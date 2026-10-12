@@ -40,6 +40,7 @@ from real_baseline import RealBaseline
 from life import LABEL as LIFE_LABEL, WORLD, Life
 from home_world import HomeWorld
 from home_computer import Computer
+from home_minecraft import MinecraftConsole
 from home_api import add_home_routes
 from twin.body import Body
 from twin.neurochem import Neuromodulators
@@ -402,8 +403,14 @@ class Live:
         self.life = Life(life_state, body=self.body)
         self.home_enabled = os.environ.get("HOME_ENABLED", "0") == "1"
         self.home_path = self.data_dir / "home.json"
-        self.home = HomeWorld(load_json(self.home_path, {})) if self.home_enabled else None
+        home_state = load_json(self.home_path, {}) if self.home_enabled else {}
+        self.home = HomeWorld(home_state) if self.home_enabled else None
         self.computer = Computer(data_dir) if self.home_enabled else None
+        self.minecraft = MinecraftConsole(data_dir) if self.home_enabled else None
+        if self.minecraft and self.minecraft.enabled and "console_game" not in home_state:
+            self.home.console_game = "minecraft"
+        elif self.home and not self.minecraft.enabled and self.home.console_game == "minecraft":
+            self.home.console_game = "pong"
         self.life.home_enabled = self.home_enabled
         self.home_device_at = 0.0
         self.time_scale = time_scale
@@ -975,6 +982,10 @@ class Live:
                 if now-self.home_device_at >= 1:
                     self.home_device_at=now
                     await self.computer.agent_step(self.home, rel)
+                    await self.minecraft.agent_step(self.home, rel)
+                    if self.minecraft.feedback:
+                        b.stimulate("reward" if self.minecraft.feedback > 0 else "salience", abs(self.minecraft.feedback))
+                        self.minecraft.feedback = 0
             if self.music.now:
                 self.music_watch.feed(rel, now, TICK)
             msg["neuro"] = {k: round(v, 2) for k, v in levels.items()}
@@ -2392,6 +2403,8 @@ async def main(args):
              supervised("chess", live.run_chess), supervised("music", live.run_music)]
     if live.computer:
         tasks.append(supervised("home computer", live.computer.run))
+    if live.minecraft and live.minecraft.enabled:
+        tasks.append(supervised("Minecraft console", live.minecraft.run))
     if live.eye:
         tasks.append(supervised("eye", live.run_eye))
     if live.browser:

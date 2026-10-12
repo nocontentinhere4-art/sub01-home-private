@@ -48,6 +48,7 @@ def add_home_routes(app, live, admin_ok):
             {
                 "home": live.home.view(),
                 "computer": live.computer.view(),
+                "minecraft": live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"},
                 "life": live.life.snapshot(),
                 "stage": live.engine.stage,
                 "time": live.clock.now(),
@@ -132,6 +133,26 @@ def add_home_routes(app, live, admin_ok):
         await live.save_state()
         return web.json_response(live.home.settings)
 
+    async def game(request):
+        enabled()
+        operator(request)
+        data = await body(request)
+        chosen = data.get("game")
+        if chosen not in ("pong", "chess", "minecraft"):
+            raise web.HTTPBadRequest(text="Unknown console game")
+        if chosen == "minecraft" and not (getattr(live, "minecraft", None) and live.minecraft.enabled):
+            raise web.HTTPConflict(text="Minecraft is not configured")
+        live.home.console_game = chosen
+        await live.save_state()
+        return web.json_response({"game": chosen})
+
+    async def minecraft_frame(request):
+        enabled()
+        console = getattr(live, "minecraft", None)
+        if not console or not console.frame:
+            raise web.HTTPNotFound(text="Minecraft has no live frame yet")
+        return web.Response(body=console.frame, content_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
     async def house(request):
         enabled()
         return web.FileResponse(
@@ -146,3 +167,5 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post("/api/home/pong", pong)
     app.router.add_post("/api/home/settings", settings)
     app.router.add_post("/api/home/intent", intent)
+    app.router.add_post("/api/home/game", game)
+    app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)

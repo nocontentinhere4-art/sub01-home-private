@@ -40,3 +40,8 @@ computer/*.bin
 
 node_modules/
 /node_modules
+
+# Local social-media exports, not application assets.
+out/x-screenshots/
+out/SUB01-first-look-X*.zip
+out/SUB01-first-look-X-English/

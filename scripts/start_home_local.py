@@ -21,6 +21,7 @@ parser.add_argument('--time-scale', type=float, default=1)
 parser.add_argument('--data-dir', default=str(ROOT / 'data'))
 parser.add_argument('--neurons', type=int, default=500000)
 parser.add_argument('--no-spiking', action='store_true', help='Lightweight visual QA only')
+parser.add_argument('--minecraft', action='store_true', help='Enable the prepared private Minecraft console; requires owner EULA acceptance')
 parser.add_argument('--browser-service', help='Optional isolated browser service, loopback only')
 options = parser.parse_args()
 if not 1 <= options.port <= 65535:
@@ -34,6 +35,7 @@ if options.browser_service:
     os.environ.update(BROWSE_SERVICE_URL=options.browser_service,
                       BROWSE_SERVICE_TOKEN='home-private-browser')
 os.environ.update(SUB01_SPIKING_LIVE='0' if options.no_spiking else '1',
+                  SUB01_MINECRAFT='1' if options.minecraft else '0',
                   SUB01_SPIKING_LIVE_NEURONS=str(options.neurons),
                   SUB01_SPIKING_LIVE_TIMEOUT_S='5', SUB01_DAY_LIVE='0',
                   SUB01_POD_SECRET='', RUNPOD_API_KEY='')

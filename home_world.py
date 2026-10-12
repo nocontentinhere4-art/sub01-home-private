@@ -221,6 +221,9 @@ class Pong:
 class HomeWorld:
     def __init__(self, state=None):
         s = state if isinstance(state, dict) else {}
+        self.console_game = s.get("console_game", "pong")
+        if self.console_game not in ("pong", "chess", "minecraft"):
+            self.console_game = "pong"
         self.settings = {"lamp": True, "curtain": False, **s.get("settings", {})}
         self.node = s.get("node", "desk") if s.get("node") in NODES else "desk"
         self.position = list(NODES[self.node])
@@ -315,7 +318,7 @@ class HomeWorld:
                 self.memories = self.memories[-100:]
                 self.last_activity = activity
         self.pong.update(
-            min(dt, 0.05), rel, activity == "play_console" and not self.path
+            min(dt, 0.05), rel, activity == "play_console" and not self.path and self.console_game == "pong"
         )
         if self.pong.matches != self.last_game_matches:
             self.memories.append(
@@ -383,6 +386,7 @@ class HomeWorld:
             "door_open": self.position[1] < 3
             and math.hypot(self.position[0] - 2, self.position[2] - 3.9) < 1.8,
             "settings": dict(self.settings),
+            "console_game": self.console_game,
             "phone": dict(self.phone),
             "pong": self.pong.view(),
             "notes": self.notes[-10:] if not compact else [],
@@ -392,6 +396,7 @@ class HomeWorld:
     def to_dict(self):
         return {
             "node": self.node,
+            "console_game": self.console_game,
             "position": self.position,
             "path": self.path,
             "target": self.target,

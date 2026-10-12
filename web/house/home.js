@@ -898,35 +898,35 @@ interactions.push(
   { object: bedsideLamp, label: "E · Switch lamp", fn: toggleLamp },
 );
 const places = {
-  entry: { p: [2, 1.65, 3.1], look: [2, 1.65, 5.2], name: "La porta di casa" },
-  outside: { p: [2, 1.65, 5.25], look: [10, 6, 24], name: "Fuori casa" },
+  entry: { p: [2, 1.65, 3.1], look: [2, 1.65, 5.2], name: "Front door" },
+  outside: { p: [2, 1.65, 5.25], look: [10, 6, 24], name: "Outside" },
   bathroom: {
     p: [-1.5, 4.65, 1.35],
     look: [-3.5, 4, 1.1],
-    name: "Bagno · Privacy mode",
+    name: "Bathroom · Privacy mode",
   },
   stairs: {
     p: [0.3, 1.65, 2.7],
     look: [0.3, 3.2, -1.7],
-    name: "La scala in legno",
+    name: "Wooden staircase",
   },
-  office: { p: [2, 1.65, -0.75], look: [2, 1.1, -3.3], name: "Lo studio" },
+  office: { p: [2, 1.65, -0.75], look: [2, 1.1, -3.3], name: "The study" },
   living: {
     p: [-1.15, 1.65, -0.8],
     look: [-2, 0.8, 1.85],
-    name: "Il soggiorno",
+    name: "Living room",
   },
   kitchen: {
     p: [-1.8, 1.65, -1.8],
     look: [-2.2, 1.2, -3.5],
-    name: "La cucina",
+    name: "Kitchen",
   },
   bedroom: {
     p: [-1.2, 4.65, -0.2],
     look: [-2.4, 3.7, -2.5],
-    name: "La camera",
+    name: "Bedroom",
   },
-  balcony: { p: [-2.2, 4.65, 4.5], look: [-2, 4.5, 20], name: "Il balcone" },
+  balcony: { p: [-2.2, 4.65, 4.5], look: [-2, 4.5, 20], name: "Balcony" },
 };
 let visitorStandTarget = null;
 let following = true,
@@ -1206,6 +1206,8 @@ function update(dt) {
 // All devices are shared server state. A viewer never starts another brain or VM.
 let homeState = null,
   computerState = {},
+  minecraftState = { enabled: false, status: "disabled" },
+  lastConsoleGame = null,
   panelKind = "",
   computerApp = "linux",
   phoneApp = "home",
@@ -1269,6 +1271,16 @@ function button(text, fn) {
   e.onclick = fn;
   return e;
 }
+function consoleChoice(label, game) {
+  return button(label, async () => {
+    if (await mutate("game", {game})) {
+      tvGame = game;
+      lastConsoleGame = game;
+      renderPanel(true);
+      drawTV();
+    }
+  });
+}
 function openPanel(kind) {
   if (kind === "computer")
     computerApp = homeState?.activity === "use_computer" ? "linux" : "browser";
@@ -1301,6 +1313,8 @@ function refreshPanelScreens() {
     image.src =
       "/api/screen/" + image.dataset.screenDevice + ".jpg?t=" + Date.now();
   }
+  const gameImage = panelBody.querySelector("[data-minecraft-frame]");
+  if (gameImage) gameImage.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
 }
 function renderPanel(reset = false) {
   if (!panelKind) return;
@@ -1376,22 +1390,28 @@ function renderPanel(reset = false) {
       terminal.textContent =
         terminalOutput() + "\n\n[" + (computerState.status || "offline") + "]";
   } else if (panelKind === "pong") {
-    title.textContent = "Wall TV / " + (tvGame === "chess" ? "Chess" : "Pong");
+    title.textContent = "Wall TV / " + (tvGame === "minecraft" ? "Minecraft" : tvGame === "chess" ? "Chess" : "Pong");
     if (reset) {
       panelBody.replaceChildren();
       const choices = document.createElement("div");
       choices.className = "apps";
       choices.append(
-        button("Pong", () => {
-          tvGame = "pong";
-          renderPanel(true);
-        }),
-        button("Chess", () => {
-          tvGame = "chess";
-          renderPanel(true);
-        }),
+        consoleChoice("Pong", "pong"),
+        consoleChoice("Chess", "chess"),
       );
+      if (minecraftState.enabled) choices.append(consoleChoice("Minecraft", "minecraft"));
       panelBody.append(choices);
+      if (tvGame === "minecraft") {
+        const image = new Image();
+        image.alt = "SUB-01’s live Minecraft viewpoint";
+        image.dataset.minecraftFrame = "1";
+        image.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
+        image.onerror = () => { image.hidden = true; };
+        image.onload = () => { image.hidden = false; };
+        panelBody.append(image, textEl("p", "His persistent Minecraft world. He plays when he chooses the console.", "muted"));
+        panelBody.append(textEl("p", "", "muted"));
+        panelBody.lastChild.id = "minecraft-status";
+      } else {
       const c = document.createElement("canvas");
       c.id = "pong-panel";
       c.tabIndex = 0;
@@ -1413,8 +1433,26 @@ function renderPanel(reset = false) {
           pongControlButton("↑", -1),
           pongControlButton("↓", 1),
         );
+      }
+      const ownerKey = document.createElement("input");
+      ownerKey.type = "password";
+      ownerKey.placeholder = "Owner access key · needed to change games";
+      ownerKey.autocomplete = "off";
+      ownerKey.value = operatorToken();
+      ownerKey.oninput = () => sessionStorage.setItem("sub01-operator-token", ownerKey.value);
+      panelBody.append(ownerKey);
     }
-    if (tvGame === "chess")
+    if (tvGame === "minecraft") {
+      const status = document.getElementById("minecraft-status");
+      const observation = minecraftState.observation || {};
+      const supplies = (observation.inventory || []).map(item => `${item.count} ${item.name.replaceAll("_", " ")}`).join(" · ");
+      if (status) status.textContent = minecraftState.status === "needs_eula"
+        ? "Waiting for the owner to accept the Minecraft EULA. The game has not started."
+        : "Minecraft: " + minecraftState.status + (minecraftState.last_action ? " · " + minecraftState.last_action.replaceAll("_", " ") : "")
+          + (observation.connected ? ` · Health ${observation.health}/20 · Food ${observation.food}/20` : "")
+          + (supplies ? " · " + supplies : "")
+          + (minecraftState.error ? " · " + minecraftState.error : "");
+    } else if (tvGame === "chess")
       drawChess(document.getElementById("pong-panel"), chessState?.game);
     else drawPong(document.getElementById("pong-panel"), homeState?.pong);
   } else if (panelKind === "phone") {
@@ -1711,7 +1749,16 @@ function drawChess(canvas, game) {
   );
 }
 function drawTV() {
-  if (tvGame === "chess" || homeState?.activity === "play_chess")
+  if (tvGame === "minecraft") {
+    if (!minecraftState.has_frame) {
+      const context = tvCanvas.getContext("2d");
+      context.fillStyle = "#10201a"; context.fillRect(0, 0, 800, 460);
+      context.fillStyle = "#ffae69"; context.textAlign = "center"; context.font = "28px system-ui";
+      context.fillText("Minecraft", 400, 205);
+      context.font = "18px system-ui";
+      context.fillText(minecraftState.status === "needs_eula" ? "Waiting for EULA approval" : minecraftState.status, 400, 245);
+    }
+  } else if (tvGame === "chess" || homeState?.activity === "play_chess")
     drawChess(tvCanvas, chessState?.game);
   else drawPong(tvCanvas, homeState?.pong);
   tvTexture.needsUpdate = true;
@@ -1733,10 +1780,25 @@ scene.add(tv);
 interactions.push({
   object: tv,
   reach: 3.5, // Console controls are available from the sofa.
-  label: "E · TV / Pong",
+  label: "E · TV / Games",
   fn: () => openPanel("pong"),
 });
 drawPong(tvCanvas);
+let minecraftFetching = false;
+setInterval(async () => {
+  if (tvGame !== "minecraft" || !minecraftState.has_frame || minecraftFetching || document.hidden) return;
+  minecraftFetching = true;
+  try {
+    const response = await fetch("/api/home/minecraft/frame.jpg");
+    if (response.ok) {
+      const image = await createImageBitmap(await response.blob());
+      tvCanvas.getContext("2d").drawImage(image, 0, 0, 800, 460);
+      image.close(); tvTexture.needsUpdate = true;
+      const expanded = panelBody.querySelector("[data-minecraft-frame]");
+      if (expanded) expanded.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
+    }
+  } catch {} finally { minecraftFetching = false; }
+}, 150);
 const phoneMesh = box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014);
 // A shared-state display, rather than a second application or browser instance.
 const phoneCanvas = document.createElement("canvas");
@@ -1866,6 +1928,11 @@ function acceptHome(state) {
     lookPoint.fromArray(state.look);
   }
   homeState = { ...homeState, ...state };
+  if (state.console_game && state.console_game !== lastConsoleGame) {
+    lastConsoleGame = state.console_game;
+    tvGame = state.console_game;
+    if (panelKind === "pong") renderPanel(true);
+  }
   if (!state.notes?.length && homeState.notes?.length === 0 && lastFullHome)
     homeState.notes = lastFullHome.notes;
   if (!state.memories?.length && lastFullHome)
@@ -1901,6 +1968,7 @@ async function syncState() {
     } catch {}
     lastFullHome = s.home;
     computerState = s.computer;
+    minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;
     acceptHome(s.home);
@@ -2162,7 +2230,7 @@ renderer.setAnimationLoop(() => {
   if (elapsed > 1) {
     document.getElementById("status").textContent =
       location.hostname === "127.0.0.1"
-        ? `${Math.round(frames / elapsed)} fps · ${renderer.info.render.calls} draw calls · ${camera.position.y > 3 ? "piano 2" : "piano 1"}`
+        ? `${Math.round(frames / elapsed)} fps · ${renderer.info.render.calls} draw calls · ${camera.position.y > 3 ? "Upper floor" : "Ground floor"}`
         : "";
     document.getElementById("status").dataset.direction = JSON.stringify([
       camera.rotation.x,
