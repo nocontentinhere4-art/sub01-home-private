@@ -261,6 +261,7 @@ function drape(w, d, x, y, z, m, drop) {
   mesh.position.set(x, y, z);
   mesh.castShadow = mesh.receiveShadow = true;
   scene.add(mesh);
+  return mesh;
 }
 function plant(x, y, z, size = 0.7) {
   furnished("potted_plant_01", x, y, z, size * 0.55);
@@ -628,12 +629,29 @@ frame(-2.2, 4.65, -3.88, 0.9, 1.2);
 box(1.65, 0.3, 2.25, -2.4, 3.25, -2.35, M.darkwood, 0.06);
 box(1.65, 0.98, 0.16, -2.4, 3.63, -3.5, M.cream, 0.08);
 box(1.6, 0.2, 2.13, -2.4, 3.47, -2.35, M.white, 0.09);
-drape(1.82, 1.7, -2.4, 3.615, -2.03, M.blue, 0.17);
+const beddingFallback = [drape(1.82, 1.7, -2.4, 3.615, -2.03, M.blue, 0.17)];
 for (const x of [-2.78, -2.02]) {
   const p = box(0.65, 0.13, 0.43, x, 3.64, -3.1, M.linen, 0.06);
   p.rotation.y = x < -2.4 ? 0.08 : -0.08;
+  beddingFallback.push(p);
 }
-drape(1.86, 0.55, -2.4, 3.69, -1.44, M.linen, 0.22);
+beddingFallback.push(drape(1.86, 0.55, -2.4, 3.69, -1.44, M.linen, 0.22));
+for (const object of beddingFallback) object.userData.replaceable = true;
+gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-2.4, 3.57, -2.35);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = (object.name.startsWith('Duvet') ? M.blue : M.linen).clone();
+    object.material.side = T.DoubleSide;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.flexibleCloth = true;
+  });
+  scene.add(root);
+  for (const object of beddingFallback) object.visible = false;
+  document.getElementById('status').dataset.bedding = lite ? 'physical-lite' : 'physical';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Bedding fallback:', error.message));
 obstacle(-2.4, -2.35, 1.75, 2.3, 1);
 rug(2.65, 3, -2.2, 3, -1.7, "#d3c4a9");
 box(0.48, 0.5, 0.45, -3.55, 3.25, -3.1, M.wood, 0.025);
@@ -2121,17 +2139,34 @@ async function applyContactLighting() {
     scene.updateMatrixWorld(true);
     baked.scene.updateMatrixWorld(true);
     let applied = 0;
+    const unused = new Set(bakedObjects.values());
     baked.scene.traverse((part) => {
       if (!part.isMesh) return;
-      const original = bakedObjects.get(part.userData.bakeId || part.name);
+      const worldGeometry = part.geometry.clone().applyMatrix4(part.matrixWorld);
+      const worldBounds = new T.Box3().setFromBufferAttribute(worldGeometry.attributes.position);
+      const matches = object => {
+        if (!object || !unused.has(object) || object.userData.flexibleCloth) return false;
+        const bounds = new T.Box3().setFromBufferAttribute(object.geometry.attributes.position).applyMatrix4(object.matrixWorld);
+        return (object.geometry.index?.count ?? object.geometry.attributes.position.count) ===
+          (worldGeometry.index?.count ?? worldGeometry.attributes.position.count) &&
+          bounds.min.distanceTo(worldBounds.min) <= .03 && bounds.max.distanceTo(worldBounds.max) <= .03;
+      };
+      let original = bakedObjects.get(part.userData.bakeId || part.name);
+      if (!matches(original)) {
+        // New replaceable furniture can shift sequential bake IDs. Preserve
+        // lighting only when exactly one unchanged world-space shape matches.
+        const candidates = [...unused].filter(matches);
+        original = candidates.length === 1 ? candidates[0] : null;
+      }
       if (
         !original ||
         original.userData.flexibleCloth ||
         !part.geometry.attributes.uv1
-      )
+      ) {
+        worldGeometry.dispose();
         return;
-      const geometry = part.geometry.clone();
-      geometry.applyMatrix4(part.matrixWorld);
+      }
+      const geometry = worldGeometry;
       geometry.applyMatrix4(original.matrixWorld.clone().invert());
       const oldBounds = new T.Box3().setFromBufferAttribute(
         original.geometry.attributes.position,
@@ -2150,6 +2185,7 @@ async function applyContactLighting() {
         return;
       }
       original.geometry.dispose();
+      unused.delete(original);
       original.geometry = geometry;
       original.material = original.material.clone();
       if (useIndirectLighting) {

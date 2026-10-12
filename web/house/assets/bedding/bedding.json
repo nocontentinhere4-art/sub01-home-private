@@ -1,0 +1,34 @@
+{
+  "source": "https://polyhaven.com/a/throw_pillows_01",
+  "pillow_license": "CC0-1.0",
+  "cloth": "Blender offline cloth simulation, 55 frames",
+  "runtime_simulation": false,
+  "geometry": {
+    "Duvet": {
+      "vertices": 16490,
+      "faces": 16488
+    },
+    "Foot throw": {
+      "vertices": 16490,
+      "faces": 16488
+    },
+    "Pillow 1": {
+      "vertices": 1717,
+      "faces": 3238
+    },
+    "Pillow 2": {
+      "vertices": 1717,
+      "faces": 3238
+    }
+  },
+  "files": {
+    "bedding.glb": {
+      "bytes": 1584004,
+      "sha256": "afc496e1ffb717706fc2012e7adb18555da764c2e6a1a725062d5b43db04e773"
+    },
+    "bedding-lite.glb": {
+      "bytes": 640792,
+      "sha256": "7533326bdc3d55145ff95a53aa91f40edd848fb8b56c22abda59a0f51118db79"
+    }
+  }
+}
