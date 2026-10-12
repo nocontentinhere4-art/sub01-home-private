@@ -405,6 +405,8 @@ class Live:
         self.home_path = self.data_dir / "home.json"
         home_state = load_json(self.home_path, {}) if self.home_enabled else {}
         self.home = HomeWorld(home_state) if self.home_enabled else None
+        if self.home:
+            self.life.arrival_check = self.activity_arrived
         self.computer = Computer(data_dir) if self.home_enabled else None
         self.minecraft = MinecraftConsole(data_dir) if self.home_enabled else None
         if self.minecraft and self.minecraft.enabled and "console_game" not in home_state:

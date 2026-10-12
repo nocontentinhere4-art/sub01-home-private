@@ -251,6 +251,7 @@ class Life:
         self.place = s.get("place", "bed")
         self.x, self.z = PLACES[self.place]
         self.heading = 0.0
+        self.arrival_check = None             # optional inhabited-house arrival, supplied by its owner
         self.path = []                         # remaining waypoints while walking
         self.activity = s.get("activity", "window")
         if self.activity not in ACTIVITIES:    # a save from before S1 (the chart is gone): he reads instead
@@ -519,6 +520,9 @@ class Life:
             until = min(until, max(t + walk, at_hour(t, PARK_CLOSES)))
         return until
 
+    def arrived(self):
+        return not self.path and (self.arrival_check is None or self.arrival_check())
+
     def start(self, act, t, why):
         if act == 'play_console':
             wish = self.console_wish
@@ -540,7 +544,7 @@ class Life:
             self.trip = None
         # the clock starts on arrival (update); until then a provisional end, never math.inf (old saves, live_server)
         self.until = self.timer(t, self.walk_s() if self.path else 0.0)
-        if not self.path:
+        if self.arrived():
             self.dur = None
         if act == "phone":                               # the chat app, or short videos when something can show (L5)
             self.phone_app = self.rng.choice(["chat", "tiktok", "tiktok"] if self.can_watch else ["chat"])
@@ -606,7 +610,7 @@ class Life:
             if d <= step:
                 self.x, self.z = tx, tz
                 self.place = self.path.pop(0)
-                if not self.path and self.dur is not None:      # arrived: the activity's clock starts now (L3)
+                if self.arrived() and self.dur is not None:      # both routes arrived: start the clock
                     self.until = self.timer(t)
                     self.dur = None
                 elif self.path and self.delivery and t >= self.delivery["arrives"] and stage == "AWAKE" \
@@ -617,7 +621,11 @@ class Life:
                 self.z += dz / d * step
             self.update_geo()
             return
-        # arrived: effects of finishing the activity, then pick the next one
+        arrived = self.arrived()
+        if self.arrival_check is not None and arrived and self.dur is not None:
+            self.until = self.timer(t)
+            self.dur = None
+        # Arrival gates expiry/effects; urgent needs and sleep can still interrupt travel.
         if self.activity == "sleep" and stage != "AWAKE":
             return                                        # asleep: nothing to decide until the brain wakes up
         must_sleep = stage != "AWAKE"
@@ -625,29 +633,30 @@ class Life:
         # an interruption names what he gets up for: the food action (needs first), else the wish or the vote
         hungry = self.hungry_now(t, rel, hot, pressure) if stage == "AWAKE" else False
         wish = (not hungry and self.wish_now(t, rel, hot, pressure)) if stage == "AWAKE" else False
-        if t >= self.until or must_sleep or woke or hungry or wish:
-            if self.activity == "buy_bread" and self.place == "counter":
-                self.bread += BREAD_PER_TRIP
-            if self.activity == "buy_konbini" and self.place == "counter":
-                self.food += 1                            # one meal (a bento), eaten like a delivered one
-                self.food_items.append(random.Random(int(t)).choice(KONBINI))
-            if self.activity == "eat" and self.food:
-                self.food -= 1
-                if self.food_items:
-                    self.food_items.pop(0)
-                self.body.eat(CARBS_PER_MEAL_G)
-            elif self.activity == "eat" and self.bread:
-                rolls = min(self.bread, ROLLS_PER_MEAL)   # a meal is two rolls (~60 g carbohydrate), a snack one
-                self.bread -= rolls
-                self.body.eat(rolls * CARBS_PER_BREAD_G)
-            if self.activity == "order_food" and not self.delivery:
-                leaves = t + 60 * self.rng.uniform(*COOK_MIN)
-                ride = TOKYO["routes"]["shop-home"]["meters"] / COURIER_SPEED
-                self.delivery = {"ordered": t, "leaves": leaves, "arrives": leaves + ride, "dish": self.order_dish or "bento"}
-            if self.activity == "get_delivery" and self.delivery and t >= self.delivery["arrives"]:
-                self.food_items.append(self.delivery.get("dish", "bento"))
-                self.delivery = None
-                self.food += 1
+        if (arrived and t >= self.until) or must_sleep or woke or hungry or wish:
+            if arrived:
+                if self.activity == "buy_bread" and self.place == "counter":
+                    self.bread += BREAD_PER_TRIP
+                if self.activity == "buy_konbini" and self.place == "counter":
+                    self.food += 1                            # one meal (a bento), eaten like a delivered one
+                    self.food_items.append(random.Random(int(t)).choice(KONBINI))
+                if self.activity == "eat" and self.food:
+                    self.food -= 1
+                    if self.food_items:
+                        self.food_items.pop(0)
+                    self.body.eat(CARBS_PER_MEAL_G)
+                elif self.activity == "eat" and self.bread:
+                    rolls = min(self.bread, ROLLS_PER_MEAL)   # a meal is two rolls (~60 g carbohydrate), a snack one
+                    self.bread -= rolls
+                    self.body.eat(rolls * CARBS_PER_BREAD_G)
+                if self.activity == "order_food" and not self.delivery:
+                    leaves = t + 60 * self.rng.uniform(*COOK_MIN)
+                    ride = TOKYO["routes"]["shop-home"]["meters"] / COURIER_SPEED
+                    self.delivery = {"ordered": t, "leaves": leaves, "arrives": leaves + ride, "dish": self.order_dish or "bento"}
+                if self.activity == "get_delivery" and self.delivery and t >= self.delivery["arrives"]:
+                    self.food_items.append(self.delivery.get("dish", "bento"))
+                    self.delivery = None
+                    self.food += 1
             nxt = (hungry or wish) if (hungry or wish) and not must_sleep else self.choose(t, stage, rel, hot, pressure)
             why = {
                 "sleep": "falls asleep" if self.place == "bed" else "goes to bed",

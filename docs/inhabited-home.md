@@ -261,3 +261,11 @@ Eighty-three targeted console/Minecraft/HomeWorld/API/music/day-routine tests pa
 Browser screens, Wikipedia fallback, chess turns, activity music and chat replies now wait for the actual HomeWorld destination. The legacy room route finishing early no longer permits a device activity while the first-person actor is still crossing the house. Background music remains allowed during walking. Activity durations still use the legacy Life clock; this change gates device execution, not that clock. The correction is saved in the private repository and requires restarting the local server to load it.
 
 Validation: 93 tests passed across home arrival routes (bedroom/desk in both directions), screens, music and HomeWorld. No public service or deployment changed.
+
+### Activity clock and applied local update — 2026-10-12
+
+The inhabited-house callback now retains each newly selected activity's duration until both the legacy journey and HomeWorld journey have arrived. Expiry waits for arrival; sleep and urgent needs can still interrupt after the legacy path has ended. Arrival-dependent completion effects (including consuming a meal) do not execute when a pending house journey is interrupted. Pending duration persists in the existing Life save format. Old room mode retains its existing clock behavior.
+
+Validation: 126 tests passed across arrival, day routine, screens, music, house and console commands; a further integrated test passed with an accelerated simulated clock while Life and HomeWorld traversed the complete bedroom → stairs → desk route. The local main server was gracefully stopped, saved and restarted with these corrections. Startup rebuilt 510,000 neurons and loaded 200 learned decisions. Chrome showed the running house at 45–49 fps on this Mac; this does not establish physical-phone performance.
+
+After restart, an explicit operator command inside the actual x86 Linux guest read `/root/sub01-home-check.txt` and returned `SUB-01 guest filesystem check`, verifying persisted guest storage again. Proof: `docs/screens/home/private-linux-after-arrival-update.jpg`. A use-computer nudge was acknowledged, but the live model remained listening to music during this observation; no spontaneous activity switch is claimed. Production and deployment configuration were untouched.
