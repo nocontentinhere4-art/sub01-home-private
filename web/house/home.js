@@ -462,16 +462,16 @@ function contact(x, y, z, w, d) {
   o.position.set(x, y + 0.042, z);
   scene.add(o);
 }
-contact(-2.2, 0, 1.85, 3.2, 1.6);
-contact(-2, 0, 0.3, 2.2, 1.4);
+contact(-1.8, 0, .1, 1.3, 2.9);
+contact(-3.2, 0, .1, 1.1, 2.1);
 contact(2, 0, -1.9, 1.2, 1.2);
 contact(-2.4, 3, -2.35, 2.2, 2.8);
 // Ground floor lounge: rounded upholstery, cushions, coffee table and ceramic objects.
-rug(2.9, 2.8, -2, 0, 0.9);
-obstacle(-2.2, 1.85, 2.7, 1.08);
-obstacle(-2, 0.3, 1.7, 0.9);
+rug(3.0, 3.3, -2.4, 0, .1);
+obstacle(-1.8, .1, .95, 2.5);
+obstacle(-3.2, .1, .70, 1.4);
 
-async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
+async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, sizeAxis = "x") {
   try {
     const url = sourceUrl || assetRoot + name + "/" + name + ".gltf";
     if (!modelCache.has(url)) modelCache.set(url, gltfLoader.loadAsync(url));
@@ -480,7 +480,7 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
     root.rotation.y = rotation;
     let bounds = new T.Box3().setFromObject(root),
       size = bounds.getSize(new T.Vector3());
-    root.scale.setScalar(width / size.x);
+    root.scale.setScalar(width / size[sizeAxis]);
     bounds = new T.Box3().setFromObject(root);
     const center = bounds.getCenter(new T.Vector3());
     root.position.set(x - center.x, y - bounds.min.y, z - center.z);
@@ -497,11 +497,11 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
     notice("An item could not load. Reconnect to retry.");
   }
 }
-furnished("sofa_03", -2.2, 0, 1.85, 2.5);
-furnished("modern_coffee_table_01", -2, 0, 0.3, 1.65, Math.PI / 2);
+furnished("sofa_03", -1.8, 0, .1, 2.5, -Math.PI / 2, null, "z");
+furnished("modern_coffee_table_01", -3.2, 0, .1, .70);
 furnished("potted_plant_01", -3.45, 0, 3.25, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
-furnished("throw_pillows_01", -2.2, 0.42, 2.02, 1.25);
+furnished("throw_pillows_01", -1.97, 0.42, .1, 1.25, -Math.PI / 2, null, "z");
 furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   if (!root) return;
   root.updateMatrixWorld(true);
@@ -972,7 +972,7 @@ const places = {
   office: { p: [2, 1.65, -0.75], look: [2, 1.1, -3.3], name: "The study" },
   living: {
     p: [-1.15, 1.65, -0.8],
-    look: [-2, 0.8, 1.85],
+    look: [-1.8, 0.8, .1],
     name: "Living room",
   },
   kitchen: {

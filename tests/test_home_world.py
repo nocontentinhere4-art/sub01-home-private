@@ -198,8 +198,7 @@ def test_ground_routes_do_not_cut_across_the_stair_treads():
             x, y, z = [v + (w-v)*i/100 for v,w in zip(A,B)]
             if abs(y-1.65) < .001:
                 assert not (-.2 <= x <= .8 and -1.7 < z < 2.51), (a,b,x,y,z)
-    home = HomeWorld()
-    home.node = 'sofa'
-    home.position = list(NODES['sofa'])
-    home.seated = 1
-    assert home.view()['position'][0] == -2.2
+    home = HomeWorld({'node':'sofa','seated':1})
+    assert home.view()['position'][0] == -1.8
+    assert home.view()['position'][2] == .1
+    assert home.view()['look'][2] == .1

@@ -16,7 +16,7 @@ NODES = {
     "back": (1.3, 1.65, -2.2),
     "kitchen_gate": (-0.5, 1.65, -2.2),
     "kitchen": (-1.8, 1.65, -1.8),
-    "sofa": (-0.45, 1.65, 1.85),
+    "sofa": (-0.45, 1.65, 0.1),
     "lounge_gate": (-0.45, 1.65, 3.2),
     "front": (1.3, 1.65, 3.2),
     "stair_approach": (0.3, 1.65, 3.2),
@@ -377,7 +377,7 @@ class HomeWorld:
             p[2] -= 1.15 * self.seated
         if self.node == "sofa":
             p[1] -= 0.35 * self.seated
-            p[0] -= 1.75 * self.seated
+            p[0] -= 1.35 * self.seated
         if self.node == "bed":
             p[1] -= 0.6 * self.seated
             p[0] -= 1.2 * self.seated
