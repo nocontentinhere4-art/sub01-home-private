@@ -7,7 +7,7 @@ const http = require('node:http');
 const path = require('node:path');
 const readline = require('node:readline');
 const { Vec3 } = require('vec3');
-const { supportsPlayer, escapeTarget } = require('./spatial.cjs');
+const { supportsPlayer, escapeTarget, placementSite } = require('./spatial.cjs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
 if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
@@ -127,11 +127,12 @@ async function act(command) {
       reward = 0.15;
     } else if (command.action === 'place_block') {
       const item = bot.inventory.items().find(i => /(_log|_planks|dirt|cobblestone)$/.test(i.name));
-      const feet = bot.entity.position.floored();
-      const support = bot.blockAt(feet.offset(1, -1, 0));
-      if (!item || !support || bot.blockAt(feet.offset(1, 0, 0))?.name !== 'air') throw new Error('no build position');
+      const site = placementSite(player.entity.position,
+        p => player.blockAt(new Vec3(p.x, p.y, p.z)), b => player.canSeeBlock(b));
+      if (!item || !site) throw new Error('no reachable free build position');
       await bot.equip(item, 'hand');
-      await bot.placeBlock(support, new Vec3(0, 1, 0));
+      if (generation !== ownGeneration || !active) return;
+      await player.placeBlock(site.support, new Vec3(0, 1, 0));
       reward = 0.2;
     } else if (command.action === 'eat') {
       const item = bot.inventory.items().find(i => ['apple', 'bread', 'carrot', 'cooked_beef'].includes(i.name));
