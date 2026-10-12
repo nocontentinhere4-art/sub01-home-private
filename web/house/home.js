@@ -15,6 +15,7 @@ import { terraceAllows } from './terrace_space.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
+import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -87,7 +88,10 @@ new HDRLoader().load(
     /* The initial room environment remains usable offline. */
   },
 );
-const camera = new T.PerspectiveCamera(64, innerWidth / innerHeight, 0.04, 110);
+let viewStorage;
+try { viewStorage = localStorage; } catch {}
+let viewControls = loadViewControls(viewStorage);
+const camera = new T.PerspectiveCamera(viewControls.fov, innerWidth / innerHeight, 0.04, 110);
 camera.rotation.order = "YXZ";
 let yaw = 0,
   pitch = 0;
@@ -1070,6 +1074,10 @@ document.getElementById("explore").onclick = () => {
 document.getElementById("lamp").onclick = toggleLamp;
 document.getElementById("curtain").onclick = toggleCurtain;
 addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && (panelKind === "view" || !e.target.matches("input,textarea"))) {
+    if (panelKind) { e.preventDefault(); closePanel(); }
+    return;
+  }
   if (e.target.matches("input,textarea")) return;
   if (
     [
@@ -1093,6 +1101,7 @@ addEventListener("keydown", (e) => {
       pongHeld.set(e.key, e.key === "ArrowUp" ? -1 : 1);
       return;
     }
+    if (panelKind) return;
     if (following && e.key !== "e") return;
     e.preventDefault();
     if (e.key === "e") {
@@ -1114,6 +1123,7 @@ addEventListener("blur", () => {
   drag = false;
 });
 renderer.domElement.addEventListener("pointerdown", (e) => {
+  if (panelKind) return;
   drag = true;
   lastX = e.clientX;
   lastY = e.clientY;
@@ -1123,18 +1133,18 @@ renderer.domElement.addEventListener("pointermove", (e) => {
   if (!drag) return;
   if (following) {
     lookOffset.x = T.MathUtils.clamp(
-      lookOffset.x - (e.clientX - lastX) * 0.003,
+      lookOffset.x - (e.clientX - lastX) * 0.003 * viewControls.sensitivity,
       -0.9,
       0.9,
     );
     lookOffset.y = T.MathUtils.clamp(
-      lookOffset.y - (e.clientY - lastY) * 0.003,
+      lookOffset.y - (e.clientY - lastY) * 0.003 * viewControls.sensitivity,
       -0.6,
       0.6,
     );
   } else {
-    yaw -= (e.clientX - lastX) * 0.003;
-    pitch = T.MathUtils.clamp(pitch - (e.clientY - lastY) * 0.003, -1.25, 1.25);
+    yaw -= (e.clientX - lastX) * 0.003 * viewControls.sensitivity;
+    pitch = T.MathUtils.clamp(pitch - (e.clientY - lastY) * 0.003 * viewControls.sensitivity, -1.25, 1.25);
   }
   lastX = e.clientX;
   lastY = e.clientY;
@@ -1378,6 +1388,10 @@ function openPanel(kind) {
   if (privacyActive || homeState?.privacy) return;
   if (kind === "computer")
     computerApp = homeState?.activity === "use_computer" ? "linux" : "browser";
+  keys = {};
+  drag = false;
+  visitorMotion.reset();
+  pongHeld.clear();
   panelKind = kind;
   panel.hidden = false;
   renderPanel(true);
@@ -1426,7 +1440,31 @@ function refreshPanelScreens() {
 function renderPanel(reset = false) {
   if (!panelKind) return;
   const title = document.getElementById("panel-title");
-  if (panelKind === "computer") {
+  if (panelKind === "view") {
+    title.textContent = "Your view";
+    if (!reset) return;
+    panelBody.replaceChildren();
+    panelBody.append(textEl("p", "Adjust how you look around the house.", "muted"));
+    for (const [key,label,min,max,step] of [["fov","View angle",50,90,1],["sensitivity","Look speed",.5,2,.05]]) {
+      const row = document.createElement("label");
+      row.className = "view-control";
+      const title = textEl("span", label);
+      const value = document.createElement("output");
+      const input = document.createElement("input");
+      input.type="range"; input.min=min; input.max=max; input.step=step; input.value=viewControls[key];
+      input.setAttribute("aria-label",label);
+      const refresh = () => { value.textContent = key === "fov" ? `${viewControls[key]}°` : `${Math.round(viewControls[key]*100)}%`; };
+      input.oninput = () => {
+        viewControls = saveViewControls(viewStorage,{...viewControls,[key]:Number(input.value)});
+        camera.fov=viewControls.fov; camera.updateProjectionMatrix(); refresh();
+      };
+      refresh(); row.append(title,value,input); panelBody.append(row);
+    }
+    panelBody.append(button("Reset view", () => {
+      viewControls = saveViewControls(viewStorage,defaultViewControls);
+      camera.fov=viewControls.fov; camera.updateProjectionMatrix(); renderPanel(true);
+    }));
+  } else if (panelKind === "computer") {
     title.textContent = "His computer";
     if (reset) {
       panelBody.replaceChildren();
@@ -2134,6 +2172,7 @@ setInterval(() => {
 document.getElementById("pc").onclick = () => {
   openPanel("computer");
 };
+document.getElementById("view").onclick = () => openPanel("view");
 document.getElementById("tv").onclick = () => openPanel("pong");
 document.getElementById("phone").onclick = () => {
   phoneApp = "home";

@@ -145,3 +145,12 @@ A regression samples every graph edge and rejects ground-height paths through th
 The sofa now faces the west-wall TV and is centered on its z=0.1 sightline. Its 2.5-m length is measured along the rotated z axis; the furniture loader retains x-axis sizing by default for other assets. The coffee table sits between sofa and TV, while the rear aisle stays open for kitchen access. Cushions, rug, contact patches and collider bounds follow the layout. The shared standing TV node is (-0.45,1.65,0.1); the seated camera becomes (-1.8,1.3,0.1) and looks toward the wall screen without a sideways head turn.
 
 All ten HomeWorld tests passed, including ground routes avoiding stair treads and the restored sofa-seat sightline. Movement and interaction JS checks passed. In the actual localhost UI, a visitor walked down from the bedroom, along the aisle and looked across the sofa/table toward the centered TV, at about 46–48 fps on this Mac. The local backend was gracefully restarted for the updated shared seat/node logic. SUB-01 remained asleep, so this is visual/layout and offline world evidence rather than a live awake game session. Proof: `docs/screens/home/private-sofa-facing-tv.jpg`. Updated furniture placement still requires a fresh indirect-light bake.
+
+
+## Personal view controls
+
+The View panel adjusts vertical view angle (50–90°, default 64°) and pointer look speed (50–200%, default 100%). Preferences persist per browser with validated bounds and recover from malformed or unavailable storage. Reset view restores the defaults. These settings affect the viewer camera, not the shared brain or house state. Escape closes the panel, including from its focused sliders.
+
+Opening any panel clears visitor movement and held controls; movement keys and canvas dragging are ignored while the panel is open, apart from the existing Pong paddle arrows. The View button is hidden by bathroom privacy alongside the device controls.
+
+The real localhost UI set 80°/80%, reloaded and read those same values, then restored 64°/100%. The panel fit a 390×844 desktop-browser viewport. In Explore mode, holding W for 1.5 seconds with the panel open left the position exactly [-1.2,4.65,-2.9]; Escape closed it. Ten HomeWorld checks and preference, movement and held-control JS checks passed. Physical-phone gesture quality is still unverified. Proofs: `docs/screens/home/private-view-controls-desktop.jpg`, `docs/screens/home/private-view-controls-mobile.jpg`.

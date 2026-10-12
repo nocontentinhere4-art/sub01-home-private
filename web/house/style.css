@@ -292,6 +292,11 @@ body.privacy-active #lamp,
 body.privacy-active #curtain,
 body.privacy-active #action,
 body.privacy-active #notice,
-body.privacy-active #reticle {
+body.privacy-active #reticle,
+body.privacy-active #view {
   display: none !important;
 }
+
+.view-control { display:grid; grid-template-columns:1fr auto; gap:10px; margin:22px 0; }
+.view-control input { grid-column:1 / -1; width:100%; padding:0; accent-color:#ff9e59; }
+.view-control output { color:#ffbc88; }

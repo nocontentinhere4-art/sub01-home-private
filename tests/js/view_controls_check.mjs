@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {loadViewControls,saveViewControls,normalizeViewControls} from '../../web/house/view_controls.mjs';
+const store=new Map(); const storage={getItem:k=>store.get(k) ?? null,setItem:(k,v)=>store.set(k,v)};
+assert.deepEqual(loadViewControls(storage),{fov:64,sensitivity:1});
+saveViewControls(storage,{fov:75,sensitivity:.8});
+assert.deepEqual(loadViewControls(storage),{fov:75,sensitivity:.8});
+assert.deepEqual(normalizeViewControls({fov:500,sensitivity:-20}),{fov:90,sensitivity:.5});
+assert.deepEqual(normalizeViewControls({fov:NaN,sensitivity:'2'}),{fov:64,sensitivity:1});
+storage.setItem('sub01-home-view','not valid JSON');
+assert.deepEqual(loadViewControls(storage),{fov:64,sensitivity:1});
+const blocked={getItem(){throw Error('unavailable')},setItem(){throw Error('unavailable')}};
+assert.deepEqual(loadViewControls(blocked),{fov:64,sensitivity:1});
+assert.deepEqual(saveViewControls(blocked,{fov:70,sensitivity:1.2}),{fov:70,sensitivity:1.2});
+console.log('PASS: viewing preferences persist, clamp malformed values and survive unavailable storage');
