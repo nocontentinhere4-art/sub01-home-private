@@ -1,0 +1,7 @@
+timesfm[torch]==2.0.2
+torch==2.14.1
+numpy==2.5.4
+matplotlib==3.11.2
+psutil==7.2.2
+huggingface_hub==2.2.0
+safetensors==0.8.0

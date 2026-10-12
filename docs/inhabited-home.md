@@ -47,3 +47,10 @@ The October 12 local Minecraft check confirmed world startup, player connection,
 Walking now brakes ahead of corners and seated destinations, retaining momentum on straight segments. The route regression checks continuous movement and low speed on final approach; the focused home/game/growth checks returned 17 passed. Visitor acceleration/braking checks remain consistent at 30/60 fps. A live route sampled 40 states with bounded walking speed.
 
 The main task now waits for child cleanup after cancellation before closing the event loop. A local SIGTERM test exited with code 0, and Minecraft logged Saving players, Saving worlds and All dimensions are saved before the next successful startup. The VM worker also gets its cleanup interval. Reference-level visual quality remains an open target.
+
+
+## Experimental forecasting (not controlling the live home)
+
+TimesFM 2.5 was tested in an isolated Python environment, with the pinned official 200M checkpoint. Install `tools/brain_forecast_requirements.txt`, then run `tools/test_brain_forecast.py` for the existing QC-passed fMRI records. For a local simulated-brain trial, use the house environment to run `tools/collect_brain_forecast.py`, then the forecast environment to run `tools/test_brain_forecast.py --live`. No brain recording is uploaded; only model weights are downloaded. Raw traces, weights, plots and reports stay under ignored `data/timesfm/`.
+
+The fMRI trial used four recordings, seven network means and three forecast origins each (84 forecasts). TimesFM MAE was 0.5652 versus 0.7034 for last-value persistence, 0.5554 for the context mean, and 0.5344 for AR(8). The local live trial used one 150-second, 4-Hz trace across 13 networks, with three origins and a 60-second horizon (39 forecasts). MAE was 0.01975 for TimesFM versus 0.02549 persistence, 0.01852 context mean and 0.01847 AR(8). Overlapping windows are not independent. These tests do not justify switching the brain to TimesFM or claiming behavioral foresight or consciousness. More recordings across activities and intervention conditions are needed.
