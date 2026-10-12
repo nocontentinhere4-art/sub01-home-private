@@ -92,3 +92,10 @@ The URL/auth/bathroom regression also verifies phone targeting. The viewport ove
 The visitor can use the full terrace width beyond the doorway throat, while its side and far rails bound the walking area. Both planter pots have collision bounds. A wooden threshold bridges the entrance and terrace. The entrance frame has no window mullion across the passage.
 
 The real localhost UI check walked from the bed entry onto the landing, down the complete staircase, through the opening door, across the terrace from x=0.91 to x=3.09 at z=4.80, and back indoors using W/A/S/D and drag controls. SUB-01 remained asleep in bed throughout. The renderer retained 63 matched indirect-light parts and showed about 45–48 fps on this Mac while active. The terrace helper check and all nine HomeWorld tests passed. Proof: `docs/screens/home/private-terrace-exit.jpg`. The exterior currently ends at this terrace; an explorable street is not implemented.
+
+
+## Responsive bathroom screen
+
+The rendered privacy screen now paints at the viewport aspect ratio, with bounded texture resolution and a wrapped caption. Canvas GPU storage is disposed and re-uploaded after a dimension change; merely flagging the resized canvas for update left the old texture stretched in the actual browser check. The scene remains replaced, so the privacy message appears in captured frames too.
+
+The localhost visitor test opened the PC panel and walked into the upstairs bathroom: the panel closed and device controls disappeared. After resizing from 1920×828 to 390×844, the privacy text remained proportionate and readable. Resizing back and walking out restored the device controls. This checks a narrow desktop-browser viewport, not performance on a physical phone. Proofs: `docs/screens/home/private-bathroom-responsive-desktop.jpg` and `docs/screens/home/private-bathroom-responsive-mobile.jpg`. Related HomeWorld, device API and browser API checks: 12 passed.

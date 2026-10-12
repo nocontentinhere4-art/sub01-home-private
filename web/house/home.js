@@ -12,6 +12,7 @@ import { WalkMotion } from "./walk_motion.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
 import { terraceAllows } from './terrace_space.mjs';
+import { paintPrivacyScreen } from './privacy_screen.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -714,25 +715,7 @@ beam([-1.5, 5.2, 2.58], [-1.5, 5.2, 2.3], 0.019, M.brass);
 cylinder(0.1, 0.02, -1.5, 5.2, 2.3, M.brass);
 // Privacy is rendered instead of the room: it is also present in recorded video.
 const privateCanvas = document.createElement("canvas");
-privateCanvas.width = 1600;
-privateCanvas.height = 1000;
-const px = privateCanvas.getContext("2d");
-px.fillStyle = "#161b19";
-px.fillRect(0, 0, 1600, 1000);
-for (let i = 0; i < 45; i++) {
-  px.fillStyle = i % 2 ? "#1c221f" : "#202824";
-  px.fillRect((i * 137) % 1600, (i * 91) % 1000, 110, 90);
-}
-px.textAlign = "center";
-px.fillStyle = "#ecb37f";
-px.font = "20px monospace";
-px.fillText("SUB-01 / PRIVACY MODE", 800, 410);
-px.fillStyle = "#e9e4d8";
-px.font = "64px sans-serif";
-px.fillText("OCCUPIED.", 800, 510);
-px.fillStyle = "#a2ada4";
-px.font = "24px sans-serif";
-px.fillText("Even a simulated brain needs a minute.", 800, 575);
+paintPrivacyScreen(privateCanvas, innerWidth, innerHeight);
 const privacyScene = new T.Scene(),
   privacyCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 2);
 privacyCamera.position.z = 1;
@@ -2299,6 +2282,9 @@ addEventListener("resize", () => {
     ),
   );
   renderer.setSize(innerWidth, innerHeight);
+  paintPrivacyScreen(privateCanvas, innerWidth, innerHeight);
+  privacyTexture.dispose(); // recreate GPU storage after the canvas dimensions change
+  privacyTexture.needsUpdate = true;
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
 });
