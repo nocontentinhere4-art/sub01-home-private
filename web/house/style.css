@@ -191,6 +191,14 @@ textarea {
   padding: 12px 0;
   font-size: 12px;
 }
+.operator-access {
+  margin: 12px 0;
+}
+.operator-access summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #b1bab2;
+}
 .muted {
   color: #b1bab2;
   font-size: 11px;

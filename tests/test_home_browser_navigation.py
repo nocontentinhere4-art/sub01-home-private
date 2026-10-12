@@ -22,10 +22,13 @@ def test_browser_navigation_requires_owner_and_valid_public_address():
             response = await c.post('/api/home/browser',json={'url':'https://docs.python.org/3/tutorial/'},headers=headers)
             assert response.status == 200
             assert calls == [('desk','https://docs.python.org/3/tutorial/'),'Python tutorial']
+            response = await c.post('/api/home/browser',json={'device':'phone','url':'https://docs.python.org/3/tutorial/'},headers=headers)
+            assert response.status == 200
+            assert calls[-2:] == [('phone','https://docs.python.org/3/tutorial/'),'Python tutorial']
             live.home.node = 'bathroom'
             live.home.position = [-1.5,4.65,1.35]
             assert (await c.post('/api/home/browser',json={'url':'https://docs.python.org/3/tutorial/'},headers=headers)).status == 409
-            assert len(calls) == 2
+            assert len(calls) == 4
         finally:
             await c.close()
     asyncio.run(run())

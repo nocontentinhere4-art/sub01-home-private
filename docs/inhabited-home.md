@@ -78,3 +78,10 @@ The isolated browser can be alive but have no permitted/current page after faile
 The Browser tab now has a public-address field, routed through authenticated `/api/home/browser` and the isolated service `/navigate`. It uses existing URL, private-session, robots, heavy-page, wall and host/rate checks. Explicit operator revisits bypass only the seven-day novelty preference, not those checks. Bathroom occupancy blocks this action. Opening a page updates the shared screen and reading input; automatic browsing resumes after the 30-second opening interval. The panel labels the actual on-screen title independently of the typed address.
 
 The local UI test opened the official Python tutorial and captured it on the desk monitor and PC panel (`docs/screens/home/private-browser-python.jpg`). The URL/auth/privacy contract and existing screen/guard checks returned 73 passed. This gives direct navigation when automatic searches fail; it does not guarantee every website is available.
+
+
+## Phone navigation and narrow layout
+
+The phone Browser app now has the same authenticated public-address navigation as the PC, targeting the separate phone context. Its current-page title comes from the phone screen status. Operator access is available in a collapsible section above content, and the address controls precede the tall page image so they remain reachable at 390 px. The local desktop browser viewport check opened the W3C CSS overview in the phone context and showed it in the phone app. The Python tutorial failed to load in that check, so this is not a claim that every address works. Operator interaction was tested while the character was asleep; it was not an autonomous choice by SUB-01.
+
+The URL/auth/bathroom regression also verifies phone targeting. The viewport override was reset after inspection. Proof: `docs/screens/home/private-phone-browser-mobile.jpg`; physical-phone performance remains unverified.

@@ -1226,6 +1226,7 @@ let homeState = null,
   computerState = {},
   browserState = null,
   browserScreen = null,
+  phoneBrowserScreen = null,
   minecraftState = { enabled: false, status: "disabled" },
   lastConsoleGame = null,
   panelKind = "",
@@ -1301,6 +1302,37 @@ function consoleChoice(label, game) {
     }
   });
 }
+function browserAddressForm(device, parent) {
+  const form = document.createElement('form'), address = document.createElement('input');
+  address.type = 'url';
+  address.placeholder = 'Operator: open a public web address';
+  address.required = true;
+  const open = button('Open', () => {});
+  form.append(address, open);
+  form.onsubmit = async event => {
+    event.preventDefault();
+    open.disabled = true;
+    try {
+      if (await mutate('browser', {device, url: address.value.trim()})) {
+        await syncState();
+        refreshPanelScreens();
+      }
+    } finally { open.disabled = false; }
+  };
+  parent.append(form);
+}
+function operatorKeyControl(parent) {
+  const token = document.createElement('input');
+  token.type = 'password';
+  token.placeholder = 'Operator key (only needed for editing)';
+  token.autocomplete = 'off';
+  token.value = operatorToken();
+  token.oninput = () => sessionStorage.setItem('sub01-operator-token', token.value);
+  parent.append(token, button('Connect as operator', () => {
+    sessionStorage.setItem('sub01-operator-token', token.value);
+    notice('Operator key saved for this tab.');
+  }));
+}
 function openPanel(kind) {
   if (privacyActive || homeState?.privacy) return;
   if (kind === "computer")
@@ -1375,24 +1407,7 @@ function renderPanel(reset = false) {
         const pageLabel = textEl('p', '', 'muted');
         pageLabel.id = 'browser-page-label';
         panelBody.append(pageLabel);
-        const addressForm = document.createElement('form');
-        const address = document.createElement('input');
-        address.type = 'url';
-        address.placeholder = 'Operator: open a public web address';
-        address.required = true;
-        const open = button('Open', () => {});
-        addressForm.append(address, open);
-        addressForm.onsubmit = async event => {
-          event.preventDefault();
-          open.disabled = true;
-          try {
-            if (await mutate('browser', {device: 'desk', url: address.value.trim()})) {
-              await syncState();
-              refreshPanelScreens();
-            }
-          } finally { open.disabled = false; }
-        };
-        panelBody.append(addressForm);
+        browserAddressForm('desk', panelBody);
         panelBody.append(
           textEl(
             "p",
@@ -1425,20 +1440,7 @@ function renderPanel(reset = false) {
         };
         panelBody.append(form);
       }
-      const token = document.createElement("input");
-      token.type = "password";
-      token.placeholder = "Operator key (only needed for editing)";
-      token.autocomplete = "off";
-      token.value = operatorToken();
-      token.oninput = () =>
-        sessionStorage.setItem("sub01-operator-token", token.value);
-      panelBody.append(
-        token,
-        button("Connect as operator", () => {
-          sessionStorage.setItem("sub01-operator-token", token.value);
-          notice("Operator key saved for this tab.");
-        }),
-      );
+      operatorKeyControl(panelBody);
     }
     const terminal = document.getElementById("terminal");
     const pageLabel = document.getElementById('browser-page-label');
@@ -1536,6 +1538,11 @@ function renderPanel(reset = false) {
       panelBody.append(apps);
       const content = document.createElement("div");
       content.id = "phone-content";
+      const access = document.createElement('details');
+      access.className = 'operator-access';
+      access.append(textEl('summary', 'Operator access'));
+      operatorKeyControl(access);
+      panelBody.append(access);
       panelBody.append(content);
     }
     const content = document.getElementById("phone-content");
@@ -1574,8 +1581,14 @@ function renderPanel(reset = false) {
     } else if (phoneApp === "browser") {
       if (reset) {
         content.replaceChildren();
+        browserAddressForm('phone', content);
+        const label = textEl('p', '', 'muted');
+        label.id = 'phone-browser-page-label';
+        content.append(label);
         browserFrame("phone", content);
       }
+      const label = document.getElementById('phone-browser-page-label');
+      if (label) label.textContent = phoneBrowserScreen?.title ? 'On screen: ' + phoneBrowserScreen.title : '';
     } else if (phoneApp === "messages") {
       if (reset) {
         content.replaceChildren(
@@ -2029,6 +2042,7 @@ async function syncState() {
     computerState = s.computer;
     browserState = s.browser || null;
     browserScreen = s.browser_screen || null;
+    phoneBrowserScreen = s.phone_browser_screen || null;
     minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;
