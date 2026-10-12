@@ -170,7 +170,7 @@ LABEL = {"sleep": "sleeping", "phone": "in bed scrolling the phone", "eat": "eat
          "order_food": "ordering food on the phone", "get_delivery": "getting the delivery at the door",
          "chat": "answering chat at the computer", "watch_video": "watching a video at the computer (muted)",
          "play_chess": "playing chess at the desk", "listen_music": "lying on the bed listening to music"}
-LABEL.update(use_computer="using his Linux computer", play_console="playing Pong on the wall TV", use_bathroom="in the bathroom (private)")
+LABEL.update(use_computer="using his Linux computer", play_console="playing a game on the wall TV", use_bathroom="in the bathroom (private)")
 DESIRES = [
     (r"\b(pong|console|tv game|videogame)\b", "play_console"),
     (r"\b(linux|terminal|emulator|computer)\b", "use_computer"),
@@ -643,7 +643,7 @@ class Life:
                 "get_delivery": "the courier rings: goes to the door",
                 "chat": "chat messages are waiting: sits at the computer to answer",
                 "watch_video": "bored: puts a video on at the computer (muted)",
-                "play_console": "turns on the wall TV for Pong",
+                "play_console": "turns on the wall TV",
                 "use_computer": "opens his Linux computer",
                 "use_bathroom": "takes a bathroom break",
                 "play_chess": "sits down for a game of chess at the desk",

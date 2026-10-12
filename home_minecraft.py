@@ -19,6 +19,10 @@ def eula_accepted(directory):
 class MinecraftConsole:
     def __init__(self, data_dir):
         self.directory = Path(data_dir) / "minecraft"
+        self.server_port = int(os.environ.get("SUB01_MC_SERVER_PORT", "25569"))
+        self.viewer_port = int(os.environ.get("SUB01_MC_VIEW_PORT", "8803"))
+        if not (1024 <= self.server_port <= 65535 and 1024 <= self.viewer_port <= 65535) or self.server_port == self.viewer_port:
+            raise ValueError("Use distinct private Minecraft ports between 1024 and 65535")
         self.enabled = os.environ.get("SUB01_MINECRAFT", "0") == "1"
         self.status = "preparing" if self.enabled else "disabled"
         self.state = {}
@@ -126,7 +130,7 @@ class MinecraftConsole:
                         await asyncio.sleep(.5)
                         continue
                     if not showing:
-                        await page.goto("http://127.0.0.1:8803", wait_until="domcontentloaded")
+                        await page.goto(f"http://127.0.0.1:{self.viewer_port}", wait_until="domcontentloaded")
                         await page.wait_for_selector("canvas")
                         showing = True
                     self.frame = await page.screenshot(type="jpeg", quality=75)
@@ -149,8 +153,8 @@ class MinecraftConsole:
         config = json.loads((self.directory / "downloads.json").read_text())
         # Never start a game server configured to bind outside the private loopback.
         properties = (self.directory / "server.properties").read_text().splitlines()
-        if "server-ip=127.0.0.1" not in properties or "server-port=25569" not in properties:
-            raise ValueError("Minecraft must bind only to 127.0.0.1:25569")
+        if "server-ip=127.0.0.1" not in properties or f"server-port={self.server_port}" not in properties:
+            raise ValueError(f"Minecraft must bind only to 127.0.0.1:{self.server_port}")
         self.status = "starting_server"
         self.error = ""
         self.state = {}
@@ -175,7 +179,7 @@ class MinecraftConsole:
                 self.worker = await asyncio.create_subprocess_exec(shutil.which("node") or "node",
                     str(ROOT / "games/minecraft/worker.cjs"), cwd=ROOT / "games/minecraft",
                     stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
-                    stderr=worker_log)
+                    stderr=worker_log, env={**os.environ, "SUB01_MC_SERVER_PORT": str(self.server_port), "SUB01_MC_VIEW_PORT": str(self.viewer_port)})
             self.status = "ready"
             tasks = [asyncio.create_task(drain_server()), asyncio.create_task(self.read_worker()),
                      asyncio.create_task(self.render_frames())]

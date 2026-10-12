@@ -17,6 +17,8 @@ import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
 import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
 import { ShadowRefresh } from './shadow_refresh.mjs';
+if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).get("test") === "daytime")
+  document.querySelector("header small").textContent += " / DAYTIME DEVICE TEST";
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||

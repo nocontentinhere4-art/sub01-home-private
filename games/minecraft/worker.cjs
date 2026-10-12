@@ -8,11 +8,15 @@ const path = require('node:path');
 const readline = require('node:readline');
 const { Vec3 } = require('vec3');
 const { supportsPlayer, escapeTarget } = require('./spatial.cjs');
+const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
+const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
+if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
+  throw new Error('Use distinct private Minecraft server and viewer ports');
 const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 app.use(express.static(path.join(path.dirname(require.resolve('prismarine-viewer')), 'public')));
-server.listen(8803, '127.0.0.1');
+server.listen(viewerPort, '127.0.0.1');
 let bot = null, active = false, connected = false, busy = false, generation = 0;
 let lastHealth = 20, lastItems = 0;
 const emit = (value) => process.stdout.write(JSON.stringify(value) + '\n');
@@ -41,7 +45,7 @@ function observation() {
 }
 function connect() {
   if (bot || !active) return;
-  bot = mineflayer.createBot({ host: '127.0.0.1', port: 25569, username: 'SUB01',
+  bot = mineflayer.createBot({ host: '127.0.0.1', port: serverPort, username: 'SUB01',
     auth: 'offline', version: '1.20.1', hideErrors: true });
   bot.loadPlugin(pathfinder);
   bot.once('spawn', () => {

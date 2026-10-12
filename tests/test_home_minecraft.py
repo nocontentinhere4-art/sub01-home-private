@@ -58,3 +58,15 @@ def test_agent_does_not_play_while_home_activity_is_elsewhere(tmp_path, monkeypa
     home.activity = "sleep"
     asyncio.run(console.agent_step(home, {}))
     assert messages[-1] == {"type": "active", "value": False}
+
+
+def test_isolated_game_ports_keep_main_instance_separate(tmp_path,monkeypatch):
+    import pytest
+    monkeypatch.setenv('SUB01_MC_SERVER_PORT','25570')
+    monkeypatch.setenv('SUB01_MC_VIEW_PORT','8805')
+    console=MinecraftConsole(tmp_path)
+    assert (console.server_port,console.viewer_port)==(25570,8805)
+    monkeypatch.setenv('SUB01_MC_VIEW_PORT','25570')
+    with pytest.raises(ValueError,match='distinct'): MinecraftConsole(tmp_path)
+    monkeypatch.setenv('SUB01_MC_VIEW_PORT','80')
+    with pytest.raises(ValueError): MinecraftConsole(tmp_path)
