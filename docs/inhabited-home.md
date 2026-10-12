@@ -255,3 +255,9 @@ Phone impulses now recognize explicit Pong/Minecraft requests instead of treatin
 The impulse form now waits for chat_ack: rejection, timeout or disconnect retain the text; acceptance clears only the submitted text and displays confirmed receipt. A full-runtime restart preserved the private state and restored 510,000 neurons, 51,497,387 synapses and 176 learned decisions. In the real Chrome phone UI an empty impulse was rejected; "play Minecraft" received a positive acknowledgement and appeared as pending while the character continued using his phone. This verifies receipt/preference, not spontaneous gameplay in the nighttime main instance. Proofs: private-impulse-rejected.jpg and private-console-suggestion-pending.jpg in docs/screens/home.
 
 Eighty-three targeted console/Minecraft/HomeWorld/API/music/day-routine tests passed. Further targeted checks cover preference serialization, authorized operator override and HTTP lifecycle; Python/JS/diff checks passed. The source and main runtime remain private/localhost. Whole-house visual fidelity and physical-device completion gates remain open.
+
+### House arrival synchronization — 2026-10-12
+
+Browser screens, Wikipedia fallback, chess turns, activity music and chat replies now wait for the actual HomeWorld destination. The legacy room route finishing early no longer permits a device activity while the first-person actor is still crossing the house. Background music remains allowed during walking. Activity durations still use the legacy Life clock; this change gates device execution, not that clock. The correction is saved in the private repository and requires restarting the local server to load it.
+
+Validation: 93 tests passed across home arrival routes (bedroom/desk in both directions), screens, music and HomeWorld. No public service or deployment changed.

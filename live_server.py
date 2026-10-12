@@ -994,7 +994,7 @@ class Live:
             if self.music.now:
                 self.music_watch.feed(rel, now, TICK)
             msg["neuro"] = {k: round(v, 2) for k, v in levels.items()}
-            if self.life.activity == "research" and not self.life.path:
+            if self.life.activity == "research" and self.activity_arrived():
                 msg["life"]["reading"] = self.reading_now(tsim)
             if self.browser and (dev := self.screen_device()):
                 msg["life"]["screen"] = self.screen_status(dev)
@@ -1052,7 +1052,7 @@ class Live:
         while True:
             await asyncio.sleep(5)
             t = self.clock.now()
-            if self.life.activity != "research" or self.life.path or not self.reader.due(t) or not self.wiki_fallback():
+            if self.life.activity != "research" or not self.activity_arrived() or not self.reader.due(t) or not self.wiki_fallback():
                 continue
             if getattr(self, "browse_wanted", False) and time.time() - getattr(self, "last_wiki_read", 0.0) < WIKI_DOWN_EVERY_S:
                 continue                                        # the browser is wanted but down: Wikipedia stays rare
@@ -1082,8 +1082,18 @@ class Live:
         return m
 
     # --- the screens: a real browser on the open web (desk + phone) -------------------
+    def activity_arrived(self):
+        """Device tasks wait for the inhabited house, not the old room's route."""
+        if self.life.path:
+            return False
+        home = getattr(self, "home", None)
+        if home is None:
+            return True
+        return (home.activity == self.life.activity and not home.path
+                and home.node == home.desired(self.life.activity))
+
     def screen_device(self):
-        if self.life.path or self.engine.stage != "AWAKE":
+        if not self.activity_arrived() or self.engine.stage != "AWAKE":
             return None
         return {"research": "desk", "phone": "phone", "watch_video": "desk"}.get(self.life.activity)
 
@@ -1434,7 +1444,7 @@ class Live:
         thread), the opponent's move (depth-2 search, in a worker thread), or the end of the game."""
         loop = asyncio.get_running_loop()
         t = self.clock.now()
-        playing = self.life.activity == "play_chess" and not self.life.path and self.engine.stage == "AWAKE"
+        playing = self.life.activity == "play_chess" and self.activity_arrived() and self.engine.stage == "AWAKE"
         g = self.chess
         if g is None:
             if playing:
@@ -1525,7 +1535,7 @@ class Live:
         t = self.clock.now()
         life, now = self.life, self.music.now
         awake = self.engine.stage == "AWAKE"
-        listening = awake and life.activity == "listen_music" and not life.path
+        listening = awake and life.activity == "listen_music" and self.activity_arrived()
         started = life.started[-1] if life.started else None
         if self.music_bg[0] != started:                         # a new activity: is there music in the background?
             self.music_bg = (started, self.music_rng.random() < MUSIC_BG_P)
@@ -1693,7 +1703,7 @@ class Live:
         self.life.plan_hint = nxt["life"] if nxt else None
         # the inbox (C1/C2): he sits down to answer only when a reply is possible; every message gets an outcome
         life = self.life
-        at_desk = not life.path and (life.activity == "chat"
+        at_desk = self.activity_arrived() and (life.activity == "chat"
                                      or (life.activity in ("research", "watch_video") and life.place == "desk"))
         open_why = m.reply_open()
         if self.chat_inbox and open_why and "replies today" in open_why:      # the day's cap: the inbox is cleared
