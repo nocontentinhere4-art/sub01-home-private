@@ -1224,6 +1224,7 @@ function update(dt) {
 // All devices are shared server state. A viewer never starts another brain or VM.
 let homeState = null,
   computerState = {},
+  browserState = null,
   minecraftState = { enabled: false, status: "disabled" },
   lastConsoleGame = null,
   panelKind = "",
@@ -1333,7 +1334,8 @@ function browserFrame(device, parent) {
   image.onerror = () => {
     image.hidden = true;
     message.hidden = false;
-    message.textContent = "His browser has no public page to show right now.";
+    message.textContent = browserState?.state === 'waiting'
+      ? browserState.why : "His browser has no public page to show right now.";
   };
   image.src = "/api/screen/" + device + ".jpg?t=" + Date.now();
   parent.append(image, message);
@@ -2000,6 +2002,7 @@ async function syncState() {
     } catch {}
     lastFullHome = s.home;
     computerState = s.computer;
+    browserState = s.browser || null;
     minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;

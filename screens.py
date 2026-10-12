@@ -131,6 +131,10 @@ class ScreensStatus:
         if self.state != "up":
             self.state, self.why, self.since = "up", "", self.clock()
 
+    def waiting(self, why="Looking for an accessible page; no current page to show"):
+        if self.state != "waiting" or self.why != why:
+            self.state, self.why, self.since = "waiting", why, self.clock()
+
     def note(self, text):
         self._roll()
         text = str(text)[:140]

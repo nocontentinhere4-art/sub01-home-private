@@ -1142,6 +1142,11 @@ class Live:
                     self.end_page()
                     await self.browser.close(open_dev)
                 open_dev = dev
+                screen_status = getattr(self, "screens", None)
+                if screen_status and not self.browser.screens.get(dev):
+                    screen_status.waiting()
+                elif screen_status:
+                    screen_status.browser_up()
                 t = self.clock.now()
                 art = self.reader.current()
                 interest = live_interest(self, art, self.search_rng)   # #56: notes, reading, taught words, tastes

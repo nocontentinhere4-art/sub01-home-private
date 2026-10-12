@@ -48,6 +48,7 @@ def add_home_routes(app, live, admin_ok):
             {
                 "home": live.home.view(),
                 "computer": live.computer.view(),
+                "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
                 "minecraft": live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"},
                 "life": live.life.snapshot(),
                 "stage": live.engine.stage,

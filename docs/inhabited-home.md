@@ -66,3 +66,8 @@ The lighting importer also matches unchanged world-space bounds and element coun
 ## Bathroom overlay privacy
 
 Privacy now closes and clears an already open computer/phone/TV panel, releases held Pong controls, hides device launchers and stops panel-frame refreshes. It covers both SUB-01 entering the bathroom and a visitor camera entering the privacy bounds. Follow/Explore remain available for navigation. The live check opened the PC, nudged a bathroom visit and observed one privacy draw call, an empty hidden panel, hidden device controls, and no device opened by E. On leaving, the computer panel could be opened again. Proof: `docs/screens/home/private-bathroom-overlays-censored.jpg`. This is presentation privacy; it does not revoke operator/API access or censor unrelated brain telemetry.
+
+
+## Browser availability state
+
+The isolated browser can be alive but have no permitted/current page after failed searches. Previously its public state could stay idle (away from the screen) even when SUB-01 was seated and researching. It now reports waiting when an active screen has no current page, and the home panel uses that reason. This does not fabricate a live page or relax robots, overlays, source cooldowns or rate limits. The local check confirmed waiting in the API and UI while the real Linux guest was separately ready from its saved snapshot. The browser service was healthy, both page statuses were empty, and a YouTube-key-unavailable note was present. No current desk frame was available in that check. Further work is needed on useful activity selection when sources do not answer. Proof: `docs/screens/home/private-browser-waiting.jpg`.
