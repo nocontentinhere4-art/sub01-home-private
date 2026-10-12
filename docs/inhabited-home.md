@@ -40,3 +40,10 @@ To rebuild, export the house with the local-only `?bake=1` button, rename `out/h
 The default local renderer now loads `gi-architecture.glb` plus day/night HDR indirect-light maps. Their manifest records 32 Cycles samples and four diffuse bounces, with mobile variants. Direct shadows and dynamic doors remain handled by the live renderer; this is baked indirect illumination, not a claim of reference-quality Unreal rendering. `?ao` uses the earlier contact-only fallback.
 
 The October 12 local Minecraft check confirmed world startup, player connection, wood collection, individual block placement, actual TV frames, pause/disconnect on a game switch and inventory persistence after restart. The support-block refusal appeared in the real event ledger. The focused Python checks returned 16 passed, and the spatial check verifies an escape vector that increases distance from a threat. A controlled live hostile trial, sustained game learning and a full house acceptance pass remain open. The UI uses English throughout.
+
+
+## Arrival motion and shutdown
+
+Walking now brakes ahead of corners and seated destinations, retaining momentum on straight segments. The route regression checks continuous movement and low speed on final approach; the focused home/game/growth checks returned 17 passed. Visitor acceleration/braking checks remain consistent at 30/60 fps. A live route sampled 40 states with bounded walking speed.
+
+The main task now waits for child cleanup after cancellation before closing the event loop. A local SIGTERM test exited with code 0, and Minecraft logged Saving players, Saving worlds and All dimensions are saved before the next successful startup. The VM worker also gets its cleanup interval. Reference-level visual quality remains an open target.

@@ -282,10 +282,24 @@ class HomeWorld:
             self.seated = max(0, self.seated - dt * 0.55)
             self.speed = 0
         elif self.path:
-            self.speed = min(1.25, self.speed + dt * 1.15)
             n = self.path[0]
             end = NODES[n]
             distance = math.dist(self.position, end)
+            arrival_speed = 0.08
+            if len(self.path) > 1:
+                following = NODES[self.path[1]]
+                incoming = [b - a for a, b in zip(self.position, end)]
+                outgoing = [b - a for a, b in zip(end, following)]
+                length = math.hypot(*incoming) * math.hypot(*outgoing)
+                cosine = sum(a * b for a, b in zip(incoming, outgoing)) / length if length > 1e-8 else 1
+                arrival_speed = 0.4 + 0.85 * max(0, min(1, cosine))
+            # Brake ahead of a corner or seat, instead of stopping abruptly
+            # at the waypoint. Straight segments preserve walking momentum.
+            desired_speed = min(1.25, math.sqrt(arrival_speed ** 2 + 2 * 1.4 * distance))
+            if self.speed < desired_speed:
+                self.speed = min(desired_speed, self.speed + dt * 1.15)
+            else:
+                self.speed = max(desired_speed, self.speed - dt * 1.8)
             step = self.speed * dt
             if distance <= step:
                 self.position = list(end)

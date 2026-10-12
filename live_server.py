@@ -2417,6 +2417,7 @@ async def main(args):
         tasks.append(supervised("spiking live", cpu_net.run))
     if getattr(live, "clips", None):
         tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
+    tasks = [asyncio.create_task(task) for task in tasks]
     me, stopping = asyncio.current_task(), []
 
     def on_sigterm():                             # a redeploy / `docker stop`: SIGTERM, then SIGKILL after a grace period.
@@ -2431,6 +2432,12 @@ async def main(args):
     try:
         await asyncio.gather(*tasks)
     finally:
+        # A cancelled gather raises before every child's finally has finished.
+        # Let the VM and Minecraft save/close before asyncio tears down pipes.
+        for task in tasks:
+            if not task.done() and not task.cancelling():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         live.store.save(live.engine, live.memory)
         if manager:
             manager.shutdown()

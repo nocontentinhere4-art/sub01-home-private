@@ -159,6 +159,25 @@ def test_camera_gets_up_before_walking_without_a_seat_teleport():
         assert h.seated == 0
 
 
+def test_walk_brakes_before_arrival_and_keeps_routes_continuous():
+    h = HomeWorld({"node": "outside"})
+    last = h.position[:]
+    approach = []
+    peak = 0
+    for _ in range(3000):
+        h.update(.02, .02, {"activity": "research"}, {})
+        peak = max(peak, h.speed)
+        assert math.dist(last, h.position) <= 1.25 * .02 + 1e-8
+        last = h.position[:]
+        if h.path == ["desk"] and math.dist(h.position, NODES["desk"]) < .25:
+            approach.append(h.speed)
+        if not h.path and h.node == "desk":
+            break
+    assert h.node == "desk" and not h.path
+    assert peak > 1.1 and len(approach) > 5
+    assert approach[-1] < .25 and approach[-1] < approach[0] / 2
+
+
 def test_pong_is_beatable_instead_of_an_infinite_perfect_tracker():
     p = Pong()
     for i in range(12000):

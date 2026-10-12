@@ -41,7 +41,10 @@ os.environ.update(SUB01_SPIKING_LIVE='0' if options.no_spiking else '1',
                   SUB01_POD_SECRET='', RUNPOD_API_KEY='')
 from live_server import main, build_parser
 
-asyncio.run(main(build_parser().parse_args([
-    '--host', '127.0.0.1', '--port', str(options.port), '--data-dir',
-    options.data_dir, '--time-scale', str(options.time_scale), '--start', options.start,
-])))
+try:
+    asyncio.run(main(build_parser().parse_args([
+        '--host', '127.0.0.1', '--port', str(options.port), '--data-dir',
+        options.data_dir, '--time-scale', str(options.time_scale), '--start', options.start,
+    ])))
+except asyncio.CancelledError:
+    pass  # Intentional SIGTERM; main has saved state and closed its children.
