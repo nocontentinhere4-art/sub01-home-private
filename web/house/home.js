@@ -14,6 +14,7 @@ import { HeldControls } from "./held_controls.mjs";
 import { terraceAllows } from './terrace_space.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
+import { createSunDust } from './sun_dust.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -906,8 +907,19 @@ beam([10, 8.8, 24], [10, 12, 24], 0.07, towerPaint);
 let lampOn = true,
   curtainOpen = false,
   lastLightMinute = -1;
+const sunDust = createSunDust(T, scene, lite);
+const lightingStudy = location.hostname === "127.0.0.1" ? new URLSearchParams(location.search).get("light") : null;
+if (["morning","noon","evening","night"].includes(lightingStudy))
+  document.querySelector("header small").textContent += " / " + lightingStudy.toUpperCase() + " LIGHTING STUDY";
+function visualLightTime(timestamp) {
+  const presets = {morning:9, noon:12, evening:17, night:23};
+  if (!Object.hasOwn(presets, lightingStudy)) return timestamp;
+  const hour = presets[lightingStudy];
+  const currentHour = (((timestamp / 3600 + 9) % 24) + 24) % 24;
+  return timestamp + (hour-currentHour)*3600;
+}
 function lighting(timestamp = Date.now() / 1000) {
-  currentLight = homeLighting(timestamp);
+  currentLight = homeLighting(visualLightTime(timestamp));
   lastLightMinute = Math.floor(timestamp / 60);
   sun.intensity = currentLight.sunIntensity;
   sun.position.set(...currentLight.sunPosition);
@@ -2347,9 +2359,10 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(accumulated, 0.05);
   accumulated = 0;
   update(dt);
+  document.getElementById("status").dataset.sunDust = sunDust.update(dt,currentLight,curtainOpen,camera.position) ? String(sunDust.count) : "off";
   if (!privacyActive)
     for (const view of windowViews)
-      view.update(dt, homeTime ? (homeTime / 3600 + 9) % 24 : 14);
+      view.update(dt, currentLight.hour);
   renderer.render(
     privacyActive ? privacyScene : scene,
     privacyActive ? privacyCamera : camera,
