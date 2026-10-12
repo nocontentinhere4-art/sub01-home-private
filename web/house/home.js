@@ -17,6 +17,7 @@ import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
 import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
 import { ShadowRefresh } from './shadow_refresh.mjs';
+import { createInteriorTrim } from './interior_trim.mjs';
 if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).get("test") === "daytime")
   document.querySelector("header small").textContent += " / DAYTIME DEVICE TEST";
 const lite =
@@ -310,9 +311,10 @@ function frame(x, y, z, w = 0.65, h = 0.85) {
   t.colorSpace = T.SRGBColorSpace;
   const p = new T.Mesh(
     new T.PlaneGeometry(w, h),
-    new T.MeshBasicMaterial({ map: t }),
+    new T.MeshStandardMaterial({ map: t, roughness: .95, metalness: 0 }),
   );
   p.position.set(x, y, z + 0.021);
+  p.receiveShadow = true;
   scene.add(p);
 }
 // Architecture: loft over the living/kitchen, double-height studio and continuous wooden staircase.
@@ -2255,6 +2257,8 @@ function batchArchitecture() {
   }
   renderer.shadowMap.needsUpdate = true;
 }
+const interiorTrim = createInteriorTrim(T, scene);
+document.getElementById('status').dataset.interiorTrim = String(interiorTrim.count);
 batchArchitecture();
 // Stable IDs let offline light maps replace only geometry, preserving live devices.
 const bakedObjects = new Map();
