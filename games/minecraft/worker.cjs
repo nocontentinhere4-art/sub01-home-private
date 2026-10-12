@@ -8,6 +8,7 @@ const path = require('node:path');
 const readline = require('node:readline');
 const { Vec3 } = require('vec3');
 const { supportsPlayer, escapeTarget, placementSite } = require('./spatial.cjs');
+const { harvestResource } = require('./resources.cjs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
 if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
@@ -25,7 +26,8 @@ function visibleWood() {
   // Mineflayer checks matching against palette entries without a position.
   // Visibility can only be tested after resolving actual world blocks.
   const positions = bot.findBlocks({ matching: b => b.name.endsWith('_log'), maxDistance: 12, count: 48 });
-  return positions.map(p => bot.blockAt(p)).find(b => b && bot.canSeeBlock(b)) || null;
+  const visible = positions.map(p => bot.blockAt(p)).filter(b => b && bot.canSeeBlock(b));
+  return visible.find(b => bot.canDigBlock(b)) || visible[0] || null;
 }
 function visibleSoil() {
   const positions = bot.findBlocks({ matching: b => ['dirt', 'grass_block'].includes(b.name), maxDistance: 6, count: 64 });
@@ -97,12 +99,14 @@ io.on('connection', socket => {
     world.removeListenersFromBot(current);
   });
 });
-async function walkTo(position) {
+async function walkTo(position, horizontalOnly = false) {
   const player = bot;
   let timer;
   try {
     await Promise.race([
-      player.pathfinder.goto(new goals.GoalNear(...position, 2)),
+      player.pathfinder.goto(horizontalOnly
+        ? new goals.GoalNearXZ(position[0], position[2], 2)
+        : new goals.GoalNear(...position, 2)),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('path timeout')), 6000); })
     ]);
   } finally { clearTimeout(timer); player?.pathfinder.setGoal(null); }
@@ -118,12 +122,8 @@ async function act(command) {
   try {
     if (command.action === 'mine_wood' || command.action === 'gather_soil') {
       const block = command.action === 'mine_wood' ? visibleWood() : visibleSoil();
-      if (!block) throw new Error('resource not visible');
-      await walkTo(block.position.toArray());
-      if (generation !== ownGeneration || !active) return;
-      if (supportsPlayer(block.position, bot.entity.position)) throw new Error('keep the ground under my feet');
-      if (bot.entity.position.distanceTo(block.position) > 4.5) throw new Error('resource out of reach');
-      await bot.dig(bot.blockAt(block.position));
+      if (!await harvestResource(player, block, walkTo,
+        () => generation === ownGeneration && active)) return;
       reward = 0.15;
     } else if (command.action === 'place_block') {
       const item = bot.inventory.items().find(i => /(_log|_planks|dirt|cobblestone)$/.test(i.name));
