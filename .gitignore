@@ -45,3 +45,6 @@ node_modules/
 out/x-screenshots/
 out/SUB01-first-look-X*.zip
 out/SUB01-first-look-X-English/
+
+# Raw local scene exports, bake intermediates and rollback copies.
+out/lighting-v*/

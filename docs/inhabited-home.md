@@ -161,3 +161,12 @@ The real localhost UI set 80°/80%, reloaded and read those same values, then re
 The lounge pendant now uses a downward spotlight with a 1024-pixel cached shadow map, a broad soft cone and a small depth bias. This gives direct furniture/floor shadows even at night, when the sun light is off. The other ceiling and desk/bed lamps retain their previous unshadowed fill. Sun shadows are enabled only while the sun is above its intensity threshold. Forced lite mode now disables runtime shadow mapping altogether and retains the precomputed indirect maps and live unshadowed lighting.
 
 The actual localhost night renderer reported pendant shadow mode, showed furniture shadows on the rug/floor, and displayed approximately 46–48 fps on this Mac. Forced lite reported indirect-only and loaded without logged errors. Ten HomeWorld checks, bake-shape, view-control and interaction JS checks passed. Proof: `docs/screens/home/private-lounge-indoor-shadows.jpg`. Shadow maps remain cached between the existing invalidation events; moving-door shadows can lag until the next refresh. The changed lounge layout and spotlight still need a new indirect bake.
+
+
+## Current lounge bake and moving-door shadows
+
+A new 899×1234 day/night Cycles atlas was generated from the TV-facing lounge and downward pendant spotlight, restoring lighting for all changed contact patches and furniture shapes. Full mode applied all 71 receivers; forced lite applied 69 and reported indirect-only without logged errors. File sizes and SHA-256 hashes were checked against the updated manifest. Raw exports, intermediates and rollback copies are now explicitly excluded from Git by `out/lighting-v*/`.
+
+Cached door shadows now request updates at most 8 Hz during motion, followed by a final settled-pose update. Leaving bathroom privacy forces a room-shadow refresh, so rendering the privacy scene cannot consume the last room update. The rate helper is checked at 30/60 Hz and does not request updates for stationary doors. This supersedes the earlier moving-door shadow lag noted above.
+
+The live localhost visitor walked downstairs and approached the front door: the door refresh-request counter went from 0 to 8 during opening, then to 17 during closing and remained at 17 afterward. The room displayed about 47 fps on this Mac. Ten HomeWorld tests, the bake-shape guard and shadow refresh checks passed. Proof: `docs/screens/home/private-lounge-lighting-v3.jpg`. This is browser-room evidence; reference-level Unreal fidelity and physical-phone performance remain open checks.

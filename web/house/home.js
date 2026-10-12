@@ -16,6 +16,7 @@ import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
 import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
+import { ShadowRefresh } from './shadow_refresh.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -409,6 +410,7 @@ const knob = new T.Mesh(new T.SphereGeometry(0.027, 12, 8), M.brass);
 knob.position.set(0.94, 1.05, -0.06);
 frontDoorGroup.add(knob);
 let entranceOpen = false;
+const doorShadowRefresh = new ShadowRefresh();
 plant(2.9, 0, 5.3, 1);
 plant(1, 0, 5.3, 0.85);
 obstacle(2.9, 5.3, .35, .35);
@@ -1260,6 +1262,10 @@ function update(dt) {
     doorOpen ? 2.3 : 1.35,
     Math.min(1, dt * 8),
   );
+  const doorMotion = Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
+    Math.abs(bathDoor.position.z - (doorOpen ? 2.3 : 1.35)) > .001;
+  if (doorShadowRefresh.step(dt,doorMotion) && !lite && !privacyActive) renderer.shadowMap.needsUpdate = true;
+  document.getElementById("status").dataset.doorShadowRefreshes = String(doorShadowRefresh.count);
   const zone = privacyActive
     ? "bathroom"
     : p.y < 3 && p.z > 3.9
@@ -1418,6 +1424,7 @@ function closePanel() {
 }
 function setPrivacy(active) {
   if (active && !privacyActive) closePanel();
+  if (!active && privacyActive && !lite) renderer.shadowMap.needsUpdate = true;
   privacyActive = active;
   document.body.classList.toggle('privacy-active', active);
 }
@@ -2269,7 +2276,7 @@ async function applyContactLighting() {
   try {
     await beddingReady;
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=2"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=3"),
       useIndirectLighting ? new HDRLoader().loadAsync(
         "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr",
       ) : loader.loadAsync(
