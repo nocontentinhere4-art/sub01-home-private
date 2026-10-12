@@ -15,6 +15,11 @@ const lite =
   (navigator.deviceMemory && navigator.deviceMemory <= 4);
 const assetRoot = "/house/assets/" + (lite ? "lite/" : "");
 const scene = new T.Scene();
+const useIndirectLighting = !new URLSearchParams(location.search).has("ao") &&
+  !new URLSearchParams(location.search).has("bake");
+const indirectMaterials = [];
+const nightLightUniform = { value: null };
+const nightLightIntensity = { value: 0 };
 let currentLight = homeLighting(Date.now() / 1000);
 scene.background = new T.Color("#a6b7bc");
 scene.fog = new T.Fog("#b2b8b1", 22, 80);
@@ -66,7 +71,7 @@ new HDRLoader().load(
     const generator = new T.PMREMGenerator(renderer);
     const capturedEnvironment = generator.fromEquirectangular(hdr);
     scene.environment = capturedEnvironment.texture;
-    scene.environmentIntensity = currentLight.environment;
+    scene.environmentIntensity = currentLight.environment * (indirectMaterials.length ? 0.65 : 1);
     envTarget.dispose();
     hdr.dispose();
     generator.dispose();
@@ -859,8 +864,12 @@ function lighting(timestamp = Date.now() / 1000) {
   sun.intensity = currentLight.sunIntensity;
   sun.position.set(...currentLight.sunPosition);
   sun.color.set(currentLight.sunColor);
-  hemi.intensity = currentLight.hemisphere;
-  scene.environmentIntensity = currentLight.environment;
+  const hasIndirect = indirectMaterials.length > 0;
+  hemi.intensity = currentLight.hemisphere * (hasIndirect ? 0.55 : 1);
+  scene.environmentIntensity = currentLight.environment * (hasIndirect ? 0.65 : 1);
+  for (const material of indirectMaterials)
+    material.lightMapIntensity = currentLight.daylight * Math.PI;
+  nightLightIntensity.value = lampOn ? Math.PI : 0;
   scene.background.set(currentLight.sky);
   scene.fog.color.copy(scene.background);
   warm.intensity = lampOn ? 12 : 0;
@@ -1970,14 +1979,23 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    const [baked, ao] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/architecture.glb"),
-      loader.loadAsync(
+    const [baked, ao, night] = await Promise.all([
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb"),
+      useIndirectLighting ? new HDRLoader().loadAsync(
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr",
+      ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
+      useIndirectLighting ? new HDRLoader().loadAsync(
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr",
+      ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
     ao.colorSpace = T.NoColorSpace;
+    if (night) {
+      night.colorSpace = T.NoColorSpace;
+      nightLightUniform.value = night;
+    }
     scene.updateMatrixWorld(true);
     baked.scene.updateMatrixWorld(true);
     let applied = 0;
@@ -2001,7 +2019,8 @@ async function applyContactLighting() {
       );
       // Reject outdated bakes after any layout change instead of distorting furniture.
       if (
-        original.geometry.index?.count !== geometry.index?.count ||
+        (original.geometry.index?.count ?? original.geometry.attributes.position.count) !==
+          (geometry.index?.count ?? geometry.attributes.position.count) ||
         oldBounds.min.distanceTo(newBounds.min) > 0.03 ||
         oldBounds.max.distanceTo(newBounds.max) > 0.03
       ) {
@@ -2011,12 +2030,34 @@ async function applyContactLighting() {
       original.geometry.dispose();
       original.geometry = geometry;
       original.material = original.material.clone();
-      original.material.aoMap = ao;
-      original.material.aoMapIntensity = 1;
+      if (useIndirectLighting) {
+        original.material.aoMap = null;
+        original.material.lightMap = ao;
+        // Cycles' white diffuse bake is outgoing radiance; Three expects irradiance.
+        original.material.lightMapIntensity = currentLight.daylight * Math.PI;
+        original.material.onBeforeCompile = (shader) => {
+          shader.uniforms.homeNightLightMap = nightLightUniform;
+          shader.uniforms.homeNightLightIntensity = nightLightIntensity;
+          shader.fragmentShader = "uniform sampler2D homeNightLightMap;\nuniform float homeNightLightIntensity;\n" +
+            shader.fragmentShader.replace("#include <lights_fragment_maps>",
+              T.ShaderChunk.lights_fragment_maps.replace(
+                "irradiance += lightMapIrradiance;",
+                "irradiance += lightMapIrradiance + texture2D(homeNightLightMap, vLightMapUv).rgb * homeNightLightIntensity;",
+              ));
+        };
+        original.material.customProgramCacheKey = () => "private-home-day-night-indirect-v1";
+        indirectMaterials.push(original.material);
+      } else {
+        original.material.aoMap = ao;
+        original.material.aoMapIntensity = 1;
+      }
       original.material.needsUpdate = true;
       applied++;
     });
     document.getElementById("status").dataset.contactMaps = String(applied);
+    if (useIndirectLighting)
+      document.getElementById("status").dataset.indirectMaps = String(applied);
+    if (useIndirectLighting) lighting(homeTime);
     renderer.shadowMap.needsUpdate = true;
   } catch (error) {
     console.warn("Contact lighting unavailable:", error.message);
