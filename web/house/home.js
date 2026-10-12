@@ -7,12 +7,14 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createWindowView } from "/room/window_view.js?v=home1";
+import { homeLighting } from "./lighting.mjs";
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
   (navigator.deviceMemory && navigator.deviceMemory <= 4);
 const assetRoot = "/house/assets/" + (lite ? "lite/" : "");
 const scene = new T.Scene();
+let currentLight = homeLighting(Date.now() / 1000);
 scene.background = new T.Color("#a6b7bc");
 scene.fog = new T.Fog("#b2b8b1", 22, 80);
 const renderer = new T.WebGLRenderer({
@@ -61,7 +63,7 @@ new HDRLoader().load(
     const generator = new T.PMREMGenerator(renderer);
     const capturedEnvironment = generator.fromEquirectangular(hdr);
     scene.environment = capturedEnvironment.texture;
-    scene.environmentIntensity = 0.65;
+    scene.environmentIntensity = currentLight.environment;
     envTarget.dispose();
     hdr.dispose();
     generator.dispose();
@@ -725,6 +727,7 @@ scene.add(warm);
 const bedLight = new T.PointLight("#ffc88a", 5, 4, 2);
 bedLight.position.set(-3.55, 3.9, -3.1);
 scene.add(bedLight);
+const ceilingLights = [];
 for (const [x, y, z] of [
   [-2, 2.55, 0.5],
   [2, 5.1, -0.2],
@@ -732,6 +735,10 @@ for (const [x, y, z] of [
   const pendant = cylinder(0.23, 0.15, x, y, z, M.white);
   beam([x, y + 0.1, z], [x, 6, z], 0.006, M.black);
   cylinder(0.18, 0.013, x, y - 0.077, z, glowMat);
+  const light = new T.PointLight("#ffddb0", 10, 5, 2);
+  light.position.set(x, y - 0.12, z);
+  ceilingLights.push(light);
+  scene.add(light);
 }
 // Distant city geometry, not a heavy second scene.
 const facadeCanvas = document.createElement("canvas");
@@ -795,15 +802,22 @@ box(1.8, 0.4, 1.8, 10, 6.4, 24, M.white, 0);
 beam([10, 8.8, 24], [10, 12, 24], 0.07, towerPaint);
 let lampOn = true,
   curtainOpen = false,
-  mood = 0;
-function lighting() {
-  const night = mood === 1;
-  sun.intensity = night ? 0.08 : 3.2;
-  hemi.intensity = night ? 0.3 : 0.95;
-  scene.background.set(night ? "#202e3e" : "#bcc8ce");
+  lastLightMinute = -1;
+function lighting(timestamp = Date.now() / 1000) {
+  currentLight = homeLighting(timestamp);
+  lastLightMinute = Math.floor(timestamp / 60);
+  sun.intensity = currentLight.sunIntensity;
+  sun.position.set(...currentLight.sunPosition);
+  sun.color.set(currentLight.sunColor);
+  hemi.intensity = currentLight.hemisphere;
+  scene.environmentIntensity = currentLight.environment;
+  scene.background.set(currentLight.sky);
   scene.fog.color.copy(scene.background);
-  warm.intensity = lampOn ? 3 : 0;
-  bedLight.intensity = lampOn ? 2 : 0;
+  warm.intensity = lampOn ? 12 : 0;
+  bedLight.intensity = lampOn ? 10 : 0;
+  ceilingLights.forEach((light) => {
+    light.intensity = lampOn ? 10 : 0;
+  });
   glowMat.emissiveIntensity = lampOn ? 1.3 : 0;
   renderer.shadowMap.needsUpdate = true;
 }
@@ -1666,8 +1680,8 @@ function acceptHome(state) {
   const changed = lampOn !== settings.lamp || curtainOpen !== settings.curtain;
   lampOn = settings.lamp !== false;
   curtainOpen = !!settings.curtain;
-  if (changed) {
-    lighting();
+  if (changed || Math.floor(homeTime / 60) !== lastLightMinute) {
+    lighting(homeTime);
     shade();
   }
   drawTV();
@@ -1731,7 +1745,7 @@ setInterval(syncState, 3000);
 setInterval(() => {
   const fresh = performance.now() - onlineAt < 5000;
   document.getElementById("connection").textContent = fresh
-    ? "● LIVE / " + (following ? "his eyes" : "visitor mode")
+    ? "● LOCAL / " + (following ? "his eyes" : "visitor mode")
     : "Reconnecting…";
 }, 1000);
 document.getElementById("pc").onclick = () => {
@@ -1833,7 +1847,12 @@ async function applyContactLighting() {
     baked.scene.traverse((part) => {
       if (!part.isMesh) return;
       const original = bakedObjects.get(part.userData.bakeId || part.name);
-      if (!original || original.userData.flexibleCloth || !part.geometry.attributes.uv1) return;
+      if (
+        !original ||
+        original.userData.flexibleCloth ||
+        !part.geometry.attributes.uv1
+      )
+        return;
       const geometry = part.geometry.clone();
       geometry.applyMatrix4(part.matrixWorld);
       geometry.applyMatrix4(original.matrixWorld.clone().invert());
