@@ -106,3 +106,10 @@ The localhost visitor test opened the PC panel and walked into the upstairs bath
 The kitchen's flat black sink placeholder has been replaced with a recessed basin, metal rim, drain and curved tube faucet. One extruded stone countertop has an actual hole and no seams between separate slabs. The base cabinet is lower beneath the basin so it does not fill the cavity. A small unshadowed work light below the upper cupboard follows the existing shared lamp setting. This is a visual fixture; running water, washing and cooking interactions are not implemented.
 
 The actual localhost visitor walked downstairs and along the narrow sofa/stair aisle to inspect the kitchen. The new geometry rendered at about 46–48 fps on this Mac. Switching the protected shared lamp setting off darkened the worktop and switching it back on restored it. Existing geometry retained 61 matched indirect-light parts; the changed cabinet/countertop rejected their old bake and still need a new bake. Nine HomeWorld tests and the movement/interaction JS checks passed. Proof: `docs/screens/home/private-kitchen-recessed-sink.jpg`.
+
+
+## Interior changes in baked batches
+
+The previous bake guard checked total element count and outer bounds. A changed cupboard inside the large dark-wood batch retained both, so loading the bake restored its old top and filled the recessed sink with wood. The guard now compares world-space vertex positions in both directions, allowing UV seam duplication, vertex reordering and 0.3-mm export rounding. The changed batch is rejected while unchanged parts retain their lighting. A geometry regression reproduces the same-bounds/same-count interior edit.
+
+The live localhost renderer retained 60 matched indirect-light parts and displayed the open metal basin and drain instead of the old wooden top, at about 48 fps on this Mac. Nine HomeWorld tests and the new shape regression passed. Proof: `docs/screens/home/private-kitchen-bake-corrected.jpg`. A new bake remains needed for changed furniture; vertex positions alone do not verify triangle connectivity for hypothetical rewiring using exactly the same vertices.

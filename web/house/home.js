@@ -13,6 +13,7 @@ import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
 import { terraceAllows } from './terrace_space.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
+import { sameVertexPositions } from './bake_shape.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -2221,6 +2222,7 @@ async function applyContactLighting() {
     baked.scene.updateMatrixWorld(true);
     let applied = 0;
     const unused = new Set(bakedObjects.values());
+    const sourcePositions = new Map();
     baked.scene.traverse((part) => {
       if (!part.isMesh) return;
       const worldGeometry = part.geometry.clone().applyMatrix4(part.matrixWorld);
@@ -2228,9 +2230,15 @@ async function applyContactLighting() {
       const matches = object => {
         if (!object || !unused.has(object) || object.userData.flexibleCloth) return false;
         const bounds = new T.Box3().setFromBufferAttribute(object.geometry.attributes.position).applyMatrix4(object.matrixWorld);
-        return (object.geometry.index?.count ?? object.geometry.attributes.position.count) ===
-          (worldGeometry.index?.count ?? worldGeometry.attributes.position.count) &&
-          bounds.min.distanceTo(worldBounds.min) <= .03 && bounds.max.distanceTo(worldBounds.max) <= .03;
+        if ((object.geometry.index?.count ?? object.geometry.attributes.position.count) !==
+          (worldGeometry.index?.count ?? worldGeometry.attributes.position.count) ||
+          bounds.min.distanceTo(worldBounds.min) > .03 || bounds.max.distanceTo(worldBounds.max) > .03) return false;
+        if (!sourcePositions.has(object)) {
+          const source = object.geometry.clone().applyMatrix4(object.matrixWorld);
+          sourcePositions.set(object, source.attributes.position.array);
+          source.dispose();
+        }
+        return sameVertexPositions(sourcePositions.get(object), worldGeometry.attributes.position.array);
       };
       let original = bakedObjects.get(part.userData.bakeId || part.name);
       if (!matches(original)) {
