@@ -22,7 +22,10 @@ def exr(path):
 regions={'loft_soffit':np.zeros((h,w),bool),'walls':np.zeros((h,w),bool)}
 faces={key:0 for key in regions}
 for mesh in meta['meshes']:
- p=mesh['primitives'][0];a=p['attributes'];positions=read(a['POSITION']);normals=read(a['NORMAL']);uv=read(a['TEXCOORD_1'])*[w,h]
+ p=mesh['primitives'][0];a=p['attributes'];positions=read(a['POSITION']);normals=read(a['NORMAL']);uv=read(a['TEXCOORD_1'])
+ # Blender glTF importer converts v -> 1-v. image.pixels is bottom-origin.
+ # Raw glTF UVs directly over image.pixels would select unrelated atlas faces.
+ uv[:,1]=1-uv[:,1];uv=uv*[w,h]
  for indices in read(p['indices']).reshape(-1,3):
   xyz=positions[indices];normal=normals[indices].mean(axis=0);area=np.linalg.norm(np.cross(xyz[1]-xyz[0],xyz[2]-xyz[0]))/2
   if area<.25:continue
@@ -38,7 +41,7 @@ for mesh in meta['meshes']:
   interior=(u>.025)&(v>.025)&(1-u-v>.025)
   regions[key][lo[1]:hi[1]+1,lo[0]:hi[0]+1]|=interior;faces[key]+=1
 old,new=exr(before),exr(after)
-result={'width':w,'height':h,'before':str(before),'after':str(after),'interpretation':'Unfiltered atlas-face interior neighbor residuals are a spatial-noise proxy. Two budgets do not establish absolute convergence; visual comparison still required.','regions':{}}
+result={'width':w,'height':h,'before':str(before),'after':str(after),'uv_convention':'glTF v flipped as Blender import; EXR image.pixels bottom origin','interpretation':'Unfiltered atlas-face interior neighbor residuals are a spatial-noise proxy. Two budgets do not establish absolute convergence; visual comparison still required.','regions':{}}
 for key,mask in regions.items():
  safe=mask[1:-1,1:-1]&mask[:-2,1:-1]&mask[2:,1:-1]&mask[1:-1,:-2]&mask[1:-1,2:]
  assert safe.sum()>100,key+' region insufficient'

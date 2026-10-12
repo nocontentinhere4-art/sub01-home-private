@@ -360,7 +360,7 @@ function frame(x, y, z, w = 0.65, h = 0.85) {
 // Architecture: loft over the living/kitchen, double-height studio and continuous wooden staircase.
 floor(8, 8, 0, 0, 0);
 floor(3.8, 8, -2.1, 3, 0);
-floor(1, 2, 0.3, 3, -2.85);
+floor(1, 2.15, 0.3, 3, -2.775);
 floor(3.8, 1.25, -2.1, 3, 4.625);
 box(8, 0.2, 8, 0, 6.05, 0, M.wall, 0);
 box(8, 6, 0.18, 0, 3, -4, M.wall, 0);
@@ -546,7 +546,7 @@ const sofaPillowFabric = sofaFabric.clone();
 sofaPillowFabric.color.setRGB(1, .72, .44);
 const sofaSeamFabric = sofaFabric.clone();
 sofaSeamFabric.color.setRGB(.69, .45, .25);
-const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=1').then(gltf => {
+const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=2').then(gltf => {
   const root = gltf.scene;
   root.position.set(-1.8, 0, .1);
   root.rotation.y = -Math.PI / 2;
@@ -2580,12 +2580,18 @@ async function applyContactLighting() {
         "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=16",
       ) : Promise.resolve(null),
     ]);
+    // Atlas UVs retain glTF top-origin V; HDRLoader defaults to the opposite orientation.
+    ao.flipY = false;
     ao.channel = 1;
     ao.colorSpace = T.NoColorSpace;
     if (night) {
+      night.flipY = false;
       night.colorSpace = T.NoColorSpace;
       nightLightUniform.value = night;
     }
+    document.getElementById("status").dataset.atlasOrientation = JSON.stringify({
+      dayFlipY: ao.flipY, nightFlipY: night?.flipY ?? null, channel: ao.channel,
+    });
     scene.updateMatrixWorld(true);
     baked.scene.updateMatrixWorld(true);
     let applied = 0;

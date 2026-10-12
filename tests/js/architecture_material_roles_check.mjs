@@ -9,7 +9,7 @@ const scene=new T.Scene(),boxes=[];
 const box=(...args)=>boxes.push(args);
 const start=source.indexOf('function floor('),end=source.indexOf('\nfunction rug(',start);
 const floor=new Function('T','scannedWood','scene','box','M',source.slice(start,end)+';return floor;')(T,scannedWood,scene,box,M);
-for(const [w,d,x,y,z] of [[8,8,0,0,0],[3.8,8,-2.1,3,0],[1,2,.3,3,-2.85],[3.8,1.25,-2.1,3,4.625]]){
+for(const [w,d,x,y,z] of [[8,8,0,0,0],[3.8,8,-2.1,3,0],[1,2.15,.3,3,-2.775],[3.8,1.25,-2.1,3,4.625]]){
  floor(w,d,x,y,z);
  const slab=boxes.at(-1),top=scene.children.at(-1);
  assert.deepEqual(slab.slice(0,6),[w,.12,d,x,y-.06,z],'supporting slab dimensions/position unchanged');
@@ -31,4 +31,4 @@ for(let i=0;i<17;i++){
  assert.equal(body[6],plaster);assert.equal(tread[6],oak);
  assert.ok(!Array.isArray(body[6])&&!Array.isArray(tread[6]),'single-material receiver path remains bake-compatible');
 }
-console.log('PASS: unchanged slab/stair counts, dimensions and coordinates; upper plaster soffits/body, oak top/treads/nosing; physical top UV; single-material bake receivers');
+console.log('PASS: slab/stair counts and repaired landing footprint; upper plaster soffits/body, oak top/treads/nosing; physical top UV; single-material bake receivers');

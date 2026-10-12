@@ -1,5 +1,5 @@
 {
-  "geometry": "Original soft fabric sofa and two relaxed plain pillows. Adapted design/proportions, not manufacturer CAD.",
+  "geometry": "Original tailored cloth sofa: approved organic silhouette, selectively subdivided textile faces and 1.5\u20133.5mm seam/foam compression. Not a soft-body simulation or manufacturer CAD.",
   "reference_url": "https://www.karimoku-case.com/furniture/n-s03/",
   "reference_dimensions_m": [
     1.815,
@@ -31,8 +31,10 @@
     "https://polyhaven.com/a/fine_grained_wood"
   ],
   "runtime_materials": "4 shared house materials; linen main/pillows/seams, oak legs; no embedded bitmaps",
-  "vertices": 6220,
-  "triangles": 12340,
-  "glb_bytes": 364456,
-  "sha256": "1ecdc5a3b4b08ded9e52e4fdec10837e35f39d92cc66c8bd980ebf231075799c"
+  "vertices": 7960,
+  "triangles": 15820,
+  "glb_bytes": 446008,
+  "sha256": "5f1fe7bf7e0897ef12a3c432c3221b261fc6405891354aae0a90f1e61360bcd4",
+  "generator": "tools/build_home_sofa_cloth.py",
+  "geometry_revision": 2
 }
