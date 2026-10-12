@@ -1176,6 +1176,7 @@ function update(dt) {
 let homeState = null,
   computerState = {},
   panelKind = "",
+  computerApp = "linux",
   phoneApp = "home",
   onlineAt = 0,
   brainStage = "",
@@ -1238,6 +1239,8 @@ function button(text, fn) {
   return e;
 }
 function openPanel(kind) {
+  if (kind === "computer")
+    computerApp = homeState?.activity === "use_computer" ? "linux" : "browser";
   panelKind = kind;
   panel.hidden = false;
   renderPanel(true);
@@ -1279,21 +1282,21 @@ function renderPanel(reset = false) {
       apps.className = "apps";
       apps.append(
         button("Linux", () => {
-          phoneApp = "linux";
+          computerApp = "linux";
           renderPanel(true);
         }),
         button("Browser", () => {
-          phoneApp = "browser";
+          computerApp = "browser";
           renderPanel(true);
         }),
       );
       panelBody.append(apps);
-      if (phoneApp === "browser") {
+      if (computerApp === "browser") {
         browserFrame("desk", panelBody);
         panelBody.append(
           textEl(
             "p",
-            "The real browser selected by his brain. Public view is read-only.",
+            "His live browser. SUB-01 chooses where to navigate; this view follows him.",
             "muted",
           ),
         );
@@ -1882,7 +1885,6 @@ setInterval(() => {
     : "Reconnecting…";
 }, 1000);
 document.getElementById("pc").onclick = () => {
-  phoneApp = "linux";
   openPanel("computer");
 };
 document.getElementById("tv").onclick = () => openPanel("pong");
