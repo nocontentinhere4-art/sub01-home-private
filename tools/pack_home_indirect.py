@@ -1,5 +1,6 @@
 """Validate and pack a Cycles light bake as RGBE HDR for the existing web loader."""
 import json
+import hashlib
 import sys
 from pathlib import Path
 
@@ -14,7 +15,8 @@ image.pixels.foreach_get(pixels)
 rgb = pixels.reshape(-1, 4)[:, :3]
 assert np.isfinite(rgb).all() and np.min(rgb) >= 0, "Invalid irradiance values"
 assert np.count_nonzero(rgb) > len(rgb) * 0.1, "Empty bake"
-stats = {"width": image.size[0], "height": image.size[1],
+stats = {"source_exr_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+         "width": image.size[0], "height": image.size[1],
          "max": float(rgb.max()), "p95": float(np.percentile(rgb.max(axis=1), 95)),
          "nonzero": float(np.mean(rgb.max(axis=1) > 0)),
          "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"}

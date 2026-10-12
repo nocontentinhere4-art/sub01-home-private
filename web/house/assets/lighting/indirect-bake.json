@@ -1,59 +1,104 @@
 {
-  "source_sha256": "578e0cb33ac651f97bcd576e2cf3e495c48d9ededdc9f8144ee392d9dc7a000a",
+  "source_sha256": "a27c74869c33618f6b3d5dabef5b1543627863fd7728362f41f2846d402aaafb",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
-  "samples": 128,
+  "samples": 512,
   "diffuse_bounces": 4,
   "direct_light": false,
   "albedo_in_bake": false,
   "receivers": 111,
   "export_material_texture_limit": 512,
-  "layout": "Flatwoven rug bodies with perimeter hems; no interior bars; unchanged rug footprint, source materials and geometry freshly exported",
+  "layout": "Repaired stair landing and sofa cloth revision2; raw glTF irradiance atlas orientation corrected",
   "day": {
-    "width": 1348,
-    "height": 1353,
-    "max": 13.641186714172363,
-    "p95": 0.4611640080809592,
-    "nonzero": 0.5038177607295361,
+    "source_exr_sha256": "55009c035a42b9b218bd3b1a71d7e4cac80653d4ca190b491474f56b02855ff6",
+    "width": 1350,
+    "height": 1349,
+    "max": 8.116704940795898,
+    "p95": 0.4507311761379241,
+    "nonzero": 0.5318699722702688,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "width": 1348,
-    "height": 1353,
-    "max": 7.767798900604248,
-    "p95": 0.006225209613330661,
-    "nonzero": 0.43228697191207144,
+    "source_exr_sha256": "b265ffc2691a6bd79fffcf67e79bed3fd24c49724b6edea6acf2652c10005742",
+    "width": 1350,
+    "height": 1349,
+    "max": 11.021322250366211,
+    "p95": 0.006263431301340446,
+    "nonzero": 0.4551986382231008,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "354136040a5ff79670a8f4ae95b213f79e2fd891f20c683a48a005f664e32ebf",
-      "bytes": 10151548
+      "sha256": "920399a64a554534f64d30232506fa83b4ffbf139c3b60ba917a4581186651b9",
+      "bytes": 10267856
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "28d5347424b63561ef727dc31b3fbff6956412ab6cb08059299c2dfd4d47a372",
-      "bytes": 3906164
+      "sha256": "73d945dbd8cd3ee08a4a6d859c203b678be20b7e49b889b605f8df099ef51b82",
+      "bytes": 3916736
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "6ed22c301989fd3c82f1add3b350b7d05498cfd4cfa97f8f23a427bb6a2a421c",
-      "bytes": 714236
+      "sha256": "702931f767827e9edff58e89d6d6f632fd618283f22fc97a5876005b20035f10",
+      "bytes": 705681
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "d89ebc41919b5994111b419008002c4687ccc393aff33c807d68cfb6c4477626",
-      "bytes": 3499906
+      "sha256": "c43cc788eebcaeefd3ef3327c49c50bac8cbe3402b7a16e89d726ab90d839c96",
+      "bytes": 3547455
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "121e1b86bb2f3c21e1db96bfcaa627dab4ef644a458ae2401f978238898707b1",
-      "bytes": 650452
+      "sha256": "cfeae7a9dfc01f0a1c86049696d51b8628a4a3e2176e81dccae8d8103dba46b6",
+      "bytes": 643674
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
   "seed": 0,
   "adaptive_sampling": false,
   "denoising": false,
-  "sampling_note": "New rug source/atlas,128 unfiltered samples, no cross-chart filtering."
+  "sampling_note": "Matched finished day/night bakes; packed without denoising or atlas blur.",
+  "atlas_orientation": "raw glTF UV; day/night flipY=false",
+  "day_sampling_comparison": {
+    "uv_convention": "glTF v flipped as Blender import; EXR image.pixels bottom origin",
+    "interpretation": "Unfiltered atlas-face interior neighbor residuals are a spatial-noise proxy. Two budgets do not establish absolute convergence; visual comparison still required.",
+    "regions": {
+      "loft_soffit": {
+        "before": {
+          "mean_linear_luminance": 0.12793758511543274,
+          "neighbor_residual_rms": 0.05312458425760269,
+          "neighbor_residual_median_abs": 0.01362623367458582,
+          "neighbor_residual_p95_abs": 0.11654192805290216
+        },
+        "after": {
+          "mean_linear_luminance": 0.12729711830615997,
+          "neighbor_residual_rms": 0.02583581767976284,
+          "neighbor_residual_median_abs": 0.006887713447213173,
+          "neighbor_residual_p95_abs": 0.0574542962014675
+        },
+        "pixels": 29298,
+        "faces": 16,
+        "rms_ratio_after_before": 0.4863250798252687,
+        "change_rms": 0.0526600182056427
+      },
+      "walls": {
+        "before": {
+          "mean_linear_luminance": 0.16356444358825684,
+          "neighbor_residual_rms": 0.05278448387980461,
+          "neighbor_residual_median_abs": 0.02486664056777954,
+          "neighbor_residual_p95_abs": 0.11050621271133415
+        },
+        "after": {
+          "mean_linear_luminance": 0.16366590559482574,
+          "neighbor_residual_rms": 0.0276237353682518,
+          "neighbor_residual_median_abs": 0.012627020478248596,
+          "neighbor_residual_p95_abs": 0.055113080143928475
+        },
+        "pixels": 65473,
+        "faces": 50,
+        "rms_ratio_after_before": 0.5233305952399521,
+        "change_rms": 0.05126229301095009
+      }
+    }
+  }
 }
