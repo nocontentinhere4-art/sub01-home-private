@@ -478,7 +478,29 @@ furnished("modern_coffee_table_01", -2, 0, 0.3, 1.65, Math.PI / 2);
 furnished("potted_plant_01", -3.45, 0, 2.7, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
 furnished("throw_pillows_01", -2, 0.42, 2.02, 1.25);
-furnished("desk_lamp_arm_01", 2.78, 0.74, -2.73, 0.32, -0.7);
+furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
+  if (!root) return;
+  root.updateMatrixWorld(true);
+  const bottom = new T.Box3().setFromObject(root).min.y;
+  const foot = new T.Vector3(), vertex = new T.Vector3();
+  let count = 0;
+  root.traverse((part) => {
+    if (!part.isMesh) return;
+    const positions = part.geometry.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+      vertex.fromBufferAttribute(positions, i).applyMatrix4(part.matrixWorld);
+      if (vertex.y < bottom + 0.002) {
+        foot.add(vertex);
+        count++;
+      }
+    }
+  });
+  if (count) {
+    foot.divideScalar(count);
+    cylinder(0.065, 0.018, foot.x, 0.854, foot.z, M.black);
+    renderer.shadowMap.needsUpdate = true;
+  }
+});
 // Kitchen, integrated oak cabinetry, stone countertop, sink and coffee corner.
 box(3.05, 0.86, 0.62, -2.2, 0.43, -3.55, M.wood, 0.015);
 box(3.16, 0.055, 0.7, -2.2, 0.895, -3.53, M.stone, 0.018);
@@ -1650,8 +1672,81 @@ interactions.push({
 });
 drawPong(tvCanvas);
 const phoneMesh = box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014);
+// A shared-state display, rather than a second application or browser instance.
+const phoneCanvas = document.createElement("canvas");
+phoneCanvas.width = 256;
+phoneCanvas.height = 512;
+const phoneTexture = new T.CanvasTexture(phoneCanvas);
+phoneTexture.colorSpace = T.SRGBColorSpace;
+const phoneDisplay = new T.Mesh(
+  new T.PlaneGeometry(0.067, 0.137),
+  new T.MeshBasicMaterial({ map: phoneTexture, toneMapped: false }),
+);
+phoneDisplay.rotation.x = -Math.PI / 2;
+phoneDisplay.position.set(2.7, 0.866, -2.92);
+scene.add(phoneDisplay);
+// Screen, speaker and buttons remain in one group so batching cannot separate them.
+const phoneSpeaker = box(0.019, 0.001, 0.003, 2.7, 0.867, -2.982, M.black, 0);
+const phoneVolume = box(0.002, 0.004, 0.025, 2.662, 0.858, -2.94, M.metal, 0);
+const phonePower = box(0.002, 0.004, 0.014, 2.738, 0.858, -2.94, M.metal, 0);
+for (const part of [phoneSpeaker, phoneVolume, phonePower]) {
+  scene.remove(part);
+  phoneDisplay.attach(part);
+}
+let phoneDisplayKey = "";
+const phoneClockFormat = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit",
+});
+function drawPhone() {
+  const time = phoneClockFormat.format(new Date(homeTime * 1000));
+  const battery = homeState?.phone?.battery;
+  const key = `${time}/${battery ?? "—"}`;
+  if (key === phoneDisplayKey) return;
+  phoneDisplayKey = key;
+  const ctx = phoneCanvas.getContext("2d");
+  const gradient = ctx.createLinearGradient(0, 0, 256, 512);
+  gradient.addColorStop(0, "#172b30");
+  gradient.addColorStop(1, "#523629");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 512);
+  ctx.fillStyle = "#f7eee4";
+  ctx.font = "18px system-ui";
+  ctx.textAlign = "right";
+  ctx.fillText(`${battery ?? "—"}%`, 230, 42);
+  ctx.textAlign = "center";
+  ctx.font = "52px system-ui";
+  ctx.fillText(time, 128, 145);
+  ctx.font = "15px system-ui";
+  ctx.fillText("TOKYO / SUB-01", 128, 173);
+  const apps = [
+    ["Notes", "N", "#ba8c50"], ["Memory", "M", "#668c80"],
+    ["Browser", "W", "#5e8699"], ["Messages", "+", "#928078"],
+    ["Music", "♪", "#a86852"], ["Home", "H", "#817b66"],
+  ];
+  apps.forEach(([label, glyph, color], i) => {
+    const x = 49 + (i % 3) * 79, y = 237 + Math.floor(i / 3) * 102;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x - 25, y, 50, 50, 12);
+    ctx.fill();
+    ctx.fillStyle = "#fff5e8";
+    ctx.font = "25px system-ui";
+    ctx.fillText(glyph, x, y + 34);
+    ctx.font = "12px system-ui";
+    ctx.fillText(label, x, y + 69);
+  });
+  ctx.fillStyle = "#fff5e8";
+  ctx.fillRect(84, 481, 88, 4);
+  phoneTexture.needsUpdate = true;
+}
+drawPhone();
 interactions.push({
   object: phoneMesh,
+  label: "E · Phone",
+  fn: () => openPanel("phone"),
+});
+interactions.push({
+  object: phoneDisplay,
   label: "E · Phone",
   fn: () => openPanel("phone"),
 });
@@ -1722,6 +1817,7 @@ function acceptHome(state) {
     shade();
   }
   drawTV();
+  drawPhone();
   if (state.activity === "use_computer") drawComputer();
   renderPanel();
 }
