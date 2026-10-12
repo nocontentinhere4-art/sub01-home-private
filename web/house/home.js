@@ -2334,21 +2334,26 @@ async function applyContactLighting() {
     let applied = 0;
     const unused = new Set(bakedObjects.values());
     const sourcePositions = new Map();
+    const sourceBounds = new Map();
+    const rejectedBakes = [];
     baked.scene.traverse((part) => {
       if (!part.isMesh) return;
       const worldGeometry = part.geometry.clone().applyMatrix4(part.matrixWorld);
       const worldBounds = new T.Box3().setFromBufferAttribute(worldGeometry.attributes.position);
       const matches = object => {
         if (!object || !unused.has(object) || object.userData.flexibleCloth) return false;
-        const bounds = new T.Box3().setFromBufferAttribute(object.geometry.attributes.position).applyMatrix4(object.matrixWorld);
         if ((object.geometry.index?.count ?? object.geometry.attributes.position.count) !==
-          (worldGeometry.index?.count ?? worldGeometry.attributes.position.count) ||
-          bounds.min.distanceTo(worldBounds.min) > .03 || bounds.max.distanceTo(worldBounds.max) > .03) return false;
+          (worldGeometry.index?.count ?? worldGeometry.attributes.position.count)) return false;
         if (!sourcePositions.has(object)) {
           const source = object.geometry.clone().applyMatrix4(object.matrixWorld);
           sourcePositions.set(object, source.attributes.position.array);
+          // Rotating a local AABB enlarges it; derive exact world bounds from
+          // transformed vertices so a rotated cushion keeps its valid bake.
+          sourceBounds.set(object, new T.Box3().setFromBufferAttribute(source.attributes.position));
           source.dispose();
         }
+        const bounds = sourceBounds.get(object);
+        if (bounds.min.distanceTo(worldBounds.min) > .03 || bounds.max.distanceTo(worldBounds.max) > .03) return false;
         return sameVertexPositions(sourcePositions.get(object), worldGeometry.attributes.position.array);
       };
       let original = bakedObjects.get(part.userData.bakeId || part.name);
@@ -2363,6 +2368,7 @@ async function applyContactLighting() {
         original.userData.flexibleCloth ||
         !part.geometry.attributes.uv1
       ) {
+        rejectedBakes.push({id: part.userData.bakeId || part.name, reason: original ? 'flexible-or-missing-uv' : 'shape-not-found'});
         worldGeometry.dispose();
         return;
       }
@@ -2381,6 +2387,7 @@ async function applyContactLighting() {
         oldBounds.min.distanceTo(newBounds.min) > 0.03 ||
         oldBounds.max.distanceTo(newBounds.max) > 0.03
       ) {
+        rejectedBakes.push({id: part.userData.bakeId || part.name, reason: 'local-bounds-or-count'});
         geometry.dispose();
         return;
       }
@@ -2418,6 +2425,7 @@ async function applyContactLighting() {
       applied++;
     });
     document.getElementById("status").dataset.contactMaps = String(applied);
+    document.getElementById("status").dataset.rejectedBakes = JSON.stringify(rejectedBakes);
     if (useIndirectLighting)
       document.getElementById("status").dataset.indirectMaps = String(applied);
     if (useIndirectLighting) lighting(homeTime);
