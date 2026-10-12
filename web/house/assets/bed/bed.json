@@ -1,0 +1,19 @@
+{
+  "reference": "https://www.muji.eu/products/double-platform-bed-frame-oak-18913",
+  "geometry": "Original adapted oak platform-bed geometry; no manufacturer CAD or product textures",
+  "dimensions_m": [
+    1.7,
+    2.22,
+    0.95
+  ],
+  "mattress_top_m": 0.57,
+  "collision_envelope_m": [
+    1.75,
+    2.3
+  ],
+  "wood_material": "Existing Poly Haven fine_grained_wood CC0 maps",
+  "vertices": 2688,
+  "faces": 2644,
+  "glb_bytes": 340096,
+  "sha256": "8f7e77fecf01f54b67301ca2f93b3c9e41dd9cdbaea15f102d889b47f2505f31"
+}

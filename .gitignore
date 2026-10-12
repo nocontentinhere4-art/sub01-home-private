@@ -54,3 +54,7 @@ out/pillow-before/
 
 # Editable private Blender project generated from the local house
 out/home-editable/
+
+# Blender rotating editor backups
+*.blend1
+*.blend2

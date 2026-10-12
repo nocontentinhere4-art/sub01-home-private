@@ -678,9 +678,40 @@ for (let y = 0.25; y < 2.6; y += 0.45) {
 }
 frame(2, 3.75, -3.885, 1.3, 1.8);
 frame(-2.2, 4.65, -3.88, 0.9, 1.2);
-// Bedroom upstairs: upholstered bed, layered linen and bedside light.
-box(1.65, 0.3, 2.25, -2.4, 3.25, -2.35, M.darkwood, 0.06);
-box(1.65, 0.98, 0.16, -2.4, 3.63, -3.5, M.cream, 0.08);
+// Bedroom upstairs: reference-built Blender bed, layered linen and bedside light.
+const bedFrameFallback = [
+  box(1.65, 0.3, 2.25, -2.4, 3.25, -2.35, M.darkwood, 0.06),
+  box(1.65, 0.98, 0.16, -2.4, 3.63, -3.5, M.cream, 0.08),
+];
+for (const object of bedFrameFallback) object.userData.replaceable = true;
+const bedOak = pbr('fine_grained_wood', [1, 1]);
+bedOak.color.set('#e7d5b5');
+bedOak.roughness = .65;
+// Keep the scanned grain/normal detail while grading its dark-wood albedo to
+// the lighter oak reference. This does not affect other furniture materials.
+function gradeOak(shader) {
+  shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>',
+    '#include <map_fragment>\n' +
+    'diffuseColor.rgb = pow(max(diffuseColor.rgb, vec3(.0001)), vec3(.45)) * vec3(.95,.90,.80);');
+}
+bedOak.userData.lightOak = true;
+bedOak.onBeforeCompile = gradeOak;
+bedOak.customProgramCacheKey = () => 'private-bed-light-oak-v1';
+const bedFrameReady = gltfLoader.loadAsync('/house/assets/bed/bed.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-2.4, 3, -2.35);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = bedOak;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-bed-frame-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  for (const object of bedFrameFallback) object.visible = false;
+  document.getElementById('status').dataset.bedFrame = 'blender-oak';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Bed frame fallback:', error.message));
 box(1.6, 0.2, 2.13, -2.4, 3.47, -2.35, M.white, 0.09);
 const beddingFallback = [drape(1.82, 1.7, -2.4, 3.615, -2.03, M.blue, 0.17)];
 for (const x of [-2.78, -2.02]) {
@@ -2280,7 +2311,7 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await beddingReady;
+    await Promise.all([beddingReady, bedFrameReady]);
     const [baked, ao, night] = await Promise.all([
       gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=4"),
       useIndirectLighting ? new HDRLoader().loadAsync(
@@ -2371,12 +2402,17 @@ async function applyContactLighting() {
                 "irradiance += lightMapIrradiance;",
                 "irradiance += lightMapIrradiance + texture2D(homeNightLightMap, vLightMapUv).rgb * homeNightLightIntensity;",
               ));
+          if (original.material.userData.lightOak) gradeOak(shader);
         };
-        original.material.customProgramCacheKey = () => "private-home-day-night-indirect-v1";
+        original.material.customProgramCacheKey = () => "private-home-day-night-indirect-v1" + (original.material.userData.lightOak ? '-oak' : '');
         indirectMaterials.push(original.material);
       } else {
         original.material.aoMap = ao;
         original.material.aoMapIntensity = 1;
+        if (original.material.userData.lightOak) {
+          original.material.onBeforeCompile = gradeOak;
+          original.material.customProgramCacheKey = () => 'private-bed-light-oak-v1';
+        }
       }
       original.material.needsUpdate = true;
       applied++;
@@ -2465,7 +2501,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await beddingReady;
+      await Promise.all([beddingReady, bedFrameReady]);
       const data = await new GLTFExporter().parseAsync(scene, {
         binary: true,
         onlyVisible: true,
