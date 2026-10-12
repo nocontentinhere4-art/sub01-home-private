@@ -99,3 +99,10 @@ The real localhost UI check walked from the bed entry onto the landing, down the
 The rendered privacy screen now paints at the viewport aspect ratio, with bounded texture resolution and a wrapped caption. Canvas GPU storage is disposed and re-uploaded after a dimension change; merely flagging the resized canvas for update left the old texture stretched in the actual browser check. The scene remains replaced, so the privacy message appears in captured frames too.
 
 The localhost visitor test opened the PC panel and walked into the upstairs bathroom: the panel closed and device controls disappeared. After resizing from 1920×828 to 390×844, the privacy text remained proportionate and readable. Resizing back and walking out restored the device controls. This checks a narrow desktop-browser viewport, not performance on a physical phone. Proofs: `docs/screens/home/private-bathroom-responsive-desktop.jpg` and `docs/screens/home/private-bathroom-responsive-mobile.jpg`. Related HomeWorld, device API and browser API checks: 12 passed.
+
+
+## Recessed kitchen sink
+
+The kitchen's flat black sink placeholder has been replaced with a recessed basin, metal rim, drain and curved tube faucet. One extruded stone countertop has an actual hole and no seams between separate slabs. The base cabinet is lower beneath the basin so it does not fill the cavity. A small unshadowed work light below the upper cupboard follows the existing shared lamp setting. This is a visual fixture; running water, washing and cooking interactions are not implemented.
+
+The actual localhost visitor walked downstairs and along the narrow sofa/stair aisle to inspect the kitchen. The new geometry rendered at about 46–48 fps on this Mac. Switching the protected shared lamp setting off darkened the worktop and switching it back on restored it. Existing geometry retained 61 matched indirect-light parts; the changed cabinet/countertop rejected their old bake and still need a new bake. Nine HomeWorld tests and the movement/interaction JS checks passed. Proof: `docs/screens/home/private-kitchen-recessed-sink.jpg`.

@@ -524,8 +524,20 @@ furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   }
 });
 // Kitchen, integrated oak cabinetry, stone countertop, sink and coffee corner.
-box(3.05, 0.86, 0.62, -2.2, 0.43, -3.55, M.wood, 0.015);
-box(3.16, 0.055, 0.7, -2.2, 0.895, -3.53, M.stone, 0.018);
+box(3.05, 0.70, 0.62, -2.2, 0.35, -3.55, M.wood, 0.015);
+// One continuous slab with a real opening, rather than seams between four boxes.
+const counterShape = new T.Shape();
+counterShape.moveTo(-1.58,-.35); counterShape.lineTo(1.58,-.35);
+counterShape.lineTo(1.58,.35); counterShape.lineTo(-1.58,.35); counterShape.closePath();
+const sinkHole = new T.Path();
+sinkHole.moveTo(-.82,-.26); sinkHole.lineTo(-.82,.17);
+sinkHole.lineTo(-.18,.17); sinkHole.lineTo(-.18,-.26); sinkHole.closePath();
+counterShape.holes.push(sinkHole);
+const kitchenCounter = new T.Mesh(new T.ExtrudeGeometry(counterShape, {depth:.055, bevelEnabled:false}), M.stone);
+kitchenCounter.rotation.x = -Math.PI / 2;
+kitchenCounter.position.set(-2.2,.8675,-3.53);
+kitchenCounter.castShadow = kitchenCounter.receiveShadow = true;
+scene.add(kitchenCounter);
 for (const x of [-3.3, -2.6, -1.9, -1.2]) {
   box(0.65, 0.76, 0.035, x, 0.44, -3.215, M.wood, 0.006);
   beam([x - 0.15, 0.75, -3.18], [x + 0.15, 0.75, -3.18], 0.01, M.brass);
@@ -545,9 +557,24 @@ box(
   }),
   0,
 );
-box(0.66, 0.012, 0.4, -2.7, 0.929, -3.48, M.black, 0.035);
-beam([-2.7, 0.93, -3.7], [-2.7, 1.16, -3.7], 0.019, M.brass);
-beam([-2.7, 1.16, -3.7], [-2.7, 1.16, -3.49], 0.019, M.brass);
+const sinkSteel = new T.MeshStandardMaterial({color: '#a6aca8', metalness: .70, roughness: .35});
+box(.64, .018, .43, -2.7, .754, -3.485, sinkSteel, .007);
+for (const x of [-3.015, -2.385]) box(.015, .16, .43, x, .836, -3.485, sinkSteel, .005);
+for (const z of [-3.6925, -3.2775]) box(.64, .16, .015, -2.7, .836, z, sinkSteel, .005);
+for (const x of [-3.035, -2.365]) box(.035, .012, .47, x, .93, -3.485, sinkSteel, .006);
+for (const z of [-3.715, -3.255]) box(.67, .012, .03, -2.7, .93, z, sinkSteel, .005);
+cylinder(.035, .006, -2.7, .766, -3.485, M.black);
+cylinder(.024, .007, -2.7, .770, -3.485, sinkSteel);
+const tapCurve = new T.CatmullRomCurve3([
+  new T.Vector3(-2.7,.93,-3.79), new T.Vector3(-2.7,1.18,-3.79),
+  new T.Vector3(-2.7,1.24,-3.72), new T.Vector3(-2.7,1.23,-3.58),
+  new T.Vector3(-2.7,1.16,-3.53),
+]);
+const kitchenTap = new T.Mesh(new T.TubeGeometry(tapCurve, 32, .017, 10, false), sinkSteel);
+kitchenTap.castShadow = true;
+scene.add(kitchenTap);
+cylinder(.029, .015, -2.7, .935, -3.79, sinkSteel);
+beam([-2.65,.95,-3.79],[-2.61,1.04,-3.79],.008,sinkSteel);
 box(0.33, 0.4, 0.29, -1.25, 1.12, -3.5, M.black, 0.035);
 cylinder(0.06, 0.08, -1.24, 0.98, -3.27, M.white);
 cylinder(0.09, 0.29, -3.4, 1.07, -3.45, M.stone);
@@ -798,6 +825,9 @@ scene.add(warm);
 const bedLight = new T.PointLight("#ffc88a", 5, 4, 2);
 bedLight.position.set(-3.55, 3.9, -3.1);
 scene.add(bedLight);
+const kitchenWorkLight = new T.PointLight("#ffe2b9", 2.4, 1.8, 2);
+kitchenWorkLight.position.set(-2.7, 1.55, -3.45);
+scene.add(kitchenWorkLight);
 const ceilingLights = [];
 for (const [x, y, z] of [
   [-2, 2.55, 0.5],
@@ -890,6 +920,7 @@ function lighting(timestamp = Date.now() / 1000) {
   scene.fog.color.copy(scene.background);
   warm.intensity = lampOn ? 12 : 0;
   bedLight.intensity = lampOn ? 10 : 0;
+  kitchenWorkLight.intensity = lampOn ? 2.4 : 0;
   ceilingLights.forEach((light) => {
     light.intensity = lampOn ? 10 : 0;
   });
