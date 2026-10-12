@@ -12,9 +12,12 @@ import { createHouseWindowView } from "./house_window_view.mjs";
 import { createExteriorBackdrops } from "./exterior_backdrops.mjs";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
+import { stairClearanceAllows } from "./stair_clearance.mjs?v=1";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
+import { createWovenRugMaterial, createWovenRugGeometries } from "./woven_rug_material.mjs";
+import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs?v=2";
@@ -267,26 +270,19 @@ function floor(w, d, x, y, z) {
   box(w, 0.12, d, x, y - 0.06, z, y > 0 ? M.wall : M.architectureOak, 0);
 }
 function rug(w, d, x, y, z, color = "#c4b49a") {
-  const m = scannedFabric.clone();
-  m.color.set(color);
-  m.roughness = .98;
-  m.normalScale.set(.4, .4);
+  const m = createWovenRugMaterial(T, M.linen, color);
   const stitching = m.clone();
-  stitching.color.multiplyScalar(.93);
-  const body = box(w, 0.018, d, x, y + 0.021, z, m, 0.008);
-  metricBoxUv(body.geometry, 2 / 3);
-  for (let i = 0; i < 12; i++) {
-    const seam = box(
-      w - 0.08,
-      0.003,
-      0.012,
-      x,
-      y + 0.034,
-      z - d / 2 + 0.08 + (i * d) / 12,
-      stitching,
-      0,
-    );
-    metricBoxUv(seam.geometry, 2 / 3);
+  stitching.color.multiplyScalar(.97);
+  const geometry = createWovenRugGeometries(RoundedBoxGeometry, mergeGeometries, w, d);
+  for (const [shape, material, name] of [
+    [geometry.body, m, 'Flatwoven rug body'],
+    [geometry.hem, stitching, 'Sewn rug perimeter'],
+  ]) {
+    const mesh = new T.Mesh(shape, material);
+    mesh.name = name;
+    mesh.position.set(x, y + .021, z);
+    mesh.castShadow = mesh.receiveShadow = true;
+    scene.add(mesh);
   }
 }
 function drape(w, d, x, y, z, m, drop) {
@@ -1243,6 +1239,10 @@ let following = true,
   keys = {},
   lastZone = "",
   targetY = 1.65;
+const viewTransition = createViewTransition({
+  initialMode: "follow", overlay: createViewTransitionOverlay(document),
+  reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+});
 const clock = new T.Clock(),
   ray = new T.Raycaster();
 let aimed = null;
@@ -1251,7 +1251,7 @@ function refreshAim() {
   scene.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
   ray.setFromCamera(new T.Vector2(), camera);
-  aimed = privacyActive ? null : reachableInteraction(ray, interactions, scene);
+  aimed = privacyActive || viewTransition.busy ? null : reachableInteraction(ray, interactions, scene);
   const action = document.getElementById("action");
   action.style.display = aimed ? "block" : "none";
   action.textContent = aimed?.label || "";
@@ -1289,6 +1289,7 @@ function canWalk(x, z, feet) {
     x < -3.78 ||
     x > 3.78 ||
     z < -3.78 ||
+    !stairClearanceAllows(x, z, feet) ||
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
     !frontDoorAllows(x, z, feet, frontDoorGroup.rotation.y) ||
     !bathroomAllows(x, z, feet, bathDoor.position.z) ||
@@ -1301,15 +1302,27 @@ function canWalk(x, z, feet) {
   );
 }
 document.getElementById("follow").onclick = () => {
-  following = true;
-  followerLook.reset(yaw, pitch);
-  visitorStandTarget = null;
-  lookOffset.set(0, 0);
-  document.getElementById("follow").classList.add("active");
-  document.getElementById("explore").classList.remove("active");
+  if (following || !homeState) return;
+  closePanel();
+  keys = {}; drag = false; visitorMotion.reset();
+  viewTransition.request("follow", () => {
+    following = true;
+    visitorStandTarget = null;
+    lookOffset.set(0, 0);
+    document.getElementById("status").dataset.viewSwapCover = String(viewTransition.state().opacity);
+    document.getElementById("status").dataset.viewSwapFrom = JSON.stringify(camera.position.toArray());
+    setLook(homeState.position, homeState.look);
+    document.getElementById("status").dataset.viewSwapTo = JSON.stringify(camera.position.toArray());
+    document.getElementById("follow").classList.add("active");
+    document.getElementById("explore").classList.remove("active");
+  });
 };
 document.getElementById("explore").onclick = () => {
-  if (!following) return; // Re-entering visitor mode must not pull the camera through the house.
+  if (!following) {
+    if (viewTransition.busy) viewTransition.reset("explore");
+    return; // Re-entering visitor mode must not pull the camera through the house.
+  }
+  viewTransition.reset("explore");
   following = false;
   visitorStandTarget =
     homeState?.seated > 0.01
@@ -1343,7 +1356,7 @@ addEventListener("keydown", (e) => {
     ].includes(e.key)
   ) {
     // A key held across censorship must be released before it can move again.
-    if (privacyActive || (e.repeat && !keys[e.key])) {
+    if (privacyActive || viewTransition.busy || (e.repeat && !keys[e.key])) {
       e.preventDefault();
       return;
     }
@@ -1378,7 +1391,7 @@ addEventListener("blur", () => {
   drag = false;
 });
 renderer.domElement.addEventListener("pointerdown", (e) => {
-  if (panelKind || privacyActive) return;
+  if (panelKind || privacyActive || viewTransition.busy) return;
   drag = true;
   lastX = e.clientX;
   lastY = e.clientY;
@@ -1409,7 +1422,7 @@ renderer.domElement.addEventListener("pointercancel", () => (drag = false));
 document.querySelectorAll("[data-key]").forEach((b) => {
   b.onpointerdown = (e) => {
     e.preventDefault();
-    if (privacyActive || panelKind) return;
+    if (privacyActive || panelKind || viewTransition.busy) return;
     if (following) document.getElementById("explore").click();
     keys[b.dataset.key] = true;
     b.setPointerCapture(e.pointerId);
@@ -1419,6 +1432,8 @@ document.querySelectorAll("[data-key]").forEach((b) => {
 });
 const visitorMotion = new WalkMotion();
 function update(dt) {
+  viewTransition.step(dt);
+  if (viewTransition.busy) { keys = {}; drag = false; visitorMotion.reset(); }
   officeChair.forEach(
     (o) =>
       (o.visible = !(
@@ -1648,7 +1663,7 @@ function operatorKeyControl(parent) {
   }));
 }
 function openPanel(kind) {
-  if (privacyActive || homeState?.privacy) return;
+  if (privacyActive || homeState?.privacy || viewTransition.busy) return;
   if (kind === "computer")
     computerApp = homeState?.activity === "use_computer" ? "linux" : "browser";
   keys = {};
@@ -2356,6 +2371,7 @@ function acceptHome(state) {
     setLook(comparison?.p || state.position, comparison?.look || state.look);
     if (comparison) {
       following = false;
+      viewTransition.reset("explore");
       document.getElementById('follow').classList.remove('active');
       document.getElementById('explore').classList.add('active');
       document.getElementById('status').dataset.comparisonView = comparisonView;
@@ -2554,14 +2570,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=15"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=16"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=15",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=16",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=15",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=16",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;

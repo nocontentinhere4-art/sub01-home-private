@@ -16,7 +16,7 @@ Repeated presses of Explore previously recreated a stand-up target at SUB-01's c
 
 The Explore handler is now idempotent while already exploring. The isolated handler regression test verifies that the first Follow→Explore action still starts a natural stand-up transition, while repeated Explore presses preserve a visitor on the entrance terrace even if SUB-01 is seated upstairs. Root performs the actual browser check.
 
-Follow itself remains a viewing-mode switch: it interpolates the visitor camera back to SUB-01's first-person viewpoint. That transition is not a collision-checked physical journey and must not be presented as walking through the house. Actual actor movement and visitor walking are separate operations.
+Follow is a viewing-mode switch, not a physical journey. The previous interpolation visually crossed walls. The current implementation covers the view completely before directly copying the latest actor viewpoint, holds a covered post-switch frame, then reveals normal continuous following. Actual actor movement and visitor walking remain separate operations.
 
 ## Balcony gate found in the audit
 
@@ -41,3 +41,11 @@ Front hinged and bathroom sliding leaves now gate the actual visitor collision f
 Exterior no longer changes to the generic boxcity at the door: inside/outside share one attributed historical spherical residential Tokyo photograph, with nearby geometric pavement/gate. Distant street/buildings remain static photographic content; no complete freely explorable exterior world is claimed. Current visual audit found excessive60×60m near paving masking the image ground; the next bounded courtyard pass addresses it separately from movement bounds.
 
 Fresh Phone-panel-open→bathroom-entry runtime acceptance captured actualwholeviewOCCUPIED, emptyhiddenpanel, zeroeditablecontrols and hidden device actions. Controlled bladder/nudge initialization applies only to isolatedQA; it does not demonstrate spontaneous need decisions, existing typed draft preservation, or held-key release. See docs/inhabited-home.md and private-bathroom-panel-censored.jpg for exact evidence.
+
+## Rendered staircase side clearance — 2026-10-13
+
+The earlier point-only floor/collision function allowed a ground-floor visitor atx.81,z-.5,eye1.65. A ray against actual exported stair triangles hit the solid body side atx.78, only3cm away and inside the4cm nearplane. stair_clearance.mjs now checks actual17body/nosing dimensions against the same16cm body radius, preserving intentionalclimbable centre steps and ignoring solids below upper-floor feet. The constructor regression records all34actualboxes;86,753continuous HomeWorld positions across everyorigin/activity remain valid. This is staircase-specific, not everyrenderedmeshproof.
+
+Actual Chrome visitor approached fromoffice x2,z-.75 withleft input and stopped atx.940379,eye1.65, giving16.04cm clearance frombodyedge.78. Screenshotprivate-stair-side-clearance.jpg captures that endpoint. Existing front/bathroom/balcony and boundedwalking checks pass with the realhelper injected into their actualcanWalk fixtures.
+
+Actual Follow switch recorded coveropacity1 atcamera copy from[-.45,1.65,2.9] to[2,1.23,-1.9], with no pageerrors. Repeat/cancel/reset/reducedmotion/earlieropaque-frame conditions have deterministiccontroller tests. This corrects visible mode-switch flight; it does not prove every actor-following interpolation triangle collision.

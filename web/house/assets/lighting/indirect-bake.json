@@ -1,5 +1,5 @@
 {
-  "source_sha256": "9f0f3cca0ecd9b54b6baacabdfb41198acd958e4aca8998c346686f21c3ad9f7",
+  "source_sha256": "578e0cb33ac651f97bcd576e2cf3e495c48d9ededdc9f8144ee392d9dc7a000a",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 128,
   "diffuse_bounces": 4,
@@ -7,53 +7,53 @@
   "albedo_in_bake": false,
   "receivers": 111,
   "export_material_texture_limit": 512,
-  "layout": "Scanned plaster raised soffits/slab edges and stair bodies; oak tops/treads/nosings/rails; unchanged dimensions",
+  "layout": "Flatwoven rug bodies with perimeter hems; no interior bars; unchanged rug footprint, source materials and geometry freshly exported",
   "day": {
-    "width": 1377,
-    "height": 1381,
-    "max": 8.696708679199219,
-    "p95": 0.46528404951095576,
-    "nonzero": 0.5216589706658,
+    "width": 1348,
+    "height": 1353,
+    "max": 13.641186714172363,
+    "p95": 0.4611640080809592,
+    "nonzero": 0.5038177607295361,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "width": 1377,
-    "height": 1381,
-    "max": 11.89102554321289,
-    "p95": 0.0062502322718501055,
-    "nonzero": 0.4539231199224668,
+    "width": 1348,
+    "height": 1353,
+    "max": 7.767798900604248,
+    "p95": 0.006225209613330661,
+    "nonzero": 0.43228697191207144,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "cc5e7fbc9bbe62ca3d7927d80a5ee3622797109ff14c9ffe893b2cbb0856e858",
-      "bytes": 9716000
+      "sha256": "354136040a5ff79670a8f4ae95b213f79e2fd891f20c683a48a005f664e32ebf",
+      "bytes": 10151548
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "e04158670c2ccce888636232043e1a0715504867e8cd02109bc2b3ce374a567f",
-      "bytes": 4175852
+      "sha256": "28d5347424b63561ef727dc31b3fbff6956412ab6cb08059299c2dfd4d47a372",
+      "bytes": 3906164
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "a7edb0b5b1bab28b4dcd2f9daf6e70358dcebbbe7501f6d49b6c4e9fb70625b5",
-      "bytes": 729318
+      "sha256": "6ed22c301989fd3c82f1add3b350b7d05498cfd4cfa97f8f23a427bb6a2a421c",
+      "bytes": 714236
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "e77ff7a6d3d3caa4bf36a00d7af7b460b5b7963078beca42690ef2c5e6767de6",
-      "bytes": 3792738
+      "sha256": "d89ebc41919b5994111b419008002c4687ccc393aff33c807d68cfb6c4477626",
+      "bytes": 3499906
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "59fd53532a6febaaa6362b3f09874c2013ff3736940c4c83e649d33057df1dfd",
-      "bytes": 668236
+      "sha256": "121e1b86bb2f3c21e1db96bfcaa627dab4ef644a458ae2401f978238898707b1",
+      "bytes": 650452
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
   "seed": 0,
   "adaptive_sampling": false,
   "denoising": false,
-  "sampling_note": "Same GI14 source/atlas/materials/lights.128 unfiltered samples; no atlas blur or cross-chart filtering."
+  "sampling_note": "New rug source/atlas,128 unfiltered samples, no cross-chart filtering."
 }

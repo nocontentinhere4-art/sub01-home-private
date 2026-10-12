@@ -12,7 +12,7 @@ const camera={position:new T.Vector3(2,1.23,-1.9)};
 const renderer={domElement:{focus(){}}};
 const homeState={seated:1,entry_position:[2,1.65,-.75]};
 const state=new Function('T','document','homeState','camera','renderer','notice',
-  `let following=true, visitorStandTarget=null, targetY=1.23;
+  `let following=true, visitorStandTarget=null, targetY=1.23; const viewTransition={busy:false,reset(){}};
    ${source.slice(start,end)}
    return {get:()=>({following,visitorStandTarget,targetY}),
            finishedStanding:()=>{visitorStandTarget=null;targetY=1.65;}};`

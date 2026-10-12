@@ -23,7 +23,7 @@ assert.equal(motion.resets,1);
 const keyboardStart=source.indexOf('addEventListener("keydown",'),keyboardEnd=source.indexOf('renderer.domElement.addEventListener("pointerdown",',keyboardStart);
 const listeners={};
 const keyboard=new Function('addEventListener','pongHeld',`
-  let keys={},drag=false,privacyActive=true,panelKind='',tvGame='pong',following=false;
+  let keys={},drag=false,privacyActive=true,panelKind='',tvGame='pong',following=false;const viewTransition={busy:false};
   const closePanel=()=>{},refreshAim=()=>{},aimed=null;
   ${source.slice(keyboardStart,keyboardEnd)}
   return {setPrivacy:value=>privacyActive=value,keys:()=>keys};
@@ -36,7 +36,7 @@ listeners.keyup(keyEvent());listeners.keydown(keyEvent());assert.equal(keyboard.
 const touchStart=source.indexOf('document.querySelectorAll("[data-key]").forEach('),touchEnd=source.indexOf('const visitorMotion =',touchStart);
 const pad={dataset:{key:'w'},setPointerCapture(){}};
 const touch=new Function('document',`
-  let keys={},privacyActive=true,panelKind='',following=false;
+  let keys={},privacyActive=true,panelKind='',following=false;const viewTransition={busy:false};
   ${source.slice(touchStart,touchEnd)}
   return {setPrivacy:value=>privacyActive=value,keys:()=>keys};
 `)({querySelectorAll:()=>[pad]});
