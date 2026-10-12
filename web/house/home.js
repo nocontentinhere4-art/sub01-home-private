@@ -45,7 +45,7 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = T.SRGBColorSpace;
 renderer.toneMapping = T.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !lite;
 renderer.shadowMap.type = T.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate = false;
 document.body.prepend(renderer.domElement);
@@ -800,7 +800,7 @@ scene.add(hemi);
 const sun = new T.DirectionalLight("#ffdeae", 3);
 sun.position.set(-12, 10, 14);
 sun.target.position.set(0, 1, 0);
-sun.castShadow = true;
+sun.castShadow = !lite;
 sun.shadow.mapSize.set(
   innerWidth < 700 ? 1024 : 2048,
   innerWidth < 700 ? 1024 : 2048,
@@ -843,8 +843,20 @@ for (const [x, y, z] of [
   const pendant = cylinder(0.23, 0.15, x, y, z, M.white);
   beam([x, y + 0.1, z], [x, 6, z], 0.006, M.black);
   cylinder(0.18, 0.013, x, y - 0.077, z, glowMat);
-  const light = new T.PointLight("#ffddb0", 10, 5, 2);
+  const light = x < 0
+    ? new T.SpotLight("#ffddb0", 10, 6, Math.PI * .37, .35, 2)
+    : new T.PointLight("#ffddb0", 10, 5, 2);
   light.position.set(x, y - 0.12, z);
+  if (light.isSpotLight) {
+    light.target.position.set(x, 0, z);
+    light.castShadow = !lite;
+    light.shadow.mapSize.set(1024,1024);
+    light.shadow.camera.near = .08;
+    light.shadow.camera.far = 6;
+    light.shadow.normalBias = .018;
+    light.shadow.bias = -.00005;
+    scene.add(light.target);
+  }
   ceilingLights.push(light);
   scene.add(light);
 }
@@ -926,6 +938,7 @@ function lighting(timestamp = Date.now() / 1000) {
   currentLight = homeLighting(visualLightTime(timestamp));
   lastLightMinute = Math.floor(timestamp / 60);
   sun.intensity = currentLight.sunIntensity;
+  sun.castShadow = !lite && currentLight.sunIntensity > .01;
   sun.position.set(...currentLight.sunPosition);
   sun.color.set(currentLight.sunColor);
   const hasIndirect = indirectMaterials.length > 0;
@@ -944,6 +957,7 @@ function lighting(timestamp = Date.now() / 1000) {
   });
   glowMat.emissiveIntensity = lampOn ? 1.3 : 0;
   renderer.shadowMap.needsUpdate = true;
+  document.getElementById("status").dataset.shadowMode = lite ? "indirect-only" : sun.castShadow ? "sun-and-pendant" : "pendant";
 }
 function shade() {
   curtainPanels.forEach((p) => (p.scale.x = curtainOpen ? 0.17 : 1));

@@ -18,7 +18,7 @@ A two-level home contains office, kitchen, living area, wooden staircase, bedroo
 
 ## Materials and performance
 
-Asset source/license/hash metadata is in `web/house/assets/manifest.json`. Scanned Poly Haven CC0 furniture and 1K PBR materials replace procedural lounge furniture and flat surfaces. Two diffuse maps have neutral colour variants; geometry remains original or CC0. Three.js includes its MIT license. The room is a single WebGL scene, with one cached shadow map, an actual indoor HDR lighting capture, 512px prebuilt mobile variants, a small prefiltered environment, instanced skyline and a capped pixel budget. Fixed architecture is batched by compatible materials/attributes. This is an improvement toward the X reference; matching its Unreal architectural rendering remains an open visual target.
+Asset source/license/hash metadata is in `web/house/assets/manifest.json`. Scanned Poly Haven CC0 furniture and 1K PBR materials replace procedural lounge furniture and flat surfaces. Two diffuse maps have neutral colour variants; geometry remains original or CC0. Three.js includes its MIT license. The room is a single WebGL scene, with cached full-mode sun/pendant shadow maps, an actual indoor HDR lighting capture, 512px prebuilt mobile variants, a small prefiltered environment, instanced skyline and a capped pixel budget. Fixed architecture is batched by compatible materials/attributes. This is an improvement toward the X reference; matching its Unreal architectural rendering remains an open visual target.
 
 ## Verification
 
@@ -154,3 +154,10 @@ The View panel adjusts vertical view angle (50–90°, default 64°) and pointer
 Opening any panel clears visitor movement and held controls; movement keys and canvas dragging are ignored while the panel is open, apart from the existing Pong paddle arrows. The View button is hidden by bathroom privacy alongside the device controls.
 
 The real localhost UI set 80°/80%, reloaded and read those same values, then restored 64°/100%. The panel fit a 390×844 desktop-browser viewport. In Explore mode, holding W for 1.5 seconds with the panel open left the position exactly [-1.2,4.65,-2.9]; Escape closed it. Ten HomeWorld checks and preference, movement and held-control JS checks passed. Physical-phone gesture quality is still unverified. Proofs: `docs/screens/home/private-view-controls-desktop.jpg`, `docs/screens/home/private-view-controls-mobile.jpg`.
+
+
+## Indoor direct shadows
+
+The lounge pendant now uses a downward spotlight with a 1024-pixel cached shadow map, a broad soft cone and a small depth bias. This gives direct furniture/floor shadows even at night, when the sun light is off. The other ceiling and desk/bed lamps retain their previous unshadowed fill. Sun shadows are enabled only while the sun is above its intensity threshold. Forced lite mode now disables runtime shadow mapping altogether and retains the precomputed indirect maps and live unshadowed lighting.
+
+The actual localhost night renderer reported pendant shadow mode, showed furniture shadows on the rug/floor, and displayed approximately 46–48 fps on this Mac. Forced lite reported indirect-only and loaded without logged errors. Ten HomeWorld checks, bake-shape, view-control and interaction JS checks passed. Proof: `docs/screens/home/private-lounge-indoor-shadows.jpg`. Shadow maps remain cached between the existing invalidation events; moving-door shadows can lag until the next refresh. The changed lounge layout and spotlight still need a new indirect bake.
