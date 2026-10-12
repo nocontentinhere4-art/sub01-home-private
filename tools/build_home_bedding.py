@@ -114,41 +114,11 @@ for obj, thickness in (cover, throw):
         polygon.use_smooth = True
     outputs.append(obj)
 
-# Reuse a scanned cushion shape, laid flat and sized as a sleeping pillow.
-bpy.ops.import_scene.gltf(filepath=str(ROOT / 'web/house/assets/throw_pillows_01/throw_pillows_01.gltf'))
-pillows = [o for o in scene.objects if o.type == 'MESH' and o.name.startswith('throw_pillows_01')]
-source = sorted(pillows, key=lambda o: o.name)[0]
-# Clear the source display pose: its local geometry is already a flat cushion.
-source.rotation_euler = (0, 0, 0)
-source.location = (0, 0, 0)
-bpy.context.view_layer.update()
-size = source.dimensions
-# Identify the thin axis, then turn it upward if required.
-thin = min(range(3), key=lambda i: size[i])
-if thin == 1:
-    source.rotation_euler.x = math.pi / 2
-elif thin == 0:
-    source.rotation_euler.y = math.pi / 2
-bpy.context.view_layer.update()
-for index, x in enumerate((-.38, .38)):
-    bpy.ops.object.select_all(action='DESELECT')
-    obj = source.copy()
-    obj.data = source.data.copy()
-    scene.collection.objects.link(obj)
-    obj.name = f'Pillow {index + 1}'
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-    size = obj.dimensions
-    obj.scale = (.65 / size.x, .43 / size.y, .15 / size.z)
-    bpy.context.view_layer.update()
-    bounds = [obj.matrix_world @ Vector(v) for v in obj.bound_box]
-    centre = sum(bounds, Vector()) / 8
-    obj.location += Vector((x, .76, .12)) - centre
-    obj.rotation_euler.z = .065 if index == 0 else -.065
-    obj.data.materials.clear()
-    outputs.append(obj)
-    obj.select_set(False)
+# Reuse and align a scanned cushion by its actual principal thickness axis.
+import sys
+sys.path.insert(0, str(Path(__file__).parent))
+from bedding_pillows import sleeping_pillows
+outputs.extend(sleeping_pillows(scene, ROOT / 'web/house/assets/throw_pillows_01/throw_pillows_01.gltf'))
 
 bpy.ops.object.select_all(action='DESELECT')
 for obj in outputs:

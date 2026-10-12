@@ -13,22 +13,23 @@
       "faces": 16488
     },
     "Pillow 1": {
-      "vertices": 1717,
-      "faces": 3238
+      "vertices": 1653,
+      "faces": 3124
     },
     "Pillow 2": {
-      "vertices": 1717,
-      "faces": 3238
+      "vertices": 1653,
+      "faces": 3124
     }
   },
   "files": {
     "bedding.glb": {
-      "bytes": 1584004,
-      "sha256": "afc496e1ffb717706fc2012e7adb18555da764c2e6a1a725062d5b43db04e773"
+      "bytes": 1709736,
+      "sha256": "990087b58c0c1c723ae38ccf06281339aeb5cd809496e5767b5b50dcfe8294b6"
     },
     "bedding-lite.glb": {
-      "bytes": 640792,
-      "sha256": "7533326bdc3d55145ff95a53aa91f40edd848fb8b56c22abda59a0f51118db79"
+      "bytes": 766520,
+      "sha256": "773238ef281de6cfb224f66ff27bd1842c3690bd636f745a2a12e23063079798"
     }
-  }
+  },
+  "pillow_alignment": "pillow02 scan; right-handed principal axes; longest axis across bed, thickness vertical"
 }

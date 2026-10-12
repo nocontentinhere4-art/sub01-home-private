@@ -690,7 +690,7 @@ for (const x of [-2.78, -2.02]) {
 }
 beddingFallback.push(drape(1.86, 0.55, -2.4, 3.69, -1.44, M.linen, 0.22));
 for (const object of beddingFallback) object.userData.replaceable = true;
-const beddingReady = gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb').then(gltf => {
+const beddingReady = gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb?v=4').then(gltf => {
   const root = gltf.scene;
   root.position.set(-2.4, 3.57, -2.35);
   root.traverse(object => {
