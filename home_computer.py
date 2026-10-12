@@ -65,7 +65,7 @@ class Computer:
         return await self.send({"type": "input", "text": text})
 
     async def agent_step(self, home, rel):
-        using = home.activity == "use_computer" and not home.path
+        using = home.activity == "use_computer" and home.activity_ready("use_computer")
         if (
             not using
             and self.ready

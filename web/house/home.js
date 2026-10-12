@@ -145,7 +145,7 @@ function pbr(name, repeat = [1, 1]) {
     normalScale: new T.Vector2(0.12, 0.12),
   });
 }
-const scannedWood = pbr("wooden_floor_02", [1, 1]),
+const scannedWood = pbr("home_oak_floor", [1, 1]),
   scannedWall = pbr("white_plaster_02", [2, 2]),
   scannedFabric = pbr("quatrefoil_jacquard_fabric", [2, 2]),
   scannedTiles = pbr("interior_tiles", [2, 2]),
@@ -174,6 +174,12 @@ const M = {
   }),
 };
 M.darkwood.color.set("#c5aa83");
+// Separate structural oak keeps bed/kitchen clone-and-grade sources unchanged.
+M.architectureOak = pbr("home_oak_veneer", [1, 1]);
+M.architectureOak.normalScale.set(.10, .10);
+M.architectureOak.roughness = .92;
+scannedWood.normalScale.set(.10, .10);
+scannedWood.roughness = .92;
 M.kitchenOak = M.darkwood.clone();
 M.kitchenOak.color.set('#e7d5b5');
 M.kitchenOak.roughness = .72;
@@ -204,6 +210,7 @@ function box(w, h, d, x, y, z, m = M.wood, r = 0.012) {
     o.material = M.darkwood;
   }
   if (m === M.kitchenOak) metricBoxUv(o.geometry, .8);
+  if (m === M.architectureOak) metricBoxUv(o.geometry, 1.83);
   scene.add(o);
   meshCount++;
   return o;
@@ -240,14 +247,15 @@ function floor(w, d, x, y, z) {
   const material = scannedWood.clone();
   for (const k of ["map", "normalMap", "roughnessMap"]) {
     material[k] = scannedWood[k].clone();
-    material[k].repeat.set(w / 2, d / 2);
+    // Poly Haven's actual scanned coverage is 1.2m square.
+    material[k].repeat.set(w / 1.2, d / 1.2);
   }
   const o = new T.Mesh(new T.PlaneGeometry(w, d), material);
   o.rotation.x = -Math.PI / 2;
   o.position.set(x, y + 0.025, z);
   o.receiveShadow = true;
   scene.add(o);
-  box(w, 0.12, d, x, y - 0.06, z, M.darkwood, 0);
+  box(w, 0.12, d, x, y - 0.06, z, M.architectureOak, 0);
 }
 function rug(w, d, x, y, z, color = "#c4b49a") {
   const m = scannedFabric.clone();
@@ -459,11 +467,11 @@ const STEP = {
 for (let i = 0; i < 17; i++) {
   const z = 2.55 - (i + 0.5) * 0.25,
     h = ((i + 1) * 3) / 17;
-  box(0.96, h, 0.25, 0.3, h / 2, z, M.darkwood, 0);
-  box(1.02, 0.035, 0.27, 0.3, h + 0.006, z, M.darkwood, 0.007);
+  box(0.96, h, 0.25, 0.3, h / 2, z, M.architectureOak, 0);
+  box(1.02, 0.035, 0.27, 0.3, h + 0.006, z, M.architectureOak, 0.007);
 }
 for (const x of [-0.25, 0.85]) {
-  beam([x, 0.9, 2.55], [x, 3.9, -1.7], 0.03, M.darkwood);
+  beam([x, 0.9, 2.55], [x, 3.9, -1.7], 0.03, M.architectureOak);
   for (let i = 0; i < 9; i++) {
     const z = 2.55 - i * 0.5,
       h = (3 * (2.55 - z)) / 4.25;
@@ -473,10 +481,10 @@ for (const x of [-0.25, 0.85]) {
 // Safe landing and loft edge, passage onto the bedroom at the rear.
 for (let z = -1.6; z < 4; z += 0.34)
   beam([-0.12, 3, z], [-0.12, 3.95, z], 0.014, M.brass);
-beam([-0.12, 3.98, -1.7], [-0.12, 3.98, 4], 0.033, M.darkwood);
+beam([-0.12, 3.98, -1.7], [-0.12, 3.98, 4], 0.033, M.architectureOak);
 for (let z = -3.8; z < -1.7; z += 0.35)
   beam([0.85, 3, z], [0.85, 3.98, z], 0.014, M.brass);
-beam([0.85, 3.98, -3.9], [0.85, 3.98, -1.7], 0.033, M.darkwood);
+beam([0.85, 3.98, -3.9], [0.85, 3.98, -1.7], 0.033, M.architectureOak);
 const aoCanvas = document.createElement("canvas");
 aoCanvas.width = aoCanvas.height = 128;
 const ao = aoCanvas.getContext("2d"),
@@ -534,11 +542,41 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, s
     notice("An item could not load. Reconnect to retry.");
   }
 }
-furnished("sofa_03", -1.8, 0, .1, 2.5, -Math.PI / 2, null, "z");
+// One original fabric sofa replaces the antique leather scan and chevron pillows.
+// Reuse existing CC0 texture objects; neutral tints compensate the blue linen scan.
+const sofaFabric = M.linen.clone();
+sofaFabric.color.setRGB(1, .67, .38);
+// The scan's roughness map averages around .7; linen upholstery should stay matte.
+sofaFabric.roughnessMap = null;
+sofaFabric.roughness = .96;
+sofaFabric.normalScale.set(.55, .55);
+const sofaPillowFabric = sofaFabric.clone();
+sofaPillowFabric.color.setRGB(1, .72, .44);
+const sofaSeamFabric = sofaFabric.clone();
+sofaSeamFabric.color.setRGB(.69, .45, .25);
+const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-1.8, 0, .1);
+  root.rotation.y = -Math.PI / 2;
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = object.name === 'Oak_legs' ? M.darkwood :
+      object.name === 'Plain_pillows' ? sofaPillowFabric :
+      object.name === 'Tailored_seams' ? sofaSeamFabric : sofaFabric;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-sofa-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  document.getElementById('status').dataset.sofa = 'blender-linen';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => {
+  console.warn('Original sofa fallback:', error.message);
+  return furnished('sofa_03', -1.8, 0, .1, 2.5, -Math.PI / 2, null, 'z');
+});
 furnished("modern_coffee_table_01", -3.2, 0, .1, .70);
 furnished("potted_plant_01", -3.45, 0, 3.25, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
-furnished("throw_pillows_01", -1.97, 0.42, .1, 1.25, -Math.PI / 2, null, "z");
 furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   if (!root) return;
   root.updateMatrixWorld(true);
@@ -2426,16 +2464,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=8"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=9"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=8",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=9",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=8",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=9",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2640,7 +2678,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady]);
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady]);
       const data = await new GLTFExporter().parseAsync(scene, {
         binary: true,
         onlyVisible: true,

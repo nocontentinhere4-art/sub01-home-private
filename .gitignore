@@ -62,3 +62,4 @@ out/home-editable/
 # Unused generated lightmap copies preserved outside shipped assets
 out/lite-unused-lighting/
 out/coffee-reference/
+out/sofa-reference/

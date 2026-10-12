@@ -271,6 +271,13 @@ class HomeWorld:
     def desired(self, activity):
         return DESTINATIONS.get(activity, "desk")
 
+    def activity_ready(self, activity=None):
+        """Finish both the walking route and the real seated camera transition."""
+        expected = self.activity if activity is None else activity
+        return (self.activity == expected and not self.path
+                and self.node == self.desired(expected)
+                and (self.node not in ("desk", "sofa", "bed") or self.seated == 1))
+
     def update(self, dt, sim_dt, life, rel):
         self.time += dt
         activity = life.get("activity", "research")
@@ -333,7 +340,7 @@ class HomeWorld:
             if self.node == "bathroom":
                 self.bladder = max(0, self.bladder - dt * 0.06)
                 self.last_bathroom = self.time
-            if activity != self.last_activity:
+            if activity != self.last_activity and self.activity_ready(activity):
                 self.memories.append(
                     {
                         "at": round(self.time, 1),
@@ -344,7 +351,7 @@ class HomeWorld:
                 self.memories = self.memories[-100:]
                 self.last_activity = activity
         self.pong.update(
-            min(dt, 0.05), rel, activity == "play_console" and not self.path and self.console_game == "pong"
+            min(dt, 0.05), rel, activity == "play_console" and self.activity_ready(activity) and self.console_game == "pong"
         )
         if self.pong.matches != self.last_game_matches:
             self.memories.append(

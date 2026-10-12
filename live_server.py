@@ -986,10 +986,12 @@ class Live:
                 if self.home.pong.reward:
                     b.stimulate("reward" if self.home.pong.reward > 0 else "salience", abs(self.home.pong.reward))
                     self.home.pong.reward = 0.0
+                # Pause/resume on the actual movement tick. Each controller
+                # already limits decisions internally (PC 18 s, Minecraft 2 s).
+                await self.computer.agent_step(self.home, rel)
+                await self.minecraft.agent_step(self.home, rel)
                 if now-self.home_device_at >= 1:
                     self.home_device_at=now
-                    await self.computer.agent_step(self.home, rel)
-                    await self.minecraft.agent_step(self.home, rel)
                     if self.minecraft.feedback:
                         b.stimulate("reward" if self.minecraft.feedback > 0 else "salience", abs(self.minecraft.feedback))
                         self.minecraft.feedback = 0
@@ -1091,8 +1093,7 @@ class Live:
         home = getattr(self, "home", None)
         if home is None:
             return True
-        return (home.activity == self.life.activity and not home.path
-                and home.node == home.desired(self.life.activity))
+        return home.activity_ready(self.life.activity)
 
     def screen_device(self):
         if not self.activity_arrived() or self.engine.stage != "AWAKE":

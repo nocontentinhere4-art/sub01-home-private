@@ -48,7 +48,8 @@ def test_agent_does_not_play_while_home_activity_is_elsewhere(tmp_path, monkeypa
         messages.append(message)
         return True
     console.send = send
-    home = SimpleNamespace(activity="research", path=[], console_game="minecraft")
+    home = HomeWorld({'node': 'sofa', 'seated': 1, 'console_game': 'minecraft'})
+    home.activity = 'research'
     asyncio.run(console.agent_step(home, {}))
     assert messages == []
     home.activity = "play_console"

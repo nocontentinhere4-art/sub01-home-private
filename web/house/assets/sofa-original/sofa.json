@@ -1,0 +1,38 @@
+{
+  "geometry": "Original soft fabric sofa and two relaxed plain pillows. Adapted design/proportions, not manufacturer CAD.",
+  "reference_url": "https://www.karimoku-case.com/furniture/n-s03/",
+  "reference_dimensions_m": [
+    1.815,
+    0.72,
+    0.67
+  ],
+  "reference_seat_height_m": 0.4,
+  "actual_blender_bounds_m": [
+    [
+      -1.1980000734329224,
+      -0.4300000071525574,
+      0.0
+    ],
+    [
+      1.1980000734329224,
+      0.39193180203437805,
+      0.8366857171058655
+    ]
+  ],
+  "seat_top_m": 0.4375,
+  "runtime_origin_m": [
+    -1.8,
+    0,
+    0.1
+  ],
+  "runtime_yaw_radians": -1.5707963267948966,
+  "runtime_material_sources": [
+    "https://polyhaven.com/a/rough_linen",
+    "https://polyhaven.com/a/fine_grained_wood"
+  ],
+  "runtime_materials": "4 shared house materials; linen main/pillows/seams, oak legs; no embedded bitmaps",
+  "vertices": 6220,
+  "triangles": 12340,
+  "glb_bytes": 364456,
+  "sha256": "1ecdc5a3b4b08ded9e52e4fdec10837e35f39d92cc66c8bd980ebf231075799c"
+}

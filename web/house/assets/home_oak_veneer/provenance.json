@@ -1,0 +1,79 @@
+{
+  "asset": "home_oak_veneer",
+  "source": "https://polyhaven.com/a/oak_veneer_01",
+  "license": "CC0-1.0",
+  "licenseSource": "https://polyhaven.com/license",
+  "scanDimensionsMetres": [
+    1.83,
+    1.83
+  ],
+  "albedoTransform": {
+    "space": "linear-sRGB",
+    "saturation": 1,
+    "gamma": 1,
+    "gain": 1
+  },
+  "preserved": "Scanned local grain and source normal/roughness variation; no flat replacement, no shader second grade.",
+  "files": [
+    {
+      "file": "home_oak_veneer/diff.jpg",
+      "sha256": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7",
+      "bytes": 641756,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7"
+    },
+    {
+      "file": "lite/home_oak_veneer/diff.jpg",
+      "sha256": "32b147b41a413702696d69f8a2c71e537b82e18f2006c2055f54417bc75335a7",
+      "bytes": 49649,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7"
+    },
+    {
+      "file": "home_oak_veneer/normal.jpg",
+      "sha256": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01",
+      "bytes": 484844,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01"
+    },
+    {
+      "file": "lite/home_oak_veneer/normal.jpg",
+      "sha256": "7b8b801f7e933b91eb2a5a6b7885849862f8a50612ffb48f32e7a1fee845acf9",
+      "bytes": 14501,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01"
+    },
+    {
+      "file": "home_oak_veneer/rough.jpg",
+      "sha256": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604",
+      "bytes": 865194,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604"
+    },
+    {
+      "file": "lite/home_oak_veneer/rough.jpg",
+      "sha256": "51ee32ee7f1904ce9d1e4e00def6ebaa9d9c3c31441b06c4b6bed508e946f423",
+      "bytes": 82896,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604"
+    }
+  ]
+}

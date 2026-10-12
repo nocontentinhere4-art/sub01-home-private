@@ -1,0 +1,79 @@
+{
+  "asset": "home_oak_floor",
+  "source": "https://polyhaven.com/a/oak_wood_planks",
+  "license": "CC0-1.0",
+  "licenseSource": "https://polyhaven.com/license",
+  "scanDimensionsMetres": [
+    1.2,
+    1.2
+  ],
+  "albedoTransform": {
+    "space": "linear-sRGB",
+    "saturation": 0.6,
+    "gamma": 0.9,
+    "gain": 1.05
+  },
+  "preserved": "Scanned local grain and source normal/roughness variation; no flat replacement, no shader second grade.",
+  "files": [
+    {
+      "file": "home_oak_floor/diff.jpg",
+      "sha256": "345bf4fb6fbc75d2254daddee0b2805a007cbb99b326688d585f9bf38a1c1306",
+      "bytes": 303619,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "f715ed3e4346e94f971ef8dd61221ff6cc774886c20f65381e01e1dc0bb0a634"
+    },
+    {
+      "file": "lite/home_oak_floor/diff.jpg",
+      "sha256": "0ce6300e2e2a2a4c417359adcec3a93e792891a5bcad806bc42d2dda6f9375b5",
+      "bytes": 48967,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "f715ed3e4346e94f971ef8dd61221ff6cc774886c20f65381e01e1dc0bb0a634"
+    },
+    {
+      "file": "home_oak_floor/normal.jpg",
+      "sha256": "b4272cb2818f8f33f2620a2dc093c962f34920e9d485a4e132eb6d69de1ba950",
+      "bytes": 392213,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "b4272cb2818f8f33f2620a2dc093c962f34920e9d485a4e132eb6d69de1ba950"
+    },
+    {
+      "file": "lite/home_oak_floor/normal.jpg",
+      "sha256": "01f636c3a10a55645d7d967240a14cb17d188006a6f3b4338451058f7a4caff3",
+      "bytes": 6222,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "b4272cb2818f8f33f2620a2dc093c962f34920e9d485a4e132eb6d69de1ba950"
+    },
+    {
+      "file": "home_oak_floor/rough.jpg",
+      "sha256": "10ced559145df3c537bf1ccef6dc767ef6c47e134c21a9650bab261fa95ecacf",
+      "bytes": 845590,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sourceSha256": "10ced559145df3c537bf1ccef6dc767ef6c47e134c21a9650bab261fa95ecacf"
+    },
+    {
+      "file": "lite/home_oak_floor/rough.jpg",
+      "sha256": "70fd9bce04f90bee2564d9e62c9756336755ee988a27e862ab3d62f9af41cebf",
+      "bytes": 78031,
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceSha256": "10ced559145df3c537bf1ccef6dc767ef6c47e134c21a9650bab261fa95ecacf"
+    }
+  ]
+}

@@ -22,9 +22,9 @@ def test_screen_waits_for_new_house_route(activity, device):
     assert live.screen_device() is None
     for _ in range(1000):
         home.update(.1, .1, {'activity': activity}, {})
-        if home.path:
+        if not home.activity_ready(activity):
             assert live.screen_device() is None
-        elif home.node == home.desired(activity):
+        else:
             break
     else:
         pytest.fail('House route never arrived')
@@ -40,6 +40,30 @@ def test_old_room_remains_available_without_home():
     assert live.screen_device() == 'desk'
     live.life.path = ['desk']
     assert live.screen_device() is None
+
+
+@pytest.mark.parametrize('activity,node', [('research', 'desk'), ('phone', 'bed'), ('play_console', 'sofa')])
+def test_activity_timer_waits_for_the_complete_seated_transition(activity, node):
+    life = timed_life('research', 'desk')
+    home = HomeWorld({'node': node})
+    live = Live.__new__(Live)
+    live.life, live.home = life, home
+    life.arrival_check = live.activity_arrived
+    life.start(activity, 1000, 'test')
+    life.path = []  # old-room route is already finished
+    duration = life.dur
+    for tick in range(1, 40):
+        now = 1000 + tick * 10
+        life.update(now, .05, 10, 'AWAKE', {})
+        if not home.activity_ready(activity):
+            assert life.dur == duration
+        home.update(.05, 10, life.snapshot(), {})
+        if life.dur is None:
+            assert home.seated == 1 and live.activity_arrived()
+            assert life.until == pytest.approx(now + duration)
+            break
+    else:
+        pytest.fail('Seated transition did not release the activity timer')
 
 
 def timed_life(activity, place):

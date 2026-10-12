@@ -78,7 +78,7 @@ class MinecraftConsole:
     async def agent_step(self, home, rel):
         if not self.enabled:
             return
-        wants = home.activity == "play_console" and not home.path and home.console_game == "minecraft"
+        wants = home.activity == "play_console" and home.activity_ready("play_console") and home.console_game == "minecraft"
         if wants != self.active:
             if await self.send({"type": "active", "value": wants}):
                 self.active = wants
