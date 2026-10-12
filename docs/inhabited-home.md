@@ -71,3 +71,10 @@ Privacy now closes and clears an already open computer/phone/TV panel, releases 
 ## Browser availability state
 
 The isolated browser can be alive but have no permitted/current page after failed searches. Previously its public state could stay idle (away from the screen) even when SUB-01 was seated and researching. It now reports waiting when an active screen has no current page, and the home panel uses that reason. This does not fabricate a live page or relax robots, overlays, source cooldowns or rate limits. The local check confirmed waiting in the API and UI while the real Linux guest was separately ready from its saved snapshot. The browser service was healthy, both page statuses were empty, and a YouTube-key-unavailable note was present. No current desk frame was available in that check. Further work is needed on useful activity selection when sources do not answer. Proof: `docs/screens/home/private-browser-waiting.jpg`.
+
+
+## Operator page navigation
+
+The Browser tab now has a public-address field, routed through authenticated `/api/home/browser` and the isolated service `/navigate`. It uses existing URL, private-session, robots, heavy-page, wall and host/rate checks. Explicit operator revisits bypass only the seven-day novelty preference, not those checks. Bathroom occupancy blocks this action. Opening a page updates the shared screen and reading input; automatic browsing resumes after the 30-second opening interval. The panel labels the actual on-screen title independently of the typed address.
+
+The local UI test opened the official Python tutorial and captured it on the desk monitor and PC panel (`docs/screens/home/private-browser-python.jpg`). The URL/auth/privacy contract and existing screen/guard checks returned 73 passed. This gives direct navigation when automatic searches fail; it does not guarantee every website is available.

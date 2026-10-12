@@ -144,6 +144,17 @@ def make_app(browser, token=None):
         await browser.close(d.get("device") if d.get("device") in browser.screens else None)
         return web.json_response({"ok": True})
 
+    async def navigate(request):
+        d = await body(request)
+        dev = device(d)
+        url = d.get('url')
+        if not isinstance(url, str) or len(url) > 2048:
+            raise web.HTTPBadRequest(text='Invalid page address')
+        status = await limited(browser.navigate(dev, url), STEP_LIMIT_S, dev)
+        if status is CLOSED:
+            return web.json_response({'status': None, 'closed': dev})
+        return web.json_response({'status': status})
+
     async def shot(request):
         sc = browser.screens.get(request.match_info["device"])
         if not sc or not sc.shot:
@@ -181,6 +192,7 @@ def make_app(browser, token=None):
 
     for path, fn in (("/init", init), ("/step", step), ("/act", act), ("/close", close)):
         app.router.add_post(path, fn)
+    app.router.add_post('/navigate', navigate)
     app.router.add_get("/shot/{device}.jpg", shot)
     app.router.add_get("/state", state)
     app.router.add_get("/health", health)
@@ -284,6 +296,13 @@ class BrowserClient:
 
     async def init(self, state):
         await self._post("/init", {"state": state}, timeout=10)
+
+    async def navigate(self, device, url):
+        d = await self._post('/navigate', {'device': device, 'url': url}, timeout=STEP_LIMIT_S + 20)
+        self._closed(d)
+        if d.get('status'):
+            self.screens[device] = d['status']
+        return d.get('status')
 
     async def step(self, device, heard=(), interest=None, mode=None):
         d = await self._post("/step", {"device": device, "heard": list(heard), "interest": interest, "mode": mode},

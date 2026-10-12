@@ -49,6 +49,7 @@ def add_home_routes(app, live, admin_ok):
                 "home": live.home.view(),
                 "computer": live.computer.view(),
                 "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
+                "browser_screen": live.screen_status('desk') if getattr(live, 'screen_status', None) else None,
                 "minecraft": live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"},
                 "life": live.life.snapshot(),
                 "stage": live.engine.stage,
@@ -71,6 +72,27 @@ def add_home_routes(app, live, admin_ok):
         if not isinstance(text, str) or len(text) > 2000:
             raise web.HTTPBadRequest(text="Input too long")
         return web.json_response({"ok": await live.computer.input(text + "\n")})
+
+    async def navigate(request):
+        enabled()
+        operator(request)
+        from browse import url_ok
+        data = await body(request)
+        url = data.get('url')
+        device = data.get('device', 'desk')
+        if not isinstance(url, str) or len(url) > 2048 or not url_ok(url) or device not in ('desk', 'phone'):
+            raise web.HTTPBadRequest(text='Use a public web page address')
+        if live.home.view()['privacy']:
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        if not getattr(live, 'browser', None):
+            raise web.HTTPConflict(text='The browser is unavailable')
+        status = await live.browser.navigate(device, url)
+        if not status:
+            raise web.HTTPConflict(text='Page unavailable or refused by the browser checks')
+        await live.on_screen(status)
+        if getattr(live, 'reader', None):
+            live.reader.saw(status, live.clock.now())
+        return web.json_response({'ok': True})
 
     async def note(request):
         enabled()
@@ -168,5 +190,6 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post("/api/home/pong", pong)
     app.router.add_post("/api/home/settings", settings)
     app.router.add_post("/api/home/intent", intent)
+    app.router.add_post('/api/home/browser', navigate)
     app.router.add_post("/api/home/game", game)
     app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)

@@ -1225,6 +1225,7 @@ function update(dt) {
 let homeState = null,
   computerState = {},
   browserState = null,
+  browserScreen = null,
   minecraftState = { enabled: false, status: "disabled" },
   lastConsoleGame = null,
   panelKind = "",
@@ -1371,6 +1372,27 @@ function renderPanel(reset = false) {
       panelBody.append(apps);
       if (computerApp === "browser") {
         browserFrame("desk", panelBody);
+        const pageLabel = textEl('p', '', 'muted');
+        pageLabel.id = 'browser-page-label';
+        panelBody.append(pageLabel);
+        const addressForm = document.createElement('form');
+        const address = document.createElement('input');
+        address.type = 'url';
+        address.placeholder = 'Operator: open a public web address';
+        address.required = true;
+        const open = button('Open', () => {});
+        addressForm.append(address, open);
+        addressForm.onsubmit = async event => {
+          event.preventDefault();
+          open.disabled = true;
+          try {
+            if (await mutate('browser', {device: 'desk', url: address.value.trim()})) {
+              await syncState();
+              refreshPanelScreens();
+            }
+          } finally { open.disabled = false; }
+        };
+        panelBody.append(addressForm);
         panelBody.append(
           textEl(
             "p",
@@ -1419,6 +1441,9 @@ function renderPanel(reset = false) {
       );
     }
     const terminal = document.getElementById("terminal");
+    const pageLabel = document.getElementById('browser-page-label');
+    if (pageLabel) pageLabel.textContent = browserScreen?.title
+      ? 'On screen: ' + browserScreen.title : '';
     if (terminal)
       terminal.textContent =
         terminalOutput() + "\n\n[" + (computerState.status || "offline") + "]";
@@ -2003,6 +2028,7 @@ async function syncState() {
     lastFullHome = s.home;
     computerState = s.computer;
     browserState = s.browser || null;
+    browserScreen = s.browser_screen || null;
     minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;

@@ -1107,6 +1107,23 @@ class Browser:
         return True
 
     # --- one step ------------------------------------------------------------------------------------------------
+    async def navigate(self, device, url):
+        """Authenticated operator navigation through the existing page guards."""
+        if not url_ok(url) or VO.private_url(url):
+            return None
+        async with self.lock:
+            sc = await self._ensure(device)
+            if not self.limits.allow(urllib.parse.urlsplit(url).hostname):
+                return None
+            if not await self.robots.check(url, lambda u: self._fetch(sc, u), self.limits):
+                return None
+            sc.awaiting, sc.pending_link, sc.watch_until = None, None, 0
+            sc.mode = None
+            if not await self._open(sc, url, 'opened by the private operator', 'page', revisit=True):
+                return None
+            sc.next_at = time.time() + 30
+            return sc.status()
+
     async def step(self, device, heard=(), interest=None, mode=None):
         """Scroll the current page or open the next one; returns the new screen status when a screenshot was taken.
         mode "video": he is watching videos (life activity watch_video): pages come from a YouTube search."""
