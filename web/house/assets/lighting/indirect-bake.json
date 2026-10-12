@@ -1,54 +1,54 @@
 {
-  "source_sha256": "ec166f7a0b4c3dc9ce60efd3e3b36dafbfccaa84ad3d599d1b5d5208bd451c78",
+  "source_sha256": "8413a2a49ec58fdaed18bf9c7c8fc81ff673b86282e13fc7818eee4defc8240b",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 32,
   "diffuse_bounces": 4,
   "direct_light": false,
   "albedo_in_bake": false,
-  "receivers": 80,
+  "receivers": 83,
   "export_material_texture_limit": 512,
-  "layout": "Grouped bedroom furniture pass: Blender oak frame, scanned side table, open bedside lamp",
+  "layout": "Kitchen oak in metric UVs and PBR fabric rugs, with matched day/night indirect lighting",
   "day": {
-    "width": 975,
+    "width": 974,
     "height": 1234,
-    "max": 4.601138591766357,
-    "p95": 0.14054314345121438,
-    "nonzero": 0.37877903835764454,
+    "max": 3.940864324569702,
+    "p95": 0.14226117730140686,
+    "nonzero": 0.3790356397618469,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "width": 975,
+    "width": 974,
     "height": 1234,
-    "max": 17.76311683654785,
-    "p95": 0.0005328789702616632,
-    "nonzero": 0.1165075011428334,
+    "max": 10.42691707611084,
+    "p95": 0.0005270098190521821,
+    "nonzero": 0.11579844182122544,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "76fe1d4f621786205c94fbab136f4efd663cbd9f49fa9dd031da231073e92335",
-      "bytes": 7388984
+      "sha256": "379eff8912beb413d449d2288209bc2c7d1fb90cfc6af51bcd7896fa2d546a0a",
+      "bytes": 7391888
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "dd13f0c2427ef3b29b23be483d739e01edb5139437833d08183382edf045655c",
-      "bytes": 2408227
+      "sha256": "8c5a8c336b38962679fda6a49ef07ad1d50372cf94ff1127b34d89206c338236",
+      "bytes": 2408610
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "d637dbeb2312bc251cdb0c02920412dd90ccabaefbc48a9449ee53357e28064e",
-      "bytes": 877354
+      "sha256": "0fb4094eada6ad46e3308484bf04cbd632046025ad5b9789972b394018dc1a35",
+      "bytes": 877437
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "2125d3f4cfccdf7f152059bf4dc955c53909df1d81002537035c975494a00cd6",
-      "bytes": 730743
+      "sha256": "01f2fde8ed590f74cc7b234b4cc05e07c2ae9f5d24d7fb0e1a68b0c6234afd79",
+      "bytes": 723738
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "453cd387765aa46b016cd6f2ea07652a3bcf2828d9fd555f5afcf298bf76f24c",
-      "bytes": 286290
+      "sha256": "43f858249685628d6918209cc710bc44c9c08175b28f5b646ea89214083066ee",
+      "bytes": 282454
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces"

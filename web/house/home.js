@@ -9,6 +9,7 @@ import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createWindowView } from "/room/window_view.js?v=home1";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
+import { metricBoxUv } from "./material_uv.mjs";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
@@ -169,6 +170,13 @@ const M = {
   }),
 };
 M.darkwood.color.set("#c5aa83");
+M.kitchenOak = M.darkwood.clone();
+M.kitchenOak.color.set('#e7d5b5');
+M.kitchenOak.roughness = .72;
+M.kitchenOak.normalScale.set(.22, .22);
+M.kitchenOak.userData.lightOak = true;
+M.kitchenOak.onBeforeCompile = gradeOak;
+M.kitchenOak.customProgramCacheKey = () => 'private-kitchen-light-oak-v1';
 M.stone.roughness = 0.35;
 M.blue.color.set("#9bb0ad");
 M.sofa.color.set("#9ca995");
@@ -187,6 +195,7 @@ function box(w, h, d, x, y, z, m = M.wood, r = 0.012) {
   if (m === M.wood && !(w > 4 || d > 5)) {
     o.material = M.darkwood;
   }
+  if (m === M.kitchenOak) metricBoxUv(o.geometry, .8);
   scene.add(o);
   meshCount++;
   return o;
@@ -233,19 +242,27 @@ function floor(w, d, x, y, z) {
   box(w, 0.12, d, x, y - 0.06, z, M.darkwood, 0);
 }
 function rug(w, d, x, y, z, color = "#c4b49a") {
-  const m = mat(color, 0.98, fabricTex);
-  box(w, 0.018, d, x, y + 0.021, z, m, 0.008);
-  for (let i = 0; i < 12; i++)
-    box(
+  const m = scannedFabric.clone();
+  m.color.set(color);
+  m.roughness = .98;
+  m.normalScale.set(.4, .4);
+  const stitching = m.clone();
+  stitching.color.multiplyScalar(.93);
+  const body = box(w, 0.018, d, x, y + 0.021, z, m, 0.008);
+  metricBoxUv(body.geometry, 2 / 3);
+  for (let i = 0; i < 12; i++) {
+    const seam = box(
       w - 0.08,
       0.003,
       0.012,
       x,
       y + 0.034,
       z - d / 2 + 0.08 + (i * d) / 12,
-      M.linen,
+      stitching,
       0,
     );
+    metricBoxUv(seam.geometry, 2 / 3);
+  }
 }
 function drape(w, d, x, y, z, m, drop) {
   const g = new T.PlaneGeometry(w, d, 36, 28);
@@ -538,7 +555,7 @@ furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   }
 });
 // Kitchen, integrated oak cabinetry, stone countertop, sink and coffee corner.
-box(3.05, 0.70, 0.62, -2.2, 0.35, -3.55, M.wood, 0.015);
+box(3.05, 0.70, 0.62, -2.2, 0.35, -3.55, M.kitchenOak, 0.015);
 // One continuous slab with a real opening, rather than seams between four boxes.
 const counterShape = new T.Shape();
 counterShape.moveTo(-1.58,-.35); counterShape.lineTo(1.58,-.35);
@@ -553,7 +570,7 @@ kitchenCounter.position.set(-2.2,.8675,-3.53);
 kitchenCounter.castShadow = kitchenCounter.receiveShadow = true;
 scene.add(kitchenCounter);
 for (const x of [-3.3, -2.6, -1.9, -1.2]) {
-  box(0.65, 0.76, 0.035, x, 0.44, -3.215, M.wood, 0.006);
+  box(0.65, 0.76, 0.035, x, 0.44, -3.215, M.kitchenOak, 0.006);
   beam([x - 0.15, 0.75, -3.18], [x + 0.15, 0.75, -3.18], 0.01, M.brass);
 }
 box(3.1, 0.7, 0.36, -2.2, 2.05, -3.71, M.white, 0.012);
@@ -1082,6 +1099,16 @@ const places = {
     name: "Bedroom",
   },
   balcony: { p: [-2.2, 4.65, 4.5], look: [-2, 4.5, 20], name: "Balcony" },
+};
+// Repeatable comparison cameras only change the visitor view, never his brain or life.
+const comparisonView = new URLSearchParams(location.search).get('shot');
+const comparisonCameras = {
+  kitchen: {p: [-.7,1.65,-1.85], look: [-2.2,1.05,-3.5]},
+  living: {p: [-.45,1.65,2.9], look: [-2.4,1.1,-.3]},
+  bedroom: places.bedroom,
+  office: places.office,
+  stairs: places.stairs,
+  entry: places.entry,
 };
 let visitorStandTarget = null;
 let following = true,
@@ -2178,7 +2205,15 @@ function acceptHome(state) {
   if (!state) return;
   if (state.privacy) setPrivacy(true);
   if (!homeState) {
-    setLook(state.position, state.look);
+    const comparison = comparisonCameras[comparisonView];
+    setLook(comparison?.p || state.position, comparison?.look || state.look);
+    if (comparison) {
+      following = false;
+      document.getElementById('follow').classList.remove('active');
+      document.getElementById('explore').classList.add('active');
+      document.getElementById('status').dataset.comparisonView = comparisonView;
+      notice('Comparison camera: ' + comparisonView + '. His life continues normally.');
+    }
   }
   homeState = { ...homeState, ...state };
   if (state.console_game && state.console_game !== lastConsoleGame) {
@@ -2370,14 +2405,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=5"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=7"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=5",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=7",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=5",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=7",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
