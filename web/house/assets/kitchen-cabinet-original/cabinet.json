@@ -1,0 +1,77 @@
+{
+  "geometry": "Original Blender construction: four independent fronts, real thin carcass, reveals and understated lower brass pulls.",
+  "referenceSources": [
+    "https://house.muji.com/life/resident/kinoie/index_211102/",
+    "https://www.woodone.co.jp/product/item/housing/suiji/"
+  ],
+  "referenceUse": "Manufacturer references inform compact white/wood kitchen proportions; no source imagery, CAD or textures included.",
+  "dimensions_m_browser": [
+    3.1,
+    0.7,
+    0.36
+  ],
+  "worldCenter_browser": [
+    -2.2,
+    2.05,
+    -3.71
+  ],
+  "doors": [
+    {
+      "node": "Cabinet door 1",
+      "hingeLocalBrowser": [
+        -1.548,
+        0,
+        0.165
+      ],
+      "axisBrowser": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "node": "Cabinet door 2",
+      "hingeLocalBrowser": [
+        -0.7730000000000001,
+        0,
+        0.165
+      ],
+      "axisBrowser": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "node": "Cabinet door 3",
+      "hingeLocalBrowser": [
+        0.0019999999999999463,
+        0,
+        0.165
+      ],
+      "axisBrowser": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "node": "Cabinet door 4",
+      "hingeLocalBrowser": [
+        0.7770000000000001,
+        0,
+        0.165
+      ],
+      "axisBrowser": [
+        0,
+        1,
+        0
+      ]
+    }
+  ],
+  "runtimeMaterials": "Reuse M.white for carcass/fronts and M.brass for pulls; no new textures.",
+  "runtimeIntegration": "Replace only the existing 3.1\u00d70.7\u00d70.36 white box. Add GLTF scene at existing center with no further scale/rotation. Leave under-cabinet light strip and all kitchen collisions unchanged.",
+  "openingImplemented": false,
+  "glb_bytes": 88284,
+  "sha256": "f7796dd06a4e13b87f46fccd2b10cb9cf5c5fbd89b69f447da9597ea27793bc3"
+}

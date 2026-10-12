@@ -8,7 +8,7 @@ import { HDRLoader } from "./vendor/HDRLoader.js";
 import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
-import { createWindowView } from "/room/window_view.js?v=home1";
+import { createHouseWindowView } from "./house_window_view.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv } from "./material_uv.mjs";
@@ -399,15 +399,15 @@ windowFrame(-2, 4.45, 3.85, 3.6, 2.5);
 const windowViews = [];
 let sharedWindowTextures;
 for (const surface of [
-  { c: [-3.94, 1.675, 0], w: 7.9, h: 2.15, ry: Math.PI / 2 },
-  { c: [-1.3, 1.675, 3.94], w: 5.35, h: 2.15, ry: Math.PI },
-  { c: [3.25, 1.675, 3.94], w: 1.35, h: 2.15, ry: Math.PI },
-  { c: [-2.075, 4.45, 3.94], w: 3.7, h: 2.5, ry: Math.PI },
+  { facade: 'west', c: [-3.94, 1.675, 0], w: 7.9, h: 2.15, ry: Math.PI / 2 },
+  { facade: 'front', c: [-1.3, 1.675, 3.94], w: 5.35, h: 2.15, ry: Math.PI },
+  { facade: 'front', c: [3.25, 1.675, 3.94], w: 1.35, h: 2.15, ry: Math.PI },
+  { facade: 'front', c: [-2.075, 4.45, 3.94], w: 3.7, h: 2.5, ry: Math.PI },
 ]) {
-  const view = createWindowView(T, {
+  const view = createHouseWindowView(T, {
     base: lite ? "/house/assets/lite/window/" : "/room/window/",
     textures: sharedWindowTextures,
-  });
+  }, surface.facade);
   if (!sharedWindowTextures) {
     sharedWindowTextures = {};
     for (const [name, uniform] of Object.entries({
@@ -425,6 +425,7 @@ for (const surface of [
   view.build(surface, scene, null);
   windowViews.push(view);
 }
+document.getElementById('status').dataset.windowProjection = 'shared-facade-world-rays';
 // A real exit through the front wall to the entrance terrace.
 floor(2.5, 1.8, 2, 0, 4.9);
 const threshold = box(1.1, .04, .3, 2, .005, 3.95, M.darkwood.clone(), 0);
@@ -574,7 +575,24 @@ const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=1
   console.warn('Original sofa fallback:', error.message);
   return furnished('sofa_03', -1.8, 0, .1, 2.5, -Math.PI / 2, null, 'z');
 });
-furnished("modern_coffee_table_01", -3.2, 0, .1, .70);
+const coffeeTableReady = gltfLoader.loadAsync('/house/assets/coffee-table-original/coffee-table.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-3.2, 0, .1);
+  root.rotation.y = -Math.PI / 2;
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = M.kitchenOak;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-coffee-table-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  document.getElementById('status').dataset.coffeeTable = 'blender-oak';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => {
+  console.warn('Coffee table fallback:', error.message);
+  return furnished('modern_coffee_table_01', -3.2, 0, .1, .70);
+});
 furnished("potted_plant_01", -3.45, 0, 3.25, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
 furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
@@ -619,7 +637,23 @@ for (const x of [-3.3, -2.6, -1.9, -1.2]) {
   box(0.65, 0.76, 0.035, x, 0.44, -3.215, M.kitchenOak, 0.006);
   beam([x - 0.15, 0.75, -3.18], [x + 0.15, 0.75, -3.18], 0.01, M.brass);
 }
-box(3.1, 0.7, 0.36, -2.2, 2.05, -3.71, M.white, 0.012);
+const cabinetFallback = box(3.1, .7, .36, -2.2, 2.05, -3.71, M.white, .012);
+cabinetFallback.userData.replaceable = true;
+const kitchenCabinetReady = gltfLoader.loadAsync('/house/assets/kitchen-cabinet-original/cabinet.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-2.2, 2.05, -3.71);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = object.name.toLowerCase().includes('pull') ? M.brass : M.white;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-upper-cabinet-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  cabinetFallback.visible = false;
+  document.getElementById('status').dataset.kitchenCabinet = 'blender-four-door';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Upper cabinet fallback:', error.message));
 box(
   3.1,
   0.035,
@@ -1242,6 +1276,7 @@ document.getElementById("follow").onclick = () => {
   document.getElementById("explore").classList.remove("active");
 };
 document.getElementById("explore").onclick = () => {
+  if (!following) return; // Re-entering visitor mode must not pull the camera through the house.
   following = false;
   visitorStandTarget =
     homeState?.seated > 0.01
@@ -2464,16 +2499,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=9"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=10"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=9",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=10",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=9",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=10",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2678,7 +2713,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady]);
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady]);
       const data = await new GLTFExporter().parseAsync(scene, {
         binary: true,
         onlyVisible: true,

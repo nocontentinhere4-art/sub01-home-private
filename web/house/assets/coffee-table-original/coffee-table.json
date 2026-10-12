@@ -1,0 +1,48 @@
+{
+  "geometry": "Original oak coffee table with continuous slab, four tapered shoulder legs and recessed support rails; no manufacturer CAD.",
+  "reference_url": "https://www.karimoku-case.com/furniture/nf-ct01/",
+  "reference_photo_url": "https://www.karimoku-case.com/wp/wp-content/uploads/2022/10/KCS_NF_commons_20221105_003-scaled.jpg",
+  "manufacturer_reference_dimensions_m": [
+    1.5,
+    0.6,
+    0.305
+  ],
+  "original_dimensions_m": [
+    1.38,
+    0.68,
+    0.39
+  ],
+  "blender_bounds_m": [
+    [
+      -0.6899999976158142,
+      -0.3400000035762787,
+      0.0
+    ],
+    [
+      0.6899999976158142,
+      0.3400000035762787,
+      0.39000001549720764
+    ]
+  ],
+  "runtime_origin_m": [
+    -3.2,
+    0,
+    0.1
+  ],
+  "runtime_yaw_radians": -1.5707963267948966,
+  "runtime_world_footprint_m": [
+    0.68,
+    1.38
+  ],
+  "existing_collision_envelope_m": [
+    0.7,
+    1.4
+  ],
+  "runtime_material": "Existing house M.kitchenOak (light-oak grade) or equivalent clone sharing existing CC0 fine_grained_wood maps; metric UVs.",
+  "texture_source": "https://polyhaven.com/a/fine_grained_wood",
+  "embedded_textures": false,
+  "vertices": 864,
+  "triangles": 1692,
+  "glb_bytes": 121756,
+  "sha256": "64d4885f28ec578733eeafe3bc6e12d1b501b8d29e71caf7555f181c4143c147"
+}

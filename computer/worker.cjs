@@ -7,7 +7,8 @@ const snapshot = process.env.SUB01_VM_STATE;
 const assets = process.env.SUB01_VM_ASSETS || __dirname;
 let serial = "",
   ready = false,
-  busy = false,
+  activeSave = null,
+  shuttingDown = false,
   restored = false;
 const send = (o) => process.stdout.write(JSON.stringify(o) + "\n");
 const vm = new V86({
@@ -48,24 +49,43 @@ vm.add_listener("emulator-loaded", async () => {
 setInterval(() => {
   send({ type: "terminal", ready, output: serial, paused: !vm.is_running() });
 }, 1000);
-async function save() {
-  if (busy || !snapshot || !ready) return;
-  busy = true;
-  try {
-    const state = Buffer.from(await vm.save_state());
-    fs.mkdirSync(path.dirname(snapshot), { recursive: true });
-    fs.writeFileSync(snapshot + ".tmp", state);
-    fs.renameSync(snapshot + ".tmp", snapshot);
-  } catch (e) {
-    send({ type: "error", message: "VM snapshot failed" });
-  } finally {
-    busy = false;
+async function save(final = false) {
+  if (activeSave) {
+    await activeSave;
+    if (!final) return;
   }
+  if (!snapshot || !ready) return;
+  // A final save follows any older periodic save: the guest may have changed
+  // since that capture began. Keep atomic replacement and bounded disk writes.
+  const saving = (async () => {
+    try {
+      const state = Buffer.from(await vm.save_state());
+      fs.mkdirSync(path.dirname(snapshot), { recursive: true });
+      fs.writeFileSync(snapshot + ".tmp", state);
+      fs.renameSync(snapshot + ".tmp", snapshot);
+    } catch (e) {
+      send({ type: "error", message: "VM snapshot failed" });
+    }
+  })();
+  activeSave = saving;
+  try {
+    await saving;
+  } finally {
+    if (activeSave === saving) activeSave = null;
+  }
+}
+async function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  await save(true);
+  vm.destroy();
+  process.exit(0);
 }
 setInterval(save, 60000);
 readline.createInterface({ input: process.stdin }).on("line", async (line) => {
   try {
     const m = JSON.parse(line);
+    if (shuttingDown) return;
     if (
       m.type === "input" &&
       typeof m.text === "string" &&
@@ -80,17 +100,11 @@ readline.createInterface({ input: process.stdin }).on("line", async (line) => {
     } else if (m.type === "save") {
       await save();
     } else if (m.type === "shutdown") {
-      await save();
-      vm.destroy();
-      process.exit(0);
+      await shutdown();
     }
   } catch (e) {
     send({ type: "error", message: "Invalid VM command" });
   }
 });
 for (const signal of ["SIGTERM", "SIGINT"])
-  process.on(signal, async () => {
-    await save();
-    vm.destroy();
-    process.exit(0);
-  });
+  process.on(signal, shutdown);
