@@ -167,6 +167,9 @@ def add_home_routes(app, live, admin_ok):
         if chosen == "minecraft" and not (getattr(live, "minecraft", None) and live.minecraft.enabled):
             raise web.HTTPConflict(text="Minecraft is not configured")
         live.home.console_game = chosen
+        if getattr(live, 'life', None):
+            live.life.console_wish = None
+            live.life.console_choice = None
         await live.save_state()
         return web.json_response({"game": chosen})
 

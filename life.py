@@ -16,6 +16,7 @@ import math
 import random
 import re
 from pathlib import Path
+from console_requests import game_request, game_music_context, valid_choice, TTL as CONSOLE_WISH_TTL
 
 from sleep import local
 from twin.body import Body
@@ -172,7 +173,7 @@ LABEL = {"sleep": "sleeping", "phone": "in bed scrolling the phone", "eat": "eat
          "play_chess": "playing chess at the desk", "listen_music": "lying on the bed listening to music"}
 LABEL.update(use_computer="using his Linux computer", play_console="playing a game on the wall TV", use_bathroom="in the bathroom (private)")
 DESIRES = [
-    (r"\b(pong|console|tv game|videogame)\b", "play_console"),
+    (r"\b(pong|minecraft|console|tv game|videogame)\b", "play_console"),
     (r"\b(linux|terminal|emulator|computer)\b", "use_computer"),
     (r"\b(bathroom|bagno|toilet)\b", "use_bathroom"),  # chat words -> short-lived desire
     (r"\b(pane|bread|fame|hungry|mangia|eat|colazione|breakfast)\b", "buy_bread"),
@@ -181,8 +182,8 @@ DESIRES = [
     (r"\b(finestra|window|guarda fuori|look outside)\b", "window"),
     (r"\b(sushi|ramen|pizza|delivery|consegna|ordina|order|cibo|food|uber)\b", "order_food"),
     (r"\b(chess|scacchi)\b", "play_chess"),
-    (r"\b(music|musica|song|songs|canzone|canzoni|spotify|playlist|metti|ascolta|listen|headphones|cuffie)\b"
-     r"|^\s*(play|put on)\b(?!.*\b(chess|scacchi|game)\b)", "listen_music"),
+    (r"\b(music|musica|song|songs|soundtrack|theme|canzone|canzoni|spotify|playlist|metti|ascolta|listen|headphones|cuffie)\b"
+     r"|^\s*(play|put on)\b(?!.*\b(chess|scacchi|game|minecraft|pong)\b)", "listen_music"),
     (r"\b(youtube|video|videos|filmato)\b", "watch_video"),
     (r"\b(learn|impara|studia|study|research|ricerca|cerca|wikipedia|why|perch[eé]|how|come mai)\b|\?", "research"),
 ]
@@ -290,6 +291,9 @@ class Life:
         self.video_block_until = s.get("video_block_until", -1e18)   # no watch_video until then (nothing to show, L5)
         self.music = None                      # live_server: {"title", "artist", "mode"} while a track plays (#68)
         self.viewer_nudge = s.get("viewer_nudge")   # [activity, sim time applied]: what viewers voted for (audience.py)
+        self.console_games = {'pong'}  # live server adds Minecraft only when configured
+        self.console_wish = valid_choice(s.get('console_wish'))
+        self.console_choice = valid_choice(s.get('console_choice'))
         target = ACTIVITIES[self.activity][0]
         if target != self.place:                          # restored mid-activity somewhere else: walk there
             self.path = route(self.place, target)[1:]
@@ -308,10 +312,17 @@ class Life:
     # --- inputs ---------------------------------------------------------------------------------
     def hear(self, text, t):
         low = text.lower()
+        requested = game_request(text)
+        if getattr(self, 'home_enabled', False) and requested in self.console_games:
+            self.console_wish = (requested, t)
         m = DISH_RE.search(low)
         if m:
             self.wish = [m.group(1), t]
         for pat, act in DESIRES:
+            if act == 'play_console' and game_music_context(text):
+                continue
+            if act == 'play_console' and requested and requested not in self.console_games:
+                continue
             if act == "watch_video" and not self.can_watch:
                 continue                                    # nothing could show (L5): no wish for it
             if re.search(pat, low):
@@ -509,6 +520,11 @@ class Life:
         return until
 
     def start(self, act, t, why):
+        if act == 'play_console':
+            wish = self.console_wish
+            self.console_choice = wish if (wish and wish[0] in self.console_games
+                and 0 <= t - wish[1] <= CONSOLE_WISH_TTL) else None
+            self.console_wish = None
         if act == "play_chess":
             self.last_chess = t
         if act == "order_food":
@@ -557,6 +573,8 @@ class Life:
                 "geo": {"lat": round(lat, 6), "lng": round(lng, 6), "heading": round(hd)}, "dish": d.get("dish")}
 
     def update(self, t, dt_real, dt_sim, stage, rel, hot=0.0, pressure=0.0, levels=None, amygdala=0.0):
+        if self.console_wish and not 0 <= t - self.console_wish[1] <= CONSOLE_WISH_TTL:
+            self.console_wish = None
         self._t = t
         if self.own_body:                                  # an external body is stepped by its owner
             self.body.update(dt_sim, levels, amygdala, stage, exertion=self.exertion())
@@ -717,7 +735,7 @@ class Life:
                 "phone": self.phone_app if self.activity == "phone" and not self.path else None,
                 "geo": self.geo, "say": self.say, "music": self.music, "food": self.food, "food_items": list(self.food_items),
                 "eating": self.eating if self.activity == "eat" else None,
-                "order": self.order_dish if self.activity == "order_food" else None, "courier": self.courier(self._t), "log": [{"t": e["t"], "what": e["what"]} for e in self.log[-8:]]}
+                "order": self.order_dish if self.activity == "order_food" else None, "courier": self.courier(self._t), "log": [{"t": e["t"], "what": e["what"]} for e in self.log[-8:]], "console_choice": self.console_choice, "console_wish": self.console_wish}
 
     def label(self):
         if self.activity == "eat" and self.eating in EAT_LABEL:
@@ -732,6 +750,7 @@ class Life:
                 "order_dish": self.order_dish, "wish": self.wish,
                 "boredom": self.boredom, "bread": self.bread, "desires": self.desires, "log": self.log,
                 "last_chess": self.last_chess, "last_order": self.last_order, "viewer_nudge": self.viewer_nudge,
+                "console_wish": self.console_wish, "console_choice": self.console_choice,
                 "started": [[ts, a] for ts, a in self.started], "dur": self.dur, "trip": self.trip,
                 "video_block_until": self.video_block_until,
                 **({"body": self.body.to_dict()} if self.own_body else {})}

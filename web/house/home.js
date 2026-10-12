@@ -1774,14 +1774,19 @@ function renderPanel(reset = false) {
         );
         const form = document.createElement("form"),
           input = document.createElement("input");
-        input.placeholder = "Try: play Pong, go outside, use Linux…";
+        input.placeholder = minecraftState.enabled ? "Try: play Minecraft, play Pong, use Linux…" : "Try: play Pong, go outside, use Linux…";
         form.append(
           input,
           button("Send impulse", () => {}),
         );
         form.onsubmit = (e) => {
           e.preventDefault();
+          if (pendingImpulse) return;
           if (socket?.readyState === 1) {
+            const send = form.querySelector('button');
+            send.disabled = true;
+            const timer = setTimeout(() => finishImpulse(false, 'No confirmation received. Try again.'), 8000);
+            pendingImpulse = {input, send, timer, text: input.value};
             socket.send(
               JSON.stringify({
                 type: "chat",
@@ -1789,9 +1794,8 @@ function renderPanel(reset = false) {
                 nick: "a visitor",
               }),
             );
-            input.value = "";
-            notice("Impulse sent.");
-          }
+            notice("Sending impulse…");
+          } else notice('Reconnecting. Try again in a moment.');
         };
         content.append(form);
       }
@@ -1847,6 +1851,8 @@ function renderPanel(reset = false) {
           "muted",
         ),
       );
+      if (homeState?.pending_console_game)
+        content.append(textEl('p', 'Suggested game: ' + homeState.pending_console_game + '. He decides whether to play.', 'muted'));
     }
   }
 }
@@ -2229,7 +2235,15 @@ async function syncState() {
     refreshPanelScreens();
   } catch {}
 }
-let socket, reconnectTimer;
+let socket, reconnectTimer, pendingImpulse;
+function finishImpulse(ok, message) {
+  if (!pendingImpulse) return;
+  clearTimeout(pendingImpulse.timer);
+  pendingImpulse.send.disabled = false;
+  if (ok && pendingImpulse.input.value === pendingImpulse.text) pendingImpulse.input.value = '';
+  pendingImpulse = null;
+  notice(message);
+}
 function connect() {
   socket = new WebSocket(
     (location.protocol === "https:" ? "wss://" : "ws://") +
@@ -2239,6 +2253,8 @@ function connect() {
   socket.onmessage = (e) => {
     try {
       const m = JSON.parse(e.data);
+      if (m.type === 'chat_ack')
+        finishImpulse(m.ok === true, m.ok ? 'Impulse received. He chooses what to do.' : 'Impulse not accepted. Edit it and try again.');
       if (m.type === "chess") {
         chessState = { ...chessState, game: m };
         drawTV();
@@ -2251,6 +2267,7 @@ function connect() {
     } catch {}
   };
   socket.onclose = () => {
+    finishImpulse(false, 'Connection lost. Your impulse was not confirmed.');
     clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(connect, 2000);
   };

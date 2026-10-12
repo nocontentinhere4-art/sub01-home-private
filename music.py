@@ -30,6 +30,7 @@ import urllib.parse
 import urllib.request
 from collections import deque
 from pathlib import Path
+from console_requests import game_request
 
 from chat import blocked, networks_for
 from sleep import local
@@ -112,6 +113,8 @@ def daypart(t):
 
 def wish(text):
     """A viewer's "play …" / "metti …" -> the query (filtered), else None."""
+    if game_request(text):
+        return None
     m = WISH.match(text or "")
     if not m:
         return None

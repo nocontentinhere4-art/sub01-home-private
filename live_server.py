@@ -412,6 +412,11 @@ class Live:
         elif self.home and not self.minecraft.enabled and self.home.console_game == "minecraft":
             self.home.console_game = "pong"
         self.life.home_enabled = self.home_enabled
+        self.life.console_games = {'pong'} | ({'minecraft'} if self.minecraft and self.minecraft.enabled else set())
+        for field in ('console_wish', 'console_choice'):
+            choice = getattr(self.life, field)
+            if choice and choice[0] not in self.life.console_games:
+                setattr(self.life, field, None)
         self.home_device_at = 0.0
         self.time_scale = time_scale
         self.life.time_scale = time_scale

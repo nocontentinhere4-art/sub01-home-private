@@ -21,3 +21,20 @@ def test_game_selection_is_authenticated_and_frames_are_real_only():
         finally:
             await http.close()
     asyncio.run(run())
+
+
+def test_operator_selection_clears_pending_console_suggestion_only_after_authorization():
+    async def run():
+        http, live = await client()
+        live.life.console_wish = ('minecraft',100)
+        live.life.console_choice = ('minecraft',90)
+        try:
+            denied = await http.post('/api/home/game',json={'game':'pong'})
+            assert denied.status == 403
+            assert live.life.console_wish == ('minecraft',100)
+            accepted = await http.post('/api/home/game',json={'game':'pong'},headers={'X-Admin-Token':'test'})
+            assert accepted.status == 200
+            assert live.life.console_wish is None and live.life.console_choice is None
+        finally:
+            await http.close()
+    asyncio.run(run())

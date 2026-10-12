@@ -8,6 +8,7 @@ Physiology and consciousness are not inferred from this simulation.
 import heapq
 import math
 import random
+from console_requests import valid_choice
 
 # xyz = walking-eye positions in the rendered house, metres.
 NODES = {
@@ -225,6 +226,8 @@ class HomeWorld:
     def __init__(self, state=None):
         s = state if isinstance(state, dict) else {}
         self.console_game = s.get("console_game", "pong")
+        self.last_console_choice = valid_choice(s.get('last_console_choice'))
+        self.pending_console_game = None
         if self.console_game not in ("pong", "chess", "minecraft"):
             self.console_game = "pong"
         self.settings = {"lamp": True, "curtain": False, **s.get("settings", {})}
@@ -271,6 +274,12 @@ class HomeWorld:
     def update(self, dt, sim_dt, life, rel):
         self.time += dt
         activity = life.get("activity", "research")
+        pending = valid_choice(life.get('console_wish'))
+        self.pending_console_game = pending[0] if pending else None
+        choice = valid_choice(life.get('console_choice'))
+        if activity == 'play_console' and choice and choice != self.last_console_choice:
+            self.console_game = choice[0]
+            self.last_console_choice = choice
         target = self.desired(activity)
         self.bladder = min(1, self.bladder + max(0, sim_dt) / 18000)
         if target != self.target:
@@ -404,6 +413,7 @@ class HomeWorld:
             and math.hypot(self.position[0] - 2, self.position[2] - 3.9) < 1.8,
             "settings": dict(self.settings),
             "console_game": self.console_game,
+            "pending_console_game": self.pending_console_game,
             "phone": dict(self.phone),
             "pong": self.pong.view(),
             "notes": self.notes[-10:] if not compact else [],
@@ -413,6 +423,7 @@ class HomeWorld:
     def to_dict(self):
         return {
             "node": self.node,
+            "last_console_choice": self.last_console_choice,
             "console_game": self.console_game,
             "position": self.position,
             "path": self.path,
