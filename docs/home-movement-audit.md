@@ -33,3 +33,11 @@ Root subsequently verified actual Chrome crossing at visitor `[-2.1608,4.65,4.56
 ## Remaining exterior continuity
 
 The balcony crossing exposed a significant visual mismatch: the photographed neighbourhood visible from inside is replaced by the existing generic, untextured box city outside. Successful physical crossing does not establish visual realism. The next exterior pass should reuse the same facade origins, textures, world-ray/depth projection and weather phases in lightweight exterior backdrops, with no glass overlays, so the balcony and entrance terrace remain coherent with their window views. This is a finite local exterior treatment, not a claim of a complete explorable city.
+
+## Current follow-up evidence — 2026-10-13
+
+Front hinged and bathroom sliding leaves now gate the actual visitor collision function with body clearance; both actor and visitor proximity open them. Dedicated harnesses include actual Python HomeWorld desk→park→desk and bed→bathroom→desk routes with a conservative held5Hz actor feed. Repeated current checks pass for bounded30/60fps walking, terrace boundaries and allthree door gates. These still do not prove collision safety against every arbitrary rendered furniture triangle.
+
+Exterior no longer changes to the generic boxcity at the door: inside/outside share one attributed historical spherical residential Tokyo photograph, with nearby geometric pavement/gate. Distant street/buildings remain static photographic content; no complete freely explorable exterior world is claimed. Current visual audit found excessive60×60m near paving masking the image ground; the next bounded courtyard pass addresses it separately from movement bounds.
+
+Fresh Phone-panel-open→bathroom-entry runtime acceptance captured actualwholeviewOCCUPIED, emptyhiddenpanel, zeroeditablecontrols and hidden device actions. Controlled bladder/nudge initialization applies only to isolatedQA; it does not demonstrate spontaneous need decisions, existing typed draft preservation, or held-key release. See docs/inhabited-home.md and private-bathroom-panel-censored.jpg for exact evidence.

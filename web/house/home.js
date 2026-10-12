@@ -262,7 +262,9 @@ function floor(w, d, x, y, z) {
   o.position.set(x, y + 0.025, z);
   o.receiveShadow = true;
   scene.add(o);
-  box(w, 0.12, d, x, y - 0.06, z, M.architectureOak, 0);
+  // The independent top plane remains oak. Raised slabs have a painted,
+  // scanned-plaster soffit/edge rather than repeating veneer over the ceiling.
+  box(w, 0.12, d, x, y - 0.06, z, y > 0 ? M.wall : M.architectureOak, 0);
 }
 function rug(w, d, x, y, z, color = "#c4b49a") {
   const m = scannedFabric.clone();
@@ -460,7 +462,8 @@ const STEP = {
 for (let i = 0; i < 17; i++) {
   const z = 2.55 - (i + 0.5) * 0.25,
     h = ((i + 1) * 3) / 17;
-  box(0.96, h, 0.25, 0.3, h / 2, z, M.architectureOak, 0);
+  // Calm painted stair body/riser; the separate tread/nosing stays real oak.
+  box(0.96, h, 0.25, 0.3, h / 2, z, M.wall, 0);
   box(1.02, 0.035, 0.27, 0.3, h + 0.006, z, M.architectureOak, 0.007);
 }
 for (const x of [-0.25, 0.85]) {
@@ -2537,14 +2540,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=13"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=14"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=13",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=14",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=13",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=14",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;

@@ -1,5 +1,38 @@
 import {createResidentialForeground} from './residential_foreground.mjs';
 import {createStreetMaterials,streetMetricUv} from './street_materials.mjs';
+// A limited real foreground meets the historical capture, rather than paving
+// an invented 60m square over its whole street. Values are world metres.
+export const RESIDENTIAL_GROUND = Object.freeze({
+  courtyardWidth:10,courtyardDepth:10.2,courtyardZ:.8,courtyardTop:-.02,
+  streetWidth:18,streetFadeStart:7,streetHalfWidth:9,farFadeStart:14.7,farEdge:17.3,
+});
+export function foregroundFadeAt(x,z,{court=false}={}){
+  const smooth=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
+  return court ? (1-smooth(4.65,5,Math.abs(x)))*(1-smooth(4.0,4.3,-z)) :
+    (1-smooth(7,9,Math.abs(x)))*(1-smooth(14.7,17.3,z));
+}
+function transitionMaterial(source,{court=false}={}){
+  const material=source.clone(),previous=source.onBeforeCompile;
+  material.transparent=true;material.depthWrite=false;
+  material.onBeforeCompile=(shader,renderer)=>{
+    previous?.(shader,renderer);
+    shader.vertexShader='varying vec3 vResidentialWorld;\n'+shader.vertexShader.replace('#include <project_vertex>',
+      `#include <project_vertex>
+       vec4 residentialWorld=vec4(transformed,1.);
+       #ifdef USE_INSTANCING
+         residentialWorld=instanceMatrix*residentialWorld;
+       #endif
+       vResidentialWorld=(modelMatrix*residentialWorld).xyz;`);
+    shader.fragmentShader='varying vec3 vResidentialWorld;\n'+shader.fragmentShader.replace('#include <opaque_fragment>',
+      (court ?
+        'diffuseColor.a *= (1.-smoothstep(4.65,5.,abs(vResidentialWorld.x)))*(1.-smoothstep(4.,4.3,-vResidentialWorld.z));\n' :
+        'diffuseColor.a *= (1.-smoothstep(7.,9.,abs(vResidentialWorld.x)))*(1.-smoothstep(14.7,17.3,vResidentialWorld.z));\n')+
+      '#include <opaque_fragment>');
+  };
+  material.customProgramCacheKey=()=> (source.customProgramCacheKey?.()||'standard')+
+    (court?'-residential-court-transition-v1':'-residential-street-transition-v1');
+  return material;
+}
 // A single historical, attributed spherical capture is visible through every
 // window and outside. No finite plates, portal copies, reflection scene or HDRI.
 export function createExteriorBackdrops(T, scene, {lite=false, manager}={}, legacy) {
@@ -23,26 +56,36 @@ export function createExteriorBackdrops(T, scene, {lite=false, manager}={}, lega
   // Real nearby pavement gives translation parallax and hides the photographed
   // nadir. Distant buildings remain a static capture, not navigable geometry.
   const foreground=new T.Group();foreground.name='residential_pavement';foreground.visible=false;group.add(foreground);
-  const {pavement,asphalt}=createStreetMaterials(T,{lite,manager});
+  const sourceMaterials=createStreetMaterials(T,{lite,manager});
+  const pavement=transitionMaterial(sourceMaterials.pavement),asphalt=transitionMaterial(sourceMaterials.asphalt);
+  const courtyard=transitionMaterial(sourceMaterials.pavement,{court:true});
   function slab(w,h,d,x,y,z,mat){
     const geometry=new T.BoxGeometry(w,h,d);
     streetMetricUv(geometry,[x,y,z],mat.userData.tileMetres||1.8);
     const m=new T.Mesh(geometry,mat);m.position.set(x,y,z);m.receiveShadow=true;foreground.add(m);return m;
   }
-  slab(60,.08,60,0,-.2,0,pavement);
-  slab(60,.16,3.1,0,-.08,7.25,pavement);
-  slab(60,.16,3.1,0,-.08,15.75,pavement);
-  slab(60,.04,5.2,0,-.135,11.5,asphalt);
+  const court=slab(10,.08,10.2,0,-.06,.8,courtyard);court.name='bounded_ground_floor_courtyard';court.renderOrder=-5;
+  const nearWalk=slab(18,.16,3.1,0,-.08,7.25,pavement);nearWalk.name='local_front_sidewalk';
+  const farWalk=slab(18,.16,3.1,0,-.08,15.75,pavement);farWalk.name='local_far_sidewalk';
+  const road=slab(18,.04,5.2,0,-.135,11.5,asphalt);road.name='local_residential_road';
   const curb=pavement.clone();curb.onBeforeCompile=pavement.onBeforeCompile;curb.customProgramCacheKey=pavement.customProgramCacheKey;
   curb.color.set('#ddd9ce');
-  slab(60,.13,.18,0,-.075,8.8,curb);slab(60,.13,.18,0,-.075,14.2,curb);
+  for(const z of [8.8,14.2]) slab(18,.13,.18,0,-.075,z,curb).renderOrder=2;
   // Recessed narrow curb joints at one-metre spacing, in one instanced draw.
-  const joints=new T.InstancedMesh(new T.BoxGeometry(.012,.12,.184),new T.MeshStandardMaterial({color:'#5c5b56',roughness:1}),120);
+  const jointMaterial=transitionMaterial(new T.MeshStandardMaterial({color:'#5c5b56',roughness:1}));
+  const joints=new T.InstancedMesh(new T.BoxGeometry(.012,.12,.184),jointMaterial,36);
   const jointMatrix=new T.Matrix4();let joint=0;
-  for(const z of [8.8,14.2])for(let x=-29.5;x<30;x+=1){jointMatrix.makeTranslation(x,-.079,z);joints.setMatrixAt(joint++,jointMatrix);}
-  foreground.add(joints);
-  const paint=new T.MeshStandardMaterial({color:'#d2cdb7',roughness:1});
-  for(const z of [9.05,13.95])slab(60,.005,.06,0,-.107,z,paint);
+  for(const z of [8.8,14.2])for(let x=-8.5;x<9;x+=1){jointMatrix.makeTranslation(x,-.079,z);joints.setMatrixAt(joint++,jointMatrix);}
+  joints.renderOrder=3;foreground.add(joints);
+  const paint=transitionMaterial(new T.MeshStandardMaterial({color:'#d2cdb7',roughness:1}));
+  for(const z of [9.05,13.95])slab(18,.005,.06,0,-.107,z,paint).renderOrder=4;
+  // A narrow side gravel bed and low curbing make the parcel read as a house
+  // frontage. Neither rises into the windows or moves a walkable visitor surface.
+  const gravel=new T.MeshStandardMaterial({color:'#66645a',roughness:1});
+  slab(.40,.025,7.4,-4.72,-.016,-.05,gravel).name='side_gravel_bed';
+  const boundary=new T.MeshStandardMaterial({color:'#aaa99b',roughness:.92});
+  for(const x of [-4.95,-4.49]) slab(.04,.045,7.5,x,-.0025,-.05,boundary);
+  for(const z of [-3.8,3.7]) slab(.50,.045,.04,-4.72,-.0025,z,boundary);
   const frontage=createResidentialForeground(T,foreground,{gateOpen:true});
   let ready=false;
   return {

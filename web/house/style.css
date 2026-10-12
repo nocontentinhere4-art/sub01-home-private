@@ -248,10 +248,23 @@ textarea {
   nav a {
     padding: 8px 9px;
   }
+  nav button,
+  nav a,
+  #panel button,
+  #touch button,
+  #action {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  #close {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
   footer {
     left: 18px;
     right: 18px;
-    bottom: 83px;
+    bottom: 122px;
   }
   footer > button,
   footer p {
@@ -262,15 +275,16 @@ textarea {
   }
   #touch {
     display: block;
+    bottom: 156px;
   }
   #panel {
     top: 100px;
-    bottom: 135px;
+    bottom: 175px;
     right: 12px;
     width: calc(100vw - 24px);
   }
   #action {
-    bottom: 230px;
+    bottom: 270px;
   }
   #notice {
     left: 18px;

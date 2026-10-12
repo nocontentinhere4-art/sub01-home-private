@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as T from '../../web/house/vendor/three.module.js';
-import {createExteriorBackdrops} from '../../web/house/exterior_backdrops.mjs';
+import {createExteriorBackdrops,foregroundFadeAt} from '../../web/house/exterior_backdrops.mjs';
 import {staticBakeScene} from '../../web/house/balcony_access.mjs';
 let loaded=[];
 class Loader{constructor(manager){this.manager=manager;}load(url){loaded.push(url);return new T.Texture();}}
@@ -17,6 +17,24 @@ for(const lite of [false,true]){
  assert.equal(view.sphere.material.depthWrite,false);assert.equal(view.sphere.material.fog,false);
  assert.equal(view.sphere.geometry.type,'SphereGeometry','full spherical sky and ground, no plate bounds');
  assert.equal(view.group.userData.excludeStaticBake,true);
+ const court=scene.getObjectByName('bounded_ground_floor_courtyard');
+ assert.deepEqual([court.geometry.parameters.width,court.geometry.parameters.depth],[10,10.2]);
+ assert.ok(Math.abs(court.position.y+court.geometry.parameters.height/2+.02)<1e-8,'ground court remains below entrance floor, not a balcony-height mask');
+ const nearWalk=scene.getObjectByName('local_front_sidewalk'),farWalk=scene.getObjectByName('local_far_sidewalk'),road=scene.getObjectByName('local_residential_road');
+ for(const surface of [nearWalk,farWalk,road])assert.equal(surface.geometry.parameters.width,18,'local foreground, not a 60m invented block');
+ assert.equal(nearWalk.position.y+nearWalk.geometry.parameters.height/2,0,'walkway matches ground-floor entry');
+ assert.ok(road.position.y+road.geometry.parameters.height/2<0,'road sits below curb');
+ assert.equal(foregroundFadeAt(2,5.25,{court:true}),1,'the current visitor terrace must retain an opaque support surface');
+ assert.equal(foregroundFadeAt(0,11.5),1);
+ assert.equal(foregroundFadeAt(9,11.5),0);
+ assert.equal(foregroundFadeAt(0,17.3),0);
+ assert.ok(foregroundFadeAt(8,11.5)>0&&foregroundFadeAt(8,11.5)<1,'feathered lateral transition instead of a hard photo boundary');
+ const shader={vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};
+ road.material.onBeforeCompile(shader,{});
+ assert.ok(shader.vertexShader.includes('instanceMatrix*residentialWorld'),'instanced curb joints share world-position fade');
+ assert.ok(shader.fragmentShader.includes('roughnessFactor *= texture2D(map,vMapUv).a'),'preserve packed PBR roughness hook');
+ assert.ok(shader.fragmentShader.includes('diffuseColor.a *= (1.-smoothstep(7.,9.,abs(vResidentialWorld.x)))'),'photo edge alpha applied before final output');
+ assert.equal(road.material.transparent,true);assert.equal(road.material.depthWrite,false);
  assert.equal(staticBakeScene(scene).children.length,0,'street capture/paving excluded from indoor baked GI');
  const texture=view.texture;view.update(.016,12);const noon=view.sphere.material.uniforms.uBrightness.value;
  view.update(.016,0);assert.ok(view.sphere.material.uniforms.uBrightness.value<noon);
