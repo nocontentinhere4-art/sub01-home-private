@@ -18,9 +18,17 @@ parser.add_argument('--port', type=int, default=8798)
 parser.add_argument('--start', default='15:00')
 parser.add_argument('--time-scale', type=float, default=1)
 parser.add_argument('--data-dir', default=str(ROOT / 'data'))
+parser.add_argument('--neurons', type=int, default=500000)
+parser.add_argument('--no-spiking', action='store_true', help='Lightweight visual QA only')
 options = parser.parse_args()
 if not 1 <= options.port <= 65535:
     parser.error('Port must be between 1 and 65535')
+if not 1000 <= options.neurons <= 1000000:
+    parser.error('Neurons must be between 1000 and 1000000')
+os.environ.update(SUB01_SPIKING_LIVE='0' if options.no_spiking else '1',
+                  SUB01_SPIKING_LIVE_NEURONS=str(options.neurons),
+                  SUB01_SPIKING_LIVE_TIMEOUT_S='5', SUB01_DAY_LIVE='0',
+                  SUB01_POD_SECRET='', RUNPOD_API_KEY='')
 from live_server import main, build_parser
 
 asyncio.run(main(build_parser().parse_args([

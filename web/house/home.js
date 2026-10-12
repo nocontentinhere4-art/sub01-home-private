@@ -8,6 +8,7 @@ import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createWindowView } from "/room/window_view.js?v=home1";
 import { homeLighting } from "./lighting.mjs";
+import { WalkMotion } from "./walk_motion.mjs";
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -36,6 +37,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = T.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate = false;
 document.body.prepend(renderer.domElement);
+renderer.domElement.tabIndex = 0;
+renderer.domElement.setAttribute('aria-label', 'Explore the private home');
 renderer.domElement.addEventListener("webglcontextlost", (event) => {
   event.preventDefault();
   if (!lite) {
@@ -444,9 +447,9 @@ rug(2.9, 2.8, -2, 0, 0.9);
 obstacle(-2, 1.85, 2.7, 1.08);
 obstacle(-2, 0.3, 1.7, 0.9);
 
-async function furnished(name, x, y, z, width, rotation = 0) {
+async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
   try {
-    const url = assetRoot + name + "/" + name + ".gltf";
+    const url = sourceUrl || assetRoot + name + "/" + name + ".gltf";
     if (!modelCache.has(url)) modelCache.set(url, gltfLoader.loadAsync(url));
     const gltf = await modelCache.get(url);
     const root = gltf.scene.clone(true);
@@ -464,6 +467,7 @@ async function furnished(name, x, y, z, width, rotation = 0) {
     });
     scene.add(root);
     renderer.shadowMap.needsUpdate = true;
+    return root;
   } catch (e) {
     console.warn("Home asset:", name, e.message);
     notice("An item could not load. Reconnect to retry.");
@@ -474,7 +478,7 @@ furnished("modern_coffee_table_01", -2, 0, 0.3, 1.65, Math.PI / 2);
 furnished("potted_plant_01", -3.45, 0, 2.7, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
 furnished("throw_pillows_01", -2, 0.42, 2.02, 1.25);
-furnished("desk_lamp_arm_01", 2.78, 0.855, -3.15, 0.32, -0.7);
+furnished("desk_lamp_arm_01", 2.78, 0.74, -2.73, 0.32, -0.7);
 // Kitchen, integrated oak cabinetry, stone countertop, sink and coffee corner.
 box(3.05, 0.86, 0.62, -2.2, 0.43, -3.55, M.wood, 0.015);
 box(3.16, 0.055, 0.7, -2.2, 0.895, -3.53, M.stone, 0.018);
@@ -512,8 +516,32 @@ for (const x of [0.95, 3.05])
 obstacle(2, -3.1, 2.4, 0.8);
 box(0.72, 0.44, 0.035, 2, 1.16, -3.3, M.black, 0.025);
 box(0.12, 0.12, 0.09, 2, 0.88, -3.3, M.metal, 0.005);
-box(0.35, 0.018, 0.2, 2, 0.856, -2.94, M.black, 0.015);
-box(0.095, 0.028, 0.06, 2.4, 0.857, -2.91, M.black, 0.02);
+const keyboardFallback = box(0.35, 0.018, 0.2, 2, 0.856, -2.94, M.black, 0.015);
+const mouseFallback = box(0.095, 0.028, 0.06, 2.4, 0.857, -2.91, M.black, 0.02);
+for (const item of [keyboardFallback, mouseFallback])
+  item.userData.replaceable = true;
+furnished(
+  "keyboard",
+  2,
+  0.846,
+  -2.94,
+  0.371,
+  0,
+  "/house/assets/keyboard/keyboard.glb",
+).then((root) => {
+  if (root) {
+    keyboardFallback.visible = false;
+    renderer.shadowMap.needsUpdate = true;
+  }
+});
+furnished("mouse", 2.4, 0.846, -2.91, 0.22, 0, "/room/mouse.glb").then(
+  (root) => {
+    if (root) {
+      mouseFallback.visible = false;
+      renderer.shadowMap.needsUpdate = true;
+    }
+  },
+);
 plant(3, 0.855, -3.25, 0.45);
 const screenCanvas = document.createElement("canvas");
 screenCanvas.width = 1024;
@@ -930,6 +958,7 @@ document.getElementById("explore").onclick = () => {
   document.getElementById("follow").classList.remove("active");
   document.getElementById("explore").classList.add("active");
   notice("Exploring as a visitor. SUB-01 continues his own day.");
+  renderer.domElement.focus({preventScroll: true});
 };
 document.getElementById("lamp").onclick = toggleLamp;
 document.getElementById("curtain").onclick = toggleCurtain;
@@ -1005,6 +1034,7 @@ document.querySelectorAll("[data-key]").forEach((b) => {
   b.onpointerup = () => (keys[b.dataset.key] = false);
   b.onpointercancel = () => (keys[b.dataset.key] = false);
 });
+const visitorMotion = new WalkMotion();
 function update(dt) {
   officeChair.forEach(
     (o) =>
@@ -1015,6 +1045,7 @@ function update(dt) {
       )),
   );
   if (following && homeState) {
+    visitorMotion.reset();
     const alpha = 1 - Math.exp(-dt * 10);
     camera.position.lerp(new T.Vector3(...homeState.position), alpha);
     targetY = camera.position.y;
@@ -1028,6 +1059,7 @@ function update(dt) {
     yaw = camera.rotation.y;
     pitch = camera.rotation.x;
   } else if (!following && visitorStandTarget) {
+    visitorMotion.reset();
     const distance = camera.position.distanceTo(visitorStandTarget);
     camera.position.lerp(
       visitorStandTarget,
@@ -1043,14 +1075,19 @@ function update(dt) {
         (keys.d || keys.ArrowRight ? 1 : 0) -
         (keys.a || keys.ArrowLeft ? 1 : 0),
       len = Math.hypot(f, a) || 1,
-      speed = (1.4 * dt) / len,
-      dx = (-Math.sin(yaw) * f + Math.cos(yaw) * a) * speed,
-      dz = (-Math.cos(yaw) * f - Math.sin(yaw) * a) * speed,
+      speed = 1.4 / len,
+      [dx, dz] = visitorMotion.step(
+        dt,
+        (-Math.sin(yaw) * f + Math.cos(yaw) * a) * speed,
+        (-Math.cos(yaw) * f - Math.sin(yaw) * a) * speed,
+      ),
       feet = targetY - 1.65;
     let x = camera.position.x,
       z = camera.position.z;
     if (canWalk(x + dx, z, feet)) x += dx;
+    else visitorMotion.x = 0;
     if (canWalk(x, z + dz, feet)) z += dz;
+    else visitorMotion.z = 0;
     camera.position.x = x;
     camera.position.z = z;
     const floor = floorAt(x, z, feet);
@@ -1775,6 +1812,7 @@ function batchArchitecture() {
   for (const child of [...scene.children]) {
     if (
       !child.isMesh ||
+      child.userData.replaceable ||
       child.isInstancedMesh ||
       protectedObjects.has(child) ||
       Array.isArray(child.material)
@@ -1819,6 +1857,7 @@ const bakedObjects = new Map();
 for (const child of scene.children) {
   if (
     !child.isMesh ||
+    child.userData.replaceable ||
     child.isInstancedMesh ||
     protectedObjects.has(child) ||
     Array.isArray(child.material) ||
@@ -1864,6 +1903,7 @@ async function applyContactLighting() {
       );
       // Reject outdated bakes after any layout change instead of distorting furniture.
       if (
+        original.geometry.index?.count !== geometry.index?.count ||
         oldBounds.min.distanceTo(newBounds.min) > 0.03 ||
         oldBounds.max.distanceTo(newBounds.max) > 0.03
       ) {

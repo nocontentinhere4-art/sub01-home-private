@@ -482,5 +482,19 @@
         "bytes": 91848
       }
     ]
+  },
+  {
+    "asset": "owner_keyboard",
+    "source": "web/room/room_clean.glb, keyboard bounds in web/room.html; see web/room/CREDITS.md",
+    "license": "CC0-1.0 (original model for SUB-01)",
+    "source_sha256": "cdd33006719f9c867e5dd3a43ef744054218259204e7d93c651373759ecaeb47",
+    "transformation": "Keyboard triangles extracted offline; colour factors/vertex colours retained, original room textures omitted. No old-room loading at runtime.",
+    "files": [
+      {
+        "file": "keyboard/keyboard.glb",
+        "sha256": "86989af770a2caa655680bdb7f0a9bbc13c417795ab8c9c734d66fcc44b89fdf",
+        "bytes": 153232
+      }
+    ]
   }
 ]

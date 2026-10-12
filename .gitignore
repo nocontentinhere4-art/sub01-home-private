@@ -37,3 +37,6 @@ out/home-bake-source.png
 
 # Guest binaries: bootstrap verifies/downloads official upstream versions.
 computer/*.bin
+
+node_modules/
+/node_modules
