@@ -63,3 +63,6 @@ out/home-editable/
 out/lite-unused-lighting/
 out/coffee-reference/
 out/sofa-reference/
+
+# Isolated real guest snapshot verification (private runtime state)
+out/vm-overlap-proof/

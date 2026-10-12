@@ -18,8 +18,18 @@ The Explore handler is now idempotent while already exploring. The isolated hand
 
 Follow itself remains a viewing-mode switch: it interpolates the visitor camera back to SUB-01's first-person viewpoint. That transition is not a collision-checked physical journey and must not be presented as walking through the house. Actual actor movement and visitor walking are separate operations.
 
-## Remaining concrete balcony gate
+## Balcony gate found in the audit
 
 The upper front window is built at `(-2, 4.45, 3.85)` with a centre mullion at `x=-2`. Evaluating the actual source `floorAt`/`canWalk` with the registered numeric furniture blockers allows a visitor at upper-floor feet height 3 to move through `x=-2, z=3.8→4.05`. That crosses the visible solid centre mullion at `z=3.85`. The balcony currently has no explicit doorway opening or collision rule restricting passage through that facade.
 
-The backend balcony waypoint at `x=-2.2` avoids the post, but that does not prevent the visitor collision. A follow-up should define a real balcony doorway and restrict visitor passage to that opening, with the same opening represented in the model and routing tests. This is a structural change to verify together with its lighting bake, rather than silently claiming that all collisions are solved.
+The backend balcony waypoint at `x=-2.2` avoided the post, but did not prevent the visitor collision.
+
+The follow-up implementation replaces the fixed centre post with a 1.05-metre sliding doorway centred at `x=-2.2`. Fixed sidelight frames stay solid; the collision gate checks the actual moving leaf edge and the same 16-centimetre visitor clearance used by existing furniture blockers. Visitor or actor approach opens the leaf at a bounded sliding speed with acceleration/braking. Runtime door motion refreshes cached shadows. The gate applies only to the upper facade, preserving the ground-floor entrance.
+
+`balcony_access_check.mjs` verifies the actual visitor `canWalk` function, closed/fixed glass rejection, usable open doorway, partial-opening clearance and the actual Python HomeWorld bed→balcony→desk route against door openness over time, including a conservative held 5 Hz actor feed. A GLB export/import round trip retains all eight fixed frame pieces while excluding the dynamic leaf from static bake geometry. The same isolated 3,124-byte static-frame GLB was imported by the actual Blender 4.2.23 runtime: eight mesh objects, no sliding leaf, `BALCONY_STATIC_BLENDER_IMPORT_OK`, exit 0. The export uses a shallow-resource scene clone, without moving or hiding the real door. Actual browser crossing, final lighting and view quality remain root verification gates.
+
+Root subsequently verified actual Chrome crossing at visitor `[-2.1608,4.65,4.562]` with the leaf fully open, and a return inside. A fixed sidelight approach at `x=-.317` stopped at `z=3.584` with the leaf closed. The house-only photograph wrapper now masks glass tint/refraction/drop highlights and reflections only in the physically cleared doorway; the outside photograph and falling rain remain visible. Its mask follows the actual leaf openness and does not affect ordinary panes.
+
+## Remaining exterior continuity
+
+The balcony crossing exposed a significant visual mismatch: the photographed neighbourhood visible from inside is replaced by the existing generic, untextured box city outside. Successful physical crossing does not establish visual realism. The next exterior pass should reuse the same facade origins, textures, world-ray/depth projection and weather phases in lightweight exterior backdrops, with no glass overlays, so the balcony and entrance terrace remain coherent with their window views. This is a finite local exterior treatment, not a claim of a complete explorable city.

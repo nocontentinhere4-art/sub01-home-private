@@ -9,6 +9,7 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
+import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv } from "./material_uv.mjs";
@@ -22,6 +23,7 @@ import { createSunDust } from './sun_dust.mjs';
 import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
 import { ShadowRefresh } from './shadow_refresh.mjs';
 import { createInteriorTrim } from './interior_trim.mjs';
+import { createDraftSubmit } from './draft_submit.mjs';
 if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).get("test") === "daytime")
   document.querySelector("header small").textContent += " / DAYTIME DEVICE TEST";
 const lite =
@@ -394,7 +396,8 @@ for (const z of [-2.6, 0, 2.6]) windowFrame(-3.85, 1.7, z, 2.48, 2.02, true);
 windowFrame(-2, 1.7, 3.85, 3.65, 2.02);
 windowFrame(0.65, 1.7, 3.85, 0.9, 2.02);
 windowFrame(3.25, 1.7, 3.85, 0.9, 2.02);
-windowFrame(-2, 4.45, 3.85, 3.6, 2.5);
+const balconyDoor = createBalconyDoor(T, scene, M.darkwood);
+const balconyGlassOpenness = {value:0};
 // Reuse the existing photographed Tokyo layers; no second scene or reflection render.
 const windowViews = [];
 let sharedWindowTextures;
@@ -407,6 +410,7 @@ for (const surface of [
   const view = createHouseWindowView(T, {
     base: lite ? "/house/assets/lite/window/" : "/room/window/",
     textures: sharedWindowTextures,
+    doorOpenness: surface.facade === 'front' && surface.c[1] > 3 ? balconyGlassOpenness : null,
   }, surface.facade);
   if (!sharedWindowTextures) {
     sharedWindowTextures = {};
@@ -707,9 +711,24 @@ cylinder(0.09, 0.29, -3.4, 1.07, -3.45, M.stone);
 obstacle(-2.2, -3.5, 3.2, 0.75);
 plant(-0.82, 0.94, -3.55, 0.5);
 // Double-height office.
-box(2.4, 0.09, 0.8, 2, 0.8, -3.1, M.wood, 0.045);
-for (const x of [0.95, 3.05])
-  box(0.08, 0.74, 0.7, x, 0.39, -3.1, M.darkwood, 0.008);
+const deskFallback = [box(2.4, .09, .8, 2, .8, -3.1, M.wood, .045)];
+for (const x of [.95, 3.05]) deskFallback.push(box(.08, .74, .7, x, .39, -3.1, M.darkwood, .008));
+for (const part of deskFallback) part.userData.replaceable = true;
+const officeDeskReady = gltfLoader.loadAsync('/house/assets/office-desk-original/desk.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(2, 0, -3.1);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = object.name === 'Desk_hardware' ? M.black : M.architectureOak;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-office-desk-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  for (const part of deskFallback) part.visible = false;
+  document.getElementById('status').dataset.officeDesk = 'blender-oak';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Office desk fallback:', error.message));
 obstacle(2, -3.1, 2.4, 0.8);
 box(0.72, 0.44, 0.035, 2, 1.16, -3.3, M.black, 0.025);
 box(0.12, 0.12, 0.09, 2, 0.88, -3.3, M.metal, 0.005);
@@ -1204,6 +1223,7 @@ const comparisonCameras = {
   office: places.office,
   stairs: places.stairs,
   entry: places.entry,
+  balcony_entry: {p: [-2.2,4.65,3.1], look: [-2.2,4.4,5]},
 };
 let visitorStandTarget = null;
 let following = true,
@@ -1259,6 +1279,7 @@ function canWalk(x, z, feet) {
     x < -3.78 ||
     x > 3.78 ||
     z < -3.78 ||
+    !balconyAllows(x, z, feet, balconyDoor.openness) ||
     (f > 2 ? z > 5.04 : !terraceAllows(x, z))
   )
     return false;
@@ -1443,6 +1464,10 @@ function update(dt) {
     camera.rotation.set(pitch, yaw, 0);
   }
   const p = camera.position;
+  const balconyMoving = balconyDoor.update(dt,
+    balconyApproach([p.x,p.y,p.z]) || balconyApproach(homeState?.position));
+  balconyGlassOpenness.value = balconyDoor.openness;
+  document.getElementById('status').dataset.balconyDoor = String(Math.round(balconyDoor.openness * 100));
   entranceOpen = p.y < 3 && Math.hypot(p.x - 2, p.z - 3.9) < 1.8;
   frontDoorGroup.rotation.y = T.MathUtils.lerp(
     frontDoorGroup.rotation.y,
@@ -1462,7 +1487,7 @@ function update(dt) {
     doorOpen ? 2.3 : 1.35,
     Math.min(1, dt * 8),
   );
-  const doorMotion = Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
+  const doorMotion = balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
     Math.abs(bathDoor.position.z - (doorOpen ? 2.3 : 1.35)) > .001;
   if (doorShadowRefresh.step(dt,doorMotion) && !lite && !privacyActive) renderer.shadowMap.needsUpdate = true;
   document.getElementById("status").dataset.doorShadowRefreshes = String(doorShadowRefresh.count);
@@ -1728,15 +1753,13 @@ function renderPanel(reset = false) {
         const form = document.createElement("form"),
           input = document.createElement("input");
         input.placeholder = "Operator: send a command to his Linux guest";
+        const run = button("Run", () => {});
         form.append(
           input,
-          button("Run", () => {}),
+          run,
         );
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          if (await mutate("computer", { input: input.value }))
-            input.value = "";
-        };
+        form.onsubmit = createDraftSubmit({input, button: run,
+          submit: text => mutate("computer", {input: text})});
         panelBody.append(form);
       }
       operatorKeyControl(panelBody);
@@ -1849,24 +1872,25 @@ function renderPanel(reset = false) {
     if (phoneApp === "notes") {
       if (reset) {
         content.replaceChildren();
-        for (const note of homeState?.notes || [])
-          content.append(textEl("div", note.text, "entry"));
+        const notes = document.createElement("div");
+        notes.id = "phone-note-list";
+        content.append(notes);
         const form = document.createElement("form"),
           ta = document.createElement("textarea");
         ta.placeholder = "Operator: leave a note";
+        const save = button("Save", () => {});
         form.append(
           ta,
-          button("Save", () => {}),
+          save,
         );
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          if (await mutate("notes", { text: ta.value })) {
-            await syncState();
-            renderPanel(true);
-          }
-        };
+        form.onsubmit = createDraftSubmit({input: ta, button: save,
+          submit: text => mutate("notes", {text}), afterSuccess: () => syncState()});
         content.append(form);
       }
+      // Refresh saved entries without recreating the active editor/draft.
+      const notes = document.getElementById("phone-note-list");
+      if (notes) notes.replaceChildren(...(homeState?.notes || [])
+        .map(note => textEl("div", note.text, "entry")));
     } else if (phoneApp === "memory") {
       content.replaceChildren();
       for (const m of homeState?.memories || [])
@@ -2499,16 +2523,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=10"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=11"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=10",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=11",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=10",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=11",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2713,8 +2737,8 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady]);
-      const data = await new GLTFExporter().parseAsync(scene, {
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady]);
+      const data = await new GLTFExporter().parseAsync(staticBakeScene(scene), {
         binary: true,
         onlyVisible: true,
         maxTextureSize: 512,

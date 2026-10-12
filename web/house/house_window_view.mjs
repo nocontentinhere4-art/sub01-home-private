@@ -1,4 +1,5 @@
 import { createWindowView } from '../room/window_view.js?v=home1';
+import { BALCONY_ACCESS } from './balcony_access.mjs';
 
 // The legacy room used one window-centred diorama. This two-floor house needs
 // one coordinate system per facade, shared by every pane on that facade.
@@ -21,6 +22,13 @@ export function photographicIntersection(camera, panePoint, facade, depth) {
   return glass.map((coordinate, i) => coordinate + (coordinate - eye[i]) * depth / outwardDistance);
 }
 
+export function doorGlassCoverage(x, y, openness) {
+  const a=BALCONY_ACCESS, left=a.centre-a.width/2, right=a.centre+a.width/2;
+  const amount=Number.isFinite(openness)?Math.max(0,Math.min(1,openness)):0;
+  const cleared=Math.min(right,left+a.slide*amount);
+  return x>=left+.025 && x<=cleared-.025 && y>=a.floor+.035 && y<=a.floor+2.665 ? 0 : 1;
+}
+
 function replaceRequired(source, from, to) {
   if (!source.includes(from)) throw new Error('Window shader contract changed');
   return source.replace(from, to);
@@ -32,12 +40,38 @@ export function createHouseWindowView(THREE, options, facade) {
   const view = createWindowView(THREE, options);
   const material = view.material;
   material.uniforms.uFacadeOrigin = {value: new THREE.Vector3(...origin)};
+  const a=BALCONY_ACCESS;
+  material.uniforms.uDoorReveal = {value: options.doorOpenness ? 1 : 0};
+  material.uniforms.uDoorOpenness = options.doorOpenness || {value:0};
+  material.uniforms.uDoorOpening = {value:new THREE.Vector4(a.centre-a.width/2,a.centre+a.width/2,a.floor,a.floor+2.7)};
+  material.uniforms.uDoorTravel = {value:a.slide};
   // No overview-camera horizon lift, zoom or grazing-angle compression.
   // Camera height and lateral movement now describe real metres in the house.
   material.uniforms.uGain.value.set(1, 1);
   material.uniforms.uLift.value.set(0, 0, 0);
   let shader = material.fragmentShader;
   shader = replaceRequired(shader, 'uniform vec2 uSize;', 'uniform vec3 uFacadeOrigin; uniform vec2 uSize;');
+  shader = replaceRequired(shader, 'uniform vec3 uFacadeOrigin;',
+    'uniform float uDoorReveal, uDoorOpenness, uDoorTravel; uniform vec4 uDoorOpening; uniform vec3 uFacadeOrigin;');
+  shader = replaceRequired(shader, 'vec3 d = normalize(vWorld - cameraPosition);', `
+    float glassCoverage = 1.0;
+    if (uDoorReveal > 0.5) {
+      float clearedEdge = min(uDoorOpening.y, uDoorOpening.x + uDoorTravel * clamp(uDoorOpenness,0.0,1.0));
+      float clear = step(uDoorOpening.x + .025,vWorld.x) * step(vWorld.x,clearedEdge - .025)
+        * step(uDoorOpening.z + .035,vWorld.y) * step(vWorld.y,uDoorOpening.w - .035);
+      glassCoverage -= clear;
+    }
+    vec3 d = normalize(vWorld - cameraPosition);`);
+  // Exterior rain stays. Only refraction/drops/reflections on the physical
+  // glass disappear where the sliding leaf has actually cleared the doorway.
+  shader = replaceRequired(shader, 'if (uRain > 0.002) {\n      vec4 n1',
+    'if (uRain * glassCoverage > 0.002) {\n      vec4 n1');
+  shader = replaceRequired(shader, 'float fres = min(0.04 + 0.96 * pow(1.0 - dz, 5.0), 0.25);',
+    'float fres = min(0.04 + 0.96 * pow(1.0 - dz, 5.0), 0.25) * glassCoverage;');
+  shader = replaceRequired(shader, 'col = col * vec3(0.93, 0.96, 0.95)',
+    'col = col * mix(vec3(1.0),vec3(0.93, 0.96, 0.95),glassCoverage)');
+  shader = replaceRequired(shader, 'if (uRain > 0.002) {\n      float s =',
+    'if (uRain * glassCoverage > 0.002) {\n      float s =');
   shader = replaceRequired(shader,
     'vec2 g = (vUv - 0.5) * uSize;',
     'vec3 facadeDelta = vWorld - uFacadeOrigin; vec2 g = vec2(dot(facadeDelta, vRight), dot(facadeDelta, vUp));');

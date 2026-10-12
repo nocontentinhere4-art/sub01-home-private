@@ -1,0 +1,45 @@
+{
+  "geometry": "Original enlarged oak desk with thin continuous desktop, four legs, structural aprons, two side drawers, central knee bay, real cable opening. Decorative drawers, not interactive.",
+  "reference_url": "https://www.muji.eu/products/oak-wooden-desk-20226",
+  "verified_manufacturer_manual": "https://www.muji.com/public/media/jp/doc/item/02_2200009922336_00002.pdf",
+  "reference_product": "MUJI Oak Wooden Desk 4550512841050",
+  "reference_dimensions_m": [
+    1.1,
+    0.55,
+    0.7
+  ],
+  "original_dimensions_m": [
+    2.4,
+    0.8,
+    0.845
+  ],
+  "desktop_thickness_m": 0.033,
+  "blender_bounds_m": [
+    [
+      -1.2000000476837158,
+      -0.4000000059604645,
+      0.0
+    ],
+    [
+      1.2000000476837158,
+      0.4000000059604645,
+      0.8449999690055847
+    ]
+  ],
+  "runtime_origin_m": [
+    2,
+    0,
+    -3.1
+  ],
+  "runtime_yaw_radians": 0,
+  "fixed_devices": "Monitor, keyboard, mouse and lamp coordinates remain unchanged; desktop top remains .845m.",
+  "runtime_materials": {
+    "Oak_desk": "M.architectureOak shared maps; metric UV / 1.83m source scan; no second oak grade",
+    "Desk_hardware": "M.black or matching dark matte material"
+  },
+  "texture_source": "https://polyhaven.com/a/oak_veneer_01",
+  "embedded_textures": false,
+  "glb_bytes": 259232,
+  "sha256": "d21a424128174a9d8dd450a69f6cb5b60f28548348391e5cfaa63fed82557598",
+  "triangles": 3652
+}

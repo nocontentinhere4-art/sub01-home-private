@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import * as T from '../../web/house/vendor/three.module.js';
-import {createHouseWindowView, facadeCoordinates, photographicIntersection} from '../../web/house/house_window_view.mjs';
+import {createHouseWindowView, facadeCoordinates, photographicIntersection, doorGlassCoverage} from '../../web/house/house_window_view.mjs';
 
 // Texture creation does not need DOM/image downloads to check shader contracts.
 class TextureLoader { load(){return new T.Texture();} }
@@ -36,4 +36,16 @@ const glass=[0,1.675,3.94];
 assert.equal(photographicIntersection([0,1.675,0],glass,'front',40)[0],0);
 assert.ok(photographicIntersection([1,1.675,0],glass,'front',40)[0]>10,'lateral eye movement produces physical parallax');
 assert.throws(()=>createHouseWindowView(three,{},'unknown'),/Unknown house facade/);
+const doorState={value:0};
+const doorway=createHouseWindowView(three,{textures:shared,doorOpenness:doorState},'front');
+assert.equal(doorway.material.uniforms.uDoorOpenness,doorState,'glass overlay follows actual leaf uniform');
+assert.equal(lower.material.uniforms.uDoorReveal.value,0,'ordinary panes retain glass effects');
+assert.equal(doorway.material.uniforms.uDoorReveal.value,1);
+assert.equal(doorGlassCoverage(-2.2,4.65,0),1);
+assert.equal(doorGlassCoverage(-2.2,4.65,.25),1);
+assert.equal(doorGlassCoverage(-2.2,4.65,1),0);
+assert.equal(doorGlassCoverage(-3.5,4.65,1),1,'fixed sidelights remain glazed');
+assert.equal(doorGlassCoverage(-2.2,5.9,1),1);
+assert.ok(doorway.material.fragmentShader.includes('uRain * glassCoverage'));
+assert.ok(doorway.material.fragmentShader.includes('if (uRain > 0.002) {\n      vec2 rp'),'rain outside remains visible through the opening');
 console.log('PASS: shared texture/origin, floor-height horizon, coherent ray intersections, lateral parallax, no pane zoom or stretched photo edges');
