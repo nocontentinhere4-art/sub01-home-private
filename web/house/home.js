@@ -679,7 +679,7 @@ for (const x of [-2.78, -2.02]) {
 }
 beddingFallback.push(drape(1.86, 0.55, -2.4, 3.69, -1.44, M.linen, 0.22));
 for (const object of beddingFallback) object.userData.replaceable = true;
-gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb').then(gltf => {
+const beddingReady = gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb').then(gltf => {
   const root = gltf.scene;
   root.position.set(-2.4, 3.57, -2.35);
   root.traverse(object => {
@@ -687,7 +687,8 @@ gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '
     object.material = (object.name.startsWith('Duvet') ? M.blue : M.linen).clone();
     object.material.side = T.DoubleSide;
     object.castShadow = object.receiveShadow = true;
-    object.userData.flexibleCloth = true;
+    object.userData.bakeId = "house-bedding-" + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
   });
   scene.add(root);
   for (const object of beddingFallback) object.visible = false;
@@ -2201,8 +2202,9 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
+    await beddingReady;
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=2"),
       useIndirectLighting ? new HDRLoader().loadAsync(
         "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr",
       ) : loader.loadAsync(
@@ -2382,15 +2384,20 @@ if (
   new URLSearchParams(location.search).has("bake")
 ) {
   const b = button("Export house geometry", async () => {
-    const data = await new GLTFExporter().parseAsync(scene, {
-      binary: true,
-      onlyVisible: true,
-    });
-    const response = await fetch("/snap?name=home-bake-source&ext=png", {
-      method: "POST",
-      body: data,
-    });
-    if (response.ok) notice("House geometry exported for light baking.");
+    try {
+      notice("Exporting the current house…");
+      await beddingReady;
+      const data = await new GLTFExporter().parseAsync(scene, {
+        binary: true,
+        onlyVisible: true,
+        maxTextureSize: 512,
+      });
+      const response = await fetch("/snap?name=home-bake-source&ext=png", {
+        method: "POST",
+        body: data,
+      });
+      notice(response.ok ? "House geometry exported for light baking." : `House export failed (${response.status}).`);
+    } catch (error) { notice("House export failed: " + error.message); }
   });
   document.querySelector("footer").append(b);
 }

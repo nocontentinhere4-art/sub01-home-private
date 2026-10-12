@@ -1,51 +1,53 @@
 {
-  "source_sha256": "f129541eeb17ad4625c55638509767dc1b06ad7254cae06a81805450e92e7b79",
+  "source_sha256": "3267720cbc24dacb523d3f9bed3b3302453ca3cfdd6aef4a4013fb9cdede9af5",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 32,
   "diffuse_bounces": 4,
   "direct_light": false,
   "albedo_in_bake": false,
+  "receivers": 71,
+  "export_material_texture_limit": 512,
   "day": {
-    "width": 857,
+    "width": 903,
     "height": 1234,
-    "max": 16.70492935180664,
-    "p95": 0.08025648929178712,
-    "nonzero": 0.3880843998040732,
+    "max": 6.137185096740723,
+    "p95": 0.07785219177603708,
+    "nonzero": 0.3770530789678202,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "width": 857,
+    "width": 903,
     "height": 1234,
-    "max": 2.4625213146209717,
-    "p95": 0.00022470373587566358,
-    "nonzero": 0.09487602336748183,
+    "max": 2.3367557525634766,
+    "p95": 0.0002327661932213232,
+    "nonzero": 0.0989148363729043,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "75ffdd41090dcab7951de9888627aa3af9540b36102d4d0cac3657a9c777cf76",
-      "bytes": 4124248
+      "sha256": "47d28823ab4d902118640eaded7c717ac5d694a72234fdf52ce5b49d7dab423e",
+      "bytes": 6762368
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "86b2c148f8db97412f67c1b1ad23ed43363eba10d1c4f04a747c04998a70d725",
-      "bytes": 2214641
+      "sha256": "0f2267c593e15ac8222cf3680479ee1a773dc8563cd01c2a79210bda28cdba49",
+      "bytes": 2260642
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "23bc4002655233836c68dc0ea3a35b7df65ac97e1cb60576bc34d24e3ccd7611",
-      "bytes": 1009826
+      "sha256": "b714d153679cd55fdfe3f4f9e3983a157030b7d12df75ab0e978a34b5278d09a",
+      "bytes": 946474
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "f03cc34f5d2c0a2c131e2726a13a4ed1ef90858ac6355a5a17cae8b842268191",
-      "bytes": 546463
+      "sha256": "be64f954916a98b668eda7028a8947ba3981edde763b862fdf82b70bf8f7c464",
+      "bytes": 593768
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "0ecd8074093268218161c1d0d2c9ea1f3f32af684f8d48bde04c23b288714fb6",
-      "bytes": 263360
+      "sha256": "a40adadce4da13f27e206d859375a5fa2abd58d90cadc4fbf6e446d00759e93f",
+      "bytes": 267696
     }
   ]
 }

@@ -113,3 +113,14 @@ The actual localhost visitor walked downstairs and along the narrow sofa/stair a
 The previous bake guard checked total element count and outer bounds. A changed cupboard inside the large dark-wood batch retained both, so loading the bake restored its old top and filled the recessed sink with wood. The guard now compares world-space vertex positions in both directions, allowing UV seam duplication, vertex reordering and 0.3-mm export rounding. The changed batch is rejected while unchanged parts retain their lighting. A geometry regression reproduces the same-bounds/same-count interior edit.
 
 The live localhost renderer retained 60 matched indirect-light parts and displayed the open metal basin and drain instead of the old wooden top, at about 48 fps on this Mac. Nine HomeWorld tests and the new shape regression passed. Proof: `docs/screens/home/private-kitchen-bake-corrected.jpg`. A new bake remains needed for changed furniture; vertex positions alone do not verify triangle connectivity for hypothetical rewiring using exactly the same vertices.
+
+
+## Updated indirect lighting and workflow reference
+
+The actual current house was exported through its local-only bake button. The exporter now waits for physical bedding, caps exported material images at 512 px to stay below the existing 64-MB local snapshot limit, and reports success/failure. This does not change runtime texture resolution. Physical duvet, throw and pillows register stable receiver IDs and finish loading before the light-map importer runs.
+
+A fresh 903×1234 atlas contains 71 receivers. Blender Cycles CPU calculated day and night diffuse indirect light with 32 samples and four diffuse bounces; validated HDR files and their lighter variants replace the earlier bake. The source hash, output hashes and measured bake statistics are in `web/house/assets/lighting/indirect-bake.json`. Previous generated versions remain in ignored `out/lighting-v2/previous/`. Lighting URL versions invalidate the old browser cache.
+
+The real localhost full renderer applied 71 parts; forced lite mode applied 69 and loaded physical-lite bedding without logged errors. Full mode showed about 47 fps on this Mac. Two differing simplified cloth parts keep direct/environment lighting in lite mode instead of accepting a mismatched full-mesh bake. Proof: `docs/screens/home/private-bedding-indirect-v2.jpg`. Physical-phone performance and reference-level visual fidelity remain unproven.
+
+Workflow reference read in Chrome: https://x.com/SimbasJungles/status/2109295930021208144 . The author describes scripted Blender-to-Unreal construction, repeated fixed-camera comparisons, emphasis on cinematic lighting, and profiling on an RTX 4090. We can adopt scene iteration and profiling while adapting the effects to the requested local browser. Sunbeam-selective dust and atmospheric shafts remain work to implement and measure; motion blur is not added by this bake.
