@@ -1,0 +1,30 @@
+{
+  "title": "Memorial for Tokiwa-so apartment house",
+  "author": "Masato OHTA (heiwa4126)",
+  "captured": "2009-12-06 12:38",
+  "place": "Toshima, Tokyo, Japan; ground-level residential neighborhood",
+  "source": "https://commons.wikimedia.org/wiki/File:Memorial_for_Tokiwa-so_apartment_house.jpg",
+  "original": "https://www.flickr.com/photos/heiwa4126/4231010508/",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "source_sha1": "ba48fc8c21d42c1767af958200653dcab09a7b96",
+  "modifications": "Resized to 4096x2048 and 2048x1024, encoded WebP. Runtime simulated-clock brightness/color grading; historical static LDR capture, not live Tokyo or separate day/night photography.",
+  "outputs": [
+    {
+      "file": "residential-4096.webp",
+      "width": 4096,
+      "height": 2048,
+      "bytes": 2708164,
+      "sha256": "4b9280a50e572c911c48b23effe970f6177609ea49928a09bf2793b274d5a9ba",
+      "estimated_mipped_rgba_bytes": 44739242
+    },
+    {
+      "file": "residential-2048.webp",
+      "width": 2048,
+      "height": 1024,
+      "bytes": 723092,
+      "sha256": "fc6ef21e6bf7d54f4429f0d851ae9a70c718dffc722732e446d7b480708be99d",
+      "estimated_mipped_rgba_bytes": 11184810
+    }
+  ]
+}

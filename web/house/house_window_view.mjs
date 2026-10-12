@@ -1,5 +1,5 @@
-import { createWindowView } from '../room/window_view.js?v=home1';
 import { BALCONY_ACCESS } from './balcony_access.mjs';
+import {weatherAt,tokyoDayKey} from '../room/window_view.js?v=home1';
 
 // The legacy room used one window-centred diorama. This two-floor house needs
 // one coordinate system per facade, shared by every pane on that facade.
@@ -19,7 +19,9 @@ export function photographicIntersection(camera, panePoint, facade, depth) {
   const glass = facadeCoordinates(panePoint, facade);
   const eye = facadeCoordinates(camera, facade);
   const outwardDistance = facade === 'west' ? camera[0] - panePoint[0] : panePoint[2] - camera[2];
-  return glass.map((coordinate, i) => coordinate + (coordinate - eye[i]) * depth / outwardDistance);
+  const origin=FACADE_ORIGINS[facade];
+  const projectionDepth=facade==='west'?origin[0]-panePoint[0]:panePoint[2]-origin[2];
+  return glass.map((coordinate, i) => coordinate + (coordinate - eye[i]) * (depth-projectionDepth) / outwardDistance);
 }
 
 export function doorGlassCoverage(x, y, openness) {
@@ -29,58 +31,31 @@ export function doorGlassCoverage(x, y, openness) {
   return x>=left+.025 && x<=cleared-.025 && y>=a.floor+.035 && y<=a.floor+2.665 ? 0 : 1;
 }
 
-function replaceRequired(source, from, to) {
-  if (!source.includes(from)) throw new Error('Window shader contract changed');
-  return source.replace(from, to);
-}
-
 export function createHouseWindowView(THREE, options, facade) {
-  const origin = FACADE_ORIGINS[facade];
-  if (!origin) throw new Error('Unknown house facade');
-  const view = createWindowView(THREE, options);
-  const material = view.material;
-  material.uniforms.uFacadeOrigin = {value: new THREE.Vector3(...origin)};
+  if(!FACADE_ORIGINS[facade])throw new Error('Unknown house facade');
   const a=BALCONY_ACCESS;
-  material.uniforms.uDoorReveal = {value: options.doorOpenness ? 1 : 0};
-  material.uniforms.uDoorOpenness = options.doorOpenness || {value:0};
-  material.uniforms.uDoorOpening = {value:new THREE.Vector4(a.centre-a.width/2,a.centre+a.width/2,a.floor,a.floor+2.7)};
-  material.uniforms.uDoorTravel = {value:a.slide};
-  // No overview-camera horizon lift, zoom or grazing-angle compression.
-  // Camera height and lateral movement now describe real metres in the house.
-  material.uniforms.uGain.value.set(1, 1);
-  material.uniforms.uLift.value.set(0, 0, 0);
-  let shader = material.fragmentShader;
-  shader = replaceRequired(shader, 'uniform vec2 uSize;', 'uniform vec3 uFacadeOrigin; uniform vec2 uSize;');
-  shader = replaceRequired(shader, 'uniform vec3 uFacadeOrigin;',
-    'uniform float uDoorReveal, uDoorOpenness, uDoorTravel; uniform vec4 uDoorOpening; uniform vec3 uFacadeOrigin;');
-  shader = replaceRequired(shader, 'vec3 d = normalize(vWorld - cameraPosition);', `
-    float glassCoverage = 1.0;
-    if (uDoorReveal > 0.5) {
-      float clearedEdge = min(uDoorOpening.y, uDoorOpening.x + uDoorTravel * clamp(uDoorOpenness,0.0,1.0));
-      float clear = step(uDoorOpening.x + .025,vWorld.x) * step(vWorld.x,clearedEdge - .025)
-        * step(uDoorOpening.z + .035,vWorld.y) * step(vWorld.y,uDoorOpening.w - .035);
-      glassCoverage -= clear;
-    }
-    vec3 d = normalize(vWorld - cameraPosition);`);
-  // Exterior rain stays. Only refraction/drops/reflections on the physical
-  // glass disappear where the sliding leaf has actually cleared the doorway.
-  shader = replaceRequired(shader, 'if (uRain > 0.002) {\n      vec4 n1',
-    'if (uRain * glassCoverage > 0.002) {\n      vec4 n1');
-  shader = replaceRequired(shader, 'float fres = min(0.04 + 0.96 * pow(1.0 - dz, 5.0), 0.25);',
-    'float fres = min(0.04 + 0.96 * pow(1.0 - dz, 5.0), 0.25) * glassCoverage;');
-  shader = replaceRequired(shader, 'col = col * vec3(0.93, 0.96, 0.95)',
-    'col = col * mix(vec3(1.0),vec3(0.93, 0.96, 0.95),glassCoverage)');
-  shader = replaceRequired(shader, 'if (uRain > 0.002) {\n      float s =',
-    'if (uRain * glassCoverage > 0.002) {\n      float s =');
-  shader = replaceRequired(shader,
-    'vec2 g = (vUv - 0.5) * uSize;',
-    'vec3 facadeDelta = vWorld - uFacadeOrigin; vec2 g = vec2(dot(facadeDelta, vRight), dot(facadeDelta, vUp));');
-  shader = replaceRequired(shader,
-    'slope = slope / (1.0 + abs(slope) / vec2(0.55, 0.9));',
-    '// Physical ray slope is shared across every pane; do not zoom each window.');
-  shader = replaceRequired(shader,
-    'if (uv.y <= 0.0 || uv.y >= 1.0) return vec4(0.0);',
-    'if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0) return vec4(0.0);');
-  material.fragmentShader = shader;
-  return view;
+  const uniforms={uTime:{value:0},uRain:{value:0},uDoorReveal:{value:options.doorOpenness?1:0},
+    uDoorOpenness:options.doorOpenness||{value:0},uDoorOpening:{value:new THREE.Vector4(a.centre-a.width/2,a.centre+a.width/2,a.floor,a.floor+2.7)},uDoorTravel:{value:a.slide}};
+  const material=new THREE.ShaderMaterial({uniforms,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:true,
+    vertexShader:`varying vec3 vWorld;varying vec2 vUv;void main(){vUv=uv;vec4 world=modelMatrix*vec4(position,1.);vWorld=world.xyz;gl_Position=projectionMatrix*viewMatrix*world;}`,
+    fragmentShader:`uniform float uTime,uRain,uDoorReveal,uDoorOpenness,uDoorTravel;uniform vec4 uDoorOpening;varying vec3 vWorld;varying vec2 vUv;
+      void main(){
+      if(uDoorReveal>.5){float edge=min(uDoorOpening.y,uDoorOpening.x+uDoorTravel*clamp(uDoorOpenness,0.,1.));
+        if(vWorld.x>=uDoorOpening.x+.025&&vWorld.x<=edge-.025&&vWorld.y>=uDoorOpening.z+.035&&vWorld.y<=uDoorOpening.w-.035)discard;}
+      vec3 eye=normalize(cameraPosition-vWorld);float facing=abs(dot(eye,vec3(${facade==='west'?'1.,0.,0.':'0.,0.,1.'})));
+      float fres=.02+.12*pow(1.-facing,5.);
+      vec2 cell=fract(vUv*vec2(90.,55.)+vec2(0.,uTime*.08));
+      float drop=smoothstep(.045,.008,length((cell-vec2(.5,.5))*vec2(1.,.4)))*uRain;
+      gl_FragColor=vec4(vec3(.48,.6,.64)+drop*.15,fres+drop*.2);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      }`});
+  let mesh;
+  return {material,get mesh(){return mesh;},build(surface,scene){mesh=new THREE.Mesh(new THREE.PlaneGeometry(surface.w,surface.h),material);mesh.position.set(...surface.c);mesh.rotation.y=surface.ry||0;mesh.name='physical_window_glass_'+facade;mesh.userData.excludeStaticBake=true;scene.add(mesh);return mesh;},
+    update(dt,hour){
+      if(!Number.isFinite(dt)||dt<0)dt=0;
+      uniforms.uTime.value+=dt;
+      const rain=Number.isFinite(hour)?weatherAt(tokyoDayKey(),hour).rain:0;
+      uniforms.uRain.value+=(rain-uniforms.uRain.value)*(1-Math.exp(-dt*.05));
+    },state(){return {probes:0,textures:0,physicalGlass:true,rain:uniforms.uRain.value};}};
 }

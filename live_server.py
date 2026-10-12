@@ -1426,7 +1426,19 @@ class Live:
             return f"redirected to {host.removeprefix('www.')}"
         return "opened" if href else "done"
 
-    # --- chess at the desk (#17): his brain model picks among the scorer's 5 candidate moves --------------------------
+    # --- shared desk/TV chess: his brain model picks among the scorer's 5 candidate moves -----------------------------
+    def chess_venue(self):
+        """Selecting TV chess does not force an activity; console play must be chosen."""
+        if self.life.activity == "play_chess":
+            return "desk"
+        home = getattr(self, "home", None)
+        if self.life.activity == "play_console" and home is not None and home.console_game == "chess":
+            return "tv"
+        return None
+
+    def chess_ready(self):
+        return self.chess_venue() is not None and self.activity_arrived() and self.engine.stage == "AWAKE"
+
     def chess_view(self):
         """GET /api/chess: the game on the board (or the last one), recent games, what the card says."""
         g = self.chess.public() if self.chess else self.chess_last
@@ -1439,40 +1451,44 @@ class Live:
 
     async def run_chess(self):
         while True:
-            await asyncio.sleep(0.25 if self.life.activity == "play_chess" else 1.0)
+            await asyncio.sleep(0.25 if self.chess_venue() is not None else 1.0)
             await self.chess_step()
 
     async def chess_step(self):
-        """One step of the game while he sits at the desk to play: a new game, his move (the brain vote, in a worker
+        """One step while settled at the desk or TV: a new game, his move (the brain vote, in a worker
         thread), the opponent's move (depth-2 search, in a worker thread), or the end of the game."""
         loop = asyncio.get_running_loop()
         t = self.clock.now()
-        playing = self.life.activity == "play_chess" and self.activity_arrived() and self.engine.stage == "AWAKE"
+        playing = self.chess_ready()
         g = self.chess
         if g is None:
             if playing:
                 level = chess_game.level_for(tail_jsonl(self.chess_path, chess_game.LEVEL_GAMES))   # W/D/L-tuned
                 g = self.chess = chess_game.Game(t, rng=self.chess_rng, level=level)
+                g.home_venue = self.chess_venue()
                 g.next_at = time.time() + self.chess_pace(g.his_turn)
                 await self.broadcast({"type": "chess", **g.public()})
             return
-        if not playing:
+        venue = getattr(g, "home_venue", "desk")
+        if not playing or self.chess_venue() != venue:
             g.stop("he got up")
             return await self.finish_chess(g, t)
         if g.over:
             return await self.finish_chess(g, t)
         if self.life.until - t < 120 and t - g.started < CHESS_MAX_S:
-            self.life.until = t + 120                           # a game in progress keeps him at the desk
+            self.life.until = t + 120                           # a game in progress keeps him at its chosen venue
         if time.time() < g.next_at:
             return
         if g.his_turn:
             opts = await loop.run_in_executor(None, g.candidates)
+            if self.chess is not g or g.over or not self.chess_ready() or self.chess_venue() != venue:
+                return
             mood = self.mood(t)
             gain = self.engine.gain
             clone = self.brain.clone()                          # snapshot on the event loop, simulated in a thread
             dec = await loop.run_in_executor(None, lambda: brain_vote.vote(clone, opts, gain, mood,
                                                                              rng=self.chess_vote_rng))
-            if self.chess is not g or g.over:
+            if self.chess is not g or g.over or not self.chess_ready() or self.chess_venue() != venue:
                 return
             chosen = opts[dec["chosen"]]
             brain_vote.apply(self.brain, chosen, gain)          # the live brain receives the chosen move's stimulus
@@ -1483,7 +1499,7 @@ class Live:
                                         for o, c in zip(dec["options"], opts)]})
         else:
             m = await loop.run_in_executor(None, g.opponent)
-            if self.chess is not g or g.over or m is None:
+            if self.chess is not g or g.over or m is None or not self.chess_ready() or self.chess_venue() != venue:
                 return
             g.push(m)
         g.next_at = time.time() + self.chess_pace(g.his_turn)
@@ -1500,7 +1516,7 @@ class Live:
             append_jsonl(self.chess_path, g.record(t))
         except OSError as e:
             print("chess: could not log the game:", repr(e)[:120], flush=True)
-        if self.life.activity == "play_chess":
+        if self.chess_venue() == getattr(g, "home_venue", "desk"):
             self.life.end_activity(t)
         await self.broadcast({"type": "chess", **self.chess_last, "finished": True})
         await self.apply_held_vote(t)                           # L4: a vote held during the game is applied now
@@ -1874,7 +1890,7 @@ class Live:
             if v.open(opts, now):
                 await self.broadcast({"type": "vote", **v.public(now)})
         p = v.pending
-        held = bool(p) and self.life.activity == "play_chess"   # L4: a vote never cuts a game; finish_chess applies it
+        held = bool(p) and self.chess_venue() is not None         # L4: desk and TV games hold votes until finish
         if p and not held:
             if awake and self.life.activity == p["act"]:          # he got there by himself meanwhile: nothing to nudge
                 v.pending = None

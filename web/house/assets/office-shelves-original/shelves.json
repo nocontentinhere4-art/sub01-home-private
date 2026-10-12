@@ -1,0 +1,54 @@
+{
+  "geometry": "Original wall-mounted oak shelf assembly with six thin shelves, three wall cleats and small visible L brackets. Not manufacturer CAD.",
+  "reference_urls": [
+    "https://www.karimoku-case.com/furniture/n-ss01/",
+    "https://www.muji.com/jp/ja/store/cmdty/detail/4550344505007"
+  ],
+  "karimoku_reference_dimensions_m": [
+    1.427,
+    0.42,
+    1.692
+  ],
+  "actual_blender_bounds_m": [
+    [
+      -1.1749999523162842,
+      -0.16999998688697815,
+      0.125
+    ],
+    [
+      1.1749998331069946,
+      0.17000000178813934,
+      2.5174999237060547
+    ]
+  ],
+  "runtime_origin_m": [
+    2.125,
+    0,
+    -3.72
+  ],
+  "runtime_yaw_radians": 0,
+  "shelf_top_heights_m": [
+    0.2675,
+    0.7175,
+    1.1675,
+    1.6175000000000002,
+    2.0675,
+    2.5175
+  ],
+  "shelf_thickness_m": 0.022,
+  "existing_footprint_m": [
+    2.35,
+    0.34
+  ],
+  "fixed_books": "Keep books at original y+0.02; shelf tops remain y+0.0175, leaving 2.5mm clearance.",
+  "monitor_clearance": "Frontmost geometry remains world z=-3.55; monitor rear is z=-3.3175, retaining ~.23m clearance.",
+  "runtime_materials": {
+    "Oak_shelves": "M.architectureOak, physical UVs /1.83m; no second light-oak grade",
+    "Shelf_hardware": "M.black or matching dark matte metal"
+  },
+  "texture_source": "https://polyhaven.com/a/oak_veneer_01",
+  "embedded_textures": false,
+  "triangles": 5724,
+  "glb_bytes": 411712,
+  "sha256": "bd0dda059f91e0238663e012e21bbf4a467289ed994ec7e2d486368bf10ef34e"
+}

@@ -1,0 +1,107 @@
+{
+  "license": "CC0 1.0",
+  "license_url": "https://polyhaven.com/license",
+  "modifications": "1K source JPGs: diffuse RGB with linear roughness packed in alpha; OpenGL normal map. Full 1024, lite Lanczos 512, lossless WebP. No displacement.",
+  "assets": [
+    {
+      "id": "asphalt_02",
+      "author": "Rob Tuytel",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "tile_metres": 3,
+      "sources": [
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+          "sha256": "1aa5ce99f58a625c71d48cfc3e68b65ca85ccb00f39e045c0a928608a0ea25ed"
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+          "sha256": "70ba3edc65525eb4dc366cf010ca7ae0bd34e0251ff0225c2dad627a873d0712"
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+          "sha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3"
+        }
+      ],
+      "outputs": [
+        {
+          "file": "asphalt_02-color-rough-1024.webp",
+          "bytes": 2183238,
+          "width": 1024,
+          "height": 1024,
+          "sha256": "dd8503cb2abbe6cf1a977495382b827530a3f645a3b1cd71b6a311e8e1b6cf68"
+        },
+        {
+          "file": "asphalt_02-normal-1024.webp",
+          "bytes": 2232892,
+          "width": 1024,
+          "height": 1024,
+          "sha256": "20ae1a383028d94516166a17ab23772d3a1f4a9a15152a3ab7c6280e85aca32c"
+        },
+        {
+          "file": "asphalt_02-color-rough-512.webp",
+          "bytes": 539596,
+          "width": 512,
+          "height": 512,
+          "sha256": "b31e84d7b4bb2b922c204335b3e7446341bde43edf101a66760f909e5749041a"
+        },
+        {
+          "file": "asphalt_02-normal-512.webp",
+          "bytes": 498924,
+          "width": 512,
+          "height": 512,
+          "sha256": "2006eeaf3cda46d2895ee5945cb234ab23a7fd69f25c0a887158097bc95329d3"
+        }
+      ]
+    },
+    {
+      "id": "concrete_pavement",
+      "author": "Charlotte Baglioni",
+      "source": "https://polyhaven.com/a/concrete_pavement",
+      "tile_metres": 1.8,
+      "sources": [
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_diff_1k.jpg",
+          "sha256": "70d3ff969a7421c7ae057b5d16386d11f5e59c6740db643352e1039413f419c4"
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_rough_1k.jpg",
+          "sha256": "99f81099af07b009134b6a81bf0f95ab16da09c57156cc2ed534975664a68533"
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_nor_gl_1k.jpg",
+          "sha256": "a5009e409ff0f7b2d19e1316fe5e2b2b4f28e4a6b79990a664be69d4e8a0e690"
+        }
+      ],
+      "outputs": [
+        {
+          "file": "concrete_pavement-color-rough-1024.webp",
+          "bytes": 1806808,
+          "width": 1024,
+          "height": 1024,
+          "sha256": "c3d09da9399664e9a32faed16a5a6006d5b51860abb809313ef78aa590f6c6cd"
+        },
+        {
+          "file": "concrete_pavement-normal-1024.webp",
+          "bytes": 1983666,
+          "width": 1024,
+          "height": 1024,
+          "sha256": "46738f529d496ef16ca8c4e7afa9a97141b3eca0250f3ac7b1dae5358c54e9e9"
+        },
+        {
+          "file": "concrete_pavement-color-rough-512.webp",
+          "bytes": 460104,
+          "width": 512,
+          "height": 512,
+          "sha256": "2c6f445b744f2a9a4c62fe6a9f97b74a9be2e942af0565e9d64a30f18bbe16f7"
+        },
+        {
+          "file": "concrete_pavement-normal-512.webp",
+          "bytes": 474348,
+          "width": 512,
+          "height": 512,
+          "sha256": "a0f5854179f77046bd8000ed7f8d77b07c482ace9b29a17ae86bb8ca2bb7ac3b"
+        }
+      ]
+    }
+  ]
+}

@@ -9,14 +9,17 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
+import { createExteriorBackdrops } from "./exterior_backdrops.mjs";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
-import { metricBoxUv } from "./material_uv.mjs";
+import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
 import { terraceAllows } from './terrace_space.mjs';
+import { frontDoorAllows, frontDoorApproach } from './front_door_access.mjs';
+import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
@@ -230,6 +233,7 @@ function beam(a, b, r = 0.022, m = M.darkwood) {
     B = new T.Vector3(...b),
     D = B.clone().sub(A),
     o = new T.Mesh(new T.CylinderGeometry(r, r, D.length(), 10), m);
+  if (m === M.architectureOak) metricCylinderUv(o.geometry,r,D.length(),1.83);
   o.position.copy(A.add(B).multiplyScalar(0.5));
   o.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), D.normalize());
   o.castShadow = true;
@@ -398,9 +402,8 @@ windowFrame(0.65, 1.7, 3.85, 0.9, 2.02);
 windowFrame(3.25, 1.7, 3.85, 0.9, 2.02);
 const balconyDoor = createBalconyDoor(T, scene, M.darkwood);
 const balconyGlassOpenness = {value:0};
-// Reuse the existing photographed Tokyo layers; no second scene or reflection render.
+// Physical glass reveals the same residential sphere and foreground indoors/out.
 const windowViews = [];
-let sharedWindowTextures;
 for (const surface of [
   { facade: 'west', c: [-3.94, 1.675, 0], w: 7.9, h: 2.15, ry: Math.PI / 2 },
   { facade: 'front', c: [-1.3, 1.675, 3.94], w: 5.35, h: 2.15, ry: Math.PI },
@@ -408,28 +411,12 @@ for (const surface of [
   { facade: 'front', c: [-2.075, 4.45, 3.94], w: 3.7, h: 2.5, ry: Math.PI },
 ]) {
   const view = createHouseWindowView(T, {
-    base: lite ? "/house/assets/lite/window/" : "/room/window/",
-    textures: sharedWindowTextures,
     doorOpenness: surface.facade === 'front' && surface.c[1] > 3 ? balconyGlassOpenness : null,
   }, surface.facade);
-  if (!sharedWindowTextures) {
-    sharedWindowTextures = {};
-    for (const [name, uniform] of Object.entries({
-      near: "tNear",
-      mid: "tMid",
-      mid_n: "tMidN",
-      mid_l: "tMidL",
-      far: "tFar",
-      sky: "tSky",
-      noise: "tNoise",
-    })) {
-      sharedWindowTextures[name] = view.material.uniforms[uniform].value;
-    }
-  }
   view.build(surface, scene, null);
   windowViews.push(view);
 }
-document.getElementById('status').dataset.windowProjection = 'shared-facade-world-rays';
+document.getElementById('status').dataset.windowProjection = 'physical-glass-shared-residential-sphere';
 // A real exit through the front wall to the entrance terrace.
 floor(2.5, 1.8, 2, 0, 4.9);
 const threshold = box(1.1, .04, .3, 2, .005, 3.95, M.darkwood.clone(), 0);
@@ -803,12 +790,28 @@ gltfLoader
 obstacle(2, -1.9, 0.7, 0.7);
 rug(2.7, 2.3, 2, 0, -1.2, "#a2aa9d");
 // Shelving and art.
-for (const x of [1, 3.25])
-  box(0.08, 2.25, 0.33, x, 1.25, -3.72, M.darkwood, 0.007);
-for (let y = 0.25; y < 2.6; y += 0.45) {
-  box(2.35, 0.035, 0.34, 2.125, y, -3.72, M.wood, 0.007);
-  if (y > 1.6) books(1.2, y + 0.02, -3.71, 15);
+const shelfFallback = [];
+for (const x of [1, 3.25]) shelfFallback.push(box(.08, 2.25, .33, x, 1.25, -3.72, M.darkwood, .007));
+for (let y = .25; y < 2.6; y += .45) {
+  shelfFallback.push(box(2.35, .035, .34, 2.125, y, -3.72, M.wood, .007));
+  if (y > 1.6) books(1.2, y + .02, -3.71, 15);
 }
+for (const part of shelfFallback) part.userData.replaceable = true;
+const officeShelvesReady = gltfLoader.loadAsync('/house/assets/office-shelves-original/shelves.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(2.125, 0, -3.72);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = object.name === 'Shelf_hardware' ? M.black : M.architectureOak;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-office-shelves-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  for (const part of shelfFallback) part.visible = false;
+  document.getElementById('status').dataset.officeShelves = 'blender-oak';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Office shelves fallback:', error.message));
 frame(2, 3.75, -3.885, 1.3, 1.8);
 frame(-2.2, 4.65, -3.88, 0.9, 1.2);
 // Bedroom upstairs: reference-built Blender bed, layered linen and bedside light.
@@ -1101,6 +1104,7 @@ for (let i = 0; i < 100; i++) {
   );
   city.setColorAt(i, new T.Color().setHSL(0.1, 0.025, 0.75 + random() * 0.2));
 }
+const legacyExteriorObjects = new Set(scene.children);
 scene.add(city);
 box(100, 0.1, 100, 0, -0.2, 0, mat("#758177"), 0);
 // A light skyline landmark, drawn in the same scene with original geometry.
@@ -1127,6 +1131,19 @@ for (const sx of [-1, 1])
   }
 box(1.8, 0.4, 1.8, 10, 6.4, 24, M.white, 0);
 beam([10, 8.8, 24], [10, 12, 24], 0.07, towerPaint);
+const legacyExterior = new T.Group();
+legacyExterior.name = 'legacy_exterior_fallback';
+legacyExterior.userData.excludeStaticBake = true;
+for (const object of [...scene.children])
+  if (!legacyExteriorObjects.has(object)) legacyExterior.add(object);
+scene.add(legacyExterior);
+const photographedExterior = createExteriorBackdrops(T, scene, {lite,manager:T.DefaultLoadingManager}, legacyExterior);
+const exteriorCredit = document.createElement('a');
+exteriorCredit.href='/house/assets/tokyo-residential/credits.html';
+exteriorCredit.textContent='Tokyo panorama · Masato OHTA · CC BY 2.0';
+exteriorCredit.target='_blank'; exteriorCredit.rel='noopener';
+exteriorCredit.style.cssText='position:fixed;bottom:5px;left:8px;font:9px monospace;color:#bfc7cc;z-index:3;background:#17202799;padding:3px 5px';
+document.body.append(exteriorCredit);
 let lampOn = true,
   curtainOpen = false,
   lastLightMinute = -1;
@@ -1280,6 +1297,8 @@ function canWalk(x, z, feet) {
     x > 3.78 ||
     z < -3.78 ||
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
+    !frontDoorAllows(x, z, feet, frontDoorGroup.rotation.y) ||
+    !bathroomAllows(x, z, feet, bathDoor.position.z) ||
     (f > 2 ? z > 5.04 : !terraceAllows(x, z))
   )
     return false;
@@ -1468,12 +1487,13 @@ function update(dt) {
     balconyApproach([p.x,p.y,p.z]) || balconyApproach(homeState?.position));
   balconyGlassOpenness.value = balconyDoor.openness;
   document.getElementById('status').dataset.balconyDoor = String(Math.round(balconyDoor.openness * 100));
-  entranceOpen = p.y < 3 && Math.hypot(p.x - 2, p.z - 3.9) < 1.8;
+  entranceOpen = frontDoorApproach([p.x,p.y,p.z]) || frontDoorApproach(homeState?.position);
   frontDoorGroup.rotation.y = T.MathUtils.lerp(
     frontDoorGroup.rotation.y,
     entranceOpen ? -Math.PI * 0.48 : 0,
     Math.min(1, dt * 7),
   );
+  document.getElementById("status").dataset.frontDoorAngle = String(frontDoorGroup.rotation.y);
   setPrivacy(
     !!homeState?.privacy ||
     (p.y > 3 &&
@@ -1481,11 +1501,11 @@ function update(dt) {
       p.x > bathroomBounds.x0 &&
       p.z > bathroomBounds.z0 &&
       p.z < bathroomBounds.z1));
-  const doorOpen = p.y > 3 && Math.hypot(p.x + 0.85, p.z - 1.35) < 1.6;
-  bathDoor.position.z = T.MathUtils.lerp(
+  const doorOpen = bathroomApproach([p.x, p.y, p.z]) || bathroomApproach(homeState?.position);
+  bathDoor.position.z = bathroomDoorPosition(
     bathDoor.position.z,
-    doorOpen ? 2.3 : 1.35,
-    Math.min(1, dt * 8),
+    dt,
+    doorOpen,
   );
   const doorMotion = balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
     Math.abs(bathDoor.position.z - (doorOpen ? 2.3 : 1.35)) > .001;
@@ -2523,16 +2543,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=11"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=12"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=11",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=12",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=11",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=12",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2689,6 +2709,8 @@ renderer.setAnimationLoop(() => {
   renderer.info.reset();
   update(dt);
   if (!startup.ready) return;
+  document.getElementById('status').dataset.exterior = photographedExterior.activate() ? 'residential-tokyo-360-static' : 'legacy-fallback';
+  photographedExterior.update(dt,currentLight.hour);
   document.getElementById("status").dataset.sunDust = sunDust.update(dt,currentLight,curtainOpen,camera.position) ? String(sunDust.count) : "off";
   if (!privacyActive)
     for (const view of windowViews)
@@ -2709,6 +2731,7 @@ renderer.setAnimationLoop(() => {
   elapsed += clock.elapsedTime - lastFrameTime;
   lastFrameTime = clock.elapsedTime;
   if (elapsed > 1) {
+    document.getElementById('status').dataset.programs = String(renderer.info.programs.length);
     document.getElementById("status").textContent =
       location.hostname === "127.0.0.1"
         ? `${Math.round(frames / elapsed)} fps · ${renderer.info.render.calls} draw calls · ${camera.position.y > 3 ? "Upper floor" : "Ground floor"}`
@@ -2737,7 +2760,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady]);
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
       const data = await new GLTFExporter().parseAsync(staticBakeScene(scene), {
         binary: true,
         onlyVisible: true,
