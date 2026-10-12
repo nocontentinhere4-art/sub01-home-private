@@ -684,7 +684,7 @@ const bedFrameFallback = [
   box(1.65, 0.98, 0.16, -2.4, 3.63, -3.5, M.cream, 0.08),
 ];
 for (const object of bedFrameFallback) object.userData.replaceable = true;
-const bedOak = pbr('fine_grained_wood', [1, 1]);
+const bedOak = M.darkwood.clone(); // Share scanned maps instead of uploading them twice.
 bedOak.color.set('#e7d5b5');
 bedOak.roughness = .65;
 // Keep the scanned grain/normal detail while grading its dark-wood albedo to
@@ -739,7 +739,19 @@ const beddingReady = gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lit
 }).catch(error => console.warn('Bedding fallback:', error.message));
 obstacle(-2.4, -2.35, 1.75, 2.3, 1);
 rug(2.65, 3, -2.2, 3, -1.7, "#d3c4a9");
-box(0.48, 0.5, 0.45, -3.55, 3.25, -3.1, M.wood, 0.025);
+const nightstandFallback = box(0.48, 0.5, 0.45, -3.55, 3.25, -3.1, M.wood, 0.025);
+nightstandFallback.userData.replaceable = true;
+const nightstandReady = furnished('side_table_01', -3.55, 3, -3.1, .5, 0, null, 'y').then(root => {
+  if (!root) return;
+  nightstandFallback.visible = false;
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.userData.bakeId = 'house-nightstand-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  document.getElementById('status').dataset.nightstand = 'scanned';
+});
+obstacle(-3.55, -3.1, .51, .42, 1);
 plant(-3.3, 3, 2.7, 0.9);
 books(-3.3, 3.035, 1, 5);
 // Bathroom on the loft. Entry is through the openable door on the aisle side.
@@ -859,15 +871,40 @@ const glowMat = new T.MeshStandardMaterial({
   emissiveIntensity: 1.3,
   roughness: 1,
 });
+glowMat.userData.lampEmission = 1.3;
+const bedsideShadeMaterial = M.linen.clone();
+bedsideShadeMaterial.emissive.set('#ffc77c');
+bedsideShadeMaterial.emissiveIntensity = .08;
+bedsideShadeMaterial.userData.lampEmission = .08;
+const switchedMaterials = new Set([glowMat, bedsideShadeMaterial]);
 const deskLamp = cylinder(0.14, 0.035, 1.1, 1.3, -3.15, glowMat);
 beam([1.1, 0.85, -3.15], [1.1, 1.3, -3.15], 0.014, M.brass);
-const bedsideLamp = cylinder(0.14, 0.2, -3.55, 3.84, -3.1, M.linen);
-cylinder(0.03, 0.23, -3.55, 3.62, -3.1, M.brass);
+let bedsideLamp = cylinder(0.14, 0.2, -3.55, 3.84, -3.1, M.linen);
+const bedsideStemFallback = cylinder(0.03, 0.23, -3.55, 3.62, -3.1, M.brass);
+bedsideLamp.userData.replaceable = bedsideStemFallback.userData.replaceable = true;
+const bedsideLampReady = gltfLoader.loadAsync('/house/assets/bedside-lamp/lamp.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-3.55, 3.5, -3.1);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.material = object.name.startsWith('Linen') ? bedsideShadeMaterial : object.name === 'Bulb' ? glowMat : M.brass;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-bedside-lamp-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  const control = interactions.find(item => item.object === bedsideLamp);
+  if (control) control.object = root;
+  bedsideLamp.visible = bedsideStemFallback.visible = false;
+  bedsideLamp = root;
+  document.getElementById('status').dataset.bedsideLamp = 'blender-linen';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Bedside lamp fallback:', error.message));
 const warm = new T.PointLight("#ffd49a", 6, 5, 2);
 warm.position.set(1.1, 1.35, -3.15);
 scene.add(warm);
 const bedLight = new T.PointLight("#ffc88a", 5, 4, 2);
-bedLight.position.set(-3.55, 3.9, -3.1);
+bedLight.position.set(-3.55, 3.768, -3.1);
 scene.add(bedLight);
 const kitchenWorkLight = new T.PointLight("#ffe2b9", 2.4, 1.8, 2);
 kitchenWorkLight.position.set(-2.7, 1.55, -3.45);
@@ -987,12 +1024,14 @@ function lighting(timestamp = Date.now() / 1000) {
   scene.background.set(currentLight.sky);
   scene.fog.color.copy(scene.background);
   warm.intensity = lampOn ? 12 : 0;
-  bedLight.intensity = lampOn ? 10 : 0;
+  bedLight.intensity = lampOn ? 3.5 : 0;
   kitchenWorkLight.intensity = lampOn ? 2.4 : 0;
   ceilingLights.forEach((light) => {
     light.intensity = lampOn ? 10 : 0;
   });
-  glowMat.emissiveIntensity = lampOn ? 1.3 : 0;
+  for (const material of switchedMaterials)
+    material.emissiveIntensity = lampOn ? material.userData.lampEmission : 0;
+  document.getElementById('status').dataset.bedsideEmission = String(lampOn ? glowMat.emissiveIntensity : 0);
   renderer.shadowMap.needsUpdate = true;
   document.getElementById("status").dataset.shadowMode = lite ? "indirect-only" : sun.castShadow ? "sun-and-pendant" : "pendant";
 }
@@ -2311,16 +2350,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=4"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=5"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=4",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=5",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=4",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=5",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2395,6 +2434,7 @@ async function applyContactLighting() {
       unused.delete(original);
       original.geometry = geometry;
       original.material = original.material.clone();
+      if (Number.isFinite(original.material.userData.lampEmission)) switchedMaterials.add(original.material);
       if (useIndirectLighting) {
         original.material.aoMap = null;
         original.material.lightMap = ao;
@@ -2509,7 +2549,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady]);
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady]);
       const data = await new GLTFExporter().parseAsync(scene, {
         binary: true,
         onlyVisible: true,

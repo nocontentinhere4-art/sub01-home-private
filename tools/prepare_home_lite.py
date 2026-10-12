@@ -6,7 +6,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "web/house/assets"
 for folder in ROOT.iterdir():
-    if not folder.is_dir() or folder.name == "lite":
+    # Lightmaps/HDR variants have their own packer; don't generate unused
+    # copies of contact-lighting atlases in the general material tree.
+    if not folder.is_dir() or folder.name in {"lite", "lighting"}:
         continue
     for image in folder.rglob("*.jpg"):
         out = ROOT / "lite" / image.relative_to(ROOT)

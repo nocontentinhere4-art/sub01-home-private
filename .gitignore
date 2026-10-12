@@ -58,3 +58,6 @@ out/home-editable/
 # Blender rotating editor backups
 *.blend1
 *.blend2
+
+# Unused generated lightmap copies preserved outside shipped assets
+out/lite-unused-lighting/

@@ -1,0 +1,12 @@
+{
+  "geometry": "Original Blender model: open linen shade, brass foot/stem/socket, bulb",
+  "dimensions_m": [
+    0.31,
+    0.31,
+    0.4
+  ],
+  "bulb_height_m": 0.268,
+  "runtime_materials": "Existing CC0 linen maps, brass and switched bulb emission",
+  "glb_bytes": 78484,
+  "sha256": "dc3e1198dc21ebbfabb098677e3ee6cd95b6002f9c11e10bdc02ef2b95affec5"
+}

@@ -9,6 +9,9 @@ from mathutils import Vector
 source, destination = map(Path,sys.argv[sys.argv.index('--')+1:])
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(source.resolve()))
+sys.path.insert(0, str(Path(__file__).parent))
+from home_material_grades import apply_browser_material_grades
+print('OAK_MATERIALS_GRADED', apply_browser_material_grades(), flush=True)
 scene=bpy.context.scene
 scene.unit_settings.system='METRIC'
 scene.unit_settings.scale_length=1

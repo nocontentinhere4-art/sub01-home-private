@@ -17,6 +17,9 @@ assert mode in ("day", "night")
 output.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(source))
+sys.path.insert(0, str(Path(__file__).parent))
+from home_material_grades import apply_browser_material_grades
+print('OAK_MATERIALS_GRADED', apply_browser_material_grades(), flush=True)
 original = {o.get("bakeId"): o for o in bpy.context.scene.objects if o.get("bakeId")}
 before = set(bpy.context.scene.objects)
 bpy.ops.import_scene.gltf(filepath=str(atlas))
