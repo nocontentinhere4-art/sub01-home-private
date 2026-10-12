@@ -2392,75 +2392,80 @@ async def main(args):
     for old, new in OLD_PATHS.items():             # links from before the launch (the login page, short names)
         app.router.add_get(old, lambda r, new=new: web.HTTPFound(new))
     app.router.add_static("/", HERE / "web")
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, shutdown_timeout=3)
     await runner.setup()
-    await web.TCPSite(runner, args.host, args.port).start()
-    print(f"SUB-01 live on http://localhost:{args.port}  ({'demo' if args.demo else (args.mint or 'no coin yet: trade feed off')}, "
-          f"time x{args.time_scale:g}, state in {data_dir})", flush=True)
-    # the deploy gap: until this line the edge gets "connection refused" (a 502); a slow build shows up here
-    print(f"startup: listening {time.monotonic() - START:.1f} s after import (brain + state built in {built_s:.1f} s); "
-          f"/healthz answers 200 from the first brain tick", flush=True)
-    live.life.can_watch = bool(live.browser)     # no browser: no videos at the desk
-    # every long-running part is supervised: an unexpected error restarts that part, instead of ending asyncio.gather
-    # and with it the process (a Railway restart = a 502 window for every page until the new process listens)
-    tasks = [supervised("brain", live.run_brain, backoff=1.0), supervised("research", live.run_research),
-             supervised("trades", live.demo_trades if args.demo else live.rpc_trades),
-             supervised("chess", live.run_chess), supervised("music", live.run_music)]
-    if live.computer:
-        tasks.append(supervised("home computer", live.computer.run))
-    if live.minecraft and live.minecraft.enabled:
-        tasks.append(supervised("Minecraft console", live.minecraft.run))
-    if live.eye:
-        tasks.append(supervised("eye", live.run_eye))
-    if live.browser:
-        tasks.append(supervised("browse", live.run_browse))
-    if live.mind:
-        tasks.append(supervised("mind", live.run_mind))
-    if manager:
-        tasks.append(manager.run())
-    if cpu_net:
-        tasks.append(supervised("spiking live", cpu_net.run))
-    if getattr(live, "clips", None):
-        tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
-    tasks = [asyncio.create_task(task) for task in tasks]
-    me, stopping = asyncio.current_task(), []
-
-    def on_sigterm():                             # a redeploy / `docker stop`: SIGTERM, then SIGKILL after a grace period.
-        if not stopping:                          # Without this the process died at once and the last minute of state
-            stopping.append(True)                 # (memory, sleep, life) was lost; now the finally below saves it first.
-            print("SIGTERM: saving state and stopping", flush=True)
-            me.cancel()
     try:
-        asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, on_sigterm)
-    except (NotImplementedError, RuntimeError, ValueError):    # not on this platform / not the main thread
-        pass
-    try:
-        await asyncio.gather(*tasks)
-    finally:
-        # A cancelled gather raises before every child's finally has finished.
-        # Let the VM and Minecraft save/close before asyncio tears down pipes.
-        for task in tasks:
-            if not task.done() and not task.cancelling():
-                task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
-        live.store.save(live.engine, live.memory)
-        if manager:
-            manager.shutdown()
-        if cpu_net:
-            await cpu_net.stop()
-        if live.home:
-            save_json(live.home_path, live.home.to_dict(), ensure_ascii=False)
-        live.save_screens()                               # #89: today's screens survive the deploy
+        await web.TCPSite(runner, args.host, args.port).start()
+        print(f"SUB-01 live on http://localhost:{args.port}  ({'demo' if args.demo else (args.mint or 'no coin yet: trade feed off')}, "
+              f"time x{args.time_scale:g}, state in {data_dir})", flush=True)
+        # the deploy gap: until this line the edge gets "connection refused" (a 502); a slow build shows up here
+        print(f"startup: listening {time.monotonic() - START:.1f} s after import (brain + state built in {built_s:.1f} s); "
+              f"/healthz answers 200 from the first brain tick", flush=True)
+        live.life.can_watch = bool(live.browser)     # no browser: no videos at the desk
+        # every long-running part is supervised: an unexpected error restarts that part, instead of ending asyncio.gather
+        # and with it the process (a Railway restart = a 502 window for every page until the new process listens)
+        tasks = [supervised("brain", live.run_brain, backoff=1.0), supervised("research", live.run_research),
+                 supervised("trades", live.demo_trades if args.demo else live.rpc_trades),
+                 supervised("chess", live.run_chess), supervised("music", live.run_music)]
+        if live.computer:
+            tasks.append(supervised("home computer", live.computer.run))
+        if live.minecraft and live.minecraft.enabled:
+            tasks.append(supervised("Minecraft console", live.minecraft.run))
+        if live.eye:
+            tasks.append(supervised("eye", live.run_eye))
         if live.browser:
-            try:
-                await asyncio.wait_for(live.sync_browsing(), 5)  # the newest log, if the browser still answers
-            except (BrowserDown, asyncio.TimeoutError):
-                pass
-            save_json(live.browsing_path, live.browsing_state, ensure_ascii=False)
-            if live.local_browser:
-                await live.local_browser.aclose()
-            else:
-                await live.browser.aclose()
+            tasks.append(supervised("browse", live.run_browse))
+        if live.mind:
+            tasks.append(supervised("mind", live.run_mind))
+        if manager:
+            tasks.append(manager.run())
+        if cpu_net:
+            tasks.append(supervised("spiking live", cpu_net.run))
+        if getattr(live, "clips", None):
+            tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
+        tasks = [asyncio.create_task(task) for task in tasks]
+        me, stopping = asyncio.current_task(), []
+
+        def on_sigterm():                             # a redeploy / `docker stop`: SIGTERM, then SIGKILL after a grace period.
+            if not stopping:                          # Without this the process died at once and the last minute of state
+                stopping.append(True)                 # (memory, sleep, life) was lost; now the finally below saves it first.
+                print("SIGTERM: saving state and stopping", flush=True)
+                me.cancel()
+        try:
+            asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, on_sigterm)
+        except (NotImplementedError, RuntimeError, ValueError):    # not on this platform / not the main thread
+            pass
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            # A cancelled gather raises before every child's finally has finished.
+            # Let the VM and Minecraft save/close before asyncio tears down pipes.
+            for task in tasks:
+                if not task.done() and not task.cancelling():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            live.store.save(live.engine, live.memory)
+            if manager:
+                manager.shutdown()
+            if cpu_net:
+                await cpu_net.stop()
+            if live.home:
+                save_json(live.home_path, live.home.to_dict(), ensure_ascii=False)
+            live.save_screens()                               # #89: today's screens survive the deploy
+            if live.browser:
+                try:
+                    await asyncio.wait_for(live.sync_browsing(), 5)  # the newest log, if the browser still answers
+                except (BrowserDown, asyncio.TimeoutError):
+                    pass
+                save_json(live.browsing_path, live.browsing_state, ensure_ascii=False)
+                if live.local_browser:
+                    await live.local_browser.aclose()
+                else:
+                    await live.browser.aclose()
+
+    finally:
+        from home_http import close_http_runner
+        await close_http_runner(runner, live.sockets)
 
 
 def build_parser():

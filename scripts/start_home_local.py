@@ -39,6 +39,9 @@ os.environ.update(SUB01_SPIKING_LIVE='0' if options.no_spiking else '1',
                   SUB01_SPIKING_LIVE_NEURONS=str(options.neurons),
                   SUB01_SPIKING_LIVE_TIMEOUT_S='5', SUB01_DAY_LIVE='0',
                   SUB01_POD_SECRET='', RUNPOD_API_KEY='')
+from scripts.local_port import wait_for_local_port
+if wait_for_local_port(options.port):
+    print("Previous local listener closed; starting the private home.", flush=True)
 from live_server import main, build_parser
 
 try:

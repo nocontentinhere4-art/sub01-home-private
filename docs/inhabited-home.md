@@ -170,3 +170,12 @@ A new 899×1234 day/night Cycles atlas was generated from the TV-facing lounge a
 Cached door shadows now request updates at most 8 Hz during motion, followed by a final settled-pose update. Leaving bathroom privacy forces a room-shadow refresh, so rendering the privacy scene cannot consume the last room update. The rate helper is checked at 30/60 Hz and does not request updates for stationary doors. This supersedes the earlier moving-door shadow lag noted above.
 
 The live localhost visitor walked downstairs and approached the front door: the door refresh-request counter went from 0 to 8 during opening, then to 17 during closing and remained at 17 afterward. The room displayed about 47 fps on this Mac. Ten HomeWorld tests, the bake-shape guard and shadow refresh checks passed. Proof: `docs/screens/home/private-lounge-lighting-v3.jpg`. This is browser-room evidence; reference-level Unreal fidelity and physical-phone performance remain open checks.
+
+
+## Device persistence and clean local restart
+
+An operator-controlled integration check woke the main simulation through the existing authenticated wake endpoint and suggested Minecraft. Hunger took priority first. At the current nighttime hour, the desk/game gate gives console play no score, so this check does not establish a new live Minecraft session; a separate daytime integration run remains needed. The wake was an operator intervention, not a spontaneous brain decision.
+
+The operator wrote `/root/sub01-home-check.txt` inside the real v86 Linux guest and read it after graceful server restarts. Its original text survived and the actual Linux panel showed the recovered file. The file lives only in the guest snapshot, not a host mount. Raw before/after data is under ignored `data/home-device-check/`; proof is `docs/screens/home/private-linux-file-restored.jpg`.
+
+The first restart surfaced an address-in-use failure. The local launcher now waits up to eight seconds for a prior listener to release its port and reports a clear bounded failure if another server retains it. The server now always closes its sites/viewer sockets and cleans up its HTTP runner, including startup failures after runner setup. Viewer closure and request shutdown are bounded. On a live shutdown with the corrected code, port 8798 was immediately bindable; the following startup returned HTTP and a ready guest, and the file was read again. Fifteen targeted lifecycle, port, world and device API checks passed. The running local brain restored 510,000 neurons and its saved learned decisions.
