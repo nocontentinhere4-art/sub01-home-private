@@ -9,6 +9,7 @@ import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createWindowView } from "/room/window_view.js?v=home1";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
+import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
 import { terraceAllows } from './terrace_space.mjs';
@@ -99,6 +100,7 @@ const camera = new T.PerspectiveCamera(viewControls.fov, innerWidth / innerHeigh
 camera.rotation.order = "YXZ";
 let yaw = 0,
   pitch = 0;
+const followerLook = new FirstPersonLook();
 let seed = 9241;
 const random = () => {
   seed = (1664525 * seed + 1013904223) >>> 0;
@@ -1113,6 +1115,7 @@ function setLook(pos, look) {
   yaw = camera.rotation.y;
   pitch = camera.rotation.x;
   targetY = pos[1];
+  followerLook.reset(yaw, pitch);
 }
 setLook(places.office.p, places.office.look);
 function floorAt(x, z, feet) {
@@ -1144,6 +1147,7 @@ function canWalk(x, z, feet) {
 }
 document.getElementById("follow").onclick = () => {
   following = true;
+  followerLook.reset(yaw, pitch);
   visitorStandTarget = null;
   lookOffset.set(0, 0);
   document.getElementById("follow").classList.add("active");
@@ -1266,13 +1270,12 @@ function update(dt) {
     const alpha = 1 - Math.exp(-dt * 10);
     camera.position.lerp(new T.Vector3(...homeState.position), alpha);
     targetY = camera.position.y;
-    const target = new T.Vector3(...homeState.look);
-    if (target.distanceTo(camera.position) > 0.1) {
-      lookPoint.lerp(target, 1 - Math.exp(-dt * 3));
-      camera.lookAt(lookPoint);
-      camera.rotation.y += lookOffset.x;
-      camera.rotation.x += lookOffset.y;
-    }
+    const [headYaw, headPitch] = followerLook.step(dt, homeState.position, homeState.look);
+    camera.rotation.set(
+      T.MathUtils.clamp(headPitch + lookOffset.y, -1.25, 1.25),
+      headYaw + lookOffset.x,
+      0,
+    );
     yaw = camera.rotation.y;
     pitch = camera.rotation.x;
   } else if (!following && visitorStandTarget) {
@@ -1380,8 +1383,7 @@ let homeState = null,
   onlineAt = 0,
   brainStage = "",
   homeTime = Date.now() / 1000;
-const lookPoint = new T.Vector3(2, 1.16, -3.3),
-  lookOffset = new T.Vector2();
+const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
 function notice(text) {
@@ -2177,7 +2179,6 @@ function acceptHome(state) {
   if (state.privacy) setPrivacy(true);
   if (!homeState) {
     setLook(state.position, state.look);
-    lookPoint.fromArray(state.look);
   }
   homeState = { ...homeState, ...state };
   if (state.console_game && state.console_game !== lastConsoleGame) {
