@@ -1,3 +1,4 @@
+import { createSunShafts } from "./sun_shafts.mjs";
 import * as T from "three";
 import { RoundedBoxGeometry } from "./vendor/RoundedBoxGeometry.js";
 import { GLTFExporter } from "./vendor/GLTFExporter.js";
@@ -2548,6 +2549,8 @@ setTimeout(() => {
   document.getElementById("load").style.display = "none";
 }, 15000);
 renderer.shadowMap.needsUpdate = true;
+const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
+renderer.info.autoReset = false;
 let frames = 0,
   elapsed = 0,
   lastFrameTime = 0,
@@ -2561,12 +2564,15 @@ renderer.setAnimationLoop(() => {
   if (accumulated < 1 / 60) return;
   const dt = Math.min(accumulated, 0.05);
   accumulated = 0;
+  renderer.info.reset();
   update(dt);
   document.getElementById("status").dataset.sunDust = sunDust.update(dt,currentLight,curtainOpen,camera.position) ? String(sunDust.count) : "off";
   if (!privacyActive)
     for (const view of windowViews)
       view.update(dt, currentLight.hour);
-  renderer.render(
+  const shaftsActive = !privacyActive && sunShafts.render(scene, camera, currentLight, sun, curtainOpen);
+  document.getElementById("status").dataset.sunShafts = shaftsActive ? String(sunShafts.pixels()) : "off";
+  if (!shaftsActive) renderer.render(
     privacyActive ? privacyScene : scene,
     privacyActive ? privacyCamera : camera,
   );
