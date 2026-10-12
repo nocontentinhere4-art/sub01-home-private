@@ -9,6 +9,8 @@ import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createWindowView } from "/room/window_view.js?v=home1";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
+import { reachableInteraction } from "./interactions.mjs";
+import { HeldControls } from "./held_controls.mjs";
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -937,6 +939,21 @@ let following = true,
 const clock = new T.Clock(),
   ray = new T.Raycaster();
 let aimed = null;
+let nextAimAt = 0;
+function refreshAim() {
+  scene.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  ray.setFromCamera(new T.Vector2(), camera);
+  aimed = privacyActive ? null : reachableInteraction(ray, interactions, scene);
+  const action = document.getElementById("action");
+  action.style.display = aimed ? "block" : "none";
+  action.textContent = aimed?.label || "";
+}
+document.getElementById("action").onclick = () => {
+  if (panelKind) return;
+  refreshAim();
+  aimed?.fn();
+};
 function setLook(pos, look) {
   camera.position.fromArray(pos);
   camera.lookAt(new T.Vector3(...look));
@@ -1014,20 +1031,29 @@ addEventListener("keydown", (e) => {
       ["ArrowUp", "ArrowDown"].includes(e.key)
     ) {
       e.preventDefault();
-      pongInput(e.key === "ArrowUp" ? -1 : 1);
+      pongHeld.set(e.key, e.key === "ArrowUp" ? -1 : 1);
       return;
     }
     if (following && e.key !== "e") return;
     e.preventDefault();
     if (e.key === "e") {
+      if (panelKind) return;
+      refreshAim();
       aimed?.fn();
       return;
     }
     keys[e.key] = true;
   }
 });
-addEventListener("keyup", (e) => (keys[e.key] = false));
-addEventListener("blur", () => (keys = {}));
+addEventListener("keyup", (e) => {
+  keys[e.key] = false;
+  pongHeld.release(e.key);
+});
+addEventListener("blur", () => {
+  keys = {};
+  pongHeld.clear();
+  drag = false;
+});
 renderer.domElement.addEventListener("pointerdown", (e) => {
   drag = true;
   lastX = e.clientX;
@@ -1055,6 +1081,7 @@ renderer.domElement.addEventListener("pointermove", (e) => {
   lastY = e.clientY;
 });
 renderer.domElement.addEventListener("pointerup", () => (drag = false));
+renderer.domElement.addEventListener("pointercancel", () => (drag = false));
 document.querySelectorAll("[data-key]").forEach((b) => {
   b.onpointerdown = (e) => {
     e.preventDefault();
@@ -1171,15 +1198,10 @@ function update(dt) {
     lastZone = zone;
     document.getElementById("place").textContent = places[zone].name;
   }
-  ray.setFromCamera(new T.Vector2(), camera);
-  const hits = ray.intersectObjects(interactions.map((i) => i.object));
-  aimed =
-    hits.length && hits[0].distance < 2
-      ? interactions.find((i) => i.object === hits[0].object)
-      : null;
-  const action = document.getElementById("action");
-  action.style.display = aimed ? "block" : "none";
-  action.textContent = aimed?.label || "";
+  if (performance.now() >= nextAimAt || privacyActive) {
+    nextAimAt = performance.now() + 100;
+    refreshAim();
+  }
 }
 // All devices are shared server state. A viewer never starts another brain or VM.
 let homeState = null,
@@ -1372,6 +1394,8 @@ function renderPanel(reset = false) {
       panelBody.append(choices);
       const c = document.createElement("canvas");
       c.id = "pong-panel";
+      c.tabIndex = 0;
+      c.setAttribute("aria-label", tvGame === "pong" ? "Pong court" : "Live chess board");
       c.width = 800;
       c.height = 460;
       panelBody.append(c);
@@ -1386,8 +1410,8 @@ function renderPanel(reset = false) {
       );
       if (tvGame === "pong")
         panelBody.append(
-          button("↑", () => pongInput(-1)),
-          button("↓", () => pongInput(1)),
+          pongControlButton("↑", -1),
+          pongControlButton("↓", 1),
         );
     }
     if (tvGame === "chess")
@@ -1546,17 +1570,46 @@ function renderPanel(reset = false) {
 let chessState = null,
   tvGame = "pong";
 let lastPongInput = 0;
+let pongSending = false;
+const pongHeld = new HeldControls();
+function pongControlButton(label, direction) {
+  const control = button(label, () => {});
+  control.setAttribute("aria-label", direction < 0 ? "Move paddle up" : "Move paddle down");
+  control.onpointerdown = (event) => {
+    event.preventDefault();
+    control.setPointerCapture(event.pointerId);
+    pongHeld.set("pointer:" + event.pointerId, direction);
+  };
+  const release = (event) => pongHeld.release("pointer:" + event.pointerId);
+  control.onpointerup = release;
+  control.onpointercancel = release;
+  control.onlostpointercapture = release;
+  control.onclick = (event) => {
+    if (event.detail === 0) pongInput(direction); // Accessible keyboard activation.
+  };
+  return control;
+}
 async function pongInput(direction) {
-  if (Date.now() - lastPongInput < 100) return;
+  if (pongSending || Date.now() - lastPongInput < 100) return false;
+  pongSending = true;
   lastPongInput = Date.now();
   try {
-    await fetch("/api/home/pong", {
+    const response = await fetch("/api/home/pong", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ direction }),
     });
-  } catch {}
+    return response.ok;
+  } catch { return false; }
+  finally { pongSending = false; }
 }
+setInterval(async () => {
+  if (panelKind !== "pong" || tvGame !== "pong" || document.hidden)
+    pongHeld.clear();
+  if (!pongHeld.active && !pongHeld.changed) return;
+  const version = pongHeld.version;
+  if (await pongInput(pongHeld.direction)) pongHeld.acknowledge(version);
+}, 110);
 function drawPong(canvas, state) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d"),
@@ -1679,6 +1732,7 @@ tv.position.set(-3.747, 1.65, -0.05);
 scene.add(tv);
 interactions.push({
   object: tv,
+  reach: 3.5, // Console controls are available from the sofa.
   label: "E · TV / Pong",
   fn: () => openPanel("pong"),
 });

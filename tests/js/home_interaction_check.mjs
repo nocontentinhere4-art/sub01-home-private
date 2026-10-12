@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import * as T from "three";
+import { reachableInteraction } from "../../web/house/interactions.mjs";
+
+const scene = new T.Scene();
+const device = new T.Mesh(new T.PlaneGeometry(0.6, 0.4), new T.MeshBasicMaterial());
+device.position.z = -1.5;
+scene.add(device);
+const interaction = {object: device, label: "Computer"};
+const ray = new T.Raycaster(new T.Vector3(), new T.Vector3(0, 0, -1));
+const check = () => {
+  scene.updateMatrixWorld(true);
+  return reachableInteraction(ray, [interaction], scene);
+};
+assert.equal(check(), interaction, "Visible device within reach");
+assert.equal(ray.far, Infinity, "Ray range restored");
+const door = new T.Mesh(new T.BoxGeometry(1, 2, 0.08), new T.MeshBasicMaterial());
+door.position.z = -0.7;
+scene.add(door);
+assert.equal(check(), null, "Closed door blocks device");
+door.position.x = 2;
+assert.equal(check(), interaction, "Open door exposes device");
+door.position.x = 0;
+door.material.transparent = true;
+door.material.opacity = 0.2;
+assert.equal(check(), interaction, "Glass does not block device");
+door.material.transparent = false;
+const hiddenParent = new T.Group();
+scene.add(hiddenParent);
+hiddenParent.attach(door);
+hiddenParent.visible = false;
+assert.equal(check(), interaction, "Hidden parent does not occlude");
+device.position.z = -2.5;
+assert.equal(check(), null, "Device beyond reach is unavailable");
+interaction.reach = 3.5;
+assert.equal(check(), interaction, "TV console range permits use from the sofa");
+delete interaction.reach;
+device.position.z = -1.5;
+device.visible = false;
+assert.equal(check(), null, "Hidden device is unavailable");
+device.visible = true;
+const deviceGroup = new T.Group();
+scene.add(deviceGroup);
+deviceGroup.attach(device);
+assert.equal(reachableInteraction(ray, [{object:deviceGroup}], scene)?.object,
+  deviceGroup, "Nested device resolves to its interaction owner");
+device.visible = false;
+assert.equal(reachableInteraction(ray, [{object:deviceGroup}], scene), null,
+  "Invisible child of a visible device group is unavailable");
+console.log("PASS: reach, opaque doors, transparent glass, hidden parents and nested devices");

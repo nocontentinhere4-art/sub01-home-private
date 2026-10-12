@@ -107,6 +107,10 @@ footer p {
   display: none;
   font-size: 12px;
 }
+body:has(#panel:not([hidden])) #action,
+body:has(#panel:not([hidden])) #reticle {
+  display: none !important;
+}
 #load {
   position: fixed;
   inset: 0;

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>SUB-01 · Home</title>
-    <link rel="stylesheet" href="/house/style.css" />
+    <link rel="stylesheet" href="/house/style.css?v=18" />
     <script type="importmap">
       { "imports": { "three": "/house/vendor/three.module.js" } }
     </script>
@@ -22,7 +22,7 @@
       ><a href="/brain">Brain</a>
     </nav>
     <div id="reticle">+</div>
-    <div id="action"></div>
+    <button id="action" type="button"></button>
     <div id="notice" role="status"></div>
     <aside id="panel" hidden>
       <button id="close" aria-label="Close">×</button>
@@ -33,7 +33,7 @@
       <button id="lamp">Lamp</button><button id="curtain">Curtains</button
       ><span id="connection">Connecting to his brain…</span
       ><small id="status"></small>
-      <p id="hint">Drag to look · Explore: W A S D · E to use a device</p>
+      <p id="hint">Drag to look · Explore: W A S D · E or tap to use a device</p>
     </footer>
     <div id="touch">
       <button data-key="w">↑</button>
@@ -52,6 +52,6 @@
         document.querySelector("#load span").textContent = String(e.reason);
       });
     </script>
-    <script type="module" src="/house/home.js?v=17"></script>
+    <script type="module" src="/house/home.js?v=18"></script>
   </body>
 </html>

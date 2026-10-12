@@ -76,3 +76,24 @@ The day view was checked on a separate accelerated-clock QA server. The night
 view and lamp-off transition were checked on the real private backend with the
 505,000-neuron process and browser active. This does not establish performance
 on other computers or on phones.
+
+## First-person interactions and games
+
+The gaze command now checks reach and opaque occluders before opening a device.
+It is a button, so it works with E, click, or tap. The TV's console controls are
+reachable from the sofa; nearby devices retain the shorter default reach.
+Hidden parents and transparent glass/contact decals are handled separately from
+opaque walls, doors, and furniture. The current target is rechecked on activation
+and disabled while bathroom privacy is active. Room commands and the reticle hide
+when a device panel is open.
+
+Pong holds use periodic bounded input while a keyboard key or pointer is held.
+Release, pointer cancellation, focus loss, closing the panel, and switching games
+clear the hold. A late response cannot discard a newer stop command. The court
+is keyboard-focusable. The server's existing short input expiry remains in place.
+
+Checks: `tests/js/home_interaction_check.mjs` and
+`tests/js/home_held_controls_check.mjs`, plus the home movement and API tests.
+The real private backend was also checked through Chrome: opening the TV from
+the gaze button and holding the keyboard/button during SUB-01's console activity.
+The game remains governed by his activity, so it pauses when he leaves the console.
