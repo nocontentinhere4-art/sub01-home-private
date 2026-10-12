@@ -11,6 +11,7 @@ import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
+import { terraceAllows } from './terrace_space.mjs';
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
@@ -324,7 +325,7 @@ box(1.45, 0.7, 0.18, 3.275, 0.35, 4, M.wall, 0);
 box(8, 0.45, 0.18, 0, 2.8, 4, M.wall, 0);
 box(4.15, 3, 0.18, 1.925, 4.55, 4, M.wall, 0);
 box(3.85, 0.6, 0.18, -2.075, 5.75, 4, M.wall, 0);
-function windowFrame(x, y, z, w, h, rotate = false) {
+function windowFrame(x, y, z, w, h, rotate = false, mullion = true) {
   const g = new T.Group();
   const dark = M.darkwood;
   for (const [ww, hh, xx, yy] of [
@@ -332,7 +333,7 @@ function windowFrame(x, y, z, w, h, rotate = false) {
     [w, 0.055, 0, h / 2],
     [0.045, h, -w / 2, 0],
     [0.045, h, w / 2, 0],
-    [0.035, h, 0, 0],
+    ...(mullion ? [[0.035, h, 0, 0]] : []),
   ]) {
     const b = new T.Mesh(new T.BoxGeometry(ww, hh, 0.06), dark);
     b.position.set(xx, yy, 0);
@@ -379,7 +380,17 @@ for (const surface of [
 }
 // A real exit through the front wall to the entrance terrace.
 floor(2.5, 1.8, 2, 0, 4.9);
-windowFrame(2, 1.12, 3.87, 1.1, 2.24);
+const threshold = box(1.1, .04, .3, 2, .005, 3.95, M.darkwood.clone(), 0);
+threshold.userData.replaceable = true; // keep the indoor lighting bake unchanged
+for (const x of [.80, 3.20]) {
+  beam([x,.9,4.15],[x,.9,5.75],.025,M.black);
+  for (const z of [4.15,4.55,4.95,5.35,5.75])
+    beam([x,.06,z],[x,.9,z],.018,M.black);
+}
+beam([.80,.9,5.75],[3.20,.9,5.75],.025,M.black);
+for (const x of [.80,1.20,1.60,2,2.40,2.80,3.20])
+  beam([x,.06,5.75],[x,.9,5.75],.018,M.black);
+windowFrame(2, 1.12, 3.87, 1.1, 2.24, false, false);
 const frontDoorGroup = new T.Group();
 frontDoorGroup.position.set(1.47, 0, 3.9);
 scene.add(frontDoorGroup);
@@ -393,6 +404,8 @@ frontDoorGroup.add(knob);
 let entranceOpen = false;
 plant(2.9, 0, 5.3, 1);
 plant(1, 0, 5.3, 0.85);
+obstacle(2.9, 5.3, .35, .35);
+obstacle(1, 5.3, .28, .28);
 for (const x of [-3.96, 3.96]) box(0.025, 0.09, 8, x, 0.055, 0, M.darkwood, 0);
 box(8, 0.09, 0.025, 0, 0.055, -3.89, M.darkwood, 0);
 const STEP = {
@@ -999,7 +1012,7 @@ function canWalk(x, z, feet) {
     x < -3.78 ||
     x > 3.78 ||
     z < -3.78 ||
-    z > (f > 2 ? 5.04 : x >= 1.45 && x <= 2.55 ? 5.65 : 3.76)
+    (f > 2 ? z > 5.04 : !terraceAllows(x, z))
   )
     return false;
   const level = f > 1.5 ? 1 : 0;

@@ -85,3 +85,10 @@ The local UI test opened the official Python tutorial and captured it on the des
 The phone Browser app now has the same authenticated public-address navigation as the PC, targeting the separate phone context. Its current-page title comes from the phone screen status. Operator access is available in a collapsible section above content, and the address controls precede the tall page image so they remain reachable at 390 px. The local desktop browser viewport check opened the W3C CSS overview in the phone context and showed it in the phone app. The Python tutorial failed to load in that check, so this is not a claim that every address works. Operator interaction was tested while the character was asleep; it was not an autonomous choice by SUB-01.
 
 The URL/auth/bathroom regression also verifies phone targeting. The viewport override was reset after inspection. Proof: `docs/screens/home/private-phone-browser-mobile.jpg`; physical-phone performance remains unverified.
+
+
+## Entrance terrace movement
+
+The visitor can use the full terrace width beyond the doorway throat, while its side and far rails bound the walking area. Both planter pots have collision bounds. A wooden threshold bridges the entrance and terrace. The entrance frame has no window mullion across the passage.
+
+The real localhost UI check walked from the bed entry onto the landing, down the complete staircase, through the opening door, across the terrace from x=0.91 to x=3.09 at z=4.80, and back indoors using W/A/S/D and drag controls. SUB-01 remained asleep in bed throughout. The renderer retained 63 matched indirect-light parts and showed about 45–48 fps on this Mac while active. The terrace helper check and all nine HomeWorld tests passed. Proof: `docs/screens/home/private-terrace-exit.jpg`. The exterior currently ends at this terrace; an explorable street is not implemented.
