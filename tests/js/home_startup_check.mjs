@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createHomeStartup} from '../../web/house/startup.mjs';
+const manager={}, stages=[], events=[];
+let pauses=0, prerequisiteResolve;
+const prereq=new Promise(resolve=>{prerequisiteResolve=resolve;});
+const texture={isTexture:true}, targetTexture={isTexture:true,isRenderTargetTexture:true};
+const room={environment:targetTexture,traverse(fn){fn({material:{map:texture,uniforms:{indirect:{value:texture}}}});}};
+const privacy={traverse(fn){fn({material:null});}};
+const camera={position:[3,2,1]}, initial=JSON.stringify(camera);
+const renderer={initTexture(t){events.push(['texture',t]);},async compileAsync(s,c){events.push(['compile',s,c]);}};
+const effects={async prepare(s,c){events.push(['effects',s,c]);}};
+const startup=createHomeStartup(manager,(...args)=>stages.push(args),async()=>{
+  pauses++;
+  if(pauses===1){manager.onStart();queueMicrotask(()=>manager.onLoad());}
+});
+manager.onStart();
+const promise=startup.prepare(renderer,room,camera,privacy,camera,[prereq],effects);
+assert.equal(startup.ready,false);assert.equal(events.length,0);
+prerequisiteResolve();manager.onLoad();
+await promise;
+assert.equal(startup.ready,true);assert.ok(pauses>=3);
+assert.equal(events.filter(e=>e[0]==='texture').length,1,'shared maps uploaded once; render targets excluded');
+assert.deepEqual(events.map(e=>e[0]),['texture','compile','compile','effects']);
+assert.equal(events[3][1],room);assert.equal(events[3][2],camera);
+assert.equal(JSON.stringify(camera),initial,'no artificial camera warm-up poses');
+assert.equal(stages.at(-1)[0],'ready');assert.equal(stages.at(-1)[2].textures,1);
+const failure=createHomeStartup({},()=>{},async()=>{});
+await assert.rejects(failure.prepare({initTexture(){throw Error('lost context');}},room,camera,privacy,camera,[],effects),/lost context/);
+assert.equal(failure.ready,false);failure.fallback();assert.equal(failure.ready,true);
+console.log('PASS: nested asset waves, prerequisite gating, unique texture preparation, compile order, camera preservation and recoverable failure');

@@ -1,0 +1,66 @@
+{
+  "asset": "marble_slab_012",
+  "original": "Marble012",
+  "source": "https://ambientcg.com/view?id=Marble012",
+  "license": "CC0-1.0",
+  "licenseSource": "https://docs.ambientcg.com/license/",
+  "archiveUrl": "https://f003.backblazeb2.com/file/ambientCG-Web/download/Marble012_uZys50mU/Marble012_1K-JPG.zip",
+  "archiveSha256": "b04384c6d49ce73baeb70db7ea4abfe9948fc9b74b9fd92c3766970662bf2c43",
+  "preparation": "Original untiled procedural marble maps; original 1K JPG and 512px Lanczos copies. OpenGL normals.",
+  "files": [
+    {
+      "file": "marble_slab_012/diff.jpg",
+      "bytes": 1220876,
+      "sha256": "a34b55c889c6b3819d2c351b6409bfd0baf0a0a55b073441850627dfebcdcd1e",
+      "dimensions": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "lite/marble_slab_012/diff.jpg",
+      "bytes": 73544,
+      "sha256": "1b0b5d35598eef1e9a675bd4118d53821134d3c5aa4125d020507481e56372f0",
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "file": "marble_slab_012/normal.jpg",
+      "bytes": 342955,
+      "sha256": "2e9a56525ffbb7e80854b19985a5c921f91192698ea337f4834192479ba0063b",
+      "dimensions": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "lite/marble_slab_012/normal.jpg",
+      "bytes": 4728,
+      "sha256": "2d60f8b708b790d5d196b858c4564022024a67bfee9d7b990a4f00662f05de10",
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "file": "marble_slab_012/rough.jpg",
+      "bytes": 535814,
+      "sha256": "f7afd636d6cca0b470549959c514976186df58ac1013016b6c3919910a6d3a04",
+      "dimensions": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "lite/marble_slab_012/rough.jpg",
+      "bytes": 45115,
+      "sha256": "73edd6af928f4393653c71ed71c7608cb6251f3e9b109ce0fbebbb07a49359da",
+      "dimensions": [
+        512,
+        512
+      ]
+    }
+  ]
+}

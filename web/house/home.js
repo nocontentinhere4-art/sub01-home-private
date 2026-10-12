@@ -1,4 +1,5 @@
 import { createSunShafts } from "./sun_shafts.mjs";
+import { createHomeStartup } from "./startup.mjs";
 import * as T from "three";
 import { RoundedBoxGeometry } from "./vendor/RoundedBoxGeometry.js";
 import { GLTFExporter } from "./vendor/GLTFExporter.js";
@@ -70,6 +71,14 @@ renderer.domElement.addEventListener("webglcontextrestored", () => {
   renderer.shadowMap.needsUpdate = true;
   notice("The room is connected again.");
 });
+const startup = createHomeStartup(T.DefaultLoadingManager, (stage, label, metrics) => {
+  document.getElementById('status').dataset.startup = stage;
+  if (label) document.querySelector('#load span').textContent = label;
+  if (metrics) document.getElementById('status').dataset.startupMetrics = JSON.stringify({
+    ...metrics, programs: renderer.info.programs.length,
+    parallelCompile: renderer.extensions.has('KHR_parallel_shader_compile'),
+  });
+});
 const environment = new RoomEnvironment();
 const pmrem = new T.PMREMGenerator(renderer);
 const envTarget = pmrem.fromScene(environment, 0.04);
@@ -108,12 +117,6 @@ const random = () => {
   seed = (1664525 * seed + 1013904223) >>> 0;
   return seed / 4294967296;
 };
-T.DefaultLoadingManager.onProgress = (url, loaded, total) => {
-  const label = document.querySelector("#load span");
-  if (label) label.textContent = "Opening his home · " + loaded + " / " + total;
-};
-T.DefaultLoadingManager.onLoad = () =>
-  (document.getElementById("load").style.display = "none");
 const loader = new T.TextureLoader();
 const gltfLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const modelCache = new Map();
@@ -179,6 +182,10 @@ M.kitchenOak.userData.lightOak = true;
 M.kitchenOak.onBeforeCompile = gradeOak;
 M.kitchenOak.customProgramCacheKey = () => 'private-kitchen-light-oak-v1';
 M.stone.roughness = 0.35;
+// A continuous slab: the older marble_01 maps depict a tiled floor with grout.
+M.counterStone = pbr("marble_slab_012", [.32, .32]);
+M.counterStone.roughness = .75;
+M.counterStone.normalScale.set(.055, .055);
 M.blue.color.set("#9bb0ad");
 M.sofa.color.set("#9ca995");
 let meshCount = 0;
@@ -565,7 +572,7 @@ const sinkHole = new T.Path();
 sinkHole.moveTo(-.82,-.26); sinkHole.lineTo(-.82,.17);
 sinkHole.lineTo(-.18,.17); sinkHole.lineTo(-.18,-.26); sinkHole.closePath();
 counterShape.holes.push(sinkHole);
-const kitchenCounter = new T.Mesh(new T.ExtrudeGeometry(counterShape, {depth:.055, bevelEnabled:false}), M.stone);
+const kitchenCounter = new T.Mesh(new T.ExtrudeGeometry(counterShape, {depth:.055, bevelEnabled:false}), M.counterStone);
 kitchenCounter.rotation.x = -Math.PI / 2;
 kitchenCounter.position.set(-2.2,.8675,-3.53);
 kitchenCounter.castShadow = kitchenCounter.receiveShadow = true;
@@ -607,8 +614,23 @@ kitchenTap.castShadow = true;
 scene.add(kitchenTap);
 cylinder(.029, .015, -2.7, .935, -3.79, sinkSteel);
 beam([-2.65,.95,-3.79],[-2.61,1.04,-3.79],.008,sinkSteel);
-box(0.33, 0.4, 0.29, -1.25, 1.12, -3.5, M.black, 0.035);
-cylinder(0.06, 0.08, -1.24, 0.98, -3.27, M.white);
+const coffeeMachineFallback = box(0.33, 0.4, 0.29, -1.25, 1.12, -3.5, M.black, 0.035);
+const coffeeCupFallback = cylinder(0.06, 0.08, -1.24, 0.98, -3.27, M.white);
+for (const item of [coffeeMachineFallback, coffeeCupFallback]) item.userData.replaceable = true;
+const coffeeMachineReady = gltfLoader.loadAsync('/house/assets/coffee-machine/coffee-machine.glb?v=1').then(gltf => {
+  const root = gltf.scene;
+  root.position.set(-1.25, .925, -3.5);
+  root.traverse(object => {
+    if (!object.isMesh) return;
+    object.castShadow = object.receiveShadow = true;
+    object.userData.bakeId = 'house-coffee-machine-' + object.name;
+    bakedObjects.set(object.userData.bakeId, object);
+  });
+  scene.add(root);
+  coffeeMachineFallback.visible = coffeeCupFallback.visible = false;
+  document.getElementById('status').dataset.coffeeMachine = 'blender-espresso';
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Coffee machine fallback:', error.message));
 cylinder(0.09, 0.29, -3.4, 1.07, -3.45, M.stone);
 obstacle(-2.2, -3.5, 3.2, 0.75);
 plant(-0.82, 0.94, -3.55, 0.5);
@@ -2404,16 +2426,16 @@ for (const child of scene.children) {
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady]);
+    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=7"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=8"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=7",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=8",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=7",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=8",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2528,7 +2550,7 @@ async function applyContactLighting() {
     console.warn("Contact lighting unavailable:", error.message);
   }
 }
-applyContactLighting();
+const contactLightingReady = applyContactLighting();
 
 addEventListener("resize", () => {
   renderer.setPixelRatio(
@@ -2545,16 +2567,19 @@ addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
 });
-setTimeout(() => {
-  document.getElementById("load").style.display = "none";
-}, 15000);
 renderer.shadowMap.needsUpdate = true;
 const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
+startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [contactLightingReady], sunShafts).catch(error => {
+  console.warn('Home preparation:', error);
+  startup.fallback();
+  notice('Some room materials could not be prepared. The home remains available.');
+});
 renderer.info.autoReset = false;
 let frames = 0,
   elapsed = 0,
   lastFrameTime = 0,
-  accumulated = 0;
+  accumulated = 0,
+  firstRoomFrame = true;
 renderer.setAnimationLoop(() => {
   if (document.hidden) {
     clock.getDelta();
@@ -2566,6 +2591,7 @@ renderer.setAnimationLoop(() => {
   accumulated = 0;
   renderer.info.reset();
   update(dt);
+  if (!startup.ready) return;
   document.getElementById("status").dataset.sunDust = sunDust.update(dt,currentLight,curtainOpen,camera.position) ? String(sunDust.count) : "off";
   if (!privacyActive)
     for (const view of windowViews)
@@ -2576,6 +2602,12 @@ renderer.setAnimationLoop(() => {
     privacyActive ? privacyScene : scene,
     privacyActive ? privacyCamera : camera,
   );
+  if (firstRoomFrame) {
+    lastFrameTime = clock.elapsedTime;
+    document.getElementById('status').dataset.firstFramePrograms = String(renderer.info.programs.length);
+    firstRoomFrame = false;
+  }
+  document.getElementById('load').style.display = 'none';
   frames++;
   elapsed += clock.elapsedTime - lastFrameTime;
   lastFrameTime = clock.elapsedTime;
@@ -2608,7 +2640,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady]);
+      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady]);
       const data = await new GLTFExporter().parseAsync(scene, {
         binary: true,
         onlyVisible: true,

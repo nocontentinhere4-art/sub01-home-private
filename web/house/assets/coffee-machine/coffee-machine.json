@@ -1,0 +1,32 @@
+{
+  "geometry": "Original unbranded Blender model. Adapted from manufacturer photo/mechanical layout; not manufacturer CAD.",
+  "reference_url": "https://www.delonghi.com/en/p/dedica-manual-espresso-makers-dedica-style-manual-coffee-maker-ec685.bk/EC685.BK.html?pid=0132106140",
+  "reference_image_url": "https://dam.delonghi.com/902x902/assets/223691",
+  "reference_dimensions_mm": [
+    149,
+    330,
+    305
+  ],
+  "blender_bounds_m": [
+    [
+      -0.10899999737739563,
+      -0.16208413243293762,
+      0.0
+    ],
+    [
+      0.13200001418590546,
+      0.12149999290704727,
+      0.3575499951839447
+    ]
+  ],
+  "runtime_materials": 7,
+  "triangles": 20596,
+  "glb_bytes": 675908,
+  "sha256": "aa9e65ca13cbe1c71feea118574ef6121ac5030b60559f48acd7bc68288ccc8b",
+  "runtime_counter_origin_m": [
+    -1.25,
+    0.925,
+    -3.5
+  ],
+  "functionality": "Furnishing geometry only; brewing/cooking activity is not implemented by this asset."
+}

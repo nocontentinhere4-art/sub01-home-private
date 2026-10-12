@@ -4,6 +4,7 @@ import {createSunShafts} from '../../web/house/sun_shafts.mjs';
 const calls=[],targets=[];
 let target=null;
 const renderer={extensions:{has:()=>true},capabilities:{maxSamples:2},
+ getRenderTarget:()=>target,compileAsync:async(s,c)=>calls.push({compile:true,s,c,target}),
  getDrawingBufferSize: v=>v.set(1920,1080),
  setRenderTarget: t=>{target=t;targets.push(t);},render:(s,c)=>calls.push({s,c,target})};
 const scene=new T.Scene(), camera=new T.PerspectiveCamera(64,16/9,.04,110), sun=new T.DirectionalLight();
@@ -11,6 +12,7 @@ camera.position.set(0,1.65,0);sun.position.set(-10,8,12);sun.castShadow=true;
 sun.shadow.map=new T.WebGLRenderTarget(8,8);
 const light={sunIntensity:2};
 const lite=createSunShafts(T,renderer,true);
+await lite.prepare(scene,camera);assert.equal(calls.length,0);
 assert.equal(lite.render(scene,camera,light,sun,true),false);assert.equal(lite.pixels(),0);
 const effect=createSunShafts(T,renderer,false);
 assert.equal(effect.render(scene,camera,light,sun,false),false);assert.equal(effect.pixels(),0);
@@ -24,3 +26,17 @@ let disposed=0;
 for(const t of targets.filter(Boolean)) t.addEventListener('dispose',()=>disposed++);
 effect.dispose();assert.equal(disposed,2);
 console.log('PASS: zero lite/dark/closed-curtain allocation, one house render, bounded volume, depth target, MSAA and target disposal');
+const warming=createSunShafts(T,renderer,false), oldTarget=new T.WebGLRenderTarget(2,2);
+renderer.setRenderTarget(oldTarget);calls.length=0;
+await warming.prepare(scene,camera);
+assert.equal(target,oldTarget);assert.equal(calls.length,3);
+assert.ok(calls.every(c=>c.compile),'preparation compiles and never renders');
+assert.equal(calls[0].s,scene);assert.ok(calls[0].target.depthTexture);
+assert.equal(calls[2].target,null);warming.dispose();oldTarget.dispose();
+console.log('PASS: direct/HDR shader preparation restores render target and does not draw a hidden room');
+const failedWarm=createSunShafts(T,renderer,false), sentinel=new T.WebGLRenderTarget(2,2);
+renderer.setRenderTarget(sentinel);
+renderer.compileAsync=async()=>{throw Error('shader compile failed');};
+await assert.rejects(failedWarm.prepare(scene,camera),/shader compile failed/);
+assert.equal(target,sentinel,'a failed shader preparation must not leave the renderer on its HDR target');
+failedWarm.dispose();sentinel.dispose();

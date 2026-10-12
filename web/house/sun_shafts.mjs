@@ -80,6 +80,25 @@ export function createSunShafts(T, renderer, lite) {
     screen=new T.Scene();quad=new T.Mesh(new T.PlaneGeometry(2,2),march);quad.frustumCulled=false;screen.add(quad);
   }
   return {
+    async prepare(scene, camera) {
+      if (lite || !renderer.extensions.has('EXT_color_buffer_float')) return;
+      if (!colorTarget) setup();
+      const previousTarget = renderer.getRenderTarget();
+      try {
+        // The HDR room pass has a different tone-mapping shader variant from
+        // direct rendering. Compile both, without rendering or moving a camera.
+        renderer.setRenderTarget(colorTarget);
+        await renderer.compileAsync(scene, camera);
+        quad.material = march;
+        renderer.setRenderTarget(volumeTarget);
+        await renderer.compileAsync(screen, fullCamera);
+        quad.material = composite;
+        renderer.setRenderTarget(null);
+        await renderer.compileAsync(screen, fullCamera);
+      } finally {
+        renderer.setRenderTarget(previousTarget);
+      }
+    },
     render(scene,camera,light,sun,curtainOpen) {
       if(lite || !renderer.extensions.has('EXT_color_buffer_float') || !curtainOpen || light.sunIntensity<.2 || !sun.castShadow ||
         Math.abs(camera.position.x)>4 || camera.position.z>4 || camera.position.z< -4) return false;
