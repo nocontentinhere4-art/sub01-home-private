@@ -273,3 +273,17 @@ textarea {
 body:has(#panel:not([hidden])) #touch {
   display: none;
 }
+
+/* Bathroom privacy covers device overlays as well as the 3D camera. */
+body.privacy-active #panel,
+body.privacy-active #pc,
+body.privacy-active #tv,
+body.privacy-active #phone,
+body.privacy-active nav a,
+body.privacy-active #lamp,
+body.privacy-active #curtain,
+body.privacy-active #action,
+body.privacy-active #notice,
+body.privacy-active #reticle {
+  display: none !important;
+}

@@ -1182,13 +1182,13 @@ function update(dt) {
     entranceOpen ? -Math.PI * 0.48 : 0,
     Math.min(1, dt * 7),
   );
-  privacyActive =
+  setPrivacy(
     !!homeState?.privacy ||
     (p.y > 3 &&
       p.x < bathroomBounds.x1 &&
       p.x > bathroomBounds.x0 &&
       p.z > bathroomBounds.z0 &&
-      p.z < bathroomBounds.z1);
+      p.z < bathroomBounds.z1));
   const doorOpen = p.y > 3 && Math.hypot(p.x + 0.85, p.z - 1.35) < 1.6;
   bathDoor.position.z = T.MathUtils.lerp(
     bathDoor.position.z,
@@ -1300,11 +1300,23 @@ function consoleChoice(label, game) {
   });
 }
 function openPanel(kind) {
+  if (privacyActive || homeState?.privacy) return;
   if (kind === "computer")
     computerApp = homeState?.activity === "use_computer" ? "linux" : "browser";
   panelKind = kind;
   panel.hidden = false;
   renderPanel(true);
+}
+function closePanel() {
+  pongHeld.clear();
+  panel.hidden = true;
+  panelKind = "";
+  panelBody.replaceChildren();
+}
+function setPrivacy(active) {
+  if (active && !privacyActive) closePanel();
+  privacyActive = active;
+  document.body.classList.toggle('privacy-active', active);
 }
 function browserFrame(device, parent) {
   const image = new Image(),
@@ -1327,6 +1339,7 @@ function browserFrame(device, parent) {
   parent.append(image, message);
 }
 function refreshPanelScreens() {
+  if (privacyActive || homeState?.privacy) return;
   for (const image of panelBody.querySelectorAll("[data-screen-device]")) {
     image.src =
       "/api/screen/" + image.dataset.screenDevice + ".jpg?t=" + Date.now();
@@ -1941,6 +1954,7 @@ async function updateRealBrowser() {
 }
 function acceptHome(state) {
   if (!state) return;
+  if (state.privacy) setPrivacy(true);
   if (!homeState) {
     setLook(state.position, state.look);
     lookPoint.fromArray(state.look);
@@ -2041,10 +2055,7 @@ document.getElementById("phone").onclick = () => {
   phoneApp = "home";
   openPanel("phone");
 };
-document.getElementById("close").onclick = () => {
-  panel.hidden = true;
-  panelKind = "";
-};
+document.getElementById("close").onclick = closePanel;
 addEventListener("pagehide", () => {
   socket?.close();
 });
