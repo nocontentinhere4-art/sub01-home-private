@@ -1,7 +1,7 @@
 {
   "source_sha256": "9f0f3cca0ecd9b54b6baacabdfb41198acd958e4aca8998c346686f21c3ad9f7",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
-  "samples": 32,
+  "samples": 128,
   "diffuse_bounces": 4,
   "direct_light": false,
   "albedo_in_bake": false,
@@ -11,17 +11,17 @@
   "day": {
     "width": 1377,
     "height": 1381,
-    "max": 20.015525817871094,
-    "p95": 0.49199782013893123,
-    "nonzero": 0.4899063280741803,
+    "max": 8.696708679199219,
+    "p95": 0.46528404951095576,
+    "nonzero": 0.5216589706658,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
     "width": 1377,
     "height": 1381,
-    "max": 12.359725952148438,
-    "p95": 0.006209124065935607,
-    "nonzero": 0.41543207247229624,
+    "max": 11.89102554321289,
+    "p95": 0.0062502322718501055,
+    "nonzero": 0.4539231199224668,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
@@ -32,24 +32,28 @@
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "1d977e59470e854112c6c32c53c08ed0d34a806678b67b7abd9d2e50dce37178",
-      "bytes": 4032152
+      "sha256": "e04158670c2ccce888636232043e1a0715504867e8cd02109bc2b3ce374a567f",
+      "bytes": 4175852
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "6e3d77a137ff4646e0fc7600469661b8a66b315c7209bd1d50530a8ef2477dae",
-      "bytes": 722477
+      "sha256": "a7edb0b5b1bab28b4dcd2f9daf6e70358dcebbbe7501f6d49b6c4e9fb70625b5",
+      "bytes": 729318
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "c1c4b47ffe2adf273c8d7236bd67442c02382f6fb932456da9620f8e4dc6b519",
-      "bytes": 3591261
+      "sha256": "e77ff7a6d3d3caa4bf36a00d7af7b460b5b7963078beca42690ef2c5e6767de6",
+      "bytes": 3792738
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "d98e773cddcc30bd939b6e9dce27607eedf5e083a8e42f2a70eae77e6f3f01ee",
-      "bytes": 653085
+      "sha256": "59fd53532a6febaaa6362b3f09874c2013ff3736940c4c83e649d33057df1dfd",
+      "bytes": 668236
     }
   ],
-  "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces"
+  "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
+  "seed": 0,
+  "adaptive_sampling": false,
+  "denoising": false,
+  "sampling_note": "Same GI14 source/atlas/materials/lights.128 unfiltered samples; no atlas blur or cross-chart filtering."
 }

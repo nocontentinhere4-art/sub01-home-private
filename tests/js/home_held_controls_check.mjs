@@ -25,3 +25,18 @@ input.clear();
 assert.equal(input.active, false, "Closing or losing focus releases controls");
 assert.equal(input.changed, true, "The final neutral command is still pending");
 console.log("PASS: continuous holds, opposing inputs, release, focus loss and in-flight responses");
+
+const timers = [], pulse = new HeldControls();
+pulse.pulse('activation', -1, callback => timers.push(callback));
+const submitted = pulse.version;
+pulse.acknowledge(submitted);
+pulse.clear();
+assert.equal(pulse.direction, 0);
+assert.equal(pulse.changed, true, 'Closing a keyboard activation must queue a neutral release');
+pulse.pulse('activation', 1, callback => timers.push(callback));
+timers[0]();
+assert.equal(pulse.direction, 1, 'An old pulse timer cannot release a newer activation');
+timers[1]();
+assert.equal(pulse.direction, 0);
+assert.equal(pulse.active, false);
+console.log('PASS: accessible activation ownership, close release and stale timer identity');

@@ -17,7 +17,7 @@ import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
-import { HeldControls } from "./held_controls.mjs";
+import { HeldControls } from "./held_controls.mjs?v=2";
 import { terraceAllows } from './terrace_space.mjs';
 import { frontDoorAllows, frontDoorApproach } from './front_door_access.mjs';
 import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
@@ -1342,6 +1342,11 @@ addEventListener("keydown", (e) => {
       "e",
     ].includes(e.key)
   ) {
+    // A key held across censorship must be released before it can move again.
+    if (privacyActive || (e.repeat && !keys[e.key])) {
+      e.preventDefault();
+      return;
+    }
     if (
       panelKind === "pong" &&
       tvGame === "pong" &&
@@ -1373,7 +1378,7 @@ addEventListener("blur", () => {
   drag = false;
 });
 renderer.domElement.addEventListener("pointerdown", (e) => {
-  if (panelKind) return;
+  if (panelKind || privacyActive) return;
   drag = true;
   lastX = e.clientX;
   lastY = e.clientY;
@@ -1404,6 +1409,7 @@ renderer.domElement.addEventListener("pointercancel", () => (drag = false));
 document.querySelectorAll("[data-key]").forEach((b) => {
   b.onpointerdown = (e) => {
     e.preventDefault();
+    if (privacyActive || panelKind) return;
     if (following) document.getElementById("explore").click();
     keys[b.dataset.key] = true;
     b.setPointerCapture(e.pointerId);
@@ -1660,7 +1666,12 @@ function closePanel() {
   panelBody.replaceChildren();
 }
 function setPrivacy(active) {
-  if (active && !privacyActive) closePanel();
+  if (active && !privacyActive) {
+    closePanel();
+    keys = {};
+    drag = false;
+    visitorMotion.reset();
+  }
   if (!active && privacyActive && !lite) renderer.shadowMap.needsUpdate = true;
   privacyActive = active;
   document.body.classList.toggle('privacy-active', active);
@@ -2036,7 +2047,7 @@ function pongControlButton(label, direction) {
   control.onpointercancel = release;
   control.onlostpointercapture = release;
   control.onclick = (event) => {
-    if (event.detail === 0) pongInput(direction); // Accessible keyboard activation.
+    if (event.detail === 0) pongHeld.pulse("activation", direction); // Accessible keyboard activation.
   };
   return control;
 }
@@ -2044,15 +2055,18 @@ async function pongInput(direction) {
   if (pongSending || Date.now() - lastPongInput < 100) return false;
   pongSending = true;
   lastPongInput = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
   try {
     const response = await fetch("/api/home/pong", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ direction }),
+      signal: controller.signal,
     });
     return response.ok;
   } catch { return false; }
-  finally { pongSending = false; }
+  finally { clearTimeout(timeout); pongSending = false; }
 }
 setInterval(async () => {
   if (panelKind !== "pong" || tvGame !== "pong" || document.hidden)
@@ -2540,14 +2554,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=14"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=15"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=14",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=15",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=14",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=15",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;

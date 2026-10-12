@@ -1,19 +1,33 @@
 """Bake actual diffuse light bounces with Blender Cycles, offline and CPU-only.
 
-Run with Blender --background --python this_file -- source.glb atlas.glb output_dir.
+Run with Blender --background --python this_file -- source.glb atlas.glb output_dir
+[day|night] --samples 128 --threads 4 --seed 0.
 The atlas is prepared by prepare_home_lightmap.py; moving devices keep live lighting.
 """
 import json
 import sys
+import argparse
+import hashlib
+import time
 from pathlib import Path
 
 import bpy
 from mathutils import Vector
 
-arguments = sys.argv[sys.argv.index("--") + 1:]
-source, atlas, output = map(Path, arguments[:3])
-mode = arguments[3] if len(arguments) > 3 else "day"
-assert mode in ("day", "night")
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('source',type=Path)
+parser.add_argument('atlas',type=Path)
+parser.add_argument('output',type=Path)
+parser.add_argument('mode',nargs='?',choices=['day','night'],default='day')
+parser.add_argument('--samples',type=int,default=128)
+parser.add_argument('--threads',type=int,default=4)
+parser.add_argument('--seed',type=int,default=0)
+options=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
+if not 1 <= options.samples <= 4096 or not 1 <= options.threads <= 32:
+    parser.error('Use 1..4096 samples and 1..32 CPU threads')
+source,atlas,output=options.source,options.atlas,options.output
+mode=options.mode
+started=time.monotonic()
 output.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(source))
@@ -38,12 +52,15 @@ for obj in receivers:
 scene = bpy.context.scene
 scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
-scene.cycles.samples = 32
+scene.cycles.samples = options.samples
+scene.cycles.seed = options.seed
+scene.cycles.use_animated_seed = False
+scene.cycles.use_adaptive_sampling = False
 scene.cycles.max_bounces = 5
 scene.cycles.diffuse_bounces = 4
 scene.cycles.use_denoising = False
 scene.render.threads_mode = "FIXED"
-scene.render.threads = 4
+scene.render.threads = options.threads
 scene.world = bpy.data.worlds.new("Private home ambient sky")
 scene.world.use_nodes = True
 scene.world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.76, 0.84, 1.0, 1)
@@ -91,9 +108,20 @@ scene.render.bake.use_pass_indirect = True
 scene.render.bake.use_pass_color = False
 scene.render.bake.use_clear = False
 scene.render.bake.margin = 6
-print(f"BAKE_START {len(receivers)} meshes {width}x{height}", flush=True)
+record={'mode':mode,'samples':scene.cycles.samples,'threads':scene.render.threads,
+        'seed':scene.cycles.seed,'adaptive_sampling':scene.cycles.use_adaptive_sampling,
+        'denoising':scene.cycles.use_denoising,'receivers':len(receivers),'width':width,'height':height,
+        'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+        'atlas_sha256':hashlib.sha256(atlas.read_bytes()).hexdigest(),
+        'direct':False,'indirect':True,'surface_albedo':False,'finished':False,
+        'kind':'Cycles diffuse indirect white-receiver outgoing radiance; runtime PI conversion unchanged'}
+(output/'bake.json').write_text(json.dumps(record,indent=2)+'\n')
+print(f"BAKE_START {len(receivers)} meshes {width}x{height} samples={scene.cycles.samples} threads={scene.render.threads} seed={scene.cycles.seed}", flush=True)
 bpy.ops.object.bake(type="DIFFUSE")
 image.filepath_raw = str(output / "indirect.exr")
 image.file_format = "OPEN_EXR"
 image.save()
+record.update(finished=True,elapsed_seconds=time.monotonic()-started,
+              output_sha256=hashlib.sha256((output/'indirect.exr').read_bytes()).hexdigest())
+(output/'bake.json').write_text(json.dumps(record,indent=2)+'\n')
 print("BAKE_DONE", image.filepath_raw, flush=True)

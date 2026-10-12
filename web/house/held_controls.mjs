@@ -4,6 +4,8 @@ export class HeldControls {
     this.holds = new Map();
     this.version = 0;
     this.acknowledged = 0;
+    this.pulses = new Map();
+    this.pulseSequence = 0;
   }
   set(id, direction) {
     if (this.holds.get(id) === direction) return;
@@ -11,9 +13,19 @@ export class HeldControls {
     this.version++;
   }
   release(id) {
+    this.pulses.delete(id);
     if (this.holds.delete(id)) this.version++;
   }
+  pulse(id, direction, schedule = callback => setTimeout(callback, 250)) {
+    const token = ++this.pulseSequence;
+    this.pulses.set(id, token);
+    this.set(id, direction);
+    schedule(() => {
+      if (this.pulses.get(id) === token) this.release(id);
+    });
+  }
   clear() {
+    this.pulses.clear();
     if (!this.holds.size) return;
     this.holds.clear();
     this.version++;
