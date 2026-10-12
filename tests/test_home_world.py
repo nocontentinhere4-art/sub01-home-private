@@ -187,3 +187,19 @@ def test_pong_is_beatable_instead_of_an_infinite_perfect_tracker():
         }
         p.update(0.05, rel, True)
     assert p.score[0] > 0 and p.score[1] > 0
+
+
+def test_ground_routes_do_not_cut_across_the_stair_treads():
+    # A diagonal shortcut to the TV previously crossed the first stair tread
+    # with a ground-level eye height. Walk around the foot before turning.
+    for a, b in EDGES:
+        A, B = NODES[a], NODES[b]
+        for i in range(101):
+            x, y, z = [v + (w-v)*i/100 for v,w in zip(A,B)]
+            if abs(y-1.65) < .001:
+                assert not (-.2 <= x <= .8 and -1.7 < z < 2.51), (a,b,x,y,z)
+    home = HomeWorld()
+    home.node = 'sofa'
+    home.position = list(NODES['sofa'])
+    home.seated = 1
+    assert home.view()['position'][0] == -2.2

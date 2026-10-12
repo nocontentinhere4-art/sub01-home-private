@@ -462,13 +462,13 @@ function contact(x, y, z, w, d) {
   o.position.set(x, y + 0.042, z);
   scene.add(o);
 }
-contact(-2, 0, 1.85, 3.2, 1.6);
+contact(-2.2, 0, 1.85, 3.2, 1.6);
 contact(-2, 0, 0.3, 2.2, 1.4);
 contact(2, 0, -1.9, 1.2, 1.2);
 contact(-2.4, 3, -2.35, 2.2, 2.8);
 // Ground floor lounge: rounded upholstery, cushions, coffee table and ceramic objects.
 rug(2.9, 2.8, -2, 0, 0.9);
-obstacle(-2, 1.85, 2.7, 1.08);
+obstacle(-2.2, 1.85, 2.7, 1.08);
 obstacle(-2, 0.3, 1.7, 0.9);
 
 async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
@@ -497,11 +497,11 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null) {
     notice("An item could not load. Reconnect to retry.");
   }
 }
-furnished("sofa_03", -2, 0, 1.85, 2.5);
+furnished("sofa_03", -2.2, 0, 1.85, 2.5);
 furnished("modern_coffee_table_01", -2, 0, 0.3, 1.65, Math.PI / 2);
-furnished("potted_plant_01", -3.45, 0, 2.7, 0.7);
+furnished("potted_plant_01", -3.45, 0, 3.25, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
-furnished("throw_pillows_01", -2, 0.42, 2.02, 1.25);
+furnished("throw_pillows_01", -2.2, 0.42, 2.02, 1.25);
 furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   if (!root) return;
   root.updateMatrixWorld(true);
