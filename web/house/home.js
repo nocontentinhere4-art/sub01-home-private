@@ -2282,14 +2282,14 @@ async function applyContactLighting() {
   try {
     await beddingReady;
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=3"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=4"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=4",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=4",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;

@@ -51,3 +51,6 @@ out/lighting-v*/
 
 # Local before/after bedding verification backups
 out/pillow-before/
+
+# Editable private Blender project generated from the local house
+out/home-editable/
