@@ -1,5 +1,5 @@
 {
-  "source_sha256": "2fb726aab7be383d49be1a0e066fac4783f4daa15bb5353336bf6e7b28c5254f",
+  "source_sha256": "d265da6c91c9ba5ed95ae8cfd09875daaa4300d32edbdea7fb71e7f6dc12cf5d",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 32,
   "diffuse_bounces": 4,
@@ -7,48 +7,48 @@
   "albedo_in_bake": false,
   "receivers": 110,
   "export_material_texture_limit": 512,
-  "layout": "Original office shelves; transparent glazing and residential exterior excluded from indoor bake",
+  "layout": "Continuous dynamic cloth curtains excluded from static bake; metric oak cylinder UV; raw current export bypasses old atlas geometry",
   "day": {
-    "width": 1377,
-    "height": 1378,
-    "max": 24.910167694091797,
-    "p95": 0.449813537299633,
-    "nonzero": 0.48807065695707946,
+    "width": 1378,
+    "height": 1376,
+    "max": 17.525426864624023,
+    "p95": 0.44680747538804977,
+    "nonzero": 0.5062843858642454,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "width": 1377,
-    "height": 1378,
-    "max": 8.216533660888672,
-    "p95": 0.004964570514857769,
-    "nonzero": 0.41363979876743473,
+    "width": 1378,
+    "height": 1376,
+    "max": 11.914398193359375,
+    "p95": 0.005099899601191282,
+    "nonzero": 0.4353123839740777,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "2787134f3d43f3840dad65f983cf2ad17ea1d91bf5dd62992c686c7fa45b641f",
+      "sha256": "805b0fb2200ff41a3ada5867d692d20eeb68de1761d4effc3bd5c231647b707d",
       "bytes": 9715092
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "249d416470b01105b74b4d95e10fccdd6a7241de74df51dd9e6091fd51515eb4",
-      "bytes": 4003186
+      "sha256": "8b42323b849ae6e531a02991700305e556115c8c2401f7f764447d4d14afe24d",
+      "bytes": 4146529
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "d1fa3f210a1cc004e903eb6a825a210ceb33d6167343ad7b2a7fcdb536fdb634",
-      "bytes": 719373
+      "sha256": "08f8b6c0ee403232954a6e6f48ca0d31eef80f2f1fe1b22cd6af490db6449c2a",
+      "bytes": 724737
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "eb2f28a77dd11ec7c9bb73ce3bc8b02372d6c7b0319b778003484379a8dd4b79",
-      "bytes": 3561631
+      "sha256": "a64a023629e18fc3f0b4a255318471d2719ffa50c598943dff62b53d9157d62a",
+      "bytes": 3730912
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "9d9f981315ebebdef5579be66b4b5160a50d661e17afbf8e3a3c90ff3ebccfcf",
-      "bytes": 651418
+      "sha256": "83fa2ff8a07347b49e5fc83a02adc34c357c84eb803365cf719356aa5910d348",
+      "bytes": 658389
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces"

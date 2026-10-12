@@ -13,7 +13,8 @@ import { createExteriorBackdrops } from "./exterior_backdrops.mjs";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { WalkMotion } from "./walk_motion.mjs";
-import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs";
+import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
+import { createCurtainPanel } from "./curtain_panels.mjs";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs";
@@ -958,26 +959,15 @@ box(0.65, 0.6, 0.16, -1.2, 3.77, 4.8, M.cream, 0.07);
 for (const x of [-1.45, -0.95])
   for (const z of [4.28, 4.7]) beam([x, 3, z], [x, 3.4, z], 0.025, M.wood);
 obstacle(-1.2, 4.55, 0.72, 0.8, 1);
-// Curtains keep folds while opening: one group per window.
+// Sewn continuous linen; dynamic folds retain textile length while gathering.
 const curtains = new T.Group();
 scene.add(curtains);
 const curtainPanels = [];
 for (const anchor of [-3.8, -0.2]) {
-  const group = new T.Group();
-  group.position.set(anchor, 4.43, 3.82);
-  const side = anchor < -2 ? 1 : -1;
-  for (let i = 0; i < 40; i++) {
-    const o = new T.Mesh(
-      new T.CylinderGeometry(0.027, 0.035, 2.48, 8),
-      M.linen,
-    );
-    o.position.set(side * i * 0.045, 0, 0);
-    o.scale.z = 0.6;
-    o.castShadow = true;
-    group.add(o);
-  }
-  curtains.add(group);
-  curtainPanels.push(group);
+  const panel = createCurtainPanel(T, M.linen, {direction: anchor < -2 ? 1 : -1});
+  panel.group.position.set(anchor, 4.43, 3.82);
+  curtains.add(panel.group);
+  curtainPanels.push(panel);
 }
 // Warm practical lights and the afternoon sun.
 const hemi = new T.HemisphereLight("#e4eced", "#8f7965", 1.7);
@@ -1186,7 +1176,7 @@ function lighting(timestamp = Date.now() / 1000) {
   document.getElementById("status").dataset.shadowMode = lite ? "indirect-only" : sun.castShadow ? "sun-and-pendant" : "pendant";
 }
 function shade() {
-  curtainPanels.forEach((p) => (p.scale.x = curtainOpen ? 0.17 : 1));
+  curtainPanels.forEach((p) => p.setOpen(curtainOpen));
 }
 async function toggleLamp() {
   await mutate("settings", { lamp: !lampOn });
@@ -2542,17 +2532,19 @@ for (const child of scene.children) {
 }
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 async function applyContactLighting() {
+  // Export the current source UVs/geometry, never a replacement from an older atlas.
+  if (new URLSearchParams(location.search).has("bake")) return;
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=12"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=13"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=12",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=13",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=12",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=13",
       ) : Promise.resolve(null),
     ]);
     ao.channel = 1;
@@ -2708,6 +2700,8 @@ renderer.setAnimationLoop(() => {
   accumulated = 0;
   renderer.info.reset();
   update(dt);
+  for (const panel of curtainPanels)
+    if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;
   document.getElementById('status').dataset.exterior = photographedExterior.activate() ? 'residential-tokyo-360-static' : 'legacy-fallback';
   photographedExterior.update(dt,currentLight.hour);
