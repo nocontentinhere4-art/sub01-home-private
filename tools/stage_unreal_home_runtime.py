@@ -11,6 +11,7 @@ from unreal_home_hands_runtime import CHARACTER_FIELDS, CHARACTER_METHODS, stage
 from unreal_native_route import FIELDS as ROUTE_FIELDS, METHODS as ROUTE_METHODS
 from unreal_hands_diagnostic import FIELDS as DIAGNOSTIC_FIELDS, METHODS as DIAGNOSTIC_METHODS
 from unreal_pc_runtime import FIELDS as PC_FIELDS, METHODS as PC_METHODS
+from unreal_contact_recording import FIELDS as CONTACT_RECORD_FIELDS, METHODS as CONTACT_RECORD_METHODS
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -100,8 +101,8 @@ ASub01HomeGameMode::ASub01HomeGameMode(){DefaultPawnClass=ASub01HomeCharacter::S
 def stage(project):
     project=Path(project)
     module=project/'Source/Sub01HomeLab';module.mkdir(parents=True,exist_ok=True)
-    header = HEADER.replace(' void Forward(float Value);', CHARACTER_FIELDS + ROUTE_FIELDS + DIAGNOSTIC_FIELDS + PC_FIELDS + '\n void Forward(float Value);')
-    cpp = CPP.replace('#include "Sub01HomeLab.h"', '#include "Sub01HomeLab.h"\n#include "Sub01HomeHands.h"\n#include "Animation/AnimSequence.h"\n#include "Engine/SkeletalMesh.h"\n#include "Sub01PCBridge.h"\n#include "Components/StaticMeshComponent.h"\n#include "Materials/MaterialInterface.h"\n#include "EngineUtils.h"\n#include "TimerManager.h"\n#include "UnrealClient.h"\n#include "Components/SceneCaptureComponent2D.h"\n#include "Engine/TextureRenderTarget2D.h"\n#include "ImageUtils.h"\n#include "RenderingThread.h"\n#include "Misc/FileHelper.h"\n#include "Misc/CommandLine.h"\n#include "Misc/Parse.h"\n#include "Misc/Paths.h"\n#include "HAL/FileManager.h"\n#include "HAL/PlatformTime.h"\n#include "HAL/PlatformMisc.h"')
+    header = HEADER.replace(' void Forward(float Value);', CHARACTER_FIELDS + ROUTE_FIELDS + DIAGNOSTIC_FIELDS + PC_FIELDS + CONTACT_RECORD_FIELDS + '\n void Forward(float Value);')
+    cpp = CPP.replace('#include "Sub01HomeLab.h"', '#include "Sub01HomeLab.h"\n#include "Sub01HomeHands.h"\n#include "Animation/AnimSequence.h"\n#include "Engine/SkeletalMesh.h"\n#include "Sub01PCBridge.h"\n#include "Components/StaticMeshComponent.h"\n#include "Materials/MaterialInterface.h"\n#include "EngineUtils.h"\n#include "TimerManager.h"\n#include "UnrealClient.h"\n#include "Components/SceneCaptureComponent2D.h"\n#include "Engine/TextureRenderTarget2D.h"\n#include "ImageUtils.h"\n#include "RenderingThread.h"\n#include "Misc/FileHelper.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n#include "Misc/CommandLine.h"\n#include "Misc/Parse.h"\n#include "Misc/Paths.h"\n#include "HAL/FileManager.h"\n#include "HAL/PlatformTime.h"\n#include "HAL/PlatformMisc.h"')
     cpp = cpp.replace(' GetCapsuleComponent()->InitCapsuleSize', ''' PrimaryActorTick.bCanEverTick=true;
  PCBridge=CreateDefaultSubobject<USub01PCBridge>(TEXT("ActualPrivatePCBridge"));
  FirstPersonBody=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RealFirstPersonBody"));
@@ -126,12 +127,12 @@ def stage(project):
     (module/'Sub01HomeLab.h').write_text(header)
     cpp=cpp.replace('\n }\n if(auto* Player=', '\n }\n BeginNativeRouteTest();\n if(auto* Player=')
     cpp=cpp.replace(' if(Device.IsEmpty()) return;', ' if(Device.IsEmpty()) return;\n if(Device==TEXT("Desk")&&PCBridge){PCBridge->SetOperatorFocus(true);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,PCBridge->GetPCStatus());return;}')
-    (module/'Sub01HomeLab.cpp').write_text(cpp + CHARACTER_METHODS + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS)
+    (module/'Sub01HomeLab.cpp').write_text(cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     bridge=Path(__file__).parent/'native_pc_bridge'
     for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp']:
         shutil.copy2(bridge/name,module/name)
     stage_hands(module)
-    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore"}); } }\n')
+    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore"}); } }\n')
     for name,kind in [('Sub01HomeLab','Game'),('Sub01HomeLabEditor','Editor')]:
         (project/'Source'/f'{name}.Target.cs').write_text(f'using UnrealBuildTool; public class {name}Target : TargetRules {{ public {name}Target(TargetInfo Target):base(Target) {{ Type=TargetType.{kind}; DefaultBuildSettings=BuildSettingsVersion.Latest; ExtraModuleNames.Add("Sub01HomeLab"); }} }}\n')
     path=project/'Sub01HomeLab.uproject';doc=json.loads(path.read_text());doc['Modules']=[{'Name':'Sub01HomeLab','Type':'Runtime','LoadingPhase':'Default'}];path.write_text(json.dumps(doc,indent=2)+'\n')
