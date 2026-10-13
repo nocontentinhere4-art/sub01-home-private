@@ -5,6 +5,7 @@ const { V86 } = require("./libv86.cjs"),
   readline = require("readline");
 const { attachFramebuffer } = require('./vga_framebuffer.cjs');
 const { guestKeyboard } = require('./guest_keyboard.cjs');
+const { guestMouse } = require('./guest_mouse.cjs');
 // v86's pixel container only; no canvas or browser is introduced.
 globalThis.ImageData ??= class ImageData { constructor(data, width, height) { this.data=data; this.width=width; this.height=height; } };
 const snapshot = process.env.SUB01_VM_STATE;
@@ -33,7 +34,7 @@ const vm = new V86({
 const keyboard = guestKeyboard(codes => vm.keyboard_send_scancodes(codes));
 let framebuffer = null;
 let lastFrameRevision = null, lastDisplayKind = '';
-let pointerX = null, pointerY = null;
+const mouse = guestMouse(vm, () => framebuffer?.capture());
 vm.add_listener("serial0-output-byte", (byte) => {
   serial = (serial + String.fromCharCode(byte)).slice(-12000);
   if (/~[%#] $/.test(serial)) ready = true;
@@ -123,21 +124,7 @@ readline.createInterface({ input: process.stdin }).on("line", async (line) => {
     } else if (m.type === "vga-keyboard" && Array.isArray(m.scancodes) && m.scancodes.length <= 16 && m.scancodes.every(code => Number.isInteger(code) && code >= 0 && code <= 255)) {
       vm.run(); await keyboard.enqueue(m.scancodes);
     } else if (m.type === "vga-mouse" && [m.dx, m.dy, m.wheel].every(value => Number.isFinite(value) && Math.abs(value) <= 100) && Array.isArray(m.buttons) && m.buttons.length === 3 && m.buttons.every(value => typeof value === 'boolean')) {
-      vm.run();
-      if (vm.absolute_pointer_enabled && framebuffer) {
-        const frame = framebuffer.capture();
-        if (frame.available) {
-          pointerX = Math.max(0, Math.min(frame.width - 1, (pointerX ?? frame.width / 2) + m.dx));
-          pointerY = Math.max(0, Math.min(frame.height - 1, (pointerY ?? frame.height / 2) + m.dy));
-          vm.bus.send("mouse-pointer-lock", false);
-          vm.bus.send("mouse-absolute", [pointerX, pointerY, frame.width, frame.height]);
-        }
-      } else {
-        vm.bus.send("mouse-pointer-lock", true);
-        vm.bus.send("mouse-delta", [m.dx, -m.dy]);
-      }
-      vm.bus.send("mouse-click", m.buttons.map(Number));
-      if (m.wheel) vm.bus.send("mouse-wheel", [m.wheel, 0]);
+      mouse(m);
     } else if (m.type === "pause") {
       keyboard.cancel();
       vm.bus?.send("mouse-click", [0, 0, 0]);

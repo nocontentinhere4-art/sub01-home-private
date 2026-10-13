@@ -58,7 +58,7 @@ def test_gui_agent_does_not_claim_unrendered_serial_commands(tmp_path):
         assert await c.input('uname -a\n') is False
         assert not any(path == '/pc/input' for _, path, _ in calls)
         assert calls[0] == ('POST', '/pc/privacy', {'active': False, 'source': 'home'})
-        assert calls[1] == ('POST', '/pc/session', {'active': True})
+        assert calls[1] == ('POST', '/pc/session', {'active': True, 'source': 'home'})
         async def unavailable(*args):
             raise RuntimeError('offline')
         c.request = unavailable

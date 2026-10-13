@@ -277,3 +277,60 @@ def test_graphical_guest_ps2_input_is_bounded_authenticated_and_privacy_safe():
             gate.set()
             await http.close()
     run(body())
+
+
+def test_home_release_cannot_clear_native_focus_and_leases_expire_independently():
+    async def body():
+        now = [100.0]
+        http, runner, computer = await started(clock=lambda: now[0])
+        try:
+            for source in ('native', 'home'):
+                assert (await http.post('/pc/session', json={'active': True, 'source': source}, headers=AUTH)).status == 200
+            await http.post('/pc/session', json={'active': False, 'source': 'home'}, headers=AUTH)
+            await runner.idle_step()
+            assert runner.view()['session'] and not computer.paused
+            now[0] = 150
+            await http.post('/pc/session', json={'active': True, 'source': 'home'}, headers=AUTH)
+            now[0] = 161  # native expired; home remains active
+            await runner.idle_step()
+            assert not computer.paused
+            await http.post('/pc/session', json={'active': False}, headers=AUTH)
+            await runner.idle_step()
+            assert not computer.paused, 'legacy native release cannot clear home lease'
+            now[0] = 211
+            await runner.idle_step()
+            assert computer.paused
+            assert (await http.post('/pc/session', json={'active': True, 'source': 'other'}, headers=AUTH)).status == 400
+        finally:
+            await http.close()
+    run(body())
+
+
+def test_new_operator_focus_during_idle_pause_is_resumed_but_privacy_clears_both():
+    async def body():
+        http, runner, computer = await started()
+        try:
+            computer.paused = False
+            gate = asyncio.Event()
+            original = computer.send
+            async def slow_pause(message):
+                if message['type'] == 'pause':
+                    computer.sent.append('pause')
+                    await gate.wait()
+                    return True
+                return await original(message)
+            computer.send = slow_pause
+            pending = asyncio.create_task(runner.idle_step())
+            await asyncio.sleep(0)
+            await runner.set_session(True, 'native')
+            gate.set()
+            await pending
+            assert computer.sent == ['pause', 'resume'] and not computer.paused
+            await runner.set_session(True, 'home')
+            await runner.set_privacy(True, 'home')
+            assert computer.paused and runner.session_until == 0
+            await runner.set_privacy(False, 'home')
+            assert not runner.view()['session'], 'clearing privacy cannot revive old focus'
+        finally:
+            await http.close()
+    run(body())
