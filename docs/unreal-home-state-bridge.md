@@ -65,6 +65,7 @@ Every route except `/healthz` requires the operator credential, as `X-Admin-Toke
     "path_source": "derived-route-graph",
     "seated": 0.0,
     "moving": true,
+    "visible": true,
     "route_sequence": 1
   },
   "destinations": {
@@ -116,6 +117,7 @@ Every route except `/healthz` requires the operator credential, as `X-Admin-Toke
   - `path_source` is `derived-route-graph`. It becomes `backend` once the backend change below lands.
   - **Edge case:** within about 1 mm of a node, between two nearly collinear edges, the planned edge wins.
 - `moving` is the backend's `walking` value.
+- `visible` is false while `presence` is `away` (owner decision 2026-10-13): hide the body while he is out; his last published waypoint stays at the doorstep.
 - `seated` is the backend's seated progress, from 0 to 1.
 
 **`destinations`**

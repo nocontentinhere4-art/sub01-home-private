@@ -264,6 +264,8 @@ class HomeStateModel:
             "path_source": path_source,
             "seated": round(float(seated), 3) if isinstance(seated, (int, float)) and math.isfinite(seated) else None,
             "moving": bool(home.get("walking")),
+            # Owner decision 2026-10-13: hide his body while he is out of the house.
+            "visible": home.get("presence") != "away",
             "route_sequence": home.get("sequence") if isinstance(home.get("sequence"), int) else None,
         }
         if status == "live":

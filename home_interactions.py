@@ -174,6 +174,9 @@ def validate_modes(value, names, modes, label):
     return dict(value)
 
 
+STAIR_NODES = frozenset({"stair_bottom", "stair_top"})
+
+
 def near(door, position):
     if not finite_position(position):
         return False
@@ -235,7 +238,10 @@ class HouseInteractions:
         locked = name == "front" and actor["presence"] == "away"
         if mode == "closed":
             return False, locked, True
-        if near(name, pos):
+        # On the stair edge the climb passes within the bathroom door's
+        # radius on the upper level; that is not approaching the door.
+        on_stairs = node in STAIR_NODES or path[:1] and path[0] in STAIR_NODES
+        if near(name, pos) and not (name == "bathroom" and on_stairs):
             return True, False, True
         return False, locked, False
 

@@ -157,6 +157,8 @@ def collider_rect(collider):
 def footprint_violations(fixture, tol=1e-6):
     """Runtime footprint must stay inside the unchanged collider, except that the
     wall side may extend into the non-walkable strip up to the wall face."""
+    if not fixture.get('collider'):
+        return []  # e.g. wall/ceiling-mounted parts; their own contract checks placement
     (x0, _, z0), (x1, _, z1) = runtime_bounds(fixture)
     cx0, cx1, cz0, cz1 = collider_rect(fixture['collider'])
     wall = fixture.get('wall_side', {})
@@ -172,29 +174,31 @@ def footprint_violations(fixture, tol=1e-6):
     return problems
 
 
-def sidecar(name, fixture, actual_local_bounds=None, glb=None, triangles=None, vertices=None):
+def sidecar(name, fixture, actual_local_bounds=None, glb=None, triangles=None, vertices=None,
+            generator='tools/build_home_bath_fixtures.py'):
     lo, hi = local_bounds(fixture['parts'])
     data = {
         'geometry': fixture['title'] + '; original procedural Blender construction, no manufacturer CAD.',
         'direction': 'SimbasJungles written direction: warm Japanese/modern apartment, light oak, glazed ceramic, '
                      'brass accents. Not visually compared with the reference.',
-        'generator': 'tools/build_home_bath_fixtures.py',
+        'generator': generator,
         'declared_blender_bounds_m': [lo, hi],
         'blender_bounds_m': actual_local_bounds or [lo, hi],
         'runtime_origin_m': fixture['runtime_origin_m'],
         'runtime_yaw_radians': fixture['runtime_yaw_radians'],
         'runtime_world_bounds_m': [list(v) for v in runtime_bounds(fixture)],
-        'existing_collider': fixture['collider'],
+        'existing_collider': fixture.get('collider'),
         'mesh_roles': sorted({p['mesh'] for p in fixture['parts']}),
         'runtime_materials': 'Shared house materials by mesh name via web/house/bath_fixture_materials.mjs: '
                              '*_oak -> M.kitchenOak (CC0 home_oak_veneer, metric 1.83 m UVs), '
                              '*_ceramic -> glazed clone of M.white, *_seat -> satin, *_brass -> M.brass, '
-                             '*_metal -> M.metal. No embedded textures.',
-        'replaces_home_js': fixture['replaces_home_js'],
-        'keeps_home_js': fixture['keeps_home_js'],
+                             '*_metal -> M.metal, *_diffuser -> switched emissive diffuser. No embedded textures.',
+        'replaces_home_js': fixture.get('replaces_home_js', []),
+        'keeps_home_js': fixture.get('keeps_home_js', []),
         'texture_source': 'https://polyhaven.com/a/oak_veneer_01',
         'embedded_textures': False,
     }
+    data.update(fixture.get('sidecar_extra', {}))
     if glb is not None:
         data.update(vertices=vertices, triangles=triangles, glb_bytes=glb.stat().st_size,
                     sha256=hashlib.sha256(glb.read_bytes()).hexdigest())
@@ -203,7 +207,10 @@ def sidecar(name, fixture, actual_local_bounds=None, glb=None, triangles=None, v
 
 # ------------------------------------------------------------------ Blender
 
-def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the private server
+def _build_in_blender(out=OUT, fixtures=None, blend_name='bath-fixtures.blend',
+                      generator='tools/build_home_bath_fixtures.py'):  # pragma: no cover - Blender only
+    fixtures = FIXTURES if fixtures is None else fixtures
+    roles = sorted({p['mesh'] for f in fixtures.values() for p in f['parts']})
     import bpy
     import bmesh
     from mathutils import Vector
@@ -212,7 +219,7 @@ def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the pr
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     preview = {}
-    for role in MESH_ROLES:
+    for role in roles:
         m = bpy.data.materials.new(role)
         m.use_nodes = True
         preview[role] = m
@@ -246,6 +253,10 @@ def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the pr
     def cut(o, location, scale, shape='sphere'):
         if shape == 'sphere':
             bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=32, radius=1, location=location)
+        elif shape == 'cylinder_y':
+            bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=1, depth=2, location=location,
+                                                rotation=(math.pi / 2, 0, 0))
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
         else:
             bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=1, depth=1, location=location)
         cutter = bpy.context.object
@@ -294,7 +305,9 @@ def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the pr
             bevel(o, min(.0015, radius / 3), 2)
         else:
             raise ValueError(shape)
-        if part['mesh'].endswith('_ceramic') or part['mesh'].endswith('_seat'):
+        for hole in part.get('cuts', []):
+            cut(o, hole['centre'], (hole['radius'], hole['depth'] / 2, hole['radius']), 'cylinder_y')
+        if part['mesh'].endswith(('_ceramic', '_seat', '_diffuser')):
             sub = o.modifiers.new('Soft glaze', 'SUBSURF')
             sub.levels = sub.render_levels = 1
             apply(o, sub)
@@ -319,7 +332,7 @@ def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the pr
         return o
 
     results = {}
-    for name, fixture in FIXTURES.items():
+    for name, fixture in fixtures.items():
         groups = {}
         for part in fixture['parts']:
             groups.setdefault(part['mesh'], []).append(make(part))
@@ -360,10 +373,11 @@ def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the pr
             mesh = o.data
             mesh.calc_loop_triangles()
             triangles += len(mesh.loop_triangles)
-        data = sidecar(name, fixture, [lo, hi], glb, triangles, sum(len(o.data.vertices) for o in joined))
+        data = sidecar(name, fixture, [lo, hi], glb, triangles, sum(len(o.data.vertices) for o in joined),
+                       generator=generator)
         (out / f'{name}.json').write_text(json.dumps(data, indent=2))
         results[name] = {'bounds': [lo, hi], 'triangles': triangles, 'bytes': glb.stat().st_size}
-    bpy.ops.wm.save_as_mainfile(filepath=str(out / 'bath-fixtures.blend'))
+    bpy.ops.wm.save_as_mainfile(filepath=str(out / blend_name))
     print('BATH_FIXTURES_BUILT', json.dumps(results), flush=True)
 
 

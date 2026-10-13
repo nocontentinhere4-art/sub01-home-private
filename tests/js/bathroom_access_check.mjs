@@ -43,17 +43,19 @@ trace=[]
 for activity in ['use_bathroom','research']:
     for i in range(2000):
         h.update(.05,.05,{'activity':activity},{})
-        trace.append(h.view()['position'])
+        # [real walking eye, what the page receives]: during privacy the feed
+        # carries the doorway stand-in, never the actor's real pose.
+        trace.append([list(h.position), h.view()['position']])
         if h.activity_ready(activity): break
     assert h.activity_ready(activity)
 print(json.dumps(trace))
 `],{cwd:new URL('../../',import.meta.url),encoding:'utf8'}));
-let centre=A.closed, held=trace[0], crossed=0;
+let centre=A.closed, held=trace[0][1], crossed=0;
 const viewer=[2,1.65,-.75];
 for(let i=0;i<trace.length;i++) {
-  if(i%4===0)held=trace[i]; // Conservative actual 5Hz actor feed, viewer stays elsewhere.
+  if(i%4===0)held=trace[i][1]; // Conservative actual 5Hz published feed, viewer stays elsewhere.
   centre=bathroomDoorPosition(centre,.05,bathroomApproach(viewer)||bathroomApproach(held));
-  const [x,y,z]=trace[i];
+  const [x,y,z]=trace[i][0];
   if(y>3 && Math.abs(x-A.plane)<=.20 && z>.85 && z<1.8) {
     crossed++;
     assert.ok(bathroomAllows(x,z,3,centre),'Real actor crosses only after leaf is physically clear');

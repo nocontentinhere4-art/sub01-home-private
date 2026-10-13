@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private Runpod furniture build: bath fixtures, contract check, optional assembly.
+"""Private Runpod furniture build: loft bath fixtures, light and door, contract check, optional assembly.
 
 Meant to be run by the owner's agent ON the already-authorized private Runpod
 server. Dry run is the default: it prints the exact commands and checks it
@@ -12,10 +12,12 @@ only. No rendering, no network, no pod management, no deployment.
 
 Outputs (never inside this Git checkout):
     DIR/bath-fixtures/{vanity,toilet}.glb + .json + bath-fixtures.blend
-    DIR/assembled/{house.blend,house.glb,assembly.json}   (only with --source)
+    DIR/bath-light/bath-light.glb + .json + bath-light.blend
+    DIR/bath-door/bath-door.glb + .json + bath-door.blend
+    DIR/assembled/{house.blend,house.glb,assembly.json}   (only with --source; vanity/toilet swap)
     DIR/furniture-build-report.json
-Idempotent: an existing build whose generator hash, Blender version and
-contract still match is reused unless --force is given.
+Idempotent: a group whose generator hashes, Blender version and contract still
+match is reused unless --force is given.
 """
 from __future__ import annotations
 
@@ -32,10 +34,19 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 import build_home_bath_fixtures as bath  # noqa: E402  (pure data; no bpy at import)
+import build_home_bath_door as bath_door  # noqa: E402
+import build_home_bath_light as bath_light  # noqa: E402
 from home_asset_audit import read_gltf, world_bounds  # noqa: E402
 
 GENERATOR = TOOLS / 'build_home_bath_fixtures.py'
 ASSEMBLER = TOOLS / 'assemble_home_blender.py'
+# Build groups in order: (output subdirectory, generator script, its pure-data module).
+GROUPS = (
+    ('bath-fixtures', GENERATOR, bath),
+    ('bath-light', TOOLS / 'build_home_bath_light.py', bath_light),
+    ('bath-door', TOOLS / 'build_home_bath_door.py', bath_door),
+)
+SPECS = {name: (group, script, module) for group, script, module in GROUPS for name in module.FIXTURES}
 REPORT_NAME = 'furniture-build-report.json'
 STATE_NAME = 'build-state.json'
 MAX_BLENDER_SECONDS = 1800
@@ -74,26 +85,30 @@ def parse_args(argv):
     return args
 
 
+def check_text(name):
+    spec = SPECS[name][2].FIXTURES[name]
+    text = (f'{name}: sidecar sha256 and generator, mesh names {sorted({p["mesh"] for p in spec["parts"]})}, '
+            f'GLB bounds inside declared envelope +{bath.BOUNDS_TOLERANCE_M} m, sidecar origin/yaw/collider '
+            f'match generator, runtime footprint inside collider, no embedded materials/images')
+    if spec.get('sidecar_extra'):
+        text += ', sidecar ' + '/'.join(sorted(spec['sidecar_extra'])) + ' match generator'
+    return text
+
+
 def plan(args):
     """Deterministic list of steps (commands are argv lists, never shell strings)."""
     out = args.output_dir.resolve()
-    fixtures = out / 'bath-fixtures'
-    steps = [
-        {'id': 'blender-version', 'argv': [args.blender, '--version']},
-        {'id': 'build-bath-fixtures',
-         'argv': [args.blender, '--background', '--factory-startup', '--python', str(GENERATOR),
-                  '--', '--output-dir', str(fixtures)],
-         'skip_if_verified': True},
-        {'id': 'verify-bath-fixtures', 'internal': True, 'checks': [
-            f'{name}: sidecar sha256, mesh names {sorted({p["mesh"] for p in spec["parts"]})}, '
-            f'GLB bounds inside declared envelope +{bath.BOUNDS_TOLERANCE_M} m, sidecar origin/yaw/collider '
-            f'match generator, runtime footprint inside collider, no embedded materials/images'
-            for name, spec in sorted(bath.FIXTURES.items())]},
-    ]
+    steps = [{'id': 'blender-version', 'argv': [args.blender, '--version']}]
+    for group, script, _ in GROUPS:
+        steps.append({'id': f'build-{group}', 'group': group,
+                      'argv': [args.blender, '--background', '--factory-startup', '--python', str(script),
+                               '--', '--output-dir', str(out / group)],
+                      'skip_if_verified': True})
+    steps.append({'id': 'verify-all', 'internal': True, 'checks': [check_text(n) for n in sorted(SPECS)]})
     if args.source:
         assemble = [args.blender, '--background', '--python', str(ASSEMBLER), '--',
                     '--source', str(args.source.resolve()), '--assets-root', str(args.assets_root.resolve()),
-                    '--output-dir', str(out / 'assembled'), '--bath-fixtures', str(fixtures)]
+                    '--output-dir', str(out / 'assembled'), '--bath-fixtures', str(out / 'bath-fixtures')]
         if args.source_sha:
             assemble += ['--source-sha', args.source_sha]
         steps.append({'id': 'assemble-home', 'argv': assemble})
@@ -111,7 +126,8 @@ def gltf_envelope(parts, tol):
 
 def verify_fixture(directory: Path, name: str):
     """Return a list of contract violations for one built fixture (empty = ok)."""
-    spec = bath.FIXTURES[name]
+    _, script, module = SPECS[name]
+    spec = module.FIXTURES[name]
     glb, side = Path(directory) / f'{name}.glb', Path(directory) / f'{name}.json'
     if not glb.is_file() or not side.is_file():
         return [f'{name}: missing {glb.name} or {side.name}']
@@ -119,6 +135,8 @@ def verify_fixture(directory: Path, name: str):
     data = json.loads(side.read_text())
     if data.get('sha256') != sha256(glb):
         problems.append(f'{name}: GLB sha256 differs from sidecar')
+    if data.get('generator') != script.relative_to(ROOT).as_posix():
+        problems.append(f'{name}: sidecar generator {data.get("generator")} is not {script.name}')
     doc, _ = read_gltf(glb)
     expected = sorted({p['mesh'] for p in spec['parts']})
     names = sorted(n.get('name', '') for n in doc.get('nodes', []) if 'mesh' in n)
@@ -143,14 +161,21 @@ def verify_fixture(directory: Path, name: str):
         problems.append(f'{name}: sidecar runtime_origin_m {origin} != generator {spec["runtime_origin_m"]}')
     if not (isinstance(yaw, (int, float)) and math.isclose(yaw, spec['runtime_yaw_radians'], abs_tol=1e-9)):
         problems.append(f'{name}: sidecar yaw {yaw} != generator {spec["runtime_yaw_radians"]}')
-    if data.get('existing_collider') != spec['collider']:
+    if data.get('existing_collider') != spec.get('collider'):
         problems.append(f'{name}: sidecar collider differs from generator')
+    for key, value in sorted(spec.get('sidecar_extra', {}).items()):
+        if data.get(key) != json.loads(json.dumps(value)):
+            problems.append(f'{name}: sidecar {key} differs from generator')
     problems += [f'{name}: {v}' for v in bath.footprint_violations(spec)]
     return problems
 
 
-def verify_all(directory: Path):
-    return {name: verify_fixture(directory, name) for name in sorted(bath.FIXTURES)}
+def verify_group(directory: Path, group: str):
+    return {name: verify_fixture(directory, name) for name in sorted(SPECS) if SPECS[name][0] == group}
+
+
+def verify_all(out: Path):
+    return {name: verify_fixture(Path(out) / SPECS[name][0], name) for name in sorted(SPECS)}
 
 # ------------------------------------------------------------------ execution
 
@@ -170,36 +195,46 @@ def blender_version(stdout: str) -> str:
     return first
 
 
+def generator_hash(script: Path) -> str:
+    """The group's script plus the shared Blender builder it imports."""
+    digest = hashlib.sha256()
+    for path in sorted({script, GENERATOR}):
+        digest.update(sha256(path).encode())
+    return digest.hexdigest()
+
+
 def execute(args, steps):
     out = args.output_dir.resolve()
-    fixtures = out / 'bath-fixtures'
-    report = {'schema': 'sub01-runpod-furniture-build/1', 'private_only': True, 'rendered': False,
-              'generator_sha256': sha256(GENERATOR), 'commands': []}
+    report = {'schema': 'sub01-runpod-furniture-build/2', 'private_only': True, 'rendered': False,
+              'commands': [], 'groups': {}}
     exe = shutil.which(args.blender)
     if not exe:
         raise SystemExit(f'Blender executable not found: {args.blender}')
     report['blender_path'] = exe
     report['blender_version'] = blender_version(run(steps[0]['argv'], report['commands']))
     print('Blender:', report['blender_version'], flush=True)
-    state_path = fixtures / STATE_NAME
-    state = json.loads(state_path.read_text()) if state_path.is_file() else {}
-    reusable = (not args.force and state.get('generator_sha256') == report['generator_sha256']
-                and state.get('blender_version') == report['blender_version']
-                and not any(verify_all(fixtures).values()))
-    if reusable:
-        report['build'] = 'reused verified build'
-    else:
-        out.mkdir(parents=True, exist_ok=True)
-        run(steps[1]['argv'], report['commands'])
-        report['build'] = 'built'
-    verification = verify_all(fixtures)
-    report['verification'] = verification
-    report['outputs'] = {p.name: sha256(p) for p in sorted(fixtures.glob('*')) if p.is_file() and p.name != STATE_NAME}
-    if any(verification.values()):
+    for group, script, _ in GROUPS:
+        directory = out / group
+        state_path = directory / STATE_NAME
+        state = json.loads(state_path.read_text()) if state_path.is_file() else {}
+        expected_state = {'generator_sha256': generator_hash(script), 'blender_version': report['blender_version']}
+        reusable = (not args.force and state == expected_state and not any(verify_group(directory, group).values()))
+        if not reusable:
+            out.mkdir(parents=True, exist_ok=True)
+            step = next(s for s in steps if s.get('group') == group)
+            run(step['argv'], report['commands'])
+        verification = verify_group(directory, group)
+        if not any(verification.values()):
+            state_path.write_text(json.dumps(expected_state, indent=2) + '\n')
+        report['groups'][group] = {
+            'build': 'reused verified build' if reusable else 'built', 'verification': verification,
+            'generator_sha256': expected_state['generator_sha256'],
+            'outputs': {p.name: sha256(p) for p in sorted(directory.glob('*')) if p.is_file() and p.name != STATE_NAME},
+        }
+    failed = any(v for g in report['groups'].values() for v in g['verification'].values())
+    if failed:
         report['status'] = 'contract-failed'
     else:
-        state_path.write_text(json.dumps({'generator_sha256': report['generator_sha256'],
-                                          'blender_version': report['blender_version']}, indent=2) + '\n')
         assemble = next((s for s in steps if s['id'] == 'assemble-home'), None)
         if assemble:
             run(assemble['argv'], report['commands'])

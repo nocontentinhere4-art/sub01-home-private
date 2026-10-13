@@ -9,12 +9,19 @@ export const BATH_FIXTURE_MESH_ROLES = Object.freeze({
   Toilet_ceramic: 'ceramic',
   Toilet_seat: 'seat',
   Toilet_metal: 'metal',
+  BathLight_oak: 'oak',
+  BathLight_diffuser: 'diffuser',
+  Door_oak: 'oak',
+  Door_brass: 'brass',
 });
 
 // Vitreous china: warm white base close to the house M.white tone, low
 // roughness glaze with a thin clearcoat. Satin seat stays visibly softer.
 export const GLAZED_CERAMIC = Object.freeze({color: '#f2eee5', roughness: .18, clearcoat: .55, clearcoatRoughness: .08});
 export const SATIN_SEAT = Object.freeze({color: '#ebe6db', roughness: .42});
+// Opal ceiling diffuser (tools/build_home_bath_light.py). lampEmission follows the
+// bathroom room light like the other switched fixtures (userData.lampEmission).
+export const BATH_LIGHT_DIFFUSER = Object.freeze({color: '#f7f2e8', emissive: '#ffe9c4', lampEmission: 1.1, roughness: .55});
 
 export function createBathFixtureMaterials(T, {oak, brass, metal}) {
   if (!oak || !brass || !metal) throw new Error('Bath fixtures need the shared oak, brass and metal materials');
@@ -25,7 +32,13 @@ export function createBathFixtureMaterials(T, {oak, brass, metal}) {
   ceramic.userData.bathFixture = 'glazed-ceramic';
   const seat = new T.MeshStandardMaterial({color: new T.Color(SATIN_SEAT.color), roughness: SATIN_SEAT.roughness, metalness: 0});
   seat.userData.bathFixture = 'satin-seat';
-  return {oak, ceramic, seat, brass, metal};
+  const diffuser = new T.MeshStandardMaterial({
+    color: new T.Color(BATH_LIGHT_DIFFUSER.color), emissive: new T.Color(BATH_LIGHT_DIFFUSER.emissive),
+    emissiveIntensity: BATH_LIGHT_DIFFUSER.lampEmission, roughness: BATH_LIGHT_DIFFUSER.roughness, metalness: 0,
+  });
+  diffuser.userData.lampEmission = BATH_LIGHT_DIFFUSER.lampEmission;
+  diffuser.userData.switchedRoom = 'bathroom';
+  return {oak, ceramic, seat, brass, metal, diffuser};
 }
 
 function finiteVector(value, length) {
