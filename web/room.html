@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SUB-01 · room</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root { --bg:#08080b; --fg:#ececf2; --dim:#8f8fa3; --faint:#5c5c72; --line:rgba(255,255,255,.08); --or:#ff6a00; --st:#ff9a3c;
           --card:rgba(12,12,18,.72); --card2:rgba(12,12,18,.86); --glass:blur(14px) saturate(1.2); }
@@ -113,12 +112,6 @@
   #screencard.phone .frame::before { content:""; position:absolute; left:50%; top:7px; width:48px; height:9px; margin-left:-24px; border-radius:6px; background:#0a0a0d; z-index:1; }
   #screencard.phone .frame img { aspect-ratio:390/844; object-fit:cover; object-position:top; }
   #screencard .url { font-size:11px; color:var(--dim); margin-top:7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  #map { height:230px; border-radius:8px; overflow:hidden; background:#0d0e13; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06); }
-  .leaflet-container { background:#0d0e13 !important; font-family:inherit !important; }
-  .leaflet-control-attribution { background:rgba(8,8,11,.6) !important; color:#6a6a7e !important; font-size:9px !important; }
-  .leaflet-control-attribution a { color:#8f8fa3 !important; }
-  .mk-me { filter:drop-shadow(0 0 5px rgba(255,154,60,.9)); }
-  .mk-courier { filter:drop-shadow(0 0 5px rgba(57,245,160,.8)); }
   #screencard .opts { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); }
   #screencard .opts .h { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin-bottom:6px; }
   #screencard .op { display:grid; grid-template-columns:1fr 64px 34px; gap:8px; align-items:center; font-size:11px; color:#a9a9b8; padding:2px 0; }
@@ -130,7 +123,6 @@
   #screencard .op .bar::after { content:""; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:rgba(255,255,255,.25); }
   #screencard .op b { font-weight:400; text-align:right; color:var(--dim); }
   #screencard .restarting { padding:18px 0; text-align:center; color:var(--dim); font-size:12px; }
-  #mapcard.out #map { height:340px; }
   /* bottom-left: the brain card and the disclaimer stack in one column, so the text can never cover the card */
   #corner { position:fixed; left:28px; bottom:18px; right:420px; display:flex; flex-direction:column; align-items:flex-start; gap:10px;
     z-index:5; pointer-events:none; }
@@ -385,7 +377,7 @@
 <div id="boot"><div><div class="w">SUB<b>-</b>01</div><div id="boot-t">loading his room in Kichijōji…</div><div class="bar"><i id="boot-bar"></i></div></div></div>
 <div id="away"></div>
 <div id="top">
-  <div id="brand"><h1>SUB-01</h1><nav><a class="on" href="/">room</a><a href="/brain">brain</a><a href="/diary">diary</a><a href="/world.html">sees</a><a href="https://city.subzerone.live/" class="city" target="_blank" rel="noopener">city</a></nav></div>
+  <div id="brand"><h1>SUB-01</h1><nav><a class="on" href="/">room</a><a href="/brain">brain</a><a href="/diary">diary</a><a href="https://city.subzerone.live/" class="city" target="_blank" rel="noopener">city</a></nav></div>
   <div id="state"><span id="live"></span><span id="chip">…</span><span id="clock"></span><span id="where"></span></div>
   <div id="story">connecting…</div>
   <div id="fiction"><span class="long">A fictional character in a simulated life, driven by a model of brain activity. Not a person, not conscious. <a href="/about.html">about</a></span><span class="short">A simulated character. Not a person, not conscious. <a href="/about.html">about</a></span></div>
@@ -474,10 +466,6 @@
     <div class="k"><span>Body</span><span id="n-food"></span></div>
     <div class="m" id="n-text"></div>
   </div>
-  <div class="card" id="mapcard">
-    <div class="k"><span id="m-k">Kichijōji, Tokyo</span><span id="m-st"></span></div>
-    <div id="map"></div>
-  </div>
   <div id="honest" tabindex="0" title="A fictional character living a simulated life, driven by a model of brain activity built from public MRI data. An AI reads each page for him and describes what he could do next; his brain model reacts to each option and chooses."><span class="tx">A fictional character living a simulated life, driven by a model of brain activity built from public MRI data.
     An AI reads each page for him and describes what he could do next; his brain model reacts to each option and chooses.</span>
     <span class="ln"><span class="cap" id="mind-cap"></span> <a href="/about.html">More on /about.</a></span></div>
@@ -489,14 +477,13 @@
 <a id="citypip" class="city" href="https://city.subzerone.live/" target="_blank" rel="noopener" title="open the city in its own window"><img src="/room/city_preview.jpg" alt="the city: SUB-01's neighbourhood in Tokyo" loading="lazy" decoding="async"><span><i id="city-dot"></i>the city · <b id="city-st">…</b></span></a>
 <a id="brainpip" href="/brain" title="open the brain"><iframe data-src="/brain?mini" tabindex="-1" loading="lazy"></iframe><span>his brain, live · real fibres</span></a>
 </div>
-<a id="dream" href="/world.html" hidden title="an image an AI renders from the brain model's state while it sleeps; a model, not a mind"><img id="dream-img" alt=""><span id="dream-t"></span></a>
+<a id="dream" hidden title="what he sees: an image an AI renders from the brain model's state while he sleeps or is outside; a model, not a mind"><img id="dream-img" alt=""><span id="dream-t"></span></a>
 <div id="rxpill">
   <div id="rx" role="group" aria-label="react"><span id="viewers" title="people with the room open now">–</span></div>
 </div>
 <div id="rxfloat" aria-hidden="true"></div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
@@ -3330,37 +3317,6 @@ function screens(life, st){
   panel(chessOn ? null : screenOn ? lastStatus[screenOn] : null);
 }
 
-// ---------- map ----------
-const map = L.map("map", {zoomControl:false, attributionControl:true, minZoom:14, maxZoom:18}).setView([35.7055, 139.5745], 15);
-map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)');
-// no tile server (OSMF's tile policy, issue #43): his ~2 x 1.5 km area is one static OSM extract (room_build/osm_area.py),
-// drawn as dark vector layers on one canvas
-const AREA_STYLE = {green:{fill:"#141f19"}, water:{fill:"#122033"}, stream:{line:"#1b2f4a", w:1.5},
-  building:{fill:"#191a22", line:"#20212b", w:0.5}, path:{line:"#282934", w:0.8, dash:"2 3"},
-  minor:{line:"#30313c", w:1.4}, major:{line:"#464755", w:2.6}, rail:{line:"#55556a", w:1.6, dash:"6 4"}};
-function drawArea(a){
-  const S = a.scale, o = [Math.round(a.origin[0] * S), Math.round(a.origin[1] * S)], lines = [];
-  map.createPane("area").style.zIndex = 250;                 // under the routes and markers, whichever loads first
-  const canvas = L.canvas({padding:0.5, pane:"area"});
-  const decode = f => { const p = []; for (let i = 0, y = o[0], x = o[1]; i < f.length; i += 2) { y += f[i]; x += f[i + 1]; p.push([y / S, x / S]); } return p; };
-  for (const k in AREA_STYLE) {
-    const st = AREA_STYLE[k], shapes = (a.layers[k] || []).map(decode), opt = {renderer:canvas, interactive:false, color:st.line,
-      weight:st.w || 0, stroke:!!st.line, dashArray:st.dash, fill:!!st.fill, fillColor:st.fill, fillOpacity:1, opacity:1};
-    if (!shapes.length) continue;
-    const lay = (st.fill ? L.polygon(shapes.map(r => [r]), opt) : L.polyline(shapes, opt)).addTo(map);
-    if (!st.fill) lines.push([lay, st.w]);
-  }
-  const widen = () => { const z = Math.pow(1.6, map.getZoom() - 15); for (const [lay, w] of lines) lay.setStyle({weight:w * z}); };
-  map.on("zoomend", widen); widen();
-  const [s, w, n, e] = a.bbox; map.setMaxBounds([[s - 0.004, w - 0.004], [n + 0.004, e + 0.004]]);
-}
-fetch("tokyo_area.json").then(r => r.json()).then(drawArea);
-const dot = (c, r, cls) => L.circleMarker([0, 0], {radius:r, color:"#0a0a0d", weight:1.5, fillColor:c, fillOpacity:1, className:cls});
-let homeMk, meMk = dot("#ff9a3c", 7, "mk-me"), courierMk = dot("#39f5a0", 6, "mk-courier"), routes = null;
-fetch("tokyo_routes.json").then(r => r.json()).then(d => {
-  routes = d; homeMk = L.circleMarker(d.places.home, {radius:6, color:"#ececf2", weight:1.5, fillColor:"#ececf2", fillOpacity:.15}).addTo(map).bindTooltip("home");
-  meMk.setLatLng(d.places.home).addTo(map);
-});
 const NET = {somatomotor:"body-movement", default:"default-mode", fear:"threat", relay:"thalamic relay"};
 const MEM_LABEL = {"after sleep": "tested after its compressed sleep, the same evening (the next-day test runs at the next session)"};
 const memWhen = d => d.label === "next day"
@@ -3602,6 +3558,7 @@ function connect(){
     if (m.type === "screen") { showScreen(m); return; }
     if (m.type === "chess") { onChess(m); return; }
     if (m.type === "music") { onMusic(m); return; }
+    if (m.type === "eye_state") { onEyeState(m); return; }
     if (m.type === "eye") { onEye(m); return; }          // (R3: the dream frame while he sleeps)
     if (m.type === "nights") { onNights(m); return; }
     if (m.type === "hello") {          // the latest chat and his replies, merged by time (hh:mm); what is playing
@@ -3672,13 +3629,15 @@ function storyText(life, outside, seated){
 function story(life, outside){ put("story", "innerHTML", storyText(life, outside, !(visible && !seatedAtDesk()))); }
 // ---------- the night (R3): while he sleeps the room is not dead air: the eye's newest frame, and the night so far ----------
 let eyeFrame = null, nights = null, stageWas = null;
+let eyeMode = "off";                                     // eye_state: open only while he sleeps or is outside
 function onEye(f){ if (f && f.img) { eyeFrame = f; dreamCard(); } }
+function onEyeState(m){ eyeMode = m.mode || "off"; dreamCard(); }
 function onNights(m){ nights = m; nightLine(); }
-function dreamCard(){                                   // the dream frame shows only while he is asleep; by day /world has it
-  const f = eyeFrame, on = !!(f && stage !== "AWAKE");
+function dreamCard(){                                   // what he sees: the dream while he sleeps, the street while he is out
+  const f = eyeFrame, on = !!(f && eyeMode !== "off" && (f.mode || (f.stage === "AWAKE" ? "outside" : "dream")) !== "awake");
   put("dream", "hidden", !on); if (!on) return;
   if ($("dream-img").getAttribute("src") !== f.img) $("dream-img").src = f.img;
-  put("dream-t", "innerHTML", `<b>${f.stage === "REM" ? "dreaming" : "deep sleep"}</b>${f.thought ? ` · “${esc(String(f.thought).slice(0, 90))}”` : " · the eye's image of the model's state"}`);
+  put("dream-t", "innerHTML", `<b>${eyeMode === "outside" ? "what he sees" : f.stage === "REM" ? "dreaming" : "deep sleep"}</b>${f.thought ? ` · “${esc(String(f.thought).slice(0, 90))}”` : " · the eye's image of the model's state"}`);
 }
 function nightLine(){                                   // under the story while he sleeps: when he fell asleep, how often woken, what came back
   const n = nights && nights.tonight, on = !!(n && stage !== "AWAKE");   // (tonight's record only: last night's onset is not "asleep since")
@@ -3715,20 +3674,7 @@ function applyTick(m){
     else put("readcard", "hidden", true);
     place(life); screens(life, stage);
     put("away", "display", outside ? "block" : "none");
-    put("away", "textContent", outside ? `the room is empty · he is ${life.walking ? "walking" : LABEL_AWAY[life.activity] || "out"} — see the map` : "");
-    if (shown.get("mapcard.out") !== outside) { shown.set("mapcard.out", outside); $("mapcard").classList.toggle("out", outside); }
-    if (routes) {
-      const pos = life.geo ? [life.geo.lat, life.geo.lng] : outside && life.activity === "park" ? routes.places.park
-        : outside ? routes.places.bakery : routes.places.home;
-      if (String(pos) !== mePos) { mePos = String(pos); meMk.setLatLng(pos); }
-      const c = life.courier;
-      if (c && c.geo) { courierMk.setLatLng([c.geo.lat, c.geo.lng]).addTo(map); } else courierMk.remove();
-      put("m-st", "textContent", c ? `courier: ${c.status}${c.eta_min ? ` · ${c.eta_min} min` : ""}` : outside ? "he is out" : "he is home");
-      if (outside || (c && c.geo)) {                // follow him / the courier: one short pan a second, only if it moved
-        const to = c && c.geo && !outside ? [c.geo.lat, c.geo.lng] : pos, now = performance.now();
-        if (now - panAt > 1000 && map.latLngToContainerPoint(to).distanceTo(map.getSize().divideBy(2)) > 3) { panAt = now; map.panTo(to, {animate:true}); }
-      }
-    }
+    put("away", "textContent", outside ? `the room is empty · he is ${life.walking ? "walking" : LABEL_AWAY[life.activity] || "out"}` : "");
     put("n-food", "textContent", life.food ? `${life.food} meal waiting` : life.bread ? `${life.bread} bread` : "nothing to eat");
     const v = life.vitals || {}, nm = m.neuro || {};
     const bar = (k, x) => `<span title="${k}: ${x} (1.0 = resting wake)">${k}<i><i style="width:${Math.min(100, Math.round(x / 1.6 * 100))}%"></i></i></span>`;
