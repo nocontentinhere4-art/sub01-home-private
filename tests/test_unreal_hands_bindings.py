@@ -71,6 +71,8 @@ class BindingTests(unittest.TestCase):
             self.assertIn('IFileManager::Get().FileSize(*CapturePath)>0',pawn)
             self.assertIn('GetCapsuleComponent()->GetScaledCapsuleHalfHeight()',pawn)
             self.assertIn('Previous.SetPlayRate(0)',blend)
+            self.assertIn('UpdateAnimationNode(const FAnimationUpdateContext& Context) override',blend)
+            self.assertNotIn('FAnimationUpdateContext Context(this',blend)
             self.assertNotIn('SetBoneTransform',cpp+blend)
             self.assertIn('SetVisibility(false)',cpp)
             self.assertFalse((root/'Config/DefaultGame.ini').exists(),'no imaginary asset path is pre-bound')

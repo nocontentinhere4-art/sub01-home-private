@@ -37,6 +37,7 @@ import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
+import { createFirstPersonBody } from "./first_person_body.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs?v=2";
 import { streetAccessAllows, buildCourtyardFrontRail } from './street_access.mjs?v=1';
@@ -1484,6 +1485,10 @@ document.querySelectorAll("[data-key]").forEach((b) => {
   b.onpointerup = () => (keys[b.dataset.key] = false);
   b.onpointercancel = () => (keys[b.dataset.key] = false);
 });
+const firstPersonBody = createFirstPersonBody(T, scene, gltfLoader, status => {
+  document.getElementById("status").dataset.firstPersonBody = JSON.stringify(status);
+});
+assetBarrier.add(firstPersonBody.ready);
 const visitorMotion = new WalkMotion();
 function update(dt) {
   viewTransition.step(dt);
@@ -2949,6 +2954,7 @@ renderer.setAnimationLoop(() => {
   accumulated = 0;
   renderer.info.reset();
   update(dt);
+  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000, following && !privacyActive, camera);
   for (const panel of curtainPanels)
     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;
