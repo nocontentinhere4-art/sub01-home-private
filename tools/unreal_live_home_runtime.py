@@ -12,7 +12,7 @@ from home_world import NODES, EDGES
 FIELDS=r'''
  void BeginLiveHome(); void UpdateLiveHome(float Dt); void PollLiveHome();
  void PlanLiveHome(const FString& Target); void ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc);
- bool LiveHome=false,LiveHomeFresh=false,LiveHomePrivate=false,LiveHomePending=false,LiveHomeBlocked=false;
+ bool LiveHome=false,LiveHomeFresh=false,LiveHomePrivate=false,LiveHomePending=false,LiveHomeBlocked=false,LiveHomeBindWaiting=false;
  FString LiveHomeOrigin,LiveHomeToken,LiveHomeNode=TEXT("door"),LiveHomeTarget,LiveHomeEpoch;
  FString LiveHomeActivity; TArray<FString> LiveHomePath;
  double LiveHomePollAt=0,LiveHomeLastReceived=0,LiveHomeProgressAt=0;
@@ -30,9 +30,14 @@ void ASub01HomeCharacter::BeginLiveHome(){
  LiveHomeOrigin=FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_HOME_ORIGIN"));
  if(LiveHomeOrigin!=TEXT("http://127.0.0.1:8821")){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED validated loopback bridge required"));return;}
  LiveHomeToken=FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_ADMIN_TOKEN"));if(LiveHomeToken.IsEmpty())return;
+ const FVector Actual=GetActorLocation();const FFindFloorResult& Contact=GetCharacterMovement()->CurrentFloor;
+ if(!GetCharacterMovement()->IsMovingOnGround()||!Contact.bBlockingHit){LiveHomeBindWaiting=true;return;}
+ LiveHomeBindWaiting=false;LiveHomeNodes.Empty();LiveHomeEdges.Empty();
  //@@SOURCE_GRAPH@@
- const FVector Entry=LiveHomeNodes.FindChecked(TEXT("door"))+FVector(0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
- if(FVector::Dist(GetActorLocation(),Entry)>20){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED actual entry spawn not within20cm; no position reset"));return;}
+ float Best=BIG_NUMBER;FString StartNode;
+ for(const auto& Node:LiveHomeNodes){const float XY=FVector2D(Actual.X-Node.Value.X,Actual.Y-Node.Value.Y).Size();const float Z=FMath::Abs(Contact.HitResult.ImpactPoint.Z-Node.Value.Z);if(XY<20&&Z<20&&XY+Z<Best){Best=XY+Z;StartNode=Node.Key;}}
+ if(StartNode.IsEmpty()){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED actual pawn not at verified graph node; no position reset"));return;}
+ LiveHomeNode=StartNode;LiveHomePath.Empty();LiveHomeTarget.Empty();LiveHomeEpoch.Empty();
  LiveHome=true;LiveHomeProgressAt=FPlatformTime::Seconds();PollLiveHome();
  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_BOUND real bridge; native physical graph movement only; seated actions not accepted"));
 }
@@ -75,15 +80,17 @@ void ASub01HomeCharacter::ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc){
  FString Epoch;Doc->TryGetStringField(TEXT("epoch"),Epoch);if(Target!=LiveHomeTarget||Epoch!=LiveHomeEpoch){LiveHomeEpoch=Epoch;PlanLiveHome(Target);}
 }
 void ASub01HomeCharacter::UpdateLiveHome(float Dt){
- if(!LiveHome)return;const double Now=FPlatformTime::Seconds();if(Now>=LiveHomePollAt)PollLiveHome();
- if(!LiveHomeFresh||Now-LiveHomeLastReceived>3||LiveHomePrivate||LiveHomeBlocked){GetCharacterMovement()->StopMovementImmediately();return;}
+ if(!LiveHome){if(LiveHomeBindWaiting)BeginLiveHome();return;}const double Now=FPlatformTime::Seconds();if(Now>=LiveHomePollAt)PollLiveHome();
+ if(!LiveHomeFresh||Now-LiveHomeLastReceived>3||LiveHomePrivate||LiveHomeBlocked){GetCharacterMovement()->StopMovementImmediately();if(!LiveHomeBlocked){LiveHomeProgressAt=Now;LiveHomeBest=BIG_NUMBER;}return;}
  if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(LiveHomeNode==TEXT("desk")&&(LiveHomeActivity==TEXT("use_computer")||LiveHomeActivity==TEXT("research")||LiveHomeActivity==TEXT("chart")));return;}
  if(PCBridge)PCBridge->SetOperatorFocus(false);
  const FString Next=LiveHomePath[0];const FVector Here=GetActorLocation(),Floor=LiveHomeNodes.FindChecked(Next);const FVector Delta(Floor.X-Here.X,Floor.Y-Here.Y,0);
- const float Distance=Delta.Size(),Height=FMath::Abs(Here.Z-GetCapsuleComponent()->GetScaledCapsuleHalfHeight()-Floor.Z);
+ const FFindFloorResult& ActualFloor=GetCharacterMovement()->CurrentFloor;
+ const float SolidFloorZ=ActualFloor.bBlockingHit?ActualFloor.HitResult.ImpactPoint.Z:Here.Z-GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+ const float Distance=Delta.Size(),Height=FMath::Abs(SolidFloorZ-Floor.Z);
  if(Distance<12&&Height<20&&GetCharacterMovement()->IsMovingOnGround()){
   LiveHomeNode=Next;LiveHomePath.RemoveAt(0);LiveHomeBest=BIG_NUMBER;LiveHomeProgressAt=Now;
-  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_REACHED node=%s pawn=%s floor=1"),*Next,*Here.ToString());return;
+  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_REACHED node=%s pawn=%s floor=1 solidFloorCm=%.4f nominalFootCm=%.4f expectedFloorCm=%.4f"),*Next,*Here.ToString(),SolidFloorZ,Here.Z-GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),Floor.Z);return;
  }
  const float Score=Distance+Height;if(Score<LiveHomeBest-1){LiveHomeBest=Score;LiveHomeProgressAt=Now;}
  if(Now-LiveHomeProgressAt>4){LiveHomeBlocked=true;GetCharacterMovement()->StopMovementImmediately();UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s target=%s; collision not bypassed"),*LiveHomeNode,*Next);return;}
@@ -105,5 +112,5 @@ def install(header,cpp):
     cpp=cpp.replace(' ConfigureActualPC();',' ConfigureActualPC();\n BeginLiveHome();',1)
     cpp=cpp.replace(' UpdateNativeRouteTest();',' UpdateNativeRouteTest();\n UpdateLiveHome(DeltaSeconds);',1)
     cpp=cpp.replace('const bool Hidden=Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270;', 'const bool Hidden=LiveHomePrivate||(Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270);',1)
-    cpp=cpp.replace(' if(PCBridge)PCBridge->SetLocalPrivacy(Hidden);',' if(LiveHome)if(auto* Player=Cast<APlayerController>(Controller))if(Player->PlayerCameraManager)Player->PlayerCameraManager->StartCameraFade(Hidden?1:0,Hidden?1:0,0,FLinearColor::Black,false,Hidden);\n if(PCBridge)PCBridge->SetLocalPrivacy(Hidden);',1)
+    cpp=cpp.replace(' if(PCBridge)PCBridge->SetLocalPrivacy(Hidden);',' if(auto* Player=Cast<APlayerController>(Controller))if(Player->PlayerCameraManager)Player->PlayerCameraManager->StartCameraFade(Hidden?1:0,Hidden?1:0,0,FLinearColor::Black,false,Hidden);\n if(PCBridge)PCBridge->SetLocalPrivacy(Hidden);',1)
     return header,cpp+METHODS.replace('//@@SOURCE_GRAPH@@',graph_source())
