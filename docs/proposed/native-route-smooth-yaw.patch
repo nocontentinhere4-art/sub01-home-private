@@ -36,7 +36,7 @@
  }
 --- a/tools/unreal_live_home_runtime.py
 +++ b/tools/unreal_live_home_runtime.py
-@@ -16,7 +16,7 @@
+@@ -20,7 +20,7 @@
   FString LiveHomeOrigin,LiveHomeToken,LiveHomeNode=TEXT("door"),LiveHomeTarget,LiveHomeEpoch;
   FString LiveHomeActivity; TArray<FString> LiveHomePath;
   double LiveHomePollAt=0,LiveHomeLastReceived=0,LiveHomeProgressAt=0;
@@ -45,7 +45,7 @@
   TMap<FString,FVector> LiveHomeNodes;TMap<FString,TArray<FString>> LiveHomeEdges;
  '''
  METHODS=r'''
-@@ -38,7 +38,7 @@
+@@ -44,7 +44,7 @@
   for(const auto& Node:LiveHomeNodes){const float XY=FVector2D(Actual.X-Node.Value.X,Actual.Y-Node.Value.Y).Size();const float Z=FMath::Abs(Contact.HitResult.ImpactPoint.Z-Node.Value.Z);if(XY<20&&Z<20&&XY+Z<Best){Best=XY+Z;StartNode=Node.Key;}}
   if(StartNode.IsEmpty()){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED actual pawn not at verified graph node; no position reset"));return;}
   LiveHomeNode=StartNode;LiveHomePath.Empty();LiveHomeTarget.Empty();LiveHomeEpoch.Empty();
@@ -54,7 +54,7 @@
   UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_BOUND real bridge; native physical graph movement only; seated actions not accepted"));
  }
  void ASub01HomeCharacter::PollLiveHome(){
-@@ -94,7 +94,18 @@
+@@ -106,7 +106,18 @@
   }
   const float Score=Distance+Height;if(Score<LiveHomeBest-1){LiveHomeBest=Score;LiveHomeProgressAt=Now;}
   if(Now-LiveHomeProgressAt>4){LiveHomeBlocked=true;GetCharacterMovement()->StopMovementImmediately();UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s target=%s; collision not bypassed"),*LiveHomeNode,*Next);return;}

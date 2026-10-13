@@ -154,7 +154,7 @@ def stage(project):
     (module/'Sub01HomeLab.h').write_text(header)
     input_marker=' UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_INPUT_MODE_BEGIN controller=%s"),*GetNameSafe(GetController()));'
     cpp=cpp.replace(input_marker,' BeginNativeRouteTest();\n'+input_marker,1)
-    cpp=cpp.replace(' if(Device.IsEmpty()) return;', ' if(Device.IsEmpty()) return;\n if(Device==TEXT("Desk")&&PCBridge){PCBridge->SetOperatorFocus(true);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,PCBridge->GetPCStatus());return;}')
+    cpp=cpp.replace(' if(Device.IsEmpty()) return;', ' if(Device.IsEmpty()) return;\n if(Device==TEXT("Desk")&&PCBridge){if(LiveHome&&!NativeSeatVerified){PCBridge->SetOperatorFocus(false);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,TEXT("Physical seating is not verified"));return;}PCBridge->SetOperatorFocus(true);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,PCBridge->GetPCStatus());return;}')
     cpp=cpp.replace(' FString Device;\n', ' if(TryNativeHomeDevice(Hit.GetComponent()))return;\n FString Device;\n',1)
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     header,cpp=install_native_control(header,cpp)

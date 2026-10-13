@@ -399,6 +399,11 @@ class BackendFeed:
                                 headers=self.headers(), allow_redirects=False) as resp:
             return resp.status, await resp.text()
 
+    async def get_native_command(self, session):
+        async with session.get(self.base + '/api/home/native_command', headers=self.headers(),
+                               allow_redirects=False) as resp:
+            return resp.status, await resp.text()
+
 
 async def read_json(request):
     if request.content_length is not None and request.content_length > MAX_BODY:
@@ -500,7 +505,14 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
         data = await read_json(request)
         doc = model.document()
         actor, brain = doc.get('actor') or {}, doc.get('brain') or {}
-        if (doc['source']['status'] != 'live' or doc.get('privacy') is not False
+        if doc.get('privacy') is True:
+            command = await read_native_command(request)
+            if (command['target'] != 'bathroom' or command['activity'] != 'use_bathroom'
+                    or data.get('phase') not in ('walking', 'arrived', 'blocked')
+                    or data.get('chair') is not None):
+                raise web.HTTPConflict(text='Private feedback permits only bathroom movement')
+            actor, brain = {'route_sequence': command['sequence']}, {'activity': command['activity']}
+        if (doc['source']['status'] != 'live' or doc.get('privacy') not in (True, False)
                 or data.get('epoch') != model.epoch
                 or type(data.get('sequence')) is not int
                 or data['sequence'] != actor.get('route_sequence')
@@ -517,6 +529,38 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
                      409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}.get(status, web.HTTPBadGateway)
             raise error(text='Native feedback refused by backend')
         return web.json_response({'ok': True, 'fresh_for_s': 3})
+
+    async def read_native_command(request):
+        if feed is None:
+            raise web.HTTPServiceUnavailable(text='No backend configured')
+        try:
+            status, text = await feed.get_native_command(request.app[SESSION])
+            command = json.loads(text) if status == 200 else None
+        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
+            raise web.HTTPServiceUnavailable(text='Home command unavailable')
+        if (not isinstance(command, dict) or set(command) != {'target', 'sequence', 'activity'}
+                or not isinstance(command['target'], str) or command['target'] not in NODES
+                or type(command['sequence']) is not int or not isinstance(command['activity'], str)):
+            raise web.HTTPServiceUnavailable(text='Home command unavailable')
+        return command
+
+    async def native_control(request):
+        import ipaddress
+        try:
+            local = ipaddress.ip_address(request.remote or '').is_loopback
+        except ValueError:
+            local = False
+        if not local:
+            raise web.HTTPForbidden(text='Native control requires loopback')
+        doc = model.document()
+        if doc['source']['status'] != 'live' or doc.get('privacy') not in (True, False):
+            raise web.HTTPConflict(text='Native control requires live source')
+        command = await read_native_command(request)
+        return web.json_response({'schema': SCHEMA, 'epoch': model.epoch,
+            'source': {'status': 'live'}, 'privacy': doc['privacy'],
+            'coordinates': {'units': 'cm', 'waypoint_height': 'floor'},
+            'actor': {'target': command['target'], 'route_sequence': command['sequence']},
+            'brain': {'activity': command['activity']}}, headers={'Cache-Control': 'no-store'})
 
     async def lifecycle(app):
         app[SESSION] = (session_factory or (lambda: aiohttp.ClientSession(
@@ -542,6 +586,7 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
     app.router.add_get("/home/state", state)
     app.router.add_post("/home/controls", controls)
     app.router.add_post('/home/native_state', native_state)
+    app.router.add_get('/home/native_control', native_control)
     return app
 
 

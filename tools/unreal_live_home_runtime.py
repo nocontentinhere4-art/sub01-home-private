@@ -8,11 +8,15 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from home_world import NODES, EDGES
+try:
+    from .unreal_native_feedback_sender import FIELDS as FEEDBACK_FIELDS, METHODS as FEEDBACK_METHODS
+except ImportError:  # runtime staging imports tools directly
+    from unreal_native_feedback_sender import FIELDS as FEEDBACK_FIELDS, METHODS as FEEDBACK_METHODS
 
 FIELDS=r'''
  void BeginLiveHome(); void UpdateLiveHome(float Dt); void PollLiveHome();
  void PlanLiveHome(const FString& Target); void ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc);
- bool LiveHome=false,LiveHomeFresh=false,LiveHomePrivate=false,LiveHomePending=false,LiveHomeBlocked=false,LiveHomeBindWaiting=false;
+ bool LiveHome=false,LiveHomeFresh=false,LiveHomePrivate=false,LiveHomePending=false,LiveHomeBlocked=false,LiveHomeBindWaiting=false,NativeSeatVerified=false;
  FString LiveHomeOrigin,LiveHomeToken,LiveHomeNode=TEXT("door"),LiveHomeTarget,LiveHomeEpoch;
  FString LiveHomeActivity; TArray<FString> LiveHomePath;
  double LiveHomePollAt=0,LiveHomeLastReceived=0,LiveHomeProgressAt=0;
@@ -24,9 +28,11 @@ METHODS=r'''
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Camera/PlayerCameraManager.h"
+#include <cmath>
 void ASub01HomeCharacter::BeginLiveHome(){
  if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01LiveHome")))return;
  if(HandsDiagnosticSeat||RouteActive){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED controlled pose/route diagnostic active"));return;}
+ if(PCBridge)PCBridge->SetOperatorFocus(false);NativeSeatVerified=false;
  LiveHomeOrigin=FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_HOME_ORIGIN"));
  if(LiveHomeOrigin!=TEXT("http://127.0.0.1:8821")){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED validated loopback bridge required"));return;}
  LiveHomeToken=FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_ADMIN_TOKEN"));if(LiveHomeToken.IsEmpty())return;
@@ -43,7 +49,7 @@ void ASub01HomeCharacter::BeginLiveHome(){
 }
 void ASub01HomeCharacter::PollLiveHome(){
  if(!LiveHome||LiveHomePending)return;LiveHomePending=true;LiveHomePollAt=FPlatformTime::Seconds()+.5;
- auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(LiveHomeOrigin+TEXT("/home/state"));Request->SetVerb(TEXT("GET"));Request->SetTimeout(3);Request->SetHeader(TEXT("X-Admin-Token"),LiveHomeToken);
+ auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(LiveHomeOrigin+TEXT("/home/native_control"));Request->SetVerb(TEXT("GET"));Request->SetTimeout(3);Request->SetHeader(TEXT("X-Admin-Token"),LiveHomeToken);
  Request->OnProcessRequestComplete().BindWeakLambda(this,[this](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
   LiveHomePending=false;if(!LiveHome)return;TSharedPtr<FJsonObject> Doc;
   if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Response->GetContentAsString()),Doc)){LiveHomeFresh=false;return;}ApplyLiveHome(Doc);
@@ -62,6 +68,7 @@ void ASub01HomeCharacter::PlanLiveHome(const FString& Target){
  }
  if(!Previous.Contains(Target)){LiveHomeFresh=false;return;}TArray<FString> Path;FString Node=Target;
  while(Node!=Start){Path.Insert(Node,0);Node=Previous.FindChecked(Node);}if(Start!=LiveHomeNode)Path.Insert(Start,0);
+ NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
  LiveHomePath=MoveTemp(Path);LiveHomeTarget=Target;LiveHomeBlocked=false;LiveHomeBest=BIG_NUMBER;LiveHomeProgressAt=FPlatformTime::Seconds();
  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_ROUTE actualNode=%s target=%s remaining=%d"),*LiveHomeNode,*Target,LiveHomePath.Num());
 }
@@ -72,17 +79,22 @@ void ASub01HomeCharacter::ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc){
  const TSharedPtr<FJsonObject>* Coordinates=nullptr;FString Units,Height;
  if(!Doc->TryGetObjectField(TEXT("coordinates"),Coordinates)||!(*Coordinates)->TryGetStringField(TEXT("units"),Units)||Units!=TEXT("cm")||!(*Coordinates)->TryGetStringField(TEXT("waypoint_height"),Height)||Height!=TEXT("floor")){LiveHomeFresh=false;return;}
  bool Private=false;if(!Doc->TryGetBoolField(TEXT("privacy"),Private)){LiveHomeFresh=false;return;}
- if(Private){LiveHomeFresh=true;LiveHomeLastReceived=FPlatformTime::Seconds();LiveHomePrivate=true;if(PCBridge)PCBridge->SetLocalPrivacy(true);LiveHomeActivity.Empty();return;}
+ LiveHomePrivate=Private;if(PCBridge)PCBridge->SetLocalPrivacy(Private);if(Private){NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);}
  const TSharedPtr<FJsonObject>* Actor=nullptr;FString Target;
  if(!Doc->TryGetObjectField(TEXT("actor"),Actor)||!(*Actor)->TryGetStringField(TEXT("target"),Target)||!LiveHomeNodes.Contains(Target)){LiveHomeFresh=false;return;}
- LiveHomeFresh=true;LiveHomeLastReceived=FPlatformTime::Seconds();LiveHomePrivate=false;
- const TSharedPtr<FJsonObject>* Brain=nullptr;if(Doc->TryGetObjectField(TEXT("brain"),Brain))(*Brain)->TryGetStringField(TEXT("activity"),LiveHomeActivity);
+ double Sequence=-1;if(!(*Actor)->TryGetNumberField(TEXT("route_sequence"),Sequence)||!FMath::IsFinite(Sequence)||Sequence<0||Sequence>9007199254740991.0||std::floor(Sequence)!=Sequence){LiveHomeFresh=false;return;}LiveHomeCommandSequence=static_cast<int64>(Sequence);
+ const TSharedPtr<FJsonObject>* Brain=nullptr;if(!Doc->TryGetObjectField(TEXT("brain"),Brain)||!(*Brain)->TryGetStringField(TEXT("activity"),LiveHomeActivity)){LiveHomeFresh=false;return;}
+ LiveHomeFresh=true;LiveHomeLastReceived=FPlatformTime::Seconds();
  FString Epoch;Doc->TryGetStringField(TEXT("epoch"),Epoch);if(Target!=LiveHomeTarget||Epoch!=LiveHomeEpoch){LiveHomeEpoch=Epoch;PlanLiveHome(Target);}
 }
 void ASub01HomeCharacter::UpdateLiveHome(float Dt){
  if(!LiveHome){if(LiveHomeBindWaiting)BeginLiveHome();return;}const double Now=FPlatformTime::Seconds();if(Now>=LiveHomePollAt)PollLiveHome();
- if(!LiveHomeFresh||Now-LiveHomeLastReceived>3||LiveHomePrivate||LiveHomeBlocked){GetCharacterMovement()->StopMovementImmediately();if(!LiveHomeBlocked){LiveHomeProgressAt=Now;LiveHomeBest=BIG_NUMBER;}return;}
- if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(LiveHomeNode==TEXT("desk")&&(LiveHomeActivity==TEXT("use_computer")||LiveHomeActivity==TEXT("research")||LiveHomeActivity==TEXT("chart")));return;}
+ UpdateNativeFeedback();
+ // Privacy blacks the view and revokes device input; it must not freeze the
+ // authenticated physical trip into or out of the bathroom.
+ if(LiveHomePrivate){NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);}
+ if(!LiveHomeFresh||Now<LiveHomeLastReceived||Now-LiveHomeLastReceived>3||LiveHomeBlocked){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);NativeSeatVerified=false;if(!LiveHomeBlocked){LiveHomeProgressAt=Now;LiveHomeBest=BIG_NUMBER;}return;}
+ if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(NativeSeatVerified&&NativeFeedbackSeatReady()&&LiveHomeNode==TEXT("desk")&&(LiveHomeActivity==TEXT("use_computer")||LiveHomeActivity==TEXT("research")||LiveHomeActivity==TEXT("chart")));return;}
  if(PCBridge)PCBridge->SetOperatorFocus(false);
  const FString Next=LiveHomePath[0];const FVector Here=GetActorLocation(),Floor=LiveHomeNodes.FindChecked(Next);const FVector Delta(Floor.X-Here.X,Floor.Y-Here.Y,0);
  const FFindFloorResult& ActualFloor=GetCharacterMovement()->CurrentFloor;
@@ -97,6 +109,9 @@ void ASub01HomeCharacter::UpdateLiveHome(float Dt){
  if(Controller&&Distance>1){Controller->SetControlRotation(FRotator(-4,Delta.Rotation().Yaw,0));AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));}
 }
 '''
+
+FIELDS += FEEDBACK_FIELDS
+METHODS += FEEDBACK_METHODS
 
 def graph_source():
     lines=[]

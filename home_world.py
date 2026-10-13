@@ -317,7 +317,8 @@ class HomeWorld:
                 and self.node == self.desired(expected)
                 and (self.node not in ("desk", "sofa", "bed") or self.seated == 1)
                 and self.native_feedback.ready(sequence=self.sequence, activity=expected, target=self.target)
-                and (self.native_feedback.epoch is None or not self.privacy()))
+                and (self.native_feedback.epoch is None or not self.privacy()
+                     or (self.target == 'bathroom' and expected == 'use_bathroom')))
 
     def update(self, dt, sim_dt, life, rel, now=None):
         self.time += dt
@@ -385,7 +386,8 @@ class HomeWorld:
                 if self.node in ("desk", "sofa", "bed")
                 else 0
             )
-            if self.node == "bathroom":
+            if self.node == "bathroom" and (self.native_feedback.epoch is None
+                                           or self.activity_ready('use_bathroom')):
                 self.bladder = max(0, self.bladder - dt * 0.06)
                 self.last_bathroom = self.time
             if activity != self.last_activity and self.activity_ready(activity):
