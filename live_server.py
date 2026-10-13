@@ -53,7 +53,7 @@ import chess_game
 import clips
 import music as music_mod
 import costs
-from browse_service import BrowserClient, BrowserDown, LocalBrowser
+from browse_service import BrowserClient, BrowserDown, FrameChanged, LocalBrowser
 from search_sources import live_interest
 import interests
 import novelty
@@ -1361,14 +1361,14 @@ class Live:
         if getattr(self, "mind", None):
             self.remember(page)                                # an AI notes what the page says (off the loop)
         if not opts:
-            return await self.browser.act(dev, {"action": "leave"}, "nothing safe to do on this page", interest)
+            return await self.browser.act(dev, {"action": "leave", "frame_id": page.get('frame_id')}, "nothing safe to do on this page", interest)
         try:
             return await self._vote_and_act(dev, page, opts, meta, interest)
         except BrowserDown:
             raise
         except Exception as e:                                 # a failing vote must not stall the screens
             print("decide failed:", repr(e)[:160], flush=True)
-            return await self.browser.act(dev, {"action": "leave"}, "the brain vote failed; wandered on", interest)
+            return await self.browser.act(dev, {"action": "leave", "frame_id": page.get('frame_id')}, "the brain vote failed; wandered on", interest)
 
     async def _vote_and_act(self, dev, page, opts, meta, interest):
         loop = asyncio.get_running_loop()
@@ -1389,6 +1389,7 @@ class Live:
         self.recent_picks = (recent + [brain_vote.repeat_key(chosen)])[-brain_vote.REPEAT_N:]
         brain_vote.apply(self.brain, chosen, gain)             # the live brain receives the chosen stimulus
         act = {k: chosen.get(k) for k in ("action", "target", "label", "href")}
+        act['frame_id'] = page.get('frame_id')
         if chosen.get("action") in brain_vote.VIDEO_ACTIONS:     # how long he watches: boredom + the brain's response
             mins = brain_vote.watch_minutes(mood["boredom"], dec["options"][dec["chosen"]]["value"])
             act["watch_s"] = mins * 60 / max(1e-6, self.time_scale)
@@ -2296,14 +2297,22 @@ async def main(args):
     async def screen_shot(request):               # latest screenshot of the desk or phone screen
         dev = request.match_info["device"]
         st = (getattr(live.browser, "screens", None) or {}).get(dev) if live.browser else None
+        frame = None
+        expected = request.query.get('frame_id')
+        if expected is not None and not 1 <= len(expected) <= 100:
+            raise web.HTTPBadRequest(text='Invalid browser frame')
         try:                                      # S2 / B8: no current status (closed, timed out), a refused title
-            shot = (await live.browser.shot(dev) if live.browser and dev in ("desk", "phone")   # or a finance page:
-                    and st and screen_showable(st) else None)                                   # nothing to show
+            if live.browser and dev in ('desk', 'phone') and st and screen_showable(st):
+                frame = await live.browser.frame(dev, expected)
+            shot = frame[0] if frame else None
+        except FrameChanged:
+            raise web.HTTPConflict(text='The browser frame changed')
         except BrowserDown:
             shot = None
         if not shot:
             raise web.HTTPNotFound()
-        return web.Response(body=shot, content_type="image/jpeg", headers={"Cache-Control": "no-store"})
+        return web.Response(body=shot, content_type="image/jpeg", headers={"Cache-Control": "no-store",
+                                                                         'X-Frame-Id': frame[1] or ''})
     app.router.add_get("/api/screen/{device}.jpg", screen_shot)
 
     async def browsing(request):                  # pages shown on his screens, newest last

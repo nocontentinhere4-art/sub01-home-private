@@ -29,6 +29,7 @@ import shutil
 import signal
 import sys
 import time
+import urllib.parse
 from pathlib import Path
 
 import aiohttp
@@ -53,6 +54,10 @@ ENV_KEEP = ("PATH", "HOME", "LANG", "TZ", "TMPDIR", "PLAYWRIGHT_BROWSERS_PATH", 
 
 class BrowserDown(Exception):
     pass
+
+
+class FrameChanged(Exception):
+    """A requested image revision is no longer current; this is not a browser crash."""
 
 
 # --- the service (runs in its own process) -------------------------------------------------------------------------
@@ -144,6 +149,14 @@ def make_app(browser, token=None):
         await browser.close(d.get("device") if d.get("device") in browser.screens else None)
         return web.json_response({"ok": True})
 
+    async def operator_action(request):
+        d = await body(request)
+        dev = device(d)
+        out = await limited(browser.operator_action(dev, d.get('action'), d.get('frame_id')), 15, dev)
+        if out is CLOSED:
+            out = {'ok': False, 'closed': dev, 'error': 'unavailable', 'message': 'Browser input timed out'}
+        return web.json_response(out)
+
     async def navigate(request):
         d = await body(request)
         dev = device(d)
@@ -157,9 +170,13 @@ def make_app(browser, token=None):
 
     async def shot(request):
         sc = browser.screens.get(request.match_info["device"])
-        if not sc or not sc.shot:
+        if not sc or not sc.status():
             raise web.HTTPNotFound()
-        return web.Response(body=sc.shot, content_type="image/jpeg", headers={"X-Shot-Id": str(sc.shot_id)})
+        expected = request.query.get('frame_id')
+        if expected is not None and expected != sc.frame_id:
+            raise web.HTTPConflict(text='The browser frame changed')
+        return web.Response(body=sc.shot, content_type="image/jpeg", headers={"X-Shot-Id": str(sc.shot_id),
+                                                                             'X-Frame-Id': sc.frame_id})
 
     async def state(request):
         return web.json_response({**browser.to_dict(), "screens": {k: s.status() for k, s in browser.screens.items()},
@@ -193,6 +210,7 @@ def make_app(browser, token=None):
     for path, fn in (("/init", init), ("/step", step), ("/act", act), ("/close", close)):
         app.router.add_post(path, fn)
     app.router.add_post('/navigate', navigate)
+    app.router.add_post('/operator-action', operator_action)
     app.router.add_get("/shot/{device}.jpg", shot)
     app.router.add_get("/state", state)
     app.router.add_get("/health", health)
@@ -303,6 +321,23 @@ class BrowserClient:
         if d.get('status'):
             self.screens[device] = d['status']
         return d.get('status')
+
+    async def operator_action(self, device, action, frame_id):
+        d = await self._post('/operator-action', {'device': device, 'action': action, 'frame_id': frame_id}, timeout=20)
+        self._closed(d)
+        if d.get('status'):
+            self.screens[device] = d['status']
+        return d
+
+    async def frame(self, device, frame_id=None):
+        """Uncached atomic JPEG/revision pair for manual UI, distinct from monitor caching."""
+        query = '?' + urllib.parse.urlencode({'frame_id': frame_id}) if frame_id is not None else ''
+        status, raw, headers = await self._get(f'/shot/{device}.jpg{query}')
+        if status == 409:
+            raise FrameChanged()
+        if status != 200:
+            return None
+        return raw, headers.get('X-Frame-Id')
 
     async def step(self, device, heard=(), interest=None, mode=None):
         d = await self._post("/step", {"device": device, "heard": list(heard), "interest": interest, "mode": mode},

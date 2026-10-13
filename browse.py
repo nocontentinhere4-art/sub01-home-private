@@ -56,6 +56,7 @@ import re
 import socket
 import time
 import urllib.parse
+import uuid
 
 import interests as I
 import memory_guard as MG
@@ -832,6 +833,7 @@ class Screen:
         self.page = None
         self.shot = None                                    # latest JPEG bytes
         self.shot_id = 0
+        self.frame_epoch = uuid.uuid4().hex
         self.info = None                                    # {title, url, host, why, t, kind}
         self.scrolls_left = 0
         self.next_at = 0.0
@@ -853,7 +855,11 @@ class Screen:
         self.site = None                                    # the logged-in site sc.ctx / sc.page belong to, or None
 
     def status(self):
-        return dict(self.info, id=self.shot_id, device=self.name, chain=self.chain) if self.info and self.shot else None
+        return dict(self.info, id=self.shot_id, frame_id=self.frame_id, device=self.name, chain=self.chain) if self.info and self.shot else None
+
+    @property
+    def frame_id(self):
+        return f"{self.frame_epoch}:{self.shot_id}"
 
     def contexts(self):
         return [p for p in [self.public, *self.sites.values()] if p]
@@ -1144,6 +1150,10 @@ class Browser:
         mode = self._video_break(device, mode)
         async with self.lock:
             try:
+                # An operator action may have acquired the lock after the first
+                # next_at check. Do not move its page as soon as that action ends.
+                if time.time() < sc.next_at:
+                    return None
                 if await self._over_soft_cap():                 # #89: recycle Chromium before the watchdog kills it
                     return None
                 sc = await self._ensure(device)
@@ -1184,6 +1194,7 @@ class Browser:
                       and (sc.page.url.startswith("http") or sc.info.get("card"))
                       and not self._fresh_chat(heard) and not moved_on):
                     page = await self.page_info(sc)
+                    page['frame_id'] = sc.frame_id
                     if page["links"] or page["can_back"]:
                         sc.awaiting, sc.awaiting_since = page, time.time()
                         return {"decide": page, "device": sc.name}
@@ -1339,6 +1350,10 @@ class Browser:
         sc = self.screens[device]
         kind, why = action.get("action"), why or "his brain picked it"
         async with self.lock:
+            expected = action.get('frame_id')
+            if expected is not None and (sc.awaiting is None or expected != sc.awaiting.get('frame_id')
+                                         or expected != sc.frame_id):
+                return None                                    # a late vote must not consume a newer choice
             page, sc.awaiting = sc.awaiting, None                  # claimed under the lock (no race with step)
             if page is None or sc.page is None:
                 return None
@@ -1398,6 +1413,79 @@ class Browser:
             except Exception as e:
                 print(f"browse ({device}) act:", repr(e)[:160], flush=True)
                 return None
+
+
+    async def operator_action(self, device, action, frame_id):
+        """Bounded manual reading controls, separate from brain choices; never raw page input."""
+        if device not in self.screens or action not in ('scroll_up', 'scroll_down', 'close_notice', 'back'):
+            return {'ok': False, 'error': 'invalid', 'message': 'Unknown browser action'}
+        # Do not queue a manual command behind a long browser operation: bathroom
+        # privacy may start while it waits. Availability check + acquire do not yield.
+        # Lock.release can wake an older waiter while locked() is momentarily
+        # false. Respect that reservation too instead of joining its queue.
+        if self.lock.locked() or any(not w.cancelled() for w in (self.lock._waiters or ())):
+            return {'ok': False, 'error': 'busy', 'message': 'The browser is busy. Try again when its frame is ready.'}
+        async with self.lock:
+            sc = self.screens[device]
+            if not sc.page or not sc.info or not sc.shot:
+                return {'ok': False, 'error': 'unavailable', 'message': 'The browser has no current public page'}
+            if not isinstance(frame_id, str) or frame_id != sc.frame_id:
+                return {'ok': False, 'error': 'stale', 'message': 'The page changed. Refresh its frame and try again.'}
+            # Check the actual current DOM and URL, not only the previously shown card.
+            if not url_ok(sc.page.url) or VO.private_url(sc.page.url):
+                await self._leave(sc)
+                sc.shot = None
+                sc.awaiting = None
+                return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'This page cannot be controlled'}
+            if await self._walled(sc.page) or await self._overlay_walled(sc.page):
+                self._cool(sc.page.url, OVERLAY_COOLDOWN_S)
+                await self._leave(sc)
+                sc.shot = None
+                sc.awaiting = None
+                return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'This page is blocked; it was left without accepting anything'}
+            if not await self._private_ok(sc):
+                sc.shot = None
+                sc.awaiting = None
+                return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'Private pages cannot be controlled'}
+            body = await sc.page.evaluate("() => (document.body?.innerText || '').slice(0,20000)")
+            title = await sc.page.title()
+            if (await self._login_walled(sc.page, body) or challenge_title(title, sc.page.url)
+                    or not text_ok(title, body, media=is_video_host(urllib.parse.urlsplit(sc.page.url).hostname or ''))
+                    or is_finance(sc.page.url, title, body)):
+                await self._leave(sc)
+                sc.shot = None
+                sc.awaiting = None
+                return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'This page cannot be controlled safely'}
+            sc.awaiting, sc.pending_link, sc.watch_until = None, None, 0
+            sc.scrolls_left = 0
+            sc.next_at = time.time() + 30
+            ok, message = True, 'Operator browser input'
+            if action in ('scroll_up', 'scroll_down'):
+                await sc.page.evaluate("direction => window.scrollBy({top: direction * innerHeight * .7, behavior:'instant'})",
+                                       -1 if action == 'scroll_up' else 1)
+                message = 'Scrolled by the private operator'
+            elif action == 'close_notice':
+                before = list(self.dismissed)
+                await self._dismiss(sc, rounds=1)
+                ok = self.dismissed != before
+                message = 'Notice closed by the private operator' if ok else 'No safe close button on this page'
+            else:
+                if len(sc.history) < 2:
+                    return {'ok': False, 'error': 'unavailable', 'message': 'No previous public page'}
+                saved = list(sc.history)
+                sc.history = saved[:-2]
+                ok = await self._open(sc, saved[-2], 'went back — private operator', 'page', revisit=True)
+                if not ok:
+                    sc.history = saved
+                    sc.shot = None
+                    return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'Previous page unavailable or refused'}
+                message = 'Went back — private operator'
+            if sc.info:
+                sc.info = dict(sc.info, why=message)
+            if not await self._shoot(sc):
+                sc.shot = None
+                return {'ok': False, 'error': 'refused', 'closed': device, 'message': 'The page could not be shown safely'}
+            return {'ok': ok, 'message': message, 'status': sc.status()}
 
     async def _next(self, sc, heard, interest):
         """Pick where to go: a fresh chat message -> search; a result from the last search; a link that matches

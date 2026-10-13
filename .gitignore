@@ -77,3 +77,7 @@ out/cabinet-interaction/
 
 # Private lower-cabinet geometry studies
 out/lower-kitchen-cabinet/
+
+# Isolated visibility-aware sky lighting diagnostics and raw bakes
+out/gi21-diffuse-study/
+out/lighting-sky-v*/

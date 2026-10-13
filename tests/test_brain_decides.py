@@ -29,7 +29,7 @@ def run(coro):
     return asyncio.run(coro)
 
 
-PAGE = {"url": "https://en.wikipedia.org/wiki/Bread", "title": "Bread", "host": "en.wikipedia.org", "kind": "page",
+PAGE = {"url": "https://en.wikipedia.org/wiki/Bread", "frame_id": "owned-frame:4", "title": "Bread", "host": "en.wikipedia.org", "kind": "page",
         "text": "Bread is a staple food prepared from a dough of flour and water.", "can_back": False,
         "links": [{"id": "L1", "href": "https://en.wikipedia.org/wiki/Sourdough", "text": "Sourdough bread", "area": 900},
                   {"id": "L2", "href": "https://www.youtube.com/watch?v=abc", "text": "How bakers knead dough",
@@ -303,8 +303,8 @@ def test_browser_crash_does_not_stop_the_brain_loop():
 
 class FakeBrowser:
     def __init__(self):
-        self.screens = {"desk": SimpleNamespace(shot=b"\xff\xd8jpg", shot_id=4, status=lambda: {"id": 4, "device": "desk"}),
-                        "phone": SimpleNamespace(shot=None, shot_id=0, status=lambda: None)}
+        self.screens = {"desk": SimpleNamespace(shot=b"\xff\xd8jpg", shot_id=4, frame_id=PAGE['frame_id'], status=lambda: {"id": 4, "device": "desk"}),
+                        "phone": SimpleNamespace(shot=None, shot_id=0, frame_id='phone-frame:0', status=lambda: None)}
         self.log, self.used, self.browser, self.acts = [], set(), None, []
 
     async def step(self, device, heard, interest, mode=None):
@@ -393,6 +393,7 @@ def test_decide_wires_eyes_vote_tastes_and_act(brain, tmp_path):
     st = run(Live.decide(live, "desk", dict(PAGE, device="desk"), "bread"))
     dec = live.decisions["desk"]
     assert st["id"] == 5 and fb.acts[0][1]["target"] == dec["options"][dec["chosen"]]["target"]
+    assert fb.acts[0][1]['frame_id'] == PAGE['frame_id']
     assert dec["options"][dec["chosen"]]["label"] == "sourdough" and dec["eyes"]["source"] == "ai"
     assert sent[0]["type"] == "decision" and live.pagewatch.cur["topics"][0] == "net:reward"
     assert np.allclose(live.brain.stim[reward] - before, V.STIM_AMP * 1.0)       # the live brain got the stimulus

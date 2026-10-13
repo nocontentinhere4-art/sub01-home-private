@@ -105,6 +105,27 @@ def add_home_routes(app, live, admin_ok):
         await live.save_state()
         return web.json_response({"ok": ok})
 
+    async def browser_action(request):
+        enabled()
+        operator(request)
+        b = await body(request)
+        if (b.get('device') not in ('desk', 'phone') or
+                b.get('action') not in ('scroll_up', 'scroll_down', 'close_notice', 'back') or
+                not isinstance(b.get('frame_id'), str) or not 1 <= len(b['frame_id']) <= 100):
+            raise web.HTTPBadRequest(text='Invalid browser action')
+        if live.home.view()['privacy']:
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        if not getattr(live, 'browser', None):
+            raise web.HTTPConflict(text='The browser is unavailable')
+        result = await live.browser.operator_action(b['device'], b['action'], b['frame_id'])
+        if live.home.view()['privacy']:
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        if result.get('status'):
+            await live.on_screen(result['status'])
+        return web.json_response(result, status=400 if result.get('error') == 'invalid'
+                                 else 409 if result.get('error') else 200,
+                                 headers={'Cache-Control': 'no-store'})
+
     async def pong(request):
         enabled()
         key = live.client_ip(request)
@@ -204,5 +225,6 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post("/api/home/settings", settings)
     app.router.add_post("/api/home/intent", intent)
     app.router.add_post('/api/home/browser', navigate)
+    app.router.add_post('/api/home/browser/action', browser_action)
     app.router.add_post("/api/home/game", game)
     app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)

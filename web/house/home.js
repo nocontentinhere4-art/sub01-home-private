@@ -22,6 +22,7 @@ import { createHavenSofaMaterials } from "./haven_sofa_materials.mjs";
 import { createLowerKitchenCabinet } from "./lower_kitchen_cabinet.mjs?v=1";
 import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
+import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -1596,6 +1597,11 @@ let homeState = null,
 const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
+const browserControls = new Map();
+function disposeBrowserControls() {
+  for (const controls of browserControls.values()) controls.dispose();
+  browserControls.clear();
+}
 const phoneMusicFeed = createLiveMusicFeed({
   isActive: owner => panelKind === 'phone' && phoneApp === 'music' &&
     !panel.hidden && !privacyActive && !homeState?.privacy && !document.hidden &&
@@ -1619,8 +1625,14 @@ const phoneMusicFeed = createLiveMusicFeed({
   },
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) phoneMusicFeed.stop();
-  else if (panelKind === 'phone' && phoneApp === 'music') renderPanel();
+  if (document.hidden) {
+    phoneMusicFeed.stop();
+    for (const controls of browserControls.values()) controls.deactivate();
+  }
+  else {
+    if (panelKind === 'phone' && phoneApp === 'music') renderPanel();
+    refreshPanelScreens();
+  }
 });
 function notice(text) {
   const n = document.getElementById("notice");
@@ -1729,6 +1741,7 @@ function openPanel(kind) {
   renderPanel(true);
 }
 function closePanel() {
+  disposeBrowserControls();
   phoneMusicFeed.stop();
   pongHeld.clear();
   panel.hidden = true;
@@ -1747,36 +1760,57 @@ function setPrivacy(active) {
   document.body.classList.toggle('privacy-active', active);
 }
 function browserFrame(device, parent) {
-  const image = new Image(),
-    message = textEl("p", "Connecting to his browser…", "muted");
-  image.alt =
-    device === "desk"
-      ? "Live browser on SUB-01’s desk"
-      : "SUB-01’s phone browser";
-  image.dataset.screenDevice = device;
-  image.onload = () => {
-    image.hidden = false;
-    message.hidden = true;
-  };
-  image.onerror = () => {
-    image.hidden = true;
-    message.hidden = false;
-    message.textContent = browserState?.state === 'waiting'
-      ? browserState.why : "His browser has no public page to show right now.";
-  };
-  image.src = "/api/screen/" + device + ".jpg?t=" + Date.now();
-  parent.append(image, message);
+  const image = new Image(), message = textEl('p', 'Connecting to his browser…', 'muted');
+  image.alt = device === 'desk' ? 'Live browser on SUB-01’s desk' : 'SUB-01’s phone browser';
+  image.hidden = true;
+  const toolbar = document.createElement('div');
+  toolbar.className = 'apps';
+  toolbar.setAttribute('aria-label', 'Operator browser controls');
+  const explanation = textEl('p', '', 'muted');
+  const buttons = [];
+  const controls = createBrowserOperatorControls({
+    device, image,
+    getFrameId: () => (device === 'desk' ? browserScreen : phoneBrowserScreen)?.frame_id,
+    getOperatorToken: operatorToken,
+    isActive: owner => owner.isConnected && !panel.hidden && !document.hidden &&
+      !privacyActive && !homeState?.privacy &&
+      ((device === 'desk' && panelKind === 'computer' && computerApp === 'browser') ||
+       (device === 'phone' && panelKind === 'phone' && phoneApp === 'browser')),
+    onState: state => {
+      for (const control of buttons) control.disabled = !state.enabled;
+      explanation.textContent = state.reason || 'Private operator controls. SUB-01 resumes browsing afterwards.';
+      image.hidden = !state.frameId;
+      message.hidden = !!state.frameId;
+      if (!state.frameId) message.textContent = state.loading
+        ? 'Loading his current browser page…' : 'His browser has no current public page to show.';
+    },
+    onFeedback: text => { message.textContent = text; message.hidden = false; notice(text); },
+    onStatus: status => {
+      if (device === 'desk') browserScreen = status; else phoneBrowserScreen = status;
+      void controls.refresh();
+    },
+    onRefreshNeeded: () => { void syncState(); },
+  });
+  for (const [action, label] of [['scroll_up', 'Scroll up'], ['scroll_down', 'Scroll down'],
+    ['close_notice', 'Close notice'], ['back', 'Back']]) {
+    const control = button(label, () => { void controls.perform(action); });
+    control.disabled = true; buttons.push(control); toolbar.append(control);
+  }
+  browserControls.set(image, controls);
+  parent.append(image, message, toolbar, explanation);
+  void controls.refresh();
 }
 function refreshPanelScreens() {
-  if (privacyActive || homeState?.privacy) return;
-  for (const image of panelBody.querySelectorAll("[data-screen-device]")) {
-    image.src =
-      "/api/screen/" + image.dataset.screenDevice + ".jpg?t=" + Date.now();
+  for (const [image, controls] of browserControls) {
+    if (!image.isConnected) { controls.dispose(); browserControls.delete(image); }
+    else void controls.refresh();
   }
+  if (privacyActive || homeState?.privacy) return;
   const gameImage = panelBody.querySelector("[data-minecraft-frame]");
   if (gameImage) gameImage.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
 }
 function renderPanel(reset = false) {
+  if (reset) disposeBrowserControls();
   if (panelKind !== 'phone' || phoneApp !== 'music' || privacyActive || homeState?.privacy || document.hidden)
     phoneMusicFeed.stop();
   if (!panelKind) return;
