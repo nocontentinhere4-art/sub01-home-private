@@ -9,6 +9,21 @@ Operator modes live in HomeWorld.settings (`doors`, `lights`) and persist with
 the other settings. Door/light runtime state persists through to_dict() but is
 always re-derived from the actor's position, so a stale snapshot cannot hold a
 bathroom door open or leave privacy off.
+
+Door states (view()["doors"][name]["state"]):
+  "open"    the leaf is open; anyone may pass.
+  "closed"  the leaf is shut but not latched. The character opens it when his
+            route passes through; a visitor may not enter through it until it
+            is opened (operator mode "open" via /api/home/settings).
+  "locked"  shut and latched: the front door while the house is away, the
+            bathroom door while it is occupied (privacy). Operator "open" does
+            not override an occupied bathroom.
+Each door separates the house from a dead end (street, bathroom, balcony). A
+visitor already on the dead-end side or in the doorway may always come back
+into the house, whatever the state: nobody is ever shut in
+(house_interactions.mjs, visitorDoorAllows).
+Operator modes: "auto" (closed unless the character passes or is near),
+"open" (held open), "closed" (closed except while the character passes).
 """
 
 import math
@@ -31,6 +46,7 @@ DOORS = {
 }
 DOOR_NAMES = tuple(DOORS)
 DOOR_MODES = ("auto", "open", "closed")
+DOOR_STATES = ("open", "closed", "locked")
 LIGHT_ROOMS = ("living", "kitchen", "bedroom", "bathroom")
 LIGHT_MODES = ("auto", "on", "off")
 PRESENCE = ("home", "leaving", "away", "returning")
@@ -239,11 +255,16 @@ class HouseInteractions:
         self._update_lights(dt, actor, settings.get("lamp", True) is not False,
                             normalise_modes(settings.get("lights"), LIGHT_ROOMS, LIGHT_MODES), now)
 
+    def door_state(self, name):
+        door = self.doors[name]
+        return "open" if door["open"] else "locked" if door["locked"] else "closed"
+
     def view(self, settings):
         door_modes = normalise_modes(settings.get("doors"), DOOR_NAMES, DOOR_MODES)
         light_modes = normalise_modes(settings.get("lights"), LIGHT_ROOMS, LIGHT_MODES)
         return {
-            "doors": {n: {**self.doors[n], "mode": door_modes[n]} for n in DOOR_NAMES},
+            "doors": {n: {**self.doors[n], "state": self.door_state(n), "mode": door_modes[n]}
+                      for n in DOOR_NAMES},
             "lights": {
                 "master": settings.get("lamp", True) is not False,
                 "dark": self.dark,

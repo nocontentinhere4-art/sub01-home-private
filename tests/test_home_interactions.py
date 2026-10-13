@@ -36,8 +36,7 @@ def test_bathroom_privacy_edges_follow_the_door_and_never_flicker():
     walk(home, "use_bathroom", each=lambda h: trace.append(
         (h.node, list(h.path), list(h.position), h.view(compact=True))))
     view = home.view()
-    assert view["privacy"] and view["doors"]["bathroom"] == {
-        "open": False, "locked": True, "mode": "auto"}
+    assert view["privacy"] and view["doors"]["bathroom"] == {"open": False, "locked": True, "state": "locked", "mode": "auto"}
     # Privacy switches on once, before the actor crosses the door plane, and
     # never turns off again while he is inside.
     flags = [v["privacy"] for *_, v in trace]
@@ -65,7 +64,7 @@ def test_bathroom_privacy_edges_follow_the_door_and_never_flicker():
     assert exit_trace[off][0] == "bath_door"
     assert not any(v["privacy"] for *_, v in exit_trace[off:])
     assert all(v["privacy"] for _, _, p, v in exit_trace if hi.in_bathroom(p))
-    assert home.view()["doors"]["bathroom"] == {"open": False, "locked": False, "mode": "auto"}
+    assert home.view()["doors"]["bathroom"] == {"open": False, "locked": False, "state": "closed", "mode": "auto"}
 
 
 def test_privacy_survives_restart_and_stale_door_snapshots():
@@ -94,7 +93,7 @@ def test_operator_cannot_open_an_occupied_bathroom():
     assert home.view()["privacy"] and home.view()["doors"]["bathroom"]["open"] is False
     walk(home, "research")
     step(home, "research")
-    assert home.view()["doors"]["bathroom"] == {"open": True, "locked": False, "mode": "open"}
+    assert home.view()["doors"]["bathroom"] == {"open": True, "locked": False, "state": "open", "mode": "open"}
 
 
 def test_devices_and_compact_feed_leak_nothing_during_privacy():
@@ -172,7 +171,7 @@ def test_front_door_exit_away_and_return_through_the_door():
         step(home, "park", {"place": "door_out"})
     view = home.view()
     assert view["presence"] == "away" and home.node == "outside"
-    assert view["doors"]["front"] == {"open": False, "locked": True, "mode": "auto"}
+    assert view["doors"]["front"] == {"open": False, "locked": True, "state": "locked", "mode": "auto"}
     # The door was open whenever he crossed its plane.
     crossing = [v for p, v in trace if 3.6 < p[2] < 4.3]
     assert crossing and all(v["doors"]["front"]["open"] for v in crossing)
@@ -195,7 +194,7 @@ def test_front_door_exit_away_and_return_through_the_door():
     assert home.view()["presence"] == "home"
     for _ in range(int(hi.CLOSE_DELAY / 0.05) + 2):
         step(home, "research", {"place": "desk"})
-    assert home.view()["doors"]["front"] == {"open": False, "locked": False, "mode": "auto"}
+    assert home.view()["doors"]["front"] == {"open": False, "locked": False, "state": "closed", "mode": "auto"}
 
 
 def test_outing_without_life_place_is_unchanged():
@@ -231,7 +230,7 @@ def test_closed_mode_still_lets_the_actor_through():
         (h.node, list(h.path), h.view()["doors"]["front"]["open"])))
     assert any(o for *_, o in seen)
     assert all(o for n, p, o in seen if hi.crossing("front", n, p))
-    assert home.view()["doors"]["front"] == {"open": False, "locked": True, "mode": "closed"}
+    assert home.view()["doors"]["front"] == {"open": False, "locked": True, "state": "locked", "mode": "closed"}
 
 
 def test_room_lights_follow_presence_daylight_sleep_and_overrides():
@@ -291,3 +290,15 @@ def test_legacy_settings_and_views_remain_compatible():
     view["settings"]["doors"]["front"] = "open"
     view["settings"]["cabinets"][0] = True
     assert home.settings["doors"]["front"] == "auto" and home.settings["cabinets"][0] is False
+
+
+def test_door_state_semantics_are_explicit():
+    home = HomeWorld({"node": "desk"})
+    states = {n: d["state"] for n, d in home.view()["doors"].items()}
+    assert states == {"front": "closed", "bathroom": "closed", "balcony": "closed"}
+    home.settings["doors"]["balcony"] = "open"
+    step(home, "research")
+    assert home.view()["doors"]["balcony"]["state"] == "open"
+    for door in home.view()["doors"].values():
+        assert door["state"] in hi.DOOR_STATES
+        assert door["state"] == ("open" if door["open"] else "locked" if door["locked"] else "closed")
