@@ -3,7 +3,7 @@ FIELDS=r'''
  void BeginNativeRouteTest();
  void UpdateNativeRouteTest();
  void FinishNativeRouteTest(bool Success,const TCHAR* Reason);
- bool RouteActive=false,RouteFailed=false;
+ bool RouteActive=false,RouteFailed=false,ForceRouteReview=false;
  int32 RouteIndex=0;
  double RouteStarted=0,RouteStepStarted=0,RouteLastProgress=0;
  float RouteBestDistance=BIG_NUMBER,RouteCaptureDelay=45;
@@ -12,11 +12,15 @@ FIELDS=r'''
 '''
 METHODS=r'''
 void ASub01HomeCharacter::BeginNativeRouteTest(){
- if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01RouteTest")))return;
+ if(!ForceRouteReview&&!FParse::Param(FCommandLine::Get(),TEXT("Sub01RouteTest")))return;
  // Actual source home_world.NODES, x/z metres -> verified UE x/y centimetres.
  // Capsule centre is floor + 91cm; no teleport, forced vertical position or jump.
  RouteNames={TEXT("door"),TEXT("front"),TEXT("stair_approach"),TEXT("stair_bottom"),TEXT("stair_top"),TEXT("landing"),TEXT("loft"),TEXT("bed")};
  RouteTargets={FVector(200,310,96),FVector(130,320,96),FVector(30,320,96),FVector(30,255,96),FVector(30,-170,396),FVector(30,-210,396),FVector(-50,-210,396),FVector(-120,-290,396)};
+ if(ForceRouteReview){
+  RouteNames.Append({TEXT("loft-return"),TEXT("landing-return"),TEXT("stair_top-return"),TEXT("stair_bottom-return"),TEXT("stair_approach-return"),TEXT("front-return"),TEXT("door-return"),TEXT("front-desk"),TEXT("aisle"),TEXT("desk")});
+  RouteTargets.Append({FVector(-50,-210,396),FVector(30,-210,396),FVector(30,-170,396),FVector(30,255,96),FVector(30,320,96),FVector(130,320,96),FVector(200,310,96),FVector(130,320,96),FVector(130,-75,96),FVector(200,-75,96)});
+ }
  RouteCaptureDelay=CaptureAfter>0?CaptureAfter:45;CaptureAfter=-1;
  RouteStarted=FPlatformTime::Seconds();RouteStepStarted=RouteStarted;RouteLastProgress=RouteStarted;
  RouteActive=true;
@@ -35,14 +39,20 @@ void ASub01HomeCharacter::UpdateNativeRouteTest(){
  const FVector Delta(Target.X-Here.X,Target.Y-Here.Y,0);
  const float Distance=Delta.Size(),HeightError=FMath::Abs(Target.Z-Here.Z);
  if(Distance<12&&HeightError<20&&GetCharacterMovement()->IsMovingOnGround()){
-  UE_LOG(LogTemp,Display,TEXT("SUB01_ROUTE_CHECKPOINT name=%s pawn=%s eye=%s floor=%d heightErrorCm=%.3f"),*RouteNames[RouteIndex],*Here.ToString(),*ViewCamera->GetComponentLocation().ToString(),GetCharacterMovement()->IsMovingOnGround()?1:0,HeightError);
+  UE_LOG(LogTemp,Display,TEXT("SUB01_ROUTE_CHECKPOINT name=%s pawn=%s eye=%s floor=%d heightErrorCm=%.3f solidFloorCm=%.4f"),*RouteNames[RouteIndex],*Here.ToString(),*ViewCamera->GetComponentLocation().ToString(),GetCharacterMovement()->IsMovingOnGround()?1:0,HeightError,GetCharacterMovement()->CurrentFloor.HitResult.ImpactPoint.Z);
   ++RouteIndex;RouteStepStarted=Now;RouteLastProgress=Now;RouteBestDistance=BIG_NUMBER;
-  if(RouteIndex==RouteTargets.Num()){FinishNativeRouteTest(true,TEXT("Ground entry to loft bed walked physically"));return;}
+  if(RouteIndex==RouteTargets.Num()){FinishNativeRouteTest(true,TEXT("Controlled source route walked physically"));return;}
   return;
  }
  const float Score=Distance+HeightError;
  if(Score<RouteBestDistance-1){RouteBestDistance=Score;RouteLastProgress=Now;}
- if(Now-RouteLastProgress>3||Now-RouteStepStarted>14||Now-RouteStarted>70){FinishNativeRouteTest(false,TEXT("Blocked or no progress; collision not bypassed"));return;}
+ if(Now-RouteLastProgress>3||Now-RouteStepStarted>14||Now-RouteStarted>70){
+  const FHitResult& Floor=GetCharacterMovement()->CurrentFloor.HitResult;
+  FHitResult Ahead;FCollisionQueryParams Params(SCENE_QUERY_STAT(Sub01StairContact),false,this);
+  GetWorld()->SweepSingleByChannel(Ahead,Here,Here+Delta.GetSafeNormal()*30,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(GetCapsuleComponent()->GetScaledCapsuleRadius(),GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),Params);
+  UE_LOG(LogTemp,Warning,TEXT("SUB01_ROUTE_COLLISION_DIAGNOSTIC target=%s pawn=%s velocity=%s distance=%.3f height=%.3f floorActor=%s floorPoint=%s floorNormal=%s aheadActor=%s aheadPoint=%s aheadNormal=%s"),*RouteNames[RouteIndex],*Here.ToString(),*GetVelocity().ToString(),Distance,HeightError,*GetNameSafe(Floor.GetActor()),*Floor.ImpactPoint.ToString(),*Floor.ImpactNormal.ToString(),*GetNameSafe(Ahead.GetActor()),*Ahead.ImpactPoint.ToString(),*Ahead.ImpactNormal.ToString());
+  FinishNativeRouteTest(false,TEXT("Blocked or no progress; collision not bypassed"));return;
+ }
  if(Here.Z<-100||Here.Z>750||FMath::Abs(Here.X)>600||FMath::Abs(Here.Y)>700){FinishNativeRouteTest(false,TEXT("Outside conservative house bounds"));return;}
  if(Distance>1){
   Controller->SetControlRotation(FRotator(-4,Delta.Rotation().Yaw,0));

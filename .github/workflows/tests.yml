@@ -49,7 +49,9 @@ jobs:
         run: python -m playwright install-deps chromium
       - name: Install browser used by operator integration tests
         run: python -m playwright install chromium
-      - run: python -m pytest -q tests/
+      # Installing Chromium also enables optional visual suites; keep those in
+      # their explicit visual jobs, while running the real operator tests here.
+      - run: python -m pytest -q tests/ --ignore=tests/visual
 
   smoke:
     runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.private_runner && fromJSON('["self-hosted","linux","x64","sub01-home-private-ci"]') || 'ubuntu-latest' }}

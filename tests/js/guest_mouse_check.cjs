@@ -27,3 +27,8 @@ guestMouse({absolute_pointer_enabled:true, run(){}, bus:{send:(...e)=>events.pus
   ({dx: 1, dy: 0, wheel: 0, buttons:[false,false,false]});
 assert.deepEqual(events, [['mouse-pointer-lock',false], ['mouse-delta',[1,-0]], ['mouse-click',[0,0,0]]]);
 console.log('guest mouse bus contract checks passed (CPU only)');
+
+const { mouseDiagnostics } = require('../../computer/guest_mouse.cjs');
+assert.ok(Object.values(mouseDiagnostics({})).every(v => v === null), 'no protocol readiness is inferred before actual devices exist');
+const d = mouseDiagnostics({absolute_pointer_enabled:false, v86:{cpu:{devices:{ps2:{use_mouse:true,enable_mouse_stream:true,mouse_stream_active:()=>false,mouse_id:4,command_register:32},vmware:{enabled:false,absolute:false,host_pointer_locked:true}}}}});
+assert.equal(d.ps2_mouse_id,4);assert.equal(d.ps2_stream_active,false);assert.equal(d.ps2_command_register,32);assert.equal(d.vmware_enabled,false);

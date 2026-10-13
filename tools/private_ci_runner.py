@@ -19,6 +19,7 @@ from pathlib import Path
 POD = '80lf8giw6ft61v'
 REPO = 'https://github.com/nocontentinhere4-art/sub01-home-private'
 DEADLINE = 1791932256
+MINIMUM_JOB_WINDOW = 21 * 60  # Workflow's 20-minute limit plus result-upload/shutdown time.
 VERSION = '2.338.0'
 SHA256 = 'af4b794c1bc41d73d40535e3fe092a39f9679cd8d965954c2aca25a05ca41d32'
 
@@ -31,8 +32,8 @@ def main():
     if os.environ.get('RUNPOD_POD_ID') != POD or os.geteuid() != 0:
         raise RuntimeError('Only the authorized home server root may provision this runner')
     remaining = int(DEADLINE - time.time())
-    if remaining < 120:
-        raise RuntimeError('Authorized compute window is ending')
+    if remaining < MINIMUM_JOB_WINDOW:
+        raise RuntimeError('Not enough authorized time for a full CI job and result upload')
     if args.token_file.stat().st_mode & 0o077:
         raise RuntimeError('Registration token file must be owner-only')
     token = args.token_file.read_text().strip()
@@ -84,6 +85,11 @@ def main():
                '--unattended', '--url', REPO, '--name', name,
                '--labels', 'sub01-home-private-ci', '--ephemeral',
                '--disableupdate', '--work', '_work']
+    # Downloads/extraction also consume the window. Check again before
+    # registering, so no job is accepted if the guard may cut off its result.
+    if DEADLINE - time.time() < MINIMUM_JOB_WINDOW:
+        args.token_file.unlink(missing_ok=True)
+        raise RuntimeError('CI preparation consumed the reserved job window')
     configured = subprocess.run(command, cwd=root, env=env, capture_output=True)
     env.pop('ACTIONS_RUNNER_INPUT_TOKEN')
     args.token_file.unlink(missing_ok=True)

@@ -50,6 +50,8 @@ CPP = r'''#include "Sub01HomeLab.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "CollisionShape.h"
+#include "CollisionQueryParams.h"
 #include "Modules/ModuleManager.h"
 #include "Misc/CoreDelegates.h"
 class FSub01HomeRuntimeModule : public FDefaultGameModuleImpl {
@@ -74,6 +76,7 @@ ASub01HomeCharacter::ASub01HomeCharacter() {
  bUseControllerRotationYaw=true;
  ViewCamera=CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonEye"));
  ViewCamera->SetupAttachment(GetCapsuleComponent());
+ ViewCamera->PostProcessSettings.bOverride_MotionBlurAmount=true;ViewCamera->PostProcessSettings.MotionBlurAmount=0;ViewCamera->PostProcessSettings.bOverride_MotionBlurMax=true;ViewCamera->PostProcessSettings.MotionBlurMax=0;
  ViewCamera->SetRelativeLocation(FVector(0,0,74)); // 91+74=165cm eye above feet.
  ViewCamera->bUsePawnControlRotation=true; ViewCamera->FieldOfView=75;
  auto* Movement=GetCharacterMovement();
@@ -160,10 +163,10 @@ def stage(project):
     (module/'Sub01HomeLab.h').write_text(header)
     (module/'Sub01HomeLab.cpp').write_text(cpp)
     bridge=Path(__file__).parent/'native_pc_bridge'
-    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp']:
+    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp']:
         shutil.copy2(bridge/name,module/name)
     stage_hands(module)
-    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore"}); } }\n')
+    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore","ImageCore"}); } }\n')
     for name,kind in [('Sub01HomeLab','Game'),('Sub01HomeLabEditor','Editor')]:
         (project/'Source'/f'{name}.Target.cs').write_text(f'using UnrealBuildTool; public class {name}Target : TargetRules {{ public {name}Target(TargetInfo Target):base(Target) {{ Type=TargetType.{kind}; DefaultBuildSettings=BuildSettingsVersion.Latest; ExtraModuleNames.Add("Sub01HomeLab"); }} }}\n')
     path=project/'Sub01HomeLab.uproject';doc=json.loads(path.read_text());doc['Modules']=[{'Name':'Sub01HomeLab','Type':'Runtime','LoadingPhase':'Default'}];path.write_text(json.dumps(doc,indent=2)+'\n')

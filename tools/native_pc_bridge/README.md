@@ -96,3 +96,15 @@ BGRA pixel and verifies opaque padding and bounded dimensions. The bridge derive
 aspect from the actual authored monitor X/Z extents (34/20), so a 1024×768 guest
 is padded to 1306×768 instead of stretched. No guest pixels are invented in the
 padding. These checks do not confirm native compile or live interaction.
+
+A later live check on the restored guest accepted **relative mouse movement and
+left click/drag**. A two-second stationary control kept the identical VGA frame;
++40/-40 screen-Y movements changed the actual cursor/menu images. Selecting the
+real Terminal task closed the desktop menu. A held left button with dx=20, dy=20
+then moved the actual terminal window from (0,0) to (40,40), with VGA frame 19→21.
+The evidence is private `out/native-device-vga/mouse-window-before.png`,
+`mouse-window-after.png`, `mouse-window-proof.json` and the `mouse-control-*`
+frames/proof. The earlier large-delta clamp probe is not a verified stress test.
+The current guest protocol is PS/2 Explorer ID4, streaming active, controller
+register 0x43; VMware/absolute mode is disabled. No mouse-sign or X configuration
+changes were needed for the successful real interaction.

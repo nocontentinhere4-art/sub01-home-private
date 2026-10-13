@@ -21,3 +21,22 @@ function guestMouse(vm, capture) {
   };
 }
 module.exports = { guestMouse };
+
+// Read only pinned-v86 protocol flags, never guest memory or host metadata.
+function mouseDiagnostics(vm) {
+  const d = vm.v86?.cpu?.devices, p = d?.ps2, w = d?.vmware;
+  const bool = value => typeof value === 'boolean' ? value : null;
+  const byte = value => Number.isInteger(value) && value >= 0 && value <= 255 ? value : null;
+  return {
+    absolute_pointer_enabled: bool(vm.absolute_pointer_enabled),
+    ps2_use_mouse: bool(p?.use_mouse),
+    ps2_stream_enabled: bool(p?.enable_mouse_stream),
+    ps2_stream_active: bool(p?.mouse_stream_active?.()),
+    ps2_mouse_id: byte(p?.mouse_id),
+    ps2_command_register: byte(p?.command_register),
+    vmware_enabled: bool(w?.enabled),
+    vmware_absolute: bool(w?.absolute),
+    vmware_host_pointer_locked: bool(w?.host_pointer_locked),
+  };
+}
+module.exports.mouseDiagnostics = mouseDiagnostics;
