@@ -96,6 +96,32 @@ def privacy(position, node, path, bathroom_locked=False):
     )
 
 
+# What every viewer sees of the actor during privacy: a fixed stand-in at the
+# bathroom doorway (where he reappears when privacy ends), not his real pose.
+# The page still needs a valid position/look (camera follow, first load) and
+# merges partial states, so the fields keep their shapes. Device apps,
+# activity changes and walking state are not published either.
+PRIVATE_ACTOR = {
+    "position": [-0.5, 4.65, 1.35],
+    "entry_position": [-0.5, 4.65, 1.35],
+    "look": [-1.5, 4.65, 1.35],
+    "walking": False,
+    "speed": 0,
+    "seated": 0,
+    "activity": "use_bathroom",
+    "place": "bathroom",
+    "destination": "bathroom",
+    "path": [],
+}
+
+
+def private_view(view):
+    """Mask a HomeWorld.view() dict in place for privacy; returns it."""
+    view.update({k: list(v) if isinstance(v, list) else v for k, v in PRIVATE_ACTOR.items()})
+    view["phone"] = {**view.get("phone", {}), "app": "home"}
+    return view
+
+
 def room_of(position):
     """Light room for a position: living, kitchen, bedroom, bathroom, or None outside."""
     if not finite_position(position):

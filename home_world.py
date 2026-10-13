@@ -453,7 +453,7 @@ class HomeWorld:
             p[2] += 0.3 * self.seated
         privacy = self.privacy()
         house = self.interactions.view(self.settings)
-        return {
+        view = {
             "version": 1,
             "position": [round(v, 4) for v in p],
             "look": self.look,
@@ -482,6 +482,8 @@ class HomeWorld:
             "notes": self.notes[-10:] if not compact else [],
             "memories": self.memories[-20:] if not compact else [],
         }
+        # One privacy decision masks the actor for every viewer (WS and API).
+        return hi.private_view(view) if privacy else view
 
     def to_dict(self):
         return {

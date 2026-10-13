@@ -303,3 +303,48 @@ def test_door_state_semantics_are_explicit():
     for door in home.view()["doors"].values():
         assert door["state"] in hi.DOOR_STATES
         assert door["state"] == ("open" if door["open"] else "locked" if door["locked"] else "closed")
+
+
+def test_privacy_masks_the_actor_pose_activity_and_phone_for_every_viewer():
+    home = HomeWorld({"node": "loft"})
+    home.phone["app"] = "browser"
+    real = []
+    walk(home, "use_bathroom", each=lambda h: real.append(h.view(compact=True)))
+    private = [v for v in real if v["privacy"]]
+    assert private
+    for view in private + [home.view(), home.view(compact=True)]:
+        for key, value in hi.PRIVATE_ACTOR.items():
+            assert view[key] == value, key
+        assert view["phone"]["app"] == "home" and view["phone"]["battery"] == home.phone["battery"]
+    # The real pose inside the bathroom is never published.
+    assert hi.in_bathroom(home.position) and home.view()["position"] != home.position
+    assert not any(hi.in_bathroom(v["position"]) or hi.in_bathroom(v["entry_position"]) for v in private)
+    # The stand-in cannot be mutated through a view.
+    home.view()["position"][0] = 99
+    assert hi.PRIVATE_ACTOR["position"][0] == -0.5
+    # When privacy ends he is published at the stand-in doorway: no camera jump.
+    after = []
+    walk(home, "research", each=lambda h: after.append(h.view(compact=True)))
+    first_public = next(v for v in after if not v["privacy"])
+    assert first_public["place"] == "bath_door"
+    assert first_public["entry_position"] == hi.PRIVATE_ACTOR["entry_position"]
+    assert home.view()["phone"]["app"] == "browser"
+
+
+def test_api_and_feed_hide_the_actor_during_privacy_without_authentication():
+    async def run():
+        http, live = await client()
+        try:
+            walk(live.home, "use_bathroom")
+            d = await (await http.get("/api/home")).json()
+            assert d["home"]["privacy"] is True
+            for key in ("position", "entry_position", "look", "activity", "path", "walking"):
+                assert d["home"][key] == hi.PRIVATE_ACTOR[key]
+            assert d["home"]["phone"]["app"] == "home"
+            feed = live.home.view(compact=True)
+            feed["devices"] = device_revisions(live, feed["privacy"])
+            assert feed["devices"] == {"privacy": True}
+            assert feed["position"] == hi.PRIVATE_ACTOR["position"]
+        finally:
+            await http.close()
+    asyncio.run(run())
