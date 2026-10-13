@@ -33,7 +33,7 @@ NODES = {
     "balcony_door": (-2.2, 4.65, 3.2),
     "balcony": (-2.2, 4.65, 4.4),
     "door": (2, 1.65, 3.2),
-    "outside": (2, 1.65, 5.25),
+    "outside": (2, 1.65, 7.25),
 }
 EDGES = [
     ("desk", "aisle"),

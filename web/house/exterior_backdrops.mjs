@@ -90,6 +90,7 @@ export function createExteriorBackdrops(T, scene, {lite=false, manager}={}, lega
   let ready=false;
   return {
     texture,group,sphere,get ready(){return ready;},
+    get gateAngle(){return frontage.gate.rotation.y;},
     get draws(){let count=0;group.traverse(object=>{if(object.isMesh)count++;});return count;},
     activate(){
       if(ready)return true;

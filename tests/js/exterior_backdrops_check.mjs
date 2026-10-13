@@ -9,6 +9,7 @@ const three={...T,TextureLoader:Loader};
 for(const lite of [false,true]){
  const scene=new T.Scene(),legacy=new T.Group();legacy.userData.excludeStaticBake=true;scene.add(legacy);
  const view=createExteriorBackdrops(three,scene,{lite},legacy);
+ assert.equal(view.gateAngle,scene.getObjectByName('Openable entrance gate').rotation.y,'street physics reads actual hinged foreground gate');
  assert.equal(loaded.findLast(url=>url.includes('/tokyo-residential/residential-')),`/house/assets/tokyo-residential/residential-${lite?2048:4096}.webp`);
  assert.equal(view.activate(),false);assert.equal(legacy.visible,true);
  view.texture.image={width:lite?2048:4096,height:lite?1024:2048};

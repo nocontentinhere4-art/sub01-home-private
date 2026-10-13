@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import * as T from '../../web/house/vendor/three.module.js';
 import {GLTFExporter} from '../../web/house/vendor/GLTFExporter.js';
 import {GLTFLoader} from '../../web/house/vendor/GLTFLoader.js';
-import {terraceAllows} from '../../web/house/terrace_space.mjs';
+import {streetAccessAllows} from '../../web/house/street_access.mjs';
 import {bathroomAllows} from '../../web/house/bathroom_access.mjs';
 import {stairClearanceAllows} from '../../web/house/stair_clearance.mjs';
 import {frontDoorAllows} from '../../web/house/front_door_access.mjs';
@@ -28,8 +28,8 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
 const collisionDoor={openness:0};
-const canWalk=new Function('STEP','blockers','terraceAllows','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
-  source.slice(start,end)+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,terraceAllows,balconyAllows,collisionDoor,frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},stairClearanceAllows);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
+  source.slice(start,end)+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,collisionDoor,frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},stairClearanceAllows);
 assert.equal(canWalk(-2,3.85,3),false);
 collisionDoor.openness=1;
 assert.equal(canWalk(A.centre,3.85,3),true);

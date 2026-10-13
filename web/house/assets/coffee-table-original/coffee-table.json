@@ -38,11 +38,13 @@
     0.7,
     1.4
   ],
-  "runtime_material": "Existing house M.kitchenOak (light-oak grade) or equivalent clone sharing existing CC0 fine_grained_wood maps; metric UVs.",
-  "texture_source": "https://polyhaven.com/a/fine_grained_wood",
+  "runtime_material": "Existing clean M.kitchenOak sharing CC0 home_oak_veneer maps, matched mean albedo, no second gamma grade; physical1.83m UVs, lengthwise top/vertical legs.",
+  "generator": "tools/build_home_coffee_table_clean_oak.py",
+  "material_revision": 2,
+  "texture_source": "https://polyhaven.com/a/oak_veneer_01",
   "embedded_textures": false,
   "vertices": 864,
   "triangles": 1692,
   "glb_bytes": 121756,
-  "sha256": "64d4885f28ec578733eeafe3bc6e12d1b501b8d29e71caf7555f181c4143c147"
+  "sha256": "f2bbdcddce59afb797a4c9ce4722e1872c908bfd9bad1ac932af40b0c5b19af4"
 }

@@ -9,7 +9,7 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
-import { createExteriorBackdrops } from "./exterior_backdrops.mjs";
+import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=2";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows } from "./stair_clearance.mjs?v=1";
@@ -17,11 +17,12 @@ import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
 import { createWovenRugMaterial, createWovenRugGeometries } from "./woven_rug_material.mjs";
+import { createCleanKitchenOak, cleanKitchenBoxUv } from "./clean_oak_material.mjs";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs?v=2";
-import { terraceAllows } from './terrace_space.mjs';
+import { streetAccessAllows, buildCourtyardFrontRail } from './street_access.mjs?v=1';
 import { frontDoorAllows, frontDoorApproach } from './front_door_access.mjs';
 import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
@@ -189,13 +190,7 @@ M.architectureOak.normalScale.set(.10, .10);
 M.architectureOak.roughness = .92;
 scannedWood.normalScale.set(.10, .10);
 scannedWood.roughness = .92;
-M.kitchenOak = M.darkwood.clone();
-M.kitchenOak.color.set('#e7d5b5');
-M.kitchenOak.roughness = .72;
-M.kitchenOak.normalScale.set(.22, .22);
-M.kitchenOak.userData.lightOak = true;
-M.kitchenOak.onBeforeCompile = gradeOak;
-M.kitchenOak.customProgramCacheKey = () => 'private-kitchen-light-oak-v1';
+M.kitchenOak = createCleanKitchenOak(T, M.architectureOak);
 M.stone.roughness = 0.35;
 // A continuous slab: the older marble_01 maps depict a tiled floor with grout.
 M.counterStone = pbr("marble_slab_012", [.32, .32]);
@@ -218,7 +213,7 @@ function box(w, h, d, x, y, z, m = M.wood, r = 0.012) {
   if (m === M.wood && !(w > 4 || d > 5)) {
     o.material = M.darkwood;
   }
-  if (m === M.kitchenOak) metricBoxUv(o.geometry, .8);
+  if (m === M.kitchenOak) cleanKitchenBoxUv(o.geometry, [x, y, z]);
   if (m === M.architectureOak) metricBoxUv(o.geometry, 1.83);
   scene.add(o);
   meshCount++;
@@ -425,9 +420,7 @@ for (const x of [.80, 3.20]) {
   for (const z of [4.15,4.55,4.95,5.35,5.75])
     beam([x,.06,z],[x,.9,z],.018,M.black);
 }
-beam([.80,.9,5.75],[3.20,.9,5.75],.025,M.black);
-for (const x of [.80,1.20,1.60,2,2.40,2.80,3.20])
-  beam([x,.06,5.75],[x,.9,5.75],.018,M.black);
+buildCourtyardFrontRail(beam, M.black);
 windowFrame(2, 1.12, 3.87, 1.1, 2.24, false, false);
 const frontDoorGroup = new T.Group();
 frontDoorGroup.position.set(1.47, 0, 3.9);
@@ -566,7 +559,7 @@ const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=2
   console.warn('Original sofa fallback:', error.message);
   return furnished('sofa_03', -1.8, 0, .1, 2.5, -Math.PI / 2, null, 'z');
 });
-const coffeeTableReady = gltfLoader.loadAsync('/house/assets/coffee-table-original/coffee-table.glb?v=1').then(gltf => {
+const coffeeTableReady = gltfLoader.loadAsync('/house/assets/coffee-table-original/coffee-table.glb?v=2').then(gltf => {
   const root = gltf.scene;
   root.position.set(-3.2, 0, .1);
   root.rotation.y = -Math.PI / 2;
@@ -1191,7 +1184,7 @@ interactions.push(
 );
 const places = {
   entry: { p: [2, 1.65, 3.1], look: [2, 1.65, 5.2], name: "Front door" },
-  outside: { p: [2, 1.65, 5.25], look: [10, 6, 24], name: "Outside" },
+  outside: { p: [2, 1.65, 7.25], look: [10, 6, 24], name: "Entrance street" },
   bathroom: {
     p: [-1.5, 4.65, 1.35],
     look: [-3.5, 4, 1.1],
@@ -1293,7 +1286,7 @@ function canWalk(x, z, feet) {
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
     !frontDoorAllows(x, z, feet, frontDoorGroup.rotation.y) ||
     !bathroomAllows(x, z, feet, bathDoor.position.z) ||
-    (f > 2 ? z > 5.04 : !terraceAllows(x, z))
+    (f > 2 ? z > 5.04 : !streetAccessAllows(x, z, photographedExterior.gateAngle))
   )
     return false;
   const level = f > 1.5 ? 1 : 0;
@@ -1508,6 +1501,7 @@ function update(dt) {
     Math.min(1, dt * 7),
   );
   document.getElementById("status").dataset.frontDoorAngle = String(frontDoorGroup.rotation.y);
+  document.getElementById("status").dataset.streetGateAngle = String(photographedExterior.gateAngle);
   setPrivacy(
     !!homeState?.privacy ||
     (p.y > 3 &&

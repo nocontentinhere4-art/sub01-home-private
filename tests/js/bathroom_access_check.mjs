@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {BATHROOM_ACCESS as A, bathroomAllows, bathroomApproach, bathroomDoorPosition} from '../../web/house/bathroom_access.mjs';
 import {balconyAllows} from '../../web/house/balcony_access.mjs';
 import {frontDoorAllows} from '../../web/house/front_door_access.mjs';
-import {terraceAllows} from '../../web/house/terrace_space.mjs';
+import {streetAccessAllows} from '../../web/house/street_access.mjs';
 import {stairClearanceAllows} from '../../web/house/stair_clearance.mjs';
 
 assert.equal(bathroomApproach([-.5,4.65,1.35]),true);
@@ -26,8 +26,8 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
 const leaf={position:{z:A.closed}};
-const canWalk=new Function('STEP','blockers','terraceAllows','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
-  source.slice(start,end)+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,terraceAllows,balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,leaf,stairClearanceAllows);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
+  source.slice(start,end)+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,leaf,stairClearanceAllows);
 assert.equal(canWalk(A.plane,1.35,3),false);
 leaf.position.z=1.7;assert.equal(canWalk(A.plane,1.35,3),false);
 leaf.position.z=A.open;assert.equal(canWalk(A.plane,1.35,3),true);

@@ -5,7 +5,7 @@ import {STAIR_CLEARANCE as A, stairClearanceAllows as allows} from '../../web/ho
 import {balconyAllows} from '../../web/house/balcony_access.mjs';
 import {frontDoorAllows} from '../../web/house/front_door_access.mjs';
 import {bathroomAllows} from '../../web/house/bathroom_access.mjs';
-import {terraceAllows} from '../../web/house/terrace_space.mjs';
+import {streetAccessAllows} from '../../web/house/street_access.mjs';
 
 // Run the actual staircase builder with a geometry recorder. This catches
 // changed mesh dimensions, not just a helper agreeing with its own constants.
@@ -58,8 +58,8 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   const [x,z,w,d,level=0]=m[1].split(',').map(Number);
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
-const canWalk=new Function('STEP','blockers','terraceAllows','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
-  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,terraceAllows,balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
+  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows);
 assert.equal(canWalk(.81,-.5,0),false,'Actual reachable near-plane regression');
 for (const x of [.96,1,1.2,1.5]) assert.equal(canWalk(x,-.5,0),true,'Desk-side aisle stays open');
 for (let i=0;i<=100;i++) {
