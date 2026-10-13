@@ -19,6 +19,7 @@ import { createCurtainPanel } from "./curtain_panels.mjs";
 import { createWovenRugMaterial, createWovenRugGeometries } from "./woven_rug_material.mjs";
 import { createCleanKitchenOak, cleanKitchenBoxUv } from "./clean_oak_material.mjs";
 import { createHavenSofaMaterials } from "./haven_sofa_materials.mjs";
+import { createLowerKitchenCabinet } from "./lower_kitchen_cabinet.mjs?v=1";
 import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
@@ -599,7 +600,19 @@ furnished("desk_lamp_arm_01", 2.65, 0.863, -3.18, 0.24, -0.7).then((root) => {
   }
 });
 // Kitchen, integrated oak cabinetry, stone countertop, sink and coffee corner.
-box(3.05, 0.70, 0.62, -2.2, 0.35, -3.55, M.kitchenOak, 0.015);
+const lowerCabinetDoors = createLowerKitchenCabinet(T, {
+  RoundedBoxGeometry, mergeGeometries, oak: M.kitchenOak, brass: M.brass, interactions,
+  getPositions: () => [camera.position.toArray(), homeState?.position].filter(Boolean),
+  onBlocked: notice,
+  onToggle: async (index, open) => {
+    const lowerCabinets = [...(homeState?.settings?.lowerCabinets || [false, false, false, false])];
+    lowerCabinets[index] = open;
+    const result = await mutate("settings", {lowerCabinets});
+    if (result?.lowerCabinets) lowerCabinetDoors.setTargets(result.lowerCabinets);
+    return !!result;
+  },
+});
+scene.add(lowerCabinetDoors.root);
 // One continuous slab with a real opening, rather than seams between four boxes.
 const counterShape = new T.Shape();
 counterShape.moveTo(-1.58,-.35); counterShape.lineTo(1.58,-.35);
@@ -613,10 +626,6 @@ kitchenCounter.rotation.x = -Math.PI / 2;
 kitchenCounter.position.set(-2.2,.8675,-3.53);
 kitchenCounter.castShadow = kitchenCounter.receiveShadow = true;
 scene.add(kitchenCounter);
-for (const x of [-3.3, -2.6, -1.9, -1.2]) {
-  box(0.65, 0.76, 0.035, x, 0.44, -3.215, M.kitchenOak, 0.006);
-  beam([x - 0.15, 0.75, -3.18], [x + 0.15, 0.75, -3.18], 0.01, M.brass);
-}
 const cabinetFallback = box(3.1, .7, .36, -2.2, 2.05, -3.71, M.white, .012);
 cabinetFallback.userData.replaceable = true;
 let upperCabinetDoors = null;
@@ -1302,6 +1311,7 @@ function canWalk(x, z, feet) {
     z < -3.78 ||
     !stairClearanceAllows(x, z, feet) ||
     (upperCabinetDoors && !upperCabinetDoors.allowsPosition(x, z, feet)) ||
+    !lowerCabinetDoors.allowsPosition(x, z, feet) ||
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
     !frontDoorAllows(x, z, feet, frontDoorGroup.rotation.y) ||
     !bathroomAllows(x, z, feet, bathDoor.position.z) ||
@@ -1508,6 +1518,8 @@ function update(dt) {
     );
     camera.rotation.set(pitch, yaw, 0);
   }
+  const lowerCabinetMoving = lowerCabinetDoors.update(dt);
+  document.getElementById("status").dataset.lowerCabinetDoors = JSON.stringify(lowerCabinetDoors.doors.map(d => ({angle: d.angle, target: d.target})));
   const cabinetMoving = upperCabinetDoors?.update(dt) || false;
   if (upperCabinetDoors) document.getElementById("status").dataset.cabinetDoors = JSON.stringify(upperCabinetDoors.snapshot());
   const p = camera.position;
@@ -1536,7 +1548,7 @@ function update(dt) {
     dt,
     doorOpen,
   );
-  const doorMotion = cabinetMoving || balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
+  const doorMotion = lowerCabinetMoving || cabinetMoving || balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
     Math.abs(bathDoor.position.z - (doorOpen ? 2.3 : 1.35)) > .001;
   if (doorShadowRefresh.step(dt,doorMotion) && !lite && !privacyActive) renderer.shadowMap.needsUpdate = true;
   document.getElementById("status").dataset.doorShadowRefreshes = String(doorShadowRefresh.count);
@@ -2409,6 +2421,7 @@ function acceptHome(state) {
     : state.activity.replaceAll("_", " ") + " · " + brainStage;
   const settings = state.settings || {};
   if (upperCabinetDoors) upperCabinetDoors.setTargets(settings.cabinets || [false, false, false, false]);
+  lowerCabinetDoors.setTargets(settings.lowerCabinets || [false, false, false, false]);
   const changed = lampOn !== settings.lamp || curtainOpen !== settings.curtain;
   lampOn = settings.lamp !== false;
   curtainOpen = !!settings.curtain;
@@ -2564,6 +2577,7 @@ document.getElementById('status').dataset.interiorTrim = String(interiorTrim.cou
 batchArchitecture();
 // Stable IDs let offline light maps replace only geometry, preserving live devices.
 const bakedObjects = new Map();
+bakedObjects.set(lowerCabinetDoors.carcass.userData.bakeId, lowerCabinetDoors.carcass);
 for (const child of scene.children) {
   if (
     !child.isMesh ||
@@ -2586,14 +2600,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=20"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=21"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=20",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=21",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=20",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=21",
       ) : Promise.resolve(null),
     ]);
     // Atlas UVs retain glTF top-origin V; HDRLoader defaults to the opposite orientation.

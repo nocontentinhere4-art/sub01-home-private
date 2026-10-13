@@ -6,6 +6,9 @@ import * as T from '../../web/house/vendor/three.module.js';
 import {balconyAllows} from '../../web/house/balcony_access.mjs';
 import {frontDoorAllows} from '../../web/house/front_door_access.mjs';
 import {bathroomAllows} from '../../web/house/bathroom_access.mjs';
+import {createLowerKitchenCabinet} from '../../web/house/lower_kitchen_cabinet.mjs';
+import {RoundedBoxGeometry} from '../../web/house/vendor/RoundedBoxGeometry.js';
+import {mergeGeometries} from '../../web/house/vendor/BufferGeometryUtils.js';
 import {streetAccessAllows} from '../../web/house/street_access.mjs';
 
 // Run the actual staircase builder with a geometry recorder. This catches
@@ -138,8 +141,9 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   const [x,z,w,d,level=0]=m[1].split(',').map(Number);
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
-const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors',
-  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows,null);
+const lowerCabinetFixture=createLowerKitchenCabinet(T,{RoundedBoxGeometry,mergeGeometries,oak:new T.MeshStandardMaterial(),brass:new T.MeshStandardMaterial()});
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors','lowerCabinetDoors',
+  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows,null,lowerCabinetFixture);
 assert.equal(canWalk(.81,-.5,0),false,'Actual reachable near-plane regression');
 assert.equal(canWalk(1,1.3,0),false,'Actual visitor gate protects above-eye head/rail contact');
 assert.equal(canWalk(-.05,.85,1.2),false,'Actual visitor gate protects above-eye loft corner');
@@ -169,3 +173,10 @@ print(json.dumps(trace))
 for (const [origin,activity,p] of trace)
   assert.equal(allows(p[0],p[2],p[1]-1.65),true,`${origin} -> ${activity}: ${p}`);
 console.log(`Stair clearance: actual 34 meshes, near-plane ray, boundaries and ${trace.length} real HomeWorld samples passed`);
+// The actual visitor gate must reject an opened lower door in the otherwise
+// clear front aisle, while keeping an adjacent walkable point available.
+lowerCabinetFixture.setTargets([false,false,false,true]);
+for(let i=0;i<180;i++)lowerCabinetFixture.update(1/60);
+assert.equal(canWalk(-1.525,-2.8,0),false,'Visitor cannot walk knees/body into the open lower door');
+assert.equal(canWalk(-1.26,-2.8,0),true,'Adjacent clear kitchen aisle remains open');
+console.log('PASS: actual visitor movement includes open lower-door clearance, without sealing its adjacent aisle');

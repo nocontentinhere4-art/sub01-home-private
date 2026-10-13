@@ -1,5 +1,5 @@
 {
-  "source_sha256": "a129681be7c7798e47ae1dba309ab49b854b5672b3f027e12ba1135002dd14f3",
+  "source_sha256": "44d003e56f0c13ea21b80179de92835fc7a93ed6ee5c36596dce27eb9ee6f419",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 512,
   "diffuse_bounces": 4,
@@ -7,50 +7,50 @@
   "albedo_in_bake": false,
   "receivers": 103,
   "export_material_texture_limit": 512,
-  "layout": "Dynamic upper cabinet leaves excluded; HAVEN sofa and leaf LOD retained",
+  "layout": "Real hollow supported lower kitchen carcass; moving lower/upper fronts excluded",
   "day": {
-    "source_exr_sha256": "7c9b8c7d170033a57663a16c0f870866c0e133de7765dceda609f765bf02dc36",
-    "width": 1366,
-    "height": 1364,
-    "max": 7.8244242668151855,
-    "p95": 0.453883962333202,
-    "nonzero": 0.5152332730793506,
+    "source_exr_sha256": "4f51bb9d9bbe7263a36b27404b8cb3201e36c144a11e02df646439f77270462b",
+    "width": 1378,
+    "height": 1379,
+    "max": 7.683135509490967,
+    "p95": 0.4453604996204376,
+    "nonzero": 0.5215938644250109,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "source_exr_sha256": "7ea07a926f742ec3dda7733f5fb3db4d7d375c3d9c8b33e1930174c9d7159c6f",
-    "width": 1366,
-    "height": 1364,
-    "max": 11.331961631774902,
-    "p95": 0.006360318465158343,
-    "nonzero": 0.4424631713631855,
+    "source_exr_sha256": "773f6e68b873f2feccdf215fab314ec33685e5f3ba3f0cb61ad6eff4eb4a880f",
+    "width": 1378,
+    "height": 1379,
+    "max": 2.4852681159973145,
+    "p95": 0.006282352772541344,
+    "nonzero": 0.4493269875417179,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "cef7e08eac8c3bc8c3b25b0b9c9754eafccc16af20943601cb4beef3b8e3057c",
-      "bytes": 12312880
+      "sha256": "ca4ee39b59a60cd6d2c4226c90daf4b38ba88840d34c47b8f0e906e107d0754a",
+      "bytes": 12907012
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "27f50a08cf47921870804f0dbac4000db6e066475b844106a9215cee26bb16ef",
-      "bytes": 3881145
+      "sha256": "71e4df81dd7ea951c901b701338457fcdd638b03ffd72159c35ae8c4972d36bd",
+      "bytes": 4007788
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "6e81b33b343b65e9a422cb217130fe33e7555c410e3e98c635f90bb02eef8051",
-      "bytes": 689031
+      "sha256": "e41e32fde043d8afbf17148c893d05e3b0354476b37bbf0194d20f44baf4204e",
+      "bytes": 699696
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "fc047cad0d404edae991d4f3e2424f5d819afc37731ab27b6fad0cdbc6307de7",
-      "bytes": 3518120
+      "sha256": "2a5058bba1de98b856bf78e25538b01a3397a792878419ee601db83209e85124",
+      "bytes": 3645868
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "89cabac59a525baa645ca559588e6b8fb860d51c7c145fc07e975e479d5dd188",
-      "bytes": 627662
+      "sha256": "c5835db9809002c5924a28f92d815d063cedd0c6075105a132cfa34f372ac669",
+      "bytes": 640910
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",

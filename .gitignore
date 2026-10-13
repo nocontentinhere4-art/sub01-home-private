@@ -74,3 +74,6 @@ out/shadow-fit/
 
 # Private cabinet geometry and integration audit
 out/cabinet-interaction/
+
+# Private lower-cabinet geometry studies
+out/lower-kitchen-cabinet/

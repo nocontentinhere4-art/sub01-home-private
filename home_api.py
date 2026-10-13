@@ -151,16 +151,18 @@ def add_home_routes(app, live, admin_ok):
             if k in b:
                 if not isinstance(b[k], bool):
                     raise web.HTTPBadRequest(text="Expected boolean")
-        if "cabinets" in b:
-            cabinets = b["cabinets"]
-            if (not isinstance(cabinets, list) or len(cabinets) != 4
-                    or any(not isinstance(v, bool) for v in cabinets)):
-                raise web.HTTPBadRequest(text="Expected four cabinet door booleans")
+        for key in ("cabinets", "lowerCabinets"):
+            if key in b:
+                doors = b[key]
+                if (not isinstance(doors, list) or len(doors) != 4
+                        or any(not isinstance(v, bool) for v in doors)):
+                    raise web.HTTPBadRequest(text="Expected four cabinet door booleans")
         for k in ("lamp", "curtain"):
             if k in b:
                 live.home.settings[k] = b[k]
-        if "cabinets" in b:
-            live.home.settings["cabinets"] = list(b["cabinets"])
+        for key in ("cabinets", "lowerCabinets"):
+            if key in b:
+                live.home.settings[key] = list(b[key])
         await live.save_state()
         return web.json_response(live.home.settings)
 
