@@ -6,7 +6,7 @@ The owner requires this work to stay private and on localhost. Do not deploy, co
 
 The primary visual reference, reaffirmed by the owner on 2026-10-13, is https://x.com/SimbasJungles/status/2109095401273938072. Use it as the acceptance reference for the home's visual direction and first-person experience. Ainthropos, Yokohara, Hmlet and other references are supporting references for individual details and techniques; they must not replace this direction. Inspect the actual reference before making visual comparisons, and never claim that a result matches it without viewing the result.
 
-Private Runpod compute is authorized within the existing $10 limit and automatic shutdown deadline. This does not authorize public deployment. Heavy Blender, Unreal and rendering work belongs on that server, not on the owner's overheating Mac.
+The owner explicitly raised the total private Runpod budget to $20 on 2026-10-13, including previous use. The current automatic stop is 2026-10-13 21:45 UTC (23:45 Europe/Rome). Authorized home compute includes the existing source pod and its private A40 recovery replacement; do not touch the separate brain pod. This does not authorize public deployment. Heavy Blender, Unreal and rendering work belongs on the server, not on the owner's overheating Mac.
 
 ## Browser access
 

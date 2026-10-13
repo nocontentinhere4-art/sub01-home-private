@@ -111,3 +111,12 @@ out/native-contact-stage/
 out/recover-api.py
 out/recover-same-pod.py
 out/recovery-provider-metadata.private.json
+out/home-replacement*.private.json
+out/create-home-replacement.py
+out/recover-home-budget20.py
+out/native-device-vga/
+out/provider-public-chunks/
+out/provider-console-public.html
+out/provider-graphql-spec.html
+out/provider-openapi-v2.json
+out/inspect-provider-public-migration.py

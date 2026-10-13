@@ -11,6 +11,11 @@ on:
   # push, and the full suite with the visual set already runs locally before every push to main (90% of the
   # month's 3,000 minutes used on 2026-10-08)
   workflow_dispatch:
+    inputs:
+      private_runner:
+        description: "Run on the temporary private home runner (must be online)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,7 +33,7 @@ env:
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.private_runner && fromJSON('["self-hosted","linux","x64","sub01-home-private-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +47,7 @@ jobs:
       - run: python -m pytest -q tests/
 
   smoke:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.private_runner && fromJSON('["self-hosted","linux","x64","sub01-home-private-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +85,10 @@ jobs:
   # two jobs side by side, each well under its 30 min: the core set's scenes (test_visual.py, ~20 min) and the other
   # pages (arrival, camera, hands). In one job nine tests took 28.5 of its 30 min (main 448a0b8).
   visual:
-    if: github.event_name == 'workflow_dispatch'
+    # Native home images are checked separately; the temporary private runner
+    # executes the same pytest/smoke checks as a normal push, without the
+    # optional hosted-browser visual suite.
+    if: github.event_name == 'workflow_dispatch' && !inputs.private_runner
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
