@@ -10,7 +10,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  import { homeLighting } from "./lighting.mjs";
  import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
  import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=3";
-@@ -41,8 +41,13 @@ import { createFirstPersonBody } from "./first_person_body.mjs";
+@@ -41,15 +41,31 @@ import { createFirstPersonBody } from "./first_person_body.mjs";
  import { reachableInteraction } from "./interactions.mjs";
  import { HeldControls } from "./held_controls.mjs?v=2";
  import { streetAccessAllows, buildCourtyardFrontRail } from './street_access.mjs?v=1';
@@ -26,9 +26,10 @@ diff --git a/web/house/home.js b/web/house/home.js
  import { paintPrivacyScreen } from './privacy_screen.mjs';
  import { sameVertexPositions } from './bake_shape.mjs';
  import { createSunDust } from './sun_dust.mjs';
-@@ -50,6 +55,16 @@ import { loadViewControls, saveViewControls, defaultViewControls } from './view_
+ import { loadViewControls, saveViewControls, defaultViewControls } from './view_controls.mjs';
  import { ShadowRefresh } from './shadow_refresh.mjs';
  import { createInteriorTrim } from './interior_trim.mjs';
++import { createEyeView } from './eye_view.mjs';
  import { createDraftSubmit } from './draft_submit.mjs';
 +// Visitor door rules (house_interactions.mjs): a closed or locked door blocks
 +// entry from the house and never traps; older servers keep the plain leaf
@@ -43,7 +44,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).get("test") === "daytime")
    document.querySelector("header small").textContent += " / DAYTIME DEVICE TEST";
  const lite =
-@@ -576,6 +591,7 @@ async function loadFurnished(name, x, y, z, width, rotation = 0, sourceUrl = nul
+@@ -576,6 +592,7 @@ async function loadFurnished(name, x, y, z, width, rotation = 0, sourceUrl = nul
  const havenSofaMaterials = createHavenSofaMaterials(T, loader, assetRoot, Math.min(renderer.capabilities.getMaxAnisotropy(), 8));
  havenSofaMaterials.Haven_linen.color.set('#737e87');
  havenSofaMaterials.Haven_seams.color.set('#58616a');
@@ -51,7 +52,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  const sofaReady = gltfLoader.loadAsync('/house/assets/haven-sofa/sofa.glb?v=1').then(gltf => {
    const root = gltf.scene;
    root.position.set(-1.8, 0, .1);
-@@ -888,9 +904,7 @@ const bedFrameReady = gltfLoader.loadAsync('/house/assets/cc0-queen-bed/queen-be
+@@ -888,9 +905,7 @@ const bedFrameReady = gltfLoader.loadAsync('/house/assets/cc0-queen-bed/queen-be
        material.color.set(/teal/.test(material.name) ? '#b99845' : '#f7f4eb');
        material.roughness = .92;
      } else {
@@ -62,7 +63,7 @@ diff --git a/web/house/home.js b/web/house/home.js
      }
      object.material = material;
      object.castShadow = object.receiveShadow = true;
-@@ -952,6 +966,54 @@ box(0.42, 0.42, 0.6, -2.9, 3.24, 2.23, M.white, 0.11);
+@@ -952,6 +967,54 @@ box(0.42, 0.42, 0.6, -2.9, 3.24, 2.23, M.white, 0.11);
  box(0.43, 0.64, 0.18, -2.9, 3.47, 2.49, M.white, 0.07);
  box(0.36, 0.04, 0.46, -2.9, 3.48, 2.18, M.cream, 0.08);
  obstacle(-2.9, 2.23, 0.45, 0.72, 1);
@@ -117,7 +118,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  box(0.9, 0.1, 1, -1.5, 3.08, 2.15, tiles, 0.015);
  const showerGlass = new T.MeshStandardMaterial({
    color: "#c2d5d1",
-@@ -985,10 +1047,6 @@ for (let x = -3.9; x < -0.2; x += 0.25)
+@@ -985,10 +1048,6 @@ for (let x = -3.9; x < -0.2; x += 0.25)
  beam([-3.95, 4.03, 5.2], [-0.2, 4.03, 5.2], 0.028, M.darkwood);
  for (const x of [-3.95, -0.2]) beam([x, 4, 4], [x, 4, 5.2], 0.028, M.darkwood);
  plant(-3.4, 3, 4.65, 1.1);
@@ -128,7 +129,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  obstacle(-1.2, 4.55, 0.72, 0.8, 1);
  // Sewn continuous linen; dynamic folds retain textile length while gathering.
  const curtains = new T.Group();
-@@ -1183,6 +1241,21 @@ exteriorCredit.textContent='Tokyo panorama · Masato OHTA · CC BY 2.0';
+@@ -1183,6 +1242,21 @@ exteriorCredit.textContent='Tokyo panorama · Masato OHTA · CC BY 2.0';
  exteriorCredit.target='_blank'; exteriorCredit.rel='noopener';
  exteriorCredit.style.cssText='position:fixed;bottom:5px;left:8px;font:9px monospace;color:#bfc7cc;z-index:3;background:#17202799;padding:3px 5px';
  document.body.append(exteriorCredit);
@@ -150,7 +151,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  let lampOn = true,
    curtainOpen = false,
    lastLightMinute = -1;
-@@ -1221,6 +1294,8 @@ function lighting(timestamp = Date.now() / 1000) {
+@@ -1221,6 +1295,8 @@ function lighting(timestamp = Date.now() / 1000) {
    });
    for (const material of switchedMaterials)
      material.emissiveIntensity = lampOn ? material.userData.lampEmission : 0;
@@ -159,7 +160,7 @@ diff --git a/web/house/home.js b/web/house/home.js
    document.getElementById('status').dataset.bedsideEmission = String(lampOn ? glowMat.emissiveIntensity : 0);
    renderer.shadowMap.needsUpdate = true;
    document.getElementById("status").dataset.shadowMode = lite ? "indirect-only" : sun.castShadow ? "sun-and-pendant" : "pendant";
-@@ -1240,6 +1315,16 @@ interactions.push(
+@@ -1240,6 +1316,16 @@ interactions.push(
    { object: deskLamp, label: "E · Switch lamp", fn: toggleLamp },
    { object: bedsideLamp, label: "E · Switch lamp", fn: toggleLamp },
  );
@@ -176,7 +177,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  const places = {
    entry: { p: [2, 1.65, 3.1], look: [2, 1.65, 5.2], name: "Front door" },
    outside: { p: [2, 1.65, 7.25], look: [10, 6, 24], name: "Entrance street" },
-@@ -1391,6 +1476,13 @@ document.getElementById("explore").onclick = () => {
+@@ -1391,6 +1477,13 @@ document.getElementById("explore").onclick = () => {
  };
  document.getElementById("lamp").onclick = toggleLamp;
  document.getElementById("curtain").onclick = toggleCurtain;
@@ -190,7 +191,7 @@ diff --git a/web/house/home.js b/web/house/home.js
  addEventListener("keydown", (e) => {
    if (e.key === "Escape" && (panelKind === "view" || !e.target.matches("input,textarea"))) {
      if (panelKind) { e.preventDefault(); closePanel(); }
-@@ -1560,11 +1652,26 @@ function update(dt) {
+@@ -1560,11 +1653,26 @@ function update(dt) {
    const cabinetMoving = upperCabinetDoors?.update(dt) || false;
    if (upperCabinetDoors) document.getElementById("status").dataset.cabinetDoors = JSON.stringify(upperCabinetDoors.snapshot());
    const p = camera.position;
@@ -220,7 +221,7 @@ diff --git a/web/house/home.js b/web/house/home.js
    frontDoorGroup.rotation.y = T.MathUtils.lerp(
      frontDoorGroup.rotation.y,
      entranceOpen ? -Math.PI * 0.48 : 0,
-@@ -1579,7 +1686,7 @@ function update(dt) {
+@@ -1579,7 +1687,7 @@ function update(dt) {
        p.x > bathroomBounds.x0 &&
        p.z > bathroomBounds.z0 &&
        p.z < bathroomBounds.z1));
@@ -229,7 +230,25 @@ diff --git a/web/house/home.js b/web/house/home.js
    bathDoor.position.z = bathroomDoorPosition(
      bathDoor.position.z,
      dt,
-@@ -2726,7 +2833,8 @@ for (const child of scene.children) {
+@@ -2609,6 +2717,7 @@ function connect() {
+   socket.onmessage = (e) => {
+     try {
+       const m = JSON.parse(e.data);
++      eyeView.accept(m);   // eye_state / eye frames / home privacy
+       if (m.type === 'chat_ack')
+         finishImpulse(m.ok === true, m.ok ? 'Impulse received. He chooses what to do.' : 'Impulse not accepted. Edit it and try again.');
+       if (m.type === "chess") {
+@@ -2629,6 +2738,9 @@ function connect() {
+     reconnectTimer = setTimeout(connect, 2000);
+   };
+ }
++// What he sees: eyelids and dreams while he sleeps, the street while he is out;
++// hidden awake at home and during bathroom privacy (eye_view.mjs).
++const eyeView = createEyeView(document.body);
+ connect();
+ syncState();
+ setInterval(syncState, 3000);
+@@ -2726,7 +2838,8 @@ for (const child of scene.children) {
  }
  // Baked contact lighting is optional: geometry/material fallback remains functional.
  for (const task of [beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady,
@@ -239,7 +258,7 @@ diff --git a/web/house/home.js b/web/house/home.js
    assetBarrier.add(task);
  }
  const homeAssetsReady = assetBarrier.settled().then(report => {
-@@ -2954,7 +3062,10 @@ renderer.setAnimationLoop(() => {
+@@ -2954,7 +3067,10 @@ renderer.setAnimationLoop(() => {
    accumulated = 0;
    renderer.info.reset();
    update(dt);
