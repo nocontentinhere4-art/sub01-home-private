@@ -348,3 +348,19 @@ def test_api_and_feed_hide_the_actor_during_privacy_without_authentication():
         finally:
             await http.close()
     asyncio.run(run())
+
+
+def test_bathroom_door_stays_shut_while_he_climbs_the_stairs():
+    """Found by the walking end-to-end phase: climbing passed within the bathroom
+    door's proximity radius on the upper level and opened it for ~1.4 s."""
+    from home_world import HomeWorld
+    home = HomeWorld()
+    seen_stairs = False
+    for _ in range(600):
+        home.update(0.1, 0.1, {"activity": "sleep"}, {})
+        if home.node in ("stair_bottom", "stair_top") or home.path[:1] in (["stair_bottom"], ["stair_top"]):
+            seen_stairs = True
+            assert not home.interactions.doors["bathroom"]["open"], (home.node, home.position)
+        if home.node == "bed":
+            break
+    assert seen_stairs and home.node == "bed"
