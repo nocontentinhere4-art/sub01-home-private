@@ -2,6 +2,16 @@
 
 Source contract implemented; physical seating and native runtime acceptance are pending.
 
+The generated native runtime now sends these reports through the existing
+loopback bridge every 0.5 seconds, with one pending request and a 1.5-second
+timeout. It binds with `walking`, reports actual graph arrival or blocking, and
+can report `seated` only if the separately validated native seat flag is true.
+The current runtime never sets that flag true: the physical transition/contact
+implementation remains required. Failed requests revoke seat evidence and PC
+focus; callbacks for an old epoch/command cannot bind the new command. Native
+engine compilation and end-to-end delivery remain unverified while GPU access
+is unavailable. CPU tests execute the actual C++ phase decision and focus guards.
+
 The authenticated loopback state bridge accepts `POST /home/native_state` and
 forwards to the actual backend `POST /api/home/native_state` using its existing
 operator credential. Both routes require authentication and an actual loopback

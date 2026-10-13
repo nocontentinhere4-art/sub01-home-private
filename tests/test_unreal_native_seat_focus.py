@@ -20,7 +20,7 @@ PC* PCBridge=&pc;struct Path{int size=0;int Num(){return size;}}LiveHomePath;
 bool LiveHome=true,LiveHomeBindWaiting=false,LiveHomeFresh=true,LiveHomePrivate=false,LiveHomeBlocked=false,NativeSeatVerified=false;
 double LiveHomePollAt=100,LiveHomeLastReceived=10,LiveHomeProgressAt=0,LiveHomeBest=0;
 std::string LiveHomeNode="desk",LiveHomeActivity="use_computer";
-void BeginLiveHome(){}void PollLiveHome(){}
+void BeginLiveHome(){}void PollLiveHome(){}void UpdateNativeFeedback(){}
 void update(float Dt){
 '''
   cases='''}

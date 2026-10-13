@@ -132,7 +132,8 @@ def test_proposed_patch_is_up_to_date_and_applies():
 
 
 def _patched(path):
-    original, patched = {"__file__": str(ROOT / path)}, {"__file__": str(ROOT / path)}
+    context = {"__file__": str(ROOT / path), "__name__": "tools." + Path(path).stem, "__package__": "tools"}
+    original, patched = dict(context), dict(context)
     text = (ROOT / path).read_text()
     exec(compile(text, path, "exec"), original)
     exec(compile(fy.apply_edits(text, path), path, "exec"), patched)
