@@ -19,6 +19,19 @@ assert.ok(pageCtx.ops.some(o=>o[0]==='image'&&o[1]==='frame'),'real frame painte
 assert.ok(screen.ops.some(o=>o[0]==='text'&&o[1]==='Anime news'),'status bar shows the real page title');
 assert.ok(screen.ops.some(o=>o[0]==='image'&&o[1]==='page'));assert.equal(texture.needsUpdate,true);
 phone.update();await flush();assert.equal(urls.length,1,'same frame is not downloaded twice');
+// A new identity keeps the previous page on screen until the new one paints.
+let resolveNext;const slow=createPhoneScreen({canvas,texture,getState:()=>({...state}),
+  createPage:(w,h)=>({width:w,height:h,getContext:()=>pageCtx}),
+  painterFactory:cfg=>createOwnedBitmapPainter({...cfg,
+    fetchResponse:async()=>({ok:true,status:200,blob:async()=>({})}),
+    decode:()=>new Promise(r=>{resolveNext=()=>r({name:'frame',width:390,height:844,close(){}});})})});
+slow.update();await flush();resolveNext();await flush();
+state.frameId='PHONE:2';screen.ops.length=0;slow.update();await flush();
+assert.ok(screen.ops.some(o=>o[0]==='image'&&o[1]==='page'),'old page stays while the new frame loads');
+assert.ok(!screen.ops.some(o=>o[0]==='text'&&o[1]==='Loading…'),'no loading flicker between pages');
+resolveNext();await flush();slow.invalidate();screen.ops.length=0;state.frameId='PHONE:3';slow.update();
+assert.ok(!screen.ops.some(o=>o[0]==='image'&&o[1]==='page'),'after invalidate (privacy/activity) the old page is gone');
+slow.dispose();state.frameId='PHONE:1';
 state.frameId='PHONE:2';phone.update();await flush();assert.equal(urls.length,2,'new frame identity fetches once');
 for(const change of[s=>{s.privacy=true;},s=>{s.hidden=true;},s=>{s.activity='sleep';}]){
   const before=urls.length;Object.assign(state,{privacy:false,hidden:false,activity:'phone'});change(state);

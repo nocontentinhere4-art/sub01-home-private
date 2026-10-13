@@ -55,7 +55,7 @@ export function createPhoneScreen({
     ctx.textAlign = "left"; ctx.font = "13px system-ui"; ctx.fillStyle = "#b9c2c8";
     const title = (s.title || phoneAppLabel(s.app)).slice(0, 34);
     ctx.fillText(title, 16, 43);
-    if (pageKey && pageKey === s.frameId) ctx.drawImage(page, 0, BAR);
+    if (pageKey) ctx.drawImage(page, 0, BAR);
     else {
       ctx.fillStyle = "#1d262c"; ctx.fillRect(0, BAR, W, H - BAR);
       ctx.fillStyle = "#e9e2d8"; ctx.textAlign = "center"; ctx.font = "20px system-ui";
@@ -78,7 +78,9 @@ export function createPhoneScreen({
         return false;
       }
       showing = true;
-      if (pageKey && pageKey !== s.frameId) pageKey = null;
+      // A new frame identity keeps the last page visible until it paints (no
+      // flicker); privacy, idle and activity changes clear it via invalidate().
+      if (!s.frameId) pageKey = null;
       if (s.frameId) void painter.update();
       return compose();
     },
