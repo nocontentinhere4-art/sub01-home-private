@@ -332,6 +332,7 @@ class BackendFeed:
         self.sleep = sleep
         self.connects = 0
         self.failures = 0
+        self.snapshot_failures = 0
 
     def headers(self):
         return {"X-Admin-Token": self._token}
@@ -343,7 +344,13 @@ class BackendFeed:
             self.model.apply_rest(await resp.json())
 
     async def run_once(self, session):
-        await self.snapshot(session)
+        try:
+            await self.snapshot(session)
+        except (aiohttp.ClientResponseError, aiohttp.ContentTypeError, ValueError):
+            # The backend answered but the snapshot failed (e.g. GET /api/home
+            # returns 500 when the screens browser is off). The WS feed carries
+            # the same `home` view, so continue; only a refused connection aborts.
+            self.snapshot_failures += 1
         ws_url = self.base.replace("http", "ws", 1) + "/ws?rate=5&lite=1"
         async with session.ws_connect(ws_url, headers=self.headers(), heartbeat=20,
                                       max_msg_size=4 * 1024 * 1024) as ws:

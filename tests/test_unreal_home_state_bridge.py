@@ -246,6 +246,7 @@ class FakeBackend:
         self.settings_posts = []
         self.settings_status = 200
         self.ws_headers = []
+        self.rest_status = 200
         app = web.Application()
         app.router.add_get("/api/home", self.state)
         app.router.add_get("/ws", self.ws)
@@ -254,6 +255,8 @@ class FakeBackend:
 
     async def state(self, request):
         self.rest_calls += 1
+        if self.rest_status != 200:
+            raise web.HTTPInternalServerError()
         return web.json_response({"home": self.world.view(), "stage": "AWAKE", "life": {}})
 
     async def ws(self, request):
@@ -373,6 +376,27 @@ def test_feed_goes_live_then_stale_then_reconnects_with_fresh_snapshot():
             await wait_until(lambda: model.status()[0] == "live")
             doc = await (await http.get("/home/state", headers=AUTH)).json()
             assert doc["source"]["status"] == "live"
+        finally:
+            await http.close()
+            await backend.server.close()
+    run(body())
+
+
+def test_failing_rest_snapshot_still_follows_the_websocket_feed():
+    # Seen against the real backend: GET /api/home answers 500 when the
+    # screens browser is off. The WS `home` view is the same data.
+    async def body():
+        backend = FakeBackend()
+        backend.rest_status = 500
+        http, model, feed = await start(backend)
+        try:
+            await wait_until(lambda: backend.sockets)
+            doc = await (await http.get("/home/state", headers=AUTH)).json()
+            assert doc["source"]["status"] == "unavailable" and feed.snapshot_failures == 1
+            await backend.push()
+            await wait_until(lambda: model.status()[0] == "live")
+            doc = await (await http.get("/home/state", headers=AUTH)).json()
+            assert doc["brain"] == {"stage": "AWAKE", "activity": "research"}
         finally:
             await http.close()
             await backend.server.close()
