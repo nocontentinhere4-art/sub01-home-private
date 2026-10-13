@@ -33,6 +33,13 @@ const ups=calls.filter(c=>c.material?.blending===T.AdditiveBlending);
 assert.equal(ups.length,levels-1);assert.ok(ups.every(c=>c.autoClear===false),'upsample accumulates without clearing');
 assert.equal(renderer.autoClear,true,'autoClear restored');
 assert.equal(calls.length,1+levels+(levels-1)+1+1);
+// Built-in three.js shader chunks define luminance(); a uniform with that
+// name fails to compile in a real browser (seen in Chromium).
+const meterPass=calls.at(-2).material;
+assert.equal(meterPass.uniforms.src.value,input.texture,'exposure meters the scene, not the thresholded bloom');
+const finalPass=calls.at(-1).material;
+assert.ok(!('luminance' in finalPass.uniforms));
+assert.ok(!/uniform[^;]*\bluminance\b/.test(finalPass.fragmentShader));
 console.log('PASS: one house render, bounded bloom chain, additive upsampling, meter and final canvas pass');
 
 calls.length=0;

@@ -9,7 +9,7 @@ export const CAMERA_DEFAULTS = Object.freeze({
   // adaptation only nudges it within roughly -15 % / +30 %, and bloom only
   // affects HDR values above the display white (windows, lamp shades).
   bloomStrength: .04, bloomThreshold: 1.1, bloomKnee: .5, bloomRadius: 1,
-  reference: .30, adaptation: .3, minExposure: .85, maxExposure: 1.3,
+  reference: .22, adaptation: .3, minExposure: .85, maxExposure: 1.3,
   adaptSpeedUp: 1.6, adaptSpeedDown: .75,
   vignette: .18, grain: .008, aberration: .0015, maxLevels: 6,
 });
@@ -25,7 +25,7 @@ export function adaptationBlend(dt, previous, target, up, down) {
 export function createCameraEffects(T, renderer, lite, settings = {}) {
   const S = { ...CAMERA_DEFAULTS, ...settings };
   let input, mips = [], lum = [], lumIndex = 0, down, up, luminance, final, screen, quad, primed = false;
-  let time = 0, lastExposure = null, reading = false, readTimer = 0;
+  let time = 0, lastExposure = null, reading = false, readTimer = -Infinity;
   const size = new T.Vector2();
   const fullCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const vertex = `varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
@@ -37,7 +37,8 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
     input.samples = Math.min(2, renderer.capabilities.maxSamples);
     input.texture.minFilter = input.texture.magFilter = T.LinearFilter;
     for (let i = 0; i < 2; i++) {
-      const t = new T.WebGLRenderTarget(1, 1, { type: T.HalfFloatType, depthBuffer: false });
+      // 1x1 meter in full float: readable by readRenderTargetPixelsAsync.
+      const t = new T.WebGLRenderTarget(1, 1, { type: T.FloatType, depthBuffer: false });
       t.texture.minFilter = t.texture.magFilter = T.NearestFilter;
       lum.push(t);
     }
@@ -80,8 +81,8 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
       vertexShader: vertex, fragmentShader: `
         varying vec2 vUv; uniform sampler2D src,previous; uniform float dt,snap,speedUp,speedDown;
         void main(){
-          // Centre-weighted log average over 256 taps of the pre-blurred
-          // second bloom level: bright windows at the frame edge count less,
+          // Centre-weighted log average over 256 linear taps of the HDR scene:
+          // bright windows at the frame edge count less,
           // as in a photographer's centre-weighted meter.
           float total=0.,weights=0.;
           for(int x=0;x<16;x++)for(int y=0;y<16;y++){
@@ -95,16 +96,16 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
           gl_FragColor=vec4(mix(prior,current,rate),0.,0.,1.);
         }` });
     final = new T.ShaderMaterial({ depthTest: false, depthWrite: false,
-      uniforms: { color: { value: input.texture }, bloom: { value: null }, luminance: { value: null },
+      uniforms: { color: { value: input.texture }, bloom: { value: null }, meter: { value: null },
         bloomStrength: { value: S.bloomStrength }, reference: { value: S.reference },
         adaptation: { value: S.adaptation }, minExposure: { value: S.minExposure }, maxExposure: { value: S.maxExposure },
         vignette: { value: S.vignette }, grain: { value: S.grain }, aberration: { value: S.aberration },
         aspect: { value: 1 }, time: { value: 0 } },
       vertexShader: vertex, fragmentShader: `
-        varying vec2 vUv; uniform sampler2D color,bloom,luminance;
+        varying vec2 vUv; uniform sampler2D color,bloom,meter;
         uniform float bloomStrength,reference,adaptation,minExposure,maxExposure,vignette,grain,aberration,aspect,time;
         void main(){
-          float average=max(texture2D(luminance,vec2(.5)).r,1e-4);
+          float average=max(texture2D(meter,vec2(.5)).r,1e-4);
           float exposure=clamp(pow(reference/average,adaptation),minExposure,maxExposure);
           vec2 d=vUv-.5; vec2 shift=d*dot(d,d)*aberration;
           vec3 c=vec3(texture2D(color,vUv-shift).r,texture2D(color,vUv).g,texture2D(color,vUv+shift).b);
@@ -169,7 +170,7 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
     } finally { renderer.autoClear = autoClear; }
     // Exposure meter: ping-pong 1x1 targets, time-based smoothing.
     const previous = lum[lumIndex], next = lum[1 - lumIndex];
-    luminance.uniforms.src.value = (mips[1] || mips[0] || input).texture;
+    luminance.uniforms.src.value = input.texture;  // the scene, never the thresholded bloom chain
     luminance.uniforms.previous.value = previous.texture;
     luminance.uniforms.dt.value = Math.min(Math.max(dt, 0), .1);
     luminance.uniforms.snap.value = primed ? 0 : 1;
@@ -179,7 +180,7 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
     lumIndex = 1 - lumIndex; primed = true;
     time = (time + dt) % 1000;
     final.uniforms.bloom.value = (mips[0] || input).texture;
-    final.uniforms.luminance.value = next.texture;
+    final.uniforms.meter.value = next.texture;
     final.uniforms.time.value = time;
     final.uniforms.aspect.value = input.width / Math.max(1, input.height);
     pass(final, null);
@@ -188,13 +189,14 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
 
   function sampleExposure(target, dt) {
     // Diagnostics only: an asynchronous 1x1 read at most once per second.
-    readTimer += dt;
-    if (reading || readTimer < 1 || !renderer.readRenderTargetPixelsAsync) return;
-    readTimer = 0; reading = true;
-    const buffer = new Uint16Array(4);
+    // Wall-clock gate: the loop caps dt at 50 ms, so summing it would stall on slow GPUs.
+    const now = globalThis.performance?.now?.() ?? Date.now();
+    if (reading || now - readTimer < 1000 || !renderer.readRenderTargetPixelsAsync) return;
+    readTimer = now; reading = true;
+    const buffer = new Float32Array(4);
     Promise.resolve().then(() => renderer.readRenderTargetPixelsAsync(target, 0, 0, 1, 1, buffer))
       .then(() => {
-        const average = Math.max(T.DataUtils.fromHalfFloat(buffer[0]), 1e-4);
+        const average = Math.max(buffer[0], 1e-4);
         lastExposure = { average, exposure: Math.min(S.maxExposure, Math.max(S.minExposure, (S.reference / average) ** S.adaptation)) };
       }).catch(() => { lastExposure = null; }).finally(() => { reading = false; });
   }
