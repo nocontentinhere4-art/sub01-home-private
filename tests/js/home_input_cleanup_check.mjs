@@ -6,17 +6,20 @@ const source=fs.readFileSync(new URL('../../web/house/home.js',import.meta.url),
 // Exercise actual panel/privacy functions against an already-held input and draft.
 const held=new HeldControls(), panel={hidden:false}, body={draft:'unfinished phone text',replaceChildren(){this.draft=null;}}, motion={resets:0,reset(){this.resets++;}};
 const start=source.indexOf('function closePanel()'), end=source.indexOf('function browserFrame(',start);
-const hooks=new Function('pongHeld','panel','panelBody','visitorMotion','document','renderer',`
+const cleanup={bitmaps:0,browsers:0,music:0};
+const hooks=new Function('pongHeld','panel','panelBody','visitorMotion','document','renderer','invalidateDeviceBitmaps','disposeBrowserControls','phoneMusicFeed',`
   let keys={w:true},drag=true,privacyActive=false,panelKind='pong';const lite=false;
   ${source.slice(start,end)}
   return {closePanel,setPrivacy,state:()=>({keys,drag,privacyActive,panelKind})};
-`)(held,panel,body,motion,{body:{classList:{toggle(){}}}},{shadowMap:{}});
+`)(held,panel,body,motion,{body:{classList:{toggle(){}}}},{shadowMap:{}},
+  ()=>cleanup.bitmaps++,()=>cleanup.browsers++,{stop:()=>cleanup.music++});
 held.set('ArrowUp',-1);held.acknowledge(held.version);
 hooks.setPrivacy(true);
 assert.equal(held.direction,0);assert.equal(held.changed,true);
 assert.equal(body.draft,null);assert.equal(panel.hidden,true);
 assert.deepEqual(hooks.state().keys,{});assert.equal(hooks.state().drag,false);
 assert.equal(motion.resets,1);
+assert.deepEqual(cleanup,{bitmaps:1,browsers:1,music:1},'Privacy cancels actual bitmap delivery and disposes panel browser/music ownership');
 
 // Use the actual keyboard listeners: censorship blocks input, and a retained
 // OS repeat after it ends cannot restart walking without a fresh key press.

@@ -24,6 +24,7 @@ import { createLowerKitchenCabinet } from "./lower_kitchen_cabinet.mjs?v=1";
 import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
+import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -1612,6 +1613,11 @@ let homeState = null,
 const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
+let deskBitmapPainter = null, minecraftBitmapPainter = null;
+function invalidateDeviceBitmaps() {
+  deskBitmapPainter?.invalidate();
+  minecraftBitmapPainter?.invalidate();
+}
 const browserControls = new Map();
 function disposeBrowserControls() {
   for (const controls of browserControls.values()) controls.dispose();
@@ -1642,6 +1648,7 @@ const phoneMusicFeed = createLiveMusicFeed({
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     phoneMusicFeed.stop();
+    invalidateDeviceBitmaps();
     for (const controls of browserControls.values()) controls.deactivate();
   }
   else {
@@ -1705,7 +1712,10 @@ function button(text, fn) {
 function consoleChoice(label, game) {
   return button(label, async () => {
     if (await mutate("game", {game})) {
+      minecraftBitmapPainter?.invalidate();
+      const changedGame = tvGame !== game;
       tvGame = game;
+      if (changedGame && game === 'minecraft') paintMinecraftUnavailable();
       lastConsoleGame = game;
       renderPanel(true);
       drawTV();
@@ -1765,6 +1775,7 @@ function closePanel() {
 }
 function setPrivacy(active) {
   if (active && !privacyActive) {
+    invalidateDeviceBitmaps();
     closePanel();
     keys = {};
     drag = false;
@@ -2272,16 +2283,18 @@ function drawChess(canvas, game) {
     h - 12,
   );
 }
+function paintMinecraftUnavailable(message = 'Waiting for Minecraft…') {
+  const context = tvCanvas.getContext('2d');
+  context.fillStyle = '#10201a'; context.fillRect(0, 0, 800, 460);
+  context.fillStyle = '#ffae69'; context.textAlign = 'center'; context.font = '28px system-ui';
+  context.fillText('Minecraft', 400, 205);
+  context.font = '18px system-ui'; context.fillText(message, 400, 245);
+  tvTexture.needsUpdate = true;
+}
 function drawTV() {
   if (tvGame === "minecraft") {
-    if (!minecraftState.has_frame) {
-      const context = tvCanvas.getContext("2d");
-      context.fillStyle = "#10201a"; context.fillRect(0, 0, 800, 460);
-      context.fillStyle = "#ffae69"; context.textAlign = "center"; context.font = "28px system-ui";
-      context.fillText("Minecraft", 400, 205);
-      context.font = "18px system-ui";
-      context.fillText(minecraftState.status === "needs_eula" ? "Waiting for EULA approval" : minecraftState.status, 400, 245);
-    }
+    if (!minecraftState.has_frame) paintMinecraftUnavailable(
+      minecraftState.status === 'needs_eula' ? 'Waiting for EULA approval' : minecraftState.status || 'Waiting for Minecraft…');
   } else if (tvGame === "chess" || homeState?.activity === "play_chess")
     drawChess(tvCanvas, chessState?.game);
   else drawPong(tvCanvas, homeState?.pong);
@@ -2308,21 +2321,21 @@ interactions.push({
   fn: () => openPanel("pong"),
 });
 drawPong(tvCanvas);
-let minecraftFetching = false;
-setInterval(async () => {
-  if (tvGame !== "minecraft" || !minecraftState.has_frame || minecraftFetching || document.hidden) return;
-  minecraftFetching = true;
-  try {
-    const response = await fetch("/api/home/minecraft/frame.jpg");
-    if (response.ok) {
-      const image = await createImageBitmap(await response.blob());
-      tvCanvas.getContext("2d").drawImage(image, 0, 0, 800, 460);
-      image.close(); tvTexture.needsUpdate = true;
-      const expanded = panelBody.querySelector("[data-minecraft-frame]");
-      if (expanded) expanded.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
-    }
-  } catch {} finally { minecraftFetching = false; }
-}, 150);
+minecraftBitmapPainter = createOwnedBitmapPainter({
+  getContextKey: () => tvGame === 'minecraft' && minecraftState.has_frame ? 'minecraft' : null,
+  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden,
+  getURL: () => '/api/home/minecraft/frame.jpg',
+  onUnavailable: () => paintMinecraftUnavailable(),
+  onError: () => paintMinecraftUnavailable('Minecraft picture unavailable.'),
+  onTimeout: () => paintMinecraftUnavailable('Minecraft is taking a moment…'),
+  paint: image => {
+    tvCanvas.getContext('2d').drawImage(image, 0, 0, 800, 460);
+    tvTexture.needsUpdate = true;
+    const expanded = panelBody.querySelector('[data-minecraft-frame]');
+    if (expanded) expanded.src = '/api/home/minecraft/frame.jpg?t=' + Date.now();
+  },
+});
+setInterval(() => { void minecraftBitmapPainter.update(); }, 150);
 const phoneMesh = box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014);
 // A shared-state display, rather than a second application or browser instance.
 const phoneCanvas = document.createElement("canvas");
@@ -2418,35 +2431,35 @@ function drawComputer() {
   lines.forEach((l, i) => sx.fillText(l.slice(0, 105), 28, 68 + i * 17));
   st.needsUpdate = true;
 }
-let screenFetching = false;
+function paintBrowserUnavailable(message = 'His browser has no public page to show right now.') {
+  sx.fillStyle = '#10201a'; sx.fillRect(0, 0, 1024, 600);
+  sx.fillStyle = '#cbd6c8'; sx.font = '24px sans-serif'; sx.textAlign = 'left';
+  sx.fillText(message, 32, 300);
+  st.needsUpdate = true;
+}
+deskBitmapPainter = createOwnedBitmapPainter({
+  getContextKey: () => homeState?.activity === 'use_computer' ? null : browserScreen?.frame_id || null,
+  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden,
+  getURL: revision => '/api/screen/desk.jpg?frame_id=' + encodeURIComponent(revision),
+  dedupPaintedKey: true,
+  paint: image => {
+    sx.fillStyle = '#14201b'; sx.fillRect(0, 0, 1024, 600);
+    sx.drawImage(image, 0, 0, 1024, 600); st.needsUpdate = true;
+  },
+  onUnavailable: (_, response) => paintBrowserUnavailable(response.status === 409
+    ? 'Updating his browser page…' : undefined),
+  onError: () => paintBrowserUnavailable('Browser picture unavailable.'),
+  onTimeout: () => paintBrowserUnavailable('His browser is taking a moment…'),
+});
 async function updateRealBrowser() {
-  if (screenFetching || homeState?.activity === "use_computer") return;
-  screenFetching = true;
-  try {
-    const res = await fetch("/api/screen/desk.jpg");
-    if (res.ok) {
-      const image = await createImageBitmap(await res.blob());
-      sx.fillStyle = "#14201b";
-      sx.fillRect(0, 0, 1024, 600);
-      sx.drawImage(image, 0, 0, 1024, 600);
-      image.close();
-      st.needsUpdate = true;
-    } else {
-      sx.fillStyle = "#10201a";
-      sx.fillRect(0, 0, 1024, 600);
-      sx.fillStyle = "#cbd6c8";
-      sx.font = "24px sans-serif";
-      sx.textAlign = "left";
-      sx.fillText("His browser has no public page to show right now.", 32, 300);
-      st.needsUpdate = true;
-    }
-  } catch {
-  } finally {
-    screenFetching = false;
-  }
+  deskBitmapPainter.synchronize();
+  if (privacyActive || homeState?.privacy || document.hidden || homeState?.activity === 'use_computer') return;
+  if (!browserScreen?.frame_id) { paintBrowserUnavailable(); return; }
+  await deskBitmapPainter.update();
 }
 function acceptHome(state) {
   if (!state) return;
+  if (state.activity !== homeState?.activity) invalidateDeviceBitmaps();
   if (state.privacy) setPrivacy(true);
   if (!homeState) {
     const comparison = comparisonCameras[comparisonView];
@@ -2462,8 +2475,10 @@ function acceptHome(state) {
   }
   homeState = { ...homeState, ...state };
   if (state.console_game && state.console_game !== lastConsoleGame) {
+    minecraftBitmapPainter?.invalidate();
     lastConsoleGame = state.console_game;
     tvGame = state.console_game;
+    if (tvGame === 'minecraft') paintMinecraftUnavailable();
     if (panelKind === "pong") renderPanel(true);
   }
   if (!state.notes?.length && homeState.notes?.length === 0 && lastFullHome)
