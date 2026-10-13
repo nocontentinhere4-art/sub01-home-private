@@ -133,3 +133,16 @@ Codex integrated H1–H15 into `web/house/home.js` in main `d03e673`. They are k
 `tools/home_js_integration_edits.py` for history but filtered out (`INTEGRATED_IN_MAIN`), so the
 patch now holds only the eye view (H16–H18, owner decision: no GPS; eyes close and dream while
 asleep, what he sees while outside). The balcony audit test now asserts the H6 boxes stay removed.
+
+# Proposed native first-person yaw (not applied)
+
+`native-route-smooth-yaw.patch` replaces the instantaneous heading snap in
+`tools/unreal_native_route.py` and `tools/unreal_live_home_runtime.py` with a
+bounded, eased yaw: shortest arc, `1-exp(-4dt)`, at most 1.8 rad/s, frame time
+capped at 0.1s. The movement input, targets and arrival gates are unchanged.
+The CPU reference and generator is `tools/first_person_yaw.py`
+(`--check` verifies the committed patch). The tests are in `tests/test_first_person_yaw.py`.
+Apply it only after the native runtime gates pass.
+
+`native-seating-feedback.md` audits the physical desk seating and feedback gap
+and proposes the next patch.
