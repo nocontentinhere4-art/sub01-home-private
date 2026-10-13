@@ -55,9 +55,9 @@ void ASub01HomeCharacter::NativePCCommand(const FString& Line){
  if(!PCBridge)return;
  UpdateNativePCPrivacy();
  const double Now=FPlatformTime::Seconds();
- if(LiveHome&&(!NativeSeatVerified||!LiveHomeFresh||LiveHomePrivate||LiveHomeBlocked||Now-LiveHomeLastReceived>3||Now<LiveHomeLastReceived||LiveHomePath.Num()!=0||LiveHomeNode!=TEXT("desk")||LiveHomeTarget!=TEXT("desk")||(LiveHomeActivity!=TEXT("use_computer")&&LiveHomeActivity!=TEXT("research")&&LiveHomeActivity!=TEXT("chart")))){
+ if(LiveHome&&(!NativeSeatVerified||!NativeFeedbackSeatReady()||!LiveHomeFresh||LiveHomePrivate||LiveHomeBlocked||Now-LiveHomeLastReceived>3||Now<LiveHomeLastReceived||LiveHomePath.Num()!=0||LiveHomeNode!=TEXT("desk")||LiveHomeTarget!=TEXT("desk")||(LiveHomeActivity!=TEXT("use_computer")&&LiveHomeActivity!=TEXT("research")&&LiveHomeActivity!=TEXT("chart")))){
   PCBridge->SetOperatorFocus(false);
-  UE_LOG(LogTemp,Warning,TEXT("SUB01_PC_OPERATOR_INPUT_REFUSED live home requires a fresh verified physical desk seat"));return;
+  UE_LOG(LogTemp,Warning,TEXT("SUB01_PC_OPERATOR_INPUT_REFUSED live home requires a fresh acknowledged physical desk seat"));return;
  }
  PCBridge->SetOperatorFocus(true);PCBridge->SetTypedLine(Line);PCBridge->SubmitTypedLine();
  UE_LOG(LogTemp,Display,TEXT("SUB01_PC_OPERATOR_INPUT requested through authenticated real backend; status=%s"),*PCBridge->GetPCStatus());

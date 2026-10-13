@@ -32,10 +32,12 @@ struct Bridge {
 struct ASub01HomeCharacter {
  Bridge Instance; Bridge* PCBridge=&Instance;
  bool LiveHome=true,NativeSeatVerified=true,LiveHomeFresh=true,LiveHomePrivate=false,LiveHomeBlocked=false;
+ bool AcknowledgedSeatLease=true; int SeatLeaseChecks=0;
  bool Bathroom=false; int PrivacyChecks=0;
  double LiveHomeLastReceived=100.; Path LiveHomePath;
  FString LiveHomeNode="desk",LiveHomeTarget="desk",LiveHomeActivity="research";
  void UpdateNativePCPrivacy(){++PrivacyChecks;Instance.Private=Bathroom||LiveHomePrivate;}
+ bool NativeFeedbackSeatReady(){++SeatLeaseChecks;return AcknowledgedSeatLease;}
  void NativePCCommand(const FString& Line);
 };
 ''' + code + r'''
@@ -47,6 +49,7 @@ void rejected(ASub01HomeCharacter& C){
 }
 int main(){
  {ASub01HomeCharacter C;C.NativeSeatVerified=false;rejected(C);}
+ {ASub01HomeCharacter C;C.AcknowledgedSeatLease=false;rejected(C);assert(C.SeatLeaseChecks==1);}
  {ASub01HomeCharacter C;C.LiveHomeFresh=false;rejected(C);}
  {ASub01HomeCharacter C;C.LiveHomePrivate=true;rejected(C);}
  {ASub01HomeCharacter C;C.LiveHomeBlocked=true;rejected(C);}
@@ -59,12 +62,12 @@ int main(){
  {ASub01HomeCharacter C;C.Bathroom=true;rejected(C);}
  for(const auto& Activity:{"research","use_computer","chart"}){
   ASub01HomeCharacter C;C.LiveHomeActivity=Activity;C.NativePCCommand("uname");
-  assert(C.Instance.Focus&&C.Instance.Typed==1&&C.Instance.Submitted==1);
+  assert(C.Instance.Focus&&C.Instance.Typed==1&&C.Instance.Submitted==1&&C.SeatLeaseChecks==1);
  }
  {ASub01HomeCharacter C;C.LiveHomeLastReceived=97.;C.NativePCCommand("uname");assert(C.Instance.Submitted==1);}
  // Explicit separate diagnostic mode keeps administrative operator commands.
- {ASub01HomeCharacter C;C.LiveHome=false;C.NativeSeatVerified=false;C.LiveHomeFresh=false;
-  C.NativePCCommand("uname");assert(C.Instance.Submitted==1);}
+ {ASub01HomeCharacter C;C.LiveHome=false;C.NativeSeatVerified=false;C.LiveHomeFresh=false;C.AcknowledgedSeatLease=false;
+  C.NativePCCommand("uname");assert(C.Instance.Submitted==1&&C.SeatLeaseChecks==0);}
  {ASub01HomeCharacter C;C.PCBridge=nullptr;C.NativePCCommand("uname");assert(C.PrivacyChecks==0);}
 }
 '''
