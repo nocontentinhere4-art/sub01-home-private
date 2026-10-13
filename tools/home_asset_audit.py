@@ -12,7 +12,7 @@ plaster, believable metric scale, no placeholder boxes). It is a triage list
 for the next modelling pass, not a visual comparison with the reference.
 
 Usage:
-    python tools/home_asset_audit.py [--root .] [--json out/home-asset-audit.json]
+    python tools/home_asset_audit.py [--root .] [--json <scratch or git-ignored path>]
 """
 from __future__ import annotations
 
