@@ -255,7 +255,10 @@ def test_demo_eye_with_caps_at_zero_makes_no_paid_call(tmp_path, monkeypatch):
     asyncio.run(run())
     assert calls.n == 0 and not live.ledger.path.exists()
     assert live.eye_resting and "eye" in live.eye_resting
-    assert live.sent == [{"type": "eye", **live.last_frame, "resting": live_server.RESTING}]
+    # the eye is open only asleep or outside (owner, 2026-10-13): this fresh engine starts asleep, so the state comes
+    # first, then the resting frame
+    assert live.sent[0]["type"] == "eye_state" and live.sent[0]["mode"] in ("closed", "dream")
+    assert live.sent[1:] == [{"type": "eye", **live.last_frame, "resting": live_server.RESTING}]
     assert live.eye_frame()["resting"] == "resting its eyes"     # also what a new viewer gets in its hello
 
 
