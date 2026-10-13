@@ -5,6 +5,8 @@ is created here. A missing configured backend is reported as unavailable.
 """
 import json
 import math
+import ipaddress
+import re
 from urllib.parse import urlsplit
 from aiohttp import web, ClientSession, ClientTimeout
 
@@ -16,6 +18,29 @@ def loopback_origin(value):
             or parsed.query or parsed.fragment or not parsed.port):
         raise ValueError('Home device backend must be an explicit loopback HTTP origin with a port')
     return value.rstrip('/')
+
+
+def phone_navigation_url(value):
+    """Bound the operator URL; the real browser still checks DNS and redirects."""
+    if not isinstance(value, str) or not 1 <= len(value) <= 2048 or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value):
+        raise ValueError('Expected a public HTTPS URL')
+    try:
+        parsed = urlsplit(value)
+        host = (parsed.hostname or '').encode('idna').decode('ascii').lower().rstrip('.')
+        if parsed.scheme != 'https' or parsed.username is not None or parsed.password is not None or parsed.port not in {None, 443} or not host:
+            raise ValueError('Expected a public HTTPS URL')
+        try:
+            address = ipaddress.ip_address(host)
+        except ValueError:
+            if ('.' not in host or host.endswith(('.local', '.internal', '.localhost', '.lan', '.home', '.corp'))
+                    or any(not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?', label) for label in host.split('.'))):
+                raise ValueError('Expected a public HTTPS URL')
+        else:
+            if not address.is_global:
+                raise ValueError('Expected a public HTTPS URL')
+    except (UnicodeError, ValueError):
+        raise ValueError('Expected a public HTTPS URL') from None
+    return value
 
 
 class HomeDeviceProxy:
@@ -99,13 +124,23 @@ class HomeDeviceProxy:
 
     async def action(self, request):
         epoch = self.runner.privacy_epoch
-        await self.home(epoch)
+        state = await self.home(epoch)
         try:
             data = await request.json()
         except ValueError:
             raise web.HTTPBadRequest(text='Invalid device action')
         device = request.match_info['device']
-        if device == 'phone':
+        if device == 'phone' and isinstance(data, dict) and data.get('action') == 'navigate':
+            try:
+                url = phone_navigation_url(data.get('url'))
+            except ValueError:
+                raise web.HTTPBadRequest(text='Expected a public HTTPS URL')
+            current = (state.get('phone_browser_screen') or {}).get('frame_id')
+            expected = data.get('frame_id')
+            if (current and expected != current) or (not current and expected is not None and expected != ''):
+                raise web.HTTPConflict(text='Actual phone frame changed')
+            path, clean = '/api/home/browser/navigate', {'device': 'phone', 'url': url}
+        elif device == 'phone':
             if (not isinstance(data, dict) or data.get('action') not in {'scroll_up', 'scroll_down', 'back', 'close_notice'}
                     or not isinstance(data.get('frame_id'), str) or not 1 <= len(data['frame_id']) <= 100):
                 raise web.HTTPBadRequest(text='Expected current phone frame and supported browser action')

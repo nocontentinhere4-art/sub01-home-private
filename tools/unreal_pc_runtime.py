@@ -5,6 +5,7 @@ FIELDS=r'''
  void UpdateNativePCPrivacy();
  bool TryNativeHomeDevice(UActorComponent* Component);
  UFUNCTION(Exec) void NativePhoneAction(const FString& Action);
+ UFUNCTION(Exec) void NativePhoneNavigate(const FString& URL);
  UFUNCTION(Exec) void NativeTVGame(const FString& Game);
  UFUNCTION(Exec) void NativePCCommand(const FString& Line);
 '''
@@ -48,6 +49,7 @@ bool ASub01HomeCharacter::TryNativeHomeDevice(UActorComponent* Component){
  UpdateNativePCPrivacy();if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>()){if(Devices->FocusHit(Component)){if(PCBridge)PCBridge->SetOperatorFocus(false);return true;}}return false;
 }
 void ASub01HomeCharacter::NativePhoneAction(const FString& Action){UpdateNativePCPrivacy();if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>())Devices->PhoneAction(Action);}
+void ASub01HomeCharacter::NativePhoneNavigate(const FString& URL){UpdateNativePCPrivacy();if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>())Devices->PhoneNavigate(URL);}
 void ASub01HomeCharacter::NativeTVGame(const FString& Game){UpdateNativePCPrivacy();if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>())Devices->TVGame(Game);}
 void ASub01HomeCharacter::NativePCCommand(const FString& Line){
  if(!PCBridge)return;

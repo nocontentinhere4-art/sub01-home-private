@@ -20,6 +20,7 @@ public:
  bool FocusHit(UActorComponent* Component);
  void ReleaseFocus();
  void PhoneAction(const FString& Action);
+ void PhoneNavigate(const FString& URL);
  void TVGame(const FString& Game);
  void SetPongDirection(float Direction){PongDirection=FMath::Clamp(Direction,-1.f,1.f);}
  FName GetFocusedDevice()const{return FocusedDevice;}
