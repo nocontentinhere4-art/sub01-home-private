@@ -1,0 +1,38 @@
+import assert from'node:assert/strict';
+import fs from'node:fs';
+import*as T from'../../web/house/vendor/three.module.js';
+import{bakedReceiverChunks,patchBakedReceiverShader,configureBakedReceiverLighting}from'../../web/house/baked_receiver_lighting.mjs';
+const original={...T.ShaderChunk},chunks=bakedReceiverChunks(T);
+assert.ok(!chunks.begin.includes('vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );'));
+assert.ok(!chunks.begin.includes('irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometryNormal );'));
+assert.ok(chunks.begin.includes('irradiance += getLightProbeIrradiance( lightProbe, geometryNormal );'),'unspecified light-probe behavior retained');
+assert.equal(chunks.begin.slice(0,chunks.begin.indexOf('#if defined( RE_IndirectDiffuse )')),original.lights_fragment_begin.slice(0,original.lights_fragment_begin.indexOf('#if defined( RE_IndirectDiffuse )')),'all direct lights/shadows exact original');
+assert.ok(chunks.maps.includes('iblIrradiance += getIBLIrradiance( geometryNormal );'),'IBL retained for specular multiscattering and sheen');
+for(const text of['radiance += getIBLRadiance( geometryViewDir, geometryNormal, material.roughness );','clearcoatRadiance += getIBLRadiance( geometryViewDir, geometryClearcoatNormal, material.clearcoatRoughness );','radiance += getIBLAnisotropyRadiance'])assert.ok(chunks.maps.includes(text));
+assert.ok(chunks.physical.includes('reflectedLight.indirectSpecular += radiance * singleScattering;'));
+assert.ok(chunks.physical.includes('reflectedLight.indirectSpecular += multiScattering * cosineWeightedIrradiance;'));
+assert.ok(chunks.physical.includes('sheenSpecularIndirect += irradiance * material.sheenColor * IBLSheenBRDF'));
+assert.ok(!chunks.physical.includes('reflectedLight.indirectDiffuse += diffuse * cosineWeightedIrradiance;'));
+assert.ok(chunks.maps.includes('irradiance += lightMapIrradiance + texture2D(homeNightLightMap, vLightMapUv).rgb * homeNightLightIntensity;'));
+const nightLightMap={value:new T.Texture()},nightLightIntensity={value:Math.PI};
+const home=fs.readFileSync(new URL('../../web/house/home.js',import.meta.url),'utf8');
+const a=home.indexOf('function gradeOak(shader) {'),b=home.indexOf('\nbedOak.userData',a);
+const materialGradeOak=new Function(home.slice(a,b)+';return gradeOak;')();
+for(const name of['standard','physical']){
+ const shader={fragmentShader:T.ShaderLib[name].fragmentShader,uniforms:{}};
+ patchBakedReceiverShader(T,shader,{nightLightMap,nightLightIntensity,materialGradeOak});
+ assert.equal(shader.uniforms.homeNightLightMap,nightLightMap);assert.equal(shader.uniforms.homeNightLightIntensity,nightLightIntensity);
+ assert.ok(shader.fragmentShader.includes('diffuseColor.rgb = pow(max(diffuseColor.rgb, vec3(.0001)), vec3(.45))'),'actual existing oak grading retained');
+ assert.ok(shader.fragmentShader.includes('#include <lights_fragment_end>'),'day/night map BRDF accumulation retained');
+ assert.ok(shader.fragmentShader.includes('#include <aomap_fragment>'),'other AO/specular occlusion behavior retained');
+ assert.ok(shader.fragmentShader.includes('reflectedLight.directDiffuse + reflectedLight.indirectDiffuse'));
+ assert.throws(()=>patchBakedReceiverShader(T,shader,{nightLightMap,nightLightIntensity}),/Unsupported/,'already patched source must not silently duplicate injection');
+}
+assert.deepEqual(T.ShaderChunk,original,'no global shader mutation affects dynamic materials');
+const material=new T.MeshStandardMaterial();material.lightMap=new T.Texture();material.userData.lightOak=true;
+assert.throws(()=>configureBakedReceiverLighting(T,material,{nightLightMap,nightLightIntensity,materialGradeOak}),/Validated/,'cannot switch before corrected maps verified');
+configureBakedReceiverLighting(T,material,{occludedDayReady:true,nightLightMap,nightLightIntensity,materialGradeOak});
+assert.equal(material.customProgramCacheKey(),'private-occluded-baked-diffuse-v1-oak');
+const shader={fragmentShader:T.ShaderLib.standard.fragmentShader,uniforms:{}};material.onBeforeCompile(shader);assert.ok(shader.fragmentShader.includes('vec3 irradiance = vec3( 0.0 );'));
+assert.throws(()=>bakedReceiverChunks({...T,ShaderChunk:{...T.ShaderChunk,lights_fragment_maps:''}}),/Unsupported/);
+console.log('PASS exact bundled Three Standard/Physical chunks: only ambient/hemi and diffuse IBL removed; direct sun/practicals/shadows, day/night maps, HDR single/multiscatter specular/clearcoat/sheen/probes preserved; actual gradeOak composed; shared uniforms/cache key; no global edits; verified-map guard; changed shader fails loudly');
