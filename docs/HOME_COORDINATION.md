@@ -6,7 +6,7 @@ Updated 2026-10-13. This file describes the new private home; the inherited docs
 
 Build the real functioning first-person home, not a promotional video. Primary reference: https://x.com/SimbasJungles/status/2109095401273938072. Ground-floor entrance, wooden stairs/loft, bathroom privacy, actual PC/phone/TV interactions and eventual brain-controlled activities. English UI. Keep the fictional character separate from the MRI donor; do not claim consciousness.
 
-Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work belongs on the existing authorized Runpod server, not the owner's overheating Mac. No additional paid pods. Budget maximum $10; existing automatic stop deadline 2026-10-13 18:16 UTC (20:16 Europe/Rome). Do not extend it. Do not touch the separate brain pod. Credentials stay out of Git and issue comments.
+Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work belongs on the existing authorized Runpod server, not the owner's overheating Mac. No additional paid pods. Budget maximum $10. The owner explicitly authorized one extra hour on the same pod: automatic stop deadline 2026-10-13 19:16 UTC (21:16 Europe/Rome), with the total $10 cap unchanged. Do not extend again without owner authorization. Do not touch the separate brain pod. Credentials stay out of Git and issue comments.
 
 ## Ownership
 
@@ -39,5 +39,7 @@ Codex integrates reviewed commits. Neither agent merges over the other's uncommi
 - Blender scene captures are geometry/material evidence only, not proof of Unreal navigation or working devices.
 
 ## Evidence required before calling it ready
+
+Current contact correction: the owner rejected the latest functional-PC video because fingers enter the keyboard and the left hand appears inactive. Both hands have captured finger motion, but the left elbow stays almost straight through the genuine 3–8 second typing segment. Claude's independent nonstretch contact solver and validator (`49c23f2`) are integrated as separate source files; 17 local tests passed. This validates the reference mathematics, not the native rendered contact. Native imported-vertex skin measurement and real arm-contact correction are in progress. The 3–8 second crop is not a seamless loop and must not be presented as one. Keep all body/contact acceptance gates disabled until actual skin measurements and native visual review pass.
 
 Actual runtime screenshots; physical routes through stairs/doors without clipping; camera/hand/contact checks; real device actions with privacy; brain activity wired to those actions; private browser streaming and acceptable frame time. Passing an importer or producing a pretty render alone does not complete the goal.
