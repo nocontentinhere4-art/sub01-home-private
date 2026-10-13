@@ -155,8 +155,12 @@ def test_vote_without_and_with_the_spiking_term(brain):
     d = V.vote(brain.clone(), SAME, 1.0, rng=np.random.default_rng(0), spiking=sp)
     assert d["spiking"]["used"] and d["spiking"]["leaned_to"] == "page c" and d["spiking"]["weight"] == V.SPIKING_W
     assert d["spiking"]["network"] == "20k-neuron network on CPU"
+    # The label names the size the network reports; an answer without a size keeps the default name.
     assert V.vote(brain.clone(), SAME, 1.0, rng=np.random.default_rng(0),
-                  spiking=dict(sp, net="gpu"))["spiking"]["network"] == "1M-neuron network on GPU"
+                  spiking=dict(sp, net="gpu"))["spiking"]["network"] == "20k-neuron network on GPU"
+    unsized = {k: v for k, v in sp.items() if k != "n_neurons"}
+    assert V.vote(brain.clone(), SAME, 1.0, rng=np.random.default_rng(0),
+                  spiking=dict(unsized, net="gpu"))["spiking"]["network"] == "1M-neuron network on GPU"
     assert d["options"][2]["spiking"] > 0.9 and d["options"][0]["spiking"] < 0
     assert d["options"][2]["p"] > base["options"][2]["p"]           # the term moves the vote toward its lean...
     assert max(o["p"] for o in d["options"]) < 0.999                 # ...as one term among others
