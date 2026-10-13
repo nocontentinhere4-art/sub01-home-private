@@ -32,6 +32,9 @@ CLICKS = ("<script>window.clicked=[];document.addEventListener('click',e=>window
           "e.target.textContent),true);</script>")
 
 PAGES = {
+    "polite_allow_ads": f"<html><body>{CLICKS}{ARTICLE}<div role='dialog' style='{FIXED}'>"
+    "<h2>Support Journalism That Matters</h2><p>Ads keep our content free.</p>"
+    "<p>Please consider allowing ads. Thank you!</p><button id='allow'>ALLOW ADS</button></div></body></html>",
     "end": f"<html><body>{CLICKS}{ARTICLE}<div role='dialog' style='{FIXED}'>{MODAL}</div></body></html>",
     "shadow": f"""<html><body>{CLICKS}{ARTICLE}<div id='host'></div><script>
         const r = document.getElementById('host').attachShadow({{mode:'open'}});
@@ -99,7 +102,7 @@ def test_an_article_about_ad_blockers_is_not_a_wall():
     assert not run("about", lambda page: browse.Browser(decide=False)._overlay_walled(page))
 
 
-@pytest.mark.parametrize("kind", ["end", "shadow", "frame"])
+@pytest.mark.parametrize("kind", ["end", "shadow", "frame", "polite_allow_ads"])
 def test_the_page_is_left_and_nothing_in_the_modal_is_pressed(kind):
     async def fn(page):
         b = browse.Browser(decide=False)

@@ -158,6 +158,29 @@ def test_articles_about_ad_blockers_are_not_walls(body):
     assert not browse.overlay_wall(body)
 
 
+@pytest.mark.parametrize("body", [
+    "Support Journalism That Matters\nAds keep our content free.\n"
+    "Please consider allowing ads. Thank you!\nALLOW ADS",
+    "SUPPORT JOURNALISM THAT MATTERS. Ads keep our content free. "
+    "Please consider allowing ads. Thank you! ALLOW ADS",
+])
+def test_observed_polite_allow_ads_wall_is_detected_without_consent(body):
+    assert browse.overlay_wall(body)
+    assert browse.choose_dismiss([{"i": 0, "label": "ALLOW ADS", "aria": "", "consent": False}]) is None
+
+
+@pytest.mark.parametrize("body", [
+    "Ads keep our content free. Here is how publisher advertising works.",
+    "Please consider allowing ads in your app settings when testing the advertising integration.",
+    "Support journalism that matters by subscribing to our weekly newsletter.",
+    "Publishers often say ads keep our content free, and readers debate whether to allow ads.",
+    "Support Journalism That Matters. " + "An ordinary paragraph about reporting. " * 20
+    + "Ads keep our content free. Please consider allowing ads.",
+])
+def test_normal_advertising_content_is_not_the_polite_wall(body):
+    assert not browse.overlay_wall(body)
+
+
 def test_an_overlay_wall_is_left_and_its_site_cools_down_briefly():
     b = browse.Browser(decide=False)
     sc = b.screens["phone"]

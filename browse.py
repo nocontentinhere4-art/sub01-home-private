@@ -658,6 +658,12 @@ OVERLAY_WALL = re.compile(
     r"(please )?(disable|turn off|pause|deactivate) (your |the )?ad[ -]?block(er|ing)?s?\b|"
     r"(we('ve| have)? )?(noticed|detected|see) (that )?you('re| are) (using |running )?an? ad[ -]?block|"
     r"ad[ -]?block(er)? (detected|is enabled|is on)|(white|allow)[ -]?list (us|this site|our site|our domain)|"
+    # A live ad wall asks politely instead of mentioning an ad blocker. Require its
+    # title, funding explanation, and nearby request together; an article about ads
+    # or an isolated request to allow them is not enough.
+    r"\bsupport\s+journalism\s+that\s+matters\b[\s\S]{0,300}?"
+    r"\bads\s+keep\s+our\s+content\s+free\b[\s\S]{0,200}?"
+    r"\bplease\s+consider\s+allowing\s+ads\b|"
     r"you('ve| have) reached your (free )?(article )?limit|subscribe to (continue|keep) reading|"
     r"(this|the) (article|story|content) is (only )?(available )?(for|to) (subscribers|members) only", re.I)
 

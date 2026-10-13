@@ -22,6 +22,7 @@ import { createHavenSofaMaterials } from "./haven_sofa_materials.mjs";
 import { createLowerKitchenCabinet } from "./lower_kitchen_cabinet.mjs?v=1";
 import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
+import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
@@ -1595,6 +1596,32 @@ let homeState = null,
 const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
+const phoneMusicFeed = createLiveMusicFeed({
+  isActive: owner => panelKind === 'phone' && phoneApp === 'music' &&
+    !panel.hidden && !privacyActive && !homeState?.privacy && !document.hidden &&
+    owner.isConnected && owner === document.getElementById('phone-music-list'),
+  onError: owner => {
+    if (!owner.dataset.loaded) owner.replaceChildren(textEl('p', 'Tracks unavailable. Retrying…', 'muted'));
+  },
+  onTracks: (owner, songs) => {
+    owner.dataset.loaded = 'true';
+    owner.replaceChildren();
+    if (!songs.length) owner.append(textEl('p', 'No track selected right now.', 'muted'));
+    for (const song of songs) {
+      const row = textEl('div', song.title + ' · ' + song.artist, 'entry');
+      if (/^https:\/\/open\.spotify\.com\/track\/[A-Za-z0-9]+$/.test(song.url || '')) {
+        const link = textEl('a', 'Listen');
+        link.href = song.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        row.append(document.createElement('br'), link);
+      }
+      owner.append(row);
+    }
+  },
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) phoneMusicFeed.stop();
+  else if (panelKind === 'phone' && phoneApp === 'music') renderPanel();
+});
 function notice(text) {
   const n = document.getElementById("notice");
   n.textContent = text;
@@ -1702,6 +1729,7 @@ function openPanel(kind) {
   renderPanel(true);
 }
 function closePanel() {
+  phoneMusicFeed.stop();
   pongHeld.clear();
   panel.hidden = true;
   panelKind = "";
@@ -1749,6 +1777,8 @@ function refreshPanelScreens() {
   if (gameImage) gameImage.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
 }
 function renderPanel(reset = false) {
+  if (panelKind !== 'phone' || phoneApp !== 'music' || privacyActive || homeState?.privacy || document.hidden)
+    phoneMusicFeed.stop();
   if (!panelKind) return;
   const title = document.getElementById("panel-title");
   if (panelKind === "view") {
@@ -1919,6 +1949,7 @@ function renderPanel(reset = false) {
       ])
         apps.append(
           button(name, () => {
+            phoneMusicFeed.stop();
             phoneApp = name;
             renderPanel(true);
           }),
@@ -2016,39 +2047,14 @@ function renderPanel(reset = false) {
       }
     } else if (phoneApp === "music") {
       if (reset) {
+        const list = document.createElement('div');
+        list.id = 'phone-music-list';
+        list.append(textEl('p', 'Loading tracks…', 'muted'));
         content.replaceChildren(
-          textEl("p", "Tracks chosen by SUB-01’s live brain model.", "muted"),
+          textEl('p', 'Tracks chosen by SUB-01’s live brain model.', 'muted'), list,
         );
-        fetch("/api/music")
-          .then((r) => r.json())
-          .then((m) => {
-            const songs = m.now ? [m.now, ...(m.today || [])] : m.today || [];
-            if (!songs.length)
-              content.append(
-                textEl("p", "No track selected right now.", "muted"),
-              );
-            for (const song of songs.slice(0, 8)) {
-              const row = textEl(
-                "div",
-                song.title + " · " + song.artist,
-                "entry",
-              );
-              if (
-                /^https:\/\/open\.spotify\.com\/track\/[A-Za-z0-9]+$/.test(
-                  song.url || "",
-                )
-              ) {
-                const a = textEl("a", "Listen");
-                a.href = song.url;
-                a.target = "_blank";
-                a.rel = "noopener noreferrer";
-                row.append(document.createElement("br"), a);
-              }
-              content.append(row);
-            }
-          })
-          .catch(() => {});
       }
+      phoneMusicFeed.setOwner(document.getElementById('phone-music-list'));
     } else {
       content.replaceChildren(
         textEl(
