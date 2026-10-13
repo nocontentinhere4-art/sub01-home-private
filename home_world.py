@@ -17,7 +17,10 @@ NODES = {
     "back": (1.3, 1.65, -2.2),
     "kitchen_gate": (-0.5, 1.65, -2.2),
     "kitchen": (-1.8, 1.65, -1.8),
-    "sofa": (-0.45, 1.65, 0.1),
+    # Stand in the front gap between the west-facing sofa and coffee table.
+    "sofa": (-2.55, 1.65, 0.1),
+    "sofa_front_approach": (-2.55, 1.65, 1.6),
+    "sofa_rear_approach": (-2.55, 1.65, -1.6),
     "lounge_gate": (-0.45, 1.65, 3.2),
     "front": (1.3, 1.65, 3.2),
     "stair_approach": (0.3, 1.65, 3.2),
@@ -41,8 +44,10 @@ EDGES = [
     ("back", "kitchen_gate"),
     ("kitchen_gate", "kitchen"),
     ("stair_approach", "lounge_gate"),
-    ("lounge_gate", "sofa"),
-    ("sofa", "kitchen_gate"),
+    ("lounge_gate", "sofa_front_approach"),
+    ("sofa_front_approach", "sofa"),
+    ("sofa", "sofa_rear_approach"),
+    ("sofa_rear_approach", "kitchen_gate"),
     ("aisle", "front"),
     ("front", "stair_approach"),
     ("stair_approach", "stair_bottom"),
@@ -254,6 +259,14 @@ class HomeWorld:
             self.path = list(s["path"])
             self.target = s["target"]
             self.activity = s.get("activity", "research")
+        if s.get("navigation_version") != 2 and self.path and (
+            self.node == "sofa" or "sofa" in self.path
+        ):
+            # The old route crossed the sofa back. Resume that legacy journey
+            # from its last safe waypoint, then take the new front approach.
+            # A fully seated sofa snapshot keeps the same visible seat pose.
+            self.position = list(NODES[self.node])
+            self.path = route(self.node, self.target)[1:]
         self.bladder = max(0, min(1, float(s.get("bladder", 0.1))))
         self.last_bathroom = s.get("last_bathroom", 0)
         self.pong = Pong(s.get("pong"))
@@ -392,8 +405,8 @@ class HomeWorld:
             p[1] -= 0.42 * self.seated
             p[2] -= 1.15 * self.seated
         if self.node == "sofa":
-            p[1] -= 0.35 * self.seated
-            p[0] -= 1.35 * self.seated
+            p[1] -= 0.2845 * self.seated  # HAVEN seat .503m; preserve the prior seated torso height.
+            p[0] += 0.75 * self.seated
         if self.node == "bed":
             p[1] -= 0.6 * self.seated
             p[0] -= 1.2 * self.seated
@@ -429,6 +442,7 @@ class HomeWorld:
 
     def to_dict(self):
         return {
+            "navigation_version": 2,
             "node": self.node,
             "last_console_choice": self.last_console_choice,
             "console_game": self.console_game,
