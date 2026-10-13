@@ -2301,6 +2301,8 @@ async def main(args):
         expected = request.query.get('frame_id')
         if expected is not None and not 1 <= len(expected) <= 100:
             raise web.HTTPBadRequest(text='Invalid browser frame')
+        if live.home and live.home.view().get('privacy'):   # bathroom privacy: no screen pixels
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         try:                                      # S2 / B8: no current status (closed, timed out), a refused title
             if live.browser and dev in ('desk', 'phone') and st and screen_showable(st):
                 frame = await live.browser.frame(dev, expected)
