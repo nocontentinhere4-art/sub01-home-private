@@ -11,9 +11,9 @@ def blend(a,b,w):
  qa=a['rotation'];qb=b['rotation'];sign=1 if sum(x*y for x,y in zip(qa,qb))>=0 else -1;q=[(1-w)*x+w*sign*y for x,y in zip(qa,qb)];norm=math.sqrt(sum(x*x for x in q));q=[x/norm for x in q]
  t=u.Transform();t.translation=u.Vector(*[(1-w)*x+w*y for x,y in zip(a['translation'],b['translation'])]);t.rotation=u.Quat(*q);t.scale3d=u.Vector(*[(1-w)*x+w*y for x,y in zip(a['scale'],b['scale'])]);return t
 rows=[]
-for j in range(301):
- i=min(j//2,149);w=(j/2)-i
- a=data['samples'][i];b=data['samples'][i+1];time=3+j/60
+for j in range(601):
+ i=min(j//2,299);w=(j/2)-i
+ a=data['samples'][i];b=data['samples'][i+1];time=3+j/120
  local={str(n):p for n,p in zip(names,u.AnimationLibrary.get_bone_poses_for_time(clip,names,time,False,mesh))}
  def compose(poses):
   out={}
@@ -27,5 +27,5 @@ for j in range(301):
  wrist=max(angular(original[n].rotation,corrected[n].rotation)for n in corrected if n.endswith(('LeftHand','RightHand')))
  result=json.loads(u.Sub01HomeHandsInstance.analyze_captured_finger_skin(mesh,[corrected[str(n)]for n in names],body,lo,hi,triangles))
  rows.append({'time':time,'wrist_world_rotation_max_error_degrees':wrist,**result})
-out={'kind':'actualUE compressed capture60Hz midpoint with runtime FTransform.Blend-equivalent NLerp6arm locals','samples_60hz':rows,'max_penetration_cm':max(h['penetrationCm']for r in rows for h in r['hands']),'wrist_world_max_error_deg':max(r['wrist_world_rotation_max_error_degrees']for r in rows)}
+out={'kind':'actualUE compressed capture120Hz midpoint with runtime FTransform.Blend-equivalent NLerp6arm locals','samples_120hz':rows,'sample_hz':120,'max_penetration_cm':max(h['penetrationCm']for r in rows for h in r['hands']),'wrist_world_max_error_deg':max(r['wrist_world_rotation_max_error_degrees']for r in rows)}
 (root/'unreal-contact-midpoint-audit.json').write_text(json.dumps(out,indent=2));u.log('SUB01_MIDPOINT_SURFACE_WRITTEN')

@@ -10,7 +10,7 @@ const marker='SUB01_NATIVE_KEYBOARD_REAL_'+Date.now();
 async function state(){const r=await fetch('http://127.0.0.1:8798/pc/state',{headers:{'X-Admin-Token':token}});if(!r.ok)throw new Error('PrivatePCStateUnavailable');return r.json();}
 let browser;
 (async()=>{
- if(Date.now()>=Date.parse('2026-10-13T18:16:00Z'))throw new Error('BudgetDeadlineEnded');
+ if(Date.now()>=Date.parse('2026-10-13T19:16:00Z'))throw new Error('BudgetDeadlineEnded');
  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-gpu','--autoplay-policy=no-user-gesture-required']});
  const page=await browser.newPage({viewport:{width:1280,height:720}});
  await page.mouse.move(640,360); // Before registration; avoids an initial native look jump.

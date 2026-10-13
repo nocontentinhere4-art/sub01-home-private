@@ -19,9 +19,10 @@ def measured_hands(hands):
 
 def validate(data):
  rows=data.get('samples',[])
- if len(rows)!=151:raise ValueError('Expected all151 authored3–8second samples')
+ if len(rows) not in (151,301):raise ValueError('Expected complete 30Hz or60Hz 3–8second samples')
+ rate=(len(rows)-1)/5
  for i,row in enumerate(rows):
-  if abs(finite_metric(row['time'])-(3+i/30))>1e-6:raise ValueError('Incomplete/nonmonotonic time samples')
+  if abs(finite_metric(row['time'])-(3+i/rate))>1e-6:raise ValueError('Incomplete/nonmonotonic time samples')
   if row['invalidInfluences']!=0:raise ValueError('Invalid imported skin influences')
   if not 0<=finite_metric(row['finger_local_max_error_degrees'])<=.1:raise ValueError('Captured finger rotation changed')
   if not 0<=finite_metric(row['bone_length_max_error_cm'])<=.01:raise ValueError('Bone stretch detected')
@@ -40,4 +41,4 @@ def validate(data):
    if abs(sum(v*v for v in t['rotation'])-1)>.001:raise ValueError('Nonunit quaternion')
  for side in [0,1]:
   if min(row['hands'][side]['overKeyVertices'] for row in rows)<=0:raise ValueError('No true key overlap at one or more samples')
- return {'samples':151,'max_corrected_top_penetration_cm':max(h['penetrationCm']for r in rows for h in r['corrected']['hands']),'acceptance':'distal skin against extracted keytop triangles at30Hz only; palm/bevel/midpoint/POV not certified'}
+ return {'samples':len(rows),'sample_rate_hz':rate,'max_corrected_top_penetration_cm':max(h['penetrationCm']for r in rows for h in r['corrected']['hands']),'acceptance':f'distal skin against extracted keytop triangles at{rate:g}Hz only; palm/bevel/midpoint/POV not certified'}

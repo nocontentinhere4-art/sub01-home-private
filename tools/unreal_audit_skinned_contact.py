@@ -14,8 +14,8 @@ caps=json.loads((Path(u.Paths.project_dir()).parent.parent/'keyboard-keycaps-wor
 key_min=u.Vector(*caps['geometryBoundsUECm']['minCm']);key_max=u.Vector(*caps['geometryBoundsUECm']['maxCm'])
 key_triangles=[u.Vector(*p) for cap in caps['keycaps'] for tri in cap['topTrianglesUECm'] for p in tri]
 rows=[]
-for frame in range(90,241):
- time=frame/30
+for frame in range(180,481):
+ time=frame/60
  poses=u.AnimationLibrary.get_bone_poses_for_time(clip,names,time,False,mesh)
  local={str(n):p for n,p in zip(names,poses)};resolved={}
  def component(n):
@@ -53,6 +53,6 @@ for frame in range(90,241):
  assert all(h['selectedVertices']>0 for h in report['hands']),report
  rows.append({'time':time,**report})
 assert all(sum(row['hands'][i]['overKeyVertices']for row in rows)>0 for i in [0,1]),'No actual key overlap: orientation/mapping invalid'
-result={'kind':'actual imported distal-influenced skinned surface; not joint estimate','source_interval_seconds':[3,8],'selected_threshold':.30,'key_xy_status':'actual87keycaps toptriangle narrowphase; sourceSHA '+caps['sourceSHA256'],'body_cm':[203.9,-232.3,-.6],'body_yaw':180,'samples':rows}
+result={'kind':'actual imported distal-influenced skinned surface; not joint estimate','source_interval_seconds':[3,8],'selected_threshold':.30,'correction_contract':'conservative continuous horizontal plane over all selected distal vertices for bimanual-only3–8s; includes key gaps; not exact physical key contact','key_xy_status':'actual87keycaps toptriangle narrowphase; sourceSHA '+caps['sourceSHA256'],'body_cm':[203.9,-232.3,-.6],'body_yaw':180,'samples':rows}
 p=Path(u.Paths.project_dir())/'unreal-skinned-contact-audit.json';p.write_text(json.dumps(result,indent=2))
 u.log('SUB01_SKIN_CONTACT_AUDIT_WRITTEN '+str(p))

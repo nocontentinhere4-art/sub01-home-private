@@ -35,6 +35,16 @@ def test_complete_measured_contract_is_accepted():
     assert module.validate(profile())['samples'] == 151
 
 
+def test_complete_60hz_profile_uses_correct_sample_times():
+    data = profile()
+    template = data['samples'][0]
+    data['samples'] = [dict(copy.deepcopy(template), time=3 + i / 60) for i in range(301)]
+    assert module.validate(data)['sample_rate_hz'] == 60
+    data['samples'][61]['time'] += .01
+    with pytest.raises(ValueError):
+        module.validate(data)
+
+
 @pytest.mark.parametrize('field', ['time', 'finger_local_max_error_degrees', 'bone_length_max_error_cm'])
 @pytest.mark.parametrize('value', [float('nan'), float('inf')])
 def test_nonfinite_measurement_cannot_pass_comparison(field, value):

@@ -39,7 +39,7 @@ TArray<FTransform> USub01HomeHandsInstance::SolveCapturedKeyboardArmContact(USke
   const FString Audit=AnalyzeCapturedFingerSkin(Mesh,Result,BodyWorld,KeyMin,KeyMax,KeyTriangles);TSharedPtr<FJsonObject> Root;auto Reader=TJsonReaderFactory<>::Create(Audit);if(!FJsonSerializer::Deserialize(Reader,Root)||!Root.IsValid())break;
   const TArray<TSharedPtr<FJsonValue>>* Hands=nullptr;if(!Root->TryGetArrayField(TEXT("hands"),Hands)||Hands->Num()!=2)break;
   bool Changed=false;
-  for(int32 Side=0;Side<2;++Side){auto HandReport=(*Hands)[Side]->AsObject();if(HandReport->GetIntegerField(TEXT("overKeyVertices"))<4)continue;const double Pen=HandReport->GetNumberField(TEXT("penetrationCm"));if(Pen<=.001||Pen>12)continue;
+  for(int32 Side=0;Side<2;++Side){auto HandReport=(*Hands)[Side]->AsObject();if(HandReport->GetIntegerField(TEXT("overKeyVertices"))<4)continue;const double Pen=FMath::Max(0.,KeyMax.Z-HandReport->GetNumberField(TEXT("minCm")));if(Pen<=.001||Pen>12)continue;
    int32 Hand=INDEX_NONE;const FString Suffix=Side==0?TEXT("LeftHand"):TEXT("RightHand");for(int32 B=0;B<Ref.GetNum();++B)if(Ref.GetBoneName(B).ToString().EndsWith(Suffix)){Hand=B;break;}if(Hand==INDEX_NONE)continue;
    const int32 Elbow=Ref.GetParentIndex(Hand),Upper=Ref.GetParentIndex(Elbow);if(Upper<0||Elbow<0)continue;
    FTransform A=Result[Upper],B=Result[Elbow],C=Result[Hand];const FQuat CapturedWrist=C.GetRotation();
