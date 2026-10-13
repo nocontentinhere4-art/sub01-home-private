@@ -82,16 +82,28 @@ class PCRunner:
         if bool(active) != self.privacy:
             self.privacy = bool(active)
             self.privacy_epoch += 1
-            if self.privacy and self.computer.ready and not self.computer.paused:
-                if await self.computer.send({"type": "pause"}):
-                    self.computer.paused = True
+            if self.privacy:
+                self.session_until = 0.0
+                self.computer.paused = True  # no in-flight session may mark it running again
+                # Pause unconditionally: a resume may already be written to the
+                # worker while its drain is pending, so the paused flag can lie.
+                # Worker stdin is ordered, so this pause lands after that resume.
+                if self.computer.ready:
+                    await self.computer.send({"type": "pause"})
             self.notify()
 
     async def set_session(self, active):
+        epoch = self.privacy_epoch
         self.session_until = self.clock() + SESSION_SECONDS if active else 0.0
         if active and not self.privacy and self.computer.ready and self.computer.paused:
             if await self.computer.send({"type": "resume"}):
-                self.computer.paused = False
+                if self.privacy or epoch != self.privacy_epoch:
+                    # Privacy began during the resume: it has already sent a later
+                    # pause; never mark the guest running or keep the session.
+                    self.computer.paused = True
+                    self.session_until = 0.0
+                else:
+                    self.computer.paused = False
         self.notify()
 
     async def input(self, text):

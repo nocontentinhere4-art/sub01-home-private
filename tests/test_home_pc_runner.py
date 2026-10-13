@@ -161,3 +161,62 @@ def test_runner_refuses_public_binds_weak_credentials_and_repo_data(tmp_path, mo
     token_file.write_text(TOKEN + "\n")
     assert pc.load_token(str(token_file)) == TOKEN
     assert TOKEN not in (pc.__doc__ or "")
+
+
+def test_privacy_beginning_during_session_resume_never_leaves_the_guest_running():
+    async def body():
+        http, runner, computer = await started()
+        try:
+            computer.output = "secret terminal"
+            gate, original = asyncio.Event(), computer.send
+
+            async def slow_send(message):
+                if message["type"] == "resume":
+                    computer.sent.append("resume")  # written to the worker; drain still pending
+                    await gate.wait()
+                    return True
+                return await original(message)
+
+            computer.send = slow_send
+            pending = asyncio.ensure_future(http.post("/pc/session", json={"active": True}, headers=AUTH))
+            await asyncio.sleep(0.05)
+            assert computer.sent == ["resume"]
+            await runner.set_privacy(True)
+            gate.set()
+            response = await (await pending).json()
+            assert response["output"] == "" and response["privacy"] is True, "response stays masked"
+            assert computer.sent[-1] == "pause", "the worker's last command is a pause, after the resume"
+            assert computer.paused is True and runner.session_until == 0.0, "no session survives privacy"
+            await runner.idle_step()
+            assert computer.sent[-1] == "pause"
+        finally:
+            await http.close()
+    run(body())
+
+
+def test_raw_input_stays_one_json_line_to_the_isolated_worker(tmp_path):
+    """Raw text (even with newlines or JSON) is one escaped `input` message for the
+    v86 serial console; it can never become a second worker command or a host shell."""
+    from home_computer import Computer
+
+    class Pipe:
+        def __init__(self):
+            self.data = b""
+
+        def write(self, data):
+            self.data += data
+
+        async def drain(self):
+            pass
+
+    async def body():
+        computer = Computer(tmp_path)
+        computer.ready = True
+        computer.process = type("P", (), {"returncode": None, "stdin": Pipe()})()
+        payload = 'x\n{"type": "shutdown"}\n$(reboot)\u0003'
+        assert await computer.input(payload)
+        lines = computer.process.stdin.data.decode().splitlines()
+        assert len(lines) == 1
+        message = __import__("json").loads(lines[0])
+        assert message == {"type": "input", "text": payload}
+    run(body())
