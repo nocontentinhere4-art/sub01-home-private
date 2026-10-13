@@ -108,7 +108,7 @@ class RemoteComputer:
         if message.get('type') not in {'pause', 'resume'}:
             return False
         try:
-            await self.request('POST', '/pc/session', {'active': message['type'] == 'resume'})
+            await self.request('POST', '/pc/session', {'active': message['type'] == 'resume', 'source': 'home'})
             return True
         except Exception:
             self._clear()
@@ -126,7 +126,7 @@ class RemoteComputer:
             now = time.monotonic()
             if using != self._using_sent or (using and now - self._session_at > 20):
                 if using or self._using_sent:
-                    await self.request('POST', '/pc/session', {'active': using})
+                    await self.request('POST', '/pc/session', {'active': using, 'source': 'home'})
                 self._using_sent, self._session_at = using, now
         except Exception:
             self._clear()

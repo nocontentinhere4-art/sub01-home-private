@@ -61,3 +61,28 @@ To share this guest with the full backend without starting another VM, set `HOME
 `--home-origin http://127.0.0.1:8820` connects the standalone runner's authenticated `/devices/*` proxy to the actual same-server home backend. The separate native device component displays real phone/Minecraft JPEGs when those services exist, and draws Pong from actual server game state with actual server paddle actions. Missing services stay unavailable. Native Chess rendering has not been implemented. Four C++ files must be staged, and the native interaction handler must call `TryNativeHomeDevice` before desk focus. Native phone/TV runtime acceptance still requires a real viewport and input test.
 
 Graphical mouse control remains **unaccepted**: real PS/2 movement bytes were observed inside the Linux kernel, but the Xvesa cursor did not move in the inspected frames. No substitute mouse result or fabricated browser page was introduced. The authorized server hard stop remains 21:45 UTC, with guest save termination armed at 21:44:47 UTC.
+
+Private guest input checkpoint (2026-10-13): the GUI keyboard executed `uname -a`
+in the actual TinyCore terminal. Mouse interaction remains **unaccepted**. The
+recorded guest `/dev/input/mice` bytes `28 14 f6` correspond to dx=20, dy=-10;
+the instruction counter advanced 796,839 while an active operator session sent
+movement/clicks, but the VGA frame and window state did not change. Xvesa had
+`/dev/input/mice` open as root, and its `,5` argument means five buttons according
+to its own help, not a five-byte packet format.
+
+The source correction in `computer/guest_mouse.cjs` matches the bundled v86
+browser adapter: always send `mouse-delta` (screen dx, negated screen dy), and
+add `mouse-absolute` when unlocked absolute mode is advertised. Previously the
+absolute branch omitted relative events, which could starve the PS/2 device
+used by Xvesa. Button order remains left/middle/right. This is a bus-contract
+correction, **not a verified fix for X window input**. No guest was restarted or
+runtime acceptance changed during this CPU-only review.
+
+At the next authorized runtime, record advertised absolute mode and X's open
+input descriptor, keep an authenticated native focus lease alive, capture the
+actual frame and instruction counter before/after movement and a held click
+on the terminal/titlebar, and require an actual window/focus change. If absent,
+capture Xvesa stderr and the guest input protocol rather than flipping movement
+signs or replacing the display. Operator/native and home/actor session leases
+now expire independently; actor release cannot cancel native focus. Privacy
+clears both leases and requires a fresh focus request after exit.

@@ -108,6 +108,7 @@ out/private-pc-runtime-assets.tar.gz
 out/native-hands-pc-*
 out/*.sh
 out/native-contact-stage/
+out/native-next-stage/
 out/recover-api.py
 out/recover-same-pod.py
 out/recovery-provider-metadata.private.json
@@ -123,3 +124,9 @@ out/inspect-provider-public-migration.py
 
 # the eye's frames (local runtime data, made while he sleeps or is outside)
 out/eye/
+out/home-resume-bound.json
+out/pc-runtime-next/
+out/source-asset-integrity.json
+out/target-asset-integrity.json
+out/download-native-pc-evidence.py
+docs/screens/home/private-minecraft-prepared.jpg

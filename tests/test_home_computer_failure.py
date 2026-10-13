@@ -10,10 +10,12 @@ def test_dead_guest_clears_pixels_text_and_input_capability(tmp_path, monkeypatc
     c.ready, c.status, c.output, c.last_command = True, 'ready', 'private terminal text', 'uname -a'
     c.display = {'kind': 'graphical', 'available': True, 'keyboard_available': True}
     c.framebuffer_png = b'old real guest pixels'
+    c.instruction_counter = 12345
     c.process = SimpleNamespace(returncode=1)
     assert asyncio.run(c.graphical_input({'type': 'vga-keyboard', 'scancodes': [30, 158]})) is False
     state = c.view()
     assert not state['ready'] and state['status'] == 'offline'
     assert state['output'] == '' and state['last_command'] == ''
+    assert state['instruction_counter'] is None
     assert c.framebuffer_png is None and not state['display']['available']
     assert not state['display'].get('keyboard_available')

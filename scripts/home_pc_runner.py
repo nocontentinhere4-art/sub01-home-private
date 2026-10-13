@@ -19,7 +19,7 @@ logged). Contract (JSON):
                                         -> {"ok": bool, "revision": int}; the text
                                            goes to the guest serial console (a
                                            newline is appended unless raw), <=2000
-  POST /pc/session {"active": bool}     -> first-person use keeps the VM running;
+  POST /pc/session {"active": bool, "source": "native"|"home"}     -> first-person use keeps the VM running;
                                            send active=true at least every 60 s
   POST /pc/privacy {"active": bool}     -> bathroom privacy: state is blanked and
                                            input is refused with 409, including an
@@ -62,9 +62,13 @@ class PCRunner:
         self.privacy = False
         self.privacy_sources = {"native": False, "home": False}
         self.privacy_epoch = 0
-        self.session_until = 0.0
+        self.session_sources = {"native": 0.0, "home": 0.0}
         self.home_devices = None
         self.changed = asyncio.Event()
+
+    @property
+    def session_until(self):
+        return max(self.session_sources.values())
 
     def authorized(self, request):
         supplied = request.headers.get("X-Admin-Token", "").encode()
@@ -90,7 +94,7 @@ class PCRunner:
             self.privacy = bool(active)
             self.privacy_epoch += 1
             if self.privacy:
-                self.session_until = 0.0
+                self.session_sources = dict.fromkeys(self.session_sources, 0.0)
                 self.computer.paused = True  # no in-flight session may mark it running again
                 # Pause unconditionally: a resume may already be written to the
                 # worker while its drain is pending, so the paused flag can lie.
@@ -99,16 +103,18 @@ class PCRunner:
                     await self.computer.send({"type": "pause"})
             self.notify()
 
-    async def set_session(self, active):
+    async def set_session(self, active, source="native"):
+        if source not in self.session_sources:
+            raise ValueError("Unknown session source")
         epoch = self.privacy_epoch
-        self.session_until = self.clock() + SESSION_SECONDS if active else 0.0
+        self.session_sources[source] = self.clock() + SESSION_SECONDS if active and not self.privacy else 0.0
         if active and not self.privacy and self.computer.ready and self.computer.paused:
             if await self.computer.send({"type": "resume"}):
                 if self.privacy or epoch != self.privacy_epoch:
                     # Privacy began during the resume: it has already sent a later
                     # pause; never mark the guest running or keep the session.
                     self.computer.paused = True
-                    self.session_until = 0.0
+                    self.session_sources = dict.fromkeys(self.session_sources, 0.0)
                 else:
                     self.computer.paused = False
         self.notify()
@@ -139,8 +145,14 @@ class PCRunner:
         c = self.computer
         busy = self.clock() < max(self.session_until, getattr(c, "input_until", 0.0))
         if c.ready and not c.paused and (self.privacy or not busy):
+            # A focus lease can arrive while the worker's pause write drains.
+            # Reconcile after that write so a stale idle decision cannot win.
             if await c.send({"type": "pause"}):
                 c.paused = True
+                busy = self.clock() < max(self.session_until, getattr(c, "input_until", 0.0))
+                epoch = self.privacy_epoch
+                if busy and not self.privacy and await c.send({"type": "resume"}):
+                    c.paused = self.privacy or epoch != self.privacy_epoch
 
     async def wait_for_change(self, since, wait):
         deadline = self.clock() + wait
@@ -259,10 +271,14 @@ def create_app(runner):
         return data["active"]
 
     async def session(request):
-        active = flag(await read_json(request))
+        data = await read_json(request)
+        active = flag(data)
+        source = data.get("source", "native")
+        if not isinstance(source, str) or source not in runner.session_sources:
+            raise web.HTTPBadRequest(text="Unknown session source")
         if active and runner.privacy:
             raise web.HTTPConflict(text="Bathroom privacy is active")
-        await runner.set_session(active)
+        await runner.set_session(active, source)
         return web.json_response(runner.view(), headers=no_store)
 
     async def privacy(request):

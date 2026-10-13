@@ -43,7 +43,7 @@ BACKOFF_WINDOW_S = 600                                          # #89: memory re
 BACKOFF_S, BACKOFF_MAX_S = 30.0, 120.0                          # ... wait 30 s, 60 s, ... before the next start
 NICE = int(os.environ.get("BROWSE_NICE") or 10)                 # the browser runs at a lower CPU priority
 HUNG_AFTER = 3                                                  # consecutive failed calls: restart the child
-ENV_KEEP = ("PATH", "HOME", "LANG", "TZ", "TMPDIR", "PLAYWRIGHT_BROWSERS_PATH", "FONTCONFIG_PATH", "PYTHONPATH",
+ENV_KEEP = ("PATH", "HOME", "LANG", "TZ", "TMPDIR", "PLAYWRIGHT_BROWSERS_PATH", "FONTCONFIG_PATH", "PYTHONPATH", "LD_LIBRARY_PATH",
             "BROWSE_PROXY", "BROWSE_IGNORE_TLS", "BROWSE_CHROMIUM", "OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS",
             # #60: the logged-in sessions reach this process only; browse.py adds them to their site's own browser
             # context and Chromium's environment never carries them (browse.CHROMIUM_ENV)

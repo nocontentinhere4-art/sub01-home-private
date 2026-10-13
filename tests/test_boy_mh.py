@@ -90,16 +90,17 @@ const vec = () => new Proxy(function () {}, {get: (t, p) => p === "x" || p === "
 const share = o => !o ? 0 : o.mix != null ? o.mix : o.rest ? 1 : 0;
 const rec = name => (...a) => { calls.push([name, a[0], share(a[3]) >= 0.5 ? "rest" : "", share(a[3])]); };
 function build(M) {
-  const env = {boy: {updateMatrixWorld() {}, rotation: {y: 0}}, bones: {RightHand: vec(), RightForeArm: vec(), RightArm: vec()}};
+  const env = {state: () => ({current: null}), boy: {updateMatrixWorld() {}, rotation: {y: 0}}, bones: {RightHand: vec(), RightForeArm: vec(), RightArm: vec()}};
   const P = {keys: {c: [0, 0, 0]}, kbNode: {}, mouseNode: {}, mouse: [0, 0, 0]};
   const OT = {json: {speed: 0.75}, t: 0, tr: 0};
   const deps = {M, env, P, OT, OT_REST: 0.2, HUMP: 0.02, CLIP: {mouse: [0, 0, 0]}, V: vec, _k: vec(), _c: vec(), _a: vec(), dK: vec(),
     toWorld: () => vec(), kbRef: () => [0, 0, 0], fwdV: () => vec(), S: () => vec(),
     ownerKeys: rec("ownerKeys"), keyOn: rec("keyOn"), pin: () => {}, follow: () => {}, mouseHold: rec("mouseHold"),
     omStep: rec("omStep"), omNow: () => ({move: [0, 0]}), rightChain: () => [], weighted: (side, w, solve) => solve(1), forearmTwistKeep: () => {}, forearmTwistBack: () => {},
-    REACH_S: 0.8, ELB_REF: {}, elbowRef: () => {}, elbowKeep: () => {}, swivelTo: () => {}, THREE: {Quaternion: function () { return vec(); }}};
+    REACH_S: 0.8, ELB_REF: {}, elbowRef: () => {}, elbowKeep: () => {}, swivelTo: () => {},
+    chainOf: () => [], grKeep: () => {}, _hq: vec(), THREE: {Quaternion: function () { return vec(); }}};
   const names = Object.keys(deps);
-  return new Function(...names, SRC.kCtx + "; " + SRC.hands + "; " + (SRC.handsBody || "") + "; return hands;")(...names.map(n => deps[n]));
+  return new Function(...names, SRC.hz + "; " + SRC.kCtx + "; " + SRC.hands + "; " + SRC.handsSolve + "; " + SRC.handsHold + "; " + (SRC.handsBody || "") + "; return hands;")(...names.map(n => deps[n]));
 }
 function run(mode, frames) {
   calls.length = 0;
@@ -138,6 +139,9 @@ def test_module_encodes_the_desk_rule():
     js = (WEB / "boy_mh.js").read_text()
     src = {"wanted": _js_function(js, "function wanted(st)"), "hands": _js_function(js, "function hands(dt)"),
            "handsBody": _js_function(js, "function handsBody(dt)") if "function handsBody(dt)" in js else "",
+           "handsSolve": _js_function(js, "function handsSolve(dt)"),
+           "handsHold": _js_function(js, "function handsHold(save"),
+           "hz": next(line.strip().split(";", 1)[0] for line in js.splitlines() if line.strip().startswith("const HZ =")),
            "kCtx": next(line.strip() for line in js.splitlines() if line.strip().startswith("const kCtx ="))}
     import os
     r = subprocess.run([node, "-e", DESK_RULE_JS], capture_output=True, text=True, timeout=60, env={**os.environ, "DESK_RULE_SRC": json.dumps(src)})

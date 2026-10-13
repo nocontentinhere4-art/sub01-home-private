@@ -325,7 +325,7 @@ def render(spec, ffmpeg="ffmpeg", cpu_base=None):
 
 def child_env():
     """Children get no secrets: only what they need to run."""
-    keep = ("PATH", "HOME", "LANG", "LC_ALL", "PLAYWRIGHT_BROWSERS_PATH", "PYTHONPATH", "TZ", "SUB01_TZ",
+    keep = ("PATH", "HOME", "LANG", "LC_ALL", "PLAYWRIGHT_BROWSERS_PATH", "PYTHONPATH", "TZ", "SUB01_TZ", "LD_LIBRARY_PATH",
             "SUB01_SITE_NAME", "SUB01_SITE_URL", "OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS")
     return {k: os.environ[k] for k in keep if k in os.environ}
 

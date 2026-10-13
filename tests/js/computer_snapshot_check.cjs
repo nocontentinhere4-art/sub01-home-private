@@ -22,6 +22,7 @@ function fixture() {
       exit: () => events.push('exit'), on: (name, fn) => signals[name] = fn},
     require: name => name === './libv86.cjs' ? {V86: function() {return guest;}}
       : name === './guest_keyboard.cjs' ? {guestKeyboard:()=>({cancel(){},enqueue:async()=>true})}
+      : name === './guest_mouse.cjs' ? require('../../computer/guest_mouse.cjs')
       : name === './vga_framebuffer.cjs' ? require('../../computer/vga_framebuffer.cjs')
       : name === 'fs' ? filesystem : name === 'readline' ? {createInterface: () => ({on: (name, fn) => onLine = fn})} : require(name)};
   vm.runInNewContext(source, context);
