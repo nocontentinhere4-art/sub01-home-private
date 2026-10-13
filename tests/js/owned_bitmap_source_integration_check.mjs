@@ -15,6 +15,7 @@ const update=functionCode('async function updateRealBrowser() {','function accep
 const privacy=functionCode('function setPrivacy(active) {','function browserFrame(device, parent) {');
 const accept=functionCode('function acceptHome(state) {','let lastFullHome = null;');
 const visibility=functionCode("document.addEventListener('visibilitychange',",'function notice(text) {');
+const screenLights=functionCode('const deviceScreenLights = [];','function invalidateDeviceBitmaps()');
 const flush=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
 const ok=()=>({ok:true,blob:async()=>({jpeg:true})});
 function fixture(){
@@ -38,7 +39,7 @@ function fixture(){
    decode:blob=>new Promise((resolve,reject)=>decodes.push({blob,resolve,reject})),
   });
  };
- const controls=new Function('scope','createOwnedBitmapPainter',`with(scope){${invalidate}\n${unavailable}\n${minecraftUnavailable}\n${assignment('minecraftBitmapPainter')}\n${assignment('deskBitmapPainter')}\n${update}\n${privacy}\n${accept}\n${visibility}\nreturn{minecraftBitmapPainter,deskBitmapPainter,invalidateDeviceBitmaps,updateRealBrowser,setPrivacy,acceptHome};}`)(scope,factory);
+ const controls=new Function('scope','createOwnedBitmapPainter',`with(scope){${screenLights}\n${invalidate}\n${unavailable}\n${minecraftUnavailable}\n${assignment('minecraftBitmapPainter')}\n${assignment('deskBitmapPainter')}\n${update}\n${privacy}\n${accept}\n${visibility}\nreturn{minecraftBitmapPainter,deskBitmapPainter,invalidateDeviceBitmaps,updateRealBrowser,setPrivacy,acceptHome};}`)(scope,factory);
  const close=()=>{controls.minecraftBitmapPainter.dispose();controls.deskBitmapPainter.dispose();assert.equal(timers.size,0);};
  return{scope,draws,tvContent,expanded,requests,decodes,configs,controls,events,timers,close};
 }
