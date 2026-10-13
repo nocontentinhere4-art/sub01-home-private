@@ -1,0 +1,76 @@
+--- a/tools/unreal_native_route.py
++++ b/tools/unreal_native_route.py
+@@ -7,6 +7,7 @@
+  int32 RouteIndex=0;
+  double RouteStarted=0,RouteStepStarted=0,RouteLastProgress=0;
+  float RouteBestDistance=BIG_NUMBER,RouteCaptureDelay=45;
++ float RouteViewYaw=0;bool RouteViewYawReady=false;
+  TArray<FVector> RouteTargets;
+  TArray<FString> RouteNames;
+ '''
+@@ -23,7 +24,7 @@
+  }
+  RouteCaptureDelay=CaptureAfter>0?CaptureAfter:45;CaptureAfter=-1;
+  RouteStarted=FPlatformTime::Seconds();RouteStepStarted=RouteStarted;RouteLastProgress=RouteStarted;
+- RouteActive=true;
++ RouteActive=true;RouteViewYawReady=false;
+  UE_LOG(LogTemp,Display,TEXT("SUB01_ROUTE_TEST_ONLY native CharacterMovement input; brain/backend unchanged; no teleport"));
+ }
+ void ASub01HomeCharacter::FinishNativeRouteTest(bool Success,const TCHAR* Reason){
+@@ -55,7 +56,15 @@
+  }
+  if(Here.Z<-100||Here.Z>750||FMath::Abs(Here.X)>600||FMath::Abs(Here.Y)>700){FinishNativeRouteTest(false,TEXT("Outside conservative house bounds"));return;}
+  if(Distance>1){
+-  Controller->SetControlRotation(FRotator(-4,Delta.Rotation().Yaw,0));
++  // View turns along the shortest arc, eased (1-exp(-4dt)) and capped at 1.8 rad/s
++  // (tools/first_person_yaw.py); the movement input is unchanged.
++  const float YawDt=FMath::Min(GetWorld()->GetDeltaSeconds(),.1f),TargetYaw=Delta.Rotation().Yaw;
++  if(!RouteViewYawReady||!FMath::IsFinite(RouteViewYaw)){RouteViewYaw=Controller->GetControlRotation().Yaw;RouteViewYawReady=true;}
++  if(YawDt>0&&FMath::IsFinite(TargetYaw)){
++   const float Turn=FMath::FindDeltaAngleDegrees(RouteViewYaw,TargetYaw),Limit=103.1324f*YawDt;
++   RouteViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=FMath::Min(.05f,Limit)?TargetYaw:RouteViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
++  }
++  Controller->SetControlRotation(FRotator(-4,RouteViewYaw,0));
+   AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));
+  }
+ }
+--- a/tools/unreal_live_home_runtime.py
++++ b/tools/unreal_live_home_runtime.py
+@@ -16,7 +16,7 @@
+  FString LiveHomeOrigin,LiveHomeToken,LiveHomeNode=TEXT("door"),LiveHomeTarget,LiveHomeEpoch;
+  FString LiveHomeActivity; TArray<FString> LiveHomePath;
+  double LiveHomePollAt=0,LiveHomeLastReceived=0,LiveHomeProgressAt=0;
+- float LiveHomeBest=BIG_NUMBER;
++ float LiveHomeBest=BIG_NUMBER,LiveHomeViewYaw=0;bool LiveHomeViewYawReady=false;
+  TMap<FString,FVector> LiveHomeNodes;TMap<FString,TArray<FString>> LiveHomeEdges;
+ '''
+ METHODS=r'''
+@@ -38,7 +38,7 @@
+  for(const auto& Node:LiveHomeNodes){const float XY=FVector2D(Actual.X-Node.Value.X,Actual.Y-Node.Value.Y).Size();const float Z=FMath::Abs(Contact.HitResult.ImpactPoint.Z-Node.Value.Z);if(XY<20&&Z<20&&XY+Z<Best){Best=XY+Z;StartNode=Node.Key;}}
+  if(StartNode.IsEmpty()){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED actual pawn not at verified graph node; no position reset"));return;}
+  LiveHomeNode=StartNode;LiveHomePath.Empty();LiveHomeTarget.Empty();LiveHomeEpoch.Empty();
+- LiveHome=true;LiveHomeProgressAt=FPlatformTime::Seconds();PollLiveHome();
++ LiveHome=true;LiveHomeViewYawReady=false;LiveHomeProgressAt=FPlatformTime::Seconds();PollLiveHome();
+  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_BOUND real bridge; native physical graph movement only; seated actions not accepted"));
+ }
+ void ASub01HomeCharacter::PollLiveHome(){
+@@ -94,7 +94,18 @@
+  }
+  const float Score=Distance+Height;if(Score<LiveHomeBest-1){LiveHomeBest=Score;LiveHomeProgressAt=Now;}
+  if(Now-LiveHomeProgressAt>4){LiveHomeBlocked=true;GetCharacterMovement()->StopMovementImmediately();UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s target=%s; collision not bypassed"),*LiveHomeNode,*Next);return;}
+- if(Controller&&Distance>1){Controller->SetControlRotation(FRotator(-4,Delta.Rotation().Yaw,0));AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));}
++ if(Controller&&Distance>1){
++  // View turns along the shortest arc, eased (1-exp(-4dt)) and capped at 1.8 rad/s
++  // (tools/first_person_yaw.py); the movement input is unchanged.
++  const float YawDt=FMath::Min(GetWorld()->GetDeltaSeconds(),.1f),TargetYaw=Delta.Rotation().Yaw;
++  if(!LiveHomeViewYawReady||!FMath::IsFinite(LiveHomeViewYaw)){LiveHomeViewYaw=Controller->GetControlRotation().Yaw;LiveHomeViewYawReady=true;}
++  if(YawDt>0&&FMath::IsFinite(TargetYaw)){
++   const float Turn=FMath::FindDeltaAngleDegrees(LiveHomeViewYaw,TargetYaw),Limit=103.1324f*YawDt;
++   LiveHomeViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=FMath::Min(.05f,Limit)?TargetYaw:LiveHomeViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
++  }
++  Controller->SetControlRotation(FRotator(-4,LiveHomeViewYaw,0));
++  AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));
++ }
+ }
+ '''
+ 
