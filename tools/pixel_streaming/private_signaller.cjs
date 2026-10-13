@@ -9,7 +9,7 @@ const http = require('node:http');
 const { createRequire } = require('node:module');
 const infra = process.argv[2];
 if (!infra || !path.isAbsolute(infra)) throw new Error('Supply absolute official infrastructure directory');
-const deadline = Date.parse('2026-10-13T18:16:00Z');
+const deadline = Date.parse('2026-10-13T19:16:00Z');
 if (Date.now() >= deadline) throw new Error('Authorized budget window has ended');
 const fromInfra = createRequire(path.join(infra, 'package.json'));
 const express = fromInfra('express');

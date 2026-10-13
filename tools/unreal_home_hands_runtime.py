@@ -1,4 +1,6 @@
 """Native real-clip first-person skeletal pose blending, staged for server compilation."""
+from unreal_skin_contact_native import HEADER as SKIN_CONTACT_HEADER, CPP as SKIN_CONTACT_CPP
+
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
@@ -89,6 +91,12 @@ struct FSub01HandsProxy : FAnimInstanceProxy {
 FAnimInstanceProxy* USub01HomeHandsInstance::CreateAnimInstanceProxy(){return new FSub01HandsProxy(this);}
 void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy* Proxy){delete Proxy;}
 '''
+
+HEADER = HEADER.replace(' protected:', SKIN_CONTACT_HEADER + '\n protected:')
+CPP += SKIN_CONTACT_CPP
+from unreal_contact_profile_runtime import install as install_contact_profile
+import unreal_hands_diagnostic
+HEADER,CPP,unreal_hands_diagnostic.METHODS=install_contact_profile(HEADER,CPP,unreal_hands_diagnostic.METHODS)
 
 CHARACTER_FIELDS = r'''
  public:
