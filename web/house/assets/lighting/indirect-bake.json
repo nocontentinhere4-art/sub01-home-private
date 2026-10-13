@@ -1,56 +1,56 @@
 {
-  "source_sha256": "39f6fdacc902bf264f9247c2c3d7b7649a6598db94b837bcc703cd0497fb3f06",
+  "source_sha256": "a129681be7c7798e47ae1dba309ab49b854b5672b3f027e12ba1135002dd14f3",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 512,
   "diffuse_bounces": 4,
   "direct_light": false,
   "albedo_in_bake": false,
-  "receivers": 111,
+  "receivers": 103,
   "export_material_texture_limit": 512,
-  "layout": "Modern licensed HAVEN linen sofa and source-preserving plant leaf LOD",
+  "layout": "Dynamic upper cabinet leaves excluded; HAVEN sofa and leaf LOD retained",
   "day": {
-    "source_exr_sha256": "a0f4bc097a4046ddd2f19d8bbb31a935186ff29a34a15d8ab0c2eab5a670ef4a",
-    "width": 1367,
-    "height": 1367,
-    "max": 8.05821704864502,
-    "p95": 0.4521100878715515,
-    "nonzero": 0.5184388627535133,
+    "source_exr_sha256": "7c9b8c7d170033a57663a16c0f870866c0e133de7765dceda609f765bf02dc36",
+    "width": 1366,
+    "height": 1364,
+    "max": 7.8244242668151855,
+    "p95": 0.453883962333202,
+    "nonzero": 0.5152332730793506,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "source_exr_sha256": "1e26aaf1fa434dda60a333f95de576b30dc89781f9a6bd00e64017913c56724a",
-    "width": 1367,
-    "height": 1367,
-    "max": 2.487633466720581,
-    "p95": 0.00625462802127001,
-    "nonzero": 0.44369501827216834,
+    "source_exr_sha256": "7ea07a926f742ec3dda7733f5fb3db4d7d375c3d9c8b33e1930174c9d7159c6f",
+    "width": 1366,
+    "height": 1364,
+    "max": 11.331961631774902,
+    "p95": 0.006360318465158343,
+    "nonzero": 0.4424631713631855,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "280aa3a2b5451d192c17d38d6736cb3c1f0a6571f8e0eb7b881b67cea1c96a5f",
-      "bytes": 12378132
+      "sha256": "cef7e08eac8c3bc8c3b25b0b9c9754eafccc16af20943601cb4beef3b8e3057c",
+      "bytes": 12312880
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "2cf951e4168b7d4d77796b2eaebad6fde04d10c01767662dad687ff29a3ed421",
-      "bytes": 3917873
+      "sha256": "27f50a08cf47921870804f0dbac4000db6e066475b844106a9215cee26bb16ef",
+      "bytes": 3881145
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "fae107863181e11cb054ef649f8ec2441e444d569356546127500e834cfdce6f",
-      "bytes": 690297
+      "sha256": "6e81b33b343b65e9a422cb217130fe33e7555c410e3e98c635f90bb02eef8051",
+      "bytes": 689031
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "e0c399b59de8bb9f216b720f32dc098d60bed46393f335af6a4705dfa4c9cfa7",
-      "bytes": 3537481
+      "sha256": "fc047cad0d404edae991d4f3e2424f5d819afc37731ab27b6fad0cdbc6307de7",
+      "bytes": 3518120
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "ded24a2838590385fa07f60a8975bf59e7ff1ae3898cc55dd9b456697b5d3833",
-      "bytes": 629061
+      "sha256": "89cabac59a525baa645ca559588e6b8fb860d51c7c145fc07e975e479d5dd188",
+      "bytes": 627662
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
