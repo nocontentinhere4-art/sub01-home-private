@@ -7,16 +7,113 @@ Run on the GPU server (this script never renders):
 
 Writes house.blend, house.glb and assembly.json. The functioning browser remains
 home114; this authoring export is not a replacement for its brain/device logic.
+
+Optional, off by default: --bath-fixtures DIR swaps the loft-bathroom placeholder
+boxes for the original vanity/toilet built by tools/build_home_bath_fixtures.py
+(DIR holds vanity/toilet .glb + .json). Without the flag the output is unchanged.
 """
 import argparse
 import hashlib
 import json
+import math
+import re
 import sys
 from pathlib import Path
 
 
 OLD_PREFIXES = ('house-bed-frame-', 'house-bedding-', 'house-coffee-table-',
                 'house-coffee-machine-')
+BATH_FIXTURE_NAMES = ('vanity', 'toilet')
+PLANE_TOLERANCE_M = .002
+
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source', type=Path, required=True)
+    parser.add_argument('--assets-root', type=Path,
+                        default=Path(__file__).resolve().parents[1] / 'web/house/assets')
+    parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--source-sha')
+    parser.add_argument('--bath-fixtures', type=Path, default=None,
+                        help='opt-in directory with original vanity/toilet GLB + sidecar JSON')
+    return parser.parse_args(argv)
+
+
+def runtime_to_blender(point):
+    """Browser/three.js metres (Y up) -> Blender world after glTF import (Z up)."""
+    x, y, z = point
+    return (x, -z, y)
+
+
+def placeholder_boxes(call):
+    """Runtime AABB plus edge radius of one literal home.js box/cylinder/beam call."""
+    def numbers(text):
+        return [float(v) for v in re.findall(r'-?\d*\.?\d+', text)]
+    if call.startswith(('box(', 'cylinder(')):
+        args = [a.strip() for a in call[call.index('(') + 1:call.rindex(')')].split(',')]
+    if call.startswith('box('):
+        # home.js: box(w, h, d, x, y, z, m = M.wood, r = 0.012); r=0 is a sharp box.
+        w, h, d, x, y, z = (float(a) for a in args[:6])
+        radius = float(args[7]) if len(args) > 7 else .012
+        return {'low': (x - w / 2, y - h / 2, z - d / 2), 'high': (x + w / 2, y + h / 2, z + d / 2),
+                'radius': min(radius, w / 3, h / 3, d / 3)}
+    if call.startswith('cylinder('):
+        r, h, x, y, z = (float(a) for a in args[:5])
+        return {'low': (x - r, y - h / 2, z - r), 'high': (x + r, y + h / 2, z + r), 'radius': r}
+    if call.startswith('beam('):
+        a, b, rest = re.match(r'beam\(\[([^\]]*)\],\s*\[([^\]]*)\],\s*([-\d.]+)', call).groups()
+        a, b, r = numbers(a), numbers(b), float(rest)
+        return {'low': tuple(min(a[i], b[i]) - r for i in range(3)),
+                'high': tuple(max(a[i], b[i]) + r for i in range(3)), 'radius': r}
+    raise ValueError('Unsupported placeholder call: ' + call)
+
+
+def blender_box(box):
+    a, b = runtime_to_blender(box['low']), runtime_to_blender(box['high'])
+    return {'low': tuple(min(a[i], b[i]) for i in range(3)), 'high': tuple(max(a[i], b[i]) for i in range(3)),
+            'radius': box['radius']}
+
+
+def face_on_placeholder_surface(points, normal, box, tolerance=PLANE_TOLERANCE_M):
+    """True when a face (Blender world points) belongs to the placeholder's own
+    surface: every vertex inside the box, and either an axis-aligned face lying
+    on one of its six planes or a rounded-edge face within its edge radius.
+    Interior objects (e.g. books hidden inside the old vanity) stay untouched."""
+    low, high = box['low'], box['high']
+    if not all(low[i] - tolerance <= p[i] <= high[i] + tolerance for p in points for i in range(3)):
+        return False
+    centre = [sum(p[i] for p in points) / len(points) for i in range(3)]
+    length = math.sqrt(sum(n * n for n in normal)) or 1
+    unit = [n / length for n in normal]
+    axis = max(range(3), key=lambda i: abs(unit[i]))
+    if abs(unit[axis]) > .999:
+        plane = high[axis] if unit[axis] > 0 else low[axis]
+        return abs(centre[axis] - plane) <= tolerance
+    # Rounded edges/corners lie within the radius of at least two planes; a
+    # bevelled object resting just inside one plane (a book's lower edge) does not.
+    near = sum(min(centre[i] - low[i], high[i] - centre[i]) <= box['radius'] + tolerance for i in range(3))
+    return near >= 2
+
+
+def bath_fixture_plan(directory):
+    """Validated import plan for the optional original bath fixtures."""
+    plan = []
+    for name in BATH_FIXTURE_NAMES:
+        glb, sidecar = Path(directory) / f'{name}.glb', Path(directory) / f'{name}.json'
+        data = json.loads(sidecar.read_text())
+        if data.get('sha256') != sha256(glb):
+            raise ValueError(f'{glb} does not match the sha256 recorded in {sidecar.name}')
+        origin, yaw = data.get('runtime_origin_m'), data.get('runtime_yaw_radians')
+        if not (isinstance(origin, list) and len(origin) == 3 and all(map(math.isfinite, origin))
+                and isinstance(yaw, (int, float)) and math.isfinite(yaw)):
+            raise ValueError(f'{sidecar} lacks a finite runtime origin/yaw')
+        calls = data.get('replaces_home_js') or []
+        if not calls:
+            raise ValueError(f'{sidecar} names no placeholder to replace')
+        plan.append({'name': name, 'glb': glb, 'identifier': f'house-original-bath-{name}',
+                     'location': runtime_to_blender(origin), 'yaw': yaw,
+                     'remove': [blender_box(placeholder_boxes(call)) for call in calls], 'calls': calls})
+    return plan
 
 
 def glb_metadata(path):
@@ -41,13 +138,9 @@ def main():
     import bmesh
     from mathutils import Vector
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source', type=Path, required=True)
-    parser.add_argument('--assets-root', type=Path,
-                        default=Path(__file__).resolve().parents[1] / 'web/house/assets')
-    parser.add_argument('--output-dir', type=Path, required=True)
-    parser.add_argument('--source-sha')
-    args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
+    args = parse_args(sys.argv[sys.argv.index('--') + 1:])
+    # Validate the optional fixtures before any expensive import work.
+    bath_plan = bath_fixture_plan(args.bath_fixtures) if args.bath_fixtures else []
     source_hash = sha256(args.source)
     if args.source_sha and source_hash != args.source_sha:
         raise ValueError('Source checksum does not match the requested V4 source')
@@ -232,8 +325,8 @@ def main():
             return alternate
         raise FileNotFoundError(path)
 
-    def import_asset(relative, identifier, anchor, width=None):
-        path = asset_path(relative)
+    def import_asset(relative, identifier, anchor, width=None, yaw=0.0):
+        path = relative if isinstance(relative, Path) else asset_path(relative)
         previous = set(scene.objects)
         bpy.ops.import_scene.gltf(filepath=str(path.resolve()))
         objects = set(scene.objects) - previous
@@ -256,6 +349,9 @@ def main():
             group.location = Vector(anchor) - Vector((center.x, center.y, minimum.z)) * scale
         else:
             group.location = anchor
+        if yaw:
+            # three.js rotation.y about runtime +Y equals Blender rotation about +Z.
+            group.rotation_euler[2] = yaw
         for obj in meshes:
             obj['bakeId'] = identifier + '-' + obj.name
             obj['home114Replacement'] = True
@@ -297,6 +393,36 @@ def main():
             material = obj.data.materials[0]
             image = base_image(material)
             set_base(material, '#737e87' if obj.name.startswith('Haven_linen') else '#58616a', image)
+    bath_report = []
+    for fixture in bath_plan:
+        # Placeholder boxes are merged into static batches: delete only faces
+        # lying on each placeholder's own surface, then import the original.
+        removed_faces = 0
+        for obj in list(scene.objects):
+            if obj.type != 'MESH' or obj.get('home114Replacement'):
+                continue
+            world = obj.matrix_world
+            normal_matrix = world.to_3x3()
+            mesh = bmesh.new()
+            mesh.from_mesh(obj.data)
+            doomed = [face for face in mesh.faces
+                      if any(face_on_placeholder_surface([tuple(world @ v.co) for v in face.verts],
+                                                         tuple(normal_matrix @ face.normal), box)
+                             for box in fixture['remove'])]
+            if doomed:
+                removed_faces += len(doomed)
+                bmesh.ops.delete(mesh, geom=doomed, context='FACES')
+                orphaned = [vertex for vertex in mesh.verts if not vertex.link_faces]
+                if orphaned:
+                    bmesh.ops.delete(mesh, geom=orphaned, context='VERTS')
+                mesh.to_mesh(obj.data)
+                obj.data.update()
+            mesh.free()
+        if not removed_faces:
+            raise RuntimeError('No placeholder faces found for bath ' + fixture['name'])
+        meshes = import_asset(fixture['glb'], fixture['identifier'], fixture['location'], yaw=fixture['yaw'])
+        bath_report.append({'name': fixture['name'], 'removed_placeholder_faces': removed_faces,
+                            'replaced_calls': fixture['calls'], 'mesh_groups': [m.name for m in meshes]})
     bpy.context.view_layer.update()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     scene['homeVersion'] = 114
@@ -316,6 +442,8 @@ def main():
               'assets': imported_assets, 'blend': str(blend), 'glb': str(glb),
               'output_glb_sha256': sha256(glb),
               'scope': 'Editable server authoring assembly; browser devices/brain remain authoritative.'}
+    if bath_report:
+        report['bath_fixtures'] = bath_report
     (args.output_dir / 'assembly.json').write_text(json.dumps(report, indent=2) + '\n')
     print('HOME114_ASSEMBLED', json.dumps(report), flush=True)
 

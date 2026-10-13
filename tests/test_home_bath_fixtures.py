@@ -81,6 +81,14 @@ def test_fixtures_do_not_overlap_each_other_or_shower():
     assert tx1 < -1.98 - .1 and vx1 < -1.98 - .1
 
 
+def test_vanity_clears_existing_bathroom_books():
+    # books(-3.3, 3.035, 1, 5) currently sits partly inside the placeholder box;
+    # widest book is .055 m, so the row starts at x >= -3.3275.
+    assert 'books(-3.3, 3.035, 1, 5);' in HOME_JS
+    (_, _, _), (vx1, _, _) = bath.runtime_bounds(bath.FIXTURES['vanity'])
+    assert vx1 < -3.3 - .055 / 2
+
+
 def test_runtime_convention_matches_js_check():
     vanity = bath.FIXTURES['vanity']
     back = bath.blender_to_runtime((0, bath.VANITY_D / 2, 0), vanity['runtime_origin_m'], vanity['runtime_yaw_radians'])
