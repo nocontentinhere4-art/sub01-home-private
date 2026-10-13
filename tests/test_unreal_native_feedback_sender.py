@@ -57,7 +57,7 @@ def test_actual_accepted_seat_lease_requires_matching_command_and_fresh_ack(tmp_
     source = '''#include <string>
 #define TEXT(x) x
 struct FPlatformTime{static double Seconds(){return 10;}};
-bool NativeFeedbackBound=true;
+bool NativeFeedbackBound=true,LiveHomePrivate=false;
 std::string NativeFeedbackAckPhase="seated",NativeFeedbackEpoch="one",LiveHomeEpoch="one",NativeFeedbackActivity="research",LiveHomeActivity="research";
 long NativeFeedbackSequence=1,LiveHomeCommandSequence=1;
 double NativeFeedbackLastAck=10;
@@ -73,6 +73,7 @@ int main(){
  NativeFeedbackLastAck=6.99;if(ready())return 7;
  NativeFeedbackLastAck=11;if(ready())return 8;
  NativeFeedbackLastAck=7;if(!ready())return 9;
+ LiveHomePrivate=true;if(ready())return 10;
  return 0;
 }
 '''

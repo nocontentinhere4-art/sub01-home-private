@@ -13,7 +13,7 @@ FIELDS = r'''
 METHODS = r'''
 bool ASub01HomeCharacter::NativeFeedbackSeatReady() const{
  const double Age=FPlatformTime::Seconds()-NativeFeedbackLastAck;
- return NativeFeedbackBound&&NativeFeedbackAckPhase==TEXT("seated")&&NativeFeedbackEpoch==LiveHomeEpoch&&NativeFeedbackSequence==LiveHomeCommandSequence&&NativeFeedbackActivity==LiveHomeActivity&&Age>=0&&Age<=3;
+ return !LiveHomePrivate&&NativeFeedbackBound&&NativeFeedbackAckPhase==TEXT("seated")&&NativeFeedbackEpoch==LiveHomeEpoch&&NativeFeedbackSequence==LiveHomeCommandSequence&&NativeFeedbackActivity==LiveHomeActivity&&Age>=0&&Age<=3;
 }
 const TCHAR* ASub01HomeCharacter::NativeFeedbackPhase() const{
  if(LiveHomeBlocked)return TEXT("blocked");
@@ -23,7 +23,8 @@ const TCHAR* ASub01HomeCharacter::NativeFeedbackPhase() const{
 }
 void ASub01HomeCharacter::UpdateNativeFeedback(){
  const double Now=FPlatformTime::Seconds();
- if(!LiveHome||!LiveHomeFresh||LiveHomePrivate||LiveHomeEpoch.IsEmpty()||LiveHomeCommandSequence<0||Now<LiveHomeLastReceived||Now-LiveHomeLastReceived>3)return;
+ const bool PrivateBathroom=LiveHomePrivate&&LiveHomeTarget==TEXT("bathroom")&&LiveHomeActivity==TEXT("use_bathroom");
+ if(!LiveHome||!LiveHomeFresh||(LiveHomePrivate&&!PrivateBathroom)||LiveHomeEpoch.IsEmpty()||LiveHomeCommandSequence<0||Now<LiveHomeLastReceived||Now-LiveHomeLastReceived>3)return;
  if(NativeFeedbackEpoch!=LiveHomeEpoch||NativeFeedbackSequence!=LiveHomeCommandSequence||NativeFeedbackActivity!=LiveHomeActivity){
   NativeFeedbackEpoch=LiveHomeEpoch;NativeFeedbackSequence=LiveHomeCommandSequence;NativeFeedbackActivity=LiveHomeActivity;NativeFeedbackBound=false;NativeFeedbackLastAck=-1;NativeFeedbackAckPhase.Empty();NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
  }
@@ -42,7 +43,8 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
   NativeFeedbackPending=false;
   if(!LiveHome||LiveHomeEpoch!=Epoch||LiveHomeCommandSequence!=Sequence||LiveHomeActivity!=Activity)return;
   const double Age=FPlatformTime::Seconds()-LiveHomeLastReceived;
-  if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!LiveHomeFresh||LiveHomePrivate||Age<0||Age>3){
+  const bool PrivateBathroom=LiveHomePrivate&&LiveHomeTarget==TEXT("bathroom")&&LiveHomeActivity==TEXT("use_bathroom");
+  if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!LiveHomeFresh||(LiveHomePrivate&&!PrivateBathroom)||Age<0||Age>3){
    NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);return;
   }
   NativeFeedbackBound=true;NativeFeedbackLastAck=FPlatformTime::Seconds();NativeFeedbackAckPhase=Phase;

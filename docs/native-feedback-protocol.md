@@ -29,8 +29,9 @@ Example initial binding (substitute the current published values):
 ```
 
 `epoch` comes from the state document, `sequence` from `actor.route_sequence`,
-and `activity` from `brain.activity`. The bridge requires a live, nonprivate
-source and matching command values. The backend independently checks its
+and `activity` from `brain.activity` in the authenticated `/home/native_control`
+document. The bridge requires a live source and matching command values, with
+privacy rejected except for the restricted bathroom routine below. The backend independently checks its
 current sequence/activity/destination and privacy. Explicit `bind:true` is
 accepted only with `walking`; it clears earlier physical evidence. Later reports
 omit `bind` or use `false`. No native binding occurs just by polling state.
@@ -70,6 +71,10 @@ bathroom approach node. An arrived report must name bathroom. Bound activity
 readiness and bladder completion wait for that fresh arrived lease; a stale,
 blocked, malformed or unrelated report cannot finish the routine. This
 exception changes neither device privacy nor physical actor positions.
+The native consumer follows this minimal control document while keeping the
+camera black and device input disabled in privacy. CharacterMovement continues
+along the same physical graph, so censoring does not freeze the approach or
+departure. No public viewer receives the private command document.
 
 Success: `200 {"ok":true,"fresh_for_s":3}`. Malformed input/unknown seat: 400;
 unauthenticated/nonloopback: 403; stale epoch/command, privacy or unbound epoch:

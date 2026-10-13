@@ -29,7 +29,7 @@ void reset(){pc.focused=true;move.stops=0;LiveHome=true;LiveHomeFresh=true;LiveH
 int main(){
 reset();update(0);if(pc.focused)return 1;
 reset();NativeSeatVerified=true;update(0);if(!pc.focused)return 2;
-reset();NativeSeatVerified=true;LiveHomePrivate=true;update(0);if(pc.focused||NativeSeatVerified||!move.stops)return 3;
+reset();NativeSeatVerified=true;LiveHomePrivate=true;LiveHomePath.size=1;update(0);if(pc.focused||NativeSeatVerified||move.stops)return 3; // censored travel continues
 reset();NativeSeatVerified=true;LiveHomeFresh=false;update(0);if(pc.focused||NativeSeatVerified)return 4;
 reset();NativeSeatVerified=true;LiveHomeLastReceived=0;update(0);if(pc.focused||NativeSeatVerified)return 5;
 reset();NativeSeatVerified=true;LiveHomeBlocked=true;update(0);if(pc.focused||NativeSeatVerified)return 6;
