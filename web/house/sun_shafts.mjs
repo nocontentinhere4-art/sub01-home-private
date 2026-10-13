@@ -80,7 +80,10 @@ export function createSunShafts(T, renderer, lite) {
     screen=new T.Scene();quad=new T.Mesh(new T.PlaneGeometry(2,2),march);quad.frustumCulled=false;screen.add(quad);
   }
   return {
-    async prepare(scene, camera) {
+    // `output` (optional) is a linear HDR target such as the camera-effects
+    // input; the composite then skips tone mapping and the camera chain
+    // applies it once.
+    async prepare(scene, camera, output = null) {
       if (lite || !renderer.extensions.has('EXT_color_buffer_float')) return;
       if (!colorTarget) setup();
       const previousTarget = renderer.getRenderTarget();
@@ -93,13 +96,13 @@ export function createSunShafts(T, renderer, lite) {
         renderer.setRenderTarget(volumeTarget);
         await renderer.compileAsync(screen, fullCamera);
         quad.material = composite;
-        renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
         await renderer.compileAsync(screen, fullCamera);
       } finally {
         renderer.setRenderTarget(previousTarget);
       }
     },
-    render(scene,camera,light,sun,curtainOpen) {
+    render(scene,camera,light,sun,curtainOpen,output=null) {
       if(lite || !renderer.extensions.has('EXT_color_buffer_float') || !curtainOpen || light.sunIntensity<.2 || !sun.castShadow ||
         Math.abs(camera.position.x)>4 || camera.position.z>4 || camera.position.z< -4) return false;
       if(!colorTarget) setup();
@@ -116,7 +119,7 @@ export function createSunShafts(T, renderer, lite) {
       march.uniforms.shadowMap.value=sun.shadow.map.texture;march.uniforms.shadowMatrix.value.copy(sun.shadow.matrix);
       quad.material=march;renderer.setRenderTarget(volumeTarget);renderer.render(screen,fullCamera);
       composite.uniforms.texel.value.set(1/vw,1/vh);
-      quad.material=composite;renderer.setRenderTarget(null);renderer.render(screen,fullCamera);
+      quad.material=composite;renderer.setRenderTarget(output);renderer.render(screen,fullCamera);
       return true;
     },
     pixels(){return volumeTarget ? volumeTarget.width*volumeTarget.height : 0;},

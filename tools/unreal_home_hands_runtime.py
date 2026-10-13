@@ -4,10 +4,13 @@ HEADER = r'''#pragma once
 #include "Animation/AnimInstance.h"
 #include "Sub01HomeHands.generated.h"
 class UAnimSequence;
+class USkeletalMesh;
 UCLASS(Transient)
 class SUB01HOMELAB_API USub01HomeHandsInstance : public UAnimInstance {
  GENERATED_BODY()
  public:
+ UFUNCTION(BlueprintCallable,Category="SUB01|PrivateDiagnostics") static int32 FinishPendingSkinCompilation();
+ UFUNCTION(BlueprintCallable,Category="SUB01|PrivateDiagnostics") static FString DescribeImportedSkinGeometry(USkeletalMesh* Mesh);
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> TargetSequence;
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> PreviousSequence;
  UPROPERTY(Transient) float TargetRate=0;
@@ -20,7 +23,32 @@ CPP = r'''#include "Sub01HomeHands.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Animation/AnimNode_SequencePlayer.h"
 #include "Animation/AnimSequence.h"
+#include "Engine/SkeletalMesh.h"
 #include "AnimNodes/AnimNode_TwoWayBlend.h"
+#if WITH_EDITOR
+#include "SkinnedAssetCompiler.h"
+#include "Rendering/SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshLODModel.h"
+#endif
+int32 USub01HomeHandsInstance::FinishPendingSkinCompilation(){
+#if WITH_EDITOR
+ auto& Manager=FSkinnedAssetCompilingManager::Get();
+ Manager.FinishAllCompilation();
+ return Manager.GetNumRemainingJobs();
+#else
+ return -1;
+#endif
+}
+FString USub01HomeHandsInstance::DescribeImportedSkinGeometry(USkeletalMesh* Mesh){
+#if WITH_EDITOR
+ if(!Mesh)return TEXT("missing");
+ auto* Model=Mesh->GetImportedModel();int32 SoftCount=0;FBox Bounds(ForceInit);
+ if(Model&&Model->LODModels.Num())for(const auto& Section:Model->LODModels[0].Sections)for(const auto& Vertex:Section.SoftVertices){++SoftCount;Bounds+=FVector(Vertex.Position);}
+ return FString::Printf(TEXT("importedVertices=%d lods=%d softVertices=%d min=%s max=%s"),Mesh->GetNumImportedVertices(),Model?Model->LODModels.Num():0,SoftCount,*Bounds.Min.ToString(),*Bounds.Max.ToString());
+#else
+ return TEXT("editor-only");
+#endif
+}
 struct FSub01HandsProxy : FAnimInstanceProxy {
  FAnimNode_SequencePlayer_Standalone Previous,Current;
  FAnimNode_TwoWayBlend Blend;
@@ -52,7 +80,9 @@ struct FSub01HandsProxy : FAnimInstanceProxy {
  virtual void Update(float DeltaSeconds) override {
   Progress=FMath::Min(1.f,Progress+FMath::Min(DeltaSeconds,.1f)/.24f);
   Blend.Alpha=Progress;
-  FAnimationUpdateContext Context(this,DeltaSeconds); Blend.Update_AnyThread(Context);
+ }
+ virtual void UpdateAnimationNode(const FAnimationUpdateContext& Context) override {
+  Blend.Update_AnyThread(Context);
  }
  virtual bool Evaluate(FPoseContext& Output) override {Blend.Evaluate_AnyThread(Output);return true;}
 };
@@ -85,8 +115,7 @@ CHARACTER_FIELDS = r'''
  FVector HandsBaseOffset;
  float WalkPhase=0,MotionWeight=0;
  void LoadHandsAssets();
- void UpdateNativeRouteTest();
- UpdateNativeCapture();
+ void UpdateNativeCapture();
  double CaptureStarted=0,CaptureRequestedAt=0;
  float CaptureAfter=-1;
  FString CapturePath;
@@ -192,6 +221,7 @@ bool ASub01HomeCharacter::SetHandsPosture(FName Posture) {
  return true;
 }
 FString ASub01HomeCharacter::GetHandsReadiness() const {
+ if(HandsDiagnostic)return TEXT("UNVERIFIED PRIVATE POSE DIAGNOSTIC: ")+HandsPosture.ToString();
  return HandsFailure.IsEmpty()?HandsPosture.ToString()+TEXT(": verified native skeletal clip bound."):HandsFailure;
 }
 void ASub01HomeCharacter::PreviewHandsPose(FName Posture) {
@@ -201,6 +231,7 @@ void ASub01HomeCharacter::PreviewHandsPose(FName Posture) {
 void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  Super::Tick(DeltaSeconds);
  UpdateNativeRouteTest();
+ UpdateNativePCPrivacy();
  UpdateNativeCapture();
  if(!HandsFailure.IsEmpty())return;
  auto* Instance=Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance());if(!Instance)return;
@@ -211,7 +242,7 @@ void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  if(Moving)WalkPhase+=FMath::Min(DeltaSeconds,.1f)*(Speed/140.f)*7.5f;
  // Only sub-centimetre camera-relative sway; no finger/bone deformation.
  // Phase freezes at idle and amplitude fades to zero, never perpetual bob.
- FirstPersonBody->SetRelativeLocation(HandsBaseOffset+FVector(0,FMath::Sin(WalkPhase)*.25f*MotionWeight,FMath::Sin(2*WalkPhase)*.15f*MotionWeight));
+ if(!HandsDiagnosticSeat)FirstPersonBody->SetRelativeLocation(HandsBaseOffset+FVector(0,FMath::Sin(WalkPhase)*.25f*MotionWeight,FMath::Sin(2*WalkPhase)*.15f*MotionWeight));
  UAnimSequence* Clip=HandsClips.FindRef(HandsPosture);
  if(HandsPosture==TEXT("Walk")&&!Moving&&HandsClips.Contains(TEXT("Idle")))Clip=HandsClips.FindRef(TEXT("Idle"));
  Instance->TargetSequence=Clip;

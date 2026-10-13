@@ -100,3 +100,10 @@ out/first-person*.tar.gz
 out/house-evidence/
 out/coordination/
 out/server-api-client/
+out/owner-motion-reference/
+out/stream-*.sh
+out/*proof*.json
+out/*proof*.png
+out/private-pc-runtime-assets.tar.gz
+out/native-hands-pc-*
+out/*.sh

@@ -8,6 +8,7 @@ import json
 import shlex
 import time
 import urllib.request
+import urllib.error
 import uuid
 from pathlib import Path
 
@@ -76,6 +77,9 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+    except urllib.error.HTTPError as error:
+        print('PRIVATE_SERVER_HTTP_STATUS=' + str(error.code))
+        raise SystemExit(1)
     except Exception as error:
         # Network exceptions may contain private request URLs: report type only.
         print('PRIVATE_SERVER_ERROR=' + type(error).__name__)

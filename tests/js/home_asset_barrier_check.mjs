@@ -26,7 +26,7 @@ const scope={T,scene,officeChair,assetBarrier:createSettledAssetBarrier(),modelC
  gltfLoader:{loadAsync(url){requests.push(url);if(url==='/room/chair_owner.glb')return chairParse.promise;if(url.includes('haven-sofa'))return sofaParse.promise;if(url.includes('sofa_03'))return fallbackParse.promise;events.push(['contact-load',chairCount()]);return Promise.resolve({scene:new T.Scene()});}},
  loader:{loadAsync(){events.push(['contact-texture',chairCount()]);return Promise.resolve(new T.Texture());}},
  location:{search:''},useIndirectLighting:false,lite:false,nightLightUniform:{value:null},switchedMaterials:new Set(),M:{},interactions:[],
- privacyScene:new T.Scene(),privacyCamera:new T.Camera(),camera:new T.Camera(),sunShafts:{async prepare(){events.push(['effects',chairCount()]);}},
+ privacyScene:new T.Scene(),privacyCamera:new T.Camera(),camera:new T.Camera(),sunShafts:{async prepare(){events.push(['effects',chairCount()]);}},postEffects:{async prepare(){events.push(['effects',chairCount()]);}},
  inspectReplacedAssets,retireReplacedAssets,
  releaseStartupModelCache:async(...args)=>{events.push(['cache-release',chairCount()]);return releaseStartupModelCache(...args);},
 };

@@ -41,7 +41,7 @@ from life import LABEL as LIFE_LABEL, WORLD, Life
 from home_world import HomeWorld
 from home_computer import Computer
 from home_minecraft import MinecraftConsole
-from home_api import add_home_routes
+from home_api import add_home_routes, device_revisions
 from twin.body import Body
 from twin.neurochem import Neuromodulators
 from research import Reader, reading_stimulus
@@ -983,6 +983,7 @@ class Live:
             if self.home:
                 self.home.update(TICK, TICK*self.time_scale, msg["life"], rel)
                 msg["home"] = self.home.view(compact=True)
+                msg["home"]["devices"] = device_revisions(self, msg["home"].get("privacy"))
                 if self.home.pong.reward:
                     b.stimulate("reward" if self.home.pong.reward > 0 else "salience", abs(self.home.pong.reward))
                     self.home.pong.reward = 0.0

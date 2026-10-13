@@ -7,8 +7,35 @@ from collections import OrderedDict
 from pathlib import Path
 from aiohttp import web
 from life import ACTIVITIES
+from home_minecraft import frame_tag
 
 HERE = Path(__file__).parent
+
+
+DEVICE_KEYS = ("computer", "desk", "phone", "minecraft", "console_game")
+
+
+def device_revisions(live, privacy):
+    """Optional `devices` object for the private WebSocket home message: one
+    identity per device so the page refreshes only on change. Older pages
+    ignore it and keep polling. During privacy nothing but the flag is sent."""
+    if privacy:
+        return {"privacy": True}
+
+    def screen(device):
+        if not getattr(live, "browser", None) or not getattr(live, "screen_status", None):
+            return None
+        status = live.screen_status(device) or {}
+        return None if status.get("restarting") else status.get("frame_id")
+
+    console = getattr(live, "minecraft", None)
+    return {
+        "computer": getattr(getattr(live, "computer", None), "revision", None),
+        "desk": screen("desk"),
+        "phone": screen("phone"),
+        "minecraft": getattr(console, "frame_tag", None) if console else None,
+        "console_game": getattr(live.home, "console_game", None),
+    }
 
 
 def add_home_routes(app, live, admin_ok):
@@ -26,7 +53,7 @@ def add_home_routes(app, live, admin_ok):
     def computer_view():
         view = live.computer.view()
         if private():
-            view = {**view, "output": "", "last_command": None, "privacy": True}
+            view = {**view, "output": "", "last_command": None, "revision": None, "privacy": True}
         return view
 
     def operator(request):
@@ -221,9 +248,16 @@ def add_home_routes(app, live, admin_ok):
         if private():
             raise web.HTTPConflict(text="Bathroom privacy is active")
         console = getattr(live, "minecraft", None)
-        if not console or not console.frame:
+        frame = console.frame if console else None
+        if not frame:
             raise web.HTTPNotFound(text="Minecraft has no live frame yet")
-        return web.Response(body=console.frame, content_type="image/jpeg", headers={"Cache-Control": "no-store"})
+        # Frame identity: the page polls during live play, but an unchanged
+        # picture (a paused game) costs an empty 304 instead of the JPEG.
+        tag = '"' + (getattr(console, "frame_tag", None) or frame_tag(frame)) + '"'
+        headers = {"Cache-Control": "no-store", "ETag": tag}
+        if request.headers.get("If-None-Match") == tag:
+            return web.Response(status=304, headers=headers)
+        return web.Response(body=frame, content_type="image/jpeg", headers=headers)
 
     async def house(request):
         enabled()
