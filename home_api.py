@@ -18,6 +18,17 @@ def add_home_routes(app, live, admin_ok):
         if not live.home:
             raise web.HTTPNotFound(text="Home is not enabled")
 
+    def private():
+        # Bathroom privacy is enforced by the server too, not only by the
+        # page: no screen pixels, terminal text or guest input while active.
+        return bool(live.home.view().get("privacy"))
+
+    def computer_view():
+        view = live.computer.view()
+        if private():
+            view = {**view, "output": "", "last_command": None, "privacy": True}
+        return view
+
     def operator(request):
         if not admin_ok(request):
             raise web.HTTPForbidden(text="Operator authentication required")
@@ -47,7 +58,7 @@ def add_home_routes(app, live, admin_ok):
         return web.json_response(
             {
                 "home": live.home.view(),
-                "computer": live.computer.view(),
+                "computer": computer_view(),
                 "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
                 "browser_screen": live.screen_status('desk') if getattr(live, 'screen_status', None) else None,
                 "phone_browser_screen": live.screen_status('phone') if getattr(live, 'screen_status', None) else None,
@@ -62,7 +73,7 @@ def add_home_routes(app, live, admin_ok):
     async def computer(request):
         enabled()
         return web.json_response(
-            live.computer.view(), headers={"Cache-Control": "no-store"}
+            computer_view(), headers={"Cache-Control": "no-store"}
         )
 
     async def command(request):
@@ -72,6 +83,8 @@ def add_home_routes(app, live, admin_ok):
         text = b.get("input")
         if not isinstance(text, str) or len(text) > 2000:
             raise web.HTTPBadRequest(text="Input too long")
+        if private():
+            raise web.HTTPConflict(text="Bathroom privacy is active")
         return web.json_response({"ok": await live.computer.input(text + "\n")})
 
     async def navigate(request):
@@ -205,6 +218,8 @@ def add_home_routes(app, live, admin_ok):
 
     async def minecraft_frame(request):
         enabled()
+        if private():
+            raise web.HTTPConflict(text="Bathroom privacy is active")
         console = getattr(live, "minecraft", None)
         if not console or not console.frame:
             raise web.HTTPNotFound(text="Minecraft has no live frame yet")
