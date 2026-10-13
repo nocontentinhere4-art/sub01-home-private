@@ -80,6 +80,9 @@ def test_feedback_readiness_expiry_and_station_identity():
         data.update(phase='seated', chair=chair)
         world.native_feedback.accept(data, sequence=world.sequence, activity=activity, target=target, nodes={target})
         assert world.activity_ready()
+    assert world.add_note('new home revision')
+    assert not world.activity_ready()  # The actual sequence mutation invalidates the old seat.
+    assert not world.view()['native_consumer']['physical_ready']
 
 
 def test_actual_bridge_backend_feedback_route_auth_epoch_and_privacy():
