@@ -112,6 +112,7 @@ def test_devices_and_compact_feed_leak_nothing_during_privacy():
 def test_api_masks_screens_while_private_and_accepts_door_and_light_modes():
     async def run():
         http, live = await client()
+        live.browser = object()  # a running browse service (screen_status needs it)
         live.screen_status = lambda d: {"device": d, "frame_id": "f-" + d, "url": "https://example.org/" + d}
         live.minecraft = SimpleNamespace(enabled=True, frame=b"x", view=lambda: {
             "enabled": True, "has_frame": True, "observation": {"pos": 1}, "events": ["e"], "last_action": "dig"})

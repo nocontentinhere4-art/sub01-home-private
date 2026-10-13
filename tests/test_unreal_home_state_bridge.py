@@ -223,7 +223,11 @@ def test_derived_route_equals_backend_path_including_mid_edge_replans():
                               ("window", 30), ("park", 12.3), ("research", 40)):
         for _ in range(int(seconds / 0.1)):
             world.update(0.1, 0.1, {"activity": activity}, {})
-            names, source = bridge.remaining_route(world.view(compact=True))
+            view = world.view(compact=True)
+            if not view["privacy"]:
+                assert view["path"] == world.path, "the backend now publishes its own route"
+            older = {k: v for k, v in view.items() if k != "path"}  # backends without `path`
+            names, source = bridge.remaining_route(older)
             assert source == "derived-route-graph"
             assert names == world.path, (activity, world.node, world.position)
             checked += 1

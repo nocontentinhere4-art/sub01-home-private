@@ -463,6 +463,9 @@ class HomeWorld:
             "activity": self.activity,
             "place": self.node,
             "destination": self.target,
+            # Remaining route waypoints (node names), so native clients follow
+            # the server's own plan instead of re-planning it.
+            "path": [] if privacy else list(self.path),
             "privacy": privacy,
             "seated": round(self.seated, 3),
             "sequence": self.sequence,

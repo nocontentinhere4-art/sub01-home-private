@@ -87,11 +87,15 @@ def add_home_routes(app, live, admin_ok):
         hidden = bool(home.get("privacy"))
 
         def screen(device):
+            # No browse service (e.g. a local run without BROWSE): no screen,
+            # instead of Live.screen_status failing on a missing browser.
             if not getattr(live, 'screen_status', None):
                 return None
             # Same rule as the devices object: during privacy no frame id,
             # title or address of a screen, only the device and the flag.
-            return {"device": device, "privacy": True} if hidden else live.screen_status(device)
+            if hidden:
+                return {"device": device, "privacy": True}
+            return live.screen_status(device) if getattr(live, 'browser', None) else None
 
         minecraft = live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"}
         if hidden and getattr(live, "minecraft", None):
