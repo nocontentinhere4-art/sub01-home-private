@@ -2460,7 +2460,8 @@ async def main(args):
         return gmaps_ok[key][0]
 
     async def config(request):                    # browser config (Maps JS keys are referrer-restricted by design)
-        key = os.environ.get("GOOGLE_MAPS_KEY", "")
+        # the private home has no GPS view at all (owner, 2026-10-13): no Maps key, and no paid Maps call to check it
+        key = "" if live.home_enabled else os.environ.get("GOOGLE_MAPS_KEY", "")
         referer = f"{request.headers.get('X-Forwarded-Proto', request.scheme)}://{request.host}/"
         return web.json_response({"gmaps": key if key and await gmaps_works(key, referer) else "", "ca": live.ca})
     app.router.add_get("/api/config", config)
