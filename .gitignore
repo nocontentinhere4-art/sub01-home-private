@@ -84,3 +84,6 @@ out/lighting-sky-v*/
 
 # Isolated wall receiver convergence runs
 out/lighting-convergence-v*/
+
+# Local causal wall-lighting diagnostics, never shipped assets
+out/lighting-wall-cause/
