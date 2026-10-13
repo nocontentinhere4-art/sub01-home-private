@@ -25,6 +25,15 @@ OLD_PREFIXES = ('house-bed-frame-', 'house-bedding-', 'house-coffee-table-',
                 'house-coffee-machine-')
 BATH_FIXTURE_NAMES = ('vanity', 'toilet')
 PLANE_TOLERANCE_M = .002
+# role -> (sRGB tint, roughness, metallic, clearcoat); mirrors bath_fixture_materials.mjs
+# and the house M.kitchenOak/M.brass/M.metal values.
+BATH_ROLE_FINISH = {
+    'oak': ('#e7dcc9', .92, 0, 0),
+    'ceramic': ('#f2eee5', .18, 0, .55),
+    'seat': ('#ebe6db', .42, 0, 0),
+    'brass': ('#b19762', .40, .55, 0),
+    'metal': ('#353a35', .38, 0, 0),
+}
 
 
 def parse_args(argv):
@@ -421,6 +430,23 @@ def main():
         if not removed_faces:
             raise RuntimeError('No placeholder faces found for bath ' + fixture['name'])
         meshes = import_asset(fixture['glb'], fixture['identifier'], fixture['location'], yaw=fixture['yaw'])
+        for obj in meshes:
+            role = obj.name.split('.')[0].split('_')[-1]
+            if role not in BATH_ROLE_FINISH:
+                raise RuntimeError('Unexpected bath fixture mesh ' + obj.name)
+            tint, roughness, metallic, coat = BATH_ROLE_FINISH[role]
+            material = bpy.data.materials.new('bath-' + fixture['name'] + '-' + role)
+            material.use_nodes = True
+            # Same values as web/house/bath_fixture_materials.mjs; oak shares the V4 scan.
+            set_base(material, tint, oak_image if role == 'oak' else None)
+            shader = bsdf(material)
+            shader.inputs['Roughness'].default_value = roughness
+            shader.inputs['Metallic'].default_value = metallic
+            for socket in ('Coat Weight', 'Clearcoat'):
+                if coat and socket in shader.inputs:
+                    shader.inputs[socket].default_value = coat
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
         bath_report.append({'name': fixture['name'], 'removed_placeholder_faces': removed_faces,
                             'replaced_calls': fixture['calls'], 'mesh_groups': [m.name for m in meshes]})
     bpy.context.view_layer.update()

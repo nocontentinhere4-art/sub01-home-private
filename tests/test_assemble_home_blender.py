@@ -106,3 +106,13 @@ def test_bath_fixture_plan_validates_sidecars(tmp_path):
     (tmp_path / 'toilet.glb').unlink()
     with pytest.raises(FileNotFoundError):
         assemble.bath_fixture_plan(tmp_path)
+
+
+def test_bath_finishes_cover_roles_and_mirror_runtime_helper():
+    roles = {name.split('_')[-1] for name in bath.MESH_ROLES}
+    assert roles == set(assemble.BATH_ROLE_FINISH)
+    helper = (ROOT / 'web/house/bath_fixture_materials.mjs').read_text()
+    tint, roughness, _, coat = assemble.BATH_ROLE_FINISH['ceramic']
+    assert f"color: '{tint}', roughness: {str(roughness).lstrip('0')}, clearcoat: {str(coat).lstrip('0')}" in helper
+    tint, roughness, _, _ = assemble.BATH_ROLE_FINISH['seat']
+    assert f"color: '{tint}', roughness: {str(roughness).lstrip('0')}" in helper
