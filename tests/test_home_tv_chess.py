@@ -1,5 +1,7 @@
 """The actual shared chess controller works at a settled sofa and at the desk."""
 import asyncio
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import json
 import threading
 
@@ -12,6 +14,9 @@ from home_world import HomeWorld
 from live_server import Live
 
 
+AFTERNOON_TOKYO = datetime(2026, 10, 13, 15, 0, tzinfo=ZoneInfo("Asia/Tokyo")).timestamp()
+
+
 def setup_live(tmp_path, monkeypatch, activity="play_console"):
     monkeypatch.setenv("HOME_ENABLED", "1")
     monkeypatch.setenv("SUB01_MINECRAFT", "0")
@@ -19,6 +24,9 @@ def setup_live(tmp_path, monkeypatch, activity="play_console"):
     monkeypatch.setattr(live_server, "CHESS_THINK_S", (0, 0))
     monkeypatch.setattr(live_server, "CHESS_REPLY_S", (0, 0))
     live = Live("m", True, time_scale=1, data_dir=tmp_path)
+    # Pin an awake Tokyo afternoon: at scale 1 the clock otherwise follows the real time, and from 00:00 to
+    # 06:00 Tokyo life scores "window" 0 (night), so the held vote was never applied when this ran at night.
+    live.clock.sim0 = AFTERNOON_TOKYO
     live.engine.stage = "AWAKE"
     live.life.start(activity, live.clock.now(), "operator test fixture")
     live.life.path = []
