@@ -12,7 +12,7 @@ import { createHouseWindowView } from "./house_window_view.mjs";
 import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
-import { stairClearanceAllows } from "./stair_clearance.mjs?v=2";
+import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
@@ -44,6 +44,7 @@ const lite =
   (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0) ||
   (navigator.deviceMemory && navigator.deviceMemory <= 4);
 const assetRoot = "/house/assets/" + (lite ? "lite/" : "");
+document.getElementById("status").dataset.standingHeight = String(STAIR_CLEARANCE.bodyHeight);
 const scene = new T.Scene();
 const useIndirectLighting = !new URLSearchParams(location.search).has("ao") &&
   !new URLSearchParams(location.search).has("bake");
@@ -388,6 +389,7 @@ function windowFrame(x, y, z, w, h, rotate = false, mullion = true) {
     ...(mullion ? [[0.035, h, 0, 0]] : []),
   ]) {
     const b = new T.Mesh(new T.BoxGeometry(ww, hh, 0.06), dark);
+    b.castShadow = b.receiveShadow = true;
     b.position.set(xx, yy, 0);
     g.add(b);
   }

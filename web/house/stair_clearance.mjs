@@ -5,9 +5,18 @@ export const STAIR_CLEARANCE = Object.freeze({
   centre: .3, bottom: 2.55, top: -1.7, rise: 3, count: 17,
   run: .25, bodyWidth: .96, treadWidth: 1.02, treadDepth: .27,
   treadThickness: .035, treadOffset: .006, radius: .16,
-  supportTolerance: .04, stepTolerance: .22, bodyHeight: 1.65,
+  // Eye height stays 1.65m in the camera/controller. The standing body extends
+  // above the eyes; a 1.82m rounded capsule protects the actual head clearance.
+  supportTolerance: .04, stepTolerance: .22, bodyHeight: 1.82,
   railXs: Object.freeze([-.25,.85]), railHeight:.9, railRadius:.03,
   postRadius:.013, postCount:9, postSpacing:.5,
+  // Actual raised floor() support boxes. The painted loft edge can meet the
+  // rounded head beside the stairs, even while the eye itself clears it.
+  loftSlabs:Object.freeze([
+    Object.freeze({x0:-4,x1:-.2,z0:-4,z1:4,low:2.88,high:3}),
+    Object.freeze({x0:-.2,x1:.8,z0:-3.85,z1:-1.7,low:2.88,high:3}),
+    Object.freeze({x0:-4,x1:-.2,z0:4,z1:5.25,low:2.88,high:3}),
+  ]),
 });
 
 function segmentDistanceSquared(p, pEnd, q, qEnd) {
@@ -40,9 +49,25 @@ export function stairRailsAllow(x,z,feet) {
   return true;
 }
 
+export function stairHeadroomAllows(x,z,feet) {
+  const a=STAIR_CLEARANCE;
+  if(![x,z,feet].every(Number.isFinite))return false;
+  const lower=feet+a.radius,upper=feet+a.bodyHeight-a.radius;
+  for(const slab of a.loftSlabs){
+    // The landing is an intentional final climbable step/support, not a head
+    // obstruction. Once on it, the capsule's rounded feet stay above the slab.
+    if(slab.high<=feet+a.stepTolerance)continue;
+    const dx=Math.max(0,slab.x0-x,x-slab.x1),dz=Math.max(0,slab.z0-z,z-slab.z1);
+    const dy=Math.max(0,slab.low-upper,lower-slab.high);
+    if(dx*dx+dy*dy+dz*dz<a.radius*a.radius)return false;
+  }
+  return true;
+}
+
 export function stairClearanceAllows(x, z, feet) {
   const a = STAIR_CLEARANCE;
   if (![x,z,feet].every(Number.isFinite)) return false;
+  if (!stairHeadroomAllows(x,z,feet)) return false;
   if (!stairRailsAllow(x,z,feet)) return false;
   const ramp = Math.max(0, a.rise * (a.bottom - z) / (a.bottom - a.top));
   // Approach the climbable first riser before the centre reaches the ramp.

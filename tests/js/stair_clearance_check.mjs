@@ -17,6 +17,18 @@ assert.ok(begin > 0 && end > begin);
 const boxes = [];
 new Function('box','M',source.slice(begin,end))((w,h,d,x,y,z)=>boxes.push({w,h,d,x,y,z}),{wall:{},architectureOak:{}});
 assert.equal(boxes.length, A.count * 2);
+// Execute the actual raised floor support-box expression and actual floor calls.
+// This keeps the added headroom bounds tied to real loft/landing/balcony geometry.
+const supportLine=source.split('\n').find(line=>line.trim().startsWith('box(w, 0.12, d,'));
+assert.ok(supportLine);
+const slabs=[];
+const buildSlab=new Function('w','d','x','y','z','M','box',supportLine);
+for(const call of source.matchAll(/^floor\(([\d., \-]+)\);/gm)){
+ const args=call[1].split(',').map(Number);if(args[3]<=0)continue;
+ buildSlab(...args,{wall:{},architectureOak:{}},(w,h,d,x,y,z)=>slabs.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,low:y-h/2,high:y+h/2}));
+}
+assert.equal(slabs.length,A.loftSlabs.length);
+for(let i=0;i<slabs.length;i++)for(const key of Object.keys(slabs[i]))assert.ok(Math.abs(slabs[i][key]-A.loftSlabs[i][key])<1e-12,`Actual raised floor mismatch: ${i}.${key}`);
 for (let i=0;i<A.count;i++) {
   const body=boxes[i*2],tread=boxes[i*2+1];
   assert.equal(body.w,A.bodyWidth); assert.equal(body.d,A.run);
@@ -75,6 +87,38 @@ for(let side=0;side<2;side++){
   }
 }
 railScene.updateMatrixWorld(true);
+// The real sloping oak rail is above the eye but inside a standing head.
+// Actual generated cylinder triangles enter the .16m head sphere centred at
+// feet+1.66 (the new capsule cap); the old
+// eye-as-body-top capsule falsely admitted the location.
+const headRadius=.16,headCentre=new T.Vector3(1,1.82-headRadius,1.3);
+const railLine=new T.Line3(new T.Vector3(.85,.9,2.55),new T.Vector3(.85,3.9,-1.7));
+const nearest=railLine.closestPointToPoint(headCentre,true,new T.Vector3());
+const headRay=new T.Raycaster(headCentre,nearest.sub(headCentre).normalize(),0,headRadius);
+const headHits=headRay.intersectObjects(railScene.children);
+assert.ok(headHits.length,'Actual oak rail triangles intersect standing head sphere');
+assert.ok(headHits[0].point.y>1.65,'Physical intersection is above eye height');
+const helperSource=fs.readFileSync(new URL('../../web/house/stair_clearance.mjs',import.meta.url),'utf8');
+const oldEyeHeightHelper=await import('data:text/javascript,'+encodeURIComponent(helperSource.replace('bodyHeight: 1.82','bodyHeight: 1.65')));
+assert.equal(oldEyeHeightHelper.stairClearanceAllows(1,1.3,0),true,'Former eye-as-top missed this real above-eye rail contact');
+assert.equal(allows(1,1.3,0),false,'Standing head now clears physical sloping rail');
+assert.equal(allows(1.045,1.3,0),true,'Clear aisle beyond rail/head remains available');
+assert.equal(A.bodyHeight,1.82);
+console.log('Above-eye head contact:',JSON.stringify({position:[1,0,1.3],triangleHit:headHits[0].point.toArray(),distanceFromHeadCentre:headHits[0].distance,headRadius,oldAllowed:true,newAllowed:false}));
+const loftSlab=slabs[0];
+const loftMesh=new T.Mesh(new T.BoxGeometry(loftSlab.x1-loftSlab.x0,loftSlab.high-loftSlab.low,loftSlab.z1-loftSlab.z0),new T.MeshStandardMaterial());
+loftMesh.position.set((loftSlab.x0+loftSlab.x1)/2,(loftSlab.low+loftSlab.high)/2,(loftSlab.z0+loftSlab.z1)/2);loftMesh.updateMatrixWorld(true);
+const loftHead=new T.Vector3(-.05,1.2+1.82-headRadius,.85);
+const loftRay=new T.Raycaster(loftHead,new T.Vector3(-.201,2.881,.85).sub(loftHead).normalize(),0,headRadius);
+const loftHits=loftRay.intersectObject(loftMesh);
+assert.ok(loftHits.length,'Actual floor support-box triangles enter rounded head beside ramp');
+assert.ok(loftHits[0].point.y>1.2+1.65,'Loft contact lies above the still-clear eye');
+assert.equal(oldEyeHeightHelper.stairClearanceAllows(-.05,.85,1.2),true,'Former eye-height body misses real loft corner');
+assert.equal(allows(-.05,.85,1.2),false,'Only the real rounded head/loft-edge intersection is rejected');
+assert.equal(allows(-.035,.85,1.2),true,'Moving15mm toward stair centre clears the actual loft edge');
+assert.equal(allows(-1,.85,0),true,'Ground walker safely below loft stays available');
+assert.equal(allows(-1,.85,3),true,'Upper-floor support is not a head obstruction');
+console.log('Loft rounded-head contact:',JSON.stringify({position:[-.05,1.2,.85],triangleHit:loftHits[0].point.toArray(),distanceFromHeadCentre:loftHits[0].distance,headRadius}));
 const railRay=new T.Raycaster(new T.Vector3(1,1.60,.55),new T.Vector3(-1,0,0),0,.16);
 assert.ok(railRay.intersectObjects(railScene.children).length,'Actual post triangles intersect formerly allowed body');
 assert.equal(allows(1,.55,0),false,'Ground aisle cannot clip raised stair post');
@@ -94,9 +138,12 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   const [x,z,w,d,level=0]=m[1].split(',').map(Number);
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
-const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
-  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors',
+  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows,null);
 assert.equal(canWalk(.81,-.5,0),false,'Actual reachable near-plane regression');
+assert.equal(canWalk(1,1.3,0),false,'Actual visitor gate protects above-eye head/rail contact');
+assert.equal(canWalk(-.05,.85,1.2),false,'Actual visitor gate protects above-eye loft corner');
+assert.equal(canWalk(-.035,.85,1.2),true,'Clear near-edge ramp position is preserved');
 for (const x of [.96,1,1.2,1.5]) assert.equal(canWalk(x,-.5,0),true,'Desk-side aisle stays open');
 for (let i=0;i<=100;i++) {
   const z=A.bottom-(A.bottom-A.top)*i/100;
