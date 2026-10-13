@@ -22,8 +22,8 @@ def main():
     import websocket
     config = json.loads(args.config.read_text())
     base = config['base_url'].rstrip('/')
-    if base != 'https://713u6mnmxu4y1a-8888.proxy.runpod.net':
-        raise RuntimeError('This client is restricted to the authorized home pod')
+    if base not in {'https://713u6mnmxu4y1a-8888.proxy.runpod.net', 'https://80lf8giw6ft61v-8888.proxy.runpod.net'}:
+        raise RuntimeError('This client is restricted to the authorized home pods')
     token = next(iter(config['tokens'].values()))
     headers = {'Authorization': 'token ' + token, 'User-Agent': 'Mozilla/5.0'}
     req = urllib.request.Request(base + '/api/terminals', data=b'{}',
