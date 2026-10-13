@@ -75,3 +75,24 @@ assert.ok(Math.abs(a-b)<1e-12,'30 and 60 fps adapt identically');
 assert.ok(adaptationBlend(.1,.2,.5,1.6,.75)>adaptationBlend(.1,.5,.2,1.6,.75),'brightening adapts faster');
 assert.equal(adaptationBlend(-1,.2,.5,1.6,.75),0);
 console.log('PASS: frame-rate independent asymmetric eye adaptation');
+
+// Asynchronous meter reads issued before reset/privacy/dispose never publish.
+{
+  const pending=[];
+  const reader={...renderer,readRenderTargetPixelsAsync:(t,x,y,w,h,buffer)=>new Promise(r=>pending.push(()=>{buffer[0]=.22;r();}))};
+  const meter=createCameraEffects(T,reader,false);
+  const flush=async()=>{while(pending.length)pending.shift()();for(let i=0;i<5;i++)await Promise.resolve();};
+  const settle=async()=>{for(let i=0;i<5;i++)await Promise.resolve();};
+  meter.render(scene,camera,1/60);await settle();assert.equal(pending.length,1);
+  await flush();assert.ok(Math.abs(meter.stats().exposure-1)<1e-6,'readback publishes when current');
+  // Reset (privacy) with a read in flight.
+  meter.reset();assert.equal(meter.stats().exposure,null,'reset clears the published exposure');
+  meter.render(scene,camera,1/60);await settle();assert.equal(pending.length,1);
+  meter.reset();await flush();
+  assert.equal(meter.stats().exposure,null,'a read from before reset is discarded');
+  // Dispose with a read in flight.
+  meter.render(scene,camera,1/60);await settle();assert.equal(pending.length,1);
+  meter.dispose();await flush();
+  assert.equal(meter.stats().exposure,null,'a read from before dispose is discarded');
+  console.log('PASS: reset, privacy and dispose invalidate pending asynchronous meter reads');
+}

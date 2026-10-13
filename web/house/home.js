@@ -2878,9 +2878,9 @@ addEventListener("resize", () => {
 });
 renderer.shadowMap.needsUpdate = true;
 const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
-// Optional developer `camera=off` gives a same-camera comparison without the
-// photographic response (bloom, eye adaptation, vignette, grain).
-const cameraEffects = createCameraEffects(T, renderer, lite || new URLSearchParams(location.search).get("camera") === "off");
+// Opt-in developer `camera=on` adds the photographic response (bloom, eye
+// adaptation, vignette, grain) until real-GPU frame time is accepted.
+const cameraEffects = createCameraEffects(T, renderer, lite || new URLSearchParams(location.search).get("camera") !== "on");
 const postEffects = {
   async prepare(scene, camera) {
     await cameraEffects.prepare(scene, camera);

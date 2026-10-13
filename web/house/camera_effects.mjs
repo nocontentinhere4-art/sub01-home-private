@@ -4,6 +4,7 @@
 // adaptation, a soft optical vignette and fine sensor grain before the existing
 // ACES/sRGB output transform. Lite, privacy and missing float targets bypass it
 // and allocate nothing. No second room scene is created or rendered.
+// Opt-in (`?camera=on`) until real-GPU frame time is accepted.
 export const CAMERA_DEFAULTS = Object.freeze({
   // Subtle by design: the physically based exposure (1.0) stays the anchor;
   // adaptation only nudges it within roughly -15 % / +30 %, and bloom only
@@ -25,7 +26,7 @@ export function adaptationBlend(dt, previous, target, up, down) {
 export function createCameraEffects(T, renderer, lite, settings = {}) {
   const S = { ...CAMERA_DEFAULTS, ...settings };
   let input, mips = [], lum = [], lumIndex = 0, down, up, luminance, final, screen, quad, primed = false;
-  let time = 0, lastExposure = null, reading = false, readTimer = -Infinity;
+  let time = 0, lastExposure = null, reading = false, readTimer = -Infinity, generation = 0;
   const size = new T.Vector2();
   const fullCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const vertex = `varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
@@ -141,6 +142,10 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
     });
   }
 
+  function invalidate() {
+    generation++; primed = false; lastExposure = null; reading = false; readTimer = -Infinity;
+  }
+
   function pass(material, target) {
     quad.material = material;
     renderer.setRenderTarget(target);
@@ -193,12 +198,17 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
     const now = globalThis.performance?.now?.() ?? Date.now();
     if (reading || now - readTimer < 1000 || !renderer.readRenderTargetPixelsAsync) return;
     readTimer = now; reading = true;
+    // A reset, privacy or dispose bumps the generation: a read issued before
+    // it can never publish a stale exposure afterwards.
+    const issued = generation;
     const buffer = new Float32Array(4);
     Promise.resolve().then(() => renderer.readRenderTargetPixelsAsync(target, 0, 0, 1, 1, buffer))
       .then(() => {
+        if (issued !== generation) return;
         const average = Math.max(buffer[0], 1e-4);
         lastExposure = { average, exposure: Math.min(S.maxExposure, Math.max(S.minExposure, (S.reference / average) ** S.adaptation)) };
-      }).catch(() => { lastExposure = null; }).finally(() => { reading = false; });
+      }).catch(() => { if (issued === generation) lastExposure = null; })
+      .finally(() => { if (issued === generation) reading = false; });
   }
 
   return {
@@ -245,13 +255,14 @@ export function createCameraEffects(T, renderer, lite, settings = {}) {
       if (!input) setup();
       return input;
     },
-    reset() { primed = false; },
+    reset() { invalidate(); },
     stats() {
       return { levels: mips.length, exposure: lastExposure && Number(lastExposure.exposure.toFixed(3)),
         meteredLuminance: lastExposure && Number(lastExposure.average.toFixed(4)) };
     },
     targets() { return [input, ...mips, ...lum].filter(Boolean); },
     dispose() {
+      invalidate();
       input?.dispose(); mips.forEach(t => t.dispose()); lum.forEach(t => t.dispose());
       down?.dispose(); up?.dispose(); luminance?.dispose(); final?.dispose(); quad?.geometry.dispose();
       mips = []; lum = []; input = null;
