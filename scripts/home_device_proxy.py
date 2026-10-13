@@ -139,7 +139,7 @@ class HomeDeviceProxy:
             expected = data.get('frame_id')
             if (current and expected != current) or (not current and expected is not None and expected != ''):
                 raise web.HTTPConflict(text='Actual phone frame changed')
-            path, clean = '/api/home/browser/navigate', {'device': 'phone', 'url': url}
+            path, clean = '/api/home/browser', {'device': 'phone', 'url': url}
         elif device == 'phone':
             if (not isinstance(data, dict) or data.get('action') not in {'scroll_up', 'scroll_down', 'back', 'close_notice'}
                     or not isinstance(data.get('frame_id'), str) or not 1 <= len(data['frame_id']) <= 100):

@@ -10,6 +10,7 @@ import math
 import random
 from console_requests import valid_choice
 import home_interactions as hi
+from home_native_feedback import NativeFeedback
 
 # xyz = walking-eye positions in the rendered house, metres.
 NODES = {
@@ -258,6 +259,7 @@ class HomeWorld:
         self.seated = max(0, min(1, float(s.get("seated", 0))))
         self.time = float(s.get("time", 0))
         self.sequence = int(s.get("sequence", 0))
+        self.native_feedback = NativeFeedback()
         if (
             s.get("path")
             and all(n in NODES for n in s["path"])
@@ -313,7 +315,9 @@ class HomeWorld:
         expected = self.activity if activity is None else activity
         return (self.activity == expected and not self.path
                 and self.node == self.desired(expected)
-                and (self.node not in ("desk", "sofa", "bed") or self.seated == 1))
+                and (self.node not in ("desk", "sofa", "bed") or self.seated == 1)
+                and self.native_feedback.ready(sequence=self.sequence, activity=expected, target=self.target)
+                and (self.native_feedback.epoch is None or not self.privacy()))
 
     def update(self, dt, sim_dt, life, rel, now=None):
         self.time += dt
@@ -469,6 +473,8 @@ class HomeWorld:
             "privacy": privacy,
             "seated": round(self.seated, 3),
             "sequence": self.sequence,
+            "native_consumer": None if privacy else self.native_feedback.view(
+                sequence=self.sequence, activity=self.activity, target=self.target),
             # Legacy flag, now the server front door state (approach included).
             "door_open": house["doors"]["front"]["open"],
             "doors": house["doors"],

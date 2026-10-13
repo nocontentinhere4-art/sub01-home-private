@@ -65,7 +65,7 @@ def test_phone_navigation_uses_current_frame_auth_and_private_backend():
             return web.json_response({'ok': True})
         app = web.Application()
         app.router.add_get('/api/home', state)
-        app.router.add_post('/api/home/browser/navigate', navigate)
+        app.router.add_post('/api/home/browser', navigate)
         upstream = TestServer(app)
         await upstream.start_server()
         device = proxy.HomeDeviceProxy(str(upstream.make_url('')).rstrip('/'), 'existing-operator', runner)
