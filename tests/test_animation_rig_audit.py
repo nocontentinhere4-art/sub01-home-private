@@ -179,3 +179,52 @@ def test_candidate_cli_writes_finite_json_outside_repository():
             assert all(math.isfinite(x) for x in entry["A_xyzw"])
     default = Path(tempfile.gettempdir())
     assert ROOT not in default.resolve().parents
+
+
+# ---------------------------------------------------------------- capture window search
+@pytest.fixture(scope="module")
+def segments():
+    return audit.scan_segments()
+
+
+def test_segment_scan_inputs_and_duplicates(segments):
+    inputs = segments["inputs"]
+    assert inputs["room_mx_typing"]["duplicate_of"] == "typing", "staged typing is the original capture's motion"
+    assert "skipped" in inputs["room_mx_sit_to_type"] and "skipped" in inputs["room_mx_type_to_sit"]
+    assert segments["windows_scored"] == 1440
+
+
+def finite(x):
+    if isinstance(x, dict):
+        return all(finite(v) for v in x.values())
+    if isinstance(x, list):
+        return all(finite(v) for v in x)
+    return not isinstance(x, float) or math.isfinite(x)
+
+
+def test_segment_scores_are_finite_bounded_and_deterministic(segments):
+    again = audit.scan_segments()
+    assert json.dumps(audit.to_jsonable(again["top"])) == json.dumps(audit.to_jsonable(segments["top"]))
+    for w in segments["top"]:
+        assert finite(w) and 0.0 <= w["score"] <= 1.0
+    scores = [w["score"] for w in segments["top"]]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_three_to_eight_seconds_is_flagged_for_left_hook_and_locked_elbow(segments):
+    ref = segments["reference_3_8s"]["typing"]
+    left = ref["hands"]["Left"]
+    assert "Left hook" in ref["flags"] and "left elbow nearly straight-locked" in ref["flags"]
+    assert left["ip_to_l1_ratio"] > audit.HOOK_RATIO
+    assert left["elbow_bend_range_deg"] < 1.0 and left["elbow_bend_mean_deg"] < 5.0
+    assert ref["hands"]["Right"]["moving_finger_joints_gt_2deg"] == 15 == left["moving_finger_joints_gt_2deg"]
+    assert ref["rank"] > ref["of"] // 2, "3-8 s is in the worse half of the captured windows"
+    assert segments["top"][0]["score"] > ref["score"]
+
+
+def test_no_typing_window_is_free_of_a_left_hook_with_a_bending_elbow(segments):
+    """Fact of the existing capture: better windows exist, but none removes the left hook."""
+    assert segments["windows_without_flags"] == 0
+    for w in segments["least_left_hook_with_bending_elbow"]:
+        assert w["hands"]["Left"]["elbow_bend_range_deg"] >= audit.ELBOW_MIN_RANGE
+        assert w["hands"]["Left"]["hooked"]
