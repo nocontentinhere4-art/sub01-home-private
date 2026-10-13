@@ -3,6 +3,10 @@ const { V86 } = require("./libv86.cjs"),
   fs = require("fs"),
   path = require("path"),
   readline = require("readline");
+const { attachFramebuffer } = require('./vga_framebuffer.cjs');
+const { guestKeyboard } = require('./guest_keyboard.cjs');
+// v86's pixel container only; no canvas or browser is introduced.
+globalThis.ImageData ??= class ImageData { constructor(data, width, height) { this.data=data; this.width=width; this.height=height; } };
 const snapshot = process.env.SUB01_VM_STATE;
 const assets = process.env.SUB01_VM_ASSETS || __dirname;
 let serial = "",
@@ -13,20 +17,29 @@ let serial = "",
 const send = (o) => process.stdout.write(JSON.stringify(o) + "\n");
 const vm = new V86({
   wasm_path: path.join(__dirname, "v86.wasm"),
-  memory_size: 64 * 1024 * 1024,
+  memory_size: (process.env.SUB01_VM_CDROM ? 128 : 64) * 1024 * 1024,
   vga_memory_size: 2 * 1024 * 1024,
   bios: { url: path.join(assets, "seabios.bin") },
   vga_bios: { url: path.join(assets, "vgabios.bin") },
-  bzimage: { url: path.join(assets, "buildroot-bzimage.bin") },
-  cmdline: "console=ttyS0 tsc=reliable",
+  ...(process.env.SUB01_VM_CDROM ? {
+    cdrom: { url: process.env.SUB01_VM_CDROM },
+  } : {
+    bzimage: { url: path.join(assets, "buildroot-bzimage.bin") },
+    cmdline: "console=ttyS0 tsc=reliable",
+  }),
   filesystem: {},
   autostart: false,
 });
+const keyboard = guestKeyboard(codes => vm.keyboard_send_scancodes(codes));
+let framebuffer = null;
+let lastFrameRevision = null, lastDisplayKind = '';
+let pointerX = null, pointerY = null;
 vm.add_listener("serial0-output-byte", (byte) => {
   serial = (serial + String.fromCharCode(byte)).slice(-12000);
   if (/~[%#] $/.test(serial)) ready = true;
 });
 vm.add_listener("emulator-loaded", async () => {
+  framebuffer = attachFramebuffer(vm.screen_adapter, () => vm.v86?.cpu?.devices?.vga);
   try {
     if (snapshot && fs.existsSync(snapshot)) {
       await vm.restore_state(fs.readFileSync(snapshot));
@@ -47,7 +60,20 @@ vm.add_listener("emulator-loaded", async () => {
   }
 });
 setInterval(() => {
-  send({ type: "terminal", ready, output: serial, paused: !vm.is_running() });
+  const vgaText = process.env.SUB01_VM_CDROM && vm.screen_adapter?.get_text_screen ? vm.screen_adapter.get_text_screen().join("\n").trimEnd() : '';
+  send({ type: "terminal", ready, output: vgaText || serial, paused: !vm.is_running() });
+  const frame = framebuffer ? framebuffer.capture() : {kind: "serial", available: false, reason: "Emulator VGA is initializing"};
+  if (frame.available) ready = true;
+  if (process.env.SUB01_VM_CDROM && framebuffer) {
+    frame.keyboard_available = true;
+    if (!frame.available) frame.kind = 'vga-text';
+    ready = true;
+  }
+  if (frame.kind !== lastDisplayKind || (frame.available && frame.revision !== lastFrameRevision)) {
+    const { png, ...display } = frame;
+    send({ type: 'display', display, ...(png ? { png: png.toString('base64') } : {}) });
+    lastDisplayKind = frame.kind; lastFrameRevision = frame.revision;
+  }
 }, 1000);
 async function save(final = false) {
   if (activeSave) {
@@ -77,6 +103,7 @@ async function save(final = false) {
 async function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
+  keyboard.cancel();
   await save(true);
   vm.destroy();
   process.exit(0);
@@ -93,7 +120,27 @@ readline.createInterface({ input: process.stdin }).on("line", async (line) => {
     ) {
       vm.run();
       vm.serial0_send(m.text);
+    } else if (m.type === "vga-keyboard" && Array.isArray(m.scancodes) && m.scancodes.length <= 16 && m.scancodes.every(code => Number.isInteger(code) && code >= 0 && code <= 255)) {
+      vm.run(); await keyboard.enqueue(m.scancodes);
+    } else if (m.type === "vga-mouse" && [m.dx, m.dy, m.wheel].every(value => Number.isFinite(value) && Math.abs(value) <= 100) && Array.isArray(m.buttons) && m.buttons.length === 3 && m.buttons.every(value => typeof value === 'boolean')) {
+      vm.run();
+      if (vm.absolute_pointer_enabled && framebuffer) {
+        const frame = framebuffer.capture();
+        if (frame.available) {
+          pointerX = Math.max(0, Math.min(frame.width - 1, (pointerX ?? frame.width / 2) + m.dx));
+          pointerY = Math.max(0, Math.min(frame.height - 1, (pointerY ?? frame.height / 2) + m.dy));
+          vm.bus.send("mouse-pointer-lock", false);
+          vm.bus.send("mouse-absolute", [pointerX, pointerY, frame.width, frame.height]);
+        }
+      } else {
+        vm.bus.send("mouse-pointer-lock", true);
+        vm.bus.send("mouse-delta", [m.dx, -m.dy]);
+      }
+      vm.bus.send("mouse-click", m.buttons.map(Number));
+      if (m.wheel) vm.bus.send("mouse-wheel", [m.wheel, 0]);
     } else if (m.type === "pause") {
+      keyboard.cancel();
+      vm.bus?.send("mouse-click", [0, 0, 0]);
       await vm.stop();
     } else if (m.type === "resume") {
       vm.run();

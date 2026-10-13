@@ -8,6 +8,7 @@ absent.
 """
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -174,6 +175,42 @@ async def _ready(cl, s=60):
             return True
         await asyncio.sleep(0.1)
     return False
+
+
+def test_child_keeps_runtime_loader_path_without_parent_credentials(tmp_path, monkeypatch):
+    """A real child sees its loader configuration but no parent service credentials."""
+    loader_path = os.pathsep.join(filter(None, (os.environ.get("LD_LIBRARY_PATH"),
+                                                  str(tmp_path / "python-runtime-lib"))))
+    monkeypatch.setenv("LD_LIBRARY_PATH", loader_path)
+    for key in ("SUB01_ADMIN_TOKEN", "RUNPOD_API_KEY", "SUB01_HOME_CONTROL_API_KEY",
+                "ACTIONS_RUNNER_INPUT_TOKEN"):
+        monkeypatch.setenv(key, "private-parent-only")
+    create_process = asyncio.create_subprocess_exec
+
+    async def probe_child(*args, **kwargs):
+        # Exercise start's actual filtered environment across a process boundary,
+        # without constructing a neuronal network just to inspect its runtime.
+        code = (
+            "import json,os; print(json.dumps({'type':'ready',"
+            "'loader':os.environ.get('LD_LIBRARY_PATH'),"
+            "'credentials':[k for k in ('SUB01_ADMIN_TOKEN','RUNPOD_API_KEY',"
+            "'SUB01_HOME_CONTROL_API_KEY','ACTIONS_RUNNER_INPUT_TOKEN') if k in os.environ],"
+            "'threads':os.environ.get('OPENBLAS_NUM_THREADS')}),flush=True)"
+        )
+        return await create_process(sys.executable, "-c", code, **kwargs)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", probe_child)
+
+    async def go():
+        client = L.LiveClient(tmp_path)
+        await client.start()
+        await asyncio.wait_for(client.proc.wait(), 5)
+        await asyncio.wait_for(client._reader_task, 5)
+        assert client.info["loader"] == loader_path
+        assert client.info["credentials"] == []
+        assert client.info["threads"] == "1"
+
+    run(go())
 
 
 def test_child_process_protocol_frames_learning_and_restart(tmp_path):

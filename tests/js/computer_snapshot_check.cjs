@@ -21,6 +21,8 @@ function fixture() {
     process: {env: {SUB01_VM_STATE: '/mock/computer.bin'}, stdin: {}, stdout: {write: text => messages.push(JSON.parse(text))},
       exit: () => events.push('exit'), on: (name, fn) => signals[name] = fn},
     require: name => name === './libv86.cjs' ? {V86: function() {return guest;}}
+      : name === './guest_keyboard.cjs' ? {guestKeyboard:()=>({cancel(){},enqueue:async()=>true})}
+      : name === './vga_framebuffer.cjs' ? require('../../computer/vga_framebuffer.cjs')
       : name === 'fs' ? filesystem : name === 'readline' ? {createInterface: () => ({on: (name, fn) => onLine = fn})} : require(name)};
   vm.runInNewContext(source, context);
   for (const byte of Buffer.from('~# ')) listeners['serial0-output-byte'](byte);

@@ -895,9 +895,10 @@ class LiveClient:
     # --- the child process ---------------------------------------------------------------------------------------
     async def start(self):
         import asyncio
+        # setup-python runtimes need their loader path to retain the same libpython.
         env = {k: v for k, v in os.environ.items()
                if k in ("PATH", "HOME", "LANG", "TZ", "SUB01_TZ", "PYTHONPATH", "SUB01_SPIKING_LIVE_IDLE_MS",
-                        "SUB01_GROW_PER_DAY", "SUB01_NEURONS_MAX")}
+                        "SUB01_GROW_PER_DAY", "SUB01_NEURONS_MAX", "LD_LIBRARY_PATH")}
         env.update(OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", PYTHONUNBUFFERED="1")
         args = [self.python, "-m", "spiking.live", "--data-dir", str(self.data_dir), "--neurons", str(self.n_neurons),
                 "--deadline-s", str(self.timeout)]
