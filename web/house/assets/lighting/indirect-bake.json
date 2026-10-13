@@ -1,30 +1,30 @@
 {
   "source_sha256": "44d003e56f0c13ea21b80179de92835fc7a93ed6ee5c36596dce27eb9ee6f419",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
-  "samples": 512,
+  "samples": 2048,
   "diffuse_bounces": 4,
-  "direct_light": false,
+  "direct_light": true,
   "albedo_in_bake": false,
   "receivers": 103,
   "export_material_texture_limit": 512,
-  "layout": "Real hollow supported lower kitchen carcass; moving lower/upper fronts excluded",
+  "layout": "Matched GI21 architecture with visibility-aware direct sky and 2048-sample day/night diffuse",
   "day": {
-    "source_exr_sha256": "4f51bb9d9bbe7263a36b27404b8cb3201e36c144a11e02df646439f77270462b",
+    "source_exr_sha256": "d64e7dcedf6909cd3708a9ba0d3aedda1beba01cdd8784b805f67ba3b2d442fd",
     "width": 1378,
     "height": 1379,
-    "max": 7.683135509490967,
-    "p95": 0.4453604996204376,
-    "nonzero": 0.5215938644250109,
-    "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
+    "max": 8.448594093322754,
+    "p95": 0.44639750570058817,
+    "nonzero": 0.6489252534650485,
+    "kind": "Receiver-albedo-excluded diffuse radiance; exact direct/indirect components are recorded in the matched bake manifest"
   },
   "night": {
-    "source_exr_sha256": "773f6e68b873f2feccdf215fab314ec33685e5f3ba3f0cb61ad6eff4eb4a880f",
+    "source_exr_sha256": "97f449198dcf2b0c3966cecd7fb8d5b836e7e488ba76e7c30cdf13bd035938cb",
     "width": 1378,
     "height": 1379,
-    "max": 2.4852681159973145,
-    "p95": 0.006282352772541344,
-    "nonzero": 0.4493269875417179,
-    "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
+    "max": 2.4292197227478027,
+    "p95": 0.0062523817876353836,
+    "nonzero": 0.4662630731972749,
+    "kind": "Receiver-albedo-excluded diffuse radiance; exact direct/indirect components are recorded in the matched bake manifest"
   },
   "files": [
     {
@@ -34,23 +34,23 @@
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "71e4df81dd7ea951c901b701338457fcdd638b03ffd72159c35ae8c4972d36bd",
-      "bytes": 4007788
+      "sha256": "ccb0a3e7e488d4faeaad7f1d88bf896b3b71ca7624e196cbc5daead0583af720",
+      "bytes": 3905714
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "e41e32fde043d8afbf17148c893d05e3b0354476b37bbf0194d20f44baf4204e",
-      "bytes": 699696
+      "sha256": "2822d5be0de4f5cadf400c6f9b59f1ed5c5ab915f0be8aa9d304f31d9df74d80",
+      "bytes": 693309
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "2a5058bba1de98b856bf78e25538b01a3397a792878419ee601db83209e85124",
-      "bytes": 3645868
+      "sha256": "d87a982f2d446c77dac2a07b4d7f6b3bf3a081decd606e150672dcd55bfc1638",
+      "bytes": 3625855
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "c5835db9809002c5924a28f92d815d063cedd0c6075105a132cfa34f372ac669",
-      "bytes": 640910
+      "sha256": "936e769601c7a556161fab9ae65d20b62c19547aa01959216f8e4b35a84a044b",
+      "bytes": 643498
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
@@ -58,5 +58,24 @@
   "adaptive_sampling": false,
   "denoising": false,
   "sampling_note": "Matched finished day/night bakes; packed without denoising or atlas blur.",
-  "atlas_orientation": "raw glTF UV; day/night flipY=false"
+  "atlas_orientation": "raw glTF UV; day/night flipY=false",
+  "threads": 4,
+  "receiver_diffuse": "occluded-direct-sky-plus-indirect-v1",
+  "day_components": [
+    {
+      "role": "indirect",
+      "manifest_file": "components/indirect/bake.json",
+      "raw_file": "components/indirect/indirect.exr",
+      "manifest_sha256": "0d6f6b1767ddd23f21abb8ada350d889b40761f9fbb237efb9abd99b6f6a473d",
+      "raw_sha256": "06dee030574e66e4d2d854a0ae9b636e8bf1c244ce965674f4b1a63d7a402d5a"
+    },
+    {
+      "role": "sky-direct",
+      "manifest_file": "components/sky-direct/bake.json",
+      "raw_file": "components/sky-direct/indirect.exr",
+      "manifest_sha256": "202e11ed65eaf726d240e7a7ff4c2292264e944c3766a029a141d44bd2ec4fa7",
+      "raw_sha256": "7aabda4caa1bf759b27f77c7fe8415e5ea744b85e6a6f253c8de83d206004d8e"
+    }
+  ],
+  "day_linear_sum_sha256": "d64e7dcedf6909cd3708a9ba0d3aedda1beba01cdd8784b805f67ba3b2d442fd"
 }

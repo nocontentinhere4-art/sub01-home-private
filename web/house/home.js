@@ -25,6 +25,7 @@ import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
+import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -2671,17 +2672,31 @@ async function applyContactLighting() {
   if (new URLSearchParams(location.search).has("bake")) return;
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
-    const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=21"),
+    const [baked, ao, night, bakeManifest] = await Promise.all([
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=22"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=21",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=22",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=21",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=22",
       ) : Promise.resolve(null),
+      useIndirectLighting ? fetch('/house/assets/lighting/indirect-bake.json?v=22').then(response => {
+        if (!response.ok) throw new Error('Lighting provenance unavailable');
+        return response.json();
+      }) : Promise.resolve(null),
     ]);
+    const occludedDayReady = bakeManifest?.receiver_diffuse === 'occluded-direct-sky-plus-indirect-v1';
+    if (occludedDayReady && (bakeManifest.source_sha256 !== '44d003e56f0c13ea21b80179de92835fc7a93ed6ee5c36596dce27eb9ee6f419'
+        || bakeManifest.receivers !== 103 || bakeManifest.direct_light !== true
+        || bakeManifest.albedo_in_bake !== false || bakeManifest.day_components?.length !== 2
+        || !bakeManifest.day_linear_sum_sha256 || bakeManifest.day_linear_sum_sha256 !== bakeManifest.day?.source_exr_sha256
+        || new Set(bakeManifest.day_components.map(part => part.role)).size !== 2
+        || !bakeManifest.day_components.some(part => part.role === 'indirect')
+        || !bakeManifest.day_components.some(part => part.role === 'sky-direct'))) {
+      throw new Error('Occluded sky bake provenance does not match this house');
+    }
     // Atlas UVs retain glTF top-origin V; HDRLoader defaults to the opposite orientation.
     ao.flipY = false;
     ao.channel = 1;
@@ -2767,18 +2782,24 @@ async function applyContactLighting() {
         original.material.lightMap = ao;
         // Receiver-albedo-excluded diffuse bake is outgoing radiance; Three expects irradiance.
         original.material.lightMapIntensity = currentLight.daylight * Math.PI;
-        original.material.onBeforeCompile = (shader) => {
-          shader.uniforms.homeNightLightMap = nightLightUniform;
-          shader.uniforms.homeNightLightIntensity = nightLightIntensity;
-          shader.fragmentShader = "uniform sampler2D homeNightLightMap;\nuniform float homeNightLightIntensity;\n" +
-            shader.fragmentShader.replace("#include <lights_fragment_maps>",
-              T.ShaderChunk.lights_fragment_maps.replace(
-                "irradiance += lightMapIrradiance;",
-                "irradiance += lightMapIrradiance + texture2D(homeNightLightMap, vLightMapUv).rgb * homeNightLightIntensity;",
-              ));
-          if (original.material.userData.lightOak) gradeOak(shader);
-        };
-        original.material.customProgramCacheKey = () => "private-home-day-night-indirect-v1" + (original.material.userData.lightOak ? '-oak' : '');
+        if (occludedDayReady) configureBakedReceiverLighting(T, original.material, {
+          occludedDayReady, nightLightMap: nightLightUniform,
+          nightLightIntensity, materialGradeOak: gradeOak,
+        });
+        else {
+          original.material.onBeforeCompile = (shader) => {
+            shader.uniforms.homeNightLightMap = nightLightUniform;
+            shader.uniforms.homeNightLightIntensity = nightLightIntensity;
+            shader.fragmentShader = "uniform sampler2D homeNightLightMap;\nuniform float homeNightLightIntensity;\n" +
+              shader.fragmentShader.replace("#include <lights_fragment_maps>",
+                T.ShaderChunk.lights_fragment_maps.replace(
+                  "irradiance += lightMapIrradiance;",
+                  "irradiance += lightMapIrradiance + texture2D(homeNightLightMap, vLightMapUv).rgb * homeNightLightIntensity;",
+                ));
+            if (original.material.userData.lightOak) gradeOak(shader);
+          };
+          original.material.customProgramCacheKey = () => "private-home-day-night-indirect-v1" + (original.material.userData.lightOak ? '-oak' : '');
+        }
         indirectMaterials.push(original.material);
       } else {
         original.material.aoMap = ao;
@@ -2792,6 +2813,7 @@ async function applyContactLighting() {
       applied++;
     });
     document.getElementById("status").dataset.contactMaps = String(applied);
+    document.getElementById("status").dataset.receiverDiffuse = occludedDayReady ? 'occluded-sky' : 'standard';
     document.getElementById("status").dataset.rejectedBakes = JSON.stringify(rejectedBakes);
     if (useIndirectLighting)
       document.getElementById("status").dataset.indirectMaps = String(applied);
