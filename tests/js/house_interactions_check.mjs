@@ -118,4 +118,11 @@ assert.equal(visitorDoorAllows('bathroom', [-.5, 1.35], [-1.5, 1.35], 0, 'locked
 // Legacy server: exactly the old collider.
 assert.equal(visitorDoorAllows('front', [2, 3.2], [2, 3.9], 0, null, 0), false);
 assert.equal(visitorDoorAllows('front', [2, 3.2], [2, 3.9], 0, null, -Math.PI * .48), true);
+// Owner decision: hidden while away, visible otherwise and for older servers.
+{
+  const { actorVisible } = await import('../../web/house/house_interactions.mjs');
+  assert.equal(actorVisible({presence: 'away'}), false);
+  for (const presence of ['home', 'leaving', 'returning', undefined]) assert.equal(actorVisible({presence}), true);
+  assert.equal(actorVisible(null), true);
+}
 console.log('house interactions ok');

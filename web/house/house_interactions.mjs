@@ -114,3 +114,10 @@ export function houseStatus(state) {
   const presence = ['home', 'leaving', 'away', 'returning'].includes(state?.presence) ? state.presence : 'home';
   return {presence, frontLocked: !!state?.doors?.front?.locked, bathroomLocked: !!state?.doors?.bathroom?.locked};
 }
+
+// Owner decision 2026-10-13: while he is out of the house (presence "away")
+// his body is hidden; his published position stays at the doorstep. Older
+// servers without presence keep him visible.
+export function actorVisible(state) {
+  return state?.presence !== 'away';
+}

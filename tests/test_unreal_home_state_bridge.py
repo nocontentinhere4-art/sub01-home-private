@@ -492,3 +492,17 @@ def test_credential_never_appears_in_documents():
     model.apply_tick(tick(HomeWorld()))
     assert TOKEN not in json.dumps(model.document())
     assert re.fullmatch(r"[0-9a-f]{12}", model.document()["epoch"])
+
+
+def test_actor_hidden_while_away_owner_decision():
+    clock = Clock()
+    model = bridge.HomeStateModel(clock=clock, stale_after=3, unavailable_after=15)
+    model.set_connected(True)
+    world = HomeWorld()
+    home = world.view(compact=True)
+    model.apply_tick({"type": "tick", "home": {**home, "presence": "home"}, "sleep": {"stage": "AWAKE"}})
+    assert model.document()["actor"]["visible"] is True
+    model.apply_tick({"type": "tick", "home": {**home, "presence": "away"}, "sleep": {"stage": "AWAKE"}})
+    assert model.document()["actor"]["visible"] is False
+    model.apply_tick({"type": "tick", "home": {**home, "presence": "returning"}, "sleep": {"stage": "AWAKE"}})
+    assert model.document()["actor"]["visible"] is True
