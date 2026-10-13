@@ -200,11 +200,25 @@ def test_furnished_placement_matches_load_furnished():
     assert max(xs) - min(xs) == pytest.approx(1) and max(zs) - min(zs) == pytest.approx(2)
 
 
-def test_balcony_boxes_measured_against_actual_chair():
-    report = audit.run_audit(ROOT)
-    balcony = next(c for c in report['procedural_placeholders'] if c['label'] == 'balcony reading chair')
-    overlap = balcony['asset_overlap'][0]
+def test_balcony_boxes_measured_against_actual_chair(tmp_path):
+    # Keep the regression's original overlap even after removing the bad boxes
+    # from the actual house. Auditing every asset is unnecessary for this case.
+    legacy = tmp_path / 'legacy-balcony.js'
+    legacy.write_text('''
+furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
+box(0.65, 0.16, 0.68, -1.2, 3.44, 4.5, M.cream, 0.07);
+box(0.65, 0.6, 0.16, -1.2, 3.77, 4.8, M.cream, 0.07);
+''')
+    balcony = audit.procedural_box_furnishings(legacy)[0]
+    boxes = [{'low': [p['centre_m'][i] - p['size_m'][i]/2 for i in range(3)],
+              'high': [p['centre_m'][i] + p['size_m'][i]/2 for i in range(3)]}
+             for p in balcony['parts']]
+    overlap = audit.asset_overlap(ROOT, boxes, 'modern_arm_chair_01',
+                                  balcony['loaded_calls']['modern_arm_chair_01'])
     assert overlap['asset'] == 'modern_arm_chair_01' and overlap['asset_back_side'] == '-z'
     seat, back = overlap['parts']
     assert seat['volume_fraction_inside_asset_bounds'] == 1 and seat['asset_vertices_inside_box'] > 1000
     assert back['protrudes_above_asset_m'] > .2 and back['low'][2] > 4.7  # old backrest on the chair's front side
+    current = audit.procedural_box_furnishings(ROOT / 'web/house/home.js')
+    assert not any('modern_arm_chair_01' in c['overlapping_assets']
+                   and c['role'] == 'visible-furnishing' for c in current)
