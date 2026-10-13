@@ -89,6 +89,12 @@ def test_vanity_clears_existing_bathroom_books():
     assert vx1 < -3.3 - .055 / 2
 
 
+def test_output_dir_argument_defaults_to_repository_asset_dir():
+    assert bath.output_dir_from_argv(['blender', '-b', '--python', 'x.py']) == bath.OUT
+    argv = ['blender', '--python', 'x.py', '--', '--output-dir', '/private/b']
+    assert bath.output_dir_from_argv(argv) == Path('/private/b')
+
+
 def test_runtime_convention_matches_js_check():
     vanity = bath.FIXTURES['vanity']
     back = bath.blender_to_runtime((0, bath.VANITY_D / 2, 0), vanity['runtime_origin_m'], vanity['runtime_yaw_radians'])

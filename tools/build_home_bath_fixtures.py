@@ -10,7 +10,10 @@ The part list below is pure data so CPU tests can verify the declared bounds
 against the unchanged home.js colliders without Blender. Run in Blender on
 the private server only (never on the owner's Mac):
 
-    blender -b --python tools/build_home_bath_fixtures.py
+    blender -b --python tools/build_home_bath_fixtures.py [-- --output-dir DIR]
+
+tools/runpod_furniture_build.py wraps this with a private output directory
+outside Git and verifies the result against the declared contract.
 
 Output: web/house/assets/bath-fixtures-original/{vanity,toilet}.glb, their
 JSON sidecars and one editable bath-fixtures.blend. GLBs carry geometry and
@@ -200,13 +203,14 @@ def sidecar(name, fixture, actual_local_bounds=None, glb=None, triangles=None, v
 
 # ------------------------------------------------------------------ Blender
 
-def _build_in_blender():  # pragma: no cover - requires Blender on the private server
+def _build_in_blender(out=OUT):  # pragma: no cover - requires Blender on the private server
     import bpy
     import bmesh
     from mathutils import Vector
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    OUT.mkdir(parents=True, exist_ok=True)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
     preview = {}
     for role in MESH_ROLES:
         m = bpy.data.materials.new(role)
@@ -348,7 +352,7 @@ def _build_in_blender():  # pragma: no cover - requires Blender on the private s
         bpy.ops.object.select_all(action='DESELECT')
         for o in joined:
             o.select_set(True)
-        glb = OUT / f'{name}.glb'
+        glb = out / f'{name}.glb'
         bpy.ops.export_scene.gltf(filepath=str(glb), export_format='GLB', use_selection=True,
                                   export_materials='NONE', export_cameras=False, export_lights=False)
         triangles = 0
@@ -357,13 +361,22 @@ def _build_in_blender():  # pragma: no cover - requires Blender on the private s
             mesh.calc_loop_triangles()
             triangles += len(mesh.loop_triangles)
         data = sidecar(name, fixture, [lo, hi], glb, triangles, sum(len(o.data.vertices) for o in joined))
-        (OUT / f'{name}.json').write_text(json.dumps(data, indent=2))
+        (out / f'{name}.json').write_text(json.dumps(data, indent=2))
         results[name] = {'bounds': [lo, hi], 'triangles': triangles, 'bytes': glb.stat().st_size}
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'bath-fixtures.blend'))
+    bpy.ops.wm.save_as_mainfile(filepath=str(out / 'bath-fixtures.blend'))
     print('BATH_FIXTURES_BUILT', json.dumps(results), flush=True)
 
 
+def output_dir_from_argv(argv):
+    """Optional `-- --output-dir DIR` (Blender passes script args after `--`)."""
+    args = argv[argv.index('--') + 1:] if '--' in argv else []
+    if '--output-dir' in args:
+        return Path(args[args.index('--output-dir') + 1])
+    return OUT
+
+
 if __name__ == '__main__':
+    import sys
     try:
         import bpy  # noqa: F401
     except ImportError:
@@ -372,4 +385,4 @@ if __name__ == '__main__':
             print(fixture_name, json.dumps({'runtime_world_bounds_m': runtime_bounds(fixture_spec),
                                             'footprint_violations': footprint_violations(fixture_spec)}))
     else:
-        _build_in_blender()
+        _build_in_blender(output_dir_from_argv(sys.argv))
