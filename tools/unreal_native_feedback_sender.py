@@ -3,13 +3,18 @@
 FIELDS = r'''
  void UpdateNativeFeedback();
  const TCHAR* NativeFeedbackPhase() const;
+ bool NativeFeedbackSeatReady() const;
  int64 LiveHomeCommandSequence=-1,NativeFeedbackSequence=-1;
- FString NativeFeedbackEpoch,NativeFeedbackActivity;
+ FString NativeFeedbackEpoch,NativeFeedbackActivity,NativeFeedbackAckPhase;
  bool NativeFeedbackBound=false,NativeFeedbackPending=false;
- double NativeFeedbackAt=0;
+ double NativeFeedbackAt=0,NativeFeedbackLastAck=-1;
 '''
 
 METHODS = r'''
+bool ASub01HomeCharacter::NativeFeedbackSeatReady() const{
+ const double Age=FPlatformTime::Seconds()-NativeFeedbackLastAck;
+ return NativeFeedbackBound&&NativeFeedbackAckPhase==TEXT("seated")&&NativeFeedbackEpoch==LiveHomeEpoch&&NativeFeedbackSequence==LiveHomeCommandSequence&&NativeFeedbackActivity==LiveHomeActivity&&Age>=0&&Age<=3;
+}
 const TCHAR* ASub01HomeCharacter::NativeFeedbackPhase() const{
  if(LiveHomeBlocked)return TEXT("blocked");
  if(!NativeFeedbackBound||LiveHomePath.Num()||LiveHomeNode!=LiveHomeTarget)return TEXT("walking");
@@ -20,7 +25,7 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
  const double Now=FPlatformTime::Seconds();
  if(!LiveHome||!LiveHomeFresh||LiveHomePrivate||LiveHomeEpoch.IsEmpty()||LiveHomeCommandSequence<0||Now<LiveHomeLastReceived||Now-LiveHomeLastReceived>3)return;
  if(NativeFeedbackEpoch!=LiveHomeEpoch||NativeFeedbackSequence!=LiveHomeCommandSequence||NativeFeedbackActivity!=LiveHomeActivity){
-  NativeFeedbackEpoch=LiveHomeEpoch;NativeFeedbackSequence=LiveHomeCommandSequence;NativeFeedbackActivity=LiveHomeActivity;NativeFeedbackBound=false;
+  NativeFeedbackEpoch=LiveHomeEpoch;NativeFeedbackSequence=LiveHomeCommandSequence;NativeFeedbackActivity=LiveHomeActivity;NativeFeedbackBound=false;NativeFeedbackLastAck=-1;NativeFeedbackAckPhase.Empty();NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
  }
  if(NativeFeedbackPending||Now<NativeFeedbackAt)return;
  NativeFeedbackAt=Now+.5;NativeFeedbackPending=true;
@@ -33,14 +38,14 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
  FString Body;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Body));
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(LiveHomeOrigin+TEXT("/home/native_state"));Request->SetVerb(TEXT("POST"));
  Request->SetTimeout(1.5);Request->SetHeader(TEXT("X-Admin-Token"),LiveHomeToken);Request->SetHeader(TEXT("Content-Type"),TEXT("application/json"));Request->SetContentAsString(Body);
- Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
+ Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity,Phase](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
   NativeFeedbackPending=false;
   if(!LiveHome||LiveHomeEpoch!=Epoch||LiveHomeCommandSequence!=Sequence||LiveHomeActivity!=Activity)return;
   const double Age=FPlatformTime::Seconds()-LiveHomeLastReceived;
   if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!LiveHomeFresh||LiveHomePrivate||Age<0||Age>3){
    NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);return;
   }
-  NativeFeedbackBound=true;
+  NativeFeedbackBound=true;NativeFeedbackLastAck=FPlatformTime::Seconds();NativeFeedbackAckPhase=Phase;
  });
  if(!Request->ProcessRequest()){NativeFeedbackPending=false;NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);}
 }

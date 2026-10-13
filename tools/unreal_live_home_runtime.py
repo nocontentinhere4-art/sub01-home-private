@@ -28,6 +28,7 @@ METHODS=r'''
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Camera/PlayerCameraManager.h"
+#include <cmath>
 void ASub01HomeCharacter::BeginLiveHome(){
  if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01LiveHome")))return;
  if(HandsDiagnosticSeat||RouteActive){UE_LOG(LogTemp,Error,TEXT("SUB01_LIVE_HOME_REFUSED controlled pose/route diagnostic active"));return;}
@@ -81,7 +82,7 @@ void ASub01HomeCharacter::ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc){
  if(Private){LiveHomeFresh=true;LiveHomeLastReceived=FPlatformTime::Seconds();LiveHomePrivate=true;if(PCBridge)PCBridge->SetLocalPrivacy(true);LiveHomeActivity.Empty();return;}
  const TSharedPtr<FJsonObject>* Actor=nullptr;FString Target;
  if(!Doc->TryGetObjectField(TEXT("actor"),Actor)||!(*Actor)->TryGetStringField(TEXT("target"),Target)||!LiveHomeNodes.Contains(Target)){LiveHomeFresh=false;return;}
- double Sequence=-1;if(!(*Actor)->TryGetNumberField(TEXT("route_sequence"),Sequence)||!FMath::IsFinite(Sequence)||Sequence<0||Sequence>9007199254740991.0||FMath::FloorToDouble(Sequence)!=Sequence){LiveHomeFresh=false;return;}LiveHomeCommandSequence=static_cast<int64>(Sequence);
+ double Sequence=-1;if(!(*Actor)->TryGetNumberField(TEXT("route_sequence"),Sequence)||!FMath::IsFinite(Sequence)||Sequence<0||Sequence>9007199254740991.0||std::floor(Sequence)!=Sequence){LiveHomeFresh=false;return;}LiveHomeCommandSequence=static_cast<int64>(Sequence);
  LiveHomeFresh=true;LiveHomeLastReceived=FPlatformTime::Seconds();LiveHomePrivate=false;
  const TSharedPtr<FJsonObject>* Brain=nullptr;if(Doc->TryGetObjectField(TEXT("brain"),Brain))(*Brain)->TryGetStringField(TEXT("activity"),LiveHomeActivity);
  FString Epoch;Doc->TryGetStringField(TEXT("epoch"),Epoch);if(Target!=LiveHomeTarget||Epoch!=LiveHomeEpoch){LiveHomeEpoch=Epoch;PlanLiveHome(Target);}
@@ -90,7 +91,7 @@ void ASub01HomeCharacter::UpdateLiveHome(float Dt){
  if(!LiveHome){if(LiveHomeBindWaiting)BeginLiveHome();return;}const double Now=FPlatformTime::Seconds();if(Now>=LiveHomePollAt)PollLiveHome();
  UpdateNativeFeedback();
  if(!LiveHomeFresh||Now-LiveHomeLastReceived>3||LiveHomePrivate||LiveHomeBlocked){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);NativeSeatVerified=false;if(!LiveHomeBlocked){LiveHomeProgressAt=Now;LiveHomeBest=BIG_NUMBER;}return;}
- if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(NativeSeatVerified&&LiveHomeNode==TEXT("desk")&&(LiveHomeActivity==TEXT("use_computer")||LiveHomeActivity==TEXT("research")||LiveHomeActivity==TEXT("chart")));return;}
+ if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(NativeSeatVerified&&NativeFeedbackSeatReady()&&LiveHomeNode==TEXT("desk")&&(LiveHomeActivity==TEXT("use_computer")||LiveHomeActivity==TEXT("research")||LiveHomeActivity==TEXT("chart")));return;}
  if(PCBridge)PCBridge->SetOperatorFocus(false);
  const FString Next=LiveHomePath[0];const FVector Here=GetActorLocation(),Floor=LiveHomeNodes.FindChecked(Next);const FVector Delta(Floor.X-Here.X,Floor.Y-Here.Y,0);
  const FFindFloorResult& ActualFloor=GetCharacterMovement()->CurrentFloor;

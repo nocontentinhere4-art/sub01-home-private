@@ -11,6 +11,11 @@ implementation remains required. Failed requests revoke seat evidence and PC
 focus; callbacks for an old epoch/command cannot bind the new command. Native
 engine compilation and end-to-end delivery remain unverified while GPU access
 is unavailable. CPU tests execute the actual C++ phase decision and focus guards.
+Live PC focus and commands also require an accepted `seated` report for the
+current epoch/sequence/activity, acknowledged within three seconds. Walking or
+arrival acknowledgments cannot enable the PC. A changed command clears the
+seat flag and acknowledgment; future contact verification must establish it
+again from the actual chair/body state.
 
 The authenticated loopback state bridge accepts `POST /home/native_state` and
 forwards to the actual backend `POST /api/home/native_state` using its existing

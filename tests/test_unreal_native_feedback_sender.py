@@ -46,3 +46,37 @@ def test_sender_is_installed_and_never_invents_physical_seating():
     assert 'Now<LiveHomeLastReceived||Now-LiveHomeLastReceived>3' in METHODS
     assert 'Bind?TEXT("walking")' in METHODS
     assert 'Request->SetTimeout(1.5)' in METHODS
+
+
+def test_actual_accepted_seat_lease_requires_matching_command_and_fresh_ack(tmp_path):
+    compiler = shutil.which('clang++') or shutil.which('g++')
+    if not compiler:
+        import pytest
+        pytest.skip('C++ compiler unavailable')
+    body = METHODS.split('bool ASub01HomeCharacter::NativeFeedbackSeatReady() const{', 1)[1].split('\nconst TCHAR*', 1)[0]
+    source = '''#include <string>
+#define TEXT(x) x
+struct FPlatformTime{static double Seconds(){return 10;}};
+bool NativeFeedbackBound=true;
+std::string NativeFeedbackAckPhase="seated",NativeFeedbackEpoch="one",LiveHomeEpoch="one",NativeFeedbackActivity="research",LiveHomeActivity="research";
+long NativeFeedbackSequence=1,LiveHomeCommandSequence=1;
+double NativeFeedbackLastAck=10;
+bool ready(){
+''' + body + '''
+int main(){
+ if(!ready())return 1;
+ NativeFeedbackBound=false;if(ready())return 2;NativeFeedbackBound=true;
+ NativeFeedbackAckPhase="walking";if(ready())return 3;NativeFeedbackAckPhase="seated";
+ NativeFeedbackEpoch="old";if(ready())return 4;NativeFeedbackEpoch="one";
+ NativeFeedbackSequence=0;if(ready())return 5;NativeFeedbackSequence=1;
+ NativeFeedbackActivity="chart";if(ready())return 6;NativeFeedbackActivity="research";
+ NativeFeedbackLastAck=6.99;if(ready())return 7;
+ NativeFeedbackLastAck=11;if(ready())return 8;
+ NativeFeedbackLastAck=7;if(!ready())return 9;
+ return 0;
+}
+'''
+    cpp = tmp_path/'lease.cpp'; cpp.write_text(source)
+    exe = tmp_path/'lease'
+    subprocess.run([compiler, '-std=c++17', str(cpp), '-o', str(exe)], check=True, capture_output=True)
+    subprocess.run([str(exe)], check=True, capture_output=True)

@@ -20,11 +20,12 @@ PC* PCBridge=&pc;struct Path{int size=0;int Num(){return size;}}LiveHomePath;
 bool LiveHome=true,LiveHomeBindWaiting=false,LiveHomeFresh=true,LiveHomePrivate=false,LiveHomeBlocked=false,NativeSeatVerified=false;
 double LiveHomePollAt=100,LiveHomeLastReceived=10,LiveHomeProgressAt=0,LiveHomeBest=0;
 std::string LiveHomeNode="desk",LiveHomeActivity="use_computer";
+bool ackReady=true;bool NativeFeedbackSeatReady(){return ackReady;}
 void BeginLiveHome(){}void PollLiveHome(){}void UpdateNativeFeedback(){}
 void update(float Dt){
 '''
   cases='''}
-void reset(){pc.focused=true;move.stops=0;LiveHome=true;LiveHomeFresh=true;LiveHomePrivate=false;LiveHomeBlocked=false;NativeSeatVerified=false;LiveHomeLastReceived=10;LiveHomePath.size=0;}
+void reset(){pc.focused=true;move.stops=0;LiveHome=true;LiveHomeFresh=true;LiveHomePrivate=false;LiveHomeBlocked=false;NativeSeatVerified=false;LiveHomeLastReceived=10;LiveHomePath.size=0;ackReady=true;}
 int main(){
 reset();update(0);if(pc.focused)return 1;
 reset();NativeSeatVerified=true;update(0);if(!pc.focused)return 2;
@@ -34,6 +35,7 @@ reset();NativeSeatVerified=true;LiveHomeLastReceived=0;update(0);if(pc.focused||
 reset();NativeSeatVerified=true;LiveHomeBlocked=true;update(0);if(pc.focused||NativeSeatVerified)return 6;
 reset();NativeSeatVerified=true;LiveHomePath.size=1;update(0);if(pc.focused)return 7;
 reset();LiveHome=false;update(0);if(!pc.focused)return 8; // separate operator diagnostic stays untouched
+reset();NativeSeatVerified=true;ackReady=false;update(0);if(pc.focused)return 9;
 return 0;}
 '''
   with tempfile.TemporaryDirectory()as tmp:
