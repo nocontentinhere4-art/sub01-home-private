@@ -28,6 +28,7 @@ import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
 import { createSettledAssetBarrier } from "./settled_asset_barrier.mjs?v=1";
+import { createDeviceScreenLight } from "./device_screen_light.mjs?v=1";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -1624,6 +1625,14 @@ const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
 let deskBitmapPainter = null, minecraftBitmapPainter = null;
+const deviceScreenLights = [];
+function updateDeviceScreenLights(dt) {
+  for (const device of deviceScreenLights)
+    device.controller.update(dt, device.canvas, {
+      privacy: privacyActive || !!homeState?.privacy,
+      hidden: document.hidden,
+    });
+}
 function invalidateDeviceBitmaps() {
   deskBitmapPainter?.invalidate();
   minecraftBitmapPainter?.invalidate();
@@ -1657,6 +1666,7 @@ const phoneMusicFeed = createLiveMusicFeed({
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    updateDeviceScreenLights(0);
     phoneMusicFeed.stop();
     invalidateDeviceBitmaps();
     for (const controls of browserControls.values()) controls.deactivate();
@@ -1793,6 +1803,7 @@ function setPrivacy(active) {
   }
   if (!active && privacyActive && !lite) renderer.shadowMap.needsUpdate = true;
   privacyActive = active;
+  updateDeviceScreenLights(0);
   document.body.classList.toggle('privacy-active', active);
 }
 function browserFrame(device, parent) {
@@ -2415,6 +2426,12 @@ function drawPhone() {
   phoneTexture.needsUpdate = true;
 }
 drawPhone();
+for (const [name, mesh, canvas, maxIntensity, distance] of [
+  ['computer', screen, sx.canvas, .7, 1.8],
+  ['television', tv, tvCanvas, 2, 2.7],
+  ['phone', phoneDisplay, phoneCanvas, .03, .6],
+]) deviceScreenLights.push({name, canvas,
+  controller: createDeviceScreenLight(T, scene, mesh, {maxIntensity, distance})});
 interactions.push({
   object: phoneMesh,
   label: "E · Phone",
@@ -2899,6 +2916,7 @@ renderer.setAnimationLoop(() => {
   for (const panel of curtainPanels)
     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;
+  updateDeviceScreenLights(dt);
   document.getElementById('status').dataset.exterior = photographedExterior.activate() ? 'residential-tokyo-360-static' : 'legacy-fallback';
   photographedExterior.update(dt,currentLight.hour);
   if (!lite && !sunlightShadowFitReady) {
@@ -2928,6 +2946,11 @@ renderer.setAnimationLoop(() => {
   elapsed += clock.elapsedTime - lastFrameTime;
   lastFrameTime = clock.elapsedTime;
   if (elapsed > 1) {
+    document.getElementById('status').dataset.screenLights = JSON.stringify(
+      deviceScreenLights.map(({name,controller}) => ({name,
+        intensity: Number(controller.light.intensity.toFixed(5)),
+        color: controller.light.color.toArray().map(value => Number(value.toFixed(4))),
+      })));
     document.getElementById('status').dataset.frameTriangles = String(renderer.info.render.triangles);
     document.getElementById('status').dataset.programs = String(renderer.info.programs.length);
     document.getElementById("status").textContent =
