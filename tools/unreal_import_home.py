@@ -24,7 +24,12 @@ params.set_editor_property('is_automated', True)
 source = manager.create_source_data(str(ROOT / manifest['assets'][0]['file']))
 if not manager.can_translate_source_data(source, True):
     raise RuntimeError('Official glTF scene translator is unavailable in this engine build')
-if not manager.import_scene('/Game/Sub01Home/ImportedScene', source, params):
+u.log('SUB01_IMPORT_PHASE starting synchronous scene import')
+scene_result = manager.import_scene('/Game/Sub01Home/ImportedScene', source, params)
+u.log('SUB01_IMPORT_PHASE synchronous scene result=' + repr(scene_result))
+manager.wait_until_all_tasks_done(False)
+u.log('SUB01_IMPORT_PHASE all scene tasks settled')
+if not scene_result:
     raise RuntimeError('Actual full-home scene import failed')
 mesh_components = []
 light_components = []

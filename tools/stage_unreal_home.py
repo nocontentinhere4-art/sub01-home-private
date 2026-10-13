@@ -45,6 +45,8 @@ EditorStartupMap=/Game/Sub01Home/ActualHome
 GameDefaultMap=/Game/Sub01Home/ActualHome
 ''')
     shutil.copy2(ROOT / 'tools/unreal_import_home.py', output / 'Content/Python/import_home.py')
+    for name in ['unreal_setup_home.py', 'unreal_home_coordinates.py', 'unreal_home_lights.py']:
+        shutil.copy2(ROOT / 'tools' / name, output / 'Content/Python' / name)
     manifest = {'engine_version': '5.8.3', 'private_only': True, 'assets': entries,
                 'scope': 'Full imported source scene, plus non-spawned furniture authoring library. No public endpoint, brain/device emulator or game behavior is silently replaced.'}
     (output / 'home-inputs.json').write_text(json.dumps(manifest, indent=2) + '\n')

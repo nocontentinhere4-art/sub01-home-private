@@ -10,6 +10,7 @@ from pathlib import Path
 import unreal as u
 sys.path.insert(0,str(Path(__file__).parent))
 from unreal_home_coordinates import infer_import_transform,convert_position
+from unreal_home_lights import place_authored_lights
 
 ROOT=Path(u.Paths.project_dir()).resolve()
 level=u.get_editor_subsystem(u.LevelEditorSubsystem)
@@ -35,6 +36,8 @@ canonical=lambda name:re.sub('[^a-z0-9]','',name.lower())
 source_pivots={canonical(node['name']):transform(i)[12:15]for i,node in enumerate(doc['nodes'])if node.get('name')and'mesh'in node}
 components=[];pairs=[];matched=set()
 for actor in actors.get_all_level_actors():
+    if any(str(tag) == 'SUB01VisualBackground' for tag in actor.get_editor_property('tags')):
+        continue
     for component in actor.get_components_by_class(u.StaticMeshComponent):
         if not component.get_editor_property('static_mesh'):continue
         components.append(component)
@@ -74,7 +77,8 @@ camera.set_actor_label('SUB01_Real_FirstPerson_Render_Camera')
 cc=camera.get_cine_camera_component();cc.set_editor_property('current_focal_length',24)
 focus=cc.get_editor_property('focus_settings');focus.set_editor_property('focus_method',u.CameraFocusMethod.DISABLE);cc.set_editor_property('focus_settings',focus)
 # No synthetic window fill cards. A real source HDR illuminates Lumen and
-# reflections; original glTF practical lights retain their imported values.
+# reflections. Blender assembly omitted runtime-created lights; restore the
+# exact authored SI recipe, not fabricated photographic fill cards.
 hdr=ROOT/'SourceAssets/room-light.hdr'
 if not hdr.is_file():raise RuntimeError('Real room-light HDR must accompany setup; no invented ambient fallback')
 task=u.AssetImportTask();task.filename=str(hdr);task.destination_path='/Game/Sub01Home/Environment';task.automated=True;task.save=True;task.replace_existing=True
@@ -83,11 +87,12 @@ cubes=[u.load_asset(path)for path in task.imported_object_paths];cube=next((asse
 if not cube:raise RuntimeError('Official HDR importer did not produce a real TextureCube')
 sky=actors.spawn_actor_from_class(u.SkyLight,u.Vector(0,0,0));sky.set_actor_label('SUB01_ActualHDR_Sky')
 sk=sky.get_component_by_class(u.SkyLightComponent);sk.set_editor_property('source_type',u.SkyLightSourceType.SLS_SPECIFIED_CUBEMAP);sk.set_editor_property('cubemap',cube);sk.set_editor_property('source_cubemap_angle',-90);sk.set_intensity(.4225)
+authored_light_rows=place_authored_lights(u,actors,pos,hour=11,lamps_on=False)
 light_rows=[]
 for actor in actors.get_all_level_actors():
     for light in actor.get_components_by_class(u.LightComponent):
         light_rows.append({'actor':actor.get_actor_label(),'class':light.get_class().get_name(),'intensity':light.get_editor_property('intensity')})
 u.EditorAssetLibrary.save_directory('/Game/Sub01Home',only_if_is_dirty=False,recursive=True)
 if not level.save_current_level():raise RuntimeError('First-person actual home map failed to save')
-(ROOT/'unreal-home-setup.json').write_text(json.dumps({'coordinates':coordinates,'collision_components':len(collision),'collision_unique_meshes':len(meshes),'spawn_source_m':[2,.94,3.1],'eye_height_cm':165,'standing_capsule_height_cm':182,'camera':camera.get_path_name(),'lighting':light_rows,'backend_interactions':'Explicitly not connected. Native E reports this; no simulated device action.','scope':'Actual Unreal scene setup; native controls/collision still require server PIE acceptance and first real renders.'},indent=2))
+(ROOT/'unreal-home-setup.json').write_text(json.dumps({'coordinates':coordinates,'collision_components':len(collision),'collision_unique_meshes':len(meshes),'spawn_source_m':[2,.94,3.1],'eye_height_cm':165,'standing_capsule_height_cm':182,'camera':camera.get_path_name(),'lighting':light_rows,'authored_lighting':authored_light_rows,'lighting_preview':{'tokyo_hour':11,'lamps_on':False,'static_preview_not_live_clock':True,'directional_units':'lux','point_spot_units':'candela','cycles_683_factor_applied':False},'backend_interactions':'Explicitly not connected. Native E reports this; no simulated device action.','scope':'Actual Unreal scene setup; native controls/collision still require server PIE acceptance and first real renders.'},indent=2))
 u.log('SUB01_REAL_FIRSTPERSON_HOME_SETUP_READY')

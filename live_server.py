@@ -2135,6 +2135,10 @@ def add_ops_routes(app, live, data_dir):
             shot = await get(site) if get and site in ("tiktok", "youtube") else None
         except BrowserDown:
             shot = None
+        # Privacy can begin while waiting for a browser frame. Recheck before
+        # returning its pixels, not only before the asynchronous request.
+        if live.home and live.home.view().get('privacy'):
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         if not shot:
             raise web.HTTPNotFound()
         return web.Response(body=shot, content_type="image/jpeg", headers={"Cache-Control": "no-store"})
@@ -2311,6 +2315,10 @@ async def main(args):
             raise web.HTTPConflict(text='The browser frame changed')
         except BrowserDown:
             shot = None
+        # Bathroom entry during the asynchronous frame read must also censor
+        # the response; the check before the await is insufficient.
+        if live.home and live.home.view().get('privacy'):
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         if not shot:
             raise web.HTTPNotFound()
         return web.Response(body=shot, content_type="image/jpeg", headers={"Cache-Control": "no-store",
