@@ -511,6 +511,7 @@ function contact(x, y, z, w, d) {
   );
   o.rotation.x = -Math.PI / 2;
   o.position.set(x, y + 0.042, z);
+  o.userData.excludeStaticBake = true; // A visual shadow decal is not a physical light-bounce surface.
   scene.add(o);
 }
 contact(-1.8, 0, .1, 1.3, 2.9);
@@ -681,6 +682,12 @@ const kitchenCabinetReady = gltfLoader.loadAsync('/house/assets/kitchen-cabinet-
   document.getElementById('status').dataset.kitchenCabinet = 'blender-four-door';
   renderer.shadowMap.needsUpdate = true;
 }).catch(error => console.warn('Upper cabinet fallback:', error.message));
+const kitchenStripMaterial = new T.MeshStandardMaterial({
+  color: "#fce9bd",
+  emissive: "#eecb88",
+  emissiveIntensity: 0.6,
+});
+kitchenStripMaterial.userData.lampEmission = 0.6;
 box(
   3.1,
   0.035,
@@ -688,11 +695,7 @@ box(
   -2.2,
   1.68,
   -3.69,
-  new T.MeshStandardMaterial({
-    color: "#fce9bd",
-    emissive: "#eecb88",
-    emissiveIntensity: 0.6,
-  }),
+  kitchenStripMaterial,
   0,
 );
 const sinkSteel = new T.MeshStandardMaterial({color: '#a6aca8', metalness: .70, roughness: .35});
@@ -1043,7 +1046,7 @@ const bedsideShadeMaterial = M.linen.clone();
 bedsideShadeMaterial.emissive.set('#ffc77c');
 bedsideShadeMaterial.emissiveIntensity = .08;
 bedsideShadeMaterial.userData.lampEmission = .08;
-const switchedMaterials = new Set([glowMat, bedsideShadeMaterial]);
+const switchedMaterials = new Set([glowMat, bedsideShadeMaterial, kitchenStripMaterial]);
 const deskLamp = cylinder(0.14, 0.035, 1.1, 1.3, -3.15, glowMat);
 beam([1.1, 0.85, -3.15], [1.1, 1.3, -3.15], 0.014, M.brass);
 let bedsideLamp = cylinder(0.14, 0.2, -3.55, 3.84, -3.1, M.linen);
