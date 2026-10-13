@@ -1,4 +1,5 @@
 import { createSunShafts } from "./sun_shafts.mjs";
+import { createCameraEffects } from "./camera_effects.mjs";
 import { createHomeStartup } from "./startup.mjs";
 import * as T from "three";
 import { RoundedBoxGeometry } from "./vendor/RoundedBoxGeometry.js";
@@ -2877,7 +2878,16 @@ addEventListener("resize", () => {
 });
 renderer.shadowMap.needsUpdate = true;
 const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
-startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [homeAssetsReady, contactLightingReady], sunShafts).then(async () => {
+// Optional developer `camera=off` gives a same-camera comparison without the
+// photographic response (bloom, eye adaptation, vignette, grain).
+const cameraEffects = createCameraEffects(T, renderer, lite || new URLSearchParams(location.search).get("camera") === "off");
+const postEffects = {
+  async prepare(scene, camera) {
+    await cameraEffects.prepare(scene, camera);
+    await sunShafts.prepare(scene, camera, cameraEffects.target());
+  },
+};
+startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [homeAssetsReady, contactLightingReady], postEffects).then(async () => {
   const ownership = {
     protectedObjects: interactions.map(item => item.object),
     retainedMaterials: [...Object.values(M), ...switchedMaterials, ...Object.values(havenSofaMaterials)],
@@ -2928,9 +2938,16 @@ renderer.setAnimationLoop(() => {
   if (!privacyActive)
     for (const view of windowViews)
       view.update(dt, currentLight.hour);
-  const shaftsActive = !privacyActive && sunShafts.render(scene, camera, currentLight, sun, curtainOpen);
+  let shaftsActive = false;
+  const cameraActive = !privacyActive && cameraEffects.render(scene, camera, dt,
+    target => (shaftsActive = sunShafts.render(scene, camera, currentLight, sun, curtainOpen, target)));
+  if (!cameraActive) {
+    if (privacyActive) cameraEffects.reset();
+    shaftsActive = !privacyActive && sunShafts.render(scene, camera, currentLight, sun, curtainOpen);
+  }
   document.getElementById("status").dataset.sunShafts = shaftsActive ? String(sunShafts.pixels()) : "off";
-  if (!shaftsActive) renderer.render(
+  document.getElementById("status").dataset.cameraEffects = cameraActive ? JSON.stringify(cameraEffects.stats()) : "off";
+  if (!cameraActive && !shaftsActive) renderer.render(
     privacyActive ? privacyScene : scene,
     privacyActive ? privacyCamera : camera,
   );
