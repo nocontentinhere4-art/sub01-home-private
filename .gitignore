@@ -120,3 +120,6 @@ out/provider-console-public.html
 out/provider-graphql-spec.html
 out/provider-openapi-v2.json
 out/inspect-provider-public-migration.py
+
+# the eye's frames (local runtime data, made while he sleeps or is outside)
+out/eye/

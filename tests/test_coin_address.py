@@ -29,5 +29,5 @@ def test_default_ca_is_a_solana_address():
 
 def test_city_paths():
     assert ls.OLD_PATHS["/city"] == ls.CITY_URL and ls.CITY_URL.startswith("https://")
-    for old in ("/life", "/map"):
-        assert ls.OLD_PATHS[old] == "/life.html"
+    for old in ("/life", "/map", "/life.html", "/sees", "/world.html"):   # no GPS map, no separate "sees" (2026-10-13)
+        assert ls.OLD_PATHS[old] == "/"

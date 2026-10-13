@@ -43,8 +43,10 @@ You receive its current state as JSON. Reply with JSON only:
   world objects when they fit; in dreams, the place melts into the replayed messages and replayed_articles
   (titles of encyclopedia articles it read that day: use them only as images or places, never as written text).
   Follow the style: awake = coherent, realistic, lighting from mood; rem = surreal dream mixing the replayed
-  messages, impossible geometry; nrem = almost black, slow blurred shapes. Never draw people's faces, text,
-  logos, violence, nudity or real persons.
+  messages, impossible geometry; nrem = almost black, slow blurred shapes. When "outside" is given it is out in
+  the street: the scene is the street ahead of it at eye height, on the way to outside.toward (quiet residential
+  Kichijoji, Tokyo: narrow lanes, low houses, utility poles, vending machines), lit by the time of day; nothing
+  else is invented. Never draw people's faces, text, logos, violence, nudity or real persons.
 - thought: one short inner line (max 16 words), always in English (even when the messages are in another language),
   reacting to what it sees. It is a brain without a body: no heart, hands or breath. Never ask for money, never tell anyone to buy or sell, never claim to be human,
   conscious, or the real person the scans came from."""
@@ -53,6 +55,7 @@ STYLE = {
     "AWAKE": "first-person view, photoreal, cinematic, natural perspective, 35mm",
     "REM": "first-person dream, surreal, dreamlike, soft glow, impossible architecture, film grain",
     "NREM": "almost completely dark, slow blurred abstract shapes, deep blue and black, very low light",
+    "OUTSIDE": "first-person view at eye height walking a quiet Tokyo street, photoreal, natural light, 35mm",
 }
 BAD = re.compile(r"https?://|www\.|\$[a-z]{2,10}\b|[1-9A-HJ-NP-Za-km-z]{32,44}|0x[0-9a-f]{40}", re.I)
 # what the eye may not draw or think (S7): money / trading images, a mind or a body. Local for now; the money part
@@ -65,7 +68,58 @@ NEUTRAL_SCENE = {
     "AWAKE": "the apartment, soft daylight on clean surfaces: {doing}",
     "REM": "the apartment with its walls bending slowly, soft glow, no clear edges",
     "NREM": "near darkness, slow blurred shapes, deep blue",
+    "OUTSIDE": "a quiet residential street in Kichijoji, Tokyo, at eye height: {doing}",
 }
+# --- when the eye is open (owner decision 2026-10-13): only while he sleeps (NREM: eyes closed, near dark; REM: the
+# dream) or while he is outside (what he really sees on the way). Awake at home the eye is off: no frame, no paid call.
+EYE_MODES = ("closed", "dream", "outside", "off")
+OUT_PRESENCE = ("leaving", "away", "returning")
+HOME_NODES = ("bed", "window", "table", "desk", "door_in")       # life.PLACES inside the apartment
+# life.PLACES outside -> where that is, in words (the real places of web/tokyo_routes.json, Kichijoji)
+TOWARD = {"door_out": "his front door", "street_home": "the street in front of his building",
+          "street_bakery": "the bakery", "bakery_door": "the bakery", "bakery_in": "the bakery",
+          "counter": "the bakery counter", "street_park": "the park", "park_gate": "the park gate",
+          "bench": "the park bench", "door_in": "home", "bed": "home", "window": "home", "table": "home",
+          "desk": "home"}
+
+
+def eye_mode(stage, presence="home", privacy=False):
+    """closed (NREM) / dream (REM) / outside (leaving, away or returning) / off (awake at home, or private)."""
+    if privacy:
+        return "off"
+    if stage == "NREM":
+        return "closed"
+    if stage == "REM":
+        return "dream"
+    return "outside" if presence in OUT_PRESENCE else "off"
+
+
+def life_presence(life):
+    """Presence from life.snapshot() when there is no house world: out while he has a street position or is at a
+    place outside the apartment."""
+    life = life or {}
+    place = life.get("place")
+    return "away" if life.get("geo") or (place and place not in HOME_NODES) else "home"
+
+
+def outside_view(life):
+    """What he is really doing outside, from life.snapshot(): where he is going and where he is. Nothing invented:
+    unknown places are left out."""
+    life = life or {}
+    place, to = life.get("place"), life.get("path_to")
+    walking = bool(life.get("walking"))
+    view = {"where": "Kichijoji, Tokyo", "walking": walking, "doing": str(life.get("doing") or "")[:80]}
+    if walking and to in TOWARD:
+        view["toward"] = TOWARD[to]
+    elif place in TOWARD:
+        view["at"] = TOWARD[place]
+        view["toward"] = TOWARD[place]
+    geo = life.get("geo") or {}
+    if geo.get("route"):
+        view["route"] = str(geo["route"])
+    return view
+
+
 SAME_SCENE = 0.8                   # word-set overlap (Jaccard) at or above which two scenes count as the same view
 
 
@@ -173,6 +227,15 @@ def load_env(path):
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
+EYE_TOKEN_ENV = "SUB01_EYE_REPLICATE_TOKEN"
+
+
+def replicate_token():
+    """The Replicate token the eye may use: REPLICATE_API_TOKEN, else SUB01_EYE_REPLICATE_TOKEN, which only the eye
+    reads (the private home sets it so that nothing else, the eyes or the diary, gets a paid token). Never logged."""
+    return os.environ.get("REPLICATE_API_TOKEN") or os.environ.get(EYE_TOKEN_ENV) or ""
+
+
 def replicate_post(url, token, payload, tries=5, poll_s=240, timeout=60):
     """POST a prediction, waiting on 429s (low-credit accounts are limited to ~6 requests/min, burst 1)."""
     body = json.dumps(payload).encode()
@@ -261,13 +324,14 @@ class Eye:
         self.heard = self.heard[-12:]
 
     def _load(self):
-        if self.llm is None and os.environ.get("REPLICATE_API_TOKEN"):
-            self.llm = ReplicateLLM(os.environ["REPLICATE_API_TOKEN"])
+        tok = replicate_token()
+        if self.llm is None and tok:
+            self.llm = ReplicateLLM(tok)
         if self.llm is None:
             from mlx_lm import load
             self.llm, self.tok = load(LLM_ID)
-        if self.img is None and os.environ.get("REPLICATE_API_TOKEN"):
-            self.img = ReplicateImages(os.environ["REPLICATE_API_TOKEN"])
+        if self.img is None and tok:
+            self.img = ReplicateImages(tok)
         if self.img is None:
             from mflux.models.common.resolution.config_resolution import ConfigResolution
             from mflux.models.z_image.variants.z_image import ZImage
@@ -318,12 +382,13 @@ class Eye:
                 tin, tout = self.llm.last_usage or (len(system + user) // 4, 0)
                 self.ledger.record("eye", "meta/meta-llama-3-8b-instruct", tin + tout, costs.llm_usd(tin, tout), "thought")
 
-    def step(self, t, stage, groups, market=None, replays=(), sim_hhmm="", doing="", articles=()):
+    def step(self, t, stage, groups, market=None, replays=(), sim_hhmm="", doing="", articles=(), outside=None):
         """One frame. Blocking (runs in a worker thread): returns the frame record. `market` is accepted for the
         caller and ignored (see mood). The image is made only when the scene changed from the last frame (same stage,
         word overlap under SAME_SCENE): otherwise the last image is kept and only the thought is new (and billed).
         When the image call fails the previous record comes back as it was, marked resting: a caption never changes
-        over an old picture, no new frame is written."""
+        over an old picture, no new frame is written. `outside` (outside_view) makes it the street he is on: the
+        scene follows his real destination and the record's mode is "outside"."""
         self._load()
         replays = list(dict.fromkeys(list(replays)[-4:]))          # the same line replayed twice is one image
         recent = [x for x, ts in self.heard if t - ts < 3 * 3600][-5:]
@@ -331,9 +396,17 @@ class Eye:
                  "recent_messages": recent, "replayed_messages": replays}
         if articles:
             state["replayed_articles"] = list(articles)[-3:]
+        look = "OUTSIDE" if outside and stage == "AWAKE" else stage
+        mode = "outside" if look == "OUTSIDE" else {"REM": "dream", "NREM": "closed"}.get(stage, "awake")
+        if look == "OUTSIDE":
+            state["outside"] = dict(outside)
+            state.pop("home", None)
         new, scene, thought = self._ask(state)
         if not scene:                                    # the model's scene was empty or refused: the room, as it is
-            scene = neutral_scene(stage, doing)
+            where = doing
+            if look == "OUTSIDE" and outside.get("toward"):
+                where = f"on the way to {outside['toward']}"
+            scene = neutral_scene(look, where)
         fresh = [x for x, ts in self.heard if t - ts < 3 * 3600 and x not in self.absorbed]
         if fresh:                                        # a message shapes the world once; objects must come from it
             said = " ".join(fresh).lower()
@@ -341,17 +414,18 @@ class Eye:
                     if isinstance(o, dict) and o.get("said") and str(o["said"]).lower().strip() in said]
             self.world.add(keep, t, fresh[-1])
             self.absorbed.update(fresh)
-        style = STYLE.get(stage, STYLE["AWAKE"])
+        style = STYLE.get(look, STYLE["AWAKE"])
         # image models ignore "no X": describe the absence positively instead
         prompt = f"{scene}. {style}. uninhabited scene, empty of humans, seen through the viewer's own eyes, clean surfaces without writing"
         t0 = time.time()
         last = self.last_rec if self.last_rec and (self.out / Path(self.last_rec["img"]).name).exists() else None
-        why = {"messages": recent, "replayed": replays, "replayed_articles": list(articles)[-3:],
+        why = {"messages": recent, "replayed": replays, **({"outside": dict(outside)} if look == "OUTSIDE" else {}), "replayed_articles": list(articles)[-3:],
                "world": self.world.top(t, 5), "mood": {k: state[k] for k in ("reward", "fear", "salience")}}
-        if last and last.get("stage") == stage and same_scene(last.get("scene", ""), scene):
+        if last and last.get("stage") == stage and last.get("mode", mode) == mode \
+                and same_scene(last.get("scene", ""), scene):
             # the view did not change: the same image, a new thought; nothing is rendered or darkened again
-            rec = {"t": sim_hhmm, "stage": stage, "img": last["img"], "thought": thought, "scene": scene, "why": why,
-                   "render_s": round(time.time() - t0, 1), "reused": True, "same_scene": True}
+            rec = {"t": sim_hhmm, "stage": stage, "mode": mode, "img": last["img"], "thought": thought, "scene": scene,
+                   "why": why, "render_s": round(time.time() - t0, 1), "reused": True, "same_scene": True}
             return self._done(rec)
         name = f"{int(time.time() * 1000)}.jpg"
         if isinstance(self.img, ReplicateImages):
@@ -374,8 +448,8 @@ class Eye:
             from PIL import ImageEnhance
             pil = ImageEnhance.Brightness(pil).enhance(0.25)
         pil.convert("RGB").save(self.out / name, quality=88)
-        rec = {"t": sim_hhmm, "stage": stage, "img": f"/eye/{name}", "thought": thought, "scene": scene, "why": why,
-               "render_s": round(time.time() - t0, 1), "reused": False}
+        rec = {"t": sim_hhmm, "stage": stage, "mode": mode, "img": f"/eye/{name}", "thought": thought, "scene": scene,
+               "why": why, "render_s": round(time.time() - t0, 1), "reused": False}
         jpgs = sorted(self.out.glob("*.jpg"))
         for old in jpgs[:-KEEP_FRAMES]:                    # bounded disk use on a server volume
             old.unlink(missing_ok=True)
