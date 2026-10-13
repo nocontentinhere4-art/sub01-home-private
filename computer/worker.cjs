@@ -5,7 +5,7 @@ const { V86 } = require("./libv86.cjs"),
   readline = require("readline");
 const { attachFramebuffer } = require('./vga_framebuffer.cjs');
 const { guestKeyboard } = require('./guest_keyboard.cjs');
-const { guestMouse } = require('./guest_mouse.cjs');
+const { guestMouse, mouseDiagnostics } = require('./guest_mouse.cjs');
 // v86's pixel container only; no canvas or browser is introduced.
 globalThis.ImageData ??= class ImageData { constructor(data, width, height) { this.data=data; this.width=width; this.height=height; } };
 const snapshot = process.env.SUB01_VM_STATE;
@@ -62,7 +62,7 @@ vm.add_listener("emulator-loaded", async () => {
 });
 setInterval(() => {
   const vgaText = process.env.SUB01_VM_CDROM && vm.screen_adapter?.get_text_screen ? vm.screen_adapter.get_text_screen().join("\n").trimEnd() : '';
-  send({ type: "terminal", ready, output: vgaText || serial, paused: !vm.is_running(), instruction_counter: vm.get_instruction_counter?.() ?? null });
+  send({ type: "terminal", ready, output: vgaText || serial, paused: !vm.is_running(), instruction_counter: vm.get_instruction_counter?.() ?? null, mouse_state: mouseDiagnostics(vm) });
   const frame = framebuffer ? framebuffer.capture() : {kind: "serial", available: false, reason: "Emulator VGA is initializing"};
   if (frame.available) ready = true;
   if (process.env.SUB01_VM_CDROM && framebuffer) {

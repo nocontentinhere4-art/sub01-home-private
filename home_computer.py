@@ -46,6 +46,7 @@ class Computer:
         self.display = {"kind": "serial", "available": False, "reason": "Graphical guest framebuffer is not active"}
         self.framebuffer_png = None
         self.instruction_counter = None
+        self.mouse_state = None
         self.process = None
         self.output = ""
         self.ready = False
@@ -62,6 +63,7 @@ class Computer:
         return {
             "status": self.status,
             "instruction_counter": self.instruction_counter,
+            "mouse_state": dict(self.mouse_state) if self.mouse_state is not None else None,
             "display": dict(self.display),
             "ready": self.ready,
             "output": self.output[-10000:],
@@ -80,6 +82,7 @@ class Computer:
         self.last_command = ""
         self.framebuffer_png = None
         self.instruction_counter = None
+        self.mouse_state = None
         self.display = {"kind": "unavailable", "available": False,
                         "reason": "Actual guest worker is unavailable"}
 
@@ -182,6 +185,17 @@ class Computer:
                     self.paused = bool(m.get("paused"))
                     count = m.get("instruction_counter")
                     self.instruction_counter = count if isinstance(count, int) and not isinstance(count, bool) and 0 <= count <= 0xffffffff else None
+                    mouse = m.get("mouse_state")
+                    self.mouse_state = None
+                    if isinstance(mouse, dict):
+                        self.mouse_state = {}
+                        for key in ("absolute_pointer_enabled", "ps2_use_mouse", "ps2_stream_enabled", "ps2_stream_active", "vmware_enabled", "vmware_absolute", "vmware_host_pointer_locked"):
+                            value = mouse.get(key)
+                            self.mouse_state[key] = value if isinstance(value, bool) else None
+                        for key in ("ps2_mouse_id", "ps2_command_register"):
+                            value = mouse.get(key)
+                            valid = isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 255
+                            self.mouse_state[key] = value if valid else None
                     self.status = "ready" if self.ready else "booting"
                 elif m.get("type") == "display":
                     display = m.get("display") or {}
