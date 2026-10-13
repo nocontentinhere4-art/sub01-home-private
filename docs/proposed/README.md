@@ -126,3 +126,10 @@ Result at `be0f9ec`, re-run with H16–H18 and `eye_view_check.mjs` added (2026-
 ## Left out
 
 Nothing was left out. Every requested hunk applies cleanly.
+
+## Status after main d03e673 (2026-10-13)
+
+Codex integrated H1–H15 into `web/house/home.js` in main `d03e673`. They are kept in
+`tools/home_js_integration_edits.py` for history but filtered out (`INTEGRATED_IN_MAIN`), so the
+patch now holds only the eye view (H16–H18, owner decision: no GPS; eyes close and dream while
+asleep, what he sees while outside). The balcony audit test now asserts the H6 boxes stay removed.

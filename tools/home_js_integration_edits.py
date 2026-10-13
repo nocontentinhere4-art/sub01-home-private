@@ -221,3 +221,9 @@ EDITS = [
      "      eyeView.accept(m);   // eye_state / eye frames / home privacy\n"
      "      if (m.type === 'chat_ack')\n"),
 ]
+
+# H1-H15 were integrated by Codex in main d03e673 ("Integrate private house
+# controls ..."); the remaining proposal is the eye view (owner decision).
+INTEGRATED_IN_MAIN = {"H1", "H2", "H2b", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10",
+                      "H11", "H12", "H13", "H14", "H15"}
+EDITS = [edit for edit in EDITS if edit[0] not in INTEGRATED_IN_MAIN]
