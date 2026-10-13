@@ -36,6 +36,8 @@ canonical=lambda name:re.sub('[^a-z0-9]','',name.lower())
 source_pivots={canonical(node['name']):transform(i)[12:15]for i,node in enumerate(doc['nodes'])if node.get('name')and'mesh'in node}
 components=[];pairs=[];matched=set()
 for actor in actors.get_all_level_actors():
+    if any(str(tag) == 'SUB01VisualBackground' for tag in actor.get_editor_property('tags')):
+        continue
     for component in actor.get_components_by_class(u.StaticMeshComponent):
         if not component.get_editor_property('static_mesh'):continue
         components.append(component)

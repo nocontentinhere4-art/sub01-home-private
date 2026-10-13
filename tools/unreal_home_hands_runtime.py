@@ -85,11 +85,16 @@ CHARACTER_FIELDS = r'''
  FVector HandsBaseOffset;
  float WalkPhase=0,MotionWeight=0;
  void LoadHandsAssets();
- void UpdateNativeCapture();
+ void UpdateNativeRouteTest();
+ UpdateNativeCapture();
  double CaptureStarted=0,CaptureRequestedAt=0;
  float CaptureAfter=-1;
  FString CapturePath;
  bool CaptureRequested=false;
+ bool CaptureViewport=false;
+ UPROPERTY() TObjectPtr<USceneCaptureComponent2D> NativeCapture;
+ UPROPERTY() TObjectPtr<UTextureRenderTarget2D> NativeCaptureTarget;
+ int32 CaptureWarmFrames=0;
 '''
 
 CHARACTER_METHODS = r'''
@@ -100,11 +105,52 @@ void ASub01HomeCharacter::UpdateNativeCapture() {
   CaptureRequested=true;CaptureRequestedAt=Now;
   const FVector Eye=ViewCamera->GetComponentLocation(),Position=GetActorLocation();
   UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_GAME_CAPTURE pawn=%s eye=%s capsuleRadius=%.3f capsuleHalfHeight=%.3f mode=%d floor=%d hands=%s path=%s"),*Position.ToString(),*Eye.ToString(),GetCapsuleComponent()->GetScaledCapsuleRadius(),GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),int32(GetCharacterMovement()->MovementMode),GetCharacterMovement()->IsMovingOnGround()?1:0,*GetHandsReadiness(),*CapturePath);
-  FScreenshotRequest::RequestScreenshot(CapturePath,false,false);
+  if(CaptureViewport){
+   UE_LOG(LogTemp,Display,TEXT("SUB01_CAPTURE_METHOD actual GameViewport FScreenshotRequest; no separate scene pass"));
+   FScreenshotRequest::RequestScreenshot(CapturePath,false,false);
+  }else{
+  NativeCaptureTarget=NewObject<UTextureRenderTarget2D>(this);
+  NativeCaptureTarget->InitCustomFormat(1280,720,PF_B8G8R8A8,false);
+  NativeCaptureTarget->UpdateResourceImmediate(true);
+  NativeCapture=NewObject<USceneCaptureComponent2D>(this);
+  NativeCapture->TextureTarget=NativeCaptureTarget;
+  NativeCapture->CaptureSource=ESceneCaptureSource::SCS_FinalColorLDR;
+  NativeCapture->bCaptureEveryFrame=false;NativeCapture->bCaptureOnMovement=false;
+  NativeCapture->bAlwaysPersistRenderingState=true;
+  NativeCapture->PostProcessSettings=ViewCamera->PostProcessSettings;
+  NativeCapture->PostProcessBlendWeight=ViewCamera->PostProcessBlendWeight;
+  NativeCapture->RegisterComponent();
+  UE_LOG(LogTemp,Display,TEXT("SUB01_CAPTURE_METHOD SceneCapture2D actual pawn POV; separate view history, not viewport-identical"));
+  }
+ }
+ if(NativeCapture&&NativeCaptureTarget&&CaptureWarmFrames<32){
+  NativeCapture->SetWorldTransform(ViewCamera->GetComponentTransform());
+  NativeCapture->FOVAngle=ViewCamera->FieldOfView;
+  NativeCapture->CaptureScene();++CaptureWarmFrames;
+  if(CaptureWarmFrames==32){
+   FlushRenderingCommands();
+   TArray<FColor> Pixels;FReadSurfaceDataFlags Flags(RCM_UNorm);Flags.SetLinearToGamma(false);
+   const bool Read=NativeCaptureTarget->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags);
+   UE_LOG(LogTemp,Display,TEXT("SUB01_CAPTURE_READ read=%d pixels=%d target=%dx%d path=%s directoryExists=%d"),Read?1:0,Pixels.Num(),NativeCaptureTarget->SizeX,NativeCaptureTarget->SizeY,*CapturePath,IFileManager::Get().DirectoryExists(*FPaths::GetPath(CapturePath))?1:0);
+   if(Read&&Pixels.Num()==1280*720){
+    // This is an opaque POV frame, not a compositing matte. FinalColorLDR
+    // alpha can be zero even when its RGB contains a valid captured scene.
+    for(FColor& Pixel:Pixels)Pixel.A=255;
+    TArray64<uint8> PNG;
+    FImageUtils::PNGCompressImageArray(1280,720,TArrayView64<const FColor>(Pixels.GetData(),Pixels.Num()),PNG);
+    UE_LOG(LogTemp,Display,TEXT("SUB01_CAPTURE_ENCODE pngBytes=%lld firstPixel=%s PNGSignature=%d"),int64(PNG.Num()),*Pixels[0].ToString(),PNG.Num()>8&&PNG[0]==137&&PNG[1]==80&&PNG[2]==78&&PNG[3]==71?1:0);
+    const bool Saved=FFileHelper::SaveArrayToFile(PNG,*CapturePath);
+    const uint32 SaveError=FPlatformMisc::GetLastError();
+    UE_LOG(LogTemp,Display,TEXT("SUB01_CAPTURE_SAVE saved=%d fileBytes=%lld osError=%u path=%s"),Saved?1:0,IFileManager::Get().FileSize(*CapturePath),SaveError,*CapturePath);
+    if(!Saved)UE_LOG(LogTemp,Error,TEXT("SUB01_CAPTURE_WRITE_FAILED"));
+   }else UE_LOG(LogTemp,Error,TEXT("SUB01_CAPTURE_READ_FAILED pixels=%d"),Pixels.Num());
+   NativeCapture->DestroyComponent();NativeCapture=nullptr;
+   NativeCaptureTarget->ReleaseResource();NativeCaptureTarget=nullptr;
+  }
  }
  if(CaptureRequested&&Now-CaptureRequestedAt>1&&IFileManager::Get().FileSize(*CapturePath)>0){
   UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_GAME_CAPTURE_SAVED bytes=%lld"),IFileManager::Get().FileSize(*CapturePath));
-  CaptureAfter=-1;FPlatformMisc::RequestExit(false);
+  CaptureAfter=-1;FPlatformMisc::RequestExitWithStatus(false,RouteFailed?2:0);
  }else if(CaptureRequested&&Now-CaptureRequestedAt>40){
   UE_LOG(LogTemp,Error,TEXT("SUB01_NATIVE_GAME_CAPTURE_FAILED no image written"));
   CaptureAfter=-1;FPlatformMisc::RequestExitWithStatus(false,2);
@@ -154,6 +200,7 @@ void ASub01HomeCharacter::PreviewHandsPose(FName Posture) {
 }
 void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  Super::Tick(DeltaSeconds);
+ UpdateNativeRouteTest();
  UpdateNativeCapture();
  if(!HandsFailure.IsEmpty())return;
  auto* Instance=Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance());if(!Instance)return;

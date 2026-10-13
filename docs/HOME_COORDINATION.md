@@ -23,7 +23,10 @@ Codex integrates reviewed commits. Neither agent merges over the other's uncommi
 - Full house assembled into /workspace/sub01-home-private/assembled/house.blend and house.glb, with actual queen bed, espresso machine and photographed coffee table.
 - Native Unreal module compiled successfully after FPoseLink SetLinkNode correction. Timed actual-player screenshot code subsequently compiled successfully.
 - ActualHome map imported and saved in Unreal: 233 placed mesh components, zero imported lights. Authored browser sun/fixtures must therefore be installed explicitly by setup, using the exact source recipe.
-- Current setup/collision/camera and first actual runtime render remain in progress. No accepted runtime screenshot or browser-streaming proof yet.
+- Actual setup is saved: 233 collision components, 183 distinct meshes, source/import coordinate discrepancy below 0.00001 cm; native pawn stands on the ground floor at capsule Z=95.65 cm, eye Z=169.65 cm.
+- Actual GameViewport screenshot verified on A40 after 45 seconds of warmup. FScreenshotRequest works in RenderOffscreen; its original failure was an inaccessible parent output directory. Separate SceneCapture images produced different lighting and are not the acceptance reference. Actual warmed viewport evidence is locally in ignored out/house-evidence/native-viewport-warm.png. Navigation through stairs, hands and private browser streaming still need runtime acceptance.
+- Historical licensed Tokyo photo installed as a visual-only background, distinct from the lighting HDR. Background actors must stay excluded from physical collision setup.
+- Claude's server bathroom privacy fix is integrated, including a recheck after asynchronous browser reads. Eleven device/privacy tests passed. Current local running backend still needs an intentional restart before using the new code; no public deployment was performed.
 - Correct ReferenceT rig uses original node reference pose; a different inverse-bind pose is not automatically a defect. Canonical-A derivatives are not accepted. Typing/walking/texting clips remain disabled until actual contact and first-person visual checks pass. No verified mouse capture.
 - Blender scene captures are geometry/material evidence only, not proof of Unreal navigation or working devices.
 
