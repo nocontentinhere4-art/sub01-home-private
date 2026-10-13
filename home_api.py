@@ -8,6 +8,7 @@ from pathlib import Path
 from aiohttp import web
 from life import ACTIVITIES
 from home_minecraft import frame_tag
+import home_interactions as hi
 
 HERE = Path(__file__).parent
 
@@ -82,14 +83,28 @@ def add_home_routes(app, live, admin_ok):
 
     async def state(request):
         enabled()
+        home = live.home.view()
+        hidden = bool(home.get("privacy"))
+
+        def screen(device):
+            if not getattr(live, 'screen_status', None):
+                return None
+            # Same rule as the devices object: during privacy no frame id,
+            # title or address of a screen, only the device and the flag.
+            return {"device": device, "privacy": True} if hidden else live.screen_status(device)
+
+        minecraft = live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"}
+        if hidden and getattr(live, "minecraft", None):
+            minecraft = {**minecraft, "has_frame": False, "observation": None,
+                         "events": [], "last_action": None, "privacy": True}
         return web.json_response(
             {
-                "home": live.home.view(),
+                "home": home,
                 "computer": computer_view(),
                 "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
-                "browser_screen": live.screen_status('desk') if getattr(live, 'screen_status', None) else None,
-                "phone_browser_screen": live.screen_status('phone') if getattr(live, 'screen_status', None) else None,
-                "minecraft": live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"},
+                "browser_screen": screen('desk'),
+                "phone_browser_screen": screen('phone'),
+                "minecraft": minecraft,
                 "life": live.life.snapshot(),
                 "stage": live.engine.stage,
                 "time": live.clock.now(),
@@ -218,14 +233,30 @@ def add_home_routes(app, live, admin_ok):
                 if (not isinstance(doors, list) or len(doors) != 4
                         or any(not isinstance(v, bool) for v in doors)):
                     raise web.HTTPBadRequest(text="Expected four cabinet door booleans")
+        # Additive, optional: partial per-door / per-room operator modes.
+        modes = {}
+        for key, names, allowed, label in (
+                ("doors", hi.DOOR_NAMES, hi.DOOR_MODES, "door"),
+                ("lights", hi.LIGHT_ROOMS, hi.LIGHT_MODES, "light room")):
+            if key in b:
+                try:
+                    modes[key] = hi.validate_modes(b[key], names, allowed, label)
+                except ValueError as error:
+                    raise web.HTTPBadRequest(text=str(error))
         for k in ("lamp", "curtain"):
             if k in b:
                 live.home.settings[k] = b[k]
         for key in ("cabinets", "lowerCabinets"):
             if key in b:
                 live.home.settings[key] = list(b[key])
+        for key, patch in modes.items():
+            live.home.settings[key] = {**live.home.settings.get(key, {}), **patch}
+        if modes or "lamp" in b:
+            # Apply now, so the response and the next feed agree; a door
+            # cannot be opened onto an occupied bathroom by this request.
+            live.home.interactions.update(0, live.home._actor(), live.home.settings, live.home.now)
         await live.save_state()
-        return web.json_response(live.home.settings)
+        return web.json_response(live.home.settings_view())
 
     async def game(request):
         enabled()
