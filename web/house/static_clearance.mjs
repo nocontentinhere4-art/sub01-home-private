@@ -4,6 +4,8 @@ export const STATIC_BODY_BOXES = Object.freeze([
   Object.freeze({name:'TV wall backing',x0:-3.91,x1:-3.77,z0:-1.125,z1:1.025,low:0,high:2.8}),
   Object.freeze({name:'Office oak shelves',x0:.95,x1:3.30,z0:-3.89,z1:-3.55,low:.125,high:2.5175}),
   Object.freeze({name:'Shower fixed glass',x0:-1.9925,x1:-1.9675,z0:1.65,z1:2.65,low:3.10,high:5.10}),
+  // Actual frame(-2.2,4.65,-3.88,.9,1.2): backing plus art plane at z+.021.
+  Object.freeze({name:'Loft wall art',x0:-2.67,x1:-1.73,z0:-3.8975,z1:-3.859,low:4.03,high:5.27}),
 ]);
 export const SHOWER_TRAY = Object.freeze({x0:-1.95,x1:-1.05,z0:1.65,z1:2.65,top:3.13});
 

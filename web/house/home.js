@@ -13,7 +13,7 @@ import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
-import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=2";
+import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=3";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
