@@ -8,7 +8,7 @@ from tests.test_home_api import client
 def test_privacy_withholds_screen_pixels_terminal_text_and_guest_input():
     async def run():
         http, live = await client()
-        live.minecraft = SimpleNamespace(enabled=True, frame=b"real-frame-bytes")
+        live.minecraft = SimpleNamespace(enabled=True, frame=b"real-frame-bytes", view=lambda: {"enabled": True})
         original = live.home.view
         private = {"on": False}
         live.home.view = lambda *a, **k: {**original(*a, **k), "privacy": private["on"]}
