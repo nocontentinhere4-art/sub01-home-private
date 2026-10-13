@@ -10,7 +10,7 @@ import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
 import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
-import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
+import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs?v=3";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
 import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=3";
@@ -26,6 +26,7 @@ import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
+import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -2842,7 +2843,20 @@ addEventListener("resize", () => {
 });
 renderer.shadowMap.needsUpdate = true;
 const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
-startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [contactLightingReady], sunShafts).catch(error => {
+startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [contactLightingReady], sunShafts).then(async () => {
+  const ownership = {
+    protectedObjects: interactions.map(item => item.object),
+    retainedMaterials: [...Object.values(M), ...switchedMaterials, ...Object.values(havenSofaMaterials)],
+    extraTextures: [nightLightUniform.value],
+  };
+  document.getElementById('status').dataset.replacedAssetPlan = JSON.stringify(inspectReplacedAssets(scene, ownership).report);
+  document.getElementById('status').dataset.retiredAssets = JSON.stringify(retireReplacedAssets(scene, {
+    ...ownership, replacementAssetsSettled: startup.ready,
+  }));
+  document.getElementById('status').dataset.releasedModelCache = JSON.stringify(await releaseStartupModelCache(modelCache, {
+    startupComplete: startup.ready,
+  }));
+}).catch(error => {
   console.warn('Home preparation:', error);
   startup.fallback();
   notice('Some room materials could not be prepared. The home remains available.');

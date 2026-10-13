@@ -84,6 +84,37 @@ export function createBalconyDoor(T, scene, wood) {
 
 export function staticBakeScene(scene) {
   const copy=scene.clone(true), excluded=[];
+  // glTF stores a light's local -Z axis, not Three's independent target.
+  // Repair only the export clone, including lights under transformed parents.
+  const originals=[], clones=[];
+  scene.traverse(object=>originals.push(object));
+  copy.traverse(object=>clones.push(object));
+  scene.updateMatrixWorld(true);
+  copy.updateMatrixWorld(true);
+  originals.forEach((original,index)=>{
+    if (!(original.isDirectionalLight || original.isSpotLight)) return;
+    const light=clones[index];
+    const targetWorld=original.target.getWorldPosition(original.position.clone());
+    const targetLocal=targetWorld.clone();
+    if (light.parent) targetLocal.applyMatrix4(light.parent.matrixWorld.clone().invert());
+    if (!light.matrixAutoUpdate) light.matrix.decompose(light.position,light.quaternion,light.scale);
+    const direction=targetLocal.clone().sub(light.position).normalize();
+    const up=light.up.clone().normalize();
+    if (Math.abs(direction.dot(up))>.999) {
+      up.set(1,0,0);
+      if (Math.abs(direction.dot(up))>.999) up.set(0,0,1);
+    }
+    light.quaternion.setFromRotationMatrix(light.matrix.clone().lookAt(light.position,targetLocal,up));
+    light.matrixAutoUpdate=true;
+    const target=original.target.clone(false);
+    target.position.set(0,0,-1);
+    target.quaternion.identity();
+    target.scale.set(1,1,1);
+    target.matrixAutoUpdate=true;
+    light.add(target);
+    light.target=target;
+    light.updateMatrix();
+  });
   copy.traverse(object=>{if(object.userData.excludeStaticBake) excluded.push(object);});
   for(const object of excluded) object.removeFromParent();
   return copy;
