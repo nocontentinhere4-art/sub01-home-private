@@ -346,7 +346,7 @@ OBSTACLE_CALL = re.compile(r'^\s*obstacle\(\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+
 # Interior plan of the house in runtime metres (x, z); anything outside is street/skyline.
 INTERIOR_XZ = ((-4.2, 4.2), (-4.2, 5.6))
 DEVICE_MATERIALS = {'M.black', 'M.metal'}
-FURNISHED_CALL = re.compile(r'furnished\(\s*[\'"]([\w-]+)[\'"]\s*,\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)')
+FURNISHED_CALL = re.compile(r'furnished\(\s*[\'"]([\w-]+)[\'"]\s*,\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)(?:,\s*([-\d.]+)(?=\s*[,)]))?')
 # Hand-identified from home.js coordinates (runtime x, floor y, z) so the
 # report names fixtures that have no preceding comment.
 KNOWN_FIXTURE_HINTS = {
@@ -421,7 +421,8 @@ def procedural_box_furnishings(home_js: Path):
         m = FURNISHED_CALL.search(line)
         if m:
             loaded.append({'line': number, 'name': m.group(1), 'x': float(m.group(2)), 'y': float(m.group(3)),
-                           'z': float(m.group(4)), 'width': float(m.group(5))})
+                           'z': float(m.group(4)), 'width': float(m.group(5)),
+                           'rotation': float(m.group(6)) if m.group(6) else 0.0})
     for cluster in clusters:
         parts = cluster['parts']
         first, last = parts[0]['line'], parts[-1]['line']
@@ -441,10 +442,11 @@ def procedural_box_furnishings(home_js: Path):
         cluster['label'] = hint or _label(lines, first, names[0] if names else None)
         # A scanned/authored asset placed at the same spot makes the boxes redundant
         # and likely interpenetrating, not merely low fidelity.
-        cluster['overlapping_assets'] = [
-            a['name'] for a in loaded
-            if lo[0] - .1 <= a['x'] <= hi[0] + .1 and lo[2] - .1 <= a['z'] <= hi[2] + .1
-            and lo[1] - .6 <= a['y'] <= hi[1]]
+        overlapping = [a for a in loaded
+                       if lo[0] - .1 <= a['x'] <= hi[0] + .1 and lo[2] - .1 <= a['z'] <= hi[2] + .1
+                       and lo[1] - .6 <= a['y'] <= hi[1]]
+        cluster['overlapping_assets'] = [a['name'] for a in overlapping]
+        cluster['loaded_calls'] = {a['name']: a for a in overlapping}
         follow = '\n'.join(lines[last:last + 2])
         if all(p['fallback'] for p in parts):
             role = 'fallback'
@@ -562,6 +564,75 @@ def score_model(entry):
     return score, reasons
 
 
+def model_vertices(path: Path):
+    """All POSITION vertices of a glTF/GLB default scene in model metres (node transforms applied)."""
+    doc, binary = read_gltf(path)
+    buffers = []
+    for buffer in doc.get('buffers', []):
+        buffers.append((path.parent / buffer['uri']).read_bytes() if 'uri' in buffer else binary)
+    nodes, points = doc.get('nodes', []), []
+    roots = doc['scenes'][doc.get('scene', 0)]['nodes'] if doc.get('scenes') else range(len(nodes))
+    stack = [(i, IDENTITY) for i in roots]
+    while stack:
+        index, parent = stack.pop()
+        node = nodes[index]
+        world = matmul(parent, node_matrix(node))
+        for prim in doc['meshes'][node['mesh']]['primitives'] if 'mesh' in node else []:
+            acc = doc['accessors'][prim['attributes']['POSITION']]
+            if acc.get('componentType') != 5126 or 'bufferView' not in acc:
+                raise ValueError(f'{path}: unsupported/compressed POSITION accessor')
+            view = doc['bufferViews'][acc['bufferView']]
+            data = buffers[view['buffer']]
+            start = view.get('byteOffset', 0) + acc.get('byteOffset', 0)
+            stride = view.get('byteStride', 12)
+            for k in range(acc['count']):
+                v = struct.unpack_from('<3f', data, start + k * stride)
+                points.append(tuple(sum(world[r][c] * w for c, w in enumerate((*v, 1))) for r in range(3)))
+        stack.extend((c, world) for c in node.get('children', []))
+    return points
+
+
+def furnished_placement(points, x, y, z, width, rotation=0.0, size_axis='x'):
+    """Replicate home.js loadFurnished(): yaw, uniform scale to width, centre x/z, rest on y."""
+    c, s = math.cos(rotation), math.sin(rotation)
+    rotated = [(px * c + pz * s, py, -px * s + pz * c) for px, py, pz in points]
+    lo = [min(p[i] for p in rotated) for i in range(3)]
+    hi = [max(p[i] for p in rotated) for i in range(3)]
+    scale = width / (hi['xyz'.index(size_axis)] - lo['xyz'.index(size_axis)])
+    cx, cz = (lo[0] + hi[0]) / 2 * scale, (lo[2] + hi[2]) / 2 * scale
+    return [(x - cx + p[0] * scale, y - lo[1] * scale + p[1] * scale, z - cz + p[2] * scale) for p in rotated]
+
+
+def asset_overlap(root: Path, part_boxes, asset_name, call):
+    """Numbers for placeholder boxes against the actual placed asset geometry."""
+    base = Path(root) / ASSETS / asset_name
+    path = base / (asset_name + '.gltf') if (base / (asset_name + '.gltf')).is_file() else base / (asset_name + '.glb')
+    placed = furnished_placement(model_vertices(path), call['x'], call['y'], call['z'], call['width'],
+                                 call.get('rotation', 0.0))
+    lo = [min(p[i] for p in placed) for i in range(3)]
+    hi = [max(p[i] for p in placed) for i in range(3)]
+    top = hi[1]
+    # Backrest side: mean z of the upper 25% of the asset's height.
+    upper = [p for p in placed if p[1] >= lo[1] + .75 * (top - lo[1])]
+    back_z = sum(p[2] for p in upper) / len(upper)
+    result = {'asset': asset_name, 'file': path.relative_to(root).as_posix(),
+              'asset_bounds_m': [[round(v, 4) for v in lo], [round(v, 4) for v in hi]],
+              'asset_back_side': '+z' if back_z > (lo[2] + hi[2]) / 2 else '-z', 'parts': []}
+    for part in part_boxes:
+        inter = [max(0.0, min(part['high'][i], hi[i]) - max(part['low'][i], lo[i])) for i in range(3)]
+        volume = math.prod(part['high'][i] - part['low'][i] for i in range(3))
+        inside = sum(all(part['low'][i] <= p[i] <= part['high'][i] for i in range(3)) for p in placed)
+        result['parts'].append({
+            'low': [round(v, 4) for v in part['low']], 'high': [round(v, 4) for v in part['high']],
+            'volume_fraction_inside_asset_bounds': round(math.prod(inter) / volume, 4) if volume else 0,
+            'asset_vertices_inside_box': inside,
+            'protrudes_above_asset_m': round(max(0.0, part['high'][1] - top), 4),
+            'protrudes_outside_asset_xz_m': round(max(0.0, lo[0] - part['low'][0], part['high'][0] - hi[0],
+                                                      lo[2] - part['low'][2], part['high'][2] - hi[2]), 4),
+        })
+    return result
+
+
 PROCEDURAL_ROLE_BASE = {'visible-furnishing': 6.0, 'device-shell': 3.0, 'fallback': 1.0,
                         'template': .5, 'exterior': .5}
 
@@ -613,6 +684,16 @@ def run_audit(root: Path = ROOT):
                    'cross_asset': len({family(f) for f in files}) > 1}
                   for h, files in seen_images.items() if len(files) > 1]
     clusters = procedural_box_furnishings(root / 'web/house/home.js')
+    for cluster in clusters:
+        if cluster.get('overlapping_assets') and cluster['role'] == 'visible-furnishing':
+            boxes = [{'low': [p['centre_m'][i] - p['size_m'][i] / 2 for i in range(3)],
+                      'high': [p['centre_m'][i] + p['size_m'][i] / 2 for i in range(3)]} for p in cluster['parts']]
+            cluster['asset_overlap'] = []
+            for name in cluster['overlapping_assets']:
+                try:
+                    cluster['asset_overlap'].append(asset_overlap(root, boxes, name, cluster['loaded_calls'][name]))
+                except (OSError, ValueError, KeyError) as error:
+                    cluster['asset_overlap'].append({'asset': name, 'error': str(error)})
     ranking = []
     for entry in models:
         if not entry['furnishing']:

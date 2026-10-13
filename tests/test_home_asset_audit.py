@@ -188,3 +188,23 @@ def test_repository_audit_smoke(tmp_path):
     out = tmp_path / 'audit.json'
     assert audit.main(['--json', str(out), '--limit', '3']) == 0
     assert json.loads(out.read_text())['weakest_furnishings']
+
+
+def test_furnished_placement_matches_load_furnished():
+    cube = [(x, y, z) for x in (-1, 1) for y in (0, 2) for z in (-.5, .5)]
+    placed = audit.furnished_placement(cube, 10, 3, -2, 1.0)            # width 1 along x -> scale .5
+    xs, ys, zs = zip(*placed)
+    assert (min(xs), max(xs), min(ys), max(ys), min(zs), max(zs)) == pytest.approx((9.5, 10.5, 3, 4, -2.25, -1.75))
+    turned = audit.furnished_placement(cube, 0, 0, 0, 1.0, math.pi / 2)  # yaw: depth now spans x
+    xs, _, zs = zip(*turned)
+    assert max(xs) - min(xs) == pytest.approx(1) and max(zs) - min(zs) == pytest.approx(2)
+
+
+def test_balcony_boxes_measured_against_actual_chair():
+    report = audit.run_audit(ROOT)
+    balcony = next(c for c in report['procedural_placeholders'] if c['label'] == 'balcony reading chair')
+    overlap = balcony['asset_overlap'][0]
+    assert overlap['asset'] == 'modern_arm_chair_01' and overlap['asset_back_side'] == '-z'
+    seat, back = overlap['parts']
+    assert seat['volume_fraction_inside_asset_bounds'] == 1 and seat['asset_vertices_inside_box'] > 1000
+    assert back['protrudes_above_asset_m'] > .2 and back['low'][2] > 4.7  # old backrest on the chair's front side
