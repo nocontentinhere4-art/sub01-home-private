@@ -120,17 +120,23 @@ for _a, _b in EDGES:
     _NEIGHBOURS.setdefault(_b, []).append(_a)
 
 
-def _on_segment(p, a, b, tol=0.02):
+def _segment_distance(p, a, b):
+    """Distance from p to segment a->b when p lies strictly past a, else None."""
     ab = [q - r for q, r in zip(b, a)]
     ap = [q - r for q, r in zip(p, a)]
     length2 = sum(v * v for v in ab)
     if length2 < 1e-9:
-        return False
+        return None
     t = sum(u * v for u, v in zip(ap, ab)) / length2
-    if t <= 1e-3 or t > 1 + 1e-6:
-        return False
+    if t <= 0 or t > 1 + 1e-6 or math.dist(p, a) < 1e-4:
+        return None
     closest = [r + t * v for r, v in zip(a, ab)]
-    return math.dist(closest, p) <= tol
+    return math.dist(closest, p)
+
+
+# The view rounds positions to 0.1 mm; edges leaving a node can be almost
+# collinear (kitchen_gate -> kitchen / sofa_rear_approach), so keep this tight.
+SEGMENT_TOLERANCE_M = 1e-3
 
 
 def remaining_route(home):
@@ -145,21 +151,26 @@ def remaining_route(home):
     if isinstance(path, list) and all(n in NODES for n in path):
         return list(path), "backend"
     place, target = home.get("place"), home.get("destination")
-    if place not in NODES or target not in NODES or place == target:
+    if place not in NODES or target not in NODES:
         return [], "derived-route-graph"
-    walking_at = home.get("entry_position")
-    nxt = None
-    if isinstance(walking_at, list) and hi.finite_position(walking_at):
-        for n in _NEIGHBOURS.get(place, []):
-            if _on_segment(walking_at, NODES[place], NODES[n]):
-                nxt = n
-                break
     try:
-        if nxt is not None:
-            return [nxt] + route(nxt, target)[1:], "derived-route-graph"
-        return route(place, target)[1:], "derived-route-graph"
+        planned = route(place, target)[1:] if place != target else []
     except ValueError:
         return [], "derived-route-graph"
+    walking_at = home.get("entry_position")
+    candidates = []
+    if isinstance(walking_at, list) and hi.finite_position(walking_at):
+        for n in _NEIGHBOURS.get(place, []):
+            d = _segment_distance(walking_at, NODES[place], NODES[n])
+            if d is not None and d <= SEGMENT_TOLERANCE_M:
+                candidates.append((d, n))
+    # Usual case: walking the planned first edge. Otherwise the actor is on
+    # an edge he was already walking when the target changed (HomeWorld
+    # finishes it, then replans from its end node).
+    if not candidates or (planned and planned[0] in [n for _, n in candidates]):
+        return planned, "derived-route-graph"
+    nxt = min(candidates)[1]
+    return [nxt] + route(nxt, target)[1:], "derived-route-graph"
 
 
 class HomeStateModel:
@@ -402,6 +413,9 @@ def validate_controls(data):
     return patch
 
 
+SESSION = web.AppKey("session", aiohttp.ClientSession)
+
+
 def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
     if not isinstance(token, str) or len(token) < MIN_TOKEN:
         raise ValueError("operator credential must be at least 12 characters")
@@ -444,7 +458,7 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
             raise web.HTTPBadRequest(text=str(error))
         if feed is None:
             raise web.HTTPServiceUnavailable(text="No backend configured")
-        session = request.app["session"]
+        session = request.app[SESSION]
         try:
             status, text = await feed.post_settings(session, patch)
         except (aiohttp.ClientError, asyncio.TimeoutError):
@@ -461,11 +475,11 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
                                   "note": "Operator modes accepted by the backend; the published state follows its next tick."})
 
     async def lifecycle(app):
-        app["session"] = (session_factory or (lambda: aiohttp.ClientSession(
+        app[SESSION] = (session_factory or (lambda: aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10))))()
         tasks = []
-        if feed is not None and app.get("run_feed", True):
-            tasks.append(asyncio.create_task(feed.run(session=app["session"])))
+        if feed is not None:
+            tasks.append(asyncio.create_task(feed.run(session=app[SESSION])))
 
         async def tick():
             while True:
@@ -476,7 +490,7 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-        await app["session"].close()
+        await app[SESSION].close()
 
     app = web.Application(middlewares=[guard], client_max_size=MAX_BODY)
     app.cleanup_ctx.append(lifecycle)
