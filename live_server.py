@@ -1868,8 +1868,9 @@ class Live:
 
     def eye_hello(self):
         """On connect: the eye's state, and its last frame only while the eye is open (awake at home: nothing)."""
-        out = [self.eye_state()] if self.eye else []
-        if self.last_frame and self.eye_mode != "off":
+        # getattr: partially built Live objects (tests, early connects) may lack the eye's fields.
+        out = [self.eye_state()] if getattr(self, "eye", None) else []
+        if getattr(self, "last_frame", None) and getattr(self, "eye_mode", "off") != "off":
             out.append(self.eye_frame())
         return out
 
