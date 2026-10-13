@@ -18,7 +18,19 @@ COMMANDS = [
 ]
 
 
+_MISSING = object()
+
+
 class Computer:
+    # Any change to what view() shows bumps a monotonic revision, so the page
+    # refreshes on an equal-length output replacement too (never by length).
+    REVISED = frozenset({"output", "ready", "paused", "status", "last_command", "commands", "error"})
+
+    def __setattr__(self, name, value):
+        if name in self.REVISED and getattr(self, name, _MISSING) != value:
+            object.__setattr__(self, "revision", getattr(self, "revision", 0) + 1)
+        object.__setattr__(self, name, value)
+
     def __init__(self, data_dir):
         self.data_dir = Path(data_dir)
         self.process = None
@@ -41,6 +53,7 @@ class Computer:
             "paused": self.paused,
             "last_command": self.last_command,
             "commands": self.commands,
+            "revision": self.revision,
             "os": "Buildroot Linux / x86",
             "error": self.error,
         }

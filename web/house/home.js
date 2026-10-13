@@ -28,6 +28,7 @@ import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { createMinecraftFrameFeed, actionErrorMessage } from "./device_requests.mjs?v=1";
 import { createPhoneScreen } from "./phone_screen.mjs?v=1";
+import { createDeviceRevisions } from "./device_revisions.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
 import { createSettledAssetBarrier } from "./settled_asset_barrier.mjs?v=1";
@@ -2545,7 +2546,18 @@ function acceptHome(state) {
   renderPanel();
 }
 let lastFullHome = null;
+// Optional WebSocket device identities: refresh on change (polling remains the fallback).
+const deviceRevisions = createDeviceRevisions({
+  refresh: () => syncState(),
+  onPrivacy: () => {
+    browserScreen = phoneBrowserScreen = null;
+    computerState = { ...computerState, output: "", last_command: null };
+    minecraftState = { ...minecraftState, has_frame: false };
+    invalidateDeviceBitmaps();
+  },
+});
 async function syncState() {
+  const epoch = deviceRevisions.epoch;
   try {
     const r = await fetch("/api/home");
     if (!r.ok) {
@@ -2556,6 +2568,7 @@ async function syncState() {
     try {
       chessState = await (await fetch("/api/chess")).json();
     } catch {}
+    if (epoch !== deviceRevisions.epoch) return; // requested before a privacy entry/exit
     lastFullHome = s.home;
     computerState = s.computer;
     browserState = s.browser || null;
@@ -2601,6 +2614,7 @@ function connect() {
       if (m.home) {
         brainStage = m.stage || m.sleep?.stage || brainStage;
         acceptHome(m.home);
+        deviceRevisions.accept(m.home.devices);
       }
     } catch {}
   };

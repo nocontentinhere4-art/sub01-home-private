@@ -1,5 +1,6 @@
 """Real local Minecraft console: official server, Mineflayer, cortical control and live frames."""
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -16,7 +17,18 @@ def eula_accepted(directory):
     except OSError:
         return False
 
+def frame_tag(frame):
+    """Identity of a JPEG frame (also its HTTP ETag body), computed once per frame."""
+    return hashlib.blake2b(frame, digest_size=12).hexdigest() if frame else None
+
+
 class MinecraftConsole:
+    def __setattr__(self, name, value):
+        # Cache the frame identity when a frame is assigned, not per request/tick.
+        if name == "frame":
+            object.__setattr__(self, "frame_tag", frame_tag(value))
+        object.__setattr__(self, name, value)
+
     def __init__(self, data_dir):
         self.directory = Path(data_dir) / "minecraft"
         self.server_port = int(os.environ.get("SUB01_MC_SERVER_PORT", "25569"))
