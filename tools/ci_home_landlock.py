@@ -19,6 +19,21 @@ READ=(1<<0)|(1<<2)|(1<<3)
 FILE_RW=(1<<1)|(1<<2)
 CONNECT=1<<1
 BIND=1<<0
+PROTECTED_PORTS=frozenset({8798,8799,8811,8820,8821,8888,8890})
+
+def tcp_rules(ephemeral_low,ephemeral_high):
+    """Allow test listeners/rebinding without granting private service ports."""
+    if not 1024<=ephemeral_low<=ephemeral_high<=65535 or any(ephemeral_low<=p<=ephemeral_high for p in PROTECTED_PORTS):
+        raise RuntimeError('Unexpected ephemeral range intersects private services')
+    for port in (80,443):
+        yield port,CONNECT
+    for port in range(8765,8770):
+        yield port,BIND|CONNECT
+    for port in range(ephemeral_low,ephemeral_high+1):
+        # Fixtures bind zero, close the listener, then rebind its allocated port.
+        yield port,BIND|CONNECT
+    yield 0,BIND
+
 lib=ctypes.CDLL(None,use_errno=True)
 def checked(result,operation):
     if result<0:raise OSError(ctypes.get_errno(),operation)
@@ -52,17 +67,11 @@ def confine():
         path_rule(str(home),FS_ALL);path_rule(str(tmp),FS_ALL)
         for p in ['/dev/null','/dev/zero','/dev/random','/dev/urandom']:
             path_rule(p,FILE_RW)
-        # TCP: GitHub/package access only; private home/admin ports are denied.
+        # TCP: public package access and bounded fixture ports; private services denied.
         ephemeral_low,ephemeral_high=map(int,Path('/proc/sys/net/ipv4/ip_local_port_range').read_text().split())
-        private_ports={8811,8798,8820,8821,8888,8890}
-        if not 1024<=ephemeral_low<=ephemeral_high<=65535 or any(ephemeral_low<=p<=ephemeral_high for p in private_ports):
-            raise RuntimeError('Unexpected ephemeral range intersects private services')
-        for port in [80,443,*range(8765,8770),*range(ephemeral_low,ephemeral_high+1)]:
-            access=CONNECT|(BIND if 8765<=port<=8769 else 0)
+        for port,access in tcp_rules(ephemeral_low,ephemeral_high):
             rule=PortRule(access,port)
             checked(lib.syscall(445,fd,2,ctypes.byref(rule),0),'Landlock TCP test/connect rule')
-        rule=PortRule(BIND,0)
-        checked(lib.syscall(445,fd,2,ctypes.byref(rule),0),'Landlock ephemeral bind rule')
         checked(lib.prctl(38,1,0,0,0),'No new privileges')
         checked(lib.syscall(446,fd,0),'Landlock enforce')
     finally:os.close(fd)

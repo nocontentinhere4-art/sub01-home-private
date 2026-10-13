@@ -83,3 +83,32 @@ Evidence in `out/house-evidence/`:
 - `native-hands-pc-before.png`, `native-hands-pc-typing.png`, `native-hands-pc-after.png` — real browser stills; the immediate after-state still precedes the next native monitor poll, so use the final decoded video frame for visible completion evidence.
 
 The owned native engine exited, GPU was released, and budget guard PID12900 remained alive. The 18:16 UTC absolute stop was unchanged. The private Jupyter file API delivered artifacts without a new public endpoint. This validates actual server-local browser media, native keyboard delivery, real guest execution, and monitor display. It **does not validate an external authenticated browser media session**; the Jupyter viewer route and external ICE remain unproven.
+
+
+## Private compute recovery — 2026-10-13 20:12 UTC
+
+The owner explicitly raised the **total** home-work allowance to $20 and approved necessary replacement private compute, with every authorized home runtime stopped by **21:45 UTC / 23:45 Rome** (epoch1791927900). The earlier $10/19:16 limits above describe historical runs only.
+
+The old home pod713u6mnmxu4y1a had no free GPU and only2GB host memory available. Generic `podResume` with gpuCount0 did not invoke its minimal recovery path. The first-party Runpod console uses the distinct `podResumeZeroGpu` operation; the same existing authorized account key successfully invoked it. That opened the existing volume without a GPU at the provider-reported $0.295/hour. It did not create a new CPU pod, migrate the original volume, or alter the brain pod.
+
+A single private replacement A40 pod80lf8giw6ft61v, named `sub01-home-private-recovery`, was created at the verified $0.59/hour. Before workload startup, its identity-checked authenticated guard was installed with the exact stop epoch and total cap20. Existing Jupyter and home-only operator credentials were reused privately; no account/key permission expansion or public application port was added. Conservative provisioning estimate13.80 included a full10 allowance for prior home work, both home runtimes through the deadline, and2 reserve. This is a conservative planning bound, not an actual billing statement.
+
+The existing licensed engine archive and selected authored project/PC/service files transferred **directly server-to-server** through existing authenticated Jupyter file access. No engine bytes were downloaded to or processed on the Mac. The source volume, real VM snapshot, and original pod were preserved; the temporary source CPU runtime was stopped after verification.
+
+Full source/target SHA256 and every128MiB block matched:
+
+- Engine ZIP39,818,576,005 bytes: `81985a9542e15761fa3cc0d4483a26ebe5fd0b448120faddaa2fe05d94142934`.
+- Actual project TAR392,120,320 bytes: `6282a23544958fdce3c5111c730708bab36d3b0ea57f71e6a99e16c7f2e4cbe6`.
+- Home services TAR769,259,520 bytes: `d4b5670df1c0650ef08a342172afbeb24f47c8ed2ff01df5910cd15fa2e8e06c`.
+
+A parallel extraction sharing one ZIP reader initially failed. After switching each worker to an independent reader, all **300,132 entries /76,966,193,342 uncompressed bytes** extracted with per-entry CRC verification. No transfer block repair or engine redownload was necessary. The transfer helper now also validates exact Content-Range/Content-Length and uses identity encoding plus cache-busted, no-store requests.
+
+The actual project was extracted as its exact nonroot owner UID/GID1001 because this volume restricts root chown. Content permissions and source skin/animation assets were preserved. Vulkan run as that user validated NVIDIA A40/Vulkan1.4.312 after restoring libEGL and standard runtime tools. Engine/project paths remain unchanged. GuardPID73 was verified active for21:45/$20 before the renderer received its GPU lease. Actual new graphical PC8811 readiness/input/frame acceptance belongs to its separate device owner; baseline8798 snapshot remains preserved without a duplicate VM launch.
+
+Recovery helper code is in `tools/private_home_recovery_guard.py`, `private_home_transfer.py`, `private_home_asset_integrity.py`, and `private_home_engine_extract.py`. The terminal client allows only the two exact authorized home pod URLs. These recovery checks establish preserved assets and ready private compute; they do not themselves establish a new native video, working remote viewer, or autonomous brain behavior.
+
+
+The replacement volume does not enforce Unix mode bits reliably. API control credentials were moved to rootfs `/root/.sub01-home-private/control.json` (root 0600), and the native computer operator credential to rootfs `/home/unreal/.sub01-private/operator-token` (UID1001 0600), each inside 0700 directories; old volume copies and transfer-session credentials were removed. Two authorized CI users are confined by rootfs `/usr/local/bin/sub01-ci-landlock`, with kernel Landlock ABI4, read-only system libraries, their own writable home/tmp/toolcache, and TCP connect ports80/443 only. Actual tests for both UIDs denied volume files, both credential files, and private service ports8811/8798/8820/8888/8890, while allowing GitHub443 and their own home writes. This wrapper must precede both runner configuration and execution. The live deadline guard was left running. The provider startup embeds the historical guard payload and must be refreshed at the next safe cold restart; changing that job during an active GPU capture would reset the container.
+
+
+After both authorized pods were confirmed EXITED at21:45:25UTC and CI registrations zero, the owner authorized one additional hour on the same replacement only. Startup was updated while stopped to a rootfs-owned guard before resume; live guardPID77 authenticated pod80lf8giw6ft61v and verified deadline22:57:36UTC (epoch1791932256), totalcap20. Conservative cumulative allowance15.54 includes all prior work and a2USD reserve. Originalpod713 remained stopped. Rootfs accountUID1001 and protected same-role operator token were restored; both CI UIDs passed actual secret/volume/private-port denial and ephemeral listener rebinding checks under the restored rootfs Landlock helper. No third pod was created.

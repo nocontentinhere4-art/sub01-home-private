@@ -51,7 +51,23 @@ CPP = r'''#include "Sub01HomeLab.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Modules/ModuleManager.h"
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl,Sub01HomeLab,"Sub01HomeLab");
+#include "Misc/CoreDelegates.h"
+class FSub01HomeRuntimeModule : public FDefaultGameModuleImpl {
+ FDelegateHandle EngineFrameHandle,WorldTickHandle;
+ bool EngineFrameLogged=false,WorldTickLogged=false;
+ public:
+ virtual void StartupModule() override {
+  FDefaultGameModuleImpl::StartupModule();
+  EngineFrameHandle=FCoreDelegates::OnBeginFrame.AddLambda([this](){if(!EngineFrameLogged){EngineFrameLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ENGINE_BEGIN_FRAME independent of actor tick"));}});
+  WorldTickHandle=FWorldDelegates::OnWorldTickStart.AddLambda([this](UWorld* World,ELevelTick TickType,float Dt){if(World&&World->IsGameWorld()&&!WorldTickLogged){WorldTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_GAME_WORLD_TICK world=%s type=%d dt=%.6f independent of actor tick"),*World->GetName(),int32(TickType),Dt);}});
+ }
+ virtual void ShutdownModule() override {
+  FCoreDelegates::OnBeginFrame.Remove(EngineFrameHandle);
+  FWorldDelegates::OnWorldTickStart.Remove(WorldTickHandle);
+  FDefaultGameModuleImpl::ShutdownModule();
+ }
+};
+IMPLEMENT_PRIMARY_GAME_MODULE(FSub01HomeRuntimeModule,Sub01HomeLab,"Sub01HomeLab");
 ASub01HomeCharacter::ASub01HomeCharacter() {
  GetCapsuleComponent()->InitCapsuleSize(16.f,91.f);
  GetMesh()->SetVisibility(false);
@@ -67,9 +83,11 @@ ASub01HomeCharacter::ASub01HomeCharacter() {
 }
 void ASub01HomeCharacter::BeginPlay() {
  Super::BeginPlay();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_INPUT_MODE_BEGIN controller=%s"),*GetNameSafe(GetController()));
  if(auto* Player=Cast<APlayerController>(GetController())) {
   Player->SetInputMode(FInputModeGameOnly()); Player->bShowMouseCursor=false;
  }
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_BEGINPLAY_RETURN tickCanEver=%d tickEnabled=%d"),PrimaryActorTick.bCanEverTick?1:0,IsActorTickEnabled()?1:0);
 }
 void ASub01HomeCharacter::SetupPlayerInputComponent(UInputComponent* Input) {
  Super::SetupPlayerInputComponent(Input);
@@ -131,7 +149,8 @@ def stage(project):
   IFileManager::Get().Delete(*CapturePath);
  }''' )
     (module/'Sub01HomeLab.h').write_text(header)
-    cpp=cpp.replace('\n }\n if(auto* Player=', '\n }\n BeginNativeRouteTest();\n if(auto* Player=')
+    input_marker=' UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_INPUT_MODE_BEGIN controller=%s"),*GetNameSafe(GetController()));'
+    cpp=cpp.replace(input_marker,' BeginNativeRouteTest();\n'+input_marker,1)
     cpp=cpp.replace(' if(Device.IsEmpty()) return;', ' if(Device.IsEmpty()) return;\n if(Device==TEXT("Desk")&&PCBridge){PCBridge->SetOperatorFocus(true);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,PCBridge->GetPCStatus());return;}')
     cpp=cpp.replace(' FString Device;\n', ' if(TryNativeHomeDevice(Hit.GetComponent()))return;\n FString Device;\n',1)
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)

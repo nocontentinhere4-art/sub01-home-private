@@ -86,3 +86,13 @@ capture Xvesa stderr and the guest input protocol rather than flipping movement
 signs or replacing the display. Operator/native and home/actor session leases
 now expire independently; actor release cannot cancel native focus. Privacy
 clears both leases and requires a fresh focus request after exit.
+
+Native module staging now requires **both** additional headers
+`Sub01GuestInputQueue.h` and `Sub01GuestFrameLayout.h` beside `Sub01PCBridge.cpp/.h`.
+The CPU queue test covers ordered press/drag/release, dropping unsent input on
+focus loss while releasing buttons after the active request, and ignoring stale
+completion after privacy cancellation. The frame test preserves every source
+BGRA pixel and verifies opaque padding and bounded dimensions. The bridge derives
+aspect from the actual authored monitor X/Z extents (34/20), so a 1024×768 guest
+is padded to 1306×768 instead of stretched. No guest pixels are invented in the
+padding. These checks do not confirm native compile or live interaction.
