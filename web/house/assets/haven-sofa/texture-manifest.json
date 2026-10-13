@@ -1,0 +1,116 @@
+{
+  "license": "CC0-1.0",
+  "source": "https://www.innerscene.com/tools/library/3d-parts/haven-224-oatmeal-two-seat-sofa-40262c27",
+  "source_sha256": "acad7fd3d9431929c303b1ae5cd476d7a108ce352a99ddf40e4e78ea7b9f2643",
+  "transformation": "PNG decoded to RGB JPEG without color grading; retained packed roughness green channel. Full1024, lite512 Lanczos.",
+  "files": [
+    {
+      "file": "haven-sofa/maps/linen_normal.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "05bd6eed503ffc1b456e7a49576572d845a2adfef8cea740103419d9c50f0d5c",
+      "bytes": 856842
+    },
+    {
+      "file": "lite/haven-sofa/maps/linen_normal.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "c99541556e8d18ad259971470ddebd0801e3912983dc02837750a4fb9c548c2b",
+      "bytes": 233993
+    },
+    {
+      "file": "haven-sofa/maps/linen_basecolor.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "5145daebdef40038066bb09fcfd3d818e045d1405a26bf1f698aa033cd97fc10",
+      "bytes": 152317
+    },
+    {
+      "file": "lite/haven-sofa/maps/linen_basecolor.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "c81c7e939d0113367191a9aaf99c11e8e0d126bb8337fb844ef351fe4054ff7f",
+      "bytes": 53843
+    },
+    {
+      "file": "haven-sofa/maps/linen_roughness.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "80205f4bdc6dcc4307827af9e7b8daf7c2c13ba526d1ca0e9c40ed11b74fed7c",
+      "bytes": 140621
+    },
+    {
+      "file": "lite/haven-sofa/maps/linen_roughness.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "a5f0764a27a1b6c7f88d2118984f7a7d11c1b563a9fe6041c256a76006577f24",
+      "bytes": 50821
+    },
+    {
+      "file": "haven-sofa/maps/walnut_normal.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "ce34dc670660a85f5b164bc91befad6b57f667623a845d55245bad5c1b7ae091",
+      "bytes": 425872
+    },
+    {
+      "file": "lite/haven-sofa/maps/walnut_normal.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "901069945ba8b855174cbcf3ef0ea0c3aa5d1719fd8002fa582d66cda6defb74",
+      "bytes": 103535
+    },
+    {
+      "file": "haven-sofa/maps/walnut_basecolor.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "ee223be9d09696c44be0e1be7c63412dd79a8bbc25d5643fab59341f5f889a83",
+      "bytes": 189007
+    },
+    {
+      "file": "lite/haven-sofa/maps/walnut_basecolor.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "80674c3d6f5b47c08d0e1d563f923744a483053bf628115a709f5df1baa12225",
+      "bytes": 54459
+    },
+    {
+      "file": "haven-sofa/maps/walnut_roughness.jpg",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "454c6333f476d691510d02fce2b0e4992b9fed6c5ce27f9b853a470a926b5b5e",
+      "bytes": 144460
+    },
+    {
+      "file": "lite/haven-sofa/maps/walnut_roughness.jpg",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "48bb8cf9535733c9e8fc80b4220f4f743a204ed475b478b645f5d610c5896b4f",
+      "bytes": 50838
+    }
+  ]
+}

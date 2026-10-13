@@ -6,11 +6,44 @@ export const STAIR_CLEARANCE = Object.freeze({
   run: .25, bodyWidth: .96, treadWidth: 1.02, treadDepth: .27,
   treadThickness: .035, treadOffset: .006, radius: .16,
   supportTolerance: .04, stepTolerance: .22, bodyHeight: 1.65,
+  railXs: Object.freeze([-.25,.85]), railHeight:.9, railRadius:.03,
+  postRadius:.013, postCount:9, postSpacing:.5,
 });
+
+function segmentDistanceSquared(p, pEnd, q, qEnd) {
+  const sub=(a,b)=>a.map((v,i)=>v-b[i]);
+  const dot=(a,b)=>a.reduce((sum,v,i)=>sum+v*b[i],0);
+  const clamp=v=>Math.max(0,Math.min(1,v));
+  const u=sub(pEnd,p),v=sub(qEnd,q),r=sub(p,q);
+  const a=dot(u,u),b=dot(u,v),c=dot(v,v),e=dot(u,r),f=dot(v,r);
+  const denominator=a*c-b*b;
+  let s=denominator>1e-10?clamp((b*f-c*e)/denominator):0;
+  let t=(b*s+f)/c;
+  if(t<0){t=0;s=clamp(-e/a);}
+  else if(t>1){t=1;s=clamp((b-e)/a);}
+  return r.reduce((sum,n,i)=>sum+(n+s*u[i]-t*v[i])**2,0);
+}
+
+export function stairRailsAllow(x,z,feet) {
+  const a=STAIR_CLEARANCE;
+  if(![x,z,feet].every(Number.isFinite))return false;
+  // Grounded capsule: its rounded feet stay at floor height, not below it.
+  const p=[x,feet+a.radius,z],end=[x,feet+a.bodyHeight-a.radius,z];
+  const overlaps=(q,qEnd,radius)=>segmentDistanceSquared(p,end,q,qEnd)<(a.radius+radius)**2;
+  for(const railX of a.railXs){
+    if(overlaps([railX,a.railHeight,a.bottom],[railX,a.rise+a.railHeight,a.top],a.railRadius))return false;
+    for(let i=0;i<a.postCount;i++){
+      const railZ=a.bottom-i*a.postSpacing,h=a.rise*(a.bottom-railZ)/(a.bottom-a.top);
+      if(overlaps([railX,h,railZ],[railX,h+a.railHeight,railZ],a.postRadius))return false;
+    }
+  }
+  return true;
+}
 
 export function stairClearanceAllows(x, z, feet) {
   const a = STAIR_CLEARANCE;
   if (![x,z,feet].every(Number.isFinite)) return false;
+  if (!stairRailsAllow(x,z,feet)) return false;
   const ramp = Math.max(0, a.rise * (a.bottom - z) / (a.bottom - a.top));
   // Approach the climbable first riser before the centre reaches the ramp.
   const onRamp = z >= a.top - 1e-8 &&

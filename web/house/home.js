@@ -12,12 +12,14 @@ import { createHouseWindowView } from "./house_window_view.mjs";
 import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
-import { stairClearanceAllows } from "./stair_clearance.mjs?v=1";
+import { stairClearanceAllows } from "./stair_clearance.mjs?v=2";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
 import { createWovenRugMaterial, createWovenRugGeometries } from "./woven_rug_material.mjs";
 import { createCleanKitchenOak, cleanKitchenBoxUv } from "./clean_oak_material.mjs";
+import { createHavenSofaMaterials } from "./haven_sofa_materials.mjs";
+import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
 import { reachableInteraction } from "./interactions.mjs";
@@ -37,6 +39,7 @@ if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).ge
 const lite =
   new URLSearchParams(location.search).has("lite") ||
   innerWidth < 700 ||
+  (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0) ||
   (navigator.deviceMemory && navigator.deviceMemory <= 4);
 const assetRoot = "/house/assets/" + (lite ? "lite/" : "");
 const scene = new T.Scene();
@@ -503,7 +506,8 @@ obstacle(-3.2, .1, .70, 1.4);
 
 async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, sizeAxis = "x") {
   try {
-    const url = sourceUrl || assetRoot + name + "/" + name + ".gltf";
+    const modelFile = name === 'potted_plant_01' ? name + '_leaf_lod.gltf?v=1' : name + '.gltf';
+    const url = sourceUrl || assetRoot + name + "/" + modelFile;
     if (!modelCache.has(url)) modelCache.set(url, gltfLoader.loadAsync(url));
     const gltf = await modelCache.get(url);
     const root = gltf.scene.clone(true);
@@ -527,33 +531,21 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, s
     notice("An item could not load. Reconnect to retry.");
   }
 }
-// One original fabric sofa replaces the antique leather scan and chevron pillows.
-// Reuse existing CC0 texture objects; neutral tints compensate the blue linen scan.
-const sofaFabric = M.linen.clone();
-sofaFabric.color.setRGB(1, .67, .38);
-// The scan's roughness map averages around .7; linen upholstery should stay matte.
-sofaFabric.roughnessMap = null;
-sofaFabric.roughness = .96;
-sofaFabric.normalScale.set(.55, .55);
-const sofaPillowFabric = sofaFabric.clone();
-sofaPillowFabric.color.setRGB(1, .72, .44);
-const sofaSeamFabric = sofaFabric.clone();
-sofaSeamFabric.color.setRGB(.69, .45, .25);
-const sofaReady = gltfLoader.loadAsync('/house/assets/sofa-original/sofa.glb?v=2').then(gltf => {
+// Licensed CC0 modern linen sofa, source physical size, grouped for browser rendering.
+const havenSofaMaterials = createHavenSofaMaterials(T, loader, assetRoot, Math.min(renderer.capabilities.getMaxAnisotropy(), 8));
+const sofaReady = gltfLoader.loadAsync('/house/assets/haven-sofa/sofa.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-1.8, 0, .1);
   root.rotation.y = -Math.PI / 2;
   root.traverse(object => {
     if (!object.isMesh) return;
-    object.material = object.name === 'Oak_legs' ? M.darkwood :
-      object.name === 'Plain_pillows' ? sofaPillowFabric :
-      object.name === 'Tailored_seams' ? sofaSeamFabric : sofaFabric;
+    object.material = havenSofaMaterials[object.name] || havenSofaMaterials.Haven_linen;
     object.castShadow = object.receiveShadow = true;
     object.userData.bakeId = 'house-sofa-' + object.name;
     bakedObjects.set(object.userData.bakeId, object);
   });
   scene.add(root);
-  document.getElementById('status').dataset.sofa = 'blender-linen';
+  document.getElementById('status').dataset.sofa = 'licensed-haven-linen';
   renderer.shadowMap.needsUpdate = true;
 }).catch(error => {
   console.warn('Original sofa fallback:', error.message);
@@ -1218,6 +1210,7 @@ const comparisonView = new URLSearchParams(location.search).get('shot');
 const comparisonCameras = {
   kitchen: {p: [-.7,1.65,-1.85], look: [-2.2,1.05,-3.5]},
   living: {p: [-.45,1.65,2.9], look: [-2.4,1.1,-.3]},
+  sofa: {p: [-3.55,1.65,1.95], look: [-1.8,.65,.1]},
   bedroom: places.bedroom,
   office: places.office,
   stairs: places.stairs,
@@ -2564,14 +2557,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=18"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=19"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=18",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=19",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=18",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=19",
       ) : Promise.resolve(null),
     ]);
     // Atlas UVs retain glTF top-origin V; HDRLoader defaults to the opposite orientation.
@@ -2749,6 +2742,7 @@ renderer.setAnimationLoop(() => {
     privacyActive ? privacyCamera : camera,
   );
   if (firstRoomFrame) {
+    document.getElementById('status').dataset.resourceBudget = JSON.stringify(sceneBudget(scene, renderer, [nightLightUniform.value]));
     lastFrameTime = clock.elapsedTime;
     document.getElementById('status').dataset.firstFramePrograms = String(renderer.info.programs.length);
     firstRoomFrame = false;
@@ -2758,6 +2752,7 @@ renderer.setAnimationLoop(() => {
   elapsed += clock.elapsedTime - lastFrameTime;
   lastFrameTime = clock.elapsedTime;
   if (elapsed > 1) {
+    document.getElementById('status').dataset.frameTriangles = String(renderer.info.render.triangles);
     document.getElementById('status').dataset.programs = String(renderer.info.programs.length);
     document.getElementById("status").textContent =
       location.hostname === "127.0.0.1"

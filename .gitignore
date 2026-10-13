@@ -49,6 +49,7 @@ out/SUB01-first-look-X-English/
 # Raw local scene exports, bake intermediates and rollback copies.
 out/lighting-v*/
 out/lighting-orientation-audit/
+out/browser-budget-audit/
 
 # Local before/after bedding verification backups
 out/pillow-before/

@@ -1,0 +1,22 @@
+{
+  "source": "Poly Haven potted_plant_01 (CC0); original source and attribution unchanged",
+  "source_url": "https://polyhaven.com/a/potted_plant_01",
+  "license": "CC0-1.0",
+  "original_provenance": "web/house/assets/manifest.json entry potted_plant_01 (unchanged source hashes)",
+  "builder": "tools/build_home_plant_lod.py followed by tools/package_home_plant_lod.py",
+  "method": "Blender collapse 20% leaves only, scanned split normals transferred; lossy geometry visually checked at 900px close range; pot/stem/pebbles accessors copied byte-for-byte",
+  "original_gltf_sha256": "23b30294407684b02f14800d6685bd8938da5d2111e17753ac8dd3c37d8c88a0",
+  "original_bin_sha256": "a8dd1f7ce75f50dc25bbedc20809da02ee4193815c155b883a329925fa5548f7",
+  "candidate_glb_sha256": "d4d095af651dccccc65a6fb8cb9d57be13d085e6bfc0dce9b0facca042df6a5f",
+  "optimized_bin_sha256": "8cfeaf97ba3dd52d5b52f65f5d918004800e6c23accaa839573748a63cba57c7",
+  "original_bytes": 5345188,
+  "optimized_bytes": 2640492,
+  "full_lite_share_geometry": true,
+  "original_materials_and_image_urls_unchanged": true,
+  "triangles": {
+    "potted_plant_01_base_low": 7008,
+    "Circle.008": 56878,
+    "Circle.002": 5440,
+    "Plane.070": 21380
+  }
+}

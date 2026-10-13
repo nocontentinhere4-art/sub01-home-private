@@ -114,7 +114,7 @@ record={'mode':mode,'samples':scene.cycles.samples,'threads':scene.render.thread
         'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
         'atlas_sha256':hashlib.sha256(atlas.read_bytes()).hexdigest(),
         'direct':False,'indirect':True,'surface_albedo':False,'finished':False,
-        'kind':'Cycles diffuse indirect white-receiver outgoing radiance; runtime PI conversion unchanged'}
+        'kind':'Cycles diffuse indirect radiance with receiver albedo excluded and source-material colored interreflection; runtime PI conversion unchanged'}
 (output/'bake.json').write_text(json.dumps(record,indent=2)+'\n')
 print(f"BAKE_START {len(receivers)} meshes {width}x{height} samples={scene.cycles.samples} threads={scene.render.threads} seed={scene.cycles.seed}", flush=True)
 bpy.ops.object.bake(type="DIFFUSE")

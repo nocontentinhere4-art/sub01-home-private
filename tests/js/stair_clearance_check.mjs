@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {STAIR_CLEARANCE as A, stairClearanceAllows as allows} from '../../web/house/stair_clearance.mjs';
+import * as T from '../../web/house/vendor/three.module.js';
 import {balconyAllows} from '../../web/house/balcony_access.mjs';
 import {frontDoorAllows} from '../../web/house/front_door_access.mjs';
 import {bathroomAllows} from '../../web/house/bathroom_access.mjs';
@@ -37,8 +38,10 @@ assert.equal(allows(.93,-.5,0),false);
 assert.equal(allows(.96,-.5,0),true);
 // A low tread projects further than a high tread above the standing head.
 assert.equal(allows(.95,2.1,0),false);
-assert.equal(allows(.98,2.1,0),true);
-assert.equal(allows(.81,-.5,3),true,'Solids below the upper floor do not block loft movement');
+assert.equal(allows(.98,2.1,0),false,'Tread clearance alone does not clear real post/handrail');
+assert.equal(allows(1.05,2.1,0),true);
+assert.equal(allows(.81,-.5,3),false,'Raised rail remains solid above an upper-floor walker');
+assert.equal(allows(-.5,-.5,3),true,'Clear loft-side movement stays available');
 for (const x of [.3,1.3,2,-.45]) assert.equal(allows(x,3.2,0),true,'Ground approach around base');
 for (let i=0;i<=170;i++) {
   const z=A.bottom-(A.bottom-A.top)*i/170, feet=A.rise*i/170;
@@ -46,6 +49,39 @@ for (let i=0;i<=170;i++) {
   assert.equal(allows(.79,z,feet),false,'Body cannot hang through tread edge');
 }
 assert.equal(allows(.3,-2.1,3),true,'Upper landing stays accessible');
+
+// Build the actual sloping oak rails/brass posts from home.js; these extend
+// beyond tread/body bounds and were previously absent from the collider.
+const railStart=source.indexOf('for (const x of [-0.25, 0.85])',end);
+const railEnd=source.indexOf('// Safe landing',railStart);
+const railScene=new T.Scene(),rails=[];
+new Function('beam','M',source.slice(railStart,railEnd))((p,q,r)=>{
+  rails.push({p,q,r});const delta=new T.Vector3(...q).sub(new T.Vector3(...p));
+  const mesh=new T.Mesh(new T.CylinderGeometry(r,r,delta.length(),10),new T.MeshStandardMaterial());
+  mesh.position.copy(new T.Vector3(...p).add(new T.Vector3(...q)).multiplyScalar(.5));
+  mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());railScene.add(mesh);
+},{architectureOak:{},brass:{}});
+assert.equal(rails.length,2*(A.postCount+1));
+assert.equal(rails.filter(r=>r.r===A.railRadius).length,2);
+assert.equal(rails.filter(r=>r.r===A.postRadius).length,18);
+for(let side=0;side<2;side++){
+  const offset=side*(A.postCount+1),x=A.railXs[side];
+  assert.deepEqual(rails[offset].p,[x,A.railHeight,A.bottom]);
+  assert.deepEqual(rails[offset].q,[x,A.rise+A.railHeight,A.top]);
+  for(let i=0;i<A.postCount;i++){
+    const z=A.bottom-i*A.postSpacing,h=A.rise*(A.bottom-z)/(A.bottom-A.top);
+    assert.deepEqual(rails[offset+i+1].p,[x,h,z]);
+    assert.deepEqual(rails[offset+i+1].q,[x,h+A.railHeight,z]);
+  }
+}
+railScene.updateMatrixWorld(true);
+const railRay=new T.Raycaster(new T.Vector3(1,1.60,.55),new T.Vector3(-1,0,0),0,.16);
+assert.ok(railRay.intersectObjects(railScene.children).length,'Actual post triangles intersect formerly allowed body');
+assert.equal(allows(1,.55,0),false,'Ground aisle cannot clip raised stair post');
+assert.equal(allows(1.03,.55,0),true,'Only real post clearance is added');
+assert.equal(allows(-.3,-1.7,3),false,'Upper-floor body cannot clip sloping rail endpoint');
+assert.equal(allows(-.5,-1.7,3),true,'Loft-side passage remains available');
+assert.equal(allows(1,.55,3),true,'Rail below upper-floor feet does not block');
 
 // Exercise the real visitor collision function with the proposed hook before
 // integration, or directly once home.js has the hook. Geometry is untouched.

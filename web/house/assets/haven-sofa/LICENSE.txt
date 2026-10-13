@@ -1,0 +1,19 @@
+HAVEN 224 — Oatmeal Two-Seat Sofa
+Original author: Innerscene
+License: CC0 1.0 Universal (public-domain dedication)
+
+Primary source:
+https://www.innerscene.com/tools/library/3d-parts/haven-224-oatmeal-two-seat-sofa-40262c27
+Library terms:
+https://www.innerscene.com/tools/library/terms
+CC0 legal reference:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The source page identifies this as an original Innerscene model released under
+CC0. Its library terms permit copying, modification, redistribution and
+commercial use. No manufacturer CAD or logos have been added in preparation.
+
+SUB-01 preparation: floor alignment, horizontal centering, four material groups,
+measured upholstery-only decimation and external full/lite PBR map derivatives.
+Source GLB is pinned as source.glb; metadata records its SHA-256. Editable .blend
+and reproducible build scripts accompany the prepared runtime geometry.

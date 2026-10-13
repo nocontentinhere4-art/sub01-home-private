@@ -1,0 +1,69 @@
+{
+  "source": "https://www.innerscene.com/tools/library/3d-parts/haven-224-oatmeal-two-seat-sofa-40262c27",
+  "download": "https://www.innerscene.com/api/library/haven-224-oatmeal-two-seat-sofa-40262c27/download",
+  "license": "CC0-1.0",
+  "license_statement": "Primary part page explicitly dedicates original Innerscene model to CC0; library terms allow commercial use, modification and redistribution.",
+  "terms": "https://www.innerscene.com/tools/library/terms",
+  "author": "Innerscene",
+  "fetched": "2026-10-13",
+  "sha256": "acad7fd3d9431929c303b1ae5cd476d7a108ce352a99ddf40e4e78ea7b9f2643",
+  "bytes": 5498092,
+  "images": [
+    {
+      "name": "linen_normal",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 1136997,
+      "mode": "RGB"
+    },
+    {
+      "name": "linen_basecolor",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 722742,
+      "mode": "RGB"
+    },
+    {
+      "name": "linen_roughness",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 425349,
+      "mode": "RGB"
+    },
+    {
+      "name": "walnut_normal",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 371602,
+      "mode": "RGB"
+    },
+    {
+      "name": "walnut_basecolor",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 391828,
+      "mode": "RGB"
+    },
+    {
+      "name": "walnut_roughness",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 251203,
+      "mode": "RGB"
+    }
+  ],
+  "status": "Approved private house replacement; source pinned for reproducible preparation.",
+  "decoded_rgba_mip_bytes_estimate": 33554431.999999996
+}

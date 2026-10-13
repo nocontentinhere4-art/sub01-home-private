@@ -1,0 +1,46 @@
+{
+  "source": "https://www.innerscene.com/tools/library/3d-parts/haven-224-oatmeal-two-seat-sofa-40262c27",
+  "author": "Innerscene",
+  "license": "CC0-1.0",
+  "license_url": "https://www.innerscene.com/tools/library/terms",
+  "source_sha256": "acad7fd3d9431929c303b1ae5cd476d7a108ce352a99ddf40e4e78ea7b9f2643",
+  "preparation": "Ground aligned and horizontally centred; source physical dimensions preserved; merged same-material objects into four groups. Optional upholstery-only collapse LOD preserves separate piping/feet/felt.",
+  "source_geometry": "Modeled modern fabric sofa; not photogrammetric scan.",
+  "ratio": 0.55,
+  "triangles": 69260,
+  "groups": 4,
+  "blender_bounds": [
+    [
+      -1.137450933456421,
+      -0.4625000059604645,
+      0.0
+    ],
+    [
+      1.137450933456421,
+      0.4625000059604645,
+      0.9172939658164978
+    ]
+  ],
+  "seat_top_m": 0.5030000167898834,
+  "seat_camera_delta_m": 0.06550001678988338,
+  "runtime_origin": [
+    -1.8,
+    0,
+    0.1
+  ],
+  "runtime_yaw": -1.5707963267948966,
+  "collision_envelope": [
+    0.95,
+    2.5
+  ],
+  "glb_bytes": 1832444,
+  "sha256": "92b7db30f9fbf169f49e75547d0d2964ce21bf410a733b963761dc0eaed2398d",
+  "embedded_images": false,
+  "generator": "tools/build_home_haven_sofa.py",
+  "texture_preparation": "tools/prepare_home_haven_textures.py",
+  "physical_dimensions_m": [
+    2.274901866912842,
+    0.925000011920929,
+    0.9172939658164978
+  ]
+}
