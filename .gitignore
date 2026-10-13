@@ -81,3 +81,6 @@ out/lower-kitchen-cabinet/
 # Isolated visibility-aware sky lighting diagnostics and raw bakes
 out/gi21-diffuse-study/
 out/lighting-sky-v*/
+
+# Isolated wall receiver convergence runs
+out/lighting-convergence-v*/

@@ -13,6 +13,7 @@ import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
+import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=2";
 import { WalkMotion } from "./walk_motion.mjs";
 import { metricBoxUv, metricCylinderUv } from "./material_uv.mjs?v=2";
 import { createCurtainPanel } from "./curtain_panels.mjs";
@@ -210,6 +211,8 @@ M.sofa.color.set("#9ca995");
 let meshCount = 0;
 const blockers = [],
   interactions = [];
+const rigidPots = [];
+const rigidBoundaryBoxes = [];
 function box(w, h, d, x, y, z, m = M.wood, r = 0.012) {
   const o = new T.Mesh(
     r
@@ -246,6 +249,8 @@ function beam(a, b, r = 0.022, m = M.darkwood) {
   o.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), D.normalize());
   o.castShadow = true;
   scene.add(o);
+  if (a[0] === .85 && b[0] === .85 && a[1] >= 3 && a[2] <= -1.7 && b[2] <= -1.7)
+    rigidBoundaryBoxes.push(rigidBoxFromMesh(T, o));
   return o;
 }
 function obstacle(x, z, w, d, level = 0) {
@@ -399,6 +404,7 @@ function windowFrame(x, y, z, w, h, rotate = false, mullion = true) {
   g.position.set(x, y, z);
   if (rotate) g.rotation.y = Math.PI / 2;
   scene.add(g);
+  for (const object of g.children) rigidBoundaryBoxes.push(rigidBoxFromMesh(T, object));
 }
 for (const z of [-2.6, 0, 2.6]) windowFrame(-3.85, 1.7, z, 2.48, 2.02, true);
 windowFrame(-2, 1.7, 3.85, 3.65, 2.02);
@@ -525,6 +531,14 @@ async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, s
     bounds = new T.Box3().setFromObject(root);
     const center = bounds.getCenter(new T.Vector3());
     root.position.set(x - center.x, y - bounds.min.y, z - center.z);
+    root.updateMatrixWorld(true);
+    if (name === 'potted_plant_01') root.traverse(object => {
+      if (object.isMesh && /potted_plant_01_pot/.test(object.name)) {
+        const pot = rigidPotFromMesh(T, object);
+        if (pot) rigidPots.push(pot);
+      }
+    });
+    document.getElementById('status').dataset.rigidPotColliders = String(rigidPots.length);
     root.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = o.receiveShadow = true;
@@ -1296,7 +1310,7 @@ function floorAt(x, z, feet) {
   if (x >= STEP.x0 && x <= STEP.x1 && z <= STEP.zBottom && z >= STEP.zTop)
     return (3 * (STEP.zBottom - z)) / (STEP.zBottom - STEP.zTop);
   if (feet > 1.4) {
-    if (x <= -0.1 && x >= -3.85 && z <= 5.08) return 3;
+    if (x <= -0.2 && x >= -3.85 && z <= 5.08) return showerSupportHeight(x,z);
     if (x <= 0.8 && x >= -0.2 && z <= -1.7) return 3;
     return null;
   }
@@ -1308,10 +1322,11 @@ function canWalk(x, z, feet) {
     f === null ||
     Math.abs(f - feet) > 0.22 ||
     (feet > 1.4 && z > -1.7 && z < 4 && Math.abs(x + 0.12) < 0.18) ||
-    x < -3.78 ||
-    x > 3.78 ||
-    z < -3.78 ||
+    x < -3.75 ||
+    x > 3.75 ||
+    z < -3.75 ||
     !stairClearanceAllows(x, z, feet) ||
+    !staticBodyAllows(x, z, f, rigidPots, rigidBoundaryBoxes) ||
     (upperCabinetDoors && !upperCabinetDoors.allowsPosition(x, z, feet)) ||
     !lowerCabinetDoors.allowsPosition(x, z, feet) ||
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
@@ -2613,6 +2628,8 @@ function batchArchitecture() {
   renderer.shadowMap.needsUpdate = true;
 }
 const interiorTrim = createInteriorTrim(T, scene);
+rigidBoundaryBoxes.push(...rigidBoxesFromInstances(T, interiorTrim));
+document.getElementById('status').dataset.rigidBoundaryColliders = String(rigidBoundaryBoxes.length);
 document.getElementById('status').dataset.interiorTrim = String(interiorTrim.count);
 batchArchitecture();
 // Stable IDs let offline light maps replace only geometry, preserving live devices.

@@ -13,13 +13,13 @@ image = bpy.data.images.load(str(source), check_existing=False)
 pixels = np.empty(len(image.pixels), dtype=np.float32)
 image.pixels.foreach_get(pixels)
 rgb = pixels.reshape(-1, 4)[:, :3]
-assert np.isfinite(rgb).all() and np.min(rgb) >= 0, "Invalid irradiance values"
+assert np.isfinite(rgb).all() and np.min(rgb) >= 0, "Invalid diffuse radiance values"
 assert np.count_nonzero(rgb) > len(rgb) * 0.1, "Empty bake"
 stats = {"source_exr_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
          "width": image.size[0], "height": image.size[1],
          "max": float(rgb.max()), "p95": float(np.percentile(rgb.max(axis=1), 95)),
          "nonzero": float(np.mean(rgb.max(axis=1) > 0)),
-         "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"}
+         "kind": "Receiver-albedo-excluded diffuse radiance; exact direct/indirect components are recorded in the matched bake manifest"}
 generated = bpy.data.images.new("Packed private light", image.size[0], image.size[1],
                                alpha=False, float_buffer=True)
 image = generated

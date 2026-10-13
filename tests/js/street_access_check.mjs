@@ -1,3 +1,5 @@
+import {lowerCabinetFixture} from './lower_cabinet_fixture.mjs';
+import {staticBodyAllows,showerSupportHeight} from '../../web/house/static_clearance.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -48,8 +50,8 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
  const [x,z,w,d,level=0]=m[1].split(',').map(Number);
  return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
-const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows',
- code+';return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,allows,{gateAngle:frontage.gate.rotation.y},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},stairClearanceAllows);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors','lowerCabinetDoors','staticBodyAllows','rigidPots','showerSupportHeight','rigidBoundaryBoxes',
+ code+';return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,allows,{gateAngle:frontage.gate.rotation.y},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},stairClearanceAllows,null,lowerCabinetFixture(),staticBodyAllows,[],showerSupportHeight,[]);
 for(let i=0;i<=400;i++) assert.equal(canWalk(2,3.2+i*4.05/400,0),true,'Real visitor canWalk with implemented street hook');
 assert.equal(canWalk(2,8.61,0),false);
 const mesh=frontage.gateLeaf;

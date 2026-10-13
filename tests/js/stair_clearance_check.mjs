@@ -1,3 +1,4 @@
+import {staticBodyAllows,showerSupportHeight} from '../../web/house/static_clearance.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -142,8 +143,8 @@ const blockers=[...source.matchAll(/obstacle\(([\d., \-]+)\)/g)].map(m=>{
   return {x0:x-w/2-.16,x1:x+w/2+.16,z0:z-d/2-.16,z1:z+d/2+.16,level};
 });
 const lowerCabinetFixture=createLowerKitchenCabinet(T,{RoundedBoxGeometry,mergeGeometries,oak:new T.MeshStandardMaterial(),brass:new T.MeshStandardMaterial()});
-const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors','lowerCabinetDoors',
-  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows,null,lowerCabinetFixture);
+const canWalk=new Function('STEP','blockers','streetAccessAllows','photographedExterior','balconyAllows','balconyDoor','frontDoorAllows','frontDoorGroup','bathroomAllows','bathDoor','stairClearanceAllows','upperCabinetDoors','lowerCabinetDoors','staticBodyAllows','rigidPots','showerSupportHeight','rigidBoundaryBoxes',
+  walkSource+'; return canWalk;')({x0:-.2,x1:.8,zBottom:2.55,zTop:-1.7},blockers,streetAccessAllows,{gateAngle:-Math.PI*.53},balconyAllows,{openness:1},frontDoorAllows,{rotation:{y:-Math.PI*.48}},bathroomAllows,{position:{z:2.3}},allows,null,lowerCabinetFixture,staticBodyAllows,[],showerSupportHeight,[]);
 assert.equal(canWalk(.81,-.5,0),false,'Actual reachable near-plane regression');
 assert.equal(canWalk(1,1.3,0),false,'Actual visitor gate protects above-eye head/rail contact');
 assert.equal(canWalk(-.05,.85,1.2),false,'Actual visitor gate protects above-eye loft corner');

@@ -14,7 +14,9 @@ assert options.mode=='day', 'World-only direct sky is a daylight pass'
 sys.path.insert(0,str(Path(__file__).parent))
 from home_sky_contract import validate_recipe
 reference=json.loads(options.reference_manifest.read_text())
-validate_recipe(reference,hashlib.sha256(source.read_bytes()).hexdigest(),hashlib.sha256(atlas.read_bytes()).hexdigest(),options.samples,options.threads,options.seed)""")
+validate_recipe(reference,hashlib.sha256(source.read_bytes()).hexdigest(),hashlib.sha256(atlas.read_bytes()).hexdigest(),options.samples,options.threads,options.seed)
+if output.resolve() in {options.reference_manifest.resolve().parent,source.resolve().parent/'day',source.resolve().parent/'night'}:
+    raise ValueError('Sky output must not overwrite original day/night indirect data')""")
 s=once(s,'scene = bpy.context.scene',"""# Eliminate emissive material contribution as well as all light objects.
 for material in bpy.data.materials:
     if not material.use_nodes:continue
