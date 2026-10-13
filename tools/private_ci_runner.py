@@ -5,6 +5,7 @@ token file. Each runner removes its registration automatically after one job.
 The dedicated Unix user has no access to the private server/operator files.
 """
 import argparse
+import fcntl
 import hashlib
 import os
 import pwd
@@ -50,14 +51,22 @@ def main():
     root = Path(user.pw_dir) / 'runner'
     root.mkdir(mode=0o700, exist_ok=True)
     archive = Path('/tmp') / f'actions-runner-{VERSION}.tar.gz'
-    if not archive.is_file():
-        url = f'https://github.com/actions/runner/releases/download/v{VERSION}/actions-runner-linux-x64-{VERSION}.tar.gz'
-        with urllib.request.urlopen(url, timeout=60) as response, archive.open('wb') as output:
-            shutil.copyfileobj(response, output, 1024 * 1024)
-    with archive.open('rb') as source:
-        digest = hashlib.file_digest(source, 'sha256').hexdigest()
-    if digest != SHA256:
-        raise RuntimeError('Official runner release checksum mismatch')
+    with archive.with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        valid = False
+        if archive.is_file():
+            with archive.open('rb') as source:
+                valid = hashlib.file_digest(source, 'sha256').hexdigest() == SHA256
+        if not valid:
+            url = f'https://github.com/actions/runner/releases/download/v{VERSION}/actions-runner-linux-x64-{VERSION}.tar.gz'
+            partial = archive.with_suffix('.part')
+            with urllib.request.urlopen(url, timeout=60) as response, partial.open('wb') as output:
+                shutil.copyfileobj(response, output, 1024 * 1024)
+            with partial.open('rb') as source:
+                valid = hashlib.file_digest(source, 'sha256').hexdigest() == SHA256
+            if not valid:
+                raise RuntimeError('Official runner release checksum mismatch')
+            partial.replace(archive)
     with tarfile.open(archive) as packed:
         packed.extractall(root, filter='data')
     for directory, children, files in os.walk(user.pw_dir):
@@ -69,7 +78,9 @@ def main():
     # removes it immediately. It never appears in the process argument list.
     env = {'PATH': '/usr/local/bin:/usr/bin:/bin', 'LANG': 'C.UTF-8',
            'ACTIONS_RUNNER_INPUT_TOKEN': token}
-    command = ['runuser', '-u', name, '--', str(root / 'config.sh'),
+    sandbox = ['/usr/sbin/runuser', '-u', name, '--', '/usr/bin/python3',
+               '/usr/local/bin/sub01-ci-landlock', '--']
+    command = sandbox + ['/bin/bash', str(root / 'config.sh'),
                '--unattended', '--url', REPO, '--name', name,
                '--labels', 'sub01-home-private-ci', '--ephemeral',
                '--disableupdate', '--work', '_work']
@@ -82,9 +93,9 @@ def main():
     print('PRIVATE_EPHEMERAL_RUNNER_READY', name, flush=True)
     # One job only; timeout stays inside the independently enforced pod stop.
     remaining = max(1, int(DEADLINE - time.time()) - 20)
-    result = subprocess.run(['runuser', '-u', name, '--', 'timeout',
+    result = subprocess.run(sandbox + ['/usr/bin/timeout',
                              '--signal=TERM', '--kill-after=5', str(remaining),
-                             str(root / 'run.sh'), '--once'], cwd=root, env=env)
+                             '/bin/bash', str(root / 'run.sh'), '--once'], cwd=root, env=env)
     print('PRIVATE_EPHEMERAL_RUNNER_EXIT', name, result.returncode, flush=True)
 
 
