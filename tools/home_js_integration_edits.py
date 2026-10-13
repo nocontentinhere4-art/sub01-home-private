@@ -20,7 +20,7 @@ EDITS = [
      "import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';\n",
      "import { frontDoorApproach } from './front_door_access.mjs';\n"
      "import { bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';\n"
-     "import { doorState, doorTargets, fixtureLevel, roomLit, visitorDoorAllows } from './house_interactions.mjs';\n"
+     "import { actorVisible, doorState, doorTargets, fixtureLevel, roomLit, visitorDoorAllows } from './house_interactions.mjs';\n"
      "import { createHouseControlsPanel, operatorMutate } from './house_controls_panel.mjs';\n"
      "import { applyHavenSeamDetail, applyQueenBedOak } from './furnishing_detail.mjs';\n"
      "import { createBathFixtureMaterials, installBathFixture } from './bath_fixture_materials.mjs';\n"
@@ -196,4 +196,11 @@ EDITS = [
      "  sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady, officeChairReady]) {\n",
      "  sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady, officeChairReady,\n"
      "  bathFixturesReady, bathLightReady, bathDoorReady]) {\n"),
+    ("H15", "Hide the actor's body while he is away; follow camera unchanged (owner decision 2026-10-13)",
+     "owner decision 2026-10-13; 41fa350 actorVisible",
+     "  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000, following && !privacyActive, camera);\n",
+     "  // Away (presence \"away\"): no body; the camera still follows homeState.position\n"
+     "  // and the body returns on the first frame he is back (step() sets visibility).\n"
+     "  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,\n"
+     "    following && !privacyActive && actorVisible(homeState), camera);\n"),
 ]

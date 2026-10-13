@@ -18,7 +18,7 @@ diff --git a/web/house/home.js b/web/house/home.js
 -import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
 +import { frontDoorApproach } from './front_door_access.mjs';
 +import { bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
-+import { doorState, doorTargets, fixtureLevel, roomLit, visitorDoorAllows } from './house_interactions.mjs';
++import { actorVisible, doorState, doorTargets, fixtureLevel, roomLit, visitorDoorAllows } from './house_interactions.mjs';
 +import { createHouseControlsPanel, operatorMutate } from './house_controls_panel.mjs';
 +import { applyHavenSeamDetail, applyQueenBedOak } from './furnishing_detail.mjs';
 +import { createBathFixtureMaterials, installBathFixture } from './bath_fixture_materials.mjs';
@@ -239,3 +239,15 @@ diff --git a/web/house/home.js b/web/house/home.js
    assetBarrier.add(task);
  }
  const homeAssetsReady = assetBarrier.settled().then(report => {
+@@ -2954,7 +3062,10 @@ renderer.setAnimationLoop(() => {
+   accumulated = 0;
+   renderer.info.reset();
+   update(dt);
+-  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000, following && !privacyActive, camera);
++  // Away (presence "away"): no body; the camera still follows homeState.position
++  // and the body returns on the first frame he is back (step() sets visibility).
++  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,
++    following && !privacyActive && actorVisible(homeState), camera);
+   for (const panel of curtainPanels)
+     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
+   if (!startup.ready) return;

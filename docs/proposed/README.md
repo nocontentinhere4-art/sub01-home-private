@@ -33,12 +33,12 @@ new free identifiers**:
 
 ## Hunks, in order
 
-Original line numbers refer to the unpatched `home.js` at `cc51313`.
+Original line numbers refer to the unpatched `home.js` (unchanged since `7ce7a43`; verified at `be0f9ec`).
 
 | Hunk | Original lines | What | Source |
 |---|---|---|---|
 | H1 | 14 | Stop importing `balconyAllows`; H2b provides a wrapped one | `1dbcf2c` |
-| H2 | 44–45 | Stop importing `frontDoorAllows`/`bathroomAllows`. Add imports: `house_interactions`, `house_controls_panel`, `furnishing_detail`, `bath_fixture_materials`, `replaced_primitives` | `0eb0514`, `1dbcf2c`, `55e620f`, `a14e876`, furnishing/bath modules |
+| H2 | 44–45 | Stop importing `frontDoorAllows`/`bathroomAllows`. Add imports: `house_interactions` (including `actorVisible`), `house_controls_panel`, `furnishing_detail`, `bath_fixture_materials`, `replaced_primitives` | `0eb0514`, `1dbcf2c`, `55e620f`, `a14e876`, furnishing/bath modules |
 | H2b | 52 (after the last import) | `visitorDoor()` plus wrappers `balconyAllows`/`frontDoorAllows`/`bathroomAllows`. A closed or locked door blocks entry from the house, never traps the visitor, and falls back to the exact old collider for older servers. `canWalk` stays byte-identical | `1dbcf2c`/`a81430f` (checkpoint #5) |
 | H3 | 578 | `applyHavenSeamDetail`: sofa seams use the linen weave normal/roughness. The rug stays off | furnishing_detail (#6) |
 | H4 | 890–894 | `applyQueenBedOak`: queen bed wood uses the shared oak maps at 1.83 m/tile, keeping the same mean roughness and colour | furnishing_detail (#6) |
@@ -52,6 +52,16 @@ Original line numbers refer to the unpatched `home.js` at `cc51313`.
 | H12 | 1567 | Front door target = `doorWant.front` | `1dbcf2c` |
 | H13 | 1582 | Bathroom door target = `doorWant.bathroom`. The `doorOpen` name is kept, so the literal checked by tests is unchanged | `1dbcf2c` |
 | H14 | 2729 | Add `bathFixturesReady`, `bathLightReady` and `bathDoorReady` to the asset barrier, so they are hidden before startup cleanup and baking | #15 |
+| H15 | 2957 | Hide the actor's body while `presence` is `"away"` (details below) | owner decision 2026-10-13; `41fa350` `actorVisible` |
+
+### H15: hiding the actor while he is away
+
+- The render loop passes `following && !privacyActive && actorVisible(homeState)` to `firstPersonBody.step()`.
+- With `following` false, `FirstPersonActionEvidence.step()` returns `'hidden'`. `step()` then sets `firstPersonBody.group.visible = false` and stops the clip.
+- On the first frame after he is back, `step()` sets the body visible again.
+- This is done in the frame loop rather than `acceptHome`, because `step()` rewrites `group.visible` every frame; a flag set in `acceptHome` would be overwritten.
+- The follow camera is unchanged: it still follows `homeState.position`.
+- The page has no separate held-phone object attached to the actor. `phoneMesh` is the static desk prop, so it is not hidden.
 
 ### H5: the bath swap block (#15)
 
@@ -74,7 +84,7 @@ Original line numbers refer to the unpatched `home.js` at `cc51313`.
 5. Runs the same checks again.
 6. Runs the Python tests that read `home.js` before and after.
 
-Result at `cc51313`:
+Result at `be0f9ec`:
 - The patch applies.
 - `node --check` passes.
 - **22 of 26 node checks pass, both before and after; no regressions.**
