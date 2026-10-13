@@ -30,6 +30,7 @@ class MinecraftConsole:
         self.frame = None
         self.worker = self.server = None
         self.active = False
+        self._render_generation = 0
         self.last_action = ""
         self.last_decision = 0
         self.feedback = 0
@@ -82,6 +83,7 @@ class MinecraftConsole:
         if wants != self.active:
             if await self.send({"type": "active", "value": wants}):
                 self.active = wants
+                self._render_generation += 1
         if not wants or not self.state.get("connected") or self.state.get("busy"):
             return
         if time.monotonic() - self.last_decision < 2:
@@ -98,6 +100,8 @@ class MinecraftConsole:
             except ValueError:
                 continue
             if message.get("type") == "state":
+                if (bool(message.get("connected")), bool(message.get("active"))) != (bool(self.state.get("connected")), bool(self.state.get("active"))):
+                    self._render_generation += 1
                 self.state = message
                 if message.get("connected"):
                     self.status = "playing" if message.get("active") else "paused"
@@ -121,22 +125,74 @@ class MinecraftConsole:
         from playwright.async_api import async_playwright
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(headless=True)
-            page = await browser.new_page(viewport={"width": 640, "height": 360}, device_scale_factor=1)
-            showing = False
             try:
-                while True:
-                    if not self.state.get("connected"):
-                        showing = False
-                        await asyncio.sleep(.5)
-                        continue
-                    if not showing:
-                        await page.goto(f"http://127.0.0.1:{self.viewer_port}", wait_until="domcontentloaded")
-                        await page.wait_for_selector("canvas")
-                        showing = True
-                    self.frame = await page.screenshot(type="jpeg", quality=75)
-                    await asyncio.sleep(.125)
+                page = await browser.new_page(viewport={"width": 640, "height": 360}, device_scale_factor=1)
+                await self._render_frame_loop(page)
             finally:
                 await browser.close()
+
+    def _render_owner(self):
+        return (self._render_generation, bool(self.state.get("connected")), self.active,
+                bool(self.state.get("active", self.active)))
+
+    async def _render_frame_loop(self, page, sleep=asyncio.sleep):
+        """Release the WebGL viewer while idle, retaining the real last JPEG.
+
+        The Mineflayer process and Minecraft world keep running independently.
+        A single initial connected-frame bootstrap supplies the TV before play;
+        subsequent paused periods never render or repeatedly reload that viewer.
+        """
+        showing = False
+        bootstrapped = bool(self.frame)
+        while True:
+            owner = self._render_owner()
+            connected = owner[1]
+            active = connected and owner[2] and owner[3]
+            bootstrap = connected and not bootstrapped
+            try:
+                if not active and not bootstrap:
+                    if showing:
+                        await page.goto('about:blank', wait_until='domcontentloaded', timeout=10000)
+                        showing = False
+                    await sleep(.5)
+                    continue
+                if not showing:
+                    # Mark potential viewer ownership before navigation, so a
+                    # failed/obsolete load is also blanked on the idle path.
+                    showing = True
+                    await page.goto(f"http://127.0.0.1:{self.viewer_port}", wait_until='domcontentloaded', timeout=10000)
+                    if self._render_owner() != owner:
+                        continue
+                    await page.wait_for_selector('canvas', timeout=10000)
+                    if self._render_owner() != owner:
+                        continue
+                frame = await page.screenshot(type='jpeg', quality=75, timeout=10000)
+                if self._render_owner() == owner:
+                    self.frame = frame
+                    bootstrapped = True
+                    if self.error.startswith('Minecraft viewer: '):
+                        self.error = ''
+                # Immediately unload after the one inactive bootstrap rather
+                # than leaving its 60fps requestAnimationFrame loop running.
+                current = self._render_owner()
+                if not (current[1] and current[2] and current[3]) and showing:
+                    await page.goto('about:blank', wait_until='domcontentloaded', timeout=10000)
+                    showing = False
+                await sleep(.125 if current[1] and current[2] and current[3] else .5)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                self.error = 'Minecraft viewer: ' + str(error)[:160]
+                # Retry from a blank viewer, not a broken navigation/canvas.
+                # If blank itself fails, retain showing so the next idle
+                # iteration retries releasing that potentially live renderer.
+                if showing:
+                    try:
+                        await page.goto('about:blank', wait_until='domcontentloaded', timeout=10000)
+                        showing = False
+                    except Exception:
+                        pass
+                await sleep(.5)
 
     async def run(self):
         try:

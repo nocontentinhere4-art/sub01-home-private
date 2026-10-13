@@ -1,0 +1,14 @@
+{
+  "source": "https://www.innerscene.com/tools/library/3d-parts/porta-espresso-small-appliance-1ca7fb5d",
+  "download": "https://www.innerscene.com/api/library/porta-espresso-small-appliance-1ca7fb5d/download",
+  "author": "Innerscene",
+  "license": "CC0-1.0",
+  "license_primary": "https://www.innerscene.com/tools/library/terms",
+  "license_statement": "Primary part page explicitly declares original Innerscene model CC0, free commercial modification and redistribution.",
+  "source_sha256": "b51e1c8d4e17b3e569270126113ec266c52c5faa49a8383f01c2981c8bcbf8e6",
+  "source_bytes": 467556,
+  "retrieved": "2026-10-13",
+  "source_description": "Compact ivory enamel / bronze / steel espresso machine, brew head, locked portafilter, steam wand, drip grate. Authored external real-scale model; not scan.",
+  "preparation": "tools/prepare_home_cc0_espresso.py",
+  "quality_review": "No local render; server visual inspection required."
+}

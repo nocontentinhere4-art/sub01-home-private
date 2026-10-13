@@ -1,0 +1,15 @@
+{
+  "source": "https://www.innerscene.com/tools/library/3d-parts/queen-bed-with-bedding-original-interior-furnishing-ea3bae95",
+  "download": "https://www.innerscene.com/api/library/queen-bed-with-bedding-original-interior-furnishing-ea3bae95/download",
+  "author": "Innerscene",
+  "license": "CC0-1.0",
+  "license_primary": "https://www.innerscene.com/tools/library/terms",
+  "license_statement": "Primary asset page: Public domain (CC0). Free to use, modify and redistribute for any purpose, including commercially, with no credit required. Original Innerscene model.",
+  "source_sha256": "547d2acae4bebcc11bc080aa5bc708c7b8c0a45a93b08bc412411d303c99a6e7",
+  "source_bytes": 765272,
+  "retrieved": "2026-10-13",
+  "source_type": "Authored external model, not photogrammetric scan. Visual fit/quality requires server review; no claim reference quality achieved.",
+  "preparation": "tools/prepare_home_cc0_queen_bed.py",
+  "server_blender_import": "tools/import_home_cc0_bed.py",
+  "local_rendering": "None; Mac overheating respected."
+}

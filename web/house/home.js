@@ -213,7 +213,12 @@ M.counterStone = pbr("marble_slab_012", [.32, .32]);
 M.counterStone.roughness = .75;
 M.counterStone.normalScale.set(.055, .055);
 M.blue.color.set("#9bb0ad");
-M.sofa.color.set("#9ca995");
+M.sofa.color.set("#657077");
+// Painted ivory plaster: fine relief, without the scan's broad albedo clouds.
+M.wall.map = null;
+M.wall.color.set("#f2f0e9");
+M.wall.normalScale.set(.035, .035);
+M.wall.roughness = .95;
 let meshCount = 0;
 const blockers = [],
   interactions = [];
@@ -564,6 +569,8 @@ async function loadFurnished(name, x, y, z, width, rotation = 0, sourceUrl = nul
 }
 // Licensed CC0 modern linen sofa, source physical size, grouped for browser rendering.
 const havenSofaMaterials = createHavenSofaMaterials(T, loader, assetRoot, Math.min(renderer.capabilities.getMaxAnisotropy(), 8));
+havenSofaMaterials.Haven_linen.color.set('#737e87');
+havenSofaMaterials.Haven_seams.color.set('#58616a');
 const sofaReady = gltfLoader.loadAsync('/house/assets/haven-sofa/sofa.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-1.8, 0, .1);
@@ -582,23 +589,15 @@ const sofaReady = gltfLoader.loadAsync('/house/assets/haven-sofa/sofa.glb?v=1').
   console.warn('Original sofa fallback:', error.message);
   return furnished('sofa_03', -1.8, 0, .1, 2.5, -Math.PI / 2, null, 'z');
 });
-const coffeeTableReady = gltfLoader.loadAsync('/house/assets/coffee-table-original/coffee-table.glb?v=2').then(gltf => {
-  const root = gltf.scene;
-  root.position.set(-3.2, 0, .1);
-  root.rotation.y = -Math.PI / 2;
+// CC0 photographed coffee table, scaled uniformly from its measured .600 × 1.202 m footprint.
+const coffeeTableReady = furnished('modern_coffee_table_01', -3.2, 0, .1, .70, 0, null, 'x').then(root => {
+  if (!root) return;
   root.traverse(object => {
     if (!object.isMesh) return;
-    object.material = M.kitchenOak;
-    object.castShadow = object.receiveShadow = true;
-    object.userData.bakeId = 'house-coffee-table-' + object.name;
+    object.userData.bakeId = 'house-cc0-coffee-table-' + object.name;
     bakedObjects.set(object.userData.bakeId, object);
   });
-  scene.add(root);
-  document.getElementById('status').dataset.coffeeTable = 'blender-oak';
-  renderer.shadowMap.needsUpdate = true;
-}).catch(error => {
-  console.warn('Coffee table fallback:', error.message);
-  return furnished('modern_coffee_table_01', -3.2, 0, .1, .70);
+  document.getElementById('status').dataset.coffeeTable = 'cc0-photographed-modern';
 });
 furnished("potted_plant_01", -3.45, 0, 3.25, 0.7);
 furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65);
@@ -720,18 +719,20 @@ beam([-2.65,.95,-3.79],[-2.61,1.04,-3.79],.008,sinkSteel);
 const coffeeMachineFallback = box(0.33, 0.4, 0.29, -1.25, 1.12, -3.5, M.black, 0.035);
 const coffeeCupFallback = cylinder(0.06, 0.08, -1.24, 0.98, -3.27, M.white);
 for (const item of [coffeeMachineFallback, coffeeCupFallback]) item.userData.replaceable = true;
-const coffeeMachineReady = gltfLoader.loadAsync('/house/assets/coffee-machine/coffee-machine.glb?v=1').then(gltf => {
+const coffeeMachineReady = gltfLoader.loadAsync('/house/assets/cc0-porta-espresso/porta-espresso.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-1.25, .925, -3.5);
   root.traverse(object => {
     if (!object.isMesh) return;
     object.castShadow = object.receiveShadow = true;
-    object.userData.bakeId = 'house-coffee-machine-' + object.name;
+    object.userData.bakeId = 'house-cc0-porta-espresso-' + object.name;
     bakedObjects.set(object.userData.bakeId, object);
   });
   scene.add(root);
-  coffeeMachineFallback.visible = coffeeCupFallback.visible = false;
-  document.getElementById('status').dataset.coffeeMachine = 'blender-espresso';
+  coffeeMachineFallback.visible = false;
+  // The source appliance has a working-facing brew outlet; retain the separate cup.
+  coffeeCupFallback.userData.replaceable = false;
+  document.getElementById('status').dataset.coffeeMachine = 'licensed-cc0-porta-espresso';
   renderer.shadowMap.needsUpdate = true;
 }).catch(error => console.warn('Coffee machine fallback:', error.message));
 cylinder(0.09, 0.29, -3.4, 1.07, -3.45, M.stone);
@@ -853,66 +854,52 @@ const officeShelvesReady = gltfLoader.loadAsync('/house/assets/office-shelves-or
   renderer.shadowMap.needsUpdate = true;
 }).catch(error => console.warn('Office shelves fallback:', error.message));
 frame(2, 3.75, -3.885, 1.3, 1.8);
-frame(-2.2, 4.65, -3.88, 0.9, 1.2);
-// Bedroom upstairs: reference-built Blender bed, layered linen and bedside light.
+frame(-2.2, 4.95, -3.88, 0.9, 1.2);
+// Licensed real-scale queen bed: frame, mattress, pillows and duvet load together.
+// Headboard faces negative Z; measured footprint 1.70 × 2.19 m stays inside the existing collider.
 const bedFrameFallback = [
   box(1.65, 0.3, 2.25, -2.4, 3.25, -2.35, M.darkwood, 0.06),
   box(1.65, 0.98, 0.16, -2.4, 3.63, -3.5, M.cream, 0.08),
+  box(1.6, 0.2, 2.13, -2.4, 3.47, -2.35, M.white, 0.09),
 ];
-for (const object of bedFrameFallback) object.userData.replaceable = true;
-const bedOak = M.darkwood.clone(); // Share scanned maps instead of uploading them twice.
-bedOak.color.set('#e7d5b5');
-bedOak.roughness = .65;
-// Keep the scanned grain/normal detail while grading its dark-wood albedo to
-// the lighter oak reference. This does not affect other furniture materials.
+const beddingFallback = [drape(1.82, 1.7, -2.4, 3.615, -2.03, M.linen, 0.17)];
+for (const object of [...bedFrameFallback, ...beddingFallback]) object.userData.replaceable = true;
+// The existing bake material pipeline also uses this oak grade on unchanged furniture.
 function gradeOak(shader) {
   shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>',
     '#include <map_fragment>\n' +
     'diffuseColor.rgb = pow(max(diffuseColor.rgb, vec3(.0001)), vec3(.45)) * vec3(.95,.90,.80);');
 }
-bedOak.userData.lightOak = true;
-bedOak.onBeforeCompile = gradeOak;
-bedOak.customProgramCacheKey = () => 'private-bed-light-oak-v1';
-const bedFrameReady = gltfLoader.loadAsync('/house/assets/bed/bed.glb?v=1').then(gltf => {
+const bedFrameReady = gltfLoader.loadAsync('/house/assets/cc0-queen-bed/queen-bed.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-2.4, 3, -2.35);
   root.traverse(object => {
     if (!object.isMesh) return;
-    object.material = bedOak;
+    // Preserve the source fabric's authored normals/roughness, grade the bed to
+    // ivory bedding and one mustard upholstered accent against light oak.
+    const material = object.material.clone();
+    if (/upholstery/.test(material.name)) {
+      material.map = M.linen.map;
+      material.color.set(/teal/.test(material.name) ? '#b99845' : '#f7f4eb');
+      material.roughness = .92;
+    } else {
+      material.map = M.architectureOak.map;
+      material.color.set('#e7dcc9');
+      material.roughness = .82;
+    }
+    object.material = material;
     object.castShadow = object.receiveShadow = true;
-    object.userData.bakeId = 'house-bed-frame-' + object.name;
+    // New IDs and exact vertex matching reject the previous handmade bed bake.
+    object.userData.bakeId = 'house-cc0-queen-bed-' + object.name;
     bakedObjects.set(object.userData.bakeId, object);
   });
   scene.add(root);
-  for (const object of bedFrameFallback) object.visible = false;
-  document.getElementById('status').dataset.bedFrame = 'blender-oak';
+  for (const object of [...bedFrameFallback, ...beddingFallback]) object.visible = false;
+  document.getElementById('status').dataset.bedFrame = 'licensed-cc0-queen-oak';
+  document.getElementById('status').dataset.bedding = 'licensed-cc0-queen-ivory';
   renderer.shadowMap.needsUpdate = true;
-}).catch(error => console.warn('Bed frame fallback:', error.message));
-box(1.6, 0.2, 2.13, -2.4, 3.47, -2.35, M.white, 0.09);
-const beddingFallback = [drape(1.82, 1.7, -2.4, 3.615, -2.03, M.blue, 0.17)];
-for (const x of [-2.78, -2.02]) {
-  const p = box(0.65, 0.13, 0.43, x, 3.64, -3.1, M.linen, 0.06);
-  p.rotation.y = x < -2.4 ? 0.08 : -0.08;
-  beddingFallback.push(p);
-}
-beddingFallback.push(drape(1.86, 0.55, -2.4, 3.69, -1.44, M.linen, 0.22));
-for (const object of beddingFallback) object.userData.replaceable = true;
-const beddingReady = gltfLoader.loadAsync('/house/assets/bedding/bedding' + (lite ? '-lite' : '') + '.glb?v=4').then(gltf => {
-  const root = gltf.scene;
-  root.position.set(-2.4, 3.57, -2.35);
-  root.traverse(object => {
-    if (!object.isMesh) return;
-    object.material = (object.name.startsWith('Duvet') ? M.blue : M.linen).clone();
-    object.material.side = T.DoubleSide;
-    object.castShadow = object.receiveShadow = true;
-    object.userData.bakeId = "house-bedding-" + object.name;
-    bakedObjects.set(object.userData.bakeId, object);
-  });
-  scene.add(root);
-  for (const object of beddingFallback) object.visible = false;
-  document.getElementById('status').dataset.bedding = lite ? 'physical-lite' : 'physical';
-  renderer.shadowMap.needsUpdate = true;
-}).catch(error => console.warn('Bedding fallback:', error.message));
+}).catch(error => console.warn('Queen bed fallback:', error.message));
+const beddingReady = bedFrameReady;
 obstacle(-2.4, -2.35, 1.75, 2.3, 1);
 rug(2.65, 3, -2.2, 3, -1.7, "#d3c4a9");
 const nightstandFallback = box(0.48, 0.5, 0.45, -3.55, 3.25, -3.1, M.wood, 0.025);
@@ -1002,11 +989,23 @@ obstacle(-1.2, 4.55, 0.72, 0.8, 1);
 const curtains = new T.Group();
 scene.add(curtains);
 const curtainPanels = [];
+const curtainGrey = M.linen.clone();
+curtainGrey.color.set('#9a9c9a');
+const curtainSheer = M.linen.clone();
+curtainSheer.color.set('#fbfaf3');
+curtainSheer.transparent = true;
+curtainSheer.opacity = .32;
+curtainSheer.depthWrite = false;
 for (const anchor of [-3.8, -0.2]) {
-  const panel = createCurtainPanel(T, M.linen, {direction: anchor < -2 ? 1 : -1});
+  const panel = createCurtainPanel(T, curtainGrey, {direction: anchor < -2 ? 1 : -1});
   panel.group.position.set(anchor, 4.43, 3.82);
   curtains.add(panel.group);
   curtainPanels.push(panel);
+  const sheer = createCurtainPanel(T, curtainSheer, {direction: anchor < -2 ? 1 : -1, amplitude: .018});
+  sheer.group.position.set(anchor, 4.43, 3.93);
+  sheer.mesh.castShadow = false;
+  curtains.add(sheer.group);
+  curtainPanels.push(sheer);
 }
 // Warm practical lights and the afternoon sun.
 const hemi = new T.HemisphereLight("#e4eced", "#8f7965", 1.7);

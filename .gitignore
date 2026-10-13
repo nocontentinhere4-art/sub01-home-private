@@ -87,3 +87,9 @@ out/lighting-convergence-v*/
 
 # Local causal wall-lighting diagnostics, never shipped assets
 out/lighting-wall-cause/
+out/physical-driver-smoke/
+
+# Private sourcing photos and cloud transfer intermediates
+out/furniture-refresh/
+out/furniture-upgrade/
+out/server-transfer/

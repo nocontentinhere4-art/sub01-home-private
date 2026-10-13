@@ -1,4 +1,4 @@
-import copy,unittest
+import copy,unittest,math
 from tools.home_sky_contract import validate_recipe,validate_sky_pair,validate_night,validate_radiance_bounds
 class SkyContractTest(unittest.TestCase):
  def setUp(self):
@@ -27,4 +27,38 @@ class SkyContractTest(unittest.TestCase):
   for minimum,maximum,finite in [(-.001,1,True),(0,float('inf'),True),(float('nan'),1,True),(0,1,False)]:
    with self.subTest(bounds=(minimum,maximum,finite)):
     with self.assertRaises(ValueError):validate_radiance_bounds(minimum,maximum,finite)
+ def physical(self,base):
+  record=copy.deepcopy(base)
+  record.update(recipe='home-physical-source-v1',diagnostic_only=False,
+    written_receiver_ids=[str(i) for i in range(103)],device='METAL',gpu_names=['test GPU'],
+    source_recipe_sha256='a'*64,preparation_recipe_sha256='b'*64,
+    material_grades_sha256='c'*64,geometry_proof_sha256='d'*64,
+    preparation=dict(recipe='home-physical-source-v1',mode='day',hdr_strength=.4225,
+      hemisphere_intensity=.22,runtime_hdr_rotation_y=-math.pi/2,
+      cycles_hdr_lookup_rotation_z=math.pi/2,source_runtime_photometric_intensities_changed=False,
+      import_energy_factor=683,hdr_sha256='e'*64,
+      fixture_emission_policy='positive finite lampEmission metadata only, night only',
+      world_only=False,lights=[{'type':'SUN'}],enabled_fixtures=[]))
+  return record
+ def test_physical_pair_and_night(self):
+  day=self.physical(self.base);sky=self.physical(self.sky)
+  sky['preparation'].update(world_only=True,lights=[])
+  validate_sky_pair(day,sky)
+  night=copy.deepcopy(day);night['mode']='night'
+  night['preparation'].update(mode='night',hdr_strength=0,enabled_fixtures=[{'lampEmission':.6}])
+  validate_night(day,night)
+ def test_subset_or_mismatched_physics_cannot_install(self):
+  day=self.physical(self.base);sky=self.physical(self.sky)
+  sky['preparation'].update(world_only=True,lights=[])
+  changes=[('diagnostic_only',True),('written_receiver_ids',['67']),
+    ('preparation_recipe_sha256','f'*64),('device','CPU'),('gpu_names',[])]
+  for key,value in changes:
+   with self.subTest(key=key):
+    bad=copy.deepcopy(sky);bad[key]=value
+    with self.assertRaises(ValueError):validate_sky_pair(day,bad)
+  for key,value in [('hdr_sha256','f'*64),('runtime_hdr_rotation_y',0),
+    ('lights',[{'type':'SUN'}]),('enabled_fixtures',[{'lampEmission':.6}])]:
+   with self.subTest(preparation=key):
+    bad=copy.deepcopy(sky);bad['preparation'][key]=value
+    with self.assertRaises(ValueError):validate_sky_pair(day,bad)
 if __name__=='__main__':unittest.main()
