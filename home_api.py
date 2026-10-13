@@ -314,7 +314,8 @@ def add_home_routes(app, live, admin_ok):
         native_operator(request)
         # Use the actual object, never the privacy-redacted public view.
         return web.json_response({'target': live.home.target, 'sequence': live.home.sequence,
-                                  'activity': live.home.activity}, headers={'Cache-Control': 'no-store'})
+                                  'activity': live.home.activity, 'privacy': live.home.privacy()},
+                                 headers={'Cache-Control': 'no-store'})
 
     async def minecraft_frame(request):
         enabled()
