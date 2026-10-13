@@ -19,7 +19,7 @@ READ=(1<<0)|(1<<2)|(1<<3)
 FILE_RW=(1<<1)|(1<<2)
 CONNECT=1<<1
 BIND=1<<0
-PROTECTED_PORTS=frozenset({8798,8799,8811,8820,8821,8888,8890})
+PROTECTED_PORTS=frozenset({8798,8799,8803,8811,8820,8821,8888,8890,25569})
 
 def tcp_rules(ephemeral_low,ephemeral_high):
     """Allow test listeners/rebinding without granting private service ports."""

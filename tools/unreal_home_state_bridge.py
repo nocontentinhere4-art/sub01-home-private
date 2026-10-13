@@ -394,6 +394,11 @@ class BackendFeed:
             text = await resp.text()
             return resp.status, text
 
+    async def post_native_state(self, session, report):
+        async with session.post(self.base + '/api/home/native_state', json=report,
+                                headers=self.headers(), allow_redirects=False) as resp:
+            return resp.status, await resp.text()
+
 
 async def read_json(request):
     if request.content_length is not None and request.content_length > MAX_BODY:
@@ -483,6 +488,36 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
                                   "doors": settings.get("doors"), "lights": settings.get("lights"),
                                   "note": "Operator modes accepted by the backend; the published state follows its next tick."})
 
+    async def native_state(request):
+        # Check the actual peer, never forwarded address headers.
+        import ipaddress
+        try:
+            local = ipaddress.ip_address(request.remote or '').is_loopback
+        except ValueError:
+            local = False
+        if not local:
+            raise web.HTTPForbidden(text='Native feedback requires loopback')
+        data = await read_json(request)
+        doc = model.document()
+        actor, brain = doc.get('actor') or {}, doc.get('brain') or {}
+        if (doc['source']['status'] != 'live' or doc.get('privacy') is not False
+                or data.get('epoch') != model.epoch
+                or type(data.get('sequence')) is not int
+                or data['sequence'] != actor.get('route_sequence')
+                or data.get('activity') != brain.get('activity')):
+            raise web.HTTPConflict(text='Native feedback does not match live command')
+        if feed is None:
+            raise web.HTTPServiceUnavailable(text='No backend configured')
+        try:
+            status, text = await feed.post_native_state(request.app[SESSION], data)
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            raise web.HTTPServiceUnavailable(text='Home backend unavailable')
+        if status != 200:
+            error = {400: web.HTTPBadRequest, 403: web.HTTPForbidden,
+                     409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}.get(status, web.HTTPBadGateway)
+            raise error(text='Native feedback refused by backend')
+        return web.json_response({'ok': True, 'fresh_for_s': 3})
+
     async def lifecycle(app):
         app[SESSION] = (session_factory or (lambda: aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10))))()
@@ -506,6 +541,7 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/home/state", state)
     app.router.add_post("/home/controls", controls)
+    app.router.add_post('/home/native_state', native_state)
     return app
 
 

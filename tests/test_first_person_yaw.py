@@ -166,3 +166,10 @@ def test_patched_native_keeps_path_and_bounds_turn(path, state, reset):
     assert f"{state}Ready" in fields and reset in methods
     # The rotation is still set before the unchanged movement input.
     assert methods.index(f"SetControlRotation(FRotator(-4,{state},0))") < methods.index(MOVE)
+
+
+@pytest.mark.parametrize("dt", [1e-6, 1e-5, 1e-4])
+@pytest.mark.parametrize("delta", [-0.04, 0.04])
+def test_final_settling_still_respects_rate_for_short_frames(dt, delta):
+    nxt = fy.step_yaw(179.99, 179.99 + delta, dt)
+    assert abs(fy.shortest_delta(179.99, nxt)) <= fy.MAX_RATE_DEG_S * dt + 1e-9

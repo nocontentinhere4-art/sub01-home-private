@@ -18,7 +18,7 @@ from pathlib import Path
 
 POD = '80lf8giw6ft61v'
 REPO = 'https://github.com/nocontentinhere4-art/sub01-home-private'
-DEADLINE = 1791932256
+DEADLINE = 1791936589
 MINIMUM_JOB_WINDOW = 21 * 60  # Workflow's 20-minute limit plus result-upload/shutdown time.
 VERSION = '2.338.0'
 SHA256 = 'af4b794c1bc41d73d40535e3fe092a39f9679cd8d965954c2aca25a05ca41d32'

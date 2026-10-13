@@ -14,6 +14,7 @@ def test_ephemeral_listener_can_rebind_its_allocated_port():
 def test_private_services_have_no_bind_or_connect_grant():
     rules = dict(tcp_rules(32768, 60999))
     assert PROTECTED_PORTS.isdisjoint(rules)
+    assert {8803, 25569}.issubset(PROTECTED_PORTS)  # Product game viewer and server.
     assert 8799 not in rules  # Private browser, as well as VM/admin services.
     assert 80 in rules and rules[80] == CONNECT
     assert rules[443] == CONNECT

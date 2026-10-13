@@ -64,9 +64,9 @@ def step_yaw(current, target, dt, max_rate=MAX_RATE_DEG_S, response=RESPONSE_PER
         return wrap_degrees(current)
     dt = min(dt, MAX_DT_S)
     delta = shortest_delta(current, target)
-    if abs(delta) <= SNAP_DEG:
-        return wrap_degrees(target)
     limit = max_rate * dt
+    if abs(delta) <= min(SNAP_DEG, limit):
+        return wrap_degrees(target)
     turn = max(-limit, min(limit, delta * (1 - math.exp(-response * dt))))
     return wrap_degrees(current + turn)
 
@@ -107,7 +107,7 @@ def smooth_yaw_cpp(state, ready, indent):
         f"{i}if(!{ready}||!FMath::IsFinite({state})){{{state}=Controller->GetControlRotation().Yaw;{ready}=true;}}\n"
         f"{i}if(YawDt>0&&FMath::IsFinite(TargetYaw)){{\n"
         f"{i} const float Turn=FMath::FindDeltaAngleDegrees({state},TargetYaw),Limit={MAX_RATE_DEG_S:.4f}f*YawDt;\n"
-        f"{i} {state}=FRotator::NormalizeAxis(FMath::Abs(Turn)<={SNAP_DEG:g}f?TargetYaw:{state}+FMath::Clamp(Turn*(1-FMath::Exp(-{RESPONSE_PER_S:g}.f*YawDt)),-Limit,Limit));\n"
+        f"{i} {state}=FRotator::NormalizeAxis(FMath::Abs(Turn)<=FMath::Min({SNAP_DEG:g}f,Limit)?TargetYaw:{state}+FMath::Clamp(Turn*(1-FMath::Exp(-{RESPONSE_PER_S:g}.f*YawDt)),-Limit,Limit));\n"
         f"{i}}}\n"
         f"{i}Controller->SetControlRotation(FRotator(-4,{state},0));\n"
     ).replace("0.05f", ".05f")

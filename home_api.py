@@ -3,6 +3,7 @@
 import json
 import math
 import time
+import ipaddress
 from collections import OrderedDict
 from pathlib import Path
 from aiohttp import web
@@ -278,6 +279,28 @@ def add_home_routes(app, live, admin_ok):
         await live.save_state()
         return web.json_response({"game": chosen})
 
+    async def native_state(request):
+        enabled()
+        operator(request)
+        try:
+            local = ipaddress.ip_address(request.remote or '').is_loopback
+        except ValueError:
+            local = False
+        if not local:
+            raise web.HTTPForbidden(text='Native feedback requires a loopback consumer')
+        data = await body(request)
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        from home_world import NODES
+        try:
+            live.home.native_feedback.accept(data, sequence=live.home.sequence,
+                activity=live.home.activity, target=live.home.target, nodes=NODES)
+        except ValueError as error:
+            raise web.HTTPBadRequest(text=str(error))
+        except RuntimeError as error:
+            raise web.HTTPConflict(text=str(error))
+        return web.json_response({'ok': True, 'fresh_for_s': 3}, headers={'Cache-Control': 'no-store'})
+
     async def minecraft_frame(request):
         enabled()
         if private():
@@ -311,4 +334,5 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post('/api/home/browser', navigate)
     app.router.add_post('/api/home/browser/action', browser_action)
     app.router.add_post("/api/home/game", game)
+    app.router.add_post('/api/home/native_state', native_state)
     app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)

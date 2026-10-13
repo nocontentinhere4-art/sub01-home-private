@@ -28,7 +28,7 @@
 +  if(!RouteViewYawReady||!FMath::IsFinite(RouteViewYaw)){RouteViewYaw=Controller->GetControlRotation().Yaw;RouteViewYawReady=true;}
 +  if(YawDt>0&&FMath::IsFinite(TargetYaw)){
 +   const float Turn=FMath::FindDeltaAngleDegrees(RouteViewYaw,TargetYaw),Limit=103.1324f*YawDt;
-+   RouteViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=.05f?TargetYaw:RouteViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
++   RouteViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=FMath::Min(.05f,Limit)?TargetYaw:RouteViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
 +  }
 +  Controller->SetControlRotation(FRotator(-4,RouteViewYaw,0));
    AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));
@@ -66,7 +66,7 @@
 +  if(!LiveHomeViewYawReady||!FMath::IsFinite(LiveHomeViewYaw)){LiveHomeViewYaw=Controller->GetControlRotation().Yaw;LiveHomeViewYawReady=true;}
 +  if(YawDt>0&&FMath::IsFinite(TargetYaw)){
 +   const float Turn=FMath::FindDeltaAngleDegrees(LiveHomeViewYaw,TargetYaw),Limit=103.1324f*YawDt;
-+   LiveHomeViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=.05f?TargetYaw:LiveHomeViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
++   LiveHomeViewYaw=FRotator::NormalizeAxis(FMath::Abs(Turn)<=FMath::Min(.05f,Limit)?TargetYaw:LiveHomeViewYaw+FMath::Clamp(Turn*(1-FMath::Exp(-4.f*YawDt)),-Limit,Limit));
 +  }
 +  Controller->SetControlRotation(FRotator(-4,LiveHomeViewYaw,0));
 +  AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));

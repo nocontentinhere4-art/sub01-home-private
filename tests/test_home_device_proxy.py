@@ -43,3 +43,70 @@ def test_actual_phone_pixels_actions_and_midflight_privacy():
         finally:
             gate.set();await client.close();await device.close();await upstream.close()
     asyncio.run(run())
+
+
+def test_phone_navigation_uses_current_frame_auth_and_private_backend():
+    async def run():
+        current = {'frame': 'current-a', 'private': False}
+        calls = []
+        entered, release = asyncio.Event(), asyncio.Event()
+        blocked = False
+        runner = SimpleNamespace(privacy=False, privacy_epoch=0)
+        async def state(request):
+            assert request.headers['X-Admin-Token'] == 'existing-operator'
+            return web.json_response({'home': {'privacy': current['private']},
+                                      'phone_browser_screen': {'frame_id': current['frame']}})
+        async def navigate(request):
+            assert request.headers['X-Admin-Token'] == 'existing-operator'
+            calls.append(await request.json())
+            if blocked:
+                entered.set()
+                await release.wait()
+            return web.json_response({'ok': True})
+        app = web.Application()
+        app.router.add_get('/api/home', state)
+        app.router.add_post('/api/home/browser', navigate)
+        upstream = TestServer(app)
+        await upstream.start_server()
+        device = proxy.HomeDeviceProxy(str(upstream.make_url('')).rstrip('/'), 'existing-operator', runner)
+        app = web.Application()
+        app.router.add_post('/{device}/action', device.action)
+        # The standalone runner applies authentication before this proxy handler.
+        client = TestClient(TestServer(app))
+        await client.start_server()
+        def body(url='https://example.org/page', frame='current-a'):
+            return {'action': 'navigate', 'url': url, 'frame_id': frame}
+        try:
+            assert (await client.post('/phone/action', json=body())).status == 200
+            assert calls == [{'device': 'phone', 'url': 'https://example.org/page'}]
+            for url in ['http://example.org', 'https://127.0.0.1', 'https://[::1]',
+                        'https://169.254.169.254', 'https://localhost', 'https://host.internal',
+                        'https://u:p@example.org', 'https://example.org:444', 'javascript:alert(1)',
+                        'https://example.org/\npage', 'https://bad_.org', 'https://[broken']:
+                assert (await client.post('/phone/action', json=body(url))).status == 400
+            assert len(calls) == 1
+            assert (await client.post('/phone/action', json=body(frame='stale'))).status == 409
+            assert (await client.post('/phone/action', json=body(frame=None))).status == 409
+            current['frame'] = None
+            assert (await client.post('/phone/action', json=body(frame=['bad']))).status == 409
+            assert (await client.post('/phone/action', json=body(frame=None))).status == 200
+            assert len(calls) == 2
+            blocked = True
+            pending = asyncio.ensure_future(client.post('/phone/action', json=body(frame=None)))
+            await entered.wait()
+            current['private'] = True
+            release.set()
+            assert (await pending).status == 409
+            current['private'] = False
+            entered.clear(); release.clear()
+            pending = asyncio.ensure_future(client.post('/phone/action', json=body(frame=None)))
+            await entered.wait()
+            runner.privacy = True; runner.privacy_epoch += 1
+            release.set()
+            assert (await pending).status == 409
+            assert (await client.post('/phone/action', json=body(frame=None))).status == 409
+            assert len(calls) == 4
+        finally:
+            release.set()
+            await client.close(); await device.close(); await upstream.close()
+    asyncio.run(run())
