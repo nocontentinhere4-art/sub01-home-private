@@ -189,7 +189,11 @@ void USub01PCBridge::PumpGraphicalInput(){
  const uint64 Epoch=Generation;
  auto Finish=[this,Epoch,Ticket](bool OK){
   if(Epoch!=Generation||!GraphicalInputs.Complete(Ticket))return;
-  if(!OK){GraphicalInputs.Cancel();SetOperatorFocus(false);Status=TEXT("Graphical input unavailable or refused");return;}
+  if(!OK){
+   // Do not recursively enqueue a release if ProcessRequest itself failed.
+   GraphicalInputs.Cancel();Focused=false;ResetNativeModifiers();
+   SendFlag(TEXT("/pc/session"),false,[](bool){});Status=TEXT("Graphical input unavailable or refused");return;
+  }
   PumpGraphicalInput();
  };
  Request->OnProcessRequestComplete().BindWeakLambda(this,[Finish](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){Finish(OK&&Response&&Response->GetResponseCode()==200);});
