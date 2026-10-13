@@ -156,3 +156,24 @@ def test_cli_validates_a_renderer_json_contract(clip, tmp_path, capsys):
     frames[1]["local_rotations"]["mixamorig:LeftHandIndex1"] = [0, 0, 0, 1]
     path.write_text(json.dumps({"hand": "Left", "frames": frames}))
     assert h.main(["validate", str(CLIP_PATH), str(path)]) == 1
+
+
+def test_left_elbow_lock_is_the_fit_ik_reach_clamp_not_the_capture(clip):
+    """room_build/kimodo_g12/rt.py two_bone clamps reach to (l1+l2)*0.9995. During
+    3-8 s the left arm sits exactly at that clamp on every frame: mx_fit's wrist goal
+    (row keys [0, -0.11] for room_mx_typing) was out of reach, so the fit locked the
+    elbow straight; the original capture's elbow motion is not what we see here."""
+    rt = (ROOT / "room_build/kimodo_g12/rt.py").read_text()
+    assert "(l1 + l2) * 0.9995" in rt
+
+    clips = json.loads((ROOT / "room_build/kimodo/mx_clips.json").read_text())
+    text = json.dumps(clips)
+    assert '"out": "room_mx_typing", "keys": [0, -0.11]' in text
+    for t in [t for t in clip.frame_times if 3.0 <= t <= 8.0]:
+        S, E, W = arm_points(clip.pose(t), "Left")
+        reach = np.linalg.norm(E - S) + np.linalg.norm(W - E)
+        assert abs(np.linalg.norm(W - S) / reach - 0.9995) < 2e-5
+    right = [np.linalg.norm(arm_points(clip.pose(t), "Right")[2] - arm_points(clip.pose(t), "Right")[0])
+             / sum(np.linalg.norm(b - a) for a, b in zip(arm_points(clip.pose(t), "Right"), arm_points(clip.pose(t), "Right")[1:]))
+             for t in np.arange(3.0, 8.0, 0.1)]
+    assert min(right) < 0.99, "the right arm leaves the clamp (it genuinely bends) in the same window"
