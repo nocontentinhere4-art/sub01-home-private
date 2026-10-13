@@ -9,6 +9,7 @@ import heapq
 import math
 import random
 from console_requests import valid_choice
+import home_interactions as hi
 
 # xyz = walking-eye positions in the rendered house, metres.
 NODES = {
@@ -242,6 +243,11 @@ class HomeWorld:
                                   and len(doors) == 4
                                   and all(isinstance(v, bool) for v in doors)
                                   else [False] * 4)
+        # Additive operator modes (auto/open/closed doors, auto/on/off lights).
+        self.settings["doors"] = hi.normalise_modes(
+            self.settings.get("doors"), hi.DOOR_NAMES, hi.DOOR_MODES)
+        self.settings["lights"] = hi.normalise_modes(
+            self.settings.get("lights"), hi.LIGHT_ROOMS, hi.LIGHT_MODES)
         self.node = s.get("node", "desk") if s.get("node") in NODES else "desk"
         self.position = list(NODES[self.node])
         self.target = self.node
@@ -286,6 +292,18 @@ class HomeWorld:
             "battery": int(s.get("battery", 100)),
         }
         self.phone_elapsed = 0
+        self.now = None
+        self.interactions = hi.HouseInteractions(s.get("interactions"))
+        self.interactions.update(0, self._actor(), self.settings, None)
+
+    def _actor(self):
+        return {"position": self.position, "node": self.node, "path": self.path,
+                "target": self.target, "activity": self.activity, "seated": self.seated}
+
+    def privacy(self):
+        """The one authoritative bathroom privacy decision (view, devices, API)."""
+        return hi.privacy(self.position, self.node, self.path,
+                          self.interactions.doors["bathroom"]["locked"])
 
     def desired(self, activity):
         return DESTINATIONS.get(activity, "desk")
@@ -297,8 +315,10 @@ class HomeWorld:
                 and self.node == self.desired(expected)
                 and (self.node not in ("desk", "sofa", "bed") or self.seated == 1))
 
-    def update(self, dt, sim_dt, life, rel):
+    def update(self, dt, sim_dt, life, rel, now=None):
         self.time += dt
+        if now is not None:
+            self.now = now
         activity = life.get("activity", "research")
         pending = valid_choice(life.get('console_wish'))
         self.pending_console_game = pending[0] if pending else None
@@ -307,6 +327,11 @@ class HomeWorld:
             self.console_game = choice[0]
             self.last_console_choice = choice
         target = self.desired(activity)
+        if (target != "outside" and life.get("place") in hi.OUTDOOR_PLACES
+                and (self.target == "outside" or self.node == "outside")):
+            # Still out on the real streets: stay outside the front door
+            # until the life walk is back at it, then return through it.
+            target = "outside"
         self.bladder = min(1, self.bladder + max(0, sim_dt) / 18000)
         if target != self.target:
             # Finish current edge before replanning; no teleports through furniture.
@@ -393,6 +418,15 @@ class HomeWorld:
         self.phone["app"] = (
             screen.get("kind", "browser") if activity == "phone" else self.phone["app"]
         )
+        self.interactions.update(dt, self._actor(), self.settings, self.now)
+
+    def settings_view(self):
+        view = dict(self.settings)
+        for key in ("cabinets", "lowerCabinets"):
+            view[key] = list(view[key])
+        for key in ("doors", "lights"):
+            view[key] = dict(view[key])
+        return view
 
     def add_note(self, text):
         text = str(text).strip()[:2000]
@@ -417,11 +451,8 @@ class HomeWorld:
             p[1] -= 0.6 * self.seated
             p[0] -= 1.2 * self.seated
             p[2] += 0.3 * self.seated
-        privacy = (
-            self.position[1] > 3
-            and -3.78 < self.position[0] < -0.85
-            and 0.5 < self.position[2] < 2.7
-        )
+        privacy = self.privacy()
+        house = self.interactions.view(self.settings)
         return {
             "version": 1,
             "position": [round(v, 4) for v in p],
@@ -435,9 +466,12 @@ class HomeWorld:
             "privacy": privacy,
             "seated": round(self.seated, 3),
             "sequence": self.sequence,
-            "door_open": self.position[1] < 3
-            and math.hypot(self.position[0] - 2, self.position[2] - 3.9) < 1.8,
-            "settings": dict(self.settings),
+            # Legacy flag, now the server front door state (approach included).
+            "door_open": house["doors"]["front"]["open"],
+            "doors": house["doors"],
+            "lights": house["lights"],
+            "presence": house["presence"],
+            "settings": self.settings_view(),
             "console_game": self.console_game,
             "pending_console_game": self.pending_console_game,
             "phone": dict(self.phone),
@@ -466,7 +500,8 @@ class HomeWorld:
                 "gain": self.pong.gain,
                 "matches": self.pong.matches,
             },
-            "settings": dict(self.settings),
+            "settings": self.settings_view(),
+            "interactions": self.interactions.to_dict(),
             "notes": self.notes,
             "memories": self.memories[-100:],
             "phone_app": self.phone["app"],

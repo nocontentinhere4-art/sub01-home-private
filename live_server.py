@@ -981,7 +981,7 @@ class Live:
             self.life.music = self.music.tick_view()
             msg["life"] = self.life.snapshot()
             if self.home:
-                self.home.update(TICK, TICK*self.time_scale, msg["life"], rel)
+                self.home.update(TICK, TICK*self.time_scale, msg["life"], rel, now=tsim)
                 msg["home"] = self.home.view(compact=True)
                 msg["home"]["devices"] = device_revisions(self, msg["home"].get("privacy"))
                 if self.home.pong.reward:
