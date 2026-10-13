@@ -44,6 +44,9 @@ jobs:
           cache-dependency-path: requirements-server.txt
       # Torch remains optional. The operator integration tests require real Chromium.
       - run: pip install -r requirements-server.txt pytest
+      - name: Install Chromium system libraries on hosted runner
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.private_runner) }}
+        run: python -m playwright install-deps chromium
       - name: Install browser used by operator integration tests
         run: python -m playwright install chromium
       - run: python -m pytest -q tests/
