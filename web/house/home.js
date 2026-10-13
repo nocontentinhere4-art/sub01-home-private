@@ -26,6 +26,8 @@ import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
 import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
+import { createMinecraftFrameFeed, actionErrorMessage } from "./device_requests.mjs?v=1";
+import { createPhoneScreen } from "./phone_screen.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
 import { createSettledAssetBarrier } from "./settled_asset_barrier.mjs?v=1";
@@ -1624,7 +1626,7 @@ let homeState = null,
 const lookOffset = new T.Vector2();
 const panel = document.getElementById("panel"),
   panelBody = document.getElementById("panel-body");
-let deskBitmapPainter = null, minecraftBitmapPainter = null;
+let deskBitmapPainter = null, minecraftBitmapPainter = null, phoneScreen = null;
 const deviceScreenLights = [];
 function updateDeviceScreenLights(dt) {
   for (const device of deviceScreenLights)
@@ -1636,6 +1638,7 @@ function updateDeviceScreenLights(dt) {
 function invalidateDeviceBitmaps() {
   deskBitmapPainter?.invalidate();
   minecraftBitmapPainter?.invalidate();
+  phoneScreen?.invalidate();
 }
 const browserControls = new Map();
 function disposeBrowserControls() {
@@ -1706,7 +1709,11 @@ async function mutate(action, data) {
       notice("Operator access is required to edit his devices.");
       return false;
     }
-    if (!response.ok) throw Error(response.status);
+    if (!response.ok) {
+      const reason = await actionErrorMessage(response);
+      if (reason) { notice(reason); return false; }
+      throw Error(response.status);
+    }
     const result = await response.json();
     if (result.ok === false) {
       notice("This device is not ready yet. Try again after it connects.");
@@ -1852,9 +1859,6 @@ function refreshPanelScreens() {
     if (!image.isConnected) { controls.dispose(); browserControls.delete(image); }
     else void controls.refresh();
   }
-  if (privacyActive || homeState?.privacy) return;
-  const gameImage = panelBody.querySelector("[data-minecraft-frame]");
-  if (gameImage) gameImage.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
 }
 function renderPanel(reset = false) {
   if (reset) disposeBrowserControls();
@@ -1961,12 +1965,11 @@ function renderPanel(reset = false) {
       if (minecraftState.enabled) choices.append(consoleChoice("Minecraft", "minecraft"));
       panelBody.append(choices);
       if (tvGame === "minecraft") {
-        const image = new Image();
-        image.alt = "SUB-01’s live Minecraft viewpoint";
+        // Mirrors the TV canvas; the TV's frame feed repaints it (no second download).
+        const image = Object.assign(document.createElement("canvas"), { width: 800, height: 460 });
+        image.setAttribute("aria-label", "SUB-01’s live Minecraft viewpoint");
         image.dataset.minecraftFrame = "1";
-        image.src = "/api/home/minecraft/frame.jpg?t=" + Date.now();
-        image.onerror = () => { image.hidden = true; };
-        image.onload = () => { image.hidden = false; };
+        image.getContext("2d").drawImage(tvCanvas, 0, 0);
         panelBody.append(image, textEl("p", "His persistent Minecraft world. He plays when he chooses the console.", "muted"));
         panelBody.append(textEl("p", "", "muted"));
         panelBody.lastChild.id = "minecraft-status";
@@ -2342,7 +2345,7 @@ interactions.push({
   fn: () => openPanel("pong"),
 });
 drawPong(tvCanvas);
-minecraftBitmapPainter = createOwnedBitmapPainter({
+minecraftBitmapPainter = createMinecraftFrameFeed({
   getContextKey: () => tvGame === 'minecraft' && minecraftState.has_frame ? 'minecraft' : null,
   isActive: () => !privacyActive && !homeState?.privacy && !document.hidden,
   getURL: () => '/api/home/minecraft/frame.jpg',
@@ -2352,8 +2355,7 @@ minecraftBitmapPainter = createOwnedBitmapPainter({
   paint: image => {
     tvCanvas.getContext('2d').drawImage(image, 0, 0, 800, 460);
     tvTexture.needsUpdate = true;
-    const expanded = panelBody.querySelector('[data-minecraft-frame]');
-    if (expanded) expanded.src = '/api/home/minecraft/frame.jpg?t=' + Date.now();
+    panelBody.querySelector('[data-minecraft-frame]')?.getContext('2d').drawImage(image, 0, 0, 800, 460);
   },
 });
 setInterval(() => { void minecraftBitmapPainter.update(); }, 150);
@@ -2380,10 +2382,21 @@ for (const part of [phoneSpeaker, phoneVolume, phonePower]) {
   phoneDisplay.attach(part);
 }
 let phoneDisplayKey = "";
+// The real phone app/browser frame while he uses the phone; idle screen otherwise.
+phoneScreen = createPhoneScreen({
+  canvas: phoneCanvas, texture: phoneTexture,
+  getState: () => ({
+    activity: homeState?.activity, app: homeState?.phone?.app, battery: homeState?.phone?.battery,
+    frameId: phoneBrowserScreen?.frame_id, title: phoneBrowserScreen?.title,
+    privacy: privacyActive || !!homeState?.privacy, hidden: document.hidden,
+    time: phoneClockFormat.format(new Date(homeTime * 1000)),
+  }),
+});
 const phoneClockFormat = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit",
 });
 function drawPhone() {
+  if (phoneScreen.update()) { phoneDisplayKey = ""; return; }
   const time = phoneClockFormat.format(new Date(homeTime * 1000));
   const battery = homeState?.phone?.battery;
   const key = `${time}/${battery ?? "—"}`;

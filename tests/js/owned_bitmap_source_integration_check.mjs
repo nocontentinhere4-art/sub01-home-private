@@ -1,8 +1,9 @@
 import assert from'node:assert/strict';
 import fs from'node:fs';
 import{createOwnedBitmapPainter}from'../../web/house/owned_bitmap_painter.mjs';
+import{createMinecraftFrameFeed}from'../../web/house/device_requests.mjs';
 const source=fs.readFileSync(new URL('../../web/house/home.js',import.meta.url),'utf8');
-function assignment(name){const a=source.indexOf(`${name} = createOwnedBitmapPainter({`),b=source.indexOf('\n});',a);assert.ok(a>0&&b>a);return source.slice(a,b+4);}
+function assignment(name){const a=source.search(new RegExp(`${name} = create(?:OwnedBitmapPainter|MinecraftFrameFeed)\\(\\{`)),b=source.indexOf('\n});',a);assert.ok(a>0&&b>a);return source.slice(a,b+4);}
 function functionCode(name,next){
  const named=/^(?:async\s+)?function\s+(\w+)/.exec(name)?.[1]||(/^[A-Za-z_]\w*$/.test(name)?name:null);
  const a=named?new RegExp(`(?:async\\s+)?function\\s+${named}\\s*\\(`).exec(source)?.index:source.indexOf(name);
@@ -19,13 +20,13 @@ const screenLights=functionCode('const deviceScreenLights = [];','function inval
 const flush=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
 const ok=()=>({ok:true,blob:async()=>({jpeg:true})});
 function fixture(){
- const draws={tv:[],tvFallback:[],desk:[],fallback:[]},tvContent={kind:'pong',label:'Pong'},expanded={src:'unchanged'},requests=[],decodes=[],configs=[],timers=new Map(),events=new Map();let timerId=0;
+ const draws={tv:[],tvFallback:[],desk:[],fallback:[]},tvContent={kind:'pong',label:'Pong'},expandedDraws=[],expanded={src:'unchanged',getContext:()=>({drawImage:(...args)=>expandedDraws.push(args)})},requests=[],decodes=[],configs=[],timers=new Map(),events=new Map();let timerId=0;
  const tvContext={drawImage:(...args)=>{draws.tv.push(args);tvContent.kind='bitmap';},fillRect:(...args)=>{draws.tvFallback.push(['fillRect',...args]);tvContent.kind='cleared';},fillText:(...args)=>{draws.tvFallback.push(['fillText',...args]);tvContent.label=args[0];}};
  const scope={homeState:{activity:'watch_video',privacy:false},privacyActive:false,document:{hidden:false},browserScreen:{frame_id:'BROWSER-UUID:47'},
   tvGame:'minecraft',minecraftState:{has_frame:true},tvTexture:{needsUpdate:false},st:{needsUpdate:false},
   tvCanvas:{getContext:()=>tvContext},
   sx:{fillRect:(...args)=>draws.desk.push(['fillRect',...args]),drawImage:(...args)=>draws.desk.push(['drawImage',...args]),fillText:(...args)=>draws.fallback.push(args)},
-  panelBody:{querySelector:()=>expanded},deskBitmapPainter:null,minecraftBitmapPainter:null};
+  panelBody:{querySelector:()=>expanded},deskBitmapPainter:null,minecraftBitmapPainter:null,phoneScreen:null};
  Object.assign(scope,{keys:{},drag:false,visitorMotion:{reset(){}},lite:false,renderer:{shadowMap:{}},
   closePanel(){},phoneMusicFeed:{stop(){}},browserControls:new Map(),panelKind:'',phoneApp:'home',refreshPanelScreens(){},
   lastConsoleGame:'minecraft',lastFullHome:null,onlineAt:0,brainStage:'awake',upperCabinetDoors:null,lowerCabinetDoors:{setTargets(){}},
@@ -39,9 +40,10 @@ function fixture(){
    decode:blob=>new Promise((resolve,reject)=>decodes.push({blob,resolve,reject})),
   });
  };
- const controls=new Function('scope','createOwnedBitmapPainter',`with(scope){${screenLights}\n${invalidate}\n${unavailable}\n${minecraftUnavailable}\n${assignment('minecraftBitmapPainter')}\n${assignment('deskBitmapPainter')}\n${update}\n${privacy}\n${accept}\n${visibility}\nreturn{minecraftBitmapPainter,deskBitmapPainter,invalidateDeviceBitmaps,updateRealBrowser,setPrivacy,acceptHome};}`)(scope,factory);
+ const feed=config=>createMinecraftFrameFeed({...config,painterFactory:factory});
+ const controls=new Function('scope','createOwnedBitmapPainter','createMinecraftFrameFeed',`with(scope){${screenLights}\n${invalidate}\n${unavailable}\n${minecraftUnavailable}\n${assignment('minecraftBitmapPainter')}\n${assignment('deskBitmapPainter')}\n${update}\n${privacy}\n${accept}\n${visibility}\nreturn{minecraftBitmapPainter,deskBitmapPainter,invalidateDeviceBitmaps,updateRealBrowser,setPrivacy,acceptHome};}`)(scope,factory,feed);
  const close=()=>{controls.minecraftBitmapPainter.dispose();controls.deskBitmapPainter.dispose();assert.equal(timers.size,0);};
- return{scope,draws,tvContent,expanded,requests,decodes,configs,controls,events,timers,close};
+ return{scope,draws,tvContent,expanded,expandedDraws,requests,decodes,configs,controls,events,timers,close};
 }
 const image=name=>({name,closed:0,close(){this.closed++;}});
 // Execute actual factory config callbacks, changing only deferred transport and
@@ -86,7 +88,8 @@ for(const transition of[
  for(let i=0;i<2;i++){
   const p=f.controls.minecraftBitmapPainter.update();f.requests[i].resolve(ok());await flush();const frame=image('minecraft-'+i);f.decodes[i].resolve(frame);assert.equal(await p,true);assert.equal(frame.closed,1);
  }
- assert.equal(f.draws.tv.length,2);assert.equal(f.expanded.src.startsWith('/api/home/minecraft/frame.jpg?t='),true);
+ assert.equal(f.draws.tv.length,2);assert.equal(f.expandedDraws.length,2,'expanded panel mirrors each painted frame');
+ assert.equal(f.expanded.src,'unchanged');assert.equal(f.requests.length,2,'no second download for the expanded panel');
  const desk=f.controls.deskBitmapPainter.update();f.requests[2].resolve(ok());await flush();const frame=image('desk');f.decodes[2].resolve(frame);assert.equal(await desk,true);assert.equal(frame.closed,1);
  assert.equal(await f.controls.deskBitmapPainter.update(),true);assert.equal(f.requests.length,3,'actual desktop config skips already-painted same revision');
  assert.equal(f.draws.desk.filter(r=>r[0]==='drawImage').length,1);f.close();

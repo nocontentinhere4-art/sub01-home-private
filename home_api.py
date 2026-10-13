@@ -1,5 +1,6 @@
 """Home APIs: shared devices, bounded public Pong input, authenticated editing."""
 
+import hashlib
 import json
 import math
 import time
@@ -221,9 +222,16 @@ def add_home_routes(app, live, admin_ok):
         if private():
             raise web.HTTPConflict(text="Bathroom privacy is active")
         console = getattr(live, "minecraft", None)
-        if not console or not console.frame:
+        frame = console.frame if console else None
+        if not frame:
             raise web.HTTPNotFound(text="Minecraft has no live frame yet")
-        return web.Response(body=console.frame, content_type="image/jpeg", headers={"Cache-Control": "no-store"})
+        # Frame identity: the page polls during live play, but an unchanged
+        # picture (a paused game) costs an empty 304 instead of the JPEG.
+        tag = '"' + hashlib.blake2b(frame, digest_size=12).hexdigest() + '"'
+        headers = {"Cache-Control": "no-store", "ETag": tag}
+        if request.headers.get("If-None-Match") == tag:
+            return web.Response(status=304, headers=headers)
+        return web.Response(body=frame, content_type="image/jpeg", headers=headers)
 
     async def house(request):
         enabled()
