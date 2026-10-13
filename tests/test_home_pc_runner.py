@@ -220,3 +220,60 @@ def test_raw_input_stays_one_json_line_to_the_isolated_worker(tmp_path):
         message = __import__("json").loads(lines[0])
         assert message == {"type": "input", "text": payload}
     run(body())
+
+
+def test_actual_frame_protocol_requires_auth_revision_and_privacy():
+    async def body():
+        http, runner, computer = await started()
+        try:
+            assert (await http.get('/pc/frame.png')).status == 403
+            assert (await http.get('/pc/frame.png', headers=AUTH)).status == 404
+            computer.framebuffer_png = b'\x89PNG\r\n\x1a\nactual-test-frame'
+            computer.display = {'kind': 'graphical', 'available': True, 'revision': 12}
+            response = await http.get('/pc/frame.png?revision=12', headers=AUTH)
+            assert response.status == 200 and await response.read() == computer.framebuffer_png
+            assert response.headers['Cache-Control'] == 'no-store'
+            assert response.headers['ETag'] == '"vga-12"'
+            assert (await http.get('/pc/frame.png?revision=11', headers=AUTH)).status == 409
+            assert (await http.get('/pc/frame.png', headers={**AUTH, 'If-None-Match': '"vga-12"'})).status == 304
+            await runner.set_privacy(True)
+            assert (await http.get('/pc/frame.png', headers={**AUTH, 'If-None-Match': '"vga-12"'})).status == 409
+            state = await (await http.get('/pc/state', headers=AUTH)).json()
+            assert 'display' not in state and state['output'] == ''
+        finally:
+            await http.close()
+    run(body())
+
+
+
+def test_graphical_guest_ps2_input_is_bounded_authenticated_and_privacy_safe():
+    async def body():
+        http, runner, computer = await started()
+        events = []
+        gate = asyncio.Event()
+        async def guest_input(data):
+            if data.get('scancodes') == [30, 158]:
+                await gate.wait()
+            events.append(data)
+            return True
+        computer.graphical_input = guest_input
+        try:
+            assert (await http.post('/pc/graphical-input', json={'type': 'vga-keyboard', 'scancodes': [30]})).status == 403
+            assert (await http.post('/pc/graphical-input', json={'type': 'vga-keyboard', 'scancodes': [30]}, headers=AUTH)).status == 409
+            computer.display = {'kind': 'graphical', 'available': True, 'revision': 1}
+            assert (await http.post('/pc/graphical-input', json={'type': 'vga-keyboard', 'scancodes': [256]}, headers=AUTH)).status == 400
+            assert (await http.post('/pc/graphical-input', json={'type': 'vga-keyboard', 'scancodes': [True]}, headers=AUTH)).status == 400
+            mouse = {'type': 'vga-mouse', 'dx': 4, 'dy': -2, 'wheel': 0, 'buttons': [True, False, False]}
+            assert (await http.post('/pc/graphical-input', json=mouse, headers=AUTH)).status == 200
+            assert events == [mouse]
+            pending = asyncio.ensure_future(http.post('/pc/graphical-input', json={'type': 'vga-keyboard', 'scancodes': [30, 158]}, headers=AUTH))
+            await asyncio.sleep(.01)
+            await runner.set_privacy(True)
+            gate.set()
+            assert (await pending).status == 409
+            assert computer.paused and computer.sent[-1] == 'pause'
+            assert (await http.post('/pc/graphical-input', json=mouse, headers=AUTH)).status == 409
+        finally:
+            gate.set()
+            await http.close()
+    run(body())

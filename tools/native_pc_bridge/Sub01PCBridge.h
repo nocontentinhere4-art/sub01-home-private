@@ -6,8 +6,8 @@ class UMeshComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class UCanvasRenderTarget2D;
-class UCanvas;
 class UTexture2D;
+class UCanvas;
 class FJsonObject;
 class IInputProcessor;
 
@@ -25,18 +25,24 @@ public:
  UFUNCTION(BlueprintCallable) void SubmitTypedLine();
  UFUNCTION(BlueprintPure) FString GetPCStatus() const { return Status; }
  bool IsAcceptingNativeInput() const { return Focused&&!Private&&!LocalPrivacy; }
+ bool IsGraphicalInputActive() const { return IsAcceptingNativeInput()&&GuestPS2Input; }
+ void SendGraphicalKey(uint32 ScanCode,bool Shift,bool Control,bool Alt);
+ void SendGraphicalMouse(float DeltaX,float DeltaY,float Wheel,bool Left,bool Middle,bool Right);
  void AppendNativeCharacter(TCHAR Character);
  void BackspaceNativeCharacter();
 protected:
  virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
  // Loopback only: remote backend access needs an approved private tunnel/relay.
- const FString Origin=TEXT("http://127.0.0.1:8798");
+ FString Origin=TEXT("http://127.0.0.1:8798");
  FString OperatorToken, TerminalOutput, TypedLine, Status=TEXT("PC backend disconnected");
  bool Focused=false, Busy=false, Private=true, LocalPrivacy=false, CommandBusy=false;
  double LastSessionHeartbeat=0;
  bool PrivacyDesired=false, PrivacyAcknowledged=false, PrivacyKnown=false, PrivacyRequestPending=false;
  double LastPrivacyAttempt=-10;
+ bool FrameBusy=false,GuestPS2Input=false;
+ FString FrameRevision;
+ UPROPERTY() TObjectPtr<UTexture2D> GraphicalFrame;
  uint64 Generation=0;
  FTimerHandle PollTimer;
  TSharedPtr<IInputProcessor> NativeInputProcessor;
@@ -49,6 +55,8 @@ private:
  void SendFlag(const FString& Path, bool Active, TFunction<void(bool)> Done);
  bool IsPublicState(const TSharedPtr<FJsonObject>& State) const;
  void ClearPrivateState(const FString& Reason);
+ void SendGraphicalInput(const TSharedPtr<FJsonObject>& Body);
+ void FetchGraphicalFrame(const TSharedPtr<FJsonObject>& State);
  void ApplyTerminal(const TSharedPtr<FJsonObject>& State);
 
  UFUNCTION() void DrawTerminal(UCanvas* Canvas, int32 Width, int32 Height);
