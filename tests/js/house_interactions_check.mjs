@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {doorTargets, fixtureLevel, houseStatus, roomLit, roomOf} from '../../web/house/house_interactions.mjs';
+import {doorSide, doorState, doorTargets, fixtureLevel, houseStatus, roomLit, roomOf, visitorDoorAllows,
+  visitorDoorOpen} from '../../web/house/house_interactions.mjs';
 
 // Legacy server (no doors/lights): page proximity and master lamp decide.
-assert.deepEqual(doorTargets({}, {front: true}), {front: true, bathroom: false, balcony: false});
+assert.deepEqual(doorTargets({}, [0, 1.65, 0], {front: true}), {front: true, bathroom: false, balcony: false});
 assert.equal(roomLit({}, 'kitchen', true), true);
 assert.equal(roomLit({}, 'kitchen', false), false);
 
@@ -15,11 +16,18 @@ const state = {
     bedroom: {on: false, mode: 'auto'}, bathroom: {on: true, mode: 'auto'}}},
   presence: 'away',
 };
-// A locked door ignores the explore camera; a closed-mode door too.
-assert.deepEqual(doorTargets(state, {front: true, bathroom: true, balcony: false}),
+// A closed or locked door does not open for a visitor approaching from the
+// house; legacy proximity flags are ignored once the server reports doors.
+assert.deepEqual(doorTargets(state, [2, 1.65, 3.2], {front: true, bathroom: true}),
   {front: false, bathroom: false, balcony: true});
-assert.equal(doorTargets({doors: {front: door(false, false, 'closed')}}, {front: true}).front, false);
-assert.equal(doorTargets({doors: {front: door(false)}}, {front: true}).front, true);
+assert.equal(doorTargets({doors: {front: door(false)}}, [2, 1.65, 3.2], {front: true}).front, false);
+// From the dead-end side it opens so he can let himself back in.
+assert.equal(doorTargets(state, [2, 1.65, 4.8]).front, true);
+assert.equal(doorTargets(state, [-1.5, 4.65, 1.35]).bathroom, true);
+assert.equal(doorState({open: false, locked: true}), 'locked');
+assert.equal(doorState({open: true, locked: false, state: 'open'}), 'open');
+assert.equal(doorState(null), null);
+assert.equal(visitorDoorOpen('front', null, [2, 1.65, 4.8]), null);
 assert.deepEqual(houseStatus(state), {presence: 'away', frontLocked: true, bathroomLocked: true});
 assert.equal(houseStatus({presence: 'bogus'}).presence, 'home');
 
@@ -57,4 +65,57 @@ print(json.dumps(h.view(compact=True)))
 assert.equal(views.privacy, true);
 assert.equal(doorTargets(views, {bathroom: true}).bathroom, false);
 assert.equal(roomLit(views, 'bathroom'), true);
+
+// ---- visitor movement through doors ----------------------------------
+const DOORS = {
+  front: {feet: 0, main: [2, 3.2], dead: [2, 4.8], closed: 0, open: -Math.PI * .48},
+  bathroom: {feet: 3, main: [-.5, 1.35], dead: [-1.5, 1.35], closed: 1.35, open: 2.3},
+  balcony: {feet: 3, main: [-2.2, 3.2], dead: [-2.2, 4.4], closed: 0, open: 1},
+};
+// Axis-separated steps exactly like home.js canWalk callers.
+function walk(name, from, to, state, leaf, steps = 400) {
+  const f = DOORS[name].feet;
+  let [x, z] = from;
+  for (let i = 0; i < steps; i++) {
+    const dx = Math.max(-.02, Math.min(.02, to[0] - x)), dz = Math.max(-.02, Math.min(.02, to[1] - z));
+    if (visitorDoorAllows(name, [x, z], [x + dx, z], f, state, leaf)) x += dx;
+    if (visitorDoorAllows(name, [x, z], [x, z + dz], f, state, leaf)) z += dz;
+  }
+  return [x, z];
+}
+const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
+for (const [name, d] of Object.entries(DOORS)) {
+  assert.equal(doorSide(name, ...d.main, d.feet), 'main', name);
+  assert.equal(doorSide(name, ...d.dead, d.feet), 'dead', name);
+  assert.equal(doorSide(name, ...d.dead, d.feet ? 0 : 3), 'other', name);
+  // Open: passes both ways.
+  assert.ok(near(walk(name, d.main, d.dead, 'open', d.open), d.dead), name + ' open entry');
+  assert.ok(near(walk(name, d.dead, d.main, 'open', d.open), d.main), name + ' open exit');
+  for (const st of ['closed', 'locked']) {
+    // Closed/locked: no entry, even while the leaf is still visually open.
+    for (const leaf of [d.closed, d.open]) {
+      const end = walk(name, d.main, d.dead, st, leaf);
+      assert.equal(doorSide(name, ...end, d.feet), 'main', `${name} ${st} blocks entry`);
+    }
+    // Never trapped: from the dead side or any doorway point he gets back in,
+    // with the leaf shut or anywhere in between.
+    assert.ok(near(walk(name, d.dead, d.main, st, d.closed), d.main), `${name} ${st} exit`);
+    const mid = [(d.main[0] + d.dead[0]) / 2, (d.main[1] + d.dead[1]) / 2];
+    for (const leaf of [d.closed, (d.closed + d.open) / 2, d.open])
+      assert.ok(near(walk(name, mid, d.main, st, leaf), d.main), `${name} ${st} doorway exit`);
+    // From the doorway he cannot continue further into the dead end.
+    const deeper = walk(name, mid, d.dead, st, d.closed);
+    assert.notEqual(doorSide(name, ...deeper, d.feet), 'dead', `${name} ${st} no entry from doorway`);
+  }
+}
+// A leaf that swung onto the visitor never pins him: he can step off it.
+assert.equal(visitorDoorAllows('front', [1.5, 3.2], [1.5, 4.5], 0, 'open', -Math.PI * .48), false, 'leaf is solid');
+assert.ok(walk('front', [1.5, 4.5], [2, 4.5], 'open', -Math.PI * .48)[0] > 1.9);
+// Fixed walls still apply when letting himself out of the bathroom.
+assert.equal(visitorDoorAllows('bathroom', [-1.5, .55], [-.85, .55], 3, 'locked', 1.35), false);
+// Another floor: the door's own collider decides (unchanged behaviour).
+assert.equal(visitorDoorAllows('bathroom', [-.5, 1.35], [-1.5, 1.35], 0, 'locked', 1.35), true);
+// Legacy server: exactly the old collider.
+assert.equal(visitorDoorAllows('front', [2, 3.2], [2, 3.9], 0, null, 0), false);
+assert.equal(visitorDoorAllows('front', [2, 3.2], [2, 3.9], 0, null, -Math.PI * .48), true);
 console.log('house interactions ok');
