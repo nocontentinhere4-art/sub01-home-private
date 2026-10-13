@@ -106,7 +106,8 @@ def test_runtime_convention_matches_js_check():
 
 def test_mesh_roles_match_runtime_material_helper():
     roles = dict(re.findall(r"(\w+): '(\w+)'", MATERIALS_JS.split('});')[0]))
-    assert sorted(roles) == bath.MESH_ROLES
+    # The helper also serves the bath light/door (tests/test_home_bath_light_door.py).
+    assert set(bath.MESH_ROLES) <= set(roles)
     for name, fixture in bath.FIXTURES.items():
         data = bath.sidecar(name, fixture)
         assert data['mesh_roles'] == sorted({p['mesh'] for p in fixture['parts']})
