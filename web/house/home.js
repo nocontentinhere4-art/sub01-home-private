@@ -19,6 +19,8 @@ import { createCurtainPanel } from "./curtain_panels.mjs";
 import { createWovenRugMaterial, createWovenRugGeometries } from "./woven_rug_material.mjs";
 import { createCleanKitchenOak, cleanKitchenBoxUv } from "./clean_oak_material.mjs";
 import { createHavenSofaMaterials } from "./haven_sofa_materials.mjs";
+import { attachUpperCabinetDoors } from "./cabinet_doors.mjs?v=1";
+import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
 import { FirstPersonLook } from "./first_person_look.mjs";
@@ -615,6 +617,7 @@ for (const x of [-3.3, -2.6, -1.9, -1.2]) {
 }
 const cabinetFallback = box(3.1, .7, .36, -2.2, 2.05, -3.71, M.white, .012);
 cabinetFallback.userData.replaceable = true;
+let upperCabinetDoors = null;
 const kitchenCabinetReady = gltfLoader.loadAsync('/house/assets/kitchen-cabinet-original/cabinet.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-2.2, 2.05, -3.71);
@@ -626,6 +629,19 @@ const kitchenCabinetReady = gltfLoader.loadAsync('/house/assets/kitchen-cabinet-
     bakedObjects.set(object.userData.bakeId, object);
   });
   scene.add(root);
+  upperCabinetDoors = attachUpperCabinetDoors(T, root, {
+    interactions,
+    getPositions: () => [camera.position.toArray(), homeState?.position].filter(Boolean),
+    onBlocked: notice,
+    onToggle: async (index, open) => {
+      const cabinets = [...(homeState?.settings?.cabinets || [false, false, false, false])];
+      cabinets[index] = open;
+      const result = await mutate("settings", {cabinets});
+      if (result?.cabinets) upperCabinetDoors.setTargets(result.cabinets);
+      return !!result;
+    },
+  });
+  if (homeState?.settings?.cabinets) upperCabinetDoors.setTargets(homeState.settings.cabinets);
   cabinetFallback.visible = false;
   document.getElementById('status').dataset.kitchenCabinet = 'blender-four-door';
   renderer.shadowMap.needsUpdate = true;
@@ -975,6 +991,12 @@ Object.assign(sun.shadow.camera, {
 sun.shadow.normalBias = 0.025;
 sun.shadow.bias = -0.00025;
 scene.add(sun, sun.target);
+const sunlightShadowFit = createShadowFit(T);
+let sunlightShadowFitReady = false;
+function fitSunlightShadow() {
+  const fit = sunlightShadowFit.fit(sun);
+  if (fit) document.getElementById("status").dataset.shadowFit = JSON.stringify({...fit, ...sunlightShadowFit.coverage(sun)});
+}
 const glowMat = new T.MeshStandardMaterial({
   color: "#fff0ce",
   emissive: "#ffcf84",
@@ -1138,6 +1160,7 @@ function lighting(timestamp = Date.now() / 1000) {
   sun.intensity = currentLight.sunIntensity;
   sun.castShadow = !lite && currentLight.sunIntensity > .01;
   sun.position.set(...currentLight.sunPosition);
+  if (sunlightShadowFitReady && sun.castShadow) fitSunlightShadow();
   sun.color.set(currentLight.sunColor);
   const hasIndirect = indirectMaterials.length > 0;
   hemi.intensity = currentLight.hemisphere * (hasIndirect ? 0.55 : 1);
@@ -1276,6 +1299,7 @@ function canWalk(x, z, feet) {
     x > 3.78 ||
     z < -3.78 ||
     !stairClearanceAllows(x, z, feet) ||
+    (upperCabinetDoors && !upperCabinetDoors.allowsPosition(x, z, feet)) ||
     !balconyAllows(x, z, feet, balconyDoor.openness) ||
     !frontDoorAllows(x, z, feet, frontDoorGroup.rotation.y) ||
     !bathroomAllows(x, z, feet, bathDoor.position.z) ||
@@ -1482,6 +1506,8 @@ function update(dt) {
     );
     camera.rotation.set(pitch, yaw, 0);
   }
+  const cabinetMoving = upperCabinetDoors?.update(dt) || false;
+  if (upperCabinetDoors) document.getElementById("status").dataset.cabinetDoors = JSON.stringify(upperCabinetDoors.snapshot());
   const p = camera.position;
   const balconyMoving = balconyDoor.update(dt,
     balconyApproach([p.x,p.y,p.z]) || balconyApproach(homeState?.position));
@@ -1508,7 +1534,7 @@ function update(dt) {
     dt,
     doorOpen,
   );
-  const doorMotion = balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
+  const doorMotion = cabinetMoving || balconyMoving || Math.abs(frontDoorGroup.rotation.y - (entranceOpen ? -Math.PI * .48 : 0)) > .001 ||
     Math.abs(bathDoor.position.z - (doorOpen ? 2.3 : 1.35)) > .001;
   if (doorShadowRefresh.step(dt,doorMotion) && !lite && !privacyActive) renderer.shadowMap.needsUpdate = true;
   document.getElementById("status").dataset.doorShadowRefreshes = String(doorShadowRefresh.count);
@@ -2380,6 +2406,7 @@ function acceptHome(state) {
     ? "Bathroom · privacy mode"
     : state.activity.replaceAll("_", " ") + " · " + brainStage;
   const settings = state.settings || {};
+  if (upperCabinetDoors) upperCabinetDoors.setTargets(settings.cabinets || [false, false, false, false]);
   const changed = lampOn !== settings.lamp || curtainOpen !== settings.curtain;
   lampOn = settings.lamp !== false;
   curtainOpen = !!settings.curtain;
@@ -2591,7 +2618,7 @@ async function applyContactLighting() {
       const worldGeometry = part.geometry.clone().applyMatrix4(part.matrixWorld);
       const worldBounds = new T.Box3().setFromBufferAttribute(worldGeometry.attributes.position);
       const matches = object => {
-        if (!object || !unused.has(object) || object.userData.flexibleCloth) return false;
+        if (!object || !unused.has(object) || object.userData.excludeStaticBake || object.userData.flexibleCloth) return false;
         if ((object.geometry.index?.count ?? object.geometry.attributes.position.count) !==
           (worldGeometry.index?.count ?? worldGeometry.attributes.position.count)) return false;
         if (!sourcePositions.has(object)) {
@@ -2615,6 +2642,7 @@ async function applyContactLighting() {
       }
       if (
         !original ||
+        original.userData.excludeStaticBake ||
         original.userData.flexibleCloth ||
         !part.geometry.attributes.uv1
       ) {
@@ -2649,7 +2677,7 @@ async function applyContactLighting() {
       if (useIndirectLighting) {
         original.material.aoMap = null;
         original.material.lightMap = ao;
-        // Cycles' white diffuse bake is outgoing radiance; Three expects irradiance.
+        // Receiver-albedo-excluded diffuse bake is outgoing radiance; Three expects irradiance.
         original.material.lightMapIntensity = currentLight.daylight * Math.PI;
         original.material.onBeforeCompile = (shader) => {
           shader.uniforms.homeNightLightMap = nightLightUniform;
@@ -2731,6 +2759,12 @@ renderer.setAnimationLoop(() => {
   if (!startup.ready) return;
   document.getElementById('status').dataset.exterior = photographedExterior.activate() ? 'residential-tokyo-360-static' : 'legacy-fallback';
   photographedExterior.update(dt,currentLight.hour);
+  if (!lite && !sunlightShadowFitReady) {
+    sunlightShadowFit.capture(scene, homeShadowSweptBounds(T));
+    sunlightShadowFitReady = true;
+    fitSunlightShadow();
+    renderer.shadowMap.needsUpdate = true;
+  }
   document.getElementById("status").dataset.sunDust = sunDust.update(dt,currentLight,curtainOpen,camera.position) ? String(sunDust.count) : "off";
   if (!privacyActive)
     for (const view of windowViews)

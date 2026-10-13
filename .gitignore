@@ -68,3 +68,9 @@ out/sofa-reference/
 
 # Isolated real guest snapshot verification (private runtime state)
 out/vm-overlap-proof/
+
+# Matched private shadow quality studies
+out/shadow-fit/
+
+# Private cabinet geometry and integration audit
+out/cabinet-interaction/

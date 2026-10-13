@@ -104,3 +104,32 @@ def test_public_input_limits_and_disabled_house():
             await c.close()
 
     asyncio.run(run())
+
+
+def test_shared_cabinet_targets_persist_and_invalid_edit_is_atomic():
+    async def run():
+        c, live = await client()
+        try:
+            opened = [True, False, True, False]
+            r = await c.post("/api/home/settings", json={"cabinets": opened})
+            assert r.status == 403
+            assert live.home.settings["cabinets"] == [False] * 4
+            r = await c.post("/api/home/settings", json={"cabinets": opened},
+                             headers={"X-Admin-Token": "test"})
+            assert r.status == 200
+            d = await (await c.get("/api/home")).json()
+            assert d["home"]["settings"]["cabinets"] == opened
+            restored = HomeWorld(live.home.to_dict())
+            assert restored.settings["cabinets"] == opened
+            restored.settings["cabinets"][0] = False
+            assert live.home.settings["cabinets"][0] is True
+            for invalid in [None, True, [], [True]*5, [0, False, True, False]]:
+                r = await c.post("/api/home/settings", json={"lamp": False, "cabinets": invalid},
+                                 headers={"X-Admin-Token": "test"})
+                assert r.status == 400
+                assert live.home.settings["lamp"] is True
+                assert live.home.settings["cabinets"] == opened
+            assert HomeWorld({"settings": {"cabinets": [1]*4}}).settings["cabinets"] == [False]*4
+        finally:
+            await c.close()
+    asyncio.run(run())

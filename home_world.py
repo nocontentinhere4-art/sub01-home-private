@@ -236,6 +236,11 @@ class HomeWorld:
         if self.console_game not in ("pong", "chess", "minecraft"):
             self.console_game = "pong"
         self.settings = {"lamp": True, "curtain": False, **s.get("settings", {})}
+        cabinets = self.settings.get("cabinets")
+        self.settings["cabinets"] = (list(cabinets) if isinstance(cabinets, list)
+                                     and len(cabinets) == 4
+                                     and all(isinstance(v, bool) for v in cabinets)
+                                     else [False] * 4)
         self.node = s.get("node", "desk") if s.get("node") in NODES else "desk"
         self.position = list(NODES[self.node])
         self.target = self.node
