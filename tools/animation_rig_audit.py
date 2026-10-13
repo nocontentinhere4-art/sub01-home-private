@@ -39,6 +39,7 @@ remains required.
 Usage:
   python tools/animation_rig_audit.py report  [--output OUT.json] [--step N]
   python tools/animation_rig_audit.py candidate [--output OUT.json]
+  python tools/animation_rig_audit.py segments [--output OUT.json]   (rank capture windows)
 Default outputs go to the system temp directory, never into the repository.
 """
 
@@ -576,6 +577,139 @@ def candidate_data(step=10, target=TARGET, clips=None):
     }
 
 
+# ---------------------------------------------------------------- capture window search
+# Existing genuine typing/desk captures (Mixamo captures baked onto the owner skeleton, plus the staged clip).
+TYPING_CAPTURES = {
+    "typing": ROOT / "web/house/assets/first-person/typing.glb",
+    "room_mx_typing": ROOT / "web/room/mh_mx/room_mx_typing.glb",
+    "room_mx_sit_to_type": ROOT / "web/room/mh_mx/room_mx_sit_to_type.glb",
+    "room_mx_type_to_sit": ROOT / "web/room/mh_mx/room_mx_type_to_sit.glb",
+}
+NON_THUMB = ("Index", "Middle", "Ring", "Pinky")
+HOOK_RATIO = 4.0          # interphalangeal (L2+L3) flexion more than 4x the knuckle (L1) flexion: hooked
+ELBOW_MIN_RANGE = 10.0    # degrees of genuine elbow bend change inside a window
+WRIST_P95_SPEED = 60.0    # cm/s; typing wrists drift, they do not fling
+WRIST_MAX_SPEED = 150.0   # cm/s; anything above is a capture pop
+
+
+def rest_bend_axis(rig, name):
+    """Joint-local flexion axis from rest only: bone x palm normal (positive = toward this hand's palm)."""
+    hand = "Left" if name.startswith("Left") else "Right"
+    i = rig.idx(name)
+    bone = rig.t[rig.idx(name[:-1] + str(int(name[-1]) + 1))]
+    normal = qrot(qinv(world_q(rig.rest[i])), palm_normal(rig.rest, rig, hand))
+    axis = np.cross(bone, normal)
+    return axis / np.linalg.norm(axis)
+
+
+def frame_series(clip):
+    """Per frame and hand: knuckle/interphalangeal flexion, elbow bend, wrist and index-tip positions,
+    and the 15 finger local rotations (levels 1-3) used for the activity count."""
+    rig = clip.rig
+    axes = {n: rest_bend_axis(rig, n) for n in finger_joint_names(levels=(1, 2, 3))}
+    out = {h: {"l1": [], "ip": [], "elbow": [], "wrist": [], "tip": [], "quats": []} for h in HANDS}
+    for r, t in clip.frames():
+        world = rig.world(r, t)
+        for hand in HANDS:
+            s = out[hand]
+            flex = {n: twist_angle(qmul(qinv(rig.r[rig.idx(n)]), r[rig.idx(n)]), axes[n])
+                    for n in finger_joint_names(hand)}
+            s["l1"].append(np.mean([flex[f"{hand}Hand{f}1"] for f in NON_THUMB]))
+            s["ip"].append(np.mean([flex[f"{hand}Hand{f}2"] + flex[f"{hand}Hand{f}3"] for f in NON_THUMB]))
+            arm, fore, wrist = (world[rig.idx(hand + b)][:3, 3] for b in ("Arm", "ForeArm", "Hand"))
+            u, v = fore - arm, wrist - fore
+            s["elbow"].append(math.degrees(math.acos(np.clip(np.dot(u, v) / np.linalg.norm(u) / np.linalg.norm(v), -1, 1))))
+            s["wrist"].append(wrist)
+            s["tip"].append(world[rig.idx(hand + "HandIndex4")][:3, 3])
+            s["quats"].append([r[rig.idx(n)] for n in finger_joint_names(hand)])
+    return {h: {k: np.array(v, float) for k, v in s.items()} for h, s in out.items()}, np.array(clip.times)
+
+
+def score_window(series, times, a, b):
+    """Metrics and score for frames [a, b] (inclusive).  Score = mean of per-hand balance and activity,
+    per-hand wrist plausibility, left elbow genuineness and loop closure, each in [0, 1]."""
+    hands, parts = {}, []
+    dt = np.diff(times[a:b + 1])
+    for hand in HANDS:
+        s = series[hand]
+        l1, ip = float(s["l1"][a:b + 1].mean()), float(s["ip"][a:b + 1].mean())
+        q = s["quats"][a:b + 1]
+        moving = int(np.sum(np.max(2 * np.degrees(np.arccos(np.clip(np.abs(np.sum(q * q[0], axis=2)), 0, 1))), axis=0) > 2.0))
+        w = s["wrist"][a:b + 1]
+        speed = np.linalg.norm(np.diff(w, axis=0), axis=1) / np.maximum(dt, 1e-6)
+        elbow = s["elbow"][a:b + 1]
+        gap = max(float(np.linalg.norm(w[-1] - w[0])), float(np.linalg.norm(s["tip"][b] - s["tip"][a])))
+        ratio = ip / max(l1, 1.0)
+        m = {"l1_flexion_mean_deg": l1, "l2_l3_flexion_mean_deg": ip, "ip_to_l1_ratio": ratio,
+             "hooked": bool(ratio > HOOK_RATIO), "moving_finger_joints_gt_2deg": moving,
+             "wrist_path_cm": float(np.sum(speed * dt)), "wrist_speed_p95_cm_s": float(np.percentile(speed, 95)),
+             "wrist_speed_max_cm_s": float(speed.max()), "elbow_bend_mean_deg": float(elbow.mean()),
+             "elbow_bend_range_deg": float(elbow.max() - elbow.min()), "endpoint_gap_cm": gap}
+        m["wrist_plausible"] = bool(m["wrist_speed_p95_cm_s"] < WRIST_P95_SPEED and m["wrist_speed_max_cm_s"] < WRIST_MAX_SPEED)
+        hands[hand] = m
+        parts += [min(1.0, (l1 / max(ip, 1e-6)) / 0.5) if l1 > 0 else 0.0, moving / 15.0, float(m["wrist_plausible"])]
+    left_elbow = hands["Left"]["elbow_bend_range_deg"]
+    gap = max(h["endpoint_gap_cm"] for h in hands.values())
+    parts += [min(1.0, left_elbow / ELBOW_MIN_RANGE), 1.0 / (1.0 + gap / 2.0)]
+    flags = [f"{h} hook" for h, m in hands.items() if m["hooked"]]
+    flags += [f"{h} <15 moving finger joints" for h, m in hands.items() if m["moving_finger_joints_gt_2deg"] < 15]
+    flags += [f"{h} implausible wrist" for h, m in hands.items() if not m["wrist_plausible"]]
+    if left_elbow < ELBOW_MIN_RANGE:
+        flags.append("left elbow nearly straight-locked")
+    return {"start": float(times[a]), "end": float(times[b]), "score": float(np.mean(parts)),
+            "loop_gap_cm": gap, "flags": flags, "hands": hands}
+
+
+def scan_segments(captures=None, lengths=(3.0, 4.0, 5.0, 6.0), stride=1, top=8):
+    """Slide windows over every capture (stride in frames; the captures are 30 fps) and rank them.
+    Top windows are de-duplicated: a window overlapping a better one by more than half is skipped."""
+    captures = TYPING_CAPTURES if captures is None else captures
+    windows, inputs, seen = [], {}, {}
+    for name, path in captures.items():
+        clip = load_clip(path)
+        series, times = frame_series(clip)
+        inputs[name] = {"path": str(Path(path).relative_to(ROOT)) if Path(path).is_relative_to(ROOT) else str(path),
+                        "sha256": clip.rig.dump["sha256"], "duration": float(times[-1]), "frames": len(times)}
+        twin = next((other for other, (s2, t2) in seen.items() if len(t2) == len(times) and np.allclose(t2, times)
+                     and all(np.allclose(series[h][k], s2[h][k], atol=1e-4) for h in HANDS for k in ("l1", "ip", "elbow", "wrist"))), None)
+        seen[name] = (series, times)
+        if twin is not None:
+            inputs[name]["duplicate_of"] = twin  # same motion (e.g. the staged clip is a rest-identical retarget)
+            continue
+        if times[-1] < min(lengths):
+            inputs[name]["skipped"] = "shorter than the shortest window"
+            continue
+        for length in lengths:
+            for a in range(0, len(times), stride):
+                b = int(np.searchsorted(times, times[a] + length - 1e-6))
+                if b >= len(times):
+                    break
+                w = score_window(series, times, a, b)
+                w.update(capture=name, length=length)
+                windows.append(w)
+    windows.sort(key=lambda w: (-w["score"], w["capture"], w["start"], w["length"]))
+    best = []
+    for w in windows:
+        if all(o["capture"] != w["capture"] or
+               min(o["end"], w["end"]) - max(o["start"], w["start"]) <= 0.5 * min(o["length"], w["length"]) for o in best):
+            best.append(w)
+        if len(best) >= top:
+            break
+    reference = {}
+    for i, w in enumerate(windows):
+        if w["capture"] in ("typing", "room_mx_typing") and w["length"] == 5.0 and abs(w["start"] - 3.0) < 1e-3:
+            reference[w["capture"]] = {**w, "rank": i + 1, "of": len(windows)}
+    # the least hooked left hand among windows whose left elbow genuinely bends
+    bending = [w for w in windows if w["hands"]["Left"]["elbow_bend_range_deg"] >= ELBOW_MIN_RANGE]
+    least_hook = sorted(bending, key=lambda w: (w["hands"]["Left"]["ip_to_l1_ratio"], w["start"]))[:3]
+    return {"inputs": inputs, "windows_scored": len(windows), "lengths_s": list(lengths), "stride_frames": stride,
+            "thresholds": {"hook_ratio": HOOK_RATIO, "left_elbow_min_range_deg": ELBOW_MIN_RANGE,
+                           "wrist_p95_cm_s": WRIST_P95_SPEED, "wrist_max_cm_s": WRIST_MAX_SPEED},
+            "top": best, "reference_3_8s": reference, "least_left_hook_with_bending_elbow": least_hook,
+            "windows_without_flags": sum(not w["flags"] for w in windows),
+            "note": "Joint data only; candidates need native first-person visual and contact review."}
+
+
 def to_jsonable(x):
     if isinstance(x, dict):
         return {str(k): to_jsonable(v) for k, v in x.items()}
@@ -590,13 +724,18 @@ def to_jsonable(x):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=("report", "candidate"))
+    ap.add_argument("command", choices=("report", "candidate", "segments"))
     ap.add_argument("--output")
     ap.add_argument("--step", type=int, default=5)
     args = ap.parse_args(argv)
     default = Path(tempfile.gettempdir()) / f"sub01-finger-{args.command}.json"
     output = Path(args.output) if args.output else default
-    data = build_report(args.step) if args.command == "report" else candidate_data()
+    if args.command == "report":
+        data = build_report(args.step)
+    elif args.command == "segments":
+        data = scan_segments()
+    else:
+        data = candidate_data()
     output.write_text(json.dumps(to_jsonable(data), indent=1) + "\n")
     print(json.dumps({"output": str(output)}))
     return output
