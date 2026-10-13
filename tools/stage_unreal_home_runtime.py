@@ -12,6 +12,8 @@ from unreal_native_route import FIELDS as ROUTE_FIELDS, METHODS as ROUTE_METHODS
 from unreal_hands_diagnostic import FIELDS as DIAGNOSTIC_FIELDS, METHODS as DIAGNOSTIC_METHODS
 from unreal_pc_runtime import FIELDS as PC_FIELDS, METHODS as PC_METHODS
 from unreal_contact_recording import FIELDS as CONTACT_RECORD_FIELDS, METHODS as CONTACT_RECORD_METHODS
+from unreal_live_home_runtime import install as install_live_home
+from unreal_native_control import install as install_native_control
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -112,9 +114,13 @@ def stage(project):
  FirstPersonBody->SetCastShadow(false);FirstPersonBody->SetVisibility(false);
  ViewCamera->bUsePawnControlRotation''')
     cpp = cpp.replace(' Super::BeginPlay();', ''' Super::BeginPlay();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_BEGIN"));
  LoadHandsAssets();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_ASSETS_DONE"));
  LoadPrivateHandsDiagnostic();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_POSE_DONE"));
  ConfigureActualPC();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_INIT_PC_DONE"));
  if(FParse::Value(FCommandLine::Get(),TEXT("Sub01CaptureAfter="),CaptureAfter)){
   CaptureAfter=FMath::Clamp(CaptureAfter,1.f,180.f);CaptureStarted=FPlatformTime::Seconds();
   CaptureViewport=FParse::Param(FCommandLine::Get(),TEXT("Sub01CaptureViewport"));
@@ -127,9 +133,15 @@ def stage(project):
     (module/'Sub01HomeLab.h').write_text(header)
     cpp=cpp.replace('\n }\n if(auto* Player=', '\n }\n BeginNativeRouteTest();\n if(auto* Player=')
     cpp=cpp.replace(' if(Device.IsEmpty()) return;', ' if(Device.IsEmpty()) return;\n if(Device==TEXT("Desk")&&PCBridge){PCBridge->SetOperatorFocus(true);if(GEngine)GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,PCBridge->GetPCStatus());return;}')
-    (module/'Sub01HomeLab.cpp').write_text(cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
+    cpp=cpp.replace(' FString Device;\n', ' if(TryNativeHomeDevice(Hit.GetComponent()))return;\n FString Device;\n',1)
+    header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
+    header,cpp=install_native_control(header,cpp)
+    header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
+    cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
+    (module/'Sub01HomeLab.h').write_text(header)
+    (module/'Sub01HomeLab.cpp').write_text(cpp)
     bridge=Path(__file__).parent/'native_pc_bridge'
-    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp']:
+    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp']:
         shutil.copy2(bridge/name,module/name)
     stage_hands(module)
     (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore"}); } }\n')

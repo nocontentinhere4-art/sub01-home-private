@@ -111,7 +111,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString MouseClipPath;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString PhoneClipPath;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") TArray<FName> ValidatedHandsPostures;
- UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector WalkMeshOffset=FVector(0,0,-165);
+ UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector WalkMeshOffset=FVector(0,0,-91);
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector DeskMeshOffset=FVector(0,0,-128);
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FRotator HandsMeshRotation=FRotator::ZeroRotator;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") TArray<FName> HiddenHeadBones;
@@ -219,6 +219,14 @@ bool ASub01HomeCharacter::SetHandsPosture(FName Posture) {
   HandsFailure=Posture.ToString()+TEXT(": actual compatible animation/retarget binding is not verified.");
   return false;
  }
+ // A full body follows capsule yaw, never camera pitch. Looking down must
+ // not rotate the feet through the floor. Legacy desk placement remains gated;
+ // the verified private desk diagnostic applies its explicit world anchor below.
+ if(Posture==TEXT("Walk")||Posture==TEXT("Phone")){
+  FirstPersonBody->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
+ }else if(!HandsDiagnosticSeat){
+  FirstPersonBody->AttachToComponent(ViewCamera,FAttachmentTransformRules::KeepWorldTransform);
+ }
  HandsBaseOffset=Posture.ToString().StartsWith(TEXT("Desk"))?DeskMeshOffset:WalkMeshOffset;
  if(auto* Instance=Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance())){
   Instance->TargetSequence=HandsClips.FindRef(Posture);
@@ -250,7 +258,10 @@ void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  if(Moving)WalkPhase+=FMath::Min(DeltaSeconds,.1f)*(Speed/140.f)*7.5f;
  // Only sub-centimetre camera-relative sway; no finger/bone deformation.
  // Phase freezes at idle and amplitude fades to zero, never perpetual bob.
- if(!HandsDiagnosticSeat)FirstPersonBody->SetRelativeLocation(HandsBaseOffset+FVector(0,FMath::Sin(WalkPhase)*.25f*MotionWeight,FMath::Sin(2*WalkPhase)*.15f*MotionWeight));
+ if(!HandsDiagnosticSeat){
+  const bool CameraRelative=FirstPersonBody->GetAttachParent()==ViewCamera;
+  FirstPersonBody->SetRelativeLocation(HandsBaseOffset+(CameraRelative?FVector(0,FMath::Sin(WalkPhase)*.25f*MotionWeight,FMath::Sin(2*WalkPhase)*.15f*MotionWeight):FVector::ZeroVector));
+ }
  UAnimSequence* Clip=HandsClips.FindRef(HandsPosture);
  if(HandsPosture==TEXT("Walk")&&!Moving&&HandsClips.Contains(TEXT("Idle")))Clip=HandsClips.FindRef(TEXT("Idle"));
  Instance->TargetSequence=Clip;

@@ -108,6 +108,7 @@ out/private-pc-runtime-assets.tar.gz
 out/native-hands-pc-*
 out/*.sh
 out/native-contact-stage/
+out/native-next-stage/
 out/recover-api.py
 out/recover-same-pod.py
 out/recovery-provider-metadata.private.json
