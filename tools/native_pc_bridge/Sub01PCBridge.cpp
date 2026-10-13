@@ -14,6 +14,8 @@
 #include "TimerManager.h"
 #include "ImageUtils.h"
 #include "Engine/Texture2D.h"
+#include "ImageCore.h"
+#include "Sub01GuestFrameLayout.h"
 
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/Application/IInputProcessor.h"
@@ -84,12 +86,17 @@ public:
  }
  bool HandleMouseButtonDownEvent(FSlateApplication&,const FPointerEvent& Event)override{return MouseButton(Event,true);}
  bool HandleMouseButtonUpEvent(FSlateApplication&,const FPointerEvent& Event)override{return MouseButton(Event,false);}
+ bool HandleMouseWheelOrGestureEvent(FSlateApplication&,const FPointerEvent& WheelEvent,const FPointerEvent*)override{
+  auto* PC=Bridge.Get();if(!PC||!PC->IsAcceptingNativeInput())return false;
+  if(PC->IsGraphicalInputActive())PC->SendGraphicalMouse(0,0,WheelEvent.GetWheelDelta(),MouseLeft,MouseMiddle,MouseRight);return true;
+ }
  const TCHAR* GetDebugName() const override {return TEXT("Sub01FocusedPCInput");}
 };
 
 void USub01PCBridge::ResetNativeModifiers(){if(NativeInputProcessor)StaticCastSharedPtr<FSub01PCInputProcessor>(NativeInputProcessor)->ResetModifiers();}
 USub01PCBridge::USub01PCBridge(){PrimaryComponentTick.bCanEverTick=false;}
 bool USub01PCBridge::Configure(UMeshComponent* Screen,int32 Slot,UMaterialInterface* Parent){
+ if(Screen){const FVector Extent=Screen->CalcBounds(Screen->GetComponentTransform()).BoxExtent;if(Extent.X>0&&Extent.Z>0)ScreenAspect=Extent.X/Extent.Z;}
  const FString Configured=FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_PC_ORIGIN"));
  if(!Configured.IsEmpty()){
   const bool Host=Configured.StartsWith(TEXT("http://127.0.0.1:"))||Configured.StartsWith(TEXT("http://localhost:"))||Configured.StartsWith(TEXT("http://[::1]:"));
@@ -115,7 +122,7 @@ bool USub01PCBridge::Configure(UMeshComponent* Screen,int32 Slot,UMaterialInterf
 void USub01PCBridge::EndPlay(const EEndPlayReason::Type Reason){
  ++Generation;ResetNativeModifiers();GetWorld()->GetTimerManager().ClearTimer(PollTimer);
  if(NativeInputProcessor&&FSlateApplication::IsInitialized())FSlateApplication::Get().UnregisterInputPreProcessor(NativeInputProcessor);NativeInputProcessor.Reset();
- OperatorToken.Empty();TerminalOutput.Empty();TypedLine.Empty();
+ GraphicalInputs.Cancel();OperatorToken.Empty();TerminalOutput.Empty();TypedLine.Empty();
  Super::EndPlay(Reason);
 }
 void USub01PCBridge::ReadState(TFunction<void(TSharedPtr<FJsonObject>)> Done){
@@ -136,7 +143,7 @@ bool USub01PCBridge::IsPublicState(const TSharedPtr<FJsonObject>& State)const{
  return State->TryGetBoolField(TEXT("privacy"),Privacy)&&!Privacy;
 }
 void USub01PCBridge::ClearPrivateState(const FString& Reason){
- GuestPS2Input=false;GraphicalFrame=nullptr;FrameRevision.Empty();FrameBusy=false;
+ GraphicalInputs.Cancel();GuestPS2Input=false;GraphicalFrame=nullptr;FrameRevision.Empty();FrameBusy=false;
  Private=true;Focused=false;ResetNativeModifiers();++Generation;TerminalOutput.Empty();TypedLine.Empty();Status=Reason;
  if(MonitorMaterial&&TerminalCanvas){MonitorMaterial->SetTextureParameterValue(TEXT("PCFrame"),TerminalCanvas);TerminalCanvas->UpdateResource();}
 }
@@ -170,12 +177,23 @@ void USub01PCBridge::Poll(){
 }
 void USub01PCBridge::SendGraphicalInput(const TSharedPtr<FJsonObject>& Body){
  if(!IsGraphicalInputActive()||OperatorToken.IsEmpty())return;
+ if(!GraphicalInputs.Push(Body)){SetOperatorFocus(false);Status=TEXT("Graphical input queue full; PC focus released");return;}
+ PumpGraphicalInput();
+}
+void USub01PCBridge::PumpGraphicalInput(){
+ TSharedPtr<FJsonObject> Body;std::uint64_t Ticket=0;
+ if(!GraphicalInputs.Begin(Body,Ticket))return;
  FString JSON;auto Writer=TJsonWriterFactory<>::Create(&JSON);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(Origin+TEXT("/pc/graphical-input"));Request->SetVerb(TEXT("POST"));Request->SetTimeout(3);
  Request->SetHeader(TEXT("Content-Type"),TEXT("application/json"));Request->SetHeader(TEXT("X-Admin-Token"),OperatorToken);Request->SetContentAsString(JSON);
  const uint64 Epoch=Generation;
- Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){if(Epoch!=Generation)return;if(!OK||!Response||Response->GetResponseCode()!=200)Status=TEXT("Graphical input unavailable or refused");});
- Request->ProcessRequest();
+ auto Finish=[this,Epoch,Ticket](bool OK){
+  if(Epoch!=Generation||!GraphicalInputs.Complete(Ticket))return;
+  if(!OK){GraphicalInputs.Cancel();SetOperatorFocus(false);Status=TEXT("Graphical input unavailable or refused");return;}
+  PumpGraphicalInput();
+ };
+ Request->OnProcessRequestComplete().BindWeakLambda(this,[Finish](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){Finish(OK&&Response&&Response->GetResponseCode()==200);});
+ if(!Request->ProcessRequest())Finish(false);
 }
 void USub01PCBridge::SendGraphicalKey(uint32 Scan,bool Shift,bool Control,bool Alt){
  TArray<TSharedPtr<FJsonValue>> Codes;
@@ -213,8 +231,15 @@ void USub01PCBridge::FetchGraphicalFrame(const TSharedPtr<FJsonObject>& State){
    if(!After->TryGetObjectField(TEXT("display"),Display)||!Display||!(*Display)->TryGetNumberField(TEXT("revision"),Current)||!(*Display)->TryGetBoolField(TEXT("available"),Available)||!Available)return;
    FString CurrentKind;if(!(*Display)->TryGetStringField(TEXT("kind"),CurrentKind)||CurrentKind!=TEXT("graphical"))return;
    FString CurrentId;(*Display)->TryGetStringField(TEXT("frame_id"),CurrentId);if(CurrentId.IsEmpty())CurrentId=FString::Printf(TEXT("%.0f"),Current);if(CurrentId!=Wanted)return;
-   UTexture2D* Texture=FImageUtils::ImportBufferAsTexture2D(Pixels);
-   if(!Texture||Texture->GetSizeX()>1280||Texture->GetSizeY()>1024)return;
+   FImage Decoded,BGRA,Padded;
+   if(!FImageUtils::DecompressImage(Pixels.GetData(),Pixels.Num(),Decoded))return;
+   FSub01GuestFrameLayout Layout;
+   if(!Sub01GuestFrameLayout(Decoded.SizeX,Decoded.SizeY,ScreenAspect,Layout)||Decoded.NumSlices!=1)return;
+   Decoded.CopyTo(BGRA,ERawImageFormat::BGRA8,EGammaSpace::sRGB);
+   Padded.Init(Layout.Width,Layout.Height,ERawImageFormat::BGRA8,EGammaSpace::sRGB);
+   if(!Sub01PadGuestBGRA(BGRA.RawData.GetData(),BGRA.RawData.Num(),Padded.RawData.GetData(),Padded.RawData.Num(),Layout))return;
+   UTexture2D* Texture=FImageUtils::CreateTexture2DFromImage(Padded);
+   if(!Texture)return;
    Texture->SRGB=true;Texture->UpdateResource();GraphicalFrame=Texture;FrameRevision=Wanted;
    if(MonitorMaterial)MonitorMaterial->SetTextureParameterValue(TEXT("PCFrame"),GraphicalFrame);
   });
@@ -231,7 +256,7 @@ void USub01PCBridge::SendFlag(const FString& Path,bool Active,TFunction<void(boo
  if(!Request->ProcessRequest())Finish(false);
 }
 void USub01PCBridge::SetOperatorFocus(bool Focus){
- if(!Focus&&IsGraphicalInputActive())SendGraphicalMouse(0,0,0,false,false,false);
+ if(!Focus){GraphicalInputs.ClearPending();if(IsGraphicalInputActive())SendGraphicalMouse(0,0,0,false,false,false);}
  Focused=Focus&&!Private&&!LocalPrivacy;ResetNativeModifiers();
  LastSessionHeartbeat=FPlatformTime::Seconds();SendFlag(TEXT("/pc/session"),Focused,[](bool){});
  if(TerminalCanvas)TerminalCanvas->UpdateResource();

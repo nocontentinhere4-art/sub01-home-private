@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Sub01GuestInputQueue.h"
 #include "Sub01PCBridge.generated.h"
 class UMeshComponent;
 class UMaterialInterface;
@@ -41,6 +42,8 @@ private:
  bool PrivacyDesired=false, PrivacyAcknowledged=false, PrivacyKnown=false, PrivacyRequestPending=false;
  double LastPrivacyAttempt=-10;
  bool FrameBusy=false,GuestPS2Input=false;
+ double ScreenAspect=1.7;
+ TSub01GuestInputQueue<TSharedPtr<FJsonObject>> GraphicalInputs;
  FString FrameRevision;
  UPROPERTY() TObjectPtr<UTexture2D> GraphicalFrame;
  uint64 Generation=0;
@@ -56,6 +59,7 @@ private:
  bool IsPublicState(const TSharedPtr<FJsonObject>& State) const;
  void ClearPrivateState(const FString& Reason);
  void SendGraphicalInput(const TSharedPtr<FJsonObject>& Body);
+ void PumpGraphicalInput();
  void FetchGraphicalFrame(const TSharedPtr<FJsonObject>& State);
  void ApplyTerminal(const TSharedPtr<FJsonObject>& State);
 
