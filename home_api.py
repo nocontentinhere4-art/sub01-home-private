@@ -62,6 +62,15 @@ def add_home_routes(app, live, admin_ok):
         if not admin_ok(request):
             raise web.HTTPForbidden(text="Operator authentication required")
 
+    def native_operator(request):
+        operator(request)
+        try:
+            local = ipaddress.ip_address(request.remote or '').is_loopback
+        except ValueError:
+            local = False
+        if not local:
+            raise web.HTTPForbidden(text='Native control requires a loopback consumer')
+
     async def body(request):
         if request.content_length is not None and request.content_length > 4096:
             raise web.HTTPRequestEntityTooLarge(
@@ -281,16 +290,15 @@ def add_home_routes(app, live, admin_ok):
 
     async def native_state(request):
         enabled()
-        operator(request)
-        try:
-            local = ipaddress.ip_address(request.remote or '').is_loopback
-        except ValueError:
-            local = False
-        if not local:
-            raise web.HTTPForbidden(text='Native feedback requires a loopback consumer')
+        native_operator(request)
         data = await body(request)
         if private():
-            raise web.HTTPConflict(text='Bathroom privacy is active')
+            relevant = {live.home.node, live.home.target, *live.home.path, 'bath_aisle', 'bath_door'}
+            if (live.home.target != 'bathroom' or live.home.activity != 'use_bathroom'
+                    or not isinstance(data.get('node'), str) or data['node'] not in relevant
+                    or data.get('phase') not in ('walking', 'arrived', 'blocked')
+                    or data.get('chair') is not None):
+                raise web.HTTPConflict(text='Bathroom privacy permits only bathroom movement feedback')
         from home_world import NODES
         try:
             live.home.native_feedback.accept(data, sequence=live.home.sequence,
@@ -300,6 +308,13 @@ def add_home_routes(app, live, admin_ok):
         except RuntimeError as error:
             raise web.HTTPConflict(text=str(error))
         return web.json_response({'ok': True, 'fresh_for_s': 3}, headers={'Cache-Control': 'no-store'})
+
+    async def native_command(request):
+        enabled()
+        native_operator(request)
+        # Use the actual object, never the privacy-redacted public view.
+        return web.json_response({'target': live.home.target, 'sequence': live.home.sequence,
+                                  'activity': live.home.activity}, headers={'Cache-Control': 'no-store'})
 
     async def minecraft_frame(request):
         enabled()
@@ -335,4 +350,5 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post('/api/home/browser/action', browser_action)
     app.router.add_post("/api/home/game", game)
     app.router.add_post('/api/home/native_state', native_state)
+    app.router.add_get('/api/home/native_command', native_command)
     app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)

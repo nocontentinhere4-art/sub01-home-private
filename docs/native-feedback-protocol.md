@@ -51,6 +51,26 @@ silently fall back to the browser seating timer. Restarting the backend clears
 all ephemeral native evidence; browser-only mode retains its prior behavior
 until explicitly bound again.
 
+## Private bathroom movement
+
+`GET /api/home/native_command` requires the existing admin credential and an
+actual loopback peer. It reads the real HomeWorld object and returns exactly
+`target`, `sequence`, and `activity`, including during bathroom privacy.
+`GET /home/native_control` applies the same access restrictions and retrieves
+that command from the real backend. Its document contains only schema, bridge
+epoch, live source status, privacy flag, actor target/route sequence, brain
+activity, and constant unit labels (`cm`, `floor`). No physical position,
+waypoint coordinates, path, screens or notes are included. Both responses use
+`Cache-Control: no-store`. The ordinary `/home/state` document stays masked.
+
+During privacy, feedback is permitted only for the actual bathroom destination
+and `use_bathroom` activity, phases walking/arrived/blocked, with no chair.
+The backend additionally requires a relevant current/remaining-route node or
+bathroom approach node. An arrived report must name bathroom. Bound activity
+readiness and bladder completion wait for that fresh arrived lease; a stale,
+blocked, malformed or unrelated report cannot finish the routine. This
+exception changes neither device privacy nor physical actor positions.
+
 Success: `200 {"ok":true,"fresh_for_s":3}`. Malformed input/unknown seat: 400;
 unauthenticated/nonloopback: 403; stale epoch/command, privacy or unbound epoch:
 409; unavailable bridge/backend: 503 (unexpected upstream failures: 502).

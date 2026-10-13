@@ -96,6 +96,7 @@ def test_actual_bridge_backend_feedback_route_auth_epoch_and_privacy():
         feed = BackendFeed(model, str(backend.make_url('')).rstrip('/'), TOKEN)
         # Only the actual POST adapter is needed; no persistent feed task.
         adapter = SimpleNamespace(post_native_state=feed.post_native_state,
+                                  get_native_command=feed.get_native_command,
                                   run=lambda **kw: asyncio.sleep(3600))
         client = TestClient(TestServer(create_app(model, TOKEN, adapter)))
         await client.start_server()
@@ -193,3 +194,87 @@ def test_phone_proxy_targets_actual_registered_navigation_route():
         finally:
             await client.close(); await proxy.close(); await backend.close()
     asyncio.run(run())
+
+
+def test_private_bathroom_movement_control_and_feedback_do_not_unmask_devices():
+    async def run():
+        from home_world import NODES
+        world = HomeWorld(); world.node = world.target = 'bathroom'
+        world.position = list(NODES['bathroom']); world.activity = 'use_bathroom'; world.path = []
+        clock = [100.]
+        world.native_feedback = NativeFeedback(lambda: clock[0])
+        live = SimpleNamespace(home=world, computer=SimpleNamespace(view=lambda: {'output':'private guest'}),
+            life=SimpleNamespace(snapshot=lambda: {}), engine=SimpleNamespace(stage='AWAKE'),
+            clock=SimpleNamespace(now=lambda: 123.), screen_status=lambda d: {'frame_id':'private-frame'}, browser=object())
+        app = web.Application(); add_home_routes(app, live, lambda r: r.headers.get('X-Admin-Token') == TOKEN)
+        backend = TestServer(app); await backend.start_server()
+        direct = TestClient(backend); await direct.start_server()
+        model = HomeStateModel(); model.apply_rest({'home': world.view()}); model.set_connected(True)
+        feed = BackendFeed(model, str(backend.make_url('')).rstrip('/'), TOKEN)
+        adapter = SimpleNamespace(post_native_state=feed.post_native_state, get_native_command=feed.get_native_command,
+                                  run=lambda **kw: asyncio.sleep(3600))
+        bridge_app = create_app(model, TOKEN, adapter)
+        client = TestClient(TestServer(bridge_app)); await client.start_server()
+        def report(phase, **patch):
+            data = dict(epoch=model.epoch, sequence=world.sequence, activity='use_bathroom',
+                        node='bathroom', phase=phase)
+            data.update(patch); return data
+        try:
+            assert world.privacy()
+            assert (await direct.get('/api/home/native_command')).status == 403
+            assert (await client.get('/home/native_control')).status == 403
+            assert (await client.get('/home/native_control', headers={'X-Admin-Token':'wrong'})).status == 403
+            public = await (await client.get('/home/state', headers=AUTH)).json()
+            assert public['privacy'] is True and public['actor'] is None and public['brain'] is None
+            public_backend = await (await direct.get('/api/home')).json()
+            assert public_backend['computer']['output'] == ''
+            assert public_backend['phone_browser_screen'] == {'device':'phone','privacy':True}
+            command_response = await direct.get('/api/home/native_command', headers=AUTH)
+            assert command_response.headers['Cache-Control'] == 'no-store'
+            command = await command_response.json()
+            assert command == {'target':'bathroom','sequence':world.sequence,'activity':'use_bathroom'}
+            response = await client.get('/home/native_control', headers=AUTH)
+            assert response.status == 200 and response.headers['Cache-Control'] == 'no-store'
+            control = await response.json()
+            assert control == {'schema':'sub01.home-state.v1','epoch':model.epoch,'source':{'status':'live'},
+                               'coordinates':{'units':'cm','waypoint_height':'floor'},
+                               'privacy':True,'actor':{'target':'bathroom','route_sequence':world.sequence},
+                               'brain':{'activity':'use_bathroom'}}
+            assert (await client.post('/home/native_state', headers=AUTH, json=report('walking',bind=True,node='bath_door'))).status == 200
+            assert not world.activity_ready()
+            world.bladder = .9
+            world.update(.2,0,{'activity':'use_bathroom'}, {})
+            assert world.bladder == .9  # No simulated completion before real arrival.
+            for phase, patch in [('seated',{'chair':'desk_chair'}), ('walking',{'node':'desk'}),
+                                 ('arrived',{'node':'bath_door'}), ('arrived',{'sequence':99})]:
+                assert (await client.post('/home/native_state', headers=AUTH, json=report(phase,**patch))).status == 409
+            assert (await client.post('/home/native_state', headers=AUTH, json=report('arrived'))).status == 200
+            assert world.activity_ready('use_bathroom')
+            world.update(.2,0,{'activity':'use_bathroom'}, {})
+            assert world.bladder < .9
+            assert (await direct.post('/api/home/computer', headers=AUTH, json={'input':'uname'})).status == 409
+            assert (await direct.post('/api/home/browser', headers=AUTH, json={'url':'https://example.org','device':'phone'})).status == 409
+            assert (await direct.get('/api/home/minecraft/frame.jpg', headers=AUTH)).status == 409
+            clock[0] += 3.01
+            assert not world.activity_ready()
+            assert (await client.post('/home/native_state', headers=AUTH, json=report('blocked'))).status == 200
+            assert not world.activity_ready()
+            # Actual remote peer rejected despite correct auth and spoofed loopback header.
+            class PublicRequest:
+                remote='203.0.113.2'
+                headers={**AUTH,'X-Forwarded-For':'127.0.0.1'}
+            for routes, path in [(app.router.routes(), '/api/home/native_command'),
+                                 (bridge_app.router.routes(), '/home/native_control')]:
+                handler = next(r.handler for r in routes if r.resource.canonical == path and r.method=='GET')
+                try: await handler(PublicRequest())
+                except web.HTTPForbidden: pass
+                else: raise AssertionError('Public native movement consumer admitted')
+            world.target='desk'; world.activity='research'
+            assert (await direct.post('/api/home/native_state',headers=AUTH,json=report('walking',activity='research'))).status == 409
+            model.set_connected(False)
+            assert (await client.get('/home/native_control', headers=AUTH)).status == 409
+        finally:
+            await client.close(); await direct.close()
+    # Browser policy import is isolated; privacy rejection occurs before use.
+    with patch.dict(sys.modules, {'browse': SimpleNamespace(url_ok=lambda u: True)}):
+        asyncio.run(run())
