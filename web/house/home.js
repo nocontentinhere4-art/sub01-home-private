@@ -27,6 +27,7 @@ import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
+import { createSettledAssetBarrier } from "./settled_asset_barrier.mjs?v=1";
 import { createLiveMusicFeed } from "./live_music_feed.mjs?v=1";
 import { sceneBudget } from "./runtime_budget.mjs?v=2";
 import { createViewTransition, createViewTransitionOverlay } from "./view-transition.mjs?v=1";
@@ -143,6 +144,7 @@ const random = () => {
 const loader = new T.TextureLoader();
 const gltfLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const modelCache = new Map();
+const assetBarrier = createSettledAssetBarrier();
 function pbr(name, repeat = [1, 1]) {
   const base = assetRoot + name + "/";
   const textures = ["diff", "normal", "rough"].map((n, i) => {
@@ -520,7 +522,10 @@ rug(3.0, 3.3, -2.4, 0, .1);
 obstacle(-1.8, .1, .95, 2.5);
 obstacle(-3.2, .1, .70, 1.4);
 
-async function furnished(name, x, y, z, width, rotation = 0, sourceUrl = null, sizeAxis = "x") {
+function furnished(...args) {
+  return assetBarrier.add(loadFurnished(...args));
+}
+async function loadFurnished(name, x, y, z, width, rotation = 0, sourceUrl = null, sizeAxis = "x") {
   try {
     const modelFile = name === 'potted_plant_01' ? name + '_leaf_lod.gltf?v=1' : name + '.gltf';
     const url = sourceUrl || assetRoot + name + "/" + modelFile;
@@ -801,7 +806,7 @@ officeChair.push(cylinder(0.055, 0.4, 2, 0.23, -1.9, M.metal));
 officeChair.push(beam([1.7, 0.12, -1.9], [2.3, 0.12, -1.9], 0.025, M.metal));
 officeChair.push(beam([2, 0.12, -2.2], [2, 0.12, -1.6], 0.025, M.metal));
 // Reuse the owner's existing repaired/optimised chair, including its 512px textures.
-gltfLoader
+const officeChairReady = gltfLoader
   .loadAsync("/room/chair_owner.glb")
   .then((gltf) => {
     const chair = gltf.scene;
@@ -2668,11 +2673,21 @@ for (const child of scene.children) {
   bakedObjects.set(id, child);
 }
 // Baked contact lighting is optional: geometry/material fallback remains functional.
+for (const task of [beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady,
+  sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady, officeChairReady]) {
+  assetBarrier.add(task);
+}
+const homeAssetsReady = assetBarrier.settled().then(report => {
+  document.getElementById('status').dataset.assetParseBarrier = JSON.stringify({
+    registered: report.registered, fulfilled: report.fulfilled, rejected: report.rejected, pending: report.pending,
+  });
+  return report;
+});
 async function applyContactLighting() {
   // Export the current source UVs/geometry, never a replacement from an older atlas.
   if (new URLSearchParams(location.search).has("bake")) return;
   try {
-    await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
+    await homeAssetsReady;
     const [baked, ao, night, bakeManifest] = await Promise.all([
       gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=22"),
       useIndirectLighting ? new HDRLoader().loadAsync(
@@ -2843,7 +2858,7 @@ addEventListener("resize", () => {
 });
 renderer.shadowMap.needsUpdate = true;
 const sunShafts = createSunShafts(T, renderer, lite || new URLSearchParams(location.search).get("shafts") === "off");
-startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [contactLightingReady], sunShafts).then(async () => {
+startup.prepare(renderer, scene, camera, privacyScene, privacyCamera, [homeAssetsReady, contactLightingReady], sunShafts).then(async () => {
   const ownership = {
     protectedObjects: interactions.map(item => item.object),
     retainedMaterials: [...Object.values(M), ...switchedMaterials, ...Object.values(havenSofaMaterials)],
@@ -2940,7 +2955,7 @@ if (
   const b = button("Export house geometry", async () => {
     try {
       notice("Exporting the current house…");
-      await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
+      await homeAssetsReady;
       const data = await new GLTFExporter().parseAsync(staticBakeScene(scene), {
         binary: true,
         onlyVisible: true,
