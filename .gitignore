@@ -93,3 +93,10 @@ out/physical-driver-smoke/
 out/furniture-refresh/
 out/furniture-upgrade/
 out/server-transfer/
+
+# Private raw motion captures and staging bundles
+out/first-person*/
+out/first-person*.tar.gz
+out/house-evidence/
+out/coordination/
+out/server-api-client/

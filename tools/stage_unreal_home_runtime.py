@@ -6,6 +6,7 @@ pretends to be runtime player controls and no backend action is faked.
 import argparse
 import json
 from pathlib import Path
+from unreal_home_hands_runtime import CHARACTER_FIELDS, CHARACTER_METHODS, stage_hands
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -13,7 +14,9 @@ HEADER = r'''#pragma once
 #include "GameFramework/GameModeBase.h"
 #include "Sub01HomeLab.generated.h"
 class UCameraComponent;
-UCLASS()
+class UAnimSequence;
+class USkeletalMeshComponent;
+UCLASS(Config=Game)
 class SUB01HOMELAB_API ASub01HomeCharacter : public ACharacter {
  GENERATED_BODY()
  public: ASub01HomeCharacter();
@@ -90,9 +93,29 @@ ASub01HomeGameMode::ASub01HomeGameMode(){DefaultPawnClass=ASub01HomeCharacter::S
 def stage(project):
     project=Path(project)
     module=project/'Source/Sub01HomeLab';module.mkdir(parents=True,exist_ok=True)
-    (module/'Sub01HomeLab.h').write_text(HEADER)
-    (module/'Sub01HomeLab.cpp').write_text(CPP)
-    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore"}); } }\n')
+    header = HEADER.replace(' void Forward(float Value);', CHARACTER_FIELDS + '\n void Forward(float Value);')
+    cpp = CPP.replace('#include "Sub01HomeLab.h"', '#include "Sub01HomeLab.h"\n#include "Sub01HomeHands.h"\n#include "Animation/AnimSequence.h"\n#include "Engine/SkeletalMesh.h"\n#include "UnrealClient.h"\n#include "Misc/CommandLine.h"\n#include "Misc/Parse.h"\n#include "Misc/Paths.h"\n#include "HAL/FileManager.h"\n#include "HAL/PlatformTime.h"\n#include "HAL/PlatformMisc.h"')
+    cpp = cpp.replace(' GetCapsuleComponent()->InitCapsuleSize', ''' PrimaryActorTick.bCanEverTick=true;
+ FirstPersonBody=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RealFirstPersonBody"));
+ GetCapsuleComponent()->InitCapsuleSize''')
+    cpp = cpp.replace(' ViewCamera->bUsePawnControlRotation', ''' FirstPersonBody->SetupAttachment(ViewCamera);
+ FirstPersonBody->SetOnlyOwnerSee(true);FirstPersonBody->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+ FirstPersonBody->SetCastShadow(false);FirstPersonBody->SetVisibility(false);
+ ViewCamera->bUsePawnControlRotation''')
+    cpp = cpp.replace(' Super::BeginPlay();', ''' Super::BeginPlay();
+ LoadHandsAssets();
+ if(FParse::Value(FCommandLine::Get(),TEXT("Sub01CaptureAfter="),CaptureAfter)){
+  CaptureAfter=FMath::Clamp(CaptureAfter,1.f,180.f);CaptureStarted=FPlatformTime::Seconds();
+  FParse::Value(FCommandLine::Get(),TEXT("Sub01CapturePath="),CapturePath);
+  if(CapturePath.IsEmpty())CapturePath=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Screenshots/Sub01NativeGame.png"));
+  CapturePath=FPaths::ConvertRelativePathToFull(CapturePath);
+  IFileManager::Get().MakeDirectory(*FPaths::GetPath(CapturePath),true);
+  IFileManager::Get().Delete(*CapturePath);
+ }''' )
+    (module/'Sub01HomeLab.h').write_text(header)
+    (module/'Sub01HomeLab.cpp').write_text(cpp + CHARACTER_METHODS)
+    stage_hands(module)
+    (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime"}); } }\n')
     for name,kind in [('Sub01HomeLab','Game'),('Sub01HomeLabEditor','Editor')]:
         (project/'Source'/f'{name}.Target.cs').write_text(f'using UnrealBuildTool; public class {name}Target : TargetRules {{ public {name}Target(TargetInfo Target):base(Target) {{ Type=TargetType.{kind}; DefaultBuildSettings=BuildSettingsVersion.Latest; ExtraModuleNames.Add("Sub01HomeLab"); }} }}\n')
     path=project/'Sub01HomeLab.uproject';doc=json.loads(path.read_text());doc['Modules']=[{'Name':'Sub01HomeLab','Type':'Runtime','LoadingPhase':'Default'}];path.write_text(json.dumps(doc,indent=2)+'\n')
