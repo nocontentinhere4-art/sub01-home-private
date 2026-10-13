@@ -25,7 +25,7 @@ _MISSING = object()
 class Computer:
     # Any change to what view() shows bumps a monotonic revision, so the page
     # refreshes on an equal-length output replacement too (never by length).
-    REVISED = frozenset({"output", "ready", "paused", "status", "last_command", "commands", "error", "display"})
+    REVISED = frozenset({"output", "ready", "paused", "status", "last_command", "commands", "error", "display", "instruction_counter"})
 
     def __setattr__(self, name, value):
         if name in self.REVISED and getattr(self, name, _MISSING) != value:
@@ -45,6 +45,7 @@ class Computer:
         self.guest_cdrom = None
         self.display = {"kind": "serial", "available": False, "reason": "Graphical guest framebuffer is not active"}
         self.framebuffer_png = None
+        self.instruction_counter = None
         self.process = None
         self.output = ""
         self.ready = False
@@ -60,6 +61,7 @@ class Computer:
     def view(self):
         return {
             "status": self.status,
+            "instruction_counter": self.instruction_counter,
             "display": dict(self.display),
             "ready": self.ready,
             "output": self.output[-10000:],
@@ -77,6 +79,7 @@ class Computer:
         self.output = ""
         self.last_command = ""
         self.framebuffer_png = None
+        self.instruction_counter = None
         self.display = {"kind": "unavailable", "available": False,
                         "reason": "Actual guest worker is unavailable"}
 
@@ -177,6 +180,8 @@ class Computer:
                     self.output = str(m.get("output", ""))[-12000:]
                     self.ready = bool(m.get("ready"))
                     self.paused = bool(m.get("paused"))
+                    count = m.get("instruction_counter")
+                    self.instruction_counter = count if isinstance(count, int) and not isinstance(count, bool) and 0 <= count <= 0xffffffff else None
                     self.status = "ready" if self.ready else "booting"
                 elif m.get("type") == "display":
                     display = m.get("display") or {}

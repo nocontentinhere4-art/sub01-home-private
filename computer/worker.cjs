@@ -61,7 +61,7 @@ vm.add_listener("emulator-loaded", async () => {
 });
 setInterval(() => {
   const vgaText = process.env.SUB01_VM_CDROM && vm.screen_adapter?.get_text_screen ? vm.screen_adapter.get_text_screen().join("\n").trimEnd() : '';
-  send({ type: "terminal", ready, output: vgaText || serial, paused: !vm.is_running() });
+  send({ type: "terminal", ready, output: vgaText || serial, paused: !vm.is_running(), instruction_counter: vm.get_instruction_counter?.() ?? null });
   const frame = framebuffer ? framebuffer.capture() : {kind: "serial", available: false, reason: "Emulator VGA is initializing"};
   if (frame.available) ready = true;
   if (process.env.SUB01_VM_CDROM && framebuffer) {
