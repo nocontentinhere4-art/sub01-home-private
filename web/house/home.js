@@ -9,7 +9,7 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.js";
 import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
-import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=2";
+import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
 import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows } from "./stair_clearance.mjs?v=1";
@@ -2564,14 +2564,14 @@ async function applyContactLighting() {
   try {
     await Promise.all([beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady, sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady]);
     const [baked, ao, night] = await Promise.all([
-      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=17"),
+      gltfLoader.loadAsync("/house/assets/lighting/" + (useIndirectLighting ? "gi-architecture" : "architecture") + ".glb?v=18"),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=17",
+        "/house/assets/lighting/indirect-day" + (lite ? "-lite" : "") + ".hdr?v=18",
       ) : loader.loadAsync(
         "/house/assets/lighting/contact-ao" + (lite ? "-lite" : "") + ".jpg",
       ),
       useIndirectLighting ? new HDRLoader().loadAsync(
-        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=17",
+        "/house/assets/lighting/indirect-night" + (lite ? "-lite" : "") + ".hdr?v=18",
       ) : Promise.resolve(null),
     ]);
     // Atlas UVs retain glTF top-origin V; HDRLoader defaults to the opposite orientation.

@@ -13,10 +13,15 @@ export function createStreetMaterials(T,{lite=false,manager}={}) {
     mat.userData.tileMetres=tileMetres;
     mat.onBeforeCompile=shader=>{
       const from='#include <roughnessmap_fragment>';
-      if(!shader.fragmentShader.includes(from))throw new Error('Street roughness shader contract changed');
+      const mapChunk='#include <map_fragment>';
+      if(!shader.fragmentShader.includes(from)||!shader.fragmentShader.includes(mapChunk))throw new Error('Street packed material shader contract changed');
+      // Map alpha stores linear roughness, never paving transparency. Standard
+      // map_fragment multiplies all RGBA channels; restore material opacity
+      // before the exterior's intentional edge fade is applied later.
+      shader.fragmentShader=shader.fragmentShader.replace(mapChunk,mapChunk+'\ndiffuseColor.a = opacity;');
       shader.fragmentShader=shader.fragmentShader.replace(from,from+'\nroughnessFactor *= texture2D(map,vMapUv).a;');
     };
-    mat.customProgramCacheKey=()=> 'street-packed-linear-roughness-v1';
+    mat.customProgramCacheKey=()=> 'street-packed-linear-roughness-opaque-v2';
     return mat;
   }
   return {pavement:material('concrete_pavement',1.8,.55),asphalt:material('asphalt_02',3,.4)};

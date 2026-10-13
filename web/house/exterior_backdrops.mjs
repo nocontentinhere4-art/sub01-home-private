@@ -1,5 +1,5 @@
 import {createResidentialForeground} from './residential_foreground.mjs';
-import {createStreetMaterials,streetMetricUv} from './street_materials.mjs';
+import {createStreetMaterials,streetMetricUv} from './street_materials.mjs?v=2';
 // A limited real foreground meets the historical capture, rather than paving
 // an invented 60m square over its whole street. Values are world metres.
 export const RESIDENTIAL_GROUND = Object.freeze({

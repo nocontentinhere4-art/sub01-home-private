@@ -1,5 +1,5 @@
 {
-  "source_sha256": "a27c74869c33618f6b3d5dabef5b1543627863fd7728362f41f2846d402aaafb",
+  "source_sha256": "5938f742e3b639c08ace38bcbd2eec1d3e437d4818df922ff9b8529d61864705",
   "renderer": "Blender 4.2.23 LTS / Cycles CPU",
   "samples": 512,
   "diffuse_bounces": 4,
@@ -7,50 +7,50 @@
   "albedo_in_bake": false,
   "receivers": 111,
   "export_material_texture_limit": 512,
-  "layout": "Repaired stair landing and sofa cloth revision2; raw glTF irradiance atlas orientation corrected",
+  "layout": "Bounded real entrance sidewalk, split courtyard rail, clean oak cabinet material and lengthwise coffee-table UV",
   "day": {
-    "source_exr_sha256": "55009c035a42b9b218bd3b1a71d7e4cac80653d4ca190b491474f56b02855ff6",
-    "width": 1350,
-    "height": 1349,
-    "max": 8.116704940795898,
-    "p95": 0.4507311761379241,
-    "nonzero": 0.5318699722702688,
+    "source_exr_sha256": "c763737304c5a861e0ed8b5cb97ce6c1f9191649078542e17a83c43617da76c4",
+    "width": 1348,
+    "height": 1350,
+    "max": 7.2782745361328125,
+    "p95": 0.4519779533147808,
+    "nonzero": 0.5368040444004836,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "night": {
-    "source_exr_sha256": "b265ffc2691a6bd79fffcf67e79bed3fd24c49724b6edea6acf2652c10005742",
-    "width": 1350,
-    "height": 1349,
-    "max": 11.021322250366211,
-    "p95": 0.006263431301340446,
-    "nonzero": 0.4551986382231008,
+    "source_exr_sha256": "21586f3d7d5f89b85315c573ae2c38daeeefc395ca8b41f997d48549b384ed21",
+    "width": 1348,
+    "height": 1350,
+    "max": 2.443120241165161,
+    "p95": 0.006266516493633376,
+    "nonzero": 0.4604874161995824,
     "kind": "Cycles diffuse indirect irradiance; direct light and albedo excluded"
   },
   "files": [
     {
       "file": "gi-architecture.glb",
-      "sha256": "920399a64a554534f64d30232506fa83b4ffbf139c3b60ba917a4581186651b9",
+      "sha256": "eb3e9d02ba32822a56dcf65b3c66457631969f8f93df7bb5088e5251847bc6ad",
       "bytes": 10267856
     },
     {
       "file": "indirect-day.hdr",
-      "sha256": "73d945dbd8cd3ee08a4a6d859c203b678be20b7e49b889b605f8df099ef51b82",
-      "bytes": 3916736
+      "sha256": "304900559dfc6b2e29fa70efe3c2737d67f8afb89be250f479b9701bea1cc9e6",
+      "bytes": 3941603
     },
     {
       "file": "indirect-day-lite.hdr",
-      "sha256": "702931f767827e9edff58e89d6d6f632fd618283f22fc97a5876005b20035f10",
-      "bytes": 705681
+      "sha256": "1514c6e678d2e46abe3307603533771bb29287e9fdaf88625f8b5123147ed2f9",
+      "bytes": 709658
     },
     {
       "file": "indirect-night.hdr",
-      "sha256": "c43cc788eebcaeefd3ef3327c49c50bac8cbe3402b7a16e89d726ab90d839c96",
-      "bytes": 3547455
+      "sha256": "f52a40287dac5f7fe0ad6db52a8e178e0cf4ed88fc8e326ab861c1f509af4515",
+      "bytes": 3571522
     },
     {
       "file": "indirect-night-lite.hdr",
-      "sha256": "cfeae7a9dfc01f0a1c86049696d51b8628a4a3e2176e81dccae8d8103dba46b6",
-      "bytes": 643674
+      "sha256": "496a5eda4f0a7b247971cc776a939e65a764419e6847ad4261c493668a3a5613",
+      "bytes": 647899
     }
   ],
   "oak_albedo_grade": "Matches browser power .45 and tint (.95,.90,.80) before diffuse bounces",
@@ -58,47 +58,5 @@
   "adaptive_sampling": false,
   "denoising": false,
   "sampling_note": "Matched finished day/night bakes; packed without denoising or atlas blur.",
-  "atlas_orientation": "raw glTF UV; day/night flipY=false",
-  "day_sampling_comparison": {
-    "uv_convention": "glTF v flipped as Blender import; EXR image.pixels bottom origin",
-    "interpretation": "Unfiltered atlas-face interior neighbor residuals are a spatial-noise proxy. Two budgets do not establish absolute convergence; visual comparison still required.",
-    "regions": {
-      "loft_soffit": {
-        "before": {
-          "mean_linear_luminance": 0.12793758511543274,
-          "neighbor_residual_rms": 0.05312458425760269,
-          "neighbor_residual_median_abs": 0.01362623367458582,
-          "neighbor_residual_p95_abs": 0.11654192805290216
-        },
-        "after": {
-          "mean_linear_luminance": 0.12729711830615997,
-          "neighbor_residual_rms": 0.02583581767976284,
-          "neighbor_residual_median_abs": 0.006887713447213173,
-          "neighbor_residual_p95_abs": 0.0574542962014675
-        },
-        "pixels": 29298,
-        "faces": 16,
-        "rms_ratio_after_before": 0.4863250798252687,
-        "change_rms": 0.0526600182056427
-      },
-      "walls": {
-        "before": {
-          "mean_linear_luminance": 0.16356444358825684,
-          "neighbor_residual_rms": 0.05278448387980461,
-          "neighbor_residual_median_abs": 0.02486664056777954,
-          "neighbor_residual_p95_abs": 0.11050621271133415
-        },
-        "after": {
-          "mean_linear_luminance": 0.16366590559482574,
-          "neighbor_residual_rms": 0.0276237353682518,
-          "neighbor_residual_median_abs": 0.012627020478248596,
-          "neighbor_residual_p95_abs": 0.055113080143928475
-        },
-        "pixels": 65473,
-        "faces": 50,
-        "rms_ratio_after_before": 0.5233305952399521,
-        "change_rms": 0.05126229301095009
-      }
-    }
-  }
+  "atlas_orientation": "raw glTF UV; day/night flipY=false"
 }

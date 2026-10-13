@@ -12,8 +12,11 @@ for(const lite of [false,true]){
   assert.equal(material.normalMap.colorSpace,T.NoColorSpace);
   assert.equal(material.map.wrapS,T.RepeatWrapping);
   assert.equal(material.roughnessMap,null,'roughness packed in shared diffuse alpha');
-  const shader={fragmentShader:'#include <roughnessmap_fragment>'};material.onBeforeCompile(shader);
+  const shader={fragmentShader:T.ShaderLib.standard.fragmentShader};material.onBeforeCompile(shader);
   assert.ok(shader.fragmentShader.includes('roughnessFactor *= texture2D(map,vMapUv).a;'));
+  assert.ok(T.ShaderChunk.map_fragment.includes('diffuseColor *= sampledDiffuseColor'),'Actual Three map chunk multiplies RGBA');
+  assert.ok(shader.fragmentShader.includes('#include <map_fragment>\ndiffuseColor.a = opacity;'));
+  assert.ok(shader.fragmentShader.indexOf('diffuseColor.a = opacity;')<shader.fragmentShader.indexOf('#include <opaque_fragment>'),'Reset occurs before intentional foreground fade');
  }
  assert.ok(urls.slice(-4).every(url=>url.endsWith((lite?512:1024)+'.webp')));
 }

@@ -43,6 +43,9 @@ def install(root, destination, layout):
                 raise ValueError(f'{asset} is not HDR')
             files['indirect-' + mode + suffix + '.hdr'] = asset
     manifest = json.loads((destination / 'indirect-bake.json').read_text())
+    if manifest.get('source_sha256') != source_hash:
+        # A controlled sampling comparison belongs to its exact scene inputs.
+        manifest.pop('day_sampling_comparison', None)
     manifest.update(source_sha256=source_hash, layout=layout,
                     sampling_note='Matched finished day/night bakes; packed without denoising or atlas blur.',
                     atlas_orientation='raw glTF UV; day/night flipY=false', **stats)

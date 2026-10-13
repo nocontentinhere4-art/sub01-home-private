@@ -22,6 +22,11 @@ for(const lite of [false,true]){
  assert.deepEqual([court.geometry.parameters.width,court.geometry.parameters.depth],[10,10.2]);
  assert.ok(Math.abs(court.position.y+court.geometry.parameters.height/2+.02)<1e-8,'ground court remains below entrance floor, not a balcony-height mask');
  const nearWalk=scene.getObjectByName('local_front_sidewalk'),farWalk=scene.getObjectByName('local_far_sidewalk'),road=scene.getObjectByName('local_residential_road');
+ const pavingShader={vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};
+ nearWalk.material.onBeforeCompile(pavingShader);
+ assert.ok(pavingShader.fragmentShader.includes('roughnessFactor *= texture2D(map,vMapUv).a;'),'Packed roughness preserved through actual transition shader');
+ assert.ok(pavingShader.fragmentShader.indexOf('diffuseColor.a = opacity;')>0);
+ assert.ok(pavingShader.fragmentShader.indexOf('diffuseColor.a = opacity;')<pavingShader.fragmentShader.indexOf('diffuseColor.a *='),'Restore surface opacity before deliberate spatial fade');
  for(const surface of [nearWalk,farWalk,road])assert.equal(surface.geometry.parameters.width,18,'local foreground, not a 60m invented block');
  assert.equal(nearWalk.position.y+nearWalk.geometry.parameters.height/2,0,'walkway matches ground-floor entry');
  assert.ok(road.position.y+road.geometry.parameters.height/2<0,'road sits below curb');
