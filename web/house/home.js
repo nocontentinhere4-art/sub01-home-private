@@ -11,7 +11,7 @@ import { GLTFLoader } from "./vendor/GLTFLoader.js";
 import { MeshoptDecoder } from "./vendor/meshopt_decoder.module.js";
 import { createHouseWindowView } from "./house_window_view.mjs";
 import { createExteriorBackdrops } from "./exterior_backdrops.mjs?v=3";
-import { balconyAllows, balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs?v=3";
+import { balconyApproach, createBalconyDoor, staticBakeScene } from "./balcony_access.mjs?v=3";
 import { homeLighting } from "./lighting.mjs";
 import { stairClearanceAllows, STAIR_CLEARANCE } from "./stair_clearance.mjs?v=3";
 import { staticBodyAllows, rigidPotFromMesh, rigidBoxFromMesh, rigidBoxesFromInstances, showerSupportHeight } from "./static_clearance.mjs?v=3";
@@ -41,8 +41,13 @@ import { createFirstPersonBody } from "./first_person_body.mjs";
 import { reachableInteraction } from "./interactions.mjs";
 import { HeldControls } from "./held_controls.mjs?v=2";
 import { streetAccessAllows, buildCourtyardFrontRail } from './street_access.mjs?v=1';
-import { frontDoorAllows, frontDoorApproach } from './front_door_access.mjs';
-import { bathroomAllows, bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
+import { frontDoorApproach } from './front_door_access.mjs';
+import { bathroomApproach, bathroomDoorPosition } from './bathroom_access.mjs';
+import { actorVisible, doorState, doorTargets, fixtureLevel, roomLit, visitorDoorAllows } from './house_interactions.mjs';
+import { createHouseControlsPanel, operatorMutate } from './house_controls_panel.mjs';
+import { applyHavenSeamDetail, applyQueenBedOak } from './furnishing_detail.mjs';
+import { createBathFixtureMaterials, installBathFixture } from './bath_fixture_materials.mjs';
+import { BATH_FALLBACK_CALLS, findReplacedPrimitives, sameCalls } from './replaced_primitives.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
@@ -50,6 +55,16 @@ import { loadViewControls, saveViewControls, defaultViewControls } from './view_
 import { ShadowRefresh } from './shadow_refresh.mjs';
 import { createInteriorTrim } from './interior_trim.mjs';
 import { createDraftSubmit } from './draft_submit.mjs';
+// Visitor door rules (house_interactions.mjs): a closed or locked door blocks
+// entry from the house and never traps; older servers keep the plain leaf
+// collider. canWalk calls these under the original collider names.
+function visitorDoor(name, x, z, feet, leaf) {
+  return visitorDoorAllows(name, [camera.position.x, camera.position.z], [x, z], feet,
+    doorState(homeState?.doors?.[name]), leaf);
+}
+function balconyAllows(x, z, feet, openness) { return visitorDoor('balcony', x, z, feet, openness); }
+function frontDoorAllows(x, z, feet, angle) { return visitorDoor('front', x, z, feet, angle); }
+function bathroomAllows(x, z, feet, leafCentre) { return visitorDoor('bathroom', x, z, feet, leafCentre); }
 if (location.hostname === "127.0.0.1" && new URLSearchParams(location.search).get("test") === "daytime")
   document.querySelector("header small").textContent += " / DAYTIME DEVICE TEST";
 const lite =
@@ -576,6 +591,7 @@ async function loadFurnished(name, x, y, z, width, rotation = 0, sourceUrl = nul
 const havenSofaMaterials = createHavenSofaMaterials(T, loader, assetRoot, Math.min(renderer.capabilities.getMaxAnisotropy(), 8));
 havenSofaMaterials.Haven_linen.color.set('#737e87');
 havenSofaMaterials.Haven_seams.color.set('#58616a');
+applyHavenSeamDetail(havenSofaMaterials, lite ? 'lite' : 'full');
 const sofaReady = gltfLoader.loadAsync('/house/assets/haven-sofa/sofa.glb?v=1').then(gltf => {
   const root = gltf.scene;
   root.position.set(-1.8, 0, .1);
@@ -888,9 +904,7 @@ const bedFrameReady = gltfLoader.loadAsync('/house/assets/cc0-queen-bed/queen-be
       material.color.set(/teal/.test(material.name) ? '#b99845' : '#f7f4eb');
       material.roughness = .92;
     } else {
-      material.map = M.architectureOak.map;
-      material.color.set('#e7dcc9');
-      material.roughness = .82;
+      applyQueenBedOak(material, object.geometry, M.architectureOak, lite ? 'lite' : 'full');
     }
     object.material = material;
     object.castShadow = object.receiveShadow = true;
@@ -952,6 +966,54 @@ box(0.42, 0.42, 0.6, -2.9, 3.24, 2.23, M.white, 0.11);
 box(0.43, 0.64, 0.18, -2.9, 3.47, 2.49, M.white, 0.07);
 box(0.36, 0.04, 0.46, -2.9, 3.48, 2.18, M.cream, 0.08);
 obstacle(-2.9, 2.23, 0.45, 0.72, 1);
+// Original bath vanity/toilet, ceiling light and oak door leaf (tools/build_home_bath_*.py).
+// The primitives above stay unbatched and are hidden only after the matching
+// GLB + sidecar loaded; any missing asset or mismatch keeps them as they are.
+const bathMaterials = createBathFixtureMaterials(T, { oak: M.architectureOak, brass: M.brass, metal: M.metal });
+const bathFallback = {};
+for (const [name, calls] of Object.entries(BATH_FALLBACK_CALLS)) {
+  try {
+    bathFallback[name] = findReplacedPrimitives(scene.children, calls);
+    for (const mesh of bathFallback[name]) mesh.userData.replaceable = true;
+  } catch (error) { console.warn('Bath ' + name + ' stays procedural:', error.message); }
+}
+let bathLight = null;
+function loadBathAsset(dir, name) {
+  return Promise.all([
+    fetch('/house/assets/' + dir + '/' + name + '.json?v=1').then(r => {
+      if (!r.ok) throw Error('sidecar ' + r.status);
+      return r.json();
+    }),
+    gltfLoader.loadAsync('/house/assets/' + dir + '/' + name + '.glb?v=1'),
+  ]);
+}
+const bathFixturesReady = Promise.all(Object.keys(BATH_FALLBACK_CALLS).map(name =>
+  loadBathAsset('bath-fixtures-original', name).then(([sidecar, gltf]) => {
+    if (!bathFallback[name] || !sameCalls(sidecar.replaces_home_js, BATH_FALLBACK_CALLS[name]))
+      throw Error('sidecar does not match the home.js fallback');
+    scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
+    for (const mesh of bathFallback[name]) mesh.visible = false;
+    document.getElementById('status').dataset['bath' + name[0].toUpperCase() + name.slice(1)] = 'original';
+    renderer.shadowMap.needsUpdate = true;
+  }).catch(error => console.warn('Bath ' + name + ' fallback:', error.message))));
+const bathLightReady = loadBathAsset('bath-light-original', 'bath-light').then(([sidecar, gltf]) => {
+  const spec = sidecar.light;
+  if (spec?.type !== 'PointLight' || spec.room !== 'bathroom') throw Error('unexpected light spec');
+  scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
+  bathLight = new T.PointLight(spec.color, spec.intensity, spec.distance, spec.decay);
+  bathLight.position.set(...spec.position);
+  bathLight.userData.fullIntensity = spec.intensity;
+  scene.add(bathLight);
+  switchedMaterials.add(bathMaterials.diffuser);
+  applyRoomLights();
+}).catch(error => console.warn('Bath light fallback:', error.message));
+const bathDoorReady = loadBathAsset('bath-door-original', 'bath-door').then(([sidecar, gltf]) => {
+  if (sidecar.runtime_parent !== 'bathDoor') throw Error('unexpected door parent');
+  // The slab keeps sliding and colliding; only its look is replaced.
+  bathDoor.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
+  bathDoor.material = new T.MeshBasicMaterial({ visible: false });
+  renderer.shadowMap.needsUpdate = true;
+}).catch(error => console.warn('Bath door fallback:', error.message));
 box(0.9, 0.1, 1, -1.5, 3.08, 2.15, tiles, 0.015);
 const showerGlass = new T.MeshStandardMaterial({
   color: "#c2d5d1",
@@ -985,10 +1047,6 @@ for (let x = -3.9; x < -0.2; x += 0.25)
 beam([-3.95, 4.03, 5.2], [-0.2, 4.03, 5.2], 0.028, M.darkwood);
 for (const x of [-3.95, -0.2]) beam([x, 4, 4], [x, 4, 5.2], 0.028, M.darkwood);
 plant(-3.4, 3, 4.65, 1.1);
-box(0.65, 0.16, 0.68, -1.2, 3.44, 4.5, M.cream, 0.07);
-box(0.65, 0.6, 0.16, -1.2, 3.77, 4.8, M.cream, 0.07);
-for (const x of [-1.45, -0.95])
-  for (const z of [4.28, 4.7]) beam([x, 3, z], [x, 3.4, z], 0.025, M.wood);
 obstacle(-1.2, 4.55, 0.72, 0.8, 1);
 // Sewn continuous linen; dynamic folds retain textile length while gathering.
 const curtains = new T.Group();
@@ -1183,6 +1241,21 @@ exteriorCredit.textContent='Tokyo panorama · Masato OHTA · CC BY 2.0';
 exteriorCredit.target='_blank'; exteriorCredit.rel='noopener';
 exteriorCredit.style.cssText='position:fixed;bottom:5px;left:8px;font:9px monospace;color:#bfc7cc;z-index:3;background:#17202799;padding:3px 5px';
 document.body.append(exteriorCredit);
+// Latest home state for per-room lights; the frame loop updates it, lighting()
+// re-applies it (lighting() first runs before homeState exists).
+let houseLightState = null, lastLightRooms = null;
+function applyRoomLights() {
+  const lit = (light) => fixtureLevel(houseLightState, light.position.toArray(), lampOn);
+  warm.intensity = 12 * lit(warm);
+  bedLight.intensity = 3.5 * lit(bedLight);
+  kitchenWorkLight.intensity = 2.4 * lit(kitchenWorkLight);
+  ceilingLights.forEach((light) => { light.intensity = 10 * lit(light); });
+  if (bathLight) bathLight.intensity = bathLight.userData.fullIntensity * lit(bathLight);
+  for (const material of switchedMaterials)
+    if (material.userData.switchedRoom)
+      material.emissiveIntensity = roomLit(houseLightState, material.userData.switchedRoom, lampOn)
+        ? material.userData.lampEmission : 0;
+}
 let lampOn = true,
   curtainOpen = false,
   lastLightMinute = -1;
@@ -1221,6 +1294,8 @@ function lighting(timestamp = Date.now() / 1000) {
   });
   for (const material of switchedMaterials)
     material.emissiveIntensity = lampOn ? material.userData.lampEmission : 0;
+  // Hoisted; absent only when a source check runs this block in isolation.
+  if (typeof applyRoomLights === 'function') applyRoomLights();
   document.getElementById('status').dataset.bedsideEmission = String(lampOn ? glowMat.emissiveIntensity : 0);
   renderer.shadowMap.needsUpdate = true;
   document.getElementById("status").dataset.shadowMode = lite ? "indirect-only" : sun.castShadow ? "sun-and-pendant" : "pendant";
@@ -1239,6 +1314,16 @@ shade();
 interactions.push(
   { object: deskLamp, label: "E · Switch lamp", fn: toggleLamp },
   { object: bedsideLamp, label: "E · Switch lamp", fn: toggleLamp },
+);
+// Doors open/close on the server (operator); "auto" returns them to the character's rules.
+async function toggleDoor(name) {
+  const open = homeState?.doors?.[name]?.state === 'open';
+  await mutate('settings', { doors: { [name]: open ? 'auto' : 'open' } });
+}
+interactions.push(
+  { object: frontDoorGroup, label: "E · Open / close the front door", fn: () => toggleDoor('front') },
+  { object: bathDoor, label: "E · Open / close the bathroom door", fn: () => toggleDoor('bathroom') },
+  { object: balconyDoor.leaf, label: "E · Open / close the balcony door", fn: () => toggleDoor('balcony') },
 );
 const places = {
   entry: { p: [2, 1.65, 3.1], look: [2, 1.65, 5.2], name: "Front door" },
@@ -1391,6 +1476,13 @@ document.getElementById("explore").onclick = () => {
 };
 document.getElementById("lamp").onclick = toggleLamp;
 document.getElementById("curtain").onclick = toggleCurtain;
+const houseControlsBox = document.createElement('details');
+houseControlsBox.id = 'house-controls';
+houseControlsBox.append(Object.assign(document.createElement('summary'), { textContent: 'House' }));
+document.querySelector('footer').append(houseControlsBox);
+const houseControls = createHouseControlsPanel(houseControlsBox,
+  { mutate: operatorMutate(fetch, operatorToken), operatorKey: operatorToken });
+houseControlsBox.addEventListener('toggle', () => houseControls.refreshOperator());
 addEventListener("keydown", (e) => {
   if (e.key === "Escape" && (panelKind === "view" || !e.target.matches("input,textarea"))) {
     if (panelKind) { e.preventDefault(); closePanel(); }
@@ -1560,11 +1652,26 @@ function update(dt) {
   const cabinetMoving = upperCabinetDoors?.update(dt) || false;
   if (upperCabinetDoors) document.getElementById("status").dataset.cabinetDoors = JSON.stringify(upperCabinetDoors.snapshot());
   const p = camera.position;
-  const balconyMoving = balconyDoor.update(dt,
-    balconyApproach([p.x,p.y,p.z]) || balconyApproach(homeState?.position));
+  if (homeState !== houseLightState) {   // a new home message
+    houseLightState = homeState;
+    houseControls.update(homeState);
+    const rooms = JSON.stringify(homeState?.lights?.rooms ?? null);
+    if (rooms !== lastLightRooms) {
+      lastLightRooms = rooms;
+      applyRoomLights();
+      if (!lite) renderer.shadowMap.needsUpdate = true;
+    }
+  }
+  // Server doors (opened from the inside for the visitor); older servers: proximity.
+  const doorWant = doorTargets(homeState, following ? null : [p.x, p.y, p.z], {
+    front: frontDoorApproach([p.x,p.y,p.z]) || frontDoorApproach(homeState?.position),
+    bathroom: bathroomApproach([p.x, p.y, p.z]) || bathroomApproach(homeState?.position),
+    balcony: balconyApproach([p.x,p.y,p.z]) || balconyApproach(homeState?.position),
+  });
+  const balconyMoving = balconyDoor.update(dt, doorWant.balcony);
   balconyGlassOpenness.value = balconyDoor.openness;
   document.getElementById('status').dataset.balconyDoor = String(Math.round(balconyDoor.openness * 100));
-  entranceOpen = frontDoorApproach([p.x,p.y,p.z]) || frontDoorApproach(homeState?.position);
+  entranceOpen = doorWant.front;
   frontDoorGroup.rotation.y = T.MathUtils.lerp(
     frontDoorGroup.rotation.y,
     entranceOpen ? -Math.PI * 0.48 : 0,
@@ -1579,7 +1686,7 @@ function update(dt) {
       p.x > bathroomBounds.x0 &&
       p.z > bathroomBounds.z0 &&
       p.z < bathroomBounds.z1));
-  const doorOpen = bathroomApproach([p.x, p.y, p.z]) || bathroomApproach(homeState?.position);
+  const doorOpen = doorWant.bathroom;
   bathDoor.position.z = bathroomDoorPosition(
     bathDoor.position.z,
     dt,
@@ -2726,7 +2833,8 @@ for (const child of scene.children) {
 }
 // Baked contact lighting is optional: geometry/material fallback remains functional.
 for (const task of [beddingReady, bedFrameReady, nightstandReady, bedsideLampReady, coffeeMachineReady,
-  sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady, officeChairReady]) {
+  sofaReady, coffeeTableReady, kitchenCabinetReady, officeDeskReady, officeShelvesReady, officeChairReady,
+  bathFixturesReady, bathLightReady, bathDoorReady]) {
   assetBarrier.add(task);
 }
 const homeAssetsReady = assetBarrier.settled().then(report => {
@@ -2954,7 +3062,10 @@ renderer.setAnimationLoop(() => {
   accumulated = 0;
   renderer.info.reset();
   update(dt);
-  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000, following && !privacyActive, camera);
+  // Away (presence "away"): no body; the camera still follows homeState.position
+  // and the body returns on the first frame he is back (step() sets visibility).
+  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,
+    following && !privacyActive && actorVisible(homeState), camera);
   for (const panel of curtainPanels)
     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;
