@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "units": "metres; positions are browser/three.js runtime coordinates (x, y up, z) of each item's origin; dims_m are (width local X, depth local Y, height local Z) in the item's Blender-local frame; yaw/tilt are Blender Euler Z/X degrees (three.js rotation.y == Blender rotation about +Z)",
+  "reference_access": "The primary reference https://x.com/SimbasJungles/status/2109095401273938072 and process article https://x.com/SimbasJungles/status/2109295930021208144 were NOT viewed while writing this spec: the owner-mandated playwright-isolated browser was not available to this agent. Details follow the owner's written description only (warm cream rooms, soft sun, contact shadows, bevels, realistic cushion/duvet/fabric detail, decor, calibrated real-world dimensions). No visual match is claimed.",
+  "materials": {
+    "linen_cream":      {"texture": "rough_linen", "tint": "#efe6d6", "roughness": 0.9, "sheen": 0.3, "repeat_per_m": 2.5, "normal_strength": 0.4},
+    "linen_oat":        {"texture": "rough_linen", "tint": "#d6c3a3", "roughness": 0.9, "sheen": 0.3, "repeat_per_m": 2.5, "normal_strength": 0.4},
+    "linen_terracotta": {"texture": "rough_linen", "tint": "#bf7f5f", "roughness": 0.9, "sheen": 0.25, "repeat_per_m": 2.5, "normal_strength": 0.4},
+    "jacquard_sand":    {"texture": "quatrefoil_jacquard_fabric", "tint": "#cdb894", "roughness": 0.85, "sheen": 0.35, "repeat_per_m": 3.0, "normal_strength": 0.5},
+    "wool_caramel":     {"texture": "rough_linen", "tint": "#b7865a", "roughness": 0.95, "sheen": 0.4, "repeat_per_m": 3.0, "normal_strength": 0.6},
+    "ceramic_ivory":    {"tint": "#ece5d8", "roughness": 0.32, "coat": 0.25},
+    "ceramic_clay":     {"tint": "#c9a589", "roughness": 0.55},
+    "oak":              {"texture": "home_oak_veneer", "tint": "#e7dcc9", "roughness": 0.8, "repeat_per_m": 0.55, "normal_strength": 0.3},
+    "paper":            {"tint": "#f1ead9", "roughness": 0.9},
+    "book_clay":        {"texture": "rough_linen", "tint": "#a8775a", "roughness": 0.85, "repeat_per_m": 4.0, "normal_strength": 0.25},
+    "book_sage":        {"texture": "rough_linen", "tint": "#8d998e", "roughness": 0.85, "repeat_per_m": 4.0, "normal_strength": 0.25},
+    "dried_stem":       {"tint": "#b59d76", "roughness": 0.85}
+  },
+  "items": [
+    {
+      "id": "sofa_pillow_linen_left", "label": "Cream linen throw pillow with oat piping, left back corner", "room": "lounge", "kind": "throw_pillow",
+      "dims_m": [0.45, 0.15, 0.45], "source": "Standard 45 x 45 cm square throw pillow; ~15 cm plump loft with feather insert",
+      "placement_rule": "Rests on the Haven sofa seat (top 0.503 m), back leaning on the back cushion face (runtime x ~ -1.68), in the corner beside the left arm; outside the seat he sits in (z -0.20..0.40)",
+      "support": "sofa_seat", "position_runtime_m": [-1.765, 0.503, -0.545], "yaw_deg": -90, "tilt_deg": -14,
+      "material": "linen_cream", "piping_material": "linen_oat", "params": {"pinch": 0.07, "sag": 0.012}, "sink_m": 0.01
+    },
+    {
+      "id": "sofa_pillow_jacquard_left_front", "label": "Sand jacquard accent pillow layered in front", "room": "lounge", "kind": "throw_pillow",
+      "dims_m": [0.40, 0.13, 0.40], "source": "Standard 40 x 40 cm accent cushion layered in front of a 45 cm pillow",
+      "placement_rule": "On the sofa seat in front of sofa_pillow_linen_left, leaning on it; must stay outside the occupied seat zone",
+      "support": "sofa_seat", "position_runtime_m": [-1.90, 0.503, -0.42], "yaw_deg": -88, "tilt_deg": -10,
+      "material": "jacquard_sand", "piping_material": "linen_oat", "params": {"pinch": 0.06, "sag": 0.01}, "sink_m": 0.01,
+      "leans_on": ["dressing:sofa_pillow_linen_left"]
+    },
+    {
+      "id": "sofa_pillow_linen_right", "label": "Oat linen throw pillow, right back corner", "room": "lounge", "kind": "throw_pillow",
+      "dims_m": [0.45, 0.15, 0.45], "source": "Standard 45 x 45 cm square throw pillow; ~15 cm loft",
+      "placement_rule": "On the sofa seat against the back cushion beside the right arm; clear of the folded throw on the arm",
+      "support": "sofa_seat", "position_runtime_m": [-1.765, 0.503, 0.73], "yaw_deg": -90, "tilt_deg": -14,
+      "material": "linen_oat", "piping_material": "linen_cream", "params": {"pinch": 0.07, "sag": 0.012}, "sink_m": 0.01
+    },
+    {
+      "id": "sofa_arm_throw_folded", "label": "Folded caramel wool throw over the right sofa arm", "room": "lounge", "kind": "draped_throw",
+      "dims_m": [0.55, 0.328, 0.224], "origin_height_m": 0.20,
+      "source": "130 x 170 cm throw folded to a ~55 cm wide band (two 12 mm wool layers) over a 24 cm upholstered arm (arm width/height measured from haven-sofa/sofa.glb)",
+      "placement_rule": "Underside rests on the right arm top (0.71 m), drops 20 cm both sides; the inner drop ends just above the seat; stays outside the lounge_gate-sofa_front_approach capsule",
+      "support": "sofa_arm_right", "position_runtime_m": [-1.90, 0.71, 1.12], "yaw_deg": 0, "tilt_deg": 0, "overhang_m": 0.06,
+      "material": "wool_caramel", "params": {"top_width": 0.24, "radius": 0.02, "drop": 0.20, "thickness": 0.012, "fold_layers": 1}
+    },
+    {
+      "id": "coffee_table_book_stack", "label": "Two linen-bound coffee-table books, slightly fanned", "room": "lounge", "kind": "book_stack",
+      "dims_m": [0.31, 0.24, 0.05], "source": "Common coffee-table book formats 31 x 24 x 2.8 cm and 27 x 21 x 2.2 cm",
+      "placement_rule": "Flat on the coffee table top (0.455 m, 0.70 x 1.40 m), far half from the sofa node; below every TV sightline",
+      "support": "coffee_table_top", "position_runtime_m": [-3.22, 0.455, -0.22], "yaw_deg": 6, "tilt_deg": 0, "rigid": true,
+      "material": "book_clay",
+      "params": {"books": [
+        {"dims_m": [0.31, 0.24, 0.028], "material": "book_clay"},
+        {"dims_m": [0.27, 0.21, 0.022], "material": "book_sage", "yaw_deg": -7, "offset": [0.01, 0.005]}
+      ]}
+    },
+    {
+      "id": "coffee_table_vase_dried_stems", "label": "Clay ceramic bud vase with dried grass stems", "room": "lounge", "kind": "vase_with_stems",
+      "dims_m": [0.22, 0.22, 0.50], "source": "Bud vase 12 cm diameter x 22 cm; dried pampas/grass stems ~28 cm above the lip",
+      "placement_rule": "On the coffee table top toward the right end; stem tops (0.96 m) stay below the TV sightlines from the sofa",
+      "support": "coffee_table_top", "position_runtime_m": [-3.25, 0.455, 0.42], "yaw_deg": 0, "tilt_deg": 0, "rigid": true,
+      "material": "ceramic_clay",
+      "params": {"stems": [[12, 20, 0.28], [18, 140, 0.25], [9, 260, 0.3], [22, 320, 0.22]]}
+    },
+    {
+      "id": "bed_foot_blanket_folded", "label": "Folded terracotta linen blanket across the foot of the bed", "room": "bedroom", "kind": "draped_throw",
+      "dims_m": [0.50, 1.648, 0.164], "origin_height_m": 0.14,
+      "source": "Queen bed blanket folded to a 50 cm runner; mattress 1.52 x 2.03 m (cc0-queen-bed queen-bed.json) so the band drops 14 cm over each side",
+      "placement_rule": "Across the duvet foot (bed already has a quilted duvet and two pillows, so no duvet is added); drop stays above the side rails (3.38 m); clear of the bed node capsule",
+      "support": "bed_top", "position_runtime_m": [-2.4, 3.66, -1.65], "yaw_deg": 90, "tilt_deg": 0, "overhang_m": 0.03, "rest_tolerance_m": 0.08,
+      "material": "linen_terracotta", "params": {"top_width": 1.52, "radius": 0.04, "drop": 0.14, "thickness": 0.012, "fold_layers": 1}
+    },
+    {
+      "id": "bed_lumbar_cushion", "label": "Oat linen lumbar cushion in front of the bed pillows", "room": "bedroom", "kind": "throw_pillow",
+      "dims_m": [0.50, 0.14, 0.30], "source": "Standard 30 x 50 cm lumbar cushion",
+      "placement_rule": "On the duvet in front of the two existing pillows, leaning lightly on them; centred on the bed",
+      "support": "bed_top", "position_runtime_m": [-2.4, 3.66, -2.66], "yaw_deg": 0, "tilt_deg": -12, "rest_tolerance_m": 0.08,
+      "material": "linen_oat", "piping_material": "linen_terracotta", "params": {"pinch": 0.05, "sag": 0.008}, "sink_m": 0.01,
+      "leans_on": ["existing:queen_bed_pillows"]
+    },
+    {
+      "id": "kitchen_canister_large", "label": "Ivory glazed canister with oak lid (large)", "room": "kitchen", "kind": "canister",
+      "dims_m": [0.11, 0.11, 0.20], "source": "Ceramic kitchen canister ~11 cm diameter x 20 cm with lid",
+      "placement_rule": "Back-left corner of the stone counter (top 0.9225 m), left of the utensil crock; away from the sink, the prep worktop and both cabinet door swings",
+      "support": "kitchen_counter", "position_runtime_m": [-3.66, 0.9225, -3.79], "yaw_deg": 0, "tilt_deg": 0, "rigid": true,
+      "material": "ceramic_ivory"
+    },
+    {
+      "id": "kitchen_canister_medium", "label": "Ivory glazed canister with oak lid (medium)", "room": "kitchen", "kind": "canister",
+      "dims_m": [0.10, 0.10, 0.16], "source": "Ceramic kitchen canister ~10 cm diameter x 16 cm with lid",
+      "placement_rule": "In the same back-left counter row as the large canister",
+      "support": "kitchen_counter", "position_runtime_m": [-3.66, 0.9225, -3.66], "yaw_deg": 0, "tilt_deg": 0, "rigid": true,
+      "material": "ceramic_ivory"
+    },
+    {
+      "id": "kitchen_canister_small", "label": "Ivory glazed canister with oak lid (small)", "room": "kitchen", "kind": "canister",
+      "dims_m": [0.09, 0.09, 0.12], "source": "Ceramic kitchen canister ~9 cm diameter x 12 cm with lid",
+      "placement_rule": "Front of the back-left counter row, still left of the utensil crock",
+      "support": "kitchen_counter", "position_runtime_m": [-3.66, 0.9225, -3.54], "yaw_deg": 0, "tilt_deg": 0, "rigid": true,
+      "material": "ceramic_ivory"
+    }
+  ],
+  "skipped_existing": [
+    {"id": "lounge_rug", "room": "lounge", "evidence": "home.js rug(3.0, 3.3, -2.4, 0, .1) already lies under the sofa and coffee table"},
+    {"id": "office_rug", "room": "office", "evidence": "home.js rug(2.7, 2.3, 2, 0, -1.2)"},
+    {"id": "bedroom_rug", "room": "bedroom", "evidence": "home.js rug(2.65, 3, -2.2, 3, -1.7)"},
+    {"id": "curtains", "room": "lounge", "evidence": "home.js createCurtainPanel grey + sheer panels (curtain_panels.mjs)"},
+    {"id": "bed_duvet", "room": "bedroom", "evidence": "cc0-queen-bed/queen-bed.json part 'Quilted closed duvet' and two plump pillows; a folded foot blanket is added instead"},
+    {"id": "office_shelf_books", "room": "office", "evidence": "home.js books(1.2, y, -3.71, 15) on the upper office shelves"},
+    {"id": "potted_plants", "room": "all", "evidence": "home.js plant()/furnished('potted_plant_01') x6 incl. kitchen counter and desk"},
+    {"id": "nightstand_decor", "room": "bedroom", "evidence": "bedside-lamp (0.31 m shade) fills the 0.50 x 0.41 m side_table_01 top"}
+  ]
+}
