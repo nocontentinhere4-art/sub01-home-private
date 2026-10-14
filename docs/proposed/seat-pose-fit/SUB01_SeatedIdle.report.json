@@ -588,7 +588,7 @@
   },
   "loop_gate": true
  },
- "glb": "docs/proposed/seat-pose-fit/SUB01_SeatedIdle.glb",
+ "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_SeatedIdle.glb",
  "sha256": "57ba5e1be7a392b3889c8a875f993d39a808fee87f12a4e25d6f70a62b47a156",
  "bytes": 160036,
  "key_count": 126,
@@ -738,6 +738,191 @@
   "finger_local_max_change_deg": 2.4e-06
  },
  "all_gates_pass": true,
+ "chair_report": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+  "source": "root chair surface report (actual UE cushion triangles)"
+ },
+ "fit_frame_all_gates_pass": true,
+ "actual_chair": {
+  "chair_moved_cm": [
+   0.0,
+   0.0
+  ],
+  "chair_transform": {
+   "translation_cm": [
+    200.0199556350708,
+    -186.69002056121826,
+    60.68757772445679
+   ],
+   "rotation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "scale": [
+    0.6068757772445679,
+    0.6068757772445679,
+    0.6068757772445679
+   ]
+  },
+  "body_cm": [
+   200.025,
+   -199.8,
+   -0.6
+  ],
+  "body_yaw": 180,
+  "body_offset_from_audited_transform_cm": [
+   -3.875,
+   32.5
+  ],
+  "keyboard": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+  "read_back_from_written_glb": true,
+  "gates": {
+   "frames": 126,
+   "seated_frames": 126,
+   "seat": {
+    "buttocks": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       0.0365,
+       0.0993
+      ],
+      "min_band_vertices": 16,
+      "min_over_surface_vertices": 1235
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       6.0319,
+       6.0852
+      ],
+      "min_over_surface_vertices": 1358
+     }
+    },
+    "left_posterior_thigh": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       -1.6197,
+       -1.5603
+      ],
+      "min_band_vertices": 587,
+      "min_over_surface_vertices": 2265
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       1.8652,
+       1.9244
+      ],
+      "min_over_surface_vertices": 3099
+     }
+    },
+    "right_posterior_thigh": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       -2.0993,
+       -2.0368
+      ],
+      "min_band_vertices": 815,
+      "min_over_surface_vertices": 2485
+     },
+     "raw": {
+      "pass_frames": 14,
+      "lowest_gap_cm": [
+       0.4341,
+       0.4867
+      ],
+      "min_over_surface_vertices": 3462
+     }
+    }
+   },
+   "soles": {
+    "left_sole": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       0.001,
+       0.0049
+      ],
+      "min_band_vertices": 103
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       -2.7281,
+       -2.7242
+      ]
+     },
+     "added_foot_slide_cm_max": 0.0,
+     "gated_frames": "all frames",
+     "unseated_frames_penetration": 0,
+     "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+    },
+    "right_sole": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       0.001,
+       0.0018
+      ],
+      "min_band_vertices": 179
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       -2.8859,
+       -2.8851
+      ]
+     },
+     "added_foot_slide_cm_max": 0.0,
+     "gated_frames": "all frames",
+     "unseated_frames_penetration": 0,
+     "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+    }
+   },
+   "bone_length_max_error_cm": 0.0,
+   "foot_world_rotation_max_change_deg": 7.3e-06,
+   "upper_body_world": {
+    "rotation_max_change_deg": {
+     "Spine": 3e-06,
+     "Spine1": 3e-06,
+     "Spine2": 3.2e-06,
+     "Neck": 3.2e-06,
+     "Head": 3.4e-06,
+     "LeftShoulder": 5.7e-06,
+     "RightShoulder": 6.6e-06
+    },
+    "spine_translation_cm": {
+     "vertical": [
+      -7.4223,
+      -7.136
+     ],
+     "horizontal_max": 6e-07
+    }
+   },
+   "head_height_change_cm": [
+    -7.4223,
+    -7.136
+   ]
+  },
+  "all_gates_pass": true
+ },
+ "all_gates_pass_rule": "measured on the ACTUAL chair (measured transform, never moved) with the body at actual_chair.body_cm; fit_frame_all_gates_pass is the chair-relative solver frame",
  "hips_path_ue_cm": [
   [
    203.983,

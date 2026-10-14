@@ -294,3 +294,45 @@ def test_seam_report_is_zero_for_a_continuous_join():
     assert r['position_delta']['max_joint_cm'] == 0 and r['position_delta']['max_joint_rotation_deg'] == 0
     # velocity: incoming step 1->2 vs outgoing 2->3 (a smooth synthetic would match; random poses do not)
     assert r['velocity_delta']['hips_cm_s'] >= 0
+
+
+@pytest.mark.skipif(not REPORT.exists(), reason='no committed seat-pose-fit report')
+def test_committed_report_measures_every_clip_on_the_actual_chair():
+    r = json.loads(REPORT.read_text())
+    assert r['chair_horizontal_shift_cm'] == [0.0, 0.0]
+    a = r['actual_chair']
+    chair_sha = r['cushion']['sha256']
+    assert a['chair_report']['sha256'] == chair_sha and a['chair_transform']['translation_cm'][1] == pytest.approx(-186.69, abs=.01)
+    assert a['clips_pass'] == r['trial_gates_pass']
+    for k, clip in r['clips'].items():
+        rep = json.loads((ROOT / clip['glb'].replace('.glb', '.report.json')).read_text())
+        assert rep['chair_report']['sha256'] == chair_sha
+        assert rep['actual_chair']['chair_moved_cm'] == [0., 0.]
+        assert rep['all_gates_pass'] == rep['actual_chair']['all_gates_pass'] == r['trial_gates_pass'][k]
+    prop = json.loads((REPORT.parent / 'chair-reposition-proposal.json').read_text())
+    assert prop['proposal_only'] is True and prop['accepted'] is False and prop['requires_root_approval'] is True
+    assert sorted(prop['failing_on_actual_chair']) == sorted(k for k, v in r['trial_gates_pass'].items() if not v)
+
+
+@pytest.mark.skipif(not REPORT.exists(), reason='no committed seat-pose-fit report')
+def test_committed_sitdown_and_getup_join_the_seated_loop_continuously():
+    r = json.loads(REPORT.read_text())
+    for name in ('SitDown', 'GetUp'):
+        rep = json.loads((REPORT.parent / f'SUB01_{name}_seated.report.json').read_text())
+        seam = rep['seam']
+        assert seam['position_delta']['max_joint_cm'] < 1e-3 and seam['position_delta']['max_joint_rotation_deg'] < 1e-2
+        ref = seam['loop_own_seam_velocity_delta_reference']
+        # the velocity step at the join is the loop's own seam step (the blend follows the loop); tolerance: the loop's
+        # own closing pose step (<= 0.0063 cm) at 30 fps
+        assert seam['velocity_delta']['max_joint_cm_s'] <= ref['max_joint_cm_s'] + .25
+        assert seam['velocity_delta']['hips_cm_s'] <= ref['hips_cm_s'] + .25
+        pf = rep['actual_chair']['per_frame']
+        assert pf['frames'] == rep['key_count'] and len(pf['patches']['buttocks']['lowest_cm']) == pf['frames']
+        assert pf['all_frames_pass'] is (not pf['failing_frames'])
+        sb = rep['correction_curve']['seam_blend']
+        assert sb['weight'].startswith('quintic') and sb['search']['candidates'] > 10
+        w = pf['blend_weight']
+        assert (w[-2:] if name == 'SitDown' else w[:2]) == [1.0, 1.0]          # the seam step is the loop's own step
+        chosen = sb['search']['chosen']
+        assert chosen['failing_frames'] == 0 and chosen['peak_ratio_to_capture'] <= 1. and chosen['feet_within_capture']
+        assert rep['all_gates_pass'] is pf['all_frames_pass'] is True

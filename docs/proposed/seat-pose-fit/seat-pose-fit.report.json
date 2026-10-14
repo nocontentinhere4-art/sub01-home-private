@@ -47,8 +47,8 @@
  },
  "cushion_is_proxy": false,
  "chair_horizontal_shift_cm": [
-  3.875,
-  -32.5
+  0.0,
+  0.0
  ],
  "source_meta": {
   "schema": "sub01.seat-fit-source.v1",
@@ -63,8 +63,8 @@
    "count": 301
   },
   "body_cm": [
-   203.9,
-   -232.3,
+   200.025,
+   -199.8,
    -0.6
   ],
   "body_yaw": 180,
@@ -108,7 +108,13 @@
     }
    },
    "file": "/home/user/sub01-home-private/docs/proposed/native-chair-measured/20261014-actual-native-plantar-witness.json.gz"
-  }
+  },
+  "export_body_cm": [
+   203.9,
+   -232.3,
+   -0.6
+  ],
+  "body_cm_rule": "the body placement on the ACTUAL chair (chair never moved)"
  },
  "gates_from": [
   "tools/validate_unreal_seat_contact.py",
@@ -997,6 +1003,575 @@
   },
   "finger_local_max_change_deg": 1.2e-06
  },
+ "actual_chair": {
+  "rule": "the native chair transform is protected: the chair stays at its measured transform and only the body placement is searched; every clip is re-measured with the body at body_cm",
+  "chair_report": {
+   "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+   "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+   "source": "root chair surface report (actual UE cushion triangles)"
+  },
+  "chair_transform": {
+   "translation_cm": [
+    200.0199556350708,
+    -186.69002056121826,
+    60.68757772445679
+   ],
+   "rotation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "scale": [
+    0.6068757772445679,
+    0.6068757772445679,
+    0.6068757772445679
+   ]
+  },
+  "body_cm": [
+   200.025,
+   -199.8,
+   -0.6
+  ],
+  "body_yaw": 180,
+  "body_offset_from_audited_transform_cm": [
+   -3.875,
+   32.5
+  ],
+  "audited_body_cm": [
+   203.9,
+   -232.3,
+   -0.6
+  ],
+  "solver_frame": {
+   "chair_offset_cm": [
+    3.875,
+    -32.5
+   ],
+   "note": "the solver measures with the body at the audited transform and the cushion offset by chair_offset_cm; identical chair-relative geometry"
+  },
+  "keyboard": {
+   "source": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+   "top_cm": 87.3898,
+   "min_cm": [
+    182.173,
+    -301.297,
+    86.537
+   ],
+   "max_cm": [
+    217.749,
+    -287.917,
+    87.39
+   ]
+  },
+  "placement_search": {
+   "rule": "body moved along UE +Y (chair fixed); x offset -3.875 cm; pitch 22.50 deg and the arm bake as solved; lowering re-centred per placement",
+   "rows": [
+    {
+     "body_offset_cm": [
+      -3.875,
+      0.0
+     ],
+     "seat_lowering_recentred_cm": null,
+     "seat_lowest_gap_cm": [
+      null,
+      null
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 0,
+      "left_posterior_thigh": 0,
+      "right_posterior_thigh": 0
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 30,
+      "right": 31
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      2.5
+     ],
+     "seat_lowering_recentred_cm": null,
+     "seat_lowest_gap_cm": [
+      null,
+      null
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 0,
+      "left_posterior_thigh": 0,
+      "right_posterior_thigh": 0
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 28,
+      "right": 30
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      5.0
+     ],
+     "seat_lowering_recentred_cm": null,
+     "seat_lowest_gap_cm": [
+      null,
+      null
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 0,
+      "left_posterior_thigh": 0,
+      "right_posterior_thigh": 0
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 4,
+      "right": 28
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      7.5
+     ],
+     "seat_lowering_recentred_cm": null,
+     "seat_lowest_gap_cm": [
+      null,
+      null
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 0,
+      "left_posterior_thigh": 0,
+      "right_posterior_thigh": 0
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 24
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      10.0
+     ],
+     "seat_lowering_recentred_cm": null,
+     "seat_lowest_gap_cm": [
+      null,
+      null
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1,
+      "left_posterior_thigh": 0,
+      "right_posterior_thigh": 0
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 2
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      12.5
+     ],
+     "seat_lowering_recentred_cm": 23.6914,
+     "seat_lowest_gap_cm": [
+      -1.6907,
+      -0.3093
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 33,
+      "left_posterior_thigh": 22,
+      "right_posterior_thigh": 18
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      15.0
+     ],
+     "seat_lowering_recentred_cm": 19.5242,
+     "seat_lowest_gap_cm": [
+      -2.3544,
+      0.3544
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 151,
+      "left_posterior_thigh": 194,
+      "right_posterior_thigh": 151
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      17.5
+     ],
+     "seat_lowering_recentred_cm": 16.9445,
+     "seat_lowest_gap_cm": [
+      -2.1594,
+      0.1594
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 456,
+      "left_posterior_thigh": 425,
+      "right_posterior_thigh": 382
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      20.0
+     ],
+     "seat_lowering_recentred_cm": 14.8881,
+     "seat_lowest_gap_cm": [
+      -1.8012,
+      -0.1988
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 538,
+      "left_posterior_thigh": 706,
+      "right_posterior_thigh": 710
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      22.5
+     ],
+     "seat_lowering_recentred_cm": 12.9734,
+     "seat_lowest_gap_cm": [
+      -1.4876,
+      -0.5124
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 618,
+      "left_posterior_thigh": 1012,
+      "right_posterior_thigh": 1124
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      25.0
+     ],
+     "seat_lowering_recentred_cm": 11.4948,
+     "seat_lowest_gap_cm": [
+      -1.3802,
+      -0.6198
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 732,
+      "left_posterior_thigh": 1255,
+      "right_posterior_thigh": 1449
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      27.5
+     ],
+     "seat_lowering_recentred_cm": 10.4868,
+     "seat_lowest_gap_cm": [
+      -1.3153,
+      -0.6847
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 813,
+      "left_posterior_thigh": 1444,
+      "right_posterior_thigh": 1659
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      30.0
+     ],
+     "seat_lowering_recentred_cm": 9.5511,
+     "seat_lowest_gap_cm": [
+      -1.4056,
+      -0.5944
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 880,
+      "left_posterior_thigh": 1637,
+      "right_posterior_thigh": 1871
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      32.5
+     ],
+     "seat_lowering_recentred_cm": 8.9215,
+     "seat_lowest_gap_cm": [
+      -1.6236,
+      -0.3764
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 953,
+      "left_posterior_thigh": 1892,
+      "right_posterior_thigh": 2062
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      35.0
+     ],
+     "seat_lowering_recentred_cm": 8.3299,
+     "seat_lowest_gap_cm": [
+      -2.0446,
+      0.0446
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1187,
+      "left_posterior_thigh": 2151,
+      "right_posterior_thigh": 2244
+     },
+     "seat_gates_pass_all_frames": true,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      37.5
+     ],
+     "seat_lowering_recentred_cm": 7.6111,
+     "seat_lowest_gap_cm": [
+      -2.315,
+      0.315
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 2400,
+      "right_posterior_thigh": 2487
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      40.0
+     ],
+     "seat_lowering_recentred_cm": 7.054,
+     "seat_lowest_gap_cm": [
+      -2.524,
+      0.524
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 2626,
+      "right_posterior_thigh": 2750
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      42.5
+     ],
+     "seat_lowering_recentred_cm": 6.6804,
+     "seat_lowest_gap_cm": [
+      -2.7346,
+      0.7346
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 2843,
+      "right_posterior_thigh": 3071
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      45.0
+     ],
+     "seat_lowering_recentred_cm": 6.3772,
+     "seat_lowest_gap_cm": [
+      -2.9554,
+      0.9554
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 3014,
+      "right_posterior_thigh": 3386
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      47.5
+     ],
+     "seat_lowering_recentred_cm": 6.2205,
+     "seat_lowest_gap_cm": [
+      -3.1513,
+      1.1513
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 3241,
+      "right_posterior_thigh": 3704
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    },
+    {
+     "body_offset_cm": [
+      -3.875,
+      50.0
+     ],
+     "seat_lowering_recentred_cm": 6.1051,
+     "seat_lowest_gap_cm": [
+      -3.3251,
+      1.3251
+     ],
+     "seat_min_over_surface_vertices": {
+      "buttocks": 1268,
+      "left_posterior_thigh": 3507,
+      "right_posterior_thigh": 3957
+     },
+     "seat_gates_pass_all_frames": false,
+     "frames_hand_over_keys": {
+      "left": 0,
+      "right": 0
+     },
+     "frames": 31,
+     "typing_keys_reachable": false
+    }
+   ],
+   "seat_feasible_offsets_y_cm": [
+    22.5,
+    25.0,
+    27.5,
+    30.0,
+    32.5,
+    35.0
+   ],
+   "keyboard_reachable_offsets_y_cm": [],
+   "both_feasible_offsets_y_cm": [],
+   "typing_feasible_on_actual_chair": false
+  },
+  "clips_pass": {
+   "DeskTyping_seated": false,
+   "SeatedIdle": true,
+   "SitDown": true,
+   "GetUp": true,
+   "SitToType": false,
+   "TypeToSit": false
+  }
+ },
  "stable_seated_interval": {
   "Sitting": {
    "file": "web/room/mh_mx/room_mx_sitting.glb",
@@ -1076,13 +1651,13 @@
    "to": "SeatedIdle.first",
    "corrected": {
     "hips_delta_cm": [
-     -0.136,
-     -3.303,
-     -1.234
+     0.0,
+     0.0,
+     0.0
     ],
-    "hips_distance_cm": 3.529,
-    "hips_rotation_deg": 5.944,
-    "upper_body_shape_max_cm": 24.601
+    "hips_distance_cm": 0.0,
+    "hips_rotation_deg": 0.0,
+    "upper_body_shape_max_cm": 0.0
    },
    "raw": {
     "hips_delta_cm": [
@@ -1196,13 +1771,13 @@
    "to": "GetUp.first",
    "corrected": {
     "hips_delta_cm": [
-     0.193,
-     3.306,
-     -0.606
+     0.0,
+     0.0,
+     0.0
     ],
-    "hips_distance_cm": 3.367,
-    "hips_rotation_deg": 5.874,
-    "upper_body_shape_max_cm": 24.907
+    "hips_distance_cm": 0.0,
+    "hips_rotation_deg": 0.0,
+    "upper_body_shape_max_cm": 0.0
    },
    "raw": {
     "hips_delta_cm": [
@@ -1220,13 +1795,13 @@
    "to": "SitToType.first",
    "corrected": {
     "hips_delta_cm": [
-     -0.14,
-     -6.976,
-     -2.318
+     -0.003,
+     -3.673,
+     -1.084
     ],
-    "hips_distance_cm": 7.353,
-    "hips_rotation_deg": 0.017,
-    "upper_body_shape_max_cm": 6.094
+    "hips_distance_cm": 3.83,
+    "hips_rotation_deg": 5.956,
+    "upper_body_shape_max_cm": 25.091
    },
    "raw": {
     "hips_delta_cm": [
@@ -1264,15 +1839,15 @@
   ],
   "standing_capsule_at_approach_clearance_to_chair_aabb_cm": 6.384,
   "sitdown_hips_travel_cm": [
-   0.132,
-   33.89,
-   -21.158
+   -0.009,
+   30.583,
+   -22.37
   ],
   "recommended": "Keep the CharacterMovement capsule at the approach point (standing size, collision on) and drive the mesh by the clip's hips root motion into the seat (no capsule move, no teleport, no collision disable). While seated the capsule stays at the approach point; the mesh offset from capsule is the SitDown hips travel. GetUp reverses it and ends at the same approach point.",
   "seated_capsule_option": {
    "centre_xy_cm": [
-    204.12,
-    -236.667
+    203.979,
+    -239.974
    ],
    "radius_cm": 17.0,
    "note": "a capsule at the seated hips XY overlaps the chair AABB by construction; it may only be used with a collision channel that ignores the owned chair actor, which counts as a bypass -> NOT recommended"
@@ -1284,10 +1859,16 @@
  },
  "clips": {
   "DeskTyping_seated": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_DeskTyping_seated.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_DeskTyping_seated.glb",
    "bytes": 1071588,
    "sha256": "97fd8489fa19d71192c74eae47d69a1045a723a7692fbaa59cfa73f9c3ef75b9",
-   "all_gates_pass": true,
+   "all_gates_pass": false,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "DeskTyping 3..8 s @60 Hz (301, the native audit)",
     "read_back_from_written_glb": true,
@@ -1488,10 +2069,16 @@
    }
   },
   "SeatedIdle": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_SeatedIdle.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_SeatedIdle.glb",
    "bytes": 160036,
    "sha256": "57ba5e1be7a392b3889c8a875f993d39a808fee87f12a4e25d6f70a62b47a156",
    "all_gates_pass": true,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
@@ -1635,13 +2222,28 @@
      -7.136
     ],
     "finger_local_max_change_deg": 2.4e-06
+   },
+   "seam": {
+    "raw": {
+     "pose_cm": 0.00633,
+     "hips_world_cm": 0.00575,
+     "velocity_cm_s": 3.05584,
+     "pass": true
+    },
+    "loop_gate": true
    }
   },
   "SitDown": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_SitDown_seated.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_SitDown_seated.glb",
    "bytes": 98712,
-   "sha256": "2c6d5da111b3af04e59719e55375b13c304a93ba755524a18865e6653cb41a6a",
-   "all_gates_pass": false,
+   "sha256": "a0b362324af7861e414730fed9175b6c72b88de5a525bce14ef113abdea25104",
+   "all_gates_pass": true,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
@@ -1649,19 +2251,16 @@
     "seated_frames": 18,
     "seat": {
      "buttocks": {
-      "pass_all_frames": false,
-      "failing_frames": 18,
-      "failures": {
-       "lowest_above_band": 18,
-       "support_vertices_short": 18
-      },
+      "pass_all_frames": true,
+      "failing_frames": 0,
+      "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        0.5025,
-        0.6812
+        0.0365,
+        0.0446
        ],
-       "min_band_vertices": 0,
-       "min_over_surface_vertices": 1256
+       "min_band_vertices": 80,
+       "min_over_surface_vertices": 1235
       },
       "raw": {
        "pass_frames": 0,
@@ -1678,11 +2277,11 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -0.3703,
-        -0.2882
+        -1.5845,
+        -1.5718
        ],
-       "min_band_vertices": 133,
-       "min_over_surface_vertices": 2460
+       "min_band_vertices": 589,
+       "min_over_surface_vertices": 2267
       },
       "raw": {
        "pass_frames": 0,
@@ -1694,18 +2293,16 @@
       }
      },
      "right_posterior_thigh": {
-      "pass_all_frames": false,
-      "failing_frames": 18,
-      "failures": {
-       "penetration": 18
-      },
+      "pass_all_frames": true,
+      "failing_frames": 0,
+      "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -2.6813,
-        -2.5025
+        -2.0468,
+        -2.0387
        ],
-       "min_band_vertices": 850,
-       "min_over_surface_vertices": 2625
+       "min_band_vertices": 819,
+       "min_over_surface_vertices": 2485
       },
       "raw": {
        "pass_frames": 18,
@@ -1724,7 +2321,7 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        0.001,
+        0.002,
         0.9552
        ],
        "min_band_vertices": 48
@@ -1736,7 +2333,7 @@
         -1.9458
        ]
       },
-      "added_foot_slide_cm_max": 0.0,
+      "added_foot_slide_cm_max": 2.279,
       "gated_frames": "seated frames",
       "unseated_frames_penetration": 0,
       "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
@@ -1748,7 +2345,7 @@
       "corrected": {
        "lowest_gap_cm": [
         0.001,
-        2.0795
+        2.0527
        ],
        "min_band_vertices": 0
       },
@@ -1759,52 +2356,52 @@
         -0.8263
        ]
       },
-      "added_foot_slide_cm_max": 0.0,
+      "added_foot_slide_cm_max": 7.6107,
       "gated_frames": "seated frames",
       "unseated_frames_penetration": 0,
       "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
      }
     },
     "bone_length_max_error_cm": 0.0,
-    "foot_world_rotation_max_change_deg": 6.3e-06,
+    "foot_world_rotation_max_change_deg": 11.7806955,
     "upper_body_world": {
      "rotation_max_change_deg": {
-      "Spine": 4.2e-06,
-      "Spine1": 4.5e-06,
-      "Spine2": 5.4e-06,
-      "Neck": 5.4e-06,
-      "Head": 5.5e-06,
-      "LeftShoulder": 5.5e-06,
-      "RightShoulder": 5.4e-06
+      "Spine": 21.4168121,
+      "Spine1": 27.240157,
+      "Spine2": 27.5987095,
+      "Neck": 29.3250215,
+      "Head": 27.5177757,
+      "LeftShoulder": 33.9144274,
+      "RightShoulder": 33.8175511
      },
      "spine_translation_cm": {
       "vertical": [
-       -7.6583,
+       -7.7157,
        0.0
       ],
-      "horizontal_max": 1.9e-06
+      "horizontal_max": 4.0054813
      }
     },
     "head_height_change_cm": [
-     -7.6583,
-     0.0
+     -8.4389,
+     4.7244
     ],
     "residual_on_all_seat_height_frames": {
      "seat": {
       "buttocks": {
        "pass_all_frames": false,
-       "failing_frames": 34,
+       "failing_frames": 6,
        "failures": {
-        "lowest_above_band": 21,
-        "support_vertices_short": 34
+        "lowest_above_band": 1,
+        "support_vertices_short": 6
        },
        "corrected": {
         "lowest_gap_cm": [
-         0.1679,
-         1.8341
+         0.018,
+         1.3692
         ],
         "min_band_vertices": 0,
-        "min_over_surface_vertices": 904
+        "min_over_surface_vertices": 940
        },
        "raw": {
         "pass_frames": 0,
@@ -1821,11 +2418,11 @@
        "failures": {},
        "corrected": {
         "lowest_gap_cm": [
-         -1.3362,
-         -0.1699
+         -1.5845,
+         -0.4984
         ],
-        "min_band_vertices": 90,
-        "min_over_surface_vertices": 1965
+        "min_band_vertices": 192,
+        "min_over_surface_vertices": 2016
        },
        "raw": {
         "pass_frames": 0,
@@ -1837,19 +2434,16 @@
        }
       },
       "right_posterior_thigh": {
-       "pass_all_frames": false,
-       "failing_frames": 32,
-       "failures": {
-        "penetration": 31,
-        "support_vertices_short": 1
-       },
+       "pass_all_frames": true,
+       "failing_frames": 0,
+       "failures": {},
        "corrected": {
         "lowest_gap_cm": [
-         -2.9524,
-         0.4612
+         -2.4178,
+         -0.2863
         ],
-        "min_band_vertices": 5,
-        "min_over_surface_vertices": 1743
+        "min_band_vertices": 67,
+        "min_over_surface_vertices": 1849
        },
        "raw": {
         "pass_frames": 30,
@@ -1863,19 +2457,59 @@
      },
      "note": "frames where the hips are at the seated height but still sliding back/forward on the cushion (not gated)"
     },
-    "finger_local_max_change_deg": 3e-06
+    "finger_local_max_change_deg": 55.9658744
+   },
+   "seam": {
+    "pair": "clip.last -> loop.first",
+    "fps": 30.0,
+    "position_delta": {
+     "hips_cm": 0.0,
+     "max_joint_cm": 0.0,
+     "hips_rotation_deg": 0.0,
+     "max_joint_rotation_deg": 1e-06
+    },
+    "velocity_delta": {
+     "hips_cm_s": 0.641,
+     "max_joint_cm_s": 5.4748,
+     "hips_ang_deg_s": 2.8182,
+     "max_joint_ang_deg_s": 5.9621
+    },
+    "velocity": {
+     "incoming_hips_cm_s": [
+      0.1267,
+      0.1754,
+      -0.0623
+     ],
+     "outgoing_hips_cm_s": [
+      -0.1534,
+      -0.4009,
+      -0.0806
+     ]
+    },
+    "loop_own_seam_velocity_delta_reference": {
+     "hips_cm_s": 0.6686,
+     "max_joint_cm_s": 5.5387,
+     "hips_ang_deg_s": 2.8182,
+     "max_joint_ang_deg_s": 5.9591
+    }
    }
   },
   "GetUp": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_GetUp_seated.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_GetUp_seated.glb",
    "bytes": 93420,
-   "sha256": "6105564f22e712e19ed18bfbeea5b185518f8f67d60b76b2c59f5a041a8331d0",
+   "sha256": "89f6b246e39992b97121d91d65ca537efa8d9516b95aa1a7e8b8bd0d124cdac7",
    "all_gates_pass": true,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
     "frames": 63,
-    "seated_frames": 6,
+    "seated_frames": 8,
     "seat": {
      "buttocks": {
       "pass_all_frames": true,
@@ -1883,17 +2517,17 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        0.2091,
+        0.0403,
         0.2588
        ],
-       "min_band_vertices": 34,
+       "min_band_vertices": 39,
        "min_over_surface_vertices": 1217
       },
       "raw": {
        "pass_frames": 0,
        "lowest_gap_cm": [
         5.7406,
-        5.8706
+        6.29
        ],
        "min_over_surface_vertices": 1323
       }
@@ -1904,19 +2538,19 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -0.9059,
-        -0.7194
+        -1.5759,
+        -0.7589
        ],
-       "min_band_vertices": 336,
-       "min_over_surface_vertices": 2503
+       "min_band_vertices": 357,
+       "min_over_surface_vertices": 2269
       },
       "raw": {
        "pass_frames": 0,
        "lowest_gap_cm": [
         1.5431,
-        1.6166
+        1.8078
        ],
-       "min_over_surface_vertices": 3452
+       "min_over_surface_vertices": 3421
       }
      },
      "right_posterior_thigh": {
@@ -1925,17 +2559,17 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -2.2588,
-        -2.2091
+        -2.2688,
+        -2.0403
        ],
-       "min_band_vertices": 858,
-       "min_over_surface_vertices": 2587
+       "min_band_vertices": 819,
+       "min_over_surface_vertices": 2488
       },
       "raw": {
-       "pass_frames": 6,
+       "pass_frames": 8,
        "lowest_gap_cm": [
         -0.4508,
-        -0.3692
+        -0.2908
        ],
        "min_over_surface_vertices": 3672
       }
@@ -1960,7 +2594,7 @@
         -1.9595
        ]
       },
-      "added_foot_slide_cm_max": 0.0,
+      "added_foot_slide_cm_max": 3.3762,
       "gated_frames": "seated frames",
       "unseated_frames_penetration": 0,
       "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
@@ -1983,30 +2617,30 @@
         -1.6871
        ]
       },
-      "added_foot_slide_cm_max": 0.0,
+      "added_foot_slide_cm_max": 7.2491,
       "gated_frames": "seated frames",
       "unseated_frames_penetration": 0,
       "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
      }
     },
     "bone_length_max_error_cm": 0.0,
-    "foot_world_rotation_max_change_deg": 7.7e-06,
+    "foot_world_rotation_max_change_deg": 7.2405941,
     "upper_body_world": {
      "rotation_max_change_deg": {
-      "Spine": 3.2e-06,
-      "Spine1": 3.2e-06,
-      "Spine2": 3.2e-06,
-      "Neck": 3.4e-06,
-      "Head": 3.8e-06,
-      "LeftShoulder": 6.2e-06,
-      "RightShoulder": 5.7e-06
+      "Spine": 4.7220228,
+      "Spine1": 4.70994,
+      "Spine2": 13.1139792,
+      "Neck": 8.7887481,
+      "Head": 27.4765624,
+      "LeftShoulder": 20.1071863,
+      "RightShoulder": 16.9439196
      },
      "spine_translation_cm": {
       "vertical": [
        -9.0769,
        0.0
       ],
-      "horizontal_max": 1.8e-06
+      "horizontal_max": 4.377944
      }
     },
     "head_height_change_cm": [
@@ -2017,14 +2651,14 @@
      "seat": {
       "buttocks": {
        "pass_all_frames": false,
-       "failing_frames": 17,
+       "failing_frames": 21,
        "failures": {
-        "lowest_above_band": 14,
-        "support_vertices_short": 17
+        "lowest_above_band": 20,
+        "support_vertices_short": 21
        },
        "corrected": {
         "lowest_gap_cm": [
-         -0.6898,
+         0.0366,
          2.7109
         ],
         "min_band_vertices": 0,
@@ -2041,15 +2675,14 @@
       },
       "left_posterior_thigh": {
        "pass_all_frames": false,
-       "failing_frames": 5,
+       "failing_frames": 1,
        "failures": {
-        "penetration": 4,
         "lowest_above_band": 1,
         "support_vertices_short": 1
        },
        "corrected": {
         "lowest_gap_cm": [
-         -2.9084,
+         -2.4786,
          1.0469
         ],
         "min_band_vertices": 0,
@@ -2066,15 +2699,14 @@
       },
       "right_posterior_thigh": {
        "pass_all_frames": false,
-       "failing_frames": 12,
+       "failing_frames": 2,
        "failures": {
-        "penetration": 10,
         "lowest_above_band": 2,
         "support_vertices_short": 2
        },
        "corrected": {
         "lowest_gap_cm": [
-         -3.5237,
+         -2.3683,
          1.3324
         ],
         "min_band_vertices": 0,
@@ -2092,14 +2724,54 @@
      },
      "note": "frames where the hips are at the seated height but still sliding back/forward on the cushion (not gated)"
     },
-    "finger_local_max_change_deg": 4.4e-06
+    "finger_local_max_change_deg": 32.7239091
+   },
+   "seam": {
+    "pair": "loop.last -> clip.first",
+    "fps": 30.0,
+    "position_delta": {
+     "hips_cm": 0.0,
+     "max_joint_cm": 0.0,
+     "hips_rotation_deg": 0.0,
+     "max_joint_rotation_deg": 1e-06
+    },
+    "velocity_delta": {
+     "hips_cm_s": 0.7366,
+     "max_joint_cm_s": 5.6071,
+     "hips_ang_deg_s": 2.8182,
+     "max_joint_ang_deg_s": 5.956
+    },
+    "velocity": {
+     "incoming_hips_cm_s": [
+      0.1267,
+      0.1754,
+      0.1103
+     ],
+     "outgoing_hips_cm_s": [
+      -0.1534,
+      -0.4009,
+      -0.2531
+     ]
+    },
+    "loop_own_seam_velocity_delta_reference": {
+     "hips_cm_s": 0.6686,
+     "max_joint_cm_s": 5.5387,
+     "hips_ang_deg_s": 2.8182,
+     "max_joint_ang_deg_s": 5.9591
+    }
    }
   },
   "SitToType": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_SitToType_seated.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_SitToType_seated.glb",
    "bytes": 66104,
    "sha256": "ed46fd3e667089b8f10780dc377c0c86239122256557a34b41e5f751eebd6d21",
-   "all_gates_pass": true,
+   "all_gates_pass": false,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
@@ -2278,10 +2950,16 @@
    }
   },
   "TypeToSit": {
-   "glb": "docs/proposed/seat-pose-fit/SUB01_TypeToSit_seated.glb",
+   "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_TypeToSit_seated.glb",
    "bytes": 57652,
    "sha256": "d25496c64288de5f1574956bac7099d60b7e8a8e3345f4e821883fcf13422452",
-   "all_gates_pass": true,
+   "all_gates_pass": false,
+   "fit_frame_all_gates_pass": true,
+   "chair_report": {
+    "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+    "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+    "source": "root chair surface report (actual UE cushion triangles)"
+   },
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
@@ -2461,11 +3139,21 @@
   }
  },
  "trial_gates_pass": {
+  "DeskTyping_seated": false,
+  "SeatedIdle": true,
+  "SitDown": true,
+  "GetUp": true,
+  "SitToType": false,
+  "TypeToSit": false
+ },
+ "trial_gates_pass_rule": "on the ACTUAL chair (measured transform, never moved), body at actual_chair.body_cm",
+ "fit_frame_gates_pass": {
   "DeskTyping_seated": true,
   "SeatedIdle": true,
-  "SitDown": false,
+  "SitDown": true,
   "GetUp": true,
   "SitToType": true,
   "TypeToSit": true
- }
+ },
+ "chair_reposition_proposal": "chair-reposition-proposal.json (proposal only; never acceptance)"
 }

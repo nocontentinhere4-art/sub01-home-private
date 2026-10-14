@@ -495,7 +495,7 @@
   },
   "note": "every key of the written clip in memory; over-key contact is gated where the hand is over the keys"
  },
- "glb": "docs/proposed/seat-pose-fit/SUB01_SitToType_seated.glb",
+ "glb": "/tmp/claude-0/-home-user-sub01-home-private/cfe87abb-bd5c-5048-a2ef-7ccd62e3eaef/scratchpad/full4/SUB01_SitToType_seated.glb",
  "sha256": "ed46fd3e667089b8f10780dc377c0c86239122256557a34b41e5f751eebd6d21",
  "bytes": 66104,
  "key_count": 37,
@@ -676,7 +676,221 @@
   },
   "finger_local_max_change_deg": 3.6e-06
  },
- "all_gates_pass": true,
+ "all_gates_pass": false,
+ "chair_report": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+  "source": "root chair surface report (actual UE cushion triangles)"
+ },
+ "fit_frame_all_gates_pass": true,
+ "actual_chair": {
+  "chair_moved_cm": [
+   0.0,
+   0.0
+  ],
+  "chair_transform": {
+   "translation_cm": [
+    200.0199556350708,
+    -186.69002056121826,
+    60.68757772445679
+   ],
+   "rotation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "scale": [
+    0.6068757772445679,
+    0.6068757772445679,
+    0.6068757772445679
+   ]
+  },
+  "body_cm": [
+   200.025,
+   -199.8,
+   -0.6
+  ],
+  "body_yaw": 180,
+  "body_offset_from_audited_transform_cm": [
+   -3.875,
+   32.5
+  ],
+  "keyboard": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+  "read_back_from_written_glb": true,
+  "gates": {
+   "frames": 37,
+   "seated_frames": 37,
+   "seat": {
+    "buttocks": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       -0.4545,
+       0.0605
+      ],
+      "min_band_vertices": 60,
+      "min_over_surface_vertices": 922
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       6.1003,
+       6.7938
+      ],
+      "min_over_surface_vertices": 1207
+     }
+    },
+    "left_posterior_thigh": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       -0.7738,
+       -0.3798
+      ],
+      "min_band_vertices": 304,
+      "min_over_surface_vertices": 1800
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       3.5136,
+       3.8637
+      ],
+      "min_over_surface_vertices": 2806
+     }
+    },
+    "right_posterior_thigh": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       -2.0605,
+       -1.5513
+      ],
+      "min_band_vertices": 1009,
+      "min_over_surface_vertices": 2093
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       1.5753,
+       1.972
+      ],
+      "min_over_surface_vertices": 2974
+     }
+    }
+   },
+   "soles": {
+    "left_sole": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       0.001,
+       0.012
+      ],
+      "min_band_vertices": 95
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       -2.6698,
+       -2.6588
+      ]
+     },
+     "added_foot_slide_cm_max": 0.0,
+     "gated_frames": "all frames",
+     "unseated_frames_penetration": 0,
+     "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+    },
+    "right_sole": {
+     "pass_all_frames": true,
+     "failing_frames": 0,
+     "failures": {},
+     "corrected": {
+      "lowest_gap_cm": [
+       0.001,
+       0.0047
+      ],
+      "min_band_vertices": 153
+     },
+     "raw": {
+      "pass_frames": 0,
+      "lowest_gap_cm": [
+       -2.8626,
+       -2.8589
+      ]
+     },
+     "added_foot_slide_cm_max": 0.0,
+     "gated_frames": "all frames",
+     "unseated_frames_penetration": 0,
+     "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+    }
+   },
+   "bone_length_max_error_cm": 0.0,
+   "foot_world_rotation_max_change_deg": 7.9e-06,
+   "upper_body_world": {
+    "rotation_max_change_deg": {
+     "Spine": 1.7e-06,
+     "Spine1": 1.7e-06,
+     "Spine2": 1.7e-06,
+     "Neck": 1.7e-06,
+     "Head": 2.1e-06,
+     "LeftShoulder": 4.7e-06,
+     "RightShoulder": 4.5e-06
+    },
+    "spine_translation_cm": {
+     "vertical": [
+      -8.7664,
+      -7.2778
+     ],
+     "horizontal_max": 7e-07
+    }
+   },
+   "head_height_change_cm": [
+    -8.7664,
+    -7.2778
+   ],
+   "key_contact": {
+    "left": {
+     "pass_all_frames": false,
+     "gate": "gap at seam frame 36; penetration on every frame",
+     "seam_gap_cm": null,
+     "seam_hand_over_keys": false,
+     "frames_over_keys": 0,
+     "frames_gap_over_0_2cm": 0,
+     "frames_penetration_over_0_1cm": 0,
+     "corrected_gap_cm": null,
+     "raw_gap_cm": null,
+     "min_over_key_vertices": 0,
+     "solver_frame_frames_over_keys": 10,
+     "keyboard_reach_lost_on_actual_chair": true
+    },
+    "right": {
+     "pass_all_frames": true,
+     "gate": "gap at seam frame 36; penetration on every frame",
+     "seam_gap_cm": null,
+     "seam_hand_over_keys": false,
+     "frames_over_keys": 0,
+     "frames_gap_over_0_2cm": 0,
+     "frames_penetration_over_0_1cm": 0,
+     "corrected_gap_cm": null,
+     "raw_gap_cm": null,
+     "min_over_key_vertices": 0,
+     "solver_frame_frames_over_keys": 0
+    }
+   }
+  },
+  "all_gates_pass": false
+ },
+ "all_gates_pass_rule": "measured on the ACTUAL chair (measured transform, never moved) with the body at actual_chair.body_cm; fit_frame_all_gates_pass is the chair-relative solver frame",
  "hips_path_ue_cm": [
   [
    203.98,

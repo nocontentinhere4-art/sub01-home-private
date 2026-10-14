@@ -1,0 +1,412 @@
+{
+ "schema": "sub01.chair-reposition-proposal.v1",
+ "proposal_only": true,
+ "accepted": false,
+ "verified": false,
+ "requires_root_approval": true,
+ "why": "clips that fail on the ACTUAL chair (chair at its measured transform, body placed on it): DeskTyping_seated, SitToType, TypeToSit. On the actual chair one body placement cannot both seat the body and reach the keyboard: see seat-pose-fit.report.json actual_chair.placement_search.",
+ "failing_on_actual_chair": [
+  "DeskTyping_seated",
+  "SitToType",
+  "TypeToSit"
+ ],
+ "chair_report": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8"
+ },
+ "actual_chair_transform": {
+  "translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   60.68757772445679
+  ],
+  "rotation_xyzw": [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ],
+  "scale": [
+   0.6068757772445679,
+   0.6068757772445679,
+   0.6068757772445679
+  ]
+ },
+ "proposed_chair_transform": {
+  "translation_cm": [
+   203.895,
+   -219.19,
+   60.6876
+  ],
+  "rotation_xyzw": [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ],
+  "scale": [
+   0.6068757772445679,
+   0.6068757772445679,
+   0.6068757772445679
+  ],
+  "delta_cm": [
+   3.875,
+   -32.5,
+   0.0
+  ],
+  "note": "XY only: no chair raise, no rotation, no scale change"
+ },
+ "body_at_proposal_cm": [
+  203.9,
+  -232.3,
+  -0.6
+ ],
+ "body_yaw": 180,
+ "body_on_actual_chair_cm": [
+  200.025,
+  -199.8,
+  -0.6
+ ],
+ "desk": {
+  "centre_xy_cm": [
+   210.0,
+   -302.0
+  ],
+  "top_cm": 84.5,
+  "yaw_deg": 0.0,
+  "source": "coordinator relay of root: native desk centre UE X210 Y-302, tabletop 84.5 cm",
+  "footprint_cm": [
+   [
+    90.0,
+    -342.0
+   ],
+   [
+    330.0,
+    -262.0
+   ]
+  ],
+  "structure_z_cm": [
+   0.0,
+   84.5
+  ],
+  "desktop_thickness_cm": 3.3,
+  "asset": "web/house/assets/office-desk-original/desk.json",
+  "asset_sha256": "d21a424128174a9d8dd450a69f6cb5b60f28548348391e5cfaa63fed82557598",
+  "geometry": "repo desk.glb (240 x 80 cm, top 84.5 cm, desktop 3.3 cm) placed at the native centre, yaw 0 (assumed: root to confirm the native desk mesh, yaw and footprint)"
+ },
+ "keyboard": {
+  "source": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+  "top_cm": 87.3898,
+  "min_cm": [
+   182.173,
+   -301.297,
+   86.537
+  ],
+  "max_cm": [
+   217.749,
+   -287.917,
+   87.39
+  ]
+ },
+ "keyboard_note": "the fit keyboard is the repo home.js placement; the repo desk centre is UE (200, -310) while the native desk centre is (210, -302). If the native keyboard moved with the desk, typing contact must be re-solved at the native keyboard before any proposal could be approved.",
+ "chair_vs_desk": {
+  "proposed": {
+   "chair_aabb_min_cm": [
+    177.319,
+    -247.173,
+    40.098
+   ],
+   "chair_aabb_max_cm": [
+    230.167,
+    -193.533,
+    73.682
+   ],
+   "horizontal_gap_to_desk_aabb_cm": 14.827,
+   "gap_x_cm": 0.0,
+   "gap_y_cm": 14.827,
+   "aabbs_overlap": false
+  },
+  "actual": {
+   "chair_aabb_min_cm": [
+    173.444,
+    -214.673,
+    40.098
+   ],
+   "chair_aabb_max_cm": [
+    226.292,
+    -161.033,
+    73.682
+   ],
+   "horizontal_gap_to_desk_aabb_cm": 47.327,
+   "gap_x_cm": 0.0,
+   "gap_y_cm": 47.327,
+   "aabbs_overlap": false
+  }
+ },
+ "skin_sampling": "every 6th skinned owner vertex (web/room/char_mixamo.glb), every written frame",
+ "clips": {
+  "DeskTyping_seated": {
+   "frames": 301,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": false,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.449,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 123398,
+    "frames_with_skin_inside_desk_structure": 301,
+    "deepest_inside_below_desk_top_cm": 3.3,
+    "inside_by_dominant_joint": {
+     "RightForeArm": 63771,
+     "LeftForeArm": 58158,
+     "RightHand": 740,
+     "RightArm": 561,
+     "RightHandThumb1": 134,
+     "RightHandThumb2": 26,
+     "RightHandThumb3": 8
+    },
+    "clear": false
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": null,
+    "highest_skin_under_desk_structure_cm": null,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 0,
+    "frames_with_skin_inside_desk_structure": 0,
+    "deepest_inside_below_desk_top_cm": 0.0,
+    "inside_by_dominant_joint": {},
+    "clear": true
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.0027,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0026,
+    "feet_on_floor_never_below": true
+   }
+  },
+  "SeatedIdle": {
+   "frames": 126,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": true,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 5.744,
+    "highest_skin_under_desk_structure_cm": 75.456,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 0,
+    "frames_with_skin_inside_desk_structure": 0,
+    "deepest_inside_below_desk_top_cm": 0.0,
+    "inside_by_dominant_joint": {},
+    "clear": true
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": null,
+    "highest_skin_under_desk_structure_cm": null,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 0,
+    "frames_with_skin_inside_desk_structure": 0,
+    "deepest_inside_below_desk_top_cm": 0.0,
+    "inside_by_dominant_joint": {},
+    "clear": true
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.001,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0009,
+    "feet_on_floor_never_below": true
+   }
+  },
+  "SitDown": {
+   "frames": 68,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": true,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.449,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 18420,
+    "frames_with_skin_inside_desk_structure": 42,
+    "deepest_inside_below_desk_top_cm": 7.557,
+    "inside_by_dominant_joint": {
+     "RightUpLeg": 3354,
+     "Hips": 1984,
+     "RightForeArm": 1907,
+     "LeftUpLeg": 1504,
+     "RightArm": 1112,
+     "RightHand": 834,
+     "RightHandRing1": 773,
+     "RightHandThumb2": 707
+    },
+    "clear": false
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": 0.002,
+    "highest_skin_under_desk_structure_cm": 81.446,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 2320,
+    "frames_with_skin_inside_desk_structure": 16,
+    "deepest_inside_below_desk_top_cm": 3.297,
+    "inside_by_dominant_joint": {
+     "RightForeArm": 674,
+     "RightHand": 515,
+     "RightHandRing1": 218,
+     "RightHandThumb2": 183,
+     "RightHandThumb1": 133,
+     "RightHandPinky1": 124,
+     "RightHandIndex1": 113,
+     "RightHandMiddle1": 108
+    },
+    "clear": false
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.001,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0009,
+    "feet_on_floor_never_below": true
+   }
+  },
+  "GetUp": {
+   "frames": 63,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": true,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.45,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 30589,
+    "frames_with_skin_inside_desk_structure": 57,
+    "deepest_inside_below_desk_top_cm": 14.898,
+    "inside_by_dominant_joint": {
+     "RightForeArm": 4673,
+     "RightArm": 4537,
+     "LeftArm": 4321,
+     "LeftForeArm": 3913,
+     "Hips": 1812,
+     "Spine2": 1674,
+     "RightUpLeg": 1516,
+     "RightHand": 1178
+    },
+    "clear": false
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": 6.569,
+    "highest_skin_under_desk_structure_cm": 74.881,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 0,
+    "frames_with_skin_inside_desk_structure": 0,
+    "deepest_inside_below_desk_top_cm": 0.0,
+    "inside_by_dominant_joint": {},
+    "clear": true
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.001,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0009,
+    "feet_on_floor_never_below": true
+   }
+  },
+  "SitToType": {
+   "frames": 37,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": false,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.447,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 16407,
+    "frames_with_skin_inside_desk_structure": 33,
+    "deepest_inside_below_desk_top_cm": 3.3,
+    "inside_by_dominant_joint": {
+     "RightForeArm": 6119,
+     "LeftForeArm": 4466,
+     "RightHand": 1549,
+     "RightHandPinky1": 413,
+     "RightHandRing1": 369,
+     "LeftHand": 355,
+     "RightHandIndex1": 312,
+     "RightHandMiddle1": 286
+    },
+    "clear": false
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": 0.001,
+    "highest_skin_under_desk_structure_cm": 81.449,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 791,
+    "frames_with_skin_inside_desk_structure": 11,
+    "deepest_inside_below_desk_top_cm": 3.296,
+    "inside_by_dominant_joint": {
+     "RightHandMiddle2": 98,
+     "RightHandIndex2": 91,
+     "RightHandMiddle1": 89,
+     "RightHandRing2": 81,
+     "RightHandRing1": 79,
+     "RightHandRing3": 74,
+     "RightHandMiddle3": 71,
+     "RightHandPinky3": 61
+    },
+    "clear": false
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.001,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0009,
+    "feet_on_floor_never_below": true
+   }
+  },
+  "TypeToSit": {
+   "frames": 29,
+   "fit_frame_all_gates_pass": true,
+   "actual_chair_all_gates_pass": false,
+   "proposed": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.449,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 18027,
+    "frames_with_skin_inside_desk_structure": 29,
+    "deepest_inside_below_desk_top_cm": 3.3,
+    "inside_by_dominant_joint": {
+     "RightForeArm": 6330,
+     "LeftForeArm": 4800,
+     "RightHand": 1566,
+     "RightHandPinky1": 512,
+     "RightHandRing1": 398,
+     "LeftHand": 371,
+     "RightHandThumb1": 361,
+     "RightHandThumb2": 298
+    },
+    "clear": false
+   },
+   "actual_placement": {
+    "min_clearance_under_desk_structure_cm": 0.0,
+    "highest_skin_under_desk_structure_cm": 81.449,
+    "desktop_underside_cm": 81.2,
+    "skin_samples_inside_desk_structure": 737,
+    "frames_with_skin_inside_desk_structure": 8,
+    "deepest_inside_below_desk_top_cm": 3.292,
+    "inside_by_dominant_joint": {
+     "RightHandMiddle3": 141,
+     "RightHandMiddle2": 117,
+     "RightHandIndex3": 115,
+     "RightHandRing2": 97,
+     "RightHandIndex2": 74,
+     "RightHandMiddle1": 49,
+     "RightHandRing1": 38,
+     "RightHandRing3": 38
+    },
+    "clear": false
+   },
+   "feet": {
+    "lowest_sole_gap_to_support_cm": 0.001,
+    "support_z_cm": 2.5,
+    "lowest_sole_gap_to_floor_2_5001_cm": 0.0009,
+    "feet_on_floor_never_below": true
+   }
+  }
+ },
+ "root_must_approve": [
+  "moving the native chair actor by delta_cm (XY only) to proposed_chair_transform, or an equivalent",
+  "the native keyboard world position used for typing (the fit uses the repo home.js keyboard)",
+  "a native swept-capsule check of the standing approach to the proposed chair against desk and chair collision",
+  "a native seat/foot/keyboard contact audit of the imported clips at the proposed chair (no pass is claimed here)"
+ ]
+}

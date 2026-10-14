@@ -9,7 +9,151 @@ failed receipts and reports are untouched. The gates are the validators' own con
 - `tools/validate_unreal_contact_profile.py`: key gap at most 0.2 cm, penetration at most 0.1 cm. The arm target is
   KeyTop + 0.08 cm.
 
-## Status
+## Status (actual chair; supersedes the shifted-chair verdicts below)
+
+Root's constraint: the native office protects the exact chair transform. The fitter therefore never moves the chair.
+The chair stays at its measured transform, translation [200.020, −186.690, 60.688] (chair report
+`20261014-actual-native-chair-surface.json`, sha256 `84b976f9…e8e8`). Only the **body** is placed: at
+[200.025, −199.8, −0.6], yaw 180. That is the audited transform minus the solver's chair offset (3.875, −32.5).
+
+The solver keeps working in its old frame: the body at the audited transform and the cushion offset by (3.875, −32.5).
+The chair-relative geometry is identical in both frames. Every written clip is then **re-measured in the actual
+world**: the body is translated, the chair is not shifted, and the keyboard stays at its world placement. A hand that
+is over the keys in the solver frame but not on the actual chair counts as lost reach. That is never a vacuous pass.
+
+Every per-clip report records `chair_report` (file and sha256). It also records `actual_chair`: the body placement, the
+gates and, for SitDown/GetUp, the per-frame block. Two separate verdicts are kept:
+- `all_gates_pass` (and the summary's `trial_gates_pass`) is the verdict on the actual chair;
+- `fit_frame_all_gates_pass` is the old solver-frame verdict.
+
+| clip | GLB sha256 | on the ACTUAL chair | solver frame (chair offset) |
+|---|---|---|---|
+| `SUB01_SeatedIdle.glb` (unchanged bytes) | `57ba5e1b…a156` | **pass** | pass |
+| `SUB01_SitDown_seated.glb` (**new**: seam blend) | `a0b36232…5104` | **pass: all 68 frames** | pass |
+| `SUB01_GetUp_seated.glb` (**new**: seam blend) | `89f6b246…cdac7` | **pass: all 63 frames** | pass |
+| `SUB01_DeskTyping_seated.glb` (unchanged bytes) | `97fd8489…75b9` | **FAIL**: keyboard unreachable (0/301 frames over the keys) | pass |
+| `SUB01_SitToType_seated.glb` (unchanged bytes) | `ed46fd3e…6d21` | **FAIL**: keyboard reach lost at the seam | pass |
+| `SUB01_TypeToSit_seated.glb` (unchanged bytes) | `d25496c6…2452` | **FAIL**: keyboard reach lost at the seam | pass |
+
+**Placement search on the actual chair** (`actual_chair.placement_search`):
+- Method: DeskTyping, 31 frames; θ = 22.5° with the lowering re-centred per placement; the body moved along +Y in
+  2.5 cm steps, at x −3.875.
+- The seat gates pass only for body offsets **+22.5..+35 cm**.
+- Both hands are over the keys only at **0..+2.5 cm**. At +5 cm the left hand is over the keys on only 4 of 31 frames.
+- The two intervals never meet, so **typing is infeasible on the actual chair** with this mocap, rig and these gates.
+- Nothing is loosened, so the three typing clips are marked failing there.
+
+**`chair-reposition-proposal.json`** is a PROPOSAL only (`proposal_only`, `accepted: false`, `requires_root_approval`).
+- It moves the chair by (+3.875, −32.5, 0) cm to [203.895, −219.190, 60.688]: XY only, with no raise, rotation or
+  scale change. The body then keeps the audited transform.
+- It is measured against the native desk: centre X210 Y−302, top 84.5 cm, using the repo `desk.glb` footprint
+  (240 × 80 cm, desktop 3.3 cm thick, assumed yaw 0). Root must confirm that geometry.
+- Chair AABB to desk AABB: 14.8 cm proposed, 47.3 cm actual.
+- **The proposal is NOT clear of the desk:**
+  - the DeskTyping, SitToType and TypeToSit forearms lie inside the desktop slab (81.2..84.5 cm) on every audit frame,
+    up to the full 3.3 cm;
+  - SitDown and GetUp intersect the desk in their standing phases (thighs, hips and arms), up to 7.6 and 14.9 cm below
+    the top.
+- On the actual placement, SitDown has right-hand skin up to 3.3 cm inside the desk edge on frames 14–29. The blend
+  starts at frame 26, so most of these are captured frames. SitToType and TypeToSit have 11 and 8 such frames. GetUp and SeatedIdle are
+  clear.
+- Feet are never below the 2.5001 cm floor: the lowest sole is +0.0009 cm.
+- Root must approve:
+  - the chair move;
+  - the native keyboard position (the fit uses the repo home.js keyboard, and the native desk centre differs from the
+    repo desk by (+10, +8) cm);
+  - a native swept-capsule check;
+  - a native contact audit.
+
+`tools/unreal_audit_seated_typing_seat_contact.py` reads `source_meta.body_cm`. That field now holds the actual-chair
+placement [200.025, −199.8, −0.6], and `chair_horizontal_shift_cm` is [0, 0]. The source export's own transform is kept
+as `source_meta.export_body_cm`.
+
+## Seam blend: SitDown → SeatedIdle and SeatedIdle → GetUp
+
+The **mode** is `SEAM_BLEND`, implemented by `seam_blend_search` / `seam_blend_eval`:
+- The captured, fitted transition is kept up to the blend window.
+- Inside the window, every joint's local rotation is slerped, and the Hips translation lerped, toward the validated
+  SeatedIdle loop played in time.
+  - SitDown blends into the loop's tail, so its last frame **is** SeatedIdle's first frame.
+  - GetUp blends out of the loop's head, so its first frame **is** SeatedIdle's last frame.
+- The weight is a quintic smootherstep, with zero first and second derivative at both window ends.
+- Each ankle goes in a straight line from the fitted capture's ankle to the loop's ankle. Its world rotation is
+  slerped, and the leg uses non-stretch two-bone IK with the blended knee as pole.
+- An unsupported frame that would penetrate gets a smooth no-penetration lift. The lift curve is a max filter plus a
+  Gaussian, never below the frame's own need, and tapered to zero next to support-gated frames and loop frames.
+- The SitDown/GetUp theta/L seam ease is superseded on the blended end.
+- Not changed: the validator bands, the 30° pitch cap and `MIN_SUPPORT_VERTICES`. The owner rig is unchanged (65
+  joints, no bone edits), and the bone length error is 0.
+
+**Gates, on every frame.**
+- The full local-support gate (seat patches and soles) applies to the settled seated frames and to every frame that is
+  already the loop.
+- Every other frame is gated on no penetration only: no seat patch below −2.5 cm, no sole below 0.
+
+**Window search.**
+- A coarse grid (every 4 frames), then every frame within ±2 of the best 4.
+- The seam step itself must be the loop's step: SitDown's last two frames and GetUp's first two frames are loop frames.
+- Rule, in order:
+  1. every frame passes;
+  2. the peak pelvis acceleration (linear and angular) stays within the fitted capture's own peak, and no sole slides
+     faster while touching than it does in the capture;
+  3. keep the most captured frames unchanged;
+  4. take the smallest peak.
+
+| | SitDown | GetUp |
+|---|---|---|
+| window (frames / s) | 26 → 51 (0.867 → 1.700 s); frames 0–25 unchanged; 51–67 the loop's tail | loop 0–1; 1 → 10 (0.033 → 0.333 s); 10–62 the capture fit |
+| candidates / passing | 250 / 211 | 195 / 179 |
+| no-penetration lift | none | 23 frames (15–37), at most 0.573 cm; sole lift at most 0.023 cm |
+| every frame passes (actual chair) | **yes, 68/68** (18 support-gated) | **yes, 63/63** (8 support-gated) |
+| peak pelvis acc. in / outside window | 649 / 302 cm/s² (capture peak 662) | 316 / 1040 cm/s² (capture peak 1040) |
+| peak pelvis ang. acc. in / outside window | 1383 / 1393 °/s² (capture 1393) | 1037 / 1452 °/s² (capture 1452) |
+
+Worst frame per metric, on the actual chair. The support frames are gated on −2.5..+0.5 cm (seat) and 0..+1 cm
+(soles), with at least 12 vertices; every other frame only on no penetration.
+
+| patch | SitDown: support highest lowest gap | SitDown: fewest band vertices | SitDown: deepest, any frame | GetUp: support highest lowest gap | GetUp: fewest band vertices | GetUp: deepest, any frame |
+|---|---|---|---|---|---|---|
+| buttocks | +0.045 cm (f50) | 80 (f51) | +0.018 (f37) | +0.259 (f14) | 39 (f10) | +0.037 (f3) |
+| left thigh | −1.572 (f50) | 589 (f66) | −1.585 (f59) | −0.759 (f10) | 357 (f10) | −2.479 (f26) |
+| right thigh | −2.039 (f60) | 819 (f54) | −2.418 (f38) | −2.040 (f1) | 819 (f1) | −2.368 (f25) |
+| left sole | +0.003 (f50) | 103 (f60) | +0.002 (f20) | +0.266 (f14) | 65 (f13) | +0.001 (f52) |
+| right sole | +0.002 (f50) | 179 (f50) | +0.001 (f17) | +0.049 (f10) | 153 (f10) | +0.001 (f56) |
+
+Seam continuity, measured on the written, read-back GLBs:
+
+| seam | position Δ (hips / max joint) | rotation Δ (hips / max joint) | velocity Δ (hips / max joint) | ang. velocity Δ (hips / max joint) |
+|---|---|---|---|---|
+| SitDown.last → SeatedIdle.first, **before** | 3.529 / 23.80 cm | 5.94 / 95.0° | 0.85 / 9.15 cm/s | 1.01 / 81.8 °/s |
+| SitDown.last → SeatedIdle.first, **after** | 0 / 0 cm | 0 / 1e-6° | 0.641 / 5.475 cm/s | 2.818 / 5.962 °/s |
+| SeatedIdle.last → GetUp.first, **before** | 3.367 / 24.24 cm | 5.87 / 95.1° | 1.91 / 24.69 cm/s | 28.8 / 261.9 °/s |
+| SeatedIdle.last → GetUp.first, **after** | 0 / 0 cm | 0 / 1e-6° | 0.737 / 5.607 cm/s | 2.818 / 5.956 °/s |
+| SeatedIdle's own loop seam (reference) | 0.006 cm | | 0.669 / 5.539 cm/s | 2.818 / 5.959 °/s |
+
+The velocity step left at each join is the SeatedIdle loop's own closing step. The blend follows the loop, so it cannot
+be smaller.
+
+**Foot drift.** The blend moves the feet to SeatedIdle's wider stance. The sole centroid ends this far from the fitted
+capture:
+
+| | left | right |
+|---|---|---|
+| SitDown, at the end | 3.10 cm | 9.59 cm |
+| GetUp, at the start | 3.46 cm | 7.25 cm |
+
+The fastest touching sole motion (lowest gap ≤ +1 cm) never exceeds that sole's own fastest motion in the capture:
+
+| | left: blended / capture | right: blended / capture |
+|---|---|---|
+| SitDown | 62.1 / 62.1 cm/s | 22.5 / 31.2 cm/s |
+| GetUp | 81.1 / 81.1 cm/s | 45.8 / 45.8 cm/s |
+
+The largest per-frame speed added over the capture while touching is 10.1 / 16.1 cm/s (SitDown, left / right) and
+22.0 / 40.8 cm/s (GetUp, left / right). This is a reposition of the feet during the capture's own foot motion. It is
+not a planted foot, and it is reported rather than hidden.
+
+## Earlier status (shifted chair, superseded)
 
 Every gate below was measured by **re-reading the written GLB**: the clip is re-sampled and the actual skin is
 re-skinned.
