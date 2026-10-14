@@ -1,9 +1,17 @@
 # Private Unreal Pixel Streaming
 
-Current authorized private target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. The owner authorized **$100 TOTAL including prior use/storage**, with ongoing same-pod work and bounded automatic-stop windows. The current live rootfs and independent local guards enforce **2026-10-14 05:51:46 UTC**, epoch **1791957106**. Original `713u6mnmxu4y1a` and transfer source `80lf8giw6ft61v` remain stopped. No provider TTL is claimed: its legacy `stopAfter` argument has no verified persisted schedule. Historical sections below describe dated hosts and do not establish current readiness. The current authenticated live browser transport is the verified HTTPS/WSS native-window fallback described next; external WebRTC remains unaccepted.
+Current authorized private target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. The owner authorized **$100 TOTAL including prior use/storage**, with ongoing same-pod work and bounded automatic-stop windows. The current live rootfs and independent local guards enforce **2026-10-14 07:11:50 UTC**, epoch **1791961910**. Original `713u6mnmxu4y1a` and transfer source `80lf8giw6ft61v` remain stopped. No provider TTL is claimed: its legacy `stopAfter` argument has no verified persisted schedule. Historical sections below describe dated hosts and do not establish current readiness. The current authenticated live browser transport is the verified HTTPS/WSS native-window fallback described next; external WebRTC remains unaccepted.
 
 
-## Current authenticated browser proof — 2026-10-14 03:41 UTC
+## Observed private browser journey — 2026-10-14 05:29 UTC
+
+The configured isolated browser decoded the newly dressed real home at 1280×720 and 23.99 frames/s over 2.5 seconds through authenticated WSS JPEG. The accepted native identity was PID37404/startticks653485299, with fresh canonical and physical privacy both false. Actual W input moved the manual character from `(200,310,95.65)` to `(200,306.052,95.65)` cm; relative mouse input changed the real view. No backend position was written.
+
+Native FOV75→95 received revision103 and visibly widened the actual camera framing. Switching all five authored indoor lights on received revision104 and visibly changed room illumination/shadows; FOV75 and all lights off were restored at revision106. Daylight stays unavailable because the actual editor witness found two identically labelled HDR skylights. No ambiguous actor is selected by the helper.
+
+Real E hit the front door and its published state became open/unlocked. The character approached `(219.354,369.457,95.65)` cm but did not cross Y400; the physical opening remains unaccepted pending exact collision diagnostics. Bathroom crossing/blackout, physical seating/contact, native Minecraft interaction and autonomous activity are not established by this journey. The later viewer decoder stall is also a real failure; the reconnect patch is deployed but awaits fresh runtime recovery acceptance. Capture/input permissions were revoked for the coordinated native rebuild. The saved observed evidence is `out/house-evidence/private-browser-journey-20261014-0529-observed.json` and its referenced actual screenshots.
+
+## Historical authenticated browser proof — 2026-10-14 03:41 UTC
 
 `native_live_viewer.py` binds only `127.0.0.1:8892`, runs as UID1001, and uses the existing authenticated Jupyter route `/proxy/8892/`. The browser first signs in through Jupyter; the viewer contains no credentials. One low-priority ffmpeg encoder reads the actual authenticated NVIDIA Xorg window and pushes bounded JPEG frames through the same-origin encrypted WebSocket. Finite HTTPS JPEG polling is a fallback. This is an HTTP/WebSocket transport, not a claim of WebRTC or audio support.
 
