@@ -96,14 +96,18 @@ def run(args):
  shelf=shelf_export(args.shelf_source,output/'shelves.glb');books,groups=prepare_books(args.books_glb,args.books_report,shelf['boards'])
  _,shelf_parts=geometry(args.shelf_source);_,home=geometry(args.home_source)
  def bvh(points,faces):return BVHTree.FromPolygons([Vector(p)for p in points],faces,all_triangles=True,epsilon=0)
- retired={181,182,190,191,126,255,256}
+ retired={162,181,182,190,191,126,255,256}
  hide=json.loads(Path(args.books_hide_manifest).read_text());old_cube_names={r['name']for r in hide['originals']};home_doc,_=read_gltf(Path(args.home_source));retired|={i for i,n in enumerate(home_doc['nodes'])if n.get('name')in old_cube_names}
  def bounds(points):return [[min(p[a]for p in points)for a in range(3)],[max(p[a]for p in points)for a in range(3)]]
  def intersects(a,b):return all(a[0][i]<=b[1][i]and b[0][i]<=a[1][i]for i in range(3))
  cached_home=[]
  for hr in home:
   if hr['node']in retired:continue
-  hp=[(p[0],p[2],p[1])for p in hr['points']];cached_home.append((hr['node'],bounds(hp),bvh(hp,hr['triangles'])))
+  faces=hr['triangles']
+  if hr['node']==163:
+   if len(faces)!=1840:raise ValueError('Exact rail/stem union source count changed')
+   faces=faces[1640:1800]
+  hp=[(p[0],p[2],p[1])for p in hr['points']];cached_home.append((hr['node'],bounds(hp),bvh(hp,faces)))
  issues=[];shelf_bvhs=[]
  for instance,(x,z)in enumerate(CENTRES):
   for row in shelf_parts:

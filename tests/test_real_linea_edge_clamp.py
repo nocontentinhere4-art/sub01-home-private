@@ -15,6 +15,7 @@ class EdgeClamp(unittest.TestCase):
    output=Path(tmp)/'lamp-posed.glb';plan=mount_plan(ROOT/'web/house/assets/real-linea140/originalsource.glb',lamp,saved,output)
    self.assertAlmostEqual(plan['actual_closed_opening_m'],.020573013607645407,places=8)
    delta=plan['posed_lamp']['rigid_screw_delta_local_y_m'];self.assertAlmostEqual(delta,-.009857579311508415,places=7)
+   self.assertGreater(plan['actual_jaw_support']['actual_flat_wood_contact_fraction'],.89);self.assertLess(plan['actual_jaw_support']['actual_flat_wood_contact_fraction'],.90)
    self.assertEqual(plan['opened_hardware_source_nodes'],[]);self.assertEqual(plan['preserved_grommet_source_nodes'],[7,8,35])
    self.assertAlmostEqual(upper-(lower+delta),plan['wood_thickness_m']+.00002,places=9)
    old,oldbin=read_gltf(lamp);oldbin=(lamp.parent/old['buffers'][0]['uri']).read_bytes();new,newbin=read_gltf(output)

@@ -61,13 +61,18 @@ def run(source,output,lamp_source=None,lamp_receipt=None,home_source=None):
     device_bounds={'monitor':[[1.64,-3.345],[2.36,-3.255]],'keyboard':[[1.8145,-3.020465],[2.1855,-2.859535]],'mouse':[[2.29,-3.014501],[2.510001,-2.8055]],'phone':[[2.661,-2.995001],[2.739001,-2.845]]}
     margins={name:min([box[0][a]-top_bounds[0][a] for a in range(2)]+[top_bounds[1][a]-box[1][a] for a in range(2)]) for name,box in device_bounds.items()}
     if min(margins.values())<=0:raise ValueError('Source device support envelope outside exported actual top')
-    report={'schema':'sub01.real-linea140-placement-export.v1','source_sha256':SHA,'output_sha256':sha256_file(output),'output_bytes':output.stat().st_size,'blender_import_meshes':len(meshes),'source_triangle_count':20024,'all60_source_primitives_preserved':True,'all7_materials_6_embedded_images_binary_exact':True,'source_binary_unchanged':True,'uniform_scale':SCALE,'actual_export_bounds_m':result['bounds_m'],'actual_export_dimensions_m':result['dimensions_m'],'top_world_height_m':.845,'device_xy_support_margins_m':margins,'hide_only_source_actor_nodes':[181,182],'lamp_mount_plan_required':True,'opened_grommet_cap_source_node':8,'opened_hardware_source_nodes':[],'expected_actor_nodes':{str(i):n['name'] for i,n in enumerate(doc['nodes']) if 'mesh' in n},'lamp_delta_ue_cm':None,'lamp_delta_status':'SEPARATE_REVIEWED_FIXTURE_AND_LIGHT_MOVE_NOT_APPLIED','not_a_native_import_receipt':True,'native_acceptance_required':['Floor is actually2.5cm','Device foot contact and functional screen bindings remain unchanged','Chair/knee collision and lamp full bounds checked before exact olddesk hide']}
+    report={'schema':'sub01.real-linea140-placement-export.v1','source_sha256':SHA,'output_sha256':sha256_file(output),'output_bytes':output.stat().st_size,'blender_import_meshes':len(meshes),'source_triangle_count':20024,'all60_source_primitives_preserved':True,'all7_materials_6_embedded_images_binary_exact':True,'source_binary_unchanged':True,'uniform_scale':SCALE,'actual_export_bounds_m':result['bounds_m'],'actual_export_dimensions_m':result['dimensions_m'],'top_world_height_m':.845,'device_xy_support_margins_m':margins,'hide_only_source_actor_nodes':[181,182],'lamp_mount_plan_required':True,'preserved_grommet_source_nodes':[7,8,35],'opened_hardware_source_nodes':[],'expected_actor_nodes':{str(i):n['name'] for i,n in enumerate(doc['nodes']) if 'mesh' in n},'lamp_delta_ue_cm':None,'lamp_delta_status':'SEPARATE_REVIEWED_FIXTURE_AND_LIGHT_MOVE_NOT_APPLIED','not_a_native_import_receipt':True,'native_acceptance_required':['Floor is actually2.5cm','Device foot contact and functional screen bindings remain unchanged','Chair/knee collision and lamp full bounds checked before exact olddesk hide']}
     if lamp_source and lamp_receipt and home_source:
         from real_linea_edge_clamp import mount_plan,blender_collision_proof
-        mount=mount_plan(source,lamp_source,json.loads(Path(lamp_receipt).read_text()),output.parent/'lamp-posed.glb')
-        mount['collision_proof']=blender_collision_proof(source,mount['posed_lamp_glb'],mount,home_source)
-        report['lamp_mount']=mount
-        if not mount['collision_proof']['ok']:raise ValueError('Actual lamp/desk/home collision proof failed '+json.dumps(mount['collision_proof']))
+        saved=json.loads(Path(lamp_receipt).read_text());attempts=[];passing=[]
+        for y in (None,DESK_Y*100,(DESK_Y+.2*.65*SCALE)*100):
+            candidate=mount_plan(source,lamp_source,saved,output.parent/'lamp-posed.glb',placement_y_cm=y)
+            candidate['collision_proof']=blender_collision_proof(source,candidate['posed_lamp_glb'],candidate,home_source)
+            attempts.append({'origin_ue_cm':candidate['new_origin_ue_cm'],'support':candidate['actual_jaw_support'],'collision_proof':candidate['collision_proof']})
+            if candidate['collision_proof']['ok']:passing.append(candidate)
+        (output.parent/'edge-clamp-candidate-proof.json').write_text(json.dumps(attempts,indent=2)+'\n')
+        if not passing:raise ValueError('All three measured side-edge clamp candidates refused '+json.dumps(attempts))
+        mount=passing[0];mount['bounded_candidate_audit']=attempts;report['lamp_mount']=mount
     output.with_suffix('.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report));return report
 
 if __name__=='__main__':
