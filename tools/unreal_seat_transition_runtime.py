@@ -7,7 +7,9 @@ renderer's measured chair/body report exists. Until then the live home is unchan
 Python side (runs anywhere): build the quantitative evidence file the native side reads,
 from the accepted reports written on the server:
     private-audit/native-chair-surface.json   (tools/unreal_chair_surface_audit.py)
-    private-audit/native-seat-contact.json    (tools/unreal_audit_seat_contact.py)
+    private-audit/native-seat-contact.json    (tools/unreal_audit_seat_contact.py, or for the seated-fit
+                                              DeskTyping clip tools/unreal_audit_seated_typing_seat_contact.py,
+                                              checked against private-audit/unreal-seated-fit-import.json)
   ->  private-audit/native-seat-evidence.json
 
     python tools/unreal_seat_transition_runtime.py <UE project dir>
@@ -21,6 +23,7 @@ pose-matched receipt while typing).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import shutil
@@ -226,12 +229,66 @@ def build_evidence(seat_report: dict, chair_text: str, mesh: str = OWNER_MESH, c
             'note': 'Evidence for a pose-matched runtime receipt only; NativeSeatVerified follows the live receipt.'}
 
 
+SEATED_TYPING_RATE_HZ = 60      # the seated typing clip's import fps; the contact audit samples it at 3..8 s @ 60 Hz
+
+
+def seated_typing_receipt_row(receipt) -> dict:
+    """The one accepted DeskTypingSeated row of the seated-fit import receipt, under the same conditions
+    LoadSeatTransition() binds it into the DeskTyping slot on (plus GLB/FBX sha256 and 60 Hz); else ValueError."""
+    if not (isinstance(receipt, dict) and receipt.get('schema') == SEATED_FIT_RECEIPT_SCHEMA
+            and receipt.get('skeleton') == OWNER_SKELETON):
+        raise ValueError('No seated-fit import receipt on the owner skeleton')
+    rows = [r for r in receipt.get('clips', []) if isinstance(r, dict) and r.get('role') == SEATED_TYPING_ROLE]
+    if len(rows) != 1:
+        raise ValueError(f'Expected exactly one {SEATED_TYPING_ROLE} receipt row, found {len(rows)}')
+    row = rows[0]
+    for field, want in (('accepted', True), ('fit_pass', True), ('same_existing_skeleton', True),
+                        ('object_path', seated_fit_object_path(SEATED_TYPING_ROLE)), ('fps', SEATED_TYPING_RATE_HZ)):
+        if row.get(field) != want:
+            raise ValueError(f'{SEATED_TYPING_ROLE} receipt row {field}={row.get(field)!r}, expected {want!r}')
+    for field in ('glb_sha256', 'fbx_sha256'):
+        if not (isinstance(row.get(field), str) and len(row[field]) == 64):
+            raise ValueError(f'{SEATED_TYPING_ROLE} receipt row has no {field}')
+    return row
+
+
+def audited_clip(report: dict, receipt_text=None) -> tuple:
+    """The clip a seat contact report was audited on: (object path, extra evidence fields).
+
+    A report that names no clip, or the captured DeskTyping clip, is the original audit (TYPING_CLIP, unchanged).
+    A report naming the seated typing clip must match the ACCEPTED import receipt row exactly (object path, GLB and
+    FBX sha256, 60 Hz); `receipt_text` is called for the receipt text only then. Anything else is refused.
+    """
+    clip = report.get('clip')
+    path = clip.get('object_path') if isinstance(clip, dict) else clip
+    if path is None or path == TYPING_CLIP:
+        return TYPING_CLIP, {}
+    seated = seated_fit_object_path(SEATED_TYPING_ROLE)
+    if path != seated or not isinstance(clip, dict):
+        raise ValueError(f'Seat contact report names clip {path!r}: neither {TYPING_CLIP} nor {seated}')
+    if receipt_text is None:
+        raise ValueError('Seated typing seat contact report needs the seated-fit import receipt')
+    raw = receipt_text()
+    row = seated_typing_receipt_row(json.loads(raw))
+    for field, want in (('role', SEATED_TYPING_ROLE), ('object_path', row['object_path']), ('glb_sha256', row['glb_sha256']),
+                        ('fbx_sha256', row['fbx_sha256']), ('rate_hz', SEATED_TYPING_RATE_HZ)):
+        if clip.get(field) != want:
+            raise ValueError(f'Seat contact report clip {field}={clip.get(field)!r} disagrees with the accepted receipt ({want!r})')
+    return seated, {'clip_role': SEATED_TYPING_ROLE, 'clip_glb_sha256': row['glb_sha256'], 'clip_fbx_sha256': row['fbx_sha256'],
+                    'seated_fit_receipt_sha256': hashlib.sha256(raw.encode() if isinstance(raw, str) else raw).hexdigest()}
+
+
 def write_evidence(project: Path) -> Path:
     audit = Path(project) / 'private-audit'
     chair_text = (audit / 'native-chair-surface.json').read_text()
     report = json.loads((audit / 'native-seat-contact.json').read_text())
+    # The evidence clip id is the clip the report was audited on: the seated typing clip only when the accepted
+    # import receipt row matches it (Sub01SeatReceipt then compares it to the clip actually bound in the slot).
+    clip, extra = audited_clip(report, lambda: (Path(project) / SEATED_FIT_RECEIPT).read_bytes())
+    evidence = build_evidence(report, chair_text, clip=clip)
+    evidence.update(extra)
     out = audit / 'native-seat-evidence.json'
-    out.write_text(json.dumps(build_evidence(report, chair_text), indent=2) + '\n')
+    out.write_text(json.dumps(evidence, indent=2) + '\n')
     return out
 
 

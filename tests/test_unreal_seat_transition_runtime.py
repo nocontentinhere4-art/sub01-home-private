@@ -249,3 +249,102 @@ def test_actual_imported_seating_assets_bind_to_semantic_roles(installed):
     assert 'Role.Asset,Role.Asset' in load
     assert 'Clip->GetSkeleton()==Mesh->GetSkeleton()&&ValidatedHandsPostures.Contains(FName(Role.Key))' in load
     assert 'SeatClips.Add(FName(Role.Key),Clip)' in load
+
+
+# ---------------------------------------------------------------- seated typing clip evidence
+SEATED = adapter.seated_fit_object_path(adapter.SEATED_TYPING_ROLE)
+
+
+def seated_receipt(**override):
+    row = {'role': adapter.SEATED_TYPING_ROLE, 'object_path': SEATED, 'accepted': True, 'fit_pass': True, 'imported': True,
+           'same_existing_skeleton': True, 'fps': 60, 'glb_sha256': 'a' * 64, 'fbx_sha256': 'f' * 64}
+    row.update(override)
+    return {'schema': adapter.SEATED_FIT_RECEIPT_SCHEMA, 'skeleton': adapter.OWNER_SKELETON, 'clips': [row]}
+
+
+def seated_clip(**override):
+    clip = {'role': adapter.SEATED_TYPING_ROLE, 'object_path': SEATED, 'glb_sha256': 'a' * 64, 'fbx_sha256': 'f' * 64, 'rate_hz': 60}
+    clip.update(override)
+    return clip
+
+
+def seated_project(tmp_path, report, receipt=None):
+    audit = tmp_path / 'private-audit'
+    audit.mkdir(exist_ok=True)
+    (audit / 'native-chair-surface.json').write_text(CHAIR)
+    (audit / 'native-seat-contact.json').write_text(json.dumps(report))
+    if receipt is not False:
+        (tmp_path / adapter.SEATED_FIT_RECEIPT).write_text(json.dumps(receipt or seated_receipt()))
+    return tmp_path
+
+
+def test_seated_report_stamps_the_seated_clip_the_native_receipt_accepts(tmp_path):
+    project = seated_project(tmp_path, {**seat_report(), 'clip': seated_clip()})
+    evidence = json.loads(adapter.write_evidence(project).read_text())
+    assert evidence['clip'] == SEATED and evidence['clip_id'] == str(adapter.seat_id(SEATED))
+    assert evidence['clip_role'] == adapter.SEATED_TYPING_ROLE
+    assert evidence['clip_glb_sha256'] == 'a' * 64 and evidence['clip_fbx_sha256'] == 'f' * 64
+    receipt_raw = (project / adapter.SEATED_FIT_RECEIPT).read_bytes()
+    assert evidence['seated_fit_receipt_sha256'] == __import__('hashlib').sha256(receipt_raw).hexdigest()
+    assert evidence['native_seat_verified'] is False and evidence['time_range_s'] == [3.0, 8.0]
+    # Sub01SeatReceipt: the live L.ClipId is Sub01SeatId(<clip bound in the DeskTyping slot>->GetPathName()).
+    p = evidence['patches']
+    fill = ''.join(f'E.MinGap[{i}]={p[n]["min_gap_cm"]};E.MaxMedian[{i}]={p[n]["max_median_cm"]};E.MinCoverage[{i}]={p[n]["min_coverage"]};E.MinBandVertices[{i}]={p[n]["min_band_vertices"]};'
+                   for i, n in enumerate(adapter.PATCHES))
+    x, y, z = evidence['body_cm']
+    run_cpp(f'''#include "Sub01SeatTransition.h"
+int main(){{FSub01SeatEvidence E;E.Loaded=true;E.Family=ESub01SeatFamily::DeskTyping;
+ E.MeshId={evidence["mesh_id"]}ull;E.ClipId={evidence["clip_id"]}ull;E.ChairRevision={evidence["chair_revision"]}ull;
+ E.X={x};E.Y={y};E.Z={z};E.PitchDeg=0;E.YawDeg=180;E.RollDeg=0;E.ScaleX=E.ScaleY=E.ScaleZ=1;E.T0=3;E.T1=8;{fill}
+ FSub01SeatLivePose L;L.MeshId=Sub01SeatId("{adapter.OWNER_MESH}");L.ClipId=Sub01SeatId("{SEATED}");L.Family=ESub01SeatFamily::DeskTyping;
+ L.ChairRevision={evidence["chair_revision"]}ull;L.X={x};L.Y={y};L.Z={z};L.PitchDeg=0;L.YawDeg=180;L.RollDeg=0;L.ScaleX=L.ScaleY=L.ScaleZ=1;L.ClipSeconds=6;L.ClipPlaying=true;
+ if(!Sub01SeatReceipt(E,L))return 1;                                   // the seated clip bound in the slot
+ L.ClipId=Sub01SeatId("{adapter.TYPING_CLIP}");if(Sub01SeatReceipt(E,L))return 2;   // the old clip is another clip
+ return 0;}}''')
+
+
+@pytest.mark.parametrize('clip,receipt,match', [
+    (seated_clip(glb_sha256='b' * 64), None, 'glb_sha256'),
+    (seated_clip(fbx_sha256='e' * 64), None, 'fbx_sha256'),
+    (seated_clip(rate_hz=30), None, 'rate_hz'),
+    (seated_clip(role='SeatedIdle'), None, 'role'),
+    (seated_clip(object_path='/Game/Sub01Hands/Seating/SUB01_SeatedIdle.SUB01_SeatedIdle'), None, 'neither'),
+    (SEATED, None, 'neither'),                                                       # a bare path carries no shas
+    (seated_clip(), seated_receipt(accepted=False), 'accepted'),
+    (seated_clip(), seated_receipt(fit_pass=False), 'fit_pass'),
+    (seated_clip(), seated_receipt(same_existing_skeleton=False), 'same_existing_skeleton'),
+    (seated_clip(), seated_receipt(object_path='/Game/Elsewhere/SUB01_DeskTypingSeated.SUB01_DeskTypingSeated'), 'object_path'),
+    (seated_clip(), seated_receipt(fps=30), 'fps'),
+    (seated_clip(), seated_receipt(fbx_sha256=None), 'fbx_sha256'),
+    (seated_clip(), {**seated_receipt(), 'skeleton': '/Game/Other.Other'}, 'owner skeleton'),
+    (seated_clip(), {**seated_receipt(), 'clips': seated_receipt()['clips'] * 2}, 'exactly one'),
+])
+def test_seated_report_refused_unless_it_matches_the_accepted_receipt_row(tmp_path, clip, receipt, match):
+    project = seated_project(tmp_path, {**seat_report(), 'clip': clip}, receipt)
+    with pytest.raises(ValueError, match=match):
+        adapter.write_evidence(project)
+    assert not (project / 'private-audit/native-seat-evidence.json').exists()
+
+
+def test_seated_report_refused_without_a_receipt(tmp_path):
+    project = seated_project(tmp_path, {**seat_report(), 'clip': seated_clip()}, receipt=False)
+    with pytest.raises(FileNotFoundError):
+        adapter.write_evidence(project)
+    assert not (project / 'private-audit/native-seat-evidence.json').exists()
+
+
+@pytest.mark.parametrize('clip', [None, adapter.TYPING_CLIP, {'object_path': adapter.TYPING_CLIP}])
+def test_original_clip_reports_unchanged(tmp_path, clip):
+    report = seat_report() if clip is None else {**seat_report(), 'clip': clip}
+    project = seated_project(tmp_path, report, receipt=False)     # the old path never reads the receipt
+    evidence = json.loads(adapter.write_evidence(project).read_text())
+    assert evidence == json.loads(json.dumps(adapter.build_evidence(seat_report(), CHAIR)))
+    assert evidence['clip'] == adapter.TYPING_CLIP and evidence['clip_id'] == str(adapter.seat_id(adapter.TYPING_CLIP))
+    assert 'clip_glb_sha256' not in evidence
+
+
+def test_failing_seated_contact_is_still_refused(tmp_path):
+    project = seated_project(tmp_path, {**seat_report(left_posterior_thigh=(1.5, 2.2)), 'clip': seated_clip()})
+    with pytest.raises(ValueError, match='posterior_thigh'):
+        adapter.write_evidence(project)
+    assert not (project / 'private-audit/native-seat-evidence.json').exists()
