@@ -75,7 +75,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  source=Path(export_glb);report=json.loads(source.with_suffix('.json').read_text());digest=hashlib.sha256(source.read_bytes()).hexdigest();doc,_=read_gltf(source)
  if report.get('source_sha256')!=SHA or report.get('output_sha256')!=digest or not report.get('source_binary_unchanged'):raise RuntimeError('Actual complete desk export proof missing')
  mount=report.get('lamp_mount',{})
- if not mount.get('collision_proof',{}).get('ok') or mount.get('opened_hardware_source_nodes')!=[7,8,35]:raise RuntimeError('Actual grommet support and source triangle collision proof missing')
+ if not mount.get('collision_proof',{}).get('ok') or mount.get('mount_mechanism')!='C-clamp-side-edge':raise RuntimeError('Actual C-clamp support and source triangle collision proof missing')
  if any(not n.get('name','').startswith('SUB01_RealLinea140_')for n in doc['nodes']):raise RuntimeError('Desk scene node UID uniqueness not verified')
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
  if not world or world.get_path_name().split('.',1)[0]!=LEVEL:raise RuntimeError('ActualHome must already be loaded by sole editor owner')
@@ -110,7 +110,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   folder=project/'Content'/directory/'Sub01Home/ActualHome'
   if folder.exists():shutil.copytree(folder,backup/directory)
  result['map_backup']=str(backup)
- added=[]
+ added=[];created_lampdest=None
  try:
   manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True);data=manager.create_source_data(str(source))
   if not manager.import_scene(dest,data,params):raise RuntimeError('Owned real desk import refused')
@@ -137,10 +137,32 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
    if not body:raise RuntimeError('Real furniture physical collision missing')
    body.set_editor_property('collision_trace_flag',u.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE);c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
   if fingerprint(u,original)!=before:raise RuntimeError('New owned material/collision setup changed originals')
+  posed_path=source.parent/'lamp-posed.glb';posed_hash=hashlib.sha256(posed_path.read_bytes()).hexdigest()
+  if posed_hash!=mount['posed_lamp']['sha256']or not mount['posed_lamp']['other_positions_normals_uv_indices_unchanged']:raise RuntimeError('Actual rigid screw derivative proof differs')
+  lampdest='/Game/Sub01Home/RealEdgeClampLamp/V_'+posed_hash[:12]
+  if u.EditorAssetLibrary.does_directory_exist(lampdest):raise RuntimeError('Posed lamp version already exists; preserve prior asset')
+  task=u.AssetImportTask();task.set_editor_property('filename',str(posed_path));task.set_editor_property('destination_path',lampdest);task.set_editor_property('automated',True);task.set_editor_property('replace_existing',False);task.set_editor_property('save',False)
+  created_lampdest=lampdest
+  u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+  posed_meshes=[u.EditorAssetLibrary.load_asset(path)for path in u.EditorAssetLibrary.list_assets(lampdest,recursive=True,include_folder=False)]
+  posed_meshes=[m for m in posed_meshes if isinstance(m,u.StaticMesh)]
+  if len(posed_meshes)!=1:raise RuntimeError('Authentic posed C-clamp must import one complete source mesh')
+  posed_mesh=posed_meshes[0];slots=list(posed_mesh.get_editor_property('static_materials'))
+  if len(slots)!=2 or posed_mesh.get_num_sections(0)!=2:raise RuntimeError('Source body/light material slots changed')
+  counts=[len(u.ProceduralMeshLibrary.get_section_from_static_mesh(posed_mesh,0,i)[1])//3 for i in range(2)]
+  if counts!=[22598,1504]:raise RuntimeError('Actual posed body/light section identities differ; no guessed material order')
+  for slot,material in zip(slots,lc[0].get_materials()):slot.set_editor_property('material_interface',material)
+  posed_mesh.set_editor_property('static_materials',slots)
+  body=posed_mesh.get_editor_property('body_setup')
+  if not body:raise RuntimeError('Authentic clamp physical collision missing')
+  body.set_editor_property('collision_trace_flag',u.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+  if fingerprint(u,original)!=before:raise RuntimeError('Posed lamp import changed originals before activation')
   if defer_activation:
-   return result,{'u':u,'old':old,'lamp':lamp,'light':light,'lights':lights,'by_node':by_node,'mount':mount,'original':original,'before':before,'added':added,'triangles':triangles,'actual':actual,'dest':dest,'source':source}
+   return result,{'u':u,'old':old,'lamp':lamp,'light':light,'lights':lights,'by_node':by_node,'mount':mount,'original':original,'before':before,'added':added,'triangles':triangles,'actual':actual,'dest':dest,'source':source,'posed_mesh':posed_mesh,'lampdest':lampdest,'lamp_component':lc[0]}
   for hardware in mount['opened_hardware_source_nodes']:
    cap,cc,_=by_node[hardware];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+  lc[0].set_static_mesh(posed_mesh)
+  for slot,material in enumerate(mount['actual_saved_material_paths']):lc[0].set_material(slot,u.EditorAssetLibrary.load_asset(material))
   lamp.set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False)
   light.set_actor_location(u.Vector(*mount['new_bulb_ue_cm']),False,False)
   if not close(vec(lights[0].get_world_location()),mount['new_bulb_ue_cm']):raise RuntimeError('Exact light component failed paired bulb move')
@@ -152,7 +174,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   allowed={a.get_path_name()for a in old+[lamp,light]}
   if fingerprint(u,[a for a in original if a.get_path_name()not in allowed])!={k:v for k,v in before.items()if k not in allowed}:raise RuntimeError('Old desk hide changed protected originals')
   result.update(native_triangle_count=triangles,native_bounds_cm=actual,desk_original_states=before,lamp_mount=mount,added_actors=[a.get_path_name()for a in added],opened_exact_hardware_actors=[by_node[i][0].get_path_name()for i in mount['opened_hardware_source_nodes']],device_contact='Actual worktop matches baseline84.5cm; device mesh/transform/material bindings remain byte-identical in native fingerprint. Existing device penetration is not corrected or called perfect.')
-  if not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Real desk asset/map save failed')
+  if not u.EditorAssetLibrary.save_directory(lampdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Real desk asset/map save failed')
   source.with_name('native-real-linea140-import.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception:
   for actor,transform,label,hidden,comps in states:
@@ -161,4 +183,6 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
     c.set_static_mesh(mesh);c.set_world_transform(world,False,False);c.set_editor_property('component_tags',tags);c.set_visibility(visible);c.set_collision_profile_name(profile);c.set_collision_enabled(collision)
     for slot,material in enumerate(materials):c.set_material(slot,material)
   for a in added:eas.destroy_actor(a)
+  for owned in (dest,created_lampdest):
+   if owned and u.EditorAssetLibrary.does_directory_exist(owned):u.EditorAssetLibrary.delete_directory(owned)
   raise

@@ -18,6 +18,8 @@ def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
  root=Path(root);proof=json.loads((root/'office-bundle.json').read_text())
  if proof.get('schema')!='sub01.real-office-bundle.v1' or not proof.get('source_triangle_collision_proof',{}).get('ok') or not proof.get('whole_book_geometry_pbr_preserved') or proof.get('complete_original_book_glb_sha256')!=BOOKS_SHA or len(proof.get('books',[]))!=46 or proof.get('hide_only_source_actor_nodes')!=[181,182,190,191]:raise RuntimeError('Actual coherent whole office source proof unavailable')
+ mount=proof['desk'].get('lamp_mount',{});pose=mount.get('posed_lamp',{})
+ if mount.get('mount_mechanism')!='C-clamp-side-edge' or mount.get('opened_hardware_source_nodes')!=[] or pose.get('triangle_count')!=24102 or pose.get('rigid_screw_triangle_count')!=1100 or not pose.get('other_positions_normals_uv_indices_unchanged') or hashlib.sha256((root/'lamp-posed.glb').read_bytes()).hexdigest()!=pose.get('sha256'):raise RuntimeError('Actual complete rigid C-clamp derivative proof unavailable')
  shelfpath=root/'shelves.glb';digest=hashlib.sha256(shelfpath.read_bytes()).hexdigest()
  if digest!=proof['shelf']['sha256'] or proof['shelf']['source_sha256']!=SHELF_SHA or not proof['shelf']['source_binary_unchanged']:raise RuntimeError('Actual complete shelf source identity differs')
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
@@ -79,8 +81,13 @@ def run(root,dry_run=True,u=None):
   # Activation starts only after ALL native/source geometry, PBR and board proofs.
   for hardware in ctx['mount']['opened_hardware_source_nodes']:
    cap,cc,_=ctx['by_node'][hardware];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
-  mount=ctx['mount'];ctx['lamp'].set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False);ctx['light'].set_actor_location(u.Vector(*[vec(ctx['light'].get_actor_location())[a]+mount['new_bulb_ue_cm'][a]-vec(ctx['lights'][0].get_world_location())[a]for a in range(3)]),False,False)
+  mount=ctx['mount'];ctx['lamp_component'].set_static_mesh(ctx['posed_mesh'])
+  for slot,material in enumerate(mount['actual_saved_material_paths']):ctx['lamp_component'].set_material(slot,u.EditorAssetLibrary.load_asset(material))
+  ctx['lamp'].set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False);ctx['light'].set_actor_location(u.Vector(*[vec(ctx['light'].get_actor_location())[a]+mount['new_bulb_ue_cm'][a]-vec(ctx['lights'][0].get_world_location())[a]for a in range(3)]),False,False)
   if not close(vec(ctx['lights'][0].get_world_location()),mount['new_bulb_ue_cm']):raise RuntimeError('Actual paired light did not reach verified bulb')
+  lamp_points,count=surface(u,ctx['lamp_component']);lamp_bounds=[[min(p[a]for p in lamp_points)for a in range(3)],[max(p[a]for p in lamp_points)for a in range(3)]]
+  if count!=24102 or not all(close(a,[v*100 for v in b])for a,b in zip(lamp_bounds,mount['lamp_world_aabb_m'])):raise RuntimeError('Actual posed C-clamp geometry/support bounds differ source')
+  if [m.get_path_name()for m in ctx['lamp_component'].get_materials()]!=mount['actual_saved_material_paths']:raise RuntimeError('Posed clamp altered verified old PBR bindings')
   book_rows=[]
   for actor,c,plan in books:
    location=vec(actor.get_actor_location());new=[location[a]+plan['delta_ue_cm'][a]for a in range(3)];actor.set_actor_location(u.Vector(*new),False,False)
@@ -108,7 +115,7 @@ def run(root,dry_run=True,u=None):
   for actor,transform,label,hidden,comps in states:
    expected=True if actor in old_targets else hidden
    if bool(actor.get_editor_property('hidden'))!=expected:raise RuntimeError('Office activation changed unplanned visibility')
-  if not u.EditorAssetLibrary.save_directory(deskdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office save failed')
+  if not u.EditorAssetLibrary.save_directory(ctx['lampdest'],only_if_is_dirty=False,recursive=True)or not u.EditorAssetLibrary.save_directory(deskdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office save failed')
   result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'desk':desk_result,'shelf_native_triangles':alltris,'shelf_materials':materials,'books':book_rows,'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
   (root/'native-office-bundle.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception:
@@ -119,6 +126,6 @@ def run(root,dry_run=True,u=None):
     for slot,mat in enumerate(mats):c.set_material(slot,mat)
   for actor in list(eas.get_all_level_actors()):
    if actor.get_path_name()not in before:eas.destroy_actor(actor)
-  for owned in (dest,deskdest):
+  for owned in (dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else [])):
    if u.EditorAssetLibrary.does_directory_exist(owned):u.EditorAssetLibrary.delete_directory(owned)
   raise
