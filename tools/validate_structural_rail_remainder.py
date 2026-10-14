@@ -65,7 +65,17 @@ def compare_triangles(expected,actual):
                     if delta>tolerance:valid=False
                 if valid:found=(candidate_index,deltas);break
             if found:break
-        if found is None:return {'ok':False,'error':'nonrail triangle position/normal/UV/winding differs','position_key':key,'candidate_count':len(candidates)}
+        if found is None:
+            diagnostics=[]
+            for candidate in candidates:
+                for shift in range(3):
+                    detail={'cyclic_shift':shift}
+                    for kind in ('position','normal','uv'):
+                        pairs=[(triangle[j][kind],candidate[(j+shift)%3][kind]) for j in range(3)]
+                        detail[kind+'_max_delta']=max((abs(x-y) for a,b in pairs if a is not None and b is not None for x,y in zip(a,b)),default=0.)
+                        detail[kind+'_expected']=[a for a,b in pairs];detail[kind+'_actual']=[b for a,b in pairs]
+                    diagnostics.append(detail)
+            return {'ok':False,'error':'nonrail triangle position/normal/UV/winding differs','position_key':key,'candidate_count':len(candidates),'candidate_attribute_diagnostics':diagnostics}
         candidates.pop(found[0])
         for kind,delta in found[1].items():maxima[kind]=max(maxima[kind],delta)
     return {'ok':True,'triangle_count':len(expected),'max_absolute_difference':maxima}

@@ -243,8 +243,8 @@ def build(source,out,expected_sha=SOURCE_SHA,remove_reviewed_desk_stem=False):
                 if 'NORMAL' in primitive['attributes']:
                     raw_normals=accessor(doc,binary,primitive['attributes']['NORMAL']);normal_matrix=Matrix(matrices[node_index]).to_3x3().inverted().transposed()
                     normals=[point(normal_matrix@Vector(raw_normals[used[loop.vertex_index]])).normalized() for loop in mesh.loops]
-                    mesh.normals_split_custom_set(normals)
                     for polygon in mesh.polygons:polygon.use_smooth=True
+                    mesh.normals_split_custom_set(normals)
                 preserved.append({'source_node_index':node_index,'primitive_index':primitive_index,'material_index':material_index,'original_triangle_count':len(indices)//3,'removed_rail_triangles':len(excluded),'preserved_triangle_count':len(faces),'preserved_vertex_count':len(used),'source_positions_normals_uv_preserved':True})
     for index,points in enumerate(oak_grip_paths()):
         curve=bpy.data.curves.new(f'SUB01_ContinuousOakGrip_{index}','CURVE');curve.dimensions='3D';curve.resolution_u=1;curve.bevel_depth=.028;curve.bevel_resolution=3;curve.use_fill_caps=True
