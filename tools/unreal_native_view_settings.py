@@ -16,10 +16,15 @@ INCLUDES = r'''
 #include "Components/SkyLightComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Math/RotationMatrix.h"
+#include "Misc/DateTime.h"
 '''
 
 FIELDS = r'''
  void InitializePrivateViewSettings();
+ void PublishPrivateNativeCameraPrivacy(bool Hidden);
+ double NativePrivacyPublishedAt=-10;
+ bool NativePrivacyLast=true;
+ int64 NativePrivacyStartTicks=0;
  void ApplyPrivateViewSettings(const TSharedPtr<FJsonObject>& Document,int32 Revision);
  void WritePrivateViewSettingsReceipt(int32 Revision,bool Accepted,const FString& Error);
  AActor* FindAuthoredSettingsActor(const FString& Label) const;
@@ -29,6 +34,15 @@ FIELDS = r'''
 '''
 
 METHODS = r'''
+void ASub01HomeCharacter::PublishPrivateNativeCameraPrivacy(bool Hidden){
+ const double Now=FPlatformTime::Seconds();if(Hidden==NativePrivacyLast&&Now-NativePrivacyPublishedAt<.2)return;
+ NativePrivacyLast=Hidden;NativePrivacyPublishedAt=Now;if(!NativePrivacyStartTicks)NativePrivacyStartTicks=PrivateSettingsStartTicks();
+ const FDateTime UTC=FDateTime::UtcNow();auto Receipt=MakeShared<FJsonObject>();
+ Receipt->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());Receipt->SetNumberField(TEXT("native_start_ticks"),NativePrivacyStartTicks);
+ Receipt->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden);
+ FString Raw;FJsonSerializer::Serialize(Receipt,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-view-privacy.tmp");
+ if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-view-privacy.json"),*Temp,true,true);
+}
 AActor* ASub01HomeCharacter::FindAuthoredSettingsActor(const FString& Label) const{
  AActor* Found=nullptr;
  for(TActorIterator<AActor> It(GetWorld());It;++It){
@@ -97,6 +111,10 @@ def install(header, cpp):
     """Integrate after a verified baseline; never call the project generator here."""
     header = header.replace(' void UpdatePrivateNativeControl();', FIELDS + '\n void UpdatePrivateNativeControl();', 1)
     cpp = INCLUDES + cpp
+    hook=" const bool Hidden=Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270;"
+    if hook not in cpp:
+        raise ValueError("Actual native bathroom privacy hook missing")
+    cpp=cpp.replace(hook,hook+"\n PublishPrivateNativeCameraPrivacy(Hidden);",1)
     cpp = cpp.replace(' const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;',
                       ' InitializePrivateViewSettings();\n const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;', 1)
     cpp = cpp.replace(' FString Capture;if(Doc->TryGetStringField',
