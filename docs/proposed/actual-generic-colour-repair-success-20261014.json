@@ -1,0 +1,217 @@
+{
+  "schema": "sub01.actual-generic-colour-repair-receipt.v1",
+  "started_utc": 1791991579.4936197,
+  "source_sha256": {
+    "unreal_home_materials_fix.py": "2c1a58ba82559c8deae87e76062810b90363a3b785ab9a32d07ee7cd04b90d10",
+    "home_materials_spec.py": "9cba5bfc4001cfdb30028a133e8717a3872beec23e46df4f70e8bc4be99e8af3",
+    "unreal_export_texture_parity.py": "b07a9f4875f18182022b5dd9affa857637e8e1ae778ad72d531bb299fc893369"
+  },
+  "scope": "13 albedo colour imports only; no normals/emission/geometry changes",
+  "texture_count": 13,
+  "material_instances": [
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_9.Material_9",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_9.SUB01_MatFix_AlbedoMI_Material_9",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_141.SUB01_MatFix_Albedo_Image_141"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_10.Material_10",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_10.SUB01_MatFix_AlbedoMI_Material_10",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_142.SUB01_MatFix_Albedo_Image_142"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_19.Material_19",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_19.SUB01_MatFix_AlbedoMI_Material_19",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_143.SUB01_MatFix_Albedo_Image_143"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_20.Material_20",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_20.SUB01_MatFix_AlbedoMI_Material_20",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_144.SUB01_MatFix_Albedo_Image_144"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_53.Material_53",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_53.SUB01_MatFix_AlbedoMI_Material_53",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_145.SUB01_MatFix_Albedo_Image_145"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_54.Material_54",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_54.SUB01_MatFix_AlbedoMI_Material_54",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_146.SUB01_MatFix_Albedo_Image_146"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_91.Material_91",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_91.SUB01_MatFix_AlbedoMI_Material_91",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_147.SUB01_MatFix_Albedo_Image_147"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_oat.SUB01_RefDress_linen_oat",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff.SUB01_MatFix_Albedo_RefDress_diff"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_terracotta.SUB01_RefDress_linen_terracotta",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_terracotta.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_terracotta",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff1.SUB01_MatFix_Albedo_RefDress_diff1"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_book_clay.SUB01_RefDress_book_clay",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_clay.SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_clay",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff2.SUB01_MatFix_Albedo_RefDress_diff2"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_book_sage.SUB01_RefDress_book_sage",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_sage.SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_sage",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff3.SUB01_MatFix_Albedo_RefDress_diff3"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_wool_caramel.SUB01_RefDress_wool_caramel",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel.SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff5.SUB01_MatFix_Albedo_RefDress_diff5"
+      }
+    },
+    {
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_cream.SUB01_RefDress_linen_cream",
+      "instance": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream",
+      "created": true,
+      "override": {
+        "BaseColorTexture": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_RefDress_diff7.SUB01_MatFix_Albedo_RefDress_diff7"
+      }
+    }
+  ],
+  "slot_changes": [
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_61.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_9.Material_9",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_9.SUB01_MatFix_AlbedoMI_Material_9"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_62.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_10.Material_10",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_10.SUB01_MatFix_AlbedoMI_Material_10"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_76.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_19.Material_19",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_19.SUB01_MatFix_AlbedoMI_Material_19"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_77.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_20.Material_20",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_20.SUB01_MatFix_AlbedoMI_Material_20"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_110.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_53.Material_53",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_53.SUB01_MatFix_AlbedoMI_Material_53"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_111.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_54.Material_54",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_54.SUB01_MatFix_AlbedoMI_Material_54"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_199.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_91.Material_91",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_91.SUB01_MatFix_AlbedoMI_Material_91"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_0.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_oat.SUB01_RefDress_linen_oat",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_27.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_oat.SUB01_RefDress_linen_oat",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_30.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_oat.SUB01_RefDress_linen_oat",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_32.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_oat.SUB01_RefDress_linen_oat",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_oat"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_1.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_terracotta.SUB01_RefDress_linen_terracotta",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_terracotta.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_terracotta"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_3.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_book_clay.SUB01_RefDress_book_clay",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_clay.SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_clay"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_5.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_book_sage.SUB01_RefDress_book_sage",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_sage.SUB01_MatFix_AlbedoMI_SUB01_RefDress_book_sage"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_23.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_wool_caramel.SUB01_RefDress_wool_caramel",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel.SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_24.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_wool_caramel.SUB01_RefDress_wool_caramel",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel.SUB01_MatFix_AlbedoMI_SUB01_RefDress_wool_caramel"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_29.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_cream.SUB01_RefDress_linen_cream",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream"
+    },
+    {
+      "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_33.StaticMeshComponent0#0",
+      "from": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_linen_cream.SUB01_RefDress_linen_cream",
+      "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream.SUB01_MatFix_AlbedoMI_SUB01_RefDress_linen_cream"
+    }
+  ],
+  "parity_problems": [],
+  "usage_after_summary": {
+    "texture_count": 117,
+    "definite_mismatch_texture_count": 0,
+    "warning_texture_count": 0
+  },
+  "visual_match_claimed": false,
+  "note": "Saved actual native home; fresh runtime pixels and light/motion verification still required."
+}
