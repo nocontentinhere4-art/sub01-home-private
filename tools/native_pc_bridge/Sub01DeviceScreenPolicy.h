@@ -7,13 +7,18 @@ struct FSub01DeviceScreenInputs{
  bool PublicHome=false;        // fresh /devices/state, privacy false, local privacy off
  bool PhoneActivity=false;     // home.activity == "phone"
  bool PhoneFrame=false;        // phone_browser_screen.frame_id is present
+ bool PhoneAppFrame=false;     // a current phone app frame identity (backend producer; schema pending)
  bool MinecraftSelected=false; // home.console_game == "minecraft"
  bool MinecraftEnabled=false;  // minecraft.enabled
  bool MinecraftFrame=false;    // minecraft.has_frame
 };
-// The phone shows the actual browser page only while he uses the phone.
-inline bool Sub01PhoneShowsPage(const FSub01DeviceScreenInputs& In){
- return In.PublicHome&&In.PhoneActivity&&In.PhoneFrame;
+// Which actual phone frame may be shown: the browser page only while he uses the
+// phone; otherwise the backend's app frame (home screen, notes, messages) if any.
+enum class ESub01PhoneFrame{None,BrowserPage,AppFrame};
+inline ESub01PhoneFrame Sub01PhoneFrame(const FSub01DeviceScreenInputs& In){
+ if(!In.PublicHome)return ESub01PhoneFrame::None;
+ if(In.PhoneActivity&&In.PhoneFrame)return ESub01PhoneFrame::BrowserPage;
+ return In.PhoneAppFrame?ESub01PhoneFrame::AppFrame:ESub01PhoneFrame::None;
 }
 // The TV requests a Minecraft JPEG only when the selected game has a live frame;
 // otherwise it stays blank instead of polling a 404 every tick.
