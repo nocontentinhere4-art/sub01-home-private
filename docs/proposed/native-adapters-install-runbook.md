@@ -163,7 +163,7 @@ git cannot show, with no receipt committed.
 | Raw Gaming capture | `/Game/Sub01Hands/Controller/SUB01_Gaming` (root's grip diagnostic) | Source PRESENT: `docs/proposed/controller-capture/gaming-owner.glb` (main 710f887). Native import UNKNOWN; the adapter does not play this clip. |
 | Controller prop | the mesh named by `private-audit/native-controller-asset.json` → `physical_assembly.mesh`, under `/Game/Sub01Home/Devices/Controller/V_8134769e2680/…`. It is **not** `/Game/Sub01Home/Props/SUB01_Controller`. The schema (`sub01.native-controller-asset.v1`) and `source_sha256` (`c034a144…`) match root's main `unreal_import_controller_prop.py`. | Tool PRESENT (main dbae3e1, f2e9582); receipt UNKNOWN / not committed |
 | Config | `+ValidatedHandsPostures=Gaming` (`unreal_controller_play_runtime.py config <project> IMPORT.json OUT.ini`; only with accepted evidence) | ABSENT |
-| `private-audit/native-sofa-surface.json` | measured sofa seat ≥ 4000 cm², `errors: []` | ABSENT (no audit tool committed; spec in `sofa-controller-play.md` §4.1) |
+| `private-audit/native-sofa-surface.json` | measured sofa seat ≥ 4000 cm², `errors: []` | ABSENT. Tool PRESENT: `tools/unreal_sofa_surface_audit.py` (not run; source expectation `docs/proposed/source-support-surfaces/20261014-source-sofa-surface.json`) |
 | `private-audit/native-controller-play-evidence.json` | `… evidence <project> GRIP.json SOFA_CONTACT.json PLACEMENT.json` | ABSENT (needs sofa contact + placement) |
 | `private-audit/native-controller-play-runtime-proof.json` | `sub01.native-controller-play-runtime-proof.v1`, ≥ 152/152 native frames passing, penetration ≥ −0.3 cm, native capture sha | ABSENT |
 
@@ -210,9 +210,22 @@ native receipts (`SUB01_SEAT_LIVE_MEASUREMENT` with contact, `SUB01_LIFE_READY �
 6. **Audits and proofs to capture, in order:**
    1. `native-chair-surface.json` (committed copy) → `native-seat-contact.json` → `native-seat-evidence.json`,
       then the live typing receipt.
-   2. `native-bed-surface.json` → `native-life-bed-evidence.json` → `native-life-root-paths.json`.
+   2. `native-bed-surface.json` → `native-life-root-paths.json` (stage-paths) → native bed capture →
+      `native-life-bed-evidence.json`.
    3. `native-sofa-surface.json`, then sofa contact and placement → `native-controller-play-evidence.json` →
       `native-controller-play-runtime-proof.json`.
+
+   Producers for 2 and 3 (server editor capture, then offline evaluation; evidence/proof are written only when
+   the native observations exist and pass, otherwise only `native-<kind>-contact-evaluation.json` with
+   `ready: false`):
+   - `UnrealEditor-Cmd … -ExecutePythonScript=tools/unreal_sofa_surface_audit.py` (and the bed audit), then
+     `python3 tools/measure_source_support_surface.py compare docs/proposed/source-support-surfaces/20261014-source-<bed|sofa>-surface.json <project>/private-audit/native-<bed|sofa>-surface.json`
+     (deltas only, not gated);
+   - `SUB01_SUPPORT_CAPTURE=<config.json> UnrealEditor-Cmd … -ExecutePythonScript=tools/unreal_native_support_capture.py`
+     with `kind` `bed`, `sofa`, then `controller_grip` (placement, mesh offsets and floor measured on the live
+     character; the grip kind needs `python3 tools/unreal_controller_grip_contact_native.py install <module>`
+     after the bundle, and a rebuild);
+   - `python3 tools/native_support_contact_evidence.py bed|sofa [--grip GRIP.json]|grip <project> <capture>`.
    4. Native captures of each, compared by eye against the SimbasJungles reference.
 7. **Readiness checks.** Claim an activity ready only with `HOME_NATIVE_REQUIRED=1` and the live logs:
    - **seat:** `ContactVerified` and `NativeSeatVerified` with PC focus while typing;
