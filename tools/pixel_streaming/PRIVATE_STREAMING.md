@@ -9,7 +9,7 @@ The Manual game PID52822/startticks654201379 physically approached the desk. Act
 
 Evidence is `out/house-evidence/private-real-native-GUI-PC-keyboard-observed.json`, `private-real-native-GUI-PC-keyboard.png` and `actual-native-gui-keyboard-proof.png`. This accepts standing native keyboard use and real guest output, not physical seating, typing hand contact or autonomous PC use.
 
-The viewer's health request now aborts after1.5seconds. A clearly labelled client-only hung-fetch test observed abort at1501ms, image hidden/source cleared and controls disabled; removing the fault restored the honest preparing state while capture flags were revoked for the managed native diagnostic gap. This tests fail-closed handling; fresh-frame recovery after that change awaits the next accepted live native session.
+The viewer's health request now aborts after1.5seconds. A clearly labelled client-only hung-fetch test observed abort at1501ms, image hidden/source cleared and controls disabled; removing the fault restored the honest preparing state while capture flags were revoked for the managed native diagnostic gap. This tests fail-closed handling; fresh-frame recovery then passed on accepted Diagnostic PID61338/startticks654649383: a repeat client-only fault aborted1502ms and cleared pixels; removing it resumed actual1280×720 decoded frames757→807. Input remained disabled throughout. Evidence is `out/house-evidence/private-viewer-health-timeout-observed.json` and `private-real-diagnostic-live-viewer-health-recovery.png`. This is an animation review view, not seating or hand-contact acceptance.
 
 ## Observed front door and Daylight control — 2026-10-14 07:54 UTC
 
