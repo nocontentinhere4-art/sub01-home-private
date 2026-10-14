@@ -287,7 +287,7 @@ class Handler(BaseHTTPRequestHandler):
         state=self.server.state
         if not state.enabled('native-viewer-capture-enabled'):
             self.json(409,{'error':'Native capture is locked'});return
-        if self.headers.get('Upgrade','').lower()!='websocket' or 'upgrade' not in self.headers.get('Connection','').lower().split(', '):
+        if self.headers.get('Upgrade','').lower()!='websocket' or 'upgrade' not in [v.strip().lower() for v in self.headers.get('Connection','').split(',')]:
             self.json(400,{'error':'Websocket upgrade required'});return
         origin=self.headers.get('Origin','')
         if origin!='https://5ldnm4vax9kelh-8888.proxy.runpod.net':
