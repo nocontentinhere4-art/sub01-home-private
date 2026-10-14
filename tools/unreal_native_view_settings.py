@@ -110,7 +110,10 @@ void ASub01HomeCharacter::ApplyPrivateViewSettings(const TSharedPtr<FJsonObject>
 def install(header, cpp):
     """Integrate after a verified baseline; never call the project generator here."""
     header = header.replace(' void UpdatePrivateNativeControl();', FIELDS + '\n void UpdatePrivateNativeControl();', 1)
-    cpp = INCLUDES + cpp
+    first_header='#include "Sub01HomeLab.h"'
+    if first_header not in cpp:
+        raise ValueError("Native module first header missing")
+    cpp=cpp.replace(first_header,first_header+"\n"+INCLUDES,1)
     hook="void ASub01HomeCharacter::UpdateNativePCPrivacy(){"
     if cpp.count(hook)!=1:
         raise ValueError("Actual native bathroom privacy function missing")
