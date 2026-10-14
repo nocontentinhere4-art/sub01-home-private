@@ -97,8 +97,8 @@ void ASub01HomeCharacter::ApplyPrivateViewSettings(const TSharedPtr<FJsonObject>
  if(HasHour&&(!(*Settings)->TryGetNumberField(TEXT("hour"),Hour)||!FMath::IsFinite(Hour)||Hour<0||Hour>24||!Sun||!Sky)){WritePrivateViewSettingsReceipt(Revision,false,TEXT("Daylight control unavailable"));return;}
  if((*Settings)->HasField(TEXT("lamps"))){
   if(!(*Settings)->TryGetObjectField(TEXT("lamps"),LampChanges)||!LampChanges||!LampChanges->IsValid()){WritePrivateViewSettingsReceipt(Revision,false,TEXT("Invalid indoor lamp request"));return;}
-  for(const auto& Pair:(*LampChanges)->Values){bool Enabled=false;AActor* Actor=FindAuthoredSettingsActor(TEXT("SUB01_AuthoredLight_")+Pair.Key);
-   if(!Lamps.Contains(Pair.Key)||!Pair.Value->TryGetBool(Enabled)||!Actor||!Actor->FindComponentByClass<ULightComponent>()){WritePrivateViewSettingsReceipt(Revision,false,TEXT("Requested indoor lamp unavailable"));return;}
+  for(const auto& Pair:(*LampChanges)->Values){const FString LampName(*Pair.Key);bool Enabled=false;AActor* Actor=FindAuthoredSettingsActor(TEXT("SUB01_AuthoredLight_")+LampName);
+   if(!Lamps.Contains(LampName)||!Pair.Value->TryGetBool(Enabled)||!Actor||!Actor->FindComponentByClass<ULightComponent>()){WritePrivateViewSettingsReceipt(Revision,false,TEXT("Requested indoor lamp unavailable"));return;}
   }
  }
  // All fields are validated before any renderer state is changed. SUN is not an indoor lamp.
@@ -108,7 +108,7 @@ void ASub01HomeCharacter::ApplyPrivateViewSettings(const TSharedPtr<FJsonObject>
   const FVector Position(-1400.f*FMath::Cos(Angle),1200.f*Elevation,300.f+1500.f*Elevation);SunActor->SetActorLocationAndRotation(Position,FRotationMatrix::MakeFromX(FVector(0,0,100)-Position).Rotator());
   Sun->SetIntensity(3.2f*Elevation);Sky->SetIntensity(.4225f*FMath::Max(.08f,Elevation));
  }
- if(LampChanges)for(const auto& Pair:(*LampChanges)->Values){bool Enabled=false;Pair.Value->TryGetBool(Enabled);auto* Light=FindAuthoredSettingsActor(TEXT("SUB01_AuthoredLight_")+Pair.Key)->FindComponentByClass<ULightComponent>();Light->SetIntensity(Enabled?Lamps[Pair.Key]:0.f);}
+ if(LampChanges)for(const auto& Pair:(*LampChanges)->Values){const FString LampName(*Pair.Key);bool Enabled=false;Pair.Value->TryGetBool(Enabled);auto* Light=FindAuthoredSettingsActor(TEXT("SUB01_AuthoredLight_")+LampName)->FindComponentByClass<ULightComponent>();Light->SetIntensity(Enabled?Lamps[LampName]:0.f);}
  WritePrivateViewSettingsReceipt(Revision,true,TEXT(""));UE_LOG(LogTemp,Display,TEXT("SUB01_PRIVATE_VIEW_SETTINGS_APPLIED revision=%d"),Revision);
 }
 '''
