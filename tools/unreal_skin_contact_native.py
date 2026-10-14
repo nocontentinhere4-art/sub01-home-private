@@ -58,5 +58,53 @@ TArray<FTransform> USub01HomeHandsInstance::SolveCapturedKeyboardArmContact(USke
  return Result;
 }
 '''
-HEADER += IK_HEADER
-CPP = '#include "TwoBoneIK.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n' + CPP + IK_CPP
+SEAT_HEADER = r"""
+ UFUNCTION(BlueprintCallable,Category="SUB01|PrivateDiagnostics") static FString AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,const TArray<FTransform>& ComponentPose,const FTransform& BodyWorld,const TArray<FVector>& CushionTriangles,float FloorZ);
+"""
+SEAT_CPP = r"""
+// Highest surface height under (X,Y) among world triangles (vertical projection);
+// false when (X,Y) is over none of them. Degenerate triangles are ignored.
+static bool Sub01SurfaceHeightAt(const FVector* Tris,int32 Count,double X,double Y,double& Z){
+ bool Found=false;
+ for(int32 T=0;T+2<Count;T+=3){
+  const FVector& A=Tris[T];const FVector& B=Tris[T+1];const FVector& C=Tris[T+2];
+  const double Det=(B.Y-C.Y)*(A.X-C.X)+(C.X-B.X)*(A.Y-C.Y);if(Det>-1.e-9&&Det<1.e-9)continue;
+  const double L1=((B.Y-C.Y)*(X-C.X)+(C.X-B.X)*(Y-C.Y))/Det,L2=((C.Y-A.Y)*(X-C.X)+(A.X-C.X)*(Y-C.Y))/Det,L3=1-L1-L2;
+  if(L1<-1.e-6||L2<-1.e-6||L3<-1.e-6)continue;
+  const double H=L1*A.Z+L2*B.Z+L3*C.Z;if(!Found||H>Z)Z=H;Found=true;
+ }
+ return Found;
+}
+// docs/qa/contact.md, seated: buttocks/back of thighs touch the cushion (-2.5..+0.5 cm),
+// soles touch the floor (0..+1 cm). Measured on actual imported soft vertices posed by the
+// captured clip; the region is chosen by skin weight, not by the body's lowest point.
+FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,const TArray<FTransform>& ComponentPose,const FTransform& BodyWorld,const TArray<FVector>& CushionTriangles,float FloorZ){
+#if WITH_EDITOR
+ if(!Mesh)return TEXT("{\"error\":\"missing mesh\"}");
+ if(CushionTriangles.Num()<3||CushionTriangles.Num()%3)return TEXT("{\"error\":\"missing cushion triangles\"}");
+ const auto& Ref=Mesh->GetRefSkeleton();const auto& Inv=Mesh->GetRefBasesInvMatrix();auto* Model=Mesh->GetImportedModel();
+ if(!Model||!Model->LODModels.Num()||ComponentPose.Num()!=Ref.GetNum()||Inv.Num()!=Ref.GetNum())return TEXT("{\"error\":\"incomplete pose or imported model\"}");
+ struct FRegion{int32 Count=0,Over=0,Band=0;double MinGap=DBL_MAX,MaxGap=-DBL_MAX;};FRegion Seat,Sole[2];int32 Invalid=0;
+ for(const auto& Section:Model->LODModels[0].Sections)for(const auto& V:Section.SoftVertices){
+  uint64 Sum=0;double SeatW=0,SoleW[2]={0,0};
+  for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;Sum+=W;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local)){++Invalid;continue;}const int32 B=Section.BoneMap[Local];if(!Ref.GetRefBoneInfo().IsValidIndex(B)){++Invalid;continue;}
+   const FString Name=Ref.GetBoneName(B).ToString();
+   if(Name.EndsWith(TEXT("Hips"))||Name.EndsWith(TEXT("LeftUpLeg"))||Name.EndsWith(TEXT("RightUpLeg")))SeatW+=W;
+   else if(Name.EndsWith(TEXT("LeftFoot"))||Name.EndsWith(TEXT("LeftToeBase")))SoleW[0]+=W;
+   else if(Name.EndsWith(TEXT("RightFoot"))||Name.EndsWith(TEXT("RightToeBase")))SoleW[1]+=W;}
+  if(!Sum)continue;const bool IsSeat=SeatW>=.30*Sum;const int32 Foot=SoleW[0]>=.30*Sum?0:(SoleW[1]>=.30*Sum?1:-1);if(!IsSeat&&Foot<0)continue;
+  FVector P=FVector::ZeroVector;
+  for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local))continue;const int32 B=Section.BoneMap[Local];if(!Inv.IsValidIndex(B))continue;const FVector Bind=FVector(Inv[B].TransformPosition(V.Position));P+=ComponentPose[B].TransformPosition(Bind)*(double(W)/double(Sum));}
+  P=BodyWorld.TransformPosition(P);
+  if(IsSeat){++Seat.Count;double Top=0;if(Sub01SurfaceHeightAt(CushionTriangles.GetData(),CushionTriangles.Num(),P.X,P.Y,Top)){const double Gap=P.Z-Top;++Seat.Over;Seat.MinGap=FMath::Min(Seat.MinGap,Gap);Seat.MaxGap=FMath::Max(Seat.MaxGap,Gap);if(Gap>=-2.5&&Gap<=.5)++Seat.Band;}}
+  if(Foot>=0){auto& S=Sole[Foot];++S.Count;++S.Over;const double Gap=P.Z-FloorZ;S.MinGap=FMath::Min(S.MinGap,Gap);S.MaxGap=FMath::Max(S.MaxGap,Gap);if(Gap>=0&&Gap<=1)++S.Band;}
+ }
+ auto Region=[](const TCHAR* Name,const FRegion& R){return FString::Printf(TEXT("{\"region\":\"%s\",\"selectedVertices\":%d,\"overSurfaceVertices\":%d,\"bandVertices\":%d,\"minGapCm\":%.8f,\"maxGapCm\":%.8f}"),Name,R.Count,R.Over,R.Band,R.Over?R.MinGap:0,R.Over?R.MaxGap:0);};
+ return FString::Printf(TEXT("{\"invalidInfluences\":%d,\"floorCm\":%.8f,\"regions\":["),Invalid,FloorZ)+Region(TEXT("seat"),Seat)+TEXT(",")+Region(TEXT("left_sole"),Sole[0])+TEXT(",")+Region(TEXT("right_sole"),Sole[1])+TEXT("]}");
+#else
+ return TEXT("{\"error\":\"editor only\"}");
+#endif
+}
+"""
+HEADER += IK_HEADER + SEAT_HEADER
+CPP = '#include "TwoBoneIK.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n' + CPP + IK_CPP + SEAT_CPP
