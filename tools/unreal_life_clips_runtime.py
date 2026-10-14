@@ -378,7 +378,21 @@ LIVE_GATE = (' // Lying (or getting up) never walks off: the captured get-up mus
              ' if(LifeMovementLocked()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n')
 
 # The renderer now plays a bound, chosen Idle at rate 1 itself (PlayingIdle, root main 178f52a).
-RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n'
+RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?float(Sub01FirstPersonMotion::AuthoredWalkRate(Speed)):(PlayingIdle?1.f:0.f)):1.f;\n'
+
+RATE_PREFIX = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?'
+
+
+def _resolve_rate_line(cpp: str, anchor: str) -> str:
+    """The renderer's walk-rate line changes form (e.g. AuthoredWalkRate); hook whichever single
+    line starts with RATE_PREFIX, so the hook stays after the posture's own rate choice."""
+    if cpp.count(anchor) == 1:
+        return anchor
+    lines = [l + '\n' for l in cpp.split('\n') if l.strip().startswith(RATE_PREFIX)]
+    if len(lines) != 1:
+        raise ValueError(f'Walk-rate anchor not unique: {len(lines)} lines start with {RATE_PREFIX!r}')
+    return lines[0].lstrip()
+
 
 # (file key, anchor, replacement); every anchor must occur exactly once in the staged source, and
 # every replacement keeps its anchor, so the seat adapter's anchors survive in either install order.
@@ -403,6 +417,9 @@ def install(sources: dict) -> dict:
     if 'FSub01LifeMachine LifeMachine;' in out['header']:
         raise ValueError('Life integration is already installed')
     for key, anchor, replacement in EDITS:
+        if anchor == RATE_ANCHOR:
+            live = _resolve_rate_line(out[key], anchor)
+            anchor, replacement = live, replacement.replace(RATE_ANCHOR, live)
         if out[key].count(anchor) != 1:
             raise ValueError(f'Life integration anchor not unique in {key}: {anchor[:60]!r}')
         out[key] = out[key].replace(anchor, replacement)

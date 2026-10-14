@@ -386,6 +386,22 @@ PROXY_APPLY = (
 PROXY_EVALUATED = ('  SeatEvaluatedSequence=Cast<UAnimSequence>(Current.GetSequence());SeatEvaluatedTime=SeatEvaluatedSequence?Current.GetAccumulatedTime():-1.f;'
                    'SeatEvaluatedSerial=SeatSerial;\n')
 
+SEAT_RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?float(Sub01FirstPersonMotion::AuthoredWalkRate(Speed)):(PlayingIdle?1.f:0.f)):1.f;\n'
+
+RATE_PREFIX = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?'
+
+
+def _resolve_rate_line(cpp: str, anchor: str) -> str:
+    """The renderer's walk-rate line changes form (e.g. AuthoredWalkRate); hook whichever single
+    line starts with RATE_PREFIX, so the hook stays after the posture's own rate choice."""
+    if cpp.count(anchor) == 1:
+        return anchor
+    lines = [l + '\n' for l in cpp.split('\n') if l.strip().startswith(RATE_PREFIX)]
+    if len(lines) != 1:
+        raise ValueError(f'Walk-rate anchor not unique: {len(lines)} lines start with {RATE_PREFIX!r}')
+    return lines[0].lstrip()
+
+
 # (file key, anchor, replacement); every anchor must occur exactly once in the staged source.
 EDITS = [
     ('header', '#include "Sub01HomeLab.generated.h"', CHARACTER_INCLUDE + '#include "Sub01HomeLab.generated.h"'),
@@ -396,8 +412,7 @@ EDITS = [
      ' // A seated body never walks off: the captured get-up must finish first.\n'
      ' if(!SeatOut.MovementInput&&LiveHomePath.Num()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n'
      ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('),
-    ('cpp', 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n',
-     'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n ApplySeatAnimation(Instance);\n'),
+    ('cpp', SEAT_RATE_ANCHOR, SEAT_RATE_ANCHOR + ' ApplySeatAnimation(Instance);\n'),
     ('hands_header', ' protected:', HANDS_FIELDS + ' protected:'),
     ('hands_cpp', ' float Progress=1;\n',
      ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;\n'),
@@ -410,6 +425,9 @@ def install(sources: dict) -> dict:
     """Apply the seat integration to staged sources {'header','cpp','hands_header','hands_cpp'}."""
     out = dict(sources)
     for key, anchor, replacement in EDITS:
+        if anchor == SEAT_RATE_ANCHOR:
+            live = _resolve_rate_line(out[key], anchor)
+            anchor, replacement = live, replacement.replace(SEAT_RATE_ANCHOR, live)
         if out[key].count(anchor) != 1:
             raise ValueError(f'Seat integration anchor not unique in {key}: {anchor[:60]!r}')
         out[key] = out[key].replace(anchor, replacement)
