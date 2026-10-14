@@ -1,0 +1,74 @@
+{
+  "schema": "sub01.real-linea-grommet-lamp-mount.v1",
+  "desk_source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "lamp_source_sha256": "2ac8389afc1519449a9cfdf7efd9fa36780a2177bb47ab58f7a7dda7d247dc8c",
+  "actual_saved_lamp_actor": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.StaticMeshActor_5",
+  "actual_saved_material_paths": [
+    "/Game/Sub01Home/RealLamps/DeskLamp/SUB01_RealLamp_DeskLamp/Materials/SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_001.SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_001",
+    "/Game/Sub01Home/RealLamps/DeskLamp/SUB01_RealLamp_DeskLamp/Materials/SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_light_001.SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_light_001"
+  ],
+  "actual_saved_origin_cm": [
+    92.32936859130861,
+    -314.5301260612905,
+    84.49999491373697
+  ],
+  "actual_saved_yaw_deg": 90,
+  "new_origin_ue_cm": [
+    159.57130298945464,
+    -333.8940398282316,
+    84.85840868537889
+  ],
+  "geometry_delta_ue_cm": [
+    67.24193439814603,
+    -19.363913766941096,
+    0.3584137716419207
+  ],
+  "new_bulb_ue_cm": [
+    177.24193439814604,
+    -334.3639137669411,
+    154.4192702729033
+  ],
+  "light_delta_ue_cm": [
+    67.24193439814603,
+    -19.363913766941096,
+    19.419270272903304
+  ],
+  "actual_old_light_ue_cm": [
+    110.00000000000001,
+    -315.0,
+    135.0
+  ],
+  "light_actor_label_for_exact_component_preflight": "SUB01_AuthoredLight_DeskLamp",
+  "opened_cap_source_node": 8,
+  "worktop_source_node": 44,
+  "grommet_rim_source_node": 35,
+  "radial_pin_clearance_m": 0.004614287905561877,
+  "lamp_world_aabb_m": [
+    [
+      1.2784779475066221,
+      -3.457413570470121,
+      0.760590316016005
+    ],
+    [
+      1.8923505351874388,
+      -3.2556842430298594,
+      1.6532010149543748
+    ]
+  ],
+  "contact_tolerance_m": 0.002,
+  "collision_proof_required": true,
+  "lamp_source_triangle_count": 24102,
+  "old_native_aabb_cm": [
+    [
+      60.60586035251618,
+      -326.377443280071,
+      75.70061782995859
+    ],
+    [
+      121.99311912059785,
+      -306.20451053604484,
+      164.96168772379556
+    ]
+  ],
+  "native_ready": false
+}
