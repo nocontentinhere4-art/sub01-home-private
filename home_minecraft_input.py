@@ -118,7 +118,7 @@ class NativeTVInput:
         if not isinstance(look,list) or len(look)!=2 or any(isinstance(v,bool)or not isinstance(v,(int,float))or not math.isfinite(v)or abs(v)>.35 for v in look):raise ValueError('Invalid bounded look')
         if operation!='controls' and (keys or look!=[0,0]):raise ValueError('Action carries unrelated controls')
         self.counter=counter
-        if operation=='release':self.until=0
+        if operation in {'release','cancel'}:self.until=0
         return {'type':'operator_input','consumer_id':cid,'focus_event_id':eid,'operation':operation,'input_id':counter,'keys':keys,'look_delta':look,'hold_ms':250}
 
 

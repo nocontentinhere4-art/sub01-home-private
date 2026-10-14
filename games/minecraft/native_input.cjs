@@ -1,18 +1,18 @@
 // Bounded controls on the actual Mineflayer player; never changes its position directly.
 const CONTROL_NAMES = ['forward','back','left','right','jump','sneak','sprint'];
 function nativeInput({player,isActive,isBusy,emit,Vec3,now=Date.now}) {
-  let owner=null,counter=0,expires=0,generation=0,pending=false;
+  let owner=null,counter=0,expires=0,generation=0,pending=false, pendingOperation=null, appliedKeys={}, appliedLook=[0,0];
   const pose = p => p?.entity ? {position:p.entity.position.toArray(),yaw:p.entity.yaw,pitch:p.entity.pitch} : null;
-  function stop() { expires=0; generation++; const p=player();p?.clearControlStates();p?.stopDigging(); }
+  function stop() { expires=0; generation++; pendingOperation=null;appliedKeys={};appliedLook=[0,0]; const p=player();p?.clearControlStates();p?.stopDigging();p?.deactivateItem?.(); }
   function tick() { if(expires && (now()>=expires || !isActive())) stop(); }
   async function accept(m) {
     const p=player(), key=`${m.consumer_id}:${m.focus_event_id}`, before=pose(p);
     const ack=(accepted,reason) => emit({type:'input_receipt',input_id:m.input_id,consumer_id:m.consumer_id,
-      focus_event_id:m.focus_event_id,accepted,reason,before,after:pose(p)});
+      focus_event_id:m.focus_event_id,accepted,reason,before,after:pose(p),controller_state:{keys:{...appliedKeys},look_delta:[...appliedLook],pending_operation:pendingOperation}});
     if(!/^[0-9a-f]{32}:[0-9a-f]{32}$/.test(key)||!Number.isSafeInteger(m.input_id)||m.input_id<1) return ack(false,'identity/order');
     if(owner!==key) { if(expires>now())return ack(false,'another focus owns controls'); stop();owner=key;counter=0; }
     if(m.input_id<=counter)return ack(false,'stale input');
-    if(!['controls','mine','place','release','cancel'].includes(m.operation))return ack(false,'operation');
+    if(!['controls','mine','place','use','release','cancel'].includes(m.operation))return ack(false,'operation');
     if(m.operation==='release'||m.operation==='cancel') {counter=m.input_id;stop();return ack(true,'released');}
     if(!isActive()||!p?.entity||isBusy()||(pending&&m.operation!=='controls'))return ack(false,'player unavailable/busy');
     const keys=m.keys||{}, look=m.look_delta||[0,0];
@@ -20,18 +20,19 @@ function nativeInput({player,isActive,isBusy,emit,Vec3,now=Date.now}) {
        !Array.isArray(look)||look.length!==2||look.some(v=>!Number.isFinite(v)||Math.abs(v)>.35))return ack(false,'limits');
     counter=m.input_id; expires=now()+250;
     if(m.operation==='controls') {
-      for(const k of CONTROL_NAMES)p.setControlState(k,keys[k]===true);
+      for(const k of CONTROL_NAMES)p.setControlState(k,keys[k]===true);appliedKeys=Object.fromEntries(CONTROL_NAMES.map(k=>[k,keys[k]===true]));appliedLook=[...look];
       if(look.some(v=>v!==0)) await p.look(p.entity.yaw+look[0],Math.max(-Math.PI/2,Math.min(Math.PI/2,p.entity.pitch+look[1])),true);
       return ack(true,'controls applied');
     }
     // Real view ray. Mineflayer blockAtCursor currently rejects zero yaw/pitch.
     const e=p.entity,dir=new Vec3(-Math.sin(e.yaw)*Math.cos(e.pitch),Math.sin(e.pitch),-Math.cos(e.yaw)*Math.cos(e.pitch));
-    const block=p.world.raycast(e.position.offset(0,e.eyeHeight||1.62,0),dir,4.5);
-    if(!block||block.name==='air')return ack(false,'no reachable cursor block');
-    const own=++generation;pending=true;let timer;
+    const block=m.operation==='use'?null:p.world.raycast(e.position.offset(0,e.eyeHeight||1.62,0),dir,4.5);
+    if(m.operation!=='use'&&(!block||block.name==='air'))return ack(false,'no reachable cursor block');
+    const own=++generation;pending=true;pendingOperation=m.operation;let timer;
     try {
       let task;
-      if(m.operation==='mine') {if(!p.canDigBlock(block))return ack(false,'block not diggable');task=p.dig(block);}
+      if(m.operation==='use'){const item=p.inventory.items().find(i=>['apple','bread','carrot','cooked_beef'].includes(i.name));if(!item)return ack(false,'no food');await p.equip(item,'hand');if(own!==generation||!isActive())return ack(false,'cancelled');task=p.consume();}
+      else if(m.operation==='mine') {if(!p.canDigBlock(block))return ack(false,'block not diggable');task=p.dig(block);}
       else {
         const face=[[0,-1,0],[0,1,0],[0,0,-1],[0,0,1],[-1,0,0],[1,0,0]][block.face];
         const item=p.inventory.items().find(i=>/(_log|_planks|^dirt$|^cobblestone$)/.test(i.name));
@@ -46,7 +47,7 @@ function nativeInput({player,isActive,isBusy,emit,Vec3,now=Date.now}) {
       await Promise.race([task,new Promise((_,reject)=>{timer=setTimeout(()=>{p.stopDigging();reject(new Error('task timeout'));},6000);})]);
       return ack(own===generation&&isActive(),own===generation?'completed':'cancelled');
     } catch(e) {return ack(false,String(e.message).slice(0,120));}
-    finally {clearTimeout(timer);pending=false;}
+    finally {clearTimeout(timer);pending=false;if(own===generation)pendingOperation=null;}
   }
   return {accept,stop,tick};
 }
