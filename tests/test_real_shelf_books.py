@@ -373,6 +373,8 @@ class FakeTexture:
 
     def set_editor_property(self, k, v):
         self.p[k] = v
+        if k == 'compression_settings':
+            self.p['srgb'] = False
 
 
 class FakeMesh:
@@ -655,3 +657,11 @@ def test_texture_contract_refuses_unknown_or_unfixable(monkeypatch):
         ui.check_textures([('T_book_nor_gl_1k', FakeTexture(True, 'TC_DEFAULT'))], roles, fix=False)
     with pytest.raises(RuntimeError, match='unknown role'):
         ui.check_textures([('T_mystery', FakeTexture(True, 'TC_DEFAULT'))], roles, fix=False)
+
+
+def test_texture_repair_restores_albedo_srgb_after_compression_reset(monkeypatch):
+    u = types.SimpleNamespace(TextureCompressionSettings=types.SimpleNamespace(TC_DEFAULT='TC_DEFAULT', TC_NORMALMAP='TC_NORMALMAP'))
+    monkeypatch.setitem(sys.modules, 'unreal', u)
+    tex = FakeTexture(False, 'TC_NORMALMAP')
+    ui.check_textures([('T_book_diff_1k', tex)], {'book_diff_1k': 'base_color'})
+    assert tex.p == {'srgb': True, 'compression_settings': 'TC_DEFAULT'}

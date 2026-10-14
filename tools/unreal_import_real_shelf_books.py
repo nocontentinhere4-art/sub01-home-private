@@ -120,11 +120,13 @@ def check_textures(textures, roles, fix=True):
             continue
         srgb, compressions = required_texture_state(role)
         if fix and import_u is not None:
-            if bool(tex.get_editor_property('srgb')) != srgb:
-                tex.set_editor_property('srgb', srgb)
             if _enum_name(tex.get_editor_property('compression_settings')) not in compressions:
                 tex.set_editor_property('compression_settings',
                                         getattr(import_u.TextureCompressionSettings, compressions[0]))
+            # Actual Interchange albedo may arrive as TC_Normalmap; compression
+            # resets sRGB, so restore colour space after compression repair.
+            if bool(tex.get_editor_property('srgb')) != srgb:
+                tex.set_editor_property('srgb', srgb)
         state = {'texture': name, 'role': role, 'srgb': bool(tex.get_editor_property('srgb')),
                  'compression': _enum_name(tex.get_editor_property('compression_settings'))}
         if state['srgb'] != srgb or state['compression'] not in compressions:
