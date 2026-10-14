@@ -57,7 +57,7 @@ def verify_native_structural_union(u,actors):
 def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
  root=Path(root);proof=json.loads((root/'office-bundle.json').read_text())
- if proof.get('schema')!='sub01.real-office-bundle.v1' or not proof.get('source_triangle_collision_proof',{}).get('ok') or not proof.get('whole_book_geometry_pbr_preserved') or proof.get('complete_original_book_glb_sha256')!=BOOKS_SHA or len(proof.get('books',[]))!=46 or proof.get('hide_only_source_actor_nodes')!=[181,182,190,191]:raise RuntimeError('Actual coherent whole office source proof unavailable')
+ if proof.get('schema')!='sub01.real-office-bundle.v1' or not proof.get('source_triangle_collision_proof',{}).get('ok') or not proof.get('whole_book_geometry_pbr_preserved') or proof.get('complete_original_book_glb_sha256')!=BOOKS_SHA or len(proof.get('books',[]))!=46 or proof.get('hide_only_source_actor_nodes')!=[181,182,190,191,259]:raise RuntimeError('Actual coherent whole office source proof unavailable')
  mount=proof['desk'].get('lamp_mount',{});pose=mount.get('posed_lamp',{})
  if mount.get('mount_mechanism')!='C-clamp-side-edge' or mount.get('opened_hardware_source_nodes')!=[] or pose.get('triangle_count')!=24102 or pose.get('rigid_screw_triangle_count')!=1100 or not pose.get('other_positions_normals_uv_indices_unchanged') or hashlib.sha256((root/'lamp-posed.glb').read_bytes()).hexdigest()!=pose.get('sha256'):raise RuntimeError('Actual complete rigid C-clamp derivative proof unavailable')
  plantproof=proof.get('plant',{})
@@ -84,7 +84,7 @@ def run(root,dry_run=True,u=None):
   if not close(vec(actor.get_actor_location()),plan['old_pivot_ue_cm']):raise RuntimeError('Actual owned book pivot differs source; no guessed relative transform')
   books.append((actor,comps[0],plan))
  desk_preflight=stage_desk(root/'desk.glb',dry_run=True,u=u)
- if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'structural_union_prerequisite':union_prerequisite,'plant_native_preflight':{'root':plantctx['root'].get_path_name(),'members':[a.get_path_name()for a,c,p in plantctx['rows']],'move_once':[a.get_path_name()for a in plantctx['move']],'rigid_delta_ue_cm':plantproof['rigid_delta_ue_cm'],'watering_native_activity_verified':False},'mutations':0}
+ if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'structural_union_prerequisite':union_prerequisite,'plant_native_preflight':{'root':plantctx['root'].get_path_name(),'members':[a.get_path_name()for a,c,p in plantctx['rows']],'move_once':[a.get_path_name()for a in plantctx['move']],'rigid_delta_ue_cm':plantproof['rigid_delta_ue_cm'],'watering_native_activity_verified':False,'obsolete259_actual_hidden_before':plantctx['oldbase_actual_hidden_before'],'obsolete259_actual_collision_before':plantctx['oldbase_actual_collision_before']},'mutations':0}
  states=[]
  for actor in original:
   comps=[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in actor.get_components_by_class(u.StaticMeshComponent)]
@@ -163,7 +163,7 @@ def run(root,dry_run=True,u=None):
    for got,want in zip(actual_fingerprint['components'],expected['components']):got['transform']=want['transform']
    if actual_fingerprint!=expected:raise RuntimeError('Book mesh/PBR/collision changed during rigid retarget')
    book_rows.append({'id':plan['id'],'actor':actor.get_path_name(),'new_bounds_cm':actual,'source_geometry_unchanged':True})
-  old_targets=ctx['old']+old_shelves
+  old_targets=ctx['old']+old_shelves+[plantctx['oldbase']]
   for actor in old_targets:
    actor.set_actor_hidden_in_game(True)
    for c in actor.get_components_by_class(u.StaticMeshComponent):c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)

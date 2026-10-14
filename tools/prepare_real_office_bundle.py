@@ -111,7 +111,7 @@ def run(args):
  plant,plant_members=source_plan(args.home_source)
  _,shelf_parts=geometry(args.shelf_source);_,home=geometry(args.home_source)
  def bvh(points,faces):return BVHTree.FromPolygons([Vector(p)for p in points],faces,all_triangles=True,epsilon=0)
- retired={162,181,182,190,191,126,255,256,221,222,223,224}
+ retired={162,181,182,190,191,126,255,256,259,221,222,223,224}
  hide=json.loads(Path(args.books_hide_manifest).read_text());old_cube_names={r['name']for r in hide['originals']};home_doc,_=read_gltf(Path(args.home_source));retired|={i for i,n in enumerate(home_doc['nodes'])if n.get('name')in old_cube_names}
  def bounds(points):return [[min(p[a]for p in points)for a in range(3)],[max(p[a]for p in points)for a in range(3)]]
  def intersects(a,b):return all(a[0][i]<=b[1][i]and b[0][i]<=a[1][i]for i in range(3))
@@ -159,7 +159,7 @@ def run(args):
     hits=bb.overlap(hb)
     if hits:issues.append({'book':book['id'],'home_node':node,'pairs':len(hits)})
  if issues:raise ValueError('Actual whole office collision proof failed '+json.dumps(issues[:100]))
- receipt={'schema':'sub01.real-office-bundle.v1','desk':desk,'shelf':shelf,'books':books,'plant':plant,'complete_original_book_glb_sha256':BOOKS_SHA,'whole_book_geometry_pbr_preserved':True,'books_native_retarget_only':True,'hide_only_source_actor_nodes':[181,182,190,191],'home_source_sha256':HOME_SHA,'desk_forward_delta_y_cm':8,'original_devices_chair_stairs_unchanged':True,'source_triangle_collision_proof':{'ok':True,'issues':[],'retired_exact_source_nodes':sorted(retired)},'native_visual_verified':False}
+ receipt={'schema':'sub01.real-office-bundle.v1','desk':desk,'shelf':shelf,'books':books,'plant':plant,'complete_original_book_glb_sha256':BOOKS_SHA,'whole_book_geometry_pbr_preserved':True,'books_native_retarget_only':True,'hide_only_source_actor_nodes':[181,182,190,191,259],'home_source_sha256':HOME_SHA,'desk_forward_delta_y_cm':8,'original_devices_chair_stairs_unchanged':True,'source_triangle_collision_proof':{'ok':True,'issues':[],'retired_exact_source_nodes':sorted(retired)},'native_visual_verified':False}
  (output/'office-bundle.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps({'schema':receipt['schema'],'books':len(books),'boards':len(shelf['boards']),'source_collision_proof':True}));return receipt
 
 if __name__=='__main__':
