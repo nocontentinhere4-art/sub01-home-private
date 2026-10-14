@@ -717,6 +717,36 @@ def clone_problems(u, original, clone, original_path):
     return problems
 
 
+def _create_clone(u, state, path, original, settings, clone_obj_path):
+    """Duplicate one original texture into its owned clone: compression first, then sRGB; tag; prove the
+    original unchanged and the exported pixels identical; save ONLY the clone."""
+    package = _package_file(u, path)
+    before_file = _file_sha(package)
+    clone = u.EditorAssetLibrary.duplicate_asset(path.split('.')[0], clone_obj_path.split('.')[0])
+    if clone is None or not isinstance(clone, u.Texture2D):
+        raise MaterialFixError('duplicate_asset failed for %s' % path)
+    owned = state.setdefault('owned_assets', [])
+    if clone_obj_path.split('.')[0] not in owned:
+        owned.append(clone_obj_path.split('.')[0])
+    (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
+    # TC_NORMALMAP forces sRGB off in PostEditChange; leave normal-map
+    # compression first, then enable the colour texture's sRGB sampling.
+    clone.set_editor_property('compression_settings', u.TextureCompressionSettings.TC_DEFAULT)
+    clone.set_editor_property('srgb', True)
+    u.EditorAssetLibrary.set_metadata_tag(clone, parity_mod.DUPLICATE_TAG, path)
+    if texture_settings(u, original) != settings or _file_sha(package) != before_file:
+        raise MaterialFixError('Original %s changed while cloning; clone NOT saved' % path)
+    problems = clone_problems(u, original, clone, path)
+    if problems:
+        raise MaterialFixError('New clone %s is not exact: %s; NOT saved' % (clone_obj_path, problems))
+    if not u.EditorAssetLibrary.save_loaded_asset(clone, False):
+        raise MaterialFixError('Saving clone %s failed' % clone_obj_path)
+    if texture_settings(u, original) != settings or _file_sha(package) != before_file:
+        raise MaterialFixError('Original %s changed after saving the clone' % path)
+    return {'original': path, 'clone': clone_obj_path, 'action': 'created',
+            'original_settings': settings, 'clone_settings': texture_settings(u, clone)}
+
+
 def repair_albedo_textures(*, u=None, actor_subsystem=None, load_level=True):
     """Create (or verify) owned colour clones of the four bed albedo textures. Idempotent, fail closed."""
     if u is None:
@@ -755,33 +785,222 @@ def repair_albedo_textures(*, u=None, actor_subsystem=None, load_level=True):
     # ---- mutation: owned duplicates only ----
     state = _load_backup(u)
     for path, original, settings, clone_obj_path in work:
-        package = _package_file(u, path)
-        before_file = _file_sha(package)
-        clone = u.EditorAssetLibrary.duplicate_asset(path.split('.')[0], clone_obj_path.split('.')[0])
-        if clone is None or not isinstance(clone, u.Texture2D):
-            raise MaterialFixError('duplicate_asset failed for %s' % path)
-        owned = state.setdefault('owned_assets', [])
-        if clone_obj_path.split('.')[0] not in owned:
-            owned.append(clone_obj_path.split('.')[0])
-        (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
-        # TC_NORMALMAP forces sRGB off in PostEditChange; leave normal-map
-        # compression first, then enable the colour texture's sRGB sampling.
-        clone.set_editor_property('compression_settings', u.TextureCompressionSettings.TC_DEFAULT)
-        clone.set_editor_property('srgb', True)
-        u.EditorAssetLibrary.set_metadata_tag(clone, parity_mod.DUPLICATE_TAG, path)
-        if texture_settings(u, original) != settings or _file_sha(package) != before_file:
-            raise MaterialFixError('Original %s changed while cloning; clone NOT saved' % path)
-        problems = clone_problems(u, original, clone, path)
-        if problems:
-            raise MaterialFixError('New clone %s is not exact: %s; NOT saved' % (clone_obj_path, problems))
-        if not u.EditorAssetLibrary.save_loaded_asset(clone, False):
-            raise MaterialFixError('Saving clone %s failed' % clone_obj_path)
-        if texture_settings(u, original) != settings or _file_sha(package) != before_file:
-            raise MaterialFixError('Original %s changed after saving the clone' % path)
-        report.append({'original': path, 'clone': clone_obj_path, 'action': 'created',
-                       'original_settings': settings, 'clone_settings': texture_settings(u, clone)})
+        report.append(_create_clone(u, state, path, original, settings, clone_obj_path))
     u.log('SUB01_ALBEDO_REPAIR ' + json.dumps([(r['clone'], r['action']) for r in report]))
     return {'schema': 'sub01.home-materials-albedo-repair.v1', 'textures': report}
+
+
+# ---------------------------------------------------------------------------
+# Generic albedo colour-space repair driven by root's texture-usage audit
+# (tools/unreal_home_texture_usage_audit.py, schema sub01-private-texture-usage-audit-v1)
+# ---------------------------------------------------------------------------
+USAGE_SCHEMA = 'sub01-private-texture-usage-audit-v1'
+USAGE_MISMATCH = 'normalmap_compression_used_as_albedo'
+USAGE_MIC_PREFIX = OWNED_PREFIX + 'AlbedoMI_'
+
+
+def usage_mic_name(material_path):
+    raw = re.sub(r'[^0-9A-Za-z_]+', '_', asset_name(material_path))
+    return USAGE_MIC_PREFIX + raw
+
+
+def _real_bed_textures():
+    return {p.split('.')[0] for p in parity_mod.BED_TEXTURES}
+
+
+def select_usage_repairs(doc, exclude=None):
+    """Pure. Textures DEFINITELY sampled as albedo but imported as normal maps, from the usage audit.
+
+    Selected only when: the file reports the definite mismatch; sRGB False and TC_NORMALMAP; every usage is
+    the albedo parameter (never also a NormalTexture anywhere in the file); no settings errors; under an
+    allowed original root; not already repaired (the 4 bed textures by default). Everything else that
+    carries a mismatch or warning is listed under 'excluded' / 'ambiguous' with the reason, never touched.
+    """
+    if doc.get('schema') != USAGE_SCHEMA:
+        raise MaterialFixError('Unexpected usage schema %r' % doc.get('schema'))
+    if doc.get('errors') or not doc.get('complete_for_declared_scope'):
+        raise MaterialFixError('Usage audit incomplete or has errors: %s' % doc.get('errors'))
+    exclude = {p.split('.')[0] for p in (exclude if exclude is not None else _real_bed_textures())}
+    roles_by_texture = {}
+    for t in doc['textures']:
+        for use in t.get('usages') or []:
+            roles_by_texture.setdefault(t['asset_path'].split('.')[0], set()).add(use.get('role'))
+    selected, excluded, ambiguous = [], [], []
+    clone_names = {}
+    for t in doc['textures']:
+        path = t['asset_path']
+        flagged = t.get('definite_binding_settings_mismatches') or t.get('warnings')
+        if not flagged:
+            continue
+        key = path.split('.')[0]
+        roles = roles_by_texture.get(key, set())
+        reasons = []
+        if key in exclude:
+            excluded.append({'texture': path, 'reason': 'already repaired (bed albedo clones)'})
+            continue
+        if USAGE_MISMATCH not in (t.get('definite_binding_settings_mismatches') or []):
+            reasons.append('no definite %s mismatch (warnings only: %s)' % (USAGE_MISMATCH, t.get('warnings')))
+        if roles != {'albedo'}:
+            reasons.append('roles %s (also used as a normal map or unknown)' % sorted(r or '?' for r in roles))
+        if any(use.get('parameter') != 'BaseColorTexture' for use in t.get('usages') or []):
+            reasons.append('a usage is not BaseColorTexture')
+        if not (t.get('srgb') is False and t.get('compression_settings') == 'TC_NORMALMAP'):
+            reasons.append('settings sRGB %s / %s' % (t.get('srgb'), t.get('compression_settings')))
+        if t.get('settings_errors'):
+            reasons.append('settings errors %s' % t['settings_errors'])
+        if not path.startswith(parity_mod.ORIGINAL_ROOTS):
+            reasons.append('outside %s' % (parity_mod.ORIGINAL_ROOTS,))
+        if not any(use.get('bindings') for use in t.get('usages') or []):
+            reasons.append('no bound slot')
+        clone = parity_mod.clone_path(path)
+        if clone in clone_names:
+            reasons.append('clone name collides with %s' % clone_names[clone])
+        if reasons:
+            ambiguous.append({'texture': path, 'reasons': reasons})
+            continue
+        clone_names[clone] = path
+        selected.append({'texture': path, 'clone': clone, 'srgb': t['srgb'],
+                         'compression_settings': t['compression_settings'],
+                         'usages': [{'material': use['material'], 'parameter': use['parameter'],
+                                     'bindings': [(b['component'], int(b['slot']), b.get('actor'))
+                                                  for b in use.get('bindings') or []]}
+                                    for use in t['usages']]})
+    materials = {}
+    for row in selected:
+        for use in row['usages']:
+            if use['material'] in materials:
+                raise MaterialFixError('Material %s samples two selected textures as albedo' % use['material'])
+            materials[use['material']] = row['texture']
+    return {'schema': 'sub01.home-materials-usage-selection.v1', 'source_generated_utc': doc.get('generated_utc'),
+            'selected': selected, 'excluded': excluded, 'ambiguous': ambiguous,
+            'count': len(selected), 'materials': materials}
+
+
+def repair_usage_albedo(doc, *, u=None, actor_subsystem=None, load_level=True, save=True, backup=True,
+                        expect_count=None):
+    """Clone every selected texture (sRGB/TC_DEFAULT, originals untouched) and re-point ONLY the
+    BaseColorTexture of each material that samples it as albedo, through owned child MICs on the same
+    slots. No tint or other parameter changes. Idempotent; fail closed; --restore reverts."""
+    if u is None:
+        import unreal as u  # noqa: N813
+    selection = select_usage_repairs(doc)
+    if expect_count is not None and selection['count'] != expect_count:
+        raise MaterialFixError('Usage selection has %d textures, expected %d: %s' % (
+            selection['count'], expect_count, [r['texture'] for r in selection['selected']]))
+    level, actors = _live_actors(u, actor_subsystem, load_level)
+    model = model_from_live(u, actors)
+    components = model['objects']['components']
+    rows_by_slot = {(r['component_path'], r['slot']): r for r in model['rows']}
+    # ---- pre-flight: textures ----
+    clone_work, verified = [], []
+    for row in selection['selected']:
+        path = row['texture']
+        original = u.load_asset(path.split('.')[0])
+        if original is None or not isinstance(original, u.Texture2D):
+            raise MaterialFixError('Usage repair refused: %s missing or not a Texture2D' % path)
+        settings = texture_settings(u, original)
+        if not (settings['srgb'] is False and settings['compression_settings'] == 'TC_NORMALMAP'):
+            raise MaterialFixError('Usage repair refused: %s live state %s differs from the usage file' % (path, settings))
+        if any(settings[k] != v for k, v in parity_mod.ADJUST_DEFAULTS.items()) or settings['lod_bias'] != 0:
+            raise MaterialFixError('Usage repair refused: %s has non-neutral LOD/adjust settings %s' % (path, settings))
+        existing = u.load_asset(row['clone'].split('.')[0])
+        if existing is not None:
+            problems = clone_problems(u, original, existing, path)
+            if problems:
+                raise MaterialFixError('Usage repair refused: existing clone %s differs: %s' % (row['clone'], problems))
+            verified.append({'original': path, 'clone': row['clone'], 'action': 'verified existing'})
+        else:
+            clone_work.append((path, original, settings, row['clone']))
+    # ---- pre-flight: materials and slots ----
+    mic_work = []
+    for row in selection['selected']:
+        for use in row['usages']:
+            mpath = use['material']
+            record = model['materials'].get(mpath)
+            material = model['objects']['materials'].get(mpath)
+            if record is None or material is None:
+                raise MaterialFixError('Usage repair refused: material %s is not bound in the live level' % mpath)
+            tname = pick_parameter(record['names'].get('texture'), ('BaseColorTexture',))
+            if tname is None:
+                raise MaterialFixError('Usage repair refused: %s does not enumerate BaseColorTexture (%s)' % (
+                    mpath, record['names'].get('texture')))
+            if str(record['values']['texture'].get(tname) or '').split('.')[0] != row['texture'].split('.')[0]:
+                raise MaterialFixError('Usage repair refused: %s BaseColorTexture is %s, not %s' % (
+                    mpath, record['values']['texture'].get(tname), row['texture']))
+            slots = []
+            for cpath, slot, _ in use['bindings']:
+                live = rows_by_slot.get((cpath, slot))
+                if live is None or len(components.get(cpath, [])) != 1:
+                    raise MaterialFixError('Usage repair refused: slot %s#%d missing or not unique' % (cpath, slot))
+                bound = original_path(model, live['material_path'])
+                if str(bound).split('.')[0] != mpath.split('.')[0]:
+                    raise MaterialFixError('Usage repair refused: slot %s#%d binds %s, not %s' % (
+                        cpath, slot, live['material_path'], mpath))
+                slots.append((cpath, slot, live['material_path']))
+            live_users = [(r['component_path'], r['slot']) for r in model['rows']
+                          if str(original_path(model, r['material_path'])).split('.')[0] == mpath.split('.')[0]]
+            if sorted(live_users) != sorted((c, s_) for c, s_, _ in slots):
+                raise MaterialFixError('Usage repair refused: %s live slots %s differ from the usage file %s' % (
+                    mpath, sorted(live_users), sorted((c, s_) for c, s_, _ in slots)))
+            mic_work.append({'material': mpath, 'object': material, 'parameter': tname, 'clone': row['clone'],
+                             'texture': row['texture'], 'slots': slots})
+    # ---- mutation: clones, owned MICs, then slots ----
+    state = _load_backup(u)
+    created = [_create_clone(u, state, *w) for w in clone_work]
+    mel = u.MaterialEditingLibrary
+    pending, mic_report = [], []
+    for item in mic_work:
+        clone = u.load_asset(item['clone'].split('.')[0])
+        name = usage_mic_name(item['material'])
+        instance, made = _load_or_create(u, name, 'MaterialInstanceConstant', 'MaterialInstanceConstantFactoryNew')
+        changed = made
+        parent = _path(instance.get_editor_property('parent'))
+        if parent != _path(item['object']):
+            if not made:
+                raise MaterialFixError('Owned %s is parented to %s, not %s' % (name, parent, item['material']))
+            mel.set_material_instance_parent(instance, item['object'])
+        if _path(mel.get_material_instance_texture_parameter_value(instance, item['parameter'])) != _path(clone):
+            mel.set_material_instance_texture_parameter_value(instance, item['parameter'], clone)
+            changed = True
+        if changed:
+            mel.update_material_instance(instance)
+            u.EditorAssetLibrary.save_loaded_asset(instance)
+        if made:
+            owned = state.setdefault('owned_assets', [])
+            if _path(instance).split('.')[0] not in owned:
+                owned.append(_path(instance).split('.')[0])
+        mic_report.append({'material': item['material'], 'instance': _path(instance), 'created': made,
+                           'override': {item['parameter']: item['clone']}})
+        for cpath, slot, current in item['slots']:
+            if current != _path(instance):
+                pending.append((cpath, slot, components[cpath][0], current, instance))
+    (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
+    map_backup = _backup_map(u) if (pending and backup and save) else None
+    touched, changes = {}, []
+    for cpath, slot, component, current, instance in pending:
+        key = '%s#%d' % (cpath, slot)
+        state['slots'].setdefault(key, {'component_path': cpath, 'slot': slot, 'original_material': current,
+                                        'target': 'usage-albedo-repair'})
+        if cpath not in touched:
+            touched[cpath] = (component, component_fingerprint(u, component))
+        component.set_material(slot, instance)
+        if _path(component.get_material(slot)) != _path(instance):
+            raise MaterialFixError('Slot assignment did not take: ' + key)
+        changes.append({'slot': key, 'from': current, 'to': _path(instance)})
+    for cpath, (component, before) in touched.items():
+        if component_fingerprint(u, component) != before:
+            raise MaterialFixError('Non-material property changed on %s; map not saved' % cpath)
+    if pending:
+        (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
+        if save and not level.save_current_level():
+            raise MaterialFixError('Level failed to save; map backup at %s' % map_backup)
+    report = {'schema': 'sub01.home-materials-usage-repair.v1', 'selection': selection,
+              'textures': verified + created, 'instances': mic_report, 'slot_changes': changes,
+              'map_backup': map_backup, 'visual_match_claimed': False}
+    (_state_dir(u) / 'usage-repair-report.json').write_text(json.dumps(report, indent=1, default=str) + '\n')
+    u.log('SUB01_USAGE_ALBEDO_REPAIR ' + json.dumps({'textures': len(selection['selected']),
+                                                     'created_clones': len(created), 'slot_changes': len(changes)}))
+    return report
 
 
 def repair_and_apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, glb=None):
@@ -957,6 +1176,11 @@ def _parse(argv):
     mode.add_argument('--repair-and-apply', action='store_true',
                       help='repair clones, export+finalize parity, mapping check, apply; stops at the first failure')
     p.add_argument('--albedo-clones', action='store_true', help='bed materials sample the owned albedo clones')
+    p.add_argument('--scope', choices=('bed', 'usage-file'), default='bed',
+                   help='--repair-albedo-textures scope: the 4 bed textures, or every texture selected from --usage-file')
+    p.add_argument('--usage-file', type=Path, help='root texture-usage audit JSON (sub01-private-texture-usage-audit-v1)')
+    p.add_argument('--expect-count', type=int, help='refuse unless the usage selection has exactly this many textures')
+    p.add_argument('--select-only', action='store_true', help='pure: print the usage-file selection and exit')
     p.add_argument('--glb', type=Path, help='full-home.glb for --repair-and-apply (default <project>/SourceAssets)')
     p.add_argument('--inventory', type=Path, help='root inventory JSON for a pure --mapping-check')
     p.add_argument('--parity', type=Path, help='texture parity JSON (tools/unreal_export_texture_parity.py)')
@@ -970,6 +1194,12 @@ def _parse(argv):
 def main(argv=None):
     args = _parse(sys.argv[1:] if argv is None else argv)
     presets = args.preset or list(spec.DEFAULT_PRESETS)
+    if args.select_only:
+        if not args.usage_file:
+            raise MaterialFixError('--select-only needs --usage-file')
+        selection = select_usage_repairs(json.loads(args.usage_file.read_text()))
+        print(json.dumps(selection, indent=1))
+        return 0 if args.expect_count in (None, selection['count']) else 2
     parity = json.loads(args.parity.read_text()) if args.parity else None
     if args.mapping_check and args.inventory:
         report = mapping_check(model_from_inventory(json.loads(args.inventory.read_text())), presets, parity,
@@ -990,6 +1220,12 @@ def main(argv=None):
                              default=str))
         elif args.restore:
             print(json.dumps(restore(u=u, save=not args.no_save)))
+        elif args.repair_albedo_textures and args.scope == 'usage-file':
+            if not args.usage_file:
+                raise MaterialFixError('--scope usage-file needs --usage-file')
+            report = repair_usage_albedo(json.loads(args.usage_file.read_text()), u=u, save=not args.no_save,
+                                         expect_count=args.expect_count)
+            print(json.dumps({'textures': len(report['textures']), 'slot_changes': len(report['slot_changes'])}))
         elif args.repair_albedo_textures:
             print(json.dumps(repair_albedo_textures(u=u), default=str))
         elif args.repair_and_apply:

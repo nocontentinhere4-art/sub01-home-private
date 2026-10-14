@@ -1079,3 +1079,232 @@ def test_combined_bed_colour_and_wood_roughness_only_clones_fabric(tmp_path):
             assert len(texture_overrides) == 1 and texture_overrides[0].startswith(parity.CLONE_ROOT)
         else:
             assert texture_overrides == []
+
+
+# ---------------------------------------------------------------------------
+# Generic albedo colour-space repair from root's texture-usage audit (13 textures)
+# ---------------------------------------------------------------------------
+USAGE_FILE = ROOT / 'docs/proposed/actual-home-texture-usage-before-repair-20261014.json'
+EXPECTED_13 = ['Image_141', 'Image_142', 'Image_143', 'Image_144', 'Image_145', 'Image_146', 'Image_147',
+               'diff', 'diff1', 'diff2', 'diff3', 'diff5', 'diff7']
+needs_usage = pytest.mark.skipif(not USAGE_FILE.is_file(), reason='usage audit absent')
+
+
+def usage_doc():
+    return json.loads(USAGE_FILE.read_text())
+
+
+def build_usage_world(tmp_path, doc=None):
+    """Fake level built from the REAL usage file: every selected texture's materials and bound slots."""
+    doc = doc or usage_doc()
+    world = World(tmp_path)
+    (tmp_path / 'Content/Sub01Home').mkdir(parents=True)
+    (tmp_path / 'Content/Sub01Home/ActualHome.umap').write_bytes(b'map')
+    parent = MaterialInstanceConstant(GLTF_PARENT + '.MI_Default_Opaque')
+    parent.textures = {'BaseColorTexture': None, 'NormalTexture': None}
+    parent.vectors = {'BaseColorFactor': LinearColor(1, 1, 1, 1)}
+    world.assets[GLTF_PARENT] = parent
+    normal = Texture2D('/Game/Sub01Home/ImportedScene/full-home/Textures/RealNormal.RealNormal', (512, 512), srgb=False)
+    selection = fix.select_usage_repairs(doc)
+    by_component = {}
+    for row in selection['selected']:
+        tex = Texture2D(row['texture'], (512, 512), srgb=False)
+        tex._props.update(dict(parity.ADJUST_DEFAULTS, compression_settings='TextureCompressionSettings.TC_NORMALMAP',
+                               lod_bias=0))
+        tex.pixels = row['texture'].encode()
+        world.assets[row['texture'].split('.')[0]] = tex
+        package = fix._package_file(make_unreal(world), row['texture'])
+        package.parent.mkdir(parents=True, exist_ok=True)
+        package.write_bytes(b'uasset:' + row['texture'].encode())
+        for use in row['usages']:
+            m = MaterialInstanceConstant(use['material'], parent)
+            m.textures = {'BaseColorTexture': tex, 'NormalTexture': normal}
+            m.vectors = {'BaseColorFactor': LinearColor(0.8, 0.7, 0.6, 1)}
+            m.scalars = {'RoughnessFactor': 0.9}
+            world.assets[use['material'].split('.')[0]] = m
+            for cpath, slot, actor in use['bindings']:
+                by_component.setdefault(cpath, (actor, {}))[1][slot] = m
+    for cpath, (actor, slots) in by_component.items():
+        materials = [slots[i] for i in range(max(slots) + 1)]
+        comp = StaticMeshComponent(cpath, Obj('/Game/M/%s.%s' % (actor, actor)), materials, location=(1, 2, 3))
+        world.actors.append(Actor(actor + '|' + cpath[-12:], [comp]))
+    return world, selection
+
+
+@needs_usage
+def test_usage_selection_is_exactly_13_with_bed_excluded():
+    selection = fix.select_usage_repairs(usage_doc())
+    names = sorted(r['texture'].rsplit('/', 1)[-1].split('.')[0] for r in selection['selected'])
+    assert selection['count'] == 13 and names == sorted(EXPECTED_13)
+    assert sorted(e['texture'].rsplit('/', 1)[-1].split('.')[0] for e in selection['excluded']) == \
+        ['Image_1410', 'Image_1411', 'Image_148', 'Image_149']
+    assert selection['ambiguous'] == []
+    assert len({r['clone'] for r in selection['selected']}) == 13
+    assert all(r['clone'].startswith(parity.CLONE_ROOT) for r in selection['selected'])
+    dressing = [r for r in selection['selected'] if 'ReferenceDressing' in r['texture']]
+    assert all('SUB01_MatFix_Albedo_RefDress_' in r['clone'] for r in dressing) and len(dressing) == 6
+    assert parity.clone_path(REAL_BED_TEXTURES[0]).endswith('SUB01_MatFix_Albedo_Image_148')   # unchanged naming
+
+
+@needs_usage
+def test_usage_selection_moves_dual_role_and_warning_only_textures_to_ambiguous():
+    doc = usage_doc()
+    sel = [t for t in doc['textures'] if t['definite_binding_settings_mismatches']]
+    victim = next(t for t in sel if t['asset_path'].endswith('Image_141.Image_141'))
+    victim['usages'].append({'material': '/Game/X/M.M', 'parameter': 'NormalTexture', 'role': 'normal',
+                             'bindings': []})
+    warn_only = next(t for t in sel if t['asset_path'].endswith('Image_142.Image_142'))
+    warn_only['definite_binding_settings_mismatches'] = []
+    selection = fix.select_usage_repairs(doc)
+    amb = {a['texture'].rsplit('/', 1)[-1].split('.')[0]: a['reasons'] for a in selection['ambiguous']}
+    assert set(amb) == {'Image_141', 'Image_142'} and selection['count'] == 11
+    assert any('normal' in r for r in amb['Image_141'])
+    doc['errors'] = ['x']
+    with pytest.raises(fix.MaterialFixError):
+        fix.select_usage_repairs(doc)
+
+
+@needs_usage
+def test_usage_repair_clones_in_order_keeps_originals_and_overrides_only_base_texture(tmp_path, monkeypatch):
+    world, selection = build_usage_world(tmp_path)
+    u = make_unreal(world)
+    log = []
+    original_set = Texture2D.set_editor_property
+
+    def logging_set(self, name, value):
+        log.append((self.get_path_name(), name))
+        original_set(self, name, value)
+
+    monkeypatch.setattr(Texture2D, 'set_editor_property', logging_set)
+    originals = {r['texture']: dict(world.assets[r['texture'].split('.')[0]]._props) for r in selection['selected']}
+    packages = {r['texture']: fix._file_sha(fix._package_file(u, r['texture'])) for r in selection['selected']}
+    before = fingerprints(u, world)
+    report = fix.repair_usage_albedo(usage_doc(), u=u, expect_count=13)
+    assert [t['action'] for t in report['textures']] == ['created'] * 13
+    for row in selection['selected']:
+        calls = [n for p, n in log if p.split('.')[0] == row['clone'].split('.')[0]]
+        assert calls[:2] == ['compression_settings', 'srgb']              # compression first, then sRGB
+        clone = world.assets[row['clone'].split('.')[0]]
+        assert clone.get_editor_property('srgb') is True
+        assert 'TC_DEFAULT' in str(clone.get_editor_property('compression_settings'))
+        assert world.assets[row['texture'].split('.')[0]]._props == originals[row['texture']]
+        assert fix._file_sha(fix._package_file(u, row['texture'])) == packages[row['texture']]
+        assert not any(p.split('.')[0] == row['texture'].split('.')[0] for p, _ in log)
+    assert not [p for p in world.saved_assets if p.split('.')[0] in {r['texture'].split('.')[0] for r in selection['selected']}]
+    slots = sum(len(b) for r in selection['selected'] for u_ in r['usages'] for b in [u_['bindings']])
+    assert len(report['slot_changes']) == slots == 18
+    for actor in world.actors:
+        for comp in actor.components:
+            for mic in comp.materials:
+                assert mic.get_name().startswith(fix.USAGE_MIC_PREFIX)
+                assert set(mic.textures) == {'BaseColorTexture'} and not mic.vectors and not mic.scalars
+                assert mic.textures['BaseColorTexture'].get_path_name().startswith(parity.CLONE_ROOT)
+                parent_ = mic.get_editor_property('parent')
+                assert parent_.textures['NormalTexture'].get_path_name().endswith('RealNormal.RealNormal')
+                assert parent_.vectors['BaseColorFactor'].r == 0.8           # tint untouched (inherited)
+    assert fingerprints(u, world) == before and world.level_saves == 1
+    # idempotent
+    saves, assets = world.level_saves, list(world.saved_assets)
+    again = fix.repair_usage_albedo(usage_doc(), u=u, expect_count=13)
+    assert [t['action'] for t in again['textures']] == ['verified existing'] * 13
+    assert again['slot_changes'] == [] and world.level_saves == saves and world.saved_assets == assets
+    assert len(world.duplicated) == 13
+
+
+@needs_usage
+def test_usage_repair_restore_is_exact(tmp_path):
+    world, _ = build_usage_world(tmp_path)
+    u = make_unreal(world)
+    originals = {c.get_path_name(): list(c.materials) for a in world.actors for c in a.components}
+    fix.repair_usage_albedo(usage_doc(), u=u)
+    result = fix.restore(u=u)
+    assert {c.get_path_name(): list(c.materials) for a in world.actors for c in a.components} == originals
+    assert len(result['deleted_owned_assets']) == 13 + 13            # 13 MICs then 13 clones
+    assert not [p for p in world.assets if p.startswith(fix.OWNED_DIR)]
+
+
+@needs_usage
+def test_usage_repair_fails_closed(tmp_path):
+    world, selection = build_usage_world(tmp_path)
+    u = make_unreal(world)
+    with pytest.raises(fix.MaterialFixError, match='expected 12'):
+        fix.repair_usage_albedo(usage_doc(), u=u, expect_count=12)
+    first = selection['selected'][0]['texture']
+    world.assets[first.split('.')[0]].set_editor_property('srgb', True)
+    with pytest.raises(fix.MaterialFixError, match='differs from the usage file'):
+        fix.repair_usage_albedo(usage_doc(), u=u)
+    world.assets[first.split('.')[0]].set_editor_property('srgb', False)
+    # a live slot bound to another material than the usage file says
+    comp = world.actors[0].components[0]
+    comp.materials[0] = Material('/Game/Other/M.M')
+    with pytest.raises(fix.MaterialFixError, match='binds|differ|not bound'):
+        fix.repair_usage_albedo(usage_doc(), u=u)
+    assert world.duplicated == [] and world.level_saves == 0
+    # tampered existing clone
+    world2, sel2 = build_usage_world(tmp_path / 'b')
+    u2 = make_unreal(world2)
+    fix.repair_usage_albedo(usage_doc(), u=u2)
+    world2.assets[sel2['selected'][3]['clone'].split('.')[0]].pixels = b'other'
+    with pytest.raises(fix.MaterialFixError, match='pixels differ'):
+        fix.repair_usage_albedo(usage_doc(), u=u2)
+
+
+def _pair_parity(selection, changes=None):
+    changes = changes or {}
+    textures = []
+    for i, row in enumerate(selection['selected']):
+        h = '%064x' % (i + 1)
+        o = synthetic_parity([row['texture']])['textures'][0]
+        o.update(decoded_rgba_sha256=h, srgb=False, compression='TC_NORMALMAP')
+        c = synthetic_parity([row['clone']])['textures'][0]
+        c.update(decoded_rgba_sha256=h)
+        c['source_provenance']['duplicate_of'] = row['texture']
+        c['original_pair'] = {'asset_path': row['texture'], 'exported': True, 'decoded_rgba_sha256': h,
+                              'png_bytes_identical': True, 'max_abs_diff_8bit': 0}
+        c.update(changes.get(i, {}))
+        textures += [o, c]
+    return {'schema': parity.PARITY_SCHEMA, 'reference': None, 'textures': textures}
+
+
+@needs_usage
+def test_usage_parity_is_per_texture_against_its_own_original():
+    selection = fix.select_usage_repairs(usage_doc())
+    clone_of = {r['clone']: r['texture'] for r in selection['selected']}
+    assert parity.validate_clone_pairs(_pair_parity(selection), clone_of) == []
+    for change, needle in [({'decoded_rgba_sha256': 'f' * 64}, 'pixels differ'), ({'srgb': False}, 'sRGB'),
+                           ({'compression': 'TC_NORMALMAP'}, 'compression'), ({'lod_bias': 2}, 'LOD'),
+                           ({'original_pair': {'max_abs_diff_8bit': 3}}, 'max abs diff')]:
+        problems = parity.validate_clone_pairs(_pair_parity(selection, {5: change}), clone_of)
+        assert problems and any(needle in p for p in problems), change
+    bad = dict(clone_of)
+    bad['/Game/Elsewhere/X.X'] = selection['selected'][0]['texture']
+    assert any('owned clone prefix' in p for p in parity.validate_clone_pairs(_pair_parity(selection), bad))
+    swapped = _pair_parity(selection)
+    swapped['textures'][1]['source_provenance']['duplicate_of'] = selection['selected'][1]['texture']
+    assert any('duplicate_of' in p for p in parity.validate_clone_pairs(swapped, clone_of))
+
+
+def test_finalize_pairs_each_clone_with_its_own_original(tmp_path):
+    pytest.importorskip('PIL')
+    out = tmp_path / 'export'
+    out.mkdir()
+    rows = []
+    pairs = [('/Game/Sub01Home/ReferenceDressing/V/T/diff.diff', (10, 20, 30)),
+             ('/Game/Sub01Home/ImportedScene/full-home/Textures/Image_141.Image_141', (200, 100, 50))]
+    for path, rgb in pairs:
+        for p_, dup, colour in ((path, None, rgb), (parity.clone_path(path), path, rgb)):
+            name = p_.rsplit('/', 1)[-1].split('.')[0]
+            (out / (name + '.png')).write_bytes(_png(colour))
+            rows.append({'asset_path': p_, 'png': name + '.png', 'width': 4, 'height': 4, 'duplicate_of': dup,
+                         'import_source_file': None,
+                         'settings': dict(parity.ADJUST_DEFAULTS, srgb=dup is not None,
+                                          compression_settings='TC_DEFAULT' if dup else 'TC_NORMALMAP', lod_bias=0)})
+    (out / 'texture-settings.json').write_text(json.dumps({'schema': parity.SETTINGS_SCHEMA, 'textures': rows}))
+    doc = parity.finalize(out)                                   # no GLB: per-texture proof only
+    assert doc['reference'] is None
+    clone_of = {parity.clone_path(p_): p_ for p_, _ in pairs}
+    assert parity.validate_clone_pairs(doc, clone_of) == []
+    pair = next(t for t in doc['textures'] if t['original_pair'])['original_pair']
+    assert pair['png_bytes_identical'] and pair['max_abs_diff_8bit'] == 0
+    (out / 'SUB01_MatFix_Albedo_RefDress_diff.png').write_bytes(_png((11, 20, 30)))
+    assert any('pixels differ' in p for p in parity.validate_clone_pairs(parity.finalize(out), clone_of))
