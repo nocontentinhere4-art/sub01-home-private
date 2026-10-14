@@ -35,6 +35,18 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  FirstPersonBody->RefreshBoneTransforms();FirstPersonBody->UpdateComponentToWorld();
  const FTransform W=FirstPersonBody->GetSocketTransform(PhoneGripWrist,RTS_World);
  UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_CAPTURED_WRIST unaccepted original fingers unchanged time=%.3f bone=%s position=%s rotation=%s scale=%s"),Time,*PhoneGripWrist.ToString(),*W.GetLocation().ToString(),*W.GetRotation().ToString(),*W.GetScale3D().ToString());
+ FName Head;
+ for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("Head")))Head=Ref.GetBoneName(I);
+ if(!Head.IsNone()){
+  const FTransform H=FirstPersonBody->GetSocketTransform(Head,RTS_World);
+  UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_CAPTURED_HEAD time=%.3f bone=%s position=%s rotation=%s camera=%s forward=%s body=%s"),PhoneGripPoseTime,*Head.ToString(),*H.GetLocation().ToString(),*H.GetRotation().ToString(),*ViewCamera->GetComponentLocation().ToString(),*ViewCamera->GetForwardVector().ToString(),*FirstPersonBody->GetComponentTransform().ToString());
+  if(FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneHeadCamera"))){
+   const FRotator Gaze=ViewCamera->GetComponentRotation();
+   ViewCamera->AttachToComponent(FirstPersonBody,FAttachmentTransformRules::SnapToTargetNotIncludingScale,Head);
+   ViewCamera->SetUsingAbsoluteRotation(true);ViewCamera->SetRelativeLocation(FVector::ZeroVector);ViewCamera->SetWorldRotation(Gaze);
+   UE_LOG(LogTemp,Warning,TEXT("SUB01_PHONE_HEAD_CAMERA_UNACCEPTED actual captured Head origin; independent camera gaze preserved; no body/finger/actor transform changed eye=%s"),*ViewCamera->GetComponentLocation().ToString());
+  }
+ }
  struct Part{FVector Center,Extent;};const Part Expected[]={
  {FVector(270,-292,85.8),FVector(3.75,7.5,.75)}, {FVector(270,-298.2,86.7),FVector(.95,.15,.05)},
  {FVector(266.2,-294,85.8),FVector(.1,1.25,.2)}, {FVector(273.8,-294,85.8),FVector(.1,.7,.2)},
@@ -56,6 +68,13 @@ void ASub01HomeCharacter::UpdatePrivatePhoneGripReview(){
  const FVector Center=W.GetLocation()+W.GetRotation().RotateVector(PhoneGripOffset);
  const FTransform Rigid(Rotation,Center,FVector::OneVector),FromOriginal(FQuat::Identity,FVector(-270,292,-85.8));
  for(int32 I=0;I<PhoneGripParts.Num();++I)if(PhoneGripParts[I])PhoneGripParts[I]->SetWorldTransform(PhoneGripOriginalTransforms[I]*FromOriginal*Rigid);
+ static double LastPhoneTelemetry=-1;const double Now=FPlatformTime::Seconds();
+ if(LastPhoneTelemetry<0||Now-LastPhoneTelemetry>=2){
+  LastPhoneTelemetry=Now;
+  UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_REVIEW_GEOMETRY unaccepted eye=%s forward=%s wrist=%s phoneCenter=%s cameraParent=%s cameraSocket=%s"),*ViewCamera->GetComponentLocation().ToString(),*ViewCamera->GetForwardVector().ToString(),*W.GetLocation().ToString(),*Center.ToString(),*GetNameSafe(ViewCamera->GetAttachParent()),*ViewCamera->GetAttachSocketName().ToString());
+  for(int32 I=0;I<PhoneGripParts.Num();++I)if(PhoneGripParts[I]){const auto B=PhoneGripParts[I]->CalcBounds(PhoneGripParts[I]->GetComponentTransform());UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_REVIEW_PART index=%d center=%s extent=%s transform=%s"),I,*B.Origin.ToString(),*B.BoxExtent.ToString(),*PhoneGripParts[I]->GetComponentTransform().ToString());}
+ }
+
 }
 void ASub01HomeCharacter::NativePhoneGripCandidate(const FString& Parameters){
  if(!PhoneGripReview||PrivateViewMode!=EPrivateViewMode::Diagnostic||!FirstPersonBody||Parameters.Len()>200||PhoneGripParts.Num()!=5)return;
