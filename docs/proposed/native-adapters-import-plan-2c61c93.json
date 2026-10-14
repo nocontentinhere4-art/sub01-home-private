@@ -1,0 +1,390 @@
+{
+ "schema": "sub01.native-adapters-import-plan.v1",
+ "main": "2c61c93",
+ "bundle_commit": "d8d03c4",
+ "verified": false,
+ "readiness_claimed": false,
+ "main_compat": {
+  "staged_main_vs_branch": "byte-identical",
+  "dry_run_exit": 0,
+  "dry_run": {
+   "Sub01HomeLab.h": [
+    44,
+    2,
+    0
+   ],
+   "Sub01HomeLab.cpp": [
+    564,
+    6,
+    0
+   ],
+   "Sub01HomeHands.h": [
+    19,
+    1,
+    0
+   ],
+   "Sub01HomeHands.cpp": [
+    14,
+    4,
+    0
+   ]
+  },
+  "dry_run_columns": [
+   "lines_added",
+   "insertions",
+   "lines_removed"
+  ],
+  "gate_lines": 16,
+  "gate_bodies": 17,
+  "other_files_untouched": 12,
+  "subsets_ok": [
+   "seat",
+   "life",
+   "life,bed",
+   "controller",
+   "seat,controller",
+   "life,bed,controller"
+  ],
+  "apply_then_reinstall": "apply ok; reinstall refused",
+  "tests_passed": 114,
+  "fixes_needed": false,
+  "run_tools_from": "branch checkout (main has older seat/contact/inventory tools and no life/bed/controller adapters)"
+ },
+ "owner": {
+  "mesh": "/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner",
+  "skeleton": "/Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton.SUB01_OriginalOwner_Skeleton",
+  "desk_typing": "/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping",
+  "status": "EXISTS",
+  "evidence": "main 178f52a docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json body.mesh/body.skeleton (owner+DeskTyping USkeleton equality; 66 UE bones)",
+  "unreal_fbx_hands_import_json": "ABSENT (historic receipt lost in migration; importers fall back to owner+DeskTyping equality)"
+ },
+ "adapters": {
+  "seat": {
+   "adapter": "tools/unreal_seat_transition_runtime.py",
+   "header": "tools/native_seating/Sub01SeatTransition.h",
+   "assets": [
+    {
+     "asset": "/Game/Sub01Hands/Seating/SUB01_SitDown.SUB01_SitDown",
+     "status": "MISSING",
+     "source": "web/room/mh_mx/room_mx_stand_to_sit.glb",
+     "create_steps": [
+      "S1",
+      "S2",
+      "S3"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Seating/SUB01_Sitting.SUB01_Sitting",
+     "status": "MISSING",
+     "source": "web/room/mh_mx/room_mx_sitting.glb",
+     "create_steps": [
+      "S1",
+      "S2",
+      "S3"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Seating/SUB01_SitToType.SUB01_SitToType",
+     "status": "MISSING",
+     "source": "web/room/mh_mx/room_mx_sit_to_type.glb",
+     "create_steps": [
+      "S1",
+      "S2",
+      "S3"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Seating/SUB01_GetUp.SUB01_GetUp",
+     "status": "MISSING",
+     "source": "web/room/mh_mx/room_mx_sit_to_stand.glb",
+     "create_steps": [
+      "S1",
+      "S2",
+      "S3"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping",
+     "status": "EXISTS",
+     "evidence": "main 178f52a docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json body.mesh/body.skeleton (owner+DeskTyping USkeleton equality; 66 UE bones)"
+    }
+   ],
+   "import_receipt": "<P>/unreal-seating-import.json",
+   "config": {
+    "file": "Config/DefaultGame.ini",
+    "section": "[/Script/Sub01HomeLab.Sub01HomeCharacter]",
+    "lines": [
+     "+ValidatedHandsPostures=StandToSit",
+     "+ValidatedHandsPostures=Sitting",
+     "+ValidatedHandsPostures=SitToType",
+     "+ValidatedHandsPostures=SitToStand"
+    ],
+    "producer": null,
+    "gate": "hand-append only when unreal-seating-import.json has 4 rows same_existing_skeleton true on the owner skeleton"
+   },
+   "proofs": [
+    {
+     "file": "private-audit/native-chair-surface.json",
+     "producer": "copy main docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json byte-identical, or tools/unreal_chair_surface_audit.py",
+     "status": "source PRESENT"
+    },
+    {
+     "file": "private-audit/native-seat-contact.json",
+     "producer": "tools/unreal_audit_seat_contact.py (main)",
+     "status": "ABSENT"
+    },
+    {
+     "file": "private-audit/native-seat-evidence.json",
+     "producer": "python3 <B>/tools/unreal_seat_transition_runtime.py <P>",
+     "status": "ABSENT"
+    },
+    {
+     "file": "<P>/unreal-skinned-contact-audit.json",
+     "producer": "tools/unreal_audit_skinned_contact.py (main)",
+     "status": "UNKNOWN"
+    },
+    {
+     "file": "live log SUB01_SEAT_LIVE_MEASUREMENT with ContactVerified",
+     "producer": "native runtime while typing",
+     "status": "ABSENT"
+    }
+   ],
+   "readiness": {
+    "NativeSeatVerified": false,
+    "pc_operator_focus": false
+   }
+  },
+  "life_idle": {
+   "adapter": "tools/unreal_life_clips_runtime.py",
+   "header": "tools/native_life/Sub01LifeClips.h",
+   "assets": [
+    {
+     "asset": "/Game/Sub01Hands/Life/SUB01_Idle.SUB01_Idle",
+     "status": "MISSING",
+     "source": "docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb",
+     "create_steps": [
+      "S1",
+      "L1",
+      "L2",
+      "L3",
+      "L4"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    }
+   ],
+   "inventory_dry_run_here": "branch inventory --extra Idle + --derived bed roles: missing_roles [], all four verdict Candidate (not committed)",
+   "import_receipt": "<P>/unreal-life-import.json",
+   "config": {
+    "file": "Config/DefaultGame.ini",
+    "lines": [
+     "IdleClipPath=/Game/Sub01Hands/Life/SUB01_Idle.SUB01_Idle",
+     "+ValidatedHandsPostures=Idle"
+    ],
+    "producer": "L5"
+   },
+   "proofs": [
+    {
+     "file": "native capture of standing idle",
+     "producer": "native runtime",
+     "status": "ABSENT"
+    }
+   ],
+   "readiness": {
+    "idle_bound": false
+   }
+  },
+  "life_bed": {
+   "adapter": "tools/unreal_bed_root_motion.py",
+   "requires": [
+    "life_idle"
+   ],
+   "assets": [
+    {
+     "asset": "/Game/Sub01Hands/Life/SUB01_LieDown.SUB01_LieDown",
+     "status": "MISSING",
+     "source": "docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb",
+     "create_steps": [
+      "L1",
+      "L2",
+      "L3",
+      "L4"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Life/SUB01_SleepLoop.SUB01_SleepLoop",
+     "status": "MISSING",
+     "source": "docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb",
+     "create_steps": [
+      "L1",
+      "L2",
+      "L3",
+      "L4"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Life/SUB01_GetUp.SUB01_GetUp",
+     "status": "MISSING",
+     "source": "docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb",
+     "create_steps": [
+      "L1",
+      "L2",
+      "L3",
+      "L4"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch"
+    }
+   ],
+   "config": {
+    "producer": "python3 <B>/tools/unreal_bed_root_motion.py config <inventory> <P>/unreal-life-import.json OUT.ini",
+    "lines": [
+     "+ValidatedHandsPostures=LieDown",
+     "+ValidatedHandsPostures=SleepLoop",
+     "+ValidatedHandsPostures=GetUp"
+    ],
+    "gate": "all three together, only after bed evidence"
+   },
+   "proofs": [
+    {
+     "file": "private-audit/native-bed-surface.json",
+     "producer": "tools/unreal_bed_surface_audit.py (branch)",
+     "status": "ABSENT"
+    },
+    {
+     "file": "private-audit/native-life-bed-evidence.json",
+     "producer": null,
+     "status": "ABSENT (no producer: server placement audit missing; fit_bed_placement.py only proposes)"
+    },
+    {
+     "file": "private-audit/native-life-root-paths.json",
+     "producer": "python3 <B>/tools/unreal_bed_root_motion.py stage-paths docs/proposed/bed-transition/SUB01_bed_mesh_root_paths.json <inventory> <P>/unreal-life-import.json <P>",
+     "status": "ABSENT"
+    }
+   ],
+   "readiness": {
+    "LifeReady_placement": false
+   },
+   "recommendation": "defer bed imports until a bed evidence producer exists"
+  },
+  "controller": {
+   "adapter": "tools/unreal_controller_play_runtime.py",
+   "assets": [
+    {
+     "asset": "/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip",
+     "status": "MISSING",
+     "source": "docs/proposed/controller-play/SUB01_GamingGrip_derived.glb (sha bf31d64518d85f6eefd8150009a758ddddc95ca6afd63d5d83bdf29a2dcdaaf9)",
+     "create_steps": [
+      "S1",
+      "C1",
+      "C2",
+      "C3"
+     ],
+     "evidence": "no import receipt, tool run or commit message on origin/main 2c61c93 or the branch; no importer existed before this commit"
+    },
+    {
+     "asset": "/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming",
+     "status": "EXISTS",
+     "evidence": "root diagnostics run_unreal_native_window_recording.py, unreal_controller_grip_diagnostic.py (dbae3e1); not played by the adapter"
+    },
+    {
+     "asset": "physical_assembly.mesh from private-audit/native-controller-asset.json under /Game/Sub01Home/Devices/Controller/V_8134769e2680/",
+     "status": "UNKNOWN",
+     "source": "web/room/controller.glb",
+     "create_steps": [
+      "C4"
+     ],
+     "evidence": "tools/unreal_import_controller_prop.py on main (dbae3e1); receipt not committed"
+    }
+   ],
+   "new_tools": [
+    "tools/export_unreal_gaming_grip_fbx.py",
+    "tools/unreal_import_gaming_grip.py",
+    "tests/test_unreal_import_gaming_grip.py"
+   ],
+   "import_receipt": "<P>/unreal-gaming-grip-import.json",
+   "config": {
+    "producer": "C5",
+    "lines": [
+     "+ValidatedHandsPostures=Gaming"
+    ],
+    "gate": "tool refuses without accepted evidence; never hand-write"
+   },
+   "proofs": [
+    {
+     "file": "private-audit/native-sofa-surface.json",
+     "producer": null,
+     "status": "ABSENT (no audit tool; spec sofa-controller-play.md 4.1)"
+    },
+    {
+     "file": "sofa contact report + placement",
+     "producer": null,
+     "status": "ABSENT (no producer)"
+    },
+    {
+     "file": "private-audit/native-controller-play-evidence.json",
+     "producer": "python3 <B>/tools/unreal_controller_play_runtime.py evidence <P> GRIP_REPORT.json SOFA_CONTACT.json PLACEMENT.json",
+     "status": "ABSENT"
+    },
+    {
+     "file": "private-audit/native-controller-play-runtime-proof.json",
+     "producer": null,
+     "status": "ABSENT (no producer)"
+    },
+    {
+     "file": "correlated Minecraft input ACK",
+     "producer": "root TV input path",
+     "status": "ABSENT"
+    }
+   ],
+   "readiness": {
+    "ControllerPlayReady": false
+   }
+  }
+ },
+ "steps": {
+  "S1": "node <B>/tools/uncompress_unreal_glb.mjs <B>/web/room/char_mixamo.glb /tmp/owner.glb",
+  "S2": "node <B>/tools/merge_unreal_skin_clips.mjs /tmp/owner.glb /tmp/seating-merged.glb <B>/web/room/mh_mx/room_mx_stand_to_sit.glb <B>/web/room/mh_mx/room_mx_sit_to_stand.glb <B>/web/room/mh_mx/room_mx_sitting.glb <B>/web/room/mh_mx/room_mx_sit_to_type.glb && blender -b --python <B>/tools/export_unreal_seating_fbx.py -- /tmp/seating-merged.glb <P>/SourceAssets/SeatingFBX",
+  "S3": "UnrealEditor-Cmd <P>/Sub01HomeLab.uproject -ExecutePythonScript=\"<B>/tools/unreal_import_seating_fbx.py\" -unattended",
+  "L1": "cd <B> && python3 tools/inventory_native_life_clips.py --extra Idle=docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb [--derived LieDown=docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb --derived SleepLoop=docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb --derived GetUp=docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb] --out <P>/private-audit/native-life-clips-inventory.json",
+  "L2": "node <B>/tools/merge_unreal_skin_clips.mjs /tmp/owner.glb /tmp/life-merged.glb <B>/docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb [bed GLBs]",
+  "L3": "blender -b --python <B>/tools/export_unreal_life_fbx.py -- /tmp/life-merged.glb <P>/SourceAssets/LifeFBX <P>/private-audit/native-life-clips-inventory.json Idle=docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb [LieDown=... SleepLoop=... GetUp=...]",
+  "L4": "UnrealEditor-Cmd <P>/Sub01HomeLab.uproject -ExecutePythonScript=\"<B>/tools/unreal_import_life_fbx.py\" -unattended",
+  "L5": "python3 <B>/tools/unreal_life_clips_runtime.py config <P>/private-audit/native-life-clips-inventory.json <P>/unreal-life-import.json /tmp/life.ini",
+  "C1": "node <B>/tools/merge_unreal_skin_clips.mjs /tmp/owner.glb /tmp/grip-merged.glb <B>/docs/proposed/controller-play/SUB01_GamingGrip_derived.glb",
+  "C2": "blender -b --python <B>/tools/export_unreal_gaming_grip_fbx.py -- /tmp/grip-merged.glb <P>/SourceAssets/ControllerFBX <B>/docs/proposed/controller-play/SUB01_GamingGrip_derived.glb",
+  "C3": "UnrealEditor-Cmd <P>/Sub01HomeLab.uproject -ExecutePythonScript=\"<B>/tools/unreal_import_gaming_grip.py\" -unattended",
+  "C4": "root's tools/unreal_import_controller_prop.py (only if private-audit/native-controller-asset.json is absent)",
+  "C5": "python3 <B>/tools/unreal_controller_play_runtime.py config <P> <P>/unreal-gaming-grip-import.json /tmp/controller.ini"
+ },
+ "order": [
+  "root office bundle complete",
+  "stage from main (tools/stage_unreal_home_runtime.py <P>)",
+  "bundle --dry-run then apply",
+  "build (expect refusals)",
+  "imports S1-S3, L1-L4 (Idle only), C1-C3, C4 if needed",
+  "config: seat lines + L5 output",
+  "rebuild/restart",
+  "proofs: seat, then bed, then sofa/controller",
+  "readiness only from live logs with HOME_NATIVE_REQUIRED=1"
+ ],
+ "rollback": [
+  "remove appended ValidatedHandsPostures/IdleClipPath lines",
+  "re-stage from main; delete Sub01SeatTransition.h, Sub01LifeClips.h and install receipt; rebuild",
+  "optionally delete /Game/Sub01Hands/Seating, /Game/Sub01Hands/Play, Life SUB01_Idle/bed assets, their receipts and SourceAssets/{SeatingFBX,LifeFBX,ControllerFBX}; never touch /Game/Sub01Hands/FBX"
+ ],
+ "gaps": [
+  "no seat config generator (hand-append after receipt check)",
+  "typing contact profile and native-seat-contact.json UNKNOWN/absent",
+  "no producer for native-life-bed-evidence.json",
+  "no sofa surface audit, sofa contact/placement or runtime-proof producer",
+  "gaming grip exporter/importer not run in Blender/UE (fake tests only)",
+  "seat adapter does not bind seat-pose-fit seated GLBs",
+  "controller prop receipt not committed",
+  "all readiness flags false; no seat/contact/input proof"
+ ]
+}
