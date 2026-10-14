@@ -26,6 +26,17 @@ METHODS=r'''
 #include "Misc/Paths.h"
 #include "Framework/Application/IInputProcessor.h"
 #include "Framework/Application/SlateApplication.h"
+// Bounded procfs read: proc files report size zero to ordinary size-based loaders.
+static uint64 Sub01MinecraftReadStartTicks(uint32 Pid){
+ char Path[64],Buffer[4096];std::snprintf(Path,sizeof(Path),"/proc/%u/stat",Pid);
+ FILE* File=std::fopen(Path,"r");if(!File)return 0;
+ const bool Read=std::fgets(Buffer,sizeof(Buffer),File)!=nullptr;std::fclose(File);if(!Read)return 0;
+ char* Cursor=std::strrchr(Buffer,')');if(!Cursor)return 0;++Cursor;
+ for(int Index=0;Index<=19;++Index){while(*Cursor==' '||*Cursor=='\t')++Cursor;if(!*Cursor)return 0;
+  if(Index==19){char* End=nullptr;const uint64 Value=std::strtoull(Cursor,&End,10);return End!=Cursor?Value:0;}
+  while(*Cursor&&*Cursor!=' '&&*Cursor!='\t')++Cursor;
+ }return 0;
+}
 class FSub01MinecraftTVInput:public IInputProcessor{
  TWeakObjectPtr<ASub01HomeCharacter> Owner;
  FString KeyName(FKey K){if(K==EKeys::W||K==EKeys::Up)return TEXT("forward");if(K==EKeys::S||K==EKeys::Down)return TEXT("back");if(K==EKeys::A||K==EKeys::Left)return TEXT("left");if(K==EKeys::D||K==EKeys::Right)return TEXT("right");if(K==EKeys::SpaceBar)return TEXT("jump");if(K==EKeys::LeftShift)return TEXT("sneak");if(K==EKeys::LeftControl)return TEXT("sprint");return FString();}
@@ -41,7 +52,7 @@ public:
 void ASub01HomeCharacter::ConfigureMinecraftTVInput(){
  MinecraftConsumerId=FGuid::NewGuid().ToString(EGuidFormats::Digits).ToLower();
  FFileHelper::LoadFileToString(MinecraftTVToken,TEXT("/home/unreal/.sub01-private/operator-token"));MinecraftTVToken.TrimStartAndEndInline();
- FString Stat; if(FFileHelper::LoadFileToString(Stat,*FString::Printf(TEXT("/proc/%u/stat"),FPlatformProcess::GetCurrentProcessId()))){int32 End; if(Stat.FindLastChar(')',End)){TArray<FString> Fields;Stat.Mid(End+1).ParseIntoArrayWS(Fields);if(Fields.Num()>19)MinecraftStartTicks=FCString::Strtoui64(*Fields[19],nullptr,10);}}
+ MinecraftStartTicks=Sub01MinecraftReadStartTicks(FPlatformProcess::GetCurrentProcessId());
  if(FSlateApplication::IsInitialized()){MinecraftTVInput=MakeShared<FSub01MinecraftTVInput>(this);FSlateApplication::Get().RegisterInputPreProcessor(MinecraftTVInput,0);}
 }
 void ASub01HomeCharacter::FocusMinecraftTV(const FHitResult& Hit){
@@ -103,4 +114,4 @@ def install(header,cpp):
     cpp=cpp.replace(' ConfigureActualPC();',' ConfigureActualPC();\n ConfigureMinecraftTVInput();',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n TickMinecraftTVInput();',1)
     cpp=cpp.replace('if(TryNativeHomeDevice(Hit.GetComponent()))return;', 'if(TryNativeHomeDevice(Hit.GetComponent())){FocusMinecraftTV(Hit);return;}',1)
-    return header,cpp+'\n#include <sys/stat.h>\n#include <cstdio>\n'+METHODS
+    return header,cpp+'\n#include <sys/stat.h>\n#include <cstdio>\n#include <cstring>\n#include <cstdlib>\n'+METHODS
