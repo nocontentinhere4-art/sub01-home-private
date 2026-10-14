@@ -325,3 +325,40 @@ def test_generic_browser_frame_binds_selection_revision_and_maps_only_approved_r
             assert computer.inputs==[] and computer.sent==[]
         finally:await client.close();await runner.home_devices.close();await backend.close()
     asyncio.run(run())
+
+
+def test_operator_navigation_starts_isolated_service_after_auth_validation_and_preserves_native_gate():
+    async def run():
+        world=HomeWorld({'native_consumer_required':True});events=[];down=False;make_private=False
+        async def ensure():
+            events.append('ensure')
+            if make_private:world.node=world.target='bathroom'
+            return 'down'if down else 'started'
+        async def init(state):events.append(('init',state))
+        async def navigate(device,url):events.append(('navigate',device,url));return {'device':device,'url':url}
+        async def on_screen(status):events.append('on_screen')
+        local=SimpleNamespace(ensure=ensure,init_state=lambda s:dict(s))
+        live=SimpleNamespace(home=world,local_browser=local,browser=SimpleNamespace(init=init,navigate=navigate),
+                             browsing_state={'used':['fixture history']},on_screen=on_screen)
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        client=TestClient(TestServer(app));await client.start_server()
+        payload={'device':'phone','url':'https://example.org/fixture'}
+        try:
+            assert(await client.post('/api/home/browser',json=payload)).status==403
+            assert(await client.post('/api/home/browser',headers=AUTH,json={**payload,'url':'http://127.0.0.1/'})).status==400
+            assert not events
+            world.node=world.target='bathroom'
+            assert(await client.post('/api/home/browser',headers=AUTH,json=payload)).status==409
+            assert not events
+            world.node=world.target='desk';down=True
+            assert(await client.post('/api/home/browser',headers=AUTH,json=payload)).status==503
+            assert events==['ensure'];events.clear();down=False;make_private=True
+            assert(await client.post('/api/home/browser',headers=AUTH,json=payload)).status==409
+            assert not any(isinstance(e,tuple)and e[0]=='navigate'for e in events)
+            world.node=world.target='desk';make_private=False;events.clear()
+            assert(await client.post('/api/home/browser',headers=AUTH,json=payload)).status==200
+            assert events==['ensure',('init',{'used':['fixture history']}),('navigate','phone','https://example.org/fixture'),'on_screen']
+            assert world.phone['app']=='browser'
+            assert world.native_feedback.required and not world.activity_ready('phone')
+        finally:await client.close()
+    asyncio.run(run())

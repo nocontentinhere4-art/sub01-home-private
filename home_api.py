@@ -158,7 +158,24 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if not getattr(live, 'browser', None):
             raise web.HTTPConflict(text='The browser is unavailable')
+        # Explicit authenticated navigation may start the isolated browser while
+        # autonomous screen use still waits for physical HomeWorld readiness.
+        local = getattr(live, 'local_browser', None)
+        if local is not None:
+            from browse_service import BrowserDown
+            try:
+                started = await local.ensure()
+                if started == 'down':
+                    raise web.HTTPServiceUnavailable(text='The isolated browser did not start')
+                if started != 'ok':
+                    await live.browser.init(local.init_state(getattr(live, 'browsing_state', {})))
+            except BrowserDown:
+                raise web.HTTPServiceUnavailable(text='The isolated browser is unavailable')
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         status = await live.browser.navigate(device, url)
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         if not status:
             raise web.HTTPConflict(text='Page unavailable or refused by the browser checks')
         await live.on_screen(status)

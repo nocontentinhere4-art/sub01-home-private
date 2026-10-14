@@ -421,6 +421,7 @@ class LocalBrowser:
         self.mem_mb, self.python = mem_mb, python
         self.token = secrets.token_hex(16)
         self.proc = None
+        self.ensure_lock = asyncio.Lock()                       # operator startup and brain heartbeat share one child
         self.restarts = 0
         self.restart_log = []                                   # [{t, why, rss_mb}]: why each restart happened (#89)
         from memory_guard import HeavyPages
@@ -471,6 +472,10 @@ class LocalBrowser:
             await self.proc.wait()
 
     async def ensure(self):
+        async with self.ensure_lock:
+            return await self._ensure()
+
+    async def _ensure(self):
         """-> "ok" (running), "started" / "restarted" (a new process: re-send the saved state) or "down"."""
         why, rss = None, None
         if self.alive():                                        # /proc reads in a thread: the ticks go on (#89)
