@@ -38,3 +38,12 @@ def test_actual_guard_file_trust_required(window,bad):
     else:
         source=path.with_name('real.json');path.rename(source);path.symlink_to(source)
     assert not authorized_viewer_window(200,path,100,uid)
+
+
+def test_only_exact_recovered_game_executable_is_eligible():
+    from tools.pixel_streaming.native_live_viewer import authorized_native_args, AUTHORIZED_NATIVE_EXECUTABLE
+    assert authorized_native_args([AUTHORIZED_NATIVE_EXECUTABLE,b'-game'])
+    assert not authorized_native_args([AUTHORIZED_NATIVE_EXECUTABLE])  # Editor/PIE is not accepted game capture.
+    assert not authorized_native_args([b'/workspace/sub01-unreal/UE/Engine/Binaries/Linux/UnrealEditor-Cmd',b'-game'])
+    assert not authorized_native_args([AUTHORIZED_NATIVE_EXECUTABLE+b'-other',b'-game'])
+    assert not authorized_native_args([])

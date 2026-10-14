@@ -23,6 +23,13 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 
 AUTHORIZED_POD = 'kjsxms1gk4rmv6'
+AUTHORIZED_NATIVE_EXECUTABLE = b'/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+
+
+def authorized_native_args(args):
+    return bool(args) and args[0] == AUTHORIZED_NATIVE_EXECUTABLE and b'-game' in args
+
+
 PRIVATE_VIEWER_ORIGIN = 'https://' + AUTHORIZED_POD + '-8888.proxy.runpod.net'
 RUNTIME_WINDOW = Path('/run/sub01-home-private/runtime-window.json')
 
@@ -351,7 +358,7 @@ class LiveState:
             if not p.name.isdigit():continue
             try:
                 args=(p/'cmdline').read_bytes().split(b'\0')
-                if args[0]!=b'/workspace/sub01-unreal/UE/Engine/Binaries/Linux/UnrealEditor-Cmd' or b'-game' not in args:continue
+                if not authorized_native_args(args):continue
                 status=(p/'status').read_text()
                 if 'Uid:\t1001\t' not in status:continue
                 ticks=int((p/'stat').read_text().rsplit(')',1)[1].split()[19])
