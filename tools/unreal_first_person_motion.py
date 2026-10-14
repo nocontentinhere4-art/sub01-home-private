@@ -42,7 +42,13 @@ def stage(module):
 
 def install(header,cpp):
     include='#include "Sub01HomeLab.h"'
-    if cpp.count(include)!=1 or cpp.count(SNAP)!=1 or cpp.count(SWAY)!=1:
+    method='void ASub01HomeCharacter::UpdateLiveHome(float Dt){'
+    if cpp.count(include)!=1 or cpp.count(method)!=1 or cpp.count(SWAY)!=1:
         raise ValueError('Unique original native Live look and body-sway hooks required')
+    start=cpp.index(method);end=cpp.index('\n}',start)+2
+    live=cpp[start:end]
+    if live.count(SNAP)!=1:
+        raise ValueError('Unique Live gaze hook required; diagnostic route is separate')
+    cpp=cpp[:start]+live.replace(SNAP,SMOOTH,1)+cpp[end:]
     cpp=cpp.replace(include,include+'\n#include "Sub01FirstPersonMotionPolicy.h"',1)
-    return header,cpp.replace(SNAP,SMOOTH,1).replace(SWAY,AUTHORED_ONLY,1)
+    return header,cpp.replace(SWAY,AUTHORED_ONLY,1)

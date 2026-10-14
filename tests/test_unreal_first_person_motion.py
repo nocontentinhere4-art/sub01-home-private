@@ -37,10 +37,12 @@ def test_install_keeps_real_physics_manual_input_and_original_authored_clips():
  from tools import stage_unreal_home_runtime as base
  from tools.unreal_live_home_runtime import METHODS as live
  from tools.unreal_home_hands_runtime import CHARACTER_METHODS as hands
- cpp=base.CPP+live+hands
+ from tools.unreal_native_route import METHODS as route
+ cpp=base.CPP+live+hands+route
  header,result=motion.install(base.HEADER,cpp)
  assert header==base.HEADER
- assert motion.SNAP not in result and motion.SWAY not in result
+ assert result.count(motion.SNAP)==1 and motion.SWAY not in result
+ assert route in result # Route diagnostic remains unchanged; only Live mode is smoothed.
  for unchanged in ['Movement->MaxWalkSpeed=140; Movement->MaxAcceleration=450;',
                    'Movement->BrakingDecelerationWalking=700; Movement->MaxStepHeight=22;',
                    'Input->BindAxis("Turn",this,&APawn::AddControllerYawInput);',
