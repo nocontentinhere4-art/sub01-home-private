@@ -576,7 +576,8 @@ def test_finger_deltas_are_added_constant_and_keep_the_captured_variation(gaming
     hands = F.Hands.from_owner()
     axes = DG.finger_axes(c, hands)
     q, per = DG.apply_finger_deltas(c.q, c, axes, {'Right': {'Thumb': (10., -6.), 'Index': (-8., 0.)}})
-    assert per['RightHandThumb1'] == {'curl_deg': 10., 'spread_deg': -6.} and per['RightHandThumb3']['spread_deg'] == 0
+    assert np.allclose(per['RightHandThumb1']['curl_deg'], 10.) and np.allclose(per['RightHandThumb1']['spread_deg'], -6.)
+    assert np.allclose(per['RightHandThumb3']['spread_deg'], 0)
     for n, expect in (('RightHandThumb2', 10.), ('RightHandIndex3', 8.)):
         i = c.index[n]
         # delta is the same every frame: relative rotation captured->derived is constant (smooth by construction)
@@ -607,6 +608,14 @@ def test_committed_derived_clip_report_is_consistent_and_honest():
     assert r['failing_frames'] == [p['frame'] for p in r['per_frame'] if not p['pass']]
     assert r['bone_length_max_error_cm'] < 1e-6 and r['upper_body_max_world_change'] == 0
     assert r['finger_deltas_deg']['max_abs_deg'] <= 15 + 1e-9 and r['controller']['oversized'] is False
+    assert r['finger_deltas_deg'].get('max_rate_deg_per_frame', 0) <= DG.MAX_DELTA_RATE_DEG_PER_FRAME
+    assert r['loop_seam_max_jump_deg']['derived'] <= r['loop_seam_max_jump_deg']['captured'] + 1.0
+    per = r['finger_deltas_deg'].get('per_joint_per_frame')
+    if per:
+        for v in per.values():
+            for k in ('curl_deg', 'spread_deg'):
+                a = np.array(v[k])
+                assert len(a) == 152 and np.abs(a).max() <= 15 + 1e-9 and np.abs(np.diff(a)).max() <= DG.MAX_DELTA_RATE_DEG_PER_FRAME
     assert r['controller']['width_cm'] == pytest.approx(15.38, abs=.01) and r['gates']['compression_allowance_beyond_band_cm'] == 0
     assert r['source_clip']['sha256'] == play.GAMING_OWNER_GLB_SHA256
     for p in r['per_frame']:
@@ -618,3 +627,15 @@ def test_committed_derived_clip_report_is_consistent_and_honest():
     if not r['all_frames_pass']:
         with pytest.raises(ValueError):
             play.validate_grip(r)
+
+
+def test_delta_smoothing_is_periodic_and_bounded():
+    x = np.zeros(40)
+    x[5] = 10
+    y = DG.gaussian_smooth(x, DG.SMOOTH_SIGMA_FRAMES)
+    assert y.sum() == pytest.approx(10) and y.max() < 10 and np.abs(np.diff(y)).max() < 2.5
+    assert np.allclose(DG.gaussian_smooth(np.full(30, 3.), 2.), 3.)
+    z = np.zeros(40)
+    z[0] = 10                                    # mass near the seam wraps to the end, keeping the loop continuous
+    w = DG.gaussian_smooth(z, 2.)
+    assert w[-1] == pytest.approx(w[1]) and w[-1] > 0

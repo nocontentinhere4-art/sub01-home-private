@@ -190,17 +190,26 @@ def apply_finger_deltas(q, clip: Clip, axes, deltas):
     """deltas: {'Left'/'Right': {finger: (curl_deg, spread_deg)}} -> new local q (curl on joints 1-3, spread on 1)."""
     q = q.copy()
     per_joint = {}
+    nf = len(q)
     for side, fingers in deltas.items():
         for f, (curl, spread) in fingers.items():
+            curl = np.broadcast_to(np.asarray(curl, float), (nf,))
+            spread = np.broadcast_to(np.asarray(spread, float), (nf,))
             for k in (1, 2, 3):
                 n = f'{side}Hand{f}{k}'
                 i = clip.index[n]
-                d = q_axis(axes[n]['curl_local'], curl)
-                if k == 1 and spread:
-                    d = q_mul(d, q_axis(axes[n]['spread_local'], spread))
-                q[:, i] = q_mul(q[:, i], np.broadcast_to(d, q[:, i].shape))
-                per_joint[n] = {'curl_deg': float(curl), 'spread_deg': float(spread if k == 1 else 0.)}
+                d = q_axis_v(axes[n]['curl_local'], curl)
+                if k == 1:
+                    d = q_mul(d, q_axis_v(axes[n]['spread_local'], spread))
+                q[:, i] = q_mul(q[:, i], d)
+                per_joint[n] = {'curl_deg': curl.copy(), 'spread_deg': spread.copy() if k == 1 else np.zeros(nf)}
     return q, per_joint
+
+
+def q_axis_v(axis, deg):
+    axis = np.asarray(axis, float) / np.linalg.norm(axis)
+    h = np.radians(np.asarray(deg, float)) / 2
+    return np.concatenate([axis[None] * np.sin(h)[:, None], np.cos(h)[:, None]], 1)
 
 
 def solve_arm(clip: Clip, q, W, side, target):
@@ -271,7 +280,7 @@ class Derivation:
         J = sub.joint_worlds(self.names, W)
         return q, W, J, C, targets, hf, reach, per_joint
 
-    def side_cost(self, side, Gs, deltas, frames, sub=3):
+    def side_cost(self, side, Gs, deltas, frames, sub=3, aim=(.5, .3)):
         """Contact cost of one hand in its own frame: depends only on its grip and finger deltas (IK is rigid on the hand)."""
         sub_clip = copy.copy(self.clip)
         sub_clip.q, sub_clip.t, sub_clip.s = self.clip.q[frames], self.clip.t[frames], self.clip.s[frames]
@@ -282,7 +291,7 @@ class Derivation:
         for f in range(len(frames)):
             loc = {k: F.apply(np.linalg.inv(H[f]), v) for k, v in
                    ((k[len(side) + 1:], self.hands.skin(k, J[f:f + 1])[0]) for k in self.hands.sets if k.startswith(side + '_'))}
-            costs.append(F.grip_cost(self.sdf, self.tg, side, loc, Gs, sub=sub, aim=(.5, .3)))
+            costs.append(F.grip_cost(self.sdf, self.tg, side, loc, Gs, sub=sub, aim=aim))
         return float(np.mean(costs) + np.max(costs))      # every frame matters, not only the average
 
     def metrics(self, J, C):
@@ -320,6 +329,55 @@ def optimise(d: Derivation, frames, rounds=3, iters=300, log=print):
     return grips['right'], grips['left'], {s.capitalize(): {f: tuple(v) for f, v in deltas[s].items()} for s in deltas}
 
 
+REFINE_KEY_STEP = 4            # per-frame refinement keys every 4 frames, linearly interpolated, then temporally filtered
+SMOOTH_SIGMA_FRAMES = 2.0
+MAX_DELTA_RATE_DEG_PER_FRAME = 1.5
+REFINE_AIM = (4., 3.)          # refinement pulls thumbs/index toward their gates harder than the contact-first base
+
+
+def gaussian_smooth(x, sigma):
+    r = int(3 * sigma)
+    k = np.exp(-.5 * (np.arange(-r, r + 1) / sigma) ** 2)
+    k /= k.sum()
+    pad = np.pad(x, (r, r), mode='wrap')            # the clip loops: filter across the seam
+    return np.convolve(pad, k, mode='valid')
+
+
+def refine(d: Derivation, grips, base, iters=150, log=print):
+    """Smooth per-frame finger delta keys on top of the constant base, bounded to |base + extra| <= 15 deg.
+
+    Keys every REFINE_KEY_STEP frames are optimised on the frames around them, linearly interpolated, Gaussian
+    filtered (sigma SMOOTH_SIGMA_FRAMES) and clipped; the captured variation stays (the delta is added)."""
+    nf = len(d.clip.times)
+    keys = list(range(0, nf, REFINE_KEY_STEP)) + ([nf - 1] if (nf - 1) % REFINE_KEY_STEP else [])
+    lim = FINGER_DELTA_MAX_DEG
+    out = {}
+    for side in ('right', 'left'):
+        S = side.capitalize()
+        b = np.array([base[S][f] for f in FINGERS], float).ravel()          # 10 params
+        extra = np.zeros((len(keys), 10))
+        prev = np.zeros(10)
+        for n, k in enumerate(keys):
+            near = sorted({max(0, k - 1), k, min(nf - 1, k + 1)})
+
+            def cost(p):
+                tot = np.clip(b + p, -lim, lim)
+                dl = {f: (float(tot[2 * i]), float(tot[2 * i + 1])) for i, f in enumerate(FINGERS)}
+                return d.side_cost(side, grips[side], dl, near, sub=2, aim=REFINE_AIM) + .01 * float(((p - prev) ** 2).sum()) + .002 * float((p ** 2).sum())
+            x, v = F.nelder_mead(cost, prev, [3.] * 10, iters)
+            extra[n] = np.clip(b + x, -lim, lim) - b
+            prev = extra[n]
+        # periodic keys: the last frame takes the first key's value, so the loop seam stays continuous
+        kx = np.array(keys[:-1] + [nf - 1]) if keys[-1] == nf - 1 else np.array(keys + [nf - 1])
+        ky = np.vstack([extra[:len(kx) - 1], extra[:1]])
+        dense = np.stack([np.interp(np.arange(nf), kx, ky[:, j]) for j in range(10)], 1)
+        dense = np.stack([gaussian_smooth(dense[:, j], SMOOTH_SIGMA_FRAMES) for j in range(10)], 1)
+        tot = np.clip(b[None] + dense, -lim, lim)
+        out[S] = {f: (tot[:, 2 * i], tot[:, 2 * i + 1]) for i, f in enumerate(FINGERS)}
+        log(f'refine {side}: max |extra| {np.abs(dense).max():.2f} deg, max rate {np.abs(np.diff(tot, axis=0)).max():.3f} deg/frame')
+    return out
+
+
 def bound_report(d: Derivation, hf, targets, reach):
     rows = []
     for f in range(len(targets['right'])):
@@ -338,11 +396,20 @@ def seam(q0, q1, names_idx):
     return float(max(G.qangle_deg(tuple(q0[i]), tuple(q1[i])) for i in names_idx))
 
 
-def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print):
+def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print, refine_iters=150, start=None):
     d = Derivation(clip, controller)
     nfr = len(d.clip.times)
     frames = list(np.unique(np.linspace(0, nfr - 1, sample).astype(int)))
-    X, GL, deltas = optimise(d, frames, rounds, iters, log)
+    if start:
+        X, GL = np.array(start['fixed_offset']['controller_in_right_hand_gltf']), np.array(start['left_grip_gltf'])
+        deltas = {S: {f: tuple(v) for f, v in fs.items()} for S, fs in start['base_finger_deltas_deg'].items()}
+    else:
+        X, GL, deltas = optimise(d, frames, rounds, iters, log)
+    base = deltas
+    if start is None:
+        frames = frames
+    if refine_iters:
+        deltas = refine(d, {'right': X, 'left': GL}, base, refine_iters, log)
     q, W, J, C, targets, hf0, reach, per_joint = d.build(X, GL, deltas)
     hf_after = d.hand_frames(J)
     rows = d.metrics(J, C)
@@ -396,10 +463,13 @@ def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print
               'fixed_offset': {'controller_in_right_hand_gltf': X.tolist(), 'max_translation_cm': var_t, 'max_rotation_deg': var_r,
                                'holds': bool(var_t <= .3 and var_r <= 1.)},
               'left_grip_gltf': GL.tolist(),
-              'finger_deltas_deg': {'rule': 'constant per joint over the clip (smooth by construction), added to the captured local rotation',
-                                    'per_joint': per_joint, 'max_abs_deg': float(max([abs(v['curl_deg']) for v in per_joint.values()] +
-                                                                                     [abs(v['spread_deg']) for v in per_joint.values()] + [0])),
-                                    'per_frame': 'identical every frame (constant delta)'},
+              'base_finger_deltas_deg': {S: {f: [float(np.mean(v[0])), float(np.mean(v[1]))] for f, v in fs.items()} for S, fs in base.items()},
+              'finger_deltas_deg': {'rule': 'constant base + smooth per-frame keys (every %d frames, Gaussian sigma %.1f), added to the captured local rotation' % (REFINE_KEY_STEP, SMOOTH_SIGMA_FRAMES)
+                                    if refine_iters else 'constant per joint over the clip, added to the captured local rotation',
+                                    'max_abs_deg': float(max(max(np.abs(v['curl_deg']).max(), np.abs(v['spread_deg']).max()) for v in per_joint.values())),
+                                    'max_rate_deg_per_frame': float(max(max(np.abs(np.diff(v['curl_deg'])).max(), np.abs(np.diff(v['spread_deg'])).max()) for v in per_joint.values())),
+                                    'per_joint_per_frame': {n: {'curl_deg': [round(float(x), 4) for x in v['curl_deg']], 'spread_deg': [round(float(x), 4) for x in v['spread_deg']]}
+                                                            for n, v in per_joint.items()}},
               'captured_finger_variation': var,
               'bone_length_max_error_cm': 100 * max(bl), 'upper_body_max_world_change': upper_err,
               'loop_seam_max_jump_deg': {'captured': seam(d.clip.q[-1], d.clip.q[0], edited), 'derived': seam(q[-1], q[0], edited)},
@@ -420,7 +490,7 @@ def write_glb(d: Derivation, q, report, out):
     doc = copy.deepcopy(d.clip.g.doc)
     binary = bytearray(d.clip.g.buffers[0])
     anim = doc['animations'][0]
-    edited = {d.clip.index[n] for n in report['finger_deltas_deg']['per_joint']} | {d.clip.index[f'{s}{b}'] for s in ('Left', 'Right') for b in ('Arm', 'ForeArm', 'Hand')}
+    edited = {d.clip.index[n] for n in report['finger_deltas_deg']['per_joint_per_frame']} | {d.clip.index[f'{s}{b}'] for s in ('Left', 'Right') for b in ('Arm', 'ForeArm', 'Hand')}
     by_node = {(c['target']['node'], c['target']['path']): c for c in anim['channels']}
     for i in sorted(edited):
         ch = by_node.get((i, 'rotation'))
@@ -444,6 +514,17 @@ def write_glb(d: Derivation, q, report, out):
     return G.write_glb(out, doc, bytes(binary))
 
 
+def start_from(report):
+    """Fixed offset, left grip and constant base deltas of a previous derived report."""
+    if 'base_finger_deltas_deg' in report:
+        base = report['base_finger_deltas_deg']
+    else:
+        pj = report['finger_deltas_deg'].get('per_joint') or report['finger_deltas_deg']['per_joint_per_frame']
+        val = lambda x: float(np.mean(x))  # noqa: E731
+        base = {S: {f: [val(pj[f'{S}Hand{f}1']['curl_deg']), val(pj[f'{S}Hand{f}1']['spread_deg'])] for f in FINGERS} for S in ('Right', 'Left')}
+    return {'fixed_offset': report['fixed_offset'], 'left_grip_gltf': report['left_grip_gltf'], 'base_finger_deltas_deg': base}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--clip', default=str(CLIP))
@@ -451,11 +532,14 @@ def main(argv=None):
     ap.add_argument('--sample', type=int, default=10)
     ap.add_argument('--rounds', type=int, default=3)
     ap.add_argument('--iters', type=int, default=300)
+    ap.add_argument('--refine-iters', type=int, default=150, help='0: constant deltas only')
+    ap.add_argument('--start', help='a previous derived report: reuse its fixed offset, left grip and base deltas')
     ap.add_argument('--out-glb', default=str(OUT_GLB))
     ap.add_argument('--out-report', default=str(OUT_REPORT))
     args = ap.parse_args(argv)
+    start = start_from(json.loads(Path(args.start).read_text())) if args.start else None
     d, q, report = derive(Path(args.clip), args.controller, args.sample, args.rounds, args.iters,
-                          log=lambda m: print(m, file=sys.stderr, flush=True))
+                          log=lambda m: print(m, file=sys.stderr, flush=True), refine_iters=args.refine_iters, start=start)
     report['output_glb_sha256'] = write_glb(d, q, report, args.out_glb)
     report['output_glb'] = str(Path(args.out_glb).relative_to(ROOT)) if Path(args.out_glb).is_relative_to(ROOT) else args.out_glb
     Path(args.out_report).write_text(json.dumps(report, indent=0) + '\n')
