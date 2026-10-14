@@ -232,7 +232,7 @@ def test_private_bathroom_movement_control_and_feedback_do_not_unmask_devices():
             command_response = await direct.get('/api/home/native_command', headers=AUTH)
             assert command_response.headers['Cache-Control'] == 'no-store'
             command = await command_response.json()
-            assert command == {'target':'bathroom','sequence':world.sequence,'activity':'use_bathroom'}
+            assert command == {'target':'bathroom','sequence':world.sequence,'activity':'use_bathroom','privacy':True}
             response = await client.get('/home/native_control', headers=AUTH)
             assert response.status == 200 and response.headers['Cache-Control'] == 'no-store'
             control = await response.json()
@@ -240,6 +240,14 @@ def test_private_bathroom_movement_control_and_feedback_do_not_unmask_devices():
                                'coordinates':{'units':'cm','waypoint_height':'floor'},
                                'privacy':True,'actor':{'target':'bathroom','route_sequence':world.sequence},
                                'brain':{'activity':'use_bathroom'}}
+            # Backend privacy wins when its next public bridge tick is delayed.
+            model.home['privacy'] = False; model.refresh()
+            assert (await (await client.get('/home/native_control',headers=AUTH)).json())['privacy'] is True
+            world.node=world.target='desk'; world.position=list(NODES['desk']); world.activity='research'
+            model.home['privacy'] = True; model.refresh()
+            exited = await (await client.get('/home/native_control',headers=AUTH)).json()
+            assert exited['privacy'] is False and exited['actor']['target'] == 'desk'
+            world.node=world.target='bathroom'; world.position=list(NODES['bathroom']); world.activity='use_bathroom'
             assert (await client.post('/home/native_state', headers=AUTH, json=report('walking',bind=True,node='bath_door'))).status == 200
             assert not world.activity_ready()
             world.bladder = .9

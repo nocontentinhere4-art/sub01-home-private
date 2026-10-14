@@ -56,13 +56,16 @@ until explicitly bound again.
 
 `GET /api/home/native_command` requires the existing admin credential and an
 actual loopback peer. It reads the real HomeWorld object and returns exactly
-`target`, `sequence`, and `activity`, including during bathroom privacy.
+`target`, `sequence`, `activity`, and the current authoritative `privacy` boolean,
+including during bathroom privacy.
 `GET /home/native_control` applies the same access restrictions and retrieves
 that command from the real backend. Its document contains only schema, bridge
-epoch, live source status, privacy flag, actor target/route sequence, brain
+epoch, live source status, the freshly fetched backend privacy flag, actor target/route sequence, brain
 activity, and constant unit labels (`cm`, `floor`). No physical position,
 waypoint coordinates, path, screens or notes are included. Both responses use
 `Cache-Control: no-store`. The ordinary `/home/state` document stays masked.
+Native control does not reuse the cached public-state privacy flag: entering or
+leaving the bathroom is reflected even before the next bridge state tick.
 
 During privacy, feedback is permitted only for the actual bathroom destination
 and `use_bathroom` activity, phases walking/arrived/blocked, with no chair.

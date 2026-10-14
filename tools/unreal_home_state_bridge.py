@@ -538,9 +538,10 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
             command = json.loads(text) if status == 200 else None
         except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
             raise web.HTTPServiceUnavailable(text='Home command unavailable')
-        if (not isinstance(command, dict) or set(command) != {'target', 'sequence', 'activity'}
+        if (not isinstance(command, dict) or set(command) != {'target', 'sequence', 'activity', 'privacy'}
                 or not isinstance(command['target'], str) or command['target'] not in NODES
-                or type(command['sequence']) is not int or not isinstance(command['activity'], str)):
+                or type(command['sequence']) is not int or not isinstance(command['activity'], str)
+                or type(command['privacy']) is not bool):
             raise web.HTTPServiceUnavailable(text='Home command unavailable')
         return command
 
@@ -557,7 +558,7 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
             raise web.HTTPConflict(text='Native control requires live source')
         command = await read_native_command(request)
         return web.json_response({'schema': SCHEMA, 'epoch': model.epoch,
-            'source': {'status': 'live'}, 'privacy': doc['privacy'],
+            'source': {'status': 'live'}, 'privacy': command['privacy'],
             'coordinates': {'units': 'cm', 'waypoint_height': 'floor'},
             'actor': {'target': command['target'], 'route_sequence': command['sequence']},
             'brain': {'activity': command['activity']}}, headers={'Cache-Control': 'no-store'})

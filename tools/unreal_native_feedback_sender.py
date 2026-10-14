@@ -44,7 +44,9 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
   if(!LiveHome||LiveHomeEpoch!=Epoch||LiveHomeCommandSequence!=Sequence||LiveHomeActivity!=Activity)return;
   const double Age=FPlatformTime::Seconds()-LiveHomeLastReceived;
   const bool PrivateBathroom=LiveHomePrivate&&LiveHomeTarget==TEXT("bathroom")&&LiveHomeActivity==TEXT("use_bathroom");
-  if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!LiveHomeFresh||(LiveHomePrivate&&!PrivateBathroom)||Age<0||Age>3){
+  TSharedPtr<FJsonObject> Ack;bool Accepted=false;double Lifetime=-1;
+  const bool AckValid=Ok&&Response.IsValid()&&Response->GetResponseCode()==200&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Response->GetContentAsString()),Ack)&&Ack.IsValid()&&Ack->TryGetBoolField(TEXT("ok"),Accepted)&&Accepted&&Ack->TryGetNumberField(TEXT("fresh_for_s"),Lifetime)&&Lifetime==3;
+  if(!AckValid||!LiveHomeFresh||(LiveHomePrivate&&!PrivateBathroom)||Age<0||Age>3){
    NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);return;
   }
   NativeFeedbackBound=true;NativeFeedbackLastAck=FPlatformTime::Seconds();NativeFeedbackAckPhase=Phase;
