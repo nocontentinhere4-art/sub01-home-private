@@ -44,24 +44,45 @@ def test_in_band_patches_are_reported_as_probe_only():
 def test_one_buttock_touching_while_the_thighs_float_is_refused():
     # docs/qa/contact.md rule 4: a lowest-point measure would accept this pose.
     data = report(left_posterior_thigh=(1.5, 2.2), right_posterior_thigh=(1.4, 2.0))
-    with pytest.raises(ValueError, match='posterior_thigh: gap'):
+    with pytest.raises(ValueError, match='posterior_thigh: no support patch'):
         seat.validate(data)
 
 
 @pytest.mark.parametrize('change,match', [
     (dict(buttocks=(-2.6, -.5)), 'penetration'),
     (dict(left_sole=(-.2, .2)), 'penetration'),
-    (dict(right_sole=(.9, 1.4)), 'gap'),
+    (dict(right_sole=(1.2, 1.4)), 'no support patch'),
 ])
 def test_band_edges_of_each_patch(change, match):
     with pytest.raises(ValueError, match=match):
         seat.validate(report(**change))
 
 
+def test_genuine_toe_plant_with_raised_heel_is_a_support_patch():
+    # Measured actual typing soles: lowest ~0 cm, median ~10.4 / 7.5 cm (toes planted, heel raised).
+    data = report(left_sole=(.02, 10.4), right_sole=(.04, 7.5))
+    for row in data['samples']:
+        for r in row['regions']:
+            if r['region'].endswith('sole'):
+                r['bandVertices'] = 40                       # toe-edge support patch only
+    assert seat.validate(data)['worst']['left_sole']['max_median_gap_cm'] == 10.4
+    for row in data['samples']:
+        for r in row['regions']:
+            if r['region'] == 'right_sole':
+                r['bandVertices'] = seat.MIN_SUPPORT_VERTICES - 1   # a point, not a patch
+    with pytest.raises(ValueError, match='right_sole: no support patch'):
+        seat.validate(data)
+    # A curved buttock resting locally (median well above the cushion) is a support patch too...
+    assert seat.validate(report(buttocks=(-1.0, 3.0)))['worst']['buttocks']['max_median_gap_cm'] == 3.0
+    # ...but not one hovering above it.
+    with pytest.raises(ValueError, match='buttocks: no support patch'):
+        seat.validate(report(buttocks=(.7, 3.0)))
+
+
 def test_coverage_and_patch_size_are_required_in_every_sample():
     data = report()
-    data['samples'][150]['regions'][0]['bandVertices'] = 40            # 20% of the buttocks in contact
-    with pytest.raises(ValueError, match='20% of the patch'):
+    data['samples'][150]['regions'][0]['bandVertices'] = 5             # a few points, not a support patch
+    with pytest.raises(ValueError, match='buttocks: no support patch'):
         seat.validate(data)
     data = report()
     data['samples'][9]['regions'][2]['overSurfaceVertices'] = 3        # thigh barely over the cushion
@@ -75,9 +96,10 @@ def test_coverage_and_patch_size_are_required_in_every_sample():
 
 @pytest.mark.parametrize('override,delta,diagnosis', [
     ({}, 0.0, 'within bands'),
-    # Whole body floating 1.5 cm above cushion and floor: lower it by 1 cm.
+    # Whole body hovering (lowest seat skin 1.0 cm, soles 1.2 cm): lowering 0.5 cm makes every
+    # local support patch touch (diagnostic only; the fitter decides how, never a hidden lift).
     (dict(buttocks=(1.0, 1.5), left_posterior_thigh=(1.0, 1.5), right_posterior_thigh=(1.0, 1.5),
-          left_sole=(1.2, 1.5), right_sole=(1.2, 1.5)), -1.0, 'translate the whole seated body by -1.000 cm'),
+          left_sole=(1.2, 1.5), right_sole=(1.2, 1.5)), -0.5, 'translate the whole seated body by -0.500 cm'),
     # Seated correctly but feet hanging 3 cm: no translation can fix both.
     (dict(left_sole=(3.0, 3.2), right_sole=(3.0, 3.3)), None, 'knee/ankle pose'),
     # Buttocks deep while thighs float: pelvis/thigh pose, not a translation.

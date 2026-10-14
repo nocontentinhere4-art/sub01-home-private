@@ -1,0 +1,903 @@
+{
+ "role": "SeatedIdle",
+ "asset": "/Game/Sub01Hands/Seating/SUB01_SeatedIdle",
+ "labels": {
+  "label": "trial",
+  "verified": false,
+  "requires_server_reaudit": true,
+  "requires_native_collision_audit": true,
+  "cushion": "root chair surface report (actual UE cushion triangles)",
+  "cushion_is_proxy": false,
+  "chair_horizontal_shift_cm": [
+   3.875,
+   -32.5
+  ],
+  "role": "SeatedIdle",
+  "source_clip": "web/room/mh_mx/room_seated_idle.glb",
+  "corrections": [
+   "pelvis_pitch_about_hips_lateral_axis_pivot_spine",
+   "vertical_lowering",
+   "spine_counter_rotation_keeps_upper_body_world_orientation",
+   "non_stretch_two_bone_leg_ik_captured_knee_pole_captured_foot_world_rotation",
+   "constant_per_leg_foot_raise_to_support",
+   "seam_blend"
+  ],
+  "theta_deg": [
+   22.0,
+   24.0
+  ],
+  "lowering_cm": [
+   7.136,
+   7.4223
+  ],
+  "foot_raise_cm": {
+   "left": 2.7291,
+   "right": 2.88695
+  },
+  "source_window_s": [
+   0.0,
+   4.1667
+  ]
+ },
+ "correction_curve": {
+  "per_frame": {
+   "theta_needed_deg": [
+    24.0,
+    24.0,
+    24.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0
+   ],
+   "theta_deg": [
+    24.0,
+    24.0,
+    24.0,
+    23.8682,
+    23.7589,
+    23.5976,
+    23.3846,
+    23.133,
+    22.867,
+    22.6154,
+    22.4024,
+    22.2411,
+    22.1318,
+    22.0655,
+    22.0295,
+    22.012,
+    22.0044,
+    22.0014,
+    22.0004,
+    22.0001,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0001,
+    22.0004,
+    22.0014,
+    22.0044,
+    22.012,
+    22.0295,
+    22.0655,
+    22.1318,
+    22.2411,
+    22.4024,
+    22.6154,
+    22.867,
+    23.133,
+    23.3846,
+    23.5976,
+    23.7589,
+    23.8682,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    23.9996,
+    23.9999,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0,
+    24.0
+   ],
+   "lowering_cm": [
+    7.3891,
+    7.3994,
+    7.4067,
+    7.3922,
+    7.3782,
+    7.3552,
+    7.327,
+    7.2919,
+    7.2559,
+    7.2234,
+    7.1976,
+    7.1783,
+    7.1632,
+    7.1522,
+    7.1465,
+    7.1447,
+    7.1432,
+    7.1407,
+    7.1398,
+    7.1431,
+    7.1493,
+    7.153,
+    7.151,
+    7.1466,
+    7.1454,
+    7.1477,
+    7.1494,
+    7.1487,
+    7.1471,
+    7.1464,
+    7.1462,
+    7.1456,
+    7.1454,
+    7.1462,
+    7.1479,
+    7.1494,
+    7.1488,
+    7.1456,
+    7.1427,
+    7.1431,
+    7.1446,
+    7.1435,
+    7.14,
+    7.1369,
+    7.136,
+    7.1373,
+    7.1411,
+    7.1486,
+    7.1606,
+    7.1768,
+    7.1972,
+    7.2222,
+    7.2519,
+    7.2874,
+    7.3275,
+    7.3627,
+    7.3883,
+    7.4024,
+    7.4185,
+    7.4163,
+    7.4144,
+    7.4134,
+    7.415,
+    7.4188,
+    7.4218,
+    7.4223,
+    7.4213,
+    7.4193,
+    7.4175,
+    7.4172,
+    7.4175,
+    7.4168,
+    7.414,
+    7.411,
+    7.4091,
+    7.408,
+    7.4067,
+    7.406,
+    7.4065,
+    7.4059,
+    7.4034,
+    7.4012,
+    7.4014,
+    7.4024,
+    7.402,
+    7.3994,
+    7.3962,
+    7.3938,
+    7.3931,
+    7.3942,
+    7.3959,
+    7.3967,
+    7.3968,
+    7.3972,
+    7.3979,
+    7.3981,
+    7.3975,
+    7.3963,
+    7.3948,
+    7.3934,
+    7.3919,
+    7.3901,
+    7.3886,
+    7.3888,
+    7.3909,
+    7.3928,
+    7.3929,
+    7.3927,
+    7.3944,
+    7.3976,
+    7.3997,
+    7.3996,
+    7.3987,
+    7.399,
+    7.4011,
+    7.4033,
+    7.4032,
+    7.4018,
+    7.4015,
+    7.4033,
+    7.4048,
+    7.4035,
+    7.4002,
+    7.3974,
+    7.396,
+    7.395
+   ],
+   "theta_range_deg": [
+    22.0,
+    24.0
+   ],
+   "lowering_range_cm": [
+    7.136,
+    7.4223
+   ],
+   "lowering_max_rate_cm_s": 1.202,
+   "theta_max_rate_deg_s": 7.979
+  }
+ },
+ "in_memory_all_keys": {
+  "frames": 126,
+  "seated_frames": 126,
+  "seat": {
+   "buttocks": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.0365,
+      0.0993
+     ],
+     "min_band_vertices": 16,
+     "min_over_surface_vertices": 1235
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      6.0319,
+      6.0852
+     ],
+     "min_over_surface_vertices": 1358
+    }
+   },
+   "left_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -1.6197,
+      -1.5603
+     ],
+     "min_band_vertices": 587,
+     "min_over_surface_vertices": 2265
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      1.8652,
+      1.9244
+     ],
+     "min_over_surface_vertices": 3099
+    }
+   },
+   "right_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -2.0993,
+      -2.0367
+     ],
+     "min_band_vertices": 815,
+     "min_over_surface_vertices": 2485
+    },
+    "raw": {
+     "pass_frames": 14,
+     "lowest_gap_cm": [
+      0.4341,
+      0.4867
+     ],
+     "min_over_surface_vertices": 3462
+    }
+   }
+  },
+  "soles": {
+   "left_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0049
+     ],
+     "min_band_vertices": 103
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.7281,
+      -2.7242
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   },
+   "right_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0018
+     ],
+     "min_band_vertices": 179
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.8859,
+      -2.8851
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   }
+  },
+  "bone_length_max_error_cm": 0.0,
+  "foot_world_rotation_max_change_deg": 1.7e-06,
+  "upper_body_world": {
+   "rotation_max_change_deg": {
+    "Spine": 1.2e-06,
+    "Spine1": 1.2e-06,
+    "Spine2": 1.2e-06,
+    "Neck": 1.2e-06,
+    "Head": 1.2e-06,
+    "LeftShoulder": 1.7e-06,
+    "RightShoulder": 1.2e-06
+   },
+   "spine_translation_cm": {
+    "vertical": [
+     -7.4223,
+     -7.136
+    ],
+    "horizontal_max": 0.0
+   }
+  },
+  "head_height_change_cm": [
+   -7.4223,
+   -7.136
+  ],
+  "note": "every key of the written clip in memory; over-key contact is gated where the hand is over the keys"
+ },
+ "seam": {
+  "raw": {
+   "pose_cm": 0.00633,
+   "hips_world_cm": 0.00575,
+   "velocity_cm_s": 3.05584,
+   "pass": true
+  },
+  "loop_gate": true
+ },
+ "glb": "docs/proposed/seat-pose-fit/SUB01_SeatedIdle.glb",
+ "sha256": "57ba5e1be7a392b3889c8a875f993d39a808fee87f12a4e25d6f70a62b47a156",
+ "bytes": 160036,
+ "key_count": 126,
+ "duration_s": 4.1667,
+ "audit": {
+  "times": "every written key",
+  "read_back_from_written_glb": true,
+  "frames": 126,
+  "seated_frames": 126,
+  "seat": {
+   "buttocks": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.0365,
+      0.0993
+     ],
+     "min_band_vertices": 16,
+     "min_over_surface_vertices": 1235
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      6.0319,
+      6.0852
+     ],
+     "min_over_surface_vertices": 1358
+    }
+   },
+   "left_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -1.6197,
+      -1.5603
+     ],
+     "min_band_vertices": 587,
+     "min_over_surface_vertices": 2265
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      1.8652,
+      1.9244
+     ],
+     "min_over_surface_vertices": 3099
+    }
+   },
+   "right_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -2.0993,
+      -2.0368
+     ],
+     "min_band_vertices": 815,
+     "min_over_surface_vertices": 2485
+    },
+    "raw": {
+     "pass_frames": 14,
+     "lowest_gap_cm": [
+      0.4341,
+      0.4867
+     ],
+     "min_over_surface_vertices": 3462
+    }
+   }
+  },
+  "soles": {
+   "left_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0049
+     ],
+     "min_band_vertices": 103
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.7281,
+      -2.7242
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   },
+   "right_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0018
+     ],
+     "min_band_vertices": 179
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.8859,
+      -2.8851
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   }
+  },
+  "bone_length_max_error_cm": 0.0,
+  "foot_world_rotation_max_change_deg": 7.3e-06,
+  "upper_body_world": {
+   "rotation_max_change_deg": {
+    "Spine": 3e-06,
+    "Spine1": 3e-06,
+    "Spine2": 3.2e-06,
+    "Neck": 3.2e-06,
+    "Head": 3.4e-06,
+    "LeftShoulder": 5.7e-06,
+    "RightShoulder": 6.6e-06
+   },
+   "spine_translation_cm": {
+    "vertical": [
+     -7.4223,
+     -7.136
+    ],
+    "horizontal_max": 6e-07
+   }
+  },
+  "head_height_change_cm": [
+   -7.4223,
+   -7.136
+  ],
+  "finger_local_max_change_deg": 2.4e-06
+ },
+ "all_gates_pass": true,
+ "hips_path_ue_cm": [
+  [
+   203.983,
+   -239.968,
+   67.292
+  ],
+  [
+   203.974,
+   -239.97,
+   67.283
+  ],
+  [
+   203.96,
+   -239.831,
+   67.318
+  ],
+  [
+   203.949,
+   -239.699,
+   67.359
+  ],
+  [
+   203.959,
+   -239.641,
+   67.385
+  ],
+  [
+   203.982,
+   -239.597,
+   67.4
+  ],
+  [
+   204.018,
+   -239.577,
+   67.409
+  ],
+  [
+   204.018,
+   -239.576,
+   67.407
+  ],
+  [
+   204.009,
+   -239.592,
+   67.402
+  ],
+  [
+   204.015,
+   -239.623,
+   67.387
+  ],
+  [
+   204.03,
+   -239.653,
+   67.375
+  ],
+  [
+   204.046,
+   -239.683,
+   67.366
+  ],
+  [
+   204.02,
+   -239.721,
+   67.352
+  ],
+  [
+   204.029,
+   -239.823,
+   67.321
+  ],
+  [
+   203.978,
+   -239.942,
+   67.285
+  ],
+  [
+   203.978,
+   -239.964,
+   67.282
+  ],
+  [
+   203.955,
+   -239.951,
+   67.286
+  ],
+  [
+   203.983,
+   -239.953,
+   67.284
+  ],
+  [
+   203.988,
+   -239.961,
+   67.284
+  ],
+  [
+   203.979,
+   -239.969,
+   67.285
+  ],
+  [
+   203.966,
+   -239.976,
+   67.287
+  ],
+  [
+   203.981,
+   -239.971,
+   67.294
+  ],
+  [
+   203.986,
+   -239.944,
+   67.313
+  ],
+  [
+   204.005,
+   -239.908,
+   67.325
+  ],
+  [
+   204.01,
+   -239.896,
+   67.334
+  ],
+  [
+   204.015,
+   -239.892,
+   67.335
+  ],
+  [
+   204.003,
+   -239.904,
+   67.327
+  ],
+  [
+   203.987,
+   -239.934,
+   67.31
+  ],
+  [
+   203.971,
+   -239.963,
+   67.291
+  ],
+  [
+   203.959,
+   -239.981,
+   67.284
+  ],
+  [
+   203.96,
+   -239.987,
+   67.282
+  ],
+  [
+   203.979,
+   -239.974,
+   67.294
+  ]
+ ]
+}

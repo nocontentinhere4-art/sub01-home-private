@@ -48,7 +48,7 @@ def test_area_loads_covers_places_and_fits_budget():
 
 
 def test_pages_draw_area_with_attribution():
-    for page in ("room.html", "life.html"):
+    for page in ("life.html",):              # room.html has no map any more (owner, 2026-10-13: no GPS display)
         t = (WEB / page).read_text()
         assert "tokyo_area.json" in t and "drawArea" in t, page
         assert "openstreetmap.org/copyright" in t and "contributors (ODbL)" in t, page

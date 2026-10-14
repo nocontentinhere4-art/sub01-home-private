@@ -101,7 +101,7 @@ def node_checks():
         text = path.read_text(errors="replace")
         if "home.js" in text or path.name in ("house_interactions_check.mjs", "house_controls_panel_check.mjs",
                                               "replaced_primitives_check.mjs", "furnishing_detail_check.mjs",
-                                              "bath_fixture_materials_check.mjs"):
+                                              "bath_fixture_materials_check.mjs", "eye_view_check.mjs"):
             found.append(path.relative_to(ROOT).as_posix())
     return found
 

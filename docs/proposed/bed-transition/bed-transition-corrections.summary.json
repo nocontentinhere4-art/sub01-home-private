@@ -1,0 +1,198 @@
+{
+ "accepted_for_binding": false,
+ "contact": {
+  "GetUp_before_ik": false,
+  "GetUp_corrected": true,
+  "GetUp_raw_end": false,
+  "LieDown_before_ik": false,
+  "LieDown_corrected": true,
+  "LieDown_raw": false
+ },
+ "continuity": {
+  "get_up_source_lying_head_speed_cm_s": {
+   "max": 26.251
+  },
+  "lie_down_end_vs_loop_start": {
+   "attitude_deg": 0.0,
+   "hips_world_distance_cm": 0.0,
+   "hips_world_offset_cm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pose_cm": 0.0,
+   "pose_rms_cm": 0.0,
+   "posture": [
+    "supine",
+    "supine"
+   ],
+   "velocity_mismatch_cm_s": 1.6934,
+   "world_max_joint_cm": 0.0
+  },
+  "loop_end_vs_get_up_start": {
+   "attitude_deg": 0.0,
+   "hips_world_distance_cm": 0.0,
+   "hips_world_offset_cm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pose_cm": 0.0,
+   "pose_rms_cm": 0.0,
+   "posture": [
+    "supine",
+    "supine"
+   ],
+   "velocity_mismatch_cm_s": 1.6967,
+   "world_max_joint_cm": 0.0
+  },
+  "loop_own_joint_speed_cm_s": {
+   "max": 8.102,
+   "median": 1.505
+  },
+  "raw_b7b099b_blend_peaks_cm_s": {
+   "lie_blend": 204,
+   "source": "docs/proposed/bed-transition-pipeline.md",
+   "wake_blend": 231
+  },
+  "seams": {
+   "lie_down_into_loop": {
+    "frames": [
+     459,
+     464
+    ],
+    "max_joint_acceleration_cm_s2": 63.578,
+    "max_joint_speed_cm_s": 2.121,
+    "max_root_step_cm": 0.0091
+   },
+   "loop_into_get_up": {
+    "frames": [
+     517,
+     522
+    ],
+    "max_joint_acceleration_cm_s2": 63.282,
+    "max_joint_speed_cm_s": 2.111,
+    "max_root_step_cm": 0.0091
+   },
+   "loop_itself": {
+    "frames": [
+     461,
+     519
+    ],
+    "max_joint_acceleration_cm_s2": 164.855,
+    "max_joint_speed_cm_s": 8.102,
+    "max_root_step_cm": 0.071
+   },
+   "settle_window": {
+    "frames": [
+     386,
+     461
+    ],
+    "max_joint_acceleration_cm_s2": 159.056,
+    "max_joint_speed_cm_s": 15.144,
+    "max_root_step_cm": 0.0925
+   },
+   "whole_clip": {
+    "max_joint_acceleration_cm_s2": 7274.168,
+    "max_joint_speed_cm_s": 396.909,
+    "max_root_step_cm": 2.2926
+   }
+  },
+  "settle": {
+   "frames": 75,
+   "lie_frame": 386,
+   "loop_phase_at_end": 0,
+   "loop_phase_at_start": 41,
+   "peak_joint_speed_hips_relative_cm_s": 15.144,
+   "peak_joint_speed_world_cm_s": 9.467,
+   "pose_gap_cm": 19.274,
+   "seconds": 2.5,
+   "weight": "smootherstep (C2); lie-down held at its captured frame, loop advancing"
+  },
+  "settle_options": {
+   "1.5s": {
+    "frames": 45,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 13,
+    "peak_joint_speed_hips_relative_cm_s": 24.339,
+    "peak_joint_speed_world_cm_s": 15.846,
+    "pose_gap_cm": 19.549
+   },
+   "2.0s": {
+    "frames": 60,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 56,
+    "peak_joint_speed_hips_relative_cm_s": 18.513,
+    "peak_joint_speed_world_cm_s": 11.97,
+    "pose_gap_cm": 19.674
+   },
+   "2.5s": {
+    "frames": 75,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 41,
+    "peak_joint_speed_hips_relative_cm_s": 15.144,
+    "peak_joint_speed_world_cm_s": 9.467,
+    "pose_gap_cm": 19.274
+   }
+  }
+ },
+ "outputs": {
+  "GetUp": {
+   "in_place": {
+    "bytes": 416272,
+    "duration_s": 12.2,
+    "frames": 367,
+    "path": "docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb",
+    "sha256": "256142f9c84c0813d64b0a57aff8cf092c6fe20831600cc48cc0e3be8896a76e"
+   },
+   "travel_in_hips": {
+    "bytes": 416292,
+    "duration_s": 12.2,
+    "frames": 367,
+    "path": "docs/proposed/bed-transition/SUB01_GetUp.corrected.travel_in_hips.glb",
+    "sha256": "4b5f847a3a8a41fa480d107fe3edeca8e2d06fbbb3333d6f86f8489132a00fea"
+   }
+  },
+  "LieDown": {
+   "in_place": {
+    "bytes": 516608,
+    "duration_s": 15.3667,
+    "frames": 462,
+    "path": "docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb",
+    "sha256": "5aa10162601b160cbf75f4d1ef3ce259fab3f1fd1600490787be4a51332a613a"
+   },
+   "travel_in_hips": {
+    "bytes": 516624,
+    "duration_s": 15.3667,
+    "frames": 462,
+    "path": "docs/proposed/bed-transition/SUB01_LieDown.corrected.travel_in_hips.glb",
+    "sha256": "7dc1953cdd5cb05aa6ca116c8b581390b8202ddba0186ca42a978e6702aecaa7"
+   }
+  },
+  "SleepLoop": {
+   "in_place": {
+    "bytes": 90808,
+    "duration_s": 1.9333,
+    "frames": 59,
+    "path": "docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb",
+    "sha256": "f6dafbff7a2e04dd5d72c2c0155dfd40f7a9cf8d2bd46aded6ab819eaca498cc"
+   },
+   "travel_in_hips": {
+    "bytes": 90824,
+    "duration_s": 1.9333,
+    "frames": 59,
+    "path": "docs/proposed/bed-transition/SUB01_SleepLoop.corrected.travel_in_hips.glb",
+    "sha256": "e680d6f2e8769c5a27cc32c68b060557aee2a5e9ffd24709631f91dc75408cd3"
+   }
+  }
+ },
+ "provenance_label": "derived_library_asset",
+ "return_residual_cm": [
+  27.145,
+  0.351
+ ],
+ "schema": "sub01.bed-transition-corrections.v1"
+}

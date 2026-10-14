@@ -629,7 +629,8 @@ def test_room_handles_the_night_and_brain_says_a_word_reaches_him_through_the_sl
     assert 'if (m.type === "eye") { onEye(m); return; }' in room and 'if (m.type === "nights") { onNights(m); return; }' in room
     assert 'id="dream"' in room and 'id="night"' in room
     dc = _js_function(room, "function dreamCard(")
-    assert 'stage !== "AWAKE"' in dc and "not a mind" in room[room.index('id="dream"') - 200:room.index('id="dream"') + 200]
+    # owner 2026-10-13: the eye card follows eye_state (open only asleep or outside), not the stage alone
+    assert 'eyeMode !== "off"' in dc and "not a mind" in room[room.index('id="dream"') - 200:room.index('id="dream"') + 200]
     assert 'nights.tonight' in _js_function(room, "function nightLine(")
     assert "reaches his activity model when he wakes" in room
     brain = (WEB / "index.html").read_text()

@@ -34,7 +34,7 @@ from brain_sim import Brain
 from chat import (RULES, TEACH_MAX_WORDS, TEACH_PER_DAY, NICK_MAX, Dedupe, RateLimiter, TeachLimits,
                   check as chat_check, check_teach, clean_nick, dedupe_key, stimulus as chat_stimulus)
 from sleep import ROME, TZ, Clock, Memory, SleepEngine, Store, day_of, hhmm, next_bedtime, night_date
-from eye import Eye, ReplicateLLM, load_env, market_mood
+from eye import Eye, ReplicateLLM, eye_mode, life_presence, load_env, market_mood, outside_view, replicate_token
 from diary import Diary
 from real_baseline import RealBaseline
 from life import LABEL as LIFE_LABEL, WORLD, Life
@@ -452,6 +452,7 @@ class Live:
         self.last_groups = {}
         self.last_rel = {}               # group activity / mean, guides what it reads next
         self.last_frame = None
+        self.eye_mode, self.eye_since = "off", None   # eye_state: closed / dream / outside / off (owner, 2026-10-13)
         self.spiking = None              # SpikingHub, set by spiking.server.attach in main()
         self.decider = None              # brain_vote.Backend (main()): a spiking network votes too, GPU or CPU (#55)
         self.mind = None                 # mind.py (main()): an AI reads and remembers for him; his brain model chooses
@@ -1781,6 +1782,8 @@ class Live:
                 try:
                     tok = os.environ.get("REPLICATE_API_TOKEN")
                     llm = self.eye.llm or (ReplicateLLM(tok) if tok else None)
+                    if isinstance(llm, ReplicateLLM) and not tok:   # the eye-only token (private home): no paid diary
+                        llm = None
                     if isinstance(llm, ReplicateLLM):                 # paid: capped and logged as "diary"
                         why = self.ledger.why_not("diary")
                         if why:
@@ -1795,22 +1798,30 @@ class Live:
                     print(f"diary: night of {date} written", flush=True)
                 except Exception as e:
                     print("diary error:", repr(e), flush=True)
+            stage = self.engine.stage
+            if stage == "AWAKE" and (self.recent_replays or self.recent_read_replays):
+                self.recent_replays, self.recent_read_replays = [], []   # dreams end when it wakes up
+            mode, life = self.eye_mode_now()
+            await self.set_eye_state(mode)
+            if mode == "off":                                         # awake at home (or private): no frame, no call
+                await asyncio.sleep(5)
+                continue
             attended = bool(self.clients)
             dream = bool(self.diary) and not attended and self.diary.due(self.engine, t)
             if not attended and not dream:                            # nobody watching and no dream due: spend nothing
                 await asyncio.sleep(5)
                 continue
-            stage = self.engine.stage
-            if stage == "AWAKE" and (self.recent_replays or self.recent_read_replays):
-                self.recent_replays, self.recent_read_replays = [], []   # dreams end when it wakes up
-            if os.environ.get("REPLICATE_API_TOKEN") and (why := self.ledger.why_not("eye")):
+            if replicate_token() and (why := self.ledger.why_not("eye")):
                 await self.rest_eye(why)                              # over a daily cap: keep the last frame
                 await asyncio.sleep(60)
                 continue
             try:
                 rec = await loop.run_in_executor(None, self.eye.step, t, stage, self.last_groups,
                                                  market_mood(self.recent_trades), list(self.recent_replays), hhmm(t),
-                                                 self.life.snapshot()["doing"], list(self.recent_read_replays))
+                                                 life.get("doing", ""), list(self.recent_read_replays),
+                                                 outside_view(life) if mode == "outside" else None)
+                if self.eye_mode_now()[0] != mode:                    # woke up / came home meanwhile: not shown
+                    continue
                 self.last_frame, self.eye_resting = rec, None
                 await self.broadcast({"type": "eye", **rec})
                 if self.diary and stage == "REM" and self.engine.night is not None:
@@ -1827,6 +1838,26 @@ class Live:
                 continue
             await asyncio.sleep(self.eye_every * {"AWAKE": 1.0, "REM": 0.75}.get(stage, 3.0))
 
+    def eye_mode_now(self):
+        """(mode, life snapshot): the eye is open only while he sleeps or is outside (eye.eye_mode). The house world's
+        presence and bathroom privacy decide when there is one; else the life's own place."""
+        life = self.life.snapshot()
+        if getattr(self, "home", None):
+            presence, privacy = self.home.interactions.presence, bool(self.home.privacy())
+        else:
+            presence, privacy = life_presence(life), life.get("activity") == "use_bathroom"
+        return eye_mode(self.engine.stage, presence, privacy), life
+
+    def eye_state(self):
+        return {"type": "eye_state", "mode": self.eye_mode, "since": self.eye_since}
+
+    async def set_eye_state(self, mode):
+        """Tell the pages when the eye opens, closes or turns off (a message only on a change)."""
+        if mode == self.eye_mode and self.eye_since is not None:
+            return
+        self.eye_mode, self.eye_since = mode, round(time.time(), 3)
+        await self.broadcast(self.eye_state())
+
     async def rest_eye(self, why):
         """Over a daily cap the eye keeps its last frame and the pages say it is resting its eyes (never an error)."""
         if self.eye_resting == why:
@@ -1838,6 +1869,14 @@ class Live:
 
     def eye_frame(self):
         return {"type": "eye", **self.last_frame, **({"resting": RESTING} if self.eye_resting else {})}
+
+    def eye_hello(self):
+        """On connect: the eye's state, and its last frame only while the eye is open (awake at home: nothing)."""
+        # getattr: partially built Live objects (tests, early connects) may lack the eye's fields.
+        out = [self.eye_state()] if getattr(self, "eye", None) else []
+        if getattr(self, "last_frame", None) and getattr(self, "eye_mode", "off") != "off":
+            out.append(self.eye_frame())
+        return out
 
     # --- health (#15) ----------------------------------------------------------
     def healthy(self):
@@ -1867,7 +1906,7 @@ class Live:
                             else None, "n": len(ticks), "budget": 1000 * TICK},
                 "loop_lag_ms": {"p50": pct(late, 0.5), "p95": pct(late, 0.95), "n": len(late)},
                 "rss_mb": rss_mb(), "websockets": len(self.sockets), "chromium": chromium,
-                "eye": {"on": bool(self.eye), "resting": self.eye_resting},
+                "eye": {"on": bool(self.eye), "resting": self.eye_resting, "mode": self.eye_mode},
                 "last_diary": nights[0]["date"] if nights else None,
                 "last_memory_test": tests[-1].get("test_day") if tests else None,
                 "spend_today": {k: round(v, 4) for k, v in self.ledger.by_day(1).popitem()[1].items()}}
@@ -1982,8 +2021,8 @@ class Live:
                                 "music": self.music.public(self.music.now) if getattr(self, "music", None) else None,
                                 "audience": self.audience_hello(ws), "ca": self.ca})
             await ws.send_json(self.nights())
-            if self.last_frame:
-                await ws.send_json(self.eye_frame())
+            for m in self.eye_hello():
+                await ws.send_json(m)
             self.feeds[ws] = self.feed_for(request.query)
             self.clients.add(ws)
             async for msg in ws:
@@ -2172,9 +2211,11 @@ async def viewer_cookie(request, handler):
 
 
 # links visitors may still have from before the launch, sent to the page they meant
-OLD_PATHS = {"/login": "/", "/room": "/", "/room/": "/", "/home": "/", "/index": "/", "/sees": "/world.html",
+# The separate "sees" page and the GPS map are gone (owner, 2026-10-13): what he sees is the eye in the house, shown
+# only while he sleeps or is outside. Their old addresses lead home.
+OLD_PATHS = {"/login": "/", "/room": "/", "/room/": "/", "/home": "/", "/index": "/", "/sees": "/",
              "/brain.html": "/brain", "/diary.html": "/diary", "/about": "/about.html",
-             "/city": CITY_URL, "/life": "/life.html", "/map": "/life.html"}   # the city site; the old map at /map
+             "/city": CITY_URL, "/life": "/", "/map": "/", "/life.html": "/", "/world.html": "/"}
 
 NOT_FOUND_PAGE = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>SUB-01</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><body style="margin:0;height:100vh;
@@ -2402,7 +2443,10 @@ async def main(args):
         # frames.jsonl grows for as long as the volume lives: read its tail only, and off the event loop
         rows = await asyncio.get_running_loop().run_in_executor(None, tail_jsonl, log, n)   # a torn line is skipped
         world = live.eye.world.top(live.clock.now(), 20) if live.eye else []
-        return web.json_response({"frames": rows, "world": world, "resting": RESTING if live.eye_resting else None})
+        if live.eye_mode == "off":                # awake at home: the eye is closed to the pages too
+            rows = []
+        return web.json_response({"frames": rows, "world": world, "resting": RESTING if live.eye_resting else None,
+                                  "mode": live.eye_mode})
     app.router.add_get("/api/frames", frames)
 
     gmaps_ok = {}
@@ -2421,7 +2465,8 @@ async def main(args):
         return gmaps_ok[key][0]
 
     async def config(request):                    # browser config (Maps JS keys are referrer-restricted by design)
-        key = os.environ.get("GOOGLE_MAPS_KEY", "")
+        # the private home has no GPS view at all (owner, 2026-10-13): no Maps key, and no paid Maps call to check it
+        key = "" if live.home_enabled else os.environ.get("GOOGLE_MAPS_KEY", "")
         referer = f"{request.headers.get('X-Forwarded-Proto', request.scheme)}://{request.host}/"
         return web.json_response({"gmaps": key if key and await gmaps_works(key, referer) else "", "ca": live.ca})
     app.router.add_get("/api/config", config)

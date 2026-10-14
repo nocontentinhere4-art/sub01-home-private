@@ -76,7 +76,8 @@ def build_evidence(seat_report: dict, chair_text: str, mesh: str = OWNER_MESH, c
         rows = [regions[name] for _, regions in samples]
         worst[name] = {'min_gap_cm': min(r['minGapCm'] for r in rows),
                        'max_median_cm': max(r['p50GapCm'] for r in rows),
-                       'min_coverage': min(r['bandVertices'] / r['overSurfaceVertices'] for r in rows)}
+                       'min_coverage': min(r['bandVertices'] / r['overSurfaceVertices'] for r in rows),
+                       'min_band_vertices': min(r['bandVertices'] for r in rows)}
     body, yaw = seat_report['body_cm'], seat_report['body_yaw']
     # unreal_audit_seat_contact.py poses the skin at Transform(body_cm, Rotator(yaw=body_yaw)),
     # unit scale; reports that state the full transform must agree with that yaw.
@@ -188,7 +189,7 @@ void ASub01HomeCharacter::LoadSeatTransition(){
    Loaded.ScaleX=(*Scale)[0]->AsNumber();Loaded.ScaleY=(*Scale)[1]->AsNumber();Loaded.ScaleZ=(*Scale)[2]->AsNumber();
    Loaded.T0=(*Range)[0]->AsNumber();Loaded.T1=(*Range)[1]->AsNumber();
    const TCHAR* Names[5]={TEXT("buttocks"),TEXT("left_posterior_thigh"),TEXT("right_posterior_thigh"),TEXT("left_sole"),TEXT("right_sole")};bool Complete=true;
-   for(int32 I=0;I<5;++I){const TSharedPtr<FJsonObject>* P=nullptr;if(!(*Patches)->TryGetObjectField(Names[I],P)||!(*P)->TryGetNumberField(TEXT("min_gap_cm"),Loaded.MinGap[I])||!(*P)->TryGetNumberField(TEXT("max_median_cm"),Loaded.MaxMedian[I])||!(*P)->TryGetNumberField(TEXT("min_coverage"),Loaded.MinCoverage[I]))Complete=false;}
+   for(int32 I=0;I<5;++I){const TSharedPtr<FJsonObject>* P=nullptr;if(!(*Patches)->TryGetObjectField(Names[I],P)||!(*P)->TryGetNumberField(TEXT("min_gap_cm"),Loaded.MinGap[I])||!(*P)->TryGetNumberField(TEXT("max_median_cm"),Loaded.MaxMedian[I])||!(*P)->TryGetNumberField(TEXT("min_coverage"),Loaded.MinCoverage[I])||!(*P)->TryGetNumberField(TEXT("min_band_vertices"),Loaded.MinBandVertices[I]))Complete=false;}
    if(Complete&&Sub01SeatEvidenceInBand(Loaded)){
     SeatEvidence=Loaded;
     // The measured pose decides where the capsule stands: audited mesh anchor minus the mesh offset.
@@ -288,7 +289,7 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
      const auto R=(*Regions)[I]->AsObject();FString Name;double Facing=0,Over=0,Band=0;
      if(!R->TryGetStringField(TEXT("region"),Name)||Name!=Names[I]||!R->TryGetNumberField(TEXT("facingVertices"),Facing)||!R->TryGetNumberField(TEXT("overSurfaceVertices"),Over)||!R->TryGetNumberField(TEXT("bandVertices"),Band)
         ||!R->TryGetNumberField(TEXT("minGapCm"),M.MinGap[I])||!R->TryGetNumberField(TEXT("p50GapCm"),M.Median[I])||Over<=0){Complete=false;break;}
-     M.Facing[I]=int(Facing);M.Coverage[I]=Band/Over;}
+     M.Facing[I]=int(Facing);M.Coverage[I]=Band/Over;M.BandCount[I]=Band;}
    }
    M.Valid=Complete;SeatMeasurement=M;
    const int32 InBand=Sub01SeatMeasuredReceipt(SeatMeasurement,L,In.ClipSerial,Now)?1:0;
@@ -385,6 +386,22 @@ PROXY_APPLY = (
 PROXY_EVALUATED = ('  SeatEvaluatedSequence=Cast<UAnimSequence>(Current.GetSequence());SeatEvaluatedTime=SeatEvaluatedSequence?Current.GetAccumulatedTime():-1.f;'
                    'SeatEvaluatedSerial=SeatSerial;\n')
 
+SEAT_RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?float(Sub01FirstPersonMotion::AuthoredWalkRate(Speed)):(PlayingIdle?1.f:0.f)):1.f;\n'
+
+RATE_PREFIX = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?'
+
+
+def _resolve_rate_line(cpp: str, anchor: str) -> str:
+    """The renderer's walk-rate line changes form (e.g. AuthoredWalkRate); hook whichever single
+    line starts with RATE_PREFIX, so the hook stays after the posture's own rate choice."""
+    if cpp.count(anchor) == 1:
+        return anchor
+    lines = [l + '\n' for l in cpp.split('\n') if l.strip().startswith(RATE_PREFIX)]
+    if len(lines) != 1:
+        raise ValueError(f'Walk-rate anchor not unique: {len(lines)} lines start with {RATE_PREFIX!r}')
+    return lines[0].lstrip()
+
+
 # (file key, anchor, replacement); every anchor must occur exactly once in the staged source.
 EDITS = [
     ('header', '#include "Sub01HomeLab.generated.h"', CHARACTER_INCLUDE + '#include "Sub01HomeLab.generated.h"'),
@@ -395,8 +412,7 @@ EDITS = [
      ' // A seated body never walks off: the captured get-up must finish first.\n'
      ' if(!SeatOut.MovementInput&&LiveHomePath.Num()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n'
      ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('),
-    ('cpp', 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n',
-     'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n ApplySeatAnimation(Instance);\n'),
+    ('cpp', SEAT_RATE_ANCHOR, SEAT_RATE_ANCHOR + ' ApplySeatAnimation(Instance);\n'),
     ('hands_header', ' protected:', HANDS_FIELDS + ' protected:'),
     ('hands_cpp', ' float Progress=1;\n',
      ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;\n'),
@@ -409,6 +425,9 @@ def install(sources: dict) -> dict:
     """Apply the seat integration to staged sources {'header','cpp','hands_header','hands_cpp'}."""
     out = dict(sources)
     for key, anchor, replacement in EDITS:
+        if anchor == SEAT_RATE_ANCHOR:
+            live = _resolve_rate_line(out[key], anchor)
+            anchor, replacement = live, replacement.replace(SEAT_RATE_ANCHOR, live)
         if out[key].count(anchor) != 1:
             raise ValueError(f'Seat integration anchor not unique in {key}: {anchor[:60]!r}')
         out[key] = out[key].replace(anchor, replacement)

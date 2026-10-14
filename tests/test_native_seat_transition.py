@@ -26,7 +26,7 @@ FSub01SeatEvidence Evidence(){
  FSub01SeatEvidence E;E.Loaded=true;E.MeshId=Sub01SeatId("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner");
  E.ClipId=Sub01SeatId("/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping");E.ChairRevision=77;E.Family=ESub01SeatFamily::DeskTyping;
  E.X=203.9;E.Y=-232.3;E.Z=-.6;E.PitchDeg=0;E.YawDeg=180;E.RollDeg=0;E.ScaleX=E.ScaleY=E.ScaleZ=1;E.T0=3;E.T1=8;
- for(int I=0;I<5;++I){E.MinGap[I]=I<3?-1.2:.1;E.MaxMedian[I]=I<3?-.3:.4;E.MinCoverage[I]=.7;}
+ for(int I=0;I<5;++I){E.MinGap[I]=I<3?-1.2:.1;E.MaxMedian[I]=I<3?-.3:.4;E.MinCoverage[I]=.7;E.MinBandVertices[I]=120;}
  return E;}
 FSub01SeatLivePose Live(const FSub01SeatEvidence& E){
  FSub01SeatLivePose L;L.MeshId=E.MeshId;L.ClipId=E.ClipId;L.ChairRevision=77;L.Family=ESub01SeatFamily::DeskTyping;
@@ -57,9 +57,15 @@ int main(){
  // Quantitative receipt: every dimension must match the accepted measurement.
  {FSub01SeatLivePose L=Live(E);CHECK(Sub01SeatEvidenceInBand(E)&&Sub01SeatReceipt(E,L),1)
   FSub01SeatEvidence B=E;B.Loaded=false;CHECK(!Sub01SeatReceipt(B,L),2)                    // no report, no receipt
-  B=E;B.MaxMedian[1]=.6;CHECK(!Sub01SeatReceipt(B,L),3)                                    // a floating thigh in the report
-  B=E;B.MinCoverage[0]=.4;CHECK(!Sub01SeatReceipt(B,L),4)
+  B=E;B.MinGap[1]=.6;CHECK(!Sub01SeatReceipt(B,L),3)                                       // a floating thigh in the report
+  B=E;B.MinBandVertices[0]=5;CHECK(!Sub01SeatReceipt(B,L),4)                                // a point is not a support patch
+  B=E;B.MaxMedian[1]=3.5;B.MinCoverage[1]=.2;CHECK(Sub01SeatReceipt(B,L),154)               // curved thigh resting locally
   B=E;B.MinGap[3]=-.1;CHECK(!Sub01SeatReceipt(B,L),5)                                      // a sole through the floor
+  // Genuine toe plant, raised heel: a high sole median/low coverage still passes with a support patch.
+  B=E;B.MaxMedian[3]=10.4;B.MinCoverage[3]=.04;B.MaxMedian[4]=7.5;B.MinCoverage[4]=.06;CHECK(Sub01SeatReceipt(B,L),150)
+  B.MinBandVertices[4]=11;CHECK(!Sub01SeatReceipt(B,L),151)                                 // a single point is not a support patch
+  B=E;B.MinGap[4]=1.2;CHECK(!Sub01SeatReceipt(B,L),152)                                      // the whole foot hovering
+  B=E;B.MinGap[0]=-2.6;CHECK(!Sub01SeatReceipt(B,L),153)                                     // deeper than the cushion compresses
   B=E;B.Z=NAN;CHECK(!Sub01SeatReceipt(B,L),6)
   FSub01SeatLivePose X=L;X.Z+=.1;CHECK(!Sub01SeatReceipt(E,X),7)                           // 1 mm off the audited transform
   X=L;X.X=E.X+.04;X.Y=E.Y+.04;CHECK(!Sub01SeatReceipt(E,X),16)                            // 0.057 cm in 3D
@@ -146,7 +152,7 @@ int main(){
  {FSub01SeatLivePose L=Live(E);FSub01SeatMeasurement M;M.Valid=true;M.MeshId=L.MeshId;M.ChairRevision=77;M.ClipSerial=5;M.MeasuredAt=10;
   M.X=L.X;M.Y=L.Y;M.Z=L.Z;M.PitchDeg=L.PitchDeg;M.YawDeg=L.YawDeg;M.RollDeg=L.RollDeg;M.ScaleX=L.ScaleX;M.ScaleY=L.ScaleY;M.ScaleZ=L.ScaleZ;M.InvalidInfluences=0;
   M.SoleSupportVerified[0]=M.SoleSupportVerified[1]=true;M.SoleFloorZ[0]=3;M.SoleFloorZ[1]=2.5;
-  for(int I=0;I<5;++I){M.Facing[I]=200;M.MinGap[I]=I<3?-1.1:.05;M.Median[I]=I<3?-.4:.3;M.Coverage[I]=.8;}
+  for(int I=0;I<5;++I){M.Facing[I]=200;M.MinGap[I]=I<3?-1.1:.05;M.Median[I]=I<3?-.4:.3;M.Coverage[I]=.8;M.BandCount[I]=160;}
   CHECK(Sub01SeatMeasuredReceipt(M,L,5,10.1),120)
   FSub01SeatLivePose X=L;X.Y+=.1;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),121)              // a displaced body
   X=L;X.YawDeg+=.2;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),122)
@@ -154,7 +160,9 @@ int main(){
   CHECK(!Sub01SeatMeasuredReceipt(M,L,6,10.1),125)                                               // another clip start
   FSub01SeatMeasurement B=M;B.InvalidInfluences=1;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),126)
   B=M;B.Facing[2]=0;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),127)
-  B=M;B.Median[4]=1.2;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),128)                           // a floating sole
+  B=M;B.MinGap[4]=1.2;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),128)                           // a hovering sole
+  B=M;B.Median[3]=10.4;B.Coverage[3]=.04;CHECK(Sub01SeatMeasuredReceipt(B,L,5,10.1),136)          // toe plant, heel raised
+  B.BandCount[3]=3;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),137)
   B=M;B.MinGap[0]=-2.6;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),129)
   X=L;X.Family=ESub01SeatFamily::None;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),130)
   X=L;X.ChairRevision=78;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),131)

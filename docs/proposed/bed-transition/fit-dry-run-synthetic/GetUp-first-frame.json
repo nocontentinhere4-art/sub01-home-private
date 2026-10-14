@@ -1,0 +1,112 @@
+{
+ "accepted": false,
+ "approach": {
+  "along_axis_cm": -107.864,
+  "distance_from_edge_cm": 33.869,
+  "floor_frame_hips_world_cm": [
+   -107.864,
+   42.131,
+   99.131
+  ],
+  "side": "foot_end",
+  "side_convention": "left/right of the mattress long axis looking toward the head end; foot_end / head_end beyond the ends (hips position only; the feet are not checked)"
+ },
+ "band_cm": [
+  -2.5,
+  0.5
+ ],
+ "bed_report": "docs/proposed/bed-transition/fit-dry-run-synthetic/SYNTHETIC-bed-surface.json",
+ "bed_revision": "13954617882379698073",
+ "binding": {
+  "lower": "torso_back",
+  "upper": "torso_back"
+ },
+ "body_min_gap_over_mattress_cm": -2.5,
+ "chosen_vertical_cm": 4.2176,
+ "clip": "docs/proposed/bed-transition/SUB01_GetUp.travel_in_hips.glb",
+ "clip_time_s": 0.0,
+ "component_to_actor": "UNKNOWN here: take the live mesh component relative transform before writing an approach",
+ "floor_frame_checked": "last",
+ "head_margin_cm": 25.0,
+ "lateral_offset_cm": 0.0,
+ "lying": "supine",
+ "mattress": {
+  "centroid_cm": [
+   0.0,
+   0.0
+  ],
+  "foot_edge_cm": -101.5,
+  "head_edge_cm": 101.5,
+  "lateral_extent_cm": [
+   -76.0,
+   76.0
+  ],
+  "long_axis_toward_head": [
+   1.0,
+   0.0
+  ]
+ },
+ "mattress_area_cm2": 30856.0,
+ "native_bed_verified": false,
+ "overhang": {
+  "past_foot_edge_cm": 0.0,
+  "past_head_edge_cm": 0.0,
+  "past_sides_cm": [
+   0.0,
+   0.0
+  ],
+  "vertices_not_over_mattress": 0
+ },
+ "patch_counts": {
+  "head_back": 9068,
+  "head_back_left_side": 7524,
+  "head_back_right_side": 7214,
+  "posterior_legs": 15529,
+  "posterior_legs_left_side": 17357,
+  "posterior_legs_right_side": 17281,
+  "torso_back": 9153,
+  "torso_back_left_side": 4075,
+  "torso_back_right_side": 4781
+ },
+ "patches": {
+  "torso_back": {
+   "band_vertices": 1116,
+   "median_gap_cm": 2.7863,
+   "min_gap_cm": -2.5,
+   "over_mattress_vertices": 9153,
+   "pass": true
+  }
+ },
+ "proposal_ok": true,
+ "refusals": [],
+ "reported_not_gated": {
+  "head_back": {
+   "gated": false,
+   "min_gap_to_mattress_cm": 9.2087,
+   "over_mattress_vertices": 9068,
+   "why": "rests on the pillow; the pillow top is not measured"
+  },
+  "posterior_legs": {
+   "gated": false,
+   "min_gap_to_mattress_cm": -2.4631,
+   "over_mattress_vertices": 15529,
+   "why": "legs may be bent (knees up) in a captured lying pose; reported only"
+  }
+ },
+ "rule": "tools/validate_unreal_seat_contact.py: local support patch + non-penetration (constants imported)",
+ "schema": "sub01.bed-placement-proposal.v1",
+ "transform": {
+  "maps": "p_world = Rz(yaw) p_component + translation (UE Z-up cm)",
+  "translation_cm": [
+   -12.1449,
+   4.4009,
+   4.2176
+  ],
+  "yaw_deg": 167.6665
+ },
+ "vertical_range_cm": [
+  4.2176,
+  7.2176
+ ],
+ "vertical_rule": "every patch lowest within the band and no skin deeper than its lower edge; inside that range the most support (smallest per-patch band count maximised), ties to the least compression"
+}

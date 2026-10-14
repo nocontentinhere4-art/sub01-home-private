@@ -203,4 +203,27 @@ EDITS = [
      "  // and the body returns on the first frame he is back (step() sets visibility).\n"
      "  firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,\n"
      "    following && !privacyActive && actorVisible(homeState), camera);\n"),
+    ("H16", "Import the eye view (owner decision 2026-10-13: no GPS; the eye only asleep or outside)",
+     "eye_view.mjs",
+     "import { createInteriorTrim } from './interior_trim.mjs';\n",
+     "import { createInteriorTrim } from './interior_trim.mjs';\n"
+     "import { createEyeView } from './eye_view.mjs';\n"),
+    ("H17", "Mount the eye view before the socket connects", "eye_view.mjs createEyeView",
+     "connect();\nsyncState();\n",
+     "// What he sees: eyelids and dreams while he sleeps, the street while he is out;\n"
+     "// hidden awake at home and during bathroom privacy (eye_view.mjs).\n"
+     "const eyeView = createEyeView(document.body);\n"
+     "connect();\nsyncState();\n"),
+    ("H18", "Feed eye_state, eye frames and home privacy to the eye view", "live_server eye_state / eye messages",
+     "      const m = JSON.parse(e.data);\n"
+     "      if (m.type === 'chat_ack')\n",
+     "      const m = JSON.parse(e.data);\n"
+     "      eyeView.accept(m);   // eye_state / eye frames / home privacy\n"
+     "      if (m.type === 'chat_ack')\n"),
 ]
+
+# H1-H15 were integrated by Codex in main d03e673 ("Integrate private house
+# controls ..."); the remaining proposal is the eye view (owner decision).
+INTEGRATED_IN_MAIN = {"H1", "H2", "H2b", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10",
+                      "H11", "H12", "H13", "H14", "H15"}
+EDITS = [edit for edit in EDITS if edit[0] not in INTEGRATED_IN_MAIN]

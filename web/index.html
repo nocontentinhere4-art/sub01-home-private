@@ -173,7 +173,7 @@
 <div id="scene"></div><div id="vignette"></div>
 
 <div id="top">
-  <div id="brand"><h1>SUB-01</h1><nav><a class="on" href="/brain">brain</a><a href="/">room</a><a href="/diary">diary</a><a href="/world.html">sees</a><a href="https://city.subzerone.live/" target="_blank" rel="noopener">city</a></nav></div>
+  <div id="brand"><h1>SUB-01</h1><nav><a class="on" href="/brain">brain</a><a href="/">room</a><a href="/diary">diary</a><a href="https://city.subzerone.live/" target="_blank" rel="noopener">city</a></nav></div>
   <div id="state"><span id="live" title="live connection"></span><span id="chip">…</span><span id="clock"></span><span id="where"></span></div>
   <div id="story">connecting…</div>
   <div id="sub"></div>
@@ -230,8 +230,8 @@
     <div class="t" id="d-title">The first diary entry is written the morning after his first night of REM sleep.</div>
     <div class="m" id="d-meta"></div>
   </a>
-  <a class="card" href="/world.html" id="c-eye" hidden>
-    <div class="k"><span>What it sees</span><span id="e-t"></span></div>
+  <a class="card" href="/" id="c-eye" hidden>
+    <div class="k"><span>What he sees</span><span id="e-t"></span></div>
     <img id="e-img" alt="">
     <div class="t q" id="e-thought"></div>
   </a>
@@ -731,8 +731,10 @@ async function loadDiary(){
       : `${full.frames.length} dream frames so far`;
   } catch (e) {}
 }
+let eyeMode = "off";                      // eye_state: the eye is open only while he sleeps or is outside
+function eyeState(m){ eyeMode = m.mode || "off"; if (eyeMode === "off") $("c-eye").hidden = true; }
 function showEye(f){
-  if (!f || !f.img) return;
+  if (!f || !f.img || eyeMode === "off") return;
   $("c-eye").hidden = false; $("e-img").src = f.img;
   $("e-t").textContent = `${f.stage} ${f.t}${f.resting ? " · " + f.resting : ""}`; $("e-thought").textContent = f.thought ? `“${f.thought}”` : "";
 }
@@ -989,6 +991,7 @@ function connect(){
       tick(`${esc(m.t)} · message <b>“${esc(m.text.slice(0, 60))}”</b> → language → ${esc(m.networks.join(", "))}${m.asleep ? ` (through the sleep at ${Math.round(m.gain * 100)}%)` : ""}`);
       fire(m.text, m.networks, m.asleep, m.gain); return;
     }
+    if (m.type === "eye_state") { eyeState(m); return; }
     if (m.type === "eye") { showEye(m); return; }
     if (m.type === "music") { if (m.playing) { musicNow = m; renderMusic(); } else if (musicNow && musicNow.id === m.id) { musicNow = null; renderMusic(); } return; }
     if (m.type === "chess") { deskChess = m; renderDesk(); if (m.finished) setTimeout(() => { if (deskChess === m) { deskChess = null; renderDesk(); } }, 60000); return; }

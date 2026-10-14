@@ -1,0 +1,2363 @@
+{
+ "accepted": false,
+ "blend": {
+  "blend_frames": 24,
+  "blend_rule": "slerp of captured local rotations (shortest arc) and lerp of the hips translation over 24 frames (0.80 s, the bed layer's existing 0.8 s crossfade), smoothstep weight; captured frames continue on both sides of the window",
+  "chains": {
+   "sleep_back": {
+    "accepted_within_blend_criteria": false,
+    "after_blend": {
+     "captured_reference_whole_clip": {
+      "get_up_source": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      },
+      "lie_down_source": {
+       "max_joint_acceleration_cm_s2": 4188.736,
+       "max_joint_speed_cm_s": 302.832,
+       "max_root_step_cm": 2.341
+      },
+      "loop_source": {
+       "max_joint_acceleration_cm_s2": 64.905,
+       "max_joint_speed_cm_s": 1.775,
+       "max_root_step_cm": 0.0015
+      }
+     },
+     "lie_down_end_vs_loop_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 15.6872,
+      "world_max_joint_cm": 0.0
+     },
+     "loop_end_vs_get_up_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 15.805,
+      "world_max_joint_cm": 0.0
+     },
+     "note": "after the blend the seams are exact by construction (pose 0); what remains is the blend itself: the pose gap is crossed in n_blend frames, so the joint speeds inside the blend window are the cost",
+     "seams": {
+      "lie_blend": {
+       "frames": [
+        331,
+        361
+       ],
+       "max_joint_acceleration_cm_s2": 3673.163,
+       "max_joint_speed_cm_s": 203.802,
+       "max_root_step_cm": 0.5003
+      },
+      "lie_down_into_loop": {
+       "frames": [
+        356,
+        361
+       ],
+       "max_joint_acceleration_cm_s2": 929.1,
+       "max_joint_speed_cm_s": 46.971,
+       "max_root_step_cm": 0.1284
+      },
+      "loop_into_get_up": {
+       "frames": [
+        555,
+        560
+       ],
+       "max_joint_acceleration_cm_s2": 959.152,
+       "max_joint_speed_cm_s": 77.291,
+       "max_root_step_cm": 0.0048
+      },
+      "wake_blend": {
+       "frames": [
+        554,
+        584
+       ],
+       "max_joint_acceleration_cm_s2": 3478.959,
+       "max_joint_speed_cm_s": 231.139,
+       "max_root_step_cm": 1.5735
+      },
+      "whole_clip": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      }
+     }
+    },
+    "before_blend": {
+     "best_match_lie_to_loop_placed": {
+      "attitude_deg": 6.7514,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 58.4516,
+      "pose_rms_cm": 45.6396,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 167.273,
+      "world_max_joint_cm": 82.2759
+     },
+     "best_match_loop_to_wake_placed": {
+      "attitude_deg": 8.7921,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 81.6856,
+      "pose_rms_cm": 49.5014,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 73.0877,
+      "world_max_joint_cm": 86.4679
+     },
+     "direct_cut_lie_end_to_loop_start_unplaced": {
+      "attitude_deg": 8.0829,
+      "hips_world_distance_cm": 150.9823,
+      "hips_world_offset_cm": [
+       -5.1755,
+       9.9376,
+       -150.5659
+      ],
+      "pose_cm": 86.8045,
+      "pose_rms_cm": 48.6519,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 0.1767,
+      "world_max_joint_cm": 281.5689
+     },
+     "direct_cut_loop_end_to_wake_start_unplaced": {
+      "attitude_deg": 2.1286,
+      "hips_world_distance_cm": 29.5227,
+      "hips_world_offset_cm": [
+       21.267,
+       -12.1293,
+       16.498
+      ],
+      "pose_cm": 84.3028,
+      "pose_rms_cm": 50.3346,
+      "posture": [
+       "supine",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 2.317,
+      "world_max_joint_cm": 106.9041
+     }
+    },
+    "discarded_captured_frames": {
+     "get_up_head_before_blend_s": 3.5333,
+     "lie_down_tail_after_blend_s": 5.0333
+    },
+    "lie_to_loop": {
+     "needed": "same posture class (supine) but a 58 cm limb/torso configuration gap: a captured settle on the owner skeleton from the lie-down's end pose into the loop's pose, or a lie-down that ends in the loop's pose, or a sleep loop captured in the lie-down's end pose. A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 58.5 cm > 10.0 cm",
+      "velocity mismatch 167.3 cm/s > 50.0 cm/s"
+     ]
+    },
+    "loop": "web/room/desk_states/bed/sleep_back.glb",
+    "loop_frames": 200,
+    "loop_posture": "supine",
+    "loop_seam_own": {
+     "pose_cm": 0.0366,
+     "velocity_mismatch_cm_s": 0.2336
+    },
+    "loop_sha256": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4",
+    "loop_to_wake": {
+     "needed": "same posture class (supine) but a 82 cm limb/torso configuration gap: a captured transition from the loop's pose into the get-up's lying start, or a get-up captured from the loop's pose. A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 81.7 cm > 10.0 cm",
+      "velocity mismatch 73.1 cm/s > 50.0 cm/s"
+     ]
+    },
+    "placement": {
+     "loop_onto_lie": {
+      "offset_cm": [
+       -20.859,
+       -7.739,
+       86.61
+      ],
+      "vertical_shift_cm": -7.739,
+      "yaw_deg": 135.3777
+     },
+     "rule": "one constant rigid placement per clip: yaw about vertical fitted by 2D Kabsch on all 65 joints, then the translation that puts the hips on the previous clip's hips at the blend start; never per frame. The vertical shift moves the loop to the lie-down's bed height, which is NOT the native mattress: the bed fit (tools/fit_bed_placement.py) decides the final height.",
+     "wake_onto_loop": {
+      "offset_cm": [
+       -18.509,
+       6.851,
+       117.906
+      ],
+      "vertical_shift_cm": 6.851,
+      "yaw_deg": 119.9985
+     }
+    },
+    "search": {
+     "candidates": {
+      "lie_frames": [
+       239,
+       485
+      ],
+      "loop_phases": [
+       0,
+       198
+      ],
+      "wake_frames": [
+       0,
+       119
+      ]
+     },
+     "chosen": {
+      "joint_normalised_cost": 8.1686,
+      "lie": {
+       "attitude_deg": 6.7514,
+       "pose_cm": 58.4516,
+       "velocity_mismatch_cm_s": 167.273
+      },
+      "lie_frame": 334,
+      "loop_phase_at_lie_blend_start": 184,
+      "loop_start_phase": 9,
+      "wake": {
+       "attitude_deg": 8.7921,
+       "pose_cm": 81.6856,
+       "velocity_mismatch_cm_s": 73.0877
+      },
+      "wake_frame": 106
+     },
+     "criteria": {
+      "attitude_deg": 30.0,
+      "normalised_cost": "max(pose/10 cm, velocity/50 cm/s, attitude/30 deg); <= 1 is a plausible blend",
+      "pose_cm": 10.0,
+      "velocity_mismatch_cm_s": 50.0
+     },
+     "loop_unique_frames": 199,
+     "n_blend": 24,
+     "unconstrained_best_lie": {
+      "attitude_deg": 6.3494,
+      "lie_frame": 334,
+      "loop_phase": 99,
+      "pose_cm": 58.0297,
+      "velocity_mismatch_cm_s": 167.5044
+     },
+     "unconstrained_best_wake": {
+      "attitude_deg": 8.7921,
+      "loop_phase": 9,
+      "pose_cm": 81.6856,
+      "velocity_mismatch_cm_s": 73.0877,
+      "wake_frame": 106
+     }
+    }
+   },
+   "sleep_back_idle": {
+    "accepted_within_blend_criteria": false,
+    "after_blend": {
+     "captured_reference_whole_clip": {
+      "get_up_source": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      },
+      "lie_down_source": {
+       "max_joint_acceleration_cm_s2": 4188.736,
+       "max_joint_speed_cm_s": 302.832,
+       "max_root_step_cm": 2.341
+      },
+      "loop_source": {
+       "max_joint_acceleration_cm_s2": 59.679,
+       "max_joint_speed_cm_s": 2.656,
+       "max_root_step_cm": 0.0174
+      }
+     },
+     "lie_down_end_vs_loop_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "oblique",
+       "oblique"
+      ],
+      "velocity_mismatch_cm_s": 27.6076,
+      "world_max_joint_cm": 0.0
+     },
+     "loop_end_vs_get_up_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "oblique",
+       "oblique"
+      ],
+      "velocity_mismatch_cm_s": 24.7808,
+      "world_max_joint_cm": 0.0
+     },
+     "note": "after the blend the seams are exact by construction (pose 0); what remains is the blend itself: the pose gap is crossed in n_blend frames, so the joint speeds inside the blend window are the cost",
+     "seams": {
+      "lie_blend": {
+       "frames": [
+        253,
+        283
+       ],
+       "max_joint_acceleration_cm_s2": 1540.044,
+       "max_joint_speed_cm_s": 290.643,
+       "max_root_step_cm": 0.5111
+      },
+      "lie_down_into_loop": {
+       "frames": [
+        278,
+        283
+       ],
+       "max_joint_acceleration_cm_s2": 1540.044,
+       "max_joint_speed_cm_s": 78.935,
+       "max_root_step_cm": 0.1269
+      },
+      "loop_into_get_up": {
+       "frames": [
+        458,
+        463
+       ],
+       "max_joint_acceleration_cm_s2": 1404.613,
+       "max_joint_speed_cm_s": 113.507,
+       "max_root_step_cm": 0.0593
+      },
+      "wake_blend": {
+       "frames": [
+        457,
+        487
+       ],
+       "max_joint_acceleration_cm_s2": 5191.261,
+       "max_joint_speed_cm_s": 356.328,
+       "max_root_step_cm": 2.7197
+      },
+      "whole_clip": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      }
+     }
+    },
+    "before_blend": {
+     "best_match_lie_to_loop_placed": {
+      "attitude_deg": 74.2171,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 123.4128,
+      "pose_rms_cm": 67.192,
+      "posture": [
+       "supine",
+       "oblique"
+      ],
+      "velocity_mismatch_cm_s": 96.7598,
+      "world_max_joint_cm": 75.3077
+     },
+     "best_match_loop_to_wake_placed": {
+      "attitude_deg": 83.0689,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 134.3765,
+      "pose_rms_cm": 56.1204,
+      "posture": [
+       "oblique",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 75.5525,
+      "world_max_joint_cm": 49.17
+     },
+     "direct_cut_lie_end_to_loop_start_unplaced": {
+      "attitude_deg": 62.0388,
+      "hips_world_distance_cm": 140.2503,
+      "hips_world_offset_cm": [
+       11.9128,
+       9.6628,
+       -139.4089
+      ],
+      "pose_cm": 138.1501,
+      "pose_rms_cm": 57.0612,
+      "posture": [
+       "supine",
+       "oblique"
+      ],
+      "velocity_mismatch_cm_s": 0.4402,
+      "world_max_joint_cm": 265.6305
+     },
+     "direct_cut_loop_end_to_wake_start_unplaced": {
+      "attitude_deg": 62.8595,
+      "hips_world_distance_cm": 13.6568,
+      "hips_world_offset_cm": [
+       4.1787,
+       -11.8541,
+       5.341
+      ],
+      "pose_cm": 136.4789,
+      "pose_rms_cm": 52.6175,
+      "posture": [
+       "oblique",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 2.317,
+      "world_max_joint_cm": 43.4611
+     }
+    },
+    "discarded_captured_frames": {
+     "get_up_head_before_blend_s": 3.9667,
+     "lie_down_tail_after_blend_s": 7.6333
+    },
+    "lie_to_loop": {
+     "needed": "a captured settle from the lie-down's end pose (supine) into the loop's pose (oblique), i.e. a supine -> oblique roll on the mattress, on the owner skeleton, or a lie-down capture that ends in the loop's pose (or a sleep loop captured in the lie-down's end pose). A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 123.4 cm > 10.0 cm",
+      "attitude 74.2 deg > 30.0 deg",
+      "velocity mismatch 96.8 cm/s > 50.0 cm/s",
+      "posture class change supine -> oblique"
+     ]
+    },
+    "loop": "web/room/desk_states/bed/sleep_back_idle.glb",
+    "loop_frames": 181,
+    "loop_posture": "oblique",
+    "loop_seam_own": {
+     "pose_cm": 0.0655,
+     "velocity_mismatch_cm_s": 0.6555
+    },
+    "loop_sha256": "99b6904165f818b8318a89e63a5f19a83bc76cfedf4ad020df0caf8659bc5552",
+    "loop_to_wake": {
+     "needed": "a captured transition from the loop's pose (oblique) to the get-up's lying start (supine), i.e. a oblique -> supine roll, or a get-up captured from the loop's pose. A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 134.4 cm > 10.0 cm",
+      "attitude 83.1 deg > 30.0 deg",
+      "velocity mismatch 75.6 cm/s > 50.0 cm/s",
+      "posture class change oblique -> supine"
+     ]
+    },
+    "placement": {
+     "loop_onto_lie": {
+      "offset_cm": [
+       -17.441,
+       -12.033,
+       112.875
+      ],
+      "vertical_shift_cm": -12.033,
+      "yaw_deg": 115.6965
+     },
+     "rule": "one constant rigid placement per clip: yaw about vertical fitted by 2D Kabsch on all 65 joints, then the translation that puts the hips on the previous clip's hips at the blend start; never per frame. The vertical shift moves the loop to the lie-down's bed height, which is NOT the native mattress: the bed fit (tools/fit_bed_placement.py) decides the final height.",
+     "wake_onto_loop": {
+      "offset_cm": [
+       -23.172,
+       7.019,
+       126.064
+      ],
+      "vertical_shift_cm": 7.019,
+      "yaw_deg": 140.5062
+     }
+    },
+    "search": {
+     "candidates": {
+      "lie_frames": [
+       239,
+       485
+      ],
+      "loop_phases": [
+       0,
+       179
+      ],
+      "wake_frames": [
+       0,
+       119
+      ]
+     },
+     "chosen": {
+      "joint_normalised_cost": 13.4376,
+      "lie": {
+       "attitude_deg": 74.2171,
+       "pose_cm": 123.4128,
+       "velocity_mismatch_cm_s": 96.7598
+      },
+      "lie_frame": 256,
+      "loop_phase_at_lie_blend_start": 153,
+      "loop_start_phase": 177,
+      "wake": {
+       "attitude_deg": 83.0689,
+       "pose_cm": 134.3765,
+       "velocity_mismatch_cm_s": 75.5525
+      },
+      "wake_frame": 119
+     },
+     "criteria": {
+      "attitude_deg": 30.0,
+      "normalised_cost": "max(pose/10 cm, velocity/50 cm/s, attitude/30 deg); <= 1 is a plausible blend",
+      "pose_cm": 10.0,
+      "velocity_mismatch_cm_s": 50.0
+     },
+     "loop_unique_frames": 180,
+     "n_blend": 24,
+     "unconstrained_best_lie": {
+      "attitude_deg": 75.7757,
+      "lie_frame": 256,
+      "loop_phase": 178,
+      "pose_cm": 123.2521,
+      "velocity_mismatch_cm_s": 96.7458
+     },
+     "unconstrained_best_wake": {
+      "attitude_deg": 83.0689,
+      "loop_phase": 177,
+      "pose_cm": 134.3765,
+      "velocity_mismatch_cm_s": 75.5525,
+      "wake_frame": 119
+     }
+    }
+   },
+   "sleep_side": {
+    "accepted_within_blend_criteria": false,
+    "after_blend": {
+     "captured_reference_whole_clip": {
+      "get_up_source": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      },
+      "lie_down_source": {
+       "max_joint_acceleration_cm_s2": 4188.736,
+       "max_joint_speed_cm_s": 302.832,
+       "max_root_step_cm": 2.341
+      },
+      "loop_source": {
+       "max_joint_acceleration_cm_s2": 39.569,
+       "max_joint_speed_cm_s": 0.927,
+       "max_root_step_cm": 0.0176
+      }
+     },
+     "lie_down_end_vs_loop_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "side_right",
+       "side_right"
+      ],
+      "velocity_mismatch_cm_s": 13.828,
+      "world_max_joint_cm": 0.0
+     },
+     "loop_end_vs_get_up_start": {
+      "attitude_deg": 0.0,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 0.0,
+      "pose_rms_cm": 0.0,
+      "posture": [
+       "side_right",
+       "side_right"
+      ],
+      "velocity_mismatch_cm_s": 15.4779,
+      "world_max_joint_cm": 0.0
+     },
+     "note": "after the blend the seams are exact by construction (pose 0); what remains is the blend itself: the pose gap is crossed in n_blend frames, so the joint speeds inside the blend window are the cost",
+     "seams": {
+      "lie_blend": {
+       "frames": [
+        300,
+        330
+       ],
+       "max_joint_acceleration_cm_s2": 1392.556,
+       "max_joint_speed_cm_s": 153.65,
+       "max_root_step_cm": 0.6655
+      },
+      "lie_down_into_loop": {
+       "frames": [
+        325,
+        330
+       ],
+       "max_joint_acceleration_cm_s2": 794.678,
+       "max_joint_speed_cm_s": 40.306,
+       "max_root_step_cm": 0.0553
+      },
+      "loop_into_get_up": {
+       "frames": [
+        524,
+        529
+       ],
+       "max_joint_acceleration_cm_s2": 868.804,
+       "max_joint_speed_cm_s": 70.681,
+       "max_root_step_cm": 0.0106
+      },
+      "wake_blend": {
+       "frames": [
+        523,
+        553
+       ],
+       "max_joint_acceleration_cm_s2": 960.951,
+       "max_joint_speed_cm_s": 205.507,
+       "max_root_step_cm": 0.4493
+      },
+      "whole_clip": {
+       "max_joint_acceleration_cm_s2": 7274.182,
+       "max_joint_speed_cm_s": 396.909,
+       "max_root_step_cm": 6.1624
+      }
+     }
+    },
+    "before_blend": {
+     "best_match_lie_to_loop_placed": {
+      "attitude_deg": 100.2802,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 59.3623,
+      "pose_rms_cm": 39.2368,
+      "posture": [
+       "supine",
+       "side_right"
+      ],
+      "velocity_mismatch_cm_s": 121.1243,
+      "world_max_joint_cm": 82.067
+     },
+     "best_match_loop_to_wake_placed": {
+      "attitude_deg": 100.8312,
+      "hips_world_distance_cm": 0.0,
+      "hips_world_offset_cm": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "pose_cm": 81.4158,
+      "pose_rms_cm": 53.3022,
+      "posture": [
+       "side_right",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 13.3156,
+      "world_max_joint_cm": 86.6489
+     },
+     "direct_cut_lie_end_to_loop_start_unplaced": {
+      "attitude_deg": 105.9772,
+      "hips_world_distance_cm": 150.4447,
+      "hips_world_offset_cm": [
+       -6.8614,
+       7.5932,
+       -150.0962
+      ],
+      "pose_cm": 79.8023,
+      "pose_rms_cm": 54.9612,
+      "posture": [
+       "supine",
+       "side_right"
+      ],
+      "velocity_mismatch_cm_s": 0.1084,
+      "world_max_joint_cm": 277.8733
+     },
+     "direct_cut_loop_end_to_wake_start_unplaced": {
+      "attitude_deg": 99.3926,
+      "hips_world_distance_cm": 29.6559,
+      "hips_world_offset_cm": [
+       22.9537,
+       -9.7834,
+       16.0277
+      ],
+      "pose_cm": 82.4584,
+      "pose_rms_cm": 53.9232,
+      "posture": [
+       "side_right",
+       "supine"
+      ],
+      "velocity_mismatch_cm_s": 2.317,
+      "world_max_joint_cm": 113.0059
+     }
+    },
+    "discarded_captured_frames": {
+     "get_up_head_before_blend_s": 2.8667,
+     "lie_down_tail_after_blend_s": 6.0667
+    },
+    "lie_to_loop": {
+     "needed": "a captured settle from the lie-down's end pose (supine) into the loop's pose (side_right), i.e. a supine -> side_right roll on the mattress, on the owner skeleton, or a lie-down capture that ends in the loop's pose (or a sleep loop captured in the lie-down's end pose). A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 59.4 cm > 10.0 cm",
+      "attitude 100.3 deg > 30.0 deg",
+      "velocity mismatch 121.1 cm/s > 50.0 cm/s",
+      "posture class change supine -> side_right"
+     ]
+    },
+    "loop": "web/room/desk_states/bed/sleep_side.glb",
+    "loop_frames": 200,
+    "loop_posture": "side_right",
+    "loop_seam_own": {
+     "pose_cm": 0.0196,
+     "velocity_mismatch_cm_s": 0.169
+    },
+    "loop_sha256": "0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b",
+    "loop_to_wake": {
+     "needed": "a captured transition from the loop's pose (side_right) to the get-up's lying start (supine), i.e. a side_right -> supine roll, or a get-up captured from the loop's pose. A blend cannot bridge this.",
+     "plausible_blend": false,
+     "refusal_reasons": [
+      "hips-relative pose gap 81.4 cm > 10.0 cm",
+      "attitude 100.8 deg > 30.0 deg",
+      "posture class change side_right -> supine"
+     ]
+    },
+    "placement": {
+     "loop_onto_lie": {
+      "offset_cm": [
+       -11.751,
+       -14.314,
+       87.846
+      ],
+      "vertical_shift_cm": -14.314,
+      "yaw_deg": 121.2056
+     },
+     "rule": "one constant rigid placement per clip: yaw about vertical fitted by 2D Kabsch on all 65 joints, then the translation that puts the hips on the previous clip's hips at the blend start; never per frame. The vertical shift moves the loop to the lie-down's bed height, which is NOT the native mattress: the bed fit (tools/fit_bed_placement.py) decides the final height.",
+     "wake_onto_loop": {
+      "offset_cm": [
+       -15.896,
+       -3.254,
+       116.188
+      ],
+      "vertical_shift_cm": -3.254,
+      "yaw_deg": 118.4817
+     }
+    },
+    "search": {
+     "candidates": {
+      "lie_frames": [
+       239,
+       485
+      ],
+      "loop_phases": [
+       0,
+       198
+      ],
+      "wake_frames": [
+       0,
+       119
+      ]
+     },
+     "chosen": {
+      "joint_normalised_cost": 8.1416,
+      "lie": {
+       "attitude_deg": 100.2802,
+       "pose_cm": 59.3623,
+       "velocity_mismatch_cm_s": 121.1243
+      },
+      "lie_frame": 303,
+      "loop_phase_at_lie_blend_start": 181,
+      "loop_start_phase": 6,
+      "wake": {
+       "attitude_deg": 100.8312,
+       "pose_cm": 81.4158,
+       "velocity_mismatch_cm_s": 13.3156
+      },
+      "wake_frame": 86
+     },
+     "criteria": {
+      "attitude_deg": 30.0,
+      "normalised_cost": "max(pose/10 cm, velocity/50 cm/s, attitude/30 deg); <= 1 is a plausible blend",
+      "pose_cm": 10.0,
+      "velocity_mismatch_cm_s": 50.0
+     },
+     "loop_unique_frames": 199,
+     "n_blend": 24,
+     "unconstrained_best_lie": {
+      "attitude_deg": 100.2861,
+      "lie_frame": 303,
+      "loop_phase": 0,
+      "pose_cm": 59.3479,
+      "velocity_mismatch_cm_s": 121.1983
+     },
+     "unconstrained_best_wake": {
+      "attitude_deg": 100.8312,
+      "loop_phase": 6,
+      "pose_cm": 81.4158,
+      "velocity_mismatch_cm_s": 13.3156,
+      "wake_frame": 86
+     }
+    }
+   }
+  },
+  "chosen_sleep_loop": "sleep_back",
+  "composed_outputs": {
+   "GetUp": {
+    "committed": false,
+    "duration_s": 9.0667,
+    "frames": 273,
+    "path": "<work>/SUB01_GetUp.chain_sleep_back.glb",
+    "sha256": "609f7ec402c648aeb35b54d3bc7b7593a6cf6888635388fb920c40910a6a8712"
+   },
+   "LieDown": {
+    "committed": false,
+    "duration_s": 11.9333,
+    "frames": 359,
+    "path": "<work>/SUB01_LieDown.chain_sleep_back.glb",
+    "sha256": "df01a95a107b24d83a4f2d5f4c965dc6471cf9bd644718e386a67cd994cd56a3"
+   },
+   "SleepLoop": {
+    "committed": false,
+    "duration_s": 6.6333,
+    "frames": 200,
+    "path": "<work>/SUB01_SleepLoop.chain_sleep_back.glb",
+    "sha256": "e0adbc27f488c68f73b126adbcbb9cca8eaae76ca3ac2a2a6ce02c673f1dc5c0"
+   }
+  },
+  "composed_root_paths": {
+   "chain_GetUp": {
+    "discontinuity": false,
+    "floor_travel_cm": 10.297,
+    "fps": 30.000028610256777,
+    "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+    "frames": 273,
+    "hips_height_cm": [
+     74.626,
+     101.798
+    ],
+    "implausible_bed_slides": [
+     {
+      "frames": 43,
+      "from_s": 0.0,
+      "max_speed_cm_s": 62.456,
+      "support": "bed",
+      "to_s": 1.4,
+      "travel_cm": 38.673
+     },
+     {
+      "frames": 10,
+      "from_s": 1.9,
+      "max_speed_cm_s": 181.789,
+      "support": "bed",
+      "to_s": 2.2,
+      "travel_cm": 37.306
+     }
+    ],
+    "max_acceleration_at_s": 1.6333,
+    "max_acceleration_cm_s2": 761.788,
+    "max_frame_step_cm": 6.1615,
+    "max_speed_at_s": 1.8667,
+    "max_speed_cm_s": 183.885,
+    "net_displacement_cm": [
+     -65.966,
+     -82.914
+    ],
+    "net_distance_cm": 105.954,
+    "non_floor_travel_cm": 166.96,
+    "path_length_cm": 177.256,
+    "support_segments": [
+     {
+      "frames": 43,
+      "from_s": 0.0,
+      "max_speed_cm_s": 62.456,
+      "support": "bed",
+      "to_s": 1.4,
+      "travel_cm": 38.673
+     },
+     {
+      "frames": 14,
+      "from_s": 1.4333,
+      "max_speed_cm_s": 183.885,
+      "support": "transitional",
+      "to_s": 1.8666,
+      "travel_cm": 42.045
+     },
+     {
+      "frames": 10,
+      "from_s": 1.9,
+      "max_speed_cm_s": 181.789,
+      "support": "bed",
+      "to_s": 2.2,
+      "travel_cm": 37.306
+     },
+     {
+      "frames": 192,
+      "from_s": 2.2333,
+      "max_speed_cm_s": 40.864,
+      "support": "transitional",
+      "to_s": 8.6,
+      "travel_cm": 48.936
+     },
+     {
+      "frames": 14,
+      "from_s": 8.6333,
+      "max_speed_cm_s": 38.168,
+      "support": "floor",
+      "to_s": 9.0666,
+      "travel_cm": 10.297
+     }
+    ],
+    "teleport_step_threshold_cm": 10.0
+   },
+   "chain_LieDown": {
+    "discontinuity": false,
+    "floor_travel_cm": 67.239,
+    "fps": 30.000028610256777,
+    "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+    "frames": 359,
+    "hips_height_cm": [
+     70.151,
+     94.001
+    ],
+    "implausible_bed_slides": [],
+    "max_acceleration_at_s": 0.7667,
+    "max_acceleration_cm_s2": 225.316,
+    "max_frame_step_cm": 2.3359,
+    "max_speed_at_s": 0.4,
+    "max_speed_cm_s": 70.077,
+    "net_displacement_cm": [
+     116.01,
+     26.708
+    ],
+    "net_distance_cm": 119.045,
+    "non_floor_travel_cm": 116.636,
+    "path_length_cm": 183.875,
+    "support_segments": [
+     {
+      "frames": 11,
+      "from_s": 0.0,
+      "max_speed_cm_s": 66.187,
+      "support": "floor",
+      "to_s": 0.3333,
+      "travel_cm": 15.726
+     },
+     {
+      "frames": 1,
+      "from_s": 0.3667,
+      "max_speed_cm_s": 68.717,
+      "support": "transitional",
+      "to_s": 0.3667,
+      "travel_cm": 2.246
+     },
+     {
+      "frames": 36,
+      "from_s": 0.4,
+      "max_speed_cm_s": 70.077,
+      "support": "floor",
+      "to_s": 1.5667,
+      "travel_cm": 51.513
+     },
+     {
+      "frames": 36,
+      "from_s": 1.6,
+      "max_speed_cm_s": 43.211,
+      "support": "transitional",
+      "to_s": 2.7667,
+      "travel_cm": 32.148
+     },
+     {
+      "frames": 19,
+      "from_s": 2.8,
+      "max_speed_cm_s": 22.484,
+      "support": "bed",
+      "to_s": 3.4,
+      "travel_cm": 7.727
+     },
+     {
+      "frames": 93,
+      "from_s": 3.4333,
+      "max_speed_cm_s": 18.075,
+      "support": "transitional",
+      "to_s": 6.5,
+      "travel_cm": 20.983
+     },
+     {
+      "frames": 163,
+      "from_s": 6.5333,
+      "max_speed_cm_s": 21.345,
+      "support": "bed",
+      "to_s": 11.9333,
+      "travel_cm": 53.532
+     }
+    ],
+    "teleport_step_threshold_cm": 10.0
+   },
+   "chain_SleepLoop": {
+    "discontinuity": false,
+    "floor_travel_cm": 0,
+    "fps": 30.000028610256777,
+    "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+    "frames": 200,
+    "hips_height_cm": [
+     79.797,
+     79.885
+    ],
+    "implausible_bed_slides": [],
+    "max_acceleration_at_s": 0.0,
+    "max_acceleration_cm_s2": 0.0,
+    "max_frame_step_cm": 0.0,
+    "max_speed_at_s": 0.0,
+    "max_speed_cm_s": 0.0,
+    "net_displacement_cm": [
+     0.0,
+     0.0
+    ],
+    "net_distance_cm": 0.0,
+    "non_floor_travel_cm": 0.0,
+    "path_length_cm": 0.0,
+    "support_segments": [
+     {
+      "frames": 200,
+      "from_s": 0.0,
+      "max_speed_cm_s": 0.0,
+      "support": "bed",
+      "to_s": 6.6333,
+      "travel_cm": 0.0
+     }
+    ],
+    "teleport_step_threshold_cm": 10.0
+   },
+   "chain_whole": {
+    "discontinuity": false,
+    "floor_travel_cm": 77.536,
+    "fps": 30.000028610256777,
+    "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+    "frames": 830,
+    "hips_height_cm": [
+     70.151,
+     101.798
+    ],
+    "implausible_bed_slides": [
+     {
+      "frames": 404,
+      "from_s": 6.5333,
+      "max_speed_cm_s": 62.456,
+      "support": "bed",
+      "to_s": 19.9666,
+      "travel_cm": 92.205
+     },
+     {
+      "frames": 10,
+      "from_s": 20.4666,
+      "max_speed_cm_s": 181.789,
+      "support": "bed",
+      "to_s": 20.7666,
+      "travel_cm": 37.306
+     }
+    ],
+    "max_acceleration_at_s": 20.2,
+    "max_acceleration_cm_s2": 761.788,
+    "max_frame_step_cm": 6.1615,
+    "max_speed_at_s": 20.4333,
+    "max_speed_cm_s": 183.885,
+    "net_displacement_cm": [
+     50.044,
+     -56.206
+    ],
+    "net_distance_cm": 75.256,
+    "non_floor_travel_cm": 283.596,
+    "path_length_cm": 361.132,
+    "support_segments": [
+     {
+      "frames": 11,
+      "from_s": 0.0,
+      "max_speed_cm_s": 66.187,
+      "support": "floor",
+      "to_s": 0.3333,
+      "travel_cm": 15.726
+     },
+     {
+      "frames": 1,
+      "from_s": 0.3667,
+      "max_speed_cm_s": 68.717,
+      "support": "transitional",
+      "to_s": 0.3667,
+      "travel_cm": 2.246
+     },
+     {
+      "frames": 36,
+      "from_s": 0.4,
+      "max_speed_cm_s": 70.077,
+      "support": "floor",
+      "to_s": 1.5667,
+      "travel_cm": 51.513
+     },
+     {
+      "frames": 36,
+      "from_s": 1.6,
+      "max_speed_cm_s": 43.211,
+      "support": "transitional",
+      "to_s": 2.7667,
+      "travel_cm": 32.148
+     },
+     {
+      "frames": 19,
+      "from_s": 2.8,
+      "max_speed_cm_s": 22.484,
+      "support": "bed",
+      "to_s": 3.4,
+      "travel_cm": 7.727
+     },
+     {
+      "frames": 93,
+      "from_s": 3.4333,
+      "max_speed_cm_s": 18.075,
+      "support": "transitional",
+      "to_s": 6.5,
+      "travel_cm": 20.983
+     },
+     {
+      "frames": 404,
+      "from_s": 6.5333,
+      "max_speed_cm_s": 62.456,
+      "support": "bed",
+      "to_s": 19.9666,
+      "travel_cm": 92.205
+     },
+     {
+      "frames": 14,
+      "from_s": 20.0,
+      "max_speed_cm_s": 183.885,
+      "support": "transitional",
+      "to_s": 20.4333,
+      "travel_cm": 42.045
+     },
+     {
+      "frames": 10,
+      "from_s": 20.4666,
+      "max_speed_cm_s": 181.789,
+      "support": "bed",
+      "to_s": 20.7666,
+      "travel_cm": 37.306
+     },
+     {
+      "frames": 192,
+      "from_s": 20.8,
+      "max_speed_cm_s": 40.864,
+      "support": "transitional",
+      "to_s": 27.1667,
+      "travel_cm": 48.936
+     },
+     {
+      "frames": 14,
+      "from_s": 27.2,
+      "max_speed_cm_s": 38.168,
+      "support": "floor",
+      "to_s": 27.6333,
+      "travel_cm": 10.297
+     }
+    ],
+    "teleport_step_threshold_cm": 10.0
+   }
+  },
+  "within_blend_criteria": false
+ },
+ "corrected_outputs": {
+  "GetUp": {
+   "in_place": {
+    "bytes": 428040,
+    "duration_s": 12.6,
+    "frames": 379,
+    "path": "docs/proposed/bed-transition/SUB01_GetUp.in_place.glb",
+    "sha256": "cae2b1be77c20019ba549e45302183cefea19a8f9154d5df79391188b92b4a5c"
+   },
+   "travel_in_hips": {
+    "bytes": 428044,
+    "duration_s": 12.6,
+    "frames": 379,
+    "path": "docs/proposed/bed-transition/SUB01_GetUp.travel_in_hips.glb",
+    "sha256": "ad604f9236aeccb5c27aa5f3f023a1f62a2dbd21942a17abb748926d62ef0af5"
+   }
+  },
+  "LieDown": {
+   "in_place": {
+    "bytes": 566384,
+    "duration_s": 16.9667,
+    "frames": 510,
+    "path": "docs/proposed/bed-transition/SUB01_LieDown.in_place.glb",
+    "sha256": "6ae5c47e9f514eb956d68db220b96af1e42f426e557ba538ecd8084d5a5b2ae6"
+   },
+   "travel_in_hips": {
+    "bytes": 566388,
+    "duration_s": 16.9667,
+    "frames": 510,
+    "path": "docs/proposed/bed-transition/SUB01_LieDown.travel_in_hips.glb",
+    "sha256": "01336e264299d915768cbeb737523e5026948c385035fc44400e8db01467e1ee"
+   }
+  }
+ },
+ "crop": {
+  "crop_frame": 378,
+  "crop_s": 12.6,
+  "cropped_duration_s": 12.6,
+  "discarded_tail": {
+   "max_speed_cm_s": 63.165,
+   "net_distance_cm": 79.895,
+   "path_length_cm": 91.944
+  },
+  "full_clip_root": {
+   "max_speed_cm_s": 183.885,
+   "net_distance_cm": 188.321,
+   "path_length_cm": 275.674
+  },
+  "full_duration_s": 15.4333,
+  "onset_frame": 366,
+  "onset_s": 12.2,
+  "rule": "standing = torso tilt <= 30.0 deg and leg extension >= 0.95 x owner rest; held >= 0.3 s (or until a walk); walk = hips horizontal speed > 20.0 cm/s, and its mean over the next 0.5 s too; crop = first settled frame (<= 10.0 cm/s) in [onset, walk), else the onset",
+  "settled": true,
+  "speed_at_crop_cm_s": 9.814,
+  "walk_onset_frame": 394,
+  "walk_onset_s": 13.1333
+ },
+ "documented_quotes": [
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "**v5's room clips carried over** by `room_build/kimodo/mx_convert.mjs` (no Mixamo capture of these yet):"
+  },
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "`desk_mouse_ik`, `room_walk`, `room_window`, `room_bed_lie`, `room_bed_wake`, `room_bedtime`"
+  },
+  {
+   "file": "web/room/CREDITS.md",
+   "file_sha256": "075e8bd62fc55666ee24b17e5fab3597aede1750b5cb8fe921c82fc81a6faf03",
+   "present_verbatim": true,
+   "quote": "| `mh_v5/*.glb` (the room clips retargeted onto v5, by G14; the same names as preview/room-mh's `mh/`) | preview/mh-motion's clips, retargeted | as their sources |"
+  },
+  {
+   "file": "web/room/mh_v5/README.md",
+   "file_sha256": "b12fa897afce5c1ce83bd74fd304a3b9b134189982f45819b0e4f908db546417",
+   "present_verbatim": true,
+   "quote": "| room_window, room_walk, room_sit_down, room_stand_up, room_bed_lie, room_bed_wake, room_door, room_bedtime | G12 (to come). G10d's QA ran with local stand-ins (room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options), not committed |"
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "**The ones here now are placeholders**: room-mh's clips run through that script as it is at ef9c0e4."
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "- **His motion:** 16 mocap clips retargeted onto him (`web/room/mh_v5/`, G14 and G12)"
+  },
+  {
+   "file": "room_build/kimodo/mh_retarget.mjs",
+   "file_sha256": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
+   "present_verbatim": true,
+   "quote": "// 3) zero-phase smoothing (Gaussian, sigma 1 frame limbs / 1.7 spine-neck-head), then two-bone IK: the wrists onto the"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Sleeping_Idle\": {"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Laying_Sleeping\": {"
+  },
+  {
+   "file": "docs/design/mixamo/README.md",
+   "file_sha256": "32c49dcba84368bba74678419913a3803f8f9d7848e265d2b134f1c08873f047",
+   "present_verbatim": true,
+   "quote": "| Sleeping_Idle \u2192 `room_sleeping_idle.glb` | 17.6 s; curled on his side; turns over and back (head 85\u00b0, arms 100\u00b0)"
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "licence is pending, so they never go to main."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "- **Asleep:** `sleep_side`; after 40-90 s `sleep_roll_to_back` (once), then `sleep_back` and `sleep_back_idle` taking turns."
+  }
+ ],
+ "get_up_end_checks": {
+  "feet_joints": {
+   "basis": "foot/toe JOINT positions (labelled: not the sole surface)",
+   "joints": {
+    "LeftFoot": {
+     "height_range_cm": 0.166515,
+     "height_std_cm": 0.056851,
+     "horizontal_slide_cm": 0.340382,
+     "min_height_cm": 14.501173,
+     "pass": true,
+     "rest_height_cm": 8.23027,
+     "sink_below_rest_cm": -6.270903
+    },
+    "LeftToeBase": {
+     "height_range_cm": 0.24032,
+     "height_std_cm": 0.083432,
+     "horizontal_slide_cm": 0.323886,
+     "min_height_cm": 12.017867,
+     "pass": true,
+     "rest_height_cm": 0.605094,
+     "sink_below_rest_cm": -11.412773
+    },
+    "RightFoot": {
+     "height_range_cm": 0.469654,
+     "height_std_cm": 0.155055,
+     "horizontal_slide_cm": 0.27389,
+     "min_height_cm": 15.026181,
+     "pass": true,
+     "rest_height_cm": 7.762488,
+     "sink_below_rest_cm": -7.263693
+    },
+    "RightToeBase": {
+     "height_range_cm": 0.25887,
+     "height_std_cm": 0.088336,
+     "horizontal_slide_cm": 0.14189,
+     "min_height_cm": 11.271227,
+     "pass": true,
+     "rest_height_cm": -1.201044,
+     "sink_below_rest_cm": -12.472271
+    }
+   },
+   "pass": true,
+   "thresholds": {
+    "height_range_cm": 2.0,
+    "height_std_cm": 0.5,
+    "sink_cm": 0.5,
+    "slide_cm": 2.0
+   }
+  },
+  "frames": 7,
+  "plantar_contact": {
+   "band_cm": [
+    0.0,
+    1.0
+   ],
+   "common_vertical_shift_interval_cm": [
+    -3.2793,
+    -4.3696
+   ],
+   "diagnosis": "no single vertical shift puts both soles in the band: the legs (captured pose) disagree; not fixed here (no IK)",
+   "feet": {
+    "left": {
+     "lowest_vertex_cm": [
+      3.279306,
+      3.408507
+     ],
+     "pass": false
+    },
+    "right": {
+     "lowest_vertex_cm": [
+      4.842716,
+      5.369633
+     ],
+     "pass": false
+    }
+   },
+   "pass": false,
+   "source": "tools/validate_unreal_seat_contact.py SOLE_BAND_CM",
+   "vertical_shift_cm_that_would_satisfy_both": null
+  },
+  "soles": {
+   "basis": "owner plantar vertices: material \"feet\", rest Y <= 0.004 m, bind normal Y < -0.7 (fixed rest-mesh selection, skinned every frame); floor y = 0",
+   "feet": {
+    "left": {
+     "centroid_horizontal_slide_cm": 0.352196,
+     "lift_range_cm": 0.1292,
+     "lowest_vertex_max_cm": 3.408507,
+     "lowest_vertex_min_cm": 3.279306,
+     "pass": true,
+     "penetration_below_floor_cm": 0.0,
+     "vertices": 1925
+    },
+    "right": {
+     "centroid_horizontal_slide_cm": 0.147033,
+     "lift_range_cm": 0.526918,
+     "lowest_vertex_max_cm": 5.369633,
+     "lowest_vertex_min_cm": 4.842716,
+     "pass": true,
+     "penetration_below_floor_cm": 0.0,
+     "vertices": 2252
+    }
+   },
+   "pass": true,
+   "rest_y_bounds_m": [
+    0.0,
+    0.003993
+   ],
+   "selected_vertices": 4177,
+   "thresholds": {
+    "lift_range_cm": 2.0,
+    "penetration_cm": 0.5,
+    "slide_cm": 2.0
+   }
+  },
+  "standing": {
+   "max_torso_tilt_deg": 9.221232,
+   "min_leg_extension": 1.054938,
+   "pass": true,
+   "thresholds": {
+    "leg_extension": 0.85,
+    "tilt_deg": 30.0
+   }
+  },
+  "window_s": [
+   12.39999,
+   12.59999
+  ]
+ },
+ "hashes": {
+  "docs/design/mixamo/README.md": "32c49dcba84368bba74678419913a3803f8f9d7848e265d2b134f1c08873f047",
+  "docs/design/room-v5/README.md": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+  "room_build/kimodo/mh_retarget.mjs": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
+  "room_build/kimodo/mixamo_clips.json": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+  "room_build/kimodo/mx_convert.mjs": "cad32e02eda028335a7f13bbfb0a441e7a38a8ff8091b124173bb197566252f4",
+  "tools/bed_transition_pipeline.py": "31b261e7e586ea4108c314f675ed91e8c658a33030ce8127a98bcb2ed0da44cf",
+  "tools/life_gltf.py": "d9d271e9dff76412448f340000014adfd85aceffcf2500e822055342793f32e5",
+  "tools/native_life_skeleton_parity.py": "07c14f220e326a6f818d8f5d49d93e6139b6359da2b6ae8517ed40049d10b60d",
+  "tools/retarget_first_person.mjs": "5e491f906c762a2fb7d8f4188461e27c9c4acf63bbd8fe35f29dbad5e72f9564",
+  "tools/retarget_life_clip.py": "8cc2661d746069c93fb53946cb8f8ed9cbc8f62224e0c9b79796878ad4991db3",
+  "tools/verify_life_idle_candidate.py": "846b22c89a3ceb7f7894d96c1ffbc96ad6489e4b025f6660595a5947c05f768a",
+  "web/room/CREDITS.md": "075e8bd62fc55666ee24b17e5fab3597aede1750b5cb8fe921c82fc81a6faf03",
+  "web/room/char_mixamo.glb": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "web/room/desk_states/README.md": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+  "web/room/desk_states/bed/sleep_back.glb": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4",
+  "web/room/desk_states/bed/sleep_back_idle.glb": "99b6904165f818b8318a89e63a5f19a83bc76cfedf4ad020df0caf8659bc5552",
+  "web/room/desk_states/bed/sleep_side.glb": "0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b",
+  "web/room/mh_mx/README.md": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+  "web/room/mh_mx/room_bed_lie.glb": "f22e3fb1a991c25dd0d128059e97e52e49819e2393db78dbc9c690a80af8d3e2",
+  "web/room/mh_mx/room_bed_wake.glb": "b85449b4ea450ab232886c25152aefb3dc4a87162bc2908b6f1141331da6b3d5",
+  "web/room/mh_v5/README.md": "b12fa897afce5c1ce83bd74fd304a3b9b134189982f45819b0e4f908db546417",
+  "web/room/mh_v5/room_bed_lie.glb": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94",
+  "web/room/mh_v5/room_bed_wake.glb": "aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49"
+ },
+ "licence_note": "PRIVATE. SleepLoop frames are Sova (author permission for the preview, confirmed by the owner 2026-10-08; licence pending, never public, never main). LieDown/GetUp derive from mh_v5 clips (\"as their sources\"; origin before preview/mh-motion undocumented). Never deploy.",
+ "lie_down_start_checks": {
+  "feet_joints": {
+   "basis": "foot/toe JOINT positions (labelled: not the sole surface)",
+   "joints": {
+    "LeftFoot": {
+     "height_range_cm": 4.403968,
+     "height_std_cm": 1.572184,
+     "horizontal_slide_cm": 33.785452,
+     "min_height_cm": 16.843468,
+     "pass": false,
+     "rest_height_cm": 8.23027,
+     "sink_below_rest_cm": -8.613199
+    },
+    "LeftToeBase": {
+     "height_range_cm": 2.412789,
+     "height_std_cm": 0.895922,
+     "horizontal_slide_cm": 35.32337,
+     "min_height_cm": 15.461935,
+     "pass": false,
+     "rest_height_cm": 0.605094,
+     "sink_below_rest_cm": -14.856841
+    },
+    "RightFoot": {
+     "height_range_cm": 0.076546,
+     "height_std_cm": 0.027512,
+     "horizontal_slide_cm": 0.45503,
+     "min_height_cm": 11.371121,
+     "pass": true,
+     "rest_height_cm": 7.762488,
+     "sink_below_rest_cm": -3.608633
+    },
+    "RightToeBase": {
+     "height_range_cm": 0.071822,
+     "height_std_cm": 0.024595,
+     "horizontal_slide_cm": 0.424672,
+     "min_height_cm": 7.738497,
+     "pass": true,
+     "rest_height_cm": -1.201044,
+     "sink_below_rest_cm": -8.939541
+    }
+   },
+   "pass": false,
+   "thresholds": {
+    "height_range_cm": 2.0,
+    "height_std_cm": 0.5,
+    "sink_cm": 0.5,
+    "slide_cm": 2.0
+   }
+  },
+  "frames": 7,
+  "plantar_contact": {
+   "band_cm": [
+    0.0,
+    1.0
+   ],
+   "common_vertical_shift_interval_cm": [
+    -1.197,
+    -11.2293
+   ],
+   "diagnosis": "no single vertical shift puts both soles in the band: the legs (captured pose) disagree; not fixed here (no IK)",
+   "feet": {
+    "left": {
+     "lowest_vertex_cm": [
+      4.290011,
+      12.229299
+     ],
+     "pass": false
+    },
+    "right": {
+     "lowest_vertex_cm": [
+      1.197039,
+      1.310897
+     ],
+     "pass": false
+    }
+   },
+   "pass": false,
+   "source": "tools/validate_unreal_seat_contact.py SOLE_BAND_CM",
+   "vertical_shift_cm_that_would_satisfy_both": null
+  },
+  "soles": {
+   "basis": "owner plantar vertices: material \"feet\", rest Y <= 0.004 m, bind normal Y < -0.7 (fixed rest-mesh selection, skinned every frame); floor y = 0",
+   "feet": {
+    "left": {
+     "centroid_horizontal_slide_cm": 37.053032,
+     "lift_range_cm": 7.939288,
+     "lowest_vertex_max_cm": 12.229299,
+     "lowest_vertex_min_cm": 4.290011,
+     "pass": false,
+     "penetration_below_floor_cm": 0.0,
+     "vertices": 1925
+    },
+    "right": {
+     "centroid_horizontal_slide_cm": 0.430132,
+     "lift_range_cm": 0.113857,
+     "lowest_vertex_max_cm": 1.310897,
+     "lowest_vertex_min_cm": 1.197039,
+     "pass": true,
+     "penetration_below_floor_cm": 0.0,
+     "vertices": 2252
+    }
+   },
+   "pass": false,
+   "rest_y_bounds_m": [
+    0.0,
+    0.003993
+   ],
+   "selected_vertices": 4177,
+   "thresholds": {
+    "lift_range_cm": 2.0,
+    "penetration_cm": 0.5,
+    "slide_cm": 2.0
+   }
+  },
+  "standing": {
+   "max_torso_tilt_deg": 8.097101,
+   "min_leg_extension": 1.068195,
+   "pass": true,
+   "thresholds": {
+    "leg_extension": 0.85,
+    "tilt_deg": 30.0
+   }
+  },
+  "window_s": [
+   0.0,
+   0.2
+  ]
+ },
+ "never": "no IK, no keyed or invented poses, no finger poses, no foot locking; only captured rotations, the captured hips path, one rigid placement per clip and a standard slerp blend",
+ "owner": "web/room/char_mixamo.glb",
+ "owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+ "provenance": {
+  "GetUp": {
+   "chain_documented": [
+    "as LieDown: preview/mh-motion -> mh_retarget.mjs (smoothing + IK) -> mh_v5; mx_convert.mjs -> mh_mx copy (not used)"
+   ],
+   "documented_as": "as LieDown",
+   "label": "derived_library_asset",
+   "not_documented": [
+    "as LieDown"
+   ],
+   "source_used": "web/room/mh_v5/room_bed_wake.glb (v5 rig, 80 nodes, one animation room_bed_wake)",
+   "verdict": "derived_library_asset (as LieDown): preview/mh-motion clip retargeted via mh_retarget.mjs; capture method undocumented."
+  },
+  "LieDown": {
+   "chain_documented": [
+    "preview/mh-motion clip on the MakeHuman rig (CREDITS: \"preview/mh-motion's clips, retargeted\")",
+    "retargeted onto v5 by room_build/kimodo/mh_retarget.mjs (G14; mh_v5/README: \"room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options\"), which applies Gaussian smoothing and two-bone wrist/ankle IK",
+    "carried onto the owner skeleton by room_build/kimodo/mx_convert.mjs as web/room/mh_mx/room_bed_lie.glb (the drifted copy, NOT used here)"
+   ],
+   "documented_as": "docs/design/room-v5/README.md calls the v5 set \"16 mocap clips\" and, in the contract, \"placeholders\"",
+   "label": "derived_library_asset",
+   "not_documented": [
+    "how the preview/mh-motion clip was made (motion capture, keyframed, or generated): no README, licence or generation script for it is in this repository; the branch is not in this repository's history",
+    "the performer, capture system, or original file (BVH/FBX) and its hash",
+    "any Mixamo capture of lying down: room_build/kimodo/mixamo_clips.json has no lie-down or get-up row (mh_mx/README: \"no Mixamo capture of these yet\")"
+   ],
+   "source_used": "web/room/mh_v5/room_bed_lie.glb (v5 rig, 80 nodes, one animation room_bed_lie)",
+   "verdict": "derived_library_asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs; capture method undocumented. Labelled, not refused; not called mocap. Corrected by tools/bed_transition_corrections.py."
+  },
+  "SleepLoop": {
+   "chain_documented": [
+    "G23's Sova bed clips (preview/sova-phone-src docs/qa/sova/mattina/bed); SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)"
+   ],
+   "label": "third_party_authored_with_permission",
+   "licence": "preview-only permission; desk_states/README: \"licence is pending, so they never go to main\". PRIVATE use only; never public, never main.",
+   "not_documented": [
+    "the capture method",
+    "the original files and their hashes"
+   ],
+   "source_used": "web/room/desk_states/bed/<loop>.glb (owner skeleton, exact rest)",
+   "verdict": "Permissioned private preview clips; capture method undocumented."
+  },
+  "related_genuine_mixamo_on_v5_not_transitions": {
+   "files": [
+    "web/room/mh_v5/room_sleeping_idle.glb (Mixamo Sleeping_Idle)",
+    "web/room/mh_v5/room_laying_sleeping.glb (Mixamo Laying_Sleeping)",
+    "web/room/mh_v5/room_laying_nodding.glb (Mixamo Laying_Nodding)"
+   ],
+   "note": "Genuine Mixamo captures per room_build/kimodo/mixamo_clips.json, but they are lying LOOPS / a rare event, fitted by kimodo_g12/bed_fit.py; none is a lie-down or a get-up, so none is a source for them."
+  }
+ },
+ "retarget": {
+  "GetUp": {
+   "mjs_sha256": "5e491f906c762a2fb7d8f4188461e27c9c4acf63bbd8fe35f29dbad5e72f9564",
+   "owner_residuals": {
+    "local_translation_policy": "owner rest offsets for every non-hips joint (no translation track is written)",
+    "max_bone_length_deviation_cm": 0.0
+   },
+   "prepare": {
+    "constant_tracks_holding_original_rest": [],
+    "dropped_scale_track_noise_max": 0.0,
+    "kept_unmapped_nodes": [
+     "src:Armature",
+     "src:NeckTwist02",
+     "src:Pelvis",
+     "src:Root",
+     "src:metacarpal1.L",
+     "src:metacarpal1.R",
+     "src:metacarpal2.L",
+     "src:metacarpal2.R",
+     "src:metacarpal3.L",
+     "src:metacarpal3.R",
+     "src:metacarpal4.L",
+     "src:metacarpal4.R"
+    ],
+    "mapped_joints": 52,
+    "prepared": "<work>/GetUp/prepared_source.glb",
+    "prepared_vs_original_max_joint_cm": 0.0,
+    "rest_rebase_correction_deg": {
+     "Head": 16.7014,
+     "LeftArm": 65.3329,
+     "LeftFoot": 38.4265,
+     "LeftForeArm": 60.327,
+     "LeftHand": 60.5986,
+     "LeftHandIndex1": 102.0123,
+     "LeftHandIndex2": 99.4329,
+     "LeftHandIndex3": 99.4329,
+     "LeftHandMiddle1": 104.4478,
+     "LeftHandMiddle2": 95.7468,
+     "LeftHandMiddle3": 95.7468,
+     "LeftHandPinky1": 103.4627,
+     "LeftHandPinky2": 112.6821,
+     "LeftHandPinky3": 112.6821,
+     "LeftHandRing1": 98.5817,
+     "LeftHandRing2": 109.9414,
+     "LeftHandRing3": 109.9414,
+     "LeftHandThumb1": 57.1146,
+     "LeftHandThumb2": 57.1091,
+     "LeftHandThumb3": 57.1091,
+     "LeftLeg": 2.8942,
+     "LeftShoulder": 19.4512,
+     "LeftToeBase": 38.4265,
+     "LeftUpLeg": 5.2074,
+     "Neck": 16.7014,
+     "RightArm": 65.0937,
+     "RightFoot": 32.2868,
+     "RightForeArm": 61.2558,
+     "RightHand": 49.9975,
+     "RightHandIndex1": 100.7696,
+     "RightHandIndex2": 103.5133,
+     "RightHandIndex3": 103.5133,
+     "RightHandMiddle1": 100.5734,
+     "RightHandMiddle2": 103.3832,
+     "RightHandMiddle3": 103.3832,
+     "RightHandPinky1": 104.6201,
+     "RightHandPinky2": 119.0043,
+     "RightHandPinky3": 119.0043,
+     "RightHandRing1": 98.8264,
+     "RightHandRing2": 107.8835,
+     "RightHandRing3": 107.8835,
+     "RightHandThumb1": 52.6123,
+     "RightHandThumb2": 52.6098,
+     "RightHandThumb3": 52.6098,
+     "RightLeg": 4.641,
+     "RightShoulder": 18.6276,
+     "RightToeBase": 32.2868,
+     "RightUpLeg": 4.7952,
+     "Spine2": 9.0703
+    },
+    "rest_rebase_passes": 1,
+    "source_direction_undefined_child_is_static_leaf": [
+     "Head",
+     "LeftHandIndex3",
+     "LeftHandMiddle3",
+     "LeftHandPinky3",
+     "LeftHandRing3",
+     "LeftHandThumb3",
+     "LeftToeBase",
+     "RightHandIndex3",
+     "RightHandMiddle3",
+     "RightHandPinky3",
+     "RightHandRing3",
+     "RightHandThumb3",
+     "RightToeBase"
+    ],
+    "source_leg_height_over_owner": 0.980104,
+    "static_leaves_added": [
+     "HeadTop_End",
+     "RightHandThumb4",
+     "RightHandIndex4",
+     "RightHandMiddle4",
+     "RightHandRing4",
+     "RightHandPinky4",
+     "LeftHandThumb4",
+     "LeftHandIndex4",
+     "LeftHandMiddle4",
+     "LeftHandRing4",
+     "LeftHandPinky4",
+     "RightToe_End",
+     "LeftToe_End"
+    ]
+   },
+   "preset": "v5",
+   "raw_output_sha256": "f53a314c9fecaceb2ccdc8f784683cb47d1406454b013d304edd1f0e8f82110e",
+   "rest_axis_residual_deg": {
+    "Head": 0,
+    "Hips": 5.9604,
+    "LeftArm": 0,
+    "LeftFoot": 0,
+    "LeftForeArm": 0,
+    "LeftHand": 0.0,
+    "LeftHandIndex1": 0,
+    "LeftHandIndex2": 0,
+    "LeftHandIndex3": 0,
+    "LeftHandMiddle1": 0,
+    "LeftHandMiddle2": 0,
+    "LeftHandMiddle3": 0,
+    "LeftHandPinky1": 0,
+    "LeftHandPinky2": 0,
+    "LeftHandPinky3": 0,
+    "LeftHandRing1": 0,
+    "LeftHandRing2": 0,
+    "LeftHandRing3": 0,
+    "LeftHandThumb1": 0,
+    "LeftHandThumb2": 0,
+    "LeftHandThumb3": 0,
+    "LeftLeg": 0,
+    "LeftShoulder": 0,
+    "LeftToeBase": 0,
+    "LeftUpLeg": 0,
+    "Neck": 0,
+    "RightArm": 0,
+    "RightFoot": 0.0,
+    "RightForeArm": 0,
+    "RightHand": 0.0,
+    "RightHandIndex1": 0,
+    "RightHandIndex2": 0,
+    "RightHandIndex3": 0,
+    "RightHandMiddle1": 0,
+    "RightHandMiddle2": 0,
+    "RightHandMiddle3": 0,
+    "RightHandPinky1": 0,
+    "RightHandPinky2": 0.0,
+    "RightHandPinky3": 0,
+    "RightHandRing1": 0,
+    "RightHandRing2": 0,
+    "RightHandRing3": 0,
+    "RightHandThumb1": 0.0,
+    "RightHandThumb2": 0,
+    "RightHandThumb3": 0,
+    "RightLeg": 0,
+    "RightShoulder": 0,
+    "RightToeBase": 0,
+    "RightUpLeg": 0,
+    "Spine": 3.154,
+    "Spine1": 3.1543,
+    "Spine2": 0
+   },
+   "retarget_first_person_mjs": {
+    "algorithm": "Aligned world rest delta; QtargetWorld=C QsrcWorld inverse(QsrcRestWorld) inverse(C) QtargetRestWorld",
+    "alignmentQuaternion": [
+     0.009873560984621044,
+     0.7072219474544038,
+     -0.01083811751659619,
+     -0.7068395610327566
+    ],
+    "checks": {
+     "boneLengthMaxError": 2.220446049250313e-16,
+     "noMotionRestMaxError": 2.9802322387695312e-08,
+     "sampledBoneLengthMaxError": 4.996003610813204e-16
+    },
+    "duration": 15.433333396911621,
+    "frames": 464,
+    "legHeightScale": 1.0203003086248856,
+    "outputSHA256": "f53a314c9fecaceb2ccdc8f784683cb47d1406454b013d304edd1f0e8f82110e",
+    "proceduralMotionAdded": false,
+    "sourceLegHeight": 0.7921039875614462,
+    "sourceSHA256": "8a98dbfd3dcdc0f451648a728db7d4d51f28cc565d0dd8ad3c3bbf4d2e15f6b5",
+    "targetLegHeight": 0.8081839429719462,
+    "targetSHA256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb"
+   },
+   "source": "web/room/mh_v5/room_bed_wake.glb",
+   "source_sha256": "aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49",
+   "this_retarget_non_hips_translation_tracks": {
+    "bone": null,
+    "max_bone_length_change_cm": 0.0,
+    "max_cm": 0.0,
+    "non_hips_translation_tracks": 0,
+    "unit": "cm (the 0.01-scale mixamo node's units), local offset vs the owner's rest offset"
+   },
+   "vs_drifted_mh_mx_copy": {
+    "copy_max_bone_length_deviation_cm": 1.566002,
+    "copy_non_hips_translation_drift": {
+     "bone": "Spine",
+     "max_bone_length_change_cm": 1.566,
+     "max_cm": 5.0331,
+     "non_hips_translation_tracks": 12,
+     "unit": "cm (the 0.01-scale mixamo node's units), local offset vs the owner's rest offset"
+    },
+    "file": "web/room/mh_mx/room_bed_wake.glb",
+    "sha256": "b85449b4ea450ab232886c25152aefb3dc4a87162bc2908b6f1141331da6b3d5",
+    "world_joint_difference_cm": {
+     "max": 20.716,
+     "median": 10.874,
+     "note": "frame by frame, each in its own clip frame"
+    }
+   },
+   "wrapper_sha256": "8cc2661d746069c93fb53946cb8f8ed9cbc8f62224e0c9b79796878ad4991db3"
+  },
+  "LieDown": {
+   "mjs_sha256": "5e491f906c762a2fb7d8f4188461e27c9c4acf63bbd8fe35f29dbad5e72f9564",
+   "owner_residuals": {
+    "local_translation_policy": "owner rest offsets for every non-hips joint (no translation track is written)",
+    "max_bone_length_deviation_cm": 0.0
+   },
+   "prepare": {
+    "constant_tracks_holding_original_rest": [],
+    "dropped_scale_track_noise_max": 0.0,
+    "kept_unmapped_nodes": [
+     "src:Armature",
+     "src:NeckTwist02",
+     "src:Pelvis",
+     "src:Root",
+     "src:metacarpal1.L",
+     "src:metacarpal1.R",
+     "src:metacarpal2.L",
+     "src:metacarpal2.R",
+     "src:metacarpal3.L",
+     "src:metacarpal3.R",
+     "src:metacarpal4.L",
+     "src:metacarpal4.R"
+    ],
+    "mapped_joints": 52,
+    "prepared": "<work>/LieDown/prepared_source.glb",
+    "prepared_vs_original_max_joint_cm": 0.0,
+    "rest_rebase_correction_deg": {
+     "Head": 16.7014,
+     "LeftArm": 65.3329,
+     "LeftFoot": 38.4265,
+     "LeftForeArm": 60.327,
+     "LeftHand": 60.5986,
+     "LeftHandIndex1": 102.0123,
+     "LeftHandIndex2": 99.4329,
+     "LeftHandIndex3": 99.4329,
+     "LeftHandMiddle1": 104.4478,
+     "LeftHandMiddle2": 95.7468,
+     "LeftHandMiddle3": 95.7468,
+     "LeftHandPinky1": 103.4627,
+     "LeftHandPinky2": 112.6821,
+     "LeftHandPinky3": 112.6821,
+     "LeftHandRing1": 98.5817,
+     "LeftHandRing2": 109.9414,
+     "LeftHandRing3": 109.9414,
+     "LeftHandThumb1": 57.1146,
+     "LeftHandThumb2": 57.1091,
+     "LeftHandThumb3": 57.1091,
+     "LeftLeg": 2.8942,
+     "LeftShoulder": 19.4512,
+     "LeftToeBase": 38.4265,
+     "LeftUpLeg": 5.2074,
+     "Neck": 16.7014,
+     "RightArm": 65.0937,
+     "RightFoot": 32.2868,
+     "RightForeArm": 61.2558,
+     "RightHand": 49.9975,
+     "RightHandIndex1": 100.7696,
+     "RightHandIndex2": 103.5133,
+     "RightHandIndex3": 103.5133,
+     "RightHandMiddle1": 100.5734,
+     "RightHandMiddle2": 103.3832,
+     "RightHandMiddle3": 103.3832,
+     "RightHandPinky1": 104.6201,
+     "RightHandPinky2": 119.0043,
+     "RightHandPinky3": 119.0043,
+     "RightHandRing1": 98.8264,
+     "RightHandRing2": 107.8835,
+     "RightHandRing3": 107.8835,
+     "RightHandThumb1": 52.6123,
+     "RightHandThumb2": 52.6098,
+     "RightHandThumb3": 52.6098,
+     "RightLeg": 4.641,
+     "RightShoulder": 18.6276,
+     "RightToeBase": 32.2868,
+     "RightUpLeg": 4.7952,
+     "Spine2": 9.0703
+    },
+    "rest_rebase_passes": 1,
+    "source_direction_undefined_child_is_static_leaf": [
+     "Head",
+     "LeftHandIndex3",
+     "LeftHandMiddle3",
+     "LeftHandPinky3",
+     "LeftHandRing3",
+     "LeftHandThumb3",
+     "LeftToeBase",
+     "RightHandIndex3",
+     "RightHandMiddle3",
+     "RightHandPinky3",
+     "RightHandRing3",
+     "RightHandThumb3",
+     "RightToeBase"
+    ],
+    "source_leg_height_over_owner": 0.980104,
+    "static_leaves_added": [
+     "HeadTop_End",
+     "RightHandThumb4",
+     "RightHandIndex4",
+     "RightHandMiddle4",
+     "RightHandRing4",
+     "RightHandPinky4",
+     "LeftHandThumb4",
+     "LeftHandIndex4",
+     "LeftHandMiddle4",
+     "LeftHandRing4",
+     "LeftHandPinky4",
+     "RightToe_End",
+     "LeftToe_End"
+    ]
+   },
+   "preset": "v5",
+   "raw_output_sha256": "f7cf15686dc35e6a13688fc3ecb6976bd813f304d641635da5258cac2056445f",
+   "rest_axis_residual_deg": {
+    "Head": 0,
+    "Hips": 5.9604,
+    "LeftArm": 0,
+    "LeftFoot": 0,
+    "LeftForeArm": 0,
+    "LeftHand": 0.0,
+    "LeftHandIndex1": 0,
+    "LeftHandIndex2": 0,
+    "LeftHandIndex3": 0,
+    "LeftHandMiddle1": 0,
+    "LeftHandMiddle2": 0,
+    "LeftHandMiddle3": 0,
+    "LeftHandPinky1": 0,
+    "LeftHandPinky2": 0,
+    "LeftHandPinky3": 0,
+    "LeftHandRing1": 0,
+    "LeftHandRing2": 0,
+    "LeftHandRing3": 0,
+    "LeftHandThumb1": 0,
+    "LeftHandThumb2": 0,
+    "LeftHandThumb3": 0,
+    "LeftLeg": 0,
+    "LeftShoulder": 0,
+    "LeftToeBase": 0,
+    "LeftUpLeg": 0,
+    "Neck": 0,
+    "RightArm": 0,
+    "RightFoot": 0.0,
+    "RightForeArm": 0,
+    "RightHand": 0.0,
+    "RightHandIndex1": 0,
+    "RightHandIndex2": 0,
+    "RightHandIndex3": 0,
+    "RightHandMiddle1": 0,
+    "RightHandMiddle2": 0,
+    "RightHandMiddle3": 0,
+    "RightHandPinky1": 0,
+    "RightHandPinky2": 0.0,
+    "RightHandPinky3": 0,
+    "RightHandRing1": 0,
+    "RightHandRing2": 0,
+    "RightHandRing3": 0,
+    "RightHandThumb1": 0.0,
+    "RightHandThumb2": 0,
+    "RightHandThumb3": 0,
+    "RightLeg": 0,
+    "RightShoulder": 0,
+    "RightToeBase": 0,
+    "RightUpLeg": 0,
+    "Spine": 3.154,
+    "Spine1": 3.1543,
+    "Spine2": 0
+   },
+   "retarget_first_person_mjs": {
+    "algorithm": "Aligned world rest delta; QtargetWorld=C QsrcWorld inverse(QsrcRestWorld) inverse(C) QtargetRestWorld",
+    "alignmentQuaternion": [
+     0.009873560984621044,
+     0.7072219474544038,
+     -0.01083811751659619,
+     -0.7068395610327566
+    ],
+    "checks": {
+     "boneLengthMaxError": 2.220446049250313e-16,
+     "noMotionRestMaxError": 2.9802322387695312e-08,
+     "sampledBoneLengthMaxError": 4.996003610813204e-16
+    },
+    "duration": 16.96666717529297,
+    "frames": 510,
+    "legHeightScale": 1.0203003086248856,
+    "outputSHA256": "f7cf15686dc35e6a13688fc3ecb6976bd813f304d641635da5258cac2056445f",
+    "proceduralMotionAdded": false,
+    "sourceLegHeight": 0.7921039875614462,
+    "sourceSHA256": "2c213e89c0fcb230a9e3f07b3ea1a405c97e3cc660ec81d3d53153cb2921ef13",
+    "targetLegHeight": 0.8081839429719462,
+    "targetSHA256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb"
+   },
+   "source": "web/room/mh_v5/room_bed_lie.glb",
+   "source_sha256": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94",
+   "this_retarget_non_hips_translation_tracks": {
+    "bone": null,
+    "max_bone_length_change_cm": 0.0,
+    "max_cm": 0.0,
+    "non_hips_translation_tracks": 0,
+    "unit": "cm (the 0.01-scale mixamo node's units), local offset vs the owner's rest offset"
+   },
+   "vs_drifted_mh_mx_copy": {
+    "copy_max_bone_length_deviation_cm": 2.975933,
+    "copy_non_hips_translation_drift": {
+     "bone": "Spine",
+     "max_bone_length_change_cm": 2.9759,
+     "max_cm": 7.0811,
+     "non_hips_translation_tracks": 12,
+     "unit": "cm (the 0.01-scale mixamo node's units), local offset vs the owner's rest offset"
+    },
+    "file": "web/room/mh_mx/room_bed_lie.glb",
+    "sha256": "f22e3fb1a991c25dd0d128059e97e52e49819e2393db78dbc9c690a80af8d3e2",
+    "world_joint_difference_cm": {
+     "max": 23.79,
+     "median": 11.605,
+     "note": "frame by frame, each in its own clip frame"
+    }
+   },
+   "wrapper_sha256": "8cc2661d746069c93fb53946cb8f8ed9cbc8f62224e0c9b79796878ad4991db3"
+  }
+ },
+ "root_paths": {
+  "GetUp": {
+   "discontinuity": false,
+   "floor_travel_cm": 10.297,
+   "fps": 30.000028610256777,
+   "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+   "frames": 379,
+   "hips_height_cm": [
+    67.775,
+    94.947
+   ],
+   "implausible_bed_slides": [
+    {
+     "frames": 149,
+     "from_s": 0.0,
+     "max_speed_cm_s": 62.456,
+     "support": "bed",
+     "to_s": 4.9333,
+     "travel_cm": 45.147
+    },
+    {
+     "frames": 10,
+     "from_s": 5.4333,
+     "max_speed_cm_s": 181.789,
+     "support": "bed",
+     "to_s": 5.7333,
+     "travel_cm": 37.306
+    }
+   ],
+   "max_acceleration_at_s": 5.1667,
+   "max_acceleration_cm_s2": 761.788,
+   "max_frame_step_cm": 6.1615,
+   "max_speed_at_s": 5.4,
+   "max_speed_cm_s": 183.885,
+   "net_displacement_cm": [
+    108.709,
+    -17.041
+   ],
+   "net_distance_cm": 110.037,
+   "non_floor_travel_cm": 173.434,
+   "path_length_cm": 183.731,
+   "support_segments": [
+    {
+     "frames": 149,
+     "from_s": 0.0,
+     "max_speed_cm_s": 62.456,
+     "support": "bed",
+     "to_s": 4.9333,
+     "travel_cm": 45.147
+    },
+    {
+     "frames": 14,
+     "from_s": 4.9667,
+     "max_speed_cm_s": 183.885,
+     "support": "transitional",
+     "to_s": 5.4,
+     "travel_cm": 42.045
+    },
+    {
+     "frames": 10,
+     "from_s": 5.4333,
+     "max_speed_cm_s": 181.789,
+     "support": "bed",
+     "to_s": 5.7333,
+     "travel_cm": 37.306
+    },
+    {
+     "frames": 192,
+     "from_s": 5.7667,
+     "max_speed_cm_s": 40.864,
+     "support": "transitional",
+     "to_s": 12.1334,
+     "travel_cm": 48.936
+    },
+    {
+     "frames": 14,
+     "from_s": 12.1667,
+     "max_speed_cm_s": 38.168,
+     "support": "floor",
+     "to_s": 12.6,
+     "travel_cm": 10.297
+    }
+   ],
+   "teleport_step_threshold_cm": 10.0
+  },
+  "GetUp_uncropped": {
+   "discontinuity": false,
+   "floor_travel_cm": 102.24,
+   "fps": 30.000028610256777,
+   "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+   "frames": 464,
+   "hips_height_cm": [
+    67.775,
+    98.112
+   ],
+   "implausible_bed_slides": [
+    {
+     "frames": 149,
+     "from_s": 0.0,
+     "max_speed_cm_s": 62.456,
+     "support": "bed",
+     "to_s": 4.9333,
+     "travel_cm": 45.147
+    },
+    {
+     "frames": 10,
+     "from_s": 5.4333,
+     "max_speed_cm_s": 181.789,
+     "support": "bed",
+     "to_s": 5.7333,
+     "travel_cm": 37.306
+    }
+   ],
+   "max_acceleration_at_s": 5.1667,
+   "max_acceleration_cm_s2": 761.788,
+   "max_frame_step_cm": 6.1615,
+   "max_speed_at_s": 5.4,
+   "max_speed_cm_s": 183.885,
+   "net_displacement_cm": [
+    181.676,
+    -49.583
+   ],
+   "net_distance_cm": 188.321,
+   "non_floor_travel_cm": 173.434,
+   "path_length_cm": 275.674,
+   "support_segments": [
+    {
+     "frames": 149,
+     "from_s": 0.0,
+     "max_speed_cm_s": 62.456,
+     "support": "bed",
+     "to_s": 4.9333,
+     "travel_cm": 45.147
+    },
+    {
+     "frames": 14,
+     "from_s": 4.9667,
+     "max_speed_cm_s": 183.885,
+     "support": "transitional",
+     "to_s": 5.4,
+     "travel_cm": 42.045
+    },
+    {
+     "frames": 10,
+     "from_s": 5.4333,
+     "max_speed_cm_s": 181.789,
+     "support": "bed",
+     "to_s": 5.7333,
+     "travel_cm": 37.306
+    },
+    {
+     "frames": 192,
+     "from_s": 5.7667,
+     "max_speed_cm_s": 40.864,
+     "support": "transitional",
+     "to_s": 12.1334,
+     "travel_cm": 48.936
+    },
+    {
+     "frames": 99,
+     "from_s": 12.1667,
+     "max_speed_cm_s": 63.165,
+     "support": "floor",
+     "to_s": 15.4334,
+     "travel_cm": 102.24
+    }
+   ],
+   "teleport_step_threshold_cm": 10.0
+  },
+  "LieDown": {
+   "discontinuity": false,
+   "floor_travel_cm": 67.239,
+   "fps": 30.000028610256777,
+   "frame": "component frame: forward = owner rest facing (+Z glTF), right = owner rest right (-X glTF), up = +Y glTF; cm, relative to frame 0. UE character-local axes are X forward, Y right, Z up.",
+   "frames": 510,
+   "hips_height_cm": [
+    70.151,
+    94.001
+   ],
+   "implausible_bed_slides": [],
+   "max_acceleration_at_s": 0.7667,
+   "max_acceleration_cm_s2": 225.316,
+   "max_frame_step_cm": 2.3359,
+   "max_speed_at_s": 0.4,
+   "max_speed_cm_s": 70.077,
+   "net_displacement_cm": [
+    124.158,
+    22.516
+   ],
+   "net_distance_cm": 126.184,
+   "non_floor_travel_cm": 124.861,
+   "path_length_cm": 192.1,
+   "support_segments": [
+    {
+     "frames": 11,
+     "from_s": 0.0,
+     "max_speed_cm_s": 66.187,
+     "support": "floor",
+     "to_s": 0.3333,
+     "travel_cm": 15.726
+    },
+    {
+     "frames": 1,
+     "from_s": 0.3667,
+     "max_speed_cm_s": 68.717,
+     "support": "transitional",
+     "to_s": 0.3667,
+     "travel_cm": 2.246
+    },
+    {
+     "frames": 36,
+     "from_s": 0.4,
+     "max_speed_cm_s": 70.077,
+     "support": "floor",
+     "to_s": 1.5667,
+     "travel_cm": 51.513
+    },
+    {
+     "frames": 36,
+     "from_s": 1.6,
+     "max_speed_cm_s": 43.211,
+     "support": "transitional",
+     "to_s": 2.7667,
+     "travel_cm": 32.148
+    },
+    {
+     "frames": 19,
+     "from_s": 2.8,
+     "max_speed_cm_s": 22.484,
+     "support": "bed",
+     "to_s": 3.4,
+     "travel_cm": 7.727
+    },
+    {
+     "frames": 93,
+     "from_s": 3.4333,
+     "max_speed_cm_s": 18.075,
+     "support": "transitional",
+     "to_s": 6.5,
+     "travel_cm": 20.983
+    },
+    {
+     "frames": 314,
+     "from_s": 6.5333,
+     "max_speed_cm_s": 32.276,
+     "support": "bed",
+     "to_s": 16.9666,
+     "travel_cm": 61.757
+    }
+   ],
+   "teleport_step_threshold_cm": 10.0
+  }
+ },
+ "schema": "sub01.bed-transition-pipeline.v1",
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
+}

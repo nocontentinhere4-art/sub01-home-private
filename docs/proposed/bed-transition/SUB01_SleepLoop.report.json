@@ -1,0 +1,315 @@
+{
+ "accepted_for_binding": false,
+ "blend": {
+  "after_blend_seams": {
+   "lie_blend": {
+    "frames": [
+     331,
+     361
+    ],
+    "max_joint_acceleration_cm_s2": 3673.163,
+    "max_joint_speed_cm_s": 203.802,
+    "max_root_step_cm": 0.5003
+   },
+   "lie_down_into_loop": {
+    "frames": [
+     356,
+     361
+    ],
+    "max_joint_acceleration_cm_s2": 929.1,
+    "max_joint_speed_cm_s": 46.971,
+    "max_root_step_cm": 0.1284
+   },
+   "loop_into_get_up": {
+    "frames": [
+     555,
+     560
+    ],
+    "max_joint_acceleration_cm_s2": 959.152,
+    "max_joint_speed_cm_s": 77.291,
+    "max_root_step_cm": 0.0048
+   },
+   "wake_blend": {
+    "frames": [
+     554,
+     584
+    ],
+    "max_joint_acceleration_cm_s2": 3478.959,
+    "max_joint_speed_cm_s": 231.139,
+    "max_root_step_cm": 1.5735
+   },
+   "whole_clip": {
+    "max_joint_acceleration_cm_s2": 7274.182,
+    "max_joint_speed_cm_s": 396.909,
+    "max_root_step_cm": 6.1624
+   }
+  },
+  "before_blend": {
+   "best_match_lie_to_loop_placed": {
+    "attitude_deg": 6.7514,
+    "hips_world_distance_cm": 0.0,
+    "hips_world_offset_cm": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pose_cm": 58.4516,
+    "pose_rms_cm": 45.6396,
+    "posture": [
+     "supine",
+     "supine"
+    ],
+    "velocity_mismatch_cm_s": 167.273,
+    "world_max_joint_cm": 82.2759
+   },
+   "best_match_loop_to_wake_placed": {
+    "attitude_deg": 8.7921,
+    "hips_world_distance_cm": 0.0,
+    "hips_world_offset_cm": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pose_cm": 81.6856,
+    "pose_rms_cm": 49.5014,
+    "posture": [
+     "supine",
+     "supine"
+    ],
+    "velocity_mismatch_cm_s": 73.0877,
+    "world_max_joint_cm": 86.4679
+   },
+   "direct_cut_lie_end_to_loop_start_unplaced": {
+    "attitude_deg": 8.0829,
+    "hips_world_distance_cm": 150.9823,
+    "hips_world_offset_cm": [
+     -5.1755,
+     9.9376,
+     -150.5659
+    ],
+    "pose_cm": 86.8045,
+    "pose_rms_cm": 48.6519,
+    "posture": [
+     "supine",
+     "supine"
+    ],
+    "velocity_mismatch_cm_s": 0.1767,
+    "world_max_joint_cm": 281.5689
+   },
+   "direct_cut_loop_end_to_wake_start_unplaced": {
+    "attitude_deg": 2.1286,
+    "hips_world_distance_cm": 29.5227,
+    "hips_world_offset_cm": [
+     21.267,
+     -12.1293,
+     16.498
+    ],
+    "pose_cm": 84.3028,
+    "pose_rms_cm": 50.3346,
+    "posture": [
+     "supine",
+     "supine"
+    ],
+    "velocity_mismatch_cm_s": 2.317,
+    "world_max_joint_cm": 106.9041
+   }
+  },
+  "blend_frames": 24,
+  "chosen_sleep_loop": "sleep_back",
+  "composed_output": {
+   "committed": false,
+   "duration_s": 6.6333,
+   "frames": 200,
+   "path": "<work>/SUB01_SleepLoop.chain_sleep_back.glb",
+   "sha256": "e0adbc27f488c68f73b126adbcbb9cca8eaae76ca3ac2a2a6ce02c673f1dc5c0"
+  },
+  "lie_to_loop": {
+   "needed": "same posture class (supine) but a 58 cm limb/torso configuration gap: a captured settle on the owner skeleton from the lie-down's end pose into the loop's pose, or a lie-down that ends in the loop's pose, or a sleep loop captured in the lie-down's end pose. A blend cannot bridge this.",
+   "plausible_blend": false,
+   "refusal_reasons": [
+    "hips-relative pose gap 58.5 cm > 10.0 cm",
+    "velocity mismatch 167.3 cm/s > 50.0 cm/s"
+   ]
+  },
+  "loop_to_wake": {
+   "needed": "same posture class (supine) but a 82 cm limb/torso configuration gap: a captured transition from the loop's pose into the get-up's lying start, or a get-up captured from the loop's pose. A blend cannot bridge this.",
+   "plausible_blend": false,
+   "refusal_reasons": [
+    "hips-relative pose gap 81.7 cm > 10.0 cm",
+    "velocity mismatch 73.1 cm/s > 50.0 cm/s"
+   ]
+  },
+  "placement": {
+   "loop_onto_lie": {
+    "offset_cm": [
+     -20.859,
+     -7.739,
+     86.61
+    ],
+    "vertical_shift_cm": -7.739,
+    "yaw_deg": 135.3777
+   },
+   "rule": "one constant rigid placement per clip: yaw about vertical fitted by 2D Kabsch on all 65 joints, then the translation that puts the hips on the previous clip's hips at the blend start; never per frame. The vertical shift moves the loop to the lie-down's bed height, which is NOT the native mattress: the bed fit (tools/fit_bed_placement.py) decides the final height.",
+   "wake_onto_loop": {
+    "offset_cm": [
+     -18.509,
+     6.851,
+     117.906
+    ],
+    "vertical_shift_cm": 6.851,
+    "yaw_deg": 119.9985
+   }
+  },
+  "search_chosen": {
+   "joint_normalised_cost": 8.1686,
+   "lie": {
+    "attitude_deg": 6.7514,
+    "pose_cm": 58.4516,
+    "velocity_mismatch_cm_s": 167.273
+   },
+   "lie_frame": 334,
+   "loop_phase_at_lie_blend_start": 184,
+   "loop_start_phase": 9,
+   "wake": {
+    "attitude_deg": 8.7921,
+    "pose_cm": 81.6856,
+    "velocity_mismatch_cm_s": 73.0877
+   },
+   "wake_frame": 106
+  }
+ },
+ "licence_note": "PRIVATE. SleepLoop frames are Sova (author permission for the preview, confirmed by the owner 2026-10-08; licence pending, never public, never main). LieDown/GetUp derive from mh_v5 clips (\"as their sources\"; origin before preview/mh-motion undocumented). Never deploy.",
+ "loops_evaluated": {
+  "sleep_back": {
+   "loop_posture": "supine",
+   "loop_seam_own": {
+    "pose_cm": 0.0366,
+    "velocity_mismatch_cm_s": 0.2336
+   },
+   "sha256": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4"
+  },
+  "sleep_back_idle": {
+   "loop_posture": "oblique",
+   "loop_seam_own": {
+    "pose_cm": 0.0655,
+    "velocity_mismatch_cm_s": 0.6555
+   },
+   "sha256": "99b6904165f818b8318a89e63a5f19a83bc76cfedf4ad020df0caf8659bc5552"
+  },
+  "sleep_side": {
+   "loop_posture": "side_right",
+   "loop_seam_own": {
+    "pose_cm": 0.0196,
+    "velocity_mismatch_cm_s": 0.169
+   },
+   "sha256": "0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b"
+  }
+ },
+ "private": true,
+ "provenance": {
+  "chain_documented": [
+   "G23's Sova bed clips (preview/sova-phone-src docs/qa/sova/mattina/bed); SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)"
+  ],
+  "label": "third_party_authored_with_permission",
+  "licence": "preview-only permission; desk_states/README: \"licence is pending, so they never go to main\". PRIVATE use only; never public, never main.",
+  "not_documented": [
+   "the capture method",
+   "the original files and their hashes"
+  ],
+  "quotes": [
+   {
+    "file": "web/room/mh_mx/README.md",
+    "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+    "present_verbatim": true,
+    "quote": "**v5's room clips carried over** by `room_build/kimodo/mx_convert.mjs` (no Mixamo capture of these yet):"
+   },
+   {
+    "file": "web/room/mh_mx/README.md",
+    "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+    "present_verbatim": true,
+    "quote": "`desk_mouse_ik`, `room_walk`, `room_window`, `room_bed_lie`, `room_bed_wake`, `room_bedtime`"
+   },
+   {
+    "file": "web/room/CREDITS.md",
+    "file_sha256": "075e8bd62fc55666ee24b17e5fab3597aede1750b5cb8fe921c82fc81a6faf03",
+    "present_verbatim": true,
+    "quote": "| `mh_v5/*.glb` (the room clips retargeted onto v5, by G14; the same names as preview/room-mh's `mh/`) | preview/mh-motion's clips, retargeted | as their sources |"
+   },
+   {
+    "file": "web/room/mh_v5/README.md",
+    "file_sha256": "b12fa897afce5c1ce83bd74fd304a3b9b134189982f45819b0e4f908db546417",
+    "present_verbatim": true,
+    "quote": "| room_window, room_walk, room_sit_down, room_stand_up, room_bed_lie, room_bed_wake, room_door, room_bedtime | G12 (to come). G10d's QA ran with local stand-ins (room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options), not committed |"
+   },
+   {
+    "file": "docs/design/room-v5/README.md",
+    "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+    "present_verbatim": true,
+    "quote": "**The ones here now are placeholders**: room-mh's clips run through that script as it is at ef9c0e4."
+   },
+   {
+    "file": "docs/design/room-v5/README.md",
+    "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+    "present_verbatim": true,
+    "quote": "- **His motion:** 16 mocap clips retargeted onto him (`web/room/mh_v5/`, G14 and G12)"
+   },
+   {
+    "file": "room_build/kimodo/mh_retarget.mjs",
+    "file_sha256": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
+    "present_verbatim": true,
+    "quote": "// 3) zero-phase smoothing (Gaussian, sigma 1 frame limbs / 1.7 spine-neck-head), then two-bone IK: the wrists onto the"
+   },
+   {
+    "file": "room_build/kimodo/mixamo_clips.json",
+    "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+    "present_verbatim": true,
+    "quote": "\"Sleeping_Idle\": {"
+   },
+   {
+    "file": "room_build/kimodo/mixamo_clips.json",
+    "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+    "present_verbatim": true,
+    "quote": "\"Laying_Sleeping\": {"
+   },
+   {
+    "file": "docs/design/mixamo/README.md",
+    "file_sha256": "32c49dcba84368bba74678419913a3803f8f9d7848e265d2b134f1c08873f047",
+    "present_verbatim": true,
+    "quote": "| Sleeping_Idle \u2192 `room_sleeping_idle.glb` | 17.6 s; curled on his side; turns over and back (head 85\u00b0, arms 100\u00b0)"
+   },
+   {
+    "file": "web/room/desk_states/README.md",
+    "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+    "present_verbatim": true,
+    "quote": "SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)."
+   },
+   {
+    "file": "web/room/desk_states/README.md",
+    "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+    "present_verbatim": true,
+    "quote": "licence is pending, so they never go to main."
+   },
+   {
+    "file": "web/room/desk_states/README.md",
+    "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+    "present_verbatim": true,
+    "quote": "- **Asleep:** `sleep_side`; after 40-90 s `sleep_roll_to_back` (once), then `sleep_back` and `sleep_back_idle` taking turns."
+   }
+  ],
+  "source_sha256": {
+   "web/room/desk_states/bed/sleep_back.glb": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4"
+  },
+  "source_used": "web/room/desk_states/bed/<loop>.glb (owner skeleton, exact rest)",
+  "verdict": "Permissioned private preview clips; capture method undocumented."
+ },
+ "retarget": {
+  "note": "already on the owner skeleton (exact rest, non-hips translation tracks: 0); sampled, not retargeted",
+  "owner_residuals": {
+   "local_translation_policy": "owner rest offsets for every non-hips joint (no translation track is written)",
+   "max_bone_length_deviation_cm": 0.0
+  }
+ },
+ "role": "SleepLoop",
+ "schema": "sub01.bed-transition-clip.v1",
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
+}

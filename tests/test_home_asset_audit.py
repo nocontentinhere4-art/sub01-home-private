@@ -200,6 +200,19 @@ def test_furnished_placement_matches_load_furnished():
     assert max(xs) - min(xs) == pytest.approx(1) and max(zs) - min(zs) == pytest.approx(2)
 
 
+def test_balcony_placeholder_boxes_removed_and_chair_collider_kept():
+    """The audit measured the old cream box chair inside the real armchair (seat box 100%
+    inside, 1,397 chair vertices; backrest on its front). Main d03e673 removed those four
+    lines (proposed hunk H6); they must not come back, and the armchair keeps its collider."""
+    home_js = (ROOT / 'web/house/home.js').read_text()
+    for removed in ('box(0.65, 0.16, 0.68, -1.2, 3.44, 4.5, M.cream, 0.07)',
+                    'box(0.65, 0.6, 0.16, -1.2, 3.77, 4.8, M.cream, 0.07)',
+                    'beam([x, 3, z], [x, 3.4, z], 0.025, M.wood)'):
+        assert removed not in home_js
+    assert 'furnished("modern_arm_chair_01", -1.2, 3, 4.5, 0.65)' in home_js
+    assert 'obstacle(-1.2, 4.55, 0.72, 0.8, 1)' in home_js
+
+
 def test_balcony_boxes_measured_against_actual_chair(tmp_path):
     # Keep the regression's original overlap even after removing the bad boxes
     # from the actual house. Auditing every asset is unnecessary for this case.

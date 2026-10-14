@@ -247,6 +247,9 @@ def test_demo_eye_with_caps_at_zero_makes_no_paid_call(tmp_path, monkeypatch):
     live.diary = D.Diary(tmp_path, tmp_path / "frames")
     live.last_frame = {"t": "11:58", "stage": "AWAKE", "img": "/eye/1.jpg", "thought": "quiet"}
     live.clients.add(object())                                   # someone is watching
+    # the eye is open only asleep or outside (owner, 2026-10-13); whether a fresh engine is asleep depends on the
+    # wall clock, so pin the open (dreaming) eye
+    monkeypatch.setattr(live, "eye_mode_now", lambda: ("dream", live.life.snapshot()))
 
     async def run():
         task = asyncio.create_task(live.run_eye())
@@ -255,7 +258,9 @@ def test_demo_eye_with_caps_at_zero_makes_no_paid_call(tmp_path, monkeypatch):
     asyncio.run(run())
     assert calls.n == 0 and not live.ledger.path.exists()
     assert live.eye_resting and "eye" in live.eye_resting
-    assert live.sent == [{"type": "eye", **live.last_frame, "resting": live_server.RESTING}]
+    # the state comes first, then the resting frame
+    assert live.sent[0] == {"type": "eye_state", "mode": "dream", "since": live.eye_since}
+    assert live.sent[1:] == [{"type": "eye", **live.last_frame, "resting": live_server.RESTING}]
     assert live.eye_frame()["resting"] == "resting its eyes"     # also what a new viewer gets in its hello
 
 

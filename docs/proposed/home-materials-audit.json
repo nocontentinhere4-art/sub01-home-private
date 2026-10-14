@@ -1,0 +1,4252 @@
+{
+ "schema": "sub01.home-materials-audit.v1",
+ "scope": "Repo-side measurements only. The real full-home.glb (server, sha 9556495f..., 110 materials) is not in the repository: run `python3 tools/home_materials_spec.py --glb <full-home.glb>` there. No visual comparison or match is claimed.",
+ "texture_sets": {
+  "home_oak_floor": {
+   "folder": "web/house/assets/home_oak_floor",
+   "licence": "CC0-1.0 Poly Haven oak_wood_planks",
+   "coverage_m": 1.2,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     160.5,
+     133.4,
+     115.8
+    ],
+    "linear_mean": {
+     "linear": [
+      0.3561,
+      0.2378,
+      0.1754
+     ],
+     "srgb_hex": "#a18674",
+     "luminance": 0.2584,
+     "hue_deg": 23.6,
+     "saturation": 0.2779,
+     "chroma": 0.2902
+    },
+    "luminance_p01_p99": [
+     0.1787,
+     0.3663
+    ],
+    "linear_p99": [
+     0.491,
+     0.3419,
+     0.2542
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.4423,
+    "green_sd": 0.0671,
+    "green_p05_p95": [
+     0.3569,
+     0.5725
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.5006,
+     0.4991,
+     0.9961
+    ]
+   }
+  },
+  "home_oak_veneer": {
+   "folder": "web/house/assets/home_oak_veneer",
+   "licence": "CC0-1.0 Poly Haven (see provenance.json)",
+   "coverage_m": 1.83,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     161.3,
+     126.1,
+     87.4
+    ],
+    "linear_mean": {
+     "linear": [
+      0.3598,
+      0.2111,
+      0.0984
+     ],
+     "srgb_hex": "#a27f58",
+     "luminance": 0.2346,
+     "hue_deg": 31.4,
+     "saturation": 0.4537,
+     "chroma": 0.459
+    },
+    "luminance_p01_p99": [
+     0.1559,
+     0.3317
+    ],
+    "linear_p99": [
+     0.4793,
+     0.305,
+     0.1651
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "green_mean": 0.5304,
+    "green_sd": 0.1216,
+    "green_p05_p95": [
+     0.3216,
+     0.7137
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.4989,
+     0.4982,
+     0.9953
+    ]
+   }
+  },
+  "fine_grained_wood": {
+   "folder": "web/house/assets/fine_grained_wood",
+   "licence": "CC0-1.0 Poly Haven fine_grained_wood",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     65.8,
+     48.1,
+     32.8
+    ],
+    "linear_mean": {
+     "linear": [
+      0.055,
+      0.0303,
+      0.0155
+     ],
+     "srgb_hex": "#423121",
+     "luminance": 0.0345,
+     "hue_deg": 27.8,
+     "saturation": 0.4973,
+     "chroma": 0.4739
+    },
+    "luminance_p01_p99": [
+     0.0154,
+     0.0614
+    ],
+    "linear_p99": [
+     0.0931,
+     0.0545,
+     0.0319
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.8914,
+    "green_sd": 0.0186,
+    "green_p05_p95": [
+     0.8627,
+     0.9216
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.494,
+     0.4884,
+     0.9977
+    ]
+   }
+  },
+  "rough_linen": {
+   "folder": "web/house/assets/rough_linen",
+   "licence": "CC0-1.0 Poly Haven rough_linen",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1026
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     145.3,
+     171.1,
+     205.4
+    ],
+    "linear_mean": {
+     "linear": [
+      0.2868,
+      0.41,
+      0.6156
+     ],
+     "srgb_hex": "#92acce",
+     "luminance": 0.3986,
+     "hue_deg": 214.3,
+     "saturation": 0.2911,
+     "chroma": 0.3539
+    },
+    "luminance_p01_p99": [
+     0.2674,
+     0.5064
+    ],
+    "linear_p99": [
+     0.3763,
+     0.521,
+     0.7529
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1026
+    ],
+    "mode": "L",
+    "green_mean": 0.7183,
+    "green_sd": 0.0983,
+    "green_p05_p95": [
+     0.5608,
+     0.8863
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1026
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.4999,
+     0.5002,
+     0.9812
+    ]
+   }
+  },
+  "quatrefoil_jacquard_fabric": {
+   "folder": "web/house/assets/quatrefoil_jacquard_fabric",
+   "licence": "CC0-1.0 Poly Haven quatrefoil_jacquard_fabric",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1037
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     146.8,
+     3.2,
+     31.9
+    ],
+    "linear_mean": {
+     "linear": [
+      0.2913,
+      0.001,
+      0.0146
+     ],
+     "srgb_hex": "#930320",
+     "luminance": 0.0637,
+     "hue_deg": 347.9,
+     "saturation": 0.9782,
+     "chroma": 2.1861
+    },
+    "luminance_p01_p99": [
+     0.0564,
+     0.0711
+    ],
+    "linear_p99": [
+     0.3185,
+     0.0024,
+     0.0232
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1037
+    ],
+    "mode": "L",
+    "green_mean": 0.7164,
+    "green_sd": 0.0852,
+    "green_p05_p95": [
+     0.6118,
+     0.8784
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1037
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.5001,
+     0.5002,
+     0.9863
+    ]
+   },
+   "neutral": {
+    "size": [
+     1024,
+     1037
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     170.9,
+     170.9,
+     170.9
+    ],
+    "linear_mean": {
+     "linear": [
+      0.4066,
+      0.4066,
+      0.4066
+     ],
+     "srgb_hex": "#ababab",
+     "luminance": 0.4066,
+     "hue_deg": 0.0,
+     "saturation": 0.0,
+     "chroma": 0.0
+    },
+    "luminance_p01_p99": [
+     0.402,
+     0.4072
+    ],
+    "linear_p99": [
+     0.4072,
+     0.4072,
+     0.4072
+    ]
+   }
+  },
+  "white_plaster_02": {
+   "folder": "web/house/assets/white_plaster_02",
+   "licence": "CC0-1.0 Poly Haven white_plaster_02",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     141.7,
+     135.3,
+     122.4
+    ],
+    "linear_mean": {
+     "linear": [
+      0.272,
+      0.2461,
+      0.1985
+     ],
+     "srgb_hex": "#8e887b",
+     "luminance": 0.2482,
+     "hue_deg": 40.1,
+     "saturation": 0.135,
+     "chroma": 0.1282
+    },
+    "luminance_p01_p99": [
+     0.1331,
+     0.3606
+    ],
+    "linear_p99": [
+     0.3916,
+     0.3564,
+     0.2961
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.9071,
+    "green_sd": 0.0208,
+    "green_p05_p95": [
+     0.8706,
+     0.9412
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.5076,
+     0.5069,
+     0.9891
+    ]
+   },
+   "neutral": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     216.9,
+     216.9,
+     216.9
+    ],
+    "linear_mean": {
+     "linear": [
+      0.693,
+      0.693,
+      0.693
+     ],
+     "srgb_hex": "#d9d9d9",
+     "luminance": 0.693,
+     "hue_deg": 0.0,
+     "saturation": 0.0,
+     "chroma": 0.0
+    },
+    "luminance_p01_p99": [
+     0.6584,
+     0.7231
+    ],
+    "linear_p99": [
+     0.7231,
+     0.7231,
+     0.7231
+    ]
+   }
+  },
+  "interior_tiles": {
+   "folder": "web/house/assets/interior_tiles",
+   "licence": "CC0-1.0 Poly Haven interior_tiles",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     170.1,
+     151.6,
+     132.2
+    ],
+    "linear_mean": {
+     "linear": [
+      0.4114,
+      0.3201,
+      0.2383
+     ],
+     "srgb_hex": "#ac9986",
+     "luminance": 0.3336,
+     "hue_deg": 30.7,
+     "saturation": 0.2201,
+     "chroma": 0.2142
+    },
+    "luminance_p01_p99": [
+     0.0355,
+     0.4219
+    ],
+    "linear_p99": [
+     0.4969,
+     0.4125,
+     0.3325
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.6961,
+    "green_sd": 0.0482,
+    "green_p05_p95": [
+     0.6588,
+     0.7686
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.5008,
+     0.4993,
+     0.9967
+    ]
+   }
+  },
+  "marble_01": {
+   "folder": "web/house/assets/marble_01",
+   "licence": "CC0-1.0 Poly Haven marble_01",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     177.4,
+     156.8,
+     121.5
+    ],
+    "linear_mean": {
+     "linear": [
+      0.4431,
+      0.3379,
+      0.1945
+     ],
+     "srgb_hex": "#b29d7a",
+     "luminance": 0.3499,
+     "hue_deg": 38.0,
+     "saturation": 0.3133,
+     "chroma": 0.2996
+    },
+    "luminance_p01_p99": [
+     0.2039,
+     0.4366
+    ],
+    "linear_p99": [
+     0.5271,
+     0.4287,
+     0.2664
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.5057,
+    "green_sd": 0.0206,
+    "green_p05_p95": [
+     0.498,
+     0.5412
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.4899,
+     0.4882,
+     0.9929
+    ]
+   }
+  },
+  "marble_slab_012": {
+   "folder": "web/house/assets/marble_slab_012",
+   "licence": "CC0-1.0 (repo manifest)",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     172.4,
+     173.4,
+     182.1
+    ],
+    "linear_mean": {
+     "linear": [
+      0.4204,
+      0.4255,
+      0.4736
+     ],
+     "srgb_hex": "#adaeb7",
+     "luminance": 0.4279,
+     "hue_deg": 234.0,
+     "saturation": 0.0522,
+     "chroma": 0.0626
+    },
+    "luminance_p01_p99": [
+     0.185,
+     0.5771
+    ],
+    "linear_p99": [
+     0.5711,
+     0.5776,
+     0.5972
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "L",
+    "green_mean": 0.0659,
+    "green_sd": 0.0295,
+    "green_p05_p95": [
+     0.0314,
+     0.1255
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.5009,
+     0.4991,
+     0.9988
+    ]
+   }
+  },
+  "haven_linen": {
+   "folder": "web/house/assets/haven-sofa/maps",
+   "licence": "CC0-1.0 Innerscene Haven 224 (texture-manifest.json)",
+   "coverage_m": null,
+   "diff": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "srgb_mean_8bit": [
+     196.3,
+     185.3,
+     166.9
+    ],
+    "linear_mean": {
+     "linear": [
+      0.5543,
+      0.4869,
+      0.3858
+     ],
+     "srgb_hex": "#c4b9a7",
+     "luminance": 0.4939,
+     "hue_deg": 37.5,
+     "saturation": 0.1502,
+     "chroma": 0.145
+    },
+    "luminance_p01_p99": [
+     0.4576,
+     0.5337
+    ],
+    "linear_p99": [
+     0.6038,
+     0.5271,
+     0.4125
+    ]
+   },
+   "rough": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "green_mean": 0.7874,
+    "green_sd": 0.0135,
+    "green_p05_p95": [
+     0.7647,
+     0.8118
+    ]
+   },
+   "normal": {
+    "size": [
+     1024,
+     1024
+    ],
+    "mode": "RGB",
+    "mean_rgb": [
+     0.4981,
+     0.4981,
+     0.9889
+    ]
+   }
+  }
+ },
+ "bed": {
+  "source_groups": {
+   "file": "web/house/assets/cc0-queen-bed/queen-bed.glb",
+   "sha256": "57cc312cca389e9ac113be44c77f1c445e92eee056ef092460fe20a78d5ba07c",
+   "groups": {
+    "CC0_queen_0": [
+     "Original walnut grain"
+    ],
+    "CC0_queen_1": [
+     "Original teal upholstery"
+    ],
+    "CC0_queen_2": [
+     "Original cream upholstery"
+    ],
+    "CC0_queen_3": [
+     "Original linen upholstery"
+    ],
+    "CC0_queen_4": [
+     "Original blue_fabric upholstery"
+    ],
+    "CC0_queen_5": [
+     "Original oak grain"
+    ]
+   }
+  },
+  "group_geometry": {
+   "CC0_queen_0": {
+    "material": "Original walnut grain",
+    "role": "frame (rails/legs), non-upholstery -> oak image #e7dcc9 rough .82",
+    "branch": "oak",
+    "assembled_tint": "#e7dcc9",
+    "area_m2": 4.608,
+    "area_share": null,
+    "bounds_min_m": [
+     -0.82,
+     0.0,
+     -1.077
+    ],
+    "bounds_max_m": [
+     0.82,
+     0.38,
+     1.077
+    ],
+    "uv_units_per_metre": 0.992
+   },
+   "CC0_queen_1": {
+    "material": "Original teal upholstery",
+    "role": "HEADBOARD panel only (6.5 cm thick at z=-1.11..-1.05, 0.25..1.27 m high) -> #b99845",
+    "branch": "upholstery",
+    "assembled_tint": "#b99845",
+    "area_m2": 3.763,
+    "area_share": 0.211,
+    "bounds_min_m": [
+     -0.85,
+     0.25,
+     -1.113
+    ],
+    "bounds_max_m": [
+     0.85,
+     1.27,
+     -1.048
+    ],
+    "uv_units_per_metre": 0.997
+   },
+   "CC0_queen_2": {
+    "material": "Original cream upholstery",
+    "role": "mattress (full length, 0.38..0.60 m) -> #f7f4eb",
+    "branch": "upholstery",
+    "assembled_tint": "#f7f4eb",
+    "area_m2": 7.564,
+    "area_share": 0.423,
+    "bounds_min_m": [
+     -0.76,
+     0.38,
+     -1.015
+    ],
+    "bounds_max_m": [
+     0.76,
+     0.6,
+     1.015
+    ],
+    "uv_units_per_metre": 0.995
+   },
+   "CC0_queen_3": {
+    "material": "Original linen upholstery",
+    "role": "pillows (z -0.89..-0.45) -> #f7f4eb",
+    "branch": "upholstery",
+    "assembled_tint": "#f7f4eb",
+    "area_m2": 1.431,
+    "area_share": 0.08,
+    "bounds_min_m": [
+     -0.684,
+     0.554,
+     -0.89
+    ],
+    "bounds_max_m": [
+     0.684,
+     0.768,
+     -0.45
+    ],
+    "uv_units_per_metre": 0.956
+   },
+   "CC0_queen_4": {
+    "material": "Original blue_fabric upholstery",
+    "role": "duvet/cover (z -0.47..+1.00, top 0.70 m) -> #f7f4eb",
+    "branch": "upholstery",
+    "assembled_tint": "#f7f4eb",
+    "area_m2": 5.111,
+    "area_share": 0.286,
+    "bounds_min_m": [
+     -0.84,
+     0.508,
+     -0.467
+    ],
+    "bounds_max_m": [
+     0.84,
+     0.698,
+     0.995
+    ],
+    "uv_units_per_metre": 0.985
+   },
+   "CC0_queen_5": {
+    "material": "Original oak grain",
+    "role": "slats (0.355..0.38 m), non-upholstery -> oak image #e7dcc9 rough .82",
+    "branch": "oak",
+    "assembled_tint": "#e7dcc9",
+    "area_m2": 3.128,
+    "area_share": null,
+    "bounds_min_m": [
+     -0.77,
+     0.355,
+     -0.949
+    ],
+    "bounds_max_m": [
+     0.77,
+     0.38,
+     0.949
+    ],
+    "uv_units_per_metre": 0.991
+   }
+  },
+  "tints": {
+   "assemble_lines": [
+    "upholstery = 'upholstery' in material.name",
+    "tint = '#b99845' if 'teal' in material.name else '#f7f4eb'",
+    "set_base(material, tint if upholstery else '#e7dcc9',",
+    "         linen_image if upholstery else oak_image, 2 if upholstery else 1)",
+    "set_roughness(material, .92 if upholstery else .82, old_factor)"
+   ],
+   "linen_image_note": "assemble_home_blender.py:203 linen_image = base_image(pillow.data.materials[0]); in the V4 export the pillow uses M.linen = pbr('rough_linen') (home.js:193), whose diff.jpg is measured below. If the native pillow texture differs, rerun --glb on the real file.",
+   "teal_with_rough_linen": {
+    "tint": "#b99845",
+    "tint_linear": {
+     "linear": [
+      0.4851,
+      0.314,
+      0.0595
+     ],
+     "srgb_hex": "#b99845",
+     "luminance": 0.332,
+     "hue_deg": 42.9,
+     "saturation": 0.627,
+     "chroma": 0.5445
+    },
+    "texture_mean": {
+     "linear": [
+      0.2868,
+      0.41,
+      0.6156
+     ],
+     "srgb_hex": "#92acce",
+     "luminance": 0.3987,
+     "hue_deg": 214.3,
+     "saturation": 0.2912,
+     "chroma": 0.3539
+    },
+    "linear_product (correct glTF)": {
+     "linear": [
+      0.1391,
+      0.1287,
+      0.0366
+     ],
+     "srgb_hex": "#686436",
+     "luminance": 0.1243,
+     "hue_deg": 55.5,
+     "saturation": 0.4839,
+     "chroma": 0.4135
+    },
+    "srgb_space_product": {
+     "linear": [
+      0.1436,
+      0.1335,
+      0.0391
+     ],
+     "srgb_hex": "#6a6638",
+     "luminance": 0.1289,
+     "hue_deg": 55.7,
+     "saturation": 0.4738,
+     "chroma": 0.408
+    },
+    "tint_double_linearised": {
+     "linear": [
+      0.0575,
+      0.0329,
+      0.003
+     ],
+     "srgb_hex": "#44330a",
+     "luminance": 0.036,
+     "hue_deg": 42.5,
+     "saturation": 0.8551,
+     "chroma": 0.6338
+    },
+    "tint_alone_no_texture": {
+     "linear": [
+      0.4851,
+      0.314,
+      0.0595
+     ],
+     "srgb_hex": "#b99845",
+     "luminance": 0.332,
+     "hue_deg": 42.9,
+     "saturation": 0.627,
+     "chroma": 0.5445
+    }
+   },
+   "cream_with_rough_linen": {
+    "tint": "#f7f4eb",
+    "tint_linear": {
+     "linear": [
+      0.9301,
+      0.9047,
+      0.8308
+     ],
+     "srgb_hex": "#f7f4eb",
+     "luminance": 0.9047,
+     "hue_deg": 45.0,
+     "saturation": 0.0486,
+     "chroma": 0.0499
+    },
+    "texture_mean": {
+     "linear": [
+      0.2868,
+      0.41,
+      0.6156
+     ],
+     "srgb_hex": "#92acce",
+     "luminance": 0.3987,
+     "hue_deg": 214.3,
+     "saturation": 0.2912,
+     "chroma": 0.3539
+    },
+    "linear_product (correct glTF)": {
+     "linear": [
+      0.2668,
+      0.3709,
+      0.5114
+     ],
+     "srgb_hex": "#8da4bd",
+     "luminance": 0.3589,
+     "hue_deg": 211.6,
+     "saturation": 0.2551,
+     "chroma": 0.2873
+    },
+    "srgb_space_product": {
+     "linear": [
+      0.2675,
+      0.3719,
+      0.5126
+     ],
+     "srgb_hex": "#8da4be",
+     "luminance": 0.3598,
+     "hue_deg": 211.6,
+     "saturation": 0.255,
+     "chroma": 0.2871
+    },
+    "tint_double_linearised": {
+     "linear": [
+      0.2433,
+      0.3266,
+      0.4046
+     ],
+     "srgb_hex": "#879bab",
+     "luminance": 0.3145,
+     "hue_deg": 206.8,
+     "saturation": 0.2067,
+     "chroma": 0.212
+    },
+    "tint_alone_no_texture": {
+     "linear": [
+      0.9301,
+      0.9047,
+      0.8308
+     ],
+     "srgb_hex": "#f7f4eb",
+     "luminance": 0.9047,
+     "hue_deg": 45.0,
+     "saturation": 0.0486,
+     "chroma": 0.0499
+    }
+   },
+   "teal_with_original_teal_texture": {
+    "tint": "#b99845",
+    "tint_linear": {
+     "linear": [
+      0.4851,
+      0.314,
+      0.0595
+     ],
+     "srgb_hex": "#b99845",
+     "luminance": 0.332,
+     "hue_deg": 42.9,
+     "saturation": 0.627,
+     "chroma": 0.5445
+    },
+    "texture_mean": {
+     "linear": [
+      0.0452,
+      0.2016,
+      0.2195
+     ],
+     "srgb_hex": "#3c7c81",
+     "luminance": 0.1696,
+     "hue_deg": 184.3,
+     "saturation": 0.5348,
+     "chroma": 0.469
+    },
+    "linear_product (correct glTF)": {
+     "linear": [
+      0.0219,
+      0.0633,
+      0.0131
+     ],
+     "srgb_hex": "#29471e",
+     "luminance": 0.0509,
+     "hue_deg": 104.5,
+     "saturation": 0.5769,
+     "chroma": 0.5585
+    },
+    "srgb_space_product": {
+     "linear": [
+      0.0247,
+      0.0683,
+      0.0167
+     ],
+     "srgb_hex": "#2c4a23",
+     "luminance": 0.0553,
+     "hue_deg": 106.7,
+     "saturation": 0.5278,
+     "chroma": 0.5318
+    },
+    "tint_double_linearised": {
+     "linear": [
+      0.0091,
+      0.0162,
+      0.0011
+     ],
+     "srgb_hex": "#182204",
+     "luminance": 0.0136,
+     "hue_deg": 80.2,
+     "saturation": 0.8977,
+     "chroma": 0.5766
+    },
+    "tint_alone_no_texture": {
+     "linear": [
+      0.4851,
+      0.314,
+      0.0595
+     ],
+     "srgb_hex": "#b99845",
+     "luminance": 0.332,
+     "hue_deg": 42.9,
+     "saturation": 0.627,
+     "chroma": 0.5445
+    }
+   },
+   "cream_with_original_cream_texture": {
+    "tint": "#f7f4eb",
+    "tint_linear": {
+     "linear": [
+      0.9301,
+      0.9047,
+      0.8308
+     ],
+     "srgb_hex": "#f7f4eb",
+     "luminance": 0.9047,
+     "hue_deg": 45.0,
+     "saturation": 0.0486,
+     "chroma": 0.0499
+    },
+    "texture_mean": {
+     "linear": [
+      0.7835,
+      0.7529,
+      0.6308
+     ],
+     "srgb_hex": "#e5e1d0",
+     "luminance": 0.7506,
+     "hue_deg": 48.6,
+     "saturation": 0.0917,
+     "chroma": 0.0956
+    },
+    "linear_product (correct glTF)": {
+     "linear": [
+      0.7287,
+      0.6811,
+      0.524
+     ],
+     "srgb_hex": "#ded7bf",
+     "luminance": 0.6799,
+     "hue_deg": 47.0,
+     "saturation": 0.1365,
+     "chroma": 0.1387
+    },
+    "srgb_space_product": {
+     "linear": [
+      0.7291,
+      0.6816,
+      0.5252
+     ],
+     "srgb_hex": "#ded7c0",
+     "luminance": 0.6804,
+     "hue_deg": 47.0,
+     "saturation": 0.1358,
+     "chroma": 0.138
+    },
+    "tint_double_linearised": {
+     "linear": [
+      0.6647,
+      0.5998,
+      0.4146
+     ],
+     "srgb_hex": "#d5cbac",
+     "luminance": 0.6002,
+     "hue_deg": 45.9,
+     "saturation": 0.1903,
+     "chroma": 0.189
+    },
+    "tint_alone_no_texture": {
+     "linear": [
+      0.9301,
+      0.9047,
+      0.8308
+     ],
+     "srgb_hex": "#f7f4eb",
+     "luminance": 0.9047,
+     "hue_deg": 45.0,
+     "saturation": 0.0486,
+     "chroma": 0.0499
+    }
+   },
+   "source_group_textures": {
+    "Original walnut grain": {
+     "linear": [
+      0.1523,
+      0.0651,
+      0.024
+     ],
+     "srgb_hex": "#6d482b",
+     "luminance": 0.0807,
+     "hue_deg": 26.7,
+     "saturation": 0.6062,
+     "chroma": 0.6631
+    },
+    "Original teal upholstery": {
+     "linear": [
+      0.0452,
+      0.2016,
+      0.2195
+     ],
+     "srgb_hex": "#3c7c81",
+     "luminance": 0.1696,
+     "hue_deg": 184.3,
+     "saturation": 0.5348,
+     "chroma": 0.469
+    },
+    "Original cream upholstery": {
+     "linear": [
+      0.7835,
+      0.7529,
+      0.6308
+     ],
+     "srgb_hex": "#e5e1d0",
+     "luminance": 0.7506,
+     "hue_deg": 48.6,
+     "saturation": 0.0917,
+     "chroma": 0.0956
+    },
+    "Original linen upholstery": {
+     "linear": [
+      0.6376,
+      0.5776,
+      0.4508
+     ],
+     "srgb_hex": "#d1c8b3",
+     "luminance": 0.5812,
+     "hue_deg": 42.0,
+     "saturation": 0.1435,
+     "chroma": 0.1412
+    },
+    "Original blue_fabric upholstery": {
+     "linear": [
+      0.0908,
+      0.1812,
+      0.3185
+     ],
+     "srgb_hex": "#557699",
+     "luminance": 0.1719,
+     "hue_deg": 210.9,
+     "saturation": 0.4445,
+     "chroma": 0.5636
+    },
+    "Original oak grain": {
+     "linear": [
+      0.415,
+      0.2656,
+      0.1209
+     ],
+     "srgb_hex": "#ac8d62",
+     "luminance": 0.2869,
+     "hue_deg": 34.7,
+     "saturation": 0.4345,
+     "chroma": 0.4241
+    }
+   }
+  }
+ },
+ "sofa": {
+  "source_groups": {
+   "file": "web/house/assets/haven-sofa/source.glb",
+   "sha256": "acad7fd3d9431929c303b1ae5cd476d7a108ce352a99ddf40e4e78ea7b9f2643",
+   "groups": {
+    "Arm | vertical tailoring seam": [
+     "Linen cord | warm flax"
+    ],
+    "Arm | vertical tailoring seam.001": [
+     "Linen cord | warm flax"
+    ],
+    "Cone.001": [
+     "Charcoal felt | foot glides and underside"
+    ],
+    "Cone.003": [
+     "Charcoal felt | foot glides and underside"
+    ],
+    "Cone.005": [
+     "Charcoal felt | foot glides and underside"
+    ],
+    "Cone.007": [
+     "Charcoal felt | foot glides and underside"
+    ],
+    "Left | feather back cushion": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Left | feather back cushion | lower tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Left | feather back cushion | upper tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Left | loose seat cushion": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Left | loose seat cushion | lower tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Left | loose seat cushion | upper tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Left | rounded upholstered arm": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Rear | upholstered back shell": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Right | feather back cushion": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Right | feather back cushion | lower tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Right | feather back cushion | upper tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Right | loose seat cushion": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Right | loose seat cushion | lower tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Right | loose seat cushion | upper tailored welt": [
+     "Linen cord | warm flax"
+    ],
+    "Right | rounded upholstered arm": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Cube.001": [
+     "Charcoal felt | foot glides and underside"
+    ],
+    "Upholstered deck": [
+     "Oatmeal | interlaced natural linen"
+    ],
+    "Cone": [
+     "Smoked walnut | satin tapered feet"
+    ],
+    "Cone.002": [
+     "Smoked walnut | satin tapered feet"
+    ],
+    "Cone.004": [
+     "Smoked walnut | satin tapered feet"
+    ],
+    "Cone.006": [
+     "Smoked walnut | satin tapered feet"
+    ]
+   },
+   "runtime_rule": "home.js:601 object.material = havenSofaMaterials[object.name] || Haven_linen; home.js:592-593 Haven_linen '#737e87', Haven_seams '#58616a'"
+  }
+ },
+ "wood_scale": {
+  "home_oak_floor": {
+   "coverage_m": 1.2,
+   "seams_px": [
+    85,
+    183,
+    315,
+    396,
+    476,
+    563,
+    645,
+    715,
+    786,
+    864,
+    955,
+    1022
+   ],
+   "pixels": 1024,
+   "plank_width_cm": 9.49,
+   "reference": "solid oak boards ~12-20 cm; Japanese composite flooring grooves 7.5 / 15 cm",
+   "note": "seam detector: row-mean luminance dips > 2 sd below a 25 px running median"
+  },
+  "home_oak_veneer": {
+   "coverage_m": 1.83,
+   "seams_px": [
+    72,
+    161,
+    313,
+    336,
+    373,
+    464,
+    481,
+    575,
+    618,
+    661,
+    739,
+    770,
+    879,
+    990,
+    1019
+   ],
+   "pixels": 1024,
+   "plank_width_cm": 10.81,
+   "reference": "solid oak boards ~12-20 cm; Japanese composite flooring grooves 7.5 / 15 cm",
+   "note": "seam detector: row-mean luminance dips > 2 sd below a 25 px running median"
+  },
+  "floor_cm_per_repeat": 120.0,
+  "queen_bed_oak_cm_per_repeat": 184.8
+ },
+ "presets": {
+  "bed-intended": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "bed-intended"
+   ],
+   "targets": [
+    {
+     "id": "bed-intended",
+     "class": "fabric",
+     "match": "material_name",
+     "source_materials": [
+      "Original teal upholstery",
+      "Original cream upholstery",
+      "Original linen upholstery",
+      "Original blue_fabric upholstery"
+     ],
+     "expected_materials": 4,
+     "same_texture": true,
+     "optional": false,
+     "bed": true,
+     "factors": {
+      "Original teal upholstery": [
+       0.48515,
+       0.31399,
+       0.05951
+      ],
+      "Original cream upholstery": [
+       0.93011,
+       0.90466,
+       0.83077
+      ],
+      "Original linen upholstery": [
+       0.93011,
+       0.90466,
+       0.83077
+      ],
+      "Original blue_fabric upholstery": [
+       0.93011,
+       0.90466,
+       0.83077
+      ]
+     },
+     "texture_signature": {
+      "sizes": [
+       [
+        512,
+        512
+       ],
+       [
+        511,
+        512
+       ],
+       [
+        1024,
+        1026
+       ]
+      ],
+      "source": "real Image_14 512x512 (root); repo rough_linen diff.jpg lite 511x512 / full 1024x1026"
+     },
+     "why": "assemble_home_blender.py:383 tints lost by the Blender glTF export; restored as linear baseColorFactor. Note: ivory x blue linen is still blue-grey (#8da4bd).",
+     "predicted": {
+      "Original teal upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.1381,
+         0.1284,
+         0.0364
+        ],
+        "srgb_hex": "#686436",
+        "luminance": 0.1238,
+        "hue_deg": 55.8,
+        "saturation": 0.4841,
+        "chroma": 0.4138
+       }
+      },
+      "Original cream upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.2647,
+         0.37,
+         0.5075
+        ],
+        "srgb_hex": "#8da4bd",
+        "luminance": 0.3575,
+        "hue_deg": 211.2,
+        "saturation": 0.2552,
+        "chroma": 0.2855
+       }
+      },
+      "Original linen upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.2647,
+         0.37,
+         0.5075
+        ],
+        "srgb_hex": "#8da4bd",
+        "luminance": 0.3575,
+        "hue_deg": 211.2,
+        "saturation": 0.2552,
+        "chroma": 0.2855
+       }
+      },
+      "Original blue_fabric upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.2647,
+         0.37,
+         0.5075
+        ],
+        "srgb_hex": "#8da4bd",
+        "luminance": 0.3575,
+        "hue_deg": 211.2,
+        "saturation": 0.2552,
+        "chroma": 0.2855
+       }
+      }
+     },
+     "texture_linear_mean_used": [
+      0.2846,
+      0.409,
+      0.6109
+     ]
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "bed-balanced": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "bed-balanced"
+   ],
+   "targets": [
+    {
+     "id": "bed-balanced",
+     "class": "fabric",
+     "match": "material_name",
+     "source_materials": [
+      "Original teal upholstery",
+      "Original cream upholstery",
+      "Original linen upholstery",
+      "Original blue_fabric upholstery"
+     ],
+     "expected_materials": 4,
+     "same_texture": true,
+     "optional": true,
+     "bed": true,
+     "factors": {
+      "Original teal upholstery": [
+       1.0269,
+       0.46246,
+       0.05868
+      ],
+      "Original cream upholstery": [
+       2.23959,
+       1.51577,
+       0.93192
+      ],
+      "Original linen upholstery": [
+       2.23959,
+       1.51577,
+       0.93192
+      ],
+      "Original blue_fabric upholstery": [
+       2.23959,
+       1.51577,
+       0.93192
+      ]
+     },
+     "texture_signature": {
+      "sizes": [
+       [
+        512,
+        512
+       ],
+       [
+        511,
+        512
+       ],
+       [
+        1024,
+        1026
+       ]
+      ],
+      "source": "real Image_14 512x512 (root); repo rough_linen diff.jpg lite 511x512 / full 1024x1026"
+     },
+     "why": "Option for root: the intended hues (#f7f4eb ivory, #b99845 ochre headboard) after cancelling the blue scan cast; ivory at Y 0.62 (CC0 cream upholstery scan Y 0.75, linen Y 0.49), ochre at dyed-textile Y 0.20.",
+     "predicted": {
+      "Original teal upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.2923,
+         0.1891,
+         0.0358
+        ],
+        "srgb_hex": "#937835",
+        "luminance": 0.2,
+        "hue_deg": 42.9,
+        "saturation": 0.6384,
+        "chroma": 0.5445
+       }
+      },
+      "Original cream upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.6374,
+         0.6199,
+         0.5693
+        ],
+        "srgb_hex": "#d1cec7",
+        "luminance": 0.62,
+        "hue_deg": 45.0,
+        "saturation": 0.0491,
+        "chroma": 0.0499
+       }
+      },
+      "Original linen upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.6374,
+         0.6199,
+         0.5693
+        ],
+        "srgb_hex": "#d1cec7",
+        "luminance": 0.62,
+        "hue_deg": 45.0,
+        "saturation": 0.0491,
+        "chroma": 0.0499
+       }
+      },
+      "Original blue_fabric upholstery": {
+       "before_real (factor lost, white)": {
+        "linear": [
+         0.2846,
+         0.409,
+         0.6109
+        ],
+        "srgb_hex": "#91abcd",
+        "luminance": 0.3971,
+        "hue_deg": 213.9,
+        "saturation": 0.2912,
+        "chroma": 0.3516
+       },
+       "after": {
+        "linear": [
+         0.6374,
+         0.6199,
+         0.5693
+        ],
+        "srgb_hex": "#d1cec7",
+        "luminance": 0.62,
+        "hue_deg": 45.0,
+        "saturation": 0.0491,
+        "chroma": 0.0499
+       }
+      }
+     },
+     "texture_linear_mean_used": [
+      0.2846,
+      0.409,
+      0.6109
+     ]
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "sofa-intended": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "sofa-intended"
+   ],
+   "targets": [
+    {
+     "id": "sofa-intended-linen",
+     "class": "fabric",
+     "match": "actor_prefix",
+     "actor_prefixes": [
+      "Haven_linen"
+     ],
+     "source_materials": [
+      "Haven_linen"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "factor": [
+      0.17144,
+      0.20864,
+      0.24228
+     ],
+     "texture_signature": null,
+     "why": "assemble_home_blender.py:401-404 tint #737e87, applied only if the inventory shows it lost (white factor); refused if a different non-white factor is present.",
+     "predicted": {
+      "before_if_lost": {
+       "linear": [
+        0.5544,
+        0.4871,
+        0.3864
+       ],
+       "srgb_hex": "#c4b9a7",
+       "luminance": 0.4941,
+       "hue_deg": 37.4,
+       "saturation": 0.1496,
+       "chroma": 0.1445
+      },
+      "after": {
+       "linear": [
+        0.095,
+        0.1016,
+        0.0936
+       ],
+       "srgb_hex": "#575a56",
+       "luminance": 0.0997,
+       "hue_deg": 109.1,
+       "saturation": 0.0389,
+       "chroma": 0.0454
+      }
+     }
+    },
+    {
+     "id": "sofa-intended-seams",
+     "class": "fabric",
+     "match": "actor_prefix",
+     "actor_prefixes": [
+      "Haven_seams"
+     ],
+     "source_materials": [
+      "Haven_seams"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "factor": [
+      0.09759,
+      0.11954,
+      0.14413
+     ],
+     "texture_signature": null,
+     "why": "assemble_home_blender.py:401-404 tint #58616a, applied only if the inventory shows it lost (white factor); refused if a different non-white factor is present.",
+     "predicted": {
+      "before_if_lost": {
+       "linear": [
+        0.5544,
+        0.4871,
+        0.3864
+       ],
+       "srgb_hex": "#c4b9a7",
+       "luminance": 0.4941,
+       "hue_deg": 37.4,
+       "saturation": 0.1496,
+       "chroma": 0.1445
+      },
+      "after": {
+       "linear": [
+        0.0541,
+        0.0582,
+        0.0557
+       ],
+       "srgb_hex": "#424443",
+       "luminance": 0.0572,
+       "hue_deg": 143.4,
+       "saturation": 0.0363,
+       "chroma": 0.036
+      }
+     }
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "darkwood-albedo": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "darkwood-albedo"
+   ],
+   "targets": [
+    {
+     "id": "darkwood-albedo",
+     "class": "dark_wood",
+     "match": "factor_fingerprint",
+     "fingerprint": [
+      0.55834,
+      0.40198,
+      0.22697
+     ],
+     "source_materials": [
+      "M.darkwood (unnamed in export)"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "factor": [
+      1.80182,
+      1.29723,
+      0.73244
+     ],
+     "factor_expect": [
+      [
+       0.5583403896342679,
+       0.4019777798321958,
+       0.22696587351009836
+      ]
+     ],
+     "texture_signature": {
+      "sizes": [
+       [
+        1024,
+        1024
+       ],
+       [
+        512,
+        512
+       ]
+      ],
+      "source": "fine_grained_wood diff.jpg"
+     },
+     "why": "fine_grained_wood mean Y 0.0345 x #c5aa83 gives Y 0.0155 (below 0.04). Same hue, scaled to Y 0.05 (dark walnut 0.04-0.10). Matched by its exact current factor, so only the material that really carries #c5aa83 is touched; brightest 1% texel 0.168.",
+     "predicted": {
+      "before": {
+       "linear": [
+        0.0307,
+        0.0122,
+        0.0035
+       ],
+       "srgb_hex": "#311d0c",
+       "luminance": 0.0155,
+       "hue_deg": 27.7,
+       "saturation": 0.7647,
+       "chroma": 0.732
+      },
+      "after": {
+       "linear": [
+        0.0991,
+        0.0393,
+        0.0114
+       ],
+       "srgb_hex": "#59381c",
+       "luminance": 0.05,
+       "hue_deg": 27.7,
+       "saturation": 0.6886,
+       "chroma": 0.732
+      }
+     }
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "metal-keyboard": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "metal-keyboard"
+   ],
+   "targets": [
+    {
+     "id": "metal-keyboard-plastic",
+     "class": "plastic",
+     "match": "material_name",
+     "source_materials": [
+      "plastic_black"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 0.0,
+       "expect": [
+        1.0
+       ]
+      }
+     ],
+     "why": "keyboard.glb plastic_black has metallic 1.0 and roughness 1.0: a plastic is a dielectric.",
+     "predicted": {}
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "metal-espresso": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "metal-espresso"
+   ],
+   "targets": [
+    {
+     "id": "metal-espresso-powdercoat",
+     "class": "plastic",
+     "match": "material_name",
+     "source_materials": [
+      "Charcoal fine-textured powdercoat"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 0.0,
+       "expect": [
+        0.25
+       ]
+      }
+     ],
+     "why": "Powder coat is a polymer film: dielectric (0.25 -> 0).",
+     "predicted": {}
+    },
+    {
+     "id": "metal-espresso-steel",
+     "class": "metal",
+     "match": "material_name",
+     "source_materials": [
+      "Satin galvanized steel",
+      "Blackened steel mounting hardware",
+      "Satin champagne bronze"
+     ],
+     "expected_materials": 3,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 1.0,
+       "expect": [
+        0.78,
+        0.75,
+        0.8
+       ]
+      }
+     ],
+     "why": "Bare metals are metallic 1 (Hoffman 2015); 0.75-0.8 mixes are non-physical.",
+     "predicted": {}
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "bed-wood-roughness": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "bed-wood-roughness"
+   ],
+   "targets": [
+    {
+     "id": "bed-wood-roughness",
+     "class": "oak",
+     "match": "material_name",
+     "source_materials": [
+      "Original walnut grain",
+      "Original oak grain"
+     ],
+     "expected_materials": 2,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "roughness_factor",
+       "value": 0.5,
+       "expect": [
+        0.82
+       ]
+      }
+     ],
+     "why": "Assembly sets the queen-bed wood to roughness .82 (near matte); oiled/lacquered oak 0.35-0.6, scan mean 0.44-0.53. Only applied if the real value is .82.",
+     "predicted": {},
+     "bed": true
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  }
+ },
+ "glbs": [
+  {
+   "file": "web/house/assets/cc0-queen-bed/queen-bed.glb",
+   "sha256": "57cc312cca389e9ac113be44c77f1c445e92eee056ef092460fe20a78d5ba07c",
+   "extensionsUsed": [],
+   "materials": [
+    {
+     "index": 0,
+     "name": "Original walnut grain",
+     "users": [
+      "CC0_queen_0"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.4399999976158142,
+     "baseColorTexture": {
+      "texture": 0,
+      "image": 0,
+      "texCoord": 0,
+      "name": "walnut_basecolor",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        108.6,
+        72.0,
+        42.6
+       ],
+       "linear_mean": {
+        "linear": [
+         0.1523,
+         0.0651,
+         0.024
+        ],
+        "srgb_hex": "#6d482b",
+        "luminance": 0.0806,
+        "hue_deg": 26.7,
+        "saturation": 0.6064,
+        "chroma": 0.6633
+       },
+       "luminance_p01_p99": [
+        0.0577,
+        0.102
+       ],
+       "linear_p99": [
+        0.1845,
+        0.0844,
+        0.0331
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.1523,
+       0.0651,
+       0.024
+      ],
+      "srgb_hex": "#6d482b",
+      "luminance": 0.0807,
+      "hue_deg": 26.7,
+      "saturation": 0.6062,
+      "chroma": 0.6631
+     },
+     "geometry": {
+      "object_space_area_m2": 4.6082,
+      "uv_units_per_metre": 0.9918,
+      "cm_per_texture_repeat": 100.83,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 1,
+     "name": "Original teal upholstery",
+     "users": [
+      "CC0_queen_1"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8600000143051147,
+     "baseColorTexture": {
+      "texture": 2,
+      "image": 2,
+      "texCoord": 0,
+      "name": "128886f8aae683d3",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        64,
+        64
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        60.0,
+        124.0,
+        129.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.0452,
+         0.2016,
+         0.2195
+        ],
+        "srgb_hex": "#3c7c81",
+        "luminance": 0.1696,
+        "hue_deg": 184.3,
+        "saturation": 0.5349,
+        "chroma": 0.4691
+       },
+       "luminance_p01_p99": [
+        0.1665,
+        0.1727
+       ],
+       "linear_p99": [
+        0.0467,
+        0.2051,
+        0.2232
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 1,
+      "image": 1,
+      "texCoord": 0,
+      "name": "fabric_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.2199999988079071,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0452,
+       0.2016,
+       0.2195
+      ],
+      "srgb_hex": "#3c7c81",
+      "luminance": 0.1696,
+      "hue_deg": 184.3,
+      "saturation": 0.5348,
+      "chroma": 0.469
+     },
+     "geometry": {
+      "object_space_area_m2": 3.7631,
+      "uv_units_per_metre": 0.9968,
+      "cm_per_texture_repeat": 100.32,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 2,
+     "name": "Original cream upholstery",
+     "users": [
+      "CC0_queen_2"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8600000143051147,
+     "baseColorTexture": {
+      "texture": 4,
+      "image": 3,
+      "texCoord": 0,
+      "name": "9589c5294431e89c",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        64,
+        64
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        229.0,
+        225.0,
+        208.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.7835,
+         0.7529,
+         0.6308
+        ],
+        "srgb_hex": "#e5e1d0",
+        "luminance": 0.7506,
+        "hue_deg": 48.6,
+        "saturation": 0.0917,
+        "chroma": 0.0956
+       },
+       "luminance_p01_p99": [
+        0.7431,
+        0.7582
+       ],
+       "linear_p99": [
+        0.7913,
+        0.7605,
+        0.6376
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 3,
+      "image": 1,
+      "texCoord": 0,
+      "name": "fabric_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.2199999988079071,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.7835,
+       0.7529,
+       0.6308
+      ],
+      "srgb_hex": "#e5e1d0",
+      "luminance": 0.7506,
+      "hue_deg": 48.6,
+      "saturation": 0.0917,
+      "chroma": 0.0956
+     },
+     "geometry": {
+      "object_space_area_m2": 7.5637,
+      "uv_units_per_metre": 0.9954,
+      "cm_per_texture_repeat": 100.46,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 3,
+     "name": "Original linen upholstery",
+     "users": [
+      "CC0_queen_3"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8600000143051147,
+     "baseColorTexture": {
+      "texture": 6,
+      "image": 4,
+      "texCoord": 0,
+      "name": "fca2d4783aad9375",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        64,
+        64
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        209.0,
+        200.0,
+        179.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.6376,
+         0.5776,
+         0.4508
+        ],
+        "srgb_hex": "#d1c8b3",
+        "luminance": 0.5812,
+        "hue_deg": 42.0,
+        "saturation": 0.1435,
+        "chroma": 0.1412
+       },
+       "luminance_p01_p99": [
+        0.5747,
+        0.5877
+       ],
+       "linear_p99": [
+        0.6445,
+        0.5841,
+        0.4564
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 5,
+      "image": 1,
+      "texCoord": 0,
+      "name": "fabric_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.2199999988079071,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.6376,
+       0.5776,
+       0.4508
+      ],
+      "srgb_hex": "#d1c8b3",
+      "luminance": 0.5812,
+      "hue_deg": 42.0,
+      "saturation": 0.1435,
+      "chroma": 0.1412
+     },
+     "geometry": {
+      "object_space_area_m2": 1.4309,
+      "uv_units_per_metre": 0.9559,
+      "cm_per_texture_repeat": 104.61,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 4,
+     "name": "Original blue_fabric upholstery",
+     "users": [
+      "CC0_queen_4"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8600000143051147,
+     "baseColorTexture": {
+      "texture": 8,
+      "image": 5,
+      "texCoord": 0,
+      "name": "20387cc4b7aa5889",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        64,
+        64
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        85.0,
+        118.0,
+        153.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.0908,
+         0.1812,
+         0.3185
+        ],
+        "srgb_hex": "#557699",
+        "luminance": 0.1719,
+        "hue_deg": 210.9,
+        "saturation": 0.4444,
+        "chroma": 0.5637
+       },
+       "luminance_p01_p99": [
+        0.1687,
+        0.1751
+       ],
+       "linear_p99": [
+        0.0931,
+        0.1845,
+        0.3231
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 7,
+      "image": 1,
+      "texCoord": 0,
+      "name": "fabric_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.2199999988079071,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0908,
+       0.1812,
+       0.3185
+      ],
+      "srgb_hex": "#557699",
+      "luminance": 0.1719,
+      "hue_deg": 210.9,
+      "saturation": 0.4445,
+      "chroma": 0.5636
+     },
+     "geometry": {
+      "object_space_area_m2": 5.1108,
+      "uv_units_per_metre": 0.9851,
+      "cm_per_texture_repeat": 101.51,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 5,
+     "name": "Original oak grain",
+     "users": [
+      "CC0_queen_5"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.5,
+     "baseColorTexture": {
+      "texture": 9,
+      "image": 6,
+      "texCoord": 0,
+      "name": "oak_basecolor",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        512,
+        384
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        172.4,
+        140.7,
+        97.4
+       ],
+       "linear_mean": {
+        "linear": [
+         0.415,
+         0.2656,
+         0.1209
+        ],
+        "srgb_hex": "#ac8d62",
+        "luminance": 0.2869,
+        "hue_deg": 34.7,
+        "saturation": 0.4345,
+        "chroma": 0.4241
+       },
+       "luminance_p01_p99": [
+        0.2376,
+        0.329
+       ],
+       "linear_p99": [
+        0.4735,
+        0.305,
+        0.1413
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.415,
+       0.2656,
+       0.1209
+      ],
+      "srgb_hex": "#ac8d62",
+      "luminance": 0.2869,
+      "hue_deg": 34.7,
+      "saturation": 0.4345,
+      "chroma": 0.4241
+     },
+     "geometry": {
+      "object_space_area_m2": 3.1282,
+      "uv_units_per_metre": 0.9914,
+      "cm_per_texture_repeat": 100.87,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "web/house/assets/cc0-porta-espresso/porta-espresso.glb",
+   "sha256": "20bf877c4f750da4e7bbff89ae2dddc0c71b647d9ac7d469293bf071bf10d3b4",
+   "extensionsUsed": [],
+   "materials": [
+    {
+     "index": 0,
+     "name": "Satin galvanized steel",
+     "users": [
+      "CC0_espresso_0"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0.7799999713897705,
+     "roughnessFactor": 0.41999998688697815,
+     "baseColorTexture": {
+      "texture": 1,
+      "image": 1,
+      "texCoord": 0,
+      "name": "793f26666fded2eb",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        164.0,
+        173.0,
+        177.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.3712,
+         0.4179,
+         0.4397
+        ],
+        "srgb_hex": "#a4adb1",
+        "luminance": 0.4095,
+        "hue_deg": 198.5,
+        "saturation": 0.0734,
+        "chroma": 0.0697
+       },
+       "luminance_p01_p99": [
+        0.4043,
+        0.4149
+       ],
+       "linear_p99": [
+        0.3763,
+        0.4233,
+        0.4452
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 0,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.3712,
+       0.4179,
+       0.4397
+      ],
+      "srgb_hex": "#a4adb1",
+      "luminance": 0.4095,
+      "hue_deg": 198.5,
+      "saturation": 0.0735,
+      "chroma": 0.0698
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0607,
+      "uv_units_per_metre": 7.726,
+      "cm_per_texture_repeat": 12.94,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness",
+      "nonphysical_partial_metal"
+     ]
+    },
+    {
+     "index": 1,
+     "name": "Charcoal fine-textured powdercoat",
+     "users": [
+      "CC0_espresso_1"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0.25,
+     "roughnessFactor": 0.5,
+     "baseColorTexture": {
+      "texture": 3,
+      "image": 2,
+      "texCoord": 0,
+      "name": "9fa33565fec230fa",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        43.0,
+        49.0,
+        49.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.0242,
+         0.0307,
+         0.0307
+        ],
+        "srgb_hex": "#2b3131",
+        "luminance": 0.0293,
+        "hue_deg": 180.0,
+        "saturation": 0.1224,
+        "chroma": 0.1088
+       },
+       "luminance_p01_p99": [
+        0.0282,
+        0.0305
+       ],
+       "linear_p99": [
+        0.0252,
+        0.0319,
+        0.0319
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 2,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0242,
+       0.0307,
+       0.0307
+      ],
+      "srgb_hex": "#2b3131",
+      "luminance": 0.0293,
+      "hue_deg": 180.0,
+      "saturation": 0.1214,
+      "chroma": 0.1079
+     },
+     "geometry": {
+      "object_space_area_m2": 0.1135,
+      "uv_units_per_metre": 7.2172,
+      "cm_per_texture_repeat": 13.86,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness",
+      "nonphysical_partial_metal",
+      "albedo_out_of_range"
+     ]
+    },
+    {
+     "index": 2,
+     "name": "Blackened steel mounting hardware",
+     "users": [
+      "CC0_espresso_2"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0.75,
+     "roughnessFactor": 0.3199999928474426,
+     "baseColorTexture": {
+      "texture": 5,
+      "image": 3,
+      "texCoord": 0,
+      "name": "56cdae412a8eb726",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        53.0,
+        58.0,
+        58.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.0356,
+         0.0423,
+         0.0423
+        ],
+        "srgb_hex": "#353a3a",
+        "luminance": 0.0409,
+        "hue_deg": 180.0,
+        "saturation": 0.0862,
+        "chroma": 0.0799
+       },
+       "luminance_p01_p99": [
+        0.0395,
+        0.0423
+       ],
+       "linear_p99": [
+        0.0369,
+        0.0437,
+        0.0437
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 4,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0356,
+       0.0423,
+       0.0423
+      ],
+      "srgb_hex": "#353a3a",
+      "luminance": 0.0409,
+      "hue_deg": 180.0,
+      "saturation": 0.0861,
+      "chroma": 0.0798
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0183,
+      "uv_units_per_metre": 9.6802,
+      "cm_per_texture_repeat": 10.33,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness",
+      "nonphysical_partial_metal"
+     ]
+    },
+    {
+     "index": 3,
+     "name": "Warm ivory satin cabinet enamel",
+     "users": [
+      "CC0_espresso_3"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.4000000059604645,
+     "baseColorTexture": {
+      "texture": 7,
+      "image": 4,
+      "texCoord": 0,
+      "name": "d966172d8b7db081",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        211.0,
+        206.0,
+        194.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.6514,
+         0.6172,
+         0.5395
+        ],
+        "srgb_hex": "#d3cec2",
+        "luminance": 0.6189,
+        "hue_deg": 42.4,
+        "saturation": 0.0806,
+        "chroma": 0.0801
+       },
+       "luminance_p01_p99": [
+        0.6121,
+        0.6256
+       ],
+       "linear_p99": [
+        0.6584,
+        0.624,
+        0.5457
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 6,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.6514,
+       0.6172,
+       0.5395
+      ],
+      "srgb_hex": "#d3cec2",
+      "luminance": 0.6189,
+      "hue_deg": 42.3,
+      "saturation": 0.0805,
+      "chroma": 0.08
+     },
+     "geometry": {
+      "object_space_area_m2": 0.6747,
+      "uv_units_per_metre": 3.8896,
+      "cm_per_texture_repeat": 25.71,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness"
+     ]
+    },
+    {
+     "index": 4,
+     "name": "Black felt floor glides",
+     "users": [
+      "CC0_espresso_4"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8799999952316284,
+     "baseColorTexture": {
+      "texture": 9,
+      "image": 5,
+      "texCoord": 0,
+      "name": "1095091350a8bae5",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        36.0,
+        35.0,
+        34.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.0176,
+         0.0168,
+         0.016
+        ],
+        "srgb_hex": "#242322",
+        "luminance": 0.0169,
+        "hue_deg": 30.0,
+        "saturation": 0.0555,
+        "chroma": 0.0402
+       },
+       "luminance_p01_p99": [
+        0.0161,
+        0.0178
+       ],
+       "linear_p99": [
+        0.0185,
+        0.0176,
+        0.0168
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 8,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0176,
+       0.0168,
+       0.016
+      ],
+      "srgb_hex": "#242322",
+      "luminance": 0.0169,
+      "hue_deg": 30.4,
+      "saturation": 0.0541,
+      "chroma": 0.0392
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0062,
+      "uv_units_per_metre": 23.5892,
+      "cm_per_texture_repeat": 4.24,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness",
+      "albedo_out_of_range"
+     ]
+    },
+    {
+     "index": 5,
+     "name": "Satin champagne bronze",
+     "users": [
+      "CC0_espresso_5"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0.800000011920929,
+     "roughnessFactor": 0.3199999928474426,
+     "baseColorTexture": {
+      "texture": 11,
+      "image": 6,
+      "texCoord": 0,
+      "name": "70d36601eaf1d52e",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        128,
+        128
+       ],
+       "mode": "RGB",
+       "srgb_mean_8bit": [
+        149.0,
+        124.0,
+        88.0
+       ],
+       "linear_mean": {
+        "linear": [
+         0.3005,
+         0.2016,
+         0.0976
+        ],
+        "srgb_hex": "#957c58",
+        "luminance": 0.2151,
+        "hue_deg": 35.4,
+        "saturation": 0.4094,
+        "chroma": 0.3917
+       },
+       "luminance_p01_p99": [
+        0.2115,
+        0.2187
+       ],
+       "linear_p99": [
+        0.305,
+        0.2051,
+        0.0999
+       ]
+      }
+     },
+     "metallicRoughnessTexture": null,
+     "normalTexture": {
+      "texture": 10,
+      "image": 0,
+      "texCoord": 0,
+      "name": "surface_normal",
+      "texture_transform": null,
+      "stats": {
+       "size": [
+        256,
+        256
+       ],
+       "mode": "RGB",
+       "mean_rgb": [
+        0.498,
+        0.498,
+        0.9961
+       ]
+      }
+     },
+     "normalScale": 0.10000000149011612,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.3005,
+       0.2016,
+       0.0976
+      ],
+      "srgb_hex": "#957c58",
+      "luminance": 0.2151,
+      "hue_deg": 35.4,
+      "saturation": 0.4093,
+      "chroma": 0.3915
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0325,
+      "uv_units_per_metre": 6.7569,
+      "cm_per_texture_repeat": 14.8,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "constant_roughness",
+      "nonphysical_partial_metal"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "web/house/assets/kitchen-cabinet-original/cabinet.glb",
+   "sha256": "f7796dd06a4e13b87f46fccd2b10cb9cf5c5fbd89b69f447da9597ea27793bc3",
+   "extensionsUsed": [],
+   "materials": [
+    {
+     "index": 0,
+     "name": "Cabinet satin white",
+     "users": [
+      "Cube",
+      "Cube.008",
+      "Cube.010",
+      "Cube.012",
+      "Cube.014"
+     ],
+     "baseColorFactor": [
+      0.7900000214576721,
+      0.7699999809265137,
+      0.7099999785423279
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.79,
+       0.77,
+       0.71
+      ],
+      "srgb_hex": "#e6e3db",
+      "luminance": 0.7699,
+      "hue_deg": 45.3,
+      "saturation": 0.0462,
+      "chroma": 0.0474
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.4000000059604645,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.79,
+       0.77,
+       0.71
+      ],
+      "srgb_hex": "#e6e3db",
+      "luminance": 0.7699,
+      "hue_deg": 45.3,
+      "saturation": 0.0462,
+      "chroma": 0.0474
+     },
+     "geometry": {
+      "object_space_area_m2": 15.4988,
+      "uv_units_per_metre": 0.5389,
+      "cm_per_texture_repeat": 185.58,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 1,
+     "name": "Cabinet brushed brass",
+     "users": [
+      "Cube.009",
+      "Cube.011",
+      "Cube.013",
+      "Cube.015"
+     ],
+     "baseColorFactor": [
+      0.800000011920929,
+      0.800000011920929,
+      0.800000011920929
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.8,
+       0.8,
+       0.8
+      ],
+      "srgb_hex": "#e7e7e7",
+      "luminance": 0.8,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0.8500000238418579,
+     "roughnessFactor": 0.44999998807907104,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.8,
+       0.8,
+       0.8
+      ],
+      "srgb_hex": "#e7e7e7",
+      "luminance": 0.8,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0209,
+      "uv_units_per_metre": 8.4676,
+      "cm_per_texture_repeat": 11.81,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate",
+      "nonphysical_partial_metal"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "web/house/assets/keyboard/keyboard.glb",
+   "sha256": "86989af770a2caa655680bdb7f0a9bbc13c417795ab8c9c734d66fcc44b89fdf",
+   "extensionsUsed": [
+    "KHR_materials_emissive_strength"
+   ],
+   "materials": [
+    {
+     "index": 0,
+     "name": "rubber",
+     "users": [
+      "mesh_0"
+     ],
+     "baseColorFactor": [
+      0.006995410192757845,
+      0.006995410192757845,
+      0.00802319310605526
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.007,
+       0.007,
+       0.008
+      ],
+      "srgb_hex": "#141416",
+      "luminance": 0.0071,
+      "hue_deg": 240.0,
+      "saturation": 0.0909,
+      "chroma": 0.0783
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.8799999952316284,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.007,
+       0.007,
+       0.008
+      ],
+      "srgb_hex": "#141416",
+      "luminance": 0.0071,
+      "hue_deg": 240.0,
+      "saturation": 0.0909,
+      "chroma": 0.0783
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0012,
+      "uv_units_per_metre": 0.0,
+      "cm_per_texture_repeat": null,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate",
+      "albedo_out_of_range"
+     ]
+    },
+    {
+     "index": 1,
+     "name": "plastic_black",
+     "users": [
+      "mesh_1"
+     ],
+     "baseColorFactor": [
+      0.026247287169098854,
+      0.026247287169098854,
+      0.029592253267765045
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.0262,
+       0.0262,
+       0.0296
+      ],
+      "srgb_hex": "#2d2d30",
+      "luminance": 0.0265,
+      "hue_deg": 240.0,
+      "saturation": 0.063,
+      "chroma": 0.0681
+     },
+     "metallicFactor": 1,
+     "roughnessFactor": 1,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.0262,
+       0.0262,
+       0.0296
+      ],
+      "srgb_hex": "#2d2d30",
+      "luminance": 0.0265,
+      "hue_deg": 240.0,
+      "saturation": 0.063,
+      "chroma": 0.0681
+     },
+     "geometry": {
+      "object_space_area_m2": 0.2122,
+      "uv_units_per_metre": 3.3205,
+      "cm_per_texture_repeat": 30.12,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 2,
+     "name": "led",
+     "users": [
+      "mesh_2"
+     ],
+     "baseColorFactor": [
+      0.10000000149011612,
+      0.6000000238418579,
+      0.30000001192092896
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.1,
+       0.6,
+       0.3
+      ],
+      "srgb_hex": "#59cb95",
+      "luminance": 0.472,
+      "hue_deg": 151.4,
+      "saturation": 0.5623,
+      "chroma": 0.5252
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.4000000059604645,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [
+      "KHR_materials_emissive_strength"
+     ],
+     "extension_values": {
+      "KHR_materials_emissive_strength": {
+       "emissiveStrength": 2
+      }
+     },
+     "effective_mean_albedo": {
+      "linear": [
+       0.1,
+       0.6,
+       0.3
+      ],
+      "srgb_hex": "#59cb95",
+      "luminance": 0.472,
+      "hue_deg": 151.4,
+      "saturation": 0.5623,
+      "chroma": 0.5252
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0,
+      "uv_units_per_metre": 0.0,
+      "cm_per_texture_repeat": null,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 3,
+     "name": "keycap",
+     "users": [
+      "mesh_3"
+     ],
+     "baseColorFactor": [
+      1,
+      1,
+      1
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.5799999833106995,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       1,
+       1,
+       1
+      ],
+      "srgb_hex": "#ffffff",
+      "luminance": 1.0,
+      "hue_deg": 0.0,
+      "saturation": 0.0,
+      "chroma": 0.0
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0932,
+      "uv_units_per_metre": 2.4997,
+      "cm_per_texture_repeat": 40.0,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate",
+      "albedo_out_of_range"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "web/house/assets/coffee-machine/coffee-machine.glb",
+   "sha256": "aa9e65ca13cbe1c71feea118574ef6121ac5030b60559f48acd7bc68288ccc8b",
+   "extensionsUsed": [],
+   "materials": [
+    {
+     "index": 0,
+     "name": "Graphite powder-coated housing",
+     "users": [
+      "Cube"
+     ],
+     "baseColorFactor": [
+      0.027000000700354576,
+      0.03099999949336052,
+      0.032999999821186066
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.027,
+       0.031,
+       0.033
+      ],
+      "srgb_hex": "#2e3133",
+      "luminance": 0.0303,
+      "hue_deg": 199.2,
+      "saturation": 0.1023,
+      "chroma": 0.0824
+     },
+     "metallicFactor": 0.18000000715255737,
+     "roughnessFactor": 0.38999998569488525,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.027,
+       0.031,
+       0.033
+      ],
+      "srgb_hex": "#2e3133",
+      "luminance": 0.0303,
+      "hue_deg": 199.2,
+      "saturation": 0.1023,
+      "chroma": 0.0824
+     },
+     "geometry": {
+      "object_space_area_m2": 0.591,
+      "uv_units_per_metre": 1.5863,
+      "cm_per_texture_repeat": 63.04,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate",
+      "nonphysical_partial_metal",
+      "albedo_out_of_range"
+     ]
+    },
+    {
+     "index": 1,
+     "name": "Matte black grip and feet",
+     "users": [
+      "Cylinder"
+     ],
+     "baseColorFactor": [
+      0.010999999940395355,
+      0.013000000268220901,
+      0.014999999664723873
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.011,
+       0.013,
+       0.015
+      ],
+      "srgb_hex": "#1b1e21",
+      "luminance": 0.0127,
+      "hue_deg": 208.6,
+      "saturation": 0.1732,
+      "chroma": 0.1303
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.6299999952316284,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.011,
+       0.013,
+       0.015
+      ],
+      "srgb_hex": "#1b1e21",
+      "luminance": 0.0127,
+      "hue_deg": 208.6,
+      "saturation": 0.1732,
+      "chroma": 0.1303
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0676,
+      "uv_units_per_metre": 14.0698,
+      "cm_per_texture_repeat": 7.11,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate",
+      "albedo_out_of_range"
+     ]
+    },
+    {
+     "index": 2,
+     "name": "Brushed stainless steel",
+     "users": [
+      "Cube.004"
+     ],
+     "baseColorFactor": [
+      0.4699999988079071,
+      0.5,
+      0.5199999809265137
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.47,
+       0.5,
+       0.52
+      ],
+      "srgb_hex": "#b6bcbf",
+      "luminance": 0.4951,
+      "hue_deg": 203.6,
+      "saturation": 0.0443,
+      "chroma": 0.0416
+     },
+     "metallicFactor": 1.0,
+     "roughnessFactor": 0.28999999165534973,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.47,
+       0.5,
+       0.52
+      ],
+      "srgb_hex": "#b6bcbf",
+      "luminance": 0.4951,
+      "hue_deg": 203.6,
+      "saturation": 0.0443,
+      "chroma": 0.0416
+     },
+     "geometry": {
+      "object_space_area_m2": 0.1123,
+      "uv_units_per_metre": 8.4983,
+      "cm_per_texture_repeat": 11.77,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 3,
+     "name": "Polished brew metal",
+     "users": [
+      "Cube.005"
+     ],
+     "baseColorFactor": [
+      0.6600000262260437,
+      0.699999988079071,
+      0.7200000286102295
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.66,
+       0.7,
+       0.72
+      ],
+      "srgb_hex": "#d4dadd",
+      "luminance": 0.6929,
+      "hue_deg": 199.7,
+      "saturation": 0.0379,
+      "chroma": 0.036
+     },
+     "metallicFactor": 1.0,
+     "roughnessFactor": 0.17000000178813934,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.66,
+       0.7,
+       0.72
+      ],
+      "srgb_hex": "#d4dadd",
+      "luminance": 0.6929,
+      "hue_deg": 199.7,
+      "saturation": 0.0379,
+      "chroma": 0.036
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0573,
+      "uv_units_per_metre": 14.6409,
+      "cm_per_texture_repeat": 6.83,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 4,
+     "name": "Small amber indicator",
+     "users": [
+      "Cylinder.010"
+     ],
+     "baseColorFactor": [
+      0.8500000238418579,
+      0.3100000023841858,
+      0.02500000037252903
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.85,
+       0.31,
+       0.025
+      ],
+      "srgb_hex": "#ed972c",
+      "luminance": 0.4042,
+      "hue_deg": 33.3,
+      "saturation": 0.8154,
+      "chroma": 0.8467
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.30000001192092896,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.85,
+       0.31,
+       0.025
+      ],
+      "srgb_hex": "#ed972c",
+      "luminance": 0.4042,
+      "hue_deg": 33.3,
+      "saturation": 0.8154,
+      "chroma": 0.8467
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0,
+      "uv_units_per_metre": 182.8243,
+      "cm_per_texture_repeat": 0.55,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 5,
+     "name": "Warm porcelain",
+     "users": [
+      "Hollow porcelain cup"
+     ],
+     "baseColorFactor": [
+      0.7699999809265137,
+      0.7400000095367432,
+      0.6700000166893005
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.77,
+       0.74,
+       0.67
+      ],
+      "srgb_hex": "#e3dfd6",
+      "luminance": 0.7413,
+      "hue_deg": 42.5,
+      "saturation": 0.0598,
+      "chroma": 0.0599
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.2199999988079071,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.77,
+       0.74,
+       0.67
+      ],
+      "srgb_hex": "#e3dfd6",
+      "luminance": 0.7413,
+      "hue_deg": 42.5,
+      "saturation": 0.0598,
+      "chroma": 0.0599
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0198,
+      "uv_units_per_metre": 7.1087,
+      "cm_per_texture_repeat": 14.07,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    },
+    {
+     "index": 6,
+     "name": "Espresso crema",
+     "users": [
+      "Cylinder.023"
+     ],
+     "baseColorFactor": [
+      0.1899999976158142,
+      0.07100000232458115,
+      0.017999999225139618
+     ],
+     "baseColorFactor_desc": {
+      "linear": [
+       0.19,
+       0.071,
+       0.018
+      ],
+      "srgb_hex": "#794b24",
+      "luminance": 0.0925,
+      "hue_deg": 27.7,
+      "saturation": 0.6981,
+      "chroma": 0.7778
+     },
+     "metallicFactor": 0,
+     "roughnessFactor": 0.3799999952316284,
+     "baseColorTexture": null,
+     "metallicRoughnessTexture": null,
+     "normalTexture": null,
+     "normalScale": null,
+     "extensions": [],
+     "extension_values": {},
+     "effective_mean_albedo": {
+      "linear": [
+       0.19,
+       0.071,
+       0.018
+      ],
+      "srgb_hex": "#794b24",
+      "luminance": 0.0925,
+      "hue_deg": 27.7,
+      "saturation": 0.6981,
+      "chroma": 0.7778
+     },
+     "geometry": {
+      "object_space_area_m2": 0.0031,
+      "uv_units_per_metre": 16.6422,
+      "cm_per_texture_repeat": 6.01,
+      "note": "object space, before node scale"
+     },
+     "flags": [
+      "no_normal_map",
+      "constant_roughness",
+      "no_albedo_variation",
+      "plastic_flat_candidate"
+     ]
+    }
+   ]
+  }
+ ]
+}

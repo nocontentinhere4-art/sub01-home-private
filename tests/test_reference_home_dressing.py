@@ -1,5 +1,6 @@
 """Pure-Python checks for tools/reference_home_dressing.py (no Blender, no rendering)."""
 import copy
+import hashlib
 import json
 import subprocess
 import sys
@@ -88,14 +89,14 @@ def test_clear_zones_and_doors_refuse(context):
 
 
 def test_valid_placement_is_accepted(context):
-    item = probe((-3.22, .455, -0.22), dims=(.25, .2, .05), support='coffee_table_top')
+    item = probe((-3.22, .39, -0.22), dims=(.25, .2, .05), support='coffee_table_top')
     assert rd.validate_item(item, context) == []
 
 
 def test_floating_or_overhanging_item_is_refused(context):
-    floating = probe((-3.22, .70, -0.22), dims=(.25, .2, .05), support='coffee_table_top')
+    floating = probe((-3.22, .70, -0.22), dims=(.25, .2, .05), support='coffee_table_top')  # top is .39
     assert any(r.startswith('support:not_resting') for r in rd.validate_item(floating, context))
-    edge = probe((-2.90, .455, -0.22), dims=(.40, .2, .05), support='coffee_table_top')
+    edge = probe((-2.90, .39, -0.22), dims=(.40, .2, .05), support='coffee_table_top')
     assert 'support:footprint_overhangs_surface' in rd.validate_item(edge, context)
 
 
@@ -448,3 +449,159 @@ def test_tri_box_overlap_basics():
     assert rd.tri_box_overlap((0, 0, 0), (.1, .1, .1), tri)
     assert not rd.tri_box_overlap((0, .5, 0), (.1, .1, .1), tri)
     assert not rd.tri_box_overlap((5, 0, 0), (.1, .1, .1), tri)
+
+
+# ---------------------------------------------------------------------------
+# Native dressing base (tools/prepare_native_dressing_base.py) acceptance.
+# Scene custom properties are faked with a dict; no Blender is used here.
+# ---------------------------------------------------------------------------
+SRC = '9' * 64
+NATIVE = {'sub01NativeSourceSha256': SRC, 'privateOnly': True,
+          'sub01AuthoringBasis': 'Exact current native GLB; additive dressing only'}
+
+
+def write_base(tmp_path, sidecar=None, content=b'BLENDER-base'):
+    blend = tmp_path / 'house.blend'
+    blend.write_bytes(content)
+    if sidecar is not None:
+        (tmp_path / 'house.json').write_text(json.dumps(sidecar))
+    return blend
+
+
+def sidecar(**over):
+    return {'schema': 'sub01.native-dressing-base.v1', 'source_sha256': SRC, 'mesh_objects': 233,
+            'vertices': 758827, 'native_house_replaced': False, 'rendered': False, **over}
+
+
+def test_unassembled_base_is_refused_without_the_flag(tmp_path):
+    blend = write_base(tmp_path, sidecar())
+    with pytest.raises(rd.BaseRefusedError, match='allow-unassembled'):
+        rd.verify_base(NATIVE, blend, False, (233, 758827), SRC)
+    with pytest.raises(rd.BaseRefusedError, match='allow-unassembled'):
+        rd.verify_base({}, blend, False, (233, 758827))
+    assert rd.verify_base({'homeVersion': 114}, blend, False, (5, 10))['basis'] == 'assembled-home114'
+
+
+def test_native_base_sha_mismatch_is_refused(tmp_path):
+    blend = write_base(tmp_path, sidecar())
+    with pytest.raises(rd.BaseRefusedError, match='source SHA-256 mismatch'):
+        rd.verify_base(NATIVE, blend, True, (233, 758827), 'a' * 64)
+    other = write_base(tmp_path, sidecar(source_sha256='b' * 64))
+    with pytest.raises(rd.BaseRefusedError, match='sidecar source_sha256'):
+        rd.verify_base(NATIVE, other, True, (233, 758827), SRC)
+    with pytest.raises(rd.BaseRefusedError, match='no sub01NativeSourceSha256'):
+        rd.verify_base({'privateOnly': True}, blend, True, (233, 758827), SRC)
+
+
+def test_native_base_counts_and_file_identity_are_checked(tmp_path):
+    blend = write_base(tmp_path, sidecar())
+    with pytest.raises(rd.BaseRefusedError, match='differ from the sidecar'):
+        rd.verify_base(NATIVE, blend, True, (232, 758827), SRC)       # one mesh object missing
+    with pytest.raises(rd.BaseRefusedError, match='schema'):
+        rd.verify_base(NATIVE, write_base(tmp_path, sidecar(schema='other')), True, (233, 758827), SRC)
+    blend = write_base(tmp_path, sidecar())
+    good = hashlib.sha256(b'BLENDER-base').hexdigest()
+    with pytest.raises(rd.BaseRefusedError, match='size'):
+        rd.verify_base(NATIVE, blend, True, (233, 758827), SRC, good, 34589540)
+    with pytest.raises(rd.BaseRefusedError, match='.blend SHA-256'):
+        rd.verify_base(NATIVE, blend, True, (233, 758827), SRC, 'c' * 64, 12)
+    ok = rd.verify_base(NATIVE, blend, True, (233, 758827), SRC, good, 12)
+    assert ok['basis'] == 'native-dressing-base' and ok['source_sha256'] == SRC
+    assert ok['base_sha256_verified'] and ok['base_bytes_verified']
+    # The sidecar alone may supply the expected SHA; without either, refuse.
+    assert rd.verify_base(NATIVE, blend, True, (233, 758827))['source_sha256'] == SRC
+    (tmp_path / 'house.json').unlink()
+    with pytest.raises(rd.BaseRefusedError, match='no expected source SHA-256'):
+        rd.verify_base(NATIVE, blend, True, (233, 758827))
+
+
+def test_anchor_prefixes_are_derived_from_repository_sources():
+    for anchor, prefixes in rd.DEFAULT_ANCHORS.items():
+        for prefix in prefixes:
+            source = rd.ANCHOR_SOURCES[prefix]
+            assert prefix.rstrip('-') in (ROOT / source).read_text(), (anchor, prefix, source)
+
+
+def test_missing_anchor_refuses_that_room_and_is_listed(spec):
+    sofa = FakeObject('sofa', ((-2.26, 0, -1.04), (-1.34, .92, 1.24)), 'house-sofa-Haven_linen')
+    desk = FakeObject('desk', ((.8, 0, -3.5), (3.2, .84, -2.7)), 'house-office-desk-Oak_desk')
+    table = FakeObject('table', ((-3.54, 0, -.59), (-2.86, .39, .79)), 'house-coffee-table-Oak_coffee_table')
+    _, geometry = geometry_of(sofa, desk, table)          # no bed, no cabinets, no counter
+    _, rejected = rd.place_on_evaluated_home(spec, geometry)
+    rooms = rd.refused_rooms(rejected)
+    assert rooms['bedroom'] == {'missing_anchors': ['bed'],
+                                'items': ['bed_foot_blanket_folded', 'bed_lumbar_cushion']}
+    assert set(rooms['kitchen']['missing_anchors']) == {'kitchen_surface', 'lower_cabinet', 'upper_cabinet'}
+    assert 'lounge' not in rooms
+
+
+def make_assets(tmp_path, folders):
+    for folder in folders:
+        for name in rd.TEXTURE_FILES:
+            (tmp_path / folder).mkdir(parents=True, exist_ok=True)
+            (tmp_path / folder / name).write_bytes(b'jpg')
+    return tmp_path
+
+
+def test_missing_textures_are_reported_with_the_untextured_fallback(spec, tmp_path):
+    assets = make_assets(tmp_path, ['quatrefoil_jacquard_fabric', 'home_oak_veneer'])   # rough_linen absent
+    report, kept, rejected = rd.texture_plan(spec, assets, spec['items'], 'flat')
+    pillow = report['items']['sofa_pillow_linen_left']
+    assert pillow['fallback_untextured'] is True and not rejected and len(kept) == len(spec['items'])
+    assert {'item': 'sofa_pillow_linen_left', 'material': 'linen_cream',
+            'path': str(assets / 'rough_linen' / 'diff.jpg')} in pillow['missing_textures']
+    assert report['materials']['linen_cream']['mode'] == 'fallback_untextured'
+    canister = report['items']['kitchen_canister_large']
+    assert canister['fallback_untextured'] is False
+    assert canister['materials'] == {'ceramic_ivory': 'untextured_authored', 'oak': 'textured'}
+    assert 'scanned' not in json.dumps(report)               # never presented as scanned
+    _, kept, rejected = rd.texture_plan(spec, assets, spec['items'], 'skip')
+    assert {r['id'] for r in rejected} >= {'sofa_pillow_linen_left', 'bed_lumbar_cushion'}
+    assert all(r['reasons'][0].startswith('texture_missing:') for r in rejected)
+    assert 'kitchen_canister_large' in {i['id'] for i in kept}
+    with pytest.raises(rd.TexturesMissingError):
+        rd.texture_plan(spec, assets, spec['items'], 'wait')
+    full = make_assets(tmp_path, ['rough_linen'])
+    report, _, _ = rd.texture_plan(spec, full, spec['items'], 'wait')
+    assert report['missing'] == [] and not any(v['fallback_untextured'] for v in report['items'].values())
+
+
+def test_spec_materials_cover_every_item_material(spec):
+    for item in spec['items']:
+        assert set(rd.item_materials(item)) <= set(spec['materials']), item['id']
+
+
+def write_glb(path, nodes, materials=()):
+    import struct
+    doc = json.dumps({'asset': {'version': '2.0'}, 'nodes': [{'name': n} for n in nodes],
+                      'materials': [{'name': m} for m in materials]}).encode()
+    doc += b' ' * (-len(doc) % 4)
+    path.write_bytes(b'glTF' + struct.pack('<II', 2, 20 + len(doc)) + struct.pack('<I', len(doc)) + b'JSON' + doc)
+    return path
+
+
+def test_additive_glb_is_verified_from_the_file(tmp_path):
+    ours = ['SUB01_RefDress_lounge_a', 'SUB01_RefDress_lounge_a_cover', 'SUB01_RefDress_lounge_a_piping']
+    good = write_glb(tmp_path / 'good.glb', ours[:2], ['SUB01_RefDress_linen_cream'])
+    assert rd.verify_additive_glb(good, ours, ours[:1]) == ['SUB01_RefDress_lounge_a_piping']
+    leaked = write_glb(tmp_path / 'leak.glb', ours + ['house-sofa-Haven_linen'])
+    with pytest.raises(RuntimeError, match='house-sofa-Haven_linen'):
+        rd.verify_additive_glb(leaked, ours, ours[:1])
+    foreign_material = write_glb(tmp_path / 'mat.glb', ours, ['Haven_linen'])
+    with pytest.raises(RuntimeError, match='foreign_materials'):
+        rd.verify_additive_glb(foreign_material, ours, ours[:1])
+    missing_root = write_glb(tmp_path / 'root.glb', ours[1:])
+    with pytest.raises(RuntimeError, match='missing_roots'):
+        rd.verify_additive_glb(missing_root, ours, ours[:1])
+
+
+def test_placement_reports_missing_support_as_unplaced(spec):
+    # Anchors exist, but the sofa is somewhere else: nothing under the pillows.
+    sofa = FakeObject('sofa', ((2.0, 0, 2.0), (2.9, .92, 3.0)), 'house-sofa-Haven_linen')
+    table = FakeObject('table', ((-3.54, 0, -.59), (-2.86, .39, .79)), 'house-coffee-table-Oak_coffee_table')
+    _, geometry = geometry_of(sofa, table)
+    accepted, rejected = rd.place_on_evaluated_home(spec, geometry)
+    reasons = {r['id']: r['reasons'] for r in rejected}
+    for item in ('sofa_pillow_linen_left', 'sofa_pillow_linen_right', 'sofa_arm_throw_folded'):
+        assert reasons[item][0].startswith('unsupported:') and 'no supporting surface' in reasons[item][0]
+    assert {'coffee_table_book_stack', 'coffee_table_vase_dried_stems'} <= {a['id'] for a in accepted}

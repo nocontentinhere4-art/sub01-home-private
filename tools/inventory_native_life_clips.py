@@ -49,6 +49,12 @@ SAMPLES = 9                  # evenly spaced FK samples per clip (first and last
 # operator_declared_capture: only a file root names on the command line (--extra), declaring it a
 # genuine capture (e.g. a Mixamo FBX kept out of Git); it is still measured and gated like the rest.
 ACCEPTED_PROVENANCE = {'mixamo_capture', 'third_party_authored_with_permission', 'operator_declared_capture'}
+# ADDITIVE (owner direction, 14 Oct 2026; tools/bed_transition_corrections.py): derived_library_asset is a library
+# clip whose derivation is documented and whose capture method is not (e.g. preview/mh-motion clips retargeted via
+# mh_retarget.mjs). It is never called a capture. Such a file (--derived ROLE=PATH) may become a Candidate ONLY when
+# the label is visible in the file itself (asset.extras.sub01_provenance.label) and it then stays in the row's
+# provenance, provenance_label and verdict_reason. It is deliberately NOT in ACCEPTED_PROVENANCE.
+DERIVED_LIBRARY_ASSET = 'derived_library_asset'
 
 # Every role the native life adapter needs, and the files the repository actually holds for it.
 ROLES = {
@@ -466,7 +472,10 @@ def role_verdict(role, rec, provenance):
         return 'Unreadable', rec['error']
     if not rec.get('skeleton', {}).get('same_owner_skeleton'):
         return 'SkeletonMismatch', '; '.join(rec.get('skeleton', {}).get('errors', [])) or 'not the owner skeleton'
-    if provenance not in ACCEPTED_PROVENANCE:
+    if provenance == DERIVED_LIBRARY_ASSET:                     # additive: see DERIVED_LIBRARY_ASSET
+        if (rec.get('provenance_label') or {}).get('label') != DERIVED_LIBRARY_ASSET:
+            return 'ProvenanceLabelMissing', 'a derived_library_asset must carry asset.extras.sub01_provenance.label in the file'
+    elif provenance not in ACCEPTED_PROVENANCE:
         return 'ProvenanceUnverified', f'provenance class {provenance!r} is not a documented genuine capture'
     if rec.get('error'):
         return 'Unreadable', rec['error']
@@ -542,10 +551,23 @@ def owner_skeleton_scan(owner, listed):
     return rows
 
 
-def inventory(extra=()):
+def derived_label(path: Path):
+    """Additive: the provenance label a derived clip carries in its own GLB (asset.extras.sub01_provenance), or None."""
+    try:
+        doc, _, _ = read_glb(path)
+    except ValueError:
+        return None
+    label = doc.get('asset', {}).get('extras', {}).get('sub01_provenance')
+    return {'label': label.get('label'), 'text': label.get('text')} if isinstance(label, dict) else None
+
+
+def inventory(extra=(), derived=()):
     owner = owner_reference()
     rows = []
     declared = [(r, p, None, 'operator_declared_capture', 'declared a genuine capture by the operator (--extra)') for r, p in extra]
+    # Additive: derived library assets (--derived), labelled, never declared captures.
+    declared += [(r, p, None, DERIVED_LIBRARY_ASSET, 'derived library asset (--derived); capture method undocumented')
+                 for r, p in derived]
     for role, rel, anim, prov, note in list(CANDIDATES) + declared:
         path = Path(rel) if Path(rel).is_absolute() else ROOT / rel
         if not path.is_file():
@@ -555,7 +577,11 @@ def inventory(extra=()):
             rec = fbx_record(path, owner)
         else:
             rec = glb_record(path, anim, owner)
+        if prov == DERIVED_LIBRARY_ASSET:                       # additive: the label stays visible in the row
+            rec['provenance_label'] = derived_label(path) if path.suffix.lower() == '.glb' else None
         verdict, reason = role_verdict(role, rec, prov)
+        if prov == DERIVED_LIBRARY_ASSET and verdict == 'Candidate':
+            reason = f'{DERIVED_LIBRARY_ASSET} (label visible; not a capture): {reason}'
         rows.append({'role': role, 'file': rel, 'provenance': prov, 'provenance_note': note, **rec,
                      'verdict': verdict, 'verdict_reason': reason})
     by_file = {r['file']: r for r in rows}
@@ -596,14 +622,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--out', type=Path)
     parser.add_argument('--extra', action='append', default=[], help='ROLE=PATH, a private source on the server')
+    parser.add_argument('--derived', action='append', default=[],
+                        help='ROLE=PATH, a labelled derived_library_asset GLB (additive; see DERIVED_LIBRARY_ASSET)')
     args = parser.parse_args(argv)
-    extra = []
-    for item in args.extra:
-        role, _, path = item.partition('=')
-        if role not in ROLES or not path:
-            parser.error(f'--extra expects ROLE=PATH with ROLE in {sorted(ROLES)}')
-        extra.append((role, path))
-    text = json.dumps(inventory(extra), indent=1, sort_keys=True) + '\n'
+    extra, derived = [], []
+    for items, out, flag in ((args.extra, extra, '--extra'), (args.derived, derived, '--derived')):
+        for item in items:
+            role, _, path = item.partition('=')
+            if role not in ROLES or not path:
+                parser.error(f'{flag} expects ROLE=PATH with ROLE in {sorted(ROLES)}')
+            out.append((role, path))
+    text = json.dumps(inventory(extra, derived), indent=1, sort_keys=True) + '\n'
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text)

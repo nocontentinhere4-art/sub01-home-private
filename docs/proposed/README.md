@@ -53,6 +53,26 @@ Original line numbers refer to the unpatched `home.js` (unchanged since `7ce7a43
 | H13 | 1582 | Bathroom door target = `doorWant.bathroom`. The `doorOpen` name is kept, so the literal checked by tests is unchanged | `1dbcf2c` |
 | H14 | 2729 | Add `bathFixturesReady`, `bathLightReady` and `bathDoorReady` to the asset barrier, so they are hidden before startup cleanup and baking | #15 |
 | H15 | 2957 | Hide the actor's body while `presence` is `"away"` (details below) | owner decision 2026-10-13; `41fa350` `actorVisible` |
+| H16 | 51 | Import `createEyeView` from `eye_view.mjs` | owner decision 2026-10-13 (eye) |
+| H17 | 2632–2633 | Mount the eye view on `document.body` just before `connect()` | `eye_view.mjs` |
+| H18 | 2611–2612 | The socket handler passes every message to `eyeView.accept(m)`: `eye_state`, `eye` frames, and `m.home.privacy` | `live_server` `eye_state` |
+
+### H16–H18: what he sees, instead of the GPS map
+
+- Owner decision 2026-10-13: no GPS. The eye is open only while he sleeps or is outside.
+- The server sends `{type: 'eye_state', mode, since}` when the mode changes, and on connect. Modes:
+  - `closed`: NREM;
+  - `dream`: REM;
+  - `outside`: presence `leaving`, `away` or `returning`;
+  - `off`: awake at home, or bathroom privacy.
+- `eye_view.mjs` behaviour:
+  - asleep, the eyelids close over the house (1.2 s), then the near-dark trace or the dream frame fades in;
+  - outside, it shows the latest real eye frame;
+  - `off` or privacy hides it at once and drops the picture.
+- Only `/eye/…` images are accepted.
+- Styles live in `web/house/style.css` (`.eye-view*`); `body.privacy-active` also hides it.
+- `eyeView` is declared before `connect()` and used only inside the socket handler. The isolated `canWalk`, `lighting()` and `acceptHome` blocks therefore gain no new free identifiers.
+- Not checked in a browser: the eyelid animation, layout and z-order are unverified visually.
 
 ### H15: hiding the actor while he is away
 
@@ -84,10 +104,10 @@ Original line numbers refer to the unpatched `home.js` (unchanged since `7ce7a43
 5. Runs the same checks again.
 6. Runs the Python tests that read `home.js` before and after.
 
-Result at `be0f9ec`:
+Result at `be0f9ec`, re-run with H16–H18 and `eye_view_check.mjs` added (2026-10-13):
 - The patch applies.
 - `node --check` passes.
-- **22 of 26 node checks pass, both before and after; no regressions.**
+- **23 of 27 node checks pass, both before and after; no regressions.**
 - The 4 checks that fail identically before and after are pre-existing source-extraction fixtures, unrelated to this patch:
   - `baked_receiver_lighting_check`: `gltfLoader` not defined;
   - `home_input_cleanup_check`: `createFirstPersonBody` not defined;
@@ -106,3 +126,23 @@ Result at `be0f9ec`:
 ## Left out
 
 Nothing was left out. Every requested hunk applies cleanly.
+
+## Status after main d03e673 (2026-10-13)
+
+Codex integrated H1–H15 into `web/house/home.js` in main `d03e673`. They are kept in
+`tools/home_js_integration_edits.py` for history but filtered out (`INTEGRATED_IN_MAIN`), so the
+patch now holds only the eye view (H16–H18, owner decision: no GPS; eyes close and dream while
+asleep, what he sees while outside). The balcony audit test now asserts the H6 boxes stay removed.
+
+# Proposed native first-person yaw (not applied)
+
+`native-route-smooth-yaw.patch` replaces the instantaneous heading snap in
+`tools/unreal_native_route.py` and `tools/unreal_live_home_runtime.py` with a
+bounded, eased yaw: shortest arc, `1-exp(-4dt)`, at most 1.8 rad/s, frame time
+capped at 0.1s. The movement input, targets and arrival gates are unchanged.
+The CPU reference and generator is `tools/first_person_yaw.py`
+(`--check` verifies the committed patch). The tests are in `tests/test_first_person_yaw.py`.
+Apply it only after the native runtime gates pass.
+
+`native-seating-feedback.md` audits the physical desk seating and feedback gap
+and proposes the next patch.

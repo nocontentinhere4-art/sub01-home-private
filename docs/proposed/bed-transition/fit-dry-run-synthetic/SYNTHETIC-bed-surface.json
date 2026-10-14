@@ -1,0 +1,1 @@
+{"schema": "SYNTHETIC (not the native bed)", "errors": [], "bed": {"component": "SYNTHETIC flat 152x203 cm top at 60 cm", "sections": [{"vertices_world_cm": [[-101.5, -76, 60.0], [101.5, -76, 60.0], [101.5, 76, 60.0], [-101.5, 76, 60.0]], "mattress_surface": {"triangle_indices": [[0, 1, 2], [0, 2, 3]], "head_end_direction_xy": [1, 0]}}]}}

@@ -121,6 +121,9 @@ out/provider-console-public.html
 out/provider-graphql-spec.html
 out/provider-openapi-v2.json
 out/inspect-provider-public-migration.py
+
+# the eye's frames (local runtime data, made while he sleeps or is outside)
+out/eye/
 out/home-resume-bound.json
 out/pc-runtime-next/
 out/source-asset-integrity.json
@@ -135,3 +138,7 @@ out/current-authorized-host-capacity-id.json
 out/home-migration-window.private.json
 out/home-*migration*.private.*
 out/migration-device-restore/
+
+# Seat-fit trial runtime data (tools/export_seat_fit_source.py, fit_seat_pose_trial.py); keep out of Git
+private-audit/
+out/seat-fit-cache/

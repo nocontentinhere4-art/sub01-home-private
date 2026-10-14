@@ -1,0 +1,514 @@
+{
+ "accepted_for_binding": false,
+ "documented_quotes": [
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "**v5's room clips carried over** by `room_build/kimodo/mx_convert.mjs` (no Mixamo capture of these yet):"
+  },
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "`desk_mouse_ik`, `room_walk`, `room_window`, `room_bed_lie`, `room_bed_wake`, `room_bedtime`"
+  },
+  {
+   "file": "web/room/CREDITS.md",
+   "file_sha256": "075e8bd62fc55666ee24b17e5fab3597aede1750b5cb8fe921c82fc81a6faf03",
+   "present_verbatim": true,
+   "quote": "| `mh_v5/*.glb` (the room clips retargeted onto v5, by G14; the same names as preview/room-mh's `mh/`) | preview/mh-motion's clips, retargeted | as their sources |"
+  },
+  {
+   "file": "web/room/mh_v5/README.md",
+   "file_sha256": "b12fa897afce5c1ce83bd74fd304a3b9b134189982f45819b0e4f908db546417",
+   "present_verbatim": true,
+   "quote": "| room_window, room_walk, room_sit_down, room_stand_up, room_bed_lie, room_bed_wake, room_door, room_bedtime | G12 (to come). G10d's QA ran with local stand-ins (room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options), not committed |"
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "**The ones here now are placeholders**: room-mh's clips run through that script as it is at ef9c0e4."
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "- **His motion:** 16 mocap clips retargeted onto him (`web/room/mh_v5/`, G14 and G12)"
+  },
+  {
+   "file": "room_build/kimodo/mh_retarget.mjs",
+   "file_sha256": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
+   "present_verbatim": true,
+   "quote": "// 3) zero-phase smoothing (Gaussian, sigma 1 frame limbs / 1.7 spine-neck-head), then two-bone IK: the wrists onto the"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Sleeping_Idle\": {"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Laying_Sleeping\": {"
+  },
+  {
+   "file": "docs/design/mixamo/README.md",
+   "file_sha256": "32c49dcba84368bba74678419913a3803f8f9d7848e265d2b134f1c08873f047",
+   "present_verbatim": true,
+   "quote": "| Sleeping_Idle \u2192 `room_sleeping_idle.glb` | 17.6 s; curled on his side; turns over and back (head 85\u00b0, arms 100\u00b0)"
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "licence is pending, so they never go to main."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "- **Asleep:** `sleep_side`; after 40-90 s `sleep_roll_to_back` (once), then `sleep_back` and `sleep_back_idle` taking turns."
+  }
+ ],
+ "duration_s": {
+  "corrected": 15.3667,
+  "raw": 16.9667
+ },
+ "floor_reference": {
+  "lying_height_change_inside_settle_cm": -3.6901,
+  "note": "the loop and the get-up share one placement, so the settle carries the difference smoothly",
+  "rule": "one constant vertical hips shift per clip so that the lower foot of the planted standing run has its lowest plantar vertex at y = 0 (no penetration); the source floor sits off y = 0",
+  "shift_cm": {
+   "LieDown": -1.9782,
+   "SleepLoop_and_GetUp": -5.6683
+  }
+ },
+ "foot_contact": {
+  "before_ik": {
+   "Left": {
+    "lowest_cm": [
+     2.9933,
+     3.6593
+    ],
+    "min_band_vertices": 0,
+    "pass": false,
+    "penetration_cm": 0.0
+   },
+   "Right": {
+    "lowest_cm": [
+     -0.0,
+     0.0756
+    ],
+    "min_band_vertices": 243,
+    "pass": true,
+    "penetration_cm": -0.0
+   },
+   "frames": 7,
+   "pass": false,
+   "rule": "per frame, per foot: lowest plantar vertex in [0.0, 1.0] cm (no penetration) and >= 12 plantar vertices in that band (verify_life_idle_candidate.sole_selection)"
+  },
+  "corrected": {
+   "Left": {
+    "lowest_cm": [
+     0.001,
+     0.001
+    ],
+    "min_band_vertices": 263,
+    "pass": true,
+    "penetration_cm": 0.0
+   },
+   "Right": {
+    "lowest_cm": [
+     0.001,
+     0.001
+    ],
+    "min_band_vertices": 252,
+    "pass": true,
+    "penetration_cm": 0.0
+   },
+   "frames": 7,
+   "pass": true,
+   "rule": "per frame, per foot: lowest plantar vertex in [0.0, 1.0] cm (no penetration) and >= 12 plantar vertices in that band (verify_life_idle_candidate.sole_selection)"
+  },
+  "leg_ik": {
+   "captured_lowest_plantar_cm": {
+    "Left": [
+     2.993306,
+     3.659294
+    ],
+    "Right": [
+     -0.0,
+     0.075571
+    ]
+   },
+   "fade": "the boundary frame's IK correction (leg local-rotation deltas, vertical hips delta) faded out with smootherstep outside the planted run; upper body untouched",
+   "fade_frames": 8,
+   "foot_orientation_adjusted_for_support": false,
+   "foot_target_dy_cm": {
+    "Left": [
+     -1.634001,
+     -0.968013
+    ],
+    "Right": [
+     1.949722,
+     2.025292
+    ]
+   },
+   "foot_world_orientation_max_change_deg": 0.0,
+   "frames": [
+    0,
+    6
+   ],
+   "ik_frames_per_foot": {
+    "Left": 7,
+    "Right": 7
+   },
+   "knee_plane_max_change_deg": 0.995925,
+   "root_support_cm": {
+    "bound_cm": 3.0,
+    "frames_nonzero": 7,
+    "max": 2.024292,
+    "min": 2.024292,
+    "required_max": 2.024292,
+    "vertical_only": true
+   },
+   "tool": "tools/leg_ik_life_clip.correct (imported unchanged)"
+  },
+  "raw_first_0.2s": {
+   "Left": {
+    "lowest_cm": [
+     4.29,
+     12.2293
+    ],
+    "min_band_vertices": 0,
+    "pass": false,
+    "penetration_cm": 0.0
+   },
+   "Right": {
+    "lowest_cm": [
+     1.197,
+     1.3109
+    ],
+    "min_band_vertices": 0,
+    "pass": false,
+    "penetration_cm": 0.0
+   },
+   "frames": 7,
+   "pass": false,
+   "rule": "per frame, per foot: lowest plantar vertex in [0.0, 1.0] cm (no penetration) and >= 12 plantar vertices in that band (verify_life_idle_candidate.sole_selection)"
+  }
+ },
+ "labels": [
+  "retargeted",
+  "walk_in_trimmed",
+  "ease_in_retime",
+  "leg_ik_floor_contact",
+  "sleep_settle_blend",
+  "lie_down_truncated"
+ ],
+ "native_bed_verified": false,
+ "never": "not run in Unreal or Blender; no runtime receipt; the bed is unmeasured; nothing deployed",
+ "outputs": {
+  "in_place": {
+   "bytes": 516608,
+   "duration_s": 15.3667,
+   "frames": 462,
+   "path": "docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb",
+   "sha256": "5aa10162601b160cbf75f4d1ef3ce259fab3f1fd1600490787be4a51332a613a"
+  },
+  "travel_in_hips": {
+   "bytes": 516624,
+   "duration_s": 15.3667,
+   "frames": 462,
+   "path": "docs/proposed/bed-transition/SUB01_LieDown.corrected.travel_in_hips.glb",
+   "sha256": "7dc1953cdd5cb05aa6ca116c8b581390b8202ddba0186ca42a978e6702aecaa7"
+  }
+ },
+ "private": true,
+ "provenance": {
+  "capture_claimed": false,
+  "capture_method": "undocumented",
+  "label": "derived_library_asset",
+  "sources_sha256": {
+   "web/room/mh_v5/room_bed_lie.glb": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94",
+   "web/room/mh_v5/room_bed_wake.glb": "aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49"
+  },
+  "text": "derived library asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs (web/room/mh_v5), then onto the owner skeleton by tools/retarget_first_person.mjs; capture method undocumented; corrected by tools/bed_transition_corrections.py (controlled adaptation, labelled)"
+ },
+ "provenance_label": "derived_library_asset",
+ "retarget": {
+  "mjs_sha256": "5e491f906c762a2fb7d8f4188461e27c9c4acf63bbd8fe35f29dbad5e72f9564",
+  "prepare": {
+   "constant_tracks_holding_original_rest": [],
+   "dropped_scale_track_noise_max": 0.0,
+   "kept_unmapped_nodes": [
+    "src:Armature",
+    "src:NeckTwist02",
+    "src:Pelvis",
+    "src:Root",
+    "src:metacarpal1.L",
+    "src:metacarpal1.R",
+    "src:metacarpal2.L",
+    "src:metacarpal2.R",
+    "src:metacarpal3.L",
+    "src:metacarpal3.R",
+    "src:metacarpal4.L",
+    "src:metacarpal4.R"
+   ],
+   "mapped_joints": 52,
+   "prepared": "<work>/LieDown/prepared_source.glb",
+   "prepared_vs_original_max_joint_cm": 0.0,
+   "rest_rebase_correction_deg": {
+    "Head": 16.7014,
+    "LeftArm": 65.3329,
+    "LeftFoot": 38.4265,
+    "LeftForeArm": 60.327,
+    "LeftHand": 60.5986,
+    "LeftHandIndex1": 102.0123,
+    "LeftHandIndex2": 99.4329,
+    "LeftHandIndex3": 99.4329,
+    "LeftHandMiddle1": 104.4478,
+    "LeftHandMiddle2": 95.7468,
+    "LeftHandMiddle3": 95.7468,
+    "LeftHandPinky1": 103.4627,
+    "LeftHandPinky2": 112.6821,
+    "LeftHandPinky3": 112.6821,
+    "LeftHandRing1": 98.5817,
+    "LeftHandRing2": 109.9414,
+    "LeftHandRing3": 109.9414,
+    "LeftHandThumb1": 57.1146,
+    "LeftHandThumb2": 57.1091,
+    "LeftHandThumb3": 57.1091,
+    "LeftLeg": 2.8942,
+    "LeftShoulder": 19.4512,
+    "LeftToeBase": 38.4265,
+    "LeftUpLeg": 5.2074,
+    "Neck": 16.7014,
+    "RightArm": 65.0937,
+    "RightFoot": 32.2868,
+    "RightForeArm": 61.2558,
+    "RightHand": 49.9975,
+    "RightHandIndex1": 100.7696,
+    "RightHandIndex2": 103.5133,
+    "RightHandIndex3": 103.5133,
+    "RightHandMiddle1": 100.5734,
+    "RightHandMiddle2": 103.3832,
+    "RightHandMiddle3": 103.3832,
+    "RightHandPinky1": 104.6201,
+    "RightHandPinky2": 119.0043,
+    "RightHandPinky3": 119.0043,
+    "RightHandRing1": 98.8264,
+    "RightHandRing2": 107.8835,
+    "RightHandRing3": 107.8835,
+    "RightHandThumb1": 52.6123,
+    "RightHandThumb2": 52.6098,
+    "RightHandThumb3": 52.6098,
+    "RightLeg": 4.641,
+    "RightShoulder": 18.6276,
+    "RightToeBase": 32.2868,
+    "RightUpLeg": 4.7952,
+    "Spine2": 9.0703
+   },
+   "rest_rebase_passes": 1,
+   "source_direction_undefined_child_is_static_leaf": [
+    "Head",
+    "LeftHandIndex3",
+    "LeftHandMiddle3",
+    "LeftHandPinky3",
+    "LeftHandRing3",
+    "LeftHandThumb3",
+    "LeftToeBase",
+    "RightHandIndex3",
+    "RightHandMiddle3",
+    "RightHandPinky3",
+    "RightHandRing3",
+    "RightHandThumb3",
+    "RightToeBase"
+   ],
+   "source_leg_height_over_owner": 0.980104,
+   "static_leaves_added": [
+    "HeadTop_End",
+    "RightHandThumb4",
+    "RightHandIndex4",
+    "RightHandMiddle4",
+    "RightHandRing4",
+    "RightHandPinky4",
+    "LeftHandThumb4",
+    "LeftHandIndex4",
+    "LeftHandMiddle4",
+    "LeftHandRing4",
+    "LeftHandPinky4",
+    "RightToe_End",
+    "LeftToe_End"
+   ]
+  },
+  "preset": "v5",
+  "rest_axis_residual_deg": {
+   "Head": 0,
+   "Hips": 5.9604,
+   "LeftArm": 0,
+   "LeftFoot": 0,
+   "LeftForeArm": 0,
+   "LeftHand": 0.0,
+   "LeftHandIndex1": 0,
+   "LeftHandIndex2": 0,
+   "LeftHandIndex3": 0,
+   "LeftHandMiddle1": 0,
+   "LeftHandMiddle2": 0,
+   "LeftHandMiddle3": 0,
+   "LeftHandPinky1": 0,
+   "LeftHandPinky2": 0,
+   "LeftHandPinky3": 0,
+   "LeftHandRing1": 0,
+   "LeftHandRing2": 0,
+   "LeftHandRing3": 0,
+   "LeftHandThumb1": 0,
+   "LeftHandThumb2": 0,
+   "LeftHandThumb3": 0,
+   "LeftLeg": 0,
+   "LeftShoulder": 0,
+   "LeftToeBase": 0,
+   "LeftUpLeg": 0,
+   "Neck": 0,
+   "RightArm": 0,
+   "RightFoot": 0.0,
+   "RightForeArm": 0,
+   "RightHand": 0.0,
+   "RightHandIndex1": 0,
+   "RightHandIndex2": 0,
+   "RightHandIndex3": 0,
+   "RightHandMiddle1": 0,
+   "RightHandMiddle2": 0,
+   "RightHandMiddle3": 0,
+   "RightHandPinky1": 0,
+   "RightHandPinky2": 0.0,
+   "RightHandPinky3": 0,
+   "RightHandRing1": 0,
+   "RightHandRing2": 0,
+   "RightHandRing3": 0,
+   "RightHandThumb1": 0.0,
+   "RightHandThumb2": 0,
+   "RightHandThumb3": 0,
+   "RightLeg": 0,
+   "RightShoulder": 0,
+   "RightToeBase": 0,
+   "RightUpLeg": 0,
+   "Spine": 3.154,
+   "Spine1": 3.1543,
+   "Spine2": 0
+  },
+  "retarget_first_person_mjs": {
+   "algorithm": "Aligned world rest delta; QtargetWorld=C QsrcWorld inverse(QsrcRestWorld) inverse(C) QtargetRestWorld",
+   "alignmentQuaternion": [
+    0.009873560984621044,
+    0.7072219474544038,
+    -0.01083811751659619,
+    -0.7068395610327566
+   ],
+   "checks": {
+    "boneLengthMaxError": 2.220446049250313e-16,
+    "noMotionRestMaxError": 2.9802322387695312e-08,
+    "sampledBoneLengthMaxError": 4.996003610813204e-16
+   },
+   "duration": 16.96666717529297,
+   "frames": 510,
+   "legHeightScale": 1.0203003086248856,
+   "outputSHA256": "f7cf15686dc35e6a13688fc3ecb6976bd813f304d641635da5258cac2056445f",
+   "proceduralMotionAdded": false,
+   "sourceLegHeight": 0.7921039875614462,
+   "sourceSHA256": "2c213e89c0fcb230a9e3f07b3ea1a405c97e3cc660ec81d3d53153cb2921ef13",
+   "targetLegHeight": 0.8081839429719462,
+   "targetSHA256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb"
+  },
+  "wrapper_sha256": "8cc2661d746069c93fb53946cb8f8ed9cbc8f62224e0c9b79796878ad4991db3"
+ },
+ "role": "LieDown",
+ "root_path": {
+  "corrected": {
+   "discontinuity": false,
+   "max_acceleration_at_s": 10.5333,
+   "max_acceleration_cm_s2": 199.005,
+   "max_frame_step_cm": 1.3448,
+   "max_speed_at_s": 0.7,
+   "max_speed_cm_s": 40.345,
+   "net_displacement_cm": [
+    65.81,
+    6.702
+   ],
+   "net_distance_cm": 66.15,
+   "path_length_cm": 126.6
+  },
+  "raw": {
+   "discontinuity": false,
+   "max_acceleration_at_s": 0.7667,
+   "max_acceleration_cm_s2": 225.316,
+   "max_frame_step_cm": 2.3359,
+   "max_speed_at_s": 0.4,
+   "max_speed_cm_s": 70.077,
+   "net_displacement_cm": [
+    124.158,
+    22.516
+   ],
+   "net_distance_cm": 126.184,
+   "path_length_cm": 192.1
+  }
+ },
+ "schema": "sub01.bed-transition-corrected-clip.v1",
+ "settle": {
+  "frames": 75,
+  "lie_frame": 386,
+  "loop_phase_at_end": 0,
+  "loop_phase_at_start": 41,
+  "peak_joint_speed_hips_relative_cm_s": 15.144,
+  "peak_joint_speed_world_cm_s": 9.467,
+  "pose_gap_cm": 19.274,
+  "seconds": 2.5,
+  "weight": "smootherstep (C2); lie-down held at its captured frame, loop advancing"
+ },
+ "walk_in_handoff": {
+  "adapter": "WalkToBed stops within 12 cm, then TurnInPlace: the clip starts from a stand-still, so a stand-still start is the matching hand-off",
+  "corrected_start_hips_speed_cm_s": 1.565,
+  "ease_in_s": 0.5,
+  "native_pose_residual": {
+   "idle_candidate_stand_idle_ual_ik": {
+    "best_frame": 9,
+    "file": "docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb",
+    "max_joint_cm": 51.443,
+    "rms_joint_cm": 24.222,
+    "sha256": "3d9876d91a7d5829e112648184bad049c5d5e977f8d67c008db15b3f2a0ccc37",
+    "worst_joint": "RightToe_End"
+   },
+   "native_walk_walking_glb": {
+    "best_frame": 1,
+    "file": "web/house/assets/first-person/walking.glb",
+    "max_joint_cm": 37.896,
+    "rms_joint_cm": 23.869,
+    "sha256": "9a7937e050a96c8f58dad1ffcfc8f5ff61f0c0699237afd5b996035f006d3f70",
+    "worst_joint": "RightToeBase"
+   }
+  },
+  "raw_start_hips_speed_cm_s": 20.504,
+  "start": {
+   "candidates": 3,
+   "foot_speed_cm_s": {
+    "Left": 5.971,
+    "Right": 17.559
+   },
+   "frame": 44,
+   "hips_speed_cm_s": 45.732,
+   "rule": "standing frames (torso <= 30.0 deg, leg extension >= 0.85 x rest, the verifier's standing rule) before he starts to sit, with both foot joints <= 20.0 cm/s and within 3.0 cm of their standing minimum; the lowest hips speed wins",
+   "standing_until_frame": 48,
+   "time_s": 1.4667
+  }
+ }
+}

@@ -1,0 +1,456 @@
+{
+ "accepted_for_binding": false,
+ "alternatives_measured": {
+  "mixamo_laying_sleeping_v5": {
+   "file": "web/room/mh_v5/room_laying_sleeping.glb",
+   "lie_side_1.5s": {
+    "lie_frame": 438,
+    "loop_phase": 34,
+    "peak_joint_speed_hips_relative_cm_s": 64.235,
+    "peak_joint_speed_world_cm_s": 61.648,
+    "pose_gap_cm": 45.358
+   },
+   "lie_side_2.0s": {
+    "lie_frame": 438,
+    "loop_phase": 31,
+    "peak_joint_speed_hips_relative_cm_s": 47.62,
+    "peak_joint_speed_world_cm_s": 45.381,
+    "pose_gap_cm": 45.218
+   },
+   "lie_side_2.5s": {
+    "lie_frame": 438,
+    "loop_phase": 22,
+    "peak_joint_speed_hips_relative_cm_s": 38.035,
+    "peak_joint_speed_world_cm_s": 36.2,
+    "pose_gap_cm": 45.25
+   },
+   "posture": "supine",
+   "seconds_needed_for_40_cm_s": 2.524,
+   "sha256": "899c8dfd5f6559ac2b077962f13bb159d90f22564996e23991e2c87e4719a257",
+   "wake_side_1.5s": {
+    "loop_phase": 50,
+    "peak_joint_speed_hips_relative_cm_s": 63.661,
+    "peak_joint_speed_world_cm_s": 47.641,
+    "pose_gap_cm": 44.392,
+    "wake_frame": 1
+   },
+   "wake_side_2.0s": {
+    "loop_phase": 1,
+    "peak_joint_speed_hips_relative_cm_s": 49.448,
+    "peak_joint_speed_world_cm_s": 34.584,
+    "pose_gap_cm": 44.331,
+    "wake_frame": 1
+   },
+   "wake_side_2.5s": {
+    "loop_phase": 50,
+    "peak_joint_speed_hips_relative_cm_s": 40.391,
+    "peak_joint_speed_world_cm_s": 27.449,
+    "pose_gap_cm": 44.392,
+    "wake_frame": 1
+   }
+  },
+  "notes": [
+   "mixamo_laying_sleeping_v5 is the Mixamo capture after the mh_retarget + bed_fit chain; docs/design/mixamo/README.md: \"The lift and the raised fists came from the retarget and bed-fit chain, not from the captures.\"",
+   "Sova loops: their right arm lies over the head; every lie-down / get-up lying frame has it at the side (~85 cm apart at the fingertips), so no window inside 2.5 s keeps the joints under 40 cm/s."
+  ],
+  "sova_sleep_back": {
+   "file": "web/room/desk_states/bed/sleep_back.glb",
+   "lie_side_1.5s": {
+    "lie_frame": 346,
+    "loop_phase": 198,
+    "peak_joint_speed_hips_relative_cm_s": 148.228,
+    "peak_joint_speed_world_cm_s": 161.886,
+    "pose_gap_cm": 85.522
+   },
+   "lie_side_2.0s": {
+    "lie_frame": 347,
+    "loop_phase": 193,
+    "peak_joint_speed_hips_relative_cm_s": 111.499,
+    "peak_joint_speed_world_cm_s": 121.647,
+    "pose_gap_cm": 85.524
+   },
+   "lie_side_2.5s": {
+    "lie_frame": 346,
+    "loop_phase": 191,
+    "peak_joint_speed_hips_relative_cm_s": 89.455,
+    "peak_joint_speed_world_cm_s": 97.323,
+    "pose_gap_cm": 85.523
+   },
+   "posture": "supine",
+   "seconds_needed_for_40_cm_s": 5.591,
+   "sha256": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4",
+   "wake_side_1.5s": {
+    "loop_phase": 5,
+    "peak_joint_speed_hips_relative_cm_s": 145.168,
+    "peak_joint_speed_world_cm_s": 151.892,
+    "pose_gap_cm": 83.892,
+    "wake_frame": 70
+   },
+   "wake_side_2.0s": {
+    "loop_phase": 197,
+    "peak_joint_speed_hips_relative_cm_s": 108.848,
+    "peak_joint_speed_world_cm_s": 113.808,
+    "pose_gap_cm": 83.897,
+    "wake_frame": 70
+   },
+   "wake_side_2.5s": {
+    "loop_phase": 189,
+    "peak_joint_speed_hips_relative_cm_s": 87.12,
+    "peak_joint_speed_world_cm_s": 91.093,
+    "pose_gap_cm": 83.902,
+    "wake_frame": 70
+   }
+  },
+  "sova_sleep_side": {
+   "file": "web/room/desk_states/bed/sleep_side.glb",
+   "lie_side_1.5s": {
+    "lie_frame": 383,
+    "loop_phase": 0,
+    "peak_joint_speed_hips_relative_cm_s": 124.981,
+    "peak_joint_speed_world_cm_s": 187.443,
+    "pose_gap_cm": 78.473
+   },
+   "lie_side_2.0s": {
+    "lie_frame": 383,
+    "loop_phase": 0,
+    "peak_joint_speed_hips_relative_cm_s": 93.714,
+    "peak_joint_speed_world_cm_s": 140.778,
+    "pose_gap_cm": 78.473
+   },
+   "lie_side_2.5s": {
+    "lie_frame": 383,
+    "loop_phase": 5,
+    "peak_joint_speed_hips_relative_cm_s": 74.942,
+    "peak_joint_speed_world_cm_s": 112.401,
+    "pose_gap_cm": 78.471
+   },
+   "posture": "side_right",
+   "seconds_needed_for_40_cm_s": 4.913,
+   "sha256": "0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b",
+   "wake_side_1.5s": {
+    "loop_phase": 197,
+    "peak_joint_speed_hips_relative_cm_s": 130.585,
+    "peak_joint_speed_world_cm_s": 170.089,
+    "pose_gap_cm": 81.932,
+    "wake_frame": 70
+   },
+   "wake_side_2.0s": {
+    "loop_phase": 189,
+    "peak_joint_speed_hips_relative_cm_s": 98.127,
+    "peak_joint_speed_world_cm_s": 127.538,
+    "pose_gap_cm": 81.935,
+    "wake_frame": 70
+   },
+   "wake_side_2.5s": {
+    "loop_phase": 198,
+    "peak_joint_speed_hips_relative_cm_s": 78.603,
+    "peak_joint_speed_world_cm_s": 102.364,
+    "pose_gap_cm": 81.933,
+    "wake_frame": 70
+   }
+  }
+ },
+ "chosen_because": "lowest transition joint speeds of every option measured (see alternatives); same posture class (supine) at both ends; zero gap into the get-up",
+ "continuity": {
+  "get_up_source_lying_head_speed_cm_s": {
+   "max": 26.251
+  },
+  "lie_down_end_vs_loop_start": {
+   "attitude_deg": 0.0,
+   "hips_world_distance_cm": 0.0,
+   "hips_world_offset_cm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pose_cm": 0.0,
+   "pose_rms_cm": 0.0,
+   "posture": [
+    "supine",
+    "supine"
+   ],
+   "velocity_mismatch_cm_s": 1.6934,
+   "world_max_joint_cm": 0.0
+  },
+  "loop_end_vs_get_up_start": {
+   "attitude_deg": 0.0,
+   "hips_world_distance_cm": 0.0,
+   "hips_world_offset_cm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pose_cm": 0.0,
+   "pose_rms_cm": 0.0,
+   "posture": [
+    "supine",
+    "supine"
+   ],
+   "velocity_mismatch_cm_s": 1.6967,
+   "world_max_joint_cm": 0.0
+  },
+  "loop_own_joint_speed_cm_s": {
+   "max": 8.102,
+   "median": 1.505
+  },
+  "raw_b7b099b_blend_peaks_cm_s": {
+   "lie_blend": 204,
+   "source": "docs/proposed/bed-transition-pipeline.md",
+   "wake_blend": 231
+  },
+  "seams": {
+   "lie_down_into_loop": {
+    "frames": [
+     459,
+     464
+    ],
+    "max_joint_acceleration_cm_s2": 63.578,
+    "max_joint_speed_cm_s": 2.121,
+    "max_root_step_cm": 0.0091
+   },
+   "loop_into_get_up": {
+    "frames": [
+     517,
+     522
+    ],
+    "max_joint_acceleration_cm_s2": 63.282,
+    "max_joint_speed_cm_s": 2.111,
+    "max_root_step_cm": 0.0091
+   },
+   "loop_itself": {
+    "frames": [
+     461,
+     519
+    ],
+    "max_joint_acceleration_cm_s2": 164.855,
+    "max_joint_speed_cm_s": 8.102,
+    "max_root_step_cm": 0.071
+   },
+   "settle_window": {
+    "frames": [
+     386,
+     461
+    ],
+    "max_joint_acceleration_cm_s2": 159.056,
+    "max_joint_speed_cm_s": 15.144,
+    "max_root_step_cm": 0.0925
+   },
+   "whole_clip": {
+    "max_joint_acceleration_cm_s2": 7274.168,
+    "max_joint_speed_cm_s": 396.909,
+    "max_root_step_cm": 2.2926
+   }
+  },
+  "settle": {
+   "frames": 75,
+   "lie_frame": 386,
+   "loop_phase_at_end": 0,
+   "loop_phase_at_start": 41,
+   "peak_joint_speed_hips_relative_cm_s": 15.144,
+   "peak_joint_speed_world_cm_s": 9.467,
+   "pose_gap_cm": 19.274,
+   "seconds": 2.5,
+   "weight": "smootherstep (C2); lie-down held at its captured frame, loop advancing"
+  },
+  "settle_options": {
+   "1.5s": {
+    "frames": 45,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 13,
+    "peak_joint_speed_hips_relative_cm_s": 24.339,
+    "peak_joint_speed_world_cm_s": 15.846,
+    "pose_gap_cm": 19.549
+   },
+   "2.0s": {
+    "frames": 60,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 56,
+    "peak_joint_speed_hips_relative_cm_s": 18.513,
+    "peak_joint_speed_world_cm_s": 11.97,
+    "pose_gap_cm": 19.674
+   },
+   "2.5s": {
+    "frames": 75,
+    "lie_frame": 386,
+    "loop_phase_at_end": 0,
+    "loop_phase_at_start": 41,
+    "peak_joint_speed_hips_relative_cm_s": 15.144,
+    "peak_joint_speed_world_cm_s": 9.467,
+    "pose_gap_cm": 19.274
+   }
+  }
+ },
+ "documented_quotes": [
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "**v5's room clips carried over** by `room_build/kimodo/mx_convert.mjs` (no Mixamo capture of these yet):"
+  },
+  {
+   "file": "web/room/mh_mx/README.md",
+   "file_sha256": "08a4a7c29eee8f22425e0e1f2cff8175362f7aff4b2a276dbe3b1ddff8658955",
+   "present_verbatim": true,
+   "quote": "`desk_mouse_ik`, `room_walk`, `room_window`, `room_bed_lie`, `room_bed_wake`, `room_bedtime`"
+  },
+  {
+   "file": "web/room/CREDITS.md",
+   "file_sha256": "075e8bd62fc55666ee24b17e5fab3597aede1750b5cb8fe921c82fc81a6faf03",
+   "present_verbatim": true,
+   "quote": "| `mh_v5/*.glb` (the room clips retargeted onto v5, by G14; the same names as preview/room-mh's `mh/`) | preview/mh-motion's clips, retargeted | as their sources |"
+  },
+  {
+   "file": "web/room/mh_v5/README.md",
+   "file_sha256": "b12fa897afce5c1ce83bd74fd304a3b9b134189982f45819b0e4f908db546417",
+   "present_verbatim": true,
+   "quote": "| room_window, room_walk, room_sit_down, room_stand_up, room_bed_lie, room_bed_wake, room_door, room_bedtime | G12 (to come). G10d's QA ran with local stand-ins (room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options), not committed |"
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "**The ones here now are placeholders**: room-mh's clips run through that script as it is at ef9c0e4."
+  },
+  {
+   "file": "docs/design/room-v5/README.md",
+   "file_sha256": "d0e950f994d22b109e9ef931aa9e832773155999fbaef63dac62306bb0a45398",
+   "present_verbatim": true,
+   "quote": "- **His motion:** 16 mocap clips retargeted onto him (`web/room/mh_v5/`, G14 and G12)"
+  },
+  {
+   "file": "room_build/kimodo/mh_retarget.mjs",
+   "file_sha256": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
+   "present_verbatim": true,
+   "quote": "// 3) zero-phase smoothing (Gaussian, sigma 1 frame limbs / 1.7 spine-neck-head), then two-bone IK: the wrists onto the"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Sleeping_Idle\": {"
+  },
+  {
+   "file": "room_build/kimodo/mixamo_clips.json",
+   "file_sha256": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
+   "present_verbatim": true,
+   "quote": "\"Laying_Sleeping\": {"
+  },
+  {
+   "file": "docs/design/mixamo/README.md",
+   "file_sha256": "32c49dcba84368bba74678419913a3803f8f9d7848e265d2b134f1c08873f047",
+   "present_verbatim": true,
+   "quote": "| Sleeping_Idle \u2192 `room_sleeping_idle.glb` | 17.6 s; curled on his side; turns over and back (head 85\u00b0, arms 100\u00b0)"
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "licence is pending, so they never go to main."
+  },
+  {
+   "file": "web/room/desk_states/README.md",
+   "file_sha256": "52e07d674b7532166d66b39e5dd4c61c91967cacd26c282f9ebe48688cc4cc67",
+   "present_verbatim": true,
+   "quote": "- **Asleep:** `sleep_side`; after 40-90 s `sleep_roll_to_back` (once), then `sleep_back` and `sleep_back_idle` taking turns."
+  }
+ ],
+ "labels": [
+  "retargeted",
+  "seated_slide_removed",
+  "lying_segment_of_get_up_source",
+  "sleep_loop_seam_blend"
+ ],
+ "loop_own_joint_speed_cm_s": {
+  "max": 8.102,
+  "median": 1.505
+ },
+ "native_bed_verified": false,
+ "never": "not run in Unreal or Blender; no runtime receipt; the bed is unmeasured; nothing deployed",
+ "outputs": {
+  "in_place": {
+   "bytes": 90808,
+   "duration_s": 1.9333,
+   "frames": 59,
+   "path": "docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb",
+   "sha256": "f6dafbff7a2e04dd5d72c2c0155dfd40f7a9cf8d2bd46aded6ab819eaca498cc"
+  },
+  "travel_in_hips": {
+   "bytes": 90824,
+   "duration_s": 1.9333,
+   "frames": 59,
+   "path": "docs/proposed/bed-transition/SUB01_SleepLoop.corrected.travel_in_hips.glb",
+   "sha256": "e680d6f2e8769c5a27cc32c68b060557aee2a5e9ffd24709631f91dc75408cd3"
+  }
+ },
+ "private": true,
+ "provenance": {
+  "capture_claimed": false,
+  "capture_method": "undocumented",
+  "label": "derived_library_asset",
+  "sources_sha256": {
+   "web/room/mh_v5/room_bed_lie.glb": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94",
+   "web/room/mh_v5/room_bed_wake.glb": "aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49"
+  },
+  "text": "derived library asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs (web/room/mh_v5), then onto the owner skeleton by tools/retarget_first_person.mjs; capture method undocumented; corrected by tools/bed_transition_corrections.py (controlled adaptation, labelled)"
+ },
+ "provenance_label": "derived_library_asset",
+ "role": "SleepLoop",
+ "schema": "sub01.bed-transition-corrected-clip.v1",
+ "seam": {
+  "after_blend": {
+   "attitude_deg": 0.0,
+   "hips_world_distance_cm": 0.0,
+   "hips_world_offset_cm": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pose_cm": 0.0,
+   "pose_rms_cm": 0.0,
+   "posture": [
+    "supine",
+    "supine"
+   ],
+   "velocity_mismatch_cm_s": 1.6967,
+   "world_max_joint_cm": 0.0
+  },
+  "captured_gap_before_blend_cm": 0.776,
+  "seam_blend_source_map": [
+   {
+    "main": 68,
+    "partner": 10,
+    "weight": 0.964506
+   },
+   {
+    "main": 69,
+    "partner": 11,
+    "weight": 0.994912
+   },
+   {
+    "main": 70,
+    "partner": 12,
+    "weight": 1.0
+   }
+  ]
+ },
+ "source": {
+  "captured_frames": [
+   12,
+   70
+  ],
+  "clip": "GetUp source (web/room/mh_v5/room_bed_wake.glb), seated slide removed",
+  "rule": "captured lying frames moving < 10.0 cm/s; loop end = the last of them within 1.0 cm of the loop start; leg_ik_life_clip.seam_blend over 12 frames",
+  "still_run_frames": [
+   0,
+   70
+  ]
+ }
+}
