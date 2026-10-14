@@ -168,7 +168,7 @@ def geometry_checks():
     return errors
 
 
-def build(source,out,expected_sha=SOURCE_SHA):
+def build(source,out,expected_sha=SOURCE_SHA,remove_reviewed_desk_stem=False):
     import bpy
     from mathutils import Vector,Matrix
     audit,doc,binary=source_audit(source,expected_sha)
@@ -208,12 +208,18 @@ def build(source,out,expected_sha=SOURCE_SHA):
         return material
     materials={role:source_material(role) for role in ('oak','metal')}
     def point(p):return Vector((p[0],-p[2],p[1]))
-    preserved=[]
+    preserved=[];additional_removals=[]
+    if remove_reviewed_desk_stem:
+        from desk_lamp_stem_source_patch import select_stem,union_remainder_selection
+        stem=select_stem(doc,binary,audit['source_sha256'])
+        if stem['triangle_indices']!=list(range(1800,1840)) or stem['selected_triangle_count']!=40:raise ValueError('Reviewed exact legacy stem triangle identity differs')
+        union_remainder_selection(audit['matched_rails'],stem) # Refuse overlaps/count drift.
+        additional_removals.append(stem)
     if audit['batched_source_patch']:
         from structural_rail_source_patch import accessor,transformed,world_matrices
         matrices=world_matrices(doc)
         removed={}
-        for row in audit['matched_rails']:
+        for row in [*audit['matched_rails'],*additional_removals]:
             key=(row['source_node_index'],row['primitive_index']);removed.setdefault(key,set()).update(row['triangle_indices'])
         affected=sorted({key[0] for key in removed})
         for node_index in affected:
@@ -265,7 +271,7 @@ def build(source,out,expected_sha=SOURCE_SHA):
     glb=out/'structural-stair-rails.glb'
     bpy.ops.export_scene.gltf(filepath=str(glb),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
     hidden={row['source_node_index']:{k:row[k] for k in ('source_node_index','source_name','actor_object_name','component_name')} for row in audit['matched_rails']}
-    report={'schema':'sub01-private-structural-rails-v1','source_audit':audit,'output_sha256':hashlib.sha256(glb.read_bytes()).hexdigest(),'replacement_only':not preserved,'scoped_original_mesh_remainder':preserved,'parts':replacement_parts(),'geometry_checks':geometry_checks(),
+    report={'schema':'sub01-private-structural-rails-v1','source_audit':audit,'additional_source_removals':additional_removals,'output_sha256':hashlib.sha256(glb.read_bytes()).hexdigest(),'replacement_only':not preserved,'scoped_original_mesh_remainder':preserved,'parts':replacement_parts(),'geometry_checks':geometry_checks(),
             'placement':'Global source metres preserved; UE glTF import coordinates, no additive scene origin offset',
             'original_hide_manifest':[hidden[i] for i in sorted(hidden)],'unchanged':['all stair/tread/slab/wall geometry','walkable staircase collision','native route graph','light/device/brain state'],
             'native_acceptance_pending':True}
@@ -275,8 +281,8 @@ def build(source,out,expected_sha=SOURCE_SHA):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--source-sha',default=SOURCE_SHA);parser.add_argument('--output-dir',required=True);parser.add_argument('--audit-source',action='store_true')
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--source-sha',default=SOURCE_SHA);parser.add_argument('--output-dir',required=True);parser.add_argument('--audit-source',action='store_true');parser.add_argument('--remove-reviewed-desk-stem',action='store_true',help='Opt-in union remainder only when replacement desk lamp is ready; never import two overlapping remainders')
     args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else None)
     if args.audit_source:
         result,_,_=source_audit(args.source,args.source_sha);print(json.dumps(result,indent=2))
-    else:build(args.source,args.output_dir,args.source_sha)
+    else:build(args.source,args.output_dir,args.source_sha,args.remove_reviewed_desk_stem)

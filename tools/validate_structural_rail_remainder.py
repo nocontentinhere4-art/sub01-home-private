@@ -76,7 +76,13 @@ def validate(source,replacement,sidecar):
     if source_hash!=report['source_audit']['source_sha256'] or replacement_hash!=report['output_sha256']:raise ValueError('Actual source/export bytes differ from audited identity')
     original,original_bin=read_gltf(Path(source));output,output_bin=read_gltf(Path(replacement));checks=[]
     selected={}
-    for row in report['source_audit']['matched_rails']:selected.setdefault((row['source_node_index'],row['primitive_index']),set()).update(row['triangle_indices'])
+    extra=report.get('additional_source_removals',[])
+    if extra:
+        from desk_lamp_stem_source_patch import select_stem,union_remainder_selection
+        stem=select_stem(original,original_bin,source_hash)
+        if len(extra)!=1 or extra[0]['triangle_indices']!=stem['triangle_indices'] or stem['triangle_indices']!=list(range(1800,1840)):raise ValueError('Additional removal differs from exact source-proven desk stem')
+        union_remainder_selection(report['source_audit']['matched_rails'],stem)
+    for row in [*report['source_audit']['matched_rails'],*extra]:selected.setdefault((row['source_node_index'],row['primitive_index']),set()).update(row['triangle_indices'])
     for remainder in report['scoped_original_mesh_remainder']:
         source_node,source_primitive=remainder['source_node_index'],remainder['primitive_index'];name=f'SUB01_PreservedSource_{source_node}_{source_primitive}'
         nodes=[i for i,n in enumerate(output['nodes']) if n.get('name')==name]
