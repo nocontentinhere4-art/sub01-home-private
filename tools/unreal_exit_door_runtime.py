@@ -77,7 +77,6 @@ FIELDS = r'''
  double ExitDoorPollAt=0,ExitDoorStateAt=-10;
  void PollActualExitDoor();
  void ConfigureActualExitDoor();
- ConfigureActualBathroomDoor();
  bool TryNativeExitDoor(UActorComponent* HitComponent);
  void UpdateActualExitDoor(float DeltaSeconds);
  bool ExitDoorSweepBlocked(float From,float To) const;

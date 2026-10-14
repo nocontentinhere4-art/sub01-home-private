@@ -16,11 +16,18 @@ class DoorAdapterTest(unittest.TestCase):
   self.assertIn('if(TryNativeBathroomDoor(Hit.GetComponent()))return;',c)
   self.assertIn('UpdateActualBathroomDoor(DeltaSeconds)',c)
   self.assertEqual(c.count(' ConfigureActualExitDoor();'),1)
+  self.assertEqual(h.count(' void ConfigureActualBathroomDoor();'),1)
+  self.assertNotIn('\n ConfigureActualBathroomDoor();',h)
   with self.assertRaises(ValueError):door.install(h,c)
   with self.assertRaises(ValueError):door.install('bad',c)
  @unittest.skipUnless(shutil.which('c++'),'C++ compiler required for native policy execution')
  def test_real_native_policy_clear_open_blocked_close_arc_and_bad_time(self):
-  source=door.POLICY+r'''
+  source=r'''
+#define UPROPERTY(...)
+class UStaticMeshComponent;class UActorComponent;
+struct FTransform {};struct FString {};template<class T> using TObjectPtr=T*;
+struct ActualInstalledFields {
+'''+door.FIELDS+'\n};\n'+door.POLICY+r'''
 #include <cassert>
 #include <limits>
 int main(){
