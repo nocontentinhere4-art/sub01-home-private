@@ -162,6 +162,25 @@ class PhysicalInput:
             raise RuntimeError("Native mouse delivery failed")
         self.x.XFlush(self.display)
 
+VIEW_SETTINGS_QUEUE_JS = r'''
+let nativeViewSettingsQueue=Promise.resolve(),nativeViewSettingsEpoch=0;
+function queueNativeViewSetting(value,identity,apply){
+ const expected=Array.isArray(identity)?identity.slice():null,epoch=nativeViewSettingsEpoch;
+ const operation=nativeViewSettingsQueue.then(async()=>{
+  if(epoch!==nativeViewSettingsEpoch)throw Error('Earlier setting was not acknowledged');
+  try{
+   const h=await readHealth();
+   if(!expected||expected.length!==2||!expected.every(x=>Number.isInteger(x)&&x>0)||
+      !Array.isArray(h.nativeIdentity)||h.nativeIdentity[0]!==expected[0]||h.nativeIdentity[1]!==expected[1]||
+      h.privacy!==false||h.viewMode!=='manual'||h.inputEnabled!==true)throw Error('Settings unavailable for this session');
+   return await apply(value,expected);
+  }catch(e){nativeViewSettingsEpoch++;throw e;}
+ });
+ nativeViewSettingsQueue=operation.catch(()=>{});
+ return operation;
+}
+'''
+
 HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>SUB-01 · Home</title>
 <style>
 [hidden]{display:none!important}
@@ -197,9 +216,11 @@ function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLast
 async function readHealth(){const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),1500);try{const r=await fetch(base+'health'+(active?'?hold=1':''),{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error('Health unavailable');return await r.json();}finally{clearTimeout(timer);}}
 async function ready(){try{const h=await readHealth();live=h.nativeAlive&&h.captureEnabled;document.querySelector('.private').textContent=h.privacy===false&&h.viewMode==='manual'?'Explore home':h.privacy===false&&h.viewMode==='live'?'Live home':h.privacy===false&&h.viewMode==='diagnostic'?'Animation review':'Private home';permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;takeControlAvailable=h.takeControlAvailable===true;control.disabled=takingControl||(!permission&&!privateEgress&&!takeControlAvailable);control.textContent=takingControl?'Taking control…':takeControlAvailable&&!permission?'Take control':privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent=!h.nativeAlive?'Home unavailable':h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=!h.nativeAlive?'The home is paused. Waiting for a fresh live session.':h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&performance.now()-(window.nativeViewerLastDecodedAt||streamOpenedAt)>3500){streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=h.viewMode==='live'&&h.activity&&typeof h.activity.awake==='boolean'?(h.activity.awake?'Awake':'Asleep')+(h.activity.activity?' · '+h.activity.activity:''):active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){active=false;permission=false;privateEgress=false;takeControlAvailable=false;live=false;streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;control.disabled=true;if(document.pointerLockElement)document.exitPointerLock();status.textContent='Private connection unavailable';document.querySelector('#emptyText').textContent='Live view is paused until the private connection returns.';}}
 
-let supported='',settingsPending=false;
+let supported='',settingsPending=false,settingsIdentity=null;
+%SETTINGS_QUEUE%
 function syncSettingValues(p){
  if(settingsPending)return;
+ settingsIdentity=[p.native_pid,p.native_start_ticks];
  for(const input of document.querySelectorAll('#nativeSettings input[data-native-key]'))if(input!==document.activeElement)input.value=p.values[input.dataset.nativeKey];
  for(const input of document.querySelectorAll('#nativeSettings input[data-native-lamp]'))input.checked=p.values.lamps[input.dataset.nativeLamp];
  const master=document.querySelector('#nativeSettings input[data-native-master]');
@@ -211,18 +232,19 @@ async function refreshSettings(){
   const p=await r.json(),caps=p.capabilities,holder=document.querySelector('#nativeSettings'),signature=JSON.stringify(caps);
   if(supported===signature){syncSettingValues(p);return;}
   supported=signature;holder.replaceChildren();holder.hidden=false;
-  const apply=async value=>{
+  const submit=async (value,expected)=>{
    settingsPending=true;
    try{
     const r=await fetch(base+'settings',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(value)});
-    const q=await r.json();if(!r.ok){status.textContent=q.error;return;}
+    const q=await r.json();if(!r.ok)throw Error(q.error||'Native setting refused');
     for(let n=0;n<10;n++){
      await new Promise(r=>setTimeout(r,150));const ack=await fetch(base+'settings').then(r=>r.json());
-     if(ack.revision===q.revision){status.textContent=ack.accepted?'Setting applied':ack.error;settingsPending=false;syncSettingValues(ack);return;}
+     if(ack.revision===q.revision){if(ack.native_pid!==expected[0]||ack.native_start_ticks!==expected[1])throw Error('Setting session changed');settingsPending=false;syncSettingValues(ack);if(!ack.accepted)throw Error(ack.error||'Native setting refused');status.textContent='Setting applied';return;}
     }
-    status.textContent='Waiting for the native setting';
-   }catch(e){status.textContent='Setting connection interrupted';}finally{settingsPending=false;}
+    throw Error('Native setting was not acknowledged');
+   }finally{settingsPending=false;}
   };
+  const apply=value=>queueNativeViewSetting(value,settingsIdentity,submit).catch(e=>{status.textContent=e.message;});
   for(const[name,label,min,max]of[['fov','Field of view',50,110],['hour','Daylight',0,24]])if(caps[name]){
    const row=document.createElement('label');row.className='row';row.textContent=label;
    const slider=document.createElement('input');slider.type='range';slider.min=min;slider.max=max;slider.step=name==='hour'?0.25:1;slider.dataset.nativeKey=name;slider.value=p.values[name];
@@ -244,7 +266,7 @@ async function refreshSettings(){
 setInterval(()=>{if(permission)refreshSettings();else{document.querySelector('#nativeSettings').hidden=true;supported='';}},1500);
 setInterval(ready,1000);ready();
 </script></body></html>
-'''.replace('%KEYS%', json.dumps(list(KEYS)))
+'''.replace('%KEYS%', json.dumps(list(KEYS))).replace('%SETTINGS_QUEUE%',VIEW_SETTINGS_QUEUE_JS)
 
 class LiveState:
     def __init__(self, deadline, fps=8, width=960):
