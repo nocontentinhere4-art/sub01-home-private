@@ -1,6 +1,6 @@
 # Private Unreal Pixel Streaming
 
-Prepared for the already authorized Runpod `713u6mnmxu4y1a`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. No other pod is authorized. The absolute runtime deadline is **2026-10-13 18:16 UTC**. The existing pod budget guard remains authoritative; this adapter also exits at that deadline.
+Current authorized migration target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. The runtime deadline is **2026-10-14 01:37:44 UTC**, within the owner's **$20 total cap including prior use**, enforced by authenticated target and external guards. The CPU-only source `80lf8giw6ft61v` is authorized solely for the transfer and must stop when copying finishes. Original pod `713u6mnmxu4y1a` remains stopped. Historical inspections below describe their dated hosts; they do not establish readiness on the new target. The private browser stream still requires actual transport and input acceptance before it can be called working.
 
 `private_signaller.cjs` uses Epic's official `@epicgames-ps/lib-pixelstreamingsignalling-ue5.8` implementation. It binds player HTTP/WebSocket to `127.0.0.1:8890` and streamer WebSocket to `127.0.0.1:8891`, limits the home to one viewer, and disables SFU. It does not start the engine or a relay. It contains no token or credential.
 

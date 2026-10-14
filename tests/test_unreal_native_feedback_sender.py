@@ -56,7 +56,8 @@ def test_actual_accepted_seat_lease_requires_matching_command_and_fresh_ack(tmp_
     body = METHODS.split('bool ASub01HomeCharacter::NativeFeedbackSeatReady() const{', 1)[1].split('\nconst TCHAR*', 1)[0]
     source = '''#include <string>
 #define TEXT(x) x
-struct FPlatformTime{static double Seconds(){return 10;}};
+struct FPlatformTime{static double clock;static double Seconds(){return clock;}};
+double FPlatformTime::clock=10;
 bool NativeFeedbackBound=true,LiveHomePrivate=false;
 std::string NativeFeedbackAckPhase="seated",NativeFeedbackEpoch="one",LiveHomeEpoch="one",NativeFeedbackActivity="research",LiveHomeActivity="research";
 long NativeFeedbackSequence=1,LiveHomeCommandSequence=1;
@@ -73,7 +74,14 @@ int main(){
  NativeFeedbackLastAck=6.99;if(ready())return 7;
  NativeFeedbackLastAck=11;if(ready())return 8;
  NativeFeedbackLastAck=7;if(!ready())return 9;
- LiveHomePrivate=true;if(ready())return 10;
+ LiveHomePrivate=true;if(ready())return 10;LiveHomePrivate=false;
+ // A report observed at 10 and acknowledged at 11.5 must expire at 13.
+ const double Now=10;
+ const std::string Phase="seated";
+ FPlatformTime::clock=11.5;
+''' + METHODS.split('  // Network delay must not renew the age of the physical observation.\n', 1)[1].split('\n });', 1)[0] + '''
+ FPlatformTime::clock=13;if(!ready())return 11;
+ FPlatformTime::clock=13.01;if(ready())return 12;
  return 0;
 }
 '''
