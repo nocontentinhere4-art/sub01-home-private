@@ -111,10 +111,10 @@ def install(header, cpp):
     """Integrate after a verified baseline; never call the project generator here."""
     header = header.replace(' void UpdatePrivateNativeControl();', FIELDS + '\n void UpdatePrivateNativeControl();', 1)
     cpp = INCLUDES + cpp
-    hook=" const bool Hidden=Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270;"
-    if hook not in cpp:
-        raise ValueError("Actual native bathroom privacy hook missing")
-    cpp=cpp.replace(hook,hook+"\n PublishPrivateNativeCameraPrivacy(Hidden);",1)
+    hook="void ASub01HomeCharacter::UpdateNativePCPrivacy(){"
+    if cpp.count(hook)!=1:
+        raise ValueError("Actual native bathroom privacy function missing")
+    cpp=cpp.replace(hook,hook+"\n const FVector ViewerEye=ViewCamera->GetComponentLocation();\n PublishPrivateNativeCameraPrivacy(ViewerEye.Z>300&&ViewerEye.X>-378&&ViewerEye.X<-85&&ViewerEye.Y>50&&ViewerEye.Y<270);",1)
     cpp = cpp.replace(' const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;',
                       ' InitializePrivateViewSettings();\n const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;', 1)
     cpp = cpp.replace(' FString Capture;if(Doc->TryGetStringField',
