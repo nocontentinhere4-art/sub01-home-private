@@ -1,0 +1,2399 @@
+{
+  "schema": "sub01-private-actual-visual-inventory-v1",
+  "level": "/Game/Sub01Home/ActualHome.ActualHome",
+  "read_only": true,
+  "bindings": [
+    {
+      "actor": "Haven_felt",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_172.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_131.Mesh_131",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_71.Material_71"
+    },
+    {
+      "actor": "Haven_seams",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_175.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_134.Mesh_134",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_74.Material_74"
+    },
+    {
+      "actor": "Haven_legs",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_173.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_132.Mesh_132",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_72.Material_72"
+    },
+    {
+      "actor": "Haven_linen",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_174.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_133.Mesh_133",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_73.Material_73"
+    },
+    {
+      "actor": "CC0_queen_0",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_260.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_0.CC0_queen_0",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001"
+    },
+    {
+      "actor": "CC0_queen_1",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_261.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_1.CC0_queen_1",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001"
+    },
+    {
+      "actor": "CC0_queen_2",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_262.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_2.CC0_queen_2",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001"
+    },
+    {
+      "actor": "CC0_queen_3",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_263.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_3.CC0_queen_3",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001"
+    },
+    {
+      "actor": "CC0_queen_4",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_264.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_4.CC0_queen_4",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001"
+    },
+    {
+      "actor": "CC0_queen_5",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_265.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/CC0_queen_5.CC0_queen_5",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_large_body",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_14.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/Mesh1.Mesh1",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_ceramic_ivory.SUB01_RefDress_ceramic_ivory"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_medium_body",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_17.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/Mesh2.Mesh2",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_ceramic_ivory.SUB01_RefDress_ceramic_ivory"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_small_body",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_20.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/Mesh3.Mesh3",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_ceramic_ivory.SUB01_RefDress_ceramic_ivory"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_large_lid",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_15.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/SUB01_RefDress_kitchen_kitchen_canister_large_lid.SUB01_RefDress_kitchen_kitchen_canister_large_lid",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_oak.SUB01_RefDress_oak"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_medium_lid",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_18.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/SUB01_RefDress_kitchen_kitchen_canister_medium_lid.SUB01_RefDress_kitchen_kitchen_canister_medium_lid",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_oak.SUB01_RefDress_oak"
+    },
+    {
+      "actor": "SUB01_ReferenceDressing_SUB01_RefDress_kitchen_kitchen_canister_small_lid",
+      "component": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.reference-dressing_node_21.StaticMeshComponent0",
+      "mesh": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/StaticMeshes/SUB01_RefDress_kitchen_kitchen_canister_small_lid.SUB01_RefDress_kitchen_kitchen_canister_small_lid",
+      "slot": 0,
+      "material": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_oak.SUB01_RefDress_oak"
+    }
+  ],
+  "materials": {
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_71.Material_71": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.9200000166893005,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 1.0,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            0.02500000037252903,
+            0.02199999988079071,
+            0.019999999552965164,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_74.Material_74": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.8399999737739563,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 1.0,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            0.09758734703063965,
+            0.11953842639923096,
+            0.1441284716129303,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_72.Material_72": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_40.Image_40",
+          "MetallicRoughnessTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_39.Image_39",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_411.Image_411",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "ClearCoatTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "ClearCoatRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "ClearCoatNormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 1.0,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.30000001192092896,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "ClearCoatFactor": 0.18000000715255737,
+          "ClearCoatRoughnessFactor": 0.3400000035762787,
+          "ClearCoatNormalScale": 1.0,
+          "ClearCoatTexture_Rotation": 0.0,
+          "ClearCoatTexture_TexCoord": 0.0,
+          "ClearCoatRoughnessTexture_Rotation": 0.0,
+          "ClearCoatRoughnessTexture_TexCoord": 0.0,
+          "ClearCoatNormalTexture_Rotation": 0.0,
+          "ClearCoatNormalTexture_TexCoord": 0.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "ClearCoatTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "ClearCoatRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "ClearCoatNormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatNormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Opaque_DS.MI_ClearCoat_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_73.Material_73": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_43.Image_43",
+          "MetallicRoughnessTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_42.Image_42",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_44.Image_44",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "SheenColorTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "SheenRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 1.0,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.4300000071525574,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "SheenRoughnessFactor": 0.5,
+          "SheenColorTexture_Rotation": 0.0,
+          "SheenColorTexture_TexCoord": 0.0,
+          "SheenRoughnessTexture_Rotation": 0.0,
+          "SheenRoughnessTexture_TexCoord": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SheenColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "SheenColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SheenRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "SheenColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "SheenRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Opaque_DS.MI_Sheen_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_45.Image_45",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.8199999928474426,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 1.0,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_148.Image_148",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/fabric_normal.fabric_normal",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.9200000166893005,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.2199999988079071,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            -1.0,
+            2.0,
+            2.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_149.Image_149",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/fabric_normal1.fabric_normal1",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.9200000166893005,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.2199999988079071,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            -1.0,
+            2.0,
+            2.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1410.Image_1410",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/fabric_normal2.fabric_normal2",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.9200000166893005,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.2199999988079071,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            -1.0,
+            2.0,
+            2.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1411.Image_1411",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/fabric_normal3.fabric_normal3",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.9200000166893005,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.2199999988079071,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            -1.0,
+            2.0,
+            2.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_46.Image_46",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.8199999928474426,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 1.0,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    },
+    "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_ceramic_ivory.SUB01_RefDress_ceramic_ivory": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "MetallicRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "NormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "ClearCoatTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "ClearCoatRoughnessTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "ClearCoatNormalTexture": "/InterchangeAssets/gltf/Textures/T_Generic_N.T_Generic_N",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 0.3199999928474426,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 1.0,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "ClearCoatFactor": 0.25,
+          "ClearCoatRoughnessFactor": 0.0,
+          "ClearCoatNormalScale": 1.0,
+          "ClearCoatTexture_Rotation": 0.0,
+          "ClearCoatTexture_TexCoord": 0.0,
+          "ClearCoatRoughnessTexture_Rotation": 0.0,
+          "ClearCoatRoughnessTexture_TexCoord": 0.0,
+          "ClearCoatNormalTexture_Rotation": 0.0,
+          "ClearCoatNormalTexture_TexCoord": 0.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            0.838798999786377,
+            0.7835378050804138,
+            0.68668532371521,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "ClearCoatTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "ClearCoatRoughnessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "ClearCoatNormalTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatNormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "ClearCoatTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Opaque_DS.MI_ClearCoat_Opaque_DS"
+    },
+    "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Materials/SUB01_RefDress_oak.SUB01_RefDress_oak": {
+      "class": "MaterialInstanceConstant",
+      "parameters": {
+        "texture": {
+          "BaseColorTexture": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Textures/diff4.diff4",
+          "MetallicRoughnessTexture": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Textures/rough4.rough4",
+          "NormalTexture": "/Game/Sub01Home/ReferenceDressing/V_d21ed8de356b/reference-dressing/Textures/normal4.normal4",
+          "OcclusionTexture": "/InterchangeAssets/gltf/Textures/T_White_Linear.T_White_Linear",
+          "SpecularTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "EmissiveTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "IridescenceThicknessTexture": "/InterchangeAssets/gltf/Textures/T_White_srgb.T_White_srgb",
+          "AnisotropyTexture": "/InterchangeAssets/gltf/Textures/T_Anisotropy_Direction_Linear.T_Anisotropy_Direction_Linear"
+        },
+        "scalar": {
+          "BaseColorTexture_Rotation": 0.0,
+          "BaseColorTexture_TexCoord": 0.0,
+          "MetallicRoughnessTexture_Rotation": 0.0,
+          "MetallicRoughnessTexture_TexCoord": 0.0,
+          "MetallicFactor": 0.0,
+          "RoughnessFactor": 1.0,
+          "NormalTexture_Rotation": 0.0,
+          "NormalTexture_TexCoord": 0.0,
+          "NormalScale": 0.30000001192092896,
+          "OcclusionTexture_Rotation": 0.0,
+          "OcclusionTexture_TexCoord": 0.0,
+          "OcclusionStrength": 1.0,
+          "IOR": 1.5,
+          "SpecularTexture_Rotation": 0.0,
+          "SpecularTexture_TexCoord": 0.0,
+          "SpecularFactor": 1.0,
+          "EmissiveTexture_Rotation": 0.0,
+          "EmissiveTexture_TexCoord": 0.0,
+          "EmissiveStrength": 1.0,
+          "AlphaCutoff": 0.0,
+          "IridescenceIOR": 1.2999999523162842,
+          "IridescenceFactor": 0.0,
+          "IridescenceThicknessMinimum": 100.0,
+          "IridescenceThicknessMaximum": 400.0,
+          "IridescenceTexture_Rotation": 0.0,
+          "IridescenceTexture_TexCoord": 0.0,
+          "IridescenceThicknessTexture_Rotation": 0.0,
+          "IridescenceThicknessTexture_TexCoord": 0.0,
+          "AnisotropyStrength": 0.0,
+          "AnisotropyRotation": 0.0,
+          "AnisotropyTexture_Rotation": 0.0,
+          "AnisotropyTexture_TexCoord": 0.0
+        },
+        "vector": {
+          "BaseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "MetallicRoughnessTexture_OffsetScale": [
+            0.0,
+            0.44999998807907104,
+            0.550000011920929,
+            0.550000011920929
+          ],
+          "BaseColorTexture_OffsetScale": [
+            0.0,
+            0.44999998807907104,
+            0.550000011920929,
+            0.550000011920929
+          ],
+          "NormalTexture_OffsetScale": [
+            0.0,
+            0.44999998807907104,
+            0.550000011920929,
+            0.550000011920929
+          ],
+          "OcclusionTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "SpecularTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "EmissiveFactor": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "SpecularTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "OcclusionTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "NormalTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "EmissiveTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "MetallicRoughnessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "BaseColorTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceThicknessTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "IridescenceTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "IridescenceThicknessTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_OffsetScale": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "AnisotropyTexture_TilingMethod": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "errors": [],
+      "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS"
+    }
+  },
+  "lights": [
+    {
+      "actor": "SUB01_AuthoredLight_SUN",
+      "class": "DirectionalLightComponent",
+      "intensity": 3.0909626483917236,
+      "light_color": "<Struct 'Color' (0x5939dc520b8) {b: 161, g: 210, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false
+    },
+    {
+      "actor": "SUB01_AuthoredLight_DeskLamp",
+      "class": "PointLightComponent",
+      "intensity": 0.0,
+      "light_color": "<Struct 'Color' (0x59385b22ab8) {b: 82, g: 168, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false,
+      "intensity_units": "<LightUnits.CANDELAS: 1>"
+    },
+    {
+      "actor": "SUB01_AuthoredLight_BedLamp",
+      "class": "PointLightComponent",
+      "intensity": 0.0,
+      "light_color": "<Struct 'Color' (0x59385b234b8) {b: 65, g: 147, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false,
+      "intensity_units": "<LightUnits.CANDELAS: 1>"
+    },
+    {
+      "actor": "SUB01_AuthoredLight_KitchenWork",
+      "class": "PointLightComponent",
+      "intensity": 0.0,
+      "light_color": "<Struct 'Color' (0x59385b23eb8) {b: 124, g: 194, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false,
+      "intensity_units": "<LightUnits.CANDELAS: 1>"
+    },
+    {
+      "actor": "SUB01_AuthoredLight_LowerPendant",
+      "class": "SpotLightComponent",
+      "intensity": 0.0,
+      "light_color": "<Struct 'Color' (0x5939f8cfcb8) {b: 111, g: 184, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false,
+      "intensity_units": "<LightUnits.CANDELAS: 1>"
+    },
+    {
+      "actor": "SUB01_AuthoredLight_UpperPendant",
+      "class": "PointLightComponent",
+      "intensity": 0.0,
+      "light_color": "<Struct 'Color' (0x59385b248b8) {b: 111, g: 184, r: 255, a: 255}>",
+      "temperature": 6500.0,
+      "use_temperature": false,
+      "intensity_units": "<LightUnits.CANDELAS: 1>"
+    }
+  ],
+  "post_processing": [],
+  "scope": "Actual read-only editor material/light inventory 2026-10-14; no physical readiness or visual-match claim."
+}
