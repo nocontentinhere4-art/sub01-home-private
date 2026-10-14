@@ -107,3 +107,76 @@ def test_real_runner_protocol_and_independent_privacy_sources(tmp_path):
                 await c.session.close()
             await server.close()
     asyncio.run(check())
+
+
+@pytest.mark.parametrize('exit_before_reply', [False, True])
+def test_pending_public_gui_reply_cannot_undo_home_privacy(tmp_path, exit_before_reply):
+    """Delay the actual PC state response across privacy, including enter/exit ABA."""
+    async def check():
+        from aiohttp import web
+        from aiohttp.test_utils import TestServer
+        from scripts.home_pc_runner import PCRunner, create_app
+
+        class Guest:
+            ready, paused, revision, input_until = True, False, 1, 0
+            framebuffer_png = b'\x89PNG\r\n\x1a\ncached-public-frame'
+            display = {'kind': 'graphical', 'available': True, 'frame_id': 'abcdef-1'}
+
+            def view(self):
+                return {'ready': True, 'paused': self.paused, 'status': 'ready',
+                        'output': 'public-before-privacy', 'display': dict(self.display)}
+
+            async def send(self, message):
+                self.paused = message['type'] == 'pause'
+                return True
+
+        entered, release = asyncio.Event(), asyncio.Event()
+        reads = 0
+
+        @web.middleware
+        async def delay_second_state(request, handler):
+            nonlocal reads
+            response = await handler(request)
+            if request.path == '/pc/state':
+                reads += 1
+                if reads == 2:
+                    # The post-frame state has already been constructed public.
+                    entered.set()
+                    await release.wait()
+            return response
+
+        runner = PCRunner(Guest(), 'test-private-secret')
+        app = create_app(runner)
+        app.middlewares.append(delay_second_state)
+        server = TestServer(app)
+        await server.start_server()
+        c = client(tmp_path)
+        c.origin = str(server.make_url('')).rstrip('/')
+        private = {'active': True}
+        home = SimpleNamespace(view=lambda: {'privacy': private['active']},
+                               activity='research', activity_ready=lambda _: False)
+        pending = asyncio.create_task(c.refresh())
+        try:
+            await asyncio.wait_for(entered.wait(), 2)
+            await c.agent_step(home, {})
+            assert runner.privacy
+            if exit_before_reply:
+                private['active'] = False
+                await c.agent_step(home, {})
+                assert not runner.privacy
+            release.set()
+            await asyncio.wait_for(pending, 2)
+            assert c.output == '' and c.framebuffer_png is None
+            assert not c.ready and not c.display['available']
+            # A new response after actual privacy exit may show the real GUI again.
+            private['active'] = False
+            await c.agent_step(home, {})
+            await c.refresh()
+            assert c.ready and c.framebuffer_png == runner.computer.framebuffer_png
+        finally:
+            release.set()
+            await asyncio.gather(pending, return_exceptions=True)
+            if c.session:
+                await c.session.close()
+            await server.close()
+    asyncio.run(check())
