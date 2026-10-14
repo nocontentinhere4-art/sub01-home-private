@@ -72,6 +72,19 @@ def canonical_privacy(document):
     if any(not isinstance(document[k],str) or not 0<len(document[k])<=80 for k in ('target','activity')):return None
     return document['privacy']
 
+def native_camera_privacy(receipt, identity, now):
+    import math
+    if not isinstance(receipt,dict) or identity is None:return None
+    if (receipt.get('native_pid'),receipt.get('native_start_ticks'))!=identity:return None
+    utc=receipt.get('captured_utc')
+    if type(utc) not in (float,int) or not math.isfinite(utc) or not -.25<=now-utc<=1:return None
+    private=receipt.get('physical_camera_private')
+    return private if type(private) is bool else None
+
+def combine_privacy(backend,physical):
+    if backend is True or physical is True:return True
+    return False if backend is False and physical is False else None
+
 class PhysicalInput:
     def __init__(self):
         self.x = ctypes.CDLL(ctypes.util.find_library("X11"))
@@ -225,6 +238,12 @@ class LiveState:
                     document=json.loads(raw)
                     value=canonical_privacy(document)
             except (OSError,ValueError,TypeError):pass
+            physical=None
+            try:
+                path=self.private/'native-view-privacy.json'
+                if path.stat().st_size<=1024:physical=native_camera_privacy(json.loads(path.read_text()),self.native(),time.time())
+            except (OSError,ValueError):pass
+            value=combine_privacy(value,physical)
             self.privacy_value=value;self.privacy_checked=time.monotonic()
             return value
 

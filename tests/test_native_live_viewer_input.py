@@ -110,3 +110,25 @@ def test_canonical_privacy_or_unknown_blocks_pixels_and_input(tmp_path, privacy)
 def test_malformed_canonical_privacy_cannot_permit_video(document):
     from tools.pixel_streaming.native_live_viewer import canonical_privacy
     assert canonical_privacy(document) is None
+
+
+@pytest.mark.parametrize('backend,physical,expected', [
+    (False,False,False), (False,True,True), (True,False,True),
+    (None,False,None), (False,None,None), (None,True,True),
+    (True,None,True), (None,None,None), (True,True,True),
+])
+def test_manual_camera_privacy_cannot_be_cleared_by_public_backend(backend,physical,expected):
+    from tools.pixel_streaming.native_live_viewer import combine_privacy
+    assert combine_privacy(backend,physical) is expected
+
+
+def test_native_camera_privacy_requires_fresh_current_process_receipt():
+    from tools.pixel_streaming.native_live_viewer import native_camera_privacy
+    receipt={'native_pid':42,'native_start_ticks':100,'captured_utc':500,
+             'physical_camera_private':False}
+    assert native_camera_privacy(receipt,(42,100),500.2) is False
+    assert native_camera_privacy(receipt,(42,101),500.2) is None
+    assert native_camera_privacy(receipt,(42,100),502) is None
+    assert native_camera_privacy(receipt,(42,100),499) is None
+    receipt['physical_camera_private']=True
+    assert native_camera_privacy(receipt,(42,100),500.2) is True
