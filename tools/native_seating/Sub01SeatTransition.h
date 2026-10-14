@@ -290,3 +290,33 @@ inline void Sub01SeatApproachFromCushion(double CushionX,double CushionY,double 
  const double R=FacingYawDeg*3.14159265358979323846/180;
  OutX=CushionX+std::cos(R)*FSub01SeatClips::SitHipBackCm;OutY=CushionY+std::sin(R)*FSub01SeatClips::SitHipBackCm;
 }
+
+// Keyboard arm profile acceptance, one sample (tools/desk_typing_seated_contact_profile.py writes the profile; the
+// seat adapter binds it to the seated-fit DeskTyping clip only when every sample passes). The limits are the existing
+// ones, never new: 301 samples at 3 + i/60 s and the key gap/penetration of tools/validate_unreal_contact_profile.py
+// (KEY_GAP_MAX_CM 0.2, penetration 0.1), bone stretch 0.01 cm and captured finger change 0.1 deg (the same file and
+// the renderer's contact profile loader), and Sub01TypingReview::DistalGap without pose review (cap-top spread at most
+// 0.2 cm, gap >= -0.1 and gap + spread <= 0.2). tests/test_desk_typing_seated_contact_profile.py checks these values.
+struct FSub01TypingProfileRules {
+ static constexpr int Samples=301;
+ static constexpr double StartSeconds=3,RateHz=60,TimeToleranceSeconds=1e-6;
+ static constexpr double KeyGapMaxCm=.2,PenetrationMaxCm=.1,CapSpreadMaxCm=.2,BoneLengthMaxCm=.01,FingerLocalMaxDeg=.1;
+};
+// Index-th corrected sample: its time, the bound cap-top spread, the arm solve's bone-length and finger errors, the
+// corrected skin's invalid influences and key top, and per hand (left, right) the lowest over-key distal skin, its
+// penetration and its over-key vertex count. False for anything nonfinite, missing or outside a limit.
+inline bool Sub01TypingProfileSample(int Index,double Time,double CapSpread,double BoneErr,double FingerErr,double Invalid,
+                                     double KeyTop,const double OverMin[2],const double Penetration[2],const double OverKey[2]){
+ using R=FSub01TypingProfileRules;
+ if(Index<0||Index>=R::Samples)return false;
+ const double V[]={Time,CapSpread,BoneErr,FingerErr,Invalid,KeyTop,OverMin[0],OverMin[1],Penetration[0],Penetration[1],OverKey[0],OverKey[1]};
+ for(double X:V)if(!Sub01SeatFinite(X))return false;
+ if(std::fabs(Time-(R::StartSeconds+Index/R::RateHz))>R::TimeToleranceSeconds)return false;
+ if(CapSpread<0||CapSpread>R::CapSpreadMaxCm||BoneErr<0||BoneErr>R::BoneLengthMaxCm||FingerErr<0||FingerErr>R::FingerLocalMaxDeg||Invalid!=0)return false;
+ for(int S=0;S<2;++S){
+  const double Gap=OverMin[S]-KeyTop;
+  if(OverKey[S]<=0||Penetration[S]<0||Penetration[S]>R::PenetrationMaxCm)return false;
+  if(Gap<-R::PenetrationMaxCm||Gap+CapSpread>R::KeyGapMaxCm+1e-9)return false;
+ }
+ return true;
+}

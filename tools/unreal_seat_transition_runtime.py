@@ -47,6 +47,12 @@ SEATED_FIT_RECEIPT_SCHEMA = 'sub01.unreal-seated-fit-import.v1'
 SEATED_FIT_SLOTS = {'SitDownSeated': ('StandToSit', 'SeatRoleStandToSit'), 'SeatedIdle': ('Sitting', 'SeatRoleSitting'),
                     'SitToTypeSeated': ('SitToType', 'SeatRoleSitToType'), 'DeskTypingSeated': ('DeskTyping', 'SeatRoleDeskTyping'),
                     'GetUpSeated': ('SitToStand', 'SeatRoleSitToStand')}
+# The seated typing clip's keyboard arm profile (tools/desk_typing_seated_contact_profile.py writes it only when the
+# native capture of THAT clip passes every typing contact gate; a later failing capture retires it). LoadSeatTransition
+# binds it to the seated-fit DeskTyping slot; the renderer's profile for /Game/Sub01Hands/FBX/SUB01_DeskTyping never is.
+SEATED_TYPING_ROLE = 'DeskTypingSeated'
+SEATED_TYPING_PROFILE_FILE = 'desk-typing-seated-contact-profile.json'        # in <project>/private-audit/
+SEATED_TYPING_PROFILE_SCHEMA = 'sub01.desk-typing-seated-contact-profile.v1'
 MIN_CUSHION_AREA_CM2 = 1000.0      # the broad seat cushion is 2228 cm^2; the 58 cm^2 lumbar top is not a seat
 PATCHES = ('buttocks', 'left_posterior_thigh', 'right_posterior_thigh', 'left_sole', 'right_sole')
 
@@ -87,6 +93,78 @@ def seated_fit_bindings(receipt, validated=()) -> dict:
             continue
         out[slot] = {'bound': False, 'role': role, 'refusal': why}
     return out
+
+
+def typing_profile_sample(index: int, row: dict, spread) -> bool:
+    """Python mirror of Sub01TypingProfileSample() (native_seating/Sub01SeatTransition.h, FSub01TypingProfileRules)."""
+    import validate_unreal_contact_profile as profile_gate
+    def num(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    try:
+        corrected = row['corrected']
+        hands = corrected['hands']
+        values = [row['time'], spread, row['bone_length_max_error_cm'], row['finger_local_max_error_degrees'],
+                  corrected['invalidInfluences'], corrected['keyTopCm']]
+        if len(hands) != 2 or [h.get('side') for h in hands] != ['left', 'right']:
+            return False
+        values += [h[k] for h in hands for k in ('overMinCm', 'penetrationCm', 'overKeyVertices')]
+    except (KeyError, TypeError):
+        return False
+    if not all(num(v) for v in values) or not 0 <= index < 301:
+        return False
+    time, spread, bone, finger, invalid, top = values[:6]
+    gap_max, pen_max = profile_gate.KEY_GAP_MAX_CM, .1
+    if abs(time - (3 + index / 60)) > 1e-6 or not 0 <= spread <= .2 or not 0 <= bone <= .01 or not 0 <= finger <= .1 or invalid != 0:
+        return False
+    for h in hands:
+        gap = h['overMinCm'] - top
+        if h['overKeyVertices'] <= 0 or not 0 <= h['penetrationCm'] <= pen_max or gap < -pen_max or gap + spread > gap_max + 1e-9:
+            return False
+    return True
+
+
+def seated_typing_profile_binding(profile, receipt, bound_object_path: str) -> dict:
+    """Python mirror of the seated typing profile binding in LoadSeatTransition(): {'bound': bool, 'refusal': str}."""
+    def refuse(why):
+        return {'bound': False, 'refusal': why}
+    if bound_object_path != seated_fit_object_path(SEATED_TYPING_ROLE):
+        return refuse('DeskTyping slot does not hold the seated typing clip')
+    row = None
+    for r in (receipt or {}).get('clips', []) if isinstance(receipt, dict) else []:
+        if (isinstance(r, dict) and r.get('role') == SEATED_TYPING_ROLE and r.get('object_path') == bound_object_path
+                and r.get('accepted') is True and r.get('fit_pass') is True and r.get('same_existing_skeleton') is True):
+            row = r
+    if not row or not row.get('glb_sha256') or not row.get('fbx_sha256'):
+        return refuse('no accepted import receipt row for the seated typing clip')
+    if not isinstance(profile, dict):
+        return refuse('no seated typing profile')
+    if profile.get('schema') != SEATED_TYPING_PROFILE_SCHEMA or profile.get('ready') is not True:
+        return refuse('profile schema/readiness')
+    if (profile.get('clip_object_path') != bound_object_path or profile.get('glb_sha256') != row['glb_sha256']
+            or profile.get('fbx_sha256') != row['fbx_sha256']):
+        return refuse('profile is bound to another clip, GLB or FBX')
+    samples, spread = profile.get('samples'), profile.get('key_top_spread_cm')
+    if not isinstance(samples, list) or len(samples) != 301 or not isinstance(spread, (int, float)):
+        return refuse('profile samples')
+    body, yaw = profile.get('body_cm'), profile.get('body_yaw')
+    if (not isinstance(body, list) or len(body) != 3 or not isinstance(yaw, (int, float))
+            or profile.get('body_rotation_pyr') != [0, yaw, 0] or profile.get('body_scale_xyz') != [1, 1, 1]):
+        return refuse('profile body transform (pitch/roll-free, unit scale)')
+    names = None
+    for i, row_ in enumerate(samples):
+        if not isinstance(row_, dict) or not typing_profile_sample(i, row_, spread):
+            return refuse(f'sample {i} outside the typing contact gates')
+        arms = row_.get('corrected_local_arms')
+        if not isinstance(arms, dict) or len(arms) != 6 or (names is not None and set(arms) != names):
+            return refuse('profile must hold six arm bones only')
+        names = set(arms)
+        for t in arms.values():
+            q, sc, tr = t.get('rotation', []), t.get('scale', []), t.get('translation', [])
+            if len(tr) != 3 or len(q) != 4 or len(sc) != 3 or abs(sum(v * v for v in q) - 1) > .001 or min(sc) <= 0:
+                return refuse('invalid arm transform')
+    if not all(math.isfinite(v) for v in body) or not math.isfinite(yaw):
+        return refuse('profile body transform (pitch/roll-free, unit scale)')
+    return {'bound': True, 'object_path': bound_object_path, 'samples': 301, 'body_cm': list(body), 'body_yaw': yaw}
 
 
 def seat_id(text: str) -> int:
@@ -281,6 +359,54 @@ void ASub01HomeCharacter::LoadSeatTransition(){
    SeatProfilePoseLoaded=Sub01SeatTransformFinite(SeatProfilePose);
   }
  }
+ // Seated typing profile (tools/desk_typing_seated_contact_profile.py). When the DeskTyping slot holds the seated-fit
+ // clip, the renderer's profile (measured on /Game/Sub01Hands/FBX/SUB01_DeskTyping) never applies to it: typing needs
+ // the profile measured natively on THIS clip (its object path and the import receipt row's GLB/FBX sha256), every
+ // sample passing Sub01TypingProfileSample, at a pitch/roll-free unit-scale body. It is bound here only when no other
+ // profile is already bound (the proxy copies arm samples only when their count changes); otherwise typing stays pending.
+ if(UAnimSequence* SeatedTyping=SeatClips.FindRef(TEXT("DeskTyping"))){if(SeatedTyping->GetPathName()==TEXT("@@SEATED_TYPING_PATH@@")){
+  SeatProfilePoseLoaded=false;FString TypingWhy;auto* TypingHands=FirstPersonBody?Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()):nullptr;
+  FString TypingReceiptText,TypingProfileText,TypingGlb,TypingFbx;TSharedPtr<FJsonObject> TypingReceipt,TypingProfile;const TArray<TSharedPtr<FJsonValue>> *TypingRows=nullptr,*TypingSamples=nullptr,*TypingBody=nullptr,*TypingRotation=nullptr,*TypingScale=nullptr;
+  if(FFileHelper::LoadFileToString(TypingReceiptText,*FPaths::Combine(FPaths::ProjectDir(),TEXT("@@SEATED_FIT_RECEIPT@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(TypingReceiptText),TypingReceipt)&&TypingReceipt.IsValid()&&TypingReceipt->TryGetArrayField(TEXT("clips"),TypingRows))
+   for(const auto& RowValue:*TypingRows){const TSharedPtr<FJsonObject>* Row=nullptr;FString Role,Object;bool A=false,F=false,Same=false;
+    if(RowValue.IsValid()&&RowValue->TryGetObject(Row)&&(*Row)->TryGetStringField(TEXT("role"),Role)&&Role==TEXT("@@SEATED_TYPING_ROLE@@")&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==SeatedTyping->GetPathName()
+       &&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A&&(*Row)->TryGetBoolField(TEXT("fit_pass"),F)&&F&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same){(*Row)->TryGetStringField(TEXT("glb_sha256"),TypingGlb);(*Row)->TryGetStringField(TEXT("fbx_sha256"),TypingFbx);}}
+  FString TypingSchema,TypingClipPath,TypingProfileGlb,TypingProfileFbx;double TypingSpread=NAN,TypingYaw=NAN;bool TypingReady=false;
+  if(!TypingHands)TypingWhy=TEXT("no hands instance");
+  else if(TypingHands->ContactTimes.Num()&&TypingHands->ContactSequence!=SeatedTyping)TypingWhy=TEXT("another clip's contact profile is already bound (launch without -Sub01ContactProfile)");
+  else if(TypingGlb.IsEmpty()||TypingFbx.IsEmpty())TypingWhy=TEXT("no accepted import receipt row for the seated typing clip");
+  else if(!FFileHelper::LoadFileToString(TypingProfileText,*FPaths::Combine(Audit,TEXT("@@SEATED_TYPING_PROFILE_FILE@@")))||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(TypingProfileText),TypingProfile)||!TypingProfile.IsValid())TypingWhy=TEXT("no seated typing profile");
+  else if(!TypingProfile->TryGetStringField(TEXT("schema"),TypingSchema)||TypingSchema!=TEXT("@@SEATED_TYPING_PROFILE_SCHEMA@@")||!TypingProfile->TryGetBoolField(TEXT("ready"),TypingReady)||!TypingReady)TypingWhy=TEXT("profile schema/readiness");
+  else if(!TypingProfile->TryGetStringField(TEXT("clip_object_path"),TypingClipPath)||TypingClipPath!=SeatedTyping->GetPathName()||!TypingProfile->TryGetStringField(TEXT("glb_sha256"),TypingProfileGlb)||TypingProfileGlb!=TypingGlb||!TypingProfile->TryGetStringField(TEXT("fbx_sha256"),TypingProfileFbx)||TypingProfileFbx!=TypingFbx)TypingWhy=TEXT("profile is bound to another clip, GLB or FBX");
+  else if(!TypingProfile->TryGetNumberField(TEXT("key_top_spread_cm"),TypingSpread)||!TypingProfile->TryGetArrayField(TEXT("samples"),TypingSamples)||TypingSamples->Num()!=FSub01TypingProfileRules::Samples)TypingWhy=TEXT("profile samples");
+  else if(!TypingProfile->TryGetArrayField(TEXT("body_cm"),TypingBody)||TypingBody->Num()!=3||!TypingProfile->TryGetNumberField(TEXT("body_yaw"),TypingYaw)||!TypingProfile->TryGetArrayField(TEXT("body_rotation_pyr"),TypingRotation)||TypingRotation->Num()!=3||!TypingProfile->TryGetArrayField(TEXT("body_scale_xyz"),TypingScale)||TypingScale->Num()!=3
+          ||(*TypingRotation)[0]->AsNumber()!=0||(*TypingRotation)[1]->AsNumber()!=TypingYaw||(*TypingRotation)[2]->AsNumber()!=0||(*TypingScale)[0]->AsNumber()!=1||(*TypingScale)[1]->AsNumber()!=1||(*TypingScale)[2]->AsNumber()!=1)TypingWhy=TEXT("profile body transform (pitch/roll-free, unit scale)");
+  TArray<float> TypingTimes;TArray<FName> TypingNames;TArray<FTransform> TypingValues;
+  for(int32 I=0;TypingWhy.IsEmpty()&&I<TypingSamples->Num();++I){
+   const TSharedPtr<FJsonObject>* Row=nullptr;const TSharedPtr<FJsonObject> *Corrected=nullptr,*Arms=nullptr;const TArray<TSharedPtr<FJsonValue>>* HandRows=nullptr;double Time=NAN,Bone=NAN,Finger=NAN,Invalid=NAN,Top=NAN;
+   if(!(*TypingSamples)[I]->TryGetObject(Row)||!(*Row)->TryGetNumberField(TEXT("time"),Time)||!(*Row)->TryGetNumberField(TEXT("bone_length_max_error_cm"),Bone)||!(*Row)->TryGetNumberField(TEXT("finger_local_max_error_degrees"),Finger)
+      ||!(*Row)->TryGetObjectField(TEXT("corrected"),Corrected)||!(*Corrected)->TryGetNumberField(TEXT("invalidInfluences"),Invalid)||!(*Corrected)->TryGetNumberField(TEXT("keyTopCm"),Top)
+      ||!(*Corrected)->TryGetArrayField(TEXT("hands"),HandRows)||HandRows->Num()!=2||!(*Row)->TryGetObjectField(TEXT("corrected_local_arms"),Arms)){TypingWhy=FString::Printf(TEXT("sample %d incomplete"),I);break;}
+   double Low[2]={NAN,NAN},Pen[2]={NAN,NAN},Over[2]={NAN,NAN};const TCHAR* Sides[2]={TEXT("left"),TEXT("right")};
+   for(int32 S=0;S<2;++S){const TSharedPtr<FJsonObject>* H=nullptr;FString Side;if((*HandRows)[S]->TryGetObject(H)&&(*H)->TryGetStringField(TEXT("side"),Side)&&Side==Sides[S]){(*H)->TryGetNumberField(TEXT("overMinCm"),Low[S]);(*H)->TryGetNumberField(TEXT("penetrationCm"),Pen[S]);(*H)->TryGetNumberField(TEXT("overKeyVertices"),Over[S]);}}
+   if(!Sub01TypingProfileSample(I,Time,TypingSpread,Bone,Finger,Invalid,Top,Low,Pen,Over)){TypingWhy=FString::Printf(TEXT("sample %d outside the typing contact gates"),I);break;}
+   if(TypingNames.IsEmpty()){for(const auto& Pair:(*Arms)->Values)TypingNames.Add(FName(*Pair.Key));TypingNames.Sort([](const FName& A,const FName& B){return A.LexicalLess(B);});}
+   if(TypingNames.Num()!=6||(*Arms)->Values.Num()!=6){TypingWhy=TEXT("profile must hold six arm bones only");break;}
+   TypingTimes.Add(Time);
+   for(const auto& Name:TypingNames){const TSharedPtr<FJsonObject>* T=nullptr;const TArray<TSharedPtr<FJsonValue>> *Pv=nullptr,*Qv=nullptr,*Sv=nullptr;
+    if(!(*Arms)->TryGetObjectField(Name.ToString(),T)||!(*T)->TryGetArrayField(TEXT("translation"),Pv)||!(*T)->TryGetArrayField(TEXT("rotation"),Qv)||!(*T)->TryGetArrayField(TEXT("scale"),Sv)||Pv->Num()!=3||Qv->Num()!=4||Sv->Num()!=3){TypingWhy=TEXT("malformed arm transform");break;}
+    const FQuat Q((*Qv)[0]->AsNumber(),(*Qv)[1]->AsNumber(),(*Qv)[2]->AsNumber(),(*Qv)[3]->AsNumber());const FVector Sc((*Sv)[0]->AsNumber(),(*Sv)[1]->AsNumber(),(*Sv)[2]->AsNumber());
+    if(Q.ContainsNaN()||FMath::Abs(Q.SizeSquared()-1)>.001||Sc.ContainsNaN()||Sc.GetMin()<=0){TypingWhy=TEXT("invalid arm transform");break;}
+    TypingValues.Add(FTransform(Q,FVector((*Pv)[0]->AsNumber(),(*Pv)[1]->AsNumber(),(*Pv)[2]->AsNumber()),Sc));}
+  }
+  if(TypingWhy.IsEmpty()&&TypingValues.Num()==TypingTimes.Num()*6&&TypingTimes.Num()==FSub01TypingProfileRules::Samples){
+   TypingHands->ContactSequence=SeatedTyping;TypingHands->ContactTimes=MoveTemp(TypingTimes);TypingHands->ContactBones=MoveTemp(TypingNames);TypingHands->ContactLocalTransforms=MoveTemp(TypingValues);
+   SeatProfilePose=FSub01SeatLivePose();SeatProfilePose.X=(*TypingBody)[0]->AsNumber();SeatProfilePose.Y=(*TypingBody)[1]->AsNumber();SeatProfilePose.Z=(*TypingBody)[2]->AsNumber();
+   SeatProfilePose.PitchDeg=0;SeatProfilePose.YawDeg=TypingYaw;SeatProfilePose.RollDeg=0;SeatProfilePose.ScaleX=SeatProfilePose.ScaleY=SeatProfilePose.ScaleZ=1;
+   SeatProfilePoseLoaded=Sub01SeatTransformFinite(SeatProfilePose);
+   UE_LOG(LogTemp,Display,TEXT("SUB01_SEATED_TYPING_PROFILE_BOUND %s samples=%d glb=%s; arms only, captured finger locals retained"),*SeatedTyping->GetPathName(),TypingHands->ContactTimes.Num(),*TypingGlb);
+  }else UE_LOG(LogTemp,Warning,TEXT("SUB01_SEATED_TYPING_PROFILE_REFUSED %s: %s; typing stays pending"),*SeatedTyping->GetPathName(),TypingWhy.IsEmpty()?TEXT("incomplete"):*TypingWhy);
+ }}
  UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_TRANSITION_READY cushionTriangles=%d profilePose=%d"),SeatCushionTriangles.Num()/3,SeatProfilePoseLoaded?1:0);
  UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_TRANSITION_READY roles=%u chairMeasured=%d contactEvidence=%d approach=%s; NativeSeatVerified only from a live receipt"),SeatRoles,SeatChairMeasured?1:0,SeatEvidence.Loaded?1:0,*SeatApproach.ToString());
 }
@@ -506,7 +632,11 @@ def install(sources: dict) -> dict:
     fits = ','.join('{TEXT("%s"),TEXT("%s"),%s}' % (role, slot, bit) for role, (slot, bit) in SEATED_FIT_SLOTS.items())
     out['cpp'] += (CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
                    .replace('@@SEATED_FIT_BINDINGS@@', fits).replace('@@SEATED_FIT_RECEIPT@@', SEATED_FIT_RECEIPT)
-                   .replace('@@SEATED_FIT_SCHEMA@@', SEATED_FIT_RECEIPT_SCHEMA))
+                   .replace('@@SEATED_FIT_SCHEMA@@', SEATED_FIT_RECEIPT_SCHEMA)
+                   .replace('@@SEATED_TYPING_PATH@@', seated_fit_object_path(SEATED_TYPING_ROLE))
+                   .replace('@@SEATED_TYPING_ROLE@@', SEATED_TYPING_ROLE)
+                   .replace('@@SEATED_TYPING_PROFILE_FILE@@', SEATED_TYPING_PROFILE_FILE)
+                   .replace('@@SEATED_TYPING_PROFILE_SCHEMA@@', SEATED_TYPING_PROFILE_SCHEMA))
     return out
 
 
