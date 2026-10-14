@@ -334,6 +334,19 @@ def _record(audit: Path, kind: str, capture_path: Path, sha: str, accepted: bool
     return out
 
 
+def _retire(audit: Path, names, sha: str) -> list:
+    """A newer native observation that fails supersedes earlier acceptance: move the earlier evidence aside (kept for
+    audit, never deleted) so no adapter keeps reading it as ready."""
+    retired = []
+    for name in names:
+        path = audit / name
+        if path.is_file():
+            moved = path.with_name(f'{path.stem}.superseded-{sha[:12]}{path.suffix}')
+            path.replace(moved)
+            retired.append(str(moved))
+    return retired
+
+
 def _load_capture(capture_path: Path):
     raw = Path(capture_path).read_bytes()
     return json.loads(raw), sha256_bytes(raw)
@@ -351,10 +364,9 @@ def write_bed(project: Path, capture_path: Path) -> dict:
         evidence = evaluate_bed(surface.read_text(), capture, sha)
         life.validate_bed(surface.read_text(), evidence)          # the adapter's own reader accepts it
     except (Refused, ValueError, KeyError, TypeError) as error:
-        stale = target.is_file()
-        _record(audit, 'bed', capture_path, sha, False, str(error),
-                extra={'existing_evidence_untouched': stale} if stale else None)
-        return {'accepted': False, 'error': str(error)}
+        retired = _retire(audit, (BED_EVIDENCE,), sha)
+        _record(audit, 'bed', capture_path, sha, False, str(error), extra={'retired_evidence': retired})
+        return {'accepted': False, 'error': str(error), 'retired': retired}
     target.write_text(json.dumps(evidence, indent=2) + '\n')
     _record(audit, 'bed', capture_path, sha, True, written=[str(target)])
     return {'accepted': True, 'written': [str(target)]}
@@ -370,8 +382,9 @@ def write_sofa(project: Path, capture_path: Path, grip_path: Path | None = None)
             raise Refused(f'SofaUnmeasured: {surface} does not exist (run tools/unreal_sofa_surface_audit.py first)')
         contact, placement = evaluate_sofa(surface.read_text(), capture, sha)
     except (Refused, ValueError, KeyError, TypeError) as error:
-        _record(audit, 'sofa', capture_path, sha, False, str(error))
-        return {'accepted': False, 'error': str(error)}
+        retired = _retire(audit, (SOFA_CONTACT, SOFA_PLACEMENT, controller.EVIDENCE, controller.RUNTIME_PROOF), sha)
+        _record(audit, 'sofa', capture_path, sha, False, str(error), extra={'retired_evidence': retired})
+        return {'accepted': False, 'error': str(error), 'retired': retired}
     written = []
     for name, doc in ((SOFA_CONTACT, contact), (SOFA_PLACEMENT, placement)):
         (audit / name).write_text(json.dumps(_clean(doc), indent=2) + '\n')
@@ -382,6 +395,7 @@ def write_sofa(project: Path, capture_path: Path, grip_path: Path | None = None)
             written.append(str(controller.write_evidence(project, grip_path, audit / SOFA_CONTACT, audit / SOFA_PLACEMENT)))
         except (ValueError, KeyError, TypeError) as error:
             result['controller_evidence_refused'] = str(error)
+            result['retired'] = _retire(audit, (controller.EVIDENCE, controller.RUNTIME_PROOF), sha)
     _record(audit, 'sofa', capture_path, sha, True, written=written,
             extra={'controller_evidence_refused': result.get('controller_evidence_refused')} if grip_path else None)
     return result
@@ -401,8 +415,9 @@ def write_grip(project: Path, capture_path: Path) -> dict:
         proof_text = json.dumps(proof, indent=2) + '\n'
         controller.validate_runtime_proof(proof_text, text)          # the adapter's own reader accepts it
     except (Refused, ValueError, KeyError, TypeError) as error:
-        _record(audit, 'controller-grip', capture_path, sha, False, str(error))
-        return {'accepted': False, 'error': str(error)}
+        retired = _retire(audit, (controller.RUNTIME_PROOF,), sha)
+        _record(audit, 'controller-grip', capture_path, sha, False, str(error), extra={'retired_evidence': retired})
+        return {'accepted': False, 'error': str(error), 'retired': retired}
     target.write_text(proof_text)
     _record(audit, 'controller-grip', capture_path, sha, True, written=[str(target)])
     return {'accepted': True, 'written': [str(target)]}

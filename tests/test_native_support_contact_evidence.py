@@ -345,3 +345,26 @@ def test_grip_analyzer_places_the_controller_like_the_adapter_and_is_probe_only(
         .strip('"') in play.CHARACTER_METHODS
     for forbidden in ('SetActorLocation', 'SetWorldLocation', 'NativeSeatVerified', 'ValidatedHandsPostures'):
         assert forbidden not in cpp
+
+
+def test_a_newer_failing_observation_retires_earlier_accepted_evidence(project, tmp_path):
+    """Earlier acceptance never outlives a newer failing native observation: the file is moved aside, not deleted."""
+    audit = project / 'private-audit'
+    bed_text = (audit / 'native-bed-surface.json').read_text()
+    assert E.write_bed(project, put(tmp_path, 'ok.json', bed_capture(bed_text)))['accepted']
+    accepted = (audit / E.BED_EVIDENCE).read_bytes()
+    bad = bed_capture(bed_text)
+    next(r for r in bad['samples'] if r['role'] == 'SleepLoop')['regions'][0] = region('buttocks', -2.6)
+    result = E.write_bed(project, put(tmp_path, 'bad.json', bad))
+    assert result['accepted'] is False and not (audit / E.BED_EVIDENCE).exists()
+    assert len(result['retired']) == 1 and Path(result['retired'][0]).read_bytes() == accepted
+    assert evaluation(project, 'bed')['retired_evidence'] == result['retired']
+
+    sofa_text = (audit / play.SOFA_REPORT).read_text()
+    accepted_evidence(project, tmp_path)
+    assert (audit / play.EVIDENCE).exists()
+    result = E.write_sofa(project, put(tmp_path, 'sofa-bad.json', sofa_capture(sofa_text, gap=-4)))
+    assert result['accepted'] is False
+    for name in (E.SOFA_CONTACT, E.SOFA_PLACEMENT, play.EVIDENCE):
+        assert not (audit / name).exists()
+    assert len(result['retired']) == 3
