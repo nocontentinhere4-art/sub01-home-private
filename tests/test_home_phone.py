@@ -100,7 +100,7 @@ def test_notes_save_registered_route_persists_real_world_and_rejects_invalid_inp
             response=await client.get('/api/home/phone/frame.jpg?frame_id='+current,headers=AUTH)
             assert response.status==200
             assert await response.read()==home_phone.render(home_phone.snapshot(world))
-            assert home_phone.snapshot(world)['entries'][-1]=='Reading\nRead the real book.'
+            assert home_phone.snapshot(world)['entries'][0]=='Reading\nRead the real book.'
             # Title is optional and the existing add_note semantics trim whitespace.
             response=await post({'action':'save_note','frame_id':current,'text':' Untitled fixture note. '})
             assert response.status==200 and world.notes[-1]['text']=='Untitled fixture note.'
@@ -157,3 +157,15 @@ def test_notes_write_through_actual_authenticated_runner_proxy_and_backend(tmp_p
         finally:
             await client.close();await runner.home_devices.close();await backend.close()
     asyncio.run(run())
+
+
+def test_notes_identical_full_list_keeps_write_frames_unique():
+    world=HomeWorld();world.phone['app']='notes'
+    for _ in range(10):world.add_note('Repeated actual text.')
+    first=home_phone.snapshot(world);old=home_phone.status(first)['frame_id']
+    world.add_note('Repeated actual text.')
+    second=home_phone.snapshot(world)
+    assert first['entries']==second['entries']
+    assert home_phone.status(second)['frame_id']!=old
+    world.add_note('Newest actual note.')
+    assert home_phone.snapshot(world)['entries'][0]=='Newest actual note.'

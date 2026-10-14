@@ -14,7 +14,10 @@ def snapshot(home, browser=None):
         app = 'home'
     data = {'app': app, 'battery': home.phone.get('battery', 100)}
     if app == 'notes':
-        data['entries'] = [str(n.get('text', '')) for n in home.notes[-10:]]
+        notes = home.notes[-10:][::-1]
+        data['entries'] = [str(n.get('text', '')) for n in notes]
+        # Stable real record identities invalidate writes even when visible text repeats.
+        data['entry_revisions'] = [[n.get('id'), n.get('at')] for n in notes]
     elif app == 'memory':
         data['entries'] = [str(m.get('command') or m.get('what') or
                               f"{m.get('activity', '')} · {m.get('place', '')}") for m in home.memories[-20:]]
