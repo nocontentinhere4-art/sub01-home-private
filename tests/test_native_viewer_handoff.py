@@ -98,3 +98,31 @@ def test_unready_native_cannot_receive_a_handoff_command(tmp_path,change):
     with pytest.raises(ValueError):state.take_manual_control({'mode':'manual'})
     assert (tmp_path/'native-control.json').read_text()==before
     assert not state.enabled('native-viewer-input-enabled')
+
+@pytest.mark.parametrize('origin,body,expected',[
+    (None,b'{"mode":"manual"}',403),
+    ('https://other.example',b'{"mode":"manual"}',403),
+    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b'{"mode":"live"}',409),
+    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b' '*129,409),
+    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b'{"mode":"manual"}',200),
+])
+def test_http_handoff_surface_requires_exact_private_origin_and_bounded_body(origin,body,expected):
+    import threading
+    import urllib.request
+    import urllib.error
+    calls=[]
+    class State:
+        def take_manual_control(self,value):
+            viewer.validate_manual_handoff(value);calls.append(value);return {'mode':'manual','inputEnabled':True}
+    server=viewer.ThreadingHTTPServer(('127.0.0.1',0),viewer.Handler);server.state=State()
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    try:
+        headers={'Content-Type':'application/json'}
+        if origin:headers['Origin']=origin
+        request=urllib.request.Request(f'http://127.0.0.1:{server.server_port}/mode',data=body,method='POST',headers=headers)
+        try:
+            with urllib.request.urlopen(request,timeout=2) as response:status=response.status
+        except urllib.error.HTTPError as error:status=error.code
+        assert status==expected
+        assert calls==([{'mode':'manual'}] if expected==200 else [])
+    finally:server.shutdown();server.server_close();thread.join(timeout=2)

@@ -7,7 +7,7 @@ Current authorized private target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Ga
 
 `unreal_native_viewer_handoff.py` is an opt-in native helper, integrated after the settings and Minecraft adapters. The private viewer can request only manual ownership from a fresh, nonprivate Live game with accepted pixels and an explicit native capability. The native command contains the exact process/start ticks and revision; it stops the existing live walker and releases scoped device focus without assigning an actor position or saving Notes. Ordinary input remains revoked until a fresh, same-process acknowledgement confirms Manual mode and cleared device focus. Diagnostic, seated, private, replaced and unacknowledged sessions cannot grant control. The viewer then offers Enter home on a separate real user click for pointer lock. The private endpoint uses the existing authenticated gateway and strict same-origin check; no new credential or public port is introduced.
 
-The source candidate passes89 focused ownership/input tests and JavaScript/Python syntax checks. It is not deployed or claimed functional until a compiled native helper and actual Live-to-Manual handoff are verified.
+The source candidate passes94 focused ownership/input tests and JavaScript/Python syntax checks. It is not deployed or claimed functional until a compiled native helper and actual Live-to-Manual handoff are verified.
 
 ## Observed standing native GUI keyboard — 2026-10-14 08:15 UTC
 
