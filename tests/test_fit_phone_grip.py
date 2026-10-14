@@ -117,3 +117,57 @@ def test_committed_fit_report_is_never_acceptance():
         assert doc['verified'] is False and doc['requires_native_reaudit'] is True and doc['visual_accepted'] is False
         assert doc['owner']['sha256'] == '7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb'
         assert doc['clip']['sha256'] == '8a6dfc041cd4768016c6348dfb90f1275cab4c09cfe6083537fb88ba6d11ae75'
+
+
+class _FakeHand:
+    """Geometry-unit fixture only (never runtime evidence): one body vertex sheet near a phone."""
+    def __init__(self, body_z):
+        xs, ys = np.meshgrid(np.linspace(-5, 5, 11), np.linspace(-9, 9, 19))
+        body = np.stack([xs.ravel(), ys.ravel(), np.full(xs.size, body_z)], 1)
+        self.positions = body[None].astype(np.float32)
+        self.labels = np.zeros(len(body), np.uint8)
+        self.triangles = np.zeros((0, 3), np.int64)
+        self.times = np.array([4.0])
+        self.joints = ['mixamorigSpine', 'mixamorigRightHand']
+        ident = [0, 0, 0, 1]
+        self.meta = {'wrists': [{'position': [0, 0, 0], 'quaternion': ident}],
+                     'heads': [{'position': [0, 0, 40], 'quaternion': ident}],
+                     'arms': [[[0, 30, 0], [0, 30, 0], [0, 15, 0]]]}
+
+    def frame_index(self, time):
+        return 0
+
+    def eye_in_wrist(self, f, local):
+        return np.array([0, 0, 40.0])
+
+    def gravity_in_wrist(self, f):
+        return np.array([0, -1.0, 0])
+
+
+def test_ik_delta_clears_body_with_smallest_bounded_move_and_upright_metric():
+    ev = fit.Evaluator(_FakeHand(body_z=-0.6), fit.default_phone(), [0, 0, 0], 4.0)
+    R, t = np.eye(3), np.zeros(3)
+    delta, ok = ev.ik_delta(0, R, t, np.zeros(3))
+    assert ok and 0 < np.linalg.norm(delta) <= 1.5 and delta[2] > 0
+    assert ev.sdf(ev.local(0, R, t+delta)).min() >= ev.clear
+    clear = fit.Evaluator(_FakeHand(body_z=-5.0), fit.default_phone(), [0, 0, 0], 4.0)
+    assert np.allclose(clear.ik_delta(0, R, t, np.zeros(3))[0], 0)
+    # Head up is +y: an unrotated phone reads upright, a 180 degree roll reads upside down.
+    assert ev.upright(0, R) == pytest.approx(1)
+    assert ev.upright(0, fit.rotvec_to_matrix([0, 0, math.pi])) == pytest.approx(-1)
+
+
+def test_wrist_correction_counter_rotates_only_non_hand_geometry():
+    hand = _FakeHand(body_z=-5.0)
+    hand.labels = np.array([1]*10+[0]*(len(hand.labels)-10), np.uint8)   # first ten: right-hand rigid
+    ev = fit.Evaluator(hand, fit.default_phone(), [0, 0, 0], 4.0)
+    C = fit.rotvec_to_matrix([0, 0, 0.4])
+    ev.set_correction(C)
+    P = ev.points(0)
+    assert np.allclose(P[:10], hand.positions[0][:10])
+    assert np.allclose(P[10:], hand.positions[0][10:]@C)
+    assert np.allclose(ev.eyes[0], C.T@ev.eyes0[0])
+    rec = fit.correction_record(C)
+    assert rec['angle_deg'] == pytest.approx(math.degrees(0.4))
+    # UE value is the handedness mirror of the glTF correction.
+    assert np.allclose(fit.quat_to_matrix(rec['ue_right_hand_local_post_multiply_xyzw']), fit.MIRROR@C@fit.MIRROR, atol=1e-7)

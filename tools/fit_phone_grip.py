@@ -239,115 +239,160 @@ def fibonacci_directions(n):
 
 
 class Evaluator:
-    """Phone in the right-hand joint frame. Hand side = vertices whose dominant influence is the right
-    hand, a right finger or the right forearm: they keep their wrist-frame position under an
-    orientation-preserving arm IK (finger and hand local rotations unchanged). Everything else is body."""
+    """Phone mount in the (corrected) right-hand joint frame.
 
-    def __init__(self, hand, phone, eye_head_local, pose_time, band=0.3, tolerance=0.0, clearance=0.2, ik_limit=10.0):
+    rigid   = vertices whose dominant influence is the right hand or a right finger: fixed in the
+              hand frame because finger local rotations are never changed.
+    forearm = dominant right forearm: moves with an arm IK translation, not with a wrist rotation.
+    body    = everything else.
+    ``correction`` is a constant extra RightHand local rotation C (hand frame -> captured hand frame),
+    bounded by ``max_correction_deg``; identity means the captured wrist."""
+
+    def __init__(self, hand, phone, eye_head_local, pose_time, band=0.3, tolerance=0.0, clearance=0.2, ik_limit=10.0,
+                 max_correction_deg=35.0, view_deg=30.0, upright_deg=25.0):
         self.hand, self.phone, self.band, self.tol, self.clear, self.ik_limit = hand, phone, band, tolerance, clearance, ik_limit
+        self.max_correction, self.view_deg, self.upright_deg = max_correction_deg, view_deg, upright_deg
         self.parts = [(p['name'], np.array(p['center'], float), np.array(p['half_extent'], float)) for p in phone['parts']]
         self.case = next(p for p in self.parts if p[0] == 'case')
         self.screen = next(p for p in self.parts if p[0] == 'screen')
         self.reach = max(np.linalg.norm(np.abs(c)+h) for _, c, h in self.parts)
         self.pose = hand.frame_index(pose_time)
         self.eye_head_local = np.asarray(eye_head_local, float)
-        self.eyes = np.array([hand.eye_in_wrist(f, eye_head_local) for f in range(len(hand.times))])
-        self.gravity = np.array([hand.gravity_in_wrist(f) for f in range(len(hand.times))])
-        side = np.array([n.startswith('mixamorigRightHand') or n == 'mixamorigRightForeArm' for n in hand.joints])
-        self.hand_side = side[hand.labels]
+        self.eyes0 = np.array([hand.eye_in_wrist(f, eye_head_local) for f in range(len(hand.times))])
+        self.gravity0 = np.array([hand.gravity_in_wrist(f) for f in range(len(hand.times))])
+        self.head_up0 = np.array([quat_to_matrix(w['quaternion']).T@quat_to_matrix(h['quaternion'])@[0.0, 1, 0]
+                                  for w, h in zip(hand.meta['wrists'], hand.meta['heads'])])
+        rigid = np.array([n.startswith('mixamorigRightHand') for n in hand.joints])
+        self.rigid = rigid[hand.labels]
+        self.forearm = np.array([n == 'mixamorigRightForeArm' for n in hand.joints])[hand.labels]
+        self.hand_side = self.rigid | self.forearm
         tri = hand.triangles
-        all_hand = self.hand_side[tri].all(1)
-        self.hand_tri, self.body_tri = tri[all_hand], tri[~all_hand]
+        self.rigid_tri = tri[self.rigid[tri].all(1)]
         arms = np.array(hand.meta['arms'])
         wrist = np.array([w['position'] for w in hand.meta['wrists']])
         self.upper = float(np.linalg.norm(arms[0, 1]-arms[0, 2]))
         self.lower = float(np.linalg.norm(arms[0, 2]-wrist[0]))
-        self.shoulder = np.array([quat_to_matrix(w['quaternion']).T@(arms[f, 1]-wrist[f]) for f, w in enumerate(hand.meta['wrists'])])
+        self.shoulder0 = np.array([quat_to_matrix(w['quaternion']).T@(arms[f, 1]-wrist[f]) for f, w in enumerate(hand.meta['wrists'])])
         self.directions = fibonacci_directions(160)
+        self.set_correction(np.eye(3))
+
+    def set_correction(self, C):
+        self.C = np.asarray(C, float)
+        self.eyes, self.gravity = self.eyes0@self.C, self.gravity0@self.C
+        self.head_up, self.shoulder = self.head_up0@self.C, self.shoulder0@self.C
+        return self
+
+    def points(self, f, idx=None):
+        """Frame-f vertices in the corrected hand frame (rigid ones unchanged, others counter-rotated)."""
+        P = self.hand.positions[f] if idx is None else self.hand.positions[f][idx]
+        if np.allclose(self.C, np.eye(3)):
+            return np.asarray(P, float)
+        rigid = self.rigid if idx is None else self.rigid[idx]
+        return np.where(rigid[:, None], P, P@self.C)
 
     def local(self, f, R, t, idx=None):
-        p = self.hand.positions[f] if idx is None else self.hand.positions[f][idx]
-        return (p-t)@R
+        return (self.points(f, idx)-t)@R
 
     def sdf(self, local):
         return np.min([box_sdf(local, c, h) for _, c, h in self.parts], axis=0)
 
     def near(self, f, t, extra=1.0):
+        # Conservative: the correction rotates about the wrist origin, so test both frames.
         p = self.hand.positions[f]
-        return np.nonzero(np.sum((p-t)**2, 1) < (self.reach+self.band+extra)**2)[0]
+        r2 = (self.reach+self.band+extra)**2
+        return np.nonzero((np.sum((p-t)**2, 1) < r2) | (np.sum((p-self.C@t)**2, 1) < r2))[0]
 
-    def hand_overlaps(self, f, R, t, idx):
+    def rigid_overlaps(self, f, R, t, idx):
         mask = np.zeros(len(self.hand.labels), bool)
         mask[idx] = True
-        tsel = self.hand_tri[mask[self.hand_tri].all(1)]
+        tsel = self.rigid_tri[mask[self.rigid_tri].all(1)]
         if not len(tsel):
             return {name: 0 for name, _, _ in self.parts}
-        P = self.hand.positions[f]
+        P = self.hand.positions[f]              # rigid vertices: identical in corrected frame
         out = {}
         for name, c, h in self.parts:
             a, b, cc = ((P[tsel[:, k]]-t)@R-c for k in range(3))
             out[name] = int(tri_box_overlap(a, b, cc, h).sum())
         return out
 
+    def upright(self, f, R):
+        """Cosine between the phone's top (+y, speaker end) and the head's up axis, both projected
+        onto the screen plane: 1 means the live screen reads upright from the actual eye."""
+        n = R[:, 2]
+        up = self.head_up[f]-(self.head_up[f]@n)*n
+        norm = np.linalg.norm(up)
+        return float(R[:, 1]@up/norm) if norm > 1e-9 else -1.0
+
+    def contact_spread(self, pts):
+        """Largest distance between hand contact points (cm): one patch cannot hold a phone."""
+        if len(pts) < 2:
+            return 0.0
+        sample = pts[:: max(1, len(pts)//200)]
+        return float(np.sqrt(((sample[:, None]-sample[None])**2).sum(-1)).max())
+
     def cost(self, x, frames):
-        R, t = rotvec_to_matrix(x[:3]), x[3:]
+        R, t = rotvec_to_matrix(x[:3]), x[3:6]
+        if len(x) > 6:
+            angle = math.degrees(np.linalg.norm(x[6:9]))
+            self.set_correction(rotvec_to_matrix(x[6:9]))
+        else:
+            angle = 0.0
         pen_h = pen_b = reward = view = 0.0
-        extra = 0.0
+        extra = 0.05*angle/10+(10*(angle-self.max_correction)**2 if angle > self.max_correction else 0)
         for f in frames:
             idx = self.near(f, t)
             if not len(idx):
                 extra += 25
                 continue
-            L = self.local(f, R, t, idx)
+            L = (self.points(f, idx)-t)@R
             s = self.sdf(L)
-            hs = self.hand_side[idx]
-            sh, sb = s[hs], s[~hs]
+            rg, fa = self.rigid[idx], self.forearm[idx]
+            sh, sf, sb = s[rg], s[fa], s[~(rg | fa)]
             pen_h += np.sum(np.maximum(-sh-self.tol, 0)**2)+0.05*np.sum(sh < -self.tol)
+            pen_h += np.sum(np.maximum(-sf, 0)**2)+0.05*np.sum(sf < 0)
             pen_b += np.sum(np.maximum(self.clear-sb, 0)**2)
             pos = sh[sh >= 0]
-            # Soft contact reward: real hand skin within the band, by geometry only.
             reward += min(float(np.sum(np.exp(-(pos/self.band)**2))), 400)/400
             if f == self.pose:
                 extra += 2*float(np.sort(pos)[:12].mean()) if len(pos) >= 12 else 25
-                extra += 2*sum(self.hand_overlaps(f, R, t, idx).values())
+                extra += 2*sum(self.rigid_overlaps(f, R, t, idx).values())
                 contact = (sh >= -self.tol) & (sh <= self.band)
-                sup = self.support(L[hs][contact], self.case[1], self.case[2], self.gravity[f]@R)
+                cl = L[rg][contact]
+                sup = self.support(cl, self.case[1], self.case[2], self.gravity[f]@R)
                 extra += 0 if sup['supported'] else 3
+                extra += max(0.0, 6.0-self.contact_spread(cl))
+                extra += 10*max(0.0, math.cos(math.radians(self.view_deg))-(R[:, 2]@(self.eyes[f]-t))/np.linalg.norm(self.eyes[f]-t))
+                extra += 10*max(0.0, math.cos(math.radians(self.upright_deg))-self.upright(f, R))
             d = self.eyes[f]-t
-            view += max(0.0, math.cos(math.radians(30))-(R[:, 2]@d)/np.linalg.norm(d))**2
+            view += max(0.0, math.cos(math.radians(self.view_deg))-(R[:, 2]@d)/np.linalg.norm(d))**2
+            view += max(0.0, math.cos(math.radians(self.upright_deg))-self.upright(f, R))**2
         n = len(frames)
         return (50*pen_h+0.5*pen_b-reward+20*view)/n+extra
 
     def ik_delta(self, f, R, t, previous):
-        """Smallest bounded wrist translation (wrist frame, orientation kept) clearing body skin."""
+        """Smallest bounded wrist translation (hand frame, orientation kept) clearing body skin."""
         idx = self.near(f, t, extra=self.ik_limit+1)
         idx = idx[~self.hand_side[idx]]
-        Lb = self.local(f, R, t, idx)
-        reach = self.upper+self.lower-0.5
+        Lb = (self.points(f, idx)-t)@R
+        # The captured pose is always reachable; a move may not straighten the arm beyond it or 0.5 cm short.
+        reach = max(self.upper+self.lower-0.5, float(np.linalg.norm(self.shoulder[f])))
         if not len(idx) or self.sdf(Lb).min() >= self.clear:
-            if np.linalg.norm(self.shoulder[f]) <= reach:
-                return np.zeros(3), True
-        best, best_score = None, None
-        steps = np.arange(0.25, self.ik_limit+1e-9, 0.25)
-        found_at = None
-        for k, m in enumerate(steps):
+            return np.zeros(3), True
+        best, best_score, found_at = None, None, None
+        for k, m in enumerate(np.arange(0.25, self.ik_limit+1e-9, 0.25)):
             if found_at is not None and k > found_at+4:
                 break
             cand = self.directions*m
             ok = np.linalg.norm(self.shoulder[f][None]-cand, axis=1) <= reach
-            if len(idx):
-                shift = cand@R                       # wrist-frame move expressed in phone frame
-                P = Lb[None]-shift[:, None]
-                ok &= self.sdf(P.reshape(-1, 3)).reshape(len(cand), -1).min(1) >= self.clear
+            P = Lb[None]-(cand@R)[:, None]
+            ok &= self.sdf(P.reshape(-1, 3)).reshape(len(cand), -1).min(1) >= self.clear
             if ok.any():
                 found_at = k if found_at is None else found_at
                 score = m+2*np.linalg.norm(cand[ok]-previous, axis=1)
                 j = int(np.argmin(score))
                 if best_score is None or score[j] < best_score:
                     best, best_score = cand[ok][j], float(score[j])
-        if best is None:
-            return np.zeros(3), False
-        return best, True
+        return (np.zeros(3), False) if best is None else (best, True)
 
     def residuals(self, R, t, frames=None, occlusion_stride=1, screen_grid=(5, 9), ik=True):
         frames = list(range(len(self.hand.times)) if frames is None else frames)
@@ -358,45 +403,50 @@ class Evaluator:
         gx, gy = np.meshgrid(np.linspace(-1, 1, sx)*sch[0]*.95, np.linspace(-1, 1, sy)*sch[1]*.95)
         samples = np.stack([gx.ravel(), gy.ravel(), np.full(gx.size, scc[2]+1e-3)], 1)
         previous = np.zeros(3)
+        tri = self.hand.triangles
         for f in frames:
-            P = self.hand.positions[f]
             idx = self.near(f, t, extra=2.0)
-            L = self.local(f, R, t, idx)
+            L = (self.points(f, idx)-t)@R
             s = self.sdf(L)
-            hs = self.hand_side[idx]
-            sh, sb = s[hs], s[~hs]
+            rg, fa = self.rigid[idx], self.forearm[idx]
+            bd = ~(rg | fa)
+            sh = s[rg]
             delta, reachable = self.ik_delta(f, R, t, previous) if ik else (np.zeros(3), True)
             previous = delta
-            sb_after = self.sdf(L[~hs]-delta@R) if np.any(~hs) else np.array([np.inf])
+            sb_after = self.sdf(L[bd]-delta@R) if np.any(bd) else np.array([np.inf])
             contact = (sh >= -self.tol) & (sh <= self.band)
-            labels = self.hand.labels[idx][hs]
+            labels = self.hand.labels[idx][rg]
             eye_local = (self.eyes[f]-t-delta)@R
             d = eye_local-scc
             angle = math.degrees(math.acos(np.clip(d[2]/np.linalg.norm(d), -1, 1)))
             row = {'time': round(float(self.hand.times[f]), 4),
                    'hand_penetrating_vertices': int(np.sum(sh < -self.tol)),
                    'hand_max_penetration_cm': round(float(max(0.0, -sh.min())) if len(sh) else 0.0, 4),
-                   'hand_triangle_part_overlaps': self.hand_overlaps(f, R, t, idx),
+                   'forearm_penetrating_vertices': int(np.sum(s[fa] < 0)),
+                   'hand_triangle_part_overlaps': self.rigid_overlaps(f, R, t, idx),
                    'hand_contact_vertices': int(contact.sum()),
+                   'hand_contact_spread_cm': round(self.contact_spread(L[rg][contact]), 3),
                    'contact_joint_labels_reporting_only': sorted({self.hand.joints[j] for j in labels[contact]}),
                    'hand_nearest_gap_cm': round(float(sh[sh >= 0].min()) if np.any(sh >= 0) else -1.0, 4),
-                   'body_penetrating_vertices_before_ik': int(np.sum(sb < 0)),
+                   'body_penetrating_vertices_before_ik': int(np.sum(s[bd] < 0)),
                    'ik_wrist_delta_cm_gltf_wrist_local': [round(float(v), 4) for v in delta],
                    'ik_wrist_delta_cm_ue_wrist_local': [round(float(v), 4) for v in MIRROR@delta],
                    'ik_reachable': bool(reachable),
                    'body_min_clearance_after_ik_cm': round(float(sb_after.min()), 4) if np.isfinite(sb_after.min()) else None,
                    'shoulder_reach_margin_cm': round(self.upper+self.lower-float(np.linalg.norm(self.shoulder[f]-delta)), 3),
+                   'screen_upright_deg': round(math.degrees(math.acos(np.clip(self.upright(f, R), -1, 1))), 2),
                    'screen_to_eye_angle_deg': round(angle, 2), 'eye_distance_cm': round(float(np.linalg.norm(d)), 2),
-                   'gravity_support': self.support(L[hs][contact], cc, ch, self.gravity[f]@R)}
+                   'gravity_support': self.support(L[rg][contact], cc, ch, self.gravity[f]@R)}
             if occlusion_stride and f % occlusion_stride == 0:
                 world = samples@R.T+t+delta
                 eye = self.eyes[f]
-                Ph = P+0
-                moved = np.zeros(len(P), bool)
-                moved[self.hand_side] = True
-                Ph = np.where(moved[:, None], P+delta, P)
-                tri = self.hand.triangles
-                near = tri[np.sum((Ph[tri[:, 0]]-(t+delta))**2, 1) < 60**2]
+                P = self.points(f)
+                Ph = np.where(self.hand_side[:, None], P+delta, P)
+                lo, hi = np.minimum(world.min(0), eye)-0.5, np.maximum(world.max(0), eye)+0.5
+                tmin = np.minimum(np.minimum(Ph[tri[:, 0]], Ph[tri[:, 1]]), Ph[tri[:, 2]])
+                tmax = np.maximum(np.maximum(Ph[tri[:, 0]], Ph[tri[:, 1]]), Ph[tri[:, 2]])
+                # Only triangles whose bounds meet the bounds of the screen-to-eye ray bundle can block.
+                near = tri[np.all((tmax >= lo) & (tmin <= hi), 1)]
                 blocked = ray_hits(world, eye, Ph[near[:, 0]], Ph[near[:, 1]], Ph[near[:, 2]]) if len(near) else np.zeros(len(world), bool)
                 row['screen_visible_fraction'] = round(1-float(blocked.mean()), 4)
             rows.append(row)
@@ -472,7 +522,7 @@ def _frame(z, roll):
 def seeds(ev, count_roll=12):
     """Initial guesses from geometry: screen toward the actual eye or along the actual palm side."""
     f = ev.pose
-    P = ev.hand.positions[f][ev.hand_side]
+    P = ev.hand.positions[f][ev.rigid]
     centroid = P[np.linalg.norm(P, axis=1) < 14].mean(0)
     eye = ev.eyes[f]
     out = []
@@ -486,20 +536,21 @@ def seeds(ev, count_roll=12):
     return out
 
 
-def cem(ev, x0, frames, iterations=30, population=48, elite=8, rng=None, sigma=(0.25, 1.5)):
+def cem(ev, x0, frames, iterations=30, population=48, elite=8, rng=None, sigma=(0.25, 1.5, 0.15)):
     rng = rng or np.random.default_rng(0)
     mean = np.array(x0, float)
-    std = np.array([sigma[0]]*3+[sigma[1]]*3)
+    std = np.array(([sigma[0]]*3+[sigma[1]]*3+[sigma[2]]*3)[:len(mean)])
+    floor = np.array(([0.004]*3+[0.03]*3+[0.004]*3)[:len(mean)])
     best, best_cost = mean.copy(), ev.cost(mean, frames)
     for _ in range(iterations):
-        pop = mean+rng.standard_normal((population, 6))*std
+        pop = mean+rng.standard_normal((population, len(mean)))*std
         costs = np.array([ev.cost(x, frames) for x in pop])
         order = np.argsort(costs)
         if costs[order[0]] < best_cost:
             best, best_cost = pop[order[0]].copy(), float(costs[order[0]])
         el = pop[order[:elite]]
         mean = el.mean(0)
-        std = np.maximum(el.std(0), [0.004]*3+[0.03]*3)
+        std = np.maximum(el.std(0), floor)
     return best, best_cost
 
 
@@ -509,13 +560,16 @@ _EV = None
 def _refine(job):
     k, x, frames = job
     x1, _ = cem(_EV, x, [_EV.pose], iterations=25, rng=np.random.default_rng(k))
-    return cem(_EV, x1, frames, iterations=12, population=32, rng=np.random.default_rng(100+k), sigma=(0.08, 0.5))
+    return cem(_EV, x1, frames, iterations=12, population=32, rng=np.random.default_rng(100+k), sigma=(0.08, 0.5, 0.06))
 
 
-def search(ev, frames, starts=8, workers=4):
+def search(ev, frames, starts=8, workers=4, correction=False):
     global _EV
     _EV = ev
-    ranked = sorted(((ev.cost(x, [ev.pose]), i, x) for i, x in enumerate(seeds(ev))), key=lambda c: c[0])[:starts]
+    pool = seeds(ev)
+    if correction:
+        pool = [np.concatenate([x, c]) for x in pool for c in (np.zeros(3),)]
+    ranked = sorted(((ev.cost(x, [ev.pose]), i, x) for i, x in enumerate(pool)), key=lambda c: c[0])[:starts]
     jobs = [(k, x, frames) for k, (_, _, x) in enumerate(ranked)]
     if workers > 1:
         import multiprocessing
@@ -524,6 +578,25 @@ def search(ev, frames, starts=8, workers=4):
     else:
         results = [_refine(j) for j in jobs]
     return sorted(((c, x) for x, c in results), key=lambda r: r[0])
+
+
+def _residual_chunk(job):
+    R, t, frames, stride = job
+    return _EV.residuals(R, t, frames=frames, occlusion_stride=stride)
+
+
+def parallel_residuals(ev, R, t, occlusion_stride=1, workers=4):
+    """Full-clip residuals in contiguous chunks; IK continuity restarts at each chunk boundary."""
+    global _EV
+    _EV = ev
+    frames = list(range(len(ev.hand.times)))
+    if workers <= 1:
+        return ev.residuals(R, t, occlusion_stride=occlusion_stride)
+    chunks = [frames[k*len(frames)//workers:(k+1)*len(frames)//workers] for k in range(workers)]
+    import multiprocessing
+    with multiprocessing.get_context('fork').Pool(workers) as pool:
+        parts = pool.map(_residual_chunk, [(R, t, c, occlusion_stride) for c in chunks])
+    return [row for part in parts for row in part]
 
 
 def summarize(rows):
@@ -547,14 +620,26 @@ def summarize(rows):
             'ik_unreachable_frames': sum(not r['ik_reachable'] for r in rows),
             'body_min_clearance_after_ik_cm': min(r['body_min_clearance_after_ik_cm'] for r in rows if r['body_min_clearance_after_ik_cm'] is not None),
             'screen_to_eye_angle_deg': [min(r['screen_to_eye_angle_deg'] for r in rows), max(r['screen_to_eye_angle_deg'] for r in rows)],
+            'screen_upright_deg': [min(r['screen_upright_deg'] for r in rows), max(r['screen_upright_deg'] for r in rows)],
             'eye_distance_cm': [min(r['eye_distance_cm'] for r in rows), max(r['eye_distance_cm'] for r in rows)],
             'screen_visible_fraction_min_mean': [min(vis), round(float(np.mean(vis)), 4)] if vis else None}
+
+
+def correction_record(C):
+    q = matrix_to_quat(C)
+    qu = matrix_to_quat(MIRROR@C@MIRROR)
+    return {'angle_deg': round(math.degrees(2*math.acos(min(1.0, abs(q[3])))), 4),
+            'gltf_right_hand_local_post_multiply_xyzw': [round(float(v), 8) for v in q],
+            'ue_right_hand_local_post_multiply_xyzw': [round(float(v), 8) for v in qu],
+            'ue_rotator': 'P=%.5f Y=%.5f R=%.5f' % ue_rotator_from_quat(qu),
+            'apply': 'RightHand local rotation := captured local * correction (every frame); all finger locals, '
+                     'bone lengths and other bones unchanged; phone mount is expressed in the corrected RightHand frame'}
 
 
 def candidate_record(ev, R, t, label, rows):
     ue_offset, ue_q, ue_rot = gltf_to_ue_local(t, R)
     q = matrix_to_quat(R)
-    return {'label': label,
+    return {'label': label, 'right_hand_correction': correction_record(ev.C),
             'gltf_wrist_local': {'offset_cm': [round(float(v), 5) for v in t], 'quaternion_xyzw': [round(float(v), 8) for v in q]},
             'ue_wrist_local': {'Sub01PhoneMountCm': 'X=%.5f Y=%.5f Z=%.5f' % tuple(ue_offset),
                                'Sub01PhoneMountEuler': 'P=%.5f Y=%.5f R=%.5f' % ue_rot,
@@ -589,6 +674,9 @@ def main(argv=None):
     ap.add_argument('--occlusion-stride', type=int, default=1)
     ap.add_argument('--top', type=int, default=3)
     ap.add_argument('--starts', type=int, default=8)
+    ap.add_argument('--wrist-correction', action='store_true',
+                    help='Also solve one bounded constant RightHand local rotation (fingers unchanged)')
+    ap.add_argument('--max-correction-deg', type=float, default=35.0)
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args(argv)
@@ -602,7 +690,7 @@ def main(argv=None):
         raise ValueError('Cached export does not match the exact owner/clip bytes')
     phone = load_phone(args.phone)
     eye = MIRROR@np.array(UE_EYE_HEAD_LOCAL)
-    ev = Evaluator(hand, phone, eye, args.pose_time)
+    ev = Evaluator(hand, phone, eye, args.pose_time, max_correction_deg=args.max_correction_deg)
     result = {'schema': SCHEMA, 'verified': False, 'requires_native_reaudit': True, 'visual_accepted': False,
               'owner': {'path': str(args.owner), 'sha256': owner_sha, 'vertices_skinned': hand.meta['owner']['vertices']},
               'clip': {'path': str(args.clip), 'sha256': clip_sha, 'duration': hand.meta['clip']['duration'], 'frames': len(hand.times)},
@@ -620,16 +708,17 @@ def main(argv=None):
         o = [float(p.split('=')[1]) for p in off.split()]
         r = {k: float(v) for k, v in (p.split('=') for p in rot.split())}
         t, R = ue_to_gltf_local(o, r['P'], r['Y'], r['R'])
-        rows = ev.residuals(R, t, occlusion_stride=args.occlusion_stride)
+        rows = parallel_residuals(ev, R, t, args.occlusion_stride, args.workers)
         result['candidates'] = [candidate_record(ev, R, t, 'evaluated', rows)]
         result['frames'] = rows
     else:
         frames = sorted(set(range(0, len(hand.times), args.frame_stride)) | {ev.pose})
-        refined = search(ev, frames, starts=args.starts, workers=args.workers)
+        refined = search(ev, frames, starts=args.starts, workers=args.workers, correction=args.wrist_correction)
         result['candidates'] = []
         for rank, (c, x) in enumerate(refined[:args.top]):
-            R, t = rotvec_to_matrix(x[:3]), x[3:]
-            rows = ev.residuals(R, t, occlusion_stride=args.occlusion_stride)
+            R, t = rotvec_to_matrix(x[:3]), x[3:6]
+            ev.set_correction(rotvec_to_matrix(x[6:9]) if len(x) > 6 else np.eye(3))
+            rows = parallel_residuals(ev, R, t, args.occlusion_stride, args.workers)
             rec = candidate_record(ev, R, t, f'rank{rank}', rows)
             rec['search_cost'] = round(float(c), 6)
             result['candidates'].append(rec)
