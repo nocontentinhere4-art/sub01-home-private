@@ -1,5 +1,7 @@
 # Native renderer handoff — 13 October 2026
 
+The private backend launch recipe must set `HOME_NATIVE_REQUIRED=1`. Its generated rootfs `private-launch.py` includes this flag so activity readiness waits for the actual native consumer to bind. Persisted seat state does not establish native readiness. This source configuration change does not restart a provider or prove a live native connection.
+
 The current generated UE 5.8.3 native module compiled successfully on the authorized A40 server. The final incremental build took 237.80 seconds. This verifies compilation, **not first-person animation or house acceptance**.
 
 The final run reached `SUB01_NATIVE_INIT_BEGIN` and `ASSETS_DONE` at 21:43:30 UTC, then `POSE_DONE` and `PC_DONE` at 21:43:45. No `SUB01_FIRST_ACTUAL_GAME_TICK`, new viewport PNG, or five-second recording was observed before the mandatory 21:45 stop. Both home pods were confirmed stopped at 21:45:25. The post-initialization first game tick/frame remains unresolved. Do not describe these changes as a finished, autonomous or visually accepted native house.

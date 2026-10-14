@@ -7,8 +7,9 @@ class NativeFeedback:
     # Protocol identifiers; native must establish the corresponding physical hit.
     SEATS = {'desk': 'desk_chair', 'sofa': 'sofa', 'bed': 'bed'}
 
-    def __init__(self, clock=time.monotonic):
+    def __init__(self, clock=time.monotonic, required=False):
         self.clock = clock
+        self.required = required is True
         self.epoch = None
         self.report = None
         self.received = None
@@ -37,6 +38,7 @@ class NativeFeedback:
             if phase != 'walking':
                 raise ValueError('Bind requires walking phase')
             self.epoch, self.report, self.received = epoch, None, None
+            self.required = True
         elif self.epoch != epoch:
             raise RuntimeError('Native consumer is not bound to this epoch')
         self.report = {k: data.get(k) for k in ('epoch', 'sequence', 'activity', 'node', 'phase', 'chair')}
@@ -44,7 +46,7 @@ class NativeFeedback:
 
     def ready(self, *, sequence, activity, target):
         if self.epoch is None:
-            return True  # Browser-only mode retains its existing transition.
+            return not self.required  # Only an explicitly browser-only home can use its timer.
         report = self.report or {}
         return (self.received is not None and 0 <= self.clock() - self.received <= self.TTL
                 and report.get('epoch') == self.epoch and report.get('sequence') == sequence
@@ -54,6 +56,8 @@ class NativeFeedback:
     def view(self, *, sequence, activity, target):
         fresh = self.received is not None and 0 <= self.clock() - self.received <= self.TTL
         return {'bound': self.epoch is not None,
+                'required': self.required,
+                'awaiting_binding': self.required and self.epoch is None,
                 'phase': (self.report or {}).get('phase') if fresh else None,
                 'fresh': fresh,
                 'physical_ready': self.epoch is not None and self.ready(

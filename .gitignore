@@ -134,3 +134,7 @@ out/home-final-ci-aggregate-private.json
 out/home-resume-bound-hour*.json
 out/home-third-hour-bound.json
 out/current-authorized-host-capacity-id.json
+
+out/home-migration-window.private.json
+out/home-*migration*.private.*
+out/migration-device-restore/

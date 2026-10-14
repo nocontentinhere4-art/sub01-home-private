@@ -45,7 +45,8 @@ def test_feedback_readiness_expiry_and_station_identity():
     assert not world.activity_ready()
     report('seated')
     assert world.activity_ready()
-    assert world.view()['native_consumer'] == {'bound': True, 'phase': 'seated', 'fresh': True, 'physical_ready': True}
+    assert world.view()['native_consumer'] == {'bound': True, 'required': True, 'awaiting_binding': False,
+                                             'phase': 'seated', 'fresh': True, 'physical_ready': True}
     now[0] += 2
     for patch in [dict(sequence=42), dict(epoch='stale'), dict(chair='made-up-chair'), dict(sequence=True)]:
         try:
@@ -56,7 +57,8 @@ def test_feedback_readiness_expiry_and_station_identity():
             raise AssertionError('Invalid feedback accepted')
     now[0] += 1.01
     assert not world.activity_ready()  # Failed reports did not renew evidence.
-    assert world.view()['native_consumer'] == {'bound': True, 'phase': None, 'fresh': False, 'physical_ready': False}
+    assert world.view()['native_consumer'] == {'bound': True, 'required': True, 'awaiting_binding': False,
+                                             'phase': None, 'fresh': False, 'physical_ready': False}
     report('blocked')
     assert not world.activity_ready()
     report('seated')
@@ -68,9 +70,11 @@ def test_feedback_readiness_expiry_and_station_identity():
     world.activity = 'eat'
     report('arrived', epoch='native-two', chair=None)
     assert world.native_feedback.ready(sequence=world.sequence, activity='eat', target='kitchen')
-    # Restart retains browser timer behavior, never a serialized native seat.
+    # Restart retains only required policy, never a serialized native result.
     restored = HomeWorld(world.to_dict())
     assert restored.native_feedback.epoch is None
+    assert restored.native_feedback.required
+    assert not restored.native_feedback.ready(sequence=restored.sequence, activity=restored.activity, target=restored.target)
     for target, activity, chair in [('sofa', 'play_console', 'sofa'), ('bed', 'phone', 'bed')]:
         world.node = world.target = target; world.activity = activity; world.seated = 1
         data = dict(epoch='native-two', sequence=world.sequence, activity=activity,
@@ -286,3 +290,44 @@ def test_private_bathroom_movement_control_and_feedback_do_not_unmask_devices():
     # Browser policy import is isolated; privacy rejection occurs before use.
     with patch.dict(sys.modules, {'browse': SimpleNamespace(url_ok=lambda u: True)}):
         asyncio.run(run())
+
+
+def test_native_required_policy_survives_real_serialization_and_restart(monkeypatch):
+    import json
+    monkeypatch.delenv('HOME_NATIVE_REQUIRED', raising=False)
+    world = HomeWorld({'seated':1})
+    assert world.activity_ready('research')
+    assert not world.native_feedback.required
+    data = dict(epoch='first-native', sequence=world.sequence, activity='research',
+                node='desk', phase='walking', bind=True)
+    world.native_feedback.accept(data, sequence=world.sequence, activity=world.activity, target='desk', nodes={'desk'})
+    data.update(phase='seated', bind=False, chair='desk_chair')
+    world.native_feedback.accept(data, sequence=world.sequence, activity=world.activity, target='desk', nodes={'desk'})
+    assert world.activity_ready('research')
+    saved = json.loads(json.dumps(world.to_dict()))
+    assert saved['native_consumer_required'] is True
+    assert not any(k.startswith('native_') for k in saved if k != 'native_consumer_required')
+    restored = HomeWorld(saved)
+    feedback = restored.native_feedback
+    assert feedback.required and feedback.epoch is None and feedback.report is None and feedback.received is None
+    assert restored.view()['native_consumer'] == {'bound':False,'required':True,'awaiting_binding':True,
+                                                  'phase':None,'fresh':False,'physical_ready':False}
+    restored.update(10,0,{'activity':'research'}, {})
+    assert restored.seated == 1 and not restored.activity_ready('research')
+    try:
+        feedback.accept(data,sequence=restored.sequence,activity='research',target='desk',nodes={'desk'})
+    except RuntimeError: pass
+    else: raise AssertionError('Old result restored without a new native bind')
+    data.update(epoch='new-native', phase='walking',bind=True,chair=None)
+    feedback.accept(data,sequence=restored.sequence,activity='research',target='desk',nodes={'desk'})
+    assert not restored.activity_ready('research')
+    data.update(phase='seated',bind=False,chair='desk_chair')
+    feedback.accept(data,sequence=restored.sequence,activity='research',target='desk',nodes={'desk'})
+    assert restored.activity_ready('research')
+    # Explicit startup policy closes even a new backend before its first bind.
+    monkeypatch.setenv('HOME_NATIVE_REQUIRED','1')
+    new_native = HomeWorld({'seated':1})
+    assert new_native.native_feedback.required and not new_native.activity_ready('research')
+    monkeypatch.setenv('HOME_NATIVE_REQUIRED','0')
+    assert HomeWorld({'seated':1}).activity_ready('research')
+    assert not HomeWorld(saved).activity_ready('research')  # Env cannot clear persisted policy.
