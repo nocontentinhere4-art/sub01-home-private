@@ -1,4 +1,4 @@
-"""Native phone/TV browser parity: the owned policy header and its proposed bridge patch."""
+"""Native phone/TV policy and actual integrated device bridge source."""
 import itertools
 import shutil
 import subprocess
@@ -10,9 +10,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-import native_device_screen_patch as patch  # noqa: E402
 from home_world import HomeWorld  # noqa: E402
 
+BRIDGE = 'tools/native_pc_bridge/Sub01HomeDeviceBridge.cpp'
+BRIDGE_HEADER = 'tools/native_pc_bridge/Sub01HomeDeviceBridge.h'
+STAGE = 'tools/stage_unreal_home_runtime.py'
 HEADER = ROOT / 'tools/native_pc_bridge/Sub01DeviceScreenPolicy.h'
 FIELDS = ('PublicHome', 'PhoneActivity', 'PhoneFrame', 'PhoneAppFrame', 'MinecraftSelected', 'MinecraftEnabled', 'MinecraftFrame')
 
@@ -59,18 +61,13 @@ def test_policy_matches_the_browser_rules():
     assert "getContextKey: () => tvGame === 'minecraft' && minecraftState.has_frame ? 'minecraft' : null" in home
 
 
-def test_proposed_patch_is_current_and_applies():
-    assert patch.main(['--check']) == 0
-    subprocess.run(['git', 'apply', '--check', str(patch.PATCH)], cwd=ROOT, check=True)
+def native_source(path):
+    return (ROOT / path).read_text()
 
 
-def patched(path):
-    return patch.apply_edits((ROOT / path).read_text(), path)
-
-
-def test_patched_bridge_gates_fetches_and_stages_header():
-    original = (ROOT / patch.BRIDGE).read_text()
-    bridge = patched(patch.BRIDGE)
+def test_integrated_bridge_gates_fetches_and_stages_header():
+    original = native_source(BRIDGE)
+    bridge = native_source(BRIDGE)
     poll = bridge.split('void USub01HomeDeviceBridge::Poll(){', 1)[1].split('\nvoid USub01HomeDeviceBridge::FetchFrame', 1)[0]
     assert '#include "Sub01DeviceScreenPolicy.h"' in bridge
     # The identity helper follows every include it needs (FJsonObject must be complete).
@@ -94,14 +91,14 @@ def test_patched_bridge_gates_fetches_and_stages_header():
     # Same authenticated loopback route and frame identity as before.
     assert 'R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")' in fetch
     assert "R->SetHeader(TEXT(\"X-Admin-Token\"),Token);" in fetch
-    stage = patched(patch.STAGE)
+    stage = native_source(STAGE)
     assert "'Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h']" in stage
-    # Native files stay untouched until their owner applies the patch.
-    assert 'Sub01DeviceScreenPolicy.h' not in original
+    # The policy is part of the actual module, not an unapplied proposal.
+    assert '#include "Sub01DeviceScreenPolicy.h"' in original
 
 
-def test_patched_open_app_and_home_actions():
-    bridge, header = patched(patch.BRIDGE), patched(patch.HEADER)
+def test_integrated_open_app_and_home_actions():
+    bridge, header = native_source(BRIDGE), native_source(BRIDGE_HEADER)
     assert header.count(' void PhoneOpenApp(const FString& App);') == 1
     method = bridge.split('void USub01HomeDeviceBridge::PhoneOpenApp(', 1)[1].split('\n', 1)[0]
     assert 'if(PhoneFrameId.IsEmpty()||(App!=TEXT("home")&&App!=TEXT("notes")&&App!=TEXT("memory")&&App!=TEXT("browser")))return;' in method
@@ -157,11 +154,11 @@ int main() {
 """
 
 
-def test_patched_phone_identity_prefers_phone_screen_compiled():
+def test_integrated_phone_identity_prefers_phone_screen_compiled():
     compiler = shutil.which('clang++') or shutil.which('g++')
     if not compiler:
         pytest.skip('C++ compiler unavailable')
-    bridge = patched(patch.BRIDGE)
+    bridge = native_source(BRIDGE)
     helper = 'static FString Sub01PhoneIdentity(' + bridge.split('static FString Sub01PhoneIdentity(', 1)[1].split('\n}\n', 1)[0] + '\n}\n'
     with tempfile.TemporaryDirectory() as tmp:
         cpp, exe = Path(tmp) / 'identity.cpp', Path(tmp) / 'identity'
