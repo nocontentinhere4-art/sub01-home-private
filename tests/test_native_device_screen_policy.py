@@ -14,7 +14,7 @@ import native_device_screen_patch as patch  # noqa: E402
 from home_world import HomeWorld  # noqa: E402
 
 HEADER = ROOT / 'tools/native_pc_bridge/Sub01DeviceScreenPolicy.h'
-FIELDS = ('PublicHome', 'PhoneActivity', 'PhoneFrame', 'MinecraftSelected', 'MinecraftEnabled', 'MinecraftFrame')
+FIELDS = ('PublicHome', 'PhoneActivity', 'PhoneFrame', 'PhoneAppFrame', 'MinecraftSelected', 'MinecraftEnabled', 'MinecraftFrame')
 
 
 def test_policy_header_truth_table_compiled():
@@ -25,19 +25,20 @@ def test_policy_header_truth_table_compiled():
     checks = []
     for row in rows:
         values = dict(zip(FIELDS, row))
-        phone = values['PublicHome'] and values['PhoneActivity'] and values['PhoneFrame']
+        phone = (0 if not values['PublicHome'] else 1 if values['PhoneActivity'] and values['PhoneFrame']
+                 else 2 if values['PhoneAppFrame'] else 0)   # None, BrowserPage, AppFrame
         tv = values['PublicHome'] and values['MinecraftSelected'] and values['MinecraftEnabled'] and values['MinecraftFrame']
         setup = ''.join(f'In.{name}={value};' for name, value in values.items())
-        checks.append(f'{{FSub01DeviceScreenInputs In;{setup}if(Sub01PhoneShowsPage(In)!={int(phone)}||'
+        checks.append(f'{{FSub01DeviceScreenInputs In;{setup}if(int(Sub01PhoneFrame(In))!={phone}||'
                       f'Sub01TVFetchesMinecraft(In)!={int(tv)})return 1;}}')
-    source = f'#include "{HEADER}"\nint main(){{FSub01DeviceScreenInputs D;if(Sub01PhoneShowsPage(D)||Sub01TVFetchesMinecraft(D))return 2;\n' \
+    source = f'#include "{HEADER}"\nint main(){{FSub01DeviceScreenInputs D;if(Sub01PhoneFrame(D)!=ESub01PhoneFrame::None||Sub01TVFetchesMinecraft(D))return 2;\n' \
              + '\n'.join(checks) + '\nreturn 0;}\n'
     with tempfile.TemporaryDirectory() as tmp:
         cpp, exe = Path(tmp) / 'policy.cpp', Path(tmp) / 'policy'
         cpp.write_text(source)
         subprocess.run([compiler, '-std=c++17', '-Wall', '-Werror', str(cpp), '-o', str(exe)], check=True, capture_output=True)
         subprocess.run([str(exe)], check=True)
-    assert len(rows) == 64
+    assert len(rows) == 128
 
 
 def test_inputs_exist_in_the_actual_backend_payload():
@@ -70,7 +71,7 @@ def test_patched_bridge_gates_fetches_and_stages_header():
     assert '#include "Sub01DeviceScreenPolicy.h"' in bridge
     # Each fetch is behind the policy; nothing else in Poll requests a frame.
     assert poll.count('FetchFrame(') == 2
-    assert 'if(Sub01PhoneShowsPage(Screen))FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
+    assert 'if(Sub01PhoneFrame(Screen)==ESub01PhoneFrame::BrowserPage)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
     assert 'if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);' in poll
     # Home is read once, before use; the blanking and Pong branches are unchanged.
     assert poll.count('State->TryGetObjectField(TEXT("home"),Home)') == 1

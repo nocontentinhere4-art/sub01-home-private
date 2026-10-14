@@ -6,7 +6,7 @@
  #include "Components/MeshComponent.h"
  #include "Engine/Canvas.h"
  #include "Engine/CanvasRenderTarget2D.h"
-@@ -65,10 +66,15 @@
+@@ -65,10 +66,17 @@
  void USub01HomeDeviceBridge::Poll(){
   if(LocalPrivacy||Busy||Token.IsEmpty())return;Busy=true;const uint64 Epoch=Generation;
   ReadHome([this,Epoch](TSharedPtr<FJsonObject> State){if(Epoch!=Generation)return;Busy=false;if(!PublicHome(State)){Clear();return;}Private=false;
@@ -16,7 +16,9 @@
 +  const TSharedPtr<FJsonObject>* Minecraft=nullptr;if(State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft){(*Minecraft)->TryGetBoolField(TEXT("enabled"),Screen.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),Screen.MinecraftFrame);}
 +  const TSharedPtr<FJsonObject>* Phone=nullptr;FString Identity;Screen.PhoneFrame=State->TryGetObjectField(TEXT("phone_browser_screen"),Phone)&&Phone&&(*Phone)->TryGetStringField(TEXT("frame_id"),Identity)&&!Identity.IsEmpty();
 +  // Browser parity (Sub01DeviceScreenPolicy.h): a page only while he is on the phone.
-+  if(Sub01PhoneShowsPage(Screen))FetchFrame(TEXT("phone"),Identity,Epoch);
++  // App frames: set Screen.PhoneAppFrame from the backend app-frame identity and fetch
++  // its URL on ESub01PhoneFrame::AppFrame once that endpoint schema is published.
++  if(Sub01PhoneFrame(Screen)==ESub01PhoneFrame::BrowserPage)FetchFrame(TEXT("phone"),Identity,Epoch);
    else if(Materials.Contains(TEXT("phone"))){Materials[TEXT("phone")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);Images.Remove(TEXT("phone"));ImageIdentity.Remove(TEXT("phone"));PhoneFrameId.Empty();}
 -  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game;(*Home)->TryGetStringField(TEXT("console_game"),Game);
 -  if(Game==TEXT("minecraft"))FetchFrame(TEXT("tv"),TEXT(""),Epoch);

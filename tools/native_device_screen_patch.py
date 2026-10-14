@@ -34,7 +34,9 @@ EDITS = [
      '  const TSharedPtr<FJsonObject>* Phone=nullptr;FString Identity;'
      'Screen.PhoneFrame=State->TryGetObjectField(TEXT("phone_browser_screen"),Phone)&&Phone&&(*Phone)->TryGetStringField(TEXT("frame_id"),Identity)&&!Identity.IsEmpty();\n'
      '  // Browser parity (Sub01DeviceScreenPolicy.h): a page only while he is on the phone.\n'
-     '  if(Sub01PhoneShowsPage(Screen))FetchFrame(TEXT("phone"),Identity,Epoch);\n'),
+     '  // App frames: set Screen.PhoneAppFrame from the backend app-frame identity and fetch\n'
+     '  // its URL on ESub01PhoneFrame::AppFrame once that endpoint schema is published.\n'
+     '  if(Sub01PhoneFrame(Screen)==ESub01PhoneFrame::BrowserPage)FetchFrame(TEXT("phone"),Identity,Epoch);\n'),
     (BRIDGE, 'home read once',
      '  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game;'
      '(*Home)->TryGetStringField(TEXT("console_game"),Game);\n',
