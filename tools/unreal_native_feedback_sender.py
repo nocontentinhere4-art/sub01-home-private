@@ -6,6 +6,8 @@ FIELDS = r'''
  bool NativeFeedbackSeatReady() const;
  int64 LiveHomeCommandSequence=-1,NativeFeedbackSequence=-1;
  FString NativeFeedbackEpoch,NativeFeedbackActivity,NativeFeedbackAckPhase;
+ FString NativeFeedbackConsumer;
+ int64 NativeFeedbackReportId=0,NativeFeedbackPendingReportId=0;
  bool NativeFeedbackBound=false,NativeFeedbackPending=false;
  double NativeFeedbackAt=0,NativeFeedbackLastAck=-1;
 '''
@@ -29,9 +31,14 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
   NativeFeedbackEpoch=LiveHomeEpoch;NativeFeedbackSequence=LiveHomeCommandSequence;NativeFeedbackActivity=LiveHomeActivity;NativeFeedbackBound=false;NativeFeedbackLastAck=-1;NativeFeedbackAckPhase.Empty();NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
  }
  if(NativeFeedbackPending||Now<NativeFeedbackAt)return;
+ if(NativeFeedbackConsumer.IsEmpty())NativeFeedbackConsumer=FGuid::NewGuid().ToString(EGuidFormats::Digits);
+ if(NativeFeedbackReportId>=9007199254740991LL)return;
  NativeFeedbackAt=Now+.5;NativeFeedbackPending=true;
+ const int64 ReportId=++NativeFeedbackReportId;const FString ConsumerId=NativeFeedbackConsumer;NativeFeedbackPendingReportId=ReportId;
  const FString Epoch=LiveHomeEpoch,Activity=LiveHomeActivity;const int64 Sequence=LiveHomeCommandSequence;const bool Bind=!NativeFeedbackBound;
  auto Doc=MakeShared<FJsonObject>();Doc->SetStringField(TEXT("epoch"),Epoch);Doc->SetNumberField(TEXT("sequence"),Sequence);
+ // Enable only after the private backend's ordered-report protocol is deployed.
+ if(FParse::Param(FCommandLine::Get(),TEXT("Sub01OrderedNativeFeedback"))){Doc->SetStringField(TEXT("consumer_id"),ConsumerId);Doc->SetNumberField(TEXT("report_id"),ReportId);}
  Doc->SetStringField(TEXT("activity"),Activity);Doc->SetStringField(TEXT("node"),LiveHomeNode);
  // Binding is always walking, including when the pawn is already at its target.
  const FString Phase=Bind?TEXT("walking"):NativeFeedbackPhase();Doc->SetStringField(TEXT("phase"),Phase);Doc->SetBoolField(TEXT("bind"),Bind);
@@ -39,7 +46,8 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
  FString Body;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Body));
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(LiveHomeOrigin+TEXT("/home/native_state"));Request->SetVerb(TEXT("POST"));
  Request->SetTimeout(1.5);Request->SetHeader(TEXT("X-Admin-Token"),LiveHomeToken);Request->SetHeader(TEXT("Content-Type"),TEXT("application/json"));Request->SetContentAsString(Body);
- Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity,Phase,Now](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
+ Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity,Phase,Now,ConsumerId,ReportId](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
+  if(NativeFeedbackConsumer!=ConsumerId||NativeFeedbackPendingReportId!=ReportId)return;
   NativeFeedbackPending=false;
   if(!LiveHome||LiveHomeEpoch!=Epoch||LiveHomeCommandSequence!=Sequence||LiveHomeActivity!=Activity)return;
   const double Age=FPlatformTime::Seconds()-LiveHomeLastReceived;
