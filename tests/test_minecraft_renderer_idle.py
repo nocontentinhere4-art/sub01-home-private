@@ -202,4 +202,21 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
                     with self.assertRaises(asyncio.CancelledError):await task
                 self.assertEqual(closed,[True]);self.assertEqual(self.console.frame,b'cached')
 
+    async def test_frame_receipt_uses_actual_viewer_entities_and_new_pixel_identity(self):
+        self.state(); self.console.directory.mkdir()
+        page = Page()
+        actual_receipts = [{'id': 921, 'type': 110, 'name': 'oak_log', 'count': 1,
+                            'status': 'textured_registry_log'}]
+        async def evaluate(expression):
+            self.assertIn('sub01ItemRenderReceipts', expression)
+            return actual_receipts
+        page.evaluate = evaluate
+        h = Harness(self.console, page)
+        await h.waiting()
+        receipt = json.loads((self.console.directory / 'frame-rendering.json').read_text())
+        self.assertEqual(receipt['entities'], actual_receipts)
+        self.assertEqual(receipt['frame_tag'], self.console.frame_tag)
+        self.assertEqual(self.console.frame_kind, 'initial_idle')
+        await h.close()
+
 if __name__ == '__main__':unittest.main()
