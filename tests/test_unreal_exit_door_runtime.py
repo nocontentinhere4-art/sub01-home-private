@@ -152,3 +152,38 @@ class CurrentBathroomSweptGeometryTest(unittest.TestCase):
   self.assertFalse(any(intersects(fitted,t)for t in structures),'The whole fitted panel sweep must clear measured structures without exclusions')
   self.assertAlmostEqual(fitted[0][2]-b['floor_top_cm'],b['floor_clearance_cm'],places=4)
   self.assertGreater(fitted[0][0]-nodes[156]['max_cm'][0],.1999)
+
+class FrontThresholdRegressionTest(unittest.TestCase):
+ def test_real_threshold_requires_clearance_not_just_main_floor(self):
+  threshold=door.GEOMETRY['threshold'];top=threshold['center_cm'][2]+threshold['extent_cm'][2]
+  self.assertGreater(top,door.GEOMETRY['verified_entry_floor_cm'])
+  self.assertLess(2.6,top,'The previous fit physically penetrated the separate threshold')
+  f=door.FITTED_GEOMETRY;c=f['leaf_center_cm'];e=f['leaf_extent_cm']
+  self.assertAlmostEqual(c[2]-e[2],3.)
+  self.assertAlmostEqual(c[2]+e[2],221.)
+  self.assertAlmostEqual(c[2]-e[2]-top,.25)
+
+PRIVATE_THRESHOLD=ROOT/'out/migration-device-restore/current-front-threshold-triangles.json'
+@unittest.skipUnless(PRIVATE_THRESHOLD.is_file(),'Private current-source threshold triangle integration receipt absent')
+class ActualFrontThresholdTrianglesTest(unittest.TestCase):
+ def test_whole_swept_leaf_clears_actual_threshold_triangles(self):
+  import json,math
+  d=json.loads(PRIVATE_THRESHOLD.read_text());self.assertEqual(d['source_sha256'],door.CURRENT_SOURCE_SHA256)
+  self.assertEqual(d['node'],53);self.assertEqual(len(d['triangles']),12)
+  self.assertAlmostEqual(max(t['max_cm'][2]for t in d['triangles']),2.75,places=4)
+  def intersects(lo,hi,t):return all(lo[a]<t['max_cm'][a]and hi[a]>t['min_cm'][a]for a in range(3))
+  self.assertTrue(any(intersects([147.45,386.25,2.6],[252.45,393.75,221.1],t)for t in d['triangles']))
+  f=door.FITTED_GEOMETRY;c=f['leaf_center_cm'];e=f['leaf_extent_cm'];hinge=f['hinge_cm']
+  for i in range(math.ceil(86.4/.25)):
+   a,b=i*.25,min((i+1)*.25,86.4);points=[]
+   for angle in[a,b]:
+    r=math.radians(angle)
+    for x in[-1,1]:
+     for y in[-1,1]:
+      for z in[-1,1]:
+       dx,dy=c[0]+x*e[0]-hinge[0],c[1]+y*e[1]-hinge[1]
+       points.append([hinge[0]+math.cos(r)*dx-math.sin(r)*dy,hinge[1]+math.sin(r)*dx+math.cos(r)*dy,c[2]+z*e[2]])
+   lo=[min(p[j]for p in points)for j in range(3)];hi=[max(p[j]for p in points)for j in range(3)]
+   # The continuous rotation's sagitta inflates horizontal extents only; its
+   # complete vertical interval remains3..221, above every real threshold face.
+   self.assertFalse(any(intersects(lo,hi,t)for t in d['triangles']))

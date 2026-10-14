@@ -234,3 +234,18 @@ def test_no_raw_keyboard_fallback_in_the_staged_proxy(installed):
         evaluate = after[name].split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
         original = before[name].split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
         assert 'ContactAllowed' not in after[name] and evaluate.replace(adapter.PROXY_EVALUATED, '') == original
+
+
+def test_actual_imported_seating_assets_bind_to_semantic_roles(installed):
+    # The editor imported these exact names; the transition's semantic names stay unchanged.
+    cpp = installed[1]['Sub01HomeLab.cpp']
+    bindings = cpp.split(' struct FSeatRoleBinding', 1)[1].split(' for(const auto& Role:Roles)', 1)[0]
+    source = ('#include <cstdio>\n#include <cstdint>\n#include "Sub01SeatTransition.h"\n'
+              'using TCHAR=char;using uint32=uint32_t;\n#define TEXT(x) x\nint main(){struct FSeatRoleBinding'
+              + bindings + 'for(const auto& r:Roles)std::printf("%s:%s:%u\\n",r.Key,r.Asset,r.Value);return 0;}')
+    assert run_cpp(source).splitlines() == ['StandToSit:SitDown:1', 'Sitting:Sitting:2',
+                                           'SitToType:SitToType:4', 'SitToStand:GetUp:16']
+    load = cpp.split('void ASub01HomeCharacter::LoadSeatTransition(){', 1)[1].split(' // Chair:', 1)[0]
+    assert 'Role.Asset,Role.Asset' in load
+    assert 'Clip->GetSkeleton()==Mesh->GetSkeleton()&&ValidatedHandsPostures.Contains(FName(Role.Key))' in load
+    assert 'SeatClips.Add(FName(Role.Key),Clip)' in load

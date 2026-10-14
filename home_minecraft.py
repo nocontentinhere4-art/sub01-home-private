@@ -202,15 +202,24 @@ class MinecraftConsole:
                         continue
                 # Read-only product-renderer receipt: actual protocol item identities
                 # and decoded texture status, never fabricated entities or pixels.
-                receipts = None
+                receipts = renderer = None
                 if callable(getattr(page, 'evaluate', None)):
-                    receipts = await page.evaluate('() => Object.values(globalThis.sub01ItemRenderReceipts || {}).slice(0, 100)')
+                    observed = await page.evaluate('() => ({entities: Object.values(globalThis.sub01ItemRenderReceipts || {}).slice(0, 100), renderer: globalThis.sub01RendererDiagnostics?.() || null})')
+                    if isinstance(observed, dict):
+                        receipts = observed.get('entities')
+                        renderer = observed.get('renderer')
+                    else:
+                        receipts = observed  # Older pinned viewer/test adapter has entities only.
+                snapshot_started = time.perf_counter()
                 frame = await page.screenshot(type='jpeg', quality=75, timeout=10000)
+                snapshot_ms = max(0, (time.perf_counter() - snapshot_started) * 1000)
                 if self._render_owner() == owner:
                     self.frame = frame
                     if receipts is not None:
                         (self.directory / 'frame-rendering.json').write_text(json.dumps(
-                            {'frame_tag': self.frame_tag, 'entities': receipts}, sort_keys=True))
+                            {'frame_tag': self.frame_tag, 'entities': receipts, 'renderer': renderer,
+                             'snapshot': {'duration_ms': round(snapshot_ms, 3), 'bytes': len(frame),
+                                          'width': 640, 'height': 360}}, sort_keys=True))
                     self.frame_kind = 'active' if active else 'initial_idle'
                     bootstrapped = True
                     if not active:

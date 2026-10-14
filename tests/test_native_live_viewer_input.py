@@ -171,3 +171,25 @@ def test_egress_requires_known_backend_and_current_native_focus_revocation(tmp_p
     receipt['native_start_ticks']=99
     path.write_text(json.dumps(receipt))
     assert not state.can_private_egress()
+
+
+@pytest.mark.parametrize('mode',['manual','live','diagnostic'])
+def test_mode_requires_fresh_actual_native_ownership(mode):
+    from tools.pixel_streaming.native_live_viewer import native_view_mode
+    receipt={'native_pid':42,'native_start_ticks':100,'captured_utc':50.,'physical_camera_private':False,'view_mode':mode}
+    assert native_view_mode(receipt,(42,100),50.)==mode
+    assert native_view_mode(receipt,(42,101),50.) is None
+    assert native_view_mode(receipt,(42,100),51.1) is None
+    assert native_view_mode({**receipt,'view_mode':'invented'},(42,100),50.) is None
+    assert native_view_mode({k:v for k,v in receipt.items() if k!='view_mode'},(42,100),50.) is None
+
+
+def test_live_activity_uses_only_fresh_public_known_stage_and_allowlisted_labels():
+    from tools.pixel_streaming.native_live_viewer import public_live_activity
+    d={'source':{'status':'live'},'privacy':False,'brain':{'stage':'AWAKE','activity':'eat'}}
+    assert public_live_activity(d)=={'awake':True,'activity':'Meal'}
+    assert public_live_activity({**d,'brain':{'stage':'REM','activity':'sleep'}})=={'awake':False,'activity':'Rest'}
+    assert public_live_activity({**d,'privacy':True}) is None
+    assert public_live_activity({**d,'source':{'status':'stale'}}) is None
+    assert public_live_activity({**d,'brain':{'stage':None,'activity':'sleep'}}) is None
+    assert public_live_activity({**d,'brain':{'stage':'AWAKE','activity':'owner private note'}})=={'awake':True,'activity':None}

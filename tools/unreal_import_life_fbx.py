@@ -27,9 +27,20 @@ source = root / 'SourceAssets/LifeFBX'
 dest = '/Game/Sub01Hands/Life'
 audit = json.loads((source / 'life-fbx-audit.json').read_text())
 inventory = json.loads((root / 'private-audit/native-life-clips-inventory.json').read_text())
-owner = json.loads((root / 'unreal-fbx-hands-import.json').read_text())
-mesh = u.load_asset(owner['mesh'])
-skeleton = u.load_asset(owner['skeleton'])
+receipt = root / 'unreal-fbx-hands-import.json'
+if receipt.is_file():
+    owner = json.loads(receipt.read_text())
+    mesh = u.load_asset(owner['mesh'])
+    skeleton = u.load_asset(owner['skeleton'])
+    identity_basis = 'Existing import receipt plus actual owner/clip skeleton equality'
+else:
+    mesh = u.load_asset('/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner')
+    typing = u.load_asset('/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping')
+    if not isinstance(typing, u.AnimSequence):
+        raise RuntimeError('Actual captured DeskTyping unavailable; no reconstructed historic receipt')
+    skeleton = typing.get_editor_property('skeleton')
+    identity_basis = 'Actual current owner and captured DeskTyping USkeleton equality; historic receipt unavailable'
+
 if not isinstance(mesh, u.SkeletalMesh) or mesh.get_editor_property('skeleton') != skeleton:
     raise RuntimeError('Existing verified owner USkeleton unavailable; do not create a replacement')
 if len(audit['bone_names']) != 65 or audit['bone_edits']:
@@ -39,13 +50,15 @@ if len(audit['bone_names']) != 65 or audit['bone_edits']:
 owner_ref = inventory_tool.owner_reference()
 owner_parents = {n: (p if p in owner_ref['skin_joints'] else None)
                  for n, p in ((n, owner_ref['parents'].get(n)) for n in owner_ref['skin_joints'])}
+u.Sub01HomeHandsInstance.finish_pending_skin_compilation()
 probe = u.SkeletalMeshComponent()
 probe.set_skeletal_mesh_asset(mesh)
 ue_names = [str(probe.get_bone_name(i)) for i in range(probe.get_num_bones())]
 ue_parents = {n: (None if str(probe.get_parent_bone(n)) in ('None', '') else str(probe.get_parent_bone(n))) for n in ue_names}
+owner_parents = parity.map_owner_parents_to_ue(owner_parents, ue_names)
 # Structure only here (names, parents, one parentless root); root motion is checked per clip below.
 skeleton_parity = parity.structural_root_parity(ue_names, ue_parents, owner_parents,
-                                                [(0.0, (0, 0, 0), (0, 0, 0, 1), (1, 1, 1))] * 2)
+                                                structure_only=True)
 if not skeleton_parity['pass']:
     raise RuntimeError('UE skeleton is not the owner skeleton: ' + '; '.join(skeleton_parity['failures']))
 u.log('SUB01_LIFE_SKELETON_PARITY ' + json.dumps({k: skeleton_parity[k] for k in ('ue_bone_count', 'owner_joint_count', 'structural_root')}))

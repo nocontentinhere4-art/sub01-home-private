@@ -34,7 +34,8 @@ HEADER_FILE = Path(__file__).resolve().parent / 'native_seating' / 'Sub01SeatTra
 OWNER_MESH = '/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner'
 TYPING_CLIP = '/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping'
 SEAT_CLIP_DIR = '/Game/Sub01Hands/Seating'           # tools/unreal_import_seating_fbx.py
-SEAT_ROLES = ('StandToSit', 'Sitting', 'SitToType', 'SitToStand')
+SEAT_ROLE_ASSETS = {'StandToSit': 'SitDown', 'Sitting': 'Sitting', 'SitToType': 'SitToType', 'SitToStand': 'GetUp'}
+SEAT_ROLES = tuple(SEAT_ROLE_ASSETS)
 MIN_CUSHION_AREA_CM2 = 1000.0      # the broad seat cushion is 2228 cm^2; the 58 cm^2 lumbar top is not a seat
 PATCHES = ('buttocks', 'left_posterior_thigh', 'right_posterior_thigh', 'left_sole', 'right_sole')
 
@@ -131,9 +132,10 @@ void ASub01HomeCharacter::LoadSeatTransition(){
  SeatRoles=0;SeatClips.Empty();SeatChairMeasured=false;SeatAnchorValid=false;SeatEvidence=FSub01SeatEvidence();
  USkeletalMesh* Mesh=FirstPersonBody?FirstPersonBody->GetSkeletalMeshAsset():nullptr;if(!Mesh)return;
  // Seat clips: the imported captures on the SAME owner skeleton, or nothing (fail closed).
- const TPair<const TCHAR*,uint32> Roles[]={{TEXT("StandToSit"),SeatRoleStandToSit},{TEXT("Sitting"),SeatRoleSitting},{TEXT("SitToType"),SeatRoleSitToType},{TEXT("SitToStand"),SeatRoleSitToStand}};
+ struct FSeatRoleBinding{const TCHAR* Key;const TCHAR* Asset;uint32 Value;};
+ const FSeatRoleBinding Roles[]={@@SEAT_ROLE_BINDINGS@@};
  for(const auto& Role:Roles){
-  const FString Path=FString::Printf(TEXT("%s/SUB01_%s.SUB01_%s"),TEXT("@@SEAT_CLIP_DIR@@"),Role.Key,Role.Key);
+  const FString Path=FString::Printf(TEXT("%s/SUB01_%s.SUB01_%s"),TEXT("@@SEAT_CLIP_DIR@@"),Role.Asset,Role.Asset);
   auto* Clip=LoadObject<UAnimSequence>(nullptr,*Path);
   // The renderer's gate: only clips it lists in ValidatedHandsPostures, on the same skeleton.
   if(Clip&&Clip->GetSkeleton()==Mesh->GetSkeleton()&&ValidatedHandsPostures.Contains(FName(Role.Key))){SeatClips.Add(FName(Role.Key),Clip);SeatRoles|=Role.Value;}
@@ -394,8 +396,8 @@ EDITS = [
      ' // A seated body never walks off: the captured get-up must finish first.\n'
      ' if(!SeatOut.MovementInput&&LiveHomePath.Num()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n'
      ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('),
-    ('cpp', 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):0.f):1.f;\n',
-     'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):0.f):1.f;\n ApplySeatAnimation(Instance);\n'),
+    ('cpp', 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n',
+     'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n ApplySeatAnimation(Instance);\n'),
     ('hands_header', ' protected:', HANDS_FIELDS + ' protected:'),
     ('hands_cpp', ' float Progress=1;\n',
      ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;\n'),
@@ -411,7 +413,9 @@ def install(sources: dict) -> dict:
         if out[key].count(anchor) != 1:
             raise ValueError(f'Seat integration anchor not unique in {key}: {anchor[:60]!r}')
         out[key] = out[key].replace(anchor, replacement)
-    out['cpp'] += CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR)
+    bindings = ','.join('{TEXT("%s"),TEXT("%s"),SeatRole%s}' % (role, asset, role)
+                        for role, asset in SEAT_ROLE_ASSETS.items())
+    out['cpp'] += CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
     return out
 
 

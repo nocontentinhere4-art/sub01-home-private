@@ -377,7 +377,8 @@ PROXY_EVALUATED = ('  LifeEvaluatedSequence=Cast<UAnimSequence>(Current.GetSeque
 LIVE_GATE = (' // Lying (or getting up) never walks off: the captured get-up must finish first.\n'
              ' if(LifeMovementLocked()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n')
 
-RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):0.f):1.f;\n'
+# The renderer now plays a bound, chosen Idle at rate 1 itself (PlayingIdle, root main 178f52a).
+RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n'
 
 # (file key, anchor, replacement); every anchor must occur exactly once in the staged source, and
 # every replacement keeps its anchor, so the seat adapter's anchors survive in either install order.

@@ -47,6 +47,7 @@ void ASub01HomeCharacter::PublishPrivateNativeCameraPrivacy(bool Hidden){
  const FDateTime UTC=FDateTime::UtcNow();auto Receipt=MakeShared<FJsonObject>();
  Receipt->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());Receipt->SetNumberField(TEXT("native_start_ticks"),NativePrivacyStartTicks);
  Receipt->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden);Receipt->SetBoolField(TEXT("private_egress_ready"),EgressReady);
+ Receipt->SetStringField(TEXT("view_mode"),PrivateViewMode==EPrivateViewMode::Manual&&!LiveHome&&!RouteActive&&!HandsDiagnosticSeat?TEXT("manual"):PrivateViewMode==EPrivateViewMode::Live&&LiveHome?TEXT("live"):TEXT("diagnostic"));
  FString Raw;FJsonSerializer::Serialize(Receipt,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-view-privacy.tmp");
  if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-view-privacy.json"),*Temp,true,true);
 }

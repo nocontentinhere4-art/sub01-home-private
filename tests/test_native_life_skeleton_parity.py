@@ -13,6 +13,25 @@ OWNER = {'mixamorig:Hips': None, 'mixamorig:Spine': 'mixamorig:Hips', 'mixamorig
 STILL = [(t, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0), (1.0, 1.0, 1.0)) for t in (0.0, 3.0, 8.0)]
 
 
+def test_actual_fbx_namespace_stripping_preserves_measured_hierarchy():
+    names = ['Mixamo', 'Hips', 'Spine', 'LeftUpLeg', 'LeftLeg', 'Head']
+    mapped = parity.map_owner_parents_to_ue(OWNER, names)
+    parents = dict(mapped)
+    parents['Hips'] = 'Mixamo'
+    parents['Mixamo'] = None
+    assert parity.structural_root_parity(names, parents, mapped, STILL)['pass']
+
+
+def test_namespace_mapping_refuses_ambiguous_native_aliases():
+    with pytest.raises(ValueError, match='Ambiguous native'):
+        parity.map_owner_parents_to_ue(OWNER, list(OWNER) + ['Hips'])
+
+
+def test_namespace_mapping_never_invents_missing_native_joints():
+    with pytest.raises(ValueError, match='missing'):
+        parity.map_owner_parents_to_ue(OWNER, ['Hips'])
+
+
 def ue(structural='Armature'):
     parents = {n: (structural if p is None else p) for n, p in OWNER.items()}
     if structural:
@@ -25,6 +44,13 @@ def test_constant_structural_root_passes_despite_count():
     names, parents = ue()
     result = parity.structural_root_parity(names, parents, OWNER, STILL)
     assert result['pass'] and result['structural_root'] == 'Armature' and result['ue_bone_count'] == len(OWNER) + 1
+
+
+def test_structure_only_never_fabricates_motion_samples():
+    names, parents = ue()
+    result = parity.structural_root_parity(names, parents, OWNER, structure_only=True)
+    assert result['pass'] and not result['root_motion_checked'] and result['sampled_times_s'] == []
+    assert not parity.structural_root_parity(names, parents, OWNER)['pass']
 
 
 def test_no_structural_root_passes():

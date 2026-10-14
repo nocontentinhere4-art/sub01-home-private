@@ -37,7 +37,9 @@ def run():
                 'mobility': str(c.get_editor_property('mobility')),
                 'visible': bool(c.is_visible()), 'cast_shadows': bool(c.get_editor_property('cast_shadows')),
                 'real_time_capture': bool(c.get_editor_property('real_time_capture')),
-                'lower_hemisphere_is_solid_color': bool(c.get_editor_property('lower_hemisphere_is_solid_color')),
+                # UE 5.8 SkyLightComponent.h: display label "Lower Hemisphere
+                # Is Solid Color" is actually bLowerHemisphereIsBlack.
+                'lower_hemisphere_is_black': bool(c.get_editor_property('lower_hemisphere_is_black')),
                 'light_color': [color.r, color.g, color.b, color.a],
                 'lower_hemisphere_color': [lower.r, lower.g, lower.b, lower.a],
                 'location': [location.x, location.y, location.z],

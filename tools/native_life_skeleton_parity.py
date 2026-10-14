@@ -21,6 +21,33 @@ ROTATION_TOLERANCE_DEG = 1e-3
 SCALE_TOLERANCE = 1e-6
 
 
+def map_owner_parents_to_ue(owner_parents, ue_names):
+    """Match only the known Mixamo namespace stripped by the actual FBX importer.
+
+    Returned names are the measured native names. Ambiguous aliases and missing
+    joints fail; this never changes hierarchy or invents a bone.
+    """
+    def semantic(name):
+        for prefix in ('mixamorig:', 'mixamorig_'):
+            if name.lower().startswith(prefix):
+                return name[len(prefix):]
+        return name
+    measured = {}
+    for name in ue_names:
+        key = semantic(name)
+        if key in measured:
+            raise ValueError('Ambiguous native bone namespace: ' + key)
+        measured[key] = name
+    keys = [semantic(name) for name in owner_parents]
+    if len(set(keys)) != len(keys):
+        raise ValueError('Ambiguous owner bone namespace')
+    if any(name not in measured for name in keys):
+        raise ValueError('A measured native owner joint is missing')
+    return {measured[semantic(name)]:
+            None if parent is None else measured[semantic(parent)]
+            for name, parent in owner_parents.items()}
+
+
 def sample_times(duration_s: float) -> list[float]:
     """The fixed sample times, clamped into the clip; duplicates removed in order."""
     out = []
@@ -40,7 +67,7 @@ def _angle_deg(a, b) -> float:
     return math.degrees(2 * math.acos(min(1.0, dot / (na * nb))))
 
 
-def structural_root_parity(ue_names, ue_parents, owner_parents, root_samples=()):
+def structural_root_parity(ue_names, ue_parents, owner_parents, root_samples=(), *, structure_only=False):
     """Prove the UE skeleton is the owner skeleton (plus at most one constant structural root).
 
     ue_names: bone names in the UE skeleton. ue_parents: name -> parent name, or None.
@@ -75,7 +102,7 @@ def structural_root_parity(ue_names, ue_parents, owner_parents, root_samples=())
         expected = structural if parent is None else parent
         if got != expected:
             failures.append(f'{name}: UE parent {got!r}, owner parent {expected!r}')
-    if structural:
+    if structural and not structure_only:
         if len(root_samples) < 2:
             failures.append('structural root needs transform samples at the fixed times')
         else:
@@ -89,4 +116,5 @@ def structural_root_parity(ue_names, ue_parents, owner_parents, root_samples=())
                                     f'({move:.6f} cm, {turn:.6f} deg, scale {grow:.2e})')
     return {'pass': not failures, 'failures': failures, 'structural_root': structural,
             'ue_bone_count': len(names), 'owner_joint_count': len(semantic), 'owner_roots': owner_roots,
-            'sampled_times_s': [r[0] for r in root_samples]}
+            'sampled_times_s': [r[0] for r in root_samples],
+            'root_motion_checked': not structure_only}
