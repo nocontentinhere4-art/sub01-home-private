@@ -49,7 +49,31 @@ def canonical(name):
     return re.sub('[^a-z0-9]', '', str(name).lower())
 
 
+def validate_provider_coverage(report):
+    if report.get('provenance', {}).get('asset') != 'book_encyclopedia_set_01':
+        return
+    from verified_encyclopedia_book_nodes import GLTF_SHA, BIN_SHA, NAMES
+    books = report.get('asset_books', [])
+    proofs = [b.get('provider_full_geometry_proof') or {} for b in books]
+    if (len(books) != 20 or {p.get('name') for p in proofs} != set(NAMES)
+            or report.get('asset_ignored_parts')
+            or sum(p.get('source_triangle_count', 0) for p in proofs) != 67306):
+        raise ValueError('Provider books lack complete authored cover/page coverage')
+    used = {b['source_book'] for b in report['built']}
+    for book, proof in zip(books, proofs):
+        if (proof.get('gltf_sha256') != GLTF_SHA or proof.get('binary_sha256') != BIN_SHA
+                or not proof.get('all_vertices_selected') or not proof.get('all_cover_page_triangles_selected')):
+            raise ValueError('Provider source geometry proof differs')
+        if book['key'] in used and (not proof.get('full_cover_page_geometry_preserved')
+                or proof.get('output_vertex_count') != proof.get('source_vertex_count')
+                or proof.get('output_triangles_per_slot') != [s['triangles'] for s in proof['source_slots']]):
+            raise ValueError('Used book output lost source cover/page geometry')
+    if not used <= {b['key'] for b in books}:
+        raise ValueError('Placed book has no verified provider source')
+
+
 def validate_receipt(report, manifest, glb, excision_applied=False):
+    validate_provider_coverage(report)
     export = report.get('additive_glb') or {}
     if (report.get('mode') != 'blender' or report.get('basis') != 'evaluated-geometry'
             or report.get('existing_objects_verified_unchanged', 0) < 1 or not report.get('built')

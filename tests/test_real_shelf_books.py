@@ -665,3 +665,11 @@ def test_texture_repair_restores_albedo_srgb_after_compression_reset(monkeypatch
     tex = FakeTexture(False, 'TC_NORMALMAP')
     ui.check_textures([('T_book_diff_1k', tex)], {'book_diff_1k': 'base_color'})
     assert tex.p == {'srgb': True, 'compression_settings': 'TC_DEFAULT'}
+
+
+def test_provider_receipt_refuses_the_incomplete_island_export():
+    report = {'provenance': {'asset': 'book_encyclopedia_set_01'},
+              'asset_books': [{'key': f'book{i:02d}'} for i in range(20)],
+              'asset_ignored_parts': [{'reason': 'thin cover sheet'}], 'built': []}
+    with pytest.raises(ValueError, match='complete authored cover/page coverage'):
+        ui.validate_provider_coverage(report)
