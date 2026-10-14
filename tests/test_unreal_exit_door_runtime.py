@@ -100,3 +100,26 @@ class FittedDoorStructuralClearanceTest(unittest.TestCase):
    return False
   self.assertFalse(collides(door.FITTED_GEOMETRY['hinge_cm'][0]-147))
   self.assertTrue(collides(.6),'Small closed-pose clearance alone misses latch/frame collision during opening')
+
+PRIVATE_BATH=ROOT/'out/migration-device-restore/current-authored-bath-door-source.json'
+PRIVATE_HEADER=ROOT/'out/migration-device-restore/current-bath-structural-header.json'
+PRIVATE_FLOOR=ROOT/'out/migration-device-restore/current-bath-floor-source.json'
+PRIVATE_BACK=ROOT/'out/migration-device-restore/current-bath-backwall-source.json'
+@unittest.skipUnless(all(p.is_file()for p in [PRIVATE_BATH,PRIVATE_HEADER,PRIVATE_FLOOR,PRIVATE_BACK]),'Private source triangle integration receipts absent in fresh checkout')
+class CurrentBathroomSweptGeometryTest(unittest.TestCase):
+ def test_full_source_panel_and_fitted_sweep_clear_real_structural_triangles(self):
+  import json
+  inputs=[json.loads(p.read_text())for p in [PRIVATE_BATH,PRIVATE_HEADER,PRIVATE_FLOOR,PRIVATE_BACK]]
+  for d in inputs:self.assertEqual(d['source_sha256'],door.CURRENT_SOURCE_SHA256)
+  b=door.BATH_GEOMETRY;nodes={n['node']:n for n in inputs[0]['nodes']};panel=nodes[b['node']];self.assertEqual(panel['mesh'],b['mesh'])
+  for a in range(3):
+   self.assertAlmostEqual((panel['min_cm'][a]+panel['max_cm'][a])/2,b['center_cm'][a],places=3)
+   self.assertAlmostEqual((panel['max_cm'][a]-panel['min_cm'][a])/2,b['extent_cm'][a],places=3)
+  def intersects(box,t):return all(box[0][a]<t['max_cm'][a]and box[1][a]>t['min_cm'][a]for a in range(3))
+  def swept(c):return ([c[a]-b['extent_cm'][a]for a in range(3)],[c[a]+b['extent_cm'][a]+(b['slide_cm']if a==1 else 0)for a in range(3)])
+  original=swept(b['center_cm']);fitted=swept(b['fitted_center_cm'])
+  structures=inputs[1]['triangles']+inputs[2]['triangles']+[t for t in inputs[3]['triangles']if t['mesh']==117]
+  self.assertTrue(any(intersects(original,t)for t in structures),'The original imported panel has real structural overlap')
+  self.assertFalse(any(intersects(fitted,t)for t in structures),'The whole fitted panel sweep must clear measured structures without exclusions')
+  self.assertAlmostEqual(fitted[0][2]-b['floor_top_cm'],b['floor_clearance_cm'],places=4)
+  self.assertGreater(fitted[0][0]-nodes[156]['max_cm'][0],.1999)
