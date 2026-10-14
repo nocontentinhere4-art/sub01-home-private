@@ -50,24 +50,40 @@ int main(){
    subprocess.run(['c++','-std=c++17',str(p/'door.cpp'),'-o',str(p/'door')],check=True,capture_output=True)
    subprocess.run([str(p/'door')],check=True,capture_output=True)
 
-PRIVATE_HOUSE=ROOT/'out/lighting-v23/unreal-home-lab/Sub01HomeLab/SourceAssets/full-home.glb'
-@unittest.skipUnless(PRIVATE_HOUSE.is_file(),'Private imported-house asset integration check; absent in fresh checkout')
-class PrivateAuthoredDoorGeometryTest(unittest.TestCase):
- def test_exact_source_leaf_and_knob_world_bounds(self):
-  import json,struct,itertools
-  raw=PRIVATE_HOUSE.read_bytes();size=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[20:20+size]);parents={c:i for i,n in enumerate(doc['nodes'])for c in n.get('children',[])}
-  def mul(a,b):return [sum(a[k*4+r]*b[c*4+k]for k in range(4))for c in range(4)for r in range(4)]
-  def world(i):
-   n=doc['nodes'][i];self.assertNotIn('rotation',n);scale=n.get('scale',[1]*3);translation=n.get('translation',[0]*3)
-   m=n.get('matrix',[scale[0],0,0,0,0,scale[1],0,0,0,0,scale[2],0,*translation,1])
-   return mul(world(parents[i]),m)if i in parents else m
-  for label in ['leaf','knob']:
-   expected=door.GEOMETRY[label];node=doc['nodes'][expected['node']];self.assertEqual(node['mesh'],expected['mesh']);m=world(expected['node']);points=[]
-   for primitive in doc['meshes'][node['mesh']]['primitives']:
-    a=doc['accessors'][primitive['attributes']['POSITION']]
-    for corner in itertools.product(*zip(a['min'],a['max'])):
-     p=[sum(m[k*4+r]*corner[k]for k in range(3))+m[12+r]for r in range(3)];points.append([100*p[0],100*p[2],100*p[1]])
-   for axis in range(3):
-    lo=min(p[axis]for p in points);hi=max(p[axis]for p in points)
-    self.assertAlmostEqual((lo+hi)/2,expected['center_cm'][axis],places=3)
-    self.assertAlmostEqual((hi-lo)/2,expected['extent_cm'][axis],places=3)
+
+PRIVATE_RECEIPT=ROOT/'out/migration-device-restore/current-authored-door-source.json'
+@unittest.skipUnless(PRIVATE_RECEIPT.is_file(),'Private current-source integration receipt; absent in fresh checkout')
+class CurrentAuthoredDoorGeometryTest(unittest.TestCase):
+ def test_exact_current_source_identity_and_bounds(self):
+  import json
+  receipt=json.loads(PRIVATE_RECEIPT.read_text());self.assertEqual(receipt['source_sha256'],door.CURRENT_SOURCE_SHA256)
+  nodes={n['node']:n for n in receipt['nodes']}
+  for key in ['leaf','knob']:
+   expected=door.GEOMETRY[key];actual=nodes[expected['node']];self.assertEqual(actual['mesh'],expected['mesh'])
+   for a in range(3):
+    self.assertAlmostEqual((actual['min_cm'][a]+actual['max_cm'][a])/2,expected['center_cm'][a],places=3)
+    self.assertAlmostEqual((actual['max_cm'][a]-actual['min_cm'][a])/2,expected['extent_cm'][a],places=3)
+  f=door.FITTED_GEOMETRY;c=f['leaf_center_cm'];e=f['leaf_extent_cm']
+  self.assertGreater(c[2]-e[2],door.GEOMETRY['verified_entry_floor_cm'])
+  self.assertGreater(nodes[54]['min_cm'][2],c[2]+e[2])
+  self.assertGreater(c[0]-e[0],nodes[55]['max_cm'][0])
+  self.assertLess(c[0]+e[0],nodes[56]['min_cm'][0])
+
+class FittedDoorStructuralClearanceTest(unittest.TestCase):
+ def test_full_leaf_rotation_clears_both_jambs_and_detects_bad_latch_fit(self):
+  import math
+  def overlaps(poly,rect):
+   axes=[(1,0),(0,1)]+[(poly[(i+1)%4][1]-poly[i][1],poly[i][0]-poly[(i+1)%4][0])for i in range(4)]
+   for a in axes:
+    p=[v[0]*a[0]+v[1]*a[1]for v in poly];q=[v[0]*a[0]+v[1]*a[1]for v in rect]
+    if max(p)<min(q)or max(q)<min(p):return False
+   return True
+  def collides(shift):
+   frames=[[(lo,384),(hi,384),(hi,390),(lo,390)]for lo,hi in [(142.75,147.25),(252.75,257.25)]]
+   for i in range(865):
+    a=math.radians(i*.1);c=math.cos(a);s=math.sin(a);h=(147+shift,394)
+    poly=[(h[0]+c*x-s*y,h[1]+s*x+c*y)for x,y in [(0,-7.75),(105,-7.75),(105,-.25),(0,-.25)]]
+    if any(overlaps(poly,f)for f in frames):return True
+   return False
+  self.assertFalse(collides(door.FITTED_GEOMETRY['hinge_cm'][0]-147))
+  self.assertTrue(collides(.6),'Small closed-pose clearance alone misses latch/frame collision during opening')
