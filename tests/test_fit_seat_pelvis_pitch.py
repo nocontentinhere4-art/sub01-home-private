@@ -201,3 +201,96 @@ def test_committed_report_is_trial_only_on_the_actual_cushion():
         doc = json.loads(p.read_bytes()[20:20 + int.from_bytes(p.read_bytes()[12:16], 'little')])
         labels = doc['asset']['extras']['sub01_labels']
         assert labels['label'] == 'trial' and labels['verified'] is False and labels['corrections']
+
+
+# ---------------------------------------------------------------- full-pose seam blend and the actual chair
+def test_seam_weight_is_quintic_with_flat_ends():
+    for end in ('end', 'start'):
+        w = P.seam_weight(end, 40, 10, 30)
+        if end == 'end':
+            assert (w[:11] == 0).all() and (w[30:] == 1).all()
+        else:
+            assert (w[:11] == 1).all() and (w[30:] == 0).all()
+        assert np.all(np.diff(w) >= -1e-12) if end == 'end' else np.all(np.diff(w) <= 1e-12)
+    x = np.linspace(0, 1, 2001)
+    s = P.smootherstep(x)
+    d1, d2 = np.gradient(s, x), np.gradient(np.gradient(s, x), x)
+    assert abs(d1[0]) < 1e-2 and abs(d1[-1]) < 1e-2 and abs(d2[1]) < 0.1 and abs(d2[-2]) < 0.1
+
+
+def test_seam_target_plays_the_loop_into_and_out_of_its_seam():
+    N, F = 9, 5
+    loop = np.zeros((N, 1, 4, 4))
+    loop[:, 0, 0, 3] = np.arange(N)
+    loop[-1, 0, 0, 3] = 0.                                     # a closed loop: last frame == first frame
+    tail = P.seam_target(loop, 'end', F)[:, 0, 0, 3]
+    assert tail[-1] == 0 and list(tail[:-1]) == [4, 5, 6, 7]    # loop frames N-1-k ... the clip ends on frame 0
+    head = P.seam_target(loop, 'start', F)[:, 0, 0, 3]
+    assert head[0] == 0 and list(head[1:]) == [1, 2, 3, 4]     # starts on the loop's last frame, then its head
+
+
+def test_seam_blend_pose_is_exact_at_the_ends_and_keeps_bone_lengths():
+    sk, W = synthetic(8, seed=4)
+    _, Wt = synthetic(8, seed=11)                              # another pose, standing 3.7 cm away
+    Wt[:, :, :3, 3] += [.02, .01, .03]
+    w = np.array([0., 0., .1, .3, .6, .9, 1., 1.])
+    out = P.seam_blend_pose(sk, np.eye(4), W, Wt, w)
+    assert np.array_equal(out[:2], W[:2]) and np.array_equal(out[6:], Wt[6:])
+    assert np.abs(lengths(sk, out) - lengths(sk, W)).max() < 1e-9
+    # the blend is monotone in the hips position between the ends
+    H = sk.j('Hips')
+    d = np.linalg.norm(out[:, H, :3, 3] - W[:, H, :3, 3], axis=1) / np.maximum(np.linalg.norm(Wt[:, H, :3, 3] - W[:, H, :3, 3], axis=1), 1e-12)
+    assert np.allclose(d[2:6], w[2:6], atol=1e-9)
+
+
+def test_seam_blend_legs_put_each_ankle_on_the_interpolated_target():
+    sk, W = synthetic(6, seed=5)
+    Wt = W.copy()
+    Wt[:, :, :3, 3] += [.01, 0., .02]                          # the loop stands 2.2 cm away
+    w = np.array([0., .2, .5, .8, 1., 1.])
+    Wb = P.seam_blend_pose(sk, np.eye(4), W, Wt, w)
+    out, info = P.seam_blend_legs(sk, Wb, W, Wt, w)
+    for side, chain in T.LEGS.items():
+        fj = sk.j(chain[2])
+        target = W[:, fj, :3, 3] + (Wt[:, fj, :3, 3] - W[:, fj, :3, 3]) * w[:, None]
+        assert np.allclose(out[1:4, fj, :3, 3], target[1:4], atol=1e-9)
+        assert info[side]['reached_all_frames']
+    assert np.abs(lengths(sk, out) - lengths(sk, W)).max() < 1e-9
+    assert np.array_equal(out[[0, 4, 5]], Wb[[0, 4, 5]])
+
+
+def test_per_frame_gate_supports_where_seated_and_only_penetration_elsewhere():
+    F = 4
+    def patch(lowest, band, over=100):
+        return {'lowest': np.array(lowest, float), 'band': np.array(band), 'over': np.full(F, over)}
+    c = {n: patch([3., -.5, .7, -1.], [0, 50, 0, 40]) for n in T.SEAT_PATCHES}
+    c.update({n: patch([2., .2, .3, -.1], [0, 30, 30, 30]) for n in T.SOLE_PATCHES})
+    support = np.array([False, True, False, True])
+    ok, fail = P.per_frame_gate(c, support, support)
+    # frame 0: unsupported and above the band -> fine; 1: supported in band -> pass; 2: unsupported, +0.7 -> fine
+    # (seat), sole +0.3 fine; 3: supported but a sole penetrates (-0.1) -> fail
+    assert list(ok) == [True, True, True, False]
+    assert fail['left_sole'][3] and not fail['buttocks'][3]
+    c['buttocks']['lowest'][2] = -2.6                           # unsupported but deeper than -2.5 -> penetration
+    ok, _ = P.per_frame_gate(c, support, support)
+    assert not ok[2]
+
+
+def test_body_placement_moves_the_body_in_ue_cm():
+    p = np.array([[.3, .9, -.2], [0., 0., 0.]])
+    d = P.ue_delta_to_gltf([-3.875, 32.5, 0.])
+    assert np.allclose(P.E.to_ue(p + d) - P.E.to_ue(p), [-3.875, 32.5, 0.], atol=1e-9)
+    W = np.tile(np.eye(4), (2, 3, 1, 1))
+    Wm = P.place_body(W, (1., 2.))
+    assert np.allclose(P.E.to_ue(Wm[..., :3, 3]) - P.E.to_ue(W[..., :3, 3]), [1., 2., 0.], atol=1e-9)
+    assert P.body_offset_for((3.875, -32.5)) == (-3.875, 32.5)
+
+
+def test_seam_report_is_zero_for_a_continuous_join():
+    sk, W = synthetic(6, seed=6)
+    loop = W[2:].copy()
+    clip = W[:3].copy()                                        # clip ends on frame 2 == loop frame 0
+    r = P.seam_report(sk, clip, loop, 'end', 30.)
+    assert r['position_delta']['max_joint_cm'] == 0 and r['position_delta']['max_joint_rotation_deg'] == 0
+    # velocity: incoming step 1->2 vs outgoing 2->3 (a smooth synthetic would match; random poses do not)
+    assert r['velocity_delta']['hips_cm_s'] >= 0
