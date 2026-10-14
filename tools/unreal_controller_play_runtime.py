@@ -38,8 +38,13 @@ import validate_unreal_seat_contact as seat_contact  # noqa: E402
 
 ROLE = 'Gaming'
 CLIP_OBJECT_PATH = '/Game/Sub01Hands/Play/SUB01_Gaming.SUB01_Gaming'
-CONTROLLER_MESH_PATH = '/Game/Sub01Home/Props/SUB01_Controller.SUB01_Controller'
+# Root's tools/unreal_import_controller_prop.py writes the imported physical assembly (contact shadow excluded) here.
+CONTROLLER_ASSET_RECEIPT = 'native-controller-asset.json'
+CONTROLLER_ASSET_SCHEMA = 'sub01.native-controller-asset.v1'
+CONTROLLER_SOURCE_SHA256 = 'c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4'
 GAMING_FBX_SHA256 = '84dfc60ab9e13b9c896e89def81478a5e47f45b80cc3d8902c5b8a0ae8d8fc7f'   # owner's private Mixamo Gaming.fbx
+GLTF_FIRST_KEY_S = 1 / 30          # Gaming GLB keys start at 1/30 s: native AnimSequence t = glTF t - 1/30 (native 4 s = glTF 4.033333 s)
+FIXED_OFFSET_TOLERANCE = (.3, 1.)  # cm, deg: a searched per-frame grip must be this close to one socket offset
 EVIDENCE_SCHEMA = 'sub01.native-controller-play-evidence.v1'
 SOFA_REPORT = 'native-sofa-surface.json'
 EVIDENCE = 'native-controller-play-evidence.json'
@@ -116,10 +121,37 @@ def validate_sofa_contact(data: dict):
     return {'samples': len(rows), 'worst': worst, 'passed': True}
 
 
+def native_time(gltf_t: float) -> float:
+    return float(gltf_t) - GLTF_FIRST_KEY_S
+
+
+def gltf_time(native_t: float) -> float:
+    return float(native_t) + GLTF_FIRST_KEY_S
+
+
+def validate_search(report: dict):
+    """Penetration-aware search (option 1): every frame must pass, the right-hand grip must be ONE socket offset, and
+    the clip the native side plays must be the derived clip with the bounded IK baked in (finger locals unchanged)."""
+    s = report['summary']
+    if s['frames'] < 2 or s['frames_passing'] != s['frames']:
+        raise ValueError(f'GripFailed: penetration-aware search passes {s["frames_passing"]}/{s["frames"]} frames')
+    v = s.get('right_grip_variation', {})
+    if not (v.get('max_translation_cm', 1e9) <= FIXED_OFFSET_TOLERANCE[0] and v.get('max_rotation_deg', 1e9) <= FIXED_OFFSET_TOLERANCE[1]):
+        raise ValueError('GripFailed: the searched right-hand grip varies; no single socket offset')
+    if report.get('clip', {}).get('ik_baked') is not True:
+        raise ValueError('GripUnmeasured: the bounded arm IK must be baked into a derived clip that the native side plays')
+    import fit_controller_grip as fit  # noqa: E402  (same directory)
+    return {'frames': s['frames'], 'controller_in_right_hand_gltf': fit.grip_variation(report['per_frame'])['mean_controller_in_hand']}
+
+
 def validate_grip(report: dict):
-    """Every-frame two-hand grip from tools/fit_controller_grip.py (fixed right-hand attachment)."""
+    """Every-frame two-hand grip from tools/fit_controller_grip.py (fixed attachment, or the option-1 search)."""
     if report.get('schema') != 'sub01.controller-grip-trial.v1':
         raise ValueError('GripUnmeasured: not a controller grip report')
+    if report.get('mode') == 'penetration_aware_joint_search':
+        if report.get('clip', {}).get('source_fbx_sha256') != GAMING_FBX_SHA256:
+            raise ValueError('GripUnmeasured: the fit is not of the owner\'s captured Gaming clip')
+        return validate_search(report)
     if report.get('clip', {}).get('source_fbx_sha256') != GAMING_FBX_SHA256:
         raise ValueError('GripUnmeasured: the fit is not of the owner\'s captured Gaming clip')
     if report.get('seated', {}).get('seated') is not True:
@@ -186,7 +218,7 @@ def build_evidence(sofa_text: str, grip: dict, contact: dict, placement: dict) -
             'approach_cm': a, 'yaw_deg': yaw, 'body_offset_cm': body, 'body_yaw_deg': body_yaw,
             'capsule_clearance_cm': clearance, 'grip_offset_cm': t, 'grip_rotation_xyzw': q,
             'grip_frames': g['frames'], 'grip_report_sha256': hashlib.sha256(json.dumps(grip, sort_keys=True).encode()).hexdigest(),
-            'seat_contact': c, 'grip_gates_passed': True, 'seat_contact_passed': True, 'accepted': True,
+            'seat_contact': c, 'time_mapping': 'native AnimSequence t = glTF key t - 1/30 s', 'grip_gates_passed': True, 'seat_contact_passed': True, 'accepted': True,
             'verified': False, 'note': 'Measured gates passed; visual/first-person review and live Minecraft output remain separate.'}
 
 
@@ -254,8 +286,14 @@ void ASub01HomeCharacter::LoadControllerPlay(){
  else ControllerPlayClip=Clip;
  const auto& Ref=Mesh->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I){const FString N=Ref.GetBoneName(I).ToString();if(N.EndsWith(TEXT("RightHand")))ControllerPlayHand=Ref.GetBoneName(I);if(N.EndsWith(TEXT("Head")))ControllerPlayHead=Ref.GetBoneName(I);}
- // The actual controller mesh: one component, hidden until play, no collision (it never pushes the pawn).
- if(auto* Prop=LoadObject<UStaticMesh>(nullptr,TEXT("@@MESH@@"))){
+ // The actual controller mesh named by root's import receipt (physical assembly only; the baked shadow is excluded):
+ // one component, hidden until play, no collision (it never pushes the pawn).
+ FString AssetText,MeshPath,AssetSchema,AssetSource;TSharedPtr<FJsonObject> Asset;const TSharedPtr<FJsonObject>* Physical=nullptr;
+ if(FFileHelper::LoadFileToString(AssetText,*FPaths::Combine(FPaths::ProjectDir(),TEXT("private-audit"),TEXT("@@ASSET_RECEIPT@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(AssetText),Asset)&&Asset.IsValid()
+  &&Asset->TryGetStringField(TEXT("schema"),AssetSchema)&&AssetSchema==TEXT("@@ASSET_SCHEMA@@")&&Asset->TryGetStringField(TEXT("source_sha256"),AssetSource)&&AssetSource==TEXT("@@ASSET_SHA@@")
+  &&Asset->TryGetObjectField(TEXT("physical_assembly"),Physical)&&(*Physical)->TryGetStringField(TEXT("mesh"),MeshPath)&&!MeshPath.Contains(TEXT("contact"),ESearchCase::IgnoreCase)){}
+ else MeshPath.Empty();
+ if(auto* Prop=MeshPath.IsEmpty()?nullptr:LoadObject<UStaticMesh>(nullptr,*MeshPath)){
   ControllerPlayProp=NewObject<UStaticMeshComponent>(this,TEXT("ActualControllerPlayProp"));ControllerPlayProp->SetStaticMesh(Prop);
   ControllerPlayProp->SetCollisionEnabled(ECollisionEnabled::NoCollision);ControllerPlayProp->SetMobility(EComponentMobility::Movable);
   ControllerPlayProp->SetUsingAbsoluteLocation(true);ControllerPlayProp->SetUsingAbsoluteRotation(true);
@@ -332,7 +370,8 @@ REQUIRED = (' bool MinecraftFocused', 'TickMinecraftTVInput();', 'bool ASub01Hom
 
 
 def methods():
-    return (CHARACTER_METHODS.replace('@@CLIP@@', CLIP_OBJECT_PATH).replace('@@ROLE@@', ROLE).replace('@@MESH@@', CONTROLLER_MESH_PATH)
+    return (CHARACTER_METHODS.replace('@@CLIP@@', CLIP_OBJECT_PATH).replace('@@ROLE@@', ROLE).replace('@@ASSET_RECEIPT@@', CONTROLLER_ASSET_RECEIPT)
+            .replace('@@ASSET_SCHEMA@@', CONTROLLER_ASSET_SCHEMA).replace('@@ASSET_SHA@@', CONTROLLER_SOURCE_SHA256)
             .replace('@@SOFA@@', SOFA_REPORT).replace('@@EVIDENCE@@', EVIDENCE).replace('@@SCHEMA@@', EVIDENCE_SCHEMA)
             .replace('@@APPROACH@@', f'{APPROACH_TOLERANCE_CM:.1f}f').replace('@@YAW@@', f'{YAW_TOLERANCE_DEG:.1f}f'))
 

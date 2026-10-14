@@ -136,6 +136,70 @@ After the proposal, contact is still not accepted:
 
 `validate_grip()` refuses this report: `GripFailed: full two-hand grip in 0/152 frames`.
 
+## 2b. Option 1: penetration-aware joint search (round 2, all 152 frames)
+
+**Controller used:** the original `web/room/controller.glb`, sha256 `c034a144…17e4`. Root's normalized derivative (`8134769e…0034`, geometry preserved) is not committed in this checkout (searched `docs/proposed/controller*` and `out/`). `controller_source()` prefers it by hash when present, and every report records which file was used. Root's `tools/unreal_import_controller_prop.py` also imports the original sha.
+
+**Time mapping.** The GLB keys start at 1/30 s, so native AnimSequence t = glTF t − 1/30 s, and native 4 s = glTF 4.033333 s. Root's posted values match my FK at glTF **4.000000** s (native 3.966667 s) within 1.5e-4 cm. At glTF **4.033333** s (native 4.0 s) my FK gives:
+
+| Joint | Position (cm) | Difference from the posted values |
+|---|---|---|
+| Hips | (2.3547, 50.5451, 11.0361) | 0.034 cm |
+| Head | (2.5921, 105.5454, 16.8054) | 0.39 cm |
+| LeftHand | (20.2004, 88.1431, 50.7127) | 0.45 cm |
+| RightHand | (-8.6597, 84.8908, 51.9462) | 0.57 cm |
+
+So the posted values are at glTF 4.0, which is native 3.9667 s. Reports now carry both `gltf_t` and `native_t`, and the adapter's evidence states the mapping.
+
+**Search.** For each of the 152 frames:
+- each hand's rigid grip of the controller is searched (6-DoF per hand);
+- the controller sits at the rigid midpoint of the two hands;
+- both wrists move under the bounded two-arm two-bone IK (≤ 10 cm, ≤ 25°), with a joint 12-DoF refinement when the bound binds;
+- the hand and fingers move as one rigid unit, so every captured finger local rotation, including the 24 moving channels, is exact.
+
+The cost puts penetration first (2 mm surrogate SDF, optimiser margin 0.1 cm), then the palm band, then the thumb and index pull. Reports use exact winding-number metrics on every hand vertex.
+
+Provisional gates: thumb distal centroid within 2.0 cm of the stick or face-button cap centre; index distal centroid within 3.0 cm of the trigger.
+
+| | contact-first (`--aim contact`) | all constraints (`--aim all`) |
+|---|---|---|
+| Frames passing everything | **0/152** | **0/152** |
+| Frames with palm patch + no penetration (both hands, within the IK bound) | **129/152** (frames 23–151) | 61/152 |
+| Frames meeting the thumb + index gates | 0 | 0 |
+| Left thumb to left stick | 0.79–2.67 cm (≤ 2 cm in 151 frames) | 0.79–2.00 cm (151) |
+| Right thumb to face buttons or right stick | 2.72–3.87 cm (never ≤ 2) | 2.36–3.41 cm (never) |
+| Left index to trigger | 3.31–5.21 cm (never ≤ 3) | 3.30–5.10 cm (never) |
+| Right index to trigger | 2.27–3.88 cm (2 frames ≤ 3) | 1.95–3.43 cm (56 frames) |
+| Wrist IK, left / right | ≤ 5.16 cm / ≤ 8.73 cm, ≤ 24.8° | ≤ 5.62 / ≤ 8.08 cm, ≤ 24.8° |
+| Elbow change, left / right | ≤ 16.6° / ≤ 6.3° | ≤ 18.7° / ≤ 6.3° |
+| Frames within the IK bound | 152 | 152 |
+| Searched grip variation across frames (right / left) | 3.0 cm, 30.6° / 1.8 cm, 16.9° | 2.9 cm, 30.6° / 1.8 cm, 17.2° |
+
+Findings:
+- **Contact is reachable for most frames.** With the bounded IK, 129/152 frames hold both palms on the grips without finger penetration. Frames 0–22 still need up to 0.62 cm of finger-skin compression.
+- **Thumbs and index fingers are not.** The captured right thumb never comes within 2.36 cm of a cap, and the captured left index never within 3.3 cm of its trigger, while contact holds. This is the captured finger pose against this controller's layout, not a solver residual.
+- **The grip is not one socket offset.** It varies by up to 3 cm and 31° across frames. Native play would need either a per-frame controller track baked with the IK into a derived clip, or a fixed offset at the cost of these residuals.
+
+**Option 3, finger-skin compression needed** (deepest hand vertex inside the controller, per frame; `compression_needed_cm` in the summaries):
+
+| | Left hand | Right hand | Worst of both hands |
+|---|---|---|---|
+| contact-first | 0.23–0.62 cm (median 0.27) | 0.22–0.28 cm | ≤ 0.30 in 129 frames, ≤ 0.50 in 131, ≤ 0.62 in all 152 |
+| all constraints | ≤ 0.63 cm | ≤ 0.37 cm | ≤ 0.63 cm |
+
+**Option 2, pad width needed** if the captured hand spacing is kept with no IK: the right hand holds its searched grip and the left palm misses the controller surface by 4.72–7.56 cm (median 5.68). That is a total pad of up to 7.56 cm, or about 3.78 cm per side if symmetric, and a contact width of up to 22.94 cm against the controller's 15.38 cm. The `--aim all` numbers are 4.96–7.50 cm.
+
+`validate_grip()` refuses both search reports. The gate also requires one socket offset (≤ 0.3 cm, ≤ 1°) and an IK-baked derived clip (`clip.ik_baked`), and neither exists.
+
+Commands:
+
+```
+python tools/fit_controller_grip.py search --clip docs/proposed/controller-capture/gaming-owner.glb --aim contact|all \
+    --source-fbx-sha256 84dfc60ab9e13b9c896e89def81478a5e47f45b80cc3d8902c5b8a0ae8d8fc7f --out OUT.json
+```
+
+Per-frame summaries: `docs/proposed/controller-play/controller-search-{contact,all}.summary.json`.
+
 ## 3. Seated on the sofa
 
 - **Contact rule:** the rule of `validate_unreal_seat_contact.py`, applied per region (buttocks, both posterior thighs, both soles) over the whole 5.03 s clip at ≥ 30 Hz:
@@ -153,7 +217,7 @@ After the proposal, contact is still not accepted:
    - Store the world-cm vertices and the upward (normal z > 0.65) edge-connected seat triangles as `sofa.sections[].vertices_world_cm` + `seat_surface.triangle_indices`, with `errors: []`.
    - Confirm that the component blocks the pawn.
    - The seat area must be ≥ 4,000 cm². The authored expectation is two cushions of about 5,808 cm² at a top of 50.3 cm.
-2. **Controller import.** Import `web/room/controller.glb` (decoded) as `/Game/Sub01Home/Props/SUB01_Controller`, body primitive only. Do not import or use `controller_contact`. Record the import axis receipt; the adapter assumes UE = 100 × (x, z, y).
+2. **Controller import.** Root's `tools/unreal_import_controller_prop.py` imports the original (sha `c034a144…`) under `/Game/Sub01Home/Devices/Controller/V_c034a1444711` and writes `private-audit/native-controller-asset.json` (`sub01.native-controller-asset.v1`), with the baked shadow excluded. The adapter loads `physical_assembly.mesh` from that receipt, and refuses a missing receipt, a different source sha or a path containing "contact". The axis contract (UE = 100 × (x, z, y)) must be confirmed from the receipt's `original_source_transform`.
 3. **Clip import.** Import `gaming-owner.glb` onto the existing owner USkeleton as `/Game/Sub01Hands/Play/SUB01_Gaming`. The import row must carry `role: Gaming`, `same_existing_skeleton: true` and `source_fbx_sha256: 84dfc60a…fc7f`.
 4. **Sofa contact.** Play SUB01_Gaming at the chosen body offset on the measured seat. Dump the per-region gaps in the `unreal_audit_seat_contact.py` format, with ≥ 152 samples over 5.03 s, to `SOFA_CONTACT.json`. Measure the placement (`approach_cm`, `yaw_deg`, `body_offset_cm`, `body_yaw_deg`, `sofa_footprint_cm`) into `PLACEMENT.json`.
 5. **Grip.** Run `python tools/fit_controller_grip.py fit --clip docs/proposed/controller-capture/gaming-owner.glb --source-fbx-sha256 84dfc60a… --out GRIP.json`. The evidence step refuses anything short of 152/152 grip frames.
@@ -175,7 +239,11 @@ After the proposal, contact is still not accepted:
 
 ## What remains
 
-- **Grip:** a grip that passes 152/152 frames. The palm-spacing finding above calls for the bounded IK plus a penetration-aware offset search, or a better-matched controller grip.
+- **Grip:** a grip that passes 152/152 frames. Option 1 holds palm contact in 129/152 frames, but the thumbs and index fingers never meet their gates. Root decides between:
+  - option 3: accept about 0.62 cm of finger-skin compression, and relax or redefine the thumb and index gates;
+  - option 2: a controller with grips about 22.9 cm across;
+  - a different capture.
+  Native play also needs the IK and the per-frame controller track baked into a derived clip.
 - **Sofa:** the native sofa audit, the seated contact run and the body offset, all measured on the server.
 - **Import:** the controller import and its axis receipt.
 - **Visual review:** a first-person review against the SimbasJungles reference.

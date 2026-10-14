@@ -371,6 +371,9 @@ def test_added_code_respects_the_posture_gate_input_path_and_never_moves_the_act
     assert 'ControllerPlayProp->SetVisibility(false)' in m and m.count('ControllerPlayProp->SetVisibility(true)') == 1
     assert m.index('if(!ControllerPlayActive)return;') < m.index('ControllerPlayProp->SetVisibility(true)')
     assert 'SetCollisionEnabled(ECollisionEnabled::NoCollision)' in m
+    # The mesh comes from root's import receipt (physical assembly, original source sha), never the contact shadow.
+    assert 'native-controller-asset.json' in m and 'sub01.native-controller-asset.v1' in m and play.CONTROLLER_SOURCE_SHA256 in m
+    assert '!MeshPath.Contains(TEXT("contact"),ESearchCase::IgnoreCase)' in m
     assert 'GetSocketTransform(ControllerPlayHand,RTS_World)' in m and 'W.GetRotation().GetNormalized()' in m
     assert 'Schema!=TEXT("sub01.native-controller-play-evidence.v1")' in m and 'Sub01ControllerPlayId(SofaText)' in m
     assert 'bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayClip&&ControllerPlayProp' in m
@@ -407,3 +410,79 @@ def test_play_id_is_the_same_fnv_as_the_life_and_seat_adapters():
     for text in ('', sofa_text(), 'sofa'):
         assert play.play_id(text) == life.life_id(text)
     assert math.isfinite(play.APPROACH_TOLERANCE_CM)
+
+
+# ---------------------------------------------------------------- option 1 search, time mapping, controller source
+def test_time_mapping_native_four_seconds_is_gltf_4_033333():
+    assert F.gltf_time(4.0) == pytest.approx(4.0 + 1 / 30) and F.native_time(F.gltf_time(4.0)) == pytest.approx(4.0)
+    assert play.gltf_time(4.0) == pytest.approx(F.gltf_time(4.0)) and play.native_time(1 / 30) == pytest.approx(0)
+
+
+@pytest.mark.skipif(not GAMING.exists(), reason='private retargeted Gaming clip absent')
+def test_root_fk_values_are_gltf_4_000_not_native_4():
+    hands = F.Hands.from_owner()
+    both = F.fk_parity_both(GAMING, hands.names)
+    g4, n4 = both['gltf_4.000000_native_3.966667'], both['gltf_4.033333_native_4.000000']
+    assert max(g4['max_abs_error_vs_root_cm'].values()) < .01
+    assert n4['native_t'] == pytest.approx(4.0) and max(n4['max_abs_error_vs_root_cm'].values()) > .3
+    assert n4['fk_cm']['LeftHand'] == pytest.approx([20.2004, 88.1431, 50.7127], abs=.01)
+
+
+@needs_controller
+def test_controller_source_prefers_normalized_and_records_which_was_used():
+    path, info = F.controller_source()
+    if info['used'] == 'normalized':
+        assert F.sha256(path) == F.NORMALIZED_CONTROLLER_SHA
+    else:
+        assert info == dict(info, used='original', sha256=F.ORIGINAL_CONTROLLER_SHA, normalized_present=False)
+
+
+def test_grip_cost_prefers_the_true_grip_over_a_penetrating_one(mesh):
+    right = frames(1)
+    sets = world_sets(right)
+    sdf = mesh.signed_distance
+    tg = F.targets(features())
+    for side in ('left', 'right'):
+        loc = F._local_sets(sets, right[0], side, 0)
+        ok = F.grip_cost(sdf, tg, side, {k: F.apply(X_TRUE, v) for k, v in F._local_sets(sets, right[0] @ X_TRUE, side, 0).items()}, X_TRUE, sub=1)
+        bad = F.grip_cost(sdf, tg, side, {k: F.apply(X_TRUE, v) for k, v in F._local_sets(sets, right[0] @ X_TRUE, side, 0).items()},
+                          X_TRUE @ F.pose(np.array([0, 0, 0, (1 if side == 'right' else -1) * .015, 0, 0])), sub=1)
+        assert ok < 1 and bad > 50 * max(ok, 1e-3), (side, ok, bad)
+        assert loc['hand'].shape[1] == 3
+
+
+def search_report(passing=152, vary=0., baked=True):
+    G = np.eye(4)
+    rows = []
+    for f in range(152):
+        g = G.copy()
+        g[0, 3] = vary * (f % 2) / 100
+        rows.append({'right': {'controller_in_hand': g.tolist()}, 'left': {'controller_in_hand': G.tolist()}})
+    return {'schema': 'sub01.controller-grip-trial.v1', 'mode': 'penetration_aware_joint_search',
+            'clip': {'source_fbx_sha256': play.GAMING_FBX_SHA256, 'ik_baked': baked},
+            'summary': {'frames': 152, 'frames_passing': passing, 'right_grip_variation': F.grip_variation(rows)}, 'per_frame': rows}
+
+
+def test_search_gate_needs_every_frame_one_socket_offset_and_a_baked_ik_clip():
+    assert play.validate_grip(search_report())['frames'] == 152
+    with pytest.raises(ValueError, match='GripFailed'):
+        play.validate_grip(search_report(passing=151))
+    with pytest.raises(ValueError, match='varies'):
+        play.validate_grip(search_report(vary=1.))
+    with pytest.raises(ValueError, match='baked'):
+        play.validate_grip(search_report(baked=False))
+    v = F.grip_variation(search_report(vary=1.)['per_frame'])
+    assert v['max_translation_cm'] == pytest.approx(.5) and v['max_rotation_deg'] < 1e-6
+
+
+SEARCH_SUMMARIES = sorted((ROOT / 'docs/proposed/controller-play').glob('controller-search-*.summary.json'))
+
+
+@pytest.mark.skipif(not SEARCH_SUMMARIES, reason='real option-1 search summaries absent')
+def test_real_option1_search_reports_are_trial_and_gated():
+    for path in SEARCH_SUMMARIES:
+        r = json.loads(path.read_text())
+        assert r['verified'] is False and r['mode'] == 'penetration_aware_joint_search' and r['summary']['frames'] == 152
+        assert r['controller']['sha256'] in (F.ORIGINAL_CONTROLLER_SHA, F.NORMALIZED_CONTROLLER_SHA)
+        with pytest.raises(ValueError):
+            play.validate_grip(r)       # no IK-baked derived clip exists yet, whatever the pass count

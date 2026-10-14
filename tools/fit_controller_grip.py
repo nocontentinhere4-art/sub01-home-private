@@ -925,6 +925,8 @@ def fit(clip, owner=OWNER, controller=CONTROLLER, cache=CACHE, stride=1, rate=No
               'controller_width_cm': float(100 * (mesh.hi[0] - mesh.lo[0])),
               'contact_spacing_cm': contact_spacing(sets),
               'fk_parity_t4s_cm': fk_parity(clip, hands.names),
+              'fk_parity_both_time_mappings': fk_parity_both(clip, hands.names),
+              'time_mapping': 'native AnimSequence t = glTF key t - 1/30 s (native 4.0 s = glTF 4.033333 s)',
               'contact_rule': {'palm_band_cm': PALM_BAND_CM, 'penetration_limit_cm': PENETRATION_LIMIT_CM,
                                'min_support_vertices': MIN_SUPPORT_VERTICES,
                                'distance': 'exact point-triangle distance, inside by generalized winding number'},
@@ -1027,6 +1029,210 @@ def capsule_clear(approach_cm, footprint_min_cm, footprint_max_cm, radius=CAPSUL
     return d - radius
 
 
+
+# ================================================================ penetration-aware joint search (option 1)
+ORIGINAL_CONTROLLER_SHA = 'c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4'
+NORMALIZED_CONTROLLER_SHA = '8134769e2680197a0b5a453e1fad11f1c82a5df54c1607b6c4c0a501721b0034'
+THUMB_GATE_CM, INDEX_GATE_CM = 2.0, 3.0   # provisional: distal-skin centroid to cap centre / trigger centre
+SEARCH_MARGIN_CM = .1           # optimiser-only inner margin on the -0.3/+0.3 cm bands
+GLTF_FIRST_KEY_S = 1 / 30      # the Gaming GLB's keys start at 1/30 s; native AnimSequence time 0 is that key
+
+
+def native_time(gltf_t, first_key=GLTF_FIRST_KEY_S):
+    """Native UE AnimSequence time of a glTF key time (native t = 4 s <-> glTF 4.033333 s)."""
+    return float(gltf_t) - first_key
+
+
+def gltf_time(native_t, first_key=GLTF_FIRST_KEY_S):
+    return float(native_t) + first_key
+
+
+def controller_source():
+    """Root's normalized controller derivative when it is present (by sha256), otherwise the original source."""
+    for p in sorted(ROOT.glob('docs/proposed/controller*/**/*.glb')) + sorted((ROOT / 'out').glob('controller*.glb')):
+        if p.is_file() and sha256(p) == NORMALIZED_CONTROLLER_SHA:
+            return p, {'used': 'normalized', 'sha256': NORMALIZED_CONTROLLER_SHA}
+    used = sha256(CONTROLLER)
+    return CONTROLLER, {'used': 'original' if used == ORIGINAL_CONTROLLER_SHA else 'unknown', 'sha256': used,
+                        'normalized_sha256_expected': NORMALIZED_CONTROLLER_SHA,
+                        'normalized_present': False,
+                        'note': 'normalized derivative not committed in this checkout (root: geometry preserved); original used'}
+
+
+def fk_parity_both(clip, names):
+    """Root's posted FK values against both time mappings (glTF 4.0 and glTF 4.033333 = native 4.0)."""
+    out = {}
+    J = {n: k for k, n in enumerate(names)}
+    for label, t in (('gltf_4.000000_native_3.966667', 4.0), ('gltf_4.033333_native_4.000000', gltf_time(4.0))):
+        w, _, _ = clip_worlds(clip, names, times=[t])
+        mine = {n: [round(float(v), 4) for v in 100 * w[0, J[n], :3, 3]] for n in FK_PARITY_T4_CM}
+        err = {n: float(np.abs(np.array(mine[n]) - np.array(v)).max()) for n, v in FK_PARITY_T4_CM.items()}
+        out[label] = {'gltf_t': t, 'native_t': native_time(t), 'fk_cm': mine, 'max_abs_error_vs_root_cm': err}
+    return out
+
+
+def _local_sets(sets, frame_m, side, f):
+    inv = np.linalg.inv(frame_m)
+    return {k[len(side) + 1:]: apply(inv, v[f]) for k, v in sets.items() if k.startswith(side + '_')}
+
+
+def grip_cost(sdf, tg, side, loc, G, sub=3, aim=(.5, .3)):
+    """Penetration-first cost (cm) of one hand (hand-frame points `loc`) gripping the controller at G (controller in hand)."""
+    inv = np.linalg.inv(G)
+    h = sdf(apply(inv, loc['hand'][::sub])) * 100
+    # Inner margins absorb the surrogate grid's interpolation error; reports use the exact distance.
+    pen = np.maximum(0., PENETRATION_LIMIT_CM + SEARCH_MARGIN_CM - h)
+    g = sdf(apply(inv, loc['palm'])) * 100
+    low, kth = g.min(), np.sort(g)[min(MIN_SUPPORT_VERTICES, len(g)) - 1]
+    lo_b, hi_b = PALM_BAND_CM[0] + SEARCH_MARGIN_CM, PALM_BAND_CM[1] - SEARCH_MARGIN_CM
+    c = 200 * (pen ** 2).mean() + 60 * pen.max() ** 2
+    c += 60 * max(0., lo_b - low) ** 2 + 60 * max(0., low - hi_b) ** 2 + 25 * max(0., kth - hi_b) ** 2
+    th = apply(inv, loc['thumb']).mean(0)
+    t = tg[f'{side}_thumb']
+    dt = 100 * min(np.linalg.norm(th - x) for x in (t if isinstance(t, tuple) else (t,)))
+    di = 100 * np.linalg.norm(apply(inv, loc['index']).mean(0) - tg[f'{side}_index'])
+    return c + aim[0] * max(0., dt - THUMB_GATE_CM + .5) ** 2 + aim[1] * max(0., di - INDEX_GATE_CM + .5) ** 2
+
+
+def bound_terms(hR, hL, GR, GL):
+    C = blend(hR @ GR, hL @ GL)
+    out = {}
+    for side, h, G in (('right', hR, GR), ('left', hL, GL)):
+        target = C @ np.linalg.inv(G)
+        out[side] = (float(100 * np.linalg.norm(target[:3, 3] - h[:3, 3])), float(angle_deg(target[:3, :3], h[:3, :3])), target)
+    return C, out
+
+
+def grip_variation(rows, side='right'):
+    """How far each frame's searched grip (controller in the hand) is from the clip mean: a FIXED socket offset needs ~0."""
+    Gs = np.array([r[side]['controller_in_hand'] for r in rows])
+    mean_t = Gs[:, :3, 3].mean(0)
+    u, _, vt = np.linalg.svd(Gs[:, :3, :3].sum(0))
+    mean_r = u @ vt
+    if np.linalg.det(mean_r) < 0:
+        u[:, -1] *= -1
+        mean_r = u @ vt
+    mean = np.eye(4)
+    mean[:3, :3], mean[:3, 3] = mean_r, mean_t
+    return {'max_translation_cm': float(100 * np.linalg.norm(Gs[:, :3, 3] - mean_t, axis=1).max()),
+            'max_rotation_deg': float(max(angle_deg(mean_r, g[:3, :3]) for g in Gs)), 'mean_controller_in_hand': mean.tolist()}
+
+
+def penetration_search(clip, owner=OWNER, controller=None, cache=CACHE, frames=None, iters=350, grid_spacing=.002, label=None,
+                       source_fbx_sha256=None, start=None, aim='all'):
+    """Option 1: per frame, jointly search each hand's rigid grip of the controller (6-DoF each; controller pose = the
+    rigid midpoint) under the bounded two-arm IK, minimising finger/palm penetration (winding-number signed distance)
+    subject to the palm band, thumbs over caps and index near triggers. Hand + fingers move rigidly, so every captured
+    finger LOCAL rotation is unchanged. Exact metrics per frame; the compression (option 3) and pad width (option 2)
+    that each frame would need are reported when it does not pass."""
+    path, csrc = (controller, {'used': 'explicit', 'sha256': sha256(controller)}) if controller else controller_source()
+    hands = Hands.from_owner(owner, cache)
+    mesh, cinfo = load_controller(path, cache)
+    feats = controller_features(mesh)
+    tg = targets(feats)
+    worlds, times, info = clip_worlds(clip, hands.names, rate=None)
+    if source_fbx_sha256:
+        info['source_fbx_sha256'] = source_fbx_sha256
+    idx = list(range(len(worlds))) if frames is None else list(frames)
+    right, left, sets = frame_features(hands, worlds)
+    sdf = SDFGrid(mesh, spacing=grid_spacing, margin=.02, cache=cache, key=cinfo['sha256'][:16])
+    J = {n: k for k, n in enumerate(hands.names)}
+    if start is None:
+        opt = np.unique(np.linspace(0, len(worlds) - 1, 8).astype(int))
+        start = {'right': solve_hand(mesh, feats, right, sets, 'right', opt, SDFGrid(mesh, cache=cache, key=cinfo['sha256'][:16])),
+                 'left': solve_hand(mesh, feats, left, sets, 'left', opt, SDFGrid(mesh, cache=cache, key=cinfo['sha256'][:16]))}
+    G = {s: start[s].copy() for s in ('right', 'left')}
+    weights = {'all': (.5, .3), 'contact': (.02, .01)}[aim]
+    steps = [.05, .05, .05, .006, .006, .006]
+    rows, after_sets, Cs = [], {k: np.empty_like(v[idx]) for k, v in sets.items()}, []
+    for n, f in enumerate(idx):
+        hand = {'right': right[f], 'left': left[f]}
+        loc = {s: _local_sets(sets, hand[s], s, f) for s in hand}
+        for s in ('right', 'left'):
+            best = None
+            for seed in ((G[s], start[s]) if n == 0 else (G[s],)):
+                x, v = nelder_mead(lambda p: grip_cost(sdf, tg, s, loc[s], pose(p), aim=weights), params_of(seed), steps, iters)
+                if best is None or v < best[1]:
+                    best = (x, v)
+            G[s] = pose(best[0])
+        C, b = bound_terms(hand['right'], hand['left'], G['right'], G['left'])
+        if any(m > IK_BOUND_CM or r > IK_BOUND_DEG for m, r, _ in b.values()):
+            def joint(p):
+                GR, GL = pose(p[:6]), pose(p[6:])
+                _, bb = bound_terms(hand['right'], hand['left'], GR, GL)
+                pen = sum(100 * max(0., m - IK_BOUND_CM) ** 2 + 2 * max(0., r - IK_BOUND_DEG) ** 2 for m, r, _ in bb.values())
+                return grip_cost(sdf, tg, 'right', loc['right'], GR, aim=weights) + grip_cost(sdf, tg, 'left', loc['left'], GL, aim=weights) + pen
+            x, _ = nelder_mead(joint, np.concatenate([params_of(G['right']), params_of(G['left'])]), steps * 2, 3 * iters)
+            G['right'], G['left'] = pose(x[:6]), pose(x[6:])
+            C, b = bound_terms(hand['right'], hand['left'], G['right'], G['left'])
+        Cs.append(C)
+        row = {'frame': f, 'gltf_t': float(times[f]), 'native_t': native_time(times[f])}
+        for s, arm in (('right', 'Right'), ('left', 'Left')):
+            move, turn, target = b[s]
+            delta = target @ np.linalg.inv(hand[s])
+            for k in sets:
+                if k.startswith(s):
+                    after_sets[k][n] = apply(delta, sets[k][f])
+            sh, el, wr = (worlds[f, J[x], :3, 3] for x in (f'{arm}Arm', f'{arm}ForeArm', f'{arm}Hand'))
+            _, reach, dang, err = two_bone_ik(sh, el, wr, target[:3, 3])
+            row[s] = {'wrist_displacement_cm': move, 'wrist_rotation_deg': turn, 'reachable': reach, 'elbow_angle_change_deg': float(dang),
+                      'ik_residual_cm': float(100 * err), 'within_bound': bool(reach and move <= IK_BOUND_CM + 1e-9 and turn <= IK_BOUND_DEG + 1e-9),
+                      'controller_in_hand': G[s].tolist()}
+        rows.append(row)
+    after = Problem(mesh, feats, right[idx], after_sets)
+    for n, row in enumerate(rows):
+        m = after.metrics(Cs[n], n)
+        row['metrics'] = {s: {k: v for k, v in m[s].items() if not k.endswith('_local_m')} for s in ('left', 'right')}
+        row['contact'] = bool(m['grip'] and row['left']['within_bound'] and row['right']['within_bound'])
+        row['thumbs_index'] = all(min(m[s]['thumb_to_target_cm'].values()) <= THUMB_GATE_CM and m[s]['index_to_trigger_cm'] <= INDEX_GATE_CM
+                                  for s in ('left', 'right'))
+        row['grip'] = bool(row['contact'] and row['thumbs_index'])
+        for s in ('left', 'right'):
+            # Option 3: skin compression this frame would need (deepest hand vertex inside the controller).
+            row[s]['compression_needed_cm'] = max(0., -m[s]['hand_min_signed_cm'])
+            row[s]['palm_lowest_cm'] = m[s]['palm_min_gap_cm']
+        # Option 2: with the CAPTURED hand spacing (no IK), the right hand holding its searched grip, how far the
+        # left palm patch is from the controller surface: the total pad thickness the grips would need to add.
+        f = row['frame']
+        CR = right[f] @ np.array(rows[n]['right']['controller_in_hand'])
+        CL = left[f] @ np.array(rows[n]['left']['controller_in_hand'])
+        dl, _ = mesh.distance(apply(np.linalg.inv(CR), sets['left_palm'][f]))
+        dr, _ = mesh.distance(apply(np.linalg.inv(CL), sets['right_palm'][f]))
+        row['pad'] = {'left_palm_gap_when_right_holds_cm': float(100 * dl.min()), 'right_palm_gap_when_left_holds_cm': float(100 * dr.min())}
+    k = lambda s, key: [r[s][key] for r in rows]  # noqa: E731
+    pad = [min(r['pad'].values()) for r in rows]
+    summary = {'frames': len(rows), 'frames_passing': int(sum(r['grip'] for r in rows)),
+               'frames_contact_only': int(sum(r['contact'] for r in rows)), 'frames_thumbs_index': int(sum(r['thumbs_index'] for r in rows)),
+               'gates': {'palm_band_cm': PALM_BAND_CM, 'penetration_limit_cm': PENETRATION_LIMIT_CM, 'min_support_vertices': MIN_SUPPORT_VERTICES,
+                         'thumb_cm': THUMB_GATE_CM, 'index_cm': INDEX_GATE_CM},
+               'frames_palm_patch_both': int(sum(r['metrics']['left']['palm_support_patch'] and r['metrics']['right']['palm_support_patch'] for r in rows)),
+               'frames_no_penetration_both': int(sum(r['metrics']['left']['hand_vertices_penetrating'] == 0 and r['metrics']['right']['hand_vertices_penetrating'] == 0 for r in rows)),
+               'frames_within_ik_bound': int(sum(r['left']['within_bound'] and r['right']['within_bound'] for r in rows)),
+               'ik_bound': {'wrist_displacement_cm': IK_BOUND_CM, 'wrist_rotation_deg': IK_BOUND_DEG},
+               'option3_compression_needed_cm': {s: {'min': float(min(k(s, 'compression_needed_cm'))), 'median': float(np.median(k(s, 'compression_needed_cm'))),
+                                                     'max': float(max(k(s, 'compression_needed_cm')))} for s in ('left', 'right')},
+               'option3_compression_needed_cm_both_max': float(max(max(k('left', 'compression_needed_cm')), max(k('right', 'compression_needed_cm')))),
+               'option2_total_pad_cm': {'min': float(min(pad)), 'median': float(np.median(pad)), 'max': float(max(pad)),
+                                        'per_side_if_symmetric_max': float(max(pad) / 2), 'controller_width_cm': float(100 * (mesh.hi[0] - mesh.lo[0])),
+                                        'required_width_cm_max': float(100 * (mesh.hi[0] - mesh.lo[0]) + max(pad))},
+               'per_side': {s: {'max_wrist_displacement_cm': float(max(k(s, 'wrist_displacement_cm'))), 'max_wrist_rotation_deg': float(max(k(s, 'wrist_rotation_deg'))),
+                                'max_elbow_angle_change_deg': float(max(map(abs, k(s, 'elbow_angle_change_deg')))),
+                                'palm_lowest_cm': [float(min(k(s, 'palm_lowest_cm'))), float(max(k(s, 'palm_lowest_cm')))],
+                                'thumb_to_target_cm_max': float(max(min(r['metrics'][s]['thumb_to_target_cm'].values()) for r in rows)),
+                                'index_to_trigger_cm_max': float(max(r['metrics'][s]['index_to_trigger_cm'] for r in rows))} for s in ('left', 'right')},
+               'right_grip_variation': {k: v for k, v in grip_variation(rows, 'right').items() if k != 'mean_controller_in_hand'},
+               'left_grip_variation': {k: v for k, v in grip_variation(rows, 'left').items() if k != 'mean_controller_in_hand'},
+               'best_frame': min(rows, key=lambda r: max(r['left']['compression_needed_cm'], r['right']['compression_needed_cm']))['frame']}
+    return {'schema': SCHEMA, 'verified': False, 'trial': True, 'mode': 'penetration_aware_joint_search', 'aim': aim,
+            'aim_weights_thumb_index': weights,
+            'label': label or 'TRIAL option 1 search; no contact accepted', 'clip': info, 'controller': dict(cinfo, source=csrc),
+            'time_mapping': 'native AnimSequence t = glTF key t - 1/30 s (native 4.0 s = glTF 4.033333 s)',
+            'fk_parity': fk_parity_both(clip, hands.names), 'sdf_grid_spacing_m': grid_spacing,
+            'rule': 'per-hand rigid grip (6-DoF each), controller at their rigid midpoint, bounded two-arm two-bone IK; hand+fingers rigid so captured '
+                    'finger locals are exact; exact winding-number metrics; option 3 = deepest hand vertex inside; option 2 = left palm gap with captured spacing',
+            'summary': summary, 'per_frame': rows}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -1042,7 +1248,25 @@ def main(argv=None):
     f.add_argument('--no-per-frame', action='store_true')
     f.add_argument('--label')
     f.add_argument('--out')
+    q = sub.add_parser('search')
+    q.add_argument('--clip', required=True)
+    q.add_argument('--controller')
+    q.add_argument('--source-fbx-sha256')
+    q.add_argument('--frames', help='comma list or a:b')
+    q.add_argument('--iters', type=int, default=350)
+    q.add_argument('--aim', choices=('all', 'contact'), default='all', help='all: thumbs/index pulled to their gates; contact: palm/penetration first')
+    q.add_argument('--out')
     args = ap.parse_args(argv)
+    if args.cmd == 'search':
+        fr = None
+        if args.frames:
+            fr = range(*map(int, args.frames.split(':'))) if ':' in args.frames else [int(x) for x in args.frames.split(',')]
+        out = penetration_search(Path(args.clip), controller=args.controller, frames=fr, iters=args.iters, source_fbx_sha256=args.source_fbx_sha256, aim=args.aim)
+        if args.out:
+            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.out).write_text(json.dumps(out, indent=1) + '\n')
+        print(json.dumps({k: out[k] for k in ('aim', 'controller', 'time_mapping', 'fk_parity', 'summary')}, indent=1))
+        return 0
     if args.cmd == 'controller':
         out = controller_report()
     elif args.cmd == 'sofa':
