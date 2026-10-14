@@ -15,6 +15,7 @@ import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlsplit, parse_qs
 
 KEYS = {**{f"Key{x.upper()}": x for x in "abcdefghijklmnopqrstuvwxyz"},
         **{f"Digit{x}": x for x in "0123456789"},
@@ -101,7 +102,21 @@ for(const [name,down] of [['keydown',true],['keyup',false]])document.addEventLis
 document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==game||performance.now()-lastMouse<50)return;lastMouse=performance.now();send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY)))});});
 for(const [name,down] of [['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down});}});
 game.oncontextmenu=e=>e.preventDefault();
-let streaming=false;async function ready(){let h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());if(h.captureEnabled&&!streaming){streaming=true;game.src=base+'stream';status.textContent='Live native window. WASD moves, mouse looks, E uses devices, Escape releases control.';}else if(!streaming)status.textContent='Waiting for the first native capture to complete.';}
+let streaming=false;
+window.nativeViewerDecodedFrames=0;
+async function streamNative(){
+ let after=0,previous=null;
+ while(streaming){
+  const response=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});
+  if(!response.ok){await new Promise(r=>setTimeout(r,250));continue;}
+  const url=URL.createObjectURL(await response.blob());
+  await new Promise((resolve,reject)=>{game.onload=resolve;game.onerror=reject;game.src=url;});
+  if(previous)URL.revokeObjectURL(previous);previous=url;
+  after=Number(response.headers.get('X-Native-Sequence'));window.nativeViewerDecodedFrames++;
+  window.nativeViewerLastSequence=after;window.nativeViewerLastCaptureUtc=response.headers.get('X-Native-Capture-Utc');
+ }
+}
+async function ready(){let h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());if(!h.nativeAlive){streaming=false;game.removeAttribute('src');game.hidden=true;status.textContent='The home is restarting. Live view is unavailable.';return;}if(h.captureEnabled&&!streaming){streaming=true;game.hidden=false;streamNative().catch(()=>{streaming=false;status.textContent='Live capture is temporarily unavailable.';});status.textContent='Live native window. WASD moves, mouse looks, E uses devices, Escape releases control.';}else if(!streaming)status.textContent='Waiting for the first native capture to complete.';}
 setInterval(ready,1000);ready();
 </script></body></html>'''.replace('%KEYS%', json.dumps(list(KEYS)))
 
@@ -118,9 +133,67 @@ class LiveState:
         self.last_input = 0
         self.last_lease = time.monotonic()
         self.proc = None
+        self.condition = threading.Condition()
+        self.latest_frame = b''
+        self.sequence = 0
+        self.capture_utc = 0
+        self.last_view_request = 0
+        self.native_checked_at = 0
+        self.native_identity = None
 
     def enabled(self, name):
-        return time.time() < self.deadline and (self.private/name).is_file()
+        if time.time()>=self.deadline:return False
+        identity=self.native()
+        if identity is None:return False
+        try:flag=json.loads((self.private/name).read_text())
+        except (OSError,ValueError):return False
+        return isinstance(flag,dict) and flag.get('native_pid')==identity[0] and flag.get('native_start_ticks')==identity[1]
+
+    def native(self):
+        if time.monotonic()-self.native_checked_at<1:return self.native_identity
+        matches=[]
+        for p in Path('/proc').iterdir():
+            if not p.name.isdigit():continue
+            try:
+                args=(p/'cmdline').read_bytes().split(b'\0')
+                if args[0]!=b'/workspace/sub01-unreal/UE/Engine/Binaries/Linux/UnrealEditor-Cmd' or b'-game' not in args:continue
+                status=(p/'status').read_text()
+                if 'Uid:\t1001\t' not in status:continue
+                ticks=int((p/'stat').read_text().rsplit(')',1)[1].split()[19])
+                matches.append((int(p.name),ticks))
+            except (OSError,ValueError):continue
+        self.native_identity=matches[0] if len(matches)==1 else None
+        self.native_checked_at=time.monotonic()
+        return self.native_identity
+
+    def ensure_capture(self):
+        with self.capture_lock:
+            if self.proc and self.proc.poll() is None:return
+            process=subprocess.Popen(['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate','8','-video_size','1280x720','-i',':99.0','-vf','scale=960:540','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+            self.proc=process
+            threading.Thread(target=self.capture,args=(process,),daemon=True).start()
+
+    def capture(self,process):
+        buffer=b''
+        try:
+            while self.enabled('native-viewer-capture-enabled') and time.monotonic()-self.last_view_request<10:
+                block=process.stdout.read1(65536)
+                if not block:break
+                buffer+=block
+                if len(buffer)>2*1024*1024:raise RuntimeError('Frame bounds exceeded')
+                while True:
+                    start=buffer.find(b'\xff\xd8');end=buffer.find(b'\xff\xd9',max(0,start))
+                    if start<0 or end<0:break
+                    frame=buffer[start:end+2];buffer=buffer[end+2:]
+                    with self.condition:
+                        self.latest_frame=frame;self.sequence+=1;self.capture_utc=time.time();self.condition.notify_all()
+        finally:
+            process.terminate()
+            try:process.wait(timeout=3)
+            except subprocess.TimeoutExpired:process.kill()
+            with self.capture_lock:
+                if self.proc is process:self.proc=None
+
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
@@ -135,43 +208,30 @@ class Handler(BaseHTTPRequestHandler):
         state = self.server.state
         if self.path.split('?')[0] == '/health':
             if self.path.endswith('?hold=1') and state.enabled('native-viewer-input-enabled'):state.last_lease=time.monotonic()
-            self.json(200, {'transport':'live-native-X11-MJPEG','session':state.session,
+            self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),
-                           'framesDelivered':state.frames,'acceptedInputs':state.accepted})
+                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native()})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
             data=HTML.encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
-        if self.path.split('?')[0] != '/stream':
+        if urlsplit(self.path).path != '/frame.jpg':
             self.json(404, {'error':'Unknown route'});return
         if not state.enabled('native-viewer-capture-enabled'):
             self.json(409, {'error':'Native capture is locked'});return
-        if not state.capture_lock.acquire(blocking=False):
-            self.json(409, {'error':'One private live viewer is already connected'});return
-        process=None
         try:
-            process=subprocess.Popen(['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate','8','-video_size','1280x720','-i',':99.0','-vf','scale=960:540','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
-            state.proc=process
-            self.send_response(200);self.send_header('Content-Type','multipart/x-mixed-replace; boundary=nativeframe');self.send_header('Cache-Control','no-store');self.send_header('X-Accel-Buffering','no');self.end_headers()
-            buffer=b''
-            while state.enabled('native-viewer-capture-enabled'):
-                block=process.stdout.read1(65536)
-                if not block:break
-                buffer+=block
-                if len(buffer)>2*1024*1024:raise RuntimeError('Frame bounds exceeded')
-                while True:
-                    start=buffer.find(b'\xff\xd8');end=buffer.find(b'\xff\xd9',max(0,start))
-                    if start<0 or end<0:break
-                    frame=buffer[start:end+2];buffer=buffer[end+2:]
-                    self.wfile.write(b'--nativeframe\r\nContent-Type: image/jpeg\r\nContent-Length: '+str(len(frame)).encode()+b'\r\n\r\n'+frame+b'\r\n');self.wfile.flush();state.frames+=1
-        except (BrokenPipeError,ConnectionResetError):
-            pass
-        finally:
-            if process:
-                process.terminate()
-                try:process.wait(timeout=3)
-                except subprocess.TimeoutExpired:process.kill()
-            state.proc=None;state.capture_lock.release()
+            after=int(parse_qs(urlsplit(self.path).query).get('after',['0'])[0])
+            if after<0:raise ValueError()
+        except ValueError:self.json(400,{'error':'Invalid frame sequence'});return
+        state.last_view_request=time.monotonic();state.ensure_capture()
+        with state.condition:
+            state.condition.wait_for(lambda:state.sequence>after and bool(state.latest_frame),timeout=2)
+            if not state.latest_frame:self.json(503,{'error':'Native pixels unavailable'});return
+            frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
+        self.send_response(200);self.send_header('Content-Type','image/jpeg');self.send_header('Cache-Control','no-store')
+        self.send_header('Content-Length',str(len(frame)));self.send_header('X-Native-Sequence',str(sequence));self.send_header('X-Native-Capture-Utc',str(captured));self.end_headers()
+        try:self.wfile.write(frame);state.frames+=1
+        except (BrokenPipeError,ConnectionResetError):pass
 
     def do_POST(self):
         state=self.server.state
