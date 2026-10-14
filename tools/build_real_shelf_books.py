@@ -942,7 +942,25 @@ def _load_asset(path, source_collection):
     return new, meshes
 
 
-def _measure_books(meshes, spine_axis, unit_scale):
+def _measure_books(meshes, spine_axis, unit_scale, asset_path=None):
+    from verified_encyclopedia_book_nodes import source_contract, verify_objects
+    try:
+        contract=source_contract(asset_path)
+        complete=verify_objects(meshes,contract) if contract is not None else None
+    except ValueError as error:
+        raise RefusedError(str(error)) from error
+    if complete is not None:
+        # The pinned provider authored one whole cover+page mesh per book.
+        # Retain every vertex/face/material/UV; seam islands are not book objects.
+        books=[]
+        for obj,proof in complete:
+            points=[tuple(obj.matrix_world @ v.co) for v in obj.data.vertices]
+            frame=book_frame(points,spine_axis)
+            problem=check_book_dims(frame['dims'],unit_scale)
+            if problem:raise RefusedError(obj.name+': '+problem)
+            part={'obj':obj,'verts':list(range(len(points))),'points':points}
+            books.append({'key':f'book{len(books)+1:02d}','parts':[part],'provider_full_geometry_proof':proof,**frame})
+        return books,[]
     parts = []
     for obj in meshes:
         mw = obj.matrix_world
@@ -1139,7 +1157,7 @@ def run(argv=None):
     collection = bpy.data.collections.new(COLLECTION)
     scene.collection.children.link(collection)
     new_objects, meshes = _load_asset(args.books_asset, source_col)
-    books, ignored = _measure_books(meshes, args.spine_axis, args.uniform_scale)
+    books, ignored = _measure_books(meshes, args.spine_axis, args.uniform_scale, args.books_asset)
     dims = {b['key']: tuple(x * args.uniform_scale for x in b['dims']) for b in books}
     placements = plan_layout(hosts, dims, args.seed)
     obstacles = nearby
@@ -1149,6 +1167,14 @@ def run(argv=None):
 
     book_meshes = {b['key']: _book_mesh(b, args.uniform_scale, source_col) for b in books
                    if any(p['source'] == b['key'] for p in accepted)}
+    from verified_encyclopedia_book_nodes import verify_mesh
+    for book in books:
+        proof=book.get('provider_full_geometry_proof')
+        if proof and book['key'] in book_meshes:
+            mesh=book_meshes[book['key']]
+            try:counts=verify_mesh(mesh,proof)
+            except ValueError as error:raise RefusedError(str(error)) from error
+            proof.update(output_vertex_count=len(mesh.vertices),output_triangles_per_slot=counts,full_cover_page_geometry_preserved=True)
     _own_materials(book_meshes.values(), report)
     for mesh in book_meshes.values():
         mesh[TAG] = True
@@ -1179,7 +1205,8 @@ def run(argv=None):
     report.update({
         'provenance': provenance, 'seed': args.seed, 'front_axis': args.front_axis,
         'asset_books': [{'key': b['key'], 'dims_m': [round(x * args.uniform_scale, 5) for x in b['dims']],
-                         'asset_tilt_deg': b['asset_tilt_deg']} for b in books],
+                         'asset_tilt_deg': b['asset_tilt_deg'],
+                         'provider_full_geometry_proof': b.get('provider_full_geometry_proof')} for b in books],
         'asset_ignored_parts': ignored,
         'hosts': [{'board_z': h['board']['z'], 'u_range': h['u_range'], 'clearance': h['board']['clearance']} for h in hosts],
         'built': [{'id': p['id'], 'source_mesh': book_meshes[p['source']].name, 'source_book': p['source'],
