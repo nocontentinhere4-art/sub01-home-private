@@ -1,0 +1,238 @@
+{
+  "kind": "Existing actual evidence CPU-only analysis; no transforms/poses/state changed",
+  "body_cm": [
+    203.9,
+    -232.3,
+    -0.6
+  ],
+  "native_seat_verified": false,
+  "plantar_selector": {
+    "bind_axis": "nativeZ",
+    "min_bind_cm": -88.03545379638672,
+    "upper_bind_cm": -87.63545379638671,
+    "bind_normal_Z_strictly_below": -0.7,
+    "foot_toe_weight_min": 0.3,
+    "fixed_vertex_count": 4171,
+    "frame_membership_fixed": true
+  },
+  "plantar_samples": [
+    {
+      "time_s": 3.0,
+      "side": "left",
+      "fixed_plantar_vertices": 1923,
+      "min_median_max_world_z_cm": [
+        -0.1613583808536475,
+        10.397010080421651,
+        24.267618772997594
+      ],
+      "source_vertices": 1925,
+      "source_native_nearest_vertex_max_error_cm": 0.19493365037110835,
+      "source_native_nearest_vertex_median_error_cm": 0.001731198054496507,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 7,
+      "toe_dominant_count": 1031,
+      "toe_dominant_z_min_max_cm": [
+        -0.1613583808536475,
+        13.409551847883884
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 77
+    },
+    {
+      "time_s": 3.0,
+      "side": "right",
+      "fixed_plantar_vertices": 2248,
+      "min_median_max_world_z_cm": [
+        -0.36020428889884115,
+        7.507187688903977,
+        14.819468959768978
+      ],
+      "source_vertices": 2252,
+      "source_native_nearest_vertex_max_error_cm": 0.00034883911578621155,
+      "source_native_nearest_vertex_median_error_cm": 0.0003003636441809605,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 0,
+      "toe_dominant_count": 1013,
+      "toe_dominant_z_min_max_cm": [
+        -0.36020428889884115,
+        8.568723448703453
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 152
+    },
+    {
+      "time_s": 6.0,
+      "side": "left",
+      "fixed_plantar_vertices": 1923,
+      "min_median_max_world_z_cm": [
+        -0.1531857876340309,
+        10.445579359312445,
+        24.43952019165122
+      ],
+      "source_vertices": 1925,
+      "source_native_nearest_vertex_max_error_cm": 0.19498981313084365,
+      "source_native_nearest_vertex_median_error_cm": 0.001762692031759061,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 7,
+      "toe_dominant_count": 1031,
+      "toe_dominant_z_min_max_cm": [
+        -0.1531857876340309,
+        13.388450962476234
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 78
+    },
+    {
+      "time_s": 6.0,
+      "side": "right",
+      "fixed_plantar_vertices": 2248,
+      "min_median_max_world_z_cm": [
+        -0.35819709440973957,
+        7.475737940800963,
+        14.692456002577568
+      ],
+      "source_vertices": 2252,
+      "source_native_nearest_vertex_max_error_cm": 0.00035599185945377426,
+      "source_native_nearest_vertex_median_error_cm": 0.00031040913778468036,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 0,
+      "toe_dominant_count": 1013,
+      "toe_dominant_z_min_max_cm": [
+        -0.35819709440973957,
+        8.57110410845962
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 154
+    },
+    {
+      "time_s": 8.0,
+      "side": "left",
+      "fixed_plantar_vertices": 1923,
+      "min_median_max_world_z_cm": [
+        -0.1567090100233116,
+        10.42043419019545,
+        24.339794966027718
+      ],
+      "source_vertices": 1925,
+      "source_native_nearest_vertex_max_error_cm": 0.19498637217129713,
+      "source_native_nearest_vertex_median_error_cm": 0.0017624620384972304,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 7,
+      "toe_dominant_count": 1031,
+      "toe_dominant_z_min_max_cm": [
+        -0.1567090100233116,
+        13.36417690367776
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 78
+    },
+    {
+      "time_s": 8.0,
+      "side": "right",
+      "fixed_plantar_vertices": 2248,
+      "min_median_max_world_z_cm": [
+        -0.35864431174149825,
+        7.489509255235154,
+        14.768555571648541
+      ],
+      "source_vertices": 2252,
+      "source_native_nearest_vertex_max_error_cm": 0.0003461447684652497,
+      "source_native_nearest_vertex_median_error_cm": 0.0002985789548427115,
+      "source_selection_boundary_mismatch_vertices_over_0_01cm": 0,
+      "toe_dominant_count": 1013,
+      "toe_dominant_z_min_max_cm": [
+        -0.35864431174149825,
+        8.586699965361804
+      ],
+      "floor_band_vertices_after_body_lift_2_8653cm": 153
+    }
+  ],
+  "whole_plantar_nonpenetration_body_lift_min_cm": 2.8603042888988415,
+  "heel_height_is_not_contact_failure": "Captured tilted plantar surface need not lie flat; require actual toe/heel support patch plus whole plantar nonpenetration, never median whole tilted sole",
+  "chair_cushion_bounds_cm": {
+    "min": [
+      173.66122217579368,
+      -214.06266374103416,
+      44.35731693208618
+    ],
+    "max": [
+      226.13159251352135,
+      -166.34063149873373,
+      51.40747074231035
+    ]
+  },
+  "broad_regions": {
+    "buttocks": {
+      "broad_downward_cloth_bounds_cm": {
+        "min": [
+          185.27207969,
+          -246.15184655,
+          56.51148404
+        ],
+        "max": [
+          223.78814774,
+          -218.79716779,
+          83.08052763
+        ]
+      },
+      "full_AABB_cover_dx_interval_cm": [
+        -2.3434447735213553,
+        11.610857514206316
+      ],
+      "full_AABB_cover_dy_interval_cm": [
+        -52.456536291266275,
+        -32.08918280896583
+      ],
+      "edge_touch_all_frames_dy_upper_bound_cm": -5.179049878965856,
+      "support_patch_accepted": false
+    },
+    "left_posterior_thigh": {
+      "broad_downward_cloth_bounds_cm": {
+        "min": [
+          180.83945367,
+          -271.34353794,
+          47.00120596
+        ],
+        "max": [
+          204.13925565,
+          -219.29192101,
+          76.83515476
+        ]
+      },
+      "full_AABB_cover_dx_interval_cm": [
+        -21.99233686352136,
+        7.178231494206329
+      ],
+      "full_AABB_cover_dy_interval_cm": [
+        -52.95128951126628,
+        -57.28087419896582
+      ],
+      "edge_touch_all_frames_dy_upper_bound_cm": -5.573979588965841,
+      "support_patch_accepted": false
+    },
+    "right_posterior_thigh": {
+      "broad_downward_cloth_bounds_cm": {
+        "min": [
+          203.71996324,
+          -269.45834911,
+          45.06329402
+        ],
+        "max": [
+          225.82478318,
+          -219.12902608,
+          77.53457019
+        ]
+      },
+      "full_AABB_cover_dx_interval_cm": [
+        -0.30680933352135753,
+        30.058741064206316
+      ],
+      "full_AABB_cover_dy_interval_cm": [
+        -52.78839458126626,
+        -55.395685368965815
+      ],
+      "edge_touch_all_frames_dy_upper_bound_cm": -5.582673458965843,
+      "support_patch_accepted": false
+    }
+  },
+  "full_broad_ROI_cover_dy_interval_cm": [
+    -52.456536291266275,
+    -57.28087419896582
+  ],
+  "minimum_buttocks_broad_AABB_cover_dy_cm": -32.08918280896583,
+  "support_fit_conclusion": "Broad cloth bounds only: no exact minimum chair translation or joint seat/sole fit can be accepted without fixed buttocks/posterior-thigh load-bearing identities/points. Pure whole-body lift also moves established hands relative to fixed keyboard; needs renewed measured palm/desk validation.",
+  "horizontal_chair_translation_only_minimum_buttock_gap_cm": 5.104013297689647,
+  "horizontal_chair_translation_with_sampled_floor_lift_minimum_buttock_gap_cm": 7.964317586588486,
+  "seat_only_height_raise_lower_bound_with_sampled_floor_lift_cm": 7.464317586588486,
+  "whole_chair_vertical_move_warning": "Moving entire chair assembly upward would also lift its floor base/casters; not a demonstrated physical height adjustment. XY-only chair translation cannot provide vertical support even for lowest broad buttock witness."
+}
