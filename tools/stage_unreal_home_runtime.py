@@ -19,6 +19,8 @@ from unreal_exit_door_runtime import install as install_exit_doors
 from unreal_minecraft_tv_input import install as install_minecraft_tv_input
 from unreal_phone_grip_diagnostic import install as install_phone_grip_diagnostic
 from unreal_native_viewer_handoff import install as install_native_viewer_handoff
+from unreal_controller_grip_diagnostic import install as install_controller_grip_diagnostic
+from exterior_backdrop_geometry import patch_native_view_settings
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -164,9 +166,11 @@ def stage(project):
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     header,cpp=install_native_control(header,cpp)
     header,cpp=install_native_view_settings(header,cpp)
+    cpp=patch_native_view_settings(cpp)
     header,cpp=install_minecraft_tv_input(header,cpp)
     header,cpp=install_native_viewer_handoff(header,cpp)
     header,cpp=install_phone_grip_diagnostic(header,cpp)
+    header,cpp=install_controller_grip_diagnostic(header,cpp)
     header,cpp=install_exit_doors(header,cpp)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)

@@ -134,3 +134,8 @@ CPP = '#include <cmath>\n#include "TwoBoneIK.h"\n#include "Serialization/JsonSer
 from unreal_plantar_skin_witness import HEADER as FOOT_WITNESS_HEADER, CPP as FOOT_WITNESS_CPP
 HEADER += FOOT_WITNESS_HEADER
 CPP += FOOT_WITNESS_CPP
+
+# Additive fixed-bind plantar support witness; legacy seat gates remain unchanged.
+from unreal_fixed_plantar_support import HEADER as FIXED_FOOT_HEADER, CPP as FIXED_FOOT_CPP
+HEADER += FIXED_FOOT_HEADER
+CPP += FIXED_FOOT_CPP
