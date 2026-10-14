@@ -1,0 +1,109 @@
+{
+  "schema": "sub01.real-steel-shelf-source-candidate.v1",
+  "source_sha256": "bbc7db5777547fcaa82314324a5be0ec1961d6d7f15aa062fe2fdbd1d1e7ee6c",
+  "source_bytes": 5567948,
+  "server_glb": "/workspace/sub01-home-private/source-candidates/steel-frame-shelf/source.glb",
+  "download_url": "https://www.innerscene.com/api/library/steel-frame-shelving-358e9855/download",
+  "details_url": "https://www.innerscene.com/tools/library/3d-parts/steel-frame-shelving-358e9855",
+  "source_provenance": "Root observed official PolyHaven photographed steel_frame_shelves_01 by James Ray Cock, CC0; retain source page receipt",
+  "actual_source_dimensions": [
+    10.974145412445068,
+    21.405006067827344,
+    5.021175384521484
+  ],
+  "uniform_unit_conversion": 0.1,
+  "converted_dimensions_m": [
+    1.0974145412445069,
+    2.1405006067827346,
+    0.5021175384521485
+  ],
+  "triangles": 4348,
+  "materials": [
+    {
+      "name": "steel_frame_shelves_01",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    }
+  ],
+  "images": [
+    {
+      "index": 0,
+      "name": "steel_frame_shelves_01_nor_gl",
+      "mimeType": "image/jpeg",
+      "bytes": 1350248,
+      "sha256": "bb5db1bdc40938b7f949d773ffdf4c7d2d8319b285ab291173676114ddb91c7b",
+      "dimensions": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "index": 1,
+      "name": "steel_frame_shelves_01_diff",
+      "mimeType": "image/jpeg",
+      "bytes": 1679686,
+      "sha256": "f13b689662757c99dce62503fa98baa54d5c8aec1597fce1ab7c5b8d5a77f721",
+      "dimensions": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "index": 2,
+      "name": "steel_frame_shelves_01_metal-steel_frame_shelves_01_rough",
+      "mimeType": "image/jpeg",
+      "bytes": 2393901,
+      "sha256": "6aeca77df7c022bec768212cba95011ce4fc67555c5e039e22542db171492a4f",
+      "dimensions": [
+        2048,
+        2048
+      ]
+    }
+  ],
+  "source_horizontal_surface_levels_scaled_m": [
+    0.004945,
+    0.085474,
+    0.088569,
+    0.113344,
+    0.113565,
+    0.132893,
+    0.592008,
+    0.594184,
+    0.618958,
+    0.619282,
+    0.619877,
+    0.63861,
+    1.098541,
+    1.100642,
+    1.125417,
+    1.125637,
+    1.126411,
+    1.144965,
+    1.605075,
+    1.606763,
+    1.631538,
+    1.631851,
+    1.632945,
+    1.651179,
+    2.08491,
+    2.109685,
+    2.110573,
+    2.111609,
+    2.129901,
+    2.139433
+  ],
+  "actual_inventory": "out/house-evidence/20261014-steel-frame-shelf-inventory.json",
+  "placement_status": "NOT READY: genuine five boards have different support levels/width from old six235cm floating shelves. Complete CC0 books must be regrouped onto measured actual boards, current supported book positions must not be left floating.",
+  "geometry_mutated": false,
+  "not_a_runtime_receipt": true
+}

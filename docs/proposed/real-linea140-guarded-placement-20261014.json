@@ -1,0 +1,168 @@
+{
+  "schema": "sub01.real-linea140-guarded-placement.v1",
+  "source_glb_server": "/workspace/sub01-home-private/source-candidates/linea140/source.glb",
+  "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "source_bytes": 3579208,
+  "source_url": "https://www.innerscene.com/api/library/linea-140-walnut-writing-desk-c94a30dc/download",
+  "details_url": "https://www.innerscene.com/tools/library/3d-parts/linea-140-walnut-writing-desk-c94a30dc",
+  "license": "CC0 per root observed official source; renderer must retain provenance receipt",
+  "geometry": "External complete original geometry; all60primitives and20024triangles required, no newly generated desk parts.",
+  "source_top_node": 44,
+  "source_top_y_m": 0.755,
+  "placement_ue_cm": {
+    "centre": [
+      210,
+      -310
+    ],
+    "floor_z": 2.5,
+    "uniform_scale": 1.086092715231788,
+    "top_z": 84.5,
+    "yaw_degrees": 0,
+    "front_positive_ue_y": true
+  },
+  "actual_top_xy_bounds_m": [
+    [
+      1.3397350993377484,
+      -3.4529801324503313
+    ],
+    [
+      2.860264900662252,
+      -2.747019867549669
+    ]
+  ],
+  "source_device_support_checks": [
+    {
+      "device": "monitor_frame_and_stand",
+      "source_nodes": [
+        73,
+        74
+      ],
+      "world_xy_bounds_m": [
+        [
+          1.6399999856948853,
+          -3.3449999541044235
+        ],
+        [
+          2.3600000143051147,
+          -3.254999950528145
+        ]
+      ],
+      "inside_actual_top_outer_bounds": true,
+      "minimum_horizontal_margin_m": 0.10798017834590778,
+      "check_scope": "source_xy_support_envelope; actual native binding and foot contact required"
+    },
+    {
+      "device": "keyboard",
+      "source_nodes": [
+        184,
+        185,
+        186,
+        187
+      ],
+      "world_xy_bounds_m": [
+        [
+          1.814499998132149,
+          -3.0204641269367585
+        ],
+        [
+          2.185500001867851,
+          -2.8595359875041595
+        ]
+      ],
+      "inside_actual_top_outer_bounds": true,
+      "minimum_horizontal_margin_m": 0.11251611995449062,
+      "check_scope": "source_xy_support_envelope; actual native binding and foot contact required"
+    },
+    {
+      "device": "mouse",
+      "source_nodes": [
+        236,
+        237,
+        238
+      ],
+      "world_xy_bounds_m": [
+        [
+          2.290000091344118,
+          -3.0145000867843628
+        ],
+        [
+          2.510000099390745,
+          -2.805500084877014
+        ]
+      ],
+      "inside_actual_top_outer_bounds": true,
+      "minimum_horizontal_margin_m": 0.05848021732734532,
+      "check_scope": "source_xy_support_envelope; actual native binding and foot contact required"
+    },
+    {
+      "device": "phone",
+      "source_nodes": [
+        132,
+        133,
+        134,
+        135,
+        136
+      ],
+      "world_xy_bounds_m": [
+        [
+          2.661000179243274,
+          -2.9950000792741776
+        ],
+        [
+          2.739000392961316,
+          -2.845000073313713
+        ]
+      ],
+      "inside_actual_top_outer_bounds": true,
+      "minimum_horizontal_margin_m": 0.0979802057640442,
+      "check_scope": "source_xy_support_envelope; actual native binding and foot contact required"
+    }
+  ],
+  "lamp_relocation": {
+    "new_centre_ue_cm": [
+      155,
+      -315
+    ],
+    "old_centre_ue_cm": [
+      110,
+      -315
+    ],
+    "requirement": "Move new real desk lamp geometry AND its associated actual light by same deltaX45cm, preserving fixture foot Z and lamp state. Check full actual new lamp foot/shade bounds; not only centre."
+  },
+  "knee_bay": {
+    "right_drawer_left_ue_cm": 237.20662151395487,
+    "left_leg_inner_ue_cm": 143.69403968978403,
+    "approved_chair_right_extent_ue_cm": 234.07256251598838,
+    "clearance_right_drawer_from_full_chair_aabb_cm": 3.1340589979664912,
+    "limitation": "Current chair is away from desk; bounds show potential lateral fit but do not prove seated pose/collision. Keep chair and native movement intact; native acceptance required."
+  },
+  "hide_original_only_after_actual_import_and_material_verification": [
+    181,
+    182
+  ],
+  "preserve_device_actor_nodes": [
+    73,
+    74,
+    75,
+    132,
+    133,
+    134,
+    135,
+    136,
+    184,
+    185,
+    186,
+    187,
+    236,
+    237,
+    238
+  ],
+  "runtime_requirements": [
+    "Renderer sole Editor owner. No full-house reimport.",
+    "Import full authored desk geometry/materials/textures; verify walnut albedos are sRGB Default, normals Normalmap, roughness linear, preserving authored factors.",
+    "Use actual native floor to resolve transform: if floor differs2.5cm, recompute uniformScale=(84.5\u2212floor_cm)/75.5, never use maxheight75.83 (grommet).",
+    "Before hiding181/182 verify all devicefoot contact and existing PC screen/phone functional bindings remain exact; save original visibility/collision states.",
+    "No changes to screens, camera, manual movement, chairs, route graph or architecture."
+  ],
+  "not_a_runtime_receipt": true
+}
