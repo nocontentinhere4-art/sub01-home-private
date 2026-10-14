@@ -219,4 +219,21 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.console.frame_kind, 'initial_idle')
         await h.close()
 
+    async def test_actual_snapshot_receipt_records_reported_renderer_and_measured_capture_cost(self):
+        self.state(); self.console.directory.mkdir()
+        page = Page()
+        renderer = {'target_fps': 15, 'frames': 3, 'attempts': 9,
+                    'vendor': 'fixture-reported vendor', 'renderer': 'fixture-reported renderer'}
+        async def evaluate(_expression):return {'entities': [], 'renderer': renderer}
+        page.evaluate = evaluate
+        with patch('home_minecraft.time.perf_counter', side_effect=[100.0, 100.025]):
+            h = Harness(self.console, page)
+            await h.waiting()
+        receipt = json.loads((self.console.directory / 'frame-rendering.json').read_text())
+        self.assertEqual(receipt['renderer'], renderer)
+        self.assertEqual(receipt['snapshot']['duration_ms'], 25.0)
+        self.assertEqual(receipt['snapshot']['bytes'], len(self.console.frame))
+        self.assertEqual(receipt['frame_tag'], self.console.frame_tag)
+        await h.close()
+
 if __name__ == '__main__':unittest.main()
