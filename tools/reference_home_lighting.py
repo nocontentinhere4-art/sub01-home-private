@@ -9,8 +9,10 @@ room.
 Operates on the EXISTING movable authored lights placed by
 tools/unreal_home_lights.py (labels ``SUB01_AuthoredLight_<name>``) in
 /Game/Sub01Home/ActualHome. It never deletes or spawns lights. It only owns
-two helper actors by exact label: an unbound PostProcessVolume and, when the
-level has no height fog, an ExponentialHeightFog.
+helper actors by exact label: an unbound PostProcessVolume and, when the
+level has no height fog, an ExponentialHeightFog; plus a bounded near-camera
+LocalFogVolume and an owned graded material instance for the authored Tokyo
+exterior backdrop (the original exterior material is left untouched).
 
 Structure
 - Pure functions (no ``unreal``): solar position (NOAA / Meeus), sunrise and
@@ -65,6 +67,12 @@ LIGHT_LABELS = tuple(LABEL_PREFIX + name for name in LIGHT_NAMES)
 SKY_LABEL = 'SUB01_ActualHDR_Sky'  # spawned by unreal_setup_home.py
 PPV_LABEL = 'SUB01_ReferenceLighting_PostProcess'
 FOG_LABEL = 'SUB01_ReferenceLighting_HeightFog'
+LOCAL_FOG_LABEL = 'SUB01_ReferenceLighting_LocalFog'
+EXTERIOR_LABEL = 'SUB01_ActualHistoricalTokyoBackground'  # tools/unreal_home_exterior.py
+EXTERIOR_TEXTURE = '/Game/Sub01Home/Environment/TokyoResidential'  # imported from TokyoResidential.png
+EXTERIOR_GRADED_DIR = '/Game/Sub01Home/Environment/ReferenceLighting'
+EXTERIOR_GRADED_MATERIAL = 'M_Sub01ReferenceTokyoBackgroundGraded'
+EXTERIOR_GRADED_INSTANCE = 'MI_Sub01ReferenceTokyoBackgroundGraded'
 REPORT_NAME = 'reference-home-lighting.json'
 
 TOKYO_LATITUDE = 35.68
@@ -80,8 +88,8 @@ NIGHT_SKY_INTENSITY = 0.02
 SUN_SOURCE_ANGLE_DEG = 0.8  # real disc 0.53 deg; slightly softer for sheer curtains/haze
 SUN_CONTACT_SHADOW_LENGTH = 0.05  # screen fraction
 LAMP_CONTACT_SHADOW_LENGTH = 0.03
-SUN_VOLUMETRIC_SCATTERING = 1.0
-LAMP_VOLUMETRIC_SCATTERING = 0.25
+SUN_VOLUMETRIC_SCATTERING = 0.6  # modest: subtle shafts, no blown-out room
+LAMP_VOLUMETRIC_SCATTERING = 0.2
 
 # (elevation deg, kelvin): monotonic, warm low sun, ~5500-6000K high sun.
 SUN_TEMPERATURE_TABLE = (
@@ -115,13 +123,36 @@ EXPOSURE = {
     'night':  {'min_ev100': -3.0, 'max_ev100': 1.0, 'bias': 0.0, 'manual_bias': 2.3},
 }
 
-# Interior fog: room depth is < 12 m, so the analytic fog starts beyond it.
+# Actual ground floor in glTF source metres (web/house/home.js shell): 8 x 8 m
+# house, outer walls at x/z = +-4 with 0.18 m thickness; upper floor finish at
+# y ~3.05 (tools/build_home_bath_fixtures.py), so the ground-floor air is
+# conservatively y 0..2.85. First-person camera: (2, 1.65, 3.1) looking -Z.
+GROUND_INTERIOR_SOURCE = {'x': (-3.91, 3.91), 'y': (0.0, 2.85), 'z': (-3.91, 3.91)}
+ROOM_DIAGONAL_M = math.dist((-3.91, 0.0, -3.91), (3.91, 2.85, 3.91))  # ~11.4 m
+FIRST_PERSON_CAMERA_SOURCE = (2.0, 1.65, 3.1)
+
+# Global height fog stays subtle: the analytic part starts past the near room
+# (the reference's problem was UE's far default start, solved with LOCAL fog),
+# and its volumetric part covers only the house, starting at the camera.
 FOG = {
-    'fog_density': 0.01, 'fog_height_falloff': 0.2, 'start_distance': 1500.0,
-    'fog_max_opacity': 0.2, 'volumetric_fog_scattering_distribution': 0.7,
-    'volumetric_fog_extinction_scale': 0.5, 'volumetric_fog_start_distance': 50.0,
-    'volumetric_fog_distance': 1500.0, 'volumetric_fog_albedo': (245, 236, 220),
+    'fog_density': 0.005, 'fog_height_falloff': 0.2, 'start_distance': 600.0,
+    'fog_max_opacity': 0.15, 'volumetric_fog_scattering_distribution': 0.6,
+    'volumetric_fog_extinction_scale': 0.4, 'volumetric_fog_start_distance': 0.0,
+    'volumetric_fog_distance': 1400.0, 'volumetric_fog_albedo': (240, 232, 218),
 }
+# Bounded local fog ellipsoid near the camera (source metres), inside the room.
+LOCAL_FOG = {
+    'center_source': (2.0, 1.45, 1.0), 'semi_axes_source_m': (1.7, 1.35, 2.6),
+    'radial_fog_extinction': 0.03,  # per metre at the centre: low, optical depth << 1
+    'height_fog_extinction': 0.0, 'fog_phase_g': 0.6,
+    'fog_albedo': (0.96, 0.93, 0.87), 'fog_emissive': (0.0, 0.0, 0.0),
+}
+LOCAL_FOG_UNIT_RADIUS_CM_FALLBACK = 500.0  # measured from actor bounds at apply time when possible
+
+# Authored Tokyo exterior backdrop grade per sky state (unlit emissive photo).
+EXTERIOR_DAY = {'brightness': 1.0, 'tint': (1.0, 1.0, 1.0), 'desaturation': 0.0}
+EXTERIOR_GOLDEN = {'brightness': 0.6, 'tint': (1.0, 0.82, 0.62), 'desaturation': 0.1}
+EXTERIOR_NIGHT = {'brightness': 0.05, 'tint': (0.45, 0.55, 1.0), 'desaturation': 0.6}
 FOG_INSCATTER = {'day': (0.50, 0.47, 0.42), 'golden': (0.30, 0.24, 0.18), 'night': (0.02, 0.025, 0.04)}
 NIGHT_SKY_TINT = (0.55, 0.65, 1.0)
 
@@ -463,6 +494,59 @@ def fog_properties(phase):
     ]
 
 
+def _ellipsoid_bounds(center, semi_axes):
+    return {axis: (center[i] - semi_axes[i], center[i] + semi_axes[i]) for i, axis in enumerate('xyz')}
+
+
+def local_fog_bounds_source():
+    return _ellipsoid_bounds(LOCAL_FOG['center_source'], LOCAL_FOG['semi_axes_source_m'])
+
+
+def local_fog_contains(point_source):
+    c, r = LOCAL_FOG['center_source'], LOCAL_FOG['semi_axes_source_m']
+    return sum(((point_source[i] - c[i]) / r[i]) ** 2 for i in range(3)) <= 1.0
+
+
+def local_fog_plan(coordinates=None):
+    """Near-camera LocalFogVolume: ellipsoid inside the ground-floor footprint."""
+    c, r = LOCAL_FOG['center_source'], LOCAL_FOG['semi_axes_source_m']
+    out = {'label': LOCAL_FOG_LABEL, 'center_source': list(c), 'semi_axes_source_m': list(r),
+           'bounds_source': {k: list(v) for k, v in local_fog_bounds_source().items()},
+           'contains_first_person_camera': local_fog_contains(FIRST_PERSON_CAMERA_SOURCE),
+           'peak_optical_depth': LOCAL_FOG['radial_fog_extinction'] * 2 * max(r),
+           'properties': [
+               (('radial_fog_extinction',), LOCAL_FOG['radial_fog_extinction'], True),
+               (('height_fog_extinction',), LOCAL_FOG['height_fog_extinction'], False),
+               (('fog_phase_g',), LOCAL_FOG['fog_phase_g'], False),
+               (('fog_albedo',), _linear(LOCAL_FOG['fog_albedo']), False),
+               (('fog_emissive',), _linear(LOCAL_FOG['fog_emissive']), False)],
+           'location_ue_cm': None, 'semi_axes_ue_cm': None}
+    out['properties'] = [{'candidates': list(n), 'value': v, 'required': q} for n, v, q in out['properties']]
+    if coordinates is not None and 'offset_cm' in coordinates:
+        from unreal_home_coordinates import convert_position
+        out['location_ue_cm'] = list(convert_position(c, coordinates))
+        out['semi_axes_ue_cm'] = [100.0 * r[coordinates['axes'][i]] for i in range(3)]
+    return out
+
+
+def exterior_grade(elevation_deg, preset='auto'):
+    """Brightness/tint/desaturation for the authored Tokyo backdrop; dark blue at night."""
+    day = 0.0 if preset == 'night' else _smoothstep(-12.0, 8.0, elevation_deg)
+    golden = 0.0 if preset == 'night' else max(0.0, 1.0 - abs(elevation_deg - 3.0) / 9.0)
+
+    def mix(a, b, t):
+        return a + (b - a) * t
+
+    out = {'brightness': mix(EXTERIOR_NIGHT['brightness'], EXTERIOR_DAY['brightness'], day),
+           'tint': [mix(EXTERIOR_NIGHT['tint'][i], EXTERIOR_DAY['tint'][i], day) for i in range(3)],
+           'desaturation': mix(EXTERIOR_NIGHT['desaturation'], EXTERIOR_DAY['desaturation'], day)}
+    if golden > 0:  # warm, dimmer backdrop around sunset/sunrise
+        out['brightness'] = mix(out['brightness'], EXTERIOR_GOLDEN['brightness'], golden * day)
+        out['tint'] = [mix(out['tint'][i], EXTERIOR_GOLDEN['tint'][i], golden * day) for i in range(3)]
+        out['desaturation'] = mix(out['desaturation'], EXTERIOR_GOLDEN['desaturation'], golden * day)
+    return out
+
+
 def plan(preset='auto', when=None, coordinates=None, north_source_xz=DEFAULT_NORTH_SOURCE_XZ,
          exposure_mode='clamped_auto', lamp_overrides=None):
     """Full JSON-serialisable property plan (the dry run). No ``unreal`` needed."""
@@ -507,7 +591,11 @@ def plan(preset='auto', when=None, coordinates=None, north_source_xz=DEFAULT_NOR
         'height_fog': {'label_if_spawned': FOG_LABEL, 'reuse_single_existing': True,
                        'properties': [{'candidates': list(c), 'value': v, 'required': r}
                                       for c, v, r in fog_properties(phase)]},
-        'dust': 'none: no cheap built-in UE dust without a Niagara asset; not invented',
+        'local_fog': local_fog_plan(coordinates),
+        'exterior': dict(exterior_grade(elevation, preset), label=EXTERIOR_LABEL, texture=EXTERIOR_TEXTURE,
+                         graded_instance=EXTERIOR_GRADED_DIR + '/' + EXTERIOR_GRADED_INSTANCE,
+                         original_material_untouched=True),
+        'dust': 'none added: no UE particle/Niagara dust asset exists in this repository',
         'unchanged_engine_defaults_assumed': {
             'r.Lumen.HardwareRayTracing': 0, 'r.Lumen.ScreenProbeGather.ScreenTraces': 1,
             'r.Lumen.Reflections.ScreenTraces': 1, 'r.VolumetricFog': 1},
@@ -647,10 +735,46 @@ def apply(preset='auto', when=None, *, u=None, actor_subsystem=None, coordinates
         if extended is False:
             problems.append('Project auto exposure is not in EV100 (extend default luminance range is off)')
         data['ev100_luminance_range_setting'] = extended
+    # Near-camera local fog volume (owned label, bounded inside the room).
+    local_plan = data['local_fog']
+    local_fog = find_unique_actors(all_actors, [LOCAL_FOG_LABEL], required=False).get(LOCAL_FOG_LABEL)
+    local_rows = []
+    if not hasattr(u, 'LocalFogVolume') or not hasattr(u, 'LocalFogVolumeComponent'):
+        problems.append('Engine has no LocalFogVolume (UE 5.3+ required for near-camera fog)')
+    else:
+        local_default = u.get_default_object(u.LocalFogVolumeComponent)
+        for row in local_plan['properties']:
+            name = next((c for c in row['candidates'] if _probe(local_default, c)), None)
+            if name:
+                local_rows.append((name, row['value']))
+            elif row['required']:
+                problems.append('LocalFogVolumeComponent lacks ' + '/'.join(row['candidates']))
+            else:
+                skipped.append('local fog ' + '/'.join(row['candidates']))
+    if local_plan['location_ue_cm'] is None:
+        problems.append('Verified coordinates lack offset_cm; cannot place the local fog volume')
+    # Authored Tokyo exterior backdrop (optional actor, unique if present).
+    exterior = find_unique_actors(all_actors, [EXTERIOR_LABEL], required=False).get(EXTERIOR_LABEL)
+    exterior_texture = None
+    if exterior is not None:
+        exterior_texture = u.load_asset(EXTERIOR_TEXTURE)
+        if exterior_texture is None or not isinstance(exterior_texture, u.Texture2D):
+            problems.append('Exterior backdrop present but its texture %s is missing' % EXTERIOR_TEXTURE)
+        elif exterior.get_component_by_class(u.StaticMeshComponent) is None:
+            problems.append('Exterior backdrop has no StaticMeshComponent')
     if problems:
         raise LightingValidationError('Refusing reference lighting, no changes made: ' + '; '.join(problems))
 
     # ---- apply phase ----
+    # Owned graded exterior assets first (asset-only, the scene is still untouched).
+    if exterior is not None:
+        instance = _ensure_exterior_instance(u, exterior_texture, data['exterior'])
+        exterior_mesh = exterior.get_component_by_class(u.StaticMeshComponent)
+        original = exterior_mesh.get_material(0)
+        data['exterior']['original_material'] = original.get_path_name() if original else None
+        exterior_mesh.set_material(0, instance)
+    else:
+        skipped.append('exterior grade (no %s actor)' % EXTERIOR_LABEL)
     before = {}
     for label, component in components.items():
         props = data['lights'][label]
@@ -694,6 +818,25 @@ def apply(preset='auto', when=None, *, u=None, actor_subsystem=None, coordinates
     for name, value in fog_rows:
         fog_component.set_editor_property(name, _resolve(u, value))
 
+    local_location = u.Vector(*local_plan['location_ue_cm'])
+    if local_fog is None:
+        local_fog = actors.spawn_actor_from_class(u.LocalFogVolume, local_location)
+        local_fog.set_actor_label(LOCAL_FOG_LABEL)
+    local_fog.set_actor_location(local_location, False, False)
+    local_fog.set_actor_scale3d(u.Vector(1.0, 1.0, 1.0))
+    try:
+        _, extent = local_fog.get_actor_bounds(False)
+        unit = max(extent.x, extent.y, extent.z)
+    except Exception:
+        unit = 0.0
+    if not 1.0 < unit < 100000.0:
+        unit = LOCAL_FOG_UNIT_RADIUS_CM_FALLBACK
+    local_plan['unit_radius_cm_measured'] = unit
+    local_fog.set_actor_scale3d(u.Vector(*[axis / unit for axis in local_plan['semi_axes_ue_cm']]))
+    local_component = local_fog.get_component_by_class(u.LocalFogVolumeComponent)
+    for name, value in local_rows:
+        local_component.set_editor_property(name, _resolve(u, value))
+
     data.update(applied=True, before=before, skipped_optional=skipped, other_post_process_volumes=other_ppvs,
                 height_fog_actor=fog.get_actor_label())
     if save:
@@ -704,6 +847,57 @@ def apply(preset='auto', when=None, *, u=None, actor_subsystem=None, coordinates
     u.log('SUB01_REFERENCE_LIGHTING_APPLIED ' + json.dumps({'preset': preset, 'when': data['when_jst'],
                                                            'phase': data['phase']}))
     return data
+
+
+def _ensure_exterior_instance(u, texture, grade):
+    """Owned unlit material: photo -> desaturate -> * tint -> * brightness -> emissive."""
+    tools = u.AssetToolsHelpers.get_asset_tools()
+    mel = u.MaterialEditingLibrary
+    parent_path = EXTERIOR_GRADED_DIR + '/' + EXTERIOR_GRADED_MATERIAL
+    parent = u.load_asset(parent_path)
+    if parent is None:
+        parent = tools.create_asset(EXTERIOR_GRADED_MATERIAL, EXTERIOR_GRADED_DIR, u.Material, u.MaterialFactoryNew())
+    if not isinstance(parent, u.Material):
+        raise RuntimeError('Owned graded exterior path holds a different asset type: ' + parent_path)
+    parent.set_editor_property('two_sided', True)
+    parent.set_editor_property('shading_model', u.MaterialShadingModel.MSM_UNLIT)
+    mel.delete_all_material_expressions(parent)
+    sample = mel.create_material_expression(parent, u.MaterialExpressionTextureSample, -900, 0)
+    sample.set_editor_property('texture', texture)
+    sample.set_editor_property('sampler_type', u.MaterialSamplerType.SAMPLERTYPE_COLOR)
+    desat = mel.create_material_expression(parent, u.MaterialExpressionDesaturation, -650, 0)
+    fraction = mel.create_material_expression(parent, u.MaterialExpressionScalarParameter, -900, 250)
+    fraction.set_editor_property('parameter_name', 'Desaturation')
+    tint = mel.create_material_expression(parent, u.MaterialExpressionVectorParameter, -650, 250)
+    tint.set_editor_property('parameter_name', 'Tint')
+    tint.set_editor_property('default_value', u.LinearColor(1, 1, 1, 1))
+    brightness = mel.create_material_expression(parent, u.MaterialExpressionScalarParameter, -400, 250)
+    brightness.set_editor_property('parameter_name', 'Brightness')
+    brightness.set_editor_property('default_value', 1.0)
+    tinted = mel.create_material_expression(parent, u.MaterialExpressionMultiply, -400, 0)
+    lit = mel.create_material_expression(parent, u.MaterialExpressionMultiply, -200, 0)
+    links = [mel.connect_material_expressions(sample, 'RGB', desat, ''),
+             mel.connect_material_expressions(fraction, '', desat, 'Fraction'),
+             mel.connect_material_expressions(desat, '', tinted, 'A'),
+             mel.connect_material_expressions(tint, '', tinted, 'B'),
+             mel.connect_material_expressions(tinted, '', lit, 'A'),
+             mel.connect_material_expressions(brightness, '', lit, 'B'),
+             mel.connect_material_property(lit, '', u.MaterialProperty.MP_EMISSIVE_COLOR)]
+    if not all(links):
+        raise RuntimeError('Graded exterior material graph failed to connect (owned asset only; scene untouched)')
+    mel.recompile_material(parent)
+    instance_path = EXTERIOR_GRADED_DIR + '/' + EXTERIOR_GRADED_INSTANCE
+    instance = u.load_asset(instance_path)
+    if instance is None:
+        instance = tools.create_asset(EXTERIOR_GRADED_INSTANCE, EXTERIOR_GRADED_DIR,
+                                      u.MaterialInstanceConstant, u.MaterialInstanceConstantFactoryNew())
+    mel.set_material_instance_parent(instance, parent)
+    mel.set_material_instance_scalar_parameter_value(instance, 'Brightness', grade['brightness'])
+    mel.set_material_instance_scalar_parameter_value(instance, 'Desaturation', grade['desaturation'])
+    mel.set_material_instance_vector_parameter_value(instance, 'Tint', u.LinearColor(*grade['tint'], 1.0))
+    u.EditorAssetLibrary.save_loaded_asset(parent)
+    u.EditorAssetLibrary.save_loaded_asset(instance)
+    return instance
 
 
 def set_lamps(states, *, u=None, actor_subsystem=None):

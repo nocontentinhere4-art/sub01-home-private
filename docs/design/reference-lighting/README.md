@@ -15,8 +15,10 @@ renders or touches the runtime generators.
   toggle (E) and all-lights (L).
 - Process article `x.com/SimbasJungles/status/2109295930021208144` links to an X Article
   ("How I modeled my entire Airbnb with Opus 5.5"). Only its title, preview sentence and cover
-  image were reachable; the article body (prompts, settings) was **not** read. No value below is
-  copied from it.
+  image were reachable to this author; the article body was **not** read here. The coordinator
+  reports having viewed the full article, which describes fixing UE's far default fog start with a
+  LOCAL near-camera fog; the local fog volume below follows that report. No numeric value is
+  copied from the article.
 - No render of the SUB-01 house with this pass has been made or viewed. It is not claimed to match
   the reference.
 
@@ -49,10 +51,11 @@ off) — unverified guess.
   → 6000 K at 90° (monotonic table; sunlight CCT literature range). Colour set to white so the
   temperature is not doubled by the authored sRGB tint.
 - **Sun softness**: source angle 0.8° (disc is 0.53°; extra softness for sheer curtains), contact
-  shadows 0.05 screen, volumetric scattering 1.0 with volumetric shadow.
+  shadows 0.05 screen, volumetric scattering 0.6 (modest, so shafts stay subtle) with volumetric
+  shadow.
 - **Lamps** (kept Movable, authored candela from `authored_lights`): Desk 12 cd 2900 K r 4 cm;
   Bed 3.5 cd 2700 K r 6 cm; KitchenWork 2.4 cd 3000 K r 3 cm; LowerPendant (spot) 10 cd 2800 K
-  r 8 cm; UpperPendant 10 cd 2800 K r 10 cm. Contact shadows 0.03, volumetric scattering 0.25,
+  r 8 cm; UpperPendant 10 cd 2800 K r 10 cm. Contact shadows 0.03, volumetric scattering 0.2,
   no volumetric shadow (cost). `set_lamps({...})` toggles individually.
 - **Post process** (owned unbound volume `SUB01_ReferenceLighting_PostProcess`, priority 10):
   Lumen GI + Lumen reflections, final gather quality 1.5, reflection quality 1.0 (default, not
@@ -61,12 +64,29 @@ off) — unverified guess.
   vignette 0.3, local exposure contrast 0.85/0.95 by day. Software Lumen with screen traces is
   assumed from engine defaults (`r.Lumen.HardwareRayTracing 0`); the project ini already sets
   Lumen GI/reflections and VSM.
-- **Height fog** (reuses the single existing fog, else spawns `SUB01_ReferenceLighting_HeightFog`
-  at the source origin): density 0.01, falloff 0.2, start distance 15 m (interior < 12 m never
-  hazes), max opacity 0.2 (background panorama barely tinted), volumetric fog on, scattering
-  distribution 0.7, extinction scale 0.5, volumetric range 0.5–15 m, cream albedo (245,236,220).
-- **Dust**: the reference shows dust specks, but UE has no cheap built-in dust without a Niagara
-  asset; none invented.
+- **Ground-floor footprint** (source metres, from the `web/house/home.js` shell): 8 x 8 m house,
+  outer walls at ±4 m, 0.18 m thick → interior x, z ∈ [−3.91, 3.91]; air y ∈ [0, 2.85] below the
+  upper floor (~3.05). First-person camera (2, 1.65, 3.1). Room diagonal ≈ 11.4 m.
+- **Global height fog**, kept subtle (reuses the single existing fog, else spawns
+  `SUB01_ReferenceLighting_HeightFog` at the source origin): density 0.005, falloff 0.2, analytic
+  start 6 m, max opacity 0.15. Volumetric fog on, starting at 0 cm with a 14 m view distance
+  (just covers the house, keeps froxels dense), extinction scale 0.4, scattering distribution 0.6,
+  albedo (240, 232, 218).
+- **Local near-camera fog** (`SUB01_ReferenceLighting_LocalFog`, UE LocalFogVolume): ellipsoid
+  centred at source (2.0, 1.45, 1.0) with semi-axes (1.7, 1.35, 2.6) m → bounds x 0.3–3.7,
+  y 0.1–2.8, z −1.6–3.6, inside the footprint and containing the first-person camera. Radial
+  extinction 0.03 /m (peak optical depth ≈ 0.16), height extinction 0, phase g 0.6, albedo
+  (0.96, 0.93, 0.87), no emissive. The engine's unit sphere radius is measured from the actor's
+  bounds at apply time (fallback 500 cm, unverified) before scaling.
+- **Tokyo exterior at night**: the authored backdrop `SUB01_ActualHistoricalTokyoBackground`
+  (unlit emissive photo from `tools/unreal_home_exterior.py`) gets an owned material
+  `M_Sub01ReferenceTokyoBackgroundGraded` / `MI_..` (same texture → desaturate → × tint ×
+  brightness → emissive). Day: brightness 1, neutral. Golden: ≈0.6, warm (1, 0.82, 0.62). Night:
+  0.05, blue (0.45, 0.55, 1.0), 60 % desaturated. The original material is not edited; its path
+  is recorded in the report so it can be restored.
+- **Dust**: no Unreal particle/Niagara dust asset exists in this repository (the three.js
+  `web/house/sun_dust.mjs` is not a UE asset), so no dust is added. The server project's Content
+  was not inspected.
 
 ## Orientation assumption
 

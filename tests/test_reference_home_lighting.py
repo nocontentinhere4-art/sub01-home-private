@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
@@ -120,12 +121,49 @@ def test_labels_follow_authored_light_code():
     assert [row['name'] for row in authored_lights(12, True)] == list(rl.LIGHT_NAMES)
 
 
-def test_fog_start_distance_sane_for_interior():
+def test_fog_start_distances_sane_for_interior():
     fog = {c[0]: v for c, v, _ in rl.fog_properties('day')}
-    assert 1000 <= fog['start_distance'] <= 3000  # beyond the < 12 m interior, not km
-    assert fog['fog_density'] <= 0.02 and fog['volumetric_fog'] is True
-    assert fog['volumetric_fog_extinction_scale'] <= 1.0
-    assert fog['fog_max_opacity'] <= 0.5
+    # Global analytic fog stays subtle and clear of the near room, but is not UE's far default.
+    assert 300 <= fog['start_distance'] <= 1000
+    assert fog['fog_density'] <= 0.01 and fog['fog_max_opacity'] <= 0.2
+    # Volumetric part starts at the camera and its view distance just covers the house.
+    assert fog['volumetric_fog'] is True and fog['volumetric_fog_start_distance'] <= 50
+    assert rl.ROOM_DIAGONAL_M * 100 <= fog['volumetric_fog_distance'] <= 2 * rl.ROOM_DIAGONAL_M * 100
+    assert 0 < fog['volumetric_fog_extinction_scale'] <= 1.0
+    assert all(200 <= c <= 255 for c in rl.FOG['volumetric_fog_albedo'])
+
+
+def test_local_fog_volume_bounded_inside_room_near_camera():
+    bounds = rl.local_fog_bounds_source()
+    for axis, (lo, hi) in bounds.items():
+        room_lo, room_hi = rl.GROUND_INTERIOR_SOURCE[axis]
+        assert room_lo < lo < hi < room_hi, axis
+    assert rl.local_fog_contains(rl.FIRST_PERSON_CAMERA_SOURCE)
+    local = rl.local_fog_plan({'axes': [0, 2, 1], 'signs': [1, -1, 1], 'offset_cm': [10, 20, 30]})
+    assert local['peak_optical_depth'] < 0.3  # low density: haze, not a wall of fog
+    assert local['location_ue_cm'] == [10 + 200, 20 - 100, 30 + 145]
+    assert local['semi_axes_ue_cm'] == pytest.approx([170, 260, 135])
+
+
+def test_volumetric_shafts_are_modest():
+    sun = rl.sun_properties(30)
+    assert 0 < sun['volumetric_scattering_intensity'] <= 1.0 and sun['cast_volumetric_shadow']
+    assert rl.lamp_properties('DeskLamp', True)['volumetric_scattering_intensity'] < sun['volumetric_scattering_intensity']
+    assert 0 < rl.LOCAL_FOG['fog_phase_g'] < 0.9 and all(0.8 <= a < 1 for a in rl.LOCAL_FOG['fog_albedo'])
+
+
+def test_night_exterior_backdrop_darker_and_bluer_than_day():
+    day = rl.exterior_grade(40)
+    night = rl.exterior_grade(-30)
+    forced = rl.exterior_grade(40, 'night')
+    golden = rl.exterior_grade(3)
+    assert night['brightness'] < 0.1 < day['brightness'] == pytest.approx(1.0)
+    assert forced['brightness'] == pytest.approx(night['brightness'])
+    assert night['tint'][2] > night['tint'][0] and night['desaturation'] > day['desaturation']
+    assert night['brightness'] < golden['brightness'] < day['brightness']
+    assert golden['tint'][0] > golden['tint'][2]  # warm at sunset
+    data = rl.plan('night', dt.datetime(2026, 10, 14, tzinfo=JST))
+    assert data['exterior']['brightness'] < rl.plan('day', dt.datetime(2026, 10, 14, tzinfo=JST))['exterior']['brightness']
 
 
 def test_orientation_default_north_minus_z_and_ue_rotation():
@@ -163,6 +201,9 @@ class FakeActor:
     def get_component_by_class(self, cls):
         return FakeComponent(self.log)
 
+    def get_actor_bounds(self, only_colliding):
+        return (0, 0, 0), SimpleNamespace(x=500.0, y=500.0, z=500.0)
+
     def __getattr__(self, name):
         if name.startswith('set_'):
             return lambda *a, **k: self.log.append(name)
@@ -184,6 +225,13 @@ class FakeActors:
 class FakeUnreal:
     class ExponentialHeightFog: pass
     class PostProcessVolume: pass
+    class LocalFogVolume: pass
+    class Texture2D: pass
+    LocalFogVolumeComponent = StaticMeshComponent = object
+
+    @staticmethod
+    def load_asset(path):
+        return None
     LightComponent = DirectionalLightComponent = PointLightComponent = SpotLightComponent = object
     SkyLightComponent = ExponentialHeightFogComponent = RendererSettings = object
 
@@ -256,5 +304,16 @@ def test_apply_happy_path_with_fake_editor_sets_lights_ppv_and_fog():
     finally:
         del FakeActor.get_editor_property
     assert data['applied'] and data['phase'] in ('day', 'golden')
-    assert log.count('spawn') == 2  # owned PPV + height fog (none existed)
+    assert log.count('spawn') == 3  # owned PPV + height fog + local fog (none existed)
     assert log.count('set_intensity') >= len(rl.LIGHT_LABELS) and 'set_actor_rotation' in log
+
+
+def test_apply_refuses_when_exterior_texture_missing_without_mutation():
+    log = []
+    u = FullFakeUnreal([])
+    actors = FakeActors([FakeActor(label, log) for label in rl.LIGHT_LABELS + (rl.EXTERIOR_LABEL,)], log)
+    with pytest.raises(rl.LightingValidationError, match='texture'):
+        rl.apply('night', dt.datetime(2026, 10, 14, tzinfo=JST), u=u, actor_subsystem=actors,
+                 coordinates={'axes': [0, 2, 1], 'signs': [1, 1, 1], 'offset_cm': [0, 0, 0]},
+                 load_level=False, save=False, write_report=False)
+    assert log == []
