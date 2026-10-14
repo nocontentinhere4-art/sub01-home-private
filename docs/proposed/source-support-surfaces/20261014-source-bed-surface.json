@@ -1,0 +1,229 @@
+{
+  "schema": "sub01.source-support-surface.v1",
+  "kind": "bed",
+  "label": "source_measured",
+  "native_verified": false,
+  "runtime_ready": false,
+  "source": {
+    "glb": "web/house/assets/cc0-queen-bed/queen-bed.glb",
+    "glb_sha256": "57cc312cca389e9ac113be44c77f1c445e92eee056ef092460fe20a78d5ba07c",
+    "metadata": "web/house/assets/cc0-queen-bed/queen-bed.json",
+    "metadata_sha256": "c4ff4ec7c44fc3d03b53581764bdcc9167858c2cb2775e574aa59c618fa861b9",
+    "authored_runtime_position_web_m": [
+      -2.4,
+      3.0,
+      -2.35
+    ],
+    "authored_runtime_yaw_rad": 0.0,
+    "frame": "UE world cm = 100 * (x, z, y) of the web world (three.js rotation.y yaw then position); AUTHORED placement, not native",
+    "metadata_recorded_sha256": "57cc312cca389e9ac113be44c77f1c445e92eee056ef092460fe20a78d5ba07c"
+  },
+  "errors": [],
+  "rule": "tools/unreal_bed_surface_audit.py mattress_top/duvet_top/head_end_direction on the material groups (mattress 'cream[ _]?upholstery', pillows 'linen[ _]?upholstery', duvet 'blue[ _]?fabric'); min mattress area 15000 cm2",
+  "groups": [
+    {
+      "node": "CC0_queen_0",
+      "material": "Original walnut grain",
+      "vertices": 3456,
+      "triangles": 1692,
+      "world_bounds_cm": {
+        "min": [
+          -322.0,
+          -342.75,
+          300.0
+        ],
+        "max": [
+          -158.0,
+          -127.25,
+          338.0
+        ]
+      },
+      "normal_agreement": 1.0
+    },
+    {
+      "node": "CC0_queen_1",
+      "material": "Original teal upholstery",
+      "vertices": 384,
+      "triangles": 188,
+      "world_bounds_cm": {
+        "min": [
+          -325.0,
+          -346.25,
+          325.0
+        ],
+        "max": [
+          -155.0,
+          -339.75,
+          427.0
+        ]
+      },
+      "normal_agreement": 1.0
+    },
+    {
+      "node": "CC0_queen_2",
+      "material": "Original cream upholstery",
+      "vertices": 384,
+      "triangles": 188,
+      "world_bounds_cm": {
+        "min": [
+          -316.0,
+          -336.5,
+          338.0
+        ],
+        "max": [
+          -164.0,
+          -133.5,
+          360.0
+        ]
+      },
+      "normal_agreement": 1.0
+    },
+    {
+      "node": "CC0_queen_3",
+      "material": "Original linen upholstery",
+      "vertices": 876,
+      "triangles": 1312,
+      "world_bounds_cm": {
+        "min": [
+          -308.4,
+          -323.99,
+          355.44
+        ],
+        "max": [
+          -171.6,
+          -279.99,
+          376.7624
+        ]
+      },
+      "normal_agreement": 1.0
+    },
+    {
+      "node": "CC0_queen_4",
+      "material": "Original blue_fabric upholstery",
+      "vertices": 1234,
+      "triangles": 2096,
+      "world_bounds_cm": {
+        "min": [
+          -324.0,
+          -281.69,
+          350.84
+        ],
+        "max": [
+          -156.0,
+          -135.53,
+          369.8064
+        ]
+      },
+      "normal_agreement": 1.0
+    },
+    {
+      "node": "CC0_queen_5",
+      "material": "Original oak grain",
+      "vertices": 4224,
+      "triangles": 2068,
+      "world_bounds_cm": {
+        "min": [
+          -317.0,
+          -329.85,
+          335.5
+        ],
+        "max": [
+          -163.0,
+          -140.15,
+          338.0
+        ]
+      },
+      "normal_agreement": 1.0
+    }
+  ],
+  "mattress": {
+    "material": "Original cream upholstery",
+    "area_cm2": 30004.07,
+    "top_z_cm": [
+      359.342,
+      360.0
+    ],
+    "world_bounds_cm": {
+      "min": [
+        -314.74836111068726,
+        -335.2483606338501,
+        359.3415856361389
+      ],
+      "max": [
+        -165.25163888931274,
+        -134.7516393661499,
+        360.0000023841858
+      ]
+    },
+    "centroid_xy_cm": [
+      -240.0,
+      -235.0
+    ],
+    "long_axis_xy": [
+      0.0,
+      -1.0
+    ],
+    "length_cm": 200.497,
+    "width_cm": 149.497,
+    "selection": "actual mattress-material upward triangles (|n_z| >= 0.90) within 4.0 cm of the highest top point; not a replacement box",
+    "collision_trace_verified": false,
+    "head_end_direction_xy": [
+      0.0,
+      -1.0
+    ],
+    "triangle_count": 18
+  },
+  "pillows": {
+    "vertices": 876,
+    "world_bounds_cm": {
+      "min": [
+        -308.4,
+        -323.99,
+        355.44
+      ],
+      "max": [
+        -171.6,
+        -279.99,
+        376.7624
+      ]
+    }
+  },
+  "duvet": [
+    {
+      "material": "Original blue_fabric upholstery",
+      "top_surface": {
+        "area_cm2": 24368.628,
+        "top_z_cm": [
+          355.969,
+          369.806
+        ],
+        "world_bounds_cm": {
+          "min": [
+            -323.99999737739563,
+            -281.68999910354614,
+            355.9692680835724
+          ],
+          "max": [
+            -156.00000262260437,
+            -135.5299985408783,
+            369.8063552379608
+          ]
+        },
+        "centroid_xy_cm": [
+          -240.0,
+          -208.61
+        ],
+        "long_axis_xy": [
+          0.999833,
+          0.018264
+        ],
+        "length_cm": 169.262,
+        "width_cm": 147.676,
+        "selection": "actual mattress-material upward triangles (|n_z| >= 0.80) within 12.0 cm of the highest top point; not a replacement box",
+        "collision_trace_verified": false,
+        "triangle_count": 934
+      },
+      "top_surface_refused": null
+    }
+  ]
+}

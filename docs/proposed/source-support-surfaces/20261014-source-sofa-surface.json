@@ -1,0 +1,502 @@
+{
+  "schema": "sub01.source-support-surface.v1",
+  "kind": "sofa",
+  "label": "source_measured",
+  "native_verified": false,
+  "runtime_ready": false,
+  "source": {
+    "glb": "web/house/assets/haven-sofa/sofa.glb",
+    "glb_sha256": "92b7db30f9fbf169f49e75547d0d2964ce21bf410a733b963761dc0eaed2398d",
+    "metadata": "web/house/assets/haven-sofa/sofa.json",
+    "metadata_sha256": "66783c8b418cb916321e971a5fde3dc75d96577ca115323e0491f2c59b241310",
+    "authored_runtime_position_web_m": [
+      -1.8,
+      0.0,
+      0.1
+    ],
+    "authored_runtime_yaw_rad": -1.5707963267948966,
+    "frame": "UE world cm = 100 * (x, z, y) of the web world (three.js rotation.y yaw then position); AUTHORED placement, not native",
+    "metadata_recorded_sha256": "92b7db30f9fbf169f49e75547d0d2964ce21bf410a733b963761dc0eaed2398d"
+  },
+  "errors": [],
+  "rule": "tools/unreal_sofa_surface_audit.py seat_surface on the Haven_linen group: mean vertex normal z > 0.65, edge-connected, exposed, per-cushion exposed projected area >= 4000 cm2 (MIN_SEAT_AREA_CM2)",
+  "groups": [
+    {
+      "node": "Haven_felt",
+      "material": null,
+      "vertices": 1997,
+      "triangles": 2972,
+      "world_bounds_cm": {
+        "min": [
+          -216.45,
+          -87.0,
+          0.0
+        ],
+        "max": [
+          -143.0,
+          107.0,
+          20.35
+        ]
+      },
+      "normal_agreement": 0.993912
+    },
+    {
+      "node": "Haven_legs",
+      "material": null,
+      "vertices": 1664,
+      "triangles": 2544,
+      "world_bounds_cm": {
+        "min": [
+          -216.4247,
+          -84.9456,
+          0.9164
+        ],
+        "max": [
+          -143.636,
+          104.9456,
+          22.1103
+        ]
+      },
+      "normal_agreement": 0.988994
+    },
+    {
+      "node": "Haven_linen",
+      "material": null,
+      "vertices": 18632,
+      "triangles": 32944,
+      "world_bounds_cm": {
+        "min": [
+          -226.25,
+          -103.7451,
+          16.0
+        ],
+        "max": [
+          -133.75,
+          123.7451,
+          91.7294
+        ]
+      },
+      "normal_agreement": 0.997997
+    },
+    {
+      "node": "Haven_seams",
+      "material": null,
+      "vertices": 21876,
+      "triangles": 30800,
+      "world_bounds_cm": {
+        "min": [
+          -220.3207,
+          -103.738,
+          33.598
+        ],
+        "max": [
+          -145.4222,
+          123.738,
+          91.1975
+        ]
+      },
+      "normal_agreement": 0.994675
+    }
+  ],
+  "footprint_world_bounds_cm": {
+    "min": [
+      -226.25,
+      -103.7451,
+      0.0
+    ],
+    "max": [
+      -133.75,
+      123.7451,
+      91.7294
+    ]
+  },
+  "seat_identity_basis": "glTF node name Haven_linen (sofa.glb has no material records; native uses the Haven_linen material)",
+  "seat": {
+    "area_cm2": 9523.111,
+    "projected_area_cm2": 9323.274,
+    "top_z_cm": [
+      46.946,
+      50.3
+    ],
+    "world_bounds_cm": {
+      "min": [
+        -221.29872918128964,
+        -79.80374336242676,
+        46.94648087024689
+      ],
+      "max": [
+        -163.3539053797722,
+        99.80374336242676,
+        50.300002098083496
+      ]
+    },
+    "cushions": [
+      {
+        "projected_area_cm2": 5806.41,
+        "exposed_projected_area_cm2": 4661.637,
+        "exposed_surface_area_cm2": 4761.555,
+        "world_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            -79.80374336242676,
+            46.94648087024689
+          ],
+          "max": [
+            -153.90127182006836,
+            8.60374629497528,
+            50.300002098083496
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            -79.80374336242676,
+            46.94648087024689
+          ],
+          "max": [
+            -163.35395753383636,
+            8.60374629497528,
+            50.300002098083496
+          ]
+        },
+        "top_z_cm": 50.300002098083496,
+        "centroid_xy_cm": [
+          -194.087,
+          -35.61
+        ],
+        "mean_up_normal": 0.918453,
+        "triangle_count": 768
+      },
+      {
+        "projected_area_cm2": 5806.41,
+        "exposed_projected_area_cm2": 4661.637,
+        "exposed_surface_area_cm2": 4761.555,
+        "world_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            11.39625370502472,
+            46.94648087024689
+          ],
+          "max": [
+            -153.90127182006836,
+            99.80374336242676,
+            50.300002098083496
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            11.39625370502472,
+            46.94648087024689
+          ],
+          "max": [
+            -163.3539053797722,
+            99.80374336242676,
+            50.300002098083496
+          ]
+        },
+        "top_z_cm": 50.300002098083496,
+        "centroid_xy_cm": [
+          -194.087,
+          55.59
+        ],
+        "mean_up_normal": 0.918453,
+        "triangle_count": 768
+      }
+    ],
+    "patches": [
+      {
+        "projected_area_cm2": 5806.41,
+        "exposed_projected_area_cm2": 4661.637,
+        "exposed_surface_area_cm2": 4761.555,
+        "world_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            -79.80374336242676,
+            46.94648087024689
+          ],
+          "max": [
+            -153.90127182006836,
+            8.60374629497528,
+            50.300002098083496
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            -79.80374336242676,
+            46.94648087024689
+          ],
+          "max": [
+            -163.35395753383636,
+            8.60374629497528,
+            50.300002098083496
+          ]
+        },
+        "top_z_cm": 50.300002098083496,
+        "centroid_xy_cm": [
+          -194.087,
+          -35.61
+        ],
+        "mean_up_normal": 0.918453,
+        "triangle_count": 1268
+      },
+      {
+        "projected_area_cm2": 5806.41,
+        "exposed_projected_area_cm2": 4661.637,
+        "exposed_surface_area_cm2": 4761.555,
+        "world_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            11.39625370502472,
+            46.94648087024689
+          ],
+          "max": [
+            -153.90127182006836,
+            99.80374336242676,
+            50.300002098083496
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -221.29872918128964,
+            11.39625370502472,
+            46.94648087024689
+          ],
+          "max": [
+            -163.3539053797722,
+            99.80374336242676,
+            50.300002098083496
+          ]
+        },
+        "top_z_cm": 50.300002098083496,
+        "centroid_xy_cm": [
+          -194.087,
+          55.59
+        ],
+        "mean_up_normal": 0.918453,
+        "triangle_count": 1268
+      },
+      {
+        "projected_area_cm2": 17470.17,
+        "exposed_projected_area_cm2": 2857.305,
+        "exposed_surface_area_cm2": 2864.34,
+        "world_bounds_cm": {
+          "min": [
+            -222.00318753719327,
+            -93.85782718658447,
+            34.9113404750824
+          ],
+          "max": [
+            -136.99681341648102,
+            113.85782718658449,
+            37.99999952316284
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -221.86322987079618,
+            -83.55002641677856,
+            35.53774952888489
+          ],
+          "max": [
+            -155.5552351474762,
+            103.51376295089723,
+            37.99999952316284
+          ]
+        },
+        "top_z_cm": 37.99999952316284,
+        "centroid_xy_cm": [
+          -180.974,
+          10.293
+        ],
+        "mean_up_normal": 0.919213,
+        "triangle_count": 1296
+      },
+      {
+        "projected_area_cm2": 3771.909,
+        "exposed_projected_area_cm2": 2107.478,
+        "exposed_surface_area_cm2": 2199.679,
+        "world_bounds_cm": {
+          "min": [
+            -154.9672383069992,
+            -91.63233280181885,
+            78.70761156082153
+          ],
+          "max": [
+            -135.8327704668045,
+            111.63233280181886,
+            84.49999690055847
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -154.78828132152557,
+            -91.63233280181885,
+            78.70761156082153
+          ],
+          "max": [
+            -135.8327704668045,
+            111.63233280181886,
+            84.49999690055847
+          ]
+        },
+        "top_z_cm": 84.49999690055847,
+        "centroid_xy_cm": [
+          -142.581,
+          9.928
+        ],
+        "mean_up_normal": 0.876561,
+        "triangle_count": 820
+      },
+      {
+        "projected_area_cm2": 1676.257,
+        "exposed_projected_area_cm2": 1501.316,
+        "exposed_surface_area_cm2": 1572.799,
+        "world_bounds_cm": {
+          "min": [
+            -224.09013986587522,
+            102.68784523010255,
+            67.05248355865479
+          ],
+          "max": [
+            -135.90986013412476,
+            122.31213808059694,
+            71.05000019073486
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -224.09013986587522,
+            102.68784523010255,
+            67.05248355865479
+          ],
+          "max": [
+            -135.90986013412476,
+            122.31213808059694,
+            71.05000019073486
+          ]
+        },
+        "top_z_cm": 71.05000019073486,
+        "centroid_xy_cm": [
+          -184.044,
+          113.019
+        ],
+        "mean_up_normal": 0.865147,
+        "triangle_count": 778
+      },
+      {
+        "projected_area_cm2": 1676.257,
+        "exposed_projected_area_cm2": 1496.767,
+        "exposed_surface_area_cm2": 1567.723,
+        "world_bounds_cm": {
+          "min": [
+            -224.09013986587522,
+            -102.31213808059691,
+            67.05248355865479
+          ],
+          "max": [
+            -135.90986013412476,
+            -82.68784523010254,
+            71.05000019073486
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -224.09013986587522,
+            -102.31213808059691,
+            67.05248355865479
+          ],
+          "max": [
+            -135.90986013412476,
+            -82.76217818260193,
+            71.05000019073486
+          ]
+        },
+        "top_z_cm": 71.05000019073486,
+        "centroid_xy_cm": [
+          -184.136,
+          -93.027
+        ],
+        "mean_up_normal": 0.865147,
+        "triangle_count": 778
+      },
+      {
+        "projected_area_cm2": 1021.66,
+        "exposed_projected_area_cm2": 1021.66,
+        "exposed_surface_area_cm2": 1116.949,
+        "world_bounds_cm": {
+          "min": [
+            -158.53772193193436,
+            -79.11390900611877,
+            86.85688376426697
+          ],
+          "max": [
+            -146.0348266363144,
+            7.97440469264984,
+            91.72939658164978
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -158.53772193193436,
+            -79.11390900611877,
+            86.85688376426697
+          ],
+          "max": [
+            -146.0348266363144,
+            7.97440469264984,
+            91.72939658164978
+          ]
+        },
+        "top_z_cm": 91.72939658164978,
+        "centroid_xy_cm": [
+          -152.224,
+          -35.656
+        ],
+        "mean_up_normal": 0.865692,
+        "triangle_count": 653
+      },
+      {
+        "projected_area_cm2": 1021.66,
+        "exposed_projected_area_cm2": 1021.66,
+        "exposed_surface_area_cm2": 1116.949,
+        "world_bounds_cm": {
+          "min": [
+            -158.53772193193436,
+            12.086091041564941,
+            86.85688376426697
+          ],
+          "max": [
+            -146.0348266363144,
+            99.17440176010132,
+            91.72939658164978
+          ]
+        },
+        "exposed_bounds_cm": {
+          "min": [
+            -158.53772193193436,
+            12.086091041564941,
+            86.85688376426697
+          ],
+          "max": [
+            -146.0348266363144,
+            99.17440176010132,
+            91.72939658164978
+          ]
+        },
+        "top_z_cm": 91.72939658164978,
+        "centroid_xy_cm": [
+          -152.224,
+          55.544
+        ],
+        "mean_up_normal": 0.865692,
+        "triangle_count": 653
+      }
+    ],
+    "selection": "upward (mean vertex normal z > 0.65) edge-connected upholstery patches, exposed triangles only (nothing of the component above the centroid), exposed projected area >= 4000 cm2 per cushion; not a replacement box",
+    "collision_trace_verified": false,
+    "triangle_count": 1536,
+    "meets_controller_min_seat_area": true
+  }
+}
