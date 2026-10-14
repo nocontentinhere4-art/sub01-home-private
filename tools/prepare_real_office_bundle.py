@@ -34,9 +34,9 @@ def board_surfaces(parts):
 def measured_shelf_depth_plan(depth,baseboard_front,desk_back):
  """Exact genuine shelf depth fits measured baseboard/desk interval, unchanged."""
  if not all(math.isfinite(v)for v in [*depth,baseboard_front,desk_back])or depth[1]<=depth[0]:raise ValueError('Invalid actual furniture/architecture bounds')
- centre=baseboard_front+.005-depth[0];front=centre+depth[1];front_gap=desk_back-front
+ centre=baseboard_front+.0051-depth[0];front=centre+depth[1];front_gap=desk_back-front
  if front_gap<.002:raise ValueError('Full genuine shelf cannot fit with5mm baseboard and2mm desk clearances')
- return {'centre_ue_y_m':centre,'actual_baseboard137138_front_ue_y_m':baseboard_front,'actual_desk_back_ue_y_m':desk_back,'actual_shelf_back_ue_y_m':centre+depth[0],'actual_shelf_front_ue_y_m':front,'back_baseboard_gap_m':.005,'front_desk_gap_m':front_gap,'unchanged_source_shape_scale':True,'full_triangle_bvh_required':True}
+ return {'centre_ue_y_m':centre,'actual_baseboard137138_front_ue_y_m':baseboard_front,'actual_desk_back_ue_y_m':desk_back,'actual_shelf_back_ue_y_m':centre+depth[0],'actual_shelf_front_ue_y_m':front,'back_baseboard_gap_m':.0051,'precision_clearance_forward_delta_m':.0001,'actual160_precision_touch_witness':{'source160_front_ue_y_m':-3.877500057220459,'previous_signed_gap_m':7.648020972084169e-08,'diagnostic_sha256':'0a026144131f29882aebacd9f1728b64fe72650ecb19583a9d1a53f31e7b9f6a'},'front_desk_gap_m':front_gap,'unchanged_source_shape_scale':True,'full_triangle_bvh_required':True}
 
 
 def shelf_export(source,output,centres=CENTRES):
@@ -107,9 +107,11 @@ def run(args):
  depth_plan=measured_shelf_depth_plan(depth,baseboard_front,desk['actual_export_bounds_m'][0][2])
  centres=tuple((x,depth_plan['centre_ue_y_m'])for x,_ in CENTRES)
  shelf=shelf_export(args.shelf_source,output/'shelves.glb',centres);shelf['actual_architecture_clearance']=depth_plan;books,groups=prepare_books(args.books_glb,args.books_report,shelf['boards'])
+ from real_office_plant import source_plan,DELTA
+ plant,plant_members=source_plan(args.home_source)
  _,shelf_parts=geometry(args.shelf_source);_,home=geometry(args.home_source)
  def bvh(points,faces):return BVHTree.FromPolygons([Vector(p)for p in points],faces,all_triangles=True,epsilon=0)
- retired={162,181,182,190,191,126,255,256}
+ retired={162,181,182,190,191,126,255,256,221,222,223,224}
  hide=json.loads(Path(args.books_hide_manifest).read_text());old_cube_names={r['name']for r in hide['originals']};home_doc,_=read_gltf(Path(args.home_source));retired|={i for i,n in enumerate(home_doc['nodes'])if n.get('name')in old_cube_names}
  def bounds(points):return [[min(p[a]for p in points)for a in range(3)],[max(p[a]for p in points)for a in range(3)]]
  def intersects(a,b):return all(a[0][i]<=b[1][i]and b[0][i]<=a[1][i]for i in range(3))
@@ -129,22 +131,35 @@ def run(args):
     if not intersects(bounds(pts),hbox):continue
     hits=sb.overlap(hb)
     if hits:issues.append({'shelf':instance,'home_node':node,'pairs':len(hits)})
- desk_doc,deskparts=geometry(output/'desk.glb')
+ desk_doc,deskparts=geometry(output/'desk.glb');desk_bvhs=[]
  for row in deskparts:
-  dp=[(p[0],p[2],p[1])for p in row['points']];db=bvh(dp,row['triangles'])
+  dp=[(p[0],p[2],p[1])for p in row['points']];db=bvh(dp,row['triangles']);desk_bvhs.append((row,dp,db))
   for sb in shelf_bvhs:
    if db.overlap(sb):issues.append({'desk_node':row['node'],'shelf_overlap':True})
+ plant_bvhs=[];plant_contacts=0;allowed={(r['node'],r['triangle'])for r in plant['exact_nonpenetrating_base_boundary_faces']}
+ for row in plant_members:
+  points=[(p[0]+DELTA[0],p[2]+DELTA[1],p[1]+DELTA[2])for p in row['points']];pb=bvh(points,row['triangles']);plant_bvhs.append(pb)
+  for dr,dp,db in desk_bvhs:
+   for pi,di in pb.overlap(db):
+    pp=[points[v]for v in row['triangles'][pi]];dd=[dp[v]for v in dr['triangles'][di]]
+    if dr['node']==44 and (row['node'],pi)in allowed and min(p[2]for p in pp)>=.845-1e-8 and all(abs(p[2]-.845)<1e-7 for p in dd):plant_contacts+=1
+    else:issues.append({'plant_node':row['node'],'plant_triangle':pi,'desk_node':dr['node'],'desk_triangle':di})
+  if any(pb.overlap(sb)for sb in shelf_bvhs):issues.append({'plant_node':row['node'],'real_shelf_penetration':True})
+  for node,hbox,hb in cached_home:
+   if intersects(bounds(points),hbox)and pb.overlap(hb):issues.append({'plant_node':row['node'],'protected_home_node':node})
+ plant['source_collision_proof']={'ok':not issues,'exact_nonpenetrating_table_contact_pairs':plant_contacts,'epsilon':0}
  for book in books:
   delta=[v/100 for v in book['delta_ue_cm']]
   for row in groups[book['id']]:
    pts=[(p[0]+delta[0],p[2]+delta[1],p[1]+delta[2])for p in row['points']];bb=bvh(pts,row['triangles'])
+   if any(bb.overlap(pb)for pb in plant_bvhs):issues.append({'book':book['id'],'real_plant_penetration':True})
    if any(bb.overlap(sb)for sb in shelf_bvhs):issues.append({'book':book['id'],'real_shelf_penetration':True})
    for node,hbox,hb in cached_home:
     if not intersects(bounds(pts),hbox):continue
     hits=bb.overlap(hb)
     if hits:issues.append({'book':book['id'],'home_node':node,'pairs':len(hits)})
  if issues:raise ValueError('Actual whole office collision proof failed '+json.dumps(issues[:100]))
- receipt={'schema':'sub01.real-office-bundle.v1','desk':desk,'shelf':shelf,'books':books,'complete_original_book_glb_sha256':BOOKS_SHA,'whole_book_geometry_pbr_preserved':True,'books_native_retarget_only':True,'hide_only_source_actor_nodes':[181,182,190,191],'home_source_sha256':HOME_SHA,'desk_forward_delta_y_cm':8,'original_devices_chair_stairs_unchanged':True,'source_triangle_collision_proof':{'ok':True,'issues':[],'retired_exact_source_nodes':sorted(retired)},'native_visual_verified':False}
+ receipt={'schema':'sub01.real-office-bundle.v1','desk':desk,'shelf':shelf,'books':books,'plant':plant,'complete_original_book_glb_sha256':BOOKS_SHA,'whole_book_geometry_pbr_preserved':True,'books_native_retarget_only':True,'hide_only_source_actor_nodes':[181,182,190,191],'home_source_sha256':HOME_SHA,'desk_forward_delta_y_cm':8,'original_devices_chair_stairs_unchanged':True,'source_triangle_collision_proof':{'ok':True,'issues':[],'retired_exact_source_nodes':sorted(retired)},'native_visual_verified':False}
  (output/'office-bundle.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps({'schema':receipt['schema'],'books':len(books),'boards':len(shelf['boards']),'source_collision_proof':True}));return receipt
 
 if __name__=='__main__':
