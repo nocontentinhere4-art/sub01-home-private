@@ -1,0 +1,64 @@
+{
+  "schema": "sub01.real-kitchen-cabinet-sink-search.v1",
+  "date_utc": "2026-10-14",
+  "outcome": "no_genuine_acquirable_source",
+  "summary": "No externally authored model that is CC0 (or equally permissive), downloadable without login/payment, realistic, and fits the actual kitchen slots was found for the lower cabinet run, the upper cabinet, the sink or the tap. BlenderKit lists CC0-labelled realistic taps and one kitchen composition, but every one is isFree=false (paid plan + login); none was downloaded, measured or hashed. Procedural/Blender kitchen parts stay; nothing is hidden.",
+  "slots": {
+    "counter_top": {"y_top_m": 0.9225, "slab_x_m": [-3.78, -0.62], "slab_z_m": [-3.88, -3.18], "underside_y_m": 0.8675, "cite": "web/house/home.js:663-673"},
+    "sink_opening": {"x_m": [-3.02, -2.38], "z_m": [-3.70, -3.27], "bowl_center_m": [-2.7, -3.485], "bowl_outer_m": [0.64, 0.43], "bowl_floor_y_m": 0.754, "rim_top_y_m": 0.936, "cite": "web/house/home.js:666-669,722-729"},
+    "tap": {"base_m": [-2.7, 0.93, -3.79], "max_y_m": 1.24, "spout_end_m": [-2.7, 1.16, -3.53], "reach_m": 0.26, "clear_height_to_strip_bottom_m": 1.6625, "cite": "web/house/home.js:730-739,710-720"},
+    "espresso_edge_x_m": -1.415,
+    "lower_run": {"x_m": [-3.725, -0.675], "z_m": [-3.86, -3.1975], "y_m": [0.0, 0.8675], "doors": 4, "door_centers_x_m": [-3.3, -2.6, -1.9, -1.2], "door_size_m": [0.65, 0.76, 0.035], "hinge": "left (-x) edge of each door, pivot (center-0.325, 0.44, -3.192), open angle -0.49*pi", "fillers_m": {"left": 0.10, "right": 0.20}, "partitions_x_m": [-2.95, -2.25, -1.55], "cite": "web/house/lower_kitchen_cabinet.mjs:2-6,31-62"},
+    "upper_run": {"center_m": [-2.2, 2.05, -3.71], "fallback_size_m": [3.1, 0.7, 0.36], "doors": 4, "built_by": "tools/build_home_upper_cabinet.py", "doors_attached_by": "web/house/cabinet_doors.mjs:31", "cite": "web/house/home.js:674-705"}
+  },
+  "interaction_requirements": [
+    "Lower run replacement must provide 4 separately addressable door meshes, each 0.65x0.76 m (+/- a few mm), pivotable about its own left vertical edge at the hinge positions above, or the four-door interaction/persistence (settings.lowerCabinets[4]) and sweep-collision check break.",
+    "A single fused mesh, or doors merged into a carcass, cannot replace the interactive run; at most it could replace the static carcass behind the existing interactive doors.",
+    "Upper run replacement must keep 4 door nodes consumable by attachUpperCabinetDoors (settings.cabinets[4]).",
+    "Sink replacement must fit the 0.64x0.43 opening and keep the drain at bowl center; tap must stay under the strip light (y < 1.66) and reach the bowl."
+  ],
+  "ue_conversion": "UE cm = (x, z, y) * 100 from source metres; UE yaw = -source yaw. Not applied: no candidate acquired.",
+  "sources_checked": [
+    {"source": "Poly Haven", "access": "curl api.polyhaven.com/assets?t=models (521 models) + /info/<id>", "licence": "CC0 (https://polyhaven.com/license)", "queries": ["kitchen","cabinet","cupboard","sink","tap","faucet","counter","basin","drawer"],
+     "results": [
+       {"id": "GothicCabinet_01", "author": "Kirill Sannikov", "dims_mm": [1719,1129,2361], "reason": "freestanding gothic carved cabinet; not a base/wall kitchen unit"},
+       {"id": "chinese_cabinet", "author": "Kirill Sannikov", "dims_mm": [1262,545,2872], "reason": "freestanding antique"},
+       {"id": "chinese_commode", "author": "Kirill Sannikov", "dims_mm": [4490,1170,2020], "reason": "antique, dims wrong"},
+       {"id": "painted_wooden_cabinet", "author": "Kirill Sannikov", "dims_mm": [1195,617,1182], "reason": "painted rustic freestanding"},
+       {"id": "painted_wooden_cabinet_02", "author": "Kirill Sannikov", "dims_mm": [997,729,2569], "reason": "tall painted rustic"},
+       {"id": "vintage_cabinet_01", "author": "Rico Cilliers", "dims_mm": [2022,670,2235], "reason": "vintage freestanding dresser"},
+       {"id": "vintage_wooden_drawer_01", "author": "James Ray Cock", "dims_mm": [1715,1007,1091], "reason": "vintage drawer unit, too deep"},
+       {"id": "modern_wooden_cabinet", "author": "Patrik Pangerl", "dims_mm": [2440,520,680], "reason": "low sideboard 0.68 m tall; no 4x0.65 doors"},
+       {"id": "drawer_cabinet", "author": "Ulan Cabanilla", "dims_mm": [1141,488,1881], "reason": "tall drawer cabinet"},
+       {"id": "electric_stove", "reason": "appliance, not cabinet/sink"},
+       {"id": "garden_hose_wall_mounted_01 / modular_pipes_plastic_01", "reason": "tag 'tap' is outdoor garden hardware, not a kitchen tap"}
+     ], "verdict": "no kitchen base/wall cabinet, sink or tap (confirms real-furniture-acquisition-packet.md:82)"},
+    {"source": "ambientCG", "access": "curl ambientcg.com/api/v2/full_json?type=3DModel&q=...", "licence": "CC0", "queries": ["sink","faucet","cabinet","kitchen"], "verdict": "0 3D models for sink/faucet/cabinet; 'kitchen' returns only materials (tiles, marble) and food"},
+    {"source": "Sketchfab", "access": "curl api.sketchfab.com/v3/search?licenses=cc0", "licence": "CC0 Public Domain filter (CC Attribution excluded)", "queries": ["kitchen sink","faucet","kitchen cabinet","base cabinet","kitchen tap","sink","cabinet","tap","kitchen","cupboard"],
+     "verdict": "0 CC0 sinks/faucets/kitchen cabinets. CC0 'cabinet' hits are museum scans (Smithsonian cabinet door panel, artsmia Augsburg table cabinet c.1560). CC0 'kitchen' hits are NewHorizonHomesInc whole-house photogrammetry scans (single fused meshes, 92k-493k faces): no separable doors, cannot be cut into a fitting unit. Unfiltered kitchen-sink results are CC Attribution / Free Standard (not CC0). Download requires login regardless."},
+    {"source": "Smithsonian Open Access", "access": "api.si.edu with DEMO_KEY", "licence": "CC0", "verdict": "NOT REACHED: OVER_RATE_LIMIT with DEMO_KEY; no own key. Via Sketchfab mirror only a cabinet door panel scan (museum object, not kitchen)."},
+    {"source": "Kenney Furniture Kit", "url": "https://kenney.nl/assets/furniture-kit", "licence": "page states 'Creative Commons CC0'", "verdict": "rejected for realism: stylised low-poly kit; zip contents not downloaded/verified"},
+    {"source": "Quaternius Ultimate House Interior", "url": "https://quaternius.com/packs/ultimatehomeinterior.html", "licence": "page states CC0", "quote": "120+ models, everything from doors and windows to kitchen and bathroom furniture! All in FBX, OBJ and Blend formats, free to use in personal and commercial proj[ects]", "verdict": "rejected for realism: stylised low-poly"},
+    {"source": "BlenderKit", "access": "curl www.blenderkit.com/api/v1/search/?query=<q> asset_type:model license:cc_zero [is_free:true]", "licence": "per-asset 'cc_zero' in API metadata; all downloads need a BlenderKit account/API key, isFree=false needs a paid plan",
+     "queries": ["kitchen sink","faucet","kitchen cabinet","sink","tap","kitchen","kitchen set","base cabinet","stainless sink","sink basin","undermount sink","kitchen base unit"],
+     "free_cc0_results": "no kitchen cabinet, sink or tap (cups, Poly Haven mirrors, 'Small Sink Hole' = ground sinkhole 3x3x1 m)",
+     "paid_cc0_leads_not_acquired": [
+       {"assetBaseId": "75422690-2134-49c2-8aa1-7d1fa4dcdb03", "name": "Kitchen Monobloc Mixer", "author": "Strawberry", "dims_m_blender_xyz": [0.2907,0.065,0.425], "faces": 4189, "objects": 10, "note": "realistic brushed-SS monobloc; 0.425 m tall fits under strip (0.9225+0.425=1.35 < 1.66); isFree=false"},
+       {"assetBaseId": "d48d9ce4-b667-4166-8413-a62fcd80dc0a", "name": "Kitchen Basin Faucet", "author": "Strawberry", "dims_m_blender_xyz": [0.343,0.2661,0.2941], "faces": 15282, "objects": 1, "note": "vintage antique-brass 3-hole mixer; style mismatch; isFree=false"},
+       {"assetBaseId": "883f4164-90e8-4d89-b76a-d56f22d9357e", "name": "Chrome moen faucet", "author": "Gabor BODOR", "dims_m_blender_xyz": [0.2393,0.0571,0.3805], "faces": 10157, "note": "brand-named product replica; isFree=false"},
+       {"assetBaseId": "29105bcf-87c1-4e0f-8b54-d5cf516de58a", "name": "Modern Flexible Faucet", "author": "Diseno Artistic", "dims_m_blender_xyz": [0.1745,0.1386,0.3396], "faces": 14424, "note": "black/gold; isFree=false"},
+       {"assetBaseId": "9f025458-63f8-4054-a50c-33516f312c9f", "name": "Cabinet set 005", "author": "polimesh", "dims_m_blender_xyz": [5.5611,0.6673,3.2909], "faces": 74089, "objects": 35, "note": "handleless full kitchen composition 5.56 m wide vs 3.05 m run; door separability/hinges unverified; isFree=false"},
+       {"assetBaseId": "96245990-547f-4281-823e-1586ef98b3eb", "name": "Kitchen unit", "author": "Introspective Mnisi", "dims_m_blender_xyz": [3.0101,3.04,2.6281], "faces": 55060, "objects": 15, "note": "3 m deep composite; isFree=false"}
+     ],
+     "verdict": "No free CC0 match. Paid CC0 taps exist but acquisition needs a paid subscription (spending outside the authorised compute budget) and login; not downloaded, so no sha256, no measured file, no separability check. Recorded as leads only."},
+    {"source": "CGTrader free / TurboSquid free", "verdict": "not checked in time; licences are royalty-free EULAs, not CC0, and require login"},
+    {"source": "NASA / other gov", "verdict": "not checked; no plausible kitchen fixtures"}
+  ],
+  "procedural_parts_retained": [
+    {"part": "lower cabinet carcass + 4 interactive doors/pulls", "cite": "web/house/lower_kitchen_cabinet.mjs:31-69; home.js:649-661"},
+    {"part": "upper cabinet (Blender, ours) + door attach", "cite": "home.js:674-705; tools/build_home_upper_cabinet.py; web/house/cabinet_doors.mjs:31"},
+    {"part": "sink bowl/rims/drain", "cite": "home.js:722-729"},
+    {"part": "tap tube + base + lever", "cite": "home.js:730-739"}
+  ],
+  "hidden_or_replaced": []
+}
