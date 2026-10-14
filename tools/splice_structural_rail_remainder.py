@@ -24,12 +24,18 @@ def selected_attribute_bytes(doc,binary,index,vertices):
     return b''.join(binary[start+v*stride:start+v*stride+width] for v in vertices)
 
 
-def splice(source,generated,sidecar,output,sidecar_output):
+def splice(source,generated,sidecar,output,sidecar_output,remove_reviewed_desk_stem=False):
     report=json.loads(Path(sidecar).read_text())
     if hashlib.sha256(Path(source).read_bytes()).hexdigest()!=report['source_audit']['source_sha256'] or hashlib.sha256(Path(generated).read_bytes()).hexdigest()!=report['output_sha256']:raise ValueError('Actual source/generated identity differs')
     source_doc,source_bin=read_gltf(Path(source));target_doc,target_bin=read_gltf(Path(generated));blob=bytearray(target_bin)
     if len(target_doc.get('buffers',[]))!=1:raise ValueError('Generated GLB must have one binary buffer')
     parents={c:i for i,n in enumerate(target_doc['nodes']) for c in n.get('children',[])}
+    if remove_reviewed_desk_stem:
+        from desk_lamp_stem_source_patch import select_stem,union_remainder_selection
+        stem=select_stem(source_doc,source_bin,report['source_audit']['source_sha256'])
+        if stem['triangle_indices']!=list(range(1800,1840)) or stem['selected_triangle_count']!=40:raise ValueError('Reviewed exact legacy stem triangle identity differs')
+        union_remainder_selection(report['source_audit']['matched_rails'],stem)
+        report['additional_source_removals']=[stem]
     matrices=world_matrices(source_doc);removed={}
     for row in [*report['source_audit']['matched_rails'],*report.get('additional_source_removals',[])]:removed.setdefault((row['source_node_index'],row['primitive_index']),set()).update(row['triangle_indices'])
     proofs=[]
@@ -51,6 +57,7 @@ def splice(source,generated,sidecar,output,sidecar_output):
         indices=[v[0] for v in accessor(source_doc,source_bin,original['indices'])]
         surviving=[v for triangle in range(len(indices)//3) if triangle not in removed.get((node_index,primitive_index),set()) for v in indices[triangle*3:triangle*3+3]]
         vertices=sorted(set(surviving));mapping={v:i for i,v in enumerate(vertices)};attributes={};hashes={}
+        remainder.update(original_triangle_count=len(indices)//3,removed_rail_triangles=len(removed.get((node_index,primitive_index),set())),preserved_triangle_count=len(surviving)//3,preserved_vertex_count=len(vertices))
         for kind,index in original['attributes'].items():
             data=selected_attribute_bytes(source_doc,source_bin,index,vertices);meta=copy.deepcopy(source_doc['accessors'][index]);meta['count']=len(vertices)
             if 'min' in meta or 'max' in meta:
@@ -73,4 +80,5 @@ def splice(source,generated,sidecar,output,sidecar_output):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for argument in ('source','generated','sidecar','output','sidecar-output'):parser.add_argument('--'+argument,required=True)
-    args=parser.parse_args();print(json.dumps(splice(args.source,args.generated,args.sidecar,args.output,args.sidecar_output)))
+    parser.add_argument('--remove-reviewed-desk-stem',action='store_true',help='Only when exact replacement desk lamp is ready; source-proven one union remainder')
+    args=parser.parse_args();print(json.dumps(splice(args.source,args.generated,args.sidecar,args.output,args.sidecar_output,args.remove_reviewed_desk_stem)))
