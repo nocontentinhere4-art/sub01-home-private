@@ -19,6 +19,17 @@ FIELDS=r'''
 CONTROL=r'''
  FString PhoneCandidate;if(Doc->TryGetStringField(TEXT("phoneGripCandidate"),PhoneCandidate)&&!PhoneCandidate.IsEmpty()&&PhoneCandidate.Len()<=200)NativePhoneGripCandidate(PhoneCandidate);
 '''
+WALK_CLEANUP=r'''
+ // Restore the authored assembly before leaving a private captured-pose review.
+ if(PhoneGripMounted){
+  for(int32 I=0;I<PhoneGripParts.Num()&&I<PhoneGripOriginalTransforms.Num();++I)
+   if(PhoneGripParts[I])PhoneGripParts[I]->SetWorldTransform(PhoneGripOriginalTransforms[I]);
+ }
+ PhoneGripReview=false;PhoneGripMounted=false;
+ if(!Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()))
+  FirstPersonBody->SetAnimInstanceClass(USub01HomeHandsInstance::StaticClass());
+ ViewCamera->SetUsingAbsoluteLocation(false);
+'''
 METHODS=r'''
 #include "Animation/AnimSingleNodeInstance.h"
 void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
@@ -112,4 +123,8 @@ def install(header,cpp):
     if cpp.count('void ASub01HomeCharacter::UpdatePrivateNativeControl(){')!=1 or cpp.count(control)!=1:
         raise ValueError('Unique protected native-control callback required')
     cpp=cpp.replace(control,CONTROL+control,1)
+    walk=' HandsDiagnosticSeat=false;HandsClips.Add(TEXT("Walk"),Walk);'
+    if cpp.count(walk)!=1:
+        raise ValueError('Unique validated walking transition required')
+    cpp=cpp.replace(walk,WALK_CLEANUP+walk,1)
     return header,cpp+'\n'+METHODS

@@ -87,3 +87,43 @@ int main(){Asset owner{"/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalO
  assert 'A->GetCurrentAsset()!=PhoneGripCapturedClip.Get()' in phone.METHODS
  assert 'FMath::Abs(A->GetCurrentTime()-4.f)>.01f' in phone.METHODS
  assert 'PrivateViewMode!=EPrivateViewMode::Diagnostic&&ViewCamera)ViewCamera->SetUsingAbsoluteLocation(false)' in phone.METHODS
+
+def test_walk_cleanup_restores_assembly_animation_and_camera_before_walk(tmp_path):
+ import shutil,subprocess,pytest
+ from tools.unreal_native_control import METHODS as control
+ compiler=shutil.which('c++')
+ if not compiler:pytest.skip('C++ compiler unavailable')
+ src=tmp_path/'walk_cleanup.cpp';exe=tmp_path/'walk_cleanup'
+ src.write_text(r'''
+#include <vector>
+#include <cassert>
+using int32=int;
+template<class T>struct Array:std::vector<T>{using std::vector<T>::vector;int Num(){return this->size();}};
+struct Anim{virtual ~Anim()=default;};
+struct USub01HomeHandsInstance:Anim{static int StaticClass(){return 1;}};
+template<class T>T* Cast(Anim* a){return dynamic_cast<T*>(a);}
+struct Part{int transform=100,writes=0;void SetWorldTransform(int t){transform=t;++writes;}};
+struct Body{Anim* anim;USub01HomeHandsInstance walk;int resets=0;Anim* GetAnimInstance(){return anim;}void SetAnimInstanceClass(int){anim=&walk;++resets;}};
+struct Camera{bool absolute=true;void SetUsingAbsoluteLocation(bool x){absolute=x;}};
+struct Fixture{bool PhoneGripMounted=true,PhoneGripReview=true;Array<Part*> PhoneGripParts;Array<int> PhoneGripOriginalTransforms;Body* FirstPersonBody;Camera* ViewCamera;void Leave(){
+'''+phone.WALK_CLEANUP+r'''
+}};
+int main(){Anim single;Body body{&single};Camera camera;Part parts[5];Fixture f;f.FirstPersonBody=&body;f.ViewCamera=&camera;
+ for(int i=0;i<5;++i){f.PhoneGripParts.push_back(&parts[i]);f.PhoneGripOriginalTransforms.push_back(i+10);}
+ f.Leave();assert(!f.PhoneGripReview&&!f.PhoneGripMounted&&!camera.absolute&&body.resets==1);
+ for(int i=0;i<5;++i)assert(parts[i].transform==i+10&&parts[i].writes==1);
+ f.Leave();assert(body.resets==1);for(auto& p:parts)assert(p.writes==1);
+ // Missing destroyed component or truncated evidence cannot index outside saved transforms.
+ f.PhoneGripMounted=true;f.PhoneGripParts[0]=nullptr;f.PhoneGripOriginalTransforms.resize(2);f.Leave();assert(parts[1].writes==2&&parts[2].writes==1);
+}
+''')
+ subprocess.run([compiler,'-std=c++17',str(src),'-o',str(exe)],check=True,capture_output=True)
+ subprocess.run([str(exe)],check=True,capture_output=True)
+ header,cpp=phone.install(' void ConfigureActualPC();',' ConfigureActualPC(); Super::Tick(DeltaSeconds);'+control)
+ start=cpp.index('bool ASub01HomeCharacter::SwitchNativeWalkView(')
+ end=cpp.index('void ASub01HomeCharacter::',start+5)
+ walk=cpp[start:end]
+ assert walk.index('if(!Walk||')<walk.index(phone.WALK_CLEANUP)
+ assert walk.index(phone.WALK_CLEANUP)<walk.index('HandsDiagnosticSeat=false;HandsClips.Add')
+ assert walk.index('SetUsingAbsoluteLocation(false)')<walk.index('ViewCamera->AttachToComponent(GetRootComponent()')
+ assert 'SetActorLocation' not in phone.WALK_CLEANUP and 'NativeSeatVerified' not in phone.WALK_CLEANUP
