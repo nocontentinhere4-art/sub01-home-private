@@ -997,6 +997,8 @@ class Live:
                     if self.minecraft.feedback:
                         b.stimulate("reward" if self.minecraft.feedback > 0 else "salience", abs(self.minecraft.feedback))
                         self.minecraft.feedback = 0
+                if msg["home"].get("privacy"):
+                    msg["life"] = {"privacy": True}
             if self.music.now:
                 self.music_watch.feed(rel, now, TICK)
             msg["neuro"] = {k: round(v, 2) for k, v in levels.items()}
@@ -1094,7 +1096,7 @@ class Live:
             return False
         home = getattr(self, "home", None)
         if home is None:
-            return True
+            return os.environ.get('HOME_NATIVE_REQUIRED') != '1'
         return home.activity_ready(self.life.activity)
 
     def screen_device(self):

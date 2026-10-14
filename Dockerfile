@@ -1,3 +1,8 @@
+FROM node:22-bookworm-slim AS minecraft-deps
+WORKDIR /deps
+COPY games/minecraft/package.json games/minecraft/package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --engine-strict
+
 FROM python:3.12-slim
 WORKDIR /app
 COPY requirements-server.txt .
@@ -8,7 +13,7 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 # #59: ffmpeg (H.264) + DejaVu fonts for the daily clips (clips.py renders in nice'd children)
 RUN pip install --no-cache-dir -r requirements-server.txt \
  && python -m playwright install --with-deps --only-shell chromium \
- && apt-get update && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core nodejs \
+ && apt-get update && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core \
  && rm -rf /var/lib/apt/lists/*
 # #18: the server and Chromium run as sub01 (uid 1000), so Chromium can keep its sandbox. The image still starts as root:
 # entrypoint.sh hands the root-owned /data volume to uid 1000 and drops privileges with setpriv (util-linux, already in
@@ -25,6 +30,9 @@ COPY console_requests.py home_http.py home_interactions.py home_minecraft.py hom
      home_world.py home_computer.py home_api.py home_native_feedback.py home_phone.py ./
 COPY scripts ./scripts
 COPY games ./games
+# Build dependencies from the lockfile, never from a developer's node_modules.
+COPY --from=minecraft-deps /usr/local/bin/node /usr/local/bin/node
+COPY --from=minecraft-deps /deps/node_modules /app/games/minecraft/node_modules
 COPY computer ./computer
 RUN python computer/bootstrap.py /app/computer
 COPY twin ./twin

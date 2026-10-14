@@ -417,3 +417,18 @@ def test_native_bridge_forward_timeout_is_shorter_than_native_sender_timeout():
         finally:
             gate.set();await client.close();await backend.close()
     asyncio.run(run())
+
+
+def test_observer_does_not_show_previous_command_seating_as_current():
+    now = [10.0]
+    feedback = NativeFeedback(clock=lambda: now[0], required=True)
+    common = dict(epoch='one', sequence=1, activity='research', node='desk')
+    feedback.accept({**common, 'phase': 'walking', 'bind': True},
+                    sequence=1, activity='research', target='desk', nodes={'desk'})
+    feedback.accept({**common, 'phase': 'seated', 'chair': 'desk_chair'},
+                    sequence=1, activity='research', target='desk', nodes={'desk'})
+    assert feedback.view(sequence=1, activity='research', target='desk')['phase'] == 'seated'
+    view = feedback.view(sequence=2, activity='research', target='desk')
+    assert view['fresh'] and view['phase'] is None and not view['physical_ready']
+    view = feedback.view(sequence=1, activity='phone', target='bed')
+    assert view['phase'] is None and not view['physical_ready']

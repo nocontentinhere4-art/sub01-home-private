@@ -250,7 +250,12 @@ def build_material(u, texture, collection, exposure_lock):
     gamma, desat, tint, bright = (blended('Gamma', False, 300), blended('Desaturation', False, 450),
                                   blended('Tint', True, 600), blended('Brightness', False, 750))
     power = node('MaterialExpressionPower', -1300, 0)
-    link(sample, 'RGB', power, 'Base'); link(gamma, '', power, 'Exponent')
+    # The editor pin display name can differ from the reflected Exponent field.
+    # Query the loaded engine instead of guessing an unsupported connector name.
+    power_inputs = list(mel.get_material_expression_input_names(power))
+    if len(power_inputs) != 2 or power_inputs[0] != 'Base' or power_inputs[1] not in ('Exp', 'Exponent'):
+        raise BackdropFixError('Unexpected actual Power inputs (scene untouched): %s' % power_inputs)
+    link(sample, 'RGB', power, power_inputs[0]); link(gamma, '', power, power_inputs[1])
     gray = node('MaterialExpressionDesaturation', -1100, 0)
     link(power, '', gray, ''); link(desat, '', gray, 'Fraction')
     tinted = node('MaterialExpressionMultiply', -900, 0)

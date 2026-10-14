@@ -309,6 +309,7 @@ def make_unreal(tmp_path, actors, texture_size=(4096, 2048), texture=True):
     u.MaterialEditingLibrary = SimpleNamespace(
         delete_all_material_expressions=lambda m: log.append('graph_reset'),
         create_material_expression=expr,
+        get_material_expression_input_names=lambda e: ['Base', 'Exp'],
         connect_material_expressions=lambda a, o, b, i: True,
         connect_material_property=lambda a, o, p: True,
         recompile_material=lambda m: log.append('recompile'),
@@ -438,3 +439,25 @@ def test_dry_run_plan_is_json():
     json.dumps(data)
     assert data['factors']['Daylight'] == 0 and data['scalars']['HorizonV'] == 0.5
     assert data['night_window_lights'].startswith('none')
+
+
+def test_actual_display_pin_exp_is_used_instead_of_reflected_exponent(tmp_path):
+    actors = scene([])
+    u, log = make_unreal(tmp_path, actors)
+    connections = []
+    def connect(a, output, b, pin):
+        connections.append((type(b).__name__, pin))
+        return type(b).__name__ != 'MaterialExpressionPower' or pin in ('Base', 'Exp')
+    u.MaterialEditingLibrary.connect_material_expressions = connect
+    run(u)
+    assert ('MaterialExpressionPower', 'Exp') in connections
+    assert ('MaterialExpressionPower', 'Exponent') not in connections
+
+
+def test_unknown_actual_power_pin_fails_before_actor_or_map_changes(tmp_path):
+    actor_log = []
+    u, log = make_unreal(tmp_path, scene(actor_log))
+    u.MaterialEditingLibrary.get_material_expression_input_names = lambda e: ['Base', 'Unknown']
+    with pytest.raises(fix.BackdropFixError, match='Unexpected actual Power inputs'):
+        run(u)
+    assert actor_log == [] and 'save_level' not in log

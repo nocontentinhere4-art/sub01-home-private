@@ -16,3 +16,5 @@ tests
 
 # Guest system binaries are fetched from pinned upstream during the image build.
 computer/*.bin
+**/node_modules
+work
