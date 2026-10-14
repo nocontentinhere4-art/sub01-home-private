@@ -1,0 +1,138 @@
+{
+  "schema": "sub01.exact-generated-loft-books-hide.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "status": "source_verified_native_actor_preflight_required",
+  "targets": [
+    {
+      "node": 112,
+      "name": "house-static-54",
+      "extras": {
+        "bakeId": "house-static-54"
+      },
+      "mesh_index": 95,
+      "materials": [
+        "Material_55"
+      ],
+      "world_ue_cm_min": [
+        -332.48970583081245,
+        92.99999997019768,
+        303.5000056028366
+      ],
+      "world_ue_cm_max": [
+        -327.5102846324444,
+        107.00000002980232,
+        320.7011014223099
+      ],
+      "native_actor_name": "full-home_node_112",
+      "native_actor_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_112",
+      "source_geometry": "procedural box(w,h,.14), home.js books(-3.3,3.035,1,5)",
+      "standalone_mesh": true
+    },
+    {
+      "node": 113,
+      "name": "house-static-55",
+      "extras": {
+        "bakeId": "house-static-55"
+      },
+      "mesh_index": 96,
+      "materials": [
+        "Material_56"
+      ],
+      "world_ue_cm_min": [
+        -327.31374967843294,
+        92.99999997019768,
+        303.50000858306885
+      ],
+      "world_ue_cm_max": [
+        -321.8862606212497,
+        107.00000002980232,
+        320.7167863845825
+      ],
+      "native_actor_name": "full-home_node_113",
+      "native_actor_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_113",
+      "source_geometry": "procedural box(w,h,.14), home.js books(-3.3,3.035,1,5)",
+      "standalone_mesh": true
+    },
+    {
+      "node": 114,
+      "name": "house-static-56",
+      "extras": {
+        "bakeId": "house-static-56"
+      },
+      "mesh_index": 97,
+      "materials": [
+        "Material_57"
+      ],
+      "world_ue_cm_min": [
+        -321.0974792018533,
+        92.99999997019768,
+        303.49998995661736
+      ],
+      "world_ue_cm_max": [
+        -317.3025032505393,
+        107.00000002980232,
+        320.9353394806385
+      ],
+      "native_actor_name": "full-home_node_114",
+      "native_actor_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_114",
+      "source_geometry": "procedural box(w,h,.14), home.js books(-3.3,3.035,1,5)",
+      "standalone_mesh": true
+    },
+    {
+      "node": 115,
+      "name": "house-static-57",
+      "extras": {
+        "bakeId": "house-static-57"
+      },
+      "mesh_index": 98,
+      "materials": [
+        "Material_58"
+      ],
+      "world_ue_cm_min": [
+        -316.52471981942654,
+        92.99999997019768,
+        303.49998846650124
+      ],
+      "world_ue_cm_max": [
+        -311.0752824693918,
+        107.00000002980232,
+        327.7909718453884
+      ],
+      "native_actor_name": "full-home_node_115",
+      "native_actor_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_115",
+      "source_geometry": "procedural box(w,h,.14), home.js books(-3.3,3.035,1,5)",
+      "standalone_mesh": true
+    },
+    {
+      "node": 116,
+      "name": "house-static-58",
+      "extras": {
+        "bakeId": "house-static-58"
+      },
+      "mesh_index": 99,
+      "materials": [
+        "Material_59"
+      ],
+      "world_ue_cm_min": [
+        -310.1586125791073,
+        92.99999997019768,
+        303.4999966621399
+      ],
+      "world_ue_cm_max": [
+        -306.64140954613686,
+        107.00000002980232,
+        330.5909991264343
+      ],
+      "native_actor_name": "full-home_node_116",
+      "native_actor_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_116",
+      "source_geometry": "procedural box(w,h,.14), home.js books(-3.3,3.035,1,5)",
+      "standalone_mesh": true
+    }
+  ],
+  "native_apply_requirements": [
+    "Require exactly one actor for each full-home_node_N and current mesh identity matching saved binding receipt before any changes.",
+    "Save original hidden/collision states; hide only targets and disable only their collision.",
+    "Preserve all other actors, source stairs161, replacement rails, approved chair, external CC0 furniture, screens, COMPLETE replacement books and four real lamps."
+  ],
+  "not_a_runtime_receipt": true
+}

@@ -1,0 +1,1693 @@
+{
+  "schema": "sub01.actual-source-prop-provenance.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "source_inventory": "out/house-evidence/20261014-actual-stair-loft-source-inventory.json",
+  "source_only_not_native_state_receipt": true,
+  "classifications": [
+    {
+      "item": "office desk",
+      "source_nodes": [
+        {
+          "node": 181,
+          "name": "Desk_hardware",
+          "extras": {
+            "name": "Desk_hardware",
+            "bakeId": "house-office-desk-Desk_hardware"
+          },
+          "mesh_index": 136,
+          "materials": [
+            "Material_14"
+          ],
+          "world_ue_cm_min": [
+            94.19999122619629,
+            -342.69999265670776,
+            70.55000066757202
+          ],
+          "world_ue_cm_max": [
+            305.8000087738037,
+            -276.2999892234802,
+            84.49999690055847
+          ],
+          "native_actor_name": "full-home_node_181"
+        },
+        {
+          "node": 182,
+          "name": "Oak_desk",
+          "extras": {
+            "name": "Oak_desk",
+            "bakeId": "house-office-desk-Oak_desk"
+          },
+          "mesh_index": 137,
+          "materials": [
+            "Material_1"
+          ],
+          "world_ue_cm_min": [
+            79.99999523162842,
+            -349.9999910593033,
+            0.0
+          ],
+          "world_ue_cm_max": [
+            320.0000047683716,
+            -269.9999898672104,
+            84.49999690055847
+          ],
+          "native_actor_name": "full-home_node_182"
+        }
+      ],
+      "geometry_origin": "authored_by_us_Blender",
+      "action": "replace_geometry_then_remove_exact_original_nodes_preserving_PC_keyboard_mouse_phone",
+      "proof": "web/house/assets/office-desk-original/desk.json; tools/build_home_office_desk.py; actual bakeId house-office-desk-*"
+    },
+    {
+      "item": "office shelf assembly",
+      "source_nodes": [
+        {
+          "node": 190,
+          "name": "Oak_shelves",
+          "extras": {
+            "name": "Oak_shelves",
+            "bakeId": "house-office-shelves-Oak_shelves"
+          },
+          "mesh_index": 142,
+          "materials": [
+            "Material_1"
+          ],
+          "world_ue_cm_min": [
+            95.00000476837158,
+            -389.0000030398369,
+            12.5
+          ],
+          "world_ue_cm_max": [
+            329.99998331069946,
+            -355.00000417232513,
+            251.74999237060547
+          ],
+          "native_actor_name": "full-home_node_190"
+        },
+        {
+          "node": 191,
+          "name": "Shelf_hardware",
+          "extras": {
+            "name": "Shelf_hardware",
+            "bakeId": "house-office-shelves-Shelf_hardware"
+          },
+          "mesh_index": 143,
+          "materials": [
+            "Material_14"
+          ],
+          "world_ue_cm_min": [
+            107.15000629425049,
+            -385.70000380277634,
+            18.950000405311584
+          ],
+          "world_ue_cm_max": [
+            317.85000562667847,
+            -357.30000138282776,
+            249.5500087738037
+          ],
+          "native_actor_name": "full-home_node_191"
+        }
+      ],
+      "geometry_origin": "authored_by_us_Blender",
+      "action": "replace_support_before_removing_exact_original_nodes; complete_CC0_books_must_remain_supported",
+      "proof": "web/house/assets/office-shelves-original/shelves.json; tools/build_home_office_shelves.py; actual bakeId house-office-shelves-*"
+    },
+    {
+      "item": "upper cabinet carcass",
+      "source_nodes": [
+        {
+          "node": 178,
+          "name": "Cabinet_carcass",
+          "extras": {
+            "name": "Cabinet carcass",
+            "bakeId": "house-upper-cabinet-Cabinet_carcass"
+          },
+          "mesh_index": 135,
+          "materials": [
+            "Material_68"
+          ],
+          "world_ue_cm_min": [
+            -375.0,
+            -389.00000751018524,
+            169.99999582767487
+          ],
+          "world_ue_cm_max": [
+            -65.00000953674316,
+            -353.00000607967377,
+            239.99999463558197
+          ],
+          "native_actor_name": "full-home_node_178"
+        }
+      ],
+      "geometry_origin": "authored_by_us_Blender",
+      "action": "replacement_required; interactive_fronts_not_in_this_static_mesh_inventory_must_be_enumerated_separately",
+      "proof": "web/house/assets/kitchen-cabinet-original/cabinet.json; home.js upperCabinetDoors"
+    },
+    {
+      "item": "lower cabinet carcass",
+      "source_nodes": [
+        {
+          "node": 63,
+          "name": "Lower_cabinet_carcass",
+          "extras": {
+            "bakeId": "house-lower-cabinet-carcass"
+          },
+          "mesh_index": 47,
+          "materials": [
+            "Material_11"
+          ],
+          "world_ue_cm_min": [
+            -372.49999046325684,
+            -385.9999895095825,
+            -3.5762786065873797e-07
+          ],
+          "world_ue_cm_max": [
+            -67.5000011920929,
+            -324.0000009536743,
+            86.75000071525574
+          ],
+          "native_actor_name": "full-home_node_63"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural",
+      "action": "replacement_required; dynamic_lower_fronts_not_in_static_inventory",
+      "proof": "home.js createLowerKitchenCabinet; actual bakeId house-lower-cabinet-carcass"
+    },
+    {
+      "item": "stone countertop",
+      "source_nodes": [
+        {
+          "node": 65,
+          "name": "house-static-10",
+          "extras": {
+            "bakeId": "house-static-10"
+          },
+          "mesh_index": 48,
+          "materials": [
+            "Material_12"
+          ],
+          "world_ue_cm_min": [
+            -378.000009059906,
+            -387.9999970111351,
+            86.7499901121365
+          ],
+          "world_ue_cm_max": [
+            -62.00000047683716,
+            -317.99999893302345,
+            92.2500111003155
+          ],
+          "native_actor_name": "full-home_node_65"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural",
+      "action": "replacement_required_before_removal; sink_opening_and_device_support_preserved",
+      "proof": "home.js counterShape+sinkHole ExtrudeGeometry; source bounds matches3.16m slab at86.75..92.25cm"
+    },
+    {
+      "item": "under cabinet strip",
+      "source_nodes": [
+        {
+          "node": 66,
+          "name": "house-static-11",
+          "extras": {
+            "bakeId": "house-static-11"
+          },
+          "mesh_index": 49,
+          "materials": [
+            "Material_13"
+          ],
+          "world_ue_cm_min": [
+            -375.0,
+            -390.50000607967377,
+            166.24999474734068
+          ],
+          "world_ue_cm_max": [
+            -65.00000953674316,
+            -347.50000536441803,
+            169.74999476224184
+          ],
+          "native_actor_name": "full-home_node_66"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural",
+      "action": "remove_only_with_real_light_fixture_replacement; do_not_hide_other_lamps_or_screens",
+      "proof": "home.js kitchenStripMaterial box3.1,.035,.43 at\u22122.2,1.68,\u22123.69; source exactbounds"
+    },
+    {
+      "item": "retained porcelain cup",
+      "source_nodes": [
+        {
+          "node": 274,
+          "name": "home114-retained-porcelain-cup",
+          "extras": {
+            "home114RuntimeCup": true
+          },
+          "mesh_index": 181,
+          "materials": [
+            "Material_68"
+          ],
+          "world_ue_cm_min": [
+            -130.00000081956387,
+            -332.9999979585409,
+            94.0000019967556
+          ],
+          "world_ue_cm_max": [
+            -118.00000108778477,
+            -320.9999982267618,
+            102.00000181794167
+          ],
+          "native_actor_name": "full-home_node_274"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural_cylinder",
+      "action": "standalone_generated_decor_removal_candidate",
+      "proof": "home.js coffeeCupFallback cylinder(.06,.08,\u22121.24,.98,\u22123.27); actual extras home114RuntimeCup true"
+    },
+    {
+      "item": "procedural rugs",
+      "source_nodes": [
+        {
+          "node": 61,
+          "name": "house-static-8",
+          "extras": {
+            "bakeId": "house-static-8"
+          },
+          "mesh_index": 45,
+          "materials": [
+            "Material_9"
+          ],
+          "world_ue_cm_min": [
+            -390.00000953674316,
+            -154.9999974668026,
+            1.2000000104308128
+          ],
+          "world_ue_cm_max": [
+            -90.00000953674316,
+            174.99999776482582,
+            2.9999999329447746
+          ],
+          "native_actor_name": "full-home_node_61"
+        },
+        {
+          "node": 62,
+          "name": "house-static-9",
+          "extras": {
+            "bakeId": "house-static-9"
+          },
+          "mesh_index": 46,
+          "materials": [
+            "Material_10"
+          ],
+          "world_ue_cm_min": [
+            -388.700008392334,
+            -153.69999632239342,
+            3.0249999836087227
+          ],
+          "world_ue_cm_max": [
+            -91.30001068115234,
+            173.69999662041664,
+            3.2749999314546585
+          ],
+          "native_actor_name": "full-home_node_62"
+        },
+        {
+          "node": 110,
+          "name": "house-static-52",
+          "extras": {
+            "bakeId": "house-static-52"
+          },
+          "mesh_index": 93,
+          "materials": [
+            "Material_53"
+          ],
+          "world_ue_cm_min": [
+            -352.50000953674316,
+            -320.0000047683716,
+            301.1999908834696
+          ],
+          "world_ue_cm_max": [
+            -87.5,
+            -20.000004768371582,
+            302.99999080598354
+          ],
+          "native_actor_name": "full-home_node_110"
+        },
+        {
+          "node": 111,
+          "name": "house-static-53",
+          "extras": {
+            "bakeId": "house-static-53"
+          },
+          "mesh_index": 94,
+          "materials": [
+            "Material_54"
+          ],
+          "world_ue_cm_min": [
+            -351.200008392334,
+            -318.7000036239624,
+            303.0249908566475
+          ],
+          "world_ue_cm_max": [
+            -88.80000114440918,
+            -21.30000591278076,
+            303.2749908044934
+          ],
+          "native_actor_name": "full-home_node_111"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural",
+      "action": "standalone_generated_decor_removal_candidates; flooring_underneath_preserved",
+      "proof": "home.js rug calls; each rug is body+hem; source thin planar bounds near ground/loft"
+    },
+    {
+      "item": "procedural wall canvases",
+      "source_nodes": [
+        {
+          "node": 108,
+          "name": "house-static-50",
+          "extras": {
+            "bakeId": "house-static-50"
+          },
+          "mesh_index": 91,
+          "materials": [
+            "Material_51"
+          ],
+          "world_ue_cm_min": [
+            135.0000023841858,
+            -386.4000082015991,
+            285.0000023841858
+          ],
+          "world_ue_cm_max": [
+            264.9999976158142,
+            -386.4000082015991,
+            464.9999976158142
+          ],
+          "native_actor_name": "full-home_node_108"
+        },
+        {
+          "node": 109,
+          "name": "house-static-51",
+          "extras": {
+            "bakeId": "house-static-51"
+          },
+          "mesh_index": 92,
+          "materials": [
+            "Material_52"
+          ],
+          "world_ue_cm_min": [
+            -265.00000953674316,
+            -385.8999967575073,
+            435.00003814697266
+          ],
+          "world_ue_cm_max": [
+            -175.0,
+            -385.8999967575073,
+            555.0000190734863
+          ],
+          "native_actor_name": "full-home_node_109"
+        },
+        {
+          "node": 119,
+          "name": "house-static-60",
+          "extras": {
+            "bakeId": "house-static-60"
+          },
+          "mesh_index": 102,
+          "materials": [
+            "Material_61"
+          ],
+          "world_ue_cm_min": [
+            -264.00000900030136,
+            57.8000009059906,
+            414.9999797344208
+          ],
+          "world_ue_cm_max": [
+            -216.00001007318497,
+            57.8000009059906,
+            474.99998211860657
+          ],
+          "native_actor_name": "full-home_node_119"
+        }
+      ],
+      "geometry_origin": "authored_by_us_procedural_canvas",
+      "action": "standalone_generated_decor_removal_candidates; preserve structural wall behind",
+      "proof": "home.js frame calls;119 is bathroom doorLabel frame(.48,.6), NOT bathroom mirror; actual planar bounds"
+    },
+    {
+      "item": "bed",
+      "source_nodes": [
+        {
+          "node": 260,
+          "name": "CC0_queen_0",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_0",
+            "home114Replacement": true
+          },
+          "mesh_index": 169,
+          "materials": [
+            "Original walnut grain.001"
+          ],
+          "world_ue_cm_min": [
+            -322.0000147819519,
+            -342.74998903274536,
+            300.0
+          ],
+          "world_ue_cm_max": [
+            -158.00000429153442,
+            -127.24999189376831,
+            337.99999952316284
+          ],
+          "native_actor_name": "full-home_node_260"
+        },
+        {
+          "node": 261,
+          "name": "CC0_queen_1",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_1",
+            "home114Replacement": true
+          },
+          "mesh_index": 170,
+          "materials": [
+            "Original teal upholstery.001"
+          ],
+          "world_ue_cm_min": [
+            -325.00001192092896,
+            -346.2499976158142,
+            325.0
+          ],
+          "world_ue_cm_max": [
+            -155.00000715255737,
+            -339.7499918937683,
+            426.99999809265137
+          ],
+          "native_actor_name": "full-home_node_261"
+        },
+        {
+          "node": 262,
+          "name": "CC0_queen_2",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_2",
+            "home114Replacement": true
+          },
+          "mesh_index": 171,
+          "materials": [
+            "Original cream upholstery.001"
+          ],
+          "world_ue_cm_min": [
+            -316.00000858306885,
+            -336.49998903274536,
+            337.99999952316284
+          ],
+          "world_ue_cm_max": [
+            -164.00001049041748,
+            -133.4999918937683,
+            360.0000023841858
+          ],
+          "native_actor_name": "full-home_node_262"
+        },
+        {
+          "node": 263,
+          "name": "CC0_queen_3",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_3",
+            "home114Replacement": true
+          },
+          "mesh_index": 172,
+          "materials": [
+            "Original linen upholstery.001"
+          ],
+          "world_ue_cm_min": [
+            -308.40001106262207,
+            -323.9899933338165,
+            355.44000267982483
+          ],
+          "world_ue_cm_max": [
+            -171.60000801086426,
+            -279.98999059200287,
+            376.7623960971832
+          ],
+          "native_actor_name": "full-home_node_263"
+        },
+        {
+          "node": 264,
+          "name": "CC0_queen_4",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_4",
+            "home114Replacement": true
+          },
+          "mesh_index": 173,
+          "materials": [
+            "Original blue_fabric upholstery.001"
+          ],
+          "world_ue_cm_min": [
+            -324.0000069141388,
+            -281.689989566803,
+            350.8400022983551
+          ],
+          "world_ue_cm_max": [
+            -156.00001215934753,
+            -135.52998900413513,
+            369.8063552379608
+          ],
+          "native_actor_name": "full-home_node_264"
+        },
+        {
+          "node": 265,
+          "name": "CC0_queen_5",
+          "extras": {
+            "bakeId": "house-cc0-queen-bed-CC0_queen_5",
+            "home114Replacement": true
+          },
+          "mesh_index": 174,
+          "materials": [
+            "Original oak grain.001"
+          ],
+          "world_ue_cm_min": [
+            -317.00000762939453,
+            -329.84999418258667,
+            335.50000190734863
+          ],
+          "world_ue_cm_max": [
+            -163.0000114440918,
+            -140.149986743927,
+            337.99999952316284
+          ],
+          "native_actor_name": "full-home_node_265"
+        }
+      ],
+      "geometry_origin": "external_authored_CC0_Innerscene",
+      "action": "preserve",
+      "proof": "web/house/assets/cc0-queen-bed/provenance.json; original source geometry only transform/material grouping, not build_home_bed.py"
+    },
+    {
+      "item": "sofa",
+      "source_nodes": [
+        {
+          "node": 172,
+          "name": "Haven_felt",
+          "extras": {
+            "name": "Haven_felt",
+            "bakeId": "house-sofa-Haven_felt"
+          },
+          "mesh_index": 131,
+          "materials": [
+            "Material_71"
+          ],
+          "world_ue_cm_min": [
+            -216.45000800959662,
+            -87.00000350994078,
+            0.0
+          ],
+          "world_ue_cm_max": [
+            -142.99998316982223,
+            107.00000447975846,
+            20.350000262260437
+          ],
+          "native_actor_name": "full-home_node_172"
+        },
+        {
+          "node": 173,
+          "name": "Haven_legs",
+          "extras": {
+            "name": "Haven_legs",
+            "bakeId": "house-sofa-Haven_legs"
+          },
+          "mesh_index": 132,
+          "materials": [
+            "Material_72"
+          ],
+          "world_ue_cm_min": [
+            -216.42475353160248,
+            -84.94560474802327,
+            0.9164460003376007
+          ],
+          "world_ue_cm_max": [
+            -143.6359859787162,
+            104.94559597044643,
+            22.11029678583145
+          ],
+          "native_actor_name": "full-home_node_173"
+        },
+        {
+          "node": 174,
+          "name": "Haven_linen",
+          "extras": {
+            "name": "Haven_linen",
+            "bakeId": "house-sofa-Haven_linen"
+          },
+          "mesh_index": 133,
+          "materials": [
+            "Material_73"
+          ],
+          "world_ue_cm_min": [
+            -226.25000801586478,
+            -103.74508564162683,
+            16.00000113248825
+          ],
+          "world_ue_cm_max": [
+            -133.74998244727993,
+            123.74508593968969,
+            91.72939658164978
+          ],
+          "native_actor_name": "full-home_node_174"
+        },
+        {
+          "node": 175,
+          "name": "Haven_seams",
+          "extras": {
+            "name": "Haven_seams",
+            "bakeId": "house-sofa-Haven_seams"
+          },
+          "mesh_index": 134,
+          "materials": [
+            "Material_74"
+          ],
+          "world_ue_cm_min": [
+            -220.32074508740763,
+            -103.73803978569917,
+            33.598002791404724
+          ],
+          "world_ue_cm_max": [
+            -145.42222720805373,
+            123.73804858138342,
+            91.19746685028076
+          ],
+          "native_actor_name": "full-home_node_175"
+        }
+      ],
+      "geometry_origin": "external_authored_CC0_Innerscene",
+      "action": "preserve",
+      "proof": "web/house/assets/haven-sofa/provenance.json; actual Haven* nodes"
+    },
+    {
+      "item": "espresso",
+      "source_nodes": [
+        {
+          "node": 267,
+          "name": "CC0_espresso_0",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_0",
+            "home114Replacement": true
+          },
+          "mesh_index": 175,
+          "materials": [
+            "Satin galvanized steel"
+          ],
+          "world_ue_cm_min": [
+            -135.35999953746796,
+            -350.6999999284744,
+            98.95000159740448
+          ],
+          "world_ue_cm_max": [
+            -112.61368989944458,
+            -336.4999994635582,
+            119.57710087299347
+          ],
+          "native_actor_name": "full-home_node_267"
+        },
+        {
+          "node": 268,
+          "name": "CC0_espresso_1",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_1",
+            "home114Replacement": true
+          },
+          "mesh_index": 176,
+          "materials": [
+            "Charcoal fine-textured powdercoat"
+          ],
+          "world_ue_cm_min": [
+            -136.55000030994415,
+            -351.50000005960464,
+            97.70000129938126
+          ],
+          "world_ue_cm_max": [
+            -113.44999969005585,
+            -325.49999952316284,
+            124.36981797218323
+          ],
+          "native_actor_name": "full-home_node_268"
+        },
+        {
+          "node": 269,
+          "name": "CC0_espresso_2",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_2",
+            "home114Replacement": true
+          },
+          "mesh_index": 177,
+          "materials": [
+            "Blackened steel mounting hardware"
+          ],
+          "world_ue_cm_min": [
+            -132.00000002980232,
+            -347.70000018179417,
+            104.30000126361847
+          ],
+          "world_ue_cm_max": [
+            -112.5,
+            -339.60000053048134,
+            119.40000057220459
+          ],
+          "native_actor_name": "full-home_node_269"
+        },
+        {
+          "node": 270,
+          "name": "CC0_espresso_3",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_3",
+            "home114Replacement": true
+          },
+          "mesh_index": 178,
+          "materials": [
+            "Warm ivory satin cabinet enamel"
+          ],
+          "world_ue_cm_min": [
+            -139.00000005960464,
+            -366.5000006556511,
+            93.65000128746033
+          ],
+          "world_ue_cm_max": [
+            -110.79999953508377,
+            -333.4999993443489,
+            127.39999890327454
+          ],
+          "native_actor_name": "full-home_node_270"
+        },
+        {
+          "node": 271,
+          "name": "CC0_espresso_4",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_4",
+            "home114Replacement": true
+          },
+          "mesh_index": 179,
+          "materials": [
+            "Black felt floor glides"
+          ],
+          "world_ue_cm_min": [
+            -137.1500000357628,
+            -364.3999993801117,
+            92.5000011920929
+          ],
+          "world_ue_cm_max": [
+            -112.84999996423721,
+            -335.6000006198883,
+            93.50000116974115
+          ],
+          "native_actor_name": "full-home_node_271"
+        },
+        {
+          "node": 272,
+          "name": "CC0_espresso_5",
+          "extras": {
+            "bakeId": "house-cc0-porta-espresso-CC0_espresso_5",
+            "home114Replacement": true
+          },
+          "mesh_index": 180,
+          "materials": [
+            "Satin champagne bronze"
+          ],
+          "world_ue_cm_min": [
+            -136.55000030994415,
+            -353.9000004529953,
+            116.4000004529953
+          ],
+          "world_ue_cm_max": [
+            -109.09999907016754,
+            -337.950000166893,
+            125.80000162124634
+          ],
+          "native_actor_name": "full-home_node_272"
+        }
+      ],
+      "geometry_origin": "external_authored_CC0_Innerscene",
+      "action": "preserve",
+      "proof": "web/house/assets/cc0-porta-espresso/provenance.json; actual CC0_espresso* nodes"
+    },
+    {
+      "item": "coffee table",
+      "source_nodes": [
+        {
+          "node": 275,
+          "name": "modern_coffee_table_01",
+          "extras": {
+            "bakeId": "house-cc0-coffee-table-modern_coffee_table_01",
+            "home114Replacement": true
+          },
+          "mesh_index": 182,
+          "materials": [
+            "modern_coffee_table_01"
+          ],
+          "world_ue_cm_min": [
+            -355.00001490116165,
+            -60.10674943260739,
+            -5.126565838509123e-10
+          ],
+          "world_ue_cm_max": [
+            -285.0000145037974,
+            80.1067492319703,
+            45.49999678083658
+          ],
+          "native_actor_name": "full-home_node_275"
+        }
+      ],
+      "geometry_origin": "external_CC0_PolyHaven_photographed_model",
+      "action": "preserve",
+      "proof": "web/house/assets/manifest.json modern_coffee_table_01; source baked house-cc0-coffee-table-*"
+    },
+    {
+      "item": "nightstand",
+      "source_nodes": [
+        {
+          "node": 240,
+          "name": "side_table_01",
+          "extras": {
+            "name": "side_table_01",
+            "bakeId": "house-nightstand-side_table_01"
+          },
+          "mesh_index": 156,
+          "materials": [
+            "side_table_01"
+          ],
+          "world_ue_cm_min": [
+            -379.96993106483535,
+            -330.42993611812375,
+            299.99998973549225
+          ],
+          "world_ue_cm_max": [
+            -330.0300593984215,
+            -289.5700448083899,
+            349.99998992251557
+          ],
+          "native_actor_name": "full-home_node_240"
+        }
+      ],
+      "geometry_origin": "external_CC0_PolyHaven_photographed_model",
+      "action": "preserve",
+      "proof": "web/house/assets/manifest.json side_table_01; actual house-nightstand-side_table_01"
+    },
+    {
+      "item": "approved owner chair",
+      "source_nodes": [
+        {
+          "node": 246,
+          "name": "chair_owner_1",
+          "extras": {},
+          "mesh_index": 159,
+          "materials": [
+            "chair_armpad"
+          ],
+          "world_ue_cm_min": [
+            165.61915477821714,
+            -205.07205733890217,
+            65.08074590086208
+          ],
+          "world_ue_cm_max": [
+            233.85031073413458,
+            -178.15556950088762,
+            67.02174084687478
+          ],
+          "native_actor_name": "full-home_node_246"
+        },
+        {
+          "node": 247,
+          "name": "chair_owner_2",
+          "extras": {},
+          "mesh_index": 160,
+          "materials": [
+            "chair_plastic"
+          ],
+          "world_ue_cm_min": [
+            165.5524777967564,
+            -214.56959704242493,
+            26.797953795509954
+          ],
+          "world_ue_cm_max": [
+            234.07256251598838,
+            -153.3930668447944,
+            121.37515544891357
+          ],
+          "native_actor_name": "full-home_node_247"
+        },
+        {
+          "node": 248,
+          "name": "chair_owner_3",
+          "extras": {},
+          "mesh_index": 161,
+          "materials": [
+            "chair_fabric"
+          ],
+          "world_ue_cm_min": [
+            173.44425362141465,
+            -214.67331478177414,
+            40.09784485728254
+          ],
+          "world_ue_cm_max": [
+            226.29191439088777,
+            -161.0329564726573,
+            73.68187258618039
+          ],
+          "native_actor_name": "full-home_node_248"
+        },
+        {
+          "node": 249,
+          "name": "chair_owner_4",
+          "extras": {},
+          "mesh_index": 162,
+          "materials": [
+            "chair_mesh"
+          ],
+          "world_ue_cm_min": [
+            180.54147805990402,
+            -170.95277347652384,
+            73.02993535240515
+          ],
+          "world_ue_cm_max": [
+            218.89094488592846,
+            -160.60327102073586,
+            118.07842671351807
+          ],
+          "native_actor_name": "full-home_node_249"
+        },
+        {
+          "node": 250,
+          "name": "chair_owner_5",
+          "extras": {},
+          "mesh_index": 163,
+          "materials": [
+            "chair_caster"
+          ],
+          "world_ue_cm_min": [
+            162.5669022794085,
+            -221.8909271092933,
+            0.0
+          ],
+          "world_ue_cm_max": [
+            237.4730089907331,
+            -151.48911401314322,
+            8.949322017727468
+          ],
+          "native_actor_name": "full-home_node_250"
+        },
+        {
+          "node": 251,
+          "name": "chair_owner_6",
+          "extras": {},
+          "mesh_index": 164,
+          "materials": [
+            "chair_base"
+          ],
+          "world_ue_cm_min": [
+            166.50075013679313,
+            -218.2682288526948,
+            6.052644319311895
+          ],
+          "world_ue_cm_max": [
+            233.25764052161162,
+            -155.34888035475092,
+            18.80431588665843
+          ],
+          "native_actor_name": "full-home_node_251"
+        },
+        {
+          "node": 252,
+          "name": "chair_owner_7",
+          "extras": {},
+          "mesh_index": 165,
+          "materials": [
+            "chair_lift"
+          ],
+          "world_ue_cm_min": [
+            196.11574038399695,
+            -188.8014081933313,
+            17.15224744317183
+          ],
+          "world_ue_cm_max": [
+            203.8352703542662,
+            -181.32635513788546,
+            27.049838183674524
+          ],
+          "native_actor_name": "full-home_node_252"
+        }
+      ],
+      "geometry_origin": "owner_existing_repaired_model",
+      "action": "preserve_explicit_owner_approval",
+      "proof": "home.js /room/chair_owner.glb; actual chair_owner_1..7"
+    },
+    {
+      "item": "potted plants",
+      "source_nodes": [
+        {
+          "node": 201,
+          "name": "potted_plant_01_leaves",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            262.5000017540401,
+            500.33809801837845,
+            55.88464759706255
+          ],
+          "world_ue_cm_max": [
+            317.50000193654665,
+            559.6619448599995,
+            126.42262020340524
+          ],
+          "native_actor_name": "full-home_node_201"
+        },
+        {
+          "node": 202,
+          "name": "potted_plant_01_pebbles",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            273.7136541444052,
+            513.992180412174,
+            4.435808187629437e-08
+          ],
+          "world_ue_cm_max": [
+            314.00575489582593,
+            554.3464882935358,
+            50.936428947596255
+          ],
+          "native_actor_name": "full-home_node_202"
+        },
+        {
+          "node": 203,
+          "name": "potted_plant_01_pot",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            272.35653222166576,
+            512.56460686185,
+            1.2834198772907257
+          ],
+          "world_ue_cm_max": [
+            316.0096466620214,
+            556.2177185116649,
+            51.044164404447656
+          ],
+          "native_actor_name": "full-home_node_203"
+        },
+        {
+          "node": 204,
+          "name": "potted_plant_01_stem",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            272.2156043313845,
+            514.0598330253002,
+            39.770170377912706
+          ],
+          "world_ue_cm_max": [
+            306.9868851296814,
+            550.878183378251,
+            119.9175013026263
+          ],
+          "native_actor_name": "full-home_node_204"
+        },
+        {
+          "node": 206,
+          "name": "potted_plant_01_leaves.001",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            76.62499655761508,
+            504.78735474869046,
+            47.501951189899216
+          ],
+          "world_ue_cm_max": [
+            123.37499741296566,
+            555.2126253193364,
+            107.4592288033287
+          ],
+          "native_actor_name": "full-home_node_206"
+        },
+        {
+          "node": 207,
+          "name": "potted_plant_01_pebbles.001",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            86.15660123218947,
+            516.3933249572505,
+            -1.5506036326219895e-08
+          ],
+          "world_ue_cm_max": [
+            120.40488738386684,
+            550.6944871701697,
+            43.295965200732
+          ],
+          "native_actor_name": "full-home_node_207"
+        },
+        {
+          "node": 208,
+          "name": "potted_plant_01_pot.001",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            85.00304758058306,
+            515.1798874213004,
+            1.0909069329500198
+          ],
+          "world_ue_cm_max": [
+            122.10819541064507,
+            552.2850328794027,
+            43.38754041455104
+          ],
+          "native_actor_name": "full-home_node_208"
+        },
+        {
+          "node": 209,
+          "name": "potted_plant_01_stem.001",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            84.8832588720498,
+            516.4508296792692,
+            33.804645348464035
+          ],
+          "world_ue_cm_max": [
+            114.43884799328484,
+            547.7464279480218,
+            101.92987765484816
+          ],
+          "native_actor_name": "full-home_node_209"
+        },
+        {
+          "node": 211,
+          "name": "potted_plant_01_leaves.002",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            -379.99999806748974,
+            287.24845465366184,
+            71.12591640436392
+          ],
+          "world_ue_cm_max": [
+            -309.9999965620814,
+            362.75153382530334,
+            160.90151953614225
+          ],
+          "native_actor_name": "full-home_node_211"
+        },
+        {
+          "node": 212,
+          "name": "potted_plant_01_pebbles.002",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -365.7280765838177,
+            304.6263780163722,
+            -6.730684719553007e-08
+          ],
+          "world_ue_cm_max": [
+            -314.4472201493372,
+            355.9864071631267,
+            64.8281833522428
+          ],
+          "native_actor_name": "full-home_node_212"
+        },
+        {
+          "node": 213,
+          "name": "potted_plant_01_pot.002",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -367.4553226987186,
+            302.80946619200574,
+            1.633443497121334
+          ],
+          "world_ue_cm_max": [
+            -311.896812400521,
+            358.36797293860593,
+            64.96530131989857
+          ],
+          "native_actor_name": "full-home_node_213"
+        },
+        {
+          "node": 214,
+          "name": "potted_plant_01_stem.002",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -367.63468547142963,
+            304.7124813437353,
+            50.61658138879537
+          ],
+          "world_ue_cm_max": [
+            -323.38032728690143,
+            351.5722008270263,
+            152.62227714820824
+          ],
+          "native_actor_name": "full-home_node_214"
+        },
+        {
+          "node": 216,
+          "name": "potted_plant_01_leaves.003",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            -95.74999721563131,
+            -369.83095575918236,
+            121.94232318758367
+          ],
+          "world_ue_cm_max": [
+            -68.24999712437804,
+            -340.16903233837184,
+            157.211309490755
+          ],
+          "native_actor_name": "full-home_node_216"
+        },
+        {
+          "node": 217,
+          "name": "potted_plant_01_pebbles.003",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -90.14317102044876,
+            -363.0039145622846,
+            93.99999945483363
+          ],
+          "world_ue_cm_max": [
+            -69.9971206447384,
+            -342.8267606216037,
+            119.46821390645272
+          ],
+          "native_actor_name": "full-home_node_217"
+        },
+        {
+          "node": 218,
+          "name": "potted_plant_01_pot.003",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -90.82173198181849,
+            -363.71770133744656,
+            94.64170932769775
+          ],
+          "world_ue_cm_max": [
+            -68.99517476164067,
+            -341.89114551253914,
+            119.52208159127622
+          ],
+          "native_actor_name": "full-home_node_218"
+        },
+        {
+          "node": 219,
+          "name": "potted_plant_01_stem.003",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -90.89219592695912,
+            -362.97008825572146,
+            113.88508457800874
+          ],
+          "world_ue_cm_max": [
+            -73.50655552781066,
+            -344.56091307924606,
+            153.95875004036554
+          ],
+          "native_actor_name": "full-home_node_219"
+        },
+        {
+          "node": 221,
+          "name": "potted_plant_01_leaves.004",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            287.62499789155953,
+            -338.34786664221485,
+            110.64809323922553
+          ],
+          "world_ue_cm_max": [
+            312.3749976235774,
+            -311.65213594111947,
+            142.39018046306063
+          ],
+          "native_actor_name": "full-home_node_221"
+        },
+        {
+          "node": 222,
+          "name": "potted_plant_01_pebbles.004",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            292.6711413958418,
+            -332.2035296519238,
+            85.50000223549186
+          ],
+          "world_ue_cm_max": [
+            310.8025864774962,
+            -314.04409136219186,
+            108.42139491770624
+          ],
+          "native_actor_name": "full-home_node_222"
+        },
+        {
+          "node": 223,
+          "name": "potted_plant_01_pot.004",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            292.060436539248,
+            -332.84593774048216,
+            86.07754111289978
+          ],
+          "world_ue_cm_max": [
+            311.70433775952813,
+            -313.2020377759453,
+            108.46987583336158
+          ],
+          "native_actor_name": "full-home_node_223"
+        },
+        {
+          "node": 224,
+          "name": "potted_plant_01_stem.004",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            291.9970189895185,
+            -332.1730859764477,
+            103.396578593187
+          ],
+          "world_ue_cm_max": [
+            307.64409512741076,
+            -315.60482855199206,
+            139.46287699911935
+          ],
+          "native_actor_name": "full-home_node_224"
+        },
+        {
+          "node": 226,
+          "name": "potted_plant_01_leaves.005",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            -354.74999944850936,
+            243.30427148394182,
+            350.29617074282487
+          ],
+          "world_ue_cm_max": [
+            -305.2499999844735,
+            296.69573288613265,
+            413.78034519049504
+          ],
+          "native_actor_name": "full-home_node_226"
+        },
+        {
+          "node": 227,
+          "name": "potted_plant_01_pebbles.005",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -344.6577124399449,
+            255.59294546452392,
+            299.9999686434642
+          ],
+          "world_ue_cm_max": [
+            -308.394822276636,
+            291.9118220439878,
+            345.84275400789295
+          ],
+          "native_actor_name": "full-home_node_227"
+        },
+        {
+          "node": 228,
+          "name": "potted_plant_01_pot.005",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -345.87912215313247,
+            254.30812928740724,
+            301.15506649017334
+          ],
+          "world_ue_cm_max": [
+            -306.5913197125721,
+            293.5959292164809,
+            345.93973593109695
+          ],
+          "native_actor_name": "full-home_node_228"
+        },
+        {
+          "node": 229,
+          "name": "potted_plant_01_stem.005",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -346.00595725259143,
+            255.65383281547628,
+            335.7931414507478
+          ],
+          "world_ue_cm_max": [
+            -314.7118049768069,
+            288.7903476643875,
+            407.92573826261247
+          ],
+          "native_actor_name": "full-home_node_229"
+        },
+        {
+          "node": 231,
+          "name": "potted_plant_01_leaves.006",
+          "extras": {
+            "name": "potted_plant_01_leaves"
+          },
+          "mesh_index": 149,
+          "materials": [
+            "potted_plant_01_leaves"
+          ],
+          "world_ue_cm_min": [
+            -370.24999502658034,
+            432.37190287865167,
+            361.47311948546843
+          ],
+          "world_ue_cm_max": [
+            -309.74999762670325,
+            497.6281313833624,
+            439.0648857602926
+          ],
+          "native_actor_name": "full-home_node_231"
+        },
+        {
+          "node": 232,
+          "name": "potted_plant_01_pebbles.006",
+          "extras": {
+            "name": "potted_plant_01_pebbles"
+          },
+          "mesh_index": 150,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -357.91497796823506,
+            447.39139281649136,
+            299.99998556259146
+          ],
+          "world_ue_cm_max": [
+            -313.59366919355114,
+            491.7811294309424,
+            356.03005476221114
+          ],
+          "native_actor_name": "full-home_node_232"
+        },
+        {
+          "node": 233,
+          "name": "potted_plant_01_pot.006",
+          "extras": {
+            "name": "potted_plant_01_pot"
+          },
+          "mesh_index": 151,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -359.4078120141369,
+            445.82106198383434,
+            301.411771774292
+          ],
+          "world_ue_cm_max": [
+            -311.3893883527846,
+            493.83948257559194,
+            356.1485882200941
+          ],
+          "native_actor_name": "full-home_node_233"
+        },
+        {
+          "node": 234,
+          "name": "potted_plant_01_stem.006",
+          "extras": {
+            "name": "potted_plant_01_stem"
+          },
+          "mesh_index": 152,
+          "materials": [
+            "potted_plant_01_pot"
+          ],
+          "world_ue_cm_min": [
+            -359.5628326862695,
+            447.46581068748503,
+            343.7471953650348
+          ],
+          "world_ue_cm_max": [
+            -321.31442557887357,
+            487.965994200753,
+            431.90925530070956
+          ],
+          "native_actor_name": "full-home_node_234"
+        }
+      ],
+      "geometry_origin": "external_CC0_PolyHaven_model",
+      "action": "preserve",
+      "proof": "web/house/assets/manifest.json potted_plant_01; source furnished() loads complete provider geometry"
+    }
+  ],
+  "preserve_rules": [
+    "Architecture/floors/walls/baseboards/stair treads161/slabs2+3, approved replacement rails, approved chair, PC/TV/phone/screens, complete new CC0 books and four real lamps.",
+    "Never hide node163 or its preserved remainder to remove isolated fixtures: it contains bath taps/other unrelated geometry.",
+    "Primitive bathtub/toilet/vanity pieces may share material-batched geometry; require exact triangle selection and one remainder before any hide.",
+    "File existence of old build_home_bed.py/build_home_sofa.py/build_home_coffee_table.py does not describe actual current955SHA geometry."
+  ],
+  "local_external_asset_availability": {
+    "already_present_qualifying": [
+      "cc0-queen-bed/queen-bed.glb",
+      "haven-sofa/sofa.glb",
+      "cc0-porta-espresso/porta-espresso.glb",
+      "modern_coffee_table_01/modern_coffee_table_01.gltf",
+      "side_table_01/side_table_01.gltf",
+      "potted_plant_01/potted_plant_01.gltf",
+      "modern_arm_chair_01/modern_arm_chair_01.gltf"
+    ],
+    "no_verified_external_geometry_ready_for": [
+      "office desk",
+      "office shelves",
+      "upper kitchen cabinet",
+      "lower kitchen cabinet",
+      "bath vanity/toilet"
+    ],
+    "textures_only_do_not_qualify_geometry": [
+      "oak_veneer_01",
+      "white_plaster_02",
+      "marble_slab_012",
+      "interior_tiles"
+    ]
+  }
+}
