@@ -230,7 +230,7 @@ def accessor_vec3(doc, buffers, index):
     return [struct.unpack_from('<3f', data, base + i * stride) for i in range(a['count'])]
 
 
-def primitive_vertices(path):
+def primitive_vertices(path, bulb_node_only=False):
     """[(material_name, emissive, [(x,y,z), ...]), ...] in the asset's own glTF frame."""
     doc, buffers = load_gltf(path)
     out = []
@@ -247,6 +247,10 @@ def primitive_vertices(path):
             names = ' '.join(str(v) for v in (n.get('name'), mesh.get('name'), mat.get('name')) if v).lower()
             emissive = (any(c > 0 for c in mat.get('emissiveFactor', [0, 0, 0])) or 'emissiveTexture' in mat
                         or 'bulb' in names)
+            if bulb_node_only:
+                # The reviewed pipe lamp's body and switch share an emission
+                # atlas. Material emission therefore cannot identify its bulb.
+                emissive = n.get('name') == 'industrial_pipe_lamp_bulb'
             out.append((mat.get('name'), emissive,
                         [_apply(m, v) for v in accessor_vec3(doc, buffers, prim['attributes']['POSITION'])]))
     return out
@@ -992,7 +996,7 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
         asset_paths['industrial_pipe_lamp'] = resolve_asset(args.bedside_lamp)
     desk_asset = measure_desk_lamp(primitive_vertices(asset_paths['desk_lamp_arm_01']))
     ceil_asset = measure_pendant(primitive_vertices(asset_paths['modern_ceiling_lamp_01']))
-    bed_asset = (measure_table_lamp(primitive_vertices(asset_paths['industrial_pipe_lamp']))
+    bed_asset = (measure_table_lamp(primitive_vertices(asset_paths['industrial_pipe_lamp'], bulb_node_only=True))
                  if 'industrial_pipe_lamp' in asset_paths else None)
     report['assets'] = {'desk_lamp_arm_01': desk_asset, 'modern_ceiling_lamp_01': ceil_asset,
                         'industrial_pipe_lamp': bed_asset}

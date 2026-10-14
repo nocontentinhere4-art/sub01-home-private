@@ -133,6 +133,22 @@ def test_rotated_lamp_bounds_use_actual_vertices_not_local_box_corners():
     assert conservative[1][1] == pytest.approx(math.sqrt(2))
 
 
+def test_pipe_lamp_bulb_identity_ignores_shared_body_emission_atlas(tmp_path):
+    d = Doc()
+    d.mesh_node([(0, 0, 0), (.1, 0, 0), (0, .3, .1)], [0, 1, 2], 'body',
+                name='industrial_pipe_lamp', emissive=True)
+    d.mesh_node([(0, .29, 0), (.01, .3, 0), (0, .31, .01)], [0, 1, 2], 'glass',
+                name='industrial_pipe_lamp_bulb', emissive=True)
+    d.doc['buffers'] = [{'uri': 'asset.bin', 'byteLength': len(d.bin)}]
+    (tmp_path / 'asset.bin').write_bytes(bytes(d.bin))
+    path = tmp_path / 'asset.gltf'
+    path.write_text(json.dumps(d.doc))
+    rows = B.primitive_vertices(path, bulb_node_only=True)
+    assert [em for _, em, _ in rows] == [False, True]
+    measured = B.measure_table_lamp(rows)
+    assert measured['rest_plane_y'] == 0 and measured['bulb_center'][1] > .29
+
+
 def build_home(stem_copies=1, stem_radius=.014, rail_conflict=False):
     d = Doc()
     # shared metal batch node 163: 3 rail balusters + the white desk-lamp stem (home.js:1114)
