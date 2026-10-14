@@ -39,11 +39,11 @@ TArray<FTransform> USub01HomeHandsInstance::SolveCapturedKeyboardArmContact(USke
   const FString Audit=AnalyzeCapturedFingerSkin(Mesh,Result,BodyWorld,KeyMin,KeyMax,KeyTriangles);TSharedPtr<FJsonObject> Root;auto Reader=TJsonReaderFactory<>::Create(Audit);if(!FJsonSerializer::Deserialize(Reader,Root)||!Root.IsValid())break;
   const TArray<TSharedPtr<FJsonValue>>* Hands=nullptr;if(!Root->TryGetArrayField(TEXT("hands"),Hands)||Hands->Num()!=2)break;
   bool Changed=false;
-  for(int32 Side=0;Side<2;++Side){auto HandReport=(*Hands)[Side]->AsObject();if(HandReport->GetIntegerField(TEXT("overKeyVertices"))<4)continue;const double Pen=FMath::Max(0.,KeyMax.Z-HandReport->GetNumberField(TEXT("minCm")));if(Pen<=.001||Pen>12)continue;
+ for(int32 Side=0;Side<2;++Side){auto HandReport=(*Hands)[Side]->AsObject();double Shift=0.;if(!Sub01KeyboardContactCorrection(KeyMax.Z,HandReport->GetNumberField(TEXT("overMinCm")),HandReport->GetIntegerField(TEXT("overKeyVertices")),Shift))continue;
    int32 Hand=INDEX_NONE;const FString Suffix=Side==0?TEXT("LeftHand"):TEXT("RightHand");for(int32 B=0;B<Ref.GetNum();++B)if(Ref.GetBoneName(B).ToString().EndsWith(Suffix)){Hand=B;break;}if(Hand==INDEX_NONE)continue;
    const int32 Elbow=Ref.GetParentIndex(Hand),Upper=Ref.GetParentIndex(Elbow);if(Upper<0||Elbow<0)continue;
    FTransform A=Result[Upper],B=Result[Elbow],C=Result[Hand];const FQuat CapturedWrist=C.GetRotation();
-   const FVector Up=BodyWorld.InverseTransformVectorNoScale(FVector(0,0,Pen+.08));const FVector Effector=C.GetTranslation()+Up;
+   const FVector Up=BodyWorld.InverseTransformVectorNoScale(FVector(0,0,Shift));const FVector Effector=C.GetTranslation()+Up;
    AnimationCore::SolveTwoBoneIK(A,B,C,B.GetTranslation(),Effector,false,1.,1.);
    C.SetRotation(CapturedWrist);const int32 Parent=Ref.GetParentIndex(Upper);
    TArray<FTransform> Local=OriginalLocal;
@@ -117,4 +117,5 @@ FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,con
 }
 """
 HEADER += IK_HEADER + SEAT_HEADER
-CPP = '#include "TwoBoneIK.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n' + CPP + IK_CPP + SEAT_CPP
+from unreal_keyboard_contact_target import CPP as KEY_CONTACT_CPP
+CPP = '#include <cmath>\n#include "TwoBoneIK.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n' + CPP + KEY_CONTACT_CPP + IK_CPP + SEAT_CPP
