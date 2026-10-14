@@ -74,7 +74,7 @@ def home_contacts(home):
     if sha(home) != HOME_SHA:
         raise ValueError('Actual full-home source hash differs')
     doc,binary=read_gltf(home);matrices=world_matrices(doc)
-    triangles=[];sink_points=[];sink_sources=set()
+    triangles=[];sink_triangles=[];sink_sources=set()
     for node_index,node in enumerate(doc['nodes']):
         if 'mesh' not in node:continue
         for pi,primitive in enumerate(doc['meshes'][node['mesh']]['primitives']):
@@ -91,10 +91,9 @@ def home_contacts(home):
                 ys=[v[1] for v in tri]
                 if max(ys)-min(ys)<1e-5 and (0<=ys[0]<.2 or .8<ys[0]<1.0):
                     triangles.append((node_index,pi,j//3,tri))
-                # Conservative actual geometry envelope INSIDE the retained sink opening.
-                inside=[v for v in tri if -3.018<=v[0]<=-2.382 and -3.698<=v[2]<=-3.272 and .4<v[1]<.8674]
-                if len(inside)==3:
-                    sink_points+=inside;sink_sources.add((node_index,pi))
+                if node_index==164:
+                    # Exact source sink assembly, not any geometry within a guessed hole.
+                    sink_triangles.append(tri);sink_sources.add((node_index,pi))
     def sample(x,z,lower,upper):
         matches=[]
         for node,prim,index,tri in triangles:
@@ -122,12 +121,28 @@ def home_contacts(home):
     slabs=[sample(x,-3.80,.8,1.0) for x in LOWER_CENTERS]
     if max(r['height_m'] for r in floors)-min(r['height_m'] for r in floors)>1e-4:raise ValueError('Kitchen floor is not one measured plane')
     if max(r['height_m'] for r in slabs)-min(r['height_m'] for r in slabs)>1e-4:raise ValueError('Counter underside is not one measured plane')
-    if not sink_points:raise ValueError('Actual sink geometry envelope unavailable; no guessed cutout')
+    sink_points=[]
+    underside=slabs[0]['height_m']
+    for tri in sink_triangles:
+        polygon=list(tri);clipped=[]
+        for a,b in zip(polygon,polygon[1:]+polygon[:1]):
+            ai=a[1]<=underside;bi=b[1]<=underside
+            if ai:clipped.append(a)
+            if ai!=bi:
+                t=(underside-a[1])/(b[1]-a[1])
+                clipped.append(tuple(a[k]+t*(b[k]-a[k]) for k in range(3)))
+        sink_points+=clipped
+    if not sink_points:raise ValueError('Exact node164 sink geometry below measured slab unavailable')
+    all_sink=[v for tri in sink_triangles for v in tri]
+    whole=[[f(v[k] for v in all_sink) for k in range(3)] for f in (min,max)]
+    expected=[[-3.0525,.745,-3.73],[-2.3475,.936,-3.24]]
+    if max(abs(a-b) for side,truth in zip(whole,expected) for a,b in zip(side,truth))>.0001:
+        raise ValueError('Exact original sink164 bounds differ')
     sink_bounds=[[f(v[k] for v in sink_points) for k in range(3)] for f in (min,max)]
     return {'source_sha256':HOME_SHA,'floor_samples':floors,'counter_underside_samples':slabs,
             'floor_m':floors[0]['height_m'],'counter_underside_m':slabs[0]['height_m'],
             'sink_conservative_bounds_m':sink_bounds,'sink_source_primitives':[list(v) for v in sorted(sink_sources)],
-            'sink_envelope_policy':'Conservative actual source triangles strictly inside retained sink opening; includes any source obstruction, never assumed sink-only.'}
+            'sink_envelope_policy':'Exact SHA-bound node164 triangles clipped below measured slab underside; conservative bounded service cutout volume, not a fabricated bowl.'}
 
 
 def plan(rows, contacts=None):
@@ -171,7 +186,7 @@ def plan(rows, contacts=None):
                     'scan_coverage_m': 1.83, 'files_sha256': PBR_SHA},
             'preserve_existing': ['real sink', 'countertop', 'under-cabinet light', 'four lower hinge positions', 'four upper hinge positions'],
             'native_ready': False, 'contact_verified': False, 'hinge_collision_verified': False,
-            'feasibility_gaps': ['Only authored mesh-7 top boards may receive an exact measured sink-envelope Boolean; all resulting source and native clearances require proof.',
+            'feasibility_gaps': ['Only source-identified upper top/side/back/frame boards may receive bounded actual sink164 service cutouts; lower supports/legs retained, all resulting native clearances require proof.',
                                  'Rigid source legs must contact actual floor while fitted wood reaches slab underside; export refuses known mismatch.',
                                  'Measured eight door closed bounds/swept collision and all native hinge bindings require actual Editor proof.',
                                  'Existing countertop and four unequal lower bays are retained; no fabricated filler meshes.']}
@@ -286,7 +301,8 @@ def measured_sink_cutouts(bpy,report):
     lo,hi=part['bounds_m']
     if part['triangles']!=12 or abs(lo[1]-.70200177)>.00001 or abs(hi[1]-.71999823)>.00001:
         raise ValueError('Exact authored removable top-board identity differs')
-    # The frozen hash identifies this complete top-board part; no other part is removed.
+    # Exact affected upper wood boards may be cut; lower supports and ALL rigid feet stay unchanged.
+    allowed={'mesh-0','mesh-3','mesh-7','mesh-8','mesh-13'}
     sink=report['actual_home_contacts']['sink_conservative_bounds_m']
     pad=.003
     cutter_bounds=[[sink[0][0]-pad,sink[0][1]-pad,sink[0][2]-pad],
@@ -298,15 +314,20 @@ def measured_sink_cutouts(bpy,report):
     changes=[]
     try:
         for obj in list(bpy.data.objects):
-            if obj.type!='MESH' or not obj.name.startswith('Lower_cabinet_body_') or not obj.name.endswith('__mesh-7'):continue
+            if obj.type!='MESH' or not obj.name.startswith('Lower_cabinet_body_'):continue
+            part_name=obj.name.rsplit('__',1)[-1]
+            if part_name not in allowed:continue
             tree,_=source_bvh(bpy,[obj])
             if not tree.overlap(bounds_bvh(cutter_bounds)):continue
             before=len(obj.data.polygons)
+            old_bottom=min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
             bpy.context.view_layer.objects.active=obj
             modifier=obj.modifiers.new('ActualSinkMeasuredCutout','BOOLEAN');modifier.operation='DIFFERENCE';modifier.solver='EXACT';modifier.object=cutter
             bpy.ops.object.modifier_apply(modifier=modifier.name)
             if len(obj.data.polygons)<1:raise ValueError('Sink cutout unexpectedly removed entire authored top board')
-            changes.append({'object':obj.name,'authored_part':'mesh-7','before_polygons':before,
+            new_bottom=min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
+            if abs(old_bottom-new_bottom)>1e-6:raise ValueError('Service cutout removed a lower board support')
+            changes.append({'object':obj.name,'authored_part':part_name,'before_polygons':before,
                             'after_polygons':len(obj.data.polygons),'operation':'measured sink envelope subtraction',
                             'cutter_bounds_browser_m':cutter_bounds,'clearance_m':pad})
     finally:
