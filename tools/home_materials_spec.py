@@ -587,8 +587,9 @@ def intended_factor(target, material_path):
     raise KeyError('%s has no factor for %s' % (target['id'], material_path))
 
 
-def _bed_target(target_id, factors, why, optional):
-    mean, _, _ = _linen_stats()
+def _bed_target(target_id, factors, why, optional, mean=None):
+    if mean is None:
+        mean, _, _ = _linen_stats()
     predicted = {k: {'before_real (factor lost, white)': describe(mean),
                      'after': describe(mul(v, mean))} for k, v in factors.items()}
     return {'id': target_id, 'class': 'fabric', 'match': 'material_name', 'source_materials': list(BED_SOURCES),
@@ -607,19 +608,30 @@ def preset_bed_intended():
                        'baseColorFactor. Note: ivory x blue linen is still blue-grey (#8da4bd).', False)
 
 
-def preset_bed_balanced():
-    """OPTIONAL: same groups, factors also cancel the linen scan's blue cast (white balance)."""
-    mean, p99, _ = _linen_stats()
+def preset_bed_balanced(measured=None):
+    """OPTIONAL: same groups, factors also cancel the linen scan's blue cast (white balance).
+
+    ``measured`` = {'linear_mean': [...], 'linear_p99': [...], 'source': str} from the texture parity file
+    (the ACTUAL UE texture pixels). Without it the target is HELD: factors are only a repo-texture preview.
+    """
+    if measured:
+        mean, p99 = tuple(measured['linear_mean']), tuple(measured['linear_p99'])
+    else:
+        mean, p99, _ = _linen_stats()
     factors = {}
     for name in BED_SOURCES:
         if 'teal' in name:
             factors[name] = tint_factor(mean, BED_TINTS['teal'], 0.20, p99)[0]
         else:
             factors[name] = tint_factor(mean, BED_TINTS['other_upholstery'], 0.62, p99)[0]
-    return _bed_target('bed-balanced', factors,
-                       'Option for root: the intended hues (#f7f4eb ivory, #b99845 ochre headboard) after '
-                       'cancelling the blue scan cast; ivory at Y 0.62 (CC0 cream upholstery scan Y 0.75, '
-                       'linen Y 0.49), ochre at dyed-textile Y 0.20.', True)
+    target = _bed_target('bed-balanced', factors,
+                         'Option for root: the intended hues (#f7f4eb ivory, #b99845 ochre headboard) after '
+                         'cancelling the blue scan cast; ivory at Y 0.62 (CC0 cream upholstery scan Y 0.75, '
+                         'linen Y 0.49), ochre at dyed-textile Y 0.20.', True, mean=mean)
+    target['texture_mean_source'] = measured.get('source', 'parity') if measured else 'repo lite rough_linen (preview)'
+    if not measured:
+        target['held'] = 'awaiting the texture parity file: factors must come from the actual UE texture pixels'
+    return target
 
 
 def _sofa_target(part):
@@ -690,13 +702,16 @@ PRESETS = {'bed-intended': preset_bed_intended, 'bed-balanced': preset_bed_balan
 DEFAULT_PRESETS = ('bed-intended',)
 
 
-def plan(presets=DEFAULT_PRESETS):
+MEASURED_AWARE = ('bed-balanced',)
+
+
+def plan(presets=DEFAULT_PRESETS, measured=None):
     unknown = [p for p in presets if p not in PRESETS]
     if unknown:
         raise ValueError('unknown preset(s): %s' % unknown)
     targets = []
     for p in dict.fromkeys(presets):
-        made = PRESETS[p]()
+        made = PRESETS[p](measured) if p in MEASURED_AWARE else PRESETS[p]()
         targets.extend(made if isinstance(made, list) else [made])
     seen = {}
     for t in targets:

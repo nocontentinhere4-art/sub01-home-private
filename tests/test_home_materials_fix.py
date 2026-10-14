@@ -627,3 +627,184 @@ def test_non_bed_preset_not_blocked_by_bed_mismatch_but_bed_preset_is(tmp_path):
     assert kb['mismatches'] and not kb['bed_mapping_required']
     assert kb['ok'] and [t['id'] for t in kb['targets']] == ['metal-keyboard-plastic']
     assert not fix.mapping_check(model, ['bed-intended'])['ok']
+
+
+# ---------------------------------------------------------------------------
+# Real editor inventory (root, 2026-10-14) and texture content-equivalence
+# ---------------------------------------------------------------------------
+import io  # noqa: E402
+import struct  # noqa: E402
+
+import unreal_export_texture_parity as parity  # noqa: E402
+
+REAL_INVENTORY = ROOT / 'docs/proposed/actual-home-material-bindings-20261014.json'
+REAL_BED_TEXTURES = list(parity.BED_TEXTURES)
+
+
+def synthetic_parity(paths, **changes):
+    """SYNTHETIC parity file (test only): what a passing root export would contain."""
+    ref = {'glb': 'full-home.glb', 'glb_sha256': '0' * 64, 'image_index': 15, 'buffer_view': 157,
+           'mime_type': 'image/png', 'width': 512, 'height': 512, 'decoded_rgba_sha256': 'a' * 64}
+    textures = []
+    for path in paths:
+        t = {'asset_path': path,
+             'source_provenance': {'import_source_file': '/workspace/x/SourceAssets/full-home.glb',
+                                   'glb_image_index': None, 'buffer_view': None, 'pixel_match_reference': True},
+             'width': 512, 'height': 512, 'srgb': True, 'compression': 'TC_DEFAULT', 'lod_bias': 0,
+             'mip_gen_settings': 'TMGS_FROM_TEXTURE_GROUP', 'adjust': dict(parity.ADJUST_DEFAULTS),
+             'png': {'file': 'x.png', 'file_sha256': 'b' * 64}, 'decoded_rgba_sha256': 'a' * 64,
+             'stats': {'mean_rgb_8bit': [144.65, 170.4, 204.73], 'stddev_rgb_8bit': [4, 4, 4],
+                       'linear_mean': [0.2805, 0.4019, 0.6052], 'linear_p99': [0.31, 0.44, 0.66]},
+             'max_abs_diff_vs_reference_8bit': 0, 'reencode_proven': False, 'reencode_note': None}
+        for key, value in changes.get(path, {}).items():
+            t[key] = value
+        textures.append(t)
+    return {'schema': parity.PARITY_SCHEMA, 'reference': ref, 'textures': textures}
+
+
+@pytest.mark.skipif(not REAL_INVENTORY.is_file(), reason='real inventory absent')
+def test_real_inventory_refuses_only_on_distinct_textures():
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    report = fix.mapping_check(model, ['bed-intended'])
+    assert report['mismatches'] == [] and report['notes'] == []
+    assert report['headboard_material_slot_users'] == 1
+    (target,) = report['targets']
+    assert len(target['problems']) == 1 and 'different base-colour textures' in target['problems'][0]
+    assert not report['ok']
+    assert sorted(m['texture'] for m in target['materials']) == sorted(REAL_BED_TEXTURES)
+    for m in target['materials']:
+        assert m['factor_parameter'] == 'BaseColorFactor' and m['current_factor'][:3] == [1.0, 1.0, 1.0]
+        assert m['path'] == 'mic_of_original' and len(m['slots']) == 1
+    assert fix.bed_texture_paths(model) == sorted(REAL_BED_TEXTURES)
+
+
+@pytest.mark.skipif(not REAL_INVENTORY.is_file(), reason='real inventory absent')
+def test_real_inventory_other_presets():
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    sofa = {t['id']: t for t in fix.mapping_check(model, ['sofa-intended'])['targets']}
+    assert sofa['sofa-intended-linen']['ok'] and not sofa['sofa-intended-linen']['materials'][0]['already_intended']
+    assert sofa['sofa-intended-seams']['materials'][0]['already_intended']     # #58616a survived the export
+    assert not fix.mapping_check(model, ['darkwood-albedo'])['ok']              # fingerprint absent: refuse
+
+
+@pytest.mark.skipif(not REAL_INVENTORY.is_file(), reason='real inventory absent')
+def test_real_inventory_with_parity_passes_and_each_defect_refuses():
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    assert fix.mapping_check(model, ['bed-intended'], synthetic_parity(REAL_BED_TEXTURES))['ok']
+    p0 = REAL_BED_TEXTURES[0]
+    defects = [
+        {p0: {'decoded_rgba_sha256': 'c' * 64, 'max_abs_diff_vs_reference_8bit': 3}},
+        {p0: {'decoded_rgba_sha256': 'c' * 64, 'max_abs_diff_vs_reference_8bit': 1}},   # not proven
+        {p0: {'srgb': False}},
+        {p0: {'compression': 'TC_NORMALMAP'}},
+        {p0: {'lod_bias': 1}},
+        {p0: {'adjust': dict(parity.ADJUST_DEFAULTS, adjust_saturation=0.8)}},
+        {p0: {'source_provenance': {'import_source_file': '/other/file.png'}}},
+        {p0: {'width': 256}},
+    ]
+    for defect in defects:
+        report = fix.mapping_check(model, ['bed-intended'], synthetic_parity(REAL_BED_TEXTURES, **defect))
+        assert not report['ok'] and report['parity_problems'], defect
+    missing = synthetic_parity(REAL_BED_TEXTURES[:3])
+    assert not fix.mapping_check(model, ['bed-intended'], missing)['ok']
+    proven = synthetic_parity(REAL_BED_TEXTURES, **{p0: {'decoded_rgba_sha256': 'c' * 64,
+                                                         'max_abs_diff_vs_reference_8bit': 1,
+                                                         'reencode_proven': True,
+                                                         'reencode_note': 'PNG re-encode, reported'}})
+    assert fix.mapping_check(model, ['bed-intended'], proven)['ok']
+    assert not fix.mapping_check(model, ['bed-intended'], {'schema': 'wrong'})['ok']
+
+
+@pytest.mark.skipif(not REAL_INVENTORY.is_file(), reason='real inventory absent')
+def test_bed_balanced_is_held_without_parity_and_uses_actual_pixels_with_it():
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    held = fix.mapping_check(model, ['bed-balanced'])
+    assert not held['ok'] and any('held' in p for p in held['targets'][0]['problems'])
+    doc = synthetic_parity(REAL_BED_TEXTURES)
+    for t in doc['textures']:
+        t['stats']['linear_mean'] = [0.30, 0.40, 0.50]
+    report = fix.mapping_check(model, ['bed-balanced'], doc)
+    assert report['ok'], report['targets'][0]['problems']
+    assert report['texture_mean_used']['linear_mean'] == pytest.approx([0.30, 0.40, 0.50])
+    target = spec.plan(['bed-balanced'], report['texture_mean_used'])['targets'][0]
+    ivory = target['factors']['Original cream upholstery']
+    after = spec.mul(ivory, (0.30, 0.40, 0.50))
+    assert spec.luminance(after) == pytest.approx(0.62, abs=1e-3)
+    assert spec.hue_sat(after)[0] == pytest.approx(45.0, abs=1.0)
+    item = next(m for m in report['targets'][0]['materials'] if 'cream' in m['material'])
+    assert item['intended_factor'] == pytest.approx(ivory)
+
+
+def _png(rgb, size=(4, 4)):
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new('RGB', size, rgb).save(buf, format='PNG')
+    return buf.getvalue()
+
+
+def _write_glb(path, image_bytes, image_index=15, view_index=157):
+    views, blob = [], b''
+    for _ in range(view_index):
+        views.append({'buffer': 0, 'byteOffset': len(blob), 'byteLength': 4})
+        blob += b'\0' * 4
+    views.append({'buffer': 0, 'byteOffset': len(blob), 'byteLength': len(image_bytes)})
+    blob += image_bytes + b'\0' * ((-len(image_bytes)) % 4)
+    doc = {'asset': {'version': '2.0'}, 'buffers': [{'byteLength': len(blob)}], 'bufferViews': views,
+           'images': [{'bufferView': view_index, 'mimeType': 'image/png'} for _ in range(image_index + 1)]}
+    js = json.dumps(doc).encode()
+    js += b' ' * ((-len(js)) % 4)
+    body = struct.pack('<II', len(js), 0x4E4F534A) + js + struct.pack('<II', len(blob), 0x004E4942) + blob
+    path.write_bytes(b'glTF' + struct.pack('<II', 2, 12 + len(body)) + body)
+
+
+def test_parity_finalize_end_to_end(tmp_path):
+    pytest.importorskip('PIL')
+    glb = tmp_path / 'full-home.glb'
+    _write_glb(glb, _png((145, 170, 205)))
+    out = tmp_path / 'export'
+    out.mkdir()
+    rows = []
+    for i, path in enumerate(REAL_BED_TEXTURES):
+        name = path.rsplit('/', 1)[-1].split('.')[0]
+        (out / (name + '.png')).write_bytes(_png((145, 170, 205) if i < 3 else (147, 170, 205)))
+        rows.append({'asset_path': path, 'png': name + '.png', 'width': 4, 'height': 4,
+                     'import_source_file': str(glb),
+                     'settings': dict(parity.ADJUST_DEFAULTS, srgb=True, compression_settings='TC_DEFAULT',
+                                      lod_bias=0, mip_gen_settings='TMGS_FROM_TEXTURE_GROUP')})
+    (out / 'texture-settings.json').write_text(json.dumps({'schema': parity.SETTINGS_SCHEMA, 'textures': rows}))
+    doc = parity.finalize(out, glb)
+    assert doc['reference']['buffer_view'] == 157 and doc['reference']['width'] == 4
+    diffs = [t['max_abs_diff_vs_reference_8bit'] for t in doc['textures']]
+    assert diffs == [0, 0, 0, 2]
+    problems, mean, _ = parity.validate_parity(doc, REAL_BED_TEXTURES)
+    assert len(problems) == 1 and 'Image_1411' in problems[0] and mean is None
+    problems, mean, _ = parity.validate_parity(doc, REAL_BED_TEXTURES[:3])
+    assert problems == [] and mean == pytest.approx([spec.srgb_to_linear(145 / 255), spec.srgb_to_linear(170 / 255),
+                                                    spec.srgb_to_linear(205 / 255)], abs=1e-4)
+
+
+def test_parity_export_is_read_only_and_guarded(tmp_path):
+    world = World(tmp_path)
+    u = make_unreal(world)
+
+    class Task(Obj):
+        def __init__(self):
+            super().__init__('/Engine/Transient.Task')
+
+    def run_task(task):
+        Path(task.get_editor_property('filename')).write_bytes(_png((1, 2, 3)))
+        return True
+
+    u.AssetExportTask = Task
+    u.Exporter = types.SimpleNamespace(run_asset_export_task=run_task)
+    for path in REAL_BED_TEXTURES:
+        tex = Texture2D(path, (512, 512))
+        tex._props.update(dict(parity.ADJUST_DEFAULTS, compression_settings='TC_DEFAULT', lod_bias=0))
+        world.assets[path.split('.')[0]] = tex
+    with pytest.raises(parity.ParityError, match='outside'):
+        parity.export_textures(tmp_path / 'a', ['/Game/Other/T.T'], u=u)
+    report = parity.export_textures(tmp_path / 'b', u=u)
+    assert len(report['textures']) == 4 and all(r['settings']['srgb'] is True for r in report['textures'])
+    assert world.saved_assets == [] and world.level_saves == 0
+    with pytest.raises(parity.ParityError, match='empty'):
+        parity.export_textures(tmp_path / 'b', u=u)

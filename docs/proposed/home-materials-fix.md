@@ -228,3 +228,93 @@ composite flooring grooves (7.5/15 cm). The floor repeats every 120 cm (home.js 
 repeat w/1.2), and the queen-bed oak every ≈185 cm. The floor roughness map G mean is 0.442
 × 0.92, giving ≈0.41: plausible for oiled oak. `M.darkwood` mean Y 0.0155 is below the 0.04
 floor; that preset is next.
+
+## 8. Real editor inventory (root, `docs/proposed/actual-home-material-bindings-20261014.json`)
+
+`--mapping-check --inventory` on the committed file (now a test fixture, `test_real_inventory_*`)
+reports:
+
+- **Bed mapping.** CC0_queen_1/2/3/4 bind four distinct upholstery MICs: teal, cream, linen
+  and blue_fabric. There are 0 mismatches and 0 notes. The headboard material has exactly 1
+  slot user. Every `BaseColorFactor` is enumerated and white.
+- **The ONLY refusal.** The four materials use four distinct texture assets (`Image_148`,
+  `Image_149`, `Image_1410`, `Image_1411`), although the GLB shares image 15. That guard stays.
+- **Other presets on the same file:**
+  - `sofa-intended`: the linen part (`Material_73`, `Image_43`) has a white factor, so its tint
+    was lost and the preset applies. The seams (`Material_74`) already carry #58616a exactly,
+    so they are skipped.
+  - `bed-wood-roughness`: passes; the real value is .82.
+  - `darkwood-albedo`, `metal-keyboard`, `metal-espresso`: refused, because their target
+    materials are not in this 12-material inventory.
+
+### Texture content-equivalence (new guard)
+
+Distinct texture assets are accepted only with a **texture parity file**:
+`sub01.texture-parity.v1`, schema in the docstring of `tools/unreal_export_texture_parity.py`.
+For every texture, all of these must hold:
+
+- **Pixels.** Dimensions are identical to GLB image 15 / bufferView 157, and the decoded RGBA
+  sha256 equals the reference. A maximum abs difference of 1/255 is allowed only with
+  `reencode_proven` and a note.
+- **Provenance.** The import data names the full-home GLB, or image 15 / bufferView 157.
+- **Settings.** sRGB is true, compression is `TC_DEFAULT`, LOD bias is 0, and every
+  `adjust_*` property is at its neutral default.
+
+With no parity file, or on any mismatch, the guard refuses. Each defect is covered by a test.
+
+Root steps (export is read-only; it saves no asset and changes no level):
+
+```bash
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_export_texture_parity.py --export <empty-dir> --quit" -unattended -nosplash
+python3 tools/unreal_export_texture_parity.py --finalize <empty-dir> --glb <project>/SourceAssets/full-home.glb > texture-parity.json
+python3 tools/unreal_home_materials_fix.py --mapping-check --inventory docs/proposed/actual-home-material-bindings-20261014.json --parity texture-parity.json
+# apply then also takes --parity texture-parity.json
+```
+
+The export takes the textures' **source** pixels, before GPU compression. BC compression
+changes individual texels but hardly the mean; the parity file records the settings that would
+change the mean (sRGB, adjustments).
+
+`bed-balanced` is **held** without a parity file. With one, its factors are recomputed from the
+mean linear colour of the ACTUAL UE pixels (`texture_mean_used` in the report), not from the
+repo `diff.jpg`. `bed-intended` does not depend on the texture mean: its factors are the exact
+assembly tints.
+
+## 9. Lighting context (coordination only; no lighting file edited)
+
+The inventory shows no post-process volume, and `SUB01_AuthoredLight_SUN` at 3.09 lux with
+`light_color` FColor (255, 210, 161) = **#ffd2a1** (`use_temperature` false). The coordinator's
+note says #ffead0; root should confirm which value is live. UE linearises the FColor:
+#ffd2a1 → linear (1.00, 0.644, 0.356), and #ffead0 → (1.00, 0.823, 0.631).
+
+Predicted reflected colour, albedo × key light colour (no exposure or tonemap, so only hue and
+saturation are meaningful):
+
+| surface | albedo | × #ffd2a1 | × #ffead0 |
+|---|---|---|---|
+| raw linen (now, tint lost) | #91abcd h214 | #918c81 h42 s0.12 (greige) | #919da7 h208 |
+| `bed-intended` ivory | #8da4bd h211 | #8d8676 h43 s0.16 (warm greige) | #8d9699 h196 |
+| `bed-intended` headboard | #686436 h56 | #68511e h42 s0.71 (mustard-brown) | #685b2a h48 |
+| `bed-balanced` ivory | #d1cec7 h45 | **#d1aa7c h32 s0.40 (caramel)** | #d1bda2 h35 s0.23 |
+| `bed-balanced` headboard | #937835 h43 | #93621e h35 s0.80 | #936e29 h39 |
+| sofa linen, tint restored | #575a56 | #574833 h36 s0.41 | #575245 |
+| sofa linen raw (now) | #c4b9a7 | #c49868 h31 s0.47 | #c4aa87 |
+
+Reading:
+- The #ffd2a1 key is warm enough to turn the blue linen greige and any warm albedo strongly
+  orange.
+- The "mustard bed" report fits warm-key × warm albedo at least as well as it fits a binding
+  error. The binding was verified correct.
+- White-balancing the bed materials (`bed-balanced`) AND keeping this key would warm the bed
+  twice, giving caramel ivory at saturation 0.40.
+
+Recommendation:
+- Judge materials under **neutral light**: a 6500 K / white key, or the same frames with the
+  camera white balance set to the key colour. That way an albedo error is not confused with
+  the light grade.
+- Then fix the key light colour in the lighting pass.
+- Under the current warm key, `bed-intended` (exact source tints) is the safer choice.
+  `bed-balanced` is meant for a neutral key or a white-balanced camera.
+- Root should capture before/after under the **same** light settings, and ideally once with
+  `SUN light_color` = white, without saving. The lighting owner decides the final key colour.
