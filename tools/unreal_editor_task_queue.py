@@ -15,9 +15,11 @@ TASKS = {
     'real_lamps': 'unreal_import_real_lamps',
     'complete_books': 'unreal_import_real_shelf_books',
     'desk_preflight': 'unreal_real_desk_import_preflight',
+    'real_office': 'unreal_import_real_office_bundle',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
+OFFICE_EXPORT = Path('/workspace/sub01-home-private/out/real-office-bundle')
 
 
 def owned(path, directory=False):
@@ -78,7 +80,15 @@ def guard_valid(path=GUARD, now=None, trusted_uid=0):
 
 
 def dispatch(task):
+    if task == 'real_office':
+        # Fixed reviewed dependencies allow corrected contact/import code to be
+        # retried in the same Editor. Requests cannot supply modules or paths.
+        for name in ('real_linea_edge_clamp', 'prepare_real_linea140_placement',
+                     'prepare_real_office_bundle', 'unreal_import_real_linea140'):
+            importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'real_office':
+        return module.run(OFFICE_EXPORT, dry_run=False)
     if task == 'real_lamps':
         return module.run(Path('/workspace/sub01-home-private/out/real-lamps'))
     if task == 'complete_books':

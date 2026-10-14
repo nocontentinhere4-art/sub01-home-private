@@ -129,6 +129,20 @@ def test_complete_books_dispatch_uses_only_complete_packet(monkeypatch):
     assert '/workspace/sub01-home-private/out/real-books' not in called[0]
 
 
+def test_office_dispatch_fixed_packet_and_reviewed_dependency_reload(monkeypatch):
+    import tools.unreal_editor_task_queue as module
+    from types import SimpleNamespace
+    called=[]; imports=[]
+    fake=SimpleNamespace(run=lambda root, **kwargs: called.append((str(root), kwargs)))
+    monkeypatch.setattr(module.importlib, 'import_module', lambda name: imports.append(name) or fake)
+    monkeypatch.setattr(module.importlib, 'reload', lambda value:value)
+    module.dispatch('real_office')
+    assert imports == ['real_linea_edge_clamp', 'prepare_real_linea140_placement',
+                       'prepare_real_office_bundle', 'unreal_import_real_linea140',
+                       'unreal_import_real_office_bundle']
+    assert called == [('/workspace/sub01-home-private/out/real-office-bundle', {'dry_run':False})]
+
+
 @pytest.mark.parametrize('change', ['file_write', 'parent_write', 'wrong_owner', 'symlink'])
 def test_guard_filesystem_trust(setup, change, tmp_path):
     q, calls, request, guard=setup
