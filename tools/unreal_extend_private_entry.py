@@ -6,8 +6,10 @@ This is a small physical courtyard, not a reconstructed Tokyo street.
 """
 import hashlib
 import json
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from unreal_import_reference_dressing import fingerprint
 
 LEVEL = '/Game/Sub01Home/ActualHome'
