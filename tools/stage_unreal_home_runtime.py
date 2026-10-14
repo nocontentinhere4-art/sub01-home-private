@@ -163,7 +163,7 @@ def stage(project):
     (module/'Sub01HomeLab.h').write_text(header)
     (module/'Sub01HomeLab.cpp').write_text(cpp)
     bridge=Path(__file__).parent/'native_pc_bridge'
-    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h']:
+    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h','Sub01NoteDraft.h']:
         shutil.copy2(bridge/name,module/name)
     stage_hands(module)
     (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore","ImageCore"}); } }\n')

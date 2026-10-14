@@ -18,6 +18,15 @@
 #include "Framework/Application/IInputProcessor.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
+#include "Engine/GameViewportClient.h"
+#include "GameFramework/PlayerController.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SEditableTextBox.h"
+#include "Widgets/Input/SMultiLineEditableTextBox.h"
+#include "Widgets/Text/STextBlock.h"
 // Current phone frame: GET /api/home phone_screen {kind:"owned_app"|"browser",available,frame_id}
 // first, else the older phone_browser_screen.frame_id. Empty when no frame is available.
 static FString Sub01PhoneIdentity(const TSharedPtr<FJsonObject>& State,bool* OwnedApp=nullptr){
@@ -31,23 +40,33 @@ static FString Sub01PhoneIdentity(const TSharedPtr<FJsonObject>& State,bool* Own
  return FString();
 }
 class FSub01DeviceInput:public IInputProcessor{
- TWeakObjectPtr<USub01HomeDeviceBridge> Bridge;bool Up=false,Down=false;
+ TWeakObjectPtr<USub01HomeDeviceBridge> Bridge;bool Up=false,Down=false,NotePressed=false;
 public:
  explicit FSub01DeviceInput(USub01HomeDeviceBridge* B):Bridge(B){}
  void Tick(const float,FSlateApplication&,TSharedRef<ICursor>)override{if(!Bridge.IsValid()||Bridge->GetFocusedDevice().IsNone()){Up=Down=false;}}
  bool HandleKeyDownEvent(FSlateApplication&,const FKeyEvent& Event)override{
-  auto* B=Bridge.Get();if(!B||B->GetFocusedDevice().IsNone())return false;const FKey K=Event.GetKey();
+  auto* B=Bridge.Get();if(!B)return false;const FKey K=Event.GetKey();
+  if(B->IsComposingNote()){
+   // Text widgets receive every other key, Backspace/Enter included; game input is UI-only meanwhile.
+   if(K==EKeys::Escape){B->CloseNoteComposer(false);return true;}
+   if(K==EKeys::Enter&&Event.IsControlDown()){B->SubmitNoteComposer();return true;}
+   return false;
+  }
+  if(B->GetFocusedDevice().IsNone())return false;
   if(K==EKeys::Escape){B->ReleaseFocus();return true;}
   if(B->GetFocusedDevice()==TEXT("phone")){
    if(K==EKeys::Up)B->PhoneAction(TEXT("scroll_up"));if(K==EKeys::Down)B->PhoneAction(TEXT("scroll_down"));if(K==EKeys::BackSpace)B->PhoneAction(TEXT("back"));if(K==EKeys::Enter)B->PhoneAction(TEXT("close_notice"));
    if(K==EKeys::Home)B->PhoneAction(TEXT("home"));if(K==EKeys::One)B->PhoneOpenApp(TEXT("home"));if(K==EKeys::Two)B->PhoneOpenApp(TEXT("notes"));if(K==EKeys::Three)B->PhoneOpenApp(TEXT("memory"));if(K==EKeys::Four)B->PhoneOpenApp(TEXT("browser"));
+   if(K==EKeys::N)NotePressed=true; // opened on release, so the N character never reaches the editor
   }else{
    if(K==EKeys::Up)Up=true;if(K==EKeys::Down)Down=true;B->SetPongDirection(float(Down)-float(Up));
    if(K==EKeys::One)B->TVGame(TEXT("pong"));if(K==EKeys::Two)B->TVGame(TEXT("chess"));if(K==EKeys::Three)B->TVGame(TEXT("minecraft"));
   }return true;
  }
- bool HandleKeyUpEvent(FSlateApplication&,const FKeyEvent& Event)override{auto* B=Bridge.Get();if(!B||B->GetFocusedDevice().IsNone())return false;if(Event.GetKey()==EKeys::Up)Up=false;if(Event.GetKey()==EKeys::Down)Down=false;B->SetPongDirection(float(Down)-float(Up));return true;}
- bool HandleMouseMoveEvent(FSlateApplication&,const FPointerEvent&)override{return Bridge.IsValid()&&!Bridge->GetFocusedDevice().IsNone();}
+ bool HandleKeyUpEvent(FSlateApplication&,const FKeyEvent& Event)override{auto* B=Bridge.Get();if(!B||B->IsComposingNote())return false;if(B->GetFocusedDevice().IsNone()){NotePressed=false;return false;}
+  if(Event.GetKey()==EKeys::N&&NotePressed){NotePressed=false;if(B->GetFocusedDevice()==TEXT("phone"))B->OpenNoteComposer();return true;}
+ if(Event.GetKey()==EKeys::Up)Up=false;if(Event.GetKey()==EKeys::Down)Down=false;B->SetPongDirection(float(Down)-float(Up));return true;}
+ bool HandleMouseMoveEvent(FSlateApplication&,const FPointerEvent&)override{return Bridge.IsValid()&&!Bridge->IsComposingNote()&&!Bridge->GetFocusedDevice().IsNone();}
 };
 USub01HomeDeviceBridge::USub01HomeDeviceBridge(){PrimaryComponentTick.bCanEverTick=false;}
 bool USub01HomeDeviceBridge::Configure(FName Device,UMeshComponent* Screen,int32 Slot,UMaterialInterface* Parent){
@@ -67,10 +86,10 @@ bool USub01HomeDeviceBridge::Configure(FName Device,UMeshComponent* Screen,int32
  GetWorld()->GetTimerManager().SetTimer(Timer,this,&USub01HomeDeviceBridge::Poll,.15f,true);return true;
 }
 void USub01HomeDeviceBridge::EndPlay(const EEndPlayReason::Type Reason){Clear();GetWorld()->GetTimerManager().ClearTimer(Timer);if(Input&&FSlateApplication::IsInitialized())FSlateApplication::Get().UnregisterInputPreProcessor(Input);Input.Reset();Token.Empty();Super::EndPlay(Reason);}
-void USub01HomeDeviceBridge::Clear(){++Generation;Private=true;Busy=false;FocusedDevice=NAME_None;PongDirection=0;PongState.Reset();PhoneFrameId.Empty();Images.Empty();ImageIdentity.Empty();FramePending.Empty();for(auto& Pair:Materials)if(Pair.Value)Pair.Value->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);}
+void USub01HomeDeviceBridge::Clear(){CloseNoteComposer(true);PhoneApp.Empty();++Generation;Private=true;Busy=false;FocusedDevice=NAME_None;PongDirection=0;PongState.Reset();PhoneFrameId.Empty();Images.Empty();ImageIdentity.Empty();FramePending.Empty();for(auto& Pair:Materials)if(Pair.Value)Pair.Value->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);}
 void USub01HomeDeviceBridge::SetLocalPrivacy(bool Hidden){if(Hidden==LocalPrivacy)return;LocalPrivacy=Hidden;if(Hidden)Clear();}
 bool USub01HomeDeviceBridge::FocusHit(UActorComponent* Component){if(Private||LocalPrivacy)return false;for(auto& Pair:Screens)if(Pair.Key==Component){FocusedDevice=Pair.Value;return true;}return false;}
-void USub01HomeDeviceBridge::ReleaseFocus(){if(FocusedDevice==TEXT("tv")&&!Private&&!LocalPrivacy){auto B=MakeShared<FJsonObject>();B->SetNumberField(TEXT("direction"),0);Action(TEXT("tv"),B);}FocusedDevice=NAME_None;PongDirection=0;}
+void USub01HomeDeviceBridge::ReleaseFocus(){if(NoteComposer.Open)CloseNoteComposer(false);if(FocusedDevice==TEXT("tv")&&!Private&&!LocalPrivacy){auto B=MakeShared<FJsonObject>();B->SetNumberField(TEXT("direction"),0);Action(TEXT("tv"),B);}FocusedDevice=NAME_None;PongDirection=0;}
 void USub01HomeDeviceBridge::ReadHome(TFunction<void(TSharedPtr<FJsonObject>)> Done){
  auto Callback=MakeShared<TFunction<void(TSharedPtr<FJsonObject>)>>(MoveTemp(Done));auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/state"));R->SetVerb(TEXT("GET"));R->SetTimeout(3);R->SetHeader(TEXT("X-Admin-Token"),Token);
  R->OnProcessRequestComplete().BindWeakLambda(this,[Callback](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){TSharedPtr<FJsonObject> State;if(OK&&Response&&Response->GetResponseCode()==200){auto Reader=TJsonReaderFactory<>::Create(Response->GetContentAsString());FJsonSerializer::Deserialize(Reader,State);}(*Callback)(State);});if(!R->ProcessRequest())(*Callback)(nullptr);
@@ -83,6 +102,7 @@ void USub01HomeDeviceBridge::Poll(){
   FSub01DeviceScreenInputs Screen;Screen.PublicHome=true;Screen.PhoneActivity=Activity==TEXT("phone");Screen.MinecraftSelected=Game==TEXT("minecraft");
   const TSharedPtr<FJsonObject>* Minecraft=nullptr;if(State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft){(*Minecraft)->TryGetBoolField(TEXT("enabled"),Screen.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),Screen.MinecraftFrame);}
   bool OwnedApp=false;const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);Screen.PhoneAppFrame=OwnedApp;Screen.PhoneFrame=!OwnedApp&&!Identity.IsEmpty();
+  PhoneApp.Empty();{const TSharedPtr<FJsonObject>* PhoneScreen=nullptr;if(OwnedApp&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)&&PhoneScreen)(*PhoneScreen)->TryGetStringField(TEXT("app"),PhoneApp);}
   // Browser parity (Sub01DeviceScreenPolicy.h): a browser page only while he is on the
   // phone; an owned app frame whenever the home is public. Same authenticated route.
   if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);
@@ -106,13 +126,72 @@ void USub01HomeDeviceBridge::FetchFrame(FName Device,const FString& Identity,uin
    auto* Texture=FImageUtils::ImportBufferAsTexture2D(Pixels);if(!Texture||Texture->GetSizeX()>2048||Texture->GetSizeY()>2048)return;Texture->SRGB=true;Texture->UpdateResource();Images.Add(Device,Texture);ImageIdentity.Add(Device,CurrentIdentity);if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),Texture);if(Device==TEXT("phone"))PhoneFrameId=Identity;
   });});if(!R->ProcessRequest())FramePending.Remove(Device);
 }
-void USub01HomeDeviceBridge::Action(FName Device,const TSharedPtr<FJsonObject>& Body){if(Private||LocalPrivacy||Token.IsEmpty())return;const uint64 Epoch=Generation;
- ReadHome([this,Device,Body,Epoch](TSharedPtr<FJsonObject> Before){if(Epoch!=Generation)return;if(!PublicHome(Before)){Clear();return;}FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/action"));R->SetVerb(TEXT("POST"));R->SetTimeout(3);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetHeader(TEXT("X-Admin-Token"),Token);R->SetContentAsString(Data);// The existing 150 ms poll refreshes state. Calling Poll from this reply
+void USub01HomeDeviceBridge::Action(FName Device,const TSharedPtr<FJsonObject>& Body,TFunction<void(int32,const FString&)> Done){
+ auto Result=MakeShared<TFunction<void(int32,const FString&)>>(MoveTemp(Done));
+ if(Private||LocalPrivacy||Token.IsEmpty()){if(*Result)(*Result)(0,FString());return;}const uint64 Epoch=Generation;
+ ReadHome([this,Device,Body,Epoch,Result](TSharedPtr<FJsonObject> Before){if(Epoch!=Generation)return;if(!PublicHome(Before)){Clear();return;}FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/action"));R->SetVerb(TEXT("POST"));R->SetTimeout(3);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetHeader(TEXT("X-Admin-Token"),Token);R->SetContentAsString(Data);// The existing 150 ms poll refreshes state. Calling Poll from this reply
    // recursively re-sends held Pong input faster than the backend rate limit.
-   R->ProcessRequest();});
+   if(*Result)R->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Result](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){
+    if(Epoch!=Generation)return;(*Result)(OK&&Response?Response->GetResponseCode():0,OK&&Response?Response->GetContentAsString():FString());});
+   if(!R->ProcessRequest()&&*Result)(*Result)(0,FString());});
 }
 void USub01HomeDeviceBridge::PhoneAction(const FString& ActionName){if(PhoneFrameId.IsEmpty())return;auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("action"),ActionName);B->SetStringField(TEXT("frame_id"),PhoneFrameId);Action(TEXT("phone"),B);}
 void USub01HomeDeviceBridge::PhoneOpenApp(const FString& App){if(PhoneFrameId.IsEmpty()||(App!=TEXT("home")&&App!=TEXT("notes")&&App!=TEXT("memory")&&App!=TEXT("browser")))return;auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("action"),TEXT("open_app"));B->SetStringField(TEXT("app"),App);B->SetStringField(TEXT("frame_id"),PhoneFrameId);Action(TEXT("phone"),B);}
+void USub01HomeDeviceBridge::PhoneSaveNote(const FString& Title,const FString& Text){
+ const ESub01NoteCheck Check=Sub01CheckNote(*Title,size_t(Title.Len()),*Text,size_t(Text.Len()));
+ if(Check!=ESub01NoteCheck::Ok){ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(Check)));return;}
+ if(PhoneFrameId.IsEmpty()||PhoneApp!=TEXT("notes")){ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(ESub01NoteSave::Stale)));return;}
+ const unsigned long long Id=NoteComposer.TryBeginSave(Check);if(!Id)return;ShowNoteStatus(TEXT("Saving..."));
+ auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("action"),TEXT("save_note"));B->SetStringField(TEXT("frame_id"),PhoneFrameId);
+ if(!Title.TrimStartAndEnd().IsEmpty())B->SetStringField(TEXT("title"),Title);B->SetStringField(TEXT("text"),Text);
+ Action(TEXT("phone"),B,[this,Id](int32 Code,const FString& Reply){
+  TSharedPtr<FJsonObject> Json;bool Ok=false;
+  if(Code==200&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Reply),Json)&&Json.IsValid())Json->TryGetBoolField(TEXT("ok"),Ok);
+  if(!NoteComposer.Saving||Id!=NoteComposer.Request)return; // a superseded request: never reported
+  const ESub01NoteSave Outcome=Sub01NoteSaveOutcome(Code,Ok);
+  // Only a confirmed save clears the draft; stale, rejected or failed saves keep it.
+  if(NoteComposer.Finish(Id,Outcome)){DraftTitle.Empty();DraftText.Empty();CloseNoteComposer(false);}
+  ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(Outcome)));
+ });
+}
+bool USub01HomeDeviceBridge::OpenNoteComposer(){
+ if(NoteComposer.Open)return true;
+ if(!NoteComposer.TryOpen(!Private&&!LocalPrivacy&&!Token.IsEmpty(),PhoneApp==TEXT("notes"),!PhoneFrameId.IsEmpty())){ShowNoteStatus(TEXT("Open Notes on the phone (key 2), then press N to write."));return false;}
+ if(!GEngine||!GEngine->GameViewport){NoteComposer.Close();return false;}
+ TWeakObjectPtr<USub01HomeDeviceBridge> Weak(this);
+ NoteWidget=SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SBox).WidthOverride(560)[SNew(SBorder).Padding(16)[
+  SNew(SVerticalBox)
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SNew(STextBlock).Text(FText::FromString(TEXT("New note")))]
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SAssignNew(NoteTitleBox,SEditableTextBox).HintText(FText::FromString(TEXT("Title (optional)"))).Text(FText::FromString(DraftTitle))]
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SNew(SBox).HeightOverride(220)[SAssignNew(NoteTextBox,SMultiLineEditableTextBox).HintText(FText::FromString(TEXT("Note"))).Text(FText::FromString(DraftText)).AutoWrapText(true)]]
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SAssignNew(NoteStatus,STextBlock).Text(FText::FromString(TEXT("Ctrl+Enter saves. Esc closes and keeps the draft."))).AutoWrapText(true)]
+  +SVerticalBox::Slot().AutoHeight()[SNew(SHorizontalBox)
+   +SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).Text(FText::FromString(TEXT("Save"))).OnClicked_Lambda([Weak](){if(Weak.IsValid())Weak->SubmitNoteComposer();return FReply::Handled();})]
+   +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).Text(FText::FromString(TEXT("Close"))).OnClicked_Lambda([Weak](){if(Weak.IsValid())Weak->CloseNoteComposer(false);return FReply::Handled();})]]
+ ]]];
+ GEngine->GameViewport->AddViewportWidgetContent(NoteWidget.ToSharedRef(),100);
+ // UI-only input: typed keys never move the operator while the editor is open.
+ if(APlayerController* Player=GetWorld()?GetWorld()->GetFirstPlayerController():nullptr){FInputModeUIOnly Mode;Mode.SetWidgetToFocus(NoteTextBox);Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);Player->SetInputMode(Mode);Player->SetShowMouseCursor(true);}
+ return true;
+}
+void USub01HomeDeviceBridge::ReadNoteDraft(){
+ if(NoteTitleBox.IsValid())DraftTitle=NoteTitleBox->GetText().ToString();
+ if(NoteTextBox.IsValid())DraftText=NoteTextBox->GetText().ToString();
+}
+void USub01HomeDeviceBridge::SubmitNoteComposer(){if(!NoteComposer.Open)return;ReadNoteDraft();PhoneSaveNote(DraftTitle,DraftText);}
+void USub01HomeDeviceBridge::CloseNoteComposer(bool Discard){
+ if(Discard){NoteComposer.Reset();DraftTitle.Empty();DraftText.Empty();NoteStatusText.Empty();}
+ else{if(NoteComposer.Open)ReadNoteDraft();NoteComposer.Close();}
+ if(NoteTitleBox.IsValid())NoteTitleBox->SetText(FText::GetEmpty());
+ if(NoteTextBox.IsValid())NoteTextBox->SetText(FText::GetEmpty());
+ if(NoteWidget.IsValid()&&GEngine&&GEngine->GameViewport)GEngine->GameViewport->RemoveViewportWidgetContent(NoteWidget.ToSharedRef());
+ const bool Shown=NoteWidget.IsValid();NoteWidget.Reset();NoteTitleBox.Reset();NoteTextBox.Reset();NoteStatus.Reset();
+ if(Shown)if(APlayerController* Player=GetWorld()?GetWorld()->GetFirstPlayerController():nullptr){Player->SetInputMode(FInputModeGameOnly());Player->SetShowMouseCursor(false);}
+}
+void USub01HomeDeviceBridge::ShowNoteStatus(const FString& Message){
+ NoteStatusText=Message;if(NoteStatus.IsValid())NoteStatus->SetText(FText::FromString(Message));
+ else if(GEngine&&!Message.IsEmpty())GEngine->AddOnScreenDebugMessage(-1,4,FColor::Orange,Message);
+}
 void USub01HomeDeviceBridge::PhoneNavigate(const FString& URL){if(URL.IsEmpty()||URL.Len()>2048||!URL.StartsWith(TEXT("https://"),ESearchCase::IgnoreCase))return;auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("action"),TEXT("navigate"));B->SetStringField(TEXT("url"),URL);if(!PhoneFrameId.IsEmpty())B->SetStringField(TEXT("frame_id"),PhoneFrameId);Action(TEXT("phone"),B);}
 void USub01HomeDeviceBridge::TVGame(const FString& Game){auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("game"),Game);Action(TEXT("tv"),B);}
 void USub01HomeDeviceBridge::DrawTV(UCanvas* Canvas,int32 Width,int32 Height){if(!Canvas||Private||LocalPrivacy||!PongState)return;const TArray<TSharedPtr<FJsonValue>> *Paddles=nullptr,*Ball=nullptr,*Score=nullptr;if(!PongState->TryGetArrayField(TEXT("paddles"),Paddles)||!PongState->TryGetArrayField(TEXT("ball"),Ball)||!PongState->TryGetArrayField(TEXT("score"),Score)||Paddles->Num()!=2||Ball->Num()!=2||Score->Num()!=2)return;

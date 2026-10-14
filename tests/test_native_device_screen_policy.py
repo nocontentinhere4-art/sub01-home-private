@@ -92,7 +92,7 @@ def test_integrated_bridge_gates_fetches_and_stages_header():
     assert 'R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")' in fetch
     assert "R->SetHeader(TEXT(\"X-Admin-Token\"),Token);" in fetch
     stage = native_source(STAGE)
-    assert "'Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h']" in stage
+    assert "'Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h'" in stage  # further staged headers may follow
     # The policy is part of the actual module, not an unapplied proposal.
     assert '#include "Sub01DeviceScreenPolicy.h"' in original
 
