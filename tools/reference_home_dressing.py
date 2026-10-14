@@ -7,34 +7,38 @@ tools/assemble_home_blender.py, in the warm-cream, soft-daylight direction of
 the owner's SimbasJungles reference. Every item comes from the calibrated spec
 docs/design/reference-dressing/spec.json (real-world sizes with a source note).
 
-Hard rules enforced by the pure-Python planner before anything is built:
-  * walk graph keep-out: a 0.35 m body capsule around every home_world.py
-    NODES/EDGES segment (floor-interpolated, so the stair edge is handled);
-  * door swing / slide zones (front, balcony, bathroom slide, kitchen cabinets);
-  * functional screens: PC monitor (UE (200,-327.6,116) cm, extent (34,0,20)),
-    phone display plane and TV plane may not be overlapped, nothing may sit in
-    the prism in front of them, and nothing may cut any sightline from their
-    viewers' eyes;
-  * clear zones: desk chair + keyboard/mouse, the sofa seat he sits in, the
-    kitchen prep worktop, sink and tap;
-  * existing objects (espresso, cup, crock, plants, lamps, pillows...) and
-    previously placed dressing may not be intersected; each item must rest on
-    its named support surface.
-Items failing any rule are REFUSED and listed with reasons. Items the house
-already has (rug, curtains, duvet, shelf books, plants) are skipped as duplicates.
+Two validation layers:
+  1. Planning (pure Python, `--dry-run`): checks the spec against the walk graph,
+     door data, device screens and ESTIMATED furniture boxes transcribed from
+     home.js. It is a pre-filter only and never places anything.
+  2. Placement (inside Blender only): every rule is re-checked against the
+     ACTUAL evaluated home (object.evaluated_get(depsgraph), modifiers applied,
+     world matrices): triangle-level collision with every existing object, a
+     downward ray onto a real support surface (no hit -> UnsupportedPlacementError
+     for any resting item; wall/hanging mounts must hit their declared surface),
+     and clearance zones derived from evaluated anchor bounds (desk/chair
+     approach and keyboard strip from the desk, the sofa seat in use, the bed
+     access side, the kitchen work zone found by ray at home_world LOOKS,
+     cabinet door swings from carcass bounds) plus the 0.35 m walk-graph
+     capsules, door swings and the PC monitor / phone / TV prisms and sightlines.
+     Hand-typed estimates are never used for placement.
 
 Additive only: new objects live in the "SUB01_ReferenceDressing" collection with
-deterministic names. Existing objects are fingerprinted before and after and the
-run aborts if any changed. The only optional edit to existing furniture is a
-modest, named, reversible bevel modifier on an exact-name whitelist
-(--bevel-existing / --remove-bevels).
+deterministic names. Before any change every pre-existing object is fingerprinted
+(name, type, parent, world matrix, exact evaluated mesh bytes, material node
+signatures); afterwards each must be byte-for-byte identical or the run aborts
+before saving/exporting. No existing object is modified (no bevels, no deletes).
+`--export-additive-glb` exports ONLY the new objects, so Unreal never reimports
+the home (reimporting would change the material/contact hashes the seat and
+keyboard audits depend on). See docs/design/reference-dressing/PREREQUISITES.md.
 
-Pure mode (no Blender, no rendering) prints the JSON placement report:
+Pure mode (no Blender, no rendering):
     python3 tools/reference_home_dressing.py --dry-run
-Server (inside Blender, never renders):
-    blender --background out/home114-assembled/house.blend \
-      --python tools/reference_home_dressing.py -- \
-      --assets-root web/house/assets --output-dir out/reference-dressing
+Server, read-only inspection of the real house.blend (never renders):
+    blender --background <house.blend> --python tools/reference_home_dressing.py -- --list-identifiers
+Server, placement + additive export (never renders, never saves over the input):
+    blender --background <house.blend> --python tools/reference_home_dressing.py -- \
+      --assets-root web/house/assets --output-dir out/reference-dressing --export-additive-glb
 """
 import argparse
 import ast
@@ -53,19 +57,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC_PATH = ROOT / 'docs/design/reference-dressing/spec.json'
 COLLECTION = 'SUB01_ReferenceDressing'
 NAME_PREFIX = 'SUB01_RefDress_'
-BEVEL_MODIFIER = 'SUB01_RefDress_Bevel'
-# Exact-name whitelist for the optional bevel on existing furniture (object name
-# or bakeId). Width stays modest; skipped when the object already has a bevel.
-BEVEL_WHITELIST = ('house-office-desk-Oak_desk', 'house-office-shelves-Oak_shelves',
-                   'Oak_desk', 'Oak_shelves')
-BEVEL_WIDTH_M = .0015
+TAG = 'sub01ReferenceDressing'
 
 EYE_HEIGHT_M = 1.65          # home_world NODES are walking-eye points
 BODY_RADIUS_M = .35          # keep-out capsule radius around the walk graph
 BODY_HEIGHT_M = 2.0
 UPPER_FLOOR_M = 3.0
 CONTACT_TOLERANCE_M = .005   # resting contact / touching neighbours is allowed
-SNAP_LIMIT_M = .10           # Blender ray snap may move an item at most this far
+SNAP_LIMIT_M = .10           # a real support may differ from the spec height by at most this
+FLAT_SUPPORT_M = .01         # rigid items: all support rays must agree within this
 
 
 # ----------------------------------------------------------------------------
@@ -108,6 +108,29 @@ def load_graph(path=ROOT / 'home_world.py'):
         if a not in nodes or b not in nodes:
             raise ValueError(f'edge {a}-{b} names an unknown node')
     return nodes, edges
+
+
+def _literal_constants(path, names):
+    """Module-level literal constants, including tuple unpacking (A, B = 1, 2)."""
+    out = {}
+    for node in ast.parse(Path(path).read_text()).body:
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id in names:
+                out[target.id] = ast.literal_eval(node.value)
+            elif isinstance(target, ast.Tuple) and isinstance(node.value, ast.Tuple):
+                for t, v in zip(target.elts, node.value.elts):
+                    if isinstance(t, ast.Name) and t.id in names:
+                        out[t.id] = ast.literal_eval(v)
+    missing = set(names) - set(out)
+    if missing:
+        raise KeyError(f'{sorted(missing)} not found in {path}')
+    return out
+
+
+def load_looks(path=ROOT / 'home_world.py'):
+    return {k: tuple(float(v) for v in xyz) for k, xyz in _literal_assignment(path, 'LOOKS').items()}
 
 
 def load_doors(path=ROOT / 'home_interactions.py'):
@@ -278,11 +301,28 @@ def default_door_zones(doors=None):
         floor = UPPER_FLOOR_M if d.get('upper') else 0.0
         zones.append({'name': f'door:{name}', 'disc': (d['centre'][0], d['centre'][1], .95),
                       'y': (floor, floor + 2.2)})
-    zones.append({'name': 'door:bathroom_slide', 'box': _box(-.98, -.72, 3.0, 5.1, .85, 2.80)})
-    # Kitchen cabinet doors (home.js lower/upper cabinet, 0.4 m class leaves).
-    zones.append({'name': 'door:kitchen_upper_cabinets', 'box': _box(-3.78, -.62, 1.68, 2.42, -3.53, -3.0)})
-    zones.append({'name': 'door:kitchen_lower_cabinets', 'box': _box(-3.78, -.62, 0.0, .86, -3.20, -2.62)})
+    zones.append(bathroom_slide_zone())
     return zones
+
+
+BATH_DOOR_OPEN_Z = 2.3   # build_home_bath_door.py: "closed z 1.35 -> open z 2.3 along the x -0.85 wall"
+
+
+def bathroom_slide_zone(path=ROOT / 'tools/build_home_bath_door.py'):
+    """Swept volume of the sliding bathroom leaf, from the builder's own constants."""
+    consts = _literal_constants(path, ('SLAB_CENTRE', 'THICKNESS', 'HEIGHT', 'WIDTH'))
+    (cx, cy, cz), t, h, w = consts['SLAB_CENTRE'], consts['THICKNESS'], consts['HEIGHT'], consts['WIDTH']
+    pad = .08
+    return {'name': 'door:bathroom_slide',
+            'box': _box(cx - t / 2 - pad, cx + t / 2 + pad, cy - h / 2, cy + h / 2,
+                        cz - w / 2 - pad, BATH_DOOR_OPEN_Z + w / 2 + pad)}
+
+
+def estimated_cabinet_door_zones():
+    """Planning estimate only (home.js cabinet positions); placement derives these
+    from the evaluated carcass bounds instead."""
+    return [{'name': 'door:kitchen_upper_cabinets', 'box': _box(-3.78, -.62, 1.68, 2.42, -3.53, -3.0)},
+            {'name': 'door:kitchen_lower_cabinets', 'box': _box(-3.78, -.62, 0.0, .86, -3.20, -2.62)}]
 
 
 def default_clear_zones():
@@ -317,7 +357,7 @@ SUPPORTS = {
     'sofa_arm_right': {'top': .71, 'rect': (-2.2625, -1.3375, 1.0, 1.2375), 'floor': 0},
     'coffee_table_top': {'top': .455, 'rect': (-3.55, -2.85, -.60, .80), 'floor': 0},
     'kitchen_counter': {'top': .9225, 'rect': (-3.78, -.62, -3.88, -3.18), 'floor': 0},
-    'bed_top': {'top': 3.60, 'rect': (-3.25, -1.55, -3.4625, -1.2375), 'floor': 1},
+    'bed_top': {'top': 3.68, 'rect': (-3.25, -1.55, -3.4625, -1.2375), 'floor': 1},
 }
 
 
@@ -325,8 +365,9 @@ def build_context(nodes=None, edges=None, doors=None):
     if nodes is None or edges is None:
         nodes, edges = load_graph()
     return {'capsules': walk_capsules(nodes, edges), 'screens': default_screens(),
-            'doors': default_door_zones(doors), 'clear': default_clear_zones(),
-            'solids': default_existing_solids(), 'supports': SUPPORTS}
+            'doors': default_door_zones(doors) + estimated_cabinet_door_zones(),
+            'clear': default_clear_zones(), 'solids': default_existing_solids(), 'supports': SUPPORTS,
+            'basis': 'planning-estimate'}
 
 
 # ----------------------------------------------------------------------------
@@ -364,14 +405,20 @@ def validate_item(item, context, placed=()):
             reasons.append(zone['name'])
     # A soft item may lean on named neighbours (layered pillows); nothing else.
     leans = set(item.get('leans_on', []))
-    for solid in context['solids']:
+    for solid in context.get('solids', ()):
         if solid['name'] not in leans and aabb_overlap(box, solid['box']):
             reasons.append(f'collides:{solid["name"]}')
+    geometry = context.get('geometry')
+    if geometry is not None:
+        for ident, count in sorted(geometry.collisions(item).items()):
+            reasons.append(f'collides:{ident} ({count} tris)')
     for other in placed:
         mutual = (f'dressing:{other["id"]}' in leans
                   or f'dressing:{item["id"]}' in other.get('leans_on', ()))
         if not mutual and aabb_overlap(box, other['aabb']):
             reasons.append(f'collides:dressing:{other["id"]}')
+    if context.get('supports') is None:   # placement: support verified by resolve_support()
+        return reasons
     support = context['supports'].get(item.get('support'))
     if support is None:
         reasons.append(f'support:unknown:{item.get("support")}')
@@ -547,6 +594,8 @@ def draped_strip_mesh(length, top_width, drop, radius=.03, nx=24, n_arc=6, drop_
     dropping `drop` on both sides. Length runs along local X. Solidify adds
     thickness outward in Blender. Top-face normals point +Z."""
     prof = []
+    if drop <= radius + 1e-9:                   # flat folded band: shoulders only
+        drop, drop_steps = radius, 0
     for k in range(drop_steps, 0, -1):          # left drop, bottom -> shoulder
         prof.append((-top_width / 2 - radius, -radius - (drop - radius) * k / drop_steps))
     for k in range(n_arc + 1):                  # left shoulder arc
@@ -604,20 +653,436 @@ def canister_lid_profile(radius):
             (.014, .026), (.010, CANISTER_LID_M), (0, CANISTER_LID_M)]
 
 
+
+
 # ----------------------------------------------------------------------------
-# Blender build
+# Evaluated geometry (pure Python; filled from Blender or from test fakes)
+# ----------------------------------------------------------------------------
+class UnsupportedPlacementError(RuntimeError):
+    """A resting item has no real support surface, or a mount has no verified surface."""
+
+
+def _inv_rot(yaw_deg, tilt_deg, point):
+    """Inverse of _rot: Blender world offset -> item-local frame."""
+    t, w = math.radians(tilt_deg), math.radians(yaw_deg)
+    x, y, z = point
+    x, y = x * math.cos(w) + y * math.sin(w), -x * math.sin(w) + y * math.cos(w)
+    y, z = y * math.cos(t) + z * math.sin(t), -y * math.sin(t) + z * math.cos(t)
+    return (x, y, z)
+
+
+def item_local_boxes(item):
+    """Collision volumes in the item-local frame (Blender local: X width, Y depth, Z up).
+    A draped throw is three slabs (top + two drops), not the box around its support."""
+    w, d, h = item['dims_m']
+    below = item.get('origin_height_m', 0.0)
+    if item['kind'] == 'draped_throw':
+        p = item['params']
+        t_total = p.get('thickness', .012) * (1 + p.get('fold_layers', 0))
+        half = p['top_width'] / 2 + p.get('radius', .03)
+        boxes = [((-w / 2, -half - t_total, 0.0), (w / 2, half + t_total, t_total))]
+        if p['drop'] > p.get('radius', .03) + 1e-9:
+            for sign in (-1, 1):
+                y0, y1 = sorted((sign * half, sign * (half + t_total)))
+                boxes.append(((-w / 2, y0, -p['drop']), (w / 2, y1, -p.get('radius', .03))))
+        return boxes
+    return [((-w / 2, -d / 2, -below), (w / 2, d / 2, h - below))]
+
+
+def world_to_local(item, point_runtime):
+    o = runtime_to_blender(item['position_runtime_m'])
+    b = runtime_to_blender(point_runtime)
+    return _inv_rot(item.get('yaw_deg', 0.0), item.get('tilt_deg', 0.0), tuple(b[i] - o[i] for i in range(3)))
+
+
+def tri_box_overlap(centre, half, tri):
+    """Akenine-Moller separating-axis test: triangle vs axis-aligned box."""
+    v = [tuple(p[i] - centre[i] for i in range(3)) for p in tri]
+    for i in range(3):
+        if min(p[i] for p in v) > half[i] or max(p[i] for p in v) < -half[i]:
+            return False
+    e = [tuple(v[(k + 1) % 3][i] - v[k][i] for i in range(3)) for k in range(3)]
+    for edge in e:
+        for a in range(3):
+            unit = [0.0, 0.0, 0.0]
+            unit[a] = 1.0
+            axis = (unit[1] * edge[2] - unit[2] * edge[1], unit[2] * edge[0] - unit[0] * edge[2],
+                    unit[0] * edge[1] - unit[1] * edge[0])
+            proj = [sum(p[i] * axis[i] for i in range(3)) for p in v]
+            r = sum(half[i] * abs(axis[i]) for i in range(3))
+            if min(proj) > r or max(proj) < -r:
+                return False
+    n = (e[0][1] * e[1][2] - e[0][2] * e[1][1], e[0][2] * e[1][0] - e[0][0] * e[1][2],
+         e[0][0] * e[1][1] - e[0][1] * e[1][0])
+    dist = sum(n[i] * v[0][i] for i in range(3))
+    r = sum(half[i] * abs(n[i]) for i in range(3))
+    return abs(dist) <= r
+
+
+def _ray_triangle(origin, direction, tri, eps=1e-12):
+    """Moller-Trumbore; distance along `direction` or None."""
+    a, b, c = tri
+    e1 = tuple(b[i] - a[i] for i in range(3))
+    e2 = tuple(c[i] - a[i] for i in range(3))
+    pv = (direction[1] * e2[2] - direction[2] * e2[1], direction[2] * e2[0] - direction[0] * e2[2],
+          direction[0] * e2[1] - direction[1] * e2[0])
+    det = sum(e1[i] * pv[i] for i in range(3))
+    if abs(det) < eps:
+        return None
+    tv = tuple(origin[i] - a[i] for i in range(3))
+    u = sum(tv[i] * pv[i] for i in range(3)) / det
+    if u < 0 or u > 1:
+        return None
+    qv = (tv[1] * e1[2] - tv[2] * e1[1], tv[2] * e1[0] - tv[0] * e1[2], tv[0] * e1[1] - tv[1] * e1[0])
+    v = sum(direction[i] * qv[i] for i in range(3)) / det
+    if v < 0 or u + v > 1:
+        return None
+    t = sum(e2[i] * qv[i] for i in range(3)) / det
+    return t if t >= 0 else None
+
+
+class SceneGeometry:
+    """Evaluated world triangles of the existing home, in runtime metres.
+    records: [{'name', 'ident', 'aabb': (lo, hi), 'tris': [(a, b, c), ...]}]"""
+
+    def __init__(self, records):
+        self.records = list(records)
+
+    def matching(self, prefixes):
+        return [r for r in self.records
+                if any(r['ident'].startswith(p) or r['name'].startswith(p) for p in prefixes)]
+
+    @staticmethod
+    def union(records):
+        if not records:
+            return None
+        return (tuple(min(r['aabb'][0][i] for r in records) for i in range(3)),
+                tuple(max(r['aabb'][1][i] for r in records) for i in range(3)))
+
+    def ray(self, origin, direction, max_dist, records=None):
+        """Nearest hit (distance, ident) along a unit direction, or None."""
+        end = tuple(origin[i] + direction[i] * max_dist for i in range(3))
+        best = None
+        for rec in self.records if records is None else records:
+            if not segment_hits_aabb(origin, end, rec['aabb'], pad=1e-6):
+                continue
+            for tri in rec['tris']:
+                t = _ray_triangle(origin, direction, tri)
+                if t is not None and t <= max_dist and (best is None or t < best[0]):
+                    best = (t, rec['ident'])
+        return best
+
+    def surface_below(self, x, z, y_from, y_to, records=None):
+        hit = self.ray((x, y_from, z), (0.0, -1.0, 0.0), y_from - y_to, records)
+        return None if hit is None else (y_from - hit[0], hit[1])
+
+    def collisions(self, item):
+        """{ident: triangle count} of existing triangles inside the item's collision
+        volumes, after shrinking each volume by the item's soft-contact allowance."""
+        allowance = item.get('contact_allowance_m', CONTACT_TOLERANCE_M)
+        boxes = []
+        for lo, hi in item_local_boxes(item):
+            half = tuple(max(0.0005, (hi[i] - lo[i]) / 2 - allowance) for i in range(3))
+            boxes.append((tuple((lo[i] + hi[i]) / 2 for i in range(3)), half))
+        world = item_aabb(item)
+        hits = {}
+        for rec in self.records:
+            if not aabb_overlap(world, rec['aabb'], 0.0):
+                continue
+            for tri in rec['tris']:
+                if any(min(p[i] for p in tri) > world[1][i] or max(p[i] for p in tri) < world[0][i]
+                       for i in range(3)):
+                    continue
+                local = [world_to_local(item, p) for p in tri]
+                if any(tri_box_overlap(c, h, local) for c, h in boxes):
+                    hits[rec['ident']] = hits.get(rec['ident'], 0) + 1
+        return hits
+
+
+# Exact identifier prefixes (bakeId, else object name) of evaluated anchors. These
+# come from the assembler and the GI-architecture proxy; root confirms them with
+# --list-identifiers and can override with --anchors <json>.
+DEFAULT_ANCHORS = {
+    'sofa': ['house-sofa-'],
+    'coffee_table': ['house-cc0-coffee-table'],
+    'bed': ['house-cc0-queen-bed'],
+    'desk': ['house-office-desk-'],
+    'upper_cabinet': ['house-upper-cabinet-'],
+    'lower_cabinet': ['house-lower-cabinet-'],
+}
+SUPPORT_ANCHOR = {'sofa_seat': 'sofa', 'sofa_arm_right': 'sofa', 'coffee_table_top': 'coffee_table',
+                  'bed_top': 'bed', 'kitchen_counter': None}
+ROOM_ANCHORS = {'lounge': ('sofa', 'coffee_table'), 'bedroom': ('bed',),
+                'kitchen': ('upper_cabinet', 'lower_cabinet', 'kitchen_surface'), 'office': ('desk',)}
+
+
+def derived_zones(geometry, anchors=None, nodes=None, looks=None):
+    """Clearance and door-swing zones from evaluated anchor bounds.
+    Returns (zones, missing_anchor_names)."""
+    anchors = anchors or DEFAULT_ANCHORS
+    if nodes is None:
+        nodes, _ = load_graph()
+    looks = looks if looks is not None else load_looks()
+    zones, missing = [], set()
+    bounds = {}
+    for key, prefixes in anchors.items():
+        bounds[key] = SceneGeometry.union(geometry.matching(prefixes))
+        if bounds[key] is None:
+            missing.add(key)
+    monitor = next(s for s in default_screens() if s['name'] == 'pc_monitor')
+    if bounds.get('desk'):
+        lo, hi = bounds['desk']
+        mx = monitor['centre'][0]
+        zones.append({'name': 'clear:desk_chair_approach', 'box': _box(mx - .6, mx + .6, lo[1], lo[1] + 1.45,
+                                                                       hi[2], hi[2] + 1.30)})
+        zones.append({'name': 'clear:keyboard_mouse_strip', 'box': _box(mx - .55, mx + .55, hi[1] - .05,
+                                                                        hi[1] + .25, hi[2] - .40, hi[2])})
+    if bounds.get('sofa'):
+        lo, hi = bounds['sofa']
+        cz = (lo[2] + hi[2]) / 2
+        zones.append({'name': 'clear:sofa_seat_in_use', 'box': _box(lo[0], hi[0], lo[1] + .40, hi[1] + .70,
+                                                                    cz - .30, cz + .30)})
+    if bounds.get('bed'):
+        lo, hi = bounds['bed']
+        bx = nodes['bed'][0]
+        x0, x1 = (hi[0], hi[0] + .60) if bx > hi[0] else (lo[0] - .60, lo[0])
+        zones.append({'name': 'clear:bed_access_side', 'box': _box(x0, x1, lo[1], lo[1] + 2.0, lo[2], hi[2])})
+    kx, _, kz = looks['kitchen']
+    hit = geometry.surface_below(kx, kz, 1.5, .5)
+    if hit is None:
+        missing.add('kitchen_surface')
+    else:
+        top = hit[0]
+        zones.append({'name': 'clear:kitchen_work_zone', 'box': _box(kx - .50, kx + .50, top - .02, top + .70,
+                                                                     kz - .40, kz + .40)})
+    for key in ('upper_cabinet', 'lower_cabinet'):
+        if bounds.get(key):
+            lo, hi = bounds[key]
+            leaf = (hi[0] - lo[0]) / 4          # four doors per run (build_home_upper_cabinet)
+            zones.append({'name': f'door:kitchen_{key}_swing', 'box': _box(lo[0], hi[0], lo[1], hi[1],
+                                                                          hi[2], hi[2] + leaf)})
+    return zones, sorted(missing)
+
+
+def evaluated_context(geometry, anchors=None, doors=None, nodes=None, edges=None, looks=None):
+    if nodes is None or edges is None:
+        nodes, edges = load_graph()
+    zones, missing = derived_zones(geometry, anchors, nodes, looks)
+    return {'capsules': walk_capsules(nodes, edges), 'screens': default_screens(),
+            'doors': default_door_zones(doors) + [z for z in zones if z['name'].startswith('door:')],
+            'clear': [z for z in zones if z['name'].startswith('clear:')],
+            'geometry': geometry, 'supports': None, 'missing_anchors': missing,
+            'basis': 'evaluated-geometry'}
+
+
+def support_samples(item):
+    px, _, pz = item['position_runtime_m']
+    if item['kind'] == 'draped_throw':
+        return [(px, pz)]
+    if item.get('rigid'):
+        lo, hi = item_aabb(item)
+        hx, hz = (hi[0] - lo[0]) * .3, (hi[2] - lo[2]) * .3
+        return [(px, pz), (px - hx, pz - hz), (px + hx, pz - hz), (px - hx, pz + hz), (px + hx, pz + hz)]
+    # Soft/leaning: along the width only, so rays miss the backrest behind it.
+    a = blender_to_runtime(_rot(item.get('yaw_deg', 0.0), 0.0, (item['dims_m'][0] * .3, 0, 0)))
+    return [(px, pz), (px - a[0], pz - a[2]), (px + a[0], pz + a[2])]
+
+
+def resolve_support(item, geometry, anchors=None):
+    """Verify the item against REAL evaluated surfaces and return a placed copy.
+    Resting items need a support hit under every sample (on the declared anchor
+    when one is known), else UnsupportedPlacementError. Wall/hanging mounts must
+    hit their declared attach surface within max_gap_m."""
+    anchors = anchors or DEFAULT_ANCHORS
+    item = json.loads(json.dumps(item))
+    mount = item.get('mount', 'rest')
+    if mount in ('wall', 'hanging'):
+        attach = item.get('attach') or {}
+        direction = attach.get('direction_runtime')
+        if not attach.get('surface') or not direction:
+            raise UnsupportedPlacementError(f'{item["id"]}: {mount} mount declares no attach surface/direction')
+        length = math.sqrt(sum(c * c for c in direction))
+        unit = tuple(c / length for c in direction)
+        gap = attach.get('max_gap_m', .02)
+        records = geometry.matching(attach['surface_prefixes']) if attach.get('surface_prefixes') else None
+        hit = geometry.ray(tuple(item['position_runtime_m']), unit, gap, records)
+        if hit is None:
+            raise UnsupportedPlacementError(
+                f'{item["id"]}: {mount} mount found no {attach["surface"]} within {gap} m')
+        item['support_evidence'] = {'mount': mount, 'surface': hit[1], 'gap_m': _r(hit[0])}
+        return item
+    if mount != 'rest':
+        raise ValueError(f'{item["id"]}: unknown mount {mount!r}')
+    key = SUPPORT_ANCHOR.get(item.get('support'), 'unknown')
+    if key == 'unknown':
+        raise UnsupportedPlacementError(f'{item["id"]}: unknown support {item.get("support")!r}')
+    records = None
+    if key is not None:
+        records = geometry.matching(anchors.get(key, []))
+        if not records:
+            raise UnsupportedPlacementError(f'{item["id"]}: support anchor {key} not found in the evaluated home')
+    py = item['position_runtime_m'][1]
+    hits = []
+    for x, z in support_samples(item):
+        hit = geometry.surface_below(x, z, py + SNAP_LIMIT_M, py - SNAP_LIMIT_M, records)
+        if hit is None:
+            raise UnsupportedPlacementError(
+                f'{item["id"]}: no supporting surface under ({x:.3f}, {z:.3f}) within ±{SNAP_LIMIT_M} m')
+        hits.append(hit)
+    ys = sorted(h[0] for h in hits)
+    if item.get('rigid') and ys[-1] - ys[0] > FLAT_SUPPORT_M:
+        raise UnsupportedPlacementError(f'{item["id"]}: uneven/partial support ({ys[-1] - ys[0]:.3f} m)')
+    surface = ys[-1] if item.get('rigid') else ys[len(ys) // 2]
+    target = surface - item.get('sink_m', 0.0)
+    item['support_evidence'] = {'mount': 'rest', 'surfaces': sorted({h[1] for h in hits}),
+                                'surface_y': _r(surface), 'delta_m': _r(target - py)}
+    item['position_runtime_m'][1] = target
+    return item
+
+
+def place_on_evaluated_home(spec, geometry, anchors=None, context=None):
+    """Authoritative placement against the evaluated home. Returns (accepted items,
+    rejected entries). Never consults hand-typed boxes."""
+    context = context or evaluated_context(geometry, anchors)
+    missing = set(context['missing_anchors'])
+    accepted, rejected, placed = [], [], []
+    for item in sorted(spec['items'], key=lambda i: i['id']):
+        entry = {'id': item['id'], 'name': object_name(item), 'room': item['room'], 'kind': item['kind']}
+        needed = sorted(missing & set(ROOM_ANCHORS.get(item['room'], ())))
+        if needed:
+            rejected.append({**entry, 'reasons': [f'clearance_unverified:{a}' for a in needed]})
+            continue
+        present = [r['ident'] for p in item.get('refuse_if_present', []) for r in geometry.matching([p])]
+        if present:
+            rejected.append({**entry, 'reasons': [f'duplicate:existing:{i}' for i in sorted(set(present))]})
+            continue
+        try:
+            resolved = resolve_support(item, geometry, anchors)
+        except UnsupportedPlacementError as error:
+            rejected.append({**entry, 'reasons': [f'unsupported:{error}']})
+            continue
+        reasons = validate_item(resolved, context, placed)
+        if reasons:
+            rejected.append({**entry, 'reasons': reasons})
+            continue
+        placed.append({'id': item['id'], 'aabb': item_aabb(resolved),
+                       'leans_on': list(item.get('leans_on', []))})
+        accepted.append(resolved)
+    return accepted, rejected
+
+
+# ----------------------------------------------------------------------------
+# Fingerprint of the existing home (works on bpy objects or duck-typed fakes)
+# ----------------------------------------------------------------------------
+GEOMETRY_TYPES = ('MESH', 'CURVE', 'SURFACE', 'META', 'FONT')
+
+
+def _floats(values):
+    return repr([float(v) for v in values]).encode()
+
+
+def _material_signature(material):
+    if material is None:
+        return None
+    sig = {'name': material.name, 'use_nodes': bool(getattr(material, 'use_nodes', False)),
+           'diffuse': list(getattr(material, 'diffuse_color', ()) or ())}
+    tree = getattr(material, 'node_tree', None)
+    if tree is not None:
+        nodes = []
+        for node in sorted(tree.nodes, key=lambda n: n.name):
+            inputs = []
+            for sock in getattr(node, 'inputs', ()):
+                value = getattr(sock, 'default_value', None)
+                try:
+                    value = [float(v) for v in value]
+                except TypeError:
+                    value = float(value) if isinstance(value, (int, float)) else repr(value)
+                inputs.append((sock.name, value))
+            image = getattr(node, 'image', None)
+            nodes.append((node.name, getattr(node, 'bl_idname', ''), inputs,
+                          getattr(image, 'filepath', None) if image else None))
+        links = sorted((l.from_node.name, l.from_socket.name, l.to_node.name, l.to_socket.name)
+                       for l in tree.links)
+        sig.update(nodes=nodes, links=links)
+    return hashlib.sha256(json.dumps(sig, sort_keys=True, default=repr).encode()).hexdigest()
+
+
+def evaluate_object(obj, depsgraph):
+    """(fingerprint row, geometry record or None) from the evaluated object."""
+    row = {'name': obj.name, 'type': obj.type,
+           'parent': obj.parent.name if getattr(obj, 'parent', None) else None,
+           'matrix': [list(map(float, r)) for r in obj.matrix_world],
+           'data': getattr(getattr(obj, 'data', None), 'name', None),
+           'materials': [_material_signature(s.material) for s in getattr(obj, 'material_slots', ())]}
+    record = None
+    if obj.type in GEOMETRY_TYPES:
+        ev = obj.evaluated_get(depsgraph)
+        mesh = ev.to_mesh()
+        try:
+            if mesh is not None:
+                mesh.calc_loop_triangles()
+                digest = hashlib.sha256()
+                for v in mesh.vertices:
+                    digest.update(_floats(v.co))
+                tri_index = [tuple(t.vertices) for t in mesh.loop_triangles]
+                digest.update(repr(tri_index).encode())
+                digest.update(repr([getattr(t, 'material_index', 0) for t in mesh.loop_triangles]).encode())
+                row['evaluated_mesh_sha256'] = digest.hexdigest()
+                mw = ev.matrix_world
+                world = [blender_to_runtime(tuple(mw @ v.co)) for v in mesh.vertices]
+                tris = [tuple(world[i] for i in t) for t in tri_index]
+                if world:
+                    record = {'name': obj.name, 'ident': str(obj.get('bakeId', obj.name)), 'tris': tris,
+                              'aabb': (tuple(min(p[i] for p in world) for i in range(3)),
+                                       tuple(max(p[i] for p in world) for i in range(3)))}
+        finally:
+            ev.to_mesh_clear()
+    return row, record
+
+
+def fingerprint_and_geometry(objects, depsgraph):
+    """Fingerprint every pre-existing object and collect its evaluated triangles."""
+    rows, records = {}, []
+    for obj in sorted(objects, key=lambda o: o.name):
+        if obj.get(TAG):
+            continue
+        row, record = evaluate_object(obj, depsgraph)
+        rows[obj.name] = hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest()
+        if record:
+            records.append(record)
+    return rows, SceneGeometry(records)
+
+
+def fingerprint_changes(before, after):
+    """Names whose fingerprint changed, disappeared, or appeared untagged."""
+    changed = sorted(n for n in before if before[n] != after.get(n))
+    added = sorted(n for n in after if n not in before)
+    return {'changed_or_removed': changed, 'unexpected_new': added}
+
+
+def additive_export_objects(objects):
+    """Only objects we created: tagged AND linked to the dedicated collection."""
+    return sorted((o for o in objects if o.get(TAG)
+                   and COLLECTION in [c.name for c in getattr(o, 'users_collection', ())]),
+                  key=lambda o: o.name)
+
+
+# ----------------------------------------------------------------------------
+# Blender build (runs only inside Blender)
 # ----------------------------------------------------------------------------
 def parse_args(argv):
     p = argparse.ArgumentParser(description='SUB-01 additive reference dressing')
     p.add_argument('--spec', type=Path, default=SPEC_PATH)
     p.add_argument('--assets-root', type=Path, default=ROOT / 'web/house/assets')
     p.add_argument('--output-dir', type=Path, default=None)
-    p.add_argument('--dry-run', action='store_true', help='plan and print JSON only')
-    p.add_argument('--no-snap', action='store_true', help='skip ray snapping to support surfaces')
-    p.add_argument('--bevel-existing', action='store_true',
-                   help='add a modest named bevel to whitelisted existing furniture')
-    p.add_argument('--remove-bevels', action='store_true', help='remove only the named bevel modifier')
-    p.add_argument('--export-glb', action='store_true', help='also export house-dressed.glb')
+    p.add_argument('--dry-run', action='store_true', help='planning estimate only, no placement')
+    p.add_argument('--list-identifiers', action='store_true',
+                   help='read-only: print evaluated object identifiers, bounds and anchor matches')
+    p.add_argument('--anchors', type=Path, default=None, help='JSON {anchor: [identifier prefixes]}')
+    p.add_argument('--export-additive-glb', action='store_true',
+                   help='export ONLY the new dressing objects to reference-dressing.glb')
+    p.add_argument('--save-blend-copy', action='store_true',
+                   help='also save house-dressed.blend as a copy (the input file is never overwritten)')
     p.add_argument('--allow-unassembled', action='store_true',
                    help='skip the homeVersion==114 assembled-house guard')
     return p.parse_args(argv)
@@ -627,26 +1092,12 @@ def _blender_argv():
     return sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
 
 
-def _fingerprint(objects):
-    rows = []
-    for obj in sorted(objects, key=lambda o: o.name):
-        mat = [round(v, 6) for row in obj.matrix_world for v in row]
-        data = obj.data
-        geo = (len(data.vertices), len(data.polygons)) if obj.type == 'MESH' else ()
-        mods = [m.name for m in obj.modifiers if m.name != BEVEL_MODIFIER]
-        rows.append((obj.name, obj.type, mat, geo, mods))
-    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
-
-
 def _srgb(hex_color):
     vals = [int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
     return tuple(v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in vals) + (1.0,)
 
 
 def _material(name, finish, assets_root, missing):
-    mat = bpy.data.materials.get(NAME_PREFIX + name)
-    if mat:
-        return mat
     mat = bpy.data.materials.new(NAME_PREFIX + name)
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -675,7 +1126,9 @@ def _material(name, finish, assets_root, missing):
                 missing.append(str(path))
                 return None
             node = nodes.new('ShaderNodeTexImage')
-            node.image = bpy.data.images.load(str(path.resolve()), check_existing=True)
+            # Load a NEW datablock (never reuse an existing image the home uses).
+            node.image = bpy.data.images.load(str(path.resolve()), check_existing=False)
+            node.image.name = NAME_PREFIX + folder + '_' + file
             node.image.colorspace_settings.name = colorspace
             links.new(mapping.outputs['Vector'], node.inputs['Vector'])
             return node
@@ -693,7 +1146,7 @@ def _material(name, finish, assets_root, missing):
             nmap.inputs['Strength'].default_value = finish.get('normal_strength', .35)
             links.new(nor.outputs['Color'], nmap.inputs['Color'])
             links.new(nmap.outputs['Normal'], shader.inputs['Normal'])
-    mat['sub01ReferenceDressing'] = True
+    mat[TAG] = True
     return mat
 
 
@@ -766,41 +1219,36 @@ def build_item(item, mats, tex, collection):
         parts.append(_piping(name + '_piping', seam, piping, collection))
     elif kind == 'draped_throw':
         t = p.get('thickness', .012)
-        v, f, uv = draped_strip_mesh(w, p['top_width'], p['drop'], p.get('radius', .03))
-        obj = _mesh_object(name + '_fabric', v, f, uv, mat, collection)
-        sol = obj.modifiers.new('Fabric thickness', 'SOLIDIFY')
-        sol.thickness, sol.offset, sol.use_rim = t, 1.0, True
-        _soft(obj, tex, strength=.004)
-        parts.append(obj)
-        folds = p.get('fold_layers', 0)
-        for k in range(folds):    # visible stacked fold edges of a folded throw
-            v2, f2, uv2 = draped_strip_mesh(w * (1 - .04 * (k + 1)), p['top_width'] + 2 * t * (k + 1),
-                                            p['drop'] * (.55 - .1 * k), p.get('radius', .03) + t * (k + 1))
-            layer = _mesh_object(f'{name}_fold{k + 1}', [(x, y, z + t * (k + 1)) for x, y, z in v2], f2,
-                                 uv2, mat, collection)
-            s2 = layer.modifiers.new('Fabric thickness', 'SOLIDIFY')
-            s2.thickness, s2.offset, s2.use_rim = t, 1.0, True
-            _soft(layer, tex, strength=.004)
-            parts.append(layer)
+        layers = [(w, p['top_width'], p['drop'], p.get('radius', .03), 0.0)]
+        for k in range(p.get('fold_layers', 0)):    # stacked fold edge of a folded throw
+            layers.append((w * (1 - .04 * (k + 1)), p['top_width'] + 2 * t * (k + 1),
+                           max(p['drop'] * (.55 - .1 * k), p.get('radius', .03) + t * (k + 1)),
+                           p.get('radius', .03) + t * (k + 1), t * (k + 1)))
+        for k, (lw, tw, drop, radius, lift) in enumerate(layers):
+            v, f, uv = draped_strip_mesh(lw, tw, drop, radius)
+            obj = _mesh_object(f'{name}_fabric{k}', [(x, y, z + lift) for x, y, z in v], f, uv, mat, collection)
+            sol = obj.modifiers.new('Fabric thickness', 'SOLIDIFY')
+            sol.thickness, sol.offset, sol.use_rim = t, 1.0, True
+            _soft(obj, tex, strength=.004)
+            parts.append(obj)
     elif kind == 'book_stack':
         z = 0.0
         for k, book in enumerate(p['books']):
             bw, bd, bh = book['dims_m']
+            off = book.get('offset', [0, 0])
             cover = _mesh_object(f'{name}_book{k + 1}_cover', *box_mesh(bw, bd, bh), mats[book['material']],
                                  collection)
             _bevel(cover, .0015, 2)
             pages = _mesh_object(f'{name}_book{k + 1}_pages', *box_mesh(bw - .006, bd - .004, bh - .004),
                                  mats['paper'], collection)
+            cover.location = (off[0], off[1], z)
+            pages.location = (off[0] + .003, off[1], z + .002)
             for o in (cover, pages):
-                o.location = (book.get('offset', [0, 0])[0], book.get('offset', [0, 0])[1],
-                              z + (0 if o is cover else .002))
                 o.rotation_euler[2] = math.radians(book.get('yaw_deg', 0))
-            pages.location.x += .003
             parts += [cover, pages]
             z += bh
     elif kind == 'vase_with_stems':
-        v, f, uv = lathe_mesh(VASE_PROFILE)
-        vase = _mesh_object(name + '_vase', v, f, uv, mat, collection)
+        vase = _mesh_object(name + '_vase', *lathe_mesh(VASE_PROFILE), mat, collection)
         sub = vase.modifiers.new('Ceramic smooth', 'SUBSURF')
         sub.levels = sub.render_levels = 1
         parts.append(vase)
@@ -833,155 +1281,119 @@ def build_item(item, mats, tex, collection):
         part.parent = root
     root.location = runtime_to_blender(item['position_runtime_m'])
     root.rotation_euler = (math.radians(item.get('tilt_deg', 0)), 0.0, math.radians(item.get('yaw_deg', 0)))
-    root['sub01ReferenceDressing'] = True
-    root['dressingSpecId'] = item['id']
-    root['bakeId'] = 'house-refdress-' + item['id']
-    for part in parts:
-        part['sub01ReferenceDressing'] = True
-        part['bakeId'] = 'house-refdress-' + part.name[len(NAME_PREFIX):]
+    for obj in [root] + parts:
+        obj[TAG] = True
+        obj['dressingSpecId'] = item['id']
+        obj['bakeId'] = 'house-refdress-' + obj.name[len(NAME_PREFIX):]
     return root, parts
 
 
-def _snap(item, scene, depsgraph):
-    """Ray-cast down onto the existing support (our objects are not built yet).
-    Returns the measured surface y in runtime metres, or None."""
-    from mathutils import Vector
-    low, high = item_aabb(item)
-    px, py, pz = item['position_runtime_m']
-    if item['kind'] == 'draped_throw':
-        samples = [(px, pz)]
-    elif item.get('rigid'):
-        hx, hz = (high[0] - low[0]) * .3, (high[2] - low[2]) * .3
-        samples = [(px, pz), (px - hx, pz - hz), (px + hx, pz - hz), (px - hx, pz + hz), (px + hx, pz + hz)]
-    else:  # soft/leaning: sample only along the width so rays miss the backrest behind it
-        ax = blender_to_runtime(_rot(item.get('yaw_deg', 0.0), 0.0, (item['dims_m'][0] * .3, 0, 0)))
-        samples = [(px, pz), (px - ax[0], pz - ax[2]), (px + ax[0], pz + ax[2])]
-    hits = []
-    for x, z in samples:
-        origin = Vector(runtime_to_blender((x, py + .25, z)))
-        ok, loc, *_ = scene.ray_cast(depsgraph, origin, Vector((0, 0, -1)), distance=.5)
-        if ok:
-            hits.append(loc.z)
-    if not hits:
-        return None
-    hits.sort()
-    return hits[-1] if item.get('rigid') else hits[len(hits) // 2]
+def _load_anchors(path):
+    if not path:
+        return dict(DEFAULT_ANCHORS)
+    data = json.loads(Path(path).read_text())
+    if not all(isinstance(v, list) and all(isinstance(s, str) and s for s in v) for v in data.values()):
+        raise ValueError('anchors file must map anchor names to lists of identifier prefixes')
+    return {**DEFAULT_ANCHORS, **data}
 
 
 def run(argv=None):
     args = parse_args(_blender_argv() if argv is None else argv)
     spec = load_spec(args.spec)
-    report = plan_dressing(spec)
     if args.dry_run or bpy is None:
-        report['mode'] = 'dry-run' if args.dry_run else 'pure-python (bpy unavailable)'
+        report = plan_dressing(spec)
+        report['mode'] = 'dry-run (planning estimate; nothing placed)' if args.dry_run else \
+            'pure-python (bpy unavailable; planning estimate only)'
         _emit(report, args.output_dir)
         return report
 
     scene = bpy.context.scene
+    anchors = _load_anchors(args.anchors)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    existing = [o for o in scene.objects if not o.get(TAG)]
+    before, geometry = fingerprint_and_geometry(existing, depsgraph)
+
+    if args.list_identifiers:
+        report = {'mode': 'list-identifiers (read-only)', 'objects': [
+            {'name': r['name'], 'ident': r['ident'], 'triangles': len(r['tris']),
+             'aabb_runtime': [list(map(_r, r['aabb'][0])), list(map(_r, r['aabb'][1]))]}
+            for r in geometry.records],
+            'anchors': {k: sorted(r['ident'] for r in geometry.matching(v)) for k, v in anchors.items()},
+            'collections': sorted(c.name for c in bpy.data.collections),
+            'materials': sorted(m.name for m in bpy.data.materials),
+            'home_version': scene.get('homeVersion'), 'existing_objects': len(before)}
+        _emit(report, args.output_dir, 'reference-dressing-identifiers.json')
+        return report
+
     if scene.get('homeVersion') != 114 and not args.allow_unassembled:
         raise RuntimeError('Open the assembled house.blend (homeVersion 114) or pass --allow-unassembled')
-    existing = [o for o in scene.objects if not o.get('sub01ReferenceDressing')]
-    before = _fingerprint(existing)
+    if bpy.data.collections.get(COLLECTION):
+        raise RuntimeError(f'{COLLECTION} already exists; start from the untouched assembled house.blend')
 
-    bevel_report = []
-    for obj in existing:
-        if obj.name not in BEVEL_WHITELIST and obj.get('bakeId') not in BEVEL_WHITELIST:
-            continue
-        if obj.type != 'MESH':
-            continue
-        if args.remove_bevels:
-            mod = obj.modifiers.get(BEVEL_MODIFIER)
-            if mod:
-                obj.modifiers.remove(mod)
-                bevel_report.append({'object': obj.name, 'action': 'removed'})
-        elif args.bevel_existing:
-            if any(m.type == 'BEVEL' for m in obj.modifiers):
-                bevel_report.append({'object': obj.name, 'action': 'skipped: already bevelled'})
-                continue
-            mod = _bevel(obj, BEVEL_WIDTH_M, 2)
-            mod.name = BEVEL_MODIFIER
-            mod.harden_normals = False
-            bevel_report.append({'object': obj.name, 'action': f'added {BEVEL_WIDTH_M} m bevel'})
+    context = evaluated_context(geometry, anchors)
+    accepted, rejected = place_on_evaluated_home(spec, geometry, anchors, context)
+    for skip in sorted(spec.get('skipped_existing', []), key=lambda s: s['id']):
+        rejected.append({'id': skip['id'], 'name': None, 'room': skip['room'], 'kind': 'skip',
+                         'reasons': [f'duplicate:existing:{skip["evidence"]}']})
 
-    # Rebuild only our own collection (idempotent re-runs never touch other objects).
-    collection = bpy.data.collections.get(COLLECTION)
-    if collection:
-        for obj in list(collection.objects):
-            if not obj.get('sub01ReferenceDressing'):
-                raise RuntimeError(f'{obj.name} in {COLLECTION} is not ours; refusing to rebuild')
-            bpy.data.objects.remove(obj, do_unlink=True)
-    else:
-        collection = bpy.data.collections.new(COLLECTION)
-        scene.collection.children.link(collection)
-
-    by_id = {i['id']: i for i in spec['items']}
-    accepted = [by_id[p['id']] for p in report['placed']]
-    context = build_context()
-    depsgraph = bpy.context.evaluated_depsgraph_get()
-    final, snaps = [], []
-    for item in accepted:
-        item = json.loads(json.dumps(item))
-        if not args.no_snap:
-            surface = _snap(item, scene, depsgraph)
-            if surface is None:
-                snaps.append({'id': item['id'], 'snap': 'no-hit; spec height kept'})
-            else:
-                target = surface - item.get('sink_m', 0.0)
-                delta = target - item['position_runtime_m'][1]
-                if abs(delta) > SNAP_LIMIT_M:
-                    report['rejected'].append({'id': item['id'], 'name': object_name(item), 'room': item['room'],
-                                               'kind': item['kind'],
-                                               'reasons': [f'support:surface_not_found_near_spec ({delta:+.3f} m)']})
-                    continue
-                item['position_runtime_m'][1] = target
-                snaps.append({'id': item['id'], 'snap_delta_m': _r(delta)})
-        reasons = validate_item(item, {**context, 'supports': {}}, final)
-        reasons = [r for r in reasons if not r.startswith('support:')]
-        if reasons:
-            report['rejected'].append({'id': item['id'], 'name': object_name(item), 'room': item['room'],
-                                       'kind': item['kind'], 'reasons': ['after_snap:' + r for r in reasons]})
-            continue
-        low, high = item_aabb(item)
-        final.append({'id': item['id'], 'aabb': (low, high), 'item': item,
-                      'leans_on': list(item.get('leans_on', []))})
-
+    collection = bpy.data.collections.new(COLLECTION)
+    scene.collection.children.link(collection)
     missing = []
     mats = {k: _material(k, v, args.assets_root, missing) for k, v in sorted(spec['materials'].items())}
-    tex = bpy.data.textures.get(NAME_PREFIX + 'FabricRelief') or bpy.data.textures.new(
-        NAME_PREFIX + 'FabricRelief', 'CLOUDS')
+    tex = bpy.data.textures.new(NAME_PREFIX + 'FabricRelief', 'CLOUDS')
     tex.noise_scale = .045
     built = []
-    for entry in final:
-        root, parts = build_item(entry['item'], mats, tex, collection)
-        built.append({'id': entry['id'], 'name': root.name, 'parts': sorted(p.name for p in parts)})
+    for item in accepted:
+        root, parts = build_item(item, mats, tex, collection)
+        built.append({'id': item['id'], 'name': root.name, 'parts': sorted(p.name for p in parts),
+                      'position_runtime_m': [_r(v) for v in item['position_runtime_m']],
+                      'support': item.get('support_evidence')})
 
     bpy.context.view_layer.update()
-    after = _fingerprint([o for o in scene.objects if not o.get('sub01ReferenceDressing')])
-    if after != before:
-        raise RuntimeError('An existing object changed during dressing; aborting without saving')
-    report.update({'mode': 'blender', 'built': built, 'snaps': snaps, 'bevels': bevel_report,
-                   'missing_textures': sorted(set(missing)), 'existing_fingerprint': before,
-                   'rendered': False, 'private_only': True})
-    report['placed'] = [p for p in report['placed'] if p['id'] in {b['id'] for b in built}]
+    after, _ = fingerprint_and_geometry([o for o in scene.objects if not o.get(TAG)],
+                                        bpy.context.evaluated_depsgraph_get())
+    diff = fingerprint_changes(before, after)
+    if diff['changed_or_removed'] or diff['unexpected_new']:
+        raise RuntimeError('Existing home changed during dressing; nothing saved/exported: ' + json.dumps(diff))
+    report = {'mode': 'blender', 'collection': COLLECTION, 'basis': 'evaluated-geometry',
+              'built': built, 'rejected': rejected, 'missing_anchors': context['missing_anchors'],
+              'missing_textures': sorted(set(missing)), 'existing_objects_verified_unchanged': len(before),
+              'existing_fingerprint_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
+              'rendered': False, 'private_only': True}
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        blend = args.output_dir / 'house-dressed.blend'
-        bpy.ops.wm.save_as_mainfile(filepath=str(blend.resolve()), copy=True)
-        report['blend'] = str(blend)
-        if args.export_glb:
-            glb = args.output_dir / 'house-dressed.glb'
-            bpy.ops.export_scene.gltf(filepath=str(glb.resolve()), export_format='GLB',
-                                      export_yup=True, export_extras=True, export_apply=True)
-            report['glb'] = str(glb)
+        if args.export_additive_glb:
+            ours = additive_export_objects(scene.objects)
+            selected = {o.name for o in scene.objects if o.select_get()}
+            active = bpy.context.view_layer.objects.active
+            for obj in scene.objects:
+                obj.select_set(obj in ours)
+            glb = args.output_dir / 'reference-dressing.glb'
+            bpy.ops.export_scene.gltf(filepath=str(glb.resolve()), export_format='GLB', use_selection=True,
+                                      export_yup=True, export_extras=True, export_apply=True,
+                                      export_lights=False, export_cameras=False)
+            for obj in scene.objects:          # restore the user's selection exactly
+                obj.select_set(obj.name in selected)
+            bpy.context.view_layer.objects.active = active
+            report['additive_glb'] = {'path': str(glb), 'objects': [o.name for o in ours],
+                                      'sha256': hashlib.sha256(glb.read_bytes()).hexdigest()}
+        if args.save_blend_copy:
+            blend = args.output_dir / 'house-dressed.blend'
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend.resolve()), copy=True)
+            report['blend_copy'] = str(blend)
+        final, _ = fingerprint_and_geometry([o for o in scene.objects if not o.get(TAG)],
+                                            bpy.context.evaluated_depsgraph_get())
+        if fingerprint_changes(before, final) != {'changed_or_removed': [], 'unexpected_new': []}:
+            raise RuntimeError('Existing home changed during export')
     _emit(report, args.output_dir)
     return report
 
 
-def _emit(report, output_dir):
+def _emit(report, output_dir, filename='reference-dressing.json'):
     text = json.dumps(report, indent=2, sort_keys=False)
     if output_dir:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        (Path(output_dir) / 'reference-dressing.json').write_text(text + '\n')
+        (Path(output_dir) / filename).write_text(text + '\n')
     print('SUB01_REFERENCE_DRESSING', json.dumps(report), flush=True)
 
 
