@@ -1,5 +1,6 @@
 """Ephemeral physical-consumer evidence; never persisted as a seated result."""
 import time
+import uuid
 
 
 class NativeFeedback:
@@ -13,9 +14,12 @@ class NativeFeedback:
         self.epoch = None
         self.report = None
         self.received = None
+        self.consumer_id = None
+        self.report_id = None
+        self.retired_consumers = set()
 
     def accept(self, data, *, sequence, activity, target, nodes):
-        if not isinstance(data, dict) or set(data) - {'epoch', 'sequence', 'activity', 'node', 'phase', 'chair', 'bind'}:
+        if not isinstance(data, dict) or set(data) - {'epoch', 'sequence', 'activity', 'node', 'phase', 'chair', 'bind', 'consumer_id', 'report_id'}:
             raise ValueError('Invalid native feedback')
         epoch, phase = data.get('epoch'), data.get('phase')
         if (not isinstance(epoch, str) or not 1 <= len(epoch) <= 64
@@ -34,6 +38,29 @@ class NativeFeedback:
             raise ValueError('Invalid chair identity')
         if phase == 'seated' and (target not in self.SEATS or chair != self.SEATS[target]):
             raise ValueError('Known physical seat identity required')
+        ordered = 'consumer_id' in data or 'report_id' in data
+        consumer, report_id = None, None
+        if ordered:
+            value, report_id = data.get('consumer_id'), data.get('report_id')
+            if (not isinstance(value, str) or len(value) not in (32, 36)
+                    or type(report_id) is not int or not 1 <= report_id <= 2**53 - 1):
+                raise ValueError('Expected consumer UUID and monotonic report integer')
+            try:
+                consumer = str(uuid.UUID(value))
+            except ValueError:
+                raise ValueError('Expected consumer UUID') from None
+            if consumer in self.retired_consumers:
+                raise RuntimeError('Native consumer was superseded')
+        if self.consumer_id is not None:
+            if not ordered:
+                raise RuntimeError('Ordered native consumer requires report identity')
+            if consumer == self.consumer_id and report_id <= self.report_id:
+                raise RuntimeError('Native report is older than accepted evidence')
+        if consumer != self.consumer_id and not data.get('bind'):
+            raise RuntimeError('New native consumer requires explicit binding')
+        if (consumer != self.consumer_id and self.consumer_id is not None
+                and len(self.retired_consumers) >= 128):
+            raise RuntimeError('Native consumer retirement bound reached')
         if data.get('bind'):
             if phase != 'walking':
                 raise ValueError('Bind requires walking phase')
@@ -41,6 +68,10 @@ class NativeFeedback:
             self.required = True
         elif self.epoch != epoch:
             raise RuntimeError('Native consumer is not bound to this epoch')
+        if ordered:
+            if consumer != self.consumer_id and self.consumer_id is not None:
+                self.retired_consumers.add(self.consumer_id)
+            self.consumer_id, self.report_id = consumer, report_id
         self.report = {k: data.get(k) for k in ('epoch', 'sequence', 'activity', 'node', 'phase', 'chair')}
         self.received = self.clock()
 

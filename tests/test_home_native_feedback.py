@@ -331,3 +331,89 @@ def test_native_required_policy_survives_real_serialization_and_restart(monkeypa
     monkeypatch.setenv('HOME_NATIVE_REQUIRED','0')
     assert HomeWorld({'seated':1}).activity_ready('research')
     assert not HomeWorld(saved).activity_ready('research')  # Env cannot clear persisted policy.
+
+
+def test_ordered_reports_reject_late_counterless_and_retired_consumers_over_http():
+    async def run():
+        clock=[100.]
+        world=HomeWorld({'seated':1});world.native_feedback=NativeFeedback(lambda:clock[0])
+        live=SimpleNamespace(home=world)
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        backend=TestServer(app);await backend.start_server()
+        model=HomeStateModel();model.apply_rest({'home':world.view()});model.set_connected(True)
+        feed=BackendFeed(model,str(backend.make_url('')).rstrip('/'),TOKEN)
+        entered,release=asyncio.Event(),asyncio.Event()
+        async def ordered_post(session,data):
+            if data.get('report_id')==2:
+                entered.set();await release.wait()
+            return await feed.post_native_state(session,data)
+        adapter=SimpleNamespace(post_native_state=ordered_post,get_native_command=feed.get_native_command,
+                                run=lambda **kw:asyncio.sleep(3600))
+        client=TestClient(TestServer(create_app(model,TOKEN,adapter)));await client.start_server()
+        first='11111111111141118111111111111111';second='22222222222242228222222222222222'
+        def report(phase='walking',**patch):
+            data=dict(epoch=model.epoch,sequence=world.sequence,activity=world.activity,node='desk',
+                      phase=phase,consumer_id=first,report_id=1)
+            if phase=='seated':data['chair']='desk_chair'
+            data.update(patch);return data
+        async def post(data):return await client.post('/home/native_state',headers=AUTH,json=data)
+        try:
+            # Legacy sender still works until an explicitly ordered binding.
+            legacy=report(bind=True);legacy.pop('consumer_id');legacy.pop('report_id')
+            assert (await post(legacy)).status==200
+            assert (await post(report(bind=True))).status==200
+            pending=asyncio.create_task(post(report(report_id=2)))
+            await entered.wait();clock[0]+=1
+            assert (await post(report('seated',report_id=3))).status==200
+            received=world.native_feedback.received
+            release.set();assert (await pending).status==409
+            assert world.native_feedback.received==received and world.activity_ready()
+            assert (await post(legacy)).status==409  # No downgrade, even explicit bind.
+            assert (await post(report('seated',report_id=3))).status==409
+            for patch in [dict(report_id=True),dict(report_id=0),dict(report_id=2**53),
+                          dict(consumer_id='not-a-guid'),dict(consumer_id=None)]:
+                assert (await post(report('seated',**{'report_id':4,**patch}))).status==400
+                assert world.native_feedback.received==received
+            only_id=report(report_id=4);only_id.pop('consumer_id')
+            assert (await post(only_id)).status==400
+            assert (await post(report(consumer_id=second,report_id=1))).status==409
+            assert (await post(report(consumer_id=second,report_id=1,bind=True))).status==200
+            assert not world.activity_ready()
+            assert (await post(report('seated',consumer_id=second,report_id=4))).status==200
+            received=world.native_feedback.received
+            # Retired native process cannot regain authority through a late bind.
+            assert (await post(report(report_id=99,bind=True))).status==409
+            assert world.native_feedback.received==received and world.activity_ready()
+            # Counter continues across commands instead of restarting at one.
+            world.add_note('new sequence');model.apply_rest({'home':world.view()})
+            assert not world.activity_ready()
+            assert (await post(report(consumer_id=second,report_id=4,bind=True))).status==409
+            assert (await post(report(consumer_id=second,report_id=5,bind=True))).status==200
+        finally:
+            release.set();await client.close();await backend.close()
+    asyncio.run(run())
+
+
+def test_native_bridge_forward_timeout_is_shorter_than_native_sender_timeout():
+    async def run():
+        gate=asyncio.Event()
+        async def slow(request):
+            assert request.headers.get('X-Admin-Token')==TOKEN
+            await gate.wait();return web.json_response({'ok':True})
+        app=web.Application();app.router.add_post('/api/home/native_state',slow)
+        backend=TestServer(app);await backend.start_server()
+        model=HomeStateModel();world=HomeWorld();model.apply_rest({'home':world.view()});model.set_connected(True)
+        feed=BackendFeed(model,str(backend.make_url('')).rstrip('/'),TOKEN)
+        adapter=SimpleNamespace(post_native_state=feed.post_native_state,get_native_command=feed.get_native_command,
+                                run=lambda **kw:asyncio.sleep(3600))
+        client=TestClient(TestServer(create_app(model,TOKEN,adapter)));await client.start_server()
+        try:
+            before=asyncio.get_running_loop().time()
+            response=await client.post('/home/native_state',headers=AUTH,json=dict(epoch=model.epoch,sequence=world.sequence,
+                activity=world.activity,node='desk',phase='walking',bind=True))
+            elapsed=asyncio.get_running_loop().time()-before
+            assert response.status==503
+            assert 1.0<=elapsed<1.5
+        finally:
+            gate.set();await client.close();await backend.close()
+    asyncio.run(run())
