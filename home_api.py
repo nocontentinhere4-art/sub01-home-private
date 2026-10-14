@@ -190,7 +190,19 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if not getattr(live, 'browser', None):
             raise web.HTTPConflict(text='The browser is unavailable')
+        selection_revision = None
+        if 'phone_frame_id' in b:
+            if (b['device'] != 'phone' or not isinstance(b['phone_frame_id'], str)
+                    or not 1 <= len(b['phone_frame_id']) <= 100):
+                raise web.HTTPBadRequest(text='Invalid phone app frame')
+            current = home_phone.status(phone_data())
+            if current['kind'] != 'browser' or b['phone_frame_id'] != current['frame_id']:
+                raise web.HTTPConflict(text='Actual phone app frame changed')
+            selection_revision = live.home.phone_selection_revision
         result = await live.browser.operator_action(b['device'], b['action'], b['frame_id'])
+        if selection_revision is not None and (live.home.phone['app'] != 'browser'
+                or live.home.phone_selection_revision != selection_revision):
+            raise web.HTTPConflict(text='Actual phone application changed')
         if live.home.view()['privacy']:
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if result.get('status'):
@@ -333,9 +345,9 @@ def add_home_routes(app, live, admin_ok):
         if request.query.get('frame_id') != st['frame_id']:
             raise web.HTTPConflict(text='Actual phone frame changed')
         if st['kind'] == 'browser':
-            from browse import FrameChanged, BrowserDown
+            from browse_service import FrameChanged, BrowserDown
             try:
-                frame = await live.browser.frame('phone', st['frame_id'])
+                frame = await live.browser.frame('phone', data['browser']['frame_id'])
             except (FrameChanged, BrowserDown):
                 raise web.HTTPConflict(text='Actual phone browser frame unavailable')
             if not frame:

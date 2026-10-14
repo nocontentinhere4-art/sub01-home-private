@@ -262,3 +262,66 @@ def test_actual_new_page_hook_respects_operator_lock_and_ignores_same_url_redraw
         await namespace['on_screen'](subject,{'device':'phone','url':'https://example.org/page-b'})
         assert world.phone['app']=='browser'
     asyncio.run(run())
+
+
+def test_generic_browser_frame_binds_selection_revision_and_maps_only_approved_raw_actions():
+    async def run():
+        from test_home_pc_runner import pc, FakeComputer
+        world=HomeWorld();world.activity='phone';world.select_phone_app('browser')
+        raw='fixture-actual-browser-a';calls=[];reads=[]
+        image=Image.new('RGB',(256,512),'#2d4663');output=io.BytesIO();image.save(output,format='JPEG');pixels=output.getvalue()
+        browser_status={'device':'phone','frame_id':raw,'width':256,'height':512,'url':'https://example.org/fixture','title':'Fixture only','age':1}
+        async def frame(device,expected):
+            reads.append((device,expected));assert expected==raw
+            return pixels,raw
+        async def operator_action(device,action,expected):
+            calls.append((device,action,expected));assert expected==raw
+            return {'ok':True}
+        live=SimpleNamespace(home=world,browser=SimpleNamespace(frame=frame,operator_action=operator_action),
+             screen_status=lambda device:dict(browser_status),computer=SimpleNamespace(view=lambda:{}),
+             life=SimpleNamespace(snapshot=lambda:{}),engine=SimpleNamespace(stage='fixture'),clock=SimpleNamespace(now=lambda:0))
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        backend=TestClient(TestServer(app));await backend.start_server()
+        computer=FakeComputer();runner=pc.PCRunner(computer,TOKEN)
+        runner.home_devices=proxy.HomeDeviceProxy(str(backend.make_url('')).rstrip('/'),TOKEN,runner)
+        client=TestClient(TestServer(pc.create_app(runner)));await client.start_server()
+        def identity():return home_phone.status(home_phone.snapshot(world,browser_status))['frame_id']
+        try:
+            logical=identity();assert logical!=raw
+            state=await (await backend.get('/api/home')).json()
+            assert state['phone_browser_screen']['frame_id']==raw # Legacy source identity stays unchanged.
+            assert state['phone_screen']['frame_id']==logical
+            browser_status['age']=2;browser_status['title']='A repaint status, same source pixels'
+            assert identity()==logical
+            unavailable=home_phone.status(home_phone.snapshot(world,{**browser_status,'restarting':True}))
+            assert unavailable['kind']=='owned_app'
+            assert unavailable['frame_id']==home_phone.status(home_phone.snapshot(world,{**browser_status,'restarting':True,'age':300}))['frame_id']
+            response=await client.get('/devices/phone/frame.jpg?frame_id='+logical,headers=AUTH)
+            assert response.status==200 and await response.read()==pixels
+            assert reads==[('phone',raw)] # Generic frame is translated only at the actual source read.
+            response=await client.post('/devices/phone/action',headers=AUTH,json={'action':'scroll_down','frame_id':logical})
+            assert response.status==200 and calls==[('phone','scroll_down',raw)]
+            assert (await client.post('/devices/phone/action',headers=AUTH,json={'action':'scroll_down','frame_id':raw})).status==409
+            # Legacy direct browser-action clients retain their raw-frame contract.
+            assert (await backend.post('/api/home/browser/action',headers=AUTH,json={'device':'phone','action':'back','frame_id':raw})).status==200
+            assert calls[-1]==('phone','back',raw)
+            world.select_phone_app('home');world.select_phone_app('browser')
+            current=identity();assert current!=logical and browser_status['frame_id']==raw
+            assert (await client.get('/devices/phone/frame.jpg?frame_id='+logical,headers=AUTH)).status==409
+            count=len(calls)
+            assert (await client.post('/devices/phone/action',headers=AUTH,json={'action':'scroll_down','frame_id':logical})).status==409
+            assert len(calls)==count
+            # A selection change between the proxy's GET and POST is rejected by
+            # the registered backend, rather than applying a raw-frame stale action.
+            original=runner.home_devices.request
+            async def between(method,path,**kwargs):
+                if method=='POST' and path=='/api/home/browser/action':world.select_phone_app('notes')
+                return await original(method,path,**kwargs)
+            runner.home_devices.request=between
+            assert (await client.post('/devices/phone/action',headers=AUTH,json={'action':'scroll_down','frame_id':current})).status==409
+            assert len(calls)==count and world.notes==[]
+            world.node=world.target='bathroom'
+            assert (await client.get('/devices/phone/frame.jpg?frame_id='+current,headers=AUTH)).status==409
+            assert computer.inputs==[] and computer.sent==[]
+        finally:await client.close();await runner.home_devices.close();await backend.close()
+    asyncio.run(run())
