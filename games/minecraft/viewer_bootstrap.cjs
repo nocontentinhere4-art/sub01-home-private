@@ -1,5 +1,5 @@
-// One genuine idle view, bounded independently from autonomous play authority.
-function viewerBootstrap({ isActive, connect, release, setTimer = setTimeout, clearTimer = clearTimeout, limitMs = 20000 }) {
+// One genuine cold idle view; release early on a real frame, never grant play.
+function viewerBootstrap({ isActive, connect, release, setTimer = setTimeout, clearTimer = clearTimeout, limitMs = 90000 }) {
   let requested = false, pending = false, timer = null;
   function finish() {
     if (!pending) return;

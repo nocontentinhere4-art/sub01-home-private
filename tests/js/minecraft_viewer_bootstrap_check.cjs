@@ -3,7 +3,7 @@ const { viewerBootstrap } = require('../../games/minecraft/viewer_bootstrap.cjs'
 function fixture() {
  let active = false, connects = 0, releases = 0, callback, clears = 0;
  const lease = viewerBootstrap({isActive: () => active, connect: () => connects++, release: () => releases++,
-  setTimer: (fn, delay) => { assert.equal(delay, 20000); callback = fn; return 7; },
+  setTimer: (fn, delay) => { assert.equal(delay, 90000); callback = fn; return 7; },
   clearTimer: id => { assert.equal(id, 7); clears++; }});
  return {lease, active: value => {active=value;}, expire: () => callback(),
   stats: () => ({active, connects, releases, clears})};
@@ -26,3 +26,8 @@ f=fixture();f.lease.request();f.active(true);f.lease.finish();
 assert.equal(f.stats().releases,0,'an independently authorized normal play handoff retains the real connection');
 assert.equal(f.lease.allowed(),false);
 console.log('Minecraft one-time idle viewer lease checks passed');
+
+// Duplicate queued expiry after early completion cannot release a later play owner.
+f=fixture();f.lease.request();f.lease.finish();f.active(true);f.expire();
+assert.equal(f.stats().releases,1);
+assert.equal(f.lease.request(),false,'longer cold lease still cannot retry indefinitely');
