@@ -1,0 +1,125 @@
+{
+  "schema": "sub01-native-lighting-capture-measurement-v1",
+  "read_only": true,
+  "image": "out/house-evidence/private-real-repaired-desk-PC-current-1457.png",
+  "sha256": "a0b5980ee7f7040422230af0bf0c09556f9234323f426b6cba43b4cfec0ecefa",
+  "size": [
+    1280,
+    720
+  ],
+  "regions": [
+    {
+      "name": "pale_left_wall",
+      "xywh": [
+        61,
+        128,
+        62,
+        120
+      ],
+      "pixel_count": 7440,
+      "median_srgb_8bit": [
+        150.0,
+        152.0,
+        157.0
+      ],
+      "median_display_linear_rgb": [
+        0.304987,
+        0.313989,
+        0.337164
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.292454,
+        0.314701,
+        0.335926
+      ],
+      "median_linear_red_blue_ratio": 0.9046,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "pale_back_wall",
+      "xywh": [
+        380,
+        233,
+        65,
+        51
+      ],
+      "pixel_count": 3315,
+      "median_srgb_8bit": [
+        96.0,
+        84.0,
+        72.0
+      ],
+      "median_display_linear_rgb": [
+        0.116971,
+        0.088656,
+        0.064803
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.070048,
+        0.092953,
+        0.105971
+      ],
+      "median_linear_red_blue_ratio": 1.805,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "bright_shade",
+      "xywh": [
+        204,
+        185,
+        51,
+        18
+      ],
+      "pixel_count": 918,
+      "median_srgb_8bit": [
+        255.0,
+        254.0,
+        249.0
+      ],
+      "median_display_linear_rgb": [
+        1.0,
+        0.991102,
+        0.947307
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.989832,
+        0.989832,
+        0.989832
+      ],
+      "median_linear_red_blue_ratio": 1.0556,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 1.0
+    },
+    {
+      "name": "pale_mousepad",
+      "xywh": [
+        807,
+        420,
+        22,
+        11
+      ],
+      "pixel_count": 242,
+      "median_srgb_8bit": [
+        127.0,
+        107.0,
+        84.0
+      ],
+      "median_display_linear_rgb": [
+        0.212231,
+        0.147027,
+        0.088656
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.148851,
+        0.156519,
+        0.165696
+      ],
+      "median_linear_red_blue_ratio": 2.3939,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    }
+  ],
+  "limitation": "Display-referred PNG after exposure/tone mapping. Not scene luminance, lux, metered EV100 or proof of neutral source albedo."
+}

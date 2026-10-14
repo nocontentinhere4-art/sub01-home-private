@@ -13,7 +13,18 @@ def test_angles_take_shortest_path_have_bounded_rate_and_frame_independent_decay
 #include <cassert>
 #include <limits>
 using Sub01FirstPersonMotion::SmoothAngle;
+using Sub01FirstPersonMotion::AuthoredWalkRate;
 int main(){
+ // Braking below 14 cm/s must slow the authored clip, not retain a .1 floor.
+ assert(std::abs(AuthoredWalkRate(7)-.05)<1e-12);
+ assert(std::abs(AuthoredWalkRate(1.01)-1.01/140.)<1e-12);
+ assert(AuthoredWalkRate(140)==1&&AuthoredWalkRate(280)==1.2);
+ assert(AuthoredWalkRate(0)==0&&AuthoredWalkRate(-2)==0);
+ assert(AuthoredWalkRate(10,0)==0);
+ assert(AuthoredWalkRate(std::numeric_limits<double>::infinity())==0);
+ assert(AuthoredWalkRate(std::numeric_limits<double>::quiet_NaN())==0);
+ double previous=AuthoredWalkRate(140);
+ for(int i=139;i>=0;--i){double rate=AuthoredWalkRate(i);assert(rate<=previous&&rate>=0);previous=rate;}
  assert(SmoothAngle(179,-179,1./60,180)>179); // Cross seam by2 degrees, not358.
  assert(SmoothAngle(-179,179,1./60,180)<-179);
  double current=0;
@@ -43,6 +54,12 @@ def test_install_keeps_real_physics_manual_input_and_original_authored_clips():
  assert header==base.HEADER
  assert result.count(motion.SNAP)==1 and motion.SWAY not in result
  assert route in result # Route diagnostic remains unchanged; only Live mode is smoothed.
+ assert motion.WALK_RATE not in result and result.count(motion.MEASURED_WALK_RATE)==1
+ for unchanged in ['GetCharacterMovement()->IsMovingOnGround()&&Speed>1;',
+                   'HandsClips.Contains(TEXT("Idle"))',
+                   '(PlayingIdle?1.f:0.f)',
+                   'Instance->TargetSequence=Clip;']:
+  assert unchanged in result
  for unchanged in ['Movement->MaxWalkSpeed=140; Movement->MaxAcceleration=450;',
                    'Movement->BrakingDecelerationWalking=700; Movement->MaxStepHeight=22;',
                    'Input->BindAxis("Turn",this,&APawn::AddControllerYawInput);',

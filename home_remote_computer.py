@@ -24,6 +24,8 @@ class RemoteComputer:
         self._using_sent = None
         self._session_at = 0
         self._state = {}
+        self._home_private = False
+        self._privacy_epoch = 0
         self._clear()
 
     def _clear(self):
@@ -57,8 +59,13 @@ class RemoteComputer:
             return b''.join(chunks)
 
     async def refresh(self):
+        epoch = self._privacy_epoch
+        if self._home_private:
+            return
         try:
             state = json.loads(await self.request('GET', '/pc/state'))
+            if self._home_private or epoch != self._privacy_epoch:
+                return
             pixels = None
             display = state.get('display', {})
             if not state.get('privacy') and display.get('available'):
@@ -74,6 +81,9 @@ class RemoteComputer:
                 state = after
             if state.get('privacy'):
                 state = {**state, 'output': '', 'display': {'kind': 'private', 'available': False}, 'ready': False}
+            # Even an enter/exit cycle invalidates a pre-privacy HTTP response.
+            if self._home_private or epoch != self._privacy_epoch:
+                return
             self._state = state
             self.ready, self.paused = bool(state.get('ready')), bool(state.get('paused', True))
             self.status, self.output = str(state.get('status', 'unavailable')), str(state.get('output', ''))
@@ -82,7 +92,8 @@ class RemoteComputer:
             self.error = str(state.get('error', ''))
             self.revision += 1
         except Exception:
-            self._clear()
+            if epoch == self._privacy_epoch:
+                self._clear()
 
     async def input(self, text):
         # A serial command is meaningful only in an actual serial guest. A GUI
@@ -116,11 +127,14 @@ class RemoteComputer:
 
     async def agent_step(self, home, rel):
         private = bool(home.view().get('privacy'))
+        if private != self._home_private:
+            self._home_private = private
+            self._privacy_epoch += 1
+            if private:
+                self._clear()
         using = not private and home.activity == 'use_computer' and home.activity_ready('use_computer')
         try:
             if private != self._privacy_sent:
-                if private:
-                    self._clear()
                 await self.request('POST', '/pc/privacy', {'active': private, 'source': 'home'})
                 self._privacy_sent = private
             now = time.monotonic()

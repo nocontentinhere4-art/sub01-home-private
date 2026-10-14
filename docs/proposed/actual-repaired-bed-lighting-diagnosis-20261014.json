@@ -1,0 +1,48 @@
+{
+  "schema": "sub01-native-daylight-brightness-diagnosis-v1",
+  "read_only": true,
+  "applied": false,
+  "capture": "out/house-evidence/private-real-repaired-bed-view-1454b.png",
+  "measurements": "docs/proposed/actual-repaired-bed-lighting-capture-stats-20261014.json",
+  "capture_state_from_root": {
+    "fov": 75,
+    "hour": 11,
+    "all_lamps_enabled": false
+  },
+  "source_facts": [
+    "ApplyPrivateViewSettings hour overwrites SUN intensity with 3.2*sin((hour-6)/12*pi) lux and SkyLight scalar with .4225*max(.08,elevation), even after authored lighting intensity edits.",
+    "At hour11 the source sets SUN3.090963 lux and sky scalar0.408604; sky intensity scalar is not a lux measurement.",
+    "The applied inventory-corrected receipt sets SUN white with use_temperature true5500K and one unbound histogram PPV EV100[-3,+3], WB5500K/tint0; auto_exposure_bias is NOT explicitly overridden, so effective bias must be read rather than assumed zero.",
+    "Runtime lamp OFF only sets LightComponent intensity0. It does not disable material emissive, baked illumination, another emitter or cached GI. The visible bright shade is not proof of an enabled LightComponent.",
+    "Character ViewCamera source only overrides motion blur; actual active camera/SceneCapture final postprocess still needs read-only confirmation."
+  ],
+  "grounded_diagnosis": {
+    "definite": "Neutral-intended repaired ivory remains very warm/dark in the display-referred capture: lower pillow median RGB71/50/29, luminance0.0371 and linear R/B5.13; pillow side RGB86/71/50, luminance0.0672 and R/B2.92. Bright shade luminance0.645 while lamps reportedOFF requires separating material emission/GI from lamp intensity.",
+    "inference": "The existing few-lux lighting plus EV100 min-3 can limit adaptation in this interior; it is a plausible brightness limitation, not proven without actual adapted EV100. Raising light intensity may be counteracted by auto exposure and would be overwritten by the hour controller. Exposure alone cannot remove the warm spectral cast.",
+    "neutral_target_evidence": "bed-balanced source intended ivory hue#f7f4eb and mean albedoY0.62, calculated from actualtexture parity. Wall neutrality is unverified, so its warm RGB92/76/53 is supporting evidence only.",
+    "not_claimed": "PNG statistics do not measure scene lux or prove native reference visual acceptance.",
+    "additional_observation": "Desk frame also shows a bright shade and brighter local white wall patch while lamps reportedOFF. This observation does not identify whether material emission, an unenumerated light, GI history, baked illumination or daylight causes it."
+  },
+  "one_conservative_fix_proposal": {
+    "review_required": true,
+    "condition": "Only if read-only HDR/exposure diagnostics show adapted exposure pinned at EV100min-3 in hour11/alllampsOFF shot, with effective bias known and no unexpected active-camera/volume overrides.",
+    "change": "Extend the existing owned PPV DAYTIME minimum EV100 from-3 toward-4 using elevation; keep maximum+3 and existing effective bias. DayMin=-3-max(0,sin((hour-6)/12*pi)); at hour11 min=-3.9659; at night min=-3.",
+    "bound": "At most one additional stop of adaptation headroom; effect can be zero when exposure is not floor-bound. It is not a fixed one-stop display gain.",
+    "integration": "The same native hour controller must own the daylight PPV minimum together with the existing sun/sky curve, so updates persist coherently and no competing script overrides it. Root must review before implementation.",
+    "preserved": "Night EV100min-3, maximum+3, lamp intensity/color settings, existing sun/sky intensities, white balance, geometry and material factors.",
+    "if_not_clamped": "Do not apply this proposal. Inspect the bright shade emission, sky cubemap/tint, real PPV blend and camera override before selecting a different correction."
+  },
+  "read_only_actual_property_checklist": [
+    "Authenticate actual playing native world/camera and current accepted hour11/alllampsOFF revision; editor defaults alone cannot prove PIE/native settings.",
+    "SUN component: intensity~3.090963lux, color white255/255/255, use_temperaturetrue5500K, visible/mobility/cast shadows/indirect_lighting_intensity; capture actual rotation.",
+    "SkyLight: intensity~0.408604, source_type/cubemap path, light_color, mobility, real_time_capture, lower_hemisphere settings, sky_occlusion; verify exactly one active sky.",
+    "All five authored indoor light intensity values exactly0; enumerate other point/spot/rect/directional lights and indirect_lighting_intensity. Check whether previous baked lightmaps contribute.",
+    "Visible bed/desk lamp shade effective material path, effective EmissiveFactor/EmissiveStrength/EmissiveTexture parameters, actual parent graph emissive connection, and original glTF emissiveFactor/emissiveTexture/KHR_materials_emissive_strength source flags. Compare to actor binding and Lumen GI settings; do not infer emissive contribution from bright pixels alone. Measure stable shade brightness.",
+    "All active PostProcessVolumes: enabled/unbound/priority/blend_weight, exposure method and every override flag, EV100 min/max, bias/biascurve, speeds, histogram logmin/logmax/percentiles, local exposure, white temp/tint and color grading.",
+    "Project extend_default_luminance_range_in_auto_exposure_settings true; runtime eye-adaptation enabled; actual adapted/target EV100 and exposure histogram using HDR/EyeAdaptation diagnostic in same native view after settling.",
+    "Active ViewCamera and capture component: PostProcessBlendWeight and effective exposure/white-balance overrides, manual physical camera exposure flag; verify browser frame corresponds to the same view.",
+    "Recapture identical pose/FOV/hour/lamps after exposure has settled, measure same named ROIs, verify ivory detail, neutral cast, no shade clipping. Check night/lampsOFF and night/lampsON remain readable with original contrast."
+  ],
+  "additional_capture": "out/house-evidence/private-real-repaired-desk-PC-current-1457.png",
+  "additional_measurements": "docs/proposed/actual-repaired-desk-lighting-capture-stats-20261014.json"
+}

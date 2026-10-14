@@ -22,6 +22,7 @@ from unreal_native_viewer_handoff import install as install_native_viewer_handof
 from unreal_controller_grip_diagnostic import install as install_controller_grip_diagnostic
 from exterior_backdrop_geometry import patch_native_view_settings
 from unreal_first_person_motion import install as install_first_person_motion, stage as stage_first_person_motion
+from unreal_native_visual_metrics import install as install_native_visual_metrics
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -174,6 +175,7 @@ def stage(project):
     header,cpp=install_controller_grip_diagnostic(header,cpp)
     header,cpp=install_exit_doors(header,cpp)
     header,cpp=install_first_person_motion(header,cpp)
+    header,cpp=install_native_visual_metrics(header,cpp)
     stage_first_person_motion(module)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
