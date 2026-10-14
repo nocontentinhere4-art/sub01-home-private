@@ -1,0 +1,855 @@
+{
+  "schema": "sub01.actual-material-repair-receipt.v1",
+  "reviewed_helper_sha256": "26ff491f5e2cdc208a12b2f0357fb062b32a6a1ceacf8608eff8765d5cadf901",
+  "materials": {
+    "schema": "sub01.home-materials-apply.v1",
+    "presets": [
+      "bed-balanced",
+      "bed-wood-roughness"
+    ],
+    "slot_changes": [
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_264.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_blue_fabric_upholstery.SUB01_MatFix_original_blue_fabric_upholstery"
+      },
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_262.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_cream_upholstery.SUB01_MatFix_original_cream_upholstery"
+      },
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_263.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_linen_upholstery.SUB01_MatFix_original_linen_upholstery"
+      },
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_261.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_teal_upholstery.SUB01_MatFix_original_teal_upholstery"
+      },
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_265.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_oak_grain.SUB01_MatFix_original_oak_grain"
+      },
+      {
+        "slot": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_260.StaticMeshComponent0#0",
+        "from": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001",
+        "to": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_walnut_grain.SUB01_MatFix_original_walnut_grain"
+      }
+    ],
+    "instances": {
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_blue_fabric_upholstery.SUB01_MatFix_original_blue_fabric_upholstery",
+        "changed": true,
+        "overrides": [
+          [
+            "vector",
+            "BaseColorFactor",
+            [
+              2.26418,
+              1.53548,
+              0.93618,
+              1.0
+            ]
+          ],
+          [
+            "texture",
+            "BaseColorTexture",
+            "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1411.SUB01_MatFix_Albedo_Image_1411"
+          ]
+        ],
+        "target": "bed-balanced"
+      },
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_cream_upholstery.SUB01_MatFix_original_cream_upholstery",
+        "changed": true,
+        "overrides": [
+          [
+            "vector",
+            "BaseColorFactor",
+            [
+              2.26418,
+              1.53548,
+              0.93618,
+              1.0
+            ]
+          ],
+          [
+            "texture",
+            "BaseColorTexture",
+            "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_149.SUB01_MatFix_Albedo_Image_149"
+          ]
+        ],
+        "target": "bed-balanced"
+      },
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_linen_upholstery.SUB01_MatFix_original_linen_upholstery",
+        "changed": true,
+        "overrides": [
+          [
+            "vector",
+            "BaseColorFactor",
+            [
+              2.26418,
+              1.53548,
+              0.93618,
+              1.0
+            ]
+          ],
+          [
+            "texture",
+            "BaseColorTexture",
+            "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1410.SUB01_MatFix_Albedo_Image_1410"
+          ]
+        ],
+        "target": "bed-balanced"
+      },
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_teal_upholstery.SUB01_MatFix_original_teal_upholstery",
+        "changed": true,
+        "overrides": [
+          [
+            "vector",
+            "BaseColorFactor",
+            [
+              1.03817,
+              0.46848,
+              0.05895,
+              1.0
+            ]
+          ],
+          [
+            "texture",
+            "BaseColorTexture",
+            "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_148.SUB01_MatFix_Albedo_Image_148"
+          ]
+        ],
+        "target": "bed-balanced"
+      },
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_oak_grain.SUB01_MatFix_original_oak_grain",
+        "changed": true,
+        "overrides": [
+          [
+            "scalar",
+            "RoughnessFactor",
+            0.5
+          ]
+        ],
+        "target": "bed-wood-roughness"
+      },
+      "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001": {
+        "path": "/Game/Sub01Home/MaterialFix/SUB01_MatFix_original_walnut_grain.SUB01_MatFix_original_walnut_grain",
+        "changed": true,
+        "overrides": [
+          [
+            "scalar",
+            "RoughnessFactor",
+            0.5
+          ]
+        ],
+        "target": "bed-wood-roughness"
+      }
+    },
+    "map_backup": "../../../../../sub01-home-private/project/Sub01HomeLab/Saved/PrivateMapBackups/1791989037782886337-materials-fix",
+    "mapping": {
+      "schema": "sub01.home-materials-mapping.v1",
+      "model_source": "live",
+      "presets": [
+        "bed-balanced",
+        "bed-wood-roughness"
+      ],
+      "source_bed": {
+        "file": "web/house/assets/cc0-queen-bed/queen-bed.glb",
+        "sha256": "57cc312cca389e9ac113be44c77f1c445e92eee056ef092460fe20a78d5ba07c",
+        "groups": {
+          "CC0_queen_0": [
+            "Original walnut grain"
+          ],
+          "CC0_queen_1": [
+            "Original teal upholstery"
+          ],
+          "CC0_queen_2": [
+            "Original cream upholstery"
+          ],
+          "CC0_queen_3": [
+            "Original linen upholstery"
+          ],
+          "CC0_queen_4": [
+            "Original blue_fabric upholstery"
+          ],
+          "CC0_queen_5": [
+            "Original oak grain"
+          ]
+        }
+      },
+      "bed_and_sofa_slots": [
+        {
+          "actor_label": "Haven_felt",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_172.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_71.Material_71",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_71.Material_71",
+          "group_by_identity": [],
+          "group_by_material": null,
+          "sofa_part": "Haven_felt"
+        },
+        {
+          "actor_label": "Haven_seams",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_175.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_74.Material_74",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_74.Material_74",
+          "group_by_identity": [],
+          "group_by_material": null,
+          "sofa_part": "Haven_seams"
+        },
+        {
+          "actor_label": "Haven_legs",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_173.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_72.Material_72",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_72.Material_72",
+          "group_by_identity": [],
+          "group_by_material": null,
+          "sofa_part": "Haven_legs"
+        },
+        {
+          "actor_label": "Haven_linen",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_174.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_73.Material_73",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_73.Material_73",
+          "group_by_identity": [],
+          "group_by_material": null,
+          "sofa_part": "Haven_linen"
+        },
+        {
+          "actor_label": "CC0_queen_0",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_260.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001",
+          "group_by_identity": [
+            "CC0_queen_0"
+          ],
+          "group_by_material": "CC0_queen_0",
+          "sofa_part": null
+        },
+        {
+          "actor_label": "CC0_queen_1",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_261.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001",
+          "group_by_identity": [
+            "CC0_queen_1"
+          ],
+          "group_by_material": "CC0_queen_1",
+          "sofa_part": null
+        },
+        {
+          "actor_label": "CC0_queen_2",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_262.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001",
+          "group_by_identity": [
+            "CC0_queen_2"
+          ],
+          "group_by_material": "CC0_queen_2",
+          "sofa_part": null
+        },
+        {
+          "actor_label": "CC0_queen_3",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_263.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001",
+          "group_by_identity": [
+            "CC0_queen_3"
+          ],
+          "group_by_material": "CC0_queen_3",
+          "sofa_part": null
+        },
+        {
+          "actor_label": "CC0_queen_4",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_264.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001",
+          "group_by_identity": [
+            "CC0_queen_4"
+          ],
+          "group_by_material": "CC0_queen_4",
+          "sofa_part": null
+        },
+        {
+          "actor_label": "CC0_queen_5",
+          "component_path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_265.StaticMeshComponent0",
+          "slot": 0,
+          "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001",
+          "original_material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001",
+          "group_by_identity": [
+            "CC0_queen_5"
+          ],
+          "group_by_material": "CC0_queen_5",
+          "sofa_part": null
+        }
+      ],
+      "headboard_material_slot_users": 1,
+      "targets": [
+        {
+          "id": "bed-balanced",
+          "ok": true,
+          "problems": [],
+          "materials": [
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_blue_fabric_upholstery_001.Original_blue_fabric_upholstery_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_264.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": [
+                2.26418,
+                1.53548,
+                0.93618
+              ],
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1411.Image_1411",
+              "albedo_clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1411.SUB01_MatFix_Albedo_Image_1411",
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            },
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_cream_upholstery_001.Original_cream_upholstery_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_262.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": [
+                2.26418,
+                1.53548,
+                0.93618
+              ],
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_149.Image_149",
+              "albedo_clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_149.SUB01_MatFix_Albedo_Image_149",
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            },
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_linen_upholstery_001.Original_linen_upholstery_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_263.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": [
+                2.26418,
+                1.53548,
+                0.93618
+              ],
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1410.Image_1410",
+              "albedo_clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1410.SUB01_MatFix_Albedo_Image_1410",
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            },
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_teal_upholstery_001.Original_teal_upholstery_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_261.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": [
+                1.03817,
+                0.46848,
+                0.05895
+              ],
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_148.Image_148",
+              "albedo_clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_148.SUB01_MatFix_Albedo_Image_148",
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            }
+          ],
+          "texture_equivalence": "accepted by parity file (identical decoded pixels, neutral settings)"
+        },
+        {
+          "id": "bed-wood-roughness",
+          "ok": true,
+          "problems": [],
+          "materials": [
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_oak_grain_001.Original_oak_grain_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_265.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": null,
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_46.Image_46",
+              "albedo_clone": null,
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [
+                [
+                  "scalar",
+                  "RoughnessFactor",
+                  0.5
+                ]
+              ],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            },
+            {
+              "material": "/Game/Sub01Home/ImportedScene/full-home/Materials/Original_walnut_grain_001.Original_walnut_grain_001",
+              "slots": [
+                [
+                  "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_260.StaticMeshComponent0",
+                  0
+                ]
+              ],
+              "parent": "/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS",
+              "path": "mic_of_original",
+              "intended_factor": null,
+              "factor_parameter": "BaseColorFactor",
+              "texture_parameter": "BaseColorTexture",
+              "texture": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_45.Image_45",
+              "albedo_clone": null,
+              "current_factor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "scalar_overrides": [
+                [
+                  "scalar",
+                  "RoughnessFactor",
+                  0.5
+                ]
+              ],
+              "already_intended": false,
+              "texture_size": [
+                512,
+                512
+              ]
+            }
+          ]
+        }
+      ],
+      "bed_mapping_required": true,
+      "parity_problems": [],
+      "albedo_clones": true,
+      "original_texture_status": {
+        "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1410.Image_1410": {
+          "srgb": false,
+          "compression": "TC_NORMALMAP",
+          "pixel_match_reference": true,
+          "verdict": "imported as a NORMAL MAP: refused as colour"
+        },
+        "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1411.Image_1411": {
+          "srgb": false,
+          "compression": "TC_NORMALMAP",
+          "pixel_match_reference": true,
+          "verdict": "imported as a NORMAL MAP: refused as colour"
+        },
+        "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_148.Image_148": {
+          "srgb": false,
+          "compression": "TC_NORMALMAP",
+          "pixel_match_reference": true,
+          "verdict": "imported as a NORMAL MAP: refused as colour"
+        },
+        "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_149.Image_149": {
+          "srgb": false,
+          "compression": "TC_NORMALMAP",
+          "pixel_match_reference": true,
+          "verdict": "imported as a NORMAL MAP: refused as colour"
+        }
+      },
+      "texture_mean_used": {
+        "linear_mean": [
+          0.28151,
+          0.40375,
+          0.60812
+        ],
+        "linear_p99": [
+          0.32778,
+          0.45641,
+          0.66539
+        ],
+        "source": "texture parity (actual UE pixels)"
+      },
+      "mismatches": [],
+      "notes": [],
+      "ok": true,
+      "visual_match_claimed": false
+    },
+    "visual_match_claimed": false,
+    "albedo_repair": {
+      "schema": "sub01.home-materials-albedo-repair.v1",
+      "textures": [
+        {
+          "original": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1410.Image_1410",
+          "clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1410.SUB01_MatFix_Albedo_Image_1410",
+          "action": "verified existing"
+        },
+        {
+          "original": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1411.Image_1411",
+          "clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_1411.SUB01_MatFix_Albedo_Image_1411",
+          "action": "verified existing"
+        },
+        {
+          "original": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_148.Image_148",
+          "clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_148.SUB01_MatFix_Albedo_Image_148",
+          "action": "verified existing"
+        },
+        {
+          "original": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_149.Image_149",
+          "clone": "/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_Image_149.SUB01_MatFix_Albedo_Image_149",
+          "action": "verified existing"
+        }
+      ]
+    },
+    "parity_file": "../../../../../sub01-home-private/project/Sub01HomeLab/Saved/SUB01MaterialFix/parity-1791989034988708018/texture-parity.json"
+  },
+  "usage_after_summary": {
+    "texture_count": 117,
+    "definite_mismatch_texture_count": 13,
+    "warning_texture_count": 13
+  },
+  "lighting": {
+    "preset": "inventory-corrected",
+    "level": "/Game/Sub01Home/ActualHome",
+    "lights": {
+      "SUB01_AuthoredLight_SUN": {
+        "from": {
+          "light_color": [
+            255,
+            210,
+            161,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 5500.0
+        }
+      },
+      "SUB01_AuthoredLight_DeskLamp": {
+        "from": {
+          "light_color": [
+            255,
+            168,
+            82,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 2900.0
+        }
+      },
+      "SUB01_AuthoredLight_BedLamp": {
+        "from": {
+          "light_color": [
+            255,
+            147,
+            65,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 2700.0
+        }
+      },
+      "SUB01_AuthoredLight_KitchenWork": {
+        "from": {
+          "light_color": [
+            255,
+            194,
+            124,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 3000.0
+        }
+      },
+      "SUB01_AuthoredLight_LowerPendant": {
+        "from": {
+          "light_color": [
+            255,
+            184,
+            111,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 2800.0
+        }
+      },
+      "SUB01_AuthoredLight_UpperPendant": {
+        "from": {
+          "light_color": [
+            255,
+            184,
+            111,
+            255
+          ],
+          "use_temperature": false,
+          "temperature": 6500.0
+        },
+        "to": {
+          "light_color": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "use_temperature": true,
+          "temperature": 2800.0
+        }
+      }
+    },
+    "unchanged_light_properties": [
+      "intensity",
+      "intensity_units",
+      "mobility",
+      "transform",
+      "volumetric_scattering_intensity",
+      "shadows",
+      "attenuation"
+    ],
+    "post_process": {
+      "label": "SUB01_ReferencePost",
+      "unbound": true,
+      "priority": 0.0,
+      "blend_weight": 1.0,
+      "settings": [
+        {
+          "property": "auto_exposure_method",
+          "value": {
+            "enum": "AutoExposureMethod",
+            "value": "AEM_HISTOGRAM"
+          }
+        },
+        {
+          "property": "auto_exposure_min_brightness",
+          "value": -3.0
+        },
+        {
+          "property": "auto_exposure_max_brightness",
+          "value": 3.0
+        },
+        {
+          "property": "white_temp",
+          "value": 5500.0
+        },
+        {
+          "property": "white_tint",
+          "value": 0.0
+        }
+      ],
+      "not_overridden": {
+        "auto_exposure_bias": "project default; keeps the backdrop fix and current baseline brightness unchanged",
+        "auto_exposure_speed_up/down": "engine defaults (3 / 1 EV/s)",
+        "tone curve (film_slope/toe/shoulder/black_clip/white_clip)": "engine filmic defaults; materials are judged on them",
+        "bloom, vignette, local exposure, Lumen methods": "unchanged; Lumen GI/reflections already set in DefaultEngine.ini"
+      }
+    },
+    "order": [
+      "tools/unreal_exterior_backdrop_fix.py",
+      "tools/unreal_home_materials_fix.py",
+      "inventory-corrected"
+    ],
+    "visual_match_claimed": false,
+    "applied": true,
+    "before": {
+      "SUB01_AuthoredLight_SUN": {
+        "light_color": [
+          255,
+          210,
+          161,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      },
+      "SUB01_AuthoredLight_DeskLamp": {
+        "light_color": [
+          255,
+          168,
+          82,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      },
+      "SUB01_AuthoredLight_BedLamp": {
+        "light_color": [
+          255,
+          147,
+          65,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      },
+      "SUB01_AuthoredLight_KitchenWork": {
+        "light_color": [
+          255,
+          194,
+          124,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      },
+      "SUB01_AuthoredLight_LowerPendant": {
+        "light_color": [
+          255,
+          184,
+          111,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      },
+      "SUB01_AuthoredLight_UpperPendant": {
+        "light_color": [
+          255,
+          184,
+          111,
+          255
+        ],
+        "use_temperature": false,
+        "temperature": 6500.0
+      }
+    },
+    "changed_lights": [],
+    "ppv_spawned_by_this_script": true,
+    "backup": "../../../../../sub01-home-private/project/Sub01HomeLab/Saved/PrivateMapBackups/1791989038869623696-lighting-inventory-correction",
+    "ev100_extended_range": true
+  },
+  "visual_match_claimed": false,
+  "note": "Saved actual native home; dedicated fresh bed and movement visual acceptance still required."
+}
