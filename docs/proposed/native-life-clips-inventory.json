@@ -1,0 +1,2528 @@
+{
+ "accepted_by_role": {
+  "GetUp": [],
+  "Idle": [],
+  "LieDown": [],
+  "SleepLoop": [
+   "web/room/desk_states/bed/sleep_back.glb",
+   "web/room/desk_states/bed/sleep_back_idle.glb",
+   "web/room/desk_states/bed/sleep_side.glb"
+  ]
+ },
+ "accepted_provenance": [
+  "mixamo_capture",
+  "operator_declared_capture",
+  "third_party_authored_with_permission"
+ ],
+ "candidates": [
+  {
+   "all_joint_like_nodes": 26,
+   "animation": "Armature|Idle|baselayer",
+   "animations_in_file": [
+    "Armature|Idle|baselayer"
+   ],
+   "bytes": 41192,
+   "duration_s": 4.0,
+   "file": "web/room/boy_idle.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 26,
+   "provenance": "ai_generated",
+   "provenance_note": "Earlier Meshy/Higgsfield character clip (web/room/CREDITS.md); 26-node rig.",
+   "role": "Idle",
+   "sha256": "4cb00b990455b60d460f9aaf20a8539102857ec35e32bbb2ddab7a9da85bf904",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 25,
+   "animation": "m_idle",
+   "animations_in_file": [
+    "m_idle"
+   ],
+   "bytes": 38060,
+   "duration_s": 3.35,
+   "file": "web/room/boy_m_idle.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 25,
+   "provenance": "ai_generated",
+   "provenance_note": "NVIDIA ARDY text-to-motion output (web/room/CREDITS.md \"clips generated with NVIDIA ARDY\").",
+   "role": "Idle",
+   "sha256": "15f915d38b0e8c1065eb325a670bd9f0fbdf7f83ab8645080b3cbbd16e363189",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 26,
+   "animation": "stand_idle",
+   "animations_in_file": [
+    "stand_idle",
+    "walk",
+    "sit_down_chair",
+    "stand_up_chair",
+    "sit_idle_upright",
+    "take_item",
+    "door_open_pull",
+    "lie_back_idle",
+    "lie_side_left",
+    "lie_side_right",
+    "sleep_breathing",
+    "sleep_breathing_left",
+    "sleep_breathing_right",
+    "roll_back_to_side_L",
+    "roll_back_to_side_R",
+    "roll_side_to_back_L",
+    "roll_side_to_back_R",
+    "type",
+    "mouse",
+    "walk_start",
+    "walk_stop",
+    "turn_in_place_L90",
+    "turn_in_place_R90",
+    "turn_in_place_180",
+    "lean_on_sill",
+    "stretch_arms_up",
+    "scratch_head",
+    "look_around",
+    "crouch_drop",
+    "put_down",
+    "sit_lean_back",
+    "sit_eat_chopsticks",
+    "sit_drink",
+    "sit_edge_idle",
+    "sit_down_bed_edge",
+    "stand_up_bed_edge",
+    "lie_down_from_edge",
+    "get_up_to_edge",
+    "lie_phone"
+   ],
+   "bytes": 638216,
+   "duration_s": 2.5,
+   "file": "web/room/boy_moves.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 26,
+   "provenance": "retargeted_library_clip",
+   "provenance_note": "Quaternius UAL Idle_Loop retargeted onto the earlier boy rig (CREDITS.md); not the owner skeleton.",
+   "role": "Idle",
+   "sha256": "df44e1d1f796e056f4f4b4a067ef5ce3e35bbe824f8c3c3164a85de18db8478c",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 80,
+   "animation": "idle",
+   "animations_in_file": [
+    "idle",
+    "walk"
+   ],
+   "bytes": 8028996,
+   "duration_s": 15.333333,
+   "file": "web/room/char_v5.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 87,
+   "provenance": "unknown",
+   "provenance_note": "Tripo v5 rig idle (41-bone v5 rig), not the owner skeleton.",
+   "role": "Idle",
+   "sha256": "da03b7bce18e8e6146d5f979a807786ab2d72035125e303103954302c87d908f",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 66,
+   "animated_bones": 65,
+   "animation": "room_bed_lie",
+   "animations_in_file": [
+    "room_bed_lie"
+   ],
+   "bytes": 637476,
+   "duration_s": 16.966667,
+   "file": "web/room/mh_mx/room_bed_lie.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -0.425927,
+     91.934418,
+     3.213289
+    ],
+    "height_range": 27.653305,
+    "last": [
+     -21.379492,
+     69.025246,
+     125.95298
+    ],
+    "max": [
+     -0.425927,
+     91.934418,
+     126.468376
+    ],
+    "max_horizontal_from_first": 125.319753,
+    "min": [
+     -29.883844,
+     64.281113,
+     3.213289
+    ],
+    "net_horizontal_first_to_last": 124.515395
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 510,
+   "loop": {
+    "loops": false,
+    "max_joint_world_delta_cm": 188.940229,
+    "max_rotation_delta_deg": 143.415959,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 6.915985,
+   "measured": true,
+   "node_count": 66,
+   "non_root_translation_tracks": 12,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_supine",
+     "reclined_or_sitting",
+     "sitting_or_crouching",
+     "standing"
+    ],
+    "first": "standing",
+    "last": "lying_supine"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": -0.235033,
+     "head_height_m": 1.45607,
+     "hips_height_m": 0.919344,
+     "hips_world_m": [
+      -0.004259,
+      0.919344,
+      0.032133
+     ],
+     "kind": "standing",
+     "leg_extension": 1.074323,
+     "lowest_joint_height_m": -0.023609,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 4.188235
+    },
+    {
+     "front_up_component": -0.672542,
+     "head_height_m": 1.090743,
+     "hips_height_m": 0.801917,
+     "hips_world_m": [
+      -0.087408,
+      0.801917,
+      0.774701
+     ],
+     "kind": "reclined_or_sitting",
+     "leg_extension": 0.92136,
+     "lowest_joint_height_m": -0.010868,
+     "time_s": 2.120833,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 57.251195
+    },
+    {
+     "front_up_component": -0.125773,
+     "head_height_m": 1.232979,
+     "hips_height_m": 0.740148,
+     "hips_world_m": [
+      -0.123374,
+      0.740148,
+      0.974308
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.69704,
+     "lowest_joint_height_m": 0.091886,
+     "time_s": 4.241667,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 23.389413
+    },
+    {
+     "front_up_component": 0.176676,
+     "head_height_m": 1.287909,
+     "hips_height_m": 0.755064,
+     "hips_world_m": [
+      -0.142516,
+      0.755064,
+      1.014126
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.663415,
+     "lowest_joint_height_m": 0.175443,
+     "time_s": 6.3625,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 6.713307
+    },
+    {
+     "front_up_component": 0.978253,
+     "head_height_m": 0.890096,
+     "hips_height_m": 0.673681,
+     "hips_world_m": [
+      -0.296214,
+      0.673681,
+      1.224146
+     ],
+     "kind": "lying_supine",
+     "leg_extension": -0.027994,
+     "lowest_joint_height_m": 0.597781,
+     "time_s": 8.483334,
+     "torso_heading_deg_about_y": -52.433613,
+     "torso_tilt_from_vertical_deg": 66.014219
+    },
+    {
+     "front_up_component": 0.896047,
+     "head_height_m": 0.658731,
+     "hips_height_m": 0.654525,
+     "hips_world_m": [
+      -0.208142,
+      0.654525,
+      1.203025
+     ],
+     "kind": "lying_supine",
+     "leg_extension": -0.032225,
+     "lowest_joint_height_m": 0.568256,
+     "time_s": 10.604167,
+     "torso_heading_deg_about_y": -59.47151,
+     "torso_tilt_from_vertical_deg": 89.562264
+    },
+    {
+     "front_up_component": 0.935305,
+     "head_height_m": 0.734051,
+     "hips_height_m": 0.711304,
+     "hips_world_m": [
+      -0.203286,
+      0.711304,
+      1.261517
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.018777,
+     "lowest_joint_height_m": 0.658285,
+     "time_s": 12.725,
+     "torso_heading_deg_about_y": -57.920214,
+     "torso_tilt_from_vertical_deg": 87.617161
+    },
+    {
+     "front_up_component": 0.977413,
+     "head_height_m": 0.694017,
+     "hips_height_m": 0.703016,
+     "hips_world_m": [
+      -0.208556,
+      0.703016,
+      1.260101
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.027462,
+     "lowest_joint_height_m": 0.658805,
+     "time_s": 14.845834,
+     "torso_heading_deg_about_y": -56.918262,
+     "torso_tilt_from_vertical_deg": 90.928274
+    },
+    {
+     "front_up_component": 0.996954,
+     "head_height_m": 0.615588,
+     "hips_height_m": 0.690252,
+     "hips_world_m": [
+      -0.213795,
+      0.690252,
+      1.25953
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.045286,
+     "lowest_joint_height_m": 0.601365,
+     "time_s": 16.966667,
+     "torso_heading_deg_about_y": -56.373419,
+     "torso_tilt_from_vertical_deg": 97.678401
+    }
+   ],
+   "provenance": "v5_carryover_source_undocumented",
+   "provenance_note": "mh_v5 clip carried onto the owner skeleton by room_build/kimodo/mx_convert.mjs (web/room/mh_mx/README.md); its original source (preview/mh-motion) is not documented in this repository.",
+   "role": "LieDown",
+   "scale_tracks": 0,
+   "sha256": "f22e3fb1a991c25dd0d128059e97e52e49819e2393db78dbc9c690a80af8d3e2",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "ProvenanceUnverified",
+   "verdict_reason": "provenance class 'v5_carryover_source_undocumented' is not a documented genuine capture"
+  },
+  {
+   "all_joint_like_nodes": 66,
+   "animated_bones": 65,
+   "animation": "room_bed_wake",
+   "animations_in_file": [
+    "room_bed_wake"
+   ],
+   "bytes": 582276,
+   "duration_s": 15.433333,
+   "file": "web/room/mh_mx/room_bed_wake.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -1.365785,
+     72.008209,
+     -14.131557
+    ],
+    "height_range": 27.404266,
+    "last": [
+     58.170471,
+     91.699745,
+     169.030655
+    ],
+    "max": [
+     58.170471,
+     92.691666,
+     169.030655
+    ],
+    "max_horizontal_from_first": 192.595332,
+    "min": [
+     -19.357109,
+     65.287399,
+     -14.210805
+    ],
+    "net_horizontal_first_to_last": 192.595332
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 464,
+   "loop": {
+    "loops": false,
+    "max_joint_world_delta_cm": 280.232079,
+    "max_rotation_delta_deg": 109.240324,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 5.028154,
+   "measured": true,
+   "node_count": 66,
+   "non_root_translation_tracks": 12,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_supine",
+     "reclined_or_sitting",
+     "sitting_or_crouching",
+     "standing"
+    ],
+    "first": "lying_supine",
+    "last": "standing"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": 0.96176,
+     "head_height_m": 0.737819,
+     "hips_height_m": 0.720082,
+     "hips_world_m": [
+      -0.013658,
+      0.720082,
+      -0.141316
+     ],
+     "kind": "lying_supine",
+     "leg_extension": -0.01629,
+     "lowest_joint_height_m": 0.637276,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": 169.47629,
+     "torso_tilt_from_vertical_deg": 88.139525
+    },
+    {
+     "front_up_component": 0.960937,
+     "head_height_m": 0.731503,
+     "hips_height_m": 0.715161,
+     "hips_world_m": [
+      -0.014293,
+      0.715161,
+      -0.141971
+     ],
+     "kind": "lying_supine",
+     "leg_extension": -0.021958,
+     "lowest_joint_height_m": 0.631315,
+     "time_s": 1.929167,
+     "torso_heading_deg_about_y": 169.477618,
+     "torso_tilt_from_vertical_deg": 88.285989
+    },
+    {
+     "front_up_component": 0.96276,
+     "head_height_m": 0.87566,
+     "hips_height_m": 0.674358,
+     "hips_world_m": [
+      0.025618,
+      0.674358,
+      -0.086008
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.224655,
+     "lowest_joint_height_m": 0.479829,
+     "time_s": 3.858333,
+     "torso_heading_deg_about_y": 166.837214,
+     "torso_tilt_from_vertical_deg": 67.718937
+    },
+    {
+     "front_up_component": -0.194178,
+     "head_height_m": 1.217765,
+     "hips_height_m": 0.728956,
+     "hips_world_m": [
+      -0.166921,
+      0.728956,
+      0.941797
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.713796,
+     "lowest_joint_height_m": 0.077179,
+     "time_s": 5.7875,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 24.010653
+    },
+    {
+     "front_up_component": -0.080803,
+     "head_height_m": 1.278012,
+     "hips_height_m": 0.739466,
+     "hips_world_m": [
+      -0.186226,
+      0.739466,
+      0.947199
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.816465,
+     "lowest_joint_height_m": 0.013744,
+     "time_s": 7.716667,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 8.200804
+    },
+    {
+     "front_up_component": -0.106887,
+     "head_height_m": 1.277572,
+     "hips_height_m": 0.739715,
+     "hips_world_m": [
+      -0.183238,
+      0.739715,
+      0.94337
+     ],
+     "kind": "standing",
+     "leg_extension": 0.853061,
+     "lowest_joint_height_m": -0.007155,
+     "time_s": 9.645833,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 2.473697
+    },
+    {
+     "front_up_component": -0.654258,
+     "head_height_m": 1.042119,
+     "hips_height_m": 0.745326,
+     "hips_world_m": [
+      -0.011442,
+      0.745326,
+      0.973599
+     ],
+     "kind": "reclined_or_sitting",
+     "leg_extension": 0.869878,
+     "lowest_joint_height_m": -0.010845,
+     "time_s": 11.575,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 56.53639
+    },
+    {
+     "front_up_component": -0.202949,
+     "head_height_m": 1.458786,
+     "hips_height_m": 0.913032,
+     "hips_world_m": [
+      0.184784,
+      0.913032,
+      1.146896
+     ],
+     "kind": "standing",
+     "leg_extension": 1.069199,
+     "lowest_joint_height_m": -0.015637,
+     "time_s": 13.504167,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 2.987861
+    },
+    {
+     "front_up_component": -0.240954,
+     "head_height_m": 1.464414,
+     "hips_height_m": 0.916997,
+     "hips_world_m": [
+      0.581705,
+      0.916997,
+      1.690307
+     ],
+     "kind": "standing",
+     "leg_extension": 1.079397,
+     "lowest_joint_height_m": -0.016689,
+     "time_s": 15.433333,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 2.05432
+    }
+   ],
+   "provenance": "v5_carryover_source_undocumented",
+   "provenance_note": "As room_bed_lie: v5 carry-over, original source undocumented here.",
+   "role": "GetUp",
+   "scale_tracks": 0,
+   "sha256": "b85449b4ea450ab232886c25152aefb3dc4a87162bc2908b6f1141331da6b3d5",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "ProvenanceUnverified",
+   "verdict_reason": "provenance class 'v5_carryover_source_undocumented' is not a documented genuine capture"
+  },
+  {
+   "all_joint_like_nodes": 66,
+   "animated_bones": 65,
+   "animation": "room_bedtime",
+   "animations_in_file": [
+    "room_bedtime"
+   ],
+   "bytes": 1077888,
+   "duration_s": 29.200001,
+   "file": "web/room/mh_mx/room_bedtime.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     144.6185,
+     71.631226,
+     -33.955063
+    ],
+    "height_range": 26.2873,
+    "last": [
+     -21.3811,
+     69.023994,
+     125.950607
+    ],
+    "max": [
+     145.598892,
+     92.3657,
+     126.469688
+    ],
+    "max_horizontal_from_first": 234.474978,
+    "min": [
+     -29.873585,
+     66.0784,
+     -73.707283
+    ],
+    "net_horizontal_first_to_last": 230.490109
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 877,
+   "loop": {
+    "loops": false,
+    "max_joint_world_delta_cm": 312.699875,
+    "max_rotation_delta_deg": 110.027765,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 6.917022,
+   "measured": true,
+   "node_count": 66,
+   "non_root_translation_tracks": 12,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_supine",
+     "reclined_or_sitting",
+     "sitting_or_crouching",
+     "standing"
+    ],
+    "first": "sitting_or_crouching",
+    "last": "lying_supine"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": 0.119863,
+     "head_height_m": 1.200288,
+     "hips_height_m": 0.716312,
+     "hips_world_m": [
+      1.446185,
+      0.716312,
+      -0.339551
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.784363,
+     "lowest_joint_height_m": -0.001568,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 27.976044
+    },
+    {
+     "front_up_component": 0.213132,
+     "head_height_m": 1.162721,
+     "hips_height_m": 0.718762,
+     "hips_world_m": [
+      1.45442,
+      0.718762,
+      -0.330628
+     ],
+     "kind": "reclined_or_sitting",
+     "leg_extension": 0.78707,
+     "lowest_joint_height_m": -0.003925,
+     "time_s": 3.65,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 36.461196
+    },
+    {
+     "front_up_component": -0.369186,
+     "head_height_m": 1.360179,
+     "hips_height_m": 0.837982,
+     "hips_world_m": [
+      1.401933,
+      0.837982,
+      -0.637253
+     ],
+     "kind": "standing",
+     "leg_extension": 0.975098,
+     "lowest_joint_height_m": -0.026512,
+     "time_s": 7.3,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 15.851954
+    },
+    {
+     "front_up_component": -0.22864,
+     "head_height_m": 1.463302,
+     "hips_height_m": 0.917258,
+     "hips_world_m": [
+      0.724223,
+      0.917258,
+      -0.257731
+     ],
+     "kind": "standing",
+     "leg_extension": 1.076417,
+     "lowest_joint_height_m": -0.017228,
+     "time_s": 10.95,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 3.556914
+    },
+    {
+     "front_up_component": -0.615213,
+     "head_height_m": 1.051921,
+     "hips_height_m": 0.760994,
+     "hips_world_m": [
+      -0.073759,
+      0.760994,
+      0.816795
+     ],
+     "kind": "reclined_or_sitting",
+     "leg_extension": 0.890918,
+     "lowest_joint_height_m": -0.004727,
+     "time_s": 14.6,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 57.02717
+    },
+    {
+     "front_up_component": -0.004264,
+     "head_height_m": 1.298282,
+     "hips_height_m": 0.782577,
+     "hips_world_m": [
+      -0.114525,
+      0.782577,
+      0.972491
+     ],
+     "kind": "sitting_or_crouching",
+     "leg_extension": 0.796407,
+     "lowest_joint_height_m": 0.073363,
+     "time_s": 18.25,
+     "torso_heading_deg_about_y": null,
+     "torso_tilt_from_vertical_deg": 16.188745
+    },
+    {
+     "front_up_component": 0.920997,
+     "head_height_m": 0.745282,
+     "hips_height_m": 0.710279,
+     "hips_world_m": [
+      -0.209118,
+      0.710279,
+      1.231676
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.009453,
+     "lowest_joint_height_m": 0.655819,
+     "time_s": 21.900001,
+     "torso_heading_deg_about_y": -58.659318,
+     "torso_tilt_from_vertical_deg": 86.308872
+    },
+    {
+     "front_up_component": 0.93242,
+     "head_height_m": 0.739206,
+     "hips_height_m": 0.711588,
+     "hips_world_m": [
+      -0.203526,
+      0.711588,
+      1.26037
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.019977,
+     "lowest_joint_height_m": 0.66165,
+     "time_s": 25.550001,
+     "torso_heading_deg_about_y": -57.872564,
+     "torso_tilt_from_vertical_deg": 87.107212
+    },
+    {
+     "front_up_component": 0.996954,
+     "head_height_m": 0.615575,
+     "hips_height_m": 0.69024,
+     "hips_world_m": [
+      -0.213811,
+      0.69024,
+      1.259506
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.045285,
+     "lowest_joint_height_m": 0.601352,
+     "time_s": 29.200001,
+     "torso_heading_deg_about_y": -56.382677,
+     "torso_tilt_from_vertical_deg": 97.678432
+    }
+   ],
+   "provenance": "v5_carryover_source_undocumented",
+   "provenance_note": "Desk stretch, walk to bed, lie down; the web page holds its LAST frame as the sleeping pose (a still).",
+   "role": "SleepLoop",
+   "scale_tracks": 0,
+   "sha256": "bcc74844c6f77a2f021ef78a7c0fcbe2dddddf75086a28f51ef611138dab0cec",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "ProvenanceUnverified",
+   "verdict_reason": "provenance class 'v5_carryover_source_undocumented' is not a documented genuine capture"
+  },
+  {
+   "all_joint_like_nodes": 71,
+   "animated_bones": 52,
+   "animation": "sleep_side",
+   "animations_in_file": [
+    "sleep_side"
+   ],
+   "bytes": 190508,
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/bed/sleep_side.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -23.9125,
+     85.192001,
+     -23.131001
+    ],
+    "height_range": 0.102905,
+    "last": [
+     -23.9133,
+     85.190598,
+     -23.1304
+    ],
+    "max": [
+     -23.9125,
+     85.282303,
+     -23.1301
+    ],
+    "max_horizontal_from_first": 0.164479,
+    "min": [
+     -23.989201,
+     85.179398,
+     -23.276501
+    ],
+    "net_horizontal_first_to_last": 0.001
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 200,
+   "loop": {
+    "loops": true,
+    "max_joint_world_delta_cm": 0.014404,
+    "max_rotation_delta_deg": 0.026949,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 0.0,
+   "measured": true,
+   "node_count": 71,
+   "non_root_translation_tracks": 0,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_side"
+    ],
+    "first": "lying_side",
+    "last": "lying_side"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": -0.308911,
+     "head_height_m": 0.957983,
+     "hips_height_m": 0.85192,
+     "hips_world_m": [
+      -0.239125,
+      0.85192,
+      -0.23131
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176631,
+     "lowest_joint_height_m": 0.682335,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": -177.195071,
+     "torso_tilt_from_vertical_deg": 78.344268
+    },
+    {
+     "front_up_component": -0.309035,
+     "head_height_m": 0.95823,
+     "hips_height_m": 0.85201,
+     "hips_world_m": [
+      -0.239135,
+      0.85201,
+      -0.231302
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176921,
+     "lowest_joint_height_m": 0.682117,
+     "time_s": 0.829167,
+     "torso_heading_deg_about_y": -177.193901,
+     "torso_tilt_from_vertical_deg": 78.326543
+    },
+    {
+     "front_up_component": -0.30943,
+     "head_height_m": 0.958624,
+     "hips_height_m": 0.852232,
+     "hips_world_m": [
+      -0.239524,
+      0.852232,
+      -0.232031
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177356,
+     "lowest_joint_height_m": 0.682092,
+     "time_s": 1.658333,
+     "torso_heading_deg_about_y": -177.21944,
+     "torso_tilt_from_vertical_deg": 78.307336
+    },
+    {
+     "front_up_component": -0.309546,
+     "head_height_m": 0.959088,
+     "hips_height_m": 0.852495,
+     "hips_world_m": [
+      -0.239524,
+      0.852495,
+      -0.232765
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177811,
+     "lowest_joint_height_m": 0.682042,
+     "time_s": 2.4875,
+     "torso_heading_deg_about_y": -177.254312,
+     "torso_tilt_from_vertical_deg": 78.285195
+    },
+    {
+     "front_up_component": -0.30943,
+     "head_height_m": 0.959244,
+     "hips_height_m": 0.852705,
+     "hips_world_m": [
+      -0.239706,
+      0.852705,
+      -0.232582
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177951,
+     "lowest_joint_height_m": 0.682136,
+     "time_s": 3.316667,
+     "torso_heading_deg_about_y": -177.250607,
+     "torso_tilt_from_vertical_deg": 78.29109
+    },
+    {
+     "front_up_component": -0.309316,
+     "head_height_m": 0.959158,
+     "hips_height_m": 0.852672,
+     "hips_world_m": [
+      -0.239518,
+      0.852672,
+      -0.232399
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177816,
+     "lowest_joint_height_m": 0.682151,
+     "time_s": 4.145833,
+     "torso_heading_deg_about_y": -177.246971,
+     "torso_tilt_from_vertical_deg": 78.296975
+    },
+    {
+     "front_up_component": -0.309201,
+     "head_height_m": 0.958647,
+     "hips_height_m": 0.852246,
+     "hips_world_m": [
+      -0.239515,
+      0.852246,
+      -0.232032
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177395,
+     "lowest_joint_height_m": 0.682022,
+     "time_s": 4.975,
+     "torso_heading_deg_about_y": -177.2261,
+     "torso_tilt_from_vertical_deg": 78.306317
+    },
+    {
+     "front_up_component": -0.308947,
+     "head_height_m": 0.958214,
+     "hips_height_m": 0.852007,
+     "hips_world_m": [
+      -0.239135,
+      0.852007,
+      -0.231302
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176861,
+     "lowest_joint_height_m": 0.682255,
+     "time_s": 5.804167,
+     "torso_heading_deg_about_y": -177.195463,
+     "torso_tilt_from_vertical_deg": 78.328048
+    },
+    {
+     "front_up_component": -0.308829,
+     "head_height_m": 0.958048,
+     "hips_height_m": 0.851906,
+     "hips_world_m": [
+      -0.239133,
+      0.851906,
+      -0.231304
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176686,
+     "lowest_joint_height_m": 0.682299,
+     "time_s": 6.633333,
+     "torso_heading_deg_about_y": -177.194896,
+     "torso_tilt_from_vertical_deg": 78.335517
+    }
+   ],
+   "provenance": "third_party_authored_with_permission",
+   "provenance_note": "SovaSims bed clip (G23), used with the author's permission (web/room/desk_states/README.md); preview-only licence, capture method not documented; fitted to the web room bed, not the native bed.",
+   "role": "SleepLoop",
+   "scale_tracks": 0,
+   "sha256": "0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "Candidate",
+   "verdict_reason": "lying throughout, loops"
+  },
+  {
+   "all_joint_like_nodes": 71,
+   "animated_bones": 52,
+   "animation": "sleep_back",
+   "animations_in_file": [
+    "sleep_back"
+   ],
+   "bytes": 190508,
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/bed/sleep_back.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -22.226601,
+     87.5364,
+     -23.6007
+    ],
+    "height_range": 0.0877,
+    "last": [
+     -22.226601,
+     87.536499,
+     -23.6007
+    ],
+    "max": [
+     -22.226601,
+     87.6241,
+     -23.6007
+    ],
+    "max_horizontal_from_first": 0.0,
+    "min": [
+     -22.226601,
+     87.5364,
+     -23.6007
+    ],
+    "net_horizontal_first_to_last": 0.0
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 200,
+   "loop": {
+    "loops": true,
+    "max_joint_world_delta_cm": 0.036473,
+    "max_rotation_delta_deg": 0.025082,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 0.0,
+   "measured": true,
+   "node_count": 71,
+   "non_root_translation_tracks": 0,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_supine"
+    ],
+    "first": "lying_supine",
+    "last": "lying_supine"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859848,
+     "hips_height_m": 0.875364,
+     "hips_world_m": [
+      -0.222266,
+      0.875364,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.144183,
+     "lowest_joint_height_m": 0.745145,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": 175.684969,
+     "torso_tilt_from_vertical_deg": 91.739299
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859827,
+     "hips_height_m": 0.875494,
+     "hips_world_m": [
+      -0.222266,
+      0.875494,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.14389,
+     "lowest_joint_height_m": 0.745297,
+     "time_s": 0.829167,
+     "torso_heading_deg_about_y": 175.690198,
+     "torso_tilt_from_vertical_deg": 91.756412
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859724,
+     "hips_height_m": 0.87582,
+     "hips_world_m": [
+      -0.222266,
+      0.87582,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.1436,
+     "lowest_joint_height_m": 0.746284,
+     "time_s": 1.658333,
+     "torso_heading_deg_about_y": 175.710602,
+     "torso_tilt_from_vertical_deg": 91.805407
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859609,
+     "hips_height_m": 0.876126,
+     "hips_world_m": [
+      -0.222266,
+      0.876126,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.143043,
+     "lowest_joint_height_m": 0.747442,
+     "time_s": 2.4875,
+     "torso_heading_deg_about_y": 175.728096,
+     "torso_tilt_from_vertical_deg": 91.853845
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859669,
+     "hips_height_m": 0.876241,
+     "hips_world_m": [
+      -0.222266,
+      0.876241,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.142679,
+     "lowest_joint_height_m": 0.7479,
+     "time_s": 3.316667,
+     "torso_heading_deg_about_y": 175.732902,
+     "torso_tilt_from_vertical_deg": 91.860739
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859583,
+     "hips_height_m": 0.876134,
+     "hips_world_m": [
+      -0.222266,
+      0.876134,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.142982,
+     "lowest_joint_height_m": 0.747522,
+     "time_s": 4.145833,
+     "torso_heading_deg_about_y": 175.728128,
+     "torso_tilt_from_vertical_deg": 91.857699
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859717,
+     "hips_height_m": 0.875834,
+     "hips_world_m": [
+      -0.222266,
+      0.875834,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.143608,
+     "lowest_joint_height_m": 0.746364,
+     "time_s": 4.975,
+     "torso_heading_deg_about_y": 175.706775,
+     "torso_tilt_from_vertical_deg": 91.807782
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859814,
+     "hips_height_m": 0.875502,
+     "hips_world_m": [
+      -0.222266,
+      0.875502,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.144015,
+     "lowest_joint_height_m": 0.745429,
+     "time_s": 5.804167,
+     "torso_heading_deg_about_y": 175.694261,
+     "torso_tilt_from_vertical_deg": 91.758734
+    },
+    {
+     "front_up_component": 0.981357,
+     "head_height_m": 0.859684,
+     "hips_height_m": 0.875365,
+     "hips_world_m": [
+      -0.222266,
+      0.875365,
+      -0.236007
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.144054,
+     "lowest_joint_height_m": 0.745024,
+     "time_s": 6.633333,
+     "torso_heading_deg_about_y": 175.681631,
+     "torso_tilt_from_vertical_deg": 91.757719
+    }
+   ],
+   "provenance": "third_party_authored_with_permission",
+   "provenance_note": "SovaSims bed clip (G23), as sleep_side.",
+   "role": "SleepLoop",
+   "scale_tracks": 0,
+   "sha256": "aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "Candidate",
+   "verdict_reason": "lying throughout, loops"
+  },
+  {
+   "all_joint_like_nodes": 71,
+   "animated_bones": 52,
+   "animation": "sleep_back_idle",
+   "animations_in_file": [
+    "sleep_back_idle"
+   ],
+   "bytes": 174380,
+   "duration_s": 6.0,
+   "file": "web/room/desk_states/bed/sleep_back_idle.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -5.1383,
+     87.261597,
+     -12.4437
+    ],
+    "height_range": 0.0383,
+    "last": [
+     -5.1383,
+     87.261299,
+     -12.4437
+    ],
+    "max": [
+     -5.1353,
+     87.278,
+     -12.4437
+    ],
+    "max_horizontal_from_first": 0.09873,
+    "min": [
+     -5.1384,
+     87.2397,
+     -12.5424
+    ],
+    "net_horizontal_first_to_last": 0.0
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 181,
+   "loop": {
+    "loops": true,
+    "max_joint_world_delta_cm": 0.065883,
+    "max_rotation_delta_deg": 0.112181,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 0.0,
+   "measured": true,
+   "node_count": 71,
+   "non_root_translation_tracks": 0,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_supine"
+    ],
+    "first": "lying_supine",
+    "last": "lying_supine"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": 0.992111,
+     "head_height_m": 0.883767,
+     "hips_height_m": 0.872616,
+     "hips_world_m": [
+      -0.051383,
+      0.872616,
+      -0.124437
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.030807,
+     "lowest_joint_height_m": 0.818802,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": -172.339432,
+     "torso_tilt_from_vertical_deg": 88.368037
+    },
+    {
+     "front_up_component": 0.992667,
+     "head_height_m": 0.883426,
+     "hips_height_m": 0.872426,
+     "hips_world_m": [
+      -0.05136,
+      0.872426,
+      -0.125258
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.031712,
+     "lowest_joint_height_m": 0.818645,
+     "time_s": 0.75,
+     "torso_heading_deg_about_y": -172.212837,
+     "torso_tilt_from_vertical_deg": 88.390782
+    },
+    {
+     "front_up_component": 0.992441,
+     "head_height_m": 0.883813,
+     "hips_height_m": 0.872485,
+     "hips_world_m": [
+      -0.051372,
+      0.872485,
+      -0.124773
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.031298,
+     "lowest_joint_height_m": 0.818615,
+     "time_s": 1.5,
+     "torso_heading_deg_about_y": -172.273085,
+     "torso_tilt_from_vertical_deg": 88.340805
+    },
+    {
+     "front_up_component": 0.992212,
+     "head_height_m": 0.884269,
+     "hips_height_m": 0.872529,
+     "hips_world_m": [
+      -0.051381,
+      0.872529,
+      -0.124446
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.030876,
+     "lowest_joint_height_m": 0.818627,
+     "time_s": 2.25,
+     "torso_heading_deg_about_y": -172.312046,
+     "torso_tilt_from_vertical_deg": 88.278222
+    },
+    {
+     "front_up_component": 0.992717,
+     "head_height_m": 0.884279,
+     "hips_height_m": 0.872412,
+     "hips_world_m": [
+      -0.05136,
+      0.872412,
+      -0.1253
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.031856,
+     "lowest_joint_height_m": 0.81876,
+     "time_s": 3.0,
+     "torso_heading_deg_about_y": -172.232953,
+     "torso_tilt_from_vertical_deg": 88.259959
+    },
+    {
+     "front_up_component": 0.992212,
+     "head_height_m": 0.884332,
+     "hips_height_m": 0.87253,
+     "hips_world_m": [
+      -0.051381,
+      0.87253,
+      -0.124446
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.03078,
+     "lowest_joint_height_m": 0.818677,
+     "time_s": 3.75,
+     "torso_heading_deg_about_y": -172.32043,
+     "torso_tilt_from_vertical_deg": 88.269056
+    },
+    {
+     "front_up_component": 0.992441,
+     "head_height_m": 0.8838,
+     "hips_height_m": 0.872479,
+     "hips_world_m": [
+      -0.051372,
+      0.872479,
+      -0.124773
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.031298,
+     "lowest_joint_height_m": 0.818607,
+     "time_s": 4.5,
+     "torso_heading_deg_about_y": -172.274334,
+     "torso_tilt_from_vertical_deg": 88.341782
+    },
+    {
+     "front_up_component": 0.992667,
+     "head_height_m": 0.883508,
+     "hips_height_m": 0.872441,
+     "hips_world_m": [
+      -0.051361,
+      0.872441,
+      -0.125132
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.031626,
+     "lowest_joint_height_m": 0.818713,
+     "time_s": 5.25,
+     "torso_heading_deg_about_y": -172.217388,
+     "torso_tilt_from_vertical_deg": 88.380965
+    },
+    {
+     "front_up_component": 0.992111,
+     "head_height_m": 0.883852,
+     "hips_height_m": 0.872613,
+     "hips_world_m": [
+      -0.051383,
+      0.872613,
+      -0.124437
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.030806,
+     "lowest_joint_height_m": 0.818863,
+     "time_s": 6.0,
+     "torso_heading_deg_about_y": -172.316059,
+     "torso_tilt_from_vertical_deg": 88.355218
+    }
+   ],
+   "provenance": "third_party_authored_with_permission",
+   "provenance_note": "SovaSims bed clip (G23), as sleep_side.",
+   "role": "SleepLoop",
+   "scale_tracks": 0,
+   "sha256": "99b6904165f818b8318a89e63a5f19a83bc76cfedf4ad020df0caf8659bc5552",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "Candidate",
+   "verdict_reason": "lying throughout, loops"
+  },
+  {
+   "all_joint_like_nodes": 71,
+   "animated_bones": 52,
+   "animation": "sleep_roll_to_back",
+   "animations_in_file": [
+    "sleep_roll_to_back"
+   ],
+   "bytes": 386424,
+   "duration_s": 14.333333,
+   "file": "web/room/desk_states/bed/sleep_roll_to_back.glb",
+   "format": "GLB",
+   "frame_rate_hz": 30.000029,
+   "hips_local_cm": {
+    "first": [
+     -23.8943,
+     85.691498,
+     -23.1105
+    ],
+    "height_range": 4.161003,
+    "last": [
+     -22.1901,
+     88.069397,
+     -23.599501
+    ],
+    "max": [
+     -22.1901,
+     89.726303,
+     -23.110201
+    ],
+    "max_horizontal_from_first": 1.77297,
+    "min": [
+     -23.9699,
+     85.5653,
+     -23.599501
+    ],
+    "net_horizontal_first_to_last": 1.77297
+   },
+   "interpolation": [
+    "LINEAR"
+   ],
+   "key_count": 431,
+   "loop": {
+    "loops": false,
+    "max_joint_world_delta_cm": 57.935453,
+    "max_rotation_delta_deg": 106.324352,
+    "rule": "first vs last key: every joint <= 1.0 cm and every rotation <= 2.0 deg"
+   },
+   "max_bone_translation_drift_from_owner_rest_cm": 0.0,
+   "measured": true,
+   "node_count": 71,
+   "non_root_translation_tracks": 0,
+   "owner_rest_leg_length_m": 0.760896,
+   "posture": {
+    "all": [
+     "lying_side",
+     "lying_supine"
+    ],
+    "first": "lying_side",
+    "last": "lying_supine"
+   },
+   "posture_samples": [
+    {
+     "front_up_component": -0.308717,
+     "head_height_m": 0.962975,
+     "hips_height_m": 0.856915,
+     "hips_world_m": [
+      -0.238943,
+      0.856915,
+      -0.231105
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176485,
+     "lowest_joint_height_m": 0.687471,
+     "time_s": 0.0,
+     "torso_heading_deg_about_y": -177.187548,
+     "torso_tilt_from_vertical_deg": 78.344481
+    },
+    {
+     "front_up_component": -0.309508,
+     "head_height_m": 0.963737,
+     "hips_height_m": 0.857223,
+     "hips_world_m": [
+      -0.239326,
+      0.857223,
+      -0.232202
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177335,
+     "lowest_joint_height_m": 0.687087,
+     "time_s": 1.791667,
+     "torso_heading_deg_about_y": -177.233149,
+     "torso_tilt_from_vertical_deg": 78.294027
+    },
+    {
+     "front_up_component": -0.309531,
+     "head_height_m": 0.964216,
+     "hips_height_m": 0.857673,
+     "hips_world_m": [
+      -0.239697,
+      0.857673,
+      -0.232569
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.177794,
+     "lowest_joint_height_m": 0.687205,
+     "time_s": 3.583333,
+     "torso_heading_deg_about_y": -177.251028,
+     "torso_tilt_from_vertical_deg": 78.290602
+    },
+    {
+     "front_up_component": -0.309152,
+     "head_height_m": 0.963459,
+     "hips_height_m": 0.857123,
+     "hips_world_m": [
+      -0.239323,
+      0.857123,
+      -0.231561
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176908,
+     "lowest_joint_height_m": 0.687362,
+     "time_s": 5.375,
+     "torso_heading_deg_about_y": -177.244173,
+     "torso_tilt_from_vertical_deg": 78.313509
+    },
+    {
+     "front_up_component": -0.309264,
+     "head_height_m": 0.963225,
+     "hips_height_m": 0.856624,
+     "hips_world_m": [
+      -0.239319,
+      0.856624,
+      -0.231468
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.176296,
+     "lowest_joint_height_m": 0.687255,
+     "time_s": 7.166667,
+     "torso_heading_deg_about_y": -177.561908,
+     "torso_tilt_from_vertical_deg": 78.340651
+    },
+    {
+     "front_up_component": -0.195343,
+     "head_height_m": 0.977535,
+     "hips_height_m": 0.868808,
+     "hips_world_m": [
+      -0.23835,
+      0.868808,
+      -0.231299
+     ],
+     "kind": "lying_side",
+     "leg_extension": 0.196584,
+     "lowest_joint_height_m": 0.693617,
+     "time_s": 8.958333,
+     "torso_heading_deg_about_y": -179.239346,
+     "torso_tilt_from_vertical_deg": 78.298983
+    },
+    {
+     "front_up_component": 0.898737,
+     "head_height_m": 0.912011,
+     "hips_height_m": 0.889149,
+     "hips_world_m": [
+      -0.22357,
+      0.889149,
+      -0.235208
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.20131,
+     "lowest_joint_height_m": 0.735974,
+     "time_s": 10.75,
+     "torso_heading_deg_about_y": 176.831093,
+     "torso_tilt_from_vertical_deg": 87.464427
+    },
+    {
+     "front_up_component": 0.98135,
+     "head_height_m": 0.870666,
+     "hips_height_m": 0.881331,
+     "hips_world_m": [
+      -0.221901,
+      0.881331,
+      -0.235995
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.144379,
+     "lowest_joint_height_m": 0.750592,
+     "time_s": 12.541666,
+     "torso_heading_deg_about_y": 175.781845,
+     "torso_tilt_from_vertical_deg": 91.197389
+    },
+    {
+     "front_up_component": 0.98135,
+     "head_height_m": 0.865075,
+     "hips_height_m": 0.880694,
+     "hips_world_m": [
+      -0.221901,
+      0.880694,
+      -0.235995
+     ],
+     "kind": "lying_supine",
+     "leg_extension": 0.144422,
+     "lowest_joint_height_m": 0.75016,
+     "time_s": 14.333333,
+     "torso_heading_deg_about_y": 175.684108,
+     "torso_tilt_from_vertical_deg": 91.750785
+    }
+   ],
+   "provenance": "third_party_authored_with_permission",
+   "provenance_note": "SovaSims bed clip (G23): a one-shot roll from side to back, not a loop.",
+   "role": "SleepLoop",
+   "scale_tracks": 0,
+   "sha256": "465dd664e0e8ccfcd23c7009e116f7e433b73bcb1d7c350e0657a9878b66b8b0",
+   "skeleton": {
+    "errors": [],
+    "joint_count": 65,
+    "joint_names_sha256": "f4bfca33774d5ced28617a5b63e6c6c997d2235368b410886ce7b35d871ea4c5",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": true
+   },
+   "uniform_keys": true,
+   "verdict": "NotLooping",
+   "verdict_reason": "first and last poses differ"
+  },
+  {
+   "all_joint_like_nodes": 80,
+   "animation": "mixamo.com",
+   "animations_in_file": [
+    "mixamo.com"
+   ],
+   "bytes": 704492,
+   "duration_s": 17.6,
+   "file": "web/room/mh_v5/room_sleeping_idle.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 80,
+   "provenance": "mixamo_capture",
+   "provenance_note": "Mixamo Sleeping_Idle retargeted onto the v5 rig (room_build/kimodo/mixamo_clips.json); not the owner skeleton.",
+   "role": "SleepLoop",
+   "sha256": "f337059ea6b199c2ab501d80036cc06c2d98c324f5dd73f12b89d73fdda97aed",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 80,
+   "animation": "mixamo.com",
+   "animations_in_file": [
+    "mixamo.com"
+   ],
+   "bytes": 93768,
+   "duration_s": 1.7,
+   "file": "web/room/mh_v5/room_laying_sleeping.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 80,
+   "provenance": "mixamo_capture",
+   "provenance_note": "Mixamo Laying_Sleeping retargeted onto the v5 rig; not the owner skeleton.",
+   "role": "SleepLoop",
+   "sha256": "899c8dfd5f6559ac2b077962f13bb159d90f22564996e23991e2c87e4719a257",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  },
+  {
+   "all_joint_like_nodes": 80,
+   "animation": "room_bed_lie",
+   "animations_in_file": [
+    "room_bed_lie"
+   ],
+   "bytes": 680172,
+   "duration_s": 16.966667,
+   "file": "web/room/mh_v5/room_bed_lie.glb",
+   "format": "GLB",
+   "measured": false,
+   "node_count": 80,
+   "provenance": "v5_carryover_source_undocumented",
+   "provenance_note": "The v5-rig original of mh_mx/room_bed_lie; not the owner skeleton.",
+   "role": "LieDown",
+   "sha256": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94",
+   "skeleton": {
+    "errors": [
+     "0 mixamorig:* joints, owner has 65",
+     "joint names differ from owner (missing 65, extra 0)"
+    ],
+    "joint_count": 0,
+    "joint_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "max_rest_trs_error": 0.0,
+    "same_owner_skeleton": false
+   },
+   "verdict": "SkeletonMismatch",
+   "verdict_reason": "0 mixamorig:* joints, owner has 65; joint names differ from owner (missing 65, extra 0)"
+  }
+ ],
+ "chain_continuity": {
+  "room_bed_lie -> room_bed_wake": {
+   "body_shape_max_delta_cm": 35.814492,
+   "hips_height_delta_cm": 2.983,
+   "hips_world_delta_cm": 141.538481,
+   "kinds": [
+    "lying_supine",
+    "lying_supine"
+   ]
+  },
+  "room_bed_lie -> sleep_back_idle": {
+   "body_shape_max_delta_cm": 144.854742,
+   "hips_height_delta_cm": 18.2364,
+   "hips_world_delta_cm": 140.534656,
+   "kinds": [
+    "lying_supine",
+    "lying_supine"
+   ]
+  },
+  "room_bed_lie -> sleep_side": {
+   "body_shape_max_delta_cm": 83.658101,
+   "hips_height_delta_cm": 16.1668,
+   "hips_world_delta_cm": 149.9794,
+   "kinds": [
+    "lying_supine",
+    "lying_side"
+   ]
+  },
+  "sleep_back_idle -> room_bed_wake": {
+   "body_shape_max_delta_cm": 135.878274,
+   "hips_height_delta_cm": -15.2531,
+   "hips_world_delta_cm": 15.803095,
+   "kinds": [
+    "lying_supine",
+    "lying_supine"
+   ]
+  }
+ },
+ "idle_shaped_in_scan": [
+  "web/house/assets/first-person/texting.glb"
+ ],
+ "missing_roles": [
+  "GetUp",
+  "Idle",
+  "LieDown"
+ ],
+ "native_bed_surface_report": null,
+ "notes": [
+  "No FBX source for idle or bed exists in the repository; the Mixamo FBX are kept out of Git by licence.",
+  "Bed clips were fitted to the web room bed; none is measured against the native house bed."
+ ],
+ "owner": {
+  "file": "web/room/char_mixamo.glb",
+  "joint_count": 65,
+  "native_asset": "/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner",
+  "sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "skin_joints_equal_bones": true
+ },
+ "owner_skeleton_scan": [
+  {
+   "animation": "mixamo.com",
+   "duration_s": 18.533333,
+   "file": "web/house/assets/first-person/texting.glb",
+   "hips_travel_cm": 2.03413,
+   "idle_shaped": true,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 16.466667,
+   "file": "web/house/assets/first-person/typing.glb",
+   "hips_travel_cm": 0.760084,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 1.033333,
+   "file": "web/house/assets/first-person/walking.glb",
+   "hips_travel_cm": 5.044133,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  },
+  {
+   "animation": "bed_phone_lift",
+   "duration_s": 18.299999,
+   "file": "web/room/desk_states/bed/bed_phone_lift.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "lying_supine"
+   ]
+  },
+  {
+   "animation": "bed_phone_typing",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/bed/bed_phone_typing.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "lying_supine"
+   ]
+  },
+  {
+   "animation": "bed_phone_watch_landscape",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/bed/bed_phone_watch_landscape.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "lying_supine"
+   ]
+  },
+  {
+   "animation": "bed_phone_watch_portrait",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/bed/bed_phone_watch_portrait.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "lying_supine"
+   ]
+  },
+  {
+   "animation": "desk_look_behind",
+   "duration_s": 9.133333,
+   "file": "web/room/desk_states/desk_look_behind.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "desk_start_01",
+   "duration_s": 6.0,
+   "file": "web/room/desk_states/desk_start_01.glb",
+   "hips_travel_cm": 49.017258,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "look_down_to_right",
+   "duration_s": 9.966666,
+   "file": "web/room/desk_states/look_down_to_right.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "look_front_to_left",
+   "duration_s": 9.966666,
+   "file": "web/room/desk_states/look_front_to_left.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "look_left_idle",
+   "duration_s": 6.666667,
+   "file": "web/room/desk_states/look_left_idle.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "look_right_idle",
+   "duration_s": 6.666667,
+   "file": "web/room/desk_states/look_right_idle.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "neutral_1",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/neutral_1.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "neutral_3",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/neutral_3.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "neutral_5",
+   "duration_s": 6.633333,
+   "file": "web/room/desk_states/neutral_5.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_feeling_frustrated_v1",
+   "duration_s": 7.5,
+   "file": "web/room/desk_states/seat_feeling_frustrated_v1.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_feeling_frustrated_v2",
+   "duration_s": 7.5,
+   "file": "web/room/desk_states/seat_feeling_frustrated_v2.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_happy",
+   "duration_s": 3.966667,
+   "file": "web/room/desk_states/seat_happy.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_looking_around_v1",
+   "duration_s": 11.066667,
+   "file": "web/room/desk_states/seat_looking_around_v1.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_looking_around_v2",
+   "duration_s": 6.533333,
+   "file": "web/room/desk_states/seat_looking_around_v2.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_looking_away_idle",
+   "duration_s": 3.666667,
+   "file": "web/room/desk_states/seat_looking_away_idle.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_looking_left",
+   "duration_s": 4.066667,
+   "file": "web/room/desk_states/seat_looking_left.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_looking_right",
+   "duration_s": 4.066667,
+   "file": "web/room/desk_states/seat_looking_right.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_neck_stretching_idle",
+   "duration_s": 3.233333,
+   "file": "web/room/desk_states/seat_neck_stretching_idle.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_smiling",
+   "duration_s": 5.233333,
+   "file": "web/room/desk_states/seat_smiling.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "seat_thinking_touching_chin",
+   "duration_s": 8.3,
+   "file": "web/room/desk_states/seat_thinking_touching_chin.glb",
+   "hips_travel_cm": 0.0,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "room_door",
+   "duration_s": 12.566667,
+   "file": "web/room/mh_mx/room_door.glb",
+   "hips_travel_cm": 21.27839,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 5.347117,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  },
+  {
+   "animation": "room_drink",
+   "duration_s": 17.966667,
+   "file": "web/room/mh_mx/room_drink.glb",
+   "hips_travel_cm": 39.228035,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 5.926885,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  },
+  {
+   "animation": "room_eat",
+   "duration_s": 22.966667,
+   "file": "web/room/mh_mx/room_eat.glb",
+   "hips_travel_cm": 2.706468,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 7.769404,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 5.833333,
+   "file": "web/room/mh_mx/room_mx_angry_gesture.glb",
+   "hips_travel_cm": 4.328805,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 10.066667,
+   "file": "web/room/mh_mx/room_mx_scared.glb",
+   "hips_travel_cm": 31.303025,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "reclined_or_sitting",
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 2.066667,
+   "file": "web/room/mh_mx/room_mx_sit_to_stand.glb",
+   "hips_travel_cm": 35.113445,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "reclined_or_sitting",
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 1.2,
+   "file": "web/room/mh_mx/room_mx_sit_to_type.glb",
+   "hips_travel_cm": 0.752091,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 4.433333,
+   "file": "web/room/mh_mx/room_mx_sitting.glb",
+   "hips_travel_cm": 39.168255,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 1.166667,
+   "file": "web/room/mh_mx/room_mx_sitting_1.glb",
+   "hips_travel_cm": 0.19136,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 7.966667,
+   "file": "web/room/mh_mx/room_mx_sitting_rubbing_arm.glb",
+   "hips_travel_cm": 3.221288,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 44.066666,
+   "file": "web/room/mh_mx/room_mx_sitting_talking.glb",
+   "hips_travel_cm": 0.760305,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 2.233333,
+   "file": "web/room/mh_mx/room_mx_stand_to_sit.glb",
+   "hips_travel_cm": 37.857656,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "reclined_or_sitting",
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 4.766667,
+   "file": "web/room/mh_mx/room_mx_standing_clap.glb",
+   "hips_travel_cm": 30.075645,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching",
+    "standing"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 0.933333,
+   "file": "web/room/mh_mx/room_mx_type_to_sit.glb",
+   "hips_travel_cm": 0.076017,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 16.466667,
+   "file": "web/room/mh_mx/room_mx_typing.glb",
+   "hips_travel_cm": 0.760084,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "room_phone",
+   "duration_s": 21.700001,
+   "file": "web/room/mh_mx/room_phone.glb",
+   "hips_travel_cm": 1.782336,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 7.752719,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "room_phone_scroll",
+   "duration_s": 21.700001,
+   "file": "web/room/mh_mx/room_phone_scroll.glb",
+   "hips_travel_cm": 1.782336,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 7.752719,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "room_read",
+   "duration_s": 17.466667,
+   "file": "web/room/mh_mx/room_read.glb",
+   "hips_travel_cm": 1.249036,
+   "idle_shaped": false,
+   "loops": false,
+   "max_bone_translation_drift_cm": 7.786739,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "mixamo.com",
+   "duration_s": 4.166667,
+   "file": "web/room/mh_mx/room_seated_idle.glb",
+   "hips_travel_cm": 0.07345,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 0.0,
+   "measured": true,
+   "postures": [
+    "sitting_or_crouching"
+   ]
+  },
+  {
+   "animation": "room_walk",
+   "duration_s": 1.266667,
+   "file": "web/room/mh_mx/room_walk.glb",
+   "hips_travel_cm": 8.395933,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 4.750679,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  },
+  {
+   "animation": "room_window",
+   "duration_s": 11.266666,
+   "file": "web/room/mh_mx/room_window.glb",
+   "hips_travel_cm": 84.914117,
+   "idle_shaped": false,
+   "loops": true,
+   "max_bone_translation_drift_cm": 5.446516,
+   "measured": true,
+   "postures": [
+    "standing"
+   ]
+  }
+ ],
+ "roles": {
+  "GetUp": "lying -> standing beside the bed, on the owner skeleton",
+  "Idle": "standing idle that loops in place (breathing, weight shift), on the owner skeleton",
+  "LieDown": "standing beside the bed -> lying on the mattress, on the owner skeleton",
+  "SleepLoop": "asleep, lying, looping, on the owner skeleton"
+ },
+ "schema": "sub01.native-life-clips-inventory.v1",
+ "source_only": true,
+ "thresholds": {
+  "idle_max_hips_travel_cm": 5.0,
+  "loop_max_joint_cm": 1.0,
+  "loop_max_rotation_deg": 2.0,
+  "lying_min_tilt_deg": 60.0,
+  "rest_trs_tolerance": 0.0001,
+  "standing_max_tilt_deg": 30.0,
+  "standing_min_leg_extension": 0.85
+ }
+}
