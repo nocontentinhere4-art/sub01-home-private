@@ -378,6 +378,54 @@ def refine(d: Derivation, grips, base, iters=150, log=print):
     return out
 
 
+PATCH_SIGMA_FRAMES = 3.0
+
+
+def deltas_from_report(report):
+    """Exact per-frame (curl, spread) arrays per finger from a derived report (curl is shared by joints 1-3)."""
+    pj = report['finger_deltas_deg']['per_joint_per_frame']
+    return {S: {f: (np.array(pj[f'{S}Hand{f}1']['curl_deg']), np.array(pj[f'{S}Hand{f}1']['spread_deg'])) for f in FINGERS}
+            for S in ('Right', 'Left')}
+
+
+def patch(d: Derivation, grips, deltas, bad, iters=300, log=print):
+    """Local smooth bump (Gaussian window, sigma PATCH_SIGMA_FRAMES, periodic) of the finger deltas around failing frames,
+    optimised on the failing frames and their neighbours with a stricter penetration margin; bounds kept."""
+    nf = len(d.clip.times)
+    out = {S: {f: (np.array(c, float), np.array(sp, float)) for f, (c, sp) in fs.items()} for S, fs in deltas.items()}
+    centre = int(round(np.mean(bad)))
+    t = np.arange(nf)
+    dist = np.minimum(np.abs(t - centre), nf - np.abs(t - centre))
+    window = np.exp(-.5 * (dist / PATCH_SIGMA_FRAMES) ** 2)
+    near = sorted({(b + k) % nf for b in bad for k in (-2, -1, 0, 1, 2)})
+    lim = FINGER_DELTA_MAX_DEG
+    for side in ('right', 'left'):
+        S = side.capitalize()
+
+        def at(p, frames):
+            res = {}
+            for i, f in enumerate(FINGERS):
+                c, sp = out[S][f]
+                res[f] = (np.clip(c + p[2 * i] * window, -lim, lim)[frames], np.clip(sp + p[2 * i + 1] * window, -lim, lim)[frames])
+            return res
+
+        def cost(p):
+            tot = 0.
+            for fr in near:
+                dl = {f: (float(c[0]), float(sp[0])) for f, (c, sp) in at(p, [fr]).items()}
+                tot = max(tot, d.side_cost(side, grips[side], dl, [fr], sub=1, aim=REFINE_AIM))
+            return tot + .002 * float((np.asarray(p) ** 2).sum())
+        x0 = np.zeros(10)
+        base_cost = cost(x0)
+        x, v = F.nelder_mead(cost, x0, [2.] * 10, iters)
+        if v < base_cost:
+            for i, f in enumerate(FINGERS):
+                c, sp = out[S][f]
+                out[S][f] = (np.clip(c + x[2 * i] * window, -lim, lim), np.clip(sp + x[2 * i + 1] * window, -lim, lim))
+        log(f'patch {side} around frame {centre}: cost {base_cost:.4f} -> {min(v, base_cost):.4f}')
+    return out
+
+
 def bound_report(d: Derivation, hf, targets, reach):
     rows = []
     for f in range(len(targets['right'])):
@@ -396,16 +444,23 @@ def seam(q0, q1, names_idx):
     return float(max(G.qangle_deg(tuple(q0[i]), tuple(q1[i])) for i in names_idx))
 
 
-def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print, refine_iters=150, start=None, reopt=()):
+def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print, refine_iters=150, start=None, reopt=(), patch_from=None, patch_frames=()):
     d = Derivation(clip, controller)
     nfr = len(d.clip.times)
     frames = list(np.unique(np.linspace(0, nfr - 1, sample).astype(int)))
-    if start:
+    if patch_from:
+        # Keep a previous derivation exactly (offset, grip, every per-frame delta) and patch only around failing frames.
+        X, GL = np.array(patch_from['fixed_offset']['controller_in_right_hand_gltf']), np.array(patch_from['left_grip_gltf'])
+        base = {S: {f: tuple(v) for f, v in fs.items()} for S, fs in patch_from['base_finger_deltas_deg'].items()}
+        deltas = patch(d, {'right': X, 'left': GL}, deltas_from_report(patch_from), list(patch_frames), iters, log)
+        refine_iters, reopt = 0, ()
+    elif start:
         X, GL = np.array(start['fixed_offset']['controller_in_right_hand_gltf']), np.array(start['left_grip_gltf'])
         deltas = {S: {f: tuple(v) for f, v in fs.items()} for S, fs in start['base_finger_deltas_deg'].items()}
     else:
         X, GL, deltas = optimise(d, frames, rounds, iters, log)
-    base = deltas
+    if not patch_from:
+        base = deltas
     grips = {'right': X, 'left': GL}
     for side in reopt:                  # re-seat a fixed grip with the stronger thumb/index pull (still one fixed offset)
         S = side.capitalize()
@@ -471,7 +526,8 @@ def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print
               'left_grip_gltf': GL.tolist(),
               'base_finger_deltas_deg': {S: {f: [float(np.mean(v[0])), float(np.mean(v[1]))] for f, v in fs.items()} for S, fs in base.items()},
               'finger_deltas_deg': {'rule': 'constant base + smooth per-frame keys (every %d frames, Gaussian sigma %.1f), added to the captured local rotation' % (REFINE_KEY_STEP, SMOOTH_SIGMA_FRAMES)
-                                    if refine_iters else 'constant per joint over the clip, added to the captured local rotation',
+                                    + ('; plus a local periodic Gaussian bump (sigma %.1f frames) around frames %s' % (PATCH_SIGMA_FRAMES, list(patch_frames)) if patch_from else '')
+                                    if (refine_iters or patch_from) else 'constant per joint over the clip, added to the captured local rotation',
                                     'max_abs_deg': float(max(max(np.abs(v['curl_deg']).max(), np.abs(v['spread_deg']).max()) for v in per_joint.values())),
                                     'max_rate_deg_per_frame': float(max(max(np.abs(np.diff(v['curl_deg'])).max(), np.abs(np.diff(v['spread_deg'])).max()) for v in per_joint.values())),
                                     'per_joint_per_frame': {n: {'curl_deg': [round(float(x), 4) for x in v['curl_deg']], 'spread_deg': [round(float(x), 4) for x in v['spread_deg']]}
@@ -539,6 +595,8 @@ def main(argv=None):
     ap.add_argument('--rounds', type=int, default=3)
     ap.add_argument('--iters', type=int, default=300)
     ap.add_argument('--refine-iters', type=int, default=150, help='0: constant deltas only')
+    ap.add_argument('--patch-from', help='a previous derived report to keep exactly, patching only --patch-frames')
+    ap.add_argument('--patch-frames', default='', help='comma list of failing frames to patch')
     ap.add_argument('--reopt', default='', help='comma list of sides whose fixed grip is re-optimised with the refinement pull')
     ap.add_argument('--start', help='a previous derived report: reuse its fixed offset, left grip and base deltas')
     ap.add_argument('--out-glb', default=str(OUT_GLB))
@@ -547,7 +605,9 @@ def main(argv=None):
     start = start_from(json.loads(Path(args.start).read_text())) if args.start else None
     d, q, report = derive(Path(args.clip), args.controller, args.sample, args.rounds, args.iters,
                           log=lambda m: print(m, file=sys.stderr, flush=True), refine_iters=args.refine_iters, start=start,
-                          reopt=tuple(x for x in args.reopt.split(',') if x))
+                          reopt=tuple(x for x in args.reopt.split(',') if x),
+                          patch_from=json.loads(Path(args.patch_from).read_text()) if args.patch_from else None,
+                          patch_frames=tuple(int(x) for x in args.patch_frames.split(',') if x))
     report['output_glb_sha256'] = write_glb(d, q, report, args.out_glb)
     report['output_glb'] = str(Path(args.out_glb).relative_to(ROOT)) if Path(args.out_glb).is_relative_to(ROOT) else args.out_glb
     Path(args.out_report).write_text(json.dumps(report, indent=0) + '\n')

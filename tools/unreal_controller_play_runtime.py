@@ -324,7 +324,10 @@ CHARACTER_FIELDS = r'''
 LIVE_GATE = (' // Playing on the sofa never walks off: the body leaves the seat first (next tick).\n'
              ' if(ControllerPlayActive&&LiveHomePath.Num()){GetCharacterMovement()->StopMovementImmediately();return;}\n')
 LIVE_ANCHOR = ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('
-RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n'
+# The renderer's final rate assignment in Tick (its walk-rate expression changes between root revisions, so the anchor
+# is the unique LINE that starts with this prefix; the call is inserted right after that line).
+RATE_PREFIX = ' Instance->TargetRate=HandsPosture==TEXT("Walk")?'
+RATE_ANCHOR = RATE_PREFIX.strip()
 
 CHARACTER_METHODS = r'''
 #include "Engine/StaticMesh.h"
@@ -430,8 +433,14 @@ EDITS = [
     ('header', ' void Forward(float Value);', CHARACTER_FIELDS + '\n void Forward(float Value);'),
     ('cpp', ' LoadPrivateHandsDiagnostic();\n', ' LoadPrivateHandsDiagnostic();\n LoadControllerPlay();\n'),
     ('cpp', LIVE_ANCHOR, LIVE_GATE + LIVE_ANCHOR),
-    ('cpp', RATE_ANCHOR, RATE_ANCHOR + ' UpdateControllerPlay(Instance,DeltaSeconds);\n'),
 ]
+
+
+def _after_rate_line(cpp: str) -> str:
+    lines = [l for l in cpp.split('\n') if l.startswith(RATE_PREFIX)]
+    if len(lines) != 1:
+        raise ValueError(f'Controller play anchor not unique in cpp: {RATE_PREFIX!r} ({len(lines)} lines)')
+    return cpp.replace(lines[0] + '\n', lines[0] + '\n UpdateControllerPlay(Instance,DeltaSeconds);\n', 1)
 SOURCE_FILES = {'header': 'Sub01HomeLab.h', 'cpp': 'Sub01HomeLab.cpp'}
 REQUIRED = (' bool MinecraftFocused', 'TickMinecraftTVInput();', 'bool ASub01HomeCharacter::SetHandsPosture(FName Posture)',
             'TArray<FName> ValidatedHandsPostures;', 'LiveHomeActivity', 'LiveHomeFresh', 'LiveHomeLastReceived')
@@ -458,6 +467,7 @@ def install(sources: dict) -> dict:
         if out[key].count(anchor) != 1:
             raise ValueError(f'Controller play anchor not unique in {key}: {anchor[:60]!r}')
         out[key] = out[key].replace(anchor, replacement)
+    out['cpp'] = _after_rate_line(out['cpp'])
     out['cpp'] += methods()
     return out
 
