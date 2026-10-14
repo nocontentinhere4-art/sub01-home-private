@@ -36,8 +36,57 @@ TYPING_CLIP = '/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping'
 SEAT_CLIP_DIR = '/Game/Sub01Hands/Seating'           # tools/unreal_import_seating_fbx.py
 SEAT_ROLE_ASSETS = {'StandToSit': 'SitDown', 'Sitting': 'Sitting', 'SitToType': 'SitToType', 'SitToStand': 'GetUp'}
 SEAT_ROLES = tuple(SEAT_ROLE_ASSETS)
+OWNER_SKELETON = '/Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton.SUB01_OriginalOwner_Skeleton'
+# Seated-fit clips (docs/proposed/seat-pose-fit/, imported by tools/unreal_import_seated_fit_fbx.py). Each may replace
+# the captured clip in ONE existing slot, only when that importer's receipt ACCEPTED the row (its per-clip fit gates
+# passed) and the renderer's ValidatedHandsPostures lists the role. Without the receipt nothing changes.
+SEATED_FIT_RECEIPT = 'private-audit/unreal-seated-fit-import.json'
+SEATED_FIT_RECEIPT_SCHEMA = 'sub01.unreal-seated-fit-import.v1'
+# SitDown/GetUp seated bind only once their per-clip fit passes (the importer never imports a failed fit). TypeToSit has
+# no slot in the transition. Durations equal the captured clips' (FSub01SeatClips), so phase timing is unchanged.
+SEATED_FIT_SLOTS = {'SitDownSeated': ('StandToSit', 'SeatRoleStandToSit'), 'SeatedIdle': ('Sitting', 'SeatRoleSitting'),
+                    'SitToTypeSeated': ('SitToType', 'SeatRoleSitToType'), 'DeskTypingSeated': ('DeskTyping', 'SeatRoleDeskTyping'),
+                    'GetUpSeated': ('SitToStand', 'SeatRoleSitToStand')}
 MIN_CUSHION_AREA_CM2 = 1000.0      # the broad seat cushion is 2228 cm^2; the 58 cm^2 lumbar top is not a seat
 PATCHES = ('buttocks', 'left_posterior_thigh', 'right_posterior_thigh', 'left_sole', 'right_sole')
+
+
+def seated_fit_object_path(role: str) -> str:
+    return f'{SEAT_CLIP_DIR}/SUB01_{role}.SUB01_{role}'
+
+
+def seated_fit_bindings(receipt, validated=()) -> dict:
+    """Python mirror of the native seated-fit binding in LoadSeatTransition(): slot -> what binds there.
+
+    A slot binds its seated-fit role only for an accepted, fit-passing row on the owner skeleton at the exact path,
+    and only when `validated` (the renderer's ValidatedHandsPostures) lists the role. Otherwise the slot keeps the
+    clip it binds today (captured Sitting / the renderer's DeskTyping) and the refusal says why.
+    """
+    rows = {}
+    ok_receipt = (isinstance(receipt, dict) and receipt.get('schema') == SEATED_FIT_RECEIPT_SCHEMA
+                  and receipt.get('skeleton') == OWNER_SKELETON)
+    if ok_receipt:
+        for row in receipt.get('clips', []):
+            if isinstance(row, dict) and row.get('role') in SEATED_FIT_SLOTS:
+                rows.setdefault(row['role'], row)
+    out = {}
+    for role, (slot, _) in SEATED_FIT_SLOTS.items():
+        row = rows.get(role)
+        if not ok_receipt:
+            why = 'no seated-fit import receipt on the owner skeleton'
+        elif row is None:
+            why = 'role not in the import receipt'
+        elif not (row.get('accepted') is True and row.get('fit_pass') is True):
+            why = 'fit gates failed or row not accepted'
+        elif row.get('same_existing_skeleton') is not True or row.get('object_path') != seated_fit_object_path(role):
+            why = f'not imported at {seated_fit_object_path(role)} on the owner skeleton'
+        elif role not in validated:
+            why = f'ValidatedHandsPostures does not list {role}'
+        else:
+            out[slot] = {'bound': True, 'role': role, 'object_path': row['object_path']}
+            continue
+        out[slot] = {'bound': False, 'role': role, 'refusal': why}
+    return out
 
 
 def seat_id(text: str) -> int:
@@ -142,6 +191,27 @@ void ASub01HomeCharacter::LoadSeatTransition(){
   else UE_LOG(LogTemp,Warning,TEXT("SUB01_SEAT_ROLE_MISSING %s"),*Path);
  }
  if(UAnimSequence* Typing=HandsClips.FindRef(TEXT("DeskTyping"))){SeatClips.Add(TEXT("DeskTyping"),Typing);SeatRoles|=SeatRoleDeskTyping;}
+ // Seated-fit clips (tools/unreal_import_seated_fit_fbx.py) replace the clip in their slot only when the import
+ // receipt ACCEPTED the row (its seat-pose-fit gates passed), at the exact path, on this owner skeleton, and the
+ // renderer's ValidatedHandsPostures lists the role. Otherwise every slot keeps what it bound above. They never
+ // verify a seat: contact evidence and the keyboard profile still compare against the clip actually bound.
+ {FString FitText,FitSchema,FitSkeleton;TSharedPtr<FJsonObject> Fit;const TArray<TSharedPtr<FJsonValue>>* FitRows=nullptr;
+  if(FFileHelper::LoadFileToString(FitText,*FPaths::Combine(FPaths::ProjectDir(),TEXT("@@SEATED_FIT_RECEIPT@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(FitText),Fit)&&Fit.IsValid()
+     &&Fit->TryGetStringField(TEXT("schema"),FitSchema)&&FitSchema==TEXT("@@SEATED_FIT_SCHEMA@@")&&Fit->TryGetStringField(TEXT("skeleton"),FitSkeleton)
+     &&Mesh->GetSkeleton()&&FitSkeleton==Mesh->GetSkeleton()->GetPathName()&&Fit->TryGetArrayField(TEXT("clips"),FitRows)){
+   struct FSeatFitSlot{const TCHAR* Role;const TCHAR* Slot;uint32 Value;};
+   const FSeatFitSlot FitSlots[]={@@SEATED_FIT_BINDINGS@@};
+   for(const auto& S:FitSlots){
+    const FString Path=FString::Printf(TEXT("%s/SUB01_%s.SUB01_%s"),TEXT("@@SEAT_CLIP_DIR@@"),S.Role,S.Role);bool Accepted=false;
+    for(const auto& RowValue:*FitRows){const TSharedPtr<FJsonObject>* Row=nullptr;FString Role,Object;bool A=false,P=false,Same=false;
+     if(RowValue.IsValid()&&RowValue->TryGetObject(Row)&&(*Row)->TryGetStringField(TEXT("role"),Role)&&Role==S.Role&&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A
+        &&(*Row)->TryGetBoolField(TEXT("fit_pass"),P)&&P&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==Path)Accepted=true;}
+    auto* Clip=Accepted&&ValidatedHandsPostures.Contains(FName(S.Role))?LoadObject<UAnimSequence>(nullptr,*Path):nullptr;
+    if(Clip&&Clip->GetSkeleton()==Mesh->GetSkeleton()){SeatClips.Add(FName(S.Slot),Clip);SeatRoles|=S.Value;UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_FIT_BOUND %s=%s"),S.Slot,*Path);}
+    else if(Accepted)UE_LOG(LogTemp,Warning,TEXT("SUB01_SEAT_FIT_REFUSED %s (not validated, missing or another skeleton)"),*Path);
+   }
+  }
+ }
  // Chair: the audited cushion report; its exact text is the chair revision.
  const FString Audit=FPaths::Combine(FPaths::ProjectDir(),TEXT("private-audit"));FString ChairText;TSharedPtr<FJsonObject> Chair;
  if(FFileHelper::LoadFileToString(ChairText,*FPaths::Combine(Audit,TEXT("native-chair-surface.json")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ChairText),Chair)&&Chair.IsValid()){
@@ -433,7 +503,10 @@ def install(sources: dict) -> dict:
         out[key] = out[key].replace(anchor, replacement)
     bindings = ','.join('{TEXT("%s"),TEXT("%s"),SeatRole%s}' % (role, asset, role)
                         for role, asset in SEAT_ROLE_ASSETS.items())
-    out['cpp'] += CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
+    fits = ','.join('{TEXT("%s"),TEXT("%s"),%s}' % (role, slot, bit) for role, (slot, bit) in SEATED_FIT_SLOTS.items())
+    out['cpp'] += (CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
+                   .replace('@@SEATED_FIT_BINDINGS@@', fits).replace('@@SEATED_FIT_RECEIPT@@', SEATED_FIT_RECEIPT)
+                   .replace('@@SEATED_FIT_SCHEMA@@', SEATED_FIT_RECEIPT_SCHEMA))
     return out
 
 
