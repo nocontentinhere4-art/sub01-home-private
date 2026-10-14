@@ -12,9 +12,14 @@ enable playback, bind config or claim bed contact. Writes unreal-life-import.jso
 """
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 import unreal as u
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import inventory_native_life_clips as inventory_tool  # noqa: E402
+import native_life_skeleton_parity as parity  # noqa: E402
 
 ROLES = ('Idle', 'LieDown', 'SleepLoop', 'GetUp')
 root = Path(u.Paths.project_dir()).resolve()
@@ -29,6 +34,21 @@ if not isinstance(mesh, u.SkeletalMesh) or mesh.get_editor_property('skeleton') 
     raise RuntimeError('Existing verified owner USkeleton unavailable; do not create a replacement')
 if len(audit['bone_names']) != 65 or audit['bone_edits']:
     raise RuntimeError('Conversion source is not the verified unchanged 65-joint owner')
+# The UE skeleton (66 bones: 65 skin joints + one structural parentless Mixamo node) against the
+# owner's 65 skin joints and their parents; a raw count is never the test.
+owner_ref = inventory_tool.owner_reference()
+owner_parents = {n: (p if p in owner_ref['skin_joints'] else None)
+                 for n, p in ((n, owner_ref['parents'].get(n)) for n in owner_ref['skin_joints'])}
+probe = u.SkeletalMeshComponent()
+probe.set_skeletal_mesh_asset(mesh)
+ue_names = [str(probe.get_bone_name(i)) for i in range(probe.get_num_bones())]
+ue_parents = {n: (None if str(probe.get_parent_bone(n)) in ('None', '') else str(probe.get_parent_bone(n))) for n in ue_names}
+# Structure only here (names, parents, one parentless root); root motion is checked per clip below.
+skeleton_parity = parity.structural_root_parity(ue_names, ue_parents, owner_parents,
+                                                [(0.0, (0, 0, 0), (0, 0, 0, 1), (1, 1, 1))] * 2)
+if not skeleton_parity['pass']:
+    raise RuntimeError('UE skeleton is not the owner skeleton: ' + '; '.join(skeleton_parity['failures']))
+u.log('SUB01_LIFE_SKELETON_PARITY ' + json.dumps({k: skeleton_parity[k] for k in ('ue_bone_count', 'owner_joint_count', 'structural_root')}))
 accepted = {(c['role'], c['sha256']) for c in inventory['candidates'] if c.get('verdict') == 'Candidate'}
 u.Sub01HomeHandsInstance.finish_pending_skin_compilation()
 world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
@@ -68,8 +88,19 @@ for row in audit['clips']:
     duration = clip.get_editor_property('sequence_length')
     if abs(duration - row['duration_s']) > 2 / 30:
         raise RuntimeError('Source life capture duration changed in UE')
+    # The structural root must carry no motion in this clip: constant at 0, 3 and 8 s (clamped).
+    samples = []
+    if skeleton_parity['structural_root']:
+        for t in parity.sample_times(duration):
+            pose = u.AnimationLibrary.get_bone_poses_for_time(clip, [skeleton_parity['structural_root']], t, False, mesh)[0]
+            loc, rot, scale = pose.translation, pose.rotation, pose.scale3d
+            samples.append((t, (loc.x, loc.y, loc.z), (rot.x, rot.y, rot.z, rot.w), (scale.x, scale.y, scale.z)))
+    clip_parity = parity.structural_root_parity(ue_names, ue_parents, owner_parents, samples)
+    if not clip_parity['pass']:
+        raise RuntimeError(f'{row["role"]}: owner skeleton parity failed: ' + '; '.join(clip_parity['failures']))
     rows.append({'role': row['role'], 'object_path': clip.get_path_name(), 'duration_s': duration,
-                 'inventory_sha256': row['inventory_sha256'], 'same_existing_skeleton': True})
+                 'inventory_sha256': row['inventory_sha256'], 'same_existing_skeleton': True,
+                 'skeleton_parity': clip_parity})
     u.log(f'SUB01_LIFE_IMPORTED role={row["role"]} path={clip.get_path_name()} duration={duration:.4f}')
 u.EditorAssetLibrary.save_directory(dest, only_if_is_dirty=False, recursive=True)
 (root / 'unreal-life-import.json').write_text(json.dumps({
