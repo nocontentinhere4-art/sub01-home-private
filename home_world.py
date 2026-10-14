@@ -507,6 +507,9 @@ class HomeWorld:
             "sequence": self.sequence,
             "native_consumer": None if privacy else self.native_feedback.view(
                 sequence=self.sequence, activity=self.activity, target=self.target),
+            # These coordinates describe the backend plan, never a measured native pawn.
+            "position_source": "privacy-mask" if privacy else "backend-plan",
+            "activity_ready": None if privacy else self.activity_ready(),
             # Legacy flag, now the server front door state (approach included).
             "door_open": house["doors"]["front"]["open"],
             "doors": house["doors"],

@@ -68,3 +68,25 @@ def test_bathroom_entry_during_frame_read_withholds_completed_pixels():
             raise AssertionError('Pixels escaped after bathroom entry during the read')
         assert calls == ['desk']
     asyncio.run(run())
+
+
+def test_private_observer_withholds_life_frame_identity_controller_and_gui_metadata():
+    async def run():
+        http, live = await client()
+        original = live.home.view
+        live.home.view = lambda *a, **k: {**original(*a, **k), 'privacy': True}
+        live.computer.view = lambda: {'output': 'private terminal', 'ready': True,
+            'display': {'kind': 'graphical', 'available': True, 'frame_id': 'private-pc'}}
+        live.minecraft = SimpleNamespace(view=lambda: {'enabled': True, 'frame_id': 'private-world',
+            'controller': {'pose_fresh': True, 'ack_input_id': 99}})
+        live.screens = SimpleNamespace(public=lambda: {'browser': {'url': 'private-page'}})
+        try:
+            value = await (await http.get('/api/home')).json()
+            assert value['life'] == {'privacy': True} and value['stage'] is None
+            assert value['browser'] is None
+            assert 'frame_id' not in value['minecraft'] and 'controller' not in value['minecraft']
+            assert value['computer']['ready'] is False
+            assert value['computer']['display'] == {'kind': 'private', 'available': False}
+        finally:
+            await http.close()
+    asyncio.run(run())

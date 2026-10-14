@@ -134,3 +134,12 @@ def test_house_and_life_clocks_follow_the_complete_two_floor_route():
     else:
         pytest.fail('House clock never started')
     assert {'stair_top', 'stair_bottom', 'desk'} <= visited
+
+
+def test_native_required_cannot_fall_back_to_the_old_room(monkeypatch):
+    monkeypatch.setenv('HOME_NATIVE_REQUIRED', '1')
+    live = Live.__new__(Live)
+    live.life = SimpleNamespace(activity='research', path=[])
+    live.engine = SimpleNamespace(stage='AWAKE')
+    assert not live.activity_arrived()
+    assert live.screen_device() is None

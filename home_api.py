@@ -58,7 +58,9 @@ def add_home_routes(app, live, admin_ok):
     def computer_view():
         view = live.computer.view()
         if private():
-            view = {**view, "output": "", "last_command": None, "revision": None, "privacy": True}
+            view = {"ready": False, "paused": True, "status": "private", "output": "",
+                    "last_command": None, "revision": None, "privacy": True,
+                    "display": {"kind": "private", "available": False}}
         return view
 
     def operator(request):
@@ -112,19 +114,20 @@ def add_home_routes(app, live, admin_ok):
 
         minecraft = live.minecraft.view() if getattr(live, "minecraft", None) else {"enabled": False, "status": "disabled"}
         if hidden and getattr(live, "minecraft", None):
-            minecraft = {**minecraft, "has_frame": False, "observation": None,
+            minecraft = {"enabled": bool(minecraft.get('enabled')), "status": "private",
+                         "active": False, "has_frame": False, "observation": None,
                          "events": [], "last_action": None, "privacy": True}
         return web.json_response(
             {
                 "home": home,
                 "computer": computer_view(),
-                "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
+                "browser": live.screens.public()["browser"] if not hidden and getattr(live, "screens", None) else None,
                 "browser_screen": screen('desk'),
                 "phone_browser_screen": screen('phone'),
                 "phone_screen": None if hidden else home_phone.status(home_phone.snapshot(live.home, screen('phone'))),
                 "minecraft": minecraft,
-                "life": live.life.snapshot(),
-                "stage": live.engine.stage,
+                "life": {"privacy": True} if hidden else live.life.snapshot(),
+                "stage": None if hidden else live.engine.stage,
                 "time": live.clock.now(),
             },
             headers={"Cache-Control": "no-store"},

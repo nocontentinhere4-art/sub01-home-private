@@ -86,10 +86,14 @@ class NativeFeedback:
 
     def view(self, *, sequence, activity, target):
         fresh = self.received is not None and 0 <= self.clock() - self.received <= self.TTL
+        current = (fresh and (self.report or {}).get('sequence') == sequence
+                   and (self.report or {}).get('activity') == activity
+                   and ((self.report or {}).get('phase') not in {'arrived', 'seated'}
+                        or (self.report or {}).get('node') == target))
         return {'bound': self.epoch is not None,
                 'required': self.required,
                 'awaiting_binding': self.required and self.epoch is None,
-                'phase': (self.report or {}).get('phase') if fresh else None,
+                'phase': (self.report or {}).get('phase') if current else None,
                 'fresh': fresh,
                 'physical_ready': self.epoch is not None and self.ready(
                     sequence=sequence, activity=activity, target=target)}
