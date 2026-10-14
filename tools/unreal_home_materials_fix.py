@@ -964,7 +964,8 @@ def repair_usage_albedo(doc, *, u=None, actor_subsystem=None, load_level=True, s
             changed = True
         if changed:
             mel.update_material_instance(instance)
-            u.EditorAssetLibrary.save_loaded_asset(instance)
+            if not u.EditorAssetLibrary.save_loaded_asset(instance):
+                raise MaterialFixError('Saving owned colour material %s failed; slots unchanged' % name)
         if made:
             owned = state.setdefault('owned_assets', [])
             if _path(instance).split('.')[0] not in owned:

@@ -1224,6 +1224,25 @@ def test_usage_repair_restore_is_exact(tmp_path):
 
 
 @needs_usage
+def test_usage_material_save_failure_leaves_live_slots_unchanged(tmp_path, monkeypatch):
+    world, _ = build_usage_world(tmp_path)
+    u = make_unreal(world)
+    before = {c.get_path_name(): list(c.materials) for a in world.actors for c in a.components}
+    save = u.EditorAssetLibrary.save_loaded_asset
+
+    def refuse_material(asset, *args, **kwargs):
+        if isinstance(asset, MaterialInstanceConstant):
+            return False
+        return save(asset, *args, **kwargs)
+
+    monkeypatch.setattr(u.EditorAssetLibrary, 'save_loaded_asset', refuse_material)
+    with pytest.raises(fix.MaterialFixError, match='slots unchanged'):
+        fix.repair_usage_albedo(usage_doc(), u=u, expect_count=13)
+    assert {c.get_path_name(): list(c.materials) for a in world.actors for c in a.components} == before
+    assert world.level_saves == 0
+
+
+@needs_usage
 def test_usage_repair_fails_closed(tmp_path):
     world, selection = build_usage_world(tmp_path)
     u = make_unreal(world)
