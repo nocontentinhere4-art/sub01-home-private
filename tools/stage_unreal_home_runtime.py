@@ -23,6 +23,8 @@ from unreal_controller_grip_diagnostic import install as install_controller_grip
 from exterior_backdrop_geometry import patch_native_view_settings
 from unreal_first_person_motion import install as install_first_person_motion, stage as stage_first_person_motion
 from unreal_native_visual_metrics import install as install_native_visual_metrics
+from unreal_native_fixture_emission import install as install_native_fixture_emission, stage as stage_native_fixture_emission
+from unreal_native_daylight_exposure import install as install_native_daylight_exposure, stage as stage_native_daylight_exposure
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -168,6 +170,10 @@ def stage(project):
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     header,cpp=install_native_control(header,cpp)
     header,cpp=install_native_view_settings(header,cpp)
+    header,cpp=install_native_fixture_emission(header,cpp)
+    stage_native_fixture_emission(module)
+    header,cpp=install_native_daylight_exposure(header,cpp)
+    stage_native_daylight_exposure(module)
     cpp=patch_native_view_settings(cpp)
     header,cpp=install_minecraft_tv_input(header,cpp)
     header,cpp=install_native_viewer_handoff(header,cpp)
