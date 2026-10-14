@@ -178,6 +178,7 @@ class MinecraftConsole:
                     if self._render_owner() != owner:
                         continue
                     await page.wait_for_selector('canvas', timeout=10000)
+                    await page.wait_for_function('() => globalThis.sub01TerrainReady?.() === true', timeout=15000)
                     if self._render_owner() != owner:
                         continue
                 frame = await page.screenshot(type='jpeg', quality=75, timeout=10000)

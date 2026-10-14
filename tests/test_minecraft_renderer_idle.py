@@ -17,6 +17,7 @@ class Page:
         self.defer = None
         self.shot_started = asyncio.Event()
         self.fail_navigation = False
+        self.terrain_ready = True
 
     async def goto(self, url, **kwargs):
         self.navigations.append(url)
@@ -26,6 +27,11 @@ class Page:
 
     async def wait_for_selector(self, selector, **kwargs):
         assert selector == 'canvas'
+
+    async def wait_for_function(self, predicate, **kwargs):
+        assert 'sub01TerrainReady' in predicate
+        if not self.terrain_ready:
+            raise RuntimeError('Actual terrain meshes or textures unavailable')
 
     async def screenshot(self, **kwargs):
         self.shots += 1
@@ -137,6 +143,20 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.console.error.startswith('Minecraft viewer: '))
         wait.set_result(None);_, wait = await h.waiting()
         self.assertEqual(page.shots, 1);self.assertEqual(self.console.error, '')
+        await h.close()
+
+    async def test_canvas_without_real_terrain_does_not_publish_idle_frame(self):
+        self.state(); page = Page(); page.terrain_ready = False
+        h = Harness(self.console, page)
+        _, wait = await h.waiting()
+        self.assertEqual(page.shots, 0)
+        self.assertIsNone(self.console.frame)
+        self.assertEqual(self.messages, [], 'No capture or release acknowledgment fabricated')
+        self.assertEqual(page.navigations[-1], 'about:blank')
+        page.terrain_ready = True; wait.set_result(None)
+        _, wait = await h.waiting()
+        self.assertEqual(page.shots, 1)
+        self.assertEqual(self.messages, [{'type': 'viewer_release'}])
         await h.close()
 
     async def test_worker_ack_and_connection_changes_invalidate_actual_owner(self):

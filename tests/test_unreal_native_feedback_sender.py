@@ -89,3 +89,29 @@ int main(){
     exe = tmp_path/'lease'
     subprocess.run([compiler, '-std=c++17', str(cpp), '-o', str(exe)], check=True, capture_output=True)
     subprocess.run([str(exe)], check=True, capture_output=True)
+
+
+def test_old_callback_cannot_release_a_new_pending_report(tmp_path):
+    compiler = shutil.which('clang++') or shutil.which('g++')
+    if not compiler:
+        import pytest
+        pytest.skip('C++ compiler unavailable')
+    guard = METHODS.split('ReportId](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){\n', 1)[1].split('\n  if(!LiveHome', 1)[0]
+    source = '''#include <string>
+std::string NativeFeedbackConsumer="current";
+long NativeFeedbackPendingReportId=2;
+bool NativeFeedbackPending=true;
+void callback(const std::string& ConsumerId,long ReportId){
+''' + guard + '''
+}
+int main(){
+ callback("current",1);if(!NativeFeedbackPending)return 1;
+ callback("retired",2);if(!NativeFeedbackPending)return 2;
+ callback("current",2);if(NativeFeedbackPending)return 3;
+ return 0;
+}
+'''
+    cpp = tmp_path/'callback.cpp'; cpp.write_text(source)
+    exe = tmp_path/'callback'
+    subprocess.run([compiler, '-std=c++17', str(cpp), '-o', str(exe)], check=True, capture_output=True)
+    subprocess.run([str(exe)], check=True, capture_output=True)
