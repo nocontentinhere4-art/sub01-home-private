@@ -1,5 +1,7 @@
 # Real kitchen cabinet / sink / tap search: no genuine source found
 
+> **Scope correction (2026-10-14).** This record's headline overstates its result. The search covered CC0 only, on a few sites, by API, on one day. It excluded CC-BY and royalty-free licences, which the owner accepts. CGTrader and TurboSquid were unchecked, and Smithsonian was not reached. The finding means only **"no free CC0 match found in this limited search"**. It does not mean that no genuine source exists. See `real-kitchen-local-source-gap.md` for the local-source record and the pending search plan.
+
 **Outcome: (b) no genuine acquirable source.** I found no externally authored model that meets all four tests:
 
 - CC0 (or an equally permissive licence),
