@@ -140,13 +140,14 @@ let active=false,lastMouse=0,accepted=0,inputQueue=Promise.resolve(),streaming=f
 window.nativeViewerDecodedFrames=0;window.nativeViewerTransport='connecting';
 function xsrf(){return document.cookie.split('; ').find(v=>v.startsWith('_xsrf='))?.split('=').slice(1).join('=')||'';}
 function settings(){if(!panel.open)panel.showModal();}
-function release(){active=false;send({action:'release'}).catch(()=>{});if(document.pointerLockElement)document.exitPointerLock();}
+function releaseNativeFocus(){if(permission){send({action:'key',code:'Escape',down:true}).catch(()=>{});send({action:'key',code:'Escape',down:false}).catch(()=>{});}}
+function release(){if(active)releaseNativeFocus();active=false;send({action:'release'}).catch(()=>{});if(document.pointerLockElement)document.exitPointerLock();}
 document.querySelector('#settings').onclick=()=>{release();settings();};document.querySelector('#close').onclick=()=>panel.close();
 document.querySelector('#full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.querySelector('#view').requestFullscreen();};
 async function deliver(event){const r=await fetch(base+'input',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(event)});const p=await r.json();if(r.ok){accepted=p.acceptedInputs;window.nativeViewerAcceptedInputs=accepted;}else{active=false;status.textContent=p.error;}return p;}
 function send(event){const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;}
 control.onclick=async()=>{const h=await fetch(base+'health').then(r=>r.json());if(!h.inputEnabled)return;panel.close();active=true;game.requestPointerLock();};
-document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game){const was=active;active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
+document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game){const was=active;if(was)releaseNativeFocus();active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
 const allowed=new Set(%KEYS%);
 for(const [name,down]of[['keydown',true],['keyup',false]])document.addEventListener(name,e=>{if(e.code==='Escape'&&down){if(active)release();else settings();return;}if(!active||!allowed.has(e.code)||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(!e.repeat)send({action:'key',code:e.code,down}).catch(()=>{});});
 document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==game||performance.now()-lastMouse<30)return;lastMouse=performance.now();const s=Number(document.querySelector('#sensitivity').value);send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX*s))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY*s)))}).catch(()=>{});});
