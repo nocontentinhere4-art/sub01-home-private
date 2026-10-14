@@ -31,6 +31,66 @@ measured cushion alone (approach = cushion centre + the captured hips travel of 
 `ContactVerified`, `NativeSeatVerified` and PC focus stay false. Apply the proposal in
 `native-seat-correction.json`, re-measure, and rebuild the evidence.
 
+## Integration prerequisites (exact)
+
+Everything below is source or server-side data; no step here was run.
+
+1. **Floor:** the offline seat audit must use the measured collision floor (2.5001 cm), not
+   `FLOOR_CM = 0.0`. The renderer is correcting this. The live measurement does not depend on
+   it, because it uses `CharacterMovement->CurrentFloor` (the walkable floor actually under the
+   capsule).
+2. **Chair report:** `private-audit/native-chair-surface.json` needs `errors: []` and the
+   cushion's `sections[].vertices_world_cm` plus `cushion_surface.triangle_indices`, from the
+   real chair triangles. Its exact text is the chair revision, so re-measuring invalidates all
+   evidence.
+3. **Placement corrections first:** apply the renderer's relative chair, body and keyboard
+   correction (from the measured seat geometry and the ~1 cm right-hand reach deficit). Then
+   re-run in this order:
+   - `unreal_audit_seat_contact.py`;
+   - `tools/unreal_seat_transition_runtime.py <project>` (evidence);
+   - the keyboard skinned-contact audit, which writes the contact profile's `body_cm`/`body_yaw`.
+4. **Same body transform:** the seat evidence `body_cm`/`body_rotation_pyr` and the contact
+   profile's `body_cm`/`body_yaw` must describe the same body transform. The arm profile is
+   applied only while the live body is at the profile's transform, within 0.05 cm and 0.05°.
+   Away from it, the raw DeskTyping clip plays, with no arm override.
+5. **Body attachment:** the live seat uses the capsule-attached rendered body (Walk attachment,
+   `WalkMeshOffset`, `HandsMeshRotation`). It never uses the camera-attached `DeskMeshOffset`
+   posture or the diagnostic `SetWorldLocationAndRotation`. `SeatLiveBody` refuses any other
+   attachment, so with it there is no transform and no receipt.
+6. **Editor build:** the live measurement calls `AnalyzeCapturedSeatSkin`, which is
+   `WITH_EDITOR` only because it reads the imported model. The private live home runs on the
+   editor binary. In a packaged build it returns an error, and contact stays unverified.
+7. **Staging:** apply `install_module()` after `stage_unreal_home_runtime.stage()`, the
+   contact-profile runtime and the skin-contact native module. The anchors must be unique; a
+   missing anchor refuses the whole install.
+
+## Arrival and receipts
+
+- **Walking:** CharacterMovement input brings the capsule to within 12 cm of the approach
+  point. The 12 cm gate only starts Aligning; it authorizes nothing.
+- **Aligning, with an audited anchor:**
+  - The view turns at up to 103°/s toward the audited body heading, measured on the rendered
+    body.
+  - The rendered body settles horizontally toward the audited body XY:
+    `MoveUpdatedComponent` with a sweep, at most 0.25 cm and 15 cm/s per tick, 15 cm in total,
+    and no Z change.
+  - A blocking or penetrating hit ends the settle. There is no depenetration and no sliding.
+  - It sits once the body is within 0.05 cm and 0.05°: a precise arrival.
+  - A blocked settle, or one past 3 s, still sits, but not as a precise arrival.
+  - Without an anchor (cushion fallback) there is no settle and never a precise arrival.
+- **Height:** Z is not settled. While walking, CharacterMovement keeps the capsule 1.9–2.4 cm
+  above the floor, so arrivals differ in height by up to 0.5 cm. An offline receipt (fixed
+  transform) therefore rarely applies.
+- **Receipt sources:** either one gives a receipt.
+  - **Offline evidence:** applies only at its exact audited transform.
+  - **Live measurement (the practical one):** while typing, at 5 Hz, `AnalyzeCapturedSeatSkin`
+    measures the actually evaluated component pose at the actual body transform, against the
+    audited cushion and the walkable floor. The result is stamped with that transform, the
+    evaluated clip serial and the time. It is accepted only for 0.25 s, the same serial and the
+    same transform within 0.05 cm and 0.05°. A later displaced arrival is never covered.
+  - **Live measurement gates:** all five patches in band, no invalid influences, and facing skin
+    in every patch. Each result is logged as `SUB01_SEAT_LIVE_MEASUREMENT` when it changes.
+
 ## What the adapter does each live tick
 
 - **Inputs, all from existing live fields:**

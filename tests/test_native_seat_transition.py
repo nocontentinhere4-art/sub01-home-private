@@ -36,6 +36,7 @@ struct Sim{
  FSub01SeatTransition M;FSub01SeatInputs In;FSub01SeatOutputs Out;uint32_t Serial=0;C Playing=C::None;double T=0;int Restarts=0;
  uint32_t Missing=0;   // roles whose clip never actually plays
  bool Stale=false;     // the proxy keeps evaluating under the previous serial (start never applied)
+ bool SettleStuck=false,TurnStuck=false;   // a swept settle / turn that makes no progress
  Sim(){In.Command=1;In.WantSeat=true;In.WantTyping=true;In.Fresh=true;In.ChairMeasured=true;In.ChairRevision=77;
        In.RolesAvailable=AllRoles;In.AtApproach=true;In.YawErrorDeg=40;}
  static uint32_t Role(C Clip){switch(Clip){case C::StandToSit:return SeatRoleStandToSit;case C::Sitting:return SeatRoleSitting;
@@ -44,7 +45,8 @@ struct Sim{
   In.NowSeconds+=1./60;
   if(Out.ClipSerial!=Serial&&!Stale){Serial=Out.ClipSerial;Playing=Out.Clip;T=Out.ClipStartSeconds;++Restarts;}else if(Playing!=C::None)T+=1./60;
   In.ClipPlaying=Playing!=C::None&&!(Missing&Role(Playing));In.ClipSeconds=T;In.ClipSerial=Serial;
-  if(Out.TurnInPlace&&In.YawErrorDeg>0)In.YawErrorDeg-=2;
+  if(Out.TurnInPlace&&In.YawErrorDeg>0&&!TurnStuck)In.YawErrorDeg-=In.YawErrorDeg>2?2:In.YawErrorDeg;
+  if(Out.SettleMove&&!SettleStuck)In.SettleErrorCm-=In.SettleErrorCm>.25?.25:In.SettleErrorCm;   // <= 0.25 cm per tick
   Out=M.Tick(In);
  }
  void Run(double Seconds){for(int I=0;I<int(Seconds*60+.5);++I)Step();}
@@ -126,6 +128,37 @@ int main(){
   S.Stale=false;S.Step();CHECK(S.In.ClipSerial==S.Out.ClipSerial&&S.T==0,96)}                // re-applied from its start
  {Sim S;S.Stale=true;S.In.YawErrorDeg=0;S.Until(P::SittingDown);S.Run(.7);
   CHECK(S.Out.Phase==P::Refused&&S.Out.Refusal==R::ClipUnavailable&&S.Out.MovementInput,97)}  // a start never applied refuses
+ // Precise arrival: a bounded settle to the audited anchor before any seat clip.
+ {Sim S;S.In.YawErrorDeg=0;S.In.SettleErrorCm=10;S.Step();CHECK(S.Out.Phase==P::Aligning&&S.Out.SettleMove&&S.Out.Clip==C::None,100)
+  int Ticks=0;while(S.Out.Phase==P::Aligning&&Ticks<400){S.Step();++Ticks;}
+  CHECK(S.Out.Phase==P::SittingDown&&S.Out.PreciseArrival&&S.In.SettleErrorCm<=.05&&Ticks>=40,101)
+  CHECK(!S.Out.SettleMove,102)S.Until(P::Typing);CHECK(S.Out.PreciseArrival,103)
+  S.In.Command=9;S.In.WantSeat=false;S.Until(P::Standing);CHECK(!S.Out.PreciseArrival,104)}
+ {Sim S;S.In.YawErrorDeg=0;S.In.SettleErrorCm=10;S.Run(.1);S.In.SettleBlocked=true;S.Step();   // a swept settle that hits something
+  CHECK(S.Out.Phase==P::SittingDown&&!S.Out.PreciseArrival&&!S.Out.SettleMove,105)}
+ {Sim S;S.In.YawErrorDeg=0;S.In.SettleErrorCm=10;S.SettleStuck=true;S.Run(2.9);CHECK(S.Out.Phase==P::Aligning&&S.Out.SettleMove,106)
+  S.Run(.2);CHECK(S.Out.Phase==P::SittingDown&&!S.Out.PreciseArrival,107)}                    // bounded in time
+ {Sim S;S.In.YawErrorDeg=1;S.TurnStuck=true;S.In.SettleErrorCm=0;S.Run(1);
+  CHECK(S.Out.Phase==P::Aligning&&S.Out.TurnInPlace&&!S.Out.SettleMove,108)                    // 1 deg is not the audited heading
+  S.TurnStuck=false;S.Step();CHECK(S.Out.Phase==P::SittingDown&&S.Out.PreciseArrival,109)}
+ {Sim S;S.In.YawErrorDeg=0;S.Until(P::SittingDown,3);CHECK(S.Out.Phase==P::SittingDown&&!S.Out.PreciseArrival,110)}  // cushion fallback: no anchor, never precise
+ // A live skin measurement applies only to the transform, serial and moment it was made at.
+ {FSub01SeatLivePose L=Live(E);FSub01SeatMeasurement M;M.Valid=true;M.MeshId=L.MeshId;M.ChairRevision=77;M.ClipSerial=5;M.MeasuredAt=10;
+  M.X=L.X;M.Y=L.Y;M.Z=L.Z;M.PitchDeg=L.PitchDeg;M.YawDeg=L.YawDeg;M.RollDeg=L.RollDeg;M.ScaleX=L.ScaleX;M.ScaleY=L.ScaleY;M.ScaleZ=L.ScaleZ;M.InvalidInfluences=0;
+  for(int I=0;I<5;++I){M.Facing[I]=200;M.MinGap[I]=I<3?-1.1:.05;M.Median[I]=I<3?-.4:.3;M.Coverage[I]=.8;}
+  CHECK(Sub01SeatMeasuredReceipt(M,L,5,10.1),120)
+  FSub01SeatLivePose X=L;X.Y+=.1;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),121)              // a displaced body
+  X=L;X.YawDeg+=.2;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),122)
+  CHECK(!Sub01SeatMeasuredReceipt(M,L,5,10.3),123)CHECK(!Sub01SeatMeasuredReceipt(M,L,5,9.9),124)   // stale, or from the future
+  CHECK(!Sub01SeatMeasuredReceipt(M,L,6,10.1),125)                                               // another clip start
+  FSub01SeatMeasurement B=M;B.InvalidInfluences=1;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),126)
+  B=M;B.Facing[2]=0;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),127)
+  B=M;B.Median[4]=1.2;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),128)                           // a floating sole
+  B=M;B.MinGap[0]=-2.6;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),129)
+  X=L;X.Family=ESub01SeatFamily::None;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),130)
+  X=L;X.ChairRevision=78;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),131)
+  X=L;X.ClipPlaying=false;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),132)
+  B=M;B.ScaleZ=NAN;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),133)}
  // Re-sit after a get-up requested mid-way.
  {Sim S;S.In.YawErrorDeg=0;S.Until(P::Typing);S.In.Command=6;S.In.WantSeat=false;S.Run(.5);
   S.In.Command=7;S.In.WantSeat=true;S.Step();CHECK(S.Out.Phase==P::StandingUp,70)

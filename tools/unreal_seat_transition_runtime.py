@@ -104,6 +104,11 @@ CHARACTER_FIELDS = r'''
  uint32 SeatRoles=0,SeatAppliedSerial=0; uint64 SeatChairRevision=0; ESub01SeatPhase SeatLoggedPhase=ESub01SeatPhase::Standing;
  bool SeatChairMeasured=false,SeatAnchorValid=false,SeatBodyAttached=false; float SeatYaw=-90;
  FVector2D SeatApproach=FVector2D::ZeroVector;
+ // Live skin measurement at the actual seated transform, the audited cushion it is measured
+ // against, the bounded settle, and the transform the keyboard contact profile was audited at.
+ FSub01SeatMeasurement SeatMeasurement; TArray<FVector> SeatCushionTriangles; double SeatMeasuredAt=0; int32 SeatMeasurementLogged=-1;
+ float SeatSettleTravel=0; bool SeatSettleBlocked=false; bool SeatProfilePoseLoaded=false; FSub01SeatLivePose SeatProfilePose;
+ bool SeatLiveBody(FSub01SeatLivePose& L) const;
 '''
 
 CHARACTER_METHODS = r'''
@@ -125,7 +130,17 @@ void ASub01HomeCharacter::LoadSeatTransition(){
  if(FFileHelper::LoadFileToString(ChairText,*FPaths::Combine(Audit,TEXT("native-chair-surface.json")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ChairText),Chair)&&Chair.IsValid()){
   const TArray<TSharedPtr<FJsonValue>>* Errors=nullptr;const TSharedPtr<FJsonObject>* ChairObject=nullptr;
   if(Chair->TryGetArrayField(TEXT("errors"),Errors)&&Errors->Num()==0&&Chair->TryGetObjectField(TEXT("chair"),ChairObject)){
-   SeatChairRevision=Sub01SeatId(*ChairText);SeatChairMeasured=true;
+   SeatChairRevision=Sub01SeatId(*ChairText);SeatChairMeasured=true;SeatCushionTriangles.Reset();
+   // The audited cushion triangles (world cm), what a live skin measurement is made against.
+   const TArray<TSharedPtr<FJsonValue>>* AllSections=nullptr;
+   if((*ChairObject)->TryGetArrayField(TEXT("sections"),AllSections))for(const auto& SectionValue:*AllSections){
+    const auto Section=SectionValue->AsObject();const TArray<TSharedPtr<FJsonValue>> *Vertices=nullptr,*Faces=nullptr;const TSharedPtr<FJsonObject>* Cushion=nullptr;
+    if(!Section->TryGetArrayField(TEXT("vertices_world_cm"),Vertices)||!Section->TryGetObjectField(TEXT("cushion_surface"),Cushion)||!(*Cushion)->TryGetArrayField(TEXT("triangle_indices"),Faces))continue;
+    for(const auto& Face:*Faces){const auto& Corners=Face->AsArray();if(Corners.Num()!=3){SeatCushionTriangles.Reset();break;}
+     for(const auto& Corner:Corners){const int32 I=int32(Corner->AsNumber());if(!Vertices->IsValidIndex(I)||(*Vertices)[I]->AsArray().Num()!=3){SeatCushionTriangles.Reset();break;}
+      const auto& V=(*Vertices)[I]->AsArray();SeatCushionTriangles.Add(FVector(V[0]->AsNumber(),V[1]->AsNumber(),V[2]->AsNumber()));}}
+   }
+   if(SeatCushionTriangles.Num()%3)SeatCushionTriangles.Reset();
    // Approach without contact evidence: cushion centre + the captured sit's hip travel (no receipt possible).
    const TArray<TSharedPtr<FJsonValue>>* Sections=nullptr;
    if((*ChairObject)->TryGetArrayField(TEXT("sections"),Sections)&&Sections->Num()){
@@ -160,7 +175,30 @@ void ASub01HomeCharacter::LoadSeatTransition(){
    }
   }
  }
+ // The keyboard contact profile (when bound) was audited at one body world transform; it may
+ // drive the arms only while the live body is at that transform.
+ SeatProfilePoseLoaded=false;FString ProfilePath,ProfileText;TSharedPtr<FJsonObject> Profile;
+ if(FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactProfile="),ProfilePath)&&FFileHelper::LoadFileToString(ProfileText,*ProfilePath)
+    &&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ProfileText),Profile)&&Profile.IsValid()){
+  const TArray<TSharedPtr<FJsonValue>>* Body=nullptr;double Yaw=NAN;
+  if(Profile->TryGetArrayField(TEXT("body_cm"),Body)&&Body->Num()==3&&Profile->TryGetNumberField(TEXT("body_yaw"),Yaw)){
+   // unreal_audit_skinned_contact.py / the diagnostic seat place the body at body_cm, yaw body_yaw, no pitch or roll, unit scale.
+   SeatProfilePose.X=(*Body)[0]->AsNumber();SeatProfilePose.Y=(*Body)[1]->AsNumber();SeatProfilePose.Z=(*Body)[2]->AsNumber();
+   SeatProfilePose.PitchDeg=0;SeatProfilePose.YawDeg=Yaw;SeatProfilePose.RollDeg=0;SeatProfilePose.ScaleX=SeatProfilePose.ScaleY=SeatProfilePose.ScaleZ=1;
+   SeatProfilePoseLoaded=Sub01SeatTransformFinite(SeatProfilePose);
+  }
+ }
+ UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_TRANSITION_READY cushionTriangles=%d profilePose=%d"),SeatCushionTriangles.Num()/3,SeatProfilePoseLoaded?1:0);
  UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_TRANSITION_READY roles=%u chairMeasured=%d contactEvidence=%d approach=%s; NativeSeatVerified only from a live receipt"),SeatRoles,SeatChairMeasured?1:0,SeatEvidence.Loaded?1:0,*SeatApproach.ToString());
+}
+// The body as it is actually rendered for the seat: the owner mesh on the capsule (Walk
+// attachment, no camera parent, no diagnostic world placement). Anything else has no transform.
+bool ASub01HomeCharacter::SeatLiveBody(FSub01SeatLivePose& L) const{
+ if(!FirstPersonBody||!FirstPersonBody->GetSkeletalMeshAsset()||HandsDiagnosticSeat||FirstPersonBody->GetAttachParent()!=GetRootComponent())return false;
+ const FTransform Body=FirstPersonBody->GetComponentTransform();const FRotator R=Body.Rotator();const FVector S=Body.GetScale3D();
+ L.MeshId=Sub01SeatId(*FirstPersonBody->GetSkeletalMeshAsset()->GetPathName());
+ L.X=Body.GetLocation().X;L.Y=Body.GetLocation().Y;L.Z=Body.GetLocation().Z;L.PitchDeg=R.Pitch;L.YawDeg=R.Yaw;L.RollDeg=R.Roll;L.ScaleX=S.X;L.ScaleY=S.Y;L.ScaleZ=S.Z;
+ return Sub01SeatTransformFinite(L);
 }
 void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
  if(!LiveHome)return;const double Now=FPlatformTime::Seconds();
@@ -174,6 +212,10 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
  const FVector Here=GetActorLocation();const FVector2D ToApproach=SeatApproach-FVector2D(Here.X,Here.Y);
  In.AtApproach=SeatAnchorValid&&ToApproach.Size()<12&&GetCharacterMovement()->IsMovingOnGround();
  const float ViewYaw=Controller?Controller->GetControlRotation().Yaw:GetActorRotation().Yaw;In.YawErrorDeg=FMath::FindDeltaAngleDegrees(ViewYaw,SeatYaw);
+ FSub01SeatLivePose Live;const bool HasBody=SeatLiveBody(Live);
+ // Precise arrival is measured on the rendered body against the audited body anchor, never the capsule.
+ if(SeatEvidence.Loaded&&HasBody){In.SettleErrorCm=FVector2D(SeatEvidence.X-Live.X,SeatEvidence.Y-Live.Y).Size();In.YawErrorDeg=FMath::FindDeltaAngleDegrees(Live.YawDeg,SeatEvidence.YawDeg);}
+ In.SettleBlocked=SeatSettleBlocked;
  auto* Instance=FirstPersonBody?Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()):nullptr;
  static const TCHAR* ClipRoles[]={TEXT(""),TEXT("StandToSit"),TEXT("Sitting"),TEXT("SitToType"),TEXT("DeskTyping"),TEXT("SitToStand")};
  UAnimSequence* Requested=SeatOut.Clip==ESub01SeatClip::None?nullptr:SeatClips.FindRef(ClipRoles[uint8(SeatOut.Clip)]);
@@ -181,14 +223,33 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
  // applied and its accumulated time (not the requested target, not a wall clock).
  In.ClipPlaying=Requested&&Instance&&Instance->SeatEvaluatedSequence==Requested&&Instance->SeatEvaluatedTime>=0;
  In.ClipSerial=Instance?uint32(Instance->SeatEvaluatedSerial):0;In.ClipSeconds=Instance?Instance->SeatEvaluatedTime:0;
- if(SeatOut.Clip==ESub01SeatClip::DeskTyping&&SeatEvidence.Loaded&&FirstPersonBody&&FirstPersonBody->GetSkeletalMeshAsset()&&Requested){
-  FSub01SeatLivePose L;const FTransform Body=FirstPersonBody->GetComponentTransform();
-  L.MeshId=Sub01SeatId(*FirstPersonBody->GetSkeletalMeshAsset()->GetPathName());L.ClipId=Sub01SeatId(*Requested->GetPathName());L.Family=ESub01SeatFamily::DeskTyping;
-  const FRotator R=Body.Rotator();const FVector S=Body.GetScale3D();
-  L.ChairRevision=SeatChairRevision;L.X=Body.GetLocation().X;L.Y=Body.GetLocation().Y;L.Z=Body.GetLocation().Z;
-  L.PitchDeg=R.Pitch;L.YawDeg=R.Yaw;L.RollDeg=R.Roll;L.ScaleX=S.X;L.ScaleY=S.Y;L.ScaleZ=S.Z;
-  L.ClipSeconds=In.ClipSeconds;L.ClipPlaying=In.ClipPlaying&&In.ClipSerial==SeatOut.ClipSerial;In.Receipt=Sub01SeatReceipt(SeatEvidence,L);
+ if(SeatOut.Clip==ESub01SeatClip::DeskTyping&&HasBody&&Requested){
+  FSub01SeatLivePose L=Live;L.ClipId=Sub01SeatId(*Requested->GetPathName());L.Family=ESub01SeatFamily::DeskTyping;
+  L.ChairRevision=SeatChairRevision;L.ClipSeconds=In.ClipSeconds;L.ClipPlaying=In.ClipPlaying&&In.ClipSerial==SeatOut.ClipSerial;
+  // Live measurement (5 Hz while typing): the actual evaluated skin at the actual body transform,
+  // against the audited cushion and the floor the capsule actually stands on.
+  const FFindFloorResult& Floor=GetCharacterMovement()->CurrentFloor;
+  if(L.ClipPlaying&&SeatCushionTriangles.Num()&&Floor.IsWalkableFloor()&&Now-SeatMeasuredAt>=.2){
+   SeatMeasuredAt=Now;SeatMeasurement=FSub01SeatMeasurement();
+   const FString Report=USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(FirstPersonBody->GetSkeletalMeshAsset(),FirstPersonBody->GetComponentSpaceTransforms(),FirstPersonBody->GetComponentTransform(),SeatCushionTriangles,Floor.HitResult.ImpactPoint.Z);
+   TSharedPtr<FJsonObject> J;const TArray<TSharedPtr<FJsonValue>>* Regions=nullptr;double Invalid=-1;
+   if(FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Report),J)&&J.IsValid()&&!J->HasField(TEXT("error"))&&J->TryGetNumberField(TEXT("invalidInfluences"),Invalid)&&J->TryGetArrayField(TEXT("regions"),Regions)&&Regions->Num()==5){
+    FSub01SeatMeasurement M;M.MeshId=L.MeshId;M.ChairRevision=SeatChairRevision;M.ClipSerial=In.ClipSerial;M.MeasuredAt=Now;M.InvalidInfluences=int(Invalid);
+    M.X=L.X;M.Y=L.Y;M.Z=L.Z;M.PitchDeg=L.PitchDeg;M.YawDeg=L.YawDeg;M.RollDeg=L.RollDeg;M.ScaleX=L.ScaleX;M.ScaleY=L.ScaleY;M.ScaleZ=L.ScaleZ;
+    const TCHAR* Names[5]={TEXT("buttocks"),TEXT("left_posterior_thigh"),TEXT("right_posterior_thigh"),TEXT("left_sole"),TEXT("right_sole")};bool Complete=true;
+    for(int32 I=0;I<5;++I){const auto R=(*Regions)[I]->AsObject();FString Name;double Facing=0,Over=0,Band=0;
+     if(!R->TryGetStringField(TEXT("region"),Name)||Name!=Names[I]||!R->TryGetNumberField(TEXT("facingVertices"),Facing)||!R->TryGetNumberField(TEXT("overSurfaceVertices"),Over)||!R->TryGetNumberField(TEXT("bandVertices"),Band)
+        ||!R->TryGetNumberField(TEXT("minGapCm"),M.MinGap[I])||!R->TryGetNumberField(TEXT("p50GapCm"),M.Median[I])||Over<=0){Complete=false;break;}
+     M.Facing[I]=int(Facing);M.Coverage[I]=Band/Over;}
+    M.Valid=Complete;SeatMeasurement=M;
+   }
+   const int32 InBand=Sub01SeatMeasuredReceipt(SeatMeasurement,L,In.ClipSerial,Now)?1:0;
+   if(InBand!=SeatMeasurementLogged){SeatMeasurementLogged=InBand;UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_LIVE_MEASUREMENT inBand=%d floorCm=%.4f %s"),InBand,Floor.HitResult.ImpactPoint.Z,*Report.Left(600));}
+  }
+  In.Receipt=Sub01SeatReceipt(SeatEvidence,L)||Sub01SeatMeasuredReceipt(SeatMeasurement,L,In.ClipSerial,Now);
  }
+ // The keyboard contact profile drives the arms only at the body transform it was audited at.
+ if(Instance)Instance->ContactProfileAllowed=SeatProfilePoseLoaded&&HasBody&&Sub01SeatSameTransform(SeatProfilePose,Live);
  SeatOut=SeatMachine.Tick(In);
  if(SeatOut.Phase!=SeatLoggedPhase||SeatOut.Refusal!=ESub01SeatRefusal::None){
   if(SeatOut.Phase!=SeatLoggedPhase)UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_PHASE %d clip=%d serial=%u refusal=%d contact=%d"),int32(SeatOut.Phase),int32(SeatOut.Clip),SeatOut.ClipSerial,int32(SeatOut.Refusal),SeatOut.ContactVerified?1:0);
@@ -217,9 +278,24 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
   ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);
   ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);SeatBodyAttached=false;
  }
- // Movement: only CharacterMovement input toward the approach point, a bounded turn in place, or nothing.
+ // Movement: only CharacterMovement input toward the approach point, a bounded turn in place, a
+ // bounded swept settle while standing, or nothing. A seated body never moves.
+ if(SeatOut.Phase!=ESub01SeatPhase::Aligning){SeatSettleTravel=0;SeatSettleBlocked=false;}
  if(!SeatOut.MovementInput)GetCharacterMovement()->StopMovementImmediately();
- else if(SeatOut.TurnInPlace&&Controller){const float Step=103.1324f*FMath::Min(Dt,.1f);Controller->SetControlRotation(FRotator(-4,ViewYaw+FMath::Clamp(In.YawErrorDeg,-Step,Step),0));}
+ else if(SeatOut.TurnInPlace&&Controller){
+  const float Step=103.1324f*FMath::Min(Dt,.1f);Controller->SetControlRotation(FRotator(-4,ViewYaw+FMath::Clamp(In.YawErrorDeg,-Step,Step),0));
+  if(SeatOut.SettleMove&&HasBody){
+   // At most 0.25 cm and 15 cm/s per tick, 15 cm in total, horizontal only, swept against
+   // collision: a hit ends the settle (no depenetration, no sliding along what it hit).
+   const FVector2D To(SeatEvidence.X-Live.X,SeatEvidence.Y-Live.Y);const float Distance=To.Size();
+   const float Step2=FMath::Min3(Distance,.25f,15.f*FMath::Min(Dt,.1f));
+   if(Distance>0&&Step2>0&&SeatSettleTravel+Step2<=15.f){
+    GetCharacterMovement()->StopMovementImmediately();FHitResult Hit;
+    GetCharacterMovement()->MoveUpdatedComponent(FVector(To.X/Distance*Step2,To.Y/Distance*Step2,0),GetActorQuat(),true,&Hit);
+    SeatSettleTravel+=Step2;if(Hit.bBlockingHit||Hit.bStartPenetrating)SeatSettleBlocked=true;
+   }else SeatSettleBlocked=true;
+  }
+ }
  else if(In.WantSeat&&In.Fresh&&!In.Private&&!In.Blocked&&SeatOut.Phase==ESub01SeatPhase::Standing&&!In.AtApproach&&Controller){
   const float Distance=ToApproach.Size();if(Distance>1)AddMovementInput(FVector(ToApproach.X/Distance,ToApproach.Y/Distance,0),FMath::Clamp(Distance/45.f,.15f,1.f));
  }
@@ -235,6 +311,9 @@ void ASub01HomeCharacter::ApplySeatAnimation(USub01HomeHandsInstance* Instance){
 '''
 
 HANDS_FIELDS = r'''
+ // The keyboard contact profile may drive the arms (false in the live home unless the body is
+ // at the profile's audited world transform).
+ UPROPERTY(Transient) bool ContactProfileAllowed=true;
  // Seat clip start (tools/unreal_seat_transition_runtime.py): applied once per serial, and
  // what the proxy actually evaluated (sequence, applied serial, accumulated time).
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> SeatStartSequence;
@@ -250,6 +329,7 @@ HANDS_FIELDS = r'''
 # a new serial's start once Current holds that serial's sequence: also when the sequence did not
 # change. The measured contact profile keeps its own start and non-looping on DeskTyping.
 PROXY_APPLY = (
+    '  ContactAllowed=Hands->ContactProfileAllowed;\n'
     '  Hands->SeatEvaluatedSequence=SeatEvaluatedSequence;Hands->SeatEvaluatedSerial=SeatEvaluatedSerial;Hands->SeatEvaluatedTime=SeatEvaluatedTime;\n'
     '  if(SeatSerial!=Hands->SeatStartSerial&&Current.GetSequence()==Hands->SeatStartSequence.Get()){\n'
     '   SeatSerial=Hands->SeatStartSerial;\n'
@@ -272,9 +352,11 @@ EDITS = [
      'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):0.f):1.f;\n ApplySeatAnimation(Instance);\n'),
     ('hands_header', ' protected:', HANDS_FIELDS + ' protected:'),
     ('hands_cpp', ' float Progress=1;\n',
-     ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;\n'),
+     ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;bool ContactAllowed=true;\n'),
     ('hands_cpp', '  Current.SetPlayRate(Hands->TargetRate);\n', PROXY_APPLY + '  Current.SetPlayRate(Hands->TargetRate);\n'),
     ('hands_cpp', '  Blend.Evaluate_AnyThread(Output);\n', '  Blend.Evaluate_AnyThread(Output);\n' + PROXY_EVALUATED),
+    ('hands_cpp', '  if(Current.GetSequence()!=ContactSequence||ContactTimes.Num()<2',
+     '  if(!ContactAllowed)return true;   // the raw clip, without the arm profile\n  if(Current.GetSequence()!=ContactSequence||ContactTimes.Num()<2'),
 ]
 
 
