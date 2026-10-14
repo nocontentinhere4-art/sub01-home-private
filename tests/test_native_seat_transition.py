@@ -38,7 +38,7 @@ struct Sim{
  bool Stale=false;     // the proxy keeps evaluating under the previous serial (start never applied)
  bool SettleStuck=false,TurnStuck=false;   // a swept settle / turn that makes no progress
  Sim(){In.Command=1;In.WantSeat=true;In.WantTyping=true;In.Fresh=true;In.ChairMeasured=true;In.ChairRevision=77;
-       In.RolesAvailable=AllRoles;In.AtApproach=true;In.YawErrorDeg=40;}
+       In.RolesAvailable=AllRoles;In.AtApproach=true;In.YawErrorDeg=40;In.TypingProfileReady=true;}
  static uint32_t Role(C Clip){switch(Clip){case C::StandToSit:return SeatRoleStandToSit;case C::Sitting:return SeatRoleSitting;
    case C::SitToType:return SeatRoleSitToType;case C::DeskTyping:return SeatRoleDeskTyping;case C::SitToStand:return SeatRoleSitToStand;default:return 0;}}
  void Step(){
@@ -145,6 +145,7 @@ int main(){
  // A live skin measurement applies only to the transform, serial and moment it was made at.
  {FSub01SeatLivePose L=Live(E);FSub01SeatMeasurement M;M.Valid=true;M.MeshId=L.MeshId;M.ChairRevision=77;M.ClipSerial=5;M.MeasuredAt=10;
   M.X=L.X;M.Y=L.Y;M.Z=L.Z;M.PitchDeg=L.PitchDeg;M.YawDeg=L.YawDeg;M.RollDeg=L.RollDeg;M.ScaleX=L.ScaleX;M.ScaleY=L.ScaleY;M.ScaleZ=L.ScaleZ;M.InvalidInfluences=0;
+  M.SoleSupportVerified[0]=M.SoleSupportVerified[1]=true;M.SoleFloorZ[0]=3;M.SoleFloorZ[1]=2.5;
   for(int I=0;I<5;++I){M.Facing[I]=200;M.MinGap[I]=I<3?-1.1:.05;M.Median[I]=I<3?-.4:.3;M.Coverage[I]=.8;}
   CHECK(Sub01SeatMeasuredReceipt(M,L,5,10.1),120)
   FSub01SeatLivePose X=L;X.Y+=.1;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),121)              // a displaced body
@@ -158,7 +159,19 @@ int main(){
   X=L;X.Family=ESub01SeatFamily::None;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),130)
   X=L;X.ChairRevision=78;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),131)
   X=L;X.ClipPlaying=false;CHECK(!Sub01SeatMeasuredReceipt(M,X,5,10.1),132)
-  B=M;B.ScaleZ=NAN;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),133)}
+  B=M;B.ScaleZ=NAN;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),133)
+  B=M;B.SoleSupportVerified[1]=false;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),134)          // capsule floor is not sole support
+  B=M;B.SoleFloorZ[0]=NAN;CHECK(!Sub01SeatMeasuredReceipt(B,L,5,10.1),135)}
+ // No raw keyboard hands: without the accepted profile at the live pose he stays in the Sitting idle.
+ {Sim S;S.In.YawErrorDeg=0;S.In.TypingProfileReady=false;S.Until(P::SeatedIdle);S.Run(1);
+  CHECK(S.Out.Phase==P::SeatedIdle&&S.Out.Clip==C::Sitting&&S.Out.TypingPending&&S.Out.Refusal==R::TypingProfilePending,140)
+  S.In.Receipt=true;S.Step();CHECK(!S.Out.ContactVerified&&!S.Out.PCFocusAllowed,141)
+  S.In.TypingProfileReady=true;S.Step();CHECK(S.Out.Phase==P::ToTyping&&!S.Out.TypingPending,142)
+  S.Run(.3);S.In.TypingProfileReady=false;S.Step();                                             // pose mismatch mid-bridge
+  CHECK(S.Out.Phase==P::SeatedIdle&&S.Out.Clip==C::Sitting&&S.Out.TypingPending,143)
+  S.In.TypingProfileReady=true;S.Until(P::Typing);S.In.Receipt=true;S.Step();CHECK(S.Out.ContactVerified&&S.Out.PCFocusAllowed,144)
+  S.In.TypingProfileReady=false;S.Step();                                                        // profile stops applying while typing
+  CHECK(S.Out.Phase==P::SeatedIdle&&S.Out.Clip==C::Sitting&&!S.Out.ContactVerified&&!S.Out.PCFocusAllowed&&S.Out.Refusal==R::TypingProfilePending,145)}
  // Re-sit after a get-up requested mid-way.
  {Sim S;S.In.YawErrorDeg=0;S.Until(P::Typing);S.In.Command=6;S.In.WantSeat=false;S.Run(.5);
   S.In.Command=7;S.In.WantSeat=true;S.Step();CHECK(S.Out.Phase==P::StandingUp,70)

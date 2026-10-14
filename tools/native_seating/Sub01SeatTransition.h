@@ -33,7 +33,10 @@ struct FSub01SeatClips {
 
 enum class ESub01SeatPhase:uint8_t{Standing,Aligning,SittingDown,SeatedIdle,ToTyping,Typing,StandingUp,Refused};
 enum class ESub01SeatClip:uint8_t{None,StandToSit,Sitting,SitToType,DeskTyping,SitToStand};
-enum class ESub01SeatRefusal:uint8_t{None,ChairUnmeasured,Private,Stale,Blocked,RoleMissing,ClipUnavailable,ChairChanged};
+// TypingProfilePending: the keyboard arm profile is not bound, or the live body is not at the
+// transform it was accepted at. The raw DeskTyping clip penetrates the keys (measured 4.7 cm
+// left, 1.8 cm right), so he stays in the captured Sitting idle instead of typing.
+enum class ESub01SeatRefusal:uint8_t{None,ChairUnmeasured,Private,Stale,Blocked,RoleMissing,ClipUnavailable,ChairChanged,TypingProfilePending};
 // Bit per role the character has actually bound to the owner skeleton.
 enum ESub01SeatRole:uint32_t{SeatRoleStandToSit=1,SeatRoleSitting=2,SeatRoleSitToType=4,SeatRoleDeskTyping=8,SeatRoleSitToStand=16};
 // Pose families a contact audit can be made for.
@@ -111,12 +114,15 @@ inline bool Sub01SeatReceipt(const FSub01SeatEvidence& E,const FSub01SeatLivePos
 
 // A seat contact measurement of the live skin (AnalyzeCapturedSeatSkin on the body's actually
 // evaluated component pose, its actual world transform, the audited cushion triangles and the
-// floor the capsule actually stands on). It applies only to the transform it was measured at,
+// surface actually traced under each sole). It applies only to the transform it was measured at,
 // the clip serial then evaluated, and for a short time: never to a later displaced arrival.
 struct FSub01SeatMeasurement {
  bool Valid=false;uint64_t MeshId=0,ChairRevision=0;uint32_t ClipSerial=0;double MeasuredAt=NAN;
  double X=NAN,Y=NAN,Z=NAN,PitchDeg=NAN,YawDeg=NAN,RollDeg=NAN,ScaleX=NAN,ScaleY=NAN,ScaleZ=NAN;
  int InvalidInfluences=-1;int Facing[5]={0,0,0,0,0};
+ // Each sole's own support: the actual surface traced under its footprint (heel, mid, toe on one
+ // flat component), not the floor under the capsule. A sole gap is measured to its own surface.
+ bool SoleSupportVerified[2]={false,false};double SoleFloorZ[2]={NAN,NAN};
  double MinGap[5]={NAN,NAN,NAN,NAN,NAN},Median[5]={NAN,NAN,NAN,NAN,NAN},Coverage[5]={NAN,NAN,NAN,NAN,NAN};
 };
 struct FSub01SeatMeasurementRules {static constexpr double MaxAgeSeconds=.25;};
@@ -125,6 +131,7 @@ inline bool Sub01SeatMeasuredReceipt(const FSub01SeatMeasurement& M,const FSub01
  if(L.Family!=ESub01SeatFamily::DeskTyping||!L.ClipPlaying||M.MeshId!=L.MeshId||M.ChairRevision!=L.ChairRevision||M.ClipSerial!=EvaluatedSerial)return false;
  if(!Sub01SeatFinite(M.MeasuredAt)||!(Now>=M.MeasuredAt)||Now-M.MeasuredAt>FSub01SeatMeasurementRules::MaxAgeSeconds)return false;
  for(int I=0;I<5;++I)if(M.Facing[I]<=0)return false;
+ for(int I=0;I<2;++I)if(!M.SoleSupportVerified[I]||!Sub01SeatFinite(M.SoleFloorZ[I]))return false;
  return Sub01SeatSameTransform(M,L)&&Sub01SeatPatchesInBand(M.MinGap,M.Median,M.Coverage);
 }
 
@@ -146,6 +153,7 @@ struct FSub01SeatInputs {
  // under this serial (the start it applied), at this time. Same clip, older serial: not started.
  double ClipSeconds=0;bool ClipPlaying=false;uint32_t ClipSerial=0;
  bool Receipt=false;         // Sub01SeatReceipt(evidence, live pose) this tick
+ bool TypingProfileReady=false;  // accepted keyboard profile bound AND the live body at its audited transform
 };
 
 struct FSub01SeatOutputs {
@@ -159,6 +167,7 @@ struct FSub01SeatOutputs {
  bool PreciseArrival=false;  // this sit began within the audit tolerance of the audited anchor
  bool ContactVerified=false; // this tick's quantitative receipt, for this command and chair, while typing
  bool PCFocusAllowed=false;  // verified, typing wanted, public, fresh, not blocked
+ bool TypingPending=false;   // typing wanted, seated in the Sitting idle until the keyboard profile applies
  ESub01SeatRefusal Refusal=ESub01SeatRefusal::None;
 };
 
@@ -207,18 +216,24 @@ public:
    break;
   case ESub01SeatPhase::SeatedIdle:
    if(!In.WantSeat||CommandChanged){BeginStandUp(0,In.NowSeconds);break;}
-   if(In.WantTyping&&!TypingFailed&&(In.RolesAvailable&TypeRoles)==TypeRoles){State=ESub01SeatPhase::ToTyping;Request(ESub01SeatClip::SitToType,0,In.NowSeconds);}
+   if(In.WantTyping&&!TypingFailed&&(In.RolesAvailable&TypeRoles)==TypeRoles){
+    if(In.TypingProfileReady){State=ESub01SeatPhase::ToTyping;Request(ESub01SeatClip::SitToType,0,In.NowSeconds);}
+    else{Out.TypingPending=true;Out.Refusal=ESub01SeatRefusal::TypingProfilePending;}
+   }
    else if(In.WantTyping&&(In.RolesAvailable&TypeRoles)!=TypeRoles)Out.Refusal=ESub01SeatRefusal::RoleMissing;
    break;
   case ESub01SeatPhase::ToTyping:
    if(!In.WantSeat||CommandChanged){BeginStandUp(0,In.NowSeconds);break;}
    if(!Started(In)&&In.NowSeconds-RequestedAt>ClipStartTimeoutSeconds){State=ESub01SeatPhase::SeatedIdle;TypingFailed=true;Request(ESub01SeatClip::Sitting,0,In.NowSeconds);Out.Refusal=ESub01SeatRefusal::ClipUnavailable;break;}
    if(!In.WantTyping){State=ESub01SeatPhase::SeatedIdle;Request(ESub01SeatClip::Sitting,0,In.NowSeconds);break;}
+   if(!In.TypingProfileReady){State=ESub01SeatPhase::SeatedIdle;Request(ESub01SeatClip::Sitting,0,In.NowSeconds);Out.TypingPending=true;Out.Refusal=ESub01SeatRefusal::TypingProfilePending;break;}
    if(Finished(In,FSub01SeatClips::SitToTypeSeconds)){State=ESub01SeatPhase::Typing;Request(ESub01SeatClip::DeskTyping,0,In.NowSeconds);}
    break;
   case ESub01SeatPhase::Typing:
    if(!In.WantSeat||CommandChanged){BeginStandUp(0,In.NowSeconds);break;}
    if(!In.WantTyping){State=ESub01SeatPhase::SeatedIdle;Request(ESub01SeatClip::Sitting,0,In.NowSeconds);break;}
+   // Never the raw keyboard hands: a profile that stops applying returns to the Sitting idle.
+   if(!In.TypingProfileReady){State=ESub01SeatPhase::SeatedIdle;Request(ESub01SeatClip::Sitting,0,In.NowSeconds);Out.TypingPending=true;Out.Refusal=ESub01SeatRefusal::TypingProfilePending;break;}
    if(!Started(In)&&In.NowSeconds-RequestedAt>ClipStartTimeoutSeconds)Out.Refusal=ESub01SeatRefusal::ClipUnavailable;
    break;
   case ESub01SeatPhase::StandingUp:
@@ -237,7 +252,7 @@ public:
   Out.SettleMove=State==ESub01SeatPhase::Aligning&&Sub01SeatFinite(In.SettleErrorCm)&&In.SettleErrorCm>FSub01SeatPoseTolerance::Cm&&!In.SettleBlocked
    &&In.NowSeconds-AlignedAt<=SettleTimeoutSeconds;
   Out.PreciseArrival=Animating&&Precise;
-  Out.ContactVerified=State==ESub01SeatPhase::Typing&&Started(In)&&In.Receipt&&!ChairChanged&&In.ChairRevision==SeatedChair&&!CommandChanged;
+  Out.ContactVerified=State==ESub01SeatPhase::Typing&&In.TypingProfileReady&&Started(In)&&In.Receipt&&!ChairChanged&&In.ChairRevision==SeatedChair&&!CommandChanged;
   Out.PCFocusAllowed=Out.ContactVerified&&In.WantTyping&&!In.Private&&In.Fresh&&!In.Blocked;
   if(ChairChanged&&Animating&&Out.Refusal==ESub01SeatRefusal::None)Out.Refusal=ESub01SeatRefusal::ChairChanged;
   return Out;

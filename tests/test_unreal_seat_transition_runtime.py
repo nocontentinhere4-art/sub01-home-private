@@ -92,6 +92,8 @@ int main(){{FSub01SeatEvidence E;E.Loaded=true;E.Family=ESub01SeatFamily::DeskTy
     (seat_report(left_posterior_thigh=(1.5, 2.2)), CHAIR, 'posterior_thigh'),       # thighs floating: no evidence
     (seat_report(buttocks=(-2.7, -1.0)), CHAIR, 'penetration'),
     (seat_report(), json.dumps({**json.loads(CHAIR), 'errors': ['two cushions']}), 'errors'),
+    (seat_report(), CHAIR.replace('180, -210', '212.4, -210').replace('180, -170', '212.4, -170').replace('[180, -210, 50.5], ', '[212.4, -210, 50.5], ')
+     .replace('"min": [180', '"min": [212.4'), 'not the broad seat cushion'),   # a 7.6 x 40 cm lumbar-sized patch
 ])
 def test_out_of_band_reports_never_become_evidence(report, chair, match):
     with pytest.raises(ValueError, match=match):
@@ -190,10 +192,21 @@ def test_live_measurement_settle_and_profile_gate():
     body = methods.split('bool ASub01HomeCharacter::SeatLiveBody(FSub01SeatLivePose& L) const{', 1)[1].split('\n}\n', 1)[0]
     # Only the capsule-attached rendered body has a transform: no camera parent, no diagnostic placement.
     assert body.lstrip().startswith('if(!FirstPersonBody||!FirstPersonBody->GetSkeletalMeshAsset()||HandsDiagnosticSeat||FirstPersonBody->GetAttachParent()!=GetRootComponent())return false;')
-    # The live skin is measured at the actual transform, evaluated pose, audited cushion and walkable floor.
-    measure = methods.split('if(L.ClipPlaying&&SeatCushionTriangles.Num()&&Floor.IsWalkableFloor()&&Now-SeatMeasuredAt>=.2){', 1)[1].split('\n  In.Receipt=', 1)[0]
-    assert 'AnalyzeCapturedSeatSkin(FirstPersonBody->GetSkeletalMeshAsset(),FirstPersonBody->GetComponentSpaceTransforms(),FirstPersonBody->GetComponentTransform(),SeatCushionTriangles,Floor.HitResult.ImpactPoint.Z)' in measure
+    # The live skin is measured at the actual transform and evaluated pose against the audited
+    # cushion; each sole against the surface traced under its own footprint, never the capsule floor.
+    measure = methods.split('if(L.ClipPlaying&&SeatCushionTriangles.Num()&&Now-SeatMeasuredAt>=.2){', 1)[1].split('\n  In.Receipt=', 1)[0]
+    assert 'CurrentFloor' not in methods
+    assert 'M.SoleSupportVerified[Side]=SeatSoleSupport(Side,M.SoleFloorZ[Side],Surfaces[Side]);' in measure
+    assert 'AnalyzeCapturedSeatSkin(FirstPersonBody->GetSkeletalMeshAsset(),FirstPersonBody->GetComponentSpaceTransforms(),FirstPersonBody->GetComponentTransform(),SeatCushionTriangles,M.SoleFloorZ[Side])' in measure
+    assert 'if(I==3+(1-Side)||(Side==1&&I<3))continue;' in measure
     assert 'M.ClipSerial=In.ClipSerial;M.MeasuredAt=Now;' in measure and 'M.X=L.X;' in measure and 'Over<=0){Complete=false;break;}' in measure
+    sole = methods.split('bool ASub01HomeCharacter::SeatSoleSupport(int32 Side,double& FloorZ,FString& Surface) const{', 1)[1].split('\n}\n', 1)[0]
+    assert 'const FVector Points[3]={A,(A+B)/2,B};' in sole and 'FCollisionQueryParams Params(TEXT("Sub01SoleSupport"),true,this);' in sole
+    assert 'Hit.bStartPenetrating||Hit.ImpactNormal.Z<.98)return false;' in sole and 'if(Component&&Hit.GetComponent()!=Component)return false;' in sole
+    assert 'if(!Component||High-Low>.2)return false;' in sole
+    # Only the broad connected cushion makes the chair measured (the lumbar patch is refused).
+    assert 'SeatChairMeasured=SeatCushionTriangles.Num()>=3&&Area>=1000&&Cushion.IsValid;' in methods
+    assert methods.count('SeatChairMeasured=true') == 0
     # The settle is bounded, horizontal, swept, and runs only in the standing turn-in-place phase.
     settle = methods.split('if(SeatOut.SettleMove&&HasBody){', 1)[1].split('\n  }\n', 1)[0]
     assert 'FMath::Min3(Distance,.25f,15.f*FMath::Min(Dt,.1f))' in settle and 'SeatSettleTravel+Step2<=15.f' in settle
@@ -203,20 +216,21 @@ def test_live_measurement_settle_and_profile_gate():
     assert methods.index('if(!SeatOut.MovementInput)GetCharacterMovement()->StopMovementImmediately();') < methods.index('if(SeatOut.SettleMove&&HasBody){')
     assert methods.count('MoveUpdatedComponent(') == 1 and 'MoveUpdatedComponent(' in turn
     assert 'In.SettleErrorCm=FVector2D(SeatEvidence.X-Live.X,SeatEvidence.Y-Live.Y).Size();In.YawErrorDeg=FMath::FindDeltaAngleDegrees(Live.YawDeg,SeatEvidence.YawDeg);' in methods
-    # The keyboard arm profile applies only at its audited body transform.
-    assert 'Instance->ContactProfileAllowed=SeatProfilePoseLoaded&&HasBody&&Sub01SeatSameTransform(SeatProfilePose,Live);' in methods
+    # Typing (and so PC focus) only with the accepted profile bound and the live body at its transform.
+    assert ('In.TypingProfileReady=Instance&&TypingClip&&Instance->ContactSequence==TypingClip&&Instance->ContactTimes.Num()==301'
+            '&&Instance->ContactLocalTransforms.Num()==301*6\n  &&SeatProfilePoseLoaded&&HasBody&&Sub01SeatSameTransform(SeatProfilePose,Live);') in methods
+    assert methods.index('In.TypingProfileReady=') < methods.index('SeatOut=SeatMachine.Tick(In);')
+    # The renderer's posture gate is never bypassed.
+    assert 'ValidatedHandsPostures.Contains(FName(Role.Key))' in methods
+    assert 'In.RolesAvailable=PostureGate?SeatRoles:0;' in methods and 'const bool PostureGate=HandsFailure.IsEmpty()&&HandsPosture==TEXT("Walk");' in methods
+    assert 'if(!Instance||SeatOut.Clip==ESub01SeatClip::None||!HandsFailure.IsEmpty()||HandsPosture!=TEXT("Walk"))return;' in methods
 
 
-def test_profile_gate_in_the_staged_proxy(installed):
-    _, after, _ = installed
-    hands_cpp, hands_h = after['Sub01HomeHands.cpp'], after['Sub01HomeHands.h']
-    assert 'UPROPERTY(Transient) bool ContactProfileAllowed=true;' in hands_h       # the diagnostic seat path is unchanged
-    evaluate = hands_cpp.split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
-    assert evaluate.index('Blend.Evaluate_AnyThread(Output);') < evaluate.index('if(!ContactAllowed)return true;') < evaluate.index('Output.Pose[Compact]=T;')
-    pre = hands_cpp.split('virtual void PreUpdate(', 1)[1].split('virtual void CacheBones()', 1)[0]
-    assert 'ContactAllowed=Hands->ContactProfileAllowed;' in pre
-    # A missing install anchor refuses instead of half-applying.
-    _, after, _ = installed
-    with pytest.raises(ValueError):
-        adapter.install({'header': after['Sub01HomeLab.h'], 'cpp': after['Sub01HomeLab.cpp'],
-                         'hands_header': after['Sub01HomeHands.h'], 'hands_cpp': after['Sub01HomeHands.cpp']})
+
+def test_no_raw_keyboard_fallback_in_the_staged_proxy(installed):
+    before, after, _ = installed
+    # The proxy's contact-profile path is untouched; raw typing is prevented by never requesting it.
+    for name in ('Sub01HomeHands.cpp',):
+        evaluate = after[name].split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
+        original = before[name].split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
+        assert 'ContactAllowed' not in after[name] and evaluate.replace(adapter.PROXY_EVALUATED, '') == original

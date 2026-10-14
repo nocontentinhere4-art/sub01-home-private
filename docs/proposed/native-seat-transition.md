@@ -35,14 +35,26 @@ measured cushion alone (approach = cushion centre + the captured hips travel of 
 
 Everything below is source or server-side data; no step here was run.
 
-1. **Floor:** the offline seat audit must use the measured collision floor (2.5001 cm), not
-   `FLOOR_CM = 0.0`. The renderer is correcting this. The live measurement does not depend on
-   it, because it uses `CharacterMovement->CurrentFloor` (the walkable floor actually under the
-   capsule).
+1. **Floor and soles:** the offline seat audit must use the measured collision floor
+   (2.5001 cm), not `FLOOR_CM = 0.0`. The renderer is correcting this. The live measurement
+   never uses the floor under the capsule, because the office rug at the desk arrival is 3 cm
+   while the floor near the soles is 2.5 cm. Each sole is measured to the surface traced under
+   its own footprint by `SeatSoleSupport`:
+   - three downward traces against complex collision, at the ankle, the mid-foot and the toe;
+   - all three must hit the same component, flat (normal Z ≥ 0.98), within 0.2 cm of each other,
+     and not start penetrating;
+   - the analyzer then runs once per sole with that sole's surface height.
+
+   A sole without verified support gives no receipt. A rug edge between the traces is caught
+   only by the same-component rule.
 2. **Chair report:** `private-audit/native-chair-surface.json` needs `errors: []` and the
    cushion's `sections[].vertices_world_cm` plus `cushion_surface.triangle_indices`, from the
-   real chair triangles. Its exact text is the chair revision, so re-measuring invalidates all
-   evidence.
+   real chair triangles. The cushion must be the broad connected seat patch: 2228.42 cm²,
+   bounds [173.661, -214.063, 44.357] to [226.132, -166.341, 51.407] cm.
+   - Both the evidence builder and the native loader refuse a cushion under 1000 cm². The old
+     58.37 cm² top was the lumbar.
+   - The approach fallback uses the centre of the cushion triangles' bounds.
+   - The report's exact text is the chair revision, so re-measuring invalidates all evidence.
 3. **Placement corrections first:** apply the renderer's relative chair, body and keyboard
    correction (from the measured seat geometry and the ~1 cm right-hand reach deficit). Then
    re-run in this order:
@@ -53,14 +65,29 @@ Everything below is source or server-side data; no step here was run.
    profile's `body_cm`/`body_yaw` must describe the same body transform. The arm profile is
    applied only while the live body is at the profile's transform, within 0.05 cm and 0.05°.
    Away from it, the raw DeskTyping clip plays, with no arm override.
-5. **Body attachment:** the live seat uses the capsule-attached rendered body (Walk attachment,
+5. **Keyboard profile and posture gate:**
+   - **No raw typing:** the raw DeskTyping clip penetrates the keys (4.7 cm left, 1.8 cm
+     right), so it is never requested. Typing needs `TypingProfileReady`: the accepted
+     301-sample keyboard profile bound to the DeskTyping clip, and the live body at the
+     profile's audited transform (0.05 cm, 0.05°).
+   - **Pending state:** otherwise he stays in the captured Sitting idle with `TypingPending` and
+     refusal `TypingProfilePending`. PC focus is not authorized. A profile or pose that stops
+     applying during the bridge or typing returns him to Sitting on that tick.
+   - **Prerequisite:** the renderer must bind the accepted profile in the live home, not only
+     in the diagnostic seat.
+   - **Posture gate:** seat clips load only if the renderer lists them in
+     `ValidatedHandsPostures` (`+ValidatedHandsPostures=StandToSit`, and so on). They play only
+     while `HandsFailure` is empty and the posture is the gated Walk posture. The seat calls
+     `SetHandsPosture(Walk)` and checks its result.
+   - **Unmeasured:** the SitToType bridge itself is not measured against the keys.
+6. **Body attachment:** the live seat uses the capsule-attached rendered body (Walk attachment,
    `WalkMeshOffset`, `HandsMeshRotation`). It never uses the camera-attached `DeskMeshOffset`
    posture or the diagnostic `SetWorldLocationAndRotation`. `SeatLiveBody` refuses any other
    attachment, so with it there is no transform and no receipt.
-6. **Editor build:** the live measurement calls `AnalyzeCapturedSeatSkin`, which is
+7. **Editor build:** the live measurement calls `AnalyzeCapturedSeatSkin`, which is
    `WITH_EDITOR` only because it reads the imported model. The private live home runs on the
    editor binary. In a packaged build it returns an error, and contact stays unverified.
-7. **Staging:** apply `install_module()` after `stage_unreal_home_runtime.stage()`, the
+8. **Staging:** apply `install_module()` after `stage_unreal_home_runtime.stage()`, the
    contact-profile runtime and the skin-contact native module. The anchors must be unique; a
    missing anchor refuses the whole install.
 
@@ -85,11 +112,11 @@ Everything below is source or server-side data; no step here was run.
   - **Offline evidence:** applies only at its exact audited transform.
   - **Live measurement (the practical one):** while typing, at 5 Hz, `AnalyzeCapturedSeatSkin`
     measures the actually evaluated component pose at the actual body transform, against the
-    audited cushion and the walkable floor. The result is stamped with that transform, the
+    audited cushion and the surface under each sole. The result is stamped with that transform, the
     evaluated clip serial and the time. It is accepted only for 0.25 s, the same serial and the
     same transform within 0.05 cm and 0.05°. A later displaced arrival is never covered.
-  - **Live measurement gates:** all five patches in band, no invalid influences, and facing skin
-    in every patch. Each result is logged as `SUB01_SEAT_LIVE_MEASUREMENT` when it changes.
+  - **Live measurement gates:** all five patches in band, no invalid influences, facing skin in
+    every patch, and verified support under both soles. Each result is logged as `SUB01_SEAT_LIVE_MEASUREMENT` when it changes.
 
 ## What the adapter does each live tick
 
