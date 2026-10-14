@@ -123,6 +123,16 @@ def local_cyl(r, h, seg=24):
     return cylinder_mesh(r, -h / 2, h / 2, 0, 0, seg)
 
 
+def test_rotated_lamp_bounds_use_actual_vertices_not_local_box_corners():
+    d = Doc()
+    index = d.mesh_node([(0, 0, 0), (1, 0, 0), (0, 1, 0)], [0, 1, 2], 'lamp')
+    d.doc['nodes'][index]['rotation'] = [0, 0, math.sin(math.pi / 8), math.cos(math.pi / 8)]
+    exact = B.glb_mesh_nodes(d.doc, d.buffers())[0]['aabb']
+    conservative = B.glb_mesh_nodes(d.doc)[0]['aabb']
+    assert exact[1][1] == pytest.approx(math.sqrt(.5))
+    assert conservative[1][1] == pytest.approx(math.sqrt(2))
+
+
 def build_home(stem_copies=1, stem_radius=.014, rail_conflict=False):
     d = Doc()
     # shared metal batch node 163: 3 rail balusters + the white desk-lamp stem (home.js:1114)

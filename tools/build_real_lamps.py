@@ -293,7 +293,7 @@ def _apply(m, p):
     return tuple(m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3] for i in range(3))
 
 
-def glb_mesh_nodes(doc):
+def glb_mesh_nodes(doc, buffers=None):
     """Every mesh node: index, name, materials, world translation, world AABB (source metres)."""
     parents = {}
     for i, n in enumerate(doc.get('nodes', [])):
@@ -314,11 +314,16 @@ def glb_mesh_nodes(doc):
         mats = []
         for prim in doc['meshes'][n['mesh']]['primitives']:
             a = doc['accessors'][prim['attributes']['POSITION']]
-            lo, hi = a['min'], a['max']
-            for cx in (lo[0], hi[0]):
-                for cy in (lo[1], hi[1]):
-                    for cz in (lo[2], hi[2]):
-                        corners.append(_apply(m, (cx, cy, cz)))
+            if buffers is not None:
+                # A rotated local AABB is conservative, not the evaluated mesh
+                # bounds. Exact vertices are required to match detailed lamps.
+                corners.extend(_apply(m, p) for p in accessor_vec3(doc, buffers, prim['attributes']['POSITION']))
+            else:
+                lo, hi = a['min'], a['max']
+                for cx in (lo[0], hi[0]):
+                    for cy in (lo[1], hi[1]):
+                        for cz in (lo[2], hi[2]):
+                            corners.append(_apply(m, (cx, cy, cz)))
             if 'material' in prim:
                 mats.append(doc['materials'][prim['material']].get('name'))
         rows.append({'index': i, 'name': n.get('name'), 'materials': mats,
@@ -350,7 +355,6 @@ def primitive_components(doc, buffers, node_index):
 
     Triangle ID = index of the triangle inside its primitive (indices // 3), the format
     of the excision manifests. Vertices sharing an exact position are welded."""
-    nodes = glb_mesh_nodes(doc)
     node = doc['nodes'][node_index]
     parents = {c: i for i, n in enumerate(doc['nodes']) for c in n.get('children', [])}
     chain, j = [], node_index
@@ -877,7 +881,7 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
     if sha256_file(args.source_glb) != args.source_sha:
         raise RefuseError('full-home GLB sha256 differs from the explicit expected identity')
     doc, buffers = load_gltf(args.source_glb)
-    nodes = glb_mesh_nodes(doc)
+    nodes = glb_mesh_nodes(doc, buffers)
     comp_cache = {}
 
     def components_of(index):
