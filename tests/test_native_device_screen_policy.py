@@ -74,19 +74,19 @@ def test_integrated_bridge_gates_fetches_and_stages_header():
     assert bridge.index('static FString Sub01PhoneIdentity(') > bridge.index('#include "Dom/JsonObject.h"')
     # Each fetch is behind the policy; nothing else in Poll requests a frame.
     assert poll.count('FetchFrame(') == 2
-    assert 'const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);' in poll
+    assert 'const FSub01DeviceScreenInputs Screen=Sub01ScreenInputs(State,&Identity,&Game);' in poll
     assert 'if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
     assert 'if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);' in poll
     assert 'phone_browser_screen' not in poll           # only through the helper, after phone_screen
     # Home is read once, before use; the blanking and Pong branches are unchanged.
     assert poll.count('State->TryGetObjectField(TEXT("home"),Home)') == 1
-    assert poll.index('FString Game,Activity') < poll.index('Sub01TVFetchesMinecraft')
+    assert poll.index('Sub01ScreenInputs(State,&Identity,&Game)') < poll.index('Sub01TVFetchesMinecraft')
     for kept in ('else if(Materials.Contains(TEXT("phone")))', 'else if(Game==TEXT("pong"))',
                  'else if(Materials.Contains(TEXT("tv")))Materials[TEXT("tv")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);'):
         assert poll.count(kept) == 1 and original.count(kept) == 1
     # A downloaded phone frame is kept only if it is still the current one, from the same source.
     fetch = bridge.split('void USub01HomeDeviceBridge::FetchFrame(', 1)[1].split('\nvoid USub01HomeDeviceBridge::Action', 1)[0]
-    assert 'if(Device==TEXT("phone")&&Sub01PhoneIdentity(After)!=Identity)return;' in fetch
+    assert 'if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After))return;' in fetch  # same policy, fresh state (test_native_device_frame_freshness.py)
     assert 'phone_browser_screen' not in fetch
     # Same authenticated loopback route and frame identity as before.
     assert 'R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")' in fetch
