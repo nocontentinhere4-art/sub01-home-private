@@ -85,6 +85,7 @@ FIELDS = r'''
 '''
 METHODS = r'''
 #include "Engine/OverlapResult.h"
+#include "Engine/StaticMesh.h"
 #include "PhysicsEngine/BodySetup.h"
 FTransform ASub01HomeCharacter::ExitDoorPose(const FTransform& Closed,float Angle) const{
  const FVector Hinge(147.45f,394,2.6f);const FQuat Swing(FVector::UpVector,FMath::DegreesToRadians(Angle));
