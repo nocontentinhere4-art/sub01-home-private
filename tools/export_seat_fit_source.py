@@ -50,6 +50,8 @@ PATCHES = ('buttocks', 'left_posterior_thigh', 'right_posterior_thigh', 'left_so
 SOLE_MATERIAL, SOLE_MAX_REST_Y_M, SOLE_MAX_NORMAL_Y = 'feet', .004, -.7     # root's plantar rule
 REGION_MIN_SHARE = .30                                                      # native region rule
 # Root's UE measurements at 3 s (lowest / median / highest plantar gap to z = 0, cm).
+WITNESS = ROOT / 'docs/proposed/native-chair-measured/20261014-actual-native-plantar-witness.json.gz'
+WITNESS_BIND_BAND_CM = .4              # root's selector: upper_bind = min_bind + 0.4 cm
 ROOT_SOLES_3S = {'left': (-.161045, 10.39739, 24.26818), 'right': (-.360148, 7.52677, 14.81967)}
 
 
@@ -183,7 +185,90 @@ def joint_worlds(clip: G.Gltf, names, times=TIMES):
     return out, parents
 
 
-def build(owner=OWNER, clip=CLIP, cache=None):
+def load_witness(path):
+    """Root's fixed native plantar witness (gzip JSON of DumpImportedFootWitness), reduced to root's plantar
+    selector (docs/proposed/native-chair-measured/*-existing-seat-foot-fit-analysis.json): bind native Z <= -87.635
+    cm (lowest bind -88.035 + 0.4), bind normal Z < -0.7, foot/toe weight >= 0.3 (already the dump's rule)."""
+    import gzip
+    opener = gzip.open if str(path).endswith('.gz') else open
+    with opener(path, 'rt') as fh:
+        d = json.load(fh)
+    out = {}
+    for s in d['samples']:
+        v = s['vertices']
+        b = np.array([x['bindPositionCm'] for x in v])
+        n = np.array([x['bindNormal'] for x in v])
+        keep = (b[:, 2] <= b[:, 2].min() + WITNESS_BIND_BAND_CM) & (n[:, 2] < SOLE_MAX_NORMAL_Y)
+        out[round(float(s['time']), 6)] = {
+            'world': np.array([x['worldPositionCm'] for x, k in zip(v, keep) if k]),
+            'side': np.array([x['side'] for x, k in zip(v, keep) if k]),
+            'global': np.array([x['globalVertex'] for x, k in zip(v, keep) if k])}
+    return out
+
+
+def witness_soles(owner_g, names, ibm, worlds, witness):
+    """Owner GLB vertices identified with root's fixed 4171 native plantar witnesses: nearest posed vertex
+    (UE world cm at the audited body transform) among all 'feet' material vertices at 3 s; checked at 6 and 8 s."""
+    doc = owner_g.doc
+    mats = [m.get('name') for m in doc.get('materials', [])]
+    prims = []
+    seen, prim_id = set(), 0
+    for node in doc['nodes']:
+        if 'mesh' not in node or node.get('skin') != 0 or node['mesh'] in seen:
+            continue
+        seen.add(node['mesh'])
+        for prim in doc['meshes'][node['mesh']]['primitives']:
+            if prim.get('material') is not None and mats[prim['material']] == SOLE_MATERIAL:
+                prims.append((prim_id, prim))
+            prim_id += 1
+    if not prims:
+        raise ValueError('no feet primitive')
+    cols = {k: [] for k in ('pid', 'vid', 'pos', 'nrm', 'jts', 'wts')}
+    for pid, prim in prims:
+        a = prim['attributes']
+        p_ = accessor(owner_g, a['POSITION'])
+        cols['pid'].append(np.full(len(p_), pid))
+        cols['vid'].append(np.arange(len(p_)))
+        cols['pos'].append(p_)
+        cols['nrm'].append(accessor(owner_g, a['NORMAL']))
+        cols['jts'].append(accessor(owner_g, a['JOINTS_0']).astype(int))
+        cols['wts'].append(accessor(owner_g, a['WEIGHTS_0']))
+    pids, vids, pos, nrm, jts, wts = (np.concatenate(cols[k]) for k in ('pid', 'vid', 'pos', 'nrm', 'jts', 'wts'))
+    wts = wts / wts.sum(axis=1, keepdims=True)
+
+    def posed(frame):
+        mats_ = worlds[frame] @ ibm
+        hom = np.hstack([pos, np.ones((len(pos), 1))])
+        p = sum(wts[:, k, None] * np.einsum('nij,nj->ni', mats_[jts[:, k], :3, :], hom) for k in range(4))
+        return to_ue(p)
+
+    def nearest(src, dst):
+        idx, err = np.zeros(len(dst), int), np.zeros(len(dst))
+        for i in range(0, len(dst), 512):
+            d2 = ((dst[i:i + 512, None, :] - src[None]) ** 2).sum(-1)
+            idx[i:i + 512] = d2.argmin(1)
+            err[i:i + 512] = np.sqrt(d2.min(1))
+        return idx, err
+    w3 = witness[3.0]
+    idx, err = nearest(posed(0), w3['world'])
+    checks = {'3.0': {'max_cm': float(err.max()), 'median_cm': float(np.median(err))}}
+    for t, f in ((6.0, 180), (8.0, 300)):
+        if t in witness:
+            e = np.linalg.norm(posed(f)[idx] - witness[t]['world'], axis=1)
+            checks[str(t)] = {'max_cm': float(e.max()), 'median_cm': float(np.median(e))}
+    out = {}
+    for side in ('left', 'right'):
+        m = w3['side'] == side
+        vid = idx[m]
+        out[f'{side}_sole'] = {'prim': pids[vid], 'vertex': vids[vid], 'pos': pos[vid], 'nrm': nrm[vid],
+                               'joints': jts[vid], 'weights': wts[vid]}
+    info = {'source': 'root fixed native plantar witness', 'witness_vertices': {s: int((w3['side'] == s).sum()) for s in ('left', 'right')},
+            'unique_owner_vertices': {s: int(len(np.unique(idx[w3['side'] == s]))) for s in ('left', 'right')},
+            'match_error_cm': checks}
+    return out, info
+
+
+def build(owner=OWNER, clip=CLIP, cache=None, witness=None):
     cache = Path(cache or ROOT / 'out/seat-fit-cache')
     owner_g = G.Gltf(decoded(owner, cache))
     clip_g = G.Gltf(clip)
@@ -191,6 +276,10 @@ def build(owner=OWNER, clip=CLIP, cache=None):
     skin = owner_g.doc['skins'][0]
     ibm = accessor(owner_g, skin['inverseBindMatrices']).reshape(-1, 4, 4).transpose(0, 2, 1)
     worlds, parents = joint_worlds(clip_g, names)
+    witness_info = None
+    if witness is not None:
+        soles, witness_info = witness_soles(owner_g, names, ibm, worlds, load_witness(witness))
+        patches.update(soles)
     meta = {'schema': SCHEMA, 'owner': str(Path(owner).relative_to(ROOT)) if Path(owner).is_relative_to(ROOT) else str(owner),
             'owner_sha256': hashlib.sha256(Path(owner).read_bytes()).hexdigest(),
             'clip': str(Path(clip).relative_to(ROOT)) if Path(clip).is_relative_to(ROOT) else str(clip),
@@ -201,6 +290,9 @@ def build(owner=OWNER, clip=CLIP, cache=None):
                       'soles': 'material "feet", rest Y <= 0.004 m, bind normal Y < -0.7 (fixed set)',
                       'fingers': 'AnalyzeCapturedFingerSkin: distal "3" joint weight >= 0.30, left first'},
             'counts': {p: int(len(patches[p]['vertex'])) for p in PATCHES}}
+    if witness_info is not None:
+        meta['rules']['soles'] = 'root fixed native plantar witness (4171), identified by nearest posed owner vertex'
+        meta['plantar_witness'] = dict(witness_info, file=str(witness))
     data = {'meta': np.array(json.dumps(meta)), 'names': np.array(names), 'parents': parents,
             'ibm': ibm, 'joint_world': worlds, 'times': np.array(TIMES)}
     for p, d in patches.items():
@@ -327,10 +419,14 @@ def main(argv=None):
     ap.add_argument('--clip', default=str(CLIP))
     ap.add_argument('--cache', default=str(ROOT / 'out/seat-fit-cache'))
     ap.add_argument('--out', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
+    ap.add_argument('--witness', default=str(WITNESS) if WITNESS.exists() else None,
+                    help="root's fixed native plantar witness (.json.gz); 'none' keeps the GLB plantar rule")
     args = ap.parse_args(argv)
-    out = save(build(args.owner, args.clip, args.cache), args.out)
+    witness = None if args.witness in (None, 'none') else args.witness
+    out = save(build(args.owner, args.clip, args.cache, witness), args.out)
     source = Source.load(out)
     print(json.dumps({'out': str(out), 'bytes': out.stat().st_size, 'counts': source.meta['counts'],
+                      'plantar_witness': source.meta.get('plantar_witness'),
                       'parity_3s': parity(source)}, indent=1))
     return 0
 

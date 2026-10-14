@@ -365,7 +365,9 @@ class Trial:
             out[side] = {'over': over.sum(axis=1), 'over_min': np.where(over, p[..., 2], np.inf).min(axis=1)}
         return out
 
-    def fit_arms(self, W):
+    def fit_arms(self, W, max_shift_cm=KEY_MAX_SHIFT_CM, frames_mask=None):
+        """max_shift_cm: the native refusal cap (12 cm). An OFFLINE bake may pass a larger value; the requests
+        over 12 cm are still reported as `refused_by_cap` (what the native runtime would refuse)."""
         top = self.keys['top_cm']
         first = {}
         for npass in range(ARM_PASSES):
@@ -374,7 +376,9 @@ class Trial:
             for side, chain in ARMS.items():
                 a = audit[side]
                 delta = top + KEY_CONTACT_TARGET_CM - a['over_min']
-                ok = (a['over'] >= KEY_MIN_OVER_VERTICES) & np.isfinite(delta) & (np.abs(delta) <= KEY_MAX_SHIFT_CM)
+                ok = (a['over'] >= KEY_MIN_OVER_VERTICES) & np.isfinite(delta) & (np.abs(delta) <= max_shift_cm)
+                if frames_mask is not None:
+                    ok &= frames_mask
                 move = ok & (np.abs(delta) > KEY_MIN_SHIFT_CM)
                 shift = np.where(ok, delta, 0.)
                 shoulder, elbow, hand = (W[:, self.sk.j(n), :3, 3] for n in chain)

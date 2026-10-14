@@ -1,0 +1,775 @@
+{
+ "role": "TypeToSit",
+ "asset": "/Game/Sub01Hands/Seating/SUB01_TypeToSit_seated",
+ "labels": {
+  "label": "trial",
+  "verified": false,
+  "requires_server_reaudit": true,
+  "requires_native_collision_audit": true,
+  "cushion": "root chair surface report (actual UE cushion triangles)",
+  "cushion_is_proxy": false,
+  "chair_horizontal_shift_cm": [
+   3.875,
+   -32.5
+  ],
+  "role": "TypeToSit",
+  "source_clip": "web/room/mh_mx/room_mx_type_to_sit.glb",
+  "corrections": [
+   "pelvis_pitch_about_hips_lateral_axis_pivot_spine",
+   "vertical_lowering",
+   "spine_counter_rotation_keeps_upper_body_world_orientation",
+   "non_stretch_two_bone_leg_ik_captured_knee_pole_captured_foot_world_rotation",
+   "constant_per_leg_foot_raise_to_support",
+   "baked_keyboard_arm_ik_captured_elbow_pole_captured_wrist_world_rotation_finger_locals_unchanged",
+   "correction_weighted_by_seated_hips_height"
+  ],
+  "theta_deg": [
+   12.0,
+   12.0
+  ],
+  "lowering_cm": [
+   7.4638,
+   7.6137
+  ],
+  "foot_raise_cm": {
+   "left": 2.67067,
+   "right": 2.86336
+  }
+ },
+ "correction_curve": {
+  "per_frame_on_gated_frames": {
+   "theta_needed_deg": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "theta_deg": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "lowering_cm": [
+    7.4941,
+    7.4861,
+    7.4773,
+    7.4683,
+    7.4643,
+    7.4638,
+    7.465,
+    7.4705,
+    7.4768,
+    7.4834,
+    7.4911,
+    7.4995,
+    7.5082,
+    7.5173,
+    7.527,
+    7.5385,
+    7.5495,
+    7.5602,
+    7.5716,
+    7.5833,
+    7.5943,
+    7.6039,
+    7.6101,
+    7.6128,
+    7.6137,
+    7.613,
+    7.6119,
+    7.6107,
+    7.6098
+   ],
+   "theta_range_deg": [
+    12.0,
+    12.0
+   ],
+   "lowering_range_cm": [
+    7.4638,
+    7.6137
+   ],
+   "lowering_max_rate_cm_s": 0.349,
+   "theta_max_rate_deg_s": 0.0
+  },
+  "seated_weight": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "gated_frames": "all frames (hips stay at the seated height)",
+  "gated_frame_count": 29,
+  "at_seat_height_frame_count": 29,
+  "seam_ease": {
+   "start": {
+    "neighbour": "DeskTyping_seated.last",
+    "theta_deg": 22.5,
+    "neighbour_lowering_cm": 8.6192,
+    "ease_s": 0.467,
+    "own_lowering_at_seam_cm": 8.3213,
+    "vertical_mismatch_cm": -0.2979
+   },
+   "end": {
+    "neighbour": "SeatedIdle.first",
+    "theta_deg": 24.0,
+    "neighbour_lowering_cm": 7.395,
+    "ease_s": 0.467,
+    "own_lowering_at_seam_cm": 8.7783,
+    "vertical_mismatch_cm": 1.3833
+   }
+  },
+  "theta_applied_deg": [
+   22.5,
+   22.4657,
+   22.2557,
+   21.7705,
+   20.9806,
+   19.9132,
+   18.6372,
+   17.25,
+   15.8628,
+   14.5868,
+   13.5194,
+   12.7295,
+   12.2443,
+   12.0343,
+   12.0,
+   12.0392,
+   12.2792,
+   12.8338,
+   13.7364,
+   14.9564,
+   16.4146,
+   18.0,
+   19.5854,
+   21.0436,
+   22.2636,
+   23.1662,
+   23.7208,
+   23.9608,
+   24.0
+  ],
+  "lowering_applied_cm": [
+   8.3213,
+   8.3028,
+   8.2692,
+   8.2063,
+   8.1221,
+   8.04,
+   7.9451,
+   7.8532,
+   7.7593,
+   7.6833,
+   7.6295,
+   7.5717,
+   7.5323,
+   7.5205,
+   7.5267,
+   7.5423,
+   7.5774,
+   7.6463,
+   7.7548,
+   7.9168,
+   8.0476,
+   8.1955,
+   8.3326,
+   8.4653,
+   8.5851,
+   8.6783,
+   8.7421,
+   8.773,
+   8.7783
+  ],
+  "arm_ramp": {
+   "left": {
+    "seam_shift_cm": 7.7922,
+    "reached_all_frames": true,
+    "min_margin_cm": 4.4149,
+    "over_native_12cm_cap": false
+   },
+   "right": {
+    "seam_shift_cm": null,
+    "reason": "hand not over the keys at the seam frame"
+   }
+  }
+ },
+ "in_memory_all_keys": {
+  "frames": 29,
+  "seated_frames": 29,
+  "seat": {
+   "buttocks": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -0.445,
+      0.0921
+     ],
+     "min_band_vertices": 40,
+     "min_over_surface_vertices": 920
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      6.583,
+      6.7539
+     ],
+     "min_over_surface_vertices": 1190
+    }
+   },
+   "left_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -0.8132,
+      -0.3792
+     ],
+     "min_band_vertices": 304,
+     "min_over_surface_vertices": 1799
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      3.7395,
+      3.8673
+     ],
+     "min_over_surface_vertices": 2807
+    }
+   },
+   "right_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -2.0921,
+      -1.555
+     ],
+     "min_band_vertices": 998,
+     "min_over_surface_vertices": 2092
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      1.8674,
+      1.9302
+     ],
+     "min_over_surface_vertices": 2975
+    }
+   }
+  },
+  "soles": {
+   "left_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0034
+     ],
+     "min_band_vertices": 96
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.6697,
+      -2.6673
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   },
+   "right_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0038
+     ],
+     "min_band_vertices": 154
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.8624,
+      -2.8596
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   }
+  },
+  "bone_length_max_error_cm": 0.0,
+  "foot_world_rotation_max_change_deg": 1.2e-06,
+  "upper_body_world": {
+   "rotation_max_change_deg": {
+    "Spine": 1.2e-06,
+    "Spine1": 0.0,
+    "Spine2": 1.7e-06,
+    "Neck": 1.2e-06,
+    "Head": 1.2e-06,
+    "LeftShoulder": 1.2e-06,
+    "RightShoulder": 1.2e-06
+   },
+   "spine_translation_cm": {
+    "vertical": [
+     -8.7783,
+     -7.5205
+    ],
+    "horizontal_max": 0.0
+   }
+  },
+  "head_height_change_cm": [
+   -8.7783,
+   -7.5205
+  ],
+  "key_contact": {
+   "left": {
+    "pass_all_frames": true,
+    "gate": "gap at seam frame 0; penetration on every frame",
+    "seam_gap_cm": 0.08,
+    "seam_hand_over_keys": true,
+    "frames_over_keys": 7,
+    "frames_gap_over_0_2cm": 6,
+    "frames_penetration_over_0_1cm": 0,
+    "corrected_gap_cm": [
+     0.08,
+     4.0629
+    ],
+    "raw_gap_cm": [
+     0.6091,
+     4.644
+    ],
+    "min_over_key_vertices": 0
+   },
+   "right": {
+    "pass_all_frames": true,
+    "gate": "gap at seam frame 0; penetration on every frame",
+    "seam_gap_cm": null,
+    "seam_hand_over_keys": false,
+    "frames_over_keys": 0,
+    "frames_gap_over_0_2cm": 0,
+    "frames_penetration_over_0_1cm": 0,
+    "corrected_gap_cm": null,
+    "raw_gap_cm": null,
+    "min_over_key_vertices": 0
+   }
+  },
+  "note": "every key of the written clip in memory; over-key contact is gated where the hand is over the keys"
+ },
+ "glb": "docs/proposed/seat-pose-fit/SUB01_TypeToSit_seated.glb",
+ "sha256": "d25496c64288de5f1574956bac7099d60b7e8a8e3345f4e821883fcf13422452",
+ "bytes": 57652,
+ "key_count": 29,
+ "duration_s": 0.9333,
+ "audit": {
+  "times": "every written key",
+  "read_back_from_written_glb": true,
+  "frames": 29,
+  "seated_frames": 29,
+  "seat": {
+   "buttocks": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -0.445,
+      0.0921
+     ],
+     "min_band_vertices": 40,
+     "min_over_surface_vertices": 920
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      6.583,
+      6.7539
+     ],
+     "min_over_surface_vertices": 1190
+    }
+   },
+   "left_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -0.8132,
+      -0.3792
+     ],
+     "min_band_vertices": 304,
+     "min_over_surface_vertices": 1799
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      3.7395,
+      3.8673
+     ],
+     "min_over_surface_vertices": 2807
+    }
+   },
+   "right_posterior_thigh": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      -2.0921,
+      -1.555
+     ],
+     "min_band_vertices": 998,
+     "min_over_surface_vertices": 2092
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      1.8674,
+      1.9302
+     ],
+     "min_over_surface_vertices": 2975
+    }
+   }
+  },
+  "soles": {
+   "left_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0034
+     ],
+     "min_band_vertices": 96
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.6697,
+      -2.6673
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   },
+   "right_sole": {
+    "pass_all_frames": true,
+    "failing_frames": 0,
+    "failures": {},
+    "corrected": {
+     "lowest_gap_cm": [
+      0.001,
+      0.0038
+     ],
+     "min_band_vertices": 154
+    },
+    "raw": {
+     "pass_frames": 0,
+     "lowest_gap_cm": [
+      -2.8624,
+      -2.8596
+     ]
+    },
+    "added_foot_slide_cm_max": 0.0,
+    "gated_frames": "all frames",
+    "unseated_frames_penetration": 0,
+    "unseated_note": "stepping frames lift a foot genuinely; only penetration is counted there"
+   }
+  },
+  "bone_length_max_error_cm": 0.0,
+  "foot_world_rotation_max_change_deg": 6.7e-06,
+  "upper_body_world": {
+   "rotation_max_change_deg": {
+    "Spine": 3.4e-06,
+    "Spine1": 3.4e-06,
+    "Spine2": 3e-06,
+    "Neck": 3.4e-06,
+    "Head": 3.8e-06,
+    "LeftShoulder": 4.8e-06,
+    "RightShoulder": 3.8e-06
+   },
+   "spine_translation_cm": {
+    "vertical": [
+     -8.7783,
+     -7.5205
+    ],
+    "horizontal_max": 6e-07
+   }
+  },
+  "head_height_change_cm": [
+   -8.7783,
+   -7.5205
+  ],
+  "key_contact": {
+   "left": {
+    "pass_all_frames": true,
+    "gate": "gap at seam frame 0; penetration on every frame",
+    "seam_gap_cm": 0.08,
+    "seam_hand_over_keys": true,
+    "frames_over_keys": 7,
+    "frames_gap_over_0_2cm": 6,
+    "frames_penetration_over_0_1cm": 0,
+    "corrected_gap_cm": [
+     0.08,
+     4.0629
+    ],
+    "raw_gap_cm": [
+     0.6091,
+     4.644
+    ],
+    "min_over_key_vertices": 0
+   },
+   "right": {
+    "pass_all_frames": true,
+    "gate": "gap at seam frame 0; penetration on every frame",
+    "seam_gap_cm": null,
+    "seam_hand_over_keys": false,
+    "frames_over_keys": 0,
+    "frames_gap_over_0_2cm": 0,
+    "frames_penetration_over_0_1cm": 0,
+    "corrected_gap_cm": null,
+    "raw_gap_cm": null,
+    "min_over_key_vertices": 0
+   }
+  },
+  "finger_local_max_change_deg": 2.4e-06
+ },
+ "all_gates_pass": true,
+ "hips_path_ue_cm": [
+  [
+   203.831,
+   -243.408,
+   66.523
+  ],
+  [
+   203.836,
+   -243.402,
+   66.539
+  ],
+  [
+   203.842,
+   -243.37,
+   66.552
+  ],
+  [
+   203.848,
+   -243.296,
+   66.568
+  ],
+  [
+   203.856,
+   -243.175,
+   66.577
+  ],
+  [
+   203.864,
+   -243.009,
+   66.561
+  ],
+  [
+   203.873,
+   -242.809,
+   66.543
+  ],
+  [
+   203.883,
+   -242.589,
+   66.516
+  ],
+  [
+   203.893,
+   -242.367,
+   66.497
+  ],
+  [
+   203.902,
+   -242.159,
+   66.474
+  ],
+  [
+   203.91,
+   -241.984,
+   66.448
+  ],
+  [
+   203.917,
+   -241.854,
+   66.449
+  ],
+  [
+   203.923,
+   -241.774,
+   66.455
+  ],
+  [
+   203.928,
+   -241.739,
+   66.452
+  ],
+  [
+   203.933,
+   -241.733,
+   66.443
+  ],
+  [
+   203.937,
+   -241.739,
+   66.43
+  ],
+  [
+   203.94,
+   -241.779,
+   66.412
+  ],
+  [
+   203.943,
+   -241.871,
+   66.382
+  ],
+  [
+   203.944,
+   -242.02,
+   66.338
+  ],
+  [
+   203.945,
+   -242.22,
+   66.268
+  ],
+  [
+   203.946,
+   -242.456,
+   66.252
+  ],
+  [
+   203.948,
+   -242.71,
+   66.236
+  ],
+  [
+   203.951,
+   -242.96,
+   66.237
+  ],
+  [
+   203.954,
+   -243.187,
+   66.237
+  ],
+  [
+   203.959,
+   -243.375,
+   66.233
+  ],
+  [
+   203.964,
+   -243.512,
+   66.227
+  ],
+  [
+   203.97,
+   -243.597,
+   66.218
+  ],
+  [
+   203.976,
+   -243.634,
+   66.211
+  ],
+  [
+   203.982,
+   -243.641,
+   66.208
+  ]
+ ]
+}
