@@ -10,6 +10,8 @@ const { Vec3 } = require('vec3');
 const { supportsPlayer, escapeTarget, placementSite } = require('./spatial.cjs');
 const { harvestResource } = require('./resources.cjs');
 const { viewerBootstrap } = require('./viewer_bootstrap.cjs');
+const { instrumentViewerBundle } = require('./viewer_readiness.cjs');
+const fs = require('node:fs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
 if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
@@ -17,7 +19,10 @@ if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 102
 const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-app.use(express.static(path.join(path.dirname(require.resolve('prismarine-viewer')), 'public')));
+const viewerPublic = path.join(path.dirname(require.resolve('prismarine-viewer')), 'public');
+const viewerEntry = instrumentViewerBundle(fs.readFileSync(path.join(viewerPublic, 'index.js'), 'utf8'));
+app.get('/index.js', (_request, response) => response.type('application/javascript').send(viewerEntry));
+app.use(express.static(viewerPublic));
 server.listen(viewerPort, '127.0.0.1');
 let bot = null, active = false, connected = false, busy = false, generation = 0;
 const idleViewer = viewerBootstrap({isActive: () => active, connect,
