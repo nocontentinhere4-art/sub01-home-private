@@ -39,7 +39,7 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
  FString Body;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Body));
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(LiveHomeOrigin+TEXT("/home/native_state"));Request->SetVerb(TEXT("POST"));
  Request->SetTimeout(1.5);Request->SetHeader(TEXT("X-Admin-Token"),LiveHomeToken);Request->SetHeader(TEXT("Content-Type"),TEXT("application/json"));Request->SetContentAsString(Body);
- Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity,Phase](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
+ Request->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Sequence,Activity,Phase,Now](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
   NativeFeedbackPending=false;
   if(!LiveHome||LiveHomeEpoch!=Epoch||LiveHomeCommandSequence!=Sequence||LiveHomeActivity!=Activity)return;
   const double Age=FPlatformTime::Seconds()-LiveHomeLastReceived;
@@ -49,7 +49,8 @@ void ASub01HomeCharacter::UpdateNativeFeedback(){
   if(!AckValid||!LiveHomeFresh||(LiveHomePrivate&&!PrivateBathroom)||Age<0||Age>3){
    NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);return;
   }
-  NativeFeedbackBound=true;NativeFeedbackLastAck=FPlatformTime::Seconds();NativeFeedbackAckPhase=Phase;
+  // Network delay must not renew the age of the physical observation.
+  NativeFeedbackBound=true;NativeFeedbackLastAck=Now;NativeFeedbackAckPhase=Phase;
  });
  if(!Request->ProcessRequest()){NativeFeedbackPending=false;NativeFeedbackBound=false;NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);}
 }
