@@ -24,14 +24,16 @@ def neutral():
 
 class ControllerEvidence:
     def __init__(self, path=Path('/home/unreal/.sub01-private/native-controller-grip.json'),
-                 *, process=native_process, wall=time.time, uid=1001, assembly=None, source_sha=None, contact_review=None):
+                 *, process=native_process, wall=time.time, uid=1001, assembly=None, source_sha=None, import_sha=None, contact_review=None):
         self.path=Path(path);self.process=process;self.wall=wall;self.uid=uid
         self.assembly=assembly if assembly is not None else os.environ.get('SUB01_CONTROLLER_ASSEMBLY')
         self.source_sha=source_sha if source_sha is not None else os.environ.get('SUB01_CONTROLLER_SOURCE_SHA')
+        self.import_sha=import_sha if import_sha is not None else os.environ.get('SUB01_CONTROLLER_IMPORT_SHA')
         self.contact_review=contact_review if contact_review is not None else os.environ.get('SUB01_CONTROLLER_CONTACT_REVIEW')
 
     def __call__(self, home, frame):
         if (not self.assembly or not self.source_sha or not re.fullmatch("[0-9a-f]{64}",self.source_sha) or not frame
+                or not self.import_sha or not re.fullmatch("[0-9a-f]{64}",self.import_sha)
                 or not self.contact_review or not re.fullmatch("[0-9a-f]{64}",self.contact_review)
                 or home.privacy() or home.activity!='play_console' or home.console_game!='minecraft'
                 or home.target!='sofa' or not home.activity_ready('play_console')):
@@ -53,13 +55,14 @@ class ControllerEvidence:
                 or d.get('epoch')!=feedback.epoch or d.get('frame_id')!=frame
                 or d.get('seat_verified')is not True or d.get('grip_verified')is not True
                 or d.get('assembly_asset')!=self.assembly or d.get('source_sha')!=self.source_sha
+                or d.get('import_sha')!=self.import_sha
                 or d.get('owner_asset')!='/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner'
                 or d.get('capture_asset')!='/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming'):
             return None
         uid,ticks,args=self.process(d.get('native_pid'))
         if uid!=self.uid or ticks!=d.get('native_start_ticks')or PROJECT.encode()not in args or b'-game'not in args:return None
         # The tuple binds all queued replies to this exact physical-consumer session.
-        return (d['native_pid'],ticks,feedback.epoch,sequence,self.assembly,self.source_sha,self.contact_review)
+        return (d['native_pid'],ticks,feedback.epoch,sequence,self.assembly,self.source_sha,self.import_sha,self.contact_review)
 
 
 class BrainController:

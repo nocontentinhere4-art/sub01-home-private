@@ -7,7 +7,7 @@ The existing native seat feedback must be required, fresh, seated at the known `
 - `schema: "sub01-native-controller-v1"`, `mode: "live"`, `privacy: false`, `activity: "play_console"`, `node: "sofa"`, `chair: "sofa"`.
 - `captured_utc`, actual `native_pid` and `/proc` `native_start_ticks`, current backend `epoch` and integer `route_sequence` (matching HomeWorld.sequence), and the real currently painted `frame_id`.
 - `seat_verified: true` and `grip_verified: true` only from actual native contact checks. Neither API payloads nor timer seating establish these facts.
-- `assembly_asset` and `source_sha` matching operator-reviewed startup registration `SUB01_CONTROLLER_ASSEMBLY` and `SUB01_CONTROLLER_SOURCE_SHA`; absence rejects input.
+- `assembly_asset`, original-provenance `source_sha`, and normalized-derivative `import_sha` matching operator-reviewed startup registration `SUB01_CONTROLLER_ASSEMBLY`, `SUB01_CONTROLLER_SOURCE_SHA`, and `SUB01_CONTROLLER_IMPORT_SHA`; absence rejects input. The normalization equivalence witness and original provenance must be reviewed before either registration is approved; a successfully imported derivative is not grip evidence.
 - Exact original owner `/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner` and Gaming capture `/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming`, finite `capture_time` in0..5.0334seconds.
 - `contact_review_sha` matching registered `SUB01_CONTROLLER_CONTACT_REVIEW`, the reviewed genuine capture/assembly/contact witness. No registration exists merely because the mesh was imported.
 
