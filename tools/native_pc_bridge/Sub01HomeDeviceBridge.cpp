@@ -234,7 +234,7 @@ void USub01HomeDeviceBridge::DrawTV(UCanvas* Canvas,int32 Width,int32 Height){if
 bool USub01HomeDeviceBridge::GetDisplayedMinecraftFrame(FString& Frame)const{
  Frame.Empty();const double Age=FPlatformTime::Seconds()-MinecraftStateReceived;
  if(Private||LocalPrivacy||!MinecraftVisible||Age<0||Age>.75||!Images.Contains(TEXT("tv"))||!Materials.Contains(TEXT("tv")))return false;
- UTexture* Painted=nullptr;auto* M=Materials.FindRef(TEXT("tv"));
+ UTexture* Painted=nullptr;auto* M=Materials.FindRef(TEXT("tv")).Get();
  if(!M||!M->GetTextureParameterValue(FMaterialParameterInfo(TEXT("PCFrame")),Painted)||Painted!=Images.FindRef(TEXT("tv")))return false;
  Frame=ImageIdentity.FindRef(TEXT("tv"));Frame.ReplaceInline(TEXT("\""),TEXT(""));return !Frame.IsEmpty();
 }

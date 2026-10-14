@@ -148,9 +148,9 @@ bool ASub01HomeCharacter::ExitDoorSweepBlocked(float From,float To) const{
   const FVector SweepExtent=Hull.GetExtent()+FVector(Sag,Sag,0);
   TArray<FOverlapResult> Overlaps;GetWorld()->OverlapMultiByChannel(Overlaps,Hinge+Mid.RotateVector(Hull.GetCenter()),Mid,ECC_Pawn,FCollisionShape::MakeBox(SweepExtent),Query);
   for(const auto& Hit:Overlaps)if(Hit.bBlockingHit){
-   const double Now=FPlatformTime::Seconds();if(Now-ExitDoorBlockLogAt>2){ExitDoorBlockLogAt=Now;auto* Component=Hit.GetComponent();FVector Center=FVector::ZeroVector,Extent=FVector::ZeroVector;int Trace=-1,Convex=-1,Boxes=-1;
-    if(Component){const auto B=Component->CalcBounds(Component->GetComponentTransform());Center=B.Origin;Extent=B.BoxExtent;if(auto* Mesh=Cast<UStaticMeshComponent>(Component))if(Mesh->GetStaticMesh())if(auto* Body=Mesh->GetStaticMesh()->GetBodySetup()){Trace=int(Body->CollisionTraceFlag);Convex=Body->AggGeom.ConvexElems.Num();Boxes=Body->AggGeom.BoxElems.Num();}}
-    UE_LOG(LogTemp,Warning,TEXT("SUB01_EXIT_DOOR_ACTUAL_BLOCKED angle=%.4f->%.4f part=%d component=%s center=%s extent=%s trace=%d convex=%d boxes=%d; collision retained"),From,To,Index,*GetPathNameSafe(Component),*Center.ToString(),*Extent.ToString(),Trace,Convex,Boxes);
+   const double Now=FPlatformTime::Seconds();if(Now-ExitDoorBlockLogAt>2){ExitDoorBlockLogAt=Now;auto* Component=Hit.GetComponent();FVector Center=FVector::ZeroVector,BlockExtent=FVector::ZeroVector;int Trace=-1,Convex=-1,Boxes=-1;
+    if(Component){const auto B=Component->CalcBounds(Component->GetComponentTransform());Center=B.Origin;BlockExtent=B.BoxExtent;if(auto* Mesh=Cast<UStaticMeshComponent>(Component))if(Mesh->GetStaticMesh())if(auto* Body=Mesh->GetStaticMesh()->GetBodySetup()){Trace=int(Body->CollisionTraceFlag);Convex=Body->AggGeom.ConvexElems.Num();Boxes=Body->AggGeom.BoxElems.Num();}}
+    UE_LOG(LogTemp,Warning,TEXT("SUB01_EXIT_DOOR_ACTUAL_BLOCKED angle=%.4f->%.4f part=%d component=%s center=%s extent=%s trace=%d convex=%d boxes=%d; collision retained"),From,To,Index,*GetPathNameSafe(Component),*Center.ToString(),*BlockExtent.ToString(),Trace,Convex,Boxes);
    }return true;
   }
  }

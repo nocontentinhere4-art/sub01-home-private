@@ -80,7 +80,7 @@ bool ASub01HomeCharacter::PublishMinecraftTVReceipt(bool Clear){
    J->SetStringField(TEXT("component_identity"),Hit.GetComponent()->GetPathName());J->SetStringField(TEXT("surface_tag"),TEXT("SUB01Device:tv"));J->SetBoolField(TEXT("surface_unique"),true);MinecraftFrame=Frame;Valid=true;
   }
  }
- FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(J.ToSharedRef(),Writer);
+ FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(J,Writer);
  const FString Path=TEXT("/home/unreal/.sub01-private/native-tv-focus.json"),Temp=Path+TEXT(".tmp");
  if(!FFileHelper::SaveStringToFile(Data,*Temp,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return false;
  chmod(TCHAR_TO_UTF8(*Temp),0600);if(rename(TCHAR_TO_UTF8(*Temp),TCHAR_TO_UTF8(*Path))!=0)return false;MinecraftLastReceipt=FPlatformTime::Seconds();return Valid;
@@ -91,7 +91,7 @@ void ASub01HomeCharacter::SendMinecraftTVInput(const FString& Operation){
  auto Body=MakeShared<FJsonObject>();Body->SetStringField(TEXT("consumer_id"),MinecraftConsumerId);Body->SetStringField(TEXT("focus_event_id"),MinecraftFocusEvent);Body->SetStringField(TEXT("frame_id"),MinecraftFrame);
  const bool Focus=Operation==TEXT("focus");if(!Focus){Body->SetNumberField(TEXT("input_id"),++MinecraftInputId);Body->SetStringField(TEXT("operation"),Operation);}
  if(Operation==TEXT("controls")){auto Keys=MakeShared<FJsonObject>();for(auto& K:MinecraftKeys)Keys->SetBoolField(K.Key,K.Value);Body->SetObjectField(TEXT("keys"),Keys);Body->SetArrayField(TEXT("look_delta"),{MakeShared<FJsonValueNumber>(MinecraftLook.X),MakeShared<FJsonValueNumber>(MinecraftLook.Y)});MinecraftLook=FVector2D::ZeroVector;}
- FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);auto R=FHttpModule::Get().CreateRequest();R->SetURL(TEXT("http://127.0.0.1:8820/api/home/minecraft/")+(Focus?TEXT("focus"):TEXT("input")));R->SetVerb(TEXT("POST"));R->SetTimeout((Operation==TEXT("mine")||Operation==TEXT("place"))?7.5f:1.f);R->SetHeader(TEXT("X-Admin-Token"),MinecraftTVToken);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetContentAsString(Data);
+ FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body,Writer);auto R=FHttpModule::Get().CreateRequest();R->SetURL(FString(TEXT("http://127.0.0.1:8820/api/home/minecraft/"))+(Focus?TEXT("focus"):TEXT("input")));R->SetVerb(TEXT("POST"));R->SetTimeout((Operation==TEXT("mine")||Operation==TEXT("place"))?7.5f:1.f);R->SetHeader(TEXT("X-Admin-Token"),MinecraftTVToken);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetContentAsString(Data);
  if(Focus){if(MinecraftHTTPPending)return;MinecraftHTTPPending=true;const FString Event=MinecraftFocusEvent,Frame=MinecraftFrame;
   R->OnProcessRequestComplete().BindWeakLambda(this,[this,Event,Frame](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){MinecraftHTTPPending=false;if(!MinecraftFocused||MinecraftFocusEvent!=Event||MinecraftFrame!=Frame)return;if(OK&&Response&&Response->GetResponseCode()==200)SendMinecraftTVInput(TEXT("controls"));});}
  if(!R->ProcessRequest()&&Focus)MinecraftHTTPPending=false;

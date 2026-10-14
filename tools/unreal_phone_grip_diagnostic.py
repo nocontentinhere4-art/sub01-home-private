@@ -23,7 +23,7 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("RightHand")))PhoneGripWrist=Ref.GetBoneName(I);
  if(PhoneGripWrist.IsNone())return;
- float Time=4;FParse::Value(FCommandLine::Get(),TEXT("Sub01PhonePoseTime="),Time);auto* Clip=HandsClips.FindRef(TEXT("Phone"));
+ float Time=4;FParse::Value(FCommandLine::Get(),TEXT("Sub01PhonePoseTime="),Time);auto* Clip=HandsClips.FindRef(TEXT("Phone")).Get();
  FirstPersonBody->PlayAnimation(Clip,false);FirstPersonBody->SetPosition(FMath::Clamp(Time,0.f,Clip->GetPlayLength()),false);FirstPersonBody->SetPlayRate(0);
  FirstPersonBody->RefreshBoneTransforms();FirstPersonBody->UpdateComponentToWorld();
  const FTransform W=FirstPersonBody->GetSocketTransform(PhoneGripWrist,RTS_World);
