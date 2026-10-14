@@ -769,6 +769,12 @@ def run(args):
     scan_frames = np.unique(np.linspace(0, len(fit_aud.trial.src.times) - 1, PLACEMENT_SCAN_FRAMES).round().astype(int))
     scan = placement_scan(fit_aud, theta, L, tri, keys, scan_frames, offset_x=body_offset[0])
     summary['chair_horizontal_shift_cm'] = [0.0, 0.0]
+    # The fitted placement on the actual chair (read by tools/unreal_audit_seated_typing_seat_contact.py as
+    # source_meta.body_cm / body_yaw); the source export's own audited transform is kept as export_body_cm.
+    summary['source_meta'] = dict(base.meta, body_cm=[E.BODY_CM[0] + body_offset[0], E.BODY_CM[1] + body_offset[1],
+                                                      E.BODY_CM[2]], body_yaw=E.BODY_YAW,
+                                  export_body_cm=list(base.meta.get('body_cm', E.BODY_CM)),
+                                  body_cm_rule='the body placement on the ACTUAL chair (chair never moved)')
     summary['actual_chair'] = {
         'rule': 'the native chair transform is protected: the chair stays at its measured transform and only the body '
                 'placement is searched; every clip is re-measured with the body at body_cm',
@@ -1279,6 +1285,20 @@ def merge_contact(parts, F):
     return out
 
 
+def touching_sole_speed(c, fps):
+    """Per sole: the fastest horizontal centroid motion (cm/s) between frames where the sole touches (both frames'
+    lowest gap <= the sole band's upper edge, +1 cm)."""
+    out = {}
+    for n in T.SOLE_PATCHES:
+        xy = np.asarray(c[n]['centroid_xy'], float)
+        low = np.nan_to_num(np.asarray(c[n]['lowest'], float), nan=np.inf)
+        touch = low <= SOLE_BAND_CM[1]
+        sp = np.linalg.norm(np.diff(xy, axis=0), axis=1) * fps
+        both = touch[1:] & touch[:-1]
+        out[n] = float(sp[both].max()) if both.any() else 0.
+    return out
+
+
 def seam_blend_eval(fit, A, W, Tg, end, a, b, support_base, fps, cache=None):
     """One candidate window. Frames at weight 0 are the fitted clip and frames at weight 1 the loop, exactly, so their
     contact is measured once (cache) and only changed frames are re-skinned. Unsupported frames that would penetrate
@@ -1344,7 +1364,8 @@ def seam_blend_search(tr, loop_rep, end):
     loop, no penetration anywhere). Rule, in order: (1) every frame passes; (2) the peak pelvis
     acceleration ratio (peak pelvis linear and angular acceleration over the whole clip, each relative to the fitted
     capture's own peak; the larger) at most SEAM_MAX_PEAK_RATIO, i.e. no abrupt boundary: the blend accelerates the
-    pelvis no more than the captured motion itself; (3) the most captured frames kept unchanged (neither blended nor
+    pelvis no more than the captured motion itself, and no sole slides faster while touching the floor (lowest gap
+    <= +1 cm) than that sole's own fastest touching motion in the fitted capture; (3) the most captured frames kept unchanged (neither blended nor
     lifted); (4) the smallest peak ratio. If no window passes, the candidate with the fewest failing frames, then rule
     2-4, is reported (and the clip fails)."""
     fit, W, F, fps = tr['fit'], tr['W'], len(tr['W']), tr['fps']
@@ -1360,22 +1381,31 @@ def seam_blend_search(tr, loop_rep, end):
     def run(a, b):
         if (a, b) in done or b - a < SEAM_MIN_FRAMES or a < 0 or b > F - 1:
             return
+        # The seam STEP itself is the loop's own step (discrete velocity continuity at the key rate): SitDown's last
+        # two frames and GetUp's first two frames are exactly loop frames.
+        if (end == 'end' and b > F - 2) or (end == 'start' and a < 1):
+            return
         done.add((a, b))
         ev = seam_blend_eval(fit, A, W, Tg, end, a, b, base_support, fps, cache)
         nfail = int((~ev['ok']).sum())
         acc, ang = float(ev['kin']['acc_cm_s2'].max()), float(ev['kin']['ang_acc_deg_s2'].max())
         ratio = max(acc / cap_acc, ang / cap_ang)
+        if 'clip_touch' not in cache:
+            cache['clip_touch'] = touching_sole_speed(cache['clip'], fps)
+        touch = touching_sole_speed(ev['contact'], fps)
+        feet_ok = all(touch[n] <= cache['clip_touch'][n] + 1e-6 for n in touch)
         kept = int(((ev['w'] <= 0) & (ev['lift_cm'] <= 0)).sum())
         row = {'a': a, 'b': b, 'failing_frames': nfail, 'max_pelvis_acc_cm_s2': _r(acc, 2),
                'max_pelvis_ang_acc_deg_s2': _r(ang, 2), 'peak_ratio_to_capture': _r(ratio, 4),
                'captured_frames_kept': kept, 'lifted_frames': int((ev['lift_cm'] > 0).sum()),
+               'max_touching_sole_speed_cm_s': {n: _r(v, 3) for n, v in touch.items()}, 'feet_within_capture': bool(feet_ok),
                'max_lift_cm': _r(ev['lift_cm'].max(), 4)}
         rows.append(row)
         evs[(a, b)] = (row, ev) if nfail == 0 else (row, None)
-    key = lambda r: (r['failing_frames'], r['peak_ratio_to_capture'] > SEAM_MAX_PEAK_RATIO + 1e-9,
+    key = lambda r: (r['failing_frames'], r['peak_ratio_to_capture'] > SEAM_MAX_PEAK_RATIO + 1e-9 or not r['feet_within_capture'],
                      -r['captured_frames_kept'], r['peak_ratio_to_capture'])
-    for a in range(0, F - 1, SEAM_SEARCH_STEP):
-        for b in sorted(set(range(a + SEAM_MIN_FRAMES, F, SEAM_SEARCH_STEP)) | {F - 1}):
+    for a in sorted(set(range(0, F - 1, SEAM_SEARCH_STEP)) | {1}):
+        for b in sorted(set(range(a + SEAM_MIN_FRAMES, F, SEAM_SEARCH_STEP)) | {F - 2}):
             run(a, b)
     for r in sorted(rows, key=key)[:SEAM_REFINE_TOP]:
         for a in range(r['a'] - SEAM_REFINE_RADIUS, r['a'] + SEAM_REFINE_RADIUS + 1):
@@ -1399,6 +1429,7 @@ def seam_blend_search(tr, loop_rep, end):
                        'min_window_frames': SEAM_MIN_FRAMES, 'candidates': len(rows), 'passing_candidates': len(passing),
                        'capture_fit_max_pelvis_acc_cm_s2': _r(cap_acc, 2),
                        'capture_fit_max_pelvis_ang_acc_deg_s2': _r(cap_ang, 2),
+                       'capture_fit_max_touching_sole_speed_cm_s': {n: _r(v, 3) for n, v in cache['clip_touch'].items()},
                        'rule': seam_blend_search.__doc__.split('Rule, in order: ')[1].split(' If no window')[0].replace('\n', ' '),
                        'chosen': best, 'best_passing': sorted(passing, key=key)[:10], 'rows': rows},
             'legs': ev['legs'], 'support_frames': [int(i) for i in np.nonzero(ev['support'])[0]],
