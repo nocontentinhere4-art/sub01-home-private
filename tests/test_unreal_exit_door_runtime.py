@@ -13,6 +13,8 @@ class DoorAdapterTest(unittest.TestCase):
   h,c=door.install(h,c)
   self.assertIn('if(TryNativeExitDoor(Hit.GetComponent()))return;',c)
   self.assertIn('UpdateActualExitDoor(DeltaSeconds)',c)
+  self.assertIn('if(TryNativeBathroomDoor(Hit.GetComponent()))return;',c)
+  self.assertIn('UpdateActualBathroomDoor(DeltaSeconds)',c)
   self.assertEqual(c.count(' ConfigureActualExitDoor();'),1)
   with self.assertRaises(ValueError):door.install(h,c)
   with self.assertRaises(ValueError):door.install('bad',c)
@@ -22,6 +24,17 @@ class DoorAdapterTest(unittest.TestCase):
 #include <cassert>
 #include <limits>
 int main(){
+ auto linearClear=[](double,double){return false;};double slide=0;
+ for(int i=0;i<40;++i)slide=Sub01ExitDoor::AdvanceSlide(slide,95,.05,linearClear);assert(slide==95);
+ auto sweptObstacle=[](double a,double b){return std::fmin(a,b)<=50&&std::fmax(a,b)>=50;};
+ for(int i=0;i<40;++i)slide=Sub01ExitDoor::AdvanceSlide(slide,0,.05,sweptObstacle);assert(slide>50);
+ assert(Sub01ExitDoor::AdvanceSlide(49,95,.05,sweptObstacle)==49);
+ assert(Sub01ExitDoor::AdvanceSlide(0,95,100,linearClear)==4.5);
+ assert(Sub01ExitDoor::AdvanceSlide(0,95,-1,linearClear)==0);
+ assert(Sub01ExitDoor::InsideBathroom(-150,135,305));
+ assert(!Sub01ExitDoor::InsideBathroom(-50,135,305));
+ assert(!Sub01ExitDoor::InsideBathroom(-150,135,0));
+ assert(!Sub01ExitDoor::InsideBathroom(-150,-150,305));
  auto clear=[](double){return false;};double a=0;
  for(int i=0;i<100;++i)a=Sub01ExitDoor::Advance(a,86.4,1.0/60,clear);
  assert(a==86.4);
