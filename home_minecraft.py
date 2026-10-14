@@ -43,6 +43,8 @@ class MinecraftConsole:
         self.frame_kind = None
         self.worker = self.server = None
         self.active = False
+        self.native_input = None
+        self._input_pending = {}
         self._render_generation = 0
         self.last_action = ""
         self.last_decision = 0
@@ -59,7 +61,7 @@ class MinecraftConsole:
         return {"enabled": self.enabled, "status": self.status, "error": self.error,
                 "active": self.active, "last_action": self.last_action,
                 "observation": self.state, "events": self.events[-8:], "has_frame": bool(self.frame),
-                "frame_kind": self.frame_kind,
+                "frame_kind": self.frame_kind, "frame_id": self.frame_tag,
                 "perception": "structured game observations from Mineflayer"}
 
     async def send(self, message):
@@ -71,6 +73,18 @@ class MinecraftConsole:
             return True
         except (OSError, asyncio.TimeoutError):
             return False
+
+    async def operator_input(self, packet):
+        key = (packet["consumer_id"], packet["focus_event_id"], packet["input_id"])
+        future = asyncio.get_running_loop().create_future()
+        self._input_pending[key] = future
+        try:
+            if not await self.send(packet):return None
+            return await asyncio.wait_for(future, 7)
+        except asyncio.TimeoutError:
+            return None
+        finally:
+            self._input_pending.pop(key, None)
 
     def choose(self, rel):
         inventory = self.state.get("inventory", [])
@@ -93,12 +107,13 @@ class MinecraftConsole:
     async def agent_step(self, home, rel):
         if not self.enabled:
             return
-        wants = home.activity == "play_console" and home.activity_ready("play_console") and home.console_game == "minecraft"
+        manual = bool(self.native_input and self.native_input.active(home.privacy()) and home.console_game == "minecraft")
+        wants = manual or home.activity == "play_console" and home.activity_ready("play_console") and home.console_game == "minecraft"
         if wants != self.active:
             if await self.send({"type": "active", "value": wants}):
                 self.active = wants
                 self._render_generation += 1
-        if not wants or not self.state.get("connected") or self.state.get("busy"):
+        if manual or not wants or not self.state.get("connected") or self.state.get("busy"):
             return
         if time.monotonic() - self.last_decision < 2:
             return
@@ -113,7 +128,11 @@ class MinecraftConsole:
                 message = json.loads(line)
             except ValueError:
                 continue
-            if message.get("type") == "state":
+            if message.get("type") == "input_receipt":
+                key = (message.get("consumer_id"), message.get("focus_event_id"), message.get("input_id"))
+                future = self._input_pending.get(key)
+                if future is not None and not future.done():future.set_result(message)
+            elif message.get("type") == "state":
                 if (bool(message.get("connected")), bool(message.get("active"))) != (bool(self.state.get("connected")), bool(self.state.get("active"))):
                     self._render_generation += 1
                 self.state = message

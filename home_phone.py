@@ -12,7 +12,8 @@ def snapshot(home, browser=None):
     app = home.phone.get('app', 'home')
     if app not in APPS:
         app = 'home'
-    data = {'app': app, 'battery': home.phone.get('battery', 100)}
+    data = {'app': app, 'battery': home.phone.get('battery', 100),
+            'selection_revision': getattr(home, 'phone_selection_revision', 0)}
     if app == 'notes':
         notes = home.notes[-10:][::-1]
         data['entries'] = [str(n.get('text', '')) for n in notes]
@@ -27,11 +28,15 @@ def snapshot(home, browser=None):
 
 
 def status(data):
-    raw = json.dumps(data, sort_keys=True, ensure_ascii=False).encode()
-    tag = hashlib.sha256(raw).hexdigest()[:24]
     browser = data.get('browser')
-    real = data['app'] == 'browser' and browser and browser.get('frame_id')
-    return {'device': 'phone', 'app': data['app'], 'frame_id': browser['frame_id'] if real else tag,
+    real = (data['app'] == 'browser' and browser and not browser.get('restarting')
+            and isinstance(browser.get('frame_id'), str) and 1 <= len(browser['frame_id']) <= 100)
+    identity = ({'app': 'browser', 'selection_revision': data.get('selection_revision', 0),
+                 'browser_frame_id': browser['frame_id']} if real else
+                {k:v for k,v in data.items() if k != 'browser'})
+    raw = json.dumps(identity, sort_keys=True, ensure_ascii=False).encode()
+    tag = hashlib.sha256(raw).hexdigest()[:24]
+    return {'device': 'phone', 'app': data['app'], 'frame_id': tag,
             'width': browser.get('width', WIDTH) if real else WIDTH,
             'height': browser.get('height', HEIGHT) if real else HEIGHT,
             'kind': 'browser' if real else 'owned_app', 'available': True}

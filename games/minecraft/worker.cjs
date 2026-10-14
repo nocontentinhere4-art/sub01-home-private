@@ -13,6 +13,7 @@ const { viewerBootstrap } = require('./viewer_bootstrap.cjs');
 const { instrumentViewerBundle } = require('./viewer_readiness.cjs');
 const { entityPacket } = require('./item_rendering.cjs');
 const fs = require('node:fs');
+const { nativeInput } = require('./native_input.cjs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
 if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
@@ -30,6 +31,8 @@ const idleViewer = viewerBootstrap({isActive: () => active, connect,
   release: () => bot?.quit('Initial idle viewer released')});
 let lastHealth = 20, lastItems = 0;
 const emit = (value) => process.stdout.write(JSON.stringify(value) + '\n');
+const operator = nativeInput({player:()=>connected?bot:null,isActive:()=>active,isBusy:()=>busy,emit,Vec3});
+setInterval(()=>operator.tick(),25);
 const hostiles = new Set(['zombie', 'skeleton', 'creeper', 'spider', 'enderman']);
 function visibleWood() {
   // Mineflayer checks matching against palette entries without a position.
@@ -79,7 +82,7 @@ function connect() {
   bot.on('death', () => { if (active) emit({ type: 'feedback', reward: -1, event: 'death' }); });
   bot.on('error', error => emit({ type: 'error', message: String(error.message).slice(0, 200) }));
   bot.on('end', () => {
-    bot = null; connected = false; busy = false; io.disconnectSockets();
+    operator.stop();bot = null; connected = false; busy = false; io.disconnectSockets();
     if (active) setTimeout(connect, 1500);
   });
 }
@@ -187,11 +190,12 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
     if (message.type === 'viewer_bootstrap') idleViewer.request();
     else if (message.type === 'viewer_release') idleViewer.finish();
     else if (message.type === 'active') {
-      active = message.value === true; generation++;
+      operator.stop();active = message.value === true; generation++;
       idleViewer.finish();
       if (active) connect();
       else { bot?.pathfinder.setGoal(null); bot?.clearControlStates(); bot?.quit('Console put away'); }
-    } else if (message.type === 'action') act(message);
+    } else if (message.type === 'operator_input') operator.accept(message).catch(error=>emit({type:'input_receipt',consumer_id:message.consumer_id,focus_event_id:message.focus_event_id,input_id:message.input_id,accepted:false,reason:String(error.message).slice(0,100)}));
+    else if (message.type === 'action') act(message);
   } catch (error) { emit({ type: 'error', message: String(error.message).slice(0, 100) }); }
 });
 setInterval(() => {

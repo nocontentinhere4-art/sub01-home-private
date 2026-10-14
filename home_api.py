@@ -42,6 +42,8 @@ def device_revisions(live, privacy):
 
 
 def add_home_routes(app, live, admin_ok):
+    from home_minecraft_input import add_minecraft_input_routes
+    add_minecraft_input_routes(app, live, admin_ok)
     inputs = OrderedDict()
 
     def enabled():
@@ -158,12 +160,29 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if not getattr(live, 'browser', None):
             raise web.HTTPConflict(text='The browser is unavailable')
+        # Explicit authenticated navigation may start the isolated browser while
+        # autonomous screen use still waits for physical HomeWorld readiness.
+        local = getattr(live, 'local_browser', None)
+        if local is not None:
+            from browse_service import BrowserDown
+            try:
+                started = await local.ensure()
+                if started == 'down':
+                    raise web.HTTPServiceUnavailable(text='The isolated browser did not start')
+                if started != 'ok':
+                    await live.browser.init(local.init_state(getattr(live, 'browsing_state', {})))
+            except BrowserDown:
+                raise web.HTTPServiceUnavailable(text='The isolated browser is unavailable')
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         status = await live.browser.navigate(device, url)
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         if not status:
             raise web.HTTPConflict(text='Page unavailable or refused by the browser checks')
         await live.on_screen(status)
         if device == 'phone' and not private():
-            live.home.phone['app'] = 'browser'
+            live.home.select_phone_app('browser', source='operator')
         if getattr(live, 'reader', None):
             live.reader.saw(status, live.clock.now())
         return web.json_response({'ok': True})
@@ -190,7 +209,19 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if not getattr(live, 'browser', None):
             raise web.HTTPConflict(text='The browser is unavailable')
+        selection_revision = None
+        if 'phone_frame_id' in b:
+            if (b['device'] != 'phone' or not isinstance(b['phone_frame_id'], str)
+                    or not 1 <= len(b['phone_frame_id']) <= 100):
+                raise web.HTTPBadRequest(text='Invalid phone app frame')
+            current = home_phone.status(phone_data())
+            if current['kind'] != 'browser' or b['phone_frame_id'] != current['frame_id']:
+                raise web.HTTPConflict(text='Actual phone app frame changed')
+            selection_revision = live.home.phone_selection_revision
         result = await live.browser.operator_action(b['device'], b['action'], b['frame_id'])
+        if selection_revision is not None and (live.home.phone['app'] != 'browser'
+                or live.home.phone_selection_revision != selection_revision):
+            raise web.HTTPConflict(text='Actual phone application changed')
         if live.home.view()['privacy']:
             raise web.HTTPConflict(text='Bathroom privacy is active')
         if result.get('status'):
@@ -333,9 +364,9 @@ def add_home_routes(app, live, admin_ok):
         if request.query.get('frame_id') != st['frame_id']:
             raise web.HTTPConflict(text='Actual phone frame changed')
         if st['kind'] == 'browser':
-            from browse import FrameChanged, BrowserDown
+            from browse_service import FrameChanged, BrowserDown
             try:
-                frame = await live.browser.frame('phone', st['frame_id'])
+                frame = await live.browser.frame('phone', data['browser']['frame_id'])
             except (FrameChanged, BrowserDown):
                 raise web.HTTPConflict(text='Actual phone browser frame unavailable')
             if not frame:
@@ -378,8 +409,8 @@ def add_home_routes(app, live, admin_ok):
         app = 'home' if data.get('action') == 'home' else data.get('app')
         if data.get('action') not in ('home', 'open_app') or not isinstance(app, str) or app not in home_phone.APPS:
             raise web.HTTPBadRequest(text='Expected supported phone app')
-        live.home.phone['app'] = app
-        return web.json_response({'ok':True, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
+        changed = live.home.select_phone_app(app, source='operator')
+        return web.json_response({'ok':True, 'changed':changed, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
 
     async def minecraft_frame(request):
         enabled()

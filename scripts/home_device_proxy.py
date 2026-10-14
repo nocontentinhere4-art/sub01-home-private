@@ -175,7 +175,16 @@ class HomeDeviceProxy:
             if (not isinstance(data, dict) or data.get('action') not in {'scroll_up', 'scroll_down', 'back', 'close_notice'}
                     or not isinstance(data.get('frame_id'), str) or not 1 <= len(data['frame_id']) <= 100):
                 raise web.HTTPBadRequest(text='Expected current phone frame and supported browser action')
-            path, clean = '/api/home/browser/action', {'device': 'phone', 'action': data['action'], 'frame_id': data['frame_id']}
+            raw = data['frame_id']
+            screen = state.get('phone_screen')
+            if screen is not None:
+                current = screen.get('frame_id')
+                raw = (state.get('phone_browser_screen') or {}).get('frame_id')
+                if screen.get('kind') != 'browser' or data['frame_id'] != current or not raw:
+                    raise web.HTTPConflict(text='Actual phone browser app frame changed')
+            path, clean = '/api/home/browser/action', {'device': 'phone', 'action': data['action'], 'frame_id': raw}
+            if screen is not None:
+                clean['phone_frame_id'] = data['frame_id']
         elif device == 'tv' and isinstance(data, dict) and 'direction' in data:
             direction = data['direction']
             if isinstance(direction, bool) or not isinstance(direction, (int, float)) or not math.isfinite(direction) or abs(direction) > 1:

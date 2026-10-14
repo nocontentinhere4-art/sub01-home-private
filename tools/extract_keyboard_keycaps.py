@@ -1,6 +1,9 @@
 """CPU-only exact authored keycap geometry and disconnected surface extraction."""
-import pathlib,json,struct,math,hashlib
-source=pathlib.Path('out/lighting-v23/unreal-home-lab/Sub01HomeLab/SourceAssets/full-home.glb')
+import pathlib,json,struct,math,hashlib,argparse
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--source',type=pathlib.Path,default=pathlib.Path('out/lighting-v23/unreal-home-lab/Sub01HomeLab/SourceAssets/full-home.glb'))
+parser.add_argument('--output',type=pathlib.Path,default=pathlib.Path('out/first-person-assets/ReferenceT/keyboard-keycaps-world.json'))
+args=parser.parse_args();source=args.source
 raw=source.read_bytes();n=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[20:20+n]);offset=20+n;binary=raw[offset+8:]
 parents={c:i for i,node in enumerate(doc['nodes'])for c in node.get('children',[])}
 def mul(a,b):return [sum(a[k*4+r]*b[c*4+k]for k in range(4))for c in range(4)for r in range(4)]
@@ -48,4 +51,4 @@ for key,ids in groups.items():
 keys.sort(key=lambda k:(-round(k['maxCm'][1],1),k['minCm'][0]))
 for i,k in enumerate(keys):k['keycapId']=i
 out={'privateOnly':True,'source':str(source),'sourceSHA256':hashlib.sha256(raw).hexdigest(),'nodeIndex':ni,'nodeName':doc['nodes'][ni]['name'],'worldNodeMatrixColumnMajor':m,'coordinateContract':'UE cm = 100 * (source glTF x, source glTF z, source glTF y); compare against native import pivot audit before use','weldToleranceMeters':1e-7,'geometryBoundsUECm':bounds(range(len(points))),'vertexCount':len(points),'indexCount':len(indices),'disconnectedComponentCount':len(keys),'verticesUECm':ue_points,'keycaps':keys,'windingNote':'Source glTF x,z,y conversion swaps horizontal/up axes; component triangles reverse winding to preserve outward normals','reviewStatus':'Actual source geometry extraction; native skin collision/contact review pending'}
-dest=pathlib.Path('out/first-person-assets/ReferenceT/keyboard-keycaps-world.json');dest.write_text(json.dumps(out,indent=2)+'\n');print(json.dumps({k:v for k,v in out.items()if k not in ('keycaps','verticesUECm')},indent=2));print('component vertex/triangle count histogram', {str((k['vertexCount'],k['triangleCount'])):sum((x['vertexCount'],x['triangleCount'])==(k['vertexCount'],k['triangleCount'])for x in keys)for k in keys});print('top heights cm',sorted(set(round(k['topCm'],5)for k in keys)));print('output',dest)
+dest=args.output;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_text(json.dumps(out,indent=2)+'\n');print(json.dumps({k:v for k,v in out.items()if k not in ('keycaps','verticesUECm')},indent=2));print('component vertex/triangle count histogram', {str((k['vertexCount'],k['triangleCount'])):sum((x['vertexCount'],x['triangleCount'])==(k['vertexCount'],k['triangleCount'])for x in keys)for k in keys});print('top heights cm',sorted(set(round(k['topCm'],5)for k in keys)));print('output',dest)

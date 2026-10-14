@@ -388,7 +388,7 @@ PROXY_EVALUATED = ('  SeatEvaluatedSequence=Cast<UAnimSequence>(Current.GetSeque
 EDITS = [
     ('header', '#include "Sub01HomeLab.generated.h"', CHARACTER_INCLUDE + '#include "Sub01HomeLab.generated.h"'),
     ('header', ' void Forward(float Value);', CHARACTER_FIELDS + '\n void Forward(float Value);'),
-    ('cpp', ' ConfigureActualPC();\n BeginLiveHome();\n', ' ConfigureActualPC();\n BeginLiveHome();\n LoadSeatTransition();\n'),
+    ('cpp', ' BeginLiveHome();\n', ' BeginLiveHome();\n LoadSeatTransition();\n'),
     ('cpp', ' UpdateNativeFeedback();\n', ' UpdateNativeFeedback();\n UpdateSeatTransition(Dt);\n'),
     ('cpp', ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(',
      ' // A seated body never walks off: the captured get-up must finish first.\n'

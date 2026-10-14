@@ -17,7 +17,10 @@ import unreal as u
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_unreal_seat_contact import cushion_triangles, propose_vertical_anchor, validate  # noqa: E402
 
-BODY_CM, BODY_YAW, FLOOR_CM = (203.9, -232.3, -.6), 180, 0.0   # unreal_hands_diagnostic.py seat pose; ground floor
+BODY_CM, BODY_YAW, FLOOR_CM = (203.9, -232.3, -.6), 180, 2.5001
+# Actual native CharacterMovement CurrentFloor.HitResult.ImpactPoint.Z, not
+# nominal browser ground zero. Verified door/front checkpoints at 02:46 UTC.
+FLOOR_EVIDENCE = 'Sub01HomeLab-backup-2026.10.14-02.47.57.log: door/front solidFloorCm=2.5001'
 
 
 def run():
@@ -52,10 +55,8 @@ def run():
         if 'error' in report:
             raise RuntimeError(report['error'])
         rows.append({'time': time, **report})
-    # The full transform the skin was posed at (the receipt matches the live body to it).
     result = {'schema': 'sub01.native-seat-contact.v1', 'body_cm': list(BODY_CM), 'body_yaw': BODY_YAW,
-              'body_rotation_pyr': [0.0, BODY_YAW, 0.0], 'body_scale_xyz': [1.0, 1.0, 1.0],
-              'floor_cm': FLOOR_CM, 'chair_component': chair['chair']['component'], 'samples': rows}
+              'floor_cm': FLOOR_CM, 'floor_evidence': FLOOR_EVIDENCE, 'chair_component': chair['chair']['component'], 'samples': rows}
     out = root / 'private-audit/native-seat-contact.json'
     out.write_text(json.dumps(result, indent=2) + '\n')
     # Probe only: the result is evidence for a pose/anchor correction, never NativeSeatVerified.

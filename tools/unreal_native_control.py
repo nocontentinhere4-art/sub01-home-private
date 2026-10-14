@@ -6,9 +6,32 @@ pose review to a physical live view is explicit and logged as a view-mode switch
 """
 FIELDS=r'''
  void UpdatePrivateNativeControl();
+ bool SwitchNativeWalkView(bool UseLiveSource);
+ enum class EPrivateViewMode:uint8 {Manual,Diagnostic,Live};
+ EPrivateViewMode PrivateViewMode=EPrivateViewMode::Manual;
  double NativeControlPollAt=0,NativeTelemetryAt=0;int32 NativeControlRevision=0,NativeTelemetryTicks=0;
 '''
 METHODS=r'''
+bool ASub01HomeCharacter::SwitchNativeWalkView(bool UseLiveSource){
+ auto* Walk=LoadObject<UAnimSequence>(nullptr,TEXT("/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk"));
+ if(!Walk||!FirstPersonBody->GetSkeletalMeshAsset()||Walk->GetSkeleton()!=FirstPersonBody->GetSkeletalMeshAsset()->GetSkeleton()){
+  UE_LOG(LogTemp,Error,TEXT("SUB01_VIEW_SWITCH_REFUSED no compatible genuine Walk asset"));return false;
+ }
+ LiveHome=false;LiveHomeFresh=false;LiveHomeBindWaiting=false;NativeSeatVerified=false;
+ if(!UseLiveSource)LiveHomePrivate=false;
+ NativeFeedbackBound=false;NativeFeedbackLastAck=-1;NativeFeedbackAckPhase.Empty();
+ NativeFeedbackConsumer=FGuid::NewGuid().ToString(EGuidFormats::Digits);NativeFeedbackPendingReportId=0;NativeFeedbackPending=false;
+ if(PCBridge)PCBridge->SetOperatorFocus(false);
+ RouteActive=false;GetCharacterMovement()->StopMovementImmediately();
+ HandsDiagnosticSeat=false;HandsClips.Add(TEXT("Walk"),Walk);SetHandsPosture(TEXT("Walk"));
+ ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
+ ViewCamera->SetUsingAbsoluteRotation(false);ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ViewCamera->FieldOfView=75;
+ GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+ PrivateViewMode=UseLiveSource?EPrivateViewMode::Live:EPrivateViewMode::Manual;
+ UE_LOG(LogTemp,Display,TEXT("SUB01_EXPLICIT_VIEW_MODE_SWITCH mode=%s actualpawnretained; no actor teleport or seating claim"),UseLiveSource?TEXT("live"):TEXT("manual"));
+ if(UseLiveSource)BeginLiveHome();
+ return true;
+}
 void ASub01HomeCharacter::UpdatePrivateNativeControl(){
  const double Now=FPlatformTime::Seconds();
  ++NativeTelemetryTicks;if(NativeTelemetryAt==0){NativeTelemetryAt=Now;NativeTelemetryTicks=0;}else if(Now-NativeTelemetryAt>=5){UE_LOG(LogTemp,Display,TEXT("SUB01_ACTUAL_GAME_TICK_RATE ticks=%d seconds=%.6f Hz=%.6f pawn=%s live=%d"),NativeTelemetryTicks,Now-NativeTelemetryAt,NativeTelemetryTicks/(Now-NativeTelemetryAt),*GetActorLocation().ToString(),LiveHome?1:0);NativeTelemetryAt=Now;NativeTelemetryTicks=0;}
@@ -22,20 +45,16 @@ void ASub01HomeCharacter::UpdatePrivateNativeControl(){
   if(FVector::Dist(GetActorLocation(),FVector(200,310,95.65))>20){UE_LOG(LogTemp,Warning,TEXT("SUB01_ROUTE_REVIEW_REFUSED actual entry capsule required; no position reset"));return;}
   auto* Walk=LoadObject<UAnimSequence>(nullptr,TEXT("/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk"));
   if(!Walk||!FirstPersonBody->GetSkeletalMeshAsset()||Walk->GetSkeleton()!=FirstPersonBody->GetSkeletalMeshAsset()->GetSkeleton())return;
-  LiveHome=false;HandsDiagnosticSeat=false;HandsClips.Add(TEXT("Walk"),Walk);SetHandsPosture(TEXT("Walk"));
-  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ViewCamera->FieldOfView=75;
+  if(!SwitchNativeWalkView(false))return;
   GetCharacterMovement()->SetMovementMode(MOVE_Walking);ForceRouteReview=true;RouteIndex=0;BeginNativeRouteTest();
  }
- bool Live=false;if(Doc->TryGetBoolField(TEXT("live"),Live)&&Live&&!LiveHome){
-  if(RouteActive){RouteActive=false;GetCharacterMovement()->StopMovementImmediately();UE_LOG(LogTemp,Display,TEXT("SUB01_ROUTE_REVIEW_CANCELLED explicit switch to real source; actual pawn retained"));}
-  auto* Walk=LoadObject<UAnimSequence>(nullptr,TEXT("/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk"));
-  if(!Walk||!FirstPersonBody->GetSkeletalMeshAsset()||Walk->GetSkeleton()!=FirstPersonBody->GetSkeletalMeshAsset()->GetSkeleton()){UE_LOG(LogTemp,Error,TEXT("SUB01_NATIVE_LIVE_SWITCH_REFUSED no compatible real Walk asset"));return;}
-  HandsDiagnosticSeat=false;HandsClips.Add(TEXT("Walk"),Walk);SetHandsPosture(TEXT("Walk"));
-  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ViewCamera->FieldOfView=75;
-  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-  UE_LOG(LogTemp,Display,TEXT("SUB01_EXPLICIT_VIEW_MODE_SWITCH controlled desk review -> actual entry pawn; no actor teleport, backend unchanged"));
-  BeginLiveHome();
- }
+ FString Mode;bool Live=false;
+ if(Doc->TryGetStringField(TEXT("mode"),Mode)){
+  if(Mode==TEXT("manual")){if(!SwitchNativeWalkView(false))return;}
+  else if(Mode==TEXT("live")){if(!SwitchNativeWalkView(true))return;}
+  else if(Mode==TEXT("diagnostic")&&HandsDiagnosticSeat){PrivateViewMode=EPrivateViewMode::Diagnostic;}
+  else {UE_LOG(LogTemp,Warning,TEXT("SUB01_VIEW_MODE_REFUSED unavailable diagnostic or unknown mode"));return;}
+ }else if(Doc->TryGetBoolField(TEXT("live"),Live)){if(!SwitchNativeWalkView(Live))return;}
  bool Replay=false;if(Doc->TryGetBoolField(TEXT("replayTyping"),Replay)&&Replay){
   auto* Hands=Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance());
   if(HandsDiagnosticSeat&&Hands&&Hands->ContactTimes.Num()==301&&Hands->ContactSequence==HandsClips.FindRef(TEXT("DeskTyping"))){Hands->ContactFreezeTime=-1;++Hands->ContactRestartSerial;UE_LOG(LogTemp,Display,TEXT("SUB01_ACTUAL_TYPING_REPLAY original3to8 onepass;301armprofile;fingerlocalsunchanged;no PNGcapture"));}
@@ -50,4 +69,8 @@ void ASub01HomeCharacter::UpdatePrivateNativeControl(){
 def install(header,cpp):
     header=header.replace(' void Forward(float Value);',FIELDS+'\n void Forward(float Value);',1)
     cpp=cpp.replace(' UpdateNativeRouteTest();',' UpdatePrivateNativeControl();\n UpdateNativeRouteTest();',1)
+    cpp=cpp.replace(' if(Controller&&Value!=0) AddMovementInput(',
+                    ' if(PrivateViewMode==EPrivateViewMode::Manual&&!LiveHome&&!RouteActive&&!HandsDiagnosticSeat&&Controller&&Value!=0) AddMovementInput(')
+    cpp=cpp.replace(' if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01LiveHome")))return;',
+                    ' if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01LiveHome")))return;\n if(FParse::Param(FCommandLine::Get(),TEXT("Sub01ManualView"))&&PrivateViewMode==EPrivateViewMode::Manual)return;',1)
     return header,cpp+METHODS

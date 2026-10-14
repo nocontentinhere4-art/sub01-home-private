@@ -12,6 +12,7 @@ import os
 from console_requests import valid_choice
 import home_interactions as hi
 from home_native_feedback import NativeFeedback
+from home_phone import APPS as PHONE_APPS
 
 # xyz = walking-eye positions in the rendered house, metres.
 NODES = {
@@ -295,10 +296,38 @@ class HomeWorld:
             "app": s.get("phone_app", "home"),
             "battery": int(s.get("battery", 100)),
         }
+        revision = s.get('phone_selection_revision', 0)
+        self.phone_selection_revision = revision if isinstance(revision, int) and not isinstance(revision, bool) and revision >= 0 else 0
+        # A restored app is retained, but a former operator session never locks a new one.
+        self._phone_operator_selected = False
+        self._phone_navigation_key = None
         self.phone_elapsed = 0
         self.now = None
         self.interactions = hi.HouseInteractions(s.get("interactions"))
         self.interactions.update(0, self._actor(), self.settings, None)
+
+    def select_phone_app(self, app, source='operator'):
+        if not isinstance(app, str) or app not in PHONE_APPS or source not in ('operator', 'browser'):
+            raise ValueError('Unknown phone application or selection source')
+        if source == 'browser' and self._phone_operator_selected:
+            return False
+        operator = source == 'operator'
+        changed = self.phone['app'] != app or self._phone_operator_selected != operator
+        self.phone['app'] = app
+        self._phone_operator_selected = operator
+        if changed:
+            self.phone_selection_revision += 1
+        return changed
+
+    def phone_browser_navigation(self, status):
+        """Actual new browser-page notification; redraws and ticks are not intent."""
+        if self.activity != 'phone' or not isinstance(status, dict) or status.get('device') != 'phone':
+            return False
+        url = status.get('url')
+        if not isinstance(url, str) or not 1 <= len(url) <= 2048 or url == self._phone_navigation_key:
+            return False
+        self._phone_navigation_key = url
+        return self.select_phone_app('browser', source='browser')
 
     def _actor(self):
         return {"position": self.position, "node": self.node, "path": self.path,
@@ -327,6 +356,9 @@ class HomeWorld:
         if now is not None:
             self.now = now
         activity = life.get("activity", "research")
+        if self.activity == 'phone' and activity != 'phone' and self._phone_operator_selected:
+            self._phone_operator_selected = False
+            self.phone_selection_revision += 1
         pending = valid_choice(life.get('console_wish'))
         self.pending_console_game = pending[0] if pending else None
         choice = valid_choice(life.get('console_choice'))
@@ -422,10 +454,6 @@ class HomeWorld:
             self.phone["battery"] = max(
                 1, min(100, self.phone["battery"] + (-1 if activity == "phone" else 2))
             )
-        screen = life.get("screen") or {}
-        self.phone["app"] = (
-            screen.get("kind", "browser") if activity == "phone" else self.phone["app"]
-        )
         self.interactions.update(dt, self._actor(), self.settings, self.now)
 
     def settings_view(self):
@@ -521,5 +549,6 @@ class HomeWorld:
             "notes": self.notes,
             "memories": self.memories[-100:],
             "phone_app": self.phone["app"],
+            "phone_selection_revision": self.phone_selection_revision,
             "battery": self.phone["battery"],
         }

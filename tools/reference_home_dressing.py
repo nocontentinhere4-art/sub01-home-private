@@ -1335,6 +1335,9 @@ def _material(name, finish, assets_root, missing, status):
             nmap.inputs['Strength'].default_value = finish.get('normal_strength', .35)
             links.new(nor.outputs['Color'], nmap.inputs['Color'])
             links.new(nmap.outputs['Normal'], shader.inputs['Normal'])
+        rough = image('rough.jpg', 'Non-Color')
+        if rough:
+            links.new(rough.outputs['Color'], shader.inputs['Roughness'])
     mat[TAG] = True
     return mat
 
