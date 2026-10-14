@@ -216,11 +216,11 @@
         0.05
       ],
       "source": "Common coffee-table book formats 31 x 24 x 2.8 cm and 27 x 21 x 2.2 cm",
-      "placement_rule": "Flat on the coffee table top (0.455 m, 0.70 x 1.40 m), far half from the sofa node; below every TV sightline",
+      "placement_rule": "Flat on the coffee table top (native base: legacy oak table, top 0.39 m, 0.68 x 1.38 m), far half from the sofa node; below every TV sightline",
       "support": "coffee_table_top",
       "position_runtime_m": [
         -3.22,
-        0.455,
+        0.39,
         -0.22
       ],
       "yaw_deg": 6,
@@ -265,11 +265,11 @@
         0.5
       ],
       "source": "Bud vase 12 cm diameter x 22 cm; dried pampas/grass stems ~28 cm above the lip",
-      "placement_rule": "On the coffee table top toward the right end; stem tops (0.96 m) stay below the TV sightlines from the sofa",
+      "placement_rule": "On the coffee table top (native base: legacy oak table, top 0.39 m) toward the right end; stem tops (~0.89 m) stay below the TV sightlines from the sofa",
       "support": "coffee_table_top",
       "position_runtime_m": [
         -3.25,
-        0.455,
+        0.39,
         0.42
       ],
       "yaw_deg": 0,
@@ -314,7 +314,7 @@
       ],
       "origin_height_m": 0.015,
       "source": "Queen blanket folded to a 50 x 136 cm band (two 12 mm layers). Measured from web/house/assets/cc0-queen-bed/queen-bed.glb: duvet top 0.681 m local (3.681 runtime) at the foot, flat top |x| <= 0.755 m, duvet side drape reaches |x| 0.84 m",
-      "placement_rule": "Lies flat on the duvet top near the foot (no side drop: a drape past the duvet side would enter the 0.35 m capsule of the 'bed' walk node at x -1.2); refused if the legacy house-bedding-* (incl. Foot_throw) is still present",
+      "placement_rule": "Lies flat on the duvet top near the foot (no side drop: a drape past the duvet side would enter the 0.35 m capsule of the 'bed' walk node at x -1.2); refused if the legacy house-bedding-* (incl. Foot_throw) is still present. Native base note: the native GLB still carries the legacy house-bedding-* including its own Foot_throw, so on that base this item is REFUSED as a duplicate (rest tolerance 0.09 only spans the cc0 duvet 3.68 vs legacy 3.60 planning heights)",
       "support": "bed_top",
       "position_runtime_m": [
         -2.4,
@@ -324,7 +324,7 @@
       "yaw_deg": 90,
       "tilt_deg": 0,
       "overhang_m": 0.03,
-      "rest_tolerance_m": 0.03,
+      "rest_tolerance_m": 0.09,
       "material": "linen_terracotta",
       "params": {
         "top_width": 1.36,
@@ -350,11 +350,11 @@
         0.3
       ],
       "source": "Standard 30 x 50 cm lumbar cushion",
-      "placement_rule": "On the duvet in front of the two existing pillows, leaning lightly on them; centred on the bed",
+      "placement_rule": "On the duvet in front of the two existing pillows, leaning lightly on them; centred on the bed (native base: legacy duvet top ~3.59 m)",
       "support": "bed_top",
       "position_runtime_m": [
         -2.4,
-        3.675,
+        3.59,
         -2.66
       ],
       "yaw_deg": 0,
@@ -488,5 +488,9 @@
     }
   ],
   "mount_rule": "Every item rests (mount 'rest'): resting items are placed only on a support surface hit by downward rays against the evaluated home. Wall-attached or hanging items must set \"mount\": \"wall\"|\"hanging\" and \"attach\": {\"surface\": <name>, \"surface_prefixes\": [...], \"direction_runtime\": [dx,dy,dz], \"max_gap_m\": 0.02}; the attach ray must hit that surface or the item is refused. No item in this version is wall-mounted or hanging.",
-  "validation_basis": "Positions/heights here are planning values. Placement re-verifies every item against the evaluated house.blend geometry (tools/reference_home_dressing.py place_on_evaluated_home); estimated boxes are never used to place."
+  "validation_basis": "Positions/heights here are planning values. Placement re-verifies every item against the evaluated house.blend geometry (tools/reference_home_dressing.py place_on_evaluated_home); estimated boxes are never used to place.",
+  "baseline": {
+    "accepted": "Native dressing base written by tools/prepare_native_dressing_base.py (commit 5473bcb): plain glTF import of the native full-home GLB, scene['sub01NativeSourceSha256'] + <base>.json sidecar (schema sub01.native-dressing-base.v1). Assembled home (homeVersion 114) is accepted without --allow-unassembled.",
+    "anchor_identifiers": "bakeId custom properties from node extras (assemble_home_blender.py bake_id convention); prefixes in tools/reference_home_dressing.py DEFAULT_ANCHORS with ANCHOR_SOURCES"
+  }
 }

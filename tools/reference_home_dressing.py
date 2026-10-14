@@ -34,11 +34,15 @@ keyboard audits depend on). See docs/design/reference-dressing/PREREQUISITES.md.
 
 Pure mode (no Blender, no rendering):
     python3 tools/reference_home_dressing.py --dry-run
-Server, read-only inspection of the real house.blend (never renders):
-    blender --background <house.blend> --python tools/reference_home_dressing.py -- --list-identifiers
-Server, placement + additive export (never renders, never saves over the input):
-    blender --background <house.blend> --python tools/reference_home_dressing.py -- \
-      --assets-root web/house/assets --output-dir out/reference-dressing --export-additive-glb
+Server (native dressing base from tools/prepare_native_dressing_base.py; never renders,
+never saves over the base). Full runbook: docs/design/reference-dressing/PREREQUISITES.md
+    B=/workspace/sub01-tools/blender-4.5.3-linux-x64/blender
+    BASE=/workspace/sub01-home-private/out/native-reference-base/house.blend
+    "$B" --background --factory-startup "$BASE" --python tools/reference_home_dressing.py -- \
+      --list-identifiers --allow-unassembled --source-sha256 <SRC> --output-dir out/reference-dressing
+    "$B" --background --factory-startup "$BASE" --python tools/reference_home_dressing.py -- \
+      --allow-unassembled --source-sha256 <SRC> --assets-root web/house/assets \
+      --texture-fallback flat --output-dir out/reference-dressing --export-additive-glb
 """
 import argparse
 import ast
@@ -355,9 +359,11 @@ SUPPORTS = {
     # name: top y, runtime rect (x0, x1, z0, z1), floor
     'sofa_seat': {'top': .503, 'rect': (-2.2625, -1.3375, .1 - 1.1375, .1 + 1.1375), 'floor': 0},
     'sofa_arm_right': {'top': .71, 'rect': (-2.2625, -1.3375, 1.0, 1.2375), 'floor': 0},
-    'coffee_table_top': {'top': .455, 'rect': (-3.55, -2.85, -.60, .80), 'floor': 0},
+    # Native base (V4 full-home GLB) keeps the legacy oak table, top 0.39 (gi-architecture proxy).
+    'coffee_table_top': {'top': .39, 'rect': (-3.54, -2.86, -.59, .79), 'floor': 0},
     'kitchen_counter': {'top': .9225, 'rect': (-3.78, -.62, -3.88, -3.18), 'floor': 0},
-    'bed_top': {'top': 3.68, 'rect': (-3.25, -1.55, -3.4625, -1.2375), 'floor': 1},
+    # Native base keeps the legacy bed + bedding: duvet top about 3.59-3.61 (proxy).
+    'bed_top': {'top': 3.60, 'rect': (-3.25, -1.55, -3.4625, -1.2375), 'floor': 1},
 }
 
 
@@ -799,16 +805,33 @@ class SceneGeometry:
         return hits
 
 
-# Exact identifier prefixes (bakeId, else object name) of evaluated anchors. These
-# come from the assembler and the GI-architecture proxy; root confirms them with
-# --list-identifiers and can override with --anchors <json>.
+# Identifier prefixes (the `bakeId` custom property the glTF importer creates from
+# node extras, else the object name) of evaluated anchors. The native dressing base
+# is a plain bpy.ops.import_scene.gltf of the native full-home GLB
+# (tools/prepare_native_dressing_base.py, commit 5473bcb), so identifiers are the
+# browser bakeIds. Each prefix below is cited in ANCHOR_SOURCES and checked by the
+# tests against those files; root confirms them with --list-identifiers and can
+# override with --anchors <json>. Current browser names and the legacy V4 names that
+# tools/assemble_home_blender.py OLD_PREFIXES proves the native GLB still carries
+# are both accepted; the report records which one matched.
 DEFAULT_ANCHORS = {
     'sofa': ['house-sofa-'],
-    'coffee_table': ['house-cc0-coffee-table'],
-    'bed': ['house-cc0-queen-bed'],
+    'coffee_table': ['house-cc0-coffee-table-', 'house-coffee-table-'],
+    'bed': ['house-cc0-queen-bed-', 'house-bed-frame-', 'house-bedding-'],
     'desk': ['house-office-desk-'],
     'upper_cabinet': ['house-upper-cabinet-'],
-    'lower_cabinet': ['house-lower-cabinet-'],
+    'lower_cabinet': ['house-lower-cabinet-carcass'],
+}
+ANCHOR_SOURCES = {
+    'house-sofa-': 'web/house/home.js',
+    'house-cc0-coffee-table-': 'web/house/home.js',
+    'house-coffee-table-': 'tools/assemble_home_blender.py',
+    'house-cc0-queen-bed-': 'web/house/home.js',
+    'house-bed-frame-': 'tools/assemble_home_blender.py',
+    'house-bedding-': 'tools/assemble_home_blender.py',
+    'house-office-desk-': 'web/house/home.js',
+    'house-upper-cabinet-': 'web/house/home.js',
+    'house-lower-cabinet-carcass': 'web/house/lower_kitchen_cabinet.mjs',
 }
 SUPPORT_ANCHOR = {'sofa_seat': 'sofa', 'sofa_arm_right': 'sofa', 'coffee_table_top': 'coffee_table',
                   'bed_top': 'bed', 'kitchen_counter': None}
@@ -1068,6 +1091,160 @@ def additive_export_objects(objects):
 
 
 # ----------------------------------------------------------------------------
+# Base verification, texture policy, additive-GLB verification (pure Python)
+# ----------------------------------------------------------------------------
+NATIVE_BASE_SCHEMA = 'sub01.native-dressing-base.v1'   # tools/prepare_native_dressing_base.py
+
+
+class BaseRefusedError(RuntimeError):
+    """The opened .blend is not an accepted dressing base."""
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for part in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(part)
+    return digest.hexdigest()
+
+
+def verify_base(scene_props, blend_path, allow_unassembled, mesh_stats, source_sha256=None,
+                base_sha256=None, base_bytes=None):
+    """Accept only (a) the assembled home (homeVersion 114), or (b) with
+    allow_unassembled, the native dressing base written by
+    prepare_native_dressing_base.py whose recorded source GLB SHA-256 matches the
+    expected one. mesh_stats = (mesh_object_count, total_original_vertices)."""
+    get = scene_props.get
+    recorded = get('sub01NativeSourceSha256')
+    if get('homeVersion') == 114 and not recorded:
+        return {'basis': 'assembled-home114'}
+    if not allow_unassembled:
+        raise BaseRefusedError('base is not the assembled home (homeVersion 114); '
+                               'pass --allow-unassembled to accept the verified native dressing base')
+    if not recorded:
+        raise BaseRefusedError('base has no sub01NativeSourceSha256: not written by prepare_native_dressing_base.py')
+    evidence = {'basis': 'native-dressing-base', 'recorded_source_sha256': recorded,
+                'authoring_basis': get('sub01AuthoringBasis'), 'private_only': bool(get('privateOnly'))}
+    sidecar_path = Path(blend_path).with_suffix('.json') if blend_path else None
+    sidecar = None
+    if sidecar_path and sidecar_path.is_file():
+        sidecar = json.loads(sidecar_path.read_text())
+        if sidecar.get('schema') != NATIVE_BASE_SCHEMA:
+            raise BaseRefusedError(f'{sidecar_path.name} schema is {sidecar.get("schema")!r}')
+        if sidecar.get('source_sha256') != recorded:
+            raise BaseRefusedError('sidecar source_sha256 differs from the scene record')
+        if [sidecar.get('mesh_objects'), sidecar.get('vertices')] != list(mesh_stats):
+            raise BaseRefusedError(f'mesh objects/vertices {list(mesh_stats)} differ from the sidecar '
+                                   f'{[sidecar.get("mesh_objects"), sidecar.get("vertices")]}')
+        evidence['sidecar'] = str(sidecar_path)
+    expected = source_sha256 or (sidecar or {}).get('source_sha256')
+    if not expected:
+        raise BaseRefusedError('no expected source SHA-256: pass --source-sha256 (or keep the base sidecar)')
+    if expected != recorded:
+        raise BaseRefusedError(f'source SHA-256 mismatch: expected {expected}, base records {recorded}')
+    evidence['source_sha256'] = recorded
+    evidence['mesh_objects'], evidence['vertices'] = mesh_stats
+    if base_sha256 or base_bytes is not None:
+        if not blend_path or not Path(blend_path).is_file():
+            raise BaseRefusedError('base file path unavailable for --base-sha256/--base-bytes')
+        if base_bytes is not None and Path(blend_path).stat().st_size != base_bytes:
+            raise BaseRefusedError(f'base size {Path(blend_path).stat().st_size} != {base_bytes}')
+        if base_sha256 and sha256_file(blend_path) != base_sha256:
+            raise BaseRefusedError('base .blend SHA-256 mismatch')
+        evidence['base_sha256_verified'] = bool(base_sha256)
+        evidence['base_bytes_verified'] = base_bytes is not None
+    return evidence
+
+
+TEXTURE_FILES = ('diff.jpg', 'normal.jpg')
+TEXTURE_POLICIES = ('flat', 'skip', 'wait')   # A, B, C in PREREQUISITES.md; 'flat' is the default
+
+
+class TexturesMissingError(RuntimeError):
+    """--texture-fallback wait: required texture files are absent."""
+
+
+def item_materials(item):
+    names = [item['material']]
+    if item.get('piping_material'):
+        names.append(item['piping_material'])
+    names += [b['material'] for b in item.get('params', {}).get('books', [])]
+    names += {'book_stack': ['paper'], 'vase_with_stems': ['dried_stem'], 'canister': ['oak']}.get(item['kind'], [])
+    return sorted(set(names))
+
+
+def texture_plan(spec, assets_root, items, policy='flat'):
+    """Which materials lack their texture files, and what that means per item.
+    Never substitutes silently: 'flat' keeps the item with fallback_untextured=True
+    (authored base colour + roughness, labelled NOT scanned/textured); 'skip'
+    rejects the item; 'wait' raises before anything is built."""
+    if policy not in TEXTURE_POLICIES:
+        raise ValueError(f'texture policy must be one of {TEXTURE_POLICIES}')
+    materials = {}
+    for name, finish in sorted(spec['materials'].items()):
+        folder = finish.get('texture')
+        missing = [str(Path(assets_root) / folder / f) for f in TEXTURE_FILES
+                   if folder and not (Path(assets_root) / folder / f).is_file()]
+        materials[name] = {'texture_folder': folder, 'missing': missing,
+                           'mode': 'untextured_authored' if not folder else
+                           ('fallback_untextured' if missing else 'textured')}
+    per_item, rejected, kept = {}, [], []
+    for item in items:
+        gaps = [{'item': item['id'], 'material': m, 'path': path}
+                for m in item_materials(item) for path in materials[m]['missing']]
+        per_item[item['id']] = {'fallback_untextured': bool(gaps), 'missing_textures': gaps,
+                                'materials': {m: materials[m]['mode'] for m in item_materials(item)}}
+        if gaps and policy == 'skip':
+            rejected.append({'id': item['id'], 'name': object_name(item), 'room': item['room'],
+                             'kind': item['kind'],
+                             'reasons': [f'texture_missing:{g["material"]}:{g["path"]}' for g in gaps]})
+        else:
+            kept.append(item)
+    all_missing = [g for v in per_item.values() for g in v['missing_textures']]
+    if all_missing and policy == 'wait':
+        raise TexturesMissingError(json.dumps(all_missing))
+    return {'policy': policy, 'materials': materials, 'items': per_item,
+            'missing': all_missing}, kept, rejected
+
+
+def refused_rooms(rejected):
+    rooms = {}
+    for r in rejected:
+        anchors = [x.split(':', 1)[1] for x in r.get('reasons', []) if x.startswith('clearance_unverified:')]
+        if anchors:
+            room = rooms.setdefault(r['room'], {'missing_anchors': set(), 'items': []})
+            room['missing_anchors'].update(anchors)
+            room['items'].append(r['id'])
+    return {k: {'missing_anchors': sorted(v['missing_anchors']), 'items': sorted(v['items'])}
+            for k, v in sorted(rooms.items())}
+
+
+def glb_json(path):
+    import struct
+    data = Path(path).read_bytes()
+    if data[:4] != b'glTF':
+        raise ValueError(f'{path} is not a GLB')
+    length = struct.unpack_from('<I', data, 12)[0]
+    return json.loads(data[20:20 + length])
+
+
+def verify_additive_glb(path, expected_names, required_names=()):
+    """The exported GLB may contain ONLY our nodes and materials. Raises (and the
+    caller deletes the file) if any other node/material is present, or a required
+    root is missing. Returns node names absent from the file (e.g. skipped curves)."""
+    doc = glb_json(path)
+    nodes = [n.get('name', '') for n in doc.get('nodes', [])]
+    foreign = sorted(n for n in nodes if n not in set(expected_names))
+    foreign_mats = sorted(m.get('name', '') for m in doc.get('materials', [])
+                          if not m.get('name', '').startswith(NAME_PREFIX))
+    absent_required = sorted(set(required_names) - set(nodes))
+    if foreign or foreign_mats or absent_required:
+        raise RuntimeError('additive GLB is not additive-only: ' + json.dumps(
+            {'foreign_nodes': foreign, 'foreign_materials': foreign_mats, 'missing_roots': absent_required}))
+    return sorted(set(expected_names) - set(nodes))
+
+
+# ----------------------------------------------------------------------------
 # Blender build (runs only inside Blender)
 # ----------------------------------------------------------------------------
 def parse_args(argv):
@@ -1084,7 +1261,14 @@ def parse_args(argv):
     p.add_argument('--save-blend-copy', action='store_true',
                    help='also save house-dressed.blend as a copy (the input file is never overwritten)')
     p.add_argument('--allow-unassembled', action='store_true',
-                   help='skip the homeVersion==114 assembled-house guard')
+                   help='accept the native dressing base from prepare_native_dressing_base.py '
+                        '(still verified by source SHA-256); without it only homeVersion 114 is accepted')
+    p.add_argument('--source-sha256', default=None,
+                   help='expected native source GLB SHA-256 (default: the base sidecar value)')
+    p.add_argument('--base-sha256', default=None, help='optional SHA-256 of the opened .blend file')
+    p.add_argument('--base-bytes', type=int, default=None, help='optional byte size of the opened .blend file')
+    p.add_argument('--texture-fallback', choices=TEXTURE_POLICIES, default='flat',
+                   help='missing textures: flat (A, default, labelled untextured), skip (B), wait (C)')
     return p.parse_args(argv)
 
 
@@ -1097,8 +1281,13 @@ def _srgb(hex_color):
     return tuple(v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in vals) + (1.0,)
 
 
-def _material(name, finish, assets_root, missing):
-    mat = bpy.data.materials.new(NAME_PREFIX + name)
+def _material(name, finish, assets_root, missing, status):
+    fallback = status['mode'] == 'fallback_untextured'
+    mat = bpy.data.materials.new(NAME_PREFIX + name + ('_UNTEXTURED_FALLBACK' if fallback else ''))
+    mat['fallback_untextured'] = fallback
+    mat['sub01Scanned'] = False          # never claim scanned material
+    if status['mode'] == 'textured':
+        mat['sub01TextureSource'] = 'web/house/assets/' + finish['texture']
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     shader = next(n for n in nodes if n.type == 'BSDF_PRINCIPLED')
@@ -1111,7 +1300,7 @@ def _material(name, finish, assets_root, missing):
         if finish.get('coat') and socket in shader.inputs:
             shader.inputs[socket].default_value = finish['coat']
     mat.diffuse_color = tint
-    folder = finish.get('texture')
+    folder = None if fallback else finish.get('texture')
     if folder:
         base = assets_root / folder
         coords = nodes.new('ShaderNodeTexCoord')
@@ -1288,6 +1477,48 @@ def build_item(item, mats, tex, collection):
     return root, parts
 
 
+def export_additive_glb(scene, collection, glb, root_names):
+    """Export ONLY the dressing collection (active collection + selection), then
+    assert from the file itself that no existing node or material is inside."""
+    ours = additive_export_objects(scene.objects)
+    if {o.name for o in ours} != {o.name for o in collection.all_objects}:
+        raise RuntimeError('dressing collection and tagged objects disagree; refusing export')
+    view_layer = bpy.context.view_layer
+
+    def find(layer):
+        if layer.collection == collection:
+            return layer
+        for child in layer.children:
+            hit = find(child)
+            if hit:
+                return hit
+        return None
+    previous_layer = view_layer.active_layer_collection
+    selected = {o.name for o in scene.objects if o.select_get()}
+    active = view_layer.objects.active
+    try:
+        view_layer.active_layer_collection = find(view_layer.layer_collection)
+        for obj in scene.objects:
+            obj.select_set(obj in ours)
+        bpy.ops.export_scene.gltf(filepath=str(glb.resolve()), export_format='GLB',
+                                  use_selection=True, use_active_collection=True,
+                                  use_active_collection_with_nested=True, use_visible=False,
+                                  export_yup=True, export_extras=True, export_apply=True,
+                                  export_lights=False, export_cameras=False)
+    finally:
+        view_layer.active_layer_collection = previous_layer
+        for obj in scene.objects:          # restore the user's selection exactly
+            obj.select_set(obj.name in selected)
+        view_layer.objects.active = active
+    try:
+        absent = verify_additive_glb(glb, [o.name for o in ours], root_names)
+    except Exception:
+        glb.unlink(missing_ok=True)
+        raise
+    return {'path': str(glb), 'objects': [o.name for o in ours], 'absent_from_glb': absent,
+            'sha256': sha256_file(glb), 'verified_additive_only': True}
+
+
 def _load_anchors(path):
     if not path:
         return dict(DEFAULT_ANCHORS)
@@ -1313,8 +1544,17 @@ def run(argv=None):
     existing = [o for o in scene.objects if not o.get(TAG)]
     before, geometry = fingerprint_and_geometry(existing, depsgraph)
 
+    meshes = [o for o in scene.objects if o.type == 'MESH' and not o.get(TAG)]
+    mesh_stats = (len(meshes), sum(len(o.data.vertices) for o in meshes))
     if args.list_identifiers:
-        report = {'mode': 'list-identifiers (read-only)', 'objects': [
+        try:
+            base = verify_base(scene, bpy.data.filepath, args.allow_unassembled, mesh_stats,
+                               args.source_sha256, args.base_sha256, args.base_bytes)
+        except BaseRefusedError as error:
+            base = {'refused': str(error)}
+        report = {'base': base, 'mesh_objects': mesh_stats[0], 'vertices': mesh_stats[1],
+                  'scene_props': {k: scene.get(k) for k in ('homeVersion', 'sub01NativeSourceSha256',
+                                                            'sub01AuthoringBasis', 'privateOnly')},'mode': 'list-identifiers (read-only)', 'objects': [
             {'name': r['name'], 'ident': r['ident'], 'triangles': len(r['tris']),
              'aabb_runtime': [list(map(_r, r['aabb'][0])), list(map(_r, r['aabb'][1]))]}
             for r in geometry.records],
@@ -1325,13 +1565,15 @@ def run(argv=None):
         _emit(report, args.output_dir, 'reference-dressing-identifiers.json')
         return report
 
-    if scene.get('homeVersion') != 114 and not args.allow_unassembled:
-        raise RuntimeError('Open the assembled house.blend (homeVersion 114) or pass --allow-unassembled')
+    base = verify_base(scene, bpy.data.filepath, args.allow_unassembled, mesh_stats,
+                       args.source_sha256, args.base_sha256, args.base_bytes)
     if bpy.data.collections.get(COLLECTION):
-        raise RuntimeError(f'{COLLECTION} already exists; start from the untouched assembled house.blend')
+        raise RuntimeError(f'{COLLECTION} already exists; start from the untouched base .blend')
 
     context = evaluated_context(geometry, anchors)
     accepted, rejected = place_on_evaluated_home(spec, geometry, anchors, context)
+    textures, accepted, texture_rejected = texture_plan(spec, args.assets_root, accepted, args.texture_fallback)
+    rejected += texture_rejected
     for skip in sorted(spec.get('skipped_existing', []), key=lambda s: s['id']):
         rejected.append({'id': skip['id'], 'name': None, 'room': skip['room'], 'kind': 'skip',
                          'reasons': [f'duplicate:existing:{skip["evidence"]}']})
@@ -1339,13 +1581,16 @@ def run(argv=None):
     collection = bpy.data.collections.new(COLLECTION)
     scene.collection.children.link(collection)
     missing = []
-    mats = {k: _material(k, v, args.assets_root, missing) for k, v in sorted(spec['materials'].items())}
+    mats = {k: _material(k, v, args.assets_root, missing, textures['materials'][k])
+            for k, v in sorted(spec['materials'].items())}
     tex = bpy.data.textures.new(NAME_PREFIX + 'FabricRelief', 'CLOUDS')
     tex.noise_scale = .045
     built = []
     for item in accepted:
         root, parts = build_item(item, mats, tex, collection)
         built.append({'id': item['id'], 'name': root.name, 'parts': sorted(p.name for p in parts),
+                      'fallback_untextured': textures['items'][item['id']]['fallback_untextured'],
+                      'missing_textures': textures['items'][item['id']]['missing_textures'],
                       'position_runtime_m': [_r(v) for v in item['position_runtime_m']],
                       'support': item.get('support_evidence')})
 
@@ -1355,28 +1600,23 @@ def run(argv=None):
     diff = fingerprint_changes(before, after)
     if diff['changed_or_removed'] or diff['unexpected_new']:
         raise RuntimeError('Existing home changed during dressing; nothing saved/exported: ' + json.dumps(diff))
-    report = {'mode': 'blender', 'collection': COLLECTION, 'basis': 'evaluated-geometry',
+    report = {'mode': 'blender', 'collection': COLLECTION, 'basis': 'evaluated-geometry', 'base': base,
+              'source_sha256': base.get('source_sha256'),
               'built': built, 'rejected': rejected, 'missing_anchors': context['missing_anchors'],
-              'missing_textures': sorted(set(missing)), 'existing_objects_verified_unchanged': len(before),
+              'refused_rooms': refused_rooms(rejected),
+              'anchors_matched': {k: sorted(r['ident'] for r in geometry.matching(v)) for k, v in anchors.items()},
+              'textures': {'policy': textures['policy'], 'missing': textures['missing'],
+                           'materials': textures['materials'],
+                           'note': 'fallback_untextured items use authored base colour/roughness only; '
+                                   'nothing is presented as scanned'},
+              'existing_objects_verified_unchanged': len(before), 'existing_mesh_objects': mesh_stats[0],
               'existing_fingerprint_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
               'rendered': False, 'private_only': True}
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         if args.export_additive_glb:
-            ours = additive_export_objects(scene.objects)
-            selected = {o.name for o in scene.objects if o.select_get()}
-            active = bpy.context.view_layer.objects.active
-            for obj in scene.objects:
-                obj.select_set(obj in ours)
-            glb = args.output_dir / 'reference-dressing.glb'
-            bpy.ops.export_scene.gltf(filepath=str(glb.resolve()), export_format='GLB', use_selection=True,
-                                      export_yup=True, export_extras=True, export_apply=True,
-                                      export_lights=False, export_cameras=False)
-            for obj in scene.objects:          # restore the user's selection exactly
-                obj.select_set(obj.name in selected)
-            bpy.context.view_layer.objects.active = active
-            report['additive_glb'] = {'path': str(glb), 'objects': [o.name for o in ours],
-                                      'sha256': hashlib.sha256(glb.read_bytes()).hexdigest()}
+            report['additive_glb'] = export_additive_glb(scene, collection, args.output_dir / 'reference-dressing.glb',
+                                                         [b['name'] for b in built])
         if args.save_blend_copy:
             blend = args.output_dir / 'house-dressed.blend'
             bpy.ops.wm.save_as_mainfile(filepath=str(blend.resolve()), copy=True)
