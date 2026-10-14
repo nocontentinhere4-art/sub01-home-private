@@ -32,3 +32,52 @@ def test_bounded_native_proc_reader_executes_against_real_process(tmp_path):
   else:assert ticks==0
  finally:proc.communicate('x',timeout=3)
  assert proc.returncode==0
+
+def test_real_e_event_refocus_requires_current_tv_ray_and_frame(tmp_path):
+ """Execute the installed handler against device/event stubs, including the Pong switch."""
+ import shutil,subprocess,pytest
+ compiler=shutil.which('c++')
+ if not compiler:pytest.skip('C++ compiler unavailable')
+ handler=native.METHODS.split(' bool HandleKeyDownEvent',1)[1].split(' bool HandleKeyUpEvent',1)[0]
+ source=tmp_path/'events.cpp';binary=tmp_path/'events'
+ source.write_text(r'''
+#include <string>
+#include <map>
+#include <cassert>
+#define TEXT(x) x
+struct FString:std::string{using std::string::string;bool IsEmpty()const{return empty();}};
+enum class EKeys{E,Escape,W,Other};using FKey=EKeys;
+struct FSlateApplication{};struct FKeyEvent{EKeys key;bool repeat=false;EKeys GetKey()const{return key;}bool IsRepeat()const{return repeat;}};
+struct FVector{double x=0;FVector operator+(FVector b)const{return{x+b.x};}FVector operator*(double b)const{return{x*b};}};
+struct Component{bool tag=true;bool ComponentHasTag(const char*)const{return tag;}};
+struct FHitResult{Component* component=nullptr;Component* GetComponent(){return component;}};
+struct FCollisionQueryParams{void AddIgnoredActor(void*){}};constexpr int ECC_Visibility=0;
+struct Camera{FVector GetComponentLocation(){return{};}FVector GetForwardVector(){return{1};}};
+struct World{bool ray=true;int queries=0;Component component;bool LineTraceSingleByChannel(FHitResult& h,FVector,FVector,int,FCollisionQueryParams){++queries;h.component=&component;return ray;}};
+struct USub01HomeDeviceBridge{FString focus="tv";bool frame=false;FString GetFocusedDevice(){return focus;}bool GetDisplayedMinecraftFrame(FString& s){s="actual-frame";return frame;}};
+struct Keys{std::map<std::string,bool> values;void Add(FString k,bool v){values[k]=v;}};
+struct Actor{bool MinecraftFocused=false,allow=true;int focusCalls=0;Keys MinecraftKeys;USub01HomeDeviceBridge device;World world;Camera camera;Camera* ViewCamera=&camera;
+ template<class T>T* FindComponentByClass(){return &device;}World* GetWorld(){return &world;}
+ void FocusMinecraftTV(const FHitResult&){++focusCalls;if(allow)MinecraftFocused=true;}
+ void ReleaseMinecraftTVInput(){MinecraftFocused=false;MinecraftKeys.values.clear();}
+};
+struct OwnerRef{Actor* actor;Actor* Get(){return actor;}};
+struct Handler{OwnerRef Owner;FString KeyName(FKey k){return k==EKeys::W?FString("forward"):FString();}
+ bool HandleKeyDownEvent'''+handler.replace('override','')+r'''
+};
+int main(){FSlateApplication app;Actor a;Handler h{{&a}};
+ // Pong is focused but there are no current Minecraft pixels: E cannot mint a lease.
+ assert(!h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==0&&a.world.queries==0);
+ a.device.frame=true;a.world.ray=false;assert(!h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==0);
+ a.world.ray=true;a.world.component.tag=false;assert(!h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==0);
+ a.world.component.tag=true;int before=a.world.queries;assert(!h.HandleKeyDownEvent(app,{EKeys::E,true}));assert(a.world.queries==before);
+ a.allow=false;assert(!h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==1&&!a.MinecraftFocused);
+ a.allow=true;assert(h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==2&&a.MinecraftFocused);
+ assert(!h.HandleKeyDownEvent(app,{EKeys::E}));assert(a.focusCalls==2); // no repeated identity renewal
+ assert(h.HandleKeyDownEvent(app,{EKeys::W}));assert(a.MinecraftKeys.values["forward"]);
+ assert(h.HandleKeyDownEvent(app,{EKeys::Escape}));assert(!a.MinecraftFocused&&a.MinecraftKeys.values.empty());
+ assert(!h.HandleKeyDownEvent(app,{EKeys::W}));
+}
+''')
+ subprocess.run([compiler,'-std=c++17',str(source),'-o',str(binary)],check=True,capture_output=True)
+ subprocess.run([str(binary)],check=True,capture_output=True)

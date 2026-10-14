@@ -43,7 +43,15 @@ class FSub01MinecraftTVInput:public IInputProcessor{
 public:
  explicit FSub01MinecraftTVInput(ASub01HomeCharacter* A):Owner(A){}
  void Tick(const float,FSlateApplication&,TSharedRef<ICursor>)override{}
- bool HandleKeyDownEvent(FSlateApplication&,const FKeyEvent& E)override{auto* A=Owner.Get();if(!A||!A->MinecraftFocused)return false;if(E.GetKey()==EKeys::Escape){A->ReleaseMinecraftTVInput();return true;}FString K=KeyName(E.GetKey());if(K.IsEmpty())return false;A->MinecraftKeys.Add(K,true);return true;}
+ bool HandleKeyDownEvent(FSlateApplication&,const FKeyEvent& E)override{auto* A=Owner.Get();if(!A)return false;
+  // The ordinary TV processor consumes E while already focused (e.g. Pong -> Minecraft).
+  // Renew only from this actual key event and an actual current TV ray, never a timer.
+  if(!A->MinecraftFocused&&E.GetKey()==EKeys::E&&!E.IsRepeat()){
+   auto* D=A->FindComponentByClass<USub01HomeDeviceBridge>();FString Frame;FHitResult Hit;FCollisionQueryParams Q;Q.AddIgnoredActor(A);
+   const FVector Eye=A->ViewCamera->GetComponentLocation();
+   if(D&&D->GetFocusedDevice()==TEXT("tv")&&D->GetDisplayedMinecraftFrame(Frame)&&A->GetWorld()->LineTraceSingleByChannel(Hit,Eye,Eye+A->ViewCamera->GetForwardVector()*200,ECC_Visibility,Q)&&Hit.GetComponent()&&Hit.GetComponent()->ComponentHasTag(TEXT("SUB01Device:tv"))){A->FocusMinecraftTV(Hit);if(A->MinecraftFocused)return true;}
+  }
+  if(!A->MinecraftFocused)return false;if(E.GetKey()==EKeys::Escape){A->ReleaseMinecraftTVInput();return true;}FString K=KeyName(E.GetKey());if(K.IsEmpty())return false;A->MinecraftKeys.Add(K,true);return true;}
  bool HandleKeyUpEvent(FSlateApplication&,const FKeyEvent& E)override{auto* A=Owner.Get();if(!A||!A->MinecraftFocused)return false;FString K=KeyName(E.GetKey());if(K.IsEmpty())return false;A->MinecraftKeys.Add(K,false);return true;}
  bool HandleMouseMoveEvent(FSlateApplication&,const FPointerEvent& E)override{auto* A=Owner.Get();if(!A||!A->MinecraftFocused)return false;auto D=E.GetCursorDelta();A->MinecraftLook.X=FMath::Clamp(A->MinecraftLook.X-D.X*.002f,-.35f,.35f);A->MinecraftLook.Y=FMath::Clamp(A->MinecraftLook.Y-D.Y*.002f,-.35f,.35f);return true;}
  bool HandleMouseButtonDownEvent(FSlateApplication&,const FPointerEvent& E)override{auto* A=Owner.Get();if(!A||!A->MinecraftFocused)return false;if(E.GetEffectingButton()==EKeys::LeftMouseButton){A->SendMinecraftTVInput(TEXT("mine"));return true;}if(E.GetEffectingButton()==EKeys::RightMouseButton){A->SendMinecraftTVInput(TEXT("place"));return true;}return false;}
