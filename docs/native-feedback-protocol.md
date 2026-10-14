@@ -48,9 +48,18 @@ current epoch/sequence/activity/node, and is renewed only by an accepted report.
 A blocked report inhibits readiness. This endpoint does not force a brain
 activity, move an actor, change privacy, or invent a seat result. Native binding
 remains in force after evidence expires, so losing the native consumer cannot
-silently fall back to the browser seating timer. Restarting the backend clears
-all ephemeral native evidence; browser-only mode retains its prior behavior
-until explicitly bound again.
+silently fall back to the browser seating timer. The saved home retains only
+`native_consumer_required: true` after an accepted explicit bind. Restarting
+clears epoch, report and receipt time, while the persisted requirement keeps
+readiness closed until a new genuine binding and physical result arrive.
+Browser-only snapshots without that requirement retain their prior behavior.
+
+The private native backend launcher must set `HOME_NATIVE_REQUIRED=1` to close
+a brand-new native session before its first binding. This option adds the
+requirement; setting it to zero does not clear an already persisted requirement.
+It belongs only in the private native launch configuration, not production.
+The sanitized consumer status includes `required` and `awaiting_binding`, with
+all consumer details still hidden during privacy.
 
 ## Private bathroom movement
 

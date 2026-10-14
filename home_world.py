@@ -8,6 +8,7 @@ Physiology and consciousness are not inferred from this simulation.
 import heapq
 import math
 import random
+import os
 from console_requests import valid_choice
 import home_interactions as hi
 from home_native_feedback import NativeFeedback
@@ -259,7 +260,8 @@ class HomeWorld:
         self.seated = max(0, min(1, float(s.get("seated", 0))))
         self.time = float(s.get("time", 0))
         self.sequence = int(s.get("sequence", 0))
-        self.native_feedback = NativeFeedback()
+        self.native_feedback = NativeFeedback(required=s.get('native_consumer_required') is True
+                                               or os.environ.get('HOME_NATIVE_REQUIRED') == '1')
         if (
             s.get("path")
             and all(n in NODES for n in s["path"])
@@ -317,7 +319,7 @@ class HomeWorld:
                 and self.node == self.desired(expected)
                 and (self.node not in ("desk", "sofa", "bed") or self.seated == 1)
                 and self.native_feedback.ready(sequence=self.sequence, activity=expected, target=self.target)
-                and (self.native_feedback.epoch is None or not self.privacy()
+                and (not self.native_feedback.required or not self.privacy()
                      or (self.target == 'bathroom' and expected == 'use_bathroom')))
 
     def update(self, dt, sim_dt, life, rel, now=None):
@@ -386,7 +388,7 @@ class HomeWorld:
                 if self.node in ("desk", "sofa", "bed")
                 else 0
             )
-            if self.node == "bathroom" and (self.native_feedback.epoch is None
+            if self.node == "bathroom" and (not self.native_feedback.required
                                            or self.activity_ready('use_bathroom')):
                 self.bladder = max(0, self.bladder - dt * 0.06)
                 self.last_bathroom = self.time
@@ -496,6 +498,7 @@ class HomeWorld:
     def to_dict(self):
         return {
             "navigation_version": 2,
+            "native_consumer_required": self.native_feedback.required,
             "node": self.node,
             "last_console_choice": self.last_console_choice,
             "console_game": self.console_game,
