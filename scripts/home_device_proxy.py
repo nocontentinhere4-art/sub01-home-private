@@ -96,13 +96,14 @@ class HomeDeviceProxy:
         state = await self.home(epoch)
         device = request.match_info['device']
         if device == 'phone':
-            identity = (state.get('phone_browser_screen') or {}).get('frame_id')
+            identity = (state.get('phone_screen') or state.get('phone_browser_screen') or {}).get('frame_id')
             expected = request.query.get('frame_id')
             if not identity:
                 raise web.HTTPNotFound(text='Actual phone browser has no current frame')
             if expected is not None and expected != identity:
                 raise web.HTTPConflict(text='Actual phone frame changed')
-            path, query = '/api/screen/phone.jpg', {'frame_id': identity}
+            path = '/api/home/phone/frame.jpg' if state.get('phone_screen') else '/api/screen/phone.jpg'
+            query = {'frame_id': identity}
         elif device == 'tv':
             if state['home'].get('console_game') != 'minecraft' or not state.get('minecraft', {}).get('enabled'):
                 raise web.HTTPNotFound(text='Actual TV JPEG is only available for configured Minecraft')
@@ -111,7 +112,7 @@ class HomeDeviceProxy:
             raise web.HTTPNotFound()
         pixels, content, tag = await self.request('GET', path, query=query)
         after = await self.home(epoch)
-        if device == 'phone' and (after.get('phone_browser_screen') or {}).get('frame_id') != identity:
+        if device == 'phone' and (after.get('phone_screen') or after.get('phone_browser_screen') or {}).get('frame_id') != identity:
             raise web.HTTPConflict(text='Actual phone frame changed')
         if device == 'tv' and after['home'].get('console_game') != 'minecraft':
             raise web.HTTPConflict(text='Actual console activity changed')
@@ -135,11 +136,18 @@ class HomeDeviceProxy:
                 url = phone_navigation_url(data.get('url'))
             except ValueError:
                 raise web.HTTPBadRequest(text='Expected a public HTTPS URL')
-            current = (state.get('phone_browser_screen') or {}).get('frame_id')
+            current = (state.get('phone_screen') or state.get('phone_browser_screen') or {}).get('frame_id')
             expected = data.get('frame_id')
             if (current and expected != current) or (not current and expected is not None and expected != ''):
                 raise web.HTTPConflict(text='Actual phone frame changed')
             path, clean = '/api/home/browser', {'device': 'phone', 'url': url}
+        elif device == 'phone' and isinstance(data, dict) and data.get('action') in {'home', 'open_app'}:
+            current = (state.get('phone_screen') or {}).get('frame_id')
+            if not current or data.get('frame_id') != current:
+                raise web.HTTPConflict(text='Actual phone frame changed')
+            if data.get('action') == 'open_app' and data.get('app') not in ('home', 'notes', 'memory', 'browser'):
+                raise web.HTTPBadRequest(text='Expected supported phone app')
+            path, clean = '/api/home/phone/action', {k:data[k] for k in ('action', 'app', 'frame_id') if k in data}
         elif device == 'phone':
             if (not isinstance(data, dict) or data.get('action') not in {'scroll_up', 'scroll_down', 'back', 'close_notice'}
                     or not isinstance(data.get('frame_id'), str) or not 1 <= len(data['frame_id']) <= 100):
