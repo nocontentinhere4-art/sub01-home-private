@@ -1,0 +1,38 @@
+--- a/tools/native_pc_bridge/Sub01HomeDeviceBridge.cpp
++++ b/tools/native_pc_bridge/Sub01HomeDeviceBridge.cpp
+@@ -1,4 +1,5 @@
+ #include "Sub01HomeDeviceBridge.h"
++#include "Sub01DeviceScreenPolicy.h"
+ #include "Components/MeshComponent.h"
+ #include "Engine/Canvas.h"
+ #include "Engine/CanvasRenderTarget2D.h"
+@@ -65,10 +66,15 @@
+ void USub01HomeDeviceBridge::Poll(){
+  if(LocalPrivacy||Busy||Token.IsEmpty())return;Busy=true;const uint64 Epoch=Generation;
+  ReadHome([this,Epoch](TSharedPtr<FJsonObject> State){if(Epoch!=Generation)return;Busy=false;if(!PublicHome(State)){Clear();return;}Private=false;
+-  const TSharedPtr<FJsonObject>* Phone=nullptr;FString Identity;if(State->TryGetObjectField(TEXT("phone_browser_screen"),Phone)&&Phone&&(*Phone)->TryGetStringField(TEXT("frame_id"),Identity)&&!Identity.IsEmpty())FetchFrame(TEXT("phone"),Identity,Epoch);
++  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game,Activity;(*Home)->TryGetStringField(TEXT("console_game"),Game);(*Home)->TryGetStringField(TEXT("activity"),Activity);
++  FSub01DeviceScreenInputs Screen;Screen.PublicHome=true;Screen.PhoneActivity=Activity==TEXT("phone");Screen.MinecraftSelected=Game==TEXT("minecraft");
++  const TSharedPtr<FJsonObject>* Minecraft=nullptr;if(State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft){(*Minecraft)->TryGetBoolField(TEXT("enabled"),Screen.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),Screen.MinecraftFrame);}
++  const TSharedPtr<FJsonObject>* Phone=nullptr;FString Identity;Screen.PhoneFrame=State->TryGetObjectField(TEXT("phone_browser_screen"),Phone)&&Phone&&(*Phone)->TryGetStringField(TEXT("frame_id"),Identity)&&!Identity.IsEmpty();
++  // Browser parity (Sub01DeviceScreenPolicy.h): a page only while he is on the phone.
++  if(Sub01PhoneShowsPage(Screen))FetchFrame(TEXT("phone"),Identity,Epoch);
+   else if(Materials.Contains(TEXT("phone"))){Materials[TEXT("phone")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);Images.Remove(TEXT("phone"));ImageIdentity.Remove(TEXT("phone"));PhoneFrameId.Empty();}
+-  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game;(*Home)->TryGetStringField(TEXT("console_game"),Game);
+-  if(Game==TEXT("minecraft"))FetchFrame(TEXT("tv"),TEXT(""),Epoch);
++  // Minecraft only with a live frame; selected without one, the TV stays blank (below).
++  if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);
+   else if(Game==TEXT("pong")){const TSharedPtr<FJsonObject>* Pong=nullptr;if((*Home)->TryGetObjectField(TEXT("pong"),Pong)&&Pong){PongState=*Pong;if(TVCanvas){TVCanvas->UpdateResource();if(Materials.Contains(TEXT("tv")))Materials[TEXT("tv")]->SetTextureParameterValue(TEXT("PCFrame"),TVCanvas);}}}
+   else if(Materials.Contains(TEXT("tv")))Materials[TEXT("tv")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);
+   if(FocusedDevice==TEXT("tv")&&Game==TEXT("pong")){auto Body=MakeShared<FJsonObject>();Body->SetNumberField(TEXT("direction"),PongDirection);Action(TEXT("tv"),Body);}
+--- a/tools/stage_unreal_home_runtime.py
++++ b/tools/stage_unreal_home_runtime.py
+@@ -163,7 +163,7 @@
+     (module/'Sub01HomeLab.h').write_text(header)
+     (module/'Sub01HomeLab.cpp').write_text(cpp)
+     bridge=Path(__file__).parent/'native_pc_bridge'
+-    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp']:
++    for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h']:
+         shutil.copy2(bridge/name,module/name)
+     stage_hands(module)
+     (module/'Sub01HomeLab.Build.cs').write_text('using UnrealBuildTool; public class Sub01HomeLab : ModuleRules { public Sub01HomeLab(ReadOnlyTargetRules Target):base(Target) { PCHUsage=PCHUsageMode.UseExplicitOrSharedPCHs; PublicDependencyModuleNames.AddRange(new string[]{"Core","CoreUObject","Engine","InputCore","AnimGraphRuntime","AnimationCore","RenderCore","RHI","HTTP","Json","JsonUtilities","Slate","SlateCore","ApplicationCore","ImageCore"}); } }\n')
