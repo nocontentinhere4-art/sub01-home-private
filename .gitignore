@@ -135,3 +135,4 @@ out/current-authorized-host-capacity-id.json
 out/home-migration-window.private.json
 out/home-*migration*.private.*
 out/migration-device-restore/
+out/phone-grip/
