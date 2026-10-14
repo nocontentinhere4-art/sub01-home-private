@@ -23,6 +23,7 @@ BATH_GEOMETRY={'node':118,'mesh':101,'center_cm':(-85.,135.,405.),'extent_cm':(3
 POLICY = r'''
 #include <cmath>
 namespace Sub01ExitDoor {
+inline constexpr double MaxArcDegrees=.25;
 inline bool InsideBathroom(double x,double y,double feet){return x<-85&&x>-378&&y>50&&y<270&&feet>280&&feet<350;}
 template<class Blocked> double AdvanceSlide(double position,double target,double dt,Blocked blocked){
  if(!std::isfinite(position)||!std::isfinite(target)||!std::isfinite(dt)||dt<=0)return position;
@@ -36,7 +37,7 @@ template<class Blocked> double Advance(double angle,double target,double dt,Bloc
  if(!std::isfinite(angle)||!std::isfinite(target)||!std::isfinite(dt)||dt<=0)return angle;
  target=std::fmax(0.0,std::fmin(86.4,target));
  const double distance=std::fmin(std::fabs(target-angle),70.0*std::fmin(dt,0.05));
- const int steps=int(std::ceil(distance/1.0));if(!steps)return angle;
+ const int steps=int(std::ceil(distance/MaxArcDegrees));if(!steps)return angle;
  const double direction=target>angle?1.0:-1.0;
  // Test every intermediate pose before committing any motion this tick.
  for(int i=1;i<=steps;++i)if(blocked(angle+direction*distance*i/steps))return angle;

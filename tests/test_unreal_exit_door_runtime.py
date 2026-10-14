@@ -24,6 +24,7 @@ class DoorAdapterTest(unittest.TestCase):
 #include <cassert>
 #include <limits>
 int main(){
+ static_assert(Sub01ExitDoor::MaxArcDegrees==.25);
  auto linearClear=[](double,double){return false;};double slide=0;
  for(int i=0;i<40;++i)slide=Sub01ExitDoor::AdvanceSlide(slide,95,.05,linearClear);assert(slide==95);
  auto sweptObstacle=[](double a,double b){return std::fmin(a,b)<=50&&std::fmax(a,b)>=50;};
@@ -83,6 +84,27 @@ class CurrentAuthoredDoorGeometryTest(unittest.TestCase):
   self.assertLess(c[0]+e[0],nodes[56]['min_cm'][0])
 
 class FittedDoorStructuralClearanceTest(unittest.TestCase):
+ def test_full_swept_hull_subdivision_clears_latch(self):
+  import math
+  frames=[[(lo,384),(hi,384),(hi,390),(lo,390)]for lo,hi in [(142.75,147.25),(252.75,257.25)]]
+  def blocked(step):
+   for i in range(math.ceil(86.4/step)):
+    start=i*step;end=min((i+1)*step,86.4);mid=math.radians((start+end)/2);points=[]
+    for angle in [start,end]:
+     a=math.radians(angle)-mid
+     for x,y in [(0,-7.75),(105,-7.75),(105,-.25),(0,-.25)]:points.append((math.cos(a)*x-math.sin(a)*y,math.sin(a)*x+math.cos(a)*y))
+    sag=math.hypot(105,7.75)*(1-math.cos(math.radians((end-start)/2)));lo=[min(p[a]for p in points)-sag for a in[0,1]];hi=[max(p[a]for p in points)+sag for a in[0,1]]
+    poly=[(147.45+math.cos(mid)*x-math.sin(mid)*y,394+math.sin(mid)*x+math.cos(mid)*y)for x,y in [(lo[0],lo[1]),(hi[0],lo[1]),(hi[0],hi[1]),(lo[0],hi[1])]]
+    axes=[(1,0),(0,1)]+[(poly[(n+1)%4][1]-poly[n][1],poly[n][0]-poly[(n+1)%4][0])for n in range(4)]
+    for frame in frames:
+     separated=False
+     for a in axes:
+      p=[v[0]*a[0]+v[1]*a[1]for v in poly];q=[v[0]*a[0]+v[1]*a[1]for v in frame]
+      if max(p)<min(q)or max(q)<min(p):separated=True;break
+     if not separated:return True
+   return False
+  self.assertTrue(blocked(1.0),'A coarse conservative hull can falsely overlap a clear latch path')
+  self.assertFalse(blocked(.25))
  def test_full_leaf_rotation_clears_both_jambs_and_detects_bad_latch_fit(self):
   import math
   def overlaps(poly,rect):
