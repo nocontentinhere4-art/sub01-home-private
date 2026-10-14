@@ -1,4 +1,4 @@
-"""One bounded Blender source job: authentic desk, grommet lamp, shelves and46 books.
+"""One bounded Blender source job: authentic desk, side-edge clamp lamp, shelves and46 books.
 
 Pure planners are testable without Blender. All heavy/source collision execution
 belongs to renderer on the authorized server. No UE or runtime mutation.
@@ -31,7 +31,15 @@ def board_surfaces(parts):
  return groups
 
 
-def shelf_export(source,output):
+def measured_shelf_depth_plan(depth,baseboard_front,desk_back):
+ """Exact genuine shelf depth fits measured baseboard/desk interval, unchanged."""
+ if not all(math.isfinite(v)for v in [*depth,baseboard_front,desk_back])or depth[1]<=depth[0]:raise ValueError('Invalid actual furniture/architecture bounds')
+ centre=baseboard_front+.005-depth[0];front=centre+depth[1];front_gap=desk_back-front
+ if front_gap<.002:raise ValueError('Full genuine shelf cannot fit with5mm baseboard and2mm desk clearances')
+ return {'centre_ue_y_m':centre,'actual_baseboard137138_front_ue_y_m':baseboard_front,'actual_desk_back_ue_y_m':desk_back,'actual_shelf_back_ue_y_m':centre+depth[0],'actual_shelf_front_ue_y_m':front,'back_baseboard_gap_m':.005,'front_desk_gap_m':front_gap,'unchanged_source_shape_scale':True,'full_triangle_bvh_required':True}
+
+
+def shelf_export(source,output,centres=CENTRES):
  raw=Path(source).read_bytes()
  if hashlib.sha256(raw).hexdigest()!=SHELF_SHA:raise ValueError('Actual shelf source bytes differ')
  length=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[20:20+length]);rest=raw[20+length:]
@@ -39,17 +47,17 @@ def shelf_export(source,output):
  _,parts=geometry(source);boards=board_surfaces(parts);low=min(p[1]for r in parts for p in r['points'])*UNIT;origin=.025+.00001-low
  node=doc['nodes'][0];node['name']='SUB01_RealSteel_bbc7db57_A';other=copy.deepcopy(node);other['name']='SUB01_RealSteel_bbc7db57_B'
  doc['nodes']=[node,other];doc['meshes'][0]['name']='SUB01_RealSteel_bbc7db57_FullOriginalMesh'
- for i,(x,z)in enumerate(CENTRES):doc['nodes'].append({'name':f'SUB01_RealSteel_bbc7db57_Root{i}','children':[i],'translation':[x,origin,z],'scale':[UNIT]*3})
+ for i,(x,z)in enumerate(centres):doc['nodes'].append({'name':f'SUB01_RealSteel_bbc7db57_Root{i}','children':[i],'translation':[x,origin,z],'scale':[UNIT]*3})
  doc['scenes']=[{'name':'SUB01_RealSteel_bbc7db57_TwoAuthenticCopies','nodes':[2,3]}];doc['scene']=0
  encoded=json.dumps(doc,separators=(',',':')).encode();encoded+=b' '*(-len(encoded)%4)
  out=struct.pack('<4sII',b'glTF',2,20+len(encoded)+len(rest))+struct.pack('<II',len(encoded),0x4E4F534A)+encoded+rest
  Path(output).write_bytes(out)
  if out[20+len(encoded):]!=rest:raise ValueError('Shelf original attribute/texture binary changed')
  shelves=[]
- for i,(x,z)in enumerate(CENTRES):
+ for i,(x,z)in enumerate(centres):
   for k,board in enumerate(boards):
    lo,hi=board['bounds_xz'];shelves.append({'instance':i,'board':k,'top_ue_m':origin+board['height'],'xy_bounds_m':[[x+lo[0],z+lo[1]],[x+hi[0],z+hi[1]]],'actual_support_triangles_source_m':board['triangles']})
- return {'sha256':hashlib.sha256(out).hexdigest(),'source_sha256':SHELF_SHA,'source_binary_unchanged':True,'triangles_per_authentic_shelf':sum(len(r['triangles'])for r in parts),'shelf_origin_height_m':origin,'boards':shelves,'native_actor_labels':['SUB01_RealSteel_bbc7db57_A','SUB01_RealSteel_bbc7db57_B']}
+ return {'sha256':hashlib.sha256(out).hexdigest(),'source_sha256':SHELF_SHA,'source_binary_unchanged':True,'triangles_per_authentic_shelf':sum(len(r['triangles'])for r in parts),'shelf_origin_height_m':origin,'actual_centres_ue_m':[list(v)for v in centres],'boards':shelves,'native_actor_labels':['SUB01_RealSteel_bbc7db57_A','SUB01_RealSteel_bbc7db57_B']}
 
 
 def pack_books(books,boards):
@@ -93,7 +101,12 @@ def run(args):
  output=Path(args.output);output.mkdir(parents=True,exist_ok=True)
  if hashlib.sha256(Path(args.home_source).read_bytes()).hexdigest()!=HOME_SHA:raise ValueError('Actual original home source differs')
  desk=prepare_desk(args.desk_source,output/'desk.glb',args.lamp_source,args.lamp_receipt,args.home_source)
- shelf=shelf_export(args.shelf_source,output/'shelves.glb');books,groups=prepare_books(args.books_glb,args.books_report,shelf['boards'])
+ _,shelf_geometry=geometry(args.shelf_source);_,home_geometry=geometry(args.home_source)
+ depth=[min(p[2]for r in shelf_geometry for p in r['points'])*UNIT,max(p[2]for r in shelf_geometry for p in r['points'])*UNIT]
+ baseboard_front=max(p[2]for r in home_geometry if r['node']in(137,138)for p in r['points'])
+ depth_plan=measured_shelf_depth_plan(depth,baseboard_front,desk['actual_export_bounds_m'][0][2])
+ centres=tuple((x,depth_plan['centre_ue_y_m'])for x,_ in CENTRES)
+ shelf=shelf_export(args.shelf_source,output/'shelves.glb',centres);shelf['actual_architecture_clearance']=depth_plan;books,groups=prepare_books(args.books_glb,args.books_report,shelf['boards'])
  _,shelf_parts=geometry(args.shelf_source);_,home=geometry(args.home_source)
  def bvh(points,faces):return BVHTree.FromPolygons([Vector(p)for p in points],faces,all_triangles=True,epsilon=0)
  retired={162,181,182,190,191,126,255,256}
@@ -109,7 +122,7 @@ def run(args):
    faces=faces[1640:1800]
   hp=[(p[0],p[2],p[1])for p in hr['points']];cached_home.append((hr['node'],bounds(hp),bvh(hp,faces)))
  issues=[];shelf_bvhs=[]
- for instance,(x,z)in enumerate(CENTRES):
+ for instance,(x,z)in enumerate(centres):
   for row in shelf_parts:
    pts=[(x+p[0]*UNIT,z+p[2]*UNIT,shelf['shelf_origin_height_m']+p[1]*UNIT)for p in row['points']];sb=bvh(pts,row['triangles']);shelf_bvhs.append(sb)
    for node,hbox,hb in cached_home:

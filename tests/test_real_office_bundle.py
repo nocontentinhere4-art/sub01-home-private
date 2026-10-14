@@ -1,12 +1,16 @@
 import hashlib,json,struct,sys,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
-from prepare_real_office_bundle import shelf_export,pack_books
+from prepare_real_office_bundle import shelf_export,pack_books,measured_shelf_depth_plan
 
 class AuthenticOffice(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.path=Path(self.tmp.name)/'shelves.glb';self.source=ROOT/'web/house/assets/real-steel-shelf/originalsource.glb';self.report=shelf_export(self.source,self.path)
  def tearDown(self):self.tmp.cleanup()
+ def test_measured_depth_fits_and_impossible_interval_refused(self):
+  depth=[-.2510587692260742,.2510587692260742];p=measured_shelf_depth_plan(depth,-3.882499980740249,-3.37298013245)
+  self.assertAlmostEqual(p['centre_ue_y_m'],-3.626441211514175,places=7);self.assertGreaterEqual(p['front_desk_gap_m'],.002)
+  with self.assertRaisesRegex(ValueError,'cannot fit'):measured_shelf_depth_plan(depth,-3.882499980740249,-3.38)
  def test_actual_five_boards_two_copies_and_original_binary_unchanged(self):
   old=self.source.read_bytes();new=self.path.read_bytes();a=struct.unpack_from('<I',old,12)[0];b=struct.unpack_from('<I',new,12)[0]
   self.assertEqual(old[20+a:],new[20+b:]);self.assertEqual(len(self.report['boards']),10);self.assertEqual(self.report['triangles_per_authentic_shelf'],4348)

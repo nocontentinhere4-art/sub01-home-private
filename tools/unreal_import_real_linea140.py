@@ -2,8 +2,8 @@
 
 run(export_glb, dry_run=True) reads exact native bindings. run(...,dry_run=False)
 imports unique owned scene assets, measures actual triangle/PBR/contact geometry,
-moves the verified lamp + its unique light to the measured grommet/bulb, opens
-only the real removable cap, then hides exactly original181/182. Rollback restores
+fits the verified authentic side-edge clamp + paired bulb/light, preserves the
+grommet hardware, then hides exactly original181/182. Rollback restores
 original component/actor states on failure. No level loading or runtime restart.
 """
 import hashlib,json,math,re,shutil,time
