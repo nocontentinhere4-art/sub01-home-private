@@ -68,7 +68,7 @@ CLONE_DIR = '/Game/Sub01Home/MaterialFix/Textures'
 CLONE_PREFIX = 'SUB01_MatFix_Albedo_'
 CLONE_ROOT = CLONE_DIR + '/' + CLONE_PREFIX
 DUPLICATE_TAG = 'sub01_matfix_duplicate_of'
-ALLOWED_ROOTS = (ALLOWED_ROOT, CLONE_ROOT)
+ALLOWED_ROOTS = (ALLOWED_ROOT, '/Game/Sub01Home/ReferenceDressing/', CLONE_ROOT)
 # Root's parity export 2026-10-14 13:51:49: all four bed albedo PNGs == GLB image 15.
 REAL_IMAGE15 = {'decoded_rgba_sha256': '0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e',
                 'width': 512, 'height': 512, 'linear_mean': [0.28151, 0.40375, 0.60812],
@@ -76,9 +76,19 @@ REAL_IMAGE15 = {'decoded_rgba_sha256': '0157e1e9c8197b2b81728df1e2fa2ac24da4199d
                 'originals_imported_as': {'srgb': False, 'compression': 'TC_NORMALMAP'}}
 
 
+DRESSING_ROOT = '/Game/Sub01Home/ReferenceDressing/'
+ORIGINAL_ROOTS = (ALLOWED_ROOT, DRESSING_ROOT)
+
+
 def clone_path(original_path):
-    """Deterministic owned clone object path for an original texture object path."""
+    """Deterministic owned clone object path for an original texture object path.
+
+    Imported-scene textures keep their name (Image_148 -> SUB01_MatFix_Albedo_Image_148, as already
+    created on the server); reference-dressing textures (generic names diff, diff1, ...) get 'RefDress_'.
+    """
     name = original_path.rsplit('/', 1)[-1].split('.')[0]
+    if original_path.startswith(DRESSING_ROOT):
+        name = 'RefDress_' + name
     return '%s/%s%s.%s%s' % (CLONE_DIR, CLONE_PREFIX, name, CLONE_PREFIX, name)
 
 
@@ -196,28 +206,49 @@ def reference_image(glb, image_index=REFERENCE_IMAGE_INDEX):
                   'decoded_rgba_sha256': stats['decoded_rgba_sha256'], 'stats': stats['stats']}
 
 
-def finalize(export_dir, glb, image_index=REFERENCE_IMAGE_INDEX):
+def finalize(export_dir, glb=None, image_index=REFERENCE_IMAGE_INDEX):
+    """Parity JSON from an export directory. With ``glb``: every texture is compared with GLB image
+    ``image_index`` (the bed case). Always: every exported clone (``duplicate_of``) is compared with its
+    OWN exported original (``original_pair``), so per-texture proof does not depend on any GLB image."""
     import numpy as np
     export_dir = Path(export_dir)
     settings = json.loads((export_dir / 'texture-settings.json').read_text())
     if settings.get('schema') != SETTINGS_SCHEMA:
         raise ParityError('Unexpected settings schema')
-    ref_rgba, reference = reference_image(glb, image_index)
-    textures = []
+    ref_rgba, reference = reference_image(glb, image_index) if glb else (None, None)
+    decoded = {}
     for row in settings['textures']:
         data = (export_dir / row['png']).read_bytes()
-        rgba, stats = decoded_stats(data)
-        if rgba.shape == ref_rgba.shape:
+        decoded[row['asset_path'].split('.')[0]] = (data,) + decoded_stats(data)
+    textures = []
+    for row in settings['textures']:
+        data, rgba, stats = decoded[row['asset_path'].split('.')[0]]
+        diff = None
+        if ref_rgba is not None and rgba.shape == ref_rgba.shape:
             diff = int(np.abs(rgba.astype(np.int16) - ref_rgba.astype(np.int16)).max())
-        else:
-            diff = None
+        pair = None
+        dup = row.get('duplicate_of')
+        if dup:
+            original = decoded.get(dup.split('.')[0])
+            if original is None:
+                pair = {'asset_path': dup, 'exported': False}
+            else:
+                o_data, o_rgba, o_stats = original
+                pair = {'asset_path': dup, 'exported': True,
+                        'decoded_rgba_sha256': o_stats['decoded_rgba_sha256'],
+                        'png_file_sha256': hashlib.sha256(o_data).hexdigest(),
+                        'png_bytes_identical': o_data == data,
+                        'max_abs_diff_8bit': (int(np.abs(rgba.astype(np.int16) - o_rgba.astype(np.int16)).max())
+                                              if rgba.shape == o_rgba.shape else None)}
         s = row['settings']
         textures.append({
             'asset_path': row['asset_path'],
             'source_provenance': {'import_source_file': row.get('import_source_file'),
-                                  'duplicate_of': row.get('duplicate_of'),
+                                  'duplicate_of': dup,
                                   'glb_image_index': None, 'buffer_view': None,
-                                  'pixel_match_reference': stats['decoded_rgba_sha256'] == reference['decoded_rgba_sha256']},
+                                  'pixel_match_reference': (stats['decoded_rgba_sha256'] == reference['decoded_rgba_sha256']
+                                                            if reference else None)},
+            'original_pair': pair,
             'width': stats['width'], 'height': stats['height'],
             'editor_size': [row['width'], row['height']],
             'srgb': s.get('srgb'), 'compression': s.get('compression_settings'), 'lod_bias': s.get('lod_bias'),
@@ -228,6 +259,50 @@ def finalize(export_dir, glb, image_index=REFERENCE_IMAGE_INDEX):
             'max_abs_diff_vs_reference_8bit': diff, 'reencode_proven': False, 'reencode_note': None})
     return {'schema': PARITY_SCHEMA, 'generated_utc': _dt.datetime.now(_dt.timezone.utc).isoformat(),
             'exporter': 'tools/unreal_export_texture_parity.py', 'reference': reference, 'textures': textures}
+
+
+def validate_clone_pairs(parity, clone_of):
+    """Per-texture proof for generic albedo clones: every clone equals its OWN original.
+
+    For each clone -> original: clone under the owned prefix; duplicate_of == original; the original is
+    in the same export and reported as the normal-map import it was; decoded RGBA sha256 and dimensions
+    identical to that original (max abs diff 0); clone sRGB True, TC_DEFAULT, LOD bias 0, neutral adjust.
+    Returns a list of problems (empty = proven).
+    """
+    if not parity or parity.get('schema') != PARITY_SCHEMA:
+        return ['no valid %s parity file' % PARITY_SCHEMA]
+    rows = {t.get('asset_path', '').split('.')[0]: t for t in parity.get('textures') or []}
+    problems = []
+    for clone, original in sorted(clone_of.items()):
+        if not is_clone_path(clone):
+            problems.append('%s: not under the owned clone prefix %s' % (clone, CLONE_ROOT))
+            continue
+        c, o = rows.get(clone.split('.')[0]), rows.get(original.split('.')[0])
+        if c is None or o is None:
+            problems.append('%s: clone %s / original %s missing from the parity export' % (
+                clone, 'present' if c else 'MISSING', 'present' if o else 'MISSING'))
+            continue
+        dup = str((c.get('source_provenance') or {}).get('duplicate_of') or '').split('.')[0]
+        if dup != original.split('.')[0]:
+            problems.append('%s: duplicate_of %r is not %s' % (clone, dup, original))
+        if c.get('decoded_rgba_sha256') != o.get('decoded_rgba_sha256') or not c.get('decoded_rgba_sha256'):
+            problems.append('%s: decoded pixels differ from its original %s' % (clone, original))
+        if (c.get('width'), c.get('height')) != (o.get('width'), o.get('height')):
+            problems.append('%s: size differs from its original' % clone)
+        pair = c.get('original_pair') or {}
+        if pair and pair.get('max_abs_diff_8bit') not in (0,):
+            problems.append('%s: max abs diff vs original %s' % (clone, pair.get('max_abs_diff_8bit')))
+        if c.get('srgb') is not True:
+            problems.append('%s: sRGB %s' % (clone, c.get('srgb')))
+        if c.get('compression') not in ALLOWED_COMPRESSION:
+            problems.append('%s: compression %s' % (clone, c.get('compression')))
+        if c.get('lod_bias') != 0:
+            problems.append('%s: LOD bias %s' % (clone, c.get('lod_bias')))
+        for key, want in ADJUST_DEFAULTS.items():
+            have = (c.get('adjust') or {}).get(key)
+            if have is None or abs(float(have) - want) > 1e-6:
+                problems.append('%s: %s=%s' % (clone, key, have))
+    return problems
 
 
 def validate_parity(parity, texture_paths, glb_name='full-home', clone_of=None):
@@ -310,6 +385,8 @@ def main(argv=None):
     mode.add_argument('--export', type=Path, help='editor: export PNGs + settings into this EMPTY directory')
     mode.add_argument('--finalize', type=Path, help='pure: build the parity JSON from an export directory')
     p.add_argument('--texture', action='append', help='UE texture object path (default: the 4 bed textures)')
+    p.add_argument('--usage-file', type=Path,
+                   help='export every texture selected by the usage-file albedo repair, plus its clone')
     p.add_argument('--clones', action='store_true',
                    help='export the owned sRGB clones of the default/--texture originals (plus the originals)')
     p.add_argument('--glb', type=Path, help='full-home.glb for --finalize')
@@ -317,12 +394,15 @@ def main(argv=None):
     p.add_argument('--quit', action='store_true')
     args = p.parse_args(argv)
     if args.finalize:
-        if not args.glb:
-            p.error('--finalize needs --glb')
         print(json.dumps(finalize(args.finalize, args.glb, args.image_index), indent=1))
         return 0
     import unreal as u  # noqa: N813
     try:
+        if args.usage_file:
+            import unreal_home_materials_fix as fix
+            selection = fix.select_usage_repairs(json.loads(args.usage_file.read_text()))
+            args.texture = [r['texture'] for r in selection['selected']]
+            args.clones = True
         originals = tuple(args.texture or BED_TEXTURES)
         paths = originals + tuple(clone_path(o) for o in originals) if args.clones else originals
         export_textures(args.export, paths, u=u)

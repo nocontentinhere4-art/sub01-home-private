@@ -388,3 +388,96 @@ UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
 If PIL/numpy are missing in the editor's Python, `--repair-and-apply` stops after the clone
 export and prints the `--finalize` and `--apply` commands. Add `--preset sofa-intended` only
 after the sofa texture is confirmed to be a colour import; otherwise the live guard refuses it.
+
+## 11. Generic albedo colour-space repair (the 13 remaining textures)
+
+Source: root's real audit `docs/proposed/actual-home-texture-usage-before-repair-20261014.json`
+(schema `sub01-private-texture-usage-audit-v1`; 125 MICs, 117 textures, 17 definite mismatches,
+complete, no errors).
+
+`select_usage_repairs` selects a texture only when ALL of these hold:
+- the file reports the definite `normalmap_compression_used_as_albedo` mismatch;
+- sRGB is False and compression is TC_NORMALMAP;
+- every usage is `BaseColorTexture` with role albedo, and the texture is never used as a
+  `NormalTexture` anywhere in the file;
+- there are no settings errors and at least one bound slot;
+- the path is under `/Game/Sub01Home/ImportedScene/` or `/Game/Sub01Home/ReferenceDressing/`;
+- its clone name does not collide with another texture's.
+
+Result: **exactly 13 textures, 13 materials, 18 slots, 0 ambiguous.**
+
+| texture | material (albedo) | slots |
+|---|---|---|
+| Image_141 | Material_9 | 1 |
+| Image_142 | Material_10 | 1 |
+| Image_143 | Material_19 | 1 |
+| Image_144 | Material_20 | 1 |
+| Image_145 | Material_53 | 1 |
+| Image_146 | Material_54 | 1 |
+| Image_147 | Material_91 (Linen_shade) | 1 |
+| ReferenceDressing diff | SUB01_RefDress_linen_oat | 4 |
+| diff1 | SUB01_RefDress_linen_terracotta | 1 |
+| diff2 | SUB01_RefDress_book_clay | 1 |
+| diff3 | SUB01_RefDress_book_sage | 1 |
+| diff5 | SUB01_RefDress_wool_caramel | 2 |
+| diff7 | SUB01_RefDress_linen_cream | 2 |
+
+Excluded as already repaired: the 4 bed textures Image_148, 149, 1410 and 1411. Nothing else
+carries a mismatch or warning.
+
+Clone naming:
+- Imported-scene textures keep their name: `SUB01_MatFix_Albedo_Image_141`. This is unchanged
+  for the existing bed clones.
+- Dressing textures get `SUB01_MatFix_Albedo_RefDress_<diffN>`, because their names are generic.
+- All clones live under `/Game/Sub01Home/MaterialFix/Textures/`.
+- Owned child MICs are named `/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_<material>`.
+
+What the repair does, per texture (same code path as root's bed fix, `_create_clone`):
+- `duplicate_asset`;
+- compression `TC_DEFAULT` first, then sRGB True;
+- tag `duplicate_of`;
+- check that the original's settings and `.uasset` sha256 are unchanged;
+- check that the PNG exports of clone and original are byte-identical;
+- save only the clone.
+
+Per material, it makes an owned child MIC that overrides **only `BaseColorTexture`**. That makes
+it a pure colour-space repair: no tint, and NormalTexture, BaseColorFactor and roughness are
+all inherited.
+
+It fails closed when:
+- the file and the live level disagree: texture state, a material's live `BaseColorTexture`, or
+  the exact set of live slots using the material;
+- the selection count differs from `--expect-count`;
+- an existing clone differs.
+
+Re-running verifies and creates nothing. `--restore` puts every recorded slot back, then deletes
+only the owned assets (MICs, then clones).
+
+Note: the backup state is shared with the bed repair, so `--restore` reverts both.
+
+### Root commands
+
+```bash
+# pure check of the selection (exit 2 if not 13)
+python3 tools/unreal_home_materials_fix.py --select-only \
+  --usage-file docs/proposed/actual-home-texture-usage-before-repair-20261014.json --expect-count 13
+# single editor command (clones + MICs + slots + save; stops at the first failure)
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --repair-albedo-textures --scope usage-file --usage-file <repo>/docs/proposed/actual-home-texture-usage-before-repair-20261014.json --expect-count 13 --quit" -unattended -nosplash
+# per-texture pixel proof (read-only export of the 13 originals + 13 clones, then pure finalize; no GLB needed)
+UnrealEditor-Cmd ... -ExecutePythonScript="<repo>/tools/unreal_export_texture_parity.py --export <empty-dir> --usage-file <repo>/docs/proposed/actual-home-texture-usage-before-repair-20261014.json --quit"
+python3 tools/unreal_export_texture_parity.py --finalize <empty-dir> > usage-texture-parity.json
+python3 -c "import json,sys; sys.path.insert(0,'tools'); import unreal_export_texture_parity as p, unreal_home_materials_fix as f; s=f.select_usage_repairs(json.load(open('docs/proposed/actual-home-texture-usage-before-repair-20261014.json'))); print(p.validate_clone_pairs(json.load(open('usage-texture-parity.json')), {r['clone']: r['texture'] for r in s['selected']}) or 'PROVEN')"
+# rollback (all recorded slots back, owned MICs + clones deleted)
+UnrealEditor-Cmd ... -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --restore --quit"
+```
+
+The step-by-step alternative is the same command without `--expect-count`, after inspecting
+`--select-only`.
+
+`finalize` now also works without `--glb`. Each clone is compared with its OWN exported original
+(`original_pair`: decoded RGBA sha256, PNG byte identity, max abs diff). `validate_clone_pairs`
+requires:
+- owned prefix and `duplicate_of`;
+- an identical decoded hash and size, with max abs diff 0;
+- sRGB True, TC_DEFAULT, LOD bias 0 and neutral adjust settings.
