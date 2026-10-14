@@ -14,4 +14,8 @@ Preserve the warming sole native Unreal instance, private X server, fully transf
 
 ## Browser access
 
-The owner requires the configured `playwright-isolated` Microsoft Playwright MCP server for Chrome interaction and research. Use its isolated browser without importing personal Chrome cookies or storage. If its tools are unavailable, report that limitation instead of substituting personal Chrome, another browser connector or a standalone Playwright script. Native app interaction, filesystem work, Runpod APIs and native Unreal captures remain available within the authorized private scope.
+On 2026-10-14 the owner explicitly authorized research with both the personal browser and the isolated browser for this home task. This supersedes the earlier Playwright-only restriction for this task. Use supported browser tools; never copy personal Chrome cookies or credentials into the isolated browser. The personal Chrome session may read the owner's linked X references. Native Claude coordination, filesystem work, Runpod APIs and native Unreal captures remain available within the private scope.
+
+## Overnight continuation
+
+The owner explicitly instructed continued work without further questions while they sleep, delegated work with Claude, and requested the complete functioning home with realistic graphics, movement, devices and English UI. Continue within the existing $100 TOTAL budget, on the same private pod, with bounded automatic-stop windows and conservative cost monitoring. The current fixed deadline remains enforced until a replacement guard has been authenticated; future measured windows within the same authorization do not require a new budget question. Keep heavy work off the Mac and leave public sites unchanged. A functioning capture or passing source tests alone do not complete the goal: verify the actual persistent native home, physical interactions, private browser input, brain activity, device use and every required room.
