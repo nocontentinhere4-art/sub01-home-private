@@ -89,3 +89,15 @@ def test_real_home_model_sequence_and_native_seat_are_required(tmp_path):
  world.native_feedback.accept({**common,'phase':'seated','chair':'sofa'},sequence=7,activity='play_console',target='sofa',nodes=NODES)
  assert e(world,'fixture-frame')
  world.sequence+=1;assert not e(world,'fixture-frame')
+
+def test_new_physical_owner_cannot_display_previous_owner_ack():
+ async def run():
+  owner=[('first',)];home=Home();c=Console();b=BrainController(enabled=True,evidence=lambda h,f:owner[0]);b.plan(home,'explore',0)
+  await b.step(c);assert b.view()['pose_fresh']is True
+  owner[0]=('second',)
+  pending=asyncio.Event();finish=asyncio.Event()
+  async def delayed(p):pending.set();await finish.wait();return None
+  c.operator_input=delayed;step=asyncio.create_task(b.step(c));await pending.wait()
+  assert b.view()['pose_fresh']is False and b.view()['ack_input_id']==0 and b.view()['pose']==neutral()
+  finish.set();await step
+ asyncio.run(run())

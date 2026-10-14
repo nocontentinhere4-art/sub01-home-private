@@ -70,6 +70,7 @@ class BrainController:
         self.consumer_id=uuid.uuid4().hex;self.event_id=None;self.owner=None
         self.counter=0;self.last_ack=0;self.pose=neutral();self.pose_until=0
         self.action_sent=False;self.action_task=None;self.last_sent=False
+        self.pose_owner=None;self.pose_received_utc=None;self.pose_epoch=None;self.pose_sequence=None;self.pose_ack_id=0
 
     def ready(self, home, frame):
         if not self.enabled:return None
@@ -106,6 +107,9 @@ class BrainController:
         for name in ('jump','sneak','sprint'):pose['buttons'][name]=keys.get(name,False)
         for name in ('mine','place','use'):pose['buttons'][name]=operation==name
         self.pose=pose;self.pose_until=self.clock()+.25
+        self.pose_owner=owner;self.pose_received_utc=time.time();self.pose_ack_id=ack['input_id']
+        self.pose_epoch=getattr(getattr(self.home,'native_feedback',None),'epoch',None)
+        self.pose_sequence=getattr(self.home,'sequence',None)
         return True
 
     async def _send(self, console, packet, owner):
@@ -123,6 +127,7 @@ class BrainController:
             self.last_sent=False;self.owner=None;self.event_id=None
             return
         if self.owner!=owner:
+            self.pose=neutral();self.pose_until=0;self.pose_owner=None
             self.owner=owner;self.event_id=uuid.uuid4().hex;self.action_sent=False
         action,turn=self.desired;keys={};look=[0,0]
         if action in {'explore','escape'}:
@@ -144,5 +149,11 @@ class BrainController:
 
     def view(self):
         valid=bool(self.home and self.owner is not None and self.last_sent and self.ready(self.home,getattr(self,'current_frame',None))==self.owner)
-        return {'enabled':self.enabled,'ready':valid,'ack_input_id':self.last_ack,
-                'pose':self.pose if valid and self.clock()<self.pose_until else neutral()}
+        fresh=bool(valid and self.pose_owner==self.owner and self.clock()<self.pose_until)
+        return {'enabled':self.enabled,'ready':valid,'pose_fresh':fresh,
+                'ack_input_id':self.pose_ack_id if fresh else 0,
+                'consumer_id':self.consumer_id if fresh else None,'event_id':self.event_id if fresh else None,
+                'epoch':self.pose_epoch if fresh else None,'sequence':self.pose_sequence if fresh else None,
+                'pose_received_utc':self.pose_received_utc if fresh else None,
+                'pose_lease_ms':max(0,min(250,int((self.pose_until-self.clock())*1000))) if fresh else 0,
+                'pose':self.pose if fresh else neutral()}
