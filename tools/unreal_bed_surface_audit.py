@@ -41,7 +41,21 @@ DEFAULT_CONFIG = {
     'min_up_normal': 0.9,          # |n_z| of a top triangle
     'top_band_cm': 4.0,            # triangles within this of the highest top point (crowned mattress)
     'min_area_cm2': MIN_MATTRESS_AREA_CM2,
+    # The duvet is draped (0.51-0.70 m in the asset): its upward faces within this band of its highest point are the
+    # candidate support if the duvet stays visible while he sleeps (fit_bed_placement.py --support duvet).
+    'duvet_top_band_cm': 12.0,
+    'duvet_min_up_normal': 0.8,
 }
+
+
+def duvet_top(vertices, indices, cfg=DEFAULT_CONFIG):
+    """The duvet section's upward top (same rule as the mattress, a wider band and normal for a draped cover),
+    or the reason it is not a support. Never raises: a duvet that is no support is recorded, not fatal."""
+    try:
+        return mattress_top(vertices, indices, {**cfg, 'top_band_cm': cfg.get('duvet_top_band_cm', 12.0),
+                                                'min_up_normal': cfg.get('duvet_min_up_normal', 0.8)}), None
+    except ValueError as exc:
+        return None, str(exc)
 
 
 def tri_normal(a, b, c):
@@ -182,9 +196,12 @@ def run():  # pragma: no cover - server only (Unreal Editor Python)
                     if material_identity(names, cfg['pillow_material_regex']):
                         pillows.extend(points)
                     if material_identity(names, cfg['duvet_material_regex']):
-                        duvet.append({'section': section, 'material_identity': names,
+                        top, why = duvet_top(points, list(indices), cfg)
+                        duvet.append({'section': section, 'material_slot': slot, 'material_identity': names,
                                       'world_bounds_cm': {'min': [min(p[i] for p in points) for i in range(3)],
-                                                          'max': [max(p[i] for p in points) for i in range(3)]}})
+                                                          'max': [max(p[i] for p in points) for i in range(3)]},
+                                      'vertices_world_cm': points, 'triangles': list(indices),
+                                      'top_surface': top, 'top_surface_refused': why})
                     if not material_identity(names, cfg['mattress_material_regex']):
                         continue
                     if material is None:

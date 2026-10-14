@@ -1467,9 +1467,9 @@
   "room_build/kimodo/mh_retarget.mjs": "6f27e09a146a0ee4e41dbc468efd4e3d68483aaafbc50840100bd35ce6a9a9a2",
   "room_build/kimodo/mixamo_clips.json": "fbc489f864cc9059ba2d7f2b974e6cbca32da35830632ce9e2793b4ddba494c7",
   "room_build/kimodo/mx_convert.mjs": "cad32e02eda028335a7f13bbfb0a441e7a38a8ff8091b124173bb197566252f4",
-  "tools/bed_transition_pipeline.py": "f6108d782071610ddbd3c71b601807361b7c79c8f848d48299bf74c02b9447a0",
+  "tools/bed_transition_pipeline.py": "31b261e7e586ea4108c314f675ed91e8c658a33030ce8127a98bcb2ed0da44cf",
   "tools/life_gltf.py": "d9d271e9dff76412448f340000014adfd85aceffcf2500e822055342793f32e5",
-  "tools/native_life_skeleton_parity.py": "5b6ce1f363b4e50127ec4fa6b21cb6d13e633e58e260bf7e66d24c20541f47f2",
+  "tools/native_life_skeleton_parity.py": "07c14f220e326a6f818d8f5d49d93e6139b6359da2b6ae8517ed40049d10b60d",
   "tools/retarget_first_person.mjs": "5e491f906c762a2fb7d8f4188461e27c9c4acf63bbd8fe35f29dbad5e72f9564",
   "tools/retarget_life_clip.py": "8cc2661d746069c93fb53946cb8f8ed9cbc8f62224e0c9b79796878ad4991db3",
   "tools/verify_life_idle_candidate.py": "846b22c89a3ceb7f7894d96c1ffbc96ad6489e4b025f6660595a5947c05f768a",
@@ -1624,11 +1624,12 @@
     "as LieDown: preview/mh-motion -> mh_retarget.mjs (smoothing + IK) -> mh_v5; mx_convert.mjs -> mh_mx copy (not used)"
    ],
    "documented_as": "as LieDown",
+   "label": "derived_library_asset",
    "not_documented": [
     "as LieDown"
    ],
    "source_used": "web/room/mh_v5/room_bed_wake.glb (v5 rig, 80 nodes, one animation room_bed_wake)",
-   "verdict": "ProvenanceUnverified (as LieDown)."
+   "verdict": "derived_library_asset (as LieDown): preview/mh-motion clip retargeted via mh_retarget.mjs; capture method undocumented."
   },
   "LieDown": {
    "chain_documented": [
@@ -1637,18 +1638,20 @@
     "carried onto the owner skeleton by room_build/kimodo/mx_convert.mjs as web/room/mh_mx/room_bed_lie.glb (the drifted copy, NOT used here)"
    ],
    "documented_as": "docs/design/room-v5/README.md calls the v5 set \"16 mocap clips\" and, in the contract, \"placeholders\"",
+   "label": "derived_library_asset",
    "not_documented": [
     "how the preview/mh-motion clip was made (motion capture, keyframed, or generated): no README, licence or generation script for it is in this repository; the branch is not in this repository's history",
     "the performer, capture system, or original file (BVH/FBX) and its hash",
     "any Mixamo capture of lying down: room_build/kimodo/mixamo_clips.json has no lie-down or get-up row (mh_mx/README: \"no Mixamo capture of these yet\")"
    ],
    "source_used": "web/room/mh_v5/room_bed_lie.glb (v5 rig, 80 nodes, one animation room_bed_lie)",
-   "verdict": "ProvenanceUnverified: a documented repository chain back to a v5-rig placeholder; the origin before preview/mh-motion is undocumented. Not upgraded to \"genuine capture\"."
+   "verdict": "derived_library_asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs; capture method undocumented. Labelled, not refused; not called mocap. Corrected by tools/bed_transition_corrections.py."
   },
   "SleepLoop": {
    "chain_documented": [
     "G23's Sova bed clips (preview/sova-phone-src docs/qa/sova/mattina/bed); SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)"
    ],
+   "label": "third_party_authored_with_permission",
    "licence": "preview-only permission; desk_states/README: \"licence is pending, so they never go to main\". PRIVATE use only; never public, never main.",
    "not_documented": [
     "the capture method",
@@ -2356,5 +2359,5 @@
   }
  },
  "schema": "sub01.bed-transition-pipeline.v1",
- "verdict": "REFUSED for binding: provenance unverified (mh_v5 placeholder origin), and the sleep-loop blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake). The bed is unmeasured."
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
 }

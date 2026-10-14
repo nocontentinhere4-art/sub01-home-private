@@ -224,6 +224,7 @@
    "as LieDown: preview/mh-motion -> mh_retarget.mjs (smoothing + IK) -> mh_v5; mx_convert.mjs -> mh_mx copy (not used)"
   ],
   "documented_as": "as LieDown",
+  "label": "derived_library_asset",
   "not_documented": [
    "as LieDown"
   ],
@@ -311,7 +312,7 @@
    "web/room/mh_v5/room_bed_wake.glb": "aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49"
   },
   "source_used": "web/room/mh_v5/room_bed_wake.glb (v5 rig, 80 nodes, one animation room_bed_wake)",
-  "verdict": "ProvenanceUnverified (as LieDown)."
+  "verdict": "derived_library_asset (as LieDown): preview/mh-motion clip retargeted via mh_retarget.mjs; capture method undocumented."
  },
  "retarget": {
   "mapping": {
@@ -896,5 +897,5 @@
    12.59999
   ]
  },
- "verdict": "REFUSED for binding: provenance unverified (mh_v5 placeholder origin), and the sleep-loop blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake). The bed is unmeasured."
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
 }

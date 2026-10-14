@@ -217,7 +217,8 @@ def test_rigid_placement_recovers_yaw_and_offset(sk):
 # ------------------------------------------------------------------ provenance
 def test_provenance_fields_are_required():
     good = {'source_used': 'x', 'source_sha256': {'x': 'ab'}, 'chain_documented': ['a'], 'not_documented': ['b'],
-            'verdict': 'ProvenanceUnverified', 'quotes': [{'file': 'f', 'present_verbatim': True}]}
+            'label': 'derived_library_asset', 'verdict': 'derived_library_asset: retargeted; capture method undocumented',
+            'quotes': [{'file': 'f', 'present_verbatim': True}]}
     assert B.validate_provenance(good)
     for k in B.REQUIRED_PROVENANCE_FIELDS:
         bad = dict(good)
@@ -228,6 +229,20 @@ def test_provenance_fields_are_required():
         B.validate_provenance({**good, 'quotes': [{'file': 'f', 'present_verbatim': False}]})
     with pytest.raises(ValueError):
         B.validate_provenance({**good, 'verdict': 'genuine Mixamo capture'})
+    # The derived label is visible, never "mocap", never an unknown label.
+    for verdict in ('derived_library_asset: mocap clip', 'derived_library_asset: motion capture of a performer',
+                    'retargeted clip (derived_library_asset)'):
+        with pytest.raises(ValueError):
+            B.validate_provenance({**good, 'verdict': verdict})
+    with pytest.raises(ValueError):
+        B.validate_provenance({**good, 'label': 'mocap'})
+
+
+def test_bed_sources_are_labelled_derived_library_assets_not_refused():
+    for role in ('LieDown', 'GetUp'):
+        assert B.PROVENANCE[role]['label'] == 'derived_library_asset'
+        assert B.PROVENANCE[role]['verdict'].startswith('derived_library_asset')
+        assert 'ProvenanceUnverified' not in B.PROVENANCE[role]['verdict']
 
 
 def test_documented_quotes_are_verbatim_in_the_repository():

@@ -210,6 +210,7 @@
   "chain_documented": [
    "G23's Sova bed clips (preview/sova-phone-src docs/qa/sova/mattina/bed); SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)"
   ],
+  "label": "third_party_authored_with_permission",
   "licence": "preview-only permission; desk_states/README: \"licence is pending, so they never go to main\". PRIVATE use only; never public, never main.",
   "not_documented": [
    "the capture method",
@@ -310,5 +311,5 @@
  },
  "role": "SleepLoop",
  "schema": "sub01.bed-transition-clip.v1",
- "verdict": "REFUSED for binding: provenance unverified (mh_v5 placeholder origin), and the sleep-loop blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake). The bed is unmeasured."
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
 }

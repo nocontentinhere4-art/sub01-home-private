@@ -203,6 +203,7 @@
    "carried onto the owner skeleton by room_build/kimodo/mx_convert.mjs as web/room/mh_mx/room_bed_lie.glb (the drifted copy, NOT used here)"
   ],
   "documented_as": "docs/design/room-v5/README.md calls the v5 set \"16 mocap clips\" and, in the contract, \"placeholders\"",
+  "label": "derived_library_asset",
   "not_documented": [
    "how the preview/mh-motion clip was made (motion capture, keyframed, or generated): no README, licence or generation script for it is in this repository; the branch is not in this repository's history",
    "the performer, capture system, or original file (BVH/FBX) and its hash",
@@ -292,7 +293,7 @@
    "web/room/mh_v5/room_bed_lie.glb": "61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94"
   },
   "source_used": "web/room/mh_v5/room_bed_lie.glb (v5 rig, 80 nodes, one animation room_bed_lie)",
-  "verdict": "ProvenanceUnverified: a documented repository chain back to a v5-rig placeholder; the origin before preview/mh-motion is undocumented. Not upgraded to \"genuine capture\"."
+  "verdict": "derived_library_asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs; capture method undocumented. Labelled, not refused; not called mocap. Corrected by tools/bed_transition_corrections.py."
  },
  "retarget": {
   "mapping": {
@@ -792,5 +793,5 @@
    0.2
   ]
  },
- "verdict": "REFUSED for binding: provenance unverified (mh_v5 placeholder origin), and the sleep-loop blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake). The bed is unmeasured."
+ "verdict": "NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured."
 }

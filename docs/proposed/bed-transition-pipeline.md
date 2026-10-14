@@ -1,357 +1,398 @@
-# Bed transition pipeline: lie down, sleep loop, get up (proposal; private)
+# Bed transitions: lie down, sleep loop, get up (proposal; private)
 
-**Status (14 October 2026): the pipeline runs end to end here, on CPU, from repository files. Its verdict is
-REFUSED for binding.** The corrected lie-down and get-up are real retargets with exact owner bone offsets, but:
+**Status (14 October 2026): corrected clips ready for root's import, NOT accepted.** The lie-down and get-up are
+labelled `derived_library_asset` (not refused, not called mocap) and corrected under labels. The sleep chain is
+continuous at 15 cm/s peak joint speed. The native mattress is still unmeasured, and no placement or runtime is
+verified.
 
-- their origin before `preview/mh-motion` is undocumented (provenance stays unverified);
-- no Sova sleep loop meets either of them within a plausible blend (the best gaps are 58 cm and 82 cm);
-- the native mattress has not been measured.
+Nothing here ran on the server, in Unreal or in Blender. No result was viewed in the engine. No runtime receipt
+exists, and nothing here claims a visual match or an accepted bed.
 
-Nothing was run on the server, in Unreal or in Blender. No result was viewed in the engine, and nothing here
-claims a visual match or an accepted bed.
+## 0. What changed since b7b099b (owner direction)
 
-## Files (all new; no existing file is edited)
+| b7b099b (raw stage) | now |
+|---|---|
+| LieDown/GetUp `ProvenanceUnverified`, refused | labelled **`derived_library_asset`**: preview/mh-motion clips retargeted via `mh_retarget.mjs`; capture method undocumented. The verbatim quotes and hashes stay in every report. |
+| GetUp: 79 cm seated slide, 184 cm/s, 762 cm/s² | slide held; 63 cm/s, 370 cm/s² (§2) |
+| LieDown starts mid-walk at 66 cm/s | trimmed to the last planted standing frame and eased in from rest (§3) |
+| soles 3.3 / 4.8 cm (GetUp end), 4.3–12.2 cm (LieDown start) | 0.001–0.08 cm, at least 213 plantar vertices per foot, no penetration (§4) |
+| Sova blend 204 / 231 cm/s, gaps 58 / 82 cm | settle 15.1 cm/s, gap into the get-up 0 cm (§5) |
+| two different bed placements | one shared rigid placement (§6) |
+| movement off in bed, no root path | mesh root-motion install step (§7) |
+
+## 1. Files
 
 | file | role |
 |---|---|
-| `tools/bed_transition_pipeline.py` | The pipeline: provenance, retarget, crop, root path, sleep-loop search, blend, gaps, reports. |
-| `tools/unreal_bed_surface_audit.py` | **Server only.** A UE editor audit of the actual mattress top, the twin of `unreal_chair_surface_audit.py`. Not run. |
-| `tools/fit_bed_placement.py` | A pure-Python placement fitter. It proposes the body transform from the lying frame's skinned back patch and the mattress triangles. It never accepts. |
-| `tests/test_bed_transition_pipeline.py` | 17 tests: synthetic, plus one real-data run (skipped if the files or Node are absent). |
-| `docs/proposed/bed-transition/*.report.json`, `*.root_path.json` | The measured reports of the run below. |
-| `docs/proposed/bed-transition/SUB01_{LieDown,GetUp}.{travel_in_hips,in_place}.glb` | The corrected clips (0.43 to 0.57 MB each). PRIVATE. |
-| `docs/proposed/bed-transition/fit-dry-run-synthetic/` | The fitter run on a **synthetic** flat mattress. It shows how the fitter behaves; it is not the native bed. |
+| `tools/bed_transition_corrections.py` | **New.** Slide hold, walk-in trim and ease-in, floor reference, leg IK, sleep loop and settle, alternatives, labelled GLBs, reports. |
+| `tools/unreal_bed_root_motion.py` | **New.** The native movement proposal: an install step after `unreal_life_clips_runtime.py`, path staging, and a config with visible labels. |
+| `tests/test_bed_transition_corrections.py` | **New.** 19 tests: synthetic, staged-source anchors, the inventory label, and real data. |
+| `tools/bed_transition_pipeline.py` | b7b099b raw stage. Its provenance now carries `label`. A `derived_library_asset` verdict must lead with the label and may not claim capture. |
+| `tools/inventory_native_life_clips.py` | **Additive** `--derived ROLE=PATH`. See §8. |
+| `tools/unreal_bed_surface_audit.py`, `tools/fit_bed_placement.py` | Additive. The audit also measures the duvet top and its material slot; the fitter gains `--support duvet`. |
+| `docs/proposed/bed-transition/SUB01_{LieDown,SleepLoop,GetUp}.corrected.{in_place,travel_in_hips}.glb` | **The corrected clips** (0.09–0.52 MB each). PRIVATE. Each one carries `asset.extras.sub01_provenance` and `sub01_labels`. |
+| `docs/proposed/bed-transition/SUB01_{Role}.corrected.report.json` | One report per clip, raw vs corrected. |
+| `docs/proposed/bed-transition/SUB01_bed_mesh_root_paths.json` | The per-frame mesh root path of all three clips, in one frame. |
+| `docs/proposed/bed-transition/SUB01_{LieDown,GetUp}.{in_place,travel_in_hips}.glb`, `SUB01_*.report.json` | The raw stage, kept for comparison (superseded). |
 
-The pipeline imports these files read-only and does not edit them:
-- `retarget_life_clip.py` (`mapping_for`, `prepare_source`, `topo`, `MJS`);
-- `verify_life_idle_candidate.py`;
-- `life_gltf.py`;
-- `validate_unreal_seat_contact.py` (`SEAT_BAND_CM`, `SOLE_BAND_CM`, `MIN_PATCH_VERTICES`, `MIN_SUPPORT_VERTICES`);
-- `unreal_life_clips_runtime.py` (`MIN_MATTRESS_AREA_CM2`, `mattress_triangles`, `life_id`).
+| corrected clip (in_place, to import) | frames / s | sha256 |
+|---|---|---|
+| `SUB01_LieDown.corrected.in_place.glb` | 462 / 15.37 | `5aa10162601b160cbf75f4d1ef3ce259fab3f1fd1600490787be4a51332a613a` |
+| `SUB01_SleepLoop.corrected.in_place.glb` | 59 / 1.93 (loops) | `f6dafbff7a2e04dd5d72c2c0155dfd40f7a9cf8d2bd46aded6ab819eaca498cc` |
+| `SUB01_GetUp.corrected.in_place.glb` | 367 / 12.20 | `256142f9c84c0813d64b0a57aff8cf092c6fe20831600cc48cc0e3be8896a76e` |
 
-`retarget_first_person.mjs` runs unchanged under Node.
+The run is deterministic: `python3 tools/bed_transition_corrections.py docs/proposed/bed-transition --work /tmp/bed-c`.
 
-## 1. Provenance (quoted; every quote is checked verbatim by the run)
+**Labels:**
+- **LieDown:** `retargeted`, `walk_in_trimmed`, `ease_in_retime`, `leg_ik_floor_contact`, `sleep_settle_blend`,
+  `lie_down_truncated`.
+- **SleepLoop:** `retargeted`, `seated_slide_removed`, `lying_segment_of_get_up_source`, `sleep_loop_seam_blend`.
+- **GetUp:** `retargeted`, `seated_slide_removed`, `head_trimmed_to_loop_start`, `cropped_before_walk`,
+  `leg_ik_floor_contact`.
 
-### Sources used, with their hashes
+## 2. Get-up: the seated slide (removed)
+
+**Window, measured:** 4.80 to 6.23 s (frames 144 to 187).
+- Peak 183.9 cm/s at 5.40 s, at sitting height (torso ≤ 45° from vertical, not standing).
+- Both feet are up to 41 cm off the floor during the run.
+
+**Why it is an artefact, not a scoot:**
+- The lie-down sits on the bed edge and lies down **30.8 cm** further in.
+- The raw get-up lies **105.2 cm** from its own seat.
+- After the hold it is **30.9 cm**, matching the lie-down.
+
+**Method:**
+- The hips' horizontal position is held through the window: the captured displacement inside it is subtracted,
+  smoothed with a Gaussian of σ = 4 frames.
+- Rotations and the vertical path are untouched.
+- The frames after the window keep their captured path, offset by the removed 76.8 cm.
+- The travel is removed, not redistributed: no step of the feet carries it, and the native walk does the leaving.
+- Hips travel inside the window: 90.3 cm raw, 24.1 cm corrected (sitting-up sway).
+
+**Root path to the standing crop** (component frame):
+
+| | raw | corrected |
+|---|---|---|
+| path / net | 183.7 / 110.0 cm | 118.3 / 39.2 cm |
+| max speed | **183.9 cm/s** at 5.40 s | **63.2 cm/s** at 4.20 s (sitting up, before the window) |
+| max acceleration | **761.8 cm/s²** at 5.17 s | **369.8 cm/s²** |
+| largest one-frame step | **6.16 cm** | **2.12 cm** |
+| discontinuity (> 10 cm/frame) | none | none |
+
+## 3. Lie-down: walk-in hand-off (stand-still start)
+
+The adapter walks to the approach (`WalkToBed`, which stops within 12 cm) and then turns in place, so the clip
+starts from a **stand-still**. The source starts at 20.5 cm/s and reaches 70 cm/s at 0.4 s, mid-walk.
+
+**Trim:** to the last standing frame with both feet planted, before he sits.
+- Rules: the verifier's standing rule (torso ≤ 30°, leg extension ≥ 0.85 × rest); both foot joints ≤ 20 cm/s and
+  within 3 cm of their standing minimum.
+- Result: **frame 44 (1.47 s)**, hips 45.7 cm/s.
+
+**Ease-in:**
+- The first 0.5 s of playback is time-warped, u = t²/2R. Only captured poses are used (slerp between neighbours).
+- The clip now starts at **1.6 cm/s** (central difference; 0 by construction).
+
+**Residual against the native clips** (hips-relative pose at the start frame, best frame of each):
+
+| reference | max joint | RMS | worst |
+|---|---|---|---|
+| native Walk `web/house/assets/first-person/walking.glb` (best frame 1) | 37.9 cm | 23.9 cm | fingers |
+| Idle candidate `stand_idle_ual_ik.glb` (best frame 9) | 51.4 cm | 24.2 cm | fingers |
+
+The renderer's own crossfade covers this pose residual. There is no speed residual (both are at rest).
+
+**Root path, raw → corrected:**
+- path: 192.1 → 126.6 cm
+- max speed: **70.1 → 40.3 cm/s**
+- max acceleration: **225.3 → 199.0 cm/s²**
+- largest step: **2.34 → 1.34 cm**
+
+## 4. Foot contact (standing phases)
+
+**Floor reference:** the source floor sits off y = 0. One constant vertical hips shift per clip puts the lower foot
+of the planted standing run on y = 0:
+- LieDown: −1.98 cm.
+- SleepLoop and GetUp: −5.67 cm (one placement).
+- The lying body therefore drops 3.7 cm inside the 2.5 s settle.
+
+**Leg IK:**
+- Tool: `leg_ik_life_clip.correct`, imported unchanged. It is an analytic two-bone IK with the captured knee plane,
+  the captured world foot orientation and a bounded vertical root support.
+- Scope: only the run of frames where both feet are planted. The boundary correction fades out over 8 frames.
+- Contact is measured with root's plantar rule (`verify_life_idle_candidate.sole_selection`).
+
+| | lowest plantar vertex, left / right | plantar vertices in 0..+1 cm (min) | verdict |
+|---|---|---|---|
+| GetUp end, raw (last 0.2 s) | 3.28–3.41 / 4.84–5.37 cm | 0 / 0 | fail |
+| GetUp end, corrected (14 frames) | 0.001 / 0.001–0.078 cm | 213 / 247 | **pass** |
+| LieDown start, raw (first 0.2 s) | 4.29–12.23 / 1.20–1.31 cm | 0 / 0 | fail |
+| LieDown start, corrected (7 frames) | 0.001 / 0.001 cm | 263 / 252 | **pass** |
+
+**IK side effects:**
+- Root support: 2.35 cm (GetUp) and 2.02 cm (LieDown), against a bound of 3 cm.
+- Knee plane change: 3.5° and 1.0°.
+- Foot world orientation change: 0°.
+- No penetration on any frame.
+
+## 5. Sleep continuity: the options measured, the choice
+
+**Method, the same for every option:** a settle in which the lie-down is held at a captured, still lying frame (it
+is truncated there) and the loop advances, with a smootherstep (C2) weight. The peak is the max joint speed
+(hips-relative, the b7b099b measure), with the world speed in brackets.
+
+| option | gap | 1.5 s | 2.0 s | 2.5 s | window for ≤ 40 cm/s |
+|---|---|---|---|---|---|
+| **(chosen)** loop from the get-up source's own captured lying-still head | 19.3 cm | 24.3 (15.8) | 18.5 (12.0) | **15.1 (9.5)** | already |
+| Mixamo Laying_Sleeping (v5, via mh_retarget + bed_fit) | 45 / 44 cm | 64 / 64 | 48 / 49 | 38.0 / 40.4 | 2.5 s |
+| Sova sleep_back (b7b099b's choice) | 86 / 84 cm | 148 / 145 | 111 / 109 | 89 / 87 | 5.6 s |
+| Sova sleep_side | 78 / 82 cm | 125 / 131 | 94 / 98 | 75 / 79 | 4.9 s; also a side ↔ back flip |
+
+**(a) Broader search.**
+- Every Sova loop, the Mixamo lying loops and the get-up's own lying frames were tried.
+- The lie-down may be truncated at any still lying frame; the get-up may start later than its first frame.
+- The Sova loops have the right arm over the head, while every lie-down and get-up lying frame has it at the side.
+  That is ~85 cm at the fingertips, which no 1.5–2.5 s window brings under 40 cm/s.
+- The Mixamo loop only reaches 38–40 cm/s at 2.5 s. Its v5 file also carries the documented "lift and raised fists"
+  of the retarget/bed-fit chain (`docs/design/mixamo/README.md`).
+
+**(b) Long captured-pose interpolation:** this is the settle above, at 1.5 / 2.0 / 2.5 s.
+
+**(c) Sova intermediate poses:** no Sova clip passes through an arms-at-side pose. `sleep_roll_to_back` rolls
+side → back with the arm moving up. So no captured Sova settle exists for these clips.
+
+**Chosen: `SleepLoop` = the get-up source's own captured lying-still head.**
+- Frames 12–70, all moving < 10 cm/s, with the seated slide removed.
+- Closed with `leg_ik_life_clip.seam_blend` over 12 frames (0.4 s); the captured gap before the blend is 0.78 cm.
+- Label: `lying_segment_of_get_up_source`. It is a captured lying-still segment; no breathing is documented for it.
+- Settle (end of LieDown): 2.5 s, from lie-down frame 386 (eased timeline) into loop phase 41 → 0, pose gap 19.3 cm.
+
+**Peak joint speed** (hips-relative):
+
+| | peak |
+|---|---|
+| settle | **15.1 cm/s** (world 9.5) |
+| loop's own speed | max 8.1, median 1.5 cm/s |
+| lie-down → loop seam | 2.1 cm/s |
+| loop → get-up seam | 2.1 cm/s |
+| raw b7b099b Sova blends | 204 and 231 cm/s |
+
+**Seams:**
+- LieDown end = loop start: pose 0 cm, hips 0 cm, velocity mismatch 1.7 cm/s.
+- Loop end = GetUp start: pose 0 cm, hips 0 cm, velocity mismatch 1.7 cm/s.
+- The get-up side needs no blend: the get-up starts at frame 12 of its source, which is the loop's start pose.
+
+**Trade-off, stated plainly:**
+- The chosen loop is a 1.93 s still-lying segment, supine with arms at the side. It is not a Sova sleeping pose.
+- The Sova loops remain usable only with a captured arm settle, or a 5–6 s settle the owner did not ask for.
+
+## 6. Placement (the bed is NOT measured)
+
+The loop and the get-up are the same captured frames, so **one rigid placement** now serves the LieDown's last
+frame and the GetUp's first frame. The b7b099b clips needed two different yaws (−58.7° and 167.7°).
+
+**Synthetic dry run** (`fit-dry-run-synthetic/*-corrected-*.json`, a flat 152 × 203 cm top at 60 cm; it is NOT the
+native bed):
+- With `--lateral-offset-cm 50` both proposals pass with the same transform: yaw −56.66°.
+- LieDown start hips: 27.6 cm outside the edge.
+- GetUp end hips: 5.1 cm outside the edge.
+- Centred (offset 0), both floor frames land over the mattress: he lies ~30 cm in from the edge, as captured.
+
+**Consequence for the capsule:**
+- The capsule radius is 16 (`InitCapsuleSize(16, 91)`), and the coordinator states 17 / 92.
+- The capsule cannot stand where the body's hips end. So the mesh root motion's return stops at the bed's
+  collision.
+- A residual of at most 20 cm is absorbed by the first native steps (§7). The placement audit must measure it.
+
+### Root's measurement run (server, exact)
+
+```
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject -ExecutePythonScript="<repo>/tools/unreal_bed_surface_audit.py" -unattended
+#   expect: SUB01_BED_SURFACE_AUDIT <project>/private-audit/native-bed-surface.json
+python3 tools/unreal_life_clips_runtime.py check-bed <project>
+#   expect: "BedPlacementMissing" (was "BedUnmeasured")
+for off in 30 40 50 60; do
+  python3 tools/fit_bed_placement.py <project>/private-audit/native-bed-surface.json \
+    docs/proposed/bed-transition/SUB01_LieDown.corrected.travel_in_hips.glb --lateral-offset-cm $off \
+    --approach-side <left|right> --work /tmp/bed-fit --out <project>/private-audit/bed-fit-lie-$off.json
+  python3 tools/fit_bed_placement.py <project>/private-audit/native-bed-surface.json \
+    docs/proposed/bed-transition/SUB01_GetUp.corrected.travel_in_hips.glb --frame 0 --floor-frame last \
+    --lateral-offset-cm $off --approach-side <left|right> --work /tmp/bed-fit --out <project>/private-audit/bed-fit-up-$off.json
+done
+```
+
+**Pick the offset where:**
+- both runs report `proposal_ok: true` and the same `transform`;
+- the GetUp's `approach.distance_from_edge_cm` is the largest, at ≥ 16 + 4 cm if possible;
+- below that, the return ends short by (20 − distance) cm and is absorbed (§7);
+- the gap is never > 20 cm (that would block).
+
+Also read the live `FirstPersonBody` relative transform (capsule offset, `HandsMeshRotation`). The fitter's
+`component_to_actor` is unknown here.
+
+### Duvet handling (recommendation)
+
+The bed's duvet (`blue_fabric`, 0.51–0.70 m in the asset) is a rigid mesh over the mattress, so a sleeping body
+intersects it.
+
+**Recommended: hide the duvet during the bed phases** (LyingDown, Asleep and GettingUp) by setting the bed
+component's duvet material slot to a masked, invisible material. Restore it after.
+- The audit now records the slot index (`duvet_sections[].material_slot`).
+- The support is then the measured cream mattress top, as the fitter assumes by default.
+- It is a reversible material state, not a geometry edit. It is not implemented in an adapter yet; it needs the
+  bed component reference from the audit.
+
+**Alternative, if the duvet must stay visible:** he lies ON the duvet. The audit now measures the duvet's upward top
+(`duvet_sections[].top_surface`: band 12 cm, |n_z| ≥ 0.8). Run the fitter with `--support duvet`, so the back patch
+is fitted to the duvet top instead of the mattress.
+
+Never deform or swap the duvet without a measurement. The web room built its duvet over his skin, which is not
+available natively.
+
+## 7. Native movement: mesh root motion, capsule at the bedside (`tools/unreal_bed_root_motion.py`)
+
+This is a new install step, applied **after** `unreal_life_clips_runtime.py install`. Its four anchors are the
+life adapter's own installed text, and each must be unique:
+- fields before `FSub01LifeMachine LifeMachine;`;
+- `LoadLifeRootPath();` before `SUB01_LIFE_READY`;
+- `UpdateLifeRootMotion(Instance);` after the movement lock and before the head camera;
+- two one-line changes:
+  - `LifeMovementLocked()` also holds while the capsule returns;
+  - the life LIVE_GATE does not zero the capsule's velocity during the return.
+
+Tests check the anchors on freshly staged main sources (`stage_unreal_home_runtime.stage`), and coexistence with the
+seat adapter in three orders.
+
+**Behaviour:**
+- **LyingDown:** the capsule stays where TurnInPlace left it, which is the approach point. The body mesh's relative
+  location is `HandsBaseOffset + root path(t)`, with t the time the hands proxy actually evaluated
+  (`LifeEvaluatedTime`).
+- **Asleep:**
+  - The body is world-anchored.
+  - The invisible capsule (the camera is on the head bone) walks by `AddMovementInput` on the floor to the GetUp's
+    measured end point (27.1 cm from the approach for these clips), at ≤ 70 cm/s. CharacterMovement collides as
+    usual.
+  - The mesh offset is recomputed every tick, so the body does not move.
+- **GettingUp:** the mesh offset follows the GetUp path. At its last frame the body stands over the capsule (offset
+  ≤ 2 cm), and the mesh returns to the renderer's own offset.
+- **Bed collision:** if the bed stops the capsule ≤ 20 cm short, the residual offset decays linearly with the
+  distance the capsule then walks natively, over 60 cm. That is ≤ 0.33 cm of foot slide per cm walked, logged as
+  `SUB01_LIFE_ROOT_RETURN_SHORT`.
+- **Blocked:** if the capsule stops more than 20 cm short, movement stays locked and `SUB01_LIFE_ROOT_RETURN_BLOCKED`
+  is logged. The body never snaps.
+- **Yaw:** actor yaw is held (`bUseControllerRotationYaw` off) while the path is active.
+
+**Never:** `SetActorLocation`, teleport, an actor transform, or bone writes.
+
+**Refusals:**
+- Without `<project>/private-audit/native-life-root-paths.json` or with a mismatching one (schema, or sample count
+  vs the imported clip's play length): `SUB01_LIFE_ROOT_MOTION_REFUSED`, and the 67af5f8 behaviour is unchanged.
+  Do not validate the bed roles then: in-place clips would lie down on the spot.
+- If the body is not on the capsule: also refused.
+
+**Assumption to check in the engine:** the renderer's `HandsMeshRotation` makes the owner's rest facing equal the
+actor's +X. The component-frame path relies on it. Check it on the first run: the logged `SUB01_LIFE_ROOT_BEGIN`
+origin must match the capsule at the bedside, and the body must not walk sideways.
+
+## 8. Provenance label (inventory)
+
+**`inventory_native_life_clips.py --derived ROLE=PATH`** (additive and commented; the default output is
+byte-identical):
+- The row's provenance is `derived_library_asset`.
+- It becomes a `Candidate` **only** if the GLB carries `asset.extras.sub01_provenance.label ==
+  "derived_library_asset"`. Otherwise the verdict is `ProvenanceLabelMissing`.
+- The row keeps `provenance_label`, and the verdict reason starts with `derived_library_asset (label visible; not a
+  capture)`.
+- It is deliberately not in `accepted_provenance`.
+
+**`unreal_bed_root_motion.py config`** writes life's config fragment plus one comment per bound derived clip:
+`; SUB01 provenance <Role>=derived_library_asset (...): preview/mh-motion clips retargeted via mh_retarget.mjs;
+capture method undocumented`.
+
+### Provenance (verbatim-checked quotes; hashes)
 
 | file | sha256 |
 |---|---|
-| `web/room/mh_v5/room_bed_lie.glb` (v5 rig, 80 nodes) | `61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94` |
-| `web/room/mh_v5/room_bed_wake.glb` (v5 rig, 80 nodes) | `aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49` |
-| `web/room/desk_states/bed/sleep_back.glb` (chosen loop) | `aa399a4283ce2f64b0fd504ddb41fbc7c717b1659ae2311cc77d2c09743103b4` |
-| `web/room/desk_states/bed/sleep_side.glb` | `0f868e63962f8481e3ca99d10095e900091b6a610b2058ab9d831db10b373b3b` |
-| `web/room/desk_states/bed/sleep_back_idle.glb` | `99b6904165f818b8318a89e63a5f19a83bc76cfedf4ad020df0caf8659bc5552` |
+| `web/room/mh_v5/room_bed_lie.glb` | `61e881220a646f37f6b52d09f05919188c159ddf89f658d274f2a4501f871e94` |
+| `web/room/mh_v5/room_bed_wake.glb` | `aa5935e33f377204549b25a31747c3ad168707747ac703e451fed30557c96f49` |
 | `web/room/char_mixamo.glb` (owner) | `7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb` |
-| `web/room/mh_mx/room_bed_lie.glb` (drifted copy, measured only) | `f22e3fb1a991c25dd0d128059e97e52e49819e2393db78dbc9c690a80af8d3e2` |
-| `web/room/mh_mx/room_bed_wake.glb` (drifted copy, measured only) | `b85449b4ea450ab232886c25152aefb3dc4a87162bc2908b6f1141331da6b3d5` |
 
-The READMEs, scripts and tools are hashed in `bed-transition-pipeline.report.json` under `hashes`.
+**Quoted:**
+- CREDITS.md: `mh_v5/*.glb` is "preview/mh-motion's clips, retargeted".
+- mh_v5/README.md: "room-mh's clips through G14's `mh_retarget.mjs` cc57630, default options".
+- mh_retarget.mjs: "zero-phase smoothing ... then two-bone IK".
+- docs/design/room-v5/README.md calls them "16 mocap clips" and "placeholders". That is quoted as written; this
+  pipeline does **not** call them mocap.
 
-### What is documented
+**Undocumented:** the capture method, performer and original file of the preview/mh-motion clips.
 
-- **CREDITS.md:** `mh_v5/*.glb` is "preview/mh-motion's clips, retargeted", under a licence "as their sources".
-- **mh_v5/README.md:** `room_bed_lie` and `room_bed_wake` are "room-mh's clips through G14's `mh_retarget.mjs`
-  cc57630, default options".
-- **mh_retarget.mjs:** it applies "zero-phase smoothing (Gaussian, sigma 1 frame limbs / 1.7 spine-neck-head),
-  then two-bone IK" on the wrists and ankles. **So the v5 "originals" are already smoothed and IK-adjusted.**
-- **docs/design/room-v5/README.md:** the set is called "16 mocap clips" in the release note, and the contract says
-  "**The ones here now are placeholders**".
-- **mh_mx/README.md:** the mh_mx copies are "v5's room clips carried over by `room_build/kimodo/mx_convert.mjs` (no
-  Mixamo capture of these yet)".
+Every corrected report carries `documented_quotes` (each checked verbatim) and the source hashes.
 
-### What is not documented
+## 9. Root import steps (server; exact; none run here)
 
-- How the `preview/mh-motion` clip was made: motion capture, keyframed or generated. No README, licence or
-  generation script for it is in this repository.
-- Its performer, capture system and original file. There is no original file hash.
-- Git history: the repository starts at the snapshot `852bd77` (2026-10-12). Every clip arrives in `449b417`, so git
-  adds nothing.
-- A Mixamo lie-down or get-up. `room_build/kimodo/mixamo_clips.json` has none.
-  - The genuine Mixamo captures on v5 (`room_sleeping_idle`, `room_laying_sleeping`, `room_laying_nodding`) are
-    lying loops or a rare event, not transitions.
-  - They are also not the sources of `room_bed_lie` / `room_bed_wake`.
-
-**Verdict: ProvenanceUnverified.** The repository documents a chain back to a v5-rig placeholder, and nothing
-before it. This is not upgraded to "genuine capture". The reports refuse a provenance block that lacks any of
-these: the source hash, the documented chain, the undocumented list, the verdict, or the verbatim quotes.
-
-### Sova sleep loops
-
-- desk_states/README.md: "SovaSims animations used with the author's permission (confirmed by the owner, 2026-10-08)".
-- The licence is pending: the clips "never go to main".
-- Their capture method is undocumented.
-- They are used here **privately only**.
-
-## 2. Retarget from the v5 originals onto the owner's exact offsets
-
-`retarget_v5()` in `bed_transition_pipeline.py` is a thin wrapper:
-1. `retarget_life_clip.mapping_for('v5')` and `prepare_source()`: rename to the owner's joints and re-base the rest.
-2. Then `node tools/retarget_first_person.mjs PREPARED OWNER RAW --clip NAME`, unchanged.
-
-| | LieDown | GetUp |
-|---|---|---|
-| frames / fps | 510 / 30 (16.967 s) | 464 / 30 (15.433 s), cropped to 379 |
-| prepared vs original source, max joint | 0.0 cm | 0.0 cm |
-| `.mjs` bone-length error (sampled) | 5e-16 m | 5e-16 m |
-| `.mjs` no-motion rest recovery | 3e-8 | 3e-8 |
-| leg-height scale (owner / source) | 1.0203 | 1.0203 |
-| rest-axis residual, Hips / Spine / Spine1 (not re-based) | 5.96° / 3.15° / 3.15° | same |
-| **owner bone-length deviation, every frame** | **0.0 cm** | **0.0 cm** |
-| non-hips translation tracks written | 0 | 0 |
-| the mh_mx copy's non-hips translation drift | **7.08 cm** (Spine), 12 tracks, length change up to 2.98 cm | **5.03 cm** (Spine), length change up to 1.57 cm |
-| world joint difference, this retarget vs the mh_mx copy | max 23.8 cm, median 11.6 cm | max 20.7 cm, median 10.9 cm |
-
-The owner's local translations are kept exactly; only captured rotations and the hips' captured delta are used.
-
-Fingers: the source's `finger*-1..3` rotations are used. The owner's `*4` finger tips, `HeadTop_End` and `Toe_End`
-hold the owner's rest. No finger pose is invented.
-
-## 3. Root travel: captured, smooth, cropped before the walk
-
-The hips' horizontal path is kept as captured. Two variants are written:
-
-- **`travel_in_hips`**: the path stays in the hips track. This is what the 67af5f8 adapter would play with movement
-  disabled.
-- **`in_place`**: the horizontal path is removed (vertical kept). `SUB01_<role>.root_path.json` gives the path per
-  frame, for the native side to drive as smooth movement.
-  - Fields: `forward_cm`, `right_cm` and `hips_up_cm` in the component frame (X forward, Y right, Z up, cm, relative
-    to frame 0), plus speed and a support class (floor / transitional / bed).
-
-The owner skeleton has no animated root bone (its structural root is constant, `native_life_skeleton_parity`), so
-UE root motion from a root bone is not available without changing the skeleton.
-
-### Get-up crop (measured)
-
-**Rule:**
-- standing = torso tilt ≤ 30° and leg extension ≥ 0.95 × the owner's rest extension (1.079), held ≥ 0.3 s;
-- walk = hips horizontal speed > 20 cm/s, with its 0.5 s mean also > 20 cm/s;
-- crop = the first settled frame (≤ 10 cm/s) between the standing onset and the walk.
-
-| | value |
-|---|---|
-| standing onset | 12.20 s (frame 366) |
-| **crop** | **12.60 s (frame 378)**, hips speed 9.8 cm/s |
-| walk onset | 13.13 s (frame 394) |
-| discarded tail (the walk away) | 91.9 cm path, 79.9 cm net, max 63.2 cm/s |
-| uncropped clip | 275.7 cm path, **188.3 cm net**, so the 1.9 m is no longer carried into the bed transition |
-
-### Remaining root travel
-
-| | LieDown (16.97 s) | GetUp (cropped, 12.6 s) |
-|---|---|---|
-| path / net | 192.1 cm / 126.2 cm (forward 124.2, right 22.5) | 183.7 cm / 110.0 cm (forward 108.7, right −17.0) |
-| max speed | 70.1 cm/s at 0.40 s (walking in) | **183.9 cm/s at 5.40 s** |
-| max acceleration | 225 cm/s² | **762 cm/s²** at 5.17 s |
-| max one-frame step | 2.34 cm (no discontinuity; threshold 10 cm) | 6.16 cm (no discontinuity) |
-| on the floor / off it | 67.2 / 124.9 cm | 10.3 / 173.4 cm |
-
-**Two findings that are reported, not fixed:**
-
-1. **LieDown starts mid-walk**, at 66 cm/s, with the left foot in the air. The start's soles fail the plantar band
-   (left 4.3 to 12.2 cm up, sliding 37 cm). It needs a walk-in hand-off at matching speed, not a standing start.
-2. **GetUp contains an implausible seated slide.** From 4.97 to 5.73 s the hips travel about 79 cm at sitting
-   height, peaking at 184 cm/s and 762 cm/s².
-   - It is smooth frame to frame, so it is not a teleport.
-   - It is still not a physical scoot. It comes from the mh_v5 source (the same in the uncropped clip).
-   - A genuine get-up capture is needed to replace it.
-
-### Get-up end checks (the verifier's own rules, last 0.2 s)
-
-| check | result |
-|---|---|
-| standing (tilt 9.2°, extension 1.055) | pass |
-| foot joints still (slide ≤ 0.34 cm) | pass |
-| soles: no penetration, no slide | pass |
-| **plantar contact** (`SOLE_BAND_CM` 0 to +1 cm) | **FAIL.** Left sole lowest 3.28 to 3.41 cm above the floor, right 4.84 to 5.37 cm. No single vertical shift fits both (interval −3.28 … −4.37 is empty): the captured legs disagree. Not fixed (no IK). |
-
-## 4. Sova sleep loops: exhaustive search, blend, gaps
-
-The search is a joint search over three things:
-- lie-down lying frames (torso > 60°);
-- the loop phase p;
-- get-up lying frames.
-
-The lie-down blends into loop phase p, the loop is re-phased to start at (p + N) mod L, and the get-up blends out of
-that same phase.
-
-**Cost:** max(hips-relative max joint distance / 10 cm, velocity mismatch / 50 cm/s, gravity attitude / 30°).
-These are stated criteria, not tuned. A posture-class change (supine / side / oblique) is a refusal on its own.
-
-**Placement:** each clip gets one rigid placement. Yaw comes from 2D Kabsch over all 65 joints, and the hips are put
-on the hips at the blend start. It is never a per-frame correction.
-
-**Blend:** N = **24 frames (0.8 s)**, the bed layer's existing crossfade. It slerps captured local rotations and lerps
-the hips, with a smoothstep weight.
-
-| loop (posture) | lie → loop: pose / velocity / attitude | loop → get-up: pose / velocity / attitude | verdict |
-|---|---|---|---|
-| **sleep_back** (supine), chosen | **58.5 cm** / 167 cm/s / 6.8° | **81.7 cm** / 73 cm/s / 8.8° | refused: pose and velocity |
-| sleep_side (side) | 59.4 cm / 121 cm/s / **100.3°** | 81.4 cm / 13 cm/s / **100.8°** | refused, plus a side ↔ back flip |
-| sleep_back_idle (oblique) | 123.4 cm / 97 cm/s / 74.2° | 134.4 cm / 76 cm/s / 83.1° | refused, plus a posture flip |
-
-### Before the blend (sleep_back)
-
-- **Direct cuts, unplaced:**
-  - lie end → loop start: pose 86.8 cm, hips 151.0 cm apart;
-  - loop end → get-up start: pose 84.3 cm, hips 29.5 cm apart.
-- **Best match, placed** (hips coincide):
-  - lie-down frame 334 (11.13 s) to loop phase 184: pose 58.5 cm (RMS 45.6 cm), attitude 6.8°. The loop is placed
-    with yaw 135.4° and a vertical shift of −7.7 cm.
-  - loop phase 9 to get-up frame 106 (3.53 s): pose 81.7 cm (RMS 49.5 cm), attitude 8.8°.
-- **Discarded captured frames:** the lie-down's last 5.03 s and the get-up's first 3.53 s.
-
-### After the blend
-
-- The seams are exact by construction: pose 0, hips 0.
-- The cost moves into the blend window. Peak joint speed is 204 cm/s (lie blend) and 231 cm/s (wake blend), against
-  1.8 cm/s inside the loop itself.
-
-**Verdict:** a 58 to 82 cm pose gap is not a plausible blend; the joints would sweep through the body. It is not
-hidden.
-
-**What is needed (either one):**
-- a captured settle from the lie-down's end pose into the loop's pose (same supine class; the gap is the limb and
-  torso configuration), **and** a captured transition from the loop's pose into the get-up's lying start; or
-- a lie-down and get-up captured from and to the loop's own pose, or a sleep loop captured in the mh_v5 lie-down's
-  end pose.
-
-The composed (blended) clips are written to the scratch work directory only. They are **not committed**.
-
-## 5. Bed geometry: requirements (the native mattress is NOT measured)
-
-### Measurement root must make
-
-Run `tools/unreal_bed_surface_audit.py` on the server. It writes `<project>/private-audit/native-bed-surface.json` in
-the shape `unreal_life_clips_runtime.validate_bed()` reads: `bed.sections[].vertices_world_cm` and
-`mattress_surface.triangle_indices`.
-
-| requirement | detail |
-|---|---|
-| component | exactly one `StaticMeshComponent` tagged `SUB01Device:Bed` (`unreal_setup_home.py`), with one mattress-material section |
-| material | default regex `cream[ _]?upholstery`. These are file facts from `queen-bed.glb`: cream 0.38 to 0.60 m (mattress), linen pillows at the −Z end, blue_fabric duvet 0.51 to 0.70 m. Override with `SUB01_BED_AUDIT_CONFIG` if the imported names differ. |
-| triangles | upward faces (\|n_z\| ≥ 0.9) within 4 cm of the highest top point, in world cm, from the official `ProceduralMeshLibrary.get_section_from_static_mesh` |
-| area | **≥ 15,000 cm²** (`MIN_MATTRESS_AREA_CM2`). The asset's mattress is about 152 × 203 cm, roughly 30,900 cm² before import. |
-| head end | the direction toward the pillows' centroid along the long axis; ambiguous (< 10 cm) means refusal |
-| collision | the component must collide (the audit records the profile and pawn response) |
-| ambiguity | more than one tagged component or section means refusal; there is no name-only acceptance |
-
-### Placement and contact audit (a server step; it does not exist yet as an engine tool)
-
-`tools/fit_bed_placement.py` computes the proposal on CPU from the measured report:
-
-- **Support patch:** a fixed bind-space selection, never a per-pose minimum. It is posterior-facing skin (bind normal ·
-  −forward > 0.7), dominated by Hips / Spine / Spine1 / Spine2 (`torso_back`). Side-lying frames use the lateral
-  selection.
-  - Gated with the seat rule's constants: the lowest vertex within `SEAT_BAND_CM` (−2.5 … +0.5 cm), at least 12
-    vertices in the band, at least 12 over the mattress, and no patch vertex hanging off the mattress.
-  - Non-penetration: no skin vertex over the mattress deeper than −2.5 cm.
-  - The legs (knees may be up) and the head (it rests on the pillow, which is unmeasured) are reported, not gated.
-- **Transform:**
-  - yaw: the body's hips→head axis onto the mattress long axis, toward the head end;
-  - position: the head top 25 cm inside the head edge, and the back patch centred across;
-  - vertical: inside the allowed range, the most support.
-- **Approach side:** the LieDown's first frame (or the GetUp's last frame, `--floor-frame last`) must land beside the
-  bed: left, right, foot end or head end, never over the mattress.
-- **Output:** `accepted: false` and `native_bed_verified: false`, always.
-
-**A real acceptance still needs the engine:**
-1. play the imported LieDown / SleepLoop / GetUp at the proposed approach;
-2. skin them every frame with the imported owner mesh;
-3. measure the back patch against the triangles of this exact `native-bed-surface.json`;
-4. only then write `native-life-bed-evidence.json` (`bed_revision` = `life_id(report text)`, `approach_cm`,
-   `yaw_deg`, `accepted`).
-
-That tool does not exist yet. The mesh component's relative transform to the actor (capsule offset, mesh yaw) is not
-known here and must be read from the live character.
-
-### Synthetic dry run (NOT the native bed)
-
-The fitter was run on a flat 152 × 203 cm top at 60 cm (`fit-dry-run-synthetic/`):
-
-- **LieDown last frame:** a proposal exists.
-  - yaw −58.7°, back patch 4569 vertices in the band at the band's −2.5 cm edge;
-  - 164 vertices off the mattress, the foot 0.4 cm past the end;
-  - the walk-in start lands 18 cm right of the edge.
-- **GetUp first frame:** a different yaw (167.7°). The standing end lands past the foot end.
-
-These two placements are not one bed placement, because the clips do not share a bed: the lie-down ends on one
-spot, the get-up starts on another.
-
-## 6. Commands
-
-Here (CPU), from the repository root:
+`<repo>` is this private checkout on the server; `<project>` is the UE project.
 
 ```
-python3 tools/bed_transition_pipeline.py docs/proposed/bed-transition --work /tmp/bed-work --write-glb
-python3 tools/fit_bed_placement.py docs/proposed/bed-transition/fit-dry-run-synthetic/SYNTHETIC-bed-surface.json \
-    docs/proposed/bed-transition/SUB01_LieDown.travel_in_hips.glb --work /tmp/bed-work \
-    --out docs/proposed/bed-transition/fit-dry-run-synthetic/LieDown-last-frame.json
-python3 tools/fit_bed_placement.py docs/proposed/bed-transition/fit-dry-run-synthetic/SYNTHETIC-bed-surface.json \
-    docs/proposed/bed-transition/SUB01_GetUp.travel_in_hips.glb --frame 0 --floor-frame last --work /tmp/bed-work \
-    --out docs/proposed/bed-transition/fit-dry-run-synthetic/GetUp-first-frame.json
-python3 -m pytest -q tests/test_bed_transition_pipeline.py
+# 0. measure + place (§6). Placement evidence is still required before the bed can play.
+
+# 1. inventory with the three labelled derived clips (paths exactly as written here; export matches them)
+python3 tools/inventory_native_life_clips.py \
+  --derived LieDown=docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb \
+  --derived SleepLoop=docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb \
+  --derived GetUp=docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb \
+  [--extra Idle=<root's Idle source>] \
+  --out <project>/private-audit/native-life-clips-inventory.json
+#   expect 3 rows provenance=derived_library_asset, verdict=Candidate,
+#   verdict_reason "derived_library_asset (label visible; not a capture): ..."
+
+# 2. FBX (export_unreal_life_fbx): owner skin + the three in-place clips in ONE merged source
+node tools/uncompress_unreal_glb.mjs web/room/char_mixamo.glb /tmp/owner.glb
+node tools/merge_unreal_skin_clips.mjs /tmp/owner.glb /tmp/life-bed.glb \
+  docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb \
+  docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb \
+  docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb
+blender -b --python tools/export_unreal_life_fbx.py -- /tmp/life-bed.glb <project>/SourceAssets/LifeFBX \
+  <project>/private-audit/native-life-clips-inventory.json \
+  LieDown=docs/proposed/bed-transition/SUB01_LieDown.corrected.in_place.glb \
+  SleepLoop=docs/proposed/bed-transition/SUB01_SleepLoop.corrected.in_place.glb \
+  GetUp=docs/proposed/bed-transition/SUB01_GetUp.corrected.in_place.glb
+#   life-fbx-audit.json and unreal-life-import.json are REWRITTEN per run: if Idle is a GLB clip, add it to the
+#   same merge and the same export (Idle=<clip>), or the Idle row disappears from the import report.
+
+# 3. import (unreal_import_life_fbx roles LieDown/SleepLoop/GetUp)
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject -ExecutePythonScript="<repo>/tools/unreal_import_life_fbx.py" -unattended
+#   expect SUB01_LIFE_SKELETON_PARITY ... and SUB01_LIFE_IMPORTED role=LieDown|SleepLoop|GetUp
+#   durations 15.3667 / 1.9333 / 12.2 s
+
+# 4. config fragment (life gate + visible labels) and the root path file
+python3 tools/unreal_bed_root_motion.py config <project>/private-audit/native-life-clips-inventory.json \
+  <project>/unreal-life-import.json /tmp/life-fragment.ini
+#   = unreal_life_clips_runtime config + "; SUB01 provenance <Role>=derived_library_asset ..." lines;
+#   bed roles appear only all together. Append the fragment to the [Sub01HomeCharacter] config.
+python3 tools/unreal_bed_root_motion.py stage-paths docs/proposed/bed-transition/SUB01_bed_mesh_root_paths.json \
+  <project>/private-audit/native-life-clips-inventory.json <project>/unreal-life-import.json <project>
+#   writes <project>/private-audit/native-life-root-paths.json only if every bed role binds the exact clip
+
+# 5. install (staged sources; order: stage -> seat (if used) -> life -> bed root motion)
+python3 tools/stage_unreal_home_runtime.py <project>
+python3 -c "import sys;sys.path.insert(0,'tools');import unreal_seat_transition_runtime as s;s.install_module('<project>/Source/Sub01HomeLab')"  # if the seat is used
+python3 tools/unreal_life_clips_runtime.py install <project>/Source/Sub01HomeLab
+python3 tools/unreal_bed_root_motion.py install <project>/Source/Sub01HomeLab
+#   build with the official Build.sh; expect SUB01_LIFE_ROOT_MOTION_READY then SUB01_LIFE_READY ... bedMeasured=1 placement=1
+#   (placement=1 needs native-life-bed-evidence.json from a server placement audit that does not exist yet)
 ```
 
-The run is deterministic. The GLB hashes are in `bed-transition-pipeline.report.json` under `corrected_outputs`.
+**Still open, in order:**
+1. The mattress measurement.
+2. The duvet decision.
+3. The placement audit: play the imported clips at the approach, skin them against this exact bed report, sweep
+   the capsule return, then write `native-life-bed-evidence.json`.
+4. The first engine run, checking the mesh-axis assumption.
 
-## 7. Server steps (root; per 67af5f8; none run here; currently BLOCKED at step 3)
-
-1. **Measure the bed:**
-   `UnrealEditor-Cmd <project>/Sub01HomeLab.uproject -ExecutePythonScript="<repo>/tools/unreal_bed_surface_audit.py" -unattended`
-   - Expect `SUB01_BED_SURFACE_AUDIT`.
-   - Then `python3 tools/unreal_life_clips_runtime.py check-bed <project>` must move from `BedUnmeasured` to
-     `BedPlacementMissing`.
-2. **Propose a placement:**
-   `python3 tools/fit_bed_placement.py <project>/private-audit/native-bed-surface.json docs/proposed/bed-transition/SUB01_LieDown.travel_in_hips.glb --approach-side <left|right> --out <project>/private-audit/bed-placement-proposal.json`
-   - Repeat for GetUp with `--frame 0 --floor-frame last`.
-   - The two must agree on one bed placement. Today they cannot (§4).
-3. **Inventory.** **Blocked:** the corrected LieDown/GetUp are `ProvenanceUnverified`, and `--extra` is the
-   operator's declaration of a genuine capture. Do not pass them as `--extra` unless the owner explicitly accepts
-   the `preview/mh-motion` provenance. The SleepLoop (`sleep_back.glb`) is an inventory Candidate already. With
-   accepted transitions:
-   `python3 tools/inventory_native_life_clips.py --extra LieDown=<clip> --extra GetUp=<clip> --out <project>/private-audit/native-life-clips-inventory.json`
-4. **FBX:**
-   ```
-   node tools/uncompress_unreal_glb.mjs web/room/char_mixamo.glb /tmp/owner.glb
-   node tools/merge_unreal_skin_clips.mjs /tmp/owner.glb /tmp/life.glb <LieDown.glb> <SleepLoop.glb> <GetUp.glb>
-   blender -b --python tools/export_unreal_life_fbx.py -- /tmp/life.glb <project>/SourceAssets/LifeFBX \
-       <project>/private-audit/native-life-clips-inventory.json LieDown=<clip> SleepLoop=<clip> GetUp=<clip>
-   ```
-5. **Import:**
-   `UnrealEditor-Cmd <project>/Sub01HomeLab.uproject -ExecutePythonScript="<repo>/tools/unreal_import_life_fbx.py" -unattended`
-   - Expect `SUB01_LIFE_IMPORTED role=LieDown|SleepLoop|GetUp`.
-6. **Config fragment:**
-   `python3 tools/unreal_life_clips_runtime.py config <inventory> <project>/unreal-life-import.json /tmp/life-fragment.ini`
-   - Bed roles are emitted only all together.
-7. **Placement evidence:** the server skin audit (§5), then `native-life-bed-evidence.json`.
-8. **Install:** `stage_unreal_home_runtime.stage(project)`, then the seat adapter if used, then
-   `python3 tools/unreal_life_clips_runtime.py install <project>/Source/Sub01HomeLab`.
-   - Build with the official Build.sh.
-   - Expect `SUB01_LIFE_READY ... bedMeasured=1 ... placement=1`.
-
-## Open requirements (in order)
-
-1. **Clips.** A captured lie-down and get-up that meet one sleep loop within ≤ 10 cm hips-relative, the same posture
-   class and ≤ 30° attitude. They must have documented provenance: for example owner-downloaded Mixamo captures,
-   retargeted with `retarget_life_clip.py --preset mixamo` or this pipeline's wrapper.
-2. **Get-up.** The 79 cm seated slide (184 cm/s) and the floating soles (3.3 and 4.8 cm) need a different source.
-   They are not fixed here.
-3. **Native movement.**
-   - In-place mode needs the adapter to drive the root path while lying, but the 67af5f8 adapter disables movement
-     during bed phases.
-   - The standing capsule cannot walk onto the mattress (the bed blocks the pawn).
-   - So either keep `travel_in_hips` (the body ends offset from the capsule, see 67af5f8's open item), or a
-     non-walking movement mode that ignores the bed for the capsule. Never a teleport.
-4. **Duvet.** The bed's duvet is a rigid mesh over the mattress. A sleeping body under it intersects it unless it is
-   hidden, swapped or deformed.
-5. **Measurement and evidence.** The mattress measurement, the component-to-actor transform, the pillow top for the
-   head, and the engine skin audit.
+Nothing here is accepted. Nothing is deployed.
 
 ## Licence
 
 - **PRIVATE.** Never deploy, never publish, never main.
-- The Sova frames are under the author's preview permission (confirmed by the owner 2026-10-08), and their licence is
-  still pending. The composed clips that contain them stay uncommitted.
-- The committed LieDown/GetUp GLBs derive from mh_v5 clips "as their sources", whose origin is undocumented.
-- They are in this private repository only, as the run's measured output, under the same terms as `web/room/mh_v5/`.
+- The corrected clips derive from the mh_v5 clips ("as their sources"). They contain no Sova frames.
+- The measured Sova and Mixamo alternatives were not written to this directory.

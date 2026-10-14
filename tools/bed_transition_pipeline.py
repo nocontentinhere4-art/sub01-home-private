@@ -119,8 +119,10 @@ PROVENANCE = {
             'any Mixamo capture of lying down: room_build/kimodo/mixamo_clips.json has no lie-down or get-up row '
             '(mh_mx/README: "no Mixamo capture of these yet")',
         ],
-        'verdict': 'ProvenanceUnverified: a documented repository chain back to a v5-rig placeholder; the origin before '
-                   'preview/mh-motion is undocumented. Not upgraded to "genuine capture".',
+        'label': 'derived_library_asset',
+        'verdict': 'derived_library_asset: preview/mh-motion clips retargeted via room_build/kimodo/mh_retarget.mjs; capture '
+                   'method undocumented. Labelled, not refused; not called mocap. Corrected by '
+                   'tools/bed_transition_corrections.py.',
     },
     'GetUp': {
         'source_used': 'web/room/mh_v5/room_bed_wake.glb (v5 rig, 80 nodes, one animation room_bed_wake)',
@@ -129,7 +131,9 @@ PROVENANCE = {
         ],
         'documented_as': 'as LieDown',
         'not_documented': ['as LieDown'],
-        'verdict': 'ProvenanceUnverified (as LieDown).',
+        'label': 'derived_library_asset',
+        'verdict': 'derived_library_asset (as LieDown): preview/mh-motion clip retargeted via mh_retarget.mjs; capture '
+                   'method undocumented.',
     },
     'SleepLoop': {
         'source_used': 'web/room/desk_states/bed/<loop>.glb (owner skeleton, exact rest)',
@@ -138,6 +142,7 @@ PROVENANCE = {
         'licence': 'preview-only permission; desk_states/README: "licence is pending, so they never go to main". '
                    'PRIVATE use only; never public, never main.',
         'not_documented': ['the capture method', 'the original files and their hashes'],
+        'label': 'third_party_authored_with_permission',
         'verdict': 'Permissioned private preview clips; capture method undocumented.',
     },
     'related_genuine_mixamo_on_v5_not_transitions': {
@@ -170,7 +175,11 @@ def check_documented(root: Path = ROOT):
     return rows
 
 
-REQUIRED_PROVENANCE_FIELDS = ('source_used', 'source_sha256', 'chain_documented', 'not_documented', 'verdict', 'quotes')
+REQUIRED_PROVENANCE_FIELDS = ('source_used', 'source_sha256', 'chain_documented', 'not_documented', 'label', 'verdict', 'quotes')
+# The labels a clip report may carry. derived_library_asset (owner direction, 14 Oct 2026): a library clip whose
+# derivation chain is documented and whose capture method is not; it is labelled and corrected, never refused for
+# that alone, and never called "mocap".
+PROVENANCE_LABELS = ('derived_library_asset', 'third_party_authored_with_permission', 'mixamo_capture')
 
 
 def validate_provenance(prov: dict):
@@ -181,6 +190,14 @@ def validate_provenance(prov: dict):
     if not all(q.get('present_verbatim') for q in prov['quotes']):
         raise ValueError('provenance quote not found verbatim in its file: '
                          + ', '.join(q['file'] for q in prov['quotes'] if not q.get('present_verbatim')))
+    if prov['label'] not in PROVENANCE_LABELS:
+        raise ValueError(f"provenance label {prov['label']!r} is not one of {PROVENANCE_LABELS}")
+    if prov['label'] == 'derived_library_asset':
+        text = prov['verdict'].lower()
+        if 'mocap' in text.replace('not called mocap', '') or 'motion capture' in text or 'genuine' in text:
+            raise ValueError('a derived_library_asset verdict may not claim motion capture')
+        if not prov['verdict'].startswith('derived_library_asset'):
+            raise ValueError('the derived_library_asset label must lead the verdict (visible)')
     if 'genuine' in prov['verdict'].lower() and 'not upgraded' not in prov['verdict'].lower():
         raise ValueError('provenance verdict may not claim a genuine capture without documentation')
     return True
@@ -1052,9 +1069,10 @@ def run(out_dir: Path, work: Path, owner_path: Path = OWNER, n_blend=BLEND_FRAME
     blend_view = {'blend_frames': n_blend, 'blend_rule': BLEND_RULE.format(n=n_blend, s=n_blend / FPS),
                   'chosen_sleep_loop': best, 'within_blend_criteria': within, 'chains': {k: strip(v) for k, v in chains.items()},
                   'composed_outputs': composed, 'composed_root_paths': chain_paths}
-    verdict_text = ('REFUSED for binding: provenance unverified (mh_v5 placeholder origin), and the sleep-loop blends exceed a '
-                    'plausible blend (blend.chains.*.lie_to_loop / loop_to_wake). The bed is unmeasured.') if not within else \
-        ('Blend gaps within the stated criteria; still NOT accepted: provenance unverified, bed unmeasured, no server '
+    verdict_text = ('NOT accepted (raw stage): LieDown/GetUp are labelled derived_library_asset (not refused for '
+                    'provenance); the raw Sova blends exceed a plausible blend (blend.chains.*.lie_to_loop / loop_to_wake) '
+                    'and are superseded by tools/bed_transition_corrections.py. The bed is unmeasured.') if not within else \
+        ('Blend gaps within the stated criteria; still NOT accepted: derived_library_asset label, bed unmeasured, no server '
          'import or native capture.')
     reports = {}
     for role in ('LieDown', 'SleepLoop', 'GetUp'):

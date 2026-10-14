@@ -331,6 +331,17 @@ def skinned_frame(clip_glb: Path, owner_glb: Path, time_s=None, frame=None, work
             'vertices': int(len(body))}
 
 
+def support_triangles(bed: dict, support='mattress'):
+    """The measured support: the mattress top, or (support='duvet') the audit's measured duvet top sections."""
+    if support == 'mattress':
+        return mattress_triangles(bed)
+    sections = [{'vertices_world_cm': d['vertices_world_cm'], 'mattress_surface': d['top_surface']}
+                for d in bed.get('duvet_sections', []) if d.get('top_surface') and d.get('vertices_world_cm')]
+    if not sections:
+        raise ValueError('BedUnmeasured: no measured duvet top in the bed report (re-run unreal_bed_surface_audit.py)')
+    return mattress_triangles({'errors': bed.get('errors'), 'bed': {'sections': sections}})
+
+
 def patches_for(frame_data, lying='supine', names=GATED_PATCHES):
     suffix = {'supine': '', 'side_left': '_left_side', 'side_right': '_right_side'}[lying]
     return {k: frame_data['patches_all'][k + suffix] for k in names}
@@ -349,12 +360,14 @@ def main(argv=None):
     ap.add_argument('--approach-side', choices=('left', 'right'))
     ap.add_argument('--floor-frame', default='first', choices=('first', 'last', 'none'),
                     help='the clip frame that must stand on the floor beside the bed: first (LieDown), last (GetUp)')
+    ap.add_argument('--support', default='mattress', choices=('mattress', 'duvet'),
+                    help='duvet: fit the back patch onto the measured duvet top (if the duvet stays visible in sleep)')
     ap.add_argument('--work', type=Path)
     ap.add_argument('--out', type=Path)
     args = ap.parse_args(argv)
     text = args.bed.read_text()
     bed = json.loads(text)
-    tris = mattress_triangles(bed)
+    tris = support_triangles(bed, args.support)
     head = None
     for section in bed['bed']['sections']:
         head = section.get('mattress_surface', {}).get('head_end_direction_xy') or head
@@ -363,7 +376,7 @@ def main(argv=None):
     res = fit(f['body'], patches_for(f, args.lying), f['joints']['HeadTop_End'], f['joints']['Hips'], tris, head,
               args.head_margin_cm, args.lateral_offset_cm, floor, args.approach_side,
               info_patches=patches_for(f, args.lying, INFO_PATCHES))
-    res.update({'floor_frame_checked': args.floor_frame, 'bed_report': str(args.bed), 'bed_revision': str(life_id(text)), 'clip': str(args.clip),
+    res.update({'support': args.support, 'floor_frame_checked': args.floor_frame, 'bed_report': str(args.bed), 'bed_revision': str(life_id(text)), 'clip': str(args.clip),
                 'clip_time_s': f['time_s'], 'lying': args.lying, 'patch_counts': f['patch_counts'],
                 'component_to_actor': 'UNKNOWN here: take the live mesh component relative transform before writing an approach'})
     s = json.dumps(res, indent=1, sort_keys=True) + '\n'
