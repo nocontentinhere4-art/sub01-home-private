@@ -26,7 +26,8 @@ Writes <project>/private-audit/native-seat-contact.json and native-seat-correcti
 a different earlier file is kept as <name>.superseded-<sha256[:12]>.json, never deleted), each naming the audited
 clip (role, object path, GLB/FBX sha256, 60 Hz) and the receipt, placement and chair sha256s. When the contact is out
 of band, an earlier native-seat-evidence.json for the seated clip is moved aside the same way, so acceptance never
-outlives a failing observation. The fit was solved with the chair shifted (chair_horizontal_shift_cm); the report
+outlives a failing observation. A fit solved with the chair shifted (nonzero chair_horizontal_shift_cm) is refused
+before any audit: the native chair transform is protected and a hypothetical chair is never evidence. The report also
 records the measured chair bounds against the fit's expected bounds (diagnostic only; validate() is the gate).
 Probe only: no mesh, actor, pose, asset or collision changes, and nothing sets NativeSeatVerified.
 NOT RUN in this repository (no engine here); tests/test_unreal_audit_seated_typing_seat_contact.py runs it on a fake.
@@ -87,6 +88,11 @@ def fit_placement(summary_raw: bytes, row: dict) -> dict:
     body, yaw = meta.get('body_cm'), meta.get('body_yaw')
     if not (isinstance(body, list) and len(body) == 3 and all(_finite(v) for v in body) and _finite(yaw)):
         raise Refused(f'PlacementMissing: {FIT_SUMMARY} source_meta has no finite body_cm/body_yaw')
+    shift = summary.get('chair_horizontal_shift_cm')
+    if shift is not None and (not isinstance(shift, list) or any(v != 0 for v in shift)):
+        raise Refused(f'ShiftedChairFit: {FIT_SUMMARY} was solved with the chair moved by {shift!r} cm; the native chair '
+                      'transform is protected, so this placement is not evidence for the actual chair. Refit on the '
+                      'measured chair, or have root approve a physical chair reposition first.')
     expected = (summary.get('capsule') or {}).get('chair_aabb_after_shift_cm')
     return {'body_cm': list(body), 'body_yaw': yaw, 'chair_horizontal_shift_cm': summary.get('chair_horizontal_shift_cm'),
             'expected_chair_bounds_cm': expected}
