@@ -75,32 +75,42 @@ static bool Sub01SurfaceHeightAt(const FVector* Tris,int32 Count,double X,double
  }
  return Found;
 }
-// docs/qa/contact.md, seated: buttocks/back of thighs touch the cushion (-2.5..+0.5 cm),
-// soles touch the floor (0..+1 cm). Measured on actual imported soft vertices posed by the
-// captured clip; the region is chosen by skin weight, not by the body's lowest point.
+// docs/qa/contact.md, seated: buttocks AND back of each thigh touch the cushion
+// (-2.5..+0.5 cm), each sole touches the floor (0..+1 cm). Rule 4: measured where the
+// contact belongs, as separate patches of downward-facing skin (posed normal toward the
+// surface), with coverage counts and gap quantiles; never one lowest vertex for a region.
+// Probe only: it changes nothing and never sets NativeSeatVerified.
 FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,const TArray<FTransform>& ComponentPose,const FTransform& BodyWorld,const TArray<FVector>& CushionTriangles,float FloorZ){
 #if WITH_EDITOR
  if(!Mesh)return TEXT("{\"error\":\"missing mesh\"}");
  if(CushionTriangles.Num()<3||CushionTriangles.Num()%3)return TEXT("{\"error\":\"missing cushion triangles\"}");
  const auto& Ref=Mesh->GetRefSkeleton();const auto& Inv=Mesh->GetRefBasesInvMatrix();auto* Model=Mesh->GetImportedModel();
  if(!Model||!Model->LODModels.Num()||ComponentPose.Num()!=Ref.GetNum()||Inv.Num()!=Ref.GetNum())return TEXT("{\"error\":\"incomplete pose or imported model\"}");
- struct FRegion{int32 Count=0,Over=0,Band=0;double MinGap=DBL_MAX,MaxGap=-DBL_MAX;};FRegion Seat,Sole[2];int32 Invalid=0;
+ // 0 buttocks (Hips), 1 left / 2 right posterior thigh (UpLeg), 3 left / 4 right sole (Foot/ToeBase).
+ struct FRegion{int32 Count=0,Facing=0,Over=0,Band=0;TArray<double> Gaps;};FRegion R[5];int32 Invalid=0;
+ const TCHAR* Names[5]={TEXT("buttocks"),TEXT("left_posterior_thigh"),TEXT("right_posterior_thigh"),TEXT("left_sole"),TEXT("right_sole")};
  for(const auto& Section:Model->LODModels[0].Sections)for(const auto& V:Section.SoftVertices){
-  uint64 Sum=0;double SeatW=0,SoleW[2]={0,0};
+  uint64 Sum=0;double W5[5]={0,0,0,0,0};
   for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;Sum+=W;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local)){++Invalid;continue;}const int32 B=Section.BoneMap[Local];if(!Ref.GetRefBoneInfo().IsValidIndex(B)){++Invalid;continue;}
    const FString Name=Ref.GetBoneName(B).ToString();
-   if(Name.EndsWith(TEXT("Hips"))||Name.EndsWith(TEXT("LeftUpLeg"))||Name.EndsWith(TEXT("RightUpLeg")))SeatW+=W;
-   else if(Name.EndsWith(TEXT("LeftFoot"))||Name.EndsWith(TEXT("LeftToeBase")))SoleW[0]+=W;
-   else if(Name.EndsWith(TEXT("RightFoot"))||Name.EndsWith(TEXT("RightToeBase")))SoleW[1]+=W;}
-  if(!Sum)continue;const bool IsSeat=SeatW>=.30*Sum;const int32 Foot=SoleW[0]>=.30*Sum?0:(SoleW[1]>=.30*Sum?1:-1);if(!IsSeat&&Foot<0)continue;
-  FVector P=FVector::ZeroVector;
-  for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local))continue;const int32 B=Section.BoneMap[Local];if(!Inv.IsValidIndex(B))continue;const FVector Bind=FVector(Inv[B].TransformPosition(V.Position));P+=ComponentPose[B].TransformPosition(Bind)*(double(W)/double(Sum));}
-  P=BodyWorld.TransformPosition(P);
-  if(IsSeat){++Seat.Count;double Top=0;if(Sub01SurfaceHeightAt(CushionTriangles.GetData(),CushionTriangles.Num(),P.X,P.Y,Top)){const double Gap=P.Z-Top;++Seat.Over;Seat.MinGap=FMath::Min(Seat.MinGap,Gap);Seat.MaxGap=FMath::Max(Seat.MaxGap,Gap);if(Gap>=-2.5&&Gap<=.5)++Seat.Band;}}
-  if(Foot>=0){auto& S=Sole[Foot];++S.Count;++S.Over;const double Gap=P.Z-FloorZ;S.MinGap=FMath::Min(S.MinGap,Gap);S.MaxGap=FMath::Max(S.MaxGap,Gap);if(Gap>=0&&Gap<=1)++S.Band;}
+   if(Name.EndsWith(TEXT("Hips")))W5[0]+=W;else if(Name.EndsWith(TEXT("LeftUpLeg")))W5[1]+=W;else if(Name.EndsWith(TEXT("RightUpLeg")))W5[2]+=W;
+   else if(Name.EndsWith(TEXT("LeftFoot"))||Name.EndsWith(TEXT("LeftToeBase")))W5[3]+=W;else if(Name.EndsWith(TEXT("RightFoot"))||Name.EndsWith(TEXT("RightToeBase")))W5[4]+=W;}
+  if(!Sum)continue;int32 Which=-1;double Best=.30*Sum;for(int32 K=0;K<5;++K)if(W5[K]>=Best){Best=W5[K];Which=K;}if(Which<0)continue;
+  FVector P=FVector::ZeroVector,N=FVector::ZeroVector;const FVector3f BindNormal(V.TangentZ.X,V.TangentZ.Y,V.TangentZ.Z);
+  for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local))continue;const int32 B=Section.BoneMap[Local];if(!Inv.IsValidIndex(B))continue;const double F=double(W)/double(Sum);
+   P+=ComponentPose[B].TransformPosition(FVector(Inv[B].TransformPosition(V.Position)))*F;N+=ComponentPose[B].TransformVectorNoScale(FVector(Inv[B].TransformVector(BindNormal)))*F;}
+  P=BodyWorld.TransformPosition(P);N=BodyWorld.TransformVectorNoScale(N).GetSafeNormal();
+  auto& Region=R[Which];++Region.Count;if(N.Z>-.5)continue;++Region.Facing; // only skin facing down onto the surface
+  double Gap=0;
+  if(Which<3){double Top=0;if(!Sub01SurfaceHeightAt(CushionTriangles.GetData(),CushionTriangles.Num(),P.X,P.Y,Top))continue;Gap=P.Z-Top;if(Gap>=-2.5&&Gap<=.5)++Region.Band;}
+  else{Gap=P.Z-FloorZ;if(Gap>=0&&Gap<=1)++Region.Band;}
+  ++Region.Over;Region.Gaps.Add(Gap);
  }
- auto Region=[](const TCHAR* Name,const FRegion& R){return FString::Printf(TEXT("{\"region\":\"%s\",\"selectedVertices\":%d,\"overSurfaceVertices\":%d,\"bandVertices\":%d,\"minGapCm\":%.8f,\"maxGapCm\":%.8f}"),Name,R.Count,R.Over,R.Band,R.Over?R.MinGap:0,R.Over?R.MaxGap:0);};
- return FString::Printf(TEXT("{\"invalidInfluences\":%d,\"floorCm\":%.8f,\"regions\":["),Invalid,FloorZ)+Region(TEXT("seat"),Seat)+TEXT(",")+Region(TEXT("left_sole"),Sole[0])+TEXT(",")+Region(TEXT("right_sole"),Sole[1])+TEXT("]}");
+ FString Result=FString::Printf(TEXT("{\"invalidInfluences\":%d,\"floorCm\":%.8f,\"regions\":["),Invalid,FloorZ);
+ for(int32 K=0;K<5;++K){auto& G=R[K].Gaps;G.Sort();auto Q=[&G](double F){return G.Num()?G[FMath::Clamp(int32(F*(G.Num()-1)+.5),0,G.Num()-1)]:0.;};
+  Result+=FString::Printf(TEXT("%s{\"region\":\"%s\",\"selectedVertices\":%d,\"facingVertices\":%d,\"overSurfaceVertices\":%d,\"bandVertices\":%d,\"minGapCm\":%.8f,\"p10GapCm\":%.8f,\"p50GapCm\":%.8f,\"p90GapCm\":%.8f,\"maxGapCm\":%.8f}"),
+   K?TEXT(","):TEXT(""),Names[K],R[K].Count,R[K].Facing,R[K].Over,R[K].Band,Q(0),Q(.1),Q(.5),Q(.9),Q(1));}
+ return Result+TEXT("]}");
 #else
  return TEXT("{\"error\":\"editor only\"}");
 #endif

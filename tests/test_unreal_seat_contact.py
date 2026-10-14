@@ -19,58 +19,92 @@ import validate_unreal_seat_contact as seat  # noqa: E402
 import unreal_skin_contact_native as native  # noqa: E402
 
 
-def report(seat_gap=-.8, left=.3, right=.4):
-    def region(name, gap):
-        return {'region': name, 'selectedVertices': 900, 'overSurfaceVertices': 400, 'bandVertices': 120,
-                'minGapCm': gap, 'maxGapCm': gap + 12}
+def region(name, low, median, over=200, band=150):
+    return {'region': name, 'selectedVertices': 900, 'facingVertices': 300, 'overSurfaceVertices': over,
+            'bandVertices': band, 'minGapCm': low, 'p10GapCm': low + .1, 'p50GapCm': median,
+            'p90GapCm': median + .4, 'maxGapCm': median + 1}
+
+
+def report(**override):
+    regions = {'buttocks': (-1.2, -.6), 'left_posterior_thigh': (-.9, -.2), 'right_posterior_thigh': (-.8, -.1),
+               'left_sole': (.1, .3), 'right_sole': (.1, .4)}
+    regions.update(override)
     row = {'invalidInfluences': 0, 'floorCm': 0.0,
-           'regions': [region('seat', seat_gap), region('left_sole', left), region('right_sole', right)]}
+           'regions': [region(name, *values) for name, values in regions.items()]}
     return {'samples': [dict(copy.deepcopy(row), time=3 + i / 60) for i in range(301)]}
 
 
-def test_complete_seated_contact_is_accepted_and_reported():
+def test_in_band_patches_are_reported_as_probe_only():
     result = seat.validate(report())
-    assert result['samples'] == 301
-    assert result['min_gap_range_cm']['seat'] == (-.8, -.8)
-    assert 'not a physical sit transition' in result['acceptance']
+    assert result['native_seat_verified'] is False and 'probe only' in result['acceptance']
+    assert result['worst']['buttocks']['min_gap_cm'] == -1.2
+    assert set(result['worst']) == set(seat.REGIONS)
 
 
-@pytest.mark.parametrize('region,gap,ok', [
-    ('seat', -2.5, True), ('seat', .5, True), ('seat', .51, False), ('seat', 3.0, False), ('seat', -2.51, False),
-    ('left_sole', 0, True), ('left_sole', 1.0, True), ('left_sole', -.01, False), ('left_sole', 1.2, False),
-    ('right_sole', 4.0, False), ('right_sole', -1.0, False),
-])
-def test_gap_and_penetration_are_both_failures_in_any_sample(region, gap, ok):
-    data = report()
-    index = seat.REGIONS.index(region)
-    data['samples'][237]['regions'][index]['minGapCm'] = gap
-    if ok:
+def test_one_buttock_touching_while_the_thighs_float_is_refused():
+    # docs/qa/contact.md rule 4: a lowest-point measure would accept this pose.
+    data = report(left_posterior_thigh=(1.5, 2.2), right_posterior_thigh=(1.4, 2.0))
+    with pytest.raises(ValueError, match='posterior_thigh: gap'):
         seat.validate(data)
-    else:
-        with pytest.raises(ValueError, match='gap' if gap > 0 else 'penetration'):
-            seat.validate(data)
 
 
-@pytest.mark.parametrize('change', ['no_over', 'no_band', 'nan', 'missing_region', 'invalid_weights', 'short', 'time'])
-def test_incomplete_evidence_is_refused(change):
+@pytest.mark.parametrize('change,match', [
+    (dict(buttocks=(-2.6, -.5)), 'penetration'),
+    (dict(left_sole=(-.2, .2)), 'penetration'),
+    (dict(right_sole=(.9, 1.4)), 'gap'),
+])
+def test_band_edges_of_each_patch(change, match):
+    with pytest.raises(ValueError, match=match):
+        seat.validate(report(**change))
+
+
+def test_coverage_and_patch_size_are_required_in_every_sample():
     data = report()
-    row = data['samples'][100]
-    if change == 'no_over':
-        row['regions'][0]['overSurfaceVertices'] = 0      # seat not over the cushion at all
-    elif change == 'no_band':
-        row['regions'][1]['bandVertices'] = 0
-    elif change == 'nan':
-        row['regions'][2]['minGapCm'] = float('nan')
-    elif change == 'missing_region':
-        row['regions'].pop()
-    elif change == 'invalid_weights':
-        row['invalidInfluences'] = 2
-    elif change == 'short':
-        data['samples'] = data['samples'][::2]            # 30 Hz is not accepted
-    else:
-        row['time'] += .01
+    data['samples'][150]['regions'][0]['bandVertices'] = 40            # 20% of the buttocks in contact
+    with pytest.raises(ValueError, match='20% of the patch'):
+        seat.validate(data)
+    data = report()
+    data['samples'][9]['regions'][2]['overSurfaceVertices'] = 3        # thigh barely over the cushion
+    with pytest.raises(ValueError, match='downward-facing'):
+        seat.validate(data)
+    data = report()
+    data['samples'][9]['regions'].pop()
     with pytest.raises(ValueError):
         seat.validate(data)
+
+
+@pytest.mark.parametrize('override,delta,diagnosis', [
+    ({}, 0.0, 'within bands'),
+    # Whole body floating 1.5 cm above cushion and floor: lower it by 1 cm.
+    (dict(buttocks=(1.0, 1.5), left_posterior_thigh=(1.0, 1.5), right_posterior_thigh=(1.0, 1.5),
+          left_sole=(1.2, 1.5), right_sole=(1.2, 1.5)), -1.0, 'translate the whole seated body by -1.000 cm'),
+    # Seated correctly but feet hanging 3 cm: no translation can fix both.
+    (dict(left_sole=(3.0, 3.2), right_sole=(3.0, 3.3)), None, 'knee/ankle pose'),
+    # Buttocks deep while thighs float: pelvis/thigh pose, not a translation.
+    (dict(buttocks=(-2.0, -1.5), left_posterior_thigh=(1.8, 2.0)), None, 'pelvis/thigh pose'),
+    (dict(right_posterior_thigh=(.0, .2)), 0.0, 'within bands'),
+])
+def test_vertical_anchor_proposal(override, delta, diagnosis):
+    proposal = seat.propose_vertical_anchor(report(**override))
+    assert proposal['native_seat_verified'] is False
+    assert diagnosis in proposal['diagnosis']
+    if delta is None:
+        assert proposal['recommended_delta_cm'] is None
+    else:
+        assert proposal['recommended_delta_cm'] == pytest.approx(delta)
+        if delta:
+            shifted = report(**{k: (v[0] + delta, v[1] + delta) for k, v in {**{
+                'buttocks': (1.0, 1.5), 'left_posterior_thigh': (1.0, 1.5), 'right_posterior_thigh': (1.0, 1.5),
+                'left_sole': (1.2, 1.5), 'right_sole': (1.2, 1.5)}, **override}.items()})
+            seat.validate(shifted)                                       # the proposed translation is in band
+
+
+def test_patch_off_its_surface_needs_horizontal_correction_first():
+    data = report()
+    for row in data['samples']:
+        row['regions'][1]['overSurfaceVertices'] = 0
+    proposal = seat.propose_vertical_anchor(data)
+    assert proposal['recommended_delta_cm'] is None and 'left_posterior_thigh' in proposal['diagnosis']
 
 
 def test_cushion_triangles_come_from_the_actual_chair_audit_selection():
@@ -121,21 +155,22 @@ int main(){
 def test_analyzer_contract_matches_the_validator():
     cpp = native.CPP.split('FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(', 1)[1]
     assert 'AnalyzeCapturedSeatSkin' in native.HEADER and 'UFUNCTION(BlueprintCallable' in native.HEADER
-    assert cpp.index('#if WITH_EDITOR') < cpp.index('GetImportedModel()')      # editor-only diagnostic
-    # Region by skin weight (>=30%), never by the body's lowest point.
+    assert cpp.index('#if WITH_EDITOR') < cpp.index('GetImportedModel()')      # editor-only probe
+    for name in seat.REGIONS:
+        assert f'TEXT("{name}")' in cpp
+    # Separate patches by dominant skin weight (>=30%), downward-facing skin only (posed normal).
     for bone in ('Hips', 'LeftUpLeg', 'RightUpLeg', 'LeftFoot', 'LeftToeBase', 'RightFoot', 'RightToeBase'):
         assert f'Name.EndsWith(TEXT("{bone}"))' in cpp
-    assert 'SeatW>=.30*Sum' in cpp
-    # Same bands as the validator, counted for both signs.
-    assert 'if(Gap>=-2.5&&Gap<=.5)++Seat.Band;' in cpp and seat.SEAT_BAND_CM == (-2.5, .5)
-    assert 'if(Gap>=0&&Gap<=1)++S.Band;' in cpp and seat.SOLE_BAND_CM == (0., 1.)
-    for field in ('selectedVertices', 'overSurfaceVertices', 'bandVertices', 'minGapCm', 'maxGapCm'):
+    assert 'double Best=.30*Sum;' in cpp and 'if(N.Z>-.5)continue;' in cpp
+    assert 'TransformVectorNoScale(FVector(Inv[B].TransformVector(BindNormal)))' in cpp
+    # Same bands as the validator; quantiles reported, not a single lowest vertex.
+    assert 'if(Gap>=-2.5&&Gap<=.5)++Region.Band;' in cpp and seat.SEAT_BAND_CM == (-2.5, .5)
+    assert 'if(Gap>=0&&Gap<=1)++Region.Band;' in cpp and seat.SOLE_BAND_CM == (0., 1.)
+    for field in ('facingVertices', 'overSurfaceVertices', 'bandVertices', 'minGapCm', 'p50GapCm', 'p90GapCm'):
         assert f'\\"{field}\\"' in cpp
-    # No pose, actor or collision mutation in the analyzer or the server audit.
+    assert 'NativeSeatVerified=true' not in cpp
     audit = (ROOT / 'tools/unreal_audit_seat_contact.py').read_text()
-    for forbidden in ('SetWorldLocation', 'SetActorLocation', 'set_actor_location', 'teleport', 'set_editor_property'):
+    for forbidden in ('SetWorldLocation', 'SetActorLocation', 'set_actor_location', 'teleport', 'set_editor_property', 'NativeSeatVerified='):
         assert forbidden not in cpp and forbidden not in audit
+    assert 'propose_vertical_anchor(result)' in audit and 'SUB01_SEAT_CONTACT_PROBE_' in audit
     assert 'frame in range(180, 481)' in audit and 'frame / 60' in audit
-    # Staged with the hands runtime like the typing analyzer.
-    hands = (ROOT / 'tools/unreal_home_hands_runtime.py').read_text()
-    assert 'HEADER.replace(\' protected:\', SKIN_CONTACT_HEADER' in hands and 'CPP += SKIN_CONTACT_CPP' in hands

@@ -4,7 +4,9 @@ Run on the authorized private GPU editor only, after tools/unreal_chair_surface_
 has written private-audit/native-chair-surface.json. Reads the actual owner mesh, the
 captured DeskTyping clip (3-8 s at 60 Hz, the same samples as the typing contact audit) and
 the diagnostic body transform. Writes private-audit/native-seat-contact.json, then gates it
-with tools/validate_unreal_seat_contact.py. No mesh, actor, pose or collision is changed.
+with tools/validate_unreal_seat_contact.py and writes the proposed vertical anchor correction
+(private-audit/native-seat-correction.json). Probe only: no mesh, actor, pose or collision is
+changed, and nothing here sets NativeSeatVerified.
 """
 import json
 import sys
@@ -13,7 +15,7 @@ from pathlib import Path
 import unreal as u
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_unreal_seat_contact import cushion_triangles, validate  # noqa: E402
+from validate_unreal_seat_contact import cushion_triangles, propose_vertical_anchor, validate  # noqa: E402
 
 BODY_CM, BODY_YAW, FLOOR_CM = (203.9, -232.3, -.6), 180, 0.0   # unreal_hands_diagnostic.py seat pose; ground floor
 
@@ -54,12 +56,15 @@ def run():
               'floor_cm': FLOOR_CM, 'chair_component': chair['chair']['component'], 'samples': rows}
     out = root / 'private-audit/native-seat-contact.json'
     out.write_text(json.dumps(result, indent=2) + '\n')
+    # Probe only: the result is evidence for a pose/anchor correction, never NativeSeatVerified.
+    proposal = propose_vertical_anchor(result)
+    (root / 'private-audit/native-seat-correction.json').write_text(json.dumps(proposal, indent=2, default=str) + '\n')
+    u.log('SUB01_SEAT_CONTACT_CORRECTION ' + json.dumps({k: proposal[k] for k in ('recommended_delta_cm', 'diagnosis')}))
     try:
         summary = validate(result)
-        u.log('SUB01_SEAT_CONTACT_ACCEPTED ' + json.dumps(summary))
+        u.log('SUB01_SEAT_CONTACT_PROBE_IN_BAND ' + json.dumps(summary, default=str))
     except ValueError as error:
-        u.log_warning(f'SUB01_SEAT_CONTACT_REFUSED {error}; report {out}')
-        raise
+        u.log_warning(f'SUB01_SEAT_CONTACT_PROBE_OUT_OF_BAND {error}; report {out}')
 
 
 if __name__ == '__main__':
