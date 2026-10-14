@@ -4,6 +4,7 @@ def test_install_targets_character_and_real_hit_only():
  h='class World{GENERATED_BODY()};class Character{GENERATED_BODY()\n void ConfigureActualPC();};'
  c='void Begin(){ ConfigureActualPC();}\nvoid Tick(){ Super::Tick(DeltaSeconds);}\nvoid Interact(){if(TryNativeHomeDevice(Hit.GetComponent()))return;}'
  header,cpp=native.install(h,c)
+ assert header.index('class IInputProcessor;')<header.index('class World')
  assert header.index('MinecraftInputId')>header.index('class Character')
  assert 'FocusMinecraftTV(Hit);return;' in cpp
  assert cpp.count(' ConfigureMinecraftTVInput();')==1 and cpp.count(' TickMinecraftTVInput();')==1

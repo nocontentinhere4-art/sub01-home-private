@@ -110,6 +110,11 @@ def install(header,cpp):
     for hook in ('if(TryNativeHomeDevice(Hit.GetComponent()))return;', ' Super::Tick(DeltaSeconds);', ' ConfigureActualPC();'):
         if cpp.count(hook)!=1:raise ValueError('Minecraft TV adapter requires unique '+hook)
     if header.count(' void ConfigureActualPC();')!=1:raise ValueError('Unique character declaration required')
+    if 'class IInputProcessor;' not in header:
+        marker=header.find('UCLASS(')
+        if marker<0:marker=header.find('class World')
+        if marker<0:raise ValueError('Header declaration location absent')
+        header=header[:marker]+'class IInputProcessor;\n'+header[marker:]
     header=header.replace(' void ConfigureActualPC();', ' void ConfigureActualPC();'+FIELDS,1)
     cpp=cpp.replace(' ConfigureActualPC();',' ConfigureActualPC();\n ConfigureMinecraftTVInput();',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n TickMinecraftTVInput();',1)
