@@ -1,7 +1,15 @@
 # Private Unreal Pixel Streaming
 
-Current authorized private target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. The owner authorized **$100 TOTAL including prior use/storage**, with ongoing same-pod work and bounded automatic-stop windows. The current live rootfs and independent local guards enforce **2026-10-14 08:43:42 UTC**, epoch **1791967422**. Original `713u6mnmxu4y1a` and transfer source `80lf8giw6ft61v` remain stopped. No provider TTL is claimed: its legacy `stopAfter` argument has no verified persisted schedule. Historical sections below describe dated hosts and do not establish current readiness. The current authenticated live browser transport is the verified HTTPS/WSS native-window fallback described next; external WebRTC remains unaccepted.
+Current authorized private target is Runpod `5ldnm4vax9kelh`, UE 5.8.3, and `/Game/Sub01Home/ActualHome`. The owner authorized **$100 TOTAL including prior use/storage**, with ongoing same-pod work and bounded automatic-stop windows. The current live rootfs and independent local guards enforce **2026-10-14 10:23:38 UTC**, epoch **1791973418**. Original `713u6mnmxu4y1a` and transfer source `80lf8giw6ft61v` remain stopped. No provider TTL is claimed: its legacy `stopAfter` argument has no verified persisted schedule. Historical sections below describe dated hosts and do not establish current readiness. The current authenticated live browser transport is the verified HTTPS/WSS native-window fallback described next; external WebRTC remains unaccepted.
 
+
+## Observed standing native GUI keyboard — 2026-10-14 08:15 UTC
+
+The Manual game PID52822/startticks654201379 physically approached the desk. Actual E focused the authored monitor, then ordinary browser keys passed through XTest, the native scoped input processor and the real PS/2 guest queue. `echo sub01nativeguireal1791965685` produced that fresh marker as a standalone output line; the next genuine `uname` returned `Linux`. The real TinyCore GUI PNG and actual native viewport were visually inspected. No direct PC input API was used. The house pawn remained at `(177.680,-144.330,98.213)` cm during the commands. Actual Escape and all key releases completed afterward.
+
+Evidence is `out/house-evidence/private-real-native-GUI-PC-keyboard-observed.json`, `private-real-native-GUI-PC-keyboard.png` and `actual-native-gui-keyboard-proof.png`. This accepts standing native keyboard use and real guest output, not physical seating, typing hand contact or autonomous PC use.
+
+The viewer's health request now aborts after1.5seconds. A clearly labelled client-only hung-fetch test observed abort at1501ms, image hidden/source cleared and controls disabled; removing the fault restored the honest preparing state while capture flags were revoked for the managed native diagnostic gap. This tests fail-closed handling; fresh-frame recovery after that change awaits the next accepted live native session.
 
 ## Observed front door and Daylight control — 2026-10-14 07:54 UTC
 
