@@ -59,6 +59,35 @@
       ],
       "gltf_export": "Official viewer Export glTF binary; no local geometry regeneration",
       "native_installed": false
+    },
+    {
+      "name": "wall-cabinet",
+      "viewer": "https://www.innerscene.com/v/24aFdgATuizevTBvWznOVb",
+      "details": "https://www.innerscene.com/tools/library/3d-parts/600-mm-wall-cabinet-carcass-f03abc52",
+      "download": "https://www.innerscene.com/api/library/600-mm-wall-cabinet-carcass-f03abc52/download",
+      "license": "CC0 (Public domain label inspected in official viewer)",
+      "access": "public without account; isolated Playwright download",
+      "files": [
+        {
+          "filename": "wall-cabinet.step",
+          "bytes": 523042,
+          "sha256": "ae3ecd50cf0d70d297e25e88963ab3ddb08cef004b2ec2119475fffe45b17f35"
+        },
+        {
+          "filename": "wall-cabinet.glb",
+          "bytes": 1036808,
+          "sha256": "c2f425271bcf3bd8e36110b6aabbe9b9418ca1171d66259a81bf18a5c8731db1"
+        }
+      ],
+      "raw_coordinate_units": "millimeters",
+      "to_meters": 0.001,
+      "source_dimensions_mm_xyz": [
+        600,
+        720,
+        350
+      ],
+      "gltf_export": "Official viewer Export glTF binary; no local geometry regeneration",
+      "native_installed": false
     }
   ],
   "warning": "Inventory helper bounds_m labels are incorrect for these unnormalized millimeter exports; convert raw positions by 0.001 before placement. This source packet is not native acceptance."
