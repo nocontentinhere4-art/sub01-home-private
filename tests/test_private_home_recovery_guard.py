@@ -10,6 +10,7 @@ def test_exact_authorized_migration_identity(pod, name):
 
 
 @pytest.mark.parametrize("pod,state", [
+    ("80lf8giw6ft61v", {"id": "80lf8giw6ft61v", "name": "sub01-home-private-recovery"}),
     ("713u6mnmxu4y1a", {"id": "713u6mnmxu4y1a", "name": "sub01-home-private-recovery"}),
     ("unrelated", {"id": "unrelated", "name": "sub01-home-private-migration-20261014"}),
     ("5ldnm4vax9kelh", {"id": "different", "name": "sub01-home-private-migration-20261014"}),
