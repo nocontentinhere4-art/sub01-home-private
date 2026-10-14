@@ -270,10 +270,12 @@ def mapping_check(model, presets=None):
     targets = []
     for target in plan['targets']:
         targets.append(check_target(model, target, slots, mismatches))
-    ok = not mismatches and not missing and all(t['ok'] for t in targets)
+    bed_required = any(t.get('bed') for t in plan['targets'])
+    ok = all(t['ok'] for t in targets) and (not bed_required or (not mismatches and not missing))
     return {'schema': 'sub01.home-materials-mapping.v1', 'model_source': model['source'],
             'presets': presets, 'source_bed': bed, 'bed_and_sofa_slots': slots,
             'headboard_material_slot_users': len(teal_users), 'targets': targets,
+            'bed_mapping_required': bed_required,
             'mismatches': mismatches, 'notes': notes, 'ok': ok, 'visual_match_claimed': False}
 
 
@@ -286,6 +288,12 @@ def target_slots(model, target):
             continue
         if target['match'] == 'material_name':
             hit = norm(mpath) in {norm(n) for n in target['source_materials']}
+        elif target['match'] == 'factor_fingerprint':
+            record = model['materials'].get(mpath) or {}
+            fname = pick_parameter((record.get('names') or {}).get('vector'),
+                                   spec.PARAM_CANDIDATES['base_color_factor'])
+            have = ((record.get('values') or {}).get('vector') or {}).get(fname) if fname else None
+            hit = have is not None and any(close(have, f, 3e-3) for f in [target['fingerprint'], target['factor']])
         else:  # actor prefix
             hit = any(norm(row['actor_label']).startswith(norm(p)) or ('_' + norm(p)) in _identity(row)
                       for p in target['actor_prefixes'])
@@ -318,17 +326,39 @@ def check_target(model, target, slots, mismatches):
         item['texture'] = values.get('texture', {}).get(tex_name) if tex_name else None
         current = values.get('vector', {}).get(factor_name) if factor_name else None
         item['current_factor'] = current
-        item['already_intended'] = bool(current is not None and close(current, intended))
-        if factor_name:
+        satisfied = []
+        if intended is None:
             item['path'] = 'mic_of_original'
-            if current is not None and not close(current, [1, 1, 1]) and not close(current, intended):
-                result['problems'].append('%s: current %s=%s is neither white (lost tint) nor the intended %s; '
-                                          'refusing' % (mpath, factor_name, current, intended))
+        elif factor_name:
+            item['path'] = 'mic_of_original'
+            accepted = target.get('factor_expect') or [[1, 1, 1]]
+            satisfied.append(bool(current is not None and close(current, intended)))
+            if current is not None and not any(close(current, a) for a in accepted) and not close(current, intended):
+                result['problems'].append('%s: current %s=%s is neither the expected %s nor the intended %s; '
+                                          'refusing' % (mpath, factor_name, current, accepted, intended))
         else:
             item['path'] = 'owned_master_required'
             if not tex_name:
                 result['problems'].append('%s: no base-colour factor and no base-colour texture parameter '
                                           'enumerated (%s); cannot even feed the owned master' % (mpath, names))
+        item['scalar_overrides'] = []
+        for override in target.get('scalars', []):
+            pname = pick_parameter(names.get('scalar'), spec.PARAM_CANDIDATES[override['param']])
+            if pname is None:
+                result['problems'].append('%s: no %s parameter among %s; refusing (no invented parameters)' % (
+                    mpath, override['param'], names.get('scalar')))
+                continue
+            have = values.get('scalar', {}).get(pname)
+            done = have is not None and abs(float(have) - override['value']) <= 2e-3
+            satisfied.append(done)
+            if not done and have is not None and override.get('expect') is not None and \
+                    not any(abs(float(have) - e) <= 2e-3 for e in override['expect']):
+                result['problems'].append('%s: current %s=%s is not the expected %s; refusing' % (
+                    mpath, pname, have, override['expect']))
+            item['scalar_overrides'].append(('scalar', pname, float(override['value'])))
+        if item['path'] == 'owned_master_required' and target.get('scalars'):
+            result['problems'].append('%s: scalar-only target needs the real parent; no owned master' % mpath)
+        item['already_intended'] = bool(satisfied) and all(satisfied)
         sig = target.get('texture_signature')
         size = (record.get('texture_sizes') or {}).get(tex_name) if tex_name else None
         item['texture_size'] = size
@@ -471,10 +501,11 @@ def ensure_instance(u, model, item, allow_master):
     mel = u.MaterialEditingLibrary
     original = model['objects']['materials'][item['material']]
     name = owned_name(item['material'])
-    factor = [float(v) for v in item['intended_factor'][:3]]
+    factor = [float(v) for v in (item['intended_factor'] or [1, 1, 1])[:3]]
     if item['path'] == 'mic_of_original':
         parent = original
-        overrides = [('vector', item['factor_parameter'], factor + [1.0])]
+        overrides = ([('vector', item['factor_parameter'], factor + [1.0])] if item['intended_factor'] is not None
+                     else []) + list(item.get('scalar_overrides') or [])
     else:
         if not allow_master:
             raise MaterialFixError('%s needs the owned master; rerun with --allow-owned-master' % item['material'])

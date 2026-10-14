@@ -1384,6 +1384,7 @@
      "expected_materials": 4,
      "same_texture": true,
      "optional": false,
+     "bed": true,
      "factors": {
       "Original teal upholstery": [
        0.48515,
@@ -1581,6 +1582,7 @@
      "expected_materials": 4,
      "same_texture": true,
      "optional": true,
+     "bed": true,
      "factors": {
       "Original teal upholstery": [
        1.0269,
@@ -1856,6 +1858,291 @@
        "chroma": 0.036
       }
      }
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "darkwood-albedo": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "darkwood-albedo"
+   ],
+   "targets": [
+    {
+     "id": "darkwood-albedo",
+     "class": "dark_wood",
+     "match": "factor_fingerprint",
+     "fingerprint": [
+      0.55834,
+      0.40198,
+      0.22697
+     ],
+     "source_materials": [
+      "M.darkwood (unnamed in export)"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "factor": [
+      1.80182,
+      1.29723,
+      0.73244
+     ],
+     "factor_expect": [
+      [
+       0.5583403896342679,
+       0.4019777798321958,
+       0.22696587351009836
+      ]
+     ],
+     "texture_signature": {
+      "sizes": [
+       [
+        1024,
+        1024
+       ],
+       [
+        512,
+        512
+       ]
+      ],
+      "source": "fine_grained_wood diff.jpg"
+     },
+     "why": "fine_grained_wood mean Y 0.0345 x #c5aa83 gives Y 0.0155 (below 0.04). Same hue, scaled to Y 0.05 (dark walnut 0.04-0.10). Matched by its exact current factor, so only the material that really carries #c5aa83 is touched; brightest 1% texel 0.168.",
+     "predicted": {
+      "before": {
+       "linear": [
+        0.0307,
+        0.0122,
+        0.0035
+       ],
+       "srgb_hex": "#311d0c",
+       "luminance": 0.0155,
+       "hue_deg": 27.7,
+       "saturation": 0.7647,
+       "chroma": 0.732
+      },
+      "after": {
+       "linear": [
+        0.0991,
+        0.0393,
+        0.0114
+       ],
+       "srgb_hex": "#59381c",
+       "luminance": 0.05,
+       "hue_deg": 27.7,
+       "saturation": 0.6886,
+       "chroma": 0.732
+      }
+     }
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "metal-keyboard": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "metal-keyboard"
+   ],
+   "targets": [
+    {
+     "id": "metal-keyboard-plastic",
+     "class": "plastic",
+     "match": "material_name",
+     "source_materials": [
+      "plastic_black"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 0.0,
+       "expect": [
+        1.0
+       ]
+      }
+     ],
+     "why": "keyboard.glb plastic_black has metallic 1.0 and roughness 1.0: a plastic is a dielectric.",
+     "predicted": {}
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "metal-espresso": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "metal-espresso"
+   ],
+   "targets": [
+    {
+     "id": "metal-espresso-powdercoat",
+     "class": "plastic",
+     "match": "material_name",
+     "source_materials": [
+      "Charcoal fine-textured powdercoat"
+     ],
+     "expected_materials": 1,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 0.0,
+       "expect": [
+        0.25
+       ]
+      }
+     ],
+     "why": "Powder coat is a polymer film: dielectric (0.25 -> 0).",
+     "predicted": {}
+    },
+    {
+     "id": "metal-espresso-steel",
+     "class": "metal",
+     "match": "material_name",
+     "source_materials": [
+      "Satin galvanized steel",
+      "Blackened steel mounting hardware",
+      "Satin champagne bronze"
+     ],
+     "expected_materials": 3,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "metallic_factor",
+       "value": 1.0,
+       "expect": [
+        0.78,
+        0.75,
+        0.8
+       ]
+      }
+     ],
+     "why": "Bare metals are metallic 1 (Hoffman 2015); 0.75-0.8 mixes are non-physical.",
+     "predicted": {}
+    }
+   ],
+   "real_bed_texture": {
+    "image": "Image_14",
+    "size": [
+     512,
+     512
+    ],
+    "srgb_mean_8bit": [
+     144.65,
+     170.4,
+     204.73
+    ],
+    "factor_present": false
+   },
+   "sources": {
+    "albedo_bounds": "Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe \"The PBR Guide\" vol. 2 (2015-2018), and Lagarde & de Rousiers, \"Moving Frostbite to PBR\", SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).",
+    "fabric_measured": "In-repo measured CC0 scans: queen-bed source \"Original cream upholstery\" texture mean Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).",
+    "fabric_roughness": "Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).",
+    "oak_roughness": "Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).",
+    "plaster_roughness": "Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).",
+    "ceramic_roughness": "Glazed ceramic/porcelain: ~0.05-0.25.",
+    "metals_f0": "Metals: metallic 1 with F0 as base colour (Hoffman, \"Physics and Math of Shading\", SIGGRAPH 2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.",
+    "dark_wood": "Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor)."
+   },
+   "visual_match_claimed": false
+  },
+  "bed-wood-roughness": {
+   "schema": "sub01.home-materials-plan.v1",
+   "presets": [
+    "bed-wood-roughness"
+   ],
+   "targets": [
+    {
+     "id": "bed-wood-roughness",
+     "class": "oak",
+     "match": "material_name",
+     "source_materials": [
+      "Original walnut grain",
+      "Original oak grain"
+     ],
+     "expected_materials": 2,
+     "optional": true,
+     "scalars": [
+      {
+       "param": "roughness_factor",
+       "value": 0.5,
+       "expect": [
+        0.82
+       ]
+      }
+     ],
+     "why": "Assembly sets the queen-bed wood to roughness .82 (near matte); oiled/lacquered oak 0.35-0.6, scan mean 0.44-0.53. Only applied if the real value is .82.",
+     "predicted": {},
+     "bed": true
     }
    ],
    "real_bed_texture": {

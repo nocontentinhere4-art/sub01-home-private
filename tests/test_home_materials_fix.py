@@ -365,7 +365,7 @@ def test_unexpected_existing_factor_is_refused(tmp_path):
     u = make_unreal(world)
     with pytest.raises(fix.MaterialFixError) as error:
         fix.apply(['bed-intended'], u=u)
-    assert 'neither white' in str(error.value)
+    assert 'neither the expected' in str(error.value)
 
 
 def test_sofa_preset_binds_by_actor_prefix(tmp_path):
@@ -532,3 +532,98 @@ def test_committed_audit_is_small_and_honest():
     assert path.stat().st_size < 400_000
     data = json.loads(path.read_text())
     assert 'No visual comparison' in data['scope']
+
+
+# ---------------------------------------------------------------------------
+# Widened presets (increment 3)
+# ---------------------------------------------------------------------------
+def add_material_actor(world, label, name, *, vectors=None, scalars=None, texture_size=(1024, 1024)):
+    parent = world.assets[GLTF_PARENT]
+    m = MaterialInstanceConstant(MAT_DIR + name + '.' + name, parent)
+    m.vectors = dict(vectors or {})
+    m.scalars = dict(scalars or {})
+    m.textures = {'BaseColorTexture': Texture2D('/Game/T/%s_tex.%s_tex' % (name, name), texture_size)}
+    world.assets[MAT_DIR + name] = m
+    comp = StaticMeshComponent('/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.%s.StaticMeshComponent0' % label,
+                               Obj('/Game/M/%s.%s' % (label, label)), [m], location=(1.0, 2.0, 3.0))
+    world.actors.append(Actor(label, [comp]))
+    return comp
+
+
+def test_metals_preset_binarises_only_enumerated_metallic(tmp_path):
+    world = build_world(tmp_path)
+    comps = {
+        'kb': add_material_actor(world, 'house-keyboard', 'plastic_black', scalars={'MetallicFactor': 1.0}),
+        'pc': add_material_actor(world, 'esp1', 'Charcoal_fine_textured_powdercoat', scalars={'MetallicFactor': 0.25}),
+    }
+    for i, name in enumerate(['Satin_galvanized_steel', 'Blackened_steel_mounting_hardware', 'Satin_champagne_bronze']):
+        comps[name] = add_material_actor(world, 'esp_s%d' % i, name, scalars={'MetallicFactor': [0.78, 0.75, 0.8][i]})
+    u = make_unreal(world)
+    before = fingerprints(u, world)
+    report = fix.apply(['metal-keyboard', 'metal-espresso'], u=u)
+    assert len(report['slot_changes']) == 5
+    assert comps['kb'].get_material(0).scalars == {'MetallicFactor': 0.0}
+    assert comps['Satin_galvanized_steel'].get_material(0).scalars == {'MetallicFactor': 1.0}
+    assert not comps['kb'].get_material(0).vectors       # no base-colour change for scalar-only targets
+    assert fingerprints(u, world) == before
+    assert fix.apply(['metal-keyboard', 'metal-espresso'], u=u)['slot_changes'] == []
+
+
+def test_scalar_target_refuses_unexpected_current_value(tmp_path):
+    world = build_world(tmp_path)
+    add_material_actor(world, 'bedwood0', 'Original_walnut_grain_002', scalars={'RoughnessFactor': 0.3})
+    world.actors = [a for a in world.actors if a.label not in ('CC0_queen_0',)]
+    u = make_unreal(world)
+    with pytest.raises(fix.MaterialFixError) as error:
+        fix.apply(['bed-wood-roughness'], u=u)
+    assert 'not the expected' in str(error.value) or 'expected 2 distinct' in str(error.value)
+    assert world.level_saves == 0
+
+
+def test_bed_wood_roughness(tmp_path):
+    world = build_world(tmp_path)
+    for name in ('Original_walnut_grain_001', 'Original_oak_grain_001'):
+        world.assets[MAT_DIR + name].scalars = {'RoughnessFactor': 0.82}
+    u = make_unreal(world)
+    report = fix.apply(['bed-wood-roughness'], u=u)
+    assert len(report['slot_changes']) == 2
+    comp = bed_components(world)['CC0_queen_5']
+    assert comp.get_material(0).scalars == {'RoughnessFactor': 0.5}
+
+
+def test_darkwood_matched_by_exact_factor_fingerprint(tmp_path):
+    world = build_world(tmp_path)
+    tint = spec.hex_to_linear('#c5aa83')
+    comp = add_material_actor(world, 'house-static-12', 'Material_012', vectors={'BaseColorFactor': LinearColor(*tint)})
+    add_material_actor(world, 'house-static-13', 'Material_013',
+                       vectors={'BaseColorFactor': LinearColor(0.5, 0.5, 0.5)})   # not darkwood: untouched
+    u = make_unreal(world)
+    report = fix.apply(['darkwood-albedo'], u=u)
+    assert len(report['slot_changes']) == 1
+    got = comp.get_material(0).vectors['BaseColorFactor']
+    target = spec.plan(['darkwood-albedo'])['targets'][0]
+    assert [got.r, got.g, got.b] == pytest.approx(target['factor'], abs=1e-4)
+    # a second material carrying the same fingerprint makes it ambiguous
+    world2 = build_world(tmp_path / 'b')
+    add_material_actor(world2, 'a1', 'Material_020', vectors={'BaseColorFactor': LinearColor(*tint)})
+    add_material_actor(world2, 'a2', 'Material_021', vectors={'BaseColorFactor': LinearColor(*tint)})
+    with pytest.raises(fix.MaterialFixError, match='expected 1 distinct'):
+        fix.apply(['darkwood-albedo'], u=make_unreal(world2))
+
+
+def test_darkwood_prediction_in_dark_wood_range():
+    target = spec.plan(['darkwood-albedo'])['targets'][0]
+    assert target['predicted']['before']['luminance'] < spec.ALBEDO_MIN
+    assert 0.04 <= target['predicted']['after']['luminance'] <= 0.10
+    assert target['predicted']['after']['hue_deg'] == pytest.approx(target['predicted']['before']['hue_deg'], abs=1.5)
+
+
+def test_non_bed_preset_not_blocked_by_bed_mismatch_but_bed_preset_is(tmp_path):
+    world = build_world(tmp_path, teal_on='CC0_queen_2')
+    add_material_actor(world, 'house-keyboard', 'plastic_black', scalars={'MetallicFactor': 1.0})
+    u = make_unreal(world)
+    model = fix.model_from_live(u, u.get_editor_subsystem('Actor'))
+    kb = fix.mapping_check(model, ['metal-keyboard'])
+    assert kb['mismatches'] and not kb['bed_mapping_required']
+    assert kb['ok'] and [t['id'] for t in kb['targets']] == ['metal-keyboard-plastic']
+    assert not fix.mapping_check(model, ['bed-intended'])['ok']

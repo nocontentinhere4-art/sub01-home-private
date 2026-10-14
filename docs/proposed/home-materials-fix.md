@@ -142,6 +142,13 @@ haven-sofa maps are CC0 Innerscene, see `texture-manifest.json`).
 | `bed-intended` | yes | the 4 upholstery materials, exactly 4 distinct, same base texture | base-colour factor = the exact assembly tint, linearised |
 | `bed-balanced` | no (alternative; refused together with `bed-intended`) | same 4 | white-balanced factor (table above) |
 | `sofa-intended` | no | actors `Haven_linen`, `Haven_seams` (1 material each) | #737e87 / #58616a linear |
+| `darkwood-albedo` | no | the ONE material whose current factor is exactly #c5aa83 linear (M.darkwood, unnamed in the export) | factor (1.802, 1.297, 0.732): Y 0.0155 → 0.050 (#311d0c → #59381c), same hue; refused when 0 or ≥2 materials carry that fingerprint, e.g. if the export lost this factor too |
+| `bed-wood-roughness` | no | `Original walnut grain`, `Original oak grain` | `RoughnessFactor` .82 → .50; only if the real value is .82 |
+| `metal-keyboard` | no | `plastic_black` | `MetallicFactor` 1.0 → 0 (plastic is a dielectric) |
+| `metal-espresso` | no | powdercoat .25 → 0; galvanized steel .78, blackened steel .75, champagne bronze .80 → 1 | `MetallicFactor` only, and only from those exact current values |
+
+Scalar presets change nothing but the named scalar. Every preset is independent. The bed
+mapping gate only blocks presets that touch bed materials (`bed-*`).
 
 Guarantees (each covered by `tests/test_home_materials_fix.py`, fake `unreal`):
 - **Mapping first.** The bed slots are compared with the measured source groups: material name

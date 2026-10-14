@@ -494,6 +494,8 @@ PHYSICAL_SOURCES = {
 }
 
 RANGES = {
+    'plastic': {'albedo_Y': (0.01, 0.85), 'roughness': (0.3, 1.0)},
+    'metal': {'albedo_Y': (0.0, 1.0), 'roughness': (0.0, 1.0)},
     'fabric': {'albedo_Y': (0.04, 0.85), 'roughness': (0.75, 1.0)},
     'oak': {'albedo_Y': (0.10, 0.50), 'roughness': (0.35, 0.60)},
     'dark_wood': {'albedo_Y': (0.04, 0.10), 'roughness': (0.35, 0.70)},
@@ -573,9 +575,11 @@ def _norm(name):
 
 
 def intended_factor(target, material_path):
-    """The linear factor a target wants on one ORIGINAL material."""
+    """The linear factor a target wants on one ORIGINAL material (None: factor untouched)."""
     if 'factor' in target:
         return target['factor']
+    if 'factors' not in target:
+        return None
     key = _norm(material_path)
     for name, factor in target['factors'].items():
         if _norm(name) == key:
@@ -588,7 +592,7 @@ def _bed_target(target_id, factors, why, optional):
     predicted = {k: {'before_real (factor lost, white)': describe(mean),
                      'after': describe(mul(v, mean))} for k, v in factors.items()}
     return {'id': target_id, 'class': 'fabric', 'match': 'material_name', 'source_materials': list(BED_SOURCES),
-            'expected_materials': 4, 'same_texture': True, 'optional': optional,
+            'expected_materials': 4, 'same_texture': True, 'optional': optional, 'bed': True,
             'factors': {k: [round(c, 5) for c in v] for k, v in factors.items()},
             'texture_signature': BED_SIGNATURE, 'why': why, 'predicted': predicted,
             'texture_linear_mean_used': [round(c, 4) for c in mean]}
@@ -629,8 +633,60 @@ def _sofa_target(part):
             'predicted': {'before_if_lost': describe(mean), 'after': describe(mul(factor, mean))}}
 
 
+def preset_darkwood():
+    """M.darkwood (home.js:207/213, fine_grained_wood x #c5aa83) is far below the dielectric floor."""
+    d = texture_set_stats('fine_grained_wood')['diff']
+    mean, p99 = tuple(d['linear_mean']['linear']), tuple(d['linear_p99'])
+    tint = hex_to_linear('#c5aa83')
+    before = mul(tint, mean)
+    target_y = 0.05
+    k = target_y / luminance(before)
+    factor = [round(c * k, 5) for c in tint]
+    after = mul(factor, mean)
+    return {'id': 'darkwood-albedo', 'class': 'dark_wood', 'match': 'factor_fingerprint',
+            'fingerprint': [round(c, 5) for c in tint], 'source_materials': ['M.darkwood (unnamed in export)'],
+            'expected_materials': 1, 'optional': True, 'factor': factor, 'factor_expect': [list(tint)],
+            'texture_signature': {'sizes': [[1024, 1024], [512, 512]], 'source': 'fine_grained_wood diff.jpg'},
+            'why': ('fine_grained_wood mean Y %.4f x #c5aa83 gives Y %.4f (below 0.04). Same hue, scaled to '
+                    'Y 0.05 (dark walnut 0.04-0.10). Matched by its exact current factor, so only the material '
+                    'that really carries #c5aa83 is touched; brightest 1%% texel %.3f.'
+                    % (luminance(mean), luminance(before), max(f * p for f, p in zip(factor, p99)))),
+            'predicted': {'before': describe(before), 'after': describe(after)}}
+
+
+def _scalar_target(target_id, cls, names, param, value, expect, why):
+    return {'id': target_id, 'class': cls, 'match': 'material_name', 'source_materials': list(names),
+            'expected_materials': len(names), 'optional': True,
+            'scalars': [{'param': param, 'value': value, 'expect': expect}], 'why': why, 'predicted': {}}
+
+
+def preset_metals():
+    """Dielectric/metal binarisation for named repo materials with non-physical metallic values."""
+    return [
+        _scalar_target('metal-keyboard-plastic', 'plastic', ['plastic_black'], 'metallic_factor', 0.0, [1.0],
+                       'keyboard.glb plastic_black has metallic 1.0 and roughness 1.0: a plastic is a dielectric.'),
+        _scalar_target('metal-espresso-powdercoat', 'plastic', ['Charcoal fine-textured powdercoat'],
+                       'metallic_factor', 0.0, [0.25], 'Powder coat is a polymer film: dielectric (0.25 -> 0).'),
+        _scalar_target('metal-espresso-steel', 'metal', ['Satin galvanized steel', 'Blackened steel mounting hardware',
+                                                         'Satin champagne bronze'],
+                       'metallic_factor', 1.0, [0.78, 0.75, 0.8],
+                       'Bare metals are metallic 1 (Hoffman 2015); 0.75-0.8 mixes are non-physical.'),
+    ]
+
+
+def preset_bed_wood_roughness():
+    return dict(_scalar_target('bed-wood-roughness', 'oak', ['Original walnut grain', 'Original oak grain'],
+                               'roughness_factor', 0.5, [0.82],
+                               'Assembly sets the queen-bed wood to roughness .82 (near matte); oiled/lacquered '
+                               'oak 0.35-0.6, scan mean 0.44-0.53. Only applied if the real value is .82.'),
+                bed=True)
+
+
 PRESETS = {'bed-intended': preset_bed_intended, 'bed-balanced': preset_bed_balanced,
-           'sofa-intended': lambda: [_sofa_target('Haven_linen'), _sofa_target('Haven_seams')]}
+           'sofa-intended': lambda: [_sofa_target('Haven_linen'), _sofa_target('Haven_seams')],
+           'darkwood-albedo': preset_darkwood,
+           'metal-keyboard': lambda: preset_metals()[:1], 'metal-espresso': lambda: preset_metals()[1:],
+           'bed-wood-roughness': preset_bed_wood_roughness}
 DEFAULT_PRESETS = ('bed-intended',)
 
 
@@ -653,18 +709,23 @@ def plan(presets=DEFAULT_PRESETS):
 
 
 def validate_target(target):
-    """Physical-range check of every predicted 'after' mean; returns a list of problems."""
+    """Physical-range check of predicted means and scalar overrides; returns a list of problems."""
     problems = []
     rng = RANGES[target['class']]
-    for name, pred in target['predicted'].items():
-        after = pred['after'] if isinstance(pred, dict) and 'after' in pred else target['predicted']['after']
+    pred = target.get('predicted') or {}
+    afters = ([v['after'] for v in pred.values() if isinstance(v, dict) and 'after' in v]
+              or ([pred['after']] if 'after' in pred else []))
+    for after in afters:
         y = after['luminance']
         if not rng['albedo_Y'][0] <= y <= rng['albedo_Y'][1]:
-            problems.append('%s/%s predicted Y %.3f outside %s' % (target['id'], name, y, rng['albedo_Y']))
+            problems.append('%s predicted Y %.3f outside %s' % (target['id'], y, rng['albedo_Y']))
         if max(after['linear']) > ALBEDO_MAX:
-            problems.append('%s/%s channel above %.2f' % (target['id'], name, ALBEDO_MAX))
-        if not isinstance(pred, dict) or 'after' not in pred:
-            break
+            problems.append('%s channel above %.2f' % (target['id'], ALBEDO_MAX))
+    for o in target.get('scalars', []):
+        if o['param'] == 'roughness_factor' and not rng['roughness'][0] <= o['value'] <= rng['roughness'][1]:
+            problems.append('%s roughness %.3f outside %s' % (target['id'], o['value'], rng['roughness']))
+        if o['param'] == 'metallic_factor' and o['value'] not in (0.0, 1.0):
+            problems.append('%s metallic %.2f is not binary' % (target['id'], o['value']))
     return problems
 
 
