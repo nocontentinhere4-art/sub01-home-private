@@ -1,0 +1,26 @@
+{
+  "schema": "sub01.private-external-model-provenance.v1",
+  "asset": "steel-frame-shelving-358e9855",
+  "author": "Poly Haven / James Ray Cock",
+  "license": "CC0-1.0",
+  "license_evidence": "Official Innerscene primary asset page observed by parent isolated-browser session 2026-10-14; source downloadable GLB retained without geometry or texture edits.",
+  "primary_details_url": "https://www.innerscene.com/tools/library/3d-parts/steel-frame-shelving-358e9855",
+  "primary_viewer_url": "https://www.innerscene.com/v/7FHxxpS7wB9AtFTT7ZE7ms",
+  "download_url": "https://www.innerscene.com/api/library/steel-frame-shelving-358e9855/download",
+  "source_sha256": "bbc7db5777547fcaa82314324a5be0ec1961d6d7f15aa062fe2fdbd1d1e7ee6c",
+  "source_bytes": 5567948,
+  "source_dimensions_gltf_units": [
+    10.974145412445068,
+    21.405006067827344,
+    5.021175384521484
+  ],
+  "geometry_mutated": false,
+  "material_count": 1,
+  "image_count": 3,
+  "triangle_count": 4348,
+  "native_imported": false,
+  "backup_scope": "Private source backup only; no public deployment.",
+  "actual_inventory_receipt": "20261014-steel-frame-shelf-inventory.json",
+  "source_upstream_url": "https://polyhaven.com/a/steel_frame_shelves_01",
+  "uniform_metric_unit_conversion": 0.1
+}

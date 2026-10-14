@@ -1,0 +1,24 @@
+{
+  "schema": "sub01.private-external-model-provenance.v1",
+  "asset": "linea-140-walnut-writing-desk-c94a30dc",
+  "author": "Innerscene",
+  "license": "CC0-1.0",
+  "license_evidence": "Official Innerscene primary asset page observed by parent isolated-browser session 2026-10-14; source downloadable GLB retained without geometry or texture edits.",
+  "primary_details_url": "https://www.innerscene.com/tools/library/3d-parts/linea-140-walnut-writing-desk-c94a30dc",
+  "primary_viewer_url": "https://www.innerscene.com/v/2SP8I6jvzGv46A1ddAeWgd",
+  "download_url": "https://www.innerscene.com/api/library/linea-140-walnut-writing-desk-c94a30dc/download",
+  "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "source_bytes": 3579208,
+  "source_dimensions_gltf_units": [
+    1.399999976158142,
+    0.7582999824080616,
+    0.6499999761581421
+  ],
+  "geometry_mutated": false,
+  "material_count": 7,
+  "image_count": 6,
+  "triangle_count": 20024,
+  "native_imported": false,
+  "backup_scope": "Private source backup only; no public deployment.",
+  "actual_inventory_receipt": "20261014-linea140-inventory.json"
+}
