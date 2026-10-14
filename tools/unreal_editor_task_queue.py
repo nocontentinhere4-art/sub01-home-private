@@ -1,0 +1,165 @@
+"""Fixed private scene tasks on the existing Editor's Slate thread; no network API."""
+import importlib
+import json
+import os
+import stat
+import time
+from pathlib import Path
+
+POD = '5ldnm4vax9kelh'
+PRIVATE = Path('/home/unreal/.sub01-private')
+GUARD = Path('/run/sub01-home-private/runtime-window.json')
+TASKS = {
+    'hide_generated': 'unreal_hide_rejected_generated_decor',
+    'structural_lamp_union': 'unreal_import_structural_lamp_union',
+    'real_lamps': 'unreal_import_real_lamps',
+    'complete_books': 'unreal_import_real_shelf_books',
+    'desk_preflight': 'unreal_real_desk_import_preflight',
+}
+# Reviewed source export path must be frozen by the owner before this task is enabled.
+DESK_EXPORT = None
+
+
+def owned(path, directory=False):
+    meta = path.lstat()
+    expected = stat.S_ISDIR if directory else stat.S_ISREG
+    if not expected(meta.st_mode) or meta.st_uid != os.geteuid() or stat.S_IMODE(meta.st_mode) != (0o700 if directory else 0o600):
+        raise PermissionError('Private queue ownership or mode differs')
+    if not directory and meta.st_nlink != 1:
+        raise PermissionError('Private queue file has multiple links')
+    return meta
+
+
+def read_owned(path):
+    owned(path)
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        meta = os.fstat(fd)
+        if meta.st_uid != os.geteuid() or stat.S_IMODE(meta.st_mode) != 0o600 or not stat.S_ISREG(meta.st_mode) or meta.st_nlink != 1:
+            raise PermissionError('Private queue file changed')
+        data = os.read(fd, 4097)
+        if len(data) > 4096:
+            raise ValueError('Private request is too large')
+        return json.loads(data)
+    finally:
+        os.close(fd)
+
+
+def guard_valid(path=GUARD, now=None):
+    try:
+        if not stat.S_ISREG(path.lstat().st_mode):
+            return False
+        with path.open() as stream:
+            raw = stream.read(4097)
+        if len(raw) > 4096:
+            return False
+        g = json.loads(raw)
+        current = time.time() if now is None else now
+        return (g.get('pod') == POD and type(g.get('total_cap')) in (int, float)
+                and 0 < g['total_cap'] <= 100
+                and type(g.get('deadline_epoch')) is int and current < g['deadline_epoch']
+                and g.get('stop_guards_authenticated') is True
+                and all(type(g.get(k)) is int and g[k] > 0 for k in ('root_guard_pid', 'external_guard_pid'))
+                and ('second_external_guard_pid' not in g or
+                     (type(g['second_external_guard_pid']) is int and g['second_external_guard_pid'] > 0)))
+    except (OSError, ValueError, TypeError):
+        return False
+
+
+def dispatch(task):
+    module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'real_lamps':
+        return module.run(Path('/workspace/sub01-home-private/out/real-lamps'))
+    if task == 'complete_books':
+        return module.run(['--root', '/workspace/sub01-home-private/out/real-books', '--excision-applied'])
+    if task == 'desk_preflight':
+        if DESK_EXPORT is None:
+            raise RuntimeError('Desk export constant not reviewed; read-only task unavailable')
+        return module.audit(DESK_EXPORT)
+    return module.run()
+
+
+class EditorTaskQueue:
+    def __init__(self, private=PRIVATE, guard=GUARD, execute=dispatch, clock=time.time):
+        self.private, self.guard, self.execute, self.clock = Path(private), Path(guard), execute, clock
+        owned(self.private, directory=True)
+        self.request = self.private / 'editor-task-request.json'
+        self.result = self.private / 'editor-task-result.json'
+        self.last_revision = 0
+        self.stopped = False
+        if self.result.exists():
+            previous = read_owned(self.result)
+            revision = previous.get('revision')
+            if type(revision) is not int or revision < 1:
+                raise ValueError('Previous task receipt revision differs')
+            self.last_revision = revision
+
+    def write_result(self, receipt):
+        owned(self.private, directory=True)
+        temporary = self.private / ('.editor-task-result-' + str(os.getpid()))
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            with os.fdopen(fd, 'w') as stream:
+                json.dump(receipt, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, self.result)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def poll(self):
+        if self.stopped:
+            return
+        if not guard_valid(self.guard, self.clock()):
+            self.stopped = True
+            return
+        try:
+            owned(self.private, directory=True)
+            request = read_owned(self.request)
+        except FileNotFoundError:
+            return
+        except (OSError, ValueError, TypeError):
+            return  # Untrusted requests are never executed or reflected into a receipt.
+        if not isinstance(request, dict) or set(request) != {'revision', 'task'}:
+            return
+        revision, task = request['revision'], request['task']
+        if type(revision) is not int or not self.last_revision < revision <= 2**53 - 1:
+            return
+        if type(task) is not str or task not in TASKS:
+            return
+        if not guard_valid(self.guard, self.clock()):
+            self.stopped = True
+            return
+        self.last_revision = revision  # Failed tasks require a NEW explicit revision.
+        receipt = {'revision': revision, 'task': task, 'ok': False,
+                   'native_ready': False, 'finished_epoch': None}
+        try:
+            self.execute(task)
+            receipt['ok'] = True
+        except BaseException as error:
+            # Includes importer SystemExit, so a task refusal cannot quit the Editor.
+            receipt['error_type'] = type(error).__name__
+            receipt['error'] = str(error)[:500]
+        receipt['finished_epoch'] = self.clock()
+        self.write_result(receipt)
+
+
+def install():
+    """Owner invokes once after Editor ready; all mutations run on Slate's thread."""
+    import unreal
+    queue = EditorTaskQueue()
+    handle = None
+    last_poll = 0.0
+
+    def tick(delta):
+        nonlocal last_poll
+        now = time.monotonic()
+        if now - last_poll < .25:
+            return
+        last_poll = now
+        queue.poll()
+        if queue.stopped:
+            unreal.unregister_slate_post_tick_callback(handle)
+
+    handle = unreal.register_slate_post_tick_callback(tick)
+    return queue, handle
