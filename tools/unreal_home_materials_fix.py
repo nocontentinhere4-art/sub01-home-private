@@ -50,6 +50,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import home_materials_spec as spec  # noqa: E402  (pure)
+import unreal_export_texture_parity as parity_mod  # noqa: E402  (pure parts only)
 
 LEVEL_PATH = '/Game/Sub01Home/ActualHome'
 OWNED_DIR = '/Game/Sub01Home/MaterialFix'
@@ -220,9 +221,27 @@ def _identity(row):
                                             row.get('slot_name'))) + '_'
 
 
-def mapping_check(model, presets=None):
+def bed_texture_paths(model):
+    """Base-colour texture paths of the four bed upholstery materials, from the model."""
+    out = set()
+    for path, record in model['materials'].items():
+        if norm(path) in {norm(n) for n in spec.BED_SOURCES}:
+            tname = pick_parameter((record.get('names') or {}).get('texture'),
+                                   spec.PARAM_CANDIDATES['base_color_texture'])
+            if tname:
+                out.add(((record.get('values') or {}).get('texture') or {}).get(tname))
+    return sorted(p for p in out if p)
+
+
+def mapping_check(model, presets=None, parity=None):
     presets = list(presets or spec.DEFAULT_PRESETS)
-    plan = spec.plan(presets)
+    measured, parity_problems = None, None
+    if parity is not None:
+        textures = bed_texture_paths(model)
+        parity_problems, mean, p99 = parity_mod.validate_parity(parity, textures)
+        if not parity_problems:
+            measured = {'linear_mean': mean, 'linear_p99': p99, 'source': 'texture parity (actual UE pixels)'}
+    plan = spec.plan(presets, measured)
     bed = spec.source_bed_groups()
     mesh_of_material = {norm(v[0]): k for k, v in bed['groups'].items()}
     mismatches, notes, slots = [], [], []
@@ -269,13 +288,14 @@ def mapping_check(model, presets=None):
     # Per planned target: the binding and parameter facts that --apply will rely on.
     targets = []
     for target in plan['targets']:
-        targets.append(check_target(model, target, slots, mismatches))
+        targets.append(check_target(model, target, slots, mismatches, parity, parity_problems))
     bed_required = any(t.get('bed') for t in plan['targets'])
     ok = all(t['ok'] for t in targets) and (not bed_required or (not mismatches and not missing))
     return {'schema': 'sub01.home-materials-mapping.v1', 'model_source': model['source'],
             'presets': presets, 'source_bed': bed, 'bed_and_sofa_slots': slots,
             'headboard_material_slot_users': len(teal_users), 'targets': targets,
-            'bed_mapping_required': bed_required,
+            'bed_mapping_required': bed_required, 'parity_problems': parity_problems,
+            'texture_mean_used': measured,
             'mismatches': mismatches, 'notes': notes, 'ok': ok, 'visual_match_claimed': False}
 
 
@@ -302,8 +322,10 @@ def target_slots(model, target):
     return found
 
 
-def check_target(model, target, slots, mismatches):
+def check_target(model, target, slots, mismatches, parity=None, parity_problems=None):
     result = {'id': target['id'], 'ok': True, 'problems': [], 'materials': []}
+    if target.get('held'):
+        result['problems'].append('held: ' + target['held'])
     found = target_slots(model, target)
     expect = target['expected_materials']
     if len(found) != expect:
@@ -373,7 +395,16 @@ def check_target(model, target, slots, mismatches):
         result['materials'].append(item)
     textures = {m['texture'] for m in result['materials'] if m['texture']}
     if target.get('same_texture') and len(textures) > 1:
-        result['problems'].append('materials use different base-colour textures %s' % sorted(textures))
+        # Distinct UE assets are accepted only with content-equivalence evidence (texture parity file).
+        if parity is None:
+            result['problems'].append('materials use different base-colour textures %s and no texture parity '
+                                      'file proves they hold the same pixels' % sorted(textures))
+        elif parity_problems:
+            result['problems'].append('texture parity refused: %s' % parity_problems)
+        else:
+            result['texture_equivalence'] = 'accepted by parity file (identical decoded pixels, neutral settings)'
+    if target.get('same_texture') and parity is not None and len(textures) == 1 and parity_problems:
+        result['problems'].append('texture parity refused: %s' % parity_problems)
     result['ok'] = not result['problems']
     return result
 
@@ -574,12 +605,12 @@ def _live_actors(u, actor_subsystem, load_level):
 
 
 def apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, backup=True,
-          allow_master=False):
+          allow_master=False, parity=None):
     if u is None:
         import unreal as u  # noqa: N813
     level, actors = _live_actors(u, actor_subsystem, load_level)
     model = model_from_live(u, actors)
-    check = mapping_check(model, presets)
+    check = mapping_check(model, presets, parity)
     if not check['ok']:
         raise MaterialFixError('Pre-flight refused (nothing changed): %s' % json.dumps(
             {'mismatches': check['mismatches'], 'notes': check['notes'],
@@ -686,6 +717,7 @@ def _parse(argv):
     mode.add_argument('--apply', action='store_true')
     mode.add_argument('--restore', action='store_true')
     p.add_argument('--inventory', type=Path, help='root inventory JSON for a pure --mapping-check')
+    p.add_argument('--parity', type=Path, help='texture parity JSON (tools/unreal_export_texture_parity.py)')
     p.add_argument('--allow-owned-master', action='store_true',
                    help='explicit fallback: MIC of the owned SUB01_MatFix_Master for parents without a factor')
     p.add_argument('--no-save', action='store_true')
@@ -696,8 +728,9 @@ def _parse(argv):
 def main(argv=None):
     args = _parse(sys.argv[1:] if argv is None else argv)
     presets = args.preset or list(spec.DEFAULT_PRESETS)
+    parity = json.loads(args.parity.read_text()) if args.parity else None
     if args.mapping_check and args.inventory:
-        report = mapping_check(model_from_inventory(json.loads(args.inventory.read_text())), presets)
+        report = mapping_check(model_from_inventory(json.loads(args.inventory.read_text())), presets, parity)
         print(json.dumps(report, indent=1, default=str))
         return 0 if report['ok'] else 2
     if not (args.apply or args.restore or args.mapping_check):
@@ -707,7 +740,7 @@ def main(argv=None):
     try:
         if args.mapping_check:
             _, actors = _live_actors(u, None, True)
-            report = mapping_check(model_from_live(u, actors), presets)
+            report = mapping_check(model_from_live(u, actors), presets, parity)
             (_state_dir(u) / MAPPING_NAME).write_text(json.dumps(report, indent=1, default=str) + '\n')
             u.log('SUB01_MATERIALS_MAPPING ' + json.dumps({'ok': report['ok'], 'mismatches': len(report['mismatches'])}))
             print(json.dumps({'ok': report['ok'], 'mismatches': report['mismatches'], 'notes': report['notes']},
@@ -715,7 +748,8 @@ def main(argv=None):
         elif args.restore:
             print(json.dumps(restore(u=u, save=not args.no_save)))
         else:
-            report = apply(presets, u=u, save=not args.no_save, allow_master=args.allow_owned_master)
+            report = apply(presets, u=u, save=not args.no_save, allow_master=args.allow_owned_master,
+                           parity=parity)
             print(json.dumps({'applied': True, 'slot_changes': len(report['slot_changes'])}))
     finally:
         if args.quit:
