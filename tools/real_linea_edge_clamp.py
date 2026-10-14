@@ -4,6 +4,7 @@ Source upper/lower contact faces are measured; no grommet removal, new hole,
 mesh welding/deletion or global collision tolerance. Normals/UV/indices unchanged.
 """
 import copy,hashlib,json,math,struct
+from functools import lru_cache
 from pathlib import Path
 from real_linea_lamp_mount import geometry,rotated_ue
 from structural_rail_source_patch import accessor
@@ -11,16 +12,28 @@ from home_asset_audit import read_gltf
 from prepare_real_linea140_placement import SHA,SCALE,DESK_Y
 LAMP_SHA='2ac8389afc1519449a9cfdf7efd9fa36780a2177bb47ab58f7a7dda7d247dc8c'
 SCREW_IDS=list(range(16964,18064))
+SCREW_SET=frozenset(SCREW_IDS)
 UPPER_IDS=(21348,21349,21350,21377,21378,21399,21400,21401,21402,21403)
 UPPER_BOUNDARY_IDS=(20730,20731,20763,20764,20967,20968,20969,20970,21026,21027,21059,21060,21261,21262,21263,21264,21348,21349,21350,21355,21356,21377,21378,21399,21400,21401,21402,21403,21405,21406)
 
 
+def geometry_signature(path):
+ path=Path(path).resolve();files=[path]
+ if path.suffix.lower()=='.gltf':
+  doc=json.loads(path.read_text());files += [path.parent/r['uri']for field in('buffers','images')for r in doc.get(field,[])if 'uri'in r]
+ return tuple((str(p),p.stat().st_size,p.stat().st_mtime_ns)for p in files)
+
+@lru_cache(maxsize=16)
+def readonly_geometry(signature):
+ return geometry(signature[0][0])
+
+
 def source_mechanics(lamp):
  if hashlib.sha256(Path(lamp).read_bytes()).hexdigest()!=LAMP_SHA:raise ValueError('Unreviewed original lamp source')
- doc,rows=geometry(lamp);body=rows[0]
+ doc,rows=readonly_geometry(geometry_signature(lamp));body=rows[0]
  if len(rows)!=2 or len(body['triangles'])!=22598:raise ValueError('Actual complete original clamp/body contract differs')
  selected={v for i in SCREW_IDS for v in body['triangles'][i]}
- other={v for i,t in enumerate(body['triangles'])if i not in set(SCREW_IDS)for v in t}
+ other={v for i,t in enumerate(body['triangles'])if i not in SCREW_SET for v in t}
  if selected&other:raise ValueError('Rigid screw shares vertices with unchanged body')
  pts=[body['points'][i]for i in selected];lo=[min(p[a]for p in pts)for a in range(3)];hi=[max(p[a]for p in pts)for a in range(3)]
  if max(abs(x-y)for x,y in zip(lo,[-.008669286966323853,-.08799377083778381,-.006943501066416502]))>1e-7 or max(abs(x-y)for x,y in zip(hi,[.008669286035001278,-.020163340494036674,.010395070537924767]))>1e-7:raise ValueError('Exact authored threaded screw bounds differ')
@@ -34,8 +47,8 @@ def source_mechanics(lamp):
  return doc,rows,selected,upper,hi[1],cap_ids
 
 
-def pose_source(lamp,output,delta):
- doc,rows,selected,upper,lower,caps=source_mechanics(lamp);path=Path(lamp);original=(path.parent/doc['buffers'][0]['uri']).read_bytes();blob=bytearray(original)
+def pose_source(lamp,output,delta,mechanics=None):
+ doc,rows,selected,upper,lower,caps=mechanics if mechanics is not None else source_mechanics(lamp);doc=copy.deepcopy(doc);path=Path(lamp);original=(path.parent/doc['buffers'][0]['uri']).read_bytes();blob=bytearray(original)
  primitive=doc['meshes'][0]['primitives'][0];index=primitive['attributes']['POSITION'];a=doc['accessors'][index];view=doc['bufferViews'][a['bufferView']]
  if a['componentType']!=5126 or a['type']!='VEC3' or view.get('byteStride',12)!=12:raise ValueError('Exact source float position layout differs')
  start=view.get('byteOffset',0)+a.get('byteOffset',0);allowed=set()
@@ -55,12 +68,12 @@ def mount_plan(desk_path,lamp_path,saved,posed_output,placement_y_cm=None):
  if hashlib.sha256(Path(desk_path).read_bytes()).hexdigest()!=SHA:raise ValueError('Actual desk source differs')
  doc,rows,selected,upper,lower,cap_ids=source_mechanics(lamp_path);actual=saved['planned']['DeskLamp']
  if abs(actual['yaw_deg']-90)>1e-6:raise ValueError('Actual native lamp yaw changed')
- _,desk=geometry(desk_path);work=[p for r in desk if r['node']==44 for p in r['points']];top=.025+max(p[1]for p in work)*SCALE;bottom=.025+min(p[1]for p in work)*SCALE;thickness=top-bottom
+ _,desk=readonly_geometry(geometry_signature(desk_path));work=[p for r in desk if r['node']==44 for p in r['points']];top=.025+max(p[1]for p in work)*SCALE;bottom=.025+min(p[1]for p in work)*SCALE;thickness=top-bottom
  screw_delta=upper-thickness-.00002-lower # measured underscrew contact,20micrometre no-penetration gap
- pose=pose_source(lamp_path,posed_output,screw_delta);edge_x=2.1+min(p[0]for p in work)*SCALE;edge_source_z=.0175
+ pose=pose_source(lamp_path,posed_output,screw_delta,(doc,rows,selected,upper,lower,cap_ids));edge_x=2.1+min(p[0]for p in work)*SCALE;edge_source_z=.0175
  origin=[edge_x+edge_source_z,(actual['location_cm'][1]if placement_y_cm is None else placement_y_cm)/100,top-upper]
  old=[x/100 for x in actual['location_cm']];delta=[(origin[a]-old[a])*100 for a in range(3)];bulb=[actual['bulb_cm'][a]+delta[a]for a in range(3)]
- newrows=geometry(posed_output)[1];newpts=[tuple(origin[a]+rotated_ue(p)[a]for a in range(3))for r in newrows for p in r['points']]
+ newrows=readonly_geometry(geometry_signature(posed_output))[1];newpts=[tuple(origin[a]+rotated_ue(p)[a]for a in range(3))for r in newrows for p in r['points']]
  oldpts=[tuple(old[a]+rotated_ue(p)[a]for a in range(3))for r in rows for p in r['points']]
  jaw=[rows[0]['points'][v]for i in UPPER_IDS for v in rows[0]['triangles'][i]]
  if sum(origin[0]-p[2]for p in jaw)/len(jaw)<edge_x+.005:raise ValueError('Actual jaw centre is not supported inside desk edge')
@@ -102,7 +115,7 @@ def blender_collision_proof(desk_path,posed_lamp,plan,home_path):
  from mathutils.bvhtree import BVHTree
  from mathutils import Vector
  if hashlib.sha256(Path(home_path).read_bytes()).hexdigest()!='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b':raise ValueError('Actual home source differs')
- _,desk=geometry(desk_path);_,lamp=geometry(posed_lamp);_,home=geometry(home_path);origin=[v/100 for v in plan['new_origin_ue_cm']]
+ _,desk=readonly_geometry(geometry_signature(desk_path));_,lamp=readonly_geometry(geometry_signature(posed_lamp));_,home=readonly_geometry(geometry_signature(home_path));origin=[v/100 for v in plan['new_origin_ue_cm']]
  def bvh(points,faces):return BVHTree.FromPolygons([Vector(p)for p in points],faces,all_triangles=True,epsilon=0)
  cached_home=[]
  for r in home:
