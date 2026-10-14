@@ -9,6 +9,31 @@ Private, server-only, additive. Nothing here has run in Blender or Unreal yet. N
 - The loft books at `home.js:938` are not touched.
 - The shelf is `tools/build_home_office_shelves.py`, loaded by home.js:861-876 as `house-office-shelves-*`. Its board tops are at .2675 + i*.45; the books stand on the boards at 2.0675 and 2.5175. The builder measures these heights from the evaluated triangles.
 
+## Material-batched books (owner rule: never hide a shared batch)
+**Selection.** Cube books are selected per **exact connected component**, never per node:
+- every evaluated node in the shelf region is split into components, with vertices welded by position because the three.js boxes duplicate them per face;
+- a component counts as a book only if its bounds match the home.js book box and it sits on a shelf board.
+
+**Per-node outcome:**
+
+| Node contents | What the builder writes |
+|---|---|
+| Exactly one book component | Listed under `originals` in `original-hide-manifest.json`, and hidden in UE. |
+| Several books, or books with other geometry (e.g. a lamp stem or rail metal sharing the material) | Never hidden. Listed under `excisions`. |
+
+**Each `excisions` entry contains:**
+- `node`, `ident`, `canonical`;
+- `triangle_order`: the Blender evaluated `loop_triangles` of that glTF node;
+- `excise.components[]` (component id, row/index, `triangle_ids`, bounds);
+- `excise.triangle_ids` and `excise.triangles_runtime_m`: world positions, so the set can be matched in any tool;
+- `remainder`: `triangle_count`, `components`, bounds, and `positions_sha256` of the kept triangles.
+
+**Unreal step with excisions.** The UE script refuses while `excisions` is non-empty. After root applies the excision, run it with `--excision-applied`; it then leaves those nodes untouched and hides only the separate ones.
+
+**Refusals.** Any count or slot mismatch is refused, including a book welded to other geometry, which then fails the box test. The refusal lists matches and near misses.
+
+**Excision format.** Root's rail/stairs excision builder (nodes 162/163) is not in any pushed branch (`origin/main` and both `claude/*` branches searched). This format is self-describing: map it onto the rail builder's format if that differs.
+
 ## Base: which and why
 Use `/workspace/sub01-home-private/out/native-reference-base/house.blend`, the native base from `tools/prepare_native_dressing_base.py`.
 - It is the plain import of the same `full-home.glb` that Unreal shows, so node names and pivots match the UE actors.
@@ -34,7 +59,8 @@ SRC=$(python3 -c "import json;print(json.load(open('${BASE%.blend}.json'))['sour
 ```
 
 **Checks after step 1** (`out/real-books/real-shelf-books-identifiers.json`):
-- exactly 30 `originals`;
+- exactly 30 `originals` (book components);
+- `originals_batched_nodes`, previewed in `original-hide-manifest.preview.json`;
 - `boards` includes z of about 2.0675 and 2.5175;
 - `shelf_objects` is not empty.
 
@@ -55,7 +81,7 @@ If the step refuses, the JSON lists the matched names and near misses.
   - `existing_objects_verified_unchanged`;
   - `additive_glb`: sha256 and texture roles.
 - `real-shelf-books.glb`: only `SUB01_RealBook_*` nodes and materials.
-- `original-hide-manifest.json`: the 30 originals plus the shelf and reference pivots used for the UE check.
+- `original-hide-manifest.json`: the separate originals, the `excisions` for batched nodes, plus the shelf and reference pivots used for the UE check.
 
 **Guarantees:**
 - **Fingerprint.** Every pre-existing object is fingerprinted before and after the build and after the export. Any change aborts, and the base is never saved.
