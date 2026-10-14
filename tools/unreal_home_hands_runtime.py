@@ -187,10 +187,12 @@ void ASub01HomeCharacter::UpdateNativeCapture() {
  }
  if(CaptureRequested&&Now-CaptureRequestedAt>1&&IFileManager::Get().FileSize(*CapturePath)>0){
   UE_LOG(LogTemp,Display,TEXT("SUB01_NATIVE_GAME_CAPTURE_SAVED bytes=%lld"),IFileManager::Get().FileSize(*CapturePath));
-  CaptureAfter=-1;FPlatformMisc::RequestExitWithStatus(false,RouteFailed?2:0);
+  CaptureAfter=-1;
+  if(FParse::Param(FCommandLine::Get(),TEXT("Sub01ExitAfterCapture")))FPlatformMisc::RequestExitWithStatus(false,RouteFailed?2:0);
  }else if(CaptureRequested&&Now-CaptureRequestedAt>40){
   UE_LOG(LogTemp,Error,TEXT("SUB01_NATIVE_GAME_CAPTURE_FAILED no image written"));
-  CaptureAfter=-1;FPlatformMisc::RequestExitWithStatus(false,2);
+  CaptureAfter=-1;
+  if(FParse::Param(FCommandLine::Get(),TEXT("Sub01ExitAfterCapture")))FPlatformMisc::RequestExitWithStatus(false,2);
  }
 }
 
@@ -224,6 +226,7 @@ bool ASub01HomeCharacter::SetHandsPosture(FName Posture) {
  // the verified private desk diagnostic applies its explicit world anchor below.
  if(Posture==TEXT("Walk")||Posture==TEXT("Phone")){
   FirstPersonBody->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
+  FirstPersonBody->SetRelativeRotation(HandsMeshRotation);
  }else if(!HandsDiagnosticSeat){
   FirstPersonBody->AttachToComponent(ViewCamera,FAttachmentTransformRules::KeepWorldTransform);
  }

@@ -23,6 +23,7 @@ void ASub01HomeCharacter::LoadPrivateHandsDiagnostic(){
  FirstPersonBody->SetSkeletalMeshAsset(Mesh);
  FirstPersonBody->SetAnimInstanceClass(USub01HomeHandsInstance::StaticClass());
  FirstPersonBody->SetRelativeRotation(FRotator(0,Yaw,0));
+ HandsMeshRotation=FRotator(0,Yaw,0);
  const auto& Ref=Mesh->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("Head")))FirstPersonBody->HideBoneByName(Ref.GetBoneName(I),EPhysBodyOp::PBO_None);
  TArray<FString> Paths;Parts.ParseIntoArray(Paths,TEXT(";"),true);
@@ -38,7 +39,7 @@ void ASub01HomeCharacter::LoadPrivateHandsDiagnostic(){
  if(Role==TEXT("DeskTyping")&&FParse::Param(FCommandLine::Get(),TEXT("Sub01DiagnosticSeat"))){
   // Controlled pose review, NOT a physical navigation/sit transition assertion.
   // Original contact-anchor whole-body transform; actual imported clip unchanged.
-  HandsDiagnosticSeat=true;GetCharacterMovement()->StopMovementImmediately();GetCharacterMovement()->DisableMovement();
+  HandsDiagnosticSeat=true;PrivateViewMode=EPrivateViewMode::Diagnostic;GetCharacterMovement()->StopMovementImmediately();GetCharacterMovement()->DisableMovement();
   FirstPersonBody->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
   FirstPersonBody->SetWorldLocationAndRotation(FVector(203.9,-232.3,-.6),FRotator(0,180,0));
   HandsBaseOffset=FirstPersonBody->GetRelativeLocation();
