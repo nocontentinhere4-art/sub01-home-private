@@ -268,7 +268,8 @@ void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  UAnimSequence* Clip=HandsClips.FindRef(HandsPosture);
  if(HandsPosture==TEXT("Walk")&&!Moving&&HandsClips.Contains(TEXT("Idle")))Clip=HandsClips.FindRef(TEXT("Idle"));
  Instance->TargetSequence=Clip;
- Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):0.f):1.f;
+ const bool PlayingIdle=HandsPosture==TEXT("Walk")&&!Moving&&Clip&&Clip==HandsClips.FindRef(TEXT("Idle")).Get();
+ Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;
 }
 '''
 
