@@ -149,12 +149,11 @@ def jacobi_eigen(a, sweeps=60):
 
 
 # ---------------------------------------------------------------- 1. identify the cube books
-def original_signature(record):
-    """None if `record` is one of the home.js shelf cube books, else the reason it is not.
-    record: {'name', 'ident', 'aabb': ((lo), (hi)) in Blender metres}."""
-    if not (ORIGINAL_NAME_RE.match(record['name']) or ORIGINAL_NAME_RE.match(record.get('ident', ''))):
-        return 'name'
-    lo, hi = record['aabb']
+def original_signature(aabb):
+    """None if a connected component with this world AABB (Blender metres) is one of the home.js
+    shelf cube books, else the reason it is not. Geometry only: a material-batched node may carry
+    any name, so the name never qualifies or disqualifies a component."""
+    lo, hi = aabb
     w, d, h = (hi[i] - lo[i] for i in range(3))
     if abs(d - ORIGINAL_DEPTH) > SIG_TOL:
         return f'depth {d:.4f}'
@@ -172,28 +171,110 @@ def original_signature(record):
     return None
 
 
+def triangle_components(tris, weld=1e-5):
+    """Exact connected components of a triangle list: vertices are welded by position (three.js
+    BoxGeometry / RoundedBoxGeometry duplicate vertices per face, and the glTF importer keeps them
+    split), then triangles sharing a welded vertex are joined. Returns
+    [{'triangle_ids': [...ascending], 'aabb': (lo, hi)}] ordered by first triangle id."""
+    parent = list(range(len(tris)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    owner = {}
+    for ti, tri in enumerate(tris):
+        for p in tri:
+            key = tuple(round(c / weld) for c in p)
+            if key in owner:
+                a, b_ = find(owner[key]), find(ti)
+                if a != b_:
+                    parent[max(a, b_)] = min(a, b_)
+            else:
+                owner[key] = ti
+    groups = {}
+    for ti in range(len(tris)):
+        groups.setdefault(find(ti), []).append(ti)
+    out = []
+    for root in sorted(groups):
+        ids = groups[root]
+        out.append({'triangle_ids': ids, 'aabb': _aabb([p for i in ids for p in tris[i]])})
+    return out
+
+
+def _region_hit(aabb, pad=0.05):
+    return all(aabb[0][k] <= SHELF_REGION[1][k] + pad and aabb[1][k] >= SHELF_REGION[0][k] - pad for k in range(3))
+
+
+def _round_tri(tri):
+    return [[round(c, 5) for c in rd.blender_to_runtime(p)] for p in tri]
+
+
 def identify_original_books(records):
-    """Exactly the 30 shelf cube books, one per (row, index) slot; raises RefusedError listing
-    every candidate otherwise."""
-    matched, near = [], []
+    """Exactly the 30 shelf cube books, one per (row, index) slot, found per EXACT connected component
+    of every evaluated node in the shelf region. Returns {'books', 'separate', 'batched'}:
+      separate: a node whose only component is one book -> safe to hide that node;
+      batched:  a node holding several books and/or non-book geometry -> NEVER hidden; a triangle-ID
+                excision set (the book components) plus a remainder spec is emitted instead.
+    Raises RefusedError (listing matches and near misses) on any count/slot ambiguity."""
+    books, near, nodes = [], [], {}
     for rec in records:
-        reason = original_signature(rec)
-        if reason is None:
-            lo, hi = rec['aabb']
-            row = min(range(len(ORIGINAL_BOTTOMS)), key=lambda r: abs(lo[2] - ORIGINAL_BOTTOMS[r]))
-            index = round(((lo[0] + hi[0]) / 2 - ORIGINAL_ROW_X0) / ORIGINAL_STEP)
-            matched.append({'name': rec['name'], 'ident': rec.get('ident', rec['name']), 'row': row,
-                            'index': index, 'aabb_blender': [list(lo), list(hi)],
-                            'pivot_runtime': list(rd.blender_to_runtime(rec.get('pivot', [(lo[i] + hi[i]) / 2 for i in range(3)])))})
-        elif reason != 'name':
-            near.append({'name': rec['name'], 'reason': reason})
-    slots = {(m['row'], m['index']) for m in matched}
-    if len(matched) != EXPECTED_ORIGINALS or len(slots) != EXPECTED_ORIGINALS:
+        if not _region_hit(rec['aabb']):
+            continue
+        comps = triangle_components(rec['tris'])
+        hits = []
+        for ci, comp in enumerate(comps):
+            reason = original_signature(comp['aabb'])
+            lo, hi = comp['aabb']
+            if reason is None:
+                row = min(range(len(ORIGINAL_BOTTOMS)), key=lambda r: abs(lo[2] - ORIGINAL_BOTTOMS[r]))
+                index = round(((lo[0] + hi[0]) / 2 - ORIGINAL_ROW_X0) / ORIGINAL_STEP)
+                centre = tuple((lo[i] + hi[i]) / 2 for i in range(3))
+                hits.append({'name': rec['name'], 'ident': rec.get('ident', rec['name']), 'component': ci,
+                             'triangle_ids': comp['triangle_ids'], 'row': row, 'index': index,
+                             'aabb_blender': [list(lo), list(hi)],
+                             'centre_runtime': list(rd.blender_to_runtime(centre))})
+            elif abs((hi[1] - lo[1]) - ORIGINAL_DEPTH) <= SIG_TOL:
+                near.append({'name': rec['name'], 'component': ci, 'reason': reason})
+        if hits:
+            nodes[rec['name']] = (rec, comps, hits)
+            books += hits
+    slots = {(m['row'], m['index']) for m in books}
+    if len(books) != EXPECTED_ORIGINALS or len(slots) != EXPECTED_ORIGINALS:
         raise RefusedError(json.dumps({
-            'error': f'expected exactly {EXPECTED_ORIGINALS} shelf cube books (2 rows x 15, home.js:856-860), '
-                     f'found {len(matched)} in {len(slots)} slots',
-            'matched': sorted(m['name'] for m in matched), 'house_static_near_misses': near[:60]}))
-    return sorted(matched, key=lambda m: (m['row'], m['index']))
+            'error': f'expected exactly {EXPECTED_ORIGINALS} shelf cube-book components (2 rows x 15, '
+                     f'home.js:856-860), found {len(books)} in {len(slots)} slots',
+            'matched': sorted(f"{m['name']}#{m['component']}" for m in books), 'near_misses': near[:60]}))
+    separate, batched = [], []
+    for name, (rec, comps, hits) in sorted(nodes.items()):
+        if len(comps) == 1 and len(hits) == 1:
+            h = hits[0]
+            h['pivot_runtime'] = list(rd.blender_to_runtime(rec.get('pivot', rd.runtime_to_blender(h['centre_runtime']))))
+            h['mode'] = 'hide'
+            separate.append(h)
+            continue
+        excise = sorted(i for h in hits for i in h['triangle_ids'])
+        keep = sorted(set(range(len(rec['tris']))) - set(excise))
+        for h in hits:
+            h['mode'] = 'excise'
+        batched.append({
+            'node': name, 'ident': rec.get('ident', name), 'canonical': canonical(name),
+            'canonical_ident': canonical(rec.get('ident', name)),
+            'triangle_order': 'blender evaluated loop_triangles of the glTF-imported node (world space)',
+            'triangle_count': len(rec['tris']), 'components_total': len(comps),
+            'excise': {'components': [{'component': h['component'], 'row': h['row'], 'index': h['index'],
+                                       'triangle_ids': h['triangle_ids'], 'aabb_blender': h['aabb_blender']}
+                                      for h in hits],
+                       'triangle_ids': excise, 'triangle_count': len(excise),
+                       'triangles_runtime_m': [_round_tri(rec['tris'][i]) for i in excise]},
+            'remainder': {'triangle_count': len(keep), 'components': len(comps) - len(hits),
+                          'aabb_blender': [list(x) for x in _aabb([p for i in keep for p in rec['tris'][i]])] if keep else None,
+                          'positions_sha256': hashlib.sha256(json.dumps([_round_tri(rec['tris'][i]) for i in keep])
+                                                             .encode()).hexdigest()},
+            'never_hide_whole_node': True})
+    books.sort(key=lambda m: (m['row'], m['index']))
+    return {'books': books, 'separate': separate, 'batched': batched}
 
 
 # ---------------------------------------------------------------- 2. shelf support surfaces
@@ -648,16 +729,26 @@ def fingerprint_changes(before, after):
     return changed
 
 
-def hide_manifest(originals, shelf_objects, reference_pivots, glb_sha=None):
+def hide_manifest(found, shelf_objects, reference_pivots, glb_sha=None):
+    """found = identify_original_books(...). Only nodes whose single component is one book are listed
+    under `originals` (hide). Books inside a material-batched node go to `excisions` (triangle IDs +
+    remainder spec); such a node is never listed for hiding."""
+    separate, batched = found['separate'], found['batched']
+    hide_names = {o['name'] for o in separate}
+    if hide_names & {b_['node'] for b_ in batched}:
+        raise RuntimeError('a batched node was listed for hiding')
     return {
-        'schema': 'sub01.real-shelf-books.hide-manifest.v1',
+        'schema': 'sub01.real-shelf-books.hide-manifest.v2',
         'source': 'web/house/home.js:361-368 books(); :856-860 office shelf rows; :2819-2833 house-static naming',
-        'policy': 'hide only (bHiddenInGame + editor hidden); never destroy; collision left unchanged',
+        'policy': 'separate book nodes: hide only (bHiddenInGame + editor hidden), never destroy, collision '
+                  'unchanged; material-batched nodes: never hidden whole, excise the listed book triangles only',
         'expected_count': EXPECTED_ORIGINALS,
+        'books_total': len(found['books']),
         'originals': [{'name': o['name'], 'bakeId': o['ident'], 'canonical': canonical(o['name']),
                        'canonical_ident': canonical(o['ident']),
                        'row': o['row'], 'index': o['index'], 'pivot_runtime_m': o['pivot_runtime']}
-                      for o in originals],
+                      for o in separate],
+        'excisions': batched,
         'shelf_objects': shelf_objects,
         'reference_pivots': reference_pivots,
         'additive_glb_sha256': glb_sha,
@@ -957,9 +1048,18 @@ def run(argv=None):
     rows_before, records = _evaluated_records(existing, depsgraph)
     before = fingerprint_rows(rows_before)
 
-    originals = identify_original_books(records)
-    original_names = {o['name'] for o in originals}
-    nearby = [r for r in records if r['name'] not in original_names and _in_region(r['aabb'], pad=0.05)]
+    found = identify_original_books(records)
+    originals = found['books']
+    hidden_names = {o['name'] for o in found['separate']}
+    excised = {x['node']: set(x['excise']['triangle_ids']) for x in found['batched']}
+    nearby = []
+    for r in records:                       # obstacles: everything except the cube-book triangles
+        if r['name'] in hidden_names or not _in_region(r['aabb'], pad=0.05):
+            continue
+        if r['name'] in excised:
+            tris = [t for i, t in enumerate(r['tris']) if i not in excised[r['name']]]
+            r = dict(r, tris=tris, aabb=_aabb([p for t in tris for p in t]) if tris else r['aabb'])
+        nearby.append(r)
     shelf_records = [r for r in nearby if r['ident'].startswith('house-office-shelves-')] or \
         [r for r in nearby if (r['aabb'][1][0] - r['aabb'][0][0]) > 2.0]
     if not shelf_records:
@@ -968,13 +1068,17 @@ def run(argv=None):
     boards = detect_boards(support_tris)
     report = {'schema': 'sub01.real-shelf-books.v1', 'mode': 'list' if args.list_originals else
               ('dry-run' if args.dry_run else 'blender'), 'basis': 'evaluated-geometry', 'base': base,
-              'base_blend': blend_path, 'originals': originals,
+              'base_blend': blend_path,
+              'originals': [{k: v for k, v in o.items() if k != 'triangle_ids'} for o in originals],
+              'originals_separate': len(found['separate']), 'originals_batched_nodes': [x['node'] for x in found['batched']],
               'shelf_objects': [{'name': r['name'], 'ident': r['ident'], 'canonical': canonical(r['name']),
                                  'canonical_ident': canonical(r['ident']),
                                  'pivot_runtime_m': list(rd.blender_to_runtime(r['pivot']))} for r in shelf_records],
               'boards': boards}
     if args.list_originals:
         _emit(report, out, 'real-shelf-books-identifiers.json')
+        (out / 'original-hide-manifest.preview.json').write_text(json.dumps(
+            hide_manifest(found, report['shelf_objects'], []), indent=2) + '\n')
         return report
 
     hosts = []
@@ -1061,7 +1165,7 @@ def run(argv=None):
         if fingerprint_changes(before, fingerprint_rows(after_rows)):
             glb.unlink(missing_ok=True)
             raise RuntimeError('existing objects changed during export')
-    manifest = hide_manifest(originals, report['shelf_objects'], reference_pivots,
+    manifest = hide_manifest(found, report['shelf_objects'], reference_pivots,
                              (report.get('additive_glb') or {}).get('sha256'))
     (out / 'original-hide-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     _emit(report, out)

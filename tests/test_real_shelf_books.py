@@ -81,15 +81,21 @@ def planned():
 
 
 # ---------------------------------------------------------------- 1. cube-book identification
+def _loft_and_shelf():
+    loft_lo, loft_hi = (-3.32, -1.07, 3.035), (-3.28, -.93, 3.2)
+    shelf = shelf_tris()
+    return [{'name': 'house-static-9', 'ident': 'house-static-9', 'aabb': (loft_lo, loft_hi), 'tris': box_tris(loft_lo, loft_hi)},
+            {'name': 'Oak_shelves', 'ident': 'house-office-shelves-Oak_shelves',
+             'aabb': b._aabb([p for t in shelf for p in t]), 'tris': shelf}]
+
+
 def test_identifies_exactly_the_thirty_shelf_cube_books():
-    recs = cube_book_records()
-    loft = {'name': 'house-static-9', 'ident': 'house-static-9', 'aabb': ((-3.32, -1.07, 3.035), (-3.28, -.93, 3.2))}
-    shelf = {'name': 'Oak_shelves', 'ident': 'house-office-shelves-Oak_shelves', 'aabb': ((.95, 3.55, .1), (3.3, 3.89, 2.52))}
-    found = b.identify_original_books(recs + [loft, shelf])
-    assert len(found) == 30 and {f['row'] for f in found} == {0, 1}
-    assert [f['index'] for f in found[:15]] == list(range(15))
-    assert all(f['name'].startswith('house-static-') for f in found)
-    assert found[0]['pivot_runtime'][2] == pytest.approx(-3.71)
+    found = b.identify_original_books(cube_book_records() + _loft_and_shelf())
+    books = found['books']
+    assert len(books) == 30 and {f['row'] for f in books} == {0, 1}
+    assert [f['index'] for f in books[:15]] == list(range(15))
+    assert len(found['separate']) == 30 and found['batched'] == []
+    assert found['separate'][0]['pivot_runtime'][2] == pytest.approx(-3.71)
 
 
 def test_refuses_and_lists_when_count_or_signature_differs():
@@ -100,14 +106,57 @@ def test_refuses_and_lists_when_count_or_signature_differs():
     assert 'found 29' in detail['error'] and len(detail['matched']) == 29
     moved = copy.deepcopy(recs)
     lo, hi = moved[3]['aabb']
-    moved[3]['aabb'] = ((lo[0], lo[1], lo[2] + .05), (hi[0], hi[1], hi[2] + .05))
+    lo, hi = (lo[0], lo[1], lo[2] + .05), (hi[0], hi[1], hi[2] + .05)
+    moved[3].update(aabb=(lo, hi), tris=box_tris(lo, hi))
     with pytest.raises(b.RefusedError) as err:
         b.identify_original_books(moved)
-    assert json.loads(str(err.value))['house_static_near_misses'][0]['reason'].startswith('bottom')
-    renamed = copy.deepcopy(recs)
-    renamed[0]['name'] = renamed[0]['ident'] = 'Book'
-    with pytest.raises(b.RefusedError):
-        b.identify_original_books(renamed)
+    assert json.loads(str(err.value))['near_misses'][0]['reason'].startswith('bottom')
+
+
+def _batch(records, extra_tris=(), name='house-static-163'):
+    tris = [t for r in records for t in r['tris']] + list(extra_tris)
+    return {'name': name, 'ident': name, 'aabb': b._aabb([p for t in tris for p in t]), 'tris': tris,
+            'pivot': (0.0, 0.0, 0.0)}
+
+
+def test_material_batched_books_with_other_geometry_get_triangle_excision_not_hide():
+    recs = cube_book_records()
+    stem = box_tris((1.0, 3.6, 2.3), (1.01, 3.61, 2.9))          # a lamp stem sharing the batch material
+    batch = _batch(recs[:3], stem)
+    found = b.identify_original_books([batch] + recs[3:] + _loft_and_shelf())
+    assert len(found['books']) == 30 and len(found['separate']) == 27
+    (x,) = found['batched']
+    assert x['node'] == 'house-static-163' and x['never_hide_whole_node']
+    assert len(x['excise']['components']) == 3 and x['components_total'] == 4
+    assert x['excise']['triangle_ids'] == list(range(36))       # exactly the three books' triangles
+    assert x['remainder']['triangle_count'] == 12 and x['remainder']['components'] == 1
+    assert x['remainder']['aabb_blender'] == [list((1.0, 3.6, 2.3)), list((1.01, 3.61, 2.9))]
+    m = b.hide_manifest(found, [], [])
+    assert 'house-static-163' not in {o['name'] for o in m['originals']}
+    assert len(m['originals']) == 27 and m['excisions'][0]['node'] == 'house-static-163'
+
+
+def test_batch_of_books_only_is_still_never_hidden_whole():
+    recs = cube_book_records()
+    found = b.identify_original_books([_batch(recs[:2])] + recs[2:])
+    assert len(found['batched']) == 1 and len(found['separate']) == 28
+    assert found['batched'][0]['remainder']['triangle_count'] == 0
+
+
+def test_no_blanket_hide_rule_is_enforced():
+    recs = cube_book_records()
+    found = b.identify_original_books([_batch(recs[:2])] + recs[2:])
+    found['separate'].append(dict(found['separate'][0], name='house-static-163'))
+    with pytest.raises(RuntimeError, match='batched node'):
+        b.hide_manifest(found, [], [])
+
+
+def test_book_welded_to_other_geometry_is_ambiguous_and_refused():
+    recs = cube_book_records()
+    lo, hi = recs[0]['aabb']
+    stem = [((hi[0], hi[1], hi[2]), (hi[0] + .2, hi[1], hi[2]), (hi[0], hi[1], hi[2] + .3))]   # shares a corner
+    with pytest.raises(b.RefusedError, match='found 29'):
+        b.identify_original_books([_batch(recs[:1], stem)] + recs[1:])
 
 
 def test_signature_constants_are_the_real_homejs_source():
@@ -239,9 +288,9 @@ def test_collisions_and_unsupported_placements_are_rejected(planned):
 def test_hide_manifest_lists_exact_originals():
     found = b.identify_original_books(cube_book_records())
     m = b.hide_manifest(found, [{'name': 'Oak_shelves'}], [], 'abc')
-    assert m['expected_count'] == 30 and len(m['originals']) == 30
+    assert m['expected_count'] == 30 and len(m['originals']) == 30 and m['excisions'] == []
     assert m['originals'][0]['canonical'] == 'housestatic500'
-    assert 'never destroy' in m['policy'] and 'collision left unchanged' in m['policy']
+    assert 'never destroy' in m['policy'] and 'collision unchanged' in m['policy'] and 'never hidden whole' in m['policy']
 
 
 def test_fingerprint_change_is_detected():
@@ -571,6 +620,29 @@ def test_receipt_refusals(ue_setup):
     short = dict(s['manifest'], originals=s['manifest']['originals'][:-1])
     with pytest.raises(ValueError, match='exact expected'):
         ui.validate_receipt(s['report'], short, s['glb'])
+
+
+def test_import_refuses_batched_books_until_excision_and_never_hides_the_batch(ue_setup):
+    s = ue_setup
+    recs = cube_book_records()
+    stem = box_tris((1.0, 3.6, 2.3), (1.01, 3.61, 2.9))
+    found = b.identify_original_books([_batch(recs[:3], stem)] + recs[3:])
+    manifest = b.hide_manifest(found, s['shelf'], s['manifest']['reference_pivots'], s['digest'])
+    with pytest.raises(ValueError, match='material-batched'):
+        ui.validate_receipt(s['report'], manifest, s['glb'])
+    assert ui.validate_receipt(s['report'], manifest, s['glb'], excision_applied=True) == s['digest']
+    bad = copy.deepcopy(manifest)
+    bad['originals'].append(dict(bad['originals'][0], name='house-static-163', canonical='housestatic163'))
+    bad['excisions'][0]['excise']['components'].pop()
+    with pytest.raises(ValueError, match='never hide'):
+        ui.validate_receipt(s['report'], bad, s['glb'], excision_applied=True)
+    # with the excision applied, the batch actor stays visible and untouched
+    s['world'][:3] = [FakeActor('house-static-163', (0, 0, 0))]
+    s['manifest'] = manifest
+    _apply(s)
+    batch_actor = next(a for a in s['world'] if a.label == 'house-static-163')
+    assert not batch_actor.hidden and batch_actor.comps[0].visible
+    assert sum(1 for a in s['world'] if a.hidden) == 27
 
 
 def test_texture_contract_refuses_unknown_or_unfixable(monkeypatch):

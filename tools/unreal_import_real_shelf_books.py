@@ -19,6 +19,9 @@ Fail closed:
     metallic-roughness / occlusion non-sRGB; owned textures are corrected, re-checked, else refused;
   * every pre-existing actor is fingerprinted (transform, meshes, materials, collision) before and after:
     any difference rolls back the import and refuses to save.
+Material-batched cube books (several books, or books plus other geometry, in one node) are NEVER hidden
+whole: the manifest lists them under `excisions` (triangle IDs + remainder spec) and this script refuses
+until root has applied that excision and passes --excision-applied; those nodes are then left untouched.
 Originals: actor hidden in game + component visibility off (editor), collision untouched. New books:
 NoCollision (decor never alters pawn movement or the seat/keyboard contact audits).
 """
@@ -46,7 +49,7 @@ def canonical(name):
     return re.sub('[^a-z0-9]', '', str(name).lower())
 
 
-def validate_receipt(report, manifest, glb):
+def validate_receipt(report, manifest, glb, excision_applied=False):
     export = report.get('additive_glb') or {}
     if (report.get('mode') != 'blender' or report.get('basis') != 'evaluated-geometry'
             or report.get('existing_objects_verified_unchanged', 0) < 1 or not report.get('built')
@@ -58,8 +61,16 @@ def validate_receipt(report, manifest, glb):
     if digest != export.get('sha256') or manifest.get('additive_glb_sha256') != digest:
         raise ValueError('Actual additive GLB differs from the Blender receipt / hide manifest')
     originals = manifest.get('originals') or []
-    if len(originals) != manifest.get('expected_count') or len({o['canonical'] for o in originals}) != len(originals):
+    excisions = manifest.get('excisions') or []
+    excised = sum(len(x['excise']['components']) for x in excisions)
+    if (len(originals) + excised != manifest.get('expected_count')
+            or len({o['canonical'] for o in originals}) != len(originals)):
         raise ValueError('Hide manifest does not list the exact expected cube books')
+    if {o['name'] for o in originals} & {x['node'] for x in excisions}:
+        raise ValueError('A material-batched node is listed for hiding; never hide a shared batch')
+    if excisions and not excision_applied:
+        raise ValueError('Cube books are material-batched in ' + ', '.join(x['node'] for x in excisions) +
+                         ': apply the triangle excision (manifest `excisions`) first, then pass --excision-applied')
     if not manifest.get('shelf_objects'):
         raise ValueError('Hide manifest has no shelf object to verify against')
     return digest
@@ -168,7 +179,7 @@ def import_transform(u, actors, manifest):
     """Infer the full-home import mapping from originals + reference pivots (never the shelf), then
     verify the shelf actor against it."""
     pairs = []
-    for entry in manifest['originals'] + manifest.get('reference_pivots', []):
+    for entry in manifest['originals'] + manifest.get('reference_pivots', []):   # batched nodes: never used
         if any(entry['name'] == s['name'] for s in manifest['shelf_objects']):
             continue
         try:
@@ -344,6 +355,8 @@ def run(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--root', default='/workspace/sub01-home-private/out/real-books')
     ap.add_argument('--restore', action='store_true')
+    ap.add_argument('--excision-applied', action='store_true',
+                    help='root already excised the batched book triangles (manifest `excisions`); those nodes stay untouched here')
     args, _ = ap.parse_known_args(sys.argv[1:] if argv is None else argv)
     root = Path(args.root)
     manifest = json.loads((root / 'original-hide-manifest.json').read_text())
@@ -356,7 +369,7 @@ def run(argv=None):
         return restore(u, level, actor_sub, project_dir, manifest)
     report = json.loads((root / 'real-shelf-books.json').read_text())
     glb = root / 'real-shelf-books.glb'
-    digest = validate_receipt(report, manifest, glb)
+    digest = validate_receipt(report, manifest, glb, args.excision_applied)
     return apply(u, level, actor_sub, project_dir, report, manifest, glb, digest)
 
 
