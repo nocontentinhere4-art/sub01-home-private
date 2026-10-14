@@ -48,12 +48,12 @@ DEFAULT_CONFIG = {
 }
 
 
-def duvet_top(vertices, indices, cfg=DEFAULT_CONFIG):
+def duvet_top(vertices, indices, cfg=DEFAULT_CONFIG, normals=None):
     """The duvet section's upward top (same rule as the mattress, a wider band and normal for a draped cover),
     or the reason it is not a support. Never raises: a duvet that is no support is recorded, not fatal."""
     try:
         return mattress_top(vertices, indices, {**cfg, 'top_band_cm': cfg.get('duvet_top_band_cm', 12.0),
-                                                'min_up_normal': cfg.get('duvet_min_up_normal', 0.8)}), None
+                                                'min_up_normal': cfg.get('duvet_min_up_normal', 0.8)}, normals), None
     except ValueError as exc:
         return None, str(exc)
 
@@ -66,20 +66,28 @@ def tri_normal(a, b, c):
     return n, length
 
 
-def mattress_top(vertices, indices, cfg=DEFAULT_CONFIG):
-    """Upward top triangles of one actual mattress section (world cm, Z up). Raises when it is not a bed top."""
+def mattress_top(vertices, indices, cfg=DEFAULT_CONFIG, normals=None):
+    """Upward top triangles of one actual mattress section (world cm, Z up). Raises when it is not a bed top.
+
+    normals: the section's imported vertex normals (world). When given, "upward" is the mean vertex normal z of the
+    triangle (the chair audit's rule: UE imports upward faces with CLOCKWISE winding, so a cross-product normal
+    points down there; tests/test_unreal_chair_surface_audit.py). Without normals the cross product is used."""
     if not vertices or len(indices) % 3:
         raise ValueError('Missing/invalid real section triangles')
     if any(len(v) != 3 or not all(math.isfinite(x) for x in v) for v in vertices):
         raise ValueError('Nonfinite world geometry')
     if any(isinstance(i, bool) or not isinstance(i, int) or i < 0 or i >= len(vertices) for i in indices):
         raise ValueError('Invalid actual section index')
+    if normals is not None and (len(normals) != len(vertices)
+                                or any(len(n) != 3 or not all(math.isfinite(x) for x in n) for n in normals)):
+        raise ValueError('Invalid actual section normals')
     up = []
     for j in range(0, len(indices), 3):
         ids = indices[j:j + 3]
         a, b, c = (vertices[i] for i in ids)
         n, length = tri_normal(a, b, c)
-        if length and n[2] / length >= cfg['min_up_normal']:
+        nz = sum(normals[i][2] for i in ids) / 3 if normals is not None else (n[2] / length if length else 0.0)
+        if length and nz >= cfg['min_up_normal']:
             up.append((ids, (a[2] + b[2] + c[2]) / 3, length / 2))
     if not up:
         raise ValueError('No upward mattress triangles')
@@ -188,15 +196,19 @@ def run():  # pragma: no cover - server only (Unreal Editor Python)
                     material = component.get_material(slot)
                     names = [str(slots[slot].material_slot_name), str(slots[slot].imported_material_slot_name),
                              material.get_name() if material else '', material.get_path_name() if material else '']
-                    local, indices, *_ = u.ProceduralMeshLibrary.get_section_from_static_mesh(mesh, 0, section)
-                    points = []
+                    local, indices, local_normals, *_ = u.ProceduralMeshLibrary.get_section_from_static_mesh(mesh, 0, section)
+                    points, normals = [], []
                     for p in local:
                         q = transform.transform_location(p)
                         points.append([float(q.x), float(q.y), float(q.z)])
+                    for n in local_normals:
+                        q = u.MathLibrary.transform_direction(transform, n)
+                        normals.append([float(q.x), float(q.y), float(q.z)])
+                    normals = normals if len(normals) == len(points) else None
                     if material_identity(names, cfg['pillow_material_regex']):
                         pillows.extend(points)
                     if material_identity(names, cfg['duvet_material_regex']):
-                        top, why = duvet_top(points, list(indices), cfg)
+                        top, why = duvet_top(points, list(indices), cfg, normals)
                         duvet.append({'section': section, 'material_slot': slot, 'material_identity': names,
                                       'world_bounds_cm': {'min': [min(p[i] for p in points) for i in range(3)],
                                                           'max': [max(p[i] for p in points) for i in range(3)]},
@@ -206,7 +218,7 @@ def run():  # pragma: no cover - server only (Unreal Editor Python)
                         continue
                     if material is None:
                         raise RuntimeError('Mattress section has no actual assigned material')
-                    surface = mattress_top(points, list(indices), cfg)
+                    surface = mattress_top(points, list(indices), cfg, normals)
                     sections.append({'lod': 0, 'section': section, 'material_slot': slot, 'material_identity': names,
                                      'vertices_world_cm': points, 'triangles': list(indices), 'mattress_surface': surface})
                 if sections:
