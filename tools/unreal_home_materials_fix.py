@@ -221,6 +221,23 @@ def _identity(row):
                                             row.get('slot_name'))) + '_'
 
 
+def original_texture_status(parity, originals):
+    """Report (never accept) how the ORIGINAL bed textures were imported, from a parity file."""
+    if not parity:
+        return None
+    rows = {t.get('asset_path'): t for t in parity.get('textures') or []}
+    out = {}
+    for path in originals:
+        t = rows.get(path)
+        if t is None:
+            continue
+        normal_import = t.get('srgb') is False or str(t.get('compression')).endswith('TC_NORMALMAP')
+        out[path] = {'srgb': t.get('srgb'), 'compression': t.get('compression'),
+                     'pixel_match_reference': (t.get('source_provenance') or {}).get('pixel_match_reference'),
+                     'verdict': 'imported as a NORMAL MAP: refused as colour' if normal_import else 'colour import'}
+    return out
+
+
 def bed_texture_paths(model):
     """Base-colour texture paths of the four bed upholstery materials, from the model."""
     out = set()
@@ -233,15 +250,24 @@ def bed_texture_paths(model):
     return sorted(p for p in out if p)
 
 
-def mapping_check(model, presets=None, parity=None):
+def mapping_check(model, presets=None, parity=None, albedo_clones=False):
     presets = list(presets or spec.DEFAULT_PRESETS)
+    albedo_clones = albedo_clones or 'albedo-color-clones' in presets
     measured, parity_problems = None, None
     if parity is not None:
         textures = bed_texture_paths(model)
-        parity_problems, mean, p99 = parity_mod.validate_parity(parity, textures)
+        if albedo_clones:
+            clone_of = {parity_mod.clone_path(t): t for t in textures}
+            parity_problems, mean, p99 = parity_mod.validate_parity(parity, sorted(clone_of), clone_of=clone_of)
+        else:
+            parity_problems, mean, p99 = parity_mod.validate_parity(parity, textures)
         if not parity_problems:
             measured = {'linear_mean': mean, 'linear_p99': p99, 'source': 'texture parity (actual UE pixels)'}
     plan = spec.plan(presets, measured)
+    if albedo_clones:
+        for t in plan['targets']:
+            if t.get('bed'):
+                t['albedo_clones'] = True
     bed = spec.source_bed_groups()
     mesh_of_material = {norm(v[0]): k for k, v in bed['groups'].items()}
     mismatches, notes, slots = [], [], []
@@ -295,6 +321,8 @@ def mapping_check(model, presets=None, parity=None):
             'presets': presets, 'source_bed': bed, 'bed_and_sofa_slots': slots,
             'headboard_material_slot_users': len(teal_users), 'targets': targets,
             'bed_mapping_required': bed_required, 'parity_problems': parity_problems,
+            'albedo_clones': albedo_clones,
+            'original_texture_status': original_texture_status(parity, bed_texture_paths(model)),
             'texture_mean_used': measured,
             'mismatches': mismatches, 'notes': notes, 'ok': ok, 'visual_match_claimed': False}
 
@@ -346,6 +374,12 @@ def check_target(model, target, slots, mismatches, parity=None, parity_problems=
         tex_name = pick_parameter(names.get('texture'), spec.PARAM_CANDIDATES['base_color_texture'])
         item['factor_parameter'], item['texture_parameter'] = factor_name, tex_name
         item['texture'] = values.get('texture', {}).get(tex_name) if tex_name else None
+        item['albedo_clone'] = None
+        if target.get('albedo_clones'):
+            if not tex_name or not item['texture']:
+                result['problems'].append('%s: no enumerated base-colour texture parameter to re-point' % mpath)
+            else:
+                item['albedo_clone'] = parity_mod.clone_path(item['texture'])
         current = values.get('vector', {}).get(factor_name) if factor_name else None
         item['current_factor'] = current
         satisfied = []
@@ -380,6 +414,8 @@ def check_target(model, target, slots, mismatches, parity=None, parity_problems=
             item['scalar_overrides'].append(('scalar', pname, float(override['value'])))
         if item['path'] == 'owned_master_required' and target.get('scalars'):
             result['problems'].append('%s: scalar-only target needs the real parent; no owned master' % mpath)
+        if item['albedo_clone']:
+            satisfied.append(item['texture'] == item['albedo_clone'])
         item['already_intended'] = bool(satisfied) and all(satisfied)
         sig = target.get('texture_signature')
         size = (record.get('texture_sizes') or {}).get(tex_name) if tex_name else None
@@ -393,7 +429,10 @@ def check_target(model, target, slots, mismatches, parity=None, parity_problems=
             if bad:
                 result['problems'].append('%s: bound on slots of other source groups %s' % (mpath, bad))
         result['materials'].append(item)
-    textures = {m['texture'] for m in result['materials'] if m['texture']}
+    textures = {m['albedo_clone'] or m['texture'] for m in result['materials'] if m['texture']}
+    if target.get('albedo_clones') and parity is None:
+        result['problems'].append('albedo clones need a parity file of the CLONES (pixels == GLB image 15, '
+                                  'sRGB True, TC_DEFAULT)')
     if target.get('same_texture') and len(textures) > 1:
         # Distinct UE assets are accepted only with content-equivalence evidence (texture parity file).
         if parity is None:
@@ -537,6 +576,11 @@ def ensure_instance(u, model, item, allow_master):
         parent = original
         overrides = ([('vector', item['factor_parameter'], factor + [1.0])] if item['intended_factor'] is not None
                      else []) + list(item.get('scalar_overrides') or [])
+        if item.get('albedo_clone'):
+            clone = u.load_asset(item['albedo_clone'].split('.')[0])
+            if clone is None or not item.get('texture_parameter'):
+                raise MaterialFixError('Albedo clone %s missing; run --repair-albedo-textures' % item['albedo_clone'])
+            overrides.append(('texture', item['texture_parameter'], clone))
     else:
         if not allow_master:
             raise MaterialFixError('%s needs the owned master; rerun with --allow-owned-master' % item['material'])
@@ -604,13 +648,171 @@ def _live_actors(u, actor_subsystem, load_level):
     return level, actor_subsystem or u.get_editor_subsystem(u.EditorActorSubsystem)
 
 
+# ---------------------------------------------------------------------------
+# Albedo texture repair: owned sRGB / TC_DEFAULT duplicates (originals never touched)
+# ---------------------------------------------------------------------------
+NEUTRAL_KEYS = ('lod_bias',) + tuple(parity_mod.ADJUST_DEFAULTS)
+
+
+def texture_settings(u, texture):
+    out = {}
+    for key in ('srgb', 'compression_settings') + NEUTRAL_KEYS:
+        value = _try(texture.get_editor_property, key)
+        out[key] = value if isinstance(value, (bool, int, float, type(None))) else parity_mod._enum_name(value)
+    out['size'] = [int(texture.blueprint_get_size_x()), int(texture.blueprint_get_size_y())]
+    return out
+
+
+def _package_file(u, object_path):
+    rel = object_path.split('.')[0]
+    if not rel.startswith('/Game/'):
+        return None
+    return Path(u.Paths.project_dir()) / 'Content' / (rel[len('/Game/'):] + '.uasset')
+
+
+def _file_sha(path):
+    import hashlib
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path and path.is_file() else None
+
+
+def _export_sha(u, texture, tag):
+    """sha256 of the PNG the editor exports from the texture's SOURCE pixels (deterministic exporter)."""
+    import hashlib
+    folder = _state_dir(u) / 'pixel-compare'
+    folder.mkdir(parents=True, exist_ok=True)
+    png = folder / ('%s-%d.png' % (tag, time.time_ns()))
+    task = u.AssetExportTask()
+    for key, value in (('object', texture), ('filename', str(png)), ('automated', True), ('prompt', False),
+                       ('replace_identical', True), ('selected', False)):
+        task.set_editor_property(key, value)
+    if not u.Exporter.run_asset_export_task(task) or not png.is_file():
+        raise MaterialFixError('PNG export failed for %s' % _path(texture))
+    digest = hashlib.sha256(png.read_bytes()).hexdigest()
+    png.unlink()
+    return digest
+
+
+def clone_problems(u, original, clone, original_path):
+    """Why an existing owned clone is NOT an exact sRGB/TC_DEFAULT colour copy of the original (empty = ok)."""
+    problems = []
+    if not isinstance(clone, u.Texture2D):
+        return ['not a Texture2D']
+    if (u.EditorAssetLibrary.get_metadata_tag(clone, parity_mod.DUPLICATE_TAG) or '').split('.')[0] != \
+            original_path.split('.')[0]:
+        problems.append('duplicate_of tag is not %s' % original_path)
+    have = texture_settings(u, clone)
+    if have['srgb'] is not True:
+        problems.append('sRGB %s' % have['srgb'])
+    if have['compression_settings'] != 'TC_DEFAULT':
+        problems.append('compression %s' % have['compression_settings'])
+    if original is not None:
+        want = texture_settings(u, original)
+        for key in NEUTRAL_KEYS + ('size',):
+            if have[key] != want[key]:
+                problems.append('%s %s differs from original %s' % (key, have[key], want[key]))
+        if not problems and _export_sha(u, clone, 'clone') != _export_sha(u, original, 'original'):
+            problems.append('exported source pixels differ from the original')
+    return problems
+
+
+def repair_albedo_textures(*, u=None, actor_subsystem=None, load_level=True):
+    """Create (or verify) owned colour clones of the four bed albedo textures. Idempotent, fail closed."""
+    if u is None:
+        import unreal as u  # noqa: N813
+    _, actors = _live_actors(u, actor_subsystem, load_level)
+    model = model_from_live(u, actors)
+    check = mapping_check(model, ['bed-intended'])
+    other = [p for t in check['targets'] for p in t['problems'] if 'different base-colour textures' not in p]
+    if check['mismatches'] or check['notes'] or other:
+        raise MaterialFixError('Repair refused: bed mapping not clean: %s' % json.dumps(
+            {'mismatches': check['mismatches'], 'notes': check['notes'], 'problems': other}, default=str))
+    originals = bed_texture_paths(model)
+    if len(originals) != 4:
+        raise MaterialFixError('Repair refused: expected 4 bed albedo textures, found %s' % originals)
+    work, report = [], []
+    for path in originals:
+        if not path.startswith(parity_mod.ALLOWED_ROOT):
+            raise MaterialFixError('Repair refused: %s is outside %s' % (path, parity_mod.ALLOWED_ROOT))
+        original = u.load_asset(path.split('.')[0])
+        if original is None or not isinstance(original, u.Texture2D):
+            raise MaterialFixError('Repair refused: %s missing or not a Texture2D' % path)
+        settings = texture_settings(u, original)
+        if not (settings['srgb'] is False and settings['compression_settings'] == 'TC_NORMALMAP'):
+            raise MaterialFixError('Repair refused: %s is not the measured normal-map import (%s)' % (path, settings))
+        if any(settings[k] != v for k, v in parity_mod.ADJUST_DEFAULTS.items()) or settings['lod_bias'] != 0:
+            raise MaterialFixError('Repair refused: %s has non-neutral LOD/adjust settings %s' % (path, settings))
+        clone_obj_path = parity_mod.clone_path(path)
+        existing = u.load_asset(clone_obj_path.split('.')[0])
+        if existing is not None:
+            problems = clone_problems(u, original, existing, path)
+            if problems:
+                raise MaterialFixError('Repair refused: existing clone %s differs: %s' % (clone_obj_path, problems))
+            report.append({'original': path, 'clone': clone_obj_path, 'action': 'verified existing'})
+            continue
+        work.append((path, original, settings, clone_obj_path))
+    # ---- mutation: owned duplicates only ----
+    state = _load_backup(u)
+    for path, original, settings, clone_obj_path in work:
+        package = _package_file(u, path)
+        before_file = _file_sha(package)
+        clone = u.EditorAssetLibrary.duplicate_asset(path.split('.')[0], clone_obj_path.split('.')[0])
+        if clone is None or not isinstance(clone, u.Texture2D):
+            raise MaterialFixError('duplicate_asset failed for %s' % path)
+        owned = state.setdefault('owned_assets', [])
+        if clone_obj_path.split('.')[0] not in owned:
+            owned.append(clone_obj_path.split('.')[0])
+        (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
+        clone.set_editor_property('srgb', True)
+        clone.set_editor_property('compression_settings', u.TextureCompressionSettings.TC_DEFAULT)
+        u.EditorAssetLibrary.set_metadata_tag(clone, parity_mod.DUPLICATE_TAG, path)
+        if texture_settings(u, original) != settings or _file_sha(package) != before_file:
+            raise MaterialFixError('Original %s changed while cloning; clone NOT saved' % path)
+        problems = clone_problems(u, original, clone, path)
+        if problems:
+            raise MaterialFixError('New clone %s is not exact: %s; NOT saved' % (clone_obj_path, problems))
+        if not u.EditorAssetLibrary.save_loaded_asset(clone, False):
+            raise MaterialFixError('Saving clone %s failed' % clone_obj_path)
+        if texture_settings(u, original) != settings or _file_sha(package) != before_file:
+            raise MaterialFixError('Original %s changed after saving the clone' % path)
+        report.append({'original': path, 'clone': clone_obj_path, 'action': 'created',
+                       'original_settings': settings, 'clone_settings': texture_settings(u, clone)})
+    u.log('SUB01_ALBEDO_REPAIR ' + json.dumps([(r['clone'], r['action']) for r in report]))
+    return {'schema': 'sub01.home-materials-albedo-repair.v1', 'textures': report}
+
+
+def repair_and_apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, glb=None):
+    """(b) repair clones, (c) parity export of originals + clones and finalize, (d) mapping check, (e) apply.
+    Stops at the first failure."""
+    if u is None:
+        import unreal as u  # noqa: N813
+    repair = repair_albedo_textures(u=u, actor_subsystem=actor_subsystem, load_level=load_level)
+    _, actors = _live_actors(u, actor_subsystem, False)
+    originals = bed_texture_paths(model_from_live(u, actors))
+    out = _state_dir(u) / ('parity-%d' % time.time_ns())
+    parity_mod.export_textures(out, tuple(originals) + tuple(parity_mod.clone_path(o) for o in originals), u=u)
+    glb = Path(glb) if glb else Path(u.Paths.project_dir()) / 'SourceAssets/full-home.glb'
+    try:
+        parity = parity_mod.finalize(out, glb)
+    except ImportError as error:
+        raise MaterialFixError('Stopped after the clone export: PIL/numpy unavailable in the editor (%s). Run '
+                               '`python3 tools/unreal_export_texture_parity.py --finalize %s --glb %s > '
+                               'texture-parity.json`, then --apply --albedo-clones --parity texture-parity.json'
+                               % (error, out, glb)) from None
+    (out / 'texture-parity.json').write_text(json.dumps(parity, indent=1) + '\n')
+    report = apply(presets, u=u, actor_subsystem=actor_subsystem, load_level=False, save=save,
+                   parity=parity, albedo_clones=True)
+    report['albedo_repair'] = repair
+    report['parity_file'] = str(out / 'texture-parity.json')
+    return report
+
+
 def apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, backup=True,
-          allow_master=False, parity=None):
+          allow_master=False, parity=None, albedo_clones=False):
     if u is None:
         import unreal as u  # noqa: N813
     level, actors = _live_actors(u, actor_subsystem, load_level)
     model = model_from_live(u, actors)
-    check = mapping_check(model, presets, parity)
+    check = mapping_check(model, presets, parity, albedo_clones)
     if not check['ok']:
         raise MaterialFixError('Pre-flight refused (nothing changed): %s' % json.dumps(
             {'mismatches': check['mismatches'], 'notes': check['notes'],
@@ -620,6 +822,21 @@ def apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, 
             if item['path'] == 'owned_master_required' and not allow_master:
                 raise MaterialFixError('Pre-flight refused: %s has no enumerated base-colour factor; owned master '
                                        'needs --allow-owned-master' % item['material'])
+    for target in check['targets']:
+        for item in target['materials']:
+            # Never tint through a colour texture that is really a normal-map import.
+            texture = u.load_asset(item['texture'].split('.')[0]) if item.get('texture') else None
+            if texture is not None and not item.get('albedo_clone') and texture_settings(u, texture)['srgb'] is False:
+                raise MaterialFixError('Pre-flight refused: %s samples %s, which is imported with sRGB False (%s); '
+                                       'repair with owned albedo clones first' % (
+                                           item['material'], item['texture'], texture_settings(u, texture)))
+            if item.get('albedo_clone'):
+                clone = u.load_asset(item['albedo_clone'].split('.')[0])
+                if clone is None:
+                    raise MaterialFixError('Pre-flight refused: albedo clone missing: ' + item['albedo_clone'])
+                problems = clone_problems(u, texture, clone, item['texture'])
+                if problems:
+                    raise MaterialFixError('Pre-flight refused: albedo clone %s: %s' % (item['albedo_clone'], problems))
     components = model['objects']['components']
     for target in check['targets']:
         for item in target['materials']:
@@ -628,13 +845,19 @@ def apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, 
                     raise MaterialFixError('Pre-flight refused: component path not unique: ' + cpath)
     # ---- mutation: owned assets first, slots last ----
     state = _load_backup(u)
-    instances, pending = {}, []
+    instances, pending, new_owned = {}, [], False
     for target in check['targets']:
         for item in target['materials']:
             if item['already_intended']:
                 continue  # the real parent already carries the intended factor: nothing to restore
             item = dict(item, desaturation=target.get('desaturation', 0.0), uv_tiling=target.get('uv_tiling', 1.0))
+            existed = u.load_asset(OWNED_DIR + '/' + owned_name(item['material'])) is not None
             instance, changed, overrides = ensure_instance(u, model, item, allow_master)
+            if not existed:
+                owned = state.setdefault('owned_assets', [])
+                if _path(instance).split('.')[0] not in owned:
+                    owned.append(_path(instance).split('.')[0])
+                    new_owned = True
             instances[item['material']] = {'path': _path(instance), 'changed': changed, 'overrides': overrides,
                                            'target': target['id']}
             for cpath, slot in item['slots']:
@@ -657,8 +880,9 @@ def apply(presets, *, u=None, actor_subsystem=None, load_level=True, save=True, 
     for cpath, (component, before) in touched.items():
         if component_fingerprint(u, component) != before:
             raise MaterialFixError('Non-material property changed on %s; map not saved' % cpath)
-    if pending:
+    if pending or new_owned:
         (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
+    if pending:
         if save and not level.save_current_level():
             raise MaterialFixError('Level failed to save; map backup at %s' % map_backup)
     report = {'schema': 'sub01.home-materials-apply.v1', 'presets': list(presets), 'slot_changes': changes,
@@ -673,7 +897,7 @@ def restore(*, u=None, actor_subsystem=None, load_level=True, save=True):
         import unreal as u  # noqa: N813
     level, actors = _live_actors(u, actor_subsystem, load_level)
     state = _load_backup(u)
-    if not state['slots']:
+    if not state['slots'] and not state.get('owned_assets'):
         raise MaterialFixError('No recorded material backup to restore')
     components = {}
     for actor in actors.get_all_level_actors():
@@ -699,9 +923,17 @@ def restore(*, u=None, actor_subsystem=None, load_level=True, save=True):
             raise MaterialFixError('Restore changed a non-material property; map not saved')
     if save and not level.save_current_level():
         raise MaterialFixError('Restore failed to save')
+    deleted = []
+    for asset in reversed(state.get('owned_assets', [])):     # MICs first, then texture clones
+        if not asset.startswith(OWNED_DIR + '/') or not asset_name(asset).startswith(OWNED_PREFIX):
+            raise MaterialFixError('Refusing to delete non-owned asset %s' % asset)
+        if u.load_asset(asset) is not None:
+            if not u.EditorAssetLibrary.delete_asset(asset):
+                raise MaterialFixError('Could not delete owned asset %s' % asset)
+            deleted.append(asset)
     path = _state_dir(u) / BACKUP_NAME
     path.rename(path.with_name('restored-%d-%s' % (time.time_ns(), BACKUP_NAME)))
-    return {'restored_slots': len(work)}
+    return {'restored_slots': len(work), 'deleted_owned_assets': deleted}
 
 
 # ---------------------------------------------------------------------------
@@ -716,6 +948,12 @@ def _parse(argv):
     mode.add_argument('--mapping-check', action='store_true')
     mode.add_argument('--apply', action='store_true')
     mode.add_argument('--restore', action='store_true')
+    mode.add_argument('--repair-albedo-textures', action='store_true',
+                      help='create/verify owned sRGB TC_DEFAULT clones of the bed albedo textures (originals untouched)')
+    mode.add_argument('--repair-and-apply', action='store_true',
+                      help='repair clones, export+finalize parity, mapping check, apply; stops at the first failure')
+    p.add_argument('--albedo-clones', action='store_true', help='bed materials sample the owned albedo clones')
+    p.add_argument('--glb', type=Path, help='full-home.glb for --repair-and-apply (default <project>/SourceAssets)')
     p.add_argument('--inventory', type=Path, help='root inventory JSON for a pure --mapping-check')
     p.add_argument('--parity', type=Path, help='texture parity JSON (tools/unreal_export_texture_parity.py)')
     p.add_argument('--allow-owned-master', action='store_true',
@@ -730,26 +968,33 @@ def main(argv=None):
     presets = args.preset or list(spec.DEFAULT_PRESETS)
     parity = json.loads(args.parity.read_text()) if args.parity else None
     if args.mapping_check and args.inventory:
-        report = mapping_check(model_from_inventory(json.loads(args.inventory.read_text())), presets, parity)
+        report = mapping_check(model_from_inventory(json.loads(args.inventory.read_text())), presets, parity,
+                               args.albedo_clones)
         print(json.dumps(report, indent=1, default=str))
         return 0 if report['ok'] else 2
-    if not (args.apply or args.restore or args.mapping_check):
+    if not (args.apply or args.restore or args.mapping_check or args.repair_albedo_textures or args.repair_and_apply):
         print(json.dumps(spec.plan(presets), indent=1, default=str))
         return 0
     import unreal as u  # noqa: N813
     try:
         if args.mapping_check:
             _, actors = _live_actors(u, None, True)
-            report = mapping_check(model_from_live(u, actors), presets, parity)
+            report = mapping_check(model_from_live(u, actors), presets, parity, args.albedo_clones)
             (_state_dir(u) / MAPPING_NAME).write_text(json.dumps(report, indent=1, default=str) + '\n')
             u.log('SUB01_MATERIALS_MAPPING ' + json.dumps({'ok': report['ok'], 'mismatches': len(report['mismatches'])}))
             print(json.dumps({'ok': report['ok'], 'mismatches': report['mismatches'], 'notes': report['notes']},
                              default=str))
         elif args.restore:
             print(json.dumps(restore(u=u, save=not args.no_save)))
+        elif args.repair_albedo_textures:
+            print(json.dumps(repair_albedo_textures(u=u), default=str))
+        elif args.repair_and_apply:
+            report = repair_and_apply(presets, u=u, save=not args.no_save, glb=args.glb)
+            print(json.dumps({'applied': True, 'slot_changes': len(report['slot_changes']),
+                              'parity_file': report['parity_file']}))
         else:
             report = apply(presets, u=u, save=not args.no_save, allow_master=args.allow_owned_master,
-                           parity=parity)
+                           parity=parity, albedo_clones=args.albedo_clones)
             print(json.dumps({'applied': True, 'slot_changes': len(report['slot_changes'])}))
     finally:
         if args.quit:

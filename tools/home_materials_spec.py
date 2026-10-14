@@ -547,7 +547,18 @@ SOFA_PARTS = ('Haven_linen', 'Haven_seams', 'Haven_legs', 'Haven_felt')
 SOFA_TINTS = {'Haven_linen': '#737e87', 'Haven_seams': '#58616a'}   # assemble_home_blender.py:401-404
 
 
+# Root's parity export 2026-10-14 13:51:49: the four bed albedo PNGs decode to exactly GLB image 15
+# (RGBA sha256 0157e1e9..., max diff 0). Measured from the ACTUAL pixels; used for every bed prediction.
+REAL_IMAGE15_LINEAR_MEAN = (0.28151, 0.40375, 0.60812)
+REAL_IMAGE15_LINEAR_P99 = (0.32778, 0.45641, 0.66539)
+
+
 def _linen_stats():
+    """Bed albedo statistics: root-measured GLB image 15 pixels (sRGB-decoded), 512x512."""
+    return REAL_IMAGE15_LINEAR_MEAN, REAL_IMAGE15_LINEAR_P99, (512, 512)
+
+
+def _repo_linen_stats():
     path = ASSETS / 'lite/rough_linen/diff.jpg'
     d = texture_stats(path.open('rb'), 'color')
     return tuple(d['linear_mean']['linear']), tuple(d['linear_p99']), tuple(d['size'])
@@ -694,7 +705,21 @@ def preset_bed_wood_roughness():
                 bed=True)
 
 
-PRESETS = {'bed-intended': preset_bed_intended, 'bed-balanced': preset_bed_balanced,
+def preset_albedo_clones():
+    """Bed materials only re-pointed to the owned sRGB/TC_DEFAULT clones of their albedo textures (no tint)."""
+    mean, _, _ = _linen_stats()
+    return {'id': 'albedo-color-clones', 'class': 'fabric', 'match': 'material_name',
+            'source_materials': list(BED_SOURCES), 'expected_materials': 4, 'same_texture': True,
+            'optional': True, 'bed': True, 'albedo_clones': True, 'texture_signature': BED_SIGNATURE,
+            'why': ('The four bed albedo textures were imported as normal maps (sRGB False, TC_NORMALMAP): '
+                    'sampled as linear the mean would be the raw 8-bit values. Owned clones with sRGB True and '
+                    'TC_DEFAULT restore colour decoding without touching the originals.'),
+            'predicted': {'albedo': {'before (normal-map import: R,G read linear; BC5 drops B, so B is not this value)':
+                                     describe(tuple(c / 255.0 for c in REAL_BED_TEXTURE['srgb_mean_8bit'])),
+                                     'after': describe(mean)}}}
+
+
+PRESETS = {'bed-intended': preset_bed_intended, 'albedo-color-clones': preset_albedo_clones, 'bed-balanced': preset_bed_balanced,
            'sofa-intended': lambda: [_sofa_target('Haven_linen'), _sofa_target('Haven_seams')],
            'darkwood-albedo': preset_darkwood,
            'metal-keyboard': lambda: preset_metals()[:1], 'metal-espresso': lambda: preset_metals()[1:],

@@ -63,6 +63,27 @@ REFERENCE_BUFFER_VIEW = 157
 BED_TEXTURES = tuple('/Game/Sub01Home/ImportedScene/full-home/Textures/%s.%s' % (n, n)
                      for n in ('Image_148', 'Image_149', 'Image_1410', 'Image_1411'))
 ALLOWED_ROOT = '/Game/Sub01Home/ImportedScene/'
+# Owned sRGB colour clones of textures that were imported as normal maps (explicit owned prefix).
+CLONE_DIR = '/Game/Sub01Home/MaterialFix/Textures'
+CLONE_PREFIX = 'SUB01_MatFix_Albedo_'
+CLONE_ROOT = CLONE_DIR + '/' + CLONE_PREFIX
+DUPLICATE_TAG = 'sub01_matfix_duplicate_of'
+ALLOWED_ROOTS = (ALLOWED_ROOT, CLONE_ROOT)
+# Root's parity export 2026-10-14 13:51:49: all four bed albedo PNGs == GLB image 15.
+REAL_IMAGE15 = {'decoded_rgba_sha256': '0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e',
+                'width': 512, 'height': 512, 'linear_mean': [0.28151, 0.40375, 0.60812],
+                'linear_p99': [0.32778, 0.45641, 0.66539],
+                'originals_imported_as': {'srgb': False, 'compression': 'TC_NORMALMAP'}}
+
+
+def clone_path(original_path):
+    """Deterministic owned clone object path for an original texture object path."""
+    name = original_path.rsplit('/', 1)[-1].split('.')[0]
+    return '%s/%s%s.%s%s' % (CLONE_DIR, CLONE_PREFIX, name, CLONE_PREFIX, name)
+
+
+def is_clone_path(path):
+    return str(path or '').startswith(CLONE_ROOT)
 ALLOWED_COMPRESSION = ('TC_DEFAULT', 'TextureCompressionSettings.TC_DEFAULT')
 ADJUST_DEFAULTS = {'adjust_brightness': 1.0, 'adjust_brightness_curve': 1.0, 'adjust_saturation': 1.0,
                    'adjust_vibrance': 0.0, 'adjust_rgb_curve': 1.0, 'adjust_hue': 0.0,
@@ -95,8 +116,8 @@ def export_textures(out_dir, paths=BED_TEXTURES, *, u=None):
     rows, problems = [], []
     textures = []
     for path in paths:
-        if not path.startswith(ALLOWED_ROOT):
-            problems.append('%s is outside %s' % (path, ALLOWED_ROOT))
+        if not path.startswith(ALLOWED_ROOTS):
+            problems.append('%s is outside %s' % (path, ' and '.join(ALLOWED_ROOTS)))
             continue
         texture = u.load_asset(path.split('.')[0])
         if texture is None or not isinstance(texture, u.Texture2D):
@@ -128,7 +149,12 @@ def export_textures(out_dir, paths=BED_TEXTURES, *, u=None):
             source = data.get_first_filename() if data is not None else None
         except Exception:  # noqa: BLE001
             source = None
-        rows.append({'asset_path': path, 'png': png.name, 'width': int(texture.blueprint_get_size_x()),
+        duplicate_of = None
+        try:
+            duplicate_of = u.EditorAssetLibrary.get_metadata_tag(texture, DUPLICATE_TAG) or None
+        except Exception:  # noqa: BLE001
+            duplicate_of = None
+        rows.append({'asset_path': path, 'png': png.name, 'duplicate_of': duplicate_of, 'width': int(texture.blueprint_get_size_x()),
                      'height': int(texture.blueprint_get_size_y()), 'settings': settings,
                      'import_source_file': source})
     report = {'schema': SETTINGS_SCHEMA, 'generated_utc': _dt.datetime.now(_dt.timezone.utc).isoformat(),
@@ -189,6 +215,7 @@ def finalize(export_dir, glb, image_index=REFERENCE_IMAGE_INDEX):
         textures.append({
             'asset_path': row['asset_path'],
             'source_provenance': {'import_source_file': row.get('import_source_file'),
+                                  'duplicate_of': row.get('duplicate_of'),
                                   'glb_image_index': None, 'buffer_view': None,
                                   'pixel_match_reference': stats['decoded_rgba_sha256'] == reference['decoded_rgba_sha256']},
             'width': stats['width'], 'height': stats['height'],
@@ -203,11 +230,29 @@ def finalize(export_dir, glb, image_index=REFERENCE_IMAGE_INDEX):
             'exporter': 'tools/unreal_export_texture_parity.py', 'reference': reference, 'textures': textures}
 
 
-def validate_parity(parity, texture_paths, glb_name='full-home'):
-    """Return (problems, mean_linear, p99_linear) for a set of UE texture paths claimed equivalent."""
+def validate_parity(parity, texture_paths, glb_name='full-home', clone_of=None):
+    """Return (problems, mean_linear, p99_linear) for a set of UE texture paths claimed equivalent.
+
+    ``clone_of`` maps owned clone paths to the original texture they must duplicate. A clone must sit
+    under the explicit owned prefix, record ``duplicate_of`` == that original, and its import data must
+    still name the GLB (duplicate_asset copies it). Originals imported as normal maps keep failing on sRGB.
+    """
     problems = []
+    clone_of = clone_of or {}
     if not parity or parity.get('schema') != PARITY_SCHEMA:
         return ['no valid %s parity file' % PARITY_SCHEMA], None, None
+    by_path = {t.get('asset_path'): t for t in parity.get('textures') or []}
+    for clone, original in sorted(clone_of.items()):
+        if not is_clone_path(clone):
+            problems.append('%s: not under the owned clone prefix %s' % (clone, CLONE_ROOT))
+        t = by_path.get(clone) or {}
+        dup = (t.get('source_provenance') or {}).get('duplicate_of')
+        if t and str(dup or '').split('.')[0] != str(original).split('.')[0]:
+            problems.append('%s: duplicate_of %r is not %s' % (clone, dup, original))
+    if REAL_IMAGE15['decoded_rgba_sha256'] != (parity.get('reference') or {}).get('decoded_rgba_sha256') and \
+            (parity.get('reference') or {}).get('width') == REAL_IMAGE15['width'] and clone_of:
+        problems.append('reference hash differs from root-measured GLB image 15 (%s...)'
+                        % REAL_IMAGE15['decoded_rgba_sha256'][:12])
     ref = parity.get('reference') or {}
     if ref.get('image_index') != REFERENCE_IMAGE_INDEX or ref.get('buffer_view') not in (REFERENCE_BUFFER_VIEW, None):
         problems.append('reference is not GLB image %d / bufferView %d: %s' % (
@@ -265,6 +310,8 @@ def main(argv=None):
     mode.add_argument('--export', type=Path, help='editor: export PNGs + settings into this EMPTY directory')
     mode.add_argument('--finalize', type=Path, help='pure: build the parity JSON from an export directory')
     p.add_argument('--texture', action='append', help='UE texture object path (default: the 4 bed textures)')
+    p.add_argument('--clones', action='store_true',
+                   help='export the owned sRGB clones of the default/--texture originals (plus the originals)')
     p.add_argument('--glb', type=Path, help='full-home.glb for --finalize')
     p.add_argument('--image-index', type=int, default=REFERENCE_IMAGE_INDEX)
     p.add_argument('--quit', action='store_true')
@@ -276,7 +323,9 @@ def main(argv=None):
         return 0
     import unreal as u  # noqa: N813
     try:
-        export_textures(args.export, tuple(args.texture or BED_TEXTURES), u=u)
+        originals = tuple(args.texture or BED_TEXTURES)
+        paths = originals + tuple(clone_path(o) for o in originals) if args.clones else originals
+        export_textures(args.export, paths, u=u)
     finally:
         if args.quit:
             u.SystemLibrary.quit_editor()

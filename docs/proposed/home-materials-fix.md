@@ -318,3 +318,73 @@ Recommendation:
   `bed-balanced` is meant for a neutral key or a white-balanced camera.
 - Root should capture before/after under the **same** light settings, and ideally once with
   `SUN light_color` = white, without saving. The lighting owner decides the final key colour.
+
+## 10. Repair: bed albedo textures imported as normal maps (root parity export 13:51:49)
+
+Root's export shows:
+- **Pixels match.** All four bed albedo PNGs decode to exactly GLB image 15: RGBA sha256
+  `0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e`, max diff 0, linear mean
+  (0.28151, 0.40375, 0.60812), p99 (0.32778, 0.45641, 0.66539).
+- **Settings are wrong.** All four UE assets have **sRGB False, TC_NORMALMAP**. The parity
+  guard refuses them, and still does.
+- **Effect on the render.** The originals are sampled without the sRGB decode. TC_NORMALMAP is
+  BC5 (red and green only, blue reconstructed), so the bed colour in the render is not the
+  texture's colour at all. The originals stay reported as "imported as a NORMAL MAP: refused
+  as colour" and are never accepted.
+
+Repair (all owned, reversible):
+1. **Repair step.** `--repair-albedo-textures` first checks the bed mapping; it must be clean
+   apart from the distinct-texture problem. It then requires each original to be exactly the
+   measured state: sRGB False, TC_NORMALMAP, LOD bias 0, neutral `adjust_*`.
+   - It runs `EditorAssetLibrary.duplicate_asset` into
+     `/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_<Image_14x>`.
+   - On the CLONE only it sets `srgb=True` and
+     `compression_settings=TextureCompressionSettings.TC_DEFAULT`, and tags
+     `sub01_matfix_duplicate_of=<original>`.
+   - Before saving the clone alone, it verifies that the original's settings and `.uasset` sha256
+     are unchanged, and that the editor's PNG export of clone and original are byte-identical.
+   - Re-running it verifies the existing clones and creates nothing. It refuses if an existing
+     clone's pixels, settings or tag differ.
+2. **Clone mode.** With `--albedo-clones` (or the preset `albedo-color-clones`), the bed MICs
+   override the real enumerated `BaseColorTexture` with the clone. With `bed-intended`, they
+   also set `BaseColorFactor`. The real `NormalTexture` and everything else are inherited.
+3. **Live guard.** A tint preset whose live base texture has sRGB False and no clone is refused.
+   This also covers the sofa's `Image_43`, if its export shows the same defect; the sofa clone
+   is a follow-up.
+4. **Parity for clones.** The guard now takes a `clone_of` map. Each clone must:
+   - sit under the explicit prefix `/Game/Sub01Home/MaterialFix/Textures/SUB01_MatFix_Albedo_`;
+   - record `duplicate_of` equal to its original, with the import data still naming the GLB;
+   - have a pixel hash equal to GLB image 15 (and the reference must be root's `0157e1e9…`);
+   - have sRGB True and TC_DEFAULT.
+
+   `--export --clones` exports the originals and the clones.
+5. **Restore.** `--restore` puts the slots back, then deletes the owned MICs and clones (owned
+   prefix only).
+
+Predicted albedo, recomputed from the measured image-15 linear mean:
+- Clone albedo (no tint): #91aacd, Y 0.393, hue 214°.
+- `bed-intended` mattress/pillows/duvet: #8ca3bc, Y 0.353. Headboard: #676435, Y 0.122.
+- `bed-balanced` stays held until root's clone parity file is available. It then uses that
+  file's measured mean.
+
+### Root sequence (one repair editor pass)
+
+```bash
+# (a) done: parity export of the originals
+# (b)-(e) as ONE guarded command (stops at the first failure; finalize runs in-editor if PIL/numpy exist):
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --repair-and-apply --preset bed-intended --quit" -unattended -nosplash
+#   writes <project>/Saved/SUB01MaterialFix/parity-<ns>/{*.png,texture-settings.json,texture-parity.json}
+
+# or step by step:
+# (b) ... -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --repair-albedo-textures --quit"
+# (c) ... -ExecutePythonScript="<repo>/tools/unreal_export_texture_parity.py --export <empty-dir> --clones --quit"
+#     python3 tools/unreal_export_texture_parity.py --finalize <empty-dir> --glb <project>/SourceAssets/full-home.glb > texture-parity.json
+# (d) python3 tools/unreal_home_materials_fix.py --mapping-check --inventory <inventory.json> --parity texture-parity.json --albedo-clones
+# (e) ... -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --apply --preset bed-intended --albedo-clones --parity <abs>/texture-parity.json --quit"
+# rollback: ... --restore --quit   (slots back, owned MICs + clones deleted)
+```
+
+If PIL/numpy are missing in the editor's Python, `--repair-and-apply` stops after the clone
+export and prints the `--finalize` and `--apply` commands. Add `--preset sofa-intended` only
+after the sofa texture is confirmed to be a colour import; otherwise the live guard refuses it.

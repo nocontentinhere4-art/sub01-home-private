@@ -141,6 +141,7 @@ class World:
         self.assets, self.actors, self.saved_assets, self.level_saves = {}, [], [], 0
         self.project_dir = str(project_dir)
         self.names_override = {}
+        self.duplicated, self.deleted = [], []
 
 
 def make_unreal(world):
@@ -177,9 +178,41 @@ def make_unreal(world):
             return asset
 
     u.AssetToolsHelpers = types.SimpleNamespace(get_asset_tools=lambda: Tools())
-    u.EditorAssetLibrary = types.SimpleNamespace(save_loaded_asset=lambda a: world.saved_assets.append(a.get_path_name()) or True,
-                                                 get_metadata_tag=lambda a, t: None,
-                                                 set_metadata_tag=lambda a, t, v: None)
+    tags = {}
+
+    def duplicate_asset(source, dest):
+        original = world.assets.get(source)
+        if original is None or dest in world.assets:
+            return None
+        clone = copy.copy(original)
+        clone._props = dict(original._props)
+        clone._path = dest + '.' + dest.rsplit('/', 1)[-1]
+        world.assets[dest] = clone
+        world.duplicated.append((source, dest))
+        return clone
+
+    def delete_asset(path):
+        world.deleted.append(path)
+        return world.assets.pop(path, None) is not None
+
+    u.EditorAssetLibrary = types.SimpleNamespace(
+        save_loaded_asset=lambda a, *_: world.saved_assets.append(a.get_path_name()) or True,
+        get_metadata_tag=lambda a, t: tags.get((a.get_path_name(), t)),
+        set_metadata_tag=lambda a, t, v: tags.__setitem__((a.get_path_name(), t), v),
+        duplicate_asset=duplicate_asset, delete_asset=delete_asset)
+    u.TextureCompressionSettings = types.SimpleNamespace(TC_DEFAULT='TextureCompressionSettings.TC_DEFAULT')
+
+    class ExportTask(Obj):
+        def __init__(self):
+            super().__init__('/Engine/Transient.ExportTask')
+
+    def run_export(task):
+        tex = task.get_editor_property('object')
+        Path(task.get_editor_property('filename')).write_bytes(b'PNG' + getattr(tex, 'pixels', b'same'))
+        return True
+
+    u.AssetExportTask = ExportTask
+    u.Exporter = types.SimpleNamespace(run_asset_export_task=run_export)
     u.SystemLibrary = types.SimpleNamespace(quit_editor=lambda: None)
 
     def chain(material, attr):
@@ -326,7 +359,10 @@ def test_restore_puts_back_originals(tmp_path):
     u = make_unreal(world)
     originals = {k: c.get_material(0) for k, c in bed_components(world).items()}
     fix.apply(['bed-intended'], u=u)
-    assert fix.restore(u=u) == {'restored_slots': 4}
+    result = fix.restore(u=u)
+    assert result['restored_slots'] == 4
+    assert sorted(result['deleted_owned_assets']) == sorted(
+        fix.OWNED_DIR + '/' + fix.owned_name(n) for _, n in BED_GROUPS if 'upholstery' in n)
     assert {k: c.get_material(0) for k, c in bed_components(world).items()} == originals
     with pytest.raises(fix.MaterialFixError):
         fix.restore(u=u)  # nothing recorded any more
@@ -808,3 +844,200 @@ def test_parity_export_is_read_only_and_guarded(tmp_path):
     assert world.saved_assets == [] and world.level_saves == 0
     with pytest.raises(parity.ParityError, match='empty'):
         parity.export_textures(tmp_path / 'b', u=u)
+
+
+# ---------------------------------------------------------------------------
+# Albedo repair: owned sRGB / TC_DEFAULT clones of normal-map-imported bed textures
+# ---------------------------------------------------------------------------
+REAL_SHA = '0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e'
+IMG = '/Game/Sub01Home/ImportedScene/full-home/Textures/'
+
+
+def build_normalmap_world(tmp_path):
+    """Root's measured state: 4 distinct bed textures (Image_148/149/1410/1411), sRGB False, TC_NORMALMAP."""
+    world = build_world(tmp_path)
+    names = {'teal': 'Image_148', 'cream': 'Image_149', 'linen': 'Image_1410', 'blue_fabric': 'Image_1411'}
+    normal = Texture2D(IMG + 'Image_150.Image_150', (512, 512), srgb=False)
+    for _, name in BED_GROUPS:
+        if 'upholstery' not in name:
+            continue
+        key = next(k for k in names if '_' + k + '_' in name)
+        tex = Texture2D(IMG + names[key] + '.' + names[key], (512, 512), srgb=False)
+        tex._props.update(dict(parity.ADJUST_DEFAULTS, compression_settings='TextureCompressionSettings.TC_NORMALMAP',
+                               lod_bias=0))
+        tex.pixels = b'image15'
+        world.assets[IMG + names[key]] = tex
+        material = world.assets[MAT_DIR + name]
+        material.textures = {'BaseColorTexture': tex, 'NormalTexture': normal}
+    world.assets[GLTF_PARENT].textures = {'BaseColorTexture': None, 'NormalTexture': None}
+    return world
+
+
+def clone_parity(**changes):
+    doc = synthetic_parity([parity.clone_path(p) for p in REAL_BED_TEXTURES])
+    doc['reference']['decoded_rgba_sha256'] = REAL_SHA
+    for t in doc['textures']:
+        t['decoded_rgba_sha256'] = REAL_SHA
+        t['source_provenance']['duplicate_of'] = REAL_BED_TEXTURES[[parity.clone_path(p) for p in
+                                                                    REAL_BED_TEXTURES].index(t['asset_path'])]
+        t['stats']['linear_mean'] = list(spec.REAL_IMAGE15_LINEAR_MEAN)
+        t['stats']['linear_p99'] = list(spec.REAL_IMAGE15_LINEAR_P99)
+        t.update(changes.get('all', {}))
+    # originals as root measured them: same pixels, imported as normal maps (reported, never accepted)
+    for p in REAL_BED_TEXTURES:
+        o = synthetic_parity([p])['textures'][0]
+        o.update(decoded_rgba_sha256=REAL_SHA, srgb=False, compression='TC_NORMALMAP')
+        doc['textures'].append(o)
+    return doc
+
+
+def test_repair_creates_owned_srgb_clones_and_leaves_originals(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    originals = {p: dict(world.assets[p.split('.')[0]]._props) for p in REAL_BED_TEXTURES}
+    report = fix.repair_albedo_textures(u=u)
+    assert [r['action'] for r in report['textures']] == ['created'] * 4
+    for p in REAL_BED_TEXTURES:
+        clone = world.assets[parity.clone_path(p).split('.')[0]]
+        assert clone.get_editor_property('srgb') is True
+        assert 'TC_DEFAULT' in str(clone.get_editor_property('compression_settings'))
+        assert clone.get_editor_property('lod_bias') == 0
+        assert world.assets[p.split('.')[0]]._props == originals[p]          # original untouched
+        assert p not in world.saved_assets and p.split('.')[0] not in world.saved_assets
+    assert all(path.startswith(parity.CLONE_ROOT) for path in world.saved_assets)
+    assert world.level_saves == 0
+    # idempotent: second run verifies, creates nothing
+    again = fix.repair_albedo_textures(u=u)
+    assert [r['action'] for r in again['textures']] == ['verified existing'] * 4 and len(world.duplicated) == 4
+
+
+def test_repair_refuses_tampered_existing_clone(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    fix.repair_albedo_textures(u=u)
+    clone = world.assets[parity.clone_path(REAL_BED_TEXTURES[0]).split('.')[0]]
+    clone.pixels = b'other'
+    with pytest.raises(fix.MaterialFixError, match='pixels differ'):
+        fix.repair_albedo_textures(u=u)
+    clone.pixels = b'image15'
+    clone.set_editor_property('srgb', False)
+    with pytest.raises(fix.MaterialFixError, match='sRGB'):
+        fix.repair_albedo_textures(u=u)
+
+
+def test_repair_refuses_unexpected_original_state(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    world.assets[REAL_BED_TEXTURES[1].split('.')[0]].set_editor_property('srgb', True)
+    with pytest.raises(fix.MaterialFixError, match='not the measured normal-map import'):
+        fix.repair_albedo_textures(u=make_unreal(world))
+    assert world.duplicated == []
+
+
+def test_tint_without_clones_is_refused_on_normalmap_textures(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    doc = synthetic_parity(REAL_BED_TEXTURES)      # even a (forged) passing parity of the originals
+    with pytest.raises(fix.MaterialFixError, match='sRGB False'):
+        fix.apply(['bed-intended'], u=u, parity=doc)
+
+
+def test_apply_with_clones_overrides_only_base_texture_and_factor(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    fix.repair_albedo_textures(u=u)
+    before = fingerprints(u, world)
+    report = fix.apply(['bed-intended'], u=u, parity=clone_parity(), albedo_clones=True)
+    assert len(report['slot_changes']) == 4
+    status = report['mapping']['original_texture_status']
+    assert all(v['verdict'].startswith('imported as a NORMAL MAP') for v in status.values()) and len(status) == 4
+    for label, name in BED_GROUPS:
+        if 'upholstery' not in name:
+            continue
+        mic = bed_components(world)[label].get_material(0)
+        assert set(mic.textures) == {'BaseColorTexture'}
+        assert mic.textures['BaseColorTexture'].get_path_name().startswith(parity.CLONE_ROOT)
+        assert set(mic.vectors) == {'BaseColorFactor'} and not mic.scalars
+        parent = mic.get_editor_property('parent')
+        assert parent.textures['NormalTexture'].get_path_name().endswith('Image_150.Image_150')  # inherited
+    assert fingerprints(u, world) == before
+    assert fix.apply(['bed-intended'], u=u, parity=clone_parity(), albedo_clones=True)['slot_changes'] == []
+    # albedo-only preset on a fresh world: only the texture parameter
+    world2 = build_normalmap_world(tmp_path / 'b')
+    u2 = make_unreal(world2)
+    fix.repair_albedo_textures(u=u2)
+    fix.apply(['albedo-color-clones'], u=u2, parity=clone_parity())
+    mic = bed_components(world2)['CC0_queen_2'].get_material(0)
+    assert set(mic.textures) == {'BaseColorTexture'} and not mic.vectors and not mic.scalars
+
+
+def test_restore_deletes_owned_clones_and_mics(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    originals = {k: c.get_material(0) for k, c in bed_components(world).items()}
+    fix.repair_albedo_textures(u=u)
+    fix.apply(['bed-intended'], u=u, parity=clone_parity(), albedo_clones=True)
+    result = fix.restore(u=u)
+    assert {k: c.get_material(0) for k, c in bed_components(world).items()} == originals
+    assert len(result['deleted_owned_assets']) == 8
+    assert not [p for p in world.assets if p.startswith(fix.OWNED_DIR)]
+    assert all(p.split('.')[0] in world.assets for p in REAL_BED_TEXTURES)
+
+
+@pytest.mark.parametrize('defect, needle', [
+    ({'all': {'srgb': False}}, 'sRGB'),
+    ({'all': {'compression': 'TC_NORMALMAP'}}, 'compression'),
+    ({'all': {'decoded_rgba_sha256': 'f' * 64, 'max_abs_diff_vs_reference_8bit': 7}}, 'pixels differ'),
+])
+def test_clone_parity_refuses_defects(defect, needle):
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    report = fix.mapping_check(model, ['bed-intended'], clone_parity(**defect), albedo_clones=True)
+    assert not report['ok'] and any(needle in p for p in report['parity_problems'])
+
+
+@pytest.mark.skipif(not REAL_INVENTORY.is_file(), reason='real inventory absent')
+def test_clone_parity_on_real_inventory_and_non_owned_paths():
+    model = fix.model_from_inventory(json.loads(REAL_INVENTORY.read_text()))
+    ok = fix.mapping_check(model, ['bed-intended'], clone_parity(), albedo_clones=True)
+    assert ok['ok'], [t['problems'] for t in ok['targets']]
+    assert ok['texture_mean_used']['linear_mean'] == pytest.approx(list(spec.REAL_IMAGE15_LINEAR_MEAN))
+    # originals alone (root's measured normal-map imports) are refused as colour
+    originals_only = clone_parity()
+    originals_only['textures'] = [t for t in originals_only['textures'] if not parity.is_clone_path(t['asset_path'])]
+    assert not fix.mapping_check(model, ['bed-intended'], originals_only)['ok']
+    # a claimed clone outside the owned prefix, or with the wrong duplicate_of, is refused
+    problems, _, _ = parity.validate_parity(clone_parity(), ['/Game/Elsewhere/T.T'],
+                                            clone_of={'/Game/Elsewhere/T.T': REAL_BED_TEXTURES[0]})
+    assert any('owned clone prefix' in p for p in problems)
+    wrong = clone_parity()
+    wrong['textures'][0]['source_provenance']['duplicate_of'] = REAL_BED_TEXTURES[1]
+    assert not fix.mapping_check(model, ['bed-intended'], wrong, albedo_clones=True)['ok']
+    # a reference that is not root's measured image-15 hash is refused for clones
+    bad_ref = clone_parity()
+    bad_ref['reference']['decoded_rgba_sha256'] = 'e' * 64
+    for t in bad_ref['textures']:
+        t['decoded_rgba_sha256'] = 'e' * 64
+    assert not fix.mapping_check(model, ['bed-intended'], bad_ref, albedo_clones=True)['ok']
+
+
+def test_predictions_use_measured_image15_pixels():
+    target = spec.plan(['bed-intended'])['targets'][0]
+    assert target['texture_linear_mean_used'] == pytest.approx(list(spec.REAL_IMAGE15_LINEAR_MEAN), abs=1e-4)
+    ivory = target['predicted']['Original cream upholstery']['after']
+    assert ivory['linear'] == pytest.approx([0.9301 * 0.28151, 0.9047 * 0.40375, 0.8308 * 0.60812], abs=2e-4)
+
+
+def test_repair_and_apply_single_command(tmp_path, monkeypatch):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    for p in REAL_BED_TEXTURES:
+        world.assets[p.split('.')[0]]._props['asset_import_data'] = None
+    monkeypatch.setattr(parity, 'finalize', lambda out, glb: clone_parity())
+    report = fix.repair_and_apply(['bed-intended'], u=u, glb=tmp_path / 'full-home.glb')
+    assert len(report['slot_changes']) == 4 and Path(report['parity_file']).is_file()
+    # a failing parity stops before any slot change
+    world2 = build_normalmap_world(tmp_path / 'b')
+    u2 = make_unreal(world2)
+    monkeypatch.setattr(parity, 'finalize', lambda out, glb: clone_parity(all={'srgb': False}))
+    with pytest.raises(fix.MaterialFixError):
+        fix.repair_and_apply(['bed-intended'], u=u2, glb=tmp_path / 'full-home.glb')
+    assert world2.level_saves == 0
