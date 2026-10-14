@@ -82,4 +82,7 @@ def install(header,cpp):
  }
 '''
     cpp=cpp.replace(control,replay+control,1)
+    first='#include "Sub01HomeLab.h"'
+    if cpp.count(first)!=1:raise ValueError('Unique native first include required')
+    cpp=cpp.replace(first,first+'\n#include "Animation/AnimSingleNodeInstance.h"',1)
     return header,cpp+'\n'+METHODS
