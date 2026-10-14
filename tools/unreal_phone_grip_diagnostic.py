@@ -16,6 +16,9 @@ FIELDS=r'''
  void ConfigurePrivatePhoneGripReview();
  void UpdatePrivatePhoneGripReview();
 '''
+CONTROL=r'''
+ FString PhoneCandidate;if(Doc->TryGetStringField(TEXT("phoneGripCandidate"),PhoneCandidate)&&!PhoneCandidate.IsEmpty()&&PhoneCandidate.Len()<=200)NativePhoneGripCandidate(PhoneCandidate);
+'''
 METHODS=r'''
 #include "Animation/AnimSingleNodeInstance.h"
 void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
@@ -26,7 +29,7 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("RightHand")))PhoneGripWrist=Ref.GetBoneName(I);
  if(PhoneGripWrist.IsNone())return;
- float Time=4;FParse::Value(FCommandLine::Get(),TEXT("Sub01PhonePoseTime="),Time);auto* Clip=HandsClips.FindRef(TEXT("Phone")).Get();
+ float Time=4;FParse::Value(FCommandLine::Get(),TEXT("Sub01PhonePoseTime="),Time);if(!FMath::IsFinite(Time))return;auto* Clip=HandsClips.FindRef(TEXT("Phone")).Get();
  PhoneGripCapturedClip=Clip;PhoneGripPoseTime=FMath::Clamp(Time,0.f,Clip->GetPlayLength());
  FirstPersonBody->PlayAnimation(Clip,false);FirstPersonBody->SetPosition(FMath::Clamp(Time,0.f,Clip->GetPlayLength()),false);FirstPersonBody->SetPlayRate(0);
  FirstPersonBody->RefreshBoneTransforms();FirstPersonBody->UpdateComponentToWorld();
@@ -70,4 +73,8 @@ def install(header,cpp):
     header=header.replace(' void ConfigureActualPC();',' void ConfigureActualPC();'+FIELDS,1)
     cpp=cpp.replace(' ConfigureActualPC();',' ConfigureActualPC();\n ConfigurePrivatePhoneGripReview();',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n UpdatePrivatePhoneGripReview();',1)
+    control=' FString Capture;if(Doc->TryGetStringField(TEXT("capture"),Capture)'
+    if cpp.count('void ASub01HomeCharacter::UpdatePrivateNativeControl(){')!=1 or cpp.count(control)!=1:
+        raise ValueError('Unique protected native-control callback required')
+    cpp=cpp.replace(control,CONTROL+control,1)
     return header,cpp+'\n'+METHODS
