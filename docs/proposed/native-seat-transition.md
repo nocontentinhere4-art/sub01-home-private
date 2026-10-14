@@ -1,81 +1,83 @@
-# Native seat transition: integration proposal (not applied)
+# Native seat transition: implementation and how to apply it
 
-Module: `tools/native_seating/Sub01SeatTransition.h`, which is engine-free and compiled by
-`tests/test_native_seat_transition.py`. It adds a typed, fail-closed seat state that follows
-the real CharacterMovement capsule and the captured owner clips. It never moves the
-capsule while a sit clip plays, never places the actor, and never reports contact on its
-own. No runtime generator, bridge or staging file is changed by this commit.
+Files owned by this work:
+- `tools/native_seating/Sub01SeatTransition.h`: an engine-free state machine and receipt rules.
+- `tools/unreal_seat_transition_runtime.py`: the evidence builder, the C++ adapter and
+  `install()`.
+- Tests: `tests/test_native_seat_transition.py`, `tests/test_unreal_seat_transition_runtime.py`.
 
-## Evidence it uses
+No runtime generator, bridge or staging file is edited. `install()` is applied by the runtime
+owner to already staged sources, after the renderer's measured reports exist. Without it, the
+live home is unchanged.
 
-| Fact | Source | Value |
-|---|---|---|
-| StandToSit duration, hips travel | `inventory_native_seating.py` on `room_mx_stand_to_sit.glb` (unchanged 65-bone owner) | 2.233 s; hips 37.857 cm back and 16.3 cm down |
-| SitToStand duration, hips travel | `room_mx_sit_to_stand.glb` | 2.067 s; hips 35.113 cm forward |
-| Cushion | `unreal_chair_surface_audit.py` → `private-audit/native-chair-surface.json` | measured triangles and bounds, one component, no errors |
-| Seat contact | `unreal_audit_seat_contact.py` → `native-seat-contact.json` (+ `native-seat-correction.json`) | per-patch, two-sided, probe only |
+## Apply (server, after the measured reports)
 
-The tests tie the header constants to the inventory. With the authored cushion centre
-(200, −190) and seated heading −90°, the clip-derived approach point is (200, −227.86). That
-is within 4.5 cm of the reviewed diagnostic anchor (−232.3), which cross-checks it. The real
-value must come from the measured cushion, not from these numbers.
+```
+# 1. measured inputs (server editor)
+unreal_chair_surface_audit.py     -> private-audit/native-chair-surface.json
+unreal_audit_seat_contact.py      -> private-audit/native-seat-contact.json (+ native-seat-correction.json)
+# 2. evidence (any Python; refuses unless the contact report is accepted)
+python tools/unreal_seat_transition_runtime.py <UE project dir>   -> private-audit/native-seat-evidence.json
+# 3. after stage_unreal_home_runtime.stage(project):
+python -c "import sys;sys.path.insert(0,'tools');import unreal_seat_transition_runtime as a;a.install_module('<project>/Source/Sub01HomeLab')"
+```
 
-## Phases (`ESub01SeatPhase`)
+The seating clips must already be imported to `/Game/Sub01Hands/Seating/SUB01_{StandToSit,Sitting,SitToType,SitToStand}`
+by `unreal_import_seating_fbx.py`, on the same owner USkeleton. A missing role makes the
+machine refuse to sit, or keeps him seated without the PC.
 
-`Standing` → `Aligning` (turn in place, no translation) → `SittingDown` (StandToSit,
-movement input off) → `Seated` (Sitting loop) → `StandingUp` (SitToStand, movement input
-off) → `Standing`. When the seat is wanted but cannot be taken, the phase is `Refused`,
-with one of these reasons: `ChairUnmeasured`, `Private`, `Stale`, `Blocked`,
-`ClipUnavailable`.
+If the contact report is out of band, there is no evidence file. Sitting still works from the
+measured cushion alone (approach = cushion centre + the captured hips travel of 37.857 cm), but
+`ContactVerified`, `NativeSeatVerified` and PC focus stay false. Apply the proposal in
+`native-seat-correction.json`, re-measure, and rebuild the evidence.
 
-- **Interrupted while sitting down** by a command change: it stands up from the matching
-  point of the captured get-up (`ClipStartSeconds = (1 − sit progress) × 2.067 s`).
-- **Command change while seated**: it plays the full get-up. Movement returns only when the
-  get-up ends. A new seat command during a get-up re-sits afterwards, through the clips.
-- **Sit clip never starts** (0.5 s): the body never moved, so the machine returns to
-  `Refused`/`ClipUnavailable`, movement is allowed, and it won't retry for that command.
-- **Get-up clip never starts**: movement stays off, because a seated body must not glide.
-- **Privacy or a stale command while seated**: the body stays seated, focus is off and
-  nothing moves.
-- **Contact**: `ContactVerified` only in `Seated`, from a fresh in-band receipt (≤ 3 s) for
-  the current command. `PCFocusAllowed` additionally requires public and fresh state.
+## What the adapter does each live tick
 
-## Hook points (for the runtime owner to apply)
+- **Inputs, all from existing live fields:**
+  - command identity = epoch | sequence | activity;
+  - the seat is wanted only at the `desk` node with an empty path and a desk activity;
+  - typing is wanted for use_computer / research / chart;
+  - freshness (≤ 3 s), privacy, blocked, chair measured and its revision (the exact chair-report
+    text);
+  - the bound roles;
+  - arrival at the approach point (< 12 cm, on ground) and the heading error;
+  - the requested clip playing on the hands instance and its time (the contact profile's actually
+    evaluated time while typing);
+  - the receipt, from the live `FirstPersonBody` world transform via `Sub01SeatReceipt`.
+- **Movement:** `AddMovementInput` toward the approach point (the audited mesh anchor minus the
+  mesh offset, or the cushion fallback); a bounded turn in place at 103°/s; otherwise
+  `StopMovementImmediately`. The live loop's walking code is gated by
+  `!SeatOut.MovementInput && path` → stop and return. A seated body never walks off.
+- **Animation:** after `Tick` picks the posture clip, `ApplySeatAnimation` overrides it with
+  the requested seat clip. Playback restarts only when `ClipSerial` changes. A serial-guarded
+  proxy hook starts the clip at `ClipStartSeconds` (mid-sit get-up) and disables looping for
+  the transitions. While seated, the camera follows the captured Head bone, and it is restored
+  on standing.
+- **Verification:** `NativeSeatVerified = SeatOut.ContactVerified` is the only assignment.
+  `SeatOut.PCFocusAllowed` false forces focus off. The existing ACK lease and PC-command guard
+  remain in place.
 
-1. **`tools/unreal_live_home_runtime.py`, `UpdateLiveHome`**, after the path is empty at
-   `desk`:
-   - add one final approach leg to `Sub01SeatApproachPoint(cushion centre, seated yaw)`,
-     with the same `AddMovementInput` and the 12 cm / 20 cm floor arrival gate. Read the
-     cushion centre from the chair report, not a constant;
-   - every tick, fill `FSub01SeatInputs` from the existing fields: `LiveHomeCommandSequence`
-     plus the activity as `Command`, `LiveHomeFresh`, `LiveHomePrivate`, `LiveHomeBlocked`;
-   - when `MovementInput` is false, skip `AddMovementInput` and call
-     `StopMovementImmediately()`;
-   - when `TurnInPlace` is true, apply only the bounded yaw from
-     `tools/first_person_yaw.py` (already integrated).
-2. **`tools/unreal_home_hands_runtime.py`**: add roles `StandToSit`, `Sitting` and
-   `SitToStand` bound to `/Game/Sub01Hands/Seating/SUB01_<role>` (from
-   `unreal_import_seating_fbx.py`, same USkeleton).
-   - Start them at `ClipStartSeconds`.
-   - Report the instance's accumulated time as `ClipSeconds`, and `ClipPlaying` only when the
-     playing sequence is the requested one.
-   - The mesh stays attached to the capsule, and the in-place hips travel carries the body
-     onto the seat.
-3. **Receipt**: `ReceiptInBand = Sub01SeatPoseMatchesAudit(evidence, capsule X/Y, yaw,
-   Sitting playing)`.
-   - `FSub01SeatEvidence.AuditInBand` comes from an accepted `native-seat-contact.json` for
-     that exact anchor and heading. The renderer supplies it as a measured report, not a
-     flag.
-   - `ReceiptCommand` is the current command, and `ReceiptAgeSeconds` is the time since the
-     check last passed.
-4. **`NativeSeatVerified = Out.ContactVerified`**. This is the only assignment. The existing
-   sender then reports `seated` with `chair=desk_chair`. The existing `NativeFeedbackSeatReady`
-   ACK lease and `NativePCCommand` guard keep PC focus off until the backend acknowledges.
-   `Out.PCFocusAllowed` is an additional local condition, not a replacement.
+## The state machine (`FSub01SeatTransition`)
+
+Standing → Aligning (turn in place) → SittingDown (StandToSit, 2.233 s) → SeatedIdle
+(Sitting) → ToTyping (SitToType, 1.2 s) → Typing (DeskTyping) → StandingUp (SitToStand,
+2.067 s) → Standing. Refused carries a reason: ChairUnmeasured, Private, Stale, Blocked,
+RoleMissing, ClipUnavailable or ChairChanged.
+
+- **Contact** is verified only while Typing, the audited family. It holds for at most 3 s after
+  the last passing receipt and is cleared by a command or chair change.
+- **A receipt** requires accepted evidence: per-patch worst gap, median and coverage in band;
+  finite values; the same mesh, clip, family and chair; a pose time inside the audited range;
+  within 2 cm in 3D, 3° of heading and 0.1% of scale.
+- **Alignment** refuses Blocked and a changed chair.
+- **Never sits** without the sit and stand-up roles.
+- **Failure handling:** a sit or bridge clip that never starts fails closed; a get-up that never
+  starts keeps movement off.
 
 ## Not claimed
 
-The module is not applied, and nothing here is native runtime evidence. Seat contact stays
-unverified until the measured report and a runtime pose match both exist. Not covered here:
-the backrest (watch mode), clearance for the thighs under the desk, the chair frame, and
-the visual blend quality between Walk and StandToSit.
+None of this is native runtime evidence until the editor build, the measured reports, and a
+viewport and log check of `SUB01_SEAT_PHASE` exist. The visual blend between the captured
+clips is unmeasured. That matters in particular for the 7 cm hip difference between the end of
+StandToSit and the start of SitToType. The backrest, thighs-under-desk and chair-frame
+clearance are not covered.
