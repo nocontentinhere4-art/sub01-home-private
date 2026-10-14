@@ -181,9 +181,17 @@ class MinecraftConsole:
                     await page.wait_for_function('() => globalThis.sub01TerrainReady?.() === true', timeout=15000)
                     if self._render_owner() != owner:
                         continue
+                # Read-only product-renderer receipt: actual protocol item identities
+                # and decoded texture status, never fabricated entities or pixels.
+                receipts = None
+                if callable(getattr(page, 'evaluate', None)):
+                    receipts = await page.evaluate('() => Object.values(globalThis.sub01ItemRenderReceipts || {}).slice(0, 100)')
                 frame = await page.screenshot(type='jpeg', quality=75, timeout=10000)
                 if self._render_owner() == owner:
                     self.frame = frame
+                    if receipts is not None:
+                        (self.directory / 'frame-rendering.json').write_text(json.dumps(
+                            {'frame_tag': self.frame_tag, 'entities': receipts}, sort_keys=True))
                     self.frame_kind = 'active' if active else 'initial_idle'
                     bootstrapped = True
                     if not active:

@@ -11,6 +11,7 @@ const { supportsPlayer, escapeTarget, placementSite } = require('./spatial.cjs')
 const { harvestResource } = require('./resources.cjs');
 const { viewerBootstrap } = require('./viewer_bootstrap.cjs');
 const { instrumentViewerBundle } = require('./viewer_readiness.cjs');
+const { entityPacket } = require('./item_rendering.cjs');
 const fs = require('node:fs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
@@ -86,7 +87,11 @@ io.on('connection', socket => {
   const current = bot;
   if (!connected || !current?.entity) return;
   socket.emit('version', current.version);
-  const world = new WorldView(current.world, 2, current.entity.position, socket);
+  const Item = require('prismarine-item')(current.registry);
+  const textureExists = name => fs.existsSync(path.join(viewerPublic, name));
+  const transport = {on: socket.on.bind(socket), emit: (event, packet) =>
+    socket.emit(event, event === 'entity' ? entityPacket(packet,current,Item,textureExists) : packet)};
+  const world = new WorldView(current.world, 2, current.entity.position, transport);
   world.init(current.entity.position);
   const position = () => {
     if (!current.entity) return;
@@ -96,6 +101,11 @@ io.on('connection', socket => {
   };
   current.on('move', position);
   world.listenToBot(current);
+  const itemUpdated = entity => {
+    if (entity.name === 'item') transport.emit('entity', {id:entity.id,name:entity.name,
+      pos:entity.position,width:entity.width,height:entity.height});
+  };
+  current.on('entityUpdate',itemUpdated);
   // Upstream ignores our player on spawn but still forwards its movement,
   // creating a fallback entity cube directly in the first-person camera.
   const moved = world.listeners[current.username].entityMoved;
@@ -106,6 +116,7 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     current.removeListener('move', position);
     world.removeListenersFromBot(current);
+    current.removeListener('entityUpdate',itemUpdated);
   });
 });
 async function walkTo(position, horizontalOnly = false) {
