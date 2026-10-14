@@ -25,6 +25,7 @@ public:
  UFUNCTION(BlueprintCallable) void SetTypedLine(const FString& Line);
  UFUNCTION(BlueprintCallable) void SubmitTypedLine();
  UFUNCTION(BlueprintPure) FString GetPCStatus() const { return Status; }
+ bool HasOperatorFocus() const { return Focused; }
  bool IsAcceptingNativeInput() const { return Focused&&!Private&&!LocalPrivacy; }
  bool IsGraphicalInputActive() const { return IsAcceptingNativeInput()&&GuestPS2Input; }
  void SendGraphicalKey(uint32 ScanCode,bool Shift,bool Control,bool Alt);

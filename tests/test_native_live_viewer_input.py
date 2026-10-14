@@ -132,3 +132,42 @@ def test_native_camera_privacy_requires_fresh_current_process_receipt():
     assert native_camera_privacy(receipt,(42,100),499) is None
     receipt['physical_camera_private']=True
     assert native_camera_privacy(receipt,(42,100),500.2) is True
+
+
+@pytest.mark.parametrize('event,allowed', [
+    ({'action':'key','code':'KeyW','down':True},True),
+    ({'action':'key','code':'KeyS','down':False},True),
+    ({'action':'mouse','dx':1,'dy':-1},True),
+    ({'action':'release'},True),
+    ({'action':'key','code':'KeyE','down':True},False),
+    ({'action':'key','code':'Enter','down':True},False),
+    ({'action':'button','button':1,'down':True},False),
+])
+def test_private_egress_is_movement_only(event,allowed):
+    from tools.pixel_streaming.native_live_viewer import private_egress_event
+    assert private_egress_event(validate_input(event)) is allowed
+
+
+def test_egress_requires_known_backend_and_current_native_focus_revocation(tmp_path):
+    state=LiveState(time.time()+30)
+    state.private=tmp_path
+    state.native=lambda:(42,100)
+    state.privacy=lambda:True
+    state.backend_privacy_value=False
+    (tmp_path/'native-viewer-input-enabled').write_text(json.dumps({
+        'native_pid':42,'native_start_ticks':100,'view_mode':'manual'}))
+    receipt={'native_pid':42,'native_start_ticks':100,'captured_utc':time.time(),
+             'physical_camera_private':True,'private_egress_ready':True}
+    path=tmp_path/'native-view-privacy.json'
+    path.write_text(json.dumps(receipt))
+    assert state.can_private_egress()
+    state.backend_privacy_value=None
+    assert not state.can_private_egress()
+    state.backend_privacy_value=False
+    receipt['private_egress_ready']=False
+    path.write_text(json.dumps(receipt))
+    assert not state.can_private_egress()
+    receipt['private_egress_ready']=True
+    receipt['native_start_ticks']=99
+    path.write_text(json.dumps(receipt))
+    assert not state.can_private_egress()

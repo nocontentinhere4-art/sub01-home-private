@@ -17,6 +17,8 @@ INCLUDES = r'''
 #include "Components/DirectionalLightComponent.h"
 #include "Math/RotationMatrix.h"
 #include "Misc/DateTime.h"
+#include "Sub01PCBridge.h"
+#include "Sub01HomeDeviceBridge.h"
 '''
 
 FIELDS = r'''
@@ -24,6 +26,7 @@ FIELDS = r'''
  void PublishPrivateNativeCameraPrivacy(bool Hidden);
  double NativePrivacyPublishedAt=-10;
  bool NativePrivacyLast=true;
+ bool NativePrivacyLastEgress=false;
  int64 NativePrivacyStartTicks=0;
  void ApplyPrivateViewSettings(const TSharedPtr<FJsonObject>& Document,int32 Revision);
  void WritePrivateViewSettingsReceipt(int32 Revision,bool Accepted,const FString& Error);
@@ -35,11 +38,14 @@ FIELDS = r'''
 
 METHODS = r'''
 void ASub01HomeCharacter::PublishPrivateNativeCameraPrivacy(bool Hidden){
- const double Now=FPlatformTime::Seconds();if(Hidden==NativePrivacyLast&&Now-NativePrivacyPublishedAt<.2)return;
+ const auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>();
+ const bool EgressReady=Hidden&&PrivateViewMode==EPrivateViewMode::Manual&&!LiveHome&&!RouteActive&&!HandsDiagnosticSeat&&GetCharacterMovement()->MovementMode==MOVE_Walking&&(!PCBridge||!PCBridge->HasOperatorFocus())&&(!Devices||(Devices->GetFocusedDevice().IsNone()&&!Devices->IsComposingNote()));
+ const double Now=FPlatformTime::Seconds();if(Hidden==NativePrivacyLast&&EgressReady==NativePrivacyLastEgress&&Now-NativePrivacyPublishedAt<.2)return;
+ NativePrivacyLastEgress=EgressReady;
  NativePrivacyLast=Hidden;NativePrivacyPublishedAt=Now;if(!NativePrivacyStartTicks)NativePrivacyStartTicks=PrivateSettingsStartTicks();
  const FDateTime UTC=FDateTime::UtcNow();auto Receipt=MakeShared<FJsonObject>();
  Receipt->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());Receipt->SetNumberField(TEXT("native_start_ticks"),NativePrivacyStartTicks);
- Receipt->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden);
+ Receipt->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden);Receipt->SetBoolField(TEXT("private_egress_ready"),EgressReady);
  FString Raw;FJsonSerializer::Serialize(Receipt,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-view-privacy.tmp");
  if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-view-privacy.json"),*Temp,true,true);
 }
@@ -117,7 +123,11 @@ def install(header, cpp):
     hook="void ASub01HomeCharacter::UpdateNativePCPrivacy(){"
     if cpp.count(hook)!=1:
         raise ValueError("Actual native bathroom privacy function missing")
-    cpp=cpp.replace(hook,hook+"\n const FVector ViewerEye=ViewCamera->GetComponentLocation();\n PublishPrivateNativeCameraPrivacy(ViewerEye.Z>300&&ViewerEye.X>-378&&ViewerEye.X<-85&&ViewerEye.Y>50&&ViewerEye.Y<270);",1)
+    cpp=cpp.replace(hook,hook+"\n const FVector ViewerEye=ViewCamera->GetComponentLocation();",1)
+    focus_hook=" if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>())Devices->SetLocalPrivacy(Hidden);"
+    if cpp.count(focus_hook)!=1:
+        raise ValueError("Native device privacy revocation hook missing")
+    cpp=cpp.replace(focus_hook,focus_hook+"\n PublishPrivateNativeCameraPrivacy(ViewerEye.Z>300&&ViewerEye.X>-378&&ViewerEye.X<-85&&ViewerEye.Y>50&&ViewerEye.Y<270);",1)
     cpp = cpp.replace(' const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;',
                       ' InitializePrivateViewSettings();\n const double Now=FPlatformTime::Seconds();\n ++NativeTelemetryTicks;', 1)
     cpp = cpp.replace(' FString Capture;if(Doc->TryGetStringField',

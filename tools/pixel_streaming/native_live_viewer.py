@@ -85,6 +85,10 @@ def combine_privacy(backend,physical):
     if backend is True or physical is True:return True
     return False if backend is False and physical is False else None
 
+def private_egress_event(event):
+    return (event['action']=='release' or event['action']=='mouse' or
+            event['action']=='key' and event['code'] in {'KeyW','KeyA','KeyS','KeyD'})
+
 class PhysicalInput:
     def __init__(self):
         self.x = ctypes.CDLL(ctypes.util.find_library("X11"))
@@ -136,7 +140,7 @@ HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name
 <script>
 const game=document.querySelector('#game'),status=document.querySelector('#status'),panel=document.querySelector('#panel'),control=document.querySelector('#control'),empty=document.querySelector('#empty'),dot=document.querySelector('#dot');
 const base=location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/[^/]*$/,'');
-let active=false,lastMouse=0,accepted=0,inputQueue=Promise.resolve(),streaming=false,permission=false,live=false,previous=null,streamGeneration=0;
+let active=false,lastMouse=0,accepted=0,inputQueue=Promise.resolve(),streaming=false,permission=false,privateEgress=false,live=false,previous=null,streamGeneration=0;
 window.nativeViewerDecodedFrames=0;window.nativeViewerTransport='connecting';
 function xsrf(){return document.cookie.split('; ').find(v=>v.startsWith('_xsrf='))?.split('=').slice(1).join('=')||'';}
 function settings(){if(!panel.open)panel.showModal();}
@@ -146,16 +150,16 @@ document.querySelector('#settings').onclick=()=>{release();settings();};document
 document.querySelector('#full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.querySelector('#view').requestFullscreen();};
 async function deliver(event){const r=await fetch(base+'input',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(event)});const p=await r.json();if(r.ok){accepted=p.acceptedInputs;window.nativeViewerAcceptedInputs=accepted;}else{active=false;status.textContent=p.error;}return p;}
 function send(event){const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;}
-control.onclick=async()=>{const h=await fetch(base+'health').then(r=>r.json());if(!h.inputEnabled)return;panel.close();active=true;game.requestPointerLock();};
-document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game){const was=active;if(was)releaseNativeFocus();active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
+control.onclick=async()=>{const h=await fetch(base+'health').then(r=>r.json());if(!h.inputEnabled&&!h.privacyEgressEnabled)return;privateEgress=!h.inputEnabled&&h.privacyEgressEnabled;panel.close();active=true;(privateEgress?document.querySelector('#view'):game).requestPointerLock();};
+document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game&&document.pointerLockElement!==document.querySelector('#view')){const was=active;if(was)releaseNativeFocus();active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
 const allowed=new Set(%KEYS%);
-for(const [name,down]of[['keydown',true],['keyup',false]])document.addEventListener(name,e=>{if(e.code==='Escape'&&down){if(active)release();else settings();return;}if(!active||!allowed.has(e.code)||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(!e.repeat)send({action:'key',code:e.code,down}).catch(()=>{});});
-document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==game||performance.now()-lastMouse<30)return;lastMouse=performance.now();const s=Number(document.querySelector('#sensitivity').value);send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX*s))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY*s)))}).catch(()=>{});});
-for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down}).catch(()=>{});}});game.oncontextmenu=e=>e.preventDefault();
+for(const [name,down]of[['keydown',true],['keyup',false]])document.addEventListener(name,e=>{if(e.code==='Escape'&&down){if(active)release();else settings();return;}if(!active||!allowed.has(e.code)||(privateEgress&&!['KeyW','KeyA','KeyS','KeyD'].includes(e.code))||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(!e.repeat)send({action:'key',code:e.code,down}).catch(()=>{});});
+document.addEventListener('mousemove',e=>{if(!active||(document.pointerLockElement!==game&&document.pointerLockElement!==document.querySelector('#view'))||performance.now()-lastMouse<30)return;lastMouse=performance.now();const s=Number(document.querySelector('#sensitivity').value);send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX*s))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY*s)))}).catch(()=>{});});
+for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&!privateEgress&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down}).catch(()=>{});}});game.oncontextmenu=e=>e.preventDefault();
 async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);try{if(generation!==streamGeneration)return;await new Promise((resolve,reject)=>{game.onload=resolve;game.onerror=reject;game.src=url;});if(generation!==streamGeneration)return;if(previous)URL.revokeObjectURL(previous);previous=url;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;window.nativeViewerLastDecodedAt=performance.now();game.hidden=false;empty.hidden=true;}catch(e){URL.revokeObjectURL(url);throw e;}}
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
 function streamNative(){const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';game.hidden=true;empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},4000);}
-async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;control.disabled=!permission;control.textContent=active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission;dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.privacy===true?'Privacy':h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?'The home is private. Live view and controls are paused.':h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&window.nativeViewerLastDecodedAt&&performance.now()-window.nativeViewerLastDecodedAt>3500){game.hidden=true;empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
+async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;control.disabled=!permission&&!privateEgress;control.textContent=privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&window.nativeViewerLastDecodedAt&&performance.now()-window.nativeViewerLastDecodedAt>3500){game.hidden=true;empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
 
 let supported='';
 async function refreshSettings(){
@@ -182,6 +186,7 @@ class LiveState:
         self.privacy_lock = threading.Lock()
         self.privacy_checked = 0
         self.privacy_value = None
+        self.backend_privacy_value = None
         self.input = None
         self.accepted = 0
         self.frames = 0
@@ -239,6 +244,7 @@ class LiveState:
                     document=json.loads(raw)
                     value=canonical_privacy(document)
             except (OSError,ValueError,TypeError):pass
+            self.backend_privacy_value=value
             physical=None
             try:
                 path=self.private/'native-view-privacy.json'
@@ -247,6 +253,19 @@ class LiveState:
             value=combine_privacy(value,physical)
             self.privacy_value=value;self.privacy_checked=time.monotonic()
             return value
+
+    def can_private_egress(self):
+        if time.time()>=self.deadline or self.privacy() is not True or type(self.backend_privacy_value) is not bool:return False
+        identity=self.native()
+        if identity is None:return False
+        try:
+            flag=json.loads((self.private/'native-viewer-input-enabled').read_text())
+            if not isinstance(flag,dict) or (flag.get('native_pid'),flag.get('native_start_ticks'))!=identity or flag.get('view_mode')!='manual':return False
+            path=self.private/'native-view-privacy.json'
+            if path.stat().st_size>1024:return False
+            receipt=json.loads(path.read_text())
+            return native_camera_privacy(receipt,identity,time.time()) is True and receipt.get('private_egress_ready') is True
+        except (OSError,ValueError):return False
 
     def settings_receipt(self):
         identity=self.native()
@@ -308,10 +327,10 @@ class Handler(BaseHTTPRequestHandler):
             self.json(200,receipt) if receipt else self.json(409,{'error':'Native settings unavailable'})
             return
         if self.path.split('?')[0] == '/health':
-            if self.path.endswith('?hold=1') and state.enabled('native-viewer-input-enabled'):state.last_lease=time.monotonic()
+            if self.path.endswith('?hold=1') and (state.enabled('native-viewer-input-enabled') or state.can_private_egress()):state.last_lease=time.monotonic()
             self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
-                           'inputEnabled':state.enabled('native-viewer-input-enabled'),
+                           'inputEnabled':state.enabled('native-viewer-input-enabled'),'privacyEgressEnabled':state.can_private_egress(),
                            'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
@@ -391,12 +410,14 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.split('?')[0]=='/settings':
             self.post_settings();return
         if self.path.split('?')[0]!='/input':self.json(404,{'error':'Unknown route'});return
-        if not state.enabled('native-viewer-input-enabled'):self.json(409,{'error':'Native input is locked'});return
+        if not state.enabled('native-viewer-input-enabled') and not state.can_private_egress():self.json(409,{'error':'Native input is locked'});return
         try:
             length=int(self.headers.get('Content-Length','0'))
             if not 0<length<=1024:raise ValueError('Input size exceeded')
             event=validate_input(json.loads(self.rfile.read(length)))
             with state.input_lock:
+                if not state.enabled('native-viewer-input-enabled') and not (state.can_private_egress() and private_egress_event(event)):
+                    self.json(409,{'error':'Private movement only; devices and settings remain locked'});return
                 if event['action']!='release' and event.get('down',True) and time.monotonic()-state.last_input<.005:self.json(429,{'error':'Input rate exceeded'});return
                 if state.input is None:state.input=PhysicalInput()
                 state.input.send(event);state.last_input=time.monotonic();state.last_lease=state.last_input;state.accepted+=1
@@ -439,7 +460,7 @@ def main():
     def release_expired_input():
         while time.time()<args.deadline_epoch:
             time.sleep(.5)
-            if server.state.input and (time.monotonic()-server.state.last_lease>5 or not server.state.enabled('native-viewer-input-enabled')):
+            if server.state.input and (time.monotonic()-server.state.last_lease>5 or not (server.state.enabled('native-viewer-input-enabled') or server.state.can_private_egress())):
                 with server.state.input_lock:server.state.input.send({'action':'release'})
     threading.Thread(target=release_expired_input,daemon=True).start()
     signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
