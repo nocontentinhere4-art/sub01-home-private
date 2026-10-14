@@ -200,6 +200,57 @@ python tools/fit_controller_grip.py search --clip docs/proposed/controller-captu
 
 Per-frame summaries: `docs/proposed/controller-play/controller-search-{contact,all}.summary.json`.
 
+## 2c. Derived grip clip `SUB01_GamingGrip` (label `derived_from_capture`), iteration 1: PARTIAL
+
+`tools/derive_controller_grip_clip.py` derives a grip clip from the real capture `gaming-owner.glb` (sha `f8b00ce5…`) against the actual 15.38 cm controller. The original `c034a144…` was used because the normalized file is not in this checkout. The controller is not oversized.
+
+How it is derived:
+- **One fixed controller offset** in the right Hand socket, and one left grip.
+- **Bounded two-arm two-bone IK** per frame (≤ 10 cm, ≤ 25°). It changes the Arm and ForeArm rotations, and the Hand local so the hand reaches its grip.
+- **Fingers:** the captured locals stay as the base. A constant curl delta (joints 1–3) and a spread delta (joint 1), each ≤ 15°, is added per finger. Because the delta is constant, it is smooth, and the captured frame-to-frame variation is unchanged.
+- **Unchanged:** translations, clavicles, spine, neck and head.
+
+Outputs: `docs/proposed/controller-play/SUB01_GamingGrip_derived.glb` (280 KB) and `…derived.report.json` (per frame: contact, penetration, thumb/index distances, IK displacement, finger deltas and seam).
+
+| Iteration 1 | Value |
+|---|---|
+| **Frames passing every gate** | **21/152** (`all_frames_pass: false`, `status: partial`) |
+| Frames with contact (both palm patches in -0.3..+0.3 cm with ≥ 12 vertices, no vertex deeper than -0.3 cm, IK within bound) | 144/152 |
+| Frames with thumbs ≤ 2.0 cm and index ≤ 3.0 cm | 22/152 |
+| Left thumb / right thumb to cap | 1.29–1.93 cm / 1.97–2.20 cm (gate 2.0) |
+| Left index / right index to trigger | 2.69–3.22 cm / 2.74–2.86 cm (gate 3.0) |
+| Deepest hand vertex | L -0.316 cm (3 frames), R -0.371 cm (5 frames). The band is -0.3 cm, with no compression allowance. |
+| Fixed offset | Holds: 6e-14 cm, 2.4e-6° |
+| IK | ≤ 4.35 cm left, ≤ 8.52 cm right, ≤ 15.3° |
+| Largest finger delta | 14.7° (left index curl); right thumb spread -11.5° |
+| Bone-length error | 2e-14 cm |
+| Upper-body change | 0 |
+| Loop seam on edited joints | 0.433° (captured 0.433°) |
+
+Failing frames are listed in the report. They fail mostly because the right thumb sits 0–0.2 cm beyond the 2.0 cm gate and the left index 0–0.22 cm beyond the 3.0 cm gate, with 8 frames slightly penetrating. Iteration 2 will add smooth per-frame delta keys.
+
+Re-run:
+
+```
+python tools/derive_controller_grip_clip.py --sample 16 --rounds 4 --iters 400
+```
+
+### Root import steps for the derived clip
+
+1. **Export to FBX.** Use the official Blender export at the clip's own **30 fps**, keeping all 152 keys. Native t = glTF t − 1/30 s.
+2. **Import** to `/Game/Sub01Hands/Play/SUB01_GamingGrip` onto the existing owner USkeleton. The import row must carry `role: Gaming`, `same_existing_skeleton: true`, `source_fbx_sha256: 84dfc60a…` and `derived_glb_sha256` = the report's `output_glb_sha256`.
+3. **Evidence.** `evidence` takes the derived report. It refuses unless `all_frames_pass`, the fixed offset holds, deltas are ≤ 15° and the label is `derived_from_capture`. Raw-capture fits and searches are refused.
+4. **Runtime proof (root).** Write `private-audit/native-controller-play-runtime-proof.json`:
+
+   ```
+   {"schema": "sub01.native-controller-play-runtime-proof.v1", "accepted": true,
+    "clip_object_path": "/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip",
+    "evidence_revision": "<FNV of the evidence text>", "frames_measured": >=152, "frames_passing": ==frames_measured,
+    "max_penetration_cm": >= -0.3, "native_capture": {"path": ..., "sha256": ...}}
+   ```
+
+   It comes from a native per-frame skin-vs-controller contact measurement of the socket-attached prop, plus a native capture. Without it, `ControllerPlayReady()` stays false.
+
 ## 3. Seated on the sofa
 
 - **Contact rule:** the rule of `validate_unreal_seat_contact.py`, applied per region (buttocks, both posterior thighs, both soles) over the whole 5.03 s clip at ≥ 30 Hz:

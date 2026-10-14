@@ -37,7 +37,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import validate_unreal_seat_contact as seat_contact  # noqa: E402
 
 ROLE = 'Gaming'
-CLIP_OBJECT_PATH = '/Game/Sub01Hands/Play/SUB01_Gaming.SUB01_Gaming'
+# The native side plays the DERIVED grip clip (tools/derive_controller_grip_clip.py), never the raw retarget.
+CLIP_OBJECT_PATH = '/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip'
+DERIVED_SCHEMA, DERIVED_LABEL = 'sub01.controller-grip-derived.v1', 'derived_from_capture'
+GAMING_OWNER_GLB_SHA256 = 'f8b00ce59716683d9ea511ccf1d38d311446ba6668afdc351d98abe4988f6c09'   # root's owner-skeleton retarget
+CLIP_FRAMES = 152
+FINGER_DELTA_MAX_DEG = 15.0
+RUNTIME_PROOF = 'native-controller-play-runtime-proof.json'
+RUNTIME_PROOF_SCHEMA = 'sub01.native-controller-play-runtime-proof.v1'
 # Root's tools/unreal_import_controller_prop.py writes the imported physical assembly (contact shadow excluded) here.
 CONTROLLER_ASSET_RECEIPT = 'native-controller-asset.json'
 CONTROLLER_ASSET_SCHEMA = 'sub01.native-controller-asset.v1'
@@ -144,8 +151,32 @@ def validate_search(report: dict):
     return {'frames': s['frames'], 'controller_in_right_hand_gltf': fit.grip_variation(report['per_frame'])['mean_controller_in_hand']}
 
 
+def validate_derived(report: dict):
+    """The derived grip clip report (tools/derive_controller_grip_clip.py): labelled, every frame passing, one fixed
+    right-socket offset, bounded finger deltas, made from root's owner-skeleton Gaming retarget."""
+    if report.get('label') != DERIVED_LABEL:
+        raise ValueError('GripUnmeasured: the clip is not labelled derived_from_capture')
+    if report.get('source_clip', {}).get('sha256') != GAMING_OWNER_GLB_SHA256:
+        raise ValueError('GripUnmeasured: not derived from the owner-skeleton Gaming capture')
+    frames = report.get('frames')
+    rows = report.get('per_frame', [])
+    if report.get('all_frames_pass') is not True or frames != CLIP_FRAMES or len(rows) != frames or not all(r.get('pass') is True for r in rows) \
+            or report.get('frames_passing') != frames:
+        raise ValueError(f'GripFailed: derived clip passes {report.get("frames_passing")}/{frames} frames (all_frames_pass required)')
+    if report.get('fixed_offset', {}).get('holds') is not True:
+        raise ValueError('GripFailed: no single fixed right-socket controller offset')
+    if not report.get('finger_deltas_deg', {}).get('max_abs_deg', 1e9) <= FINGER_DELTA_MAX_DEG:
+        raise ValueError('GripFailed: finger deltas exceed the bound')
+    if report.get('controller', {}).get('oversized') is not False or not report.get('output_glb_sha256'):
+        raise ValueError('GripUnmeasured: controller size or derived GLB identity missing')
+    return {'frames': frames, 'controller_in_right_hand_gltf': report['fixed_offset']['controller_in_right_hand_gltf'],
+            'grip_clip_sha256': report['output_glb_sha256']}
+
+
 def validate_grip(report: dict):
-    """Every-frame two-hand grip from tools/fit_controller_grip.py (fixed attachment, or the option-1 search)."""
+    """Native play needs the DERIVED clip report; raw-capture fits and searches are diagnostics and are refused."""
+    if report.get('schema') == DERIVED_SCHEMA:
+        return validate_derived(report)
     if report.get('schema') != 'sub01.controller-grip-trial.v1':
         raise ValueError('GripUnmeasured: not a controller grip report')
     if report.get('mode') == 'penetration_aware_joint_search':
@@ -213,8 +244,10 @@ def build_evidence(sofa_text: str, grip: dict, contact: dict, placement: dict) -
     clearance = capsule_clearance(a, fp['min'], fp['max'])
     if clearance <= 0:
         raise ValueError(f'CapsuleInsideSofa: standing capsule overlaps the sofa footprint by {-clearance:.2f} cm')
+    if 'grip_clip_sha256' not in g:
+        raise ValueError('GripUnmeasured: native play needs the derived grip clip report (the raw capture never holds the controller)')
     t, q = ue_grip(g['controller_in_right_hand_gltf'])
-    return {'schema': EVIDENCE_SCHEMA, 'sofa_revision': str(play_id(sofa_text)), 'seat_area_cm2': area,
+    return {'schema': EVIDENCE_SCHEMA, 'clip_object_path': CLIP_OBJECT_PATH, 'grip_clip_sha256': g['grip_clip_sha256'], 'label': DERIVED_LABEL, 'sofa_revision': str(play_id(sofa_text)), 'seat_area_cm2': area,
             'approach_cm': a, 'yaw_deg': yaw, 'body_offset_cm': body, 'body_yaw_deg': body_yaw,
             'capsule_clearance_cm': clearance, 'grip_offset_cm': t, 'grip_rotation_xyzw': q,
             'grip_frames': g['frames'], 'grip_report_sha256': hashlib.sha256(json.dumps(grip, sort_keys=True).encode()).hexdigest(),
@@ -234,10 +267,32 @@ def write_evidence(project: Path, grip_path: Path, contact_path: Path, placement
     return out
 
 
+def validate_runtime_proof(proof_text: str, evidence_text: str) -> dict:
+    """Root's NATIVE runtime proof (mirror of the native loader): without it ControllerPlayReady() stays false.
+
+    private-audit/native-controller-play-runtime-proof.json, written by root's native capture/contact run:
+      {"schema": "sub01.native-controller-play-runtime-proof.v1", "accepted": true,
+       "clip_object_path": CLIP_OBJECT_PATH, "evidence_revision": "<play_id(evidence text)>",
+       "frames_measured": >=152, "frames_passing": == frames_measured,
+       "native_capture": {"path": ..., "sha256": ...}, "max_penetration_cm": >= -0.3}
+    """
+    p, ev = json.loads(proof_text), json.loads(evidence_text)
+    if p.get('schema') != RUNTIME_PROOF_SCHEMA or p.get('accepted') is not True:
+        raise ValueError('RuntimeProofMissing: no accepted native runtime proof')
+    if p.get('clip_object_path') != CLIP_OBJECT_PATH or p.get('evidence_revision') != str(play_id(evidence_text)):
+        raise ValueError('RuntimeProofMissing: proof is for another clip or evidence revision')
+    m, k = p.get('frames_measured'), p.get('frames_passing')
+    if not _finite(m, k) or m < CLIP_FRAMES or k != m:
+        raise ValueError(f'RuntimeProofFailed: native frames passing {k}/{m}')
+    if not _finite(p.get('max_penetration_cm')) or p['max_penetration_cm'] < -0.3 or not p.get('native_capture', {}).get('sha256'):
+        raise ValueError('RuntimeProofFailed: native penetration beyond the band or no native capture')
+    return {'frames': m, 'grip_clip_sha256': ev.get('grip_clip_sha256')}
+
+
 def config_fragment(project: Path, import_report: dict) -> tuple[str, dict]:
     """`+ValidatedHandsPostures=Gaming` only with accepted evidence on THIS sofa report and the exact import row."""
     audit = Path(project) / 'private-audit'
-    refusals = {}
+    refusals, ev = {}, {}
     try:
         sofa_text = (audit / SOFA_REPORT).read_text()
         ev = json.loads((audit / EVIDENCE).read_text())
@@ -246,9 +301,10 @@ def config_fragment(project: Path, import_report: dict) -> tuple[str, dict]:
     except (OSError, ValueError) as error:
         refusals['evidence'] = f'missing: {error}'
     rows = [r for r in import_report.get('clips', []) if r.get('role') == ROLE]
+    want = ev.get('grip_clip_sha256') if isinstance(ev, dict) else None
     if len(rows) != 1 or rows[0].get('object_path') != CLIP_OBJECT_PATH or rows[0].get('same_existing_skeleton') is not True \
-            or rows[0].get('source_fbx_sha256') != GAMING_FBX_SHA256:
-        refusals['clip'] = f'expected one {CLIP_OBJECT_PATH} import of the owner\'s Gaming.fbx on the existing owner USkeleton'
+            or rows[0].get('source_fbx_sha256') != GAMING_FBX_SHA256 or not want or rows[0].get('derived_glb_sha256') != want:
+        refusals['clip'] = f'expected one {CLIP_OBJECT_PATH} import of the derived grip GLB (evidence sha) on the existing owner USkeleton'
     if refusals:
         return '', refusals
     return CHARACTER_SECTION + f'\n+ValidatedHandsPostures={ROLE}\n', {}
@@ -262,7 +318,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY() TObjectPtr<UStaticMeshComponent> ControllerPlayProp;
  FName ControllerPlayHand,ControllerPlayHead; FVector ControllerPlayGripOffset=FVector::ZeroVector; FQuat ControllerPlayGripRotation=FQuat::Identity;
  FVector ControllerPlayBodyOffset=FVector::ZeroVector; float ControllerPlayBodyYaw=0; FVector2D ControllerPlayApproach=FVector2D::ZeroVector; float ControllerPlayYaw=0;
- bool ControllerPlayEvidence=false,ControllerPlayActive=false,ControllerPlayLoggedReady=false; FString ControllerPlayRefusal=TEXT("not loaded");
+ bool ControllerPlayEvidence=false,ControllerPlayRuntimeProof=false,ControllerPlayActive=false,ControllerPlayLoggedReady=false; FString ControllerPlayRefusal=TEXT("not loaded");
 '''
 
 LIVE_GATE = (' // Playing on the sofa never walks off: the body leaves the seat first (next tick).\n'
@@ -273,7 +329,7 @@ RATE_ANCHOR = 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Cl
 CHARACTER_METHODS = r'''
 #include "Engine/StaticMesh.h"
 static uint64 Sub01ControllerPlayId(const FString& Text){uint64 V=1469598103934665603ull;for(TCHAR C:Text){V^=uint64(uint8(C));V*=1099511628211ull;}return V;}
-bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayClip&&ControllerPlayProp&&!ControllerPlayHand.IsNone()&&!ControllerPlayHead.IsNone();}
+bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayRuntimeProof&&ControllerPlayClip&&ControllerPlayProp&&!ControllerPlayHand.IsNone()&&!ControllerPlayHead.IsNone();}
 void ASub01HomeCharacter::LoadControllerPlay(){
  ControllerPlayEvidence=false;ControllerPlayClip=nullptr;
  USkeletalMesh* Mesh=FirstPersonBody?FirstPersonBody->GetSkeletalMeshAsset():nullptr;
@@ -320,6 +376,18 @@ void ASub01HomeCharacter::LoadControllerPlay(){
  ControllerPlayGripRotation=FQuat((*Q)[0]->AsNumber(),(*Q)[1]->AsNumber(),(*Q)[2]->AsNumber(),(*Q)[3]->AsNumber()).GetNormalized();
  ControllerPlayEvidence=!ControllerPlayBodyOffset.ContainsNaN()&&!ControllerPlayGripOffset.ContainsNaN()&&ControllerPlayGripOffset.Size()<=30&&FMath::IsFinite(Yaw)&&FMath::IsFinite(BodyYaw)&&FMath::IsFinite(ControllerPlayApproach.X)&&FMath::IsFinite(ControllerPlayApproach.Y);
  if(ControllerPlayEvidence&&ControllerPlayClip&&ControllerPlayProp)ControllerPlayRefusal.Empty();else if(ControllerPlayRefusal.IsEmpty())ControllerPlayRefusal=TEXT("EvidenceRejected");
+ // Root's NATIVE runtime capture/contact proof for THIS evidence and clip: without it play is never ready.
+ ControllerPlayRuntimeProof=false;FString ProofText;TSharedPtr<FJsonObject> Proof;
+ if(ControllerPlayEvidence&&FFileHelper::LoadFileToString(ProofText,*FPaths::Combine(Audit,TEXT("@@PROOF@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ProofText),Proof)&&Proof.IsValid()){
+  FString PSchema,PClip,PRevision;bool PAccepted=false;double Measured=0,Passing=-1,Penetration=NAN;const TSharedPtr<FJsonObject>* Capture=nullptr;FString CaptureSha;
+  ControllerPlayRuntimeProof=Proof->TryGetStringField(TEXT("schema"),PSchema)&&PSchema==TEXT("@@PROOF_SCHEMA@@")&&Proof->TryGetBoolField(TEXT("accepted"),PAccepted)&&PAccepted
+   &&Proof->TryGetStringField(TEXT("clip_object_path"),PClip)&&PClip==TEXT("@@CLIP@@")
+   &&Proof->TryGetStringField(TEXT("evidence_revision"),PRevision)&&FCString::Strtoui64(*PRevision,nullptr,10)==Sub01ControllerPlayId(EvidenceText)
+   &&Proof->TryGetNumberField(TEXT("frames_measured"),Measured)&&Proof->TryGetNumberField(TEXT("frames_passing"),Passing)&&Measured>=@@FRAMES@@&&Passing==Measured
+   &&Proof->TryGetNumberField(TEXT("max_penetration_cm"),Penetration)&&Penetration>=-0.3
+   &&Proof->TryGetObjectField(TEXT("native_capture"),Capture)&&(*Capture)->TryGetStringField(TEXT("sha256"),CaptureSha)&&!CaptureSha.IsEmpty();
+ }
+ if(!ControllerPlayRuntimeProof&&ControllerPlayRefusal.IsEmpty())ControllerPlayRefusal=TEXT("RuntimeProofMissing");
  UE_LOG(LogTemp,Display,TEXT("SUB01_CONTROLLER_PLAY_READY ready=%d refusal=%s approach=%s"),ControllerPlayReady()?1:0,*ControllerPlayRefusal,*ControllerPlayApproach.ToString());
 }
 void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance,float Dt){
@@ -372,7 +440,8 @@ REQUIRED = (' bool MinecraftFocused', 'TickMinecraftTVInput();', 'bool ASub01Hom
 def methods():
     return (CHARACTER_METHODS.replace('@@CLIP@@', CLIP_OBJECT_PATH).replace('@@ROLE@@', ROLE).replace('@@ASSET_RECEIPT@@', CONTROLLER_ASSET_RECEIPT)
             .replace('@@ASSET_SCHEMA@@', CONTROLLER_ASSET_SCHEMA).replace('@@ASSET_SHA@@', CONTROLLER_SOURCE_SHA256)
-            .replace('@@SOFA@@', SOFA_REPORT).replace('@@EVIDENCE@@', EVIDENCE).replace('@@SCHEMA@@', EVIDENCE_SCHEMA)
+            .replace('@@SOFA@@', SOFA_REPORT).replace('@@PROOF@@', RUNTIME_PROOF).replace('@@PROOF_SCHEMA@@', RUNTIME_PROOF_SCHEMA)
+            .replace('@@FRAMES@@', str(CLIP_FRAMES)).replace('@@EVIDENCE@@', EVIDENCE).replace('@@SCHEMA@@', EVIDENCE_SCHEMA)
             .replace('@@APPROACH@@', f'{APPROACH_TOLERANCE_CM:.1f}f').replace('@@YAW@@', f'{YAW_TOLERANCE_DEG:.1f}f'))
 
 

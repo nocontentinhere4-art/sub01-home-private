@@ -1,0 +1,7080 @@
+{
+"schema": "sub01.controller-grip-derived.v1",
+"label": "derived_from_capture",
+"verified": false,
+"trial": true,
+"source_clip": {
+"file": "docs/proposed/controller-capture/gaming-owner.glb",
+"sha256": "f8b00ce59716683d9ea511ccf1d38d311446ba6668afdc351d98abe4988f6c09",
+"source_fbx_sha256": "declared by root: 84dfc60ab9e13b9c896e89def81478a5e47f45b80cc3d8902c5b8a0ae8d8fc7f"
+},
+"controller": {
+"excluded_primitives": [
+"controller_contact"
+],
+"file": "web/room/controller.glb",
+"sha256": "c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4",
+"source": {
+"used": "original",
+"sha256": "c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4",
+"normalized_sha256_expected": "8134769e2680197a0b5a453e1fad11f1c82a5df54c1607b6c4c0a501721b0034",
+"normalized_present": false,
+"note": "normalized derivative not committed in this checkout (root: geometry preserved); original used"
+},
+"width_cm": 15.380217134952545,
+"oversized": false
+},
+"frames": 152,
+"frames_passing": 21,
+"frames_contact_pass": 144,
+"frames_thumbs_index_pass": 22,
+"all_frames_pass": false,
+"failing_frames": [
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12,
+13,
+14,
+15,
+16,
+17,
+18,
+19,
+20,
+21,
+22,
+23,
+24,
+25,
+26,
+27,
+28,
+29,
+30,
+31,
+32,
+33,
+34,
+35,
+36,
+37,
+38,
+39,
+40,
+41,
+42,
+43,
+44,
+45,
+46,
+47,
+50,
+51,
+52,
+53,
+54,
+55,
+56,
+57,
+58,
+59,
+60,
+61,
+62,
+63,
+64,
+65,
+66,
+67,
+68,
+69,
+70,
+71,
+72,
+73,
+74,
+75,
+76,
+77,
+78,
+79,
+80,
+81,
+82,
+83,
+84,
+85,
+86,
+87,
+88,
+89,
+90,
+91,
+92,
+93,
+94,
+95,
+98,
+99,
+100,
+101,
+102,
+105,
+106,
+114,
+115,
+116,
+117,
+118,
+119,
+120,
+121,
+122,
+123,
+124,
+126,
+127,
+128,
+129,
+130,
+131,
+132,
+133,
+134,
+135,
+136,
+137,
+138,
+139,
+140,
+141,
+142,
+143,
+144,
+145,
+146
+],
+"gates": {
+"palm_band_cm": [
+-0.3,
+0.3
+],
+"penetration_limit_cm": -0.3,
+"compression_allowance_beyond_band_cm": 0,
+"min_support_vertices": 12,
+"thumb_cm": 2.0,
+"index_cm": 3.0,
+"ik_bound": {
+"wrist_displacement_cm": 10.0,
+"wrist_rotation_deg": 25.0
+},
+"finger_delta_max_deg": 15.0,
+"fixed_offset_tolerance": [
+0.3,
+1.0
+]
+},
+"fixed_offset": {
+"controller_in_right_hand_gltf": [
+[
+0.055263058769772555,
+0.8314142075857629,
+-0.5528981911346307,
+-0.002187154743582098
+],
+[
+0.04113165248877948,
+-0.5551700010751619,
+-0.8307192408207161,
+0.11165533832585553
+],
+[
+-0.9976242686998702,
+0.02316646996723165,
+-0.06487783265728275,
+0.08853620183273464
+],
+[
+0.0,
+0.0,
+0.0,
+1.0
+]
+],
+"max_translation_cm": 6.253726250641243e-14,
+"max_rotation_deg": 2.4148365394514667e-06,
+"holds": true
+},
+"left_grip_gltf": [
+[
+0.31157060890463206,
+-0.7655473306788063,
+0.5629041127557615,
+0.05839133162268827
+],
+[
+0.16209179897301673,
+-0.5408899029976597,
+-0.8253268210478034,
+0.064483033613395
+],
+[
+0.9362958957362184,
+0.34838972046507954,
+-0.04443645239862937,
+0.08597874214249479
+],
+[
+0.0,
+0.0,
+0.0,
+1.0
+]
+],
+"finger_deltas_deg": {
+"rule": "constant per joint over the clip (smooth by construction), added to the captured local rotation",
+"per_joint": {
+"RightHandThumb1": {
+"curl_deg": 1.7015350178365765,
+"spread_deg": -11.540297441352498
+},
+"RightHandThumb2": {
+"curl_deg": 1.7015350178365765,
+"spread_deg": 0.0
+},
+"RightHandThumb3": {
+"curl_deg": 1.7015350178365765,
+"spread_deg": 0.0
+},
+"RightHandIndex1": {
+"curl_deg": -1.6401933233096808,
+"spread_deg": -4.145797118745057
+},
+"RightHandIndex2": {
+"curl_deg": -1.6401933233096808,
+"spread_deg": 0.0
+},
+"RightHandIndex3": {
+"curl_deg": -1.6401933233096808,
+"spread_deg": 0.0
+},
+"RightHandMiddle1": {
+"curl_deg": -1.6185380764850725,
+"spread_deg": -1.1422773776880848
+},
+"RightHandMiddle2": {
+"curl_deg": -1.6185380764850725,
+"spread_deg": 0.0
+},
+"RightHandMiddle3": {
+"curl_deg": -1.6185380764850725,
+"spread_deg": 0.0
+},
+"RightHandRing1": {
+"curl_deg": 0.595223649987028,
+"spread_deg": -0.34124821824591733
+},
+"RightHandRing2": {
+"curl_deg": 0.595223649987028,
+"spread_deg": 0.0
+},
+"RightHandRing3": {
+"curl_deg": 0.595223649987028,
+"spread_deg": 0.0
+},
+"RightHandPinky1": {
+"curl_deg": -0.11077530115634684,
+"spread_deg": -0.013324128297646861
+},
+"RightHandPinky2": {
+"curl_deg": -0.11077530115634684,
+"spread_deg": 0.0
+},
+"RightHandPinky3": {
+"curl_deg": -0.11077530115634684,
+"spread_deg": 0.0
+},
+"LeftHandThumb1": {
+"curl_deg": 0.5725993510740943,
+"spread_deg": 1.89653304972425
+},
+"LeftHandThumb2": {
+"curl_deg": 0.5725993510740943,
+"spread_deg": 0.0
+},
+"LeftHandThumb3": {
+"curl_deg": 0.5725993510740943,
+"spread_deg": 0.0
+},
+"LeftHandIndex1": {
+"curl_deg": 14.706735381430795,
+"spread_deg": -2.8345172550740414
+},
+"LeftHandIndex2": {
+"curl_deg": 14.706735381430795,
+"spread_deg": 0.0
+},
+"LeftHandIndex3": {
+"curl_deg": 14.706735381430795,
+"spread_deg": 0.0
+},
+"LeftHandMiddle1": {
+"curl_deg": -0.37916258964767247,
+"spread_deg": 0.030522829092311184
+},
+"LeftHandMiddle2": {
+"curl_deg": -0.37916258964767247,
+"spread_deg": 0.0
+},
+"LeftHandMiddle3": {
+"curl_deg": -0.37916258964767247,
+"spread_deg": 0.0
+},
+"LeftHandRing1": {
+"curl_deg": -1.9389175397753602,
+"spread_deg": -0.06665885101962063
+},
+"LeftHandRing2": {
+"curl_deg": -1.9389175397753602,
+"spread_deg": 0.0
+},
+"LeftHandRing3": {
+"curl_deg": -1.9389175397753602,
+"spread_deg": 0.0
+},
+"LeftHandPinky1": {
+"curl_deg": -0.09146016889085677,
+"spread_deg": 0.02183971126419138
+},
+"LeftHandPinky2": {
+"curl_deg": -0.09146016889085677,
+"spread_deg": 0.0
+},
+"LeftHandPinky3": {
+"curl_deg": -0.09146016889085677,
+"spread_deg": 0.0
+}
+},
+"max_abs_deg": 14.706735381430795,
+"per_frame": "identical every frame (constant delta)"
+},
+"captured_finger_variation": {
+"RightHandThumb1": {
+"captured_amplitude_deg": 0.9194,
+"derived_amplitude_deg": 0.9194
+},
+"RightHandThumb2": {
+"captured_amplitude_deg": 12.6451,
+"derived_amplitude_deg": 12.6451
+},
+"RightHandThumb3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"RightHandIndex1": {
+"captured_amplitude_deg": 2.0509,
+"derived_amplitude_deg": 2.0509
+},
+"RightHandIndex2": {
+"captured_amplitude_deg": 11.4173,
+"derived_amplitude_deg": 11.4173
+},
+"RightHandIndex3": {
+"captured_amplitude_deg": 10.5886,
+"derived_amplitude_deg": 10.5886
+},
+"RightHandMiddle1": {
+"captured_amplitude_deg": 0.8956,
+"derived_amplitude_deg": 0.8956
+},
+"RightHandMiddle2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"RightHandMiddle3": {
+"captured_amplitude_deg": 0.1242,
+"derived_amplitude_deg": 0.1242
+},
+"RightHandRing1": {
+"captured_amplitude_deg": 0.8955,
+"derived_amplitude_deg": 0.8955
+},
+"RightHandRing2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"RightHandRing3": {
+"captured_amplitude_deg": 0.1289,
+"derived_amplitude_deg": 0.1289
+},
+"RightHandPinky1": {
+"captured_amplitude_deg": 0.8951,
+"derived_amplitude_deg": 0.8951
+},
+"RightHandPinky2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"RightHandPinky3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandThumb1": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandThumb2": {
+"captured_amplitude_deg": 13.6152,
+"derived_amplitude_deg": 13.6152
+},
+"LeftHandThumb3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandIndex1": {
+"captured_amplitude_deg": 1.8934,
+"derived_amplitude_deg": 1.8934
+},
+"LeftHandIndex2": {
+"captured_amplitude_deg": 11.2063,
+"derived_amplitude_deg": 11.2063
+},
+"LeftHandIndex3": {
+"captured_amplitude_deg": 7.2999,
+"derived_amplitude_deg": 7.2999
+},
+"LeftHandMiddle1": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandMiddle2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandMiddle3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandRing1": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandRing2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandRing3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandPinky1": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandPinky2": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+},
+"LeftHandPinky3": {
+"captured_amplitude_deg": 0.0,
+"derived_amplitude_deg": 0.0
+}
+},
+"bone_length_max_error_cm": 2.220446049250313e-14,
+"upper_body_max_world_change": 0.0,
+"loop_seam_max_jump_deg": {
+"captured": 0.43255151564947975,
+"derived": 0.43255151564947975
+},
+"summary": {
+"left": {
+"palm_min_gap_cm": [
+-0.211,
+-0.2099
+],
+"hand_min_signed_cm": -0.3158,
+"frames_penetrating": 3,
+"thumb_to_target_cm": [
+1.2889,
+1.932
+],
+"index_to_trigger_cm": [
+2.6858,
+3.2176
+],
+"max_wrist_displacement_cm": 4.3539,
+"max_wrist_rotation_deg": 15.2891
+},
+"right": {
+"palm_min_gap_cm": [
+-0.2078,
+-0.1932
+],
+"hand_min_signed_cm": -0.3712,
+"frames_penetrating": 5,
+"thumb_to_target_cm": [
+1.9723,
+2.2036
+],
+"index_to_trigger_cm": [
+2.7445,
+2.8635
+],
+"max_wrist_displacement_cm": 8.5212,
+"max_wrist_rotation_deg": 15.2891
+}
+},
+"per_frame": [
+{
+"frame": 0,
+"gltf_t": 0.03333333507180214,
+"native_t": 1.7384688064114862e-09,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 86,
+"thumb_to_target_cm": {
+"stick": 1.3106
+},
+"thumb_min_gap_cm": -0.1495,
+"index_to_trigger_cm": 2.9874,
+"wrist_displacement_cm": 4.1208,
+"wrist_rotation_deg": 15.0861,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 1.9723,
+"face_buttons": 3.9621
+},
+"thumb_min_gap_cm": -0.1464,
+"index_to_trigger_cm": 2.8152,
+"wrist_displacement_cm": 8.1789,
+"wrist_rotation_deg": 15.0861,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 1,
+"gltf_t": 0.06666667014360428,
+"native_t": 0.033333336810270946,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 86,
+"thumb_to_target_cm": {
+"stick": 1.329
+},
+"thumb_min_gap_cm": -0.1571,
+"index_to_trigger_cm": 2.9989,
+"wrist_displacement_cm": 4.1435,
+"wrist_rotation_deg": 15.0895,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2636,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9809,
+"face_buttons": 3.9242
+},
+"thumb_min_gap_cm": -0.0949,
+"index_to_trigger_cm": 2.7784,
+"wrist_displacement_cm": 8.198,
+"wrist_rotation_deg": 15.0895,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 2,
+"gltf_t": 0.10000000149011612,
+"native_t": 0.0666666681567828,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 85,
+"thumb_to_target_cm": {
+"stick": 1.3566
+},
+"thumb_min_gap_cm": -0.165,
+"index_to_trigger_cm": 3.0229,
+"wrist_displacement_cm": 4.1412,
+"wrist_rotation_deg": 15.098,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2049,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.265,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 164,
+"thumb_to_target_cm": {
+"stick": 2.0029,
+"face_buttons": 3.8767
+},
+"thumb_min_gap_cm": -0.1008,
+"index_to_trigger_cm": 2.7802,
+"wrist_displacement_cm": 8.1949,
+"wrist_rotation_deg": 15.098,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 3,
+"gltf_t": 0.13333334028720856,
+"native_t": 0.10000000695387523,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.3975
+},
+"thumb_min_gap_cm": -0.1754,
+"index_to_trigger_cm": 3.0573,
+"wrist_displacement_cm": 4.1191,
+"wrist_rotation_deg": 15.1067,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2065,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.266,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 188,
+"thumb_to_target_cm": {
+"stick": 2.0292,
+"face_buttons": 3.8447
+},
+"thumb_min_gap_cm": -0.0871,
+"index_to_trigger_cm": 2.8128,
+"wrist_displacement_cm": 8.168,
+"wrist_rotation_deg": 15.1067,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 4,
+"gltf_t": 0.1666666716337204,
+"native_t": 0.13333333830038707,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 82,
+"thumb_to_target_cm": {
+"stick": 1.4479
+},
+"thumb_min_gap_cm": -0.1798,
+"index_to_trigger_cm": 3.092,
+"wrist_displacement_cm": 4.1081,
+"wrist_rotation_deg": 15.1012,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2078,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2663,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 198,
+"thumb_to_target_cm": {
+"stick": 2.0345,
+"face_buttons": 3.8471
+},
+"thumb_min_gap_cm": -0.0876,
+"index_to_trigger_cm": 2.8418,
+"wrist_displacement_cm": 8.1338,
+"wrist_rotation_deg": 15.1012,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 5,
+"gltf_t": 0.20000000298023224,
+"native_t": 0.1666666696468989,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 82,
+"thumb_to_target_cm": {
+"stick": 1.5027
+},
+"thumb_min_gap_cm": -0.1763,
+"index_to_trigger_cm": 3.1224,
+"wrist_displacement_cm": 4.1371,
+"wrist_rotation_deg": 15.0707,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2064,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2659,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 186,
+"thumb_to_target_cm": {
+"stick": 2.0127,
+"face_buttons": 3.8858
+},
+"thumb_min_gap_cm": -0.0835,
+"index_to_trigger_cm": 2.8364,
+"wrist_displacement_cm": 8.1093,
+"wrist_rotation_deg": 15.0707,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 6,
+"gltf_t": 0.23333333432674408,
+"native_t": 0.20000000099341075,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 82,
+"thumb_to_target_cm": {
+"stick": 1.5517
+},
+"thumb_min_gap_cm": -0.1616,
+"index_to_trigger_cm": 3.1537,
+"wrist_displacement_cm": 4.1959,
+"wrist_rotation_deg": 15.023,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2049,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.265,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 168,
+"thumb_to_target_cm": {
+"stick": 1.9906,
+"face_buttons": 3.9365
+},
+"thumb_min_gap_cm": -0.1181,
+"index_to_trigger_cm": 2.8052,
+"wrist_displacement_cm": 8.0957,
+"wrist_rotation_deg": 15.023,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 7,
+"gltf_t": 0.2666666805744171,
+"native_t": 0.2333333472410838,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 84,
+"thumb_to_target_cm": {
+"stick": 1.5824
+},
+"thumb_min_gap_cm": -0.1765,
+"index_to_trigger_cm": 3.1897,
+"wrist_displacement_cm": 4.2462,
+"wrist_rotation_deg": 14.9794,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2043,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2641,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 151,
+"thumb_to_target_cm": {
+"stick": 1.9804,
+"face_buttons": 3.9698
+},
+"thumb_min_gap_cm": -0.1159,
+"index_to_trigger_cm": 2.7841,
+"wrist_displacement_cm": 8.086,
+"wrist_rotation_deg": 14.9794,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 8,
+"gltf_t": 0.30000001192092896,
+"native_t": 0.26666667858759563,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 88,
+"thumb_to_target_cm": {
+"stick": 1.5905
+},
+"thumb_min_gap_cm": -0.1695,
+"index_to_trigger_cm": 3.2144,
+"wrist_displacement_cm": 4.2503,
+"wrist_rotation_deg": 14.975,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2634,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9792,
+"face_buttons": 3.9764
+},
+"thumb_min_gap_cm": -0.1144,
+"index_to_trigger_cm": 2.7833,
+"wrist_displacement_cm": 8.0662,
+"wrist_rotation_deg": 14.975,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 9,
+"gltf_t": 0.3333333432674408,
+"native_t": 0.30000000993410747,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.5784
+},
+"thumb_min_gap_cm": -0.1835,
+"index_to_trigger_cm": 3.2003,
+"wrist_displacement_cm": 4.1985,
+"wrist_rotation_deg": 15.003,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9837,
+"face_buttons": 4.0001
+},
+"thumb_min_gap_cm": -0.0907,
+"index_to_trigger_cm": 2.7936,
+"wrist_displacement_cm": 8.007,
+"wrist_rotation_deg": 15.003,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 10,
+"gltf_t": 0.36666667461395264,
+"native_t": 0.3333333412806193,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 80,
+"thumb_to_target_cm": {
+"stick": 1.5437
+},
+"thumb_min_gap_cm": -0.1776,
+"index_to_trigger_cm": 3.1543,
+"wrist_displacement_cm": 4.1228,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 1.9975,
+"face_buttons": 4.0521
+},
+"thumb_min_gap_cm": -0.0755,
+"index_to_trigger_cm": 2.809,
+"wrist_displacement_cm": 7.929,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 11,
+"gltf_t": 0.4000000059604645,
+"native_t": 0.36666667262713115,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.4893
+},
+"thumb_min_gap_cm": -0.1592,
+"index_to_trigger_cm": 3.124,
+"wrist_displacement_cm": 4.0575,
+"wrist_rotation_deg": 15.0833,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0252,
+"face_buttons": 4.124
+},
+"thumb_min_gap_cm": -0.0108,
+"index_to_trigger_cm": 2.8209,
+"wrist_displacement_cm": 7.8951,
+"wrist_rotation_deg": 15.0833,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 12,
+"gltf_t": 0.4333333373069763,
+"native_t": 0.400000003973643,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 69,
+"thumb_to_target_cm": {
+"stick": 1.4352
+},
+"thumb_min_gap_cm": -0.1777,
+"index_to_trigger_cm": 3.1332,
+"wrist_displacement_cm": 4.0204,
+"wrist_rotation_deg": 15.1256,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0639,
+"face_buttons": 4.2012
+},
+"thumb_min_gap_cm": 0.0375,
+"index_to_trigger_cm": 2.82,
+"wrist_displacement_cm": 7.9263,
+"wrist_rotation_deg": 15.1256,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 13,
+"gltf_t": 0.46666666865348816,
+"native_t": 0.43333333532015483,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.3851
+},
+"thumb_min_gap_cm": -0.1421,
+"index_to_trigger_cm": 3.1602,
+"wrist_displacement_cm": 4.0166,
+"wrist_rotation_deg": 15.137,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2627,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.1034,
+"face_buttons": 4.272
+},
+"thumb_min_gap_cm": 0.1138,
+"index_to_trigger_cm": 2.8034,
+"wrist_displacement_cm": 8.0006,
+"wrist_rotation_deg": 15.137,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 14,
+"gltf_t": 0.5,
+"native_t": 0.4666666666666667,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.3376
+},
+"thumb_min_gap_cm": -0.168,
+"index_to_trigger_cm": 3.1572,
+"wrist_displacement_cm": 4.0425,
+"wrist_rotation_deg": 15.1302,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2635,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.1324,
+"face_buttons": 4.3255
+},
+"thumb_min_gap_cm": 0.1163,
+"index_to_trigger_cm": 2.7798,
+"wrist_displacement_cm": 8.0833,
+"wrist_rotation_deg": 15.1302,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 15,
+"gltf_t": 0.5333333611488342,
+"native_t": 0.5000000278155009,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.3096
+},
+"thumb_min_gap_cm": -0.1824,
+"index_to_trigger_cm": 3.118,
+"wrist_displacement_cm": 4.0893,
+"wrist_rotation_deg": 15.1167,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2644,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 2.1409,
+"face_buttons": 4.3462
+},
+"thumb_min_gap_cm": 0.1229,
+"index_to_trigger_cm": 2.767,
+"wrist_displacement_cm": 8.1508,
+"wrist_rotation_deg": 15.1167,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 16,
+"gltf_t": 0.5666666626930237,
+"native_t": 0.5333333293596904,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 78,
+"thumb_to_target_cm": {
+"stick": 1.3101
+},
+"thumb_min_gap_cm": -0.173,
+"index_to_trigger_cm": 3.0651,
+"wrist_displacement_cm": 4.1314,
+"wrist_rotation_deg": 15.1073,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.205,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2652,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 153,
+"thumb_to_target_cm": {
+"stick": 2.1298,
+"face_buttons": 4.3327
+},
+"thumb_min_gap_cm": 0.1258,
+"index_to_trigger_cm": 2.7678,
+"wrist_displacement_cm": 8.1955,
+"wrist_rotation_deg": 15.1073,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 17,
+"gltf_t": 0.6000000238418579,
+"native_t": 0.5666666905085246,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 79,
+"thumb_to_target_cm": {
+"stick": 1.3386
+},
+"thumb_min_gap_cm": -0.1528,
+"index_to_trigger_cm": 3.01,
+"wrist_displacement_cm": 4.1434,
+"wrist_rotation_deg": 15.1084,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.205,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2652,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 155,
+"thumb_to_target_cm": {
+"stick": 2.1059,
+"face_buttons": 4.2942
+},
+"thumb_min_gap_cm": 0.1291,
+"index_to_trigger_cm": 2.7685,
+"wrist_displacement_cm": 8.2165,
+"wrist_rotation_deg": 15.1084,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 18,
+"gltf_t": 0.6333333253860474,
+"native_t": 0.599999992052714,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 81,
+"thumb_to_target_cm": {
+"stick": 1.4014
+},
+"thumb_min_gap_cm": -0.163,
+"index_to_trigger_cm": 2.9374,
+"wrist_displacement_cm": 4.1256,
+"wrist_rotation_deg": 15.1142,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 2.0748,
+"face_buttons": 4.2394
+},
+"thumb_min_gap_cm": 0.0658,
+"index_to_trigger_cm": 2.7664,
+"wrist_displacement_cm": 8.223,
+"wrist_rotation_deg": 15.1142,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 19,
+"gltf_t": 0.6666666865348816,
+"native_t": 0.6333333532015483,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 82,
+"thumb_to_target_cm": {
+"stick": 1.4895
+},
+"thumb_min_gap_cm": -0.1758,
+"index_to_trigger_cm": 2.8432,
+"wrist_displacement_cm": 4.1097,
+"wrist_rotation_deg": 15.1134,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2634,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0433,
+"face_buttons": 4.1782
+},
+"thumb_min_gap_cm": 0.0127,
+"index_to_trigger_cm": 2.7822,
+"wrist_displacement_cm": 8.2435,
+"wrist_rotation_deg": 15.1134,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 20,
+"gltf_t": 0.699999988079071,
+"native_t": 0.6666666547457377,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 80,
+"thumb_to_target_cm": {
+"stick": 1.5858
+},
+"thumb_min_gap_cm": -0.1888,
+"index_to_trigger_cm": 2.7606,
+"wrist_displacement_cm": 4.1442,
+"wrist_rotation_deg": 15.1177,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2627,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0194,
+"face_buttons": 4.1203
+},
+"thumb_min_gap_cm": -0.0397,
+"index_to_trigger_cm": 2.8049,
+"wrist_displacement_cm": 8.3095,
+"wrist_rotation_deg": 15.1177,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 21,
+"gltf_t": 0.7333333492279053,
+"native_t": 0.700000015894572,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 75,
+"thumb_to_target_cm": {
+"stick": 1.6743
+},
+"thumb_min_gap_cm": -0.1861,
+"index_to_trigger_cm": 2.7155,
+"wrist_displacement_cm": 4.2345,
+"wrist_rotation_deg": 15.1365,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0064,
+"face_buttons": 4.0574
+},
+"thumb_min_gap_cm": -0.0527,
+"index_to_trigger_cm": 2.8031,
+"wrist_displacement_cm": 8.3955,
+"wrist_rotation_deg": 15.1365,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 22,
+"gltf_t": 0.7666666507720947,
+"native_t": 0.7333333174387614,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 72,
+"thumb_to_target_cm": {
+"stick": 1.742
+},
+"thumb_min_gap_cm": -0.1476,
+"index_to_trigger_cm": 2.7113,
+"wrist_displacement_cm": 4.3201,
+"wrist_rotation_deg": 15.1256,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0094,
+"face_buttons": 3.9712
+},
+"thumb_min_gap_cm": -0.0582,
+"index_to_trigger_cm": 2.7932,
+"wrist_displacement_cm": 8.4097,
+"wrist_rotation_deg": 15.1256,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 23,
+"gltf_t": 0.800000011920929,
+"native_t": 0.7666666785875956,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.7771
+},
+"thumb_min_gap_cm": -0.1175,
+"index_to_trigger_cm": 2.7558,
+"wrist_displacement_cm": 4.3325,
+"wrist_rotation_deg": 15.0743,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 2.0297,
+"face_buttons": 3.8937
+},
+"thumb_min_gap_cm": -0.0508,
+"index_to_trigger_cm": 2.7909,
+"wrist_displacement_cm": 8.2924,
+"wrist_rotation_deg": 15.0743,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 24,
+"gltf_t": 0.8333333134651184,
+"native_t": 0.7999999801317851,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.7774
+},
+"thumb_min_gap_cm": -0.109,
+"index_to_trigger_cm": 2.8624,
+"wrist_displacement_cm": 4.2701,
+"wrist_rotation_deg": 15.0331,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 152,
+"thumb_to_target_cm": {
+"stick": 2.0434,
+"face_buttons": 3.8536
+},
+"thumb_min_gap_cm": -0.0838,
+"index_to_trigger_cm": 2.7972,
+"wrist_displacement_cm": 8.0996,
+"wrist_rotation_deg": 15.0331,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 25,
+"gltf_t": 0.8666666746139526,
+"native_t": 0.8333333412806193,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.7528
+},
+"thumb_min_gap_cm": -0.1347,
+"index_to_trigger_cm": 3.002,
+"wrist_displacement_cm": 4.1914,
+"wrist_rotation_deg": 15.0177,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 152,
+"thumb_to_target_cm": {
+"stick": 2.0398,
+"face_buttons": 3.8448
+},
+"thumb_min_gap_cm": -0.0855,
+"index_to_trigger_cm": 2.807,
+"wrist_displacement_cm": 7.9325,
+"wrist_rotation_deg": 15.0177,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 26,
+"gltf_t": 0.8999999761581421,
+"native_t": 0.8666666428248088,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.714
+},
+"thumb_min_gap_cm": -0.1346,
+"index_to_trigger_cm": 3.0977,
+"wrist_displacement_cm": 4.1283,
+"wrist_rotation_deg": 15.0342,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.0275,
+"face_buttons": 3.8559
+},
+"thumb_min_gap_cm": -0.0784,
+"index_to_trigger_cm": 2.8071,
+"wrist_displacement_cm": 7.8448,
+"wrist_rotation_deg": 15.0342,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 27,
+"gltf_t": 0.9333333373069763,
+"native_t": 0.900000003973643,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 67,
+"thumb_to_target_cm": {
+"stick": 1.6762
+},
+"thumb_min_gap_cm": -0.1612,
+"index_to_trigger_cm": 3.1024,
+"wrist_displacement_cm": 4.0937,
+"wrist_rotation_deg": 15.0584,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0142,
+"face_buttons": 3.8841
+},
+"thumb_min_gap_cm": -0.0801,
+"index_to_trigger_cm": 2.8097,
+"wrist_displacement_cm": 7.8275,
+"wrist_rotation_deg": 15.0584,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 28,
+"gltf_t": 0.9666666388511658,
+"native_t": 0.9333333055178324,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.6534
+},
+"thumb_min_gap_cm": -0.1834,
+"index_to_trigger_cm": 3.0842,
+"wrist_displacement_cm": 4.0915,
+"wrist_rotation_deg": 15.0609,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0053,
+"face_buttons": 3.9285
+},
+"thumb_min_gap_cm": -0.1165,
+"index_to_trigger_cm": 2.8126,
+"wrist_displacement_cm": 7.8426,
+"wrist_rotation_deg": 15.0609,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 29,
+"gltf_t": 1.0,
+"native_t": 0.9666666666666667,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.6498
+},
+"thumb_min_gap_cm": -0.1867,
+"index_to_trigger_cm": 3.0854,
+"wrist_displacement_cm": 4.1024,
+"wrist_rotation_deg": 15.0498,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0016,
+"face_buttons": 3.9816
+},
+"thumb_min_gap_cm": -0.0605,
+"index_to_trigger_cm": 2.8145,
+"wrist_displacement_cm": 7.8581,
+"wrist_rotation_deg": 15.0498,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 30,
+"gltf_t": 1.0333333015441895,
+"native_t": 0.9999999682108561,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 67,
+"thumb_to_target_cm": {
+"stick": 1.6452
+},
+"thumb_min_gap_cm": -0.1707,
+"index_to_trigger_cm": 3.0621,
+"wrist_displacement_cm": 4.0941,
+"wrist_rotation_deg": 15.0498,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0033,
+"face_buttons": 4.0195
+},
+"thumb_min_gap_cm": -0.0695,
+"index_to_trigger_cm": 2.8063,
+"wrist_displacement_cm": 7.844,
+"wrist_rotation_deg": 15.0498,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 31,
+"gltf_t": 1.0666667222976685,
+"native_t": 1.033333388964335,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 67,
+"thumb_to_target_cm": {
+"stick": 1.6231
+},
+"thumb_min_gap_cm": -0.0813,
+"index_to_trigger_cm": 3.0462,
+"wrist_displacement_cm": 4.079,
+"wrist_rotation_deg": 15.0581,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2632,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0068,
+"face_buttons": 4.0322
+},
+"thumb_min_gap_cm": -0.069,
+"index_to_trigger_cm": 2.7825,
+"wrist_displacement_cm": 7.8209,
+"wrist_rotation_deg": 15.0581,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 32,
+"gltf_t": 1.100000023841858,
+"native_t": 1.0666666905085245,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.5938
+},
+"thumb_min_gap_cm": -0.0505,
+"index_to_trigger_cm": 3.0414,
+"wrist_displacement_cm": 4.0871,
+"wrist_rotation_deg": 15.0561,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.0132,
+"face_buttons": 4.0368
+},
+"thumb_min_gap_cm": -0.0597,
+"index_to_trigger_cm": 2.7614,
+"wrist_displacement_cm": 7.8308,
+"wrist_rotation_deg": 15.0561,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 33,
+"gltf_t": 1.1333333253860474,
+"native_t": 1.099999992052714,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.5585
+},
+"thumb_min_gap_cm": -0.0668,
+"index_to_trigger_cm": 3.0421,
+"wrist_displacement_cm": 4.117,
+"wrist_rotation_deg": 15.0419,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.205,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2651,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 161,
+"thumb_to_target_cm": {
+"stick": 2.0238,
+"face_buttons": 4.0516
+},
+"thumb_min_gap_cm": -0.0482,
+"index_to_trigger_cm": 2.7737,
+"wrist_displacement_cm": 7.8764,
+"wrist_rotation_deg": 15.0419,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 34,
+"gltf_t": 1.1666666269302368,
+"native_t": 1.1333332935969034,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.5211
+},
+"thumb_min_gap_cm": -0.1022,
+"index_to_trigger_cm": 3.067,
+"wrist_displacement_cm": 4.1377,
+"wrist_rotation_deg": 15.0316,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2044,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2642,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 150,
+"thumb_to_target_cm": {
+"stick": 2.0377,
+"face_buttons": 4.0749
+},
+"thumb_min_gap_cm": -0.0296,
+"index_to_trigger_cm": 2.7817,
+"wrist_displacement_cm": 7.9118,
+"wrist_rotation_deg": 15.0316,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 35,
+"gltf_t": 1.2000000476837158,
+"native_t": 1.1666667143503824,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.4824
+},
+"thumb_min_gap_cm": -0.167,
+"index_to_trigger_cm": 3.1074,
+"wrist_displacement_cm": 4.1309,
+"wrist_rotation_deg": 15.0316,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0523,
+"face_buttons": 4.0991
+},
+"thumb_min_gap_cm": -0.0085,
+"index_to_trigger_cm": 2.7892,
+"wrist_displacement_cm": 7.9078,
+"wrist_rotation_deg": 15.0316,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 36,
+"gltf_t": 1.2333333492279053,
+"native_t": 1.2000000158945718,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 69,
+"thumb_to_target_cm": {
+"stick": 1.4479
+},
+"thumb_min_gap_cm": -0.1642,
+"index_to_trigger_cm": 3.1648,
+"wrist_displacement_cm": 4.1103,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2633,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0631,
+"face_buttons": 4.1165
+},
+"thumb_min_gap_cm": 0.0202,
+"index_to_trigger_cm": 2.7862,
+"wrist_displacement_cm": 7.8825,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 37,
+"gltf_t": 1.2666666507720947,
+"native_t": 1.2333333174387613,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 79,
+"thumb_to_target_cm": {
+"stick": 1.4122
+},
+"thumb_min_gap_cm": -0.1477,
+"index_to_trigger_cm": 3.212,
+"wrist_displacement_cm": 4.0995,
+"wrist_rotation_deg": 15.0366,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2044,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2642,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.066,
+"face_buttons": 4.1214
+},
+"thumb_min_gap_cm": 0.0283,
+"index_to_trigger_cm": 2.7648,
+"wrist_displacement_cm": 7.8677,
+"wrist_rotation_deg": 15.0366,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 38,
+"gltf_t": 1.2999999523162842,
+"native_t": 1.2666666189829507,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 86,
+"thumb_to_target_cm": {
+"stick": 1.3839
+},
+"thumb_min_gap_cm": -0.1896,
+"index_to_trigger_cm": 3.2176,
+"wrist_displacement_cm": 4.1067,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2044,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2642,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0628,
+"face_buttons": 4.1159
+},
+"thumb_min_gap_cm": 0.0195,
+"index_to_trigger_cm": 2.7744,
+"wrist_displacement_cm": 7.8713,
+"wrist_rotation_deg": 15.035,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 39,
+"gltf_t": 1.3333333730697632,
+"native_t": 1.3000000397364297,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 87,
+"thumb_to_target_cm": {
+"stick": 1.3874
+},
+"thumb_min_gap_cm": -0.1844,
+"index_to_trigger_cm": 3.154,
+"wrist_displacement_cm": 4.1246,
+"wrist_rotation_deg": 15.03,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0606,
+"face_buttons": 4.1114
+},
+"thumb_min_gap_cm": 0.0125,
+"index_to_trigger_cm": 2.7937,
+"wrist_displacement_cm": 7.8771,
+"wrist_rotation_deg": 15.03,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 40,
+"gltf_t": 1.3666666746139526,
+"native_t": 1.3333333412806192,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 90,
+"thumb_to_target_cm": {
+"stick": 1.4277
+},
+"thumb_min_gap_cm": -0.164,
+"index_to_trigger_cm": 3.0745,
+"wrist_displacement_cm": 4.1442,
+"wrist_rotation_deg": 15.0238,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2627,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0624,
+"face_buttons": 4.1135
+},
+"thumb_min_gap_cm": 0.0164,
+"index_to_trigger_cm": 2.8047,
+"wrist_displacement_cm": 7.8721,
+"wrist_rotation_deg": 15.0238,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 41,
+"gltf_t": 1.399999976158142,
+"native_t": 1.3666666428248087,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 90,
+"thumb_to_target_cm": {
+"stick": 1.4811
+},
+"thumb_min_gap_cm": -0.1601,
+"index_to_trigger_cm": 3.0282,
+"wrist_displacement_cm": 4.1616,
+"wrist_rotation_deg": 15.0191,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2042,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2638,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.061,
+"face_buttons": 4.1099
+},
+"thumb_min_gap_cm": 0.0111,
+"index_to_trigger_cm": 2.7735,
+"wrist_displacement_cm": 7.8603,
+"wrist_rotation_deg": 15.0191,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 42,
+"gltf_t": 1.4333332777023315,
+"native_t": 1.399999944368998,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 88,
+"thumb_to_target_cm": {
+"stick": 1.524
+},
+"thumb_min_gap_cm": -0.176,
+"index_to_trigger_cm": 3.039,
+"wrist_displacement_cm": 4.1739,
+"wrist_rotation_deg": 15.0141,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2047,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2646,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 2.05,
+"face_buttons": 4.0893
+},
+"thumb_min_gap_cm": -0.018,
+"index_to_trigger_cm": 2.7631,
+"wrist_displacement_cm": 7.846,
+"wrist_rotation_deg": 15.0141,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 43,
+"gltf_t": 1.4666666984558105,
+"native_t": 1.433333365122477,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 88,
+"thumb_to_target_cm": {
+"stick": 1.5454
+},
+"thumb_min_gap_cm": -0.1833,
+"index_to_trigger_cm": 3.0879,
+"wrist_displacement_cm": 4.1894,
+"wrist_rotation_deg": 15.0005,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2043,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.264,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 2.0314,
+"face_buttons": 4.0553
+},
+"thumb_min_gap_cm": -0.0301,
+"index_to_trigger_cm": 2.7828,
+"wrist_displacement_cm": 7.8416,
+"wrist_rotation_deg": 15.0005,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 44,
+"gltf_t": 1.5,
+"native_t": 1.4666666666666666,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 89,
+"thumb_to_target_cm": {
+"stick": 1.5522
+},
+"thumb_min_gap_cm": -0.1776,
+"index_to_trigger_cm": 3.1503,
+"wrist_displacement_cm": 4.221,
+"wrist_rotation_deg": 14.9751,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2633,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0122,
+"face_buttons": 4.0217
+},
+"thumb_min_gap_cm": -0.0545,
+"index_to_trigger_cm": 2.7876,
+"wrist_displacement_cm": 7.8633,
+"wrist_rotation_deg": 14.9751,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 45,
+"gltf_t": 1.5333333015441895,
+"native_t": 1.499999968210856,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.5619
+},
+"thumb_min_gap_cm": -0.1683,
+"index_to_trigger_cm": 3.1985,
+"wrist_displacement_cm": 4.2771,
+"wrist_rotation_deg": 14.9466,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2042,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2639,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9979,
+"face_buttons": 3.9998
+},
+"thumb_min_gap_cm": -0.0715,
+"index_to_trigger_cm": 2.768,
+"wrist_displacement_cm": 7.9254,
+"wrist_rotation_deg": 14.9466,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 46,
+"gltf_t": 1.5666667222976685,
+"native_t": 1.533333388964335,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 93,
+"thumb_to_target_cm": {
+"stick": 1.5784
+},
+"thumb_min_gap_cm": -0.164,
+"index_to_trigger_cm": 3.185,
+"wrist_displacement_cm": 4.3334,
+"wrist_rotation_deg": 14.9291,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2051,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2653,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 157,
+"thumb_to_target_cm": {
+"stick": 1.99,
+"face_buttons": 3.9918
+},
+"thumb_min_gap_cm": -0.0819,
+"index_to_trigger_cm": 2.7536,
+"wrist_displacement_cm": 8.0297,
+"wrist_rotation_deg": 14.9291,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 47,
+"gltf_t": 1.600000023841858,
+"native_t": 1.5666666905085245,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 91,
+"thumb_to_target_cm": {
+"stick": 1.5909
+},
+"thumb_min_gap_cm": -0.1686,
+"index_to_trigger_cm": 3.1146,
+"wrist_displacement_cm": 4.3539,
+"wrist_rotation_deg": 14.9333,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2053,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2656,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 170,
+"thumb_to_target_cm": {
+"stick": 1.9862,
+"face_buttons": 3.991
+},
+"thumb_min_gap_cm": -0.0901,
+"index_to_trigger_cm": 2.7777,
+"wrist_displacement_cm": 8.1586,
+"wrist_rotation_deg": 14.9333,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 48,
+"gltf_t": 1.6333333253860474,
+"native_t": 1.599999992052714,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 88,
+"thumb_to_target_cm": {
+"stick": 1.5779
+},
+"thumb_min_gap_cm": -0.1759,
+"index_to_trigger_cm": 2.9898,
+"wrist_displacement_cm": 4.3255,
+"wrist_rotation_deg": 14.9598,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2045,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2644,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 155,
+"thumb_to_target_cm": {
+"stick": 1.9848,
+"face_buttons": 3.9973
+},
+"thumb_min_gap_cm": -0.0893,
+"index_to_trigger_cm": 2.7842,
+"wrist_displacement_cm": 8.2671,
+"wrist_rotation_deg": 14.9598,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 49,
+"gltf_t": 1.6666666269302368,
+"native_t": 1.6333332935969034,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 89,
+"thumb_to_target_cm": {
+"stick": 1.5313
+},
+"thumb_min_gap_cm": -0.1788,
+"index_to_trigger_cm": 2.8651,
+"wrist_displacement_cm": 4.2711,
+"wrist_rotation_deg": 14.9903,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.263,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9873,
+"face_buttons": 4.0187
+},
+"thumb_min_gap_cm": -0.0784,
+"index_to_trigger_cm": 2.7913,
+"wrist_displacement_cm": 8.3312,
+"wrist_rotation_deg": 14.9903,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 50,
+"gltf_t": 1.7000000476837158,
+"native_t": 1.6666667143503824,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.4853
+},
+"thumb_min_gap_cm": -0.1707,
+"index_to_trigger_cm": 2.8063,
+"wrist_displacement_cm": 4.1976,
+"wrist_rotation_deg": 15.0192,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0027,
+"face_buttons": 4.0772
+},
+"thumb_min_gap_cm": -0.0869,
+"index_to_trigger_cm": 2.8178,
+"wrist_displacement_cm": 8.3476,
+"wrist_rotation_deg": 15.0192,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 51,
+"gltf_t": 1.7333333492279053,
+"native_t": 1.7000000158945718,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.4841
+},
+"thumb_min_gap_cm": -0.1804,
+"index_to_trigger_cm": 2.8252,
+"wrist_displacement_cm": 4.0955,
+"wrist_rotation_deg": 15.0584,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0458,
+"face_buttons": 4.1828
+},
+"thumb_min_gap_cm": 0.0117,
+"index_to_trigger_cm": 2.8245,
+"wrist_displacement_cm": 8.3109,
+"wrist_rotation_deg": 15.0584,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 52,
+"gltf_t": 1.7666666507720947,
+"native_t": 1.7333333174387613,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 97,
+"thumb_to_target_cm": {
+"stick": 1.5348
+},
+"thumb_min_gap_cm": -0.1712,
+"index_to_trigger_cm": 2.9127,
+"wrist_displacement_cm": 3.9737,
+"wrist_rotation_deg": 15.094,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0981,
+"face_buttons": 4.2817
+},
+"thumb_min_gap_cm": 0.1142,
+"index_to_trigger_cm": 2.824,
+"wrist_displacement_cm": 8.2205,
+"wrist_rotation_deg": 15.094,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 53,
+"gltf_t": 1.7999999523162842,
+"native_t": 1.7666666189829507,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 95,
+"thumb_to_target_cm": {
+"stick": 1.5927
+},
+"thumb_min_gap_cm": -0.1667,
+"index_to_trigger_cm": 3.0388,
+"wrist_displacement_cm": 3.8749,
+"wrist_rotation_deg": 15.0911,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.1156,
+"face_buttons": 4.3116
+},
+"thumb_min_gap_cm": 0.13,
+"index_to_trigger_cm": 2.8244,
+"wrist_displacement_cm": 8.1173,
+"wrist_rotation_deg": 15.0911,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 54,
+"gltf_t": 1.8333333730697632,
+"native_t": 1.8000000397364297,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.5967
+},
+"thumb_min_gap_cm": -0.1565,
+"index_to_trigger_cm": 3.1414,
+"wrist_displacement_cm": 3.8219,
+"wrist_rotation_deg": 15.0633,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2031,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2621,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0895,
+"face_buttons": 4.2632
+},
+"thumb_min_gap_cm": 0.0992,
+"index_to_trigger_cm": 2.8272,
+"wrist_displacement_cm": 8.0495,
+"wrist_rotation_deg": 15.0633,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 55,
+"gltf_t": 1.8666666746139526,
+"native_t": 1.8333333412806192,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 93,
+"thumb_to_target_cm": {
+"stick": 1.5431
+},
+"thumb_min_gap_cm": -0.1738,
+"index_to_trigger_cm": 3.158,
+"wrist_displacement_cm": 3.7996,
+"wrist_rotation_deg": 15.0492,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2031,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2621,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.059,
+"face_buttons": 4.1962
+},
+"thumb_min_gap_cm": 0.0291,
+"index_to_trigger_cm": 2.8289,
+"wrist_displacement_cm": 8.0225,
+"wrist_rotation_deg": 15.0492,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 56,
+"gltf_t": 1.899999976158142,
+"native_t": 1.8666666428248087,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 88,
+"thumb_to_target_cm": {
+"stick": 1.4539
+},
+"thumb_min_gap_cm": -0.164,
+"index_to_trigger_cm": 3.085,
+"wrist_displacement_cm": 3.803,
+"wrist_rotation_deg": 15.0573,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0518,
+"face_buttons": 4.1712
+},
+"thumb_min_gap_cm": 0.039,
+"index_to_trigger_cm": 2.8244,
+"wrist_displacement_cm": 8.0315,
+"wrist_rotation_deg": 15.0573,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 57,
+"gltf_t": 1.9333332777023315,
+"native_t": 1.899999944368998,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 87,
+"thumb_to_target_cm": {
+"stick": 1.3772
+},
+"thumb_min_gap_cm": -0.194,
+"index_to_trigger_cm": 2.967,
+"wrist_displacement_cm": 3.8386,
+"wrist_rotation_deg": 15.072,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0644,
+"face_buttons": 4.1916
+},
+"thumb_min_gap_cm": 0.0404,
+"index_to_trigger_cm": 2.8091,
+"wrist_displacement_cm": 8.0822,
+"wrist_rotation_deg": 15.072,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 58,
+"gltf_t": 1.9666666984558105,
+"native_t": 1.933333365122477,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2103,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 87,
+"thumb_to_target_cm": {
+"stick": 1.3641
+},
+"thumb_min_gap_cm": -0.1819,
+"index_to_trigger_cm": 2.8191,
+"wrist_displacement_cm": 3.8774,
+"wrist_rotation_deg": 15.0863,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0791,
+"face_buttons": 4.2138
+},
+"thumb_min_gap_cm": 0.0634,
+"index_to_trigger_cm": 2.7937,
+"wrist_displacement_cm": 8.1429,
+"wrist_rotation_deg": 15.0863,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 59,
+"gltf_t": 2.0,
+"native_t": 1.9666666666666666,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2099,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.4268
+},
+"thumb_min_gap_cm": -0.1783,
+"index_to_trigger_cm": 2.7144,
+"wrist_displacement_cm": 3.872,
+"wrist_rotation_deg": 15.1132,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.263,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0848,
+"face_buttons": 4.2092
+},
+"thumb_min_gap_cm": 0.08,
+"index_to_trigger_cm": 2.7899,
+"wrist_displacement_cm": 8.1543,
+"wrist_rotation_deg": 15.1132,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 60,
+"gltf_t": 2.0333333015441895,
+"native_t": 1.999999968210856,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2099,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 77,
+"thumb_to_target_cm": {
+"stick": 1.5258
+},
+"thumb_min_gap_cm": -0.1351,
+"index_to_trigger_cm": 2.6858,
+"wrist_displacement_cm": 3.8156,
+"wrist_rotation_deg": 15.158,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2628,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0888,
+"face_buttons": 4.1938
+},
+"thumb_min_gap_cm": 0.0512,
+"index_to_trigger_cm": 2.7953,
+"wrist_displacement_cm": 8.1019,
+"wrist_rotation_deg": 15.158,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 61,
+"gltf_t": 2.066666603088379,
+"native_t": 2.0333332697550457,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2101,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.6455
+},
+"thumb_min_gap_cm": -0.1666,
+"index_to_trigger_cm": 2.7166,
+"wrist_displacement_cm": 3.7461,
+"wrist_rotation_deg": 15.2065,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0934,
+"face_buttons": 4.1791
+},
+"thumb_min_gap_cm": 0.0215,
+"index_to_trigger_cm": 2.8042,
+"wrist_displacement_cm": 8.0213,
+"wrist_rotation_deg": 15.2065,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 62,
+"gltf_t": 2.0999999046325684,
+"native_t": 2.066666571299235,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 66,
+"thumb_to_target_cm": {
+"stick": 1.7647
+},
+"thumb_min_gap_cm": -0.1057,
+"index_to_trigger_cm": 2.8198,
+"wrist_displacement_cm": 3.7245,
+"wrist_rotation_deg": 15.2295,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0945,
+"face_buttons": 4.1669
+},
+"thumb_min_gap_cm": 0.0053,
+"index_to_trigger_cm": 2.8105,
+"wrist_displacement_cm": 7.9801,
+"wrist_rotation_deg": 15.2295,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 63,
+"gltf_t": 2.133333444595337,
+"native_t": 2.1000001112620037,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 63,
+"thumb_to_target_cm": {
+"stick": 1.8593
+},
+"thumb_min_gap_cm": -0.0321,
+"index_to_trigger_cm": 2.9469,
+"wrist_displacement_cm": 3.7594,
+"wrist_rotation_deg": 15.2193,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0859,
+"face_buttons": 4.1489
+},
+"thumb_min_gap_cm": 0.0086,
+"index_to_trigger_cm": 2.8135,
+"wrist_displacement_cm": 8.0002,
+"wrist_rotation_deg": 15.2193,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 64,
+"gltf_t": 2.1666667461395264,
+"native_t": 2.133333412806193,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 62,
+"thumb_to_target_cm": {
+"stick": 1.91
+},
+"thumb_min_gap_cm": 0.0098,
+"index_to_trigger_cm": 3.0211,
+"wrist_displacement_cm": 3.8141,
+"wrist_rotation_deg": 15.1897,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0658,
+"face_buttons": 4.1194
+},
+"thumb_min_gap_cm": 0.0254,
+"index_to_trigger_cm": 2.8159,
+"wrist_displacement_cm": 8.0492,
+"wrist_rotation_deg": 15.1897,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 65,
+"gltf_t": 2.200000047683716,
+"native_t": 2.1666667143503826,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 62,
+"thumb_to_target_cm": {
+"stick": 1.8997
+},
+"thumb_min_gap_cm": 0.0081,
+"index_to_trigger_cm": 2.9965,
+"wrist_displacement_cm": 3.8531,
+"wrist_rotation_deg": 15.1604,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0385,
+"face_buttons": 4.0803
+},
+"thumb_min_gap_cm": -0.0309,
+"index_to_trigger_cm": 2.8182,
+"wrist_displacement_cm": 8.0814,
+"wrist_rotation_deg": 15.1604,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 66,
+"gltf_t": 2.2333333492279053,
+"native_t": 2.200000015894572,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 64,
+"thumb_to_target_cm": {
+"stick": 1.8311
+},
+"thumb_min_gap_cm": -0.0384,
+"index_to_trigger_cm": 3.0013,
+"wrist_displacement_cm": 3.8621,
+"wrist_rotation_deg": 15.149,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0098,
+"face_buttons": 4.0378
+},
+"thumb_min_gap_cm": -0.0662,
+"index_to_trigger_cm": 2.8167,
+"wrist_displacement_cm": 8.0702,
+"wrist_rotation_deg": 15.149,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 67,
+"gltf_t": 2.2666666507720947,
+"native_t": 2.2333333174387615,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 67,
+"thumb_to_target_cm": {
+"stick": 1.7124
+},
+"thumb_min_gap_cm": -0.1367,
+"index_to_trigger_cm": 3.1193,
+"wrist_displacement_cm": 3.8493,
+"wrist_rotation_deg": 15.1645,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 1.9933,
+"face_buttons": 4.0133
+},
+"thumb_min_gap_cm": -0.0785,
+"index_to_trigger_cm": 2.8077,
+"wrist_displacement_cm": 8.023,
+"wrist_rotation_deg": 15.1645,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 68,
+"gltf_t": 2.299999952316284,
+"native_t": 2.266666618982951,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 72,
+"thumb_to_target_cm": {
+"stick": 1.5641
+},
+"thumb_min_gap_cm": -0.1689,
+"index_to_trigger_cm": 3.0774,
+"wrist_displacement_cm": 3.8295,
+"wrist_rotation_deg": 15.1912,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 1.9932,
+"face_buttons": 4.017
+},
+"thumb_min_gap_cm": -0.0791,
+"index_to_trigger_cm": 2.794,
+"wrist_displacement_cm": 7.9748,
+"wrist_rotation_deg": 15.1912,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 69,
+"gltf_t": 2.3333332538604736,
+"native_t": 2.2999999205271404,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.4376
+},
+"thumb_min_gap_cm": -0.1847,
+"index_to_trigger_cm": 2.9673,
+"wrist_displacement_cm": 3.812,
+"wrist_rotation_deg": 15.2044,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2633,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0142,
+"face_buttons": 4.0596
+},
+"thumb_min_gap_cm": -0.0452,
+"index_to_trigger_cm": 2.7854,
+"wrist_displacement_cm": 7.9604,
+"wrist_rotation_deg": 15.2044,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 70,
+"gltf_t": 2.366666555404663,
+"native_t": 2.33333322207133,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.3995
+},
+"thumb_min_gap_cm": -0.1991,
+"index_to_trigger_cm": 2.9753,
+"wrist_displacement_cm": 3.7979,
+"wrist_rotation_deg": 15.2001,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2638,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0615,
+"face_buttons": 4.1429
+},
+"thumb_min_gap_cm": 0.0607,
+"index_to_trigger_cm": 2.7875,
+"wrist_displacement_cm": 7.9839,
+"wrist_rotation_deg": 15.2001,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 71,
+"gltf_t": 2.4000000953674316,
+"native_t": 2.3666667620340984,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 97,
+"thumb_to_target_cm": {
+"stick": 1.4783
+},
+"thumb_min_gap_cm": -0.2006,
+"index_to_trigger_cm": 3.0328,
+"wrist_displacement_cm": 3.7873,
+"wrist_rotation_deg": 15.1826,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2048,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2643,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 2.1287,
+"face_buttons": 4.2431
+},
+"thumb_min_gap_cm": 0.0476,
+"index_to_trigger_cm": 2.7947,
+"wrist_displacement_cm": 8.0225,
+"wrist_rotation_deg": 15.1826,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 72,
+"gltf_t": 2.433333396911621,
+"native_t": 2.400000063578288,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 98,
+"thumb_to_target_cm": {
+"stick": 1.6361
+},
+"thumb_min_gap_cm": -0.1751,
+"index_to_trigger_cm": 3.0969,
+"wrist_displacement_cm": 3.7794,
+"wrist_rotation_deg": 15.1436,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2053,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 2.1868,
+"face_buttons": 4.3215
+},
+"thumb_min_gap_cm": 0.0806,
+"index_to_trigger_cm": 2.796,
+"wrist_displacement_cm": 8.0449,
+"wrist_rotation_deg": 15.1436,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 73,
+"gltf_t": 2.4666666984558105,
+"native_t": 2.4333333651224773,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.7883
+},
+"thumb_min_gap_cm": -0.1626,
+"index_to_trigger_cm": 3.1295,
+"wrist_displacement_cm": 3.7758,
+"wrist_rotation_deg": 15.0799,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2637,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.2036,
+"face_buttons": 4.3481
+},
+"thumb_min_gap_cm": 0.1,
+"index_to_trigger_cm": 2.7892,
+"wrist_displacement_cm": 8.049,
+"wrist_rotation_deg": 15.0799,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 74,
+"gltf_t": 2.5,
+"native_t": 2.466666666666667,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 95,
+"thumb_to_target_cm": {
+"stick": 1.8428
+},
+"thumb_min_gap_cm": -0.191,
+"index_to_trigger_cm": 3.1254,
+"wrist_displacement_cm": 3.7903,
+"wrist_rotation_deg": 15.02,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.1996,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2714,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 2.171,
+"face_buttons": 4.3205
+},
+"thumb_min_gap_cm": 0.1024,
+"index_to_trigger_cm": 2.7775,
+"wrist_displacement_cm": 8.0724,
+"wrist_rotation_deg": 15.02,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 75,
+"gltf_t": 2.5333333015441895,
+"native_t": 2.4999999682108562,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.7844
+},
+"thumb_min_gap_cm": -0.1625,
+"index_to_trigger_cm": 3.1214,
+"wrist_displacement_cm": 3.8279,
+"wrist_rotation_deg": 14.9837,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.1952,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2892,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 150,
+"thumb_to_target_cm": {
+"stick": 2.107,
+"face_buttons": 4.2509
+},
+"thumb_min_gap_cm": 0.0801,
+"index_to_trigger_cm": 2.7749,
+"wrist_displacement_cm": 8.1422,
+"wrist_rotation_deg": 14.9837,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 76,
+"gltf_t": 2.566666603088379,
+"native_t": 2.5333332697550457,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 95,
+"thumb_to_target_cm": {
+"stick": 1.6534
+},
+"thumb_min_gap_cm": -0.16,
+"index_to_trigger_cm": 3.1179,
+"wrist_displacement_cm": 3.8919,
+"wrist_rotation_deg": 14.9593,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.1933,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2977,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 152,
+"thumb_to_target_cm": {
+"stick": 2.0408,
+"face_buttons": 4.158
+},
+"thumb_min_gap_cm": 0.031,
+"index_to_trigger_cm": 2.7882,
+"wrist_displacement_cm": 8.2576,
+"wrist_rotation_deg": 14.9593,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 77,
+"gltf_t": 2.5999999046325684,
+"native_t": 2.566666571299235,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 91,
+"thumb_to_target_cm": {
+"stick": 1.5273
+},
+"thumb_min_gap_cm": -0.1841,
+"index_to_trigger_cm": 3.1153,
+"wrist_displacement_cm": 3.9839,
+"wrist_rotation_deg": 14.9362,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.1932,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2894,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 154,
+"thumb_to_target_cm": {
+"stick": 1.9972,
+"face_buttons": 4.0689
+},
+"thumb_min_gap_cm": -0.0916,
+"index_to_trigger_cm": 2.8081,
+"wrist_displacement_cm": 8.3905,
+"wrist_rotation_deg": 14.9362,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 78,
+"gltf_t": 2.633333444595337,
+"native_t": 2.6000001112620037,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.4427
+},
+"thumb_min_gap_cm": -0.1873,
+"index_to_trigger_cm": 3.1138,
+"wrist_displacement_cm": 4.0753,
+"wrist_rotation_deg": 14.9304,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.1982,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2719,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 149,
+"thumb_to_target_cm": {
+"stick": 1.9796,
+"face_buttons": 4.0132
+},
+"thumb_min_gap_cm": -0.0928,
+"index_to_trigger_cm": 2.8204,
+"wrist_displacement_cm": 8.4906,
+"wrist_rotation_deg": 14.9304,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 79,
+"gltf_t": 2.6666667461395264,
+"native_t": 2.633333412806193,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 76,
+"thumb_to_target_cm": {
+"stick": 1.4046
+},
+"thumb_min_gap_cm": -0.1668,
+"index_to_trigger_cm": 3.1121,
+"wrist_displacement_cm": 4.1292,
+"wrist_rotation_deg": 14.9553,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2025,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2619,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9801,
+"face_buttons": 4.0093
+},
+"thumb_min_gap_cm": -0.0941,
+"index_to_trigger_cm": 2.8199,
+"wrist_displacement_cm": 8.5212,
+"wrist_rotation_deg": 14.9553,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 80,
+"gltf_t": 2.700000047683716,
+"native_t": 2.6666667143503826,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.387
+},
+"thumb_min_gap_cm": -0.1676,
+"index_to_trigger_cm": 3.107,
+"wrist_displacement_cm": 4.141,
+"wrist_rotation_deg": 14.9975,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2042,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 1.9988,
+"face_buttons": 4.0608
+},
+"thumb_min_gap_cm": -0.0831,
+"index_to_trigger_cm": 2.8087,
+"wrist_displacement_cm": 8.4891,
+"wrist_rotation_deg": 14.9975,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 81,
+"gltf_t": 2.7333333492279053,
+"native_t": 2.700000015894572,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.3779
+},
+"thumb_min_gap_cm": -0.1733,
+"index_to_trigger_cm": 3.0955,
+"wrist_displacement_cm": 4.127,
+"wrist_rotation_deg": 15.0368,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0385,
+"face_buttons": 4.1445
+},
+"thumb_min_gap_cm": 0.0393,
+"index_to_trigger_cm": 2.796,
+"wrist_displacement_cm": 8.4289,
+"wrist_rotation_deg": 15.0368,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 82,
+"gltf_t": 2.7666666507720947,
+"native_t": 2.7333333174387615,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.3811
+},
+"thumb_min_gap_cm": -0.18,
+"index_to_trigger_cm": 3.0644,
+"wrist_displacement_cm": 4.0816,
+"wrist_rotation_deg": 15.0604,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2634,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0855,
+"face_buttons": 4.2204
+},
+"thumb_min_gap_cm": 0.0781,
+"index_to_trigger_cm": 2.7881,
+"wrist_displacement_cm": 8.3442,
+"wrist_rotation_deg": 15.0604,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 83,
+"gltf_t": 2.799999952316284,
+"native_t": 2.766666618982951,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 69,
+"thumb_to_target_cm": {
+"stick": 1.4077
+},
+"thumb_min_gap_cm": -0.1664,
+"index_to_trigger_cm": 2.9817,
+"wrist_displacement_cm": 3.9948,
+"wrist_rotation_deg": 15.0756,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.264,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 2.1185,
+"face_buttons": 4.2569
+},
+"thumb_min_gap_cm": 0.0587,
+"index_to_trigger_cm": 2.782,
+"wrist_displacement_cm": 8.209,
+"wrist_rotation_deg": 15.0756,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 84,
+"gltf_t": 2.8333332538604736,
+"native_t": 2.7999999205271404,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.4577
+},
+"thumb_min_gap_cm": -0.1732,
+"index_to_trigger_cm": 2.9027,
+"wrist_displacement_cm": 3.8839,
+"wrist_rotation_deg": 15.1001,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2047,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2648,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 149,
+"thumb_to_target_cm": {
+"stick": 2.1198,
+"face_buttons": 4.2335
+},
+"thumb_min_gap_cm": 0.0404,
+"index_to_trigger_cm": 2.7704,
+"wrist_displacement_cm": 8.0158,
+"wrist_rotation_deg": 15.1001,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 85,
+"gltf_t": 2.866666555404663,
+"native_t": 2.83333322207133,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 73,
+"thumb_to_target_cm": {
+"stick": 1.5187
+},
+"thumb_min_gap_cm": -0.1433,
+"index_to_trigger_cm": 2.8704,
+"wrist_displacement_cm": 3.7833,
+"wrist_rotation_deg": 15.1348,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2052,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2653,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 152,
+"thumb_to_target_cm": {
+"stick": 2.0991,
+"face_buttons": 4.1718
+},
+"thumb_min_gap_cm": -0.0015,
+"index_to_trigger_cm": 2.7536,
+"wrist_displacement_cm": 7.7986,
+"wrist_rotation_deg": 15.1348,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 86,
+"gltf_t": 2.9000000953674316,
+"native_t": 2.8666667620340984,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 73,
+"thumb_to_target_cm": {
+"stick": 1.5719
+},
+"thumb_min_gap_cm": -0.1415,
+"index_to_trigger_cm": 2.8987,
+"wrist_displacement_cm": 3.7218,
+"wrist_rotation_deg": 15.1593,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2051,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2653,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 149,
+"thumb_to_target_cm": {
+"stick": 2.0591,
+"face_buttons": 4.0817
+},
+"thumb_min_gap_cm": -0.0013,
+"index_to_trigger_cm": 2.7445,
+"wrist_displacement_cm": 7.6231,
+"wrist_rotation_deg": 15.1593,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 87,
+"gltf_t": 2.933333396911621,
+"native_t": 2.900000063578288,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 73,
+"thumb_to_target_cm": {
+"stick": 1.6009
+},
+"thumb_min_gap_cm": -0.146,
+"index_to_trigger_cm": 2.9665,
+"wrist_displacement_cm": 3.7024,
+"wrist_rotation_deg": 15.1636,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 2.0222,
+"face_buttons": 3.9989
+},
+"thumb_min_gap_cm": -0.0354,
+"index_to_trigger_cm": 2.7543,
+"wrist_displacement_cm": 7.5296,
+"wrist_rotation_deg": 15.1636,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 88,
+"gltf_t": 2.9666666984558105,
+"native_t": 2.9333333651224773,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 73,
+"thumb_to_target_cm": {
+"stick": 1.5835
+},
+"thumb_min_gap_cm": -0.1541,
+"index_to_trigger_cm": 3.0234,
+"wrist_displacement_cm": 3.7076,
+"wrist_rotation_deg": 15.1604,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2634,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 2.0046,
+"face_buttons": 3.942
+},
+"thumb_min_gap_cm": -0.101,
+"index_to_trigger_cm": 2.7813,
+"wrist_displacement_cm": 7.5112,
+"wrist_rotation_deg": 15.1604,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 89,
+"gltf_t": 3.0,
+"native_t": 2.966666666666667,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 76,
+"thumb_to_target_cm": {
+"stick": 1.5173
+},
+"thumb_min_gap_cm": -0.1361,
+"index_to_trigger_cm": 3.0055,
+"wrist_displacement_cm": 3.7182,
+"wrist_rotation_deg": 15.1619,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0061,
+"face_buttons": 3.9084
+},
+"thumb_min_gap_cm": -0.1115,
+"index_to_trigger_cm": 2.8094,
+"wrist_displacement_cm": 7.5208,
+"wrist_rotation_deg": 15.1619,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 90,
+"gltf_t": 3.0333333015441895,
+"native_t": 2.9999999682108562,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 81,
+"thumb_to_target_cm": {
+"stick": 1.437
+},
+"thumb_min_gap_cm": -0.1661,
+"index_to_trigger_cm": 2.9494,
+"wrist_displacement_cm": 3.7268,
+"wrist_rotation_deg": 15.1659,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 143,
+"thumb_to_target_cm": {
+"stick": 2.0198,
+"face_buttons": 3.9098
+},
+"thumb_min_gap_cm": -0.0676,
+"index_to_trigger_cm": 2.8197,
+"wrist_displacement_cm": 7.5228,
+"wrist_rotation_deg": 15.1659,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 91,
+"gltf_t": 3.066666603088379,
+"native_t": 3.0333332697550457,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 87,
+"thumb_to_target_cm": {
+"stick": 1.3815
+},
+"thumb_min_gap_cm": -0.1904,
+"index_to_trigger_cm": 2.9027,
+"wrist_displacement_cm": 3.7346,
+"wrist_rotation_deg": 15.1723,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 2.0425,
+"face_buttons": 3.9467
+},
+"thumb_min_gap_cm": -0.067,
+"index_to_trigger_cm": 2.81,
+"wrist_displacement_cm": 7.5225,
+"wrist_rotation_deg": 15.1723,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 92,
+"gltf_t": 3.0999999046325684,
+"native_t": 3.066666571299235,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 93,
+"thumb_to_target_cm": {
+"stick": 1.3721
+},
+"thumb_min_gap_cm": -0.2224,
+"index_to_trigger_cm": 2.8755,
+"wrist_displacement_cm": 3.7421,
+"wrist_rotation_deg": 15.1864,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.0607,
+"face_buttons": 3.9981
+},
+"thumb_min_gap_cm": -0.0507,
+"index_to_trigger_cm": 2.793,
+"wrist_displacement_cm": 7.5367,
+"wrist_rotation_deg": 15.1864,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 93,
+"gltf_t": 3.133333444595337,
+"native_t": 3.1000001112620037,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2643,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 99,
+"thumb_to_target_cm": {
+"stick": 1.4285
+},
+"thumb_min_gap_cm": -0.2643,
+"index_to_trigger_cm": 2.859,
+"wrist_displacement_cm": 3.7489,
+"wrist_rotation_deg": 15.2072,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2633,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0554,
+"face_buttons": 4.0159
+},
+"thumb_min_gap_cm": -0.0203,
+"index_to_trigger_cm": 2.7823,
+"wrist_displacement_cm": 7.5738,
+"wrist_rotation_deg": 15.2072,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 94,
+"gltf_t": 3.1666667461395264,
+"native_t": 3.133333412806193,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 102,
+"thumb_to_target_cm": {
+"stick": 1.5182
+},
+"thumb_min_gap_cm": -0.2519,
+"index_to_trigger_cm": 2.8464,
+"wrist_displacement_cm": 3.7546,
+"wrist_rotation_deg": 15.2238,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2635,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0261,
+"face_buttons": 3.9963
+},
+"thumb_min_gap_cm": -0.0351,
+"index_to_trigger_cm": 2.7828,
+"wrist_displacement_cm": 7.6359,
+"wrist_rotation_deg": 15.2238,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 95,
+"gltf_t": 3.200000047683716,
+"native_t": 3.1666667143503826,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 100,
+"thumb_to_target_cm": {
+"stick": 1.5777
+},
+"thumb_min_gap_cm": -0.2446,
+"index_to_trigger_cm": 2.841,
+"wrist_displacement_cm": 3.7634,
+"wrist_rotation_deg": 15.221,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2635,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 2.0008,
+"face_buttons": 3.9798
+},
+"thumb_min_gap_cm": -0.0617,
+"index_to_trigger_cm": 2.7903,
+"wrist_displacement_cm": 7.7245,
+"wrist_rotation_deg": 15.221,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 96,
+"gltf_t": 3.2333333492279053,
+"native_t": 3.200000015894572,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 101,
+"thumb_to_target_cm": {
+"stick": 1.5497
+},
+"thumb_min_gap_cm": -0.2459,
+"index_to_trigger_cm": 2.8626,
+"wrist_displacement_cm": 3.777,
+"wrist_rotation_deg": 15.1972,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2636,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 1.989,
+"face_buttons": 3.9604
+},
+"thumb_min_gap_cm": -0.0865,
+"index_to_trigger_cm": 2.7985,
+"wrist_displacement_cm": 7.8204,
+"wrist_rotation_deg": 15.1972,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 97,
+"gltf_t": 3.2666666507720947,
+"native_t": 3.2333333174387615,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 101,
+"thumb_to_target_cm": {
+"stick": 1.472
+},
+"thumb_min_gap_cm": -0.2543,
+"index_to_trigger_cm": 2.918,
+"wrist_displacement_cm": 3.7831,
+"wrist_rotation_deg": 15.1718,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2637,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 153,
+"thumb_to_target_cm": {
+"stick": 1.9895,
+"face_buttons": 3.9165
+},
+"thumb_min_gap_cm": -0.1406,
+"index_to_trigger_cm": 2.8024,
+"wrist_displacement_cm": 7.8823,
+"wrist_rotation_deg": 15.1718,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 98,
+"gltf_t": 3.299999952316284,
+"native_t": 3.266666618982951,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2712,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 100,
+"thumb_to_target_cm": {
+"stick": 1.4113
+},
+"thumb_min_gap_cm": -0.2712,
+"index_to_trigger_cm": 2.9908,
+"wrist_displacement_cm": 3.7728,
+"wrist_rotation_deg": 15.1667,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2637,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 150,
+"thumb_to_target_cm": {
+"stick": 2.0018,
+"face_buttons": 3.8729
+},
+"thumb_min_gap_cm": -0.1096,
+"index_to_trigger_cm": 2.7997,
+"wrist_displacement_cm": 7.8845,
+"wrist_rotation_deg": 15.1667,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 99,
+"gltf_t": 3.3333332538604736,
+"native_t": 3.2999999205271404,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.3471
+},
+"thumb_min_gap_cm": -0.2321,
+"index_to_trigger_cm": 3.0425,
+"wrist_displacement_cm": 3.7442,
+"wrist_rotation_deg": 15.1894,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2635,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.0182,
+"face_buttons": 3.845
+},
+"thumb_min_gap_cm": -0.0972,
+"index_to_trigger_cm": 2.7932,
+"wrist_displacement_cm": 7.8251,
+"wrist_rotation_deg": 15.1894,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 100,
+"gltf_t": 3.366666555404663,
+"native_t": 3.33333322207133,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 90,
+"thumb_to_target_cm": {
+"stick": 1.3084
+},
+"thumb_min_gap_cm": -0.1647,
+"index_to_trigger_cm": 3.0489,
+"wrist_displacement_cm": 3.6954,
+"wrist_rotation_deg": 15.2301,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.0258,
+"face_buttons": 3.8378
+},
+"thumb_min_gap_cm": -0.0903,
+"index_to_trigger_cm": 2.7929,
+"wrist_displacement_cm": 7.73,
+"wrist_rotation_deg": 15.2301,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 101,
+"gltf_t": 3.4000000953674316,
+"native_t": 3.3666667620340984,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 78,
+"thumb_to_target_cm": {
+"stick": 1.3066
+},
+"thumb_min_gap_cm": -0.1754,
+"index_to_trigger_cm": 3.0198,
+"wrist_displacement_cm": 3.6376,
+"wrist_rotation_deg": 15.2692,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2628,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 2.0201,
+"face_buttons": 3.8496
+},
+"thumb_min_gap_cm": -0.0845,
+"index_to_trigger_cm": 2.7989,
+"wrist_displacement_cm": 7.6486,
+"wrist_rotation_deg": 15.2692,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 102,
+"gltf_t": 3.433333396911621,
+"native_t": 3.400000063578288,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.3221
+},
+"thumb_min_gap_cm": -0.1719,
+"index_to_trigger_cm": 2.9715,
+"wrist_displacement_cm": 3.5946,
+"wrist_rotation_deg": 15.2891,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2628,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.006,
+"face_buttons": 3.8777
+},
+"thumb_min_gap_cm": -0.093,
+"index_to_trigger_cm": 2.8,
+"wrist_displacement_cm": 7.6206,
+"wrist_rotation_deg": 15.2891,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 103,
+"gltf_t": 3.4666666984558105,
+"native_t": 3.4333333651224773,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.334
+},
+"thumb_min_gap_cm": -0.1658,
+"index_to_trigger_cm": 2.9573,
+"wrist_displacement_cm": 3.578,
+"wrist_rotation_deg": 15.2842,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2632,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9913,
+"face_buttons": 3.9158
+},
+"thumb_min_gap_cm": -0.1401,
+"index_to_trigger_cm": 2.7932,
+"wrist_displacement_cm": 7.6396,
+"wrist_rotation_deg": 15.2842,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 104,
+"gltf_t": 3.5,
+"native_t": 3.466666666666667,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 79,
+"thumb_to_target_cm": {
+"stick": 1.3366
+},
+"thumb_min_gap_cm": -0.1512,
+"index_to_trigger_cm": 2.9825,
+"wrist_displacement_cm": 3.5788,
+"wrist_rotation_deg": 15.2684,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2043,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2639,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 150,
+"thumb_to_target_cm": {
+"stick": 1.9824,
+"face_buttons": 3.9477
+},
+"thumb_min_gap_cm": -0.0968,
+"index_to_trigger_cm": 2.7838,
+"wrist_displacement_cm": 7.665,
+"wrist_rotation_deg": 15.2684,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 105,
+"gltf_t": 3.5333333015441895,
+"native_t": 3.4999999682108562,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 89,
+"thumb_to_target_cm": {
+"stick": 1.3331
+},
+"thumb_min_gap_cm": -0.1792,
+"index_to_trigger_cm": 3.0163,
+"wrist_displacement_cm": 3.5884,
+"wrist_rotation_deg": 15.2567,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2048,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2647,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 155,
+"thumb_to_target_cm": {
+"stick": 1.9776,
+"face_buttons": 3.9648
+},
+"thumb_min_gap_cm": -0.1192,
+"index_to_trigger_cm": 2.7715,
+"wrist_displacement_cm": 7.6755,
+"wrist_rotation_deg": 15.2567,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 106,
+"gltf_t": 3.566666603088379,
+"native_t": 3.5333332697550457,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.3283
+},
+"thumb_min_gap_cm": -0.223,
+"index_to_trigger_cm": 3.0197,
+"wrist_displacement_cm": 3.6024,
+"wrist_rotation_deg": 15.2542,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2051,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2653,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 159,
+"thumb_to_target_cm": {
+"stick": 1.9746,
+"face_buttons": 3.9708
+},
+"thumb_min_gap_cm": -0.1298,
+"index_to_trigger_cm": 2.7602,
+"wrist_displacement_cm": 7.6777,
+"wrist_rotation_deg": 15.2542,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 107,
+"gltf_t": 3.5999999046325684,
+"native_t": 3.566666571299235,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2587,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 96,
+"thumb_to_target_cm": {
+"stick": 1.3275
+},
+"thumb_min_gap_cm": -0.2587,
+"index_to_trigger_cm": 2.9999,
+"wrist_displacement_cm": 3.6138,
+"wrist_rotation_deg": 15.2599,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.205,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2652,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 159,
+"thumb_to_target_cm": {
+"stick": 1.9738,
+"face_buttons": 3.9705
+},
+"thumb_min_gap_cm": -0.137,
+"index_to_trigger_cm": 2.7539,
+"wrist_displacement_cm": 7.6828,
+"wrist_rotation_deg": 15.2599,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 108,
+"gltf_t": 3.633333444595337,
+"native_t": 3.6000001112620037,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2734,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 98,
+"thumb_to_target_cm": {
+"stick": 1.3376
+},
+"thumb_min_gap_cm": -0.2734,
+"index_to_trigger_cm": 2.9313,
+"wrist_displacement_cm": 3.6167,
+"wrist_rotation_deg": 15.2662,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 152,
+"thumb_to_target_cm": {
+"stick": 1.975,
+"face_buttons": 3.9711
+},
+"thumb_min_gap_cm": -0.1266,
+"index_to_trigger_cm": 2.7571,
+"wrist_displacement_cm": 7.6876,
+"wrist_rotation_deg": 15.2662,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 109,
+"gltf_t": 3.6666667461395264,
+"native_t": 3.633333412806193,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2715,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 98,
+"thumb_to_target_cm": {
+"stick": 1.3553
+},
+"thumb_min_gap_cm": -0.2715,
+"index_to_trigger_cm": 2.868,
+"wrist_displacement_cm": 3.6148,
+"wrist_rotation_deg": 15.2667,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2636,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9772,
+"face_buttons": 3.9745
+},
+"thumb_min_gap_cm": -0.1197,
+"index_to_trigger_cm": 2.7723,
+"wrist_displacement_cm": 7.6883,
+"wrist_rotation_deg": 15.2667,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 110,
+"gltf_t": 3.700000047683716,
+"native_t": 3.6666667143503826,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2628,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 95,
+"thumb_to_target_cm": {
+"stick": 1.3694
+},
+"thumb_min_gap_cm": -0.2628,
+"index_to_trigger_cm": 2.8221,
+"wrist_displacement_cm": 3.6194,
+"wrist_rotation_deg": 15.261,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2036,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2629,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9784,
+"face_buttons": 3.9751
+},
+"thumb_min_gap_cm": -0.1166,
+"index_to_trigger_cm": 2.7937,
+"wrist_displacement_cm": 7.6891,
+"wrist_rotation_deg": 15.261,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 111,
+"gltf_t": 3.7333333492279053,
+"native_t": 3.700000015894572,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2603,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.3697
+},
+"thumb_min_gap_cm": -0.2603,
+"index_to_trigger_cm": 2.7868,
+"wrist_displacement_cm": 3.6358,
+"wrist_rotation_deg": 15.2512,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9774,
+"face_buttons": 3.9696
+},
+"thumb_min_gap_cm": -0.1221,
+"index_to_trigger_cm": 2.8081,
+"wrist_displacement_cm": 7.6912,
+"wrist_rotation_deg": 15.2512,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 112,
+"gltf_t": 3.7666666507720947,
+"native_t": 3.7333333174387615,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.27,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 97,
+"thumb_to_target_cm": {
+"stick": 1.3546
+},
+"thumb_min_gap_cm": -0.27,
+"index_to_trigger_cm": 2.7474,
+"wrist_displacement_cm": 3.6651,
+"wrist_rotation_deg": 15.2367,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9758,
+"face_buttons": 3.9647
+},
+"thumb_min_gap_cm": -0.1208,
+"index_to_trigger_cm": 2.8047,
+"wrist_displacement_cm": 7.6987,
+"wrist_rotation_deg": 15.2367,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 113,
+"gltf_t": 3.799999952316284,
+"native_t": 3.766666618982951,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2105,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2878,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 100,
+"thumb_to_target_cm": {
+"stick": 1.3405
+},
+"thumb_min_gap_cm": -0.2878,
+"index_to_trigger_cm": 2.7086,
+"wrist_displacement_cm": 3.7091,
+"wrist_rotation_deg": 15.2176,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2034,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2626,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9765,
+"face_buttons": 3.9759
+},
+"thumb_min_gap_cm": -0.1188,
+"index_to_trigger_cm": 2.798,
+"wrist_displacement_cm": 7.7253,
+"wrist_rotation_deg": 15.2176,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 114,
+"gltf_t": 3.8333332538604736,
+"native_t": 3.7999999205271404,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3055,
+"hand_vertices_penetrating": 2,
+"hand_vertices_inside": 103,
+"thumb_to_target_cm": {
+"stick": 1.3458
+},
+"thumb_min_gap_cm": -0.3055,
+"index_to_trigger_cm": 2.6969,
+"wrist_displacement_cm": 3.7727,
+"wrist_rotation_deg": 15.198,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2624,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9854,
+"face_buttons": 4.0202
+},
+"thumb_min_gap_cm": -0.0799,
+"index_to_trigger_cm": 2.7996,
+"wrist_displacement_cm": 7.7897,
+"wrist_rotation_deg": 15.198,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 115,
+"gltf_t": 3.866666555404663,
+"native_t": 3.83333322207133,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2104,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3158,
+"hand_vertices_penetrating": 2,
+"hand_vertices_inside": 107,
+"thumb_to_target_cm": {
+"stick": 1.3834
+},
+"thumb_min_gap_cm": -0.3158,
+"index_to_trigger_cm": 2.7249,
+"wrist_displacement_cm": 3.8545,
+"wrist_rotation_deg": 15.1842,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2031,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0068,
+"face_buttons": 4.0902
+},
+"thumb_min_gap_cm": -0.0809,
+"index_to_trigger_cm": 2.8086,
+"wrist_displacement_cm": 7.8927,
+"wrist_rotation_deg": 15.1842,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 116,
+"gltf_t": 3.9000000953674316,
+"native_t": 3.8666667620340984,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2106,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3026,
+"hand_vertices_penetrating": 1,
+"hand_vertices_inside": 106,
+"thumb_to_target_cm": {
+"stick": 1.4398
+},
+"thumb_min_gap_cm": -0.3026,
+"index_to_trigger_cm": 2.7942,
+"wrist_displacement_cm": 3.9396,
+"wrist_rotation_deg": 15.1794,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.203,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.262,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0356,
+"face_buttons": 4.1603
+},
+"thumb_min_gap_cm": 0.0027,
+"index_to_trigger_cm": 2.8222,
+"wrist_displacement_cm": 8.0093,
+"wrist_rotation_deg": 15.1794,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 117,
+"gltf_t": 3.933333396911621,
+"native_t": 3.900000063578288,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2897,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 107,
+"thumb_to_target_cm": {
+"stick": 1.5011
+},
+"thumb_min_gap_cm": -0.2897,
+"index_to_trigger_cm": 2.8656,
+"wrist_displacement_cm": 4.0178,
+"wrist_rotation_deg": 15.1757,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.203,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.262,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0465,
+"face_buttons": 4.1836
+},
+"thumb_min_gap_cm": 0.012,
+"index_to_trigger_cm": 2.8338,
+"wrist_displacement_cm": 8.1142,
+"wrist_rotation_deg": 15.1757,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 118,
+"gltf_t": 3.9666666984558105,
+"native_t": 3.9333333651224773,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2808,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 109,
+"thumb_to_target_cm": {
+"stick": 1.5521
+},
+"thumb_min_gap_cm": -0.2808,
+"index_to_trigger_cm": 2.8919,
+"wrist_displacement_cm": 4.0883,
+"wrist_rotation_deg": 15.1533,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2031,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.262,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0372,
+"face_buttons": 4.1636
+},
+"thumb_min_gap_cm": 0.0068,
+"index_to_trigger_cm": 2.8339,
+"wrist_displacement_cm": 8.1994,
+"wrist_rotation_deg": 15.1533,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 119,
+"gltf_t": 4.0,
+"native_t": 3.966666666666667,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2665,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 105,
+"thumb_to_target_cm": {
+"stick": 1.5806
+},
+"thumb_min_gap_cm": -0.2665,
+"index_to_trigger_cm": 2.8712,
+"wrist_displacement_cm": 4.126,
+"wrist_rotation_deg": 15.1176,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0281,
+"face_buttons": 4.1413
+},
+"thumb_min_gap_cm": -0.0137,
+"index_to_trigger_cm": 2.8261,
+"wrist_displacement_cm": 8.2358,
+"wrist_rotation_deg": 15.1176,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 120,
+"gltf_t": 4.0333333015441895,
+"native_t": 3.9999999682108562,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 100,
+"thumb_to_target_cm": {
+"stick": 1.5848
+},
+"thumb_min_gap_cm": -0.2462,
+"index_to_trigger_cm": 2.8455,
+"wrist_displacement_cm": 4.1458,
+"wrist_rotation_deg": 15.0691,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2625,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.0295,
+"face_buttons": 4.1376
+},
+"thumb_min_gap_cm": -0.0013,
+"index_to_trigger_cm": 2.8122,
+"wrist_displacement_cm": 8.2387,
+"wrist_rotation_deg": 15.0691,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 121,
+"gltf_t": 4.066666603088379,
+"native_t": 4.033333269755046,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2107,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 99,
+"thumb_to_target_cm": {
+"stick": 1.5496
+},
+"thumb_min_gap_cm": -0.2288,
+"index_to_trigger_cm": 2.8595,
+"wrist_displacement_cm": 4.1541,
+"wrist_rotation_deg": 15.0161,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2628,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0347,
+"face_buttons": 4.1373
+},
+"thumb_min_gap_cm": 0.0273,
+"index_to_trigger_cm": 2.7997,
+"wrist_displacement_cm": 8.2298,
+"wrist_rotation_deg": 15.0161,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 122,
+"gltf_t": 4.099999904632568,
+"native_t": 4.066666571299235,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 97,
+"thumb_to_target_cm": {
+"stick": 1.4974
+},
+"thumb_min_gap_cm": -0.2226,
+"index_to_trigger_cm": 2.9208,
+"wrist_displacement_cm": 4.1564,
+"wrist_rotation_deg": 14.9767,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2037,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0307,
+"face_buttons": 4.1094
+},
+"thumb_min_gap_cm": 0.0208,
+"index_to_trigger_cm": 2.7955,
+"wrist_displacement_cm": 8.2339,
+"wrist_rotation_deg": 14.9767,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 123,
+"gltf_t": 4.133333206176758,
+"native_t": 4.099999872843425,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2639,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 99,
+"thumb_to_target_cm": {
+"stick": 1.4365
+},
+"thumb_min_gap_cm": -0.2639,
+"index_to_trigger_cm": 2.9963,
+"wrist_displacement_cm": 4.1607,
+"wrist_rotation_deg": 14.9671,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2632,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0207,
+"face_buttons": 4.0697
+},
+"thumb_min_gap_cm": -0.0323,
+"index_to_trigger_cm": 2.7964,
+"wrist_displacement_cm": 8.2664,
+"wrist_rotation_deg": 14.9671,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 124,
+"gltf_t": 4.166666507720947,
+"native_t": 4.133333174387614,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2948,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 103,
+"thumb_to_target_cm": {
+"stick": 1.3798
+},
+"thumb_min_gap_cm": -0.2948,
+"index_to_trigger_cm": 3.0074,
+"wrist_displacement_cm": 4.1466,
+"wrist_rotation_deg": 14.9951,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2631,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0017,
+"face_buttons": 3.9926
+},
+"thumb_min_gap_cm": -0.0604,
+"index_to_trigger_cm": 2.8008,
+"wrist_displacement_cm": 8.2828,
+"wrist_rotation_deg": 14.9951,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 125,
+"gltf_t": 4.199999809265137,
+"native_t": 4.1666664759318035,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2872,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 100,
+"thumb_to_target_cm": {
+"stick": 1.3417
+},
+"thumb_min_gap_cm": -0.2872,
+"index_to_trigger_cm": 2.9997,
+"wrist_displacement_cm": 4.1,
+"wrist_rotation_deg": 15.0325,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2038,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2632,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 1.997,
+"face_buttons": 3.92
+},
+"thumb_min_gap_cm": -0.1372,
+"index_to_trigger_cm": 2.8049,
+"wrist_displacement_cm": 8.2257,
+"wrist_rotation_deg": 15.0325,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 126,
+"gltf_t": 4.233333110809326,
+"native_t": 4.199999777475993,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 94,
+"thumb_to_target_cm": {
+"stick": 1.3185
+},
+"thumb_min_gap_cm": -0.2445,
+"index_to_trigger_cm": 2.9904,
+"wrist_displacement_cm": 4.0535,
+"wrist_rotation_deg": 15.0689,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2041,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2637,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 151,
+"thumb_to_target_cm": {
+"stick": 2.0085,
+"face_buttons": 3.8655
+},
+"thumb_min_gap_cm": -0.0904,
+"index_to_trigger_cm": 2.8132,
+"wrist_displacement_cm": 8.1436,
+"wrist_rotation_deg": 15.0689,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 127,
+"gltf_t": 4.266666889190674,
+"native_t": 4.233333555857341,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.3144
+},
+"thumb_min_gap_cm": -0.2068,
+"index_to_trigger_cm": 2.9625,
+"wrist_displacement_cm": 4.0555,
+"wrist_rotation_deg": 15.099,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 171,
+"thumb_to_target_cm": {
+"stick": 2.029,
+"face_buttons": 3.8324
+},
+"thumb_min_gap_cm": -0.0884,
+"index_to_trigger_cm": 2.8224,
+"wrist_displacement_cm": 8.1242,
+"wrist_rotation_deg": 15.099,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 128,
+"gltf_t": 4.300000190734863,
+"native_t": 4.26666685740153,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 92,
+"thumb_to_target_cm": {
+"stick": 1.3095
+},
+"thumb_min_gap_cm": -0.1954,
+"index_to_trigger_cm": 2.9345,
+"wrist_displacement_cm": 4.0525,
+"wrist_rotation_deg": 15.1242,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2048,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2649,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 178,
+"thumb_to_target_cm": {
+"stick": 2.0528,
+"face_buttons": 3.8083
+},
+"thumb_min_gap_cm": -0.1088,
+"index_to_trigger_cm": 2.8145,
+"wrist_displacement_cm": 8.1168,
+"wrist_rotation_deg": 15.1242,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 129,
+"gltf_t": 4.333333492279053,
+"native_t": 4.3000001589457195,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 89,
+"thumb_to_target_cm": {
+"stick": 1.2971
+},
+"thumb_min_gap_cm": -0.1699,
+"index_to_trigger_cm": 2.9372,
+"wrist_displacement_cm": 4.0337,
+"wrist_rotation_deg": 15.1246,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2048,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2649,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 169,
+"thumb_to_target_cm": {
+"stick": 2.0876,
+"face_buttons": 3.7777
+},
+"thumb_min_gap_cm": -0.1841,
+"index_to_trigger_cm": 2.791,
+"wrist_displacement_cm": 8.106,
+"wrist_rotation_deg": 15.1246,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 130,
+"gltf_t": 4.366666793823242,
+"native_t": 4.333333460489909,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 81,
+"thumb_to_target_cm": {
+"stick": 1.2889
+},
+"thumb_min_gap_cm": -0.1543,
+"index_to_trigger_cm": 2.968,
+"wrist_displacement_cm": 4.0172,
+"wrist_rotation_deg": 15.1322,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2048,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2676,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 170,
+"thumb_to_target_cm": {
+"stick": 2.1335,
+"face_buttons": 3.7512
+},
+"thumb_min_gap_cm": -0.2676,
+"index_to_trigger_cm": 2.7703,
+"wrist_displacement_cm": 8.1039,
+"wrist_rotation_deg": 15.1322,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 131,
+"gltf_t": 4.400000095367432,
+"native_t": 4.366666762034098,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 79,
+"thumb_to_target_cm": {
+"stick": 1.2934
+},
+"thumb_min_gap_cm": -0.1715,
+"index_to_trigger_cm": 2.9205,
+"wrist_displacement_cm": 4.0163,
+"wrist_rotation_deg": 15.1505,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3327,
+"hand_vertices_penetrating": 4,
+"hand_vertices_inside": 173,
+"thumb_to_target_cm": {
+"stick": 2.169,
+"face_buttons": 3.7465
+},
+"thumb_min_gap_cm": -0.3327,
+"index_to_trigger_cm": 2.7644,
+"wrist_displacement_cm": 8.1076,
+"wrist_rotation_deg": 15.1505,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 132,
+"gltf_t": 4.433333396911621,
+"native_t": 4.400000063578288,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 78,
+"thumb_to_target_cm": {
+"stick": 1.3067
+},
+"thumb_min_gap_cm": -0.1714,
+"index_to_trigger_cm": 2.7831,
+"wrist_displacement_cm": 4.0182,
+"wrist_rotation_deg": 15.1477,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3656,
+"hand_vertices_penetrating": 6,
+"hand_vertices_inside": 172,
+"thumb_to_target_cm": {
+"stick": 2.1852,
+"face_buttons": 3.7637
+},
+"thumb_min_gap_cm": -0.3656,
+"index_to_trigger_cm": 2.7858,
+"wrist_displacement_cm": 8.1004,
+"wrist_rotation_deg": 15.1477,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 133,
+"gltf_t": 4.4666666984558105,
+"native_t": 4.433333365122477,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 74,
+"thumb_to_target_cm": {
+"stick": 1.3251
+},
+"thumb_min_gap_cm": -0.1783,
+"index_to_trigger_cm": 2.787,
+"wrist_displacement_cm": 4.0286,
+"wrist_rotation_deg": 15.1329,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3712,
+"hand_vertices_penetrating": 5,
+"hand_vertices_inside": 173,
+"thumb_to_target_cm": {
+"stick": 2.1861,
+"face_buttons": 3.8051
+},
+"thumb_min_gap_cm": -0.3712,
+"index_to_trigger_cm": 2.8153,
+"wrist_displacement_cm": 8.092,
+"wrist_rotation_deg": 15.1329,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 134,
+"gltf_t": 4.5,
+"native_t": 4.466666666666667,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 69,
+"thumb_to_target_cm": {
+"stick": 1.3499
+},
+"thumb_min_gap_cm": -0.163,
+"index_to_trigger_cm": 2.9367,
+"wrist_displacement_cm": 4.0439,
+"wrist_rotation_deg": 15.121,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3498,
+"hand_vertices_penetrating": 5,
+"hand_vertices_inside": 173,
+"thumb_to_target_cm": {
+"stick": 2.1784,
+"face_buttons": 3.8685
+},
+"thumb_min_gap_cm": -0.3498,
+"index_to_trigger_cm": 2.8138,
+"wrist_displacement_cm": 8.0945,
+"wrist_rotation_deg": 15.121,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 135,
+"gltf_t": 4.5333333015441895,
+"native_t": 4.499999968210856,
+"pass": false,
+"contact_pass": false,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 68,
+"thumb_to_target_cm": {
+"stick": 1.3862
+},
+"thumb_min_gap_cm": -0.1656,
+"index_to_trigger_cm": 3.0027,
+"wrist_displacement_cm": 4.0685,
+"wrist_rotation_deg": 15.1045,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2039,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.3121,
+"hand_vertices_penetrating": 2,
+"hand_vertices_inside": 172,
+"thumb_to_target_cm": {
+"stick": 2.1754,
+"face_buttons": 3.9427
+},
+"thumb_min_gap_cm": -0.3121,
+"index_to_trigger_cm": 2.7963,
+"wrist_displacement_cm": 8.1241,
+"wrist_rotation_deg": 15.1045,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 136,
+"gltf_t": 4.566666603088379,
+"native_t": 4.533333269755046,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 69,
+"thumb_to_target_cm": {
+"stick": 1.4316
+},
+"thumb_min_gap_cm": -0.1715,
+"index_to_trigger_cm": 2.9944,
+"wrist_displacement_cm": 4.0816,
+"wrist_rotation_deg": 15.0949,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2046,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2645,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 180,
+"thumb_to_target_cm": {
+"stick": 2.1813,
+"face_buttons": 4.0289
+},
+"thumb_min_gap_cm": -0.2351,
+"index_to_trigger_cm": 2.8002,
+"wrist_displacement_cm": 8.1557,
+"wrist_rotation_deg": 15.0949,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 137,
+"gltf_t": 4.599999904632568,
+"native_t": 4.566666571299235,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 70,
+"thumb_to_target_cm": {
+"stick": 1.4701
+},
+"thumb_min_gap_cm": -0.1813,
+"index_to_trigger_cm": 2.9245,
+"wrist_displacement_cm": 4.076,
+"wrist_rotation_deg": 15.1002,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2051,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2654,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 183,
+"thumb_to_target_cm": {
+"stick": 2.1899,
+"face_buttons": 4.1203
+},
+"thumb_min_gap_cm": -0.1314,
+"index_to_trigger_cm": 2.8185,
+"wrist_displacement_cm": 8.159,
+"wrist_rotation_deg": 15.1002,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 138,
+"gltf_t": 4.633333206176758,
+"native_t": 4.599999872843425,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 71,
+"thumb_to_target_cm": {
+"stick": 1.5223
+},
+"thumb_min_gap_cm": -0.1748,
+"index_to_trigger_cm": 2.8144,
+"wrist_displacement_cm": 4.0642,
+"wrist_rotation_deg": 15.1149,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2052,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2656,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 183,
+"thumb_to_target_cm": {
+"stick": 2.1963,
+"face_buttons": 4.1915
+},
+"thumb_min_gap_cm": -0.0558,
+"index_to_trigger_cm": 2.8213,
+"wrist_displacement_cm": 8.1311,
+"wrist_rotation_deg": 15.1149,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 139,
+"gltf_t": 4.666666507720947,
+"native_t": 4.633333174387614,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 72,
+"thumb_to_target_cm": {
+"stick": 1.6122
+},
+"thumb_min_gap_cm": -0.1543,
+"index_to_trigger_cm": 2.8106,
+"wrist_displacement_cm": 4.0643,
+"wrist_rotation_deg": 15.1284,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.205,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2651,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 162,
+"thumb_to_target_cm": {
+"stick": 2.1999,
+"face_buttons": 4.2376
+},
+"thumb_min_gap_cm": 0.0044,
+"index_to_trigger_cm": 2.8067,
+"wrist_displacement_cm": 8.1093,
+"wrist_rotation_deg": 15.1284,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 140,
+"gltf_t": 4.699999809265137,
+"native_t": 4.6666664759318035,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 74,
+"thumb_to_target_cm": {
+"stick": 1.7126
+},
+"thumb_min_gap_cm": -0.1599,
+"index_to_trigger_cm": 2.9423,
+"wrist_displacement_cm": 4.0681,
+"wrist_rotation_deg": 15.1269,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2045,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2643,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 148,
+"thumb_to_target_cm": {
+"stick": 2.1898,
+"face_buttons": 4.2525
+},
+"thumb_min_gap_cm": 0.0375,
+"index_to_trigger_cm": 2.7934,
+"wrist_displacement_cm": 8.1257,
+"wrist_rotation_deg": 15.1269,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 141,
+"gltf_t": 4.733333110809326,
+"native_t": 4.699999777475993,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 73,
+"thumb_to_target_cm": {
+"stick": 1.8121
+},
+"thumb_min_gap_cm": -0.1352,
+"index_to_trigger_cm": 2.9849,
+"wrist_displacement_cm": 4.0705,
+"wrist_rotation_deg": 15.1182,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.204,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2634,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.159,
+"face_buttons": 4.2323
+},
+"thumb_min_gap_cm": 0.0225,
+"index_to_trigger_cm": 2.7934,
+"wrist_displacement_cm": 8.1718,
+"wrist_rotation_deg": 15.1182,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 142,
+"gltf_t": 4.766666889190674,
+"native_t": 4.733333555857341,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 72,
+"thumb_to_target_cm": {
+"stick": 1.8962
+},
+"thumb_min_gap_cm": -0.0805,
+"index_to_trigger_cm": 2.9651,
+"wrist_displacement_cm": 4.0738,
+"wrist_rotation_deg": 15.1181,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2035,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2627,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.1171,
+"face_buttons": 4.1973
+},
+"thumb_min_gap_cm": 0.0196,
+"index_to_trigger_cm": 2.8038,
+"wrist_displacement_cm": 8.2109,
+"wrist_rotation_deg": 15.1181,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 143,
+"gltf_t": 4.800000190734863,
+"native_t": 4.76666685740153,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 72,
+"thumb_to_target_cm": {
+"stick": 1.932
+},
+"thumb_min_gap_cm": -0.0992,
+"index_to_trigger_cm": 2.9318,
+"wrist_displacement_cm": 4.0744,
+"wrist_rotation_deg": 15.121,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2033,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 140,
+"thumb_to_target_cm": {
+"stick": 2.0755,
+"face_buttons": 4.1521
+},
+"thumb_min_gap_cm": 0.0397,
+"index_to_trigger_cm": 2.8142,
+"wrist_displacement_cm": 8.2072,
+"wrist_rotation_deg": 15.121,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 144,
+"gltf_t": 4.833333492279053,
+"native_t": 4.8000001589457195,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 77,
+"thumb_to_target_cm": {
+"stick": 1.8836
+},
+"thumb_min_gap_cm": -0.1295,
+"index_to_trigger_cm": 2.8286,
+"wrist_displacement_cm": 4.0699,
+"wrist_rotation_deg": 15.1226,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2622,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 141,
+"thumb_to_target_cm": {
+"stick": 2.039,
+"face_buttons": 4.0868
+},
+"thumb_min_gap_cm": -0.0306,
+"index_to_trigger_cm": 2.8225,
+"wrist_displacement_cm": 8.1769,
+"wrist_rotation_deg": 15.1226,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 145,
+"gltf_t": 4.866666793823242,
+"native_t": 4.833333460489909,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2108,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 81,
+"thumb_to_target_cm": {
+"stick": 1.753
+},
+"thumb_min_gap_cm": -0.1702,
+"index_to_trigger_cm": 2.7818,
+"wrist_displacement_cm": 4.0697,
+"wrist_rotation_deg": 15.1255,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2029,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2617,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 142,
+"thumb_to_target_cm": {
+"stick": 2.0158,
+"face_buttons": 4.0261
+},
+"thumb_min_gap_cm": -0.0501,
+"index_to_trigger_cm": 2.8456,
+"wrist_displacement_cm": 8.1616,
+"wrist_rotation_deg": 15.1255,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 146,
+"gltf_t": 4.900000095367432,
+"native_t": 4.866666762034098,
+"pass": false,
+"contact_pass": true,
+"thumbs_index_pass": false,
+"left": {
+"palm_min_gap_cm": -0.2109,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 83,
+"thumb_to_target_cm": {
+"stick": 1.5908
+},
+"thumb_min_gap_cm": -0.1705,
+"index_to_trigger_cm": 2.8839,
+"wrist_displacement_cm": 4.0771,
+"wrist_rotation_deg": 15.1247,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2027,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2614,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 2.0015,
+"face_buttons": 3.9999
+},
+"thumb_min_gap_cm": -0.0646,
+"index_to_trigger_cm": 2.8635,
+"wrist_displacement_cm": 8.1694,
+"wrist_rotation_deg": 15.1247,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 147,
+"gltf_t": 4.933333396911621,
+"native_t": 4.900000063578288,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 87,
+"thumb_to_target_cm": {
+"stick": 1.4911
+},
+"thumb_min_gap_cm": -0.182,
+"index_to_trigger_cm": 2.9986,
+"wrist_displacement_cm": 4.084,
+"wrist_rotation_deg": 15.1212,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2028,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2616,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 144,
+"thumb_to_target_cm": {
+"stick": 1.9899,
+"face_buttons": 3.9987
+},
+"thumb_min_gap_cm": -0.078,
+"index_to_trigger_cm": 2.8515,
+"wrist_displacement_cm": 8.1716,
+"wrist_rotation_deg": 15.1212,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 148,
+"gltf_t": 4.9666666984558105,
+"native_t": 4.933333365122477,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 90,
+"thumb_to_target_cm": {
+"stick": 1.4405
+},
+"thumb_min_gap_cm": -0.1715,
+"index_to_trigger_cm": 2.9975,
+"wrist_displacement_cm": 4.0863,
+"wrist_rotation_deg": 15.1191,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.203,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.262,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9817,
+"face_buttons": 3.9924
+},
+"thumb_min_gap_cm": -0.0988,
+"index_to_trigger_cm": 2.8331,
+"wrist_displacement_cm": 8.1589,
+"wrist_rotation_deg": 15.1191,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 149,
+"gltf_t": 5.0,
+"native_t": 4.966666666666667,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 91,
+"thumb_to_target_cm": {
+"stick": 1.3936
+},
+"thumb_min_gap_cm": -0.1949,
+"index_to_trigger_cm": 2.9916,
+"wrist_displacement_cm": 4.0918,
+"wrist_rotation_deg": 15.1155,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2031,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.262,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 145,
+"thumb_to_target_cm": {
+"stick": 1.9768,
+"face_buttons": 3.9778
+},
+"thumb_min_gap_cm": -0.1175,
+"index_to_trigger_cm": 2.8325,
+"wrist_displacement_cm": 8.1517,
+"wrist_rotation_deg": 15.1155,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 150,
+"gltf_t": 5.0333333015441895,
+"native_t": 4.999999968210856,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 89,
+"thumb_to_target_cm": {
+"stick": 1.3451
+},
+"thumb_min_gap_cm": -0.1915,
+"index_to_trigger_cm": 2.9917,
+"wrist_displacement_cm": 4.102,
+"wrist_rotation_deg": 15.107,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.203,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2619,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 146,
+"thumb_to_target_cm": {
+"stick": 1.9739,
+"face_buttons": 3.9664
+},
+"thumb_min_gap_cm": -0.1336,
+"index_to_trigger_cm": 2.8385,
+"wrist_displacement_cm": 8.1601,
+"wrist_rotation_deg": 15.107,
+"reachable": true,
+"within_bound": true
+}
+},
+{
+"frame": 151,
+"gltf_t": 5.066666603088379,
+"native_t": 5.033333269755046,
+"pass": true,
+"contact_pass": true,
+"thumbs_index_pass": true,
+"left": {
+"palm_min_gap_cm": -0.211,
+"palm_band_vertices": 15,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2577,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 86,
+"thumb_to_target_cm": {
+"stick": 1.3152
+},
+"thumb_min_gap_cm": -0.1509,
+"index_to_trigger_cm": 2.9875,
+"wrist_displacement_cm": 4.1151,
+"wrist_rotation_deg": 15.0939,
+"reachable": true,
+"within_bound": true
+},
+"right": {
+"palm_min_gap_cm": -0.2032,
+"palm_band_vertices": 22,
+"palm_support_patch": true,
+"hand_min_signed_cm": -0.2623,
+"hand_vertices_penetrating": 0,
+"hand_vertices_inside": 147,
+"thumb_to_target_cm": {
+"stick": 1.9725,
+"face_buttons": 3.9624
+},
+"thumb_min_gap_cm": -0.1441,
+"index_to_trigger_cm": 2.8209,
+"wrist_displacement_cm": 8.1731,
+"wrist_rotation_deg": 15.0939,
+"reachable": true,
+"within_bound": true
+}
+}
+],
+"output_glb_sha256": "280885e2bb847bcc5ae6fa3c55e736fa0879a0289553e45242303b0d51a1d12f",
+"output_glb": "docs/proposed/controller-play/SUB01_GamingGrip_derived.glb",
+"status": "partial",
+"run": {
+"command": "python tools/derive_controller_grip_clip.py --sample 16 --rounds 4 --iters 400",
+"iteration": 1
+}
+}

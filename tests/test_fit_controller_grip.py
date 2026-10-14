@@ -233,11 +233,23 @@ def sofa_text():
     return json.dumps({'errors': [], 'sofa': {'sections': [{'vertices_world_cm': v, 'seat_surface': {'triangle_indices': [[0, 1, 2], [0, 2, 3]]}}]}})
 
 
-def grip_report(ok=True):
+def grip_report(ok=True, **override):
+    """A derived grip clip report (what native play needs)."""
     frames = 152
-    side = {'palm_support_patch_frames': frames if ok else 3, 'frames_with_penetration': 0}
+    rows = [{'frame': f, 'pass': ok or f > 3} for f in range(frames)]
+    r = {'schema': play.DERIVED_SCHEMA, 'label': play.DERIVED_LABEL, 'verified': False,
+         'source_clip': {'sha256': play.GAMING_OWNER_GLB_SHA256}, 'frames': frames, 'frames_passing': frames if ok else frames - 4,
+         'all_frames_pass': ok, 'per_frame': rows, 'fixed_offset': {'holds': True, 'controller_in_right_hand_gltf': np.eye(4).tolist()},
+         'finger_deltas_deg': {'max_abs_deg': 12.}, 'controller': {'oversized': False}, 'output_glb_sha256': 'ab' * 32}
+    r.update(override)
+    return r
+
+
+def raw_fit_report():
+    frames = 152
+    side = {'palm_support_patch_frames': frames, 'frames_with_penetration': 0}
     return {'schema': 'sub01.controller-grip-trial.v1', 'clip': {'source_fbx_sha256': play.GAMING_FBX_SHA256}, 'seated': {'seated': True},
-            'fixed': {'summary': {'frames': frames, 'frames_full_grip': frames if ok else 3, 'left': side, 'right': side},
+            'fixed': {'summary': {'frames': frames, 'frames_full_grip': frames, 'left': side, 'right': side},
                       'controller_in_right_hand': np.eye(4).tolist()}}
 
 
@@ -259,16 +271,26 @@ def test_evidence_is_computed_from_measured_gates_and_refuses_each_failure():
     assert ev['capsule_clearance_cm'] == pytest.approx(11.75) and ev['grip_offset_cm'] == [0, 0, 0] and ev['grip_rotation_xyzw'] == [0, 0, 0, 1]
     with pytest.raises(ValueError, match='GripFailed'):
         play.build_evidence(sofa_text(), grip_report(False), contact(), PLACEMENT)
+    with pytest.raises(ValueError, match='GripFailed'):
+        play.build_evidence(sofa_text(), grip_report(all_frames_pass=True, frames_passing=151), contact(), PLACEMENT)
     with pytest.raises(ValueError, match='penetration'):
         play.build_evidence(sofa_text(), grip_report(), contact(False), PLACEMENT)
     with pytest.raises(ValueError, match='CapsuleInsideSofa'):
         play.build_evidence(sofa_text(), grip_report(), contact(), dict(PLACEMENT, approach_cm=[-220, 10]))
     with pytest.raises(ValueError, match='SofaUnmeasured'):
         play.build_evidence(json.dumps({'errors': ['x']}), grip_report(), contact(), PLACEMENT)
-    other = grip_report()
-    other['clip']['source_fbx_sha256'] = '0' * 64
     with pytest.raises(ValueError, match='Gaming'):
-        play.build_evidence(sofa_text(), other, contact(), PLACEMENT)
+        play.build_evidence(sofa_text(), grip_report(source_clip={'sha256': '0' * 64}), contact(), PLACEMENT)
+    with pytest.raises(ValueError, match='derived_from_capture'):
+        play.build_evidence(sofa_text(), grip_report(label='raw'), contact(), PLACEMENT)
+    with pytest.raises(ValueError, match='fixed'):
+        play.build_evidence(sofa_text(), grip_report(fixed_offset={'holds': False}), contact(), PLACEMENT)
+    with pytest.raises(ValueError, match='finger deltas'):
+        play.build_evidence(sofa_text(), grip_report(finger_deltas_deg={'max_abs_deg': 16.}), contact(), PLACEMENT)
+    # A raw-capture fit (even a passing one) never feeds native play: the raw clip does not hold the controller.
+    with pytest.raises(ValueError, match='derived grip clip'):
+        play.build_evidence(sofa_text(), raw_fit_report(), contact(), PLACEMENT)
+    assert ev['clip_object_path'] == play.CLIP_OBJECT_PATH and ev['grip_clip_sha256'] == 'ab' * 32 and ev['label'] == 'derived_from_capture'
 
 
 def test_ue_grip_conjugates_the_axis_swap():
@@ -286,7 +308,8 @@ def test_ue_grip_conjugates_the_axis_swap():
 
 def test_config_fragment_only_with_accepted_evidence_and_exact_import(tmp_path):
     (tmp_path / 'private-audit').mkdir()
-    row = {'role': 'Gaming', 'object_path': play.CLIP_OBJECT_PATH, 'same_existing_skeleton': True, 'source_fbx_sha256': play.GAMING_FBX_SHA256}
+    row = {'role': 'Gaming', 'object_path': play.CLIP_OBJECT_PATH, 'same_existing_skeleton': True, 'source_fbx_sha256': play.GAMING_FBX_SHA256,
+           'derived_glb_sha256': 'ab' * 32}
     text, refusals = play.config_fragment(tmp_path, {'clips': [row]})
     assert text == '' and 'evidence' in refusals
     (tmp_path / 'private-audit' / play.SOFA_REPORT).write_text(sofa_text())
@@ -294,6 +317,7 @@ def test_config_fragment_only_with_accepted_evidence_and_exact_import(tmp_path):
     text, refusals = play.config_fragment(tmp_path, {'clips': [row]})
     assert refusals == {} and text.endswith('+ValidatedHandsPostures=Gaming\n')
     assert play.config_fragment(tmp_path, {'clips': [dict(row, same_existing_skeleton=False)]})[0] == ''
+    assert play.config_fragment(tmp_path, {'clips': [dict(row, derived_glb_sha256='cd' * 32)]})[0] == ''
     (tmp_path / 'private-audit' / play.SOFA_REPORT).write_text(sofa_text() + ' ')   # another sofa report revision
     assert 'evidence' in play.config_fragment(tmp_path, {'clips': [row]})[1]
 
@@ -376,7 +400,9 @@ def test_added_code_respects_the_posture_gate_input_path_and_never_moves_the_act
     assert '!MeshPath.Contains(TEXT("contact"),ESearchCase::IgnoreCase)' in m
     assert 'GetSocketTransform(ControllerPlayHand,RTS_World)' in m and 'W.GetRotation().GetNormalized()' in m
     assert 'Schema!=TEXT("sub01.native-controller-play-evidence.v1")' in m and 'Sub01ControllerPlayId(SofaText)' in m
-    assert 'bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayClip&&ControllerPlayProp' in m
+    assert 'bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayRuntimeProof&&ControllerPlayClip&&ControllerPlayProp' in m
+    assert 'native-controller-play-runtime-proof.json' in m and 'Sub01ControllerPlayId(EvidenceText)' in m and 'Passing==Measured' in m
+    assert 'TEXT("/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip")' in m
 
 
 def test_install_refuses_missing_anchors_requirements_and_reinstall(installed):
@@ -486,3 +512,109 @@ def test_real_option1_search_reports_are_trial_and_gated():
         assert r['controller']['sha256'] in (F.ORIGINAL_CONTROLLER_SHA, F.NORMALIZED_CONTROLLER_SHA)
         with pytest.raises(ValueError):
             play.validate_grip(r)       # no IK-baked derived clip exists yet, whatever the pass count
+
+
+# ---------------------------------------------------------------- derived grip clip and runtime proof
+def proof(evidence_text, **override):
+    p = {'schema': play.RUNTIME_PROOF_SCHEMA, 'accepted': True, 'clip_object_path': play.CLIP_OBJECT_PATH,
+         'evidence_revision': str(play.play_id(evidence_text)), 'frames_measured': 152, 'frames_passing': 152,
+         'max_penetration_cm': -.2, 'native_capture': {'path': 'x.png', 'sha256': 'ef' * 32}}
+    p.update(override)
+    return json.dumps(p)
+
+
+def test_not_ready_without_roots_runtime_proof():
+    ev = json.dumps(play.build_evidence(sofa_text(), grip_report(), contact(), PLACEMENT))
+    assert play.validate_runtime_proof(proof(ev), ev)['frames'] == 152
+    for bad in (dict(accepted=False), dict(frames_passing=151), dict(frames_measured=100, frames_passing=100),
+                dict(evidence_revision='1'), dict(clip_object_path='/Game/Other'), dict(max_penetration_cm=-.4), dict(native_capture={})):
+        with pytest.raises(ValueError):
+            play.validate_runtime_proof(proof(ev, **bad), ev)
+    # The native loader computes readiness only with the proof field set (see the C++ gate test above).
+    m = play.methods()
+    assert m.index('ControllerPlayRuntimeProof=false;') < m.index('ControllerPlayRuntimeProof=Proof->TryGetStringField')
+    assert 'RuntimeProofMissing' in m
+
+
+import derive_controller_grip_clip as DG  # noqa: E402
+
+DERIVED_REPORT = ROOT / 'docs/proposed/controller-play/SUB01_GamingGrip_derived.report.json'
+DERIVED_GLB = ROOT / 'docs/proposed/controller-play/SUB01_GamingGrip_derived.glb'
+
+
+@pytest.fixture(scope='module')
+def gaming_clip():
+    if not GAMING.exists():
+        pytest.skip('private retargeted Gaming clip absent')
+    return DG.Clip(GAMING)
+
+
+def test_two_bone_ik_on_the_real_arm_reaches_keeps_lengths_and_leaves_the_rest(gaming_clip):
+    c = gaming_clip
+    W0 = c.worlds()
+    H = c.index['LeftHand']
+    target = np.stack([F.rigid(m) for m in W0[:, H]])
+    target[:, :3, 3] += np.array([-.05, .01, .02])                      # 5.5 cm toward the controller
+    target[:, :3, :3] = target[:, :3, :3] @ F.rotvec_to_matrix([0, .2, 0])
+    q, reach = DG.solve_arm(c, c.q, W0, 'Left', target)
+    W = c.worlds(q)
+    assert reach.all()
+    assert np.allclose(W[:, H, :3, 3], target[:, :3, 3], atol=1e-9)
+    assert np.allclose(DG.unit_rot(W[:, H]), target[:, :3, :3], atol=1e-9)
+    for child in ('LeftForeArm', 'LeftHand', 'LeftHandIndex1', 'LeftHandIndex3'):
+        i, p = c.index[child], c.g.parent[c.index[child]]
+        assert np.allclose(np.linalg.norm(W[:, i, :3, 3] - W[:, p, :3, 3], axis=1), np.linalg.norm(W0[:, i, :3, 3] - W0[:, p, :3, 3], axis=1), atol=1e-12)
+    for n in ('Head', 'Neck', 'Spine2', 'LeftShoulder', 'RightHand', 'RightHandThumb2'):
+        assert np.allclose(W[:, c.index[n]], W0[:, c.index[n]])
+    # finger locals are untouched by the arm IK
+    for n in ('LeftHandThumb2', 'LeftHandIndex2'):
+        assert np.allclose(q[:, c.index[n]], c.q[:, c.index[n]])
+
+
+def test_finger_deltas_are_added_constant_and_keep_the_captured_variation(gaming_clip):
+    c = gaming_clip
+    hands = F.Hands.from_owner()
+    axes = DG.finger_axes(c, hands)
+    q, per = DG.apply_finger_deltas(c.q, c, axes, {'Right': {'Thumb': (10., -6.), 'Index': (-8., 0.)}})
+    assert per['RightHandThumb1'] == {'curl_deg': 10., 'spread_deg': -6.} and per['RightHandThumb3']['spread_deg'] == 0
+    for n, expect in (('RightHandThumb2', 10.), ('RightHandIndex3', 8.)):
+        i = c.index[n]
+        # delta is the same every frame: relative rotation captured->derived is constant (smooth by construction)
+        rel = [G_angle(c.q[f, i], q[f, i]) for f in range(len(c.times))]
+        assert np.allclose(rel, expect, atol=1e-6)
+        # captured temporal variation preserved: frame-to-frame changes are identical
+        d0 = [G_angle(c.q[f, i], c.q[f + 1, i]) for f in range(len(c.times) - 1)]
+        d1 = [G_angle(q[f, i], q[f + 1, i]) for f in range(len(c.times) - 1)]
+        assert np.allclose(d0, d1, atol=1e-6)
+    untouched = c.index['LeftHandThumb2']
+    assert np.allclose(q[:, untouched], c.q[:, untouched])
+    # curl sign: positive curl moves the distal joint toward the palm side
+    W0, W1 = c.worlds(), c.worlds(DG.apply_finger_deltas(c.q, c, axes, {'Right': {'Index': (10., 0.)}})[0])
+    tip = c.index['RightHandIndex4']
+    assert np.linalg.norm(W1[:, tip, :3, 3] - W0[:, tip, :3, 3], axis=1).min() > 1e-3
+
+
+def G_angle(a, b):
+    import life_gltf as LG
+    return LG.qangle_deg(tuple(a), tuple(b))
+
+
+@pytest.mark.skipif(not DERIVED_REPORT.exists(), reason='derived grip clip report absent (python tools/derive_controller_grip_clip.py)')
+def test_committed_derived_clip_report_is_consistent_and_honest():
+    r = json.loads(DERIVED_REPORT.read_text())
+    assert r['label'] == 'derived_from_capture' and r['verified'] is False and r['frames'] == 152 and len(r['per_frame']) == 152
+    assert r['all_frames_pass'] == (r['frames_passing'] == 152) == all(p['pass'] for p in r['per_frame'])
+    assert r['failing_frames'] == [p['frame'] for p in r['per_frame'] if not p['pass']]
+    assert r['bone_length_max_error_cm'] < 1e-6 and r['upper_body_max_world_change'] == 0
+    assert r['finger_deltas_deg']['max_abs_deg'] <= 15 + 1e-9 and r['controller']['oversized'] is False
+    assert r['controller']['width_cm'] == pytest.approx(15.38, abs=.01) and r['gates']['compression_allowance_beyond_band_cm'] == 0
+    assert r['source_clip']['sha256'] == play.GAMING_OWNER_GLB_SHA256
+    for p in r['per_frame']:
+        if p['pass']:
+            for s in ('left', 'right'):
+                assert p[s]['hand_min_signed_cm'] >= -.3 and p[s]['palm_support_patch'] and p[s]['within_bound']
+    if DERIVED_GLB.exists():
+        assert F.sha256(DERIVED_GLB) == r['output_glb_sha256'] and DERIVED_GLB.stat().st_size < 2_000_000
+    if not r['all_frames_pass']:
+        with pytest.raises(ValueError):
+            play.validate_grip(r)
