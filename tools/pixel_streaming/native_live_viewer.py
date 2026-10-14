@@ -81,6 +81,23 @@ def native_camera_privacy(receipt, identity, now):
     private=receipt.get('physical_camera_private')
     return private if type(private) is bool else None
 
+def native_view_mode(receipt, identity, now):
+    """Mode is useful only while its actual process/camera heartbeat is fresh."""
+    if native_camera_privacy(receipt,identity,now) is None:return None
+    mode=receipt.get('view_mode')
+    return mode if mode in ('manual','live','diagnostic') else None
+
+ACTIVITY_LABELS={'sleep':'Rest','phone':'Phone','eat':'Meal','buy_bread':'Bakery','buy_konbini':'Shop','window':'Window','park':'Park','research':'Research','order_food':'Ordering food','get_delivery':'Delivery','chat':'Conversation','watch_video':'Videos','play_chess':'Chess','use_computer':'Computer','play_console':'Game','use_bathroom':'Bathroom','listen_music':'Music'}
+
+def public_live_activity(document):
+    """Return only the existing bridge's public, current stage and activity label."""
+    if not isinstance(document,dict) or document.get('privacy') is not False:return None
+    source=document.get('source');brain=document.get('brain')
+    if not isinstance(source,dict) or source.get('status')!='live' or not isinstance(brain,dict):return None
+    stage=brain.get('stage')
+    if stage not in ('AWAKE','NREM','REM'):return None
+    return {'awake':stage=='AWAKE','activity':ACTIVITY_LABELS.get(brain.get('activity')) if isinstance(brain.get('activity'),str) else None}
+
 def combine_privacy(backend,physical):
     if backend is True or physical is True:return True
     return False if backend is False and physical is False else None
@@ -162,7 +179,7 @@ for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListen
 async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);let retained=false;try{if(generation!==streamGeneration)return;const decoded=new Image();decoded.src=url;await Promise.race([decoded.decode(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Frame decode timeout')),1500))]);if(generation!==streamGeneration)return;game.src=url;if(previous)URL.revokeObjectURL(previous);previous=url;retained=true;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;window.nativeViewerLastDecodedAt=performance.now();game.hidden=false;empty.hidden=true;}catch(e){throw e;}finally{if(!retained)URL.revokeObjectURL(url);}}
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
 function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLastDecodedAt=0;const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';clearPixels();empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},2500);}
-async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;control.disabled=!permission&&!privateEgress;control.textContent=privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent=h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&performance.now()-(window.nativeViewerLastDecodedAt||streamOpenedAt)>3500){streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){active=false;permission=false;privateEgress=false;live=false;streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;control.disabled=true;if(document.pointerLockElement)document.exitPointerLock();status.textContent='Private connection unavailable';document.querySelector('#emptyText').textContent='Live view is paused until the private connection returns.';}}
+async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;document.querySelector('.private').textContent=h.privacy===false&&h.viewMode==='manual'?'Explore home':h.privacy===false&&h.viewMode==='live'?'Live home':'Private home';permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;control.disabled=!permission&&!privateEgress;control.textContent=privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent=h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&performance.now()-(window.nativeViewerLastDecodedAt||streamOpenedAt)>3500){streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=h.viewMode==='live'&&h.activity&&typeof h.activity.awake==='boolean'?(h.activity.awake?'Awake':'Asleep')+(h.activity.activity?' · '+h.activity.activity:''):active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){active=false;permission=false;privateEgress=false;live=false;streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;control.disabled=true;if(document.pointerLockElement)document.exitPointerLock();status.textContent='Private connection unavailable';document.querySelector('#emptyText').textContent='Live view is paused until the private connection returns.';}}
 
 let supported='',settingsPending=false;
 function syncSettingValues(p){
@@ -293,6 +310,25 @@ class LiveState:
             self.privacy_value=value;self.privacy_checked=time.monotonic()
             return value
 
+    def view_mode(self):
+        if self.privacy() is not False:return None
+        try:
+            path=self.private/'native-view-privacy.json'
+            if path.stat().st_size>1024:return None
+            return native_view_mode(json.loads(path.read_text()),self.native(),time.time())
+        except (OSError,ValueError):return None
+
+    def live_activity(self):
+        if self.view_mode()!='live':return None
+        try:
+            token=(self.private/'operator-token').read_text().strip()
+            request=urllib.request.Request('http://127.0.0.1:8821/home/state',headers={'X-Admin-Token':token})
+            with urllib.request.urlopen(request,timeout=.5) as response:
+                raw=response.read(8193)
+                if len(raw)>8192:return None
+                return public_live_activity(json.loads(raw))
+        except (OSError,ValueError,TypeError):return None
+
     def can_private_egress(self):
         if time.time()>=self.deadline or self.privacy() is not True or type(self.backend_privacy_value) is not bool:return False
         identity=self.native()
@@ -370,7 +406,7 @@ class Handler(BaseHTTPRequestHandler):
             self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),'privacyEgressEnabled':state.can_private_egress(),
-                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
+                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'viewMode':state.view_mode(),'activity':state.live_activity(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
             data=HTML.encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
