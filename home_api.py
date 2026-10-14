@@ -10,6 +10,7 @@ from aiohttp import web
 from life import ACTIVITIES
 from home_minecraft import frame_tag
 import home_interactions as hi
+import home_phone
 
 HERE = Path(__file__).parent
 
@@ -118,6 +119,7 @@ def add_home_routes(app, live, admin_ok):
                 "browser": live.screens.public()["browser"] if getattr(live, "screens", None) else None,
                 "browser_screen": screen('desk'),
                 "phone_browser_screen": screen('phone'),
+                "phone_screen": None if hidden else home_phone.status(home_phone.snapshot(live.home, screen('phone'))),
                 "minecraft": minecraft,
                 "life": live.life.snapshot(),
                 "stage": live.engine.stage,
@@ -160,6 +162,8 @@ def add_home_routes(app, live, admin_ok):
         if not status:
             raise web.HTTPConflict(text='Page unavailable or refused by the browser checks')
         await live.on_screen(status)
+        if device == 'phone' and not private():
+            live.home.phone['app'] = 'browser'
         if getattr(live, 'reader', None):
             live.reader.saw(status, live.clock.now())
         return web.json_response({'ok': True})
@@ -317,6 +321,66 @@ def add_home_routes(app, live, admin_ok):
                                   'activity': live.home.activity, 'privacy': live.home.privacy()},
                                  headers={'Cache-Control': 'no-store'})
 
+    def phone_data():
+        browser = live.screen_status('phone') if getattr(live, 'browser', None) and getattr(live, 'screen_status', None) else None
+        return home_phone.snapshot(live.home, browser)
+
+    async def phone_frame(request):
+        enabled(); operator(request)
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        data = phone_data(); st = home_phone.status(data)
+        if request.query.get('frame_id') != st['frame_id']:
+            raise web.HTTPConflict(text='Actual phone frame changed')
+        if st['kind'] == 'browser':
+            from browse import FrameChanged, BrowserDown
+            try:
+                frame = await live.browser.frame('phone', st['frame_id'])
+            except (FrameChanged, BrowserDown):
+                raise web.HTTPConflict(text='Actual phone browser frame unavailable')
+            if not frame:
+                raise web.HTTPNotFound(text='Actual phone browser frame unavailable')
+            pixels = frame[0]
+        else:
+            pixels = home_phone.render(data)
+        if private() or home_phone.status(phone_data())['frame_id'] != st['frame_id']:
+            raise web.HTTPConflict(text='Actual phone frame changed')
+        tag = '"' + frame_tag(pixels) + '"'
+        headers = {'Cache-Control':'no-store', 'ETag':tag, 'X-Frame-Id':st['frame_id']}
+        if request.headers.get('If-None-Match') == tag:
+            return web.Response(status=304, headers=headers)
+        return web.Response(body=pixels, content_type='image/jpeg', headers=headers)
+
+    async def phone_action(request):
+        enabled(); operator(request)
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        data = await body(request)
+        # Privacy may change while the bounded request body is arriving.
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
+        if data.get('frame_id') != home_phone.status(phone_data())['frame_id']:
+            raise web.HTTPConflict(text='Actual phone frame changed')
+        if data.get('action') == 'save_note':
+            if live.home.phone.get('app') != 'notes':
+                raise web.HTTPConflict(text='Open Notes before saving a note')
+            title, text = data.get('title', ''), data.get('text')
+            if (not isinstance(title, str) or len(title) > 120
+                    or not isinstance(text, str) or len(text) > 2000 or not text.strip()):
+                raise web.HTTPBadRequest(text='Expected a note title up to 120 characters and nonempty text up to 2000 characters')
+            title, text = title.strip(), text.strip()
+            combined = title + '\n' + text if title else text
+            if len(combined) > 2000:
+                raise web.HTTPBadRequest(text='The complete note must be at most 2000 characters')
+            live.home.add_note(combined)
+            await live.save_state()
+            return web.json_response({'ok':True, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
+        app = 'home' if data.get('action') == 'home' else data.get('app')
+        if data.get('action') not in ('home', 'open_app') or not isinstance(app, str) or app not in home_phone.APPS:
+            raise web.HTTPBadRequest(text='Expected supported phone app')
+        live.home.phone['app'] = app
+        return web.json_response({'ok':True, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
+
     async def minecraft_frame(request):
         enabled()
         if private():
@@ -353,3 +417,5 @@ def add_home_routes(app, live, admin_ok):
     app.router.add_post('/api/home/native_state', native_state)
     app.router.add_get('/api/home/native_command', native_command)
     app.router.add_get("/api/home/minecraft/frame.jpg", minecraft_frame)
+    app.router.add_get("/api/home/phone/frame.jpg", phone_frame)
+    app.router.add_post("/api/home/phone/action", phone_action)

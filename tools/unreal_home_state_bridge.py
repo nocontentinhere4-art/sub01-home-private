@@ -396,7 +396,8 @@ class BackendFeed:
 
     async def post_native_state(self, session, report):
         async with session.post(self.base + '/api/home/native_state', json=report,
-                                headers=self.headers(), allow_redirects=False) as resp:
+                                headers=self.headers(), allow_redirects=False,
+                                timeout=aiohttp.ClientTimeout(total=1.2)) as resp:
             return resp.status, await resp.text()
 
     async def get_native_command(self, session):

@@ -65,8 +65,8 @@ class HomeDeviceProxy:
                 chunks.append(chunk)
             body = b''.join(chunks)
             if response.status != 200:
-                if response.status in {403, 404, 409, 503}:
-                    raise {403: web.HTTPForbidden, 404: web.HTTPNotFound, 409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}[response.status](text='Actual home device unavailable')
+                if response.status in {400, 403, 404, 409, 503}:
+                    raise {400: web.HTTPBadRequest, 403: web.HTTPForbidden, 404: web.HTTPNotFound, 409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}[response.status](text='Actual home device unavailable')
                 raise web.HTTPBadGateway(text='Actual home device backend is unavailable')
             return body, response.headers.get('Content-Type', ''), response.headers.get('ETag')
 
@@ -96,13 +96,14 @@ class HomeDeviceProxy:
         state = await self.home(epoch)
         device = request.match_info['device']
         if device == 'phone':
-            identity = (state.get('phone_browser_screen') or {}).get('frame_id')
+            identity = (state.get('phone_screen') or state.get('phone_browser_screen') or {}).get('frame_id')
             expected = request.query.get('frame_id')
             if not identity:
                 raise web.HTTPNotFound(text='Actual phone browser has no current frame')
             if expected is not None and expected != identity:
                 raise web.HTTPConflict(text='Actual phone frame changed')
-            path, query = '/api/screen/phone.jpg', {'frame_id': identity}
+            path = '/api/home/phone/frame.jpg' if state.get('phone_screen') else '/api/screen/phone.jpg'
+            query = {'frame_id': identity}
         elif device == 'tv':
             if state['home'].get('console_game') != 'minecraft' or not state.get('minecraft', {}).get('enabled'):
                 raise web.HTTPNotFound(text='Actual TV JPEG is only available for configured Minecraft')
@@ -111,7 +112,7 @@ class HomeDeviceProxy:
             raise web.HTTPNotFound()
         pixels, content, tag = await self.request('GET', path, query=query)
         after = await self.home(epoch)
-        if device == 'phone' and (after.get('phone_browser_screen') or {}).get('frame_id') != identity:
+        if device == 'phone' and (after.get('phone_screen') or after.get('phone_browser_screen') or {}).get('frame_id') != identity:
             raise web.HTTPConflict(text='Actual phone frame changed')
         if device == 'tv' and after['home'].get('console_game') != 'minecraft':
             raise web.HTTPConflict(text='Actual console activity changed')
@@ -125,21 +126,51 @@ class HomeDeviceProxy:
     async def action(self, request):
         epoch = self.runner.privacy_epoch
         state = await self.home(epoch)
+        if request.content_length is not None and request.content_length > 4096:
+            raise web.HTTPRequestEntityTooLarge(max_size=4096, actual_size=request.content_length)
+        chunks, total = [], 0
+        async for chunk in request.content.iter_chunked(4096):
+            total += len(chunk)
+            if total > 4096:
+                raise web.HTTPRequestEntityTooLarge(max_size=4096, actual_size=total)
+            chunks.append(chunk)
         try:
-            data = await request.json()
-        except ValueError:
+            data = json.loads(b''.join(chunks))
+        except (ValueError, UnicodeDecodeError):
             raise web.HTTPBadRequest(text='Invalid device action')
+        if not isinstance(data, dict):
+            raise web.HTTPBadRequest(text='Expected device action object')
         device = request.match_info['device']
         if device == 'phone' and isinstance(data, dict) and data.get('action') == 'navigate':
             try:
                 url = phone_navigation_url(data.get('url'))
             except ValueError:
                 raise web.HTTPBadRequest(text='Expected a public HTTPS URL')
-            current = (state.get('phone_browser_screen') or {}).get('frame_id')
+            current = (state.get('phone_screen') or state.get('phone_browser_screen') or {}).get('frame_id')
             expected = data.get('frame_id')
             if (current and expected != current) or (not current and expected is not None and expected != ''):
                 raise web.HTTPConflict(text='Actual phone frame changed')
             path, clean = '/api/home/browser', {'device': 'phone', 'url': url}
+        elif device == 'phone' and data.get('action') == 'save_note':
+            screen = state.get('phone_screen') or {}
+            if screen.get('app') != 'notes':
+                raise web.HTTPConflict(text='Open Notes before saving a note')
+            current = screen.get('frame_id')
+            if not current or data.get('frame_id') != current:
+                raise web.HTTPConflict(text='Actual phone frame changed')
+            title, text = data.get('title', ''), data.get('text')
+            if (not isinstance(title, str) or len(title) > 120
+                    or not isinstance(text, str) or len(text) > 2000 or not text.strip()
+                    or len((title.strip() + '\n' if title.strip() else '') + text.strip()) > 2000):
+                raise web.HTTPBadRequest(text='Expected bounded note title and nonempty text')
+            path, clean = '/api/home/phone/action', {k:data[k] for k in ('action', 'frame_id', 'title', 'text') if k in data}
+        elif device == 'phone' and isinstance(data, dict) and data.get('action') in {'home', 'open_app'}:
+            current = (state.get('phone_screen') or {}).get('frame_id')
+            if not current or data.get('frame_id') != current:
+                raise web.HTTPConflict(text='Actual phone frame changed')
+            if data.get('action') == 'open_app' and data.get('app') not in ('home', 'notes', 'memory', 'browser'):
+                raise web.HTTPBadRequest(text='Expected supported phone app')
+            path, clean = '/api/home/phone/action', {k:data[k] for k in ('action', 'app', 'frame_id') if k in data}
         elif device == 'phone':
             if (not isinstance(data, dict) or data.get('action') not in {'scroll_up', 'scroll_down', 'back', 'close_notice'}
                     or not isinstance(data.get('frame_id'), str) or not 1 <= len(data['frame_id']) <= 100):

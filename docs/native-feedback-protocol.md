@@ -96,3 +96,26 @@ Tests exercise the actual registered bridge and backend routes with HTTP
 requests, including rejected reports and a backend privacy change ahead of its
 next bridge tick. They isolate the router's literal activity catalog dependency;
 they do not start the numerical brain, a browser, emulator or native renderer.
+
+## Ordered consumer opt-in
+
+The sender can opt in with `Sub01OrderedNativeFeedback`. Its `consumer_id` is a
+UUID fixed for that native process (32 hex digits or standard hyphenated form),
+and `report_id` is an integer from 1 through 2^53−1 that increases for every
+report and never resets when the command changes. Both fields must be provided
+together. This source protocol is not a claim of live native acceptance.
+
+The original sender is compatible until the first successful explicitly bound
+ordered report. From that point the backend rejects counterless reports,
+repeated/older counters, and an unbound different consumer. A successful walking
+bind by a new consumer retires the earlier UUID for this backend's lifetime;
+a late report, including a late bind, cannot reclaim that retired identity.
+Retirement is bounded to 128 identities and fails closed if exhausted. Failed
+reports change neither evidence nor freshness. Only the required-native policy
+is persisted; counters, identities and physical results remain ephemeral.
+
+The bridge's feedback POST timeout is 1.2 seconds, shorter than the native
+sender's 1.5-second deadline. Tests send a newer seated report before releasing
+an older delayed HTTP report and confirm the older report cannot overwrite it.
+They also exercise the actual forwarding timeout and compatibility transition.
+Deploy the backend protocol and verify it before enabling the native opt-in.
