@@ -37,18 +37,24 @@ LOAD=r'''
  FString ProfilePath;
  if(Role==TEXT("DeskTyping")&&FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactProfile="),ProfilePath)){
   FString Raw;TSharedPtr<FJsonObject> Root;bool Valid=FFileHelper::LoadFileToString(Raw,*ProfilePath)&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Raw),Root);
+  const bool HoverFlag=FParse::Param(FCommandLine::Get(),TEXT("Sub01ReviewTypingHover"));
+  const bool PoseReview=HoverFlag&&HandsDiagnostic&&FParse::Param(FCommandLine::Get(),TEXT("Sub01DiagnosticSeat"));
+  double CapSpread=0;Valid=Valid&&Root.IsValid()&&Root->TryGetNumberField(TEXT("key_top_spread_cm"),CapSpread)&&FMath::IsFinite(CapSpread)&&(!HoverFlag||PoseReview);
   const TArray<TSharedPtr<FJsonValue>>* Rows=nullptr;Valid=Valid&&Root.IsValid()&&Root->TryGetArrayField(TEXT("samples"),Rows)&&Rows->Num()==301;
   auto* Instance=Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance());TArray<float> Times;TArray<FName> Names;TArray<FTransform> Values;
-  if(Valid&&Instance){for(const auto& RowValue:*Rows){auto Row=RowValue->AsObject();if(Row->GetNumberField(TEXT("bone_length_max_error_cm"))>.01||Row->GetNumberField(TEXT("finger_local_max_error_degrees"))>.1){Valid=false;break;}auto Corrected=Row->GetObjectField(TEXT("corrected"));double KeyTop=0;if(!Corrected->TryGetNumberField(TEXT("keyTopCm"),KeyTop)||!FMath::IsFinite(KeyTop))Valid=false;for(const auto& H:Corrected->GetArrayField(TEXT("hands"))){const auto Hand=H->AsObject();double Low=0;if(Hand->GetNumberField(TEXT("penetrationCm"))>.1||!Hand->TryGetNumberField(TEXT("overMinCm"),Low)||!FMath::IsFinite(Low)||Low-KeyTop>.2+1e-9)Valid=false;}
+  if(Valid&&Instance){for(const auto& RowValue:*Rows){auto Row=RowValue->AsObject();if(Row->GetNumberField(TEXT("bone_length_max_error_cm"))>.01||Row->GetNumberField(TEXT("finger_local_max_error_degrees"))>.1){Valid=false;break;}auto Corrected=Row->GetObjectField(TEXT("corrected"));double KeyTop=0;if(!Corrected->TryGetNumberField(TEXT("keyTopCm"),KeyTop)||!FMath::IsFinite(KeyTop))Valid=false;for(const auto& H:Corrected->GetArrayField(TEXT("hands"))){const auto Hand=H->AsObject();double Low=0;if(Hand->GetNumberField(TEXT("penetrationCm"))>.1||!Hand->TryGetNumberField(TEXT("overMinCm"),Low)||!FMath::IsFinite(Low)||!Sub01TypingReview::DistalGap(Low-KeyTop,CapSpread,PoseReview))Valid=false;}
    auto Arms=Row->GetObjectField(TEXT("corrected_local_arms"));if(Names.IsEmpty()){for(const auto& Pair:Arms->Values)Names.Add(FName(*Pair.Key));Names.Sort([](const FName& A,const FName& B){return A.LexicalLess(B);});}if(Names.Num()!=6){Valid=false;break;}Times.Add(Row->GetNumberField(TEXT("time")));
    for(const auto& Name:Names){auto T=Arms->GetObjectField(Name.ToString());const auto& P=T->GetArrayField(TEXT("translation"));const auto& Q=T->GetArrayField(TEXT("rotation"));const auto& S=T->GetArrayField(TEXT("scale"));if(P.Num()!=3||Q.Num()!=4||S.Num()!=3){Valid=false;break;}Values.Add(FTransform(FQuat(Q[0]->AsNumber(),Q[1]->AsNumber(),Q[2]->AsNumber(),Q[3]->AsNumber()),FVector(P[0]->AsNumber(),P[1]->AsNumber(),P[2]->AsNumber()),FVector(S[0]->AsNumber(),S[1]->AsNumber(),S[2]->AsNumber())));}
   }}
-  if(Valid&&Instance&&Values.Num()==Times.Num()*6){Instance->ContactSequence=Clip;Instance->ContactTimes=MoveTemp(Times);Instance->ContactBones=MoveTemp(Names);Instance->ContactLocalTransforms=MoveTemp(Values);FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactFreeze="),Instance->ContactFreezeTime);FString RecordDir;if(FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactRecordDir="),RecordDir))Instance->ContactFreezeTime=3;UE_LOG(LogTemp,Display,TEXT("SUB01_CONTACT_PROFILE_BOUND 301 samples; six arm bones only; captured fingerlocals retained; onepass; requires visual acceptance"));}
-  else UE_LOG(LogTemp,Error,TEXT("SUB01_CONTACT_PROFILE_REFUSED invalid/unresolved surface/finger/bone checks"));
+  if(Valid&&Instance&&Values.Num()==Times.Num()*6){Instance->ContactSequence=Clip;Instance->ContactTimes=MoveTemp(Times);Instance->ContactBones=MoveTemp(Names);Instance->ContactLocalTransforms=MoveTemp(Values);FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactFreeze="),Instance->ContactFreezeTime);FString RecordDir;if(FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactRecordDir="),RecordDir))Instance->ContactFreezeTime=3;UE_LOG(LogTemp,Display,TEXT("SUB01_CONTACT_PROFILE_BOUND 301 samples; six arm bones only; captured fingerlocals retained; onepass; explicitHoverReview=%d; NO physical seating, full-palm or key-press acceptance"),PoseReview?1:0);}
+  else {HandsClips.Remove(FName(*Role));FirstPersonBody->SetVisibility(false,true);HandsFailure=TEXT("Captured typing profile refused; unsafe raw pose hidden");UE_LOG(LogTemp,Error,TEXT("SUB01_CONTACT_PROFILE_REFUSED invalid/unresolved surface/finger/bone checks; raw fallback hidden"));}
  }
 '''
 
+from unreal_typing_review_policy import CPP as TYPING_REVIEW_CPP
+
 def install(header,cpp,diagnostic):
+ diagnostic=TYPING_REVIEW_CPP+diagnostic
  header=header.replace(' protected:',HEADER+'\n protected:')
  cpp=cpp.replace(' float Progress=1;',PROXY_FIELDS+'\n float Progress=1;')
  cpp=cpp.replace('  if(Current.GetSequence()!=Hands->TargetSequence)',PREUPDATE+'\n  if(Current.GetSequence()!=Hands->TargetSequence)')

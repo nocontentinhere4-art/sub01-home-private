@@ -18,6 +18,7 @@ class MovementOwner(unittest.TestCase):
             (project / "Sub01HomeLab.uproject").write_text("{}")
             stage.stage(project)
             cpp = (project / "Source/Sub01HomeLab/Sub01HomeLab.cpp").read_text()
+            self.assertEqual(cpp.splitlines()[0], '#include "Sub01HomeLab.h"')
             forward = cpp.split("void ASub01HomeCharacter::Forward(float Value) {", 1)[1].split("\n}", 1)[0]
             right = cpp.split("void ASub01HomeCharacter::Right(float Value) {", 1)[1].split("\n}", 1)[0]
         pre = r'''

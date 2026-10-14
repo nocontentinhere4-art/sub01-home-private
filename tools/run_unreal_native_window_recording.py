@@ -14,7 +14,9 @@ def main():
     parser.add_argument('--display-provider',choices=('xvfb','nvidia-xorg'),default='xvfb')
     parser.add_argument('--reuse-display',action='store_true')
     parser.add_argument('--startup-view',choices=('manual','live','desk-diagnostic'),default='manual')
+    parser.add_argument('--review-typing-hover',action='store_true',help='Explicit distal-surface pose review; no seating or key-contact acceptance')
     args=parser.parse_args()
+    if args.review_typing_hover and args.startup_view!='desk-diagnostic':raise SystemExit('Typing hover review requires explicit desk diagnostic')
     remaining=args.deadline_epoch-time.time()
     if remaining<90:raise SystemExit('Authorized window too short')
     PRIVATE.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -47,6 +49,7 @@ def main():
     control=PRIVATE/'native-control.json'
     control.write_text(json.dumps({'revision':100}));os.chown(control,1001,1001);control.chmod(0o600)
     native=['runuser','-u','unreal','--','timeout','--kill-after=5',str(max(1,int(args.deadline_epoch-time.time()))),'/workspace/sub01-unreal/UE/Engine/Binaries/Linux/UnrealEditor-Cmd',str(PROJECT/'Sub01HomeLab.uproject'),'/Game/Sub01Home/ActualHome','-game','-vulkan','-corelimit=8','-ZenDataPath=/workspace/sub01-unreal/cache/zen','-unattended','-NoSound','-NoSplash','-windowed','-NoBorder','-WinX=0','-WinY=0','-ResX=1280','-ResY=720','-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0,r.DefaultFeature.MotionBlur 0','-Sub01HandsDiagnostic=DeskTyping','-Sub01DiagnosticSeat','-Sub01ContactFreeze=3','-Sub01LiveHome','-Sub01NativeControl='+str(control),'-Sub01DiagnosticMesh=/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner','-Sub01DiagnosticClip=/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping','-Sub01ContactProfile='+str(PROJECT/'unreal-skinned-contact-audit.json')]
+    if args.review_typing_hover:native.append('-Sub01ReviewTypingHover')
     if args.startup_view!='desk-diagnostic':
         native=[item for item in native if not item.startswith(('-Sub01HandsDiagnostic=','-Sub01DiagnosticClip=','-Sub01ContactProfile=','-Sub01ContactFreeze=')) and item not in ('-Sub01DiagnosticSeat','-Sub01LiveHome')]
         native+=['-Sub01HandsDiagnostic=Walk','-Sub01DiagnosticClip=/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk']

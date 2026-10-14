@@ -16,6 +16,8 @@ from unreal_live_home_runtime import install as install_live_home
 from unreal_native_control import install as install_native_control
 from unreal_native_view_settings import install as install_native_view_settings
 from unreal_exit_door_runtime import install as install_exit_doors
+from unreal_minecraft_tv_input import install as install_minecraft_tv_input
+from unreal_phone_grip_diagnostic import install as install_phone_grip_diagnostic
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -161,10 +163,15 @@ def stage(project):
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     header,cpp=install_native_control(header,cpp)
     header,cpp=install_native_view_settings(header,cpp)
+    header,cpp=install_minecraft_tv_input(header,cpp)
+    header,cpp=install_phone_grip_diagnostic(header,cpp)
     header,cpp=install_exit_doors(header,cpp)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
     (module/'Sub01HomeLab.h').write_text(header)
+    # Every adapter may add includes; the native module header must remain first.
+    cpp=cpp.replace('#include \"Sub01HomeLab.h\"\n','',1)
+    cpp='#include \"Sub01HomeLab.h\"\n'+cpp
     (module/'Sub01HomeLab.cpp').write_text(cpp)
     bridge=Path(__file__).parent/'native_pc_bridge'
     for name in ['Sub01PCBridge.h','Sub01PCBridge.cpp','Sub01GuestInputQueue.h','Sub01GuestFrameLayout.h','Sub01HomeDeviceBridge.h','Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h','Sub01NoteDraft.h']:
