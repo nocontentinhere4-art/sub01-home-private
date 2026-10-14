@@ -1058,3 +1058,24 @@ def test_normal_map_compression_forces_srgb_off_until_compression_changes(tmp_pa
         clone = world.assets[row['clone'].split('.')[0]]
         assert clone.get_editor_property('srgb') is True
         assert 'TC_DEFAULT' in str(clone.get_editor_property('compression_settings'))
+
+
+def test_combined_bed_colour_and_wood_roughness_only_clones_fabric(tmp_path):
+    world = build_normalmap_world(tmp_path)
+    u = make_unreal(world)
+    for _, name in BED_GROUPS:
+        if 'upholstery' not in name:
+            world.assets[MAT_DIR + name].scalars['RoughnessFactor'] = .82
+    fix.repair_albedo_textures(u=u)
+    original_wood_textures = {name: world.assets[MAT_DIR + name].textures['BaseColorTexture']
+                              for _, name in BED_GROUPS if 'upholstery' not in name}
+    report = fix.apply(['bed-balanced', 'bed-wood-roughness'], u=u,
+                       parity=clone_parity(), albedo_clones=True)
+    assert len(report['slot_changes']) == 6
+    for source, entry in report['instances'].items():
+        texture_overrides = [value for kind, parameter, value in entry['overrides']
+                             if kind == 'texture' and parameter == 'BaseColorTexture']
+        if 'upholstery' in source:
+            assert len(texture_overrides) == 1 and texture_overrides[0].startswith(parity.CLONE_ROOT)
+        else:
+            assert texture_overrides == []

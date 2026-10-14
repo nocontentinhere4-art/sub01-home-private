@@ -266,7 +266,9 @@ def mapping_check(model, presets=None, parity=None, albedo_clones=False):
     plan = spec.plan(presets, measured)
     if albedo_clones:
         for t in plan['targets']:
-            if t.get('bed'):
+            # Bed mapping also guards wooden rails/slats. Only the four proven
+            # upholstery source images belong to the albedo-copy repair.
+            if t.get('bed') and t.get('class') == 'fabric' and set(t.get('source_materials', [])) == set(spec.BED_SOURCES):
                 t['albedo_clones'] = True
     bed = spec.source_bed_groups()
     mesh_of_material = {norm(v[0]): k for k, v in bed['groups'].items()}
