@@ -8,6 +8,8 @@ The provider refused the resume because the original host has no free GPUs. The 
 
 Keep one persistent Editor session for scene import work. Hot-reload reviewed importer modules and retry corrected operations without exiting the Editor; the fixed private task queue must preserve its whitelist and budget/ownership checks. Do not confuse saved assets or source tests with actual native visual/input acceptance.
 
+Officially verified migration target: `kjsxms1gk4rmv6`, exact name `sub01-home-private-migration-20261014-migration`, one A40, $0.59/hour, 150GB volume and 5GB container. Two exact-target external stop guards authenticated before work (PIDs 97214/97215). Authenticate the rootfs guard and recovered files before heavy work. This is the verified replacement referred to above; preserve the stopped source.
+
 Browser work follows the owner's latest supplied preference: configured playwright-isolated only for this task, no personal Chrome or imported browser credentials. Native Claude coordination and authorized file/provider API work remain available.
 
 The owner requires this work to stay private and on localhost. Do not deploy, connect this repository to Railway, modify the live SUB-01 site or its configuration, create public PRs, or publish these home changes without a separate explicit owner instruction. Keep credentials and local runtime data out of Git. Continue improving the real functioning home against the SimbasJungles visual reference; a video or standalone mockup is not completion.
