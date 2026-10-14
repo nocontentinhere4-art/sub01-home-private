@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--deadline-epoch',type=int,required=True)
     parser.add_argument('--display-provider',choices=('xvfb','nvidia-xorg'),default='xvfb')
     parser.add_argument('--reuse-display',action='store_true')
+    parser.add_argument('--route-test',action='store_true',help='Explicit actual source-graph CharacterMovement test; no live brain binding')
     parser.add_argument('--startup-view',choices=('manual','live','desk-diagnostic','phone-diagnostic','controller-diagnostic'),default='manual')
     parser.add_argument('--review-typing-hover',action='store_true',help='Explicit distal-surface pose review; no seating or key-contact acceptance')
     parser.add_argument('--controller-pose-time',type=float,default=4)
@@ -98,6 +99,10 @@ def main():
         native+=['-Sub01HandsDiagnostic=Walk','-Sub01DiagnosticClip=/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk']
         native+=['-Sub01LiveHome']
         if args.startup_view=='manual':native+=['-Sub01ManualView']
+    if args.route_test:
+        if args.startup_view!='manual':raise ValueError('Route test requires the walking Manual baseline')
+        native=[item for item in native if item!='-Sub01LiveHome']
+        native.append('-Sub01RouteTest')
     saved=PROJECT/'Saved/Logs/Sub01HomeLab.log'
     initial=saved.stat().st_mtime if saved.exists()else 0
     with log.open('w')as output:
