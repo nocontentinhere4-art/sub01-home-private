@@ -486,13 +486,15 @@ class FakeMIC:
 
 class FakeTex:
     def __init__(self, srgb):
-        self.props = {'srgb': srgb}
+        self.props = {'srgb': srgb, 'compression_settings': 'TC_NORMALMAP' if not srgb else 'TC_DEFAULT'}
 
     def get_editor_property(self, k):
         return self.props[k]
 
     def set_editor_property(self, k, v):
         self.props[k] = v
+        if k == 'compression_settings':
+            self.props['srgb'] = False
 
     def get_path_name(self):
         return '/Game/Sub01Home/RealLamps/T'
@@ -537,6 +539,7 @@ class FakeUnreal:
         class LES:
             def save_current_level(self):
                 u.saved += 1
+                return True
 
         self._subs = {'ed': Editor(), 'eas': EAS(), 'les': LES()}
         self.UnrealEditorSubsystem, self.EditorActorSubsystem, self.LevelEditorSubsystem = 'ed', 'eas', 'les'
@@ -544,6 +547,7 @@ class FakeUnreal:
         self.StaticMeshComponent = object
         self.StaticMesh = FakeSM
         self.MaterialInstanceConstant = FakeMIC
+        self.TextureCompressionSettings = type('Compression', (), {'TC_DEFAULT': 'TC_DEFAULT', 'TC_NORMALMAP': 'TC_NORMALMAP'})
         self.meshes = {}
 
         class Task:
@@ -606,6 +610,28 @@ class FakeUnreal:
 
 def ue(p):
     return (p[0] * 100 + 7, p[2] * 100 - 3, p[1] * 100 + 1)  # verified (x, z, y) mapping plus offset
+
+
+def test_import_repairs_normal_misclassified_albedo_after_compression_reset():
+    u = FakeUnreal([])
+    mesh = FakeSM('DeskLamp')
+    U.sanitize_materials(u, mesh, 'DeskLamp')
+    albedo = mesh.mat.textures['BaseColorTexture']
+    normal = mesh.mat.textures['NormalTexture']
+    assert albedo.props == {'srgb': True, 'compression_settings': 'TC_DEFAULT'}
+    assert normal.props == {'srgb': False, 'compression_settings': 'TC_NORMALMAP'}
+
+
+def test_import_leaves_inherited_unowned_texture_immutable():
+    u = FakeUnreal([])
+    mesh = FakeSM('DeskLamp')
+    placeholder = FakeTex(True)
+    placeholder.get_path_name = lambda: '/Engine/EngineMaterials/DefaultNormal'
+    before = dict(placeholder.props)
+    mesh.mat.textures['InheritedNormalTexture'] = placeholder
+    rows = U.sanitize_materials(u, mesh, 'DeskLamp')
+    assert placeholder.props == before
+    assert rows[0]['textures']['InheritedNormalTexture']['inherited_read_only']
 
 
 def make_outputs(tmp_path, roles=('DeskLamp', 'LowerPendant')):

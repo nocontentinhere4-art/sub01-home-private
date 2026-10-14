@@ -192,16 +192,34 @@ def sanitize_materials(u, mesh, role):
                 low = str(name).lower()
                 if tex is None:
                     continue
+                if not tex.get_path_name().startswith(DEST + '/'):
+                    row['textures'][str(name)] = {'texture': tex.get_path_name(), 'inherited_read_only': True}
+                    continue
                 if 'emiss' in low:
                     raise Refuse(f'{role}: emissive texture bound on {mat.get_name()}.{name}')
                 want = True if any(k in low for k in SRGB_PARAMS) else False if any(k in low for k in LINEAR_PARAMS) else None
                 srgb = bool(tex.get_editor_property('srgb'))
-                if want is not None and srgb != want:
+                compression = tex.get_editor_property('compression_settings')
+                desired = (u.TextureCompressionSettings.TC_DEFAULT if want is True
+                           else u.TextureCompressionSettings.TC_NORMALMAP if 'normal' in low else None)
+                changed = desired is not None and compression != desired
+                if changed:
+                    tex.set_editor_property('compression_settings', desired)
+                # Compression changes can reset sRGB: restore it afterwards.
+                if want is not None and bool(tex.get_editor_property('srgb')) != want:
                     tex.set_editor_property('srgb', want)
-                    u.EditorAssetLibrary.save_loaded_asset(tex)
-                row['textures'][str(name)] = {'texture': tex.get_path_name(), 'srgb': want if want is not None else srgb,
-                                              'fixed': want is not None and srgb != want}
-            u.EditorAssetLibrary.save_loaded_asset(mat)
+                    changed = True
+                if desired is not None and tex.get_editor_property('compression_settings') != desired:
+                    raise Refuse(f'{role}: owned texture compression repair failed: {name}')
+                if want is not None and bool(tex.get_editor_property('srgb')) != want:
+                    raise Refuse(f'{role}: owned texture colour-space repair failed: {name}')
+                if changed and not u.EditorAssetLibrary.save_loaded_asset(tex):
+                    raise Refuse(f'{role}: owned texture failed to save: {name}')
+                row['textures'][str(name)] = {'texture': tex.get_path_name(), 'srgb': bool(tex.get_editor_property('srgb')),
+                                              'compression': str(tex.get_editor_property('compression_settings')),
+                                              'fixed': changed or (want is not None and srgb != want)}
+            if not u.EditorAssetLibrary.save_loaded_asset(mat):
+                raise Refuse(f'{role}: owned material failed to save')
         else:
             raise Refuse(f'{role}: slot {i} is not a MaterialInstanceConstant; emission cannot be verified')
         report.append(row)
@@ -299,7 +317,8 @@ def run(out_dir, dry_run=False, restore=False, u=None):
         except Exception:
             pass
     state_path.write_text(json.dumps({'hidden': list(known.values())}, indent=2))
-    u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level()
+    if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():
+        raise Refuse('Real lamps map failed to save')
     (out_dir / 'unreal-real-lamps-report.json').write_text(json.dumps(result, indent=2, default=str))
     return result
 
