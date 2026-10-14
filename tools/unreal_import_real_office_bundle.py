@@ -14,6 +14,45 @@ from prepare_real_office_bundle import BOOKS_SHA,SHELF_SHA
 LEVEL='/Game/Sub01Home/ActualHome'
 
 
+def verify_native_structural_union(u,actors):
+ """Read actual saved receipt/bytes and native bindings; no staging/mutations."""
+ project=Path(u.Paths.project_dir());receipt_path=project/'private-audit/native-structural-lamp-union.json'
+ receipt=json.loads(receipt_path.read_text());source=Path('/workspace/sub01-home-private/structural-rails-20261014/structural-lamp-union-remainder-only.glb')
+ digest=hashlib.sha256(source.read_bytes()).hexdigest();roundtrip=receipt.get('roundtrip',{})
+ if receipt.get('source_sha256')!='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b' or receipt.get('union_sha256')!=digest or not roundtrip.get('ok') or roundtrip.get('replacement_sha256')!=digest or len(roundtrip.get('checks',[]))!=1 or roundtrip['checks'][0].get('triangle_count')!=160:raise RuntimeError('Actual saved exact160 union receipt/byte proof unavailable')
+ def unique(predicate,label):
+  matches=[a for a in actors if predicate(a)]
+  if len(matches)!=1:raise RuntimeError('Exact structural native prerequisite identity differs '+label)
+  return matches[0]
+ batches=[]
+ for node in (162,163):
+  actor=unique(lambda a:a.get_name()==f'full-home_node_{node}',str(node));components=actor.get_components_by_class(u.StaticMeshComponent)
+  if len(components)!=1 or not components[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/') or not bool(actor.get_editor_property('hidden')) or components[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION:raise RuntimeError('Original162/163 must be hidden and NoCollision before office staging')
+  batches.append(actor)
+ actor=unique(lambda a:a.get_actor_label()=='SUB01_VerifiedLampUnion160_'+digest[:12],'owned160 actor');components=actor.get_components_by_class(u.StaticMeshComponent)
+ if len(components)!=1:raise RuntimeError('Exact owned160 component count differs')
+ component=components[0];mesh=component.get_editor_property('static_mesh')
+ if component.get_path_name()!=receipt.get('new_union_component') or not mesh or not mesh.get_path_name().startswith('/Game/Sub01Home/StructuralLampUnionMeshOnly/V_'+digest[:12]+'/') or bool(actor.get_editor_property('hidden')) or not bool(component.get_editor_property('visible')) or component.get_collision_enabled()!=u.CollisionEnabled.QUERY_AND_PHYSICS or str(component.get_collision_profile_name())!='BlockAll':raise RuntimeError('Exact owned160 native geometry is not active/physical')
+ points,count=surface(u,component)
+ if count!=160 or component.get_num_materials()!=1 or component.get_material(0)!=batches[1].get_components_by_class(u.StaticMeshComponent)[0].get_material(0):raise RuntimeError('Owned160 triangle/material binding differs saved exact union')
+ from structural_rail_source_patch import accessor
+ from home_asset_audit import node_matrix,IDENTITY
+ doc,binary=read_gltf(source)
+ if len(doc['nodes'])!=1 or node_matrix(doc['nodes'][0])!=IDENTITY:raise RuntimeError('Actual160 source identity transform differs')
+ source_points=accessor(doc,binary,doc['meshes'][0]['primitives'][0]['attributes']['POSITION'])
+ expected=[[(min if side==0 else max)(p[k]for p in source_points)*100 for k in(0,2,1)]for side in(0,1)]
+ actual=[[(min if side==0 else max)(p[k]for p in points)for k in range(3)]for side in(0,1)]
+ if not all(close(a,b)for a,b in zip(actual,expected)):raise RuntimeError('Owned160 actual native world bounds differ exact source bytes')
+ old_path=receipt.get('old_owned_remainder_hidden')
+ if not old_path:raise RuntimeError('Saved union lacks exact prior200 identity')
+ for old in actors:
+  prior=old.get_path_name()==old_path or (old.get_actor_label().startswith('SUB01_VerifiedRails_')and 'PreservedSource_163_0'in old.get_actor_label())
+  if not prior:continue
+  comps=old.get_components_by_class(u.StaticMeshComponent)
+  if len(comps)!=1 or '/StructuralRails/V_d586193fee24/'not in comps[0].get_editor_property('static_mesh').get_path_name() or not bool(old.get_editor_property('hidden')) or comps[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION:raise RuntimeError('Old200 remainder must be absent or hidden/NoCollision before office staging')
+ return {'union_sha256':digest,'exact_native_component':component.get_path_name(),'native_triangles':count,'actual_native_bounds_cm':actual,'old162163_hidden_nocollision':True,'old200_remainder_inactive':True,'mutations':0}
+
+
 def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
  root=Path(root);proof=json.loads((root/'office-bundle.json').read_text())
@@ -24,7 +63,7 @@ def run(root,dry_run=True,u=None):
  if digest!=proof['shelf']['sha256'] or proof['shelf']['source_sha256']!=SHELF_SHA or not proof['shelf']['source_binary_unchanged']:raise RuntimeError('Actual complete shelf source identity differs')
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
  if not world or world.get_path_name().split('.',1)[0]!=LEVEL:raise RuntimeError('Already loaded ActualHome required; no new Editor or level load')
- original=list(eas.get_all_level_actors());before=fingerprint(u,original)
+ original=list(eas.get_all_level_actors());union_prerequisite=verify_native_structural_union(u,original);before=fingerprint(u,original)
  def exact(predicate,description):
   rows=[a for a in original if predicate(a)]
   if len(rows)!=1:raise RuntimeError('Actual original binding is not unique '+description)
@@ -42,7 +81,7 @@ def run(root,dry_run=True,u=None):
   if not close(vec(actor.get_actor_location()),plan['old_pivot_ue_cm']):raise RuntimeError('Actual owned book pivot differs source; no guessed relative transform')
   books.append((actor,comps[0],plan))
  desk_preflight=stage_desk(root/'desk.glb',dry_run=True,u=u)
- if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'mutations':0}
+ if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'structural_union_prerequisite':union_prerequisite,'mutations':0}
  states=[]
  for actor in original:
   comps=[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in actor.get_components_by_class(u.StaticMeshComponent)]
@@ -116,7 +155,7 @@ def run(root,dry_run=True,u=None):
    expected=True if actor in old_targets else hidden
    if bool(actor.get_editor_property('hidden'))!=expected:raise RuntimeError('Office activation changed unplanned visibility')
   if not u.EditorAssetLibrary.save_directory(ctx['lampdest'],only_if_is_dirty=False,recursive=True)or not u.EditorAssetLibrary.save_directory(deskdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office save failed')
-  result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'desk':desk_result,'shelf_native_triangles':alltris,'shelf_materials':materials,'books':book_rows,'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
+  result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'structural_union_prerequisite':union_prerequisite,'desk':desk_result,'shelf_native_triangles':alltris,'shelf_materials':materials,'books':book_rows,'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
   (root/'native-office-bundle.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception:
   for actor,transform,label,hidden,comps in states:
