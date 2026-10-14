@@ -52,7 +52,9 @@ def run():
         if 'error' in report:
             raise RuntimeError(report['error'])
         rows.append({'time': time, **report})
+    # The full transform the skin was posed at (the receipt matches the live body to it).
     result = {'schema': 'sub01.native-seat-contact.v1', 'body_cm': list(BODY_CM), 'body_yaw': BODY_YAW,
+              'body_rotation_pyr': [0.0, BODY_YAW, 0.0], 'body_scale_xyz': [1.0, 1.0, 1.0],
               'floor_cm': FLOOR_CM, 'chair_component': chair['chair']['component'], 'samples': rows}
     out = root / 'private-audit/native-seat-contact.json'
     out.write_text(json.dumps(result, indent=2) + '\n')

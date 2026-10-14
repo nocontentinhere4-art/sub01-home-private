@@ -25,23 +25,25 @@ const uint32_t AllRoles=SeatRoleStandToSit|SeatRoleSitting|SeatRoleSitToType|Sea
 FSub01SeatEvidence Evidence(){
  FSub01SeatEvidence E;E.Loaded=true;E.MeshId=Sub01SeatId("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner");
  E.ClipId=Sub01SeatId("/Game/Sub01Hands/FBX/SUB01_DeskTyping.SUB01_DeskTyping");E.ChairRevision=77;E.Family=ESub01SeatFamily::DeskTyping;
- E.X=203.9;E.Y=-232.3;E.Z=-.6;E.YawDeg=180;E.Scale=1;E.T0=3;E.T1=8;
+ E.X=203.9;E.Y=-232.3;E.Z=-.6;E.PitchDeg=0;E.YawDeg=180;E.RollDeg=0;E.ScaleX=E.ScaleY=E.ScaleZ=1;E.T0=3;E.T1=8;
  for(int I=0;I<5;++I){E.MinGap[I]=I<3?-1.2:.1;E.MaxMedian[I]=I<3?-.3:.4;E.MinCoverage[I]=.7;}
  return E;}
 FSub01SeatLivePose Live(const FSub01SeatEvidence& E){
  FSub01SeatLivePose L;L.MeshId=E.MeshId;L.ClipId=E.ClipId;L.ChairRevision=77;L.Family=ESub01SeatFamily::DeskTyping;
- L.X=E.X+.5;L.Y=E.Y-.5;L.Z=E.Z+.3;L.YawDeg=181;L.Scale=1;L.ClipSeconds=5;L.ClipPlaying=true;return L;}
+ L.X=E.X+.02;L.Y=E.Y-.02;L.Z=E.Z+.02;L.PitchDeg=.01;L.YawDeg=180.04;L.RollDeg=-.01;L.ScaleX=1;L.ScaleY=1.00005;L.ScaleZ=1;
+ L.ClipSeconds=5;L.ClipPlaying=true;return L;}   // float noise of the same transform
 struct Sim{
  FSub01SeatTransition M;FSub01SeatInputs In;FSub01SeatOutputs Out;uint32_t Serial=0;C Playing=C::None;double T=0;int Restarts=0;
  uint32_t Missing=0;   // roles whose clip never actually plays
+ bool Stale=false;     // the proxy keeps evaluating under the previous serial (start never applied)
  Sim(){In.Command=1;In.WantSeat=true;In.WantTyping=true;In.Fresh=true;In.ChairMeasured=true;In.ChairRevision=77;
        In.RolesAvailable=AllRoles;In.AtApproach=true;In.YawErrorDeg=40;}
  static uint32_t Role(C Clip){switch(Clip){case C::StandToSit:return SeatRoleStandToSit;case C::Sitting:return SeatRoleSitting;
    case C::SitToType:return SeatRoleSitToType;case C::DeskTyping:return SeatRoleDeskTyping;case C::SitToStand:return SeatRoleSitToStand;default:return 0;}}
  void Step(){
   In.NowSeconds+=1./60;
-  if(Out.ClipSerial!=Serial){Serial=Out.ClipSerial;Playing=Out.Clip;T=Out.ClipStartSeconds;++Restarts;}else if(Playing!=C::None)T+=1./60;
-  In.ClipPlaying=Playing!=C::None&&!(Missing&Role(Playing));In.ClipSeconds=T;
+  if(Out.ClipSerial!=Serial&&!Stale){Serial=Out.ClipSerial;Playing=Out.Clip;T=Out.ClipStartSeconds;++Restarts;}else if(Playing!=C::None)T+=1./60;
+  In.ClipPlaying=Playing!=C::None&&!(Missing&Role(Playing));In.ClipSeconds=T;In.ClipSerial=Serial;
   if(Out.TurnInPlace&&In.YawErrorDeg>0)In.YawErrorDeg-=2;
   Out=M.Tick(In);
  }
@@ -57,14 +59,20 @@ int main(){
   B=E;B.MinCoverage[0]=.4;CHECK(!Sub01SeatReceipt(B,L),4)
   B=E;B.MinGap[3]=-.1;CHECK(!Sub01SeatReceipt(B,L),5)                                      // a sole through the floor
   B=E;B.Z=NAN;CHECK(!Sub01SeatReceipt(B,L),6)
-  FSub01SeatLivePose X=L;X.Z+=2.5;CHECK(!Sub01SeatReceipt(E,X),7)                          // Z counts (was ignored)
-  X=L;X.Scale=1.01;CHECK(!Sub01SeatReceipt(E,X),8)
+  FSub01SeatLivePose X=L;X.Z+=.1;CHECK(!Sub01SeatReceipt(E,X),7)                           // 1 mm off the audited transform
+  X=L;X.X=E.X+.04;X.Y=E.Y+.04;CHECK(!Sub01SeatReceipt(E,X),16)                            // 0.057 cm in 3D
+  X=L;X.ScaleY=1.001;CHECK(!Sub01SeatReceipt(E,X),8)                                       // every scale axis
+  X=L;X.ScaleZ=.999;CHECK(!Sub01SeatReceipt(E,X),17)
+  X=L;X.ScaleX=NAN;CHECK(!Sub01SeatReceipt(E,X),18)
+  X=L;X.PitchDeg=.2;CHECK(!Sub01SeatReceipt(E,X),19)                                       // a tilted body is not the audited pose
+  X=L;X.RollDeg=-.2;CHECK(!Sub01SeatReceipt(E,X),90)
   X=L;X.ClipId=Sub01SeatId("/Game/Sub01Hands/Seating/SUB01_Sitting");X.Family=ESub01SeatFamily::None;CHECK(!Sub01SeatReceipt(E,X),9)  // Sitting is not the audited DeskTyping
   X=L;X.ClipSeconds=8.5;CHECK(!Sub01SeatReceipt(E,X),10)                                   // outside the audited pose time
   X=L;X.MeshId^=1;CHECK(!Sub01SeatReceipt(E,X),11)
   X=L;X.ChairRevision=78;CHECK(!Sub01SeatReceipt(E,X),12)
-  X=L;X.YawDeg=-178;CHECK(Sub01SeatReceipt(E,X),13)                                        // heading wraps
-  X=L;X.YawDeg=176;CHECK(!Sub01SeatReceipt(E,X),14)
+  X=L;X.YawDeg=-179.97;CHECK(Sub01SeatReceipt(E,X),13)                                     // heading wraps
+  X=L;X.YawDeg=180.1;CHECK(!Sub01SeatReceipt(E,X),14)
+  B=E;B.YawDeg=-180;B.RollDeg=359.98;X=L;CHECK(Sub01SeatReceipt(B,X),91)
   X=L;X.ClipPlaying=false;CHECK(!Sub01SeatReceipt(E,X),15)}
  // Full sit, type, focus, stand.
  {Sim S;S.In.AtApproach=false;S.Run(.2);CHECK(S.Out.Phase==P::Standing&&S.Out.MovementInput,20)
@@ -74,7 +82,11 @@ int main(){
   S.Until(P::Typing);CHECK(S.Out.Clip==C::DeskTyping&&!S.Out.MovementInput,24)
   CHECK(!S.Out.ContactVerified&&!S.Out.PCFocusAllowed,25)                                  // typing is not contact
   S.In.Receipt=true;S.Step();CHECK(S.Out.ContactVerified&&S.Out.PCFocusAllowed,26)
-  S.In.Receipt=false;S.Run(2.9);CHECK(S.Out.ContactVerified,27)S.Run(.2);CHECK(!S.Out.ContactVerified&&!S.Out.PCFocusAllowed,28)  // 3 s hold only
+  S.In.Receipt=false;S.Step();CHECK(!S.Out.ContactVerified&&!S.Out.PCFocusAllowed,27)      // nothing held over
+  // A body moved off the audited transform cannot reuse the contact it had.
+  FSub01SeatLivePose L=Live(E);S.In.Receipt=Sub01SeatReceipt(E,L);S.Step();CHECK(S.Out.ContactVerified,28)
+  L.X+=.1;S.In.Receipt=Sub01SeatReceipt(E,L);S.Step();CHECK(!S.Out.ContactVerified&&!S.Out.PCFocusAllowed,36)
+  L.X-=.1;L.YawDeg+=.2;S.In.Receipt=Sub01SeatReceipt(E,L);S.Step();CHECK(!S.Out.ContactVerified,37)
   S.In.Receipt=true;S.Step();S.In.Blocked=true;S.Step();CHECK(S.Out.ContactVerified&&!S.Out.PCFocusAllowed,29)
   S.In.Blocked=false;S.In.Private=true;S.Step();CHECK(!S.Out.PCFocusAllowed,30)
   S.In.Private=false;S.In.Fresh=false;S.Step();CHECK(!S.Out.PCFocusAllowed&&S.Out.Phase==P::Typing,31)
@@ -105,6 +117,15 @@ int main(){
   CHECK(S.Out.Phase==P::SeatedIdle&&S.Out.Clip==C::Sitting,64)S.Run(1);CHECK(S.Out.Phase==P::SeatedIdle,65)}  // not retried
  {Sim S;S.In.YawErrorDeg=0;S.Until(P::Typing);S.Missing=SeatRoleSitToStand;S.In.Command=5;S.In.WantSeat=false;S.Run(1);
   CHECK(S.Out.Phase==P::StandingUp&&!S.Out.MovementInput&&S.Out.Refusal==R::ClipUnavailable,66)}  // never glides out of the chair
+ // The same clip still evaluating under an older serial is not the requested start.
+ {Sim S;S.In.YawErrorDeg=0;S.In.WantTyping=false;S.Until(P::SeatedIdle);S.Run(.2);CHECK(S.Playing==C::Sitting,92)
+  S.Stale=true;S.In.WantTyping=true;S.Step();CHECK(S.Out.Phase==P::ToTyping,93)
+  S.Run(.7);   // the bridge start was never applied: back to Sitting under a NEW serial
+  CHECK(S.Out.Phase==P::SeatedIdle&&S.Out.Clip==C::Sitting&&S.Out.Refusal==R::None&&S.Playing==C::Sitting,94)
+  CHECK(S.In.ClipSerial!=S.Out.ClipSerial,95)
+  S.Stale=false;S.Step();CHECK(S.In.ClipSerial==S.Out.ClipSerial&&S.T==0,96)}                // re-applied from its start
+ {Sim S;S.Stale=true;S.In.YawErrorDeg=0;S.Until(P::SittingDown);S.Run(.7);
+  CHECK(S.Out.Phase==P::Refused&&S.Out.Refusal==R::ClipUnavailable&&S.Out.MovementInput,97)}  // a start never applied refuses
  // Re-sit after a get-up requested mid-way.
  {Sim S;S.In.YawErrorDeg=0;S.Until(P::Typing);S.In.Command=6;S.In.WantSeat=false;S.Run(.5);
   S.In.Command=7;S.In.WantSeat=true;S.Step();CHECK(S.Out.Phase==P::StandingUp,70)

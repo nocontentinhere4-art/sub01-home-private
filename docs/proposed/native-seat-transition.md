@@ -41,17 +41,24 @@ measured cushion alone (approach = cushion centre + the captured hips travel of 
     text);
   - the bound roles;
   - arrival at the approach point (< 12 cm, on ground) and the heading error;
-  - the requested clip playing on the hands instance and its time (the contact profile's actually
-    evaluated time while typing);
-  - the receipt, from the live `FirstPersonBody` world transform via `Sub01SeatReceipt`.
+  - playback as the hands proxy actually evaluated it: `SeatEvaluatedSequence`,
+    `SeatEvaluatedSerial` and `SeatEvaluatedTime`, recorded in `Evaluate` and published in the
+    next `PreUpdate`. It is never the requested `TargetSequence` and never a wall clock. A clip
+    counts as started only when the evaluated sequence is the requested one under the requested
+    serial. The same sequence still evaluating under an older serial is not a start;
+  - the receipt, from the live `FirstPersonBody` world transform (location, pitch/yaw/roll,
+    `GetScale3D` X/Y/Z) via `Sub01SeatReceipt`.
 - **Movement:** `AddMovementInput` toward the approach point (the audited mesh anchor minus the
   mesh offset, or the cushion fallback); a bounded turn in place at 103°/s; otherwise
   `StopMovementImmediately`. The live loop's walking code is gated by
   `!SeatOut.MovementInput && path` → stop and return. A seated body never walks off.
 - **Animation:** after `Tick` picks the posture clip, `ApplySeatAnimation` overrides it with
-  the requested seat clip. Playback restarts only when `ClipSerial` changes. A serial-guarded
-  proxy hook starts the clip at `ClipStartSeconds` (mid-sit get-up) and disables looping for
-  the transitions. While seated, the camera follows the captured Head bone, and it is restored
+  the requested seat clip. Playback restarts only when `ClipSerial` changes. The character
+  hands the proxy the serial itself, with its sequence, start and looping. After the target
+  switch, the proxy applies them once, as soon as `Current` holds that sequence. This happens
+  even when the sequence did not change, for example Sitting requested again. The proxy then
+  reports that serial back with what it evaluated. DeskTyping keeps the measured contact
+  profile's own start and non-looping. While seated, the camera follows the captured Head bone, and it is restored
   on standing.
 - **Verification:** `NativeSeatVerified = SeatOut.ContactVerified` is the only assignment.
   `SeatOut.PCFocusAllowed` false forces focus off. The existing ACK lease and PC-command guard
@@ -64,11 +71,21 @@ Standing → Aligning (turn in place) → SittingDown (StandToSit, 2.233 s) → 
 2.067 s) → Standing. Refused carries a reason: ChairUnmeasured, Private, Stale, Blocked,
 RoleMissing, ClipUnavailable or ChairChanged.
 
-- **Contact** is verified only while Typing, the audited family. It holds for at most 3 s after
-  the last passing receipt and is cleared by a command or chair change.
+- **Contact** is verified only while Typing the evaluated DeskTyping start, from this tick's
+  receipt. Nothing is held over. A body moved off the audited transform loses contact on that
+  tick, and so does a changed command or chair.
 - **A receipt** requires accepted evidence: per-patch worst gap, median and coverage in band;
-  finite values; the same mesh, clip, family and chair; a pose time inside the audited range;
-  within 2 cm in 3D, 3° of heading and 0.1% of scale.
+  finite values; the same mesh, clip, family and chair; a pose time inside the audited range.
+  It also requires the audit's own transform, to numeric noise: within 0.05 cm in 3D, 0.05° on
+  each of pitch, yaw and roll, and 0.01% on each scale axis. Those tolerances are far below the
+  contact gates (soles 0 to +1 cm). The evidence carries `body_rotation_pyr` and
+  `body_scale_xyz`. `unreal_audit_seat_contact.py` now writes them, and for older reports they
+  are derived from its fixed `Rotator(yaw)` at unit scale.
+- **Re-auditing at the live pose:** the walking arrival gate is 12 cm, so a receipt passes
+  only if the audit was made at the exact live seated transform. On entering Typing, the
+  character logs `SUB01_SEAT_LIVE_BODY cm=[…] pyr=[…] scale=[…]`. Re-run the contact audit
+  posed at that transform, then rebuild the evidence. Until then `NativeSeatVerified` stays
+  false, which is intended.
 - **Alignment** refuses Blocked and a changed chair.
 - **Never sits** without the sit and stand-up roles.
 - **Failure handling:** a sit or bridge clip that never starts fails closed; a get-up that never

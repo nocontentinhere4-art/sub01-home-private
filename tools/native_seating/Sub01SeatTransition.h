@@ -11,8 +11,10 @@
 // nothing here places the actor.
 //
 // Contact is never assumed: ContactVerified needs a quantitative skin/cushion receipt
-// (Sub01SeatReceipt) whose audited asset, clip family, pose time, 3D anchor, heading and
-// scale match the live body, for the current command and chair measurement.
+// (Sub01SeatReceipt) whose audited asset, clip family, pose time and full body transform
+// (location, pitch/yaw/roll, all three scale axes) match the live body to the audit's own
+// precision, this tick, for the current command and chair measurement. Clip playback counts
+// only from the animation proxy's evaluated sequence AND the serial it actually applied.
 #include <cmath>
 #include <cstdint>
 
@@ -46,15 +48,15 @@ template<class C> inline uint64_t Sub01SeatId(const C* Text){
 struct FSub01SeatEvidence {
  bool Loaded=false;
  uint64_t MeshId=0,ClipId=0,ChairRevision=0;ESub01SeatFamily Family=ESub01SeatFamily::None;
- double X=NAN,Y=NAN,Z=NAN,YawDeg=NAN,Scale=NAN;   // audited body (mesh component) world transform
+ double X=NAN,Y=NAN,Z=NAN,PitchDeg=NAN,YawDeg=NAN,RollDeg=NAN,ScaleX=NAN,ScaleY=NAN,ScaleZ=NAN;   // audited body (mesh component) world transform
  double T0=NAN,T1=NAN;                             // audited clip time range
  // buttocks, left/right posterior thigh, left/right sole: worst min gap, worst median, worst coverage.
  double MinGap[5]={NAN,NAN,NAN,NAN,NAN},MaxMedian[5]={NAN,NAN,NAN,NAN,NAN},MinCoverage[5]={NAN,NAN,NAN,NAN,NAN};
 };
 inline bool Sub01SeatEvidenceInBand(const FSub01SeatEvidence& E){
  if(!E.Loaded||!E.MeshId||!E.ClipId||!E.ChairRevision||E.Family==ESub01SeatFamily::None)return false;
- const double Pose[]={E.X,E.Y,E.Z,E.YawDeg,E.Scale,E.T0,E.T1};for(double V:Pose)if(!Sub01SeatFinite(V))return false;
- if(!(E.Scale>0)||!(E.T1>E.T0))return false;
+ const double Pose[]={E.X,E.Y,E.Z,E.PitchDeg,E.YawDeg,E.RollDeg,E.ScaleX,E.ScaleY,E.ScaleZ,E.T0,E.T1};for(double V:Pose)if(!Sub01SeatFinite(V))return false;
+ if(!(E.ScaleX>0)||!(E.ScaleY>0)||!(E.ScaleZ>0)||!(E.T1>E.T0))return false;
  for(int I=0;I<5;++I){
   if(!Sub01SeatFinite(E.MinGap[I])||!Sub01SeatFinite(E.MaxMedian[I])||!Sub01SeatFinite(E.MinCoverage[I]))return false;
   const double Low=I<3?-2.5:0,High=I<3?.5:1;
@@ -65,19 +67,28 @@ inline bool Sub01SeatEvidenceInBand(const FSub01SeatEvidence& E){
 // The live body, as the character actually has it this tick.
 struct FSub01SeatLivePose {
  uint64_t MeshId=0,ClipId=0,ChairRevision=0;ESub01SeatFamily Family=ESub01SeatFamily::None;
- double X=NAN,Y=NAN,Z=NAN,YawDeg=NAN,Scale=NAN,ClipSeconds=NAN;bool ClipPlaying=false;
+ double X=NAN,Y=NAN,Z=NAN,PitchDeg=NAN,YawDeg=NAN,RollDeg=NAN,ScaleX=NAN,ScaleY=NAN,ScaleZ=NAN,ClipSeconds=NAN;bool ClipPlaying=false;
 };
+// The audit poses the skin at one exact transform; contact gates are 0..1 cm (soles) and
+// -2.5..+0.5 cm (seat), so the receipt allows only numeric noise around that transform.
+struct FSub01SeatPoseTolerance {
+ static constexpr double Cm=.05,Deg=.05,ScaleRatio=1e-4;
+};
+inline double Sub01SeatAngleDelta(double A,double B){double D=std::fmod(std::fabs(A-B),360.);return D>180?360-D:D;}
 // True only when the accepted measurement applies to exactly this body: same mesh, same
 // playing clip and pose family, a pose time inside the audited range, the same chair
-// measurement, and the same world transform (2 cm in 3D, 3 deg heading, 0.1% scale).
+// measurement, and the same world transform (FSub01SeatPoseTolerance: 0.05 cm in 3D,
+// 0.05 deg on each of pitch, yaw and roll, 0.01% on each scale axis).
 inline bool Sub01SeatReceipt(const FSub01SeatEvidence& E,const FSub01SeatLivePose& L){
+ using T=FSub01SeatPoseTolerance;
  if(!Sub01SeatEvidenceInBand(E)||!L.ClipPlaying)return false;
- const double Pose[]={L.X,L.Y,L.Z,L.YawDeg,L.Scale,L.ClipSeconds};for(double V:Pose)if(!Sub01SeatFinite(V))return false;
+ const double Pose[]={L.X,L.Y,L.Z,L.PitchDeg,L.YawDeg,L.RollDeg,L.ScaleX,L.ScaleY,L.ScaleZ,L.ClipSeconds};for(double V:Pose)if(!Sub01SeatFinite(V))return false;
  if(L.MeshId!=E.MeshId||L.ClipId!=E.ClipId||L.Family!=E.Family||L.ChairRevision!=E.ChairRevision)return false;
  if(L.ClipSeconds<E.T0||L.ClipSeconds>E.T1)return false;
  const double D=std::sqrt((L.X-E.X)*(L.X-E.X)+(L.Y-E.Y)*(L.Y-E.Y)+(L.Z-E.Z)*(L.Z-E.Z));
- double A=std::fmod(std::fabs(L.YawDeg-E.YawDeg),360.);if(A>180)A=360-A;
- return D<=2&&A<=3&&std::fabs(L.Scale/E.Scale-1)<=1e-3;
+ if(!(D<=T::Cm))return false;
+ if(!(Sub01SeatAngleDelta(L.PitchDeg,E.PitchDeg)<=T::Deg&&Sub01SeatAngleDelta(L.YawDeg,E.YawDeg)<=T::Deg&&Sub01SeatAngleDelta(L.RollDeg,E.RollDeg)<=T::Deg))return false;
+ return std::fabs(L.ScaleX/E.ScaleX-1)<=T::ScaleRatio&&std::fabs(L.ScaleY/E.ScaleY-1)<=T::ScaleRatio&&std::fabs(L.ScaleZ/E.ScaleZ-1)<=T::ScaleRatio;
 }
 
 // Everything the state machine may know, gathered by the character each tick.
@@ -91,7 +102,9 @@ struct FSub01SeatInputs {
  uint32_t RolesAvailable=0;  // ESub01SeatRole bits actually bound
  bool AtApproach=false;      // on ground within the arrival gate of the approach point
  double YawErrorDeg=180;     // to the seated heading
- double ClipSeconds=0;bool ClipPlaying=false;   // playback of the clip this machine requested
+ // What the animation proxy actually evaluated last: the requested sequence is playing,
+ // under this serial (the start it applied), at this time. Same clip, older serial: not started.
+ double ClipSeconds=0;bool ClipPlaying=false;uint32_t ClipSerial=0;
  bool Receipt=false;         // Sub01SeatReceipt(evidence, live pose) this tick
 };
 
@@ -102,14 +115,14 @@ struct FSub01SeatOutputs {
  double ClipStartSeconds=0;  // where that clip must start
  bool MovementInput=true;    // CharacterMovement input allowed this tick
  bool TurnInPlace=false;     // only yaw toward the seated heading, no translation
- bool ContactVerified=false; // fresh quantitative receipt for this command and chair while typing
+ bool ContactVerified=false; // this tick's quantitative receipt, for this command and chair, while typing
  bool PCFocusAllowed=false;  // verified, typing wanted, public, fresh, not blocked
  ESub01SeatRefusal Refusal=ESub01SeatRefusal::None;
 };
 
 class FSub01SeatTransition {
 public:
- static constexpr double AlignToleranceDeg=3,ClipStartTimeoutSeconds=.5,ReceiptHoldSeconds=3;
+ static constexpr double AlignToleranceDeg=3,ClipStartTimeoutSeconds=.5;
  static constexpr double EndToleranceSeconds=1./120; // a clip clamped at its end counts as finished
  static constexpr uint32_t SitRoles=SeatRoleStandToSit|SeatRoleSitting|SeatRoleSitToStand;
  static constexpr uint32_t TypeRoles=SeatRoleSitToType|SeatRoleDeskTyping;
@@ -119,7 +132,7 @@ public:
  FSub01SeatOutputs Tick(const FSub01SeatInputs& In){
   FSub01SeatOutputs Out;
   const bool CommandChanged=In.Command!=Command;Command=In.Command;
-  if(CommandChanged){ClipFailed=false;TypingFailed=false;LastReceipt=-1e9;}
+  if(CommandChanged){ClipFailed=false;TypingFailed=false;}
   const bool ChairChanged=SeatedChair&&(!In.ChairMeasured||In.ChairRevision!=SeatedChair);
   switch(State){
   case ESub01SeatPhase::Standing:
@@ -167,15 +180,13 @@ public:
    if(Finished(In,FSub01SeatClips::GetUpSeconds)){State=ESub01SeatPhase::Standing;Clip=ESub01SeatClip::None;SeatedChair=0;++Serial;}
    break;
   }
-  // Contact: only while typing, from a receipt for this command and chair; a receipt holds
-  // for at most 3 s after the last passing check (no stale contact).
-  if(State==ESub01SeatPhase::Typing&&In.Receipt&&!ChairChanged&&In.ChairRevision==SeatedChair)LastReceipt=In.NowSeconds;
-  if(State!=ESub01SeatPhase::Typing||ChairChanged)LastReceipt=-1e9;
+  // Contact: only while typing the evaluated DeskTyping start, from this tick's receipt for
+  // this command and chair. Nothing is held over: a moved body loses contact immediately.
   Out.Phase=State;Out.Clip=Clip;Out.ClipSerial=Serial;Out.ClipStartSeconds=Start;
   const bool Animating=State==ESub01SeatPhase::SittingDown||State==ESub01SeatPhase::SeatedIdle||State==ESub01SeatPhase::ToTyping
    ||State==ESub01SeatPhase::Typing||State==ESub01SeatPhase::StandingUp;
   Out.MovementInput=!Animating;Out.TurnInPlace=State==ESub01SeatPhase::Aligning;
-  Out.ContactVerified=State==ESub01SeatPhase::Typing&&In.NowSeconds-LastReceipt<=ReceiptHoldSeconds&&In.NowSeconds>=LastReceipt;
+  Out.ContactVerified=State==ESub01SeatPhase::Typing&&Started(In)&&In.Receipt&&!ChairChanged&&In.ChairRevision==SeatedChair&&!CommandChanged;
   Out.PCFocusAllowed=Out.ContactVerified&&In.WantTyping&&!In.Private&&In.Fresh&&!In.Blocked;
   if(ChairChanged&&Animating&&Out.Refusal==ESub01SeatRefusal::None)Out.Refusal=ESub01SeatRefusal::ChairChanged;
   return Out;
@@ -184,12 +195,12 @@ public:
 private:
  ESub01SeatPhase State=ESub01SeatPhase::Standing;ESub01SeatClip Clip=ESub01SeatClip::None;
  uint64_t Command=0,SeatedChair=0;uint32_t Serial=0;
- bool ClipFailed=false,TypingFailed=false;double Start=0,RequestedAt=0,LastReceipt=-1e9;
+ bool ClipFailed=false,TypingFailed=false;double Start=0,RequestedAt=0;
  void Request(ESub01SeatClip Next,double From,double Now){Clip=Next;Start=From;RequestedAt=Now;++Serial;}
- static bool Started(const FSub01SeatInputs& In){return In.ClipPlaying;}
- static bool Finished(const FSub01SeatInputs& In,double Duration){return In.ClipPlaying&&In.ClipSeconds>=Duration-EndToleranceSeconds;}
- static double Progress(const FSub01SeatInputs& In,double Duration){
-  if(!In.ClipPlaying||!(Duration>0))return 0;const double P=In.ClipSeconds/Duration;return P<0?0:P>1?1:P;
+ bool Started(const FSub01SeatInputs& In)const{return In.ClipPlaying&&In.ClipSerial==Serial&&Serial!=0;}
+ bool Finished(const FSub01SeatInputs& In,double Duration)const{return Started(In)&&In.ClipSeconds>=Duration-EndToleranceSeconds;}
+ double Progress(const FSub01SeatInputs& In,double Duration)const{
+  if(!Started(In)||!(Duration>0))return 0;const double P=In.ClipSeconds/Duration;return P<0?0:P>1?1:P;
  }
  void BeginStandUp(double FromFraction,double Now){
   State=ESub01SeatPhase::StandingUp;Request(ESub01SeatClip::SitToStand,(FromFraction<0?0:FromFraction>1?1:FromFraction)*FSub01SeatClips::GetUpSeconds,Now);

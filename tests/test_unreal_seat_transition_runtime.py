@@ -71,15 +71,19 @@ def test_evidence_is_built_only_from_an_accepted_report_and_matches_the_native_r
     fill = ''.join(f'E.MinGap[{i}]={p[n]["min_gap_cm"]};E.MaxMedian[{i}]={p[n]["max_median_cm"]};E.MinCoverage[{i}]={p[n]["min_coverage"]};'
                    for i, n in enumerate(adapter.PATCHES))
     x, y, z = evidence['body_cm']
+    pitch, yaw, roll = evidence['body_rotation_pyr']
+    sx, sy, sz = evidence['body_scale_xyz']
+    assert (pitch, yaw, roll, sx, sy, sz) == (0, 180, 0, 1, 1, 1)
     source = f'''#include "Sub01SeatTransition.h"
 int main(){{FSub01SeatEvidence E;E.Loaded=true;E.Family=ESub01SeatFamily::DeskTyping;
  E.MeshId={evidence["mesh_id"]}ull;E.ClipId={evidence["clip_id"]}ull;E.ChairRevision={evidence["chair_revision"]}ull;
- E.X={x};E.Y={y};E.Z={z};E.YawDeg={evidence["body_yaw"]};E.Scale={evidence["body_scale"]};E.T0={evidence["time_range_s"][0]};E.T1={evidence["time_range_s"][1]};{fill}
+ E.X={x};E.Y={y};E.Z={z};E.PitchDeg={pitch};E.YawDeg={yaw};E.RollDeg={roll};E.ScaleX={sx};E.ScaleY={sy};E.ScaleZ={sz};E.T0={evidence["time_range_s"][0]};E.T1={evidence["time_range_s"][1]};{fill}
  if(!Sub01SeatEvidenceInBand(E))return 1;
  FSub01SeatLivePose L;L.MeshId=Sub01SeatId("{adapter.OWNER_MESH}");L.ClipId=Sub01SeatId("{adapter.TYPING_CLIP}");L.Family=ESub01SeatFamily::DeskTyping;
- L.ChairRevision={evidence["chair_revision"]}ull;L.X={x};L.Y={y};L.Z={z}+1.5;L.YawDeg=-178;L.Scale=1;L.ClipSeconds=6;L.ClipPlaying=true;
+ L.ChairRevision={evidence["chair_revision"]}ull;L.X={x};L.Y={y};L.Z={z}+.03;L.PitchDeg=0;L.YawDeg=-179.98;L.RollDeg=0;L.ScaleX=L.ScaleY=L.ScaleZ=1;L.ClipSeconds=6;L.ClipPlaying=true;
  if(!Sub01SeatReceipt(E,L))return 2;
- L.Z={z}+2.5;if(Sub01SeatReceipt(E,L))return 3;
+ L.Z={z}+.1;if(Sub01SeatReceipt(E,L))return 3;                 // a moved body is not the audited one
+ L.Z={z};L.RollDeg=.5;if(Sub01SeatReceipt(E,L))return 4;
  return 0;}}'''
     run_cpp(source)
 
@@ -92,6 +96,19 @@ int main(){{FSub01SeatEvidence E;E.Loaded=true;E.Family=ESub01SeatFamily::DeskTy
 def test_out_of_band_reports_never_become_evidence(report, chair, match):
     with pytest.raises(ValueError, match=match):
         adapter.build_evidence(report, chair)
+
+
+@pytest.mark.parametrize('override,match', [
+    ({'body_rotation_pyr': [0.0, 170.0, 0.0]}, 'yaw disagrees'),
+    ({'body_scale_xyz': [1.0, 0.0, 1.0]}, '3-axis scale'),
+    ({'body_scale_xyz': [1.0, 1.0]}, '3-axis scale'),
+    ({'body_rotation_pyr': [float('nan'), 180, 0.0]}, 'pitch/yaw/roll'),
+])
+def test_evidence_needs_the_full_audited_transform(override, match):
+    with pytest.raises(ValueError, match=match):
+        adapter.build_evidence({**seat_report(), **override}, CHAIR)
+    stated = adapter.build_evidence({**seat_report(), 'body_rotation_pyr': [0.0, 180, 0.0], 'body_scale_xyz': [1, 1, 1.0]}, CHAIR)
+    assert stated['body_rotation_pyr'] == [0.0, 180, 0.0] and stated['body_scale_xyz'] == [1, 1, 1.0]
 
 
 def test_write_evidence_from_server_reports(tmp_path):
@@ -132,8 +149,16 @@ def test_install_applies_to_the_actual_staged_sources(installed):
     assert gate < live.index('AddMovementInput(')                       # a seated body cannot walk off
     tick = cpp.split('void ASub01HomeCharacter::Tick(float DeltaSeconds) {', 1)[1].split('\n}\n', 1)[0]
     assert tick.rstrip().endswith('ApplySeatAnimation(Instance);')       # after the posture's own clip choice
-    switch = hands_cpp.split('if(Current.GetSequence()!=Hands->TargetSequence) {', 1)[1].split('\n  }', 1)[0]
-    assert switch.index('Current.SetAccumulatedTime(0);') < switch.index('Current.SetAccumulatedTime(Hands->SeatStartSeconds);')
+    # The serial start is applied after the target switch, outside it: also for an unchanged sequence.
+    pre = hands_cpp.split('virtual void PreUpdate(', 1)[1].split('virtual void CacheBones()', 1)[0]
+    switch = pre.split('if(Current.GetSequence()!=Hands->TargetSequence) {', 1)[1].split('\n  }\n', 1)
+    assert 'SeatStartSerial' not in switch[0]
+    applied = switch[1].index('if(SeatSerial!=Hands->SeatStartSerial&&Current.GetSequence()==Hands->SeatStartSequence.Get()){')
+    assert applied < switch[1].index('Current.SetAccumulatedTime(Hands->SeatStartSeconds);Current.SetLoopAnimation(!Hands->SeatNoLoop);')
+    assert pre.index('Hands->SeatEvaluatedSerial=SeatEvaluatedSerial;') < pre.index('SeatSerial=Hands->SeatStartSerial;')
+    evaluate = hands_cpp.split('virtual bool Evaluate(FPoseContext& Output) override {', 1)[1].split('\n }\n', 1)[0]
+    assert evaluate.index('Blend.Evaluate_AnyThread(Output);') < evaluate.index('SeatEvaluatedSerial=SeatSerial;') < evaluate.index('return true;')
+    assert 'UPROPERTY(Transient) TObjectPtr<UAnimSequence> SeatEvaluatedSequence;' in hands_h
     # Only additions: every original line is still present, in order.
     for name, text in before.items():
         lines = [l for l in text.splitlines() if l.strip()]
@@ -151,6 +176,12 @@ def test_added_code_never_places_the_actor_and_owns_seat_verification(installed)
     assert 'if(!SeatOut.PCFocusAllowed&&PCBridge)PCBridge->SetOperatorFocus(false);' in methods
     assert 'In.Receipt=Sub01SeatReceipt(SeatEvidence,L);' in methods and 'Sub01SeatEvidenceInBand(Loaded)' in methods
     assert 'AddMovementInput(' in methods and methods.count('AddMovementInput(') == 1   # the approach leg only
+    # Playback comes from what the proxy evaluated, never the requested target or a wall clock.
+    assert 'In.ClipPlaying=Requested&&Instance&&Instance->SeatEvaluatedSequence==Requested' in methods
+    assert 'In.ClipSerial=Instance?uint32(Instance->SeatEvaluatedSerial):0;In.ClipSeconds=Instance?Instance->SeatEvaluatedTime:0;' in methods
+    assert 'TargetSequence==Requested' not in methods and 'SeatClipStartedAt' not in methods
+    assert 'Instance->SeatStartSerial=int32(SeatOut.ClipSerial);' in methods
+    assert 'L.PitchDeg=R.Pitch;L.YawDeg=R.Yaw;L.RollDeg=R.Roll;L.ScaleX=S.X;L.ScaleY=S.Y;L.ScaleZ=S.Z;' in methods
     # A missing install anchor refuses instead of half-applying.
     _, after, _ = installed
     with pytest.raises(ValueError):
