@@ -37,6 +37,7 @@ bool ASub01HomeCharacter::ApplyPrivateViewerHandoff(const TSharedPtr<FJsonObject
  if(auto* Devices=FindComponentByClass<USub01HomeDeviceBridge>())Devices->ReleaseFocus();
  NativePrivacyPublishedAt=-10;
  const FVector Eye=ViewCamera->GetComponentLocation();PublishPrivateNativeCameraPrivacy(Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270);
+ WritePrivateViewSettingsReceipt(Revision,true,TEXT(""));
  WritePrivateViewerHandoffReceipt(Revision,true,TEXT(""));
  UE_LOG(LogTemp,Display,TEXT("SUB01_VIEWER_MANUAL_HANDOFF revision=%d actualpawnretained"),Revision);return true;
 }
