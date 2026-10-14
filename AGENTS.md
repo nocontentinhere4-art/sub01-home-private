@@ -1,5 +1,15 @@
 # Private local home
 
+## Latest human continuation — 14 October, after the first fixed stop
+
+The owner explicitly resumed work after the earlier stop: “Muovi il culo, e c'e' proprio bisogno di spegnere e riaccendere ogni volta runpod”. Continue privately within the existing $100 TOTAL cap. A bounded four-hour continuation ends at 2026-10-14 22:40:55 UTC (2026-10-15 00:40:55 Europe/Rome), epoch 1792017655; this duration is an implementation bound, not a newly purchased budget. Two independent local exact-identity stop guards were authenticated before the same-pod resume attempt. The conservative prior bound $70 plus this window's $6 reserve is $76; this is not an actual invoice.
+
+The provider refused the resume because the original host has no free GPUs. The owner previously explicitly authorized automatic migration (“Sì, migra mantenendo il limite di $20”), subsequently expanded the overall budget to $100, and now requested continued work. That authorization persists: an official automatic migration preserving the same A40 specifications and private data may replace the unavailable home pod within the unchanged cap and deadline. This supersedes the older same-ID-only restriction for this specific recovery. Do not touch the brain pod, create unrelated capacity, use the Mac for heavy work, or manually recopy the engine from the Mac. Preserve the source pod and stored world. Authenticate the official returned target identity, rate and independent shutdown guards before work on the replacement; stop a target whose identity, costs or guards cannot be verified. Record the verified replacement ID here once returned. The old pod remains stopped.
+
+Keep one persistent Editor session for scene import work. Hot-reload reviewed importer modules and retry corrected operations without exiting the Editor; the fixed private task queue must preserve its whitelist and budget/ownership checks. Do not confuse saved assets or source tests with actual native visual/input acceptance.
+
+Browser work follows the owner's latest supplied preference: configured playwright-isolated only for this task, no personal Chrome or imported browser credentials. Native Claude coordination and authorized file/provider API work remain available.
+
 The owner requires this work to stay private and on localhost. Do not deploy, connect this repository to Railway, modify the live SUB-01 site or its configuration, create public PRs, or publish these home changes without a separate explicit owner instruction. Keep credentials and local runtime data out of Git. Continue improving the real functioning home against the SimbasJungles visual reference; a video or standalone mockup is not completion.
 
 ## Reference priority
