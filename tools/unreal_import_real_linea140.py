@@ -49,6 +49,11 @@ def verify_materials(u,components,doc,dest):
   if max(abs(e.r),abs(e.g),abs(e.b))>1e-6:raise RuntimeError('Unexpected source desk emission')
   expected={'MetallicFactor':pbr.get('metallicFactor',1),'RoughnessFactor':pbr.get('roughnessFactor',1)}
   if 'normalTexture'in source:expected['NormalScale']=source['normalTexture'].get('scale',1)
+  clearcoat=source.get('extensions',{}).get('KHR_materials_clearcoat')
+  if clearcoat:
+   parent=mat.get_editor_property('parent')
+   if not parent or parent.get_path_name()!='/InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Opaque_DS.MI_ClearCoat_Opaque_DS':raise RuntimeError('Original double-sided clearcoat material parent differs')
+   expected['ClearCoatFactor']=clearcoat.get('clearcoatFactor',0);expected['ClearCoatRoughnessFactor']=clearcoat.get('clearcoatRoughnessFactor',0)
   for name,want in expected.items():
    if name not in scalars or abs(mel.get_material_instance_scalar_parameter_value(mat,scalars[name])-want)>1e-5:raise RuntimeError('Authored scalar differs '+name)
   roles=[]
