@@ -59,7 +59,7 @@ The `.bin` is served from the 8k/4k folder because Poly Haven shares one binary 
 - the cube-built `house-office-shelves-*` nodes from `tools/build_home_office_shelves.py`, loaded at home.js:862-876 (oak boards, cleats, `Shelf_hardware`).
 
 Shared-batch risk:
-- Those nodes use `M.architectureOak`, the same material as the stair treads (home.js:502).
+- Those nodes use `M.architectureOak`, the same material as the stair treads (home.js:503).
 - If the UE source GLB merged any of them into a shared batch (`batchArchitecture`, home.js:2766), select **exact connected components** the way `tools/build_real_shelf_books.py` / `tools/build_real_lamps.py` do. Refuse on ambiguity, and never hide a node that also carries stair geometry.
 
 **Kitchen** items are additive; no procedural object is replaced:
