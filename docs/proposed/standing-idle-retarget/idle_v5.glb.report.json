@@ -1,0 +1,1117 @@
+{
+ "animation": "idle",
+ "finalize": {
+  "duration_s": 15.333333,
+  "frames": 461,
+  "in_place": true,
+  "output_sha256": "7d7f42c06c4f7b1ef111f90f7c8db136f91587dc629045c84fe705c73494856a",
+  "removed_linear_drift_cm": [
+   -0.000584,
+   -0.000323
+  ],
+  "removed_start_offset_cm": [
+   20.151991,
+   0.022094
+  ],
+  "window_frames": [
+   0,
+   460
+  ],
+  "window_source_s": [
+   0.0,
+   15.333333
+  ]
+ },
+ "loop_search": {
+  "best_loop_among_planted_windows": {
+   "duration_s": 3.2,
+   "end_frame": 102,
+   "end_s": 3.4,
+   "hips_world_cm": 1.528081,
+   "normalised_cost": 3.989133,
+   "pose_cm": 1.994566,
+   "start_frame": 6,
+   "start_s": 0.2,
+   "velocity_cm_s": 9.241169
+  },
+  "best_loop_window": {
+   "duration_s": 14.766667,
+   "end_frame": 460,
+   "end_s": 15.333333,
+   "hips_world_cm": 0.377387,
+   "normalised_cost": 1.468303,
+   "pose_cm": 0.734152,
+   "start_frame": 17,
+   "start_s": 0.566667,
+   "velocity_cm_s": 7.295296
+  },
+  "frames": 461,
+  "longest_window_passing_loop_feet_and_hips": null,
+  "min_window_s": 2.0,
+  "rule": "normalised_cost = max(pose/0.5 cm, hips/0.5 cm, velocity/5 cm/s), passes at <= 1; loop: pose <= 0.5 cm, hips <= 0.5 cm, velocity <= 5 cm/s between window start/end frames; feet joints slide <= 2 cm and rise <= 2 cm, hips travel <= 5 cm within the window"
+ },
+ "mapping": {
+  "Head": "Head",
+  "HeadTop_End": null,
+  "Hips": "Hip",
+  "LeftArm": "L_Upperarm",
+  "LeftFoot": "L_Foot",
+  "LeftForeArm": "L_Forearm",
+  "LeftHand": "L_Hand",
+  "LeftHandIndex1": "finger2-1.L",
+  "LeftHandIndex2": "finger2-2.L",
+  "LeftHandIndex3": "finger2-3.L",
+  "LeftHandIndex4": null,
+  "LeftHandMiddle1": "finger3-1.L",
+  "LeftHandMiddle2": "finger3-2.L",
+  "LeftHandMiddle3": "finger3-3.L",
+  "LeftHandMiddle4": null,
+  "LeftHandPinky1": "finger5-1.L",
+  "LeftHandPinky2": "finger5-2.L",
+  "LeftHandPinky3": "finger5-3.L",
+  "LeftHandPinky4": null,
+  "LeftHandRing1": "finger4-1.L",
+  "LeftHandRing2": "finger4-2.L",
+  "LeftHandRing3": "finger4-3.L",
+  "LeftHandRing4": null,
+  "LeftHandThumb1": "finger1-1.L",
+  "LeftHandThumb2": "finger1-2.L",
+  "LeftHandThumb3": "finger1-3.L",
+  "LeftHandThumb4": null,
+  "LeftLeg": "L_Calf",
+  "LeftShoulder": "L_Clavicle",
+  "LeftToeBase": "L_ToeBase",
+  "LeftToe_End": null,
+  "LeftUpLeg": "L_Thigh",
+  "Neck": "NeckTwist01",
+  "RightArm": "R_Upperarm",
+  "RightFoot": "R_Foot",
+  "RightForeArm": "R_Forearm",
+  "RightHand": "R_Hand",
+  "RightHandIndex1": "finger2-1.R",
+  "RightHandIndex2": "finger2-2.R",
+  "RightHandIndex3": "finger2-3.R",
+  "RightHandIndex4": null,
+  "RightHandMiddle1": "finger3-1.R",
+  "RightHandMiddle2": "finger3-2.R",
+  "RightHandMiddle3": "finger3-3.R",
+  "RightHandMiddle4": null,
+  "RightHandPinky1": "finger5-1.R",
+  "RightHandPinky2": "finger5-2.R",
+  "RightHandPinky3": "finger5-3.R",
+  "RightHandPinky4": null,
+  "RightHandRing1": "finger4-1.R",
+  "RightHandRing2": "finger4-2.R",
+  "RightHandRing3": "finger4-3.R",
+  "RightHandRing4": null,
+  "RightHandThumb1": "finger1-1.R",
+  "RightHandThumb2": "finger1-2.R",
+  "RightHandThumb3": "finger1-3.R",
+  "RightHandThumb4": null,
+  "RightLeg": "R_Calf",
+  "RightShoulder": "R_Clavicle",
+  "RightToeBase": "R_ToeBase",
+  "RightToe_End": null,
+  "RightUpLeg": "R_Thigh",
+  "Spine": "Waist",
+  "Spine1": "Spine01",
+  "Spine2": "Spine02"
+ },
+ "never": "no IK, no hand posing, no crossfade, no invented keys; static leaves hold owner rest",
+ "output": "<scratch>/idle_v5.glb",
+ "output_sha256": "7d7f42c06c4f7b1ef111f90f7c8db136f91587dc629045c84fe705c73494856a",
+ "owner": "web/room/char_mixamo.glb",
+ "prepare": {
+  "constant_tracks_holding_original_rest": [
+   "mixamorig:LeftHandThumb1",
+   "mixamorig:LeftHandThumb2",
+   "mixamorig:LeftHandIndex1",
+   "mixamorig:LeftHandIndex2",
+   "mixamorig:LeftHandMiddle1",
+   "mixamorig:LeftHandMiddle2",
+   "mixamorig:LeftHandRing1",
+   "mixamorig:LeftHandRing2",
+   "mixamorig:LeftHandPinky1",
+   "mixamorig:LeftHandPinky2",
+   "mixamorig:RightHandThumb1",
+   "mixamorig:RightHandThumb2",
+   "mixamorig:RightHandIndex1",
+   "mixamorig:RightHandIndex2",
+   "mixamorig:RightHandMiddle1",
+   "mixamorig:RightHandMiddle2",
+   "mixamorig:RightHandRing1",
+   "mixamorig:RightHandRing2",
+   "mixamorig:RightHandPinky1",
+   "mixamorig:RightHandPinky2"
+  ],
+  "dropped_scale_track_noise_max": 8.285045623779297e-06,
+  "kept_unmapped_nodes": [
+   "src:Armature",
+   "src:NeckTwist02",
+   "src:Pelvis",
+   "src:Root",
+   "src:metacarpal1.L",
+   "src:metacarpal1.R",
+   "src:metacarpal2.L",
+   "src:metacarpal2.R",
+   "src:metacarpal3.L",
+   "src:metacarpal3.R",
+   "src:metacarpal4.L",
+   "src:metacarpal4.R"
+  ],
+  "mapped_joints": 52,
+  "prepared": "<scratch>/work_v5/prepared_source.glb",
+  "prepared_vs_original_max_joint_cm": 0.00026707,
+  "rest_rebase_correction_deg": {
+   "Head": 16.7014,
+   "LeftArm": 65.3329,
+   "LeftFoot": 38.4265,
+   "LeftForeArm": 60.327,
+   "LeftHand": 60.5986,
+   "LeftHandIndex1": 102.0123,
+   "LeftHandIndex2": 99.4329,
+   "LeftHandIndex3": 99.4329,
+   "LeftHandMiddle1": 104.4478,
+   "LeftHandMiddle2": 95.7468,
+   "LeftHandMiddle3": 95.7468,
+   "LeftHandPinky1": 103.4627,
+   "LeftHandPinky2": 112.6821,
+   "LeftHandPinky3": 112.6821,
+   "LeftHandRing1": 98.5817,
+   "LeftHandRing2": 109.9414,
+   "LeftHandRing3": 109.9414,
+   "LeftHandThumb1": 57.1146,
+   "LeftHandThumb2": 57.1091,
+   "LeftHandThumb3": 57.1091,
+   "LeftLeg": 2.8942,
+   "LeftShoulder": 19.4512,
+   "LeftToeBase": 38.4265,
+   "LeftUpLeg": 5.2074,
+   "Neck": 16.7014,
+   "RightArm": 65.0937,
+   "RightFoot": 32.2868,
+   "RightForeArm": 61.2558,
+   "RightHand": 49.9975,
+   "RightHandIndex1": 100.7696,
+   "RightHandIndex2": 103.5133,
+   "RightHandIndex3": 103.5133,
+   "RightHandMiddle1": 100.5734,
+   "RightHandMiddle2": 103.3832,
+   "RightHandMiddle3": 103.3832,
+   "RightHandPinky1": 104.6201,
+   "RightHandPinky2": 119.0043,
+   "RightHandPinky3": 119.0043,
+   "RightHandRing1": 98.8264,
+   "RightHandRing2": 107.8835,
+   "RightHandRing3": 107.8835,
+   "RightHandThumb1": 52.6123,
+   "RightHandThumb2": 52.6098,
+   "RightHandThumb3": 52.6098,
+   "RightLeg": 4.641,
+   "RightShoulder": 18.6276,
+   "RightToeBase": 32.2868,
+   "RightUpLeg": 4.7952,
+   "Spine2": 9.0703
+  },
+  "rest_rebase_passes": 1,
+  "source_direction_undefined_child_is_static_leaf": [
+   "Head",
+   "LeftHandIndex3",
+   "LeftHandMiddle3",
+   "LeftHandPinky3",
+   "LeftHandRing3",
+   "LeftHandThumb3",
+   "LeftToeBase",
+   "RightHandIndex3",
+   "RightHandMiddle3",
+   "RightHandPinky3",
+   "RightHandRing3",
+   "RightHandThumb3",
+   "RightToeBase"
+  ],
+  "source_leg_height_over_owner": 0.980104,
+  "static_leaves_added": [
+   "HeadTop_End",
+   "RightHandThumb4",
+   "RightHandIndex4",
+   "RightHandMiddle4",
+   "RightHandRing4",
+   "RightHandPinky4",
+   "LeftHandThumb4",
+   "LeftHandIndex4",
+   "LeftHandMiddle4",
+   "LeftHandRing4",
+   "LeftHandPinky4",
+   "RightToe_End",
+   "LeftToe_End"
+  ]
+ },
+ "preset": "v5",
+ "preset_note": "Tripo v5 rig (web/room/char_v5.glb): Hip/Waist/Spine01/Spine02/NeckTwist01, L_/R_ limbs, finger1..5-1..3 (thumb..pinky). Twist, Pelvis and metacarpal nodes are unmapped intermediates (their motion reaches the mapped joints).",
+ "provenance": "web/room/char_v5.glb#idle = the idle shipped with the Tripo v5 placeholder rig (CREDITS.md: char_v5.glb AI-generated with Tripo, Tripo's terms of service); capture method undocumented",
+ "retarget_first_person": {
+  "algorithm": "Aligned world rest delta; QtargetWorld=C QsrcWorld inverse(QsrcRestWorld) inverse(C) QtargetRestWorld",
+  "alignmentQuaternion": [
+   0.009873560984621044,
+   0.7072219474544038,
+   -0.01083811751659619,
+   -0.7068395610327566
+  ],
+  "checks": {
+   "boneLengthMaxError": 2.220446049250313e-16,
+   "noMotionRestMaxError": 2.9802322387695312e-08,
+   "sampledBoneLengthMaxError": 4.440892098500626e-16
+  },
+  "duration": 15.33333345875144,
+  "frames": 461,
+  "legHeightScale": 1.0203003086248856,
+  "proceduralMotionAdded": false,
+  "sourceLegHeight": 0.7921039875614462,
+  "targetLegHeight": 0.8081839429719462
+ },
+ "retarget_first_person_rest_axis_residual_deg": {
+  "Head": 0,
+  "Hips": 5.9604,
+  "LeftArm": 0,
+  "LeftFoot": 0,
+  "LeftForeArm": 0,
+  "LeftHand": 0.0,
+  "LeftHandIndex1": 0,
+  "LeftHandIndex2": 0,
+  "LeftHandIndex3": 0,
+  "LeftHandMiddle1": 0,
+  "LeftHandMiddle2": 0,
+  "LeftHandMiddle3": 0,
+  "LeftHandPinky1": 0,
+  "LeftHandPinky2": 0,
+  "LeftHandPinky3": 0,
+  "LeftHandRing1": 0,
+  "LeftHandRing2": 0,
+  "LeftHandRing3": 0,
+  "LeftHandThumb1": 0,
+  "LeftHandThumb2": 0,
+  "LeftHandThumb3": 0,
+  "LeftLeg": 0,
+  "LeftShoulder": 0,
+  "LeftToeBase": 0,
+  "LeftUpLeg": 0,
+  "Neck": 0,
+  "RightArm": 0,
+  "RightFoot": 0.0,
+  "RightForeArm": 0,
+  "RightHand": 0.0,
+  "RightHandIndex1": 0,
+  "RightHandIndex2": 0,
+  "RightHandIndex3": 0,
+  "RightHandMiddle1": 0,
+  "RightHandMiddle2": 0,
+  "RightHandMiddle3": 0,
+  "RightHandPinky1": 0,
+  "RightHandPinky2": 0.0,
+  "RightHandPinky3": 0,
+  "RightHandRing1": 0,
+  "RightHandRing2": 0,
+  "RightHandRing3": 0,
+  "RightHandThumb1": 0.0,
+  "RightHandThumb2": 0,
+  "RightHandThumb3": 0,
+  "RightLeg": 0,
+  "RightShoulder": 0,
+  "RightToeBase": 0,
+  "RightUpLeg": 0,
+  "Spine": 3.154,
+  "Spine1": 3.1543,
+  "Spine2": 0
+ },
+ "schema": "sub01.life-clip-retarget.v1",
+ "source": "web/room/char_v5.glb",
+ "source_sha256": "da03b7bce18e8e6146d5f979a807786ab2d72035125e303103954302c87d908f",
+ "verification": {
+  "accepted_for_binding": false,
+  "animation": "Idle",
+  "candidate": "<scratch>/idle_v5.glb",
+  "candidate_sha256": "7d7f42c06c4f7b1ef111f90f7c8db136f91587dc629045c84fe705c73494856a",
+  "failed": [
+   "feet_joints",
+   "loop",
+   "root_in_place",
+   "soles"
+  ],
+  "invariants": {
+   "bone_length_constancy": {
+    "max_dev_from_owner_lengths_cm": 0.0,
+    "max_stretch_cm": 0.0,
+    "owner_length_rule_applies": true,
+    "pass": true,
+    "per_bone": {
+     "Head": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "HeadTop_End": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftArm": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftFoot": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftForeArm": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHand": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandIndex1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandIndex2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandIndex3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandIndex4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandMiddle1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandMiddle2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandMiddle3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandMiddle4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandPinky1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandPinky2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandPinky3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandPinky4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandRing1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandRing2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandRing3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandRing4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandThumb1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandThumb2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandThumb3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftHandThumb4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftLeg": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftShoulder": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftToeBase": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftToe_End": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "LeftUpLeg": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "Neck": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightArm": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightFoot": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightForeArm": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHand": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandIndex1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandIndex2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandIndex3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandIndex4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandMiddle1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandMiddle2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandMiddle3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandMiddle4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandPinky1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandPinky2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandPinky3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandPinky4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandRing1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandRing2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandRing3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandRing4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandThumb1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandThumb2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandThumb3": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightHandThumb4": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightLeg": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightShoulder": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightToeBase": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightToe_End": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "RightUpLeg": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "Spine": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "Spine1": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     },
+     "Spine2": {
+      "max_dev_from_own_rest_cm": 0.0,
+      "max_dev_from_owner_cm": 0.0
+     }
+    },
+    "tolerance_cm": 0.05
+   },
+   "feet_joints": {
+    "basis": "foot/toe JOINT positions (labelled: not the sole surface)",
+    "joints": {
+     "LeftFoot": {
+      "height_range_cm": 3.034148,
+      "height_std_cm": 1.136225,
+      "horizontal_slide_cm": 14.075054,
+      "min_height_cm": 8.125278,
+      "pass": false,
+      "rest_height_cm": 8.23027,
+      "sink_below_rest_cm": 0.104991
+     },
+     "LeftToeBase": {
+      "height_range_cm": 2.639819,
+      "height_std_cm": 0.532572,
+      "horizontal_slide_cm": 14.273776,
+      "min_height_cm": 5.834963,
+      "pass": false,
+      "rest_height_cm": 0.605094,
+      "sink_below_rest_cm": -5.229869
+     },
+     "RightFoot": {
+      "height_range_cm": 3.18208,
+      "height_std_cm": 1.284845,
+      "horizontal_slide_cm": 19.733103,
+      "min_height_cm": 7.777604,
+      "pass": false,
+      "rest_height_cm": 7.762488,
+      "sink_below_rest_cm": -0.015116
+     },
+     "RightToeBase": {
+      "height_range_cm": 3.493003,
+      "height_std_cm": 0.84549,
+      "horizontal_slide_cm": 19.88877,
+      "min_height_cm": 4.211962,
+      "pass": false,
+      "rest_height_cm": -1.201044,
+      "sink_below_rest_cm": -5.413007
+     }
+    },
+    "pass": false,
+    "thresholds": {
+     "height_range_cm": 2.0,
+     "height_std_cm": 0.5,
+     "sink_cm": 0.5,
+     "slide_cm": 2.0
+    }
+   },
+   "loop": {
+    "max_pose_cm": 0.5,
+    "max_velocity_cm_s": 5.0,
+    "pass": false,
+    "start_end_hips_relative_pose_cm": 0.05651,
+    "start_end_hips_world_cm": 0.000366,
+    "start_end_velocity_delta_cm_s": 15.256793
+   },
+   "rest_offsets": {
+    "max_deviation_cm": 0.0,
+    "pass": true,
+    "per_bone": {
+     "Head": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "HeadTop_End": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "Hips": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftArm": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftFoot": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftForeArm": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHand": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandIndex1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandIndex2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandIndex3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandIndex4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandMiddle1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandMiddle2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandMiddle3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandMiddle4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandPinky1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandPinky2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandPinky3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandPinky4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandRing1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandRing2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandRing3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandRing4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandThumb1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandThumb2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandThumb3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftHandThumb4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftLeg": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftShoulder": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftToeBase": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftToe_End": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "LeftUpLeg": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "Neck": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightArm": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightFoot": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightForeArm": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHand": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandIndex1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandIndex2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandIndex3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandIndex4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandMiddle1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandMiddle2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandMiddle3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandMiddle4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandPinky1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandPinky2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandPinky3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandPinky4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandRing1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandRing2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandRing3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandRing4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandThumb1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandThumb2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandThumb3": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightHandThumb4": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightLeg": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightShoulder": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightToeBase": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightToe_End": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "RightUpLeg": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "Spine": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "Spine1": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     },
+     "Spine2": {
+      "length_dev_cm": 0.0,
+      "offset_max_component_dev_cm": 0.0,
+      "rest_rotation_dev_deg": 0.0
+     }
+    },
+    "tolerance_cm": 0.05
+   },
+   "root_in_place": {
+    "hips_max_horizontal_travel_cm": 25.766001,
+    "hips_net_horizontal_cm": 0.0,
+    "hips_vertical_range_cm": 1.690269,
+    "max_net_cm": 0.5,
+    "max_travel_cm": 5.0,
+    "pass": false,
+    "structural_root_constant": true
+   },
+   "skeleton": {
+    "joint_count": 65,
+    "mode": "bone_for_bone",
+    "owner_joint_count": 65,
+    "parity": {
+     "failures": [],
+     "owner_joint_count": 65,
+     "owner_roots": [
+      "mixamorig:Hips"
+     ],
+     "pass": true,
+     "sampled_times_s": [
+      0.0,
+      3.0,
+      8.0
+     ],
+     "structural_root": "mixamo",
+     "ue_bone_count": 66
+    },
+    "pass": true,
+    "prefixes": [
+     "mixamorig:"
+    ]
+   },
+   "soles": {
+    "basis": "owner plantar vertices: material \"feet\", rest Y <= 0.004 m, bind normal Y < -0.7 (fixed rest-mesh selection, skinned every frame); floor y = 0",
+    "feet": {
+     "left": {
+      "centroid_horizontal_slide_cm": 14.394837,
+      "lift_range_cm": 4.261797,
+      "lowest_vertex_max_cm": 0.705215,
+      "lowest_vertex_min_cm": -3.556582,
+      "pass": false,
+      "penetration_below_floor_cm": 3.556582,
+      "vertices": 1925
+     },
+     "right": {
+      "centroid_horizontal_slide_cm": 19.833239,
+      "lift_range_cm": 4.296004,
+      "lowest_vertex_max_cm": 1.593993,
+      "lowest_vertex_min_cm": -2.70201,
+      "pass": false,
+      "penetration_below_floor_cm": 2.70201,
+      "vertices": 2252
+     }
+    },
+    "pass": false,
+    "rest_y_bounds_m": [
+     0.0,
+     0.003993
+    ],
+    "selected_vertices": 4177,
+    "thresholds": {
+     "lift_range_cm": 2.0,
+     "penetration_cm": 0.5,
+     "slide_cm": 2.0
+    }
+   },
+   "standing": {
+    "max_torso_tilt_deg": 7.653017,
+    "min_leg_extension": 1.054025,
+    "pass": true,
+    "thresholds": {
+     "leg_extension": 0.85,
+     "tilt_deg": 30.0
+    }
+   },
+   "symmetry": {
+    "pairs": {
+     "Arm": {
+      "min_left_minus_right_cm": 37.478593,
+      "pass": true
+     },
+     "Foot": {
+      "min_left_minus_right_cm": 13.728739,
+      "pass": true
+     },
+     "Hand": {
+      "min_left_minus_right_cm": 53.588623,
+      "pass": true
+     },
+     "Shoulder": {
+      "min_left_minus_right_cm": 7.142267,
+      "pass": true
+     },
+     "UpLeg": {
+      "min_left_minus_right_cm": 21.465486,
+      "pass": true
+     }
+    },
+    "pass": true,
+    "rule": "hips-frame lateral coordinate of each Left joint > its Right twin, every frame"
+   },
+   "timing": {
+    "duration_bounds_s": [
+     1.0,
+     60.0
+    ],
+    "duration_s": 15.333333,
+    "expected_fps": 30.0,
+    "fps": 30.000029,
+    "frames": 461,
+    "pass": true,
+    "uniform_keys": true
+   }
+  },
+  "mode": "bone_for_bone",
+  "note": "Measured only. A failing clip is refused; it is never posed, trimmed or edited here. Renderer validation (native capture) is still required before binding.",
+  "owner": "web/room/char_mixamo.glb",
+  "owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "pass": false,
+  "schema": "sub01.life-idle-candidate-verification.v1"
+ },
+ "window_choice": "no window passes; whole clip kept and reported as failing"
+}
