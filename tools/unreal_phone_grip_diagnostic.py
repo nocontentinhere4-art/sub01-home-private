@@ -25,11 +25,14 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneGripDiagnostic")))return;
  FString Role;FParse::Value(FCommandLine::Get(),TEXT("Sub01HandsDiagnostic="),Role);
  if(!HandsDiagnostic||Role!=TEXT("Phone")||!FirstPersonBody||!HandsClips.Contains(TEXT("Phone"))){UE_LOG(LogTemp,Error,TEXT("SUB01_PHONE_GRIP_REFUSED requires original captured Phone diagnostic"));return;}
+ const bool HeadCamera=FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneHeadCamera")),EyeCamera=FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneEyeCamera"));
+ if(HeadCamera&&EyeCamera){UE_LOG(LogTemp,Error,TEXT("SUB01_PHONE_EYE_CAMERA_REFUSED mutually exclusive camera reviews"));return;}
  PrivateViewMode=EPrivateViewMode::Diagnostic;
  const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("RightHand")))PhoneGripWrist=Ref.GetBoneName(I);
  if(PhoneGripWrist.IsNone())return;
  float Time=4;FParse::Value(FCommandLine::Get(),TEXT("Sub01PhonePoseTime="),Time);if(!FMath::IsFinite(Time))return;auto* Clip=HandsClips.FindRef(TEXT("Phone")).Get();
+ if(EyeCamera&&(FMath::Abs(Time-4.f)>.0001f||FirstPersonBody->GetSkeletalMeshAsset()->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner")||Clip->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_Phone.SUB01_Phone"))){UE_LOG(LogTemp,Error,TEXT("SUB01_PHONE_EYE_CAMERA_REFUSED exact original owner/Phone4s witness required"));return;}
  PhoneGripCapturedClip=Clip;PhoneGripPoseTime=FMath::Clamp(Time,0.f,Clip->GetPlayLength());
  FirstPersonBody->PlayAnimation(Clip,false);FirstPersonBody->SetPosition(FMath::Clamp(Time,0.f,Clip->GetPlayLength()),false);FirstPersonBody->SetPlayRate(0);
  FirstPersonBody->RefreshBoneTransforms();FirstPersonBody->UpdateComponentToWorld();
@@ -61,7 +64,20 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  UE_LOG(LogTemp,Warning,TEXT("SUB01_UNACCEPTED_PHONE_GRIP_CANDIDATE original five-part assembly7.5x15x1.5cm materials and live screen unchanged offset=%s rotation=%s; NO normal activity acceptance"),*PhoneGripOffset.ToString(),*PhoneGripRotation.ToString());
 }
 void ASub01HomeCharacter::UpdatePrivatePhoneGripReview(){
+ const bool EyeCamera=FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneEyeCamera"));
+ if(EyeCamera&&PrivateViewMode!=EPrivateViewMode::Diagnostic&&ViewCamera)ViewCamera->SetUsingAbsoluteLocation(false);
  if(!PhoneGripReview||!PhoneGripMounted||PrivateViewMode!=EPrivateViewMode::Diagnostic||!FirstPersonBody)return;
+ if(EyeCamera){
+  auto* A=FirstPersonBody->GetSingleNodeInstance();
+  if(!A||A->GetCurrentAsset()!=PhoneGripCapturedClip.Get()||FMath::Abs(A->GetCurrentTime()-4.f)>.01f)return;
+  const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();FName Head;
+  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("Head")))Head=Ref.GetBoneName(I);
+  if(Head.IsNone())return;const FTransform H=FirstPersonBody->GetSocketTransform(Head,RTS_World);
+  // Exact original iris surfaces skinned at4s, source45e9177; native frame independently verified.
+  // Physical cm + unit quaternion deliberately exclude the hidden Head bone's zero scale.
+  const FVector Eye=H.GetLocation()+H.GetRotation().GetNormalized().RotateVector(FVector(.11885198390986161,-13.382490930007885,12.634526097714183));
+  if(Eye.ContainsNaN())return;ViewCamera->SetUsingAbsoluteLocation(true);ViewCamera->SetWorldLocation(Eye);
+ }
  const FTransform W=FirstPersonBody->GetSocketTransform(PhoneGripWrist,RTS_World);
  // Rigid assembly uses real world centimetres, independent of imported bone scale.
  const FQuat Rotation=W.GetRotation()*PhoneGripRotation.Quaternion();
