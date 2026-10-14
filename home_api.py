@@ -42,6 +42,8 @@ def device_revisions(live, privacy):
 
 
 def add_home_routes(app, live, admin_ok):
+    from home_minecraft_input import add_minecraft_input_routes
+    add_minecraft_input_routes(app, live, admin_ok)
     inputs = OrderedDict()
 
     def enabled():
