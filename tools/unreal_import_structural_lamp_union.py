@@ -3,6 +3,29 @@ import hashlib,json,time
 from pathlib import Path
 from unreal_import_reference_dressing import fingerprint
 ROOT=Path('/workspace/sub01-home-private/structural-rails-20261014')
+def import_owned_union_mesh(u, source, digest):
+ # Asset-only import has no scene actors/UIDs to reuse from the existing map.
+ destination='/Game/Sub01Home/StructuralLampUnionMeshOnly/V_'+digest[:12]
+ def meshes():
+  result=[]
+  for path in u.EditorAssetLibrary.list_assets(destination,recursive=True,include_folder=False):
+   item=u.EditorAssetLibrary.load_asset(path)
+   if isinstance(item,u.StaticMesh):result.append(item)
+  return result
+ found=meshes()
+ if not found:
+  task=u.AssetImportTask();task.filename=str(source);task.destination_path=destination
+  task.automated=True;task.replace_existing=False;task.save=True
+  u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+  u.InterchangeManager.get_interchange_manager_scripted().wait_until_all_tasks_done(False)
+  found=meshes()
+ if len(found)!=1:raise RuntimeError('Owned union asset-only import must contain exactly one mesh')
+ mesh=found[0]
+ if not mesh.get_path_name().startswith(destination+'/'):raise RuntimeError('Union mesh outside approved namespace')
+ vertices,indices,*_=u.ProceduralMeshLibrary.get_section_from_static_mesh(mesh,0,0)
+ if len(indices)!=160*3 or len(mesh.get_editor_property('static_materials'))!=1:
+  raise RuntimeError('Actual imported union must preserve exactly160 triangles and one material')
+ return mesh
 def run():
  import unreal as u
  project=Path(u.Paths.project_dir());source=ROOT/'structural-lamp-union-remainder-only.glb';proof=json.loads((ROOT/'remainder-lamp-union-roundtrip.json').read_text())
@@ -15,10 +38,7 @@ def run():
  old_comp=old[0].get_components_by_class(u.StaticMeshComponent)
  if len(old_comp)!=1 or '/StructuralRails/V_d586193fee24/' not in old_comp[0].get_editor_property('static_mesh').get_path_name():raise RuntimeError('Unreviewed previous remainder version')
  material=batches[0].get_components_by_class(u.StaticMeshComponent)[0].get_material(0)
- # Existing imported OWNED static mesh; avoid Interchange scene actor UID reuse.
- mesh_path='/Game/Sub01Home/StructuralLampUnion/V_920edd7a573e/structural-lamp-union-remainder-only/StaticMeshes/SUB01_PreservedSource_163_0.SUB01_PreservedSource_163_0'
- mesh=u.load_asset(mesh_path)
- if not mesh:raise SystemExit('Union pending: source-proven owned160 asset unavailable; saved removal preserved')
+ mesh=import_owned_union_mesh(u,source,digest)
  from home_asset_audit import read_gltf,IDENTITY,node_matrix
  from structural_rail_source_patch import accessor
  doc,binary=read_gltf(source)
@@ -42,7 +62,7 @@ def run():
   raise RuntimeError('Originalchanged by owned mesh placement '+json.dumps(diffs))
  old[0].set_actor_hidden_in_game(True);old_comp[0].set_collision_profile_name('NoCollision')
  old_comp[0].set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
- expected=json.loads(json.dumps(before));expected[old[0].get_path_name()]['components'][0]['collision']=str(u.CollisionEnabled.NO_COLLISION);expected[old[0].get_path_name()]['components'][0]['profile']='NoCollision'
+ expected=json.loads(json.dumps(before));expected[old[0].get_path_name()]['components'][0]['collision']=str(old_comp[0].get_collision_enabled());expected[old[0].get_path_name()]['components'][0]['profile']='NoCollision'
  after=fingerprint(u,original)
  if after!=expected:
   diffs={k:{'expected':expected[k],'actual':v} for k,v in after.items() if expected.get(k)!=v}
