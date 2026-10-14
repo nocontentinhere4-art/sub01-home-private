@@ -39,6 +39,10 @@ static FString Sub01PhoneIdentity(const TSharedPtr<FJsonObject>& State,bool* Own
  if(State.IsValid()&&State->TryGetObjectField(TEXT("phone_browser_screen"),Screen)&&Screen&&(*Screen).IsValid()&&(*Screen)->TryGetStringField(TEXT("frame_id"),Id)&&!Id.IsEmpty()&&Id.Len()<=100)return Id;
  return FString();
 }
+// The exact request body Action sends (also measured before a note is sent).
+static FString Sub01JsonBody(const TSharedPtr<FJsonObject>& Body){
+ FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);return Data;
+}
 // The screen-policy inputs of one /devices/state document (Poll and the final
 // paint check read the same fields the same way). PublicHome is decided by the caller.
 static FSub01DeviceScreenInputs Sub01ScreenInputs(const TSharedPtr<FJsonObject>& State,FString* PhoneIdentity=nullptr,FString* Game=nullptr){
@@ -148,7 +152,7 @@ void USub01HomeDeviceBridge::FetchFrame(FName Device,const FString& Identity,uin
 void USub01HomeDeviceBridge::Action(FName Device,const TSharedPtr<FJsonObject>& Body,TFunction<void(int32,const FString&)> Done){
  auto Result=MakeShared<TFunction<void(int32,const FString&)>>(MoveTemp(Done));
  if(Private||LocalPrivacy||Token.IsEmpty()){if(*Result)(*Result)(0,FString());return;}const uint64 Epoch=Generation;
- ReadHome([this,Device,Body,Epoch,Result](TSharedPtr<FJsonObject> Before){if(Epoch!=Generation)return;if(!PublicHome(Before)){Clear();return;}FString Data;auto Writer=TJsonWriterFactory<>::Create(&Data);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/action"));R->SetVerb(TEXT("POST"));R->SetTimeout(3);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetHeader(TEXT("X-Admin-Token"),Token);R->SetContentAsString(Data);// The existing 150 ms poll refreshes state. Calling Poll from this reply
+ ReadHome([this,Device,Body,Epoch,Result](TSharedPtr<FJsonObject> Before){if(Epoch!=Generation)return;if(!PublicHome(Before)){Clear();return;}const FString Data=Sub01JsonBody(Body);auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/action"));R->SetVerb(TEXT("POST"));R->SetTimeout(3);R->SetHeader(TEXT("Content-Type"),TEXT("application/json"));R->SetHeader(TEXT("X-Admin-Token"),Token);R->SetContentAsString(Data);// The existing 150 ms poll refreshes state. Calling Poll from this reply
    // recursively re-sends held Pong input faster than the backend rate limit.
    if(*Result)R->OnProcessRequestComplete().BindWeakLambda(this,[this,Epoch,Result](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){
     if(Epoch!=Generation)return;(*Result)(OK&&Response?Response->GetResponseCode():0,OK&&Response?Response->GetContentAsString():FString());});
@@ -160,9 +164,13 @@ void USub01HomeDeviceBridge::PhoneSaveNote(const FString& Title,const FString& T
  const ESub01NoteCheck Check=Sub01CheckNote(*Title,size_t(Title.Len()),*Text,size_t(Text.Len()));
  if(Check!=ESub01NoteCheck::Ok){ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(Check)));return;}
  if(PhoneFrameId.IsEmpty()||PhoneApp!=TEXT("notes")){ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(ESub01NoteSave::Stale)));return;}
- const unsigned long long Id=NoteComposer.TryBeginSave(Check);if(!Id)return;ShowNoteStatus(TEXT("Saving..."));
+ if(NoteComposer.Saving){ShowNoteStatus(TEXT("Saving the previous note..."));return;}
  auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("action"),TEXT("save_note"));B->SetStringField(TEXT("frame_id"),PhoneFrameId);
  if(!Title.TrimStartAndEnd().IsEmpty())B->SetStringField(TEXT("title"),Title);B->SetStringField(TEXT("text"),Text);
+ // The proxy and backend bound the request body in bytes; measure exactly what Action will send.
+ const FString Encoded=Sub01JsonBody(B);
+ if(Sub01CheckEncodedNote(Sub01Utf8Length(*Encoded,size_t(Encoded.Len())))!=ESub01NoteCheck::Ok){ShowNoteStatus(UTF8_TO_TCHAR(Sub01NoteMessage(ESub01NoteCheck::EncodedTooLarge)));return;}
+ const unsigned long long Id=NoteComposer.TryBeginSave(Check);if(!Id)return;ShowNoteStatus(TEXT("Saving..."));
  Action(TEXT("phone"),B,[this,Id](int32 Code,const FString& Reply){
   TSharedPtr<FJsonObject> Json;bool Ok=false;
   if(Code==200&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Reply),Json)&&Json.IsValid())Json->TryGetBoolField(TEXT("ok"),Ok);
@@ -175,17 +183,20 @@ void USub01HomeDeviceBridge::PhoneSaveNote(const FString& Title,const FString& T
 }
 bool USub01HomeDeviceBridge::OpenNoteComposer(){
  if(NoteComposer.Open)return true;
+ if(NoteComposer.Saving){ShowNoteStatus(TEXT("Saving the previous note..."));return false;}
  if(!NoteComposer.TryOpen(!Private&&!LocalPrivacy&&!Token.IsEmpty(),PhoneApp==TEXT("notes"),!PhoneFrameId.IsEmpty())){ShowNoteStatus(TEXT("Open Notes on the phone (key 2), then press N to write."));return false;}
  if(!GEngine||!GEngine->GameViewport){NoteComposer.Close();return false;}
  TWeakObjectPtr<USub01HomeDeviceBridge> Weak(this);
  NoteWidget=SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SBox).WidthOverride(560)[SNew(SBorder).Padding(16)[
   SNew(SVerticalBox)
   +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SNew(STextBlock).Text(FText::FromString(TEXT("New note")))]
-  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SAssignNew(NoteTitleBox,SEditableTextBox).HintText(FText::FromString(TEXT("Title (optional)"))).Text(FText::FromString(DraftTitle))]
-  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SNew(SBox).HeightOverride(220)[SAssignNew(NoteTextBox,SMultiLineEditableTextBox).HintText(FText::FromString(TEXT("Note"))).Text(FText::FromString(DraftText)).AutoWrapText(true)]]
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SAssignNew(NoteTitleBox,SEditableTextBox).HintText(FText::FromString(TEXT("Title (optional)"))).Text(FText::FromString(DraftTitle))
+   .IsReadOnly_Lambda([Weak](){return !Weak.IsValid()||!Weak->NoteComposer.CanEdit();}).OnTextChanged_Lambda([Weak](const FText&){if(Weak.IsValid()&&!Weak->NoteProgrammatic)Weak->NoteComposer.Edited();})]
+  +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SNew(SBox).HeightOverride(220)[SAssignNew(NoteTextBox,SMultiLineEditableTextBox).HintText(FText::FromString(TEXT("Note"))).Text(FText::FromString(DraftText)).AutoWrapText(true)
+   .IsReadOnly_Lambda([Weak](){return !Weak.IsValid()||!Weak->NoteComposer.CanEdit();}).OnTextChanged_Lambda([Weak](const FText&){if(Weak.IsValid()&&!Weak->NoteProgrammatic)Weak->NoteComposer.Edited();})]]
   +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)[SAssignNew(NoteStatus,STextBlock).Text(FText::FromString(TEXT("Ctrl+Enter saves. Esc closes and keeps the draft."))).AutoWrapText(true)]
   +SVerticalBox::Slot().AutoHeight()[SNew(SHorizontalBox)
-   +SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).Text(FText::FromString(TEXT("Save"))).OnClicked_Lambda([Weak](){if(Weak.IsValid())Weak->SubmitNoteComposer();return FReply::Handled();})]
+   +SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).Text(FText::FromString(TEXT("Save"))).IsEnabled_Lambda([Weak](){return Weak.IsValid()&&Weak->NoteComposer.CanEdit();}).OnClicked_Lambda([Weak](){if(Weak.IsValid())Weak->SubmitNoteComposer();return FReply::Handled();})]
    +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).Text(FText::FromString(TEXT("Close"))).OnClicked_Lambda([Weak](){if(Weak.IsValid())Weak->CloseNoteComposer(false);return FReply::Handled();})]]
  ]]];
  GEngine->GameViewport->AddViewportWidgetContent(NoteWidget.ToSharedRef(),100);
@@ -201,8 +212,10 @@ void USub01HomeDeviceBridge::SubmitNoteComposer(){if(!NoteComposer.Open)return;R
 void USub01HomeDeviceBridge::CloseNoteComposer(bool Discard){
  if(Discard){NoteComposer.Reset();DraftTitle.Empty();DraftText.Empty();NoteStatusText.Empty();}
  else{if(NoteComposer.Open)ReadNoteDraft();NoteComposer.Close();}
+ NoteProgrammatic=true;
  if(NoteTitleBox.IsValid())NoteTitleBox->SetText(FText::GetEmpty());
  if(NoteTextBox.IsValid())NoteTextBox->SetText(FText::GetEmpty());
+ NoteProgrammatic=false;
  if(NoteWidget.IsValid()&&GEngine&&GEngine->GameViewport)GEngine->GameViewport->RemoveViewportWidgetContent(NoteWidget.ToSharedRef());
  const bool Shown=NoteWidget.IsValid();NoteWidget.Reset();NoteTitleBox.Reset();NoteTextBox.Reset();NoteStatus.Reset();
  if(Shown)if(APlayerController* Player=GetWorld()?GetWorld()->GetFirstPlayerController():nullptr){Player->SetInputMode(FInputModeGameOnly());Player->SetShowMouseCursor(false);}

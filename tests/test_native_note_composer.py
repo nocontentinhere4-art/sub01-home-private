@@ -196,3 +196,95 @@ def test_header_declarations_and_staging():
                             ('SButton', 'Widgets/Input/SButton.h'), ('STextBlock', 'Widgets/Text/STextBlock.h'),
                             ('SVerticalBox', 'Widgets/SBoxPanel.h'), ('SBorder', 'Widgets/Layout/SBorder.h'), ('SBox', 'Widgets/Layout/SBox.h')):
         assert re.search(rf'\b{widget}\b', CPP) and f'#include "{include}"' in CPP
+
+
+def test_ack_of_an_older_save_never_clears_a_newer_draft_compiled():
+    # Mirrors the bridge's use: the draft text is owned outside the composer and is
+    # emptied only when Finish() returns true (PhoneSaveNote's reply handler).
+    source = r'''
+#include <string>
+#include "Sub01NoteDraft.h"
+#define CHECK(c,n) if(!(c))return n;
+struct Bridge{
+ FSub01NoteComposer C;std::u16string Draft;
+ // A read-only editor fires no change event; an accepted change advances the revision.
+ bool Type(const std::u16string& Text){if(!C.CanEdit())return false;C.Edited();Draft=Text;return true;}
+ unsigned long long Save(){return C.TryBeginSave(Draft.empty()?ESub01NoteCheck::EmptyText:ESub01NoteCheck::Ok);}
+ void Reply(unsigned long long Id,ESub01NoteSave O){if(C.Finish(Id,O))Draft.clear();}
+};
+int main(){
+ {Bridge B;CHECK(B.C.TryOpen(true,true,true)&&B.Type(u"A"),1)
+  unsigned long long A=B.Save();CHECK(A,2)
+  CHECK(!B.C.CanEdit()&&!B.Type(u"B")&&B.Draft==u"A",3)        // editing during the save is refused
+  B.C.Close();CHECK(!B.C.TryOpen(true,true,true),4)            // and the editor cannot be reopened
+  B.Reply(A,ESub01NoteSave::Saved);CHECK(B.Draft.empty()&&!B.C.Saving,5)   // A confirmed: A cleared
+  CHECK(B.C.TryOpen(true,true,true)&&B.Type(u"B")&&B.Draft==u"B",6)}       // then B can be written
+ {Bridge B;B.C.TryOpen(true,true,true);B.Type(u"A");unsigned long long A=B.Save();
+  // Even if an edit slips in during the save (revision advances), A's ack keeps B.
+  B.C.Edited();B.Draft=u"B";
+  B.Reply(A,ESub01NoteSave::Saved);CHECK(B.Draft==u"B"&&!B.C.Saving&&B.C.Open,7)
+  unsigned long long Second=B.Save();CHECK(Second&&Second!=A,8)
+  B.Reply(A,ESub01NoteSave::Saved);CHECK(B.Draft==u"B"&&B.C.Saving,9)      // a repeated old ack is ignored
+  B.Reply(Second,ESub01NoteSave::Saved);CHECK(B.Draft.empty(),10)}
+ {Bridge B;B.C.TryOpen(true,true,true);B.Type(u"A");unsigned long long A=B.Save();
+  B.Reply(A,ESub01NoteSave::Stale);CHECK(B.Draft==u"A"&&B.C.CanEdit(),11)  // stale keeps the draft, editable again
+  CHECK(B.Type(u"A2"),12)A=B.Save();B.Reply(A,ESub01NoteSave::Rejected);CHECK(B.Draft==u"A2",13)
+  A=B.Save();B.Reply(A,ESub01NoteSave::Failed);CHECK(B.Draft==u"A2",14)}
+ {Bridge B;B.C.TryOpen(true,true,true);B.Type(u"A");unsigned long long A=B.Save();
+  B.C.Reset();B.Draft.clear();                                   // privacy during the save erases the draft
+  B.Reply(A,ESub01NoteSave::Saved);CHECK(B.Draft.empty()&&!B.C.Open&&!B.C.Saving,15)
+  CHECK(B.C.TryOpen(true,true,true)&&B.Type(u"C")&&B.Draft==u"C",16)
+  B.Reply(A,ESub01NoteSave::Saved);CHECK(B.Draft==u"C",17)}       // the pre-privacy ack never clears new text
+ return 0;}
+'''
+    with tempfile.TemporaryDirectory() as tmp:
+        compile_and_run(tmp, source)
+
+
+def utf16_units(text):
+    data = text.encode('utf-16-le', 'surrogatepass')
+    return [int.from_bytes(data[i:i + 2], 'little') for i in range(0, len(data), 2)]
+
+
+def test_encoded_body_bytes_and_4096_limit_compiled():
+    import json
+    rng = random.Random(4096)
+    alphabet = ['a', ' ', '\n', '"', '\\', 'é', 'ß', '€', '漢', '😀', '\x01', '\ud800']
+    payloads = []
+    for title, text in [('', 'a' * 2000), ('T' * 120, 'a' * 1879), ('', 'é' * 2000), ('', '€' * 1300), ('', '€' * 1400),
+                        ('Ünïcødé', '漢' * 1360), ('', '😀' * 1000), ('', '\x01' * 700), ('', 'a\n' * 1000)]:
+        payloads.append((title, text))
+    for _ in range(200):
+        payloads.append((''.join(rng.choice(alphabet) for _ in range(rng.randrange(0, 40))),
+                         ''.join(rng.choice(alphabet) for _ in range(rng.randrange(1, 1600)))))
+    lines, expected = [], []
+    for title, text in payloads:
+        body = json.dumps({'action': 'save_note', 'frame_id': 'f' * 32, 'title': title, 'text': text}, ensure_ascii=False)
+        units = utf16_units(body)
+        size = len(body.encode('utf-8', 'surrogatepass'))
+        expected.append((size, size > 4096))
+        lines.append(f'{{static const char16_t B[]={{{",".join(map(str, units))}}};std::size_t N=Sub01Utf8Length(B,{len(units)});'
+                     f'std::printf("%zu %d\\n",N,int(Sub01CheckEncodedNote(N)==ESub01NoteCheck::EncodedTooLarge));}}')
+    with tempfile.TemporaryDirectory() as tmp:
+        out = compile_and_run(tmp, '#include <cstdio>\n#include "Sub01NoteDraft.h"\nint main(){\n' + '\n'.join(lines) + '\nreturn 0;}\n')
+    got = [tuple(map(int, line.split())) for line in out.splitlines()]
+    assert got == [(size, int(big)) for size, big in expected]
+    # Character-valid drafts that only the byte bound refuses exist (e.g. 1400 euro signs = 4200 bytes).
+    flags = [big for _, big in expected[:9]]
+    assert flags == [False, False, False, False, True, True, False, True, False]
+
+
+def test_bridge_measures_the_exact_payload_and_blocks_edits_while_saving():
+    save = block(CPP, 'void USub01HomeDeviceBridge::PhoneSaveNote(', '\nbool USub01HomeDeviceBridge::OpenNoteComposer')
+    # Same serializer as Action; checked before a save starts, so the draft is kept and no request is made.
+    assert 'const FString Data=Sub01JsonBody(Body);' in CPP and CPP.count('TJsonWriterFactory<>::Create(&Data)') == 1
+    measure = save.index('Sub01CheckEncodedNote(Sub01Utf8Length(*Encoded,size_t(Encoded.Len())))')
+    assert save.index('const FString Encoded=Sub01JsonBody(B);') < measure < save.index('NoteComposer.TryBeginSave(Check)')
+    assert save.index('if(NoteComposer.Saving){') < save.index('NoteComposer.TryBeginSave(Check)')
+    opening = block(CPP, 'bool USub01HomeDeviceBridge::OpenNoteComposer(){', '\nvoid USub01HomeDeviceBridge::ReadNoteDraft')
+    assert opening.index('if(NoteComposer.Saving){') < opening.index('NoteComposer.TryOpen(')
+    assert opening.count('.IsReadOnly_Lambda([Weak](){return !Weak.IsValid()||!Weak->NoteComposer.CanEdit();})') == 2
+    assert opening.count('OnTextChanged_Lambda([Weak](const FText&){if(Weak.IsValid()&&!Weak->NoteProgrammatic)Weak->NoteComposer.Edited();})') == 2
+    assert '.IsEnabled_Lambda([Weak](){return Weak.IsValid()&&Weak->NoteComposer.CanEdit();})' in opening
+    closing = block(CPP, 'void USub01HomeDeviceBridge::CloseNoteComposer(bool Discard){', '\nvoid USub01HomeDeviceBridge::ShowNoteStatus')
+    assert closing.index('NoteProgrammatic=true;') < closing.index('NoteTextBox->SetText(FText::GetEmpty());') < closing.index('NoteProgrammatic=false;')

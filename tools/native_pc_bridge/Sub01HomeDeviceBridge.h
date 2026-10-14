@@ -42,7 +42,7 @@ protected:
 private:
  FString Origin=TEXT("http://127.0.0.1:8798");
  FString Token,PhoneFrameId,PhoneApp,DraftTitle,DraftText,NoteStatusText;
- FSub01NoteComposer NoteComposer;
+ FSub01NoteComposer NoteComposer;bool NoteProgrammatic=false;
  TSharedPtr<SWidget> NoteWidget;TSharedPtr<SEditableTextBox> NoteTitleBox;TSharedPtr<SMultiLineEditableTextBox> NoteTextBox;TSharedPtr<STextBlock> NoteStatus;
 bool Private=true,LocalPrivacy=false,Busy=false;
  uint64 Generation=0;float PongDirection=0;FName FocusedDevice;
