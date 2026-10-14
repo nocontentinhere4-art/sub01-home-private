@@ -419,7 +419,7 @@ def main():
     def release_expired_input():
         while time.time()<args.deadline_epoch:
             time.sleep(.5)
-            if server.state.input and time.monotonic()-server.state.last_lease>5:
+            if server.state.input and (time.monotonic()-server.state.last_lease>5 or not server.state.enabled('native-viewer-input-enabled')):
                 with server.state.input_lock:server.state.input.send({'action':'release'})
     threading.Thread(target=release_expired_input,daemon=True).start()
     signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
