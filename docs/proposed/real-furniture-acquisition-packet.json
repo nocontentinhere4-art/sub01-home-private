@@ -1,0 +1,745 @@
+{
+ "schema": "sub01.real-furniture-acquisition-packet.v1",
+ "status": "proposed; source-only; nothing imported, nothing rendered; no visual match claimed",
+ "generated": "2026-10-14",
+ "coordinate_contract": {
+  "source": "three.js/glTF home metres, Y up (web/house/home.js)",
+  "ue_cm": "(x*100, z*100, y*100) per tools/build_real_lamps.py:168-174",
+  "ue_yaw": "ue_yaw_deg = -source_yaw_deg (tools/build_real_lamps.py:184-193 ue_yaw_from_source with default axes); Unreal re-verifies via tools/unreal_home_coordinates.infer_import_transform"
+ },
+ "web_access": "Poly Haven public API (api.polyhaven.com) and dl.polyhaven.org via curl; files downloaded to session scratch only, md5 matched the API, sha256 computed locally; bounds measured from glTF POSITION data with node transforms.",
+ "inventory_commit_25f5b4e": "not found: git fetch origin main; git show 25f5b4e -> unknown revision; git log --all has no such commit. Repo provenance used instead: web/house/assets/manifest.json and web/house/assets/*/provenance.json.",
+ "slots": {
+  "office_shelf_wall": {
+   "description": "Rear (north) wall behind the office desk, office side of the stair.",
+   "x_min": 0.8,
+   "x_max": 3.91,
+   "z_back": -3.8775,
+   "z_front_limit": -3.5,
+   "max_depth": 0.3775,
+   "max_height_under_art": 2.85,
+   "conservative_x_span": [
+    0.95,
+    3.3
+   ],
+   "citations": [
+    "web/house/home.js:406 rear wall box(8,6,.18,0,3,-4) -> inner face z -3.91",
+    "web/house/home.js:489 baseboard box(8,.09,.025,0,.055,-3.89) -> front z -3.8775",
+    "web/house/home.js:781 desk obstacle(2,-3.1,2.4,.8) -> desk back z -3.50; tools/build_home_office_desk.py:61 desktop 2.4 x .8, top .845",
+    "web/house/home.js:490-496 STEP x0 -0.2 x1 0.8 (stair)",
+    "web/house/home.js:407 east wall box(.18,6,8,4,..) -> inner x 3.91",
+    "web/house/home.js:877 frame(2,3.75,-3.885,1.3,1.8) -> art bottom y 2.85 over x 1.35..2.65",
+    "web/house/home.js:855-876 current shelf: verticals x 1 and 3.25, boards 2.35 x .34 at z -3.72, glb at (2.125,0,-3.72)",
+    "tools/build_home_office_shelves.py:56-57,86 board tops .2675+i*.45, 2.35 x .34"
+   ]
+  },
+  "kitchen_table_area": {
+   "description": "Free ground-floor zone between the kitchen run aisle and the lounge, against the west windows.",
+   "x_min": -3.91,
+   "x_max": -0.2,
+   "z_min": -2.28,
+   "z_max": -0.76,
+   "exclusions_padded": {
+    "sofa": {
+     "x": [
+      -2.435,
+      -1.165
+     ],
+     "z": [
+      -1.31,
+      1.51
+     ]
+    },
+    "coffee_table": {
+     "x": [
+      -3.71,
+      -2.69
+     ],
+     "z": [
+      -0.76,
+      0.96
+     ]
+    }
+   },
+   "citations": [
+    "web/house/home.js:663-672 counter 3.16 x .70 centred (-2.2,-3.53): x -3.78..-0.62, z -3.88..-3.18, top .9225",
+    "web/house/lower_kitchen_cabinet.mjs:2-5 hinges z -3.192, door width .65 -> swing reaches z ~ -2.54",
+    "aisle: 0.9 m kept in front of counter -> z_min -2.28",
+    "web/house/home.js:549,611 sofa obstacle(-1.8,.1,.95,2.5) -> x -2.275..-1.325, z -1.15..1.35",
+    "web/house/home.js:550,614 coffee table obstacle(-3.2,.1,.7,1.4) -> z from -0.6 (0.16 m kept)",
+    "web/house/home.js:409,442 west wall inner x -3.91; window frames x -3.85 (+-0.03), bottom y .69, z -3.84..-1.36",
+    "web/house/home.js:490-496 stair x0 -0.2 bounds the zone east",
+    "exclusions use the home.js:287-294 obstacle() 0.16 m padding",
+    "web/house/home.js:1362 kitchen viewpoint (-0.7,1.65,-1.85) stays clear"
+   ]
+  },
+  "kitchen_counter_top": {
+   "description": "Stone counter top between sink and espresso machine.",
+   "x_min": -2.38,
+   "x_max": -1.415,
+   "z_min": -3.88,
+   "z_max": -3.18,
+   "y": 0.9225,
+   "citations": [
+    "web/house/home.js:663-672 counter top y .8675+.055",
+    "web/house/home.js:666-669 sink hole x -3.02..-2.38 world",
+    "web/house/home.js:740-745 espresso at (-1.25,.925,-3.5), fallback .33 wide -> x -1.415..-1.085"
+   ]
+  }
+ },
+ "assets": [
+  {
+   "id": "wooden_display_shelves_01",
+   "name": "Wooden Display Shelves 01",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source": "Poly Haven",
+   "page_url": "https://polyhaven.com/a/wooden_display_shelves_01",
+   "api_info": "https://api.polyhaven.com/info/wooden_display_shelves_01",
+   "api_files": "https://api.polyhaven.com/files/wooden_display_shelves_01",
+   "licence": "CC0-1.0",
+   "licence_source": "https://polyhaven.com/license",
+   "licence_quote": "All assets (HDRIs, textures and 3D models) on this site are the original work of Poly Haven staff, or artists who willingly and directly donate/sell their work to Poly Haven. Our assets are all licensed as CC0",
+   "polycount": 3174,
+   "api_dimensions_mm": [
+    1077.8,
+    371.5,
+    1556.2
+   ],
+   "resolution": "1k",
+   "format": "gltf",
+   "target_dir": "/workspace/sub01-home-private/reviewed-furniture/wooden_display_shelves_01/",
+   "files": [
+    {
+     "path": "wooden_display_shelves_01_1k.gltf",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_display_shelves_01/wooden_display_shelves_01_1k.gltf",
+     "size": 6795,
+     "md5": "e807901382c7223238c5c3fd5bad5d8e",
+     "sha256": "3784953c451b088d24ac1b0e6946c7f7bd589115f51e6549fdb8fe9f7c10600e"
+    },
+    {
+     "path": "textures/wooden_display_shelves_01_arm_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_display_shelves_01/wooden_display_shelves_01_arm_1k.jpg",
+     "size": 164353,
+     "md5": "526dc6c49a7ce366b61f04ab794107ee",
+     "sha256": "33d6b769eafab3b1d8605b202cd41b0994b8c43df02dca5bdd86e942e390ff6a"
+    },
+    {
+     "path": "textures/wooden_display_shelves_01_nor_gl_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_display_shelves_01/wooden_display_shelves_01_nor_gl_1k.jpg",
+     "size": 54739,
+     "md5": "696f1c48d08ffcc4bfc90e4aabc91286",
+     "sha256": "04191c25bfb8e76314863b624233807792df64fa1a638c75d20788becb4cbb8c"
+    },
+    {
+     "path": "wooden_display_shelves_01.bin",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/wooden_display_shelves_01/wooden_display_shelves_01.bin",
+     "size": 105988,
+     "md5": "d26e27c0c3a7c6b247b220a49379298f",
+     "sha256": "e6c000a780626e618c1f1c0c1ec2ec29e1452e7824055ba53b40963d857edfbe"
+    },
+    {
+     "path": "textures/wooden_display_shelves_01_diff_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_display_shelves_01/wooden_display_shelves_01_diff_1k.jpg",
+     "size": 139254,
+     "md5": "b3f7519052957a3f0199e5fcd742a0b6",
+     "sha256": "cb57e90d9588ce81e58ff7300e89956a6a3c45119165b858d921a5a2439cbeaf"
+    }
+   ],
+   "count": 2,
+   "slot": "office_shelf_wall",
+   "measured_bounds_gltf_m": {
+    "min": [
+     -0.1858,
+     0.0004,
+     -0.5389
+    ],
+    "max": [
+     0.1858,
+     1.5566,
+     0.5389
+    ],
+    "size": [
+     0.3715,
+     1.5562,
+     1.0778
+    ]
+   },
+   "dimensions_m": {
+    "width": 1.0778,
+    "depth": 0.3715,
+    "height": 1.5566
+   },
+   "measured_notes": "Width runs along glTF Z, depth along glTF X. Open both faces (no back panel; +X/-X outer face areas equal). Board up-faces at y .038/.414/.790/1.165/1.542 (pitch .376); cubby partitions z +-.164/.188, +-.514/.538 (3 columns, ~.326 clear). Three bins are separate nodes _drawer_01..03 (y .038-.388).",
+   "placements": [
+    {
+     "label": "west unit",
+     "source_m": [
+      1.5861,
+      0.0,
+      -3.6918
+     ],
+     "source_yaw_deg": -90,
+     "ue_cm": [
+      158.61,
+      -369.18,
+      0.0
+     ],
+     "ue_yaw_deg": 90
+    },
+    {
+     "label": "east unit",
+     "source_m": [
+      2.6639,
+      0.0,
+      -3.6918
+     ],
+     "source_yaw_deg": -90,
+     "ue_cm": [
+      266.39,
+      -369.18,
+      0.0
+     ],
+     "ue_yaw_deg": 90
+    }
+   ],
+   "footprint_m": {
+    "x": [
+     1.0472,
+     3.2028
+    ],
+    "z": [
+     -3.8775,
+     -3.506
+    ],
+    "y": [
+     0.0,
+     1.5566
+    ]
+   },
+   "clearance_m": {
+    "to_desk_back": 0.006,
+    "width_spare_in_conservative_span": 0.194,
+    "to_art_frame_bottom": 1.2934,
+    "to_east_wall": 0.7072,
+    "to_stair": 0.2472
+   },
+   "replaces": [
+    "web/house/home.js:855-861 shelfFallback boxes (2 verticals .08x2.25x.33, 6 boards 2.35x.035x.34) - already replaceable",
+    "web/house/home.js:862-876 house-office-shelves-* nodes (tools/build_home_office_shelves.py cube-built oak boards, wall cleats, Shelf_hardware)"
+   ],
+   "risks": [
+    "Desk-back clearance is only 6 mm against the current 2.4 x .8 desk obstacle; re-check against the measured LINEA 140 footprint before import. If the LINEA desk is narrower, the alternative is one unit beside it, x centre chosen from the measured desk edge (do not guess).",
+    "Cube-book/real-book plan (docs/proposed/real-shelf-books.md, tools/build_real_shelf_books.py) targets board tops 2.0675/2.5175 of the current shelf; those boards disappear. Re-target books to the cubby floors 1.165 / top 1.542 (measured) before swapping, or sequence the shelf swap after the book work is re-run.",
+    "Lower rows (.038/.414/.790) sit behind the desk (top .845); only the 1.165 row and the top are visible above the desktop."
+   ]
+  },
+  {
+   "id": "round_wooden_table_02",
+   "name": "Round Wooden Table 02",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source": "Poly Haven",
+   "page_url": "https://polyhaven.com/a/round_wooden_table_02",
+   "api_info": "https://api.polyhaven.com/info/round_wooden_table_02",
+   "api_files": "https://api.polyhaven.com/files/round_wooden_table_02",
+   "licence": "CC0-1.0",
+   "licence_source": "https://polyhaven.com/license",
+   "licence_quote": "All assets (HDRIs, textures and 3D models) on this site are the original work of Poly Haven staff, or artists who willingly and directly donate/sell their work to Poly Haven. Our assets are all licensed as CC0",
+   "polycount": 4254,
+   "api_dimensions_mm": [
+    796.2,
+    796.2,
+    746.0
+   ],
+   "resolution": "1k",
+   "format": "gltf",
+   "target_dir": "/workspace/sub01-home-private/reviewed-furniture/round_wooden_table_02/",
+   "files": [
+    {
+     "path": "round_wooden_table_02_1k.gltf",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/round_wooden_table_02/round_wooden_table_02_1k.gltf",
+     "size": 2851,
+     "md5": "d0d30c21d878a5f1f36a96b33458aba0",
+     "sha256": "df65c35148280a06efcc06bfa75432bb13f29318e869597fc94f364ce2b55974"
+    },
+    {
+     "path": "textures/round_wooden_table_02_nor_gl_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_02/round_wooden_table_02_nor_gl_1k.jpg",
+     "size": 635637,
+     "md5": "0f04a60c2f59f09808b26eb594732eed",
+     "sha256": "34989b9a15753b964a4d9d6b2673c048ff2c14feedbe4e6adbeb4bf32be8bc8c"
+    },
+    {
+     "path": "textures/round_wooden_table_02_diff_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_02/round_wooden_table_02_diff_1k.jpg",
+     "size": 470007,
+     "md5": "2f16277bfd0ff661de3245c11d0b556e",
+     "sha256": "9872acedc6be92ef232c581c8e9ce435e4aa0d8f5c4b75e4ce445995a3ef8c28"
+    },
+    {
+     "path": "textures/round_wooden_table_02_arm_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_02/round_wooden_table_02_arm_1k.jpg",
+     "size": 677385,
+     "md5": "bd5ba146734d7aa0acdfcae0c66b727f",
+     "sha256": "613d051b4c4e093c5e65eec37d39f6f48ac5476e2cb1b59c4b034f308ef1a7ee"
+    },
+    {
+     "path": "round_wooden_table_02.bin",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/round_wooden_table_02/round_wooden_table_02.bin",
+     "size": 135412,
+     "md5": "026ad1fd824b6eb38a4a260565471243",
+     "sha256": "fa9a0ed80be31d9160207913762cedc5de21d1cb37b01a5ae6caa23ce7a741b6"
+    }
+   ],
+   "count": 1,
+   "slot": "kitchen_table_area",
+   "measured_bounds_gltf_m": {
+    "min": [
+     -0.3981,
+     0.0,
+     -0.3981
+    ],
+    "max": [
+     0.3981,
+     0.746,
+     0.3981
+    ],
+    "size": [
+     0.7962,
+     0.746,
+     0.7962
+    ]
+   },
+   "dimensions_m": {
+    "width": 0.7962,
+    "depth": 0.7962,
+    "height": 0.746
+   },
+   "placements": [
+    {
+     "label": "kitchen table",
+     "source_m": [
+      -2.9,
+      0.0,
+      -1.6
+     ],
+     "source_yaw_deg": 0,
+     "ue_cm": [
+      -290.0,
+      -160.0,
+      0.0
+     ],
+     "ue_yaw_deg": 0
+    }
+   ],
+   "footprint_m": {
+    "x": [
+     -3.2981,
+     -2.5019
+    ],
+    "z": [
+     -1.9981,
+     -1.2019
+    ],
+    "y": [
+     0.0,
+     0.746
+    ]
+   },
+   "clearance_m": {
+    "to_counter_front": 1.1819,
+    "to_aisle_line": 0.2819,
+    "to_sofa_x": 0.2269,
+    "to_coffee_table_z": 0.6019
+   },
+   "replaces": [],
+   "note": "Additive: there is no existing procedural table here. Add obstacle(-2.90,-1.60,.80,.80)."
+  },
+  {
+   "id": "dining_chair_02",
+   "name": "Dining Chair 02",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source": "Poly Haven",
+   "page_url": "https://polyhaven.com/a/dining_chair_02",
+   "api_info": "https://api.polyhaven.com/info/dining_chair_02",
+   "api_files": "https://api.polyhaven.com/files/dining_chair_02",
+   "licence": "CC0-1.0",
+   "licence_source": "https://polyhaven.com/license",
+   "licence_quote": "All assets (HDRIs, textures and 3D models) on this site are the original work of Poly Haven staff, or artists who willingly and directly donate/sell their work to Poly Haven. Our assets are all licensed as CC0",
+   "polycount": 22013,
+   "api_dimensions_mm": [
+    433.6,
+    576.4,
+    973.4
+   ],
+   "resolution": "1k",
+   "format": "gltf",
+   "target_dir": "/workspace/sub01-home-private/reviewed-furniture/dining_chair_02/",
+   "files": [
+    {
+     "path": "dining_chair_02_1k.gltf",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/dining_chair_02/dining_chair_02_1k.gltf",
+     "size": 2723,
+     "md5": "5aff75016e0943e84161de89dcc3ceb8",
+     "sha256": "88352a44a17319846f61fe03ce75c79fb1849aa508b6a262366c149c1bbd06b8"
+    },
+    {
+     "path": "dining_chair_02.bin",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/dining_chair_02/dining_chair_02.bin",
+     "size": 544592,
+     "md5": "b7f8a91c0a5249d02de7885f3b242c4e",
+     "sha256": "c7f1ef858f73815176d2ab304472a69ccf6097e971e5258eb924a75f841d4af5"
+    },
+    {
+     "path": "textures/dining_chair_02_nor_gl_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dining_chair_02/dining_chair_02_nor_gl_1k.jpg",
+     "size": 119612,
+     "md5": "9c0e1003f9c8859a2e5c2c7f92a8f238",
+     "sha256": "348703512ca1215f8389e9108419c2d1a46537663db25f423c3ef900d20cfe61"
+    },
+    {
+     "path": "textures/dining_chair_02_diff_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dining_chair_02/dining_chair_02_diff_1k.jpg",
+     "size": 91518,
+     "md5": "6b7b8e4ac0a3aad9ecdf314a97b0ef75",
+     "sha256": "343990f764790da1149485a422dee2bc6797945a6af06a37d02d7a7de041acf5"
+    },
+    {
+     "path": "textures/dining_chair_02_arm_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dining_chair_02/dining_chair_02_arm_1k.jpg",
+     "size": 162630,
+     "md5": "2b16c9ddb3ea83d200b02de54a4fdcb8",
+     "sha256": "0a81c0c886baa1e65d94fb6fb90ab4751bee319888ecf1c428ae62042d8a5b15"
+    }
+   ],
+   "count": 2,
+   "slot": "kitchen_table_area",
+   "measured_bounds_gltf_m": {
+    "min": [
+     -0.2168,
+     0.0013,
+     -0.331
+    ],
+    "max": [
+     0.2168,
+     0.9747,
+     0.2454
+    ],
+    "size": [
+     0.4336,
+     0.9734,
+     0.5764
+    ]
+   },
+   "dimensions_m": {
+    "width": 0.4336,
+    "depth": 0.5764,
+    "height": 0.9747
+   },
+   "measured_notes": "Backrest vertices (y>.8) average z -0.254, so the seat front faces glTF +Z.",
+   "placements": [
+    {
+     "label": "west chair facing +X",
+     "source_m": [
+      -3.4434,
+      0.0,
+      -1.6
+     ],
+     "source_yaw_deg": 90,
+     "ue_cm": [
+      -344.34,
+      -160.0,
+      0.0
+     ],
+     "ue_yaw_deg": -90
+    },
+    {
+     "label": "east chair facing -X",
+     "source_m": [
+      -2.3566,
+      0.0,
+      -1.6
+     ],
+     "source_yaw_deg": -90,
+     "ue_cm": [
+      -235.66,
+      -160.0,
+      0.0
+     ],
+     "ue_yaw_deg": 90
+    }
+   ],
+   "footprint_m": {
+    "west": {
+     "x": [
+      -3.7744,
+      -3.198
+     ],
+     "z": [
+      -1.8168,
+      -1.3832
+     ]
+    },
+    "east": {
+     "x": [
+      -2.602,
+      -2.0256
+     ],
+     "z": [
+      -1.8168,
+      -1.3832
+     ]
+    }
+   },
+   "clearance_m": {
+    "west_back_to_window_frame": 0.0456,
+    "seat_tuck_under_table": 0.1,
+    "east_to_sofa_z": 0.2332
+   },
+   "replaces": [],
+   "note": "Additive. Seat tuck .10 m assumes the table pedestal leaves knee room; root checks the pedestal bounds after import."
+  },
+  {
+   "id": "wooden_cutting_board",
+   "name": "Wooden Cutting Board",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source": "Poly Haven",
+   "page_url": "https://polyhaven.com/a/wooden_cutting_board",
+   "api_info": "https://api.polyhaven.com/info/wooden_cutting_board",
+   "api_files": "https://api.polyhaven.com/files/wooden_cutting_board",
+   "licence": "CC0-1.0",
+   "licence_source": "https://polyhaven.com/license",
+   "licence_quote": "All assets (HDRIs, textures and 3D models) on this site are the original work of Poly Haven staff, or artists who willingly and directly donate/sell their work to Poly Haven. Our assets are all licensed as CC0",
+   "polycount": 3520,
+   "api_dimensions_mm": [
+    449.9,
+    246.7,
+    41.3
+   ],
+   "resolution": "1k",
+   "format": "gltf",
+   "target_dir": "/workspace/sub01-home-private/reviewed-furniture/wooden_cutting_board/",
+   "files": [
+    {
+     "path": "wooden_cutting_board_1k.gltf",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_cutting_board/wooden_cutting_board_1k.gltf",
+     "size": 2852,
+     "md5": "557750a30841a91f5d9a8f734bd9ee20",
+     "sha256": "89fa89f6987c5087c0c7a8ac8ccbe451cfa8976ae46377d83a423e658cff9de4"
+    },
+    {
+     "path": "textures/wooden_cutting_board_arm_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_cutting_board/wooden_cutting_board_arm_1k.jpg",
+     "size": 401619,
+     "md5": "b391b4029d163e0bde43096d7b39013d",
+     "sha256": "f35dec51ff94e279a9d43a4ee64b75235cc3d6701107ae22a1eea797e3d236d3"
+    },
+    {
+     "path": "textures/wooden_cutting_board_diff_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_cutting_board/wooden_cutting_board_diff_1k.jpg",
+     "size": 788732,
+     "md5": "11be431e04b3a108eb74d3dd0559a9a4",
+     "sha256": "79274fb86cc7f62363e4448b4597f06933d640a79c746ff6f823d2e4e27ad143"
+    },
+    {
+     "path": "textures/wooden_cutting_board_nor_gl_1k.jpg",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_cutting_board/wooden_cutting_board_nor_gl_1k.jpg",
+     "size": 677881,
+     "md5": "c57c50618d604c9a742847f4333f3058",
+     "sha256": "b123d7ca0d0be01a31686240c925e85a1d2499172586f119482924b06b0b0c93"
+    },
+    {
+     "path": "wooden_cutting_board.bin",
+     "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/wooden_cutting_board/wooden_cutting_board.bin",
+     "size": 94688,
+     "md5": "ce582ea49488bb7def153bdf37082016",
+     "sha256": "d7fa7549afcae99eb4739dfb13039f1e56f03327c2936cb021bfd05c3afad839"
+    }
+   ],
+   "count": 1,
+   "slot": "kitchen_counter_top",
+   "measured_bounds_gltf_m": {
+    "min": [
+     -0.2242,
+     0.0001,
+     -0.1233
+    ],
+    "max": [
+     0.2257,
+     0.0413,
+     0.1234
+    ],
+    "size": [
+     0.4499,
+     0.0413,
+     0.2467
+    ]
+   },
+   "dimensions_m": {
+    "width": 0.4499,
+    "depth": 0.2467,
+    "height": 0.0413
+   },
+   "placements": [
+    {
+     "label": "counter board",
+     "source_m": [
+      -1.9,
+      0.9225,
+      -3.62
+     ],
+     "source_yaw_deg": 0,
+     "ue_cm": [
+      -190.0,
+      -362.0,
+      92.25
+     ],
+     "ue_yaw_deg": 0
+    }
+   ],
+   "footprint_m": {
+    "x": [
+     -2.1242,
+     -1.6743
+    ],
+    "z": [
+     -3.7433,
+     -3.4966
+    ],
+    "y": [
+     0.9226,
+     0.9638
+    ]
+   },
+   "clearance_m": {
+    "to_sink_edge": 0.2558,
+    "to_espresso": 0.2593,
+    "to_counter_back": 0.1367,
+    "to_upper_cabinet_underside": 0.736
+   },
+   "replaces": [],
+   "note": "Additive real kitchen prop."
+  }
+ ],
+ "gaps": [
+  "Kitchen base/wall cabinets, sink and tap: no CC0 model on Poly Haven (521 models searched for kitchen/cabinet/cupboard/sink/faucet/tap/counter/hood/fridge/oven). The interactive lower cabinet (web/house/lower_kitchen_cabinet.mjs) and Blender upper cabinet (web/house/assets/kitchen-cabinet-original, home.js:675-705) stay until a genuine CC0 source is found; their door interactions are persistent devices.",
+  "ambientCG API (ambientcg.com/api/v2/full_json?type=3DModel) returned materials/HDRIs only on the first page; not a furniture source."
+ ],
+ "rejected": [
+  {
+   "id": "steel_frame_shelves_01",
+   "name": "Steel Frame Shelves 01",
+   "reason": "depth .502 > office slot .3775",
+   "page_url": "https://polyhaven.com/a/steel_frame_shelves_01"
+  },
+  {
+   "id": "steel_frame_shelves_02",
+   "name": "Steel Frame Shelves 02",
+   "reason": "depth .502 > .3775",
+   "page_url": "https://polyhaven.com/a/steel_frame_shelves_02"
+  },
+  {
+   "id": "steel_frame_shelves_03",
+   "name": "Steel Frame Shelves 03",
+   "reason": "depth .721 > .3775 (width 2.351 would fit)",
+   "page_url": "https://polyhaven.com/a/steel_frame_shelves_03"
+  },
+  {
+   "id": "drawer_cabinet",
+   "name": "Drawer Cabinet",
+   "reason": "depth .488 > .3775; modern style fits but needs a different wall",
+   "page_url": "https://polyhaven.com/a/drawer_cabinet"
+  },
+  {
+   "id": "wooden_bookshelf_worn",
+   "name": "Wooden Bookshelf Worn",
+   "reason": "depth .581 > .3775; worn shed style",
+   "page_url": "https://polyhaven.com/a/wooden_bookshelf_worn"
+  },
+  {
+   "id": "modern_wooden_cabinet",
+   "name": "Modern Wooden Cabinet",
+   "reason": "depth .52 > .3775; low sideboard, not a shelf",
+   "page_url": "https://polyhaven.com/a/modern_wooden_cabinet"
+  },
+  {
+   "id": "Shelf_01",
+   "name": "Shelf 01",
+   "reason": "fits (1.003 x .257 x 2.080) but weathered distressed paint; off-direction for a warm modern apartment",
+   "page_url": "https://polyhaven.com/a/Shelf_01"
+  },
+  {
+   "id": "painted_wooden_shelves",
+   "name": "Painted Wooden Shelves",
+   "reason": "fits (.511 x .367 x 1.125) but worn farmhouse paint; too small for the wall",
+   "page_url": "https://polyhaven.com/a/painted_wooden_shelves"
+  },
+  {
+   "id": "round_wooden_table_01",
+   "name": "Round Wooden Table 01",
+   "reason": "1.40 m diameter leaves no chair room in the 1.635 x 1.52 zone",
+   "page_url": "https://polyhaven.com/a/round_wooden_table_01"
+  },
+  {
+   "id": "wooden_table_02",
+   "name": "Wooden Table 02",
+   "reason": "1.134 x .706 fits alone but leaves no end-chair room against window frames/sofa",
+   "page_url": "https://polyhaven.com/a/wooden_table_02"
+  },
+  {
+   "id": "coffee_table_round_01",
+   "name": "Coffee Table Round 01",
+   "reason": "1.30 m, coffee height .49",
+   "page_url": "https://polyhaven.com/a/coffee_table_round_01"
+  },
+  {
+   "id": "gallinera_table",
+   "name": "Gallinera Table",
+   "reason": ".49 high, antique carved",
+   "page_url": "https://polyhaven.com/a/gallinera_table"
+  },
+  {
+   "id": "gallinera_chair",
+   "name": "Gallinera Chair",
+   "reason": "antique carved, .58 x .60 footprint",
+   "page_url": "https://polyhaven.com/a/gallinera_chair"
+  },
+  {
+   "id": "painted_wooden_chair_01",
+   "name": "Painted Wooden Chair 01",
+   "reason": "distressed farmhouse paint",
+   "page_url": "https://polyhaven.com/a/painted_wooden_chair_01"
+  },
+  {
+   "id": "bar_chair_round_01",
+   "name": "Bar Chair Round 01",
+   "reason": "counter has no overhang/knee space (home.js:663-672, lower doors at z -3.192); vintage carved",
+   "page_url": "https://polyhaven.com/a/bar_chair_round_01"
+  },
+  {
+   "id": "metal_stool_01",
+   "name": "Metal Stool 01",
+   "reason": "no counter overhang; aged industrial",
+   "page_url": "https://polyhaven.com/a/metal_stool_01"
+  },
+  {
+   "id": "metal_stool_03",
+   "name": "Metal Stool 03",
+   "reason": "no counter overhang; rusted green paint",
+   "page_url": "https://polyhaven.com/a/metal_stool_03"
+  },
+  {
+   "id": "electric_stove",
+   "name": "Electric Stove",
+   "reason": ".503 x .648 x .859 worn white vintage; would cut the 4-bay interactive lower cabinet run (lower_kitchen_cabinet.mjs:3)",
+   "page_url": "https://polyhaven.com/a/electric_stove"
+  }
+ ]
+}
