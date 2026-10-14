@@ -36,5 +36,12 @@ class StructuralRailTests(unittest.TestCase):
             self.assertGreater(p['b'][2],p['a'][2])
         self.assertTrue(any(p['name']=='North west return wall flange' for p in rail.replacement_parts()))
 
+    def test_oak_grips_are_two_continuous_paths_without_capped_landing_intersections(self):
+        paths=rail.oak_grip_paths()
+        self.assertEqual(len(paths),2)
+        self.assertEqual(sum(len(p)-1 for p in paths),sum(p['material']=='oak' for p in rail.replacement_parts()))
+        self.assertEqual(paths[1][-1],(-.13,3.98,-3.91))
+        self.assertEqual(paths[0][-1],(-.26,3.98,3.88))
+
 
 if __name__=='__main__':unittest.main()

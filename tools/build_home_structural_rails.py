@@ -87,7 +87,9 @@ def replacement_parts():
             beam(side+f' tread anchored post {i}',(x,surface+.006,z),(x,top-.029,z),.012)
             beam(side+f' post foot collar {i}',(x,surface+.006,z),(x,surface+.038,z),.021)
             # A real fixing saddle under the timber grip; not a hanging endpoint.
-            plate(side+f' grip saddle {i}',(x,top-.032,z),(.035,.009,.035))
+            angle=math.atan(3/4.25)
+            plate(side+f' grip saddle {i}',(x,top-math.cos(angle)*.0325,z-math.sin(angle)*.0325),(.035,.009,.035))
+            parts[-1]['pitch_blender_x']=angle
             for dx in (-.021,.021):
                 beam(side+f' countersunk anchor {i} {dx}',(x+dx,surface+.006,z),(x+dx,surface+.009,z),.0035)
         # Tread-to-landing grip transition is visibly offset above the slab.
@@ -120,10 +122,28 @@ def replacement_parts():
     return parts
 
 
+def oak_grip_paths():
+    """Join exact touching grip segments into continuous uncapped bend paths."""
+    remaining=[p for p in replacement_parts() if p['material']=='oak']
+    paths=[]
+    while remaining:
+        part=remaining.pop(0);points=[part['a'],part['b']]
+        while True:
+            matches=[(i,p['b'] if p['a']==points[-1] else p['a']) for i,p in enumerate(remaining) if p['a']==points[-1] or p['b']==points[-1]]
+            if len(matches)>1:raise ValueError('Ambiguous structural grip branching')
+            if not matches:break
+            index,endpoint=matches[0];remaining.pop(index);points.append(endpoint)
+        paths.append(points)
+    return paths
+
+
 def part_bounds(part):
     if part['shape']=='beam':
         return [[min(a,b)-part['radius'] for a,b in zip(part['a'],part['b'])],[max(a,b)+part['radius'] for a,b in zip(part['a'],part['b'])]]
-    return [[c-s/2 for c,s in zip(part['centre'],part['size'])],[c+s/2 for c,s in zip(part['centre'],part['size'])]]
+    size=list(part['size'])
+    if 'pitch_blender_x' in part:
+        angle=part['pitch_blender_x'];size[1],size[2]=abs(math.cos(angle))*size[1]+abs(math.sin(angle))*size[2],abs(math.cos(angle))*size[2]+abs(math.sin(angle))*size[1]
+    return [[c-s/2 for c,s in zip(part['centre'],size)],[c+s/2 for c,s in zip(part['centre'],size)]]
 
 
 def geometry_checks():
@@ -180,7 +200,14 @@ def build(source,out,expected_sha=SOURCE_SHA):
         return material
     materials={role:source_material(role) for role in ('oak','metal')}
     def point(p):return Vector((p[0],-p[2],p[1]))
+    for index,points in enumerate(oak_grip_paths()):
+        curve=bpy.data.curves.new(f'SUB01_ContinuousOakGrip_{index}','CURVE');curve.dimensions='3D';curve.resolution_u=1;curve.bevel_depth=.028;curve.bevel_resolution=3;curve.use_fill_caps=True
+        spline=curve.splines.new('POLY');spline.points.add(len(points)-1)
+        for entry,p in zip(spline.points,points):entry.co=(*point(p),1)
+        obj=bpy.data.objects.new(curve.name,curve);bpy.context.collection.objects.link(obj);obj.data.materials.append(materials['oak'])
+        bpy.context.view_layer.objects.active=obj;obj.select_set(True);bpy.ops.object.convert(target='MESH');obj.select_set(False)
     for part in replacement_parts():
+        if part['material']=='oak':continue
         if part['shape']=='beam':
             a,b=point(part['a']),point(part['b']);direction=b-a
             bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=part['radius'],depth=direction.length,location=(a+b)/2)
@@ -190,6 +217,7 @@ def build(source,out,expected_sha=SOURCE_SHA):
             bpy.ops.mesh.primitive_cube_add(size=1,location=point(part['centre']))
             obj=bpy.context.object;obj.dimensions=(part['size'][0],part['size'][2],part['size'][1])
             bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+            if 'pitch_blender_x' in part:obj.rotation_euler.x=part['pitch_blender_x']
             bevel=obj.modifiers.new('Machined edge','BEVEL');bevel.width=.001;bevel.segments=2
             bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=bevel.name)
         obj.name='SUB01_StructuralRail_'+part['name'];obj.data.materials.append(materials[part['material']])
