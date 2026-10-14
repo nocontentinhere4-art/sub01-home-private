@@ -102,9 +102,10 @@ def test_unready_native_cannot_receive_a_handoff_command(tmp_path,change):
 @pytest.mark.parametrize('origin,body,expected',[
     (None,b'{"mode":"manual"}',403),
     ('https://other.example',b'{"mode":"manual"}',403),
-    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b'{"mode":"live"}',409),
-    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b' '*129,409),
-    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b'{"mode":"manual"}',200),
+    (viewer.PRIVATE_VIEWER_ORIGIN,b'{"mode":"live"}',409),
+    (viewer.PRIVATE_VIEWER_ORIGIN,b' '*129,409),
+    (viewer.PRIVATE_VIEWER_ORIGIN,b'{"mode":"manual"}',200),
+    ('https://5ldnm4vax9kelh-8888.proxy.runpod.net',b'{"mode":"manual"}',403),
 ])
 def test_http_handoff_surface_requires_exact_private_origin_and_bounded_body(origin,body,expected):
     import threading

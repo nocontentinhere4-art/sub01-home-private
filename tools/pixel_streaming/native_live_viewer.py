@@ -12,6 +12,7 @@ import ctypes.util
 import json
 import os
 import signal
+import stat
 import subprocess
 import threading
 import time
@@ -20,6 +21,40 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
+
+AUTHORIZED_POD = 'kjsxms1gk4rmv6'
+PRIVATE_VIEWER_ORIGIN = 'https://' + AUTHORIZED_POD + '-8888.proxy.runpod.net'
+RUNTIME_WINDOW = Path('/run/sub01-home-private/runtime-window.json')
+
+
+def authorized_viewer_window(deadline, path=RUNTIME_WINDOW, now=None, trusted_uid=0):
+    """Startup only on the exact root-published, authenticated migration window."""
+    try:
+        parent = path.parent.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid != trusted_uid or parent.st_mode & 0o022:
+            return False
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            meta = os.fstat(fd)
+            if not stat.S_ISREG(meta.st_mode) or meta.st_uid != trusted_uid or meta.st_mode & 0o022 or meta.st_nlink != 1:
+                return False
+            raw = os.read(fd, 4097)
+        finally:
+            os.close(fd)
+        if len(raw) > 4096:
+            return False
+        window = json.loads(raw)
+        current = time.time() if now is None else now
+        return (isinstance(window, dict) and window.get('pod') == AUTHORIZED_POD
+                and type(deadline) is int and current < deadline
+                and type(window.get('deadline_epoch')) is int and deadline <= window['deadline_epoch']
+                and type(window.get('total_cap')) in (int, float) and 0 < window['total_cap'] <= 100
+                and window.get('stop_guards_authenticated') is True
+                and all(type(window.get(key)) is int and window[key] > 0
+                        for key in ('root_guard_pid', 'external_guard_pid', 'second_external_guard_pid')))
+    except (OSError, ValueError, TypeError):
+        return False
+
 
 KEYS = {**{f"Key{x.upper()}": x for x in "abcdefghijklmnopqrstuvwxyz"},
         **{f"Digit{x}": x for x in "0123456789"},
@@ -537,7 +572,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get('Upgrade','').lower()!='websocket' or 'upgrade' not in [v.strip().lower() for v in self.headers.get('Connection','').split(',')]:
             self.json(400,{'error':'Websocket upgrade required'});return
         origin=self.headers.get('Origin','')
-        if origin!='https://5ldnm4vax9kelh-8888.proxy.runpod.net':
+        if origin!=PRIVATE_VIEWER_ORIGIN:
             self.json(403,{'error':'Private viewer origin required'});return
         try:
             key=self.headers.get('Sec-WebSocket-Key','')
@@ -585,7 +620,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         state=self.server.state
         if self.path.split('?')[0]=='/mode':
-            if self.headers.get('Origin')!='https://5ldnm4vax9kelh-8888.proxy.runpod.net':self.json(403,{'error':'Private viewer origin required'});return
+            if self.headers.get('Origin')!=PRIVATE_VIEWER_ORIGIN:self.json(403,{'error':'Private viewer origin required'});return
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=128:raise ValueError('Ownership request size exceeded')
@@ -634,7 +669,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);parser.add_argument('--capture-fps',type=int,choices=[8,15,24,30],default=8);parser.add_argument('--capture-width',type=int,choices=[960,1280],default=960);args=parser.parse_args()
-    if os.getuid()!=1001 or time.time()>=args.deadline_epoch:raise SystemExit('Authorized nonroot runtime required')
+    if os.getuid()!=1001 or not authorized_viewer_window(args.deadline_epoch):raise SystemExit('Verified private migration window and nonroot runtime required')
     os.environ['DISPLAY']=':99';os.environ['XAUTHORITY']='/home/unreal/.sub01-private/native-xauthority'
     server=ThreadingHTTPServer(('127.0.0.1',8892),Handler);server.daemon_threads=True;server.state=LiveState(args.deadline_epoch,args.capture_fps,args.capture_width)
     def stop(*_):
