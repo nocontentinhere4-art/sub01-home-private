@@ -827,6 +827,20 @@ def light_relation(plan, shade_radius=0.11):
              'note': 'proposal only; light components are not moved by these tools'}}
 
 
+def ceiling_attachment_contact(role, new_face_z, old_face_z, old_normal_z, plan):
+    """Allow actual flush ceiling contact, never a wall or roof penetration.
+
+    BVH overlap includes a canopy side triangle touching the ceiling at its top
+    edge. Its lower vertex does not make that edge contact a penetration.
+    """
+    if role not in ('LowerPendant', 'UpperPendant'):
+        return False
+    ceiling = plan['ceiling_underside_y']
+    return (old_normal_z <= -.98 and old_face_z[1] - old_face_z[0] <= .0005
+            and max(abs(z - ceiling) for z in old_face_z) <= .0005
+            and ceiling - .0005 <= new_face_z[1] <= ceiling + .0005)
+
+
 def fingerprint_rows(rows):
     blob = json.dumps(sorted(rows, key=lambda r: r['name']), sort_keys=True).encode()
     return hashlib.sha256(blob).hexdigest()
@@ -853,6 +867,8 @@ def parse_args(argv):
                    help='reviewed industrial_pipe_lamp directory or .gltf (old procedural bedside lamp is hidden)')
     p.add_argument('--rail-excision', type=Path, help="root's rail builder triangle-ID manifest (read-only)")
     p.add_argument('--bedside-yaw', type=float, default=BEDSIDE_YAW_DEG)
+    p.add_argument('--desk-yaw', type=float, default=DESK_YAW_DEG,
+                   help='rigid real desk lamp orientation; support and collision checks remain required')
     p.add_argument('--output-dir', type=Path, required=True)
     p.add_argument('--roles', default=','.join(ROLES))
     p.add_argument('--min-clearance', type=float, default=0.02)
@@ -949,6 +965,7 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
 
     # BVH trees of every other evaluated mesh (source-frame probes)
     trees = {}
+    obstacle_faces = {}
     for name, o in pre.items():
         if name in excluded:
             continue
@@ -964,6 +981,10 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
             drop = [f for f in bm.faces if any(all(inside(v, b) for v in f.verts) for b in excised_boxes)]
             if drop:
                 bmesh.ops.delete(bm, geom=drop, context='FACES_ONLY')
+        bm.faces.index_update()
+        bm.normal_update()
+        obstacle_faces[name] = [((min(v.co.z for v in f.verts), max(v.co.z for v in f.verts)), float(f.normal.z))
+                                for f in bm.faces]
         trees[name] = BVHTree.FromBMesh(bm)
         bm.free()
         ev.to_mesh_clear()
@@ -1005,7 +1026,7 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
         try:
             if role == 'DeskLamp':
                 probe_start['y'] = 1.30  # below the shelves, above the desk top (0.845)
-                plans[role] = plan_desk_lamp(desk_asset, probe_down)
+                plans[role] = plan_desk_lamp(desk_asset, probe_down, yaw_deg=args.desk_yaw)
             elif role == 'BedLamp':
                 probe_start['y'] = LIGHT_SOURCE['BedLamp'][1]  # old lamp hidden; nightstand top ~3.5
                 plans[role] = plan_bedside(bed_asset, probe_down, args.bedside_yaw)
@@ -1101,7 +1122,8 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
             for name, t in trees.items():
                 pairs = tree.overlap(t)
                 allowed = name == plan['support_object']
-                bad = [i for i, _ in pairs if not (allowed and contact_face(i))]
+                bad = [i for i, j in pairs if not (allowed and (contact_face(i) or ceiling_attachment_contact(
+                    role, face_z[i], obstacle_faces[name][j][0], obstacle_faces[name][j][1], plan)))]
                 if bad:
                     raise RefuseError(f'{role}: intersects {name} ({len(bad)} face pairs outside the support contact)')
                 dmin = min((t.find_nearest(p)[3] for p in pts[::7] if t.find_nearest(p)[0] is not None),

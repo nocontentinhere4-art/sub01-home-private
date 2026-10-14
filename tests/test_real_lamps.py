@@ -149,6 +149,14 @@ def test_pipe_lamp_bulb_identity_ignores_shared_body_emission_atlas(tmp_path):
     assert measured['rest_plane_y'] == 0 and measured['bulb_center'][1] > .29
 
 
+def test_canopy_side_edge_can_touch_verified_ceiling_without_crossing_it():
+    plan = {'ceiling_underside_y': 2.88}
+    assert B.ceiling_attachment_contact('LowerPendant', (2.85, 2.88), (2.88, 2.88), -1, plan)
+    assert not B.ceiling_attachment_contact('LowerPendant', (2.85, 2.882), (2.88, 2.88), -1, plan)
+    assert not B.ceiling_attachment_contact('LowerPendant', (2.85, 2.88), (2.80, 3.0), 0, plan)
+    assert not B.ceiling_attachment_contact('LowerPendant', (2.85, 2.88), (2.88, 2.88), 1, plan)
+
+
 def build_home(stem_copies=1, stem_radius=.014, rail_conflict=False):
     d = Doc()
     # shared metal batch node 163: 3 rail balusters + the white desk-lamp stem (home.js:1114)
