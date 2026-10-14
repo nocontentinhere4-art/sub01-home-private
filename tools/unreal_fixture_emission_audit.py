@@ -17,6 +17,7 @@ from pathlib import Path
 LEVEL = '/Game/Sub01Home/ActualHome'
 NODE = re.compile(r':PersistentLevel\.full-home_node_(\d+)\.StaticMeshComponent\d+$')
 MATERIAL_ROOT = '/Game/Sub01Home/ImportedScene/full-home/Materials/'
+OWNED_SHADE = '/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_91.SUB01_MatFix_AlbedoMI_Material_91'
 # Root's exact source-position review against authored light table, 2026-10-14.
 # Shared Material_63 is deliberately split by source node, never a global write.
 FIXTURE_CONTROLS = {
@@ -110,7 +111,16 @@ def run(output, glb, expected_sha256, *, u=None):
         name = fixture['source_material_name']
         expected = MATERIAL_ROOT + name + '.' + name if isinstance(name, str) and re.fullmatch(r'[A-Za-z0-9_]+', name) else None
         row['expected_original_material'] = expected
-        if expected is None or path != expected:
+        bound_parent = material.get_editor_property('parent') if isinstance(material, u.MaterialInstance) else None
+        row['actual_parent'] = bound_parent.get_path_name() if bound_parent else None
+        owned_shade = fixture['source_node_index'] == 199 and path == OWNED_SHADE and row['actual_parent'] == expected
+        original = bound_parent if owned_shade else material
+        original_parent = original.get_editor_property('parent') if isinstance(original, u.MaterialInstance) else None
+        row['original_parent'] = original_parent.get_path_name() if original_parent else None
+        row['accepted_exact_owned_colour_mic'] = owned_shade
+        row['all_original_material_users'] = users.get(expected, [])
+        row['actual_parent_chain'] = [p for p in (row['actual_parent'], row['original_parent'] if owned_shade else None) if p]
+        if expected is None or (path != expected and not owned_shade):
             row['errors'].append('Actual saved binding is not exact imported source material identity')
         if len(users[path]) != 1:
             row['errors'].append('Shared material: every source user must be explicitly reviewed before toggle')
@@ -131,6 +141,19 @@ def run(output, glb, expected_sha256, *, u=None):
                 except Exception as error:
                     row['errors'].append(kind+' enumeration: '+str(error))
             scalar, vector = row['parameters'].get('scalar', {}), row['parameters'].get('vector', {})
+            try:
+                names = {str(p): p for p in u.MaterialEditingLibrary.get_vector_parameter_names(original)}
+                if 'EmissiveFactor' in names:
+                    factor = u.MaterialEditingLibrary.get_material_instance_vector_parameter_value(original, names['EmissiveFactor'])
+                    row['original_effective_emissive_factor'] = [float(getattr(factor, c)) for c in 'rgba'] if factor is not None else None
+                else:
+                    row['original_effective_emissive_factor'] = None
+                row['bound_effective_emissive_factor'] = vector.get('EmissiveFactor')
+                row['bound_matches_original_emissive_factor'] = (row['original_effective_emissive_factor'] is not None and row['bound_effective_emissive_factor'] == row['original_effective_emissive_factor'])
+                if not row['bound_matches_original_emissive_factor']:
+                    row['errors'].append('Bound EmissiveFactor differs from or lacks enumerated original vector')
+            except Exception as error:
+                row['errors'].append('original EmissiveFactor enumeration: '+str(error))
             row['exact_zero_override_parameters_present'] = [p for p in ('EmissiveFactor', 'EmissiveStrength') if (p in vector and vector[p] is not None) or (p in scalar and scalar[p] is not None)]
             if not row['exact_zero_override_parameters_present']:
                 row['errors'].append('No enumerated effective EmissiveFactor/EmissiveStrength: native toggle unavailable')

@@ -35,6 +35,17 @@ class NativeFixtureEmissionTests(unittest.TestCase):
 #include <cassert>
 #include <limits>
 int main(){using Sub01NativeFixtureEmission::ValidOriginalFactor;
+using Sub01NativeFixtureEmission::ValidBinding;
+using Sub01NativeFixtureEmission::SameFactor;
+assert(ValidBinding(198,true,true,false,false,false));
+assert(!ValidBinding(198,true,false,false,false,false));
+assert(ValidBinding(199,false,false,true,true,true));
+assert(!ValidBinding(198,false,false,true,true,true)); // Colour MIC allowed on node199 only.
+assert(!ValidBinding(199,false,false,false,true,true)); // Broad owned-prefix match forbidden.
+assert(!ValidBinding(199,false,false,true,false,true)); // Extra parent chain forbidden.
+assert(!ValidBinding(199,false,false,true,true,false)); // Unreviewed variant forbidden.
+assert(SameFactor(.08,.04568999,.0161245,1,.08,.04568999,.0161245,1));
+assert(!SameFactor(.08,.04568999,.0161245,1,.081,.04568999,.0161245,1));
 assert(ValidOriginalFactor(1,.62396038,.23074006,1));
 assert(ValidOriginalFactor(.08,.04568999,.0161245,1));
 assert(!ValidOriginalFactor(0,0,0,1));
@@ -44,6 +55,16 @@ assert(!ValidOriginalFactor(std::numeric_limits<double>::quiet_NaN(),1,1,1));}
 ''')
             subprocess.run([compiler,'-std=c++17',str(source),'-o',str(binary)],check=True,capture_output=True)
             subprocess.run([str(binary)],check=True,capture_output=True)
+
+    def test_exact_owned_colour_mic_path_matches_repair_naming(self):
+        from unreal_home_materials_fix import usage_mic_name
+        original='/Game/Sub01Home/ImportedScene/full-home/Materials/Material_91.Material_91'
+        name=usage_mic_name(original)
+        path='/Game/Sub01Home/MaterialFix/'+name+'.'+name
+        self.assertIn(path, fixture.METHODS)
+        self.assertIn('NativeFixtureEmissionParentMaterial13', fixture.FIELDS)
+        self.assertIn('NativeFixtureEmissionParentMaterial63', fixture.FIELDS)
+        self.assertIn('NativeFixtureEmissionParentMaterial91', fixture.FIELDS)
 
 
 if __name__ == '__main__':
