@@ -1,7 +1,7 @@
 """Guard only the explicitly authorized replacement private home runtime."""
 import json, os, time, urllib.request
 from pathlib import Path
-DEADLINE=1791951720
+DEADLINE=1791957106
 NAME='sub01-home-private-recovery'
 AUTHORIZED_PODS={
  '5ldnm4vax9kelh':'sub01-home-private-migration-20261014',

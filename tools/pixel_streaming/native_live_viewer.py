@@ -16,6 +16,7 @@ import subprocess
 import threading
 import time
 import uuid
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
@@ -64,6 +65,12 @@ def validate_settings(value, capabilities):
         if any(k not in LAMPS or k not in available or type(v) is not bool for k,v in lamps.items()):
             raise ValueError('Unsupported indoor lamp')
     return value
+
+def canonical_privacy(document):
+    if not isinstance(document,dict) or set(document)!={'target','sequence','activity','privacy'}:return None
+    if type(document['privacy']) is not bool or type(document['sequence']) is not int:return None
+    if any(not isinstance(document[k],str) or not 0<len(document[k])<=80 for k in ('target','activity')):return None
+    return document['privacy']
 
 class PhysicalInput:
     def __init__(self):
@@ -134,7 +141,7 @@ for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListen
 async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);try{if(generation!==streamGeneration)return;await new Promise((resolve,reject)=>{game.onload=resolve;game.onerror=reject;game.src=url;});if(generation!==streamGeneration)return;if(previous)URL.revokeObjectURL(previous);previous=url;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;game.hidden=false;empty.hidden=true;}catch(e){URL.revokeObjectURL(url);throw e;}}
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
 function streamNative(){const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';game.hidden=true;empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},4000);}
-async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;control.disabled=!permission;control.textContent=active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission;dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
+async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;control.disabled=!permission;control.textContent=active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission;dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.privacy===true?'Privacy':h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?'The home is private. Live view and controls are paused.':h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
 
 let supported='';
 async function refreshSettings(){
@@ -158,6 +165,9 @@ class LiveState:
         self.capture_lock = threading.Lock()
         self.input_lock = threading.Lock()
         self.settings_lock = threading.Lock()
+        self.privacy_lock = threading.Lock()
+        self.privacy_checked = 0
+        self.privacy_value = None
         self.input = None
         self.accepted = 0
         self.frames = 0
@@ -178,7 +188,11 @@ class LiveState:
         if identity is None:return False
         try:flag=json.loads((self.private/name).read_text())
         except (OSError,ValueError):return False
-        return isinstance(flag,dict) and flag.get('native_pid')==identity[0] and flag.get('native_start_ticks')==identity[1]
+        allowed=isinstance(flag,dict) and flag.get('native_pid')==identity[0] and flag.get('native_start_ticks')==identity[1]
+        if allowed and self.privacy() is not False:
+            with self.condition:self.latest_frame=b'';self.capture_utc=0
+            return False
+        return allowed
 
     def native(self):
         if time.monotonic()-self.native_checked_at<1:return self.native_identity
@@ -197,9 +211,26 @@ class LiveState:
         self.native_checked_at=time.monotonic()
         return self.native_identity
 
+    def privacy(self):
+        # Only the canonical backend command decides privacy; no activity writes.
+        with self.privacy_lock:
+            if time.monotonic()-self.privacy_checked<.1:return self.privacy_value
+            value=None
+            try:
+                token=(self.private/'operator-token').read_text().strip()
+                request=urllib.request.Request('http://127.0.0.1:8820/api/home/native_command',headers={'X-Admin-Token':token})
+                with urllib.request.urlopen(request,timeout=.5) as response:
+                    raw=response.read(1025)
+                    if len(raw)>1024:raise ValueError('Privacy response bounds')
+                    document=json.loads(raw)
+                    value=canonical_privacy(document)
+            except (OSError,ValueError,TypeError):pass
+            self.privacy_value=value;self.privacy_checked=time.monotonic()
+            return value
+
     def settings_receipt(self):
         identity=self.native()
-        if not identity or time.time()>=self.deadline:return None
+        if not identity or time.time()>=self.deadline or self.privacy() is not False:return None
         try:
             path=self.private/'native-view-settings-receipt.json'
             if path.stat().st_size>4096:return None
@@ -261,7 +292,7 @@ class Handler(BaseHTTPRequestHandler):
             self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),
-                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'captureFps':state.fps,'captureWidth':state.width})
+                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
             data=HTML.encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
@@ -328,6 +359,7 @@ class Handler(BaseHTTPRequestHandler):
                     state.condition.wait_for(lambda:state.sequence>sequence or ended.is_set(),timeout=1)
                     if not state.latest_frame or state.sequence<=sequence:continue
                     frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
+                if not state.enabled('native-viewer-capture-enabled'):break
                 send(2,struct.pack('!Qd',sequence,captured)+frame);state.frames+=1
         except (OSError,BrokenPipeError,ConnectionResetError):pass
         finally:

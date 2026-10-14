@@ -34,6 +34,7 @@ def test_unsupported_or_unbounded_input_is_rejected(event):
 def test_capture_permission_cannot_survive_native_process_replacement(tmp_path):
     state = LiveState(time.time() + 30)
     state.private = tmp_path
+    state.privacy = lambda: False
     flag = tmp_path / "native-viewer-capture-enabled"
     flag.write_text(json.dumps({"native_pid": 42, "native_start_ticks": 100}))
     state.native = lambda: (42, 100)
@@ -50,6 +51,7 @@ def test_capture_permission_cannot_survive_native_process_replacement(tmp_path):
 def test_invalid_capture_permission_fails_closed(tmp_path, content):
     state = LiveState(time.time() + 30)
     state.private = tmp_path
+    state.privacy = lambda: False
     state.native = lambda: (42, 100)
     flag = tmp_path / "native-viewer-capture-enabled"
     flag.write_text(content)
@@ -78,6 +80,7 @@ def test_settings_require_actual_native_capability():
 def test_settings_receipt_is_invalid_after_native_replacement(tmp_path):
     state = LiveState(time.time() + 30)
     state.private = tmp_path
+    state.privacy = lambda: False
     (tmp_path/'native-view-settings-receipt.json').write_text(json.dumps({
         'native_pid': 42, 'native_start_ticks': 100,
         'capabilities': {'fov': True}, 'values': {'fov': 75},
@@ -86,3 +89,24 @@ def test_settings_receipt_is_invalid_after_native_replacement(tmp_path):
     assert state.settings_receipt()['capabilities']['fov']
     state.native = lambda: (42, 101)
     assert state.settings_receipt() is None
+
+
+@pytest.mark.parametrize("privacy", [True, None])
+def test_canonical_privacy_or_unknown_blocks_pixels_and_input(tmp_path, privacy):
+    state = LiveState(time.time()+30)
+    state.private = tmp_path
+    state.native = lambda: (42,100)
+    state.privacy = lambda: privacy
+    state.latest_frame = b'previous real frame'
+    for name in ('native-viewer-capture-enabled','native-viewer-input-enabled'):
+        (tmp_path/name).write_text(json.dumps({'native_pid':42,'native_start_ticks':100}))
+        assert not state.enabled(name)
+    assert state.latest_frame == b''
+
+
+@pytest.mark.parametrize('document', [None, [], {'privacy': False},
+    {'target':'bed','sequence':1,'activity':'sleep','privacy':0},
+    {'target':'bed','sequence':True,'activity':'sleep','privacy':False}])
+def test_malformed_canonical_privacy_cannot_permit_video(document):
+    from tools.pixel_streaming.native_live_viewer import canonical_privacy
+    assert canonical_privacy(document) is None
