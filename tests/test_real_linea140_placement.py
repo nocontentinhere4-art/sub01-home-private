@@ -11,7 +11,7 @@ class ExactSourcePlacement(unittest.TestCase):
   for field in ('accessors','materials','images','bufferViews'):self.assertEqual(old[field],new[field])
   self.assertEqual([m['primitives'] for m in old['meshes']],[m['primitives'] for m in new['meshes']]);self.assertEqual(len({n['name'] for n in new['nodes']}),len(new['nodes']))
   root=new['nodes'][new['scenes'][new.get('scene',0)]['nodes'][0]]
-  self.assertEqual(root['children'],old['scenes'][old.get('scene',0)]['nodes']);self.assertEqual(root['translation'],[2.1,.025,-3.1]);self.assertEqual(root['scale'],[SCALE]*3)
+  self.assertEqual(root['children'],old['scenes'][old.get('scene',0)]['nodes']);self.assertEqual(root['translation'],[2.1,.025,-3.02]);self.assertEqual(root['scale'],[SCALE]*3)
   self.assertAlmostEqual(.755*SCALE+.025,.845)
  def test_unreviewed_source_refused(self):
   with self.assertRaises(ValueError):place_bytes(b'glTFchanged')

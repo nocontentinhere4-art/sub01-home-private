@@ -32,7 +32,7 @@ def surface(u,c):
 
 def verify_materials(u,components,doc,dest):
  unique={m.get_path_name():m for c in components for m in c.get_materials() if m}
- if len(unique)!=7:raise RuntimeError('Real desk imported material count differs7')
+ if len(unique)!=len(doc['materials']):raise RuntimeError('Real furniture imported material count differs original source')
  def canon(s):return re.sub('[^a-z0-9]','',s.lower())
  rows=[];mel=u.MaterialEditingLibrary
  for source in doc['materials']:
@@ -65,7 +65,7 @@ def verify_materials(u,components,doc,dest):
  return rows
 
 
-def run(export_glb,dry_run=True,u=None):
+def run(export_glb,dry_run=True,u=None,defer_activation=False):
  if u is None:import unreal as u
  source=Path(export_glb);report=json.loads(source.with_suffix('.json').read_text());digest=hashlib.sha256(source.read_bytes()).hexdigest();doc,_=read_gltf(source)
  if report.get('source_sha256')!=SHA or report.get('output_sha256')!=digest or not report.get('source_binary_unchanged'):raise RuntimeError('Actual complete desk export proof missing')
@@ -80,6 +80,9 @@ def run(export_glb,dry_run=True,u=None):
   if len(found)!=1:raise RuntimeError('Actual identity unavailable '+label)
   return found[0]
  old=[exact(lambda a:a.get_name()==f'full-home_node_{i}',str(i))for i in (181,182)]
+ for a,name in zip(old,('Desk_hardware','Oak_desk')):
+  comps=a.get_components_by_class(u.StaticMeshComponent)
+  if a.get_actor_label()!=name or len(comps)!=1 or not comps[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/'):raise RuntimeError('Exact original desk source identity differs; no shared batch hide')
  lamp=exact(lambda a:a.get_path_name()==mount['actual_saved_lamp_actor'],'saved DeskLamp actor')
  light=exact(lambda a:a.get_actor_label()==mount['light_actor_label_for_exact_component_preflight'],'actual authored DeskLamp light')
  lc=lamp.get_components_by_class(u.StaticMeshComponent);lights=light.get_components_by_class(u.LightComponent)
@@ -129,6 +132,8 @@ def run(export_glb,dry_run=True,u=None):
    if not body:raise RuntimeError('Real furniture physical collision missing')
    body.set_editor_property('collision_trace_flag',u.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE);c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
   if fingerprint(u,original)!=before:raise RuntimeError('New owned material/collision setup changed originals')
+  if defer_activation:
+   return result,{'u':u,'old':old,'lamp':lamp,'light':light,'lights':lights,'by_node':by_node,'mount':mount,'original':original,'before':before,'added':added,'triangles':triangles,'actual':actual,'dest':dest,'source':source}
   cap,cc,_=by_node[8];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   lamp.set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False)
   light.set_actor_location(u.Vector(*mount['new_bulb_ue_cm']),False,False)

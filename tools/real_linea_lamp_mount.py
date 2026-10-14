@@ -3,7 +3,7 @@ import hashlib,json,math
 from pathlib import Path
 from home_asset_audit import read_gltf
 from structural_rail_source_patch import accessor,world_matrices,transformed
-from prepare_real_linea140_placement import SHA,SCALE
+from prepare_real_linea140_placement import SHA,SCALE,DESK_Y
 
 
 def geometry(path):
@@ -32,7 +32,7 @@ def mount_plan(desk_path,lamp_path,saved_receipt):
  centre=[(pmin[a]+pmax[a])/2 for a in range(3)]
  actual=saved_receipt['planned']['DeskLamp']
  if abs(actual['yaw_deg']-90)>1e-6:raise ValueError('Actual lamp yaw differs reviewed90')
- hole=[2.1-.47*SCALE,-3.1-.22*SCALE];rot=rotated_ue(centre)
+ hole=[2.1-.47*SCALE,DESK_Y-.22*SCALE];rot=rotated_ue(centre)
  rim=[p for r in desk if r['node']==35 for p in r['points']]
  rest=.025+max(p[1]for p in rim)*SCALE
  origin=[hole[0]-rot[0],hole[1]-rot[1],rest]
@@ -60,7 +60,7 @@ def blender_collision_proof(desk_path,lamp_path,plan,home_path):
   lpts=[tuple(origin[a]+rotated_ue(p)[a]for a in range(3))for p in lr['points']];lb=bvh(lpts,lr['triangles'])
   for dr in desk:
    if dr['node']==8:continue # exact physically opened removable grommet lid, retained source asset
-   dpts=[(2.1+p[0]*SCALE,-3.1+p[2]*SCALE,.025+p[1]*SCALE)for p in dr['points']]
+   dpts=[(2.1+p[0]*SCALE,DESK_Y+p[2]*SCALE,.025+p[1]*SCALE)for p in dr['points']]
    for li,di in lb.overlap(bvh(dpts,dr['triangles'])):
     local=[lr['points'][k][1]for k in lr['triangles'][li]]
     if dr['node']==35 and min(local)>=-.002 and max(local)<=.03:contact_pairs+=1

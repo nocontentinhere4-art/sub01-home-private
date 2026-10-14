@@ -9,6 +9,7 @@ from pathlib import Path
 from real_furniture_base import glb_json,sha256_file
 SHA='99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d'
 SCALE=(.845-.025)/.755
+DESK_Y=-3.02
 
 
 def place_bytes(raw):
@@ -22,7 +23,7 @@ def place_bytes(raw):
     for i,node in enumerate(doc['nodes']):node['name']=f'SUB01_RealLinea140_99bdf3fd_Node{i:03d}'
     for i,mesh in enumerate(doc['meshes']):mesh['name']=f'SUB01_RealLinea140_99bdf3fd_Mesh{i:03d}'
     scene=doc['scenes'][doc.get('scene',0)];children=scene['nodes'];root=len(doc['nodes'])
-    doc['nodes'].append({'name':'SUB01_RealLinea140_Complete_99bdf3fd','children':children,'translation':[2.1,.025,-3.1],'scale':[SCALE]*3})
+    doc['nodes'].append({'name':'SUB01_RealLinea140_Complete_99bdf3fd','children':children,'translation':[2.1,.025,DESK_Y],'scale':[SCALE]*3})
     scene['nodes']=[root];scene['name']='SUB01_RealLinea140_WorldPlacement'
     encoded=json.dumps(doc,separators=(',',':')).encode();encoded+=b' '*(-len(encoded)%4)
     return struct.pack('<4sII',b'glTF',2,20+len(encoded)+len(rest))+struct.pack('<II',len(encoded),0x4E4F534A)+encoded+rest
@@ -56,7 +57,7 @@ def run(source,output,lamp_source=None,lamp_receipt=None,home_source=None):
         if doc.get(key)!=source_doc.get(key):raise ValueError('Original source '+key+' changed')
     length=struct.unpack_from('<I',raw,12)[0];outlength=struct.unpack_from('<I',placed,12)[0]
     if raw[20+length:]!=placed[20+outlength:]:raise ValueError('Original binary geometry/texture bytes changed')
-    top_bounds=[[2.1-.699*SCALE,-3.1-.325*SCALE],[2.1+.699*SCALE,-3.1+.325*SCALE]]
+    top_bounds=[[2.1-.699*SCALE,DESK_Y-.325*SCALE],[2.1+.699*SCALE,DESK_Y+.325*SCALE]]
     device_bounds={'monitor':[[1.64,-3.345],[2.36,-3.255]],'keyboard':[[1.8145,-3.020465],[2.1855,-2.859535]],'mouse':[[2.29,-3.014501],[2.510001,-2.8055]],'phone':[[2.661,-2.995001],[2.739001,-2.845]]}
     margins={name:min([box[0][a]-top_bounds[0][a] for a in range(2)]+[top_bounds[1][a]-box[1][a] for a in range(2)]) for name,box in device_bounds.items()}
     if min(margins.values())<=0:raise ValueError('Source device support envelope outside exported actual top')
