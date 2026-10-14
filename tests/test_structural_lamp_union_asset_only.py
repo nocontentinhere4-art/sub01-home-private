@@ -1,7 +1,8 @@
-import unittest
+import unittest,sys
 from types import SimpleNamespace
 from pathlib import Path
-from tools.unreal_import_structural_lamp_union import import_owned_union_mesh
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+from unreal_import_structural_lamp_union import import_owned_union_mesh
 class Mesh:
  def __init__(self,path,triangles=160):self.path=path;self.triangles=triangles
  def get_path_name(self):return self.path
