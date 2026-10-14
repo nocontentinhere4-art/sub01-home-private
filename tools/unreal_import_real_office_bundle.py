@@ -27,7 +27,7 @@ def verify_native_structural_union(u,actors):
  batches=[]
  for node in (162,163):
   actor=unique(lambda a:a.get_name()==f'full-home_node_{node}',str(node));components=actor.get_components_by_class(u.StaticMeshComponent)
-  if len(components)!=1 or not components[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/') or not bool(actor.get_editor_property('hidden')) or components[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION:raise RuntimeError('Original162/163 must be hidden and NoCollision before office staging')
+  if len(components)!=1 or components[0].get_editor_property('static_mesh').get_path_name()!=f'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_{node-41}.Mesh_{node-41}' or components[0].get_num_materials()!=1 or components[0].get_material(0).get_path_name()!=f'/Game/Sub01Home/ImportedScene/full-home/Materials/Material_{1 if node==162 else 8}.Material_{1 if node==162 else 8}' or not bool(actor.get_editor_property('hidden')) or components[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION:raise RuntimeError('Original162/163 must be hidden and NoCollision before office staging')
   batches.append(actor)
  actor=unique(lambda a:a.get_actor_label()=='SUB01_VerifiedLampUnion160_'+digest[:12],'owned160 actor');components=actor.get_components_by_class(u.StaticMeshComponent)
  if len(components)!=1:raise RuntimeError('Exact owned160 component count differs')

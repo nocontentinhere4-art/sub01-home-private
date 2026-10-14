@@ -27,8 +27,8 @@ class Actor:
 
 class ExactUnion(unittest.TestCase):
  def exercise(self,active200=False,count160=160):
-  raw=b'exact-reviewed-160-source';digest=hashlib.sha256(raw).hexdigest();material=object()
-  actors=[Actor('full-home_node_'+str(n),'source',True,Component('/old/'+str(n),'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh',0,material))for n in(162,163)]
+  raw=b'exact-reviewed-160-source';digest=hashlib.sha256(raw).hexdigest();material=Mesh('/Game/Sub01Home/ImportedScene/full-home/Materials/Material_8.Material_8')
+  actors=[Actor('full-home_node_'+str(n),'source',True,Component('/old/'+str(n),f'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_{n-41}.Mesh_{n-41}',0,material if n==163 else Mesh('/Game/Sub01Home/ImportedScene/full-home/Materials/Material_1.Material_1')))for n in(162,163)]
   actors.append(Actor('union','SUB01_VerifiedLampUnion160_'+digest[:12],False,Component('/union/component','/Game/Sub01Home/StructuralLampUnionMeshOnly/V_'+digest[:12]+'/Mesh',1,material)))
   actors.append(Actor('old200','SUB01_VerifiedRails_SUB01_PreservedSource_163_0',not active200,Component('/old200/component','/Game/Sub01Home/StructuralRails/V_d586193fee24/Mesh',1 if active200 else 0,material)))
   receipt={'source_sha256':'9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b','union_sha256':digest,'roundtrip':{'ok':True,'replacement_sha256':digest,'checks':[{'triangle_count':160}]},'new_union_component':'/union/component','old_owned_remainder_hidden':'/actual/old200'}
