@@ -65,8 +65,8 @@ class HomeDeviceProxy:
                 chunks.append(chunk)
             body = b''.join(chunks)
             if response.status != 200:
-                if response.status in {403, 404, 409, 503}:
-                    raise {403: web.HTTPForbidden, 404: web.HTTPNotFound, 409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}[response.status](text='Actual home device unavailable')
+                if response.status in {400, 403, 404, 409, 503}:
+                    raise {400: web.HTTPBadRequest, 403: web.HTTPForbidden, 404: web.HTTPNotFound, 409: web.HTTPConflict, 503: web.HTTPServiceUnavailable}[response.status](text='Actual home device unavailable')
                 raise web.HTTPBadGateway(text='Actual home device backend is unavailable')
             return body, response.headers.get('Content-Type', ''), response.headers.get('ETag')
 
@@ -126,10 +126,20 @@ class HomeDeviceProxy:
     async def action(self, request):
         epoch = self.runner.privacy_epoch
         state = await self.home(epoch)
+        if request.content_length is not None and request.content_length > 4096:
+            raise web.HTTPRequestEntityTooLarge(max_size=4096, actual_size=request.content_length)
+        chunks, total = [], 0
+        async for chunk in request.content.iter_chunked(4096):
+            total += len(chunk)
+            if total > 4096:
+                raise web.HTTPRequestEntityTooLarge(max_size=4096, actual_size=total)
+            chunks.append(chunk)
         try:
-            data = await request.json()
-        except ValueError:
+            data = json.loads(b''.join(chunks))
+        except (ValueError, UnicodeDecodeError):
             raise web.HTTPBadRequest(text='Invalid device action')
+        if not isinstance(data, dict):
+            raise web.HTTPBadRequest(text='Expected device action object')
         device = request.match_info['device']
         if device == 'phone' and isinstance(data, dict) and data.get('action') == 'navigate':
             try:
@@ -141,6 +151,19 @@ class HomeDeviceProxy:
             if (current and expected != current) or (not current and expected is not None and expected != ''):
                 raise web.HTTPConflict(text='Actual phone frame changed')
             path, clean = '/api/home/browser', {'device': 'phone', 'url': url}
+        elif device == 'phone' and data.get('action') == 'save_note':
+            screen = state.get('phone_screen') or {}
+            if screen.get('app') != 'notes':
+                raise web.HTTPConflict(text='Open Notes before saving a note')
+            current = screen.get('frame_id')
+            if not current or data.get('frame_id') != current:
+                raise web.HTTPConflict(text='Actual phone frame changed')
+            title, text = data.get('title', ''), data.get('text')
+            if (not isinstance(title, str) or len(title) > 120
+                    or not isinstance(text, str) or len(text) > 2000 or not text.strip()
+                    or len((title.strip() + '\n' if title.strip() else '') + text.strip()) > 2000):
+                raise web.HTTPBadRequest(text='Expected bounded note title and nonempty text')
+            path, clean = '/api/home/phone/action', {k:data[k] for k in ('action', 'frame_id', 'title', 'text') if k in data}
         elif device == 'phone' and isinstance(data, dict) and data.get('action') in {'home', 'open_app'}:
             current = (state.get('phone_screen') or {}).get('frame_id')
             if not current or data.get('frame_id') != current:

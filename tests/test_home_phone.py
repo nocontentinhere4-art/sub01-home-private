@@ -106,3 +106,54 @@ def test_notes_save_registered_route_persists_real_world_and_rejects_invalid_inp
             assert response.status==200 and world.notes[-1]['text']=='Untitled fixture note.'
         finally:await client.close()
     asyncio.run(run())
+
+
+def test_notes_write_through_actual_authenticated_runner_proxy_and_backend(tmp_path):
+    async def run():
+        import json
+        from test_home_pc_runner import pc, FakeComputer
+        world=HomeWorld();world.phone['app']='notes'
+        world.notes=[{'text':'Fixture only existing note.'}]
+        original=copy.deepcopy(world.notes);writes=[]
+        async def save():
+            writes.append(copy.deepcopy(world.to_dict()))
+            (tmp_path/'saved.json').write_text(json.dumps(world.to_dict()))
+        live=SimpleNamespace(home=world,save_state=save,computer=SimpleNamespace(view=lambda:{}),
+             life=SimpleNamespace(snapshot=lambda:{}),engine=SimpleNamespace(stage='awake'),clock=SimpleNamespace(now=lambda:0))
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        backend=TestServer(app);await backend.start_server()
+        computer=FakeComputer();runner=pc.PCRunner(computer,TOKEN)
+        runner.home_devices=proxy.HomeDeviceProxy(str(backend.make_url('')).rstrip('/'),TOKEN,runner)
+        client=TestClient(TestServer(pc.create_app(runner)));await client.start_server()
+        def frame():return home_phone.status(home_phone.snapshot(world))['frame_id']
+        async def post(data,auth=True):return await client.post('/devices/phone/action',json=data,headers=AUTH if auth else {})
+        try:
+            old=frame();payload={'action':'save_note','frame_id':old,'title':'Today','text':'A fixture reminder.'}
+            assert (await post(payload,False)).status==403
+            assert (await post({**payload,'frame_id':'stale'})).status==409
+            for bad in [dict(title='t'*121),dict(text=''),dict(text=[]),dict(title=None),dict(text='x'*2001),dict(title='t',text='x'*2000)]:
+                assert (await post({**payload,**bad})).status==400
+            assert (await client.post('/devices/phone/action',headers=AUTH,data=json.dumps({**payload,'padding':'x'*5000}))).status==413
+            world.phone['app']='home'
+            assert (await post({**payload,'frame_id':frame()})).status==409
+            world.phone['app']='notes';world.node=world.target='bathroom'
+            assert (await post(payload)).status==409
+            world.node=world.target='desk';runner.privacy=True
+            assert (await post(payload)).status==409
+            runner.privacy=False
+            assert not writes and world.notes==original
+            assert computer.inputs==[] and computer.sent==[] # No PC/browser input mapping.
+            response=await post({**payload,'device':'desk','url':'https://example.org/'})
+            assert response.status==200;reply=await response.json();current=reply['phone_screen']['frame_id'];assert current!=old
+            assert world.notes[-1]['text']=='Today\nA fixture reminder.'
+            restored=HomeWorld(json.loads((tmp_path/'saved.json').read_text()));assert restored.notes==world.notes
+            assert len(writes)==1 and computer.inputs==[] and computer.sent==[]
+            response=await client.get('/devices/phone/frame.jpg?frame_id='+current,headers=AUTH)
+            assert response.status==200 and response.headers['Content-Type']=='image/jpeg'
+            assert await response.read()==home_phone.render(home_phone.snapshot(world))
+            assert response.headers['ETag'] and response.headers['Cache-Control']=='no-store'
+            assert (await post(payload)).status==409 and len(writes)==1
+            assert (await client.get('/devices/phone/frame.jpg?frame_id='+old,headers=AUTH)).status==409
+        finally:
+            await client.close();await runner.home_devices.close();await backend.close()
+    asyncio.run(run())
