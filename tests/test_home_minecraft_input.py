@@ -123,3 +123,11 @@ def test_manual_activation_is_separate_from_sofa_and_never_runs_autonomous_choic
   world.node=world.target='bathroom'
   await c.agent_step(world,{});assert sent[-1]=={'type':'active','value':False} and not c.active
  asyncio.run(run())
+
+def test_cancel_revokes_focus_lease_even_with_stale_frame(tmp_path):
+ import pytest
+ p,file,clock=fixture(tmp_path);p.focus(focus(),'actual-fixture-frame',False)
+ assert p.active()
+ p.control({**packet(1,'cancel'),'frame_id':'old'},'new',True)
+ assert p.until==0 and not p.active()
+ with pytest.raises(PermissionError):p.control(packet(2),'actual-fixture-frame',False)

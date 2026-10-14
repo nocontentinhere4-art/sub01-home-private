@@ -36,8 +36,9 @@ def main():
     parser.add_argument('--deadline-epoch',type=int,required=True)
     parser.add_argument('--display-provider',choices=('xvfb','nvidia-xorg'),default='xvfb')
     parser.add_argument('--reuse-display',action='store_true')
-    parser.add_argument('--startup-view',choices=('manual','live','desk-diagnostic','phone-diagnostic'),default='manual')
+    parser.add_argument('--startup-view',choices=('manual','live','desk-diagnostic','phone-diagnostic','controller-diagnostic'),default='manual')
     parser.add_argument('--review-typing-hover',action='store_true',help='Explicit distal-surface pose review; no seating or key-contact acceptance')
+    parser.add_argument('--controller-pose-time',type=float,default=4)
     parser.add_argument('--phone-pose-time',type=float,default=4)
     parser.add_argument('--phone-mount-offset')
     parser.add_argument('--phone-mount-euler')
@@ -50,6 +51,7 @@ def main():
     if args.phone_eye_camera and args.startup_view!='phone-diagnostic':raise SystemExit('Measured eye camera requires explicit phone diagnostic')
     if args.phone_eye_camera and (args.phone_head_camera or args.phone_pose_time!=4):raise SystemExit('Measured eye camera requires its original 4s witness and no Head-origin flag')
     phone_args=phone_review_arguments(args.phone_pose_time,args.phone_mount_offset,args.phone_mount_euler) if args.startup_view=='phone-diagnostic' else []
+    if args.startup_view=='controller-diagnostic' and (not math.isfinite(args.controller_pose_time) or not 0<=args.controller_pose_time<=5.033334):raise SystemExit('Gaming review requires finite genuine clip time')
     remaining=args.deadline_epoch-time.time()
     if remaining<90:raise SystemExit('Authorized window too short')
     PRIVATE.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -88,6 +90,9 @@ def main():
         native+=phone_args
         if args.phone_head_camera:native.append('-Sub01PhoneHeadCamera')
         if args.phone_eye_camera:native.append('-Sub01PhoneEyeCamera')
+    elif args.startup_view=='controller-diagnostic':
+        native=[item for item in native if not item.startswith(('-Sub01HandsDiagnostic=','-Sub01DiagnosticClip=','-Sub01ContactProfile=','-Sub01ContactFreeze=')) and item not in ('-Sub01DiagnosticSeat','-Sub01LiveHome')]
+        native+=['-Sub01HandsDiagnostic=Gaming','-Sub01DiagnosticClip=/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming','-Sub01ControllerGripDiagnostic',f'-Sub01ControllerPoseTime={args.controller_pose_time:g}']
     elif args.startup_view!='desk-diagnostic':
         native=[item for item in native if not item.startswith(('-Sub01HandsDiagnostic=','-Sub01DiagnosticClip=','-Sub01ContactProfile=','-Sub01ContactFreeze=')) and item not in ('-Sub01DiagnosticSeat','-Sub01LiveHome')]
         native+=['-Sub01HandsDiagnostic=Walk','-Sub01DiagnosticClip=/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk']

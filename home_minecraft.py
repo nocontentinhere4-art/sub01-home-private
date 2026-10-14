@@ -9,6 +9,8 @@ import shutil
 import time
 from pathlib import Path
 
+from home_minecraft_controller import BrainController
+
 ROOT = Path(__file__).parent
 
 def eula_accepted(directory):
@@ -20,6 +22,23 @@ def eula_accepted(directory):
 def frame_tag(frame):
     """Identity of a JPEG frame (also its HTTP ETag body), computed once per frame."""
     return hashlib.blake2b(frame, digest_size=12).hexdigest() if frame else None
+
+
+def minecraft_browser_launch_options():
+    """Opt-in measured NVIDIA/Xorg path; never share a browser profile/cookies."""
+    if os.environ.get("SUB01_MC_HARDWARE_WEBGL", "0") != "1":
+        return {"headless": True}
+    authority = Path(os.environ.get("SUB01_MC_XAUTHORITY", "/home/unreal/.sub01-private/native-xauthority"))
+    display = os.environ.get("SUB01_MC_DISPLAY", ":99")
+    if display != ":99" or not authority.is_absolute():
+        raise ValueError("Minecraft GPU rendering requires the private local X display")
+    info = authority.stat()
+    if info.st_uid != os.getuid() or info.st_mode & 0o077 or not authority.is_file():
+        raise ValueError("Minecraft GPU rendering requires the protected same-owner X authority")
+    return {"headless": True,
+            "args": ["--enable-gpu", "--use-gl=angle", "--use-angle=gl", "--ozone-platform=x11"],
+            "ignore_default_args": ["--enable-unsafe-swiftshader"],
+            "env": {**os.environ, "DISPLAY": display, "XAUTHORITY": str(authority)}}
 
 
 class MinecraftConsole:
@@ -44,6 +63,7 @@ class MinecraftConsole:
         self.worker = self.server = None
         self.active = False
         self.native_input = None
+        self.controller = BrainController()
         self._input_pending = {}
         self._render_generation = 0
         self.last_action = ""
@@ -62,7 +82,7 @@ class MinecraftConsole:
                 "active": self.active, "last_action": self.last_action,
                 "observation": self.state, "events": self.events[-8:], "has_frame": bool(self.frame),
                 "frame_kind": self.frame_kind, "frame_id": self.frame_tag,
-                "perception": "structured game observations from Mineflayer"}
+                "perception": "structured game observations from Mineflayer", "controller": self.controller.view()}
 
     async def send(self, message):
         if not self.worker or self.worker.returncode is not None:
@@ -108,7 +128,12 @@ class MinecraftConsole:
         if not self.enabled:
             return
         manual = bool(self.native_input and self.native_input.active(home.privacy()) and home.console_game == "minecraft")
-        wants = manual or home.activity == "play_console" and home.activity_ready("play_console") and home.console_game == "minecraft"
+        self.controller.home = home
+        self.controller.current_frame = self.frame_tag
+        autonomous = home.activity == "play_console" and home.activity_ready("play_console") and home.console_game == "minecraft"
+        if self.controller.enabled:
+            autonomous = autonomous and bool(self.controller.ready(home, self.frame_tag))
+        wants = manual or autonomous
         if wants != self.active:
             if await self.send({"type": "active", "value": wants}):
                 self.active = wants
@@ -118,7 +143,13 @@ class MinecraftConsole:
         if time.monotonic() - self.last_decision < 2:
             return
         action = self.choose(rel)
-        if await self.send({"type": "action", "action": action, "turn": self.rng.uniform(-1.2, 1.2)}):
+        turn = self.rng.uniform(-1.2, 1.2)
+        if self.controller.enabled:
+            self.controller.plan(home, action, turn)
+            self.last_decision = time.monotonic()
+            self.last_action = action
+            return
+        if await self.send({"type": "action", "action": action, "turn": turn}):
             self.last_decision = time.monotonic()
             self.last_action = action
 
@@ -157,7 +188,7 @@ class MinecraftConsole:
     async def render_frames(self):
         from playwright.async_api import async_playwright
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True)
+            browser = await playwright.chromium.launch(**minecraft_browser_launch_options())
             try:
                 page = await browser.new_page(viewport={"width": 640, "height": 360}, device_scale_factor=1)
                 await self._render_frame_loop(page)
@@ -293,7 +324,7 @@ class MinecraftConsole:
                     stderr=worker_log, env={**os.environ, "SUB01_MC_SERVER_PORT": str(self.server_port), "SUB01_MC_VIEW_PORT": str(self.viewer_port)})
             self.status = "ready"
             tasks = [asyncio.create_task(drain_server()), asyncio.create_task(self.read_worker()),
-                     asyncio.create_task(self.render_frames())]
+                     asyncio.create_task(self.render_frames()), asyncio.create_task(self.controller.run(self))]
             await self.send({'type': 'viewer_bootstrap'})
             while self.server.returncode is None and self.worker.returncode is None:
                 for task in tasks:
