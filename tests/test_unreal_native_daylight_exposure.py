@@ -22,6 +22,14 @@ class DaylightExposureTests(unittest.TestCase):
 #include <cassert>
 #include <limits>
 int main(){using Sub01NativeDaylightExposure::DayMin;
+using Sub01NativeDaylightExposure::MaximumScale;
+using Sub01NativeDaylightExposure::FloorClamped;
+assert(MaximumScale(-3,1,.78)==16);
+assert(std::abs(MaximumScale(DayMin(11),1,.78)-31.25307)<.0001);
+assert(FloorClamped(.01183,-3,.78)); // Actual native avg below .0225 floor.
+assert(!FloorClamped(.0225,-3,.78));
+assert(!FloorClamped(.03,-3,.78));
+assert(MaximumScale(-3,1,0)==0);
 for(int i=0;i<=2400;i++){double h=i/100.,v=DayMin(h);assert(v>=-4&&v<=-3);if(h<=6||h>=18)assert(std::abs(v+3)<1e-12);}
 assert(DayMin(12)==-4);assert(std::abs(DayMin(11)+3.9659258263)<1e-9);
 assert(DayMin(-1)==-3&&DayMin(25)==-3);
@@ -40,6 +48,9 @@ assert(DayMin(std::numeric_limits<double>::quiet_NaN())==-3);}
         self.assertIn('Sun->SetIntensity(3.2f*Elevation);',cpp)
         self.assertIn('ApplyNativeFixtureEmission(LampName,Enabled);',cpp)
         self.assertNotIn('SetActorLocation',day.METHODS)
+        self.assertIn('r.EyeAdaptation.LensAttenuation',day.METHODS)
+        self.assertIn('r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange',day.METHODS)
+        self.assertIn('Settings.AutoExposureBiasCurve',day.METHODS)
         self.assertEqual(day.METHODS.count('Post->Settings.'),1)
         with self.assertRaises(ValueError):day.install(header,cpp)
 
