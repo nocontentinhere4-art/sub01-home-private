@@ -18,7 +18,7 @@ def run():
  # Existing imported OWNED static mesh; avoid Interchange scene actor UID reuse.
  mesh_path='/Game/Sub01Home/StructuralLampUnion/V_920edd7a573e/structural-lamp-union-remainder-only/StaticMeshes/SUB01_PreservedSource_163_0.SUB01_PreservedSource_163_0'
  mesh=u.load_asset(mesh_path)
- if not mesh:raise RuntimeError('Source-proven owned160 mesh unavailable')
+ if not mesh:raise SystemExit('Union pending: source-proven owned160 asset unavailable; saved removal preserved')
  from home_asset_audit import read_gltf,IDENTITY,node_matrix
  from structural_rail_source_patch import accessor
  doc,binary=read_gltf(source)

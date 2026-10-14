@@ -62,6 +62,18 @@ def run():
   for component, c in zip(sorted(a.get_components_by_class(u.StaticMeshComponent),key=lambda item:item.get_path_name()),expected[a.get_path_name()]['components']):
    if component.get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION or str(component.get_collision_profile_name())!='NoCollision':raise RuntimeError('Explicit NoCollision did not apply')
    c['collision']=str(component.get_collision_enabled());c['profile']=str(component.get_collision_profile_name())
+ # Deferred component registration can reset unrelated owned book collision profiles.
+ # Restore their exact pre-operation collision state, then retain the full strict guard.
+ target_paths={a.get_path_name() for a in targets}
+ for a in original:
+  if a.get_path_name() in target_paths:continue
+  prior={c['path']:c for c in before[a.get_path_name()]['components']}
+  for component in a.get_components_by_class(u.StaticMeshComponent):
+   old=prior[component.get_path_name()]
+   if str(component.get_collision_enabled())!=old['collision'] or str(component.get_collision_profile_name())!=old['profile']:
+    component.set_collision_profile_name(old['profile'])
+    enum_name=old['collision'].split('CollisionEnabled.',1)[1].split(':',1)[0].split('>',1)[0]
+    component.set_collision_enabled(getattr(u.CollisionEnabled,enum_name))
  current=fingerprint(u,original)
  if current!=expected:
   (project/'private-audit/generated-removal-differences.json').write_text(json.dumps({k:{'expected':expected[k],'actual':current[k]} for k in expected if expected[k]!=current[k]},indent=2))
