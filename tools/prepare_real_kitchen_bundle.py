@@ -174,8 +174,13 @@ def plan(rows, contacts=None):
         # Panel +/-10mm and authored pull geometry are retained; not the 51mm total stretched as wood.
         add('Lower_cabinet_hinge_'+str(i), 'door', [x,.44,-3.215], [.65,.76,.051],
             ('mesh-2','mesh-3','mesh-4'), [x-.325,.44,-3.192])
+    upper_door_back=-3.545+rows['door']['bounds_m'][0][2]
+    upper_body_rear=-3.89
+    upper_body_front=upper_door_back-.002
     for i, x in enumerate(UPPER_CENTERS, 1):
-        add('Upper_cabinet_body_'+str(i), 'wall', [x,2.05,-3.71], [.775,.7,.36])
+        # Keep the authored hinge fixed; stop the carcass behind the real wood panel.
+        add('Upper_cabinet_body_'+str(i), 'wall', [x,2.05,(upper_body_rear+upper_body_front)/2],
+            [.775,.7,upper_body_front-upper_body_rear])
         # Original authored pivot -1.548 + worldX -2.2, actual attachUpper hingeOffset +.014.
         add('Cabinet hinge '+str(i), 'door', [x,2.05,-3.545], [.771,.66,.051],
             ('mesh-2','mesh-3','mesh-4'), [x-.771/2,2.05,-3.531])
@@ -323,6 +328,9 @@ def measured_sink_cutouts(bpy,report):
             old_bottom=min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
             bpy.context.view_layer.objects.active=obj
             modifier=obj.modifiers.new('ActualSinkMeasuredCutout','BOOLEAN');modifier.operation='DIFFERENCE';modifier.solver='EXACT';modifier.object=cutter
+            # Authored CAD triangulation has per-face seams and T-junctions.
+            # Exact hole-tolerant evaluation changes no input positions; final BVH remains strict.
+            modifier.use_hole_tolerant=True;modifier.use_self=True
             bpy.ops.object.modifier_apply(modifier=modifier.name)
             if len(obj.data.polygons)<1:raise ValueError('Sink cutout unexpectedly removed entire authored top board')
             new_bottom=min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
@@ -350,6 +358,14 @@ def verify_source_collisions(bpy,report):
             w=obj.matrix_world @ vertex.co;point=(w.x,w.z,-w.y)
             if all(sink[0][k]<point[k]<sink[1][k] for k in range(3)):
                 sink_hits.append(obj.name);break
+    sink_hit_evidence=[]
+    body_polygons=[(obj,poly) for obj in bodies for poly in obj.data.polygons]
+    for index,_ in pairs[:12]:
+        obj,poly=body_polygons[index]
+        points=[obj.matrix_world @ obj.data.vertices[i].co for i in poly.vertices]
+        browser=[(v.x,v.z,-v.y) for v in points]
+        sink_hit_evidence.append({'object':obj.name,'polygon_index':poly.index,
+            'vertices_browser_m':[list(v) for v in browser]})
     door_rows=[]
     parents=[o for o in bpy.data.objects if o.type=='EMPTY' and ('hinge_' in o.name or o.name.startswith('Cabinet hinge '))]
     if len(parents)!=8:raise ValueError('All eight fixed hinge parents required for sweep test')
@@ -369,6 +385,7 @@ def verify_source_collisions(bpy,report):
             parent.rotation_euler.z=0;bpy.context.view_layer.update()
         door_rows.append({'hinge':parent.name,'tested_poses':tested,'closed_and_sweep_passed':failure is None,'failure':failure})
     return {'epsilon_m':0.0,'sink_source_bvh_clear':not sink_hits,'sink_intersections':sorted(set(sink_hits)),
+            'sink_intersection_evidence':sink_hit_evidence,
             'doors':door_rows,'passed':not sink_hits and all(r['closed_and_sweep_passed'] for r in door_rows),
             'native_ready':False,'scope':'Derived source triangles only; not native simple-collision or physical capsule proof'}
 

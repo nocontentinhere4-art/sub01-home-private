@@ -1,0 +1,2807 @@
+{
+  "schema": "sub01.actual-kitchen-derived-source-proof.v1",
+  "source_report": {
+    "schema": "sub01.real-kitchen-derived-plan.v1",
+    "source": {
+      "base": {
+        "file": "face-frame-base-cabinet.glb",
+        "sha256": "424076e0bb92c82439d45d34ebf43638b0f89de6e01aecf677bb8700b46f8e80",
+        "raw_units": "millimeters",
+        "unit_scale": 0.001,
+        "bounds_m": [
+          [
+            -0.29999819946289064,
+            -0.0999899978637696,
+            -0.2799993896484375
+          ],
+          [
+            0.29999819946289064,
+            0.7199982299804689,
+            0.29999798583984394
+          ]
+        ],
+        "parts": [
+          {
+            "node_index": 2,
+            "name": "mesh-0",
+            "bounds_m": [
+              [
+                -0.29999819946289064,
+                7.199999690049632e-05,
+                -0.2799440002441406
+              ],
+              [
+                -0.2820018005371094,
+                0.7199279785156252,
+                0.2799440002441408
+              ]
+            ],
+            "triangles": 5724,
+            "vertices": 17172
+          },
+          {
+            "node_index": 4,
+            "name": "mesh-1",
+            "bounds_m": [
+              [
+                -0.29099780273437503,
+                0.3416004943847656,
+                0.22000100708007822
+              ],
+              [
+                -0.269002197265625,
+                0.34649951171874993,
+                0.22999899291992196
+              ]
+            ],
+            "triangles": 186,
+            "vertices": 558
+          },
+          {
+            "node_index": 6,
+            "name": "mesh-2",
+            "bounds_m": [
+              [
+                -0.29099780273437503,
+                0.3416004943847657,
+                -0.2299989929199218
+              ],
+              [
+                -0.269002197265625,
+                0.34649951171875004,
+                -0.22000100708007805
+              ]
+            ],
+            "triangles": 186,
+            "vertices": 558
+          },
+          {
+            "node_index": 8,
+            "name": "mesh-3",
+            "bounds_m": [
+              [
+                0.2820018005371094,
+                7.199999690049632e-05,
+                -0.2799440002441406
+              ],
+              [
+                0.29999819946289064,
+                0.7199279785156252,
+                0.2799440002441408
+              ]
+            ],
+            "triangles": 5724,
+            "vertices": 17172
+          },
+          {
+            "node_index": 10,
+            "name": "mesh-4",
+            "bounds_m": [
+              [
+                0.269002197265625,
+                0.3416004943847656,
+                0.22000100708007822
+              ],
+              [
+                0.29099780273437503,
+                0.34649951171874993,
+                0.22999899291992196
+              ]
+            ],
+            "triangles": 188,
+            "vertices": 564
+          },
+          {
+            "node_index": 12,
+            "name": "mesh-5",
+            "bounds_m": [
+              [
+                0.269002197265625,
+                0.3416004943847657,
+                -0.2299989929199218
+              ],
+              [
+                0.29099780273437503,
+                0.34649951171875004,
+                -0.22000100708007805
+              ]
+            ],
+            "triangles": 188,
+            "vertices": 564
+          },
+          {
+            "node_index": 14,
+            "name": "mesh-6",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                1.7999999690179303e-06,
+                -0.2799440002441406
+              ],
+              [
+                0.28194360351562503,
+                0.017998199462890687,
+                0.2799440002441406
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 16,
+            "name": "mesh-7",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                0.7020017700195311,
+                -0.27994400024414046
+              ],
+              [
+                0.28194360351562503,
+                0.7199982299804689,
+                0.2799440002441408
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 18,
+            "name": "mesh-8",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                0.018068399429321348,
+                -0.2799993896484375
+              ],
+              [
+                0.28194360351562503,
+                0.7019315795898439,
+                -0.2740006103515623
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 20,
+            "name": "mesh-9",
+            "bounds_m": [
+              [
+                -0.28094378662109376,
+                0.34650180053710933,
+                -0.2619464111328125
+              ],
+              [
+                0.28094378662109376,
+                0.3644981994628907,
+                0.27394641113281254
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 22,
+            "name": "mesh-10",
+            "bounds_m": [
+              [
+                -0.2999945068359375,
+                7.199999690049186e-05,
+                0.28000201416015624
+              ],
+              [
+                -0.2450054931640625,
+                0.719927978515625,
+                0.29999798583984394
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 24,
+            "name": "mesh-11",
+            "bounds_m": [
+              [
+                0.2450054931640625,
+                7.199999690049186e-05,
+                0.28000201416015624
+              ],
+              [
+                0.2999945068359375,
+                0.719927978515625,
+                0.29999798583984394
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 26,
+            "name": "mesh-12",
+            "bounds_m": [
+              [
+                -0.24495100402832032,
+                5.499999970131065e-06,
+                0.28000201416015624
+              ],
+              [
+                0.24495100402832032,
+                0.0549944992065429,
+                0.2999979858398438
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 28,
+            "name": "mesh-13",
+            "bounds_m": [
+              [
+                -0.24495100402832032,
+                0.6650054931640624,
+                0.2800020141601564
+              ],
+              [
+                0.24495100402832032,
+                0.7199945068359374,
+                0.29999798583984394
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 30,
+            "name": "mesh-14",
+            "bounds_m": [
+              [
+                -0.25199560546875,
+                -0.0999899978637696,
+                0.18800439453124998
+              ],
+              [
+                -0.20800439453125,
+                -9.999999776524329e-06,
+                0.23199560546875
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          },
+          {
+            "node_index": 32,
+            "name": "mesh-15",
+            "bounds_m": [
+              [
+                -0.25199560546875,
+                -0.0999899978637695,
+                -0.23199560546875003
+              ],
+              [
+                -0.20800439453125,
+                -9.99999977643107e-06,
+                -0.18800439453125
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          },
+          {
+            "node_index": 34,
+            "name": "mesh-16",
+            "bounds_m": [
+              [
+                0.20800439453125,
+                -0.0999899978637696,
+                0.18800439453124998
+              ],
+              [
+                0.25199560546875,
+                -9.999999776524329e-06,
+                0.23199560546875
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          },
+          {
+            "node_index": 36,
+            "name": "mesh-17",
+            "bounds_m": [
+              [
+                0.20800439453125,
+                -0.0999899978637695,
+                -0.23199560546875003
+              ],
+              [
+                0.25199560546875,
+                -9.99999977643107e-06,
+                -0.18800439453125
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          }
+        ],
+        "dimensions_m": [
+          0.5999963989257813,
+          0.8199882278442385,
+          0.5799973754882815
+        ]
+      },
+      "door": {
+        "file": "shaker-door.glb",
+        "sha256": "8fd7333614e496afd635b7d7586b1775d6bfaed26b52238b448c3ddc92d86b67",
+        "raw_units": "millimeters",
+        "unit_scale": 0.001,
+        "bounds_m": [
+          [
+            -0.298,
+            -2.220446049250313e-18,
+            -0.01
+          ],
+          [
+            0.298,
+            0.716,
+            0.041000000000000085
+          ]
+        ],
+        "parts": [
+          {
+            "node_index": 2,
+            "name": "mesh-0",
+            "bounds_m": [
+              [
+                -0.232,
+                0.066,
+                -0.006999999999999986
+              ],
+              [
+                0.232,
+                0.65,
+                -0.0009999999999998556
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 4,
+            "name": "mesh-1",
+            "bounds_m": [
+              [
+                -0.298,
+                -2.220446049250313e-18,
+                -0.01
+              ],
+              [
+                0.298,
+                0.716,
+                0.01000000000000016
+              ]
+            ],
+            "triangles": 32,
+            "vertices": 96
+          },
+          {
+            "node_index": 6,
+            "name": "mesh-2",
+            "bounds_m": [
+              [
+                0.23500000000000001,
+                0.275,
+                0.010000000000000061
+              ],
+              [
+                0.245,
+                0.28500000000000003,
+                0.035000000000000066
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          },
+          {
+            "node_index": 8,
+            "name": "mesh-3",
+            "bounds_m": [
+              [
+                0.23500000000000001,
+                0.371,
+                0.010000000000000082
+              ],
+              [
+                0.245,
+                0.381,
+                0.03500000000000009
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          },
+          {
+            "node_index": 10,
+            "name": "mesh-4",
+            "bounds_m": [
+              [
+                0.234,
+                0.27,
+                0.02900000000000006
+              ],
+              [
+                0.246,
+                0.386,
+                0.041000000000000085
+              ]
+            ],
+            "triangles": 164,
+            "vertices": 492
+          }
+        ],
+        "dimensions_m": [
+          0.596,
+          0.716,
+          0.05100000000000009
+        ]
+      },
+      "wall": {
+        "file": "wall-cabinet.glb",
+        "sha256": "c2f425271bcf3bd8e36110b6aabbe9b9418ca1171d66259a81bf18a5c8731db1",
+        "raw_units": "millimeters",
+        "unit_scale": 0.001,
+        "bounds_m": [
+          [
+            -0.29999819946289064,
+            1.7999999690412405e-06,
+            -0.17499940490722657
+          ],
+          [
+            0.29999819946289064,
+            0.7199982299804688,
+            0.1749649963378908
+          ]
+        ],
+        "parts": [
+          {
+            "node_index": 2,
+            "name": "mesh-0",
+            "bounds_m": [
+              [
+                -0.29999819946289064,
+                7.199999690051963e-05,
+                -0.17496499633789062
+              ],
+              [
+                -0.2820018005371094,
+                0.7199279785156251,
+                0.1749649963378908
+              ]
+            ],
+            "triangles": 5724,
+            "vertices": 17172
+          },
+          {
+            "node_index": 4,
+            "name": "mesh-1",
+            "bounds_m": [
+              [
+                -0.29099780273437503,
+                0.34160049438476564,
+                0.11500099945068366
+              ],
+              [
+                -0.269002197265625,
+                0.34649951171875,
+                0.12499900054931648
+              ]
+            ],
+            "triangles": 186,
+            "vertices": 558
+          },
+          {
+            "node_index": 6,
+            "name": "mesh-2",
+            "bounds_m": [
+              [
+                -0.29099780273437503,
+                0.34160049438476564,
+                -0.12499900054931634
+              ],
+              [
+                -0.269002197265625,
+                0.34649951171875,
+                -0.11500099945068352
+              ]
+            ],
+            "triangles": 186,
+            "vertices": 558
+          },
+          {
+            "node_index": 8,
+            "name": "mesh-3",
+            "bounds_m": [
+              [
+                0.2820018005371094,
+                7.199999690051963e-05,
+                -0.17496499633789062
+              ],
+              [
+                0.29999819946289064,
+                0.7199279785156251,
+                0.1749649963378908
+              ]
+            ],
+            "triangles": 5724,
+            "vertices": 17172
+          },
+          {
+            "node_index": 10,
+            "name": "mesh-4",
+            "bounds_m": [
+              [
+                0.269002197265625,
+                0.34160049438476564,
+                0.11500099945068366
+              ],
+              [
+                0.29099780273437503,
+                0.34649951171875,
+                0.12499900054931648
+              ]
+            ],
+            "triangles": 188,
+            "vertices": 564
+          },
+          {
+            "node_index": 12,
+            "name": "mesh-5",
+            "bounds_m": [
+              [
+                0.269002197265625,
+                0.34160049438476564,
+                -0.12499900054931634
+              ],
+              [
+                0.29099780273437503,
+                0.34649951171875,
+                -0.11500099945068352
+              ]
+            ],
+            "triangles": 188,
+            "vertices": 564
+          },
+          {
+            "node_index": 14,
+            "name": "mesh-6",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                1.7999999690412405e-06,
+                -0.17496499633789062
+              ],
+              [
+                0.28194360351562503,
+                0.017998199462890663,
+                0.17496499633789062
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 16,
+            "name": "mesh-7",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                0.7020017700195312,
+                -0.17496499633789048
+              ],
+              [
+                0.28194360351562503,
+                0.7199982299804688,
+                0.1749649963378908
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 18,
+            "name": "mesh-8",
+            "bounds_m": [
+              [
+                -0.28194360351562503,
+                0.018068399429321327,
+                -0.17499940490722657
+              ],
+              [
+                0.28194360351562503,
+                0.7019315795898438,
+                -0.1690005950927733
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          },
+          {
+            "node_index": 20,
+            "name": "mesh-9",
+            "bounds_m": [
+              [
+                -0.28094378662109376,
+                0.34650180053710933,
+                -0.1569674072265624
+              ],
+              [
+                0.28094378662109376,
+                0.3644981994628907,
+                0.1689674072265626
+              ]
+            ],
+            "triangles": 12,
+            "vertices": 36
+          }
+        ],
+        "dimensions_m": [
+          0.5999963989257813,
+          0.7199964299804997,
+          0.3499644012451174
+        ]
+      }
+    },
+    "assemblies": [
+      {
+        "name": "Lower_cabinet_body_1",
+        "source": "base",
+        "center_browser_m": [
+          -3.333,
+          0.49624937211957215,
+          -3.55
+        ],
+        "target_dimensions_m": [
+          0.7479999999999998,
+          0.8425011670642379,
+          0.62
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          0.009999298095703213
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.246674148943561,
+          1.0312567342651233,
+          1.0689703543538307
+        ],
+        "rigid_parts": [
+          "mesh-14",
+          "mesh-15",
+          "mesh-16",
+          "mesh-17"
+        ],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Lower_cabinet_hinge_1",
+        "source": "door",
+        "center_browser_m": [
+          -3.3,
+          0.44,
+          -3.215
+        ],
+        "target_dimensions_m": [
+          0.65,
+          0.76,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.0906040268456376,
+          1.0614525139664805,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -3.625,
+          0.44,
+          -3.192
+        ]
+      },
+      {
+        "name": "Lower_cabinet_body_2",
+        "source": "base",
+        "center_browser_m": [
+          -2.5999999999999996,
+          0.49624937211957215,
+          -3.55
+        ],
+        "target_dimensions_m": [
+          0.6819999999999999,
+          0.8425011670642379,
+          0.62
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          0.009999298095703213
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.1366734887426588,
+          1.0312567342651233,
+          1.0689703543538307
+        ],
+        "rigid_parts": [
+          "mesh-14",
+          "mesh-15",
+          "mesh-16",
+          "mesh-17"
+        ],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Lower_cabinet_hinge_2",
+        "source": "door",
+        "center_browser_m": [
+          -2.6,
+          0.44,
+          -3.215
+        ],
+        "target_dimensions_m": [
+          0.65,
+          0.76,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.0906040268456376,
+          1.0614525139664805,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -2.9250000000000003,
+          0.44,
+          -3.192
+        ]
+      },
+      {
+        "name": "Lower_cabinet_body_3",
+        "source": "base",
+        "center_browser_m": [
+          -1.9,
+          0.49624937211957215,
+          -3.55
+        ],
+        "target_dimensions_m": [
+          0.6820000000000002,
+          0.8425011670642379,
+          0.62
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          0.009999298095703213
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.1366734887426593,
+          1.0312567342651233,
+          1.0689703543538307
+        ],
+        "rigid_parts": [
+          "mesh-14",
+          "mesh-15",
+          "mesh-16",
+          "mesh-17"
+        ],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Lower_cabinet_hinge_3",
+        "source": "door",
+        "center_browser_m": [
+          -1.9,
+          0.44,
+          -3.215
+        ],
+        "target_dimensions_m": [
+          0.65,
+          0.76,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.0906040268456376,
+          1.0614525139664805,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -2.225,
+          0.44,
+          -3.192
+        ]
+      },
+      {
+        "name": "Lower_cabinet_body_4",
+        "source": "base",
+        "center_browser_m": [
+          -1.117,
+          0.49624937211957215,
+          -3.55
+        ],
+        "target_dimensions_m": [
+          0.848,
+          0.8425011670642379,
+          0.62
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          0.009999298095703213
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.4133418159146258,
+          1.0312567342651233,
+          1.0689703543538307
+        ],
+        "rigid_parts": [
+          "mesh-14",
+          "mesh-15",
+          "mesh-16",
+          "mesh-17"
+        ],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Lower_cabinet_hinge_4",
+        "source": "door",
+        "center_browser_m": [
+          -1.2,
+          0.44,
+          -3.215
+        ],
+        "target_dimensions_m": [
+          0.65,
+          0.76,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.0906040268456376,
+          1.0614525139664805,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -1.525,
+          0.44,
+          -3.192
+        ]
+      },
+      {
+        "name": "Upper_cabinet_body_1",
+        "source": "wall",
+        "center_browser_m": [
+          -3.3625,
+          2.05,
+          -3.7234999999999996
+        ],
+        "target_dimensions_m": [
+          0.775,
+          0.7,
+          0.33300000000000063
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          -1.7204284667879377e-05
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.291674419025749,
+          0.972227042874308,
+          0.9515253517650363
+        ],
+        "rigid_parts": [],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Cabinet hinge 1",
+        "source": "door",
+        "center_browser_m": [
+          -3.3625,
+          2.05,
+          -3.545
+        ],
+        "target_dimensions_m": [
+          0.771,
+          0.66,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.2936241610738255,
+          0.9217877094972068,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -3.7479999999999998,
+          2.05,
+          -3.531
+        ]
+      },
+      {
+        "name": "Upper_cabinet_body_2",
+        "source": "wall",
+        "center_browser_m": [
+          -2.5875,
+          2.05,
+          -3.7234999999999996
+        ],
+        "target_dimensions_m": [
+          0.775,
+          0.7,
+          0.33300000000000063
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          -1.7204284667879377e-05
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.291674419025749,
+          0.972227042874308,
+          0.9515253517650363
+        ],
+        "rigid_parts": [],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Cabinet hinge 2",
+        "source": "door",
+        "center_browser_m": [
+          -2.5875,
+          2.05,
+          -3.545
+        ],
+        "target_dimensions_m": [
+          0.771,
+          0.66,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.2936241610738255,
+          0.9217877094972068,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -2.973,
+          2.05,
+          -3.531
+        ]
+      },
+      {
+        "name": "Upper_cabinet_body_3",
+        "source": "wall",
+        "center_browser_m": [
+          -1.8125,
+          2.05,
+          -3.7234999999999996
+        ],
+        "target_dimensions_m": [
+          0.775,
+          0.7,
+          0.33300000000000063
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          -1.7204284667879377e-05
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.291674419025749,
+          0.972227042874308,
+          0.9515253517650363
+        ],
+        "rigid_parts": [],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Cabinet hinge 3",
+        "source": "door",
+        "center_browser_m": [
+          -1.8125,
+          2.05,
+          -3.545
+        ],
+        "target_dimensions_m": [
+          0.771,
+          0.66,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.2936241610738255,
+          0.9217877094972068,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -2.198,
+          2.05,
+          -3.531
+        ]
+      },
+      {
+        "name": "Upper_cabinet_body_4",
+        "source": "wall",
+        "center_browser_m": [
+          -1.0375,
+          2.05,
+          -3.7234999999999996
+        ],
+        "target_dimensions_m": [
+          0.775,
+          0.7,
+          0.33300000000000063
+        ],
+        "source_center_m": [
+          0.0,
+          0.36000001499021894,
+          -1.7204284667879377e-05
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.291674419025749,
+          0.972227042874308,
+          0.9515253517650363
+        ],
+        "rigid_parts": [],
+        "hinge_browser_m": null
+      },
+      {
+        "name": "Cabinet hinge 4",
+        "source": "door",
+        "center_browser_m": [
+          -1.0375,
+          2.05,
+          -3.545
+        ],
+        "target_dimensions_m": [
+          0.771,
+          0.66,
+          0.051
+        ],
+        "source_center_m": [
+          0.0,
+          0.358,
+          0.0
+        ],
+        "affine_scale_after_mm_normalization": [
+          1.2936241610738255,
+          0.9217877094972068,
+          0.9999999999999982
+        ],
+        "rigid_parts": [
+          "mesh-2",
+          "mesh-3",
+          "mesh-4"
+        ],
+        "hinge_browser_m": [
+          -1.423,
+          2.05,
+          -3.531
+        ]
+      }
+    ],
+    "actual_home_contacts": {
+      "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+      "floor_samples": [
+        {
+          "sample_browser_xz": [
+            -3.333,
+            -3.55
+          ],
+          "height_m": 0.02499878858745319,
+          "faces": [
+            {
+              "node": 0,
+              "primitive": 0,
+              "triangle": 0,
+              "y_m": 0.02499878858745319
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 63,
+              "primitive": 0,
+              "triangle": 1074,
+              "y_m": 0.07999999821186066
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -2.5999999999999996,
+            -3.55
+          ],
+          "height_m": 0.02499878858745319,
+          "faces": [
+            {
+              "node": 0,
+              "primitive": 0,
+              "triangle": 0,
+              "y_m": 0.02499878858745319
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 63,
+              "primitive": 0,
+              "triangle": 1074,
+              "y_m": 0.07999999821186066
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -1.9,
+            -3.55
+          ],
+          "height_m": 0.02499878858745319,
+          "faces": [
+            {
+              "node": 0,
+              "primitive": 0,
+              "triangle": 0,
+              "y_m": 0.02499878858745319
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 63,
+              "primitive": 0,
+              "triangle": 1075,
+              "y_m": 0.07999999821186066
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -1.117,
+            -3.55
+          ],
+          "height_m": 0.02499878858745319,
+          "faces": [
+            {
+              "node": 0,
+              "primitive": 0,
+              "triangle": 0,
+              "y_m": 0.02499878858745319
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 63,
+              "primitive": 0,
+              "triangle": 1075,
+              "y_m": 0.07999999821186066
+            }
+          ]
+        }
+      ],
+      "counter_underside_samples": [
+        {
+          "sample_browser_xz": [
+            -3.3,
+            -3.8
+          ],
+          "height_m": 0.8674999556516911,
+          "faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 4,
+              "y_m": 0.8674999556516911
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 12,
+              "y_m": 0.9224998989407704
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -2.6,
+            -3.8
+          ],
+          "height_m": 0.8674999556516911,
+          "faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 4,
+              "y_m": 0.8674999556516911
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 12,
+              "y_m": 0.9224998989407704
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -1.9,
+            -3.8
+          ],
+          "height_m": 0.8674999556516911,
+          "faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 4,
+              "y_m": 0.8674999556516911
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 12,
+              "y_m": 0.9224998989407704
+            }
+          ]
+        },
+        {
+          "sample_browser_xz": [
+            -1.2,
+            -3.8
+          ],
+          "height_m": 0.867499901121365,
+          "faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 7,
+              "y_m": 0.867499901121365
+            }
+          ],
+          "paired_slab_top_faces": [
+            {
+              "node": 65,
+              "primitive": 0,
+              "triangle": 15,
+              "y_m": 0.9224999534710965
+            }
+          ]
+        }
+      ],
+      "floor_m": 0.02499878858745319,
+      "counter_underside_m": 0.8674999556516911,
+      "sink_conservative_bounds_m": [
+        [
+          -3.0225000381469727,
+          0.7450000047683716,
+          -3.700000047683716
+        ],
+        [
+          -2.377500057220459,
+          0.8674999556516911,
+          -3.2699999809265137
+        ]
+      ],
+      "sink_source_primitives": [
+        [
+          164,
+          0
+        ]
+      ],
+      "sink_envelope_policy": "Exact SHA-bound node164 triangles clipped below measured slab underside; conservative bounded service cutout volume, not a fabricated bowl."
+    },
+    "hardware_policy": "rigid .001 scale about each authored part center; center follows panel fit",
+    "wood_policy": "explicit nonuniform affine fit; source files untouched; no manufacturer unscaled-size claim",
+    "pbr": {
+      "source": "https://polyhaven.com/a/oak_veneer_01",
+      "license": "CC0",
+      "scan_coverage_m": 1.83,
+      "files_sha256": {
+        "diff.jpg": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7",
+        "rough.jpg": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604",
+        "normal.jpg": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01"
+      }
+    },
+    "preserve_existing": [
+      "real sink",
+      "countertop",
+      "under-cabinet light",
+      "four lower hinge positions",
+      "four upper hinge positions"
+    ],
+    "native_ready": false,
+    "contact_verified": false,
+    "hinge_collision_verified": false,
+    "feasibility_gaps": [
+      "Only source-identified upper top/side/back/frame boards may receive bounded actual sink164 service cutouts; lower supports/legs retained, all resulting native clearances require proof.",
+      "Rigid source legs must contact actual floor while fitted wood reaches slab underside; export refuses known mismatch.",
+      "Measured eight door closed bounds/swept collision and all native hinge bindings require actual Editor proof.",
+      "Existing countertop and four unequal lower bays are retained; no fabricated filler meshes."
+    ],
+    "exported_parts": [
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-14",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-11",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-15",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-10",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-12",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-16",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-13",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-17",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_1",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_1",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_1",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_1",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_1",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-14",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-11",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-15",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-10",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-12",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-16",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-13",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-17",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_2",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_2",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_2",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_2",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_2",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-14",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-11",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-15",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-10",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-12",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-16",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-13",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-17",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_3",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_3",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_3",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_3",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_3",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-14",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-11",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-15",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-10",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-12",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-16",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-13",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-17",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_4",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_4",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_4",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_4",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Lower_cabinet_hinge_4",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_1",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 1",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 1",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 1",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 1",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 1",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_2",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 2",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 2",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 2",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 2",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 2",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_3",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 3",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 3",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 3",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 3",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 3",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-0",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-2",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-1",
+        "vertices": 558,
+        "polygons": 186,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-9",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-7",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-6",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-8",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-3",
+        "vertices": 17172,
+        "polygons": 5724,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-4",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Upper_cabinet_body_4",
+        "source_part": "mesh-5",
+        "vertices": 564,
+        "polygons": 188,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 4",
+        "source_part": "mesh-0",
+        "vertices": 36,
+        "polygons": 12,
+        "rigid": false
+      },
+      {
+        "assembly": "Cabinet hinge 4",
+        "source_part": "mesh-2",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 4",
+        "source_part": "mesh-3",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 4",
+        "source_part": "mesh-4",
+        "vertices": 492,
+        "polygons": 164,
+        "rigid": true
+      },
+      {
+        "assembly": "Cabinet hinge 4",
+        "source_part": "mesh-1",
+        "vertices": 96,
+        "polygons": 32,
+        "rigid": false
+      }
+    ],
+    "leg_contacts": [
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "part": "mesh-14",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "part": "mesh-15",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "part": "mesh-16",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_1",
+        "part": "mesh-17",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "part": "mesh-14",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "part": "mesh-15",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "part": "mesh-16",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_2",
+        "part": "mesh-17",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "part": "mesh-14",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "part": "mesh-15",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "part": "mesh-16",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_3",
+        "part": "mesh-17",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "part": "mesh-14",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "part": "mesh-15",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "part": "mesh-16",
+        "foot_bottom_m": 0.025008797645568848,
+        "floor_contact_error_m": 1.0009058115656444e-05
+      },
+      {
+        "assembly": "Lower_cabinet_body_4",
+        "part": "mesh-17",
+        "foot_bottom_m": 0.02500876784324646,
+        "floor_contact_error_m": 9.979255793268749e-06
+      }
+    ],
+    "measured_sink_boolean": [
+      {
+        "object": "Lower_cabinet_body_1__mesh-3",
+        "authored_part": "mesh-3",
+        "before_polygons": 5724,
+        "after_polygons": 6278,
+        "operation": "measured sink envelope subtraction",
+        "cutter_bounds_browser_m": [
+          [
+            -3.0255000381469728,
+            0.7420000047683716,
+            -3.703000047683716
+          ],
+          [
+            -2.374500057220459,
+            0.8774999556516911,
+            -3.2669999809265136
+          ]
+        ],
+        "clearance_m": 0.003
+      },
+      {
+        "object": "Lower_cabinet_body_1__mesh-7",
+        "authored_part": "mesh-7",
+        "before_polygons": 12,
+        "after_polygons": 19,
+        "operation": "measured sink envelope subtraction",
+        "cutter_bounds_browser_m": [
+          [
+            -3.0255000381469728,
+            0.7420000047683716,
+            -3.703000047683716
+          ],
+          [
+            -2.374500057220459,
+            0.8774999556516911,
+            -3.2669999809265136
+          ]
+        ],
+        "clearance_m": 0.003
+      },
+      {
+        "object": "Lower_cabinet_body_2__mesh-0",
+        "authored_part": "mesh-0",
+        "before_polygons": 5724,
+        "after_polygons": 6283,
+        "operation": "measured sink envelope subtraction",
+        "cutter_bounds_browser_m": [
+          [
+            -3.0255000381469728,
+            0.7420000047683716,
+            -3.703000047683716
+          ],
+          [
+            -2.374500057220459,
+            0.8774999556516911,
+            -3.2669999809265136
+          ]
+        ],
+        "clearance_m": 0.003
+      },
+      {
+        "object": "Lower_cabinet_body_2__mesh-7",
+        "authored_part": "mesh-7",
+        "before_polygons": 12,
+        "after_polygons": 19,
+        "operation": "measured sink envelope subtraction",
+        "cutter_bounds_browser_m": [
+          [
+            -3.0255000381469728,
+            0.7420000047683716,
+            -3.703000047683716
+          ],
+          [
+            -2.374500057220459,
+            0.8774999556516911,
+            -3.2669999809265136
+          ]
+        ],
+        "clearance_m": 0.003
+      }
+    ],
+    "source_collision_checks": {
+      "epsilon_m": 0.0,
+      "sink_source_bvh_clear": true,
+      "sink_intersections": [],
+      "sink_intersection_evidence": [],
+      "doors": [
+        {
+          "hinge": "Cabinet hinge 1",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Cabinet hinge 2",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Cabinet hinge 3",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Cabinet hinge 4",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Lower_cabinet_hinge_1",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Lower_cabinet_hinge_2",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Lower_cabinet_hinge_3",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        },
+        {
+          "hinge": "Lower_cabinet_hinge_4",
+          "tested_poses": 90,
+          "closed_and_sweep_passed": true,
+          "failure": null
+        }
+      ],
+      "passed": true,
+      "native_ready": false,
+      "scope": "Derived source triangles only; not native simple-collision or physical capsule proof"
+    },
+    "source_export_ready": true,
+    "derived_sha256": "687d9c6d9bdaca124d59dc55047783b223c3ae6fb8bfaed1d20dfd89e2961d2a"
+  },
+  "actual_guarded_job": {
+    "exit_code": 0,
+    "guard_before": {
+      "pod": "kjsxms1gk4rmv6",
+      "deadline_epoch": 1792017655,
+      "total_cap": 100,
+      "root_guard_alive": true,
+      "checked_epoch": 1792013109.4920824
+    },
+    "guard_after": {
+      "pod": "kjsxms1gk4rmv6",
+      "deadline_epoch": 1792017655,
+      "total_cap": 100,
+      "root_guard_alive": true,
+      "checked_epoch": 1792013122.5145886
+    },
+    "no_native_mutations": true,
+    "source_only": true
+  },
+  "actual_export_byte_audit": {
+    "sha256": "687d9c6d9bdaca124d59dc55047783b223c3ae6fb8bfaed1d20dfd89e2961d2a",
+    "bytes": 12432136,
+    "mesh_nodes": 152,
+    "expected_mesh_nodes": 152,
+    "images": [
+      {
+        "bufferView": 4,
+        "mimeType": "image/jpeg",
+        "name": "normal"
+      },
+      {
+        "bufferView": 5,
+        "mimeType": "image/jpeg",
+        "name": "diff"
+      },
+      {
+        "bufferView": 6,
+        "mimeType": "image/png",
+        "name": "rough"
+      }
+    ],
+    "material_roles": [
+      {
+        "name": "SUB01_RealKitchen_CC0_Oak",
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        },
+        "normalTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0,
+        "roughnessFactor": null
+      },
+      {
+        "name": "Material_0",
+        "baseColorTexture": null,
+        "metallicRoughnessTexture": null,
+        "normalTexture": null,
+        "metallicFactor": 0,
+        "roughnessFactor": 0.8500000238418579
+      },
+      {
+        "name": "Material_0.001",
+        "baseColorTexture": null,
+        "metallicRoughnessTexture": null,
+        "normalTexture": null,
+        "metallicFactor": 0,
+        "roughnessFactor": 0.8500000238418579
+      }
+    ],
+    "native_ready": false
+  },
+  "remaining_acceptance": [
+    "Protected home geometry and door-versus-other-door collision checks",
+    "Actual native hinge bindings and collision profiles",
+    "Actual private house visual and interaction acceptance"
+  ],
+  "native_ready": false
+}
