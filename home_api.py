@@ -356,8 +356,25 @@ def add_home_routes(app, live, admin_ok):
         if private():
             raise web.HTTPConflict(text='Bathroom privacy is active')
         data = await body(request)
+        # Privacy may change while the bounded request body is arriving.
+        if private():
+            raise web.HTTPConflict(text='Bathroom privacy is active')
         if data.get('frame_id') != home_phone.status(phone_data())['frame_id']:
             raise web.HTTPConflict(text='Actual phone frame changed')
+        if data.get('action') == 'save_note':
+            if live.home.phone.get('app') != 'notes':
+                raise web.HTTPConflict(text='Open Notes before saving a note')
+            title, text = data.get('title', ''), data.get('text')
+            if (not isinstance(title, str) or len(title) > 120
+                    or not isinstance(text, str) or len(text) > 2000 or not text.strip()):
+                raise web.HTTPBadRequest(text='Expected a note title up to 120 characters and nonempty text up to 2000 characters')
+            title, text = title.strip(), text.strip()
+            combined = title + '\n' + text if title else text
+            if len(combined) > 2000:
+                raise web.HTTPBadRequest(text='The complete note must be at most 2000 characters')
+            live.home.add_note(combined)
+            await live.save_state()
+            return web.json_response({'ok':True, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
         app = 'home' if data.get('action') == 'home' else data.get('app')
         if data.get('action') not in ('home', 'open_app') or not isinstance(app, str) or app not in home_phone.APPS:
             raise web.HTTPBadRequest(text='Expected supported phone app')

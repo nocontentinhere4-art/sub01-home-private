@@ -45,6 +45,10 @@ def render(data):
     title = {'home':'Home', 'notes':'Notes', 'memory':'Memory', 'browser':'Browser'}[data['app']]
     draw.text((16, 54), title, font=font, fill='white')
     y = 96
+    if data['app'] == 'notes':
+        draw.rounded_rectangle((16, 87, 240, 121), radius=6, fill='#26435b')
+        draw.text((28, 96), '+ Add note', font=small, fill='white')
+        y = 145
     lines = ['Notes', 'Memory', 'Browser'] if data['app'] == 'home' else data.get('entries', [])
     if data['app'] in ('notes', 'memory') and not lines:
         lines = ['No saved notes.' if data['app']=='notes' else 'No recorded memories.']

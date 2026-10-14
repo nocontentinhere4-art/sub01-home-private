@@ -56,3 +56,53 @@ def test_real_phone_route_proxy_data_identity_and_privacy():
         finally:
             await client.close();await device.close();await backend.close()
     asyncio.run(run())
+
+
+def test_notes_save_registered_route_persists_real_world_and_rejects_invalid_input(tmp_path):
+    async def run():
+        import json
+        world=HomeWorld();world.phone['app']='notes'
+        world.notes=[{'id':1,'text':'Existing fixture entry.'}]
+        original=copy.deepcopy(world.notes);saved=[]
+        async def save():
+            value=world.to_dict();saved.append(value)
+            (tmp_path/'world.json').write_text(json.dumps(value))
+        live=SimpleNamespace(home=world,save_state=save)
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        client=TestClient(TestServer(app));await client.start_server()
+        def frame():return home_phone.status(home_phone.snapshot(world))['frame_id']
+        async def post(payload, auth=True):
+            return await client.post('/api/home/phone/action',json=payload,headers=AUTH if auth else {})
+        try:
+            first=frame();seq=world.sequence
+            clean={'action':'save_note','frame_id':first,'title':'Reading','text':'Read the real book.'}
+            assert (await post(clean,False)).status==403
+            assert (await post({**clean,'frame_id':'old'})).status==409
+            for bad in [dict(text=''),dict(text='  \n '),dict(text=None),dict(text=[]),dict(text='x'*2001),
+                        dict(title=None),dict(title=[]),dict(title='x'*121),dict(title='a',text='x'*2000)]:
+                assert (await post({**clean,**bad})).status==400
+                assert world.notes==original and world.sequence==seq and not saved
+            world.phone['app']='home'
+            assert (await post({**clean,'frame_id':frame()})).status==409
+            world.phone['app']='notes';world.node=world.target='bathroom'
+            assert (await post(clean)).status==409
+            world.node=world.target='desk'
+            response=await post({**clean,'title':' Reading ','text':' Read the real book. '})
+            assert response.status==200;result=await response.json()
+            assert world.notes[0]==original[0]
+            assert world.notes[-1]['text']=='Reading\nRead the real book.'
+            assert world.sequence==seq+1 and len(saved)==1
+            restored=HomeWorld(json.loads((tmp_path/'world.json').read_text()))
+            assert restored.notes==world.notes
+            current=frame();assert current!=first and result['phone_screen']['frame_id']==current
+            assert (await post(clean)).status==409 # Retried old frame cannot duplicate a saved note.
+            assert len(saved)==1 and len(world.notes)==2
+            response=await client.get('/api/home/phone/frame.jpg?frame_id='+current,headers=AUTH)
+            assert response.status==200
+            assert await response.read()==home_phone.render(home_phone.snapshot(world))
+            assert home_phone.snapshot(world)['entries'][-1]=='Reading\nRead the real book.'
+            # Title is optional and the existing add_note semantics trim whitespace.
+            response=await post({'action':'save_note','frame_id':current,'text':' Untitled fixture note. '})
+            assert response.status==200 and world.notes[-1]['text']=='Untitled fixture note.'
+        finally:await client.close()
+    asyncio.run(run())
