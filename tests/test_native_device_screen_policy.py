@@ -64,22 +64,107 @@ def test_proposed_patch_is_current_and_applies():
     subprocess.run(['git', 'apply', '--check', str(patch.PATCH)], cwd=ROOT, check=True)
 
 
+def patched(path):
+    return patch.apply_edits((ROOT / path).read_text(), path)
+
+
 def test_patched_bridge_gates_fetches_and_stages_header():
     original = (ROOT / patch.BRIDGE).read_text()
-    bridge = patch.apply_edits(original, patch.BRIDGE)
+    bridge = patched(patch.BRIDGE)
     poll = bridge.split('void USub01HomeDeviceBridge::Poll(){', 1)[1].split('\nvoid USub01HomeDeviceBridge::FetchFrame', 1)[0]
     assert '#include "Sub01DeviceScreenPolicy.h"' in bridge
+    # The identity helper follows every include it needs (FJsonObject must be complete).
+    assert bridge.index('static FString Sub01PhoneIdentity(') > bridge.index('#include "Dom/JsonObject.h"')
     # Each fetch is behind the policy; nothing else in Poll requests a frame.
     assert poll.count('FetchFrame(') == 2
-    assert 'if(Sub01PhoneFrame(Screen)==ESub01PhoneFrame::BrowserPage)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
+    assert 'const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);' in poll
+    assert 'if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
     assert 'if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);' in poll
+    assert 'phone_browser_screen' not in poll           # only through the helper, after phone_screen
     # Home is read once, before use; the blanking and Pong branches are unchanged.
     assert poll.count('State->TryGetObjectField(TEXT("home"),Home)') == 1
     assert poll.index('FString Game,Activity') < poll.index('Sub01TVFetchesMinecraft')
     for kept in ('else if(Materials.Contains(TEXT("phone")))', 'else if(Game==TEXT("pong"))',
                  'else if(Materials.Contains(TEXT("tv")))Materials[TEXT("tv")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);'):
         assert poll.count(kept) == 1 and original.count(kept) == 1
-    stage = patch.apply_edits((ROOT / patch.STAGE).read_text(), patch.STAGE)
+    # A downloaded phone frame is kept only if it is still the current one, from the same source.
+    fetch = bridge.split('void USub01HomeDeviceBridge::FetchFrame(', 1)[1].split('\nvoid USub01HomeDeviceBridge::Action', 1)[0]
+    assert 'if(Device==TEXT("phone")&&Sub01PhoneIdentity(After)!=Identity)return;' in fetch
+    assert 'phone_browser_screen' not in fetch
+    # Same authenticated loopback route and frame identity as before.
+    assert 'R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")' in fetch
+    assert "R->SetHeader(TEXT(\"X-Admin-Token\"),Token);" in fetch
+    stage = patched(patch.STAGE)
     assert "'Sub01HomeDeviceBridge.cpp','Sub01DeviceScreenPolicy.h']" in stage
     # Native files stay untouched until their owner applies the patch.
     assert 'Sub01DeviceScreenPolicy.h' not in original
+
+
+def test_patched_open_app_and_home_actions():
+    bridge, header = patched(patch.BRIDGE), patched(patch.HEADER)
+    assert header.count(' void PhoneOpenApp(const FString& App);') == 1
+    method = bridge.split('void USub01HomeDeviceBridge::PhoneOpenApp(', 1)[1].split('\n', 1)[0]
+    assert 'if(PhoneFrameId.IsEmpty()||(App!=TEXT("home")&&App!=TEXT("notes")&&App!=TEXT("memory")&&App!=TEXT("browser")))return;' in method
+    for field in ('TEXT("action"),TEXT("open_app")', 'TEXT("app"),App', 'TEXT("frame_id"),PhoneFrameId'):
+        assert field in method
+    assert 'Action(TEXT("phone"),B);' in method     # existing authenticated, privacy-guarded action path
+    keys = bridge.split('if(B->GetFocusedDevice()==TEXT("phone")){', 1)[1].split('}else{', 1)[0]
+    for binding in ('EKeys::Home)B->PhoneAction(TEXT("home"))', 'EKeys::One)B->PhoneOpenApp(TEXT("home"))',
+                    'EKeys::Two)B->PhoneOpenApp(TEXT("notes"))', 'EKeys::Three)B->PhoneOpenApp(TEXT("memory"))',
+                    'EKeys::Four)B->PhoneOpenApp(TEXT("browser"))'):
+        assert binding in keys
+
+
+IDENTITY_STUBS = r"""
+#include <map>
+#include <memory>
+#include <string>
+#define TEXT(x) x
+struct FString : std::string { using std::string::string; FString() {} FString(const std::string& s) : std::string(s) {}
+  bool IsEmpty() const { return empty(); } int Len() const { return (int)size(); } };
+template <class T> struct TSharedPtr { std::shared_ptr<T> P; bool IsValid() const { return (bool)P; } T* operator->() const { return P.get(); } };
+struct FJsonObject {
+  std::map<std::string, TSharedPtr<FJsonObject>> Objects; std::map<std::string, std::string> Strings; std::map<std::string, bool> Bools;
+  bool TryGetObjectField(const char* K, const TSharedPtr<FJsonObject>*& Out) const { auto I = Objects.find(K); if (I == Objects.end()) return false; Out = &I->second; return true; }
+  bool TryGetStringField(const char* K, FString& Out) const { auto I = Strings.find(K); if (I == Strings.end()) return false; Out = I->second; return true; }
+  bool TryGetBoolField(const char* K, bool& Out) const { auto I = Bools.find(K); if (I == Bools.end()) return false; Out = I->second; return true; }
+};
+TSharedPtr<FJsonObject> Obj() { TSharedPtr<FJsonObject> O; O.P = std::make_shared<FJsonObject>(); return O; }
+"""
+
+IDENTITY_CASES = r"""
+TSharedPtr<FJsonObject> State(const char* Kind, bool Available, const char* Id, const char* Browser) {
+  auto S = Obj();
+  if (Kind) { auto P = Obj(); P->Strings["device"] = "phone"; P->Strings["kind"] = Kind; P->Bools["available"] = Available;
+    if (Id) P->Strings["frame_id"] = Id; P->Strings["app"] = "notes"; S->Objects["phone_screen"] = P; }
+  if (Browser) { auto B = Obj(); B->Strings["frame_id"] = Browser; S->Objects["phone_browser_screen"] = B; }
+  return S;
+}
+int main() {
+  bool Owned = true;
+  if (Sub01PhoneIdentity(State("owned_app", true, "app-7", "web-3"), &Owned) != "app-7" || !Owned) return 1;   // app preferred
+  if (Sub01PhoneIdentity(State("browser", true, "web-9", "web-3"), &Owned) != "web-9" || Owned) return 2;     // phone_screen browser
+  if (Sub01PhoneIdentity(State("owned_app", false, "app-7", "web-3"), &Owned) != "" || Owned) return 3;     // unavailable: nothing
+  if (Sub01PhoneIdentity(State("tiktok", true, "x", "web-3"), &Owned) != "" ) return 4;                    // unknown kind refused
+  if (Sub01PhoneIdentity(State("owned_app", true, "", "web-3"), &Owned) != "") return 5;                   // empty id refused
+  if (Sub01PhoneIdentity(State("owned_app", true, std::string(101, 'a').c_str(), nullptr), &Owned) != "") return 6;  // bounded id
+  if (Sub01PhoneIdentity(State(nullptr, false, nullptr, "web-3"), &Owned) != "web-3" || Owned) return 7;    // older backend fallback
+  if (Sub01PhoneIdentity(State(nullptr, false, nullptr, nullptr), &Owned) != "") return 8;
+  if (Sub01PhoneIdentity(TSharedPtr<FJsonObject>(), &Owned) != "") return 9;
+  if (Sub01PhoneIdentity(State("owned_app", true, "app-8", nullptr)) != "app-8") return 10;                 // default out-param
+  return 0;
+}
+"""
+
+
+def test_patched_phone_identity_prefers_phone_screen_compiled():
+    compiler = shutil.which('clang++') or shutil.which('g++')
+    if not compiler:
+        pytest.skip('C++ compiler unavailable')
+    bridge = patched(patch.BRIDGE)
+    helper = 'static FString Sub01PhoneIdentity(' + bridge.split('static FString Sub01PhoneIdentity(', 1)[1].split('\n}\n', 1)[0] + '\n}\n'
+    with tempfile.TemporaryDirectory() as tmp:
+        cpp, exe = Path(tmp) / 'identity.cpp', Path(tmp) / 'identity'
+        cpp.write_text(IDENTITY_STUBS + helper + IDENTITY_CASES)
+        subprocess.run([compiler, '-std=c++17', '-Wall', '-Werror', str(cpp), '-o', str(exe)], check=True, capture_output=True)
+        subprocess.run([str(exe)], check=True)
