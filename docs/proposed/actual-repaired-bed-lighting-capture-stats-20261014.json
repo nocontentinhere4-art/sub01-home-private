@@ -1,0 +1,153 @@
+{
+  "schema": "sub01-native-lighting-capture-measurement-v1",
+  "read_only": true,
+  "image": "out/house-evidence/private-real-repaired-bed-view-1454b.png",
+  "sha256": "6ce2acd8abb3ce2ffae1b763a121c340404b108de8170d5152231f8ab434cbcd",
+  "size": [
+    1280,
+    720
+  ],
+  "regions": [
+    {
+      "name": "ivory_pillow_side",
+      "xywh": [
+        251,
+        377,
+        26,
+        67
+      ],
+      "pixel_count": 1742,
+      "median_srgb_8bit": [
+        86.0,
+        71.0,
+        50.0
+      ],
+      "median_display_linear_rgb": [
+        0.093059,
+        0.06301,
+        0.031896
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.057711,
+        0.067152,
+        0.072784
+      ],
+      "median_linear_red_blue_ratio": 2.9176,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "ivory_top_pillow",
+      "xywh": [
+        329,
+        334,
+        69,
+        32
+      ],
+      "pixel_count": 2208,
+      "median_srgb_8bit": [
+        49.0,
+        33.0,
+        17.0
+      ],
+      "median_display_linear_rgb": [
+        0.030713,
+        0.015209,
+        0.005605
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.015411,
+        0.017812,
+        0.018915
+      ],
+      "median_linear_red_blue_ratio": 5.4793,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "ivory_lower_pillow",
+      "xywh": [
+        476,
+        459,
+        75,
+        47
+      ],
+      "pixel_count": 3525,
+      "median_srgb_8bit": [
+        71.0,
+        50.0,
+        29.0
+      ],
+      "median_display_linear_rgb": [
+        0.06301,
+        0.031896,
+        0.012286
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.034786,
+        0.037095,
+        0.039714
+      ],
+      "median_linear_red_blue_ratio": 5.1284,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "right_wall",
+      "xywh": [
+        947,
+        221,
+        99,
+        135
+      ],
+      "pixel_count": 13365,
+      "median_srgb_8bit": [
+        92.0,
+        76.0,
+        53.0
+      ],
+      "median_display_linear_rgb": [
+        0.107023,
+        0.072272,
+        0.035601
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.066684,
+        0.077012,
+        0.091094
+      ],
+      "median_linear_red_blue_ratio": 3.0062,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    },
+    {
+      "name": "lamp_shade",
+      "xywh": [
+        244,
+        211,
+        31,
+        37
+      ],
+      "pixel_count": 1147,
+      "median_srgb_8bit": [
+        227.0,
+        209.0,
+        162.0
+      ],
+      "median_display_linear_rgb": [
+        0.768151,
+        0.637597,
+        0.361307
+      ],
+      "display_linear_luminance_p10_p50_p90": [
+        0.638891,
+        0.64505,
+        0.658198
+      ],
+      "median_linear_red_blue_ratio": 2.126,
+      "black_pixel_fraction_all_channels_le_2": 0.0,
+      "clipped_pixel_fraction_any_channel_ge_254": 0.0
+    }
+  ],
+  "limitation": "Display-referred PNG after exposure/tone mapping. Not scene luminance, lux, metered EV100 or proof of neutral source albedo."
+}
