@@ -396,7 +396,7 @@ def seam(q0, q1, names_idx):
     return float(max(G.qangle_deg(tuple(q0[i]), tuple(q1[i])) for i in names_idx))
 
 
-def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print, refine_iters=150, start=None):
+def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print, refine_iters=150, start=None, reopt=()):
     d = Derivation(clip, controller)
     nfr = len(d.clip.times)
     frames = list(np.unique(np.linspace(0, nfr - 1, sample).astype(int)))
@@ -406,8 +406,14 @@ def derive(clip=CLIP, controller=None, sample=10, rounds=3, iters=300, log=print
     else:
         X, GL, deltas = optimise(d, frames, rounds, iters, log)
     base = deltas
-    if start is None:
-        frames = frames
+    grips = {'right': X, 'left': GL}
+    for side in reopt:                  # re-seat a fixed grip with the stronger thumb/index pull (still one fixed offset)
+        S = side.capitalize()
+        g, v = F.nelder_mead(lambda p: d.side_cost(side, F.pose(p), base[S], frames, sub=2, aim=REFINE_AIM),
+                             F.params_of(grips[side]), [.03, .03, .03, .003, .003, .003], iters)
+        grips[side] = F.pose(g)
+        log(f'reopt {side} grip: cost {v:.4f}')
+    X, GL = grips['right'], grips['left']
     if refine_iters:
         deltas = refine(d, {'right': X, 'left': GL}, base, refine_iters, log)
     q, W, J, C, targets, hf0, reach, per_joint = d.build(X, GL, deltas)
@@ -533,13 +539,15 @@ def main(argv=None):
     ap.add_argument('--rounds', type=int, default=3)
     ap.add_argument('--iters', type=int, default=300)
     ap.add_argument('--refine-iters', type=int, default=150, help='0: constant deltas only')
+    ap.add_argument('--reopt', default='', help='comma list of sides whose fixed grip is re-optimised with the refinement pull')
     ap.add_argument('--start', help='a previous derived report: reuse its fixed offset, left grip and base deltas')
     ap.add_argument('--out-glb', default=str(OUT_GLB))
     ap.add_argument('--out-report', default=str(OUT_REPORT))
     args = ap.parse_args(argv)
     start = start_from(json.loads(Path(args.start).read_text())) if args.start else None
     d, q, report = derive(Path(args.clip), args.controller, args.sample, args.rounds, args.iters,
-                          log=lambda m: print(m, file=sys.stderr, flush=True), refine_iters=args.refine_iters, start=start)
+                          log=lambda m: print(m, file=sys.stderr, flush=True), refine_iters=args.refine_iters, start=start,
+                          reopt=tuple(x for x in args.reopt.split(',') if x))
     report['output_glb_sha256'] = write_glb(d, q, report, args.out_glb)
     report['output_glb'] = str(Path(args.out_glb).relative_to(ROOT)) if Path(args.out_glb).is_relative_to(ROOT) else args.out_glb
     Path(args.out_report).write_text(json.dumps(report, indent=0) + '\n')

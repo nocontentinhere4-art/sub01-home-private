@@ -200,7 +200,7 @@ python tools/fit_controller_grip.py search --clip docs/proposed/controller-captu
 
 Per-frame summaries: `docs/proposed/controller-play/controller-search-{contact,all}.summary.json`.
 
-## 2c. Derived grip clip `SUB01_GamingGrip` (label `derived_from_capture`), iteration 3: PARTIAL
+## 2c. Derived grip clip `SUB01_GamingGrip` (label `derived_from_capture`), iteration 4: PARTIAL, 149/152
 
 `tools/derive_controller_grip_clip.py` derives a grip clip from the real capture `gaming-owner.glb` (sha `f8b00ce5…`) against the actual 15.38 cm controller. The original `c034a144…` was used because the normalized file is not in this checkout. The controller is not oversized.
 
@@ -216,30 +216,32 @@ How it is derived:
 
 Outputs: `docs/proposed/controller-play/SUB01_GamingGrip_derived.glb` (280 KB) and `…derived.report.json`. The report covers, per frame: contact, penetration, thumb/index distances, IK displacement, every joint's curl/spread delta and the seam.
 
-| | Iteration 1 | Iteration 2 | **Iteration 3 (committed)** |
-|---|---|---|---|
-| **Frames passing every gate** | 21/152 | 28/152 | **39/152** (`all_frames_pass: false`, `status: partial`) |
-| Contact (palm patches in -0.3..+0.3 cm with ≥ 12 vertices, no vertex deeper than -0.3 cm, IK within bound) | 144 | 152 | 148 |
-| Thumbs ≤ 2.0 cm and index ≤ 3.0 cm | 22 | 28 | 39 |
-| Loop seam (captured 0.433°) | 0.433° | 4.14° (superseded) | 0.669° |
+| | Iteration 1 | Iteration 2 | Iteration 3 | **Iteration 4 (committed)** |
+|---|---|---|---|---|
+| **Frames passing every gate** | 21/152 | 28/152 | 39/152 | **149/152** (`all_frames_pass: false`, `status: partial`; failing frames 3, 4, 5) |
+| Contact (palm patches in -0.3..+0.3 cm with ≥ 12 vertices, no vertex deeper than -0.3 cm, IK within bound) | 144 | 152 | 148 | 149 |
+| Thumbs ≤ 2.0 cm and index ≤ 3.0 cm | 22 | 28 | 39 | **152** |
+| Loop seam (captured 0.433°) | 0.433° | 4.14° (superseded) | 0.669° | 0.669° |
 
-Iteration 3 detail:
+Iteration 4 is iteration 3 plus the fixed right-hand offset re-optimised with the thumb pull. It is still one fixed offset: < 1e-13 cm, < 1e-5°.
+
+Iteration 4 detail:
 
 | Measure | Left | Right |
 |---|---|---|
-| Thumb to cap | 1.24–1.68 cm (passes) | **1.97–2.15 cm** (gate 2.0) |
-| Index to trigger | 2.52–2.98 cm (passes) | 2.60–2.82 cm (passes) |
-| Deepest hand vertex | -0.260 cm | -0.338 cm in 4 frames |
-| Wrist IK | ≤ 4.35 cm | ≤ 8.52 cm |
+| Thumb to cap | 1.24–1.68 cm (passes) | 1.64–1.83 cm (passes) |
+| Index to trigger | 2.52–2.98 cm (passes) | 2.70–2.86 cm (passes) |
+| Palm lowest gap | -0.23..-0.21 cm | -0.24..-0.21 cm |
+| Deepest hand vertex | -0.260 cm | -0.351 cm (frames 3–5 only, 2–3 vertices) |
+| Wrist IK | ≤ 4.45 cm | ≤ 8.67 cm |
 
-Other iteration 3 results:
-- Wrist rotation ≤ 15.3°.
-- Fixed offset holds (< 1e-13 cm, < 1e-5°).
+Other iteration 4 results:
+- Wrist rotation ≤ 16.7°.
 - Finger deltas: max 15.0°, max rate 1.46°/frame.
 - Bone-length error: 2e-14 cm.
 - Upper-body change: 0.
 
-**The remaining blocker is the right thumb.** Its distal-skin centroid stays 0–0.15 cm beyond the provisional 2.0 cm cap gate in most failing frames, and 4 frames slightly over-penetrate. The failing frames are listed in the report. Next iteration: re-optimise the fixed right offset with the thumb pull.
+**The only failures are frames 3–5.** There, 2–3 right-hand vertices go 0.01–0.05 cm past the -0.3 cm band. No compression allowance is used.
 
 Re-run:
 
