@@ -8,7 +8,19 @@ import json
 from pathlib import Path
 
 SOURCE_SHA='c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4'
-DEST='/Game/Sub01Home/Devices/Controller/V_'+SOURCE_SHA[:12]
+NORMALIZED_SHA='8134769e2680197a0b5a453e1fad11f1c82a5df54c1607b6c4c0a501721b0034'
+DEST='/Game/Sub01Home/Devices/Controller/V_'+NORMALIZED_SHA[:12]
+
+def validate_normalization(report):
+    if report.get('original_sha256')!=SOURCE_SHA or report.get('normalized_sha256')!=NORMALIZED_SHA or report.get('floating_position_accessors')is not True:
+        raise ValueError('Exact original and derived source provenance required')
+    before,after=report.get('before'),report.get('after')
+    if not isinstance(before,list)or not isinstance(after,list)or len(before)!=2 or len(after)!=2:raise ValueError('Physical controller and baked shadow receipts required')
+    for a,b in zip(before,after):
+        for key in ('materials','polygons','triangle_positions_sha256','world_min_m','world_max_m'):
+            if a.get(key)!=b.get(key):raise ValueError('Original world geometry/material fingerprint changed')
+        if not isinstance(a.get('triangle_positions_sha256'),str)or len(a['triangle_positions_sha256'])!=64:raise ValueError('Actual triangle fingerprint required')
+    if before[0].get('materials')!=['controller']or before[1].get('materials')!=['controller_contact']:raise ValueError('Actual physical material identity required')
 
 
 def physical_slots(names):
@@ -18,9 +30,11 @@ def physical_slots(names):
 def run():
     import unreal as u
     from unreal_import_reference_dressing import fingerprint
-    source=Path('/workspace/sub01-home-private/out/controller-private-source.glb')
-    if hashlib.sha256(source.read_bytes()).hexdigest()!=SOURCE_SHA:
-        raise RuntimeError('Exact original private controller source changed')
+    base=Path('/workspace/sub01-home-private/out')
+    original=base/'controller-private-source.glb';source=base/'controller-normalized-source.glb'
+    if hashlib.sha256(original.read_bytes()).hexdigest()!=SOURCE_SHA or hashlib.sha256(source.read_bytes()).hexdigest()!=NORMALIZED_SHA:
+        raise RuntimeError('Exact original/normalized private controller source changed')
+    normalization=json.loads((base/'native-gaming-source/controller-normalization.json').read_text());validate_normalization(normalization)
     project=Path(u.Paths.project_dir());out=project/'private-audit/native-controller-asset.json'
     actors=u.get_editor_subsystem(u.EditorActorSubsystem)
     original=list(actors.get_all_level_actors());before=fingerprint(u,original)
@@ -46,14 +60,14 @@ def run():
                 mesh=component.get_editor_property('static_mesh')
                 if not mesh:continue
                 slots=[str(m.get_editor_property('material_slot_name')) for m in mesh.get_editor_property('static_materials')]
-                bounds=component.get_editor_property('bounds')
+                origin,extent,_radius=u.SystemLibrary.get_component_bounds(component)
                 transform=component.get_world_transform()
                 row={'mesh':mesh.get_path_name(),'component':component.get_path_name(),'material_slots':slots,
                      'original_source_transform':{'translation':[transform.translation.x,transform.translation.y,transform.translation.z],
                         'quaternion':[transform.rotation.x,transform.rotation.y,transform.rotation.z,transform.rotation.w],
                         'scale':[transform.scale3d.x,transform.scale3d.y,transform.scale3d.z]},
-                     'original_source_bounds_cm':{'center':[bounds.origin.x,bounds.origin.y,bounds.origin.z],
-                        'extent':[bounds.box_extent.x,bounds.box_extent.y,bounds.box_extent.z]}}
+                     'original_source_bounds_cm':{'center':[origin.x,origin.y,origin.z],
+                        'extent':[extent.x,extent.y,extent.z]}}
                 if physical_slots(slots):physical.append(row)
                 elif slots and all('controller_contact' in n.lower() for n in slots):excluded.append(row)
                 else:raise RuntimeError('Unknown controller material identity; no proxy selection')
@@ -61,7 +75,7 @@ def run():
             raise RuntimeError('Actual controller main mesh and baked shadow must be unique')
         if min(physical[0]['original_source_bounds_cm']['extent'])<=0:
             raise RuntimeError('Actual controller geometry is empty')
-        report={'schema':'sub01.native-controller-asset.v1','source_sha256':SOURCE_SHA,
+        report={'schema':'sub01.native-controller-asset.v1','source_sha256':SOURCE_SHA,'import_source_sha256':NORMALIZED_SHA,'normalization':normalization,
                 'physical_assembly':physical[0],'excluded_baked_shadow':excluded,
                 'original_actor_count':len(before),'original_actor_fingerprints_unchanged':True,
                 'placed_in_home':False,'grip_accepted':False,'sofa_seated_accepted':False,'runtime_ready':False}

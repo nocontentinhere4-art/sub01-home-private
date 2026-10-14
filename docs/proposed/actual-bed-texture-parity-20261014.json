@@ -1,0 +1,275 @@
+{
+  "schema": "sub01.texture-parity.v1",
+  "generated_utc": "2026-10-14T13:52:57.611383+00:00",
+  "exporter": "tools/unreal_export_texture_parity.py",
+  "reference": {
+    "glb": "/workspace/sub01-home-private/project/Sub01HomeLab/SourceAssets/full-home.glb",
+    "glb_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+    "image_index": 15,
+    "buffer_view": 157,
+    "mime_type": "image/png",
+    "width": 512,
+    "height": 512,
+    "decoded_rgba_sha256": "0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e",
+    "stats": {
+      "mean_rgb_8bit": [
+        144.527,
+        170.274,
+        204.604
+      ],
+      "stddev_rgb_8bit": [
+        4.51,
+        4.089,
+        3.55
+      ],
+      "linear_mean": [
+        0.28151,
+        0.40375,
+        0.60812
+      ],
+      "linear_p99": [
+        0.32778,
+        0.45641,
+        0.66539
+      ]
+    }
+  },
+  "textures": [
+    {
+      "asset_path": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_148.Image_148",
+      "source_provenance": {
+        "import_source_file": "/workspace/sub01-home-private/project/Sub01HomeLab/SourceAssets/full-home.glb",
+        "glb_image_index": null,
+        "buffer_view": null,
+        "pixel_match_reference": true
+      },
+      "width": 512,
+      "height": 512,
+      "editor_size": [
+        512,
+        512
+      ],
+      "srgb": false,
+      "compression": "TC_NORMALMAP",
+      "lod_bias": 0,
+      "mip_gen_settings": "TMGS_FROM_TEXTURE_GROUP",
+      "adjust": {
+        "adjust_brightness": 1.0,
+        "adjust_brightness_curve": 1.0,
+        "adjust_saturation": 1.0,
+        "adjust_vibrance": 0.0,
+        "adjust_rgb_curve": 1.0,
+        "adjust_hue": 0.0,
+        "adjust_min_alpha": 0.0,
+        "adjust_max_alpha": 1.0
+      },
+      "png": {
+        "file": "Image_148.png",
+        "file_sha256": "0bc4648d36b664c26b1af82bf53b435e19bc3c2ae374d75f43ff98a489c25849"
+      },
+      "decoded_rgba_sha256": "0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e",
+      "stats": {
+        "mean_rgb_8bit": [
+          144.527,
+          170.274,
+          204.604
+        ],
+        "stddev_rgb_8bit": [
+          4.51,
+          4.089,
+          3.55
+        ],
+        "linear_mean": [
+          0.28151,
+          0.40375,
+          0.60812
+        ],
+        "linear_p99": [
+          0.32778,
+          0.45641,
+          0.66539
+        ]
+      },
+      "max_abs_diff_vs_reference_8bit": 0,
+      "reencode_proven": false,
+      "reencode_note": null
+    },
+    {
+      "asset_path": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_149.Image_149",
+      "source_provenance": {
+        "import_source_file": "/workspace/sub01-home-private/project/Sub01HomeLab/SourceAssets/full-home.glb",
+        "glb_image_index": null,
+        "buffer_view": null,
+        "pixel_match_reference": true
+      },
+      "width": 512,
+      "height": 512,
+      "editor_size": [
+        512,
+        512
+      ],
+      "srgb": false,
+      "compression": "TC_NORMALMAP",
+      "lod_bias": 0,
+      "mip_gen_settings": "TMGS_FROM_TEXTURE_GROUP",
+      "adjust": {
+        "adjust_brightness": 1.0,
+        "adjust_brightness_curve": 1.0,
+        "adjust_saturation": 1.0,
+        "adjust_vibrance": 0.0,
+        "adjust_rgb_curve": 1.0,
+        "adjust_hue": 0.0,
+        "adjust_min_alpha": 0.0,
+        "adjust_max_alpha": 1.0
+      },
+      "png": {
+        "file": "Image_149.png",
+        "file_sha256": "0bc4648d36b664c26b1af82bf53b435e19bc3c2ae374d75f43ff98a489c25849"
+      },
+      "decoded_rgba_sha256": "0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e",
+      "stats": {
+        "mean_rgb_8bit": [
+          144.527,
+          170.274,
+          204.604
+        ],
+        "stddev_rgb_8bit": [
+          4.51,
+          4.089,
+          3.55
+        ],
+        "linear_mean": [
+          0.28151,
+          0.40375,
+          0.60812
+        ],
+        "linear_p99": [
+          0.32778,
+          0.45641,
+          0.66539
+        ]
+      },
+      "max_abs_diff_vs_reference_8bit": 0,
+      "reencode_proven": false,
+      "reencode_note": null
+    },
+    {
+      "asset_path": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1410.Image_1410",
+      "source_provenance": {
+        "import_source_file": "/workspace/sub01-home-private/project/Sub01HomeLab/SourceAssets/full-home.glb",
+        "glb_image_index": null,
+        "buffer_view": null,
+        "pixel_match_reference": true
+      },
+      "width": 512,
+      "height": 512,
+      "editor_size": [
+        512,
+        512
+      ],
+      "srgb": false,
+      "compression": "TC_NORMALMAP",
+      "lod_bias": 0,
+      "mip_gen_settings": "TMGS_FROM_TEXTURE_GROUP",
+      "adjust": {
+        "adjust_brightness": 1.0,
+        "adjust_brightness_curve": 1.0,
+        "adjust_saturation": 1.0,
+        "adjust_vibrance": 0.0,
+        "adjust_rgb_curve": 1.0,
+        "adjust_hue": 0.0,
+        "adjust_min_alpha": 0.0,
+        "adjust_max_alpha": 1.0
+      },
+      "png": {
+        "file": "Image_1410.png",
+        "file_sha256": "0bc4648d36b664c26b1af82bf53b435e19bc3c2ae374d75f43ff98a489c25849"
+      },
+      "decoded_rgba_sha256": "0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e",
+      "stats": {
+        "mean_rgb_8bit": [
+          144.527,
+          170.274,
+          204.604
+        ],
+        "stddev_rgb_8bit": [
+          4.51,
+          4.089,
+          3.55
+        ],
+        "linear_mean": [
+          0.28151,
+          0.40375,
+          0.60812
+        ],
+        "linear_p99": [
+          0.32778,
+          0.45641,
+          0.66539
+        ]
+      },
+      "max_abs_diff_vs_reference_8bit": 0,
+      "reencode_proven": false,
+      "reencode_note": null
+    },
+    {
+      "asset_path": "/Game/Sub01Home/ImportedScene/full-home/Textures/Image_1411.Image_1411",
+      "source_provenance": {
+        "import_source_file": "/workspace/sub01-home-private/project/Sub01HomeLab/SourceAssets/full-home.glb",
+        "glb_image_index": null,
+        "buffer_view": null,
+        "pixel_match_reference": true
+      },
+      "width": 512,
+      "height": 512,
+      "editor_size": [
+        512,
+        512
+      ],
+      "srgb": false,
+      "compression": "TC_NORMALMAP",
+      "lod_bias": 0,
+      "mip_gen_settings": "TMGS_FROM_TEXTURE_GROUP",
+      "adjust": {
+        "adjust_brightness": 1.0,
+        "adjust_brightness_curve": 1.0,
+        "adjust_saturation": 1.0,
+        "adjust_vibrance": 0.0,
+        "adjust_rgb_curve": 1.0,
+        "adjust_hue": 0.0,
+        "adjust_min_alpha": 0.0,
+        "adjust_max_alpha": 1.0
+      },
+      "png": {
+        "file": "Image_1411.png",
+        "file_sha256": "0bc4648d36b664c26b1af82bf53b435e19bc3c2ae374d75f43ff98a489c25849"
+      },
+      "decoded_rgba_sha256": "0157e1e9c8197b2b81728df1e2fa2ac24da4199dad6ae1ca4d94a0b61f32b47e",
+      "stats": {
+        "mean_rgb_8bit": [
+          144.527,
+          170.274,
+          204.604
+        ],
+        "stddev_rgb_8bit": [
+          4.51,
+          4.089,
+          3.55
+        ],
+        "linear_mean": [
+          0.28151,
+          0.40375,
+          0.60812
+        ],
+        "linear_p99": [
+          0.32778,
+          0.45641,
+          0.66539
+        ]
+      },
+      "max_abs_diff_vs_reference_8bit": 0,
+      "reencode_proven": false,
+      "reencode_note": null
+    }
+  ]
+}

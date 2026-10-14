@@ -266,7 +266,9 @@ def mapping_check(model, presets=None, parity=None, albedo_clones=False):
     plan = spec.plan(presets, measured)
     if albedo_clones:
         for t in plan['targets']:
-            if t.get('bed'):
+            # Bed mapping also guards wooden rails/slats. Only the four proven
+            # upholstery source images belong to the albedo-copy repair.
+            if t.get('bed') and t.get('class') == 'fabric' and set(t.get('source_materials', [])) == set(spec.BED_SOURCES):
                 t['albedo_clones'] = True
     bed = spec.source_bed_groups()
     mesh_of_material = {norm(v[0]): k for k, v in bed['groups'].items()}
@@ -762,8 +764,10 @@ def repair_albedo_textures(*, u=None, actor_subsystem=None, load_level=True):
         if clone_obj_path.split('.')[0] not in owned:
             owned.append(clone_obj_path.split('.')[0])
         (_state_dir(u) / BACKUP_NAME).write_text(json.dumps(state, indent=1) + '\n')
-        clone.set_editor_property('srgb', True)
+        # TC_NORMALMAP forces sRGB off in PostEditChange; leave normal-map
+        # compression first, then enable the colour texture's sRGB sampling.
         clone.set_editor_property('compression_settings', u.TextureCompressionSettings.TC_DEFAULT)
+        clone.set_editor_property('srgb', True)
         u.EditorAssetLibrary.set_metadata_tag(clone, parity_mod.DUPLICATE_TAG, path)
         if texture_settings(u, original) != settings or _file_sha(package) != before_file:
             raise MaterialFixError('Original %s changed while cloning; clone NOT saved' % path)

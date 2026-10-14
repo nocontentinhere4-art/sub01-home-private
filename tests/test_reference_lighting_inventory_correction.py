@@ -252,3 +252,18 @@ def test_colour_drift_refused_unless_allowed(tmp_path):
         run(u, actors)
     assert log == []
     assert run(u, actors, allow_drift=True)['applied']
+
+
+@pytest.mark.parametrize('value,accepted', [(1, True), (0, False)])
+def test_deprecated_setting_uses_actual_renderer_cvar(tmp_path, value, accepted):
+    inventory = lc.load_inventory(INVENTORY)
+    u, actors, log = level(tmp_path)
+    def absent(cls):
+        raise AttributeError('deprecated editor field unavailable')
+    u.get_default_object = absent
+    u.SystemLibrary = SimpleNamespace(get_console_variable_int_value=lambda name: value)
+    if accepted:
+        assert lc.validate(u, actors.get_all_level_actors(), inventory)['ev100_extended_range'] is True
+    else:
+        with pytest.raises(lc.CorrectionRefused, match='EV100'):
+            lc.validate(u, actors.get_all_level_actors(), inventory)
