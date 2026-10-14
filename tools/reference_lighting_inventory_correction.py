@@ -357,8 +357,17 @@ def validate(u, actors, inventory, allow_drift=False, restoring=False):
             'extend_default_luminance_range_in_auto_exposure_settings')
     except Exception:
         extended = None
-    if extended is False:
-        problems.append('auto exposure bounds would not be EV100 (extended luminance range is off)')
+    if extended is None:
+        # UE 5.8 hides this deprecated editor setting. Query its actual renderer
+        # CVar instead of claiming EV100 semantics from unavailable reflection.
+        try:
+            value = u.SystemLibrary.get_console_variable_int_value(
+                'r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange')
+            extended = bool(value) if value in (0, 1) else None
+        except Exception:
+            pass
+    if extended is not True:
+        problems.append('auto exposure bounds are not verified as EV100 (extended luminance range is off or unavailable)')
     if problems:
         raise CorrectionRefused('Refusing %s, no changes made: %s' % (PRESET, '; '.join(problems)))
     return {'components': {label: found[label][0] for label in expected}, 'states': states,
