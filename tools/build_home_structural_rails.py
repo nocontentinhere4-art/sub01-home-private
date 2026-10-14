@@ -3,7 +3,8 @@
 blender -b --python tools/build_home_structural_rails.py -- --source SOURCE.glb
   --source-sha SHA --output-dir PRIVATE_DIR
 Pure --audit-source works without Blender. Never replaces tread, wall or route
-geometry. Refuses export unless every old rail is a separate exact source beam.
+geometry. Batched rail meshes are surgically patched: nonrail source triangles,
+normals and UV are preserved in a scoped remainder before originals are hidden.
 Coordinates are actual home.js metres, Y up; Blender is (x,-z,y).
 """
 import argparse
@@ -69,7 +70,11 @@ def source_audit(source, expected_sha=SOURCE_SHA):
             continue
         row=found[0];used.add(row['source_node_index'])
         matched.append(dict(row,expected_role=expected['name'],actor_object_name='full-home_node_'+str(row['source_node_index']),component_name='StaticMeshComponent0'))
-    return {'source_sha256':actual,'source':str(path),'old_rail_count':len(old_rails()),'matched_rails':matched,'errors':errors},doc,binary
+    batched=False
+    if errors:
+        from structural_rail_source_patch import select
+        matched,errors=select(doc,binary,old_rails());batched=True
+    return {'source_sha256':actual,'source':str(path),'old_rail_count':len(old_rails()),'matched_rails':matched,'errors':errors,'batched_source_patch':batched},doc,binary
 
 
 def replacement_parts():
@@ -163,16 +168,17 @@ def geometry_checks():
 
 def build(source,out,expected_sha=SOURCE_SHA):
     import bpy
-    from mathutils import Vector
+    from mathutils import Vector,Matrix
     audit,doc,binary=source_audit(source,expected_sha)
     if audit['errors']:raise ValueError('Exact isolated original rail proof failed: '+json.dumps(audit['errors']))
     if geometry_checks():raise ValueError(geometry_checks())
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     # Reuse the actual source rail material pixels and PBR factors, not a new tint.
-    def source_material(role):
-        record=next(row for row in audit['matched_rails'] if row['expected_role']==('incline' if role=='oak' else 'incline post'))
-        data=doc['materials'][record['material_index']];pbr=data.get('pbrMetallicRoughness',{})
+    def source_material(role,index=None):
+        if index is None:
+            record=next(row for row in audit['matched_rails'] if row['expected_role']==('incline' if role=='oak' else 'incline post'));index=record['material_index']
+        data=doc['materials'][index];pbr=data.get('pbrMetallicRoughness',{})
         material=bpy.data.materials.new('SUB01_StructuralRail_'+role);material.use_nodes=True
         bsdf=material.node_tree.nodes.get('Principled BSDF')
         bsdf.inputs['Base Color'].default_value=pbr.get('baseColorFactor',[1,1,1,1])
@@ -200,6 +206,38 @@ def build(source,out,expected_sha=SOURCE_SHA):
         return material
     materials={role:source_material(role) for role in ('oak','metal')}
     def point(p):return Vector((p[0],-p[2],p[1]))
+    preserved=[]
+    if audit['batched_source_patch']:
+        from structural_rail_source_patch import accessor,transformed,world_matrices
+        matrices=world_matrices(doc)
+        removed={}
+        for row in audit['matched_rails']:
+            key=(row['source_node_index'],row['primitive_index']);removed.setdefault(key,set()).update(row['triangle_indices'])
+        affected=sorted({key[0] for key in removed})
+        for node_index in affected:
+            node=doc['nodes'][node_index]
+            for primitive_index,primitive in enumerate(doc['meshes'][node['mesh']]['primitives']):
+                raw_positions=accessor(doc,binary,primitive['attributes']['POSITION'])
+                indices=[v[0] for v in accessor(doc,binary,primitive['indices'])] if 'indices' in primitive else list(range(len(raw_positions)))
+                excluded=removed.get((node_index,primitive_index),set())
+                faces=[indices[j*3:j*3+3] for j in range(len(indices)//3) if j not in excluded]
+                if not faces:continue
+                used=sorted({i for face in faces for i in face});mapping={i:j for j,i in enumerate(used)}
+                positions=[point(transformed(matrices[node_index],raw_positions[i])) for i in used]
+                mesh=bpy.data.meshes.new(f'SUB01_PreservedSource_{node_index}_{primitive_index}');mesh.from_pydata(positions,[],[[mapping[i] for i in face] for face in faces]);mesh.update()
+                obj=bpy.data.objects.new(mesh.name,mesh);bpy.context.collection.objects.link(obj)
+                material_index=primitive.get('material')
+                obj.data.materials.append(source_material(f'preserved-{material_index}',material_index))
+                if 'TEXCOORD_0' in primitive['attributes']:
+                    raw_uv=accessor(doc,binary,primitive['attributes']['TEXCOORD_0']);layer=mesh.uv_layers.new(name='OriginalSourceUV')
+                    for loop in mesh.loops:
+                        uv=raw_uv[used[loop.vertex_index]];layer.data[loop.index].uv=(uv[0],1-uv[1])
+                if 'NORMAL' in primitive['attributes']:
+                    raw_normals=accessor(doc,binary,primitive['attributes']['NORMAL']);normal_matrix=Matrix(matrices[node_index]).to_3x3().inverted().transposed()
+                    normals=[point(normal_matrix@Vector(raw_normals[used[loop.vertex_index]])).normalized() for loop in mesh.loops]
+                    mesh.normals_split_custom_set(normals)
+                    for polygon in mesh.polygons:polygon.use_smooth=True
+                preserved.append({'source_node_index':node_index,'primitive_index':primitive_index,'material_index':material_index,'original_triangle_count':len(indices)//3,'removed_rail_triangles':len(excluded),'preserved_triangle_count':len(faces),'preserved_vertex_count':len(used),'source_positions_normals_uv_preserved':True})
     for index,points in enumerate(oak_grip_paths()):
         curve=bpy.data.curves.new(f'SUB01_ContinuousOakGrip_{index}','CURVE');curve.dimensions='3D';curve.resolution_u=1;curve.bevel_depth=.028;curve.bevel_resolution=3;curve.use_fill_caps=True
         spline=curve.splines.new('POLY');spline.points.add(len(points)-1)
@@ -224,9 +262,10 @@ def build(source,out,expected_sha=SOURCE_SHA):
     bpy.ops.object.select_all(action='SELECT')
     glb=out/'structural-stair-rails.glb'
     bpy.ops.export_scene.gltf(filepath=str(glb),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
-    report={'schema':'sub01-private-structural-rails-v1','source_audit':audit,'output_sha256':hashlib.sha256(glb.read_bytes()).hexdigest(),'replacement_only':True,'parts':replacement_parts(),'geometry_checks':geometry_checks(),
+    hidden={row['source_node_index']:{k:row[k] for k in ('source_node_index','source_name','actor_object_name','component_name')} for row in audit['matched_rails']}
+    report={'schema':'sub01-private-structural-rails-v1','source_audit':audit,'output_sha256':hashlib.sha256(glb.read_bytes()).hexdigest(),'replacement_only':not preserved,'scoped_original_mesh_remainder':preserved,'parts':replacement_parts(),'geometry_checks':geometry_checks(),
             'placement':'Global source metres preserved; UE glTF import coordinates, no additive scene origin offset',
-            'original_hide_manifest':audit['matched_rails'],'unchanged':['all stair/tread/slab/wall geometry','walkable staircase collision','native route graph','light/device/brain state'],
+            'original_hide_manifest':[hidden[i] for i in sorted(hidden)],'unchanged':['all stair/tread/slab/wall geometry','walkable staircase collision','native route graph','light/device/brain state'],
             'native_acceptance_pending':True}
     (out/'structural-stair-rails.json').write_text(json.dumps(report,indent=2)+'\n')
     bpy.ops.wm.save_as_mainfile(filepath=str(out/'structural-stair-rails.blend'))
