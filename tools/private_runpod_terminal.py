@@ -22,7 +22,7 @@ def main():
     import websocket
     config = json.loads(args.config.read_text())
     base = config['base_url'].rstrip('/')
-    if base not in {'https://713u6mnmxu4y1a-8888.proxy.runpod.net', 'https://80lf8giw6ft61v-8888.proxy.runpod.net', 'https://5ldnm4vax9kelh-8888.proxy.runpod.net'}:
+    if base not in {'https://713u6mnmxu4y1a-8888.proxy.runpod.net', 'https://80lf8giw6ft61v-8888.proxy.runpod.net', 'https://5ldnm4vax9kelh-8888.proxy.runpod.net', 'https://kjsxms1gk4rmv6-8888.proxy.runpod.net'}:
         raise RuntimeError('This client is restricted to the authorized home pods')
     token = next(iter(config['tokens'].values()))
     headers = {'Authorization': 'token ' + token, 'User-Agent': 'Mozilla/5.0'}
