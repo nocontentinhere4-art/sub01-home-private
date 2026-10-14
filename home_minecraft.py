@@ -22,6 +22,23 @@ def frame_tag(frame):
     return hashlib.blake2b(frame, digest_size=12).hexdigest() if frame else None
 
 
+def minecraft_browser_launch_options():
+    """Opt-in measured NVIDIA/Xorg path; never share a browser profile/cookies."""
+    if os.environ.get("SUB01_MC_HARDWARE_WEBGL", "0") != "1":
+        return {"headless": True}
+    authority = Path(os.environ.get("SUB01_MC_XAUTHORITY", "/home/unreal/.sub01-private/native-xauthority"))
+    display = os.environ.get("SUB01_MC_DISPLAY", ":99")
+    if display != ":99" or not authority.is_absolute():
+        raise ValueError("Minecraft GPU rendering requires the private local X display")
+    info = authority.stat()
+    if info.st_uid != os.getuid() or info.st_mode & 0o077 or not authority.is_file():
+        raise ValueError("Minecraft GPU rendering requires the protected same-owner X authority")
+    return {"headless": True,
+            "args": ["--enable-gpu", "--use-gl=angle", "--use-angle=gl", "--ozone-platform=x11"],
+            "ignore_default_args": ["--enable-unsafe-swiftshader"],
+            "env": {**os.environ, "DISPLAY": display, "XAUTHORITY": str(authority)}}
+
+
 class MinecraftConsole:
     def __setattr__(self, name, value):
         # Cache the frame identity when a frame is assigned, not per request/tick.
@@ -157,7 +174,7 @@ class MinecraftConsole:
     async def render_frames(self):
         from playwright.async_api import async_playwright
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True)
+            browser = await playwright.chromium.launch(**minecraft_browser_launch_options())
             try:
                 page = await browser.new_page(viewport={"width": 640, "height": 360}, device_scale_factor=1)
                 await self._render_frame_loop(page)
