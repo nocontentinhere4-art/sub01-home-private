@@ -382,19 +382,53 @@ def cluster_parts(parts, overlap=0.5):
     parts: [{'points': [...], ...}] -> list of lists of part indices. Neighbouring books only touch
     by a sliver, so they stay separate."""
     boxes = [_aabb(p['points']) for p in parts]
+    volumes = [_volume(*box) for box in boxes]
     parent = list(range(len(parts)))
 
     def find(i):
         while parent[i] != i:
             i = parent[i]
         return i
-    for i in range(len(parts)):
-        for j in range(i + 1, len(parts)):
-            lo = tuple(max(boxes[i][0][k], boxes[j][0][k]) for k in range(3))
-            hi = tuple(min(boxes[i][1][k], boxes[j][1][k]) for k in range(3))
-            small = min(_volume(*boxes[i]), _volume(*boxes[j])) or 1e-12
-            if _volume(lo, hi) >= overlap * small:
-                parent[find(j)] = find(i)
+    # Keep legacy i,j union order: component roots affect returned group order.
+    # Positive-overlap finite AABBs can only merge with strictly overlapping
+    # intervals on all axes. Zero-volume UV-seam islands cannot pass the legacy
+    # positive threshold (their smaller volume falls back to 1e-12).
+    regular = math.isfinite(overlap) and overlap > 0 and all(
+        math.isfinite(volume) and overlap * (volume or 1e-12) > 0 and all(math.isfinite(value) for corner in box for value in corner)
+        for box, volume in zip(boxes, volumes))
+    if regular:
+        import heapq
+        eligible = [i for i, volume in enumerate(volumes) if volume > 0]
+        candidates = [[] for _ in parts]
+        if eligible:
+            def separation(axis):
+                extent = max(boxes[i][1][axis] for i in eligible) - min(boxes[i][0][axis] for i in eligible)
+                width = sum(boxes[i][1][axis] - boxes[i][0][axis] for i in eligible) / len(eligible)
+                return extent / width if width > 0 else 0
+            axis = max(range(3), key=separation)
+            active, ends = set(), []
+            for i in sorted(eligible, key=lambda i: (boxes[i][0][axis], i)):
+                low = boxes[i][0][axis]
+                while ends and ends[0][0] <= low:
+                    _, expired = heapq.heappop(ends)
+                    active.remove(expired)
+                for j in active:
+                    if all(min(boxes[i][1][k], boxes[j][1][k]) > max(boxes[i][0][k], boxes[j][0][k]) for k in range(3)):
+                        first, second = sorted((i, j))
+                        candidates[first].append(second)
+                active.add(i)
+                heapq.heappush(ends, (boxes[i][1][axis], i))
+        pairs = ((i, j) for i, neighbours in enumerate(candidates) for j in sorted(neighbours))
+    else:
+        # Preserve legacy comparisons for zero/negative/NaN thresholds or
+        # nonfinite boxes/volumes rather than guessing their merge semantics.
+        pairs = ((i, j) for i in range(len(parts)) for j in range(i + 1, len(parts)))
+    for i, j in pairs:
+        lo = tuple(max(boxes[i][0][k], boxes[j][0][k]) for k in range(3))
+        hi = tuple(min(boxes[i][1][k], boxes[j][1][k]) for k in range(3))
+        small = min(volumes[i], volumes[j]) or 1e-12
+        if _volume(lo, hi) >= overlap * small:
+            parent[find(j)] = find(i)
     groups = {}
     for i in range(len(parts)):
         groups.setdefault(find(i), []).append(i)
