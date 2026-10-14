@@ -7,11 +7,11 @@ those existing collidable components; it does not create a door/outdoor world.
 CURRENT_SOURCE_SHA256 = '9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 GEOMETRY = {'leaf': {'node':58,'mesh':43,'center_cm':(199.5,390.,110.),'extent_cm':(52.5,3.75,110.)},
             'knob': {'node':59,'mesh':44,'center_cm':(241.,384.,105.),'extent_cm':(2.7,2.7,2.7)},
-            'hinge_cm':(147.,390.,0.), 'verified_entry_floor_cm':2.5001,  'tag':'SUB01Door:Front'}
-FITTED_GEOMETRY = {'leaf_center_cm':(199.95,390.,111.85),'leaf_extent_cm':(52.5,3.75,109.25),
-                   'knob_center_cm':(241.45,384.,107.6),'hinge_cm':(147.45,394.,2.6),
-                   'leaf_vertical_scale':218.5/220, 'floor_clearance_cm':.0999,
-                   'header_clearance_cm':.15, 'left_jamb_clearance_cm':.20,
+            'hinge_cm':(147.,390.,0.),'threshold':{'node':53,'center_cm':(200.,387.,0.),'extent_cm':(55.,3.,2.75)}, 'verified_entry_floor_cm':2.5001,  'tag':'SUB01Door:Front'}
+FITTED_GEOMETRY = {'leaf_center_cm':(199.95,390.,112.),'leaf_extent_cm':(52.5,3.75,109.),
+                   'knob_center_cm':(241.45,384.,108.),'hinge_cm':(147.45,394.,3.),
+                   'leaf_vertical_scale':218./220, 'floor_clearance_cm':.4998693,
+                   'header_clearance_cm':.25,'threshold_top_cm':2.75,'threshold_clearance_cm':.25, 'left_jamb_clearance_cm':.20,
                    'right_jamb_clearance_cm':.30,
                    'review':'Explicit physical fitting to measured floor/header/jamb; native audit pending'}
 BATH_GEOMETRY={'node':118,'mesh':101,'center_cm':(-85.,135.,405.),'extent_cm':(3.25,44.5,100.),
@@ -88,7 +88,7 @@ METHODS = r'''
 #include "Engine/StaticMesh.h"
 #include "PhysicsEngine/BodySetup.h"
 FTransform ASub01HomeCharacter::ExitDoorPose(const FTransform& Closed,float Angle) const{
- const FVector Hinge(147.45f,394,2.6f);const FQuat Swing(FVector::UpVector,FMath::DegreesToRadians(Angle));
+ const FVector Hinge(147.45f,394,3.f);const FQuat Swing(FVector::UpVector,FMath::DegreesToRadians(Angle));
  return FTransform(Swing*Closed.GetRotation(),Hinge+Swing.RotateVector(Closed.GetLocation()-Hinge),Closed.GetScale3D());
 }
 void ASub01HomeCharacter::ConfigureActualExitDoor(){
@@ -111,13 +111,13 @@ void ASub01HomeCharacter::ConfigureActualExitDoor(){
  ExitDoorLeaf=Leaf;ExitDoorKnob=Knob;
  const auto BeforeLeaf=Leaf->CalcBounds(Leaf->GetComponentTransform());const auto BeforeKnob=Knob->CalcBounds(Knob->GetComponentTransform());
  ExitDoorClosedLeaf=Leaf->GetComponentTransform();ExitDoorClosedKnob=Knob->GetComponentTransform();
- FVector Scale=ExitDoorClosedLeaf.GetScale3D();Scale.Z*=218.5f/220.f;ExitDoorClosedLeaf.SetScale3D(Scale);
- ExitDoorClosedLeaf.AddToTranslation(FVector(.45f,0,1.85f));ExitDoorClosedKnob.AddToTranslation(FVector(.45f,0,2.6f));
+ FVector Scale=ExitDoorClosedLeaf.GetScale3D();Scale.Z*=218.f/220.f;ExitDoorClosedLeaf.SetScale3D(Scale);
+ ExitDoorClosedLeaf.AddToTranslation(FVector(.45f,0,2.f));ExitDoorClosedKnob.AddToTranslation(FVector(.45f,0,3.f));
  Leaf->SetWorldTransform(ExitDoorClosedLeaf,false,nullptr,ETeleportType::None);Knob->SetWorldTransform(ExitDoorClosedKnob,false,nullptr,ETeleportType::None);
  for(auto* C:{Leaf,Knob}){C->SetMobility(EComponentMobility::Movable);C->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);C->SetCollisionResponseToChannel(ECC_Pawn,ECR_Block);C->SetCollisionResponseToChannel(ECC_Visibility,ECR_Block);C->ComponentTags.AddUnique(TEXT("SUB01Door:Front"));}
  const auto AfterLeaf=Leaf->CalcBounds(Leaf->GetComponentTransform());const auto AfterKnob=Knob->CalcBounds(Knob->GetComponentTransform());
  UE_LOG(LogTemp,Display,TEXT("SUB01_EXIT_DOOR_ACTUAL_FIT beforeCenter=%s beforeExtent=%s afterCenter=%s afterExtent=%s knobBefore=%s knobAfter=%s"),*BeforeLeaf.Origin.ToString(),*BeforeLeaf.BoxExtent.ToString(),*AfterLeaf.Origin.ToString(),*AfterLeaf.BoxExtent.ToString(),*BeforeKnob.Origin.ToString(),*AfterKnob.Origin.ToString());
- UE_LOG(LogTemp,Display,TEXT("SUB01_EXIT_DOOR_BOUND leaf=%s knob=%s hinge=147.45,394,2.6 physicalFit leafDelta=.45,0,1.85 leafZScale=.9931818 knobDelta=.45,0,2.6"),*Leaf->GetName(),*Knob->GetName());
+ UE_LOG(LogTemp,Display,TEXT("SUB01_EXIT_DOOR_BOUND leaf=%s knob=%s hinge=147.45,394,3 physicalFit leafDelta=.45,0,2 leafZScale=.9909091 knobDelta=.45,0,3"),*Leaf->GetName(),*Knob->GetName());
 }
 bool ASub01HomeCharacter::TryNativeExitDoor(UActorComponent* HitComponent){
  if(!ExitDoorLeaf||!ExitDoorKnob||(HitComponent!=ExitDoorLeaf&&HitComponent!=ExitDoorKnob))return false;
@@ -134,12 +134,12 @@ bool ASub01HomeCharacter::ExitDoorSweepBlocked(float From,float To) const{
  if(!ExitDoorLeaf||!ExitDoorKnob||!GetWorld())return true;
  FCollisionQueryParams Query(SCENE_QUERY_STAT(Sub01ExitDoor),false);
  Query.AddIgnoredComponent(ExitDoorLeaf.Get());Query.AddIgnoredComponent(ExitDoorKnob.Get());
- const FVector Hinge(147.45f,394,2.6f);const FQuat Mid(FVector::UpVector,FMath::DegreesToRadians((From+To)*.5f));
+ const FVector Hinge(147.45f,394,3.f);const FQuat Mid(FVector::UpVector,FMath::DegreesToRadians((From+To)*.5f));
  const FQuat First(FVector::UpVector,FMath::DegreesToRadians(From)),Last(FVector::UpVector,FMath::DegreesToRadians(To));
  // Complete leaf/knob swept hull: endpoint corners in midpoint axes plus the
  // circular-arc sagitta bound enclose every point between both poses.
- for(int Index=0;Index<2;++Index){const FVector Closed=Index?FVector(241.45f,384,107.6f):FVector(199.95f,390,111.85f);
-  const FVector Extent=Index?FVector(2.7,2.7,2.7):FVector(52.5,3.75,109.25f);FBox Hull(ForceInit);float Radius=0;
+ for(int Index=0;Index<2;++Index){const FVector Closed=Index?FVector(241.45f,384,108.f):FVector(199.95f,390,112.f);
+  const FVector Extent=Index?FVector(2.7,2.7,2.7):FVector(52.5,3.75,109.f);FBox Hull(ForceInit);float Radius=0;
   for(float X:{-1.f,1.f})for(float Y:{-1.f,1.f})for(float Z:{-1.f,1.f}){
    const FVector P=Closed-Hinge+FVector(X*Extent.X,Y*Extent.Y,Z*Extent.Z);Radius=FMath::Max(Radius,float(FVector2D(P.X,P.Y).Size()));
    Hull+=Mid.UnrotateVector(First.RotateVector(P));Hull+=Mid.UnrotateVector(Last.RotateVector(P));
