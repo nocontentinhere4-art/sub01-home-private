@@ -169,3 +169,12 @@ The replacement volume does not enforce Unix mode bits reliably. API control cre
 
 
 After both authorized pods were confirmed EXITED at21:45:25UTC and CI registrations zero, the owner authorized one additional hour on the same replacement only. Startup was updated while stopped to a rootfs-owned guard before resume; live guardPID77 authenticated pod80lf8giw6ft61v and verified deadline22:57:36UTC (epoch1791932256), totalcap20. Conservative cumulative allowance15.54 includes all prior work and a2USD reserve. Originalpod713 remained stopped. Rootfs accountUID1001 and protected same-role operator token were restored; both CI UIDs passed actual secret/volume/private-port denial and ephemeral listener rebinding checks under the restored rootfs Landlock helper. No third pod was created.
+
+
+## Actual acknowledged browser ownership — 2026-10-14 10:35 UTC
+
+The current sole native game72595/start655217130 was visually accepted in Manual mode, then genuinely bound to the live home source. It physically reached the upper bathroom; the fresh native camera receipt became private and the authenticated browser removed its image URL, held decoded frames and denied an actual manual-ownership request with409. The source naturally changed to music/bed, and the native character physically left the bathroom and reached bed without position assignments.
+
+In public Live mode the browser showed the actual fresh `Awake · Music` feed and `Take control`. Its real click produced native acknowledgement revision104 with accepted=true, device_focus_cleared=true and mode=manual. The real pawn stayed exactly(-117.222,-278.845,396.273)cm across the handoff. A separate genuine Enter home click acquired pointer lock; bounded W300ms and real relative mouse input moved the physical pawn to(-127.038,-318.264,396.273)cm while the native game remained about60Hz. Escape forwarded native focus/key release and opened settings; a second Escape closed them.
+
+Private evidence: `out/house-evidence/private-real-viewer-handoff-observed.json` and the Manual baseline, physical-private blackout, public Live Take control and post-handoff screenshots. This establishes current external authenticated live pixels and native ownership/input. Transport remains HTTPS/WSS JPEG, not external WebRTC/audio. Bed seating, complete hand contact, anatomical phone grip and full home completion are not established by this proof. The existing11:49:25UTC same-pod guards/$100TOTAL cap remain unchanged.
