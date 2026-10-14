@@ -41,6 +41,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import reference_home_dressing as rd  # noqa: E402  (pure-Python helpers; bpy optional)
+from real_furniture_base import verify_base, sha256_file, glb_json
 
 try:  # Blender only
     import bpy  # type: ignore
@@ -1021,14 +1022,14 @@ def _export(scene, collection, glb, names):
         for obj in scene.objects:
             obj.select_set(obj.name in selected)
         view_layer.objects.active = active
-    doc = rd.glb_json(glb)
+    doc = glb_json(glb)
     try:
         verify_additive_glb(doc, names)
         roles = glb_texture_roles(doc)
     except Exception:
         glb.unlink(missing_ok=True)
         raise
-    return {'path': str(glb), 'sha256': rd.sha256_file(glb), 'objects': sorted(names),
+    return {'path': str(glb), 'sha256': sha256_file(glb), 'objects': sorted(names),
             'texture_roles': roles, 'verified_additive_only': True}
 
 
@@ -1041,7 +1042,7 @@ def run(argv=None):
     blend_path = bpy.data.filepath
     mesh_objects = [o for o in scene.objects if o.type == 'MESH']
     stats = (len(mesh_objects), sum(len(o.data.vertices) for o in mesh_objects))
-    base = rd.verify_base(scene, blend_path, args.allow_unassembled, stats, args.source_sha256,
+    base = verify_base(scene, blend_path, args.allow_unassembled, stats, args.source_sha256,
                           args.base_sha256, args.base_bytes)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     existing = list(scene.objects)
@@ -1097,7 +1098,7 @@ def run(argv=None):
         hosts.append({'board': board, 'frame': frame, 'u_range': u_range, 'top_clearance': args.top_clearance})
 
     provenance = {'asset': ASSET_NAME, 'url': ASSET_URL, 'license': ASSET_LICENSE,
-                  'file': str(Path(args.books_asset).resolve()), 'sha256': rd.sha256_file(args.books_asset),
+                  'file': str(Path(args.books_asset).resolve()), 'sha256': sha256_file(args.books_asset),
                   'uniform_scale': args.uniform_scale, 'spine_axis_in_asset': args.spine_axis}
     source_col = bpy.data.collections.new(SOURCE_COLLECTION)
     scene.collection.children.link(source_col)
