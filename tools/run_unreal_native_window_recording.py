@@ -41,9 +41,11 @@ def main():
     parser.add_argument('--phone-pose-time',type=float,default=4)
     parser.add_argument('--phone-mount-offset')
     parser.add_argument('--phone-mount-euler')
+    parser.add_argument('--phone-head-camera',action='store_true',help='Explicit captured Head-origin diagnostic camera; no normal activity acceptance')
     args=parser.parse_args()
     if args.review_typing_hover and args.startup_view!='desk-diagnostic':raise SystemExit('Typing hover review requires explicit desk diagnostic')
     if args.startup_view!='phone-diagnostic' and (args.phone_mount_offset or args.phone_mount_euler):raise SystemExit('Phone mount requires explicit phone diagnostic')
+    if args.phone_head_camera and args.startup_view!='phone-diagnostic':raise SystemExit('Head-origin camera requires explicit phone diagnostic')
     phone_args=phone_review_arguments(args.phone_pose_time,args.phone_mount_offset,args.phone_mount_euler) if args.startup_view=='phone-diagnostic' else []
     remaining=args.deadline_epoch-time.time()
     if remaining<90:raise SystemExit('Authorized window too short')
@@ -81,6 +83,7 @@ def main():
     if args.startup_view=='phone-diagnostic':
         native=[item for item in native if not item.startswith(('-Sub01HandsDiagnostic=','-Sub01DiagnosticClip=','-Sub01ContactProfile=','-Sub01ContactFreeze=')) and item not in ('-Sub01DiagnosticSeat','-Sub01LiveHome')]
         native+=phone_args
+        if args.phone_head_camera:native.append('-Sub01PhoneHeadCamera')
     elif args.startup_view!='desk-diagnostic':
         native=[item for item in native if not item.startswith(('-Sub01HandsDiagnostic=','-Sub01DiagnosticClip=','-Sub01ContactProfile=','-Sub01ContactFreeze=')) and item not in ('-Sub01DiagnosticSeat','-Sub01LiveHome')]
         native+=['-Sub01HandsDiagnostic=Walk','-Sub01DiagnosticClip=/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk']
