@@ -34,6 +34,17 @@ Private, server-only, additive. Nothing here has run in Blender or Unreal yet. N
 
 **Excision format.** Root's rail/stairs excision builder (nodes 162/163) is not in any pushed branch (`origin/main` and both `claude/*` branches searched). This format is self-describing: map it onto the rail builder's format if that differs.
 
+### Guard against root's rail/stem union
+Root's union is recorded in `evidence/native/exact-lamp-stem-rail-union.json`: node 163 / primitive 0, with stem triangles 1800..1839 removed and rail remainder 1640..1799 of 1840. The rail batches are nodes 162/163.
+
+- **What is reserved.** The builder always reserves glTF nodes 162 and 163, plus every node index or name it finds in that evidence file (or in the file given by `--reserved-evidence`).
+- **Naming the reserved nodes.** It names them from `--source-glb <native full-home.glb>`.
+- **When it refuses:**
+  - if any hidden or excised book node is a reserved node;
+  - if a batched book excision exists while reserved indices cannot be named.
+- **What it records.** The check is written under `reserved_surgery_guard` in the report.
+- **Triangle numbering.** Book `triangle_ids` follow Blender `loop_triangles` order. They are not glTF primitive indices; the world positions are included so the two can be matched.
+
 ## Base: which and why
 Use `/workspace/sub01-home-private/out/native-reference-base/house.blend`, the native base from `tools/prepare_native_dressing_base.py`.
 - It is the plain import of the same `full-home.glb` that Unreal shows, so node names and pivots match the UE actors.
@@ -47,12 +58,13 @@ B=/workspace/sub01-tools/blender-4.5.3-linux-x64/blender
 BASE=/workspace/sub01-home-private/out/native-reference-base/house.blend
 ASSET=$(ls out/furniture-refresh/set-dressing/**/book_encyclopedia_set_01*.{blend,gltf} 2>/dev/null | head -1)   # confirm the path by hand
 SRC=$(python3 -c "import json;print(json.load(open('${BASE%.blend}.json'))['source_sha256'])")
-# 1. read-only: candidates, boards, shelf object
+# 1. read-only and fast (evaluates only objects near the shelf; no asset needed): candidates, boards, shelf, reserved-node guard
 "$B" --background --factory-startup "$BASE" --python tools/build_real_shelf_books.py -- \
-  --list-originals --allow-unassembled --source-sha256 "$SRC" --books-asset "$ASSET" --output-dir out/real-books
+  --list-originals --allow-unassembled --source-sha256 9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b \
+  --source-glb <UE project>/SourceAssets/full-home.glb --output-dir out/real-books
 # 2. dry run: measure, lay out, check, report; no GLB
 "$B" --background --factory-startup "$BASE" --python tools/build_real_shelf_books.py -- \
-  --dry-run --allow-unassembled --source-sha256 "$SRC" --books-asset "$ASSET" --output-dir out/real-books
+  --dry-run --allow-unassembled --source-sha256 "$SRC" --source-glb <UE project>/SourceAssets/full-home.glb --books-asset "$ASSET" --output-dir out/real-books
 # 3. build plus additive GLB
 "$B" --background --factory-startup "$BASE" --python tools/build_real_shelf_books.py -- \
   --allow-unassembled --source-sha256 "$SRC" --books-asset "$ASSET" --output-dir out/real-books

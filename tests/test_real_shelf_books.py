@@ -655,3 +655,48 @@ def test_texture_contract_refuses_unknown_or_unfixable(monkeypatch):
         ui.check_textures([('T_book_nor_gl_1k', FakeTexture(True, 'TC_DEFAULT'))], roles, fix=False)
     with pytest.raises(RuntimeError, match='unknown role'):
         ui.check_textures([('T_mystery', FakeTexture(True, 'TC_DEFAULT'))], roles, fix=False)
+
+
+# ---------------------------------------------------------------- 7. root's rail/stem union never conflicts
+UNION_EVIDENCE = {'node': 163, 'primitive': 0, 'removed_triangles': [1800, 1839],
+                  'remainder_triangles': [1640, 1799], 'triangle_count': 1840,
+                  'rail_batches': [{'node_index': 162}, {'node_index': 163}]}
+
+
+def test_reserved_union_nodes_are_parsed_and_named_from_source_glb():
+    idx, names = b.reserved_from_evidence(UNION_EVIDENCE)
+    assert idx == {162, 163} and names == set()
+    glb = {'nodes': [{'name': f'n{i}'} for i in range(162)] + [{'name': 'house-static-162'}, {'name': 'house-static-163'}]}
+    named, unresolved = b.resolve_reserved(idx, names, glb)
+    assert named == {'house-static-162', 'house-static-163'} and unresolved == set()
+    assert b.resolve_reserved(idx, names, None)[1] == {162, 163}
+
+
+def test_book_excision_touching_the_rail_stem_node_is_refused():
+    recs = cube_book_records()
+    stem = box_tris((1.0, 3.6, 2.3), (1.01, 3.61, 2.9))
+    found = b.identify_original_books([_batch(recs[:3], stem, name='house-static-163')] + recs[3:])
+    with pytest.raises(b.RefusedError, match='rail/stem union'):
+        b.check_reserved_conflicts(found, {'house-static-163'}, set())
+    # a separate single-book node that is reserved is refused as well
+    sep = b.identify_original_books(recs)
+    with pytest.raises(b.RefusedError, match='rail/stem union'):
+        b.check_reserved_conflicts(sep, {recs[0]['name']}, set())
+
+
+def test_unresolved_reserved_nodes_refuse_only_batched_excisions():
+    recs = cube_book_records()
+    sep = b.identify_original_books(recs)
+    assert b.check_reserved_conflicts(sep, set(), {162, 163})['conflicts'] == []
+    batched = b.identify_original_books([_batch(recs[:2], name='house-static-77')] + recs[2:])
+    with pytest.raises(b.RefusedError, match='--source-glb'):
+        b.check_reserved_conflicts(batched, set(), {162, 163})
+    ok = b.check_reserved_conflicts(batched, {'house-static-162', 'house-static-163'}, set())
+    assert ok['reserved_node_names'] == ['house-static-162', 'house-static-163']
+
+
+def test_list_originals_needs_no_books_asset_and_accepts_source_sha():
+    args = b.parse_args(['--list-originals', '--allow-unassembled', '--source-sha256',
+                         '9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'])
+    assert args.list_originals and args.books_asset is None and args.source_sha256.startswith('9556495')
+    assert args.reserved_evidence == 'evidence/native/exact-lamp-stem-rail-union.json'

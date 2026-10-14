@@ -277,6 +277,70 @@ def identify_original_books(records):
     return {'books': books, 'separate': separate, 'batched': batched}
 
 
+# ---------------------------------------------------------------- 1b. never collide with root's rail/stem surgery
+# Root's exact union (evidence/native/exact-lamp-stem-rail-union.json; tools/build_home_structural_rails.py,
+# tools/validate_structural_rail_remainder.py on origin/main): glTF node 163 / primitive 0, desk stem
+# triangles 1800..1839 removed, rail remainder 1640..1799 of 1840; structural rail batches in nodes 162/163.
+RESERVED_NODE_INDICES = (162, 163)
+RESERVED_TRIANGLES = {163: (1640, 1840)}
+DEFAULT_RESERVED_EVIDENCE = 'evidence/native/exact-lamp-stem-rail-union.json'
+
+
+def reserved_from_evidence(doc):
+    """Node indices / names that root's surgery touches, collected from any evidence JSON shape
+    (keys containing 'node': ints are glTF node indices, strings are node names)."""
+    indices, names = set(), set()
+
+    def walk(value, key=''):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, k)
+        elif isinstance(value, list):
+            for v in value:
+                walk(v, key)
+        elif 'node' in key.lower():
+            if isinstance(value, bool):
+                return
+            if isinstance(value, int):
+                indices.add(value)
+            elif isinstance(value, str) and value:
+                names.add(value)
+    walk(doc)
+    return indices, names
+
+
+def resolve_reserved(indices, names, glb_doc=None):
+    """Reserved node names: explicit names plus the source GLB's names for reserved indices.
+    Returns (names, unresolved indices)."""
+    out, unresolved = set(names), set()
+    nodes = (glb_doc or {}).get('nodes', [])
+    for i in indices:
+        if 0 <= i < len(nodes) and nodes[i].get('name'):
+            out.add(nodes[i]['name'])
+        else:
+            unresolved.add(i)
+    return out, unresolved
+
+
+def check_reserved_conflicts(found, reserved_names, unresolved):
+    """Refuse if any hidden or excised book node is a node root's rail/stem union touches. If some
+    reserved indices cannot be named, refuse whenever a batched excision exists (a single-book
+    node cannot be the rail/stem batch, so separate hides stay allowed)."""
+    touched = {o['name'] for o in found['separate']} | {x['node'] for x in found['batched']}
+    touched_idents = {o['ident'] for o in found['separate']} | {x['ident'] for x in found['batched']}
+    clash = sorted((touched | touched_idents) & set(reserved_names))
+    if clash:
+        raise RefusedError(json.dumps({'error': "book surgery touches a node of root's rail/stem union; refusing",
+                                       'nodes': clash}))
+    if unresolved and found['batched']:
+        raise RefusedError(json.dumps({'error': 'batched book excision present but reserved rail/stem node '
+                                       'indices cannot be named; pass --source-glb (the native full-home.glb)',
+                                       'unresolved_node_indices': sorted(unresolved),
+                                       'batched_nodes': [x['node'] for x in found['batched']]}))
+    return {'reserved_node_names': sorted(reserved_names), 'unresolved_node_indices': sorted(unresolved),
+            'conflicts': []}
+
+
 # ---------------------------------------------------------------- 2. shelf support surfaces
 def _tri_normal(tri):
     a, b, c = tri
@@ -840,7 +904,10 @@ def image_roles(material):
 # ---------------------------------------------------------------- Blender run
 def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    ap.add_argument('--books-asset', required=True, help='book_encyclopedia_set_01 .blend/.gltf/.glb on the server')
+    ap.add_argument('--books-asset', help='book_encyclopedia_set_01 .blend/.gltf/.glb on the server (not needed for --list-originals)')
+    ap.add_argument('--source-glb', help="native full-home.glb, to name root's reserved rail/stem nodes (162/163)")
+    ap.add_argument('--reserved-evidence', default=DEFAULT_RESERVED_EVIDENCE,
+                    help="root's exact stem/rail union JSON; its node indices/names are never hidden or excised here")
     ap.add_argument('--output-dir', default='out/real-books')
     ap.add_argument('--dry-run', action='store_true', help='measure, place and check; write the report but no GLB')
     ap.add_argument('--list-originals', action='store_true', help='read-only: list cube-book candidates and boards')
@@ -874,6 +941,13 @@ def _evaluated_records(objects, depsgraph):
             records.append({'name': obj.name, 'ident': record['ident'], 'tris': tris, 'aabb': _aabb(pts),
                             'pivot': tuple(obj.matrix_world.translation)})
     return rows, records
+
+
+def _object_near_shelf(obj):
+    if obj.type not in rd.GEOMETRY_TYPES:
+        return False
+    pts = [tuple(obj.matrix_world @ __import__('mathutils').Vector(c)) for c in obj.bound_box]
+    return _in_region(_aabb(pts), pad=0.1)
 
 
 def _in_region(aabb, region=SHELF_REGION, pad=0.0):
@@ -1043,12 +1117,33 @@ def run(argv=None):
     stats = (len(mesh_objects), sum(len(o.data.vertices) for o in mesh_objects))
     base = rd.verify_base(scene, blend_path, args.allow_unassembled, stats, args.source_sha256,
                           args.base_sha256, args.base_bytes)
+    if not args.list_originals and not args.books_asset:
+        raise RefusedError('--books-asset is required unless --list-originals')
     depsgraph = bpy.context.evaluated_depsgraph_get()
     existing = list(scene.objects)
-    rows_before, records = _evaluated_records(existing, depsgraph)
-    before = fingerprint_rows(rows_before)
+    if args.list_originals:          # fast, read-only: only objects whose bounds reach the shelf region
+        rows_before, records = _evaluated_records([o for o in existing if _object_near_shelf(o)], depsgraph)
+        before = {}
+    else:
+        rows_before, records = _evaluated_records(existing, depsgraph)
+        before = fingerprint_rows(rows_before)
 
-    found = identify_original_books(records)
+    reserved_idx, reserved_names = set(RESERVED_NODE_INDICES), set()
+    evidence = Path(args.reserved_evidence)
+    if evidence.is_file():
+        i2, n2 = reserved_from_evidence(json.loads(evidence.read_text()))
+        reserved_idx |= i2
+        reserved_names |= n2
+    reserved_names, unresolved = resolve_reserved(reserved_idx, reserved_names,
+                                                  rd.glb_json(args.source_glb) if args.source_glb else None)
+    try:
+        found = identify_original_books(records)
+        reserved = check_reserved_conflicts(found, reserved_names, unresolved)
+    except RefusedError as error:
+        if args.list_originals:
+            _emit({'schema': 'sub01.real-shelf-books.v1', 'mode': 'list', 'base': base, 'refused': str(error),
+                   'objects_scanned': [r['name'] for r in records]}, out, 'real-shelf-books-identifiers.json')
+        raise
     originals = found['books']
     hidden_names = {o['name'] for o in found['separate']}
     excised = {x['node']: set(x['excise']['triangle_ids']) for x in found['batched']}
@@ -1070,6 +1165,7 @@ def run(argv=None):
               ('dry-run' if args.dry_run else 'blender'), 'basis': 'evaluated-geometry', 'base': base,
               'base_blend': blend_path,
               'originals': [{k: v for k, v in o.items() if k != 'triangle_ids'} for o in originals],
+              'reserved_surgery_guard': reserved, 'reserved_evidence': str(evidence) if evidence.is_file() else None,
               'originals_separate': len(found['separate']), 'originals_batched_nodes': [x['node'] for x in found['batched']],
               'shelf_objects': [{'name': r['name'], 'ident': r['ident'], 'canonical': canonical(r['name']),
                                  'canonical_ident': canonical(r['ident']),
