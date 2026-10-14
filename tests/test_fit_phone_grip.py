@@ -78,7 +78,8 @@ def test_support_hull_and_pinch():
     assert fit.Evaluator.support(under, np.zeros(3), half, np.array([0, 0, -1.0]))['supported']
     one_side = np.array([[x, y, -.75] for x in (2, 3) for y in (5, 6)])
     assert not fit.Evaluator.support(one_side, np.zeros(3), half, np.array([0, 0, -1.0]))['supported']
-    pinch = np.array([[3.75, 0, 0], [-3.75, 0, 0]])
+    pinch = np.array([[3.75, y, 0] for y in (0, 1, 2)]+[[-3.75, y, 0] for y in (0, 1, 2)])
+    assert not fit.Evaluator.support(pinch[:4], np.zeros(3), half, np.array([0, 0, -1.0]))['opposing_side_pinch']
     assert fit.Evaluator.support(pinch, np.zeros(3), half, np.array([0, 0, -1.0]))['opposing_side_pinch']
 
 

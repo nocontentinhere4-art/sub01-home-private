@@ -360,6 +360,7 @@ class Evaluator:
                 cl = L[rg][contact]
                 sup = self.support(cl, self.case[1], self.case[2], self.gravity[f]@R)
                 extra += 0 if sup['supported'] else 3
+                extra += 0 if sup.get('opposing_side_pinch') else 2
                 extra += max(0.0, 6.0-self.contact_spread(cl))
                 extra += 10*max(0.0, math.cos(math.radians(self.view_deg))-(R[:, 2]@(self.eyes[f]-t))/np.linalg.norm(self.eyes[f]-t))
                 extra += 10*max(0.0, math.cos(math.radians(self.upright_deg))-self.upright(f, R))
@@ -464,8 +465,11 @@ class Evaluator:
         normals = np.zeros_like(contacts)
         normals[np.arange(len(q)), axis] = np.sign(q[np.arange(len(q)), axis])
         pushing = normals@g > 0.25          # skin under the phone relative to gravity
-        lateral = {tuple(n) for n in normals[np.abs(normals@g) <= 0.25].astype(int).tolist()}
-        pinch = any(tuple(-v for v in n) in lateral for n in lateral)
+        # Friction pinch: at least three skin contacts on each of two opposite case faces.
+        faces = {}
+        for n in normals.astype(int).tolist():
+            faces[tuple(n)] = faces.get(tuple(n), 0)+1
+        pinch = any(k >= 3 and faces.get(tuple(-v for v in n), 0) >= 3 for n, k in faces.items())
         pts = contacts[pushing]
         if len(pts) < 3:
             return {'supported': bool(pinch), 'under_contacts': int(len(pts)), 'opposing_side_pinch': bool(pinch)}
@@ -477,6 +481,29 @@ class Evaluator:
         inside = _inside(hull, com)
         return {'supported': bool(inside or pinch), 'under_contacts': int(len(pts)), 'com_inside_support_hull': bool(inside),
                 'opposing_side_pinch': bool(pinch)}
+
+
+def thumb_screen_track(ev, R, t, touch_cm=0.1):
+    """Captured thumb pad versus the screen glass, per frame (corrected hand frame, phone frame).
+
+    uv: screen coordinates of the thumb pad point nearest the glass plane (0..1, origin at the
+    volume/bottom corner, v toward the speaker); depth_cm: signed height above the glass (negative
+    means the rigid model presses through, i.e. a tap the native finger collision must resolve).
+    A touch is reported only from geometry (|depth| <= touch_cm inside the glass), never from names."""
+    _, sc, sh = ev.screen
+    names = np.array(ev.hand.joints)[ev.hand.labels]
+    pad = np.nonzero(np.isin(names, ['mixamorigRightHandThumb3']))[0]
+    rows = []
+    for f in range(len(ev.hand.times)):
+        L = (ev.points(f, pad)-t)@R
+        i = int(np.argmin(L[:, 2]))
+        p = L[i]
+        u, v = (p[0]-sc[0])/(2*sh[0])+.5, (p[1]-sc[1])/(2*sh[1])+.5
+        depth = float(p[2]-sc[2])
+        inside = 0 <= u <= 1 and 0 <= v <= 1
+        rows.append({'time': round(float(ev.hand.times[f]), 4), 'uv': [round(u, 4), round(v, 4)], 'depth_cm': round(depth, 4),
+                     'over_glass': bool(inside), 'touch': bool(inside and abs(depth) <= touch_cm), 'press': bool(inside and depth < -touch_cm)})
+    return rows
 
 
 def _hull(points):
@@ -519,14 +546,30 @@ def _frame(z, roll):
     return np.stack([x, np.cross(z, x), z], 1)
 
 
-def seeds(ev, count_roll=12):
+def seeds(ev, count_roll=12, kinds=('pinch', 'view')):
     """Initial guesses from geometry: screen toward the actual eye or along the actual palm side."""
     f = ev.pose
     P = ev.hand.positions[f][ev.rigid]
     centroid = P[np.linalg.norm(P, axis=1) < 14].mean(0)
     eye = ev.eyes[f]
     out = []
-    for z in (eye-centroid, np.array([0.0, 0, 1]), (eye-centroid)/np.linalg.norm(eye-centroid)+[0, 0, 1]):
+    # Pinch seeds: case thickness between the thumb pad and the opposing finger pads, by measured skin.
+    names = np.array(ev.hand.joints)[ev.hand.labels]
+    allp = ev.hand.positions[f]
+    thumb = allp[names == 'mixamorigRightHandThumb3']
+    for finger in (('mixamorigRightHandMiddle3', 'mixamorigRightHandIndex3') if 'pinch' in kinds else ()):
+        pads = allp[names == finger]
+        if not len(thumb) or not len(pads):
+            continue
+        d = np.sqrt(((thumb[:, None]-pads[None])**2).sum(-1))
+        i, j = np.unravel_index(np.argmin(d), d.shape)
+        mid, z = (thumb[i]+pads[j])/2, thumb[i]-pads[j]
+        for k in range(count_roll):
+            R = _frame(z, 2*math.pi*k/count_roll)
+            for sx in (-3.0, 0.0, 3.0):
+                for sy in (-6.0, -3.0, 3.0, 6.0):
+                    out.append(np.concatenate([matrix_to_rotvec(R), mid+R[:, 0]*sx+R[:, 1]*sy]))
+    for z in ((eye-centroid, np.array([0.0, 0, 1]), (eye-centroid)/np.linalg.norm(eye-centroid)+[0, 0, 1]) if 'view' in kinds else ()):
         for lift in (2.0, 4.0, 6.0):
             for slide in (-2.0, 0.0, 2.0):
                 for k in range(count_roll):
@@ -559,14 +602,14 @@ _EV = None
 
 def _refine(job):
     k, x, frames = job
-    x1, _ = cem(_EV, x, [_EV.pose], iterations=25, rng=np.random.default_rng(k))
+    x1, _ = cem(_EV, x, [_EV.pose], iterations=40, rng=np.random.default_rng(k))
     return cem(_EV, x1, frames, iterations=12, population=32, rng=np.random.default_rng(100+k), sigma=(0.08, 0.5, 0.06))
 
 
-def search(ev, frames, starts=8, workers=4, correction=False):
+def search(ev, frames, starts=8, workers=4, correction=False, kinds=('pinch', 'view')):
     global _EV
     _EV = ev
-    pool = seeds(ev)
+    pool = seeds(ev, kinds=kinds)
     if correction:
         pool = [np.concatenate([x, c]) for x in pool for c in (np.zeros(3),)]
     ranked = sorted(((ev.cost(x, [ev.pose]), i, x) for i, x in enumerate(pool)), key=lambda c: c[0])[:starts]
@@ -669,6 +712,7 @@ def main(argv=None):
     ap.add_argument('--cache', type=Path, default=ROOT/'out/phone-grip')
     ap.add_argument('--radius', type=float, default=30)
     ap.add_argument('--pose-time', type=float, default=4.0)
+    ap.add_argument('--evaluate-gltf', help='JSON {offset_cm, quaternion_xyzw, correction_xyzw?} in the glTF hand frame')
     ap.add_argument('--evaluate-ue', help="Evaluate a UE candidate 'X=.. Y=.. Z=..|P=.. Y=.. R=..' instead of searching")
     ap.add_argument('--frame-stride', type=int, default=20, help='Search frames stride (final residuals use every frame)')
     ap.add_argument('--occlusion-stride', type=int, default=1)
@@ -677,6 +721,7 @@ def main(argv=None):
     ap.add_argument('--wrist-correction', action='store_true',
                     help='Also solve one bounded constant RightHand local rotation (fingers unchanged)')
     ap.add_argument('--max-correction-deg', type=float, default=35.0)
+    ap.add_argument('--seed-set', default='pinch,view', help='Comma list: pinch (thumb/finger pads), view (screen to eye)')
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args(argv)
@@ -703,7 +748,16 @@ def main(argv=None):
                          'preserves': 'right-hand world rotation, all finger local rotations, bone lengths',
                          'note': 'IK moves hand and phone together, so hand-phone residuals are invariant; it only clears body skin. '
                                  'Hand-vs-body skin after the move and forearm skin re-deformation are not re-skinned here; root re-audits natively.'}}
-    if args.evaluate_ue:
+    if args.evaluate_gltf:
+        cand = json.loads(Path(args.evaluate_gltf).read_text())
+        R, t = quat_to_matrix(cand['quaternion_xyzw']), np.array(cand['offset_cm'], float)
+        ev.set_correction(quat_to_matrix(cand.get('correction_xyzw', [0, 0, 0, 1])))
+        rows = parallel_residuals(ev, R, t, args.occlusion_stride, args.workers)
+        result['candidates'] = [candidate_record(ev, R, t, cand.get('label', 'evaluated'), rows)]
+        result['candidates'][0]['provenance'] = cand.get('provenance')
+        result['candidates'][0]['thumb_screen_track'] = thumb_screen_track(ev, R, t)
+        result['frames'] = rows
+    elif args.evaluate_ue:
         off, rot = args.evaluate_ue.split('|')
         o = [float(p.split('=')[1]) for p in off.split()]
         r = {k: float(v) for k, v in (p.split('=') for p in rot.split())}
@@ -713,7 +767,8 @@ def main(argv=None):
         result['frames'] = rows
     else:
         frames = sorted(set(range(0, len(hand.times), args.frame_stride)) | {ev.pose})
-        refined = search(ev, frames, starts=args.starts, workers=args.workers, correction=args.wrist_correction)
+        refined = search(ev, frames, starts=args.starts, workers=args.workers, correction=args.wrist_correction,
+                         kinds=tuple(args.seed_set.split(',')))
         result['candidates'] = []
         for rank, (c, x) in enumerate(refined[:args.top]):
             R, t = rotvec_to_matrix(x[:3]), x[3:6]
