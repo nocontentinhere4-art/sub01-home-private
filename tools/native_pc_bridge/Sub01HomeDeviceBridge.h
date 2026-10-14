@@ -36,6 +36,7 @@ public:
  bool IsComposingNote()const{return NoteComposer.Open;}
  void TVGame(const FString& Game);
  void SetPongDirection(float Direction){PongDirection=FMath::Clamp(Direction,-1.f,1.f);}
+ bool GetDisplayedMinecraftFrame(FString& Frame)const;
  FName GetFocusedDevice()const{return FocusedDevice;}
 protected:
  void EndPlay(const EEndPlayReason::Type Reason)override;
@@ -44,6 +45,7 @@ private:
  FString Token,PhoneFrameId,PhoneApp,DraftTitle,DraftText,NoteStatusText;
  FSub01NoteComposer NoteComposer;bool NoteProgrammatic=false;
  TSharedPtr<SWidget> NoteWidget;TSharedPtr<SEditableTextBox> NoteTitleBox;TSharedPtr<SMultiLineEditableTextBox> NoteTextBox;TSharedPtr<STextBlock> NoteStatus;
+bool MinecraftVisible=false;double MinecraftStateReceived=0;
 bool Private=true,LocalPrivacy=false,Busy=false;
  uint64 Generation=0;float PongDirection=0;FName FocusedDevice;
  FTimerHandle Timer;

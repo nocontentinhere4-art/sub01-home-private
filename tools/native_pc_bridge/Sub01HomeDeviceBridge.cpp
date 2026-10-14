@@ -111,7 +111,7 @@ bool USub01HomeDeviceBridge::Configure(FName Device,UMeshComponent* Screen,int32
  GetWorld()->GetTimerManager().SetTimer(Timer,this,&USub01HomeDeviceBridge::Poll,.15f,true);return true;
 }
 void USub01HomeDeviceBridge::EndPlay(const EEndPlayReason::Type Reason){Clear();GetWorld()->GetTimerManager().ClearTimer(Timer);if(Input&&FSlateApplication::IsInitialized())FSlateApplication::Get().UnregisterInputPreProcessor(Input);Input.Reset();Token.Empty();Super::EndPlay(Reason);}
-void USub01HomeDeviceBridge::Clear(){CloseNoteComposer(true);PhoneApp.Empty();++Generation;Private=true;Busy=false;FocusedDevice=NAME_None;PongDirection=0;PongState.Reset();PhoneFrameId.Empty();Images.Empty();ImageIdentity.Empty();FramePending.Empty();for(auto& Pair:Materials)if(Pair.Value)Pair.Value->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);}
+void USub01HomeDeviceBridge::Clear(){MinecraftVisible=false;MinecraftStateReceived=0;CloseNoteComposer(true);PhoneApp.Empty();++Generation;Private=true;Busy=false;FocusedDevice=NAME_None;PongDirection=0;PongState.Reset();PhoneFrameId.Empty();Images.Empty();ImageIdentity.Empty();FramePending.Empty();for(auto& Pair:Materials)if(Pair.Value)Pair.Value->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);}
 void USub01HomeDeviceBridge::SetLocalPrivacy(bool Hidden){if(Hidden==LocalPrivacy)return;LocalPrivacy=Hidden;if(Hidden)Clear();}
 bool USub01HomeDeviceBridge::FocusHit(UActorComponent* Component){if(Private||LocalPrivacy)return false;for(auto& Pair:Screens)if(Pair.Key==Component){FocusedDevice=Pair.Value;return true;}return false;}
 void USub01HomeDeviceBridge::ReleaseFocus(){if(NoteComposer.Open)CloseNoteComposer(false);if(FocusedDevice==TEXT("tv")&&!Private&&!LocalPrivacy){auto B=MakeShared<FJsonObject>();B->SetNumberField(TEXT("direction"),0);Action(TEXT("tv"),B);}FocusedDevice=NAME_None;PongDirection=0;}
@@ -125,6 +125,7 @@ void USub01HomeDeviceBridge::Poll(){
  ReadHome([this,Epoch](TSharedPtr<FJsonObject> State){if(Epoch!=Generation)return;Busy=false;if(!PublicHome(State)){Clear();return;}Private=false;
   const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game,Identity;
   const FSub01DeviceScreenInputs Screen=Sub01ScreenInputs(State,&Identity,&Game);
+  MinecraftVisible=Sub01TVFetchesMinecraft(Screen);MinecraftStateReceived=FPlatformTime::Seconds();
   PhoneApp.Empty();{const TSharedPtr<FJsonObject>* PhoneScreen=nullptr;if(Screen.PhoneAppFrame&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)&&PhoneScreen)(*PhoneScreen)->TryGetStringField(TEXT("app"),PhoneApp);}
   // Browser parity (Sub01DeviceScreenPolicy.h): a browser page only while he is on the
   // phone; an owned app frame whenever the home is public. Same authenticated route.
@@ -228,4 +229,12 @@ void USub01HomeDeviceBridge::PhoneNavigate(const FString& URL){if(URL.IsEmpty()|
 void USub01HomeDeviceBridge::TVGame(const FString& Game){auto B=MakeShared<FJsonObject>();B->SetStringField(TEXT("game"),Game);Action(TEXT("tv"),B);}
 void USub01HomeDeviceBridge::DrawTV(UCanvas* Canvas,int32 Width,int32 Height){if(!Canvas||Private||LocalPrivacy||!PongState)return;const TArray<TSharedPtr<FJsonValue>> *Paddles=nullptr,*Ball=nullptr,*Score=nullptr;if(!PongState->TryGetArrayField(TEXT("paddles"),Paddles)||!PongState->TryGetArrayField(TEXT("ball"),Ball)||!PongState->TryGetArrayField(TEXT("score"),Score)||Paddles->Num()!=2||Ball->Num()!=2||Score->Num()!=2)return;
  Canvas->SetDrawColor(FColor(217,232,217));Canvas->K2_DrawBox(FVector2D(.04f*Width,(*Paddles)[0]->AsNumber()*Height-.1f*Height),FVector2D(8,.2f*Height),4,FLinearColor(FColor(217,232,217)));Canvas->K2_DrawBox(FVector2D(.95f*Width,(*Paddles)[1]->AsNumber()*Height-.1f*Height),FVector2D(8,.2f*Height),4,FLinearColor(FColor(217,232,217)));Canvas->K2_DrawBox(FVector2D((*Ball)[0]->AsNumber()*Width-4,(*Ball)[1]->AsNumber()*Height-4),FVector2D(8,8),4,FLinearColor(FColor(217,232,217)));if(GEngine)Canvas->DrawText(GEngine->GetSmallFont(),FString::Printf(TEXT("%d : %d"),int32((*Score)[0]->AsNumber()),int32((*Score)[1]->AsNumber())),Width*.44f,24,2,2);
+}
+
+bool USub01HomeDeviceBridge::GetDisplayedMinecraftFrame(FString& Frame)const{
+ Frame.Empty();const double Age=FPlatformTime::Seconds()-MinecraftStateReceived;
+ if(Private||LocalPrivacy||!MinecraftVisible||Age<0||Age>.75||!Images.Contains(TEXT("tv"))||!Materials.Contains(TEXT("tv")))return false;
+ UTexture* Painted=nullptr;auto* M=Materials.FindRef(TEXT("tv"));
+ if(!M||!M->GetTextureParameterValue(FMaterialParameterInfo(TEXT("PCFrame")),Painted)||Painted!=Images.FindRef(TEXT("tv")))return false;
+ Frame=ImageIdentity.FindRef(TEXT("tv"));Frame.ReplaceInline(TEXT("\""),TEXT(""));return !Frame.IsEmpty();
 }
