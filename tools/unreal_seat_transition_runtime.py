@@ -75,7 +75,8 @@ def build_evidence(seat_report: dict, chair_text: str, mesh: str = OWNER_MESH, c
         rows = [regions[name] for _, regions in samples]
         worst[name] = {'min_gap_cm': min(r['minGapCm'] for r in rows),
                        'max_median_cm': max(r['p50GapCm'] for r in rows),
-                       'min_coverage': min(r['bandVertices'] / r['overSurfaceVertices'] for r in rows)}
+                       'min_coverage': min(r['bandVertices'] / r['overSurfaceVertices'] for r in rows),
+                       'min_band_vertices': min(r['bandVertices'] for r in rows)}
     body, yaw = seat_report['body_cm'], seat_report['body_yaw']
     # unreal_audit_seat_contact.py poses the skin at Transform(body_cm, Rotator(yaw=body_yaw)),
     # unit scale; reports that state the full transform must agree with that yaw.
@@ -186,7 +187,7 @@ void ASub01HomeCharacter::LoadSeatTransition(){
    Loaded.ScaleX=(*Scale)[0]->AsNumber();Loaded.ScaleY=(*Scale)[1]->AsNumber();Loaded.ScaleZ=(*Scale)[2]->AsNumber();
    Loaded.T0=(*Range)[0]->AsNumber();Loaded.T1=(*Range)[1]->AsNumber();
    const TCHAR* Names[5]={TEXT("buttocks"),TEXT("left_posterior_thigh"),TEXT("right_posterior_thigh"),TEXT("left_sole"),TEXT("right_sole")};bool Complete=true;
-   for(int32 I=0;I<5;++I){const TSharedPtr<FJsonObject>* P=nullptr;if(!(*Patches)->TryGetObjectField(Names[I],P)||!(*P)->TryGetNumberField(TEXT("min_gap_cm"),Loaded.MinGap[I])||!(*P)->TryGetNumberField(TEXT("max_median_cm"),Loaded.MaxMedian[I])||!(*P)->TryGetNumberField(TEXT("min_coverage"),Loaded.MinCoverage[I]))Complete=false;}
+   for(int32 I=0;I<5;++I){const TSharedPtr<FJsonObject>* P=nullptr;if(!(*Patches)->TryGetObjectField(Names[I],P)||!(*P)->TryGetNumberField(TEXT("min_gap_cm"),Loaded.MinGap[I])||!(*P)->TryGetNumberField(TEXT("max_median_cm"),Loaded.MaxMedian[I])||!(*P)->TryGetNumberField(TEXT("min_coverage"),Loaded.MinCoverage[I])||!(*P)->TryGetNumberField(TEXT("min_band_vertices"),Loaded.MinBandVertices[I]))Complete=false;}
    if(Complete&&Sub01SeatEvidenceInBand(Loaded)){
     SeatEvidence=Loaded;
     // The measured pose decides where the capsule stands: audited mesh anchor minus the mesh offset.
@@ -286,7 +287,7 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
      const auto R=(*Regions)[I]->AsObject();FString Name;double Facing=0,Over=0,Band=0;
      if(!R->TryGetStringField(TEXT("region"),Name)||Name!=Names[I]||!R->TryGetNumberField(TEXT("facingVertices"),Facing)||!R->TryGetNumberField(TEXT("overSurfaceVertices"),Over)||!R->TryGetNumberField(TEXT("bandVertices"),Band)
         ||!R->TryGetNumberField(TEXT("minGapCm"),M.MinGap[I])||!R->TryGetNumberField(TEXT("p50GapCm"),M.Median[I])||Over<=0){Complete=false;break;}
-     M.Facing[I]=int(Facing);M.Coverage[I]=Band/Over;}
+     M.Facing[I]=int(Facing);M.Coverage[I]=Band/Over;M.BandCount[I]=Band;}
    }
    M.Valid=Complete;SeatMeasurement=M;
    const int32 InBand=Sub01SeatMeasuredReceipt(SeatMeasurement,L,In.ClipSerial,Now)?1:0;

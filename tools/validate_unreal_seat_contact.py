@@ -1,9 +1,15 @@
 """Gate and diagnose the measured seated contact of the actual posed skin (probe only).
 
 docs/qa/contact.md, seated at the desk: buttocks and the back of each thigh touch the seat
-cushion (-2.5 to +0.5 cm), both soles touch the floor (0 to +1 cm); a gap fails like a
-penetration. Rule 4: each contact is a separate patch of downward-facing skin, gated on
-coverage, never one lowest vertex. Measures come from tools/unreal_audit_seat_contact.py.
+cushion (-2.5 to +0.5 cm); a gap fails like a penetration. Rule 4: each contact is a separate
+patch of downward-facing skin, never one lowest vertex. Seat patches are gated on median and
+coverage. Soles are gated as a SUPPORT PATCH: no plantar vertex below the support surface
+(non-penetration), the lowest within +1 cm, and at least MIN_SUPPORT_VERTICES plantar vertices
+in that 0..+1 cm band. A genuine captured seated foot plants its toes with the heel raised
+(measured: left sole median ~10.4 cm, right ~7.5 cm, plane normals tilted 32 deg and 55 deg), so a
+whole-sole median or coverage gate would reject real motion; it is not used for soles.
+Sole membership is the renderer's fixed bind-space plantar selection (slides material, rest
+Y <= 0.004 m, bind normal Y < -0.7), not a per-pose minimum. Measures come from tools/unreal_audit_seat_contact.py.
 
 This is a probe: nothing here changes a pose or may set NativeSeatVerified.
 """
@@ -16,7 +22,8 @@ SOLE_REGIONS = ('left_sole', 'right_sole')
 REGIONS = SEAT_REGIONS + SOLE_REGIONS
 # Provisional patch requirements (tune only from actual reports, and say so):
 MIN_PATCH_VERTICES = 12      # downward-facing skin over the surface, per patch
-MIN_BAND_COVERAGE = .5       # share of that patch within the contact band
+MIN_BAND_COVERAGE = .5       # share of a SEAT patch within the contact band
+MIN_SUPPORT_VERTICES = 12    # plantar vertices within 0..+1 cm of the support surface, per sole
 
 
 def band(region):
@@ -76,9 +83,15 @@ def validate(data):
             coverage = r['bandVertices'] / r['overSurfaceVertices']
             if r['minGapCm'] < low:
                 raise ValueError(f'{name}: penetration {r["minGapCm"]:.3f} cm at {time:.4f} s below {low} cm')
-            if r['p50GapCm'] > high or coverage < MIN_BAND_COVERAGE:
+            if name in SOLE_REGIONS:
+                if r['minGapCm'] > high or r['bandVertices'] < MIN_SUPPORT_VERTICES:
+                    raise ValueError(f'{name}: no support patch, lowest {r["minGapCm"]:.3f} cm, {r["bandVertices"]} plantar vertices '
+                                     f'within {low}..{high} cm at {time:.4f} s')
+            elif r['p50GapCm'] > high or coverage < MIN_BAND_COVERAGE:
                 raise ValueError(f'{name}: gap, median {r["p50GapCm"]:.3f} cm, {coverage:.0%} of the patch in contact at {time:.4f} s')
-            w = worst.setdefault(name, {'min_gap_cm': math.inf, 'max_median_gap_cm': -math.inf, 'min_coverage': 1.})
+            w = worst.setdefault(name, {'min_gap_cm': math.inf, 'max_median_gap_cm': -math.inf, 'min_coverage': 1.,
+                                        'min_band_vertices': math.inf})
+            w['min_band_vertices'] = min(w['min_band_vertices'], r['bandVertices'])
             w['min_gap_cm'] = min(w['min_gap_cm'], r['minGapCm'])
             w['max_median_gap_cm'] = max(w['max_median_gap_cm'], r['p50GapCm'])
             w['min_coverage'] = min(w['min_coverage'], coverage)
@@ -107,8 +120,10 @@ def propose_vertical_anchor(data):
                     continue
                 if low - r['minGapCm'] > lo:
                     lo, binding['lower'] = low - r['minGapCm'], (name, time)
-                if high - r['p50GapCm'] < hi:
-                    hi, binding['upper'] = high - r['p50GapCm'], (name, time)
+                # Seat patches must touch at their median; a sole only at its support patch (lowest point).
+                touch = r['minGapCm'] if name in SOLE_REGIONS else r['p50GapCm']
+                if high - touch < hi:
+                    hi, binding['upper'] = high - touch, (name, time)
         return lo, hi, binding
 
     seat_lo, seat_hi, seat_binding = interval(SEAT_REGIONS)

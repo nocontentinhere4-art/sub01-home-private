@@ -59,14 +59,21 @@ struct FSub01SeatEvidence {
  double T0=NAN,T1=NAN;                             // audited clip time range
  // buttocks, left/right posterior thigh, left/right sole: worst min gap, worst median, worst coverage.
  double MinGap[5]={NAN,NAN,NAN,NAN,NAN},MaxMedian[5]={NAN,NAN,NAN,NAN,NAN},MinCoverage[5]={NAN,NAN,NAN,NAN,NAN};
+ double MinBandVertices[5]={NAN,NAN,NAN,NAN,NAN};   // fewest in-band vertices over the audited frames
 };
-// docs/qa/contact.md bands per patch: seat patches -2.5..+0.5 cm, soles 0..+1 cm, at least
-// half of each patch's facing skin over the surface in band.
-inline bool Sub01SeatPatchesInBand(const double* MinGap,const double* Median,const double* Coverage){
+// docs/qa/contact.md bands per patch (tools/validate_unreal_seat_contact.py). Seat patches:
+// -2.5..+0.5 cm, median in band and at least half of the facing skin over the cushion in band.
+// Soles: a support patch, not a flat sole: nothing below the support surface, the lowest plantar
+// point within +1 cm and at least 12 plantar vertices in 0..+1 cm. A genuine seated foot plants
+// its toes with the heel raised, so no whole-sole median or coverage is required.
+struct FSub01SeatSupport {static constexpr int MinSupportVertices=12;};
+inline bool Sub01SeatPatchesInBand(const double* MinGap,const double* Median,const double* Coverage,const double* BandVertices){
  for(int I=0;I<5;++I){
-  if(!Sub01SeatFinite(MinGap[I])||!Sub01SeatFinite(Median[I])||!Sub01SeatFinite(Coverage[I]))return false;
-  const double Low=I<3?-2.5:0,High=I<3?.5:1;
-  if(MinGap[I]<Low||Median[I]>High||Coverage[I]<.5)return false;
+  if(!Sub01SeatFinite(MinGap[I])||!Sub01SeatFinite(BandVertices[I]))return false;
+  if(I<3){
+   if(!Sub01SeatFinite(Median[I])||!Sub01SeatFinite(Coverage[I]))return false;
+   if(MinGap[I]<-2.5||Median[I]>.5||Coverage[I]<.5)return false;
+  }else if(MinGap[I]<0||MinGap[I]>1||BandVertices[I]<FSub01SeatSupport::MinSupportVertices)return false;
  }
  return true;
 }
@@ -78,7 +85,7 @@ template<class T> inline bool Sub01SeatTransformFinite(const T& P){
 inline bool Sub01SeatEvidenceInBand(const FSub01SeatEvidence& E){
  if(!E.Loaded||!E.MeshId||!E.ClipId||!E.ChairRevision||E.Family==ESub01SeatFamily::None)return false;
  if(!Sub01SeatTransformFinite(E)||!Sub01SeatFinite(E.T0)||!Sub01SeatFinite(E.T1)||!(E.T1>E.T0))return false;
- return Sub01SeatPatchesInBand(E.MinGap,E.MaxMedian,E.MinCoverage);
+ return Sub01SeatPatchesInBand(E.MinGap,E.MaxMedian,E.MinCoverage,E.MinBandVertices);
 }
 // The live body, as the character actually has it this tick.
 struct FSub01SeatLivePose {
@@ -123,7 +130,7 @@ struct FSub01SeatMeasurement {
  // Each sole's own support: the actual surface traced under its footprint (heel, mid, toe on one
  // flat component), not the floor under the capsule. A sole gap is measured to its own surface.
  bool SoleSupportVerified[2]={false,false};double SoleFloorZ[2]={NAN,NAN};
- double MinGap[5]={NAN,NAN,NAN,NAN,NAN},Median[5]={NAN,NAN,NAN,NAN,NAN},Coverage[5]={NAN,NAN,NAN,NAN,NAN};
+ double MinGap[5]={NAN,NAN,NAN,NAN,NAN},Median[5]={NAN,NAN,NAN,NAN,NAN},Coverage[5]={NAN,NAN,NAN,NAN,NAN},BandCount[5]={NAN,NAN,NAN,NAN,NAN};
 };
 struct FSub01SeatMeasurementRules {static constexpr double MaxAgeSeconds=.25;};
 inline bool Sub01SeatMeasuredReceipt(const FSub01SeatMeasurement& M,const FSub01SeatLivePose& L,uint32_t EvaluatedSerial,double Now){
@@ -132,7 +139,7 @@ inline bool Sub01SeatMeasuredReceipt(const FSub01SeatMeasurement& M,const FSub01
  if(!Sub01SeatFinite(M.MeasuredAt)||!(Now>=M.MeasuredAt)||Now-M.MeasuredAt>FSub01SeatMeasurementRules::MaxAgeSeconds)return false;
  for(int I=0;I<5;++I)if(M.Facing[I]<=0)return false;
  for(int I=0;I<2;++I)if(!M.SoleSupportVerified[I]||!Sub01SeatFinite(M.SoleFloorZ[I]))return false;
- return Sub01SeatSameTransform(M,L)&&Sub01SeatPatchesInBand(M.MinGap,M.Median,M.Coverage);
+ return Sub01SeatSameTransform(M,L)&&Sub01SeatPatchesInBand(M.MinGap,M.Median,M.Coverage,M.BandCount);
 }
 
 // Everything the state machine may know, gathered by the character each tick.

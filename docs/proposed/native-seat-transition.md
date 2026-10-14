@@ -91,6 +91,34 @@ Everything below is source or server-side data; no step here was run.
    contact-profile runtime and the skin-contact native module. The anchors must be unique; a
    missing anchor refuses the whole install.
 
+## Sole criterion: support patch, not a flat sole
+
+The measured actual typing soles match between the source GLB and UE at 3, 6 and 8 s:
+
+| Sole | Lowest | Median | Highest |
+|---|---|---|---|
+| Left | -0.161 cm | 10.397 cm | 24.268 cm |
+| Right | -0.360 cm | 7.527 cm | 14.820 cm |
+
+They are a genuine toe plant with the heel raised: plane normals are tilted, with an RMS of
+0.093 cm, and all of the lowest fixed plantar points are toe-base vertices.
+
+- **Soles:** gated as a support patch:
+  - no plantar vertex below the support surface (non-penetration, 0 cm);
+  - the lowest point within +1 cm;
+  - at least 12 plantar vertices in the 0..+1 cm band.
+
+  There is no whole-sole median or coverage gate for soles. That would reject real motion, and
+  removing it is not a loosened threshold.
+- **Seat patches:** keep their median and coverage gates.
+- **Measured sole lowest points:** they are below 0 cm, so they still fail non-penetration
+  against the 2.5 cm floor at the measured body transform. Fixing that needs a measured,
+  non-stretching leg/body placement (the separate fitter, roughly +2.74 cm left and +2.94 cm
+  right as root measured). It must not be a global body lift and must not relax the gate.
+- **Sole membership:** the renderer's fixed bind-space plantar selection, 4171 vertices in UE.
+- **Analyzer facing filter:** the analyzer's facing filter (posed normal Z ≤ -0.5) is the
+  renderer's. Tilted toe normals near that limit are its call.
+
 ## Arrival and receipts
 
 - **Walking:** CharacterMovement input brings the capsule to within 12 cm of the approach

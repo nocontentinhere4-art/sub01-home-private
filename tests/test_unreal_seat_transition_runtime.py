@@ -65,10 +65,10 @@ def test_evidence_is_built_only_from_an_accepted_report_and_matches_the_native_r
     evidence = adapter.build_evidence(seat_report(), CHAIR)
     assert evidence['native_seat_verified'] is False and evidence['family'] == 'DeskTyping'
     assert evidence['time_range_s'] == [3.0, 8.0] and evidence['chair_revision'] == str(adapter.seat_id(CHAIR))
-    assert evidence['patches']['left_posterior_thigh'] == {'min_gap_cm': -.9, 'max_median_cm': -.2, 'min_coverage': .75}
+    assert evidence['patches']['left_posterior_thigh'] == {'min_gap_cm': -.9, 'max_median_cm': -.2, 'min_coverage': .75, 'min_band_vertices': 150}
     # The native consumer accepts exactly this evidence for the matching live pose, and nothing near it.
     p = evidence['patches']
-    fill = ''.join(f'E.MinGap[{i}]={p[n]["min_gap_cm"]};E.MaxMedian[{i}]={p[n]["max_median_cm"]};E.MinCoverage[{i}]={p[n]["min_coverage"]};'
+    fill = ''.join(f'E.MinGap[{i}]={p[n]["min_gap_cm"]};E.MaxMedian[{i}]={p[n]["max_median_cm"]};E.MinCoverage[{i}]={p[n]["min_coverage"]};E.MinBandVertices[{i}]={p[n]["min_band_vertices"]};'
                    for i, n in enumerate(adapter.PATCHES))
     x, y, z = evidence['body_cm']
     pitch, yaw, roll = evidence['body_rotation_pyr']

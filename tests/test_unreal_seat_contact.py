@@ -51,11 +51,30 @@ def test_one_buttock_touching_while_the_thighs_float_is_refused():
 @pytest.mark.parametrize('change,match', [
     (dict(buttocks=(-2.6, -.5)), 'penetration'),
     (dict(left_sole=(-.2, .2)), 'penetration'),
-    (dict(right_sole=(.9, 1.4)), 'gap'),
+    (dict(right_sole=(1.2, 1.4)), 'no support patch'),
 ])
 def test_band_edges_of_each_patch(change, match):
     with pytest.raises(ValueError, match=match):
         seat.validate(report(**change))
+
+
+def test_genuine_toe_plant_with_raised_heel_is_a_support_patch():
+    # Measured actual typing soles: lowest ~0 cm, median ~10.4 / 7.5 cm (toes planted, heel raised).
+    data = report(left_sole=(.02, 10.4), right_sole=(.04, 7.5))
+    for row in data['samples']:
+        for r in row['regions']:
+            if r['region'].endswith('sole'):
+                r['bandVertices'] = 40                       # toe-edge support patch only
+    assert seat.validate(data)['worst']['left_sole']['max_median_gap_cm'] == 10.4
+    for row in data['samples']:
+        for r in row['regions']:
+            if r['region'] == 'right_sole':
+                r['bandVertices'] = seat.MIN_SUPPORT_VERTICES - 1   # a point, not a patch
+    with pytest.raises(ValueError, match='right_sole: no support patch'):
+        seat.validate(data)
+    # Seat patches keep the median/coverage gate.
+    with pytest.raises(ValueError, match='buttocks: gap'):
+        seat.validate(report(buttocks=(-1.0, .8)))
 
 
 def test_coverage_and_patch_size_are_required_in_every_sample():
