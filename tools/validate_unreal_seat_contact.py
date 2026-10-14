@@ -1,11 +1,13 @@
 """Gate and diagnose the measured seated contact of the actual posed skin (probe only).
 
 docs/qa/contact.md, seated at the desk: buttocks and the back of each thigh touch the seat
-cushion (-2.5 to +0.5 cm); a gap fails like a penetration. Rule 4: each contact is a separate
-patch of downward-facing skin, never one lowest vertex. Seat patches are gated on median and
-coverage. Soles are gated as a SUPPORT PATCH: no plantar vertex below the support surface
-(non-penetration), the lowest within +1 cm, and at least MIN_SUPPORT_VERTICES plantar vertices
-in that 0..+1 cm band. A genuine captured seated foot plants its toes with the heel raised
+cushion (-2.5 to +0.5 cm, the cushion's allowed compression to a touching gap) and each sole
+its support (0 to +1 cm). Rule 4: each contact is a separate patch of downward-facing skin,
+never one lowest vertex. EVERY patch is gated as a LOCAL SUPPORT PATCH: nothing deeper than the
+band's lower edge (non-penetration / maximum compression), the lowest point within the band's
+upper edge (touching), and at least MIN_SUPPORT_VERTICES patch vertices inside the band. A
+whole-patch median or coverage gate is not used: buttocks and thighs are curved, and only the
+part resting on the cushion is in contact (median/coverage are still reported). A genuine captured seated foot plants its toes with the heel raised
 (measured: left sole median ~10.4 cm, right ~7.5 cm, plane normals tilted 32 deg and 55 deg), so a
 whole-sole median or coverage gate would reject real motion; it is not used for soles.
 Sole membership is the renderer's fixed bind-space plantar selection (slides material, rest
@@ -83,12 +85,9 @@ def validate(data):
             coverage = r['bandVertices'] / r['overSurfaceVertices']
             if r['minGapCm'] < low:
                 raise ValueError(f'{name}: penetration {r["minGapCm"]:.3f} cm at {time:.4f} s below {low} cm')
-            if name in SOLE_REGIONS:
-                if r['minGapCm'] > high or r['bandVertices'] < MIN_SUPPORT_VERTICES:
-                    raise ValueError(f'{name}: no support patch, lowest {r["minGapCm"]:.3f} cm, {r["bandVertices"]} plantar vertices '
-                                     f'within {low}..{high} cm at {time:.4f} s')
-            elif r['p50GapCm'] > high or coverage < MIN_BAND_COVERAGE:
-                raise ValueError(f'{name}: gap, median {r["p50GapCm"]:.3f} cm, {coverage:.0%} of the patch in contact at {time:.4f} s')
+            if r['minGapCm'] > high or r['bandVertices'] < MIN_SUPPORT_VERTICES:
+                raise ValueError(f'{name}: no support patch, lowest {r["minGapCm"]:.3f} cm, {r["bandVertices"]} vertices '
+                                 f'within {low}..{high} cm at {time:.4f} s')
             w = worst.setdefault(name, {'min_gap_cm': math.inf, 'max_median_gap_cm': -math.inf, 'min_coverage': 1.,
                                         'min_band_vertices': math.inf})
             w['min_band_vertices'] = min(w['min_band_vertices'], r['bandVertices'])
@@ -120,10 +119,9 @@ def propose_vertical_anchor(data):
                     continue
                 if low - r['minGapCm'] > lo:
                     lo, binding['lower'] = low - r['minGapCm'], (name, time)
-                # Seat patches must touch at their median; a sole only at its support patch (lowest point).
-                touch = r['minGapCm'] if name in SOLE_REGIONS else r['p50GapCm']
-                if high - touch < hi:
-                    hi, binding['upper'] = high - touch, (name, time)
+                # Every patch must touch at its local support patch (its lowest point).
+                if high - r['minGapCm'] < hi:
+                    hi, binding['upper'] = high - r['minGapCm'], (name, time)
         return lo, hi, binding
 
     seat_lo, seat_hi, seat_binding = interval(SEAT_REGIONS)

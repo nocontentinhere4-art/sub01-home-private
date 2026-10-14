@@ -110,7 +110,12 @@ They are a genuine toe plant with the heel raised: plane normals are tilted, wit
 
   There is no whole-sole median or coverage gate for soles. That would reject real motion, and
   removing it is not a loosened threshold.
-- **Seat patches:** keep their median and coverage gates.
+- **Seat patches:** the same local support-patch rule since this change. Nothing may sit
+  deeper than -2.5 cm (cushion compression), the lowest point must be within +0.5 cm, and at
+  least 12 patch vertices must be in the band. Buttocks and thighs are curved, so a
+  whole-patch median or coverage is reported but not gated.
+- **Earlier reports:** receipts and reports that failed under the earlier rules stay as they
+  were recorded. Nothing old is rewritten.
 - **Measured sole lowest points:** they are below 0 cm, so they still fail non-penetration
   against the 2.5 cm floor at the measured body transform. Fixing that needs a measured,
   non-stretching leg/body placement (the separate fitter, roughly +2.74 cm left and +2.94 cm

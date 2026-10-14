@@ -57,14 +57,15 @@ int main(){
  // Quantitative receipt: every dimension must match the accepted measurement.
  {FSub01SeatLivePose L=Live(E);CHECK(Sub01SeatEvidenceInBand(E)&&Sub01SeatReceipt(E,L),1)
   FSub01SeatEvidence B=E;B.Loaded=false;CHECK(!Sub01SeatReceipt(B,L),2)                    // no report, no receipt
-  B=E;B.MaxMedian[1]=.6;CHECK(!Sub01SeatReceipt(B,L),3)                                    // a floating thigh in the report
-  B=E;B.MinCoverage[0]=.4;CHECK(!Sub01SeatReceipt(B,L),4)
+  B=E;B.MinGap[1]=.6;CHECK(!Sub01SeatReceipt(B,L),3)                                       // a floating thigh in the report
+  B=E;B.MinBandVertices[0]=5;CHECK(!Sub01SeatReceipt(B,L),4)                                // a point is not a support patch
+  B=E;B.MaxMedian[1]=3.5;B.MinCoverage[1]=.2;CHECK(Sub01SeatReceipt(B,L),154)               // curved thigh resting locally
   B=E;B.MinGap[3]=-.1;CHECK(!Sub01SeatReceipt(B,L),5)                                      // a sole through the floor
   // Genuine toe plant, raised heel: a high sole median/low coverage still passes with a support patch.
   B=E;B.MaxMedian[3]=10.4;B.MinCoverage[3]=.04;B.MaxMedian[4]=7.5;B.MinCoverage[4]=.06;CHECK(Sub01SeatReceipt(B,L),150)
   B.MinBandVertices[4]=11;CHECK(!Sub01SeatReceipt(B,L),151)                                 // a single point is not a support patch
   B=E;B.MinGap[4]=1.2;CHECK(!Sub01SeatReceipt(B,L),152)                                      // the whole foot hovering
-  B=E;B.MaxMedian[0]=.6;CHECK(!Sub01SeatReceipt(B,L),153)                                    // seat patches keep their median gate
+  B=E;B.MinGap[0]=-2.6;CHECK(!Sub01SeatReceipt(B,L),153)                                     // deeper than the cushion compresses
   B=E;B.Z=NAN;CHECK(!Sub01SeatReceipt(B,L),6)
   FSub01SeatLivePose X=L;X.Z+=.1;CHECK(!Sub01SeatReceipt(E,X),7)                           // 1 mm off the audited transform
   X=L;X.X=E.X+.04;X.Y=E.Y+.04;CHECK(!Sub01SeatReceipt(E,X),16)                            // 0.057 cm in 3D

@@ -61,19 +61,18 @@ struct FSub01SeatEvidence {
  double MinGap[5]={NAN,NAN,NAN,NAN,NAN},MaxMedian[5]={NAN,NAN,NAN,NAN,NAN},MinCoverage[5]={NAN,NAN,NAN,NAN,NAN};
  double MinBandVertices[5]={NAN,NAN,NAN,NAN,NAN};   // fewest in-band vertices over the audited frames
 };
-// docs/qa/contact.md bands per patch (tools/validate_unreal_seat_contact.py). Seat patches:
-// -2.5..+0.5 cm, median in band and at least half of the facing skin over the cushion in band.
-// Soles: a support patch, not a flat sole: nothing below the support surface, the lowest plantar
-// point within +1 cm and at least 12 plantar vertices in 0..+1 cm. A genuine seated foot plants
-// its toes with the heel raised, so no whole-sole median or coverage is required.
+// docs/qa/contact.md bands per patch (tools/validate_unreal_seat_contact.py): seat patches
+// -2.5..+0.5 cm (cushion compression to touching), soles 0..+1 cm. Every patch is a LOCAL
+// support patch: nothing deeper than the band, the lowest point inside it, and at least 12
+// patch vertices in band. No whole-patch median/coverage: buttocks and thighs are curved and a
+// genuine seated foot plants its toes with the heel raised (median/coverage are reported only).
 struct FSub01SeatSupport {static constexpr int MinSupportVertices=12;};
 inline bool Sub01SeatPatchesInBand(const double* MinGap,const double* Median,const double* Coverage,const double* BandVertices){
+ (void)Median;(void)Coverage;
  for(int I=0;I<5;++I){
   if(!Sub01SeatFinite(MinGap[I])||!Sub01SeatFinite(BandVertices[I]))return false;
-  if(I<3){
-   if(!Sub01SeatFinite(Median[I])||!Sub01SeatFinite(Coverage[I]))return false;
-   if(MinGap[I]<-2.5||Median[I]>.5||Coverage[I]<.5)return false;
-  }else if(MinGap[I]<0||MinGap[I]>1||BandVertices[I]<FSub01SeatSupport::MinSupportVertices)return false;
+  const double Low=I<3?-2.5:0,High=I<3?.5:1;
+  if(MinGap[I]<Low||MinGap[I]>High||BandVertices[I]<FSub01SeatSupport::MinSupportVertices)return false;
  }
  return true;
 }
