@@ -60,5 +60,6 @@ A one-time 20-second worker lease permits only the connection, with action and
 reward authority remaining inactive. A captured idle frame is labeled
 `initial_idle`; the renderer releases that client after capture, and timeout
 releases it even if rendering fails. Later brain play still requires the actual
-home activity/physical-readiness gate. This does not move the saved player,
-change the world or manufacture a game frame.
+home activity/physical-readiness gate. Bootstrap issues no movement, placement
+or time-change commands and never manufactures a game frame. Normal server
+physics and world time continue while the genuine client is connected.
