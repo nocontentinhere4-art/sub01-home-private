@@ -45,6 +45,26 @@ def validate_input(value):
             return value
     raise ValueError("Unsupported input")
 
+LAMPS = {"DeskLamp", "BedLamp", "KitchenWork", "LowerPendant", "UpperPendant"}
+
+def validate_settings(value, capabilities):
+    """Validate the whole request before altering any native control file."""
+    import math
+    if not isinstance(value, dict) or not value or set(value)-{'fov','hour','lamps'}:
+        raise ValueError('Unsupported view settings')
+    for name, low, high in [('fov',50,110),('hour',0,24)]:
+        if name in value:
+            v=value[name]
+            if capabilities.get(name) is not True or type(v) not in (int,float) or not math.isfinite(v) or not low<=v<=high:
+                raise ValueError('View setting unavailable or out of bounds')
+    if 'lamps' in value:
+        lamps=value['lamps'];available=capabilities.get('lamps',[])
+        if not isinstance(available,list) or not isinstance(lamps,dict) or not lamps:
+            raise ValueError('Indoor lamps unavailable')
+        if any(k not in LAMPS or k not in available or type(v) is not bool for k,v in lamps.items()):
+            raise ValueError('Unsupported indoor lamp')
+    return value
+
 class PhysicalInput:
     def __init__(self):
         self.x = ctypes.CDLL(ctypes.util.find_library("X11"))
@@ -115,6 +135,16 @@ async function decode(blob,sequence,captured,generation){const url=URL.createObj
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
 function streamNative(){const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';game.hidden=true;empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},4000);}
 async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;control.disabled=!permission;control.textContent=active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission;dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
+
+let supported='';
+async function refreshSettings(){
+ try{const r=await fetch(base+'settings');if(!r.ok)return;const p=await r.json(),caps=p.capabilities,holder=document.querySelector('#nativeSettings');const signature=JSON.stringify(caps);if(supported===signature)return;supported=signature;holder.replaceChildren();holder.hidden=false;
+ const apply=async value=>{const r=await fetch(base+'settings',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(value)});const q=await r.json();if(!r.ok){status.textContent=q.error;return;}for(let n=0;n<10;n++){await new Promise(r=>setTimeout(r,150));const ack=await fetch(base+'settings').then(r=>r.json());if(ack.revision===q.revision){status.textContent=ack.accepted?'Setting applied':ack.error;return;}}status.textContent='Waiting for the native setting';};
+ for(const[name,label,min,max]of[['fov','Field of view',50,110],['hour','Time of day',0,24]])if(caps[name]){const row=document.createElement('label');row.className='row';row.textContent=label;const slider=document.createElement('input');slider.type='range';slider.min=min;slider.max=max;slider.step=name==='hour'?0.25:1;slider.value=p.values[name];slider.onchange=()=>apply({[name]:Number(slider.value)});row.append(slider);holder.append(row);}
+ for(const name of caps.lamps||[]){const row=document.createElement('label');row.className='row';row.textContent=name.replace(/([a-z])([A-Z])/g,'$1 $2');const check=document.createElement('input');check.type='checkbox';check.checked=p.values.lamps[name];check.onchange=()=>apply({lamps:{[name]:check.checked}});row.append(check);holder.append(row);}
+ }catch(e){}
+}
+setInterval(()=>{if(permission)refreshSettings();else{document.querySelector('#nativeSettings').hidden=true;supported='';}},1500);
 setInterval(ready,1000);ready();
 </script></body></html>
 '''.replace('%KEYS%', json.dumps(list(KEYS)))
@@ -127,6 +157,7 @@ class LiveState:
         self.session = uuid.uuid4().hex
         self.capture_lock = threading.Lock()
         self.input_lock = threading.Lock()
+        self.settings_lock = threading.Lock()
         self.input = None
         self.accepted = 0
         self.frames = 0
@@ -165,6 +196,18 @@ class LiveState:
         self.native_identity=matches[0] if len(matches)==1 else None
         self.native_checked_at=time.monotonic()
         return self.native_identity
+
+    def settings_receipt(self):
+        identity=self.native()
+        if not identity or time.time()>=self.deadline:return None
+        try:
+            path=self.private/'native-view-settings-receipt.json'
+            if path.stat().st_size>4096:return None
+            receipt=json.loads(path.read_text())
+            if not isinstance(receipt,dict) or (receipt.get('native_pid'),receipt.get('native_start_ticks'))!=identity:return None
+            if not isinstance(receipt.get('capabilities'),dict) or not isinstance(receipt.get('values'),dict):return None
+            return receipt
+        except (OSError,ValueError):return None
 
     def ensure_capture(self):
         with self.capture_lock:
@@ -209,6 +252,10 @@ class Handler(BaseHTTPRequestHandler):
         state = self.server.state
         if urlsplit(self.path).path=='/socket':
             self.websocket_video();return
+        if self.path.split('?')[0]=='/settings':
+            receipt=state.settings_receipt()
+            self.json(200,receipt) if receipt else self.json(409,{'error':'Native settings unavailable'})
+            return
         if self.path.split('?')[0] == '/health':
             if self.path.endswith('?hold=1') and state.enabled('native-viewer-input-enabled'):state.last_lease=time.monotonic()
             self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
@@ -289,6 +336,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         state=self.server.state
+        if self.path.split('?')[0]=='/settings':
+            self.post_settings();return
         if self.path.split('?')[0]!='/input':self.json(404,{'error':'Unknown route'});return
         if not state.enabled('native-viewer-input-enabled'):self.json(409,{'error':'Native input is locked'});return
         try:
@@ -302,6 +351,28 @@ class Handler(BaseHTTPRequestHandler):
                 self.json(200,{'acceptedInputs':state.accepted,'physicalDelivery':'XTest','session':state.session})
         except (ValueError,TypeError,json.JSONDecodeError):self.json(400,{'error':'Unsupported input'})
         except Exception:self.json(503,{'error':'Native input unavailable'})
+
+    def post_settings(self):
+        state=self.server.state
+        if not state.enabled('native-viewer-input-enabled'):
+            self.json(409,{'error':'Native controls are locked'});return
+        try:
+            length=int(self.headers.get('Content-Length','0'))
+            if not 0<length<=1024:raise ValueError('Settings size exceeded')
+            request=json.loads(self.rfile.read(length))
+            with state.settings_lock:
+                receipt=state.settings_receipt()
+                if not receipt:raise ValueError('Native settings unavailable')
+                settings=validate_settings(request,receipt['capabilities'])
+                path=state.private/'native-control.json'
+                existing=json.loads(path.read_text()) if path.exists() and path.stat().st_size<=4096 else {}
+                revision=max(int(existing.get('revision',0)),int(receipt.get('revision',0)))+1
+                if not 0<revision<2147483647 or not state.enabled('native-viewer-input-enabled'):raise ValueError('Native control changed')
+                # Previous replay, routing or capture commands are not resubmitted.
+                temp=state.private/'native-viewer-settings-control.tmp'
+                temp.write_text(json.dumps({'revision':revision,'viewSettings':settings}));temp.chmod(0o600);temp.replace(path)
+                self.json(202,{'revision':revision,'pending':True})
+        except (ValueError,TypeError,OSError):self.json(400,{'error':'View settings refused'})
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);parser.add_argument('--capture-fps',type=int,choices=[8,15,24,30],default=8);parser.add_argument('--capture-width',type=int,choices=[960,1280],default=960);args=parser.parse_args()

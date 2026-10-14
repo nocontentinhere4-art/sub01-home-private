@@ -54,3 +54,35 @@ def test_invalid_capture_permission_fails_closed(tmp_path, content):
     flag = tmp_path / "native-viewer-capture-enabled"
     flag.write_text(content)
     assert not state.enabled(flag.name)
+
+
+@pytest.mark.parametrize('value', [
+    {'fov': 111}, {'fov': True}, {'hour': float('nan')},
+    {'lamps': {'SUN': False}}, {'lamps': {'DeskLamp': 1}},
+    {'lamps': {'Actor/Other': True}}, {'console': 'anything'},
+])
+def test_settings_cannot_address_unknown_actors_or_unbounded_camera(value):
+    from tools.pixel_streaming.native_live_viewer import validate_settings
+    with pytest.raises(ValueError):
+        validate_settings(value, {'fov': True, 'hour': True, 'lamps': ['DeskLamp']})
+
+
+def test_settings_require_actual_native_capability():
+    from tools.pixel_streaming.native_live_viewer import validate_settings
+    with pytest.raises(ValueError):
+        validate_settings({'fov': 75}, {})
+    assert validate_settings({'fov': 75, 'lamps': {'DeskLamp': False}},
+                             {'fov': True, 'lamps': ['DeskLamp']})
+
+
+def test_settings_receipt_is_invalid_after_native_replacement(tmp_path):
+    state = LiveState(time.time() + 30)
+    state.private = tmp_path
+    (tmp_path/'native-view-settings-receipt.json').write_text(json.dumps({
+        'native_pid': 42, 'native_start_ticks': 100,
+        'capabilities': {'fov': True}, 'values': {'fov': 75},
+    }))
+    state.native = lambda: (42, 100)
+    assert state.settings_receipt()['capabilities']['fov']
+    state.native = lambda: (42, 101)
+    assert state.settings_receipt() is None
