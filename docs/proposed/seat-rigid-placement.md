@@ -22,11 +22,14 @@ otherwise; they are not in git.
 - **The chair `dz` is limited to the chair's real height adjustment.** That range comes from the scene
   export, defaults to none (`[0, 0]`) and is reported on every candidate.
 - **The thresholds are imported, never redefined or relaxed.**
-  - Seat band −2.5..+0.5 cm, with patches of at least 12 vertices and coverage ≥ 0.5
-    (`validate_unreal_seat_contact`).
-  - Soles are gated as a **support patch** (root, c93a830): nothing below the support (min ≥ 0), the lowest
-    plantar point ≤ +1 cm, and at least `MIN_SUPPORT_VERTICES` (12) plantar vertices in 0..+1 cm. There is no
-    whole-sole median or coverage gate, because a genuine seated foot plants its toes with the heel raised.
+  - **Every patch is a local support patch** (root, 9ff9880; soles since c93a830):
+    - nothing deeper than the band's lower edge (−2.5 cm seat, 0 sole);
+    - the lowest point within the upper edge (+0.5 seat, +1 sole);
+    - at least `MIN_SUPPORT_VERTICES` (12) patch vertices in band;
+    - at least 12 facing vertices over the surface (`validate_unreal_seat_contact`).
+
+    Seat median and coverage are reported only, not gated: a curved buttock or thigh is not a flat patch, and
+    a genuine seated foot plants its toes with the heel raised.
   - Skin counts only where it faces down: normal z ≤ −0.5, as in `AnalyzeCapturedSeatSkin`.
   - Key gap: at most 0.2 cm, with penetration of at most 0.1 cm (`validate_unreal_contact_profile`).
   - The key contact target is fixed at 0.08 cm (`unreal_keyboard_contact_target.py`).
@@ -184,8 +187,7 @@ The search runs in four steps:
 |---|---|
 | `patch_not_over_surface` | fewer than 12 facing vertices over the cushion / support (horizontal miss) |
 | `penetration` | min gap below band (seat −2.5, sole 0) |
-| `gap`, `coverage` | seat patches only: median above +0.5 cm, < 50 % of the patch in band |
-| `sole_lowest_above_band`, `sole_support_vertices` | soles: lowest plantar point above +1 cm, < 12 plantar vertices in 0..+1 cm |
+| `lowest_above_band`, `support_vertices` | every patch: lowest point above the upper edge, < 12 patch vertices in band |
 | `reach_exceeds_arm` | requested shoulder-to-target distance > arm length (no stretch) |
 | `key_contact_gap`, `key_penetration` | post-IK over-key gap > 0.2 cm or penetration > 0.1 cm (invariant under horizontal placement) |
 | `body_collision`, `furniture_overlap` | body vertex inside a rigid part, or two units' parts overlapping (box–box exact SAT, hulls by vertex containment) |
@@ -194,7 +196,7 @@ The search runs in four steps:
 
 **Families.**
 - `chair` also reports `chair_dz_needed_for_seat_band_cm`: the chair lift that would put every seat patch's
-  minimum and median in band at the best horizontal placement. If `lo > hi`, no single height works and the
+  lowest point in band at the best horizontal placement. If `lo > hi`, no single height works and the
   pose must change. A lift outside the stated real range is reported, never applied.
 - `body` and `keyboard` also report:
   - `reach_best`: the placement that minimises reach excess alone;
@@ -230,6 +232,14 @@ anything. The solver's `passing` is a prediction from exported samples, and is n
 ## What the fixture shows
 
 These results come from root's measured numbers. Fixture assumptions are named in the test.
+
+> **Rule note.** These results were produced under the seat rule as of 8e4bf80, which gated the seat median
+> and coverage. They are kept as they were. Under the current local-support-patch rule (9ff9880):
+> - the seat gates read `lowest_above_band` / `support_vertices` in place of `gap` / `coverage`;
+> - the chair lift needed in the fixture is ≥ 5.293 cm (the thighs' lowest skin binds);
+> - the overlap, reach, key and sole findings below are unchanged.
+>
+> The actual 301-frame pose-fit trial is in `docs/proposed/seat-pose-fit.md`.
 
 - **Current placement:** zero cushion overlap for buttocks and both thighs on all 301 frames. The buttocks'
   rear edge is at Y −218.797; the cushion starts at −214.063.

@@ -286,9 +286,12 @@ def test_translated_chair_candidate_restores_overlap(solved):
     assert best['moved_world_transforms']['chair']['location_cm'][1] < CUSHION_MIN[1] + 10
     # Overlap is restored, but the cushion top is 5.104 cm under the lowest buttock skin: the seat gap
     # gate still fails, a chair lift is reported as needed, and no body lift is ever used.
-    assert gates_of(best, 'gap', 'buttocks')[0]['worst_amount'] > 4
+    low = gates_of(best, 'lowest_above_band', 'buttocks')[0]           # local support patch rule (9ff9880)
+    assert low['worst_amount'] == pytest.approx(BUTT_MIN[2] - CUSHION_MAX[2] - .5, abs=1e-3)
+    assert not any(g['gate'] in ('gap', 'coverage') for c in all_candidates(result) for g in c['failing_gates'])
     need = result['families']['chair']['chair_dz_needed_for_seat_band_cm']
-    assert need[0] > 4.5
+    # Lowest-point rule: the thighs' lowest skin (57.2, fixture assumption) binds: 57.2 - 51.407 - 0.5.
+    assert need[0] == pytest.approx(57.2 - CUSHION_MAX[2] - .5, abs=1e-3) and need[0] >= low['worst_amount']
     residual = [r for r in result['irreducible_residuals'] if r['residual'] == 'seat_vertical_gap']
     assert residual and residual[0]['allowed_chair_dz_cm'] == [0.0, 0.0]
 

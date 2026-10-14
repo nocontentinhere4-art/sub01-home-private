@@ -41,8 +41,8 @@ SCHEMA_KEYBOARD = 'sub01.seat-fit-keyboard.v1'
 SEAT_BAND_CM = seat_contact.SEAT_BAND_CM                  # (-2.5, +0.5) buttocks / posterior thighs
 SOLE_BAND_CM = seat_contact.SOLE_BAND_CM                  # (0, +1) soles on their support
 MIN_PATCH_VERTICES = seat_contact.MIN_PATCH_VERTICES      # 12 downward-facing vertices over the surface
-MIN_BAND_COVERAGE = seat_contact.MIN_BAND_COVERAGE        # 0.5 of a SEAT patch in the band
-MIN_SUPPORT_VERTICES = seat_contact.MIN_SUPPORT_VERTICES  # 12 plantar vertices in 0..+1 cm, per sole
+MIN_BAND_COVERAGE = seat_contact.MIN_BAND_COVERAGE        # reported only since 9ff9880 (not gated)
+MIN_SUPPORT_VERTICES = seat_contact.MIN_SUPPORT_VERTICES  # 12 patch vertices in band, every patch
 SEAT_PATCHES = seat_contact.SEAT_REGIONS
 SOLE_PATCHES = seat_contact.SOLE_REGIONS
 PATCHES = seat_contact.REGIONS
@@ -572,20 +572,14 @@ def evaluate(problem, placement, frames=None):
                                    'horizontal_overlap_fraction': _r(overlap[w]), 'surface': surface}),
                   _gate('penetration', name, low - mn, enough & (mn < low), times, 'cm below band',
                         lambda w: {'min_gap_cm': _r(mn[w]), 'band_cm': [low, high]})]
-        if name in SEAT_PATCHES:
-            checks += [_gate('gap', name, p50 - high, enough & (p50 > high), times, 'cm above band',
-                             lambda w: {'median_gap_cm': _r(p50[w]), 'band_cm': [low, high]}),
-                       _gate('coverage', name, MIN_BAND_COVERAGE - cov, enough & (cov < MIN_BAND_COVERAGE), times,
-                             'fraction short', lambda w: {'coverage': _r(cov[w]), 'required': MIN_BAND_COVERAGE})]
-        else:
-            # Support patch (validate_unreal_seat_contact.py): nothing below the support, the lowest plantar
-            # point within +1 cm, at least MIN_SUPPORT_VERTICES plantar vertices in band. No sole median/coverage:
-            # a genuine seated foot plants its toes with the heel raised.
-            checks += [_gate('sole_lowest_above_band', name, mn - high, enough & (mn > high), times, 'cm above band',
-                             lambda w: {'min_gap_cm': _r(mn[w]), 'band_cm': [low, high]}),
-                       _gate('sole_support_vertices', name, (MIN_SUPPORT_VERTICES - nb).astype(float),
-                             enough & (nb < MIN_SUPPORT_VERTICES), times, 'vertices short',
-                             lambda w: {'band_vertices': int(nb[w]), 'required': MIN_SUPPORT_VERTICES})]
+        # Every patch is a LOCAL support patch (validate_unreal_seat_contact.py, 9ff9880): nothing deeper than the
+        # band's lower edge, the lowest point within the upper edge, at least MIN_SUPPORT_VERTICES vertices in band.
+        # Seat median and coverage are reported only (a curved buttock/thigh is not a flat patch).
+        checks += [_gate('lowest_above_band', name, mn - high, enough & (mn > high), times, 'cm above band',
+                         lambda w: {'min_gap_cm': _r(mn[w]), 'median_gap_cm': _r(p50[w]), 'band_cm': [low, high]}),
+                   _gate('support_vertices', name, (MIN_SUPPORT_VERTICES - nb).astype(float),
+                         enough & (nb < MIN_SUPPORT_VERTICES), times, 'vertices short',
+                         lambda w: {'band_vertices': int(nb[w]), 'required': MIN_SUPPORT_VERTICES})]
         gates += [g for g in checks if g]
         with np.errstate(invalid='ignore'):
             metrics['patches'][name] = {
@@ -601,11 +595,9 @@ def evaluate(problem, placement, frames=None):
         # vertical gap (a vertical gap cannot be closed horizontally); then band excursions, capped per frame.
         penalty += 100. * float(np.mean(~enough)) + 20. * float(np.mean(1. - overlap))
         if enough.any():
-            upper = p50[enough] if name in SEAT_PATCHES else mn[enough]
-            excursion = np.maximum(0, low - mn[enough]) + np.maximum(0, upper - high)
+            excursion = np.maximum(0, low - mn[enough]) + np.maximum(0, mn[enough] - high)
             penalty += float(np.mean(np.minimum(excursion, 20.))) * float(np.mean(enough))
-            short = (MIN_BAND_COVERAGE - cov[enough]) if name in SEAT_PATCHES else \
-                (MIN_SUPPORT_VERTICES - nb[enough]) / MIN_SUPPORT_VERTICES
+            short = (MIN_SUPPORT_VERTICES - nb[enough]) / MIN_SUPPORT_VERTICES
             penalty += 5. * float(np.mean(np.maximum(0, short))) * float(np.mean(enough))
 
     # Reach and key contact are cheap: always every frame, whatever subset the skin is ranked on.
@@ -734,7 +726,7 @@ def _chair_dz(problem, rigid, frames):
 
 
 def _needed_chair_dz(problem, rigid, frames):
-    """[lo, hi] chair lift (cm) that would put every seat patch's min/median in band, or None if off-surface."""
+    """[lo, hi] chair lift (cm) that puts every seat patch's lowest point in band, or None if off-surface."""
     fi = np.arange(len(problem.times)) if frames is None else np.asarray(frames)
     lo, hi = -math.inf, math.inf
     for name in SEAT_PATCHES:
@@ -750,7 +742,7 @@ def _needed_chair_dz(problem, rigid, frames):
         if not ok.any():
             return None
         low, high = SEAT_BAND_CM
-        lo = max(lo, float(np.max(p50[ok] - high)))     # lifting the chair by dz lowers every gap by dz
+        lo = max(lo, float(np.max(mn[ok] - high)))      # lifting the chair by dz lowers every gap by dz
         hi = min(hi, float(np.min(mn[ok] - low)))
     return (lo, hi)
 
@@ -869,7 +861,7 @@ def solve(problem, config=SearchConfig()):
                          'chair_height_adjustment_source': problem.chair_height_source,
                          'input_problems': list(problem.input_problems)},
               'constants': {'seat_band_cm': list(SEAT_BAND_CM), 'sole_band_cm': list(SOLE_BAND_CM),
-                            'min_patch_vertices': MIN_PATCH_VERTICES, 'min_band_coverage': MIN_BAND_COVERAGE,
+                            'min_patch_vertices': MIN_PATCH_VERTICES, 'min_band_coverage_reported_only': MIN_BAND_COVERAGE,
                             'min_support_vertices': MIN_SUPPORT_VERTICES,
                             'facing_down_max_normal_z': FACING_DOWN_MAX_NZ, 'key_gap_max_cm': KEY_GAP_MAX_CM,
                             'key_penetration_max_cm': KEY_PENETRATION_MAX_CM, 'key_contact_target_cm': KEY_CONTACT_TARGET_CM,
@@ -898,7 +890,7 @@ def solve(problem, config=SearchConfig()):
                                                    best['chair'].pivot), None)
             entry['chair_dz_needed_for_seat_band_cm'] = None if need is None else [_r(need[0]), _r(need[1])]
             entry['chair_dz_needed_note'] = (
-                'lift range (cm) that would put every seat patch min/median in band at the best horizontal placement; '
+                'lift range (cm) that would put every seat patch lowest point in band at the best horizontal placement; '
                 'empty (lo > hi) means no single chair height does, so pose work is needed; outside the stated real '
                 'chair adjustment it is NOT applied (body dz is forbidden)')
             entry['reach_note'] = 'chair placement moves neither the shoulders nor the keyboard: reach is unchanged'
@@ -1087,7 +1079,7 @@ def _irreducible(problem, result):
         out.append({'residual': 'key_contact', 'scope': 'any horizontal rigid placement',
                     'reason': 'the post-IK key gap is vertical; the 0.08 cm target and 0.2 cm band are unchanged',
                     'keycap_top_spread_cm': _r(problem.keycap_spread_cm), 'gates': key})
-    sole_gates = ('patch_not_over_surface', 'penetration', 'sole_lowest_above_band', 'sole_support_vertices')
+    sole_gates = ('patch_not_over_surface', 'penetration', 'lowest_above_band', 'support_vertices')
     soles = [g for g in result['baseline']['failing_gates'] if g['gate'] in sole_gates and g['subject'] in SOLE_PATCHES]
     if soles and all(any(g['gate'] in sole_gates and g['subject'] in SOLE_PATCHES for g in e['candidates'][0]['failing_gates'])
                      for e in result['families'].values()):
