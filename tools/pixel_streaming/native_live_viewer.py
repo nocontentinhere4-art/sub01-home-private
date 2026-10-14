@@ -161,13 +161,46 @@ async function finite(generation){window.nativeViewerTransport='https-jpeg';let 
 function streamNative(){const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';game.hidden=true;empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},4000);}
 async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;control.disabled=!permission&&!privateEgress;control.textContent=privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&window.nativeViewerLastDecodedAt&&performance.now()-window.nativeViewerLastDecodedAt>3500){game.hidden=true;empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
 
-let supported='';
+let supported='',settingsPending=false;
+function syncSettingValues(p){
+ if(settingsPending)return;
+ for(const input of document.querySelectorAll('#nativeSettings input[data-native-key]'))if(input!==document.activeElement)input.value=p.values[input.dataset.nativeKey];
+ for(const input of document.querySelectorAll('#nativeSettings input[data-native-lamp]'))input.checked=p.values.lamps[input.dataset.nativeLamp];
+ const master=document.querySelector('#nativeSettings input[data-native-master]');
+ if(master){const values=(p.capabilities.lamps||[]).map(name=>p.values.lamps[name]);master.checked=values.every(Boolean);master.indeterminate=values.some(Boolean)&&!master.checked;}
+}
 async function refreshSettings(){
- try{const r=await fetch(base+'settings');if(!r.ok)return;const p=await r.json(),caps=p.capabilities,holder=document.querySelector('#nativeSettings');const signature=JSON.stringify(caps);if(supported===signature)return;supported=signature;holder.replaceChildren();holder.hidden=false;
- const apply=async value=>{const r=await fetch(base+'settings',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(value)});const q=await r.json();if(!r.ok){status.textContent=q.error;return;}for(let n=0;n<10;n++){await new Promise(r=>setTimeout(r,150));const ack=await fetch(base+'settings').then(r=>r.json());if(ack.revision===q.revision){status.textContent=ack.accepted?'Setting applied':ack.error;return;}}status.textContent='Waiting for the native setting';};
- for(const[name,label,min,max]of[['fov','Field of view',50,110],['hour','Time of day',0,24]])if(caps[name]){const row=document.createElement('label');row.className='row';row.textContent=label;const slider=document.createElement('input');slider.type='range';slider.min=min;slider.max=max;slider.step=name==='hour'?0.25:1;slider.value=p.values[name];slider.onchange=()=>apply({[name]:Number(slider.value)});row.append(slider);holder.append(row);}
- if((caps.lamps||[]).length){const row=document.createElement('label');row.className='row';row.textContent='Indoor lights';const all=document.createElement('input');all.type='checkbox';const values=caps.lamps.map(name=>p.values.lamps[name]);all.checked=values.every(Boolean);all.indeterminate=values.some(Boolean)&&!all.checked;all.onchange=()=>apply({lamps:Object.fromEntries(caps.lamps.map(name=>[name,all.checked]))});row.append(all);holder.append(row);}
- for(const name of caps.lamps||[]){const row=document.createElement('label');row.className='row';row.textContent=name.replace(/([a-z])([A-Z])/g,'$1 $2');const check=document.createElement('input');check.type='checkbox';check.checked=p.values.lamps[name];check.onchange=()=>apply({lamps:{[name]:check.checked}});row.append(check);holder.append(row);}
+ try{
+  const r=await fetch(base+'settings');if(!r.ok)return;
+  const p=await r.json(),caps=p.capabilities,holder=document.querySelector('#nativeSettings'),signature=JSON.stringify(caps);
+  if(supported===signature){syncSettingValues(p);return;}
+  supported=signature;holder.replaceChildren();holder.hidden=false;
+  const apply=async value=>{
+   settingsPending=true;
+   try{
+    const r=await fetch(base+'settings',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(value)});
+    const q=await r.json();if(!r.ok){status.textContent=q.error;return;}
+    for(let n=0;n<10;n++){
+     await new Promise(r=>setTimeout(r,150));const ack=await fetch(base+'settings').then(r=>r.json());
+     if(ack.revision===q.revision){status.textContent=ack.accepted?'Setting applied':ack.error;settingsPending=false;syncSettingValues(ack);return;}
+    }
+    status.textContent='Waiting for the native setting';
+   }catch(e){status.textContent='Setting connection interrupted';}finally{settingsPending=false;}
+  };
+  for(const[name,label,min,max]of[['fov','Field of view',50,110],['hour','Daylight',0,24]])if(caps[name]){
+   const row=document.createElement('label');row.className='row';row.textContent=label;
+   const slider=document.createElement('input');slider.type='range';slider.min=min;slider.max=max;slider.step=name==='hour'?0.25:1;slider.dataset.nativeKey=name;slider.value=p.values[name];
+   slider.onchange=()=>apply({[name]:Number(slider.value)});row.append(slider);holder.append(row);
+  }
+  if((caps.lamps||[]).length){
+   const row=document.createElement('label');row.className='row';row.textContent='Indoor lights';const master=document.createElement('input');master.type='checkbox';master.dataset.nativeMaster='true';
+   master.onchange=()=>apply({lamps:Object.fromEntries(caps.lamps.map(name=>[name,master.checked]))});row.append(master);holder.append(row);
+  }
+  for(const name of caps.lamps||[]){
+   const row=document.createElement('label');row.className='row';row.textContent=name.replace(/([a-z])([A-Z])/g,'$1 $2');
+   const check=document.createElement('input');check.type='checkbox';check.dataset.nativeLamp=name;check.onchange=()=>apply({lamps:{[name]:check.checked}});row.append(check);holder.append(row);
+  }
+  syncSettingValues(p);
  }catch(e){}
 }
 setInterval(()=>{if(permission)refreshSettings();else{document.querySelector('#nativeSettings').hidden=true;supported='';}},1500);
