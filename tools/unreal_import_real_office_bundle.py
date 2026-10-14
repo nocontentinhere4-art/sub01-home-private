@@ -77,7 +77,8 @@ def run(root,dry_run=True,u=None):
    if not close([min(p[0]for p in plane),min(p[1]for p in plane)],[a[0]*100,a[1]*100]) or not close([max(p[0]for p in plane),max(p[1]for p in plane)],[b[0]*100,b[1]*100]):raise RuntimeError('Actual native full board footprint differs source')
   if fingerprint(u,original)!=before:raise RuntimeError('Owned PBR/collision setup changed originals before activation')
   # Activation starts only after ALL native/source geometry, PBR and board proofs.
-  cap,cc,_=ctx['by_node'][8];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+  for hardware in ctx['mount']['opened_hardware_source_nodes']:
+   cap,cc,_=ctx['by_node'][hardware];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   mount=ctx['mount'];ctx['lamp'].set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False);ctx['light'].set_actor_location(u.Vector(*[vec(ctx['light'].get_actor_location())[a]+mount['new_bulb_ue_cm'][a]-vec(ctx['lights'][0].get_world_location())[a]for a in range(3)]),False,False)
   if not close(vec(ctx['lights'][0].get_world_location()),mount['new_bulb_ue_cm']):raise RuntimeError('Actual paired light did not reach verified bulb')
   book_rows=[]

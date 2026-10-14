@@ -75,7 +75,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  source=Path(export_glb);report=json.loads(source.with_suffix('.json').read_text());digest=hashlib.sha256(source.read_bytes()).hexdigest();doc,_=read_gltf(source)
  if report.get('source_sha256')!=SHA or report.get('output_sha256')!=digest or not report.get('source_binary_unchanged'):raise RuntimeError('Actual complete desk export proof missing')
  mount=report.get('lamp_mount',{})
- if not mount.get('collision_proof',{}).get('ok') or mount.get('opened_cap_source_node')!=8:raise RuntimeError('Actual grommet support and source triangle collision proof missing')
+ if not mount.get('collision_proof',{}).get('ok') or mount.get('opened_hardware_source_nodes')!=[7,8,35]:raise RuntimeError('Actual grommet support and source triangle collision proof missing')
  if any(not n.get('name','').startswith('SUB01_RealLinea140_')for n in doc['nodes']):raise RuntimeError('Desk scene node UID uniqueness not verified')
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
  if not world or world.get_path_name().split('.',1)[0]!=LEVEL:raise RuntimeError('ActualHome must already be loaded by sole editor owner')
@@ -139,7 +139,8 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   if fingerprint(u,original)!=before:raise RuntimeError('New owned material/collision setup changed originals')
   if defer_activation:
    return result,{'u':u,'old':old,'lamp':lamp,'light':light,'lights':lights,'by_node':by_node,'mount':mount,'original':original,'before':before,'added':added,'triangles':triangles,'actual':actual,'dest':dest,'source':source}
-  cap,cc,_=by_node[8];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+  for hardware in mount['opened_hardware_source_nodes']:
+   cap,cc,_=by_node[hardware];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   lamp.set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False)
   light.set_actor_location(u.Vector(*mount['new_bulb_ue_cm']),False,False)
   if not close(vec(lights[0].get_world_location()),mount['new_bulb_ue_cm']):raise RuntimeError('Exact light component failed paired bulb move')
@@ -150,7 +151,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
    for c in a.get_components_by_class(u.StaticMeshComponent):c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   allowed={a.get_path_name()for a in old+[lamp,light]}
   if fingerprint(u,[a for a in original if a.get_path_name()not in allowed])!={k:v for k,v in before.items()if k not in allowed}:raise RuntimeError('Old desk hide changed protected originals')
-  result.update(native_triangle_count=triangles,native_bounds_cm=actual,desk_original_states=before,lamp_mount=mount,added_actors=[a.get_path_name()for a in added],opened_exact_removable_cap=cap.get_path_name(),device_contact='Actual worktop matches baseline84.5cm; device mesh/transform/material bindings remain byte-identical in native fingerprint. Existing device penetration is not corrected or called perfect.')
+  result.update(native_triangle_count=triangles,native_bounds_cm=actual,desk_original_states=before,lamp_mount=mount,added_actors=[a.get_path_name()for a in added],opened_exact_hardware_actors=[by_node[i][0].get_path_name()for i in mount['opened_hardware_source_nodes']],device_contact='Actual worktop matches baseline84.5cm; device mesh/transform/material bindings remain byte-identical in native fingerprint. Existing device penetration is not corrected or called perfect.')
   if not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Real desk asset/map save failed')
   source.with_name('native-real-linea140-import.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception:

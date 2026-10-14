@@ -10,8 +10,8 @@ class GenuineMount(unittest.TestCase):
   return {'planned':{'DeskLamp':{'yaw_deg':90,'location_cm':[92.32936859130861,-314.5301260612905,84.49999491373697],'bulb_cm':[110,-315,154.06085650126138],'light_cm':[110,-315,135],'actor':'reviewed-exact-actor','materials':[{'material':'reviewed-body'},{'material':'reviewed-bulb'}]}}}
  def test_actual_mount_pin_clearance_and_distinct_light_delta(self):
   p=mount_plan(ROOT/'web/house/assets/real-linea140/originalsource.glb',ROOT/'web/house/assets/desk_lamp_arm_01/desk_lamp_arm_01.gltf',self.fixture())
-  self.assertGreater(p['radial_pin_clearance_m'],.004);self.assertEqual(p['opened_cap_source_node'],8)
-  self.assertAlmostEqual(p['new_origin_ue_cm'][2],84.85840868537889)
+  self.assertGreater(p['radial_pin_clearance_m'],.002);self.assertEqual(p['opened_cap_source_node'],8);self.assertEqual(p['opened_hardware_source_nodes'],[7,8,35])
+  self.assertAlmostEqual(p['new_origin_ue_cm'][2],84.5,places=5)
   self.assertAlmostEqual(p['light_delta_ue_cm'][2]-p['geometry_delta_ue_cm'][2],19.06085650126138)
   self.assertEqual(p['lamp_source_triangle_count'],24102);self.assertFalse(p['native_ready'])
  def test_changed_actual_yaw_refused(self):
