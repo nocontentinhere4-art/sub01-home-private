@@ -79,10 +79,13 @@ FIELDS = r'''
  void ConfigureActualExitDoor();
  bool TryNativeExitDoor(UActorComponent* HitComponent);
  void UpdateActualExitDoor(float DeltaSeconds);
+ mutable double ExitDoorBlockLogAt=0;
  bool ExitDoorSweepBlocked(float From,float To) const;
  FTransform ExitDoorPose(const FTransform& Closed,float Angle) const;
 '''
 METHODS = r'''
+#include "Engine/OverlapResult.h"
+#include "PhysicsEngine/BodySetup.h"
 FTransform ASub01HomeCharacter::ExitDoorPose(const FTransform& Closed,float Angle) const{
  const FVector Hinge(147.45f,394,2.6f);const FQuat Swing(FVector::UpVector,FMath::DegreesToRadians(Angle));
  return FTransform(Swing*Closed.GetRotation(),Hinge+Swing.RotateVector(Closed.GetLocation()-Hinge),Closed.GetScale3D());
@@ -142,7 +145,13 @@ bool ASub01HomeCharacter::ExitDoorSweepBlocked(float From,float To) const{
   }
   const float Sag=Radius*(1.f-FMath::Cos(FMath::DegreesToRadians(FMath::Abs(To-From)*.5f)));
   const FVector SweepExtent=Hull.GetExtent()+FVector(Sag,Sag,0);
-  if(GetWorld()->OverlapBlockingTestByChannel(Hinge+Mid.RotateVector(Hull.GetCenter()),Mid,ECC_Pawn,FCollisionShape::MakeBox(SweepExtent),Query))return true;
+  TArray<FOverlapResult> Overlaps;GetWorld()->OverlapMultiByChannel(Overlaps,Hinge+Mid.RotateVector(Hull.GetCenter()),Mid,ECC_Pawn,FCollisionShape::MakeBox(SweepExtent),Query);
+  for(const auto& Hit:Overlaps)if(Hit.bBlockingHit){
+   const double Now=FPlatformTime::Seconds();if(Now-ExitDoorBlockLogAt>2){ExitDoorBlockLogAt=Now;auto* Component=Hit.GetComponent();FVector Center=FVector::ZeroVector,Extent=FVector::ZeroVector;int Trace=-1,Convex=-1,Boxes=-1;
+    if(Component){const auto B=Component->CalcBounds(Component->GetComponentTransform());Center=B.Origin;Extent=B.BoxExtent;if(auto* Mesh=Cast<UStaticMeshComponent>(Component))if(Mesh->GetStaticMesh())if(auto* Body=Mesh->GetStaticMesh()->GetBodySetup()){Trace=int(Body->CollisionTraceFlag);Convex=Body->AggGeom.ConvexElems.Num();Boxes=Body->AggGeom.BoxElems.Num();}}
+    UE_LOG(LogTemp,Warning,TEXT("SUB01_EXIT_DOOR_ACTUAL_BLOCKED angle=%.4f->%.4f part=%d component=%s center=%s extent=%s trace=%d convex=%d boxes=%d; collision retained"),From,To,Index,*GetPathNameSafe(Component),*Center.ToString(),*Extent.ToString(),Trace,Convex,Boxes);
+   }return true;
+  }
  }
  return false;
 }
