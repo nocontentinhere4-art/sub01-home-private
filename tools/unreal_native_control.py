@@ -18,6 +18,7 @@ bool ASub01HomeCharacter::SwitchNativeWalkView(bool UseLiveSource){
   UE_LOG(LogTemp,Error,TEXT("SUB01_VIEW_SWITCH_REFUSED no compatible genuine Walk asset"));return false;
  }
  LiveHome=false;LiveHomeFresh=false;LiveHomeBindWaiting=false;NativeSeatVerified=false;
+ if(!UseLiveSource)LiveHomePrivate=false;
  NativeFeedbackBound=false;NativeFeedbackLastAck=-1;NativeFeedbackAckPhase.Empty();
  NativeFeedbackConsumer=FGuid::NewGuid().ToString(EGuidFormats::Digits);NativeFeedbackPendingReportId=0;NativeFeedbackPending=false;
  if(PCBridge)PCBridge->SetOperatorFocus(false);

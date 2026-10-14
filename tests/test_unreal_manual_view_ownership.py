@@ -60,6 +60,15 @@ int main(){both();assert(Calls==2);
         self.assertIn('TEXT("manual")', METHODS)
         self.assertIn("SwitchNativeWalkView(Live)", METHODS)
 
+    def test_actual_manual_reset_releases_only_cached_live_privacy(self):
+        body = METHODS.split(" LiveHome=false;", 1)[1].split(" NativeFeedbackBound=false;", 1)[0]
+        code = "#include <cassert>\nbool LiveHome=true,LiveHomeFresh=true,LiveHomeBindWaiting=true,NativeSeatVerified=true,LiveHomePrivate=true;\nvoid reset(bool UseLiveSource){LiveHome=false;" + body + "}\nint main(){reset(true);assert(LiveHomePrivate);assert(!NativeSeatVerified&&!LiveHomeFresh);reset(false);assert(!LiveHomePrivate);}\n"
+        with tempfile.TemporaryDirectory() as directory:
+            source=Path(directory)/"privacy.cpp";binary=Path(directory)/"privacy"
+            source.write_text(code)
+            subprocess.run(["c++","-std=c++17",str(source),"-o",str(binary)],check=True,capture_output=True)
+            subprocess.run([str(binary)],check=True)
+
 
 if __name__ == "__main__":
     unittest.main()

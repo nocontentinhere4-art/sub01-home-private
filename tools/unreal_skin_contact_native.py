@@ -30,12 +30,16 @@ IK_HEADER = r'''
  UFUNCTION(BlueprintCallable,Category="SUB01|PrivateDiagnostics") static TArray<FTransform> SolveCapturedKeyboardArmContact(USkeletalMesh* Mesh,const TArray<FTransform>& ComponentPose,const FTransform& BodyWorld,FVector KeyMin,FVector KeyMax,const TArray<FVector>& KeyTriangles);
 '''
 IK_CPP = r'''
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 TArray<FTransform> USub01HomeHandsInstance::SolveCapturedKeyboardArmContact(USkeletalMesh* Mesh,const TArray<FTransform>& ComponentPose,const FTransform& BodyWorld,FVector KeyMin,FVector KeyMax,const TArray<FVector>& KeyTriangles){
  TArray<FTransform> Result=ComponentPose;
  if(!Mesh||Result.Num()!=Mesh->GetRefSkeleton().GetNum())return Result;
  const auto& Ref=Mesh->GetRefSkeleton();TArray<FTransform> OriginalLocal;OriginalLocal.SetNum(Result.Num());
  for(int32 B=0;B<Result.Num();++B){const int32 P=Ref.GetParentIndex(B);OriginalLocal[B]=P>=0?ComponentPose[B].GetRelativeTransform(ComponentPose[P]):ComponentPose[B];}
- for(int32 Iter=0;Iter<3;++Iter){
+ int32 DiagnosticIterations=3;FParse::Value(FCommandLine::Get(),TEXT("Sub01ContactDiagnosticIterations="),DiagnosticIterations);DiagnosticIterations=FMath::Clamp(DiagnosticIterations,3,8);
+ const bool ReachAudit=FParse::Param(FCommandLine::Get(),TEXT("Sub01ContactReachAudit"));
+ for(int32 Iter=0;Iter<DiagnosticIterations;++Iter){
   const FString Audit=AnalyzeCapturedFingerSkin(Mesh,Result,BodyWorld,KeyMin,KeyMax,KeyTriangles);TSharedPtr<FJsonObject> Root;auto Reader=TJsonReaderFactory<>::Create(Audit);if(!FJsonSerializer::Deserialize(Reader,Root)||!Root.IsValid())break;
   const TArray<TSharedPtr<FJsonValue>>* Hands=nullptr;if(!Root->TryGetArrayField(TEXT("hands"),Hands)||Hands->Num()!=2)break;
   bool Changed=false;
@@ -44,7 +48,12 @@ TArray<FTransform> USub01HomeHandsInstance::SolveCapturedKeyboardArmContact(USke
    const int32 Elbow=Ref.GetParentIndex(Hand),Upper=Ref.GetParentIndex(Elbow);if(Upper<0||Elbow<0)continue;
    FTransform A=Result[Upper],B=Result[Elbow],C=Result[Hand];const FQuat CapturedWrist=C.GetRotation();
    const FVector Up=BodyWorld.InverseTransformVectorNoScale(FVector(0,0,Shift));const FVector Effector=C.GetTranslation()+Up;
+   const FVector Before=C.GetTranslation();const double ArmLength=FVector::Dist(A.GetTranslation(),B.GetTranslation())+FVector::Dist(B.GetTranslation(),Before);const double TargetDistance=FVector::Dist(A.GetTranslation(),Effector);const bool Reachable=TargetDistance<=ArmLength+1.e-4;
+   if(ReachAudit)UE_LOG(LogTemp,Display,TEXT("SUB01_CONTACT_REACH iter=%d side=%d requestedZ=%.9f armLength=%.9f targetDistance=%.9f reachable=%d overlap=%d gap=%.9f"),Iter,Side,Shift,ArmLength,TargetDistance,Reachable?1:0,HandReport->GetIntegerField(TEXT("overKeyVertices")),HandReport->GetNumberField(TEXT("overMinCm"))-KeyMax.Z);
+   // Extra iterations are diagnostic-only and must not conceal an unreachable nonstretch target.
+   if(Iter>=3&&!Reachable)continue;
    AnimationCore::SolveTwoBoneIK(A,B,C,B.GetTranslation(),Effector,false,1.,1.);
+   if(ReachAudit)UE_LOG(LogTemp,Display,TEXT("SUB01_CONTACT_ACHIEVED iter=%d side=%d actualWorldZ=%.9f remainingDistance=%.9f"),Iter,Side,BodyWorld.TransformPosition(C.GetTranslation()).Z-BodyWorld.TransformPosition(Before).Z,FVector::Dist(C.GetTranslation(),Effector));
    C.SetRotation(CapturedWrist);const int32 Parent=Ref.GetParentIndex(Upper);
    TArray<FTransform> Local=OriginalLocal;
    for(int32 N=0;N<Result.Num();++N){const int32 P=Ref.GetParentIndex(N);Local[N]=P>=0?Result[N].GetRelativeTransform(Result[P]):Result[N];const FString Name=Ref.GetBoneName(N).ToString();if(Name.Contains(TEXT("HandThumb"))||Name.Contains(TEXT("HandIndex"))||Name.Contains(TEXT("HandMiddle"))||Name.Contains(TEXT("HandRing"))||Name.Contains(TEXT("HandPinky")))Local[N]=OriginalLocal[N];}
@@ -87,7 +96,7 @@ FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,con
  const auto& Ref=Mesh->GetRefSkeleton();const auto& Inv=Mesh->GetRefBasesInvMatrix();auto* Model=Mesh->GetImportedModel();
  if(!Model||!Model->LODModels.Num()||ComponentPose.Num()!=Ref.GetNum()||Inv.Num()!=Ref.GetNum())return TEXT("{\"error\":\"incomplete pose or imported model\"}");
  // 0 buttocks (Hips), 1 left / 2 right posterior thigh (UpLeg), 3 left / 4 right sole (Foot/ToeBase).
- struct FRegion{int32 Count=0,Facing=0,Over=0,Band=0;TArray<double> Gaps;};FRegion R[5];int32 Invalid=0;
+ struct FRegion{int32 Count=0,Facing=0,Over=0,Band=0;TArray<double> Gaps;FBox FacingBounds=FBox(ForceInit);};FRegion R[5];int32 Invalid=0;
  const TCHAR* Names[5]={TEXT("buttocks"),TEXT("left_posterior_thigh"),TEXT("right_posterior_thigh"),TEXT("left_sole"),TEXT("right_sole")};
  for(const auto& Section:Model->LODModels[0].Sections)for(const auto& V:Section.SoftVertices){
   uint64 Sum=0;double W5[5]={0,0,0,0,0};
@@ -100,7 +109,7 @@ FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,con
   for(int32 I=0;I<UE_ARRAY_COUNT(V.InfluenceWeights);++I){const auto W=V.InfluenceWeights[I];if(!W)continue;const int32 Local=V.InfluenceBones[I];if(!Section.BoneMap.IsValidIndex(Local))continue;const int32 B=Section.BoneMap[Local];if(!Inv.IsValidIndex(B))continue;const double F=double(W)/double(Sum);
    P+=ComponentPose[B].TransformPosition(FVector(Inv[B].TransformPosition(V.Position)))*F;N+=ComponentPose[B].TransformVectorNoScale(FVector(Inv[B].TransformVector(BindNormal)))*F;}
   P=BodyWorld.TransformPosition(P);N=BodyWorld.TransformVectorNoScale(N).GetSafeNormal();
-  auto& Region=R[Which];++Region.Count;if(N.Z>-.5)continue;++Region.Facing; // only skin facing down onto the surface
+  auto& Region=R[Which];++Region.Count;if(N.Z>-.5)continue;++Region.Facing;Region.FacingBounds+=P; // only skin facing down onto the surface
   double Gap=0;
   if(Which<3){double Top=0;if(!Sub01SurfaceHeightAt(CushionTriangles.GetData(),CushionTriangles.Num(),P.X,P.Y,Top))continue;Gap=P.Z-Top;if(Gap>=-2.5&&Gap<=.5)++Region.Band;}
   else{Gap=P.Z-FloorZ;if(Gap>=0&&Gap<=1)++Region.Band;}
@@ -108,8 +117,9 @@ FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,con
  }
  FString Result=FString::Printf(TEXT("{\"invalidInfluences\":%d,\"floorCm\":%.8f,\"regions\":["),Invalid,FloorZ);
  for(int32 K=0;K<5;++K){auto& G=R[K].Gaps;G.Sort();auto Q=[&G](double F){return G.Num()?G[FMath::Clamp(int32(F*(G.Num()-1)+.5),0,G.Num()-1)]:0.;};
-  Result+=FString::Printf(TEXT("%s{\"region\":\"%s\",\"selectedVertices\":%d,\"facingVertices\":%d,\"overSurfaceVertices\":%d,\"bandVertices\":%d,\"minGapCm\":%.8f,\"p10GapCm\":%.8f,\"p50GapCm\":%.8f,\"p90GapCm\":%.8f,\"maxGapCm\":%.8f}"),
-   K?TEXT(","):TEXT(""),Names[K],R[K].Count,R[K].Facing,R[K].Over,R[K].Band,Q(0),Q(.1),Q(.5),Q(.9),Q(1));}
+  const FVector Min=R[K].Facing?R[K].FacingBounds.Min:FVector::ZeroVector,Max=R[K].Facing?R[K].FacingBounds.Max:FVector::ZeroVector;
+  Result+=FString::Printf(TEXT("%s{\"region\":\"%s\",\"selectedVertices\":%d,\"facingVertices\":%d,\"overSurfaceVertices\":%d,\"bandVertices\":%d,\"minGapCm\":%.8f,\"p10GapCm\":%.8f,\"p50GapCm\":%.8f,\"p90GapCm\":%.8f,\"maxGapCm\":%.8f,\"facingBoundsWorldCm\":{\"min\":[%.8f,%.8f,%.8f],\"max\":[%.8f,%.8f,%.8f]}}"),
+   K?TEXT(","):TEXT(""),Names[K],R[K].Count,R[K].Facing,R[K].Over,R[K].Band,Q(0),Q(.1),Q(.5),Q(.9),Q(1),Min.X,Min.Y,Min.Z,Max.X,Max.Y,Max.Z);}
  return Result+TEXT("]}");
 #else
  return TEXT("{\"error\":\"editor only\"}");
@@ -119,3 +129,8 @@ FString USub01HomeHandsInstance::AnalyzeCapturedSeatSkin(USkeletalMesh* Mesh,con
 HEADER += IK_HEADER + SEAT_HEADER
 from unreal_keyboard_contact_target import CPP as KEY_CONTACT_CPP
 CPP = '#include <cmath>\n#include "TwoBoneIK.h"\n#include "Serialization/JsonSerializer.h"\n#include "Serialization/JsonReader.h"\n' + CPP + KEY_CONTACT_CPP + IK_CPP + SEAT_CPP
+
+# Bind-space witness is independent of posed height/normal and remains diagnostic.
+from unreal_plantar_skin_witness import HEADER as FOOT_WITNESS_HEADER, CPP as FOOT_WITNESS_CPP
+HEADER += FOOT_WITNESS_HEADER
+CPP += FOOT_WITNESS_CPP

@@ -14,6 +14,8 @@ from unreal_pc_runtime import FIELDS as PC_FIELDS, METHODS as PC_METHODS
 from unreal_contact_recording import FIELDS as CONTACT_RECORD_FIELDS, METHODS as CONTACT_RECORD_METHODS
 from unreal_live_home_runtime import install as install_live_home
 from unreal_native_control import install as install_native_control
+from unreal_native_view_settings import install as install_native_view_settings
+from unreal_exit_door_runtime import install as install_exit_doors
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -158,6 +160,8 @@ def stage(project):
     cpp=cpp.replace(' FString Device;\n', ' if(TryNativeHomeDevice(Hit.GetComponent()))return;\n FString Device;\n',1)
     header,cpp=install_live_home(header,cpp + CHARACTER_METHODS.replace(' UpdateNativeCapture();', ' UpdateNativeContactRecording();\n UpdateNativeCapture();') + ROUTE_METHODS + DIAGNOSTIC_METHODS + PC_METHODS + CONTACT_RECORD_METHODS)
     header,cpp=install_native_control(header,cpp)
+    header,cpp=install_native_view_settings(header,cpp)
+    header,cpp=install_exit_doors(header,cpp)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
     (module/'Sub01HomeLab.h').write_text(header)
