@@ -140,7 +140,7 @@ def test_editor_opens_only_on_notes_and_privacy_erases_every_draft():
     opening = block(CPP, 'bool USub01HomeDeviceBridge::OpenNoteComposer(){', '\nvoid USub01HomeDeviceBridge::ReadNoteDraft')
     assert "NoteComposer.TryOpen(!Private&&!LocalPrivacy&&!Token.IsEmpty(),PhoneApp==TEXT(\"notes\"),!PhoneFrameId.IsEmpty())" in opening
     poll = block(CPP, 'void USub01HomeDeviceBridge::Poll(){', '\nvoid USub01HomeDeviceBridge::FetchFrame')
-    assert 'PhoneApp.Empty();' in poll and 'if(OwnedApp&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)' in poll
+    assert 'PhoneApp.Empty();' in poll and 'if(Screen.PhoneAppFrame&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)' in poll
     # Clear() runs on backend privacy, unknown state, local privacy and EndPlay; it erases first.
     clear = block(CPP, 'void USub01HomeDeviceBridge::Clear(){', '\n')
     assert clear.startswith('CloseNoteComposer(true);PhoneApp.Empty();++Generation;')

@@ -39,6 +39,27 @@ static FString Sub01PhoneIdentity(const TSharedPtr<FJsonObject>& State,bool* Own
  if(State.IsValid()&&State->TryGetObjectField(TEXT("phone_browser_screen"),Screen)&&Screen&&(*Screen).IsValid()&&(*Screen)->TryGetStringField(TEXT("frame_id"),Id)&&!Id.IsEmpty()&&Id.Len()<=100)return Id;
  return FString();
 }
+// The screen-policy inputs of one /devices/state document (Poll and the final
+// paint check read the same fields the same way). PublicHome is decided by the caller.
+static FSub01DeviceScreenInputs Sub01ScreenInputs(const TSharedPtr<FJsonObject>& State,FString* PhoneIdentity=nullptr,FString* Game=nullptr){
+ FSub01DeviceScreenInputs In;In.PublicHome=true;FString Activity,Console;
+ const TSharedPtr<FJsonObject>* Home=nullptr;
+ if(State.IsValid()&&State->TryGetObjectField(TEXT("home"),Home)&&Home&&(*Home).IsValid()){(*Home)->TryGetStringField(TEXT("console_game"),Console);(*Home)->TryGetStringField(TEXT("activity"),Activity);}
+ In.PhoneActivity=Activity==TEXT("phone");In.MinecraftSelected=Console==TEXT("minecraft");
+ const TSharedPtr<FJsonObject>* Minecraft=nullptr;
+ if(State.IsValid()&&State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft&&(*Minecraft).IsValid()){(*Minecraft)->TryGetBoolField(TEXT("enabled"),In.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),In.MinecraftFrame);}
+ bool OwnedApp=false;const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);In.PhoneAppFrame=OwnedApp;In.PhoneFrame=!OwnedApp&&!Identity.IsEmpty();
+ if(PhoneIdentity)*PhoneIdentity=Identity;if(Game)*Game=Console;return In;
+}
+// Downloaded bytes may be painted only if the fresh state still allows that exact
+// frame by the same policy Poll used: same phone identity and still showable
+// (owned app while public; browser only while he is on the phone), or Minecraft
+// still selected, enabled and with a frame.
+static bool Sub01FrameStillCurrent(bool Phone,const FString& Identity,const TSharedPtr<FJsonObject>& After){
+ FString CurrentIdentity;const FSub01DeviceScreenInputs In=Sub01ScreenInputs(After,&CurrentIdentity);
+ if(Phone)return !Identity.IsEmpty()&&CurrentIdentity==Identity&&Sub01PhoneFrame(In)!=ESub01PhoneFrame::None;
+ return Sub01TVFetchesMinecraft(In);
+}
 class FSub01DeviceInput:public IInputProcessor{
  TWeakObjectPtr<USub01HomeDeviceBridge> Bridge;bool Up=false,Down=false,NotePressed=false;
 public:
@@ -98,11 +119,9 @@ bool USub01HomeDeviceBridge::PublicHome(const TSharedPtr<FJsonObject>& State)con
 void USub01HomeDeviceBridge::Poll(){
  if(LocalPrivacy||Busy||Token.IsEmpty())return;Busy=true;const uint64 Epoch=Generation;
  ReadHome([this,Epoch](TSharedPtr<FJsonObject> State){if(Epoch!=Generation)return;Busy=false;if(!PublicHome(State)){Clear();return;}Private=false;
-  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game,Activity;(*Home)->TryGetStringField(TEXT("console_game"),Game);(*Home)->TryGetStringField(TEXT("activity"),Activity);
-  FSub01DeviceScreenInputs Screen;Screen.PublicHome=true;Screen.PhoneActivity=Activity==TEXT("phone");Screen.MinecraftSelected=Game==TEXT("minecraft");
-  const TSharedPtr<FJsonObject>* Minecraft=nullptr;if(State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft){(*Minecraft)->TryGetBoolField(TEXT("enabled"),Screen.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),Screen.MinecraftFrame);}
-  bool OwnedApp=false;const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);Screen.PhoneAppFrame=OwnedApp;Screen.PhoneFrame=!OwnedApp&&!Identity.IsEmpty();
-  PhoneApp.Empty();{const TSharedPtr<FJsonObject>* PhoneScreen=nullptr;if(OwnedApp&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)&&PhoneScreen)(*PhoneScreen)->TryGetStringField(TEXT("app"),PhoneApp);}
+  const TSharedPtr<FJsonObject>* Home=nullptr;State->TryGetObjectField(TEXT("home"),Home);FString Game,Identity;
+  const FSub01DeviceScreenInputs Screen=Sub01ScreenInputs(State,&Identity,&Game);
+  PhoneApp.Empty();{const TSharedPtr<FJsonObject>* PhoneScreen=nullptr;if(Screen.PhoneAppFrame&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)&&PhoneScreen)(*PhoneScreen)->TryGetStringField(TEXT("app"),PhoneApp);}
   // Browser parity (Sub01DeviceScreenPolicy.h): a browser page only while he is on the
   // phone; an owned app frame whenever the home is public. Same authenticated route.
   if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);
@@ -119,8 +138,8 @@ void USub01HomeDeviceBridge::FetchFrame(FName Device,const FString& Identity,uin
  if(Device==TEXT("phone")&&Images.Contains(Device)&&ImageIdentity.FindRef(Device)==Identity)return;FramePending.Add(Device);auto R=FHttpModule::Get().CreateRequest();R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")+(Identity.IsEmpty()?TEXT(""):TEXT("?frame_id=")+Identity));R->SetVerb(TEXT("GET"));R->SetTimeout(3);R->SetHeader(TEXT("X-Admin-Token"),Token);
  R->OnProcessRequestComplete().BindWeakLambda(this,[this,Device,Identity,Epoch](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){if(Epoch!=Generation)return;if(!OK||!Response||Response->GetResponseCode()!=200){FramePending.Remove(Device);if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);Images.Remove(Device);ImageIdentity.Remove(Device);return;}const FString Tag=Response->GetHeader(TEXT("ETag"));const TArray<uint8> Pixels=Response->GetContent();if(Pixels.Num()>6*1024*1024){FramePending.Remove(Device);return;}
   ReadHome([this,Device,Identity,Epoch,Pixels,Tag](TSharedPtr<FJsonObject> After){if(Epoch!=Generation)return;FramePending.Remove(Device);if(!PublicHome(After)){Clear();return;}
-   if(Device==TEXT("phone")&&Sub01PhoneIdentity(After)!=Identity)return;
-   if(Device==TEXT("tv")){const TSharedPtr<FJsonObject>* Home=nullptr;FString Game;if(!After->TryGetObjectField(TEXT("home"),Home)||!Home||!(*Home)->TryGetStringField(TEXT("console_game"),Game)||Game!=TEXT("minecraft"))return;}
+   // Same policy as Poll, re-evaluated on the fresh state at the moment of painting.
+   if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After))return;
    const FString CurrentIdentity=Device==TEXT("phone")?Identity:Tag;
    if(!CurrentIdentity.IsEmpty()&&Images.Contains(Device)&&ImageIdentity.FindRef(Device)==CurrentIdentity){if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),Images[Device]);return;}
    auto* Texture=FImageUtils::ImportBufferAsTexture2D(Pixels);if(!Texture||Texture->GetSizeX()>2048||Texture->GetSizeY()>2048)return;Texture->SRGB=true;Texture->UpdateResource();Images.Add(Device,Texture);ImageIdentity.Add(Device,CurrentIdentity);if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),Texture);if(Device==TEXT("phone"))PhoneFrameId=Identity;
