@@ -15,7 +15,7 @@ def setup(tmp_path):
                                    root_guard_pid=1, external_guard_pid=2,
                                    second_external_guard_pid=3, stop_guards_authenticated=True)))
     calls = []
-    queue = EditorTaskQueue(private, guard, calls.append, lambda: 100)
+    queue = EditorTaskQueue(private, guard, calls.append, lambda: 100, guard_uid=os.geteuid())
     def request(revision=1, task='hide_generated', **extra):
         p = private / 'editor-task-request.json'
         p.write_text(json.dumps(dict(revision=revision, task=task, **extra)))
@@ -60,7 +60,7 @@ def test_expiry_unregister_signal_no_task_or_save(setup):
     request(); q.clock = lambda: 200
     q.poll()
     assert q.stopped and not calls and not q.result.exists()
-    assert not guard_valid(guard, 200)
+    assert not guard_valid(guard, 200, trusted_uid=os.geteuid())
 
 
 @pytest.mark.parametrize('mode', [0o644, 0o666])
@@ -93,7 +93,7 @@ def test_guard_identity_and_authenticated_budget_required(setup, field, value):
 def test_receipt_survives_queue_reload_without_reexecuting(setup):
     q, calls, request, _ = setup
     request(); q.poll()
-    replacement=EditorTaskQueue(q.private, q.guard, calls.append, lambda:100)
+    replacement=EditorTaskQueue(q.private, q.guard, calls.append, lambda:100, guard_uid=os.geteuid())
     replacement.poll(); assert len(calls)==1
 
 
@@ -114,3 +114,44 @@ def test_slate_poll_is_bounded_and_unregisters_at_expiry(setup, monkeypatch):
     request(2); now[0]=1.1; callbacks[0](.01); assert len(calls)==1
     q.clock=lambda:200; now[0]=1.3; callbacks[0](.01)
     assert actual is q and handle==17 and removed == [17] and len(calls)==1
+
+
+def test_complete_books_dispatch_uses_only_complete_packet(monkeypatch):
+    import tools.unreal_editor_task_queue as module
+    from types import SimpleNamespace
+    called=[]; imports=[]
+    fake=SimpleNamespace(run=lambda argv: called.append(argv))
+    monkeypatch.setattr(module.importlib, 'import_module', lambda name: imports.append(name) or fake)
+    monkeypatch.setattr(module.importlib, 'reload', lambda value:value)
+    module.dispatch('complete_books')
+    assert imports == ['unreal_import_real_shelf_books']
+    assert called == [['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied']]
+    assert '/workspace/sub01-home-private/out/real-books' not in called[0]
+
+
+@pytest.mark.parametrize('change', ['file_write', 'parent_write', 'wrong_owner', 'symlink'])
+def test_guard_filesystem_trust(setup, change, tmp_path):
+    q, calls, request, guard=setup
+    if change=='file_write':guard.chmod(0o666)
+    elif change=='parent_write':guard.parent.chmod(0o777)
+    elif change=='wrong_owner':q.guard_uid=os.geteuid()+1
+    else:
+        actual=tmp_path/'actual'; guard.rename(actual); guard.symlink_to(actual)
+    request(); q.poll()
+    assert q.stopped and not calls
+
+
+def test_receipt_write_failure_retries_without_reexecuting_task(setup, monkeypatch):
+    q, calls, request, _=setup
+    original=q.write_result; attempts=[]
+    def temporary_failure(receipt):
+        attempts.append(receipt)
+        if len(attempts)<3:raise PermissionError('Receipt unavailable')
+        original(receipt)
+    monkeypatch.setattr(q,'write_result',temporary_failure)
+    request(); q.poll(); q.poll()
+    assert calls==['hide_generated'] and q.pending_result is not None and not q.stopped
+    q.poll()
+    assert q.pending_result is None and q.receipt_error_type is None
+    assert json.loads(q.result.read_text())['ok'] is True
+    assert len(calls)==1

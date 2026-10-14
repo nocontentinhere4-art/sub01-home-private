@@ -45,15 +45,26 @@ def read_owned(path):
         os.close(fd)
 
 
-def guard_valid(path=GUARD, now=None):
+def guard_valid(path=GUARD, now=None, trusted_uid=0):
     try:
+        parent = path.parent.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid != trusted_uid or parent.st_mode & 0o022:
+            return False
         if not stat.S_ISREG(path.lstat().st_mode):
             return False
-        with path.open() as stream:
-            raw = stream.read(4097)
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            meta = os.fstat(fd)
+            if not stat.S_ISREG(meta.st_mode) or meta.st_uid != trusted_uid or meta.st_mode & 0o022 or meta.st_nlink != 1:
+                return False
+            raw = os.read(fd, 4097).decode('utf-8')
+        finally:
+            os.close(fd)
         if len(raw) > 4096:
             return False
         g = json.loads(raw)
+        if not isinstance(g, dict):
+            return False
         current = time.time() if now is None else now
         return (g.get('pod') == POD and type(g.get('total_cap')) in (int, float)
                 and 0 < g['total_cap'] <= 100
@@ -71,7 +82,7 @@ def dispatch(task):
     if task == 'real_lamps':
         return module.run(Path('/workspace/sub01-home-private/out/real-lamps'))
     if task == 'complete_books':
-        return module.run(['--root', '/workspace/sub01-home-private/out/real-books', '--excision-applied'])
+        return module.run(['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied'])
     if task == 'desk_preflight':
         if DESK_EXPORT is None:
             raise RuntimeError('Desk export constant not reviewed; read-only task unavailable')
@@ -80,11 +91,14 @@ def dispatch(task):
 
 
 class EditorTaskQueue:
-    def __init__(self, private=PRIVATE, guard=GUARD, execute=dispatch, clock=time.time):
+    def __init__(self, private=PRIVATE, guard=GUARD, execute=dispatch, clock=time.time, guard_uid=0):
         self.private, self.guard, self.execute, self.clock = Path(private), Path(guard), execute, clock
         owned(self.private, directory=True)
         self.request = self.private / 'editor-task-request.json'
         self.result = self.private / 'editor-task-result.json'
+        self.guard_uid = guard_uid
+        self.pending_result = None
+        self.receipt_error_type = None
         self.last_revision = 0
         self.stopped = False
         if self.result.exists():
@@ -110,9 +124,17 @@ class EditorTaskQueue:
     def poll(self):
         if self.stopped:
             return
-        if not guard_valid(self.guard, self.clock()):
+        if not guard_valid(self.guard, self.clock(), self.guard_uid):
             self.stopped = True
             return
+        if self.pending_result is not None:
+            try:
+                self.write_result(self.pending_result)
+                self.pending_result = None
+                self.receipt_error_type = None
+            except OSError as error:
+                self.receipt_error_type = type(error).__name__
+                return
         try:
             owned(self.private, directory=True)
             request = read_owned(self.request)
@@ -127,7 +149,7 @@ class EditorTaskQueue:
             return
         if type(task) is not str or task not in TASKS:
             return
-        if not guard_valid(self.guard, self.clock()):
+        if not guard_valid(self.guard, self.clock(), self.guard_uid):
             self.stopped = True
             return
         self.last_revision = revision  # Failed tasks require a NEW explicit revision.
@@ -141,7 +163,11 @@ class EditorTaskQueue:
             receipt['error_type'] = type(error).__name__
             receipt['error'] = str(error)[:500]
         receipt['finished_epoch'] = self.clock()
-        self.write_result(receipt)
+        try:
+            self.write_result(receipt)
+        except OSError as error:
+            self.pending_result = receipt
+            self.receipt_error_type = type(error).__name__
 
 
 def install():
