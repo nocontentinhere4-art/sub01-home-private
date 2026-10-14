@@ -54,3 +54,11 @@ The viewer transport is based on PrismarineJS/prismarine-viewer's Mineflayer
 example, under its MIT license; see PRISMARINE-LICENSE. Dependencies retain
 their own licenses. Minecraft and its game assets are governed by Mojang's
 terms and are downloaded locally, not redistributed in this repository.
+
+The private TV may capture one genuine initial idle view before autonomous play.
+A one-time 20-second worker lease permits only the connection, with action and
+reward authority remaining inactive. A captured idle frame is labeled
+`initial_idle`; the renderer releases that client after capture, and timeout
+releases it even if rendering fails. Later brain play still requires the actual
+home activity/physical-readiness gate. This does not move the saved player,
+change the world or manufacture a game frame.

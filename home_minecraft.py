@@ -40,6 +40,7 @@ class MinecraftConsole:
         self.state = {}
         self.error = ""
         self.frame = None
+        self.frame_kind = None
         self.worker = self.server = None
         self.active = False
         self._render_generation = 0
@@ -58,6 +59,7 @@ class MinecraftConsole:
         return {"enabled": self.enabled, "status": self.status, "error": self.error,
                 "active": self.active, "last_action": self.last_action,
                 "observation": self.state, "events": self.events[-8:], "has_frame": bool(self.frame),
+                "frame_kind": self.frame_kind,
                 "perception": "structured game observations from Mineflayer"}
 
     async def send(self, message):
@@ -181,7 +183,10 @@ class MinecraftConsole:
                 frame = await page.screenshot(type='jpeg', quality=75, timeout=10000)
                 if self._render_owner() == owner:
                     self.frame = frame
+                    self.frame_kind = 'active' if active else 'initial_idle'
                     bootstrapped = True
+                    if not active:
+                        await self.send({'type': 'viewer_release'})
                     if self.error.startswith('Minecraft viewer: '):
                         self.error = ''
                 # Immediately unload after the one inactive bootstrap rather
@@ -227,6 +232,7 @@ class MinecraftConsole:
         self.error = ""
         self.state = {}
         self.frame = None
+        self.frame_kind = None
         self.server = await asyncio.create_subprocess_exec(config["java"], "-Xms256M", "-Xmx1024M",
             "-jar", str(self.directory / "server.jar"), "nogui", cwd=self.directory,
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
@@ -251,6 +257,7 @@ class MinecraftConsole:
             self.status = "ready"
             tasks = [asyncio.create_task(drain_server()), asyncio.create_task(self.read_worker()),
                      asyncio.create_task(self.render_frames())]
+            await self.send({'type': 'viewer_bootstrap'})
             while self.server.returncode is None and self.worker.returncode is None:
                 for task in tasks:
                     if task.done() and task.exception():

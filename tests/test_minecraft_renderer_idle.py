@@ -63,6 +63,11 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
         self.console = MinecraftConsole(self.directory.name)
         self.console.worker = object()
         self.console.server = object()
+        self.messages = []
+        async def send(message):
+            self.messages.append(message)
+            return True
+        self.console.send = send
 
     def tearDown(self):
         self.directory.cleanup()
@@ -78,6 +83,8 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
         _, wait = await h.waiting()
         self.assertEqual(page.shots, 1)
         self.assertEqual(page.navigations[-1], 'about:blank')
+        self.assertEqual(self.console.frame_kind, 'initial_idle')
+        self.assertEqual(self.messages, [{'type': 'viewer_release'}])
         saved = self.console.frame
         for _ in range(3):
             wait.set_result(None);_, wait = await h.waiting()
