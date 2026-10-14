@@ -19,6 +19,7 @@ INCLUDES = r'''
 #include "Misc/DateTime.h"
 #include "Sub01PCBridge.h"
 #include "Sub01HomeDeviceBridge.h"
+#include <cstdio>
 '''
 
 FIELDS = r'''
@@ -61,7 +62,10 @@ AActor* ASub01HomeCharacter::FindAuthoredSettingsActor(const FString& Label) con
  return Found;
 }
 int64 ASub01HomeCharacter::PrivateSettingsStartTicks() const{
- FString Raw;if(!FFileHelper::LoadFileToString(Raw,TEXT("/proc/self/stat")))return 0;
+ // procfs reports a zero file size; read its live bytes instead of sizing via FFileHelper.
+ char Bytes[4096];FILE* File=std::fopen("/proc/self/stat","r");if(!File)return 0;
+ const bool Read=std::fgets(Bytes,sizeof(Bytes),File)!=nullptr;std::fclose(File);if(!Read)return 0;
+ const FString Raw=UTF8_TO_TCHAR(Bytes);
  int32 Close=INDEX_NONE;if(!Raw.FindLastChar(TEXT(')'),Close))return 0;
  TArray<FString> Fields;Raw.Mid(Close+1).ParseIntoArrayWS(Fields);
  return Fields.Num()>19?FCString::Atoi64(*Fields[19]):0;
