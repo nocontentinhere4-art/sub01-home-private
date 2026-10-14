@@ -1,0 +1,65 @@
+{
+  "schema": "sub01.real-kitchen-source.v1",
+  "retrieved_utc": "2026-10-14T19:44:00Z",
+  "assets": [
+    {
+      "name": "face-frame-base-cabinet",
+      "viewer": "https://www.innerscene.com/v/7VC6dUsGwJKdxl5WW5Ggph",
+      "details": "https://www.innerscene.com/tools/library/3d-parts/600-mm-face-frame-base-cabinet-760be2d4",
+      "download": "https://www.innerscene.com/api/library/600-mm-face-frame-base-cabinet-760be2d4/download",
+      "license": "CC0 (Public domain label inspected in official viewer)",
+      "access": "public without account; isolated Playwright download",
+      "files": [
+        {
+          "filename": "face-frame-base-cabinet.step",
+          "bytes": 622125,
+          "sha256": "1c30450a4f0ef4205101f68ca1cf2a03be76066220885ee543a0e2e697e17ef1"
+        },
+        {
+          "filename": "face-frame-base-cabinet.glb",
+          "bytes": 1102216,
+          "sha256": "424076e0bb92c82439d45d34ebf43638b0f89de6e01aecf677bb8700b46f8e80"
+        }
+      ],
+      "raw_coordinate_units": "millimeters",
+      "to_meters": 0.001,
+      "source_dimensions_mm_xyz": [
+        600,
+        820,
+        580
+      ],
+      "gltf_export": "Official viewer Export glTF binary; no local geometry regeneration",
+      "native_installed": false
+    },
+    {
+      "name": "shaker-door",
+      "viewer": "https://www.innerscene.com/v/5WRQVzG7lOvP9AFPXEasgo",
+      "details": "https://www.innerscene.com/tools/library/3d-parts/shaker-cabinet-door-596-mm-fae22352",
+      "download": "https://www.innerscene.com/api/library/shaker-cabinet-door-596-mm-fae22352/download",
+      "license": "CC0 (Public domain label inspected in official viewer)",
+      "access": "public without account; isolated Playwright download",
+      "files": [
+        {
+          "filename": "shaker-door.step",
+          "bytes": 67533,
+          "sha256": "080bd9a8b4bd7e30b84dc5c8c3e6b8ce3c15167d85b13862ebb0c106baeb18da"
+        },
+        {
+          "filename": "shaker-door.glb",
+          "bytes": 48932,
+          "sha256": "8fd7333614e496afd635b7d7586b1775d6bfaed26b52238b448c3ddc92d86b67"
+        }
+      ],
+      "raw_coordinate_units": "millimeters",
+      "to_meters": 0.001,
+      "source_dimensions_mm_xyz": [
+        596,
+        716,
+        51
+      ],
+      "gltf_export": "Official viewer Export glTF binary; no local geometry regeneration",
+      "native_installed": false
+    }
+  ],
+  "warning": "Inventory helper bounds_m labels are incorrect for these unnormalized millimeter exports; convert raw positions by 0.001 before placement. This source packet is not native acceptance."
+}
