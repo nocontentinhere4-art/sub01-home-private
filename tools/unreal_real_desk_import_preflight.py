@@ -21,7 +21,7 @@ def validate_export(source,report):
     return True
 
 
-def audit(export_path,output_path=None,u=None):
+def audit(export_path,output_path=None,u=None,lamp_receipt_path="/workspace/sub01-home-private/out/real-lamps/unreal-real-lamps-report.json"):
     if u is None:import unreal as u
     export_path=Path(export_path);gaps=[]
     try:report=json.loads(export_path.with_suffix('.json').read_text());validate_export(export_path,report)
@@ -33,8 +33,19 @@ def audit(export_path,output_path=None,u=None):
         found=[a for a in actors if a.get_name()==f'full-home_node_{node}']
         if len(found)!=1:gaps.append(f'Actual source actor {node} not uniquely present')
         else:targets.extend(found)
-    # Labels select diagnostic candidates only. They are not trusted mutation identity.
-    lamps=[a for a in actors if a.get_actor_label() in ('SUB01_RealLamp_DeskLamp','SUB01_AuthoredLight_DeskLamp')]
+    # Saved actual importer receipt supplies geometry actor identity; no guessed relocation.
+    saved_lamp=None
+    try:
+        saved_lamp=json.loads(Path(lamp_receipt_path).read_text())['planned']['DeskLamp']
+        geometry=[a for a in actors if a.get_path_name()==saved_lamp['actor']]
+        if len(geometry)!=1:raise ValueError('Saved DeskLamp actor is not uniquely present')
+        expected_materials=[m['material'] for m in saved_lamp['materials']]
+        components=geometry[0].get_components_by_class(u.StaticMeshComponent)
+        if len(components)!=1 or [m.get_path_name() if m else None for m in components[0].get_materials()]!=expected_materials:raise ValueError('Actual saved DeskLamp material binding differs')
+        lamps=geometry+[a for a in actors if a.get_actor_label()=='SUB01_AuthoredLight_DeskLamp']
+    except (OSError,ValueError,KeyError) as exc:
+        gaps.append('Actual saved DeskLamp receipt cannot be verified: '+str(exc))
+        lamps=[a for a in actors if a.get_actor_label() in ('SUB01_RealLamp_DeskLamp','SUB01_AuthoredLight_DeskLamp')]
     rows=[]
     for actor in targets+lamps:
         centre,extent=actor.get_actor_bounds(False)
@@ -42,8 +53,8 @@ def audit(export_path,output_path=None,u=None):
         for c in actor.get_components_by_class(u.LightComponent):
             row['light_components'].append({'path':c.get_path_name(),'intensity':c.get_editor_property('intensity'),'world_location_cm':[c.get_world_location().x,c.get_world_location().y,c.get_world_location().z]})
         rows.append(row)
-    gaps.extend(['Reviewed exact DeskLamp actor/component mesh asset identity, authored light component path and saved original transforms are unavailable; label matches are diagnostic only.','Actual new lamp foot vertices, shade extrema, bulb/light pairing and support margin after +45cm X must be measured and reviewed.','Actual native top84.5cm at floor2.5cm and all device foot contacts, source/native screen bindings, approved chair knee clearance must be measured.','Candidate material-instance actual parameters/parents and complete seven-material texture role/sRGB/compression receipts must be reviewed before hiding old desk.','New Interchange scene node/mesh UID names must ALL be unique to this desk version; a unique asset destination or root node alone is insufficient.'])
-    result={'schema':'sub01.real-desk-import-prerequisite-audit.v1','source_sha256':SOURCE_SHA,'read_only':True,'import_ready':False,'activation_allowed':False,'prerequisite_gaps':gaps,'actual_bindings':fingerprint(u,targets+lamps),'actual_bounds_and_lights':rows,'protected_source_device_nodes':list(DEVICES),'proposed_old_desk_hide_nodes':[181,182],'lamp_delta_ue_cm':[45,0,0],'native_mutations_performed':0}
+    gaps.extend(['Saved DeskLamp geometry actor/material receipt is read when present; actual mesh asset identity, exact light component path and transforms still require this audit plus explicit reviewed pairing before relocation.','Actual new lamp foot vertices, shade extrema, bulb/light pairing and support margin after +45cm X must be measured and reviewed.','Actual native top84.5cm at floor2.5cm and all device foot contacts, source/native screen bindings, approved chair knee clearance must be measured.','Candidate material-instance actual parameters/parents and complete seven-material texture role/sRGB/compression receipts must be reviewed before hiding old desk.','New Interchange scene node/mesh UID names must ALL be unique to this desk version; a unique asset destination or root node alone is insufficient.'])
+    result={'schema':'sub01.real-desk-import-prerequisite-audit.v1','source_sha256':SOURCE_SHA,'read_only':True,'import_ready':False,'activation_allowed':False,'prerequisite_gaps':gaps,'actual_bindings':fingerprint(u,targets+lamps),'actual_bounds_and_lights':rows,'saved_lamp_import_receipt':saved_lamp,'protected_source_device_nodes':list(DEVICES),'proposed_old_desk_hide_nodes':[181,182],'lamp_delta_ue_cm':[45,0,0],'native_mutations_performed':0}
     if output_path:Path(output_path).write_text(json.dumps(result,indent=2)+'\n')
     return result
 
