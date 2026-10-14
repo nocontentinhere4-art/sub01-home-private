@@ -31,7 +31,7 @@ def test_good_idle_passes_every_invariant(tmp_path, owner):
     assert inv['rest_offsets']['max_deviation_cm'] == 0
     assert inv['bone_length_constancy']['max_stretch_cm'] < 1e-4
     assert inv['skeleton']['parity']['structural_root'] == 'mixamo'       # 66 nodes vs 65 joints is fine
-    assert inv['soles']['selected_vertices'] == 8                          # sock and upward vertices excluded
+    assert inv['soles']['selected_vertices'] == 32                         # sock and upward vertices excluded
     assert inv['timing']['fps'] == pytest.approx(30, abs=1e-3)
     assert inv['loop']['start_end_hips_relative_pose_cm'] < 1e-4
 

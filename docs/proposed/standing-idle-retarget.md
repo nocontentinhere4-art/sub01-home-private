@@ -1,10 +1,21 @@
 # Standing idle for the native owner: retarget pipeline, measured residuals, acquisition plan
 
-**Status (14 October 2026): no clip passes. No genuine standing idle exists on the owner skeleton in
-this repository, and nothing was downloaded or acquired.** The retarget pipeline below is real and
-was run here on every standing idle the repository holds. Each output fails at least one measured
-gate, so none of them is committed and none should be bound. The measured reports are committed
-in `docs/proposed/standing-idle-retarget/`.
+**Status (14 October 2026, revised): one corrected clip passes the verifier.**
+`docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb` is the Quaternius UAL `Idle_Loop`
+(CC0), retargeted onto the owner and then corrected by a labelled leg-IK and seam stage. Its labels
+are `retargeted+seam_blend+leg_ik_support+root_support`. It passes every check of
+`verify_life_idle_candidate.py`, with thresholds unchanged, and the inventory reads it as
+`Candidate`.
+
+It is **not a raw capture**, and the labels, in the GLB extras and the report, say so. It has not
+been imported into Unreal, rendered or seen. **No Mixamo or other new clip was downloaded or
+acquired.** The raw retargets alone (section "Measured residuals") all fail, and their GLBs are not
+committed.
+
+**Licence note.** Quaternius's asset licence (QAL v1.0, quoted in `web/room/CREDITS.md`) forbids
+redistributing the assets "as a standalone asset or pack". The corrected GLB is kept privately in
+this repository, under `docs/` and outside `web/`, so it is never served. It goes into the private
+native home only. Never publish it on its own.
 
 The web was **not** checked. This session has no `playwright-isolated` browser tool, so every licence
 fact below is quoted from files in the repository. Where the repository says nothing, the fact is
@@ -18,7 +29,9 @@ marked unverified.
 | `tools/verify_life_idle_candidate.py` | The gate. It measures a candidate against the owner and exits 0 only if every invariant passes. It never edits a clip. |
 | `tools/life_gltf.py` | glTF reading (GLB, or `.gltf` with `.bin` or `data:` buffers), forward kinematics, and a GLB writer. It has **no meshopt decoder**: compressed files are decoded first by the existing `tools/uncompress_unreal_glb.mjs`, which uses the vendored official decoder. |
 | `tests/test_verify_life_idle_candidate.py`, `tests/test_retarget_life_clip.py`, `tests/life_clip_synth.py` | Tests on synthetic owner-like GLBs, plus real-file tests that skip when the files are absent. |
+| `tools/leg_ik_life_clip.py` | The leg-IK support and seam-blend stage, with `tests/test_leg_ik_life_clip.py`. See "Leg-IK and seam correction" below. |
 | `docs/proposed/standing-idle-retarget/*.json` | The measured reports of the real runs. |
+| `docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb` | The corrected clip: 95 KB, owner skeleton nodes and animation only, no mesh. |
 
 `tools/native_life_skeleton_parity.py` (3a1bae2) is reused unchanged for the 66-vs-65 rule.
 
@@ -168,9 +181,95 @@ source. The best UAL loop window is the whole clip, 0 to 2.47 s, with normalised
 best v5 loop among windows where the feet stay planted is 0.2 to 3.4 s, with pose 1.99 cm and cost
 3.99.
 
-**Verdict: none of the repository's clips can be bound as the owner's Idle.** The freeze remains
-until a better source arrives. The adapter's fail-closed refusal (`SUB01_LIFE_IDLE_REFUSED`) is the
-correct behaviour today.
+**Verdict on the raw retargets: none can be bound as they are.** The UAL retarget becomes bindable
+only after the labelled correction stage in the next section.
+
+## Leg-IK and seam correction (`tools/leg_ik_life_clip.py`)
+
+This stage was authorized by the owner on 14 October 2026. Its input is the raw retarget above. Each
+change below is applied only when it is needed, labelled, and reported.
+
+### 1. `seam_blend`
+
+This runs only when the raw seam fails the verifier.
+
+- **Method:** the standard captured-pose loop crossfade. The clip is shortened by N frames. Its last
+  N frames are slerped (rotations) and lerped (hips translation) toward its first N frames with
+  C2 smootherstep weights, so the last frame equals the first frame.
+- **Here:** N = 12 frames, 0.4 s.
+- **Unchanged frames:** every frame outside the 13-frame window is the captured frame, value for
+  value.
+- **Inside the window:** local rotations move by up to 5.36° from the main captured frame.
+
+### 2. `leg_ik_support`
+
+This runs per foot, only where the plantar patch is not already within 0 to +0.1 cm.
+
+- **Plantar patch:** the fixed rule, 4177 vertices, skinned every frame.
+- **Ankle target:** the captured ankle moved vertically until the lowest plantar vertex is at
+  +0.001 cm.
+- **Solve:** analytic two-bone IK, UpLeg → Leg → Foot. The knee stays on this frame's captured knee
+  plane: the plane turns by at most 2.27° to contain the moved ankle.
+- **Foot:** keeps its captured world orientation (change 0.0°). It was not adjusted for support.
+  The toe keeps its local rotation.
+- **What changes:** only the UpLeg, Leg and Foot local rotations. Bone translations are the
+  owner's.
+
+### 3. `root_support`
+
+This runs only because the left leg is almost straight in the capture and its foot floats 3.6 cm.
+
+- **Change:** a smooth, purely vertical hips drop of 1.91 to 2.39 cm, below the 3.0 cm bound.
+- **How it is built:** the required drop per frame, then a cyclic closing plus a mean over 0.2 s.
+  The result is never less than what is required.
+- **Horizontal:** no horizontal change.
+
+### Results
+
+| check | raw retarget | corrected |
+|---|---|---|
+| verifier failed | `feet_joints`, `loop`, `soles` | **none (pass)** |
+| left sole, lowest vertex | +3.58 to +3.65 cm (floats) | +0.001 cm |
+| right sole, lowest vertex | −2.22 to −2.16 cm (2.22 cm penetration) | +0.001 cm (0 penetration) |
+| support patch, 0 to +1 cm, need ≥ 12 | — | L 379 / R 387 vertices (pass) |
+| sole centroid slide L / R | 0.18 / 0.33 cm | 0.13 / 0.23 cm |
+| foot-joint max slide | 0.44 cm | 0.30 cm |
+| foot-joint height range (max) | 0.10 cm | 0.15 cm |
+| loop pose (start against end) | 0.0 cm | 0.0 cm |
+| seam velocity | **16.80 cm/s** | 2.30 cm/s |
+| hips horizontal travel | 0.78 cm | 0.62 cm |
+| hips vertical range | 0.92 cm | 0.54 cm |
+| bone lengths vs owner, every frame | 0.0 cm | 0.0 cm (≤ 1e-4 required) |
+| upper-body local rotations, outside the blend | — | 0 values differ (bit-identical) |
+| upper-body local rotations, inside the 0.4 s blend | — | ≤ 5.36° |
+| world hand orientation change, outside the blend | — | 0.0° |
+| duration | 2.5 s (76 frames) | 2.1 s (64 frames) |
+
+These are the 2.5 s retarget run's numbers, recomputed on the corrected file. The full numbers are
+in `stand_idle_ual_ik.glb.report.json`, next to the raw `stand_idle_ual.glb.report.json`.
+
+### Regenerate
+
+The output is deterministic, sha256 `3d9876d9…`:
+
+```
+python3 tools/retarget_life_clip.py web/room/boy_moves.glb OUT/stand_idle_ual.glb --preset ual_boy --animation stand_idle
+python3 tools/leg_ik_life_clip.py OUT/stand_idle_ual.glb OUT/stand_idle_ual_ik.glb --raw-report OUT/stand_idle_ual.glb.report.json
+python3 tools/verify_life_idle_candidate.py OUT/stand_idle_ual_ik.glb        # exit 0
+```
+
+### What remains unverified, for root to check on a native capture
+
+- **Fingers:** the source has none, so the owner's straight rest fingers ride rigidly on the hands.
+  This is likely the most visible flaw.
+- **Palm and forearm twist:** twist is aligned only at the hands.
+- **Spine lean:** the 3.2° Spine / Spine1 rest residual.
+- **The blended 0.4 s:** look for any visible hand drift.
+- **The 2.4 cm hips drop:** the knees are slightly more bent than in the capture.
+- **Soles against the native floor.** The y = 0 floor here is the owner's rest floor. The Unreal
+  floor height is not verified.
+- **The Walk ↔ Idle crossfade.**
+- **The first-person view.**
 
 ## Licence facts, as the repository records them
 
@@ -273,6 +372,20 @@ The licence is unverified (see above).
    `python3 tools/retarget_life_clip.py /srv/private/life/GASP_Idle.glb /srv/private/life/Idle.glb --mapping /srv/private/life/manny_to_owner.json --provenance "Epic GASP <asset name>"`
 5. Continue at **Common steps** below.
 
+## Server steps for the corrected UAL idle (root)
+
+These are the common steps below, with `/srv/private/life/Idle.glb` replaced by the committed
+`docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb`, or a regenerated copy with the same
+sha256. Use the same path string in `--extra` and in the export's `Idle=` argument. The action name
+in the merged GLB is the file stem, `stand_idle_ual_ik`.
+
+1. `python3 tools/verify_life_idle_candidate.py <repo>/docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb`
+   Exit 0 is required.
+2. `python3 tools/inventory_native_life_clips.py --extra Idle=<repo>/docs/proposed/standing-idle-retarget/stand_idle_ual_ik.glb --out <project>/private-audit/native-life-clips-inventory.json`
+   This was checked here: the verdict is `Candidate`, "standing, stationary, loops", with rest TRS
+   error 0.
+3. Then continue with the FBX export, import, config fragment, install, build and visual check below.
+
 ## Common steps, into 67af5f8's adapter
 
 All of these run as root, on the server. Every step must succeed before the next.
@@ -325,5 +438,6 @@ python3 tools/retarget_life_clip.py web/room/boy_idle.glb  OUT/boy_idle_ai.glb  
 python3 tools/verify_life_idle_candidate.py web/room/mh_mx/room_mx_standing_clap.glb --out OUT/standing_clap.verify.json
 ```
 
-The output GLBs, 0.1 to 0.5 MB each, are **not committed**, because every one of them fails the
-gate. They regenerate in seconds, deterministically, from the commands above.
+The raw output GLBs, 0.1 to 0.5 MB each, are **not committed**, because every one of them fails the
+gate. They regenerate in seconds, deterministically, from the commands above. Only the corrected
+`stand_idle_ual_ik.glb` (it passes) is committed; see "Leg-IK and seam correction".

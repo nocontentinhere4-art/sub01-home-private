@@ -47,9 +47,10 @@ def world_rest_cm(spec):
     return pos
 
 
-def mat_inverse_translation(p):
-    """Column-major glTF inverse bind matrix of a pure translation p (metres)."""
-    return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -p[0], -p[1], -p[2], 1]
+def mat_inverse_translation(p, scale=0.01):
+    """Column-major glTF inverse bind matrix of a joint at world p (metres) under the 0.01 armature."""
+    k = 1 / scale
+    return [k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, -p[0] * k, -p[1] * k, -p[2] * k, 1]
 
 
 def build(path, clip=None, *, drop=(), reparent=None, root_track=None, prefix=P, mesh=True, extra_nodes=None):
@@ -77,7 +78,8 @@ def build(path, clip=None, *, drop=(), reparent=None, root_track=None, prefix=P,
             if side + 'Foot' not in index:
                 continue
             fx = pos[side + 'Foot'][0] * 0.01
-            for dx, dz, y in ((-0.03, -0.04, 0.0), (0.03, -0.04, 0.001), (-0.03, 0.08, 0.002), (0.03, 0.08, 0.003)):
+            grid = [(-0.03 + 0.02 * a, -0.04 + 0.04 * b, 0.001 * ((a + b) % 4)) for a in range(4) for b in range(4)]
+            for dx, dz, y in grid:                   # 16 plantar vertices per foot, rest Y 0..0.003 m
                 verts.append((fx + dx, y, dz))
                 normals.append((0.0, -1.0, 0.0))
                 jidx.append(joints.index(index[side + 'Foot']))
