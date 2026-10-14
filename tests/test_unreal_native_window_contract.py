@@ -8,6 +8,14 @@ class NativeWindowContract(unittest.TestCase):
         result=subprocess.run([sys.executable,str(ROOT/'tools/run_unreal_native_window_recording.py'),'--deadline-epoch','9999999999','--startup-view','manual','--phone-head-camera'],capture_output=True,text=True,timeout=5)
         self.assertNotEqual(result.returncode,0)
         self.assertIn('Head-origin camera requires explicit phone diagnostic',result.stderr)
+    def test_measured_eye_review_refuses_wrong_role_time_and_two_camera_flags(self):
+        for extra,message in [(['--startup-view','manual'], 'explicit phone diagnostic'),
+                              (['--startup-view','phone-diagnostic','--phone-pose-time','5'], 'original 4s witness'),
+                              (['--startup-view','phone-diagnostic','--phone-head-camera'], 'no Head-origin flag')]:
+            result=subprocess.run([sys.executable,str(ROOT/'tools/run_unreal_native_window_recording.py'),
+                                   '--deadline-epoch','9999999999','--phone-eye-camera',*extra],capture_output=True,text=True,timeout=5)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn(message,result.stderr)
     def test_real_generated_replay_keeps_fingers_and_refuses_live_view(self):
         with tempfile.TemporaryDirectory()as tmp:
             project=Path(tmp);(project/'Config').mkdir();(project/'Sub01HomeLab.uproject').write_text('{}');stage.stage(project)
