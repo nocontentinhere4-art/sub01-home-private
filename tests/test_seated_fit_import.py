@@ -30,7 +30,7 @@ class Props:
 
 
 def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=None, extra_for=None, root_moves=False,
-                skeleton_path=fit.OWNER_SKELETON, frames_per_s=None, rename_fails_for=None, existing=()):
+                skeleton_path=fit.OWNER_SKELETON, frames_per_s=None, rename_fails_for=None, existing=(), save_fails_for=None):
     """A fake editor with a real asset table: import, list, exists, rename, delete and load all act on `assets`."""
     log = SimpleNamespace(imported=[], deleted=[], saved=[], renamed=[], options={})
 
@@ -101,10 +101,18 @@ def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=N
         return True
 
     def delete(path):
-        assert path.split('.', 1)[0].startswith(fit.DEST + '/_Staging/'), f'deleted a non-staging path {path}'
+        renamed_here = {dst for _, dst in log.renamed}
+        assert (path.split('.', 1)[0].startswith(fit.DEST + '/_Staging/') or path.split('.', 1)[0] in renamed_here), \
+            f'deleted a path this run did not create: {path}'
         for k in [k for k in assets if k.split('.', 1)[0] == path.split('.', 1)[0]]:
             del assets[k]
         log.deleted.append(path)
+
+    def save(path, only_if_is_dirty=False):
+        if save_fails_for and path == f'{fit.DEST}/SUB01_{save_fails_for}':
+            return False
+        log.saved.append(path)
+        return True
 
     library = SimpleNamespace(get_bone_poses_for_time=poses)
     if frames_per_s is not None:
@@ -122,7 +130,7 @@ def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=N
         AssetToolsHelpers=SimpleNamespace(get_asset_tools=lambda: Tools()),
         AnimationLibrary=library,
         EditorAssetLibrary=SimpleNamespace(
-            save_directory=lambda d, **k: log.saved.append(d), delete_asset=delete, does_asset_exist=exists,
+            save_asset=save, delete_asset=delete, does_asset_exist=exists,
             rename_asset=rename,
             list_assets=lambda d, recursive=True, include_folder=False: [k for k in assets if k.startswith(d + '/')]),
         log=lambda m: None)
@@ -215,7 +223,8 @@ def test_imports_only_passing_fits_via_staging_with_60hz_typing(tmp_path):
     write_source(tmp_path)
     u, log = fake_unreal(tmp_path)
     receipt = fit.main(u, tmp_path, OWNER_PARENTS, txid='t1')
-    assert sorted(log.imported) == sorted(PASSING) and not log.deleted and log.saved == [fit.DEST]
+    assert sorted(log.imported) == sorted(PASSING) and not log.deleted
+    assert sorted(log.saved) == sorted(f'{fit.DEST}/SUB01_{r}' for r in PASSING)
     assert sorted(log.renamed) == sorted((f'{fit.DEST}/_Staging/{r}_t1', f'{fit.DEST}/SUB01_{r}') for r in PASSING)
     assert final_paths(log) == {fit.object_path(r) for r in PASSING}
     assert not [k for k in log.assets if '/_Staging/' in k]
@@ -302,8 +311,26 @@ def test_rename_failure_never_deletes_a_final_path(tmp_path):
     with pytest.raises(RuntimeError, match='rename'):
         fit.main(u, tmp_path, OWNER_PARENTS, txid='r')
     assert not (tmp_path / fit.RECEIPT_FILE).exists()
-    assert all('/_Staging/' in d for d in log.deleted)
+    renamed_here = {dst for _, dst in log.renamed}
+    assert all('/_Staging/' in d or d in renamed_here for d in log.deleted)
     assert not [k for k in log.assets if '/_Staging/' in k]
+    assert not final_paths(log)          # finals renamed earlier in this run are removed: no receipt-less orphans
+
+
+def test_save_failure_removes_only_this_runs_clips_and_keeps_previous_acceptance(tmp_path):
+    write_source(tmp_path)
+    first, _ = fake_unreal(tmp_path)
+    fit.main(first, tmp_path, OWNER_PARENTS, txid='old')
+    receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
+    u, log = fake_unreal(tmp_path, existing=['SeatedIdle'], save_fails_for='SitToTypeSeated')
+    original = log.assets[fit.object_path('SeatedIdle')]
+    with pytest.raises(RuntimeError, match='SitToTypeSeated: could not save'):
+        fit.main(u, tmp_path, OWNER_PARENTS, txid='new')
+    assert (tmp_path / fit.RECEIPT_FILE).read_bytes() == receipt_bytes
+    assert log.assets[fit.object_path('SeatedIdle')] is original
+    assert final_paths(log) == {fit.object_path('SeatedIdle')}
+    assert fit.object_path('SeatedIdle').split('.', 1)[0] not in log.deleted
+    assert not [k for k in log.assets if '/_Staging/' in k] and not list(tmp_path.rglob('*.tmp'))
 
 
 def test_existing_asset_without_matching_receipt_is_refused_with_zero_mutations(tmp_path):

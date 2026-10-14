@@ -204,7 +204,8 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None) -> dict
     for p in owned[:-1]:                              # leftover redirectors/side outputs in staging
         if lib.does_asset_exist(p):
             lib.delete_asset(p)
-    lib.save_asset(FINAL_PACKAGE, only_if_is_dirty=False)
+    if not lib.save_asset(FINAL_PACKAGE, only_if_is_dirty=False):
+        refuse(f'Could not save {FINAL_PACKAGE}; this run\'s clip removed, earlier receipt untouched')
     receipt = {'schema': RECEIPT_SCHEMA, 'owner': mesh.get_path_name(), 'skeleton': skeleton.get_path_name(),
                'identity_basis': basis, 'transaction_id': txid, 'staging_path': staged_package,
                'clips': [{'role': ROLE, 'object_path': clip.get_path_name(), 'duration_s': duration, 'frames': FRAMES,

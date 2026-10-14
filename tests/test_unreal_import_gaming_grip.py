@@ -29,7 +29,7 @@ class Props:
 
 
 def fake_unreal(project, *, typing_skeleton='SK', clip_skeleton='SK', duration=grip.NATIVE_DURATION_S,
-                root_moves=False, bones=BONES, parents=PARENTS, path=None, extra_outputs=0, rename_ok=True):
+                root_moves=False, bones=BONES, parents=PARENTS, path=None, extra_outputs=0, rename_ok=True, save_ok=True):
     log = SimpleNamespace(imported=[], deleted=[], saved=[], renamed=[], messages=[])
 
     class SkeletalMesh(Props):
@@ -111,7 +111,7 @@ def fake_unreal(project, *, typing_skeleton='SK', clip_skeleton='SK', duration=g
         does_directory_exist=lambda d: any(k.startswith(d + '/') for k in assets),
         list_assets=lambda d, recursive=True, include_folder=False: [k for k in assets if k.startswith(d + '/')],
         delete_asset=delete_asset, rename_asset=rename_asset,
-        save_asset=lambda p, only_if_is_dirty=False: log.saved.append(p) or True)
+        save_asset=lambda p, only_if_is_dirty=False: save_ok and (log.saved.append(p) or True))
 
     def poses(clip, names, t, _, mesh):
         x = t if root_moves else 0.0
@@ -313,3 +313,17 @@ def test_import_output_outside_staging_is_refused_and_left_untouched(tmp_path):
 def test_default_owner_parents_are_the_65_joint_owner_with_one_root():
     parents = grip.owner_parents_default()
     assert len(parents) == 65 and [n for n, p in parents.items() if p is None] == ['mixamorig:Hips']
+
+
+def test_save_failure_refuses_removes_only_its_own_clip_and_keeps_the_previous_receipt(tmp_path):
+    write_source(tmp_path)
+    u, log = fake_unreal(tmp_path, save_ok=False)
+    previous = b'{"schema": "previous acceptance kept byte-for-byte"}\n'
+    (tmp_path / grip.RECEIPT_FILE).write_bytes(previous)
+    foreign = f'{grip.STAGING_DIR}/Other_run.Other_run'
+    u.assets[foreign] = u.AnimSequence(foreign, skeleton=u.Skeleton('SK'), sequence_length=1.0)
+    with pytest.raises(RuntimeError, match='Could not save'):
+        grip.main(u, tmp_path, OWNER_PARENTS)
+    assert (tmp_path / grip.RECEIPT_FILE).read_bytes() == previous and not list(tmp_path.glob('*.tmp'))
+    assert grip.OBJECT_PATH not in u.assets and foreign in u.assets
+    assert grip.FINAL_PACKAGE in log.deleted and grip.STAGING_DIR + '/Other_run' not in log.deleted

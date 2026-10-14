@@ -284,8 +284,9 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: P
     created, staged = set(), []
 
     def refuse(why):
-        for path in sorted(created):
-            assets.delete_asset(path)
+        for path in sorted(created):              # only paths this transaction created (staged or renamed-to finals)
+            if assets.does_asset_exist(path):
+                assets.delete_asset(path)
         raise RuntimeError(why)
 
     world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
@@ -338,11 +339,14 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: P
         if not assets.rename_asset(staged_package, package_path(object_path(role))):
             refuse(f'{role}: rename {staged_package} -> {object_path(role)} failed')
         created.discard(staged_package)
+        created.add(package_path(object_path(role)))   # was absent before this run, so owned by this transaction
         moved = u.load_asset(object_path(role))
         if not isinstance(moved, u.AnimSequence) or moved.get_editor_property('skeleton') != skeleton:
             refuse(f'{role}: renamed asset is not the verified staged sequence')
         results[role] = result
-    assets.save_directory(DEST, only_if_is_dirty=True, recursive=True)
+    for role, _, _ in staged:
+        if not assets.save_asset(package_path(object_path(role)), only_if_is_dirty=False):
+            refuse(f'{role}: could not save {object_path(role)}; this run\'s clips removed, earlier receipt untouched')
     receipt = {'schema': RECEIPT_SCHEMA, 'owner': mesh.get_path_name(), 'skeleton': skeleton.get_path_name(),
                'identity_basis': basis, 'destination': DEST, 'protected_untouched': PROTECTED_TYPING, 'txid': txid,
                'clips': [results[r['role']] for r in rows],
