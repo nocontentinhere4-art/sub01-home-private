@@ -197,25 +197,60 @@ def test_stem_refuses_when_ambiguous_or_missing():
     assert nodes
 
 
-def test_union_with_rail_is_one_remainder_without_double_removal():
-    d, spans, rail = build_home()
-    nodes, parts = identify(d)
-    manifest = B.build_hide_manifest(parts, B.identify_red_lamp(nodes), B.ROLES, B.identify_bedside(nodes))
-    lamp = B.lamp_excision_manifest(manifest['excisions'])
-    counts = B.triangle_counts(d.doc)
-    combined = B.combine_remainder(lamp, rail, counts)
-    rows = [r for r in combined['remainders'] if r['node'] == 163]
-    assert len(rows) == 1
-    row = rows[0]
-    assert row['remove_triangle_ids'] == sorted(t for s in spans for t in s)
-    assert row['lamp_triangles'] == len(spans[3]) and row['rail_triangles'] == sum(len(s) for s in spans[:3])
-    assert row['remaining_triangles'] == counts[(163, 0)] - len(row['remove_triangle_ids'])
-    _, _, bad = build_home(rail_conflict=True)
-    with pytest.raises(B.RefuseError, match='double-removal'):
-        B.combine_remainder(lamp, bad, counts)
-    # nested-dict rail format is accepted too
-    nested = {'nodes': {'163': {'primitives': {'0': {'triangle_ids': rail['excisions'][0]['triangle_ids']}}}}}
-    assert B.combine_remainder(lamp, nested, counts)['remainders'] == combined['remainders']
+def stem_row(tris, node=163, prim=0):
+    return {'role': 'DeskLamp', 'part': 'white_lamp_stem', 'node': node, 'primitive': prim, 'triangle_ids': tris}
+
+
+def test_stem_cross_check_against_reviewed_union(tmp_path):
+    reviewed = list(range(1800, 1840))
+    assert B.REVIEWED_STEM['triangle_ids'] == reviewed and len(reviewed) == 40
+    ref = B.cross_check_stem([stem_row(reviewed)], B.REVIEWED_SOURCE_SHA)
+    assert ref['reviewed_match'] and ref['triangle_ids'] == [1800, 1839] and ref['triangle_count'] == 40
+    assert ref['action_here'].startswith('none')  # no competing union/excision output
+    with pytest.raises(B.RefuseError, match='differs from reviewed'):
+        B.cross_check_stem([stem_row(list(range(1801, 1841)))], B.REVIEWED_SOURCE_SHA)
+    with pytest.raises(B.RefuseError, match='differs from reviewed'):
+        B.cross_check_stem([stem_row(reviewed, node=162)], B.REVIEWED_SOURCE_SHA)
+    union = tmp_path / 'exact-lamp-stem-rail-union.json'
+    union.write_text(json.dumps({'node': 163, 'primitive': 0, 'stem_triangles': [1800, 1839],
+                                 'rail_remainder_triangles': [1640, 1799]}))
+    ref = B.cross_check_stem([stem_row(reviewed)], B.REVIEWED_SOURCE_SHA, union)
+    assert ref['union_manifest']['sha256'] == hashlib.sha256(union.read_bytes()).hexdigest()
+    union.write_text(json.dumps({'stem_triangles': list(range(1700, 1740))}))
+    with pytest.raises(B.RefuseError, match='does not contain'):
+        B.cross_check_stem([stem_row(reviewed)], B.REVIEWED_SOURCE_SHA, union)
+    with pytest.raises(B.RefuseError, match='shared batch'):
+        B.cross_check_stem([stem_row(reviewed), dict(stem_row([1]), part='white_body', role='LowerPendant')],
+                           B.REVIEWED_SOURCE_SHA)
+
+
+def write_glb(d, path):
+    js = json.dumps(dict(d.doc, buffers=[{'byteLength': len(d.bin)}])).encode()
+    js += b' ' * (-len(js) % 4)
+    bin_ = bytes(d.bin) + b'\0' * (-len(d.bin) % 4)
+    body = struct.pack('<II', len(js), 0x4E4F534A) + js + struct.pack('<II', len(bin_), 0x004E4942) + bin_
+    path.write_bytes(b'glTF' + struct.pack('<II', 2, 12 + len(body)) + body)
+
+
+def test_list_originals_read_only(tmp_path):
+    d, spans, _ = build_home()
+    glb = tmp_path / 'full-home.glb'
+    write_glb(d, glb)
+    before = glb.read_bytes()
+    sha = hashlib.sha256(before).hexdigest()
+    out = B.list_originals(glb, sha)
+    assert out['read_only'] and glb.read_bytes() == before
+    assert out['stem_excision_reference']['node'] == 163 and not out['stem_excision_reference']['reviewed_match']
+    assert {126, 127, 129, 198, 199} <= {e['source_node_index'] for e in out['entries']}
+    with pytest.raises(B.RefuseError, match='differs from expected'):
+        B.list_originals(glb, B.REVIEWED_SOURCE_SHA)
+    args = B.parse_args(['--source-glb', str(glb), '--source-sha256', sha, '--list-originals'])
+    assert args.source_sha == sha and args.list_originals and not args.allow_unassembled
+    with pytest.raises(SystemExit):
+        B.parse_args(['--source-glb', str(glb)])
+    full = B.parse_args(['--source-glb', 'x.glb', '--allow-unassembled', '--ceiling-lamp', 'c.gltf',
+                         '--desk-lamp', 'd.gltf', '--output-dir', 'out/real-lamps'])
+    assert full.allow_unassembled and full.source_sha == B.REVIEWED_SOURCE_SHA and 'BedLamp' not in full.roles
 
 
 def test_emitters_hidden_not_excised_and_no_blanket_batch_hide():

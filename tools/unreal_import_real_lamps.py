@@ -11,8 +11,8 @@ SUB01_RealLamp_<role>.glb files. Fail closed: every identity (file hashes, origi
 actors, authored light anchors, the verified import transform) is checked before the
 first mutation. Originals are hidden in game and editor, never destroyed; collision is
 left unchanged. Shared batches (e.g. node 163) are never hidden: their exact lamp
-components are excised by root's single remainder surgery (combined-remainder-spec.json),
-not by this script. SUB01_AuthoredLight_* components are never moved; their position
+components (desk stem: node 163 / prim 0 / tris 1800..1839) are removed by root's
+byte-preserving glTF splice from the reviewed union manifest, never by this script. SUB01_AuthoredLight_* components are never moved; their position
 relative to the new bulb is reported with a proposal. Imported materials are owned
 copies under /Game/Sub01Home/RealLamps/ and have every emissive parameter zeroed.
 Screens/devices are protected: any hide target that looks like one is refused.

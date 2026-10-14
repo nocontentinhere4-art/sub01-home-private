@@ -8,9 +8,9 @@ stop at 18:18:23 UTC. Nothing is deployed and the live site is not touched.
 
 | Role | Real asset (CC0, modeled Poly Haven model) | Replaces (hidden, never destroyed) | Excised exact components |
 |---|---|---|---|
-| DeskLamp | `desk_lamp_arm_01` (the existing red one, moved from the right of the desk to the left) | node 126 `Mesh_106`, the white glow disc (`web/house/home.js:1113`); the red instance nodes on the right (`home.js:625`, matched by materials `desk_lamp_arm_01*`) | white stem `beam([1.1,.85,-3.15],[1.1,1.3,-3.15], .014)` (`home.js:1114`), which sits in the shared rail-metal batch node 163 / Material 8 |
-| LowerPendant | `modern_ceiling_lamp_01` | node 127 `house-static-64` glow disc (`home.js:1152`); body/cable (`home.js:1150-1151`) if standalone | body/cable if batched |
-| UpperPendant | `modern_ceiling_lamp_01` | node 129 `house-static-65` glow disc; body/cable if standalone | body/cable if batched |
+| DeskLamp | `desk_lamp_arm_01` (the existing red one, moved from the right of the desk to the left) | node 126 `Mesh_106`, the white glow disc (`web/house/home.js:1113`); the red instance nodes on the right (`home.js:625`, matched by materials `desk_lamp_arm_01*`) | none here. The white stem `beam([1.1,.85,-3.15],[1.1,1.3,-3.15], .014)` (`home.js:1114`) is node 163 / prim 0 tris 1800..1839; the builder only cross-checks it, and root's splice removes it |
+| LowerPendant | `modern_ceiling_lamp_01` | node 127 `house-static-64` glow disc (`home.js:1152`); body/cable (`home.js:1150-1151`) if standalone | refuses if batched (needs a reviewed union) |
+| UpperPendant | `modern_ceiling_lamp_01` | node 129 `house-static-65` glow disc; body/cable if standalone | refuses if batched (needs a reviewed union) |
 | BedLamp | `industrial_pipe_lamp` (reviewed copy at `/workspace/sub01-home-private/reviewed-furniture/industrial_pipe_lamp`; native size 18.3 × 36.4 × 26.2 cm) | the old procedural bedside lamp (`tools/build_home_bedside_lamp.py`, `home.js:1117-1131`): nodes 195 `Brass_base`, 196 `Brass_socket`, 197 `Brass_stem`, 198 `Bulb`, 199 `Linen_shade` | none |
 
 Wording: `desk_lamp_arm_01`, `modern_ceiling_lamp_01` and `industrial_pipe_lamp` are
@@ -23,14 +23,20 @@ Rules:
   still find their exact actors.
 - Node 66 (KitchenWork) and every screen, monitor, TV, phone, keyboard or PC
   identity are refused as hide targets.
-- A shared batch is never hidden as a whole. The builder selects lamp parts inside
-  a batch by **exact welded connected components** that fit the home.js cylinder
-  (endpoints and radius, ±1.5 mm). It refuses when there is no match or when
-  there is more than one candidate set. It writes those triangle IDs to
-  `lamp-excision-triangles.json`. `combined-remainder-spec.json` holds the union with
-  root's rail excision (the 45 rail components in nodes 162/163) as **one**
-  remainder edit per node and primitive. Any triangle claimed by both sides is a
-  hard refusal.
+- A shared batch is never hidden as a whole, and this builder does **not** excise
+  anything. In the exact source `9556495…`, the white stem is node 163 / primitive 0 /
+  Material 8, triangles **1800..1839** (40 triangles, 64 vertices) of 1840. The
+  rails+stem union keeps 160 rail-remainder triangles (1640..1799). The builder
+  selects the stem by exact welded connected components (cylinder endpoints and
+  radius, ±1.5 mm) **only to cross-check** that selection against those reviewed
+  triangles, and refuses on any mismatch, on no match or on several candidate sets.
+  If `--stem-union-manifest evidence/native/exact-lamp-stem-rail-union.json` is
+  given, the builder reads it read-only, requires it to contain those triangles,
+  and records its sha256. The manifest output carries only
+  `stem_excision_reference`. Root's byte-preserving glTF splice
+  (`tools/structural_rail_source_patch.py` lineage; the texture agent applies the
+  remainder) owns the removal. Any other lamp part found inside a shared batch
+  refuses until a reviewed union exists.
 - Real size only: uniform scale 1.0. The pendant cable is shortened or lengthened
   along its axis only (thin rod band; the cross-section does not change), so the
   canopy touches the measured ceiling underside and the bulb sits at the light.
@@ -65,14 +71,17 @@ Expected placements (the server measures the real values):
 cd /workspace/sub01-home-private
 BL=/workspace/sub01-tools/blender-4.5.3-linux-x64/blender
 SRC=out/lighting-v23/unreal-home-lab/Sub01HomeLab/SourceAssets/full-home.glb   # exact GLB Unreal imported
-sha256sum "$SRC"   # must be 9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b
+SHA=9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b
+UNION=evidence/native/exact-lamp-stem-rail-union.json   # root's reviewed manifest, read-only
 CEIL=$(ls out/furniture-refresh/*/modern_ceiling_lamp_01*.gltf out/furniture-refresh/modern_ceiling_lamp_01*/*.gltf 2>/dev/null | head -1)
+# 0) read-only original-signature check (plain python, no bpy, writes nothing)
+python3 tools/build_real_lamps.py --source-glb "$SRC" --source-sha256 $SHA --list-originals \
+  --stem-union-manifest "$UNION" > /tmp/real-lamps-originals.json
 # 1) dry run: identification, supports, collisions, manifests (no GLB export)
 $BL --background --factory-startup --python tools/build_real_lamps.py -- \
-  --source-glb "$SRC" --ceiling-lamp "$CEIL" \
-  --desk-lamp web/house/assets/desk_lamp_arm_01/desk_lamp_arm_01.gltf \
+  --source-glb "$SRC" --source-sha256 $SHA --allow-unassembled --stem-union-manifest "$UNION" \
+  --ceiling-lamp "$CEIL" --desk-lamp web/house/assets/desk_lamp_arm_01/desk_lamp_arm_01.gltf \
   --bedside-lamp /workspace/sub01-home-private/reviewed-furniture/industrial_pipe_lamp \
-  --rail-excision <root rail builder triangle-ID manifest.json> \
   --output-dir out/real-lamps --dry-run
 # 2) real build: same command without --dry-run
 ```
@@ -86,8 +95,7 @@ evaluated world bounds; otherwise the builder refuses.
 
 Outputs in `out/real-lamps/`: `real-lamps.glb` (world-placed, additive),
 `SUB01_RealLamp_<role>.glb` (local frame, for UE), `placement-report.json`,
-`original-hide-manifest.json`, `lamp-excision-triangles.json`,
-`combined-remainder-spec.json` and `provenance.json` (Poly Haven URLs, CC0, sha256
+`original-hide-manifest.json` (with `stem_excision_reference`) and `provenance.json` (Poly Haven URLs, CC0, sha256
 of every file). Pre-existing objects are fingerprinted, and any change is a refusal.
 
 Unreal (sole editor owner, ActualHome already loaded):
@@ -99,8 +107,9 @@ r.run('/workspace/sub01-home-private/out/real-lamps', dry_run=True)   # verify e
 r.run('/workspace/sub01-home-private/out/real-lamps')                 # import, spawn SUB01_RealLamp_<role>, hide originals
 ```
 
-Root's single remainder surgery consumes `combined-remainder-spec.json` for nodes
-162 and 163. This import does not excise anything.
+Root's byte-preserving splice, from the reviewed union manifest, removes the stem
+and rail triangles in node 163. Neither the builder nor this import excises
+anything.
 
 ## Visual checks (native capture, before claiming anything)
 
@@ -119,8 +128,7 @@ Root's single remainder surgery consumes `combined-remainder-spec.json` for node
 `r.run(out_dir, restore=True)` restores the exact previous hidden state recorded in
 `unreal-real-lamps-state.json` and removes only the `SUB01_RealLamp_*` actors. The
 imported assets under `/Game/Sub01Home/RealLamps/` stay unreferenced and can be
-deleted manually. To roll back the excision, rerun root's surgery with only the rail
-manifest.
+deleted manually. The stem splice is root's, and its rollback is root's.
 
 ## Emission slots for the emission-toggle agent
 

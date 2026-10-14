@@ -12,7 +12,8 @@ Server-only (Blender 4.5.3, run by root/the renderer; never on the owner's Mac):
     --ceiling-lamp out/furniture-refresh/<...>/modern_ceiling_lamp_01_1k.gltf \
     --desk-lamp web/house/assets/desk_lamp_arm_01/desk_lamp_arm_01.gltf \
     --bedside-lamp /workspace/sub01-home-private/reviewed-furniture/industrial_pipe_lamp \
-    [--rail-excision <root rail builder triangle-ID manifest.json>] \
+    --allow-unassembled --source-sha256 9556495f... \
+    [--stem-union-manifest evidence/native/exact-lamp-stem-rail-union.json] \
     --output-dir out/real-lamps [--dry-run]
 
 A base .blend may be passed instead of --factory-startup ONLY if it is the plain
@@ -26,9 +27,10 @@ What it does (fail closed; nothing pre-existing is modified, saved or deleted):
   the manifest (never destroyed: emitter nodes 126/127/129/198/199 keep the native
   fixture guards valid). Parts merged into SHARED batches (e.g. the white desk-lamp
   stem inside the rail-metal batch node 163 / Material 8) are selected by EXACT
-  connected components (cylinder endpoints + radius) and emitted as triangle IDs,
-  unioned with root's rail excision into ONE remainder spec; a shared batch is never
-  hidden as a whole;
+  connected components (cylinder endpoints + radius) only to CROSS-CHECK root's
+  reviewed stem+rail union manifest (triangles 1800..1839); the removal itself is
+  root's byte-preserving glTF splice, referenced, never re-emitted; a shared batch is
+  never hidden as a whole;
 * relocates the single existing red ``desk_lamp_arm_01`` (home.js:625, matched by
   its exact material names) to the left of the desk, and replaces the procedural
   bedside lamp (tools/build_home_bedside_lamp.py) with industrial_pipe_lamp;
@@ -61,6 +63,14 @@ SCHEMA = 'sub01.real-lamps.v1'
 COLLECTION = 'SUB01_RealLamps'
 ACTOR_PREFIX = 'SUB01_RealLamp_'
 REVIEWED_SOURCE_SHA = '9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
+# Renderer ground truth in that exact source: the white desk-lamp stem (home.js:1114) is
+# node 163 / primitive 0 / Material 8, triangles 1800..1839 (40 tris, 64 verts) of 1840.
+# Root's byte-preserving glTF splice (tools/structural_rail_source_patch.py lineage,
+# evidence/native/exact-lamp-stem-rail-union.json) owns the stem+rail removal; this
+# builder only cross-checks and references it, never emits a competing union.
+REVIEWED_STEM = {'node': 163, 'primitive': 0, 'material_index': 8,
+                 'triangle_ids': list(range(1800, 1840)), 'primitive_triangles': 1840}
+STEM_UNION_MANIFEST = 'evidence/native/exact-lamp-stem-rail-union.json'
 ACQUISITION = 'modeled Poly Haven CC0 asset (not documented as scanned or photographed)'
 POLYHAVEN = {
     'modern_ceiling_lamp_01': {'url': 'https://polyhaven.com/a/modern_ceiling_lamp_01',
@@ -540,61 +550,50 @@ def build_hide_manifest(parts, red_nodes, roles, bedside_nodes=None):
             'protected_never_hidden': sorted(NEVER_HIDE_NODES), 'protected_pattern': SCREEN_PATTERN.pattern}
 
 
-def _norm_excision(spec):
-    """{(node, primitive): set(triangle ids)} from list or nested-dict manifests."""
-    out = {}
-    rows = spec.get('excisions') if isinstance(spec, dict) and 'excisions' in spec else None
-    if rows is None and isinstance(spec, dict) and 'nodes' in spec:
-        rows = []
-        for node, val in spec['nodes'].items():
-            if 'primitives' in val:
-                for prim, pv in val['primitives'].items():
-                    rows.append({'node': int(node), 'primitive': int(prim), 'triangle_ids': pv['triangle_ids']})
-            else:
-                rows.append({'node': int(node), 'primitive': int(val.get('primitive', 0)),
-                             'triangle_ids': val['triangle_ids']})
-    if rows is None and isinstance(spec, list):
-        rows = spec
-    if rows is None:
-        raise RefuseError('unrecognised excision manifest format')
-    for r in rows:
-        key = (int(r['node']), int(r.get('primitive', 0)))
-        ids = [int(t) for t in r['triangle_ids']]
-        if len(set(ids)) != len(ids):
-            raise RefuseError(f'duplicate triangle IDs inside one excision row {key}')
-        if out.get(key, set()) & set(ids):
-            raise RefuseError(f'double removal inside one manifest at {key}')
-        out.setdefault(key, set()).update(ids)
-    return out
+def _int_lists(obj):
+    if isinstance(obj, list) and obj and all(isinstance(v, int) and not isinstance(v, bool) for v in obj):
+        yield obj
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            yield from _int_lists(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _int_lists(v)
 
 
-def lamp_excision_manifest(excisions):
-    return {'schema': SCHEMA + '.excision', 'triangle_id': 'index within primitive (indices // 3)',
-            'excisions': [{k: x[k] for k in ('node', 'primitive', 'triangle_ids', 'component_count', 'role', 'part',
-                                             'citation', 'aabb_m')} for x in excisions]}
+def cross_check_stem(excisions, source_sha, union_manifest=None):
+    """Our exact component selection must equal the renderer's reviewed stem triangles; the
+    union manifest (read-only) must contain them. Returns the reference emitted instead of a union."""
+    stems = [x for x in excisions if x.get('part') == 'white_lamp_stem']
+    others = [x for x in excisions if x.get('part') != 'white_lamp_stem']
+    if others:
+        raise RefuseError('lamp geometry other than the reviewed stem lies in a shared batch: '
+                          f'{[(x["role"], x["part"], x["node"]) for x in others]}; needs a reviewed union first')
+    if not stems:
+        return None
+    sel = stems[0]
+    if source_sha == REVIEWED_SOURCE_SHA and (sel['node'], sel['primitive'], sel['triangle_ids']) != (
+            REVIEWED_STEM['node'], REVIEWED_STEM['primitive'], REVIEWED_STEM['triangle_ids']):
+        raise RefuseError(f'stem selection node {sel["node"]}/prim {sel["primitive"]} '
+                          f'tris {sel["triangle_ids"][:1]}..{sel["triangle_ids"][-1:]} differs from reviewed 163/0 1800..1839')
+    ref = {'owner': "root's byte-preserving glTF splice (texture agent applies the remainder)",
+           'node': sel['node'], 'primitive': sel['primitive'], 'triangle_ids': [sel['triangle_ids'][0], sel['triangle_ids'][-1]],
+           'triangle_count': len(sel['triangle_ids']), 'reviewed_match': source_sha == REVIEWED_SOURCE_SHA,
+           'union_manifest': None, 'action_here': 'none (cross-check and reference only)'}
+    if union_manifest is not None:
+        path = Path(union_manifest)
+        data = json.loads(path.read_text())
+        want = set(sel['triangle_ids'])
+        if not any(want <= set(lst) for lst in _int_lists(data)) and not _range_listed(data, want):
+            raise RefuseError(f'{path}: reviewed union manifest does not contain the stem triangles')
+        ref['union_manifest'] = {'path': str(path), 'sha256': sha256_file(path)}
+    return ref
 
 
-def combine_remainder(lamp_spec, rail_spec=None, triangle_counts=None):
-    """ONE remainder spec per (node, primitive): union of lamp and rail triangle IDs.
-
-    Refuses on any triangle claimed by both (double removal) or out of range."""
-    lamp = _norm_excision(lamp_spec)
-    rail = _norm_excision(rail_spec) if rail_spec else {}
-    out = []
-    for key in sorted(set(lamp) | set(rail)):
-        a, b = lamp.get(key, set()), rail.get(key, set())
-        both = a & b
-        if both:
-            raise RefuseError(f'double-removal conflict at node {key[0]} primitive {key[1]}: {sorted(both)[:10]}')
-        union = sorted(a | b)
-        total = (triangle_counts or {}).get(key)
-        if total is not None and union and (union[-1] >= total or union[0] < 0):
-            raise RefuseError(f'triangle ID out of range at {key}')
-        out.append({'node': key[0], 'primitive': key[1], 'remove_triangle_ids': union,
-                    'lamp_triangles': len(a), 'rail_triangles': len(b),
-                    'remaining_triangles': None if total is None else total - len(union)})
-    return {'schema': SCHEMA + '.combined-remainder', 'consumer': "root's remainder surgery (single edit per node)",
-            'rail_manifest_included': bool(rail_spec), 'remainders': out}
+def _range_listed(data, want):
+    """Accept a manifest that records the stem as an inclusive [first, last] range."""
+    lo, hi = min(want), max(want)
+    return any(len(lst) == 2 and lst[0] == lo and lst[1] == hi for lst in _int_lists(data))
 
 
 def triangle_counts(doc):
@@ -838,20 +837,27 @@ def provenance(paths):
 def parse_args(argv):
     p = argparse.ArgumentParser(description='Real CC0 lamp replacement builder (server Blender only)')
     p.add_argument('--source-glb', type=Path, required=True)
-    p.add_argument('--source-sha', default=REVIEWED_SOURCE_SHA)
-    p.add_argument('--ceiling-lamp', type=Path, required=True)
-    p.add_argument('--desk-lamp', type=Path, required=True)
+    p.add_argument('--source-sha', '--source-sha256', dest='source_sha', default=REVIEWED_SOURCE_SHA)
+    p.add_argument('--allow-unassembled', action='store_true',
+                   help='empty base scene: import the exact source GLB (the actual home Unreal imported)')
+    p.add_argument('--stem-union-manifest', type=Path,
+                   help=f"root's reviewed stem+rail union manifest, read-only (e.g. {STEM_UNION_MANIFEST})")
+    p.add_argument('--list-originals', action='store_true',
+                   help='read-only: print the identified originals/excision cross-check and exit (no bpy needed)')
+    p.add_argument('--ceiling-lamp', type=Path)
+    p.add_argument('--desk-lamp', type=Path)
     p.add_argument('--bedside-lamp', type=Path,
                    help='reviewed industrial_pipe_lamp directory or .gltf (old procedural bedside lamp is hidden)')
-    p.add_argument('--rail-excision', type=Path, help="root's rail builder triangle-ID manifest (read-only)")
     p.add_argument('--bedside-yaw', type=float, default=BEDSIDE_YAW_DEG)
-    p.add_argument('--output-dir', type=Path, required=True)
+    p.add_argument('--output-dir', type=Path)
     p.add_argument('--roles', default=','.join(ROLES))
     p.add_argument('--min-clearance', type=float, default=0.02)
     p.add_argument('--dry-run', action='store_true')
     a = p.parse_args(argv)
     a.roles = tuple(r for r in a.roles.split(',') if r)
-    if 'BedLamp' in a.roles and not a.bedside_lamp:
+    if not a.list_originals and not (a.ceiling_lamp and a.desk_lamp and a.output_dir):
+        p.error('--ceiling-lamp, --desk-lamp and --output-dir are required unless --list-originals')
+    if 'BedLamp' in a.roles and not a.bedside_lamp and not a.list_originals:
         a.roles = tuple(r for r in a.roles if r != 'BedLamp')
     if not set(a.roles) <= set(ROLES) or not a.roles:
         p.error(f'--roles must be a subset of {ROLES}')
@@ -888,14 +894,22 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
     red = identify_red_lamp(nodes) if 'DeskLamp' in args.roles else []
     bedside_nodes = identify_bedside(nodes) if 'BedLamp' in args.roles else {}
     manifest = build_hide_manifest(parts, red, args.roles, bedside_nodes)
-    tri_counts = triangle_counts(doc)
-    lamp_excision = lamp_excision_manifest(manifest['excisions'])
-    rail_spec = json.loads(args.rail_excision.read_text()) if args.rail_excision else None
-    remainder = combine_remainder(lamp_excision, rail_spec, tri_counts)
+    early_refusals = {}
+    batched = {x['role'] for x in manifest['excisions'] if x['part'] != 'white_lamp_stem'}
+    if batched:  # per-role refusal: lamp parts in shared batches without a reviewed union
+        for role in batched:
+            early_refusals[role] = 'lamp part inside a shared batch without a reviewed union (never blanket-hidden)'
+        args.roles = tuple(r for r in args.roles if r not in batched)
+        manifest = build_hide_manifest(parts, red, args.roles, bedside_nodes)
+    union_path = args.stem_union_manifest
+    stem_reference = cross_check_stem(manifest['excisions'], args.source_sha, union_path)
+    manifest['stem_excision_reference'] = stem_reference
     excised_boxes = [x['aabb_m'] for x in manifest['excisions']]
 
     scene = bpy.context.scene
     if not [o for o in scene.objects if o.type == 'MESH']:
+        if not args.allow_unassembled:
+            raise RefuseError('empty base scene: pass --allow-unassembled to import the exact source GLB')
         bpy.ops.import_scene.gltf(filepath=str(args.source_glb.resolve()))
     depsgraph = bpy.context.evaluated_depsgraph_get()
 
@@ -980,7 +994,8 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
         h = cast((x, y, z), (0, 0, 1))
         return None if h is None else (h[0].z, h[2], h[1].z)
 
-    report = {'schema': SCHEMA, 'source_glb_sha256': args.source_sha, 'roles': {}, 'refused_roles': {},
+    report = {'schema': SCHEMA, 'source_glb_sha256': args.source_sha, 'roles': {}, 'refused_roles': dict(early_refusals),
+              'stem_excision_reference': stem_reference,
               'old_bedside_lamp': 'procedural (tools/build_home_bedside_lamp.py); hidden via manifest when BedLamp is placed'}
     asset_paths = {'modern_ceiling_lamp_01': resolve_asset(args.ceiling_lamp),
                    'desk_lamp_arm_01': resolve_asset(args.desk_lamp)}
@@ -1121,8 +1136,8 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
     # roles refused => their originals stay visible
     manifest['entries'] = [e for e in manifest['entries'] if e['role'] in report['roles']]
     manifest['excisions'] = [x for x in manifest['excisions'] if x['role'] in report['roles']]
-    lamp_excision = lamp_excision_manifest(manifest['excisions'])
-    remainder = combine_remainder(lamp_excision, rail_spec, tri_counts)
+    if 'DeskLamp' not in report['roles']:
+        manifest['stem_excision_reference'] = None
     check_no_second_red_lamp(manifest, placed)
     after = fingerprint()
     if before != after:
@@ -1137,8 +1152,6 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
     (args.output_dir / 'placement-report.json').write_text(json.dumps(report, indent=2))
     (args.output_dir / 'original-hide-manifest.json').write_text(json.dumps(manifest, indent=2))
     (args.output_dir / 'provenance.json').write_text(json.dumps(report['provenance'], indent=2))
-    (args.output_dir / 'lamp-excision-triangles.json').write_text(json.dumps(lamp_excision, indent=2))
-    (args.output_dir / 'combined-remainder-spec.json').write_text(json.dumps(remainder, indent=2))
     if args.dry_run or not placed:
         print(json.dumps({'dry_run': args.dry_run, 'roles': list(report['roles']),
                           'refused': report['refused_roles']}, indent=2))
@@ -1165,10 +1178,37 @@ def _blender_main(args):  # pragma: no cover - exercised on the server
     return report
 
 
+def list_originals(source_glb, source_sha, roles=ROLES, union_manifest=None):
+    """Read-only original-signature check of the exact source GLB (no bpy, no writes)."""
+    actual = sha256_file(source_glb)
+    if actual != source_sha:
+        raise RefuseError(f'source sha256 {actual} differs from expected {source_sha}')
+    doc, buffers = load_gltf(source_glb)
+    nodes = glb_mesh_nodes(doc)
+    cache = {}
+
+    def components_of(i):
+        if i not in cache:
+            cache[i] = primitive_components(doc, buffers, i)
+        return cache[i]
+    parts = identify_originals(nodes, components_of)
+    red = identify_red_lamp(nodes) if 'DeskLamp' in roles else []
+    bed = identify_bedside(nodes) if 'BedLamp' in roles else {}
+    manifest = build_hide_manifest(parts, red, roles, bed)
+    manifest['stem_excision_reference'] = cross_check_stem(manifest['excisions'], actual, union_manifest)
+    manifest['source_glb_sha256'] = actual
+    manifest['read_only'] = True
+    return manifest
+
+
 def main(argv=None):  # pragma: no cover
-    argv = sys.argv[sys.argv.index('--') + 1:] if argv is None and '--' in sys.argv else (argv or [])
+    argv = sys.argv[sys.argv.index('--') + 1:] if argv is None and '--' in sys.argv else (argv or sys.argv[1:])
     args = parse_args(argv)
     try:
+        if args.list_originals:
+            print(json.dumps(list_originals(args.source_glb, args.source_sha, args.roles, args.stem_union_manifest),
+                             indent=2))
+            return
         _blender_main(args)
     except RefuseError as exc:
         print('REFUSED:', exc, file=sys.stderr)
