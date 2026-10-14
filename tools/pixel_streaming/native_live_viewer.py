@@ -4,6 +4,9 @@ Run as unreal on the authorized server. This is an HTTP fallback, not WebRTC.
 It never launches Unreal or moves an actor through a backend/state API.
 """
 import argparse
+import base64
+import hashlib
+import struct
 import ctypes
 import ctypes.util
 import json
@@ -83,46 +86,43 @@ class PhysicalInput:
             raise RuntimeError("Native mouse delivery failed")
         self.x.XFlush(self.display)
 
-HTML = r'''<!doctype html><html><head><meta charset="utf-8"><title>Private live home</title>
-<style>body{margin:0;background:#101319;color:#e7eaf0;font:16px system-ui}header{padding:12px 20px;display:flex;gap:20px;align-items:center}small{color:#aab4c4}img{display:block;width:min(100vw,1280px);margin:auto;cursor:crosshair}button{font:inherit;padding:8px 14px}#status{padding:12px 20px}</style></head>
-<body><header><strong>Private live home</strong><small>Live view · Hand motion diagnostic</small><button id="control">Control the home</button></header>
-<img id="game" alt="Live native Unreal home"><div id="status">Waiting for the native window.</div>
+HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>SUB-01 · Home</title>
+<style>
+:root{font-family:Inter,Arial,sans-serif;color:#f6f0e9;background:#151411;color-scheme:dark;--accent:#ff713d}*{box-sizing:border-box}body{margin:0;height:100dvh;overflow:hidden}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #ffffff2b;background:#24221eee;border-radius:9px;padding:10px 15px;transition:background .15s}button:hover{background:#383229}button:disabled{opacity:.45;cursor:default}button.primary{background:var(--accent);color:#24140d;border-color:var(--accent);font-weight:600}button.primary:hover{background:#ff8c61}header{height:72px;padding:0 26px;display:flex;align-items:center;gap:20px;background:#191714;border-bottom:1px solid #ffffff12}.brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700;letter-spacing:.12em}.mark{width:20px;height:20px;background:var(--accent);border-radius:5px 5px 5px 0;transform:rotate(-8deg)}.private{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#938d84;border-left:1px solid #4b453e;padding-left:20px}.actions{margin-left:auto;display:flex;gap:9px}.view{height:calc(100dvh - 72px);position:relative;display:flex;align-items:center;justify-content:center;background:#0b0b0a}#game{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}.bottom{position:absolute;bottom:20px;left:22px;right:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;pointer-events:none}.pill{background:#191714e8;border:1px solid #ffffff1c;padding:10px 14px;border-radius:30px;font-size:12px;color:#ded5ca;backdrop-filter:blur(12px)}.dot{display:inline-block;width:6px;height:6px;background:#999287;border-radius:50%;margin-right:8px}.dot.live{background:#77bf8a}.help{font-size:12px;color:#dfd7cc;text-shadow:0 1px 4px #000;background:#161411bd;padding:9px 14px;border-radius:25px}.empty{position:absolute;text-align:center;color:#aaa195;padding:24px}.empty strong{display:block;font-size:23px;font-weight:400;color:#e4ddd3;margin-bottom:12px}.view:fullscreen{height:100dvh}dialog{border:1px solid #ffffff20;border-radius:18px;background:#211e19;color:#ede6dd;width:min(440px,90vw);padding:28px;box-shadow:0 25px 100px #0008}dialog::backdrop{background:#0008;backdrop-filter:blur(6px)}h2{margin:0 0 25px;font-size:23px;font-weight:500}.row{display:flex;justify-content:space-between;align-items:center;margin:18px 0}input[type=range]{width:180px;accent-color:var(--accent)}.muted{font-size:12px;color:#aaa195;line-height:1.6}kbd{font:11px inherit;border:1px solid #ffffff30;border-radius:4px;padding:2px 5px}.close{float:right;background:none;padding:4px 8px}.operator{margin-top:24px;border-top:1px solid #ffffff20;padding-top:17px;font-size:12px;color:#aba397}.operator summary{cursor:pointer}.operator p{line-height:1.6}.sr{position:absolute;left:-10000px}@media(max-width:600px){header{padding:0 14px;gap:12px}.private{display:none}.actions{gap:5px}button{padding:9px 11px}.help{display:none}.bottom{left:12px;bottom:12px}.brand{font-size:16px}}
+</style></head><body>
+<header><div class="brand"><span class="mark" aria-hidden="true"></span>SUB-01</div><span class="private">Private home</span><div class="actions"><button id="control" class="primary" disabled>Enter home</button><button id="full" aria-label="Fullscreen">⤢</button><button id="settings" aria-label="Settings">⚙</button></div></header>
+<main class="view" id="view"><img id="game" alt="Live first-person view of the home" hidden><div class="empty" id="empty"><strong>Your home, live.</strong><span id="emptyText">Connecting to the private session…</span></div><div class="bottom"><div class="pill"><span id="dot" class="dot"></span><span id="status" aria-live="polite">Connecting</span></div><span class="help" id="help" hidden>WASD move · Mouse look · E interact · Esc release</span></div></main>
+<dialog id="panel"><button class="close" id="close" aria-label="Close settings">×</button><h2>Settings</h2><label class="row">Look sensitivity <input id="sensitivity" type="range" min="0.25" max="2" step="0.05" value="1"></label><p class="muted">Click Enter home to take control. Press <kbd>Esc</kbd> to release the mouse and open settings.</p><div id="nativeSettings" hidden></div><details class="operator"><summary>Session</summary><p id="sessionState">Private connection · Live native view</p><p>The view comes directly from the running home. Controls are available only when the native session releases them.</p></details></dialog>
 <script>
-const game=document.querySelector('#game'), status=document.querySelector('#status');
+const game=document.querySelector('#game'),status=document.querySelector('#status'),panel=document.querySelector('#panel'),control=document.querySelector('#control'),empty=document.querySelector('#empty'),dot=document.querySelector('#dot');
 const base=location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/[^/]*$/,'');
-let active=false,lastMouse=0,accepted=0,inputQueue=Promise.resolve();
+let active=false,lastMouse=0,accepted=0,inputQueue=Promise.resolve(),streaming=false,permission=false,live=false,previous=null,streamGeneration=0;
+window.nativeViewerDecodedFrames=0;window.nativeViewerTransport='connecting';
 function xsrf(){return document.cookie.split('; ').find(v=>v.startsWith('_xsrf='))?.split('=').slice(1).join('=')||'';}
-async function deliver(event){let r=await fetch(base+'input',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(event)});let p=await r.json();if(r.ok){accepted=p.acceptedInputs;status.textContent='You are controlling the home.';}else status.textContent=p.error;return p;}
-function send(event){const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='The input connection was interrupted.';});return operation;}
-document.querySelector('#control').onclick=async()=>{let h=await fetch(base+'health').then(r=>r.json());if(!h.inputEnabled){status.textContent='Input is locked while the first native capture completes.';return;}active=true;game.requestPointerLock();};
-document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game){active=false;send({action:'release'});}});
-window.addEventListener('blur',()=>{active=false;send({action:'release'});});
+function settings(){if(!panel.open)panel.showModal();}
+function release(){active=false;send({action:'release'}).catch(()=>{});if(document.pointerLockElement)document.exitPointerLock();}
+document.querySelector('#settings').onclick=()=>{release();settings();};document.querySelector('#close').onclick=()=>panel.close();
+document.querySelector('#full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.querySelector('#view').requestFullscreen();};
+async function deliver(event){const r=await fetch(base+'input',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(event)});const p=await r.json();if(r.ok){accepted=p.acceptedInputs;window.nativeViewerAcceptedInputs=accepted;}else{active=false;status.textContent=p.error;}return p;}
+function send(event){const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;}
+control.onclick=async()=>{const h=await fetch(base+'health').then(r=>r.json());if(!h.inputEnabled)return;panel.close();active=true;game.requestPointerLock();};
+document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game){const was=active;active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
 const allowed=new Set(%KEYS%);
-for(const [name,down] of [['keydown',true],['keyup',false]])document.addEventListener(name,e=>{if(!active||!allowed.has(e.code)||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(!e.repeat)send({action:'key',code:e.code,down});});
-document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==game||performance.now()-lastMouse<50)return;lastMouse=performance.now();send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY)))});});
-for(const [name,down] of [['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down});}});
-game.oncontextmenu=e=>e.preventDefault();
-let streaming=false;
-window.nativeViewerDecodedFrames=0;
-async function streamNative(){
- let after=0,previous=null;
- while(streaming){
-  const response=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});
-  if(!response.ok){await new Promise(r=>setTimeout(r,250));continue;}
-  const url=URL.createObjectURL(await response.blob());
-  await new Promise((resolve,reject)=>{game.onload=resolve;game.onerror=reject;game.src=url;});
-  if(previous)URL.revokeObjectURL(previous);previous=url;
-  after=Number(response.headers.get('X-Native-Sequence'));window.nativeViewerDecodedFrames++;
-  window.nativeViewerLastSequence=after;window.nativeViewerLastCaptureUtc=response.headers.get('X-Native-Capture-Utc');
- }
-}
-async function ready(){let h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());if(!h.nativeAlive){streaming=false;game.removeAttribute('src');game.hidden=true;status.textContent='The home is restarting. Live view is unavailable.';return;}if(h.captureEnabled&&!streaming){streaming=true;game.hidden=false;streamNative().catch(()=>{streaming=false;status.textContent='Live capture is temporarily unavailable.';});status.textContent='Live native window. WASD moves, mouse looks, E uses devices, Escape releases control.';}else if(!streaming)status.textContent='Waiting for the first native capture to complete.';}
+for(const [name,down]of[['keydown',true],['keyup',false]])document.addEventListener(name,e=>{if(e.code==='Escape'&&down){if(active)release();else settings();return;}if(!active||!allowed.has(e.code)||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(!e.repeat)send({action:'key',code:e.code,down}).catch(()=>{});});
+document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==game||performance.now()-lastMouse<30)return;lastMouse=performance.now();const s=Number(document.querySelector('#sensitivity').value);send({action:'mouse',dx:Math.max(-100,Math.min(100,Math.round(e.movementX*s))),dy:Math.max(-100,Math.min(100,Math.round(e.movementY*s)))}).catch(()=>{});});
+for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down}).catch(()=>{});}});game.oncontextmenu=e=>e.preventDefault();
+async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);try{if(generation!==streamGeneration)return;await new Promise((resolve,reject)=>{game.onload=resolve;game.onerror=reject;game.src=url;});if(generation!==streamGeneration)return;if(previous)URL.revokeObjectURL(previous);previous=url;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;game.hidden=false;empty.hidden=true;}catch(e){URL.revokeObjectURL(url);throw e;}}
+async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
+function streamNative(){const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';game.hidden=true;empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},4000);}
+async function ready(){try{const h=await fetch(base+'health'+(active?'?hold=1':'')).then(r=>r.json());live=h.nativeAlive&&h.captureEnabled;permission=live&&h.inputEnabled;control.disabled=!permission;control.textContent=active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission;dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();game.hidden=true;empty.hidden=false;status.textContent=h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}status.textContent=active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){status.textContent='Private connection unavailable';}}
 setInterval(ready,1000);ready();
-</script></body></html>'''.replace('%KEYS%', json.dumps(list(KEYS)))
+</script></body></html>
+'''.replace('%KEYS%', json.dumps(list(KEYS)))
 
 class LiveState:
-    def __init__(self, deadline):
+    def __init__(self, deadline, fps=8, width=960):
         self.deadline = deadline
+        self.fps=fps;self.width=width;self.viewer_lock=threading.Lock()
         self.private = Path('/home/unreal/.sub01-private')
         self.session = uuid.uuid4().hex
         self.capture_lock = threading.Lock()
@@ -169,7 +169,8 @@ class LiveState:
     def ensure_capture(self):
         with self.capture_lock:
             if self.proc and self.proc.poll() is None:return
-            process=subprocess.Popen(['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate','8','-video_size','1280x720','-i',':99.0','-vf','scale=960:540','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+            with self.condition:self.latest_frame=b'';self.capture_utc=0
+            process=subprocess.Popen(['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate',str(self.fps),'-video_size','1280x720','-i',':99.0','-vf',f'scale={self.width}:{self.width*9//16}','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
             self.proc=process
             threading.Thread(target=self.capture,args=(process,),daemon=True).start()
 
@@ -206,12 +207,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         state = self.server.state
+        if urlsplit(self.path).path=='/socket':
+            self.websocket_video();return
         if self.path.split('?')[0] == '/health':
             if self.path.endswith('?hold=1') and state.enabled('native-viewer-input-enabled'):state.last_lease=time.monotonic()
             self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),
-                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native()})
+                           'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
             data=HTML.encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
@@ -226,12 +229,63 @@ class Handler(BaseHTTPRequestHandler):
         state.last_view_request=time.monotonic();state.ensure_capture()
         with state.condition:
             state.condition.wait_for(lambda:state.sequence>after and bool(state.latest_frame),timeout=2)
-            if not state.latest_frame:self.json(503,{'error':'Native pixels unavailable'});return
+            if not state.latest_frame or not state.enabled('native-viewer-capture-enabled'):self.json(503,{'error':'Native pixels unavailable'});return
             frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
         self.send_response(200);self.send_header('Content-Type','image/jpeg');self.send_header('Cache-Control','no-store')
         self.send_header('Content-Length',str(len(frame)));self.send_header('X-Native-Sequence',str(sequence));self.send_header('X-Native-Capture-Utc',str(captured));self.end_headers()
         try:self.wfile.write(frame);state.frames+=1
         except (BrokenPipeError,ConnectionResetError):pass
+
+    def websocket_video(self):
+        state=self.server.state
+        if not state.enabled('native-viewer-capture-enabled'):
+            self.json(409,{'error':'Native capture is locked'});return
+        if self.headers.get('Upgrade','').lower()!='websocket' or 'upgrade' not in self.headers.get('Connection','').lower().split(', '):
+            self.json(400,{'error':'Websocket upgrade required'});return
+        origin=self.headers.get('Origin','')
+        if origin!='https://5ldnm4vax9kelh-8888.proxy.runpod.net':
+            self.json(403,{'error':'Private viewer origin required'});return
+        try:
+            key=self.headers.get('Sec-WebSocket-Key','')
+            if len(base64.b64decode(key,validate=True))!=16 or self.headers.get('Sec-WebSocket-Version')!='13':raise ValueError()
+        except ValueError:self.json(400,{'error':'Invalid websocket request'});return
+        if not state.viewer_lock.acquire(blocking=False):
+            self.json(409,{'error':'One private viewer is already connected'});return
+        ended=threading.Event();writing=threading.Lock()
+        def send(opcode,payload):
+            size=len(payload)
+            header=bytes([0x80|opcode])+(bytes([size]) if size<126 else bytes([126])+struct.pack('!H',size) if size<65536 else bytes([127])+struct.pack('!Q',size))
+            with writing:self.wfile.write(header+payload);self.wfile.flush()
+        def controls():
+            try:
+                while not ended.is_set():
+                    head=self.rfile.read(2)
+                    if len(head)!=2:break
+                    opcode=head[0]&15;size=head[1]&127
+                    if not head[0]&128 or not head[1]&128 or size>125:break
+                    mask=self.rfile.read(4);raw=self.rfile.read(size)
+                    if len(mask)!=4 or len(raw)!=size:break
+                    data=bytes(b^mask[i%4] for i,b in enumerate(raw))
+                    if opcode==8:send(8,b'');break
+                    if opcode==9:send(10,data)
+                    elif opcode!=10:break
+            except (OSError,ConnectionResetError):pass
+            finally:ended.set()
+        try:
+            self.send_response(101);self.send_header('Upgrade','websocket');self.send_header('Connection','Upgrade')
+            self.send_header('Sec-WebSocket-Accept',base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode());self.end_headers();self.wfile.flush()
+            threading.Thread(target=controls,daemon=True).start();sequence=state.sequence
+            while not ended.is_set() and state.enabled('native-viewer-capture-enabled'):
+                state.last_view_request=time.monotonic();state.ensure_capture()
+                with state.condition:
+                    state.condition.wait_for(lambda:state.sequence>sequence or ended.is_set(),timeout=1)
+                    if not state.latest_frame or state.sequence<=sequence:continue
+                    frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
+                send(2,struct.pack('!Qd',sequence,captured)+frame);state.frames+=1
+        except (OSError,BrokenPipeError,ConnectionResetError):pass
+        finally:
+            ended.set();state.viewer_lock.release();self.close_connection=True
+
 
     def do_POST(self):
         state=self.server.state
@@ -250,10 +304,10 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:self.json(503,{'error':'Native input unavailable'})
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);parser.add_argument('--capture-fps',type=int,choices=[8,15,24,30],default=8);parser.add_argument('--capture-width',type=int,choices=[960,1280],default=960);args=parser.parse_args()
     if os.getuid()!=1001 or time.time()>=args.deadline_epoch:raise SystemExit('Authorized nonroot runtime required')
     os.environ['DISPLAY']=':99';os.environ['XAUTHORITY']='/home/unreal/.sub01-private/native-xauthority'
-    server=ThreadingHTTPServer(('127.0.0.1',8892),Handler);server.daemon_threads=True;server.state=LiveState(args.deadline_epoch)
+    server=ThreadingHTTPServer(('127.0.0.1',8892),Handler);server.daemon_threads=True;server.state=LiveState(args.deadline_epoch,args.capture_fps,args.capture_width)
     def stop(*_):
         if server.state.proc:server.state.proc.terminate()
         if server.state.input:
