@@ -1213,6 +1213,8 @@ class Live:
         if sc is None:
             return None
         kind = sc.seen(st)
+        if kind and st.get('device') == 'phone' and self.home:
+            self.home.phone_browser_navigation(st)
         note = getattr(self.browser, "feed_note", None)
         if note:
             sc.note(note)

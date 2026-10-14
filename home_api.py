@@ -163,7 +163,7 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPConflict(text='Page unavailable or refused by the browser checks')
         await live.on_screen(status)
         if device == 'phone' and not private():
-            live.home.phone['app'] = 'browser'
+            live.home.select_phone_app('browser', source='operator')
         if getattr(live, 'reader', None):
             live.reader.saw(status, live.clock.now())
         return web.json_response({'ok': True})
@@ -378,8 +378,8 @@ def add_home_routes(app, live, admin_ok):
         app = 'home' if data.get('action') == 'home' else data.get('app')
         if data.get('action') not in ('home', 'open_app') or not isinstance(app, str) or app not in home_phone.APPS:
             raise web.HTTPBadRequest(text='Expected supported phone app')
-        live.home.phone['app'] = app
-        return web.json_response({'ok':True, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
+        changed = live.home.select_phone_app(app, source='operator')
+        return web.json_response({'ok':True, 'changed':changed, 'phone_screen':home_phone.status(phone_data())}, headers={'Cache-Control':'no-store'})
 
     async def minecraft_frame(request):
         enabled()

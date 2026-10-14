@@ -12,7 +12,8 @@ def snapshot(home, browser=None):
     app = home.phone.get('app', 'home')
     if app not in APPS:
         app = 'home'
-    data = {'app': app, 'battery': home.phone.get('battery', 100)}
+    data = {'app': app, 'battery': home.phone.get('battery', 100),
+            'selection_revision': getattr(home, 'phone_selection_revision', 0)}
     if app == 'notes':
         notes = home.notes[-10:][::-1]
         data['entries'] = [str(n.get('text', '')) for n in notes]

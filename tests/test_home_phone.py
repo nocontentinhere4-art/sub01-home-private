@@ -169,3 +169,96 @@ def test_notes_identical_full_list_keeps_write_frames_unique():
     assert home_phone.status(second)['frame_id']!=old
     world.add_note('Newest actual note.')
     assert home_phone.snapshot(world)['entries'][0]=='Newest actual note.'
+
+
+def test_phone_ticks_keep_explicit_notes_composer_and_real_navigation_transitions(tmp_path):
+    async def run():
+        import json
+        world=HomeWorld();world.node=world.target='bed';world.path=[];world.seated=1
+        writes=[]
+        async def save():
+            writes.append(copy.deepcopy(world.to_dict()))
+            (tmp_path/'phone-world.json').write_text(json.dumps(world.to_dict()))
+        live=SimpleNamespace(home=world,save_state=save)
+        app=web.Application();add_home_routes(app,live,lambda r:r.headers.get('X-Admin-Token')==TOKEN)
+        client=TestClient(TestServer(app));await client.start_server()
+        def frame():return home_phone.status(home_phone.snapshot(world))['frame_id']
+        def tick(activity='phone'):
+            world.update(.1,0,{'activity':activity,'screen':{'kind':'browser','frame_id':'paint-only'}},{})
+        async def action(data):return await client.post('/api/home/phone/action',headers=AUTH,json=data)
+        try:
+            tick();first=frame();sequence=world.sequence
+            response=await action({'action':'open_app','app':'notes','frame_id':first});assert response.status==200
+            assert (await response.json())['changed'] is True
+            revision=world.phone_selection_revision;notes=frame()
+            for _ in range(10):tick()
+            assert world.phone['app']=='notes' and frame()==notes
+            assert world.phone_selection_revision==revision and world.sequence==sequence
+            # Even a real new background page cannot steal an operator's active composer.
+            assert not world.phone_browser_navigation({'device':'phone','url':'https://example.org/background'})
+            assert world.phone['app']=='notes' and frame()==notes
+            response=await action({'action':'open_app','app':'notes','frame_id':notes})
+            assert (await response.json())['changed'] is False and frame()==notes
+            response=await action({'action':'save_note','frame_id':notes,'text':'Only this advancing-tick fixture is written.'})
+            assert response.status==200 and len(writes)==1
+            assert HomeWorld(json.loads((tmp_path/'phone-world.json').read_text())).notes==world.notes
+            written=frame();tick();assert world.phone['app']=='notes' and frame()==written
+            assert (await action({'action':'save_note','frame_id':notes,'text':'Old composer retry.'})).status==409
+            # Leaving the actual session releases ownership and invalidates its old input frame.
+            tick('eat');assert world.phone_selection_revision==revision+1
+            assert (await action({'action':'save_note','frame_id':written,'text':'Expired session write.'})).status==409
+            tick();assert world.phone['app']=='notes' # No default browser or stale-screen switch.
+            assert world.phone_browser_navigation({'device':'phone','url':'https://example.org/new-session-page'})
+            assert world.phone['app']=='browser'
+            current=frame()
+            assert not world.phone_browser_navigation({'device':'phone','url':'https://example.org/new-session-page','frame_id':'new-paint'})
+            assert frame()==current
+            assert home_phone.status(home_phone.snapshot(world))['kind']=='owned_app' # Browser unavailable, not invented content.
+            # Restored app/revision persist, but an old operator lock does not.
+            world.select_phone_app('notes');snapshot=world.to_dict();restored=HomeWorld(snapshot)
+            assert restored.phone['app']=='notes' and restored.phone_selection_revision==world.phone_selection_revision
+            restored.activity='phone'
+            assert restored.phone_browser_navigation({'device':'phone','url':'https://example.org/after-restart'})
+            assert restored.phone['app']=='browser'
+            # Failed/unavailable navigation cannot steal Notes; a successful
+            # explicit operator navigation deliberately supersedes its lock.
+            world.select_phone_app('notes')
+            response=await client.post('/api/home/browser',headers=AUTH,json={'device':'phone','url':'https://example.org/open'})
+            assert response.status==409 and world.phone['app']=='notes'
+            navigated=[]
+            async def navigate(device,url):
+                navigated.append((device,url));return {'device':device,'url':url}
+            async def on_screen(status):world.phone_browser_navigation(status)
+            live.browser=SimpleNamespace(navigate=navigate);live.on_screen=on_screen
+            response=await client.post('/api/home/browser',headers=AUTH,json={'device':'phone','url':'https://example.org/open'})
+            assert response.status==200 and world.phone['app']=='browser'
+            assert navigated==[('phone','https://example.org/open')]
+            # Explicit Home and Browser selections are actual supported app intents.
+            response=await action({'action':'home','frame_id':frame()});assert response.status==200 and world.phone['app']=='home'
+            response=await action({'action':'open_app','app':'browser','frame_id':frame()});assert response.status==200 and world.phone['app']=='browser'
+        finally:await client.close()
+    asyncio.run(run())
+
+
+def test_actual_new_page_hook_respects_operator_lock_and_ignores_same_url_redraw():
+    import ast,time
+    from screens import ScreensStatus
+    root=__import__('pathlib').Path(__file__).resolve().parents[1]
+    tree=ast.parse((root/'live_server.py').read_text())
+    method=next(n for cls in tree.body if isinstance(cls,ast.ClassDef) for n in cls.body
+                if isinstance(n,ast.AsyncFunctionDef) and n.name=='on_screen')
+    namespace={'time':time,'SCREENS_SAVE_S':9999}
+    exec(compile(ast.Module(body=[method],type_ignores=[]),str(root/'live_server.py'),'exec'),namespace)
+    world=HomeWorld();world.activity='phone';world.select_phone_app('notes')
+    subject=SimpleNamespace(home=world,screens=ScreensStatus(),browser=SimpleNamespace(),screens_saved=time.time(),da_bursts=None)
+    async def run():
+        await namespace['on_screen'](subject,{'device':'phone','url':'https://example.org/page-a'})
+        assert world.phone['app']=='notes'
+        world.update(.1,0,{'activity':'eat'},{})
+        world.update(.1,0,{'activity':'phone'},{})
+        revision=world.phone_selection_revision
+        await namespace['on_screen'](subject,{'device':'phone','url':'https://example.org/page-a','frame_id':'redraw'})
+        assert world.phone['app']=='notes' and world.phone_selection_revision==revision
+        await namespace['on_screen'](subject,{'device':'phone','url':'https://example.org/page-b'})
+        assert world.phone['app']=='browser'
+    asyncio.run(run())
