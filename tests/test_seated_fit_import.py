@@ -177,7 +177,7 @@ def test_role_mapping_paths_and_rates():
 def test_fit_verdicts_are_the_committed_reports():
     verdicts = {r: p['fit_pass'] for r, p in PLAN.items()}
     assert verdicts == {'DeskTypingSeated': True, 'SeatedIdle': True, 'SitDownSeated': False, 'SitToTypeSeated': True,
-                        'TypeToSitSeated': True, 'GetUpSeated': False}
+                        'TypeToSitSeated': True, 'GetUpSeated': True}
 
 
 def _copy_fit(tmp_path):
@@ -190,7 +190,7 @@ def _copy_fit(tmp_path):
 
 def test_plan_refuses_a_changed_glb_or_a_disagreeing_verdict(tmp_path):
     repo = _copy_fit(tmp_path)
-    report = repo / fit.FIT_DIR / 'SUB01_GetUp_seated.report.json'
+    report = repo / fit.FIT_DIR / 'SUB01_SitDown_seated.report.json'
     data = json.loads(report.read_text())
     data['all_gates_pass'] = True                          # the per-clip verdict cannot be flipped on its own
     report.write_text(json.dumps(data))
@@ -204,7 +204,7 @@ def test_plan_refuses_a_changed_glb_or_a_disagreeing_verdict(tmp_path):
 
 
 # ------------------------------------------------------------------ importer (fake unreal)
-PASSING = ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated']
+PASSING = ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated', 'GetUpSeated']
 
 
 def final_paths(log):
@@ -227,7 +227,7 @@ def test_imports_only_passing_fits_via_staging_with_60hz_typing(tmp_path):
     assert on_disk['runtime_ready'] is False and on_disk['readiness_claimed'] is False and on_disk['native_seat_verified'] is False
     rows = {r['role']: r for r in on_disk['clips']}
     assert sorted(on_disk['accepted_roles']) == sorted(PASSING)
-    for role in ('SitDownSeated', 'GetUpSeated'):
+    for role in ('SitDownSeated',):
         assert rows[role]['imported'] is False and rows[role]['accepted'] is False and rows[role]['fit_pass'] is False
         assert 'never imported' in rows[role]['refusal']
     typing = rows['DeskTypingSeated']
@@ -409,14 +409,15 @@ def test_failed_fits_never_fill_a_slot(tmp_path):
     receipt = _receipt(tmp_path)
     everything = set(seat.SEATED_FIT_SLOTS)
     bound = seat.seated_fit_bindings(receipt, everything)
-    assert bound['StandToSit']['bound'] is False and bound['SitToStand']['bound'] is False
+    assert bound['StandToSit']['bound'] is False                       # SitDown seated still fails its fit
     assert bound['Sitting']['bound'] and bound['SitToType']['bound'] and bound['DeskTyping']['bound']
+    assert bound['SitToStand']['bound']                                # GetUp seated passes since the seam need floor
     # Even a hand-edited receipt row that claims the import cannot pass a failed fit.
     forged = json.loads(json.dumps(receipt))
     for row in forged['clips']:
-        if row['role'] == 'GetUpSeated':
+        if row['role'] == 'SitDownSeated':
             row.update(imported=True, accepted=True, same_existing_skeleton=True)
-    assert seat.seated_fit_bindings(forged, everything)['SitToStand']['bound'] is False
+    assert seat.seated_fit_bindings(forged, everything)['StandToSit']['bound'] is False
 
 
 def test_installed_native_binding_mirrors_the_python_gate():

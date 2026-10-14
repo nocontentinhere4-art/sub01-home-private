@@ -187,6 +187,8 @@
     "theta_deg": 24.0,
     "neighbour_lowering_cm": 7.395,
     "ease_s": 0.5,
+    "floor_rule": "not applied: the seam frame is gated and its need conflicts with the neighbour value",
+    "frames_raised_to_need_in_clip": 0,
     "own_lowering_at_seam_cm": 6.4613,
     "vertical_mismatch_cm": -0.9337
    }

@@ -142,20 +142,20 @@ def test_seated_fit_lines_only_for_accepted_passing_fits(tmp_path):
     lines = section((p / ini.INI).read_text())
     added = [l for l in lines if l.startswith('+ValidatedHandsPostures=') and l != '+ValidatedHandsPostures=Walk']
     assert added == ['+ValidatedHandsPostures=SeatedIdle', '+ValidatedHandsPostures=SitToTypeSeated',
-                     '+ValidatedHandsPostures=DeskTypingSeated']
-    assert not any('SitDownSeated' in l or 'GetUpSeated' in l for l in lines)
+                     '+ValidatedHandsPostures=DeskTypingSeated', '+ValidatedHandsPostures=GetUpSeated']
+    assert not any('SitDownSeated' in l for l in lines)
 
 
 def test_forged_seated_fit_row_for_a_failed_fit_is_never_written(tmp_path):
     p = project(tmp_path / 'p')
     receipt = _receipt(p)
     for row in receipt['clips']:
-        if row['role'] in ('SitDownSeated', 'GetUpSeated'):
+        if row['role'] == 'SitDownSeated':
             row.update(imported=True, accepted=True, fit_pass=True, same_existing_skeleton=True)
     (p / seat.SEATED_FIT_RECEIPT).write_text(json.dumps(receipt))
     assert ini.main([str(p), '--only', 'seated-fit']) == 0
     text = (p / ini.INI).read_text()
-    assert 'SitDownSeated' not in text and 'GetUpSeated' not in text   # the committed reports still fail
+    assert 'SitDownSeated' not in text                                 # the committed SitDown report still fails
 
 
 def test_restore_puts_the_backup_back(tmp_path):

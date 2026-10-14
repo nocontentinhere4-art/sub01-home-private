@@ -18,7 +18,7 @@ Roles (role -> committed GLB, export rate):
     GetUpSeated      <- SUB01_GetUp_seated.glb        30 fps
 
 Only a clip whose per-clip report has `all_gates_pass: true` is imported (and then ACCEPTED). A failing clip (today
-SitDown and GetUp) is refused outright: never imported, no override flag exists; its receipt row says
+SitDown) is refused outright: never imported, no override flag exists; its receipt row says
 `imported: false, accepted: false, fit_pass: false` with the reason. The importer refuses (RuntimeError, only this run's staging assets deleted, receipt untouched) when
 the audit is not the committed fit, a source FBX changed, the owner skeleton is not
 /Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton, a staged clip is on another skeleton or at another path, its
@@ -74,7 +74,7 @@ GLB_SHA256 = {
     'SitDownSeated': '2c6d5da111b3af04e59719e55375b13c304a93ba755524a18865e6653cb41a6a',
     'SitToTypeSeated': 'ed46fd3e667089b8f10780dc377c0c86239122256557a34b41e5f751eebd6d21',
     'TypeToSitSeated': 'd25496c64288de5f1574956bac7099d60b7e8a8e3345f4e821883fcf13422452',
-    'GetUpSeated': '1a75ff55161c8ee3b3a88c37446ad790e1fe6c5dd8120a201e687715c9ae369a',
+    'GetUpSeated': '6105564f22e712e19ed18bfbeea5b185518f8f67d60b76b2c59f5a041a8331d0',
 }
 
 

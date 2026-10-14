@@ -20,10 +20,10 @@ re-skinned.
 |---|---|---|---|---|
 | `SUB01_DeskTyping_seated.glb` (1.07 MB, 60 Hz) | 989 | **all pass**: 301 audit samples, and every key in memory | 22.5° constant | 8.619 cm constant |
 | `SUB01_SeatedIdle.glb` (loop) | 126 | **all pass**; loop gate true | 22–24° per frame | 7.14–7.42 cm |
-| `SUB01_SitDown_seated.glb` | 68 | **FAIL**: buttocks 18/18, right_posterior_thigh 18/18 | 0.0–30.0° applied | 0.00–7.66 cm |
+| `SUB01_SitDown_seated.glb` | 68 | **FAIL** (unchanged bytes): buttocks 18/18, right_posterior_thigh 18/18 | 0.0–30.0° applied | 0.00–7.66 cm |
 | `SUB01_SitToType_seated.glb` | 37 | **all pass** on the gated frames | 13.8–24.0° applied | 7.28–8.77 cm |
 | `SUB01_TypeToSit_seated.glb` | 29 | **all pass** on the gated frames | 12.0–24.0° applied | 7.52–8.78 cm |
-| `SUB01_GetUp_seated.glb` | 63 | **FAIL**: buttocks 1/6 | 0.0–30.0° applied | 0.00–9.07 cm |
+| `SUB01_GetUp_seated.glb` | 63 | **all pass** on the 6 gated frames (since the seam need floor, below) | 24.0–30.0° at the seam side | 8.42–9.08 cm |
 
 ## Inputs (actual, committed)
 
@@ -570,3 +570,40 @@ native collision audit.
    - the keyboard contact audit and `validate_unreal_contact_profile.py`;
    - the native collision audit.
    Nothing is claimed until those pass.
+
+## Seam need floor (GetUp fixed, SitDown still failing)
+
+**Why GetUp failed.** Its 6 gated frames (7, 10–14) need 30° of pitch, but the 0.5 s seam ease from SeatedIdle's
+24° pulled them to 26.6–30°, so one frame had only 7 buttock band vertices (gate: 12). Change in
+`tools/fit_seat_pelvis_pitch.py`: the ease never takes a gated frame below its own pitch need (the rule
+`solve_per_frame` already uses). The seam frame keeps the neighbour's exact 24°. Between it and the first gated frame
+the pitch rises by smootherstep, 24° → 30° over frames 0–7 (0.23 s). The written GetUp now passes on every gated
+frame:
+- buttocks +0.209..+0.259 cm, at least 34 band vertices;
+- left posterior thigh −0.906..−0.719 cm;
+- right posterior thigh −2.259..−2.209 cm;
+- both soles pass.
+
+Cost: the vertical lowering mismatch at the SeatedIdle→GetUp seam grows from +0.50 to +1.02 cm. This is not a
+validator gate; SitToType already has +1.37 cm. The seam still needs a native look.
+
+DeskTyping, SeatedIdle, SitToType and TypeToSit are byte-identical. Their reports only gain the `floor_rule` seam
+fields.
+
+**Why SitDown still fails.** All 18 gated frames (50–67) need more than the 30° pitch grid allows. At 30°:
+- buttocks lowest +0.50..+0.68 cm, above the +0.5 cm edge, with 0 band vertices (gate 12);
+- right posterior thigh lowest −2.68..−2.50 cm, penetrating below −2.5.
+
+The spread between those two patches (about 3.18 cm) is wider than the 3.0 cm band. An offline probe of the gated
+frames (not committed) found:
+- 34° passes 8/18;
+- 38° passes 18/18 with 0.26 cm margin, under the required 0.4;
+- pelvis roll of ±2–6° changes the spread by at most 0.03–0.09 cm. It does not help.
+
+Two further obstacles:
+- the last gated frame **is** the SeatedIdle seam frame (24°), so no floor can apply there without a pitch pop. The
+  floor is therefore skipped on that side, and the clip is unchanged;
+- passing would need either a posterior pelvic tilt above 30° (outside the stated search domain, anatomically
+  doubtful) or a different seated end pose than the capture provides.
+
+The importer and the config installer refuse SitDown outright, with no override.

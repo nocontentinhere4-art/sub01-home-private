@@ -1198,9 +1198,9 @@
     "hips_delta_cm": [
      0.193,
      3.306,
-     -0.079
+     -0.606
     ],
-    "hips_distance_cm": 3.313,
+    "hips_distance_cm": 3.367,
     "hips_rotation_deg": 5.874,
     "upper_body_shape_max_cm": 24.907
    },
@@ -1869,8 +1869,8 @@
   "GetUp": {
    "glb": "docs/proposed/seat-pose-fit/SUB01_GetUp_seated.glb",
    "bytes": 93420,
-   "sha256": "1a75ff55161c8ee3b3a88c37446ad790e1fe6c5dd8120a201e687715c9ae369a",
-   "all_gates_pass": false,
+   "sha256": "6105564f22e712e19ed18bfbeea5b185518f8f67d60b76b2c59f5a041a8331d0",
+   "all_gates_pass": true,
    "audit": {
     "times": "every written key",
     "read_back_from_written_glb": true,
@@ -1878,17 +1878,15 @@
     "seated_frames": 6,
     "seat": {
      "buttocks": {
-      "pass_all_frames": false,
-      "failing_frames": 1,
-      "failures": {
-       "support_vertices_short": 1
-      },
+      "pass_all_frames": true,
+      "failing_frames": 0,
+      "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        0.2286,
-        0.3965
+        0.2091,
+        0.2588
        ],
-       "min_band_vertices": 7,
+       "min_band_vertices": 34,
        "min_over_surface_vertices": 1217
       },
       "raw": {
@@ -1906,11 +1904,11 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -0.9065,
-        -0.788
+        -0.9059,
+        -0.7194
        ],
-       "min_band_vertices": 335,
-       "min_over_surface_vertices": 2515
+       "min_band_vertices": 336,
+       "min_over_surface_vertices": 2503
       },
       "raw": {
        "pass_frames": 0,
@@ -1927,8 +1925,8 @@
       "failures": {},
       "corrected": {
        "lowest_gap_cm": [
-        -2.3966,
-        -2.2287
+        -2.2588,
+        -2.2091
        ],
        "min_band_vertices": 858,
        "min_over_surface_vertices": 2587
@@ -1992,42 +1990,42 @@
      }
     },
     "bone_length_max_error_cm": 0.0,
-    "foot_world_rotation_max_change_deg": 7.3e-06,
+    "foot_world_rotation_max_change_deg": 7.7e-06,
     "upper_body_world": {
      "rotation_max_change_deg": {
       "Spine": 3.2e-06,
       "Spine1": 3.2e-06,
       "Spine2": 3.2e-06,
       "Neck": 3.4e-06,
-      "Head": 3.4e-06,
+      "Head": 3.8e-06,
       "LeftShoulder": 6.2e-06,
       "RightShoulder": 5.7e-06
      },
      "spine_translation_cm": {
       "vertical": [
-       -9.0745,
+       -9.0769,
        0.0
       ],
       "horizontal_max": 1.8e-06
      }
     },
     "head_height_change_cm": [
-     -9.0745,
+     -9.0769,
      0.0
     ],
     "residual_on_all_seat_height_frames": {
      "seat": {
       "buttocks": {
        "pass_all_frames": false,
-       "failing_frames": 19,
+       "failing_frames": 17,
        "failures": {
-        "lowest_above_band": 15,
-        "support_vertices_short": 19
+        "lowest_above_band": 14,
+        "support_vertices_short": 17
        },
        "corrected": {
         "lowest_gap_cm": [
-         -0.2214,
-         2.7131
+         -0.6898,
+         2.7109
         ],
         "min_band_vertices": 0,
         "min_over_surface_vertices": 680
@@ -2051,8 +2049,8 @@
        },
        "corrected": {
         "lowest_gap_cm": [
-         -2.9065,
-         1.0486
+         -2.9084,
+         1.0469
         ],
         "min_band_vertices": 0,
         "min_over_surface_vertices": 1327
@@ -2068,16 +2066,16 @@
       },
       "right_posterior_thigh": {
        "pass_all_frames": false,
-       "failing_frames": 13,
+       "failing_frames": 12,
        "failures": {
-        "penetration": 11,
+        "penetration": 10,
         "lowest_above_band": 2,
         "support_vertices_short": 2
        },
        "corrected": {
         "lowest_gap_cm": [
-         -3.1104,
-         1.3344
+         -3.5237,
+         1.3324
         ],
         "min_band_vertices": 0,
         "min_over_surface_vertices": 1697
@@ -2466,7 +2464,7 @@
   "DeskTyping_seated": true,
   "SeatedIdle": true,
   "SitDown": false,
-  "GetUp": false,
+  "GetUp": true,
   "SitToType": true,
   "TypeToSit": true
  }

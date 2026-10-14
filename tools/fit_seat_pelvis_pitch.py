@@ -873,6 +873,38 @@ def run(args):
             seam_info[end] = {'neighbour': f'{ref[0]}.{ref[1]}', 'theta_deg': _r(th_t, 4), 'neighbour_lowering_cm': _r(L_t, 4),
                               'ease_s': _r(span, 3)}
         if seam_info:
+            # The ease never takes a gated frame below its own pitch need (the same rule as solve_per_frame: never
+            # below a key's own need). Between the seam frame (which keeps the neighbour's exact value) and the first/
+            # last gated frame the floor is a smootherstep from the seam value to that frame's need.
+            need_g = np.asarray(pf['theta_needed_deg'], float)
+            floor = np.interp(idx, seated, need_g) * w
+            last = len(times) - 1
+            for end in seam_info:
+                th_t = seam_info[end]['theta_deg']
+                seam_frame = 0 if end == 'start' else len(times) - 1
+                if seam_frame in set(seated.tolist()):
+                    # The seam frame itself is gated: its need and the neighbour's value conflict. No floor on this
+                    # side (it would only add a pitch pop at the seam); the gates then report the clip honestly.
+                    d = (tt - tt[0]) if end == 'start' else (tt[-1] - tt)
+                    floor[d < span] = -np.inf
+                    seam_info[end]['floor_rule'] = 'not applied: the seam frame is gated and its need conflicts with the neighbour value'
+                    continue
+                if end == 'start':
+                    g0 = int(seated[0])
+                    m = idx < g0
+                    floor[m] = th_t + (need_g[0] - th_t) * smootherstep(idx[m] / max(g0, 1))
+                    floor[0] = th_t
+                else:
+                    g1 = int(seated[-1])
+                    m = idx > g1
+                    floor[m] = th_t + (need_g[-1] - th_t) * smootherstep((last - idx[m]) / max(last - g1, 1))
+                    floor[last] = th_t
+                seam_info[end]['floor_rule'] = ('gated frames never below their own pitch need; the seam frame keeps '
+                                                'the neighbour value')
+            raised = th_all < floor - 1e-9
+            th_all = np.maximum(th_all, floor)
+            for end in seam_info:
+                seam_info[end]['frames_raised_to_need_in_clip'] = int(raised.sum())
             # the lowering is re-solved (band-centred) for the eased pitch on every gated frame
             L_g, *_ = sub.solve_lowering_per_frame(th_all[seated], L_all[seated])
             L_all = np.array([L_g[pos[f]] for f in near]) * w
