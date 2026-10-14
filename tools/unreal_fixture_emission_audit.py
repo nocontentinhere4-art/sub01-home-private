@@ -17,6 +17,16 @@ from pathlib import Path
 LEVEL = '/Game/Sub01Home/ActualHome'
 NODE = re.compile(r':PersistentLevel\.full-home_node_(\d+)\.StaticMeshComponent\d+$')
 MATERIAL_ROOT = '/Game/Sub01Home/ImportedScene/full-home/Materials/'
+# Root's exact source-position review against authored light table, 2026-10-14.
+# Shared Material_63 is deliberately split by source node, never a global write.
+FIXTURE_CONTROLS = {
+    66: ('KitchenWork', 13, 'Material_13'),
+    126: ('DeskLamp', 63, 'Material_63'),
+    127: ('LowerPendant', 63, 'Material_63'),
+    129: ('UpperPendant', 63, 'Material_63'),
+    198: ('BedLamp', 63, 'Material_63'),
+    199: ('BedLamp', 79, 'Material_91'),
+}
 
 
 def source_fixtures(glb, expected_sha256):
@@ -45,7 +55,9 @@ def source_fixtures(glb, expected_sha256):
         for slot, primitive in enumerate(doc['meshes'][node['mesh']].get('primitives', [])):
             if primitive.get('material') in tagged:
                 fixtures.append(dict(tagged[primitive['material']], source_node_index=index,
-                                     source_node_name=node.get('name'), source_primitive_slot=slot))
+                                     source_node_name=node.get('name'), source_primitive_slot=slot,
+                                     source_local_translation=node.get('translation', [0, 0, 0]),
+                                     source_parent_node_indices=[p for p, candidate in enumerate(doc['nodes']) if index in candidate.get('children', [])]))
     return {'sha256': actual, 'tagged_material_count': len(tagged), 'fixtures': fixtures}
 
 
@@ -67,8 +79,16 @@ def run(output, glb, expected_sha256, *, u=None):
                 if material:
                     users.setdefault(material.get_path_name(), []).append({'actor': actor.get_actor_label(), 'component': path, 'slot': slot})
     results = []
+    manifest_errors = []
+    if {f['source_node_index'] for f in source['fixtures']} != set(FIXTURE_CONTROLS) or len(source['fixtures']) != 6:
+        manifest_errors.append('Source tagged fixture set differs from reviewed exact six-node control manifest')
     for fixture in source['fixtures']:
         row = dict(fixture, errors=[], parameters={}, native_toggle_available=False)
+        control = FIXTURE_CONTROLS.get(fixture['source_node_index'])
+        if control and (fixture['source_material_index'], fixture['source_material_name']) == control[1:]:
+            row['reviewed_native_lamp_control'] = control[0]
+        else:
+            row['errors'].append('Source fixture/material identity differs from reviewed native control manifest')
         matches = nodes.get(fixture['source_node_index'], [])
         if len(matches) != 1:
             row['errors'].append('Source node must match exactly one actual imported component')
@@ -114,10 +134,11 @@ def run(output, glb, expected_sha256, *, u=None):
             row['exact_zero_override_parameters_present'] = [p for p in ('EmissiveFactor', 'EmissiveStrength') if (p in vector and vector[p] is not None) or (p in scalar and scalar[p] is not None)]
             if not row['exact_zero_override_parameters_present']:
                 row['errors'].append('No enumerated effective EmissiveFactor/EmissiveStrength: native toggle unavailable')
-        row['errors'].append('Explicit reviewed native lamp control name and graph emissive semantics required; audit cannot authorize an override')
+        row['errors'].append('Actual parent graph emissive semantics required; audit cannot authorize an override')
         results.append(row)
     report = {'schema': 'sub01-private-fixture-emission-audit-v1', 'read_only': True, 'level': world.get_path_name(),
-              'source': source, 'fixtures': results, 'screen_policy': 'PC/TV/phone and untagged materials excluded; no emission inferred from image',
+              'source': source, 'fixtures': results, 'manifest_errors': manifest_errors,
+              'screen_policy': 'PC/TV/phone and untagged materials excluded; no emission inferred from image',
               'native_toggle_available': False}
     Path(output).write_text(json.dumps(report, indent=2)+'\n')
     u.log('SUB01_FIXTURE_EMISSION_AUDIT fixtures=%d read_only=true' % len(results))
