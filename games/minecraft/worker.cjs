@@ -9,6 +9,7 @@ const readline = require('node:readline');
 const { Vec3 } = require('vec3');
 const { supportsPlayer, escapeTarget, placementSite } = require('./spatial.cjs');
 const { harvestResource } = require('./resources.cjs');
+const { viewerBootstrap } = require('./viewer_bootstrap.cjs');
 const serverPort = Number(process.env.SUB01_MC_SERVER_PORT || 25569);
 const viewerPort = Number(process.env.SUB01_MC_VIEW_PORT || 8803);
 if (![serverPort,viewerPort].every(port => Number.isInteger(port) && port >= 1024 && port <= 65535) || serverPort === viewerPort)
@@ -19,6 +20,8 @@ const io = require('socket.io')(server);
 app.use(express.static(path.join(path.dirname(require.resolve('prismarine-viewer')), 'public')));
 server.listen(viewerPort, '127.0.0.1');
 let bot = null, active = false, connected = false, busy = false, generation = 0;
+const idleViewer = viewerBootstrap({isActive: () => active, connect,
+  release: () => bot?.quit('Initial idle viewer released')});
 let lastHealth = 20, lastItems = 0;
 const emit = (value) => process.stdout.write(JSON.stringify(value) + '\n');
 const hostiles = new Set(['zombie', 'skeleton', 'creeper', 'spider', 'enderman']);
@@ -46,11 +49,12 @@ function observation() {
     time: bot.time?.timeOfDay ?? 0 };
 }
 function connect() {
-  if (bot || !active) return;
+  if (bot || (!active && !idleViewer.allowed())) return;
   bot = mineflayer.createBot({ host: '127.0.0.1', port: serverPort, username: 'SUB01',
     auth: 'offline', version: '1.20.1', hideErrors: true });
   bot.loadPlugin(pathfinder);
   bot.once('spawn', () => {
+    if (!active && !idleViewer.allowed()) { bot?.quit('Idle viewer lease expired'); return; }
     connected = true;
     const movements = new Movements(bot);
     movements.canDig = false;
@@ -66,7 +70,7 @@ function connect() {
     if (active && bot.health < lastHealth) emit({ type: 'feedback', reward: -0.5, event: 'damage', health: bot.health });
     lastHealth = bot.health;
   });
-  bot.on('death', () => emit({ type: 'feedback', reward: -1, event: 'death' }));
+  bot.on('death', () => { if (active) emit({ type: 'feedback', reward: -1, event: 'death' }); });
   bot.on('error', error => emit({ type: 'error', message: String(error.message).slice(0, 200) }));
   bot.on('end', () => {
     bot = null; connected = false; busy = false; io.disconnectSockets();
@@ -164,8 +168,11 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
   if (line.length > 4096) return;
   try {
     const message = JSON.parse(line);
-    if (message.type === 'active') {
+    if (message.type === 'viewer_bootstrap') idleViewer.request();
+    else if (message.type === 'viewer_release') idleViewer.finish();
+    else if (message.type === 'active') {
       active = message.value === true; generation++;
+      idleViewer.finish();
       if (active) connect();
       else { bot?.pathfinder.setGoal(null); bot?.clearControlStates(); bot?.quit('Console put away'); }
     } else if (message.type === 'action') act(message);
