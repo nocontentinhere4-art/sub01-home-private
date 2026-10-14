@@ -29,9 +29,10 @@ class Props:
         return self.values[key]
 
 
-def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=None, root_moves=False,
-                skeleton_path=fit.OWNER_SKELETON, frames_per_s=None):
-    log = SimpleNamespace(imported=[], deleted=[], saved=[], options={})
+def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=None, extra_for=None, root_moves=False,
+                skeleton_path=fit.OWNER_SKELETON, frames_per_s=None, rename_fails_for=None, existing=()):
+    """A fake editor with a real asset table: import, list, exists, rename, delete and load all act on `assets`."""
+    log = SimpleNamespace(imported=[], deleted=[], saved=[], renamed=[], options={})
 
     class SkeletalMesh(Props):
         def get_path_name(self):
@@ -58,31 +59,26 @@ def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=N
     owner_sk = Skeleton('SK')
     assets = {fit.grip.OWNER_MESH: SkeletalMesh(skeleton=owner_sk),
               fit.grip.OWNER_TYPING: AnimSequence(fit.grip.OWNER_TYPING, skeleton=owner_sk)}
+    for role in existing:
+        assets[fit.object_path(role)] = AnimSequence(fit.object_path(role), skeleton=owner_sk,
+                                                     sequence_length=PLAN[role]['duration_s'], role=role, original=True)
 
-    class Component:
-        def set_skeletal_mesh_asset(self, mesh):
-            pass
-
-        def get_num_bones(self):
-            return len(BONES)
-
-        def get_bone_name(self, i):
-            return BONES[i]
-
-        def get_parent_bone(self, name):
-            return PARENTS[name]
+    def obj(package):
+        return f'{package}.{package.rsplit("/", 1)[1]}'
 
     class Tools:
         def import_asset_tasks(self, tasks):
             for task in tasks:
-                assert task.destination_path == fit.DEST == '/Game/Sub01Hands/Seating'
+                assert task.destination_path == fit.DEST + '/_Staging' and task.replace_existing is False
                 assert task.options.values['skeleton'] == owner_sk and task.options.values['import_mesh'] is False
-                role = task.destination_name[len('SUB01_'):]
-                path = fit.object_path(role) if role != wrong_path_for else fit.object_path(role) + 'X'
-                assert path != fit.PROTECTED_TYPING
+                role = task.destination_name.rsplit('_', 1)[0]
+                package = f'{task.destination_path}/{task.destination_name}' + ('X' if role == wrong_path_for else '')
+                assert obj(package) not in assets, 'import must never replace'
                 duration = (durations or {}).get(role, PLAN[role]['duration_s'])
-                assets[path] = AnimSequence(path, skeleton=Skeleton(clip_skeleton), sequence_length=duration, role=role)
-                task.imported_object_paths = [path]
+                assets[obj(package)] = AnimSequence(obj(package), skeleton=Skeleton(clip_skeleton), sequence_length=duration, role=role)
+                task.imported_object_paths = [obj(package)]
+                if role == extra_for:
+                    assets[obj(package + '_Extra')] = AnimSequence(obj(package + '_Extra'), skeleton=owner_sk)
                 log.imported.append(role)
                 log.options[role] = task.options.values['anim_sequence_import_data'].values
 
@@ -90,6 +86,25 @@ def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=N
         x = t if root_moves else 0.0
         return [SimpleNamespace(translation=SimpleNamespace(x=x, y=0, z=0), rotation=SimpleNamespace(x=0, y=0, z=0, w=1),
                                 scale3d=SimpleNamespace(x=1, y=1, z=1))]
+
+    def exists(path):
+        return any(k.split('.', 1)[0] == path.split('.', 1)[0] for k in assets)
+
+    def rename(src, dst):
+        role = src.rsplit('/', 1)[1].rsplit('_', 1)[0]
+        if role == rename_fails_for or exists(dst) or not exists(src):
+            return False
+        clip = assets.pop(obj(src))
+        clip.p = obj(dst)
+        assets[obj(dst)] = clip
+        log.renamed.append((src, dst))
+        return True
+
+    def delete(path):
+        assert path.split('.', 1)[0].startswith(fit.DEST + '/_Staging/'), f'deleted a non-staging path {path}'
+        for k in [k for k in assets if k.split('.', 1)[0] == path.split('.', 1)[0]]:
+            del assets[k]
+        log.deleted.append(path)
 
     library = SimpleNamespace(get_bone_poses_for_time=poses)
     if frames_per_s is not None:
@@ -106,10 +121,27 @@ def fake_unreal(project, *, clip_skeleton='SK', durations=None, wrong_path_for=N
         AssetImportTask=lambda: SimpleNamespace(imported_object_paths=[]),
         AssetToolsHelpers=SimpleNamespace(get_asset_tools=lambda: Tools()),
         AnimationLibrary=library,
-        EditorAssetLibrary=SimpleNamespace(save_directory=lambda d, **k: log.saved.append(d),
-                                           delete_asset=lambda p: log.deleted.append(p)),
+        EditorAssetLibrary=SimpleNamespace(
+            save_directory=lambda d, **k: log.saved.append(d), delete_asset=delete, does_asset_exist=exists,
+            rename_asset=rename,
+            list_assets=lambda d, recursive=True, include_folder=False: [k for k in assets if k.startswith(d + '/')]),
         log=lambda m: None)
+    log.assets = assets
     return u, log
+
+
+class Component:
+    def set_skeletal_mesh_asset(self, mesh):
+        pass
+
+    def get_num_bones(self):
+        return len(BONES)
+
+    def get_bone_name(self, i):
+        return BONES[i]
+
+    def get_parent_bone(self, name):
+        return PARENTS[name]
 
 
 def write_source(project, mutate=None):
@@ -172,12 +204,21 @@ def test_plan_refuses_a_changed_glb_or_a_disagreeing_verdict(tmp_path):
 
 
 # ------------------------------------------------------------------ importer (fake unreal)
-def test_imports_only_passing_fits_at_the_exact_paths_with_60hz_typing(tmp_path):
+PASSING = ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated']
+
+
+def final_paths(log):
+    return {k for k in log.assets if k.startswith(fit.DEST + '/') and '/_Staging/' not in k}
+
+
+def test_imports_only_passing_fits_via_staging_with_60hz_typing(tmp_path):
     write_source(tmp_path)
     u, log = fake_unreal(tmp_path)
-    receipt = fit.main(u, tmp_path, OWNER_PARENTS)
-    assert sorted(log.imported) == ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated']
-    assert not log.deleted and log.saved == [fit.DEST]
+    receipt = fit.main(u, tmp_path, OWNER_PARENTS, txid='t1')
+    assert sorted(log.imported) == sorted(PASSING) and not log.deleted and log.saved == [fit.DEST]
+    assert sorted(log.renamed) == sorted((f'{fit.DEST}/_Staging/{r}_t1', f'{fit.DEST}/SUB01_{r}') for r in PASSING)
+    assert final_paths(log) == {fit.object_path(r) for r in PASSING}
+    assert not [k for k in log.assets if '/_Staging/' in k]
     assert log.options['DeskTypingSeated'] == {'use_default_sample_rate': False, 'custom_sample_rate': 60}
     assert log.options['SeatedIdle'] == {'use_default_sample_rate': True}
     on_disk = json.loads((tmp_path / 'private-audit/unreal-seated-fit-import.json').read_text())
@@ -185,20 +226,21 @@ def test_imports_only_passing_fits_at_the_exact_paths_with_60hz_typing(tmp_path)
     assert on_disk['schema'] == seat.SEATED_FIT_RECEIPT_SCHEMA and on_disk['skeleton'] == fit.OWNER_SKELETON
     assert on_disk['runtime_ready'] is False and on_disk['readiness_claimed'] is False and on_disk['native_seat_verified'] is False
     rows = {r['role']: r for r in on_disk['clips']}
-    assert sorted(on_disk['accepted_roles']) == ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated']
+    assert sorted(on_disk['accepted_roles']) == sorted(PASSING)
     for role in ('SitDownSeated', 'GetUpSeated'):
         assert rows[role]['imported'] is False and rows[role]['accepted'] is False and rows[role]['fit_pass'] is False
         assert 'never imported' in rows[role]['refusal']
     typing = rows['DeskTypingSeated']
     assert typing['object_path'] == '/Game/Sub01Hands/Seating/SUB01_DeskTypingSeated.SUB01_DeskTypingSeated'
     assert typing['sample_rate_hz'] == 60 and typing['accepted'] and typing['same_existing_skeleton']
+    assert typing['preserved_existing'] is False
 
 
 def test_no_override_exists_for_failed_fits(tmp_path):
     import inspect
     source = (ROOT / 'tools/unreal_import_seated_fit_fbx.py').read_text() + (ROOT / 'tools/export_unreal_seated_fit_fbx.py').read_text()
-    assert 'allow' not in source.lower().replace('allowed', '') and 'override' not in inspect.signature(fit.main).parameters
-    assert set(inspect.signature(fit.main).parameters) == {'u', 'root', 'owner_parents', 'repo'}
+    assert 'allow' not in source.lower()
+    assert set(inspect.signature(fit.main).parameters) == {'u', 'root', 'owner_parents', 'repo', 'txid'}
     write_source(tmp_path)
     u, log = fake_unreal(tmp_path)
     with pytest.raises(TypeError):
@@ -221,7 +263,7 @@ def test_measured_rate_is_checked_when_the_editor_exposes_it(tmp_path):
     u, log = fake_unreal(tmp_path, frames_per_s=lambda role: 30)        # typing resampled to 30 Hz
     with pytest.raises(RuntimeError, match='DeskTypingSeated: sampled at 30.00 Hz, expected 60 Hz'):
         fit.main(u, tmp_path, OWNER_PARENTS)
-    assert log.deleted and not (tmp_path / fit.RECEIPT_FILE).exists()
+    assert log.deleted and not final_paths(log) and not (tmp_path / fit.RECEIPT_FILE).exists()
     u, _ = fake_unreal(tmp_path, frames_per_s=lambda role: PLAN[role]['fps'])
     assert fit.main(u, tmp_path, OWNER_PARENTS)['clips'][0]['sampled_rate_measured_hz'] == pytest.approx(60, abs=1)
 
@@ -230,18 +272,90 @@ def test_measured_rate_is_checked_when_the_editor_exposes_it(tmp_path):
     ({'clip_skeleton': 'NEW'}, 'differs from the actual owner skeleton'),
     ({'durations': {'SeatedIdle': 4.5}}, 'SeatedIdle: length'),
     ({'root_moves': True}, 'parity failed'),
-    ({'wrong_path_for': 'SitToTypeSeated'}, 'expected /Game/Sub01Hands/Seating/SUB01_SitToTypeSeated'),
+    ({'wrong_path_for': 'SitToTypeSeated'}, 'SitToTypeSeated: import created'),
+    ({'extra_for': 'SeatedIdle'}, 'SeatedIdle: import created'),
 ])
-def test_mismatch_deletes_this_runs_assets_and_writes_no_receipt(tmp_path, kwargs, why):
+def test_failure_after_staged_import_deletes_only_staging_and_keeps_existing_asset_and_receipt(tmp_path, kwargs, why):
     write_source(tmp_path)
-    old = tmp_path / fit.RECEIPT_FILE
-    old.parent.mkdir(parents=True)
-    old.write_text('{"stale": true}')                       # a previous receipt is withdrawn, never left describing replaced assets
-    u, log = fake_unreal(tmp_path, **kwargs)
+    # A valid earlier run: SeatedIdle exists at its final path with a matching receipt.
+    first, first_log = fake_unreal(tmp_path)
+    fit.main(first, tmp_path, OWNER_PARENTS, txid='old')
+    receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
+    # The failing role must be one that is staged again, so the preserved one is another role.
+    keep = 'DeskTypingSeated' if 'SeatedIdle' in (kwargs.get('durations') or {}) or kwargs.get('extra_for') else 'SeatedIdle'
+    assert fit.object_path(keep) in first_log.assets
+    # A later run where only `keep` exists and the others must be staged again.
+    u, log = fake_unreal(tmp_path, existing=[keep], **kwargs)
+    original = log.assets[fit.object_path(keep)]
     with pytest.raises(RuntimeError, match=why):
+        fit.main(u, tmp_path, OWNER_PARENTS, txid='new')
+    assert (tmp_path / fit.RECEIPT_FILE).read_bytes() == receipt_bytes             # receipt untouched
+    assert log.assets[fit.object_path(keep)] is original and original.values.get('original')   # existing asset kept
+    assert final_paths(log) == {fit.object_path(keep)} and not log.renamed
+    assert log.deleted and all(d.startswith(fit.DEST + '/_Staging/') and '_new' in d for d in log.deleted)
+    assert not [k for k in log.assets if '/_Staging/' in k]                          # this run's staging is cleaned up
+
+
+def test_rename_failure_never_deletes_a_final_path(tmp_path):
+    write_source(tmp_path)
+    u, log = fake_unreal(tmp_path, rename_fails_for='SitToTypeSeated')
+    with pytest.raises(RuntimeError, match='rename'):
+        fit.main(u, tmp_path, OWNER_PARENTS, txid='r')
+    assert not (tmp_path / fit.RECEIPT_FILE).exists()
+    assert all('/_Staging/' in d for d in log.deleted)
+    assert not [k for k in log.assets if '/_Staging/' in k]
+
+
+def test_existing_asset_without_matching_receipt_is_refused_with_zero_mutations(tmp_path):
+    write_source(tmp_path)
+    u, log = fake_unreal(tmp_path, existing=['SeatedIdle'])
+    before = dict(log.assets)
+    with pytest.raises(RuntimeError, match='already exists without a matching import receipt'):
         fit.main(u, tmp_path, OWNER_PARENTS)
-    assert log.deleted and set(log.deleted) <= {fit.object_path(r) for r in fit.ROLES} | {fit.object_path('SitToTypeSeated') + 'X'}
-    assert not log.saved and not old.exists()
+    assert log.assets == before and not log.imported and not log.deleted and not log.renamed and not log.saved
+    assert not (tmp_path / fit.RECEIPT_FILE).exists()
+    # A receipt for another FBX does not match either.
+    (tmp_path / fit.RECEIPT_FILE).parent.mkdir(parents=True, exist_ok=True)
+    stale = {'schema': fit.RECEIPT_SCHEMA, 'skeleton': fit.OWNER_SKELETON, 'clips': [
+        {'role': 'SeatedIdle', 'object_path': fit.object_path('SeatedIdle'), 'fbx_sha256': '0' * 64,
+         'glb_sha256': PLAN['SeatedIdle']['glb_sha256'], 'fps': 30, 'imported': True, 'accepted': True,
+         'fit_pass': True, 'same_existing_skeleton': True}]}
+    (tmp_path / fit.RECEIPT_FILE).write_text(json.dumps(stale))
+    stale_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
+    with pytest.raises(RuntimeError, match='without a matching import receipt'):
+        fit.main(u, tmp_path, OWNER_PARENTS)
+    assert log.assets == before and not log.imported and (tmp_path / fit.RECEIPT_FILE).read_bytes() == stale_bytes
+
+
+def test_rerun_preserves_matching_existing_assets(tmp_path):
+    write_source(tmp_path)
+    u, log = fake_unreal(tmp_path)
+    fit.main(u, tmp_path, OWNER_PARENTS, txid='a')
+    receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
+    u2, log2 = fake_unreal(tmp_path, existing=PASSING)
+    assert fit.main(u2, tmp_path, OWNER_PARENTS, txid='b') == json.loads(receipt_bytes)
+    assert not log2.imported and not log2.renamed and not log2.deleted
+    assert (tmp_path / fit.RECEIPT_FILE).read_bytes() == receipt_bytes
+    # Only SeatedIdle exists: it is preserved, the rest staged and renamed, receipt rewritten.
+    (tmp_path / fit.RECEIPT_FILE).write_bytes(receipt_bytes)
+    u3, log3 = fake_unreal(tmp_path, existing=['SeatedIdle'])
+    receipt = fit.main(u3, tmp_path, OWNER_PARENTS, txid='c')
+    rows = {r['role']: r for r in receipt['clips']}
+    assert rows['SeatedIdle']['preserved_existing'] is True and rows['DeskTypingSeated']['preserved_existing'] is False
+    assert sorted(log3.imported) == sorted(set(PASSING) - {'SeatedIdle'})
+
+
+def test_existing_asset_on_another_skeleton_is_refused_without_change(tmp_path):
+    write_source(tmp_path)
+    u, _ = fake_unreal(tmp_path)
+    fit.main(u, tmp_path, OWNER_PARENTS, txid='a')
+    receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
+    u2, log2 = fake_unreal(tmp_path, existing=['SeatedIdle'])
+    log2.assets[fit.object_path('SeatedIdle')].values['sequence_length'] = 9.0
+    before = dict(log2.assets)
+    with pytest.raises(RuntimeError, match='differs from its receipt'):
+        fit.main(u2, tmp_path, OWNER_PARENTS)
+    assert log2.assets == before and not log2.imported and (tmp_path / fit.RECEIPT_FILE).read_bytes() == receipt_bytes
 
 
 def test_refuses_another_owner_skeleton_before_any_import(tmp_path):

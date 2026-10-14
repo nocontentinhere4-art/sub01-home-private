@@ -19,10 +19,14 @@ Roles (role -> committed GLB, export rate):
 
 Only a clip whose per-clip report has `all_gates_pass: true` is imported (and then ACCEPTED). A failing clip (today
 SitDown and GetUp) is refused outright: never imported, no override flag exists; its receipt row says
-`imported: false, accepted: false, fit_pass: false` with the reason. The importer refuses (RuntimeError, every asset imported in this run deleted again, NO receipt) when
+`imported: false, accepted: false, fit_pass: false` with the reason. The importer refuses (RuntimeError, only this run's staging assets deleted, receipt untouched) when
 the audit is not the committed fit, a source FBX changed, the owner skeleton is not
-/Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton, an imported clip is on another skeleton or at another path, its
-length differs from the GLB duration, or its structural root moves. It never writes config, never touches
+/Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton, a staged clip is on another skeleton or at another path, its
+length differs from the GLB duration, or its structural root moves. It never replaces or deletes an existing asset:
+an existing final path is kept only when the existing receipt matches it (`preserved_existing`), else it refuses with
+no change; new clips are imported into this run's unique staging paths (/Game/Sub01Hands/Seating/_Staging/<Role>_<txid>,
+replace_existing=False), verified there, then renamed onto final paths that must not exist. On failure only this
+run's staging assets are deleted and the receipt is left untouched. It never writes config, never touches
 /Game/Sub01Hands/FBX (SUB01_DeskTyping stays the renderer's), and claims no seat, contact or readiness.
 Receipt: <project>/private-audit/unreal-seated-fit-import.json (sub01.unreal-seated-fit-import.v1), which the seat
 adapter (tools/unreal_seat_transition_runtime.py) and tools/install_default_game_ini.py read.
@@ -191,7 +195,35 @@ def _sampled_rate(u, clip, duration):
     return float(frames(clip)) / duration
 
 
-def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: Path = REPO) -> dict:
+def package_path(object_path_: str) -> str:
+    return object_path_.split('.', 1)[0]
+
+
+def _matching_receipt_row(receipt, row) -> dict | None:
+    """The existing receipt's row for exactly this source, skeleton and path (an accepted, imported fit), or None."""
+    if not isinstance(receipt, dict) or receipt.get('schema') != RECEIPT_SCHEMA or receipt.get('skeleton') != OWNER_SKELETON:
+        return None
+    for old in receipt.get('clips', []):
+        if (isinstance(old, dict) and old.get('role') == row['role'] and old.get('object_path') == object_path(row['role'])
+                and old.get('fbx_sha256') == row['sha256'] and old.get('glb_sha256') == row['glb_sha256']
+                and old.get('fps') == row['fps'] and old.get('imported') is True and old.get('accepted') is True
+                and old.get('fit_pass') is True and old.get('same_existing_skeleton') is True):
+            return old
+    return None
+
+
+def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: Path = REPO, txid: str | None = None) -> dict:
+    """Never replaces or deletes an existing asset at a final path, and never touches the receipt on failure.
+
+    1. every final path that already exists must match the existing receipt (same FBX/GLB sha256, skeleton, path,
+       rate) and the live asset (owner skeleton, length): it is kept as `preserved_existing`; otherwise refuse with
+       zero mutations;
+    2. missing roles are imported into unique staging paths of this run (replace_existing=False);
+    3. each staged asset is verified (skeleton, path, length, sample rate, structural root);
+    4. only when all pass are they renamed onto their final paths (which must not exist); then the receipt is written.
+    On any failure only the staging assets this run created (folder-list diff) are deleted.
+    """
+    import uuid
     root = Path(root or u.Paths.project_dir()).resolve()
     receipt_path = root / RECEIPT_FILE
     source = root / SOURCE_DIR
@@ -213,38 +245,74 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: P
     skeleton_parity = parity.structural_root_parity(ue_names, ue_parents, owner, structure_only=True)
     if not skeleton_parity['pass']:
         raise RuntimeError('UE skeleton is not the owner skeleton: ' + '; '.join(skeleton_parity['failures']))
-    # A receipt exists only after a complete successful run; an older one is withdrawn before anything is replaced.
-    if receipt_path.exists():
-        receipt_path.unlink()
-    world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
-    u.SystemLibrary.execute_console_command(world, 'Interchange.FeatureFlags.Import.FBX 0')
-    imported, results = [], []
+    assets = u.EditorAssetLibrary
+    old_receipt = json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
 
-    def refuse(why):
-        for p in imported:
-            u.EditorAssetLibrary.delete_asset(p)
-        raise RuntimeError(why)
-
+    # Phase 1 (read only): existing final assets are preserved only against a matching receipt and live checks.
+    results, todo = {}, []
     for row in rows:
         role = row['role']
         entry = {'role': role, 'object_path': object_path(role), 'fit_pass': row['fit_pass'], 'fps': row['fps'],
                  'glb': row['glb'], 'glb_sha256': row['glb_sha256'], 'report_sha256': row['report_sha256'],
                  'fbx_sha256': row['sha256'], 'glb_duration_s': row['duration_s'], 'frames': row['frames']}
         if not row['fit_pass']:
-            results.append(dict(entry, imported=False, accepted=False,
-                                refusal='per-clip seat-pose-fit gates failed; a failed fit is never imported'))
+            results[role] = dict(entry, imported=False, accepted=False,
+                                 refusal='per-clip seat-pose-fit gates failed; a failed fit is never imported')
             continue
+        if not assets.does_asset_exist(package_path(object_path(role))):
+            todo.append((row, entry))
+            continue
+        old = _matching_receipt_row(old_receipt, row)
+        live = u.load_asset(object_path(role))
+        if old is None:
+            raise RuntimeError(f'{role}: {object_path(role)} already exists without a matching import receipt; '
+                               'nothing replaced, nothing changed')
+        if (not isinstance(live, u.AnimSequence) or live.get_editor_property('skeleton') != skeleton
+                or abs(live.get_editor_property('sequence_length') - row['duration_s']) > DURATION_TOLERANCE_S):
+            raise RuntimeError(f'{role}: existing {object_path(role)} differs from its receipt (skeleton or length); '
+                               'nothing replaced, nothing changed')
+        results[role] = dict(old, preserved_existing=True)
+    if not todo:
+        if old_receipt is None:
+            raise RuntimeError('Nothing to import and no receipt')
+        return old_receipt
+
+    # Phase 2: stage every missing role under this run's unique names; verify; then rename all.
+    txid = txid or uuid.uuid4().hex[:12]
+    staging = f'{DEST}/_Staging'
+    listed = lambda: {package_path(str(p)) for p in assets.list_assets(staging, recursive=True, include_folder=False)}
+    created, staged = set(), []
+
+    def refuse(why):
+        for path in sorted(created):
+            assets.delete_asset(path)
+        raise RuntimeError(why)
+
+    world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
+    u.SystemLibrary.execute_console_command(world, 'Interchange.FeatureFlags.Import.FBX 0')
+    for row, entry in todo:
+        role = row['role']
+        name = f'{role}_{txid}'
+        staged_package = f'{staging}/{name}'
+        if assets.does_asset_exist(staged_package):
+            refuse(f'{role}: staging path {staged_package} already exists')
+        before = listed()
         task = u.AssetImportTask()
-        task.filename, task.destination_path, task.destination_name = str(source / row['file']), DEST, asset_name(role)
-        task.automated, task.replace_existing, task.save, task.options = True, True, True, _options(u, skeleton, row['fps'])
+        task.filename, task.destination_path, task.destination_name = str(source / row['file']), staging, name
+        task.automated, task.replace_existing, task.save, task.options = True, False, False, _options(u, skeleton, row['fps'])
         u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
-        imported.extend(task.imported_object_paths)
-        clips = [c for c in (u.load_asset(p) for p in task.imported_object_paths) if isinstance(c, u.AnimSequence)]
-        if len(clips) != 1 or clips[0].get_editor_property('skeleton') != skeleton:
+        new = listed() - before
+        created |= new
+        foreign = {package_path(str(p)) for p in task.imported_object_paths} - new
+        if foreign:
+            refuse(f'{role}: import reported paths outside this run\'s staging: {sorted(foreign)}')
+        if new != {staged_package}:
+            refuse(f'{role}: import created {sorted(new)}, expected only {staged_package}')
+        clip = u.load_asset(f'{staged_package}.{name}')
+        if not isinstance(clip, u.AnimSequence) or clip.get_editor_property('skeleton') != skeleton:
             refuse(f'{role}: imported sequence differs from the actual owner skeleton')
-        clip = clips[0]
-        if clip.get_path_name() != object_path(role):
-            refuse(f'{role}: imported as {clip.get_path_name()}, expected {object_path(role)}')
+        if clip.get_path_name() != f'{staged_package}.{name}':
+            refuse(f'{role}: staged as {clip.get_path_name()}, expected {staged_package}.{name}')
         duration = clip.get_editor_property('sequence_length')
         if abs(duration - row['duration_s']) > DURATION_TOLERANCE_S:
             refuse(f'{role}: length {duration:.4f} s differs from the GLB {row["duration_s"]:.4f} s')
@@ -260,20 +328,33 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None, repo: P
         clip_parity = parity.structural_root_parity(ue_names, ue_parents, owner, samples)
         if not clip_parity['pass']:
             refuse(f'{role}: owner skeleton parity failed: ' + '; '.join(clip_parity['failures']))
-        results.append(dict(entry, imported=True, accepted=True, duration_s=duration,
-                            sample_rate_hz=row['fps'], sampled_rate_measured_hz=rate,
-                            same_existing_skeleton=True, skeleton_parity=clip_parity))
-    u.EditorAssetLibrary.save_directory(DEST, only_if_is_dirty=False, recursive=True)
+        staged.append((role, staged_package, dict(entry, imported=True, accepted=True, preserved_existing=False,
+                                                  duration_s=duration, sample_rate_hz=row['fps'], sampled_rate_measured_hz=rate,
+                                                  same_existing_skeleton=True, skeleton_parity=clip_parity)))
+    for role, staged_package, _ in staged:
+        if assets.does_asset_exist(package_path(object_path(role))):
+            refuse(f'{role}: final path {object_path(role)} appeared during the import; nothing replaced')
+    for role, staged_package, result in staged:
+        if not assets.rename_asset(staged_package, package_path(object_path(role))):
+            refuse(f'{role}: rename {staged_package} -> {object_path(role)} failed')
+        created.discard(staged_package)
+        moved = u.load_asset(object_path(role))
+        if not isinstance(moved, u.AnimSequence) or moved.get_editor_property('skeleton') != skeleton:
+            refuse(f'{role}: renamed asset is not the verified staged sequence')
+        results[role] = result
+    assets.save_directory(DEST, only_if_is_dirty=True, recursive=True)
     receipt = {'schema': RECEIPT_SCHEMA, 'owner': mesh.get_path_name(), 'skeleton': skeleton.get_path_name(),
-               'identity_basis': basis, 'destination': DEST, 'protected_untouched': PROTECTED_TYPING,
-               'clips': results,
-               'accepted_roles': [r['role'] for r in results if r['accepted']],
+               'identity_basis': basis, 'destination': DEST, 'protected_untouched': PROTECTED_TYPING, 'txid': txid,
+               'clips': [results[r['role']] for r in rows],
+               'accepted_roles': [r['role'] for r in rows if results[r['role']]['accepted']],
                'fit_label': 'trial', 'requires_server_reaudit': True, 'requires_native_collision_audit': True,
                'physical_contact_verified': False, 'native_seat_verified': False, 'runtime_ready': False,
                'readiness_claimed': False}
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
-    receipt_path.write_text(json.dumps(receipt, indent=2) + '\n')
-    u.log(f'SUB01_SEATED_FIT_IMPORTED accepted={",".join(receipt["accepted_roles"])}')
+    temp = receipt_path.with_name(receipt_path.name + f'.{txid}.tmp')
+    temp.write_text(json.dumps(receipt, indent=2) + '\n')
+    temp.replace(receipt_path)
+    u.log(f'SUB01_SEATED_FIT_IMPORTED accepted={",".join(receipt["accepted_roles"])} txid={txid}')
     return receipt
 
 
