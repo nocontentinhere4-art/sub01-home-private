@@ -376,11 +376,22 @@ def _states(u, actors, manifest):
     return rows
 
 
+def ensure_private_level(u, level, keep_loaded=False):
+    if keep_loaded:
+        world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
+        if world is None or world.get_path_name().split('.', 1)[0] != LEVEL:
+            raise RuntimeError('ActualHome must already be loaded; persistent tasks never reload another level')
+        return
+    if not level.load_level(LEVEL):
+        raise RuntimeError('Existing private native map is unavailable')
+
+
 def run(argv=None):
     import unreal as u
     ap = argparse.ArgumentParser()
     ap.add_argument('--root', default='/workspace/sub01-home-private/out/real-books')
     ap.add_argument('--restore', action='store_true')
+    ap.add_argument('--keep-loaded-level', action='store_true', help='Require the already loaded ActualHome; preserve the persistent editor world')
     ap.add_argument('--excision-applied', action='store_true',
                     help='root already excised the batched book triangles (manifest `excisions`); those nodes stay untouched here')
     args, _ = ap.parse_known_args(sys.argv[1:] if argv is None else argv)
@@ -388,8 +399,7 @@ def run(argv=None):
     manifest = json.loads((root / 'original-hide-manifest.json').read_text())
     level = u.get_editor_subsystem(u.LevelEditorSubsystem)
     actor_sub = u.get_editor_subsystem(u.EditorActorSubsystem)
-    if not level.load_level(LEVEL):
-        raise RuntimeError('Existing private native map is unavailable')
+    ensure_private_level(u, level, args.keep_loaded_level)
     project_dir = u.Paths.project_dir()
     if args.restore:
         return restore(u, level, actor_sub, project_dir, manifest)

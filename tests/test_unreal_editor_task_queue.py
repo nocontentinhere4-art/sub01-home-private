@@ -125,7 +125,7 @@ def test_complete_books_dispatch_uses_only_complete_packet(monkeypatch):
     monkeypatch.setattr(module.importlib, 'reload', lambda value:value)
     module.dispatch('complete_books')
     assert imports == ['unreal_import_real_shelf_books']
-    assert called == [['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied']]
+    assert called == [['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied', '--keep-loaded-level']]
     assert '/workspace/sub01-home-private/out/real-books' not in called[0]
 
 

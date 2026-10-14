@@ -82,7 +82,7 @@ def dispatch(task):
     if task == 'real_lamps':
         return module.run(Path('/workspace/sub01-home-private/out/real-lamps'))
     if task == 'complete_books':
-        return module.run(['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied'])
+        return module.run(['--root', '/workspace/sub01-home-private/out/real-books-complete', '--excision-applied', '--keep-loaded-level'])
     if task == 'desk_preflight':
         if DESK_EXPORT is None:
             raise RuntimeError('Desk export constant not reviewed; read-only task unavailable')

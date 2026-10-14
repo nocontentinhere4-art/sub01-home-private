@@ -16,6 +16,22 @@ import build_real_shelf_books as b  # noqa: E402
 import unreal_import_real_shelf_books as ui  # noqa: E402
 
 
+@pytest.mark.parametrize('world_path', ['/Game/Other.Other', '/Game/Sub01Home/UEDPIE_0_ActualHome.ActualHome', None])
+def test_persistent_import_refuses_wrong_world_without_loading(world_path):
+    world = None if world_path is None else types.SimpleNamespace(get_path_name=lambda: world_path)
+    u = types.SimpleNamespace(UnrealEditorSubsystem=object(), get_editor_subsystem=lambda _: types.SimpleNamespace(get_editor_world=lambda: world))
+    level = types.SimpleNamespace(load_level=lambda _: pytest.fail('Persistent import reloaded a world'))
+    with pytest.raises(RuntimeError, match='already be loaded'):
+        ui.ensure_private_level(u, level, keep_loaded=True)
+
+
+def test_persistent_import_preserves_existing_private_world():
+    world = types.SimpleNamespace(get_path_name=lambda: '/Game/Sub01Home/ActualHome.ActualHome')
+    u = types.SimpleNamespace(UnrealEditorSubsystem=object(), get_editor_subsystem=lambda _: types.SimpleNamespace(get_editor_world=lambda: world))
+    level = types.SimpleNamespace(load_level=lambda _: pytest.fail('Existing scene was reloaded'))
+    ui.ensure_private_level(u, level, keep_loaded=True)
+
+
 # ---------------------------------------------------------------- synthetic home pieces
 def box_tris(lo, hi):
     x0, y0, z0 = lo
