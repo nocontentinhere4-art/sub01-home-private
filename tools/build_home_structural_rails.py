@@ -74,6 +74,8 @@ def source_audit(source, expected_sha=SOURCE_SHA):
     if errors:
         from structural_rail_source_patch import select
         matched,errors=select(doc,binary,old_rails());batched=True
+        if not errors and {row['source_node_index'] for row in matched}!={162,163}:
+            errors.append({'reason':'Actual reviewed affected source nodes must be exactly162 oak and163 metal; no other geometry may be replaced'})
     return {'source_sha256':actual,'source':str(path),'old_rail_count':len(old_rails()),'matched_rails':matched,'errors':errors,'batched_source_patch':batched},doc,binary
 
 
