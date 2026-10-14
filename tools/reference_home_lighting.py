@@ -73,6 +73,9 @@ EXTERIOR_TEXTURE = '/Game/Sub01Home/Environment/TokyoResidential'  # imported fr
 EXTERIOR_GRADED_DIR = '/Game/Sub01Home/Environment/ReferenceLighting'
 EXTERIOR_GRADED_MATERIAL = 'M_Sub01ReferenceTokyoBackgroundGraded'
 EXTERIOR_GRADED_INSTANCE = 'MI_Sub01ReferenceTokyoBackgroundGraded'
+# Leveled view-direction backdrop (tools/unreal_exterior_backdrop_fix.py). When the
+# backdrop already uses this instance, presets only write its time-of-day MPC.
+EXTERIOR_LEVELED_INSTANCE = '/Game/Sub01Home/Environment/BackdropFix/MI_Sub01TokyoBackdropLevel'
 REPORT_NAME = 'reference-home-lighting.json'
 
 TOKYO_LATITUDE = 35.68
@@ -547,6 +550,14 @@ def exterior_grade(elevation_deg, preset='auto'):
     return out
 
 
+def exterior_time_factors(elevation_deg, preset='auto'):
+    """MPC scalars for the leveled backdrop; same curve as exterior_grade."""
+    if preset == 'night':
+        return {'Daylight': 0.0, 'GoldenWeight': 0.0}
+    day = _smoothstep(-12.0, 8.0, elevation_deg)
+    return {'Daylight': day, 'GoldenWeight': day * max(0.0, 1.0 - abs(elevation_deg - 3.0) / 9.0)}
+
+
 def plan(preset='auto', when=None, coordinates=None, north_source_xz=DEFAULT_NORTH_SOURCE_XZ,
          exposure_mode='clamped_auto', lamp_overrides=None):
     """Full JSON-serialisable property plan (the dry run). No ``unreal`` needed."""
@@ -594,7 +605,8 @@ def plan(preset='auto', when=None, coordinates=None, north_source_xz=DEFAULT_NOR
         'local_fog': local_fog_plan(coordinates),
         'exterior': dict(exterior_grade(elevation, preset), label=EXTERIOR_LABEL, texture=EXTERIOR_TEXTURE,
                          graded_instance=EXTERIOR_GRADED_DIR + '/' + EXTERIOR_GRADED_INSTANCE,
-                         original_material_untouched=True),
+                         original_material_untouched=True,
+                         leveled_factors=exterior_time_factors(elevation, preset)),
         'dust': 'none added: no UE particle/Niagara dust asset exists in this repository',
         'unchanged_engine_defaults_assumed': {
             'r.Lumen.HardwareRayTracing': 0, 'r.Lumen.ScreenProbeGather.ScreenTraces': 1,
@@ -768,11 +780,18 @@ def apply(preset='auto', when=None, *, u=None, actor_subsystem=None, coordinates
     # ---- apply phase ----
     # Owned graded exterior assets first (asset-only, the scene is still untouched).
     if exterior is not None:
-        instance = _ensure_exterior_instance(u, exterior_texture, data['exterior'])
         exterior_mesh = exterior.get_component_by_class(u.StaticMeshComponent)
         original = exterior_mesh.get_material(0)
         data['exterior']['original_material'] = original.get_path_name() if original else None
-        exterior_mesh.set_material(0, instance)
+        if original is not None and original.get_path_name().split('.')[0] == EXTERIOR_LEVELED_INSTANCE:
+            # Keep the leveled projection; only the time-of-day collection changes.
+            from unreal_exterior_backdrop_fix import set_time_of_day
+            factors = data['exterior']['leveled_factors']
+            set_time_of_day(u, factors['Daylight'], factors['GoldenWeight'])
+            data['exterior']['applied_to'] = 'leveled backdrop time-of-day collection'
+        else:
+            instance = _ensure_exterior_instance(u, exterior_texture, data['exterior'])
+            exterior_mesh.set_material(0, instance)
     else:
         skipped.append('exterior grade (no %s actor)' % EXTERIOR_LABEL)
     before = {}
