@@ -7,6 +7,7 @@ def test_install_is_explicit_diagnostic_only_and_preserves_five_parts():
  assert header.index('PhoneGripReview')>header.index('class Character')
  assert cpp.count(' ConfigurePrivatePhoneGripReview();')==1
  assert cpp.count(' UpdatePrivatePhoneGripReview();')==1
+ assert 'PrivateViewMode=EPrivateViewMode::Diagnostic;' in cpp
  assert 'Sub01PhoneGripDiagnostic' in cpp and 'Role!=TEXT("Phone")' in cpp
  assert 'Sub01PhoneMountCm=' in cpp and 'Sub01PhoneMountEuler=' in cpp
  assert 'PlayAnimation(Clip,false)' in cpp and 'SetPosition' in cpp

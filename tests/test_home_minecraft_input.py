@@ -105,3 +105,21 @@ def test_console_requires_worker_receipt_not_pipe_ack(tmp_path):
   result=await pending;assert result['accepted'] is False
   stream.feed_eof();await reader
  asyncio.run(run())
+
+def test_manual_activation_is_separate_from_sofa_and_never_runs_autonomous_choice(tmp_path):
+ async def run():
+  from home_minecraft import MinecraftConsole
+  c=MinecraftConsole(tmp_path);c.enabled=True;c.state={'connected':True};sent=[]
+  world=HomeWorld({'native_consumer_required':True});world.console_game='minecraft';world.activity='phone'
+  lease={'allowed':False}
+  c.native_input=SimpleNamespace(active=lambda private:lease['allowed'] and not private)
+  async def sender(p):sent.append(p);return True
+  c.send=sender
+  c.choose=lambda rel:(_ for _ in ()).throw(AssertionError('Manual ownership must not synthesize autonomous play'))
+  await c.agent_step(world,{});assert not sent and not c.active
+  lease['allowed']=True
+  await c.agent_step(world,{});assert sent[-1]=={'type':'active','value':True} and c.active
+  assert not world.activity_ready('play_console') and world.native_feedback.required
+  world.node=world.target='bathroom'
+  await c.agent_step(world,{});assert sent[-1]=={'type':'active','value':False} and not c.active
+ asyncio.run(run())

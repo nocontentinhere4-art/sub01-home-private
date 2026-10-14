@@ -19,6 +19,7 @@ void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneGripDiagnostic")))return;
  FString Role;FParse::Value(FCommandLine::Get(),TEXT("Sub01HandsDiagnostic="),Role);
  if(!HandsDiagnostic||Role!=TEXT("Phone")||!FirstPersonBody||!HandsClips.Contains(TEXT("Phone"))){UE_LOG(LogTemp,Error,TEXT("SUB01_PHONE_GRIP_REFUSED requires original captured Phone diagnostic"));return;}
+ PrivateViewMode=EPrivateViewMode::Diagnostic;
  const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("RightHand")))PhoneGripWrist=Ref.GetBoneName(I);
  if(PhoneGripWrist.IsNone())return;
