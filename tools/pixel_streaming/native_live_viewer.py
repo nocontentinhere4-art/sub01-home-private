@@ -199,9 +199,11 @@ async function refreshSettings(){
    const row=document.createElement('label');row.className='row';row.textContent='Indoor lights';const master=document.createElement('input');master.type='checkbox';master.dataset.nativeMaster='true';
    master.onchange=()=>apply({lamps:Object.fromEntries(caps.lamps.map(name=>[name,master.checked]))});row.append(master);holder.append(row);
   }
+  let lampHolder=holder;
+  if((caps.lamps||[]).length){const details=document.createElement('details');details.className='operator';const summary=document.createElement('summary');summary.textContent='Individual lights';details.append(summary);holder.append(details);lampHolder=details;}
   for(const name of caps.lamps||[]){
    const row=document.createElement('label');row.className='row';row.textContent=name.replace(/([a-z])([A-Z])/g,'$1 $2');
-   const check=document.createElement('input');check.type='checkbox';check.dataset.nativeLamp=name;check.onchange=()=>apply({lamps:{[name]:check.checked}});row.append(check);holder.append(row);
+   const check=document.createElement('input');check.type='checkbox';check.dataset.nativeLamp=name;check.onchange=()=>apply({lamps:{[name]:check.checked}});row.append(check);lampHolder.append(row);
   }
   syncSettingValues(p);
  }catch(e){}
