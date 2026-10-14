@@ -4,6 +4,7 @@ nibabel
 numpy
 scipy
 matplotlib
+pillow
 aiohttp
 scikit-image
 trimesh
