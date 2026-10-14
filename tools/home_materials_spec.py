@@ -454,6 +454,8 @@ def build_audit():
            'texture_sets': {name: texture_set_stats(name) for name in TEXTURE_SETS},
            'bed': {'source_groups': source_bed_groups(), 'group_geometry': bed_group_geometry(), 'tints': bed_tint_analysis()},
            'sofa': {'source_groups': source_sofa_groups()},
+           'wood_scale': wood_scale_audit(),
+           'presets': {name: plan([name]) for name in PRESETS},
            'glbs': []}
     for rel in REPO_GLBS:
         out['glbs'].append(audit_glb(ASSETS / rel))
@@ -470,6 +472,261 @@ def main(argv=None):
     if args.audit:
         args.audit.write_text(json.dumps(build_audit(), indent=1) + '\n')
     return 0
+
+
+
+# ---------------------------------------------------------------------------
+# Physical reference ranges (sources noted; linear albedo, GGX roughness)
+# ---------------------------------------------------------------------------
+PHYSICAL_SOURCES = {
+    'albedo_bounds': ('Dielectric albedo kept within ~0.04-0.85 linear (sRGB ~50-240): Allegorithmic/Adobe '
+                      '"The PBR Guide" vol. 2 (2015-2018), and Lagarde & de Rousiers, "Moving Frostbite to PBR", '
+                      'SIGGRAPH 2014 course notes (charcoal ~0.02-0.04, fresh snow ~0.8-0.9).'),
+    'fabric_measured': ('In-repo measured CC0 scans: queen-bed source "Original cream upholstery" texture mean '
+                        'Y 0.75; Haven oatmeal linen basecolor Y 0.49 (texture-manifest.json, no grading).'),
+    'fabric_roughness': 'Woven cotton/linen: diffuse-dominated, GGX roughness ~0.8-1.0 (Frostbite 2014, cloth).',
+    'oak_roughness': 'Oiled / lacquered oak: roughness ~0.35-0.6 (owner task brief; Poly Haven oak scan G mean 0.44).',
+    'plaster_roughness': 'Matte interior paint/plaster: ~0.85-0.95 (Poly Haven white_plaster_02 rough mean 0.91).',
+    'ceramic_roughness': 'Glazed ceramic/porcelain: ~0.05-0.25.',
+    'metals_f0': ('Metals: metallic 1 with F0 as base colour (Hoffman, "Physics and Math of Shading", SIGGRAPH '
+                  '2015: iron .56/.57/.58, aluminium .91/.92/.92); plastics/powdercoat are dielectrics, metallic 0.'),
+    'dark_wood': 'Dark stained walnut-like wood: linear albedo Y ~0.04-0.10 (above the 0.04 floor).',
+}
+
+RANGES = {
+    'fabric': {'albedo_Y': (0.04, 0.85), 'roughness': (0.75, 1.0)},
+    'oak': {'albedo_Y': (0.10, 0.50), 'roughness': (0.35, 0.60)},
+    'dark_wood': {'albedo_Y': (0.04, 0.10), 'roughness': (0.35, 0.70)},
+    'plaster': {'albedo_Y': (0.50, 0.85), 'roughness': (0.85, 0.97)},
+    'ceramic': {'albedo_Y': (0.50, 0.85), 'roughness': (0.05, 0.25)},
+}
+
+# Parameter names this script will look for on the REAL parent, in order. Only a name the
+# editor enumerates on the parent is ever used; none present -> the target is refused.
+PARAM_CANDIDATES = {
+    'base_color_factor': ('BaseColorFactor', 'Base Color Factor', 'BaseColor_Factor'),
+    'base_color_texture': ('BaseColorTexture', 'Base Color Texture', 'BaseColor_Texture'),
+    'roughness_factor': ('RoughnessFactor', 'Roughness Factor', 'Roughness_Factor'),
+    'metallic_factor': ('MetallicFactor', 'Metallic Factor', 'Metallic_Factor'),
+    'normal_scale': ('NormalScale', 'Normal Scale', 'NormalTexture_Scale'),
+}
+
+
+def tint_factor(texture_mean_linear, target_hex, target_luminance, texture_p99=None, cap=ALBEDO_MAX):
+    """Per-channel linear factor so that factor x texture_mean = target chromaticity at target luminance.
+
+    The texture's spatial variation is kept (it is multiplied, not replaced). If the brightest 1% of any
+    channel would exceed ``cap``, the whole factor is scaled down uniformly (hue kept).
+    Returns (factor, predicted_mean).
+    """
+    chroma_lin = hex_to_linear(target_hex)
+    k = target_luminance / luminance(chroma_lin)
+    target = tuple(c * k for c in chroma_lin)
+    factor = [t / max(m, 1e-6) for t, m in zip(target, texture_mean_linear)]
+    if texture_p99:
+        worst = max(f * p for f, p in zip(factor, texture_p99))
+        if worst > cap:
+            factor = [f * cap / worst for f in factor]
+    factor = tuple(round(f, 5) for f in factor)
+    return factor, mul(factor, texture_mean_linear)
+
+
+TEXTURE_SRGB = {'base_color': True, 'normal': False, 'roughness': False, 'metallic_roughness': False}
+PARAM_CANDIDATES['normal_texture'] = ('NormalTexture', 'Normal Texture', 'Normal_Texture')
+
+# Root's measurement of the real full-home.glb (2026-10-14): bed materials 98..101 all use
+# Image_14, a 512x512 PNG, 8-bit sRGB mean [144.65, 170.4, 204.73], and carry NO baseColorFactor
+# (the assembly's MixRGB tints were dropped by the Blender glTF export). The repo's lite
+# rough_linen diff.jpg (the V4 export used the lite tier) has 8-bit mean [145.3, 171.3, 205.0],
+# so its linear mean below stands in for Image_14.
+REAL_BED_TEXTURE = {'image': 'Image_14', 'size': [512, 512], 'srgb_mean_8bit': [144.65, 170.4, 204.73],
+                    'factor_present': False}
+SOFA_PARTS = ('Haven_linen', 'Haven_seams', 'Haven_legs', 'Haven_felt')
+SOFA_TINTS = {'Haven_linen': '#737e87', 'Haven_seams': '#58616a'}   # assemble_home_blender.py:401-404
+
+
+def _linen_stats():
+    path = ASSETS / 'lite/rough_linen/diff.jpg'
+    d = texture_stats(path.open('rb'), 'color')
+    return tuple(d['linear_mean']['linear']), tuple(d['linear_p99']), tuple(d['size'])
+
+
+def _haven_stats():
+    path = ASSETS / 'lite/haven-sofa/maps/linen_basecolor.jpg'
+    if not path.is_file():
+        path = ASSETS / 'haven-sofa/maps/linen_basecolor.jpg'
+    d = texture_stats(path.open('rb'), 'color')
+    return tuple(d['linear_mean']['linear']), tuple(d['linear_p99']), tuple(d['size'])
+
+
+BED_SOURCES = ('Original teal upholstery', 'Original cream upholstery', 'Original linen upholstery',
+               'Original blue_fabric upholstery')
+BED_SIGNATURE = {'sizes': [[512, 512], [511, 512], [1024, 1026]],
+                 'source': 'real Image_14 512x512 (root); repo rough_linen diff.jpg lite 511x512 / full 1024x1026'}
+
+
+def _norm(name):
+    import re
+    s = re.sub(r'[^0-9a-z]+', '_', str(name).rsplit('/', 1)[-1].split('.')[0].lower()).strip('_')
+    s = re.sub(r'^(mi|m|mat|material)_', '', s)
+    return re.sub(r'(_\d{3})+$', '', s)
+
+
+def intended_factor(target, material_path):
+    """The linear factor a target wants on one ORIGINAL material."""
+    if 'factor' in target:
+        return target['factor']
+    key = _norm(material_path)
+    for name, factor in target['factors'].items():
+        if _norm(name) == key:
+            return factor
+    raise KeyError('%s has no factor for %s' % (target['id'], material_path))
+
+
+def _bed_target(target_id, factors, why, optional):
+    mean, _, _ = _linen_stats()
+    predicted = {k: {'before_real (factor lost, white)': describe(mean),
+                     'after': describe(mul(v, mean))} for k, v in factors.items()}
+    return {'id': target_id, 'class': 'fabric', 'match': 'material_name', 'source_materials': list(BED_SOURCES),
+            'expected_materials': 4, 'same_texture': True, 'optional': optional,
+            'factors': {k: [round(c, 5) for c in v] for k, v in factors.items()},
+            'texture_signature': BED_SIGNATURE, 'why': why, 'predicted': predicted,
+            'texture_linear_mean_used': [round(c, 4) for c in mean]}
+
+
+def preset_bed_intended():
+    """Restore exactly the assembly's lost tints (linear factors), nothing else."""
+    factors = {name: hex_to_linear(BED_TINTS['teal'] if 'teal' in name else BED_TINTS['other_upholstery'])
+               for name in BED_SOURCES}
+    return _bed_target('bed-intended', factors,
+                       'assemble_home_blender.py:383 tints lost by the Blender glTF export; restored as linear '
+                       'baseColorFactor. Note: ivory x blue linen is still blue-grey (#8da4bd).', False)
+
+
+def preset_bed_balanced():
+    """OPTIONAL: same groups, factors also cancel the linen scan's blue cast (white balance)."""
+    mean, p99, _ = _linen_stats()
+    factors = {}
+    for name in BED_SOURCES:
+        if 'teal' in name:
+            factors[name] = tint_factor(mean, BED_TINTS['teal'], 0.20, p99)[0]
+        else:
+            factors[name] = tint_factor(mean, BED_TINTS['other_upholstery'], 0.62, p99)[0]
+    return _bed_target('bed-balanced', factors,
+                       'Option for root: the intended hues (#f7f4eb ivory, #b99845 ochre headboard) after '
+                       'cancelling the blue scan cast; ivory at Y 0.62 (CC0 cream upholstery scan Y 0.75, '
+                       'linen Y 0.49), ochre at dyed-textile Y 0.20.', True)
+
+
+def _sofa_target(part):
+    mean, _, size = _haven_stats()
+    factor = [round(c, 5) for c in hex_to_linear(SOFA_TINTS[part])]
+    return {'id': 'sofa-intended-' + part.split('_')[1], 'class': 'fabric', 'match': 'actor_prefix',
+            'actor_prefixes': [part], 'source_materials': [part], 'expected_materials': 1, 'optional': True,
+            'factor': factor, 'texture_signature': None,
+            'why': 'assemble_home_blender.py:401-404 tint %s, applied only if the inventory shows it lost '
+                   '(white factor); refused if a different non-white factor is present.' % SOFA_TINTS[part],
+            'predicted': {'before_if_lost': describe(mean), 'after': describe(mul(factor, mean))}}
+
+
+PRESETS = {'bed-intended': preset_bed_intended, 'bed-balanced': preset_bed_balanced,
+           'sofa-intended': lambda: [_sofa_target('Haven_linen'), _sofa_target('Haven_seams')]}
+DEFAULT_PRESETS = ('bed-intended',)
+
+
+def plan(presets=DEFAULT_PRESETS):
+    unknown = [p for p in presets if p not in PRESETS]
+    if unknown:
+        raise ValueError('unknown preset(s): %s' % unknown)
+    targets = []
+    for p in dict.fromkeys(presets):
+        made = PRESETS[p]()
+        targets.extend(made if isinstance(made, list) else [made])
+    seen = {}
+    for t in targets:
+        for name in t['source_materials']:
+            if name in seen:
+                raise ValueError('duplicate target material %r in %s and %s' % (name, seen[name], t['id']))
+            seen[name] = t['id']
+    return {'schema': 'sub01.home-materials-plan.v1', 'presets': list(presets), 'targets': targets,
+            'real_bed_texture': REAL_BED_TEXTURE, 'sources': PHYSICAL_SOURCES, 'visual_match_claimed': False}
+
+
+def validate_target(target):
+    """Physical-range check of every predicted 'after' mean; returns a list of problems."""
+    problems = []
+    rng = RANGES[target['class']]
+    for name, pred in target['predicted'].items():
+        after = pred['after'] if isinstance(pred, dict) and 'after' in pred else target['predicted']['after']
+        y = after['luminance']
+        if not rng['albedo_Y'][0] <= y <= rng['albedo_Y'][1]:
+            problems.append('%s/%s predicted Y %.3f outside %s' % (target['id'], name, y, rng['albedo_Y']))
+        if max(after['linear']) > ALBEDO_MAX:
+            problems.append('%s/%s channel above %.2f' % (target['id'], name, ALBEDO_MAX))
+        if not isinstance(pred, dict) or 'after' not in pred:
+            break
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# Wood scale (texel density) maths
+# ---------------------------------------------------------------------------
+def plank_seams(path, axis=0, window=12, sigma=2.0, merge_px=10):
+    """Pixel positions of dark plank seams across ``axis`` (0: seams are rows, planks run along x)."""
+    import numpy as np
+    from PIL import Image
+    a = np.asarray(Image.open(path).convert('L'), dtype=np.float64)
+    profile = a.mean(axis=1 - axis)
+    n = len(profile)
+    base = np.array([np.median(profile[max(0, i - window):i + window + 1]) for i in range(n)])
+    d = profile - base
+    thr = -sigma * float(np.std(d))
+    out = []
+    for i in range(1, n - 1):
+        if d[i] < thr and d[i] <= d[i - 1] and d[i] <= d[i + 1]:
+            if out and i - out[-1] < merge_px:
+                if d[i] < d[out[-1]]:
+                    out[-1] = i
+            else:
+                out.append(i)
+    return out, n
+
+
+def plank_width_cm(seams, pixels, coverage_m):
+    """Median seam spacing converted to centimetres at the scan's physical coverage."""
+    gaps = sorted(b - a for a, b in zip(seams, seams[1:]))
+    if not gaps:
+        return None
+    mid = len(gaps) // 2
+    median = gaps[mid] if len(gaps) % 2 else 0.5 * (gaps[mid - 1] + gaps[mid])
+    return 100.0 * coverage_m * median / pixels
+
+
+def cm_per_repeat(coverage_m=None, uv_per_metre=None, repeat=1.0):
+    """World centimetres covered by one texture tile. Either the scan coverage (metric UVs:
+    1 UV = coverage metres, e.g. home.js floor() repeat w/1.2), or measured UV units per metre."""
+    if uv_per_metre:
+        return 100.0 / (uv_per_metre * repeat)
+    return 100.0 * coverage_m / repeat
+
+
+def uv_tiling_for_plank(measured_width_cm, target_width_cm):
+    """Tiling multiplier that turns the measured plank width into the target width."""
+    return measured_width_cm / target_width_cm
+
+
+def wood_scale_audit():
+    out = {}
+    for name in ('home_oak_floor', 'home_oak_veneer'):
+        folder, coverage, _ = TEXTURE_SETS[name]
+        seams, n = plank_seams(ASSETS / folder / 'diff.jpg', axis=0)
+        out[name] = {'coverage_m': coverage, 'seams_px': seams, 'pixels': n,
+                     'plank_width_cm': round(plank_width_cm(seams, n, coverage), 2) if len(seams) > 1 else None,
+                     'reference': 'solid oak boards ~12-20 cm; Japanese composite flooring grooves 7.5 / 15 cm',
+                     'note': 'seam detector: row-mean luminance dips > 2 sd below a 25 px running median'}
+    out['floor_cm_per_repeat'] = cm_per_repeat(coverage_m=1.2, repeat=1.0)
+    out['queen_bed_oak_cm_per_repeat'] = round(cm_per_repeat(uv_per_metre=0.99 / (1 * 1.83)), 1)
+    return out
 
 
 if __name__ == '__main__':

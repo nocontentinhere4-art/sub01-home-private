@@ -1,6 +1,6 @@
 # Home materials fix (proposed, private)
 
-Status: audit increment 1. No Unreal, Blender or pod action was taken by this
+Status: increment 2 (audit, mapping check and bed/sofa restore patch). No Unreal, Blender or pod action was taken by this
 author. Nothing here has been rendered; **no visual match with the SimbasJungles
 reference is claimed** (the reference was not viewed). Root owns all UE runs.
 
@@ -96,3 +96,128 @@ Minimal fix options (no change to the assemble script):
 
 All the source textures are CC0 (Poly Haven scans listed in `web/house/assets/manifest.json`;
 haven-sofa maps are CC0 Innerscene, see `texture-manifest.json`).
+
+## 3. Ground truth from root (real `full-home.glb`, measured on the server)
+
+- Bed materials 98..101 (`Original teal/cream/linen/blue_fabric upholstery.001`):
+  - all four use `baseColorTexture` 108/110/112/114, which resolve to source 15 = `Image_14`
+    (512×512 PNG, 8-bit sRGB mean [144.65, 170.4, 204.73]), the same blue linen in all four;
+  - **none of them carries a `baseColorFactor`**;
+  - roughness is 0.92, normalScale 0.22, UV 2×.
+- So the Blender glTF export dropped the assembly's MixRGB tints. Every upholstery group
+  renders as the raw blue linen: linear mean (0.285, 0.409, 0.611), #91abcd, Y 0.397, hue 214°.
+  This uses the repo lite `rough_linen/diff.jpg`, 8-bit mean [145.3, 171.3, 205.0], as the
+  stand-in for Image_14.
+- What the source design intended, computed linear-correct:
+
+| group (role) | intended tint | predicted mean after restoring the factor |
+|---|---|---|
+| CC0_queen_1 (headboard) | #b99845 | #686436, Y 0.124, hue 56° (khaki/olive, not clean ochre) |
+| CC0_queen_2/3/4 (mattress, pillows, duvet) | #f7f4eb | **#8da4bd, Y 0.358, hue 211° (blue-grey)** |
+
+  The designer clearly intended a warm ivory duvet ("ivory bedding" in home.js:900) and an
+  ochre accent. With the blue scan, however, the restored factors still give a blue-grey bed.
+  Warm ivory needs the blue cast neutralised. That is the separate, optional
+  `bed-balanced` preset, for root to decide:
+
+| group | `bed-balanced` linear factor | predicted mean |
+|---|---|---|
+| headboard | (1.0269, 0.4625, 0.0587) | #937835, Y 0.20, hue 43° (the #b99845 hue) |
+| mattress/pillows/duvet | (2.2396, 1.5158, 0.9319) | #d1cec7, Y 0.62, hue 45° (the #f7f4eb hue) |
+
+  This white-balances through the factor only (the texture's spatial variation is about ±4/255,
+  so a factor is equivalent to desaturating it). Factors above 1 are needed because the scan's
+  red mean is 0.285. The brightest 1 % of texels stays ≤ 0.85.
+- Sofa: `assemble_home_blender.py:401-404` tints `Haven_linen` #737e87 and `Haven_seams`
+  #58616a with the same `set_base`, so the same loss probably applies. If the inventory shows a
+  white factor, the Haven oatmeal linen (#c4b9a7, Y 0.49) renders raw. `sofa-intended`
+  (optional) restores #737e87 → #575a56 (Y 0.10) and #58616a → #424443 (Y 0.057). If the
+  inventory shows the intended factor already present, the preset does nothing. If it shows
+  any other non-white factor, the preset is refused.
+
+## 4. The patch: `tools/unreal_home_materials_fix.py` + `tools/home_materials_spec.py`
+
+| preset | default | targets (by source material name / actor prefix) | override |
+|---|---|---|---|
+| `bed-intended` | yes | the 4 upholstery materials, exactly 4 distinct, same base texture | base-colour factor = the exact assembly tint, linearised |
+| `bed-balanced` | no (alternative; refused together with `bed-intended`) | same 4 | white-balanced factor (table above) |
+| `sofa-intended` | no | actors `Haven_linen`, `Haven_seams` (1 material each) | #737e87 / #58616a linear |
+
+Guarantees (each covered by `tests/test_home_materials_fix.py`, fake `unreal`):
+- **Mapping first.** The bed slots are compared with the measured source groups: material name
+  ⇄ `CC0_queen_N` actor/component/mesh identity.
+  - Any slot bound to another group's material, a group with two materials, the headboard
+    material on another bed part, a missing group or an ambiguous identity is a refusal.
+  - Root's read-only inventory (`tools/unreal_home_visual_inventory.py`, schema
+    `sub01-private-actual-visual-inventory-v1`) is parsed directly by `--mapping-check
+    --inventory` (exit 2 when it is not safe). The live enumeration is the fallback.
+- **No invented parameters.** Only a name the editor enumerates on the real parent is used
+  (`BaseColorFactor` / `Base Color Factor` / `BaseColor_Factor`, first match). If none
+  exists, the target is refused.
+  - The owned `SUB01_MatFix_Master` is used only with the explicit `--allow-owned-master`.
+    It provides BaseColorTexture × Tint with optional Desaturation, Roughness,
+    NormalTexture × NormalStrength, UVTiling and Metallic. It reuses the original texture
+    assets and checks their colour space: base colour sRGB, normal/roughness non-sRGB.
+- **Current factor guard.** It must be white (tint lost) or already the intended value
+  (the material is then skipped). Anything else is a refusal.
+- **Texture signature.** In live mode the base texture must be 512×512 (real Image_14), or
+  the repo's 511×512 / 1024×1026 linen. All four bed materials must share one texture.
+- **Additive only.** Owned MICs `/Game/Sub01Home/MaterialFix/SUB01_MatFix_<source>` are
+  parented to the original. Assignment is per exact component path + slot.
+  - Transform, mesh, collision and profile are fingerprinted before and after; any difference
+    aborts before the save.
+  - The original material per slot is recorded once in
+    `<project>/Saved/SUB01MaterialFix/backup.json`. The map is copied to
+    `Saved/PrivateMapBackups/<ns>-materials-fix` first.
+  - A second run changes nothing. `--restore` puts every recorded slot back.
+
+## 5. Root commands
+
+```bash
+# 0. pure plan, anywhere
+python3 tools/unreal_home_materials_fix.py --dry-run                       # bed-intended
+python3 tools/unreal_home_materials_fix.py --dry-run --preset bed-balanced --preset sofa-intended
+# 1. mapping check on root's existing read-only inventory JSON (no editor)
+python3 tools/unreal_home_materials_fix.py --mapping-check --inventory <inventory.json> --preset bed-intended --preset sofa-intended
+# 1b. or live, read-only, in the editor
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --mapping-check --quit" -unattended -nosplash
+# 2. apply (only after the mapping report is clean)
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --apply --preset bed-intended --quit" -unattended -nosplash
+# 3. rollback
+UnrealEditor-Cmd <project>/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome \
+  -ExecutePythonScript="<repo>/tools/unreal_home_materials_fix.py --restore --quit" -unattended -nosplash
+# real-GLB audit (server)
+python3 tools/home_materials_spec.py --glb <project>/SourceAssets/full-home.glb > full-home-materials.json
+```
+
+Order: the material fix is independent of lights and post. Run it **after**
+`tools/unreal_exterior_backdrop_fix.py` and **before** `tools/reference_home_lighting.py --apply`
+so that exposure/grade frames are judged on the corrected albedo. It touches no light, PPV,
+fog or backdrop actor, and those scripts touch no interior mesh material.
+
+## 6. Before/after frames (derived positions, verify with the import transform)
+
+Runtime → UE uses (x, y, z) m → (100x, 100z, 100y) cm. This was checked against the monitor
+pivot (2, 1.16, −3.276) ↔ (200, −327.6, 116).
+
+| shot | camera UE cm | look-at UE cm | look for |
+|---|---|---|---|
+| bed close-up | (−100, −100, 420) | (−240, −260, 355) | duvet/mattress/pillows no longer raw blue linen; headboard hue distinct from the duvet; weave still visible |
+| sofa | (−160, 10, 140) | (−360, 10, 60) | linen/seam tone vs the floor (only if `sofa-intended` is applied) |
+| desk + wood floor | (200, −75, 165) | (200, −300, 75) | control frame: must be unchanged by `bed-intended` |
+| kitchen | (−180, −180, 165) | (−220, −350, 120) | control frame: must be unchanged |
+
+Same exposure, time preset and post settings before and after. Compare the mean pixel hue
+of a duvet crop: it should move from ≈214° (blue) toward the predicted value. Desk and
+kitchen frames should be pixel-identical, apart from GI noise.
+
+## 7. Wood scale (measured, no change proposed yet)
+
+`home_oak_floor/diff.jpg` (1.2 m scan) has 12 seams with a median spacing of 81 px, i.e.
+**≈9.5 cm planks**. That is narrower than 12–20 cm solid boards, but within Japanese
+composite flooring grooves (7.5/15 cm). The floor repeats every 120 cm (home.js `floor()`
+repeat w/1.2), and the queen-bed oak every ≈185 cm. The floor roughness map G mean is 0.442
+× 0.92, giving ≈0.41: plausible for oiled oak. `M.darkwood` mean Y 0.0155 is below the 0.04
+floor; that preset is next.
