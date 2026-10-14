@@ -119,6 +119,12 @@
     }
   ],
   "lamp_relocation": {
+    "actual_saved_lamp_receipt": "out/house-evidence/20261014-unreal-real-lamps-report.json",
+    "actual_actor_origin_ue_cm": [92.32937, -314.53013, 84.49999],
+    "actual_bulb_ue_cm": [110, -315, 154.06086],
+    "actual_light_ue_cm": [110, -315, 135],
+    "native_relocation_verified": false,
+    "measured_limitation": "The model origin differs from the bulb centre. A 45cm shift alone does not prove foot or shade support. The existing light is approximately 19.06cm below the bulb; exact geometry and paired-light review remain required before activation.",
     "new_centre_ue_cm": [
       155,
       -315
