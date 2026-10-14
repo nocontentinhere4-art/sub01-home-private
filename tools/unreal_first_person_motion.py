@@ -1,7 +1,8 @@
 """First-person motion refinement; no pawn placement or skeletal pose changes.
 
 Renderer owns integration/build. Manual input and CharacterMovement properties
-remain intact; only automatic Live gaze and legacy procedural body sway change.
+remain intact. Authored walk playback follows actual planar speed through braking,
+using the existing 140 cm/s playback reference, without a minimum cadence floor.
 """
 from pathlib import Path
 
@@ -9,6 +10,10 @@ POLICY=r'''#pragma once
 #include <algorithm>
 #include <cmath>
 namespace Sub01FirstPersonMotion {
+inline double AuthoredWalkRate(double PlanarSpeed,double ReferenceSpeed=140.){
+ if(!std::isfinite(PlanarSpeed)||PlanarSpeed<=0||!std::isfinite(ReferenceSpeed)||ReferenceSpeed<=0)return 0;
+ return std::clamp(PlanarSpeed/ReferenceSpeed,0.,1.2);
+}
 inline double SmoothAngle(double Current,double Target,double Dt,double MaxDegreesPerSecond){
  if(!std::isfinite(Current))return 0;
  if(!std::isfinite(Target)||!std::isfinite(Dt)||Dt<=0||!std::isfinite(MaxDegreesPerSecond)||MaxDegreesPerSecond<=0)return Current;
@@ -36,6 +41,8 @@ SWAY=r''' MotionWeight=FMath::FInterpTo(MotionWeight,Weight,DeltaSeconds,10);
  }
 '''
 AUTHORED_ONLY=' // The captured skeletal clip supplies motion; no extra procedural body sine.\n if(!HandsDiagnosticSeat)FirstPersonBody->SetRelativeLocation(HandsBaseOffset);\n'
+WALK_RATE='FMath::Clamp(Speed/140.f,.1f,1.2f)'
+MEASURED_WALK_RATE='float(Sub01FirstPersonMotion::AuthoredWalkRate(Speed))'
 
 def stage(module):
     (Path(module)/'Sub01FirstPersonMotionPolicy.h').write_text(POLICY)
@@ -43,7 +50,7 @@ def stage(module):
 def install(header,cpp):
     include='#include "Sub01HomeLab.h"'
     method='void ASub01HomeCharacter::UpdateLiveHome(float Dt){'
-    if cpp.count(include)!=1 or cpp.count(method)!=1 or cpp.count(SWAY)!=1:
+    if cpp.count(include)!=1 or cpp.count(method)!=1 or cpp.count(SWAY)!=1 or cpp.count(WALK_RATE)!=1:
         raise ValueError('Unique original native Live look and body-sway hooks required')
     start=cpp.index(method);end=cpp.index('\n}',start)+2
     live=cpp[start:end]
@@ -51,4 +58,4 @@ def install(header,cpp):
         raise ValueError('Unique Live gaze hook required; diagnostic route is separate')
     cpp=cpp[:start]+live.replace(SNAP,SMOOTH,1)+cpp[end:]
     cpp=cpp.replace(include,include+'\n#include "Sub01FirstPersonMotionPolicy.h"',1)
-    return header,cpp.replace(SWAY,AUTHORED_ONLY,1)
+    return header,cpp.replace(SWAY,AUTHORED_ONLY,1).replace(WALK_RATE,MEASURED_WALK_RATE,1)
