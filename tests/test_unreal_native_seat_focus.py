@@ -22,6 +22,7 @@ double LiveHomePollAt=100,LiveHomeLastReceived=10,LiveHomeProgressAt=0,LiveHomeB
 std::string LiveHomeNode="desk",LiveHomeActivity="use_computer";
 bool ackReady=true;bool NativeFeedbackSeatReady(){return ackReady;}
 void BeginLiveHome(){}void PollLiveHome(){}void UpdateNativeFeedback(){}
+double LiveHomeRecoverAt=0;void RecoverLiveHome(double){} // blocked recovery: tests/test_unreal_live_home_recovery.py
 void update(float Dt){
 '''
   cases='''}

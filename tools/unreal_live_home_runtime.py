@@ -22,6 +22,13 @@ FIELDS=r'''
  double LiveHomePollAt=0,LiveHomeLastReceived=0,LiveHomeProgressAt=0;
  float LiveHomeBest=BIG_NUMBER;
  TMap<FString,FVector> LiveHomeNodes;TMap<FString,TArray<FString>> LiveHomeEdges;
+ bool FindLiveHomePath(const FString& Start,const FString& Target,TArray<FString>& Out) const;
+ void BlockLiveHome(const FString& Next,double Now); void RecoverLiveHome(double Now);
+ // Bounded blocked-route recovery: hold the real blocked state, then retry or replan
+ // from the endpoint actually reached. Budget resets only with a new command.
+ static constexpr int32 LiveHomeMaxRecoveries=2; static constexpr double LiveHomeBlockedHold=1.0;
+ int32 LiveHomeRecoveries=0; double LiveHomeRecoverAt=0;
+ FString LiveHomeBlockedFrom,LiveHomeBlockedTo; TSet<FString> LiveHomeAvoid;
 '''
 METHODS=r'''
 #include "HttpModule.h"
@@ -55,22 +62,59 @@ void ASub01HomeCharacter::PollLiveHome(){
   if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Response->GetContentAsString()),Doc)){LiveHomeFresh=false;return;}ApplyLiveHome(Doc);
  });Request->ProcessRequest();
 }
-void ASub01HomeCharacter::PlanLiveHome(const FString& Target){
- if(!LiveHomeNodes.Contains(Target)){LiveHomeFresh=false;return;}
- // Replan from our next actually traversed edge endpoint, not the backend's
- // already-ahead node. Finish that physical edge before following the new path.
- const FString Start=LiveHomePath.Num()?LiveHomePath[0]:LiveHomeNode;
+bool ASub01HomeCharacter::FindLiveHomePath(const FString& Start,const FString& Target,TArray<FString>& Out) const{
+ // Shortest source-graph route, skipping edges this command found physically blocked.
+ Out.Empty();if(!LiveHomeNodes.Contains(Start)||!LiveHomeNodes.Contains(Target))return false;
  TArray<FString> Open;Open.Add(Start);TMap<FString,FString> Previous;Previous.Add(Start,TEXT(""));TMap<FString,double> Costs;Costs.Add(Start,0);
  while(Open.Num()){
   int32 Best=0;for(int32 I=1;I<Open.Num();++I)if(Costs.FindChecked(Open[I])<Costs.FindChecked(Open[Best]))Best=I;
   const FString Current=Open[Best];Open.RemoveAt(Best);if(Current==Target)break;
-  for(const FString& Next:LiveHomeEdges.FindChecked(Current)){const double Cost=Costs.FindChecked(Current)+FVector::Dist(LiveHomeNodes.FindChecked(Current),LiveHomeNodes.FindChecked(Next));const double* Known=Costs.Find(Next);if(!Known||Cost<*Known){Costs.Add(Next,Cost);Previous.Add(Next,Current);Open.AddUnique(Next);}}
+  for(const FString& Next:LiveHomeEdges.FindChecked(Current)){if(LiveHomeAvoid.Contains(Current+TEXT(">")+Next))continue;const double Cost=Costs.FindChecked(Current)+FVector::Dist(LiveHomeNodes.FindChecked(Current),LiveHomeNodes.FindChecked(Next));const double* Known=Costs.Find(Next);if(!Known||Cost<*Known){Costs.Add(Next,Cost);Previous.Add(Next,Current);Open.AddUnique(Next);}}
  }
- if(!Previous.Contains(Target)){LiveHomeFresh=false;return;}TArray<FString> Path;FString Node=Target;
- while(Node!=Start){Path.Insert(Node,0);Node=Previous.FindChecked(Node);}if(Start!=LiveHomeNode)Path.Insert(Start,0);
+ if(!Previous.Contains(Target))return false;
+ FString Node=Target;while(Node!=Start){Out.Insert(Node,0);Node=Previous.FindChecked(Node);}
+ return true;
+}
+void ASub01HomeCharacter::PlanLiveHome(const FString& Target){
+ if(!LiveHomeNodes.Contains(Target)){LiveHomeFresh=false;return;}
+ // Replan from our next actually traversed edge endpoint, not the backend's
+ // already-ahead node. Finish that physical edge before following the new path,
+ // unless that edge is blocked: then start from the endpoint actually reached.
+ const bool FromReached=LiveHomeBlocked||!LiveHomePath.Num();
+ const FString Start=FromReached?LiveHomeNode:LiveHomePath[0];
+ // A new command starts with no remembered obstruction and a full recovery budget.
+ LiveHomeAvoid.Empty();LiveHomeRecoveries=0;LiveHomeRecoverAt=0;LiveHomeBlockedFrom.Empty();LiveHomeBlockedTo.Empty();
+ TArray<FString> Path;if(!FindLiveHomePath(Start,Target,Path)){LiveHomeFresh=false;return;}
+ if(Start!=LiveHomeNode)Path.Insert(Start,0);else if(LiveHomeBlocked)Path.Insert(LiveHomeNode,0); // walk back, never placed
  NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
  LiveHomePath=MoveTemp(Path);LiveHomeTarget=Target;LiveHomeBlocked=false;LiveHomeBest=BIG_NUMBER;LiveHomeProgressAt=FPlatformTime::Seconds();
  UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_ROUTE actualNode=%s target=%s remaining=%d"),*LiveHomeNode,*Target,LiveHomePath.Num());
+}
+void ASub01HomeCharacter::BlockLiveHome(const FString& Next,double Now){
+ // Real stall: stop, keep "blocked" for at least two feedback periods so the
+ // backend records it, and never move the pawn other than by movement input.
+ LiveHomeBlocked=true;GetCharacterMovement()->StopMovementImmediately();NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);
+ LiveHomeBlockedFrom=LiveHomeNode;LiveHomeBlockedTo=Next;
+ // Stalling on the way back to the endpoint actually reached, or an exhausted
+ // budget, leaves him blocked until the backend issues a new command.
+ const bool Final=Next==LiveHomeNode||LiveHomeRecoveries>=LiveHomeMaxRecoveries;
+ LiveHomeRecoverAt=Final?0:Now+LiveHomeBlockedHold;
+ UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s next=%s target=%s attempt=%d/%d final=%d; collision not bypassed"),*LiveHomeNode,*Next,*LiveHomeTarget,LiveHomeRecoveries,LiveHomeMaxRecoveries,Final?1:0);
+}
+void ASub01HomeCharacter::RecoverLiveHome(double Now){
+ LiveHomeRecoverAt=0;++LiveHomeRecoveries;
+ // First retry the same edge (a closing door, a passing obstruction), then avoid it.
+ // While private, only retry: no detour through other rooms under a censored view.
+ const bool Replan=LiveHomeRecoveries>1&&!LiveHomePrivate;
+ if(Replan){LiveHomeAvoid.Add(LiveHomeBlockedFrom+TEXT(">")+LiveHomeBlockedTo);LiveHomeAvoid.Add(LiveHomeBlockedTo+TEXT(">")+LiveHomeBlockedFrom);}
+ TArray<FString> Path;
+ if(!FindLiveHomePath(LiveHomeNode,LiveHomeTarget,Path)){
+  UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s next=%s target=%s attempt=%d/%d final=1; no physical route avoids the blocked edge"),*LiveHomeNode,*LiveHomeBlockedTo,*LiveHomeTarget,LiveHomeRecoveries,LiveHomeMaxRecoveries);return;
+ }
+ // Walk back to the endpoint actually reached first; the pawn is never placed there.
+ Path.Insert(LiveHomeNode,0);
+ LiveHomePath=MoveTemp(Path);LiveHomeBlocked=false;LiveHomeBest=BIG_NUMBER;LiveHomeProgressAt=Now;
+ UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_RECOVERY mode=%s from=%s target=%s attempt=%d/%d remaining=%d"),Replan?TEXT("replan"):TEXT("retry"),*LiveHomeNode,*LiveHomeTarget,LiveHomeRecoveries,LiveHomeMaxRecoveries,LiveHomePath.Num());
 }
 void ASub01HomeCharacter::ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc){
  FString Schema;if(!Doc.IsValid()||!Doc->TryGetStringField(TEXT("schema"),Schema)||Schema!=TEXT("sub01.home-state.v1")){LiveHomeFresh=false;return;}
@@ -90,6 +134,8 @@ void ASub01HomeCharacter::ApplyLiveHome(const TSharedPtr<FJsonObject>& Doc){
 void ASub01HomeCharacter::UpdateLiveHome(float Dt){
  if(!LiveHome){if(LiveHomeBindWaiting)BeginLiveHome();return;}const double Now=FPlatformTime::Seconds();if(Now>=LiveHomePollAt)PollLiveHome();
  UpdateNativeFeedback();
+ // Recover only on a fresh command, after the blocked state has been held and reported.
+ if(LiveHomeBlocked&&LiveHomeRecoverAt>0&&Now>=LiveHomeRecoverAt&&LiveHomeFresh&&Now>=LiveHomeLastReceived&&Now-LiveHomeLastReceived<=3)RecoverLiveHome(Now);
  // Privacy blacks the view and revokes device input; it must not freeze the
  // authenticated physical trip into or out of the bathroom.
  if(LiveHomePrivate){NativeSeatVerified=false;if(PCBridge)PCBridge->SetOperatorFocus(false);}
@@ -105,7 +151,7 @@ void ASub01HomeCharacter::UpdateLiveHome(float Dt){
   UE_LOG(LogTemp,Display,TEXT("SUB01_LIVE_HOME_REACHED node=%s pawn=%s floor=1 solidFloorCm=%.4f nominalFootCm=%.4f expectedFloorCm=%.4f"),*Next,*Here.ToString(),SolidFloorZ,Here.Z-GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),Floor.Z);return;
  }
  const float Score=Distance+Height;if(Score<LiveHomeBest-1){LiveHomeBest=Score;LiveHomeProgressAt=Now;}
- if(Now-LiveHomeProgressAt>4){LiveHomeBlocked=true;GetCharacterMovement()->StopMovementImmediately();UE_LOG(LogTemp,Warning,TEXT("SUB01_LIVE_HOME_BLOCKED node=%s target=%s; collision not bypassed"),*LiveHomeNode,*Next);return;}
+ if(Now-LiveHomeProgressAt>4){BlockLiveHome(Next,Now);return;}
  if(Controller&&Distance>1){Controller->SetControlRotation(FRotator(-4,Delta.Rotation().Yaw,0));AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));}
 }
 '''
