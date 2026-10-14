@@ -54,3 +54,36 @@ int main(){Document doc;Handler handler{&doc};
  assert 'FMath::Abs(Animation->GetCurrentTime()-PhoneGripPoseTime)>.01f' in phone.METHODS
  assert 'Offset.ContainsNaN()||Rotation.ContainsNaN()||Offset.Size()>30' in phone.METHODS
  assert 'if(!FMath::IsFinite(Time))return;' in phone.METHODS
+
+def test_measured_eye_camera_refuses_other_owner_clip_and_pose(tmp_path):
+ import shutil,subprocess,re,pytest
+ compiler=shutil.which('c++')
+ if not compiler:pytest.skip('C++ compiler unavailable')
+ guard=re.search(r' if\(EyeCamera&&\(FMath::Abs\(Time-4\.f\).*?\n',phone.METHODS).group(0)
+ source=tmp_path/'eye_gate.cpp';binary=tmp_path/'eye_gate'
+ source.write_text(r'''
+#include <string>
+#include <cmath>
+#include <cassert>
+#define TEXT(x) x
+#define UE_LOG(...)
+struct FMath{static float Abs(float x){return std::fabs(x);}};
+struct Asset{std::string path;std::string GetPathName(){return path;}};
+struct Body{Asset* mesh;Asset* GetSkeletalMeshAsset(){return mesh;}};
+bool Check(bool EyeCamera,float Time,Body* FirstPersonBody,Asset* Clip){bool accepted=false;auto Run=[&](){
+'''+guard+r'''
+accepted=true;};Run();return accepted;}
+int main(){Asset owner{"/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner"};Asset clip{"/Game/Sub01Hands/FBX/SUB01_Phone.SUB01_Phone"};Body body{&owner};
+ assert(Check(true,4,&body,&clip));assert(!Check(true,3.9f,&body,&clip));
+ owner.path="other-owner";assert(!Check(true,4,&body,&clip));
+ owner.path="/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner";clip.path="other-clip";assert(!Check(true,4,&body,&clip));
+ assert(Check(false,3.9f,&body,&clip));
+}
+''')
+ subprocess.run([compiler,'-std=c++17',str(source),'-o',str(binary)],check=True,capture_output=True)
+ subprocess.run([str(binary)],check=True,capture_output=True)
+ assert 'if(HeadCamera&&EyeCamera)' in phone.METHODS
+ assert 'H.GetRotation().GetNormalized().RotateVector' in phone.METHODS
+ assert 'A->GetCurrentAsset()!=PhoneGripCapturedClip.Get()' in phone.METHODS
+ assert 'FMath::Abs(A->GetCurrentTime()-4.f)>.01f' in phone.METHODS
+ assert 'PrivateViewMode!=EPrivateViewMode::Diagnostic&&ViewCamera)ViewCamera->SetUsingAbsoluteLocation(false)' in phone.METHODS
