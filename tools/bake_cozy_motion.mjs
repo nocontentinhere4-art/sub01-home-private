@@ -6,8 +6,8 @@ import {pathToFileURL} from 'node:url';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 
-const args=process.argv.slice(2);
-const inPlace=args.at(-1)==='--in-place';if(inPlace)args.pop();
+const supplied=process.argv.slice(2),inPlace=supplied.includes('--in-place'),rigidBones=supplied.includes('--rigid-bones');
+const args=supplied.filter(x=>!['--in-place','--rigid-bones'].includes(x));
 assert.equal(args.length,4,'Usage: node tools/bake_cozy_motion.mjs COZY_PACKAGE MOTION.npz OWNER.glb OUT.glb');
 const [cozy,motionPath,ownerPath,outPath]=args.map(p=>path.resolve(p));
 const moduleAt=p=>import(pathToFileURL(path.join(cozy,p)).href);
@@ -54,6 +54,7 @@ const rotations=new Map(affected.map(i=>[i,[]])),translations=new Map(affected.m
 let maxFingerLocalChange=0,maxUnmappedLocalChange=0,maxQuaternionNormError=0;
 for(let frame=0;frame<motion.frames;frame++){
  applyMotionFrame(rig,motion,frame);
+ if(rigidBones)for(const i of affected)if(nodes[i]!==hips)nodes[i].position.copy(initial[i].p);
  if(inPlace){
   // Physical CharacterMovement owns travel and heading in the home. Remove
   // source horizontal root travel/yaw, while retaining vertical gait motion.
@@ -98,4 +99,6 @@ assert(output.subarray(28+padded.length,28+padded.length+bin.length).equals(bin)
 fs.mkdirSync(path.dirname(outPath),{recursive:true});fs.writeFileSync(outPath,output);
 const report={schema:'sub01.cozy-body-candidate.v1',cozyVersion:JSON.parse(fs.readFileSync(path.join(cozy,'package.json'))).version,motionSha256:hash(motionRaw),ownerSha256:hash(raw),outputSha256:hash(output),frames:motion.frames,fps:motion.fps,durationSeconds:times.at(-1),mappedBodyBones:affected.map(i=>nodes[i].name),originalMeshSkinAndTextureBinaryPreserved:true,originalNodeRestTransformsPreserved:true,maxUnmappedLocalChange,maxFingerLocalChange,maxQuaternionNormError,wristAndFingerMotionGenerated:false,handContactAccepted:false,nativeImported:false,nativeVisualAccepted:false,source:'CozyClay upstream playback, external package retained under its own license',limitations:['CozyClay cskel27 playback intentionally leaves wrists and fingers in their reference pose','A passing interchange check is not acceptance of the rendered character or native interaction','Root trajectory must be aligned to measured house waypoints and physical navigation before runtime use']};
 report.rootMotionPolicy=inPlace?'in-place XZ/yaw, physical CharacterMovement must own world travel':'original source trajectory, review only';
+report.nonHipLocalTranslationsPreserved=rigidBones;
+report.footPlantAccepted=false;
 fs.writeFileSync(outPath+'.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));

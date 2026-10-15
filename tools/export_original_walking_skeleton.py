@@ -36,7 +36,8 @@ scene.frame_set(int(start))
 path = output / 'original-walking-skeleton.glb'
 bpy.ops.export_scene.gltf(filepath=str(path), export_format='GLB', export_animations=True,
                           export_skins=True, export_force_sampling=True,
-                          export_anim_single_armature=True, export_def_bones=False)
+                          export_anim_single_armature=True, export_def_bones=False,
+                          export_anim_slide_to_zero=True)
 raw = path.read_bytes()
 doc = json.loads(raw[20:20+int.from_bytes(raw[12:16], 'little')])
 assert doc.get('animations') and any('HandIndex1' in n.get('name', '') for n in doc['nodes'])
@@ -44,6 +45,7 @@ report = {'schema': 'sub01.original-walking-capture-export.v1', 'source_fbx_sha2
           'output_sha256': hashlib.sha256(raw).hexdigest(), 'fps': scene.render.fps/scene.render.fps_base,
           'action_frame_range': [start, end], 'original_bone_names': [b.name for b in arm.data.bones],
           'bones': len(arm.data.bones), 'glb_nodes': len(doc['nodes']), 'glb_animation_channels': len(doc['animations'][0]['channels']),
+          'export_time_origin': 'First source frame shifted to elapsed time zero; no pose samples changed',
           'actual_source_bone_samples': records, 'old_owner_mesh_or_retarget_used': False,
           'native_imported': False, 'hand_visual_or_contact_accepted': False}
 (output/'original-capture-report.json').write_text(json.dumps(report, indent=2)+'\n')

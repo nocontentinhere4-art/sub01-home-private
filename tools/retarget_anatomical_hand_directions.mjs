@@ -21,11 +21,11 @@ export function directionFrame(direction,normal){
 export function calibrateSegment(sourceDirection,sourceDorsal,targetDirection,targetDorsal){
  return directionFrame(sourceDirection,sourceDorsal).multiply(directionFrame(targetDirection,targetDorsal).invert()).normalize();
 }
-function rest(f){return f.doc.nodes.map(n=>({r:n.rotation||[0,0,0,1],t:n.translation||[0,0,0]}));}
+function rest(f){return f.doc.nodes.map(n=>({r:n.rotation||[0,0,0,1],t:n.translation||[0,0,0],s:n.scale||[1,1,1]}));}
 export function worldPose(f,local){
  const result=[],visiting=new Set();
  function get(i){if(result[i])return result[i];assert(!visiting.has(i));visiting.add(i);
-  const n=f.doc.nodes[i],s=n.scale||[1,1,1];assert(s.every(x=>Number.isFinite(x)&&x>0)&&Math.max(...s)-Math.min(...s)<1e-6);
+  const n=f.doc.nodes[i],s=local[i].s||n.scale||[1,1,1];assert(s.every(x=>Number.isFinite(x)&&x>0)&&Math.max(...s)-Math.min(...s)<1e-6);
   const parent=f.parents.has(i)?get(f.parents.get(i)):null,rotation=q(local[i].r),position=vector(local[i].t);
   assert([...local[i].r,...local[i].t].every(Number.isFinite));
   if(parent){position.multiplyScalar(parent.s).applyQuaternion(parent.r).add(parent.p);rotation.premultiply(parent.r);}
@@ -42,20 +42,19 @@ function tracks(f){
  const a=f.doc.animations?.[0];assert(a,'Recorded source animation required');const result=new Map();
  for(const c of a.channels){
   assert(['rotation','translation','scale'].includes(c.target.path));
-  if(c.target.path==='scale')continue;
-  const s=a.samplers[c.sampler];assert(['LINEAR',undefined].includes(s.interpolation));
+  const s=a.samplers[c.sampler];assert(['LINEAR','STEP',undefined].includes(s.interpolation));
   const times=accessor(f,s.input).map(v=>v[0]),values=accessor(f,s.output);
   assert(times.length===values.length&&times.every((v,i)=>v>=0&&(!i||v>times[i-1])));
-  const key=c.target.node+':'+c.target.path;assert(!result.has(key));result.set(key,{times,values,path:c.target.path});
+  const key=c.target.node+':'+c.target.path;assert(!result.has(key));result.set(key,{times,values,path:c.target.path,interpolation:s.interpolation||'LINEAR'});
  }return result;
 }
 function sample(t,time){
  let hi=t.times.findIndex(v=>v>=time);if(hi<0)return t.values.at(-1);if(!hi||t.times[hi]===time)return t.values[hi];
- const lo=hi-1,alpha=(time-t.times[lo])/(t.times[hi]-t.times[lo]);
+ const lo=hi-1,alpha=(time-t.times[lo])/(t.times[hi]-t.times[lo]);if(t.interpolation==='STEP')return t.values[lo];
  return t.path==='rotation'?q(t.values[lo]).slerp(q(t.values[hi]),alpha).toArray():t.values[lo].map((v,i)=>v+(t.values[hi][i]-v)*alpha);
 }
 function localAt(f,ts,time){
- const local=rest(f);for(const [key,t]of ts){const [i,path]=key.split(':');local[Number(i)][path==='rotation'?'r':'t']=sample(t,time);}return local;
+ const local=rest(f);for(const [key,t]of ts){const [i,path]=key.split(':');local[Number(i)][{rotation:'r',translation:'t',scale:'s'}[path]]=sample(t,time);}return local;
 }
 
 export function retargetDirections(source,target,output,baselineSeconds=0){
@@ -75,7 +74,7 @@ export function retargetDirections(source,target,output,baselineSeconds=0){
    const sd=vector(srcRest[sc].t),td=vector(dstRest[tc].t);
    const sn=new Vector3(0,0,1).applyQuaternion(palms[side].sr).applyQuaternion(swr[s].r.clone().invert());
    const tn=new Vector3(0,0,1).applyQuaternion(palms[side].tr).applyQuaternion(twr[t].r.clone().invert());
-   segments.push({side,name,s,t,sc,tc,calibration:calibrateSegment(sd,sn,td,tn),maxDirectionErrorRadians:0});
+   segments.push({side,name,s,t,sc,tc,sourceRestDirection:unit(sd),sourceDorsal:sn,targetDirection:td,targetDorsal:tn,maxSourceLocalDirectionVariationRadians:0,maxDirectionErrorRadians:0});
   }
  }
  const channels=new Map([...Object.values(palms).map(p=>p.ti),...segments.map(s=>s.t)].map(i=>[i,[]]));
@@ -93,7 +92,11 @@ export function retargetDirections(source,target,output,baselineSeconds=0){
    targetPalms[side]={source:sp,target:tp};
   }
   for(const s of segments){
-   const p=targetPalms[s.side];desired.set(s.t,p.target.clone().multiply(p.source.clone().invert()).multiply(sw[s.s].r).multiply(s.calibration).normalize());
+   // Original FBX exports may contain sampled child translations. Use their
+   // actual recorded direction, retaining the target's own segment length.
+   const direction=vector(sl[s.sc].t),calibration=calibrateSegment(direction,s.sourceDorsal,s.targetDirection,s.targetDorsal);
+   s.maxSourceLocalDirectionVariationRadians=Math.max(s.maxSourceLocalDirectionVariationRadians,s.sourceRestDirection.angleTo(unit(direction)));
+   const p=targetPalms[s.side];desired.set(s.t,p.target.clone().multiply(p.source.clone().invert()).multiply(sw[s.s].r).multiply(calibration).normalize());
   }
   // Convert desired world frames back through actual target parent frames.
   const solved=[];
@@ -120,7 +123,7 @@ export function retargetDirections(source,target,output,baselineSeconds=0){
  dst.doc.animations??=[];dst.doc.animations.push(animation);dst.doc.buffers[0].byteLength=offset;
  writeGLB(output,dst.doc,Buffer.concat(parts));
  const report={schema:'sub01.captured-anatomical-direction-retarget.v1',sourceSha256:sha(src.raw),targetSha256:sha(dst.raw),outputSha256:sha(fs.readFileSync(output)),
-  frames:times.length,durationSeconds:times.at(-1),wristBaselineSeconds:baselineSeconds,handChannels:channels.size,segments:segments.map(({name,maxDirectionErrorRadians})=>({name,maxDirectionErrorRadians})),maxPostFKDirectionErrorRadians:maxDirectionError,
+  frames:times.length,durationSeconds:times.at(-1),wristBaselineSeconds:baselineSeconds,handChannels:channels.size,segments:segments.map(({name,maxDirectionErrorRadians,maxSourceLocalDirectionVariationRadians})=>({name,maxDirectionErrorRadians,maxSourceLocalDirectionVariationRadians})),maxPostFKDirectionErrorRadians:maxDirectionError,
   sourceGeometryWeightsAndTargetRestUnchanged:true,nondeformingEndpointRotationsHeldAtRest:true,noAuthoredFingerCurl:true,
   visualAccepted:false,nativeImported:false,contactAccepted:false,
   limitations:['Wrist baseline still requires reviewed owner cuff alignment','Twist is transported from the captured bone and anatomical dorsal frames; skin deformation must be rendered','Matching measured segment directions does not establish fingertip contact or self-intersection freedom']};

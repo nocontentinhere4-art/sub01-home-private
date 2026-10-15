@@ -21,7 +21,7 @@ def read(path):
     return doc, binary
 
 
-def verify(owner, candidate, in_place=False):
+def verify(owner, candidate, in_place=False, rigid_bones=False):
     original, before = read(owner)
     baked, after = read(candidate)
     for key in ('nodes', 'skins', 'meshes', 'images', 'textures', 'materials', 'scenes'):
@@ -63,6 +63,9 @@ def verify(owner, candidate, in_place=False):
             max_norm_error = max(max_norm_error, max(abs(sum(x*x for x in row)-1) for row in value))
         elif name.endswith(':Hips'):
             root = value
+        elif rigid_bones and channel['target']['path'] == 'translation':
+            rest = original['nodes'][channel['target']['node']].get('translation', [0, 0, 0])
+            assert all(max(abs(x-y) for x, y in zip(row, rest)) < 1e-4 for row in value), 'Non-Hips bone translation changes actual owner bone length: ' + name
     assert len(names) == 20 and len(frame_counts) == 1 and max_norm_error < 1e-5 and root
     travel = math.dist(root[0], root[-1]) * .01
     horizontal_drift = max(math.hypot(p[0]-root[0][0], p[2]-root[0][2]) for p in root) * .01
@@ -74,6 +77,7 @@ def verify(owner, candidate, in_place=False):
             'duration_seconds': times[-1], 'body_bones': len(names),
             'root_start_to_end_m': travel, 'horizontal_root_drift_m': horizontal_drift,
             'in_place': in_place, 'max_quaternion_squared_norm_error': max_norm_error,
+            'non_hip_bone_local_translations_verified': rigid_bones,
             'original_geometry_skin_images_graphs_unchanged': True,
             'hand_tracks_overridden': False, 'native_visual_accepted': False,
             'candidate_sha256': hashlib.sha256(candidate.read_bytes()).hexdigest()}
@@ -85,8 +89,9 @@ if __name__ == '__main__':
     p.add_argument('candidate', type=Path)
     p.add_argument('--output', type=Path)
     p.add_argument('--in-place', action='store_true')
+    p.add_argument('--rigid-bones', action='store_true')
     a = p.parse_args()
-    report = verify(a.owner, a.candidate, a.in_place)
+    report = verify(a.owner, a.candidate, a.in_place, a.rigid_bones)
     rendered = json.dumps(report, indent=2) + '\n'
     if a.output:
         a.output.write_text(rendered)

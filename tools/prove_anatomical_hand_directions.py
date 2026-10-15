@@ -86,17 +86,18 @@ class Clip:
         animation = doc['animations'][animation_index]
         for channel in animation['channels']:
             sampler = animation['samplers'][channel['sampler']]
-            assert sampler.get('interpolation', 'LINEAR') == 'LINEAR'
+            interpolation = sampler.get('interpolation', 'LINEAR')
+            assert interpolation in ['LINEAR', 'STEP']
             t = [v[0] for v in accessor(doc, binary, sampler['input'])]
             assert all(t[i] > t[i-1] for i in range(1, len(t)))
             self.tracks[channel['target']['node'], channel['target']['path']] = (
-                t, accessor(doc, binary, sampler['output']))
+                t, accessor(doc, binary, sampler['output']), interpolation)
 
     def positions(self, time):
         locals_ = [{k: n.get(k, default) for k, default in
                     [('rotation', [0, 0, 0, 1]), ('translation', [0, 0, 0]), ('scale', [1, 1, 1])]}
                    for n in self.doc['nodes']]
-        for (index, kind), (times, values) in self.tracks.items():
+        for (index, kind), (times, values, interpolation) in self.tracks.items():
             hi = bisect.bisect_left(times, time)
             if hi == 0:
                 value = values[0]
@@ -107,7 +108,7 @@ class Clip:
             else:
                 lo = hi - 1
                 alpha = (time - times[lo]) / (times[hi] - times[lo])
-                value = slerp(values[lo], values[hi], alpha) if kind == 'rotation' else [
+                value = values[lo] if interpolation == 'STEP' else slerp(values[lo], values[hi], alpha) if kind == 'rotation' else [
                     x + alpha * (y-x) for x, y in zip(values[lo], values[hi])]
             locals_[index][kind] = value
         world = {}
@@ -140,7 +141,7 @@ def prove(source, original, candidate, output):
     assert cd['animations'][:-1] == od.get('animations', [])
     a, b = Clip(sd, sb, 0), Clip(cd, cb, -1)
     assert len(b.tracks) == 32 and all(path == 'rotation' for _, path in b.tracks)
-    times = sorted({t for ts, _ in b.tracks.values() for t in ts})
+    times = sorted({t for ts, _, _ in b.tracks.values() for t in ts})
     rows = []
     for side in ['Left', 'Right']:
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:

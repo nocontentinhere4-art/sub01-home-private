@@ -1,0 +1,24 @@
+{
+  "schema": "sub01.raw-capture-anatomical-hands-rejection.v1",
+  "source_sha256": "d9a8ab295d6e93d61dc3e14e5fac1682531e145804677dd349f24fb8e685c030",
+  "actual_skin_audit_sha256": "42e4e7bb0b838c1e843da59b7e4f725d41886802181a10ab3bfd7cbc32ffc380",
+  "actual_all_32_source_frames": true,
+  "summary": {
+    "Left": {
+      "complete_frames": 32,
+      "nonadjacent_overlap_min": 629,
+      "nonadjacent_overlap_max": 1016,
+      "max_edge_stretch_ratio": 3.959179471577399
+    },
+    "Right": {
+      "complete_frames": 32,
+      "nonadjacent_overlap_min": 632,
+      "nonadjacent_overlap_max": 879,
+      "max_edge_stretch_ratio": 4.12741752718265
+    }
+  },
+  "decision": "REJECTED: measured skin overlap and extreme edge stretch despite exact captured bone directions",
+  "native_imported": false,
+  "source_geometry_changed": false,
+  "next_step": "Verify actual anatomical finger identity and remove demonstrable foreign-finger weights only on unambiguous surface regions; no angle patch or acceptance waiver."
+}
