@@ -87,7 +87,15 @@ def run(root,dry_run=True,u=None):
   actor=exact(lambda a:a.get_actor_label()==plan['id'],plan['id']);comps=actor.get_components_by_class(u.StaticMeshComponent)
   if len(comps)!=1 or not comps[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/RealBooks/V_'+BOOKS_SHA[:12]+'/'):raise RuntimeError('Book is not exact COMPLETE owned source version '+plan['id'])
   points,count=surface(u,comps[0]);bounds=[[min(p[a]for p in points)for a in range(3)],[max(p[a]for p in points)for a in range(3)]]
-  if count!=plan['actual_source_triangle_count'] or not all(close(a,[v*100 for v in b])for a,b in zip(bounds,plan['old_bounds_ue_m'])):raise RuntimeError('Actual complete book geometry differs source '+plan['id'])
+  if count!=plan['actual_source_triangle_count'] or not all(close(a,[v*100 for v in b])for a,b in zip(bounds,plan['old_bounds_ue_m'])):
+   mesh=comps[0].get_editor_property('static_mesh');wanted=[[v*100 for v in b]for b in plan['old_bounds_ue_m']]
+   details={'book':plan['id'],'mesh':mesh.get_path_name(),'actual_triangle_count':count,'expected_source_triangle_count':plan['actual_source_triangle_count'],'actual_bounds_cm':bounds,'expected_bounds_cm':wanted,'actual_minus_expected_bounds_cm':[[x-y for x,y in zip(a,b)]for a,b in zip(bounds,wanted)],'geometry_api_audit':real_office_plant.native_geometry_api_audit(u,mesh)}
+   try:
+    imported=mesh.get_editor_property('asset_import_data')
+    details['imported_source_filenames']=list(imported.extract_filenames())if imported and hasattr(imported,'extract_filenames')else []
+   except Exception as error:details['source_filename_error']=str(error)
+   audit=Path(u.Paths.project_dir())/'private-audit'/'office-book-native-refusal.json';audit.parent.mkdir(parents=True,exist_ok=True);audit.write_text(json.dumps(details,indent=2)+'\n')
+   raise RuntimeError('Actual complete book geometry differs source '+plan['id']+'; full diagnostics saved to '+str(audit))
   if not close(vec(actor.get_actor_location()),plan['old_pivot_ue_cm']):raise RuntimeError('Actual owned book pivot differs source; no guessed relative transform')
   books.append((actor,comps[0],plan))
  desk_preflight=stage_desk(root/'desk.glb',dry_run=True,u=u)
