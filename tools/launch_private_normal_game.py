@@ -5,6 +5,7 @@ This launcher never stops an Editor, changes a map, or enables a posture gate.
 import hashlib
 import json
 import os
+import re
 import stat
 import subprocess
 import time
@@ -15,11 +16,29 @@ from launch_private_persistent_editor import (
 )
 
 MODULE_SHA = '97068a48dde1cdaa57b5d186f4cfb9682c4e0e3a6f078c2dcf7482a555a4e45a'
+WALKING_CAMERA_OFFSET = (22.208151, 3.580561, 64.610182)
+
+
+def verified_private_walking_camera(project):
+    """Do not silently restore the legacy collar-intersecting camera on a new boot."""
+    section = None
+    values = []
+    for line in (project / 'Config/DefaultGame.ini').read_text().splitlines():
+        line = line.strip()
+        if line.startswith('[') and line.endswith(']'):
+            section = line
+        elif section == '[/Script/Sub01HomeLab.Sub01HomeCharacter]' and line.startswith('WalkingCameraOffset='):
+            match = re.fullmatch(r'WalkingCameraOffset=\(X=([^,]+),Y=([^,]+),Z=([^\)]+)\)', line)
+            assert match, 'Malformed measured walking camera configuration'
+            values.append(tuple(map(float, match.groups())))
+    assert len(values) == 1 and all(abs(a-b) < 0.000001 for a, b in zip(values[0], WALKING_CAMERA_OFFSET)), \
+        'Restore the reviewed private-walking-camera-20261015.ini before launch'
 
 
 def launch():
     window = verified_window(Path('/run/sub01-home-private/runtime-window.json'))
     verified_private_crash_preference(ENGINE)
+    verified_private_walking_camera(PROJECT)
     for proc in Path('/proc').iterdir():
         if not proc.name.isdigit():
             continue

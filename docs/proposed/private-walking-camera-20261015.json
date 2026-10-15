@@ -1,0 +1,42 @@
+{
+  "schema": "sub01.warm-normal-camera-review.v1",
+  "native_pid": 28701,
+  "native_start_ticks": 973703999,
+  "module_sha256": "97068a48dde1cdaa57b5d186f4cfb9682c4e0e3a6f078c2dcf7482a555a4e45a",
+  "stable_witness": "out/house-evidence/game28701-stable-eye-witness.json",
+  "candidate_camera_local_cm": {
+    "x": 22.208150954150312,
+    "y": 3.5805613130220593,
+    "z": 64.61018215994386
+  },
+  "actual_camera_after_reload_world_cm": [
+    203.580561,
+    287.791849,
+    160.26027650912476
+  ],
+  "runtime_success_log_utc": "2026-10-15 06:57:53.143",
+  "runtime_success_marker": "SUB01_WALKING_CONFIG_RELOADED binding=Walk",
+  "body_actor_offset_unchanged": true,
+  "reviewed_browser_frame": "out/house-evidence/dgt-measured-eye-deep-downlook-28701.png",
+  "reviewed_browser_frame_sha256": "cd5c5ba911d4a46ab0d8e2e370e8aea7afe741c26bc159dc967503956459c86c",
+  "visible_collar_obstruction_cleared": true,
+  "full_walking_foot_contact_verified": false,
+  "normal_posture_device_gates_changed": false,
+  "approval_scope": "Parent reviewed actual steep downlook: collar obstruction corrected; not full gait/contact acceptance",
+  "config_fragment": "docs/proposed/private-walking-camera-20261015.ini",
+  "authoritative_property": "[/Script/Sub01HomeLab.Sub01HomeCharacter] WalkingCameraOffset",
+  "idle_eye_sampling_range_world_cm": {
+    "x": [
+      203.20271850175064,
+      203.90426607165432
+    ],
+    "y": [
+      286.20008774419,
+      289.73644905586605
+    ],
+    "z": [
+      159.61040876754166,
+      160.75968290073743
+    ]
+  }
+}
