@@ -1,0 +1,106 @@
+{
+  "schema": "sub01.reference-pc-setup-source-packet.v1",
+  "scope": "Private source-only review; human walking/native input/editor/runtime/site untouched",
+  "source_root": "/workspace/sub01-home-private/reference-pc-setup-r1/output-r5",
+  "source_builder": "tools/build_reference_pc_setup.py",
+  "reference": "Owner supplied photograph codex-clipboard-b590ffbd-a83a-448c-b48b-c1f8bf394dc6.png",
+  "dressing": {
+    "source": "pc-setup-dressing.glb",
+    "source_sha256": "d00dad940c0036fe919523be0ccd4f2b18bdce7559d53511ab3c281b35e221b2",
+    "prepared": "pc-setup-dressing-prepared.glb",
+    "prepared_sha256": "b9dabcfdc0635a7bc89cd4e2043d9bf297f03d3216b276d3771cf44846259059",
+    "parts": 110,
+    "exact_zero_triangles_removed": 528,
+    "all_positive_triangle_corner_bytes_exact": true,
+    "original_binary_prefix_exact": true,
+    "material_count": 11,
+    "image_count": 9
+  },
+  "desk": {
+    "source": "pc-desk-dark-source-variant.glb",
+    "source_sha256": "feebc23a1d812db0c6feca2a7e6469c94209fe0ebc105f2650457c95aa3b0084",
+    "prepared": "pc-desk-dark-source-variant-prepared.glb",
+    "prepared_sha256": "a8e5c856ea0b30ee86cd4bcb1c692f2387dcba414e308238674bc78c3c4c856f",
+    "parts": 54,
+    "exact_zero_triangles_removed": 0,
+    "all_positive_triangle_corner_bytes_exact": true,
+    "original_binary_prefix_exact": true,
+    "material_count": 7,
+    "image_count": 6
+  },
+  "dressing_positive_triangles": 447936,
+  "complete_genuine_desk_triangles": 20024,
+  "provenance": [
+    {
+      "source": "https://www.innerscene.com/tools/library/3d-parts/linea-140-walnut-writing-desk-c94a30dc",
+      "license": "CC0-1.0",
+      "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+      "original_complete_geometry": true,
+      "changes": "Reviewed uniform world placement, darker wood finish; full geometry and six genuine images retained"
+    },
+    {
+      "source": "https://polyhaven.com/a/potted_plant_01",
+      "license": "CC0-1.0",
+      "source_mesh_nodes": [
+        201,
+        202,
+        203,
+        204
+      ],
+      "container_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+      "changes": "Four rigid uniformly scaled duplicates; only exact-zero triangles removed for import, positive corner attributes byte-exact"
+    },
+    {
+      "source": "Owner reference photograph",
+      "production_asset": "Original Blender modeled speakers/riser/mic/headphones/through-hole pegboard/practical/accessories, not manufacturer CAD or scan"
+    }
+  ],
+  "source_clearance": {
+    "protected_device_triangle_intersections": [],
+    "arm_clearance_violations": [],
+    "arm_clearance_box_blender_m": [
+      [
+        1.74,
+        2.72,
+        0.846
+      ],
+      [
+        2.58,
+        3.1,
+        1.05
+      ]
+    ],
+    "protected_device_geometry_and_uv_unchanged": true,
+    "desk_top_cm": 84.5,
+    "mat_top_cm": 84.57,
+    "keyboard_mouse_bottom_cm": 84.6
+  },
+  "native_handoff_requirements": [
+    "NO import or restart while human is walking",
+    "PC monitor73/74/75, source keyboard184..187 and mouse236/237 are context only, absent from dressing and desk exports; never replace their UV/material/tag/guest mapping",
+    "Preserve accepted chair, its transform and contact targets",
+    "Exact current desk and shelf ownership must be independently inventoried; do not blindly retire original181/182/190/191 if already replaced",
+    "Only retire exact old mousepad238 when new mat source contact verified",
+    "Verify full source positive-corner geometry and all eleven dressing/seven desk PBR materials before atomic activation; rollback preserve original states",
+    "Source clearance is not native physical acceptance; actual manual keyboard/mouse operation and chair/arm/capsule clearances must be tested after owner releases input",
+    "Source Cycles photography is not proof of native illumination; create one receipt-bound warm practical only with imported bulb and no duplicate existing light"
+  ],
+  "native_practical_light_plan": {
+    "source": "reference warm filament pendant",
+    "native_position_cm": [
+      290,
+      -372,
+      176
+    ],
+    "intensity_lumens": 60,
+    "temperature_kelvin": 2400,
+    "radius_cm": 160,
+    "create_only_with_verified_imported_bulb_and_no_existing_matching_light": true
+  },
+  "actual_native_imported": false,
+  "native_visual_physical_accepted": false,
+  "functional_readiness_changed": false,
+  "source_detail_review_local": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/reference-pc-setup-r5/pc-setup-lit-review.png",
+  "source_full_review_local": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/reference-pc-setup-r5/pc-setup-full-review.png",
+  "source_full_review_sha256": "6c894c936fee4f57758edc80c260ce187a692d88b6e3714b02146686c5bff8e6"
+}
