@@ -51,6 +51,8 @@ TASKS = {
     # Neither accepts caller-supplied paths, modules or map/runtime settings.
     'bathroom_corridor': 'unreal_import_bathroom_corridor',
     'fp_keyboard_review': 'unreal_import_fp_keyboard_review',
+    'reference_bedding': 'unreal_import_reference_bedding',
+    'residential_windows': 'unreal_import_real_home_windows',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -129,6 +131,10 @@ def dispatch(task):
     if task == 'scene_visual_inventory':
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
     if task == 'nanite_materials':
+        return module.run(dry_run=False)
+    if task == 'reference_bedding':
+        return module.run('/workspace/sub01-home-private/reference-bedding-source-r1/output/bedding.glb', dry_run=False)
+    if task == 'residential_windows':
         return module.run(dry_run=False)
     if task == 'real_wc':
         # The importer owns its frozen, proved source path and preserves shared

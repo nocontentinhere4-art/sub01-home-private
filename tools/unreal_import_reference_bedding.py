@@ -14,7 +14,7 @@ def prepare(source,target):
  from home_asset_audit import read_gltf
  source=Path(source)
  if hashlib.sha256(source.read_bytes()).hexdigest()!=SHA:raise RuntimeError('Frozen actual cloth bake required')
- doc,blob=read_gltf(source);doc=copy.deepcopy(doc)
+ original_doc,original_blob=read_gltf(source);doc=copy.deepcopy(original_doc);blob=original_blob
  if len(doc.get('nodes',[]))!=4 or {n.get('name')for n in doc['nodes']}!=set(NAMES):raise RuntimeError('Exact4 textile parts required')
  for n in doc['nodes']:
   n['name']=NAMES[n['name']];doc['meshes'][n['mesh']]['name']=n['name']
@@ -24,7 +24,13 @@ def prepare(source,target):
  target=Path(target);target.parent.mkdir(parents=True,exist_ok=True)
  if target.exists():raise RuntimeError('New prepared source required')
  target.write_bytes(struct.pack('<III',0x46546c67,2,28+len(text)+len(blob))+struct.pack('<II',len(text),0x4e4f534a)+text+struct.pack('<II',len(blob),0x004e4942)+blob)
- return doc,blob
+ actual,actual_blob=read_gltf(target);restored=copy.deepcopy(actual)
+ for i,n in enumerate(original_doc['nodes']):restored['nodes'][i]['name']=n['name']
+ for i,m in enumerate(original_doc['meshes']):
+  if 'name'in m:restored['meshes'][i]['name']=m['name']
+  else:restored['meshes'][i].pop('name',None)
+ if restored!=original_doc or bytes(actual_blob)!=bytes(original_blob):raise RuntimeError('Names-only bedding preparation changed original source document/binary')
+ return actual,actual_blob
 
 def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output/bedding.glb',dry_run=True):
  import unreal as u
@@ -45,7 +51,16 @@ def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output
   matches=[a for a in original if a.get_name()==f'full-home_node_{ni}']
   if len(matches)!=1:raise RuntimeError('Unique exact original textile actor required')
   actor=matches[0];cs=actor.get_components_by_class(u.StaticMeshComponent)
-  if len(cs)!=1 or not same_triangles(expected_triangles(olddoc,oldblob,ni),native_triangles(u,cs[0]),tolerance=.0001):raise RuntimeError('Original textile geometry no longer matches source')
+  if len(cs)!=1:raise RuntimeError('Standalone exact original textile component required')
+  expected_old=expected_triangles(olddoc,oldblob,ni);actual_old=native_triangles(u,cs[0]);mesh=cs[0].get_editor_property('static_mesh')
+  if not same_triangles(expected_old,actual_old,tolerance=.0001):
+   def bounds(tris):
+    pts=[p for t in tris for p in t]
+    return [[min(p[k]for p in pts)for k in range(3)],[max(p[k]for p in pts)for k in range(3)]]if pts else None
+   settings=u.get_editor_subsystem(u.StaticMeshEditorSubsystem).get_nanite_settings(mesh)
+   details={'schema':'sub01.original-bedding-native-refusal.v1','source_node':ni,'source_node_name':olddoc['nodes'][ni].get('name'),'actor':actor.get_path_name(),'mesh':mesh.get_path_name()if mesh else None,'source_triangles':len(expected_old),'native_cpu_triangles':len(actual_old),'source_bounds_ue_cm':bounds(expected_old),'native_bounds_ue_cm':bounds(actual_old),'material_paths':[m.get_path_name()if m else None for m in cs[0].get_materials()],'nanite':{k:str(settings.get_editor_property(k))for k in('enabled','fallback_target','fallback_relative_error','fallback_percent_triangles','keep_percent_triangles','trim_relative_error')},'native_changed':False}
+   refusal=project/'private-audit/reference-bedding-original-refusal.json';refusal.parent.mkdir(exist_ok=True);refusal.write_text(json.dumps(details,indent=2)+'\n')
+   raise RuntimeError('Original textile fullsource geometry differs CPU surface; inspect reference-bedding-original-refusal.json')
   old.append((actor,cs[0],bool(actor.get_editor_property('hidden')),actor.is_temporarily_hidden_in_editor(),cs[0].get_collision_enabled()))
  prepared=project/'Saved/PrivateImportInputs'/('reference-bedding-'+uuid.uuid4().hex+'.glb');doc,blob=prepare(source,prepared)
  result={'schema':'sub01.reference-bedding-native-import.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'activity_gates_changed':False,'retired_source_nodes':list(OLD)}

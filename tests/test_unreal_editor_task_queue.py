@@ -203,3 +203,16 @@ def test_bathroom_pendant_dispatch_uses_only_fixed_source(monkeypatch):
     monkeypatch.setattr(module.importlib,'reload',lambda value:value)
     module.dispatch('real_bathroom_pendant')
     assert calls==[('/workspace/sub01-home-private/real-bathroom-pendant-source/split-v3/bathroom-pendant.glb',{'dry_run':False})]
+
+@pytest.mark.parametrize('task,expected_args',[
+ ('reference_bedding',('/workspace/sub01-home-private/reference-bedding-source-r1/output/bedding.glb',)),
+ ('residential_windows',()),
+])
+def test_measured_window_and_textile_dispatch_fixed_reviewed_sources(monkeypatch,task,expected_args):
+    from types import SimpleNamespace
+    import tools.unreal_editor_task_queue as module
+    calls=[];fake=SimpleNamespace(run=lambda *a,**kw:calls.append((a,kw)))
+    monkeypatch.setattr(module.importlib,'import_module',lambda name:fake)
+    monkeypatch.setattr(module.importlib,'reload',lambda value:value)
+    module.dispatch(task)
+    assert calls==[(expected_args,{'dry_run':False})]
