@@ -510,7 +510,7 @@ def test_girdle_clearance_candidates_stay_inside_the_cited_ranges():
 def test_axis_rotation_and_clearance_candidates():
     R = K.axis_rotation([0., 0., 1.], np.radians([90., 0.]))
     assert np.allclose(R[0] @ [1., 0., 0.], [0., 1., 0.]) and np.allclose(R[1], np.eye(3))
-    assert all(0. < c <= 30. for c in K.PITCH_CLEAR_CANDIDATES)       # added flexion; the soft +-15 deg limit follows
+    assert all(0. < c <= 45. for c in K.PITCH_CLEAR_CANDIDATES)       # added flexion; the soft +-15 deg limit follows
     assert list(K.PITCH_CLEAR_CANDIDATES) == sorted(K.PITCH_CLEAR_CANDIDATES)
 
 

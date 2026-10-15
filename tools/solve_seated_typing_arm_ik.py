@@ -366,7 +366,8 @@ GIRDLE_PROTRACTION_DEG = (-15., 15.)
 # Clearance first by the WRIST (a six-arm-bone change): added palmar flexion toward neutral, where the captured hand
 # attitude holds the wrist at the soft extension limit (-15 deg) and the sleeve under the forearm meets the desk; the
 # result is still soft-limited to the +-15 deg RULA zone. The girdle (below) is only the fallback.
-PITCH_CLEAR_CANDIDATES = (5., 10., 15., 20., 25., 30.)
+PITCH_CLEAR_CANDIDATES = (5., 10., 15., 20., 25., 30., 35., 40., 45.)
+PITCH_CLEAR_ROUNDS = 3
 GIRDLE_CLEAR_CANDIDATES = ((-2.5, 0.), (-5., 0.), (-7.5, 0.), (-10., 0.), (-10., -7.5), (-10., -15.))
 
 
@@ -1146,8 +1147,11 @@ class ClipArmIK:
             self.clear_side(s, delta, phi, lift, history, 2)
         girdle, pitch = {}, {}
         for s in SIDES:
-            pitch[s] = self.girdle_clear(s, delta, phi, lift, 'pitch', PITCH_CLEAR_CANDIDATES)
-            if pitch[s]['frames']:
+            pitch[s] = []
+            for _r_ in range(PITCH_CLEAR_ROUNDS):      # the full-clip contact re-solve can move neighbours: repeat
+                pitch[s].append(self.girdle_clear(s, delta, phi, lift, 'pitch', PITCH_CLEAR_CANDIDATES))
+                if not pitch[s][-1]['frames']:
+                    break
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
                 self.clear_side(s, delta, phi, lift, history, 1)
             girdle[s] = self.girdle_clear(s, delta, phi, lift)
@@ -2394,7 +2398,7 @@ def strip(rep):
 
 
 LOOP_BLEND_S = .5              # DeskTyping loop closure: C1 blend of the last 0.5 s to frame 0's swivel / girdle / lift
-FINISH_RESERVE_S = 1200.       # measured full-clip finish (+ the measurement) on the 989-frame DeskTyping
+FINISH_RESERVE_S = 1200.       # the full-clip finish starts only at the beginning of a run (measured 1280 s; one stage)
 FINISH_KEYS = ('delta', 'phi', 'lift', 'hand_xy', 'girdle', 'pitch', 'finger_xy_target', 'mode', 'on')
 CHUNK_RESERVE_S = 240.          # a chunk is only started with at least this much of the bound left
 ERGO_BUDGET_S_PER_CHUNK = 60.   # the ergonomic candidate search per chunk stops after this (the clearance pose is kept)
@@ -2583,7 +2587,7 @@ def run(args):
         fin = out_dir / 'SUB01_DeskTyping_seated.finish-checkpoint.npz'
         sig = hashlib.sha256(b''.join((out_dir / 'DeskTyping_seated.chunks' / c).read_bytes() for c in ik.chunks)
                              + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER, PITCH_CLEAR_CANDIDATES,
-                                    GIRDLE_CLEAR_CANDIDATES, POLISH_XY_CM, 'v2')).encode()).hexdigest()
+                                    GIRDLE_CLEAR_CANDIDATES, POLISH_XY_CM, PITCH_CLEAR_ROUNDS, 'v3')).encode()).hexdigest()
         if fin.exists() and str(np.load(fin)['signature']) == sig:
             z = np.load(fin)
             ik.close_loop(int(round(LOOP_BLEND_S / ik.dt)), {s_: np.array(ik.phi[s_], float) for s_ in SIDES},
