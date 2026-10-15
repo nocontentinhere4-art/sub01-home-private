@@ -7,11 +7,13 @@ def semantic(n):
   if n.startswith(prefix):return n[len(prefix):]
  return n
 
-def run():
+def run(grip=False):
  import unreal as u
  from private_home_candidate_scope import active_candidate_guard,CANDIDATE
  assert active_candidate_guard();d=json.loads((CANDIDATE/'private-audit/anatomical-owner-fbx-candidate.json').read_text());assert d['initial_inventory_passed']and d['assets_saved']and d['owner_assigned']is False
  new=u.load_asset(d['meshes'][0]['path']);clip=u.load_asset(d['clips'][0]['path']);old=u.load_asset('/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner');oldclip=u.load_asset('/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk')
+ if grip:
+  receipt=json.loads((CANDIDATE/'private-audit/anatomical-grip-candidate.json').read_text());assert receipt['assets_saved']and receipt['matching_existing_new_skeleton'];clip=u.load_asset(receipt['clip']);oldclip=u.load_asset('/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip')
  assert clip.get_editor_property('skeleton')==new.get_editor_property('skeleton')and oldclip.get_editor_property('skeleton')==old.get_editor_property('skeleton')
  u.Sub01HomeHandsInstance.finish_pending_skin_compilation()
  def structure(mesh):
@@ -24,10 +26,10 @@ def run():
    return resolved[n]
   return {semantic(n):get(n)for n in names}
  rows=[];maxpos=maxrot=maxscale=0.
- for i in range(32):
+ for i in range(152 if grip else 32):
   t=i/30;pa=poses(old,oldclip,a,t);pb=poses(new,clip,b,t);samples=[]
   for n in body:
    x,y=pa[n],pb[n];error=(x.translation-y.translation).length();q=x.rotation;r=y.rotation;dot=abs(q.x*r.x+q.y*r.y+q.z*r.z+q.w*r.w);angle=math.degrees(2*math.acos(min(1.,dot)));scale=(x.scale3d-y.scale3d).length();maxpos=max(maxpos,error);maxrot=max(maxrot,angle);maxscale=max(maxscale,scale);samples.append({'bone':n,'position_error_cm':error,'rotation_error_degrees':angle,'scale_error':scale})
   rows.append({'time_s':t,'body':samples})
  report={'schema':'sub01.actual-native-anatomical-body-pose-audit.v1','read_only':True,'old_mesh':old.get_path_name(),'old_clip':oldclip.get_path_name(),'new_mesh':new.get_path_name(),'new_clip':clip.get_path_name(),'samples':rows,'nonfinger_bones':len(body),'max_position_error_cm':maxpos,'max_rotation_error_degrees':maxrot,'max_scale_error':maxscale,'body_pose_equivalence_passed':maxpos<=.02 and maxrot<=.05 and maxscale<=.0001,'hand_pose_equivalence_verified':False,'world_changed':False,'owner_assigned':False,'epoch':time.time()}
- assert active_candidate_guard();p=CANDIDATE/'private-audit/anatomical-body-pose-audit.json';p.write_text(json.dumps(report,indent=2)+'\n');return {k:v for k,v in report.items()if k!='samples'}
+ assert active_candidate_guard();p=CANDIDATE/('private-audit/anatomical-grip-body-pose-audit.json'if grip else'private-audit/anatomical-body-pose-audit.json');p.write_text(json.dumps(report,indent=2)+'\n');return {k:v for k,v in report.items()if k!='samples'}
