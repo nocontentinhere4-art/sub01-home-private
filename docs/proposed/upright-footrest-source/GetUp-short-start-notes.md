@@ -1,0 +1,9 @@
+# Short-start derived GetUp — source candidate
+
+The previous reversed candidate's first28keys are not duplicate poses. They contain authentic Idle breathing and finger motion (up to43.19° at LeftHandMiddle1), while its body is nearly stationary. A duplicate-only trim would be an incorrect description.
+
+Candidate `b68f15891a759d236595f4821fab32d881d9613990dd0d32daac85234568d3b7` replaces that1.17-second phase with an explicitly DERIVED0.20-second shortest-quaternion bridge between its exact original keys0and27. It retains every original active key28–67, including all local float32 output bytes, with their original time intervals. It retains the exact initial Idle and final standing endpoints. The rest-node document and original binary prefix are unchanged. The previous candidate7b0ac721… remains preserved.
+
+The written result has47keys/1.933333s. The actual bounded GPU source job exited0in31.26s. All71 samples (every written key plus120Hz bridge samples) pass the unchanged limited-joint anatomy and strong finite seated-support checks. Bone-length error is below1e−5cm; retained active written matrices differ by less than1e−12. Actual minimum floor height2.540778cm; furniture margins chair+0.287826cm, footrest+0.049996cm and desk+0.412251cm. Collision sampling remains every6th source skinned vertex, not an all-triangle body claim. The same owner831790…, actual chair+2.5001cm source lift,84.5cm desk and finite19part footrest are used; no threshold or floor change was made.
+
+This is a source candidate, not the original GetUp capture or a native acceptance result. C0 endpoints are preserved; C1 continuity, naturalness, explicit handshape/selfcontact, standing/runtime Idle integration and the typing chain remain pending. All readiness flags stay false. The proof records every changed bridge track, original/new time mapping, source identity and actual collision witness.

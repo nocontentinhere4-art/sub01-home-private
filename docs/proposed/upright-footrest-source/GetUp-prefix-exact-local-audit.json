@@ -1,0 +1,203 @@
+{
+  "schema": "sub01.getup-stationary-prefix-local-audit.v1",
+  "prefix_keys": 28,
+  "all_local_tracks_identical_to_key0": false,
+  "rows": [
+    {
+      "key": 0,
+      "time_s": 0.0,
+      "changed_local_tracks_vs_key0": 0,
+      "max_local_quaternion_change_deg": 0.0,
+      "root_translation_delta_cm": 0
+    },
+    {
+      "key": 1,
+      "time_s": 0.04333329200744629,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.13635890461036343,
+      "root_translation_delta_cm": 0.009307979026050399
+    },
+    {
+      "key": 2,
+      "time_s": 0.08666658401489258,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.23288945677491535,
+      "root_translation_delta_cm": 0.01565267441334547
+    },
+    {
+      "key": 3,
+      "time_s": 0.12999987602233887,
+      "changed_local_tracks_vs_key0": 48,
+      "max_local_quaternion_change_deg": 0.30283992636809004,
+      "root_translation_delta_cm": 0.022741611443055764
+    },
+    {
+      "key": 4,
+      "time_s": 0.17333364486694336,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.37080335510530366,
+      "root_translation_delta_cm": 0.028046860050541165
+    },
+    {
+      "key": 5,
+      "time_s": 0.21666693687438965,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.4205168076553643,
+      "root_translation_delta_cm": 0.02993412865277102
+    },
+    {
+      "key": 6,
+      "time_s": 0.26000022888183594,
+      "changed_local_tracks_vs_key0": 46,
+      "max_local_quaternion_change_deg": 0.4970330917403094,
+      "root_translation_delta_cm": 0.029324110842950567
+    },
+    {
+      "key": 7,
+      "time_s": 0.3033335208892822,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 0.5681137076458225,
+      "root_translation_delta_cm": 0.025711470917341436
+    },
+    {
+      "key": 8,
+      "time_s": 0.3466668128967285,
+      "changed_local_tracks_vs_key0": 48,
+      "max_local_quaternion_change_deg": 0.5945946080996838,
+      "root_translation_delta_cm": 0.019398023183561274
+    },
+    {
+      "key": 9,
+      "time_s": 0.3900001049041748,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.6475442166713551,
+      "root_translation_delta_cm": 0.013514159081084371
+    },
+    {
+      "key": 10,
+      "time_s": 0.4333333969116211,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 0.7563572382565291,
+      "root_translation_delta_cm": 0.01144953644112308
+    },
+    {
+      "key": 11,
+      "time_s": 0.4766666889190674,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 8.660136866157565,
+      "root_translation_delta_cm": 0.01595635376849619
+    },
+    {
+      "key": 12,
+      "time_s": 0.5199999809265137,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 20.769266943359714,
+      "root_translation_delta_cm": 0.02441306849912177
+    },
+    {
+      "key": 13,
+      "time_s": 0.5633335113525391,
+      "changed_local_tracks_vs_key0": 51,
+      "max_local_quaternion_change_deg": 33.30650054298477,
+      "root_translation_delta_cm": 0.03432683918977067
+    },
+    {
+      "key": 14,
+      "time_s": 0.6066668033599854,
+      "changed_local_tracks_vs_key0": 51,
+      "max_local_quaternion_change_deg": 41.65238431266543,
+      "root_translation_delta_cm": 0.04409331060570459
+    },
+    {
+      "key": 15,
+      "time_s": 0.6500000953674316,
+      "changed_local_tracks_vs_key0": 51,
+      "max_local_quaternion_change_deg": 42.00290799999663,
+      "root_translation_delta_cm": 0.05381603544112855
+    },
+    {
+      "key": 16,
+      "time_s": 0.6933333873748779,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 38.33912273270612,
+      "root_translation_delta_cm": 0.06380962510181089
+    },
+    {
+      "key": 17,
+      "time_s": 0.7366669178009033,
+      "changed_local_tracks_vs_key0": 51,
+      "max_local_quaternion_change_deg": 43.19472572472554,
+      "root_translation_delta_cm": 0.07290109170855932
+    },
+    {
+      "key": 18,
+      "time_s": 0.7800002098083496,
+      "changed_local_tracks_vs_key0": 50,
+      "max_local_quaternion_change_deg": 38.71416926469292,
+      "root_translation_delta_cm": 0.07813107690184859
+    },
+    {
+      "key": 19,
+      "time_s": 0.8233335018157959,
+      "changed_local_tracks_vs_key0": 50,
+      "max_local_quaternion_change_deg": 41.79560469585627,
+      "root_translation_delta_cm": 0.07982636059566363
+    },
+    {
+      "key": 20,
+      "time_s": 0.8666667938232422,
+      "changed_local_tracks_vs_key0": 48,
+      "max_local_quaternion_change_deg": 42.34534094863821,
+      "root_translation_delta_cm": 0.07934272835858175
+    },
+    {
+      "key": 21,
+      "time_s": 0.9100000858306885,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 37.904019629922466,
+      "root_translation_delta_cm": 0.07737623284447528
+    },
+    {
+      "key": 22,
+      "time_s": 0.9533333778381348,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 41.92978646674422,
+      "root_translation_delta_cm": 0.07459248243465755
+    },
+    {
+      "key": 23,
+      "time_s": 0.996666669845581,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 37.77200467444017,
+      "root_translation_delta_cm": 0.07148992654779698
+    },
+    {
+      "key": 24,
+      "time_s": 1.0400002002716064,
+      "changed_local_tracks_vs_key0": 50,
+      "max_local_quaternion_change_deg": 27.11488132697976,
+      "root_translation_delta_cm": 0.06825482357019128
+    },
+    {
+      "key": 25,
+      "time_s": 1.0833334922790527,
+      "changed_local_tracks_vs_key0": 48,
+      "max_local_quaternion_change_deg": 14.606255780066205,
+      "root_translation_delta_cm": 0.06341385535872378
+    },
+    {
+      "key": 26,
+      "time_s": 1.126666784286499,
+      "changed_local_tracks_vs_key0": 47,
+      "max_local_quaternion_change_deg": 4.228739557087533,
+      "root_translation_delta_cm": 0.05493576548686092
+    },
+    {
+      "key": 27,
+      "time_s": 1.1700000762939453,
+      "changed_local_tracks_vs_key0": 49,
+      "max_local_quaternion_change_deg": 0.9685888547440652,
+      "root_translation_delta_cm": 0.04372720542188481
+    }
+  ]
+}
