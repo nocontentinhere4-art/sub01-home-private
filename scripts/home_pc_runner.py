@@ -45,6 +45,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from home_computer import Computer  # noqa: E402
+from computer.input_receipts import native_receipt  # noqa: E402
 
 LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 SESSION_SECONDS = 60
@@ -107,6 +108,10 @@ class PCRunner:
         if source not in self.session_sources:
             raise ValueError("Unknown session source")
         epoch = self.privacy_epoch
+        if not active and source == "native":
+            cancel = getattr(self.computer, "cancel_graphical_receipts", None)
+            if cancel:
+                await cancel()
         self.session_sources[source] = self.clock() + SESSION_SECONDS if active and not self.privacy else 0.0
         if active and not self.privacy and self.computer.ready and self.computer.paused:
             if await self.computer.send({"type": "resume"}):
@@ -133,13 +138,19 @@ class PCRunner:
         if self.privacy:
             return None
         epoch = self.privacy_epoch
-        ok = await self.computer.graphical_input(data)
+        receipt = data.get("native_receipt")
+        if receipt is not None:
+            sender = getattr(self.computer, "graphical_input_receipt", None)
+            result = await sender({k: v for k, v in data.items() if k != "native_receipt"}, receipt) if sender else {"ok": False}
+        else:
+            ok = await self.computer.graphical_input(data)
+            result = {"ok": bool(ok)}
         if self.privacy or epoch != self.privacy_epoch:
             self.computer.paused = True
             if self.computer.ready:
                 await self.computer.send({"type": "pause"})
             return None
-        return {"ok": bool(ok)}
+        return result
 
     async def idle_step(self):
         c = self.computer
@@ -258,6 +269,11 @@ def create_app(runner):
             clean = {k: data[k] for k in ["type", "dx", "dy", "wheel", "buttons"]}
         else:
             raise web.HTTPBadRequest(text="Unknown graphical guest input")
+        if "native_receipt" in data:
+            try:
+                clean["native_receipt"] = native_receipt(data["native_receipt"])
+            except ValueError:
+                raise web.HTTPBadRequest(text="Expected bounded native input identity")
         if not (getattr(runner.computer, "display", {}).get("available") or getattr(runner.computer, "display", {}).get("keyboard_available")):
             raise web.HTTPConflict(text="Guest graphical framebuffer is unavailable")
         result = await runner.graphical_input(clean)

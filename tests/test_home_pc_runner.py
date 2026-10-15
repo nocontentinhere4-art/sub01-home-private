@@ -334,3 +334,42 @@ def test_new_operator_focus_during_idle_pause_is_resumed_but_privacy_clears_both
         finally:
             await http.close()
     run(body())
+
+
+def test_optional_native_receipt_is_validated_and_existing_route_returns_actual_ack():
+    async def body():
+        http, runner, computer = await started()
+        calls = []
+        native = {'input_id': 71, 'generation': 3}
+        async def injected(data, identity):
+            calls.append((data, identity))
+            return {'ok': True, 'native_receipt': identity, 'ack_level': 'GuestKeyboardInjected'}
+        async def cancel():
+            calls.append('cancel-native-receipts')
+        computer.graphical_input_receipt = injected
+        computer.cancel_graphical_receipts = cancel
+        computer.display = {'kind':'graphical','available':True,'revision':1}
+        try:
+            packet = {'type':'vga-keyboard','scancodes':[30,158], 'native_receipt':native,
+                      '_receipt':{'id':'client-must-not-choose-worker-ACK'}}
+            reply = await http.post('/pc/graphical-input', json=packet, headers=AUTH)
+            assert reply.status == 200
+            assert await reply.json() == {'ok':True,'native_receipt':native,'ack_level':'GuestKeyboardInjected'}
+            assert calls == [({'type':'vga-keyboard','scancodes':[30,158]}, native)]
+            for invalid in [None, {'input_id':True,'generation':3}, {'input_id':71,'generation':3,'ok':True}]:
+                reply = await http.post('/pc/graphical-input', json={**packet,'native_receipt':invalid}, headers=AUTH)
+                assert reply.status == 400
+            assert len(calls) == 1
+            await runner.set_session(False, 'home')
+            assert len(calls) == 1  # another focus source does not cancel native keys
+            await runner.set_session(False, 'native')
+            assert calls[-1] == 'cancel-native-receipts'
+            # An injected failure cannot become ok:true at the HTTP wrapper.
+            async def refused(data, identity):
+                return {'ok':False}
+            computer.graphical_input_receipt = refused
+            reply = await http.post('/pc/graphical-input', json=packet, headers=AUTH)
+            assert reply.status == 200 and await reply.json() == {'ok':False}
+        finally:
+            await http.close()
+    run(body())

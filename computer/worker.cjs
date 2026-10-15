@@ -5,6 +5,7 @@ const { V86 } = require("./libv86.cjs"),
   readline = require("readline");
 const { attachFramebuffer } = require('./vga_framebuffer.cjs');
 const { guestKeyboard } = require('./guest_keyboard.cjs');
+const { inputReceipts } = require('./input_receipts.cjs');
 const { guestMouse, mouseDiagnostics } = require('./guest_mouse.cjs');
 // v86's pixel container only; no canvas or browser is introduced.
 globalThis.ImageData ??= class ImageData { constructor(data, width, height) { this.data=data; this.width=width; this.height=height; } };
@@ -16,6 +17,7 @@ let serial = "",
   shuttingDown = false,
   restored = false;
 const send = (o) => process.stdout.write(JSON.stringify(o) + "\n");
+const receipts = inputReceipts(send);
 const vm = new V86({
   wasm_path: path.join(__dirname, "v86.wasm"),
   memory_size: (process.env.SUB01_VM_CDROM ? 128 : 64) * 1024 * 1024,
@@ -104,7 +106,7 @@ async function save(final = false) {
 async function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
-  keyboard.cancel();
+  receipts.cancelAll();keyboard.cancel();
   await save(true);
   vm.destroy();
   process.exit(0);
@@ -121,12 +123,21 @@ readline.createInterface({ input: process.stdin }).on("line", async (line) => {
     ) {
       vm.run();
       vm.serial0_send(m.text);
-    } else if (m.type === "vga-keyboard" && Array.isArray(m.scancodes) && m.scancodes.length <= 16 && m.scancodes.every(code => Number.isInteger(code) && code >= 0 && code <= 255)) {
-      vm.run(); await keyboard.enqueue(m.scancodes);
+    } else if (m.type === "vga-keyboard" && Array.isArray(m.scancodes) && m.scancodes.length >= 1 && m.scancodes.length <= 16 && m.scancodes.every(code => Number.isInteger(code) && code >= 0 && code <= 255)) {
+      const receipt=receipts.begin(m);if(!receipt)return;
+      try {if(!receipt.valid()){receipt.finish(false,'Rejected');return;}
+       vm.run();const ok=await keyboard.enqueue(m.scancodes,receipt.valid,receipt.wait);
+       receipt.finish(ok,'GuestKeyboardInjected');
+      }catch(e){receipt.finish(false,'Rejected');throw e;}
     } else if (m.type === "vga-mouse" && [m.dx, m.dy, m.wheel].every(value => Number.isFinite(value) && Math.abs(value) <= 100) && Array.isArray(m.buttons) && m.buttons.length === 3 && m.buttons.every(value => typeof value === 'boolean')) {
-      mouse(m);
+      const receipt=receipts.begin(m);if(!receipt)return;
+      try {if(!receipt.valid()){receipt.finish(false,'Rejected');return;}
+       mouse(m);receipt.finish(true,'GuestMouseInjected');
+      }catch(e){receipt.finish(false,'Rejected');throw e;}
+    } else if(m.type==='graphical-input-cancel') {
+      receipts.cancel(m);
     } else if (m.type === "pause") {
-      keyboard.cancel();
+      receipts.cancelAll();keyboard.cancel();
       vm.bus?.send("mouse-click", [0, 0, 0]);
       await vm.stop();
     } else if (m.type === "resume") {

@@ -28,7 +28,7 @@ int main(){
  assert(Q.Complete(Id));assert(A.Acknowledged(7,Id,1.22,T::EAck::TransportAccepted));
  auto S=A.Sample(7,1.23,true,false);assert(S.Active&&S.InputId==Id&&S.Ack==T::EAck::TransportAccepted);
  assert(S.SecondsSinceAck>.009&&S.SecondsSinceAck<.011);
- assert(!A.Acknowledged(7,Id,1.24,T::EAck::GuestConsumed)); // cannot replay/upgrade an ACK
+ assert(!A.Acknowledged(7,Id,1.24,T::EAck::GuestKeyboardInjected)); // cannot replay/upgrade an ACK
  assert(!A.Sample(7,1.48,true,false).Active); // bounded, never free-running clip
  assert(A.Receipts()[0].CancelledAt==1.48);
  assert(!A.Queued(7,Id,T::EKind::KeyTap,1.5)); // replay ID refused

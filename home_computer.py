@@ -8,6 +8,7 @@ import random
 import shutil
 import time
 from pathlib import Path
+from computer.input_receipts import InputReceipts, native_receipt
 
 COMMANDS = [
     ("uname -a", "attention"),
@@ -58,6 +59,7 @@ class Computer:
         self.error = ""
         self._running = False
         self.input_until = 0.0
+        self.input_receipts = InputReceipts()
 
     def view(self):
         return {
@@ -76,6 +78,7 @@ class Computer:
         }
 
     def clear_unavailable_guest(self):
+        self.input_receipts.cancel_all()
         self.ready = False
         self.status = "offline"
         self.output = ""
@@ -87,11 +90,14 @@ class Computer:
                         "reason": "Actual guest worker is unavailable"}
 
     async def send(self, message):
+        if message.get("type") in {"pause", "shutdown"}:
+            # Existing privacy/idle pause invalidates ACKs before its pipe drains.
+            self.input_receipts.cancel_all()
         if not self.process or self.process.returncode is not None:
             self.clear_unavailable_guest()
             return False
-        self.process.stdin.write((json.dumps(message) + "\n").encode())
         try:
+            self.process.stdin.write((json.dumps(message) + "\n").encode())
             await asyncio.wait_for(self.process.stdin.drain(), 0.05)
             return True
         except (asyncio.TimeoutError, BrokenPipeError, ConnectionResetError):
@@ -111,6 +117,44 @@ class Computer:
         self.input_until = time.monotonic() + 5
         self.paused = False
         return await self.send(data)
+
+    async def cancel_graphical_receipts(self):
+        # Only correlated requests are cancelled; legacy input and other held
+        # keys are untouched. The worker releases keys owned by these requests.
+        for packet in self.input_receipts.cancel_all():
+            await self.send(packet)
+
+    async def graphical_input_receipt(self, data, native):
+        native = native_receipt(native)
+        kind = data.get("type")
+        level = {"vga-keyboard": "GuestKeyboardInjected", "vga-mouse": "GuestMouseInjected"}.get(kind)
+        if not level or not (self.display.get("available") or self.display.get("keyboard_available")):
+            return {"ok": False}
+        process = self.process
+        if not process or process.returncode is not None:
+            self.clear_unavailable_guest()
+            return {"ok": False}
+        pending = self.input_receipts.begin(process, native, level)
+        if pending is None:
+            return {"ok": False}
+        identifier, receipt, future = pending
+        self.input_until = time.monotonic() + 5
+        self.paused = False
+        try:
+            if not await self.send({**data, "_receipt": receipt}):
+                return {"ok": False}
+            # One bounded future observes the existing stdin/stdout operation;
+            # no extra dispatch queue, worker, endpoint or retry is introduced.
+            result = await asyncio.wait_for(asyncio.shield(future), 1.5)
+            if self.process is not process or process.returncode is not None:
+                return {"ok": False}
+            return result
+        except asyncio.TimeoutError:
+            return {"ok": False}
+        finally:
+            packet = self.input_receipts.discard(identifier)
+            if packet and self.process is process and process.returncode is None:
+                await self.send(packet)
 
     async def agent_step(self, home, rel):
         using = home.activity == "use_computer" and home.activity_ready("use_computer")
@@ -173,13 +217,16 @@ class Computer:
             env=env,
         )
         self._running = True
+        worker = self.process  # ACK authority is the stdout producer, not a mutable current pointer.
         try:
-            async for line in self.process.stdout:
+            async for line in worker.stdout:
                 try:
                     m = json.loads(line)
                 except ValueError:
                     continue
-                if m.get("type") == "terminal":
+                if m.get("type") == "graphical-input-ack":
+                    self.input_receipts.complete(m, worker)
+                elif m.get("type") == "terminal":
                     self.output = str(m.get("output", ""))[-12000:]
                     self.ready = bool(m.get("ready"))
                     self.paused = bool(m.get("paused"))

@@ -7,12 +7,12 @@
 // Read-only action history. It never dispatches, retries, or stores input payloads.
 // IDs are supplied by the EXISTING GraphicalInputs ticket/generation owner.
 // HTTP 200 alone is not an acknowledgement: parse {"ok":true} first. Current
-// guest runner only confirms stdin drain; do not label that GuestConsumed.
+// guest runner only confirms stdin drain; do not label that GuestKeyboardInjected/GuestMouseInjected.
 class FSub01PCActionTimeline {
 public:
  enum class EKind { KeyTap, MouseMove, MouseButtons, Release };
  enum class EState { Queued, Sent, Accepted, Released, Cancelled };
- enum class EAck { None, TransportAccepted, GuestConsumed };
+ enum class EAck { None, TransportAccepted, GuestKeyboardInjected, GuestMouseInjected };
  struct FReceipt {
   std::uint64_t Generation=0,InputId=0;
   EKind Kind=EKind::KeyTap; EState State=EState::Queued; EAck Ack=EAck::None;
