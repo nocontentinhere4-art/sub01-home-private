@@ -89,6 +89,11 @@ int main() {
   CHECK(!PollFetchesTV(Lost) && !PollFetchesTV(Disabled), 16)        // Poll would not have asked either
   CHECK(!Sub01FrameStillCurrent(false, FString(), TSharedPtr<FJsonObject>()), 17)
   CHECK(!Sub01FrameStillCurrent(true, "web-1", TSharedPtr<FJsonObject>()), 18)
+  // Actual local physical focus allows a real page without forging brain activity.
+  CHECK(Sub01FrameStillCurrent(true,"web-1",Make(PutDown),true),19)
+  CHECK(!Sub01FrameStillCurrent(true,"web-1",Make(PutDown),false),20) // focus lost during image download
+  CHECK(!Sub01FrameStillCurrent(true,"stale",Make(PutDown),true),21)
+  CHECK(!Sub01FrameStillCurrent(true,"web-1",TSharedPtr<FJsonObject>(),true),22)
   return 0;
 }
 '''
@@ -113,11 +118,11 @@ def test_poll_and_final_paint_share_one_parser_and_policy():
     poll = CPP.split('void USub01HomeDeviceBridge::Poll(){', 1)[1].split('\nvoid USub01HomeDeviceBridge::FetchFrame', 1)[0]
     fetch = CPP.split('void USub01HomeDeviceBridge::FetchFrame(', 1)[1].split('\nvoid USub01HomeDeviceBridge::Action', 1)[0]
     assert 'const FSub01DeviceScreenInputs Screen=Sub01ScreenInputs(State,&Identity,&Game);' in poll
-    assert 'if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
+    assert 'if(Sub01PhoneFrame(Screen,FocusedDevice==TEXT("phone"))!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
     assert 'if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);' in poll
     # The fresh After state is rechecked by the same policy before any texture is created or bound.
     after = fetch.split('ReadHome([this,Device,Identity,Epoch,Pixels,Tag](TSharedPtr<FJsonObject> After){', 1)[1]
-    check = after.index('if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After))return;')
+    check = after.index('if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After,FocusedDevice==TEXT("phone")))return;')
     assert after.index('if(!PublicHome(After)){Clear();return;}') < check
     assert check < after.index('SetTextureParameterValue(TEXT("PCFrame"),Images[Device])')
     assert check < after.index('FImageUtils::ImportBufferAsTexture2D(Pixels)')

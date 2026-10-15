@@ -75,7 +75,7 @@ def test_integrated_bridge_gates_fetches_and_stages_header():
     # Each fetch is behind the policy; nothing else in Poll requests a frame.
     assert poll.count('FetchFrame(') == 2
     assert 'const FSub01DeviceScreenInputs Screen=Sub01ScreenInputs(State,&Identity,&Game);' in poll
-    assert 'if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
+    assert 'if(Sub01PhoneFrame(Screen,FocusedDevice==TEXT("phone"))!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);' in poll
     assert 'if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);' in poll
     assert 'phone_browser_screen' not in poll           # only through the helper, after phone_screen
     # Home is read once, before use; the blanking and Pong branches are unchanged.
@@ -86,7 +86,7 @@ def test_integrated_bridge_gates_fetches_and_stages_header():
         assert poll.count(kept) == 1 and original.count(kept) == 1
     # A downloaded phone frame is kept only if it is still the current one, from the same source.
     fetch = bridge.split('void USub01HomeDeviceBridge::FetchFrame(', 1)[1].split('\nvoid USub01HomeDeviceBridge::Action', 1)[0]
-    assert 'if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After))return;' in fetch  # same policy, fresh state (test_native_device_frame_freshness.py)
+    assert 'if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After,FocusedDevice==TEXT("phone")))return;' in fetch  # same policy, fresh state (test_native_device_frame_freshness.py)
     assert 'phone_browser_screen' not in fetch
     # Same authenticated loopback route and frame identity as before.
     assert 'R->SetURL(Origin+TEXT("/devices/")+Device.ToString()+TEXT("/frame.jpg")' in fetch
@@ -165,3 +165,16 @@ def test_integrated_phone_identity_prefers_phone_screen_compiled():
         cpp.write_text(IDENTITY_STUBS + helper + IDENTITY_CASES)
         subprocess.run([compiler, '-std=c++17', '-Wall', '-Werror', str(cpp), '-o', str(exe)], check=True, capture_output=True)
         subprocess.run([str(exe)], check=True)
+
+
+def test_manual_phone_focus_never_bypasses_privacy_or_real_frame_requirement(tmp_path):
+    compiler=shutil.which('clang++') or shutil.which('g++')
+    if not compiler:pytest.skip('C++ compiler unavailable')
+    cases=[]
+    for public,activity,frame,owned,focus in itertools.product((0,1),repeat=5):
+        expected=0 if not public else 1 if frame and (activity or focus) else 2 if owned else 0
+        cases.append(f'{{FSub01DeviceScreenInputs In;In.PublicHome={public};In.PhoneActivity={activity};In.PhoneFrame={frame};In.PhoneAppFrame={owned};if(int(Sub01PhoneFrame(In,{focus}))!={expected})return 1;}}')
+    source=tmp_path/'focus.cpp';exe=tmp_path/'focus'
+    source.write_text(f'#include "{HEADER}"\nint main(){{'+''.join(cases)+'return 0;}')
+    subprocess.run([compiler,'-std=c++17','-Wall','-Werror',str(source),'-o',str(exe)],check=True,capture_output=True)
+    subprocess.run([str(exe)],check=True)

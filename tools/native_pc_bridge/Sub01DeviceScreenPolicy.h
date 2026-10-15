@@ -13,11 +13,11 @@ struct FSub01DeviceScreenInputs{
  bool MinecraftFrame=false;    // minecraft.has_frame
 };
 // Which actual phone frame may be shown: the browser page only while he uses the
-// phone; otherwise the backend's app frame (home screen, notes, messages) if any.
+// phone or an operator physically focuses it; otherwise the backend's app frame (home screen, notes, messages) if any.
 enum class ESub01PhoneFrame{None,BrowserPage,AppFrame};
-inline ESub01PhoneFrame Sub01PhoneFrame(const FSub01DeviceScreenInputs& In){
+inline ESub01PhoneFrame Sub01PhoneFrame(const FSub01DeviceScreenInputs& In,bool PhysicalPhoneFocus=false){
  if(!In.PublicHome)return ESub01PhoneFrame::None;
- if(In.PhoneActivity&&In.PhoneFrame)return ESub01PhoneFrame::BrowserPage;
+ if((In.PhoneActivity||PhysicalPhoneFocus)&&In.PhoneFrame)return ESub01PhoneFrame::BrowserPage;
  return In.PhoneAppFrame?ESub01PhoneFrame::AppFrame:ESub01PhoneFrame::None;
 }
 // The TV requests a Minecraft JPEG only when the selected game has a live frame;

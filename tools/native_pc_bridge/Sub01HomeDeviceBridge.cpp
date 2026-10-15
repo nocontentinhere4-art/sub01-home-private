@@ -59,9 +59,9 @@ static FSub01DeviceScreenInputs Sub01ScreenInputs(const TSharedPtr<FJsonObject>&
 // frame by the same policy Poll used: same phone identity and still showable
 // (owned app while public; browser only while he is on the phone), or Minecraft
 // still selected, enabled and with a frame.
-static bool Sub01FrameStillCurrent(bool Phone,const FString& Identity,const TSharedPtr<FJsonObject>& After){
+static bool Sub01FrameStillCurrent(bool Phone,const FString& Identity,const TSharedPtr<FJsonObject>& After,bool PhysicalPhoneFocus=false){
  FString CurrentIdentity;const FSub01DeviceScreenInputs In=Sub01ScreenInputs(After,&CurrentIdentity);
- if(Phone)return !Identity.IsEmpty()&&CurrentIdentity==Identity&&Sub01PhoneFrame(In)!=ESub01PhoneFrame::None;
+ if(Phone)return !Identity.IsEmpty()&&CurrentIdentity==Identity&&Sub01PhoneFrame(In,PhysicalPhoneFocus)!=ESub01PhoneFrame::None;
  return Sub01TVFetchesMinecraft(In);
 }
 class FSub01DeviceInput:public IInputProcessor{
@@ -136,8 +136,8 @@ void USub01HomeDeviceBridge::Poll(){
   PhoneApp.Empty();{const TSharedPtr<FJsonObject>* PhoneScreen=nullptr;if(State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)&&PhoneScreen)(*PhoneScreen)->TryGetStringField(TEXT("app"),PhoneApp);}
   if(AddressOpen&&PhoneApp!=TEXT("browser"))ClosePhoneAddress(false);
   // Browser parity (Sub01DeviceScreenPolicy.h): a browser page only while he is on the
-  // phone; an owned app frame whenever the home is public. Same authenticated route.
-  if(Sub01PhoneFrame(Screen)!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);
+  // phone or physically focused by the operator; same authenticated route.
+  if(Sub01PhoneFrame(Screen,FocusedDevice==TEXT("phone"))!=ESub01PhoneFrame::None)FetchFrame(TEXT("phone"),Identity,Epoch);
   else if(Materials.Contains(TEXT("phone"))){Materials[TEXT("phone")]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);Images.Remove(TEXT("phone"));ImageIdentity.Remove(TEXT("phone"));PhoneFrameId.Empty();}
   // Minecraft only with a live frame; selected without one, the TV stays blank (below).
   if(Sub01TVFetchesMinecraft(Screen))FetchFrame(TEXT("tv"),TEXT(""),Epoch);
@@ -152,7 +152,7 @@ void USub01HomeDeviceBridge::FetchFrame(FName Device,const FString& Identity,uin
  R->OnProcessRequestComplete().BindWeakLambda(this,[this,Device,Identity,Epoch](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){if(Epoch!=Generation)return;if(!OK||!Response||Response->GetResponseCode()!=200){FramePending.Remove(Device);if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),BlankCanvas);Images.Remove(Device);ImageIdentity.Remove(Device);return;}const FString Tag=Response->GetHeader(TEXT("ETag"));const TArray<uint8> Pixels=Response->GetContent();if(Pixels.Num()>6*1024*1024){FramePending.Remove(Device);return;}
   ReadHome([this,Device,Identity,Epoch,Pixels,Tag](TSharedPtr<FJsonObject> After){if(Epoch!=Generation)return;FramePending.Remove(Device);if(!PublicHome(After)){Clear();return;}
    // Same policy as Poll, re-evaluated on the fresh state at the moment of painting.
-   if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After))return;
+   if(!Sub01FrameStillCurrent(Device==TEXT("phone"),Identity,After,FocusedDevice==TEXT("phone")))return;
    const FString CurrentIdentity=Device==TEXT("phone")?Identity:Tag;
    if(!CurrentIdentity.IsEmpty()&&Images.Contains(Device)&&ImageIdentity.FindRef(Device)==CurrentIdentity){if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),Images[Device]);return;}
    auto* Texture=FImageUtils::ImportBufferAsTexture2D(Pixels);if(!Texture||Texture->GetSizeX()>2048||Texture->GetSizeY()>2048)return;Texture->SRGB=true;Texture->UpdateResource();Images.Add(Device,Texture);ImageIdentity.Add(Device,CurrentIdentity);if(Materials.Contains(Device))Materials[Device]->SetTextureParameterValue(TEXT("PCFrame"),Texture);if(Device==TEXT("phone"))PhoneFrameId=Identity;

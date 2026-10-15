@@ -29,3 +29,11 @@ no-local-address and downstream browsing restrictions remain authoritative.
 The private viewer supports physical Arrow/Home/End/Tab/Delete keys so phone
 scrolling and text widgets can receive their existing native bindings. This
 adds no Ctrl/Alt/Meta host shortcuts or browser credentials.
+
+Physical manual phone focus is distinct from SUB-01's autonomous phone activity.
+A real browser frame may also be painted while the actual native bridge has
+focused the physical phone via E. It still requires a fresh public home and exact
+phone frame identity; the async final paint rechecks current physical focus, so
+releasing it during the download refuses that frame. This local focus is never
+read from backend-supplied JSON, never changes the brain's activity or readiness,
+and cannot bypass privacy. The default/autonomous frame policy is unchanged.
