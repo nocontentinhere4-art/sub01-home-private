@@ -16,3 +16,18 @@ def test_candidate_must_not_be_game():
  with pytest.raises(AssertionError):m.validate_scope(scope(),m.CANDIDATE,game,editor,1792082700)
 def test_deadline_expired():
  with pytest.raises(AssertionError):m.validate_scope(scope(),m.CANDIDATE,*contexts(),1792117175)
+
+def promoted_scope():
+ s=scope();s.update(live_generation='playable-14acd9d355c6-e571937b708c',game_pid=193148,game_start_ticks=978377926,live_playable_project=str(m.PLAYABLE),live_map_sha256=m.PLAYABLE_MAP_SHA,live_module_sha256=m.PLAYABLE_MODULE_SHA);return s
+def promoted_contexts():
+ return ((978377926,'S',[str(m.PLAYABLE/'Sub01HomeLab.uproject').encode(),b'-game']),contexts()[1])
+def test_exact_promoted_live_game_still_only_authorizes_candidate():
+ assert m.validate_scope(promoted_scope(),m.CANDIDATE,*promoted_contexts(),1792094100)
+ for p in (m.SOURCE,m.PLAYABLE):
+  with pytest.raises(AssertionError):m.validate_scope(promoted_scope(),p,*promoted_contexts(),1792094100)
+@pytest.mark.parametrize('field,value',[('live_generation','arbitrary'),('game_pid',193149),('game_start_ticks',978377927),('live_playable_project',str(m.SOURCE)),('live_map_sha256','bad'),('live_module_sha256','bad')])
+def test_promoted_generation_cannot_adopt_other_game_or_assets(field,value):
+ s=promoted_scope();s[field]=value
+ with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*promoted_contexts(),1792094100)
+def test_promoted_scope_does_not_accept_departed_original_game():
+ with pytest.raises(AssertionError):m.validate_scope(promoted_scope(),m.CANDIDATE,*contexts(),1792094100)

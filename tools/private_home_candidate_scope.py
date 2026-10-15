@@ -10,6 +10,10 @@ CANDIDATE=Path('/workspace/sub01-private-candidate-20261015/Sub01HomeLab')
 SCOPE=Path('/run/sub01-home-private/candidate-scope.json')
 MAP_SHA='f2072833e5c21aeed43b4aefc63361a45396a3038e0234227dad9bd1501f7617'
 MODULE_SHA='97c3395e01e03c2df5f549c7920df289fa69a1073bee71c0b9a93fbfe8f5506a'
+PLAYABLE=Path('/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab')
+PLAYABLE_MAP_SHA='14acd9d355c66741b7ddfd17d34acbdc5f5f75f8fc71f0a708504f06ff0eeb00'
+PLAYABLE_MODULE_SHA='e571937b708c8e860d05373f1d3de428bc22a4c547cf80ded1ef80db706ace96'
+PLAYABLE_IDENTITY=(193148,978377926)
 HOME_SHA='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def trusted_json(path):
@@ -26,8 +30,14 @@ def validate_scope(scope,project,game,editor,now):
  assert scope.get('schema')=='sub01.private-next-home-candidate-scope.v1'and scope.get('candidate_project')==str(CANDIDATE)and scope.get('source_project')==str(SOURCE)
  assert scope.get('original_map_sha256')==MAP_SHA and scope.get('module_sha256')==MODULE_SHA
  assert now < scope.get('deadline_epoch',0)<=1792117175 and scope.get('no_live_promotion')is True
- assert scope.get('game_pid')==159171 and scope.get('game_start_ticks')==976840968 and game[0]==976840968 and game[1]!='Z'
- assert str(SOURCE/'Sub01HomeLab.uproject').encode()in game[2]and b'-game'in game[2]
+ if scope.get('live_generation')=='playable-14acd9d355c6-e571937b708c':
+  assert (scope.get('game_pid'),scope.get('game_start_ticks'))==PLAYABLE_IDENTITY
+  assert scope.get('live_playable_project')==str(PLAYABLE)and scope.get('live_map_sha256')==PLAYABLE_MAP_SHA and scope.get('live_module_sha256')==PLAYABLE_MODULE_SHA
+  assert game[0]==PLAYABLE_IDENTITY[1]and game[1]!='Z'and str(PLAYABLE/'Sub01HomeLab.uproject').encode()in game[2]and b'-game'in game[2]
+ else:
+  assert not scope.get('live_generation'),'Unknown private Game generation'
+  assert scope.get('game_pid')==159171 and scope.get('game_start_ticks')==976840968 and game[0]==976840968 and game[1]!='Z'
+  assert str(SOURCE/'Sub01HomeLab.uproject').encode()in game[2]and b'-game'in game[2]
  assert editor[0]==scope.get('editor_start_ticks')and editor[1]!='Z'and str(CANDIDATE/'Sub01HomeLab.uproject').encode()in editor[2]and b'-game'not in editor[2]
  assert scope.get('editor_pid')==os.getpid(),'Scope belongs to one actual candidate Editor process'
  return True
@@ -38,7 +48,12 @@ def active_candidate_guard(project=None):
  if Path(project).resolve()!=CANDIDATE:return False
  from unreal_editor_task_queue import guard_valid
  assert guard_valid(now=time.time()+60),'Authenticated private GPU window required'
- scope=trusted_json(SCOPE);validate_scope(scope,project,proc(159171),proc(os.getpid()),time.time())
+ scope=trusted_json(SCOPE);validate_scope(scope,project,proc(scope['game_pid']),proc(os.getpid()),time.time())
+ if scope.get('live_generation'):
+  receipt=CANDIDATE/'private-audit/approved-playable-promotion.json';assert sha(receipt)==scope['promotion_receipt_sha256']
+  promoted=json.loads(receipt.read_text());assert promoted.get('status')=='promoted-private-awaiting-functional-QA'and promoted.get('grants_refreshed')is True and promoted.get('first_frame_png_verified')is True
+  assert (promoted.get('new_pid'),promoted.get('new_start'))==PLAYABLE_IDENTITY and promoted.get('new_project')==str(PLAYABLE)and promoted.get('map_sha256')==PLAYABLE_MAP_SHA and promoted.get('module_sha256')==PLAYABLE_MODULE_SHA
+  assert sha(PLAYABLE/'Content/Sub01Home/ActualHome.umap')==PLAYABLE_MAP_SHA and sha(PLAYABLE/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==PLAYABLE_MODULE_SHA,'Promoted live home must remain immutable'
  assert sha(SOURCE/'Content/Sub01Home/ActualHome.umap')==MAP_SHA and sha(SOURCE/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==MODULE_SHA,'Live home map/module must remain unchanged'
  assert sha(CANDIDATE/'private-audit/candidate-copy.json')==scope['copy_receipt_sha256']
  copy=json.loads((CANDIDATE/'private-audit/candidate-copy.json').read_text());assert copy['all_writable_project_files_are_independent_copies']and copy['all_copied_file_hashes_verified']
