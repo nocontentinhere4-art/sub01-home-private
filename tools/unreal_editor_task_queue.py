@@ -119,6 +119,8 @@ def dispatch(task):
         for name in ('real_linea_edge_clamp', 'prepare_real_linea140_placement',
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
+    if task == 'real_bathroom_pendant':
+        importlib.reload(importlib.import_module('unreal_import_real_linea140'))
     module = importlib.reload(importlib.import_module(TASKS[task]))
     if task == 'scene_visual_inventory':
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
