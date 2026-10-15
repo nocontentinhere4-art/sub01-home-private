@@ -14,7 +14,7 @@ from launch_private_persistent_editor import (
     ENGINE, PROJECT, PRIVATE, verified_private_crash_preference, verified_window,
 )
 
-MODULE_SHA = '5a93902277e0d7e14ae501d2d6cfdd57785b9d3eaefb3b7b67041c19e3703ef0'
+MODULE_SHA = '97068a48dde1cdaa57b5d186f4cfb9682c4e0e3a6f078c2dcf7482a555a4e45a'
 
 
 def launch():
