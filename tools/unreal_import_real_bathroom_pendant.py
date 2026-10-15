@@ -76,9 +76,23 @@ def source_slot_binding(c,source,dest):
     return {source['name']:mat.get_path_name()}
 
 
-def verify_owned_material(u,c,source,dest):
+def source_rendered_material_binding(c,source,dest):
+    """For an exact verified single-primitive source part, audit rendered binding.
+
+    Interchange may assign a scene material override different from the mesh's
+    default slot. The caller must first prove every world-space source triangle
+    and exactly one source primitive; numeric/texture PBR verification follows.
+    """
+    mesh=c.get_editor_property('static_mesh');mat=c.get_material(0)
+    if (not mesh or not mesh.get_path_name().startswith(dest+'/')
+            or c.get_num_materials()!=1 or not mat or not mat.get_path_name().startswith(dest+'/')):
+        raise RuntimeError('Exact verified part requires one assigned newly owned rendered material')
+    return {source['name']:mat.get_path_name()}
+
+
+def verify_owned_material(u,c,source,dest,source_primitive_verified=False):
     from unreal_import_real_linea140 import verify_materials
-    binding=source_slot_binding(c,source,dest)
+    binding=(source_rendered_material_binding(c,source,dest)if source_primitive_verified else source_slot_binding(c,source,dest))
     mat=c.get_material(0);mel=u.MaterialEditingLibrary
     if not mat or not mat.get_path_name().startswith(dest+'/'):
         raise RuntimeError('Only newly owned imported fixture materials may be checked')

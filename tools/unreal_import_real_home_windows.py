@@ -9,7 +9,7 @@ from structural_rail_source_patch import world_matrices
 from prepare_real_wc_bundle import node_geometry
 from unreal_remove_frame_backings import native_triangles,same_triangles
 from unreal_import_real_linea140 import verify_materials
-from unreal_import_real_bathroom_pendant import source_slot_binding
+from unreal_import_real_bathroom_pendant import source_rendered_material_binding
 from unreal_import_reference_dressing import fingerprint
 from unreal_import_real_wc import owned_geometry
 from unreal_owned_import_cleanup import detach_added
@@ -125,7 +125,7 @@ def run(dry_run=True):
    sm=doc['materials'][pr[0]['material']]['name']
    if sm=='Window clear insulated glass':glass_components.append(c)
    else:
-    binding=source_slot_binding(c,doc['materials'][pr[0]['material']],dest)
+    binding=source_rendered_material_binding(c,doc['materials'][pr[0]['material']],dest)
     if sm in material_bindings and material_bindings[sm]!=binding[sm]:raise RuntimeError('Source window material maps to multiple actual instances')
     material_bindings.update(binding)
   if sum(len(x['exact_zero_area_source_indices'])for x in geometry_parts)!=432 or sum(x['positive_source_triangles']for x in geometry_parts)!=12624:raise RuntimeError('Pinned complete positive source surface counts differ')

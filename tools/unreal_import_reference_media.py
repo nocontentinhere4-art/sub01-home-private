@@ -110,7 +110,7 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
    actual=native_triangles(u,c);expected=expected_triangles(doc,blob,ni)
    if not same_triangles(expected,actual,tolerance=.0001):raise RuntimeError('Actual world media cabinet triangles differ from source')
    material=doc['materials'][doc['meshes'][n['mesh']]['primitives'][0]['material']]
-   pbr.append(verify_owned_material(u,c,material,dest));c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS);c.set_cast_shadow(True);actor.set_actor_label(n['name']);parts.append((actor,c));total+=len(actual)
+   pbr.append(verify_owned_material(u,c,material,dest,source_primitive_verified=True));c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS);c.set_cast_shadow(True);actor.set_actor_label(n['name']);parts.append((actor,c));total+=len(actual)
   if len(parts)!=11 or fingerprint(u,original)!=before:raise RuntimeError('Complete11 parts and protected original state required')
   u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True)
   for actor,c,_,_,_ in old:actor.set_actor_hidden_in_game(True);actor.set_is_temporarily_hidden_in_editor(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
