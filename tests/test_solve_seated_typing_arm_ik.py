@@ -255,18 +255,66 @@ def test_roll_is_reversible_quintic_and_floor_bound():
     assert np.isclose(d.sum(), np.linalg.norm(roll.roll), atol=1e-9)   # straight line, monotone
 
 
-def test_chair_shell_clears_the_real_desk_along_the_roll():
+def test_point_triangle_distance_exact_cases():
+    a, b, c = np.array([[0., 0, 0]]), np.array([[1., 0, 0]]), np.array([[0., 1, 0]])
+    pts = np.array([[.2, .2, .5], [2., 0, 0], [-1., -1, 0], [.5, .5, -1.]])
+    d = [K.point_triangle_distance(p[None], a, b, c)[0] for p in pts]
+    assert np.allclose(d, [.5, 1., math.sqrt(2), 1.])
+
+
+def test_complete_chair_is_the_measured_native_chair_with_arms_base_and_castors():
+    pytest.importorskip('scipy')
     chair = K.load_chair()
     assert np.allclose(chair['translation_cm'], [200.0199556350708, -186.69002056121826, 60.68757772445679])
-    g = K.load_geometry()
-    B, nodes = K.desk_boxes(g)
-    roll = K.ChairRoll(chair['translation_cm'], K.ROLL_OFFSET_CM)
-    rep = K.chair_path_clearance(chair, roll, B, nodes, samples=21)
-    assert rep['clear_all_samples'] and rep['worst']['min_cm'] > 0
-    # the measured chair has no armrests: away from the seat centre the shell never rises above the cushion
-    v = chair['shell_vertices_cm']
-    side = np.abs(v[:, 0] - chair['translation_cm'][0]) > 20
-    assert v[side & (v[:, 1] < -177), 2].max() < 52.
+    c = K.load_complete_chair(chair)
+    assert c['source_sha256'] == K.CHAIR_SOURCE_SHA256
+    assert set(c['triangles_by_material']) >= {'chair_fabric', 'chair_plastic', 'chair_armpad', 'chair_base', 'chair_caster', 'chair_lift'}
+    assert c['measured_shell_on_source_surface_cm']['max'] <= K.CHAIR_MATCH_TOL_CM
+    assert c['armrest_top_cm'] > 60                      # the actual chair HAS arm pads (about 67 cm)
+    col = K.ChairCollider(c)
+    m, mat = col.margin(np.array([[170.5, -190., 75.], [170.5, -190., 66.]]), np.zeros(3))
+    assert m[0] > 0 and m[1] < 0 and mat[1] == 'chair_armpad'       # above the pad clear; inside it refused
+
+
+def test_complete_chair_roll_clears_the_desk_and_keeps_its_floor_contact():
+    pytest.importorskip('scipy')
+    chair = K.load_chair()
+    c = K.load_complete_chair(chair)
+    B, nodes = K.desk_boxes(K.load_geometry())
+    rep = K.chair_path_clearance(c, K.ChairRoll(chair['translation_cm'], K.ROLL_OFFSET_CM), B, nodes, samples=21)
+    assert rep['desk_clear_all_samples'] and rep['floor_gap_constant_along_roll']
+    # the measured chair's caster bottoms sit at 0.0 cm, the support plane is 2.5 cm: reported AND gated, never hidden
+    assert rep['floor_gap_cm'][0] == pytest.approx(c['lowest_cm'] - K.FLOOR_CM)
+    assert rep['floor_no_penetration'] == (c['lowest_cm'] >= K.FLOOR_CM)
+
+
+def test_finger_contract_refuses_any_finger_change():
+    sk, W, ibm = synthetic()
+    ctx = SimpleNamespace(sk=sk, finger_joints=[NAMES.index(n) for n in NAMES if 'Hand' in n and n != 'LeftHand'])
+    W3 = np.repeat(W, 3, axis=0)
+    t = np.array([0., 1 / 30, 2 / 30])
+    ok = K.finger_contract(ctx, W3, W3, t)
+    assert ok['pass']
+    bent = W3.copy()
+    k = NAMES.index('LeftHandMiddle2')
+    R = rot((0, 0, 1), .2)
+    piv = bent[1, k, :3, 3].copy()
+    for j in (k, k + 1):
+        bent[1, j, :3, :3] = R @ bent[1, j, :3, :3]
+        bent[1, j, :3, 3] = piv + R @ (bent[1, j, :3, 3] - piv)
+    bad = K.finger_contract(ctx, bent, W3, t)
+    assert not bad['pass'] and bad['worst_error']['value'] == pytest.approx(.2, abs=1e-6)
+
+
+def test_exit_code_refuses_unless_every_gate_passes(monkeypatch):
+    assert K.exit_code({'ready': True, 'gates': {'a': True, 'b': True}}) == 0
+    assert K.exit_code({'ready': True, 'gates': {'a': True, 'b': False}}) == K.EXIT_REFUSED != 0
+    assert K.exit_code({'ready': False, 'gates': {'a': True}}) == K.EXIT_REFUSED
+    assert K.exit_code({}) == K.EXIT_REFUSED
+    for ready, want in ((False, K.EXIT_REFUSED), (True, 0)):
+        summary = {'ready': ready, 'gates': {'g': ready}, 'chair_roll_activity': {'roll_cm': [0, 0, 0]}}
+        monkeypatch.setattr(K, 'run', lambda args, s=summary: (s, {}))
+        assert K.main(['--out-dir', '/nonexistent-not-written']) == want
 
 
 # ---------------------------------------------------------------- the committed proposal
@@ -280,7 +328,10 @@ def test_committed_proposal_is_labelled_and_consistent():
     assert p['geometry']['sha256'] == hashlib.sha256(K.GEOMETRY_JSON.read_bytes()).hexdigest()
     roll = p['chair_roll_activity']
     assert np.allclose(roll['start_transform_cm'], p['chair']['translation_cm'], atol=1e-3)
-    assert roll['reversibility']['reversible'] and roll['chair_shell_clearance_along_path']['clear_all_samples']
+    assert roll['reversibility']['reversible'] and roll['reversibility']['final_equals_initial_exact']
+    assert p['gates']['roll_reversible_exact'] is True
+    assert p['ready'] == all(p['gates'].values()) and p['native_verified'] is False
+    assert p['gates']['roll_complete_chair_clear_of_desk'] == roll['complete_chair_clearance_along_path']['desk_clear_all_samples']
     for name, clip in p['clips'].items():
         path = ROOT / clip['glb']
         assert path.exists() and hashlib.sha256(path.read_bytes()).hexdigest() == clip['sha256']

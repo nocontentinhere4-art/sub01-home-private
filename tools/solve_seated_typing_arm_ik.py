@@ -680,21 +680,141 @@ class ChairRoll:
                 'mean_dt_s': round(float(dt.mean()), 5)}
 
 
-def chair_path_clearance(chair, roll, boxes, nodes, samples=101):
-    """Measured chair shell (all its vertices) vs every real-desk part box along the whole roll path."""
+# ---------------------------------------------------------------- the COMPLETE chair (shell, arms, base, castors, lift)
+CHAIR_SOURCE = ROOT / 'web/room/chair_owner.glb'      # the owner chair source: the native Mesh_174 at scale 0.6069
+CHAIR_SOURCE_SHA256 = 'd27084af80035c7ab278f90daf77a422fabe738095dad0b015a531f86249e2dc'
+FLOOR_CM = 2.5                                        # root: LINEA feet / support plane (fit FLOOR_CM 2.5001)
+UPHOLSTERY = ('chair_fabric',)                        # compressible: may be pressed in down to SEAT_BAND_CM[0]
+CHAIR_MATCH_TOL_CM = .5     # native LOD0 is a reduced mesh: its vertices lie ON the source surface, measured max 0.416 cm
+
+
+def point_triangle_distance(p, a, b, c):
+    """Vectorised exact distance from points p (N,3) to triangles (N,3 each) (Ericson, Real-Time Collision Detection)."""
+    ab, ac, ap = b - a, c - a, p - a
+    d1, d2 = np.sum(ab * ap, -1), np.sum(ac * ap, -1)
+    bp = p - b; d3, d4 = np.sum(ab * bp, -1), np.sum(ac * bp, -1)
+    cp = p - c; d5, d6 = np.sum(ab * cp, -1), np.sum(ac * cp, -1)
+    va = d3 * d6 - d5 * d4; vb = d5 * d2 - d1 * d6; vc = d1 * d4 - d3 * d2
+    den = np.where(np.abs(va + vb + vc) < 1e-30, 1e-30, va + vb + vc)
+    v, w = vb / den, vc / den
+    q = a + ab * v[..., None] + ac * w[..., None]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t_ab = np.clip(d1 / (d1 - d3), 0, 1); t_ac = np.clip(d2 / (d2 - d6), 0, 1)
+        t_bc = np.clip((d4 - d3) / ((d4 - d3) + (d5 - d6)), 0, 1)
+    cand = [a, b, c, a + ab * np.nan_to_num(t_ab)[..., None], a + ac * np.nan_to_num(t_ac)[..., None],
+            b + (c - b) * np.nan_to_num(t_bc)[..., None]]
+    inside = (va >= 0) & (vb >= 0) & (vc >= 0)
+    dist = np.min([np.linalg.norm(p - x, axis=-1) for x in cand], axis=0)
+    return np.where(inside, np.linalg.norm(p - q, axis=-1), dist)
+
+
+def load_complete_chair(measured, cache=None):
+    """Every triangle (with material and outward face normal) of the actual chair source, placed by root's MEASURED
+    native transform (translation, uniform scale, identity rotation; UE = translation + 100 * scale * (x, z, y)). Root's
+    measured native chair_fabric shell (a reduced LOD0 mesh of 1121 vertices) must lie on the source's chair_fabric
+    surface: exact point-to-triangle distance <= CHAIR_MATCH_TOL_CM for every measured vertex, which proves the source and
+    its placement are the native chair."""
+    src = Path(CHAIR_SOURCE)
+    sha = hashlib.sha256(src.read_bytes()).hexdigest()
+    if sha != CHAIR_SOURCE_SHA256:
+        raise ValueError('chair source bytes differ from the reviewed owner chair')
+    g = G.Gltf(E.decoded(src, Path(cache or ROOT / 'out/seat-fit-cache')))
+    node = g.doc['nodes'][0]
+    if node.get('rotation') not in (None, [0, 0, 0, 1]) or len(g.doc['nodes']) != 1:
+        raise ValueError('unexpected chair node layout')
+    sc = float(measured['scale'][0])
+    if not np.allclose(node['scale'], [sc] * 3, atol=1e-6) or not np.allclose(measured['scale'], [sc] * 3):
+        raise ValueError('chair source scale differs from the measured native scale')
+    t = np.asarray(measured['translation_cm'], float)
+    tris, fn, mat = [], [], []
+    for prim in g.doc['meshes'][node['mesh']]['primitives']:
+        v = t + 100. * sc * E.accessor(g, prim['attributes']['POSITION'])[:, [0, 2, 1]]
+        vn = E.accessor(g, prim['attributes']['NORMAL'])[:, [0, 2, 1]]
+        idx = E.accessor(g, prim['indices']).astype(int).reshape(-1, 3)
+        tr = v[idx]
+        n = np.cross(tr[:, 1] - tr[:, 0], tr[:, 2] - tr[:, 0])
+        n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
+        n *= np.where(np.sum(n * vn[idx].sum(1), axis=1) < 0, -1., 1.)[:, None]     # outward: agree with vertex normals
+        tris.append(tr), fn.append(n)
+        mat += [g.doc['materials'][prim['material']]['name']] * len(idx)
+    tris, fn, mat = np.concatenate(tris), np.concatenate(fn), np.array(mat)
+    from scipy.spatial import cKDTree
+    fab = tris[mat == 'chair_fabric']
+    V = measured['shell_vertices_cm']
+    _, ii = cKDTree(fab.mean(1)).query(V, k=24)
+    err = np.min([point_triangle_distance(V, *np.moveaxis(fab[ii[:, k]], 1, 0)) for k in range(24)], axis=0)
+    if err.max() > CHAIR_MATCH_TOL_CM:
+        raise ValueError(f'chair source does not reproduce the measured native shell (max {err.max():.4f} cm)')
+    edge = np.linalg.norm(tris[:, 1] - tris[:, 0], axis=1)
+    return {'source': rel(src), 'source_sha256': sha, 'placement': 'measured native transform (root chair report)',
+            'triangles_cm': tris, 'face_normals': fn, 'material': mat, 'vertices_cm': tris.reshape(-1, 3),
+            'triangles_by_material': {m: int((mat == m).sum()) for m in np.unique(mat)},
+            'measured_shell_on_source_surface_cm': {'median': float(np.median(err)), 'max': float(err.max()),
+                                                    'tolerance': CHAIR_MATCH_TOL_CM, 'measured_vertices': int(len(V))},
+            'edge_length_median_cm': float(np.median(edge)),
+            'bounds_cm': [tris.reshape(-1, 3).min(0).tolist(), tris.reshape(-1, 3).max(0).tolist()],
+            'armrest_top_cm': float(tris[mat == 'chair_armpad'][..., 2].max()) if (mat == 'chair_armpad').any() else None,
+            'lowest_cm': float(tris[..., 2].min())}
+
+
+class ChairCollider:
+    """Signed distance of points to the complete chair at a roll offset: exact distance to the nearest of the K_TRI
+    nearest-centroid triangles, signed by that triangle's outward normal (negative = inside). Upholstery may be pressed
+    in down to the seat band's lower edge (SEAT_BAND_CM[0], the cushion compression the seat gates allow); every other
+    part (plastic frame and arms, arm pads, back mesh, base, castors, gas lift) allows no penetration."""
+    K_TRI, REACH_CM = 8, 15.
+
+    def __init__(self, complete):
+        from scipy.spatial import cKDTree
+        self.c = complete
+        self.cen = complete['triangles_cm'].mean(1)
+        self.tree = cKDTree(self.cen)
+        self.allow = np.where(np.isin(complete['material'], UPHOLSTERY), seat_contact.SEAT_BAND_CM[0], 0.)
+
+    def margin(self, points, offset):
+        """(signed distance - allowed depth) per point (REACH_CM where no triangle is near), and the nearest material."""
+        shape = np.shape(points)[:-1]
+        p = np.asarray(points, float).reshape(-1, 3) - np.asarray(offset, float)
+        m = np.full(len(p), self.REACH_CM)
+        mat = np.full(len(p), '', dtype=object)
+        d0, _ = self.tree.query(p, distance_upper_bound=self.REACH_CM + 10.)
+        near = np.nonzero(np.isfinite(d0))[0]
+        if len(near):
+            _, ii = self.tree.query(p[near], k=self.K_TRI)
+            T_ = self.c['triangles_cm']
+            best, arg = np.full(len(near), np.inf), np.zeros(len(near), int)
+            for k in range(self.K_TRI):
+                tri = T_[ii[:, k]]
+                d = point_triangle_distance(p[near], tri[:, 0], tri[:, 1], tri[:, 2])
+                better = d < best
+                best[better], arg[better] = d[better], ii[better, k]
+            sgn = np.sign(np.sum((p[near] - self.cen[arg]) * self.c['face_normals'][arg], axis=1))
+            sd = best * np.where(sgn == 0, 1., sgn)
+            m[near] = np.minimum(sd - self.allow[arg], self.REACH_CM)
+            mat[near] = self.c['material'][arg]
+        return m.reshape(shape), mat.reshape(shape)
+
+
+def chair_path_clearance(complete, roll, boxes, nodes, samples=101):
+    """The COMPLETE chair (every source vertex) vs every real-desk part box and the floor along the whole roll path
+    (pull-in s 0 -> 1; push-back retraces the same positions)."""
     s = np.linspace(0., 1., samples)
     rows = []
+    V, M = complete['vertices_cm'], complete['material']
     for si in s:
-        pts = chair['shell_vertices_cm'] + roll.offset(si)
-        d, w = boxes_min_distance(pts, boxes)
+        pts = V + roll.offset(si)
+        d, w = boxes_min_distance(pts, boxes, reach_cm=20.)
         k = int(np.argmin(d))
-        rows.append({'s': round(float(si), 4), 'min_cm': round(float(d[k]), 4), 'nearest_desk_node': nodes[w[k]]})
-    worst = min(rows, key=lambda r: r['min_cm'])
-    return {'samples': samples, 'worst': worst, 'clear_all_samples': all(r['min_cm'] > 0 for r in rows),
-            'end_min_cm': rows[-1]['min_cm'], 'rows': rows[::10] + [rows[-1]] if samples > 10 else rows,
-            'method': 'signed distance of every measured chair shell vertex to each real desk part AABB (conservative)',
-            'limitation': 'the measured chair report holds only the chair_fabric shell (Z 40.1..73.7 cm); a chair base/'
-                          'castors, if separate actors, are not in the report and need the native swept check'}
+        rows.append({'s': round(float(si), 4), 'desk_min_cm': round(float(d[k]), 4), 'nearest_desk_node': nodes[w[k]] if w[k] >= 0 else None,
+                     'chair_part': str(M[k]), 'floor_gap_cm': round(float(pts[:, 2].min() - FLOOR_CM), 4)})
+    worst = min(rows, key=lambda r: r['desk_min_cm'])
+    floor = [r['floor_gap_cm'] for r in rows]
+    return {'samples': samples, 'worst_desk': worst, 'desk_clear_all_samples': all(r['desk_min_cm'] > 0 for r in rows),
+            'floor_gap_cm': [min(floor), max(floor)], 'floor_gap_constant_along_roll': bool(max(floor) - min(floor) < 1e-9),
+            'floor_no_penetration': bool(min(floor) >= 0.), 'rows': rows[::10] + ([rows[-1]] if (samples - 1) % 10 else []),
+            'method': 'every vertex of the complete chair source (shell, arms, arm pads, back mesh, base, castors, gas '
+                      'lift) at the measured transform + the roll offset, signed distance to each real desk part AABB '
+                      '(conservative, 20 cm reach) and height above the floor support plane'}
 
 
 def reversibility(roll, times_in, times_out):
@@ -708,7 +828,8 @@ def reversibility(roll, times_in, times_out):
             'push_back_start_equals_pull_in_end': bool(np.allclose(b[0], a[-1], atol=1e-9)),
             'push_back_end_equals_measured': bool(np.allclose(b[-1], roll.start, atol=1e-9)),
             'same_path_max_deviation_cm': float(np.abs(fwd - back).max()),
-            'reversible': bool(np.allclose(a[0], roll.start) and np.allclose(b[-1], roll.start) and np.allclose(b[0], a[-1])
+            'final_equals_initial_exact': bool(np.array_equal(b[-1], roll.start)),
+            'reversible': bool(np.array_equal(a[0], roll.start) and np.array_equal(b[-1], roll.start) and np.allclose(b[0], a[-1], atol=1e-12)
                                and np.abs(fwd - back).max() < 1e-9)}
 
 
@@ -815,6 +936,9 @@ class Context:
         self.boxes, self.box_nodes = desk_boxes(self.geometry)
         self.chair = load_chair()
         self.tri = self.chair['cushion_triangles_cm']
+        self.complete_chair = load_complete_chair(self.chair, cache)
+        self.collider = ChairCollider(self.complete_chair)
+        self.finger_joints = [k for k, n in enumerate(self.base.names) if any(f in n for f in FINGERS)]
         self.keys = T.keycaps_from_glb()
         self.arms = arm_skin(self.base.names, stride=1, cache=cache)
         self.body_skin = P.owner_skin(stride=BODY_SKIN_STRIDE, cache=cache)
@@ -852,7 +976,81 @@ class Context:
         return P.SeatFit(E.Source(d), self.tri, self.keys, tuple(chair_offset))
 
 
-def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_seam=None, finger_frames=None):
+MEASURE_REACH_CM = 10.          # distances beyond this report as 10 (never a false small value)
+FINGER_LOCAL_GATE_DEG = .1      # tools/validate_unreal_contact_profile.py: captured finger rotation change <= 0.1 deg
+
+
+def finger_steps_deg_s(ctx, W):
+    """Per finger joint: the capture's own largest frame-to-frame local rotation step, per second."""
+    L = arm_locals(ctx.sk, W)
+    return {k: P.rot_angle_deg(L[1:, k, :3, :3], L[:-1, k, :3, :3]) for k in ctx.finger_joints}
+
+
+def finger_contract(ctx, W, W_raw, times, seams=()):
+    """Finger gate on EVERY frame. Outside the seam windows: every finger local equals the clip's capture within
+    FINGER_LOCAL_GATE_DEG. Inside a full-pose seam window (weight w toward a neighbour pose whose fingers are that
+    neighbour's capture): every finger local equals slerp(capture, neighbour capture, w) within FINGER_LOCAL_GATE_DEG,
+    and every per-frame finger step is at most the largest step either capture itself makes in the same time
+    (max captured angular speed x dt) + FINGER_LOCAL_GATE_DEG. No frame is exempt."""
+    F = len(times)
+    Lo, Lr = arm_locals(ctx.sk, W), arm_locals(ctx.sk, W_raw)
+    expected = Lr.copy()
+    inwin = np.zeros(F, bool)
+    speed = {k: 0. for k in ctx.finger_joints}
+    t = np.asarray(times, float)
+    dt = np.diff(t)
+    for k, v in finger_steps_deg_s(ctx, W_raw).items():
+        speed[k] = max(speed[k], float((v / dt).max()))
+    for w, target, target_capture_times in seams:
+        w = np.asarray(w, float)
+        Lt = arm_locals(ctx.sk, target)
+        mid = w > 0
+        inwin |= mid
+        for k in ctx.finger_joints:
+            q = P.slerp_arrays(P.quat_from_matrix(unit_rot(expected[mid, k, :3, :3]))[:, None],
+                               P.quat_from_matrix(unit_rot(Lt[mid, k, :3, :3]))[:, None], w[mid])[:, 0]
+            expected[mid, k, :3, :3] = quat_to_matrix(q)
+        cap = target_capture_times
+        if cap is not None:
+            for k, v in finger_steps_deg_s(ctx, cap[0]).items():
+                speed[k] = max(speed[k], float((v / np.diff(cap[1])).max()))
+    err = np.max([P.rot_angle_deg(unit_rot(Lo[:, k, :3, :3]), unit_rot(expected[:, k, :3, :3])) for k in ctx.finger_joints], axis=0)
+    steps = np.max([P.rot_angle_deg(Lo[1:, k, :3, :3], Lo[:-1, k, :3, :3]) - (speed[k] * dt + FINGER_LOCAL_GATE_DEG)
+                    for k in ctx.finger_joints], axis=0)
+    out = {'rule': finger_contract.__doc__.split('No frame')[0].strip() + ' Overlapping windows compose in order.',
+           'gate_deg': FINGER_LOCAL_GATE_DEG,
+           'max_error_outside_windows_deg': _r(err[~inwin].max(), 6) if (~inwin).any() else None,
+           'max_error_inside_windows_deg': _r(err[inwin].max(), 6) if inwin.any() else None,
+           'worst_error': worst_frame(err, times, lowest=False), 'window_frames': int(inwin.sum()),
+           'worst_step_excess_deg': worst_frame(steps, times[1:], lowest=False),
+           'max_capture_speed_deg_s': _r(max(speed.values()), 3)}
+    out['pass'] = bool(err.max() <= FINGER_LOCAL_GATE_DEG and (steps <= 0).all())
+    return out
+
+
+def finger_override(ctx, W, W_raw, seams):
+    """Set every finger local to the declared seam blend of the captures: slerp(capture, neighbour capture, w), windows
+    composed in order. Fingers are leaves of the hand, so only finger (and fingertip) positions change."""
+    Lo, Lr = arm_locals(ctx.sk, W), arm_locals(ctx.sk, W_raw)
+    exp = Lr[:, :, :3, :3].copy()
+    for w, target, _ in seams:
+        w = np.asarray(w, float)
+        Lt = arm_locals(ctx.sk, target)
+        mid = w > 0
+        for k in ctx.finger_joints:
+            q = P.slerp_arrays(P.quat_from_matrix(unit_rot(exp[mid, k]))[:, None], P.quat_from_matrix(unit_rot(Lt[mid, k, :3, :3]))[:, None], w[mid])[:, 0]
+            exp[mid, k] = quat_to_matrix(q)
+    out = np.array(W, copy=True)
+    order = sorted(ctx.finger_joints, key=lambda k: depth(ctx.sk, k))
+    for k in order:
+        L = Lo[:, k].copy()
+        L[:, :3, :3] = exp[:, k] * np.linalg.norm(Lo[:, k, :3, 0], axis=-1)[:, None, None]
+        out[:, k] = out[:, ctx.sk.parents[k]] @ L
+    return out
+
+
+def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_seam=None, finger_frames=None,
+            finger_seams=()):
     """Every gate and metric on the given (read-back) pose, every frame. Solver frame: body at the audited transform,
     chair at measured + ROLL_OFFSET_CM. World at frame f: the body moved by shift[f] (UE cm), the chair at the measured
     transform + chair_offset_world[f]. Seat/sole gates are chair-relative (chair and body roll rigidly together), so they
@@ -918,7 +1116,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
         for a in range(0, F, 60):
             sl = slice(a, a + 60)
             pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
-            d, which = boxes_min_distance(pts, ctx.boxes)
+            d, which = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
             v, _ = slab_clearance(pts, ctx.geometry['tabletop_slab'])
             for p in rows:
                 m = part == p
@@ -961,7 +1159,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     for a in range(0, F, 40):
         sl = slice(a, a + 40)
         pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
-        d, _ = boxes_min_distance(pts, ctx.boxes)
+        d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
         for k in body_min:
             m = ctx.body_group == k
             body_min[k][sl] = d[:, m].min(1)
@@ -972,16 +1170,40 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     out['body_vs_desk']['sampling'] = f'every {BODY_SKIN_STRIDE}th owner skin vertex'
     out['seat_pass'] = bool(seat_pass)
     out['seat_pass_at_rolled_chair'] = bool(seat_pass_r)
-    fm = np.ones(F, bool) if finger_frames is None else np.asarray(finger_frames, bool)
-    out['finger_local_max_change_deg'] = _r(P.finger_local_error_deg(ctx.sk, W_raw[fm], W[fm], np.eye(4)), 7) if fm.any() else 0.
-    out['finger_local_gate_frames'] = 'every frame' if finger_frames is None else \
-        f'{int(fm.sum())} frames outside the full-pose seam windows (inside them the fingers blend to the neighbour clip)'
-    if finger_frames is not None:
-        out['finger_local_max_change_in_seam_windows_deg'] = _r(P.finger_local_error_deg(ctx.sk, W_raw, W, np.eye(4)), 4)
+    out['fingers'] = finger_contract(ctx, W, W_raw, times, finger_seams)
+    out['finger_local_max_change_deg'] = out['fingers']['worst_error']['value']
+    # the COMPLETE chair at this frame's roll offset: vs the real desk, the floor, and the body
+    offs, inv = np.unique(np.round(np.asarray(chair_offset_world, float), 9), axis=0, return_inverse=True)
+    ch_desk, ch_floor = np.empty(len(offs)), np.empty(len(offs))
+    V = ctx.complete_chair['vertices_cm']
+    for i, o in enumerate(offs):
+        ch_desk[i] = boxes_min_distance(V + o, ctx.boxes, reach_cm=20.)[0].min()
+        ch_floor[i] = (V[:, 2] + o[2]).min() - FLOOR_CM
+    ch_desk, ch_floor = ch_desk[inv.ravel()], ch_floor[inv.ravel()]
+    body_chair = np.full(F, np.inf)
+    body_part = np.full(F, '', dtype=object)
+    for f in range(F):
+        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
+        m, mat = ctx.collider.margin(pts, chair_offset_world[f])
+        k = int(np.argmin(m))
+        body_chair[f], body_part[f] = m[k], f'{ctx.body_group[k]} vs {mat[k]}'
+    pf['chair_vs_desk_cm'] = [_r(v, 3) for v in ch_desk]
+    pf['chair_floor_gap_cm'] = [_r(v, 4) for v in ch_floor]
+    pf['body_vs_chair_margin_cm'] = [_r(v, 3) for v in body_chair]
+    out['chair'] = {'chair_vs_desk': worst_frame(ch_desk, times), 'chair_vs_desk_pass': bool((ch_desk > 0).all()),
+                    'floor_gap': worst_frame(ch_floor, times), 'floor_pass': bool((ch_floor >= 0).all()),
+                    'body_vs_chair_margin': dict(worst_frame(body_chair, times) or {}, contact=str(body_part[int(np.argmin(body_chair))])),
+                    'body_vs_chair_pass': bool((body_chair > 0).all()),
+                    'rule': 'body skin (every %dth vertex) signed distance to the complete chair minus the allowed depth '
+                            '(upholstery: the seat band lower edge %.1f cm; every other part 0) > 0; complete chair vs the '
+                            'real desk part boxes > 0; lowest chair point >= the %.1f cm floor' % (
+                                BODY_SKIN_STRIDE, seat_contact.SEAT_BAND_CM[0], FLOOR_CM)}
     out['all_gates_pass'] = bool(seat_pass and seat_pass_r and all(v['pass'] for v in keys_out.values())
                                  and all(v['desk_clearance_pass'] for v in arms_out.values())
                                  and out['body_vs_desk']['legs_and_torso_clear']
-                                 and g['bone_length_max_error_cm'] <= .01 and out['finger_local_max_change_deg'] <= .1)
+                                 and g['bone_length_max_error_cm'] <= .01 and out['fingers']['pass']
+                                 and out['chair']['chair_vs_desk_pass'] and out['chair']['floor_pass']
+                                 and out['chair']['body_vs_chair_pass'])
     out['per_frame'] = pf
     return out
 
@@ -1079,26 +1301,34 @@ def transition_arms(ctx, ik, W_fit, W_ik, s, keep_fit):
     return Wb, {'ik_weight': [_r(v, 4) for v in w], 'frames_raised_for_clearance_or_keys': sorted(raised)}
 
 
-def post_lift(ctx, ik, W, window):
-    """Inside a full-pose seam window, blending two non-penetrating poses can still put a finger into the keycaps or
-    an arm against the desk. Per side, the smallest smooth vertical wrist lift (non-stretch two-bone IK, current elbow as
-    pole, current hand world rotation, fingers carried) that removes it; zero outside the window and on frames where the
-    window weight is 1 (those frames ARE the neighbour pose)."""
+def post_contact(ctx, ik, W, window, seam_frame=None):
+    """After the DeskTyping-side seam blend (and with the captured finger curls kept on every frame), per side a smooth
+    vertical wrist correction (non-stretch two-bone IK, current elbow as pole, current wrist-relative hand rotation,
+    fingers carried) over the window: exact key contact (KeyTop + 0.08 cm) at the seam frame when that hand is over the
+    keys there, tapered by the window weight, plus the smallest smooth lift that removes any keycap penetration or desk
+    contact inside the window. Zero outside the window."""
     F = len(W)
     window = np.asarray(window, float)
-    gate = (window > 0) & (window < 1)
+    gate = window > 0
     top = ik.keys['top_cm']
     lift = {s: np.zeros(F) for s in SIDES}
+    seam_d = {s: 0. for s in SIDES}
     W0 = np.array(W, copy=True)
     Wc = W0
-    for _ in range(12):
+    for _ in range(16):
         a = ik.key_audit(Wc)
         more = False
         for s in SIDES:
             need = np.where(gate & (a[s]['over'] > 0), np.maximum(0., top - a[s]['over_min']), 0.)
             cl = ik.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0]
-            need = np.maximum(need, np.where(gate & (cl < 0), LIFT_STEP_CM, 0.))
-            need = np.nan_to_num(need)
+            need = np.nan_to_num(np.maximum(need, np.where(gate & (cl < 0), LIFT_STEP_CM, 0.)))
+            if seam_frame is not None:
+                need[seam_frame] = 0.
+                if a[s]['over'][seam_frame] >= KEY_MIN_OVER_VERTICES:
+                    res = top + KEY_TOP_TARGET_CM - a[s]['over_min'][seam_frame]
+                    if abs(res) > CONTACT_TOL_CM:
+                        seam_d[s] += float(res)
+                        more = True
             if need.any():
                 more = True
                 lift[s] = envelope(lift[s] + need, ik.dt) * gate
@@ -1106,13 +1336,15 @@ def post_lift(ctx, ik, W, window):
             break
         Wc = np.array(W0, copy=True)
         for s in SIDES:
-            if not lift[s].any():
+            v = lift[s] + seam_d[s] * window
+            if not v.any():
                 continue
             a_, b_, c_ = (ctx.sk.j(n) for n in ARM_BONES[s])
-            tgt = Wc[:, c_, :3, 3] + UP * lift[s][:, None] / 100.
-            Wc, _, _, _, _ = solve_arm(ctx.sk, Wc, s, tgt, Wc[:, b_, :3, 3], ctx.base.ibm, D=wrist_relative(Wc, ctx.base.names,
-                                       ctx.base.ibm, s), limit=False)
-    return Wc, {s: {'max_cm': _r(v.max(), 4), 'frames': [int(i) for i in np.nonzero(v)[0]]} for s, v in lift.items()}
+            tgt = Wc[:, c_, :3, 3] + UP * v[:, None] / 100.
+            Wc, _, _, _, _ = solve_arm(ctx.sk, Wc, s, tgt, Wc[:, b_, :3, 3], ctx.base.ibm,
+                                       D=wrist_relative(Wc, ctx.base.names, ctx.base.ibm, s), limit=False)
+    return Wc, {s: {'seam_contact_shift_cm': _r(seam_d[s], 4), 'lift_max_cm': _r(lift[s].max(), 4),
+                    'lift_frames': [int(i) for i in np.nonzero(lift[s])[0]]} for s in SIDES}
 
 
 def seam_blend_with_soles(ctx, A, W_clip, Tg, w, W_raw, times):
@@ -1217,11 +1449,12 @@ def strip(rep):
 SEAM_FULL_S = .3                # full-pose seam windows of the transitions (SeatedIdle side and DeskTyping side)
 
 
-def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir):
+def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=None, dt_capture=None):
     """SitToType (at_end: the keyboard is at its end) / TypeToSit. The chair roll plays over the clip. Both ends are
-    full-pose seam blends (fit_seat_pelvis_pitch.seam_blend_pose + seam_blend_legs, quintic weights): the SeatedIdle end
-    becomes the validated SeatedIdle loop exactly (SitToType's first frame IS SeatedIdle's last; TypeToSit's last IS
-    SeatedIdle's first) and the keyboard end becomes the written DeskTyping pose exactly (its first / last frame, held).
+    full-pose seam blends (fit_seat_pelvis_pitch.seam_blend_pose + seam_blend_legs, quintic weights) of every joint
+    EXCEPT the fingers: the SeatedIdle end becomes the validated SeatedIdle loop pose (SitToType's first frame = SeatedIdle's
+    last; TypeToSit's last = SeatedIdle's first) and the keyboard end the written DeskTyping pose (its first / last frame,
+    held), while the fingers keep this clip's captured curls on every frame (their boundary jump is reported).
     Between them the arms blend from the seat-fit arms to the whole-arm IK (contact on the fit's own over-key frames,
     real-desk clearance)."""
     f_c, r_c, g_c, t_c = ctx.clip(role)
@@ -1247,7 +1480,10 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir):
     Td = np.repeat((W_dt[0] if at_end else W_dt[-1])[None], F, axis=0)
     w_dt = P.seam_weight('end', F, F - 1 - n, F - 1) if at_end else P.seam_weight('start', F, 0, n)
     W3, legs_dt = seam_blend_with_soles(ctx, A, W2, Td, w_dt, r_c.joint_world, t_c)
-    W3, seam_lift = post_lift(ctx, ikc, W3, w_dt)
+    # fingers keep THIS clip's captured curls on every frame (gate (a): all-frame invariance, no seam exemption); the
+    # finger change at the clip boundary is then a seam jump, measured and reported in the seam table
+    W3 = finger_override(ctx, W3, r_c.joint_world, [])
+    W3, seam_lift = post_contact(ctx, ikc, W3, w_dt, seam_frame=F - 1 if at_end else 0)
     path, sha = write(ctx, g_c, W3, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role))
     Wcb = readback(ctx, path, t_c)
     seam_frame = F - 1 if at_end else 0
@@ -1255,11 +1491,12 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir):
            'input_fit_clip': f'docs/proposed/seat-pose-fit/{CLIPS[role][0]}', 'raw_capture': CLIPS[role][1],
            'chair_roll': roll.describe(t_c, s) | {'activity': 'pull chair in' if at_end else 'push chair back'},
            'seam_windows': {'seated_idle_side_weight': [_r(v, 4) for v in w_idle], 'desk_typing_side_weight': [_r(v, 4) for v in w_dt],
-                            'window_frames': n, 'legs': {'seated_idle_side': legs_idle, 'desk_typing_side': legs_dt},
-                            'desk_typing_side_wrist_lift': seam_lift},
+                            'window_frames': n, 'fingers': 'captured curls kept on every frame (all-frame invariance gate)',
+                            'legs': {'seated_idle_side': legs_idle, 'desk_typing_side': legs_dt},
+                            'desk_typing_side_wrist_contact': seam_lift},
            'arm_weights': weights, 'ik_history': ikc.history,
            'measure': measure(ctx, role, Wcb, r_c.joint_world, t_c, shift_c, off, ikc, key_seam=seam_frame,
-                              finger_frames=(w_idle == 0) & (w_dt == 0))}
+                              finger_seams=())}
     rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'])
     return rep, Wcb, shift_c, t_c
 
@@ -1320,9 +1557,11 @@ def run(args):
     reports['DeskTyping_seated'], worlds['DeskTyping_seated'] = rep, (Wb, shift, t_dt)
     print('DeskTyping', rep['all_gates_pass'], flush=True)
     # ---- transitions: the roll is played over them (pull-in over SitToType, push-back over TypeToSit)
-    W_idle = ctx.clip('SeatedIdle')[0].joint_world
+    f_i, r_i, _, t_i = ctx.clip('SeatedIdle')
+    W_idle = f_i.joint_world
     for role, at_end in (('SitToType_seated', True), ('TypeToSit_seated', False)):
-        rep, Wcb, shift_c, t_c = transition(ctx, role, at_end, roll, r0, W_idle, Wb, out_dir)
+        rep, Wcb, shift_c, t_c = transition(ctx, role, at_end, roll, r0, W_idle, Wb, out_dir,
+                                            (r_i.joint_world, t_i), (r_dt.joint_world, t_dt))
         reports[role], worlds[role] = rep, (Wcb, shift_c, t_c)
         print(role, rep['all_gates_pass'], flush=True)
     # ---- unchanged neighbours (seat-pose-fit GLBs) for the seams: at the measured chair (body at its actual placement)
@@ -1346,16 +1585,35 @@ def run(args):
         'seat_fit_chair_offset_cm': list(ROLL_OFFSET_CM), 'extra_pull_in_dy_cm': dy,
         'played_over': {'pull_in': 'SitToType_seated', 'push_back': 'TypeToSit_seated'},
         'held_rolled_during': 'DeskTyping_seated', 'at_measured_transform_during': ['SitDown_seated', 'SeatedIdle', 'GetUp_seated'],
-        'chair_shell_clearance_along_path': chair_path_clearance(ctx.chair, roll, ctx.boxes, ctx.box_nodes),
+        'complete_chair': {k: v for k, v in ctx.complete_chair.items() if k not in ('triangles_cm', 'face_normals', 'material', 'vertices_cm')},
+        'complete_chair_clearance_along_path': chair_path_clearance(ctx.complete_chair, roll, ctx.boxes, ctx.box_nodes),
         'reversibility': reversibility(roll, worlds['SitToType_seated'][2], worlds['TypeToSit_seated'][2]),
         'feet': 'the body rolls rigidly with the chair: sole gaps are unchanged and the soles slide on the floor at the roll '
                 'speed (a seated scoot); per-frame sole gates are in each transition report'}
     summary['clips'] = {k: {'glb': v['glb'], 'sha256': v['sha256'], 'all_gates_pass': v['all_gates_pass']} for k, v in reports.items()}
     summary['all_gates_pass'] = {k: v['all_gates_pass'] for k, v in reports.items()}
+    act = summary['chair_roll_activity']
+    path_ = act['complete_chair_clearance_along_path']
+    summary['gates'] = dict({f'clip_{k}': v for k, v in summary['all_gates_pass'].items()},
+                            roll_complete_chair_clear_of_desk=path_['desk_clear_all_samples'],
+                            roll_complete_chair_floor_no_penetration=path_['floor_no_penetration'],
+                            roll_floor_contact_unchanged=path_['floor_gap_constant_along_roll'],
+                            roll_reversible_exact=act['reversibility']['reversible'])
+    summary['ready'] = bool(all(summary['gates'].values()))
+    summary['native_verified'] = False
+    summary['ready_rule'] = 'every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits %d when not ready)' % EXIT_REFUSED
     for k, v in reports.items():
         (out_dir / f'SUB01_{k}.report.json').write_text(json.dumps(strip(v), indent=1, allow_nan=False) + '\n')
     (out_dir / 'seated-typing-ik.proposal.json').write_text(json.dumps(summary, indent=1, allow_nan=False) + '\n')
     return summary, reports
+
+
+EXIT_REFUSED = 3
+
+
+def exit_code(summary):
+    """0 only when every aggregate gate passed (summary['ready']); EXIT_REFUSED otherwise (the report is still written)."""
+    return 0 if summary.get('ready') is True and all(summary.get('gates', {False: False}).values()) else EXIT_REFUSED
 
 
 def main(argv=None):
@@ -1370,8 +1628,8 @@ def main(argv=None):
         GEOMETRY_JSON.parent.mkdir(parents=True, exist_ok=True)
         GEOMETRY_JSON.write_text(json.dumps(desk_geometry(args.desk_source), indent=1) + '\n')
     summary, _ = run(args)
-    print(json.dumps({'all_gates_pass': summary['all_gates_pass'], 'roll_cm': summary['chair_roll_activity']['roll_cm']}, indent=1))
-    return 0
+    print(json.dumps({'ready': summary['ready'], 'gates': summary['gates'], 'roll_cm': summary['chair_roll_activity']['roll_cm']}, indent=1))
+    return exit_code(summary)
 
 
 if __name__ == '__main__':
