@@ -4,7 +4,8 @@ from uuid import uuid4
 from unreal_owned_import_cleanup import release_temporary
 from real_linea_lamp_mount import geometry
 from pathlib import Path
-NODES=(221,222,223,224);ROOT_NODE=225;DELTA=(-.4,0.,-.01)
+from plant_physical_geometry import partition,area_squared
+NODES=(221,222,223,224);ROOT_NODE=225;DELTA=(-.4,0.,-.0157754111289978)
 MESHES={221:165,222:163,223:164,224:162}
 
 def source_plan(home):
@@ -19,16 +20,23 @@ def source_plan(home):
  expected=[[2.590996563434601,-3.2401549220085144,.844999972730875],[2.720996558666229,-3.1101549267768858,.8629999719560146]]
  if max(abs(x-y)for a,b in zip(lb,expected)for x,y in zip(a,b))>1e-6:raise ValueError('Actual generated radius65mm/height18mm obsolete foot bounds differ')
  legacy_plan={'source_node':259,'source_name':'Mesh_181','source_material':'Material_14','source_triangle_count':len(legacy[0]['triangles']),'old_bounds_ue_m':lb,'native_mesh':'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_181.Mesh_181','native_material':'/Game/Sub01Home/ImportedScene/full-home/Materials/Material_14.Material_14','source_evidence':'home.js625 old red arm +644 generated cylinder radius.065,height.018; real-lamps saved hide receipt omitted259','action':'hide_only_exact259_and_NoCollision_in_same_office_transaction'}
- plans=[];contacts=[];boundary=[];allpoints=[]
+ plans=[];contacts=[];boundary=[];allpoints=[];discarded=[]
  for row in members:
-  old=[(p[0],p[2],p[1])for p in row['points']];new=[tuple(p[a]+DELTA[a]for a in range(3))for p in old];allpoints+=new
+  nominal=len(row['triangles']);physical,zero=partition([[row['points'][v]for v in t]for t in row['triangles']])
+  if zero:
+   if row['node']!=222 or nominal!=56878 or zero!=list(range(56746,56878)):raise ValueError('Unreviewed zero-area plant source geometry')
+   discarded.append({'node':row['node'],'nominal_source_triangles':nominal,'zero_area_triangle_indices':zero})
+  zero_set=set(zero);row['triangles']=[t for i,t in enumerate(row['triangles'])if i not in zero_set]
+  used={v for t in row['triangles']for v in t}
+  old=[(p[0],p[2],p[1])for p in row['points']];new=[tuple(p[a]+DELTA[a]for a in range(3))for p in old];allpoints+=[new[v]for v in used]
   bounds=lambda ps:[[min(p[a]for p in ps)for a in range(3)],[max(p[a]for p in ps)for a in range(3)]]
   for i,t in enumerate(row['triangles']):
-   if min(new[v][2]for v in t)>=.845-1e-8 and any(abs(new[v][2]-.845)<=1e-7 for v in t):boundary.append({'node':row['node'],'triangle':i})
-   if all(abs(new[v][2]-.845)<=1e-7 for v in t):contacts.append({'node':row['node'],'triangle':i,'points_ue_m':[new[v]for v in t]})
-  plans.append({'node':row['node'],'old_bounds_ue_m':bounds(old),'new_bounds_ue_m':bounds(new),'source_triangle_count':len(row['triangles'])})
- if abs(min(p[2]for p in allpoints)-.845)>1e-7 or not contacts:raise ValueError('Actual authored plant base lacks exact tabletop contact faces')
- return {'root_source_node':225,'mesh_source_nodes':list(NODES),'rigid_delta_ue_cm':[v*100 for v in DELTA],'members':plans,'exact_base_contact_faces':contacts,'exact_nonpenetrating_base_boundary_faces':boundary,'geometry_uv_pbr_unchanged':True,'retire_only_obsolete_generated_lamp_base':legacy_plan,'watering_anchor_status':'No watering implementation/coordinate anchor found in local native source; actual interaction acceptance remains unverified'},members
+   if min(new[v][2]for v in t)>=.845-1e-8 and any(abs(new[v][2]-.845)<=1e-7 for v in t):
+    face={'node':row['node'],'triangle':i,'points_ue_m':[new[v]for v in t],'positive_triangle_area_m2':area_squared([new[v]for v in t])**.5,'contact_kind':'nonpenetrating point/edge on actual positive-area pot surface'}
+    boundary.append({'node':row['node'],'triangle':i});contacts.append(face)
+  plans.append({'node':row['node'],'old_bounds_ue_m':bounds([old[v]for v in used]),'new_bounds_ue_m':bounds([new[v]for v in used]),'source_triangle_count':len(row['triangles']),'nominal_source_triangle_count':nominal,'discarded_exact_zero_area_triangle_indices':zero})
+ if abs(min(p[2]for p in allpoints)-.845)>1e-7 or not contacts or any(r['node']!=223 or r['positive_triangle_area_m2']<=0 for r in contacts):raise ValueError('Actual authored plant base lacks exact tabletop contact faces')
+ return {'root_source_node':225,'mesh_source_nodes':list(NODES),'rigid_delta_ue_cm':[v*100 for v in DELTA],'members':plans,'positive_area_base_support_triangles':contacts,'discarded_exact_zero_area_padding':discarded,'physical_geometry_policy':'Every positive-area source triangle preserved; only exact132 zero-area pebbles padding discarded; support is real pot point/edge contact, not a flat invented face','exact_nonpenetrating_base_boundary_faces':boundary,'geometry_uv_pbr_unchanged':True,'retire_only_obsolete_generated_lamp_base':legacy_plan,'watering_anchor_status':'No watering implementation/coordinate anchor found in local native source; actual interaction acceptance remains unverified'},members
 
 
 
@@ -134,11 +142,12 @@ def stage_exact_owned_geometry(u,ctx,eas):
    temp.set_actor_label('SUB01_OfficePlant_SourceProof_'+str(plan['node']));temp.set_actor_hidden_in_game(True)
    tc=temp.get_component_by_class(u.StaticMeshComponent);temporary[-1]=(temp,tc);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
    for slot,material in enumerate(c.get_materials()):tc.set_material(slot,material)
-   wanted=triangles(doc,binary,plan['node']);actual=native_triangles(u,tc)
+   raw=triangles(doc,binary,plan['node']);wanted,zero=partition(raw);actual=native_triangles(u,tc)
+   if len(raw)!=plan.get('nominal_source_triangle_count',plan['source_triangle_count'])or zero!=plan.get('discarded_exact_zero_area_triangle_indices',[]):raise RuntimeError('Actual plant zero-area source manifest changed')
    if len(wanted)!=plan['source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned rebuilt full plant triangle geometry differs exact source '+str(plan['node']))
    if [m.get_path_name()if m else None for m in tc.get_materials()]!=[m.get_path_name()if m else None for m in c.get_materials()]:raise RuntimeError('Owned rebuilt plant altered material bindings')
    replacements[c.get_path_name()]=clone
-   proof.append({'node':plan['node'],'original_mesh':original.get_path_name(),'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
+   proof.append({'node':plan['node'],'original_mesh':original.get_path_name(),'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'nominal_source_triangles':len(raw),'discarded_exact_zero_area_triangle_indices':zero,'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
   after={c.get_editor_property('static_mesh').get_path_name():native_geometry_api_audit(u,c.get_editor_property('static_mesh'))['nanite_settings']for a,c,p in ctx['rows']}
   if after!=original_settings:raise RuntimeError('Shared original plant Nanite settings changed')
   return {'destination':dest,'replacements':replacements,'proof':proof}
