@@ -1,0 +1,33 @@
+{
+  "schema": "sub01.real-table-controller-plant-rigid-clearance.v1",
+  "sourceSHA": {
+    "real-dualsense-160mm.glb": "0c86d9bda650856c51946aefe2497e176d4c6aeb57aa806e7789e33c32428598",
+    "muuto-around-large-dark-satin.glb": "8796c519e5a4d6acaffe6a77dcf7393ab1f703de75a3de05b3e148a84eb772b4",
+    "genuine-around-plant.glb": "17f547cd694ceb85d15f7eb49890ec0f8a4de6e0f8c23eec08d19ab63c728abf"
+  },
+  "controllerRootTranslationUEcm": [
+    -257,
+    -25,
+    37.426253204345706
+  ],
+  "controllerYawUEdegrees": 0,
+  "controllerOnlyDeltaYcm": -20,
+  "fullSourceBVHFindings": [],
+  "sourceFootSamples": 1191,
+  "minimumSupportedSkinGapCm": 0.005,
+  "controllerBoundsUEcm": [
+    [
+      -265.0,
+      -30.28704261779785,
+      37.42625427246094
+    ],
+    [
+      -249.0,
+      -19.71295738220215,
+      43.937984466552734
+    ]
+  ],
+  "allOriginalGeometryPBRPreserved": true,
+  "ok": true,
+  "nativeChanged": false
+}
