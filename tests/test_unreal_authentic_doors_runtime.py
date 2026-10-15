@@ -73,3 +73,16 @@ def test_linear_swept_bounds_cover_opening_and_closing():
    for sample in range(101):
     p=start+(end-start)*sample/100
     assert middle-half-1e-12<=p<=middle+half+1e-12
+
+def test_actual_generator_keeps_all_corridor_privacy_gates_before_owned_doors(tmp_path):
+ from stage_unreal_home_runtime import stage
+ from unreal_bathroom_corridor_runtime import SOURCE_SHA,EXPORT_SHA,CONTRACT_SHA,NODES
+ (tmp_path/'Config').mkdir();(tmp_path/'Sub01HomeLab.uproject').write_text('{}');(tmp_path/'private-audit').mkdir()
+ (tmp_path/'private-audit/bathroom-corridor-native-import.json').write_text(json.dumps({'schema':'sub01.bathroom-corridor-native-import.v1','source_sha256':SOURCE_SHA,'export_sha256':EXPORT_SHA,'source_contract_sha256':CONTRACT_SHA,'source_nodes':NODES,'saved':True,'originals_preserved':True}))
+ stage(tmp_path);module=tmp_path/'Source/Sub01HomeLab';header=(module/'Sub01HomeLab.h').read_text();cpp=(module/'Sub01HomeLab.cpp').read_text();write(tmp_path,receipt());header,cpp=install(header,cpp,tmp_path)
+ assert cpp.count('Eye.X<-100')==6 and 'Eye.X<-85'not in cpp
+ assert 'x<-100&&x>-378' in cpp and 'x<-85&&'not in cpp
+ assert cpp.index(' ConfigureAuthenticDoors();')<cpp.index(' ConfigureActualExitDoor();')
+ assert cpp.index(' if(TryAuthenticDoor(Hit.GetComponent()))return;')<cpp.index(' if(TryNativeExitDoor(Hit.GetComponent()))return;')
+ assert 'GeometryProfile!=TEXT("5ffac2406e66")'in cpp
+ assert 'GetCapsuleComponent()->InitCapsuleSize(16.f,91.f)'in cpp
