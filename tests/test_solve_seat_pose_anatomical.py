@@ -1,4 +1,5 @@
 """Anatomical seated pose solver (tools/solve_seat_pose_anatomical.py): synthetic chain, limits, skinning, main margins."""
+import hashlib
 import json
 import subprocess
 import sys
@@ -178,9 +179,14 @@ def test_committed_report_is_labelled_and_main_judged():
     rep = json.loads(path.read_text())
     assert rep['label'] == 'proposal' and rep['verified'] is False and rep['changes_importer_pins_or_verdicts'] is False
     assert rep['main_validator']['sha256'] == 'dd95f1b1a8c3fc9a7d08b6d599985b86440c84752d85ae9f12fa8d480397a18f'
-    assert 'MIN_SUPPORT_VERTICES' not in json.dumps(rep['objective'])
+    assert 'no local-support' in rep['objective']
+    seen = 0
     for cand in rep['candidates'].values():
-        for clip, c in cand.items():
-            if isinstance(c, dict) and 'main_rule' in c:
-                assert c['bone_length_max_error_cm'] <= 1e-3
-                assert all(r.get('local_translation_change_cm', 0) <= 1e-4 for r in c['joint_edits_vs_capture'].values())
+        for clip, c in cand.get('clips', {}).items():
+            seen += 1
+            assert c['main_rule']['gated_frames'] > 0
+            assert c['bone_length_max_error_cm'] <= 1e-3
+            assert all((r.get('local_translation_change_cm') or 0) <= 1e-4 for r in c.get('joint_edits_vs_capture', {}).values())
+            glb = ROOT / c['glb']
+            assert glb.exists() and hashlib.sha256(glb.read_bytes()).hexdigest() == c['sha256']
+    assert seen
