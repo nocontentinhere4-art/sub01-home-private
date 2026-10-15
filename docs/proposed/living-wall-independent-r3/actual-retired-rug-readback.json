@@ -1,0 +1,122 @@
+{
+  "schema": "sub01.actual-retired-living-rug-readback.v1",
+  "originalSourceSha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "retirementReceiptSha256": "a4b1416718bc1d2fff5564537d909e7c342720329f5e6f59f10ff2c0a5ac4b0f",
+  "actor": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_61",
+  "label": "house-static-8",
+  "actorHiddenInGame": true,
+  "stateFingerprint": {
+    "label": "house-static-8",
+    "transform": {
+      "translation": [
+        -240.00000953674316,
+        10.000000149011612,
+        2.0999999716877937
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "components": [
+      {
+        "path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_61.StaticMeshComponent0",
+        "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_45.Mesh_45",
+        "transform": {
+          "translation": [
+            -240.00000953674316,
+            10.000000149011612,
+            2.0999999716877937
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "collision": "<CollisionEnabled.NO_COLLISION: 0>",
+        "profile": "NoCollision",
+        "materials": [
+          "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_9.SUB01_MatFix_AlbedoMI_Material_9"
+        ],
+        "tags": []
+      }
+    ]
+  },
+  "currentActorSnapshot": {
+    "label": "house-static-8",
+    "transform": {
+      "translation": [
+        -240.00000953674316,
+        10.000000149011612,
+        2.0999999716877937
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "components": [
+      {
+        "path": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_61.StaticMeshComponent0",
+        "mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_45.Mesh_45",
+        "transform": {
+          "translation": [
+            -240.00000953674316,
+            10.000000149011612,
+            2.0999999716877937
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "collision": "<CollisionEnabled.NO_COLLISION: 0>",
+        "profile": "NoCollision",
+        "materials": [
+          "/Game/Sub01Home/MaterialFix/SUB01_MatFix_AlbedoMI_Material_9.SUB01_MatFix_AlbedoMI_Material_9"
+        ],
+        "tags": []
+      }
+    ],
+    "hidden": true,
+    "editor_hidden": false,
+    "actor_collision": true,
+    "component_visibility": {
+      "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.full-home_node_61.StaticMeshComponent0": true
+    }
+  },
+  "worldSnapshotUnchanged": true,
+  "mapUnchanged": true,
+  "candidateMapSha256": "14acd9d355c66741b7ddfd17d34acbdc5f5f75f8fc71f0a708504f06ff0eeb00",
+  "candidateProject": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab",
+  "epoch": 1792100101.3875942,
+  "inputAcquired": false
+}
