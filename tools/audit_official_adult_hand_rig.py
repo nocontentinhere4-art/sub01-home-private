@@ -11,9 +11,10 @@ def dominant_bones(obj,indices):
  return weights.most_common(4)
 
 def audit_motion():
- import sys,hashlib,numpy as np
- source=Path('/home/unreal/runtime-tools/official-hands-walk-candidate-r8.glb');out=Path('/workspace/sub01-home-private/human-base-hands-r1/rig-r8-motion-independent-audit.json')
- assert hashlib.sha256(source.read_bytes()).hexdigest()=='3b1660eacf58203f3e87dfa2fa00799c27d104306bf5370c9fce2fa82fee3862'
+ import sys,hashlib,numpy as np,argparse
+ parser=argparse.ArgumentParser();parser.add_argument('--motion',action='store_true');parser.add_argument('--source',type=Path,default=Path('/home/unreal/runtime-tools/official-hands-walk-candidate-r8.glb'));parser.add_argument('--sha256',default='3b1660eacf58203f3e87dfa2fa00799c27d104306bf5370c9fce2fa82fee3862');parser.add_argument('--output',type=Path,default=Path('/workspace/sub01-home-private/human-base-hands-r1/rig-r8-motion-independent-audit.json'))
+ argv=sys.argv[sys.argv.index('--')+1:] if '--'in sys.argv else sys.argv[1:];args=parser.parse_args(argv);source,out=args.source,args.output
+ assert hashlib.sha256(source.read_bytes()).hexdigest()==args.sha256
  bpy.ops.wm.read_factory_settings(use_empty=True);scene=bpy.context.scene;scene.render.fps=30;bpy.ops.import_scene.gltf(filepath=str(source));arm=next(o for o in scene.objects if o.type=='ARMATURE');assert len(arm.data.bones)==44
  arm.animation_data_create();arm.animation_data.action=list(bpy.data.actions)[0]
  for track in arm.animation_data.nla_tracks:track.mute=True

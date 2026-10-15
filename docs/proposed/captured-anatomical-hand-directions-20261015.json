@@ -13,7 +13,7 @@
   "nondeforming_endpoint4_rotations": "held at original target rest",
   "independent_verifier": "tools/prove_anatomical_hand_directions.py",
   "independent_method": "Standard-library serialized 4x4 matrix forward kinematics, measured actual posed segment vectors in actual posed knuckle palm frames; no reuse of generator's calibration code",
-  "max_serialized_segment_direction_error_degrees": 0.000008144481502960801,
+  "max_serialized_segment_direction_error_degrees": 8.144481502960801e-06,
   "both_hands_verified": true,
   "original_binary_geometry_skin_weights_materials_and_rest_exact": true,
   "existing_target_animations_preserved": true,
@@ -21,7 +21,10 @@
     "out/house-evidence/actual-new-hand-rig-r8-walk/actual-new-left-walk-021.png",
     "out/house-evidence/actual-new-hand-rig-r8-walk/actual-new-right-walk-021.png"
   ],
-  "rendered_new_direction_variant": "pending; do not inherit prior variant's visual assessment",
+  "rendered_new_direction_variant": [
+    "out/house-evidence/actual-new-hand-directions-r1/actual-new-left-walk-021.png",
+    "out/house-evidence/actual-new-hand-directions-r1/actual-new-right-walk-021.png"
+  ],
   "native_imported": false,
   "contact_accepted": false,
   "remaining": [
@@ -30,5 +33,24 @@
     "Fit both wrists/forearms under actual owner cuffs and review first-person camera",
     "Coherent skin material and actual keyboard/controller/phone contacts",
     "Native integration and real interaction acceptance"
-  ]
+  ],
+  "status": "REJECTED for integration: serialized bone-direction accuracy does not provide acceptable skin deformation",
+  "actual_skin_audit": {
+    "sha256": "4324dc08ea692e81da38a13dca9260ff3238a4877331f6ab4a5a7851aab56355",
+    "source_sha256": "8b4050c7821c131679e51686fe2bd48a32d24b9e653c9b2a5e794e9d276a6a04",
+    "all32frames_complete": true,
+    "sides": {
+      "Left": {
+        "self_overlap_candidates_min": 973,
+        "self_overlap_candidates_max": 1087,
+        "max_edge_stretch_ratio": 7.479015756699077
+      },
+      "Right": {
+        "self_overlap_candidates_min": 877,
+        "self_overlap_candidates_max": 1017,
+        "max_edge_stretch_ratio": 6.463718254026746
+      }
+    }
+  },
+  "next_diagnostic": "Compare/export genuine original Walking.fbx skeleton rather than assuming the old owner-retargeted skeleton reproduces anatomically compatible phalange frames. No root cause accepted yet."
 }
