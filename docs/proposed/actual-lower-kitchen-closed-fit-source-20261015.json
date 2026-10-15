@@ -1,0 +1,368 @@
+{
+  "schema": "sub01.actual-lower-kitchen-closed-fit-source.v1",
+  "source_commit": "1fb34d3",
+  "output_remote": "/workspace/sub01-home-private/kitchen-lowerfit-source-20261015/output",
+  "native_glb_sha256": "accd954c120a60f4eb68bd869fe2f1b578517880d71b82e673af5834c32fb79d",
+  "native_glb_bytes": 12441648,
+  "proof_sha256": "11acf200b869a6a6100c7b341ca1fe01c90ecace139d009f77e797f40ded63fd",
+  "parts": 152,
+  "hinges": [
+    {
+      "index": 0,
+      "assembly": "Cabinet hinge 1",
+      "hinge_ue_cm": [
+        -374.79999999999995,
+        -353.1,
+        204.99999999999997
+      ]
+    },
+    {
+      "index": 1,
+      "assembly": "Cabinet hinge 2",
+      "hinge_ue_cm": [
+        -297.3,
+        -353.1,
+        204.99999999999997
+      ]
+    },
+    {
+      "index": 2,
+      "assembly": "Cabinet hinge 3",
+      "hinge_ue_cm": [
+        -219.79999999999998,
+        -353.1,
+        204.99999999999997
+      ]
+    },
+    {
+      "index": 3,
+      "assembly": "Cabinet hinge 4",
+      "hinge_ue_cm": [
+        -142.3,
+        -353.1,
+        204.99999999999997
+      ]
+    },
+    {
+      "index": 4,
+      "assembly": "Lower_cabinet_hinge_1",
+      "hinge_ue_cm": [
+        -370.5,
+        -319.20000000000005,
+        49.62493721195722
+      ]
+    },
+    {
+      "index": 5,
+      "assembly": "Lower_cabinet_hinge_2",
+      "hinge_ue_cm": [
+        -293.9,
+        -319.20000000000005,
+        49.62493721195722
+      ]
+    },
+    {
+      "index": 6,
+      "assembly": "Lower_cabinet_hinge_3",
+      "hinge_ue_cm": [
+        -223.90000000000003,
+        -319.20000000000005,
+        49.62493721195722
+      ]
+    },
+    {
+      "index": 7,
+      "assembly": "Lower_cabinet_hinge_4",
+      "hinge_ue_cm": [
+        -153.9,
+        -319.20000000000005,
+        49.62493721195722
+      ]
+    }
+  ],
+  "fit_profile": "actual-carcass-authored-2mm-reveals-v1",
+  "actual_lower_closed_fit": {
+    "profile": "actual-carcass-authored-2mm-reveals-v1",
+    "passed": true,
+    "source_serialization_bounds_limit_m": 1e-05,
+    "doors": [
+      {
+        "profile": "actual-carcass-authored-2mm-reveals-v1",
+        "index": 0,
+        "carcass_bounds_xy_m": [
+          [
+            -3.707,
+            0.1249987885874532
+          ],
+          [
+            -2.959,
+            0.8674999556516911
+          ]
+        ],
+        "reveal_m": 0.002,
+        "center_browser_m": [
+          -3.333,
+          0.49624937211957215,
+          -3.215
+        ],
+        "dimensions_m": [
+          0.7439999999999998,
+          0.738501167064238,
+          0.051
+        ],
+        "hinge_browser_m": [
+          -3.705,
+          0.49624937211957215,
+          -3.192
+        ],
+        "expected_panel_bounds_browser_m": [
+          [
+            -3.705,
+            0.1269987885874532,
+            -3.225
+          ],
+          [
+            -2.961,
+            0.8654999556516911,
+            -3.205
+          ]
+        ],
+        "legacy_hinge_delta_browser_m": [
+          -0.08000000000000007,
+          0.05624937211957215,
+          0.0
+        ],
+        "actual_panel_bounds_browser_m": [
+          [
+            -3.7049999237060547,
+            0.12699878215789795,
+            -3.2249999046325684
+          ],
+          [
+            -2.9609999656677246,
+            0.8655000329017639,
+            -3.2049999237060547
+          ]
+        ],
+        "actual_vertex_bounds_error_m": 9.536743172944284e-08
+      },
+      {
+        "profile": "actual-carcass-authored-2mm-reveals-v1",
+        "index": 1,
+        "carcass_bounds_xy_m": [
+          [
+            -2.941,
+            0.1249987885874532
+          ],
+          [
+            -2.259,
+            0.8674999556516911
+          ]
+        ],
+        "reveal_m": 0.002,
+        "center_browser_m": [
+          -2.5999999999999996,
+          0.49624937211957215,
+          -3.215
+        ],
+        "dimensions_m": [
+          0.6779999999999999,
+          0.738501167064238,
+          0.051
+        ],
+        "hinge_browser_m": [
+          -2.939,
+          0.49624937211957215,
+          -3.192
+        ],
+        "expected_panel_bounds_browser_m": [
+          [
+            -2.939,
+            0.1269987885874532,
+            -3.225
+          ],
+          [
+            -2.2609999999999997,
+            0.8654999556516911,
+            -3.205
+          ]
+        ],
+        "legacy_hinge_delta_browser_m": [
+          -0.01399999999999979,
+          0.05624937211957215,
+          0.0
+        ],
+        "actual_panel_bounds_browser_m": [
+          [
+            -2.938999891281128,
+            0.12699878215789795,
+            -3.2249999046325684
+          ],
+          [
+            -2.260999917984009,
+            0.8655000329017639,
+            -3.2049999237060547
+          ]
+        ],
+        "actual_vertex_bounds_error_m": 1.0871887212715592e-07
+      },
+      {
+        "profile": "actual-carcass-authored-2mm-reveals-v1",
+        "index": 2,
+        "carcass_bounds_xy_m": [
+          [
+            -2.241,
+            0.1249987885874532
+          ],
+          [
+            -1.559,
+            0.8674999556516911
+          ]
+        ],
+        "reveal_m": 0.002,
+        "center_browser_m": [
+          -1.9,
+          0.49624937211957215,
+          -3.215
+        ],
+        "dimensions_m": [
+          0.6780000000000002,
+          0.738501167064238,
+          0.051
+        ],
+        "hinge_browser_m": [
+          -2.2390000000000003,
+          0.49624937211957215,
+          -3.192
+        ],
+        "expected_panel_bounds_browser_m": [
+          [
+            -2.2390000000000003,
+            0.1269987885874532,
+            -3.225
+          ],
+          [
+            -1.561,
+            0.8654999556516911,
+            -3.205
+          ]
+        ],
+        "legacy_hinge_delta_browser_m": [
+          -0.014000000000000234,
+          0.05624937211957215,
+          0.0
+        ],
+        "actual_panel_bounds_browser_m": [
+          [
+            -2.239000082015991,
+            0.12699878215789795,
+            -3.2249999046325684
+          ],
+          [
+            -1.561000108718872,
+            0.8655000329017639,
+            -3.2049999237060547
+          ]
+        ],
+        "actual_vertex_bounds_error_m": 1.0871887212715592e-07
+      },
+      {
+        "profile": "actual-carcass-authored-2mm-reveals-v1",
+        "index": 3,
+        "carcass_bounds_xy_m": [
+          [
+            -1.541,
+            0.1249987885874532
+          ],
+          [
+            -0.693,
+            0.8674999556516911
+          ]
+        ],
+        "reveal_m": 0.002,
+        "center_browser_m": [
+          -1.117,
+          0.49624937211957215,
+          -3.215
+        ],
+        "dimensions_m": [
+          0.844,
+          0.738501167064238,
+          0.051
+        ],
+        "hinge_browser_m": [
+          -1.539,
+          0.49624937211957215,
+          -3.192
+        ],
+        "expected_panel_bounds_browser_m": [
+          [
+            -1.539,
+            0.1269987885874532,
+            -3.225
+          ],
+          [
+            -0.695,
+            0.8654999556516911,
+            -3.205
+          ]
+        ],
+        "legacy_hinge_delta_browser_m": [
+          -0.014000000000000012,
+          0.05624937211957215,
+          0.0
+        ],
+        "actual_panel_bounds_browser_m": [
+          [
+            -1.5390000343322754,
+            0.12699878215789795,
+            -3.2249999046325684
+          ],
+          [
+            -0.6950000524520874,
+            0.8655000329017639,
+            -3.2049999237060547
+          ]
+        ],
+        "actual_vertex_bounds_error_m": 9.536743172944284e-08
+      }
+    ],
+    "collision_epsilon_unchanged_m": 0.0
+  },
+  "full_collision_counts": {
+    "ok": true,
+    "epsilon_m": 0.0,
+    "protected_triangle_count": 110064,
+    "door_home_poses": 720,
+    "door_pair_bvh_tests": 18,
+    "door_pair_aabb_rejects": 226782,
+    "all_poses_inside_audited_region": true
+  },
+  "source_ready": true,
+  "native_ready": false,
+  "actual_new_scene_visual_verified": false,
+  "source_execution": {
+    "schema": "sub01.kitchen-lowerfit-source-job.v1",
+    "guard_before": {
+      "pod": "dgtgepkz7h1zy5",
+      "deadline_epoch": 1792117175,
+      "checked_epoch": 1792072001.8858204
+    },
+    "started_epoch": 1792072002.0619369,
+    "pid": 152685,
+    "start_ticks": 976229746,
+    "cpus": [
+      12,
+      13
+    ],
+    "max_seconds": 120,
+    "native_mutations": false,
+    "exit": 0,
+    "finished_epoch": 1792072029.1367774,
+    "guard_after": {
+      "pod": "dgtgepkz7h1zy5",
+      "deadline_epoch": 1792117175,
+      "checked_epoch": 1792072029.1368935
+    }
+  }
+}
