@@ -16,6 +16,7 @@ TASKS = {
     'complete_books': 'unreal_import_real_shelf_books',
     'desk_preflight': 'unreal_real_desk_import_preflight',
     'real_office': 'unreal_import_real_office_bundle',
+    'gaming_grip': 'unreal_import_gaming_grip',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -87,6 +88,9 @@ def dispatch(task):
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'gaming_grip':
+        # Import verified source on the existing skeleton; this does not bind gameplay.
+        return module.main(importlib.import_module('unreal'))
     if task == 'real_office':
         return module.run(OFFICE_EXPORT, dry_run=False)
     if task == 'real_lamps':

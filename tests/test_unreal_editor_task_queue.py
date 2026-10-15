@@ -169,3 +169,15 @@ def test_receipt_write_failure_retries_without_reexecuting_task(setup, monkeypat
     assert q.pending_result is None and q.receipt_error_type is None
     assert json.loads(q.result.read_text())['ok'] is True
     assert len(calls)==1
+
+
+def test_grip_dispatch_uses_loaded_editor_and_no_request_supplied_path(monkeypatch):
+    import tools.unreal_editor_task_queue as module
+    from types import SimpleNamespace
+    calls=[]; native=object()
+    importer=SimpleNamespace(main=lambda editor:calls.append(editor))
+    modules={'unreal_import_gaming_grip':importer,'unreal':native}
+    monkeypatch.setattr(module.importlib,'import_module',modules.__getitem__)
+    monkeypatch.setattr(module.importlib,'reload',lambda value:value)
+    module.dispatch('gaming_grip')
+    assert calls==[native]
