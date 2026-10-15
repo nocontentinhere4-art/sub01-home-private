@@ -15,7 +15,7 @@ from launch_private_persistent_editor import (
     ENGINE, PROJECT, PRIVATE, verified_private_crash_preference, verified_window,
 )
 
-MODULE_SHA = '97068a48dde1cdaa57b5d186f4cfb9682c4e0e3a6f078c2dcf7482a555a4e45a'
+MODULE_SHA = 'ac53fbedad394ada48344b5eca338a251cba90e734403e4124d8a1661a6e1036'
 WALKING_CAMERA_OFFSET = (22.208151, 3.580561, 64.610182)
 
 

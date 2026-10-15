@@ -13,8 +13,8 @@ from launch_private_persistent_editor import PROJECT, PRIVATE, verified_window
 SIBLING = Path('/workspace/sub01-private-native-build/Sub01HomeLab')
 HASHES = {
     'libUnrealEditor-Sub01HomeLab.so': MODULE_SHA,
-    'libUnrealEditor-Sub01HomeLab.debug': '612cc2ed6cec2fa1b68c3caab506b5c7ce191273ab92c4a0c34481abf7f29df6',
-    'libUnrealEditor-Sub01HomeLab.sym': '66c1a945f302e2a2cd1bafa8e88d0da9678844056dd4d661b6b055c78801aa5f',
+    'libUnrealEditor-Sub01HomeLab.debug': 'aa22f9bd142327e2b50795ef1dafd2e24cae4c3415869199e6dad6779978ae08',
+    'libUnrealEditor-Sub01HomeLab.sym': '27c7dfe4c85693a0276c88660105c54dfbbb6a226da769024a30ff7b7de2da8b',
     'UnrealEditor.modules': '9c051a8a7c90657a24e2718e9cd4f41e16dcbdf37374940848e092eaa79df653',
     'Sub01HomeLabEditor.target': '26948e7c25f9deb5bb45cf8cdf5ac3fec6cfeb96623d58e1b494c86287aa530a',
 }
@@ -30,7 +30,7 @@ def deploy():
                         (proc / 'stat').read_text().rsplit(')', 1)[1].split()[0] != 'Z'), 'Live Unreal module must never be overwritten'
         except OSError:
             continue
-    proof = json.loads((SIBLING / 'actual-native-compile-coherent-phone-aliasfix-artifact-proof.json').read_text())
+    proof = json.loads((SIBLING / 'actual-native-compile-coherent-review-d788361-artifact-proof.json').read_text())
     assert proof['actual_exit'] == 0 and proof['build_id'] == '55116800'
     source, target = SIBLING / 'Binaries/Linux', PROJECT / 'Binaries/Linux'
     for name, expected in HASHES.items():
