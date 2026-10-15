@@ -76,6 +76,7 @@ DESK_ITEMS_UE_CM = {'monitor_stand (box .12 x .12 at 2, .88, -3.3)': [[194., -33
                     'plant (3, .855, -3.25)': [[300., -325.], [300., -325.]]}
 
 # ---------------------------------------------------------------- limits (hard) and soft targets (never loosened)
+DEVICE_Z_CM = -0.1                 # home.js bottoms at 0.846 m float 0.1 cm over the 84.5 cm LINEA top: rest them on it
 SLAB_EDGE_MARGIN_MIN_CM = 2.0      # a device footprint stays >= 2 cm inside every worktop edge: the worktop's eased top
                                    # edge (84.5 -> 84.283 cm, geometry note) is < 1 cm wide, so >= 1 cm of FLAT top remains
 DEVICE_GAP_MIN_CM = 1.0            # keyboard case to mouse pad, plan view
@@ -139,8 +140,8 @@ class Layout:
     (negative = toward the desk) added to the original typing roll. The body rolls rigidly with the chair."""
 
     def __init__(self, kb=(0., 0.), mouse=(0., 0.), chair_dy=0.):
-        self.kb = np.array([kb[0], kb[1], 0.], float)
-        self.mouse = np.array([mouse[0], mouse[1], 0.], float)
+        self.kb = np.array([kb[0], kb[1], kb[2] if len(kb) > 2 else 0.], float)
+        self.mouse = np.array([mouse[0], mouse[1], mouse[2] if len(mouse) > 2 else 0.], float)
         self.chair_dy = float(chair_dy)
 
     @property
@@ -158,19 +159,20 @@ class Layout:
 
     def describe(self):
         kb0, ms0 = np.array(KEYBOARD_THREE_M), np.array(MOUSE_THREE_M)
-        kb1 = kb0 + np.array([self.kb[0], 0., self.kb[1]]) / 100.
-        ms1 = ms0 + np.array([self.mouse[0], 0., self.mouse[1]]) / 100.
+        kb1 = kb0 + np.array([self.kb[0], self.kb[2], self.kb[1]]) / 100.
+        ms1 = ms0 + np.array([self.mouse[0], self.mouse[2], self.mouse[1]]) / 100.
         c0 = np.array(CHAIR_INITIAL_CM)
         return {
-            'keyboard': {'delta_ue_cm': [_r(v) for v in self.kb], 'delta_three_m': [_r(self.kb[0] / 100, 5), 0.0, _r(self.kb[1] / 100, 5)],
+            'keyboard': {'delta_ue_cm': [_r(v) for v in self.kb], 'delta_three_m': [_r(self.kb[0] / 100, 5), _r(self.kb[2] / 100, 5), _r(self.kb[1] / 100, 5)],
                          'original_three_m': list(kb0), 'proposed_three_m': [_r(v, 5) for v in kb1],
                          'original_home_js': KEYBOARD_HOME_JS,
-                         'proposed_home_js': f'furnished("keyboard", {kb1[0]:.4f}, 0.846, {kb1[2]:.4f}, 0.371, 0, "/house/assets/keyboard/keyboard.glb")',
+                         'z_note': 'Z -0.1 cm: the case bottom rests ON the 84.5 cm worktop (home.js 0.846 m floated 0.1 cm); root confirms natively',
+                         'proposed_home_js': f'furnished("keyboard", {kb1[0]:.4f}, {kb1[1]:.4f}, {kb1[2]:.4f}, 0.371, 0, "/house/assets/keyboard/keyboard.glb")',
                          'rotation_and_scale': 'unchanged'},
-            'mouse': {'delta_ue_cm': [_r(v) for v in self.mouse], 'delta_three_m': [_r(self.mouse[0] / 100, 5), 0.0, _r(self.mouse[1] / 100, 5)],
+            'mouse': {'delta_ue_cm': [_r(v) for v in self.mouse], 'delta_three_m': [_r(self.mouse[0] / 100, 5), _r(self.mouse[2] / 100, 5), _r(self.mouse[1] / 100, 5)],
                       'original_three_m': list(ms0), 'proposed_three_m': [_r(v, 5) for v in ms1],
                       'original_home_js': MOUSE_HOME_JS,
-                      'proposed_home_js': f'furnished("mouse", {ms1[0]:.4f}, 0.846, {ms1[2]:.4f}, 0.22, 0, "/room/mouse.glb")',
+                      'proposed_home_js': f'furnished("mouse", {ms1[0]:.4f}, {ms1[1]:.4f}, {ms1[2]:.4f}, 0.22, 0, "/room/mouse.glb")',
                       'rotation_and_scale': 'unchanged'},
             'chair': {'initial_translation_cm': list(c0), 'initial_is': 'measured native + 2.5001 cm lift (bfe7dc8), unchanged',
                       'original_typing_roll_cm': [*CHAIR_ROLL_ORIGINAL_CM, 0.0],
@@ -242,7 +244,7 @@ def device_check(ctx, kbg, layout):
     return {'keyboard': {'footprint_cm': [[_r(v) for v in kb_lo], [_r(v) for v in kb_hi]],
                          'key_field_cm': [[_r(v) for v in kbg['keys']['key_min'] + layout.kb], [_r(v) for v in kbg['keys']['key_max'] + layout.kb]],
                          'dimensions_cm': [_r(v) for v in kb_hi - kb_lo], 'slab_margins_cm': {k: _r(v) for k, v in kb_m.items()},
-                         'bottom_cm': _r(kbg['bottom_cm'], 4), 'bottom_above_worktop_cm': _r(kbg['bottom_cm'] - top, 4),
+                         'bottom_cm': _r(kbg['bottom_cm'] + layout.kb[2], 4), 'bottom_above_worktop_cm': _r(kbg['bottom_cm'] + layout.kb[2] - top, 4),
                          'bottom_note': 'the case bottom floats 0.1 cm over the 84.5 cm top at the home.js placement '
                                         '(root\'s pending device-foot check); the refit changes X/Y only',
                          'bottom_support_vertices': int(len(kb_bottom)),
@@ -299,6 +301,8 @@ HAND_PITCH_DEG = 0.                # keyboard: level hand (bind-neutral axis)
 HAND_YAW_ADAPT_DEG = 20.           # the hand frame may turn toward the forearm about the palm point (fingers at <= 20 deg
                                    # to the key columns, as touch typists do) ...
 HAND_PITCH_ADAPT_DEG = 10.         # ... and pitch within +-10 deg of its device attitude
+HAND_ADAPT_SMOOTH_KEYS = 9.        # Gaussian sigma (60 Hz keys, 0.15 s) of the hand-frame yaw / pitch adaptation
+PALM_MOTION_SMOOTH_KEYS = 4.       # Gaussian sigma (0.067 s) of the source-ready palm motion (its single-key polish moves)
 MOUSE_HAND_PITCH_DEG = 15.         # mouse: the hand drapes over the shell
 PALM_LENGTH_CM = {'left': 7.07, 'right': 8.76}     # bind wrist -> middle MCP (owner rig, measured)
 
@@ -359,6 +363,7 @@ class Targets:
             mm = p0[mf].mean(0) if mf.any() else mk
             dev = p0 - ((1 - w)[:, None] * mk + w[:, None] * mm)
             dev[:, 2] = 0.
+            dev[:, 0], dev[:, 1] = gaussian(dev[:, 0], PALM_MOTION_SMOOTH_KEYS), gaussian(dev[:, 1], PALM_MOTION_SMOOTH_KEYS)
             key, (kx, ky) = HOME_KEYS_UE_CM[s]
             mcp = np.array([kx, ky + MCP_BEHIND_CM, top + MCP_ABOVE_CM])
             pb = math.radians(HAND_PITCH_DEG)
@@ -432,6 +437,10 @@ def posed_with_normals(skin, ibm, W):
 
 
 HULL_BIN_CM = 2.0
+ARM_BODY_SOLVER_MIN_CM = 1.0       # solver design margin to the torso / thigh section (search skin stride 3); the GATE stays
+                                   # >= 0 on every arm vertex
+PATH_SWIVEL_DEG = tuple(float(v) for v in np.arange(-120., 120.01, 10.))
+PATH_SMOOTH_WEIGHT = .05           # per cm^2 of elbow step between keys
 
 
 def section_gap(body_pts, q, bin_cm=HULL_BIN_CM, reach=20.):
@@ -505,6 +514,8 @@ class ArmSolver:
             yf, pf = np.arctan2(fore[:, 0], -fore[:, 1]), np.arcsin(np.clip(fore[:, 2], -1, 1))
             dy = np.clip((yf - y0 + np.pi) % (2 * np.pi) - np.pi, -math.radians(HAND_YAW_ADAPT_DEG), math.radians(HAND_YAW_ADAPT_DEG))
             dp = np.clip(pf - p0, -math.radians(HAND_PITCH_ADAPT_DEG), math.radians(HAND_PITCH_ADAPT_DEG))
+            if len(frames) > 10 and np.all(np.diff(frames) == 1):          # a contiguous clip: smooth the adaptation in time
+                dy, dp = gaussian(dy, HAND_ADAPT_SMOOTH_KEYS), gaussian(dp, HAND_ADAPT_SMOOTH_KEYS)
             y1, p1 = y0 + dy, p0 + dp
             d = np.stack([np.cos(p1) * np.sin(y1), -np.cos(p1) * np.cos(y1), np.sin(p1)], -1)
             Q = T.find_between(ue_dir_to_gltf(u0), ue_dir_to_gltf(d))
@@ -581,8 +592,8 @@ class ArmSolver:
         return res
 
     @staticmethod
-    def clear(res):
-        return ((res['desk_min'] >= ARM_DESK_TARGET_CM) & (res['torso'] >= ARM_BODY_MIN_CM) & (res['legs'] >= ARM_BODY_MIN_CM)
+    def clear(res, body_min=ARM_BODY_MIN_CM):
+        return ((res['desk_min'] >= ARM_DESK_TARGET_CM) & (res['torso'] >= body_min) & (res['legs'] >= body_min)
                 & (res['chair'] > 0) & (res['keyboard_case'] > 0))
 
     # -- the relaxed swivel
@@ -642,6 +653,61 @@ class ArmSolver:
         else:
             phi_out = phi
         return phi_out, info
+
+
+    def solve_side_path(self, frames, side, wrist_t, hand_rot, layout, palm_off=None, phis=None):
+        """CONTINUOUS swivel path (dynamic programming over every frame): node cost = the ergonomic cost of the swivel,
+        +inf where the arm skin is not clear (desk >= 0.5 cm, own torso / thighs >= ARM_BODY_SOLVER_MIN_CM, chair,
+        keyboard case); transition cost = PATH_SMOOTH_WEIGHT * elbow step^2, with a steep penalty above
+        ELBOW_STEP_MAX_CM + the wrist's own step at that key (the swivel never adds a jump). Frames without any clear
+        swivel take the least-violating one (reported, never hidden)."""
+        phis = np.asarray(PATH_SWIVEL_DEG if phis is None else phis)
+        F, K = len(frames), len(phis)
+        node = np.zeros((K, F))
+        ok = np.zeros((K, F), bool)
+        el = np.zeros((K, F, 3))
+        viol = np.zeros((K, F))
+        a, b = (self.sk.j(n) for n in A.ARM_BONES[side][:2])
+        for k, ph in enumerate(phis):
+            W, _, _ = self.pose(frames, side, wrist_t, ph, hand_rot=hand_rot, palm_off=palm_off)
+            m = arm_metrics(self.ctx, W, self.Wb[frames], side, layout.shift)
+            ev, uv, fv, dvv = ergo_violation(m)
+            node[k] = ((ev / SCORE_SCALE['elbow_cm']) ** 2 + (uv / SCORE_SCALE['upper_arm_deg']) ** 2
+                       + (fv / SCORE_SCALE['wrist_deg']) ** 2 + (dvv / SCORE_SCALE['wrist_deg']) ** 2 + 1e-3 * m['elbow_above_top_cm'])
+            res = self.side_clearance(W, side, layout, frames)
+            ok[k] = self.clear(res, body_min=ARM_BODY_SOLVER_MIN_CM)
+            viol[k] = (np.maximum(0, ARM_DESK_TARGET_CM - res['desk_min']) + np.maximum(0, ARM_BODY_SOLVER_MIN_CM - res['torso'])
+                       + np.maximum(0, ARM_BODY_SOLVER_MIN_CM - res['legs']) + np.maximum(0, -res['chair']) + np.maximum(0, -res['keyboard_case']))
+            el[k] = E.to_ue(W[:, b, :3, 3])
+        none = ~ok.any(0)
+        cost = np.where(ok, node, np.inf)
+        cost[:, none] = node[:, none] + 1e3 * viol[:, none]
+        wr = E.to_ue(np.asarray(wrist_t))
+        wstep = np.r_[0., np.linalg.norm(np.diff(wr, axis=0), axis=1)]
+        D = cost[:, 0].copy()
+        back = np.zeros((K, F), int)
+        for f in range(1, F):
+            step = np.linalg.norm(el[:, f][:, None] - el[:, f - 1][None], axis=-1)        # (K new, K old)
+            bound = ELBOW_STEP_MAX_CM + wstep[f]
+            trans = PATH_SMOOTH_WEIGHT * step ** 2 + 1e4 * np.maximum(0., step - bound)
+            tot = D[None] + trans
+            back[:, f] = np.argmin(tot, axis=1)
+            D = cost[:, f] + tot[np.arange(K), back[:, f]]
+        idx = np.zeros(F, int)
+        idx[-1] = int(np.argmin(D))
+        for f in range(F - 1, 0, -1):
+            idx[f - 1] = back[idx[f], f]
+        phi = phis[idx]
+        chosen_ok = ok[idx, np.arange(F)]
+        e = el[idx, np.arange(F)]
+        estep = np.r_[0., np.linalg.norm(np.diff(e, axis=0), axis=1)]
+        _, reach, _ = self.pose(frames, side, wrist_t, phi, hand_rot=hand_rot, palm_off=palm_off)
+        info = {'method': 'dynamic-programming swivel path', 'candidates_deg': [float(phis[0]), float(phis[-1]), float(phis[1] - phis[0])],
+                'unresolved_frames': int((~chosen_ok).sum()), 'frames_without_any_clear_swivel': int(none.sum()),
+                'reach_all': bool(np.all(reach)), 'elbow_max_step_cm': _r(estep.max(), 3),
+                'elbow_steps_over_bound': int((estep > ELBOW_STEP_MAX_CM + wstep + 1e-9).sum()),
+                'loop_elbow_step_cm': _r(np.linalg.norm(e[-1] - e[0]), 3)}
+        return phi.astype(float), info
 
 
 def gaussian(x, sigma, periodic=True):
@@ -816,9 +882,10 @@ SEARCH_STRIDE = 40                 # search frames: every 40th DeskTyping key (2
 SEARCH_ARM_STRIDE = 3              # arm skin stride for the swivel search; every report re-measures every vertex
 FINAL_CHECK_STRIDE = 10            # seat / body / envelope frames in the final run
 SEARCH_GRID = {'kb_dy': (15., 17.),                   # keyboard toward the body (17: front feet 2.25 cm inside the edge)
-               'chair_dy': (0., 3., 6., 9.),          # roll vs the original typing roll (+ = less pull-in: room for the
-                                                      # elbows between the belly and the worktop edge)
-               'mouse_dx': (-8., 0.),                 # mouse beside the keyboard (pad 1.45 cm from the case) or as is
+               'kb_dx': (0., 4., 8.),                 # keyboard toward the right shoulder (the home row's F/J centre is
+                                                      # 6.3 cm left of the body midline at dx 0; 8: case 2.0 cm from the pad)
+               'chair_dy': (9., 12., 15., 18.),       # roll vs the original typing roll (+ = less pull-in)
+               'mouse_dx': (0.,),
                }
 
 
@@ -845,9 +912,9 @@ class Setup:
     def layout_for(self, kb_dy, chair_dy, mouse_dx, kb_dx=0.):
         slab = self.ctx.geometry['tabletop_slab']
         mdy = mouse_dy_for(kb_dy, self.ctx.mouse['footprint_ue_cm'][1][1], slab['front_edge_y_cm'])
-        return Layout((kb_dx, kb_dy), (mouse_dx, mdy), chair_dy)
+        return Layout((kb_dx, kb_dy, DEVICE_Z_CM), (mouse_dx, mdy, DEVICE_Z_CM), chair_dy)
 
-    def evaluate(self, layout, frames, smooth=False, extra_ue=None):
+    def evaluate(self, layout, frames, smooth=False, extra_ue=None, path=False):
         """Solve both arms on `frames`; returns (W, per-side metrics, per-side solve info, per-side wrist targets)."""
         W = np.array(self.Wb[frames], copy=True)
         ms, infos, phis, palms = {}, {}, {}, {}
@@ -855,8 +922,11 @@ class Setup:
             wt, palm = self.targets.wrist_target(s, layout, extra_ue)
             hr = self.targets.R_cap[s][frames]
             po = np.asarray(self.targets.palm_off[s])[frames]
-            phi, info = self.solver.solve_side(frames, s, wt[frames], hr, layout, smooth=smooth, palm_off=po,
-                                               dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
+            if path:
+                phi, info = self.solver.solve_side_path(frames, s, wt[frames], hr, layout, palm_off=po)
+            else:
+                phi, info = self.solver.solve_side(frames, s, wt[frames], hr, layout, smooth=smooth, palm_off=po,
+                                                   dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
             hand = {}
             W, reach, ratio = self.solver.pose(frames, s, wt[frames], phi, W=W, hand_rot=hr, palm_off=po, info=hand)
             self.last_hand = getattr(self, 'last_hand', {})
@@ -864,6 +934,7 @@ class Setup:
             info['hand_frame_yaw_deg'] = rng(hand.get('hand_yaw_deg', np.zeros(1)), 2)
             info['hand_frame_pitch_deg'] = rng(hand.get('hand_pitch_deg', np.zeros(1)), 2)
             info['reach_all_frames'] = bool(np.all(reach))
+            info.setdefault('reach_all', info['reach_all_frames'])
             info['max_distance_over_chain_length'] = _r(ratio.max(), 4)
             ms[s] = arm_metrics(self.ctx, W, self.Wb[frames], s, layout.shift)
             infos[s], phis[s], palms[s] = info, phi, palm[frames]
@@ -876,10 +947,10 @@ def search(setup, out_dir, deadline):
     seen = {tuple(r['layout_key']) for r in done['rows']}
     frames = np.arange(0, len(setup.times), SEARCH_STRIDE)
     complete = True
-    for kb_dy in SEARCH_GRID['kb_dy']:
-        for chair_dy in SEARCH_GRID['chair_dy']:
-            for mouse_dx in SEARCH_GRID['mouse_dx']:
-                lay = setup.layout_for(kb_dy, chair_dy, mouse_dx)
+    import itertools
+    for kb_dy, kb_dx, chair_dy, mouse_dx in itertools.product(SEARCH_GRID['kb_dy'], SEARCH_GRID['kb_dx'], SEARCH_GRID['chair_dy'], SEARCH_GRID['mouse_dx']):
+            if True:
+                lay = setup.layout_for(kb_dy, chair_dy, mouse_dx, kb_dx)
                 if lay.key() in seen:
                     continue
                 if deadline and time.time() > deadline:
@@ -1008,7 +1079,7 @@ def final(setup, layout, out_dir, search_rows=None, t_start=None):
     ctx = setup.ctx
     frames = np.arange(len(setup.times))
     t0 = time.time()
-    W, ms, infos, phis, palms = setup.evaluate(layout, frames, smooth=True)
+    W, ms, infos, phis, palms = setup.evaluate(layout, frames, path=True)
     np.savez_compressed(out_dir / 'arm-solution.npz', **{
         **{f'{s}_{b}_world_gltf': W[:, ctx.sk.j(n)] for s in A.SIDES for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s])},
         **{f'{s}_swivel_deg': phis[s] for s in A.SIDES}, **{f'{s}_palm_target_ue_cm': palms[s] for s in A.SIDES},
