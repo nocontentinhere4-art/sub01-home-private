@@ -6,7 +6,10 @@ def run():
  import unreal as u
  from private_home_candidate_scope import active_candidate_guard,CANDIDATE
  from unreal_import_reference_entry import snapshot
+ import importlib
  import unreal_candidate_visual_review as review
+ assert review._handle is None
+ review=importlib.reload(review)
  assert active_candidate_guard()and review._handle is None
  receipt=json.loads((CANDIDATE/'private-audit/reference-living-tv-zone-native.json').read_text());assert receipt['saved']and receipt['protected_other_actors_exact']
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors());before=snapshot(u,actors);mapfile=CANDIDATE/'Content/Sub01Home/ActualHome.umap';mapsha=hashlib.sha256(mapfile.read_bytes()).hexdigest();prior=u.EditorLevelLibrary.get_level_viewport_camera_info()

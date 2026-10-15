@@ -1,0 +1,41 @@
+{
+  "schema": "sub01.actual-private-tv-zone-r4-checkpoint.v1",
+  "status": "candidate-saved-and-actual-viewed-not-promoted",
+  "candidate_editor_pid": 203351,
+  "candidate_editor_start_ticks": 978985107,
+  "guarded_live_game_pid": 193148,
+  "guarded_live_game_start_ticks": 978377926,
+  "live_game_changed": false,
+  "source_wall_sha256": "3a664a85e472abcc4998ad6aaa1a7a9eada353421a56c878345cc6a87410ade1",
+  "cabinet_sha256": "63e025252dfaa4d0db66800d5b1b36de54d46b61af2bff64e878a39287985979",
+  "candidate_map_sha256": "1ce9c4dbf1269e1c108d6f3174c332ae5e3c2424992525ac005520a1a7d8a333",
+  "actual_image": "out/house-evidence/candidate-actual-corrected-r4-living-tv-zone.png",
+  "image_viewed": true,
+  "all_images_complete": true,
+  "legacy_review_metadata_note": "Already-loaded visual review module still reports stale original_game_pid159171. Exact active_candidate_guard independently binds current193148/start978377926 at every phase. Updated source now derives actual identity from trusted scope; not falsely using stale metadata as identity proof.",
+  "fixes": {
+    "retained_original_white_wall_coplanarity": "Measured two original node158 faces overlap40816.586cm2. Genuine9board veneer source front now5mm closer to room, nicheback and originalwhitewall untouched. Fullnative source geometry/PBR verified.",
+    "editor_static_screen_blowout": "Actual static imported M_Unlit lacks EyeAdaptationInverse, but live Game dynamic parent already has it. New owned Editor preview duplicates exact original material chain/texture/UV and adds inverse alpha1; runtime Game parent unchanged.",
+    "ps5_screen_overlap": "Existing6part assembly rigidly translatedUE[.5,-20,0]cm onto solid pier. Fullsource/native allpositive triangles verified at1\u00b5m, othersnapshot exact. Source067eye previously10.8095cm projected overlap, now11.27246cm separation."
+  },
+  "actual_receipts": [
+    "070-living_wall_r4-result.json",
+    "living-tv-wall-r4-native.json",
+    "071-tv_preview_exposure-result.json",
+    "editor-tv-preview-exposure.json",
+    "072-tv_console_shift-result.json",
+    "tv-console-solid-pier.json",
+    "073-living_tv_zone_view-result.json",
+    "living-tv-zone-view-restored.json"
+  ],
+  "rejected_source_assets_not_imported": [
+    "coffee-c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9",
+    "sofa-b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3"
+  ],
+  "limitations": [
+    "Pale veneer finish still needs visual choice against warm reference",
+    "Old sofa rejected; replacement acquisition in progress",
+    "Physical controller contact and gameplay unaccepted",
+    "No new live promotion while human tours"
+  ]
+}
