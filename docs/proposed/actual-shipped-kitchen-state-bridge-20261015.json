@@ -1,0 +1,37 @@
+{
+  "schema": "sub01.actual-shipped-kitchen-bridge.v1",
+  "actual_epoch": 1792063580.9181728,
+  "target": "dgtgepkz7h1zy5",
+  "cause": "The shipped bridge omitted kitchen export/control installation; both real backend four-boolean arrays were valid.",
+  "source_commit": "c89d2ed",
+  "old_bridge_pid": 4351,
+  "old_bridge_start_ticks": 972443517,
+  "new_timed_wrapper_pid": 78142,
+  "new_source_sha256": "469e5b44f36fdce65d0c640a71a113938ec1bec4798d103d0db0ff5ad910933f",
+  "helper_sha256": "5e76af20797c977acc4777e17bbbb7dd91eb8c640739561d97801abd1f62c0b8",
+  "actual_live_kitchen": {
+    "cabinets": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "lowerCabinets": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "actual_source_status": "live",
+  "actual_source_age_s": 0.1,
+  "actual_privacy": false,
+  "deadline_epoch": 1792117175,
+  "backend8820_restarted": false,
+  "pc_or_minecraft_restarted": false,
+  "native_restarted_by_this_operation": false,
+  "public_changes": false,
+  "scope": "Actual state export verified. Physical E/open-close hinge motion remains a separate native acceptance test.",
+  "verification": "26 tests passed; regression exercises the actual shipped bridge rather than first applying an optional installer.",
+  "initial_preflight": "First attempt refused /proc/cwd read before writes. Process metadata was read under its own Unix user; credentials stayed private and outside this receipt."
+}
