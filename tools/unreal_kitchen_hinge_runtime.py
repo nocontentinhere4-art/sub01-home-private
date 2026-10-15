@@ -53,6 +53,7 @@ FIELDS = r'''
  void PollActualKitchen();
  void UpdateActualKitchen(float DeltaSeconds);
  bool TryNativeKitchen(UActorComponent* HitComponent);
+ UFUNCTION(Exec) void InspectActualKitchen();
  bool KitchenSweepBlocked(int Door,float From,float To) const;
 '''
 
@@ -62,6 +63,21 @@ struct FSub01KitchenSpec {int Door;const TCHAR* Tag;FVector Minimum;FVector Maxi
 const FSub01KitchenSpec KitchenSpecs[]={@@SPECS@@};
 const FVector KitchenHinges[]={@@HINGES@@};
 const TCHAR* KitchenOwnedPrefix=TEXT("@@DEST@@");
+}
+void ASub01HomeCharacter::InspectActualKitchen(){
+ const double Now=FPlatformTime::Seconds();
+ if(PrivateViewMode!=EPrivateViewMode::Manual||LiveHome||RouteActive||HandsDiagnosticSeat||NativePrivacyLast||Now-NativePrivacyPublishedAt>.5){
+  UE_LOG(LogTemp,Warning,TEXT("SUB01_KITCHEN_INSPECT_REFUSED fresh public manual view required"));return;
+ }
+ if(!KitchenReady||KitchenParts.Num()!=40||KitchenClosed.Num()!=40){UE_LOG(LogTemp,Warning,TEXT("SUB01_KITCHEN_INSPECT_REFUSED exact 8hinge/40part binding absent"));return;}
+ for(int I=0;I<40;++I){const auto* C=KitchenParts[I].Get();if(!IsValid(C)||!C->GetStaticMesh()||!C->GetStaticMesh()->GetPathName().StartsWith(KitchenOwnedPrefix)||!C->ComponentHasTag(FName(KitchenSpecs[I].Tag))){UE_LOG(LogTemp,Warning,TEXT("SUB01_KITCHEN_INSPECT_REFUSED source binding differs part=%d"),I);return;}}
+ const uint32 Pid=FPlatformProcess::GetCurrentProcessId();const int64 Ticks=PrivateSettingsStartTicks();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_KITCHEN_INSPECT_BEGIN pid=%u start=%lld binding=%s stateAge=%.6f sourceFresh=%d actionPending=%d; read_only=true"),Pid,Ticks,KitchenOwnedPrefix,Now-KitchenStateAt,int(Now-KitchenStateAt<=2),int(KitchenActionPending));
+ for(int Door=0;Door<8;++Door)UE_LOG(LogTemp,Display,TEXT("SUB01_KITCHEN_INSPECT_DOOR index=%d actualDegrees=%.9f backendOpen=%d targetDegrees=%.9f hinge=%s"),Door,KitchenAngles[Door],int(KitchenBackendOpen[Door]),KitchenBackendOpen[Door]?Sub01Kitchen::OpenDegrees:0.,*KitchenHinges[Door].ToString());
+ for(int I=0;I<40;++I){const auto* C=KitchenParts[I].Get();const FTransform T=C->GetComponentTransform();const FTransform& Closed=KitchenClosed[I];
+  UE_LOG(LogTemp,Display,TEXT("SUB01_KITCHEN_INSPECT_PART index=%d door=%d component=%s mesh=%s position=%s quaternion=%s scale=%s closedPosition=%s closedQuaternion=%s closedScale=%s collision=%d visible=%d"),I,I/5,*C->GetPathName(),*C->GetStaticMesh()->GetPathName(),*T.GetLocation().ToString(),*T.GetRotation().ToString(),*T.GetScale3D().ToString(),*Closed.GetLocation().ToString(),*Closed.GetRotation().ToString(),*Closed.GetScale3D().ToString(),int(C->GetCollisionEnabled()),int(C->IsVisible()));
+ }
+ UE_LOG(LogTemp,Display,TEXT("SUB01_KITCHEN_INSPECT_END pid=%u start=%lld doors=8 parts=40; geometry_movement_settings_unchanged=true"),Pid,Ticks);
 }
 void ASub01HomeCharacter::ConfigureActualKitchen(){
  if(FPlatformMisc::GetEnvironmentVariable(TEXT("SUB01_KITCHEN_RUNTIME"))!=TEXT("1"))return;
