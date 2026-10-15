@@ -1,0 +1,45 @@
+{
+  "schema": "sub01.anatomical-native-walking-checkpoint.v1",
+  "actual_game": {
+    "pid": 193148,
+    "start_ticks": 978377926,
+    "project": "/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab",
+    "backend_pid": 198702,
+    "backend_start_ticks": 978621779
+  },
+  "source_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "fbx_transport_sha256": "8027a9849bcfe37b24cab270b5ae972a5639b5bb524d41bcd527fe2d10361109",
+  "actual_native_proofs": {
+    "body_frames": 32,
+    "nonfinger_bones": 25,
+    "body_position_error_cm": 0.0,
+    "rendered_component_frames": 32,
+    "rendered_component_max_position_error_cm": 0.0103967185,
+    "rendered_component_max_rotation_error_deg": 0.0289508265,
+    "cuff_normal_texture_scale": [
+      625,
+      625
+    ],
+    "source_materials_verified": true,
+    "source_approved_by_owner": true,
+    "first_person_actual_editor_images_viewed_by_parent": true
+  },
+  "warm_binding": {
+    "status": "warm-bound-awaiting-private-walk-QA",
+    "epoch": 1792097710.0412352,
+    "actual_reflected_mesh_and_target_sequence_verified": true,
+    "camera_displacement_cm": 0.0,
+    "game_pod_devices_restarted": false,
+    "walking_only": true,
+    "old_idle_not_reused": true,
+    "freeze_at_rest_limitation": true,
+    "receipt": "private-audit/walking-warm-binding.json"
+  },
+  "rollback_lesson": "UE ReloadConfig succeeds silently; verify actual Game config branch unload and reflected mesh/animation, never require console input echo. Initial echo assertion triggered exact original-config rollback before successful retry.",
+  "limitations": [
+    "Actual normal Game walking visual/input QA pending parent.",
+    "True compatible Idle remains held; stopping currently freezes Walk phase.",
+    "PC, phone and controller contact gates unchanged and unaccepted.",
+    "No public deployment."
+  ]
+}
