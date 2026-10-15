@@ -14,7 +14,9 @@ What the native fragment does, only with MEASURED evidence:
   solved grip offset (socket rotation and location, imported bone scale excluded: the phone-review rule);
 - places the BODY component (never the actor/capsule) on the measured sofa seat from the evidence body
   offset; the capsule stays standing at the measured approach outside the sofa; the camera rides the
-  captured Head socket while playing and is restored after;
+  captured Head socket at the measured eye (iris-midpoint offset, original owner only) while playing and
+  is restored after, eased both ways with a frame-rate independent exponential (no one-frame drop of
+  the view from the standing eye to the seated head, or jump back up);
 - leaves Minecraft input to the existing plumbing (TickMinecraftTVInput -> /api/home/minecraft/input ->
   games/minecraft/native_input.cjs). It sends no input of its own;
 - exposes ControllerPlayReady(): true only when the measured sofa surface, sofa seat contact, capsule
@@ -317,6 +319,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY() TObjectPtr<UAnimSequence> ControllerPlayClip;
  UPROPERTY() TObjectPtr<UStaticMeshComponent> ControllerPlayProp;
  FName ControllerPlayHand,ControllerPlayHead; FVector ControllerPlayGripOffset=FVector::ZeroVector; FQuat ControllerPlayGripRotation=FQuat::Identity;
+ void UpdateControllerPlayCamera(float Dt); FVector ControllerPlayEye=FVector::ZeroVector,ControllerPlayEyeOffset=FVector::ZeroVector; bool ControllerPlayCameraEasing=false;
  FVector ControllerPlayBodyOffset=FVector::ZeroVector; float ControllerPlayBodyYaw=0; FVector2D ControllerPlayApproach=FVector2D::ZeroVector; float ControllerPlayYaw=0;
  bool ControllerPlayEvidence=false,ControllerPlayRuntimeProof=false,ControllerPlayActive=false,ControllerPlayLoggedReady=false; FString ControllerPlayRefusal=TEXT("not loaded");
 '''
@@ -328,9 +331,21 @@ LIVE_ANCHOR = ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('
 # is the unique LINE that starts with this prefix; the call is inserted right after that line).
 RATE_PREFIX = ' Instance->TargetRate=HandsPosture==TEXT("Walk")?'
 RATE_ANCHOR = RATE_PREFIX.strip()
+# Eye in the owner's Head bone frame (cm): the physical iris-surface midpoint measured natively on
+# /Game/Sub01Hands/FBX/SUB01_OriginalOwner (root's tools/unreal_controller_grip_diagnostic.py). The Head
+# joint itself sits ~18 cm below/behind the eyes, so a camera snapped to the joint views from the neck.
+OWNER_MESH_OBJECT_PATH = '/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner'
+EYE_OFFSET_HEAD_CM = (.11885198390986161, -13.382490930007885, 12.634526097714183)
+# Camera easing: exponential approach, 1-exp(-rate*dt) per tick (dt capped at .1 s like the renderer),
+# so settle time does not depend on frame rate; 10/s reaches 95% in 0.30 s.
+EYE_EASE_RATE = 10.0
+EYE_ALPHA_CPP = ('static double Sub01ControllerPlayEyeAlpha(double Dt){return Dt>0&&Dt==Dt?-std::expm1(-%.1f*(Dt<.1?Dt:.1)):0.;}'
+                 % EYE_EASE_RATE)
 
 CHARACTER_METHODS = r'''
 #include "Engine/StaticMesh.h"
+#include <cmath>
+@@EYE_ALPHA@@
 static uint64 Sub01ControllerPlayId(const FString& Text){uint64 V=1469598103934665603ull;for(TCHAR C:Text){V^=uint64(uint8(C));V*=1099511628211ull;}return V;}
 bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayRuntimeProof&&ControllerPlayClip&&ControllerPlayProp&&!ControllerPlayHand.IsNone()&&!ControllerPlayHead.IsNone();}
 void ASub01HomeCharacter::LoadControllerPlay(){
@@ -345,6 +360,8 @@ void ASub01HomeCharacter::LoadControllerPlay(){
  else ControllerPlayClip=Clip;
  const auto& Ref=Mesh->GetRefSkeleton();
  for(int32 I=0;I<Ref.GetNum();++I){const FString N=Ref.GetBoneName(I).ToString();if(N.EndsWith(TEXT("RightHand")))ControllerPlayHand=Ref.GetBoneName(I);if(N.EndsWith(TEXT("Head")))ControllerPlayHead=Ref.GetBoneName(I);}
+ // The measured eye offset belongs to the original owner skin only; any other skin keeps the Head joint.
+ ControllerPlayEyeOffset=Mesh->GetPathName()==TEXT("@@OWNER_MESH@@")?FVector(@@EYE_OFFSET@@):FVector::ZeroVector;
  // The actual controller mesh named by root's import receipt (physical assembly only; the baked shadow is excluded):
  // one component, hidden until play, no collision (it never pushes the pawn).
  FString AssetText,MeshPath,AssetSchema,AssetSource;TSharedPtr<FJsonObject> Asset;const TSharedPtr<FJsonObject>* Physical=nullptr;
@@ -406,17 +423,19 @@ void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance
   if(!SetHandsPosture(TEXT("Walk"))||!HandsFailure.IsEmpty()){UE_LOG(LogTemp,Warning,TEXT("SUB01_CONTROLLER_PLAY_POSTURE_GATE %s"),*HandsFailure);Play=false;}
   else{
    ControllerPlayActive=true;GetCharacterMovement()->StopMovementImmediately();
-   ViewCamera->AttachToComponent(FirstPersonBody,FAttachmentTransformRules::SnapToTargetNotIncludingScale,ControllerPlayHead);ViewCamera->SetUsingAbsoluteRotation(true);
+   // Eye camera in world space, eased from wherever the view is now (never a one-frame drop).
+   if(!ControllerPlayCameraEasing)ControllerPlayEye=ViewCamera->GetComponentLocation();
+   ControllerPlayCameraEasing=true;ViewCamera->SetUsingAbsoluteLocation(true);ViewCamera->SetUsingAbsoluteRotation(true);
    UE_LOG(LogTemp,Display,TEXT("SUB01_CONTROLLER_PLAY_BEGIN TRIAL seated Gaming clip; minecraftFocused=%d (input stays with the existing TV input path)"),MinecraftFocused?1:0);
   }
  }
  if(!Play&&ControllerPlayActive){
   if(ControllerPlayProp)ControllerPlayProp->SetVisibility(false);
   FirstPersonBody->SetRelativeLocation(HandsBaseOffset);FirstPersonBody->SetRelativeRotation(HandsMeshRotation);
-  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);
-  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);
+  // The camera eases back to the standing eye below and is then handed back to the capsule.
   ControllerPlayActive=false;UE_LOG(LogTemp,Display,TEXT("SUB01_CONTROLLER_PLAY_END"));
  }
+ if(!ControllerPlayActive)UpdateControllerPlayCamera(Dt);
  if(!ControllerPlayActive)return;
  // The captured clip after the renderer's choice (as the seat/life adapters do); the capsule never moves.
  GetCharacterMovement()->StopMovementImmediately();
@@ -426,6 +445,22 @@ void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance
  const FTransform W=FirstPersonBody->GetSocketTransform(ControllerPlayHand,RTS_World);const FQuat R=W.GetRotation().GetNormalized();
  ControllerPlayProp->SetWorldLocationAndRotation(W.GetLocation()+R.RotateVector(ControllerPlayGripOffset),R*ControllerPlayGripRotation);
  ControllerPlayProp->SetVisibility(true);
+ UpdateControllerPlayCamera(Dt);
+}
+void ASub01HomeCharacter::UpdateControllerPlayCamera(float Dt){
+ if(!ControllerPlayCameraEasing||!ViewCamera||!FirstPersonBody)return;
+ // Standing eye: the renderer's capsule-relative camera (0,0,74). Seated: the captured Head socket at the eye.
+ const FVector Standing=GetRootComponent()->GetComponentTransform().TransformPosition(FVector(0,0,74));
+ FVector Target=Standing;
+ if(ControllerPlayActive){const FTransform H=FirstPersonBody->GetSocketTransform(ControllerPlayHead,RTS_World);Target=H.GetLocation()+H.GetRotation().GetNormalized().RotateVector(ControllerPlayEyeOffset);}
+ if(Target.ContainsNaN())return;
+ ControllerPlayEye=FMath::Lerp(ControllerPlayEye,Target,float(Sub01ControllerPlayEyeAlpha(Dt)));
+ ViewCamera->SetWorldLocation(ControllerPlayEye);
+ if(!ControllerPlayActive&&FVector::Dist(ControllerPlayEye,Standing)<.5f){
+  ViewCamera->SetUsingAbsoluteLocation(false);ViewCamera->SetUsingAbsoluteRotation(false);
+  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
+  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ControllerPlayCameraEasing=false;
+ }
 }
 '''
 
@@ -447,7 +482,8 @@ REQUIRED = (' bool MinecraftFocused', 'TickMinecraftTVInput();', 'bool ASub01Hom
 
 
 def methods():
-    return (CHARACTER_METHODS.replace('@@CLIP@@', CLIP_OBJECT_PATH).replace('@@ROLE@@', ROLE).replace('@@ASSET_RECEIPT@@', CONTROLLER_ASSET_RECEIPT)
+    return (CHARACTER_METHODS.replace('@@EYE_ALPHA@@', EYE_ALPHA_CPP).replace('@@OWNER_MESH@@', OWNER_MESH_OBJECT_PATH)
+            .replace('@@EYE_OFFSET@@', ','.join(repr(v) for v in EYE_OFFSET_HEAD_CM)).replace('@@CLIP@@', CLIP_OBJECT_PATH).replace('@@ROLE@@', ROLE).replace('@@ASSET_RECEIPT@@', CONTROLLER_ASSET_RECEIPT)
             .replace('@@ASSET_SCHEMA@@', CONTROLLER_ASSET_SCHEMA).replace('@@ASSET_SHA@@', CONTROLLER_SOURCE_SHA256)
             .replace('@@SOFA@@', SOFA_REPORT).replace('@@PROOF@@', RUNTIME_PROOF).replace('@@PROOF_SCHEMA@@', RUNTIME_PROOF_SCHEMA)
             .replace('@@FRAMES@@', str(CLIP_FRAMES)).replace('@@EVIDENCE@@', EVIDENCE).replace('@@SCHEMA@@', EVIDENCE_SCHEMA)
