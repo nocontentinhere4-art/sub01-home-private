@@ -16,13 +16,13 @@ def window(tmp_path):
 
 def test_exact_migrated_private_target_and_bounded_window(window):
     path,_=window
-    assert PRIVATE_VIEWER_ORIGIN=='https://kjsxms1gk4rmv6-8888.proxy.runpod.net'
+    assert PRIVATE_VIEWER_ORIGIN=='https://dgtgepkz7h1zy5-8888.proxy.runpod.net'
     assert authorized_viewer_window(200,path,100,os.geteuid())
     assert not authorized_viewer_window(201,path,100,os.geteuid())
     assert not authorized_viewer_window(200,path,200,os.geteuid())
 
 
-@pytest.mark.parametrize('key,value', [('pod','5ldnm4vax9kelh'),('pod','brain'),
+@pytest.mark.parametrize('key,value', [('pod','kjsxms1gk4rmv6'),('pod','5ldnm4vax9kelh'),('pod','brain'),
     ('total_cap',101),('stop_guards_authenticated',False),('second_external_guard_pid',0)])
 def test_previous_pod_and_unverified_window_refused(window,key,value):
     path,doc=window;doc[key]=value;path.write_text(json.dumps(doc))

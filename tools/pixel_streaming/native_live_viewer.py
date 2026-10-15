@@ -22,7 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 
-AUTHORIZED_POD = 'kjsxms1gk4rmv6'
+AUTHORIZED_POD = 'dgtgepkz7h1zy5'
 AUTHORIZED_NATIVE_EXECUTABLE = b'/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
 
 
