@@ -1,0 +1,165 @@
+{
+  "schema": "sub01.real-bathroom-pendant-source.v1",
+  "source_url": "https://polyhaven.com/a/modern_ceiling_lamp_01",
+  "license": "CC0",
+  "source_gltf_sha256": "f88b5d0a81fa813457a77474e7e4e812f97ad5fac2109ba03ddb183274be3f8c",
+  "home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "source_measurements": {
+    "canopy_top_y": 1.1726436614990234,
+    "canopy_radius": 0.0597928985953331,
+    "canopy_center_xz": [
+      0.0006063282489776611,
+      0.0002886056900024414
+    ],
+    "bulb_center": [
+      2.8349459171295166e-05,
+      0.4197324365377426,
+      0.0015027765184640884
+    ],
+    "cable_band_y": [
+      0.6710921645164489,
+      1.011092164516449
+    ],
+    "cable_length": 0.3400000000000001,
+    "aabb": [
+      [
+        -0.21579641103744507,
+        0.22109216451644897,
+        -0.2143276482820511
+      ],
+      [
+        0.21585291624069214,
+        1.1726436614990234,
+        0.2173331081867218
+      ]
+    ],
+    "native_drop": 0.7529112249612808
+  },
+  "actual_roof_source_probes": [
+    {
+      "probe_xz": [
+        -2.6,
+        1.55
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.540207101404667,
+        1.55
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.5577200359364403,
+        1.5922799640635596
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.6,
+        1.6097928985953331
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.64227996406356,
+        1.5922799640635596
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.659792898595333,
+        1.55
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.64227996406356,
+        1.5077200359364404
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.6,
+        1.490207101404667
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    },
+    {
+      "probe_xz": [
+        -2.5577200359364403,
+        1.5077200359364404
+      ],
+      "primitive": 0,
+      "triangle": 42,
+      "y": 5.949999809265137,
+      "normal_y": -1.0
+    }
+  ],
+  "new_cable_length_m": 0.03,
+  "uniform_scale": 1.0,
+  "native_material_parts": 3,
+  "split_world_triangle_corners_and_uvs_exact": true,
+  "original_vertices": 3538,
+  "original_polygons": 5602,
+  "source_topology_materials_retained": true,
+  "world_bounds_blender_m": [
+    [
+      -2.8164029121398926,
+      -1.7670444250106812,
+      5.308448314666748
+    ],
+    [
+      -2.384753465652466,
+      -1.335383653640747,
+      5.949999809265137
+    ]
+  ],
+  "standing_headroom_m": 2.255948314666748,
+  "bulb_ue_cm": [
+    -260.05779787898064,
+    155.12141708284616,
+    550.7088584303856
+  ],
+  "glb_sha256": "c953ce7625525ce501f0bfc05eadd108a55754c6288159c3f4457ea7e4277b6e",
+  "blend_sha256": "967269ad03531184b9d7ab84dde237a0ab7a3317756db608fe16c6f5f050e870",
+  "native_imported": false,
+  "native_light_installed": false,
+  "source_collision_complete": false,
+  "runtime_ready": false,
+  "pending": [
+    "Full source/native fixture collision check",
+    "Native independent switched light and actual first-person ON/OFF review"
+  ]
+}

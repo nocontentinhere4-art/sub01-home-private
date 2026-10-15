@@ -22,3 +22,18 @@ Generator: tools/build_reference_bathroom_pendant.py. First attempt's missing
 Blender Python path was corrected; successful source build is the server r2
 folder recorded by the coordinator. No rendering, GPU reset, live device or map
 change occurred during this authoring pass.
+
+## Three-part native candidate
+
+`split-v3/` is the same actual fixture separated in Blender by material into
+Glass / Metal / Globe, so a native integration can preserve canopy shadows while
+letting the diffuse globe emit light without trapping it inside an opaque shadow
+shell. Both glass transmission/shadows and switching still need native review.
+No native light is installed by this source operation.
+
+`tools/verify_pendant_material_split.py` independently compared all5602 world
+triangle corners, corner UVs/normals, PBR material factors, image bytes and sampler
+assignments: exact semantic parity with the measured one-part candidate. Texture
+indices are correctly resolved through actual image/sampler bindings; export
+reordering is not a material change. Geometry is identical, so the original
+surface collision proof applies to these same world triangles.

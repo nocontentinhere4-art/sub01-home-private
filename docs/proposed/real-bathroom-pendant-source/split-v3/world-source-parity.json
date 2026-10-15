@@ -1,0 +1,15 @@
+{
+  "schema": "sub01.bathroom-pendant-material-split-parity.v1",
+  "one_component_sha256": "0ec188ac44e20e72fb936d2623c6c0ea5fd2d1a615170696ff565b1d0e4a5c82",
+  "three_component_sha256": "c953ce7625525ce501f0bfc05eadd108a55754c6288159c3f4457ea7e4277b6e",
+  "all5602_world_triangle_corners_uvs_normals_exact": true,
+  "all_material_pbr_definitions_image_bytes_sampler_assignments_exact": true,
+  "native_component_roles": {
+    "SUB01_RealBathroomPendant_Globe": "modern_ceiling_globe",
+    "SUB01_RealBathroomPendant_Glass": "modern_ceiling_lamp_01_glass",
+    "SUB01_RealBathroomPendant_Metal": "modern_ceiling_lamp_01"
+  },
+  "source_surface_collision_geometry_same_as_proven_r2": true,
+  "native_imported": false,
+  "runtime_ready": false
+}

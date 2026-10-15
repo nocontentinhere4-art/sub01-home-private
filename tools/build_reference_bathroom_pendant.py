@@ -47,7 +47,7 @@ def canopy_proof(home, radius):
     return result
 
 
-def build(asset, home, output):
+def build(asset, home, output, separate_materials=False):
     import bpy
     from mathutils import Vector
     from build_real_lamps import primitive_vertices, measure_pendant, cable_remap
@@ -87,6 +87,31 @@ def build(asset, home, output):
         raise ValueError('Source topology/materials changed')
     bpy.context.view_layer.objects.active=obj
     bpy.ops.object.select_all(action='DESELECT');obj.select_set(True)
+    def corners(objects):
+        result=[]
+        for part in objects:
+            part.data.calc_loop_triangles()
+            uv=part.data.uv_layers.active
+            for triangle in part.data.loop_triangles:
+                name=part.data.materials[triangle.material_index].name
+                points=tuple(tuple(part.matrix_world@part.data.vertices[i].co) for i in triangle.vertices)
+                tex=tuple(tuple(uv.data[i].uv) for i in triangle.loops) if uv else ()
+                result.append((name,points,tex))
+        return sorted(result)
+    before_corners=corners([obj])
+    if separate_materials:
+        bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.separate(type='MATERIAL');bpy.ops.object.mode_set(mode='OBJECT')
+        for part in [o for o in bpy.context.scene.objects if o.type=='MESH']:
+            if len(part.data.materials)!=1:raise ValueError('One physical material role per part required')
+            material=part.data.materials[0].name
+            role={'modern_ceiling_lamp_01_glass':'Glass','modern_ceiling_lamp_01':'Metal','modern_ceiling_globe':'Globe'}.get(material)
+            if role is None:raise ValueError('Unexpected genuine material role')
+            part.name='SUB01_RealBathroomPendant_'+role
+    parts=[o for o in bpy.context.scene.objects if o.type=='MESH']
+    if corners(parts)!=before_corners:raise ValueError('Material split changed world triangle corners or UVs')
+    bpy.ops.object.select_all(action='DESELECT')
+    for part in parts:part.select_set(True)
     output.mkdir(parents=True)
     bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(output/'bathroom-pendant.blend'))
     target=output/'bathroom-pendant.glb'
@@ -96,7 +121,7 @@ def build(asset, home, output):
     report={'schema':'sub01.real-bathroom-pendant-source.v1','source_url':'https://polyhaven.com/a/modern_ceiling_lamp_01',
             'license':'CC0','source_gltf_sha256':ASSET_SHA,'home_sha256':HOME_SHA,'source_measurements':measurements,
             'actual_roof_source_probes':probes,'new_cable_length_m':cable_length,'uniform_scale':1.,
-            'original_vertices':counts[0],'original_polygons':counts[1],'source_topology_materials_retained':True,
+            'native_material_parts':len(parts),'split_world_triangle_corners_and_uvs_exact':True,'original_vertices':counts[0],'original_polygons':counts[1],'source_topology_materials_retained':True,
             'world_bounds_blender_m':bounds,'standing_headroom_m':bounds[0][2]-3.0525,
             'bulb_ue_cm':[bulb_world[0]*100,bulb_world[2]*100,bulb_world[1]*100],
             'glb_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
@@ -108,6 +133,6 @@ def build(asset, home, output):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--asset',required=True);p.add_argument('--home',required=True);p.add_argument('--output',required=True)
+    p=argparse.ArgumentParser();p.add_argument('--asset',required=True);p.add_argument('--home',required=True);p.add_argument('--output',required=True);p.add_argument('--separate-materials',action='store_true')
     args=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
-    a=p.parse_args(args);build(a.asset,a.home,a.output)
+    a=p.parse_args(args);build(a.asset,a.home,a.output,a.separate_materials)
