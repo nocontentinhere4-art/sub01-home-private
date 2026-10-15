@@ -624,7 +624,7 @@ def solve_idle(ctx, clock, report, cand, x0=WARM_START, max_rounds=4):
 
 
 def write_and_report(ctx, out_dir, role, asset, g, sk, W, W0, times, labels, extra, support_mask=None, end=None,
-                     loop_readback=None):
+                     loop_readback=None, loop=True, audit_index=None):
     """Write the GLB (P.write_clip: every joint's local rotation + the Hips translation; other captured tracks kept),
     read it back, store the per-frame patch metrics in the shape tools/recheck_seat_fit_main_rule.py reads."""
     path = Path(out_dir) / f'{asset}.glb'
@@ -638,18 +638,29 @@ def write_and_report(ctx, out_dir, role, asset, g, sk, W, W0, times, labels, ext
     m = meas_out.metrics(W_out)
     F = len(W_out)
     mask = np.ones(F, bool) if support_mask is None else np.asarray(support_mask, bool)
+    sel = np.arange(F) if audit_index is None else np.asarray(audit_index)
     rep = {'schema': SCHEMA, 'role': role, 'asset': f'/Game/Sub01Hands/Seating/{asset}', 'labels': labels,
            'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size, 'key_count': F,
            'duration_s': _r(times[-1] - times[0]),
            'readback_max_joint_error_cm': _r(np.abs(W_out[:, :, :3, 3] - W[:, :, :3, 3]).max() * 100, 6),
            'actual_chair': {'body_offset_from_audited_transform_cm': list(ctx.body_offset),
                             'chair_lift_cm': ctx.lift,
-                            'per_frame': {'support_mask': [bool(v) for v in mask],
-                                          'patches': {n: {'lowest_cm': [_r(v, 6) for v in m[n]['lowest']],
-                                                          'median_cm': [_r(v, 6) for v in m[n]['median']],
-                                                          'band_vertices': [int(v) for v in m[n]['band']],
-                                                          'over_vertices': [int(v) for v in m[n]['over']]}
+                            'per_frame': {'support_mask': [bool(v) for v in mask[sel]],
+                                          'keys': [int(i) for i in sel] if audit_index is not None else 'every key',
+                                          'patches': {n: {'lowest_cm': [_r(v, 6) for v in m[n]['lowest'][sel]],
+                                                          'median_cm': [_r(v, 6) for v in m[n]['median'][sel]],
+                                                          'band_vertices': [int(v) for v in m[n]['band'][sel]],
+                                                          'over_vertices': [int(v) for v in m[n]['over'][sel]]}
                                                       for n in m}}}}
+    if audit_index is not None:      # every written key too (the 301 audit samples above are what the recheck reads)
+        rep['actual_chair']['per_frame_all_keys'] = {
+            'support_mask': [bool(v) for v in mask],
+            'patches': {n: {'lowest_cm': [_r(v, 6) for v in m[n]['lowest']], 'median_cm': [_r(v, 6) for v in m[n]['median']],
+                            'band_vertices': [int(v) for v in m[n]['band']], 'over_vertices': [int(v) for v in m[n]['over']]}
+                        for n in m}}
+        R_ = __import__('recheck_seat_fit_main_rule')
+        allk = R_.recheck(ctx.V, role, m, mask, F)
+        rep['main_rule_all_keys'] = {k: allk[k] for k in ('pass_main_rule', 'failing_frame_count', 'gated_frames', 'worst')}
     rep.update(extra)
     rep['bone_length_max_error_cm'] = _r(bone_length_error_cm(sk, W0, W_out), 7)
     A = P.armature_world(g, g.by_name['mixamorig:Hips'])
@@ -670,10 +681,10 @@ def write_and_report(ctx, out_dir, role, asset, g, sk, W, W0, times, labels, ext
         'note': 'the ranges are SEATED / normal-ROM ranges; ungated stand/sit motion frames keep the capture, which '
                 'already leaves them (e.g. anterior pelvic tilt while rising)'}
     fps = (F - 1) / (times[-1] - times[0])
-    if end is None:
+    if end is None and loop:
         rep['loop_closure'] = P.seam_measure(P.hips_frame_shapes(sk, W_out), P.ue_point(W_out[:, sk.j('Hips'), :3, 3]),
                                              0, F - 1, fps)
-    else:
+    elif end is not None:
         rep['seam_to_SeatedIdle'] = P.seam_report(sk, W_out, loop_readback, end, fps)
     Wa = P.place_body(W_out, ctx.body_offset)
     rep['clearance'] = {'chair_complete': chair_clearance(ctx.collider, np.asarray(ctx.base.ibm), Wa,
@@ -695,7 +706,7 @@ def main_rule_verdict(ctx, out_dir, name, R):
     return res
 
 
-def seam_window_search(ctx, tr, W_loop, end, deadline):
+def seam_window_search(ctx, tr, W_loop, end, deadline, cands=None, prefer_smooth=False):
     """The existing full-pose seam blend (fit_seat_pelvis_pitch.seam_blend_eval: quintic window, loop-target legs,
     no-penetration lifts) restricted to windows in which every settled (gated) frame is already exactly the loop, so
     no gated frame keeps the capture's tiptoe pose. Choice: (1) no failing frame - main's rule on the support frames,
@@ -709,7 +720,9 @@ def seam_window_search(ctx, tr, W_loop, end, deadline):
     cap_acc, cap_ang = float(kin0['acc_cm_s2'].max()), float(kin0['ang_acc_deg_s2'].max())
     meas = FastMeasure(fit.trial)
     cache, rows, best = {}, [], None
-    if end == 'end':
+    if cands is not None:
+        pass
+    elif end == 'end':
         bs = [b for b in range(min(int(gated.min()), F - 2), max(int(gated.min()) - 7, SEAM_MIN_FRAMES), -2)]
         cands = [(a, b) for b in bs for a in range(max(0, b - 45), b - SEAM_MIN_FRAMES + 1, SEAM_A_STEP)]
     else:
@@ -740,7 +753,8 @@ def seam_window_search(ctx, tr, W_loop, end, deadline):
                'feet_within_capture': bool(feet_ok), 'captured_frames_kept': kept,
                'lifted_frames': int((ev['lift_cm'] > 0).sum()), 'max_lift_cm': _r(ev['lift_cm'].max(), 4)}
         rows.append(row)
-        key = (row['failing_frames'], ratio > 1 + 1e-9 or not feet_ok, -kept, ratio)
+        key = ((row['failing_frames'], ratio, -kept) if prefer_smooth else
+               (row['failing_frames'], ratio > 1 + 1e-9 or not feet_ok, -kept, ratio))
         if best is None or key < best[0]:
             best = (key, row, ev)
     _, row, ev = best
@@ -876,6 +890,252 @@ def run(args):
     return report
 
 
+# ---------------------------------------------------------------- typing base (DeskTyping / SitToType / TypeToSit)
+TYPING = (('SitToType', 'room_mx_sit_to_type.glb'), ('DeskTyping', 'room_mx_typing.glb'), ('TypeToSit', 'room_mx_type_to_sit.glb'))
+TYPING_WARM_START = (27., 14.5, -11.76, 5.5, 2.36, 3.8, 1.13, -7.59, 1.77)
+SEAM_TYPING_A = (1, 2, 3)
+
+
+class SharedSolver:
+    """One constant edit set for several clips (the typing chain keeps one perch, so its internal seams keep the
+    capture's own continuity); the worst margin over every clip's probe frames."""
+
+    def __init__(self, solvers, frames, target_cm=.25, edit_weight=.004):
+        self.solvers, self.frames, self.target, self.edit_weight, self.evals = solvers, frames, target_cm, edit_weight, 0
+
+    def cost(self, prm, _=None):
+        self.evals += 1
+        worst, ex = [], 0.
+        for sol, fr in zip(self.solvers, self.frames):
+            _, _, mg, _, _, e = sol.evaluate(prm, fr)
+            worst.append(solver_cost_worst(mg))
+            ex = max(ex, float(e.max()))
+        w = np.minimum(np.concatenate(worst), self.target)
+        return -np.min(w) - .1 * np.mean(w) + 20. * ex + 5. * param_bounds_excess(prm) + self.edit_weight * edit_cost(prm)
+
+    def optimise(self, x0, deadline, maxfev=400):
+        from scipy.optimize import minimize
+        best = (self.cost(x0), np.asarray(x0, float))
+        steps = np.array([4., 2., 2., 3., 2., 3., 2., 8., 8.])
+        x = best[1]
+        for rnd in range(3):
+            if time.time() > deadline:
+                break
+            simplex = np.vstack([x] + [x + np.eye(len(x))[i] * steps[i] * (.5 ** rnd) for i in range(len(x))])
+            r = minimize(self.cost, x, method='Nelder-Mead',
+                         options={'initial_simplex': simplex, 'maxfev': maxfev, 'xatol': 1e-3, 'fatol': 1e-5})
+            if r.fun < best[0]:
+                best = (float(r.fun), np.asarray(r.x, float))
+            x = best[1]
+        return best[1], best[0]
+
+
+REFINE_PARAMS = (0, 1, 2, 3, 5)      # pelvis tilt, root down, root back, both ankle-forward offsets
+REFINE_KNOT_FRAMES = 12
+REFINE_SIGMA_FRAMES = 4.
+
+
+def refine_per_frame(sol, x, deadline, pinned=(), target=.08, rounds=6):
+    """Time-varying residual edits where the shared constant set leaves frames failing: a residual delta of
+    REFINE_PARAMS on knots every REFINE_KNOT_FRAMES keys, each knot solved (Nelder-Mead) on the keys around it with a
+    pull toward zero, then linearly interpolated, Gaussian smoothed (sigma REFINE_SIGMA_FRAMES) and verified on every
+    key. Knots on `pinned` keys (chain seams) stay exactly 0 so the seams keep the shared set. Returns (F, 9) params."""
+    from scipy.optimize import minimize
+    F = len(sol.W0)
+    prm = np.tile(np.asarray(x, float), (F, 1))
+    knots = np.unique(np.r_[np.arange(0, F, REFINE_KNOT_FRAMES), F - 1])
+    delta = np.zeros((len(knots), len(PARAMS)))
+    log = []
+    for rnd in range(rounds):
+        _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
+        w = solver_cost_worst(mg)
+        bad = (w < target) | (ex > 0)
+        log.append({'round': rnd, 'failing_main_frames': int((worst < 0).sum()), 'below_target_frames': int(bad.sum()),
+                    'worst_margin_cm': _r(worst.min())})
+        if not (worst < 0).any() and not (ex > 0).any() or time.time() > deadline:
+            break
+        for ki, k in enumerate(knots):
+            if time.time() > deadline:
+                break
+            lo, hi = max(0, k - REFINE_KNOT_FRAMES), min(F, k + REFINE_KNOT_FRAMES + 1)
+            if not bad[lo:hi].any() or any(abs(k - p) < 1 for p in pinned):
+                continue
+            fr = np.arange(lo, hi, 2)
+
+            def cost(d):
+                q = prm[fr].copy()
+                q[:, REFINE_PARAMS] += d
+                _, _, mg_, _, _, ex_ = sol.evaluate(q, fr)
+                ww = np.minimum(solver_cost_worst(mg_), target + .05)
+                return -ww.min() - .1 * ww.mean() + 20. * float(ex_.max()) + .002 * float(np.sum((d / [5., 2.5, 2.5, 3., 3.]) ** 2))
+            d0 = delta[ki, list(REFINE_PARAMS)]
+            simplex = np.vstack([d0] + [d0 + np.eye(len(d0))[i] * [3., 1.5, 1.5, 2., 2.][i] for i in range(len(d0))])
+            r = minimize(cost, d0, method='Nelder-Mead', options={'initial_simplex': simplex, 'maxfev': 120,
+                                                                   'xatol': 1e-3, 'fatol': 1e-5})
+            delta[ki, list(REFINE_PARAMS)] = r.x
+        dense = np.stack([np.interp(np.arange(F), knots, delta[:, c]) for c in range(len(PARAMS))], 1)
+        if REFINE_SIGMA_FRAMES > 0:
+            xk = np.arange(-int(3 * REFINE_SIGMA_FRAMES), int(3 * REFINE_SIGMA_FRAMES) + 1)
+            ker = np.exp(-.5 * (xk / REFINE_SIGMA_FRAMES) ** 2)
+            ker /= ker.sum()
+            dense = np.stack([np.convolve(np.pad(dense[:, c], len(xk) // 2, mode='edge'), ker, mode='valid')
+                              for c in range(len(PARAMS))], 1)
+        for p_ in pinned:                                   # exactly the shared set at the chain seams
+            wpin = np.clip(np.abs(np.arange(F) - p_) / REFINE_KNOT_FRAMES, 0, 1)
+            dense *= P.smootherstep(wpin)[:, None]
+        prm = np.tile(np.asarray(x, float), (F, 1)) + dense
+    _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
+    log.append({'round': 'final', 'failing_main_frames': int((worst < 0).sum()), 'worst_margin_cm': _r(worst.min()),
+                'anatomical_excess_frames': int((ex > 0).sum())})
+    return prm, log
+
+
+def typing_sources(ctx):
+    out = {}
+    for name, fname in TYPING:
+        g = G.Gltf(CLIPS / fname)
+        kt = list(map(float, g.animation().key_times()))
+        if name == 'DeskTyping':          # written at 60 Hz so the native 3..8 s audit samples are exact keys
+            kt = [kt[0] + i / 60 for i in range(int(round((kt[-1] - kt[0]) * 60)) + 1)]
+        src, _ = P.clip_source(ctx.base, CLIPS / fname, kt)
+        fit, meas = ctx.fit(src)
+        model = PoseModel(fit, meas)
+        out[name] = {'g': g, 'times': kt, 'src': src, 'fit': fit, 'meas': meas, 'model': model, 'W0': src.joint_world,
+                     'solver': IdleSolver(model, ctx.V, src.joint_world), 'fname': fname}
+    return out
+
+
+def run_typing(args):
+    import recheck_seat_fit_main_rule as R
+    import solve_seated_typing_arm_ik as S
+    out_dir = Path(args.out_dir) / 'chair-lift-proposal'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    clock = Clock(args.max_seconds, out_dir / 'typing-base.report.json')
+    V = R.load_main_validator(R.main_validator_bytes(args.ref))
+    base = E.Source.load(args.source)
+    keys = T.keycaps_from_glb()
+    ctx = Context(V, base, keys, CHAIR_LIFT_CM)
+    ctx.collider = S.ChairCollider(S.load_complete_chair(S.load_chair()))
+    report = {'schema': SCHEMA + '.typing-base', 'label': 'proposal', 'verified': False, 'requires_server_reaudit': True,
+              'changes_importer_pins_or_verdicts': False, 'source_captures_untouched': True,
+              'arms': 'upper body and arms as captured (they translate with the root); the arm / typing step follows',
+              'chair_lift_cm': CHAIR_LIFT_CM, 'main_validator_sha256': V.SOURCE_SHA256, 'clips': {}}
+    srcs = typing_sources(ctx)
+    probes = []
+    for name, sd in srcs.items():
+        F = len(sd['W0'])
+        probes.append(np.unique(np.r_[np.arange(0, F, 40 if name == 'DeskTyping' else 4), F - 1]))
+    shared = SharedSolver([sd['solver'] for sd in srcs.values()], probes)
+    x = np.asarray(args.warm_start or TYPING_WARM_START, float)
+    history = []
+    for rnd in range(0 if args.fixed else 3):
+        budget = min(clock.left() * .45, 900.)
+        if budget < 60:
+            break
+        x, c = shared.optimise(x, time.time() + budget)
+        full = {}
+        bad = []
+        for (name, sd), pr in zip(srcs.items(), range(len(srcs))):
+            _, m, mg, worst, _, ex = sd['solver'].evaluate(x, np.arange(len(sd['W0'])))
+            full[name] = {'failing_frames': int((worst < 0).sum()), 'worst_margin_cm': _r(worst.min()),
+                          'anatomical_excess_deg_max': _r(ex.max(), 4), 'per_patch': patch_table(V, m)}
+            bad.append(np.nonzero((worst < 0) | (ex > 0))[0])
+        history.append({'round': rnd, 'params': [_r(v, 4) for v in x], 'evals': shared.evals, 'clips': full})
+        report['shared_solve_history'] = history
+        clock.checkpoint(f'typing shared solve round {rnd}', report)
+        if not any(len(b) for b in bad):
+            break
+        shared.frames = [np.unique(np.r_[pr, b[:: max(1, len(b) // 8)][:8]]) for pr, b in zip(shared.frames, bad)]
+    report['params'] = dict(zip(PARAMS, [_r(v, 4) for v in x]))
+    # the anatomical SeatedIdle loop (committed chair-lift packet), read back
+    gi = G.Gltf(out_dir / 'SUB01_SeatedIdle.glb')
+    W_loop, _ = E.joint_worlds(gi, base.names, gi.animation().key_times())
+    labels = {'label': 'proposal', 'verified': False, 'requires_server_reaudit': True, 'requires_native_collision_audit': True,
+              'chair_lift_cm': CHAIR_LIFT_CM, 'params': report['params'],
+              'derived_edits': ['pelvis_tilt_about_lateral_axis_pivot_spine_spine_counter_rotated',
+                                'root_vertical_and_fore_aft_translation', 'flat_foot_heel_down_bind_plantar_heading_kept',
+                                'toes_to_bind_local', 'non_stretch_two_bone_leg_ik_ankle_offset_hip_swivel']}
+    written = {}
+    report['per_frame_refine'] = {}
+    for name, sd in srcs.items():
+        F0 = len(sd['W0'])
+        pinned = {'SitToType': (F0 - 1,), 'DeskTyping': (0, F0 - 1), 'TypeToSit': (0,)}[name]
+        budget = min(clock.left() * .6, 2400.) if name == 'DeskTyping' else min(clock.left() * .2, 600.)
+        prm, log = refine_per_frame(sd['solver'], x, time.time() + budget, pinned)
+        sd['prm'] = prm
+        dlt = prm - np.asarray(x, float)
+        report['per_frame_refine'][name] = {'log': log, 'pinned_keys': list(pinned),
+                                            'max_abs_delta': dict(zip(PARAMS, [_r(v, 4) for v in np.abs(dlt).max(0)])),
+                                            'frames_with_delta': int((np.abs(dlt).max(1) > 1e-6).sum())}
+        clock.checkpoint(f'{name} per-frame refine', report)
+    for name, sd in srcs.items():
+        sk = sd['fit'].sk
+        W = sd['model'].apply(sd['W0'], sd['prm'])
+        F = len(W)
+        role = f'{name}_seated'
+        lab = dict(labels, role=role, source_clip=f'web/room/mh_mx/{sd["fname"]}')
+        extra, end, support = {}, None, np.ones(F, bool)
+        if name in ('SitToType', 'TypeToSit'):
+            end = 'start' if name == 'SitToType' else 'end'
+            fps = (F - 1) / (sd['times'][-1] - sd['times'][0])
+            tr = {'fit': sd['fit'], 'W': W, 'g': sd['g'], 'fps': fps, 'settled': np.ones(F, bool)}
+            cands = ([(a, b) for a in SEAM_TYPING_A for b in range(a + SEAM_MIN_FRAMES, F, 2)] if end == 'start' else
+                     [(a, b) for b in (F - 1 - k for k in SEAM_TYPING_A) for a in range(0, b - SEAM_MIN_FRAMES + 1, 2)])
+            ev, info = seam_window_search(ctx, tr, W_loop, end, time.time() + min(clock.left() * .3, 600), cands=cands,
+                                          prefer_smooth=True)
+            info['choice_rule'] = ('every frame of these seated clips is gated, so the window is chosen by (1) no failing '
+                                   'frame, (2) the smallest pelvis peak acceleration ratio to the capture, (3) most '
+                                   'captured frames kept')
+            info['mode'] = 'full-pose seam blend with the anatomical SeatedIdle (%s)' % (
+                'loop head into the clip' if end == 'start' else 'clip into the loop tail')
+            W, support = ev['W'], ev['support']
+            lab['derived_edits'] = lab['derived_edits'] + ['full_pose_seam_blend_with_anatomical_SeatedIdle']
+            extra['seam_blend'] = info
+        audit = None
+        if name == 'DeskTyping':
+            t0 = sd['times'][0]
+            audit = np.rint((np.asarray(E.TIMES) - t0) * 60).astype(int)
+        rep = write_and_report(ctx, out_dir, role, f'SUB01_{role}', sd['g'], sk, W, sd['W0'], sd['times'], lab, extra,
+                               support_mask=support, end=end, loop_readback=W_loop, loop=False, audit_index=audit)
+        rep['main_rule'] = main_rule_verdict(ctx, out_dir, role, R)
+        written[name] = rep
+        report['clips'][name] = {k: v for k, v in rep.items() if not k.startswith('_') and k != 'actual_chair'}
+        clock.checkpoint(f'{name} written', report)
+    # seams along the chain (written, read-back clips): position and velocity deltas
+    chain = [('SeatedIdle', W_loop, 30.), ('SitToType', written['SitToType']['_W_out'], 30.),
+             ('DeskTyping', written['DeskTyping']['_W_out'], 60.), ('TypeToSit', written['TypeToSit']['_W_out'], 30.),
+             ('SeatedIdle', W_loop, 30.)]
+    sk = srcs['DeskTyping']['fit'].sk
+    seams = []
+    for (na, Wa, fa), (nb, Wb, fb) in zip(chain[:-1], chain[1:]):
+        r = P.seam_report(sk, Wb, Wa, 'start', fb)
+        if fa != fb:      # velocities at each clip's own key rate
+            va, wa = P.joint_velocity(Wa[-2], Wa[-1], fa)
+            vb, wb = P.joint_velocity(Wb[0], Wb[1], fb)
+            H = sk.j('Hips')
+            r['velocity_delta'] = {'hips_cm_s': _r(np.linalg.norm(vb[H] - va[H]), 4),
+                                   'max_joint_cm_s': _r(np.linalg.norm(vb - va, axis=1).max(), 4),
+                                   'hips_ang_deg_s': _r(np.linalg.norm(wb[H] - wa[H]), 4),
+                                   'max_joint_ang_deg_s': _r(np.linalg.norm(wb - wa, axis=1).max(), 4)}
+        r.pop('loop_own_seam_velocity_delta_reference', None)
+        r['pair'] = f'{na}.last -> {nb}.first'
+        H = sk.j('Hips')
+        r['lower_body_position_delta_cm'] = _r(max(np.linalg.norm(P.ue_point(Wb[0, k, :3, 3]) - P.ue_point(Wa[-1, k, :3, 3]))
+                                                    for k in [H] + [sk.j(f'{p}{b}') for p in ('Left', 'Right')
+                                                                    for b in ('UpLeg', 'Leg', 'Foot', 'ToeBase')]), 4)
+        seams.append(r)
+    report['seams'] = seams
+    for name, rep in written.items():
+        report['clips'][name]['checks'] = clip_checks(rep)
+    req = ('SitToType', 'DeskTyping', 'TypeToSit')
+    report['source_ready'] = all(n in written and all(clip_checks(written[n]).values()) for n in req)
+    report['native_ready'] = False
+    report['ready'] = False
+    report['elapsed_s'] = round(time.time() - clock.t0, 1)
+    clock.path.write_text(json.dumps(report, indent=1, default=_json) + '\n')
+    return report
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--source', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
@@ -886,7 +1146,15 @@ def main(argv=None):
     ap.add_argument('--only-lift', action='store_true', help='solve only the chair-lift proposal')
     ap.add_argument('--warm-start', type=float, nargs=len(PARAMS), default=None)
     ap.add_argument('--fixed', action='store_true', help='use --warm-start as the parameters (no optimisation)')
+    ap.add_argument('--typing', action='store_true', help='the typing base (SitToType, DeskTyping, TypeToSit) on the '
+                    'chair-lift proposal, seamed to the committed anatomical SeatedIdle')
     args = ap.parse_args(argv)
+    if args.typing:
+        rep = run_typing(args)
+        print(json.dumps({'params': rep['params'], 'source_ready': rep['source_ready'],
+                          'clips': {k: {'main_rule': v['main_rule']['pass_main_rule'], 'sha256': v['sha256'],
+                                        'checks': v.get('checks')} for k, v in rep['clips'].items()}}, indent=1))
+        return 0
     rep = run(args)
     print(json.dumps(rep['summary'], indent=1))
     return 0
