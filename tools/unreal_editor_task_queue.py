@@ -60,6 +60,7 @@ TASKS = {
     'reference_bedding': 'unreal_import_reference_bedding',
     'reference_media': 'unreal_import_reference_media',
     'reference_entry': 'unreal_import_reference_entry',
+    'reference_sheer': 'unreal_import_reference_sheer',
     'residential_windows': 'unreal_import_real_home_windows',
     'exterior_readonly': 'unreal_exterior_readonly',
     'window_material_diagnostic': 'unreal_window_material_diagnostic',
@@ -148,6 +149,8 @@ def dispatch(task):
         return module.run(dry_run=task=='real_doors_preflight')
     if task in ('authentic_bath_preflight','authentic_bath'):
         return module.run(dry_run=task=='authentic_bath_preflight')
+    if task == 'reference_sheer':
+        return module.run(dry_run=False)
     if task == 'reference_entry':
         return module.run(dry_run=False)
     if task == 'reference_media':

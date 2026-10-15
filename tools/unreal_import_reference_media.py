@@ -36,6 +36,7 @@ def prepare(source,target):
   n['name']=NAMES[n['name']];doc['meshes'][n['mesh']]['name']=n['name']
   ps=doc['meshes'][n['mesh']]['primitives']
   if len(ps)!=1 or 'NORMAL'not in ps[0]['attributes']or 'TEXCOORD_0'not in ps[0]['attributes']:raise RuntimeError('Complete textured source required')
+ for index,material in enumerate(doc['materials']):material['name']='RM'+format(index,'02d')
  text=json.dumps(doc,separators=(',',':')).encode();text+=b' '*(-len(text)%4);blob=bytes(blob);blob+=b'\0'*(-len(blob)%4)
  target=Path(target);target.parent.mkdir(parents=True,exist_ok=True)
  if target.exists():raise RuntimeError('New prepared source required')
@@ -45,6 +46,9 @@ def prepare(source,target):
  for i,m in enumerate(original_doc['meshes']):
   if 'name'in m:restored['meshes'][i]['name']=m['name']
   else:restored['meshes'][i].pop('name',None)
+ for index,material in enumerate(original_doc['materials']):
+  if 'name'in material:restored['materials'][index]['name']=material['name']
+  else:restored['materials'][index].pop('name',None)
  if restored!=original_doc or bytes(actual_blob)!=bytes(original_blob):raise RuntimeError('Names-only bedding preparation changed original source document/binary')
  return actual,actual_blob
 
@@ -81,7 +85,7 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
    raise RuntimeError('Original textile fullsource geometry differs CPU surface; inspect reference-media-original-refusal.json')
   old.append((actor,cs[0],bool(actor.get_editor_property('hidden')),actor.is_temporarily_hidden_in_editor(),cs[0].get_collision_enabled()))
  prepared=project/'Saved/PrivateImportInputs'/('reference-media-'+uuid.uuid4().hex+'.glb');doc,blob=prepare(source,prepared)
- result={'schema':'sub01.reference-media-native-import.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'activity_gates_changed':False,'gameplay_available':False,'retired_source_nodes':list(OLD)}
+ result={'schema':'sub01.reference-media-native-import.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'activity_gates_changed':False,'gameplay_available':False,'retired_source_nodes':list(OLD),'material_aliases':{('RM'+format(i,'02d')):m.get('name')for i,m in enumerate(read_gltf(Path(source))[0]['materials'])}}
  if dry_run:return result
  backup=project/'Saved/PrivateMapBackups'/('reference-media-'+str(time.time_ns()));backup.mkdir(parents=True);shutil.copy2(project/'Content/Sub01Home/ActualHome.umap',backup/'ActualHome.umap')
  dest='/Game/Sub01Home/ReferenceMedia/V_'+SHA[:12]+'/Attempt_'+uuid.uuid4().hex;audit=project/'private-audit';audit.mkdir(exist_ok=True)
@@ -100,7 +104,7 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
      # label as well, then still independently prove all geometry and PBR.
      for key in {m.get_name(),actor.get_actor_label()}:
       if key in NAMES:by.setdefault(key,[]).append((actor,c))
-  parts=[];pbr=[];total=0
+  parts=[];pbr=[];total=0;geometry_rows=[]
   for ni,n in enumerate(doc['nodes']):
    matches=by.get(n['name'],[])
    if len(matches)!=1:raise RuntimeError('Unique exact imported bedding part required: '+n['name'])
@@ -108,9 +112,25 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
    if len(actor.get_components_by_class(u.StaticMeshComponent))!=1:raise RuntimeError('Standalone exact source media actor required')
    owned_geometry(u,c.get_editor_property('static_mesh'),dest)
    actual=native_triangles(u,c);expected=expected_triangles(doc,blob,ni)
-   if not same_triangles(expected,actual,tolerance=.0001):raise RuntimeError('Actual world media cabinet triangles differ from source')
+   source_full=expected
+   def positive(tris):
+    kept=[];zero=[]
+    for i,t in enumerate(tris):
+     a=[t[1][k]-t[0][k]for k in range(3)];b=[t[2][k]-t[0][k]for k in range(3)]
+     if (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])==(0.,0.,0.):zero.append(i)
+     else:kept.append(t)
+    return kept,zero
+   expected,source_zero=positive(expected)
+   if not same_triangles(expected,actual,tolerance=.0001):
+    _,native_zero=positive(actual)
+    (audit/'reference-media-geometry-refusal.json').write_text(json.dumps({'source_part':n['name'],'source_triangles':len(source_full),'source_positive_triangles':len(expected),'native_triangles':len(actual),'source_exact_zero_indices':source_zero,'native_exact_zero_indices':native_zero,'source_triangles_full':source_full,'native_triangles_full':actual,'owned_destination':dest},indent=2)+'\n')
+    raise RuntimeError('Actual world media cabinet triangles differ from source')
+   geometry_rows.append({'source_part':n['name'],'source_full_triangles':len(source_full),'source_exact_zero_indices':source_zero,'complete_positive_triangles':len(actual),'every_positive_corner_verified':True})
    material=doc['materials'][doc['meshes'][n['mesh']]['primitives'][0]['material']]
-   pbr.append(verify_owned_material(u,c,material,dest,source_primitive_verified=True));c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS);c.set_cast_shadow(True);actor.set_actor_label(n['name']);parts.append((actor,c));total+=len(actual)
+   try:pbr.append(verify_owned_material(u,c,material,dest,source_primitive_verified=True))
+   except Exception as error:
+    mat=c.get_material(0);v=u.MaterialEditingLibrary.get_material_instance_vector_parameter_value(mat,'BaseColorFactor');(audit/'reference-media-pbr-refusal.json').write_text(json.dumps({'source_part':n['name'],'source_material':material,'actual_material':mat.get_path_name(),'actual_base_factor':[v.r,v.g,v.b,v.a],'owned_destination':dest,'error':str(error)},indent=2)+'\n');raise
+   c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS);c.set_cast_shadow(True);actor.set_actor_label(n['name']);parts.append((actor,c));total+=len(actual)
   if len(parts)!=11 or fingerprint(u,original)!=before:raise RuntimeError('Complete11 parts and protected original state required')
   u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True)
   for actor,c,_,_,_ in old:actor.set_actor_hidden_in_game(True);actor.set_is_temporarily_hidden_in_editor(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
