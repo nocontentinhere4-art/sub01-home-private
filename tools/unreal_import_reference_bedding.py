@@ -116,12 +116,19 @@ def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output
   for actor in added:
    for c in actor.get_components_by_class(u.StaticMeshComponent):
     m=c.get_editor_property('static_mesh')
-    if m and m.get_path_name().startswith(dest+'/'):by.setdefault(m.get_name(),[]).append((actor,c))
+    if m and m.get_path_name().startswith(dest+'/'):
+     # Interchange may truncate an asset basename to respect package limits.
+     # The preserved scene-node actor label remains exact; geometry and PBR
+     # below still have to match the complete frozen source independently.
+     for key in {m.get_name(),actor.get_actor_label()}:
+      if key in NAMES.values():by.setdefault(key,[]).append((actor,c))
   parts=[];pbr=[];total=0
   for ni,n in enumerate(doc['nodes']):
    matches=by.get(n['name'],[])
    if len(matches)!=1:raise RuntimeError('Unique exact imported bedding part required: '+n['name'])
-   actor,c=matches[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest)
+   actor,c=matches[0]
+   if len(actor.get_components_by_class(u.StaticMeshComponent))!=1:raise RuntimeError('Standalone exact source textile actor required')
+   owned_geometry(u,c.get_editor_property('static_mesh'),dest)
    actual=native_triangles(u,c);expected=expected_triangles(doc,blob,ni)
    if not same_triangles(expected,actual,tolerance=.0001):raise RuntimeError('Actual world cloth triangles differ from source')
    material=doc['materials'][doc['meshes'][n['mesh']]['primitives'][0]['material']]
