@@ -4,6 +4,7 @@ Only accepts the next-window protected-home/cross-door proof, never the earlier
 sink-only receipt. Stages unique owned assets, verifies all152 actual native
 parts/PBR, builds eight movable five-part hinges, then retires exact63/178.
 """
+import copy
 import hashlib
 import itertools
 import json
@@ -21,6 +22,9 @@ from unreal_import_reference_dressing import fingerprint
 from structural_rail_source_patch import accessor, world_matrices, transformed
 
 LEVEL = '/Game/Sub01Home/ActualHome'
+# Native Interchange names differ from source glTF mesh index135 for node178.
+NATIVE_OLD_MESH = {63: 47, 178: 136}
+NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
 
 
 def same_triangles(source, actual, tolerance_cm=.02):
@@ -54,7 +58,7 @@ def same_triangles(source, actual, tolerance_cm=.02):
     return True
 
 
-def verify_retained_native(u, original, source):
+def verify_retained_native(u, original, source, allow_owned_nanite_rebuild=False, owned_paths=None):
     doc, binary = read_gltf(source)
     matrices = world_matrices(doc)
     rows = []
@@ -63,7 +67,7 @@ def verify_retained_native(u, original, source):
         if len(matches) != 1:
             raise RuntimeError('Retained source countertop/strip/sink identity missing')
         components = matches[0].get_components_by_class(u.StaticMeshComponent)
-        expected_path = f'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_{mesh_index}.Mesh_{mesh_index}'
+        expected_path = (owned_paths or {}).get(node) or f'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_{mesh_index}.Mesh_{mesh_index}'
         if (len(components) != 1 or components[0].get_editor_property('static_mesh').get_path_name() != expected_path
                 or bool(matches[0].get_editor_property('hidden')) or not components[0].get_editor_property('visible')):
             raise RuntimeError('Exact retained kitchen source geometry/binding unavailable')
@@ -82,10 +86,20 @@ def verify_retained_native(u, original, source):
             pts = [world.transform_location(p) for p in vertices]
             points = [[float(p.x), float(p.y), float(p.z)] for p in pts]
             actual += [[points[k] for k in ids[j:j+3]] for j in range(0, len(ids), 3)]
-        if not same_triangles(expected, actual):
-            raise RuntimeError('Retained native countertop/strip/sink differs from actual source triangles '+str(node))
+        verified = same_triangles(expected, actual)
+        if not verified:
+            from real_office_plant import native_geometry_api_audit
+            audit = native_geometry_api_audit(u, mesh)
+            settings = audit.get('nanite_settings', {})
+            apis = audit.get('subsystem_apis', {})
+            if not (allow_owned_nanite_rebuild and node == 164 and settings.get('enabled') is True
+                    and settings.get('keep_percent_triangles') == 1. and settings.get('trim_relative_error') == 0.
+                    and apis.get('get_nanite_settings') and apis.get('set_nanite_settings')):
+                raise RuntimeError('Retained native countertop/strip/sink differs from actual source triangles '+str(node))
         rows.append({'node': node, 'component': c.get_path_name(), 'triangles': len(actual),
-                     'source_triangle_positions_verified_cm': .02})
+                     'source_geometry_verified': verified,
+                     'source_triangle_positions_verified_cm': .02 if verified else None,
+                     'requires_owned_full_source_clone': not verified})
     return rows
 
 
@@ -163,7 +177,8 @@ def preflight(root, u):
     original = list(eas.get_all_level_actors())
     audit_path = audit_original_kitchen(u, original, project/'SourceAssets/full-home.glb', project)
     old = []
-    for node, (label, mesh_index) in OLD.items():
+    for node, (label, source_mesh_index) in OLD.items():
+        mesh_index = NATIVE_OLD_MESH[node]
         matches = [a for a in original if a.get_name() == 'full-home_node_'+str(node)]
         if len(matches) != 1:
             raise RuntimeError('Exact original cabinet identity missing '+str(node))
@@ -172,11 +187,13 @@ def preflight(root, u):
         expected = f'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_{mesh_index}.Mesh_{mesh_index}'
         if (actor.get_actor_label() != label or len(components) != 1
                 or components[0].get_editor_property('static_mesh').get_path_name() != expected
+                or components[0].get_num_materials() != 1
+                or components[0].get_material(0).get_path_name() != f'/Game/Sub01Home/ImportedScene/full-home/Materials/Material_{NATIVE_OLD_MATERIAL[node]}.Material_{NATIVE_OLD_MATERIAL[node]}'
                 or bool(actor.get_editor_property('hidden'))):
             raise RuntimeError('Original cabinet binding/visibility differs; no batch guesses; source_node='+str(node)+' expected_label='+label+' expected_mesh='+expected+' full_audit='+str(audit_path))
         old.append((actor, components[0]))
     # Actual source geometry, not just actor names or coincident bounding boxes.
-    retained = verify_retained_native(u, original, project/'SourceAssets/full-home.glb')
+    retained = verify_retained_native(u, original, project/'SourceAssets/full-home.glb', allow_owned_nanite_rebuild=True)
     if any(any(str(tag).startswith('SUB01Kitchen:') for tag in c.get_editor_property('component_tags'))
            for a in original for c in a.get_components_by_class(u.StaticMeshComponent)):
         raise RuntimeError('Owned kitchen already present; inspect receipt before any reimport')
@@ -309,20 +326,37 @@ def run(root, dry_run=True, u=None):
             source_bindings[material_index] = actual_material.get_path_name()
         if len(source_bindings) != len(doc['materials']):
             raise RuntimeError('Authored kitchen material coverage incomplete')
+        import unreal_kitchen_retained_geometry
+        retained_restore = unreal_kitchen_retained_geometry.stage(u, original, retained, project/'SourceAssets/full-home.glb', eas)
         if snapshot(u, original) != before:
             raise RuntimeError('Owned geometry/material setup changed protected originals')
+        for actor, c, clone, materials in retained_restore['replacements']:
+            c.set_static_mesh(clone)
+            for slot, material in enumerate(materials):
+                c.set_material(slot, material)
+        retained_after = verify_retained_native(u, original, project/'SourceAssets/full-home.glb',
+                            owned_paths={164: retained_restore['proof'][0]['owned_mesh']} if retained_restore['proof'] else None)
+
         for actor, c in old:
             actor.set_actor_hidden_in_game(True)
             c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
         protected = [a for a in original if a not in [r[0] for r in old]]
-        if snapshot(u, protected) != {a.get_path_name(): before[a.get_path_name()] for a in protected}:
+        protected_expected = copy.deepcopy({a.get_path_name(): before[a.get_path_name()] for a in protected})
+        for actor, c, clone, materials in retained_restore['replacements']:
+            exact = [r for r in protected_expected[actor.get_path_name()]['components'] if r['path'] == c.get_path_name()]
+            if len(exact) != 1:
+                raise RuntimeError('Exact retained sink component fingerprint missing')
+            exact[0]['mesh'] = clone.get_path_name()
+        if snapshot(u, protected) != protected_expected:
             raise RuntimeError('Kitchen activation altered sink/counter/light/chair/stairs/devices')
-        result.update({'map_backup': str(backup), 'parts': rows, 'materials': materials,
+        result.update({'retained_native_source_geometry': retained_after, 'retained_sink_full_source_restore': retained_restore['proof'], 'map_backup': str(backup), 'parts': rows, 'materials': materials,
                        'hinges': proof['hinges'], 'protected_originals_verified': len(protected),
                        'hidden_originals': [a.get_path_name() for a, c in old]})
         # Write a pending receipt before saving, never mark interaction/visual tests passed.
         pending = root/'native-kitchen-import.pending.json'
         pending.write_text(json.dumps(result, indent=2)+'\n')
+        if retained_restore['destination'] and not u.EditorAssetLibrary.save_directory(retained_restore['destination'], only_if_is_dirty=False, recursive=True):
+            raise RuntimeError('Owned retained sink mesh save failed')
         if not u.EditorAssetLibrary.save_directory(dest, only_if_is_dirty=False, recursive=True):
             raise RuntimeError('Owned kitchen asset save failed')
         level_save_attempted = True
@@ -359,6 +393,8 @@ def run(root, dry_run=True, u=None):
                 eas.destroy_actor(actor)
         if u.EditorAssetLibrary.does_directory_exist(dest):
             u.EditorAssetLibrary.delete_directory(dest)
+        if 'retained_restore' in locals() and retained_restore['destination'] and u.EditorAssetLibrary.does_directory_exist(retained_restore['destination']):
+            u.EditorAssetLibrary.delete_directory(retained_restore['destination'])
         if staging_source_created:
             staging_source.unlink(missing_ok=True)
         if snapshot(u, original) != before:

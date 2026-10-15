@@ -1,0 +1,122 @@
+{
+  "schema": "sub01.actual-kitchen-original-closure-review.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "scene_mutations": 0,
+  "actual_rows": [
+    {
+      "source_node": 63,
+      "source_name": "Lower_cabinet_carcass",
+      "source_triangles": 6000,
+      "native_mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_47.Mesh_47",
+      "native_materials": [
+        "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_11.Material_11"
+      ],
+      "native_cpu_triangles": 939,
+      "actor_hidden": false,
+      "component_visible": true,
+      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "nanite_settings": {
+        "enabled": true,
+        "fallback_percent_triangles": 1.0,
+        "fallback_relative_error": 1.0,
+        "keep_percent_triangles": 1.0,
+        "trim_relative_error": 0.0,
+        "fallback_target": "<NaniteFallbackTarget.AUTO: 0>"
+      }
+    },
+    {
+      "source_node": 178,
+      "source_name": "Cabinet_carcass",
+      "source_triangles": 864,
+      "native_mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_136.Mesh_136",
+      "native_materials": [
+        "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_68.Material_68"
+      ],
+      "native_cpu_triangles": 256,
+      "actor_hidden": false,
+      "component_visible": true,
+      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "nanite_settings": {
+        "enabled": true,
+        "fallback_percent_triangles": 1.0,
+        "fallback_relative_error": 1.0,
+        "keep_percent_triangles": 1.0,
+        "trim_relative_error": 0.0,
+        "fallback_target": "<NaniteFallbackTarget.AUTO: 0>"
+      }
+    },
+    {
+      "source_node": 65,
+      "source_name": "house-static-10",
+      "source_triangles": 32,
+      "native_mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_48.Mesh_48",
+      "native_materials": [
+        "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_12.Material_12"
+      ],
+      "native_cpu_triangles": 32,
+      "actor_hidden": false,
+      "component_visible": true,
+      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "nanite_settings": {
+        "enabled": true,
+        "fallback_percent_triangles": 1.0,
+        "fallback_relative_error": 1.0,
+        "keep_percent_triangles": 1.0,
+        "trim_relative_error": 0.0,
+        "fallback_target": "<NaniteFallbackTarget.AUTO: 0>"
+      }
+    },
+    {
+      "source_node": 66,
+      "source_name": "house-static-11",
+      "source_triangles": 12,
+      "native_mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_49.Mesh_49",
+      "native_materials": [
+        "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_13.Material_13"
+      ],
+      "native_cpu_triangles": 12,
+      "actor_hidden": false,
+      "component_visible": true,
+      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "nanite_settings": {
+        "enabled": true,
+        "fallback_percent_triangles": 1.0,
+        "fallback_relative_error": 1.0,
+        "keep_percent_triangles": 1.0,
+        "trim_relative_error": 0.0,
+        "fallback_target": "<NaniteFallbackTarget.AUTO: 0>"
+      }
+    },
+    {
+      "source_node": 164,
+      "source_name": "house-static-70",
+      "source_triangles": 2700,
+      "native_mesh": "/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_123.Mesh_123",
+      "native_materials": [
+        "/Game/Sub01Home/ImportedScene/full-home/Materials/Material_15.Material_15"
+      ],
+      "native_cpu_triangles": 576,
+      "actor_hidden": false,
+      "component_visible": true,
+      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "nanite_settings": {
+        "enabled": true,
+        "fallback_percent_triangles": 1.0,
+        "fallback_relative_error": 1.0,
+        "keep_percent_triangles": 1.0,
+        "trim_relative_error": 0.0,
+        "fallback_target": "<NaniteFallbackTarget.AUTO: 0>"
+      }
+    }
+  ],
+  "native_source_index_correction": {
+    "source_node": 178,
+    "source_mesh_index": 135,
+    "actual_native_asset_name": "Mesh_136",
+    "source_manifest_OLD_table_unchanged": true
+  },
+  "retained_geometry_strategy": "Keep counter65 and strip66 original bindings. Only actual source164 Nanite fallback may defer proof; rebuild exact private sink copy and match all2700 original source world triangles before any component binding or cabinet visibility changes. Original shared sink mesh/materials/world transform remain protected.",
+  "native_fix_executed": false,
+  "closed_pose_only": true,
+  "native_interactions_verified": false
+}
