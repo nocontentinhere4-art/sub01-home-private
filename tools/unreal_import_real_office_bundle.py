@@ -56,6 +56,9 @@ def verify_native_structural_union(u,actors):
 
 def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
+ # A warm Editor retains dependency modules across reviewed source retries.
+ import importlib,real_office_plant
+ plant_preflight=importlib.reload(real_office_plant).native_preflight
  root=Path(root);proof=json.loads((root/'office-bundle.json').read_text())
  if proof.get('schema')!='sub01.real-office-bundle.v1' or not proof.get('source_triangle_collision_proof',{}).get('ok') or not proof.get('whole_book_geometry_pbr_preserved') or proof.get('complete_original_book_glb_sha256')!=BOOKS_SHA or len(proof.get('books',[]))!=46 or proof.get('hide_only_source_actor_nodes')!=[181,182,190,191,259]:raise RuntimeError('Actual coherent whole office source proof unavailable')
  mount=proof['desk'].get('lamp_mount',{});pose=mount.get('posed_lamp',{})
