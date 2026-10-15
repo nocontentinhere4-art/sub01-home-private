@@ -32,14 +32,14 @@ def source_proof(root=ROOT):
  if bvh.get('fixture_sha256')!=SHA or bvh.get('target_corridor_sha256')!='5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91' or bvh.get('fixture_meshes')!=90 or bvh.get('protected_nodes')!=[117,158] or bvh.get('unresolved_positive_crossings')!=0 or bvh.get('surface_contact_epsilon_cm')!=.001:raise RuntimeError('Actual exported fixture-versus-target-architecture BVH proof required')
  return report
 
-def prepare_import(source,target):
+def prepare_import(source,target,prefix='SUB01_AuthenticBath_'):
  """Unique legal identifiers and exactzeroarea removal; all physical corner bytes exact."""
  from prepare_frame_backing_remainder import elements,read
  from prepare_real_wc_bundle import glb
  doc,original=read_gltf(Path(source));out=copy.deepcopy(doc);blob=bytearray(original);removed={};names={}
  for ni,n in enumerate(out['nodes']):
   if 'mesh'not in n:continue
-  legal='SUB01_AuthenticBath_'+str(ni).zfill(3);names[n['name']]=legal;n['name']=legal;out['meshes'][n['mesh']]['name']=legal
+  legal=prefix+str(ni).zfill(3);names[n['name']]=legal;n['name']=legal;out['meshes'][n['mesh']]['name']=legal
   for pi,p in enumerate(out['meshes'][n['mesh']]['primitives']):
    pos,pfmt=elements(doc,original,p['attributes']['POSITION']);pos=[struct.unpack(pfmt,v)for v in pos];ids,ff=elements(doc,original,p['indices']);ids=[struct.unpack(ff,v)[0]for v in ids];keep=[];zero=[]
    for ti in range(0,len(ids),3):
@@ -60,6 +60,30 @@ def prepare_import(source,target):
  Path(target).parent.mkdir(parents=True,exist_ok=True);Path(target).write_bytes(encoded)
  return actual,ab,{'names':names,'exact_zero_area_faces_removed':removed,'all_positive_triangle_corner_bytes_exact':True,'original_binary_prefix_exact':True,'prepared_sha256':hashlib.sha256(encoded).hexdigest()}
 
+def audit_original_167_source(u,eas,c,expected,project,allow_clone):
+ """Rebuild an independent fullsource copy; never mutate the original Nanite asset."""
+ mesh=c.get_editor_property('static_mesh');want='/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_126.Mesh_126'
+ if not mesh or mesh.get_path_name()!=want:raise RuntimeError('Exact frozen original167 mesh126 binding required')
+ sub=u.get_editor_subsystem(u.StaticMeshEditorSubsystem);keys=('enabled','fallback_target','fallback_relative_error','fallback_percent_triangles','keep_percent_triangles','trim_relative_error');settings={k:str(sub.get_nanite_settings(mesh).get_editor_property(k))for k in keys};actual=native_triangles(u,c)
+ def bounds(tris):
+  pts=[p for t in tris for p in t];return [[f(p[k]for p in pts)for k in range(3)]for f in(min,max)]if pts else None
+ diagnostic={'schema':'sub01.original-bath167-source-diagnostic.v1','component':c.get_path_name(),'mesh':want,'source_triangles':len(expected),'native_render_fallback_triangles':len(actual),'source_bounds_cm':bounds(expected),'native_fallback_bounds_cm':bounds(actual),'original_nanite':settings,'original_changed':False}
+ (project/'private-audit/authentic-bath-original167-diagnostic.json').write_text(json.dumps(diagnostic,indent=2)+'\n')
+ if not sub.get_nanite_settings(mesh).get_editor_property('enabled')or not allow_clone:raise RuntimeError('Original167 fallback differs; execute requires bounded owned fullsource clone audit')
+ dest='/Game/Sub01Home/AuthenticBath/Original167Audit/Attempt_'+uuid.uuid4().hex;clone=u.EditorAssetLibrary.duplicate_asset(want.split('.',1)[0],dest+'/Mesh_126')
+ if not clone:raise RuntimeError('Original167 ownedclone creation failed')
+ actor=None
+ try:
+  owned_geometry(u,clone,dest)
+  if u.Sub01HomeHandsInstance.finish_pending_static_compilation()!=0:raise RuntimeError('Original167 ownedclone stillcompiling')
+  actor=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));actor.set_actor_label('SUB01_TemporaryOriginalBath167Audit');actor.set_actor_hidden_in_game(True);cc=actor.get_component_by_class(u.StaticMeshComponent);cc.set_static_mesh(clone);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);cc.set_world_transform(c.get_world_transform(),False,True);full=native_triangles(u,cc)
+  if not same_triangles(expected,full,tolerance=.0001):raise RuntimeError('Original167 fullsource ownedclone differs: source='+str(len(expected))+' clone='+str(len(full)))
+  diagnostic.update(method='independent actual complete-source clone',clone_mesh=clone.get_path_name(),full_source_clone_triangles=len(full),all_source_world_triangles_exact=True,tolerance_cm=.0001)
+  return diagnostic
+ finally:
+  if actor and not eas.destroy_actor(actor):raise RuntimeError('Temporary original167 audit actorcleanup failed')
+  if settings!={k:str(sub.get_nanite_settings(mesh).get_editor_property(k))for k in keys}or c.get_editor_property('static_mesh')!=mesh:raise RuntimeError('Original167 binding/settingschanged duringcloneaudit')
+
 def run(dry_run=True):
  import unreal as u
  report=source_proof();project=Path(u.Paths.project_dir());audit=project/'private-audit';home=project/'SourceAssets/full-home.glb'
@@ -69,13 +93,15 @@ def run(dry_run=True):
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
  if not world or world.get_path_name()!='/Game/Sub01Home/ActualHome.ActualHome':raise RuntimeError('Actual loaded home required')
  if(audit/'authentic-bath-fixtures-native.json').exists():raise RuntimeError('Existing bath receipt must be inspected; no duplicate import')
- eas=u.get_editor_subsystem(u.EditorActorSubsystem);original=list(eas.get_all_level_actors());before=fingerprint(u,original);by_path={a.get_path_name():a for a in original};hd,hb=read_gltf(home);old=[];originals={}
+ eas=u.get_editor_subsystem(u.EditorActorSubsystem);original=list(eas.get_all_level_actors());before=fingerprint(u,original);by_path={a.get_path_name():a for a in original};hd,hb=read_gltf(home);old=[];originals={};original_source_proofs=[]
  def take(a,expected=None,mesh_path=None):
   cs=a.get_components_by_class(u.StaticMeshComponent)
   if len(cs)!=1:raise RuntimeError('Unique actual retiredfixture component required '+a.get_path_name())
   c=cs[0];m=c.get_editor_property('static_mesh')
   if not m or(mesh_path and m.get_path_name()!=mesh_path)or bool(a.get_editor_property('hidden'))or not c.get_editor_property('visible'):raise RuntimeError('Exact live retiredfixture binding required '+a.get_path_name())
-  if expected is not None and not same_triangles(expected,native_triangles(u,c)):raise RuntimeError('Retiredfixture full native surface differs '+a.get_path_name())
+  if expected is not None and not same_triangles(expected,native_triangles(u,c),tolerance=.0001):
+   if a.get_name()!='full-home_node_167':raise RuntimeError('Retiredfixture full native surface differs '+a.get_path_name())
+   original_source_proofs.append(audit_original_167_source(u,eas,c,expected,project,not dry_run))
   old.append((a,c,bool(a.get_editor_property('hidden')),bool(c.get_editor_property('visible')),a.is_temporarily_hidden_in_editor(),capture(u,c)));return c
  for ni in (119,121,122,167):
   found=[a for a in original if a.get_name()==f'full-home_node_{ni}']
@@ -110,7 +136,7 @@ def run(dry_run=True):
  if not a:raise RuntimeError('Exact current vanitytop remainder missing')
  take(a,expected_triangles(hd,hb,166)[:300])
  if len(old)!=17:raise RuntimeError('Exact17 retiredfixture owners required')
- result={'schema':'sub01.authentic-bath-fixtures-native.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'bathroom_activity_ready':False,'door_or_privacy_or_room_changed':False}
+ result={'schema':'sub01.authentic-bath-fixtures-native.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'bathroom_activity_ready':False,'door_or_privacy_or_room_changed':False,'original_source_proofs':original_source_proofs}
  if dry_run:return result
  backup=project/'Saved/PrivateMapBackups'/('authentic-bath-'+str(time.time_ns()));backup.mkdir(parents=True);shutil.copy2(project/'Content/Sub01Home/ActualHome.umap',backup/'ActualHome.umap')
  for name in ('__ExternalActors__','__ExternalObjects__'):
