@@ -95,7 +95,11 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
   for actor in added:
    for c in actor.get_components_by_class(u.StaticMeshComponent):
     m=c.get_editor_property('static_mesh')
-    if m and m.get_path_name().startswith(dest+'/'):by.setdefault(m.get_name(),[]).append((actor,c))
+    if m and m.get_path_name().startswith(dest+'/'):
+     # Interchange can shorten the asset basename; bind the exact source-node
+     # label as well, then still independently prove all geometry and PBR.
+     for key in {m.get_name(),actor.get_actor_label()}:
+      if key in NAMES:by.setdefault(key,[]).append((actor,c))
   parts=[];pbr=[];total=0
   for ni,n in enumerate(doc['nodes']):
    matches=by.get(n['name'],[])
