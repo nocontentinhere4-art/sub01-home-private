@@ -46,9 +46,9 @@ TOOLS = Path(__file__).resolve().parent
 REPO = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 
-import install_native_adapters_bundle as bundle  # noqa: E402
 import native_adapters_ue_shim as shim  # noqa: E402
-import unreal_controller_grip_contact_native as grip  # noqa: E402
+# The full bundle and the grip analyzer are imported lazily (full mode only): --only seat,controller needs neither,
+# so that mode runs in a clean origin/main tree with only the minimal seat+controller file set copied in.
 
 CLASS = 'ASub01HomeCharacter'
 CPP, HEADER, HANDS_H, HANDS_CPP = 'Sub01HomeLab.cpp', 'Sub01HomeLab.h', 'Sub01HomeHands.h', 'Sub01HomeHands.cpp'
@@ -261,8 +261,40 @@ def stage_project(project: Path, staging_ref=None) -> dict:
     return info
 
 
-def install(module: Path) -> dict:
+def install_minimal(module: Path) -> dict:
+    """--only seat,controller: tools/install_seat_controller_adapters.py (seat -> controller), no grip analyzer."""
+    import install_seat_controller_adapters as minimal
+    import unreal_controller_play_runtime as controller
+    import unreal_seat_transition_runtime as seat
+    module = Path(module)
+    fresh = {p.name: p.read_text() for p in module.iterdir() if p.is_file()}
+    try:
+        result = minimal.plan(module)
+        minimal.install(module)
+    except minimal.Refused as error:
+        raise Refused(f'minimal installer refused: {error}') from None
+    src = result['sources']
+    names = minimal.FILES
+    anchors = []
+    for key, anchor, _ in seat.EDITS:
+        anchors.append({'adapter': 'seat', 'file': names[key], 'anchor': anchor, 'count': src[key].count(anchor)})
+    after_seat = seat.install(src)
+    for key, anchor, _ in controller.EDITS:
+        anchors.append({'adapter': 'controller', 'file': names[key], 'anchor': anchor, 'count': after_seat[key].count(anchor)})
+    anchors.append({'adapter': 'controller', 'file': CPP, 'anchor': 'unique line starting ' + controller.RATE_ANCHOR,
+                    'count': sum(1 for line in after_seat['cpp'].split('\n') if line.startswith(controller.RATE_PREFIX))})
+    after = {p.name: p.read_text() for p in module.iterdir() if p.is_file()}
+    return {'fresh': fresh, 'after': after, 'anchors': anchors, 'selected': ['seat', 'controller']}
+
+
+def install(module: Path, only=None) -> dict:
     """Bundle (seat -> life -> bed -> controller) then the grip analyzer, into module; returns before/after texts."""
+    if only:
+        if tuple(only) != ('seat', 'controller'):
+            raise Refused(f'--only supports exactly seat,controller (got {",".join(only)})')
+        return install_minimal(module)
+    import install_native_adapters_bundle as bundle
+    import unreal_controller_grip_contact_native as grip
     module = Path(module)
     fresh = {p.name: p.read_text() for p in module.iterdir() if p.is_file()}
     try:
@@ -293,6 +325,11 @@ def hunks(before: str, after: str) -> list:
     out = []
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=old, b=new, autojunk=False).get_opcodes():
         if tag == 'equal':
+            continue
+        # A replaced line whose old text is kept verbatim as its prefix is a same-line extension (root's main seat
+        # adapter appends the proxy members to ` float Progress=1;`); it is still additive and checked as added text.
+        if tag == 'replace' and i2 - i1 == j2 - j1 and all(new[j].startswith(old[i]) for i, j in zip(range(i1, i2), range(j1, j2))):
+            out.append({'old_index': i1, 'first': j1 + 1, 'lines': new[j1:j2], 'extended': True})
             continue
         if tag != 'insert':
             raise Refused(f'install is not additive ({tag} at old line {i1 + 1})')
@@ -531,10 +568,11 @@ def build_units(work: Path, module: Path, fresh: dict, after: dict, added: dict)
     shim.write(shim_dir, ue, generated)
     units, coverage = [], []
     pure = [n for n, t in sorted(after.items()) if n.endswith('.h') and not any(k == '"' for k, _ in includes(t))]
-    text = ''.join(f'#include "{n}"\n' for n in [*ADAPTER_HEADERS, *[p for p in pure if p not in ADAPTER_HEADERS]])
+    adapter_headers = [n for n in ADAPTER_HEADERS if n in after]
+    text = ''.join(f'#include "{n}"\n' for n in [*adapter_headers, *[p for p in pure if p not in adapter_headers]])
     (tu_dir / 'engine_free_headers.cpp').write_text(text)
     units.append({'name': 'engine_free_headers', 'path': tu_dir / 'engine_free_headers.cpp', 'shim': False, 'defines': [[]]})
-    coverage += [{'part': f'{n} (whole header)', 'unit': 'engine_free_headers'} for n in ADAPTER_HEADERS]
+    coverage += [{'part': f'{n} (whole header)', 'unit': 'engine_free_headers'} for n in adapter_headers]
 
     # character: the installed class (probe members injected on its closing line), every appended top-level item,
     # every inserted statement block as a probe member.
@@ -563,7 +601,7 @@ def build_units(work: Path, module: Path, fresh: dict, after: dict, added: dict)
             coverage.append({'part': f'{CPP}:{h["first"]} inserted into {h["host"]["name"]}', 'unit': None})
     (tu_dir / 'character.cpp').write_text('\n'.join(body) + '\n')
     units.append({'name': 'character', 'path': tu_dir / 'character.cpp', 'shim': True, 'defines': [['-DWITH_EDITOR=1']]})
-    coverage.append({'part': f'{HEADER} (whole installed header, incl. {", ".join(ADAPTER_HEADERS)})', 'unit': 'character'})
+    coverage.append({'part': f'{HEADER} (whole installed header, incl. {", ".join(adapter_headers)})', 'unit': 'character'})
 
     # hands: whole header, the whole FSub01HandsProxy (root struct + inserted lines), appended top-level items.
     hands_after = after[HANDS_CPP]
@@ -606,12 +644,12 @@ def compile_units(units, module: Path, shim_dir: Path, tu_dir: Path) -> list:
 
 
 # ---------------------------------------------------------------------------------------------- driver
-def check(work: Path, staging_ref=None) -> dict:
+def check(work: Path, staging_ref=None, only=None) -> dict:
     work = Path(work)
     project = work / 'project'
     staging = stage_project(project, staging_ref)
     module = project / 'Source/Sub01HomeLab'
-    installed = install(module)
+    installed = install(module, only)
     fresh, after = installed['fresh'], installed['after']
     added = {}
     for name in sorted(after):
@@ -666,16 +704,18 @@ def main(argv=None) -> int:
     parser.add_argument('--staging-ref', help='git ref whose staging inputs stage the module (e.g. origin/main)')
     parser.add_argument('--json', type=Path, help='write the full report here')
     parser.add_argument('--keep', type=Path, help='keep the scratch project and translation units here')
+    parser.add_argument('--only', help='seat,controller: install only those two (tools/install_seat_controller_adapters.py)')
     args = parser.parse_args(argv)
+    only = tuple(x for x in args.only.split(',') if x) if args.only else None
     try:
         if args.keep:
             if args.keep.exists():
                 shutil.rmtree(args.keep)
             args.keep.mkdir(parents=True)
-            report = check(args.keep, args.staging_ref)
+            report = check(args.keep, args.staging_ref, only)
         else:
             with tempfile.TemporaryDirectory(prefix='sub01-closure-') as tmp:
-                report = check(Path(tmp), args.staging_ref)
+                report = check(Path(tmp), args.staging_ref, only)
     except Refused as error:
         print(f'REFUSED: {error}', file=sys.stderr)
         return 2
