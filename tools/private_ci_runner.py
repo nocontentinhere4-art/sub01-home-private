@@ -14,14 +14,17 @@ import subprocess
 import tarfile
 import time
 import urllib.request
+import json
 from pathlib import Path
 
-POD = '80lf8giw6ft61v'
+POD = 'dgtgepkz7h1zy5'
 REPO = 'https://github.com/nocontentinhere4-art/sub01-home-private'
-DEADLINE = 1791936589
+DEADLINE = 1792117175
+MAX_RUN_SECONDS = 35 * 60
 MINIMUM_JOB_WINDOW = 21 * 60  # Workflow's 20-minute limit plus result-upload/shutdown time.
-VERSION = '2.338.0'
-SHA256 = 'af4b794c1bc41d73d40535e3fe092a39f9679cd8d965954c2aca25a05ca41d32'
+# Current official repository Actions runner download metadata, queried before use.
+VERSION = '2.337.0'
+SHA256 = '70920811a4f8ad4328818682bca5c6469c1c942fab52448868071d0063816613'
 
 
 def main():
@@ -31,7 +34,15 @@ def main():
     args = parser.parse_args()
     if os.environ.get('RUNPOD_POD_ID') != POD or os.geteuid() != 0:
         raise RuntimeError('Only the authorized home server root may provision this runner')
-    remaining = int(DEADLINE - time.time())
+    window_path = Path('/run/sub01-home-private/runtime-window.json')
+    window_stat = window_path.stat()
+    window = json.loads(window_path.read_text())
+    if (window_stat.st_uid != 0 or window_stat.st_mode & 0o022 or
+            window.get('pod') != POD or window.get('deadline_epoch') != DEADLINE or
+            window.get('stop_guards_authenticated') is not True):
+        raise RuntimeError('Current independently guarded private window is required')
+    job_deadline = min(DEADLINE, time.time() + MAX_RUN_SECONDS)
+    remaining = int(job_deadline - time.time())
     if remaining < MINIMUM_JOB_WINDOW:
         raise RuntimeError('Not enough authorized time for a full CI job and result upload')
     if args.token_file.stat().st_mode & 0o077:
@@ -87,7 +98,7 @@ def main():
                '--disableupdate', '--work', '_work']
     # Downloads/extraction also consume the window. Check again before
     # registering, so no job is accepted if the guard may cut off its result.
-    if DEADLINE - time.time() < MINIMUM_JOB_WINDOW:
+    if job_deadline - time.time() < MINIMUM_JOB_WINDOW:
         args.token_file.unlink(missing_ok=True)
         raise RuntimeError('CI preparation consumed the reserved job window')
     configured = subprocess.run(command, cwd=root, env=env, capture_output=True)
@@ -98,8 +109,10 @@ def main():
         raise RuntimeError('Ephemeral runner configuration failed')
     print('PRIVATE_EPHEMERAL_RUNNER_READY', name, flush=True)
     # One job only; timeout stays inside the independently enforced pod stop.
-    remaining = max(1, int(DEADLINE - time.time()) - 20)
-    result = subprocess.run(sandbox + ['/usr/bin/timeout',
+    remaining = max(1, int(job_deadline - time.time()) - 20)
+    result = subprocess.run(sandbox + ['/usr/bin/nice', '-n', '19',
+                             '/usr/bin/taskset', '-c', str(12 + args.slot),
+                             '/usr/bin/timeout',
                              '--signal=TERM', '--kill-after=5', str(remaining),
                              '/bin/bash', str(root / 'run.sh'), '--once'], cwd=root, env=env)
     print('PRIVATE_EPHEMERAL_RUNNER_EXIT', name, result.returncode, flush=True)
