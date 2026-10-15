@@ -54,6 +54,9 @@ class RouteSourceTests(unittest.TestCase):
             self.assertIn('Distance<12&&HeightError<20&&GetCharacterMovement()->IsMovingOnGround()',cpp)
             self.assertIn('Now-RouteLastProgress>3',cpp)
             self.assertIn('RequestExitWithStatus(false,RouteFailed?2:0)',cpp)
-            self.assertNotIn('SetActorLocation',cpp);self.assertNotIn('Teleport',cpp)
+            # Scope the movement contract to the actual installed route. Other
+            # house systems legitimately position the sun and animate doors.
+            self.assertIn(METHODS, cpp)
+            self.assertNotRegex(METHODS, r'\b(?:SetActorLocation(?:AndRotation)?|TeleportTo|SetWorldLocation)\s*\(')
 
 if __name__=='__main__':unittest.main()

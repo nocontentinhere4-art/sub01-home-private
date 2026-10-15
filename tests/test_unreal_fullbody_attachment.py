@@ -20,9 +20,11 @@ class FullBodyAttachmentTests(unittest.TestCase):
   self.assertGreater(165-165*math.cos(math.radians(45)),48)
  def test_real_clip_motion_and_fixed_desk_contact_are_preserved(self):
   cpp,_=self.generated()
-  self.assertIn('FirstPersonBody->GetAttachParent()==ViewCamera',cpp)
-  self.assertIn(':FVector::ZeroVector',cpp)
-  self.assertIn('Speed/140.f',cpp)
+  # Authored motion replaced the extra procedural sway: retain the stable
+  # body origin and use actual planar speed rather than restoring the old bob.
+  self.assertIn('FirstPersonBody->SetRelativeLocation(HandsBaseOffset);',cpp)
+  self.assertNotIn('FirstPersonBody->SetRelativeLocation(HandsBaseOffset+',cpp)
+  self.assertIn('Sub01FirstPersonMotion::AuthoredWalkRate(Speed)',cpp)
   self.assertIn('SetWorldLocationAndRotation(FVector(203.9,-232.3,-.6),FRotator(0,180,0))',cpp)
   self.assertIn('ViewCamera->AttachToComponent(FirstPersonBody',cpp)
   self.assertNotIn('SetActorLocation(',cpp)

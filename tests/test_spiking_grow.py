@@ -181,7 +181,8 @@ def test_activity_rule_forms_reinforces_decays_and_prunes_within_the_budget():
 
 
 # --- persistence and fallbacks ------------------------------------------------------------------------------------------
-def test_growth_persists_across_restarts_and_falls_back_on_mismatch_or_corruption(tmp_path):
+def test_growth_persists_across_restarts_and_falls_back_on_mismatch_or_corruption(tmp_path, monkeypatch):
+    monkeypatch.setattr(G, "mem_room_bytes", lambda: 64 * 1024 * 1024)
     said = []
     path = tmp_path / "spiking" / "live_weights.npz"
     a = L.LiveBrain(SMALL, path, twin=True, log=said.append, per_day=300, cap=10 ** 6)
@@ -264,9 +265,24 @@ def test_cost_guard_refuses_what_does_not_fit():
 def test_child_grows_once_a_day_on_the_servers_wake_message(tmp_path, monkeypatch):
     monkeypatch.setenv("SUB01_GROW_PER_DAY", "200")
     monkeypatch.setenv("SUB01_NEURONS_MAX", "5300")
+    # Exercise the real child/wake protocol with a controlled small memory
+    # budget. An unrelated Unreal process must not decide this lifecycle test.
+    # Production growth guards remain unchanged and are tested independently.
+    child_python = tmp_path / "controlled-growth-python"
+    child_python.write_text(
+        f"#!{sys.executable}\n"
+        "import runpy, sys\n"
+        f"sys.path.insert(0, {str(ROOT)!r})\n"
+        "assert sys.argv[1:3] == ['-m', 'spiking.live']\n"
+        "from spiking import growth\n"
+        "growth.mem_room_bytes = lambda: 64 * 1024 * 1024\n"
+        "sys.argv = ['spiking.live'] + sys.argv[3:]\n"
+        "runpy.run_module('spiking.live', run_name='__main__')\n"
+    )
+    child_python.chmod(0o700)
 
     async def go():
-        cl = L.LiveClient(tmp_path, n_neurons=SMALL)
+        cl = L.LiveClient(tmp_path, n_neurons=SMALL, python=str(child_python))
         assert cl.on_stage("AWAKE") is None and cl.grow_day is None       # not ready: nothing sent
         cl.stage = None
         await cl.start()

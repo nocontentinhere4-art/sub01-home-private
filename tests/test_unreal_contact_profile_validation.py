@@ -118,6 +118,7 @@ LOADER_STUBS = r"""
 #include <memory>
 #include <string>
 #include <vector>
+@@POLICY@@
 #define TEXT(x) x
 struct FMath { static bool IsFinite(double V) { return std::isfinite(V); } };
 struct FJsonObject;
@@ -135,6 +136,8 @@ bool Row(double Top, std::shared_ptr<FJsonObject> L, std::shared_ptr<FJsonObject
   auto Corrected = std::make_shared<FJsonObject>(); if (HasTop) Corrected->Numbers["keyTopCm"] = Top;
   for (auto& H : {L, R}) { auto V = std::make_shared<FJsonValue>(); V->O = H; Corrected->Hands.push_back(V); }
   bool Valid = true;
+  const double CapSpread = 0;
+  const bool PoseReview = false;
 @@STATEMENT@@
   return Valid;
 }
@@ -157,11 +160,13 @@ def test_native_loader_applies_the_same_two_sided_gate_compiled():
     compiler = shutil.which('clang++') or shutil.which('g++')
     if not compiler:
         pytest.skip('C++ compiler unavailable')
-    source = (Path(__file__).resolve().parents[1] / 'tools/unreal_contact_profile_runtime.py').read_text()
-    statement = re.search(r'double KeyTop=0;.*?Low-KeyTop>\.2\+1e-9\)Valid=false;\}', source).group(0)
+    from unreal_contact_profile_runtime import LOAD
+    from unreal_typing_review_policy import CPP as actual_policy
+    statement = 'double KeyTop=0;' + LOAD.split('double KeyTop=0;', 1)[1].split('\n   auto Arms=', 1)[0]
+    assert 'Sub01TypingReview::DistalGap(Low-KeyTop,CapSpread,PoseReview)' in statement
     with tempfile.TemporaryDirectory() as tmp:
         cpp, exe = Path(tmp) / 'gate.cpp', Path(tmp) / 'gate'
-        cpp.write_text(LOADER_STUBS.replace('@@STATEMENT@@', statement))
+        cpp.write_text(LOADER_STUBS.replace('@@POLICY@@', actual_policy).replace('@@STATEMENT@@', statement))
         built = subprocess.run([compiler, '-std=c++17', '-Wall', '-Werror', str(cpp), '-o', str(exe)], capture_output=True, text=True)
         assert built.returncode == 0, built.stderr[-2000:]
         assert subprocess.run([str(exe)]).returncode == 0
