@@ -544,7 +544,8 @@
      8.54
     ],
     "reach_all_frames": true,
-    "max_distance_over_chain_length": 0.8365
+    "max_distance_over_chain_length": 0.8365,
+    "kept_from": "docs/proposed/desk-original-scale/chair-roll-7p702/arm-solution.npz @ 837f65c"
    },
    "swivel_deg": [
     -35.0,
@@ -762,7 +763,7 @@
     "unresolved_frames": 0,
     "frames_without_any_clear_swivel": 0,
     "reach_all": true,
-    "elbow_max_step_cm": 1.78,
+    "elbow_max_step_cm": 1.541,
     "elbow_steps_over_bound": 0,
     "loop_elbow_step_cm": 0.026,
     "hand_frame_yaw_deg": [
@@ -770,27 +771,27 @@
      20.0
     ],
     "hand_frame_pitch_deg": [
-     -15.56,
-     1.36
+     -16.15,
+     1.42
     ],
     "reach_all_frames": true,
     "max_distance_over_chain_length": 0.9681
    },
    "swivel_deg": [
-    -120.0,
-    90.0
+    -110.0,
+    85.0
    ],
    "elbow_height_cm": [
     81.14,
-    91.48
+    91.42
    ],
    "elbow_above_desk_top_cm": [
     3.14,
-    13.48
+    13.42
    ],
    "upper_arm_from_vertical_deg": [
-    19.73,
-    51.52
+    23.17,
+    51.18
    ],
    "upper_arm_deg_if_elbow_at_desk_top": [
     0.0,
@@ -814,15 +815,15 @@
    ],
    "shoulder_girdle": "unchanged (captured): only Arm, ForeArm, Hand (+ carried fingers) change",
    "wrist_flexion_deg_raw": [
-    -20.01,
-    9.15
+    -17.61,
+    9.3
    ],
    "wrist_deviation_deg_raw": [
-    -47.55,
-    15.78
+    -47.38,
+    15.76
    ],
    "wrist_twist_deg": [
-    -70.87,
+    -70.97,
     -22.26
    ],
    "wrist_flexion_capture_deg": [
@@ -835,18 +836,18 @@
    ],
    "wrist_note": "RAW: the captured hand attitude on the new forearm; no soft limit and no added flexion applied",
    "forearm_slope_deg": [
-    -20.51,
-    4.63
+    -19.97,
+    3.73
    ],
    "shoulder_to_wrist_horizontal_cm": [
-    26.73,
-    43.13
+    26.7,
+    43.14
    ],
    "upper_arm_cm": 27.736,
    "forearm_cm": 23.121,
    "upper_arm_reach_floor_deg": [
-    7.49,
-    46.17
+    7.42,
+    46.2
    ],
    "clearance_cm": {
     "desk_upper_arm": [
@@ -854,24 +855,24 @@
      10.0
     ],
     "desk_forearm": [
-     0.22,
-     5.523
+     0.347,
+     5.33
     ],
     "desk_hand": [
-     1.812,
-     4.233
+     1.809,
+     4.17
     ],
     "desk_fingers": [
      -1.4,
-     1.502
+     1.314
     ],
     "vertical_over_worktop_non_finger": [
-     0.372,
-     4.743
+     0.53,
+     4.849
     ],
     "own_torso": [
-     -0.582,
-     10.609
+     1.19,
+     9.974
     ],
     "own_thighs": [
      20.0,
@@ -882,14 +883,14 @@
      3.0
     ],
     "keyboard_case_non_finger": [
-     0.333,
-     14.962
+     0.382,
+     14.215
     ]
    },
    "clearance_frames_failing": {
     "desk_gt_0": 0,
-    "desk_design_0p5": 34,
-    "torso": 2,
+    "desk_design_0p5": 25,
+    "torso": 0,
     "thighs": 0,
     "chair": 0,
     "keyboard_case": 0
@@ -910,31 +911,31 @@
     ],
     "frames": 989,
     "frames_ok": {
-     "elbow": 882,
-     "upper_arm": 1,
-     "wrist_flexion": 974,
-     "wrist_deviation": 386,
-     "all_four": 1
+     "elbow": 845,
+     "upper_arm": 0,
+     "wrist_flexion": 973,
+     "wrist_deviation": 373,
+     "all_four": 0
     },
     "worst_excess": {
-     "elbow_cm": 3.48,
-     "upper_arm_deg": 31.52,
-     "wrist_flexion_deg": 5.01,
-     "wrist_deviation_deg": 27.55
+     "elbow_cm": 3.42,
+     "upper_arm_deg": 31.18,
+     "wrist_flexion_deg": 2.61,
+     "wrist_deviation_deg": 27.38
     }
    },
    "continuity": {
     "elbow": {
-     "max_speed_cm_s": 432.51,
-     "max_accel_cm_s2": 47817.5,
+     "max_speed_cm_s": 377.15,
+     "max_accel_cm_s2": 42624.2,
      "loop_step_cm": 0.0261,
-     "max_frame_step_cm": 7.2085
+     "max_frame_step_cm": 6.2858
     },
     "wrist": {
-     "max_speed_cm_s": 272.86,
-     "max_accel_cm_s2": 4079.6,
-     "loop_step_cm": 0.0038,
-     "max_frame_step_cm": 4.5477
+     "max_speed_cm_s": 272.93,
+     "max_accel_cm_s2": 4080.9,
+     "loop_step_cm": 0.0039,
+     "max_frame_step_cm": 4.5488
     },
     "palm_target": {
      "max_speed_cm_s": 278.78,
@@ -947,36 +948,36 @@
     "keyboard": {
      "frames": 574,
      "elbow_above_desk_top_cm": [
-      3.14,
-      12.14
+      3.75,
+      12.08
      ],
      "upper_arm_from_vertical_deg": [
-      19.73,
-      50.27
+      23.17,
+      50.11
      ],
      "wrist_flexion_deg_raw": [
-      -18.19,
-      5.39
+      -17.4,
+      4.91
      ],
      "wrist_deviation_deg_raw": [
-      -47.55,
-      6.78
+      -47.38,
+      2.38
      ],
      "forearm_slope_deg": [
-      -16.45,
-      4.63
+      -16.19,
+      3.31
      ],
      "frames_ok": {
-      "elbow": 543,
-      "upper_arm": 1,
+      "elbow": 507,
+      "upper_arm": 0,
       "wrist_flexion": 565,
-      "wrist_deviation": 48
+      "wrist_deviation": 35
      },
      "median": {
-      "elbow_above_desk_top_cm": 6.83,
-      "upper_arm_deg": 34.18,
-      "wrist_flexion_deg": -2.54,
-      "wrist_deviation_deg": -29.16
+      "elbow_above_desk_top_cm": 8.13,
+      "upper_arm_deg": 38.12,
+      "wrist_flexion_deg": -3.74,
+      "wrist_deviation_deg": -33.19
      }
     },
     "mouse": {
@@ -987,15 +988,15 @@
      ],
      "upper_arm_from_vertical_deg": [
       27.32,
-      49.28
+      49.34
      ],
      "wrist_flexion_deg_raw": [
-      -3.38,
-      9.15
+      -3.39,
+      8.47
      ],
      "wrist_deviation_deg_raw": [
-      0.21,
-      13.27
+      0.2,
+      13.3
      ],
      "forearm_slope_deg": [
       -14.97,
@@ -1005,48 +1006,48 @@
       "elbow": 294,
       "upper_arm": 0,
       "wrist_flexion": 349,
-      "wrist_deviation": 311
+      "wrist_deviation": 314
      },
      "median": {
-      "elbow_above_desk_top_cm": 5.18,
-      "upper_arm_deg": 35.59,
-      "wrist_flexion_deg": 4.1,
-      "wrist_deviation_deg": 7.55
+      "elbow_above_desk_top_cm": 5.13,
+      "upper_arm_deg": 35.6,
+      "wrist_flexion_deg": 4.16,
+      "wrist_deviation_deg": 7.01
      }
     },
     "transit": {
      "frames": 66,
      "elbow_above_desk_top_cm": [
-      3.38,
-      13.48
+      3.46,
+      13.42
      ],
      "upper_arm_from_vertical_deg": [
-      25.84,
-      51.52
+      26.22,
+      51.18
      ],
      "wrist_flexion_deg_raw": [
-      -20.01,
-      8.65
+      -17.61,
+      9.3
      ],
      "wrist_deviation_deg_raw": [
-      -44.26,
-      15.78
+      -46.01,
+      15.76
      ],
      "forearm_slope_deg": [
-      -20.51,
-      3.77
+      -19.97,
+      3.73
      ],
      "frames_ok": {
-      "elbow": 45,
+      "elbow": 44,
       "upper_arm": 0,
-      "wrist_flexion": 60,
-      "wrist_deviation": 27
+      "wrist_flexion": 59,
+      "wrist_deviation": 24
      },
      "median": {
-      "elbow_above_desk_top_cm": 8.35,
-      "upper_arm_deg": 42.09,
-      "wrist_flexion_deg": -0.56,
-      "wrist_deviation_deg": -8.74
+      "elbow_above_desk_top_cm": 8.65,
+      "upper_arm_deg": 43.79,
+      "wrist_flexion_deg": -0.18,
+      "wrist_deviation_deg": -8.11
      }
     }
    }
@@ -1069,11 +1070,11 @@
    "keyboard_frames": 574,
    "keyboard_frames_with_fingers_over_keys": 574,
    "gap_cm_over_keys": [
-    -3.488,
-    2.5
+    -3.507,
+    2.372
    ],
-   "frames_in_existing_key_gate": 26,
-   "gap_median_cm": -1.619
+   "frames_in_existing_key_gate": 18,
+   "gap_median_cm": -1.803
   }
  },
  "palm_target_envelope_for_new_hands": {
@@ -1292,7 +1293,7 @@
   "left_swivel_resolved_every_frame": true,
   "left_wrist_flexion_raw_within_soft_zone": true,
   "right_arm_desk_clear_every_frame": true,
-  "right_arm_clear_of_own_body": false,
+  "right_arm_clear_of_own_body": true,
   "right_arm_clear_of_chair": true,
   "right_arm_clear_of_keyboard_case": true,
   "right_ik_non_stretch_reached_every_frame": true,
@@ -1362,8 +1363,8 @@
   "device_plane_rule": "keyboard case bottom and mouse pad bottom at 78.0 cm (home.js 0.846 m - 0.066 m; the 0.1 cm home.js float removed as in 9f4e199); keycaps and mouse palm target -6.5 cm vs 9f4e199 at the new XY"
  },
  "timing_s": {
-  "solve": 1678.1,
-  "total": 2012.4
+  "solve": 580.2,
+  "total": 918.1
  },
  "original": {
   "keyboard": {
@@ -1532,7 +1533,7 @@
   "clips": {
    "SitToType_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_SitToType_seated_refit.glb",
-    "sha256": "628f3725c41bc7a0cb17aea39e0984e2c408188713337bed55eae8f9550144fc",
+    "sha256": "83712a7e2aeb2f044bce893eccf4a578198f2860ddc2aae2275f79d4f4228e8f",
     "frames": 37,
     "chair_translation_per_frame_cm": [
      [
@@ -1771,11 +1772,11 @@
       "forearm": 3.223,
       "upper_arm": 10.0,
       "hand": 2.265,
-      "fingers": -1.393,
+      "fingers": -1.392,
       "torso": 1.361,
       "legs": 12.279,
       "chair": 3.0,
-      "keyboard_case": 3.743
+      "keyboard_case": 3.742
      }
     },
     "clearance_frames_failing": {
@@ -1797,7 +1798,7 @@
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "4bb4b220cb90bbd36e33268f86df5081ed07911a10725ebf092377b55b991252",
+    "sha256": "69174a7bc66f76669e6fdce93be96227ceeb4cd2b3ecf050154ca32d86984c8a",
     "frames": 29,
     "chair_translation_per_frame_cm": [
      [
@@ -1961,7 +1962,7 @@
        "iter": 4,
        "side": "right",
        "frames_below_target": 1,
-       "min_cm": -0.0878
+       "min_cm": -0.0876
       },
       {
        "iter": 5,
@@ -2009,7 +2010,7 @@
        ]
       },
       "right": {
-       "max": 8.3478,
+       "max": 8.3476,
        "frames_moved": [
         1,
         2,
@@ -2089,7 +2090,7 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "38fb1ef82c220e323dd97b15f34302db908170a8f8e6eec93a51f6c8c265aedf",
+    "sha256": "183d814579a4f56985640ede9a37a1a6ee25ba7385237a5cbc71d14dc75a54fe",
     "note": "base DeskTyping (anatomical chair-lift base) with ONLY the six arm bones re-solved by this refit; fingers carried with their base locals",
     "readback_arm_joint_max_error_cm": 3e-06
    }
