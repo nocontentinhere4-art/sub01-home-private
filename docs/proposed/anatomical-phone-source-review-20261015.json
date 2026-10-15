@@ -1,0 +1,180 @@
+{
+  "schema": "sub01.anatomical-phone-source-review.v1",
+  "source_sha256": "5d695e89fb87ecc4fee86ad830aebb1b1539480b9c703a90d22edc362ba3eec5",
+  "clip": "SUB01_Anatomical_Phone",
+  "all_actual_samples": 557,
+  "source_geometry_changed": false,
+  "all_influence_sets_used": true,
+  "cuff_candidates": {
+    "Left_max": 0,
+    "Right_max": 14,
+    "Right_nonzero_samples": 14,
+    "Right_first_last_seconds": [
+      11.766666412353516,
+      12.199999809265137
+    ]
+  },
+  "peak": {
+    "seconds": 11.833333015441895,
+    "sides": {
+      "Left": {
+        "cuff_hand_triangle_candidates": 0,
+        "unique_hand_triangles": 0,
+        "unique_cuff_triangles": 0,
+        "touched_hand_region_by_majority_skin_weight": {},
+        "dominant_hand_bone_histogram": {},
+        "hand_triangle_centroid_wrist_toward_elbow_projection_range_m": null,
+        "wrist_world_glTF_m": [
+          0.2622922658920288,
+          0.8806954622268677,
+          0.032081086188554764
+        ],
+        "forearm_joint_world_glTF_m": [
+          0.24045388400554657,
+          1.1118667125701904,
+          0.0078745037317276
+        ],
+        "cuff_unique_triangle_sample": [],
+        "hand_unique_triangle_sample": [],
+        "first_pairs": []
+      },
+      "Right": {
+        "cuff_hand_triangle_candidates": 14,
+        "unique_hand_triangles": 10,
+        "unique_cuff_triangles": 3,
+        "touched_hand_region_by_majority_skin_weight": {
+          "forearm": 10
+        },
+        "dominant_hand_bone_histogram": {
+          "mixamorig:RightForeArm": 10
+        },
+        "hand_triangle_centroid_wrist_toward_elbow_projection_range_m": [
+          0.015578084945312539,
+          0.018056647546196094
+        ],
+        "wrist_world_glTF_m": [
+          -0.13203386962413788,
+          1.1069426536560059,
+          0.25259146094322205
+        ],
+        "forearm_joint_world_glTF_m": [
+          -0.28251877427101135,
+          1.0842490196228027,
+          0.07853008806705475
+        ],
+        "cuff_unique_triangle_sample": [
+          1034,
+          1035,
+          1037
+        ],
+        "hand_unique_triangle_sample": [
+          59150,
+          59152,
+          59153,
+          59154,
+          59155,
+          59310,
+          59311,
+          59312,
+          59313,
+          59315
+        ],
+        "first_pairs": [
+          [
+            1037,
+            59150
+          ],
+          [
+            1037,
+            59315
+          ],
+          [
+            1035,
+            59155
+          ],
+          [
+            1035,
+            59154
+          ],
+          [
+            1035,
+            59311
+          ],
+          [
+            1034,
+            59155
+          ],
+          [
+            1034,
+            59153
+          ],
+          [
+            1034,
+            59152
+          ],
+          [
+            1034,
+            59150
+          ],
+          [
+            1034,
+            59311
+          ]
+        ]
+      }
+    }
+  },
+  "sampled_depth": [
+    {
+      "side": "Right",
+      "samples": 1683,
+      "inside_samples": 42,
+      "ambiguous_samples": 6,
+      "max_sampled_depth_mm": 0.04603317574947141,
+      "worst_witness": {
+        "cloth_triangle": 1034,
+        "point_glTF_m": [
+          -0.1377466917037964,
+          1.1244677305221558,
+          0.23286275565624237
+        ],
+        "nearest_actual_skin_glTF_m": [
+          -0.13772079348564148,
+          1.124498724937439,
+          0.2328406721353531
+        ],
+        "actual_skin_triangle": 59315,
+        "depth_m": 4.603317574947141e-05,
+        "unanimous_three_rays": true
+      },
+      "analysis_closure_faces_added": 1,
+      "analysis_manifold_closed": true,
+      "spacing": "barycentric 32 subdivisions per intersecting original cloth triangle; sampled maximum is not a continuous global maximum",
+      "depth_reference": "nearest original genuine hand surface, excludes analysis cap from distance",
+      "geometry_edited": false
+    }
+  ],
+  "source_images": {
+    "out/house-evidence/serialized-phone-final-r1/render-palm-r3/actual-serialized-owner-Phone120-firstperson.png": {
+      "sha256": "05b26c410158a89ed5229f59624c54d700a8368a60fc7ff8ce4ca8832fb4e16c",
+      "viewed": true
+    },
+    "out/house-evidence/serialized-phone-final-r1/actual-Phone-right-cuff-peak-macro.png": {
+      "sha256": "d9ebbdb8587f7cc22424188efbdea6248fb8f0ea01af83e24f8e04829a73a789",
+      "viewed": true
+    }
+  },
+  "source_only": true,
+  "native_contact_or_activity_ready": false,
+  "old_phone_mount_status": "REJECTED direct-source-wrist basis hypothesis: exact old source5-part prop visibly outside anatomical palm; actual new native RightHand basis must be measured before fitting",
+  "phone_prop_source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "prop_source_nodes": [
+    132,
+    133,
+    134,
+    135,
+    136
+  ],
+  "native_game_or_input_touched": false,
+  "next": "Preserve approved anatomy. Only consider independently measured cloth weight/clearance fix with Walk/Grip/Phone regression; do not fix via finger/hand pose edits."
+}
