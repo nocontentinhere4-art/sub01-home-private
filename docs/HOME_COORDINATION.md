@@ -1,12 +1,24 @@
 # Private SUB-01 home — Codex / Claude coordination
 
-Updated 2026-10-15 14:08 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
+Updated 2026-10-15 21:30 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
 
 ## Goal and boundaries
 
 Build the real functioning first-person home, not a promotional video. Primary reference: https://x.com/SimbasJungles/status/2109095401273938072. Ground-floor entrance, wooden stairs/loft, bathroom privacy, actual PC/phone/TV interactions and eventual brain-controlled activities. English UI. Keep the fictional character separate from the MRI donor; do not claim consciousness.
 
 Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
+
+## Active owner priorities and safe integration — 21:30 UTC
+
+The owner asked us to improve efficiency and proceed in parallel. The next integrated deliverable is the living/TV zone: a solid recessed TV wall hiding the obsolete middle window, the existing wooden cabinet rigidly placed under the TV, a genuine textured modern coffee table, and a better contemporary sofa/pillow composition. The actual TV screen geometry and functional input mapping must stay aligned. PolyHaven sofa03 was personally reviewed and rejected as ornate/baroque; its geometry must not be disguised by a blue tint. Its separate modern coffee table is visually accepted as a source candidate, not yet native/runtime acceptance. Native integration owns map/import work, bath_doors_finish owns lounge assets, kitchen_activation independently checks clearances and actual active rug state. Do not block the living zone on further controller polish.
+
+The approved anatomical Walk is already warm-bound in the actual unchanged Game193148/backend198702, with real reflected mesh/sequence and zero camera displacement verified at20:55. At rest it currently freezes the Walk phase; a compatible authentic Idle is still pending. Root viewed IdleR9 at21:25 and accepts it for a separate animation-only candidate import, not yet native acceptance. The owner explicitly liked the new hands: preserve their relaxed anatomy/shape. Device contact and autonomous activity gates remain false.
+
+The owner is touring localhost8791. At20:58 the actual read-only state showed upstairs/balcony position and765 accepted inputs, so no other agent may inject Game console/movement or restart Game/devices while their control may be active. Candidate Editor work is separate. The old dense208k-triangle comparator held Editor175718/start977713981 for over20 minutes. A bounded candidate-only recovery froze and independently SHA-verified890,176,950 accepted asset bytes and unchanged map14acd, then terminated that exact hung Editor after15 seconds grace. New sole candidate Editor203351/start978985107 uses the same project/cache with optimized exact-distance triangle buckets. Actual Game/backend and both capture/input grant hashes stayed unchanged. Unaccepted tasks058/059 are recorded interrupted and quarantined, never passed. Private receipt: candidate-dense-proof-recovery.json. This is recovery of a pathological worker, not permission for routine pod/Game restarts.
+
+Claude remains assigned separate source-only ergonomic solver/verifier work through the private coordination issue. Root sent a concrete desk-height diagnosis: original LINEA140 is75.83cm tall, while our uniform1.086093 scale created the84.5cm support plane. Compare original uniform scale and consistently supported devices in a reversible proposal before spending all search time around an artificially tall desk. No runtime desk or hand changes were authorized by this source assignment.
+
+The latest six-hour heartbeat work cutoff is23:28:41UTC; do not start new work from that automation after its cutoff. Absolute GPU stop remains2026-10-16 02:19:35UTC, total cap$100 and reserve$10. No public deployment or brain-server edits.
 
 ## Verified device response — 20:31 UTC
 
