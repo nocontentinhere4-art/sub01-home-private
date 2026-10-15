@@ -17,12 +17,12 @@ adapter, with every readiness flag false by default.
 
 | path | status on main | sha256 |
 |---|---|---|
-| tools/install_seat_controller_adapters.py | NEW | see commit (report lists the final value) |
-| tools/controller_play_minimal.py | NEW | see commit |
+| tools/install_seat_controller_adapters.py | NEW | 1bc4f783ddb1d30adcedbf01d3c2b8a7694c656e6348538240d30ddfbeff1b7b |
+| tools/controller_play_minimal.py | NEW | 688644f13dd63abaffa124f8a7cbf77ee9e41306b9ed1ac842f1bc26894e7422 |
 | tools/unreal_controller_play_runtime.py | NEW (branch file verbatim, incl. eye camera aa18430) | 1190282a31e53141b68c4f5efdf562139b91c1d9a13dfc9a4a174b20febb33b0 |
-| tools/check_native_adapters_compile_closure.py | NEW (022c399 + `--only seat,controller`, lazy bundle/grip imports, same-line extension hunks) | see commit |
+| tools/check_native_adapters_compile_closure.py | NEW (022c399 + `--only seat,controller`, lazy bundle/grip imports, same-line extension hunks) | d66b9a82a33cf13803e7533d7dddc5cf6b7b72afb31f2e02aa781cf34dccc413 |
 | tools/native_adapters_ue_shim.py | NEW (022c399, unchanged) | ec715687b2b0b515781029c06eee70484dcced9a7210bd24174e5f427a918f0e |
-| tests/test_seat_controller_minimal.py | NEW | see commit |
+| tests/test_seat_controller_minimal.py | NEW | d848b7fda39e9d1fe6f1b56ac9f97674d17bff6e4da8d98db5fd10e473f814e9 |
 | tools/unreal_seat_transition_runtime.py | **MODIFIED, 1 line deleted** (root-owned; patch below, root applies) | main 534903e15553dc2308b8ba4fb78165c9fb3973e87d0ff668ba3bdb99b1e91661 -> patched 76661fc8034fff5289f37d74264b89ecffe092a88c1b0c65443c6efe8c8d35b4 |
 
 Used from main unchanged: `tools/validate_unreal_seat_contact.py` (dd95f1b1...a18f, the strong median + 50% coverage
@@ -89,4 +89,10 @@ python3 -m pytest -q tests/test_seat_controller_minimal.py
   root function bodies hosting inserted lines (inserted lines compiled as probes), real engine signatures, UHT, linking.
 - `status`: evidence false, runtime_proof false, ready false. `config` with no evidence: written false, exit 3.
 - `tests/test_seat_controller_minimal.py`: 17 passed (main worktree).
-- Main's existing suite: see the final report / commit message for the baseline vs packet comparison.
+- Main's whole suite (`python3 -m pytest -q tests --continue-on-collection-errors`), pristine 57d41bb vs 57d41bb +
+  packet + brace patch: baseline 22 failed / 2327 passed / 49 skipped / 57 errors; packet 22 failed / **2344** passed /
+  49 skipped / 57 errors. The +17 are the packet tests; the FAILED/ERROR sets are identical (pre-existing, e.g. missing
+  `aiohttp` in this sandbox), so nothing else changes.
+- Claude branch: test_seat_controller_minimal (skips without main's contract), compile-closure, fit_controller_grip,
+  controller eye camera and support-contact tests: 70 passed, 1 skipped.
+- The patch file's own sha256: 197b7787388687b8c1cea11e2aa9d898a34d4d1eb8ce3aa345ae611523986c11.
