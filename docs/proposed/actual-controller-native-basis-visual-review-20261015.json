@@ -1,0 +1,51 @@
+{
+  "schema": "sub01.actual-controller-native-basis-visual-review.v1",
+  "native_pid": 77178,
+  "native_start_ticks": 975360109,
+  "module_sha256": "089345fa2c32f843fc4d4dad17d0d63afcb70bef25030d8f716c0800292072c4",
+  "source_basis_fix": "b70421a",
+  "review_sequence": [
+    "actual false accepted 11:32:12.399 UTC",
+    "held PNG viewed",
+    "Manual revision1 restore",
+    "actual true accepted 11:37:18.867 UTC",
+    "12s continuous loop recorded after actual play1",
+    "Manual revision2 restore requested"
+  ],
+  "privacy_identity_guard_checks": 46,
+  "actual_native_loop_seconds": 12,
+  "visual_observations": [
+    "Correctly sized controller now aligned between both hands; previous large below-wrist gap removed.",
+    "Controller visible with both real hands/forearms in held image and decoded 2s/8s movie frames."
+  ],
+  "finger_contact_or_penetration_measured": false,
+  "seat_or_brain_controller_readiness": false,
+  "authored_animation_contact_accepted": false,
+  "media": [
+    {
+      "path": "out/house-evidence/dgt-controller-basis-fixed-held-77178.png",
+      "bytes": 543252,
+      "sha256": "f3cbef6398401967d0c44e8b07bbc06b92b14e07cd0415098981ea7fa674a658"
+    },
+    {
+      "path": "out/house-evidence/controller77178-controller-review-playing-loop-12s.mp4",
+      "bytes": 5864276,
+      "sha256": "5f0e1e4b5233908117205ab2fc6e39187397f6c7652c4752f85b9bbf07e5ae07"
+    },
+    {
+      "path": "out/house-evidence/controller77178-loop-record-result.json",
+      "bytes": 612,
+      "sha256": "149a3b3c9813cd18784b32b1771f3177eba143dcee7fe8d140e48406a27014cb"
+    },
+    {
+      "path": "out/house-evidence/controller77178-basis-loop-2s.png",
+      "bytes": 983397,
+      "sha256": "5d2889057058b407986c477080000b850629b5c909a62097d3fcb5e5ab3ed973"
+    },
+    {
+      "path": "out/house-evidence/controller77178-basis-loop-8s.png",
+      "bytes": 1053134,
+      "sha256": "61927ff6c6979a41f5c27414c4b51afe7e5b4ffa4dfbd3d7c6a0868e58a645c4"
+    }
+  ]
+}
