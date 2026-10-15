@@ -21,7 +21,7 @@ export function relativeHandRotation(targetRest, sourceBaseline, sourcePose, sou
  return Q(targetRest).multiply(axis).multiply(delta).multiply(axis.clone().invert()).normalize().toArray();
 }
 
-export function read(file){
+export function read(file,{allowMaterialTransforms=false}={}){
  const raw=fs.readFileSync(file);assert.equal(raw.toString('ascii',0,4),'glTF');
  assert.equal(raw.readUInt32LE(4),2);assert.equal(raw.readUInt32LE(8),raw.length);
  let doc,bin;
@@ -31,7 +31,7 @@ export function read(file){
   else throw Error('Unsupported GLB chunk');p+=8+size;
  }
  assert(doc&&bin&&doc.buffers.length===1&&!doc.buffers[0].uri,'Self-contained decoded GLB required');
- assert(!doc.extensionsRequired?.length,'Decode required extensions first');
+ assert((doc.extensionsRequired||[]).every(name=>allowMaterialTransforms&&name==='KHR_texture_transform'),'Decode required geometry extensions first');
  assert(doc.nodes.every(n=>!n.matrix),'Export explicit node TRS first; matrix nodes need reviewed decomposition');
  const parents=new Map();doc.nodes.forEach((n,i)=>(n.children||[]).forEach(c=>{assert(!parents.has(c),'Multiple parents');parents.set(c,i);}));
  const names=new Map();doc.nodes.forEach((n,i)=>{if(selected(n.name)){assert(!names.has(key(n.name)),'Duplicate hand name');names.set(key(n.name),i);}});

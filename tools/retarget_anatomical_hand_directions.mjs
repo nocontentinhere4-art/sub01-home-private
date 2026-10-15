@@ -57,10 +57,12 @@ function localAt(f,ts,time){
  const local=rest(f);for(const [key,t]of ts){const [i,path]=key.split(':');local[Number(i)][{rotation:'r',translation:'t',scale:'s'}[path]]=sample(t,time);}return local;
 }
 
-export function retargetDirections(source,target,output,baselineSeconds=0){
- const src=read(source),dst=read(target),ts=tracks(src),srcRest=rest(src),dstRest=rest(dst);
+export function retargetDirections(source,target,output,baselineSeconds=0,{preserveTargetBody=false}={}){
+ const src=read(source),dst=read(target,{allowMaterialTransforms:true}),ts=tracks(src),srcRest=rest(src),dstRest=rest(dst);
  const swr=worldPose(src,srcRest),twr=worldPose(dst,dstRest),baseline=localAt(src,ts,baselineSeconds),sbw=worldPose(src,baseline);
  const times=[...new Set([...ts.values()].flatMap(t=>t.times))].sort((a,b)=>a-b);
+ const bodyTracks=preserveTargetBody?tracks(dst):null,bodyAnimation=preserveTargetBody?structuredClone(dst.doc.animations[0]):null;
+ if(bodyTracks){assert([...bodyTracks.keys()].every(key=>!segmentsFingerName(dst.doc.nodes[Number(key.split(':')[0])].name)),'Body source must not contain obsolete finger channels');const bodyTimes=[...bodyTracks.values()].flatMap(t=>t.times);assert(Math.abs(Math.max(...bodyTimes)-times.at(-1))<1e-4,'Captured body/finger clocks must match explicitly');}
  assert(times.length>=2&&times.length<=24000&&baselineSeconds>=times[0]&&baselineSeconds<=times.at(-1));
  const palms={},segments=[];
  for(const side of ['Left','Right']){
@@ -77,12 +79,12 @@ export function retargetDirections(source,target,output,baselineSeconds=0){
    segments.push({side,name,s,t,sc,tc,sourceRestDirection:unit(sd),sourceDorsal:sn,targetDirection:td,targetDorsal:tn,maxSourceLocalDirectionVariationRadians:0,maxDirectionErrorRadians:0});
   }
  }
- const channels=new Map([...Object.values(palms).map(p=>p.ti),...segments.map(s=>s.t)].map(i=>[i,[]]));
+ const channels=new Map([...(preserveTargetBody?[]:Object.values(palms).map(p=>p.ti)),...segments.map(s=>s.t)].map(i=>[i,[]]));
  let maxDirectionError=0;
  for(const time of times){
-  const sl=localAt(src,ts,time),sw=worldPose(src,sl),tl=rest(dst),desired=new Map(),targetPalms={};
+  const sl=localAt(src,ts,time),sw=worldPose(src,sl),tl=bodyTracks?localAt(dst,bodyTracks,time):rest(dst),desired=new Map(),targetPalms={};
   for(const side of ['Left','Right']){
-   const p=palms[side];tl[p.ti].r=relativeHandRotation(dstRest[p.ti].r,baseline[p.si].r,sl[p.si].r,sbw[p.si].r.toArray(),twr[p.ti].r.toArray());
+   const p=palms[side];if(!preserveTargetBody)tl[p.ti].r=relativeHandRotation(dstRest[p.ti].r,baseline[p.si].r,sl[p.si].r,sbw[p.si].r.toArray(),twr[p.ti].r.toArray());
   }
   const wristWorld=worldPose(dst,tl);
   for(const side of ['Left','Right']){
@@ -120,13 +122,15 @@ export function retargetDirections(source,target,output,baselineSeconds=0){
  }
  const input=append(times,'SCALAR'),animation={name:'Captured anatomical phalange directions, rest curvature compensated',samplers:[],channels:[]};
  for(const [i,values]of channels){const sampler=animation.samplers.length;animation.samplers.push({input,output:append(values,'VEC4'),interpolation:'LINEAR'});animation.channels.push({sampler,target:{node:i,path:'rotation'}});}
+ if(bodyAnimation){const offset=bodyAnimation.samplers.length;animation.channels=bodyAnimation.channels.concat(animation.channels.map(c=>({...c,sampler:c.sampler+offset})));animation.samplers=bodyAnimation.samplers.concat(animation.samplers);animation.name='Original captured body and anatomically corrected fingers';}
  dst.doc.animations??=[];dst.doc.animations.push(animation);dst.doc.buffers[0].byteLength=offset;
  writeGLB(output,dst.doc,Buffer.concat(parts));
  const report={schema:'sub01.captured-anatomical-direction-retarget.v1',sourceSha256:sha(src.raw),targetSha256:sha(dst.raw),outputSha256:sha(fs.readFileSync(output)),
   frames:times.length,durationSeconds:times.at(-1),wristBaselineSeconds:baselineSeconds,handChannels:channels.size,segments:segments.map(({name,maxDirectionErrorRadians,maxSourceLocalDirectionVariationRadians})=>({name,maxDirectionErrorRadians,maxSourceLocalDirectionVariationRadians})),maxPostFKDirectionErrorRadians:maxDirectionError,
-  sourceGeometryWeightsAndTargetRestUnchanged:true,nondeformingEndpointRotationsHeldAtRest:true,noAuthoredFingerCurl:true,
+  sourceGeometryWeightsAndTargetRestUnchanged:true,nondeformingEndpointRotationsHeldAtRest:true,noAuthoredFingerCurl:true,originalBodyChannelsPreserved:preserveTargetBody,
   visualAccepted:false,nativeImported:false,contactAccepted:false,
   limitations:['Wrist baseline still requires reviewed owner cuff alignment','Twist is transported from the captured bone and anatomical dorsal frames; skin deformation must be rendered','Matching measured segment directions does not establish fingertip contact or self-intersection freedom']};
  fs.writeFileSync(output+'.json',JSON.stringify(report,null,2)+'\n');return report;
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){const [source,target,out,baseline]=process.argv.slice(2);assert(source&&target&&out&&baseline!==undefined,'SOURCE.glb TARGET.glb OUT.glb WRIST_BASELINE_SECONDS');const r=retargetDirections(source,target,out,Number(baseline));console.log(JSON.stringify({outputSha256:r.outputSha256,frames:r.frames,channels:r.handChannels,maxDirectionErrorRadians:r.maxPostFKDirectionErrorRadians}));}
+function segmentsFingerName(name){return /Hand(Thumb|Index|Middle|Ring|Pinky)[1-4]$/.test(normalize(name));}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){const [source,target,out,baseline,flag]=process.argv.slice(2);assert(source&&target&&out&&baseline!==undefined,'SOURCE.glb TARGET.glb OUT.glb WRIST_BASELINE_SECONDS [--preserve-target-body]');assert(flag===undefined||flag==='--preserve-target-body');const r=retargetDirections(source,target,out,Number(baseline),{preserveTargetBody:flag==='--preserve-target-body'});console.log(JSON.stringify({outputSha256:r.outputSha256,frames:r.frames,channels:r.handChannels,maxDirectionErrorRadians:r.maxPostFKDirectionErrorRadians}));}

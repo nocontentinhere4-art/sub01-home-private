@@ -1,0 +1,18 @@
+{
+  "status": "source_only_private_WIP",
+  "selected_weighted_walk_sha256": "04878a70440d116cd9df73fce0ab670d1540bcadd12d79b030911b3b00505e9a",
+  "body_original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "geometry_source_sha256": "9a0f98531b66b10e9147f0c88b8682ae11375debf9d4a1026a4d58a2cbdfcbf7",
+  "method": "Preserve original serialized body buffers and25 nonfinger joints/binds; append genuine Blender anatomical hands and fitted cuffs; barycentric clip original sleeve crossing triangles with all skin influences. Retarget only captured palm-frame finger directions while preserving26 original body/wrist channels.",
+  "frames": 32,
+  "sample_fps": 30,
+  "body_bind_error": 0,
+  "max_direction_error_degrees": 7.938258625446581e-05,
+  "native_imported": false,
+  "contact_accepted": false,
+  "pending": [
+    "Actual full-skin weighted cuff motion audit",
+    "Native skeletal import equivalence and visual review",
+    "Actual PC/phone/controller contact acceptance"
+  ]
+}

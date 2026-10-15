@@ -131,7 +131,8 @@ def palm_axes(positions, side):
     return x, y, z
 
 
-def prove(source, original, candidate, output):
+def prove(source, original, candidate, output, mode=None):
+    assert mode in (None, '--preserve-target-body')
     sd, sb, source_hash = load(source)
     od, ob, original_hash = load(original)
     cd, cb, candidate_hash = load(candidate)
@@ -140,7 +141,14 @@ def prove(source, original, candidate, output):
         assert cd.get(field) == od.get(field), field
     assert cd['animations'][:-1] == od.get('animations', [])
     a, b = Clip(sd, sb, 0), Clip(cd, cb, -1)
-    assert len(b.tracks) == 32 and all(path == 'rotation' for _, path in b.tracks)
+    if mode:
+        body = od['animations'][0]
+        combined = cd['animations'][-1]
+        assert combined['samplers'][:len(body['samplers'])] == body['samplers']
+        assert combined['channels'][:len(body['channels'])] == body['channels']
+        assert len(combined['channels']) == len(body['channels']) + 30
+    else:
+        assert len(b.tracks) == 32 and all(path == 'rotation' for _, path in b.tracks)
     times = sorted({t for ts, _, _ in b.tracks.values() for t in ts})
     rows = []
     for side in ['Left', 'Right']:
@@ -161,6 +169,7 @@ def prove(source, original, candidate, output):
               'source_sha256': source_hash, 'original_sha256': original_hash, 'candidate_sha256': candidate_hash,
               'frames': len(times), 'measured_segments': rows, 'both_sides': True,
               'original_binary_graph_skin_weights_materials_exact': True,
+              'original_body_channels_and_samplers_preserved': bool(mode),
               'oracle': 'Independent standard-library 4x4 matrix FK; actual posed segment directions compared in actual posed knuckle-defined palm frames',
               'max_error_degrees': math.degrees(max(r['max_serialized_direction_error_radians'] for r in rows)),
               'native_accepted': False, 'skin_deformation_or_contact_accepted': False}
