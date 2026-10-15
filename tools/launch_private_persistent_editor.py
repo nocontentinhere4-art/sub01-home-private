@@ -99,6 +99,9 @@ def run():
     log_path = PRIVATE / 'persistent-editor-launch.log'
     if log_path.exists():
         shutil.copy2(log_path, PRIVATE / f'previous-editor-launch-{time.time_ns()}.log')
+    ready_path = PRIVATE / 'persistent-editor-ready.json'
+    if ready_path.exists():
+        ready_path.replace(PRIVATE / f'previous-editor-ready-{time.time_ns()}.json')
     log = log_path.open('w')
     child = subprocess.Popen(args, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     receipt = {'wrapper_pid': child.pid, 'engine_root': str(ENGINE),
