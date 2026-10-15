@@ -1,0 +1,70 @@
+{
+  "schema": "sub01.serialized-owner65-aux-captured-clips.v1",
+  "restSha256": "209df19300ab56d7b08667e930bb06deef818edb1cf04dbff71aec9a08c64152",
+  "clips": [
+    {
+      "name": "Idle",
+      "sourcePath": "out/first-person-assets/ReferenceT/idle-source-review.glb",
+      "sourceSha256": "3d9876d91a7d5829e112648184bad049c5d5e977f8d67c008db15b3f2a0ccc37",
+      "sourceType": "original captured idle",
+      "outputPath": "out/serialized-owner65-aux-r1/owner65-anatomical-Idle.glb",
+      "outputSha256": "87d95e195c7d19d1ba1e4c1ece8fb6911e6559771e7b94aef3a5e5887b8af114",
+      "sourceBodyRootAnd25RestMaxComponentError": 2.220446049250313e-16,
+      "sourceRestComponentTolerance": 1e-12,
+      "bodyWristChannelsExact": 26,
+      "frames": 64,
+      "sourceFirstSampleSeconds": 0,
+      "sourceLastSampleSeconds": 2.0999999046325684,
+      "durationSeconds": 2.0999999046325684,
+      "sourceClockFps": 30,
+      "anatomicalFingerChannels": 30,
+      "maxPostFKDirectionErrorRadians": 2.1073424255447017e-08,
+      "geometryBinaryPrefixExact": true,
+      "nativeImported": false,
+      "bodySkinIndependentAuditPending": false,
+      "handSelfContactAccepted": false,
+      "controllerPropContactAccepted": false,
+      "visualAccepted": false,
+      "bodySkinIndependentAudit": {
+        "receipt": "Idle-skin-proof.json",
+        "receiptSha256": "a97ec3d7afc61666d1c926fab032cb171978e1f68bca56daa2f53886cc772e75",
+        "retainedVertexFrameChecks": 15185088,
+        "maxRetainedWorldErrorM": 0,
+        "maxSleeveFragmentWorldErrorM": 4.8313232318783125e-08
+      },
+      "remoteSourcePath": "/workspace/sub01-home-private/body-preservation-audit-r1/owner65-anatomical-Idle.glb"
+    },
+    {
+      "name": "GamingGrip",
+      "sourcePath": "docs/proposed/controller-play/SUB01_GamingGrip_derived.glb",
+      "sourceSha256": "bf31d64518d85f6eefd8150009a758ddddc95ca6afd63d5d83bdf29a2dcdaaf9",
+      "sourceType": "derived reviewed grip, NOT raw captured Gaming",
+      "outputPath": "out/serialized-owner65-aux-r1/owner65-anatomical-GamingGrip.glb",
+      "outputSha256": "e1ced522f07d78ce84ea8d4a143a14045f7cefe743d9745a3e323b45b5685c76",
+      "sourceBodyRootAnd25RestMaxComponentError": 2.220446049250313e-16,
+      "sourceRestComponentTolerance": 1e-12,
+      "bodyWristChannelsExact": 26,
+      "frames": 152,
+      "sourceFirstSampleSeconds": 0.03333333507180214,
+      "sourceLastSampleSeconds": 5.066666603088379,
+      "durationSeconds": 5.033333268016577,
+      "sourceClockFps": 30,
+      "anatomicalFingerChannels": 30,
+      "maxPostFKDirectionErrorRadians": 2.1073424255447017e-08,
+      "geometryBinaryPrefixExact": true,
+      "nativeImported": false,
+      "bodySkinIndependentAuditPending": false,
+      "handSelfContactAccepted": false,
+      "controllerPropContactAccepted": false,
+      "visualAccepted": false,
+      "bodySkinIndependentAudit": {
+        "receipt": "GamingGrip-skin-proof.json",
+        "receiptSha256": "fca19e919b2bb879e5694c25533ad06f05a9cd0a492cb422756b6e1f73b242c9",
+        "retainedVertexFrameChecks": 36064584,
+        "maxRetainedWorldErrorM": 0,
+        "maxSleeveFragmentWorldErrorM": 4.831323049939938e-08
+      },
+      "remoteSourcePath": "/workspace/sub01-home-private/body-preservation-audit-r1/owner65-anatomical-GamingGrip.glb"
+    }
+  ]
+}
