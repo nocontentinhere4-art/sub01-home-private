@@ -4,7 +4,7 @@ from pathlib import Path
 from private_home_candidate_scope import active_candidate_guard,trusted_json,SCOPE,CANDIDATE
 STYLE=Path('/workspace/sub01-home-private/reference-teal-bathroom-r5/output')
 PROOF=STYLE.parent/'independent-proof-r2/independent-source-proof.json'
-TASKS={'probe','wall_console_preflight','wall_console','teal_bath_preflight','teal_bath','sheer_material_readonly','plant_placement_inventory','bed_finish_preflight','bed_finish','photo_plants_preflight','photo_plants'}
+TASKS={'probe','wall_console_preflight','wall_console','teal_bath_preflight','teal_bath','sheer_material_readonly','plant_placement_inventory','bed_finish_preflight','bed_finish','photo_plants_preflight','photo_plants','visual_review'}
 def dispatch(task,probe):
  if task=='probe':return probe
  if task in('wall_console_preflight','wall_console'):
@@ -15,6 +15,7 @@ def dispatch(task,probe):
   module=importlib.reload(importlib.import_module('unreal_import_reference_bed_finish'));return module.run(dry_run=task.endswith('_preflight'))
  if task in('photo_plants_preflight','photo_plants'):
   module=importlib.reload(importlib.import_module('unreal_import_candidate_photo_plants'));return module.run(dry_run=task.endswith('_preflight'))
+ if task=='visual_review':return importlib.reload(importlib.import_module('unreal_candidate_visual_review')).run()
  if task=='plant_placement_inventory':return importlib.reload(importlib.import_module('unreal_candidate_placement_inventory')).run()
  if task=='sheer_material_readonly':return importlib.reload(importlib.import_module('unreal_sheer_material_readonly')).run()
  raise RuntimeError('No free-form candidate task execution')

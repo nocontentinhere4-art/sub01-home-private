@@ -9,11 +9,11 @@
   "original_game_start_ticks": 976840968,
   "original_map_sha256": "f2072833e5c21aeed43b4aefc63361a45396a3038e0234227dad9bd1501f7617",
   "module_sha256": "97c3395e01e03c2df5f549c7920df289fa69a1073bee71c0b9a93fbfe8f5506a",
-  "candidate_editor_pid": 172010,
-  "candidate_editor_start_ticks": 977377746,
+  "candidate_editor_pid": 175718,
+  "candidate_editor_start_ticks": 977713981,
   "candidate_xdisplay": ":100",
   "candidate_xserver_pid": 172007,
-  "null_rhi": true,
+  "null_rhi": false,
   "initial_root_authority_permits_only_readonly_probe_preflight": true,
   "original_x99_game_viewer_input_grants_and_device_services_untouched": true,
   "active_home_guard_unchanged_outside_exact_authorized_candidate": true,
@@ -47,10 +47,26 @@
       "schema": "sub01.reference-teal-bathroom-native.v1",
       "saved": true,
       "visual_acceptance": false
+    },
+    "reference-bed-finish-native.json": {
+      "receipt_sha256": "50e22fa85e58d2422e11b7b89bbfae70781d84f03c8f93945b01e44b07754ac2",
+      "schema": "sub01.reference-bed-finish-candidate-native.v1",
+      "saved": true,
+      "new_bed_parts": 6,
+      "cloth_meshes_transforms_and_collisions_unchanged": true,
+      "visual_acceptance": false
     }
   },
   "candidate_map_sha256_after_bath_and_console": "f9f1497cb14e3f3b0015dfc11a620d39fb90ec1dfeb9603c8b005f787e994c94",
   "actual_rendered_visual_acceptance": false,
   "no_second_game_started_shared_device_bus_preserved": true,
-  "bed_retry_status": "Preflight passed; exact empty-source-root cleanup required. Failed native transactions rolled back; no map change claimed."
+  "bed_retry_status": "Actual retry015 saved after exact proven empty-source-root cleanup; full protected snapshot passed.",
+  "candidate_map_sha256_after_bed": "98d7298aec45a710d39d7376360e50fb0f5e935d639a99c70fe2bfcda2420926",
+  "candidate_vulkan_render_probe": {
+    "epoch": 1792087263.5745752,
+    "actors": 1451,
+    "static_components": 1328,
+    "missing_static_meshes": [],
+    "source_game_preserved": true
+  }
 }
