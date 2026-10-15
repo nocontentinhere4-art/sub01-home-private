@@ -1,0 +1,442 @@
+{
+ "schema": "sub01.phone-grip-review-packet.v1",
+ "purpose": "native VISUAL review only",
+ "ready": false,
+ "verified": false,
+ "gates": {
+  "native_import": false,
+  "native_contact": false,
+  "visual_acceptance": false,
+  "activity_binding": false
+ },
+ "label": "derived_from_capture",
+ "original_capture_invariance": "NOT APPLICABLE (derived)",
+ "files": {
+  "derived_glb": {
+   "path": "docs/proposed/phone-grip-derived/SUB01_PhoneGrip_derived.glb",
+   "sha256": "81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2"
+  },
+  "report": {
+   "path": "docs/proposed/phone-grip-derived/SUB01_PhoneGrip_derived.report.json",
+   "sha256": "67b85378a21c4e7764cebb416f04b9e97e559b9426d6ead692c97a8b46016bb7"
+  },
+  "audit": {
+   "path": "docs/proposed/phone-grip-derived/SUB01_PhoneGrip_derived.audit.json",
+   "sha256": "056bbc6713e561046084de56f225897b6afa597204039fffcb707996a4dd9acb"
+  },
+  "raw_capture_unchanged": {
+   "path": "docs/proposed/phone-capture/texting.glb",
+   "sha256": "8a6dfc041cd4768016c6348dfb90f1275cab4c09cfe6083537fb88ba6d11ae75"
+  },
+  "owner": {
+   "path": "web/room/char_mixamo.glb",
+   "sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+   "skin_joints": 65
+  }
+ },
+ "contract": {
+  "keys": 557,
+  "fps": 30,
+  "channels": 66,
+  "changed_rotation_channels": [
+   "mixamorig:RightHand",
+   "mixamorig:RightHandIndex1",
+   "mixamorig:RightHandIndex2",
+   "mixamorig:RightHandIndex3",
+   "mixamorig:RightHandMiddle1",
+   "mixamorig:RightHandMiddle2",
+   "mixamorig:RightHandMiddle3",
+   "mixamorig:RightHandPinky1",
+   "mixamorig:RightHandPinky2",
+   "mixamorig:RightHandPinky3",
+   "mixamorig:RightHandRing1",
+   "mixamorig:RightHandRing2",
+   "mixamorig:RightHandRing3",
+   "mixamorig:RightHandThumb1",
+   "mixamorig:RightHandThumb2"
+  ],
+  "bone_length_max_error_cm": 1.9081958235744878e-14,
+  "untouched_channels_byte_identical": true
+ },
+ "mount": {
+  "frame": "derived RightHand (the constant hand correction is baked into the clip; no native wrist installer needed)",
+  "gltf_right_hand_local": {
+   "offset_cm": [
+    0.75422,
+    9.68499,
+    4.71232
+   ],
+   "quaternion_xyzw": [
+    0.12777729,
+    0.15084934,
+    -0.49159966,
+    0.84808444
+   ]
+  },
+  "phoneGripCandidate": "X=0.75422 Y=-9.68499 Z=4.71232|P=-22.42641 Y=59.35637 R=4.24461",
+  "assembly": "original five-part phone (tools/unreal_phone_grip_diagnostic.py PARTS), materials and live screen unchanged",
+  "wrist_correction": "none at runtime: the RightHand correction is baked into the derived clip"
+ },
+ "taps": {
+  "rule": "tap = the per-frame stop is engaged AND the thumb pad skin is within 0.02 cm of the glass rectangle; stop on the case rim = rim_contact, not a tap; near_glass = pad within 0.1 cm without force; geometry only, no timer",
+  "count": 27,
+  "events": [
+   {
+    "down_time": 1.93333,
+    "up_time": 2.0,
+    "frames": 3,
+    "uv": [
+     0.8526,
+     0.4563
+    ],
+    "press_stop_deg_max": 1.3375
+   },
+   {
+    "down_time": 2.26667,
+    "up_time": 2.26667,
+    "frames": 1,
+    "uv": [
+     0.786,
+     0.3846
+    ],
+    "press_stop_deg_max": 0.9871
+   },
+   {
+    "down_time": 2.63333,
+    "up_time": 2.66667,
+    "frames": 2,
+    "uv": [
+     0.8938,
+     0.4603
+    ],
+    "press_stop_deg_max": 1.4398
+   },
+   {
+    "down_time": 2.96667,
+    "up_time": 3.0,
+    "frames": 2,
+    "uv": [
+     0.9655,
+     0.5099
+    ],
+    "press_stop_deg_max": 1.2689
+   },
+   {
+    "down_time": 4.2,
+    "up_time": 4.23333,
+    "frames": 2,
+    "uv": [
+     0.8477,
+     0.4524
+    ],
+    "press_stop_deg_max": 1.1685
+   },
+   {
+    "down_time": 4.5,
+    "up_time": 4.5,
+    "frames": 1,
+    "uv": [
+     0.7853,
+     0.3835
+    ],
+    "press_stop_deg_max": 0.8022
+   },
+   {
+    "down_time": 4.86667,
+    "up_time": 4.9,
+    "frames": 2,
+    "uv": [
+     0.8926,
+     0.4594
+    ],
+    "press_stop_deg_max": 1.1628
+   },
+   {
+    "down_time": 5.2,
+    "up_time": 5.23333,
+    "frames": 2,
+    "uv": [
+     0.9641,
+     0.5091
+    ],
+    "press_stop_deg_max": 0.9809
+   },
+   {
+    "down_time": 7.13333,
+    "up_time": 7.16667,
+    "frames": 2,
+    "uv": [
+     0.8488,
+     0.4543
+    ],
+    "press_stop_deg_max": 0.7546
+   },
+   {
+    "down_time": 7.43333,
+    "up_time": 7.46667,
+    "frames": 2,
+    "uv": [
+     0.7364,
+     0.3859
+    ],
+    "press_stop_deg_max": 0.3144
+   },
+   {
+    "down_time": 7.8,
+    "up_time": 7.83333,
+    "frames": 2,
+    "uv": [
+     0.8122,
+     0.4738
+    ],
+    "press_stop_deg_max": 0.8318
+   },
+   {
+    "down_time": 8.13333,
+    "up_time": 8.16667,
+    "frames": 2,
+    "uv": [
+     0.9019,
+     0.5375
+    ],
+    "press_stop_deg_max": 0.8306
+   },
+   {
+    "down_time": 9.46667,
+    "up_time": 9.46667,
+    "frames": 1,
+    "uv": [
+     0.8477,
+     0.4539
+    ],
+    "press_stop_deg_max": 0.8975
+   },
+   {
+    "down_time": 9.76667,
+    "up_time": 9.76667,
+    "frames": 1,
+    "uv": [
+     0.785,
+     0.3827
+    ],
+    "press_stop_deg_max": 0.5391
+   },
+   {
+    "down_time": 10.13333,
+    "up_time": 10.16667,
+    "frames": 2,
+    "uv": [
+     0.819,
+     0.4785
+    ],
+    "press_stop_deg_max": 0.8359
+   },
+   {
+    "down_time": 10.46667,
+    "up_time": 10.5,
+    "frames": 2,
+    "uv": [
+     0.9636,
+     0.5085
+    ],
+    "press_stop_deg_max": 0.6733
+   },
+   {
+    "down_time": 11.66667,
+    "up_time": 11.66667,
+    "frames": 1,
+    "uv": [
+     0.848,
+     0.4541
+    ],
+    "press_stop_deg_max": 0.8839
+   },
+   {
+    "down_time": 11.96667,
+    "up_time": 11.96667,
+    "frames": 1,
+    "uv": [
+     0.7853,
+     0.383
+    ],
+    "press_stop_deg_max": 0.5374
+   },
+   {
+    "down_time": 12.33333,
+    "up_time": 12.36667,
+    "frames": 2,
+    "uv": [
+     0.8196,
+     0.4788
+    ],
+    "press_stop_deg_max": 0.8618
+   },
+   {
+    "down_time": 12.66667,
+    "up_time": 12.7,
+    "frames": 2,
+    "uv": [
+     0.9642,
+     0.5089
+    ],
+    "press_stop_deg_max": 0.7329
+   },
+   {
+    "down_time": 14.46667,
+    "up_time": 14.5,
+    "frames": 2,
+    "uv": [
+     0.8501,
+     0.4551
+    ],
+    "press_stop_deg_max": 0.7837
+   },
+   {
+    "down_time": 14.76667,
+    "up_time": 14.8,
+    "frames": 2,
+    "uv": [
+     0.7867,
+     0.3846
+    ],
+    "press_stop_deg_max": 0.4075
+   },
+   {
+    "down_time": 15.13333,
+    "up_time": 15.16667,
+    "frames": 2,
+    "uv": [
+     0.8139,
+     0.4753
+    ],
+    "press_stop_deg_max": 1.07
+   },
+   {
+    "down_time": 15.46667,
+    "up_time": 15.5,
+    "frames": 2,
+    "uv": [
+     0.9045,
+     0.5391
+    ],
+    "press_stop_deg_max": 1.1861
+   },
+   {
+    "down_time": 16.63333,
+    "up_time": 16.66667,
+    "frames": 2,
+    "uv": [
+     0.8511,
+     0.4559
+    ],
+    "press_stop_deg_max": 1.0261
+   },
+   {
+    "down_time": 16.93333,
+    "up_time": 16.96667,
+    "frames": 2,
+    "uv": [
+     0.7872,
+     0.3856
+    ],
+    "press_stop_deg_max": 0.6928
+   },
+   {
+    "down_time": 17.3,
+    "up_time": 17.36667,
+    "frames": 3,
+    "uv": [
+     0.8384,
+     0.4705
+    ],
+    "press_stop_deg_max": 1.6087
+   }
+  ],
+  "audit_glass_events": 28
+ },
+ "audit_summary": {
+  "all_frames": {
+   "fingers_palm": {
+    "max_depth_cm": 0.1981,
+    "frames_beyond_compression": 77,
+    "triangle_overlaps_total": {
+     "case": 2083,
+     "speaker": 0,
+     "volume": 0,
+     "power": 0,
+     "screen": 0
+    },
+    "frames_with_triangle_overlap": 254
+   },
+   "thumb": {
+    "max_depth_cm": 0.0,
+    "frames_beyond_compression": 0,
+    "triangle_overlaps_total": {
+     "case": 179,
+     "speaker": 0,
+     "volume": 0,
+     "power": 0,
+     "screen": 1265
+    },
+    "frames_with_triangle_overlap": 133
+   },
+   "forearm": {
+    "max_depth_cm": 0.0,
+    "frames_beyond_compression": 0,
+    "triangle_overlaps_total": {
+     "case": 0,
+     "speaker": 0,
+     "volume": 0,
+     "power": 0,
+     "screen": 0
+    },
+    "frames_with_triangle_overlap": 0
+   },
+   "body": {
+    "max_depth_cm": 0.0,
+    "frames_beyond_compression": 0,
+    "triangle_overlaps_total": {
+     "case": 0,
+     "speaker": 0,
+     "volume": 0,
+     "power": 0,
+     "screen": 0
+    },
+    "frames_with_triangle_overlap": 0
+   },
+   "frames_supported": 556
+  },
+  "hold_window": {
+   "fingers_palm": 0.1981,
+   "thumb": 0.0,
+   "forearm": 0.0,
+   "body": 0.0,
+   "screen_to_eye_angle_deg": [
+    22.65,
+    33.1
+   ],
+   "screen_upright_deg": [
+    10.95,
+    36.16
+   ],
+   "screen_visible_fraction_min_mean": [
+    0.9111,
+    0.961
+   ]
+  }
+ },
+ "known_open_items": [
+  "fingers/palm (thenar) skin exceeds the 0.15 cm compression band on some unsampled frames (see audit)",
+  "palm carries little: finger-pads-behind + thumb-in-front hold, not a full palm cradle",
+  "native import, contact, visual acceptance and activity binding are not done"
+ ],
+ "native_review_steps_server_only": [
+  "python tools/phone_grip_packet.py check",
+  "node tools/uncompress_unreal_glb.mjs web/room/char_mixamo.glb OWNER.glb",
+  "node tools/merge_unreal_skin_clips.mjs OWNER.glb MERGED.glb docs/proposed/phone-grip-derived/SUB01_PhoneGrip_derived.glb",
+  "blender -b --python tools/export_unreal_phone_grip_fbx.py -- MERGED.glb <project>/SourceAssets/PhoneFBX",
+  "import <project>/SourceAssets/PhoneFBX/PhoneGrip.fbx onto the EXISTING owner USkeleton with root's import tooling (e.g. a phone copy of unreal_import_gaming_grip.py); never replace the original SUB01_Phone asset",
+  "review with the existing private phone grip diagnostic: Phone role, the derived clip, -Sub01PhoneMountCm/-Sub01PhoneMountEuler from phoneGripCandidate, no -Sub01PhoneWristCorrection",
+  "judge actual first-person hand + live screen pixels; readiness stays false until root's native proof"
+ ]
+}

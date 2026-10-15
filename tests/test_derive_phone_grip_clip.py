@@ -101,3 +101,20 @@ def test_active_set_adds_worst_separated_frames(tmp_path):
     frames = D.update_active_set(tmp_path/'set.json', tmp_path/'a.json', k=8)
     assert frames == [5, 12]                               # 6 is too close to 5; within-compression frames ignored
     assert D.update_active_set(tmp_path/'set.json') == [5, 12]
+
+
+def test_review_packet_contract_and_manifest():
+    import phone_grip_packet as P
+    if not (DERIVED/'packet.json').exists():
+        pytest.skip('No committed review packet')
+    result = P.check(DERIVED)
+    assert result['ok'], result['errors']
+    assert set(result['changed_channels']) == {f'mixamorig:RightHand{s}' for s in
+                                               ['']+[f'{f}{j}' for f in ('Index', 'Middle', 'Ring', 'Pinky') for j in (1, 2, 3)]+['Thumb1', 'Thumb2']}
+    packet = json.loads((DERIVED/'packet.json').read_text())
+    assert packet['ready'] is False and packet['verified'] is False and not any(packet['gates'].values())
+    assert packet['files']['derived_glb']['sha256'] == result['derived_sha256']
+    assert packet['files']['raw_capture_unchanged']['sha256'] == P.SOURCE_SHA256
+    assert packet['contract']['keys'] == 557 and packet['contract']['channels'] == 66
+    src = (ROOT/'tools/export_unreal_phone_grip_fbx.py').read_text()
+    assert "CLIP_NAME = 'SUB01_PhoneGrip_derived'" in src and 'FRAMES, JOINTS' in src and "'runtime_ready': False" in src
