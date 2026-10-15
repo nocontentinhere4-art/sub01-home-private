@@ -1,0 +1,1116 @@
+{
+ "schema": "sub01.real-linea140-ue-geometry.v1",
+ "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+ "scale": 1.0,
+ "translation_m": [
+  2.1,
+  0.025,
+  -3.02
+ ],
+ "provenance": {
+  "placement": "origin/main tools/prepare_real_linea140_placement.py (place_bytes, SCALE, DESK_Y) @ b17952c",
+  "ue_mapping": "origin/main tools/real_linea_edge_clamp.py contact_coverage: (2.1 + x S, DESK_Y + z S, .025 + y S) * 100",
+  "record": "origin/main docs/proposed/real-linea140-guarded-placement-20261014.json @ bb24ae5",
+  "source": "origin/main web/house/assets/real-linea140/originalsource.glb"
+ },
+ "mapping": "UE cm = 100 * (2.1 + S x, -3.02 + S z, .025 + S y), glTF source node world points",
+ "overall_min_cm": [
+  140.0,
+  -334.5,
+  2.5
+ ],
+ "overall_max_cm": [
+  280.0,
+  -269.5,
+  78.33
+ ],
+ "overall_dims_cm": [
+  140.0,
+  65.0,
+  75.83
+ ],
+ "floor_cm": 2.5,
+ "tabletop_slab": {
+  "node": 44,
+  "name": "Solid walnut worktop | 1400 x 650 x 28 mm",
+  "min_cm": [
+   140.0,
+   -334.5,
+   75.2
+  ],
+  "max_cm": [
+   280.0,
+   -269.5,
+   78.0
+  ],
+  "top_cm": 78.0,
+  "bottom_cm": 75.2,
+  "thickness_cm": 2.8,
+  "front_edge_y_cm": -269.5,
+  "rear_edge_y_cm": -334.5,
+  "centre_xy_cm": [
+   210.0,
+   -302.0
+  ],
+  "front_is_positive_ue_y": true,
+  "note": "AABB of the worktop node: the eased top/bottom edges (84.283 / 81.785 cm) and rounded plan corners lie inside it, so box clearance is conservative"
+ },
+ "front_apron": {
+  "node": 47,
+  "min_cm": [
+   146.0,
+   -277.8,
+   72.1
+  ],
+  "max_cm": [
+   274.0,
+   -275.4,
+   74.9
+  ],
+  "bottom_cm": 72.1
+ },
+ "knee_bay_cm": {
+  "x": [
+   148.95,
+   235.05
+  ],
+  "below_z": 72.1,
+  "left_leg_inner_x": 148.95,
+  "drawer_carcass_left_x": 235.05
+ },
+ "grommet_rim_top_cm": 78.33,
+ "parts": [
+  {
+   "node": 0,
+   "name": "Bronze drawer pull | grip",
+   "kind": "drawer",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    246.8,
+    -273.0,
+    66.9
+   ],
+   "max_cm": [
+    259.8,
+    -271.8,
+    68.1
+   ]
+  },
+  {
+   "node": 1,
+   "name": "Bronze drawer pull | standoff",
+   "kind": "drawer",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    246.8,
+    -274.7,
+    67.0
+   ],
+   "max_cm": [
+    247.8,
+    -272.4,
+    68.0
+   ]
+  },
+  {
+   "node": 2,
+   "name": "Bronze drawer pull | standoff.001",
+   "kind": "drawer",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    258.8,
+    -274.7,
+    67.0
+   ],
+   "max_cm": [
+    259.8,
+    -272.4,
+    68.0
+   ]
+  },
+  {
+   "node": 3,
+   "name": "Bronze leg shoe",
+   "kind": "leg_shoe",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    145.95,
+    -278.05,
+    3.2
+   ],
+   "max_cm": [
+    149.05,
+    -274.95,
+    7.2
+   ]
+  },
+  {
+   "node": 4,
+   "name": "Bronze leg shoe.001",
+   "kind": "leg_shoe",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    145.95,
+    -329.05,
+    3.2
+   ],
+   "max_cm": [
+    149.05,
+    -325.95,
+    7.2
+   ]
+  },
+  {
+   "node": 5,
+   "name": "Bronze leg shoe.002",
+   "kind": "leg_shoe",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    270.95,
+    -278.05,
+    3.2
+   ],
+   "max_cm": [
+    274.05,
+    -274.95,
+    7.2
+   ]
+  },
+  {
+   "node": 6,
+   "name": "Bronze leg shoe.003",
+   "kind": "leg_shoe",
+   "materials": [
+    "Satin champagne bronze"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    270.95,
+    -329.05,
+    3.2
+   ],
+   "max_cm": [
+    274.05,
+    -325.95,
+    7.2
+   ]
+  },
+  {
+   "node": 7,
+   "name": "Cable grommet | open lead slot",
+   "kind": "grommet",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    162.3,
+    -322.65,
+    77.85
+   ],
+   "max_cm": [
+    163.7,
+    -322.15,
+    77.95
+   ]
+  },
+  {
+   "node": 8,
+   "name": "Cable grommet | split lid",
+   "kind": "grommet",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 484,
+   "min_cm": [
+    161.0,
+    -326.1,
+    77.4
+   ],
+   "max_cm": [
+    165.0,
+    -322.1,
+    77.8
+   ]
+  },
+  {
+   "node": 9,
+   "name": "Cable trough base",
+   "kind": "cable_trough",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    164.25,
+    -327.85,
+    69.15
+   ],
+   "max_cm": [
+    229.75,
+    -318.35,
+    69.45
+   ]
+  },
+  {
+   "node": 10,
+   "name": "Cable trough fixing tab",
+   "kind": "cable_trough",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    165.6,
+    -327.3,
+    72.55
+   ],
+   "max_cm": [
+    168.8,
+    -323.3,
+    75.05
+   ]
+  },
+  {
+   "node": 11,
+   "name": "Cable trough fixing tab.001",
+   "kind": "cable_trough",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    225.2,
+    -327.3,
+    72.55
+   ],
+   "max_cm": [
+    228.4,
+    -323.3,
+    75.05
+   ]
+  },
+  {
+   "node": 12,
+   "name": "Cable trough rear flange",
+   "kind": "cable_trough",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    164.25,
+    -327.75,
+    69.2
+   ],
+   "max_cm": [
+    229.75,
+    -327.45,
+    73.8
+   ]
+  },
+  {
+   "node": 13,
+   "name": "Concealed steel drawer slide",
+   "kind": "drawer",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    236.9,
+    -325.5,
+    56.55
+   ],
+   "max_cm": [
+    237.9,
+    -279.5,
+    58.85
+   ]
+  },
+  {
+   "node": 14,
+   "name": "Concealed steel drawer slide.001",
+   "kind": "drawer",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    268.7,
+    -325.5,
+    56.55
+   ],
+   "max_cm": [
+    269.7,
+    -279.5,
+    58.85
+   ]
+  },
+  {
+   "node": 15,
+   "name": "Desktop fixing | countersunk head",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    144.77,
+    -276.83,
+    74.41
+   ],
+   "max_cm": [
+    145.43,
+    -276.17,
+    74.59
+   ]
+  },
+  {
+   "node": 16,
+   "name": "Desktop fixing | countersunk head.001",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    149.57,
+    -276.83,
+    74.41
+   ],
+   "max_cm": [
+    150.23,
+    -276.17,
+    74.59
+   ]
+  },
+  {
+   "node": 17,
+   "name": "Desktop fixing | countersunk head.002",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    144.77,
+    -327.83,
+    74.41
+   ],
+   "max_cm": [
+    145.43,
+    -327.17,
+    74.59
+   ]
+  },
+  {
+   "node": 18,
+   "name": "Desktop fixing | countersunk head.003",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    149.57,
+    -327.83,
+    74.41
+   ],
+   "max_cm": [
+    150.23,
+    -327.17,
+    74.59
+   ]
+  },
+  {
+   "node": 19,
+   "name": "Desktop fixing | countersunk head.004",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    269.77,
+    -276.83,
+    74.41
+   ],
+   "max_cm": [
+    270.43,
+    -276.17,
+    74.59
+   ]
+  },
+  {
+   "node": 20,
+   "name": "Desktop fixing | countersunk head.005",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    274.57,
+    -276.83,
+    74.41
+   ],
+   "max_cm": [
+    275.23,
+    -276.17,
+    74.59
+   ]
+  },
+  {
+   "node": 21,
+   "name": "Desktop fixing | countersunk head.006",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    269.77,
+    -327.83,
+    74.41
+   ],
+   "max_cm": [
+    270.43,
+    -327.17,
+    74.59
+   ]
+  },
+  {
+   "node": 22,
+   "name": "Desktop fixing | countersunk head.007",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 324,
+   "min_cm": [
+    274.57,
+    -327.83,
+    74.41
+   ],
+   "max_cm": [
+    275.23,
+    -327.17,
+    74.59
+   ]
+  },
+  {
+   "node": 23,
+   "name": "Desktop fixing | hex socket",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    144.9771,
+    -276.6398,
+    74.38
+   ],
+   "max_cm": [
+    145.2229,
+    -276.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 24,
+   "name": "Desktop fixing | hex socket.001",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    149.7771,
+    -276.6398,
+    74.38
+   ],
+   "max_cm": [
+    150.0229,
+    -276.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 25,
+   "name": "Desktop fixing | hex socket.002",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    144.9771,
+    -327.6398,
+    74.38
+   ],
+   "max_cm": [
+    145.2229,
+    -327.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 26,
+   "name": "Desktop fixing | hex socket.003",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    149.7771,
+    -327.6398,
+    74.38
+   ],
+   "max_cm": [
+    150.0229,
+    -327.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 27,
+   "name": "Desktop fixing | hex socket.004",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    269.9771,
+    -276.6398,
+    74.38
+   ],
+   "max_cm": [
+    270.2229,
+    -276.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 28,
+   "name": "Desktop fixing | hex socket.005",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    274.7771,
+    -276.6398,
+    74.38
+   ],
+   "max_cm": [
+    275.0229,
+    -276.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 29,
+   "name": "Desktop fixing | hex socket.006",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    269.9771,
+    -327.6398,
+    74.38
+   ],
+   "max_cm": [
+    270.2229,
+    -327.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 30,
+   "name": "Desktop fixing | hex socket.007",
+   "kind": "fixing",
+   "materials": [
+    "Fastener socket recess"
+   ],
+   "vertices": 196,
+   "min_cm": [
+    274.7771,
+    -327.6398,
+    74.38
+   ],
+   "max_cm": [
+    275.0229,
+    -327.3602,
+    74.42
+   ]
+  },
+  {
+   "node": 31,
+   "name": "Drawer bottom",
+   "kind": "drawer",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 240,
+   "min_cm": [
+    236.9,
+    -327.25,
+    54.85
+   ],
+   "max_cm": [
+    269.7,
+    -276.75,
+    56.75
+   ]
+  },
+  {
+   "node": 32,
+   "name": "Drawer left carcass side",
+   "kind": "drawer",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 240,
+   "min_cm": [
+    235.05,
+    -328.15,
+    55.0
+   ],
+   "max_cm": [
+    236.95,
+    -275.85,
+    74.4
+   ]
+  },
+  {
+   "node": 33,
+   "name": "Drawer rear panel",
+   "kind": "drawer",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 240,
+   "min_cm": [
+    236.9,
+    -328.05,
+    55.0
+   ],
+   "max_cm": [
+    269.7,
+    -326.15,
+    74.4
+   ]
+  },
+  {
+   "node": 34,
+   "name": "Drawer right carcass side",
+   "kind": "drawer",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 240,
+   "min_cm": [
+    269.75,
+    -328.15,
+    55.0
+   ],
+   "max_cm": [
+    271.65,
+    -275.85,
+    74.4
+   ]
+  },
+  {
+   "node": 35,
+   "name": "Flush cable grommet | charcoal rim",
+   "kind": "grommet",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 1536,
+   "min_cm": [
+    160.47,
+    -326.53,
+    77.87
+   ],
+   "max_cm": [
+    165.53,
+    -321.47,
+    78.33
+   ]
+  },
+  {
+   "node": 36,
+   "name": "Inset elastomer foot",
+   "kind": "foot",
+   "materials": [
+    "Black felt floor glides"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    146.15,
+    -277.85,
+    2.5
+   ],
+   "max_cm": [
+    148.85,
+    -275.15,
+    3.3
+   ]
+  },
+  {
+   "node": 37,
+   "name": "Inset elastomer foot.001",
+   "kind": "foot",
+   "materials": [
+    "Black felt floor glides"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    146.15,
+    -328.85,
+    2.5
+   ],
+   "max_cm": [
+    148.85,
+    -326.15,
+    3.3
+   ]
+  },
+  {
+   "node": 38,
+   "name": "Inset elastomer foot.002",
+   "kind": "foot",
+   "materials": [
+    "Black felt floor glides"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    271.15,
+    -277.85,
+    2.5
+   ],
+   "max_cm": [
+    273.85,
+    -275.15,
+    3.3
+   ]
+  },
+  {
+   "node": 39,
+   "name": "Inset elastomer foot.003",
+   "kind": "foot",
+   "materials": [
+    "Black felt floor glides"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    271.15,
+    -328.85,
+    2.5
+   ],
+   "max_cm": [
+    273.85,
+    -326.15,
+    3.3
+   ]
+  },
+  {
+   "node": 40,
+   "name": "Slender steel square leg",
+   "kind": "leg",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    146.05,
+    -277.95,
+    3.7
+   ],
+   "max_cm": [
+    148.95,
+    -275.05,
+    75.1
+   ]
+  },
+  {
+   "node": 41,
+   "name": "Slender steel square leg.001",
+   "kind": "leg",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    146.05,
+    -328.95,
+    3.7
+   ],
+   "max_cm": [
+    148.95,
+    -326.05,
+    75.1
+   ]
+  },
+  {
+   "node": 42,
+   "name": "Slender steel square leg.002",
+   "kind": "leg",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    271.05,
+    -277.95,
+    3.7
+   ],
+   "max_cm": [
+    273.95,
+    -275.05,
+    75.1
+   ]
+  },
+  {
+   "node": 43,
+   "name": "Slender steel square leg.003",
+   "kind": "leg",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    271.05,
+    -328.95,
+    3.7
+   ],
+   "max_cm": [
+    273.95,
+    -326.05,
+    75.1
+   ]
+  },
+  {
+   "node": 44,
+   "name": "Solid walnut worktop | 1400 x 650 x 28 mm",
+   "kind": "worktop",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 1072,
+   "min_cm": [
+    140.0,
+    -334.5,
+    75.2
+   ],
+   "max_cm": [
+    280.0,
+    -269.5,
+    78.0
+   ]
+  },
+  {
+   "node": 45,
+   "name": "Steel end apron",
+   "kind": "apron",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    146.4,
+    -328.0,
+    72.1
+   ],
+   "max_cm": [
+    148.8,
+    -276.0,
+    74.9
+   ]
+  },
+  {
+   "node": 46,
+   "name": "Steel end apron.001",
+   "kind": "apron",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    271.2,
+    -328.0,
+    72.1
+   ],
+   "max_cm": [
+    273.6,
+    -276.0,
+    74.9
+   ]
+  },
+  {
+   "node": 47,
+   "name": "Steel long apron",
+   "kind": "apron",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    146.0,
+    -277.8,
+    72.1
+   ],
+   "max_cm": [
+    274.0,
+    -275.4,
+    74.9
+   ]
+  },
+  {
+   "node": 48,
+   "name": "Steel long apron.001",
+   "kind": "apron",
+   "materials": [
+    "Charcoal fine-textured powdercoat"
+   ],
+   "vertices": 216,
+   "min_cm": [
+    146.0,
+    -328.6,
+    72.1
+   ],
+   "max_cm": [
+    274.0,
+    -326.2,
+    74.9
+   ]
+  },
+  {
+   "node": 49,
+   "name": "Top fixing plate",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    144.05,
+    -279.95,
+    74.65
+   ],
+   "max_cm": [
+    150.95,
+    -273.05,
+    75.15
+   ]
+  },
+  {
+   "node": 50,
+   "name": "Top fixing plate.001",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    144.05,
+    -330.95,
+    74.65
+   ],
+   "max_cm": [
+    150.95,
+    -324.05,
+    75.15
+   ]
+  },
+  {
+   "node": 51,
+   "name": "Top fixing plate.002",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    269.05,
+    -279.95,
+    74.65
+   ],
+   "max_cm": [
+    275.95,
+    -273.05,
+    75.15
+   ]
+  },
+  {
+   "node": 52,
+   "name": "Top fixing plate.003",
+   "kind": "fixing",
+   "materials": [
+    "Blackened steel mounting hardware"
+   ],
+   "vertices": 204,
+   "min_cm": [
+    269.05,
+    -330.95,
+    74.65
+   ],
+   "max_cm": [
+    275.95,
+    -324.05,
+    75.15
+   ]
+  },
+  {
+   "node": 53,
+   "name": "Walnut drawer front",
+   "kind": "drawer",
+   "materials": [
+    "Satin walnut | end grain",
+    "Satin walnut | longitudinal grain"
+   ],
+   "vertices": 240,
+   "min_cm": [
+    236.85,
+    -276.6,
+    55.75
+   ],
+   "max_cm": [
+    269.75,
+    -274.4,
+    73.45
+   ]
+  }
+ ]
+}

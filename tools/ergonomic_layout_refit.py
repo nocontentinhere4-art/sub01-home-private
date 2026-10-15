@@ -911,9 +911,11 @@ def mouse_dy_for(kb_dy, mouse_front_y, slab_front_y):
 
 
 class Setup:
-    def __init__(self, source, cache, arm_stride=SEARCH_ARM_STRIDE):
+    def __init__(self, source, cache, arm_stride=SEARCH_ARM_STRIDE, geometry=None, device_dz=0.):
         A.configure(BASE_DIR, SOLVER_CHAIR_OFFSET_CM)
-        self.ctx = ctx = A.Context(source, cache=cache, chair_translation=list(CHAIR_INITIAL_CM))
+        self.geometry_path = Path(geometry) if geometry else A.GEOMETRY_JSON
+        self.device_dz = float(device_dz)     # desk variant: devices follow the worktop top by this drop (UE cm)
+        self.ctx = ctx = A.Context(source, geometry=self.geometry_path, cache=cache, chair_translation=list(CHAIR_INITIAL_CM))
         f, r, _, t = ctx.clip('DeskTyping_seated')
         self.times, self.Wb, self.Wr = t, f.joint_world, r.joint_world
         if hashlib.sha256(SOLVED_GLB.read_bytes()).hexdigest() != SOLVED_SHA256:
@@ -928,7 +930,8 @@ class Setup:
     def layout_for(self, kb_dy, chair_dy, mouse_dx, kb_dx=0.):
         slab = self.ctx.geometry['tabletop_slab']
         mdy = mouse_dy_for(kb_dy, self.ctx.mouse['footprint_ue_cm'][1][1], slab['front_edge_y_cm'])
-        return Layout((kb_dx, kb_dy, DEVICE_Z_CM), (mouse_dx, mdy, DEVICE_Z_CM), chair_dy)
+        z = DEVICE_Z_CM + self.device_dz
+        return Layout((kb_dx, kb_dy, z), (mouse_dx, mdy, z), chair_dy)
 
     def evaluate(self, layout, frames, smooth=False, extra_ue=None, path=False, keep=None, path_kw=None):
         """Solve both arms on `frames`; returns (W, per-side metrics, per-side solve info, per-side wrist targets)."""
@@ -1180,8 +1183,12 @@ def final(setup, layout, out_dir, search_rows=None, t_start=None, keep=None, pat
                    'inputs': {'base_dir': BASE_DIR, 'solved_desk_typing_glb': A.rel(SOLVED_GLB), 'solved_sha256': SOLVED_SHA256,
                               'geometry_sha256': ctx.geometry_sha256, 'chair_source_sha256': A.CHAIR_SOURCE_SHA256,
                               'keyboard_sha256': setup.kbg['sha256'], 'mouse_sha256': ctx.mouse['sha256']}},
-        'solution_file': 'docs/proposed/ergonomic-layout-refit/arm-solution.npz',
-        'per_frame_file': 'docs/proposed/ergonomic-layout-refit/per-frame.json',
+        'solution_file': A.rel(out_dir / 'arm-solution.npz'),
+        'per_frame_file': A.rel(out_dir / 'per-frame.json'),
+        'desk_variant': {'geometry_file': A.rel(setup.geometry_path), 'geometry_sha256': ctx.geometry_sha256,
+                         'desk_scale': ctx.geometry['scale'], 'translation_m': ctx.geometry['translation_m'],
+                         'worktop_top_cm': ctx.geometry['tabletop_slab']['top_cm'], 'device_plane_cm': ctx.geometry['tabletop_slab']['top_cm'],
+                         'device_dz_cm': setup.device_dz},
         'timing_s': {'solve': round(solve_s, 1), 'total': round(time.time() - (t_start or t0), 1)}}
     if search_rows is not None:
         proposal['search'] = {'grid': SEARCH_GRID, 'frames': f'every {SEARCH_STRIDE}th DeskTyping key', 'rows': len(search_rows),
@@ -1339,13 +1346,17 @@ def main(argv=None):
     ap.add_argument('--max-seconds', type=float, default=3000.)
     ap.add_argument('--postprocess-only', action='store_true', help='add the verifier fields and the GLB to a written proposal')
     ap.add_argument('--status', default='final_candidate')
+    ap.add_argument('--geometry', default=None, help='desk geometry JSON (default: root SCALE geometry); e.g. the original-scale variant')
+    ap.add_argument('--device-dz', type=float, default=0., help='drop of every desk device with the worktop top (UE cm, e.g. -6.5)')
+    ap.add_argument('--right-path-params', action='store_true', help='solve both arms, the right with the right re-solve DP '
+                    'parameters (torso margin 2 cm, step bound 1.8 cm, loop blend) instead of keeping a committed left')
     ap.add_argument('--resolve-right', action='store_true', help='keep the committed LEFT arm; re-solve only the right arm '
                     '(torso margin 2 cm, elbow step bound 1.8 cm, loop-closure blend, smoother right palm / hand frame)')
     args = ap.parse_args(argv)
     t_start = time.time()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    setup = Setup(args.source, args.cache)
+    setup = Setup(args.source, args.cache, geometry=args.geometry, device_dz=args.device_dz)
     if args.postprocess_only:
         prop = postprocess(setup, out, args.status)
         print(json.dumps({k: prop[k] for k in ('status', 'source_ready', 'native_ready', 'ready')}, default=_np))
@@ -1368,6 +1379,8 @@ def main(argv=None):
         k = best['layout_key']
         layout = Layout((k[0], k[1]), (k[2], k[3]), k[4])
     keep = path_kw = None
+    if args.right_path_params:
+        path_kw = {'right': {'body_min': RIGHT_BODY_SOLVER_MIN_CM, 'step_max': RIGHT_STEP_SOLVER_MAX_CM, 'loop_blend': LOOP_BLEND_KEYS}}
     if args.resolve_right:
         prev = json.loads((out / 'ergonomic-layout-refit.proposal.json').read_text())
         z = dict(np.load(out / 'arm-solution.npz'))

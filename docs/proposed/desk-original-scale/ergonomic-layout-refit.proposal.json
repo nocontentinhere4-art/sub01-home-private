@@ -1,0 +1,30 @@
+{
+ "schema": "sub01.ergonomic-layout-refit.v1",
+ "status": "in_progress",
+ "variant": "desk-original-scale",
+ "source_only": true,
+ "verified": false,
+ "source_ready": false,
+ "native_ready": false,
+ "ready": false,
+ "desk_variant": {
+  "geometry_file": "docs/proposed/desk-original-scale/real-linea140-geometry-scale1.json",
+  "desk_scale": 1.0,
+  "translation_m": [
+   2.1,
+   0.025,
+   -3.02
+  ],
+  "worktop_top_cm": 78.0,
+  "device_plane_cm": 78.0,
+  "device_dz_cm": -6.5
+ },
+ "planned_layout": {
+  "kb_dy": 14.202,
+  "chair_dy": 12.202,
+  "mouse_dx": 0.0,
+  "kb_dx": 8.0,
+  "device_z_cm": -6.6,
+  "rule": "9f4e199 layout translated by the worktop front-edge move (-269.5 - -266.702 = -2.798 cm UE Y); devices -6.5 cm with the top"
+ }
+}

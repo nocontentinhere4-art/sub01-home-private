@@ -64,8 +64,9 @@ GEOMETRY_JSON = ROOT / 'docs/proposed/seated-typing-ik/real-linea140-geometry.js
 WORKTOP_NODE = 44
 
 
-def linea_nodes_ue(glb_path):
-    """{node: (name, materials, (N, 3) UE cm points)} for every mesh node of the verified LINEA source."""
+def linea_nodes_ue(glb_path, scale=LINEA_SCALE):
+    """{node: (name, materials, (N, 3) UE cm points)} for every mesh node of the verified LINEA source (uniform `scale`
+    about root's place_bytes node translation; default = root's SCALE)."""
     from home_asset_audit import read_gltf
     from structural_rail_source_patch import accessor, transformed, world_matrices
     path = Path(glb_path)
@@ -83,7 +84,7 @@ def linea_nodes_ue(glb_path):
             mats.add(doc['materials'][prim['material']]['name'])
         P = np.asarray(pts, float)
         tx, ty, tz = LINEA_TRANSLATION_M
-        ue = np.stack([tx + P[:, 0] * LINEA_SCALE, tz + P[:, 2] * LINEA_SCALE, ty + P[:, 1] * LINEA_SCALE], -1) * 100.
+        ue = np.stack([tx + P[:, 0] * scale, tz + P[:, 2] * scale, ty + P[:, 1] * scale], -1) * 100.
         out[ni] = (node.get('name', ''), sorted(mats), ue)
     return out
 
@@ -98,9 +99,9 @@ def part_kind(name):
     return 'other'
 
 
-def desk_geometry(glb_path):
+def desk_geometry(glb_path, scale=LINEA_SCALE):
     """Per-node UE AABBs of the real desk plus the derived tabletop slab, knee bay and front edge (UE cm)."""
-    nodes = linea_nodes_ue(glb_path)
+    nodes = linea_nodes_ue(glb_path, scale)
     parts = []
     for ni, (name, mats, ue) in sorted(nodes.items()):
         parts.append({'node': ni, 'name': name, 'kind': part_kind(name), 'materials': mats, 'vertices': int(len(ue)),
@@ -114,7 +115,7 @@ def desk_geometry(glb_path):
     left_legs_inner = max(p['max_cm'][0] for p in legs if p['max_cm'][0] < top['min_cm'][0] + 20)
     drawer_left = min(p['min_cm'][0] for p in drawer)
     return {
-        'schema': 'sub01.real-linea140-ue-geometry.v1', 'source_sha256': LINEA_SHA256, 'scale': LINEA_SCALE,
+        'schema': 'sub01.real-linea140-ue-geometry.v1', 'source_sha256': LINEA_SHA256, 'scale': scale,
         'translation_m': list(LINEA_TRANSLATION_M), 'provenance': LINEA_ROOT_PROVENANCE,
         'mapping': 'UE cm = 100 * (2.1 + S x, -3.02 + S z, .025 + S y), glTF source node world points',
         'overall_min_cm': [round(float(v), 4) for v in allp.min(0)], 'overall_max_cm': [round(float(v), 4) for v in allp.max(0)],
@@ -126,8 +127,9 @@ def desk_geometry(glb_path):
                           'front_edge_y_cm': top['max_cm'][1], 'rear_edge_y_cm': top['min_cm'][1],
                           'centre_xy_cm': [round((top['min_cm'][a] + top['max_cm'][a]) / 2, 4) for a in range(2)],
                           'front_is_positive_ue_y': True,
-                          'note': 'AABB of the worktop node: the eased top/bottom edges (84.283 / 81.785 cm) and rounded '
-                                  'plan corners lie inside it, so box clearance is conservative'},
+                          'note': 'AABB of the worktop node: the eased top/bottom edges (%.3f / %.3f cm) and rounded '
+                                  'plan corners lie inside it, so box clearance is conservative'
+                                  % tuple(2.5 + (z - 2.5) * scale / LINEA_SCALE for z in (84.283, 81.785))},
         'front_apron': {'node': front_apron['node'], 'min_cm': front_apron['min_cm'], 'max_cm': front_apron['max_cm'],
                         'bottom_cm': front_apron['min_cm'][2]},
         'knee_bay_cm': {'x': [round(left_legs_inner, 4), round(drawer_left, 4)], 'below_z': front_apron['min_cm'][2],
@@ -3080,6 +3082,8 @@ def main(argv=None):
                     'checked) and run the remaining stages')
     ap.add_argument('--quick', action='store_true', help='smoke run on a DeskTyping subset (never a proposal)')
     ap.add_argument('--desk-source', help='LINEA140 source GLB: re-derive docs/proposed/seated-typing-ik/real-linea140-geometry.json')
+    ap.add_argument('--desk-scale', type=float, default=None, help='with --geometry-only: uniform desk scale (default root SCALE)')
+    ap.add_argument('--geometry-only', default=None, help='with --desk-source: write the geometry JSON to this path and stop')
     args = ap.parse_args(argv)
     configure(args.base_dir, args.base_chair_offset)
     global ARMS_ONLY
@@ -3092,6 +3096,11 @@ def main(argv=None):
         res = audit_main_seat_rule(args.out_dir, args.source, args.cache)
         print(json.dumps({k: v['pass'] for k, v in res.items()}))
         return EXIT_REFUSED if not all(v['pass'] for v in res.values()) else 0
+    if args.desk_source and args.geometry_only:
+        out = Path(args.geometry_only)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(desk_geometry(args.desk_source, LINEA_SCALE if args.desk_scale is None else args.desk_scale), indent=1) + '\n')
+        return 0
     if args.desk_source:
         GEOMETRY_JSON.parent.mkdir(parents=True, exist_ok=True)
         GEOMETRY_JSON.write_text(json.dumps(desk_geometry(args.desk_source), indent=1) + '\n')
