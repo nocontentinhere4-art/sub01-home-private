@@ -1,0 +1,144 @@
+{
+  "schema": "sub01.actual-reference-wall-console-review.v1",
+  "source": {
+    "schema": "sub01.reference-wall-console-source.v1",
+    "sha256": "6768a9972ce5f21533f75fbc49b0860233e877d6adf0348db1398bc80ca1e522",
+    "source_blend_sha256": "1b0a64e658cbc99bf198ac2311fdad8abfc07ecec7de12a0f728d01714b8f769",
+    "console_geometry": "Existing original curved console shell rigidly rotated; old circular floor stand omitted for wall bracket",
+    "controller_display_width_m": 0.16,
+    "controller_held_source_changed": false,
+    "native_imported": false,
+    "gameplay_available": false,
+    "actual_tv_screen_geometry_or_minecraft_changed": false,
+    "existing_cabinet_changed": false,
+    "reference_arrangement_mirrored_for_actual_wall_fit": true,
+    "console_bounds_blender_m": [
+      [
+        -3.744999885559082,
+        0.9267550706863403,
+        1.2580000162124634
+      ],
+      [
+        -3.6335558891296387,
+        1.143244981765747,
+        1.6135092973709106
+      ]
+    ],
+    "controller_bounds_blender_m": [
+      [
+        -3.734999895095825,
+        0.9550000429153442,
+        1.0549999475479126
+      ],
+      [
+        -3.6768877506256104,
+        1.1150000095367432,
+        1.1628257036209106
+      ]
+    ],
+    "parts": [
+      {
+        "node": "WCPart00",
+        "material": "WCM00",
+        "source_material": "Console dim blue status trim"
+      },
+      {
+        "node": "WCPart01",
+        "material": "WCM01",
+        "source_material": "Console satin black polymer"
+      },
+      {
+        "node": "WCPart02",
+        "material": "WCM02",
+        "source_material": "Console vent shadow"
+      },
+      {
+        "node": "WCPart03",
+        "material": "WCM03",
+        "source_material": "Console white textured polymer"
+      },
+      {
+        "node": "WCPart04",
+        "material": "WCM04",
+        "source_material": "Wall mount powder coated steel"
+      },
+      {
+        "node": "WCPart05",
+        "material": "WCM05",
+        "source_material": "controller"
+      }
+    ],
+    "triangles": 39636,
+    "wall_contact_x_m": -3.77,
+    "attachment": "5mm folded steel wall backplate,8mm load-bearing tray,4anchors; separate controller dock",
+    "reference": "User supplied second minimalist wall-mounted console+TV photograph; reference only, not texture"
+  },
+  "actual_bvh_proof": {
+    "schema": "sub01.reference-wall-console-bvh.v1",
+    "sha256": "6768a9972ce5f21533f75fbc49b0860233e877d6adf0348db1398bc80ca1e522",
+    "protected_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+    "protected_cabinet_source_sha256": "7a27cdf114d219968c7e5aa39f491be2ff979d58d3965344acf0ebdb6a651a96",
+    "actual_window_source_sha256": "7119c36483ec3ba22aa71c0cab6a5a7d46d6daf1e544410a6d8fa5f8e933aa57",
+    "actual_door_source_sha256": "5b8a2bb8b4bb8fe19af1d0c086fb78f3e7f9dff9e06170a06642a8f3d1761a0c",
+    "protected_parts": 521,
+    "parts": 6,
+    "epsilon_m": 0,
+    "ignored_pairs": 0,
+    "measured_attachment_contacts": [
+      {
+        "part": "WCPart04",
+        "protected_part": "house-static-67",
+        "pairs": 56,
+        "classification": "exact rear surface attachment, no vertex behind actual float32 wall plane",
+        "actual_wall_plane_x_m": -3.7699999809265137
+      }
+    ],
+    "unresolved": [],
+    "ok": true,
+    "native_changed": false,
+    "rigid_reuse_congruency": [
+      {
+        "source_material": "Console dim blue status trim",
+        "original_triangles": 376,
+        "current_triangles": 376,
+        "maximum_bidirectional_triangle_edge_shape_distance_m": 3.023370993560093e-07,
+        "ok": true
+      },
+      {
+        "source_material": "Console satin black polymer",
+        "original_triangles": 564,
+        "current_triangles": 564,
+        "maximum_bidirectional_triangle_edge_shape_distance_m": 3.2398668281530263e-07,
+        "ok": true
+      },
+      {
+        "source_material": "Console vent shadow",
+        "original_triangles": 9400,
+        "current_triangles": 9400,
+        "maximum_bidirectional_triangle_edge_shape_distance_m": 3.70794197124269e-07,
+        "ok": true
+      },
+      {
+        "source_material": "Console white textured polymer",
+        "original_triangles": 13500,
+        "current_triangles": 13500,
+        "maximum_bidirectional_triangle_edge_shape_distance_m": 3.7845433098482317e-07,
+        "ok": true
+      },
+      {
+        "source_material": "controller",
+        "original_triangles": 13848,
+        "current_triangles": 13848,
+        "maximum_bidirectional_triangle_edge_shape_distance_m": 4.4773815943699447e-07,
+        "ok": true
+      }
+    ]
+  },
+  "source_review_image_sha256": "2e395759486ceca3abdc2e0245f5e2b458ee76fb4777a0b12f743e42ce5072ae",
+  "native_imported": false,
+  "native_visual_verified": false,
+  "ps5_gameplay_available": false,
+  "retirement_contract": "Only source/media receipt indices5..10 (six device-only groups); original five cabinet groups, TV source/Minecraft/device tags and all other actors exact",
+  "reference_image": "User supplied second minimalist PS5/TV wall photo; inspected, never used as texture",
+  "source_review_accepted_by_coordinator": true
+}
