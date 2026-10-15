@@ -11,5 +11,5 @@ def run():
  def restore(error=None):
   u.EditorLevelLibrary.set_level_viewport_camera_info(*prior);u.SystemLibrary.execute_console_command(world,'t.MaxFPS 1');assert snapshot(u,eas.get_all_level_actors())==before and hashlib.sha256(mapfile.read_bytes()).hexdigest()==mapsha and active_candidate_guard();(CANDIDATE/'private-audit/genuine-gaming-view-restored.json').write_text(json.dumps({'schema':'sub01.actual-genuine-gaming-view-restored.v1','world_camera_map_restored':True,'actual_game_changed':False,'capture_error':str(error)if error else None,'epoch':time.time()},indent=2)+'\n');return True
  u.SystemLibrary.execute_console_command(world,'t.MaxFPS 15')
- try:return review.run([('genuine-complete-living',(-90,220,165),(-10,-141.7,0)),('genuine-ps5-dock',(-290,-205,158),(-5,132,0)),('genuine-table-controller',(-225,30,108),(-52,-132,0))],capture_delay=5,initial_delay=3,on_finish=restore)
+ try:return review.run([('genuine-complete-living',(-90,220,165),(-10,-141.7,0)),('genuine-ps5-dock',(-290,-205,158),(-5,132,0)),('genuine-table-controller',(-225,30,108),(-52,-132,0)),('genuine-ps5-front-lightband',(-367.5,-190,148),(-2,90,0))],capture_delay=5,initial_delay=3,on_finish=restore)
  except Exception:restore('setup refused');raise
