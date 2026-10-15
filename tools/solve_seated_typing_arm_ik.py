@@ -2409,7 +2409,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
     # the SitDown / GetUp desk-clearance pass (every arm vertex, every frame); both seam frames never move
     protect = np.zeros(F, bool)
     protect[[0, F - 1]] = True
-    W3, desk_pass = desk_clear_arms(ctx, W3, shift_c, t_c, protect)
+    W3, desk_pass = desk_clear_arms(ctx, W3, shift_c, t_c, protect, no_down=True)
     path, sha = write(ctx, g_c, W3, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role))
     Wcb = readback(ctx, path, t_c)
     seam_frame = F - 1 if at_end else 0
@@ -2547,6 +2547,8 @@ def run(args):
                              + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER)).encode()).hexdigest()
         if fin.exists() and str(np.load(fin)['signature']) == sig:
             z = np.load(fin)
+            ik.close_loop(int(round(LOOP_BLEND_S / ik.dt)), {s_: np.array(ik.phi[s_], float) for s_ in SIDES},
+                          {s_: np.array(ik.lift[s_], float) for s_ in SIDES})     # the solved tail's IK inputs
             for k in FINISH_KEYS:
                 setattr(ik, k, {s_: z[f'{k}_{s_}'] for s_ in SIDES})
             ik.finish_report = json.loads(str(z['report'])) | {'resumed_from_checkpoint': fin.name}
@@ -2692,8 +2694,10 @@ DESK_PASS_ITERATIONS = 40
 DESK_PASS_STEP_MARGIN_CM = .1
 
 
-def box_push(points, lo, hi):
-    """Unit direction that moves each point out of (or away from) the box along the shortest way."""
+def box_push(points, lo, hi, no_down=False):
+    """Unit direction that moves each point out of (or away from) the box along the shortest way. no_down: a point
+    inside never leaves through the bottom face (an arm reaches a desk part from above: a finger halfway into the
+    3.04 cm worktop is pushed up or out of a side, never down through the slab)."""
     p = np.asarray(points, float)
     lo, hi = np.asarray(lo, float), np.asarray(hi, float)
     q = np.clip(p, lo, hi)
@@ -2704,6 +2708,8 @@ def box_push(points, lo, hi):
     if inside.any():
         pin = p[inside]
         d = np.concatenate([pin - lo, hi - pin], axis=-1)            # distance to each face
+        if no_down:
+            d[:, 2] = np.inf
         k = d.argmin(-1)
         v = np.zeros((len(pin), 3))
         v[np.arange(len(pin)), k % 3] = np.where(k < 3, -1., 1.)
@@ -2711,7 +2717,7 @@ def box_push(points, lo, hi):
     return dirs
 
 
-def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES):
+def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES, no_down=False):
     """Whole-arm desk-clearance pass (SitDown / GetUp): wherever arm skin (upper arm, forearm, hand, fingers) is closer
     than FOREARM_TARGET_CLEARANCE_CM to a real LINEA part, the wrist moves out of the part along the shortest way
     (smoothly over time), with non-stretch two-bone IK, the elbow pole carried with the hand, the captured hand WORLD
@@ -2751,7 +2757,7 @@ def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES):
             f = np.nonzero(bad)[0]
             b = which[f, k[f]]
             lo, hi = ctx.boxes[b, 0], ctx.boxes[b, 1]
-            dirs = np.stack([box_push(pts[i, k[i]][None], lo[j], hi[j])[0] for j, i in enumerate(f)])
+            dirs = np.stack([box_push(pts[i, k[i]][None], lo[j], hi[j], no_down)[0] for j, i in enumerate(f)])
             need = (FOREARM_TARGET_CLEARANCE_CM - dmin[f] + DESK_PASS_STEP_MARGIN_CM)[:, None] * dirs
             step = np.zeros((F, 3))
             step[f] = need

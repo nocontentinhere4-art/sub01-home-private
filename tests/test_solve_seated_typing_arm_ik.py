@@ -412,6 +412,8 @@ def test_box_push_directions():
     lo, hi = np.zeros(3), np.array([10., 10., 2.])
     d = K.box_push(np.array([[5, 5, 1.9], [5, 5, .1], [5, 9.9, 1.], [12, 5, 1.]]), lo, hi)
     assert np.allclose(d, [[0, 0, 1], [0, 0, -1], [0, 1, 0], [1, 0, 0]])
+    d = K.box_push(np.array([[5, 5, .1], [5, .05, .1]]), lo, hi, no_down=True)
+    assert np.allclose(d, [[0, 0, 1], [0, -1, 0]])
 
 
 def test_desk_clear_arms_lifts_the_hand_out_of_a_slab_and_keeps_protected_frames():
