@@ -292,3 +292,12 @@ def test_desk_variant_parser(tmp_path):
     p.write_text(json.dumps({'desk': {'scale': [1, 1, 1.1]}}))
     with pytest.raises(ValueError):
         V.desk_variant_from_proposal(p)
+
+
+def test_only_the_exact_root_approved_monitor_move_is_accepted():
+    ok, why = V.plan_move_approved('monitor_stand', 1.0, [4.0, 2.0, -6.5])
+    assert ok and '6204026225' in why
+    assert V.plan_move_approved('monitor_stand', 1.0, [0, 0, -6.5]) == (True, None)
+    assert V.plan_move_approved('monitor_stand', 1.0, [4.0, 2.5, -6.5])[0] is False     # not the approved offset
+    assert V.plan_move_approved('monitor_stand', 1.086093, [4.0, 2.0, -6.5])[0] is False  # approved at scale 1.0 only
+    assert V.plan_move_approved('clamp_lamp', 1.0, [4.0, 2.0, -6.5])[0] is False         # no other item relaxed

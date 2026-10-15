@@ -1021,6 +1021,26 @@ def device_offsets_to_add(variant, base_deltas):
     return add
 
 
+# Plan moves root explicitly approved (exact offsets only; nothing else is relaxed). Anything else must keep the
+# original plan position.
+ROOT_APPROVED_PLAN_MOVES = {
+    ('monitor_stand', 1.0): {'offset_xy_cm': (4.0, 2.0), 'approval': 'private issue #1 comment 6204026225, '
+                             '2026-10-15 22:59 UTC: monitor/support shift (+4, +2, -6.5 cm) approved at source scale 1.0'},
+}
+
+
+def plan_move_approved(name, scale, offset_cm):
+    """True when the item keeps its original plan position, or moves by exactly a root-approved plan offset at that
+    desk scale. Returns (ok, approval_or_None)."""
+    xy = np.asarray(offset_cm, float)[:2]
+    if np.allclose(xy, 0):
+        return True, None
+    rule = ROOT_APPROVED_PLAN_MOVES.get((name, None if scale is None else round(float(scale), 6)))
+    if rule and np.allclose(xy, rule['offset_xy_cm'], atol=1e-6):
+        return True, rule['approval']
+    return False, None
+
+
 def desk_variant_check(variant=None, base_deltas=None, ref=MAIN_REF):
     """Desk + items only (fast): the LINEA140 at the variant scale, the monitor stand / clamp lamp / keyboard / mouse at
     their variant offsets: on the new top exactly, original footprints, margins inside the flat top, no overlaps."""
@@ -1052,9 +1072,11 @@ def desk_variant_check(variant=None, base_deltas=None, ref=MAIN_REF):
         'bottom_minus_top_cm': r_(g), 'offset_cm': [r_(v) for v in st['variant_offset_cm']],
         'footprint_cm': [[r_(v) for v in fp[0]], [r_(v) for v in fp[1]]],
         'original_footprint': bool(np.allclose(st['variant_offset_cm'][:2], 0)),
+        'plan_move_approved': plan_move_approved('monitor_stand', variant['scale'], st['variant_offset_cm'])[1],
         'footprint_over_flat_top': over, 'footprint_grown_by_margin_over_flat_top': grown,
         'screen_moves_with_stand': bool(np.allclose(items['monitor_frame']['variant_offset_cm'], st['variant_offset_cm'])),
-        'pass': bool(gap_lo <= g <= gap_hi and over and grown and np.allclose(st['variant_offset_cm'][:2], 0)
+        'pass': bool(gap_lo <= g <= gap_hi and over and grown
+                     and plan_move_approved('monitor_stand', variant['scale'], st['variant_offset_cm'])[0]
                      and np.allclose(items['monitor_frame']['variant_offset_cm'], st['variant_offset_cm']))}
     # clamp lamp: origin on the top, pin still in the (scaled) grommet within root's radial clearance
     if 'clamp_lamp' in items:
