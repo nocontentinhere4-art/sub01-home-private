@@ -1,0 +1,78 @@
+{
+  "schema": "sub01.final-serialized-owner-fbx-source-handoff.v1",
+  "source_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "fbx_sha256": "8027a9849bcfe37b24cab270b5ae972a5639b5bb524d41bcd527fe2d10361109",
+  "remote_fbx": "/workspace/sub01-home-private/serialized-owner-fbx-final-r1/serialized-owner-diagnostic.fbx",
+  "all32_poses_updated8weight_cuffs_included": true,
+  "all9_meshes_599152_unique_triangles_per_pose_checked": true,
+  "maximum_world_corner_error_m": 1.0676007828901426e-05,
+  "original25_physical_bind_frame_max_component_error": 2.1457672119140625e-06,
+  "per_triangle_material_slot_assignment_mismatches": 0,
+  "native_material_plan": [
+    {
+      "source_material_index": 0,
+      "exact_material_name": "tripo_material_6bf04053-4eb9-4c81-aed9-ebf290057e82",
+      "native_TwoSided_required": false,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 1,
+      "exact_material_name": "owner_head",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 2,
+      "exact_material_name": "hood_lining",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 3,
+      "exact_material_name": "hood_patches",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 4,
+      "exact_material_name": "feet",
+      "native_TwoSided_required": false,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 5,
+      "exact_material_name": "PortableOriginalHoodiePalette_KnitLeft",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 6,
+      "exact_material_name": "PortableOriginalHoodiePalette_KnitRight",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 7,
+      "exact_material_name": "OfficialAnatomicalSkin_SourceReview",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    },
+    {
+      "source_material_index": 8,
+      "exact_material_name": "OfficialAnatomicalNails_SourceReview",
+      "native_TwoSided_required": true,
+      "native_verified": false
+    }
+  ],
+  "actual_FBX_reimport_backface_culling_all_false": true,
+  "original_raw_triangle_multiplicity_preserved": false,
+  "only628_exact_opposite_winding_sameIndex_doubleSided_duplicates_compacted": true,
+  "source_meshes_in_FBX": 9,
+  "armatures_in_FBX": 1,
+  "native_expectation": "Official legacy FBX skeletal importer historically combines all skinned nodes on same skeleton into one USkeletalMesh; actual combined9-node result remains native-owner verification.",
+  "serialized_IBMs_bit_identical_in_FBX": false,
+  "native_geometry_binds_weights_materials_and_scale_pending": true,
+  "native_runtime_changed": false,
+  "source_validator_sha256": "bdc27adb6ca604868a353c912b3953d0f1cc629f11356f17a781bf7d17235b72",
+  "source_8influence_cuff_weight_preservation": "Posed surface checked in source FBX roundtrip; native import must retain actual8influences, not truncate to4."
+}

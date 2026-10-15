@@ -1,0 +1,138 @@
+{
+  "schema": "sub01.original25-fbx-blender-bind-frame-probe.v1",
+  "original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "candidate_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "fbx_sha256": "8027a9849bcfe37b24cab270b5ae972a5639b5bb524d41bcd527fe2d10361109",
+  "bones": [
+    {
+      "bone": "mixamorig:Hips",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 9.313225746154785e-10
+    },
+    {
+      "bone": "mixamorig:Spine",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 7.450580596923828e-09
+    },
+    {
+      "bone": "mixamorig:Spine1",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.862645149230957e-09
+    },
+    {
+      "bone": "mixamorig:Spine2",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.4901161193847656e-08
+    },
+    {
+      "bone": "mixamorig:Neck",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 7.450580596923828e-09
+    },
+    {
+      "bone": "mixamorig:Head",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 7.450580596923828e-09
+    },
+    {
+      "bone": "mixamorig:HeadTop_End",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.60770320892334e-08
+    },
+    {
+      "bone": "mixamorig:RightShoulder",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.6763806343078613e-08
+    },
+    {
+      "bone": "mixamorig:RightArm",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 4.470348358154297e-08
+    },
+    {
+      "bone": "mixamorig:RightForeArm",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.9802322387695312e-08
+    },
+    {
+      "bone": "mixamorig:RightHand",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 9.313225746154785e-10,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.564621925354004e-07
+    },
+    {
+      "bone": "mixamorig:LeftShoulder",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.4901161193847656e-08
+    },
+    {
+      "bone": "mixamorig:LeftArm",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.7939677238464355e-09
+    },
+    {
+      "bone": "mixamorig:LeftForeArm",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.4901161193847656e-07
+    },
+    {
+      "bone": "mixamorig:LeftHand",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 9.313225746154785e-10,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 5.960464477539063e-08
+    },
+    {
+      "bone": "mixamorig:RightUpLeg",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 8.299866749439389e-08
+    },
+    {
+      "bone": "mixamorig:RightLeg",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 8.940696716308594e-08
+    },
+    {
+      "bone": "mixamorig:RightFoot",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.384185791015625e-07
+    },
+    {
+      "bone": "mixamorig:RightToeBase",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.0477378964424133e-06
+    },
+    {
+      "bone": "mixamorig:RightToe_End",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.0265579223632812e-06
+    },
+    {
+      "bone": "mixamorig:LeftUpLeg",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.0460644261911511e-07
+    },
+    {
+      "bone": "mixamorig:LeftLeg",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.0485018719919026e-07
+    },
+    {
+      "bone": "mixamorig:LeftFoot",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.086162567138672e-07
+    },
+    {
+      "bone": "mixamorig:LeftToeBase",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 1.2423843145370483e-06
+    },
+    {
+      "bone": "mixamorig:LeftToe_End",
+      "original_GLTF_vs_anatomical_GLTF_bind_frame_max_error": 0.0,
+      "original_GLTF_vs_anatomical_FBX_bind_frame_max_error": 2.1457672119140625e-06
+    }
+  ],
+  "maximum_anatomical_GLTF_difference": 9.313225746154785e-10,
+  "maximum_anatomical_FBX_difference": 2.1457672119140625e-06,
+  "definition": "Armature object world times edit-bone matrix_local; compare original and anatomical source through same Blender glTF convention, then exported/reimported FBX. This is a frame-coordinate probe, not a claim that Blender REST equals original serialized glTF posed skin.",
+  "native_imported": false,
+  "native_or_contact_accepted": false
+}

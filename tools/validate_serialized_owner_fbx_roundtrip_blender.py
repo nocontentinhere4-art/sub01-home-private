@@ -80,10 +80,28 @@ def compare(a,b):
   for perm in[(0,1,2),(0,2,1),(1,0,2),(1,2,0),(2,0,1),(2,1,0)]:best=np.minimum(best,np.linalg.norm(tri-actual[:,perm,:],axis=2).max(axis=1))
   rows.append({'mesh':name,'same_triangles':True,'triangles':len(tri),'max_ordered_triangle_corner_error_m':float(best.max()),'p99_error_m':float(np.quantile(best,.99))})
  return rows
+def material_slot_proof():
+ result=[]
+ for _,node in mesh_nodes:
+  obj=bpy.data.objects[node['name']];mesh=obj.data;mesh.calc_loop_triangles();expected_names=[]
+  for p in doc['meshes'][node['mesh']]['primitives']:
+   expected_names += [doc['materials'][p['material']]['name']]*len(actual_unique_indices(p))
+  actual_names=[obj.material_slots[mesh.polygons[t.polygon_index].material_index].material.name for t in mesh.loop_triangles]
+  assert len(expected_names)==len(actual_names)
+  mismatch=sum(a!=b for a,b in zip(expected_names,actual_names))
+  slots=[]
+  for index,slot in enumerate(obj.material_slots):
+   names=[i for i,m in enumerate(doc['materials'])if m['name']==slot.material.name];assert len(names)==1
+   source_index=names[0];mat=doc['materials'][source_index]
+   slots.append({'blender_fbx_slot_index':index,'material_name':slot.material.name,'source_glTF_material_index':source_index,'source_doubleSided_required':bool(mat.get('doubleSided',False)),'observed_Blender_use_backface_culling':bool(slot.material.use_backface_culling),'native_TwoSided_verified':False})
+  result.append({'mesh':node['name'],'unique_triangles':len(actual_names),'triangle_material_assignment_mismatches':mismatch,'ordered_triangle_material_sequence_sha256':hashlib.sha256('\0'.join(actual_names).encode()).hexdigest(),'slots':slots})
+  assert mismatch==0,'FBX changed material-to-triangle assignment'
+ return result
 bpy.ops.wm.read_factory_settings(use_empty=True);scene=bpy.context.scene;scene.render.fps=fps;bpy.ops.import_scene.gltf(filepath=str(source));arm=next(o for o in scene.objects if o.type=='ARMATURE');assert len(arm.data.bones)==65
 assert len(bpy.data.actions)==1;action=list(bpy.data.actions)[0];arm.animation_data.action=action
 for t in arm.animation_data.nla_tracks:t.mute=True
 start,end=action.frame_range;assert abs(end-start-(frames-1))<.001
+source_material_slots=material_slot_proof()
 imported={f:snapshot(arm,start+f)for f in probes};source_comparison={str(f):compare(truth[f],imported[f])for f in probes}
 # Preserve actual imported bone frame; no edit-mode bone alignment or pose-as-rest.
 selected=[arm]+[bpy.data.objects[n['name']]for _,n in mesh_nodes]
@@ -95,6 +113,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True);scene=bpy.context.scene;scene.r
 arm=next(o for o in scene.objects if o.type=='ARMATURE');assert len(arm.data.bones)==65;assert len(bpy.data.actions)==1;action=list(bpy.data.actions)[0];arm.animation_data.action=action
 for t in arm.animation_data.nla_tracks:t.mute=True
 rs,re=action.frame_range;assert abs(re-rs-(frames-1))<.001
+fbx_material_slots=material_slot_proof()
 roundtrip={f:snapshot(arm,rs+f)for f in probes};fbx_comparison={str(f):compare(truth[f],roundtrip[f])for f in probes}
-report={'schema':'sub01.serialized-owner-fbx-source-experiment.v1','source_sha256':expected,'fbx_sha256':hashlib.sha256(fbx.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'source_frames':frames,'fps':fps,'probe_frames':probes,'source_blender_range':[start,end],'fbx_blender_range':[rs,re],'no_bone_alignment_or_pose_as_rest':True,'source_GLTF_to_Blender':source_comparison,'source_GLTF_to_FBX_reimport':fbx_comparison,'source_exact_duplicate_face_evidence':duplicate_evidence,'raw_triangle_multiplicity_preserved':False,'only_exact_opposite_winding_doubleSided_duplicates_compacted':True,'native_imported':False,'native_or_contact_accepted':False}
+report={'schema':'sub01.serialized-owner-fbx-source-experiment.v1','source_sha256':expected,'fbx_sha256':hashlib.sha256(fbx.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'source_frames':frames,'fps':fps,'probe_frames':probes,'source_blender_range':[start,end],'fbx_blender_range':[rs,re],'no_bone_alignment_or_pose_as_rest':True,'source_GLTF_to_Blender':source_comparison,'source_GLTF_to_FBX_reimport':fbx_comparison,'source_Blender_material_slots':source_material_slots,'FBX_reimport_material_slots':fbx_material_slots,'native_TwoSided_and_material_assignment_pending':True,'source_exact_duplicate_face_evidence':duplicate_evidence,'raw_triangle_multiplicity_preserved':False,'only_exact_opposite_winding_doubleSided_duplicates_compacted':True,'native_imported':False,'native_or_contact_accepted':False}
 (out/'conversion-proof.json').write_text(json.dumps(report,indent=2)+'\n');print('ACTUAL_FBX_CONVERSION_PROOF',json.dumps(report),flush=True)
