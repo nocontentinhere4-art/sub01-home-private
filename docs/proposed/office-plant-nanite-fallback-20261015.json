@@ -1,0 +1,17 @@
+{
+  "schema": "sub01.office-plant-nanite-fallback-review.v1",
+  "actual_source_node": 221,
+  "actual_source_triangles": 21380,
+  "actual_cpu_render_lod0_triangles": 3290,
+  "actual_nanite": {"enabled": true, "fallback_percent_triangles": 1.0, "fallback_relative_error": 1.0, "fallback_target": "AUTO", "keep_percent_triangles": 1.0, "trim_relative_error": 0.0},
+  "actual_api": {"StaticMeshEditorSubsystem.get_nanite_settings": true, "StaticMeshEditorSubsystem.set_nanite_settings": true, "StaticMesh.get_mesh_description": false},
+  "official_api_source": "https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/StaticMeshEditorSubsystem?application_version=5.6",
+  "official_api_review_method": "Configured playwright-isolated browser, primary Epic Python5.6 documentation",
+  "diagnosis": "CPU ProceduralMeshLibrary LOD0 extraction is the Nanite fallback, not full retained source geometry. This explains the count and small bounds discrepancy; it does not establish a defect in the displayed Nanite high-resolution mesh.",
+  "proposed_native_fix": "Within the complete office transaction, duplicate only four exact office plant mesh assets into /Game/Sub01Home/RealOfficePlant/V_9556495fa816_FullSource; disable Nanite and rebuild/save those private copies. Verify every resulting world triangle against source955 at original world transforms before any original mesh binding or plant placement changes. Swap exact four component mesh references only during whole-office activation, then apply the existing proven whole-parent rigid translation.",
+  "strict_full_source_triangle_checks_unchanged": true,
+  "shared_original_mesh_settings_materials_unchanged": true,
+  "failure_cleanup": "Remove temporary no-collision proof actors and owned asset directory. Complete office rollback restores original mesh references, all original actor/component transforms/materials/tags/collision and resaves if a map save was attempted.",
+  "native_fix_executed": false,
+  "native_visual_verified": false
+}

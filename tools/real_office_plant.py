@@ -56,14 +56,14 @@ def native_geometry_api_audit(u,mesh):
  return report
 
 
-def native_preflight(u,actors,plan,surface,close):
+def native_preflight(u,actors,plan,surface,close,allow_owned_nanite_rebuild=False):
  base=plan['retire_only_obsolete_generated_lamp_base'];found=[a for a in actors if a.get_name()=='full-home_node_259']
  if len(found)!=1:raise RuntimeError('Exact obsolete lamp base259 native actor unavailable')
  oldbase=found[0];bc=oldbase.get_components_by_class(u.StaticMeshComponent)
  if len(bc)!=1 or bc[0].get_editor_property('static_mesh').get_path_name()!=base['native_mesh']or bc[0].get_num_materials()!=1 or bc[0].get_material(0).get_path_name()!=base['native_material']:raise RuntimeError('Exact obsolete259 native mesh/material identity differs')
  bp,bt=surface(u,bc[0]);bb=[[min(p[a]for p in bp)for a in range(3)],[max(p[a]for p in bp)for a in range(3)]]
  if bt!=base['source_triangle_count']or not all(close(a,[v*100 for v in b])for a,b in zip(bb,base['old_bounds_ue_m'])):raise RuntimeError('Actual native259 source cylinder bounds/count differ')
- rows=[]
+ rows=[];deferred=[]
  for p in plan['members']:
   found=[a for a in actors if a.get_name()=='full-home_node_'+str(p['node'])]
   if len(found)!=1:raise RuntimeError('Exact genuine office plant actor missing')
@@ -80,7 +80,11 @@ def native_preflight(u,actors,plan,surface,close):
     audit=Path(u.Paths.project_dir())/'private-audit'/'office-plant-native-refusal.json'
     audit.parent.mkdir(parents=True,exist_ok=True)
     audit.write_text(json.dumps(details,indent=2,sort_keys=True)+'\n')
-   raise RuntimeError('Actual genuine plant geometry/world bounds differ: '+json.dumps(details,sort_keys=True))
+   settings=details['geometry_api_audit'].get('nanite_settings',{})
+   apis=details['geometry_api_audit'].get('subsystem_apis',{})
+   if allow_owned_nanite_rebuild and settings.get('enabled')is True and settings.get('keep_percent_triangles')==1.0 and settings.get('trim_relative_error')==0.0 and apis.get('get_nanite_settings')and apis.get('set_nanite_settings'):
+    deferred.append(details)  # NOT a geometry pass: exact proof is required on owned full-source clones before activation.
+   else:raise RuntimeError('Actual genuine plant geometry/world bounds differ: '+json.dumps(details,sort_keys=True))
   rows.append((actor,comps[0],p))
  root=[a for a in actors if a.get_name()=='full-home_node_225']
  if len(root)!=1 or root[0].get_components_by_class(u.StaticMeshComponent):raise RuntimeError('Exact empty office parent225 identity differs')
@@ -90,4 +94,56 @@ def native_preflight(u,actors,plan,surface,close):
   if any(a in [r[0]for r in rows]for a in parents):raise RuntimeError('Ambiguous office plant child hierarchy; no double translation')
   move=[root[0]]+[r[0]for r in rows]
  else:raise RuntimeError('Mixed office plant225 attachment; no guessed double translation')
- return {'rows':rows,'move':move,'root':root[0],'plan':plan,'oldbase':oldbase,'oldbase_actual_hidden_before':bool(oldbase.get_editor_property('hidden')),'oldbase_actual_collision_before':str(bc[0].get_collision_enabled())}
+ return {'requires_owned_geometry_rebuild':deferred,'native_source_geometry_verified':not deferred,'rows':rows,'move':move,'root':root[0],'plan':plan,'oldbase':oldbase,'oldbase_actual_hidden_before':bool(oldbase.get_editor_property('hidden')),'oldbase_actual_collision_before':str(bc[0].get_collision_enabled())}
+
+
+def stage_exact_owned_geometry(u,ctx,eas):
+ """Restore full retained source geometry on private copies, leaving originals intact.
+
+ Nanite AUTO fallback is not source geometry. The original asset's settings,
+ materials and components are never changed here. Temporary no-collision actors
+ verify full source triangles before returning proposed owned replacements.
+ """
+ if not ctx['requires_owned_geometry_rebuild']:return {'destination':None,'replacements':{},'proof':[]}
+ from home_asset_audit import read_gltf
+ from unreal_import_real_kitchen import same_triangles
+ from unreal_monitor_support_fix import triangles,native_triangles
+ source=Path(u.Paths.project_dir())/'SourceAssets/full-home.glb'
+ if hashlib.sha256(source.read_bytes()).hexdigest()!='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b':raise RuntimeError('Exact retained plant source955 required for rebuild')
+ doc,binary=read_gltf(source)
+ dest='/Game/Sub01Home/RealOfficePlant/V_9556495fa816_FullSource'
+ if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Owned full-source plant version already exists; inspect prior transaction')
+ sub=u.get_editor_subsystem(u.StaticMeshEditorSubsystem);temporary=[];replacements={};proof=[]
+ original_settings={c.get_editor_property('static_mesh').get_path_name():native_geometry_api_audit(u,c.get_editor_property('static_mesh'))['nanite_settings']for a,c,p in ctx['rows']}
+ try:
+  for actor,c,plan in ctx['rows']:
+   original=c.get_editor_property('static_mesh');name=f"{dest}/SourceNode{plan['node']}"
+   clone=u.EditorAssetLibrary.duplicate_asset(original.get_path_name(),name)
+   if not clone or clone.get_path_name().split('.',1)[0]!=name:raise RuntimeError('Exact owned plant mesh duplication failed')
+   settings=sub.get_nanite_settings(clone)
+   settings.set_editor_property('enabled',False)
+   settings.set_editor_property('fallback_percent_triangles',1.0)
+   settings.set_editor_property('fallback_relative_error',0.0)
+   sub.set_nanite_settings(clone,settings,True)
+   # Asset save completes pending mesh compilation before CPU triangle extraction.
+   if not u.EditorAssetLibrary.save_loaded_asset(clone,only_if_is_dirty=False):raise RuntimeError('Owned full-source plant mesh rebuild/save failed')
+   if sub.get_nanite_settings(clone).get_editor_property('enabled'):raise RuntimeError('Owned full-source plant clone still uses Nanite fallback')
+   temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));temporary.append(temp)
+   temp.set_actor_label('SUB01_OfficePlant_SourceProof_'+str(plan['node']));temp.set_actor_hidden_in_game(True)
+   tc=temp.get_component_by_class(u.StaticMeshComponent);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+   for slot,material in enumerate(c.get_materials()):tc.set_material(slot,material)
+   wanted=triangles(doc,binary,plan['node']);actual=native_triangles(u,tc)
+   if len(wanted)!=plan['source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned rebuilt full plant triangle geometry differs exact source '+str(plan['node']))
+   if [m.get_path_name()if m else None for m in tc.get_materials()]!=[m.get_path_name()if m else None for m in c.get_materials()]:raise RuntimeError('Owned rebuilt plant altered material bindings')
+   replacements[c.get_path_name()]=clone
+   proof.append({'node':plan['node'],'original_mesh':original.get_path_name(),'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
+  after={c.get_editor_property('static_mesh').get_path_name():native_geometry_api_audit(u,c.get_editor_property('static_mesh'))['nanite_settings']for a,c,p in ctx['rows']}
+  if after!=original_settings:raise RuntimeError('Shared original plant Nanite settings changed')
+  return {'destination':dest,'replacements':replacements,'proof':proof}
+ except Exception:
+  for temp in temporary:eas.destroy_actor(temp)
+  temporary=[]
+  if u.EditorAssetLibrary.does_directory_exist(dest):u.EditorAssetLibrary.delete_directory(dest)
+  raise
+ finally:
+  for temp in temporary:eas.destroy_actor(temp)
