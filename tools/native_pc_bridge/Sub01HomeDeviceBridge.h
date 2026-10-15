@@ -34,6 +34,10 @@ public:
  void CloseNoteComposer(bool Discard);
  void SubmitNoteComposer();
  bool IsComposingNote()const{return NoteComposer.Open;}
+ bool OpenPhoneAddress();
+ void ClosePhoneAddress(bool Discard);
+ void SubmitPhoneAddress();
+ bool IsComposingAddress()const{return AddressOpen;}
  void TVGame(const FString& Game);
  void SetPongDirection(float Direction){PongDirection=FMath::Clamp(Direction,-1.f,1.f);}
  bool GetDisplayedMinecraftFrame(FString& Frame)const;
@@ -44,6 +48,9 @@ private:
  FString Origin=TEXT("http://127.0.0.1:8798");
  FString Token,PhoneFrameId,PhoneApp,DraftTitle,DraftText,NoteStatusText;
  FSub01NoteComposer NoteComposer;bool NoteProgrammatic=false;
+ bool AddressOpen=false,AddressPending=false;uint64 AddressRequest=0;
+ FString AddressDraft;TSharedPtr<SWidget> AddressWidget;
+ TSharedPtr<SEditableTextBox> AddressBox;TSharedPtr<STextBlock> AddressStatus;
  TSharedPtr<SWidget> NoteWidget;TSharedPtr<SEditableTextBox> NoteTitleBox;TSharedPtr<SMultiLineEditableTextBox> NoteTextBox;TSharedPtr<STextBlock> NoteStatus;
 bool MinecraftVisible=false;double MinecraftStateReceived=0;
 bool Private=true,LocalPrivacy=false,Busy=false;

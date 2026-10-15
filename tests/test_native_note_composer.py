@@ -140,10 +140,13 @@ def test_editor_opens_only_on_notes_and_privacy_erases_every_draft():
     opening = block(CPP, 'bool USub01HomeDeviceBridge::OpenNoteComposer(){', '\nvoid USub01HomeDeviceBridge::ReadNoteDraft')
     assert "NoteComposer.TryOpen(!Private&&!LocalPrivacy&&!Token.IsEmpty(),PhoneApp==TEXT(\"notes\"),!PhoneFrameId.IsEmpty())" in opening
     poll = block(CPP, 'void USub01HomeDeviceBridge::Poll(){', '\nvoid USub01HomeDeviceBridge::FetchFrame')
-    assert 'PhoneApp.Empty();' in poll and 'if(Screen.PhoneAppFrame&&State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)' in poll
+    assert 'PhoneApp.Empty();' in poll and 'if(State->TryGetObjectField(TEXT("phone_screen"),PhoneScreen)' in poll
+    # Real browser and offline app frames both expose their actual app; the
+    # editor itself still requires PhoneApp==notes below, never browser.
     # Clear() runs on backend privacy, unknown state, local privacy and EndPlay; it erases first.
     clear = block(CPP, 'void USub01HomeDeviceBridge::Clear(){', '\n')
-    assert clear.startswith('CloseNoteComposer(true);PhoneApp.Empty();++Generation;')
+    assert clear.index('CloseNoteComposer(true);') < clear.index('PhoneApp.Empty();') < clear.index('++Generation;')
+    assert clear.index('ClosePhoneAddress(true);') < clear.index('++Generation;')
     assert 'void USub01HomeDeviceBridge::EndPlay(const EEndPlayReason::Type Reason){Clear();' in CPP
     assert 'void USub01HomeDeviceBridge::SetLocalPrivacy(bool Hidden){if(Hidden==LocalPrivacy)return;LocalPrivacy=Hidden;if(Hidden)Clear();}' in CPP
     assert 'if(!PublicHome(State)){Clear();return;}' in poll

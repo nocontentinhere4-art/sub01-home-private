@@ -193,3 +193,10 @@ def test_live_activity_uses_only_fresh_public_known_stage_and_allowlisted_labels
     assert public_live_activity({**d,'source':{'status':'stale'}}) is None
     assert public_live_activity({**d,'brain':{'stage':None,'activity':'sleep'}}) is None
     assert public_live_activity({**d,'brain':{'stage':'AWAKE','activity':'owner private note'}})=={'awake':True,'activity':None}
+
+
+@pytest.mark.parametrize('code',['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End','Tab','Delete'])
+def test_phone_navigation_and_text_widget_physical_keys_are_supported(code):
+    from tools.pixel_streaming.native_live_viewer import KEYS
+    assert validate_input({'action':'key','code':code,'down':True})['code']==code
+    assert code in KEYS

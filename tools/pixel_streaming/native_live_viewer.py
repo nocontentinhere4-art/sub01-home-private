@@ -72,6 +72,8 @@ KEYS = {**{f"Key{x.upper()}": x for x in "abcdefghijklmnopqrstuvwxyz"},
         **{f"Digit{x}": x for x in "0123456789"},
         "Space": "space", "Enter": "Return", "Escape": "Escape",
         "Backspace": "BackSpace", "ShiftLeft": "Shift_L", "ShiftRight": "Shift_R",
+        "ArrowUp": "Up", "ArrowDown": "Down", "ArrowLeft": "Left", "ArrowRight": "Right",
+        "Home": "Home", "End": "End", "Tab": "Tab", "Delete": "Delete",
         "Minus": "minus", "Equal": "equal", "Period": "period", "Comma": "comma",
         "Slash": "slash", "Semicolon": "semicolon", "Quote": "apostrophe",
         "BracketLeft": "bracketleft", "BracketRight": "bracketright", "Backslash": "backslash"}

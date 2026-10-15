@@ -110,3 +110,21 @@ def test_phone_navigation_uses_current_frame_auth_and_private_backend():
             release.set()
             await client.close(); await device.close(); await upstream.close()
     asyncio.run(run())
+
+
+def test_phone_browser_cold_start_may_take_longer_than_fast_device_poll():
+    """Real upstream delay exceeds former4s limit; same privacy guard after it."""
+    async def run():
+        async def navigate(request):
+            assert request.headers['X-Admin-Token']=='existing-operator'
+            await asyncio.sleep(4.15)
+            return web.json_response({'ok':True})
+        app=web.Application();app.router.add_post('/api/home/browser',navigate)
+        upstream=TestServer(app);await upstream.start_server()
+        device=proxy.HomeDeviceProxy(str(upstream.make_url('')).rstrip('/'),'existing-operator',SimpleNamespace(privacy=False,privacy_epoch=0))
+        try:
+            body,kind,_=await device.request('POST','/api/home/browser',data={'device':'phone','url':'https://example.org'})
+            assert __import__('json').loads(body)=={'ok':True}
+            assert kind.startswith('application/json')
+        finally:await device.close();await upstream.close()
+    asyncio.run(run())

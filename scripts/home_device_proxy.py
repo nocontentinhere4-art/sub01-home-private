@@ -55,7 +55,8 @@ class HomeDeviceProxy:
     async def request(self, method, path, *, data=None, query=None):
         if self.session is None:
             self.session = ClientSession(timeout=ClientTimeout(total=4))
-        async with self.session.request(method, self.origin + path, params=query, json=data,
+        options = {'timeout': ClientTimeout(total=30)} if method == 'POST' and path == '/api/home/browser' else {}
+        async with self.session.request(method, self.origin + path, params=query, json=data, **options,
                                         headers={'X-Admin-Token': self.token}, allow_redirects=False) as response:
             chunks, total = [], 0
             async for chunk in response.content.iter_chunked(65536):

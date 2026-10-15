@@ -15,3 +15,17 @@ Notes writes use the same authenticated proxy route with `{action:"save_note",fr
 Phone selection has an independent persisted phone_selection_revision, included in its frame identity without changing the actor route sequence. Repeating an identical app selection reports changed:false and leaves its frame unchanged. Session exit invalidates the old composer frame; a restored app retains its revision but not an operator lock or prior navigation notification. The actual Live.on_screen hook only forwards a phone navigation when ScreensStatus.seen recognizes a new page, so same-URL frame repaints cannot replace Notes. Explicit authenticated successful operator navigation deliberately supersedes the composer; an unavailable/failed browser does not.
 
 With an actual browser source, the generic phone frame identity binds phone selection revision plus the raw browser frame identity. Same-source title/age repaints do not invalidate it. The backend reads the actual raw source frame internally; legacy `/api/screen/phone.jpg` and direct browser-action clients retain their original raw-frame contract. The private proxy translates approved generic browser actions to raw IDs and includes a phone_frame_id context check so an app selection change between its state GET and action POST is rejected by the actual backend before browser input. Restarting/missing browser sources render the truthful unavailable app with a stable identity. Tests use explicitly labeled fixture browser images and IDs, never claim them as production website evidence.
+
+Native address entry (source, not runtime acceptance): with the actual phone
+focused and Browser selected (4), release B to open the English address editor.
+Enter submits a public HTTPS URL through the existing authenticated proxy with
+the current painted phone frame identity; Esc closes and retains the draft.
+The pawn receives UI-only input while editing. Opening is confirmed only by
+HTTP200 plus ok:true; failures retain the address. Closing invalidates late
+replies, app changes close the editor, and privacy erases its text and widget.
+Browser navigation has a bounded30s proxy/35s native timeout, while ordinary
+state/frame/action polling retains its existing shorter deadlines. Public URL,
+no-local-address and downstream browsing restrictions remain authoritative.
+The private viewer supports physical Arrow/Home/End/Tab/Delete keys so phone
+scrolling and text widgets can receive their existing native bindings. This
+adds no Ctrl/Alt/Meta host shortcuts or browser credentials.
