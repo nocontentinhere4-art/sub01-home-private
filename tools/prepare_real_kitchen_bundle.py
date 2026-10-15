@@ -145,6 +145,50 @@ def home_contacts(home):
             'sink_envelope_policy':'Exact SHA-bound node164 triangles clipped below measured slab underside; conservative bounded service cutout volume, not a fabricated bowl.'}
 
 
+LOWER_FIT_PROFILE = 'actual-carcass-authored-2mm-reveals-v1'
+
+
+def lower_door_fit(rows, contacts, index):
+    """Fit the genuine Shaker wood to its actual carcass, not legacy 650mm leafs.
+
+    The authored600mm base/596mm door and720mm wood/716mm door give2mm
+    reveals. Existing unequal real bays remain; hardware stays rigid. Corrected
+    lower hinge axes follow each fitted left leaf edge. Upper axes are unchanged.
+    """
+    if type(index)is not int or not 0<=index<4:raise ValueError('Exact lower cabinet index required')
+    source=rows['base'];door=rows['door'];frame=next(p for p in door['parts'] if p['name']=='mesh-1')
+    width=source['bounds_m'][1][0]-source['bounds_m'][0][0]
+    wood=[p for p in source['parts'] if p['name'] not in {'mesh-14','mesh-15','mesh-16','mesh-17'}]
+    height=max(p['bounds_m'][1][1] for p in wood)-min(p['bounds_m'][0][1] for p in wood)
+    fw=frame['bounds_m'][1][0]-frame['bounds_m'][0][0];fh=frame['bounds_m'][1][1]-frame['bounds_m'][0][1]
+    if max(abs(width-.600),abs(height-.720),abs(fw-.596),abs(fh-.716))>2e-5:raise ValueError('Exact authored600/596 and720/716mm source compatibility required')
+    floor=contacts['floor_m'];top=contacts['counter_underside_m'];left,right=LOWER_BAYS[index];bottom=floor+.1
+    if not all(math.isfinite(v)for v in (floor,top,left,right))or top-bottom<=.004 or right-left<=.004:raise ValueError('Measured positive carcass bounds required')
+    reveal=.002;center=[(left+right)/2,(bottom+top)/2,-3.215]
+    return {'profile':LOWER_FIT_PROFILE,'index':index,'carcass_bounds_xy_m':[[left,bottom],[right,top]],'reveal_m':reveal,
+            'center_browser_m':center,'dimensions_m':[right-left-2*reveal,top-bottom-2*reveal,.051],
+            'hinge_browser_m':[left+reveal,center[1],-3.192],
+            'expected_panel_bounds_browser_m':[[left+reveal,bottom+reveal,-3.225],[right-reveal,top-reveal,-3.205]],
+            'legacy_hinge_delta_browser_m':[left+reveal-(LOWER_CENTERS[index]-.325),center[1]-.44,0.]}
+
+
+def verify_lower_closed_fit(bpy, report):
+    """Measure exported authored frame vertices before accepting source export."""
+    if report.get('lower_door_fit_profile')!=LOWER_FIT_PROFILE:raise ValueError('Current measured lower-door fit profile required')
+    bpy.context.view_layer.update();measured=[]
+    for index in range(4):
+        fit=lower_door_fit(report['source'],report['actual_home_contacts'],index)
+        obj=bpy.data.objects.get('Lower_cabinet_hinge_'+str(index+1)+'__mesh-1')
+        if obj is None:raise ValueError('Actual authored Shaker frame missing')
+        points=[obj.matrix_world @ v.co for v in obj.data.vertices]
+        browser=[(p.x,p.z,-p.y)for p in points]
+        bounds=[[fn(p[k]for p in browser)for k in range(3)]for fn in (min,max)]
+        error=max(abs(a-b)for actual,expected in zip(bounds,fit['expected_panel_bounds_browser_m'])for a,b in zip(actual,expected))
+        if error>1e-5:raise ValueError('Actual lower closed-frame/reveal fit differs')
+        measured.append({**fit,'actual_panel_bounds_browser_m':bounds,'actual_vertex_bounds_error_m':error})
+    return {'profile':LOWER_FIT_PROFILE,'passed':True,'source_serialization_bounds_limit_m':1e-5,'doors':measured,'collision_epsilon_unchanged_m':0.}
+
+
 def plan(rows, contacts=None):
     assemblies = []
     floor=contacts["floor_m"] if contacts else None
@@ -172,8 +216,9 @@ def plan(rows, contacts=None):
         add('Lower_cabinet_body_'+str(i), 'base', [(bay[0]+bay[1])/2,(underside+floor)/2,-3.55],
             [bay[1]-bay[0],underside-floor,.62], ('mesh-14','mesh-15','mesh-16','mesh-17'))
         # Panel +/-10mm and authored pull geometry are retained; not the 51mm total stretched as wood.
-        add('Lower_cabinet_hinge_'+str(i), 'door', [x,.44,-3.215], [.65,.76,.051],
-            ('mesh-2','mesh-3','mesh-4'), [x-.325,.44,-3.192])
+        fit=lower_door_fit(rows,contacts,i-1)
+        add('Lower_cabinet_hinge_'+str(i), 'door', fit['center_browser_m'],fit['dimensions_m'],
+            ('mesh-2','mesh-3','mesh-4'),fit['hinge_browser_m'])
     upper_door_back=-3.545+rows['door']['bounds_m'][0][2]
     upper_body_rear=-3.89
     upper_body_front=upper_door_back-.002
@@ -184,12 +229,12 @@ def plan(rows, contacts=None):
         # Original authored pivot -1.548 + worldX -2.2, actual attachUpper hingeOffset +.014.
         add('Cabinet hinge '+str(i), 'door', [x,2.05,-3.545], [.771,.66,.051],
             ('mesh-2','mesh-3','mesh-4'), [x-.771/2,2.05,-3.531])
-    return {'schema': 'sub01.real-kitchen-derived-plan.v1', 'source': rows,
+    return {'schema': 'sub01.real-kitchen-derived-plan.v1', 'lower_door_fit_profile':LOWER_FIT_PROFILE, 'source': rows,
             'assemblies': assemblies, 'actual_home_contacts':contacts, 'hardware_policy': 'rigid .001 scale about each authored part center; center follows panel fit',
             'wood_policy': 'explicit nonuniform affine fit; source files untouched; no manufacturer unscaled-size claim',
             'pbr': {'source': 'https://polyhaven.com/a/oak_veneer_01', 'license': 'CC0',
                     'scan_coverage_m': 1.83, 'files_sha256': PBR_SHA},
-            'preserve_existing': ['real sink', 'countertop', 'under-cabinet light', 'four lower hinge positions', 'four upper hinge positions'],
+            'preserve_existing': ['real sink', 'countertop', 'under-cabinet light', 'eight hinge names and functions', 'four upper hinge positions'],
             'native_ready': False, 'contact_verified': False, 'hinge_collision_verified': False,
             'feasibility_gaps': ['Only source-identified upper top/side/back/frame boards may receive bounded actual sink164 service cutouts; lower supports/legs retained, all resulting native clearances require proof.',
                                  'Rigid source legs must contact actual floor while fitted wood reaches slab underside; export refuses known mismatch.',
@@ -266,6 +311,7 @@ def export_blender(root, output, report):
                 low=min(v.co.z+parent.location.z for v in data.vertices)
                 contacts.append({'assembly':assembly['name'],'part':name,'foot_bottom_m':low,'floor_contact_error_m':abs(low-report['actual_home_contacts']['floor_m'])})
     report['exported_parts']=exported;report['leg_contacts']=contacts
+    report['lower_closed_fit_proof']=verify_lower_closed_fit(bpy,report)
     measured_sink_cutouts(bpy,report)
     collision_checks=verify_source_collisions(bpy,report)
     report['source_collision_checks']=collision_checks

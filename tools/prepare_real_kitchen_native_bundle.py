@@ -314,9 +314,19 @@ def validate_manifest(proof):
             raise ValueError('Exact five authored parts per moving hinge required')
         i = hinge['index']
         center = base.UPPER_CENTERS[i] if i < 4 else base.LOWER_CENTERS[i-4]
-        expected_hinge = [100*(center-(.771/2 if i < 4 else .325)), -353.1 if i < 4 else -319.2, 205. if i < 4 else 44.]
+        if i>=4 and report.get('lower_door_fit_profile')==base.LOWER_FIT_PROFILE:
+            fitted=base.lower_door_fit(report['source'],report['actual_home_contacts'],i-4)
+            expected_hinge=[100*fitted['hinge_browser_m'][k] for k in (0,2,1)]
+            measured=report.get('lower_closed_fit_proof',{})
+            if measured.get('passed')is not True or measured.get('profile')!=base.LOWER_FIT_PROFILE or len(measured.get('doors',[]))!=4:
+                raise ValueError('Actual exported four-door closed fit proof required')
+            frame=next(p for p in own if p['source_part']=='mesh-1')
+            if max(abs(a-b)for actual,truth in zip(frame['bounds_browser_m'],fitted['expected_panel_bounds_browser_m'])for a,b in zip(actual,truth))>1e-5:
+                raise ValueError('Actual native lower-frame closed bounds do not fit carcass')
+        else:
+            expected_hinge = [100*(center-(.771/2 if i < 4 else .325)), -353.1 if i < 4 else -319.2, 205. if i < 4 else 44.]
         if max(abs(a-b) for a, b in zip(hinge['hinge_ue_cm'], expected_hinge)) > 1e-7:
-            raise ValueError('Original authored cabinet hinge world position changed')
+            raise ValueError('Source-profile cabinet hinge world position differs')
     return proof
 
 
