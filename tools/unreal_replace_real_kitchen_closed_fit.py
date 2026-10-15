@@ -136,7 +136,7 @@ def run():
         for actor,c in parts:
             actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);c.set_editor_property('component_tags',[t for t in c.get_editor_property('component_tags')if not str(t).startswith('SUB01Kitchen:')])
         for actor,c in originals:actor.set_actor_hidden_in_game(False);c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
-        result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink)
+        result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink,import_revision=6)
         after=importer.snapshot(u,actors)
         if after!=expected:
             differences={path:{'expected':expected.get(path),'actual':after.get(path)}for path in set(expected)|set(after)if expected.get(path)!=after.get(path)}

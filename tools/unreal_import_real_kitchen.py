@@ -183,7 +183,7 @@ def audit_original_kitchen(u, actors, source, project):
     return target
 
 
-def preflight(root, u, retained_owned_paths=None):
+def preflight(root, u, retained_owned_paths=None, import_revision=None):
     root = Path(root)
     proof = validate_manifest(json.loads((root/'native-kitchen.json').read_text()))
     source = root/'native-kitchen.glb'
@@ -219,17 +219,19 @@ def preflight(root, u, retained_owned_paths=None):
     if any(any(str(tag).startswith('SUB01Kitchen:') for tag in c.get_editor_property('component_tags'))
            for a in original for c in a.get_components_by_class(u.StaticMeshComponent)):
         raise RuntimeError('Owned kitchen already present; inspect receipt before any reimport')
-    destination = '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+'_R'+str(IMPORT_REVISION)
+    revision=IMPORT_REVISION if import_revision is None else import_revision
+    if type(revision)is not int or not 1<=revision<=999:raise ValueError('Explicit bounded owned import revision required')
+    destination = '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+'_R'+str(revision)
     if u.EditorAssetLibrary.does_directory_exist(destination):
         raise RuntimeError('Kitchen asset version exists; no duplicate scene import')
     return proof, source, project, eas, original, old, destination, retained
 
 
-def run(root, dry_run=True, u=None, retained_owned_paths=None):
+def run(root, dry_run=True, u=None, retained_owned_paths=None, import_revision=None):
     if u is None:
         import unreal as u
     root = Path(root)
-    proof, source, project, eas, original, old, dest, retained = preflight(root, u, retained_owned_paths=retained_owned_paths)
+    proof, source, project, eas, original, old, dest, retained = preflight(root, u, retained_owned_paths=retained_owned_paths, import_revision=import_revision)
     before = snapshot(u, original)
     result = {'schema': 'sub01.real-kitchen-native-import.v1', 'export_sha256': proof['export_sha256'],
               'retire_only_original_nodes': [63, 178], 'native_visual_verified': False,
