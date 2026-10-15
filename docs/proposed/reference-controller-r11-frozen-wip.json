@@ -1,0 +1,152 @@
+{
+  "schema": "sub01.reference-controller-r11-frozen-wip.v1",
+  "source": {
+    "schema": "sub01.reference-controller-r11-source.v1",
+    "held_width_m": 0.15380217134952545,
+    "display_width_m": 0.16,
+    "initial_assembly_uniform_normalization": 1.0,
+    "display_uniform_scale": 1.0402974067016881,
+    "geometry": "Preserved R5 manufactured assembly and fixed controls; only white cover closed topology repaired by0.30mm Blender voxel remesh and actual surface fairing",
+    "reference": "Three human supplied front/side photographs inspected; original model, not licensed Sony CAD/scan",
+    "old_original_width_m": 0.15380217134952545,
+    "core_inset_method": "Closest boundary-edge inward normal including concave grips;1.2mm decaying into interior",
+    "white_cover_deck_offset_m": 0.0013,
+    "white_cover_wall_thickness_m": 0.0008,
+    "control_targets_unchanged_from_r3": true,
+    "white_cover_real_catmull_clark_subdivision": 1,
+    "white_cover_only_width_scale": 1.0001988965192044,
+    "old_grip_geometry_preserved": false,
+    "old_contact_proofs_invalidated": true,
+    "new_grip_recheck_required": true,
+    "native_imported": false,
+    "hand_contact_accepted": false,
+    "activity_ready": false,
+    "thumb_targets_blender_m": [
+      [
+        -0.028,
+        -0.008,
+        0.046
+      ],
+      [
+        0.028,
+        -0.008,
+        0.046
+      ]
+    ],
+    "bounds_held_blender_m": [
+      [
+        -0.07690108567476273,
+        -0.0560000017285347,
+        2.4999998515795596e-08
+      ],
+      [
+        0.07690108567476273,
+        0.052000001072883606,
+        0.04610000178217888
+      ]
+    ],
+    "triangles": 244930,
+    "material_count": 6,
+    "held_glb_sha256": "18e02de2601f6dca59c336fb3df2154a54f94a5dc73aab6fd951bf2287e35247",
+    "display_glb_sha256": "70a509ae1bc7be500904f9514758088368f663f1f8bb7f6fb1b4518d7c6d9bd5",
+    "white_cover_repair_voxel_m": 0.0003,
+    "white_cover_repair_smooth_iterations": 80,
+    "white_cover_max_nearest_original_deviation_m": 0.0003941933100577444,
+    "fixed_control_and_body_coordinates_verified_identical": true,
+    "base_editable_blend_sha256": "912081cf2d04a7635a6fdbcbc7ffc432cb395dda12e288e6b795c174b3380394"
+  },
+  "proof": {
+    "schema": "sub01.reference-controller-r11-exported-proof.v1",
+    "held": {
+      "sha256": "18e02de2601f6dca59c336fb3df2154a54f94a5dc73aab6fd951bf2287e35247",
+      "width_m": 0.15380217134952545,
+      "triangles": 244930,
+      "material_primitives": 6,
+      "texture_dimensions": [
+        [
+          256,
+          256
+        ]
+      ]
+    },
+    "display": {
+      "sha256": "70a509ae1bc7be500904f9514758088368f663f1f8bb7f6fb1b4518d7c6d9bd5",
+      "width_m": 0.1599999964237213,
+      "triangles": 244930,
+      "material_primitives": 6,
+      "texture_dimensions": [
+        [
+          256,
+          256
+        ]
+      ]
+    },
+    "source_shell_topology": [
+      {
+        "object": "Deep dark central bridge and lower body",
+        "vertices": 9218,
+        "faces": 17949,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0
+      },
+      {
+        "object": "Curved white manufactured grip covers",
+        "vertices": 104023,
+        "faces": 208038,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0
+      }
+    ],
+    "actual_original_width_m": 0.15380217134952545,
+    "old_contact_proofs_invalidated": true,
+    "new_grip_recheck_required": true,
+    "hand_contact_accepted": false,
+    "native_imported": false,
+    "activity_ready": false,
+    "source_visual_accepted": false,
+    "ok": true
+  },
+  "editable_blend_sha256": "aefa39455f8786f46d5094d8f57b25dd8dcde99158274097e67430fa731ab082",
+  "review": {
+    "front_sha256": "3b3042b5ac7a33844da66e1b0a69e13257fbe60e06f53eab0b5c87f9ba1038f8",
+    "side_sha256": "705213bf9f7f8d5d9f4b0d9f726acbce7420b9ff646df5394b5bd3c159b6c162",
+    "accepted_as_wip_source_only": true,
+    "remaining_defects": [
+      "Broad shallow sidewall dimples; not final AAA surface quality"
+    ],
+    "native_visual_accepted": false,
+    "hand_contact_accepted": false,
+    "activity_ready": false,
+    "display_lod_front_sha256": "3bd573e11033584bba94263a330006957a99fb2cccea523a8b2ed31268286305",
+    "display_lod_side_sha256": "b9cdc0110c53b04c71dec257e97e0183b0767d98f6cd590926958c86fa910682"
+  },
+  "assignment_policy": {
+    "isolated_candidate_project_only": true,
+    "original_controller_retirement_allowed": false,
+    "held_and_display_grip_receipts_invalidated": true,
+    "review_import_actors_hidden_no_collision": true,
+    "no_live_promotion": true,
+    "all_temporary_import_actors_destroyed_before_receipt": true
+  },
+  "display_lod": {
+    "schema": "sub01.reference-controller-r11-display-lod.v1",
+    "base_display_sha256": "70a509ae1bc7be500904f9514758088368f663f1f8bb7f6fb1b4518d7c6d9bd5",
+    "sha256": "1a312ae7bdafd73d837a96b0562d5467624abd2bc0b163856bbb7422f9a11e7e",
+    "triangles": 37964,
+    "width_m": 0.1600000038743019,
+    "material_count": 6,
+    "held_geometry_unchanged": true,
+    "display_only": true,
+    "native_imported": false,
+    "hand_contact_accepted": false,
+    "activity_ready": false
+  },
+  "artifact_directory_remote": "/workspace/sub01-home-private/reference-controller-r11/output",
+  "artifact_directory_local": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/reference-controller-r11",
+  "authoring_tools_sha256": {
+    "build_reference_controller_r5.py": "6b54fc4cdf01dc4def3e43e19a889ba463224180a9ecad0776b26cfd8772e41b",
+    "repair_reference_controller_r11.py": "375a8f6955eaacdeee80ffd1b58acdf8af9e99e91310e952e26f4005b105c22c",
+    "prove_reference_controller_r11.py": "186912aed23b9c549a0f89ce562c3a75034902d1cde799f8e6b88a2385b84d72",
+    "build_reference_controller_display_lod.py": "df5c25a446b34e0400a3578d3d97507e6f22c6f08a3191636e2771ceb3a6f992"
+  }
+}
