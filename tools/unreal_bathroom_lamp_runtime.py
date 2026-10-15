@@ -24,8 +24,10 @@ bool ASub01HomeCharacter::PrepareNativeBathroomLamp(){
  const FString Prefix=TEXT("/Game/Sub01Home/RealBathroomPendant/V_c953ce762552/Attempt_");
  if(!Globe||!Globe->GetStaticMesh()||!Globe->GetStaticMesh()->GetPathName().StartsWith(Prefix)||Globe->GetNumMaterials()!=1)return Refuse(TEXT("Genuine source c953 three-part globe identity differs"));
  if(BathroomLampMID){if(Globe->GetMaterial(0)!=BathroomLampMID)return Refuse(TEXT("Globe MID binding changed"));return true;}
+ const auto& SourceSlots=Globe->GetStaticMesh()->GetStaticMaterials();
+ if(SourceSlots.Num()!=1||SourceSlots[0].MaterialSlotName!=FName(TEXT("modern_ceiling_globe")))return Refuse(TEXT("Exact original source globe material slot differs"));
  auto* Original=Cast<UMaterialInstance>(Globe->GetMaterial(0));FLinearColor Factor;
- if(!Original||!Original->GetPathName().StartsWith(Prefix)||!Original->GetName().Contains(TEXT("modern_ceiling_globe"))||!Original->GetVectorParameterValue(FMaterialParameterInfo(TEXT("EmissiveFactor")),Factor))return Refuse(TEXT("Actual owned original source emission unavailable"));
+ if(!Original||!Original->GetPathName().StartsWith(Prefix)||SourceSlots[0].MaterialInterface.Get()!=Original||!Original->GetVectorParameterValue(FMaterialParameterInfo(TEXT("EmissiveFactor")),Factor))return Refuse(TEXT("Actual owned original source emission unavailable"));
  if(!FMath::IsFinite(Factor.R)||!FMath::IsFinite(Factor.G)||!FMath::IsFinite(Factor.B)||!FMath::IsFinite(Factor.A)||!FMath::IsNearlyEqual(Factor.R,.6229580641f,.00001f)||!FMath::IsNearlyEqual(Factor.G,.5416215658f,.00001f)||!FMath::IsNearlyEqual(Factor.B,.4745504856f,.00001f))return Refuse(TEXT("Imported globe emission differs original CC0 source"));
  auto* Prepared=UMaterialInstanceDynamic::Create(Original,this);if(!Prepared)return Refuse(TEXT("Owned globe dynamic material unavailable"));
  Prepared->SetVectorParameterValue(TEXT("EmissiveFactor"),Light->Intensity>0?Factor:FLinearColor(0,0,0,0));

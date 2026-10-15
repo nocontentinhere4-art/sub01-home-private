@@ -95,3 +95,16 @@ def test_explicit_slot_binding_still_runs_every_original_pbr_factor_gate():
     value[0]=1.
     for bad in [{},{'modern_ceiling_globe':'/Game/Other.Other'},{'wrong':mat.get_path_name()}]:
         with pytest.raises(RuntimeError,match='Explicit source material bindings'):verify_materials(u,[c],doc,'/Game/Owned',material_bindings=bad)
+
+
+def test_native_fixture_uses_preserved_source_slot_not_shortened_asset_basename(tmp_path):
+    (tmp_path/'Sub01HomeLab.uproject').write_text('{}');(tmp_path/'Config').mkdir();runtime.stage(tmp_path)
+    cpp=(tmp_path/'Source/Sub01HomeLab/Sub01HomeLab.cpp').read_text()
+    method=cpp.split('bool ASub01HomeCharacter::PrepareNativeBathroomLamp(){',1)[1].split('void ASub01HomeCharacter::ApplyNativeBathroomLamp',1)[0]
+    assert 'SourceSlots.Num()!=1||SourceSlots[0].MaterialSlotName!=FName(TEXT("modern_ceiling_globe"))' in method
+    assert 'SourceSlots[0].MaterialInterface.Get()!=Original' in method
+    assert 'Original->GetName().Contains' not in method
+    assert 'Original->GetPathName().StartsWith(Prefix)' in method
+    assert 'FMath::IsNearlyEqual(Factor.R,.6229580641f,.00001f)' in method
+    assert 'FMath::IsNearlyEqual(Factor.G,.5416215658f,.00001f)' in method
+    assert 'FMath::IsNearlyEqual(Factor.B,.4745504856f,.00001f)' in method
