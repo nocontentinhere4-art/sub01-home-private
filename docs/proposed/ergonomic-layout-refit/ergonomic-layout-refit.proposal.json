@@ -87,9 +87,9 @@
     0.0
    ],
    "proposed_typing_translation_cm": [
-    203.8949556350708,
-    -192.96902056121826,
-    63.1876777245
+    203.895,
+    -192.969,
+    63.1877
    ],
    "rotation_scale_z": "unchanged (castor roll on the floor)"
   },
@@ -514,9 +514,9 @@
   },
   "pass": true,
   "chair_translation_cm": [
-   203.8949556350708,
-   -192.96902056121826,
-   63.1876777245
+   203.895,
+   -192.969,
+   63.1877
   ],
   "frames": "99 frames (every 10th of DeskTyping)"
  },
@@ -544,7 +544,8 @@
      10.0
     ],
     "reach_all_frames": true,
-    "max_distance_over_chain_length": 0.8583
+    "max_distance_over_chain_length": 0.8583,
+    "kept_from": "arm-solution.npz @ 4fca1fd"
    },
    "swivel_deg": [
     -35.0,
@@ -762,7 +763,7 @@
     "unresolved_frames": 0,
     "frames_without_any_clear_swivel": 0,
     "reach_all": true,
-    "elbow_max_step_cm": 1.999,
+    "elbow_max_step_cm": 1.966,
     "elbow_steps_over_bound": 0,
     "loop_elbow_step_cm": 0.536,
     "hand_frame_yaw_deg": [
@@ -770,27 +771,27 @@
      20.0
     ],
     "hand_frame_pitch_deg": [
-     -14.35,
+     -13.49,
      10.0
     ],
     "reach_all_frames": true,
-    "max_distance_over_chain_length": 0.9964
+    "max_distance_over_chain_length": 0.9869
    },
    "swivel_deg": [
-    -105.0,
-    30.0
+    -120.0,
+    20.0
    ],
    "elbow_height_cm": [
-    83.8,
-    98.95
+    83.67,
+    100.32
    ],
    "elbow_above_desk_top_cm": [
-    -0.7,
-    14.45
+    -0.83,
+    15.82
    ],
    "upper_arm_from_vertical_deg": [
-    27.75,
-    74.3
+    31.72,
+    77.41
    ],
    "upper_arm_deg_if_elbow_at_desk_top": [
     25.83,
@@ -814,16 +815,16 @@
    ],
    "shoulder_girdle": "unchanged (captured): only Arm, ForeArm, Hand (+ carried fingers) change",
    "wrist_flexion_deg_raw": [
-    -22.9,
-    16.38
+    -29.75,
+    16.09
    ],
    "wrist_deviation_deg_raw": [
-    -47.7,
-    15.35
+    -49.06,
+    16.07
    ],
    "wrist_twist_deg": [
-    -71.68,
-    -22.55
+    -71.36,
+    -22.53
    ],
    "wrist_flexion_capture_deg": [
     -82.86,
@@ -835,18 +836,18 @@
    ],
    "wrist_note": "RAW: the captured hand attitude on the new forearm; no soft limit and no added flexion applied",
    "forearm_slope_deg": [
-    -23.5,
-    12.0
+    -27.13,
+    12.34
    ],
    "shoulder_to_wrist_horizontal_cm": [
-    31.29,
-    47.99
+    31.49,
+    47.26
    ],
    "upper_arm_cm": 27.736,
    "forearm_cm": 23.121,
    "upper_arm_reach_floor_deg": [
-    17.14,
-    63.71
+    17.56,
+    60.51
    ],
    "clearance_cm": {
     "desk_upper_arm": [
@@ -854,24 +855,24 @@
      10.0
     ],
     "desk_forearm": [
-     0.234,
-     6.046
+     0.304,
+     5.464
     ],
     "desk_hand": [
-     1.812,
-     5.04
+     1.791,
+     4.651
     ],
     "desk_fingers": [
-     -1.518,
-     1.726
+     -1.52,
+     1.786
     ],
     "vertical_over_worktop_non_finger": [
-     0.291,
-     6.008
+     0.349,
+     5.351
     ],
     "own_torso": [
-     -0.145,
-     14.837
+     0.825,
+     15.28
     ],
     "own_thighs": [
      20.0,
@@ -882,14 +883,14 @@
      3.0
     ],
     "keyboard_case_non_finger": [
-     0.588,
-     12.1
+     0.482,
+     14.62
     ]
    },
    "clearance_frames_failing": {
     "desk_gt_0": 0,
-    "desk_design_0p5": 76,
-    "torso": 5,
+    "desk_design_0p5": 79,
+    "torso": 0,
     "thighs": 0,
     "chair": 0,
     "keyboard_case": 0
@@ -910,143 +911,143 @@
     ],
     "frames": 989,
     "frames_ok": {
-     "elbow": 704,
+     "elbow": 787,
      "upper_arm": 0,
-     "wrist_flexion": 882,
-     "wrist_deviation": 711,
+     "wrist_flexion": 878,
+     "wrist_deviation": 557,
      "all_four": 0
     },
     "worst_excess": {
-     "elbow_cm": 4.45,
-     "upper_arm_deg": 54.3,
-     "wrist_flexion_deg": 7.9,
-     "wrist_deviation_deg": 27.7
+     "elbow_cm": 5.82,
+     "upper_arm_deg": 57.41,
+     "wrist_flexion_deg": 14.75,
+     "wrist_deviation_deg": 29.06
     }
    },
    "continuity": {
     "elbow": {
-     "max_speed_cm_s": 123.59,
-     "max_accel_cm_s2": 10583.3,
-     "loop_step_cm": 0.5354,
-     "max_frame_step_cm": 2.0598
+     "max_speed_cm_s": 109.2,
+     "max_accel_cm_s2": 10654.1,
+     "loop_step_cm": 0.0261,
+     "max_frame_step_cm": 1.8201
     },
     "wrist": {
-     "max_speed_cm_s": 237.92,
-     "max_accel_cm_s2": 3730.9,
-     "loop_step_cm": 0.0051,
-     "max_frame_step_cm": 3.9653
+     "max_speed_cm_s": 272.57,
+     "max_accel_cm_s2": 4075.1,
+     "loop_step_cm": 0.0058,
+     "max_frame_step_cm": 4.5429
     },
     "palm_target": {
-     "max_speed_cm_s": 247.86,
-     "max_accel_cm_s2": 3761.3,
+     "max_speed_cm_s": 278.78,
+     "max_accel_cm_s2": 4088.1,
      "loop_step_cm": 0.0,
-     "max_frame_step_cm": 4.131
+     "max_frame_step_cm": 4.6463
     }
    },
    "by_device": {
     "keyboard": {
      "frames": 574,
      "elbow_above_desk_top_cm": [
-      -0.7,
-      12.58
+      -0.83,
+      12.41
      ],
      "upper_arm_from_vertical_deg": [
-      27.75,
-      67.18
+      31.72,
+      69.16
      ],
      "wrist_flexion_deg_raw": [
-      -17.08,
-      10.98
+      -22.87,
+      11.26
      ],
      "wrist_deviation_deg_raw": [
-      -47.7,
-      3.86
+      -48.3,
+      2.27
      ],
      "forearm_slope_deg": [
-      -16.99,
-      12.0
+      -17.82,
+      12.34
      ],
      "frames_ok": {
-      "elbow": 330,
+      "elbow": 407,
       "upper_arm": 0,
-      "wrist_flexion": 560,
-      "wrist_deviation": 341
+      "wrist_flexion": 556,
+      "wrist_deviation": 219
      },
      "median": {
-      "elbow_above_desk_top_cm": 0.39,
-      "upper_arm_deg": 34.81,
-      "wrist_flexion_deg": 0.78,
-      "wrist_deviation_deg": -18.47
+      "elbow_above_desk_top_cm": 1.54,
+      "upper_arm_deg": 37.11,
+      "wrist_flexion_deg": 0.58,
+      "wrist_deviation_deg": -21.77
      }
     },
     "mouse": {
      "frames": 349,
      "elbow_above_desk_top_cm": [
-      -0.13,
-      9.74
+      0.08,
+      9.79
      ],
      "upper_arm_from_vertical_deg": [
-      38.83,
-      61.72
+      39.38,
+      61.82
      ],
      "wrist_flexion_deg_raw": [
-      -3.04,
-      16.38
+      -3.97,
+      16.09
      ],
      "wrist_deviation_deg_raw": [
-      -0.5,
-      13.12
+      -0.32,
+      14.23
      ],
      "forearm_slope_deg": [
-      -11.93,
-      11.75
+      -12.23,
+      11.21
      ],
      "frames_ok": {
-      "elbow": 345,
+      "elbow": 349,
       "upper_arm": 0,
-      "wrist_flexion": 266,
-      "wrist_deviation": 333
+      "wrist_flexion": 275,
+      "wrist_deviation": 310
      },
      "median": {
-      "elbow_above_desk_top_cm": 2.25,
-      "upper_arm_deg": 45.77,
-      "wrist_flexion_deg": 11.51,
-      "wrist_deviation_deg": 3.61
+      "elbow_above_desk_top_cm": 2.42,
+      "upper_arm_deg": 46.51,
+      "wrist_flexion_deg": 11.02,
+      "wrist_deviation_deg": 4.27
      }
     },
     "transit": {
      "frames": 66,
      "elbow_above_desk_top_cm": [
-      -0.53,
-      14.45
+      -0.76,
+      15.82
      ],
      "upper_arm_from_vertical_deg": [
-      36.09,
-      74.3
+      35.03,
+      77.41
      ],
      "wrist_flexion_deg_raw": [
-      -22.9,
-      11.28
+      -29.75,
+      4.34
      ],
      "wrist_deviation_deg_raw": [
-      -39.15,
-      15.35
+      -49.06,
+      16.07
      ],
      "forearm_slope_deg": [
-      -23.5,
-      11.81
+      -27.13,
+      12.14
      ],
      "frames_ok": {
-      "elbow": 29,
+      "elbow": 31,
       "upper_arm": 0,
-      "wrist_flexion": 56,
-      "wrist_deviation": 37
+      "wrist_flexion": 47,
+      "wrist_deviation": 28
      },
      "median": {
-      "elbow_above_desk_top_cm": 9.45,
-      "upper_arm_deg": 60.52,
-      "wrist_flexion_deg": -2.15,
-      "wrist_deviation_deg": -6.87
+      "elbow_above_desk_top_cm": 9.63,
+      "upper_arm_deg": 58.82,
+      "wrist_flexion_deg": -0.45,
+      "wrist_deviation_deg": -10.85
      }
     }
    }
@@ -1069,11 +1070,11 @@
    "keyboard_frames": 574,
    "keyboard_frames_with_fingers_over_keys": 574,
    "gap_cm_over_keys": [
-    -3.678,
-    4.421
+    -3.528,
+    3.818
    ],
-   "frames_in_existing_key_gate": 13,
-   "gap_median_cm": -1.292
+   "frames_in_existing_key_gate": 10,
+   "gap_median_cm": -1.305
   }
  },
  "palm_target_envelope_for_new_hands": {
@@ -1110,16 +1111,16 @@
      "unresolved_frames": 1,
      "reach_all": true,
      "elbow_above_top_cm": [
-      -1.11,
-      14.73
+      -0.76,
+      15.72
      ],
      "upper_arm_deg": [
-      25.6,
-      70.4
+      25.4,
+      72.6
      ],
      "wrist_flexion_deg": [
-      -20.0,
-      3.7
+      -23.6,
+      4.3
      ]
     }
    },
@@ -1144,15 +1145,15 @@
      "unresolved_frames": 0,
      "reach_all": true,
      "elbow_above_top_cm": [
-      -1.19,
-      9.78
+      -0.83,
+      8.89
      ],
      "upper_arm_deg": [
-      25.7,
-      60.4
+      25.4,
+      56.9
      ],
      "wrist_flexion_deg": [
-      -0.9,
+      -0.6,
       16.4
      ]
     }
@@ -1178,12 +1179,12 @@
      "unresolved_frames": 0,
      "reach_all": true,
      "elbow_above_top_cm": [
-      -1.34,
-      11.85
+      -1.39,
+      11.81
      ],
      "upper_arm_deg": [
-      26.7,
-      67.1
+      26.3,
+      64.0
      ],
      "wrist_flexion_deg": [
       -3.9,
@@ -1212,15 +1213,15 @@
      "unresolved_frames": 0,
      "reach_all": true,
      "elbow_above_top_cm": [
-      -0.94,
-      10.11
+      -0.88,
+      7.58
      ],
      "upper_arm_deg": [
-      25.6,
-      58.5
+      25.3,
+      53.6
      ],
      "wrist_flexion_deg": [
-      -1.6,
+      -0.4,
       16.1
      ]
     }
@@ -1255,16 +1256,16 @@
      17.38
     ],
     "upper_arm_deg": [
-     61.6,
-     80.5
+     61.7,
+     79.5
     ],
     "wrist_flexion_deg_raw": [
-     -33.6,
+     -33.3,
      0.0
     ],
     "shoulder_to_wrist_horizontal_cm": [
-     33.8,
-     44.3
+     33.6,
+     43.8
     ],
     "unresolved_frames": 0
    }
@@ -1292,7 +1293,7 @@
   "left_swivel_resolved_every_frame": true,
   "left_wrist_flexion_raw_within_soft_zone": true,
   "right_arm_desk_clear_every_frame": true,
-  "right_arm_clear_of_own_body": false,
+  "right_arm_clear_of_own_body": true,
   "right_arm_clear_of_chair": true,
   "right_arm_clear_of_keyboard_case": true,
   "right_ik_non_stretch_reached_every_frame": true,
@@ -1301,7 +1302,7 @@
   "transition_SitToType_seated_arms_clear": true,
   "transition_TypeToSit_seated_arms_clear": true,
   "left_elbow_path_continuous": true,
-  "right_elbow_path_continuous": false
+  "right_elbow_path_continuous": true
  },
  "method": {
   "module": "tools/ergonomic_layout_refit.py",
@@ -1322,8 +1323,8 @@
  "solution_file": "docs/proposed/ergonomic-layout-refit/arm-solution.npz",
  "per_frame_file": "docs/proposed/ergonomic-layout-refit/per-frame.json",
  "timing_s": {
-  "solve": 1131.9,
-  "total": 1446.6
+  "solve": 558.9,
+  "total": 866.9
  },
  "original": {
   "keyboard": {
@@ -1471,9 +1472,9 @@
     0.0
    ],
    "proposed_typing_translation_cm": [
-    203.8949556350708,
-    -192.96902056121826,
-    63.1876777245
+    203.895,
+    -192.969,
+    63.1877
    ],
    "rotation_scale_z": "unchanged (castor roll on the floor)"
   },
@@ -1492,7 +1493,7 @@
   "clips": {
    "SitToType_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_SitToType_seated_refit.glb",
-    "sha256": "0a62bdbb32b7d63e4b0d7d8f744035533545e10e75e1145e4c1ca93b981136c8",
+    "sha256": "b47ac95e9e5ecb5b72c9612f568cd458be005046e2773fce7135e57cf470085d",
     "frames": 37,
     "chair_translation_per_frame_cm": [
      [
@@ -1501,178 +1502,178 @@
       63.1876777245
      ],
      [
-      200.0207452234255,
-      -186.6913,
+      200.02075196047045,
+      -186.6913109166207,
       63.1876777245
      ],
      [
-      200.02605259721116,
-      -186.6999,
+      200.02605861756055,
+      -186.6999097552965,
       63.1876777245
      ],
      [
-      200.03969131356726,
-      -186.722,
+      200.03967074265609,
+      -186.72196666716096,
       63.1876777245
      ],
      [
-      200.06462362763,
-      -186.7624,
+      200.06464521647587,
+      -186.76243498228726,
       63.1876777245
      ],
      [
-      200.1033180853462,
-      -186.8251,
+      200.10334677942356,
+      -186.82514649551268,
       63.1876777245
      ],
      [
-      200.1575026688786,
-      -186.9129,
+      200.15749420603564,
+      -186.91288628691842,
       63.1876777245
      ],
      [
-      200.22822651025461,
-      -187.0275,
+      200.22820642738574,
+      -187.02746745797842,
       63.1876777245
      ],
      [
-      200.31604503231227,
-      -187.1698,
+      200.3160487198965,
+      -187.16980597531386,
       63.1876777245
      ],
      [
-      200.4210816623489,
-      -187.34,
+      200.4210786819458,
+      -187.33999517059326,
       63.1876777245
      ],
      [
-      200.54290440482382,
-      -187.5374,
+      200.54289261093194,
+      -187.5373808893298,
       63.1876777245
      ],
      [
-      200.68064926865566,
-      -187.7606,
+      200.68067149550996,
+      -187.7606360161079,
       63.1876777245
      ],
      [
-      200.8332054081683,
-      -188.0078,
+      200.8332271924848,
+      -188.00783529902534,
       63.1876777245
      ],
      [
-      200.99902998214506,
-      -188.2765,
+      200.99904856828766,
+      -188.27653011674565,
       63.1876777245
      ],
      [
-      201.17633329477445,
-      -188.5638,
+      201.17634764045184,
+      -188.56382324555054,
       63.1876777245
      ],
      [
-      201.36307879565038,
-      -188.8664,
+      201.36310571908902,
+      -188.86644362639257,
       63.1876777245
      ],
      [
-      201.55710650706942,
-      -189.1808,
+      201.55711972438104,
+      -189.1808214171612,
       63.1876777245
      ],
      [
-      201.75607131038203,
-      -189.5032,
+      201.75604744797684,
+      -189.50316133366655,
       63.1876777245
      ],
      [
-      201.9574429459928,
-      -189.8295,
+      201.9574556350708,
+      -189.82952056121826,
       63.1876777245
      ],
      [
-      202.15887629525224,
-      -190.1559,
+      202.15886346350152,
+      -190.15587920759674,
       63.1876777245
      ],
      [
-      202.3577793849162,
-      -190.4782,
+      202.35779154576056,
+      -190.4782197052753,
       63.1876777245
      ],
      [
-      202.5518070963352,
-      -190.7926,
+      202.55180520993594,
+      -190.79259694330295,
       63.1876777245
      ],
      [
-      202.73855259721114,
-      -191.0952,
+      202.73856346662757,
+      -191.09521761266214,
       63.1876777245
      ],
      [
-      202.91585590984053,
-      -191.3825,
+      202.91586239451033,
+      -191.38251050767525,
       63.1876777245
      ],
      [
-      203.08168048381728,
-      -191.6512,
+      203.08168393508396,
+      -191.65120559238798,
       63.1876777245
      ],
      [
-      203.23423662332996,
-      -191.8984,
+      203.2342395146473,
+      -191.89840468505332,
       63.1876777245
      ],
      [
-      203.37204320081045,
-      -192.1217,
+      203.37201854301168,
+      -192.12166004482106,
       63.1876777245
      ],
      [
-      203.49380422963668,
-      -192.319,
+      203.49383238519655,
+      -192.31904562290592,
       63.1876777245
      ],
      [
-      203.59884085967332,
-      -192.4892,
+      203.59886246399736,
+      -192.48923500736788,
       63.1876777245
      ],
      [
-      203.68672109537965,
-      -192.6316,
+      203.68670466566996,
+      -192.63157337751042,
       63.1876777245
      ],
      [
-      203.75744493675566,
-      -192.7462,
+      203.7574169805672,
+      -192.74615470015294,
       63.1876777245
      ],
      [
-      203.8115678066394,
-      -192.8339,
+      203.8115643874763,
+      -192.83389445963223,
       63.1876777245
      ],
      [
-      203.8502622643556,
-      -192.8966,
+      203.85026606774701,
+      -192.89660616296638,
       63.1876777245
      ],
      [
-      203.875256292067,
-      -192.9371,
+      203.87524051485028,
+      -192.93707443480156,
       63.1876777245
      ],
      [
-      203.88883329477446,
-      -192.9591,
+      203.88885263867166,
+      -192.95913134460145,
       63.1876777245
      ],
      [
-      203.89414066856008,
-      -192.9677,
+      203.89415930361739,
+      -192.96773019600636,
       63.1876777245
      ],
      [
@@ -1696,7 +1697,7 @@
        "iter": 1,
        "side": "right",
        "frames_below_target": 1,
-       "min_cm": 0.4577
+       "min_cm": 0.4581
       },
       {
        "iter": 2,
@@ -1708,7 +1709,7 @@
        "iter": 2,
        "side": "right",
        "frames_below_target": 0,
-       "min_cm": 0.5961
+       "min_cm": 0.5976
       }
      ],
      "wrist_displacement_cm": {
@@ -1717,7 +1718,7 @@
        "frames_moved": []
       },
       "right": {
-       "max": 1.6889,
+       "max": 1.6854,
        "frames_moved": [
         1,
         2,
@@ -1775,15 +1776,15 @@
       "keyboard_case": 1.106
      },
      "right": {
-      "desk_min": 0.856,
-      "forearm": 2.204,
+      "desk_min": 0.854,
+      "forearm": 2.212,
       "upper_arm": 10.0,
-      "hand": 0.856,
+      "hand": 0.854,
       "fingers": -1.519,
       "torso": 1.362,
       "legs": 12.393,
       "chair": 3.0,
-      "keyboard_case": 2.833
+      "keyboard_case": 2.829
      }
     },
     "clearance_frames_failing": {
@@ -1805,7 +1806,7 @@
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "21807715f6aef3584d407f22de0a5c92343594192e6542934e51d74c9a05f779",
+    "sha256": "896a6fc4c3758379fc7c3923f5662d26b6e3db64b3d1e2f9a67c2517575c4de9",
     "frames": 29,
     "chair_translation_per_frame_cm": [
      [
@@ -1814,138 +1815,138 @@
       63.1876777245
      ],
      [
-      203.8932766774787,
-      -192.9663,
+      203.8932836339806,
+      -192.96631127222588,
       63.1876777245
      ],
      [
-      203.8822916480154,
-      -192.9485,
+      203.88230372489016,
+      -192.948519569212,
       63.1876777245
      ],
      [
-      203.85464393341118,
-      -192.9037,
+      203.8546263248039,
+      -192.90367146723995,
       63.1876777245
      ],
      [
-      203.80477930528568,
-      -192.8229,
+      203.80480717309382,
+      -192.8229451566367,
       63.1876777245
      ],
      [
-      203.72918008566472,
-      -192.7004,
+      203.72918527232412,
+      -192.70040840439594,
       63.1876777245
      ],
      [
-      203.6257480104935,
-      -192.5328,
+      203.6257207105558,
+      -192.5327557635332,
       63.1876777245
      ],
      [
-      203.49380422963668,
-      -192.319,
+      203.4938325881958,
+      -192.31904595184326,
       63.1876777245
      ],
      [
-      203.33421273417562,
-      -192.0604,
+      203.3342368206723,
+      -192.0604390294484,
       63.1876777245
      ],
      [
-      203.14876321992176,
-      -191.7599,
+      203.14878432511264,
+      -191.75993419857897,
       63.1876777245
      ],
      [
-      202.94029451471394,
-      -191.4221,
+      202.94029847944537,
+      -191.4221064243997,
       63.1876777245
      ],
      [
-      202.71238601017498,
-      -191.0528,
+      202.71241328450475,
+      -191.052844194972,
       63.1876777245
      ],
      [
-      202.46941937536053,
-      -190.6591,
+      202.4694111872499,
+      -190.65908673209117,
       63.1876777245
      ],
      [
-      202.2160848475695,
-      -190.2486,
+      202.21606096923352,
+      -190.24856130785253,
       63.1876777245
      ],
      [
-      201.9574429459928,
-      -189.8295,
+      201.9574556350708,
+      -189.82952056121826,
       63.1876777245
      ],
      [
-      201.6988627580648,
-      -189.4105,
+      201.69885030090808,
+      -189.410479814584,
       63.1876777245
      ],
      [
-      201.44552823027374,
-      -189.0,
+      201.44549986026533,
+      -188.99995402960445,
       63.1876777245
      ],
      [
-      201.2024998818106,
-      -188.6062,
+      201.20249798563685,
+      -188.6061969274645,
       63.1876777245
      ],
      [
-      200.97459137727165,
-      -188.2369,
+      200.9746125950285,
+      -188.2369343809794,
       63.1876777245
      ],
      [
-      200.76612267206383,
-      -187.8991,
+      200.76612694502896,
+      -187.89910692385754,
       63.1876777245
      ],
      [
-      200.58067315780997,
-      -187.5986,
+      200.58067429486766,
+      -187.5986018424736,
       63.1876777245
      ],
      [
-      200.4210816623489,
-      -187.34,
+      200.42107874719557,
+      -187.33999527632312,
       63.1876777245
      ],
      [
-      200.28919959514076,
-      -187.1263,
+      200.28919050697291,
+      -187.12628527365013,
       63.1876777245
      ],
      [
-      200.18570580632087,
-      -186.9586,
+      200.18572603775124,
+      -186.95863278274868,
       63.1876777245
      ],
      [
-      200.1101065866999,
-      -186.8361,
+      200.1101040692195,
+      -186.8360959207072,
       63.1876777245
      ],
      [
-      200.06030367222309,
-      -186.7554,
+      200.0602849708153,
+      -186.75536969648013,
       63.1876777245
      ],
      [
-      200.03259424397018,
-      -186.7105,
+      200.03260754116897,
+      -186.71052154660936,
       63.1876777245
      ],
      [
-      200.0216092145069,
-      -186.6927,
+      200.02162764001324,
+      -186.69272985645273,
       63.1876777245
      ],
      [
@@ -1957,28 +1958,28 @@
     "arms": "base transition arms (SeatedIdle seam) slerped in local rotation to the refit DeskTyping last frame with the quintic roll parameter",
     "seam_to_desk_typing_arm_joint_max_cm": 0.0379,
     "desk_pass": {
-     "iterations": 6,
+     "iterations": 7,
      "history_tail": [
       {
-       "iter": 4,
+       "iter": 5,
        "side": "left",
        "frames_below_target": 0,
        "min_cm": 0.6
       },
       {
-       "iter": 4,
+       "iter": 5,
        "side": "right",
-       "frames_below_target": 2,
-       "min_cm": -0.4141
+       "frames_below_target": 1,
+       "min_cm": 0.4754
       },
       {
-       "iter": 5,
+       "iter": 6,
        "side": "left",
        "frames_below_target": 0,
        "min_cm": 0.6
       },
       {
-       "iter": 5,
+       "iter": 6,
        "side": "right",
        "frames_below_target": 0,
        "min_cm": 0.6
@@ -2018,7 +2019,7 @@
        ]
       },
       "right": {
-       "max": 11.3334,
+       "max": 11.1122,
        "frames_moved": [
         1,
         2,
@@ -2068,15 +2069,15 @@
       "keyboard_case": 2.195
      },
      "right": {
-      "desk_min": 0.8,
-      "forearm": 2.58,
+      "desk_min": 0.6,
+      "forearm": 2.581,
       "upper_arm": 10.0,
-      "hand": 0.8,
-      "fingers": -1.518,
+      "hand": 0.6,
+      "fingers": -1.519,
       "torso": 1.372,
       "legs": 12.62,
       "chair": 3.0,
-      "keyboard_case": 8.646
+      "keyboard_case": 8.882
      }
     },
     "clearance_frames_failing": {
@@ -2098,7 +2099,7 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "f4f132f1c0385487ce7b0b1b52e449072ea72790a3d87dd162213270eca2eef2",
+    "sha256": "d5a85367a6e40471b8362db5018f2cd98546b6d2356b6f49a67d95db71792bd1",
     "note": "base DeskTyping (anatomical chair-lift base) with ONLY the six arm bones re-solved by this refit; fingers carried with their base locals",
     "readback_arm_joint_max_error_cm": 4e-06
    }

@@ -155,3 +155,29 @@ redoes the contact on the frozen new hands.
   (+15 kept, because +18 made the mouse unreachable at full frame rate); mouse X 0/−8.
 - **Not done:** the arm-vs-own-body test is a conservative convex plan section; the native collision audit; the
   new-hand contact; SitToType/TypeToSit hand contact.
+
+## Right-arm pass (0f52217 code; this commit) — supersedes the right-arm numbers above
+
+The LEFT arm is kept exactly (arm-solution.npz @ 4fca1fd). Only the right arm was re-solved, with a 2 cm torso margin in
+the solver, a 1.8 cm DP elbow-step bound, a 0.5 s loop-closure blend of the swivel, and a smoother right palm path
+(sigma 8 keys) and hand-frame adaptation (sigma 15 keys). No correction was added, and no gate was changed. The chair
+roll per-frame translations are exact (full precision, cd9d50a).
+
+| Right arm | 4fca1fd | This pass |
+|---|---|---|
+| Own torso | 5 frames, -0.145 cm | 0 frames (min +0.825 cm) |
+| Elbow max step per key (posed) | 2.06 cm | 1.82 cm |
+| DeskTyping loop, arm joints (last -> first) | RightForeArm 0.535 cm | max 0.026 cm (both arms <= 0.026) |
+| Raw flexion in +-15°: keys / mouse / transit | 560/574, 266/349, 56/66 | 556/574, 275/349, 47/66 |
+| Raw flexion range: keys / mouse / transit | -17.1..11.0 / -3.0..16.4 / -22.9..11.3° | -22.9..11.3 / -4.0..16.1 / -29.8..4.3° |
+| Deviation in zone, keys / median | 341/574, -18.5° | 219/574, -21.8° |
+| Elbow above top / upper arm, keys medians | 0.4 cm / 34.8° | 1.5 cm / 37.1° |
+
+- Transitions were rewritten for the new right arm: SitToType `b47ac95e…` and TypeToSit `896a6fc4…`. Both pass on every
+  frame, with seams of 0.032 and 0.038 cm. The DeskTyping GLB is `d5a85367…`.
+- **Gates:** every gate passes except `right_wrist_flexion_raw_within_soft_zone`, so `source_ready` stays false.
+  - Raw flexion is within ±15° on 878 of 989 right frames (89%).
+  - The excursions sit in the keyboard <-> mouse transits and on a few keyboard frames around the reach to the right of
+    K.
+- **Trade-off, stated plainly:** the torso clearance and the continuity got fixed, but the right-hand deviation on the keys
+  got worse (median -21.8°).
