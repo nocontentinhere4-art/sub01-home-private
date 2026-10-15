@@ -1,0 +1,193 @@
+{
+  "schema": "sub01.genuine-kitchen-syngonium-source.v1",
+  "sourceURL": "https://polyhaven.com/a/potted_plant_02",
+  "author": "Rico Cilliers",
+  "license": "CC0-1.0",
+  "sourceFiles": [
+    {
+      "path": "potted_plant_02_2k.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/2k/potted_plant_02/potted_plant_02_2k.gltf",
+      "md5": "9161f84da94065f5b3888347c0f275ce",
+      "sha256": "80ab49cb61737244f50b805ddde3dd64e461b2a244817f8882e95a97c916d158",
+      "bytes": 6653
+    },
+    {
+      "path": "potted_plant_02.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/potted_plant_02/potted_plant_02.bin",
+      "md5": "cdbd4619b2596c9c469ad34676085fa8",
+      "sha256": "9c9812482c78a59789ed32fa842b4cbd9365e09c900c31ebb998e5efe627fe97",
+      "bytes": 1852244
+    },
+    {
+      "path": "textures/potted_plant_02_leaves_diff_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_leaves_diff_2k.jpg",
+      "md5": "96aa3bba976e762eedced66d9832c2a5",
+      "sha256": "f70de9a4b735b740e79d4e7720a47eae5e2bb4a289880cdae5905d156223bd7d",
+      "bytes": 584084
+    },
+    {
+      "path": "textures/potted_plant_02_leaves_nor_gl_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_leaves_nor_gl_2k.jpg",
+      "md5": "c187345d2875a28be93e61db4dd61558",
+      "sha256": "2ae648b12ea457fb720f9adc6f8dc9feb8d5409e43f3b9f2ce7f089b3eef12f6",
+      "bytes": 481780
+    },
+    {
+      "path": "textures/potted_plant_02_pot_diff_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_pot_diff_2k.jpg",
+      "md5": "d7c6055680866af21f73e14a57bbd7d3",
+      "sha256": "21672040b5de49e7dae07452431b4fe5cf401494f5ab5157b5f54a146cc68383",
+      "bytes": 596006
+    },
+    {
+      "path": "textures/potted_plant_02_leaves_rough_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_leaves_rough_2k.jpg",
+      "md5": "0b1e1d0c38da3a5d73dc1274fc739fa0",
+      "sha256": "399e61a82069b3e344cece76c128f84a664dd44719331450877b671906e01e27",
+      "bytes": 435284
+    },
+    {
+      "path": "textures/potted_plant_02_pot_nor_gl_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_pot_nor_gl_2k.jpg",
+      "md5": "0b333cfc921defac311dc9232f2f01b9",
+      "sha256": "8e8c2e96de90e793712a9db8a6cea7a38f7fd5ec489b8134b586a42ebbbfcb11",
+      "bytes": 494387
+    },
+    {
+      "path": "textures/potted_plant_02_pot_rough_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_02/potted_plant_02_pot_rough_2k.jpg",
+      "md5": "08a89ef59d4fd0b19a925cc4d2c512af",
+      "sha256": "c1f341bfa5e610dab2fd31aad4068fa20cf957b098912da5949bca996d7649bf",
+      "bytes": 426559
+    }
+  ],
+  "originalGltfMaterials": [
+    {
+      "doubleSided": true,
+      "name": "potted_plant_02_pot",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    },
+    {
+      "alphaCutoff": 0.5,
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "name": "potted_plant_02_leaves",
+      "normalTexture": {
+        "index": 3
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 4
+        },
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "index": 5
+        }
+      }
+    }
+  ],
+  "completeOriginalSyngoniumLeavesAndSoilRetained": true,
+  "onlyTerracottaPotRemoved": true,
+  "genuineIndoorPotSource": "/workspace/sub01-home-private/real-lived-props-r1/potted_plant_04/potted_plant_04.gltf",
+  "donorUniformPotScale": 1.4295387138007754,
+  "finalWholeAssemblyUniformScale": 0.8778280249411502,
+  "soilTopBelowGenuinePotRimM": 0.003511312099764601,
+  "originalMeshes": [
+    {
+      "originalName": "potted_plant_02_pot",
+      "vertices": 2840,
+      "triangles": 5184
+    },
+    {
+      "originalName": "potted_plant_02_leaves",
+      "vertices": 7348,
+      "triangles": 10692
+    },
+    {
+      "originalName": "potted_plant_02_dirt",
+      "vertices": 34606,
+      "triangles": 53930
+    }
+  ],
+  "ownedMaterials": [
+    {
+      "originalName": "potted_plant_02_leaves",
+      "ownedName": "SK00",
+      "useBackfaceCulling": false,
+      "principledPresent": true
+    },
+    {
+      "originalName": "potted_plant_02_pot",
+      "ownedName": "SK01",
+      "useBackfaceCulling": false,
+      "principledPresent": true
+    },
+    {
+      "originalName": "potted_plant_04",
+      "ownedName": "SK02",
+      "useBackfaceCulling": false,
+      "principledPresent": true
+    }
+  ],
+  "uniformScale": 0.47552319310095875,
+  "originalDimensionsM": [
+    0.7011570334434509,
+    0.6573866009712219,
+    0.8411787152290344
+  ],
+  "placedDimensionsM": [
+    0.2926822900772095,
+    0.27975034713745117,
+    0.3999999761581421
+  ],
+  "translationBlenderM": [
+    -0.7980871796607971,
+    3.5064327716827393,
+    0.922484815120697
+  ],
+  "boundsBlenderM": [
+    [
+      -0.9663411974906921,
+      3.4074552059173584,
+      0.922510027885437
+    ],
+    [
+      -0.6736589074134827,
+      3.6872055530548096,
+      1.322510004043579
+    ]
+  ],
+  "boundsUEcm": [
+    [
+      -96.63411974906921,
+      -368.72055530548096,
+      92.2510027885437
+    ],
+    [
+      -67.36589074134827,
+      -340.74552059173584,
+      132.2510004043579
+    ]
+  ],
+  "originalGeometryUVPBRNoTintOrDecimation": true,
+  "retireOnlyOriginalHomeNodes": [
+    216,
+    217,
+    218,
+    219
+  ],
+  "nativeInstalled": false,
+  "physicalContactAccepted": false,
+  "sourceSHA256": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af"
+}

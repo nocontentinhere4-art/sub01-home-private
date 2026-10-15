@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.reviewed-static-cosmetic-plant-source-approval.v1",
+  "source_sha256": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af",
+  "raw_report_sha256": "c1c646c0399d6eb19cc8280540e51e7f5a462a42777c8d999ec72671dddb6934",
+  "external_fit_passed": true,
+  "internal_leaf_rim_contact_pairs": 65,
+  "raw_report_fit_passed": false,
+  "internal_visual_contact_accepted": true,
+  "reviewer": "root agent; explicit source review received in parent instruction after viewing actual close render",
+  "reviewed_images": [
+    {
+      "local_path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/real-kitchen-syngonium-indoor-r2/genuine-syngonium-front.png",
+      "sha256": "bfb584b8a69e33ca8276c02a5901e18efeb178aba6d6e22ed8153037961fa43b"
+    },
+    {
+      "local_path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/real-kitchen-syngonium-indoor-r2/genuine-syngonium-back.png",
+      "sha256": "4c9c2ec1c10aa1b7758546d504fdcafe3b879261c3de83b6693e9eadd687d59d"
+    }
+  ],
+  "dynamic_stability_accepted": false,
+  "native_visual_accepted": false,
+  "scope": "Only exact disclosed source-internal65leaf/rim pairs; no retained kitchen collision waived; source geometry/PBR intact."
+}

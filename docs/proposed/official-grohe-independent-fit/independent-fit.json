@@ -1,0 +1,34 @@
+{
+  "schema": "sub01.official-grohe-concetto-independent-counter-fit.v1",
+  "source_sha256": "89c7ba8c7d303c9f2e65f9616337a9c3d3dfbcfaea20fbfc7d096457901bebfc",
+  "protected_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "onlyRetiredSourceNodes": [
+    69,
+    70,
+    71
+  ],
+  "actualCADSolids": 6,
+  "completeCADTriangles": 84500,
+  "fullSourceIntersections": [],
+  "baseActualSkinVerticesSupported": 317,
+  "baseSkinGapCm": {
+    "min": 0.00101470947265625,
+    "max": 0.00101470947265625
+  },
+  "providedOutletCenterXYcm": [
+    -270.0,
+    -357.5
+  ],
+  "actualSinkBasinDropHitCm": [
+    -270.0,
+    -357.5,
+    76.30000305175781
+  ],
+  "outletDropInsideSinkGeometry": true,
+  "staticHandleAndBodyNoRetainedGeometryIntersection": true,
+  "dynamicLeverSweepVerified": false,
+  "nativeChanged": false,
+  "sourceFitPassed": true,
+  "ok": true,
+  "intersections": []
+}

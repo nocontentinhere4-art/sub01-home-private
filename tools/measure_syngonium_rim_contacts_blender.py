@@ -1,0 +1,9 @@
+"""Measure actual leaf/pot contacts relative to authentic soil coverage; read-only."""
+exec(compile(open('/home/unreal/runtime-tools/audit_real_lived_props_blender.py').read().split('home=load(',1)[0],'geometry-only','exec'))
+R=Path('/workspace/sub01-home-private/real-kitchen-syngonium-r1');rows=[]
+for variant in['r2','r3','r4']:
+ P=R/('indoor-output-'+variant)/'genuine-kitchen-syngonium.glb';parts=load(P);leaf=next(a for a in parts if a['name']=='SKPlant01');soil=next(a for a in parts if a['name']=='SKPlant02');pot=next(a for a in parts if a['name']=='SKIndoorPot');pairs=tree(leaf).overlap(tree(pot));li={i for a,b in pairs for i in leaf['faces'][a]};pi={i for a,b in pairs for i in pot['faces'][b]};verts=[leaf['points'][i]for i in li];potverts=[pot['points'][i]for i in pi];above=[(a,b)for a,b in pairs if max(leaf['points'][i].z for i in leaf['faces'][a])>soil['bounds'][1][2]];nearest=[]
+ for v in verts:
+  hit,n,fi,dist=tree(pot).find_nearest(v);nearest.append({'distanceCm':dist,'signedSurfaceDistanceCm':(v-hit).dot(n),'leafPointUEcm':list(v),'potPointUEcm':list(hit)})
+ row={'variant':variant,'source_sha256':hashlib.sha256(P.read_bytes()).hexdigest(),'leafPotPairs':len(pairs),'intersectingLeafSurfaceBoundsUEcm':[[min(v[k]for v in verts)for k in range(3)],[max(v[k]for v in verts)for k in range(3)]],'intersectingPotSurfaceBoundsUEcm':[[min(v[k]for v in potverts)for k in range(3)],[max(v[k]for v in potverts)for k in range(3)]],'soilBoundsUEcm':soil['bounds'],'potTopZcm':pot['bounds'][1][2],'leafPairsWithAnyVertexAboveSoilTop':len(above),'maximumNearestSurfaceDistanceCm':max(v['distanceCm']for v in nearest),'nearestMeasurements':nearest};rows.append(row)
+(R/'measured-rim-contacts.json').write_text(json.dumps(rows,indent=2));print(json.dumps([{k:v for k,v in r.items()if k!='nearestMeasurements'}for r in rows]),flush=True)

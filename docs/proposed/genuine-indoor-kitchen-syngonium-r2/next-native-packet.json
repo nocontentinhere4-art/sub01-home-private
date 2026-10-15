@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.genuine-indoor-syngonium-next-native-packet.v1",
+  "source_path": "/workspace/sub01-home-private/real-kitchen-syngonium-r1/indoor-output-r2/genuine-kitchen-syngonium.glb",
+  "source_sha256": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af",
+  "source_mesh_parts": 3,
+  "source_materials": 3,
+  "indexed_triangles": 68366,
+  "root_source_review": "static-source-review-approval.json",
+  "external_fit_passed": true,
+  "internal_leaf_rim_contact_pairs": 65,
+  "raw_report_fit_passed": false,
+  "internal_visual_contact_accepted": true,
+  "retire_only_source_nodes": [
+    216,
+    217,
+    218,
+    219
+  ],
+  "retirement": "Whole four unique actors hidden+NoCollision, exact106snapshots guarded; sharedmeshes/materials untouched",
+  "native_importer": "tools/unreal_import_genuine_indoor_syngonium.py",
+  "native_importer_sha256": "5fe2dbd345b601c751ed7713fafc8b4a54eb8a3c7fad23491497e988e31dc9a6",
+  "native_installed": false,
+  "dynamic_stability_verified": false,
+  "exact_original_foliage_variegation_preserved": true,
+  "leaf_blend": "MASK with source cutoff0.5 and TwoSided; actual assigned native state required",
+  "indoor_pot": "Complete genuine potted_plant_04 ceramic source, uniformscale and rigidplacement only. No terracotta recolour."
+}

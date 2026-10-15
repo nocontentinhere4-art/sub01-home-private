@@ -1,0 +1,75 @@
+{
+  "schema": "sub01.genuine-kitchen-syngonium-independent-fit.v1",
+  "source_sha256": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af",
+  "protectedHome_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "protectedProps_sha256": "966f2798427c6726cbdca404f73792474e69349016662dc8f1e18c084b363626",
+  "onlyRetiredOriginalNodes": [
+    216,
+    217,
+    218,
+    219
+  ],
+  "newPartBoundsUEcm": [
+    {
+      "name": "SKPlant01",
+      "bounds": [
+        [
+          -96.63411712646484,
+          -368.7205505371094,
+          105.84561920166016
+        ],
+        [
+          -67.36589050292969,
+          -341.8706359863281,
+          132.25100708007812
+        ]
+      ]
+    },
+    {
+      "name": "SKPlant02",
+      "bounds": [
+        [
+          -88.74263000488281,
+          -359.85455322265625,
+          109.52845001220703
+        ],
+        [
+          -71.4535903930664,
+          -342.7043762207031,
+          111.35999298095703
+        ]
+      ]
+    },
+    {
+      "name": "SKIndoorPot",
+      "bounds": [
+        [
+          -90.63204956054688,
+          -361.8133850097656,
+          92.25100708007812
+        ],
+        [
+          -69.56417846679688,
+          -340.7455139160156,
+          111.71112823486328
+        ]
+      ]
+    }
+  ],
+  "fullSourceTriangleIntersections": [
+    {
+      "new": "SKPlant01",
+      "protected": "genuineWhitePot",
+      "pairs": 65
+    }
+  ],
+  "lowestPotSkinVerticesSupported": 49,
+  "actualLowestFootGapsCm": {
+    "minimum": 0.001007080078125,
+    "maximum": 0.001007080078125
+  },
+  "leafMaterialActualDoubleSidedMasked": true,
+  "actualMaskCutoff": 0.5,
+  "nativeChanged": false,
+  "sourceFitPassed": false
+}
