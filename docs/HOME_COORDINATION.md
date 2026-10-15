@@ -8,6 +8,14 @@ Build the real functioning first-person home, not a promotional video. Primary r
 
 Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
 
+## Follow-up — 20:28 UTC
+
+Actual final anatomical FBX imported into isolated warm Editor as one combined physical173.09cm owner, same captured32sample Walk/skeleton. Independent actual native comparison across25 original body bones gives0cm position change. Exact9 sourceglTF material instances are now assigned to only this fresh owned mesh, including source625× knit normal transform, measured dark sheen and separate nail clearcoat. Actual candidate first-person visual review is in progress; active Game still uses prior owner and no normal-contact readiness is enabled.
+
+Source Idle is explicitly rejected: its old captured/derived wrist data twists Hand relative ForeArm about166–167degrees, causing ordinary linear skinning to collapse both old body and new cuffs. This is not solved by shortening cuffs or hiding fingers. Trace authentic source/reference convention before any corrected Idle selection. DerivedGamingGrip's152 source cuff samples pass0bothsides; actual controller contact remains unaccepted.
+
+Minecraft repair found an old hardcoded consumer project path in the loaded backend. Exact promoted PID/start/project patch has14 passing regressions. Before the controlled backend-only refresh, actual Java world flush ACK,24 copied/hash-matched world/player files and87.2MB atomic PC snapshot were verified. No pod/Game restart or user world reset is authorized by this fix. Root owns fresh browser input proof after agent reports operational; current isolated QA tab isabout:blank, manual focusreleased.
+
 ## Actual private checkpoint — 2026-10-15 20:12 UTC
 
 - Actual private Game is **193148/start978377926**, sealed project `/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab`, map14acd9d355c6/modulee571937b708c. Original159171 exited during the controlled reviewed promotion; original fallback remains preserved. Same pod/devices/world; public production untouched.
