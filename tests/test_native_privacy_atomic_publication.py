@@ -37,3 +37,9 @@ def test_real_publisher_uses_same_directory_atomic_rename_without_guard_changes(
     assert 'IFileManager::Get().Move' not in body
     assert 'Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden)' in body
     assert 'Now-NativePrivacyPublishedAt<.2' in body
+
+
+def test_companion_guard_metrics_publisher_also_replaces_atomically():
+    import unreal_native_visual_metrics as metrics
+    assert 'std::rename(TCHAR_TO_UTF8(*Temp),"/home/unreal/.sub01-private/native-visual-metrics.json")' in metrics.METHODS
+    assert 'IFileManager::Get().Move' not in metrics.METHODS

@@ -61,7 +61,7 @@ void ASub01HomeCharacter::PublishPrivateVisualMetrics(){
   Doc->SetStringField(TEXT("eye_witness_source"),TEXT("45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8"));
  }
  Num(Doc,TEXT("actual_speed_cm_s"),GetVelocity().Size2D());if(auto* Anim=FirstPersonBody?Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()):nullptr)Num(Doc,TEXT("target_animation_rate"),Anim->TargetRate);
- FString Raw;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-visual-metrics.tmp");if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-visual-metrics.json"),*Temp,true,true);
+ FString Raw;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-visual-metrics.tmp");if(FFileHelper::SaveStringToFile(Raw,*Temp)&&std::rename(TCHAR_TO_UTF8(*Temp),"/home/unreal/.sub01-private/native-visual-metrics.json")!=0)UE_LOG(LogTemp,Error,TEXT("SUB01_NATIVE_VISUAL_METRICS_ATOMIC_PUBLICATION_FAILED"));
 }
 '''
 def install(header,cpp):
