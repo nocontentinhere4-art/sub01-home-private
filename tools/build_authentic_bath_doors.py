@@ -83,9 +83,12 @@ def build(source,output):
  for o in objs:
   name=o['source_part_name'].lower()
   if 'steel stud'in name or'horizontal stiffener'in name:omitted.append(o['source_part_name']);bpy.data.objects.remove(o,do_unlink=True);continue
-  if any(s in name for s in ('sliding timber leaf','dark pull well','recessed pull rim')):o.location.x-=.224
+  if 'continuous head track' in name:
+   o.matrix_world=Matrix.Translation(Vector((-.9225,0,0)))@o.matrix_world
+  if any(s in name for s in ('sliding timber leaf','dark pull well','recessed pull rim')):
+   o.matrix_world=Matrix.Translation(Vector((-.224,0,0)))@o.matrix_world
   retained.append(o)
- groups['pocket-door']=retained;place(retained,t);changes.append({'assembly':'bathroom door','explicit_omitted_concealed_pocket_parts':omitted,'leaf_closed_translation_source_x_m':-.224,'operational_native_ready':False})
+ groups['pocket-door']=retained;place(retained,t);changes.append({'assembly':'bathroom door','explicit_omitted_concealed_pocket_parts':omitted,'leaf_closed_translation_source_x_m':-.224,'track_translation_source_x_m':-.9225,'operational_native_ready':False})
  # Real patio unit fits beneath measured545cm upper lintel; fixed sidelights fill aperture.
  objs,t=load('patio-door',(-220,400,302.5));place(objs,t)
  for name,lo,hi in [('BalconyLeftJamb',(-385,391,302.5),(-380,409,545)),('BalconyRightJamb',(-20,391,302.5),(-15,409,545)),('BalconyHead',(-385,391,540),(-15,409,545)),('BalconyUnitHead',(-322.1,391,523),(-117.9,409,527))]:box(name,lo,hi,plaster)
@@ -104,7 +107,8 @@ def build(source,output):
  for o in fixtures:o.select_set(True)
  bpy.ops.export_scene.gltf(filepath=str(output/'bath-fixtures.glb'),export_format='GLB',use_selection=True,export_yup=True,export_texcoords=True,export_normals=True,export_materials='EXPORT')
  bpy.ops.wm.save_as_mainfile(filepath=str(output/'editable-bath-doors.blend'))
- report={'schema':'sub01.authentic-bath-door-fit-source.v1','sources':provenance,'changes':changes,'parts':rows,'exports':{k:hashlib.sha256((output/(k+'.glb')).read_bytes()).hexdigest()for k in groups},'fixture_parts':[o.name for o in fixtures],'fixture_sha256':hashlib.sha256((output/'bath-fixtures.glb').read_bytes()).hexdigest(),'native_imported':False,'runtime_doors_ready':False,'source_collision_proof_complete':False,'visual_review_complete':False,'protected_stairs_and_chair_unchanged':True}
+ roles={'bathroom':{'moving_parts':[o.name for o in groups['pocket-door']if any(s in o.get('source_part_name','').lower()for s in ('sliding timber leaf','dark pull well','recessed pull rim'))],'motion':'native Y +95cm','closed_leaf_bounds_ue_cm':next(r['bounds_ue_cm']for r in rows if r['source_part']=='Pocket | sliding timber leaf'),'native_runtime_binding_ready':False},'entry':{'moving_parts':[o.name for o in groups['entry-door']if not o.get('source_part_name','').startswith('Frame |')],'hinge_ue_cm':[154.3,402.2,2.5],'native_runtime_binding_ready':False},'balcony':{'moving_parts':['SUB01_patio_door_'+str(i).zfill(3)for i in (6,7,10,12,13,19,21,22)],'motion':'native X +91cm','native_runtime_binding_ready':False}}
+ report={'schema':'sub01.authentic-bath-door-fit-source.v1','sources':provenance,'changes':changes,'parts':rows,'exports':{k:hashlib.sha256((output/(k+'.glb')).read_bytes()).hexdigest()for k in groups},'door_roles':roles,'fixture_parts':[o.name for o in fixtures],'fixture_sha256':hashlib.sha256((output/'bath-fixtures.glb').read_bytes()).hexdigest(),'native_imported':False,'runtime_doors_ready':False,'source_collision_proof_complete':False,'visual_review_complete':False,'protected_stairs_and_chair_unchanged':True}
  (output/'source-report.json').write_text(json.dumps(report,indent=2)+'\n');print('BATH_DOOR_FITTED_SOURCE_EXPORTED',len(rows),flush=True)
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--source',required=True);p.add_argument('--output',required=True);a=p.parse_args(sys.argv[sys.argv.index('--')+1:]if'--'in sys.argv else None);build(a.source,a.output)

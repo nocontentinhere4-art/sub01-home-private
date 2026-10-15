@@ -4,7 +4,7 @@ Sole native integrator executes. No door, room/wall/floor/camera or privacy writ
 Existing CC0 WC, old vanity and shower are retired only after full actual surface
 and material verification. Original actors/assets stay present for exact rollback.
 """
-import copy,hashlib,json,shutil,time,uuid
+import copy,hashlib,json,shutil,time,uuid,struct
 from pathlib import Path
 from home_asset_audit import read_gltf
 from prepare_frame_backing_remainder import SOURCE_SHA
@@ -31,6 +31,34 @@ def source_proof(root=ROOT):
  bvh=json.loads((root/'actual-architecture-bvh.json').read_text())
  if bvh.get('fixture_sha256')!=SHA or bvh.get('target_corridor_sha256')!='5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91' or bvh.get('fixture_meshes')!=90 or bvh.get('protected_nodes')!=[117,158] or bvh.get('unresolved_positive_crossings')!=0 or bvh.get('surface_contact_epsilon_cm')!=.001:raise RuntimeError('Actual exported fixture-versus-target-architecture BVH proof required')
  return report
+
+def prepare_import(source,target):
+ """Unique legal identifiers and exactzeroarea removal; all physical corner bytes exact."""
+ from prepare_frame_backing_remainder import elements,read
+ from prepare_real_wc_bundle import glb
+ doc,original=read_gltf(Path(source));out=copy.deepcopy(doc);blob=bytearray(original);removed={};names={}
+ for ni,n in enumerate(out['nodes']):
+  if 'mesh'not in n:continue
+  legal='SUB01_AuthenticBath_'+str(ni).zfill(3);names[n['name']]=legal;n['name']=legal;out['meshes'][n['mesh']]['name']=legal
+  for pi,p in enumerate(out['meshes'][n['mesh']]['primitives']):
+   pos,pfmt=elements(doc,original,p['attributes']['POSITION']);pos=[struct.unpack(pfmt,v)for v in pos];ids,ff=elements(doc,original,p['indices']);ids=[struct.unpack(ff,v)[0]for v in ids];keep=[];zero=[]
+   for ti in range(0,len(ids),3):
+    a,b,c=(pos[j]for j in ids[ti:ti+3]);x=[b[k]-a[k]for k in range(3)];y=[c[k]-a[k]for k in range(3)];cross=(x[1]*y[2]-x[2]*y[1],x[2]*y[0]-x[0]*y[2],x[0]*y[1]-x[1]*y[0])
+    if cross==(0,0,0):zero.append(ti//3)
+    else:keep.extend(ids[ti:ti+3])
+   if zero:
+    raw=struct.pack('<'+'I'*len(keep),*keep);blob.extend(b'\0'*(-len(blob)%4));offset=len(blob);blob.extend(raw);vi=len(out['bufferViews']);out['bufferViews'].append({'buffer':0,'byteOffset':offset,'byteLength':len(raw),'target':34963});ai=len(out['accessors']);out['accessors'].append({'bufferView':vi,'componentType':5125,'count':len(keep),'type':'SCALAR'});p['indices']=ai;removed[legal+':'+str(pi)]=zero
+ out['buffers'][0]['byteLength']=len(blob);encoded=glb(out,blob);actual,ab=read(encoded)
+ if bytes(ab[:len(original)])!=bytes(original):raise RuntimeError('Original fixture attribute/material/image bytes changed')
+ for ni,n in enumerate(out['nodes']):
+  if 'mesh'not in n:continue
+  for pi,p in enumerate(out['meshes'][n['mesh']]['primitives']):
+   old=doc['meshes'][doc['nodes'][ni]['mesh']]['primitives'][pi];iv,ff=elements(actual,ab,p['indices']);ii=[struct.unpack(ff,v)[0]for v in iv];ov,ff=elements(doc,original,old['indices']);oi=[struct.unpack(ff,v)[0]for v in ov];zero=set(removed.get(n['name']+':'+str(pi),[]));wanted=[j for ti in range(len(oi)//3)if ti not in zero for j in oi[ti*3:ti*3+3]]
+   for role,ai in old['attributes'].items():
+    a,_=elements(doc,original,ai);b,_=elements(actual,ab,p['attributes'][role])
+    if [a[i]for i in wanted]!=[b[i]for i in ii]:raise RuntimeError('Physical fixture triangle corner changed')
+ Path(target).parent.mkdir(parents=True,exist_ok=True);Path(target).write_bytes(encoded)
+ return actual,ab,{'names':names,'exact_zero_area_faces_removed':removed,'all_positive_triangle_corner_bytes_exact':True,'original_binary_prefix_exact':True,'prepared_sha256':hashlib.sha256(encoded).hexdigest()}
 
 def run(dry_run=True):
  import unreal as u
@@ -77,11 +105,12 @@ def run(dry_run=True):
   if folder.exists():shutil.copytree(folder,backup/name)
  dest='/Game/Sub01Home/AuthenticBath/V_'+SHA[:12]+'/Attempt_'+uuid.uuid4().hex;added=[];parts=[];active=False
  try:
+  prepared=project/'Saved/PrivateImportInputs'/('authentic-bath-'+uuid.uuid4().hex+'.glb');doc,blob,prepared_proof=prepare_import(ROOT/'bath-fixtures.glb',prepared)
   manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
-  if not manager.import_scene(dest,manager.create_source_data(str(ROOT/'bath-fixtures.glb')),params):raise RuntimeError('Authentic bathroom scene import refused')
+  if not manager.import_scene(dest,manager.create_source_data(str(prepared)),params):raise RuntimeError('Authentic bathroom scene import refused')
   manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before]
   for a in added:a.set_actor_hidden_in_game(True)
-  doc,blob=read_gltf(ROOT/'bath-fixtures.glb');glass=[];opaque=[];bindings={}
+  glass=[];opaque=[];bindings={}
   for ni,n in enumerate(doc['nodes']):
    if'mesh'not in n:continue
    matches=[a for a in added if a.get_actor_label()==n['name']]
@@ -117,7 +146,7 @@ def run(dry_run=True):
   excluded={a.get_path_name()for a,c,*_ in old};retained=[a for a in original if a.get_path_name()not in excluded]
   if fingerprint(u,retained)!={k:v for k,v in before.items()if k not in excluded}:raise RuntimeError('Bathroom activation changed unrelated actualhome')
   if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Actual bathroom map save refused')
-  result.update(saved=True,parts=[{'actor':a.get_path_name(),'component':c.get_path_name()}for a,c in parts],retired=[a.get_path_name()for a,c,*_ in old],remainders=[a.get_path_name()for a,c in remainders],materials=material_proof,glass_material=gm.get_path_name(),map_backup=str(backup),owned_destination=dest,protected_originals_unchanged=True)
+  result.update(saved=True,parts=[{'actor':a.get_path_name(),'component':c.get_path_name()}for a,c in parts],retired=[a.get_path_name()for a,c,*_ in old],remainders=[a.get_path_name()for a,c in remainders],materials=material_proof,glass_material=gm.get_path_name(),map_backup=str(backup),owned_destination=dest,protected_originals_unchanged=True,prepared_source_proof=prepared_proof)
   (audit/'authentic-bath-fixtures-native.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception as error:
   for a,c,h,v,t,st in old:a.set_actor_hidden_in_game(h);a.set_is_temporarily_hidden_in_editor(t);c.set_visibility(v);restore(u,c,st)
