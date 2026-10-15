@@ -1,0 +1,361 @@
+{
+  "schema": "sub01.wall-console-rigid-outward-shift.v1",
+  "assemblySha256": "6768a9972ce5f21533f75fbc49b0860233e877d6adf0348db1398bc80ca1e522",
+  "wallSha256": "3a664a85e472abcc4998ad6aaa1a7a9eada353421a56c878345cc6a87410ade1",
+  "deltaUEcm": [
+    0.5,
+    -20.0,
+    0.0
+  ],
+  "deltaBlenderM": [
+    0.005,
+    0.2,
+    0
+  ],
+  "newWallFrontExtensionUEcm": 0.5,
+  "nicheBackShiftCm": 0,
+  "sourceGeometryMaterialRotationScaleUnchanged": true,
+  "actualTVSourceAfterWallShift": [
+    {
+      "sourceNode": 130,
+      "wallIntersections": 0,
+      "minimumVertexToNewWallCm": 0.75
+    },
+    {
+      "sourceNode": 131,
+      "wallIntersections": 0,
+      "minimumVertexToNewWallCm": 4.909339904785156
+    }
+  ],
+  "allSixPartBoundsUEcm": [
+    [
+      -376.5,
+      -135.0,
+      104.19999694824219
+    ],
+    [
+      -358.0,
+      -112.0,
+      161.35093688964844
+    ]
+  ],
+  "solidRightPierYcm": [
+    -140,
+    -94.2
+  ],
+  "minimumPierEdgeMarginCm": 5.0,
+  "parts": [
+    {
+      "name": "WCPart01",
+      "boundsUEcm": [
+        [
+          -371.965576171875,
+          -133.65005493164062,
+          125.80000305175781
+        ],
+        [
+          -362.8555908203125,
+          -113.91004180908203,
+          160.3000030517578
+        ]
+      ]
+    },
+    {
+      "name": "WCPart03",
+      "boundsUEcm": [
+        [
+          -374.0,
+          -134.32449340820312,
+          125.90000915527344
+        ],
+        [
+          -362.965576171875,
+          -112.67550659179688,
+          161.35093688964844
+        ]
+      ]
+    },
+    {
+      "name": "WCPart02",
+      "boundsUEcm": [
+        [
+          -372.3655700683594,
+          -133.50003051757812,
+          127.4749984741211
+        ],
+        [
+          -364.8655700683594,
+          -113.96003723144531,
+          155.22500610351562
+        ]
+      ]
+    },
+    {
+      "name": "WCPart00",
+      "boundsUEcm": [
+        [
+          -372.15557861328125,
+          -114.05004119873047,
+          143.5
+        ],
+        [
+          -365.0755615234375,
+          -113.95004272460938,
+          157.0
+        ]
+      ]
+    },
+    {
+      "name": "WCPart05",
+      "boundsUEcm": [
+        [
+          -373.0,
+          -131.5,
+          105.49999237060547
+        ],
+        [
+          -367.18878173828125,
+          -115.50000762939453,
+          116.2825698852539
+        ]
+      ]
+    },
+    {
+      "name": "WCPart04",
+      "boundsUEcm": [
+        [
+          -376.5,
+          -135.0,
+          104.19999694824219
+        ],
+        [
+          -358.0,
+          -112.0,
+          155.8000030517578
+        ]
+      ]
+    }
+  ],
+  "sourceColliderScope": "All original HOME955 mesh nodes + nine final R4 boards with0.5cm front extension and unchanged niche back + complete207manufacturedwindows and76doors; actual native collider readback remains separate.",
+  "sourceBroadphaseChecks": [
+    {
+      "assembly": "WCPart01",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart03",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart02",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart00",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart05",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart04",
+      "protected": "house-static-67",
+      "source": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "sourceNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "assembly": "WCPart04",
+      "protected": "LWLower",
+      "source": "/workspace/sub01-home-private/reference-living-tv-wall-r4/output/living-tv-wall.glb",
+      "sourceNode": 0,
+      "intersectionPairs": 26
+    },
+    {
+      "assembly": "WCPart04",
+      "protected": "LWLeftPier",
+      "source": "/workspace/sub01-home-private/reference-living-tv-wall-r4/output/living-tv-wall.glb",
+      "sourceNode": 2,
+      "intersectionPairs": 40
+    }
+  ],
+  "exactBoundaryAttachmentContacts": [
+    {
+      "assembly": "WCPart04",
+      "protected": "LWLower",
+      "source": "/workspace/sub01-home-private/reference-living-tv-wall-r4/output/living-tv-wall.glb",
+      "sourceNode": 0,
+      "intersectionPairs": 26,
+      "kind": "exact separating X halfspaces; rear attachment only"
+    },
+    {
+      "assembly": "WCPart04",
+      "protected": "LWLeftPier",
+      "source": "/workspace/sub01-home-private/reference-living-tv-wall-r4/output/living-tv-wall.glb",
+      "sourceNode": 2,
+      "intersectionPairs": 40,
+      "kind": "exact separating X halfspaces; rear attachment only"
+    }
+  ],
+  "unresolvedSourceIntersections": [],
+  "projections": [
+    {
+      "eyeRole": "actual_native_photo067",
+      "eyeCm": [
+        -230,
+        -210,
+        160
+      ],
+      "beforeScreenPlaneProjectionBoundsYZcm": [
+        [
+          -116.44136383223734,
+          98.72100710868624
+        ],
+        [
+          -77.1905059684336,
+          161.46025552790042
+        ]
+      ],
+      "afterScreenPlaneProjectionBoundsYZcm": [
+        [
+          -135.88296318029802,
+          98.485409432777
+        ],
+        [
+          -99.27245969560128,
+          161.4657300885867
+        ]
+      ],
+      "horizontalSeparationFromScreenCm": 11.272459695601285,
+      "allAssemblyPointsOutsideScreenY": true
+    },
+    {
+      "eyeRole": "south_approach",
+      "eyeCm": [
+        -65,
+        -220,
+        165
+      ],
+      "beforeScreenPlaneProjectionBoundsYZcm": [
+        [
+          -115.74403609869913,
+          101.82371258615717
+        ],
+        [
+          -84.97204529751801,
+          161.34697092362097
+        ]
+      ],
+      "afterScreenPlaneProjectionBoundsYZcm": [
+        [
+          -135.46429162211183,
+          101.71667042060793
+        ],
+        [
+          -105.87798285715299,
+          161.34105726615002
+        ]
+      ],
+      "horizontalSeparationFromScreenCm": 17.877982857152986,
+      "allAssemblyPointsOutsideScreenY": true
+    },
+    {
+      "eyeRole": "sofa_seated",
+      "eyeCm": [
+        -155,
+        -5,
+        115
+      ],
+      "beforeScreenPlaneProjectionBoundsYZcm": [
+        [
+          -123.7131296469767,
+          103.9936254703618
+        ],
+        [
+          -91.13129903937312,
+          163.76740966760838
+        ]
+      ],
+      "afterScreenPlaneProjectionBoundsYZcm": [
+        [
+          -145.64543939290098,
+          103.9667937438818
+        ],
+        [
+          -111.16772820769214,
+          163.88446552266197
+        ]
+      ],
+      "horizontalSeparationFromScreenCm": 23.167728207692136,
+      "allAssemblyPointsOutsideScreenY": true
+    },
+    {
+      "eyeRole": "north_approach",
+      "eyeCm": [
+        -65,
+        185,
+        165
+      ],
+      "beforeScreenPlaneProjectionBoundsYZcm": [
+        [
+          -131.49152416507815,
+          101.82371258615717
+        ],
+        [
+          -90.01541633343851,
+          161.34697092362097
+        ]
+      ],
+      "afterScreenPlaneProjectionBoundsYZcm": [
+        [
+          -153.17054676673195,
+          101.71667042060793
+        ],
+        [
+          -110.34455205729881,
+          161.34105726615002
+        ]
+      ],
+      "horizontalSeparationFromScreenCm": 22.344552057298813,
+      "allAssemblyPointsOutsideScreenY": true
+    }
+  ],
+  "tvFunctionalPlaneExact": {
+    "x": -374.7,
+    "y": [
+      -88,
+      78
+    ],
+    "z": [
+      117.5,
+      212.5
+    ]
+  },
+  "actualGameChanged": false,
+  "nativeInputChanged": false,
+  "nativePlacementOrRenderedAcceptance": false,
+  "source_sha256": "3a664a85e472abcc4998ad6aaa1a7a9eada353421a56c878345cc6a87410ade1",
+  "ok": true,
+  "tv_case_screen_unchanged": true,
+  "niche_rear_unchanged": true,
+  "retained_original_white_wall_unchanged": true,
+  "actual_original_white_front_x_cm": -377.0,
+  "actual_new_cladding_front_x_cm": -376.5,
+  "actual_white_cladding_plane_separation_cm": 0.5
+}

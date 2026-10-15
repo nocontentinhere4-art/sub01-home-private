@@ -1,0 +1,188 @@
+{
+  "schema": "sub01.actual-original-tv-wall-coplanarity.v1",
+  "homeSha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "wallSha256": "828d7078120975c830db7016152936378617295c86a54cde5b6888b79940bc0a",
+  "planeSelectionCentreXcm": -377,
+  "planeSelectionMaxDistanceCm": 0.0001,
+  "selectionDistanceIsNotPenetrationWaiver": true,
+  "originalTrianglesOnPlane": 2,
+  "newCladdingTrianglesOnPlane": 16,
+  "overlappingOriginalTriangles": [
+    {
+      "node": 158,
+      "name": "house-static-67",
+      "material": "Material_67",
+      "triangle": 480,
+      "points": [
+        [
+          -376.99999809265137,
+          102.50000953674316,
+          279.9999952316284
+        ],
+        [
+          -376.99999809265137,
+          102.50000953674316,
+          2.3841858265427618e-06
+        ],
+        [
+          -376.99999809265137,
+          -112.5,
+          279.9999952316284
+        ]
+      ],
+      "overlapWithCladding": [
+        {
+          "newPart": "LWLower",
+          "newTriangle": 186,
+          "overlapCm2": 1996.7032552362575
+        },
+        {
+          "newPart": "LWLower",
+          "newTriangle": 187,
+          "overlapCm2": 2782.1490730484466
+        },
+        {
+          "newPart": "LWUpper",
+          "newTriangle": 186,
+          "overlapCm2": 5374.8521124964445
+        },
+        {
+          "newPart": "LWUpper",
+          "newTriangle": 187,
+          "overlapCm2": 6412.307317585344
+        },
+        {
+          "newPart": "LWRightPier",
+          "newTriangle": 186,
+          "overlapCm2": 1599.1253387931765
+        },
+        {
+          "newPart": "LWRightPier",
+          "newTriangle": 187,
+          "overlapCm2": 312.23490513763954
+        },
+        {
+          "newPart": "LWRecessRight",
+          "newTriangle": 186,
+          "overlapCm2": 31.679996415674395
+        },
+        {
+          "newPart": "LWRecessRight",
+          "newTriangle": 187,
+          "overlapCm2": 31.679996415673486
+        },
+        {
+          "newPart": "LWRecessLower",
+          "newTriangle": 186,
+          "overlapCm2": 7.629505455084313
+        },
+        {
+          "newPart": "LWRecessLower",
+          "newTriangle": 187,
+          "overlapCm2": 32.380845393156505
+        },
+        {
+          "newPart": "LWRecessUpper",
+          "newTriangle": 186,
+          "overlapCm2": 37.091473238005165
+        },
+        {
+          "newPart": "LWRecessUpper",
+          "newTriangle": 187,
+          "overlapCm2": 51.2938735887019
+        }
+      ],
+      "totalTriangleOverlapCm2": 18669.127692803606
+    },
+    {
+      "node": 158,
+      "name": "house-static-67",
+      "material": "Material_67",
+      "triangle": 481,
+      "points": [
+        [
+          -376.99999809265137,
+          102.50000953674316,
+          2.3841858265427618e-06
+        ],
+        [
+          -376.99999809265137,
+          -112.5,
+          2.3841858265427618e-06
+        ],
+        [
+          -376.99999809265137,
+          -112.5,
+          279.9999952316284
+        ]
+      ],
+      "overlapWithCladding": [
+        {
+          "newPart": "LWLower",
+          "newTriangle": 186,
+          "overlapCm2": 10128.186933396893
+        },
+        {
+          "newPart": "LWLower",
+          "newTriangle": 187,
+          "overlapCm2": 8505.387592881196
+        },
+        {
+          "newPart": "LWUpper",
+          "newTriangle": 186,
+          "overlapCm2": 986.4394928289585
+        },
+        {
+          "newPart": "LWUpper",
+          "newTriangle": 187,
+          "overlapCm2": 470.4003112887194
+        },
+        {
+          "newPart": "LWLeftPier",
+          "newTriangle": 186,
+          "overlapCm2": 381.008926107299
+        },
+        {
+          "newPart": "LWLeftPier",
+          "newTriangle": 187,
+          "overlapCm2": 1530.3508457547314
+        },
+        {
+          "newPart": "LWRecessLeft",
+          "newTriangle": 186,
+          "overlapCm2": 31.679996415674395
+        },
+        {
+          "newPart": "LWRecessLeft",
+          "newTriangle": 187,
+          "overlapCm2": 31.679996415675305
+        },
+        {
+          "newPart": "LWRecessLower",
+          "newTriangle": 186,
+          "overlapCm2": 45.05049012892084
+        },
+        {
+          "newPart": "LWRecessLower",
+          "newTriangle": 187,
+          "overlapCm2": 20.299150190847968
+        },
+        {
+          "newPart": "LWRecessUpper",
+          "newTriangle": 186,
+          "overlapCm2": 15.588522345997262
+        },
+        {
+          "newPart": "LWRecessUpper",
+          "newTriangle": 187,
+          "overlapCm2": 1.3861219953005275
+        }
+      ],
+      "totalTriangleOverlapCm2": 22147.458379750213
+    }
+  ],
+  "totalOverlapCm2": 40816.58607255382,
+  "proposedWallAndMountRigidXDeltaCm": 0.5,
+  "tvScreenAndInputUnchanged": true,
+  "nativeChanged": false
+}
