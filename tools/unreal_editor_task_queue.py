@@ -23,6 +23,7 @@ TASKS = {
     'review_desk': 'unreal_scene_review',
     'review_kitchen': 'unreal_scene_review',
     'review_stairs': 'unreal_scene_review',
+    'review_bathroom': 'unreal_scene_review',
     'hands_inventory': 'unreal_hands_inventory',
     'walk_pose_audit': 'unreal_walk_pose_audit',
     'refresh_queue': 'unreal_editor_queue_refresh',
@@ -131,7 +132,7 @@ def dispatch(task):
         return report
     if task == 'refresh_queue':
         return {'refreshed_existing_queue': module.refresh(), 'native_game_accepted': False}
-    if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs'):
+    if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs', 'review_bathroom'):
         return module.run(task.removeprefix('review_'))
     if task == 'monitor_support':
         return module.run(OFFICE_EXPORT, dry_run=False)

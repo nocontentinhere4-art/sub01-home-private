@@ -9,6 +9,8 @@ VIEWS = {
     'desk': ((200, -195, 165), (-18, -90, 0)),
     'kitchen': ((-125, -190, 165), (-8, -134, 0)),
     'stairs': ((140, -120, 165), (18, -169, 0)),
+    # Actual tile top305.25cm; source-bounded eye west of shower partition.
+    'bathroom': ((-230, 120, 465), (-43.5, 121.2, 0)),
 }
 
 
