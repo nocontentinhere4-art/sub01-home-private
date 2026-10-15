@@ -439,3 +439,20 @@ def test_desk_clear_arms_lifts_the_hand_out_of_a_slab_and_keeps_protected_frames
     for a, b in ((2, 3), (3, 4)):                                              # no stretch
         assert np.allclose(np.linalg.norm(out[:, b, :3, 3] - out[:, a, :3, 3], axis=1), np.linalg.norm(W[:, b, :3, 3] - W[:, a, :3, 3], axis=1))
     assert np.allclose(K.arm_locals(sk, out)[:, NAMES.index('LeftHandMiddle2')], K.arm_locals(sk, W)[:, NAMES.index('LeftHandMiddle2')])
+
+
+def test_base_invariance_allows_only_the_arm_chains():
+    sk, W, ibm = synthetic()
+    ctx = SimpleNamespace(sk=SimpleNamespace(names=NAMES, subtree=sk.subtree, j=sk.j))
+    old = K.SIDES
+    try:
+        K.SIDES = {'left': 'Left'}
+        W2 = pose_hand(W, rot((0, 0, 1), 20))               # an arm change: allowed
+        r = K.base_invariance(ctx, W2, W, np.array([0.]))
+        assert r['pass'] and r['joints_checked'] == 2       # Hips, LeftShoulder
+        W3 = W2.copy()
+        W3[:, 0, :3, 3] += [0, .001, 0]                     # the pelvis moves 0.1 cm: refused
+        r = K.base_invariance(ctx, W3, W, np.array([0.]))
+        assert not r['pass'] and r['max_position_cm']['value'] == pytest.approx(.1)
+    finally:
+        K.SIDES = old

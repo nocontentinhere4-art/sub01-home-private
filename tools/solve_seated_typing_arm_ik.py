@@ -392,7 +392,7 @@ SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
 ERGO_ELBOW_ABOVE_DESK_CM = (0., 10.)
 ERGO_UPPER_ARM_MAX_DEG = 20.
 ERGO_ELBOW_SCALE_CM, ERGO_UPPER_ARM_SCALE_DEG = 1., 5.
-ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-60., 120.01, 5.))
+ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-60., 120.01, 10.))
 SWIVEL_COARSE_STEP_DEG = 10.
 SWIVEL_COARSE_DEG = tuple(float(v) for v in np.arange(0., SWIVEL_GRID_DEG[-1] + .01, SWIVEL_COARSE_STEP_DEG))
 SEARCH_CONTACT_PASSES = 4
@@ -608,8 +608,11 @@ class ClipArmIK:
         ok0 = self.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
         best_cost[ok0] = self.ergonomic_cost(ez, ua)[ok0]
         before = {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)}
+        hxy0 = self.hand_xy[s].copy()
+        best_hxy = hxy0.copy()
         for g in ERGO_SWIVEL_DEG:
             ph = np.full(F, math.radians(g))
+            self.hand_xy[s] = hxy0.copy()           # every candidate starts from the same horizontal correction
             dl = self.solve_contact_side(s, delta, ph, lift, fr, passes=SEARCH_CONTACT_PASSES)
             Wt = self.pose(self.W_fit.copy(), s, dl, ph, lift)[0]
             ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
@@ -617,6 +620,8 @@ class ClipArmIK:
             c = np.where(ok, self.ergonomic_cost(ez, ua) + 1e-6 * abs(g), np.inf)
             better = c < best_cost
             best_cost[better], best_phi[better], best_delta[better] = c[better], ph[better], dl[better]
+            best_hxy[better] = self.hand_xy[s][better]
+        self.hand_xy[s] = best_hxy
         sig = SWIVEL_SMOOTH_S / self.dt
         x = np.arange(-3 * int(math.ceil(sig)), 3 * int(math.ceil(sig)) + 1)
         ker = np.exp(-.5 * (x / sig) ** 2)
@@ -1165,8 +1170,26 @@ def finger_override(ctx, W, W_raw, seams):
     return out
 
 
+ARMS_ONLY = False           # --arms-only: only the arm chains may differ from the base clip (lower body / pelvis gated)
+BASE_INVARIANCE_CM, BASE_INVARIANCE_DEG = 1e-3, 1e-3
+
+
+def base_invariance(ctx, W, W_base, times):
+    """Every joint outside the two arm chains (Arm, ForeArm, Hand and the fingers) vs the base clip: world position and
+    rotation change; the pelvis, spine, shoulders, head and legs must be the base's (float32 storage only)."""
+    arm = set()
+    for s in SIDES:
+        arm |= set(ctx.sk.subtree(ctx.sk.j(ARM_BONES[s][0])))
+    other = [k for k in range(len(ctx.sk.names)) if k not in arm]
+    dp = np.linalg.norm(W[:, other][..., :3, 3] - W_base[:, other][..., :3, 3], axis=-1).max(1) * 100
+    dr = np.max([P.rot_angle_deg(unit_rot(W[:, k, :3, :3]), unit_rot(W_base[:, k, :3, :3])) for k in other], axis=0)
+    return {'joints_checked': len(other), 'max_position_cm': worst_frame(dp, times, lowest=False),
+            'max_rotation_deg': worst_frame(dr, times, lowest=False),
+            'pass': bool(dp.max() <= BASE_INVARIANCE_CM and dr.max() <= BASE_INVARIANCE_DEG)}
+
+
 def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_seam=None, finger_frames=None,
-            finger_seams=()):
+            finger_seams=(), base=None):
     """Every gate and metric on the given (read-back) pose, every frame. Solver frame: body at the audited transform,
     chair at measured + ROLL_OFFSET_CM. World at frame f: the body moved by shift[f] (UE cm), the chair at the measured
     transform + chair_offset_world[f]. Seat/sole gates are chair-relative (chair and body roll rigidly together), so they
@@ -1309,7 +1332,9 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     seat_pass = bool(seat_pass and out['seat_main_strong_rule']['pass'])
     out['seat_pass'] = bool(seat_pass)
     out['seat_pass_at_rolled_chair'] = bool(seat_pass_r)
-    out['fingers'] = finger_contract(ctx, W, W_raw, times, finger_seams)
+    out['fingers'] = finger_contract(ctx, W, W_raw if base is None else base, times, finger_seams)
+    out['fingers']['reference'] = 'raw capture' if base is None else 'the seated base clip'
+    out['base_invariance'] = base_invariance(ctx, W, base, times) if base is not None else None
     out['finger_local_max_change_deg'] = out['fingers']['worst_error']['value']
     # the COMPLETE chair at this frame's roll offset: vs the real desk, the floor, and the body
     offs, inv = np.unique(np.round(np.asarray(chair_offset_world, float), 9), axis=0, return_inverse=True)
@@ -1342,7 +1367,8 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
                                  and out['body_vs_desk']['legs_and_torso_clear']
                                  and g['bone_length_max_error_cm'] <= .01 and out['fingers']['pass']
                                  and out['chair']['chair_vs_desk_pass'] and out['chair']['floor_pass']
-                                 and out['chair']['body_vs_chair_pass'])
+                                 and out['chair']['body_vs_chair_pass']
+                                 and (out['base_invariance'] is None or out['base_invariance']['pass']))
     out['per_frame'] = pf
     return out
 
@@ -1419,8 +1445,8 @@ def transition_arms(ctx, ik, W_fit, W_ik, s, keep_fit):
         posed = frames is not None
         out = key_penetration(ik, Wb, frames)
         for side in SIDES:
-            out |= ik.clearance(Wb, side, CLEARANCE_STRIDE, frames, SEARCH_REACH_CM, posed_frames=posed)[0] \
-                < FOREARM_TARGET_CLEARANCE_CM
+            out |= ik.clearance(Wb, side, 1, frames, SEARCH_REACH_CM, posed_frames=posed)[0] \
+                < FOREARM_TARGET_CLEARANCE_CM                 # every arm vertex (short clips)
         return out
     raised = set()
     for _ in range(2):
@@ -1462,7 +1488,7 @@ def post_contact(ctx, ik, W, window, seam_frame=None):
         more = False
         for s in SIDES:
             need = np.where(gate & (a[s]['over'] > 0), np.maximum(0., top - a[s]['over_min']), 0.)
-            cl = ik.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0]
+            cl = ik.clearance(Wc, s, 1, reach=SEARCH_REACH_CM)[0]
             need = np.nan_to_num(np.maximum(need, np.where(gate & (cl < 0), LIFT_STEP_CM, 0.)))
             if seam_frame is not None:
                 need[seam_frame] = 0.
@@ -1612,7 +1638,10 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
     mode = 'start' if at_end else 'end'
     Tg = P.seam_target(W_idle, mode, F)
     w_idle = P.seam_weight('start', F, 0, n) if at_end else P.seam_weight('end', F, F - 1 - n, F - 1)
-    W1, legs_idle = seam_blend_with_soles(ctx, A, W_fit, Tg, w_idle, r_c.joint_world, t_c)
+    if ARMS_ONLY:      # the base already joins SeatedIdle; its lower body and pelvis must not change
+        W1, legs_idle = W_fit, 'base unchanged (arms-only mode)'
+    else:
+        W1, legs_idle = seam_blend_with_soles(ctx, A, W_fit, Tg, w_idle, r_c.joint_world, t_c)
     # arms: whole-arm IK, blended in along the roll
     contact_shift = shift_c[-1] if at_end else shift_c[0]
     ikc = ctx.ik(W1, r_c.joint_world, t_c, shift_c, contact_shift=contact_shift)
@@ -1621,10 +1650,13 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
     # DeskTyping side: the written DeskTyping first (SitToType) / last (TypeToSit) frame, held
     Td = np.repeat((W_dt[0] if at_end else W_dt[-1])[None], F, axis=0)
     w_dt = P.seam_weight('end', F, F - 1 - n, F - 1) if at_end else P.seam_weight('start', F, 0, n)
-    W3, legs_dt = seam_blend_with_soles(ctx, A, W2, Td, w_dt, r_c.joint_world, t_c)
-    # fingers keep THIS clip's captured curls on every frame (gate (a): all-frame invariance, no seam exemption); the
-    # finger change at the clip boundary is then a seam jump, measured and reported in the seam table
-    W3 = finger_override(ctx, W3, r_c.joint_world, [])
+    if ARMS_ONLY:      # arm-local seam into DeskTyping's first / last frame; the lower body stays the base's
+        W3, legs_dt = blend_arm_locals(ctx.sk, W2, Td, w_dt), 'base unchanged (arms-only mode)'
+        W3 = finger_override(ctx, W3, W_fit, [])
+    else:
+        W3, legs_dt = seam_blend_with_soles(ctx, A, W2, Td, w_dt, r_c.joint_world, t_c)
+        # fingers keep THIS clip's captured curls on every frame (gate (a): all-frame invariance, no seam exemption)
+        W3 = finger_override(ctx, W3, r_c.joint_world, [])
     W3, seam_lift = post_contact(ctx, ikc, W3, w_dt, seam_frame=F - 1 if at_end else 0)
     path, sha = write(ctx, g_c, W3, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role))
     Wcb = readback(ctx, path, t_c)
@@ -1638,7 +1670,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
                             'desk_typing_side_wrist_contact': seam_lift},
            'arm_weights': weights, 'ik_history': ikc.history,
            'measure': measure(ctx, role, Wcb, r_c.joint_world, t_c, shift_c, off, ikc, key_seam=seam_frame,
-                              finger_seams=())}
+                              finger_seams=(), base=W_fit if ARMS_ONLY else None)}
     rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'])
     return rep, Wcb, shift_c, t_c
 
@@ -1679,12 +1711,18 @@ def run(args):
     # ---- roll: the seat fit's chair offset plus the scanned extra pull-in
     f_dt, r_dt, g_dt, t_dt = ctx.clip('DeskTyping_seated')
     prior = None
-    if args.resume:
+    if args.roll_dy is not None:
+        scan = {'fixed': True, 'chosen_extra_pull_in_dy_cm': args.roll_dy,
+                'rule': 'fixed by --roll-dy (the earlier probe scan on the seat-fit base chose 0: docs/proposed/seated-typing-ik)'}
+        pick = {'extra_pull_in_dy_cm': args.roll_dy}
+    elif args.resume:
         prior = json.loads((out_dir / 'seated-typing-ik.proposal.json').read_text())
         scan = prior['roll_scan']
         pick = {'extra_pull_in_dy_cm': scan['chosen_extra_pull_in_dy_cm']}
     else:
         pick, scan = roll_scan(ctx, f_dt, r_dt, t_dt, dys=(0.,) if args.quick else ROLL_SCAN_DY_CM)
+    if args.resume and prior is None:
+        prior = json.loads((out_dir / 'seated-typing-ik.proposal.json').read_text())
     if args.quick:                      # smoke run only: a subset of DeskTyping keys, no profile gate
         f_dt, r_dt, g_dt, t_dt = ctx.clip('DeskTyping_seated', list(t_dt[AUDIT_KEYS[0]:AUDIT_KEYS[1] + 1:30]))
     dy = float(pick['extra_pull_in_dy_cm'])
@@ -1740,7 +1778,8 @@ def run(args):
                'keys': F, 'input_fit_clip': rel(Path(FIT_DIR) / CLIPS['DeskTyping_seated'][0]),
                'raw_capture': CLIPS['DeskTyping_seated'][1], 'readback_max_world_error_cm': _r(np.abs(Wb[..., :3, 3] - W[..., :3, 3]).max() * 100, 6),
                'ik_history': ik.history, 'measure': measure(ctx, 'DeskTyping_seated', Wb, r_dt.joint_world, t_dt, shift,
-                                                            np.tile(roll.roll, (F, 1)), ik)}
+                                                            np.tile(roll.roll, (F, 1)), ik,
+                                                            base=f_dt.joint_world if ARMS_ONLY else None)}
         rep['contact_profile'] = profile_validation(ctx, Wb, f_dt.joint_world, r_dt.joint_world, t_dt, shift) if not args.quick \
             else {'pass': False, 'skipped': 'quick smoke run'}
         rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'] and rep['contact_profile']['pass'])
@@ -2096,6 +2135,9 @@ def main(argv=None):
     ap.add_argument('--chair-translation', type=lambda v: [float(x) for x in v.split(',')], default=None,
                     help='x,y,z: the given INITIAL chair translation (default root\'s measured one), e.g. a proposed lift')
     ap.add_argument('--keycaps', default=None, help='keyboard-keycaps-world.json keyboard IK targets (default: home.js keyboard)')
+    ap.add_argument('--arms-only', action='store_true', help='only the arm chains may change: no full-pose seam blends; the '
+                    'lower body / pelvis are gated identical to the base')
+    ap.add_argument('--roll-dy', type=float, default=None, help='fixed extra pull-in (skips the probe scan)')
     ap.add_argument('--base-transitions', action='store_true', help='SitDown/GetUp desk-clearance arm pass on --base-dir '
                     '(SeatedIdle measured unchanged); writes the clips and seated-arms.packet.json into --out-dir')
     ap.add_argument('--audit-main-seat-rule', action='store_true', help='gate the committed clips\' seat base with main\'s '
@@ -2108,6 +2150,8 @@ def main(argv=None):
     ap.add_argument('--desk-source', help='LINEA140 source GLB: re-derive docs/proposed/seated-typing-ik/real-linea140-geometry.json')
     args = ap.parse_args(argv)
     configure(args.base_dir, args.base_chair_offset)
+    global ARMS_ONLY
+    ARMS_ONLY = bool(args.arms_only)
     if args.base_transitions:
         packet = base_transitions_packet(args)
         print(json.dumps(packet['gates']))
