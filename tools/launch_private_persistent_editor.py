@@ -78,7 +78,7 @@ def run():
             str(seconds), 'taskset', '-c', affinity, str(ENGINE / 'Engine/Binaries/Linux/UnrealEditor'),
             str(PROJECT / 'Sub01HomeLab.uproject'), '/Game/Sub01Home/ActualHome',
             '-NoSplash', '-Unattended', '-NoSound', '-NoLiveCoding', '-NoHotReloadFromIDE',
-            '-corelimit=10', '-physicalcorelimit=10',
+            '-corelimit=10', '-physicalcorelimit=10', '-immersive',
             '-ExecutePythonScript=' + str(BOOTSTRAP), '-log', '-stdout',
             '-FullStdOutLogOutput', '-ResX=1280', '-ResY=720', '-Windowed']
     log = (PRIVATE / 'persistent-editor-launch.log').open('w')
