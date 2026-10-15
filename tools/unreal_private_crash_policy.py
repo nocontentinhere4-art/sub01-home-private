@@ -33,13 +33,15 @@ def run(u=None):
     default.set_editor_property('send_unattended_bug_reports', False)
     if default.get_editor_property('send_unattended_bug_reports'):
         raise RuntimeError('Actual crash privacy CDO refused the owned setting')
-    # Do not mistake a void Blueprint command request for actual Editor Exec.
-    # Record the installed reflected APIs before choosing a proven execution path.
-    apis = {}
-    for name in ('EditorLevelLibrary', 'LevelEditorSubsystem', 'UnrealEditorSubsystem'):
-        cls_api = getattr(u, name, None)
-        apis[name] = {n: str(getattr(cls_api, n).__doc__)[:1800]
-                     for n in dir(cls_api) if 'console' in n.lower() or 'exec' in n.lower()}
+    marker = str(time.time_ns())
+    begin = 'SUB01_PRIVATE_CRASH_RELOAD_BEGIN_'+marker
+    end = 'SUB01_PRIVATE_CRASH_RELOAD_END_'+marker
+    u.log(begin)
+    # Actual UE5.8 KismetSystemLibrary.cpp falls back to GEngine->Exec with no PC.
+    # GetIni reads GConfig and prints final cached values after static layers.
+    u.SystemLibrary.execute_console_command(world, COMMAND)
+    u.SystemLibrary.execute_console_command(world, 'GetIni EditorSettings:/Script/UnrealEd.CrashReportsPrivacySettings bSendUnattendedBugReports')
+    u.log(end)
     after = bool(default.get_editor_property('send_unattended_bug_reports'))
     if after or not disk_disabled():
         raise RuntimeError('Actual reloaded crash privacy setting is not disabled')
@@ -48,8 +50,9 @@ def run(u=None):
               'previous_send_unattended_bug_reports': before,
               'current_send_unattended_bug_reports': after,
               'disk_explicitly_disabled': True, 'fixed_reload_command': COMMAND,
-              'cache_reload_requested': False, 'cache_reload_execution_verified': False,
-              'reflected_editor_command_apis': apis, 'crash_triggered_for_test': False,
+              'cache_reload_requested': True, 'cache_reload_execution_verified': False,
+              'cached_getini_readback_requested': True, 'log_begin_marker': begin,
+              'log_end_marker': end, 'crash_triggered_for_test': False,
               'scene_mutations': 0, 'native_game_accepted': False}
     path = Path(u.Paths.project_dir())/'private-audit/private-editor-crash-policy.json'
     path.write_text(json.dumps(report, indent=2)+'\n')
