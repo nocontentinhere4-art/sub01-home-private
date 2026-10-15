@@ -27,6 +27,12 @@ try:
 except ImportError:
     from native_input_channel import packet as input_packet, dispatch as dispatch_input, INPUT_SOCKET_JS
 
+try:
+    from .native_h264_capture import AnnexBAccessUnits, capture_command as h264_capture_command
+except ImportError:
+    from native_h264_capture import AnnexBAccessUnits, capture_command as h264_capture_command
+
+
 AUTHORIZED_POD = 'dgtgepkz7h1zy5'
 AUTHORIZED_NATIVE_EXECUTABLE = b'/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
 
@@ -326,7 +332,9 @@ setInterval(ready,1000);ready();
 '''.replace('%KEYS%', json.dumps(list(KEYS))).replace('%SETTINGS_QUEUE%',VIEW_SETTINGS_QUEUE_JS).replace('%INPUT_SOCKET_CODE%',INPUT_SOCKET_JS)
 
 class LiveState:
-    def __init__(self, deadline, fps=8, width=960):
+    def __init__(self, deadline, fps=8, width=960, codec='jpeg'):
+        if codec not in ('jpeg','h264_nvenc'):raise ValueError('Supported capture codec required')
+        self.codec=codec
         self.deadline = deadline
         self.fps=fps;self.width=width;self.viewer_lock=threading.Lock()
         self.private = Path('/home/unreal/.sub01-private')
@@ -516,16 +524,24 @@ class LiveState:
         with self.capture_lock:
             if self.proc and self.proc.poll() is None:return
             with self.condition:self.latest_frame=b'';self.capture_utc=0
-            process=subprocess.Popen(['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate',str(self.fps),'-video_size','1280x720','-i',':99.0','-vf',f'scale={self.width}:{self.width*9//16}','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+            command=h264_capture_command(self.fps,self.width) if self.codec=='h264_nvenc' else ['ffmpeg','-nostdin','-loglevel','error','-f','x11grab','-framerate',str(self.fps),'-video_size','1280x720','-i',':99.0','-vf',f'scale={self.width}:{self.width*9//16}','-filter_threads','1','-threads','1','-c:v','mjpeg','-q:v','5','-f','image2pipe','pipe:1']
+            process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
             self.proc=process
             threading.Thread(target=self.capture,args=(process,),daemon=True).start()
 
     def capture(self,process):
         buffer=b''
+        h264=AnnexBAccessUnits() if self.codec=='h264_nvenc' else None
         try:
             while self.enabled('native-viewer-capture-enabled') and time.monotonic()-self.last_view_request<10:
                 block=process.stdout.read1(65536)
                 if not block:break
+                if h264 is not None:
+                    for frame in h264.feed(block):
+                        if not self.enabled('native-viewer-capture-enabled'):break
+                        with self.condition:
+                            self.latest_frame=frame;self.sequence+=1;self.capture_utc=time.time();self.condition.notify_all()
+                    continue
                 buffer+=block
                 if len(buffer)>2*1024*1024:raise RuntimeError('Frame bounds exceeded')
                 while True:
@@ -561,14 +577,19 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path.split('?')[0] == '/health':
             if self.path.endswith('?hold=1') and (state.enabled('native-viewer-input-enabled') or state.can_private_egress()):state.last_lease=time.monotonic()
-            self.json(200, {'transport':'live-native-X11-JPEG','session':state.session,
+            self.json(200, {'transport':'live-native-X11-H264' if state.codec=='h264_nvenc' else 'live-native-X11-JPEG','captureCodec':state.codec,'session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),'privacyEgressEnabled':state.can_private_egress(),
                            'takeControlAvailable':state.take_control_available(),
                            'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'viewMode':state.view_mode(),'activity':state.live_activity(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
-            data=HTML.encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
+            if state.codec=='h264_nvenc':
+                try:from .native_h264_frontend import h264_html
+                except ImportError:from native_h264_frontend import h264_html
+                data=h264_html(HTML).encode()
+            else:data=HTML.encode()
+            self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
         if urlsplit(self.path).path != '/frame.jpg':
             self.json(404, {'error':'Unknown route'});return
         if not state.enabled('native-viewer-capture-enabled'):
@@ -582,7 +603,7 @@ class Handler(BaseHTTPRequestHandler):
             state.condition.wait_for(lambda:state.sequence>after and bool(state.latest_frame),timeout=2)
             if not state.latest_frame or not state.enabled('native-viewer-capture-enabled'):self.json(503,{'error':'Native pixels unavailable'});return
             frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
-        self.send_response(200);self.send_header('Content-Type','image/jpeg');self.send_header('Cache-Control','no-store')
+        self.send_response(200);self.send_header('Content-Type','video/h264' if state.codec=='h264_nvenc' else 'image/jpeg');self.send_header('Cache-Control','no-store')
         self.send_header('Content-Length',str(len(frame)));self.send_header('X-Native-Sequence',str(sequence));self.send_header('X-Native-Capture-Utc',str(captured));self.end_headers()
         try:self.wfile.write(frame);state.frames+=1
         except (BrokenPipeError,ConnectionResetError):pass
@@ -706,10 +727,10 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError,TypeError,OSError):self.json(400,{'error':'View settings refused'})
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);parser.add_argument('--capture-fps',type=int,choices=[8,15,24,30],default=8);parser.add_argument('--capture-width',type=int,choices=[960,1280],default=960);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--deadline-epoch',type=int,required=True);parser.add_argument('--capture-fps',type=int,choices=[8,15,24,30,60],default=8);parser.add_argument('--capture-width',type=int,choices=[960,1280],default=960);parser.add_argument('--capture-codec',choices=['jpeg','h264_nvenc'],default='jpeg');args=parser.parse_args()
     if os.getuid()!=1001 or not authorized_viewer_window(args.deadline_epoch):raise SystemExit('Verified private migration window and nonroot runtime required')
     os.environ['DISPLAY']=':99';os.environ['XAUTHORITY']='/home/unreal/.sub01-private/native-xauthority'
-    server=ThreadingHTTPServer(('127.0.0.1',8892),Handler);server.daemon_threads=True;server.state=LiveState(args.deadline_epoch,args.capture_fps,args.capture_width)
+    server=ThreadingHTTPServer(('127.0.0.1',8892),Handler);server.daemon_threads=True;server.state=LiveState(args.deadline_epoch,args.capture_fps,args.capture_width,args.capture_codec)
     def stop(*_):
         if server.state.proc:server.state.proc.terminate()
         if server.state.input:
