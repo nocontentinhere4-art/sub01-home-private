@@ -29,6 +29,33 @@ def source_plan(home):
  return {'root_source_node':225,'mesh_source_nodes':list(NODES),'rigid_delta_ue_cm':[v*100 for v in DELTA],'members':plans,'exact_base_contact_faces':contacts,'exact_nonpenetrating_base_boundary_faces':boundary,'geometry_uv_pbr_unchanged':True,'retire_only_obsolete_generated_lamp_base':legacy_plan,'watering_anchor_status':'No watering implementation/coordinate anchor found in local native source; actual interaction acceptance remains unverified'},members
 
 
+
+def native_geometry_api_audit(u,mesh):
+ """Read-only API/settings receipt; never rebuilds or changes shared assets."""
+ report={'unreal_module_name':getattr(u,'__name__',None),'apis':{name:hasattr(mesh,name)for name in ('get_mesh_description','get_num_source_models','get_num_lods')},'nanite_settings':{},'errors':{}}
+ try:
+  settings=mesh.get_editor_property('nanite_settings')
+  for prop in ('enabled','fallback_percent_triangles','fallback_relative_error','keep_percent_triangles','trim_relative_error','fallback_target'):
+   try:
+    value=settings.get_editor_property(prop)
+    report['nanite_settings'][prop]=value if isinstance(value,(bool,int,float,str))else str(value)
+   except Exception as error:report['errors']['nanite_settings.'+prop]=str(error)
+ except Exception as error:report['errors']['nanite_settings']=str(error)
+ if hasattr(u,'StaticMeshEditorSubsystem'):
+  try:
+   sub=u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
+   report['subsystem_apis']={name:hasattr(sub,name)for name in ('get_nanite_settings','set_nanite_settings','get_lod_count','get_lod_vertex_count')}
+  except Exception as error:report['errors']['StaticMeshEditorSubsystem']=str(error)
+ if hasattr(mesh,'get_mesh_description'):
+  try:
+   description=mesh.get_mesh_description(0)
+   report['mesh_description_present']=description is not None
+   for method in ('get_triangle_count','get_vertex_count','get_polygon_count'):
+    if description is not None and hasattr(description,method):report['mesh_description_'+method]=getattr(description,method)()
+  except Exception as error:report['errors']['mesh_description']=str(error)
+ return report
+
+
 def native_preflight(u,actors,plan,surface,close):
  base=plan['retire_only_obsolete_generated_lamp_base'];found=[a for a in actors if a.get_name()=='full-home_node_259']
  if len(found)!=1:raise RuntimeError('Exact obsolete lamp base259 native actor unavailable')
@@ -48,6 +75,7 @@ def native_preflight(u,actors,plan,surface,close):
    wanted=[[v*100 for v in b]for b in p['old_bounds_ue_m']]
    mesh=comps[0].get_editor_property('static_mesh');parent=actor.get_attach_parent_actor()
    details={'source_node':p['node'],'actor':actor.get_name(),'expected_mesh':expected,'actual_mesh':mesh.get_path_name(),'expected_triangle_count':p['source_triangle_count'],'actual_triangle_count':count,'expected_world_bounds_ue_cm':wanted,'actual_world_bounds_ue_cm':box,'actual_minus_expected_bounds_cm':[[x-y for x,y in zip(a,b)]for a,b in zip(box,wanted)],'attach_parent_actor':parent.get_name()if parent else None,'actor_transform':str(actor.get_actor_transform())if hasattr(actor,'get_actor_transform')else None,'component_world_transform':str(comps[0].get_world_transform())if hasattr(comps[0],'get_world_transform')else None,'native_lod0_sections':mesh.get_num_sections(0)if hasattr(mesh,'get_num_sections')else None,'native_lod_count':mesh.get_num_lods()if hasattr(mesh,'get_num_lods')else None}
+   details['geometry_api_audit']=native_geometry_api_audit(u,mesh)
    if hasattr(u,'Paths'):
     audit=Path(u.Paths.project_dir())/'private-audit'/'office-plant-native-refusal.json'
     audit.parent.mkdir(parents=True,exist_ok=True)
