@@ -41,6 +41,21 @@ def actual_material_property(material,name,override_flag):
    return m.get_editor_property(name)
  raise RuntimeError('Actual rendered material property unavailable')
 
+def apply_owned_alpha_cutoff(u,component,source,destination):
+ """Make the rendered owned MASK instance explicitly match authored glTF cutoff.
+
+ Interchange also supplies AlphaCutoff to its body function, but its root native
+ clip value is zero. Set only the newly owned MI base override, never the shared
+ Interchange material or an original home's material.
+ """
+ if source.get('alphaMode','OPAQUE')!='MASK':return
+ material=component.get_material(0)
+ if not isinstance(material,u.MaterialInstanceConstant)or not material.get_path_name().startswith(destination+'/'):raise RuntimeError('Only fresh owned botanical MASK material may receive source clipping override')
+ cutoff=float(source.get('alphaCutoff',.5))
+ if not 0<=cutoff<=1:raise RuntimeError('Authored alpha cutoff outside glTF range')
+ overrides=material.get_editor_property('base_property_overrides');overrides.set_editor_property('opacity_mask_clip_value',cutoff);overrides.set_editor_property('override_opacity_mask_clip_value',True);material.set_editor_property('base_property_overrides',overrides);u.MaterialEditingLibrary.update_material_instance(material)
+ if abs(float(actual_material_property(material,'opacity_mask_clip_value','override_opacity_mask_clip_value'))-cutoff)>1e-5:raise RuntimeError('Owned source alpha cutoff did not apply')
+
 def verify_leaf_mode(u,component,source):
  material=component.get_material(0);mode=actual_material_property(material,'blend_mode','override_blend_mode');two=actual_material_property(material,'two_sided','override_two_sided')
  wanted={'OPAQUE':u.BlendMode.BLEND_OPAQUE,'MASK':u.BlendMode.BLEND_MASKED}.get(source.get('alphaMode','OPAQUE'))
@@ -116,7 +131,7 @@ def run(dry_run=True):
     if not same_triangles(wanted,actual,tolerance=.0001):raise RuntimeError('Actual complete native botanical geometry differs '+node['name'])
     primitives=doc['meshes'][node['mesh']]['primitives']
     if len(primitives)!=1 or len(a.get_components_by_class(u.StaticMeshComponent))!=1:raise RuntimeError('Standalone exact source primitive required')
-    source_mat=doc['materials'][primitives[0]['material']];pbr=verify_owned_material(u,c,source_mat,destination,source_primitive_verified=True);mode=verify_leaf_mode(u,c,source_mat)
+    source_mat=doc['materials'][primitives[0]['material']];pbr=verify_owned_material(u,c,source_mat,destination,source_primitive_verified=True);apply_owned_alpha_cutoff(u,c,source_mat,destination);mode=verify_leaf_mode(u,c,source_mat)
     original_material=original_doc['materials'][primitives[0]['material']];solid='plant pot'in original_material.get('name','').lower();c.set_collision_profile_name('BlockAll'if solid else'NoCollision');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS if solid else u.CollisionEnabled.NO_COLLISION);c.set_cast_shadow(True);a.set_actor_label('SUB01PhotoPlant_'+node['name']);parts.append((a,c));geometry.append({'node':node['name'],'variant':variant,'positive_triangles':len(actual),'source_exact_zero_indices':zero,'component':c.get_path_name()});materials.append({'source':source_mat['name'],'core_pbr':pbr,'botanical_mode':mode})
   if len(parts)!=18 or sum(p['positive_triangles']for p in geometry)>42128 or snapshot(u,actors)!=before:raise RuntimeError('Complete four source plants and unchanged originals required')
   if not u.EditorAssetLibrary.save_directory(destination,only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned exact plant assets save refused')

@@ -1,0 +1,20 @@
+{
+  "schema": "sub01.candidate-actual-light-comparison.v1",
+  "actual_editor_pid": 175718,
+  "actual_comparison_local": "out/house-evidence/candidate-practical-comparison.json",
+  "actual_capture_receipt_local": "out/house-evidence/candidate-practical-captures.json",
+  "all_six_images_complete": true,
+  "complete_original_light_exposure_actor_state_restored": true,
+  "world_saved": false,
+  "original_live_game_unchanged": true,
+  "actual_view_findings": {
+    "bed_existing_3_5cd_2700K": "Actual existing bedside practical lights the full bed but burns wall hotspot; too strong under current exposure. Not chosen for save.",
+    "bath_existing_4000K": "Actual teal and ceramic appear substantially more neutral than3000K. Parent approved bounded candidate adoption after current exact transactions.",
+    "one_stop_minimum_EV100_minus4": "Bed remains too dark; exposure adjustment alone rejected."
+  },
+  "next_bounded_comparison": "Existing bedside practical0.35cd or0.7cd at3000K and0.35cd3500K, with exact baseline restoration; no invisible fill.",
+  "photographic_plants": "Transaction023 refused exact native root alpha clip0 versus source0.5; exact full world rollback. Read-only025 confirmed AlphaCutoff scalar0.5 but root0. Transaction026 applies explicit authored0.5 native clip override only on newly owned MI, notsharedInterchangeparent; strictverificationremains.",
+  "overall_visual_accepted": false,
+  "runtime_contact_accepted": false,
+  "public_changes": false
+}

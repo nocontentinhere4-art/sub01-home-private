@@ -1,10 +1,10 @@
 """Fixed, root-requested asset tasks for the independent real-home candidate."""
-import importlib,json,time,traceback,os
+import importlib,json,time,traceback,os,sys
 from pathlib import Path
 from private_home_candidate_scope import active_candidate_guard,trusted_json,SCOPE,CANDIDATE
 STYLE=Path('/workspace/sub01-home-private/reference-teal-bathroom-r5/output')
 PROOF=STYLE.parent/'independent-proof-r2/independent-source-proof.json'
-TASKS={'probe','wall_console_preflight','wall_console','teal_bath_preflight','teal_bath','sheer_material_readonly','plant_placement_inventory','bed_finish_preflight','bed_finish','photo_plants_preflight','photo_plants','visual_review','visual_review_cancel','lighting_readonly','settled_review'}
+TASKS={'probe','wall_console_preflight','wall_console','teal_bath_preflight','teal_bath','sheer_material_readonly','plant_placement_inventory','bed_finish_preflight','bed_finish','photo_plants_preflight','photo_plants','visual_review','visual_review_cancel','lighting_readonly','settled_review','practical_light_comparison','plant_material_readonly','practical_light_refinement','kitchen_grain_preflight','kitchen_grain'}
 def dispatch(task,probe):
  if task=='probe':return probe
  if task in('wall_console_preflight','wall_console'):
@@ -15,6 +15,10 @@ def dispatch(task,probe):
   module=importlib.reload(importlib.import_module('unreal_import_reference_bed_finish'));return module.run(dry_run=task.endswith('_preflight'))
  if task in('photo_plants_preflight','photo_plants'):
   module=importlib.reload(importlib.import_module('unreal_import_candidate_photo_plants'));return module.run(dry_run=task.endswith('_preflight'))
+ if task in('kitchen_grain_preflight','kitchen_grain'):return importlib.reload(importlib.import_module('unreal_candidate_kitchen_grain')).run(dry_run=task.endswith('_preflight'))
+ if task in('practical_light_comparison','practical_light_refinement'):
+  importlib.reload(importlib.import_module('unreal_candidate_visual_review'));return importlib.reload(importlib.import_module('unreal_candidate_practical_light_comparison')).run(refinement=task.endswith('_refinement'))
+ if task=='plant_material_readonly':return importlib.reload(importlib.import_module('unreal_candidate_plant_material_readonly')).run()
  if task=='lighting_readonly':return importlib.reload(importlib.import_module('unreal_candidate_lighting_readonly')).run()
  if task=='settled_review':return importlib.reload(importlib.import_module('unreal_candidate_visual_review')).settled_review()
  if task=='visual_review_cancel':return importlib.reload(importlib.import_module('unreal_candidate_visual_review')).cancel()
@@ -38,7 +42,9 @@ def _poll_once(seen,probe):
  for request in sorted((SCOPE.parent/'candidate-requests').glob('*.json')):
   if request.name in seen:continue
   body=trusted_json(request);task=body.get('task');assert body.get('schema')=='sub01.private-next-home-task.v1'and body.get('candidate_editor_pid')==os.getpid();assert task in TASKS and task in scope.get('allowed_tasks',[])
-  assert body.get('world_mutations_authorized')is (task in('wall_console','teal_bath','bed_finish','photo_plants')),'Explicit candidate-only mutation phase required'
+  assert body.get('world_mutations_authorized')is (task in('wall_console','teal_bath','bed_finish','photo_plants','practical_light_comparison','practical_light_refinement','kitchen_grain')),'Explicit candidate-only mutation phase required'
+  review=sys.modules.get('unreal_candidate_visual_review')
+  if review is not None and getattr(review,'_handle',None)is not None and task!='visual_review_cancel':return
   seen.add(request.name);result={'schema':'sub01.private-next-home-task-result.v1','task':task,'editor_pid':os.getpid(),'started_epoch':time.time(),'original_game_preserved':False,'promoted_to_live':False}
   try:
    result['result']=dispatch(task,probe);assert active_candidate_guard(CANDIDATE);result['ok']=True;result['original_game_preserved']=True

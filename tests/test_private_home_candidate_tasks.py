@@ -37,3 +37,15 @@ def test_hot_reload_source_preserves_in_progress_latch():
   exec(compile((ROOT/'tools/private_home_candidate_tasks.py').read_text(),str(ROOT/'tools/private_home_candidate_tasks.py'),'exec'),m.__dict__)
   assert m._busy is True
  finally:m._busy=False
+
+def test_pending_asset_task_waits_for_exact_capture_lease(monkeypatch,tmp_path):
+ import os,json
+ scope=tmp_path/'scope.json';requests=tmp_path/'candidate-requests';requests.mkdir();audit=tmp_path/'private-audit';audit.mkdir();request=requests/'020-photo_plants.json';request.touch()
+ body={'schema':'sub01.private-next-home-task.v1','task':'photo_plants','candidate_editor_pid':os.getpid(),'world_mutations_authorized':True}
+ monkeypatch.setattr(m,'SCOPE',scope);monkeypatch.setattr(m,'CANDIDATE',tmp_path);monkeypatch.setattr(m,'active_candidate_guard',lambda _:True);monkeypatch.setattr(m,'trusted_json',lambda p:{'allowed_tasks':['photo_plants']}if p==scope else body)
+ review=SimpleNamespace(_handle=object());monkeypatch.setitem(sys.modules,'unreal_candidate_visual_review',review);calls=[];monkeypatch.setattr(m,'dispatch',lambda *args:calls.append(args)or{'saved':True})
+ seen=set();m._poll_once(seen,{})
+ assert not calls and not seen and not list(audit.iterdir())
+ review._handle=None;m._poll_once(seen,{})
+ assert len(calls)==1 and request.name in seen
+ assert json.loads((audit/'020-photo_plants-result.json').read_text())['ok']is True
