@@ -28,6 +28,7 @@ TASKS = {
     'refresh_queue': 'unreal_editor_queue_refresh',
     'kitchen_partial_inventory': 'unreal_kitchen_partial_inventory',
     'private_crash_policy': 'unreal_private_crash_policy',
+    'plant_clone_audit': 'unreal_loaded_plant_clone_audit',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
