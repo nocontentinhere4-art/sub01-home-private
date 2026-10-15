@@ -4,8 +4,8 @@ import os
 import time
 from pathlib import Path
 
-_handle=None
-_state=None
+_handle=globals().get('_handle')
+_state=globals().get('_state')
 
 
 def complete_png(path,after):

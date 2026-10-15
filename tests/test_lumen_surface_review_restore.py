@@ -41,3 +41,10 @@ def test_async_capture_restores_exact_prior_after_png_or_error(tmp_path,monkeypa
     assert state['value']==8 and state['unregistered'] and receipt['restored_prior_verified']
     assert receipt['phase']==('failed'if fail_diagnostic else'complete')
     if not fail_diagnostic:assert [v for v,p in state['captures']]==[8,5,8]
+
+
+def test_reload_preserves_active_review_guard():
+    m=load();sentinel=object();m._handle=sentinel;m._state={'phase':'surface_requested'}
+    code=Path(__file__).parents[1]/'tools/unreal_lumen_surface_review.py'
+    exec(compile(code.read_text(),str(code),'exec'),m.__dict__)
+    assert m._handle is sentinel and m._state=={'phase':'surface_requested'}
