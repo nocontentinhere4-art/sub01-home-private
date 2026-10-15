@@ -88,3 +88,16 @@ def test_committed_derived_report_never_claims_capture_or_acceptance():
         a = json.loads(audit.read_text())
         assert a['verified'] is False and not any(a['native_gates'].values()) and a['clip']['sha256'] == r['output']['sha256']
         assert a['summary']['all_frames']['frames'] == 556
+
+
+def test_active_set_adds_worst_separated_frames(tmp_path):
+    def row(depth):
+        g = {'max_depth_cm': depth, 'triangle_overlaps': {'case': 0, 'screen': 0, 'volume': 0, 'power': 0, 'speaker': 0}}
+        return {'fingers_palm': g, 'thumb': dict(g, max_depth_cm=0.0), 'body': dict(g, max_depth_cm=0.0), 'forearm': dict(g, max_depth_cm=0.0)}
+    depths = [0.0]*20
+    depths[5], depths[6], depths[12] = 0.5, 0.45, 0.3
+    audit = {'clip': {'sha256': 'x'}, 'frames': [row(d) for d in depths]}
+    (tmp_path/'a.json').write_text(json.dumps(audit))
+    frames = D.update_active_set(tmp_path/'set.json', tmp_path/'a.json', k=8)
+    assert frames == [5, 12]                               # 6 is too close to 5; within-compression frames ignored
+    assert D.update_active_set(tmp_path/'set.json') == [5, 12]

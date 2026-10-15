@@ -44,6 +44,7 @@ FLEX_LIMITS = {1: (-5.0, 85.0), 2: (0.0, 105.0), 3: (0.0, 75.0)}
 ABD_LIMIT, HAND_CORR_MAX, THUMB1_MAX, THUMB2_MAX, THUMB_STOP_MAX = 15.0, 25.0, 45.0, 30.0, 35.0
 COMPRESSION_CM, BAND_CM, CLEAR_CM, TOUCH_CM = 0.15, 0.3, 0.2, 0.1
 PALM_CONTACT_MIN, PROXIMAL_CONTACT_MIN = 60, 40
+PALM_WEIGHT = 3.0
 HOVER_MEDIAN_CM, DIP_QUANTILE, DIP_DEPTH_CM = 0.4, 0.2, -0.15   # thumb rests above glass; captured dips reach it
 NP = 31                    # mount 6, hand correction 3, fingers 4x4, thumb1 (CMC) 3, thumb2 (MCP) 3
 
@@ -63,7 +64,7 @@ def ensure_skin(cache):
 
 
 class Derivation:
-    def __init__(self, rig, skin, phone=None, pose_time=4.0, view_frames=None):
+    def __init__(self, rig, skin, phone=None, pose_time=4.0, view_frames=None, active_frames=()):
         self.rig, self.skin = rig, skin
         self.phone = phone or FG.default_phone()
         self.parts = [(p['name'], np.array(p['center'], float), np.array(p['half_extent'], float)) for p in self.phone['parts']]
@@ -98,7 +99,8 @@ class Derivation:
         self.head_up = Rhd[:, :, 1]
         self.view_frames = sorted(set(view_frames if view_frames is not None else [self.f0]+[int(np.argmin(np.abs(rig.times-t))) for t in (2.5, 7, 10, 13, 15.5)]))
         self.body = {f: self.near_static(f) for f in self.view_frames}
-        self.thumb_frames = [int(np.argmin(np.abs(rig.times-t))) for t in np.arange(2.0, 16.01, 1.4)]
+        self.thumb_frames = sorted(set([int(np.argmin(np.abs(rig.times-t))) for t in np.arange(2.0, 16.01, 0.7)]) | {int(f) for f in active_frames})
+        self.active_frames = sorted(int(f) for f in active_frames)
 
     # ---------------------------------------------------------------- kinematics
     def near_static(self, f, radius=25.0):
@@ -122,9 +124,10 @@ class Derivation:
                 q[i] = local
         t1, t2 = self.rig.index('RightHandThumb1'), self.rig.index('RightHandThumb2')
         q[t1] = q_mul(q[t1], rotvec_q(p[25:28]))
-        if thumb_stop and thumb_axis is not None:
-            q[t1] = q_mul(q[t1], q_axis_angle(thumb_axis, math.radians(thumb_stop)))
         q[t2] = q_mul(q[t2], rotvec_q(p[28:31]))
+        if thumb_stop and thumb_axis is not None:
+            j = self.rig.index(thumb_axis[0])
+            q[j] = q_mul(q[j], q_axis_angle(thumb_axis[1], math.radians(thumb_stop)))
         return qnorm(q)
 
     def worlds(self, f, q):
@@ -172,6 +175,8 @@ class Derivation:
         L = self.to_phone(P, Rp, cp)
         s = self.sdf(L)
         hold = ~self.thumb_tip
+        keys = np.min([FG.box_sdf(L, c_, h_) for n_, c_, h_ in self.parts if n_ in ('volume', 'power', 'speaker')], axis=0)
+        c += 200*float(np.sum(np.maximum(-keys[hold], 0)**2))      # resting skin must not press a key
         pen = np.maximum(-s[hold]-COMPRESSION_CM, 0)
         c += 200*float(np.sum(pen**2))+0.5*float(np.sum(pen > 0))
         for finger in FINGERS:
@@ -181,7 +186,7 @@ class Derivation:
         # Cradle: the palm itself must carry the phone (not only fingertips), plus proximal phalanges.
         palm_n = float(np.sum(self.palm & contact))
         prox_n = float(np.sum(self.proximal & contact))
-        c += 3*max(0.0, 1-palm_n/PALM_CONTACT_MIN)+1.5*max(0.0, 1-prox_n/PROXIMAL_CONTACT_MIN)
+        c += PALM_WEIGHT*max(0.0, 1-palm_n/PALM_CONTACT_MIN)+PALM_WEIGHT/2*max(0.0, 1-prox_n/PROXIMAL_CONTACT_MIN)
         sup = FG.Evaluator.support(L[contact], self.case[1], self.case[2], np.array([0, -1.0, 0])@Rp)
         c += 0 if sup['supported'] else 4
         c += 0 if sup.get('com_inside_support_hull') else 1
@@ -203,8 +208,14 @@ class Derivation:
             qt = self.edit(ft, p)
             Wt = self.worlds(ft, qt)
             Rt, ct = self.phone_pose(Wt, p)
-            Lt = self.to_phone(self.skin.deform(Wt, self.moving[self.thumb_pad]), Rt, ct)
-            h.append(float(self.sdf(Lt).min()))
+            sa = self.sdf(self.to_phone(self.skin.deform(Wt, self.moving), Rt, ct))
+            h.append(float(sa[self.thumb_pad].min()))
+            n = len(self.thumb_frames)
+            # Every sampled hold frame: palm/thenar/finger skin within the compression band, the proximal thumb
+            # segment (which a tap lift cannot move) clear, and the pad dipping only as far as an MCP lift returns it.
+            c += 200*float(np.sum(np.maximum(-sa[~self.thumb_tip]-COMPRESSION_CM, 0)**2))/n
+            c += 200*float(np.sum(np.maximum(-sa[self.thumb_tip & ~self.thumb_pad], 0)**2))/n
+            c += 50*float(np.sum(np.maximum(-sa[self.thumb_pad]-0.4, 0)**2))/n
         h = np.array(h)
         c += 4*(np.median(h)-HOVER_MEDIAN_CM)**2+4*(np.quantile(h, DIP_QUANTILE)-DIP_DEPTH_CM)**2
         for fv in self.view_frames:
@@ -227,39 +238,50 @@ class Derivation:
 
     # ---------------------------------------------------------------- per-frame thumb stop
     def thumb_stop(self, f, p, previous=0.0):
-        """Smallest thumb CMC (Thumb1) lift (deg) keeping the actual thumb skin on/above the glass and case."""
+        """Smallest thumb lift (deg) that keeps the actual thumb skin on/above the glass and case.
+
+        Tries the MCP (Thumb2, the joint of a thumb tap) first, then the CMC (Thumb1). A lift is accepted only
+        if no other right-hand skin (thenar, palm, fingers) goes deeper than the compression band, and never
+        deeper than it already was. Returns (deg, (joint, local axis), thumb clearance, thumb phone-local pts)."""
         q = self.edit(f, p)
         W = self.worlds(f, q)
         Rp, cp = self.phone_pose(W, p)
-        t2 = self.rig.index('RightHandThumb1')
-        Rt = W[t2, :3, :3]/np.linalg.norm(W[t2, :3, 0])
-        thumb = self.moving[self.thumb_tip]
-
-        def depth(angle, axis):
-            qq = self.edit(f, p, angle, axis)
-            WW = self.worlds(f, qq)
-            L = self.to_phone(self.skin.deform(WW, thumb), Rp, cp)
-            return float(self.sdf(L).min()), L
-        # Axis: rotation at Thumb2 whose small motion moves the pad along the screen normal (away from glass).
+        tip_idx = self.moving[self.thumb_tip]
+        rest_mask = ~self.thumb_tip
         pad = self.skin.deform(W, self.moving[self.thumb_pad]).mean(0)
-        arm = pad-W[t2, :3, 3]*100
-        axis_world = np.cross(arm, Rp[:, 2])
-        axis = Rt.T@(axis_world/np.linalg.norm(axis_world))
-        d0, L0 = depth(0.0, axis)
-        if d0 >= 0:
-            return 0.0, axis, d0, L0
-        lo, hi = 0.0, THUMB_STOP_MAX
-        dh, Lh = depth(hi, axis)
-        if dh < 0:
-            return hi, axis, dh, Lh
-        for _ in range(18):
-            mid = (lo+hi)/2
-            dm, Lm = depth(mid, axis)
-            if dm < 0:
-                lo = mid
-            else:
-                hi, dh, Lh = mid, dm, Lm
-        return hi, axis, dh, Lh
+
+        def measure(stop):
+            WW = self.worlds(f, self.edit(f, p, stop[0], stop[1]))
+            L = self.to_phone(self.skin.deform(WW, self.moving), Rp, cp)
+            s = self.sdf(L)
+            return float(s[self.thumb_tip].min()), float(s[rest_mask].min()), L[self.thumb_tip]
+        tip0, other0, L0 = measure((0.0, None))
+        if tip0 >= 0:
+            return 0.0, None, tip0, L0
+        floor = min(other0, -COMPRESSION_CM)
+        best = None
+        for name in ('RightHandThumb2', 'RightHandThumb1'):
+            j = self.rig.index(name)
+            Rj = W[j, :3, :3]/np.linalg.norm(W[j, :3, 0])
+            axis_world = np.cross(pad-W[j, :3, 3]*100, Rp[:, 2])
+            axis = (name, Rj.T@(axis_world/np.linalg.norm(axis_world)))
+            tip, other, L = measure((THUMB_STOP_MAX, axis))
+            if tip < 0 or other < floor:
+                score = min(tip, other-floor)
+                if best is None or score > best[0]:
+                    best = (score, THUMB_STOP_MAX, axis, tip, L)
+                continue
+            lo, hi, found = 0.0, THUMB_STOP_MAX, (tip, L)
+            for _ in range(18):
+                mid = (lo+hi)/2
+                tm, om, Lm = measure((mid, axis))
+                if tm < 0 or om < floor:
+                    lo = mid
+                else:
+                    hi, found = mid, (tm, Lm)
+            return hi, axis, found[0], found[1]
+        _, deg, axis, tip, L = best
+        return deg, axis, tip, L
 
 
 def clamp_params(p):
@@ -274,6 +296,39 @@ def clamp_params(p):
         if a > lim:
             p[sl] *= lim/a
     return p
+
+
+def audit_violations(audit, compression=COMPRESSION_CM):
+    """Per-frame severity from an independent audit: hand/thenar/body depth beyond compression, key or glass
+    crossings by resting skin. Returns [(severity, frame_index)] sorted worst first."""
+    out = []
+    for i, r in enumerate(audit['frames']):
+        sev = 0.0
+        for g in ('fingers_palm', 'thumb', 'body', 'forearm'):
+            sev += max(0.0, r[g]['max_depth_cm']-(compression if g != 'body' else 0.0))
+            ov = r[g]['triangle_overlaps']
+            sev += 0.01*(ov.get('volume', 0)+ov.get('power', 0)+ov.get('speaker', 0)+(ov.get('screen', 0) if g != 'thumb' else 0))
+        if sev > 0:
+            out.append((sev, i))
+    return sorted(out, reverse=True)
+
+
+def update_active_set(path, audit_path=None, k=8, min_gap=3):
+    """Constraint generation: persisted extrema set, extended with the audit's worst separated frames."""
+    path = Path(path)
+    doc = json.loads(path.read_text()) if path.exists() else {'frames': [], 'history': []}
+    if audit_path:
+        audit = json.loads(Path(audit_path).read_text())
+        added = []
+        for sev, f in audit_violations(audit):
+            if len(added) >= k:
+                break
+            if all(abs(f-g) >= min_gap for g in doc['frames']+added):
+                added.append(f)
+        doc['frames'] = sorted(set(doc['frames']) | set(added))
+        doc['history'].append({'audit_clip_sha256': audit['clip']['sha256'], 'added': added})
+        path.write_text(json.dumps(doc, indent=1)+'\n')
+    return doc['frames']
 
 
 def seed_params():
@@ -351,9 +406,12 @@ def derive_frames(d, p, log=print):
         u = (tip[0]-d.screen[1][0])/(2*d.screen[2][0])+.5
         v = (tip[1]-d.screen[1][1])/(2*d.screen[2][1])+.5
         over = 0 <= u <= 1 and 0 <= v <= 1
+        # Touch = force contact: the captured thumb would pass the glass and the stop holds it there.
         rows.append({'time': round(float(d.rig.times[f]), 5), 'thumb_stop_deg': round(stop, 4),
+                     'thumb_stop_joint': axis[0] if axis else None,
                      'thumb_min_clearance_cm': round(depth, 4), 'thumb_pad_uv': [round(u, 4), round(v, 4)],
-                     'thumb_over_glass': bool(over), 'touch': bool(over and depth <= TOUCH_CM)})
+                     'thumb_over_glass': bool(over), 'near_glass': bool(over and depth <= TOUCH_CM),
+                     'touch': bool(over and stop > 0 and depth <= TOUCH_CM)})
     return q, rows
 
 
@@ -444,7 +502,11 @@ def main(argv=None):
     ap.add_argument('--out-dir', type=Path, default=ROOT/'docs/proposed/phone-grip-derived')
     ap.add_argument('--params', type=Path, help='Reuse solved parameters JSON instead of searching')
     ap.add_argument('--start', type=Path, help='Warm-start from a previous derivation report')
+    ap.add_argument('--active-set', type=Path, help='JSON {frames:[...]} of audit-found extrema kept in every solve')
+    ap.add_argument('--add-worst-from-audit', type=Path, help='Append the worst violating frames of this audit to --active-set')
+    ap.add_argument('--worst-k', type=int, default=8)
     ap.add_argument('--iterations', type=int, default=60)
+    ap.add_argument('--palm-weight', type=float, default=PALM_WEIGHT)
     ap.add_argument('--population', type=int, default=64)
     ap.add_argument('--workers', type=int, default=4)
     args = ap.parse_args(argv)
@@ -452,7 +514,9 @@ def main(argv=None):
     rig = Rig(Path(args.cache)/'owner-skin.json', args.clip)
     if skin.owner_sha != FG.sha256(OWNER):
         raise ValueError('Owner skin cache does not match the owner GLB')
-    d = Derivation(rig, skin)
+    globals()['PALM_WEIGHT'] = args.palm_weight
+    active = update_active_set(args.active_set, args.add_worst_from_audit, args.worst_k) if args.active_set else []
+    d = Derivation(rig, skin, active_frames=active)
     if args.params:
         p = np.array(json.loads(args.params.read_text())['params'], float)
         cost = d.cost(p)
@@ -489,12 +553,13 @@ def main(argv=None):
                   'thumb2_mcp_offset_deg': round(math.degrees(np.linalg.norm(p[28:31])), 4),
                   'finger_cradle': fingers, 'finger_cradle_within_anatomical_limits': inside,
                   'limits_deg': {'flex': {f'joint{j}': v for j, v in FLEX_LIMITS.items()}, 'abduction': ABD_LIMIT, 'hand_correction': HAND_CORR_MAX,
-                                 'thumb1_cmc': THUMB1_MAX, 'thumb2_mcp': THUMB2_MAX, 'thumb_stop_at_cmc': THUMB_STOP_MAX}},
+                                 'thumb1_cmc': THUMB1_MAX, 'thumb2_mcp': THUMB2_MAX, 'thumb_stop_mcp_then_cmc': THUMB_STOP_MAX}},
         'per_joint': joint_report(d, q),
         'untouched_joints_max_quaternion_component_change': exact,
         'bone_length_max_error_cm': bone_lengths(d, q, list(range(0, len(rig.times), 10))),
+        'active_set_frames': d.active_frames,
         'thumb': {'frames': thumb_rows, 'tap_events': taps, 'tap_count': len(taps),
-                  'rule': f'touch = thumb skin within {TOUCH_CM} cm of the glass inside the screen; derived from geometry each frame, no timer'},
+                  'rule': 'touch (tap) = the captured thumb would pass the glass and the per-frame stop holds its skin on the glass inside the screen; near_glass = within %.1f cm without force; geometry only, no timer' % TOUCH_CM},
         'left_hand': 'unchanged capture (free hand); audited for phone clearance by tools/audit_phone_grip_clip.py',
         'gates': {'native_import': False, 'native_contact': False, 'visual_acceptance': False, 'activity_binding': False}}
     (args.out_dir/'SUB01_PhoneGrip_derived.report.json').write_text(json.dumps(report, indent=1)+'\n')

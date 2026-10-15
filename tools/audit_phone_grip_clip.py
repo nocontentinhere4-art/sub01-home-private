@@ -96,7 +96,8 @@ def audit(hand, R, t, phone=None, compression=COMPRESSION_CM, band=0.3, frames=N
         tip = pad[np.argmin(ps)]
         u, v = (tip[0]-sc[0])/(2*sh[0])+.5, (tip[1]-sc[1])/(2*sh[1])+.5
         row['thumb_glass'] = {'uv': [round(u, 4), round(v, 4)], 'clearance_cm': round(float(ps.min()), 4),
-                        'touch_glass': bool(0 <= u <= 1 and 0 <= v <= 1 and ps.min() <= 0.1)}
+                        'near_glass': bool(0 <= u <= 1 and 0 <= v <= 1 and ps.min() <= 0.1),
+                               'touch_glass': bool(0 <= u <= 1 and 0 <= v <= 1 and ps.min() <= 0.02)}
         lp = P[left]
         row['left_hand_min_clearance_cm'] = round(float(ev.sdf((lp-t)@R).min()), 3) if len(lp) else None
         rows.append(row)

@@ -1,0 +1,7664 @@
+{
+ "schema": "sub01.phone-grip-derived.v1",
+ "label": "derived_from_capture",
+ "verified": false,
+ "requires_native_reaudit": true,
+ "visual_accepted": false,
+ "original_capture_invariance": "NOT APPLICABLE: derived clip; finger, thumb and RightHand local rotations are edited",
+ "source": {
+  "clip": "docs/proposed/phone-capture/texting.glb",
+  "clip_sha256": "8a6dfc041cd4768016c6348dfb90f1275cab4c09cfe6083537fb88ba6d11ae75",
+  "owner": "web/room/char_mixamo.glb",
+  "owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "keys": 557,
+  "fps": 30
+ },
+ "output": {
+  "glb": "docs/proposed/phone-grip-derived/SUB01_PhoneGrip_derived.glb",
+  "sha256": "df613902840c5d7a537792316838f5d11cf2978dc080e46f7540206357d37c31"
+ },
+ "params": [
+  0.12326393305400993,
+  0.2807337841761524,
+  -1.1688069847075895,
+  0.7619496863401485,
+  8.64162264698264,
+  4.408823882995276,
+  -0.05363257083102971,
+  0.05705378372276682,
+  0.06263878246812976,
+  9.575230435826011,
+  42.48506070461749,
+  32.143247862467085,
+  14.838489932995863,
+  19.174664455173136,
+  48.87043776360389,
+  33.38728042431077,
+  4.578062101721597,
+  23.493669390438253,
+  48.38255945096736,
+  34.01212321877351,
+  7.105200757154809,
+  33.17252296071324,
+  48.12578756405728,
+  34.164392152190736,
+  3.103014933566286,
+  0.333348863357917,
+  0.11150225179793971,
+  -0.3285347732127705,
+  0.14950630048607813,
+  -0.00263976534328594,
+  0.06247149823820354
+ ],
+ "objective_at_review_pose": 8.921746,
+ "phone_mount": {
+  "gltf_right_hand_local": {
+   "offset_cm": [
+    0.76195,
+    8.64162,
+    4.40882
+   ],
+   "quaternion_xyzw": [
+    0.05795024,
+    0.13198175,
+    -0.54949277,
+    0.8229704
+   ]
+  },
+  "ue_phoneGripCandidate": "X=0.76195 Y=-8.64162 Z=4.40882|P=-16.31516 Y=67.88692 R=-2.96622",
+  "frame": "derived RightHand (the constant hand correction is baked into the clip; no native wrist installer needed)"
+ },
+ "edits": {
+  "right_hand_correction_deg": 5.7454,
+  "thumb1_cmc_offset_deg": 27.5669,
+  "thumb2_mcp_offset_deg": 9.2851,
+  "finger_cradle": {
+   "Index": {
+    "joint1_flex_deg": 9.575,
+    "joint2_flex_deg": 42.485,
+    "joint3_flex_deg": 32.143,
+    "joint1_abduction_deg": 14.838,
+    "within_limits": true
+   },
+   "Middle": {
+    "joint1_flex_deg": 19.175,
+    "joint2_flex_deg": 48.87,
+    "joint3_flex_deg": 33.387,
+    "joint1_abduction_deg": 4.578,
+    "within_limits": true
+   },
+   "Ring": {
+    "joint1_flex_deg": 23.494,
+    "joint2_flex_deg": 48.383,
+    "joint3_flex_deg": 34.012,
+    "joint1_abduction_deg": 7.105,
+    "within_limits": true
+   },
+   "Pinky": {
+    "joint1_flex_deg": 33.173,
+    "joint2_flex_deg": 48.126,
+    "joint3_flex_deg": 34.164,
+    "joint1_abduction_deg": 3.103,
+    "within_limits": true
+   }
+  },
+  "finger_cradle_within_anatomical_limits": true,
+  "limits_deg": {
+   "flex": {
+    "joint1": [
+     -5.0,
+     85.0
+    ],
+    "joint2": [
+     0.0,
+     105.0
+    ],
+    "joint3": [
+     0.0,
+     75.0
+    ]
+   },
+   "abduction": 15.0,
+   "hand_correction": 25.0,
+   "thumb1_cmc": 45.0,
+   "thumb2_mcp": 30.0,
+   "thumb_stop_mcp_then_cmc": 35.0
+  }
+ },
+ "per_joint": {
+  "mixamorig:RightHand": {
+   "delta_from_capture_deg": {
+    "min": 5.745,
+    "max": 5.745,
+    "mean": 5.745
+   },
+   "max_angular_speed_deg_s": 302.707,
+   "max_angular_accel_deg_s2": 3640.649
+  },
+  "mixamorig:RightHandIndex1": {
+   "delta_from_capture_deg": {
+    "min": 10.446,
+    "max": 27.916,
+    "mean": 26.419
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandIndex2": {
+   "delta_from_capture_deg": {
+    "min": 3.9,
+    "max": 43.434,
+    "mean": 40.47
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandIndex3": {
+   "delta_from_capture_deg": {
+    "min": 3.789,
+    "max": 18.313,
+    "mean": 11.96
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandMiddle1": {
+   "delta_from_capture_deg": {
+    "min": 4.587,
+    "max": 12.789,
+    "mean": 10.238
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandMiddle2": {
+   "delta_from_capture_deg": {
+    "min": 4.255,
+    "max": 49.571,
+    "mean": 46.18
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandMiddle3": {
+   "delta_from_capture_deg": {
+    "min": 2.595,
+    "max": 25.907,
+    "mean": 24.543
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandRing1": {
+   "delta_from_capture_deg": {
+    "min": 1.543,
+    "max": 15.573,
+    "mean": 10.427
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandRing2": {
+   "delta_from_capture_deg": {
+    "min": 4.209,
+    "max": 56.618,
+    "mean": 53.088
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandRing3": {
+   "delta_from_capture_deg": {
+    "min": 6.755,
+    "max": 15.804,
+    "mean": 7.528
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandPinky1": {
+   "delta_from_capture_deg": {
+    "min": 4.272,
+    "max": 36.272,
+    "mean": 9.469
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandPinky2": {
+   "delta_from_capture_deg": {
+    "min": 3.428,
+    "max": 62.331,
+    "mean": 58.745
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandPinky3": {
+   "delta_from_capture_deg": {
+    "min": 2.291,
+    "max": 21.952,
+    "mean": 13.377
+   },
+   "max_angular_speed_deg_s": 0.0,
+   "max_angular_accel_deg_s2": 0.0
+  },
+  "mixamorig:RightHandThumb1": {
+   "delta_from_capture_deg": {
+    "min": 27.567,
+    "max": 27.567,
+    "mean": 27.567
+   },
+   "max_angular_speed_deg_s": 221.628,
+   "max_angular_accel_deg_s2": 5461.467
+  },
+  "mixamorig:RightHandThumb2": {
+   "delta_from_capture_deg": {
+    "min": 9.285,
+    "max": 14.965,
+    "mean": 9.443
+   },
+   "max_angular_speed_deg_s": 220.559,
+   "max_angular_accel_deg_s2": 6193.827
+  }
+ },
+ "untouched_joints_max_quaternion_component_change": 2.220446049250313e-16,
+ "bone_length_max_error_cm": 1.7694179454963432e-14,
+ "active_set_frames": [],
+ "thumb": {
+  "frames": [
+   {
+    "time": 0.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2147,
+    "thumb_pad_uv": [
+     0.7903,
+     0.5139
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2144,
+    "thumb_pad_uv": [
+     0.79,
+     0.5137
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2119,
+    "thumb_pad_uv": [
+     0.7897,
+     0.5136
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2093,
+    "thumb_pad_uv": [
+     0.7894,
+     0.5134
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2067,
+    "thumb_pad_uv": [
+     0.7891,
+     0.5132
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2039,
+    "thumb_pad_uv": [
+     0.7888,
+     0.5129
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2012,
+    "thumb_pad_uv": [
+     0.7884,
+     0.5127
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1984,
+    "thumb_pad_uv": [
+     0.7881,
+     0.5125
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1956,
+    "thumb_pad_uv": [
+     0.7878,
+     0.5123
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1928,
+    "thumb_pad_uv": [
+     0.7874,
+     0.5121
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.19,
+    "thumb_pad_uv": [
+     0.7871,
+     0.5118
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1871,
+    "thumb_pad_uv": [
+     0.7867,
+     0.5116
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1844,
+    "thumb_pad_uv": [
+     0.7863,
+     0.5114
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1816,
+    "thumb_pad_uv": [
+     0.786,
+     0.5111
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1789,
+    "thumb_pad_uv": [
+     0.7856,
+     0.5109
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1762,
+    "thumb_pad_uv": [
+     0.7853,
+     0.5106
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1736,
+    "thumb_pad_uv": [
+     0.7849,
+     0.5104
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1711,
+    "thumb_pad_uv": [
+     0.7846,
+     0.5102
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1686,
+    "thumb_pad_uv": [
+     0.7842,
+     0.5099
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1662,
+    "thumb_pad_uv": [
+     0.7839,
+     0.5097
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1639,
+    "thumb_pad_uv": [
+     0.7836,
+     0.5094
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1612,
+    "thumb_pad_uv": [
+     0.7832,
+     0.5092
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1577,
+    "thumb_pad_uv": [
+     0.7829,
+     0.509
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1543,
+    "thumb_pad_uv": [
+     0.7826,
+     0.5088
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.151,
+    "thumb_pad_uv": [
+     0.7823,
+     0.5086
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1479,
+    "thumb_pad_uv": [
+     0.782,
+     0.5084
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1449,
+    "thumb_pad_uv": [
+     0.7817,
+     0.5082
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.142,
+    "thumb_pad_uv": [
+     0.7815,
+     0.508
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1393,
+    "thumb_pad_uv": [
+     0.7812,
+     0.5078
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 0.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1367,
+    "thumb_pad_uv": [
+     0.781,
+     0.5076
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1663,
+    "thumb_pad_uv": [
+     0.7836,
+     0.5087
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2399,
+    "thumb_pad_uv": [
+     0.791,
+     0.5122
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2895,
+    "thumb_pad_uv": [
+     0.8023,
+     0.5176
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3269,
+    "thumb_pad_uv": [
+     0.8168,
+     0.5248
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.405,
+    "thumb_pad_uv": [
+     0.8332,
+     0.5332
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4364,
+    "thumb_pad_uv": [
+     0.8502,
+     0.5423
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4893,
+    "thumb_pad_uv": [
+     0.8659,
+     0.5516
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4716,
+    "thumb_pad_uv": [
+     0.8782,
+     0.5607
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4237,
+    "thumb_pad_uv": [
+     0.8854,
+     0.5698
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3461,
+    "thumb_pad_uv": [
+     0.8892,
+     0.5817
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2458,
+    "thumb_pad_uv": [
+     0.8919,
+     0.5949
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1253,
+    "thumb_pad_uv": [
+     0.8951,
+     0.6076
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0282,
+    "thumb_pad_uv": [
+     0.8989,
+     0.6181
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 1.43333,
+    "thumb_stop_deg": 2.1227,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9026,
+     0.6247
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 1.46667,
+    "thumb_stop_deg": 6.7241,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9058,
+     0.6259
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 1.5,
+    "thumb_stop_deg": 5.0008,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9028,
+     0.6236
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 1.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0312,
+    "thumb_pad_uv": [
+     0.8975,
+     0.6177
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 1.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.119,
+    "thumb_pad_uv": [
+     0.8936,
+     0.6077
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2504,
+    "thumb_pad_uv": [
+     0.8906,
+     0.595
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3773,
+    "thumb_pad_uv": [
+     0.889,
+     0.5806
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4727,
+    "thumb_pad_uv": [
+     0.8886,
+     0.5656
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.534,
+    "thumb_pad_uv": [
+     0.8885,
+     0.5516
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.536,
+    "thumb_pad_uv": [
+     0.8875,
+     0.5397
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4961,
+    "thumb_pad_uv": [
+     0.8834,
+     0.5308
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4058,
+    "thumb_pad_uv": [
+     0.8753,
+     0.523
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2833,
+    "thumb_pad_uv": [
+     0.865,
+     0.5158
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1491,
+    "thumb_pad_uv": [
+     0.8546,
+     0.5088
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 1.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0175,
+    "thumb_pad_uv": [
+     0.8455,
+     0.5021
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 1.93333,
+    "thumb_stop_deg": 0.8916,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8366,
+     0.496
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 1.96667,
+    "thumb_stop_deg": 2.1349,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8292,
+     0.4908
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 2.0,
+    "thumb_stop_deg": 0.86,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8301,
+     0.4866
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 2.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0304,
+    "thumb_pad_uv": [
+     0.8318,
+     0.4837
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1571,
+    "thumb_pad_uv": [
+     0.8317,
+     0.4812
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2531,
+    "thumb_pad_uv": [
+     0.8298,
+     0.4786
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2736,
+    "thumb_pad_uv": [
+     0.8232,
+     0.4757
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2218,
+    "thumb_pad_uv": [
+     0.8113,
+     0.472
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1369,
+    "thumb_pad_uv": [
+     0.7975,
+     0.4684
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0606,
+    "thumb_pad_uv": [
+     0.785,
+     0.466
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0379,
+    "thumb_pad_uv": [
+     0.7764,
+     0.4661
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0972,
+    "thumb_pad_uv": [
+     0.7708,
+     0.449
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1806,
+    "thumb_pad_uv": [
+     0.7695,
+     0.4548
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2577,
+    "thumb_pad_uv": [
+     0.7713,
+     0.4619
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3071,
+    "thumb_pad_uv": [
+     0.7755,
+     0.4697
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3407,
+    "thumb_pad_uv": [
+     0.7802,
+     0.4775
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3397,
+    "thumb_pad_uv": [
+     0.783,
+     0.485
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3039,
+    "thumb_pad_uv": [
+     0.7838,
+     0.4932
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2149,
+    "thumb_pad_uv": [
+     0.7843,
+     0.5018
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1148,
+    "thumb_pad_uv": [
+     0.7975,
+     0.5295
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0534,
+    "thumb_pad_uv": [
+     0.8029,
+     0.537
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0245,
+    "thumb_pad_uv": [
+     0.811,
+     0.5436
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0568,
+    "thumb_pad_uv": [
+     0.8228,
+     0.5494
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1292,
+    "thumb_pad_uv": [
+     0.8224,
+     0.5357
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2256,
+    "thumb_pad_uv": [
+     0.8385,
+     0.5404
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3097,
+    "thumb_pad_uv": [
+     0.854,
+     0.5447
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3624,
+    "thumb_pad_uv": [
+     0.8661,
+     0.5491
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3603,
+    "thumb_pad_uv": [
+     0.8721,
+     0.5543
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3002,
+    "thumb_pad_uv": [
+     0.8718,
+     0.5612
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1987,
+    "thumb_pad_uv": [
+     0.8885,
+     0.5861
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 2.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0937,
+    "thumb_pad_uv": [
+     0.8854,
+     0.592
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 2.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.029,
+    "thumb_pad_uv": [
+     0.8841,
+     0.5954
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 3.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.044,
+    "thumb_pad_uv": [
+     0.8863,
+     0.5952
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 3.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1351,
+    "thumb_pad_uv": [
+     0.8936,
+     0.5924
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2575,
+    "thumb_pad_uv": [
+     0.9042,
+     0.5872
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3828,
+    "thumb_pad_uv": [
+     0.8935,
+     0.5625
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.462,
+    "thumb_pad_uv": [
+     0.9002,
+     0.5536
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4904,
+    "thumb_pad_uv": [
+     0.8986,
+     0.5437
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4554,
+    "thumb_pad_uv": [
+     0.8836,
+     0.5298
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.372,
+    "thumb_pad_uv": [
+     0.8602,
+     0.5109
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2706,
+    "thumb_pad_uv": [
+     0.8374,
+     0.4911
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1712,
+    "thumb_pad_uv": [
+     0.8201,
+     0.4753
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1459,
+    "thumb_pad_uv": [
+     0.8105,
+     0.4685
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2027,
+    "thumb_pad_uv": [
+     0.8094,
+     0.475
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3066,
+    "thumb_pad_uv": [
+     0.8298,
+     0.5121
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.412,
+    "thumb_pad_uv": [
+     0.8496,
+     0.5342
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4591,
+    "thumb_pad_uv": [
+     0.8721,
+     0.5554
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4467,
+    "thumb_pad_uv": [
+     0.8861,
+     0.5711
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3774,
+    "thumb_pad_uv": [
+     0.8937,
+     0.5859
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2673,
+    "thumb_pad_uv": [
+     0.8977,
+     0.5997
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1405,
+    "thumb_pad_uv": [
+     0.8998,
+     0.6112
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0379,
+    "thumb_pad_uv": [
+     0.9009,
+     0.6195
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 3.66667,
+    "thumb_stop_deg": 4.4649,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9028,
+     0.6238
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 3.7,
+    "thumb_stop_deg": 6.1362,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9032,
+     0.6248
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 3.73333,
+    "thumb_stop_deg": 4.4197,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9002,
+     0.6225
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 3.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0186,
+    "thumb_pad_uv": [
+     0.8953,
+     0.6164
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 3.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1219,
+    "thumb_pad_uv": [
+     0.8915,
+     0.6064
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2541,
+    "thumb_pad_uv": [
+     0.8886,
+     0.5938
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3855,
+    "thumb_pad_uv": [
+     0.8871,
+     0.5794
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4818,
+    "thumb_pad_uv": [
+     0.8869,
+     0.5645
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5444,
+    "thumb_pad_uv": [
+     0.887,
+     0.5505
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 3.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5455,
+    "thumb_pad_uv": [
+     0.886,
+     0.5387
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5056,
+    "thumb_pad_uv": [
+     0.882,
+     0.5298
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4148,
+    "thumb_pad_uv": [
+     0.8739,
+     0.522
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2919,
+    "thumb_pad_uv": [
+     0.8636,
+     0.5148
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1573,
+    "thumb_pad_uv": [
+     0.8533,
+     0.5079
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0253,
+    "thumb_pad_uv": [
+     0.8442,
+     0.5013
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.16667,
+    "thumb_stop_deg": 0.6697,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8357,
+     0.4952
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 4.2,
+    "thumb_stop_deg": 1.917,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8284,
+     0.4899
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 4.23333,
+    "thumb_stop_deg": 0.6407,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8293,
+     0.4858
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 4.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.038,
+    "thumb_pad_uv": [
+     0.8306,
+     0.4829
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1649,
+    "thumb_pad_uv": [
+     0.8306,
+     0.4803
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2611,
+    "thumb_pad_uv": [
+     0.8287,
+     0.4777
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2817,
+    "thumb_pad_uv": [
+     0.8221,
+     0.4747
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.23,
+    "thumb_pad_uv": [
+     0.8102,
+     0.471
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1452,
+    "thumb_pad_uv": [
+     0.7965,
+     0.4674
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0691,
+    "thumb_pad_uv": [
+     0.784,
+     0.465
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0466,
+    "thumb_pad_uv": [
+     0.7754,
+     0.4651
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1063,
+    "thumb_pad_uv": [
+     0.77,
+     0.4479
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1896,
+    "thumb_pad_uv": [
+     0.7687,
+     0.4536
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2577,
+    "thumb_pad_uv": [
+     0.7705,
+     0.4607
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3076,
+    "thumb_pad_uv": [
+     0.7747,
+     0.4685
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3412,
+    "thumb_pad_uv": [
+     0.7794,
+     0.4762
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3396,
+    "thumb_pad_uv": [
+     0.7821,
+     0.4837
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3088,
+    "thumb_pad_uv": [
+     0.7828,
+     0.492
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2228,
+    "thumb_pad_uv": [
+     0.7833,
+     0.5007
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1234,
+    "thumb_pad_uv": [
+     0.7851,
+     0.509
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0528,
+    "thumb_pad_uv": [
+     0.8016,
+     0.5359
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0326,
+    "thumb_pad_uv": [
+     0.8096,
+     0.5426
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0675,
+    "thumb_pad_uv": [
+     0.8214,
+     0.5484
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 4.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1382,
+    "thumb_pad_uv": [
+     0.8211,
+     0.5347
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 4.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2354,
+    "thumb_pad_uv": [
+     0.8372,
+     0.5394
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3197,
+    "thumb_pad_uv": [
+     0.8527,
+     0.5438
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3725,
+    "thumb_pad_uv": [
+     0.8648,
+     0.5482
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3704,
+    "thumb_pad_uv": [
+     0.8708,
+     0.5534
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3106,
+    "thumb_pad_uv": [
+     0.8705,
+     0.5603
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2076,
+    "thumb_pad_uv": [
+     0.887,
+     0.5852
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1028,
+    "thumb_pad_uv": [
+     0.8838,
+     0.5911
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0381,
+    "thumb_pad_uv": [
+     0.8825,
+     0.5945
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 5.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0531,
+    "thumb_pad_uv": [
+     0.8847,
+     0.5944
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 5.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1433,
+    "thumb_pad_uv": [
+     0.8921,
+     0.5916
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2667,
+    "thumb_pad_uv": [
+     0.9028,
+     0.5864
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3943,
+    "thumb_pad_uv": [
+     0.8922,
+     0.5617
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.473,
+    "thumb_pad_uv": [
+     0.899,
+     0.5528
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5009,
+    "thumb_pad_uv": [
+     0.8975,
+     0.5429
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4668,
+    "thumb_pad_uv": [
+     0.8819,
+     0.529
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3853,
+    "thumb_pad_uv": [
+     0.857,
+     0.5101
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2848,
+    "thumb_pad_uv": [
+     0.8329,
+     0.4902
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1983,
+    "thumb_pad_uv": [
+     0.816,
+     0.4743
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1547,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1548,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.155,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1551,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1552,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1553,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1554,
+    "thumb_pad_uv": [
+     0.8097,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1556,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1557,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1558,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1559,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4677
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.156,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 5.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1561,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1562,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1563,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1564,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1566,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1567,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1568,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1569,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.157,
+    "thumb_pad_uv": [
+     0.8096,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1571,
+    "thumb_pad_uv": [
+     0.8095,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1572,
+    "thumb_pad_uv": [
+     0.8095,
+     0.4676
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2191,
+    "thumb_pad_uv": [
+     0.8117,
+     0.4759
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3401,
+    "thumb_pad_uv": [
+     0.8347,
+     0.5164
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4465,
+    "thumb_pad_uv": [
+     0.8575,
+     0.5417
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4672,
+    "thumb_pad_uv": [
+     0.8792,
+     0.5628
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4263,
+    "thumb_pad_uv": [
+     0.8904,
+     0.5783
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3345,
+    "thumb_pad_uv": [
+     0.8965,
+     0.593
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2123,
+    "thumb_pad_uv": [
+     0.8993,
+     0.6057
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0853,
+    "thumb_pad_uv": [
+     0.9001,
+     0.6154
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 6.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0126,
+    "thumb_pad_uv": [
+     0.9,
+     0.6217
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 6.63333,
+    "thumb_stop_deg": 5.1306,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9014,
+     0.6238
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 6.66667,
+    "thumb_stop_deg": 5.0699,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9002,
+     0.6232
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 6.7,
+    "thumb_stop_deg": 1.9404,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.896,
+     0.619
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 6.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0666,
+    "thumb_pad_uv": [
+     0.8918,
+     0.6108
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 6.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.193,
+    "thumb_pad_uv": [
+     0.8885,
+     0.5994
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3263,
+    "thumb_pad_uv": [
+     0.8864,
+     0.5858
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4482,
+    "thumb_pad_uv": [
+     0.8857,
+     0.571
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5272,
+    "thumb_pad_uv": [
+     0.8859,
+     0.5565
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.56,
+    "thumb_pad_uv": [
+     0.8857,
+     0.5435
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5416,
+    "thumb_pad_uv": [
+     0.8836,
+     0.5332
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 6.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4751,
+    "thumb_pad_uv": [
+     0.8774,
+     0.5251
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3652,
+    "thumb_pad_uv": [
+     0.8679,
+     0.5177
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2341,
+    "thumb_pad_uv": [
+     0.8574,
+     0.5107
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.097,
+    "thumb_pad_uv": [
+     0.8476,
+     0.5039
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.007,
+    "thumb_pad_uv": [
+     0.8394,
+     0.4975
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.13333,
+    "thumb_stop_deg": 1.2995,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8308,
+     0.4919
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 7.16667,
+    "thumb_stop_deg": 1.3809,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8275,
+     0.4871
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 7.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0052,
+    "thumb_pad_uv": [
+     0.8297,
+     0.4836
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1105,
+    "thumb_pad_uv": [
+     0.8299,
+     0.481
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2282,
+    "thumb_pad_uv": [
+     0.8293,
+     0.4784
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2912,
+    "thumb_pad_uv": [
+     0.8255,
+     0.4756
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2711,
+    "thumb_pad_uv": [
+     0.816,
+     0.4722
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1979,
+    "thumb_pad_uv": [
+     0.8027,
+     0.4684
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1121,
+    "thumb_pad_uv": [
+     0.7892,
+     0.4652
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0571,
+    "thumb_pad_uv": [
+     0.7783,
+     0.4639
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0763,
+    "thumb_pad_uv": [
+     0.7712,
+     0.4451
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1572,
+    "thumb_pad_uv": [
+     0.7684,
+     0.4498
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2348,
+    "thumb_pad_uv": [
+     0.7687,
+     0.4563
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2854,
+    "thumb_pad_uv": [
+     0.7719,
+     0.4637
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3299,
+    "thumb_pad_uv": [
+     0.7767,
+     0.4715
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3474,
+    "thumb_pad_uv": [
+     0.7807,
+     0.4791
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3274,
+    "thumb_pad_uv": [
+     0.7822,
+     0.4869
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2759,
+    "thumb_pad_uv": [
+     0.7825,
+     0.4955
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1807,
+    "thumb_pad_uv": [
+     0.7833,
+     0.5041
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.087,
+    "thumb_pad_uv": [
+     0.7978,
+     0.5316
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0537,
+    "thumb_pad_uv": [
+     0.8044,
+     0.5387
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0486,
+    "thumb_pad_uv": [
+     0.8141,
+     0.5449
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 7.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1073,
+    "thumb_pad_uv": [
+     0.8128,
+     0.5315
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1949,
+    "thumb_pad_uv": [
+     0.8284,
+     0.5365
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2894,
+    "thumb_pad_uv": [
+     0.8445,
+     0.541
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 7.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3608,
+    "thumb_pad_uv": [
+     0.8587,
+     0.5453
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.389,
+    "thumb_pad_uv": [
+     0.8681,
+     0.55
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3559,
+    "thumb_pad_uv": [
+     0.8706,
+     0.5561
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2703,
+    "thumb_pad_uv": [
+     0.8879,
+     0.5812
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.161,
+    "thumb_pad_uv": [
+     0.8845,
+     0.5879
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0711,
+    "thumb_pad_uv": [
+     0.882,
+     0.5927
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 8.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0423,
+    "thumb_pad_uv": [
+     0.8821,
+     0.5943
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 8.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0991,
+    "thumb_pad_uv": [
+     0.8871,
+     0.5928
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 8.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.215,
+    "thumb_pad_uv": [
+     0.8965,
+     0.5888
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3404,
+    "thumb_pad_uv": [
+     0.8866,
+     0.5651
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.449,
+    "thumb_pad_uv": [
+     0.8958,
+     0.5569
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5037,
+    "thumb_pad_uv": [
+     0.8991,
+     0.5475
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5007,
+    "thumb_pad_uv": [
+     0.8911,
+     0.5364
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4389,
+    "thumb_pad_uv": [
+     0.8695,
+     0.5196
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3441,
+    "thumb_pad_uv": [
+     0.8439,
+     0.4996
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2459,
+    "thumb_pad_uv": [
+     0.8229,
+     0.481
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1752,
+    "thumb_pad_uv": [
+     0.811,
+     0.4691
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1632,
+    "thumb_pad_uv": [
+     0.8094,
+     0.4673
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1633,
+    "thumb_pad_uv": [
+     0.8094,
+     0.4673
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1634,
+    "thumb_pad_uv": [
+     0.8094,
+     0.4673
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1634,
+    "thumb_pad_uv": [
+     0.8094,
+     0.4673
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1952,
+    "thumb_pad_uv": [
+     0.8101,
+     0.4713
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3431,
+    "thumb_pad_uv": [
+     0.8341,
+     0.5168
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4575,
+    "thumb_pad_uv": [
+     0.8654,
+     0.5501
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4621,
+    "thumb_pad_uv": [
+     0.8876,
+     0.5717
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3998,
+    "thumb_pad_uv": [
+     0.899,
+     0.5885
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2917,
+    "thumb_pad_uv": [
+     0.904,
+     0.6025
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1622,
+    "thumb_pad_uv": [
+     0.9046,
+     0.6131
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 8.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.045,
+    "thumb_pad_uv": [
+     0.9028,
+     0.6201
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 8.93333,
+    "thumb_stop_deg": 3.6192,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9017,
+     0.6232
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 8.96667,
+    "thumb_stop_deg": 5.2892,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9009,
+     0.6237
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 9.0,
+    "thumb_stop_deg": 3.5857,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.898,
+     0.6214
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 9.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0154,
+    "thumb_pad_uv": [
+     0.8935,
+     0.6152
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 9.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1314,
+    "thumb_pad_uv": [
+     0.8899,
+     0.6053
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2631,
+    "thumb_pad_uv": [
+     0.8871,
+     0.5926
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3936,
+    "thumb_pad_uv": [
+     0.8858,
+     0.5783
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4955,
+    "thumb_pad_uv": [
+     0.8857,
+     0.5634
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5583,
+    "thumb_pad_uv": [
+     0.8858,
+     0.5495
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5597,
+    "thumb_pad_uv": [
+     0.8849,
+     0.5378
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5193,
+    "thumb_pad_uv": [
+     0.881,
+     0.5289
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4281,
+    "thumb_pad_uv": [
+     0.8729,
+     0.5212
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3048,
+    "thumb_pad_uv": [
+     0.8626,
+     0.5141
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1698,
+    "thumb_pad_uv": [
+     0.8523,
+     0.5072
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0374,
+    "thumb_pad_uv": [
+     0.8431,
+     0.5006
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 9.43333,
+    "thumb_stop_deg": 0.3226,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8354,
+     0.4945
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 9.46667,
+    "thumb_stop_deg": 1.5755,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8281,
+     0.4893
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 9.5,
+    "thumb_stop_deg": 0.2999,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8177,
+     0.4647
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 9.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0496,
+    "thumb_pad_uv": [
+     0.8297,
+     0.4822
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 9.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1766,
+    "thumb_pad_uv": [
+     0.8298,
+     0.4796
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2729,
+    "thumb_pad_uv": [
+     0.828,
+     0.4769
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2937,
+    "thumb_pad_uv": [
+     0.8214,
+     0.474
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.242,
+    "thumb_pad_uv": [
+     0.8095,
+     0.4703
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1572,
+    "thumb_pad_uv": [
+     0.7958,
+     0.4666
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0812,
+    "thumb_pad_uv": [
+     0.7833,
+     0.4642
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 9.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0588,
+    "thumb_pad_uv": [
+     0.7735,
+     0.4437
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 9.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1189,
+    "thumb_pad_uv": [
+     0.7695,
+     0.4471
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2011,
+    "thumb_pad_uv": [
+     0.7682,
+     0.4528
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2609,
+    "thumb_pad_uv": [
+     0.7701,
+     0.4598
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3112,
+    "thumb_pad_uv": [
+     0.7743,
+     0.4675
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3448,
+    "thumb_pad_uv": [
+     0.7791,
+     0.4753
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 9.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3426,
+    "thumb_pad_uv": [
+     0.7818,
+     0.4828
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3105,
+    "thumb_pad_uv": [
+     0.7824,
+     0.4911
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2318,
+    "thumb_pad_uv": [
+     0.7828,
+     0.4998
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1336,
+    "thumb_pad_uv": [
+     0.7845,
+     0.5082
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0581,
+    "thumb_pad_uv": [
+     0.8008,
+     0.5352
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 10.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0426,
+    "thumb_pad_uv": [
+     0.8088,
+     0.5419
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 10.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0783,
+    "thumb_pad_uv": [
+     0.8206,
+     0.5477
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 10.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1489,
+    "thumb_pad_uv": [
+     0.8204,
+     0.5341
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2471,
+    "thumb_pad_uv": [
+     0.8366,
+     0.5388
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3312,
+    "thumb_pad_uv": [
+     0.8521,
+     0.5431
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3839,
+    "thumb_pad_uv": [
+     0.8643,
+     0.5475
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3819,
+    "thumb_pad_uv": [
+     0.8702,
+     0.5528
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3221,
+    "thumb_pad_uv": [
+     0.8699,
+     0.5597
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2173,
+    "thumb_pad_uv": [
+     0.8863,
+     0.5847
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1127,
+    "thumb_pad_uv": [
+     0.8831,
+     0.5906
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.048,
+    "thumb_pad_uv": [
+     0.8817,
+     0.594
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 10.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0627,
+    "thumb_pad_uv": [
+     0.884,
+     0.5939
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 10.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1525,
+    "thumb_pad_uv": [
+     0.8914,
+     0.5911
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2768,
+    "thumb_pad_uv": [
+     0.9022,
+     0.586
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4052,
+    "thumb_pad_uv": [
+     0.8918,
+     0.5612
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4842,
+    "thumb_pad_uv": [
+     0.8986,
+     0.5523
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5118,
+    "thumb_pad_uv": [
+     0.8972,
+     0.5425
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4742,
+    "thumb_pad_uv": [
+     0.882,
+     0.5283
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3862,
+    "thumb_pad_uv": [
+     0.8584,
+     0.5088
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2796,
+    "thumb_pad_uv": [
+     0.8357,
+     0.4885
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1766,
+    "thumb_pad_uv": [
+     0.8187,
+     0.4728
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1645,
+    "thumb_pad_uv": [
+     0.8094,
+     0.4674
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2518,
+    "thumb_pad_uv": [
+     0.8103,
+     0.4794
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3859,
+    "thumb_pad_uv": [
+     0.8397,
+     0.5249
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4631,
+    "thumb_pad_uv": [
+     0.868,
+     0.5522
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 10.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4604,
+    "thumb_pad_uv": [
+     0.8865,
+     0.571
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3944,
+    "thumb_pad_uv": [
+     0.8962,
+     0.5869
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2852,
+    "thumb_pad_uv": [
+     0.9008,
+     0.6008
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1564,
+    "thumb_pad_uv": [
+     0.902,
+     0.6118
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0398,
+    "thumb_pad_uv": [
+     0.9014,
+     0.6194
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 11.13333,
+    "thumb_stop_deg": 3.5891,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9015,
+     0.6231
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.16667,
+    "thumb_stop_deg": 5.2617,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9011,
+     0.6238
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.2,
+    "thumb_stop_deg": 3.5594,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8983,
+     0.6215
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0165,
+    "thumb_pad_uv": [
+     0.8938,
+     0.6153
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 11.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1323,
+    "thumb_pad_uv": [
+     0.8902,
+     0.6054
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2641,
+    "thumb_pad_uv": [
+     0.8874,
+     0.5927
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3946,
+    "thumb_pad_uv": [
+     0.8861,
+     0.5784
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4959,
+    "thumb_pad_uv": [
+     0.886,
+     0.5636
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.559,
+    "thumb_pad_uv": [
+     0.8861,
+     0.5497
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5601,
+    "thumb_pad_uv": [
+     0.8852,
+     0.5379
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5197,
+    "thumb_pad_uv": [
+     0.8813,
+     0.529
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4285,
+    "thumb_pad_uv": [
+     0.8731,
+     0.5214
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3052,
+    "thumb_pad_uv": [
+     0.8629,
+     0.5142
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1703,
+    "thumb_pad_uv": [
+     0.8525,
+     0.5073
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0379,
+    "thumb_pad_uv": [
+     0.8434,
+     0.5007
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 11.63333,
+    "thumb_stop_deg": 0.3088,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8357,
+     0.4947
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.66667,
+    "thumb_stop_deg": 1.5621,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8284,
+     0.4894
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.7,
+    "thumb_stop_deg": 0.2875,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.818,
+     0.4649
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 11.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0499,
+    "thumb_pad_uv": [
+     0.8299,
+     0.4824
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 11.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1769,
+    "thumb_pad_uv": [
+     0.83,
+     0.4798
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2731,
+    "thumb_pad_uv": [
+     0.8282,
+     0.4771
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2938,
+    "thumb_pad_uv": [
+     0.8217,
+     0.4742
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2421,
+    "thumb_pad_uv": [
+     0.8098,
+     0.4705
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1573,
+    "thumb_pad_uv": [
+     0.796,
+     0.4668
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 11.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0812,
+    "thumb_pad_uv": [
+     0.7835,
+     0.4644
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 11.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0588,
+    "thumb_pad_uv": [
+     0.7749,
+     0.4646
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1187,
+    "thumb_pad_uv": [
+     0.7697,
+     0.4474
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2006,
+    "thumb_pad_uv": [
+     0.7684,
+     0.4531
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2619,
+    "thumb_pad_uv": [
+     0.7703,
+     0.4601
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3121,
+    "thumb_pad_uv": [
+     0.7746,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3457,
+    "thumb_pad_uv": [
+     0.7794,
+     0.4756
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3436,
+    "thumb_pad_uv": [
+     0.7821,
+     0.4831
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3118,
+    "thumb_pad_uv": [
+     0.7828,
+     0.4914
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2311,
+    "thumb_pad_uv": [
+     0.7832,
+     0.5001
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1326,
+    "thumb_pad_uv": [
+     0.7849,
+     0.5085
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0585,
+    "thumb_pad_uv": [
+     0.8013,
+     0.5355
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0417,
+    "thumb_pad_uv": [
+     0.8093,
+     0.5422
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0772,
+    "thumb_pad_uv": [
+     0.8211,
+     0.5481
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1477,
+    "thumb_pad_uv": [
+     0.8209,
+     0.5344
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2457,
+    "thumb_pad_uv": [
+     0.8371,
+     0.5391
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3297,
+    "thumb_pad_uv": [
+     0.8526,
+     0.5434
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3823,
+    "thumb_pad_uv": [
+     0.8648,
+     0.5479
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3801,
+    "thumb_pad_uv": [
+     0.8708,
+     0.5531
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3202,
+    "thumb_pad_uv": [
+     0.8705,
+     0.56
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2156,
+    "thumb_pad_uv": [
+     0.887,
+     0.585
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1108,
+    "thumb_pad_uv": [
+     0.8838,
+     0.5909
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.046,
+    "thumb_pad_uv": [
+     0.8825,
+     0.5943
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0607,
+    "thumb_pad_uv": [
+     0.8847,
+     0.5942
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 12.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1505,
+    "thumb_pad_uv": [
+     0.8922,
+     0.5915
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.275,
+    "thumb_pad_uv": [
+     0.9029,
+     0.5863
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4032,
+    "thumb_pad_uv": [
+     0.8924,
+     0.5616
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4814,
+    "thumb_pad_uv": [
+     0.8992,
+     0.5527
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.509,
+    "thumb_pad_uv": [
+     0.8978,
+     0.5429
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4745,
+    "thumb_pad_uv": [
+     0.8821,
+     0.529
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3928,
+    "thumb_pad_uv": [
+     0.8572,
+     0.5101
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 12.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.292,
+    "thumb_pad_uv": [
+     0.8331,
+     0.4902
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2053,
+    "thumb_pad_uv": [
+     0.8162,
+     0.4743
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1623,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1622,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1621,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.162,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1619,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1618,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1618,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1617,
+    "thumb_pad_uv": [
+     0.8099,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1616,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1615,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1614,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1613,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1612,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1611,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.161,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1609,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1608,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1607,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1606,
+    "thumb_pad_uv": [
+     0.81,
+     0.4679
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1604,
+    "thumb_pad_uv": [
+     0.8101,
+     0.468
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.202,
+    "thumb_pad_uv": [
+     0.8112,
+     0.4737
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3853,
+    "thumb_pad_uv": [
+     0.8431,
+     0.528
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4698,
+    "thumb_pad_uv": [
+     0.8802,
+     0.5632
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4402,
+    "thumb_pad_uv": [
+     0.8988,
+     0.583
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3575,
+    "thumb_pad_uv": [
+     0.9084,
+     0.5991
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2405,
+    "thumb_pad_uv": [
+     0.9108,
+     0.6113
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1125,
+    "thumb_pad_uv": [
+     0.9086,
+     0.6194
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 13.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0134,
+    "thumb_pad_uv": [
+     0.9046,
+     0.6238
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 13.96667,
+    "thumb_stop_deg": 5.1786,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9033,
+     0.6246
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 14.0,
+    "thumb_stop_deg": 5.129,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9017,
+     0.6237
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 14.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0052,
+    "thumb_pad_uv": [
+     0.8969,
+     0.6198
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0683,
+    "thumb_pad_uv": [
+     0.8932,
+     0.6115
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1942,
+    "thumb_pad_uv": [
+     0.8899,
+     0.6001
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3277,
+    "thumb_pad_uv": [
+     0.8877,
+     0.5864
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4465,
+    "thumb_pad_uv": [
+     0.887,
+     0.5717
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.526,
+    "thumb_pad_uv": [
+     0.8871,
+     0.5571
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5581,
+    "thumb_pad_uv": [
+     0.8869,
+     0.5441
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5399,
+    "thumb_pad_uv": [
+     0.8847,
+     0.5338
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4732,
+    "thumb_pad_uv": [
+     0.8785,
+     0.5257
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3634,
+    "thumb_pad_uv": [
+     0.8691,
+     0.5184
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2323,
+    "thumb_pad_uv": [
+     0.8585,
+     0.5113
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0955,
+    "thumb_pad_uv": [
+     0.8486,
+     0.5046
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0051,
+    "thumb_pad_uv": [
+     0.8405,
+     0.4982
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.46667,
+    "thumb_stop_deg": 1.3462,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8317,
+     0.4925
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 14.5,
+    "thumb_stop_deg": 1.4321,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8284,
+     0.4878
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 14.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0021,
+    "thumb_pad_uv": [
+     0.8307,
+     0.4843
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1082,
+    "thumb_pad_uv": [
+     0.8309,
+     0.4817
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2255,
+    "thumb_pad_uv": [
+     0.8303,
+     0.4792
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2882,
+    "thumb_pad_uv": [
+     0.8265,
+     0.4765
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2678,
+    "thumb_pad_uv": [
+     0.817,
+     0.4731
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1943,
+    "thumb_pad_uv": [
+     0.8037,
+     0.4693
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1082,
+    "thumb_pad_uv": [
+     0.7902,
+     0.4662
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0529,
+    "thumb_pad_uv": [
+     0.7794,
+     0.4649
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0717,
+    "thumb_pad_uv": [
+     0.7721,
+     0.4462
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 14.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1515,
+    "thumb_pad_uv": [
+     0.7693,
+     0.4509
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2369,
+    "thumb_pad_uv": [
+     0.7697,
+     0.4574
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2868,
+    "thumb_pad_uv": [
+     0.7729,
+     0.465
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3311,
+    "thumb_pad_uv": [
+     0.7778,
+     0.4728
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 14.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3489,
+    "thumb_pad_uv": [
+     0.7818,
+     0.4804
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3298,
+    "thumb_pad_uv": [
+     0.7833,
+     0.4883
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2702,
+    "thumb_pad_uv": [
+     0.7837,
+     0.4969
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1733,
+    "thumb_pad_uv": [
+     0.7847,
+     0.5054
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.08,
+    "thumb_pad_uv": [
+     0.7995,
+     0.5328
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0466,
+    "thumb_pad_uv": [
+     0.8062,
+     0.5399
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0479,
+    "thumb_pad_uv": [
+     0.8159,
+     0.5462
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0988,
+    "thumb_pad_uv": [
+     0.8299,
+     0.5516
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1889,
+    "thumb_pad_uv": [
+     0.8301,
+     0.5378
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2793,
+    "thumb_pad_uv": [
+     0.8463,
+     0.5422
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3504,
+    "thumb_pad_uv": [
+     0.8605,
+     0.5466
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3781,
+    "thumb_pad_uv": [
+     0.87,
+     0.5512
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3444,
+    "thumb_pad_uv": [
+     0.8725,
+     0.5574
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2609,
+    "thumb_pad_uv": [
+     0.8902,
+     0.5824
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1503,
+    "thumb_pad_uv": [
+     0.8868,
+     0.5891
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0599,
+    "thumb_pad_uv": [
+     0.8845,
+     0.594
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0309,
+    "thumb_pad_uv": [
+     0.8847,
+     0.5956
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0876,
+    "thumb_pad_uv": [
+     0.8896,
+     0.5941
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 15.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2012,
+    "thumb_pad_uv": [
+     0.8989,
+     0.5901
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3291,
+    "thumb_pad_uv": [
+     0.9101,
+     0.5838
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4335,
+    "thumb_pad_uv": [
+     0.8979,
+     0.5582
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4885,
+    "thumb_pad_uv": [
+     0.9011,
+     0.5488
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.484,
+    "thumb_pad_uv": [
+     0.893,
+     0.5374
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4122,
+    "thumb_pad_uv": [
+     0.8715,
+     0.519
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3049,
+    "thumb_pad_uv": [
+     0.8471,
+     0.4973
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1767,
+    "thumb_pad_uv": [
+     0.8273,
+     0.4783
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1255,
+    "thumb_pad_uv": [
+     0.8143,
+     0.4682
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2056,
+    "thumb_pad_uv": [
+     0.8109,
+     0.4764
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3831,
+    "thumb_pad_uv": [
+     0.8448,
+     0.5307
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4636,
+    "thumb_pad_uv": [
+     0.8813,
+     0.5641
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 15.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4304,
+    "thumb_pad_uv": [
+     0.9001,
+     0.5839
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3481,
+    "thumb_pad_uv": [
+     0.9097,
+     0.6001
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2306,
+    "thumb_pad_uv": [
+     0.9122,
+     0.6122
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1035,
+    "thumb_pad_uv": [
+     0.9102,
+     0.6203
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.1,
+    "thumb_stop_deg": 0.0055,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9063,
+     0.6248
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.13333,
+    "thumb_stop_deg": 5.7948,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9052,
+     0.6254
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.16667,
+    "thumb_stop_deg": 5.7495,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.9036,
+     0.6246
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.2,
+    "thumb_stop_deg": 0.1433,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8985,
+     0.6208
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0642,
+    "thumb_pad_uv": [
+     0.8947,
+     0.6125
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1879,
+    "thumb_pad_uv": [
+     0.8913,
+     0.6011
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3218,
+    "thumb_pad_uv": [
+     0.8891,
+     0.5874
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4351,
+    "thumb_pad_uv": [
+     0.8882,
+     0.5726
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5158,
+    "thumb_pad_uv": [
+     0.8882,
+     0.558
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5463,
+    "thumb_pad_uv": [
+     0.888,
+     0.545
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.5285,
+    "thumb_pad_uv": [
+     0.8858,
+     0.5347
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.4619,
+    "thumb_pad_uv": [
+     0.8795,
+     0.5265
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3523,
+    "thumb_pad_uv": [
+     0.8701,
+     0.5191
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2214,
+    "thumb_pad_uv": [
+     0.8596,
+     0.5121
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0848,
+    "thumb_pad_uv": [
+     0.8497,
+     0.5053
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0071,
+    "thumb_pad_uv": [
+     0.8416,
+     0.4989
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.63333,
+    "thumb_stop_deg": 1.6517,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8322,
+     0.4933
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.66667,
+    "thumb_stop_deg": 1.7393,
+    "thumb_stop_joint": "RightHandThumb2",
+    "thumb_min_clearance_cm": 0.0,
+    "thumb_pad_uv": [
+     0.8288,
+     0.4885
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": true
+   },
+   {
+    "time": 16.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0042,
+    "thumb_pad_uv": [
+     0.8318,
+     0.4851
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0973,
+    "thumb_pad_uv": [
+     0.8319,
+     0.4825
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2142,
+    "thumb_pad_uv": [
+     0.8313,
+     0.48
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2766,
+    "thumb_pad_uv": [
+     0.8274,
+     0.4773
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.256,
+    "thumb_pad_uv": [
+     0.8179,
+     0.474
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1823,
+    "thumb_pad_uv": [
+     0.8047,
+     0.4703
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 16.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0959,
+    "thumb_pad_uv": [
+     0.7912,
+     0.4671
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0402,
+    "thumb_pad_uv": [
+     0.7803,
+     0.4659
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 16.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0585,
+    "thumb_pad_uv": [
+     0.7742,
+     0.4678
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1389,
+    "thumb_pad_uv": [
+     0.7701,
+     0.452
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2249,
+    "thumb_pad_uv": [
+     0.7704,
+     0.4586
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2842,
+    "thumb_pad_uv": [
+     0.7736,
+     0.4662
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3282,
+    "thumb_pad_uv": [
+     0.7784,
+     0.4741
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3462,
+    "thumb_pad_uv": [
+     0.7824,
+     0.4818
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.3356,
+    "thumb_pad_uv": [
+     0.7852,
+     0.4903
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2684,
+    "thumb_pad_uv": [
+     0.7881,
+     0.5003
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1766,
+    "thumb_pad_uv": [
+     0.7915,
+     0.5101
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1066,
+    "thumb_pad_uv": [
+     0.7952,
+     0.5183
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0389,
+    "thumb_pad_uv": [
+     0.8114,
+     0.5428
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0144,
+    "thumb_pad_uv": [
+     0.8118,
+     0.545
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0131,
+    "thumb_pad_uv": [
+     0.8097,
+     0.545
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0228,
+    "thumb_pad_uv": [
+     0.8059,
+     0.5433
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0456,
+    "thumb_pad_uv": [
+     0.801,
+     0.5404
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0194,
+    "thumb_pad_uv": [
+     0.7959,
+     0.5365
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0513,
+    "thumb_pad_uv": [
+     0.7911,
+     0.532
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.0883,
+    "thumb_pad_uv": [
+     0.7871,
+     0.527
+    ],
+    "thumb_over_glass": true,
+    "near_glass": true,
+    "touch": false
+   },
+   {
+    "time": 17.56667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1266,
+    "thumb_pad_uv": [
+     0.7841,
+     0.5221
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.6,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1636,
+    "thumb_pad_uv": [
+     0.7821,
+     0.5175
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.63333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.153,
+    "thumb_pad_uv": [
+     0.7811,
+     0.5134
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.66667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1469,
+    "thumb_pad_uv": [
+     0.7807,
+     0.5102
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.7,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1407,
+    "thumb_pad_uv": [
+     0.7808,
+     0.5082
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.73333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1365,
+    "thumb_pad_uv": [
+     0.781,
+     0.5076
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.76667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1396,
+    "thumb_pad_uv": [
+     0.7813,
+     0.5078
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.8,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.143,
+    "thumb_pad_uv": [
+     0.7816,
+     0.508
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.83333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1465,
+    "thumb_pad_uv": [
+     0.7819,
+     0.5083
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.86667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1503,
+    "thumb_pad_uv": [
+     0.7823,
+     0.5085
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.9,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1542,
+    "thumb_pad_uv": [
+     0.7826,
+     0.5088
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.93333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1584,
+    "thumb_pad_uv": [
+     0.783,
+     0.509
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 17.96667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1627,
+    "thumb_pad_uv": [
+     0.7834,
+     0.5093
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.0,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1654,
+    "thumb_pad_uv": [
+     0.7838,
+     0.5096
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.03333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1683,
+    "thumb_pad_uv": [
+     0.7842,
+     0.5098
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.06667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1712,
+    "thumb_pad_uv": [
+     0.7846,
+     0.5101
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.1,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1743,
+    "thumb_pad_uv": [
+     0.785,
+     0.5104
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.13333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1775,
+    "thumb_pad_uv": [
+     0.7854,
+     0.5107
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.16667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1808,
+    "thumb_pad_uv": [
+     0.7859,
+     0.511
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.2,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1841,
+    "thumb_pad_uv": [
+     0.7863,
+     0.5113
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.23333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1875,
+    "thumb_pad_uv": [
+     0.7867,
+     0.5116
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.26667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1909,
+    "thumb_pad_uv": [
+     0.7872,
+     0.5119
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.3,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1943,
+    "thumb_pad_uv": [
+     0.7876,
+     0.5121
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.33333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.1977,
+    "thumb_pad_uv": [
+     0.788,
+     0.5124
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.36667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.201,
+    "thumb_pad_uv": [
+     0.7884,
+     0.5127
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.4,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2044,
+    "thumb_pad_uv": [
+     0.7888,
+     0.5129
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.43333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2076,
+    "thumb_pad_uv": [
+     0.7892,
+     0.5132
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.46667,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2108,
+    "thumb_pad_uv": [
+     0.7896,
+     0.5134
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.5,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2139,
+    "thumb_pad_uv": [
+     0.79,
+     0.5137
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   },
+   {
+    "time": 18.53333,
+    "thumb_stop_deg": 0.0,
+    "thumb_stop_joint": null,
+    "thumb_min_clearance_cm": 0.2149,
+    "thumb_pad_uv": [
+     0.7903,
+     0.5139
+    ],
+    "thumb_over_glass": true,
+    "near_glass": false,
+    "touch": false
+   }
+  ],
+  "tap_events": [
+   {
+    "down_time": 1.43333,
+    "up_time": 1.5,
+    "frames": 3,
+    "uv": [
+     0.9037,
+     0.6247
+    ],
+    "press_stop_deg_max": 6.7241
+   },
+   {
+    "down_time": 1.93333,
+    "up_time": 2.0,
+    "frames": 3,
+    "uv": [
+     0.832,
+     0.4911
+    ],
+    "press_stop_deg_max": 2.1349
+   },
+   {
+    "down_time": 3.66667,
+    "up_time": 3.73333,
+    "frames": 3,
+    "uv": [
+     0.9021,
+     0.6237
+    ],
+    "press_stop_deg_max": 6.1362
+   },
+   {
+    "down_time": 4.16667,
+    "up_time": 4.23333,
+    "frames": 3,
+    "uv": [
+     0.8311,
+     0.4903
+    ],
+    "press_stop_deg_max": 1.917
+   },
+   {
+    "down_time": 6.63333,
+    "up_time": 6.7,
+    "frames": 3,
+    "uv": [
+     0.8992,
+     0.622
+    ],
+    "press_stop_deg_max": 5.1306
+   },
+   {
+    "down_time": 7.13333,
+    "up_time": 7.16667,
+    "frames": 2,
+    "uv": [
+     0.8292,
+     0.4895
+    ],
+    "press_stop_deg_max": 1.3809
+   },
+   {
+    "down_time": 8.93333,
+    "up_time": 9.0,
+    "frames": 3,
+    "uv": [
+     0.9002,
+     0.6228
+    ],
+    "press_stop_deg_max": 5.2892
+   },
+   {
+    "down_time": 9.43333,
+    "up_time": 9.5,
+    "frames": 3,
+    "uv": [
+     0.8271,
+     0.4828
+    ],
+    "press_stop_deg_max": 1.5755
+   },
+   {
+    "down_time": 11.13333,
+    "up_time": 11.2,
+    "frames": 3,
+    "uv": [
+     0.9003,
+     0.6228
+    ],
+    "press_stop_deg_max": 5.2617
+   },
+   {
+    "down_time": 11.63333,
+    "up_time": 11.7,
+    "frames": 3,
+    "uv": [
+     0.8274,
+     0.483
+    ],
+    "press_stop_deg_max": 1.5621
+   },
+   {
+    "down_time": 13.96667,
+    "up_time": 14.0,
+    "frames": 2,
+    "uv": [
+     0.9025,
+     0.6241
+    ],
+    "press_stop_deg_max": 5.1786
+   },
+   {
+    "down_time": 14.46667,
+    "up_time": 14.5,
+    "frames": 2,
+    "uv": [
+     0.83,
+     0.4901
+    ],
+    "press_stop_deg_max": 1.4321
+   },
+   {
+    "down_time": 16.1,
+    "up_time": 16.2,
+    "frames": 4,
+    "uv": [
+     0.9034,
+     0.6239
+    ],
+    "press_stop_deg_max": 5.7948
+   },
+   {
+    "down_time": 16.63333,
+    "up_time": 16.66667,
+    "frames": 2,
+    "uv": [
+     0.8305,
+     0.4909
+    ],
+    "press_stop_deg_max": 1.7393
+   }
+  ],
+  "tap_count": 14,
+  "rule": "touch (tap) = the captured thumb would pass the glass and the per-frame stop holds its skin on the glass inside the screen; near_glass = within 0.1 cm without force; geometry only, no timer"
+ },
+ "left_hand": "unchanged capture (free hand); audited for phone clearance by tools/audit_phone_grip_clip.py",
+ "gates": {
+  "native_import": false,
+  "native_contact": false,
+  "visual_acceptance": false,
+  "activity_binding": false
+ }
+}
