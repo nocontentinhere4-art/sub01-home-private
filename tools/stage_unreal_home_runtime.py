@@ -26,6 +26,7 @@ from unreal_walking_collision_envelope import install as install_walking_envelop
 from exterior_backdrop_geometry import patch_native_view_settings
 from unreal_first_person_motion import install as install_first_person_motion, stage as stage_first_person_motion
 from unreal_native_visual_metrics import install as install_native_visual_metrics
+from unreal_interaction_trace_witness import install as install_interaction_trace_witness
 from unreal_native_fixture_emission import install as install_native_fixture_emission, stage as stage_native_fixture_emission
 from unreal_native_daylight_exposure import install as install_native_daylight_exposure, stage as stage_native_daylight_exposure
 
@@ -189,6 +190,7 @@ def stage(project):
     header,cpp=install_exit_doors(header,cpp)
     header,cpp=install_first_person_motion(header,cpp)
     header,cpp=install_native_visual_metrics(header,cpp)
+    header,cpp=install_interaction_trace_witness(header,cpp)
     stage_first_person_motion(module)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
