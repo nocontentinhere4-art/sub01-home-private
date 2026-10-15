@@ -1,0 +1,66 @@
+{
+  "schema": "sub01.actual-coherent-home-integration-checkpoint.v1",
+  "module_sha256": "97c3395e01e03c2df5f549c7920df289fa69a1073bee71c0b9a93fbfe8f5506a",
+  "map_sha256": "f2072833e5c21aeed43b4aefc63361a45396a3038e0234227dad9bd1501f7617",
+  "native_pid": 159171,
+  "native_start_ticks": 976840968,
+  "game_started_epoch": 1792078114.2863584,
+  "native_geometry_profile": "5ffac2406e66",
+  "source_cpp_sha256": "be016bca02559ab0981c4fe0642264395978b8db8fbff1fce41e80abfb48ceef",
+  "source_header_sha256": "bda916f22a5bc114660454b3d8a0dd16f8f09dab00be829ae94153b2126ba5de",
+  "coherent_compile_actual_exit": 0,
+  "saved_native_packets": [
+    "kitchen_lower_fit_152",
+    "bedding_4",
+    "corridor_9",
+    "bath_fixtures_90",
+    "real_doors_76",
+    "windows_207",
+    "entry_4",
+    "media_11",
+    "fps_keyboard_REVIEW_only"
+  ],
+  "media": {
+    "source_sha256": "7a27cdf114d219968c7e5aa39f491be2ff979d58d3965344acf0ebdb6a651a96",
+    "source_total_triangles": 67436,
+    "exact_zero_area_source_triangles": 280,
+    "all_positive_native_triangles": 67156,
+    "all_11_source_material_factors_verified": true,
+    "source_bvh_no_positive_intersections": true,
+    "native_visual_acceptance": false
+  },
+  "sheer": {
+    "installed": false,
+    "strict_refusal": "Actual required colour/emission parameters unavailable",
+    "original_world_preserved": true
+  },
+  "physical_route": {
+    "actual_success": true,
+    "reached": 18,
+    "expected": 18,
+    "all_floor_hits": true,
+    "no_teleport": true,
+    "capsule_radius_cm": 16,
+    "capsule_half_height_cm": 91,
+    "near_clip_cm": 10,
+    "actual_recording_seconds": 78,
+    "actual_recording_bytes": 9600228,
+    "privacy_identity_checks": 298,
+    "recording": "/workspace/sub01-private-recovered-project/Sub01HomeLab/evidence/realistic-home-route97c/actual-realistic-home-route-78s.mp4",
+    "physical_hand_foot_contact_acceptance": false
+  },
+  "actual_projection": {
+    "horizontal_fov_degrees": 74.99998675492475,
+    "vertical_fov_degrees": 46.69211573231263,
+    "viewport": [
+      1280,
+      720
+    ],
+    "valid": true
+  },
+  "public_changes": false,
+  "gpu_restart": false,
+  "normal_pc_hand_contact_accepted": false,
+  "autonomous_activity_gates_enabled": false,
+  "whole_home_accepted": false
+}
