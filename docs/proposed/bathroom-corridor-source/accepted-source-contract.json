@@ -1,0 +1,79 @@
+{
+  "schema": "sub01.accepted-bathroom-corridor-source-contract.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "export_sha256": "5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91",
+  "files": {
+    "bath-corridor.glb": {
+      "bytes": 79204,
+      "sha256": "5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91"
+    },
+    "bath-corridor.json": {
+      "bytes": 16754,
+      "sha256": "9448b8ac1ed390c4fc839821072e69ed0741d86e4927d7c00b80f75bf6fbc82b"
+    },
+    "source-clearance-proof.json": {
+      "bytes": 16022,
+      "sha256": "b93d815ae9de1954b222f492487bfaab78dec88b66cb289ffb9000c48422d1c5"
+    },
+    "independent-corner-bytes.json": {
+      "bytes": 4461,
+      "sha256": "05e401bbd7ffebad66dbe766b2b9dc2948532be1f7c73843fe0901529d1efcd8"
+    }
+  },
+  "original_source_nodes": [
+    117,
+    118,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    158
+  ],
+  "owned_geometry_triangles": 876,
+  "native_receipt_schema": "sub01.bathroom-corridor-native-import.v1",
+  "native_receipt_relative_path": "private-audit/bathroom-corridor-native-import.json",
+  "native_asset_prefix": "/Game/Sub01Home/BathroomCorridor/V_5ffac2406e66/Attempt_",
+  "native_door_tag": "SUB01BathroomCorridor:5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91:SourceNode118",
+  "new_source_door_center_ue_cm": [
+    -100,
+    135,
+    405
+  ],
+  "existing_door_fit_delta_ue_cm": [
+    11.2,
+    0,
+    0
+  ],
+  "expected_runtime_closed_door_center_ue_cm": [
+    -88.8,
+    135,
+    405
+  ],
+  "door_extent_ue_cm": [
+    3.25,
+    44.5,
+    100
+  ],
+  "door_open_slide_y_cm": 95,
+  "bathroom_privacy_right_x_cm": -100,
+  "bath_aisle_ue_cm": [
+    -60,
+    -20,
+    465
+  ],
+  "bath_door_outside_ue_cm": [
+    -56.7,
+    135,
+    465
+  ],
+  "bathroom_inside_ue_cm": [
+    -150,
+    135,
+    465
+  ],
+  "native_imported": false,
+  "native_physical_path_accepted": false,
+  "scope": "Actual876source triangles; exact432protected architecture position-corner bytes/allUVnormalcorner bytes;101R25samples and continuous full-source door-swept-AABB proof. Native collision hull/step/privacy tests still required."
+}

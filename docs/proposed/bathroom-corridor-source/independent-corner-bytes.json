@@ -1,0 +1,149 @@
+{
+  "schema": "sub01.bathroom-corridor-independent-corner-bytes.v1",
+  "actual_output_glb_sha256": "5ffac2406e668a327427e60bc75e3ee3ecf13a89381d0312b821277386cb9c91",
+  "parts": [
+    {
+      "source_node": 117,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 118,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 300,
+          "sha256": "d877653acda06e468c8f6ab8e5c273c3cf3538acc913ac66326bbaa67e9c309c"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 300,
+          "sha256": "d6dc92dc3e53141a82309a095449c5d400701f35730cab8adc099a034ead2732"
+        }
+      }
+    },
+    {
+      "source_node": 151,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 152,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 153,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 154,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 155,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 156,
+      "attributes": {
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "f34824b33913c5cd665ccd00dec9e7227acaf098c7d0d11d7b8a7793d4dc70b7"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 12,
+          "sha256": "e6f1932166a46feabb67c4275b259c9fb6d02a66a7fcfe28aaf8c512460094ef"
+        }
+      }
+    },
+    {
+      "source_node": 158,
+      "attributes": {
+        "POSITION": {
+          "exact_corner_bytes": true,
+          "triangles": 432,
+          "sha256": "cf9343108d87e1d44c9bf5dfb5be478838e6931d3acaa5db9b917601d64338a6"
+        },
+        "NORMAL": {
+          "exact_corner_bytes": true,
+          "triangles": 492,
+          "sha256": "0121f83c15e1588d8b56cc4b423a0fb1e3ce227bd14828dbec10d795f0a3ed2f"
+        },
+        "TEXCOORD_0": {
+          "exact_corner_bytes": true,
+          "triangles": 492,
+          "sha256": "415ab4dbe4a7d87e978cbf0ff61da72d073f1563e49cb67f8be41bc5da8e5dd4"
+        }
+      }
+    }
+  ],
+  "all_UV_normals_other_corner_bytes_exact": true,
+  "protected_architecture_position_corner_triangles_exact": 432,
+  "native_imported": false
+}
