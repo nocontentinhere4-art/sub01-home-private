@@ -1,0 +1,29 @@
+{
+  "schema": "sub01.anatomical-phone-original-capture.v1",
+  "status": "source_WIP_contact_and_native_unaccepted",
+  "final_sha256": "5d695e89fb87ecc4fee86ad830aebb1b1539480b9c703a90d22edc362ba3eec5",
+  "remote_file": "/home/unreal/runtime-tools/root-owner65-anatomical-Phone-final.glb",
+  "original_fbx_sha256": "458a0d3e73da67c873332fc67761173e7437b37f32de6e7fffaec356537aedb4",
+  "approved_hand_geometry_rest_skin_materials_unchanged": true,
+  "original_body_wrist_channels_exact": 26,
+  "captured_frames": 557,
+  "captured_sample_fps": 30,
+  "duration_seconds": 18.533333333333335,
+  "anatomical_finger_channels": 30,
+  "max_independent_palm_direction_error_degrees": 7.294645231227028e-06,
+  "affine_refinement_maximum_rotation_correction_radians": 2.7712955084487494e-06,
+  "affine_reason": "Evaluate actual complete parent scale matrix instead of scalar approximation; no hand pose style change or angular tolerance relaxation.",
+  "full_skin_cuff_audit": {
+    "frames": 557,
+    "left_max_candidates": 0,
+    "right_max_candidates": 14,
+    "right_affected_seconds": [
+      11.7666664,
+      12.1999998
+    ],
+    "accepted": false
+  },
+  "phone_prop_basis": "Prior mount is measured in old native FBX RightHand bone frame; new-family native basis/contact must be measured, not assumed.",
+  "native_imported": false,
+  "phone_contact_accepted": false
+}

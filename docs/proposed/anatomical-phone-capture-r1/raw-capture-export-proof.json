@@ -1,0 +1,8 @@
+{
+  "source_sha256": "458a0d3e73da67c873332fc67761173e7437b37f32de6e7fffaec356537aedb4",
+  "export_sha256": "c7c7874df437843b1f497d50d471ba2975c887d55db4f66020b4be085aca25cf",
+  "sampled_bones": 126,
+  "max_actual_fbx_to_export_world_error_m": 6.12873997977879e-07,
+  "old_owner_retarget_used": false,
+  "native_imported": false
+}

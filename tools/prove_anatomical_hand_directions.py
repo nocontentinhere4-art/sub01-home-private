@@ -150,6 +150,8 @@ def prove(source, original, candidate, output, mode=None):
     else:
         assert len(b.tracks) == 32 and all(path == 'rotation' for _, path in b.tracks)
     times = sorted({t for ts, _, _ in b.tracks.values() for t in ts})
+    # Every segment uses the same two poses at a given captured time.
+    poses = {time: (a.positions(time), b.positions(time)) for time in times}
     rows = []
     for side in ['Left', 'Right']:
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
@@ -158,7 +160,7 @@ def prove(source, original, candidate, output, mode=None):
                 child = side + 'Hand' + finger + str(segment + 1)
                 errors = []
                 for time in times:
-                    sp, tp = a.positions(time), b.positions(time)
+                    sp, tp = poses[time]
                     sdir, tdir = unit(subtract(sp[child], sp[name])), unit(subtract(tp[child], tp[name]))
                     sv = [dot(axis, sdir) for axis in palm_axes(sp, side)]
                     tv = [dot(axis, tdir) for axis in palm_axes(tp, side)]

@@ -1,0 +1,136 @@
+{
+  "schema": "sub01.independent-serialized-anatomical-direction.v1",
+  "source_sha256": "c7c7874df437843b1f497d50d471ba2975c887d55db4f66020b4be085aca25cf",
+  "original_sha256": "34bc51c01f13c9c4de732d4c99970b35b4f98ae844badfd632c6cf30a6237c37",
+  "candidate_sha256": "5b785ce409ca4655359481ef72f1e817001de08dc8e969b8c276c8b5823eb8bc",
+  "frames": 557,
+  "measured_segments": [
+    {
+      "name": "LeftHandThumb1",
+      "max_serialized_direction_error_radians": 4.712160915387242e-08
+    },
+    {
+      "name": "LeftHandThumb2",
+      "max_serialized_direction_error_radians": 6.322027276634106e-08
+    },
+    {
+      "name": "LeftHandThumb3",
+      "max_serialized_direction_error_radians": 6.664001874625058e-08
+    },
+    {
+      "name": "LeftHandIndex1",
+      "max_serialized_direction_error_radians": 2.1073424255447017e-08
+    },
+    {
+      "name": "LeftHandIndex2",
+      "max_serialized_direction_error_radians": 5.575503985246929e-08
+    },
+    {
+      "name": "LeftHandIndex3",
+      "max_serialized_direction_error_radians": 6.828569911354543e-08
+    },
+    {
+      "name": "LeftHandMiddle1",
+      "max_serialized_direction_error_radians": 3.332000937312528e-08
+    },
+    {
+      "name": "LeftHandMiddle2",
+      "max_serialized_direction_error_radians": 5.575503985246929e-08
+    },
+    {
+      "name": "LeftHandMiddle3",
+      "max_serialized_direction_error_radians": 6.989264130329237e-08
+    },
+    {
+      "name": "LeftHandRing1",
+      "max_serialized_direction_error_radians": 4.2146848510894035e-08
+    },
+    {
+      "name": "LeftHandRing2",
+      "max_serialized_direction_error_radians": 6.989264130329237e-08
+    },
+    {
+      "name": "LeftHandRing3",
+      "max_serialized_direction_error_radians": 9.064022496787044e-08
+    },
+    {
+      "name": "LeftHandPinky1",
+      "max_serialized_direction_error_radians": 4.4703483581542975e-08
+    },
+    {
+      "name": "LeftHandPinky2",
+      "max_serialized_direction_error_radians": 9.305772182939053e-08
+    },
+    {
+      "name": "LeftHandPinky3",
+      "max_serialized_direction_error_radians": 1.0215721428991925e-07
+    },
+    {
+      "name": "RightHandThumb1",
+      "max_serialized_direction_error_radians": 5.771194914292421e-08
+    },
+    {
+      "name": "RightHandThumb2",
+      "max_serialized_direction_error_radians": 8.429369702178808e-08
+    },
+    {
+      "name": "RightHandThumb3",
+      "max_serialized_direction_error_radians": 9.424321830774487e-08
+    },
+    {
+      "name": "RightHandIndex1",
+      "max_serialized_direction_error_radians": 2.1073424255447017e-08
+    },
+    {
+      "name": "RightHandIndex2",
+      "max_serialized_direction_error_radians": 8.296615425989067e-08
+    },
+    {
+      "name": "RightHandIndex3",
+      "max_serialized_direction_error_radians": 1.0536712127723512e-07
+    },
+    {
+      "name": "RightHandMiddle1",
+      "max_serialized_direction_error_radians": 2.580956827951785e-08
+    },
+    {
+      "name": "RightHandMiddle2",
+      "max_serialized_direction_error_radians": 9.541398640621977e-08
+    },
+    {
+      "name": "RightHandMiddle3",
+      "max_serialized_direction_error_radians": 1.2731557704981472e-07
+    },
+    {
+      "name": "RightHandRing1",
+      "max_serialized_direction_error_radians": 4.2146848510894035e-08
+    },
+    {
+      "name": "RightHandRing2",
+      "max_serialized_direction_error_radians": 8.429369702178808e-08
+    },
+    {
+      "name": "RightHandRing3",
+      "max_serialized_direction_error_radians": 1.1250129990683128e-07
+    },
+    {
+      "name": "RightHandPinky1",
+      "max_serialized_direction_error_radians": 4.4703483581542975e-08
+    },
+    {
+      "name": "RightHandPinky2",
+      "max_serialized_direction_error_radians": 1.0745380149674388e-07
+    },
+    {
+      "name": "RightHandPinky3",
+      "max_serialized_direction_error_radians": 1.1733186057227575e-07
+    }
+  ],
+  "both_sides": true,
+  "original_binary_graph_skin_weights_materials_exact": true,
+  "original_body_channels_and_samplers_preserved": true,
+  "oracle": "Independent standard-library 4x4 matrix FK; actual posed segment directions compared in actual posed knuckle-defined palm frames",
+  "max_error_degrees": 7.294645231227028e-06,
+  "native_accepted": false,
+  "skin_deformation_or_contact_accepted": false
+}
