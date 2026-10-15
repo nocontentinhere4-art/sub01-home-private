@@ -1,0 +1,53 @@
+{
+  "schema": "sub01.anyps5-home-source-contract.v1",
+  "upstream": "https://github.com/boykopovar/AnyPS5",
+  "commit": "2e5dd5aa144af1bf90a214a6341bf3e1b4e6d47a",
+  "source_references": [
+    "README.md",
+    "docs/user/USAGE.md",
+    "docs/user/INPUT_MAPPING.md",
+    "docs/dev/BUILD.md",
+    "tools/pad_input.py",
+    "core/libs/prx/libScePad/include/InputCommandFile.hpp"
+  ],
+  "documented_mode": "Native executable relinking plus reimplemented PRX libraries, not Remote Play",
+  "documented_physical_console_or_PSN_requirement": false,
+  "required_title_input": [
+    "clean x86-64 ELF",
+    "bundled clean ELF modules",
+    "original title resources including eboot.bin"
+  ],
+  "required_linux_runtime": [
+    "converted app.elf",
+    "built Linux libs/*.prx",
+    "Vulkan1.1 graphics/compute/presentation",
+    "compatible x86-64 CPU",
+    "dedicated owned title capture/focus producer"
+  ],
+  "actual_host_read_only": {
+    "cpu": "AMD Ryzen9 7950X",
+    "documented_CPU_features_present": true,
+    "cmake": "/usr/bin/cmake",
+    "g++": "/usr/bin/g++",
+    "ninja": null,
+    "configured_runtime_exists": false
+  },
+  "pad_transport": "APS5_PAD_INPUT_FILE exact7integer schema",
+  "private_pad_path": "/home/unreal/.sub01-private/anyps5/anyps5-pad-command",
+  "pad_max_hold_ms": 500,
+  "file_permissions": "directory0700/file0600, same owner, atomic replace",
+  "title_process_launch_implemented": false,
+  "tv_source_frame_adapter_installed": false,
+  "brain_action_generation": false,
+  "existing_explicit_intent_translation_implemented": true,
+  "live_controller_input_enabled": false,
+  "blockers": [
+    "No actual title ELF/module/resource bundle configured",
+    "AnyPS5 Linux relinker/PRX runtime not built or supplied",
+    "Actual separate title-window capture and native physical TV focus receipt producer not implemented; current Minecraft focus is refused"
+  ],
+  "no_Game_or_viewer_restart": true,
+  "native_ready": false,
+  "title_execution_verified": false,
+  "physical_controller_contact_accepted": false
+}
