@@ -1,0 +1,119 @@
+{
+  "schema": "sub01.actual-native-phone-product-proof.v1",
+  "target": "dgtgepkz7h1zy5",
+  "native_pid": 62592,
+  "native_start_ticks": 975054032,
+  "module_sha256": "486be2e5be4ce6b0af7110f78dae1ad0593824052d018d564c752f61023804d3",
+  "actual_physical_e": {
+    "utc": "2026-10-15T10:59:35.143Z",
+    "source_actor": "full-home_node_136",
+    "component_tag": "SUB01Device:phone",
+    "distance_cm": 90.602692,
+    "hit_world_cm": [
+      271.49,
+      -292.111,
+      86.6
+    ],
+    "source": "actual native SUB01_INTERACT_RAY log"
+  },
+  "actual_input": {
+    "transport": "existing authenticated WSS input channel",
+    "product_browser_driver": "configured isolated Playwright MCP",
+    "dom_input_injection": false,
+    "native_keys": [
+      "E",
+      "Digit1",
+      "Digit2",
+      "Digit3",
+      "Digit4",
+      "B",
+      "https://example.com",
+      "Enter"
+    ],
+    "address_widget_visible": true,
+    "wss_accepted_inputs_at_navigation": 88,
+    "wss_pending_at_navigation": 0,
+    "decoded_frames_at_navigation": 27516,
+    "release": {
+      "actual_escape": true,
+      "accepted_inputs_after": 92,
+      "pending_after": 0,
+      "pointer_locked_after": false,
+      "viewer_input_flag_revoked": true
+    }
+  },
+  "actual_app_frame_transitions": [
+    {
+      "epoch": 1792062071.8668804,
+      "app": "home",
+      "kind": "owned_app",
+      "frame_id": "65fbe0f3a4610989bc2fba3a",
+      "available": true
+    },
+    {
+      "epoch": 1792062092.794857,
+      "app": "notes",
+      "kind": "owned_app",
+      "frame_id": "45a2af212363c6021eaa59c8",
+      "available": true
+    },
+    {
+      "epoch": 1792062093.5250733,
+      "app": "memory",
+      "kind": "owned_app",
+      "frame_id": "a23319e1ed65be627c3a0ed4",
+      "available": true
+    },
+    {
+      "epoch": 1792062094.2437146,
+      "app": "browser",
+      "kind": "owned_app",
+      "frame_id": "9f40593edcb9a908d7f0c362",
+      "available": true
+    },
+    {
+      "epoch": 1792062104.829695,
+      "app": "browser",
+      "kind": "browser",
+      "frame_id": "7c1c85f49c7ad968da08d388",
+      "available": true
+    }
+  ],
+  "actual_browser": {
+    "title": "Example Domain",
+    "origin": "https://example.com",
+    "path": "/",
+    "phone_kind": "browser",
+    "phone_frame_id": "7c1c85f49c7ad968da08d388",
+    "raw_browser_frame_id": "ba7d45a3155c4153814bae8f2ff3c3bd:1",
+    "native_phone_page_visually_reviewed": true
+  },
+  "app_samples": {
+    "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/dgt-phone-product-app-samples-62592.json",
+    "sha256": "c17c46d85653a6f790c2d8dcf7c654bf50005c07a5ba21db6c9293362d9f7d1c"
+  },
+  "images": {
+    "dgt-62592-phone-address-widget-open.png": {
+      "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/dgt-62592-phone-address-widget-open.png",
+      "bytes": 250735,
+      "sha256": "3b5a9ae1870965c755dcaf0539ba0c6ccd3961fe5199aad6b88cffec6a316f3f"
+    },
+    "dgt-62592-phone-real-address-typed.png": {
+      "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/dgt-62592-phone-real-address-typed.png",
+      "bytes": 251300,
+      "sha256": "ba44cb87f23d119dc7749a3141526a7c51aa310858bceeccb4309ee02c5f78f8"
+    },
+    "dgt-62592-phone-browser-navigation-result.png": {
+      "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/dgt-62592-phone-browser-navigation-result.png",
+      "bytes": 235559,
+      "sha256": "3cfaa9a067bd62411240f5f62f53a5a5810aecdef4b610c09a5f4fa858b62c55"
+    }
+  },
+  "canonical_and_physical_privacy_public_during_test": true,
+  "notes_written": false,
+  "personal_browser_or_sessions_used": false,
+  "input_to_photon_latency_measured": false,
+  "handheld_contact_accepted": false,
+  "pc_guest_browser_accepted": false,
+  "recorded_epoch": 1792062574.5316648
+}
