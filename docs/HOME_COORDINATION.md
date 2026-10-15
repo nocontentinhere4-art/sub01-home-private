@@ -1,12 +1,27 @@
 # Private SUB-01 home — Codex / Claude coordination
 
-Updated 2026-10-13. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
+Updated 2026-10-15 08:23 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
 
 ## Goal and boundaries
 
 Build the real functioning first-person home, not a promotional video. Primary reference: https://x.com/SimbasJungles/status/2109095401273938072. Ground-floor entrance, wooden stairs/loft, bathroom privacy, actual PC/phone/TV interactions and eventual brain-controlled activities. English UI. Keep the fictional character separate from the MRI donor; do not claim consciousness.
 
-Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work belongs on the existing authorized Runpod server, not the owner's overheating Mac. No additional paid pods. Budget maximum $10. The owner explicitly authorized one extra hour on the same pod: automatic stop deadline 2026-10-13 19:16 UTC (21:16 Europe/Rome), with the total $10 cap unchanged. Do not extend again without owner authorization. Do not touch the separate brain pod. Credentials stay out of Git and issue comments.
+Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
+
+## Current actual state (2026-10-15)
+
+- Same private GPU, real Game39931/start974207379, coherent module ac53fbedad394ada48344b5eca338a251cba90e734403e4124d8a1661a6e1036 (source d788361). Stable approximately60Hz native; authenticated private viewer measured24fps. No public changes.
+- Saved ActualHome map c1c432b9c2fe1d648c9acdc3f52285b7a9fd6e98bd536a06a19071781da53d95 includes genuine LINEA desk/office, R5 real modular kitchen8hinges/40boundparts, genuine full-source WC. WC is present but dark; visual quality remains unaccepted.
+- Actual measured eye offset [22.208150954150312,3.5805613130220593,64.61018215994386] replaces the camera inside the collar. Warm reloaded and persisted. Capsule still R16/H91/nearclip10; explicit R25/nearclip1 candidate is compiled but not applied/accepted. Retest full physical routes after any envelope change.
+- Genuine PC interaction passed from real right aisle via E and actual keyboard: Linux command and output appeared on native monitor, instruction counter advanced, Esc paused it again. This proves manual PC input, not natural seated typing or autonomous brain control.
+- Phone parent-first mount/restore correction compiled: actual first five-part group now coherent on first mount. Full playback, restore and repeat-entry verification underway. Current held-image is explicit Animation Review, not activity readiness.
+- Actual GI readbacks: GI1/reflection1/allow1/generate-distance-fields1; HardwareRayTracing flag1 but r.RayTracing0, MeshSDF tracing0. Installed-source tracing analysis underway; do not infer HWRT enabled from its flag or change geometry/exposure speculatively.
+- Upright finite-footrest SeatedIdle source5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da passes all126 strict anatomy/contact/collision samples, with actual finite support. Chair model unchanged; required whole-chair lift+2.5001cm. Source readiness remains false pending coherent transitions/typing. One native component34869299fd7c8428b224e2c4f95cf39186ab2094fd38e54183235eb21cb9876a preserves all19 authored parts/20primitives; future importer a6006c6 is source-tested, not executed.
+- Source agent owns SitDown/GetUp; Claude is asked in private issue1 to solve ONLY the three typing clips against the NEW upright base, replacing the obsolete forward perch. Renderer owns actual map/Game deployment. Streamer owns isolated-browser input and device acceptance.
+- Main reference quality, natural complete hands/body transitions, actual TV Minecraft control with held controller, bathroom light/privacy route, complete phone apps, and autonomous life still require work. Do not report the house complete or source tests as runtime proof.
+
+## Historical ownership and evidence
+
 
 ## Ownership
 
