@@ -5,6 +5,8 @@ this import never claims a running game or enables an activity gate.
 import copy,hashlib,json,shutil,time,uuid
 from pathlib import Path
 from home_asset_audit import read_gltf
+from prepare_real_wc_bundle import node_geometry
+from structural_rail_source_patch import world_matrices
 from prepare_frame_backing_remainder import SOURCE_SHA
 from unreal_import_real_wc import expected_triangles,owned_geometry
 from unreal_remove_frame_backings import native_triangles,same_triangles
@@ -96,14 +98,22 @@ def run(dry_run=True):
    c=cs[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest)
    if not same_triangles(expected_triangles(d,b,ni),native_triangles(u,c)):raise RuntimeError('Realdoor actualsurface differs '+n['name'])
    ps=d['meshes'][n['mesh']]['primitives']
-   if len(ps)!=1 or c.get_num_materials()!=1:raise RuntimeError('Complete original singlematerial doorpart required')
+   material_diag={'node':ni,'name':n['name'],'mesh':c.get_editor_property('static_mesh').get_path_name(),'source_primitives':[{'material_index':p['material'],'material_name':d['materials'][p['material']]['name'],'triangle_count':d['accessors'][p['indices']]['count']//3}for p in ps],'native_sections':c.get_editor_property('static_mesh').get_num_sections(0),'native_slot_count':c.get_num_materials(),'native_materials':[m.get_path_name()if m else None for m in c.get_materials()]}
+   if len(ps)!=c.get_num_materials()or len(ps)!=c.get_editor_property('static_mesh').get_num_sections(0):
+    (audit/'authentic-door-material-section-diagnostic.json').write_text(json.dumps(material_diag,indent=2)+'\n');raise RuntimeError('Exact sourceprimitive/native section andslot count differ '+n['name'])
+   expected_sections=node_geometry(d,b,ni,world_matrices(d));world=c.get_world_transform();isglass_flags=[]
+   for slot,(primitive,section)in enumerate(zip(ps,expected_sections)):
+    vs,ids,*_=u.ProceduralMeshLibrary.get_section_from_static_mesh(c.get_editor_property('static_mesh'),0,slot);vv=[world.transform_location(p)for p in vs];native=[[[float(vv[k].x),float(vv[k].y),float(vv[k].z)]for k in ids[j:j+3]]for j in range(0,len(ids),3)];source=[[[float(section['points'][k][0])*100,float(section['points'][k][2])*100,float(section['points'][k][1])*100]for k in face]for face in section['faces']]
+    if not same_triangles(source,native,tolerance=.0001):
+     material_diag.update(failed_slot=slot,source_section_triangles=len(source),actual_section_triangles=len(native));(audit/'authentic-door-material-section-diagnostic.json').write_text(json.dumps(material_diag,indent=2)+'\n');raise RuntimeError('Per-material exact door physicalsurface differs '+n['name'])
+    material=d['materials'][primitive['material']];isglass=material.get('extensions',{}).get('KHR_materials_transmission',{}).get('transmissionFactor',0)>.5;isglass_flags.append(isglass)
+    if not isglass:
+     path=c.get_material(slot).get_path_name();prior=bindings.setdefault(material['name'],path)
+     if path!=prior:raise RuntimeError('One originaldoor material became separateinstances')
+   if any(isglass_flags)and not all(isglass_flags):raise RuntimeError('Mixedopaque/glass source component requires per-slot glass handling')
+   (glass if all(isglass_flags)else opaque).append(c)
    oldname=by_original[n['name']];role=moving.get(oldname);group=source_rows[oldname]['group'];assembly={'pocket-door':'bathroom','entry-door':'entry','patio-door':'balcony'}.get(group)
    if not assembly:assembly='entry'if oldname.startswith('SUB01_Entry')else'balcony'
-   material=d['materials'][ps[0]['material']];isglass=material.get('extensions',{}).get('KHR_materials_transmission',{}).get('transmissionFactor',0)>.5
-   (glass if isglass else opaque).append(c)
-   if not isglass:
-    path=c.get_material(0).get_path_name();prior=bindings.setdefault(material['name'],path)
-    if path!=prior:raise RuntimeError('One originaldoor material became separateinstances')
    c.set_mobility(u.ComponentMobility.MOVABLE if role else u.ComponentMobility.STATIC);c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS);c.set_editor_property('component_tags',[u.Name(TAG+('moving:'+role if role else'fixed:'+assembly))]);parts.append((a,c));origin,extent=a.get_actor_bounds(False)
    rows.append({'source_part':oldname,'name':n['name'],'actor':a.get_path_name(),'component':c.get_path_name(),'mesh':c.get_editor_property('static_mesh').get_path_name(),'moving_group':role,'assembly':assembly,'world_center_cm':[float(origin.x),float(origin.y),float(origin.z)],'world_extent_cm':[float(extent.x),float(extent.y),float(extent.z)],'full_source_geometry_verified':True})
   if len(parts)!=76:raise RuntimeError('Complete76actualdoorparts required')
