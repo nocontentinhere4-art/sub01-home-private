@@ -1,0 +1,9 @@
+{
+  "status": "human-rejected-visual-source-do-not-import-or-promote",
+  "reason": "Owner rejected the table and re-tinted Haven sofa as too smooth/stylized. Geometric clearance proof does not override visual rejection.",
+  "rejectedTableSha256": "c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9",
+  "rejectedSofaSha256": "b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
+  "retainedAcceptedZone": "TV wall828d7078 and genuine cabinet63e02525 remain independent accepted source candidates.",
+  "sourceProofRetainedForHistory": true,
+  "nativePromotionPermitted": false
+}

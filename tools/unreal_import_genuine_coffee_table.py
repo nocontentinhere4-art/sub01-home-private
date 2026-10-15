@@ -16,6 +16,7 @@ def contract(report,doc):
  return True
 
 def run(dry_run=True,retired_receipt=None,retired_receipt_sha=None):
+ raise RuntimeError('Human rejected c05a5 table visual source; retained importer is historical and must not execute')
  import unreal as u
  from private_home_candidate_scope import active_candidate_guard
  from home_asset_audit import read_gltf

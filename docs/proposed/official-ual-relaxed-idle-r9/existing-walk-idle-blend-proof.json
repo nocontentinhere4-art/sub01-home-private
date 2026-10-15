@@ -1,0 +1,2736 @@
+{
+  "schema": "sub01.existing-walk-idle-blend-compatibility.v1",
+  "sourceWalkSha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "sourceIdleSha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "existingBlendDurationSeconds": 0.24,
+  "quaternionMethod": "UE-style shortest-hemisphere normalized FastLerp; glTF source sampling uses LINEAR quaternion slerp",
+  "targetRate": 1,
+  "sameSerializedRestAndInverseBinds": true,
+  "heldApprovedFingerMaximumRotationErrorDegrees": 0.0000024148365394514667,
+  "summary": {
+    "walkToIdle": {
+      "transitions": 32,
+      "maximumEndpointWristDistanceM": 0.40367224463054446,
+      "maximumEndpointWristAngleDegrees": 70.24867395284348,
+      "maximumBlendedWristSpeedMPerS": 1.7819250454160407,
+      "maximumBlendedWristAngularSpeedDegreesPerS": 305.6290166176463
+    },
+    "idleToWalk": {
+      "transitions": 76,
+      "maximumEndpointWristDistanceM": 0.18815890780615663,
+      "maximumEndpointWristAngleDegrees": 42.305598303903366,
+      "maximumBlendedWristSpeedMPerS": 2.338030418309452,
+      "maximumBlendedWristAngularSpeedDegreesPerS": 363.41066682290176
+    }
+  },
+  "rows": [
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.06053352378639709,
+          "wristRotationDegrees": 27.495525166833712
+        },
+        "Right": {
+          "wristDistanceM": 0.18805072041251664,
+          "wristRotationDegrees": 40.301665055319326
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.4228956636272103,
+        "Right": 0.8304692728903464
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 126.61274377841148,
+        "Right": 180.0619219680173
+      },
+      "startPositionDiscontinuityM": 5.185169430563076e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.266250202865052e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.03333333507180214,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05364921509387431,
+          "wristRotationDegrees": 29.98780213289856
+        },
+        "Right": {
+          "wristDistanceM": 0.22427754278425027,
+          "wristRotationDegrees": 44.456876250865555
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.46298392712397984,
+        "Right": 0.9891058163999503
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 137.6208829893001,
+        "Right": 198.84125213087538
+      },
+      "startPositionDiscontinuityM": 4.126162952233366e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 7.2377686124476805e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.06666667014360428,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.09015982589436185,
+          "wristRotationDegrees": 32.605649745696724
+        },
+        "Right": {
+          "wristDistanceM": 0.26527213006002553,
+          "wristRotationDegrees": 49.422729044627
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.5939537971243594,
+        "Right": 1.157284827888742
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 148.17978285657398,
+        "Right": 221.02435915123726
+      },
+      "startPositionDiscontinuityM": 3.356589068483857e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 4.817411735555328e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.10000000149011612,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.13495090355253134,
+          "wristRotationDegrees": 35.3142375129241
+        },
+        "Right": {
+          "wristDistanceM": 0.30618049661541547,
+          "wristRotationDegrees": 54.26659539783473
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.7600757941260345,
+        "Right": 1.3333773312358599
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 159.4563445978197,
+        "Right": 241.9338189779478
+      },
+      "startPositionDiscontinuityM": 3.477763656540197e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.90864377767277e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.13333334028720856,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.1744244641585838,
+          "wristRotationDegrees": 39.09352510391137
+        },
+        "Right": {
+          "wristDistanceM": 0.34510657199781525,
+          "wristRotationDegrees": 58.02537356943105
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.9151028003295614,
+        "Right": 1.5034491761296844
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 176.16740405788923,
+        "Right": 258.1500984989365
+      },
+      "startPositionDiscontinuityM": 3.4583269010671523e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 8.954198305323368e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.1666666716337204,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.20374185359864538,
+          "wristRotationDegrees": 42.87095261932148
+        },
+        "Right": {
+          "wristDistanceM": 0.37780963691408415,
+          "wristRotationDegrees": 61.084824236052405
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.0423667593063397,
+        "Right": 1.6486035909740555
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 193.9094842663598,
+        "Right": 271.4274465000176
+      },
+      "startPositionDiscontinuityM": 3.379462171739212e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 4.742874840267547e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.20000000298023224,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.22114303047371886,
+          "wristRotationDegrees": 45.8640629604786
+        },
+        "Right": {
+          "wristDistanceM": 0.3983464036682063,
+          "wristRotationDegrees": 63.01736244532603
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.1334791232245984,
+        "Right": 1.7477729260782235
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 208.44299072107265,
+        "Right": 278.8700569904765
+      },
+      "startPositionDiscontinuityM": 3.4359788356585895e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.640599496620651e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.23333333432674408,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.22500709865676974,
+          "wristRotationDegrees": 46.89061313582825
+        },
+        "Right": {
+          "wristDistanceM": 0.40367224463054446,
+          "wristRotationDegrees": 63.52814088452235
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.1703542147639343,
+        "Right": 1.7819250454160407
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 213.513538785951,
+        "Right": 279.7870856597063
+      },
+      "startPositionDiscontinuityM": 4.579669976578771e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.707437923744493e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.2666666805744171,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.20995983874802387,
+          "wristRotationDegrees": 45.95158573391698
+        },
+        "Right": {
+          "wristDistanceM": 0.39342303548351604,
+          "wristRotationDegrees": 62.90727362253337
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.1230191656281867,
+        "Right": 1.739773634555367
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 209.26886733561753,
+        "Right": 276.5175149225142
+      },
+      "startPositionDiscontinuityM": 2.3551386880256624e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.985173094038516e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.30000001192092896,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.1858253180337692,
+          "wristRotationDegrees": 43.05566820949945
+        },
+        "Right": {
+          "wristDistanceM": 0.36428077793192126,
+          "wristRotationDegrees": 61.50863351232995
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.0322405034883975,
+        "Right": 1.6057156214256463
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 195.8050243198252,
+        "Right": 270.38388701964675
+      },
+      "startPositionDiscontinuityM": 4.509747244882934e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.594315114139762e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.3333333432674408,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.16192475202538786,
+          "wristRotationDegrees": 37.38354566889661
+        },
+        "Right": {
+          "wristDistanceM": 0.323917567890191,
+          "wristRotationDegrees": 59.690022676613154
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.9333348603909302,
+        "Right": 1.4292708597722117
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 169.4793102018041,
+        "Right": 262.5608590096245
+      },
+      "startPositionDiscontinuityM": 2.423651445728339e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.822058658345461e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.36666667461395264,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.13462061548937174,
+          "wristRotationDegrees": 30.94972279539414
+        },
+        "Right": {
+          "wristDistanceM": 0.2811052876078553,
+          "wristRotationDegrees": 58.06541569902342
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.8084775335044362,
+        "Right": 1.2457991705158658
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 140.4181158187062,
+        "Right": 255.91040492384198
+      },
+      "startPositionDiscontinuityM": 2.294102111849412e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.855045090355223e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.4000000059604645,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.1044480997629079,
+          "wristRotationDegrees": 25.037936662287677
+        },
+        "Right": {
+          "wristDistanceM": 0.23909635174788177,
+          "wristRotationDegrees": 56.71131140027316
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.649294569839322,
+        "Right": 1.0811671735023183
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 115.23922621856873,
+        "Right": 251.05481057278058
+      },
+      "startPositionDiscontinuityM": 2.2591401799415137e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.661338147750939e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.4333333373069763,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.08718603675533639,
+          "wristRotationDegrees": 18.81807969680369
+        },
+        "Right": {
+          "wristDistanceM": 0.1925702048197517,
+          "wristRotationDegrees": 54.10699411732465
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.47937023205163076,
+        "Right": 0.911197458774739
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 89.73488454589985,
+        "Right": 240.3831213092554
+      },
+      "startPositionDiscontinuityM": 4.47545209131181e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.955527313080394e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.46666666865348816,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.10130263959754095,
+          "wristRotationDegrees": 13.980464345404
+        },
+        "Right": {
+          "wristDistanceM": 0.1403636759723785,
+          "wristRotationDegrees": 49.982155156535036
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.45775695227023333,
+        "Right": 0.7198275595207998
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 69.7015238985562,
+        "Right": 222.39442019325804
+      },
+      "startPositionDiscontinuityM": 2.665835984225005e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.57362090592517e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.5,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.13801991008888082,
+          "wristRotationDegrees": 15.522955384858518
+        },
+        "Right": {
+          "wristDistanceM": 0.09181008515570578,
+          "wristRotationDegrees": 46.106954355536026
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.6659137454896343,
+        "Right": 0.5511451185821473
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 71.80823778303528,
+        "Right": 206.39781286051667
+      },
+      "startPositionDiscontinuityM": 4.877504447772788e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.866437849774421e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.5333333611488342,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.18646329857008465,
+          "wristRotationDegrees": 22.87816093593322
+        },
+        "Right": {
+          "wristDistanceM": 0.05412612971325887,
+          "wristRotationDegrees": 44.52576503981221
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.8844885128920585,
+        "Right": 0.4312008943209339
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 103.6185919030541,
+        "Right": 201.9075084097583
+      },
+      "startPositionDiscontinuityM": 5.635475559608569e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.779196360774662e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.5666666626930237,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.23858337228382182,
+          "wristRotationDegrees": 31.765638070090702
+        },
+        "Right": {
+          "wristDistanceM": 0.045056988092428904,
+          "wristRotationDegrees": 45.98485472269516
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.0852450737515318,
+        "Right": 0.43651077195212384
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 140.6819412398126,
+        "Right": 210.30412965372184
+      },
+      "startPositionDiscontinuityM": 3.8081823067227083e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.304854800243424e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.6000000238418579,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.2850317622199463,
+          "wristRotationDegrees": 40.968643648518835
+        },
+        "Right": {
+          "wristDistanceM": 0.06741212611883167,
+          "wristRotationDegrees": 49.05040505393275
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.2466331158413841,
+        "Right": 0.5111521823046863
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 178.99542242491935,
+        "Right": 224.44305586490975
+      },
+      "startPositionDiscontinuityM": 3.516314866869299e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.955527313080394e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.6333333253860474,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.32691031218715433,
+          "wristRotationDegrees": 50.206710261844115
+        },
+        "Right": {
+          "wristDistanceM": 0.0939240350599346,
+          "wristRotationDegrees": 52.582896270711196
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.3984464293256953,
+        "Right": 0.5939503134434353
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 216.93372675552894,
+        "Right": 240.07705711413658
+      },
+      "startPositionDiscontinuityM": 4.855242786854203e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.088854689467822e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.6666666865348816,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.3624716441599701,
+          "wristRotationDegrees": 57.99979035618275
+        },
+        "Right": {
+          "wristDistanceM": 0.11716713620053525,
+          "wristRotationDegrees": 55.98176985465494
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5480084986937144,
+        "Right": 0.6725778903079487
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 247.98595427039263,
+        "Right": 254.90368200533288
+      },
+      "startPositionDiscontinuityM": 2.5776846797341143e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 7.791361360319881e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.699999988079071,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.38696735565899465,
+          "wristRotationDegrees": 64.7133976622102
+        },
+        "Right": {
+          "wristDistanceM": 0.1348927044783272,
+          "wristRotationDegrees": 59.47409871010415
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.6761506033405247,
+        "Right": 0.7393426799067446
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.7117124598049,
+        "Right": 269.76877379375844
+      },
+      "startPositionDiscontinuityM": 2.242025235105681e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.125396027766235e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.7333333492279053,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.40013098709952255,
+          "wristRotationDegrees": 69.70846319973683
+        },
+        "Right": {
+          "wristDistanceM": 0.14302437234040782,
+          "wristRotationDegrees": 63.563574874849955
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.7614869413348337,
+        "Right": 0.7855244517306896
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 293.23796875705824,
+        "Right": 286.7639961139028
+      },
+      "startPositionDiscontinuityM": 3.764949453935611e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.828670879282072e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.7666666507720947,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.40313618386535044,
+          "wristRotationDegrees": 70.24867395284348
+        },
+        "Right": {
+          "wristDistanceM": 0.14153740685053745,
+          "wristRotationDegrees": 66.99970557342844
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.7731423405690334,
+        "Right": 0.7957358231294834
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 295.018424395168,
+        "Right": 300.413005214229
+      },
+      "startPositionDiscontinuityM": 2.7194799110210365e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.431871827503859e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.800000011920929,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.39680804327699276,
+          "wristRotationDegrees": 66.57835765258237
+        },
+        "Right": {
+          "wristDistanceM": 0.12916888832516726,
+          "wristRotationDegrees": 68.41803831998871
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.7159506437400116,
+        "Right": 0.75127454209627
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 279.30724992863657,
+        "Right": 305.6290166176463
+      },
+      "startPositionDiscontinuityM": 4.967007407645019e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.568167990716596e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.8333333134651184,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.3734665814796665,
+          "wristRotationDegrees": 59.87682993253493
+        },
+        "Right": {
+          "wristDistanceM": 0.11815388455978623,
+          "wristRotationDegrees": 68.46876233794754
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.581826192369326,
+        "Right": 0.699142322475144
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 251.53915076259904,
+        "Right": 305.142475513795
+      },
+      "startPositionDiscontinuityM": 3.433175098891678e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.684427777288335e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.8666666746139526,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.3390918047514361,
+          "wristRotationDegrees": 50.59544994760981
+        },
+        "Right": {
+          "wristDistanceM": 0.10817418550800675,
+          "wristRotationDegrees": 64.68715486117729
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4176120165313433,
+        "Right": 0.6267174584865385
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 215.43220399506575,
+        "Right": 288.5693237577315
+      },
+      "startPositionDiscontinuityM": 3.433175098891678e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 7.021666937153402e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.8999999761581421,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.29227654864490515,
+          "wristRotationDegrees": 38.740919740621095
+        },
+        "Right": {
+          "wristDistanceM": 0.10486156560389306,
+          "wristRotationDegrees": 57.44717699118755
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.212956328365246,
+        "Right": 0.553619376989715
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 173.6717512148317,
+        "Right": 257.17123011167917
+      },
+      "startPositionDiscontinuityM": 4.611102534756203e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 6.684427777288335e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.9333333373069763,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.2351476543450205,
+          "wristRotationDegrees": 26.42399673025007
+        },
+        "Right": {
+          "wristDistanceM": 0.11288953142235086,
+          "wristRotationDegrees": 48.42542753477148
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.9692665392225871,
+        "Right": 0.4978694981022238
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 132.4446179926346,
+        "Right": 218.38434618257676
+      },
+      "startPositionDiscontinuityM": 4.484050470211362e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.845580556137306e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 0.9666666388511658,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.1753759781576423,
+          "wristRotationDegrees": 19.909477000885573
+        },
+        "Right": {
+          "wristDistanceM": 0.13450840365547428,
+          "wristRotationDegrees": 40.958005982572395
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.7162619959236435,
+        "Right": 0.5849778567729546
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 109.61450263441279,
+        "Right": 185.99412276716126
+      },
+      "startPositionDiscontinuityM": 3.368045037175248e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.768888059150692e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 1,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.11303185349113391,
+          "wristRotationDegrees": 21.699401702748688
+        },
+        "Right": {
+          "wristDistanceM": 0.16211362762388012,
+          "wristRotationDegrees": 38.430643985053734
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.501824253498472,
+        "Right": 0.7171905565884061
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 108.88934400579755,
+        "Right": 172.9259007129172
+      },
+      "startPositionDiscontinuityM": 2.3055512673781017e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 5.688200336284365e-16
+    },
+    {
+      "role": "Walk-to-Idle",
+      "outgoingPhaseSeconds": 1.0333333015441895,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.06053395651306741,
+          "wristRotationDegrees": 27.4955241719825
+        },
+        "Right": {
+          "wristDistanceM": 0.18805070174241995,
+          "wristRotationDegrees": 40.3016588110955
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 0.4228971534809438,
+        "Right": 0.8304693993200458
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 126.61274270182226,
+        "Right": 180.06188833538553
+      },
+      "startPositionDiscontinuityM": 3.3450938666784586e-16,
+      "endPositionDiscontinuityM": 6.901322157724297e-16,
+      "reversalSamePoseMaximumErrorM": 7.575797802392804e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.06053352378639709,
+          "wristRotationDegrees": 27.495525166833712
+        },
+        "Right": {
+          "wristDistanceM": 0.18805072041251664,
+          "wristRotationDegrees": 40.301665055319326
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4348067442870727,
+        "Right": 2.3376820143602117
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.6573418176397,
+        "Right": 361.34904981555684
+      },
+      "startPositionDiscontinuityM": 4.75098925995612e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.676337548948129e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.03333333507180214,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05997306621833197,
+          "wristRotationDegrees": 27.716879324995194
+        },
+        "Right": {
+          "wristDistanceM": 0.18807726533596827,
+          "wristRotationDegrees": 40.42057873589503
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4391701026955475,
+        "Right": 2.3367382612616723
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.1958427248794,
+        "Right": 361.0980178797404
+      },
+      "startPositionDiscontinuityM": 4.47545209131181e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.77599954797753e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.06666667014360428,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.058812868921106196,
+          "wristRotationDegrees": 27.975130677576267
+        },
+        "Right": {
+          "wristDistanceM": 0.187608779139164,
+          "wristRotationDegrees": 40.566940312564235
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4453154836175963,
+        "Right": 2.3336509538025725
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.7747080335522,
+        "Right": 360.8447768383067
+      },
+      "startPositionDiscontinuityM": 4.578092683617719e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.661048867003676e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.10000000149011612,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05715313685086711,
+          "wristRotationDegrees": 28.257936137554353
+        },
+        "Right": {
+          "wristDistanceM": 0.18664128949116182,
+          "wristRotationDegrees": 40.73750152592991
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4529352283780932,
+        "Right": 2.3284157580177514
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.36373104858484,
+        "Right": 360.59156262212304
+      },
+      "startPositionDiscontinuityM": 2.5438405243138006e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.95137269211454e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.13333334028720856,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05509607175876375,
+          "wristRotationDegrees": 28.55282418856824
+        },
+        "Right": {
+          "wristDistanceM": 0.18517397491029836,
+          "wristRotationDegrees": 40.92908103702366
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4617193389915464,
+        "Right": 2.32103464834858
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.93227906932236,
+        "Right": 360.3402032819872
+      },
+      "startPositionDiscontinuityM": 7.216449660063518e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 4.930522358029409e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.1666666716337204,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05274277015602366,
+          "wristRotationDegrees": 28.84752768676383
+        },
+        "Right": {
+          "wristDistanceM": 0.1832536721645043,
+          "wristRotationDegrees": 41.13625144809804
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.471346412727517,
+        "Right": 2.311727648466459
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.44938134490735,
+        "Right": 360.0996903727432
+      },
+      "startPositionDiscontinuityM": 3.391018353563873e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 4.783309287441108e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.20000000298023224,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05018902781147485,
+          "wristRotationDegrees": 29.123089351465435
+        },
+        "Right": {
+          "wristDistanceM": 0.1810048202229873,
+          "wristRotationDegrees": 41.3449338165279
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.481411632999693,
+        "Right": 2.3011203011531145
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.85876877019103,
+        "Right": 359.897047959612
+      },
+      "startPositionDiscontinuityM": 2.5438405243138006e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.269627593800408e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.23333333432674408,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04752390917017579,
+          "wristRotationDegrees": 29.364114393390967
+        },
+        "Right": {
+          "wristDistanceM": 0.17854251464398554,
+          "wristRotationDegrees": 41.54351430774702
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4915213130476845,
+        "Right": 2.289776305006551
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.11635804385753,
+        "Right": 359.75245565051983
+      },
+      "startPositionDiscontinuityM": 3.0088327379293205e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.684427777288335e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.2666666805744171,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.044847667845708775,
+          "wristRotationDegrees": 29.5641306985178
+        },
+        "Right": {
+          "wristDistanceM": 0.17597812383500674,
+          "wristRotationDegrees": 41.72534850068547
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.501374863599563,
+        "Right": 2.27815106779149
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.2099800007189,
+        "Right": 359.6733965789317
+      },
+      "startPositionDiscontinuityM": 1.2412670766236366e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.004449063730082e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.30000001192092896,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.042233734976457715,
+          "wristRotationDegrees": 29.71638851263201
+        },
+        "Right": {
+          "wristDistanceM": 0.17341929091268213,
+          "wristRotationDegrees": 41.883553410600214
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5106224023777626,
+        "Right": 2.2667289174530834
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.1257671576554,
+        "Right": 359.6670418103404
+      },
+      "startPositionDiscontinuityM": 2.618455766672135e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.93995257398358e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.3333333432674408,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.0397427037376429,
+          "wristRotationDegrees": 29.819358972101107
+        },
+        "Right": {
+          "wristDistanceM": 0.17094663016186865,
+          "wristRotationDegrees": 42.01479991398998
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5190462058736671,
+        "Right": 2.2558491167556216
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.8709884133047,
+        "Right": 359.7351156003303
+      },
+      "startPositionDiscontinuityM": 6.003246128916101e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.866350197783356e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.36666667461395264,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03740751632831569,
+          "wristRotationDegrees": 29.8795614855707
+        },
+        "Right": {
+          "wristDistanceM": 0.16859740552976343,
+          "wristRotationDegrees": 42.1205521533663
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.526623933921403,
+        "Right": 2.2456512634053487
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.48604762503646,
+        "Right": 359.86716209422065
+      },
+      "startPositionDiscontinuityM": 3.260541871072589e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.804363002006077e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.4000000059604645,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03527016101104333,
+          "wristRotationDegrees": 29.902730346150534
+        },
+        "Right": {
+          "wristDistanceM": 0.16640970312218753,
+          "wristRotationDegrees": 42.20157657624833
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5333321747197257,
+        "Right": 2.236254297191401
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.00802555415515,
+        "Right": 360.0545769623734
+      },
+      "startPositionDiscontinuityM": 2.482534153247273e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.811435411151494e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.4333333373069763,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.033349067469920224,
+          "wristRotationDegrees": 29.893919211847013
+        },
+        "Right": {
+          "wristDistanceM": 0.16441669856106303,
+          "wristRotationDegrees": 42.25877286863974
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.539112246105114,
+        "Right": 2.227807373645023
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.47327454099155,
+        "Right": 360.28831008687854
+      },
+      "startPositionDiscontinuityM": 5.594315114139762e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.066778860128639e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.46666666865348816,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03165672271906946,
+          "wristRotationDegrees": 29.858340950613986
+        },
+        "Right": {
+          "wristDistanceM": 0.16264675706618995,
+          "wristRotationDegrees": 42.29253369420824
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5439173498127434,
+        "Right": 2.2204361764183824
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.9185784185159,
+        "Right": 360.55774907308154
+      },
+      "startPositionDiscontinuityM": 3.6002095113654283e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.737519483400931e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.5,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.030191425455419363,
+          "wristRotationDegrees": 29.800991535382607
+        },
+        "Right": {
+          "wristDistanceM": 0.16112374880963512,
+          "wristRotationDegrees": 42.30343930077074
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5476917832163968,
+        "Right": 2.2142659749142997
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.3819636000603,
+        "Right": 360.85346187332425
+      },
+      "startPositionDiscontinuityM": 3.4136607725077225e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.822736016865924e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.5333333611488342,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.0289542640091561,
+          "wristRotationDegrees": 29.725058406222228
+        },
+        "Right": {
+          "wristDistanceM": 0.1598688035649119,
+          "wristRotationDegrees": 42.29151024944085
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5503655853173832,
+        "Right": 2.2093780732201185
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.8902957302798,
+        "Right": 361.16277483976916
+      },
+      "startPositionDiscontinuityM": 2.3055512673781017e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.887846720064157e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.5666666626930237,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.027939962777999577,
+          "wristRotationDegrees": 29.627868914500084
+        },
+        "Right": {
+          "wristDistanceM": 0.15889977937376906,
+          "wristRotationDegrees": 42.2569008239367
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.551662313526655,
+        "Right": 2.2058820973376614
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.4364080535245,
+        "Right": 361.4745772069359
+      },
+      "startPositionDiscontinuityM": 3.387999773988765e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.944442800358888e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.6000000238418579,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.02714725057099895,
+          "wristRotationDegrees": 29.505254135884023
+        },
+        "Right": {
+          "wristDistanceM": 0.15823289470107244,
+          "wristRotationDegrees": 42.19938696364025
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5512769857801976,
+        "Right": 2.203872295318797
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.0043076900154,
+        "Right": 361.77571420212854
+      },
+      "startPositionDiscontinuityM": 5.721958498152797e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.661338147750939e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.6333333253860474,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.02659235290546214,
+          "wristRotationDegrees": 29.35266427821058
+        },
+        "Right": {
+          "wristDistanceM": 0.15788580878386796,
+          "wristRotationDegrees": 42.118772560086754
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5489117262483652,
+        "Right": 2.2034403986865114
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.57641529779625,
+        "Right": 362.0536933681923
+      },
+      "startPositionDiscontinuityM": 3.447170978769293e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.065416064076988e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.6666666865348816,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.026316673543590113,
+          "wristRotationDegrees": 29.16898706882264
+        },
+        "Right": {
+          "wristDistanceM": 0.15787474193146836,
+          "wristRotationDegrees": 42.01566119175947
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5443979803555796,
+        "Right": 2.2046552601581277
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.1463230237065,
+        "Right": 362.2965005997821
+      },
+      "startPositionDiscontinuityM": 5.757191532588119e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.036438896220727e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.699999988079071,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.026358520364826606,
+          "wristRotationDegrees": 28.964986717623166
+        },
+        "Right": {
+          "wristDistanceM": 0.1582042981411747,
+          "wristRotationDegrees": 41.894042232054005
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5380515901038547,
+        "Right": 2.207482940224712
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.74484658941236,
+        "Right": 362.4968899547943
+      },
+      "startPositionDiscontinuityM": 4.484050470211362e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.688200336284365e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.7333333492279053,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.02676711199851257,
+          "wristRotationDegrees": 28.74610660801507
+        },
+        "Right": {
+          "wristDistanceM": 0.15888933867101854,
+          "wristRotationDegrees": 41.753534240298166
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5302199887292673,
+        "Right": 2.21196981025534
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.378179888804,
+        "Right": 362.66123891305057
+      },
+      "startPositionDiscontinuityM": 4.072131729349396e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.042816540784768e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.7666666507720947,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.02758627592229577,
+          "wristRotationDegrees": 28.51444020072813
+        },
+        "Right": {
+          "wristDistanceM": 0.15995314842052075,
+          "wristRotationDegrees": 41.59220859308261
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5212139143281356,
+        "Right": 2.2182153509382214
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.0410094877106,
+        "Right": 362.8032187370366
+      },
+      "startPositionDiscontinuityM": 3.3422138886441676e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.635475559608569e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.800000011920929,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.028838003100860786,
+          "wristRotationDegrees": 28.27853176400195
+        },
+        "Right": {
+          "wristDistanceM": 0.16142349993837446,
+          "wristRotationDegrees": 41.41171339347674
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5114144273936128,
+        "Right": 2.226287583804116
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.7511696064932,
+        "Right": 362.9283186631579
+      },
+      "startPositionDiscontinuityM": 2.5438405243138006e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.855045090355223e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.8333333134651184,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.030509151802539866,
+          "wristRotationDegrees": 28.04696637799102
+        },
+        "Right": {
+          "wristDistanceM": 0.16326047296943658,
+          "wristRotationDegrees": 41.21838859409114
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5012048211768736,
+        "Right": 2.235920190921678
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.52565136256874,
+        "Right": 363.0340927426487
+      },
+      "startPositionDiscontinuityM": 3.3422138886441676e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.921381455689615e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.8666666746139526,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03253721417588545,
+          "wristRotationDegrees": 27.82839333271777
+        },
+        "Right": {
+          "wristDistanceM": 0.1653799183285672,
+          "wristRotationDegrees": 41.02130353482248
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4909266054148231,
+        "Right": 2.246682951449207
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.3828906593463,
+        "Right": 363.11430858380186
+      },
+      "startPositionDiscontinuityM": 5.606351459942525e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.684427777288335e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.8999999761581421,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03484429861908696,
+          "wristRotationDegrees": 27.631689601237163
+        },
+        "Right": {
+          "wristDistanceM": 0.1676958852388932,
+          "wristRotationDegrees": 40.8294828895865
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4809407001339276,
+        "Right": 2.25810398468184
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.3393093099955,
+        "Right": 363.16143807670073
+      },
+      "startPositionDiscontinuityM": 3.002224531865041e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.425880329391634e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.9333333373069763,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03733154324871916,
+          "wristRotationDegrees": 27.46530271083955
+        },
+        "Right": {
+          "wristDistanceM": 0.17011854821631095,
+          "wristRotationDegrees": 40.65125896396653
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4715830489368322,
+        "Right": 2.269722009782931
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.4112098319557,
+        "Right": 363.1665219354227
+      },
+      "startPositionDiscontinuityM": 2.7755575615628914e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.871957671317179e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 0.9666666388511658,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.039893508179129775,
+          "wristRotationDegrees": 27.339162551408144
+        },
+        "Right": {
+          "wristDistanceM": 0.17255121553477273,
+          "wristRotationDegrees": 40.49566203939218
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4632118556443896,
+        "Right": 2.2810391419558194
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.6188060738945,
+        "Right": 363.11973182074445
+      },
+      "startPositionDiscontinuityM": 5.802176783577771e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.753223014464259e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04243397930784289,
+          "wristRotationDegrees": 27.25502235672658
+        },
+        "Right": {
+          "wristDistanceM": 0.1749317161406076,
+          "wristRotationDegrees": 40.366658025747476
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4559283920698824,
+        "Right": 2.291795746404212
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.95005740604705,
+        "Right": 363.0215048533623
+      },
+      "startPositionDiscontinuityM": 3.1432500083045447e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.004449063730082e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.0333333015441895,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04489234161902203,
+          "wristRotationDegrees": 27.209517324196465
+        },
+        "Right": {
+          "wristDistanceM": 0.17722033569086224,
+          "wristRotationDegrees": 40.26518049691646
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.449723320177476,
+        "Right": 2.301825742326854
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.371540228515,
+        "Right": 362.87956111476785
+      },
+      "startPositionDiscontinuityM": 1.3597399555105182e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.762129228624217e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.0666667222976685,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.047206424142495235,
+          "wristRotationDegrees": 27.199235695167047
+        },
+        "Right": {
+          "wristDistanceM": 0.17937234652726178,
+          "wristRotationDegrees": 40.19215045062604
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4445736215412626,
+        "Right": 2.3109623938608004
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.85154431391953,
+        "Right": 362.7010317570789
+      },
+      "startPositionDiscontinuityM": 2.7894008272968645e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.88171034870434e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.100000023841858,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.049323812892669266,
+          "wristRotationDegrees": 27.220665107642517
+        },
+        "Right": {
+          "wristDistanceM": 0.1813412729492304,
+          "wristRotationDegrees": 40.1481975824588
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.440459630911234,
+        "Right": 2.3190291966444785
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.35769346004463,
+        "Right": 362.492504326283
+      },
+      "startPositionDiscontinuityM": 3.1718530512353936e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 9.209666375651935e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.1333333253860474,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05118032223132903,
+          "wristRotationDegrees": 27.2700034710495
+        },
+        "Right": {
+          "wristDistanceM": 0.18307294302976448,
+          "wristRotationDegrees": 40.13372659006587
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.437341257674278,
+        "Right": 2.325851213858032
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.8572614786485,
+        "Right": 362.25941128878145
+      },
+      "startPositionDiscontinuityM": 8.120581339769891e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.757588526067314e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.1666666269302368,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05271998186982934,
+          "wristRotationDegrees": 27.344713851773644
+        },
+        "Right": {
+          "wristDistanceM": 0.18451368419114475,
+          "wristRotationDegrees": 40.14902835839869
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.435246281408684,
+        "Right": 2.3312313236182622
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.3274475409442,
+        "Right": 362.0069206685897
+      },
+      "startPositionDiscontinuityM": 3.339432805544703e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.594315114139762e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.2000000476837158,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05385749999491676,
+          "wristRotationDegrees": 27.44821933706055
+        },
+        "Right": {
+          "wristDistanceM": 0.1856073671761807,
+          "wristRotationDegrees": 40.19440302848692
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4343727731976985,
+        "Right": 2.3349717311062745
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.7797158865719,
+        "Right": 361.7399115389688
+      },
+      "startPositionDiscontinuityM": 4.775249788392736e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 9.130909444985391e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.2333333492279053,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05450522590851531,
+          "wristRotationDegrees": 27.5851124466295
+        },
+        "Right": {
+          "wristDistanceM": 0.18629701719879954,
+          "wristRotationDegrees": 40.26992159251594
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.434972270479724,
+        "Right": 2.3368680722627486
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.23404126168947,
+        "Right": 361.4626952359876
+      },
+      "startPositionDiscontinuityM": 3.3766115072321297e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.28550816809042e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.2666666507720947,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05457968097223222,
+          "wristRotationDegrees": 27.76025411179734
+        },
+        "Right": {
+          "wristDistanceM": 0.18652634845609573,
+          "wristRotationDegrees": 40.3756742663965
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4373087975356378,
+        "Right": 2.3367155440592695
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.7122565117978,
+        "Right": 361.179218426872
+      },
+      "startPositionDiscontinuityM": 3.5062126016408685e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.843874359417885e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.2999999523162842,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05403185625910681,
+          "wristRotationDegrees": 27.975472959981076
+        },
+        "Right": {
+          "wristDistanceM": 0.18624802921430977,
+          "wristRotationDegrees": 40.511432998040085
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.441561677928968,
+        "Right": 2.3343389601421407
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.2269880543303,
+        "Right": 360.8933660288981
+      },
+      "startPositionDiscontinuityM": 2.3714374201337736e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.716907481869143e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.3333333730697632,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05293111734114215,
+          "wristRotationDegrees": 28.22090706215041
+        },
+        "Right": {
+          "wristDistanceM": 0.18544830678352056,
+          "wristRotationDegrees": 40.67413024893095
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4475054331230983,
+        "Right": 2.3297000917738346
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.75541197745343,
+        "Right": 360.60705963926745
+      },
+      "startPositionDiscontinuityM": 2.498001805406602e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.820507832482207e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.3666666746139526,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05137666231619948,
+          "wristRotationDegrees": 28.48433142767247
+        },
+        "Right": {
+          "wristDistanceM": 0.18412370774331902,
+          "wristRotationDegrees": 40.86073367442527
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.454819320822305,
+        "Right": 2.3227935729953124
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.2684035526542,
+        "Right": 360.32185960400676
+      },
+      "startPositionDiscontinuityM": 3.188872858294072e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.952200016230843e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.399999976158142,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.049469293813492216,
+          "wristRotationDegrees": 28.753179506875043
+        },
+        "Right": {
+          "wristDistanceM": 0.1823202041989789,
+          "wristRotationDegrees": 41.065752954703086
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4631750321914305,
+        "Right": 2.313835458607622
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.7338762320689,
+        "Right": 360.0470925520452
+      },
+      "startPositionDiscontinuityM": 4.775249788392736e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.034405433428661e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.4333332777023315,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.0473091107146186,
+          "wristRotationDegrees": 29.01496170593741
+        },
+        "Right": {
+          "wristDistanceM": 0.18015973496292395,
+          "wristRotationDegrees": 41.2791187374576
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4722367047728122,
+        "Right": 2.3033890710178775
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.12113091376426,
+        "Right": 359.7996990650502
+      },
+      "startPositionDiscontinuityM": 3.4219371797089426e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.810469165661947e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.4666666984558105,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04499072251740909,
+          "wristRotationDegrees": 29.250846474172917
+        },
+        "Right": {
+          "wristDistanceM": 0.17776157986957875,
+          "wristRotationDegrees": 41.48717125439172
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4815810770149949,
+        "Right": 2.2920457393506863
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.37254711599184,
+        "Right": 359.6061568341955
+      },
+      "startPositionDiscontinuityM": 4.511882036597708e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.088547964785382e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.5,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.042599803282954506,
+          "wristRotationDegrees": 29.445663975021365
+        },
+        "Right": {
+          "wristDistanceM": 0.17524304125297333,
+          "wristRotationDegrees": 41.67796177648905
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.49080364061973,
+        "Right": 2.2803707831918443
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.4450533155328,
+        "Right": 359.48542857620987
+      },
+      "startPositionDiscontinuityM": 3.2398021848425308e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.728686258851893e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.5333333015441895,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04023417392532788,
+          "wristRotationDegrees": 29.592775677954005
+        },
+        "Right": {
+          "wristDistanceM": 0.17271829985346684,
+          "wristRotationDegrees": 41.84460433807829
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.499587218801939,
+        "Right": 2.268829993900257
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.32576261115895,
+        "Right": 359.44451776280175
+      },
+      "startPositionDiscontinuityM": 2.4847151100229447e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.828670879282072e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.5666667222976685,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03795765414143055,
+          "wristRotationDegrees": 29.690683896715306
+        },
+        "Right": {
+          "wristDistanceM": 0.17027299171534133,
+          "wristRotationDegrees": 41.983629474887216
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5077080251367982,
+        "Right": 2.2577831812686955
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 274.02144862929373,
+        "Right": 359.4853014445007
+      },
+      "startPositionDiscontinuityM": 4.257111788135694e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.707437923744493e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.600000023841858,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03581510400946731,
+          "wristRotationDegrees": 29.74615515155611
+        },
+        "Right": {
+          "wristDistanceM": 0.1679486510455058,
+          "wristRotationDegrees": 42.09660832050189
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5151577161508847,
+        "Right": 2.247365008488602
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.5726202464688,
+        "Right": 359.5974464766971
+      },
+      "startPositionDiscontinuityM": 2.453514781374947e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.158048441266492e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.6333333253860474,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.033847555788471,
+          "wristRotationDegrees": 29.764831848061274
+        },
+        "Right": {
+          "wristDistanceM": 0.16578818242111343,
+          "wristRotationDegrees": 42.18444903874718
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5218889995809204,
+        "Right": 2.237739016587625
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 273.01653210267045,
+        "Right": 359.7728022604332
+      },
+      "startPositionDiscontinuityM": 4.494775313252277e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.685868231518457e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.6666666269302368,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.032102144186157054,
+          "wristRotationDegrees": 29.752202035193264
+        },
+        "Right": {
+          "wristDistanceM": 0.16383080487304316,
+          "wristRotationDegrees": 42.24810031733364
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5278758818606137,
+        "Right": 2.2290298580688517
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.38945695075046,
+        "Right": 360.00223713588287
+      },
+      "startPositionDiscontinuityM": 2.435541875787129e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.736090074350496e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.7000000476837158,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.030599870074253074,
+          "wristRotationDegrees": 29.71333571386269
+        },
+        "Right": {
+          "wristDistanceM": 0.1621087090481495,
+          "wristRotationDegrees": 42.28835834605005
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.533065449411275,
+        "Right": 2.2213822065320303
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.7287198520466,
+        "Right": 360.27710910347093
+      },
+      "startPositionDiscontinuityM": 4.528924144620228e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.955527313080394e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.7333333492279053,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.029350373637862807,
+          "wristRotationDegrees": 29.653575257651763
+        },
+        "Right": {
+          "wristDistanceM": 0.160648500062476,
+          "wristRotationDegrees": 42.305598303903366
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5374016736071974,
+        "Right": 2.214929730648383
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.0713710844906,
+        "Right": 360.5863487298825
+      },
+      "startPositionDiscontinuityM": 3.1031676915590914e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.988675367311055e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.7666666507720947,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.028363836927525525,
+          "wristRotationDegrees": 29.577474506561884
+        },
+        "Right": {
+          "wristDistanceM": 0.15947365499861402,
+          "wristRotationDegrees": 42.30025513654174
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.54086004808021,
+        "Right": 2.2097618501118705
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.4543556814917,
+        "Right": 360.9193786833575
+      },
+      "startPositionDiscontinuityM": 4.728641100182568e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.900916318210353e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.7999999523162842,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.027627455061461678,
+          "wristRotationDegrees": 29.488298766311768
+        },
+        "Right": {
+          "wristDistanceM": 0.1586014234516806,
+          "wristRotationDegrees": 42.272373631334766
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.543346331045663,
+        "Right": 2.2059897287106693
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.9057199726755,
+        "Right": 361.2644408349867
+      },
+      "startPositionDiscontinuityM": 5.034405433428661e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.9458293318293e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.8333333730697632,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.027138223766372163,
+          "wristRotationDegrees": 29.383287304378047
+        },
+        "Right": {
+          "wristDistanceM": 0.15804583145469844,
+          "wristRotationDegrees": 42.2220725005407
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5445973616171982,
+        "Right": 2.2037035976713972
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.41777110439625,
+        "Right": 361.60952225972716
+      },
+      "startPositionDiscontinuityM": 3.4219371797089426e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.690187733356917e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.8666666746139526,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.026895971051642018,
+          "wristRotationDegrees": 29.258156299919
+        },
+        "Right": {
+          "wristDistanceM": 0.15781961731888333,
+          "wristRotationDegrees": 42.14905123013141
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5443129715784853,
+        "Right": 2.202994858331445
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.97458295582936,
+        "Right": 361.94140137766107
+      },
+      "startPositionDiscontinuityM": 3.387999773988765e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.631521572941402e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.899999976158142,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.026916466287576206,
+          "wristRotationDegrees": 29.10860671846414
+        },
+        "Right": {
+          "wristDistanceM": 0.15793525694722782,
+          "wristRotationDegrees": 42.053236680196385
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5422011537027707,
+        "Right": 2.203945699775625
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.5593528621057,
+        "Right": 362.24754816761606
+      },
+      "startPositionDiscontinuityM": 2.3551386880256624e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.748943856986671e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.9333332777023315,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.027236781260998825,
+          "wristRotationDegrees": 28.933398958578586
+        },
+        "Right": {
+          "wristDistanceM": 0.15840441680682885,
+          "wristRotationDegrees": 41.935065408918774
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5380984637161546,
+        "Right": 2.2066178322504655
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.1649476049715,
+        "Right": 362.51564126251725
+      },
+      "startPositionDiscontinuityM": 3.510833468576701e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.130536482749599e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 1.9666666984558105,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.02787723559802337,
+          "wristRotationDegrees": 28.743203864488347
+        },
+        "Right": {
+          "wristDistanceM": 0.15922762236745255,
+          "wristRotationDegrees": 41.798576572621776
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5323256719729024,
+        "Right": 2.2109734336753886
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.8219955112596,
+        "Right": 362.7387189619263
+      },
+      "startPositionDiscontinuityM": 4.47545209131181e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.952832160537328e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.028860503278670686,
+          "wristRotationDegrees": 28.543554590641786
+        },
+        "Right": {
+          "wristDistanceM": 0.16041666693514947,
+          "wristRotationDegrees": 41.64366730269783
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.5252327602212532,
+        "Right": 2.2170565116230776
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.5370068436131,
+        "Right": 362.9236535534693
+      },
+      "startPositionDiscontinuityM": 2.8202997483103253e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.802176783577771e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.0333333015441895,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03020244449650821,
+          "wristRotationDegrees": 28.336416217816588
+        },
+        "Right": {
+          "wristDistanceM": 0.16200004234323637,
+          "wristRotationDegrees": 41.46795741632565
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.517129282185436,
+        "Right": 2.2250019956248206
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.30314719147475,
+        "Right": 363.085814302211
+      },
+      "startPositionDiscontinuityM": 5.057306561942087e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.856689535013502e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.066666603088379,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03189942403043204,
+          "wristRotationDegrees": 28.130599277787045
+        },
+        "Right": {
+          "wristDistanceM": 0.1639342151118163,
+          "wristRotationDegrees": 41.27772312609809
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.508396554130993,
+        "Right": 2.234546521844863
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.1392315546519,
+        "Right": 363.2228855495367
+      },
+      "startPositionDiscontinuityM": 2.237726045655905e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.4796043696850615e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.0999999046325684,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03392305271200555,
+          "wristRotationDegrees": 27.934418210515926
+        },
+        "Right": {
+          "wristDistanceM": 0.16613519154840944,
+          "wristRotationDegrees": 41.08192774317761
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4994117690357465,
+        "Right": 2.245221673600789
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.0619408003425,
+        "Right": 363.3276810190048
+      },
+      "startPositionDiscontinuityM": 3.3422138886441676e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.843874359417885e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.133333444595337,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.036209023909744745,
+          "wristRotationDegrees": 27.756833685287884
+        },
+        "Right": {
+          "wristDistanceM": 0.16851662147090965,
+          "wristRotationDegrees": 40.889525565551125
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4905131826365945,
+        "Right": 2.2565913489936573
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.0886703058333,
+        "Right": 363.3929495294045
+      },
+      "startPositionDiscontinuityM": 4.611102534756203e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.901322157724297e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.1666667461395264,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.03868591235252933,
+          "wristRotationDegrees": 27.606452147733858
+        },
+        "Right": {
+          "wristDistanceM": 0.17099242450091431,
+          "wristRotationDegrees": 40.7092158507726
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4820556469048807,
+        "Right": 2.2681875382198218
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.2364106645142,
+        "Right": 363.41066682290176
+      },
+      "startPositionDiscontinuityM": 2.7341025078088734e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.2377686124476805e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.200000047683716,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04126212386364694,
+          "wristRotationDegrees": 27.49332775862984
+        },
+        "Right": {
+          "wristDistanceM": 0.17346783602106838,
+          "wristRotationDegrees": 40.549811447973646
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4743934928469242,
+        "Right": 2.2795243866256434
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.5254670693587,
+        "Right": 363.37032436781396
+      },
+      "startPositionDiscontinuityM": 7.850462293418876e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.753223014464259e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.2333333492279053,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04387075257622325,
+          "wristRotationDegrees": 27.418961749545424
+        },
+        "Right": {
+          "wristDistanceM": 0.17588699778959105,
+          "wristRotationDegrees": 40.4154607218804
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4676658476824322,
+        "Right": 2.2903157519128934
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 267.94258467626315,
+        "Right": 363.27326381706524
+      },
+      "startPositionDiscontinuityM": 3.554447978966673e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.836925621952896e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.2666666507720947,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04644263007681673,
+          "wristRotationDegrees": 27.380500221321277
+        },
+        "Right": {
+          "wristDistanceM": 0.17821357865833362,
+          "wristRotationDegrees": 40.3073072443562
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4618403520720755,
+        "Right": 2.3004375758846276
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 268.45737572226795,
+        "Right": 363.12764766148297
+      },
+      "startPositionDiscontinuityM": 3.251669631848525e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.783900038130591e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.299999952316284,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.04892549464731094,
+          "wristRotationDegrees": 27.3745338633159
+        },
+        "Right": {
+          "wristDistanceM": 0.18040844471128092,
+          "wristRotationDegrees": 40.226380459258024
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4569053304246449,
+        "Right": 2.3097229559701917
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.0359408102264,
+        "Right": 362.94103273020903
+      },
+      "startPositionDiscontinuityM": 3.9448084808579573e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 7.162874682589104e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.3333332538604736,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.0512639033372079,
+          "wristRotationDegrees": 27.397449620141618
+        },
+        "Right": {
+          "wristDistanceM": 0.18242874394737973,
+          "wristRotationDegrees": 40.173392123578864
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4528334264528064,
+        "Right": 2.3180088373518495
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 269.6464297056359,
+        "Right": 362.7197609420777
+      },
+      "startPositionDiscontinuityM": 2.254873622441467e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.826968921430001e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.366666555404663,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05340813729700336,
+          "wristRotationDegrees": 27.44558724377621
+        },
+        "Right": {
+          "wristDistanceM": 0.1842276061226047,
+          "wristRotationDegrees": 40.14893820328367
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4496098107647033,
+        "Right": 2.32511039085045
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.2566264324767,
+        "Right": 362.47031213156356
+      },
+      "startPositionDiscontinuityM": 3.571340232560386e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 8.886119947416683e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.4000000953674316,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.0552948526600125,
+          "wristRotationDegrees": 27.515154545591866
+        },
+        "Right": {
+          "wristDistanceM": 0.18575327530278485,
+          "wristRotationDegrees": 40.15354934728718
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.447183281485735,
+        "Right": 2.330861405532221
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 270.83481573687317,
+        "Right": 362.1980947399339
+      },
+      "startPositionDiscontinuityM": 2.3551386880256624e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.955527313080394e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.433333396911621,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05686872590550734,
+          "wristRotationDegrees": 27.60350810815395
+        },
+        "Right": {
+          "wristDistanceM": 0.18695335967807036,
+          "wristRotationDegrees": 40.18745470075994
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4455815448889604,
+        "Right": 2.3350637982426425
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.35736632769647,
+        "Right": 361.908161893714
+      },
+      "startPositionDiscontinuityM": 3.236828524569469e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 6.843874359417885e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.4666666984558105,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05804635965347085,
+          "wristRotationDegrees": 27.71384932949305
+        },
+        "Right": {
+          "wristDistanceM": 0.18777377195424186,
+          "wristRotationDegrees": 40.25081601329444
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4449941415434207,
+        "Right": 2.3375216458789385
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 271.83597352655653,
+        "Right": 361.6047995193244
+      },
+      "startPositionDiscontinuityM": 4.523738428040422e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 4.585973723508303e-16
+    },
+    {
+      "role": "Idle-to-Walk",
+      "outgoingPhaseSeconds": 2.5,
+      "endPoseDifferenceAtTargetTime0": {
+        "Left": {
+          "wristDistanceM": 0.05873943496954432,
+          "wristRotationDegrees": 27.851115343053582
+        },
+        "Right": {
+          "wristDistanceM": 0.18815890780615663,
+          "wristRotationDegrees": 40.3436619592444
+        }
+      },
+      "maximumBlendedWristSpeedMPerS": {
+        "Left": 1.4456681140978451,
+        "Right": 2.338030418309452
+      },
+      "maximumBlendedWristAngularSpeedDegreesPerS": {
+        "Left": 272.2911020680545,
+        "Right": 361.2916943900703
+      },
+      "startPositionDiscontinuityM": 4.022314661866725e-16,
+      "endPositionDiscontinuityM": 4.577566798522237e-16,
+      "reversalSamePoseMaximumErrorM": 5.688200336284365e-16
+    }
+  ],
+  "limitations": [
+    "Source FK only; no deformed-skin sweep during blend",
+    "Linear alpha has finite nonzero start/end velocity changes; position continuity is not C1 velocity continuity",
+    "Actual UE compression, input reversal and controller/device exclusion remain native visual gates",
+    "No source root/capsule grounding or physical wrist collision acceptance"
+  ],
+  "nativeAccepted": false,
+  "runtimeChanged": false
+}
