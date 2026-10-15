@@ -20,7 +20,9 @@ class NativeFixtureEmissionTests(unittest.TestCase):
         self.assertLess(fixture.METHODS.index('GetAllVectorParameterInfo'), fixture.METHODS.index('UMaterialInstanceDynamic::Create'))
         self.assertLess(fixture.METHODS.index('UMaterialInstanceDynamic::Create'), fixture.METHODS.index('Components[I]->SetMaterial'))
         self.assertIn('Enabled?NativeFixtureOriginalFactors[I]:FLinearColor(0,0,0,0)', cpp)
-        self.assertNotIn('SetScalarParameterValue', fixture.METHODS)
+        self.assertEqual(fixture.METHODS.count('SetScalarParameterValue'),2)
+        self.assertEqual(fixture.METHODS.count('if(I==6)'),2)
+        self.assertIn('I==6?1:0,Prepared[I]', fixture.METHODS)
         self.assertNotIn('SetActorLocation', fixture.METHODS)
         with self.assertRaises(ValueError):fixture.install(header, cpp)
         with self.assertRaises(ValueError):fixture.install(runtime.HEADER+view.FIELDS, runtime.CPP)
@@ -55,6 +57,26 @@ assert(!ValidOriginalFactor(std::numeric_limits<double>::quiet_NaN(),1,1,1));}
 ''')
             subprocess.run([compiler,'-std=c++17',str(source),'-o',str(binary)],check=True,capture_output=True)
             subprocess.run([str(binary)],check=True,capture_output=True)
+
+    def test_genuine_bulb_uses_pinned_source_emission_not_zeroed_importer_values(self):
+        import hashlib
+        import json
+        source=Path(__file__).resolve().parents[1]/'web/house/assets/desk_lamp_arm_01/desk_lamp_arm_01.gltf'
+        self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),
+                         '2ac8389afc1519449a9cfdf7efd9fa36780a2177bb47ab58f7a7dda7d247dc8c')
+        material=json.loads(source.read_text())['materials'][1]
+        self.assertEqual(material['name'],'desk_lamp_arm_01_light')
+        self.assertEqual(material['emissiveFactor'],[1,.9837890267372131,.649111270904541])
+        self.assertNotIn('KHR_materials_emissive_strength',material.get('extensions',{}))
+        self.assertIn('FLinearColor(1.f,.9837890267372131f,.649111270904541f,1.f)',fixture.METHODS)
+        # The importer zeroed BOTH parameters: restoring factor alone stays dark.
+        self.assertIn('GetAllScalarParameterInfo',fixture.METHODS)
+        self.assertIn('SavedStrength!=0.f',fixture.METHODS)
+        self.assertIn('if(I==6)MID->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled[I]?1.f:0.f)',fixture.METHODS)
+        self.assertIn('if(I==6)NativeFixtureMIDs[I]->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled?1.f:0.f)',fixture.METHODS)
+        self.assertLess(fixture.METHODS.index('SavedStrength!=0.f'),fixture.METHODS.index('UMaterialInstanceDynamic::Create'))
+        self.assertIn('Enabled.Add(Enabled[1])',fixture.METHODS)
+        self.assertIn('NativeFixtureComponents[I]->GetMaterial(I==6?1:0)',fixture.METHODS)
 
     def test_exact_owned_colour_mic_path_matches_repair_naming(self):
         from unreal_home_materials_fix import usage_mic_name

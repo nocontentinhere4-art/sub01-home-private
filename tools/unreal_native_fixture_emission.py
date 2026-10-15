@@ -2,7 +2,9 @@
 
 Renderer owns integration/build. Reviewed config must set NativeFixtureEmissionVerified,
 actual parent paths for Material13/63/91 (or explicitly reviewed common fallback),
-and exact source SHA below. No asset writes;
+and exact source SHA below. The saved posed genuine DeskLamp must also match
+its exact actor, two material slots and owned derivative mesh namespace. Only
+its bulb slot receives source emission factor and glTF default strength1. No asset writes;
 original shared materials stay untouched. install hooks the native view settings.
 """
 from pathlib import Path
@@ -26,6 +28,7 @@ INCLUDES = r'''
 #include "Materials/MaterialInstance.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 '''
 FIELDS = r'''
  UPROPERTY(Config) bool NativeFixtureEmissionVerified=false;
@@ -48,8 +51,8 @@ bool ASub01HomeCharacter::PrepareNativeFixtureEmission(){
  auto Refuse=[&](const FString& Error){NativeFixtureEmissionError=Error;UE_LOG(LogTemp,Error,TEXT("SUB01_FIXTURE_EMISSION_UNAVAILABLE %s"),*Error);return false;};
  if(NativeFixtureEmissionSourceSHA!=TEXT("9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b"))return Refuse(TEXT("Reviewed source identity receipt missing"));
  if(NativeFixtureMIDs.Num()){
-  if(NativeFixtureMIDs.Num()!=6||NativeFixtureComponents.Num()!=6||NativeFixtureOriginalFactors.Num()!=6||NativeFixtureLampNames.Num()!=6)return Refuse(TEXT("Incomplete owned fixture state"));
-  for(int32 I=0;I<6;++I)if(!IsValid(NativeFixtureComponents[I])||!IsValid(NativeFixtureMIDs[I])||NativeFixtureComponents[I]->GetMaterial(0)!=NativeFixtureMIDs[I])return Refuse(TEXT("Owned fixture slot changed externally"));
+  if(NativeFixtureMIDs.Num()!=7||NativeFixtureComponents.Num()!=7||NativeFixtureOriginalFactors.Num()!=7||NativeFixtureLampNames.Num()!=7)return Refuse(TEXT("Incomplete owned fixture state"));
+  for(int32 I=0;I<7;++I)if(!IsValid(NativeFixtureComponents[I])||!IsValid(NativeFixtureMIDs[I])||NativeFixtureComponents[I]->GetMaterial(I==6?1:0)!=NativeFixtureMIDs[I])return Refuse(TEXT("Owned fixture slot changed externally"));
   return true;
  }
  struct FTarget {int32 Node;const TCHAR* Material;const TCHAR* Lamp;};
@@ -83,20 +86,45 @@ bool ASub01HomeCharacter::PrepareNativeFixtureEmission(){
   if(!Light||!FMath::IsFinite(Light->Intensity)||Light->Intensity<0)return Refuse(TEXT("Exact associated native lamp intensity unavailable"));
   Components.Add(Component);Originals.Add(Material);SourceOriginals.Add(SourceOriginal);Factors.Add(Factor);Enabled.Add(Light->Intensity>0);
  }
+ // The saved genuine articulated desk lamp has a distinct light surface in
+ // slot1. Its importer deliberately zeroed factor AND strength. Restore only
+ // this source-authored emitter on a per-component MID; the red body stays put.
+ AActor* RealDesk=nullptr;
+ const FString RealActor=TEXT("/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.StaticMeshActor_5");
+ for(TActorIterator<AActor> It(GetWorld());It;++It)if(It->GetPathName()==RealActor){if(RealDesk)return Refuse(TEXT("Duplicate genuine desk lamp"));RealDesk=*It;}
+ if(!RealDesk)return Refuse(TEXT("Saved genuine desk lamp missing"));
+ TArray<UStaticMeshComponent*> RealMeshes;RealDesk->GetComponents<UStaticMeshComponent>(RealMeshes);
+ if(RealMeshes.Num()!=1||RealMeshes[0]->GetName()!=TEXT("StaticMeshComponent0")||RealMeshes[0]->GetNumMaterials()!=2||!RealMeshes[0]->GetStaticMesh()||!RealMeshes[0]->GetStaticMesh()->GetPathName().StartsWith(TEXT("/Game/Sub01Home/RealEdgeClampLamp/V_8ec48458a8f0/Attempt_")))return Refuse(TEXT("Saved genuine posed lamp identity differs"));
+ auto* RealComponent=RealMeshes[0];
+ const FString RealRoot=TEXT("/Game/Sub01Home/RealLamps/DeskLamp/SUB01_RealLamp_DeskLamp/Materials/");
+ const FString BodyName=TEXT("SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_001"),BulbName=TEXT("SUB01_RealLamp_DeskLamp_desk_lamp_arm_01_light_001");
+ auto* Bulb=Cast<UMaterialInstance>(RealComponent->GetMaterial(1));
+ if(!RealComponent->GetMaterial(0)||RealComponent->GetMaterial(0)->GetPathName()!=RealRoot+BodyName+TEXT(".")+BodyName||!Bulb||Bulb->GetPathName()!=RealRoot+BulbName+TEXT(".")+BulbName)return Refuse(TEXT("Saved genuine lamp body/bulb material binding differs"));
+ TArray<FMaterialParameterInfo> BulbVectors,BulbScalars;TArray<FGuid> BulbVectorIDs,BulbScalarIDs;
+ Bulb->GetAllVectorParameterInfo(BulbVectors,BulbVectorIDs);Bulb->GetAllScalarParameterInfo(BulbScalars,BulbScalarIDs);
+ int32 FactorMatches=0,StrengthMatches=0;
+ for(const auto& Info:BulbVectors)if(Info.Name==TEXT("EmissiveFactor")&&Info.Association==EMaterialParameterAssociation::GlobalParameter)++FactorMatches;
+ for(const auto& Info:BulbScalars)if(Info.Name==TEXT("EmissiveStrength")&&Info.Association==EMaterialParameterAssociation::GlobalParameter)++StrengthMatches;
+ FLinearColor SavedBulb;float SavedStrength=0;
+ if(FactorMatches!=1||StrengthMatches!=1||!Bulb->GetVectorParameterValue(FMaterialParameterInfo(TEXT("EmissiveFactor")),SavedBulb)||!Bulb->GetScalarParameterValue(FMaterialParameterInfo(TEXT("EmissiveStrength")),SavedStrength)||!FMath::IsFinite(SavedStrength)||!FMath::IsFinite(SavedBulb.A)||SavedStrength!=0.f||SavedBulb.R!=0.f||SavedBulb.G!=0.f||SavedBulb.B!=0.f)return Refuse(TEXT("Actual genuine bulb zeroed factor/strength receipt differs"));
+ // Original Poly Haven glTF SHA2ac8389a... has this factor, no strength
+ // extension (glTF default1). No light, wall or lamp-body colour is changed.
+ Components.Add(RealComponent);Originals.Add(Bulb);SourceOriginals.Add(Bulb);
+ Factors.Add(FLinearColor(1.f,.9837890267372131f,.649111270904541f,1.f));Enabled.Add(Enabled[1]);
  // Any additional mesh slot using an original fixture material is ambiguous,
  // including screens. No original material is ever modified.
  for(TActorIterator<AActor> It(GetWorld());It;++It){TArray<UMeshComponent*> Meshes;It->GetComponents<UMeshComponent>(Meshes);
-  for(auto* Mesh:Meshes)for(int32 Slot=0;Slot<Mesh->GetNumMaterials();++Slot){auto* User=Cast<UMaterialInstance>(Mesh->GetMaterial(Slot));if((Originals.Contains(User)||SourceOriginals.Contains(User))&&(!Components.Contains(Cast<UStaticMeshComponent>(Mesh))||Slot!=0))return Refuse(TEXT("Unexpected shared original fixture material user"));}
+  for(auto* Mesh:Meshes)for(int32 Slot=0;Slot<Mesh->GetNumMaterials();++Slot){auto* User=Cast<UMaterialInstance>(Mesh->GetMaterial(Slot));if((Originals.Contains(User)||SourceOriginals.Contains(User))&&(Components.IndexOfByKey(Cast<UStaticMeshComponent>(Mesh))==INDEX_NONE||Slot!=(Components.IndexOfByKey(Cast<UStaticMeshComponent>(Mesh))==6?1:0)))return Refuse(TEXT("Unexpected shared original fixture material user"));}
  }
  TArray<UMaterialInstanceDynamic*> Prepared;
- for(int32 I=0;I<6;++I){auto* MID=UMaterialInstanceDynamic::Create(Originals[I],this);if(!MID)return Refuse(TEXT("MID allocation failed; no fixture slot/light changed"));MID->SetVectorParameterValue(TEXT("EmissiveFactor"),Enabled[I]?Factors[I]:FLinearColor(0,0,0,0));Prepared.Add(MID);}
- // All six bindings, effective original vectors and allocations validated first.
- for(int32 I=0;I<6;++I){NativeFixtureComponents.Add(Components[I]);NativeFixtureMIDs.Add(Prepared[I]);NativeFixtureOriginalFactors.Add(Factors[I]);NativeFixtureLampNames.Add(Targets[I].Lamp);Components[I]->SetMaterial(0,Prepared[I]);}
- NativeFixtureEmissionError.Empty();UE_LOG(LogTemp,Display,TEXT("SUB01_FIXTURE_EMISSION_READY exactTargets=6 originalsUnchanged=true"));return true;
+ for(int32 I=0;I<7;++I){auto* MID=UMaterialInstanceDynamic::Create(Originals[I],this);if(!MID)return Refuse(TEXT("MID allocation failed; no fixture slot/light changed"));MID->SetVectorParameterValue(TEXT("EmissiveFactor"),Enabled[I]?Factors[I]:FLinearColor(0,0,0,0));if(I==6)MID->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled[I]?1.f:0.f);Prepared.Add(MID);}
+ // All seven bindings, effective original vectors and allocations validated first.
+ for(int32 I=0;I<7;++I){NativeFixtureComponents.Add(Components[I]);NativeFixtureMIDs.Add(Prepared[I]);NativeFixtureOriginalFactors.Add(Factors[I]);NativeFixtureLampNames.Add(I==6?TEXT("DeskLamp"):Targets[I].Lamp);Components[I]->SetMaterial(I==6?1:0,Prepared[I]);}
+ NativeFixtureEmissionError.Empty();UE_LOG(LogTemp,Display,TEXT("SUB01_FIXTURE_EMISSION_READY exactTargets=7 originalsUnchanged=true"));return true;
 }
 void ASub01HomeCharacter::ApplyNativeFixtureEmission(const FString& Lamp,bool Enabled){
  if(!NativeFixtureEmissionVerified)return;
- for(int32 I=0;I<NativeFixtureMIDs.Num();++I)if(NativeFixtureLampNames[I]==Lamp)NativeFixtureMIDs[I]->SetVectorParameterValue(TEXT("EmissiveFactor"),Enabled?NativeFixtureOriginalFactors[I]:FLinearColor(0,0,0,0));
+ for(int32 I=0;I<NativeFixtureMIDs.Num();++I)if(NativeFixtureLampNames[I]==Lamp){NativeFixtureMIDs[I]->SetVectorParameterValue(TEXT("EmissiveFactor"),Enabled?NativeFixtureOriginalFactors[I]:FLinearColor(0,0,0,0));if(I==6)NativeFixtureMIDs[I]->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled?1.f:0.f);}
 }
 '''
 
@@ -121,7 +149,7 @@ def install(header, cpp):
     cpp=cpp.replace(init_hook,' if(PrivateSettingsInitialized)return;PrivateSettingsInitialized=true;\n if(!PrepareNativeFixtureEmission()){WritePrivateViewSettingsReceipt(0,false,NativeFixtureEmissionError);return;}\n WritePrivateViewSettingsReceipt(0,true,TEXT(""));',1)
     cpp=cpp.replace(preflight,' if(LampChanges&&!PrepareNativeFixtureEmission()){WritePrivateViewSettingsReceipt(Revision,false,NativeFixtureEmissionError);return;}\n'+preflight,1)
     cpp=cpp.replace(apply_hook,apply_hook+'ApplyNativeFixtureEmission(LampName,Enabled);',1)
-    cpp=cpp.replace(receipt_hook,receipt_hook+'Receipt->SetBoolField(TEXT("fixture_emission_ready"),NativeFixtureEmissionVerified&&NativeFixtureMIDs.Num()==6&&NativeFixtureEmissionError.IsEmpty());Receipt->SetStringField(TEXT("fixture_emission_diagnostic"),NativeFixtureEmissionError);',1)
+    cpp=cpp.replace(receipt_hook,receipt_hook+'Receipt->SetBoolField(TEXT("fixture_emission_ready"),NativeFixtureEmissionVerified&&NativeFixtureMIDs.Num()==7&&NativeFixtureEmissionError.IsEmpty());Receipt->SetStringField(TEXT("fixture_emission_diagnostic"),NativeFixtureEmissionError);',1)
     return header,cpp+METHODS
 
 
