@@ -131,3 +131,21 @@ def test_cancel_revokes_focus_lease_even_with_stale_frame(tmp_path):
  p.control({**packet(1,'cancel'),'frame_id':'old'},'new',True)
  assert p.until==0 and not p.active()
  with pytest.raises(PermissionError):p.control(packet(2),'actual-fixture-frame',False)
+
+
+def test_recovered_project_is_exact_and_legacy_or_editor_receipts_refuse(tmp_path):
+ import pytest
+ assert PROJECT == '/workspace/sub01-private-recovered-project/Sub01HomeLab/Sub01HomeLab.uproject'
+ policy, file, clock = fixture(tmp_path)
+ policy.focus(focus(), 'actual-fixture-frame', False)
+ for args in [
+  [b'/workspace/sub01-home-private/project/Sub01HomeLab/Sub01HomeLab.uproject', b'-game'],
+  [PROJECT.encode() + b'.other', b'-game'],
+  [PROJECT.encode(), b'-run=pythonscript'],
+  [PROJECT.encode(), b'-game-other'],
+ ]:
+  policy.owner = None; policy.until = 0
+  policy.process = lambda pid, args=args: (os.getuid(), 456, args)
+  with pytest.raises(ValueError, match='Native process identity changed'):
+   policy.focus(focus(), 'actual-fixture-frame', False)
+  assert policy.owner is None and policy.until == 0

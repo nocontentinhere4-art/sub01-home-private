@@ -14,7 +14,7 @@ from pathlib import Path
 from aiohttp import web
 
 RECEIPT = Path('/home/unreal/.sub01-private/native-tv-focus.json')
-PROJECT = '/workspace/sub01-home-private/project/Sub01HomeLab/Sub01HomeLab.uproject'
+PROJECT = '/workspace/sub01-private-recovered-project/Sub01HomeLab/Sub01HomeLab.uproject'
 MAX_COUNTER = 2**53-1
 CONTROLS = {'forward','back','left','right','jump','sneak','sprint'}
 
