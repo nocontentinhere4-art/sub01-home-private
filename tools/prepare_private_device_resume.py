@@ -22,6 +22,8 @@ def selected_source(name):
     p = Path(name)
     if p.is_absolute() or '..' in p.parts:
         return False
+    if name in {'out/connectome.npz', 'out/atlas_names.json'}:
+        return True
     return (p.suffix in {'.py', '.cjs', '.js', '.json', '.html', '.css', '.wasm', '.csv', '.npz'}
             and ('/' not in name or name.startswith((
                 'computer/', 'games/minecraft/', 'scripts/home_',
