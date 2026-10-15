@@ -9,7 +9,9 @@ function guestKeyboard(send, delay = ms => new Promise(resolve => setTimeout(res
    const captured = epoch, owner=Symbol();
    async function releaseOwned(){
     if(extendedOwner===owner){extended=false;extendedOwner=null;}
-    for(const [key,entry]of held)if(entry.owner===owner){await waitFor(send(entry.release));held.delete(key);}
+    for(const [key,entry]of held)if(entry.owner===owner){
+     try{await waitFor(send(entry.release));}catch(_){}finally{held.delete(key);}
+    }
    }
    const task = chain.then(async () => {
     try {
@@ -38,7 +40,9 @@ function guestKeyboard(send, delay = ms => new Promise(resolve => setTimeout(res
   },
   cancel() {
    epoch++;
-   for(const entry of held.values()) send(entry.release);
+   for(const entry of held.values()) {
+    try{Promise.resolve(send(entry.release)).catch(()=>{});}catch(_){}
+   }
    held.clear(); extended = false;extendedOwner=null;
   }
  };

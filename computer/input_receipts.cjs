@@ -14,9 +14,10 @@ function inputReceipts(send, wall=Date.now, mono=()=>performance.now(), limit=32
   return {
    valid:()=>!entry.cancelled&&wall()<=entry.deadline_ms,
    async wait(promise){
-    if(entry.cancelled||wall()>entry.deadline_ms)return false;
+    const invocation=Promise.resolve(promise);
+    if(entry.cancelled||wall()>entry.deadline_ms){invocation.catch(()=>{});return false;}
     let timer;
-    try{return await Promise.race([Promise.resolve(promise).then(()=>true),entry.aborted,
+    try{return await Promise.race([invocation.then(()=>true),entry.aborted,
      new Promise(resolve=>timer=setTimeout(()=>resolve(false),Math.max(0,entry.deadline_ms-wall())))]);}
     finally{clearTimeout(timer);}
    },

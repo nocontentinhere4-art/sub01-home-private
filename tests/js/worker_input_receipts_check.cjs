@@ -13,6 +13,10 @@ const {guestKeyboard}=require('../../computer/guest_keyboard.cjs');
  assert.equal(protocol.begin({_receipt:{...envelope,deadline_ms:5000}}),null);
  assert.equal(protocol.begin({_receipt:{...envelope,id:'client-input-17'}}),null);
  const legacy=protocol.begin({});assert(legacy.valid());legacy.finish(true,'x');assert.equal(out.length,1);
+ const cancelled=protocol.begin({_receipt:{...envelope,id:'f'.repeat(32)}});
+ protocol.cancel({id:'f'.repeat(32),generation:7});
+ assert.equal(await cancelled.wait(Promise.reject(Error('cancelled release API rejection'))),false);
+ cancelled.finish(false,'Rejected');await new Promise(setImmediate);
  // A timed-out packet must not release an already-held key from another packet.
  const keys=[],delays=[];const keyboard=guestKeyboard(c=>keys.push(...c),()=>new Promise(r=>delays.push(r)));
  const held=keyboard.enqueue([29]);await new Promise(setImmediate);delays.shift()();await held;
