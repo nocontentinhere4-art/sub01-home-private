@@ -330,9 +330,9 @@ def run(root, dry_run=True, u=None):
         retained_restore = unreal_kitchen_retained_geometry.stage(u, original, retained, project/'SourceAssets/full-home.glb', eas)
         if snapshot(u, original) != before:
             raise RuntimeError('Owned geometry/material setup changed protected originals')
-        for actor, c, clone, materials in retained_restore['replacements']:
+        for actor, c, clone, component_materials in retained_restore['replacements']:
             c.set_static_mesh(clone)
-            for slot, material in enumerate(materials):
+            for slot, material in enumerate(component_materials):
                 c.set_material(slot, material)
         retained_after = verify_retained_native(u, original, project/'SourceAssets/full-home.glb',
                             owned_paths={164: retained_restore['proof'][0]['owned_mesh']} if retained_restore['proof'] else None)
@@ -342,7 +342,7 @@ def run(root, dry_run=True, u=None):
             c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
         protected = [a for a in original if a not in [r[0] for r in old]]
         protected_expected = copy.deepcopy({a.get_path_name(): before[a.get_path_name()] for a in protected})
-        for actor, c, clone, materials in retained_restore['replacements']:
+        for actor, c, clone, component_materials in retained_restore['replacements']:
             exact = [r for r in protected_expected[actor.get_path_name()]['components'] if r['path'] == c.get_path_name()]
             if len(exact) != 1:
                 raise RuntimeError('Exact retained sink component fingerprint missing')

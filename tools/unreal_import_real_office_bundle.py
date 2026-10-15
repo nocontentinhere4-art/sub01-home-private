@@ -147,8 +147,8 @@ def run(root,dry_run=True,u=None):
   for actor,c,plan in plantctx['rows']:
    replacement=plant_geometry['replacements'].get(c.get_path_name())
    if replacement:
-    materials=list(c.get_materials());c.set_static_mesh(replacement)
-    for slot,material in enumerate(materials):c.set_material(slot,material)
+    component_materials=list(c.get_materials());c.set_static_mesh(replacement)
+    for slot,material in enumerate(component_materials):c.set_material(slot,material)
   # Move the exact genuine225 group once; independent children each move once.
   plant_old={a.get_path_name():vec(a.get_actor_location())for a,c,p in plantctx['rows']}
   for actor in plantctx['move']:
@@ -174,8 +174,8 @@ def run(root,dry_run=True,u=None):
   for actor,c,plan in books:
    replacement=book_geometry['replacements'].get(c.get_path_name())
    if replacement:
-    materials=list(c.get_materials());c.set_static_mesh(replacement)
-    for slot,material in enumerate(materials):c.set_material(slot,material)
+    component_materials=list(c.get_materials());c.set_static_mesh(replacement)
+    for slot,material in enumerate(component_materials):c.set_material(slot,material)
    location=vec(actor.get_actor_location());new=[location[a]+plan['delta_ue_cm'][a]for a in range(3)];actor.set_actor_location(u.Vector(*new),False,False)
    pts,count=surface(u,c);actual=[[min(p[a]for p in pts)for a in range(3)],[max(p[a]for p in pts)for a in range(3)]]
    if not all(close(a,[v*100 for v in b])for a,b in zip(actual,plan['new_bounds_ue_m'])):raise RuntimeError('Actual book retarget missed physical board '+plan['id'])
