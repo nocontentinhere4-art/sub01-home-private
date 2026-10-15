@@ -30,6 +30,7 @@ TASKS = {
     'private_crash_policy': 'unreal_private_crash_policy',
     'plant_clone_audit': 'unreal_loaded_plant_clone_audit',
     'book_clone_audit': 'unreal_loaded_book16_clone_audit',
+    'recover_saved_home': 'unreal_recover_saved_home',
     'scene_visual_inventory': 'unreal_home_visual_inventory',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
