@@ -115,7 +115,11 @@ def dispatch(task):
     if task == 'nanite_materials':
         return module.run(dry_run=False)
     if task == 'nanite_materials_preflight':
-        return module.run(dry_run=True)
+        report = module.run(dry_run=True)
+        audit = Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/nanite-material-preflight.json')
+        audit.parent.mkdir(exist_ok=True)
+        audit.write_text(json.dumps(report, indent=2)+'\n')
+        return report
     if task == 'refresh_queue':
         return {'refreshed_existing_queue': module.refresh(), 'native_game_accepted': False}
     if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs'):
