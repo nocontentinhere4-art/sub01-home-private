@@ -1236,7 +1236,7 @@ def transitions(setup, out_dir, layout, W_dt):
         for i in range(F):
             off = roll * sm[i]
             fl = _FrameLayout(layout, off - r0, off)
-            chair_t.append([_r(v, 4) for v in np.asarray(CHAIR_INITIAL_CM) + off])
+            chair_t.append([float(v) for v in np.asarray(CHAIR_INITIAL_CM) + off])   # full precision: the roll must start/end exactly at the original
             for sd in A.SIDES:
                 res = sol.side_clearance(W[i:i + 1], sd, fl, np.array([i]))
                 for k in rows[sd]:
