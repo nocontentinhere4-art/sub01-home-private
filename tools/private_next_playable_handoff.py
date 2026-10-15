@@ -138,7 +138,11 @@ def run(target):
   assert not matching(OLD);child,log=launch(target,'new');metadata.update(status='warming',new_wrapper_pid=child.pid,new_log=log);persist();pid,start=wait(target);first_frame=target/'evidence/promotion-first-new.png';until=time.time()+90
   while time.time()<until and not complete_frame(first_frame,metadata['started_epoch']):time.sleep(.25)
   if not complete_frame(first_frame,metadata['started_epoch']):raise RuntimeError('Actual newGame first1280x720PNG was not completed; grants remain disabled')
-  metadata.update(first_frame=str(first_frame),first_frame_sha256=sha(first_frame),first_frame_png_verified=True);metadata.update(new_pid=pid,new_start=start,status='fresh-physical-manual-ready',grants_refreshed=False);persist();rollout=device_phase('apply_after_launch',snapshot,pid,start);metadata['backend_restarted']=True;metadata['minecraft_consumer_policy']=assert_minecraft_consumer_policy(target,pid,start,Path(snapshot)/'rollout.json');persist();grants(pid,start);metadata.update(status='promoted-private-awaiting-functional-QA',grants_refreshed=True,finished_epoch=time.time(),devices_operational=False)
+  metadata.update(first_frame=str(first_frame),first_frame_sha256=sha(first_frame),first_frame_png_verified=True);new_metrics=json.loads((PRIVATE/'native-visual-metrics.json').read_text());assert(new_metrics['native_pid'],new_metrics['native_start_ticks'])==(pid,start)and time.time()-new_metrics['captured_utc']<2
+  old_camera=idle['actual_camera_world_cm'];new_camera=new_metrics['actual_camera_world_cm'];camera_error=sum((old_camera[k]-new_camera[k])**2 for k in 'xyz')**.5
+  assert camera_error<=.5,'New Game changed the preserved camera position by more than 5mm'
+  metadata['preserved_camera_error_cm']=camera_error
+  metadata.update(new_pid=pid,new_start=start,status='fresh-physical-manual-ready',grants_refreshed=False);persist();rollout=device_phase('apply_after_launch',snapshot,pid,start);metadata['backend_restarted']=True;metadata['minecraft_consumer_policy']=assert_minecraft_consumer_policy(target,pid,start,Path(snapshot)/'rollout.json');persist();grants(pid,start);metadata.update(status='promoted-private-awaiting-functional-QA',grants_refreshed=True,finished_epoch=time.time(),devices_operational=False)
   # A fresh renderer identity also invalidates backend TV consumer policy. Do
   # not claim device operation from privacy/viewer grants or reset the world.
   rollouts=sorted(Path('/workspace/sub01-home-private').glob('minecraft-policy-refresh-*/rollout.json'))
