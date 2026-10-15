@@ -1,5 +1,9 @@
 # Private local home
 
+## Latest human continuation — work until the owner returns
+
+The owner subsequently explicitly instructed continuous autonomous work until they return to this chat, with Claude and parallel agents. The six-hour work time below is now a progress milestone, not a mandatory work shutdown. Continue meaningful private implementation and verification beyond it if needed. The separately authorized GPU deadline **2026-10-16 02:19:35 UTC**, unchanged $100 total cap and $10 balance/data reserve still apply. This does not authorize extending GPU duration or spending, publishing changes, or modifying the public sites or brain server. Keep the current GPU and persistent Editor running through ordinary edits; monitor agent failures and resume interrupted assigned work rather than assuming background work continues after an error.
+
 ## Latest human GPU duration — 15 October, 24 hours continuous
 
 The owner subsequently explicitly authorized keeping the GPU running for **24 hours**, then deciding whether to continue. GPU deadline is now **2026-10-16 02:19:35 UTC (04:19:35 Europe/Rome), epoch 1792117175**. This supersedes GPU shutdown at the six-hour work target; the work target itself remains 2026-10-15 08:14:32 UTC. Authenticate replacement guards before retiring the previous ones and update services from the trusted root-owned runtime window without restarting the pod. Preserve the $10 balance/data reserve and other-account-spend monitoring. Do not extend beyond the 24 hours yourself.
