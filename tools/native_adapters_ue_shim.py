@@ -230,6 +230,8 @@ struct FVector {
  FVector(double InX, double InY, double InZ) : X(InX), Y(InY), Z(InZ) {}
  explicit FVector(const FVector3f& V) : X(V.X), Y(V.Y), Z(V.Z) {}
  explicit FVector(const FVector4f& V) : X(V.X), Y(V.Y), Z(V.Z) {}
+ double operator[](int32 I) const { return I == 0 ? X : I == 1 ? Y : Z; }
+ double& operator[](int32 I) { return I == 0 ? X : I == 1 ? Y : Z; }
  FVector operator+(const FVector& V) const { return {X + V.X, Y + V.Y, Z + V.Z}; }
  FVector operator-(const FVector& V) const { return {X - V.X, Y - V.Y, Z - V.Z}; }
  FVector operator-() const { return {-X, -Y, -Z}; }
@@ -342,6 +344,7 @@ class FJsonValue {
 public:
  virtual ~FJsonValue() = default;
  double AsNumber() const { return 0; }
+ bool TryGetNumber(double&) const { return false; }
  const TSharedPtr<FJsonObject>& AsObject() const;
  const TArray<TSharedPtr<FJsonValue>>& AsArray() const;
  bool TryGetObject(const TSharedPtr<FJsonObject>*& Out) const { Out = nullptr; return false; }
@@ -409,7 +412,8 @@ public:
  FSkeletalMeshModel* GetImportedModel() const { return nullptr; }
 #endif
 };
-class UStaticMesh : public UObject {};
+struct FBoxSphereBounds { FVector Origin, BoxExtent; double SphereRadius = 0; };
+class UStaticMesh : public UObject { public: FBoxSphereBounds GetBounds() const { return {}; } };
 class UAnimSequenceBase : public UObject { public: virtual float GetPlayLength() const { return 0; } USkeleton* GetSkeleton() const { return nullptr; } };
 class UAnimSequence : public UAnimSequenceBase {};
 class UWorld;
@@ -434,6 +438,7 @@ class USceneComponent : public UActorComponent {
 public:
  const FTransform& GetComponentTransform() const { static FTransform None; return None; }
  FVector GetComponentLocation() const { return FVector(); }
+ FVector GetComponentScale() const { return FVector(); }
  USceneComponent* GetAttachParent() const { return nullptr; }
  FTransform GetSocketTransform(FName, ERelativeTransformSpace = RTS_World) const { return FTransform(); }
  bool AttachToComponent(USceneComponent*, const FAttachmentTransformRules&, FName = NAME_None) { return true; }
@@ -442,6 +447,7 @@ public:
  void SetUsingAbsoluteRotation(bool) {}
  void SetWorldLocation(const FVector&, bool = false, struct FHitResult* = nullptr, ETeleportType = ETeleportType::None) {}
  void SetWorldLocationAndRotation(FVector, const FQuat&, bool = false, struct FHitResult* = nullptr, ETeleportType = ETeleportType::None) {}
+ void SetWorldScale3D(FVector) {}
  void SetRelativeLocation(FVector, bool = false, struct FHitResult* = nullptr, ETeleportType = ETeleportType::None) {}
  void SetRelativeRotation(FRotator, bool = false, struct FHitResult* = nullptr, ETeleportType = ETeleportType::None) {}
  void SetVisibility(bool, bool = false) {}

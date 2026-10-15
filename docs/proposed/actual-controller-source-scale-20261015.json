@@ -1,0 +1,29 @@
+{
+  "schema": "sub01.actual-controller-source-scale-observation.v1",
+  "native_pid": 39931,
+  "native_start_ticks": 974207379,
+  "native_import_receipt_sha256": "761375d6dbf7fdd20b9912ddeecd6a3c4ecb14b52538f644407c8b5445b52882",
+  "original_source_sha256": "c034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4",
+  "normalized_import_source_sha256": "8134769e2680197a0b5a453e1fad11f1c82a5df54c1607b6c4c0a501721b0034",
+  "physical_mesh": "/Game/Sub01Home/Devices/Controller/V_8134769e2680/controller-normalized-source/StaticMeshes/controller.controller",
+  "actual_native_import_component_scale": [
+    0.07690108567476273,
+    0.07690108567476273,
+    0.07690108567476273
+  ],
+  "actual_native_import_world_extent_cm": [
+    7.690108567476273,
+    5.1824392154020416,
+    2.7930535686806195
+  ],
+  "raw_mesh_local_extent_cm_derived_from_actual_import": [
+    100.0,
+    67.39097595214844,
+    36.3200798034668
+  ],
+  "unit_scale_size_multiplier": 13.0037175837711,
+  "original_source_glb": "web/room/controller.glb",
+  "native_fixed_prop_bounds_verified": false,
+  "held_visual_accepted": false,
+  "contact_or_gameplay_readiness_changed": false
+}

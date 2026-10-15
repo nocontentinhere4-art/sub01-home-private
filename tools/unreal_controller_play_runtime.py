@@ -347,6 +347,10 @@ CHARACTER_METHODS = r'''
 #include <cmath>
 @@EYE_ALPHA@@
 static uint64 Sub01ControllerPlayId(const FString& Text){uint64 V=1469598103934665603ull;for(TCHAR C:Text){V^=uint64(uint8(C));V*=1099511628211ull;}return V;}
+static bool Sub01ControllerPhysicalExtentMatches(const FVector& Local,const FVector& Scale,const FVector& Expected){
+ for(int32 I=0;I<3;++I)if(!FMath::IsFinite(Local[I])||!FMath::IsFinite(Scale[I])||!FMath::IsFinite(Expected[I])||Local[I]<=0||Scale[I]<=0||Expected[I]<=0||FMath::Abs(Local[I]*Scale[I]-Expected[I])>.001)return false;
+ return true;
+}
 bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayRuntimeProof&&ControllerPlayClip&&ControllerPlayProp&&!ControllerPlayHand.IsNone()&&!ControllerPlayHead.IsNone();}
 void ASub01HomeCharacter::LoadControllerPlay(){
  ControllerPlayEvidence=false;ControllerPlayClip=nullptr;
@@ -369,11 +373,23 @@ void ASub01HomeCharacter::LoadControllerPlay(){
   &&Asset->TryGetStringField(TEXT("schema"),AssetSchema)&&AssetSchema==TEXT("@@ASSET_SCHEMA@@")&&Asset->TryGetStringField(TEXT("source_sha256"),AssetSource)&&AssetSource==TEXT("@@ASSET_SHA@@")
   &&Asset->TryGetObjectField(TEXT("physical_assembly"),Physical)&&(*Physical)->TryGetStringField(TEXT("mesh"),MeshPath)&&!MeshPath.Contains(TEXT("contact"),ESearchCase::IgnoreCase)){}
  else MeshPath.Empty();
+ // Interchange preserves this source's authored node scale. Reusing only its
+ // mesh at unit scale makes the 15.38 cm controller two metres wide. Restore
+ // the actual imported component scale, validated against its native bounds.
+ FVector PropScale=FVector::ZeroVector,SourceExtent=FVector::ZeroVector;
+ const TSharedPtr<FJsonObject> *SourceTransform=nullptr,*SourceBounds=nullptr;
+ const TArray<TSharedPtr<FJsonValue>> *ScaleValues=nullptr,*ExtentValues=nullptr;
+ bool ScaleValid=!MeshPath.IsEmpty()&&(*Physical)->TryGetObjectField(TEXT("original_source_transform"),SourceTransform)&&(*Physical)->TryGetObjectField(TEXT("original_source_bounds_cm"),SourceBounds)
+  &&(*SourceTransform)->TryGetArrayField(TEXT("scale"),ScaleValues)&&ScaleValues->Num()==3&&(*SourceBounds)->TryGetArrayField(TEXT("extent"),ExtentValues)&&ExtentValues->Num()==3;
+ if(ScaleValid)for(int32 I=0;I<3;++I){double S=0,E=0;if(!(*ScaleValues)[I]->TryGetNumber(S)||!(*ExtentValues)[I]->TryGetNumber(E)){ScaleValid=false;break;}PropScale[I]=S;SourceExtent[I]=E;}
+ if(!ScaleValid){MeshPath.Empty();ControllerPlayRefusal=TEXT("ControllerSourceScaleMissing");}
  if(auto* Prop=MeshPath.IsEmpty()?nullptr:LoadObject<UStaticMesh>(nullptr,*MeshPath)){
+  if(!Sub01ControllerPhysicalExtentMatches(Prop->GetBounds().BoxExtent,PropScale,SourceExtent)){ControllerPlayRefusal=TEXT("ControllerSourceScaleBoundsMismatch");return;}
   ControllerPlayProp=NewObject<UStaticMeshComponent>(this,TEXT("ActualControllerPlayProp"));ControllerPlayProp->SetStaticMesh(Prop);
   ControllerPlayProp->SetCollisionEnabled(ECollisionEnabled::NoCollision);ControllerPlayProp->SetMobility(EComponentMobility::Movable);
   ControllerPlayProp->SetUsingAbsoluteLocation(true);ControllerPlayProp->SetUsingAbsoluteRotation(true);
-  ControllerPlayProp->SetupAttachment(GetRootComponent());ControllerPlayProp->RegisterComponent();ControllerPlayProp->SetVisibility(false);
+  ControllerPlayProp->SetupAttachment(GetRootComponent());ControllerPlayProp->RegisterComponent();ControllerPlayProp->SetWorldScale3D(PropScale);ControllerPlayProp->SetVisibility(false);
+  UE_LOG(LogTemp,Display,TEXT("SUB01_CONTROLLER_SOURCE_SCALE raw_extent=%s restored_scale=%s source_extent=%s actual_scale=%s"),*Prop->GetBounds().BoxExtent.ToString(),*PropScale.ToString(),*SourceExtent.ToString(),*ControllerPlayProp->GetComponentScale().ToString());
  }else if(ControllerPlayClip)ControllerPlayRefusal=TEXT("ControllerMeshMissing");
  // Measured sofa seat (its exact text is the revision) and the computed evidence for THIS report.
  const FString Audit=FPaths::Combine(FPaths::ProjectDir(),TEXT("private-audit"));FString SofaText,EvidenceText;TSharedPtr<FJsonObject> Sofa,E;
