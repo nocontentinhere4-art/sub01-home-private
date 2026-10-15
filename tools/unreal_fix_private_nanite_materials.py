@@ -7,6 +7,8 @@ Run dry_run first; renderer owns the next saved Editor batch and Game handoff.
 """
 import hashlib
 import json
+import os
+import re
 import shutil
 import time
 from pathlib import Path
@@ -17,6 +19,63 @@ MANIFEST = Path(__file__).with_name(MANIFEST_NAME)
 if not MANIFEST.exists():MANIFEST=Path(__file__).resolve().parents[1]/'docs/proposed'/MANIFEST_NAME
 WARNING_SHA='cb35254e3a15c419c89b18deaae4aed5031df4784da2c31ce1a690da2be26e91'
 DEST = '/Game/Sub01Home/NaniteMaterials/Game18241'
+FIXTURE_FIELDS={str(n):'NativeFixtureEmissionParentMaterial'+str(n) for n in (13,63,91)}
+
+
+def fixture_config_text(text,before,after):
+    """Replace only three identity fields; preserve every other byte/setting."""
+    lines=text.splitlines(keepends=True)
+    starts=[i for i,l in enumerate(lines) if l.strip()=='[/Script/Sub01HomeLab.Sub01HomeCharacter]']
+    if len(starts)!=1:raise RuntimeError('Unique character Game config section required')
+    start=starts[0]+1;end=next((i for i in range(start,len(lines)) if lines[i].lstrip().startswith('[')),len(lines))
+    values={}
+    for i in range(start,end):
+        match=re.match(r'^\s*(NativeFixtureEmissionParent\w+)\s*=\s*(.*?)\s*$',lines[i])
+        if match:
+            key,value=match.groups()
+            if key in values:raise RuntimeError('Duplicate fixture parent config '+key)
+            values[key]=(i,value.strip('"'))
+    additions=[]
+    for node,key in FIXTURE_FIELDS.items():
+        current=values.get(key,values.get('NativeFixtureEmissionParentPath',(None,'')))[1]
+        if current not in (before[node],after[node]):raise RuntimeError('Existing reviewed fixture parent differs '+key)
+        line=key+'='+after[node]+'\n'
+        if key in values:lines[values[key][0]]=line
+        else:additions.append(line)
+    if additions:
+        if end and not lines[end-1].endswith(('\n','\r')):lines[end-1]+='\n'
+        lines[end:end]=additions
+    return ''.join(lines)
+
+
+def update_fixture_parent_config(report):
+    before=report['fixture_parents_before'];after=report['fixture_parents_after']
+    owned=set(report['owned_ancestors'].values())
+    if set(before)!=set(FIXTURE_FIELDS) or set(after)!=set(FIXTURE_FIELDS):raise RuntimeError('Three actual fixture parent identities required')
+    for node,new in after.items():
+        if new!=before[node] and new not in owned:raise RuntimeError('Fixture parent not from actual owned clone receipt')
+    originals={};updates={};backups={};backup=Path(report['backup'])/'fixture-config'
+    candidates=[PROJECT/'Config/DefaultGame.ini',PROJECT/'Saved/Config/Linux/Game.ini',PROJECT/'Saved/Config/LinuxEditor/Game.ini']
+    if not candidates[0].is_file():raise RuntimeError('Actual project DefaultGame.ini missing')
+    for file in candidates:
+        if not file.is_file():continue
+        data=file.read_bytes();text=data.decode()
+        if '[/Script/Sub01HomeLab.Sub01HomeCharacter]' not in text:
+            if file==candidates[0]:raise RuntimeError('Project character config section missing')
+            continue
+        originals[file]=data;updates[file]=fixture_config_text(text,before,after).encode()
+    backup.mkdir(parents=True)
+    for file,data in originals.items():
+        relative=file.relative_to(PROJECT);saved=backup/relative;saved.parent.mkdir(parents=True,exist_ok=True);saved.write_bytes(data)
+        backups[str(file)]={'file':str(saved),'sha256':hashlib.sha256(data).hexdigest()}
+    try:
+        for file,data in updates.items():
+            pending=file.with_name(file.name+'.nanite-parent-pending');pending.write_bytes(data);pending.chmod(file.stat().st_mode&0o777)
+            os.replace(pending,file)
+        return {'only_fields':list(FIXTURE_FIELDS.values()),'actual_parents':after,'config_backups':backups}
+    except Exception:
+        for file,data in originals.items():file.write_bytes(data)
+        raise
 
 
 def path(obj):
@@ -92,12 +151,16 @@ def run(dry_run=True,u=None):
                     raise RuntimeError('Unreviewed external ancestor '+path(member))
                 external[path(member)]=member
     before={path(m):effective(u,m) for m in targets}
+    fixtures={n:eal.load_asset('/Game/Sub01Home/ImportedScene/full-home/Materials/Material_'+n+'.Material_'+n) for n in FIXTURE_FIELDS}
+    if any(not isinstance(m,u.MaterialInstanceConstant) for m in fixtures.values()):raise RuntimeError('Exact source fixture parent inventory unavailable')
+    fixture_before={n:path(m.get_editor_property('parent')) for n,m in fixtures.items()}
     bindings=binding_inventory(u)
     report={'schema':'sub01.private-nanite-material-fix.v1','warning_sha256':hashlib.sha256(raw).hexdigest(),
             'dry_run':dry_run,'targets':names,'effective_before':before,
             'project_parent_edges':{n:path(p) for n,(_,p) in edges.items()},
             'target_parents_before':{path(m):path(m.get_editor_property('parent')) for m in targets if isinstance(m,u.MaterialInstanceConstant)},
             'private_direct_bases':sorted(direct),'external_ancestors':sorted(external),
+            'fixture_parents_before':fixture_before,
             'game_visual_verified':False}
     if dry_run:return report
     backup=PROJECT/'Saved/PrivateMaterialBackups'/('nanite-'+str(time.time_ns()))
@@ -147,12 +210,16 @@ def run(dry_run=True,u=None):
         report.update(dry_run=False,effective_after=after,owned_ancestors={n:path(m) for n,m in clones.items()},
                       asset_backups=files,backup=str(backup),component_bindings_unchanged=True,pbr_parameters_unchanged=True,
                       target_parents_after={path(m):path(m.get_editor_property('parent')) for m in targets if isinstance(m,u.MaterialInstanceConstant)},
-                      fixture_parent_config_review_required=True,shader_completion_and_game_recapture_required=True)
+                      fixture_parents_after={n:path(m.get_editor_property('parent')) for n,m in fixtures.items()},
+                      shader_completion_and_game_recapture_required=True)
+        report['fixture_config_update']=update_fixture_parent_config(report)
         (backup/'success.json').write_text(json.dumps(report,indent=2)+'\n')
         audit=PROJECT/'private-audit';audit.mkdir(exist_ok=True)
         (audit/'nanite-material-usage-fix.json').write_text(json.dumps(report,indent=2)+'\n')
         return report
     except Exception as error:
+        for file,item in report.get('fixture_config_update',{}).get('config_backups',{}).items():
+            Path(file).write_bytes(Path(item['file']).read_bytes())
         for child,parent in reversed(changed_edges):
             mel.set_material_instance_parent(child,parent);mel.update_material_instance(child)
         for name,value in flags.items():

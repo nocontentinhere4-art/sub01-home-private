@@ -32,6 +32,10 @@ class FixTests(unittest.TestCase):
         assets={names[0]:Material(names[0])}
         for name in names[1:]:assets[name]=Instance(name,external)
         originals=dict(assets);changes=[]
+        for n in fix.FIXTURE_FIELDS:
+            name='/Game/Sub01Home/ImportedScene/full-home/Materials/Material_'+n+'.Material_'+n
+            assets.setdefault(name,Instance(name,external))
+        config=folder/'Config/DefaultGame.ini';config.parent.mkdir();config.write_text('[/Script/Sub01HomeLab.Sub01HomeCharacter]\nNativeFixtureEmissionParentPath='+external.name+'\nOtherValue=keep\n')
         for name in names:
             f=folder/'Content'/(name.split('.')[0][6:]+'.uasset');f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(name.encode())
         def duplicate(name,dest):
@@ -52,6 +56,18 @@ class FixTests(unittest.TestCase):
             if fail_after_parent and calls[0]>70 and calls[0]<=140:state['roughness']=.9
             return state
         return u,originals,base,external,changes,effective
+
+    def test_config_update_is_receipt_derived_and_preserves_unrelated_settings(self):
+        old={n:'/InterchangeAssets/glTF/MI_Original' for n in fix.FIXTURE_FIELDS}
+        new=dict(old,**{'13':'/Game/Sub01Home/NaniteMaterials/Owned'})
+        text='; keep comment\n[/Script/Sub01HomeLab.Sub01HomeCharacter]\nNativeFixtureEmissionParentPath='+old['13']+'\nOtherValue=keep\n[Other]\nvalue=unchanged\n'
+        result=fix.fixture_config_text(text,old,new)
+        self.assertIn('OtherValue=keep\n',result)
+        self.assertTrue(result.endswith('[Other]\nvalue=unchanged\n'))
+        self.assertIn('NativeFixtureEmissionParentMaterial13='+new['13'],result)
+        self.assertIn('NativeFixtureEmissionParentMaterial63='+old['63'],result)
+        with self.assertRaisesRegex(RuntimeError,'Existing reviewed'):
+            fix.fixture_config_text(text,dict(old,**{'63':'unexpected'}),dict(new,**{'63':'unexpected-new'}))
 
     def test_owned_ancestor_clone_preserves_plugin_and_exact_original_bindings(self):
         with tempfile.TemporaryDirectory() as td:
