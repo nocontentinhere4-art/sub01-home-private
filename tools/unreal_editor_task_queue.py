@@ -31,6 +31,7 @@ TASKS = {
     'plant_clone_audit': 'unreal_loaded_plant_clone_audit',
     'book_clone_audit': 'unreal_loaded_book16_clone_audit',
     'recover_saved_home': 'unreal_recover_saved_home',
+    'collision_state_audit': 'unreal_book_collision_audit',
     'scene_visual_inventory': 'unreal_home_visual_inventory',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
