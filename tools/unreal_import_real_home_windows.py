@@ -2,7 +2,7 @@
 Exact lower30 originals retired after207part worldgeometry/PBR verification.
 No camera, panorama, upper balcony, entry door, gameplay or activity flags change.
 """
-import copy,hashlib,json,re,shutil,time,uuid
+import copy,hashlib,json,re,shutil,struct,time,uuid
 from pathlib import Path
 from home_asset_audit import read_gltf
 from structural_rail_source_patch import world_matrices
@@ -19,6 +19,25 @@ EXPECTED_SHA='7119c36483ec3ba22aa71c0cab6a5a7d46d6daf1e544410a6d8fa5f8e933aa57'
 
 def triangles(doc,blob,node):
  return [[[float(p[0])*100,float(p[2])*100,float(p[1])*100]for p in(row['points'][j]for j in face)]for row in node_geometry(doc,blob,node,world_matrices(doc))for face in row['faces']]
+
+
+def prepare_legal_import_names(source,target):
+ """Unique ASCII-only names prevent FBX/glTF period sanitization collisions.
+ All geometry/material/binary bytes remain unchanged; only node/mesh names vary.
+ """
+ original,blob=read_gltf(source);doc=copy.deepcopy(original);names={}
+ for i,n in enumerate(doc['nodes']):
+  names[i]=n['name'];n['name']='SUB01_RealWindow_Part_'+str(i)
+  doc['meshes'][n['mesh']]['name']=n['name']
+ raw=json.dumps(doc,separators=(',',':')).encode();raw+=b' '*(-len(raw)%4);binary=bytes(blob);binary+=b'\0'*(-len(binary)%4)
+ Path(target).parent.mkdir(parents=True,exist_ok=True);Path(target).write_bytes(struct.pack('<III',0x46546c67,2,28+len(raw)+len(binary))+struct.pack('<II',len(raw),0x4e4f534a)+raw+struct.pack('<II',len(binary),0x004e4942)+binary)
+ actual,actual_blob=read_gltf(target);restored=copy.deepcopy(actual)
+ for i,n in enumerate(original['nodes']):restored['nodes'][i]['name']=n['name']
+ for i,m in enumerate(original['meshes']):
+  if'name'in m:restored['meshes'][i]['name']=m['name']
+  else:restored['meshes'][i].pop('name',None)
+ if restored!=original or bytes(actual_blob)!=bytes(blob):raise RuntimeError('Names-only legal import preparation changed source content')
+ return actual,actual_blob,names
 
 
 def positive_area_triangles(source):
@@ -81,9 +100,10 @@ def run(dry_run=True):
   folder=project/'Content'/name/'Sub01Home/ActualHome'
   if folder.exists():shutil.copytree(folder,backup/name)
  dest='/Game/Sub01Home/ResidentialWindows/V_'+EXPECTED_SHA[:12]+'/Attempt_'+uuid.uuid4().hex;added=[];audit=project/'private-audit';audit.mkdir(exist_ok=True)
+ prepared=project/'Saved/PrivateImportInputs'/('residential-windows-'+uuid.uuid4().hex+'.glb');doc,blob,source_names=prepare_legal_import_names(source,prepared)
  try:
   manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
-  if not manager.import_scene(dest,manager.create_source_data(str(source)),params):raise RuntimeError('Residential assembly import refused')
+  if not manager.import_scene(dest,manager.create_source_data(str(prepared)),params):raise RuntimeError('Residential assembly import refused')
   manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before]
   for a in added:a.set_actor_hidden_in_game(True)
   if fingerprint(u,original)!=before:raise RuntimeError('Import changed protected originals beforeactivation')
@@ -97,7 +117,7 @@ def run(dry_run=True):
    c=cs[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest);full=triangles(doc,blob,ni);expected,zero_faces=positive_area_triangles(full);actual=native_triangles(u,c)
    if not same_triangles(expected,actual):
     (audit/'residential-window-geometry-refusal.json').write_text(json.dumps({'node':ni,'name':node['name'],'expected':len(expected),'actual':len(actual)},indent=2));raise RuntimeError('Full residential geometry/worldplacement differs '+node['name'])
-   geometry_parts.append({'node':ni,'source_triangles':len(full),'exact_zero_area_source_indices':zero_faces,'positive_source_triangles':len(expected),'actual_native_triangles':len(actual),'all_positive_triangles_matched':True})
+   geometry_parts.append({'node':ni,'source_name':source_names[ni],'source_triangles':len(full),'exact_zero_area_source_indices':zero_faces,'positive_source_triangles':len(expected),'actual_native_triangles':len(actual),'all_positive_triangles_matched':True})
    c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
    components.append(c);parts.append((a,c));pr=doc['meshes'][node['mesh']]['primitives']
    if len(pr)!=1 or c.get_num_materials()!=1:raise RuntimeError('Exact perpart source material required')
@@ -114,7 +134,7 @@ def run(dry_run=True):
   wc=walls[0].get_components_by_class(u.StaticMeshComponent)
   if len(wc)!=1 or wc[0].get_num_materials()!=1:raise RuntimeError('Actual wall PBR not unique')
   for a,c in parts:
-   if 'FacadePier_'in a.get_actor_label():c.set_material(0,wc[0].get_material(0))
+   if 'FacadePier_'in source_names[next(i for i,n in enumerate(doc['nodes'])if n['name']==a.get_actor_label())]:c.set_material(0,wc[0].get_material(0))
   if fingerprint(u,original)!=before:raise RuntimeError('Owned material setup changed protectedhome')
   for a,c,h,v,e in old:a.set_actor_hidden_in_game(True);c.set_visibility(False);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   for a,c in parts:a.set_actor_hidden_in_game(False);c.set_visibility(True)
