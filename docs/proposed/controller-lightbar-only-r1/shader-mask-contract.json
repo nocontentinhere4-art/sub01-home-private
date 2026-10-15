@@ -1,0 +1,46 @@
+{
+  "schema": "sub01.dualsense-side-lightbar-shader-contract.v1",
+  "source_emissive_sha256": "a8f27e4affec055d68080727700ce1e44a56c1eae12c4edebd9167af6231e191",
+  "source_texture_resolution": [
+    4096,
+    4096
+  ],
+  "source_geometry_modified": false,
+  "source_texture_modified": false,
+  "method": "Multiply existing EmissiveColor by the union of two bounded TexCoord0 rectangles, using an owned material-parent clone. No raster edit.",
+  "pixel_rectangles_half_open": [
+    [
+      970,
+      3270,
+      1070,
+      3630
+    ],
+    [
+      3680,
+      3350,
+      3780,
+      3710
+    ]
+  ],
+  "uv_rectangles_half_open": [
+    [
+      0.23681640625,
+      0.79833984375,
+      0.26123046875,
+      0.88623046875
+    ],
+    [
+      0.8984375,
+      0.81787109375,
+      0.9228515625,
+      0.90576171875
+    ]
+  ],
+  "source_nonblack_pixels": 288651,
+  "kept_nonblack_pixels": 10289,
+  "removed_nonblack_pixels": 278362,
+  "emissive_strength_proposed": 0.5,
+  "all_other_pbr_parameters_unchanged": true,
+  "native_front_rear_visual_review_required": true,
+  "native_accepted": false
+}
