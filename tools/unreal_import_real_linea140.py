@@ -89,7 +89,8 @@ def verify_materials(u,components,doc,dest):
    if param not in textures:raise RuntimeError('Actual texture parameter absent '+param)
    tex=mel.get_material_instance_texture_parameter_value(mat,textures[param])
    if not tex or not tex.get_path_name().startswith(dest+'/'):raise RuntimeError('Authored PBR texture reused unowned asset')
-   tex.set_editor_property('srgb',srgb);tex.set_editor_property('compression_settings',compression)
+   # TC_NORMALMAP clamps sRGB off; establish compression before the colour-space flag.
+   tex.set_editor_property('compression_settings',compression);tex.set_editor_property('srgb',srgb)
    if bool(tex.get_editor_property('srgb'))!=srgb or tex.get_editor_property('compression_settings')!=compression:raise RuntimeError('Owned texture role correction refused')
    roles.append({'parameter':param,'texture':tex.get_path_name(),'srgb':srgb,'compression':str(compression)})
   rows.append({'source_material':source['name'],'actual_material':mat.get_path_name(),'textures':roles})
