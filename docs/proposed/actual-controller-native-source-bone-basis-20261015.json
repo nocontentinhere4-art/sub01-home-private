@@ -473,5 +473,18 @@
         }
       }
     }
-  ]
+  ],
+  "source_mount_correction": {
+    "native_wrist_basis_xyzw": [
+      0.7071067811865476,
+      0,
+      0,
+      0.7071067811865476
+    ],
+    "applies_only_to_source_controller_prop_mount": true,
+    "bones_camera_head_source_physical_trs_unchanged": true,
+    "all_201_samples_eight_controller_corners_max_delta_cm": 0.018130920275321823,
+    "without_basis_max_delta_cm": 31.49281216593956,
+    "actual_native_post_patch_visual_contact_accepted": false
+  }
 }

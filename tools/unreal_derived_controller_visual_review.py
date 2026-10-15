@@ -37,7 +37,7 @@ void ASub01HomeCharacter::UpdateDerivedControllerVisualReview(){
  // Rigid transform from the exact bf31d645 derived report, same glTF->UE
  // convention as ue_grip(). Native alignment remains subject to visual review.
  const FTransform W=FirstPersonBody->GetSocketTransform(ControllerGripRight,RTS_World);
- const FQuat Q=W.GetRotation().GetNormalized();
+ const FQuat Q=Sub01ControllerSourceHandFrameRotation(W.GetRotation().GetNormalized());
  const FVector P=W.GetLocation()+Q.RotateVector(FVector(-.4953816746105376,9.019971890640429,10.536509174570956));
  const FQuat R=Q*FQuat(-.6482862729184252,.5822889827099884,-.373853500296671,.31764446992829865);
  if(P.ContainsNaN()||R.ContainsNaN())return;

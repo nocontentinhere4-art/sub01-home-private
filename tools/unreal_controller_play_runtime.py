@@ -352,6 +352,12 @@ static bool Sub01ControllerPhysicalExtentMatches(const FVector& Local,const FVec
  for(int32 I=0;I<3;++I)if(!FMath::IsFinite(Local[I])||!FMath::IsFinite(Scale[I])||!FMath::IsFinite(Expected[I])||Local[I]<=0||Scale[I]<=0||Expected[I]<=0||FMath::Abs(Local[I]*Scale[I]-Expected[I])>.001)return false;
  return true;
 }
+// FBX imported bone axes differ from glTF source axes by this measured basis.
+// Paired native/source samples preserve joint positions but require local +90 X.
+// This applies only to the prop mount; no bone, body or camera is modified.
+static FQuat Sub01ControllerSourceHandFrameRotation(const FQuat& NativeWristRotation){
+ return NativeWristRotation*FQuat(.7071067811865475244,0.,0.,.7071067811865475244);
+}
 static FVector Sub01ControllerSourceMountPosition(const FVector& GripPosition,const FQuat& GripRotation,const FVector& SourceOffset){
  return GripPosition+GripRotation.RotateVector(SourceOffset);
 }
@@ -471,7 +477,7 @@ void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance
  Instance->TargetSequence=ControllerPlayClip;Instance->TargetRate=1.f;
  FirstPersonBody->SetRelativeLocation(ControllerPlayBodyOffset);FirstPersonBody->SetRelativeRotation(HandsMeshRotation+FRotator(0,ControllerPlayBodyYaw,0));
  // Rigid at the captured right Hand socket: socket rotation and location, imported bone scale excluded.
- const FTransform W=FirstPersonBody->GetSocketTransform(ControllerPlayHand,RTS_World);const FQuat R=W.GetRotation().GetNormalized();
+ const FTransform W=FirstPersonBody->GetSocketTransform(ControllerPlayHand,RTS_World);const FQuat R=Sub01ControllerSourceHandFrameRotation(W.GetRotation().GetNormalized());
  const FVector GripPosition=W.GetLocation()+R.RotateVector(ControllerPlayGripOffset);const FQuat GripRotation=R*ControllerPlayGripRotation;
  ControllerPlayProp->SetWorldLocationAndRotation(Sub01ControllerSourceMountPosition(GripPosition,GripRotation,ControllerPlaySourceOffset),GripRotation*ControllerPlaySourceRotation);
  ControllerPlayProp->SetVisibility(true);
