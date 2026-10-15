@@ -29,13 +29,14 @@ def run():
                 if hasattr(v,'get_path_name'):v=v.get_path_name()
                 elif not isinstance(v,(str,bool,int,float,type(None))):v=str(v)
                 values[key]=v
-            except Exception as exc:report['unavailable'][obj.get_path_name()+':'+key]=str(exc)
+            except Exception as exc:report['unavailable'][(obj.get_path_name()if hasattr(obj,'get_path_name')else type(obj).__name__)+':'+key]=str(exc)
         return values
     for actor,kind,cls in ((lamps[0],'fixture',u.StaticMeshComponent),(lights[0],'light',u.LightComponent)):
         for c in actor.get_components_by_class(cls):
             p=c.get_world_location()
             row={'kind':kind,'component':c.get_path_name(),'world_location_cm':[p.x,p.y,p.z],
                  'properties':properties(c,('cast_shadow','cast_dynamic_shadow','cast_static_shadow','cast_shadow_as_two_sided',
+                   'cast_shadows','cast_dynamic_shadows','cast_static_shadows',
                    'affect_dynamic_indirect_lighting','affect_distance_field_lighting','visible_in_ray_tracing',
                    'intensity','intensity_units','attenuation_radius','use_inverse_squared_falloff',
                    'source_radius','soft_source_radius','source_length','indirect_lighting_intensity'))}
@@ -44,8 +45,12 @@ def run():
                 for m in c.get_materials():
                     chain=[];seen=set()
                     while m and m.get_path_name()not in seen:
-                        seen.add(m.get_path_name());chain.append({'path':m.get_path_name(),
-                          'properties':properties(m,('two_sided','blend_mode','shading_model','cast_ray_traced_shadows'))})
+                        seen.add(m.get_path_name());entry={'path':m.get_path_name(),
+                          'properties':properties(m,('two_sided','blend_mode','shading_model','cast_ray_traced_shadows'))}
+                        if isinstance(m,u.MaterialInstanceConstant):
+                            try:entry['base_property_overrides']=properties(m.get_editor_property('base_property_overrides'),('override_two_sided','two_sided','override_blend_mode','blend_mode'))
+                            except Exception as exc:entry['base_property_override_unavailable']=str(exc)
+                        chain.append(entry)
                         try:m=m.get_editor_property('parent')
                         except Exception:break
                     row['materials'].append(chain)
