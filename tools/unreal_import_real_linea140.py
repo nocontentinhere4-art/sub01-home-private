@@ -123,11 +123,16 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  if not close(vec(lamp.get_actor_location()),mount['actual_saved_origin_cm']) or not close(vec(lights[0].get_world_location()),mount['actual_old_light_ue_cm']):raise RuntimeError('Actual saved lamp/light transform changed')
  support_audit=audit_original_support(u,original,lc[0],mount,old)
  lamp_points,lamp_triangles=surface(u,lc[0]);lamp_bounds=[[min(p[a]for p in lamp_points)for a in range(3)],[max(p[a]for p in lamp_points)for a in range(3)]]
- if lamp_triangles!=mount['lamp_source_triangle_count'] or not all(close(a,b)for a,b in zip(lamp_bounds,mount['old_native_aabb_cm'])):raise RuntimeError('Actual native lamp source geometry differs measured support model; full_audit='+str(support_audit))
+ import unreal_saved_lamp_source_proof,importlib
+ saved_lamp_proof_module=importlib.reload(unreal_saved_lamp_source_proof)
+ saved_lamp_deferred=lamp_triangles!=mount['lamp_source_triangle_count'] or not all(close(a,b)for a,b in zip(lamp_bounds,mount['old_native_aabb_cm']))
+ if saved_lamp_deferred and not saved_lamp_proof_module.can_defer(u,lc[0]):raise RuntimeError('Actual native lamp source geometry differs measured support model; full_audit='+str(support_audit))
  old_points=[]
  for c in old[1].get_components_by_class(u.StaticMeshComponent):old_points.extend(surface(u,c)[0])
  if abs(max(p[2]for p in old_points)-84.5)>.05:raise RuntimeError('Actual old desk support top differs84.5; no assumed offset')
  result={'schema':'sub01.real-linea140-native-import.v1','dry_run':dry_run,'source_sha256':SHA,'export_sha256':digest,'exact_lamp_actor':lamp.get_path_name(),'exact_lamp_component':lc[0].get_path_name(),'exact_light_component':lights[0].get_path_name(),'old_desk_actors':[a.get_path_name()for a in old],'native_visual_verified':False}
+ result['old_saved_lamp_full_geometry_verified']=not saved_lamp_deferred
+ result['requires_temporary_saved_lamp_source_proof']=saved_lamp_deferred
  if dry_run:return result
  dest='/Game/Sub01Home/RealLinea140/V_'+digest[:12]
  if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Desk version already imported; inspect saved receipt instead of duplicate import')
@@ -140,6 +145,10 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  result['map_backup']=str(backup)
  added=[];created_lampdest=None
  try:
+  if saved_lamp_deferred:
+   result['saved_lamp_full_source_proof']=saved_lamp_proof_module.prove(u,eas,lc[0],mount,'/Game/Sub01Home/RealEdgeClampLamp/V_'+mount['posed_lamp']['sha256'][:12]+'_SavedSourceProof',surface,close)
+   result['old_saved_lamp_full_geometry_verified']=True
+   if fingerprint(u,original)!=before:raise RuntimeError('Saved lamp source proof changed original scene')
   manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True);data=manager.create_source_data(str(source))
   if not manager.import_scene(dest,data,params):raise RuntimeError('Owned real desk import refused')
   manager.wait_until_all_tasks_done(False)
