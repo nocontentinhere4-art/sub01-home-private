@@ -31,7 +31,9 @@ def deploy():
         except OSError:
             continue
     proof = json.loads((SIBLING / 'final-phone-policy-456445b-artifact-proof.json').read_text())
-    assert proof['actual_exit'] == 0 and proof['build_id'] == '55116800'
+    assert proof['actual_exit'] == 0 and proof['schema'] == 'sub01.actual-sibling-native-artifacts.v1'
+    assert proof['target'] == 'dgtgepkz7h1zy5'
+    assert proof['result']['exit'] == 0
     source, target = SIBLING / 'Binaries/Linux', PROJECT / 'Binaries/Linux'
     for name, expected in HASHES.items():
         assert proof['files'][name]['sha256'] == expected
