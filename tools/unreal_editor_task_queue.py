@@ -39,6 +39,7 @@ TASKS = {
     'nanite_materials_preflight': 'unreal_fix_private_nanite_materials',
     'phone_grip': 'unreal_import_phone_grip',
     'frame_backings': 'unreal_remove_frame_backings',
+    'real_wc': 'unreal_import_real_wc',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -114,6 +115,10 @@ def dispatch(task):
     if task == 'scene_visual_inventory':
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
     if task == 'nanite_materials':
+        return module.run(dry_run=False)
+    if task == 'real_wc':
+        # The importer owns its frozen, proved source path and preserves shared
+        # vanity/balcony geometry. Queue requests cannot override that packet.
         return module.run(dry_run=False)
     if task == 'nanite_materials_preflight':
         report = module.run(dry_run=True)
