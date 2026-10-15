@@ -580,7 +580,7 @@ class IdleSolver(Solver):
             self.edit_weight * edit_cost(prm)
 
 
-def solve_idle(ctx, clock, report, x0=WARM_START, max_rounds=4):
+def solve_idle(ctx, clock, report, cand, x0=WARM_START, max_rounds=4):
     g = G.Gltf(CLIPS / IDLE_CLIP)
     la, lb = ctx.idle_frames
     times = g.animation().key_times()[la:lb + 1]
@@ -604,7 +604,7 @@ def solve_idle(ctx, clock, report, x0=WARM_START, max_rounds=4):
                         'all_frames_worst_margin_cm': _r(worst.min()), 'failing_frames': int(len(bad)),
                         'anatomical_excess_deg_max': _r(ex.max(), 4),
                         'per_patch': patch_table(ctx.V, m)})
-        report['idle_solve_history'] = history
+        cand['idle_solve_history'] = history
         clock.checkpoint(f'SeatedIdle round {rnd}', report)
         if not len(bad) and ex.max() == 0:
             break
@@ -648,9 +648,17 @@ def write_and_report(ctx, out_dir, role, asset, g, sk, W, W0, times, labels, ext
     B = np.linalg.inv(np.asarray(ctx.base.ibm))
     ang, cap = joint_angles(W_out, B, sk.names), joint_angles(W0, B, sk.names)
     rep['anatomical_angles'] = angle_summary(ang, cap)
-    rep['anatomical_limits_ok'] = bool(limit_excess({k: v[mask] for k, v in ang.items()},
-                                                    {k: v[mask] for k, v in cap.items()}).max() == 0)
-    rep['anatomical_limits_ok_all_frames'] = bool(limit_excess(ang, cap).max() == 0)
+    ex_edit, ex_abs, ex_cap = limit_excess(ang, cap), limit_excess(ang), limit_excess(cap)
+    rep['anatomical_limits_ok'] = bool(ex_edit[mask].max() == 0)
+    rep['anatomical_limits_ok_all_frames'] = bool(ex_edit.max() == 0)
+    rep['anatomical_limit_frames'] = {
+        'gated_frames_outside': [int(i) for i in np.nonzero((ex_edit > 0) & mask)[0]],
+        'frames_outside_absolute_ranges': [int(i) for i in np.nonzero(ex_abs > 0)[0]],
+        'frames_outside_pelvis_edit_bound_only': [int(i) for i in np.nonzero((ex_edit > 0) & (ex_abs == 0))[0]],
+        'capture_itself_outside_absolute_ranges': [int(i) for i in np.nonzero(ex_cap > 0)[0]],
+        'max_excess_deg': _r(ex_edit.max(), 3),
+        'note': 'the ranges are SEATED / normal-ROM ranges; ungated stand/sit motion frames keep the capture, which '
+                'already leaves them (e.g. anterior pelvic tilt while rising)'}
     fps = (F - 1) / (times[-1] - times[0])
     if end is None:
         rep['loop_closure'] = P.seam_measure(P.hips_frame_shapes(sk, W_out), P.ue_point(W_out[:, sk.j('Hips'), :3, 3]),
@@ -782,7 +790,7 @@ def run(args):
                                 'cushion_top_cm': {'measured': _r(ctx.tri[..., 2].max() - lift, 4),
                                                    'lifted': _r(ctx.tri[..., 2].max(), 4)}}
         clock.checkpoint(f'{vname}: start', report)
-        idle = solve_idle(ctx, clock, cand)
+        idle = solve_idle(ctx, clock, report, cand)
         sk = idle['fit'].sk
         x = idle['x']
         labels = {'label': 'proposal', 'verified': False, 'requires_server_reaudit': True,

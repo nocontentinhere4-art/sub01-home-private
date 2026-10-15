@@ -1,0 +1,3239 @@
+{
+ "schema": "sub01.seat-pose-anatomical.v1",
+ "role": "GetUp_seated",
+ "asset": "/Game/Sub01Hands/Seating/SUB01_GetUp_seated",
+ "labels": {
+  "label": "proposal",
+  "verified": false,
+  "requires_server_reaudit": true,
+  "requires_native_collision_audit": true,
+  "role": "GetUp_seated",
+  "source_clip": "web/room/mh_mx/room_mx_sit_to_stand.glb",
+  "derived_edits": [
+   "seat_pose_fit_transition_correction (fit_seat_pelvis_pitch.fit_transition)",
+   "full_pose_seam_blend_into_anatomical_SeatedIdle"
+  ],
+  "params": {
+   "pelvis_tilt_deg": 33.2348,
+   "root_down_cm": 12.8205,
+   "root_back_cm": -10.7543,
+   "left_ankle_forward_cm": 6.0673,
+   "left_ankle_lateral_cm": -1.1047,
+   "right_ankle_forward_cm": 7.4045,
+   "right_ankle_lateral_cm": -0.1252,
+   "left_hip_swivel_deg": -2.4147,
+   "right_hip_swivel_deg": -9.5021
+  },
+  "chair_lift_cm": 0.0
+ },
+ "glb": "docs/proposed/seat-pose-anatomical/SUB01_GetUp_seated.glb",
+ "sha256": "4e941d3d12cfd19b98c7b5647b6783dd4be777ee3305cc7fa044d3a4da106af6",
+ "bytes": 93224,
+ "key_count": 63,
+ "duration_s": 2.0667,
+ "readback_max_joint_error_cm": 8e-06,
+ "actual_chair": {
+  "body_offset_from_audited_transform_cm": [
+   -3.875,
+   32.5
+  ],
+  "chair_lift_cm": 0.0,
+  "per_frame": {
+   "support_mask": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "patches": {
+    "buttocks": {
+     "lowest_cm": [
+      -2.046799,
+      -2.040777,
+      -2.032376,
+      -2.026824,
+      -2.024474,
+      -2.024393,
+      -2.024708,
+      -2.024263,
+      -2.023145,
+      -2.021428,
+      -2.019188,
+      -2.017973,
+      -2.019011,
+      -2.021541,
+      -2.023561,
+      -2.025313,
+      -2.029436,
+      -2.035125,
+      -2.036484,
+      -2.02636,
+      -1.99667,
+      -1.949898,
+      -1.908567,
+      -1.869401,
+      -1.826236,
+      -1.562897,
+      -1.199252,
+      -0.767227,
+      -0.54261,
+      -0.294404,
+      -0.045891,
+      0.256125,
+      0.588139,
+      1.019321,
+      1.668567,
+      2.482361,
+      3.793132,
+      5.6167,
+      7.945199,
+      10.783776,
+      14.495163,
+      17.843929,
+      20.7543,
+      23.121535,
+      24.986747,
+      26.732293,
+      28.508382,
+      30.104542,
+      31.502687,
+      32.626707,
+      33.436915,
+      34.241602,
+      34.790337,
+      35.110399,
+      35.792494,
+      39.313138,
+      39.65876,
+      40.177946,
+      40.784415,
+      41.506182,
+      42.152501,
+      null,
+      null
+     ],
+     "median_cm": [
+      0.207905,
+      0.215877,
+      0.2311,
+      0.238452,
+      0.242083,
+      0.243233,
+      0.244576,
+      0.245226,
+      0.245365,
+      0.24519,
+      0.244766,
+      0.242769,
+      0.23887,
+      0.235937,
+      0.228733,
+      0.225309,
+      0.223039,
+      0.238884,
+      0.279697,
+      0.352319,
+      0.480924,
+      0.670493,
+      0.904052,
+      1.200333,
+      1.599716,
+      2.024696,
+      2.579076,
+      3.179798,
+      3.830224,
+      4.427535,
+      4.759416,
+      4.938091,
+      5.313648,
+      5.451003,
+      5.156784,
+      5.515851,
+      6.537488,
+      8.073908,
+      10.457176,
+      13.737423,
+      17.492087,
+      21.36715,
+      24.787753,
+      26.924138,
+      28.391666,
+      29.753395,
+      31.105957,
+      32.739279,
+      34.590662,
+      37.936928,
+      38.620509,
+      39.197193,
+      39.506628,
+      39.655318,
+      39.937374,
+      40.161243,
+      40.565159,
+      41.254539,
+      41.650401,
+      42.346517,
+      42.613048,
+      null,
+      null
+     ],
+     "band_vertices": [
+      416,
+      414,
+      411,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409,
+      408,
+      408,
+      408,
+      408,
+      411,
+      411,
+      414,
+      416,
+      417,
+      416,
+      390,
+      328,
+      317,
+      325,
+      311,
+      323,
+      314,
+      288,
+      235,
+      153,
+      39,
+      14,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "over_vertices": [
+      720,
+      720,
+      718,
+      718,
+      718,
+      718,
+      718,
+      718,
+      718,
+      718,
+      718,
+      717,
+      717,
+      717,
+      717,
+      718,
+      721,
+      726,
+      728,
+      741,
+      749,
+      766,
+      785,
+      811,
+      831,
+      861,
+      877,
+      894,
+      902,
+      899,
+      884,
+      856,
+      831,
+      777,
+      726,
+      694,
+      674,
+      646,
+      622,
+      594,
+      566,
+      550,
+      513,
+      490,
+      463,
+      440,
+      408,
+      373,
+      346,
+      328,
+      308,
+      272,
+      250,
+      231,
+      203,
+      198,
+      200,
+      149,
+      53,
+      26,
+      9,
+      0,
+      0
+     ]
+    },
+    "left_posterior_thigh": {
+     "lowest_cm": [
+      -2.210803,
+      -2.207742,
+      -2.201536,
+      -2.197548,
+      -2.196818,
+      -2.198929,
+      -2.202103,
+      -2.204934,
+      -2.207226,
+      -2.208947,
+      -2.210001,
+      -2.211096,
+      -2.212658,
+      -2.214439,
+      -2.216027,
+      -2.218055,
+      -2.221703,
+      -2.226286,
+      -2.252726,
+      -2.246557,
+      -2.219962,
+      -2.197863,
+      -2.185361,
+      -2.203,
+      -2.245406,
+      -2.319472,
+      -2.303587,
+      -2.2005,
+      -2.03457,
+      -1.822035,
+      -1.603153,
+      -1.307545,
+      -0.933059,
+      -0.535023,
+      0.138935,
+      0.947691,
+      2.135527,
+      3.797802,
+      5.948197,
+      8.395184,
+      10.944004,
+      13.493325,
+      15.807056,
+      17.713373,
+      19.448023,
+      21.130724,
+      22.80579,
+      30.090151,
+      31.186305,
+      32.167059,
+      33.05036,
+      33.895014,
+      34.26798,
+      34.771597,
+      35.378148,
+      36.044334,
+      38.012339,
+      38.808824,
+      39.765199,
+      40.528759,
+      41.598839,
+      null,
+      null
+     ],
+     "median_cm": [
+      -0.469917,
+      -0.466293,
+      -0.45741,
+      -0.451081,
+      -0.449246,
+      -0.452149,
+      -0.456822,
+      -0.45725,
+      -0.462752,
+      -0.467505,
+      -0.470898,
+      -0.475311,
+      -0.481087,
+      -0.48467,
+      -0.487863,
+      -0.493909,
+      -0.5058,
+      -0.507909,
+      -0.510068,
+      -0.501042,
+      -0.457896,
+      -0.401152,
+      -0.307176,
+      -0.234251,
+      -0.182966,
+      -0.060297,
+      0.176457,
+      0.429008,
+      0.713992,
+      0.900004,
+      1.189663,
+      1.485191,
+      1.86772,
+      2.266181,
+      2.981822,
+      3.889511,
+      5.33916,
+      7.400747,
+      10.285311,
+      13.964083,
+      18.022275,
+      21.745132,
+      25.196285,
+      27.854467,
+      30.167218,
+      32.073928,
+      33.513244,
+      34.703877,
+      35.848858,
+      36.826849,
+      37.707191,
+      38.387737,
+      38.55769,
+      38.573336,
+      38.73599,
+      38.883056,
+      39.214756,
+      39.731836,
+      40.415709,
+      41.283143,
+      41.778778,
+      null,
+      null
+     ],
+     "band_vertices": [
+      947,
+      945,
+      945,
+      943,
+      942,
+      942,
+      943,
+      944,
+      945,
+      946,
+      947,
+      949,
+      952,
+      954,
+      955,
+      957,
+      959,
+      963,
+      972,
+      986,
+      993,
+      994,
+      990,
+      992,
+      980,
+      950,
+      897,
+      838,
+      767,
+      679,
+      592,
+      468,
+      389,
+      282,
+      52,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "over_vertices": [
+      1298,
+      1297,
+      1297,
+      1296,
+      1296,
+      1296,
+      1296,
+      1297,
+      1297,
+      1297,
+      1297,
+      1297,
+      1297,
+      1297,
+      1297,
+      1298,
+      1300,
+      1310,
+      1330,
+      1364,
+      1394,
+      1421,
+      1465,
+      1528,
+      1579,
+      1613,
+      1635,
+      1636,
+      1624,
+      1609,
+      1587,
+      1531,
+      1477,
+      1400,
+      1347,
+      1309,
+      1322,
+      1334,
+      1420,
+      1540,
+      1669,
+      1682,
+      1558,
+      1376,
+      1228,
+      1095,
+      994,
+      894,
+      826,
+      756,
+      665,
+      563,
+      495,
+      429,
+      380,
+      326,
+      277,
+      225,
+      142,
+      62,
+      14,
+      0,
+      0
+     ]
+    },
+    "right_posterior_thigh": {
+     "lowest_cm": [
+      -2.041582,
+      -2.034094,
+      -2.024775,
+      -2.018421,
+      -2.014668,
+      -2.012516,
+      -2.010752,
+      -2.008847,
+      -2.006795,
+      -2.004062,
+      -2.000551,
+      -1.998624,
+      -2.000488,
+      -2.005084,
+      -2.008908,
+      -2.011835,
+      -2.018389,
+      -2.036306,
+      -2.04191,
+      -2.050608,
+      -2.059151,
+      -2.026812,
+      -2.021679,
+      -2.022302,
+      -2.076838,
+      -2.210985,
+      -2.240535,
+      -2.194332,
+      -2.073144,
+      -1.851723,
+      -1.633209,
+      -1.322897,
+      -0.906234,
+      -0.402481,
+      0.37778,
+      1.127682,
+      2.123783,
+      3.666974,
+      5.881167,
+      8.193362,
+      10.657847,
+      12.999587,
+      14.785718,
+      16.828691,
+      18.77854,
+      20.643417,
+      22.482494,
+      24.41497,
+      26.519318,
+      29.92349,
+      31.189408,
+      32.250093,
+      33.118068,
+      33.959446,
+      35.344028,
+      37.318891,
+      37.932396,
+      38.719685,
+      40.008502,
+      41.776779,
+      42.291511,
+      null,
+      null
+     ],
+     "median_cm": [
+      0.038936,
+      0.045398,
+      0.052068,
+      0.056096,
+      0.062736,
+      0.067207,
+      0.071465,
+      0.0764,
+      0.078328,
+      0.07999,
+      0.083964,
+      0.084897,
+      0.086719,
+      0.084855,
+      0.077597,
+      0.077812,
+      0.071963,
+      0.060231,
+      0.054073,
+      0.058166,
+      0.093557,
+      0.145064,
+      0.194544,
+      0.267712,
+      0.299374,
+      0.320248,
+      0.431591,
+      0.650881,
+      0.907825,
+      1.248497,
+      1.546794,
+      1.879145,
+      2.183413,
+      2.530096,
+      3.160235,
+      3.819954,
+      4.952496,
+      6.694727,
+      9.216241,
+      12.561249,
+      16.282917,
+      19.881125,
+      23.11638,
+      25.512138,
+      27.577668,
+      29.256035,
+      30.760185,
+      32.107265,
+      33.440622,
+      34.667454,
+      35.817786,
+      36.744983,
+      37.516141,
+      38.153416,
+      38.584923,
+      38.941515,
+      39.403416,
+      40.078601,
+      41.251573,
+      41.959119,
+      42.539275,
+      null,
+      null
+     ],
+     "band_vertices": [
+      1041,
+      1039,
+      1038,
+      1038,
+      1035,
+      1031,
+      1026,
+      1025,
+      1023,
+      1022,
+      1021,
+      1020,
+      1018,
+      1024,
+      1026,
+      1026,
+      1033,
+      1043,
+      1055,
+      1067,
+      1062,
+      1041,
+      1051,
+      1054,
+      1046,
+      1059,
+      1030,
+      944,
+      846,
+      744,
+      655,
+      590,
+      474,
+      235,
+      13,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "over_vertices": [
+      1596,
+      1595,
+      1595,
+      1596,
+      1596,
+      1595,
+      1595,
+      1597,
+      1597,
+      1597,
+      1597,
+      1596,
+      1596,
+      1597,
+      1597,
+      1597,
+      1601,
+      1616,
+      1640,
+      1668,
+      1702,
+      1742,
+      1805,
+      1863,
+      1924,
+      1987,
+      2010,
+      2002,
+      1996,
+      1983,
+      1946,
+      1896,
+      1847,
+      1782,
+      1736,
+      1687,
+      1671,
+      1690,
+      1795,
+      1871,
+      1927,
+      1951,
+      1916,
+      1683,
+      1416,
+      1253,
+      1131,
+      1000,
+      874,
+      773,
+      671,
+      569,
+      454,
+      364,
+      290,
+      239,
+      194,
+      148,
+      53,
+      9,
+      4,
+      0,
+      0
+     ]
+    },
+    "left_sole": {
+     "lowest_cm": [
+      0.05,
+      0.050001,
+      0.050002,
+      0.05,
+      0.05,
+      0.050002,
+      0.050003,
+      0.05,
+      0.050003,
+      0.050002,
+      0.049999,
+      0.05,
+      0.049999,
+      0.049999,
+      0.050003,
+      0.051004,
+      0.061149,
+      0.098755,
+      0.176442,
+      0.265189,
+      0.345456,
+      0.401348,
+      0.370309,
+      0.296354,
+      0.266774,
+      0.223901,
+      0.16371,
+      0.094435,
+      0.031639,
+      0.002001,
+      0.009497,
+      0.072097,
+      0.174034,
+      0.292915,
+      0.398478,
+      0.446798,
+      0.409685,
+      0.31588,
+      0.183852,
+      0.080411,
+      0.030456,
+      0.013185,
+      0.00761,
+      0.00395,
+      0.009612,
+      0.009033,
+      0.007729,
+      0.006632,
+      0.006238,
+      0.011267,
+      0.003992,
+      0.005484,
+      0.000997,
+      0.001338,
+      0.002489,
+      0.176361,
+      0.146358,
+      0.144525,
+      0.672023,
+      0.946801,
+      0.835906,
+      0.56565,
+      0.338118
+     ],
+     "median_cm": [
+      0.227778,
+      0.227779,
+      0.22778,
+      0.227778,
+      0.227779,
+      0.22778,
+      0.227781,
+      0.227779,
+      0.227781,
+      0.227779,
+      0.227777,
+      0.227778,
+      0.227777,
+      0.227777,
+      0.227781,
+      0.228543,
+      0.258656,
+      0.339161,
+      0.450624,
+      0.655619,
+      0.978917,
+      1.396935,
+      1.897287,
+      2.450836,
+      3.020299,
+      3.630998,
+      4.265961,
+      4.929311,
+      5.580067,
+      6.264022,
+      6.890729,
+      7.537217,
+      7.98846,
+      8.257311,
+      8.536475,
+      8.485093,
+      8.199513,
+      7.428268,
+      6.144577,
+      4.477482,
+      2.84033,
+      1.546084,
+      0.776628,
+      0.468444,
+      0.407613,
+      0.393912,
+      0.39112,
+      0.388221,
+      0.389853,
+      0.407011,
+      0.4367,
+      0.578901,
+      0.88608,
+      1.171078,
+      1.130564,
+      1.090632,
+      0.833034,
+      0.631814,
+      1.025282,
+      1.260154,
+      1.214621,
+      0.96951,
+      0.746118
+     ],
+     "band_vertices": [
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1395,
+      986,
+      660,
+      450,
+      352,
+      277,
+      226,
+      203,
+      183,
+      170,
+      157,
+      140,
+      120,
+      101,
+      82,
+      68,
+      61,
+      75,
+      98,
+      137,
+      203,
+      361,
+      685,
+      1102,
+      1534,
+      1719,
+      1763,
+      1768,
+      1773,
+      1770,
+      1758,
+      1695,
+      1386,
+      1032,
+      852,
+      867,
+      867,
+      1164,
+      1576,
+      884,
+      47,
+      261,
+      1028,
+      1609
+     ],
+     "over_vertices": [
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1922,
+      1921,
+      1916,
+      1913,
+      1910,
+      1893,
+      1880,
+      1848,
+      1824,
+      1783,
+      1743,
+      1726,
+      1733,
+      1777,
+      1835,
+      1887,
+      1910,
+      1921,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923
+     ]
+    },
+    "right_sole": {
+     "lowest_cm": [
+      0.050002,
+      0.050001,
+      0.050004,
+      0.050003,
+      0.050001,
+      0.050004,
+      0.050003,
+      0.050002,
+      0.050004,
+      0.050002,
+      0.05,
+      0.050002,
+      0.050001,
+      0.05,
+      0.050005,
+      0.05077,
+      0.055975,
+      0.069571,
+      0.093283,
+      0.117944,
+      0.164577,
+      0.161487,
+      0.124044,
+      0.10533,
+      0.091281,
+      0.078566,
+      0.06057,
+      0.038452,
+      0.016069,
+      0.002001,
+      0.002001,
+      0.013412,
+      0.036962,
+      0.068157,
+      0.096969,
+      0.115125,
+      0.114813,
+      0.186543,
+      0.618234,
+      1.146907,
+      1.228514,
+      0.76797,
+      0.387996,
+      0.167822,
+      0.036425,
+      0.006354,
+      0.001998,
+      0.002829,
+      0.00345,
+      0.003827,
+      0.00407,
+      0.005116,
+      0.003648,
+      0.002242,
+      0.001124,
+      0.001071,
+      0.001033,
+      0.00107,
+      0.002272,
+      0.002879,
+      0.002471,
+      0.007355,
+      0.029603
+     ],
+     "median_cm": [
+      0.232994,
+      0.232993,
+      0.232996,
+      0.232995,
+      0.232993,
+      0.232996,
+      0.232996,
+      0.232995,
+      0.232996,
+      0.232995,
+      0.232992,
+      0.232994,
+      0.232993,
+      0.232992,
+      0.232998,
+      0.237823,
+      0.257938,
+      0.302952,
+      0.390811,
+      0.504779,
+      0.66555,
+      0.857163,
+      1.079453,
+      1.376167,
+      1.705983,
+      2.066307,
+      2.444929,
+      2.853099,
+      3.276646,
+      3.70586,
+      4.155953,
+      4.589363,
+      4.984509,
+      5.290556,
+      5.462092,
+      5.352724,
+      4.886067,
+      4.114679,
+      3.272001,
+      2.388166,
+      1.789067,
+      1.43904,
+      1.063973,
+      0.890378,
+      0.835238,
+      0.823417,
+      0.822612,
+      0.823609,
+      0.824471,
+      0.825082,
+      0.825417,
+      0.826533,
+      0.825183,
+      0.82384,
+      0.822783,
+      0.823162,
+      0.822797,
+      0.822873,
+      0.824115,
+      0.824826,
+      0.824528,
+      0.829502,
+      0.851862
+     ],
+     "band_vertices": [
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      1898,
+      1283,
+      1038,
+      794,
+      675,
+      570,
+      473,
+      400,
+      360,
+      323,
+      290,
+      261,
+      232,
+      218,
+      204,
+      207,
+      230,
+      268,
+      220,
+      0,
+      0,
+      221,
+      1034,
+      1269,
+      1325,
+      1338,
+      1340,
+      1339,
+      1339,
+      1338,
+      1338,
+      1337,
+      1338,
+      1340,
+      1342,
+      1342,
+      1342,
+      1342,
+      1340,
+      1339,
+      1339,
+      1333,
+      1302
+     ],
+     "over_vertices": [
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2246,
+      2241,
+      2238,
+      2228,
+      2214,
+      2202,
+      2199,
+      2201,
+      2216,
+      2238,
+      2247,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248
+     ]
+    }
+   }
+  }
+ },
+ "seam_blend": {
+  "mode": "full-pose seam blend into the anatomical SeatedIdle (loop head)",
+  "end": "start",
+  "window_frames": [
+   14,
+   41
+  ],
+  "chosen": {
+   "a": 14,
+   "b": 41,
+   "failing_frames": 0,
+   "peak_ratio_to_capture": 1.0,
+   "feet_within_capture": true,
+   "captured_frames_kept": 22,
+   "lifted_frames": 22,
+   "max_lift_cm": 0.0575
+  },
+  "candidates": 58,
+  "gated_frames": [
+   7,
+   10,
+   11,
+   12,
+   13,
+   14
+  ],
+  "search_rule": "(1) no failing frame - main's rule on the support frames,\nno penetration elsewhere; (2) pelvis peak acceleration ratio <= 1 and no added sole sliding; (3) most captured\nframes kept; (4) smallest ratio (the order of seam_blend_search).",
+  "rows": [
+   {
+    "a": 14,
+    "b": 17,
+    "failing_frames": 2,
+    "peak_ratio_to_capture": 5.3987,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.5734
+   },
+   {
+    "a": 14,
+    "b": 20,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.9947,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.5734
+   },
+   {
+    "a": 14,
+    "b": 23,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2564,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.5707
+   },
+   {
+    "a": 14,
+    "b": 26,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0412,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.5229
+   },
+   {
+    "a": 14,
+    "b": 29,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.4114
+   },
+   {
+    "a": 14,
+    "b": 32,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.3045
+   },
+   {
+    "a": 14,
+    "b": 35,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 23,
+    "max_lift_cm": 0.1745
+   },
+   {
+    "a": 14,
+    "b": 38,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0177,
+    "feet_within_capture": true,
+    "captured_frames_kept": 25,
+    "lifted_frames": 22,
+    "max_lift_cm": 0.1194
+   },
+   {
+    "a": 14,
+    "b": 41,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": true,
+    "captured_frames_kept": 22,
+    "lifted_frames": 22,
+    "max_lift_cm": 0.0575
+   },
+   {
+    "a": 14,
+    "b": 44,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0849,
+    "feet_within_capture": true,
+    "captured_frames_kept": 19,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 14,
+    "b": 47,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.077,
+    "feet_within_capture": true,
+    "captured_frames_kept": 16,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 14,
+    "b": 50,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.9981,
+    "feet_within_capture": true,
+    "captured_frames_kept": 13,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 14,
+    "b": 53,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.8982,
+    "feet_within_capture": true,
+    "captured_frames_kept": 10,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 14,
+    "b": 56,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.7977,
+    "feet_within_capture": true,
+    "captured_frames_kept": 7,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 14,
+    "b": 59,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.7048,
+    "feet_within_capture": true,
+    "captured_frames_kept": 4,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 19,
+    "failing_frames": 2,
+    "peak_ratio_to_capture": 5.3417,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.5734
+   },
+   {
+    "a": 16,
+    "b": 22,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.8844,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.5721
+   },
+   {
+    "a": 16,
+    "b": 25,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1559,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.5324
+   },
+   {
+    "a": 16,
+    "b": 28,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1473,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.449
+   },
+   {
+    "a": 16,
+    "b": 31,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.3045
+   },
+   {
+    "a": 16,
+    "b": 34,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 21,
+    "max_lift_cm": 0.1675
+   },
+   {
+    "a": 16,
+    "b": 37,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0018,
+    "feet_within_capture": true,
+    "captured_frames_kept": 26,
+    "lifted_frames": 20,
+    "max_lift_cm": 0.0863
+   },
+   {
+    "a": 16,
+    "b": 40,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0397,
+    "feet_within_capture": true,
+    "captured_frames_kept": 23,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 43,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0673,
+    "feet_within_capture": true,
+    "captured_frames_kept": 20,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 46,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1067,
+    "feet_within_capture": true,
+    "captured_frames_kept": 17,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 49,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0285,
+    "feet_within_capture": true,
+    "captured_frames_kept": 14,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 52,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.9168,
+    "feet_within_capture": true,
+    "captured_frames_kept": 11,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 55,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.8035,
+    "feet_within_capture": true,
+    "captured_frames_kept": 8,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 58,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.7001,
+    "feet_within_capture": true,
+    "captured_frames_kept": 5,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 16,
+    "b": 61,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.6095,
+    "feet_within_capture": true,
+    "captured_frames_kept": 2,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 21,
+    "failing_frames": 1,
+    "peak_ratio_to_capture": 4.9609,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 19,
+    "max_lift_cm": 0.5723
+   },
+   {
+    "a": 18,
+    "b": 24,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.797,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 19,
+    "max_lift_cm": 0.5437
+   },
+   {
+    "a": 18,
+    "b": 27,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.5426,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 19,
+    "max_lift_cm": 0.4555
+   },
+   {
+    "a": 18,
+    "b": 30,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 24,
+    "lifted_frames": 20,
+    "max_lift_cm": 0.3058
+   },
+   {
+    "a": 18,
+    "b": 33,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 19,
+    "max_lift_cm": 0.1229
+   },
+   {
+    "a": 18,
+    "b": 36,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 26,
+    "lifted_frames": 18,
+    "max_lift_cm": 0.0575
+   },
+   {
+    "a": 18,
+    "b": 39,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0974,
+    "feet_within_capture": true,
+    "captured_frames_kept": 24,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 42,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0174,
+    "feet_within_capture": true,
+    "captured_frames_kept": 21,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 45,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1363,
+    "feet_within_capture": true,
+    "captured_frames_kept": 18,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 48,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0668,
+    "feet_within_capture": true,
+    "captured_frames_kept": 15,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 51,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.941,
+    "feet_within_capture": true,
+    "captured_frames_kept": 12,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 54,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.8114,
+    "feet_within_capture": true,
+    "captured_frames_kept": 9,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 57,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.6946,
+    "feet_within_capture": true,
+    "captured_frames_kept": 6,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 18,
+    "b": 60,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.5947,
+    "feet_within_capture": true,
+    "captured_frames_kept": 3,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 23,
+    "failing_frames": 2,
+    "peak_ratio_to_capture": 4.8375,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 17,
+    "max_lift_cm": 0.547
+   },
+   {
+    "a": 20,
+    "b": 26,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 2.4148,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 17,
+    "max_lift_cm": 0.4584
+   },
+   {
+    "a": 20,
+    "b": 29,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0391,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 17,
+    "max_lift_cm": 0.3055
+   },
+   {
+    "a": 20,
+    "b": 32,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 17,
+    "max_lift_cm": 0.1151
+   },
+   {
+    "a": 20,
+    "b": 35,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0976,
+    "feet_within_capture": false,
+    "captured_frames_kept": 28,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 38,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1565,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 41,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0399,
+    "feet_within_capture": true,
+    "captured_frames_kept": 22,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 44,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1562,
+    "feet_within_capture": true,
+    "captured_frames_kept": 19,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 47,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1155,
+    "feet_within_capture": true,
+    "captured_frames_kept": 16,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 50,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.9731,
+    "feet_within_capture": true,
+    "captured_frames_kept": 13,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 53,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.822,
+    "feet_within_capture": true,
+    "captured_frames_kept": 10,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 56,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.6884,
+    "feet_within_capture": true,
+    "captured_frames_kept": 7,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 59,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.5769,
+    "feet_within_capture": true,
+    "captured_frames_kept": 4,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 20,
+    "b": 62,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 0.486,
+    "feet_within_capture": true,
+    "captured_frames_kept": 1,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   }
+  ],
+  "weight": "quintic smootherstep",
+  "no_penetration_lift_max_cm": 0.0575,
+  "foot_lift_max_cm": {
+   "left": 1.1926,
+   "right": 0.3216
+  }
+ },
+ "bone_length_max_error_cm": 0.0,
+ "joint_edits_vs_capture": {
+  "Hips": {
+   "max_deg": 39.4644,
+   "mean_deg": 18.8069,
+   "frames_changed": 56,
+   "root_translation_cm": {
+    "max": 22.8151,
+    "mean_xyz_gltf": [
+     0.0135,
+     -6.5135,
+     9.5924
+    ]
+   }
+  },
+  "Spine": {
+   "max_deg": 29.0813,
+   "mean_deg": 10.3319,
+   "frames_changed": 56,
+   "local_translation_change_cm": 0.0
+  },
+  "Spine1": {
+   "max_deg": 8.6738,
+   "mean_deg": 2.7708,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "Spine2": {
+   "max_deg": 8.6774,
+   "mean_deg": 2.7696,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "Neck": {
+   "max_deg": 11.0623,
+   "mean_deg": 4.5535,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "Head": {
+   "max_deg": 35.7951,
+   "mean_deg": 13.5289,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightShoulder": {
+   "max_deg": 21.2078,
+   "mean_deg": 7.8202,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightArm": {
+   "max_deg": 45.9808,
+   "mean_deg": 15.5809,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightForeArm": {
+   "max_deg": 47.3879,
+   "mean_deg": 11.5018,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHand": {
+   "max_deg": 54.2451,
+   "mean_deg": 20.3156,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb1": {
+   "max_deg": 31.6699,
+   "mean_deg": 13.4191,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb2": {
+   "max_deg": 27.7426,
+   "mean_deg": 10.2106,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb3": {
+   "max_deg": 35.9825,
+   "mean_deg": 12.9277,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex1": {
+   "max_deg": 34.1057,
+   "mean_deg": 6.7393,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex2": {
+   "max_deg": 22.047,
+   "mean_deg": 6.0673,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex3": {
+   "max_deg": 13.2566,
+   "mean_deg": 5.5634,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle1": {
+   "max_deg": 38.9964,
+   "mean_deg": 6.4693,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle2": {
+   "max_deg": 17.0953,
+   "mean_deg": 4.3783,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle3": {
+   "max_deg": 20.9777,
+   "mean_deg": 7.0237,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing1": {
+   "max_deg": 46.159,
+   "mean_deg": 6.0203,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing2": {
+   "max_deg": 13.0053,
+   "mean_deg": 3.1995,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing3": {
+   "max_deg": 17.5268,
+   "mean_deg": 5.4084,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky1": {
+   "max_deg": 35.3965,
+   "mean_deg": 6.0101,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky2": {
+   "max_deg": 12.3499,
+   "mean_deg": 2.9145,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky3": {
+   "max_deg": 21.7864,
+   "mean_deg": 7.7705,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftShoulder": {
+   "max_deg": 19.2354,
+   "mean_deg": 7.4569,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftArm": {
+   "max_deg": 51.2989,
+   "mean_deg": 16.0506,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftForeArm": {
+   "max_deg": 49.2113,
+   "mean_deg": 12.3745,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHand": {
+   "max_deg": 38.2504,
+   "mean_deg": 12.1838,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb1": {
+   "max_deg": 43.828,
+   "mean_deg": 17.0925,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb2": {
+   "max_deg": 27.1612,
+   "mean_deg": 9.5497,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb3": {
+   "max_deg": 24.3301,
+   "mean_deg": 8.4138,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex1": {
+   "max_deg": 28.1544,
+   "mean_deg": 8.54,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex2": {
+   "max_deg": 26.2323,
+   "mean_deg": 7.3786,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex3": {
+   "max_deg": 9.9057,
+   "mean_deg": 1.8437,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle1": {
+   "max_deg": 27.2086,
+   "mean_deg": 8.4093,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle2": {
+   "max_deg": 24.061,
+   "mean_deg": 6.5641,
+   "frames_changed": 41,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle3": {
+   "max_deg": 22.0185,
+   "mean_deg": 6.404,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing1": {
+   "max_deg": 15.2832,
+   "mean_deg": 5.2917,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing2": {
+   "max_deg": 13.8457,
+   "mean_deg": 2.2007,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing3": {
+   "max_deg": 28.6261,
+   "mean_deg": 9.8964,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky1": {
+   "max_deg": 9.5641,
+   "mean_deg": 3.6675,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky2": {
+   "max_deg": 10.2213,
+   "mean_deg": 3.4482,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky3": {
+   "max_deg": 21.1232,
+   "mean_deg": 6.99,
+   "frames_changed": 39,
+   "local_translation_change_cm": 0.0
+  },
+  "RightUpLeg": {
+   "max_deg": 31.3956,
+   "mean_deg": 17.4924,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "RightLeg": {
+   "max_deg": 34.6216,
+   "mean_deg": 25.241,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "RightFoot": {
+   "max_deg": 59.8784,
+   "mean_deg": 31.8609,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "RightToeBase": {
+   "max_deg": 5.9493,
+   "mean_deg": 1.0066,
+   "frames_changed": 40,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftUpLeg": {
+   "max_deg": 32.5676,
+   "mean_deg": 19.5591,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftLeg": {
+   "max_deg": 31.9418,
+   "mean_deg": 23.9457,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftFoot": {
+   "max_deg": 84.201,
+   "mean_deg": 41.1475,
+   "frames_changed": 63,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftToeBase": {
+   "max_deg": 0.7616,
+   "mean_deg": 0.1305,
+   "frames_changed": 23,
+   "local_translation_change_cm": 0.0
+  }
+ },
+ "joints_unchanged": [
+  "HeadTop_End",
+  "RightHandThumb4",
+  "RightHandIndex4",
+  "RightHandMiddle4",
+  "RightHandRing4",
+  "RightHandPinky4",
+  "LeftHandThumb4",
+  "LeftHandIndex4",
+  "LeftHandMiddle4",
+  "LeftHandRing4",
+  "LeftHandPinky4",
+  "RightToe_End",
+  "LeftToe_End"
+ ],
+ "upper_body_world_vs_capture": {
+  "Spine1": {
+   "world_rotation_change_deg_max": 31.79512,
+   "world_translation_cm": [
+    0.262,
+    -6.792,
+    4.983
+   ],
+   "translation_spread_cm": 19.9146
+  },
+  "Spine2": {
+   "world_rotation_change_deg_max": 28.55037,
+   "world_translation_cm": [
+    0.301,
+    -6.173,
+    4.078
+   ],
+   "translation_spread_cm": 20.0857
+  },
+  "Neck": {
+   "world_rotation_change_deg_max": 33.71711,
+   "world_translation_cm": [
+    0.281,
+    -5.181,
+    3.199
+   ],
+   "translation_spread_cm": 22.9863
+  },
+  "Head": {
+   "world_rotation_change_deg_max": 27.47656,
+   "world_translation_cm": [
+    -0.165,
+    -4.243,
+    2.634
+   ],
+   "translation_spread_cm": 23.7388
+  },
+  "LeftShoulder": {
+   "world_rotation_change_deg_max": 36.30712,
+   "world_translation_cm": [
+    0.345,
+    -4.741,
+    3.412
+   ],
+   "translation_spread_cm": 23.8401
+  },
+  "RightShoulder": {
+   "world_rotation_change_deg_max": 36.75184,
+   "world_translation_cm": [
+    0.341,
+    -4.833,
+    3.478
+   ],
+   "translation_spread_cm": 24.0324
+  },
+  "LeftArm": {
+   "world_rotation_change_deg_max": 71.35089,
+   "world_translation_cm": [
+    0.097,
+    -5.319,
+    1.476
+   ],
+   "translation_spread_cm": 19.8678
+  },
+  "RightArm": {
+   "world_rotation_change_deg_max": 64.28058,
+   "world_translation_cm": [
+    0.6,
+    -5.691,
+    1.679
+   ],
+   "translation_spread_cm": 20.5224
+  },
+  "LeftForeArm": {
+   "world_rotation_change_deg_max": 72.75716,
+   "world_translation_cm": [
+    -2.124,
+    -7.815,
+    -1.985
+   ],
+   "translation_spread_cm": 22.5453
+  },
+  "RightForeArm": {
+   "world_rotation_change_deg_max": 67.92864,
+   "world_translation_cm": [
+    1.411,
+    -7.657,
+    -2.126
+   ],
+   "translation_spread_cm": 20.256
+  },
+  "LeftHand": {
+   "world_rotation_change_deg_max": 64.13255,
+   "world_translation_cm": [
+    4.833,
+    -8.876,
+    0.971
+   ],
+   "translation_spread_cm": 22.5349
+  },
+  "RightHand": {
+   "world_rotation_change_deg_max": 64.50759,
+   "world_translation_cm": [
+    -4.673,
+    -8.415,
+    0.717
+   ],
+   "translation_spread_cm": 20.8766
+  }
+ },
+ "anatomical_angles": {
+  "pelvis_posterior_tilt": {
+   "range_deg": [
+    -7.8,
+    40.01
+   ],
+   "limit_deg": [
+    0.0,
+    45.0
+   ],
+   "within_limit": false,
+   "capture_range_deg": [
+    -24.04,
+    19.25
+   ],
+   "max_change_deg": 39.45
+  },
+  "pelvis_obliquity": {
+   "range_deg": [
+    -2.01,
+    4.74
+   ],
+   "capture_range_deg": [
+    -3.43,
+    4.62
+   ],
+   "max_change_deg": 3.08
+  },
+  "pelvis_heading": {
+   "range_deg": [
+    -2.6,
+    -0.45
+   ],
+   "capture_range_deg": [
+    -2.05,
+    3.33
+   ],
+   "max_change_deg": 4.96
+  },
+  "lumbar_flexion": {
+   "range_deg": [
+    7.23,
+    69.67
+   ],
+   "limit_deg": [
+    -16.0,
+    52.0
+   ],
+   "within_limit": false,
+   "capture_range_deg": [
+    7.23,
+    56.78
+   ],
+   "max_change_deg": 29.03
+  },
+  "left_hip_flexion": {
+   "range_deg": [
+    26.84,
+    79.52
+   ],
+   "limit_deg": [
+    -30.0,
+    120.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    11.92,
+    97.38
+   ],
+   "max_change_deg": 32.39
+  },
+  "left_hip_abduction": {
+   "range_deg": [
+    -0.15,
+    10.13
+   ],
+   "limit_deg": [
+    -30.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -2.12,
+    7.75
+   ],
+   "max_change_deg": 5.48
+  },
+  "left_hip_internal_rotation": {
+   "range_deg": [
+    -13.42,
+    0.94
+   ],
+   "limit_deg": [
+    -45.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -14.79,
+    3.38
+   ],
+   "max_change_deg": 2.8
+  },
+  "left_knee_flexion": {
+   "range_deg": [
+    32.71,
+    120.59
+   ],
+   "limit_deg": [
+    -5.0,
+    135.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    5.85,
+    91.47
+   ],
+   "max_change_deg": 31.86
+  },
+  "left_knee_varus": {
+   "range_deg": [
+    -1.64,
+    13.63
+   ],
+   "capture_range_deg": [
+    -4.34,
+    3.84
+   ],
+   "max_change_deg": 9.79
+  },
+  "left_knee_axial": {
+   "range_deg": [
+    -12.26,
+    -2.82
+   ],
+   "capture_range_deg": [
+    -11.64,
+    5.75
+   ],
+   "max_change_deg": 8.73
+  },
+  "left_ankle_dorsiflexion": {
+   "range_deg": [
+    -17.89,
+    19.78
+   ],
+   "limit_deg": [
+    -50.0,
+    20.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -64.05,
+    1.12
+   ],
+   "max_change_deg": 83.81
+  },
+  "left_subtalar_inversion": {
+   "range_deg": [
+    -4.22,
+    10.98
+   ],
+   "limit_deg": [
+    -15.0,
+    35.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -6.24,
+    9.57
+   ],
+   "max_change_deg": 6.23
+  },
+  "left_foot_adduction": {
+   "range_deg": [
+    -3.85,
+    4.16
+   ],
+   "capture_range_deg": [
+    -6.07,
+    0.22
+   ],
+   "max_change_deg": 9.96
+  },
+  "left_mtp_extension": {
+   "range_deg": [
+    -1.44,
+    4.28
+   ],
+   "limit_deg": [
+    -45.0,
+    70.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -1.44,
+    4.28
+   ],
+   "max_change_deg": 0.76
+  },
+  "right_hip_flexion": {
+   "range_deg": [
+    22.78,
+    76.86
+   ],
+   "limit_deg": [
+    -30.0,
+    120.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    12.48,
+    92.95
+   ],
+   "max_change_deg": 31.25
+  },
+  "right_hip_abduction": {
+   "range_deg": [
+    -1.79,
+    5.15
+   ],
+   "limit_deg": [
+    -30.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -2.39,
+    6.55
+   ],
+   "max_change_deg": 1.49
+  },
+  "right_hip_internal_rotation": {
+   "range_deg": [
+    -13.9,
+    -8.8
+   ],
+   "limit_deg": [
+    -45.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -13.49,
+    -1.74
+   ],
+   "max_change_deg": 7.29
+  },
+  "right_knee_flexion": {
+   "range_deg": [
+    32.5,
+    107.35
+   ],
+   "limit_deg": [
+    -5.0,
+    135.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    12.8,
+    75.92
+   ],
+   "max_change_deg": 34.19
+  },
+  "right_knee_varus": {
+   "range_deg": [
+    2.27,
+    11.88
+   ],
+   "capture_range_deg": [
+    -4.3,
+    1.84
+   ],
+   "max_change_deg": 16.11
+  },
+  "right_knee_axial": {
+   "range_deg": [
+    -9.57,
+    -3.48
+   ],
+   "capture_range_deg": [
+    -13.8,
+    -1.13
+   ],
+   "max_change_deg": 4.74
+  },
+  "right_ankle_dorsiflexion": {
+   "range_deg": [
+    -8.78,
+    14.87
+   ],
+   "limit_deg": [
+    -50.0,
+    20.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -40.9,
+    5.25
+   ],
+   "max_change_deg": 55.72
+  },
+  "right_subtalar_inversion": {
+   "range_deg": [
+    -6.49,
+    6.9
+   ],
+   "limit_deg": [
+    -15.0,
+    35.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -16.5,
+    1.43
+   ],
+   "max_change_deg": 23.4
+  },
+  "right_foot_adduction": {
+   "range_deg": [
+    -12.33,
+    -2.12
+   ],
+   "capture_range_deg": [
+    -16.08,
+    -5.14
+   ],
+   "max_change_deg": 12.36
+  },
+  "right_mtp_extension": {
+   "range_deg": [
+    0.0,
+    6.98
+   ],
+   "limit_deg": [
+    -45.0,
+    70.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    0.15,
+    7.04
+   ],
+   "max_change_deg": 5.93
+  }
+ },
+ "anatomical_limits_ok": true,
+ "anatomical_limits_ok_all_frames": false,
+ "seam_to_SeatedIdle": {
+  "pair": "loop.last -> clip.first",
+  "fps": 30.0,
+  "position_delta": {
+   "hips_cm": 0.0,
+   "max_joint_cm": 0.0,
+   "hips_rotation_deg": 0.0,
+   "max_joint_rotation_deg": 1e-06
+  },
+  "velocity_delta": {
+   "hips_cm_s": 0.7373,
+   "max_joint_cm_s": 5.5432,
+   "hips_ang_deg_s": 2.8183,
+   "max_joint_ang_deg_s": 5.9562
+  },
+  "velocity": {
+   "incoming_hips_cm_s": [
+    0.1327,
+    0.1965,
+    0.1101
+   ],
+   "outgoing_hips_cm_s": [
+    -0.1591,
+    -0.4255,
+    -0.1575
+   ]
+  },
+  "loop_own_seam_velocity_delta_reference": {
+   "hips_cm_s": 0.6935,
+   "max_joint_cm_s": 5.4791,
+   "hips_ang_deg_s": 2.8183,
+   "max_joint_ang_deg_s": 5.9592
+  }
+ },
+ "clearance": {
+  "chair_complete": {
+   "min_margin_cm": 0.368,
+   "frames_with_penetration": 0,
+   "frames_checked": 13,
+   "deepest_by_chair_part_cm": {},
+   "clear": true,
+   "skin_sampling": "every 6th skinned owner vertex",
+   "rule": "ChairCollider (tools/solve_seated_typing_arm_ik.py): margin = signed distance - allowed depth; chair_fabric allows -2.5 cm (seat band), every other part 0"
+  },
+  "desk": {
+   "min_clearance_under_desk_structure_cm": 6.569,
+   "highest_skin_under_desk_structure_cm": 74.881,
+   "desktop_underside_cm": 81.2,
+   "skin_samples_inside_desk_structure": 0,
+   "frames_with_skin_inside_desk_structure": 0,
+   "deepest_inside_below_desk_top_cm": 0.0,
+   "inside_by_dominant_joint": {},
+   "clear": true
+  }
+ },
+ "ready": false,
+ "main_rule": {
+  "frames": 63,
+  "gated_frames": 15,
+  "gated_frame_indices": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14
+  ],
+  "pass_main_rule": true,
+  "failing_frames": [],
+  "failing_frame_count": 0,
+  "main_validate_message_by_frame": {},
+  "failing_frames_by_patch_and_condition": {},
+  "worst": {
+   "buttocks": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0468,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.2454,
+     "frame": 8
+    },
+    "min_coverage": {
+     "value": 0.5682,
+     "frame": 10
+    },
+    "min_over_surface_vertices": {
+     "value": 717.0,
+     "frame": 11
+    }
+   },
+   "left_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.216,
+     "frame": 14
+    },
+    "max_median_gap_cm": {
+     "value": -0.4492,
+     "frame": 4
+    },
+    "min_coverage": {
+     "value": 0.7269,
+     "frame": 4
+    },
+    "min_over_surface_vertices": {
+     "value": 1296.0,
+     "frame": 3
+    }
+   },
+   "right_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0416,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.0867,
+     "frame": 12
+    },
+    "min_coverage": {
+     "value": 0.6378,
+     "frame": 12
+    },
+    "min_over_surface_vertices": {
+     "value": 1595.0,
+     "frame": 1
+    }
+   },
+   "left_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 13
+    },
+    "max_median_gap_cm": {
+     "value": 0.2278,
+     "frame": 8
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 1923.0,
+     "frame": 0
+    }
+   },
+   "right_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 13
+    },
+    "max_median_gap_cm": {
+     "value": 0.233,
+     "frame": 14
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 2248.0,
+     "frame": 0
+    }
+   }
+  },
+  "vertical_shift_window_cm": {
+   "rule": "main's propose_vertical_anchor arithmetic per patch on the gated frames: a vertical shift d is allowed when min + d >= band low and median + d <= band high; [lo, hi] empty (lo > hi) means no rigid shift of that set can pass",
+   "seat_patches_together": [
+    -0.284,
+    0.2546
+   ],
+   "each_seat_patch": {
+    "buttocks": [
+     -0.4532,
+     0.2546
+    ],
+    "left_posterior_thigh": [
+     -0.284,
+     0.9492
+    ],
+    "right_posterior_thigh": [
+     -0.4584,
+     0.4133
+    ]
+   },
+   "each_sole": {
+    "left_sole": [
+     -0.05,
+     0.7722
+    ],
+    "right_sole": [
+     -0.05,
+     0.767
+    ]
+   }
+  },
+  "patch_spread_vs_band": {
+   "buttocks": {
+    "band_width_cm": 3.0,
+    "max_median_minus_min_cm": 2.2695,
+    "frames_wider_than_band": 0,
+    "note": "median - min > band width: no rigid vertical shift of this patch passes that frame"
+   },
+   "left_posterior_thigh": {
+    "band_width_cm": 3.0,
+    "max_median_minus_min_cm": 1.7477,
+    "frames_wider_than_band": 0,
+    "note": "median - min > band width: no rigid vertical shift of this patch passes that frame"
+   },
+   "right_posterior_thigh": {
+    "band_width_cm": 3.0,
+    "max_median_minus_min_cm": 2.0899,
+    "frames_wider_than_band": 0,
+    "note": "median - min > band width: no rigid vertical shift of this patch passes that frame"
+   },
+   "left_sole": {
+    "band_width_cm": 1.0,
+    "max_median_minus_min_cm": 0.1778,
+    "frames_wider_than_band": 0,
+    "note": "median - min > band width: no rigid vertical shift of this patch passes that frame"
+   },
+   "right_sole": {
+    "band_width_cm": 1.0,
+    "max_median_minus_min_cm": 0.183,
+    "frames_wider_than_band": 0,
+    "note": "median - min > band width: no rigid vertical shift of this patch passes that frame"
+   }
+  },
+  "measurement_reproduction_max_abs_lowest_gap_diff_cm": {
+   "buttocks": 1e-06,
+   "left_posterior_thigh": 2e-06,
+   "right_posterior_thigh": 2e-06,
+   "left_sole": 0.0,
+   "right_sole": 0.0
+  },
+  "glb_sha256": "4e941d3d12cfd19b98c7b5647b6783dd4be777ee3305cc7fa044d3a4da106af6",
+  "per_patch_on_gated_frames": {
+   "buttocks": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0468,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.2454,
+     "frame": 8
+    },
+    "min_coverage": {
+     "value": 0.5682,
+     "frame": 10
+    },
+    "min_over_surface_vertices": {
+     "value": 717,
+     "frame": 11
+    }
+   },
+   "left_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.216,
+     "frame": 14
+    },
+    "max_median_gap_cm": {
+     "value": -0.4492,
+     "frame": 4
+    },
+    "min_coverage": {
+     "value": 0.7269,
+     "frame": 4
+    },
+    "min_over_surface_vertices": {
+     "value": 1296,
+     "frame": 3
+    }
+   },
+   "right_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0416,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.0867,
+     "frame": 12
+    },
+    "min_coverage": {
+     "value": 0.6378,
+     "frame": 12
+    },
+    "min_over_surface_vertices": {
+     "value": 1595,
+     "frame": 1
+    }
+   },
+   "left_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 13
+    },
+    "max_median_gap_cm": {
+     "value": 0.2278,
+     "frame": 8
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 1923,
+     "frame": 0
+    }
+   },
+   "right_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 13
+    },
+    "max_median_gap_cm": {
+     "value": 0.233,
+     "frame": 14
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 2248,
+     "frame": 0
+    }
+   }
+  },
+  "binding_constraints": [
+   {
+    "patch": "buttocks",
+    "condition": "median",
+    "margin": 0.2546,
+    "frame": 8,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "left_posterior_thigh",
+    "condition": "min_gap",
+    "margin": 0.284,
+    "frame": 14,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "buttocks",
+    "condition": "coverage",
+    "margin": 0.4095,
+    "frame": 10,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "right_posterior_thigh",
+    "condition": "median",
+    "margin": 0.4133,
+    "frame": 12,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   }
+  ]
+ }
+}
