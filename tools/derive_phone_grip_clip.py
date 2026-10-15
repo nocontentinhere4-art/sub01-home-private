@@ -42,9 +42,10 @@ OWNER = ROOT/'web/room/char_mixamo.glb'
 FINGERS = ('Index', 'Middle', 'Ring', 'Pinky')
 FLEX_LIMITS = {1: (-5.0, 85.0), 2: (0.0, 105.0), 3: (0.0, 75.0)}
 ABD_LIMIT, HAND_CORR_MAX, THUMB1_MAX, THUMB2_MAX, THUMB_STOP_MAX = 15.0, 25.0, 45.0, 30.0, 35.0
-COMPRESSION_CM, BAND_CM, CLEAR_CM, TOUCH_CM = 0.15, 0.3, 0.2, 0.1
+COMPRESSION_CM, BAND_CM, CLEAR_CM, TOUCH_CM, GLASS_TOUCH_CM = 0.15, 0.3, 0.2, 0.1, 0.02
 PALM_CONTACT_MIN, PROXIMAL_CONTACT_MIN = 60, 40
 PALM_WEIGHT = 3.0
+RIM_CLEAR_CM, PAD_U, PAD_V = 0.1, (0.25, 0.75), (0.2, 0.7)     # texting thumb: pad over the glass interior, side off the rim
 HOVER_MEDIAN_CM, DIP_QUANTILE, DIP_DEPTH_CM = 0.4, 0.2, -0.15   # thumb rests above glass; captured dips reach it
 NP = 31                    # mount 6, hand correction 3, fingers 4x4, thumb1 (CMC) 3, thumb2 (MCP) 3
 
@@ -199,7 +200,7 @@ class Derivation:
         tip = pad[np.argmin(pad[:, 2])]
         u = (tip[0]-self.screen[1][0])/(2*self.screen[2][0])+.5
         v = (tip[1]-self.screen[1][1])/(2*self.screen[2][1])+.5
-        c += 20*(max(0, .15-u)**2+max(0, u-.85)**2+max(0, .15-v)**2+max(0, v-.85)**2)
+        c += 20*(max(0, PAD_U[0]-u)**2+max(0, u-PAD_U[1])**2+max(0, PAD_V[0]-v)**2+max(0, v-PAD_V[1])**2)
         h = tip[2]-self.screen[1][2]
         c += 2*(max(0.0, h-1.0)**2+max(0.0, -0.8-h)**2)
         # Captured thumb motion before the stop: hover above the glass, dip through it only at its minima.
@@ -208,13 +209,14 @@ class Derivation:
             qt = self.edit(ft, p)
             Wt = self.worlds(ft, qt)
             Rt, ct = self.phone_pose(Wt, p)
-            sa = self.sdf(self.to_phone(self.skin.deform(Wt, self.moving), Rt, ct))
-            h.append(float(sa[self.thumb_pad].min()))
+            Lm = self.to_phone(self.skin.deform(Wt, self.moving), Rt, ct)
+            sa = self.sdf(Lm)
+            h.append(float(FG.box_sdf(Lm[self.thumb_pad], self.screen[1], self.screen[2]).min()))   # pad to glass
             n = len(self.thumb_frames)
             # Every sampled hold frame: palm/thenar/finger skin within the compression band, the proximal thumb
             # segment (which a tap lift cannot move) clear, and the pad dipping only as far as an MCP lift returns it.
             c += 200*float(np.sum(np.maximum(-sa[~self.thumb_tip]-COMPRESSION_CM, 0)**2))/n
-            c += 200*float(np.sum(np.maximum(-sa[self.thumb_tip & ~self.thumb_pad], 0)**2))/n
+            c += 200*float(np.sum(np.maximum(RIM_CLEAR_CM-sa[self.thumb_tip & ~self.thumb_pad], 0)**2))/n   # thumb side off the rim
             c += 50*float(np.sum(np.maximum(-sa[self.thumb_pad]-0.4, 0)**2))/n
         h = np.array(h)
         c += 4*(np.median(h)-HOVER_MEDIAN_CM)**2+4*(np.quantile(h, DIP_QUANTILE)-DIP_DEPTH_CM)**2
@@ -402,16 +404,21 @@ def derive_frames(d, p, log=print):
         prev = stop
         q[f] = d.edit(f, p, stop, axis)
         pad = L[d.thumb_pad[d.thumb_tip]]
-        tip = pad[np.argmin(d.sdf(pad))]
+        glass = FG.box_sdf(pad, d.screen[1], d.screen[2])
+        tip = pad[np.argmin(glass)]
         u = (tip[0]-d.screen[1][0])/(2*d.screen[2][0])+.5
         v = (tip[1]-d.screen[1][1])/(2*d.screen[2][1])+.5
         over = 0 <= u <= 1 and 0 <= v <= 1
-        # Touch = force contact: the captured thumb would pass the glass and the stop holds it there.
+        pad_glass = float(glass.min())
+        # Tap = force contact of the PAD on the glass: the captured thumb would pass the phone, the stop holds it,
+        # and the pad skin is within GLASS_TOUCH_CM of the glass rectangle. A stop on the case rim is not a tap.
         rows.append({'time': round(float(d.rig.times[f]), 5), 'thumb_stop_deg': round(stop, 4),
                      'thumb_stop_joint': axis[0] if axis else None,
-                     'thumb_min_clearance_cm': round(depth, 4), 'thumb_pad_uv': [round(u, 4), round(v, 4)],
-                     'thumb_over_glass': bool(over), 'near_glass': bool(over and depth <= TOUCH_CM),
-                     'touch': bool(over and stop > 0 and depth <= TOUCH_CM)})
+                     'thumb_min_clearance_cm': round(depth, 4), 'pad_glass_clearance_cm': round(pad_glass, 4),
+                     'thumb_pad_uv': [round(u, 4), round(v, 4)], 'thumb_over_glass': bool(over),
+                     'near_glass': bool(over and pad_glass <= TOUCH_CM),
+                     'rim_contact': bool(stop > 0 and pad_glass > GLASS_TOUCH_CM),
+                     'touch': bool(over and stop > 0 and pad_glass <= GLASS_TOUCH_CM)})
     return q, rows
 
 
@@ -559,7 +566,7 @@ def main(argv=None):
         'bone_length_max_error_cm': bone_lengths(d, q, list(range(0, len(rig.times), 10))),
         'active_set_frames': d.active_frames,
         'thumb': {'frames': thumb_rows, 'tap_events': taps, 'tap_count': len(taps),
-                  'rule': 'touch (tap) = the captured thumb would pass the glass and the per-frame stop holds its skin on the glass inside the screen; near_glass = within %.1f cm without force; geometry only, no timer' % TOUCH_CM},
+                  'rule': 'tap = the per-frame stop is engaged AND the thumb pad skin is within %.2f cm of the glass rectangle; stop on the case rim = rim_contact, not a tap; near_glass = pad within %.1f cm without force; geometry only, no timer' % (GLASS_TOUCH_CM, TOUCH_CM)},
         'left_hand': 'unchanged capture (free hand); audited for phone clearance by tools/audit_phone_grip_clip.py',
         'gates': {'native_import': False, 'native_contact': False, 'visual_acceptance': False, 'activity_binding': False}}
     (args.out_dir/'SUB01_PhoneGrip_derived.report.json').write_text(json.dumps(report, indent=1)+'\n')

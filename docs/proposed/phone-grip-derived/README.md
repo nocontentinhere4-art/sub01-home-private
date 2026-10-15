@@ -31,7 +31,7 @@ All edits are rotations, so bone lengths are unchanged (max error 1.9e-14 cm). E
 | RightHandThumb1 (CMC) | Captured × constant offset (≤45°) | 23.8° |
 | RightHandThumb2 (MCP) | Captured × constant offset (≤30°), then a per-frame glass stop: MCP first, then CMC, on 75 frames; it reaches its 35° bound on at least one frame | 9.35° |
 
-- **Tap events:** taps come only from the stop, never from a timer. The captured thumb would pass the glass, and the stop holds its skin on the glass inside the screen. The report lists 27 taps; the audit, using an independent ≤0.02 cm contact test, sees 28 glass contacts, mostly near uv (0.76–0.95, 0.48–0.61), toward the right of the glass.
+- **Tap events:** taps come only from the stop, never from a timer. The captured thumb would pass the glass, and the stop holds its skin on the glass inside the screen. The report lists 27 taps; the audit, using an independent ≤0.02 cm contact test, sees 28 glass contacts, mostly near uv (0.76–0.95, 0.48–0.61), toward the right of the glass. **Correction (later commit):** v8's report counted stop engagements as taps, including the thumb side resting on the case rim. The corrected rule counts a tap only when the stop is engaged and the thumb PAD is within 0.02 cm of the glass; rim stops are reported as `rim_contact`. Most of v8's "taps" are rim contacts, so its tap count is not evidence of texting.
 - **Phone mount** (original five-part assembly, derived RightHand frame), UE `phoneGripCandidate`: `X=0.63516 Y=-8.88427 Z=4.47354|P=-19.28669 Y=65.29789 R=0.04263` (from the report).
 
 ## Independent audit, all 556 frames (hold window 2–16 s in brackets)
