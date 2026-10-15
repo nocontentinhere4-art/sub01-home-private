@@ -14,7 +14,27 @@ def test_angles_take_shortest_path_have_bounded_rate_and_frame_independent_decay
 #include <limits>
 using Sub01FirstPersonMotion::SmoothAngle;
 using Sub01FirstPersonMotion::AuthoredWalkRate;
+using Sub01FirstPersonMotion::HeadingWalkScale;
 int main(){
+ assert(HeadingWalkScale(0,0)==1);
+ assert(HeadingWalkScale(0,90)==0&&HeadingWalkScale(0,180)==0);
+ assert(HeadingWalkScale(0,-90)==0&&HeadingWalkScale(0,-180)==0);
+ assert(std::abs(HeadingWalkScale(0,45)-.25)<1e-12);
+ assert(std::abs(HeadingWalkScale(179,-179)-HeadingWalkScale(0,2))<1e-12);
+ assert(HeadingWalkScale(0,std::numeric_limits<double>::quiet_NaN())==0);
+ // A right-angle corridor turn used to request full sideways travel while
+ // yaw eased. Integrate the actual production policy, without teleporting
+ // the pawn or changing its collision route: transverse input demand falls >70%.
+ for(double fps: {30.,60.,144.}){
+  double yaw=0,original=0,aligned=0;
+  for(int i=0;i<int(2*fps);++i){
+   yaw=SmoothAngle(yaw,90,1./fps,180);
+   double side=std::sin((90-yaw)*3.14159265358979323846/180.);
+   original+=140*side/fps;
+   aligned+=140*side*HeadingWalkScale(yaw,90)/fps;
+  }
+  assert(original>15&&aligned<original*.30);
+ }
  // Braking below 14 cm/s must slow the authored clip, not retain a .1 floor.
  assert(std::abs(AuthoredWalkRate(7)-.05)<1e-12);
  assert(std::abs(AuthoredWalkRate(1.01)-1.01/140.)<1e-12);
@@ -52,6 +72,7 @@ def test_install_keeps_real_physics_manual_input_and_original_authored_clips():
  cpp=base.CPP+live+hands+route
  header,result=motion.install(base.HEADER,cpp)
  assert header==base.HEADER
+ assert result.count(motion.ALIGNED_MOVE)==1
  assert result.count(motion.SNAP)==1 and motion.SWAY not in result
  assert route in result # Route diagnostic remains unchanged; only Live mode is smoothed.
  assert motion.WALK_RATE not in result and result.count(motion.MEASURED_WALK_RATE)==1
