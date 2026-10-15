@@ -25,7 +25,7 @@ def run(view, u=None):
     capture = getattr(u.AutomationLibrary, 'take_high_res_screenshot', None)
     if capture is None:
         raise RuntimeError('Actual Editor viewport screenshot API unavailable')
-    output = Path(u.Paths.project_dir())/'evidence/scene-review'
+    output = Path(u.Paths.project_dir()).resolve()/'evidence/scene-review'
     output.mkdir(parents=True, exist_ok=True)
     stamp = time.time_ns()
     path = output/(view+'-'+str(stamp)+'.png')
