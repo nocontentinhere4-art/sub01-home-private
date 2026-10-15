@@ -1,0 +1,45 @@
+{
+  "schema": "sub01.actual-reference-bedding-source.v1",
+  "native_imported": false,
+  "source_visual_reviewed": true,
+  "reference": {
+    "page": "https://hmlet.com/en/property/city/tokyo",
+    "photo": "https://cdn.hmlet.com/morishita/603/small/photo_main1_20250311_141817.jpg",
+    "use": "Viewed photographic reference for white linen drape; no reference photograph used as production texture."
+  },
+  "geometry": {
+    "duvet": "Actual70-frame Blender cloth simulation on measured1.52x2.03m mattress",
+    "pillows": "Existing CC0 PolyHaven throw_pillows_01 source, original topology and sewn seams retained; sleeping orientation/scale fitted",
+    "source_only": true
+  },
+  "server_root": "/workspace/sub01-home-private/reference-bedding-source-r1/output",
+  "files": {
+    "bedding.glb": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
+    "bedding-lite.glb": "33fdcff0b3b8207712d6d35e4db51710c7ef57122ba82584ca93efc0455e3477",
+    "bedding.blend": "877de066d1b7b68424a285f1fcee8755e568f0ecd9229e5a0ae865d55b984b7f",
+    "bed-reference-review.png": "7ca2d0403211975c15af45de8b22a63e52bfad30a2095dd2907c4129e4e2b4c6"
+  },
+  "replacement": {
+    "source_nodes": [
+      263,
+      264
+    ],
+    "preserve_existing_headboard_mattress_frame": true,
+    "gltf_world_translation_m": [
+      -2.4,
+      3.6,
+      -2.35
+    ]
+  },
+  "validation": {
+    "python_compile": "pass",
+    "actual_blender_bake": "pass",
+    "actual_cpu_preview": "viewed",
+    "native_visual": "pending",
+    "native_walk_collision": "pending"
+  },
+  "limitations": [
+    "An isolated neutral-lit source render is not final acceptance inside the real native home.",
+    "Existing frame/headboard/mattress remain preserved; this packet replaces textiles only."
+  ]
+}
