@@ -1,5 +1,11 @@
 # Private local home
 
+## Latest human GPU duration — 15 October, 24 hours continuous
+
+The owner subsequently explicitly authorized keeping the GPU running for **24 hours**, then deciding whether to continue. GPU deadline is now **2026-10-16 02:19:35 UTC (04:19:35 Europe/Rome), epoch 1792117175**. This supersedes GPU shutdown at the six-hour work target; the work target itself remains 2026-10-15 08:14:32 UTC. Authenticate replacement guards before retiring the previous ones and update services from the trusted root-owned runtime window without restarting the pod. Preserve the $10 balance/data reserve and other-account-spend monitoring. Do not extend beyond the 24 hours yourself.
+
+Actual replacement allocated at 02:17:45 UTC: **dgtgepkz7h1zy5**, Secure Cloud EU-RO-1, RTX4090/24GB, 16 vCPU, 61GB RAM, $0.89/hour, 20GB container disk; 150GB Standard persistent network volume **dvrlt6yk2k** attached at creation at /workspace. Provider/transfer/Unreal operations remain the renderer owner's responsibility. Never modify the separate brain server or public sites. Ordinary changes are hot-applied within the persistent private working environment, not by stopping/restarting the GPU.
+
 ## Latest human continuation — 15 October, continuous six-hour work
 
 The owner explicitly instructed use of the available Runpod balance, an available GPU, and no repeated stop/start for code or scene changes. They then fixed six hours of work on 15 October at 02:14:32 UTC: the absolute stop deadline is **2026-10-15 08:14:32 UTC (10:14:32 Europe/Rome), epoch 1792052072**. This supersedes the older two-hour/four-hour implementation windows below. Keep the working GPU and Editor alive across changes; stop for completion, the fixed deadline, a verified budget cutoff, or an actual unrecoverable failure. Do not extend the six-hour deadline yourself.
