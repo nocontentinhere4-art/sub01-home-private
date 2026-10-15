@@ -1,0 +1,129 @@
+{
+  "schema": "sub01.authored-digit-anatomical-hands-r9.v1",
+  "private_only": true,
+  "status": "Actual sculpt-region rig rebuilt; independent digit identity, skin-motion and device contact remain unaccepted",
+  "original_skin_geometry_changed": false,
+  "mirrored_hands": false,
+  "source_archive_sha256": "811f43accbb31a88266d932f8f5563b2d13586fca0ba2693aad1f5fe582b3515",
+  "source_blend_sha256": "3c121505651140ceb4d69fd1d8923f7788ffadd81672f5be14845a5f2c75c137",
+  "source_license": "Official Blender Human Base Meshes v1.4.1 CC0",
+  "rig_glb_sha256": "edf71e368cc82c0441e7282df4a296ac7568c1aeea9fff9fa533b398164991c2",
+  "rig_blend": "/workspace/sub01-home-private/human-base-hands-r1/rig-r9/official-adult-hand-pair-rig.blend",
+  "report": "/workspace/sub01-home-private/human-base-hands-r1/rig-r9/rig-report.json",
+  "bone_count": 44,
+  "skin_vertices": {
+    "Left": 64223,
+    "Right": 64198
+  },
+  "actual_source_region_map": {
+    "Left": {
+      "palm": 9,
+      "forearm": 12,
+      "Thumb": [
+        80,
+        81,
+        82,
+        83
+      ],
+      "Index": [
+        76,
+        77,
+        78,
+        79
+      ],
+      "Middle": [
+        72,
+        73,
+        74,
+        75
+      ],
+      "Ring": [
+        68,
+        69,
+        70,
+        71
+      ],
+      "Pinky": [
+        64,
+        65,
+        66,
+        67
+      ]
+    },
+    "Right": {
+      "palm": 10,
+      "forearm": 11,
+      "Thumb": [
+        84,
+        85,
+        86,
+        87
+      ],
+      "Index": [
+        88,
+        89,
+        90,
+        91
+      ],
+      "Middle": [
+        92,
+        93,
+        94,
+        95
+      ],
+      "Ring": [
+        96,
+        97,
+        98,
+        99
+      ],
+      "Pinky": [
+        100,
+        101,
+        102,
+        103
+      ]
+    }
+  },
+  "joint_authority": "MCP/PIP/DIP from exact original shared sculpt-region boundary vertex rings; endpoint from own original distal+nail cap, moved inward 7% of distal length. Actual detailed skin medial crosssection refines X. Optional segment interior fitting bounded3.5mm; source region identity retained in durable receipt.",
+  "weighting": "Fresh Blender bone heat on genuine source coarse quad surface with temporary solver-only cuff cap; robust barycentric transfer to original detailed skin. No old Tripo weights.",
+  "build_checks": {
+    "unweighted_vertices": 0,
+    "cross_side_vertices": 0,
+    "max_sum_error_left": 4.470348358154297e-08,
+    "max_sum_error_right": 4.6095465222606435e-08,
+    "all_original_skin_rest_vertices_exact": true
+  },
+  "rejected_predecessor": "R8 donor-based anatomy was inside skin but mapped onto incorrect physical digits. Never use R8 or its motion derivatives for native/contact acceptance.",
+  "tailored_cuff_candidate": {
+    "source": "/workspace/sub01-home-private/human-base-hands-r1/owner-composite-r15",
+    "status": "Saved constrained Blender scene exists, but actual32frame cuff audit rejected right-side skin intersections. Refit after R9 canonical rig/skin-motion proof.",
+    "no_native_import": true
+  },
+  "acceptance": {
+    "digit_identity": true,
+    "rest_anatomy_independent": false,
+    "motion_skin": false,
+    "cuff": false,
+    "controller": false,
+    "pc": false,
+    "phone": false,
+    "first_person_camera": false,
+    "native_imported": false,
+    "autonomy_ready": false,
+    "digit_identity_scope": "Root independently verified30 actual authored source boundary joints and viewed both-side distinct-digit overlays; no skin-motion/contact acceptance implied"
+  },
+  "authored_highres_regions": {
+    "remote": "/workspace/sub01-home-private/human-base-hands-r1/rig-r9/exact-authored-highres-regions.json",
+    "local": "out/official-adult-hand-rig-r9/exact-authored-highres-regions.json",
+    "sha256": "53aaed6944200e96ad24384f12ffdba609842f0f5d879c2f274636c32a62d760",
+    "bytes": 18633491,
+    "vertices": 128421,
+    "method": "Uniquely matched original Multires3 vertices by1e\u22127m Blender world coordinate key; original propagated face-region IDs and all boundary incidences retained",
+    "glTF_to_Blender_coordinate_conversion": "(x,\u2212z,y)"
+  },
+  "actual_raw_capture_review": "out/house-evidence/actual-new-hand-r9-raw-capture",
+  "motion_status": "Actual32-frame raw-capture BVH still rejects residual web intersections; root owns region-aware weight derivative. Do not integrate until it passes.",
+  "exported_surface_proof": "out/official-adult-hand-rig-r9/independent-exported-surface-proof.json",
+  "source_surface_attributes_exact": "All POSITION, NORMAL and triangle-index bytes unchanged versus exact original R8 sculpt geometry. Both sources have no TEXCOORD_0; no exported UV preservation claimed."
+}

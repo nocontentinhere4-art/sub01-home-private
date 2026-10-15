@@ -1,0 +1,73 @@
+{
+  "schema": "sub01.official-anatomical-hands-source-packet.v1",
+  "status": "REJECTED: actual digit overlay revealed donor-derived chains assigned to wrong physical fingers. Inside-skin audit was insufficient.",
+  "private_only": true,
+  "source": {
+    "official_catalog": "https://www.blender.org/download/demo-files/",
+    "bundle": "Human Base Meshes v1.4.1",
+    "license": "CC0",
+    "archive_sha256": "811f43accbb31a88266d932f8f5563b2d13586fca0ba2693aad1f5fe582b3515",
+    "source_blend_sha256": "3c121505651140ceb4d69fd1d8923f7788ffadd81672f5be14845a5f2c75c137",
+    "anatomical_mesh": "GEO-body_male_realistic, original three multiresolution levels",
+    "both_sides_original_not_mirrored": true,
+    "source_pair_sha256": "dd355e9a42b0b3df69e932e57007c27ad8e2374066948c42ef5edeb1e2007a6e",
+    "source_extraction_proof": "/workspace/sub01-home-private/human-base-hands-r1/adult-hand-pair-source-r1/independent-written-surface-proof.json"
+  },
+  "actual_rig": {
+    "editable_blend": "/workspace/sub01-home-private/human-base-hands-r1/rig-r8/official-adult-hand-pair-rig.blend",
+    "glb": "/workspace/sub01-home-private/human-base-hands-r1/rig-r8/official-adult-hand-pair-rig.glb",
+    "glb_sha256": "066c8a30cee02cfeb5f615cb69d4f00fbebaf1c7be1c694c6d9b6d78ddfa05f4",
+    "bone_count": 44,
+    "deforming_bones_per_side": 17,
+    "terminal_fourth_phalanges_deform": false,
+    "left_vertices": 64223,
+    "right_vertices": 64198,
+    "weight_source": "New Blender bone heat on genuine original coarse sculpt domain, barycentric transfer to unchanged detailed surface; no old Tripo weights",
+    "rest_anatomy_independent_audit": "/workspace/sub01-home-private/human-base-hands-r1/rig-r8-independent-audit.json",
+    "rest_anatomy_audit_result": "All 17 deform bone segments per side, seven probes each, inside capped analysis-only skin; both sides weighted, zero cross-side or unweighted vertices",
+    "source_rest_vertices_unchanged_by_binding": true,
+    "digit_identity_verified": false,
+    "digit_identity_failure": "Index/Middle/Ring chains shifted onto adjacent physical digits; Ring and Pinky share the last physical digit. Rebuilt from actual authored sculpt region boundaries as R9."
+  },
+  "motion_evidence": {
+    "baseline_relative_candidate_sha256": "3b1660eacf58203f3e87dfa2fa00799c27d104306bf5370c9fce2fa82fee3862",
+    "baseline_relative_audit": "Finite all frames; right no nonadjacent BVH pairs; left local thumb-web candidates in five frames. Not contact accepted.",
+    "old_derived_capture_directions_sha256": "8b4050c7821c131679e51686fe2bd48a32d24b9e653c9b2a5e794e9d276a6a04",
+    "old_derived_capture_directions_status": "REJECTED: independently accurate joint directions do not prevent severe skin intersections/stretch. Must not integrate.",
+    "raw_original_capture_retarget": "Owned by root; actual skin audit pending before adoption",
+    "new_procedural_finger_curl_authored": false,
+    "mirrored_animation_or_skin": false
+  },
+  "canonical_owner_review": {
+    "tool": "tools/bind_canonical_walk_owner.mjs",
+    "actual_output_sha256": "15702245a3a820ae57fd28d3456a57cc67a0afe403c27a60c3e701eac48cf9ff",
+    "actual_capture_channel_count": 66,
+    "preservation_test": "tests/test_canonical_captured_walk_owner.py",
+    "test_result": "1 passed; all original channel names, float sample values, interpolation and owner rest/mesh/skin/material/image data exact",
+    "raw_capture_distribution": "Private project use only; no standalone asset redistribution"
+  },
+  "cuff_integration": {
+    "tool": "tools/fit_official_hand_owner_composite_blender.py",
+    "source_only_no_native_input": true,
+    "candidate_body": "Canonical original Walking owner",
+    "latest_candidate": "/workspace/sub01-home-private/human-base-hands-r1/owner-composite-r8",
+    "approach": "Actual forearm axes and wrist centers; no anatomical scale or oversized mounting offset; proximal surplus skin only, protecting phalange-weighted anatomy. Local original dark cuff cloth fit is measured against actual new skin, retains original material/UV/weights.",
+    "cuff_selector_limitation": "Dark authored texture and proximity selection is a candidate garment mask, requiring actual visual and geometric audit; it is not a semantic clothing annotation.",
+    "refused_candidates": [
+      "R2 damaged original cuff faces; rejected",
+      "R5 crop would alter phalange-weighted anatomy; refused",
+      "R6 required more than 4 cm mounting correction; refused"
+    ],
+    "first_person_limitation": "Source camera/head visibility and actual native camera parity still require correction; standalone source image does not prove native framing"
+  },
+  "acceptance": {
+    "skin_self_contact": false,
+    "cuff_contact": false,
+    "controller_contact": false,
+    "pc_contact": false,
+    "phone_contact": false,
+    "first_person_visual": false,
+    "native_imported": false,
+    "autonomy_ready": false
+  }
+}
