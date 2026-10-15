@@ -56,6 +56,9 @@ def verify_native_structural_union(u,actors):
 
 def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
+ if getattr(u,'__name__',None)=='unreal':
+  from unreal_editor_queue_refresh import refresh
+  refresh()  # Reviewed same-instance queue refresh; helper authenticates ownership/guard.
  # A warm Editor retains dependency modules across reviewed source retries.
  import importlib,real_office_plant
  plant_preflight=importlib.reload(real_office_plant).native_preflight
