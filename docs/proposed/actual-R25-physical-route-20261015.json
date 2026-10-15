@@ -1,0 +1,73 @@
+{
+  "schema": "sub01.actual-R25-physical-route-acceptance.v1",
+  "native_pid": 39931,
+  "native_start_ticks": 974207379,
+  "module_sha256": "ac53fbedad394ada48344b5eca338a251cba90e734403e4124d8a1661a6e1036",
+  "configuration": {
+    "radius_cm": 25,
+    "half_height_cm": 91,
+    "near_clip_cm": 1,
+    "explicit_review_only": true
+  },
+  "physical_canonical_route_accepted": true,
+  "canonical_checkpoint_count": 18,
+  "all_checkpoints_moving_on_ground": true,
+  "movement_method": "Existing source-pinned native CharacterMovement AddMovementInput; no teleport, forced vertical position or collision disable",
+  "native_result": "[2026.10.15-09.35.58:218][370]LogTemp: Display: SUB01_ROUTE_RESULT success=1 reason=Controlled source route walked physically reached=18/18 pawn=X=188.147 Y=-73.531 Z=96.363 eye=X=210.627 Y=-72.721 Z=160.973 floor=1",
+  "native_checkpoint_rows": [
+    "[2026.10.15-09.35.36:667][ 77]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=door pawn=X=205.708 Y=320.082 Z=95.650 eye=X=197.882 Y=298.992 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.37:450][124]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=front pawn=X=141.686 Y=319.603 Z=95.650 eye=X=119.370 Y=316.770 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.38:484][186]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_approach pawn=X=41.453 Y=319.965 Z=95.650 eye=X=19.234 Y=316.452 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.39:200][229]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_bottom pawn=X=31.504 Y=266.828 Z=110.419 eye=X=32.239 Y=244.345 Z=175.029 floor=1 heightErrorCm=14.419 solidFloorCm=19.9484",
+    "[2026.10.15-09.35.42:551][430]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_top pawn=X=30.032 Y=-158.368 Z=395.261 eye=X=33.551 Y=-180.586 Z=459.872 floor=1 heightErrorCm=0.739 solidFloorCm=302.3559",
+    "[2026.10.15-09.35.43:134][465]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=landing pawn=X=30.006 Y=-198.054 Z=395.587 eye=X=33.576 Y=-220.264 Z=460.197 floor=1 heightErrorCm=0.413 solidFloorCm=302.5000",
+    "[2026.10.15-09.35.43:967][515]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=loft pawn=X=-38.237 Y=-211.165 Z=395.650 eye=X=-60.673 Y=-212.794 Z=460.260 floor=1 heightErrorCm=0.350 solidFloorCm=302.4999",
+    "[2026.10.15-09.35.45:017][578]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=bed pawn=X=-111.821 Y=-281.909 Z=395.650 eye=X=-125.092 Y=-300.072 Z=460.260 floor=1 heightErrorCm=0.350 solidFloorCm=302.4999",
+    "[2026.10.15-09.35.45:984][636]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=loft-return pawn=X=-57.660 Y=-218.875 Z=395.650 eye=X=-45.860 Y=-199.723 Z=460.260 floor=1 heightErrorCm=0.350 solidFloorCm=302.5000",
+    "[2026.10.15-09.35.46:850][688]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=landing-return pawn=X=18.398 Y=-210.923 Z=395.650 eye=X=40.251 Y=-205.590 Z=460.260 floor=1 heightErrorCm=0.350 solidFloorCm=302.5000",
+    "[2026.10.15-09.35.47:384][720]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_top-return pawn=X=27.651 Y=-181.462 Z=395.650 eye=X=28.639 Y=-158.989 Z=460.260 floor=1 heightErrorCm=0.350 solidFloorCm=302.5000",
+    "[2026.10.15-09.35.51:167][947]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_bottom-return pawn=X=29.995 Y=253.797 Z=115.427 eye=X=26.510 Y=276.020 Z=180.037 floor=1 heightErrorCm=19.427 solidFloorCm=37.2141",
+    "[2026.10.15-09.35.51:901][991]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=stair_approach-return pawn=X=29.999 Y=308.158 Z=95.650 eye=X=26.420 Y=330.366 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.52:867][ 49]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=front-return pawn=X=118.181 Y=318.894 Z=95.650 eye=X=139.959 Y=324.530 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.53:684][ 98]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=door-return pawn=X=188.388 Y=311.350 Z=95.650 eye=X=210.861 Y=312.344 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.54:401][141]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=front-desk pawn=X=141.358 Y=318.337 Z=95.650 eye=X=118.866 Y=318.012 Z=160.260 floor=1 heightErrorCm=0.350 solidFloorCm=2.5001",
+    "[2026.10.15-09.35.57:467][325]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=aisle pawn=X=130.281 Y=-63.183 Z=96.363 eye=X=133.332 Y=-85.470 Z=160.973 floor=1 heightErrorCm=0.363 solidFloorCm=3.0000",
+    "[2026.10.15-09.35.58:218][370]LogTemp: Display: SUB01_ROUTE_CHECKPOINT name=desk pawn=X=188.147 Y=-73.531 Z=96.363 eye=X=210.627 Y=-72.721 Z=160.973 floor=1 heightErrorCm=0.363 solidFloorCm=3.0000"
+  ],
+  "record": {
+    "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/r25-protected-actual-R25-controlled-source-route-78s.mp4",
+    "sha256": "50f88d386983267d581fb9eae0f9e5c0386a9286d47e63f5d2b85b3c3bbfc160",
+    "duration_s": 78.0,
+    "identity_and_both_privacy_checks": 297,
+    "started_epoch": 1792056933.8972518,
+    "finished_epoch": 1792057012.2503107,
+    "modes": [
+      "diagnostic",
+      "manual"
+    ],
+    "native_x11_viewport": true,
+    "decoded_frames_viewed_s": [
+      7,
+      10,
+      19,
+      23
+    ]
+  },
+  "manual_checkpoint_observation": {
+    "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/dgt-R25-actual-physical-checkpoints-39931.json",
+    "sha256": "30439432594f4d3ddbaa601188979893cde211c6746873545c7730253334fca2",
+    "front_door_crossing_and_PC_uname_observed": true,
+    "bathroom_entered": false,
+    "bathroom_closed_state_verified": false
+  },
+  "earlier_second_manual_movie": {
+    "failed_closed": true,
+    "deleted": true,
+    "exception_observation": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/r25-ground-record-failed-closed-observation.json",
+    "sha256": "c46302511ba6fc018a42bd0a86a0ff3cefac84b83f9a2dcd7292006ba89fc1df"
+  },
+  "foot_contact_gait_visual_all_rooms_accepted": false,
+  "seat_controller_autonomous_activity_accepted": false,
+  "default_launch_capsule_changed": false,
+  "scope": "Canonical physical route plus separately observed manual front-door/PC checks; not every room/door/device or body/feet acceptance"
+}
