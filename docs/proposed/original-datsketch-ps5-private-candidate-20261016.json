@@ -1,0 +1,71 @@
+{
+  "schema": "sub01.private-original-ps5-source-packet.v1",
+  "status": "candidate source images delivered to root; not imported",
+  "artist": "DatSketch",
+  "title": "Playstation 5 Digital Edition (2020 original, not Slim)",
+  "artist_url": "https://sketchfab.com/DatSketch",
+  "primary_model_url": "https://sketchfab.com/3d-models/playstation-5-digital-edition-ea891a5332934095a5c6407b3b14b296",
+  "primary_current_license": "CC-BY-ND-4.0",
+  "primary_license_observed_with_configured_playwright": true,
+  "historical_embedded_license": "CC-BY-4.0 (conflicts with current primary; not asserted current BY permission)",
+  "immutable_mirror_commit": "01f2a6a744f407abb95b0dc6f433dd1a11dd4c3f",
+  "mirror_public_source": "https://github.com/zuramai/ps5-landing/tree/01f2a6a744f407abb95b0dc6f433dd1a11dd4c3f/dist/assets/models/ps5",
+  "source_remote_directory": "/workspace/sub01-home-private/ps5-datsketch-original-r1",
+  "review": {
+    "schema": "sub01.original-datsketch-ps5-review.v1",
+    "raw_gltf_sha256": "b9a0248fcc589d9d4add5d4579f4b7294ae94563bf3c51a4ad88e119aea9a260",
+    "raw_bin_sha256": "1c82f48f3b8f950e6c4133ea909b10faa4b2c2cc071baa2db855af41374f0f97",
+    "asset_metadata_original": {
+      "extras": {
+        "author": "DatSketch (https://sketchfab.com/DatSketch)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/playstation-5-digital-edition-ea891a5332934095a5c6407b3b14b296",
+        "title": "Playstation 5 Digital Edition"
+      },
+      "generator": "Sketchfab-9.82.0",
+      "version": "2.0"
+    },
+    "primary_current_license": "CC-BY-ND-4.0 verified official artist Sketchfab page",
+    "historical_embedded_license": "CC-BY-4.0; conflicting with current primary, not asserted current BY license",
+    "complete_original_meshes": 24,
+    "original_materials": 13,
+    "mesh_PBR_TRS_source_modified": false,
+    "bounds_Blender_imported_units": [
+      [
+        -64.6814956665039,
+        -108.2154312133789,
+        -0.08846907317638397
+      ],
+      [
+        67.5992660522461,
+        157.2681121826172,
+        329.0549621582031
+      ]
+    ],
+    "dimensions_Blender_imported_units": [
+      132.28076171875,
+      265.4835510253906,
+      329.1434326171875
+    ],
+    "native_imported": false,
+    "redistribution_authorized": false
+  },
+  "source_attribution": "Playstation 5 Digital Edition by DatSketch, https://sketchfab.com/DatSketch, current primary CC Attribution-NoDerivs4.0. Complete source privately inspected without mesh/material/TRS changes. Historical mirror metadata separately retained.",
+  "root_authorized_scope": "PRIVATE original complete asset inspection only; no mesh/PBR/LOD/cut/deformation, no publication/redistribution. Any eventual integration must preserve full model, original files and attribution; unit and support fit separately reviewed.",
+  "sony_official_physical_reference": {
+    "url": "https://blog.playstation.com/2020/11/09/ps5-the-ultimate-faq/",
+    "digital_dimensions_mm_excluding_base": [
+      390,
+      92,
+      260
+    ],
+    "actual_source_physical_scale_verified": false
+  },
+  "images": {
+    "front": "out/house-evidence/ps5-datsketch-original-r1/front.png",
+    "rear": "out/house-evidence/ps5-datsketch-original-r1/rear.png",
+    "primary_license": "out/house-evidence/ps5-datsketch-primary-license.png"
+  },
+  "native_imported": false,
+  "contact_or_gameplay_acceptance": false
+}
