@@ -242,7 +242,7 @@ def test_actual_imported_seating_assets_bind_to_semantic_roles(installed):
     bindings = cpp.split(' struct FSeatRoleBinding', 1)[1].split(' for(const auto& Role:Roles)', 1)[0]
     source = ('#include <cstdio>\n#include <cstdint>\n#include "Sub01SeatTransition.h"\n'
               'using TCHAR=char;using uint32=uint32_t;\n#define TEXT(x) x\nint main(){struct FSeatRoleBinding'
-              + bindings + 'for(const auto& r:Roles)std::printf("%s:%s:%u\\n",r.Key,r.Asset,r.Value);return 0;}')
+              + bindings + 'for(const auto& r:Roles){std::printf("%s:%s:%u\\n",r.Key,r.Asset,r.Value);}\nreturn 0;}')
     assert run_cpp(source).splitlines() == ['StandToSit:SitDown:1', 'Sitting:Sitting:2',
                                            'SitToType:SitToType:4', 'SitToStand:GetUp:16']
     load = cpp.split('void ASub01HomeCharacter::LoadSeatTransition(){', 1)[1].split(' // Chair:', 1)[0]
