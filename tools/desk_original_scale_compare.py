@@ -1,7 +1,7 @@
 import json, sys
 import numpy as np
 R = '/home/user/sub01-home-private/'
-A_DIR, B_DIR = R + 'docs/proposed/ergonomic-layout-refit/', R + 'docs/proposed/desk-original-scale/'
+A_DIR, B_DIR = R + 'docs/proposed/ergonomic-layout-refit/', R + 'docs/proposed/desk-original-scale/chair-roll-7p702/'
 T = {'elbow_above_top_cm': (0., 10.), 'upper_arm_deg': (-1e9, 20.), 'wrist_flexion_deg': (-15., 15.), 'wrist_deviation_deg': (-20., 10.)}
 def stats(d):
     out = {}

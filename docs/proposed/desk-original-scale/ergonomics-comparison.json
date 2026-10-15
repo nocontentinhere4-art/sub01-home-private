@@ -1,0 +1,168 @@
+{
+ "targets": {
+  "elbow_above_top_cm": [
+   0.0,
+   10.0
+  ],
+  "upper_arm_deg": [
+   -1000000000.0,
+   20.0
+  ],
+  "wrist_flexion_deg": [
+   -15.0,
+   15.0
+  ],
+  "wrist_deviation_deg": [
+   -20.0,
+   10.0
+  ]
+ },
+ "scale_1p086_9f4e199": {
+  "left": {
+   "elbow_above_top_cm": {
+    "min": -2.16,
+    "median": -0.16,
+    "max": 2.25,
+    "in_target": "210/989",
+    "in_target_pct": 21.2
+   },
+   "upper_arm_deg": {
+    "min": 29.02,
+    "median": 39.03,
+    "max": 43.5,
+    "in_target": "0/989",
+    "in_target_pct": 0.0
+   },
+   "wrist_flexion_deg": {
+    "min": 0.33,
+    "median": 4.27,
+    "max": 10.18,
+    "in_target": "989/989",
+    "in_target_pct": 100.0
+   },
+   "wrist_deviation_deg": {
+    "min": -19.75,
+    "median": -9.83,
+    "max": -4.91,
+    "in_target": "989/989",
+    "in_target_pct": 100.0
+   },
+   "shoulder_elevation_deg": {
+    "min": -22.38,
+    "median": -17.06,
+    "max": -8.98
+   },
+   "all_four_in_target_pct": 0.0
+  },
+  "right": {
+   "elbow_above_top_cm": {
+    "min": -0.83,
+    "median": 2.11,
+    "max": 15.82,
+    "in_target": "788/989",
+    "in_target_pct": 79.7
+   },
+   "upper_arm_deg": {
+    "min": 31.72,
+    "median": 42.53,
+    "max": 77.41,
+    "in_target": "0/989",
+    "in_target_pct": 0.0
+   },
+   "wrist_flexion_deg": {
+    "min": -29.75,
+    "median": 1.37,
+    "max": 16.09,
+    "in_target": "878/989",
+    "in_target_pct": 88.8
+   },
+   "wrist_deviation_deg": {
+    "min": -49.06,
+    "median": -14.72,
+    "max": 16.07,
+    "in_target": "557/989",
+    "in_target_pct": 56.3
+   },
+   "shoulder_elevation_deg": {
+    "min": -21.81,
+    "median": -13.15,
+    "max": -5.16
+   },
+   "all_four_in_target_pct": 0.0
+  }
+ },
+ "scale_1p0_desk_original_scale": {
+  "left": {
+   "elbow_above_top_cm": {
+    "min": 1.82,
+    "median": 3.94,
+    "max": 7.45,
+    "in_target": "989/989",
+    "in_target_pct": 100.0
+   },
+   "upper_arm_deg": {
+    "min": 16.88,
+    "median": 30.55,
+    "max": 36.34,
+    "in_target": "118/989",
+    "in_target_pct": 11.9
+   },
+   "wrist_flexion_deg": {
+    "min": -0.98,
+    "median": 0.62,
+    "max": 2.02,
+    "in_target": "989/989",
+    "in_target_pct": 100.0
+   },
+   "wrist_deviation_deg": {
+    "min": -25.79,
+    "median": -18.12,
+    "max": -14.05,
+    "in_target": "656/989",
+    "in_target_pct": 66.3
+   },
+   "shoulder_elevation_deg": {
+    "min": -22.38,
+    "median": -17.06,
+    "max": -8.98
+   },
+   "all_four_in_target_pct": 11.9
+  },
+  "right": {
+   "elbow_above_top_cm": {
+    "min": 3.14,
+    "median": 6.68,
+    "max": 13.48,
+    "in_target": "883/989",
+    "in_target_pct": 89.3
+   },
+   "upper_arm_deg": {
+    "min": 19.73,
+    "median": 34.63,
+    "max": 51.52,
+    "in_target": "1/989",
+    "in_target_pct": 0.1
+   },
+   "wrist_flexion_deg": {
+    "min": -20.01,
+    "median": -0.74,
+    "max": 9.15,
+    "in_target": "974/989",
+    "in_target_pct": 98.5
+   },
+   "wrist_deviation_deg": {
+    "min": -47.55,
+    "median": -25.02,
+    "max": 15.78,
+    "in_target": "386/989",
+    "in_target_pct": 39.0
+   },
+   "shoulder_elevation_deg": {
+    "min": -21.81,
+    "median": -13.15,
+    "max": -5.16
+   },
+   "all_four_in_target_pct": 0.1
+  }
+ }
+}

@@ -1,0 +1,294 @@
+{
+ "schema": "sub01.desk-original-scale-items.v1",
+ "desk_scale": 1.0,
+ "worktop_top_cm": 78.0,
+ "device_plane_cm": 78.0,
+ "drop_cm": -6.5,
+ "slab_cm": [
+  [
+   140.0,
+   -334.5,
+   75.2
+  ],
+  [
+   280.0,
+   -269.5,
+   78.0
+  ]
+ ],
+ "items": {
+  "monitor_stand": {
+   "home_js_main": "box(0.12, 0.12, 0.09, 2, 0.88, -3.3, M.metal, 0.005)",
+   "support_fix_dz_cm": 2.499999824837346,
+   "delta_ue_cm": [
+    4.0,
+    2.0,
+    -6.499999824837346
+   ],
+   "delta_vs_main_home_js_three_m": [
+    0.04,
+    -0.04,
+    0.02
+   ],
+   "proposed_home_js": "box(0.12, 0.12, 0.09, 2.04, 0.840000000, -3.2800, M.metal, 0.005)",
+   "bottom_cm": 78.0,
+   "plan_cm": [
+    [
+     198.0,
+     -332.5
+    ],
+    [
+     210.0,
+     -323.5
+    ]
+   ]
+  },
+  "monitor_frame": {
+   "home_js_main": "box(0.72, 0.44, 0.035, 2, 1.16, -3.3, M.black, 0.025)",
+   "delta_ue_cm": [
+    4.0,
+    2.0,
+    -6.499999824837346
+   ],
+   "proposed_home_js": "box(0.72, 0.44, 0.035, 2.04, 1.120000000, -3.2800, M.black, 0.025)",
+   "screen_plane_home_js": "screen.position.set(2.04, 1.120000000, -3.2560)",
+   "plan_cm": [
+    [
+     168.0,
+     -329.75
+    ],
+    [
+     240.0,
+     -326.25
+    ]
+   ]
+  },
+  "clamp_lamp": {
+   "record": "origin/main docs/proposed/real-linea-grommet-lamp-mount-20261014.json",
+   "old_origin_ue_cm": [
+    160.14190484299667,
+    -325.89403973509934,
+    84.49999948211064
+   ],
+   "delta_ue_cm": [
+    4.046357615894039,
+    1.8940397350993377,
+    -6.5
+   ],
+   "new_origin_ue_cm": [
+    164.1882624588907,
+    -324.0,
+    77.99999948211064
+   ],
+   "old_bulb_ue_cm": [
+    177.81253625168807,
+    -326.36391367380884,
+    154.06086106963505
+   ],
+   "new_bulb_ue_cm": [
+    181.8588938675821,
+    -324.4698739387095,
+    147.56086106963505
+   ],
+   "yaw_deg": 90,
+   "scale": "unchanged (lamp source not rescaled)",
+   "new_world_aabb_cm": [
+    [
+     132.46475422009829,
+     -335.8473172187805,
+     69.20062239833226
+    ],
+    [
+     193.85201298817995,
+     -315.67438447475433,
+     158.46169229216923
+    ]
+   ],
+   "grommet_rim_centre_scale1_cm": [
+    163.0,
+    -324.0
+   ],
+   "grommet_rim_centre_root_scale_cm": [
+    158.95365,
+    -325.89405
+   ],
+   "note": "radial pin clearance and contact tolerance unchanged (rigid move with the grommet); the native collision proof is root's"
+  },
+  "grommet": {
+   "source_nodes": [
+    7,
+    8,
+    35
+   ],
+   "moves_with_desk_scale": true,
+   "rim_node35_aabb_cm": [
+    [
+     160.47,
+     -326.53,
+     77.87
+    ],
+    [
+     165.53,
+     -321.47,
+     78.33
+    ]
+   ],
+   "rim_top_cm": 78.33,
+   "centre_xy_cm": [
+    163.0,
+    -324.0
+   ],
+   "root_scale_rim_aabb_cm": [
+    [
+     156.2058,
+     -328.6419,
+     84.3588
+    ],
+    [
+     161.7015,
+     -323.1462,
+     84.8584
+    ]
+   ]
+  },
+  "phone": {
+   "home_js_main": "box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014) (+ its speaker/volume/power boxes)",
+   "delta_ue_cm": [
+    0.0,
+    0.0,
+    -6.5
+   ],
+   "plan_cm": [
+    [
+     266.25,
+     -299.5
+    ],
+    [
+     273.75,
+     -284.5
+    ]
+   ],
+   "note": "rigid -6.5 cm with every phone part (keeps main's bottom-to-top relation)"
+  },
+  "keyboard": {
+   "delta_ue_cm": [
+    8.0,
+    14.202,
+    -6.6
+   ],
+   "proposed_home_js": "furnished(\"keyboard\", 2.0800, 0.7800, -2.7980, 0.371, 0, \"/house/assets/keyboard/keyboard.glb\")",
+   "proposed_three_m": [
+    2.08,
+    0.78,
+    -2.79798
+   ],
+   "plan_cm": [
+    [
+     189.45,
+     -287.844
+    ],
+    [
+     226.55,
+     -271.752
+    ]
+   ],
+   "bottom_cm": 78.0,
+   "key_field_cm": [
+    [
+     190.173,
+     -287.095,
+     79.937
+    ],
+    [
+     225.749,
+     -273.715,
+     80.79
+    ]
+   ]
+  },
+  "mouse": {
+   "delta_ue_cm": [
+    0.0,
+    9.05,
+    -6.6
+   ],
+   "proposed_home_js": "furnished(\"mouse\", 2.4000, 0.7800, -2.8195, 0.22, 0, \"/room/mouse.glb\")",
+   "proposed_three_m": [
+    2.4,
+    0.78,
+    -2.8195
+   ],
+   "plan_cm": [
+    [
+     229.0,
+     -292.4
+    ],
+    [
+     251.0,
+     -271.5
+    ]
+   ],
+   "palm_target_cm": [
+    241.2,
+    -277.527,
+    83.441
+   ]
+  }
+ },
+ "slab_margins_cm": {
+  "monitor_stand": {
+   "front_cm": 54.0,
+   "rear_cm": 2.0,
+   "left_cm": 58.0,
+   "right_cm": 70.0
+  },
+  "monitor_frame": {
+   "front_cm": 56.75,
+   "rear_cm": 4.75,
+   "left_cm": 28.0,
+   "right_cm": 40.0
+  },
+  "phone": {
+   "front_cm": 15.0,
+   "rear_cm": 35.0,
+   "left_cm": 126.25,
+   "right_cm": 6.25
+  },
+  "keyboard": {
+   "front_cm": 2.252,
+   "rear_cm": 46.656,
+   "left_cm": 49.45,
+   "right_cm": 53.45
+  },
+  "mouse": {
+   "front_cm": 2.0,
+   "rear_cm": 42.1,
+   "left_cm": 89.0,
+   "right_cm": 29.0
+  },
+  "grommet_rim": {
+   "front_cm": 51.97,
+   "rear_cm": 7.97,
+   "left_cm": 20.47,
+   "right_cm": 114.47
+  }
+ },
+ "plan_overlaps_on_top": {
+  "monitor_stand|monitor_frame": true,
+  "monitor_stand|phone": false,
+  "monitor_stand|keyboard": false,
+  "monitor_stand|mouse": false,
+  "monitor_stand|grommet_rim": false,
+  "monitor_frame|phone": false,
+  "monitor_frame|keyboard": false,
+  "monitor_frame|mouse": false,
+  "monitor_frame|grommet_rim": false,
+  "phone|keyboard": false,
+  "phone|mouse": false,
+  "phone|grommet_rim": false,
+  "keyboard|mouse": false,
+  "keyboard|grommet_rim": false,
+  "mouse|grommet_rim": false
+ },
+ "note": "plan boxes are the items' footprints on the worktop; the clamp lamp is mounted IN the grommet (not on the top) and its arm overhangs, so lamp|grommet and lamp overhead overlaps are by design and are checked natively by root's collision proof"
+}
