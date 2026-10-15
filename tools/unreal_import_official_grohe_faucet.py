@@ -50,7 +50,7 @@ def run(dry_run=True):
  assert hashlib.sha256((project/'SourceAssets/full-home.glb').read_bytes()).hexdigest()==HOME_SHA
  doc,blob=read_gltf(source);assert contract(json.loads((ROOT/'source-report.json').read_text()),doc)
  proofpath=ROOT/'independent-fit.json';assert hashlib.sha256(proofpath.read_bytes()).hexdigest()=='2938e536489653b9efc0b539d3bb6f120cceea00677cc63779623582f3fb7012';proof=json.loads(proofpath.read_text());assert proof['schema']=='sub01.official-grohe-concetto-independent-counter-fit.v1'and proof['source_sha256']==SHA and proof['ok']is True and proof['intersections']==[], 'Independent true counter/sink/handle fit must pass'
- inventory_path=project/'private-audit/kitchen-detail-inventory.json';assert hashlib.sha256(inventory_path.read_bytes()).hexdigest()==INVENTORY_SHA
+ inventory_path=ROOT.parent/'source/original-faucet-inventory-106.json';assert hashlib.sha256(inventory_path.read_bytes()).hexdigest()==INVENTORY_SHA
  inventory=json.loads(inventory_path.read_text());pinned={r['name']:r['snapshot']for r in inventory['components']}
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors());before=snapshot(u,actors)
  assert not any(a.get_actor_label().startswith(PREFIX) for a in actors),'GROHE Concetto already installed; inspect receipt'
