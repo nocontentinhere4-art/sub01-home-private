@@ -85,6 +85,10 @@ def assigned_material_binding(c,source,destination):
 
 
 def guard():
+ # A parallel Editor is allowed only on the independently copied candidate;
+ # its root-owned scope pins both actual processes and protects the live map.
+ from private_home_candidate_scope import active_candidate_guard
+ if active_candidate_guard():return
  from unreal_editor_task_queue import guard_valid
  if not guard_valid(now=time.time()+60):raise RuntimeError('Authenticated live private budget window required')
  private=Path('/home/unreal/.sub01-private')

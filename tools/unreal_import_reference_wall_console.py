@@ -63,7 +63,9 @@ def run(dry_run=True):
  doc,blob=read_gltf(source)
  if len(doc['nodes'])!=6 or {n.get('name')for n in doc['nodes']}!=NAMES:raise RuntimeError('Exact six material-group sources required')
  project=Path(u.Paths.project_dir()).resolve()
- if project!=Path('/workspace/sub01-private-recovered-project/Sub01HomeLab')or hashlib.sha256((project/'SourceAssets/full-home.glb').read_bytes()).hexdigest()!=HOME_SHA:raise RuntimeError('Exact private project and protected home source required')
+ from private_home_candidate_scope import require_project
+ require_project(project)
+ if hashlib.sha256((project/'SourceAssets/full-home.glb').read_bytes()).hexdigest()!=HOME_SHA:raise RuntimeError('Exact protected home source required')
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
  if not world or world.get_path_name().split('.',1)[0]!='/Game/Sub01Home/ActualHome':raise RuntimeError('ActualHome must already be loaded')
  audit=project/'private-audit';receipt=json.loads((audit/'reference-media-native-import.json').read_text())

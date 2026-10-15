@@ -36,6 +36,8 @@ def contract(root,proof_path):
 
 def run(style_root,proof_path,dry_run=True):
  import unreal as u
+ from unreal_import_reference_entry import guard
+ guard()
  from home_asset_audit import read_gltf
  from unreal_import_authentic_bath_fixtures import prepare_import
  from unreal_import_real_wc import expected_triangles,owned_geometry
