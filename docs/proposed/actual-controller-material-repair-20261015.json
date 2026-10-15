@@ -1,0 +1,21 @@
+{
+  "schema": "sub01.actual-controller-material-repair.v1",
+  "pod": "dgtgepkz7h1zy5",
+  "editor_pid": 58031,
+  "task_revision": 82,
+  "task_success": true,
+  "source_commit": "fb9c2ab",
+  "audit_local_path": "out/house-evidence/controller-material-native-audit.json",
+  "audit_sha256": "634a0d6d80146491e7aa8517dca48ee00a7d928959713e0c94cd6fa0c894aa0d",
+  "actual_fix_local_path": "out/house-evidence/controller-private-nanite-material-fix.json",
+  "actual_fix_sha256": "b3bcb9d4f3fe56bdc37404524d6e6e5b8fee8b77bf7dc50812662e2ba9b35954",
+  "scope": "One exact owned controller MIC now inherits private copies of its two plugin ancestors; only the private base enables Nanite usage.",
+  "mesh_package_sha256_unchanged": "894531d3cdb5178344fda417b8bf83a98125a5877096587f8a5faa44d6e552da",
+  "effective_pbr_equal": true,
+  "all_actor_material_bindings_equal": true,
+  "mesh_rebuilt": false,
+  "plugin_assets_modified": false,
+  "game_no_default_material_warning_verified": false,
+  "game_controller_visual_verified": false,
+  "controller_contact_or_activity_verified": false
+}
