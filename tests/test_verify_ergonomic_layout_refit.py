@@ -223,3 +223,72 @@ def test_wrist_angles_joint_line():
     mid = wrist + 8 * np.array([[math.cos(a), -math.sin(a), 0]])            # ulnar deviation 30 deg
     f, d = V.wrist_angles_anatomical(elbow, wrist, mid, palm, radial)
     assert d[0] == pytest.approx(-30., abs=1e-6) and f[0] == pytest.approx(0., abs=1e-6)
+
+
+# ---------------------------------------------------------------- desk variant (desk-original-scale)
+def _git_main_available():
+    import subprocess
+    return subprocess.run(['git', 'cat-file', '-e', 'origin/main:web/house/assets/real-linea140/originalsource.glb'],
+                          cwd=ROOT, capture_output=True).returncode == 0
+
+
+needs_main = pytest.mark.skipif(not _git_main_available(), reason='origin/main desk GLB not available')
+LOWER = {k: np.array([0., 0., -6.5]) for k in ('monitor_frame', 'monitor_stand', 'clamp_lamp', 'keyboard', 'mouse')}
+REFIT_DELTAS = {'keyboard': np.array([8., 17., -.1]), 'mouse': np.array([0., 11.848, -.1])}
+
+
+@needs_main
+def test_desk_default_scale_unchanged():
+    d = V.desk_geometry()
+    assert d['constants']['scale'] == pytest.approx(1.086093, abs=1e-6)
+    assert d['constants']['scale_source'] == 'root place_bytes SCALE'
+    assert d['top_cm'] == pytest.approx(84.5, abs=1e-3)
+    assert V.desk_variant_from_proposal is not None and V.DEFAULT_DESK_VARIANT['scale'] is None
+
+
+@needs_main
+def test_desk_scale_one_top_apron_slab():
+    d = V.desk_geometry(scale=1.0)
+    assert d['top_cm'] == pytest.approx(78.0, abs=.01)
+    assert d['apron_bottom_cm'] == pytest.approx(72.10, abs=.01)
+    assert d['slab_bottom_cm'] == pytest.approx(75.20, abs=.01)
+    assert d['floor_cm'] == pytest.approx(2.5, abs=1e-6)
+
+
+@needs_main
+def test_variant_items_on_new_top_and_floating_item_fails():
+    var = dict(V.DEFAULT_DESK_VARIANT, scale=1.0, offsets_cm=dict(LOWER))
+    r = V.desk_variant_check(var, REFIT_DELTAS)
+    assert r['desk']['top_cm'] == pytest.approx(78.0, abs=.01)
+    for k in ('keyboard', 'mouse'):
+        assert r['items'][k]['bottom_minus_top_cm'] == pytest.approx(0., abs=.01)
+        assert r['items'][k]['original_footprint']
+    assert r['items']['monitor_stand']['bottom_minus_top_cm'] == pytest.approx(0., abs=.01)
+    assert r['items']['clamp_lamp']['origin_minus_top_cm'] == pytest.approx(0., abs=.01)
+    # an item left at the old 84.5 cm top floats 6.5 cm above the new top: fails
+    off = dict(LOWER)
+    off['mouse'] = np.zeros(3)
+    r2 = V.desk_variant_check(dict(var, offsets_cm=off), REFIT_DELTAS)
+    assert r2['items']['mouse']['bottom_minus_top_cm'] == pytest.approx(6.5, abs=.01)
+    assert not r2['items']['mouse']['pass'] and not r2['pass']
+    off = dict(LOWER)
+    off['monitor_stand'] = off['monitor_frame'] = np.zeros(3)
+    r3 = V.desk_variant_check(dict(var, offsets_cm=off), REFIT_DELTAS)
+    assert r3['items']['monitor_stand']['bottom_minus_top_cm'] == pytest.approx(6.5, abs=.01)
+    assert not r3['items']['monitor_stand']['pass']
+
+
+def test_desk_variant_parser(tmp_path):
+    doc = {'status': 'in_progress', 'desk': {'scale': [1.0, 1.0, 1.0], 'translation_m': [2.1, .025, -3.02]},
+           'items': {'monitor': {'delta_ue_cm': [0, 0, -6.5]}, 'lamp': -6.5, 'keyboard': {'dz_cm': -6.5},
+                     'mouse': [0, 0, -6.5], 'targets': {'dz_cm': -6.5}}}
+    p = tmp_path / 'v.json'
+    p.write_text(json.dumps(doc))
+    v = V.desk_variant_from_proposal(p)
+    assert v['scale'] == 1.0 and v['status'] == 'in_progress'
+    for k in ('monitor_frame', 'monitor_stand', 'clamp_lamp', 'keyboard', 'mouse'):
+        assert v['offsets_cm'][k].tolist() == [0, 0, -6.5]
+    assert v['ignored_keys'] == ['targets']
+    p.write_text(json.dumps({'desk': {'scale': [1, 1, 1.1]}}))
+    with pytest.raises(ValueError):
+        V.desk_variant_from_proposal(p)

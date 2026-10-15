@@ -361,10 +361,16 @@ def part_kind(name):
     return 'other'
 
 
-def desk_geometry(ref=MAIN_REF):
+def desk_geometry(ref=MAIN_REF, scale=None):
+    """The LINEA140 rebuilt from the pinned source GLB. `scale` (uniform) overrides root's SCALE (a desk variant); the
+    translation stays root's. Default (None) = root's place_bytes SCALE (1.086093), unchanged."""
     raw = pinned('web/house/assets/real-linea140/originalsource.glb', ref)
     ptxt = git_bytes(MAIN_SOURCES['placement'], ref)
     c = placement_constants(ptxt.decode())
+    c['root_scale'] = c['scale']
+    if scale is not None:
+        c['scale'] = float(scale)
+    c['scale_source'] = 'root place_bytes SCALE' if scale is None else 'desk variant override (uniform)'
     doc, binary = parse_glb(raw)
     S, (tx, ty, tz) = c['scale'], c['translation_m']
     parts = []
@@ -387,14 +393,19 @@ def desk_geometry(ref=MAIN_REF):
     n = np.cross(t[:, 1] - t[:, 0], t[:, 2] - t[:, 0])
     flat = (np.abs(t[..., 2] - tz_) < 1e-4).all(1) & (np.linalg.norm(n, axis=1) > 1e-9)
     allv = np.concatenate([p['tris'].reshape(-1, 3) for p in parts])
+    aprons = [p for p in parts if p['kind'] == 'apron']
     return {'parts': parts, 'worktop': top, 'top_cm': float(tz_), 'flat_top_tris': t[flat],
+            'slab_bottom_cm': float(top['min'][2]),
+            'apron_bottom_cm': float(min(p['min'][2] for p in aprons)) if aprons else None,
             'floor_cm': float(allv[:, 2].min()), 'bounds': [allv.min(0), allv.max(0)], 'constants': c,
             'source_sha256': sha256(raw), 'placement_source_sha256': sha256(ptxt)}
 
 
-def desk_items(desk, ref=MAIN_REF):
+def desk_items(desk, ref=MAIN_REF, offsets=None):
     """Other desk items as UE boxes, with provenance (monitor frame + stand from home.js lifted by the support fix,
-    root's device envelopes, the clamp lamp and the grommet rim)."""
+    root's device envelopes, the clamp lamp and the grommet rim). `offsets` (desk variant): UE cm rigid offsets per item
+    ('monitor_frame', 'monitor_stand', 'clamp_lamp'); default none (unchanged)."""
+    offsets = {k: np.asarray(v, float) for k, v in (offsets or {}).items()}
     js = git_bytes(MAIN_SOURCES['home_js'], ref).decode()
     fix_raw = git_bytes(MAIN_SOURCES['monitor_fix'], ref)
     fix = json.loads(fix_raw)
@@ -417,11 +428,14 @@ def desk_items(desk, ref=MAIN_REF):
         lo, hi = np.minimum(lo, hi), np.maximum(lo, hi)
         lo[2] += lift
         hi[2] += lift
-        items[key] = {'min_cm': lo, 'max_cm': hi, 'on_slab': key == 'monitor_stand',
+        o = offsets.get(key, np.zeros(3))
+        items[key] = {'min_cm': lo + o, 'max_cm': hi + o, 'on_slab': key == 'monitor_stand',
+                      'original_min_cm': lo, 'original_max_cm': hi, 'variant_offset_cm': o,
                       'provenance': f'{ref}:web/house/home.js line {line} box({w}, {h}, {d}, {x}, {y}, {z}, M.{mat}) '
-                                    f'+ {lift:.4f} cm rigid lift ({MAIN_SOURCES["monitor_fix"]})'}
+                                    f'+ {lift:.4f} cm rigid lift ({MAIN_SOURCES["monitor_fix"]})'
+                                    + (f' + variant offset {o.tolist()} cm' if key in offsets else '')}
     stand_bottom = items['monitor_stand']['min_cm'][2]
-    screen = np.asarray(fix['new_screen_expected_center_ue_cm'], float)
+    screen = np.asarray(fix['new_screen_expected_center_ue_cm'], float) + offsets.get('monitor_frame', np.zeros(3))
     items['monitor_stand']['support_check'] = {'stand_bottom_cm': r_(stand_bottom), 'desk_top_cm': r_(desk['top_cm']),
                                                'stand_on_top': bool(abs(stand_bottom - desk['top_cm']) < .01)}
     items['monitor_frame']['screen_centre_check'] = {
@@ -439,8 +453,15 @@ def desk_items(desk, ref=MAIN_REF):
     lamp = json.loads(git_bytes(MAIN_SOURCES['lamp_mount'], ref))
     if 'lamp_world_aabb_m' in lamp:
         lo, hi = (np.asarray(v, float) * 100 for v in lamp['lamp_world_aabb_m'])
-        items['clamp_lamp'] = {'min_cm': lo, 'max_cm': hi, 'on_slab': True,
-                               'provenance': f'{ref}:{MAIN_SOURCES["lamp_mount"]} lamp_world_aabb_m (UE metres x, y, z)'}
+        o = offsets.get('clamp_lamp', np.zeros(3))
+        origin = np.asarray(lamp.get('new_origin_ue_cm', [np.nan] * 3), float)
+        items['clamp_lamp'] = {'min_cm': lo + o, 'max_cm': hi + o, 'on_slab': True,
+                               'original_min_cm': lo, 'original_max_cm': hi, 'variant_offset_cm': o,
+                               'origin_cm': origin + o, 'original_origin_cm': origin,
+                               'provenance': f'{ref}:{MAIN_SOURCES["lamp_mount"]} lamp_world_aabb_m (UE metres x, y, z)'
+                                             + (f' + variant offset {o.tolist()} cm' if 'clamp_lamp' in offsets else '')}
+        items['clamp_lamp']['support_check'] = {'lamp_origin_z_cm': r_(origin[2] + o[2]), 'desk_top_cm': r_(desk['top_cm']),
+                                                'origin_on_top': bool(abs(origin[2] + o[2] - desk['top_cm']) < .01)}
     for p in desk['parts']:
         if p['kind'] == 'grommet' and p['max'][2] > desk['top_cm']:
             items[f'grommet_node{p["node"]}'] = {'min_cm': p['min'], 'max_cm': p['max'], 'on_slab': True,
@@ -894,6 +915,170 @@ def layout_from_proposal(path):
             'original_chair_start_cm': np.asarray(orig['chair_initial_translation_cm'], float)}
 
 
+# ---------------------------------------------------------------- desk variant (e.g. desk-original-scale)
+DEFAULT_DESK_VARIANT = {'proposal_file': None, 'proposal_sha256': None, 'status': 'default', 'scale': None,
+                        'translation_m': None, 'offsets_cm': {}, 'ignored_keys': []}
+_ITEM_ALIASES = {'monitor': ('monitor_frame', 'monitor_stand'), 'monitor_frame': ('monitor_frame',),
+                 'screen': ('monitor_frame',), 'monitor_panel': ('monitor_frame',), 'monitor_stand': ('monitor_stand',),
+                 'stand': ('monitor_stand',), 'lamp': ('clamp_lamp',), 'clamp_lamp': ('clamp_lamp',),
+                 'desk_lamp': ('clamp_lamp',), 'keyboard': ('keyboard',), 'mouse': ('mouse',)}
+
+
+def _offset_vec(v, name):
+    """A per-item rigid offset (UE cm) from a list, a number (dz) or a dict (delta / offset / dz keys)."""
+    if isinstance(v, (int, float)):
+        return np.array([0., 0., float(v)])
+    if isinstance(v, (list, tuple)):
+        a = np.asarray(v, float)
+        if a.shape != (3,):
+            raise ValueError(f'{name}: offset must be 3 UE cm values')
+        return a
+    if isinstance(v, dict):
+        d = _first(v, 'delta_ue_cm', 'offset_ue_cm', 'delta_cm', 'offset_cm', 'translation_delta_ue_cm', 'translation_delta_cm')
+        if d is not None:
+            return _offset_vec(d, name)
+        dz = _first(v, 'dz_cm', 'delta_z_cm', 'offset_z_cm', 'z_offset_cm', 'dz_ue_cm')
+        if dz is not None:
+            return np.array([0., 0., float(dz)])
+        dm = _first(v, 'delta_three_m', 'offset_three_m')
+        if dm is not None:
+            return three_to_ue(dm)
+        if any(_first(v, k) not in (None, 0, [0, 0, 0]) for k in ('rotation', 'yaw', 'scale_change')):
+            raise ValueError(f'{name}: only rigid translations are supported')
+    raise ValueError(f'{name}: no recognisable offset in {v!r}')
+
+
+def desk_variant_from_proposal(path):
+    """A desk variant proposal: `desk.scale` (uniform; also desk_scale / linea140.scale) and per-item rigid offsets in
+    UE cm (`items` / `item_offsets_cm` / `item_transforms` / `offsets`, at the top level or under desk / proposed). Only
+    the declared numbers are read; the geometry is rebuilt here from the source GLB."""
+    path = Path(path)
+    raw = path.read_bytes()
+    doc = json.loads(raw)
+    scopes = [doc] + [doc[k] for k in ('proposed', 'proposal', 'variant') if isinstance(doc.get(k), dict)]
+    desk, scale, items, translation = {}, None, None, None
+    for sc in scopes:
+        desk = _first(sc, 'desk', 'linea140', 'LINEA140') or desk
+        scale = scale if scale is not None else (_first(desk, 'scale', 'uniform_scale') if isinstance(desk, dict) else None)
+        scale = scale if scale is not None else _first(sc, 'desk_scale', 'linea140_scale')
+        translation = translation or (_first(desk, 'translation_m') if isinstance(desk, dict) else None)
+        items = items or _first(sc, 'items', 'item_offsets_cm', 'item_transforms', 'offsets', 'item_offsets')
+        if items is None and isinstance(desk, dict):
+            items = _first(desk, 'items', 'item_offsets_cm', 'item_transforms')
+    if isinstance(scale, (list, tuple)):
+        if not np.allclose(scale, scale[0], atol=1e-12):
+            raise ValueError(f'desk scale {scale} is not uniform')
+        scale = scale[0]
+    if scale is None:
+        raise ValueError('desk variant: no desk.scale')
+    offsets, ignored = {}, []
+    for k, v in (items or {}).items():
+        targets = _ITEM_ALIASES.get(k.lower())
+        if targets is None:
+            ignored.append(k)
+            continue
+        o = _offset_vec(v, k)
+        for t in targets:
+            if t in offsets and not np.allclose(offsets[t], o):
+                raise ValueError(f'{t}: conflicting offsets')
+            offsets[t] = o
+    return {'proposal_file': str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path),
+            'proposal_sha256': sha256(raw), 'status': doc.get('status'), 'scale': float(scale),
+            'translation_m': translation, 'offsets_cm': offsets, 'ignored_keys': ignored}
+
+
+def _rect_over_flat(fp, desk, margin):
+    fp = np.asarray(fp, float)
+    xs = np.r_[np.arange(fp[0, 0], fp[1, 0], 1.), fp[1, 0]]
+    ys = np.r_[np.arange(fp[0, 1], fp[1, 1], 1.), fp[1, 1]]
+    gx, gy = np.meshgrid(xs, ys)
+    g = np.stack([gx.ravel(), gy.ravel()], -1)
+    grown = np.concatenate([g + [margin, 0], g - [margin, 0], g + [0, margin], g - [0, margin]])
+    return bool(point_in_triangles_2d(g, desk['flat_top_tris']).all()), bool(point_in_triangles_2d(grown, desk['flat_top_tris']).all())
+
+
+def grommet_centre(desk):
+    g = [p for p in desk['parts'] if p['kind'] == 'grommet' and 'rim' in p['name'].lower()] or \
+        [p for p in desk['parts'] if p['kind'] == 'grommet']
+    return np.mean([(p['min'] + p['max']) / 2 for p in g], axis=0) if g else None
+
+
+def desk_variant_check(variant=None, base_deltas=None, ref=MAIN_REF):
+    """Desk + items only (fast): the LINEA140 at the variant scale, the monitor stand / clamp lamp / keyboard / mouse at
+    their variant offsets: on the new top exactly, original footprints, margins inside the flat top, no overlaps."""
+    variant = variant or DEFAULT_DESK_VARIANT
+    base_deltas = base_deltas or {'keyboard': np.zeros(3), 'mouse': np.zeros(3)}
+    off = variant['offsets_cm']
+    desk = desk_geometry(ref, variant['scale'])
+    root = desk_geometry(ref) if variant['scale'] is not None else desk
+    items, meta = desk_items(desk, ref, {k: v for k, v in off.items() if k in ('monitor_frame', 'monitor_stand', 'clamp_lamp')})
+    tr_ok = variant['translation_m'] is None or bool(np.allclose(variant['translation_m'], desk['constants']['translation_m'], atol=1e-9))
+    out = {'variant': {k: (v if k != 'offsets_cm' else {a: [r_(x) for x in b] for a, b in v.items()}) for k, v in variant.items()},
+           'desk': {'scale': desk['constants']['scale'], 'root_scale': desk['constants']['root_scale'],
+                    'scale_source': desk['constants']['scale_source'], 'translation_m': desk['constants']['translation_m'],
+                    'declared_translation_matches_root': tr_ok,
+                    'top_cm': r_(desk['top_cm'], 3), 'slab_bottom_cm': r_(desk['slab_bottom_cm'], 3),
+                    'apron_bottom_cm': r_(desk['apron_bottom_cm'], 3), 'floor_cm': r_(desk['floor_cm'], 3),
+                    'worktop_aabb_cm': [[r_(v, 3) for v in desk['worktop']['min']], [r_(v, 3) for v in desk['worktop']['max']]],
+                    'root_scale_top_cm': r_(root['top_cm'], 3), 'top_change_cm': r_(desk['top_cm'] - root['top_cm'], 3),
+                    'source_sha256': desk['source_sha256']},
+           'items': {}}
+    top, M = desk['top_cm'], TH['device_slab_margin_cm']
+    gap_lo, gap_hi = TH['device_foot_gap_cm']
+    # monitor stand
+    st = items['monitor_stand']
+    fp = [st['min_cm'][:2], st['max_cm'][:2]]
+    over, grown = _rect_over_flat(fp, desk, M)
+    g = float(st['min_cm'][2] - top)
+    out['items']['monitor_stand'] = {
+        'bottom_minus_top_cm': r_(g), 'offset_cm': [r_(v) for v in st['variant_offset_cm']],
+        'footprint_cm': [[r_(v) for v in fp[0]], [r_(v) for v in fp[1]]],
+        'original_footprint': bool(np.allclose(st['variant_offset_cm'][:2], 0)),
+        'footprint_over_flat_top': over, 'footprint_grown_by_margin_over_flat_top': grown,
+        'screen_moves_with_stand': bool(np.allclose(items['monitor_frame']['variant_offset_cm'], st['variant_offset_cm'])),
+        'pass': bool(gap_lo <= g <= gap_hi and over and grown and np.allclose(st['variant_offset_cm'][:2], 0)
+                     and np.allclose(items['monitor_frame']['variant_offset_cm'], st['variant_offset_cm']))}
+    # clamp lamp: origin on the top, pin still in the (scaled) grommet within root's radial clearance
+    if 'clamp_lamp' in items:
+        lp = items['clamp_lamp']
+        gc, gc0 = grommet_centre(desk), grommet_centre(root)
+        rel, rel0 = lp['origin_cm'][:2] - gc[:2], lp['original_origin_cm'][:2] - gc0[:2]
+        lamp_doc = json.loads(git_bytes(MAIN_SOURCES['lamp_mount'], ref))
+        clr = float(lamp_doc.get('radial_pin_clearance_m', .006)) * 100
+        g = float(lp['origin_cm'][2] - top)
+        drift = float(np.linalg.norm(rel - rel0))
+        out['items']['clamp_lamp'] = {
+            'origin_minus_top_cm': r_(g), 'offset_cm': [r_(v) for v in lp['variant_offset_cm']],
+            'grommet_centre_cm': [r_(v) for v in gc], 'root_scale_grommet_centre_cm': [r_(v) for v in gc0],
+            'lamp_to_grommet_xy_cm': [r_(v) for v in rel], 'root_lamp_to_grommet_xy_cm': [r_(v) for v in rel0],
+            'pin_drift_vs_grommet_cm': r_(drift), 'radial_pin_clearance_cm': r_(clr),
+            'original_footprint': bool(np.allclose(lp['variant_offset_cm'][:2], 0)),
+            'pass': bool(gap_lo <= g <= gap_hi and drift <= clr)}
+    # keyboard / mouse
+    devs = {}
+    for name in ('keyboard', 'mouse'):
+        d = np.asarray(base_deltas[name], float) + off.get(name, np.zeros(3))
+        devs[name] = device_geometry(name, d, ref)
+    for name, other in (('keyboard', 'mouse'), ('mouse', 'keyboard')):
+        sup = device_support(devs[name], desk, items, other_devices=(devs[other],))
+        sup['offset_cm'] = [r_(v) for v in off.get(name, np.zeros(3))]
+        sup['original_footprint'] = bool(np.allclose(off.get(name, np.zeros(3))[:2], 0))
+        sup['pass'] = bool(sup['pass'] and sup['original_footprint'])
+        out['items'][name] = sup
+    # pairwise overlaps of the slab items (stand, lamp, keyboard, mouse)
+    rects = {'monitor_stand': [items['monitor_stand']['min_cm'][:2], items['monitor_stand']['max_cm'][:2]],
+             'keyboard': devs['keyboard']['footprint_cm'], 'mouse': devs['mouse']['footprint_cm']}
+    if 'clamp_lamp' in items:
+        rects['clamp_lamp'] = [items['clamp_lamp']['min_cm'][:2], items['clamp_lamp']['max_cm'][:2]]
+    names = sorted(rects)
+    pairs = {f'{a}|{b}': r_(rect_gap(rects[a], rects[b])) for i, a in enumerate(names) for b in names[i + 1:]}
+    out['overlaps'] = {'horizontal_gap_cm': pairs, 'min_margin_cm': TH['device_item_margin_cm'],
+                       'pass': bool(all(v >= TH['device_item_margin_cm'] for v in pairs.values()))}
+    out['pass'] = bool(tr_ok and out['overlaps']['pass'] and all(v['pass'] for v in out['items'].values()))
+    out['ready'] = False
+    return out
+
+
 def baseline_layout():
     """The current committed layout (seated-arms-on-anatomical: keyboard/mouse at home.js, roll (3.875, -21.279))."""
     return {'proposal_file': None, 'proposal_sha256': None, 'status': 'baseline',
@@ -976,12 +1161,17 @@ def accel(x, dt):
     return np.linalg.norm(np.diff(x, 2, axis=0), axis=-1) / dt ** 2
 
 
-def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, frames_limit=None, log=print):
+def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, frames_limit=None, log=print, desk_variant=None):
     t0 = time.time()
     res = {'schema': SCHEMA, 'label': 'independent verification', 'source_only': True, 'ready': False,
            'native_verified': False, 'never_a_receipt': True, 'thresholds': {k: list(v) if isinstance(v, tuple) else v for k, v in TH.items()}}
-    desk = desk_geometry(ref)
-    items, item_meta = desk_items(desk, ref)
+    dv = desk_variant or DEFAULT_DESK_VARIANT
+    if desk_variant is not None:
+        res['desk_variant'] = desk_variant_check(dv, {'keyboard': layout['keyboard_delta_cm'], 'mouse': layout['mouse_delta_cm']}, ref)
+        layout = dict(layout, keyboard_delta_cm=np.asarray(layout['keyboard_delta_cm'], float) + dv['offsets_cm'].get('keyboard', np.zeros(3)),
+                      mouse_delta_cm=np.asarray(layout['mouse_delta_cm'], float) + dv['offsets_cm'].get('mouse', np.zeros(3)))
+    desk = desk_geometry(ref, dv['scale'])
+    items, item_meta = desk_items(desk, ref, {k: v for k, v in dv['offsets_cm'].items() if k in ('monitor_frame', 'monitor_stand', 'clamp_lamp')})
     js = git_bytes(MAIN_SOURCES['home_js'], ref).decode()
     # ---- geometry provenance
     res['geometry'] = {
@@ -1024,7 +1214,7 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
     res['devices']['keyboard']['moved_toward_body_cm'] = r_(kd[1])
     env = []
     for dy in np.arange(0., 20.01, 1.):        # static envelope: keyboard straight toward the body, feet on the top
-        k = device_geometry('keyboard', [kd[0], dy, -(kb0['bottom_cm'] - desk['top_cm'])], ref)
+        k = device_geometry('keyboard', [kd[0], dy, -(kb0['bottom_cm'] - desk['top_cm'])], ref)   # feet on the (variant) top
         env.append((float(dy), device_support(k, desk, items, other_devices=(ms,))['pass']))
     ok = [d for d, p in env if p]
     res['devices']['keyboard']['static_envelope'] = {
@@ -1190,6 +1380,8 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
         '3_body_all_clips': all(b['pass'] for b in body_out.values()),
         '4_continuity': res['continuity']['pass'],
         '5_ergonomics': res['ergonomics']['pass']}
+    if 'desk_variant' in res:
+        checks['0_desk_variant_items'] = res['desk_variant']['pass']
     res['checks'] = checks
     res['all_pass'] = bool(all(checks.values()))
     res['elapsed_s'] = round(time.time() - t0, 1)
@@ -1483,9 +1675,25 @@ def main(argv=None):
     ap.add_argument('--stride', type=int, default=2)
     ap.add_argument('--frames-limit', type=int, default=None, help='smoke runs only')
     ap.add_argument('--ref', default=MAIN_REF)
+    ap.add_argument('--desk-variant', default=None,
+                    help='desk variant proposal JSON (desk.scale + per-item UE cm offsets); default: root scale, unchanged')
+    ap.add_argument('--desk-only', action='store_true',
+                    help='with --desk-variant: only the desk / item support checks (no body, chair or clips)')
     args = ap.parse_args(argv)
     layout = baseline_layout() if args.baseline else layout_from_proposal(args.proposal)
-    res = run_verification(layout, args.source, args.ref, args.stride, frames_limit=args.frames_limit)
+    variant = desk_variant_from_proposal(args.desk_variant) if args.desk_variant else None
+    if args.desk_only:
+        res = {'schema': SCHEMA, 'label': 'independent desk-variant verification (desk + items only)', 'source_only': True,
+               'ready': False, 'native_verified': False, 'never_a_receipt': True,
+               'base_layout': {'proposal_file': layout['proposal_file'], 'keyboard_delta_cm': np.asarray(layout['keyboard_delta_cm']).tolist(),
+                               'mouse_delta_cm': np.asarray(layout['mouse_delta_cm']).tolist()},
+               'desk_variant': desk_variant_check(variant, {'keyboard': layout['keyboard_delta_cm'], 'mouse': layout['mouse_delta_cm']}, args.ref)}
+        out = Path(args.out_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f'{args.name or "desk-variant-verification"}.json').write_text(json.dumps(to_jsonable(res), indent=1, allow_nan=False) + '\n')
+        print('desk_variant pass', res['desk_variant']['pass'])
+        return 0
+    res = run_verification(layout, args.source, args.ref, args.stride, frames_limit=args.frames_limit, desk_variant=variant)
     res['layout'] = {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in layout.items()}
     if args.frames_limit:
         res['SMOKE_frames_limit'] = args.frames_limit
