@@ -1,0 +1,27 @@
+{
+  "sourceSha256": "8796c519e5a4d6acaffe6a77dcf7393ab1f703de75a3de05b3e148a84eb772b4",
+  "actualManufacturerSourcePassed": true,
+  "actualSourceAdversarialChecks": [
+    {
+      "case": "unapproved unsatin roughness",
+      "rejected": true
+    },
+    {
+      "case": "transparent imported wood",
+      "rejected": true
+    },
+    {
+      "case": "legacy transparent wood",
+      "rejected": true
+    },
+    {
+      "case": "altered official manufacturer photo",
+      "rejected": true
+    },
+    {
+      "case": "missing source face",
+      "rejected": true
+    }
+  ],
+  "nativeWorldImported": false
+}

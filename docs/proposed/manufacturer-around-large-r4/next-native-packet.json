@@ -1,0 +1,35 @@
+{
+  "schema": "sub01.manufacturer-around-next-native-candidate.v1",
+  "ownerSourceCandidateApprovedAfterActualReview": true,
+  "finalNativeVisualAccepted": false,
+  "sourcePath": "/workspace/sub01-home-private/manufacturer-around-large-r1/placed-dark-satin-r4/muuto-around-large-dark-satin.glb",
+  "sourceSha256": "8796c519e5a4d6acaffe6a77dcf7393ab1f703de75a3de05b3e148a84eb772b4",
+  "editableBlendPath": "/workspace/sub01-home-private/manufacturer-around-large-r1/placed-dark-satin-r4/muuto-around-large-dark-satin.blend",
+  "importer": "tools/unreal_import_manufacturer_around_table.py",
+  "importerSha256": "c6849eb376c6bb348f6b2e256836cc79e1ebaa05856ebff638cad4e5df932c54",
+  "functions": [
+    "run(dry_run=True)",
+    "run(dry_run=False)"
+  ],
+  "sourceTriangles": 5484,
+  "sourceExactZeroAreaTriangles": 0,
+  "nativeWorldTriangleToleranceCm": 0.0001,
+  "old275": "Already hidden/NoCollision by native exact whole-actor retirement, current snapshot must remain exact receipt.after",
+  "retired275Receipt": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/obsolete-living-table-retired.json",
+  "retired275ReceiptSha256": "c47de45adb808fbe50a865f48459d10fa31ec3284cc224b8706c1cf507122107",
+  "sourceOnlyGates": [
+    "full5484positive native-world triangle equality",
+    "actual assigned fullPBR and effective opaque material",
+    "complete all-other-actor state preservation/rollback",
+    "current retired275 exact snapshot unchanged"
+  ],
+  "privateCandidateOnly": true,
+  "actualOriginalGameOrInputChangesPermitted": false,
+  "sourceReviewImage": "out/house-evidence/manufacturer-around-large-r1/muuto-rest-around-satin-review.png",
+  "physicalDimensionsPolicy": "Unmodified genuine archived manufacturer geometry71.8146x71.2361x37.5072cm; current36cm-high catalog SKU not claimed exact.",
+  "evidenceSha256": {
+    "independent-source-contract.json": "27e233371d9a2d89421ba7427283287d8df526806abddccf0ec2b7b0d9a7fdbd",
+    "source-report.json": "e45961469fe59bffdf31277d69569a5b3a8dfc11466799a9bf21ab33a866f051",
+    "independent-living-layout.json": "a9b69bd24b15fdca2ace8ac4eddda55005657eb02890a057aab8905edd0972d7"
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "schema": "sub01.manufacturer-around-satin-factor-only.v1",
+  "source": "Official Muuto Around Coffee Table Large OBJ/MTL + official Oak.jpg downloaded through public manufacturer portal",
+  "sourceURL": "https://www.muuto.com/product/Around-Coffee-Table--AROTABLR/AROTABLR01/",
+  "officialVerifiedPhysicalDimensionsCm": {
+    "height": 36,
+    "diameter": 72
+  },
+  "officialProduct": "Oak old60032/newAROTABLR01; dimensions independently viewed via configured Playwright by parent",
+  "downloadURL": "https://download.muuto.com/digitalshowroom/#/product/628654978823581?tag=573684022989939",
+  "license": "Manufacturer asset; no CC0 claim. Private review source only; redistribution/publication permission unverified.",
+  "sourceZipSha256": "03d5946d49858acf67accadc841bd5246039951f7d9ee9486e7373154d94a58e",
+  "originalObjSha256": "f27df005f80adfae997f88d4fa09228d3df10a4be2d79315e35971fa6a88edc2",
+  "sourceUnitsComment": "centimeters",
+  "unitsConversionOnly": 0.01,
+  "rawSourcePhysicalDimensionsM": [
+    0.7181460857391357,
+    0.7123614549636841,
+    0.3750724792480469
+  ],
+  "rigidTranslationBlenderM": [
+    -2.59030818939209,
+    0.048023615032434464,
+    0.025094928219914436
+  ],
+  "boundsBlenderM": [
+    [
+      -2.8970730304718018,
+      -0.3061807453632355,
+      0.025049999356269836
+    ],
+    [
+      -2.178926944732666,
+      0.406180739402771,
+      0.4001224637031555
+    ]
+  ],
+  "boundsUEcm": [
+    [
+      -289.7073030471802,
+      -40.6180739402771,
+      2.5049999356269836
+    ],
+    [
+      -217.8926944732666,
+      30.618074536323547,
+      40.01224637031555
+    ]
+  ],
+  "parts": [
+    {
+      "originalName": "Around_Large",
+      "originalVertices": 2763,
+      "originalTriangles": 5484,
+      "originalMaterialNames": [
+        "aroud9:blinn5SG"
+      ],
+      "uvLayers": [
+        "UVMap"
+      ]
+    }
+  ],
+  "triangles": 5484,
+  "originalGeometryAndUVPreserved": true,
+  "finish": "Manufacturer original Stained Dark Brown.jpg, original UV; no synthetic tint/geometry modifications",
+  "floorTopUEcm": 2.505,
+  "nativeImportPermitted": false,
+  "visualAccepted": false,
+  "placementAndRoutesAccepted": false,
+  "files": {
+    "muuto-around-large-dark-satin.glb": "8796c519e5a4d6acaffe6a77dcf7393ab1f703de75a3de05b3e148a84eb772b4",
+    "muuto-around-large-dark-satin.blend": "1c55dfd69c91d0db16ba7ae7c88deec743d8d568592d12beaa90d721266a9fea"
+  },
+  "officialCurrentSKUAndArchivedGeometryMismatch": {
+    "sourceGeometryCm": [
+      71.81460857391357,
+      71.23614549636841,
+      37.50724792480469
+    ],
+    "currentPageHeightCm": 36,
+    "currentPageDiameterCm": 72,
+    "heightDifferenceCm": 1.5072479248046875,
+    "notSilentlyRescaledToCurrentSKU": true,
+    "sourceVersionOrSKUIdentityPending": true
+  },
+  "physicalDimensionAcceptance": false,
+  "parentSourceGlbSha256": "34c7b528c0587426ab847bd202007c4365a959023f40b2150ebff730540947c5",
+  "rigidDeltaUEcm": [
+    5.2,
+    0,
+    0
+  ],
+  "centreUEcm": [
+    -253.8,
+    -5
+  ],
+  "actualFourFootPatchSupport": [
+    {
+      "bottomPatchVertices": 20,
+      "minZM": 0.025050032883882523,
+      "maxZM": 0.02505003660917282,
+      "centroidXYM": [
+        -2.3123838186264036,
+        -0.17768889293074608
+      ],
+      "lowestVertexGapFromSourceFloorM": 3.288388252323249e-08
+    },
+    {
+      "bottomPatchVertices": 20,
+      "minZM": 0.025050032883882523,
+      "maxZM": 0.02505003660917282,
+      "centroidXYM": [
+        -2.764012348651886,
+        -0.178129456192255
+      ],
+      "lowestVertexGapFromSourceFloorM": 3.288388252323249e-08
+    },
+    {
+      "bottomPatchVertices": 20,
+      "minZM": 0.025049999356269836,
+      "maxZM": 0.025050003081560135,
+      "centroidXYM": [
+        -2.3126834988594056,
+        0.27434313744306565
+      ],
+      "lowestVertexGapFromSourceFloorM": -6.437301629247383e-10
+    },
+    {
+      "bottomPatchVertices": 20,
+      "minZM": 0.025049999356269836,
+      "maxZM": 0.025050003081560135,
+      "centroidXYM": [
+        -2.764466643333435,
+        0.27393259257078173
+      ],
+      "lowestVertexGapFromSourceFloorM": -6.437301629247383e-10
+    }
+  ],
+  "originalLocalVertexAndUVArraysExactlyUnchanged": true,
+  "currentSKUExactMatchClaimed": false,
+  "archivedOfficialVariantRetained": true,
+  "originalFinish": "Exact Stained Dark Brown.jpg from original official manufacturer ZIP",
+  "originalFinishImageSha256": "eb0e81a544d6132a31dc4e9fe6feb51ea6956a5f08d3913caba7166642e52ea1",
+  "originalGeometryUVAndPlacementExactlyUnchanged": true,
+  "serializedCompleteBinaryExact": true,
+  "serializedJsonOnlyDifference": {
+    "path": "materials[0].pbrMetallicRoughness.roughnessFactor",
+    "before": 0.41999998688697815,
+    "after": 0.65
+  },
+  "physicalFinish": "Same original manufacturer StainedDarkBrown photograph; satin roughness correction only, no tint/UV/geometry change",
+  "opaqueShaderVerified": {
+    "alphaMode": "OPAQUE default",
+    "metallicFactor": 0,
+    "transmissionExtensionAbsent": true,
+    "blenderTransmissionWeight": 0,
+    "blenderAlpha": 1
+  }
+}
