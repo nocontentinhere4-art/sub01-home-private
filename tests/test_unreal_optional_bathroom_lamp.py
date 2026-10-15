@@ -39,3 +39,15 @@ def test_full_stage_requires_actual_optional_globe_and_preserves_original_lamps(
     assert 'V_c953ce762552/Attempt_' in cpp
     assert 'ApplyNativeFixtureEmission(LampName,Enabled);' in cpp
     assert 'if(LampName==TEXT("BathroomCeiling"))ApplyNativeBathroomLamp(Enabled);' in cpp
+
+
+def test_prepared_native_mesh_identities_change_no_payload_or_world_geometry(tmp_path):
+    from unreal_import_real_bathroom_pendant import prepare_native_input
+    from home_asset_audit import read_gltf
+    proof=prepare_native_input(SOURCE,tmp_path/'native.glb')
+    original,old=read_gltf(SOURCE);actual,new=read_gltf(tmp_path/'native.glb')
+    assert bytes(old)==bytes(new)
+    assert proof['source_document_except_mesh_names_and_all_binary_exact'] is True
+    assert {m['name'] for m in actual['meshes']}=={n['name'] for n in original['nodes']}
+    for index,mesh in enumerate(original['meshes']):actual['meshes'][index]['name']=mesh['name']
+    assert original==actual

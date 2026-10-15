@@ -37,3 +37,19 @@ assignments: exact semantic parity with the measured one-part candidate. Texture
 indices are correctly resolved through actual image/sampler bindings; export
 reordering is not a material change. Geometry is identical, so the original
 surface collision proof applies to these same world triangles.
+
+## Prepared native integration, not yet executed
+
+The importer prepares a names-only GLB copy whose three mesh names match the
+explicit role identifiers. It verifies all other document fields and binary bytes
+stay exact, then binds actual imported owned mesh identities and full world
+triangles rather than relying on display labels. Prepared-input SHA and imported
+inventory are retained. Original scene actors stay unchanged; failures detach
+new actors and quarantine their assets without deleting referenced packages.
+
+The optional native sixth lamp is BathroomCeiling (5.5cd/3000K), independently
+switched through the existing private settings UI when the actual imported lamp
+exists. Metal casts shadows; glass and diffuse globe transmit this point light.
+Its source emission uses a per-component runtime MID, leaving imported materials
+unchanged. Older maps retain five available lamps. Source tests pass; actual
+Editor import, native compilation and ON/OFF/visual acceptance are pending.

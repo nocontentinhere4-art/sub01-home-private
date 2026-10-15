@@ -7,6 +7,8 @@ activity gates change. Native illumination/contact/ON-OFF acceptance is separate
 import hashlib
 import json
 import shutil
+import copy
+import struct
 import time
 import uuid
 from pathlib import Path
@@ -35,6 +37,27 @@ def validate(source):
         if len(primitives)!=1 or doc['materials'][primitives[0]['material']]['name']!=ROLES[n['name'][len(PREFIX):]]:
             raise RuntimeError('Actual source role/material binding differs')
     return proof,doc,blob
+
+
+def prepare_native_input(source, target):
+    """Normalize only mesh identities; retain every binary/PBR/transform byte."""
+    from home_asset_audit import read_gltf
+    proof,doc,blob=validate(source);prepared=copy.deepcopy(doc)
+    for node in prepared['nodes']:
+        prepared['meshes'][node['mesh']]['name']=node['name']
+    target=Path(target)
+    if target.exists():raise RuntimeError('Prepared owned input must be new')
+    target.parent.mkdir(parents=True,exist_ok=True)
+    text=json.dumps(prepared,separators=(',',':')).encode();text+=b' '*(-len(text)%4)
+    payload=bytes(blob);payload+=b'\0'*(-len(payload)%4)
+    target.write_bytes(struct.pack('<III',0x46546c67,2,28+len(text)+len(payload))+struct.pack('<II',len(text),0x4e4f534a)+text+struct.pack('<II',len(payload),0x004e4942)+payload)
+    actual,binary=read_gltf(target);restored=copy.deepcopy(actual)
+    for index,mesh in enumerate(doc['meshes']):restored['meshes'][index]['name']=mesh['name']
+    if restored!=doc or bytes(binary)!=bytes(blob):raise RuntimeError('Names-only input changed source payload')
+    return {'schema':'sub01.bathroom-pendant-owned-import-identities.v1','source_sha256':SHA,
+            'prepared_input_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
+            'source_document_except_mesh_names_and_all_binary_exact':True,
+            'native_mesh_names':[m['name'] for m in actual['meshes']]}
 
 
 def verify_owned_material(u,c,source,dest):
@@ -88,15 +111,26 @@ def run(source,dry_run=True):
     audit=project/'private-audit';audit.mkdir(exist_ok=True)
     try:
         manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
-        if not manager.import_scene(dest,manager.create_source_data(str(source)),params):raise RuntimeError('Owned fixture import refused')
+        prepared=project/'Saved/PrivateImportInputs'/('bathroom-pendant-'+uuid.uuid4().hex+'.glb')
+        input_proof=prepare_native_input(source,prepared)
+        if not manager.import_scene(dest,manager.create_source_data(str(prepared)),params):raise RuntimeError('Owned fixture import refused')
         manager.wait_until_all_tasks_done(False)
         added=[a for a in eas.get_all_level_actors() if a.get_path_name() not in before]
         for a in added:a.set_actor_hidden_in_game(True)
-        parts=[];materials=[];total=0
+        parts=[];materials=[];total=0;by_mesh={};inventory=[]
+        for actor in added:
+            record={'actor':actor.get_path_name(),'label':actor.get_actor_label(),'components':[]}
+            for component in actor.get_components_by_class(u.StaticMeshComponent):
+                mesh=component.get_editor_property('static_mesh')
+                record['components'].append(mesh.get_path_name() if mesh else None)
+                if mesh and mesh.get_path_name().startswith(dest+'/'):
+                    by_mesh.setdefault(mesh.get_name(),[]).append(actor)
+            inventory.append(record)
+        (audit/'real-bathroom-pendant-import-inventory.json').write_text(json.dumps(inventory,indent=2)+'\n')
         for ni,n in enumerate(doc['nodes']):
-            matches=[a for a in added if a.get_actor_label()==n['name']]
+            matches=by_mesh.get(n['name'],[])
             if len(matches)!=1:raise RuntimeError('Unique exact source role actor required')
-            actor=matches[0];actor.tags=list(actor.tags)+[u.Name(n['name'])];cs=actor.get_components_by_class(u.StaticMeshComponent)
+            actor=matches[0];actor.set_actor_label(n['name']);actor.set_editor_property('tags',list(actor.get_editor_property('tags'))+[u.Name(n['name'])]);cs=actor.get_components_by_class(u.StaticMeshComponent)
             if len(cs)!=1 or cs[0].get_num_materials()!=1:raise RuntimeError('Actual source component/material differs')
             c=cs[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest)
             actual=native_triangles(u,c);expected=expected_triangles(doc,blob,ni)
@@ -112,6 +146,7 @@ def run(source,dry_run=True):
             parts.append((actor,c,role))
         if total!=5602 or len(parts)!=3:raise RuntimeError('Complete authentic three-part fixture required')
         light=eas.spawn_actor_from_class(u.PointLight,u.Vector(*BULB));light.set_actor_label('SUB01_AuthoredLight_BathroomCeiling')
+        light.set_editor_property('tags',list(light.get_editor_property('tags'))+[u.Name('SUB01_AuthoredLight_BathroomCeiling')])
         light.set_actor_hidden_in_game(True);lc=light.get_component_by_class(u.PointLightComponent)
         lc.set_mobility(u.ComponentMobility.MOVABLE);lc.set_editor_property('intensity_units',u.LightUnits.CANDELAS)
         lc.set_editor_property('use_inverse_squared_falloff',True);lc.set_editor_property('attenuation_radius',400.)
@@ -122,7 +157,7 @@ def run(source,dry_run=True):
         if not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned authentic fixture asset save failed')
         for actor,c,role in parts:actor.set_actor_hidden_in_game(False)
         light.set_actor_hidden_in_game(False)
-        result.update(owned_destination=dest,backup=str(backup),complete_native_triangles=total,
+        result.update(owned_destination=dest,backup=str(backup),prepared_input=input_proof,complete_native_triangles=total,
                       actors=[{'actor':a.get_path_name(),'component':c.get_path_name(),'role':r} for a,c,r in parts],materials=materials,
                       light_actor=light.get_path_name(),bulb_ue_cm=BULB,intensity_cd=5.5,temperature_kelvin=3000.,protected_originals_unchanged=True)
         pending=audit/'real-bathroom-pendant-import.pending.json';pending.write_text(json.dumps(result,indent=2)+'\n')
