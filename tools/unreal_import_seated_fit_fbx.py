@@ -17,8 +17,9 @@ Roles (role -> committed GLB, export rate):
     TypeToSitSeated  <- SUB01_TypeToSit_seated.glb    30 fps
     GetUpSeated      <- SUB01_GetUp_seated.glb        30 fps
 
-Only a clip whose per-clip report has `all_gates_pass: true` is imported (and then ACCEPTED). A failing clip (today
-SitDown) is refused outright: never imported, no override flag exists; its receipt row says
+Only a clip whose per-clip report has `all_gates_pass: true` is imported (and then ACCEPTED). That verdict is measured
+on the ACTUAL, unmoved chair (root protects its transform). A failing clip (today DeskTyping, SitToType and TypeToSit:
+typing is infeasible on the actual chair, see docs/proposed/seat-pose-fit/chair-reposition-proposal.json) is refused outright: never imported, no override flag exists; its receipt row says
 `imported: false, accepted: false, fit_pass: false` with the reason. The importer refuses (RuntimeError, only this run's staging assets deleted, receipt untouched) when
 the audit is not the committed fit, a source FBX changed, the owner skeleton is not
 /Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton, a staged clip is on another skeleton or at another path, its
@@ -71,10 +72,10 @@ ROLES = {
 GLB_SHA256 = {
     'DeskTypingSeated': '97fd8489fa19d71192c74eae47d69a1045a723a7692fbaa59cfa73f9c3ef75b9',
     'SeatedIdle': '57ba5e1be7a392b3889c8a875f993d39a808fee87f12a4e25d6f70a62b47a156',
-    'SitDownSeated': '2c6d5da111b3af04e59719e55375b13c304a93ba755524a18865e6653cb41a6a',
+    'SitDownSeated': 'a0b362324af7861e414730fed9175b6c72b88de5a525bce14ef113abdea25104',
     'SitToTypeSeated': 'ed46fd3e667089b8f10780dc377c0c86239122256557a34b41e5f751eebd6d21',
     'TypeToSitSeated': 'd25496c64288de5f1574956bac7099d60b7e8a8e3345f4e821883fcf13422452',
-    'GetUpSeated': '6105564f22e712e19ed18bfbeea5b185518f8f67d60b76b2c59f5a041a8331d0',
+    'GetUpSeated': '89f6b246e39992b97121d91d65ca537efa8d9516b95aa1a7e8b8bd0d124cdac7',
 }
 
 

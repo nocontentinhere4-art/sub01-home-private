@@ -152,11 +152,11 @@ class Component:
         return PARENTS[name]
 
 
-def write_source(project, mutate=None):
+def write_source(project, mutate=None, plan=None):
     folder = project / fit.SOURCE_DIR
     folder.mkdir(parents=True)
     rows = []
-    for role, row in PLAN.items():
+    for role, row in (plan or PLAN).items():
         fbx = folder / f'{role}.fbx'
         fbx.write_bytes(f'fake fbx {role}'.encode())
         rows.append({'role': role, 'source_action': row['source_action'], 'glb': row['glb'], 'glb_sha256': row['glb_sha256'],
@@ -184,8 +184,12 @@ def test_role_mapping_paths_and_rates():
 
 def test_fit_verdicts_are_the_committed_reports():
     verdicts = {r: p['fit_pass'] for r, p in PLAN.items()}
-    assert verdicts == {'DeskTypingSeated': True, 'SeatedIdle': True, 'SitDownSeated': False, 'SitToTypeSeated': True,
-                        'TypeToSitSeated': True, 'GetUpSeated': True}
+    # Measured on the ACTUAL, unmoved chair: typing is infeasible there, SitDown/GetUp/SeatedIdle pass.
+    assert verdicts == {'DeskTypingSeated': False, 'SeatedIdle': True, 'SitDownSeated': True, 'SitToTypeSeated': False,
+                        'TypeToSitSeated': False, 'GetUpSeated': True}
+    assert sorted(r for r, v in verdicts.items() if v) == sorted(PASSING)
+    summary = json.loads((ROOT / fit.SUMMARY_REPORT).read_text())
+    assert summary['chair_horizontal_shift_cm'] == [0.0, 0.0]
 
 
 def _copy_fit(tmp_path):
@@ -196,14 +200,40 @@ def _copy_fit(tmp_path):
     return repo
 
 
+def _typing_passes_repo(tmp_path):
+    """SYNTHETIC copy of the committed fit where DeskTypingSeated's verdict is consistently True in the per-clip report,
+    the summary row and trial_gates_pass (GLB bytes unchanged, so its pin still holds). Only used to exercise the
+    60 Hz typing import path, which the actual-chair verdict no longer reaches; never the committed verdict."""
+    repo = _copy_fit(tmp_path / 'typing-pass')
+    report = repo / fit.FIT_DIR / 'SUB01_DeskTyping_seated.report.json'
+    data = json.loads(report.read_text())
+    data['all_gates_pass'] = True
+    report.write_text(json.dumps(data))
+    summary_file = repo / fit.SUMMARY_REPORT
+    summary = json.loads(summary_file.read_text())
+    summary['clips']['DeskTyping_seated']['all_gates_pass'] = True
+    summary['trial_gates_pass']['DeskTyping_seated'] = True
+    summary_file.write_text(json.dumps(summary))
+    plan = {r['role']: r for r in fit.plan_clips(repo)}
+    assert plan['DeskTypingSeated']['fit_pass'] is True and plan['DeskTypingSeated']['fps'] == 60
+    return repo, plan
+
+
 def test_plan_refuses_a_changed_glb_or_a_disagreeing_verdict(tmp_path):
     repo = _copy_fit(tmp_path)
-    report = repo / fit.FIT_DIR / 'SUB01_SitDown_seated.report.json'
+    report = repo / fit.FIT_DIR / 'SUB01_DeskTyping_seated.report.json'
     data = json.loads(report.read_text())
-    data['all_gates_pass'] = True                          # the per-clip verdict cannot be flipped on its own
+    data['all_gates_pass'] = True                          # a failed per-clip verdict cannot be flipped on its own
     report.write_text(json.dumps(data))
     with pytest.raises(RuntimeError, match='verdicts disagree'):
         fit.plan_clips(repo)
+    repo3 = _copy_fit(tmp_path / 'c')
+    summary_file = repo3 / fit.SUMMARY_REPORT
+    summary = json.loads(summary_file.read_text())
+    summary['trial_gates_pass']['SitToType'] = True        # nor can the summary's verdict alone
+    summary_file.write_text(json.dumps(summary))
+    with pytest.raises(RuntimeError, match='verdicts disagree'):
+        fit.plan_clips(repo3)
     repo2 = _copy_fit(tmp_path / 'b')
     glb = repo2 / fit.FIT_DIR / 'SUB01_SeatedIdle.glb'
     glb.write_bytes(glb.read_bytes() + b' ')
@@ -212,7 +242,8 @@ def test_plan_refuses_a_changed_glb_or_a_disagreeing_verdict(tmp_path):
 
 
 # ------------------------------------------------------------------ importer (fake unreal)
-PASSING = ['DeskTypingSeated', 'SeatedIdle', 'SitToTypeSeated', 'TypeToSitSeated', 'GetUpSeated']
+PASSING = ['SeatedIdle', 'SitDownSeated', 'GetUpSeated']
+FAILED = ['DeskTypingSeated', 'SitToTypeSeated', 'TypeToSitSeated']
 
 
 def final_paths(log):
@@ -228,21 +259,52 @@ def test_imports_only_passing_fits_via_staging_with_60hz_typing(tmp_path):
     assert sorted(log.renamed) == sorted((f'{fit.DEST}/_Staging/{r}_t1', f'{fit.DEST}/SUB01_{r}') for r in PASSING)
     assert final_paths(log) == {fit.object_path(r) for r in PASSING}
     assert not [k for k in log.assets if '/_Staging/' in k]
-    assert log.options['DeskTypingSeated'] == {'use_default_sample_rate': False, 'custom_sample_rate': 60}
-    assert log.options['SeatedIdle'] == {'use_default_sample_rate': True}
+    assert set(log.options) == set(PASSING)                           # failed fits never reach an import task
+    assert all(log.options[r] == {'use_default_sample_rate': True} for r in PASSING)
     on_disk = json.loads((tmp_path / 'private-audit/unreal-seated-fit-import.json').read_text())
     assert on_disk == json.loads(json.dumps(receipt))
     assert on_disk['schema'] == seat.SEATED_FIT_RECEIPT_SCHEMA and on_disk['skeleton'] == fit.OWNER_SKELETON
     assert on_disk['runtime_ready'] is False and on_disk['readiness_claimed'] is False and on_disk['native_seat_verified'] is False
     rows = {r['role']: r for r in on_disk['clips']}
     assert sorted(on_disk['accepted_roles']) == sorted(PASSING)
-    for role in ('SitDownSeated',):
+    for role in FAILED:
         assert rows[role]['imported'] is False and rows[role]['accepted'] is False and rows[role]['fit_pass'] is False
-        assert 'never imported' in rows[role]['refusal']
+        assert 'never imported' in rows[role]['refusal'] and 'same_existing_skeleton' not in rows[role]
+        assert fit.object_path(role) not in log.assets
+    for role in PASSING:
+        assert rows[role]['sample_rate_hz'] == 30 and rows[role]['accepted'] and rows[role]['same_existing_skeleton']
+        assert rows[role]['preserved_existing'] is False
+
+
+def test_60hz_custom_rate_import_options():
+    u = SimpleNamespace(FbxImportUI=lambda: Props(anim_sequence_import_data=Props()),
+                        FBXImportType=SimpleNamespace(FBXIT_ANIMATION='anim'))
+    sixty = fit._options(u, 'SK', 60)
+    assert sixty.values['anim_sequence_import_data'].values == {'use_default_sample_rate': False, 'custom_sample_rate': 60}
+    assert sixty.values['skeleton'] == 'SK' and sixty.values['import_mesh'] is False
+    assert fit._options(u, 'SK', 30).values['anim_sequence_import_data'].values == {'use_default_sample_rate': True}
+
+
+def test_typing_fit_would_import_at_60hz_if_its_committed_verdict_passed(tmp_path):
+    repo, plan = _typing_passes_repo(tmp_path)
+    write_source(tmp_path, plan=plan)
+    u, log = fake_unreal(tmp_path)
+    receipt = fit.main(u, tmp_path, OWNER_PARENTS, repo=repo, txid='t1')
+    assert sorted(log.imported) == sorted(PASSING + ['DeskTypingSeated'])
+    assert log.options['DeskTypingSeated'] == {'use_default_sample_rate': False, 'custom_sample_rate': 60}
+    assert log.options['SeatedIdle'] == {'use_default_sample_rate': True}
+    rows = {r['role']: r for r in receipt['clips']}
     typing = rows['DeskTypingSeated']
     assert typing['object_path'] == '/Game/Sub01Hands/Seating/SUB01_DeskTypingSeated.SUB01_DeskTypingSeated'
     assert typing['sample_rate_hz'] == 60 and typing['accepted'] and typing['same_existing_skeleton']
     assert typing['preserved_existing'] is False
+    # The still-failing typing transitions stay refused in the same run.
+    assert rows['SitToTypeSeated']['imported'] is False and rows['TypeToSitSeated']['imported'] is False
+    # The committed repo itself refuses that synthetic audit: its DeskTyping fit_pass differs.
+    u2, log2 = fake_unreal(tmp_path)
+    with pytest.raises(RuntimeError, match='DeskTypingSeated: audit fit_pass differs'):
+        fit.main(u2, tmp_path, OWNER_PARENTS)
+    assert not log2.imported
 
 
 def test_no_override_exists_for_failed_fits(tmp_path):
@@ -269,19 +331,32 @@ def test_seated_durations_keep_the_transition_timing():
 
 def test_measured_rate_is_checked_when_the_editor_exposes_it(tmp_path):
     write_source(tmp_path)
-    u, log = fake_unreal(tmp_path, frames_per_s=lambda role: 30)        # typing resampled to 30 Hz
-    with pytest.raises(RuntimeError, match='DeskTypingSeated: sampled at 30.00 Hz, expected 60 Hz'):
+    u, log = fake_unreal(tmp_path, frames_per_s=lambda role: 60)        # a 30 fps clip resampled to 60 Hz
+    with pytest.raises(RuntimeError, match='SeatedIdle: sampled at 60.00 Hz, expected 30 Hz'):
         fit.main(u, tmp_path, OWNER_PARENTS)
     assert log.deleted and not final_paths(log) and not (tmp_path / fit.RECEIPT_FILE).exists()
     u, _ = fake_unreal(tmp_path, frames_per_s=lambda role: PLAN[role]['fps'])
-    assert fit.main(u, tmp_path, OWNER_PARENTS)['clips'][0]['sampled_rate_measured_hz'] == pytest.approx(60, abs=1)
+    rows = {r['role']: r for r in fit.main(u, tmp_path, OWNER_PARENTS)['clips']}
+    assert all(rows[r]['sampled_rate_measured_hz'] == pytest.approx(30, abs=1) for r in PASSING)
+
+
+def test_measured_60hz_typing_rate_is_checked_when_the_editor_exposes_it(tmp_path):
+    repo, plan = _typing_passes_repo(tmp_path)
+    write_source(tmp_path, plan=plan)
+    u, log = fake_unreal(tmp_path, frames_per_s=lambda role: 30)        # typing resampled to 30 Hz
+    with pytest.raises(RuntimeError, match='DeskTypingSeated: sampled at 30.00 Hz, expected 60 Hz'):
+        fit.main(u, tmp_path, OWNER_PARENTS, repo=repo)
+    assert log.deleted and not final_paths(log) and not (tmp_path / fit.RECEIPT_FILE).exists()
+    u, _ = fake_unreal(tmp_path, frames_per_s=lambda role: plan[role]['fps'])
+    rows = {r['role']: r for r in fit.main(u, tmp_path, OWNER_PARENTS, repo=repo)['clips']}
+    assert rows['DeskTypingSeated']['sampled_rate_measured_hz'] == pytest.approx(60, abs=1)
 
 
 @pytest.mark.parametrize('kwargs, why', [
     ({'clip_skeleton': 'NEW'}, 'differs from the actual owner skeleton'),
     ({'durations': {'SeatedIdle': 4.5}}, 'SeatedIdle: length'),
     ({'root_moves': True}, 'parity failed'),
-    ({'wrong_path_for': 'SitToTypeSeated'}, 'SitToTypeSeated: import created'),
+    ({'wrong_path_for': 'SitDownSeated'}, 'SitDownSeated: import created'),
     ({'extra_for': 'SeatedIdle'}, 'SeatedIdle: import created'),
 ])
 def test_failure_after_staged_import_deletes_only_staging_and_keeps_existing_asset_and_receipt(tmp_path, kwargs, why):
@@ -291,7 +366,7 @@ def test_failure_after_staged_import_deletes_only_staging_and_keeps_existing_ass
     fit.main(first, tmp_path, OWNER_PARENTS, txid='old')
     receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
     # The failing role must be one that is staged again, so the preserved one is another role.
-    keep = 'DeskTypingSeated' if 'SeatedIdle' in (kwargs.get('durations') or {}) or kwargs.get('extra_for') else 'SeatedIdle'
+    keep = 'GetUpSeated' if 'SeatedIdle' in (kwargs.get('durations') or {}) or kwargs.get('extra_for') else 'SeatedIdle'
     assert fit.object_path(keep) in first_log.assets
     # A later run where only `keep` exists and the others must be staged again.
     u, log = fake_unreal(tmp_path, existing=[keep], **kwargs)
@@ -307,14 +382,14 @@ def test_failure_after_staged_import_deletes_only_staging_and_keeps_existing_ass
 
 def test_rename_failure_never_deletes_a_final_path(tmp_path):
     write_source(tmp_path)
-    u, log = fake_unreal(tmp_path, rename_fails_for='SitToTypeSeated')
+    u, log = fake_unreal(tmp_path, rename_fails_for='GetUpSeated')      # the last rename: earlier finals exist
     with pytest.raises(RuntimeError, match='rename'):
         fit.main(u, tmp_path, OWNER_PARENTS, txid='r')
     assert not (tmp_path / fit.RECEIPT_FILE).exists()
     renamed_here = {dst for _, dst in log.renamed}
     assert all('/_Staging/' in d or d in renamed_here for d in log.deleted)
     assert not [k for k in log.assets if '/_Staging/' in k]
-    assert not final_paths(log)          # finals renamed earlier in this run are removed: no receipt-less orphans
+    assert log.renamed and not final_paths(log)   # finals renamed earlier in this run are removed: no receipt-less orphans
 
 
 def test_save_failure_removes_only_this_runs_clips_and_keeps_previous_acceptance(tmp_path):
@@ -322,9 +397,9 @@ def test_save_failure_removes_only_this_runs_clips_and_keeps_previous_acceptance
     first, _ = fake_unreal(tmp_path)
     fit.main(first, tmp_path, OWNER_PARENTS, txid='old')
     receipt_bytes = (tmp_path / fit.RECEIPT_FILE).read_bytes()
-    u, log = fake_unreal(tmp_path, existing=['SeatedIdle'], save_fails_for='SitToTypeSeated')
+    u, log = fake_unreal(tmp_path, existing=['SeatedIdle'], save_fails_for='GetUpSeated')
     original = log.assets[fit.object_path('SeatedIdle')]
-    with pytest.raises(RuntimeError, match='SitToTypeSeated: could not save'):
+    with pytest.raises(RuntimeError, match='GetUpSeated: could not save'):
         fit.main(u, tmp_path, OWNER_PARENTS, txid='new')
     assert (tmp_path / fit.RECEIPT_FILE).read_bytes() == receipt_bytes
     assert log.assets[fit.object_path('SeatedIdle')] is original
@@ -368,7 +443,8 @@ def test_rerun_preserves_matching_existing_assets(tmp_path):
     u3, log3 = fake_unreal(tmp_path, existing=['SeatedIdle'])
     receipt = fit.main(u3, tmp_path, OWNER_PARENTS, txid='c')
     rows = {r['role']: r for r in receipt['clips']}
-    assert rows['SeatedIdle']['preserved_existing'] is True and rows['DeskTypingSeated']['preserved_existing'] is False
+    assert rows['SeatedIdle']['preserved_existing'] is True and rows['SitDownSeated']['preserved_existing'] is False
+    assert all(rows[r]['imported'] is False and 'preserved_existing' not in rows[r] for r in FAILED)
     assert sorted(log3.imported) == sorted(set(PASSING) - {'SeatedIdle'})
 
 
@@ -393,8 +469,14 @@ def test_refuses_another_owner_skeleton_before_any_import(tmp_path):
     assert not log.imported and not (tmp_path / fit.RECEIPT_FILE).exists()
 
 
+def _audit_row(audit, role):
+    return next(r for r in audit['clips'] if r['role'] == role)
+
+
 @pytest.mark.parametrize('mutate, why', [
-    (lambda a: a['clips'][2].update(fit_pass=True), 'fit_pass differs'),            # a failed fit relabelled as passing
+    (lambda a: _audit_row(a, 'SitToTypeSeated').update(fit_pass=True), 'SitToTypeSeated: audit fit_pass differs'),  # failed fit relabelled passing
+    (lambda a: _audit_row(a, 'DeskTypingSeated').update(fit_pass=True), 'DeskTypingSeated: audit fit_pass differs'),
+    (lambda a: _audit_row(a, 'SitDownSeated').update(fit_pass=False), 'SitDownSeated: audit fit_pass differs'),
     (lambda a: a['clips'][0].update(fps=30), 'fps differs'),
     (lambda a: a['clips'].pop(), 'exactly the six'),
     (lambda a: a['clips'][1].update(sha256='0' * 64), 'source FBX changed'),
@@ -417,12 +499,15 @@ def _receipt(tmp_path):
 
 def test_adapter_binds_seated_slots_only_from_an_accepted_receipt_and_config(tmp_path):
     receipt = _receipt(tmp_path)
-    bound = seat.seated_fit_bindings(receipt, validated={'SeatedIdle', 'DeskTypingSeated'})
+    bound = seat.seated_fit_bindings(receipt, validated={'SeatedIdle', 'SitDownSeated'})
     assert bound['Sitting'] == {'bound': True, 'role': 'SeatedIdle', 'object_path': fit.object_path('SeatedIdle')}
-    assert bound['DeskTyping'] == {'bound': True, 'role': 'DeskTypingSeated', 'object_path': fit.object_path('DeskTypingSeated')}
+    assert bound['StandToSit'] == {'bound': True, 'role': 'SitDownSeated', 'object_path': fit.object_path('SitDownSeated')}
+    # Accepted but not listed by config: not bound.
+    assert bound['SitToStand'] == {'bound': False, 'role': 'GetUpSeated',
+                                   'refusal': 'ValidatedHandsPostures does not list GetUpSeated'}
     # Without config validation, without a receipt, or with a non-accepted row: existing behaviour.
     assert not any(v['bound'] for v in seat.seated_fit_bindings(receipt, validated=()).values())
-    assert not any(v['bound'] for v in seat.seated_fit_bindings(None, validated={'SeatedIdle', 'DeskTypingSeated'}).values())
+    assert not any(v['bound'] for v in seat.seated_fit_bindings(None, validated={'SeatedIdle', 'SitDownSeated'}).values())
     failed = json.loads(json.dumps(receipt))
     for row in failed['clips']:
         if row['role'] == 'SeatedIdle':
@@ -436,15 +521,18 @@ def test_failed_fits_never_fill_a_slot(tmp_path):
     receipt = _receipt(tmp_path)
     everything = set(seat.SEATED_FIT_SLOTS)
     bound = seat.seated_fit_bindings(receipt, everything)
-    assert bound['StandToSit']['bound'] is False                       # SitDown seated still fails its fit
-    assert bound['Sitting']['bound'] and bound['SitToType']['bound'] and bound['DeskTyping']['bound']
-    assert bound['SitToStand']['bound']                                # GetUp seated passes since the seam need floor
+    # Typing is infeasible on the actual chair: DeskTyping and SitToType stay on today's clips even when validated.
+    for slot in ('DeskTyping', 'SitToType'):
+        assert bound[slot] == {'bound': False, 'role': {'DeskTyping': 'DeskTypingSeated', 'SitToType': 'SitToTypeSeated'}[slot],
+                               'refusal': 'fit gates failed or row not accepted'}
+    assert bound['Sitting']['bound'] and bound['StandToSit']['bound'] and bound['SitToStand']['bound']
     # Even a hand-edited receipt row that claims the import cannot pass a failed fit.
     forged = json.loads(json.dumps(receipt))
     for row in forged['clips']:
-        if row['role'] == 'SitDownSeated':
+        if row['role'] in FAILED:
             row.update(imported=True, accepted=True, same_existing_skeleton=True)
-    assert seat.seated_fit_bindings(forged, everything)['StandToSit']['bound'] is False
+    forged_bound = seat.seated_fit_bindings(forged, everything)
+    assert forged_bound['DeskTyping']['bound'] is False and forged_bound['SitToType']['bound'] is False
 
 
 def test_installed_native_binding_mirrors_the_python_gate():

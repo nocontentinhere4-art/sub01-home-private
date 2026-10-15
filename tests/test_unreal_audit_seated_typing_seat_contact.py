@@ -118,10 +118,9 @@ def engine_module(monkeypatch):
 
 
 def run(project, **kw):
-    # A fit solved on the actual (unshifted) chair; the committed summary assumes a moved chair and is refused.
+    # The committed fit summary, solved on the actual (unshifted) chair.
     u, seen = fake_unreal(project, **kw)
-    repo = _summary_repo(project.parent / 'unshifted', lambda d: d.update(chair_horizontal_shift_cm=[0.0, 0.0]))
-    return wrapper.main(u, project, repo=repo), seen
+    return wrapper.main(u, project, repo=seated_import.REPO), seen
 
 
 def test_root_audit_is_reused_unedited_and_restored(tmp_path):
@@ -141,7 +140,7 @@ def test_seated_clip_audited_at_the_fitted_placement_becomes_seated_evidence(tmp
     # only the seated clip was evaluated, every 60 Hz frame of 3..8 s, at the fitted body placement and measured floor
     import unreal_audit_seat_contact as audit
     assert seen['clips'] == {SEATED} and len(seen['times']) == 301 and seen['times'][0] == 3 and seen['times'][-1] == 8
-    summary = json.loads((project.parent / 'unshifted' / 'repo' / seated_import.SUMMARY_REPORT).read_text())
+    summary = json.loads((ROOT / seated_import.SUMMARY_REPORT).read_text())
     assert report['body_cm'] == summary['source_meta']['body_cm'] and report['body_yaw'] == summary['source_meta']['body_yaw']
     assert seen['body'].location.__dict__ == dict(zip('xyz', summary['source_meta']['body_cm']))
     assert seen['floor'] == audit.FLOOR_CM and report['floor_evidence'] == audit.FLOOR_EVIDENCE and seen['triangles'] == 6
@@ -206,19 +205,27 @@ def _summary_repo(tmp_path, mutate):
     (None, {}, lambda d: d['clips']['DeskTyping_seated'].update(sha256='0' * 64), 'PlacementStale'),
     (None, {}, lambda d: d['source_meta'].update(times={'start_s': 0, 'end_s': 5, 'rate_hz': 60, 'count': 301}), 'Window'),
     (None, {}, lambda d: d['source_meta'].pop('body_cm'), 'PlacementMissing'),
-    (None, {}, 'committed', 'ShiftedChairFit'),                    # the committed fit: chair moved (3.875, -32.5)
     (None, {}, lambda d: d.update(chair_horizontal_shift_cm=[0.0, -0.5]), 'ShiftedChairFit'),
 ])
 def test_refuses_inconsistent_inputs_and_writes_nothing(tmp_path, row, kw, mutate, match):
     project = make_project(tmp_path, row)
     u, _ = fake_unreal(project, **kw)
-    if mutate == 'committed':
-        repo = seated_import.REPO
-    else:
-        repo = _summary_repo(tmp_path, lambda d: (d.update(chair_horizontal_shift_cm=[0.0, 0.0]), mutate and mutate(d)))
+    repo = _summary_repo(tmp_path, lambda d: mutate and mutate(d))
     with pytest.raises(wrapper.Refused, match=match):
         wrapper.main(u, project, repo=repo)
     assert sorted(p.name for p in (project / 'private-audit').iterdir()) == ['native-chair-surface.json', 'unreal-seated-fit-import.json']
+
+
+def test_committed_fit_summary_is_solved_on_the_unmoved_chair():
+    raw = (ROOT / seated_import.SUMMARY_REPORT).read_bytes()
+    summary = json.loads(raw)
+    assert summary['chair_horizontal_shift_cm'] == [0.0, 0.0]
+    place = wrapper.fit_placement(raw, receipt_row())
+    assert place['chair_horizontal_shift_cm'] == [0.0, 0.0]
+    assert place['body_cm'] == summary['source_meta']['body_cm'] == [200.025, -199.8, -0.6]
+    # The committed DeskTyping_seated verdict itself fails on the actual chair, so the importer never writes the
+    # accepted row this wrapper requires (receipt_row() above is a synthetic accepted row).
+    assert summary['clips'][wrapper.FIT_KEY]['all_gates_pass'] is False
 
 
 def test_refuses_without_receipt_or_chair(tmp_path):
