@@ -1,0 +1,107 @@
+{
+  "schema": "sub01.actual-eight-kitchen-physical-interactions.v1",
+  "native_pid": 77178,
+  "native_start_ticks": 975360109,
+  "source_export_sha256": "c5b8f73361d819efced9ab1f7f567f6c9adb284126eebb7de3b03db33229eec5",
+  "actual_owned_asset_prefix": "/Game/Sub01Home/RealKitchen/V_c5b8f73361d8_R5/",
+  "input": "Genuine browser WASD/mouse/E; physical R25/H91/near1 candidate. No teleport/collision bypass/direct backend setting writes.",
+  "opened_and_closed_door_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "exact_native_open_angle_measured": {
+    "door": 2,
+    "actual_degrees": 88.199996948,
+    "target_degrees": 88.2
+  },
+  "other_seven_open_evidence": "Each exact tagged native E ray, authenticated backend true state and viewed open native image; exact maximum angles not independently sampled.",
+  "final_native_inspect_utc": "2026-10-15 11:53:20.859 UTC",
+  "final_source_fresh": true,
+  "final_source_state_age_seconds": 0.487,
+  "final_eight_actual_angles_degrees": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "final_backend_flags": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "final_current_part_transforms_equal_closed": 40,
+  "moving_parts": 40,
+  "unexpected_blocked_logs": 0,
+  "blocked_by_obstacle_test_completed": false,
+  "physical_E_tagged_rays": 17,
+  "first_far_E_limit": "Eye ray172.72cm hit D2 but capsule-centre closest-bounds limit refused; genuine closer approach ray150.31cm succeeded. Range unchanged.",
+  "full_native_log": {
+    "path": "out/house-evidence/kitchen77178-all-physical-E-and-inspects.txt",
+    "sha256": "a0c37625307d9cd1773d50e5a2130ea609415264b9873ab42b149666ea6b766f"
+  },
+  "open_images": [
+    {
+      "path": "out/house-evidence/kitchen77178-upper-D0-open.png",
+      "bytes": 661774,
+      "sha256": "d44231ab10d1977067f9e7addf49d0fa036a37c0d6f0fae5c5c48a711036d46c",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-upper-D1-open.png",
+      "bytes": 465779,
+      "sha256": "e56afba0c012fbb36b8e1851f92dd7a591aaeeb98db967ffe38624c16b1a0e55",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-upper-closer-after-E.png",
+      "bytes": 323569,
+      "sha256": "1166cdaa95417120f09477fc5f0efa6b909c6991d68eb199b1fc080d17a49553",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-upper-D3-open.png",
+      "bytes": 304116,
+      "sha256": "09eb2b20e29ace16e7fa6ee65187ddbe68e142ee1073fe96c76ce4f4bd233aeb",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-lower-L0-open.png",
+      "bytes": 681493,
+      "sha256": "259dda9afd1615e743c416b19901dba609a4ef66755526db8a40934b8cabac7f",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-lower-L1-open.png",
+      "bytes": 593222,
+      "sha256": "27ea0d40d3c80b814f2b2b6ae67c94ee99ddcd3ff8b84aaf365711aa0dd500b5",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-lower-L2-open.png",
+      "bytes": 609436,
+      "sha256": "7986fdf37a3ee18632d22e37a4be19fbbc3eb141f01b1d872e81963a006635eb",
+      "viewed": true
+    },
+    {
+      "path": "out/house-evidence/kitchen77178-lower-L3-open.png",
+      "bytes": 529550,
+      "sha256": "6c368e84a238e7770964d3646d1ba39740f7af49fd5e477ebdc7182d1155ee2e",
+      "viewed": true
+    }
+  ]
+}
