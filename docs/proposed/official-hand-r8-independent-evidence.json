@@ -1,0 +1,181 @@
+{
+  "schema": "sub01.official-hand-r8-independent-evidence.v1",
+  "rest_audit_sha256": "c1e49393171552e1f852d627f9be9c9c238a061047a130db933ab92b47664727",
+  "rest_audit_remote": "/workspace/sub01-home-private/human-base-hands-r1/rig-r8-independent-audit.json",
+  "actual_motion_sha256": "3b1660eacf58203f3e87dfa2fa00799c27d104306bf5370c9fce2fa82fee3862",
+  "motion_audit_sha256": "275743840b0fb0053fcd719a25f7825740ff18e624e18a8a27bc079de632e15f",
+  "motion_audit_remote": "/workspace/sub01-home-private/human-base-hands-r1/rig-r8-motion-independent-audit.json",
+  "rest_sides": {
+    "Left": {
+      "vertices": 64223,
+      "zero_weight_vertices": 0,
+      "wrong_side_weight_vertices": 0,
+      "max_weight_sum_error": 4.6100467443466187e-08,
+      "deform_bones": 17,
+      "probes_per_bone": 7,
+      "all_probes_inside_majority": true,
+      "analysis_cuff_closed": true
+    },
+    "Right": {
+      "vertices": 64198,
+      "zero_weight_vertices": 0,
+      "wrong_side_weight_vertices": 0,
+      "max_weight_sum_error": 4.842877388000488e-08,
+      "deform_bones": 17,
+      "probes_per_bone": 7,
+      "all_probes_inside_majority": true,
+      "analysis_cuff_closed": true
+    }
+  },
+  "actual_motion_frames": 32,
+  "actual_action_range": [
+    0.0,
+    31.0
+  ],
+  "all_source_integer_frames_sampled": true,
+  "motion_overlap_candidates": [
+    {
+      "frame": 12,
+      "mesh": "CC0Adult_Left_ForearmHand_SOURCE_UNRIGGED",
+      "candidate_pairs": 9,
+      "triangle_pairs": [
+        [
+          72470,
+          72496
+        ],
+        [
+          72467,
+          72496
+        ],
+        [
+          72457,
+          72467
+        ],
+        [
+          72455,
+          72496
+        ],
+        [
+          72456,
+          72496
+        ],
+        [
+          72456,
+          72457
+        ],
+        [
+          72454,
+          72455
+        ],
+        [
+          72451,
+          72455
+        ],
+        [
+          72451,
+          72456
+        ]
+      ],
+      "dominant_region": "Left thumb web; Thumb2~48%,Index1~20%,Thumb1~18%,Thumb3~13%"
+    },
+    {
+      "frame": 13,
+      "mesh": "CC0Adult_Left_ForearmHand_SOURCE_UNRIGGED",
+      "candidate_pairs": 9,
+      "triangle_pairs": [
+        [
+          72470,
+          72496
+        ],
+        [
+          72467,
+          72496
+        ],
+        [
+          72457,
+          72467
+        ],
+        [
+          72455,
+          72496
+        ],
+        [
+          72456,
+          72496
+        ],
+        [
+          72456,
+          72457
+        ],
+        [
+          72454,
+          72455
+        ],
+        [
+          72451,
+          72455
+        ],
+        [
+          72451,
+          72456
+        ]
+      ],
+      "dominant_region": "Left thumb web; Thumb2~48%,Index1~20%,Thumb1~18%,Thumb3~13%"
+    },
+    {
+      "frame": 14,
+      "mesh": "CC0Adult_Left_ForearmHand_SOURCE_UNRIGGED",
+      "candidate_pairs": 2,
+      "triangle_pairs": [
+        [
+          72457,
+          72467
+        ],
+        [
+          72456,
+          72457
+        ]
+      ],
+      "dominant_region": "Left thumb web; Thumb2~48%,Index1~20%,Thumb1~18%,Thumb3~13%"
+    },
+    {
+      "frame": 25,
+      "mesh": "CC0Adult_Left_ForearmHand_SOURCE_UNRIGGED",
+      "candidate_pairs": 2,
+      "triangle_pairs": [
+        [
+          72457,
+          72467
+        ],
+        [
+          72456,
+          72457
+        ]
+      ],
+      "dominant_region": "Left thumb web; Thumb2~48%,Index1~20%,Thumb1~18%,Thumb3~13%"
+    },
+    {
+      "frame": 26,
+      "mesh": "CC0Adult_Left_ForearmHand_SOURCE_UNRIGGED",
+      "candidate_pairs": 2,
+      "triangle_pairs": [
+        [
+          72457,
+          72467
+        ],
+        [
+          72456,
+          72457
+        ]
+      ],
+      "dominant_region": "Left thumb web; Thumb2~48%,Index1~20%,Thumb1~18%,Thumb3~13%"
+    }
+  ],
+  "right_hand_self_overlap_candidates_total": 0,
+  "between_hands_overlap_candidates_total": 0,
+  "native_imported": false,
+  "visual_accepted": false,
+  "self_contact_accepted": false,
+  "prop_contact_verified": false,
+  "limitation": "Nonadjacent BVH overlap candidates are conservatively reported; actual thumb-web visual/physical review is required. No keyboard/controller/phone prop exists in this captured walk source."
+}
