@@ -164,11 +164,21 @@ def run(root, dry_run=True, u=None):
                  c.get_collision_enabled(), c.get_collision_profile_name(), c.get_editor_property('mobility'))
                 for c in a.get_components_by_class(u.StaticMeshComponent)]) for a in original]
     level_save_attempted = False
+    # Interchange may label its scene owner from the filename rather than the
+    # glTF scene name. Give that owner the same deterministic UID too.
+    staging_source = root/(proof['prefix']+'Scene.glb')
+    staging_source_created = False
     try:
+        if staging_source.exists():
+            if hashlib.sha256(staging_source.read_bytes()).hexdigest() != proof['export_sha256']:
+                raise RuntimeError('Owned kitchen staging filename exists with different bytes')
+        else:
+            shutil.copy2(source, staging_source)
+            staging_source_created = True
         manager = u.InterchangeManager.get_interchange_manager_scripted()
         params = u.ImportAssetParameters()
         params.set_editor_property('is_automated', True)
-        if not manager.import_scene(dest, manager.create_source_data(str(source)), params):
+        if not manager.import_scene(dest, manager.create_source_data(str(staging_source)), params):
             raise RuntimeError('Unique authentic kitchen import failed')
         manager.wait_until_all_tasks_done(False)
         if snapshot(u, original) != before:
@@ -300,6 +310,8 @@ def run(root, dry_run=True, u=None):
                 eas.destroy_actor(actor)
         if u.EditorAssetLibrary.does_directory_exist(dest):
             u.EditorAssetLibrary.delete_directory(dest)
+        if staging_source_created:
+            staging_source.unlink(missing_ok=True)
         if snapshot(u, original) != before:
             raise RuntimeError('Kitchen rollback differs from protected originals; preserve map backup '+str(backup))
         if level_save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():
