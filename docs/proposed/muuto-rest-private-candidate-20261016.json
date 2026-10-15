@@ -1,0 +1,112 @@
+{
+  "schema": "sub01.muuto-rest-private-candidate-packet.v1",
+  "status": "source candidate; final combined image sent to root; no native import",
+  "source_url": "https://www.muuto.com/product/Rest-Sofa-3-Seater--RES3S/RES3SHB0602/",
+  "official_download_url": "https://download.muuto.com/digitalshowroom/#/product/649435452002300?tag=573684022989939",
+  "license_provenance": "Official public manufacturer architectural download. NOT CC0, not redistributed in Git. Private model inspection/integration candidate.",
+  "sofa_glb": "/workspace/sub01-home-private/manufacturer-muuto-rest-r1/candidate-r3/muuto-rest-3-candidate.glb",
+  "sofa_sha256": "286115af3c6dc71f679f34bca3d639d2689df7cd377053893189ae1651dc0b4e",
+  "sofa_source_report": {
+    "schema": "sub01.muuto-rest-candidate.v1",
+    "source_original_obj_sha256": "0d4a22c20014c5b699e60fd1b2452359272bbe4e41e5f9b81d825d802ca8c1ee",
+    "source_archive_sha256": "fcfaf520cd9a48157bef3c3ef2a790a303f337e450fe028cbdb448eea47b1fff",
+    "source_author": "Muuto official manufacturer architecture download, not CC0",
+    "geometry_edits": "NONE: original surface/face partition and rigid mm\u2192m fit only",
+    "source_vertex_count": 4083,
+    "source_polygon_faces": 4879,
+    "parts": [
+      "MuutoRest_000",
+      "MuutoRest_001"
+    ],
+    "materials": [
+      "hearth",
+      "oak"
+    ],
+    "bounds_Blender_m": [
+      [
+        -1.7950000762939453,
+        -1.2097525596618652,
+        0.025049949064850807
+      ],
+      [
+        -0.782655656337738,
+        1.0097525119781494,
+        0.7522684931755066
+      ]
+    ],
+    "bounds_UE_cm": [
+      [
+        -179.50000762939453,
+        -100.97525119781494,
+        2.5049949064850807
+      ],
+      [
+        -78.2655656337738,
+        120.97525596618652,
+        75.22684931755066
+      ]
+    ],
+    "source_photographs": [
+      "Hearth 6.jpg",
+      "Oak.jpg"
+    ],
+    "normal_texture_derived_from_actual_photo": {
+      "tile_review_assumption_m": 0.25,
+      "height_strength_m": 1.8e-05,
+      "sha256": "cf8a13fee03c57a5ed6f7351c504651264652bcb7b1b44dd8ccb49b87bf26300"
+    },
+    "sofa_glb_sha256": "286115af3c6dc71f679f34bca3d639d2689df7cd377053893189ae1651dc0b4e",
+    "around_source_sha256": "1a7c531c5ddc58a55a965daa2f1e0f5932e1b76ed67811375ca65c46548a99e3",
+    "around_candidate_translation_UE_cm": [
+      5.2,
+      0,
+      0
+    ],
+    "retire_only_whole_original_sofa_actors": [
+      172,
+      173,
+      174,
+      175
+    ],
+    "native_imported": false,
+    "seating_contact_ready": false
+  },
+  "independent_original_surface_proof": {
+    "schema": "sub01.muuto-original-surface-proof.v1",
+    "original_obj_sha256": "0d4a22c20014c5b699e60fd1b2452359272bbe4e41e5f9b81d825d802ca8c1ee",
+    "candidate_sha256": "286115af3c6dc71f679f34bca3d639d2689df7cd377053893189ae1651dc0b4e",
+    "original_vertices": 4083,
+    "original_triangles": 4258,
+    "original_quads": 621,
+    "all4879originalfaces_complete": true,
+    "all5500finaltriangles_have_exact_source_polygon": true,
+    "max_original_position_error_cm": 2.5056783297266427e-05,
+    "position_tolerance_cm": 5e-05,
+    "all_original_polygon_boundaries_preserved": true,
+    "native_or_contact_acceptance": false
+  },
+  "import_helper": "tools/unreal_import_muuto_rest_sofa.py",
+  "import_helper_sha256": "a98dbcef004927f01cb3c9e038b34ecbad6ed8ca07631483ca7a443cfb3c8ad3",
+  "retire_whole_original_actors_only": [
+    172,
+    173,
+    174,
+    175
+  ],
+  "preserve": [
+    "all original mesh assets",
+    "protected TV/Minecraft plane/UV/device mapping",
+    "PCguest and all userworld state",
+    "every other actual actor snapshot",
+    "retired rug hidden NoCollision"
+  ],
+  "new_source_native_geometry_tolerance_cm": 0.0001,
+  "actual_native_writer": "native_integration only",
+  "seating_contact_ready": false,
+  "native_visual_verified": false,
+  "combined_source_review": "out/house-evidence/manufacturer-muuto-rest-around-dark-r3/muuto-rest-around-source-review.png",
+  "previous_rejected_candidates": [
+    "Haven b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
+    "table c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9"
+  ]
+}
