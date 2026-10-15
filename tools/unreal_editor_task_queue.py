@@ -18,6 +18,7 @@ TASKS = {
     'real_office': 'unreal_import_real_office_bundle',
     'gaming_grip': 'unreal_import_gaming_grip',
     'real_kitchen': 'unreal_import_real_kitchen',
+    'kitchen_closed_fit': 'unreal_replace_real_kitchen_closed_fit',
     'monitor_support': 'unreal_monitor_support_fix',
     'review_living': 'unreal_scene_review',
     'review_desk': 'unreal_scene_review',
@@ -52,6 +53,7 @@ TASKS = {
     'bathroom_corridor': 'unreal_import_bathroom_corridor',
     'fp_keyboard_review': 'unreal_import_fp_keyboard_review',
     'reference_bedding': 'unreal_import_reference_bedding',
+    'reference_media': 'unreal_import_reference_media',
     'residential_windows': 'unreal_import_real_home_windows',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
@@ -132,6 +134,8 @@ def dispatch(task):
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
     if task == 'nanite_materials':
         return module.run(dry_run=False)
+    if task == 'reference_media':
+        return module.run(dry_run=False)
     if task == 'reference_bedding':
         return module.run('/workspace/sub01-home-private/reference-bedding-source-r1/output/bedding.glb', dry_run=False)
     if task == 'residential_windows':
@@ -154,6 +158,10 @@ def dispatch(task):
         return module.run(task.removeprefix('review_'))
     if task == 'monitor_support':
         return module.run(OFFICE_EXPORT, dry_run=False)
+    if task == 'kitchen_closed_fit':
+        # Exact authenticated R5 retirement/import wrapper owns the frozen paths.
+        importlib.reload(importlib.import_module('unreal_import_real_kitchen'))
+        return module.run()
     if task == 'real_kitchen':
         return module.run(KITCHEN_EXPORT, dry_run=False)
     if task == 'gaming_grip':
