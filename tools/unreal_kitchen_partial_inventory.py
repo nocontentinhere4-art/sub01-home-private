@@ -54,6 +54,21 @@ def run(u=None):
                 item['read_error'] = type(error).__name__ + ': ' + str(error)
             row['components'].append(item)
         result['partial_actors'].append(row)
+    # Inspect only the already-loaded, exact R2 mesh that lost twelve triangles.
+    exact = ('/Game/Sub01Home/RealKitchen/V_c5b8f73361d8_R2/'
+             'SUB01_RealKitchen_687d9c6d9bda_Scene/StaticMeshes/'
+             'SUB01_RealKitchen_687d9c6d9bda_Mesh_11.'
+             'SUB01_RealKitchen_687d9c6d9bda_Mesh_11')
+    loaded = u.find_object(None, exact)
+    result['failed_r2_mesh'] = {'path': exact, 'loaded': loaded is not None,
+                              'assets_force_loaded': False}
+    if loaded is not None:
+        from unreal_loaded_plant_clone_audit import build_settings
+        sub = u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
+        result['failed_r2_mesh'].update({
+            'build_settings': build_settings(u, loaded),
+            'geometry_api_audit': native_geometry_api_audit(u, loaded),
+            'set_lod_build_settings_doc': str(getattr(sub, 'set_lod_build_settings', None).__doc__)})
     # Registry metadata does not load any potentially corrupt failed package.
     registry = u.AssetRegistryHelpers.get_asset_registry()
     for asset in registry.get_assets_by_path(DEST, recursive=True):
