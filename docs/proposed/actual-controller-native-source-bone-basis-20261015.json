@@ -1,0 +1,477 @@
+{
+  "schema": "sub01.actual-controller-native-source-bone-basis-audit.v1",
+  "native_pid": 62592,
+  "native_start_ticks": 975054032,
+  "source_sha256": "bf31d64518d85f6eefd8150009a758ddddc95ca6afd63d5d83bdf29a2dcdaaf9",
+  "source_first_key_s": 0.03333333507180214,
+  "native_time_mapping": "source_time = native_time + source_first_key",
+  "captured_log_sha256": "3a558f38f5efb31243e6633955eb4e5e1da6711eadd3f08dae66d22ce737914f",
+  "actual_sample_count": 201,
+  "distinct_native_times": [
+    0.0,
+    0.013,
+    0.03,
+    0.549,
+    0.598,
+    0.648,
+    0.681,
+    0.731,
+    0.764,
+    0.797,
+    0.83,
+    0.88,
+    0.947,
+    0.98,
+    1.03,
+    1.063,
+    1.582,
+    1.632,
+    1.665,
+    1.715,
+    1.748,
+    1.781,
+    1.814,
+    1.864,
+    1.914,
+    1.963,
+    2.013,
+    2.046,
+    2.096,
+    2.549,
+    2.598,
+    2.648,
+    2.681,
+    2.731,
+    2.764,
+    2.814,
+    2.847,
+    2.88,
+    2.947,
+    2.98,
+    3.03,
+    3.063,
+    3.582,
+    3.632,
+    3.681,
+    3.715,
+    3.748,
+    3.797,
+    3.831,
+    3.864,
+    3.914,
+    3.98,
+    4.0,
+    4.013,
+    4.046,
+    4.096,
+    4.598,
+    4.665,
+    4.698,
+    4.731,
+    4.781,
+    4.814,
+    4.847,
+    4.897,
+    4.947,
+    4.997
+  ],
+  "per_joint_summary": {
+    "RightHand": {
+      "max_position_delta_cm": 0.01386568209640574,
+      "max_basis_difference_to_positive_90deg_X_degrees": 0.040810674610817554,
+      "min_orientation_difference_deg": 89.98653396310773,
+      "max_orientation_difference_deg": 90.02367924313792
+    },
+    "LeftHand": {
+      "max_position_delta_cm": 0.014628629039224956,
+      "max_basis_difference_to_positive_90deg_X_degrees": 0.04211259982408564,
+      "min_orientation_difference_deg": 89.97899819307464,
+      "max_orientation_difference_deg": 90.01074470149125
+    },
+    "Head": {
+      "max_position_delta_cm": 0.011272324583095785,
+      "max_basis_difference_to_positive_90deg_X_degrees": 0.016526490640674296,
+      "min_orientation_difference_deg": 89.9886693068003,
+      "max_orientation_difference_deg": 90.01323330101786
+    }
+  },
+  "scene_or_pose_modified": false,
+  "native_skin_vertex_parity_verified": false,
+  "controller_contact_accepted": false,
+  "detailed_audit_local_path": "out/house-evidence/controller62592-source-native-bone-basis-audit.json",
+  "detailed_audit_sha256": "ca94fe1b19f49c86df4ab799b607187f45296787008c07008c20d5a3b3286145",
+  "native_prop_readonly_getall_local_path": "out/house-evidence/controller62592-prop-readonly-GETALL.txt",
+  "native_prop_readonly_getall_sha256": "94669540aeb4787356b50a49dae967fe1188aa889f2da6d28ddc0ed40e871b25",
+  "native_prop_world_position_cm": [
+    195.099759,
+    271.540146,
+    90.049992
+  ],
+  "native_prop_world_rotation_pitch_yaw_roll_deg": [
+    2.947811,
+    -100.61163,
+    47.822208
+  ],
+  "native_prop_world_scale": [
+    0.076901,
+    0.076901,
+    0.076901
+  ],
+  "inferred_fixed_native_to_source_hand_basis_xyzw": [
+    0.7071067811865476,
+    0,
+    0,
+    0.7071067811865476
+  ],
+  "basis_inference": "NativeQ inverse * bodyWorldQ * reflectedSourceJointQ, evaluated independently at each paired logged phase. No fitted geometry or offsets.",
+  "native_time_log_resolution_s": 0.001,
+  "original_skeleton_or_pose_modified": false,
+  "mount_correction_applied": false,
+  "witness_samples": [
+    {
+      "native_time_s": 0.0,
+      "source_time_s": 0.03333333507180214,
+      "body_position_cm": [
+        200.0,
+        310.0,
+        4.650095
+      ],
+      "body_rotation_pyr_deg": [
+        -0.0,
+        -180.0,
+        -0.0
+      ],
+      "joints": {
+        "RightHand": {
+          "native_world_position_cm": [
+            202.892,
+            261.825,
+            85.997
+          ],
+          "native_world_quaternion_xyzw": [
+            0.006220271,
+            0.60723946,
+            0.052346316,
+            -0.792768194
+          ],
+          "source_converted_world_position_cm": [
+            202.8932408848064,
+            261.8237144829297,
+            85.99772330260987
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.5561691390401319,
+            0.46640267109010225,
+            -0.39238368219923925,
+            -0.5649597181420486
+          ],
+          "position_delta_cm": 0.0019275673545302908,
+          "orientation_delta_degrees": 90.00096302314607,
+          "native_to_source_basis_xyzw": [
+            0.7071127234435128,
+            -1.0696408162259222e-05,
+            1.3864356598162496e-05,
+            0.7071008386628208
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0022257235425536645
+        },
+        "LeftHand": {
+          "native_world_position_cm": [
+            184.283,
+            258.462,
+            92.808
+          ],
+          "native_world_quaternion_xyzw": [
+            0.051821829,
+            0.667118095,
+            0.012546546,
+            0.743041405
+          ],
+          "source_converted_world_position_cm": [
+            184.2839100222788,
+            258.46237027210975,
+            92.80860419596482
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            0.5620584097630066,
+            0.48060390999291,
+            -0.4628412028892538,
+            0.48876195292006486
+          ],
+          "position_delta_cm": 0.0011533840414643083,
+          "orientation_delta_degrees": 89.99951573033023,
+          "native_to_source_basis_xyzw": [
+            0.7071037927605567,
+            9.492226052470294e-06,
+            1.1109947359682245e-05,
+            0.7071097694489183
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0017431239590453295
+        },
+        "Head": {
+          "native_world_position_cm": [
+            197.291,
+            294.368,
+            110.21
+          ],
+          "native_world_quaternion_xyzw": [
+            -0.007430245,
+            0.713341053,
+            -0.700777446,
+            0.000551556
+          ],
+          "source_converted_world_position_cm": [
+            197.29079176521074,
+            294.3674932345868,
+            110.21156255313713
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.004858365660113581,
+            0.008870300018979819,
+            -0.9999328465124793,
+            0.005658314778855228
+          ],
+          "position_delta_cm": 0.001655821614137871,
+          "orientation_delta_degrees": 90.00155991199603,
+          "native_to_source_basis_xyzw": [
+            0.7071164066589123,
+            -6.302801251828369e-06,
+            1.393724482292581e-05,
+            0.7070971554177091
+          ],
+          "basis_distance_to_positive_90deg_X": 0.00234640609177541
+        }
+      }
+    },
+    {
+      "native_time_s": 4.0,
+      "source_time_s": 4.033333335071802,
+      "body_position_cm": [
+        200.0,
+        310.0,
+        4.650095
+      ],
+      "body_rotation_pyr_deg": [
+        -0.0,
+        -180.0,
+        -0.0
+      ],
+      "joints": {
+        "RightHand": {
+          "native_world_position_cm": [
+            202.471,
+            262.009,
+            85.449
+          ],
+          "native_world_quaternion_xyzw": [
+            0.017152585,
+            0.597610944,
+            0.041427078,
+            -0.800531539
+          ],
+          "source_converted_world_position_cm": [
+            202.4714484562231,
+            262.00717402016693,
+            85.44699761155525
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.5539467451477025,
+            0.45187178259004007,
+            -0.39327630993528906,
+            -0.5781769968468553
+          ],
+          "position_delta_cm": 0.0027467935522248205,
+          "orientation_delta_degrees": 90.00133603371043,
+          "native_to_source_basis_xyzw": [
+            0.7071150251696245,
+            -1.0022978318899202e-05,
+            -1.3133262509386906e-05,
+            0.7070985369143531
+          ],
+          "basis_distance_to_positive_90deg_X": 0.002317113363476395
+        },
+        "LeftHand": {
+          "native_world_position_cm": [
+            184.062,
+            258.769,
+            92.839
+          ],
+          "native_world_quaternion_xyzw": [
+            0.039451068,
+            0.676956496,
+            0.00381263,
+            0.734955086
+          ],
+          "source_converted_world_position_cm": [
+            184.06244233729467,
+            258.76746898724883,
+            92.83663015662333
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            0.5475963446901666,
+            0.48137945204337734,
+            -0.4759820964143446,
+            0.4917856345252388
+          ],
+          "position_delta_cm": 0.0028558396237259123,
+          "orientation_delta_degrees": 90.00080434144918,
+          "native_to_source_basis_xyzw": [
+            0.7071117443980672,
+            9.012339755436729e-06,
+            7.5099590768699345e-06,
+            0.7071018178428768
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0015665552941362738
+        },
+        "Head": {
+          "native_world_position_cm": [
+            197.408,
+            293.197,
+            110.197
+          ],
+          "native_world_quaternion_xyzw": [
+            -0.006522578,
+            0.716908543,
+            -0.69705741,
+            -0.010514942
+          ],
+          "source_converted_world_position_cm": [
+            197.40785402656724,
+            293.19460728424986,
+            110.19551506288471
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.012022330929900791,
+            0.014055482681084124,
+            -0.9998248908211097,
+            -0.002845111626938566
+          ],
+          "position_delta_cm": 0.0028198289204221555,
+          "orientation_delta_degrees": 89.99782905073874,
+          "native_to_source_basis_xyzw": [
+            0.7070933840680701,
+            3.3073222531716775e-05,
+            2.6608270017709597e-06,
+            0.7071201772727509
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0043783210773221705
+        }
+      }
+    },
+    {
+      "native_time_s": 4.997,
+      "source_time_s": 5.030333335071802,
+      "body_position_cm": [
+        200.0,
+        310.0,
+        4.650095
+      ],
+      "body_rotation_pyr_deg": [
+        -0.0,
+        -180.0,
+        -0.0
+      ],
+      "joints": {
+        "RightHand": {
+          "native_world_position_cm": [
+            202.918,
+            261.823,
+            85.966
+          ],
+          "native_world_quaternion_xyzw": [
+            0.006920617,
+            0.607470317,
+            0.051420025,
+            -0.792646138
+          ],
+          "source_converted_world_position_cm": [
+            202.91758610271663,
+            261.8228890516728,
+            85.96806494620887
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.5555837762550067,
+            0.46592047573643586,
+            -0.3931820913902854,
+            -0.5653782988952808
+          ],
+          "position_delta_cm": 0.002108938912828447,
+          "orientation_delta_degrees": 89.99860832325925,
+          "native_to_source_basis_xyzw": [
+            0.7070981934450247,
+            -1.2462253915706993e-05,
+            9.226882099491588e-07,
+            0.7071153687133546
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0019968340145682943
+        },
+        "LeftHand": {
+          "native_world_position_cm": [
+            184.306,
+            258.466,
+            92.777
+          ],
+          "native_world_quaternion_xyzw": [
+            0.050816235,
+            0.666995736,
+            0.012033551,
+            0.743229165
+          ],
+          "source_converted_world_position_cm": [
+            184.30734130880887,
+            258.4663762621867,
+            92.77882743468368
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            0.5614680208386349,
+            0.48014058804975324,
+            -0.4631278340457005,
+            0.48962361729692094
+          ],
+          "position_delta_cm": 0.002297868594366445,
+          "orientation_delta_degrees": 89.99900908554031,
+          "native_to_source_basis_xyzw": [
+            0.7071006664168321,
+            -1.3243556655548094e-05,
+            -4.185311238147249e-06,
+            0.7071128957669796
+          ],
+          "basis_distance_to_positive_90deg_X": 0.0018748480482049593
+        },
+        "Head": {
+          "native_world_position_cm": [
+            197.319,
+            294.35,
+            110.209
+          ],
+          "native_world_quaternion_xyzw": [
+            -0.007580389,
+            0.7133774,
+            -0.700738403,
+            0.000955546
+          ],
+          "source_converted_world_position_cm": [
+            197.31950352638978,
+            294.3504852775879,
+            110.20974515181567
+          ],
+          "source_converted_world_quaternion_xyzw": [
+            -0.004700929948892228,
+            0.00890997160934738,
+            -0.9999311422962535,
+            0.006018665105000766
+          ],
+          "position_delta_cm": 0.0010219023392155826,
+          "orientation_delta_degrees": 90.0030905340427,
+          "native_to_source_basis_xyzw": [
+            0.707125851190914,
+            6.791104737184352e-07,
+            -2.3966563175983872e-05,
+            0.7070877102613706
+          ],
+          "basis_distance_to_positive_90deg_X": 0.004135187412638914
+        }
+      }
+    }
+  ]
+}
