@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 import prepare_real_kitchen_native_bundle as bundle
 import unreal_kitchen_hinge_runtime as runtime
 import unreal_kitchen_state_bridge as bridge
-from unreal_import_real_kitchen import same_triangles, run as native_import
+from unreal_import_real_kitchen import same_triangles, run as native_import, detach_failed_import
 
 
 def fixture():
@@ -49,6 +49,33 @@ def fixture():
 
 
 class KitchenGuards(unittest.TestCase):
+    def test_failed_import_detaches_every_new_mesh_before_any_actor_destroy(self):
+        events = []
+        class Component:
+            def set_static_mesh(self, mesh):
+                self.mesh = mesh
+                events.append('detach')
+        class Actor:
+            def __init__(self, name):
+                self.name, self.components = name, [Component(), Component()]
+            def get_path_name(self):
+                return self.name
+            def get_components_by_class(self, cls):
+                return self.components
+        original, one, two = Actor('protected'), Actor('owned1'), Actor('owned2')
+        class Editor:
+            def get_all_level_actors(self):
+                return [original, one, two]
+            def destroy_actor(self, actor):
+                self.assert_detached = all(c.mesh is None for a in (one, two) for c in a.components)
+                if not self.assert_detached:
+                    raise AssertionError('destroyed actor before releasing all meshes')
+                events.append('destroy')
+                return True
+        self.assertEqual(detach_failed_import(types.SimpleNamespace(StaticMeshComponent=Component), Editor(), {'protected': {}}), 2)
+        self.assertEqual(events, ['detach']*4+['destroy']*2)
+        self.assertTrue(all(not hasattr(c, 'mesh') for c in original.components))
+
     def test_analytic_swept_bound_contains_between_endpoint_extremum(self):
         # Endpoint-only AABBs miss x=sqrt(2) halfway through this real circular arc.
         box = bundle.swept_bounds([(1., 1., 2.)], (0., 0., 0.), -math.pi/2)

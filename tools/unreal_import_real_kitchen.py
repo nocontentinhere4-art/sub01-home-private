@@ -27,6 +27,23 @@ NATIVE_OLD_MESH = {63: 47, 178: 136}
 NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
 
 
+def detach_failed_import(u, eas, before):
+    """Remove staged actors without force-deleting compiling/referenced assets.
+
+    Unreal's destroy_actor does not synchronously release component mesh refs.
+    Failed assets stay quarantined in their unique owned namespace for later
+    inspection; preflight refuses to import that namespace a second time.
+    """
+    added = [a for a in eas.get_all_level_actors() if a.get_path_name() not in before]
+    for actor in added:
+        for component in actor.get_components_by_class(u.StaticMeshComponent):
+            component.set_static_mesh(None)
+    for actor in added:
+        if not eas.destroy_actor(actor):
+            raise RuntimeError('Failed kitchen actor could not be detached safely')
+    return len(added)
+
+
 def same_triangles(source, actual, tolerance_cm=.02):
     """Independent of index/vertex splitting/order; every actual triangle consumed."""
     if len(source) != len(actual):
@@ -252,6 +269,7 @@ def run(root, dry_run=True, u=None):
         if any(not a.get_actor_label().startswith(proof['prefix']) for a in added):
             raise RuntimeError('Importer added an unowned/unexpected actor')
         by_name, components, rows = {}, [], []
+        geometry_checks = []
         moving = {name: hinge['index'] for hinge in proof['hinges'] for name in hinge['parts']}
         mesh_subsystem = u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
         for expected in proof['parts']:
@@ -270,6 +288,9 @@ def run(root, dry_run=True, u=None):
             points, count = surface(u, c)
             actual = [[f(p[k] for p in points) for k in range(3)] for f in (min, max)]
             wanted = [[b[k]*100 for k in (0, 2, 1)] for b in expected['bounds_browser_m']]
+            geometry_checks.append({'part': expected['name'], 'mesh': mesh.get_path_name(),
+                                    'actual_triangles': count, 'expected_triangles': expected['triangles'],
+                                    'actual_bounds_cm': actual, 'expected_bounds_cm': wanted})
             if count != expected['triangles'] or not all(close(a, b, .02) for a, b in zip(actual, wanted)):
                 raise RuntimeError('Actual native kitchen triangle count/world placement changed '+expected['name'])
             body = mesh.get_editor_property('body_setup')
@@ -364,7 +385,12 @@ def run(root, dry_run=True, u=None):
             raise RuntimeError('Kitchen level save failed; restore private map backup')
         pending.replace(root/'native-kitchen-import.json')
         return result
-    except Exception:
+    except Exception as failure:
+        failure_report = {'schema': 'sub01.real-kitchen-native-failure.v1',
+                          'accepted': False, 'error': str(failure),
+                          'geometry_checks': locals().get('geometry_checks', []),
+                          'quarantined_asset_directory': dest, 'map_backup': str(backup)}
+        (root/'native-kitchen-import.failed.json').write_text(json.dumps(failure_report, indent=2)+'\n')
         def depth(actor):
             seen = set()
             while actor.get_attach_parent_actor():
@@ -388,13 +414,10 @@ def run(root, dry_run=True, u=None):
                 c.set_mobility(mobility)
                 for slot, mat in enumerate(materials):
                     c.set_material(slot, mat)
-        for actor in list(eas.get_all_level_actors()):
-            if actor.get_path_name() not in before:
-                eas.destroy_actor(actor)
-        if u.EditorAssetLibrary.does_directory_exist(dest):
-            u.EditorAssetLibrary.delete_directory(dest)
-        if 'retained_restore' in locals() and retained_restore['destination'] and u.EditorAssetLibrary.does_directory_exist(retained_restore['destination']):
-            u.EditorAssetLibrary.delete_directory(retained_restore['destination'])
+        detach_failed_import(u, eas, before)
+        # Never ForceDeleteObjects while this exception frame or asynchronous
+        # asset compilation still holds imported UObject references. Owned
+        # failed assets remain available to diagnose the actual refusal.
         if staging_source_created:
             staging_source.unlink(missing_ok=True)
         if snapshot(u, original) != before:
