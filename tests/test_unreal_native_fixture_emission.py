@@ -75,8 +75,44 @@ assert(!ValidOriginalFactor(std::numeric_limits<double>::quiet_NaN(),1,1,1));}
         self.assertIn('if(I==6)MID->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled[I]?1.f:0.f)',fixture.METHODS)
         self.assertIn('if(I==6)NativeFixtureMIDs[I]->SetScalarParameterValue(TEXT("EmissiveStrength"),Enabled?1.f:0.f)',fixture.METHODS)
         self.assertLess(fixture.METHODS.index('SavedStrength!=0.f'),fixture.METHODS.index('UMaterialInstanceDynamic::Create'))
-        self.assertIn('Enabled.Add(Enabled[1])',fixture.METHODS)
+        self.assertIn('const bool RealEnabled=Enabled[1];Enabled.Add(RealEnabled);',fixture.METHODS)
         self.assertIn('NativeFixtureComponents[I]->GetMaterial(I==6?1:0)',fixture.METHODS)
+
+    def test_genuine_lamp_enabled_append_executes_without_self_alias(self):
+        compiler = shutil.which('c++')
+        if not compiler:self.skipTest('C++ compiler unavailable')
+        # Execute the generated append with the same address-range guard as TArray.
+        # Spare capacity is deliberate: UE rejects aliasing even without reallocation.
+        import re
+        statement = re.search(r'const bool RealEnabled=Enabled\[1\];Enabled\.Add\(RealEnabled\);', fixture.METHODS)
+        self.assertIsNotNone(statement)
+        harness = r"""#include <cstdint>
+#include <initializer_list>
+#include <stdexcept>
+struct BoolArray {
+ bool values[22]{}; int count=6;
+ bool& operator[](int i){return values[i];}
+ void Add(const bool& value){
+  auto p=reinterpret_cast<std::uintptr_t>(&value);
+  auto lo=reinterpret_cast<std::uintptr_t>(values);
+  if(p>=lo && p<lo+sizeof(values))throw std::runtime_error("self alias");
+  values[count++]=value;
+ }
+};
+int main(){for(bool state:{false,true}){BoolArray Enabled;Enabled[1]=state;
+APPEND
+if(Enabled.count!=7 || Enabled[6]!=state)return 3;
+}return 0;}
+"""
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            for name,append,expected in [('fixed',statement.group(),0),('old','Enabled.Add(Enabled[1]);',None)]:
+                source=root/(name+'.cpp');binary=root/name
+                source.write_text(harness.replace('APPEND',append))
+                subprocess.run([compiler,'-std=c++17',str(source),'-o',str(binary)],check=True,capture_output=True)
+                result=subprocess.run([str(binary)],capture_output=True)
+                if expected is None:self.assertNotEqual(result.returncode,0)
+                else:self.assertEqual(result.returncode,expected,result.stderr)
 
     def test_exact_owned_colour_mic_path_matches_repair_naming(self):
         from unreal_home_materials_fix import usage_mic_name

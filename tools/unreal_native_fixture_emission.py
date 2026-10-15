@@ -110,7 +110,7 @@ bool ASub01HomeCharacter::PrepareNativeFixtureEmission(){
  // Original Poly Haven glTF SHA2ac8389a... has this factor, no strength
  // extension (glTF default1). No light, wall or lamp-body colour is changed.
  Components.Add(RealComponent);Originals.Add(Bulb);SourceOriginals.Add(Bulb);
- Factors.Add(FLinearColor(1.f,.9837890267372131f,.649111270904541f,1.f));Enabled.Add(Enabled[1]);
+ Factors.Add(FLinearColor(1.f,.9837890267372131f,.649111270904541f,1.f));const bool RealEnabled=Enabled[1];Enabled.Add(RealEnabled);
  // Any additional mesh slot using an original fixture material is ambiguous,
  // including screens. No original material is ever modified.
  for(TActorIterator<AActor> It(GetWorld());It;++It){TArray<UMeshComponent*> Meshes;It->GetComponents<UMeshComponent>(Meshes);
