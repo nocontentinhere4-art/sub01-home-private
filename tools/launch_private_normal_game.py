@@ -51,6 +51,7 @@ def launch():
            'XDG_RUNTIME_DIR': str(PRIVATE / 'xdg-runtime'),
            'SUB01_HOME_ORIGIN': 'http://127.0.0.1:8821',
            'SUB01_PC_ORIGIN': 'http://127.0.0.1:8811', 'SUB01_ADMIN_TOKEN': token,
+           'SUB01_KITCHEN_RUNTIME': '1',
            'OMP_NUM_THREADS': '6', 'OPENBLAS_NUM_THREADS': '1'}
     remaining = max(1, int(window['deadline_epoch'] - time.time()))
     cpus = sorted(os.sched_getaffinity(0))[:10]
