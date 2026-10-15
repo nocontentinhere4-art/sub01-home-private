@@ -33,7 +33,7 @@ struct FAnimNode_SequencePlayer_Standalone{
  bool SetSequence(UAnimSequenceBase* S){Seq=S;return true;}UAnimSequenceBase* GetSequence()const{return Seq;}
  void SetAccumulatedTime(float T){Time=T;}float GetAccumulatedTime()const{return Time;}
  void SetPlayRate(float R){Rate=R;}float GetPlayRate()const{return Rate;}
- void SetLoopAnimation(bool L){Loop=L;}bool GetLoopAnimation()const{return Loop;}
+ void SetLoopAnimation(bool L){Loop=L;}bool IsLooping()const{return Loop;}
  void Tick(float Dt){if(!Seq)return;Time+=Rate*Dt;if(Loop)Time=std::fmod(Time,Seq->Length);else Time=std::min(Time,Seq->Length);}
 };
 struct FPoseLink{FAnimNode_SequencePlayer_Standalone* N=nullptr;void SetLinkNode(FAnimNode_SequencePlayer_Standalone* L){N=L;}};

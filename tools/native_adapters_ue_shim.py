@@ -536,7 +536,7 @@ struct FAnimNode_SequencePlayer_Standalone : FAnimNode_Base {
  float GetAccumulatedTime() const { return 0; }
  bool SetPlayRate(float) { return true; }
  bool SetLoopAnimation(bool) { return true; }
- bool GetLoopAnimation() const { return true; }
+ bool IsLooping() const { return true; }
 };
 struct FAnimNode_TwoWayBlend : FAnimNode_Base {
  FPoseLink A, B; float Alpha = 0;
