@@ -1,0 +1,155 @@
+{
+  "schema": "sub01.actual-source-door-analytic-work-bound.v1",
+  "scope": "Lightweight authored-source-bound math only; NO triangle collision/native/visual proof",
+  "source_door_sha256": "8fd7333614e496afd635b7d7586b1775d6bfaed26b52238b448c3ddc92d86b67",
+  "closed_part_bounds_include_all_five_authored_parts": true,
+  "pairs": [
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Lower_cabinet_hinge_2",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Lower_cabinet_hinge_3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Lower_cabinet_hinge_4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Cabinet hinge 1",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Cabinet hinge 2",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_1",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Lower_cabinet_hinge_3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Lower_cabinet_hinge_4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Cabinet hinge 1",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Cabinet hinge 2",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_2",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_3",
+      "right": "Lower_cabinet_hinge_4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_3",
+      "right": "Cabinet hinge 1",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_3",
+      "right": "Cabinet hinge 2",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_3",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_3",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_4",
+      "right": "Cabinet hinge 1",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_4",
+      "right": "Cabinet hinge 2",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_4",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Lower_cabinet_hinge_4",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Cabinet hinge 1",
+      "right": "Cabinet hinge 2",
+      "analytic_swept_disjoint": false
+    },
+    {
+      "left": "Cabinet hinge 1",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Cabinet hinge 1",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Cabinet hinge 2",
+      "right": "Cabinet hinge 3",
+      "analytic_swept_disjoint": false
+    },
+    {
+      "left": "Cabinet hinge 2",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": true
+    },
+    {
+      "left": "Cabinet hinge 3",
+      "right": "Cabinet hinge 4",
+      "analytic_swept_disjoint": false
+    }
+  ],
+  "total_pairs": 28,
+  "whole_arc_disjoint_pairs": 25,
+  "per_pose_aabb_pairs_max": 24300,
+  "triangle_bvh_calls_max_before_per_pose_aabb": 24300,
+  "elapsed_s": 0.11640362499747425,
+  "heavy_execution_performed": false,
+  "native_ready": false
+}

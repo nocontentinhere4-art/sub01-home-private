@@ -113,7 +113,7 @@ void ASub01HomeCharacter::PollActualKitchen(){
  if(!KitchenReady||KitchenPollPending)return;KitchenPollPending=true;KitchenPollAt=FPlatformTime::Seconds()+.5;
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(KitchenOrigin+TEXT("/home/state"));Request->SetVerb(TEXT("GET"));Request->SetTimeout(1.2f);Request->SetHeader(TEXT("X-Admin-Token"),KitchenToken);
  Request->OnProcessRequestComplete().BindWeakLambda(this,[this](FHttpRequestPtr,FHttpResponsePtr Response,bool Ok){
-  KitchenPollPending=false;if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200)return;
+  KitchenPollPending=false;KitchenStateAt=-10;if(!Ok||!Response.IsValid()||Response->GetResponseCode()!=200)return;
   TSharedPtr<FJsonObject> Doc;if(!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Response->GetContentAsString()),Doc)||!Doc.IsValid())return;
   const TSharedPtr<FJsonObject>* Source=nullptr;const TSharedPtr<FJsonObject>* Kitchen=nullptr;FString Status;bool Private=true;
   if(!Doc->TryGetObjectField(TEXT("source"),Source)||!(*Source)->TryGetStringField(TEXT("status"),Status)||Status!=TEXT("live")||
@@ -125,7 +125,7 @@ void ASub01HomeCharacter::PollActualKitchen(){
   }
   for(int I=0;I<8;++I)KitchenBackendOpen[I]=Values[I];KitchenStateAt=FPlatformTime::Seconds();
  });
- if(!Request->ProcessRequest())KitchenPollPending=false;
+ if(!Request->ProcessRequest()){KitchenPollPending=false;KitchenStateAt=-10;}
 }
 bool ASub01HomeCharacter::TryNativeKitchen(UActorComponent* HitComponent){
  if(!KitchenReady)return false;int Door=-1;UStaticMeshComponent* HitPart=nullptr;

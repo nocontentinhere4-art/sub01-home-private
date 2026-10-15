@@ -26,6 +26,9 @@ def same_triangles(source, actual, tolerance_cm=.02):
     """Independent of index/vertex splitting/order; every actual triangle consumed."""
     if len(source) != len(actual):
         return False
+    if any(len(t) != 3 or any(len(p) != 3 or not all(math.isfinite(v) for v in p) for p in t)
+           for group in (source, actual) for t in group):
+        return False
     cell = .05
     def key(triangle):
         return tuple(math.floor(sum(p[k] for p in triangle)/3/cell) for k in range(3))

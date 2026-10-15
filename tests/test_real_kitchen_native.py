@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 import prepare_real_kitchen_native_bundle as bundle
 import unreal_kitchen_hinge_runtime as runtime
 import unreal_kitchen_state_bridge as bridge
-from unreal_import_real_kitchen import same_triangles
+from unreal_import_real_kitchen import same_triangles, run as native_import
 
 
 def fixture():
@@ -67,12 +67,20 @@ class KitchenGuards(unittest.TestCase):
         modified[0][1][0] -= 1.
         self.assertFalse(same_triangles(source, modified))
         self.assertFalse(same_triangles(source, source[:1]))
+        self.assertFalse(same_triangles(source, [source[0], source[1][:2]]))
 
     def test_actual_previous_sink_only_pass_cannot_activate_native_import(self):
         previous = json.loads((ROOT/'docs/proposed/actual-kitchen-source-proof-20261014.json').read_text())
         self.assertTrue(previous['source_report']['source_export_ready'])
         with self.assertRaises(ValueError):
             bundle.validate_manifest(previous['source_report'])
+        class NoNativeActions:
+            def __getattr__(self, name):
+                raise AssertionError('Old receipt reached native API '+name)
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, 'native-kitchen.json').write_text(json.dumps(previous['source_report']))
+            with self.assertRaises(ValueError):
+                native_import(directory, dry_run=False, u=NoNativeActions())
         good = fixture()
         bundle.validate_manifest(good)
         for mutation in (
