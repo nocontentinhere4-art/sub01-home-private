@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.private-fps-review-local-backup.v1",
+  "files": [
+    {
+      "file": "FirstPersonKeyboardReview.fbx",
+      "bytes": 14613052,
+      "sha256": "07baf00adbe6e9fa49f22ea954787e3590ba602a5c7ab6f247cc990a50205d53"
+    },
+    {
+      "file": "first-person-keyboard-review.blend",
+      "bytes": 29747353,
+      "sha256": "92600506abeeecc1c2a66fff294cdd3e692595220f039eeddbbdb92678f7b830"
+    },
+    {
+      "file": "arms-with-keyboard-review.glb.audit.json",
+      "bytes": 882,
+      "sha256": "a1099ad178332bd85cb080fef5d020f33fce227f3d2f8c7ac34920471816d975"
+    },
+    {
+      "file": "keyboard-review-fbx-roundtrip.json",
+      "bytes": 6504,
+      "sha256": "58c0451a0b228481bf7bd7c4b2a558a702cdfa91c1a544e1fcaf209bb56012ef"
+    }
+  ],
+  "native_ready": false,
+  "activity_ready": false
+}
