@@ -25,6 +25,7 @@ TASKS = {
     'review_stairs': 'unreal_scene_review',
     'hands_inventory': 'unreal_hands_inventory',
     'walk_pose_audit': 'unreal_walk_pose_audit',
+    'refresh_queue': 'unreal_editor_queue_refresh',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -97,6 +98,8 @@ def dispatch(task):
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'refresh_queue':
+        return {'refreshed_existing_queue': module.refresh(), 'native_game_accepted': False}
     if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs'):
         return module.run(task.removeprefix('review_'))
     if task == 'monitor_support':
