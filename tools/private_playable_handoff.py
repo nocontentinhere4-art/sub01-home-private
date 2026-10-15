@@ -4,7 +4,7 @@ Requires a completely verified independent playable-copy receipt. Credentials
 and prior state remain only in the private mode0700 rollback directory.
 """
 from pathlib import Path
-import hashlib,json,os,signal,shutil,subprocess,time,urllib.request,struct
+import hashlib,json,os,signal,shutil,subprocess,time,urllib.request,struct,ast
 PRIVATE=Path('/home/unreal/.sub01-private');OLD=Path('/workspace/sub01-private-recovered-project/Sub01HomeLab');OLDPID=159171;OLDSTART=976840968
 ENGINE=Path('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd')
 
@@ -31,6 +31,30 @@ def fresh(pid,start):
  try:
   d=json.loads((PRIVATE/'native-view-privacy.json').read_text());return d if(d.get('native_pid'),d.get('native_start_ticks'))==(pid,start)and -.25<=time.time()-d.get('captured_utc',0)<=1 and d.get('physical_camera_private')is False and d.get('view_mode')=='manual'else None
  except(OSError,ValueError):return None
+
+def consumer_policy_constants(text):
+ values={}
+ for node in ast.parse(text).body:
+  if not isinstance(node,ast.Assign):continue
+  for target in node.targets:
+   if isinstance(target,ast.Name)and target.id in ('PROJECT','NATIVE_PID','NATIVE_START_TICKS'):
+    assert target.id not in values,'Duplicate consumer policy identity'
+    values[target.id]=ast.literal_eval(node.value)
+ assert set(values)=={'PROJECT','NATIVE_PID','NATIVE_START_TICKS'}
+ assert isinstance(values['PROJECT'],str)and type(values['NATIVE_PID'])is int and type(values['NATIVE_START_TICKS'])is int
+ return values
+
+def assert_minecraft_consumer_policy(project,pid,start,rollout_path):
+ """Read-only independent consumer check; viewer grants alone are insufficient."""
+ policy=Path('/home/unreal/sub01-backend/home_minecraft_input.py');values=consumer_policy_constants(policy.read_text())
+ assert values=={'PROJECT':str(Path(project)/'Sub01HomeLab.uproject'),'NATIVE_PID':pid,'NATIVE_START_TICKS':start},'Minecraft consumer requires exact fresh Game policy refresh'
+ rollout=json.loads(Path(rollout_path).read_text());assert rollout['schema']=='sub01.exact-minecraft-policy-rollout.v1'and rollout['policy_after_sha256']==sha(policy)
+ assert rollout['game_identity_unchanged']=={'pid':pid,'start_ticks':start}
+ backend=rollout['backend_pid'];assert proc(backend)[0]==rollout['backend_start_ticks']and proc(backend)[1]!='Z','Policy rollout must belong to current actual backend'
+ boot=next(int(line.split()[1])for line in Path('/proc/stat').read_text().splitlines()if line.startswith('btime '));backend_epoch=boot+rollout['backend_start_ticks']/os.sysconf('SC_CLK_TCK')
+ assert policy.stat().st_mtime<=backend_epoch+1 and rollout['started_epoch']<=backend_epoch+1<=rollout['finished_epoch']+2,'Backend must start after this installed policy, not use an older cached module'
+ assert proc(pid)[0]==start and b'-game'in proc(pid)[2]and str(Path(project)/'Sub01HomeLab.uproject').encode()in proc(pid)[2]
+ return {'exact_consumer_project_pid_start_verified':True,'backend_pid':backend,'backend_start_ticks':rollout['backend_start_ticks'],'policy_sha256':rollout['policy_after_sha256'],'backend_started_after_policy_install':True,'functional_input_frame_QA_still_required':True}
 
 def run(target):
  from launch_private_persistent_editor import verified_window
@@ -85,7 +109,16 @@ def run(target):
   assert not matching(OLD);child,log=launch(target,'new');metadata.update(status='warming',new_wrapper_pid=child.pid,new_log=log);persist();pid,start=wait(target);first_frame=target/'evidence/promotion-first-new.png';until=time.time()+90
   while time.time()<until and not complete_frame(first_frame,metadata['started_epoch']):time.sleep(.25)
   if not complete_frame(first_frame,metadata['started_epoch']):raise RuntimeError('Actual newGame first1280x720PNG was not completed; grants remain disabled')
-  metadata.update(first_frame=str(first_frame),first_frame_sha256=sha(first_frame),first_frame_png_verified=True);metadata.update(new_pid=pid,new_start=start,status='fresh-physical-manual-ready',grants_refreshed=False);persist();grants(pid,start);metadata.update(status='promoted-private-awaiting-functional-QA',grants_refreshed=True,finished_epoch=time.time());persist();print(json.dumps({k:v for k,v in metadata.items()if k not in ['backup']}),flush=True)
+  metadata.update(first_frame=str(first_frame),first_frame_sha256=sha(first_frame),first_frame_png_verified=True);metadata.update(new_pid=pid,new_start=start,status='fresh-physical-manual-ready',grants_refreshed=False);persist();grants(pid,start);metadata.update(status='promoted-private-awaiting-functional-QA',grants_refreshed=True,finished_epoch=time.time(),devices_operational=False)
+  # A fresh renderer identity also invalidates backend TV consumer policy. Do
+  # not claim device operation from privacy/viewer grants or reset the world.
+  rollouts=sorted(Path('/workspace/sub01-home-private').glob('minecraft-policy-refresh-*/rollout.json'))
+  try:
+   assert rollouts,'No actual backend consumer policy rollout proof'
+   metadata['minecraft_consumer_policy']=assert_minecraft_consumer_policy(target,pid,start,rollouts[-1])
+  except Exception as policy_error:
+   metadata['minecraft_consumer_policy']={'exact_consumer_project_pid_start_verified':False,'required_action':'refresh exact backend consumer policy before device QA','reason':str(policy_error),'functional_input_frame_QA_still_required':True}
+  persist();print(json.dumps({k:v for k,v in metadata.items()if k not in ['backup']}),flush=True)
  except Exception as error:
   metadata.update(status='rollback',error=str(error));persist();(PRIVATE/'native-viewer-input-enabled').unlink(missing_ok=True);(PRIVATE/'native-viewer-capture-enabled').unlink(missing_ok=True)
   for pid,start in matching(target):
