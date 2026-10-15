@@ -1,0 +1,138 @@
+{
+  "schema": "sub01.actual-reference-sheer-source-review.v1",
+  "source": {
+    "schema": "sub01.reference-sheer-source.v1",
+    "sha256": "32de9fcc3c6ddd548fed66f8cd0e48971268f3252beb7b9968200f26ecf88414",
+    "reference": "https://platform.twitter.com/embed/Tweet.html?id=2109095401273938072",
+    "actual_reference_frames_viewed_s": [
+      0,
+      7
+    ],
+    "source_linen": "https://polyhaven.com/a/rough_linen",
+    "source_license": "CC0",
+    "source_weave_physical_mm": [
+      270.7081392676629,
+      271.29998803138733
+    ],
+    "derived_texture": "Original photographed linen recoloured bleached cream; genuine photographed weave mask controls alpha. No X screenshot used as texture.",
+    "cloth_frames_simulated": 28,
+    "cloth_pinned_heading": true,
+    "cloth_source_geometry": "Actual Blender Cloth modifier gravity drape applied after28frames;2continuous single surfaces, no stacked strips/boxes",
+    "texture_max_dimension": 1026,
+    "panels": 2,
+    "hardware_groups": 1,
+    "alpha_surfaces": 2,
+    "materials_lit": true,
+    "source_transmission_weight": 0.12,
+    "native_lit_translucency_verified": false,
+    "native_shadows_verified": false,
+    "native_imported": false,
+    "door_source_sha256": "5b8a2bb8b4bb8fe19af1d0c086fb78f3e7f9dff9e06170a06642a8f3d1761a0c",
+    "full_door_sweep_x_cm": [
+      -314.95,
+      -125.05
+    ],
+    "actual_door_hardware_min_y_cm": 390.65,
+    "actual_upper_floor_cm": 302.5,
+    "parts": [
+      {
+        "name": "SUB01ReferenceSheer_Left",
+        "bounds_ue_cm": [
+          [
+            -379.03172969818115,
+            370.07763385772705,
+            303.52532863616943
+          ],
+          [
+            -329.9999952316284,
+            377.9339551925659,
+            534.9999904632568
+          ]
+        ],
+        "triangles": 6144
+      },
+      {
+        "name": "SUB01ReferenceSheer_Right",
+        "bounds_ue_cm": [
+          [
+            -70.00203132629395,
+            370.08795738220215,
+            303.52559089660645
+          ],
+          [
+            -20.930859446525574,
+            377.93054580688477,
+            534.9999904632568
+          ]
+        ],
+        "triangles": 6144
+      },
+      {
+        "name": "SUB01ReferenceSheer_Hardware",
+        "bounds_ue_cm": [
+          [
+            -382.99999237060547,
+            373.3999967575073,
+            535.7499599456787
+          ],
+          [
+            -17.00000762939453,
+            390.95001220703125,
+            544.7500228881836
+          ]
+        ],
+        "triangles": 3332
+      }
+    ]
+  },
+  "short_native_names": {
+    "schema": "sub01.reference-sheer-short-native-names.v1",
+    "source_sha256": "32de9fcc3c6ddd548fed66f8cd0e48971268f3252beb7b9968200f26ecf88414",
+    "prepared_sha256": "b531ac1eaa30995be9c133c8aea18e59a795c84157d47f699a74740702ff1d2c",
+    "geometry_PBR_image_binary_unchanged": true,
+    "node_names": [
+      "SCLeft",
+      "SCRight",
+      "SCHardware"
+    ],
+    "material_names": [
+      "SCM00",
+      "SCM01"
+    ],
+    "image_names": [
+      "SCT00",
+      "SCT01",
+      "SCT02"
+    ]
+  },
+  "actual_bvh_proof": {
+    "schema": "sub01.reference-sheer-actual-source-bvh.v1",
+    "native_changed": false,
+    "source_sha256": "b531ac1eaa30995be9c133c8aea18e59a795c84157d47f699a74740702ff1d2c",
+    "epsilon_cm": 0,
+    "unresolved": [],
+    "ok": true,
+    "retired_old_balcony_nodes_excluded": [
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48
+    ],
+    "retirement_owner": "actual saved authentic-door packet5b8a2bb8",
+    "current_door_source_sha256": "5b8a2bb8b4bb8fe19af1d0c086fb78f3e7f9dff9e06170a06642a8f3d1761a0c",
+    "retained_home_source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+    "protected_nodes_tested": 301,
+    "full91cm_door_sweep_separated": true,
+    "native_material_translucency_verified": false,
+    "native_shadows_verified": false
+  },
+  "full_backlit_source_preview_sha256": "39407075cb3fca5198e0ee9ff2f9e16fb1119594da4b7d824345f33ee03eba5c",
+  "source_review_accepted_by_coordinator": true,
+  "native_imported": false,
+  "native_shader_verified": false,
+  "native_light_filtering_or_shadows_verified": false
+}
