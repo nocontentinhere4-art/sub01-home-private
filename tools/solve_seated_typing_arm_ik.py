@@ -2217,6 +2217,8 @@ def post_contact(ctx, ik, W, window, seam_frame=None):
     F = len(W)
     window = np.asarray(window, float)
     gate = window > 0
+    # the seam frame IS the neighbour's written pose: the smooth lift is tapered to exactly zero there (C1, quintic)
+    taper = np.ones(F) if seam_frame is None else seam_taper(F, [seam_frame], ik.dt)
     top = ik.keys['top_cm']
     lift = {s: np.zeros(F) for s in SIDES}
     seam_d = {s: 0. for s in SIDES}
@@ -2240,7 +2242,7 @@ def post_contact(ctx, ik, W, window, seam_frame=None):
                         more = True
             if need.any():
                 more = True
-                lift[s] = envelope(lift[s] + need, ik.dt) * gate
+                lift[s] = envelope(lift[s] + need, ik.dt) * gate * taper
         if not more:
             break
         Wc = np.array(W0, copy=True)
@@ -2409,7 +2411,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
     # the SitDown / GetUp desk-clearance pass (every arm vertex, every frame); both seam frames never move
     protect = np.zeros(F, bool)
     protect[[0, F - 1]] = True
-    W3, desk_pass = desk_clear_arms(ctx, W3, shift_c, t_c, protect, no_down=True)
+    W3, desk_pass = desk_clear_arms(ctx, W3, shift_c, t_c, protect, no_down=True, taper_s=SEAM_TAPER_S)
     path, sha = write(ctx, g_c, W3, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role))
     Wcb = readback(ctx, path, t_c)
     seam_frame = F - 1 if at_end else 0
@@ -2717,7 +2719,18 @@ def box_push(points, lo, hi, no_down=False):
     return dirs
 
 
-def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES, no_down=False):
+SEAM_TAPER_S = .2              # corrections reach zero at a protected / seam frame over this time (quintic, C1)
+
+
+def seam_taper(F, frames, dt, taper_s=SEAM_TAPER_S):
+    """(F,) weight: 0 at the given frames, smootherstep up to 1 at taper_s away from the nearest of them."""
+    m = max(1, int(round(taper_s / dt)))
+    idx = np.arange(F)
+    dist = np.min(np.abs(idx[:, None] - np.asarray(frames)[None, :]), axis=1)
+    return smootherstep(np.clip(dist / m, 0., 1.))
+
+
+def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES, no_down=False, taper_s=0.):
     """Whole-arm desk-clearance pass (SitDown / GetUp): wherever arm skin (upper arm, forearm, hand, fingers) is closer
     than FOREARM_TARGET_CLEARANCE_CM to a real LINEA part, the wrist moves out of the part along the shortest way
     (smoothly over time), with non-stretch two-bone IK, the elbow pole carried with the hand, the captured hand WORLD
@@ -2726,6 +2739,7 @@ def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES, no_down=False):
     F = len(times)
     dt = float(np.median(np.diff(times))) if F > 1 else 1 / 30
     protect = np.asarray(protect, bool)
+    taper = seam_taper(F, np.nonzero(protect)[0], dt, taper_s) if taper_s and protect.any() else (~protect).astype(float)
     W0 = np.array(W, copy=True)
     disp = {s: np.zeros((F, 3)) for s in sides}            # UE cm
     hist = []
@@ -2764,7 +2778,7 @@ def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES, no_down=False):
             for a in range(3):                             # smooth in time, never below a frame's own need
                 pos_, neg_ = np.maximum(step[:, a], 0), np.maximum(-step[:, a], 0)
                 step[:, a] = envelope(pos_, dt) - envelope(neg_, dt)
-            step[protect] = 0.
+            step *= taper[:, None]                         # zero at (and smoothly into) the protected frames
             disp[s] += step
         if not more:
             break
