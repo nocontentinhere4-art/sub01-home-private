@@ -73,5 +73,33 @@
     "genuine_hand_uvs_exact": true,
     "cuff_uvs_exact": true,
     "body_reference_preview_uvs_fixed": true
+  },
+  "animated_cuff_audit_baseline": {
+    "source_sha256": "9dc705a63b4f071fa28b8bc141d2a58502d1d21a94558dd33792702b19e2b826",
+    "clip": "SUB01_Anatomical_Walk",
+    "actual_samples": 32,
+    "all_eight_influences_used": true,
+    "max_cuff_hand_triangle_candidates": {
+      "Left": 299,
+      "Right": 386
+    },
+    "contact_accepted": false,
+    "evaluation": "Direct serialized jointWorld*IBM*POSITION; no Blender-import rest reinterpretation"
+  },
+  "cuff_weight_candidate": {
+    "relative_path": "weight-transfer-r6/canonical-anatomical-hand-cuffs-weighted.glb",
+    "sha256": "9a0f98531b66b10e9147f0c88b8682ae11375debf9d4a1026a4d58a2cbdfcbf7",
+    "relative_report": "weight-transfer-r6/weight-transfer-report.json",
+    "report_sha256": "7d66f6996105a5ccd41ecb094e22726e9e4abb62c3a409c602baa0b469c2af82",
+    "proof_tool": "tools/prove_canonical_cuff_weight_only.mjs",
+    "all_geometry_uv_triangles_exact": true,
+    "all_genuine_hand_weights_exact": true,
+    "nodes_rest_skin_materials_exact": true,
+    "cuff_vertices_per_side": 780,
+    "max_cuff_influences": 3,
+    "max_weight_sum_error": 4.156026989221573e-08,
+    "method": "Distal cuff nearest genuine skin barycentric complete weight field; proximal cuff original serialized real hoodie boundary field; continuous52-to30mm axial blend. No enlargement/pose edits.",
+    "posed_contact_recheck_pending": true,
+    "native_imported": false
   }
 }
