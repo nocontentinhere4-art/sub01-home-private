@@ -1,8 +1,11 @@
 """Guarded warm-Editor rigid support correction for source955 monitor73/74/75.
 
-No imports, geometry/material edits, level loads or runtime activation. The
+Only exact private full-source copies of frame73/stand74 may replace Nanite
+fallback bindings; screen75 and all material bindings remain unchanged. No level
+loads or runtime activation. The
 completed genuine office and exact live-screen binding update are prerequisites.
 """
+import copy
 import hashlib
 import json
 import math
@@ -13,6 +16,7 @@ from pathlib import Path
 from home_asset_audit import read_gltf
 from structural_rail_source_patch import accessor, world_matrices, transformed
 from unreal_import_real_kitchen import same_triangles, snapshot
+import unreal_monitor_source_geometry as source_geometry
 
 HOME_SHA = '9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 DESK_SHA = '99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d'
@@ -148,9 +152,14 @@ def preflight(root, u):
         if len(paths) != 1 or paths[0] not in allowed:
             raise RuntimeError('Unreviewed monitor material binding '+str(node))
         wanted, actual = triangles(doc, binary, node), native_triangles(u, c)
-        if len(wanted) != count or not same_triangles(wanted, actual):
+        if len(wanted) != count:
+            raise RuntimeError('Exact original monitor source count differs '+str(node))
+        if not same_triangles(wanted, actual) and not source_geometry.can_rebuild(u, node, c):
             raise RuntimeError('Full native monitor source geometry differs '+str(node))
-        rows.append((node, actor, c, actual))
+        # A reviewed fallback may defer only to a private full-source proof.
+        # Source triangles support the read-only plan; stage() must prove all
+        # of them on actual native copies before any original binding changes.
+        rows.append((node, actor, c, wanted))
     top_actor = _only([a for a in actors if a.get_actor_label() == 'SUB01_RealLinea140_99bdf3fd_Node044'], 'genuine worktop44')
     top_component = _only(top_actor.get_components_by_class(u.StaticMeshComponent), 'worktop44 component')
     if top_actor.get_editor_property('hidden') or not top_component.get_editor_property('visible'):
@@ -175,7 +184,8 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
     result = {'schema': 'sub01.monitor-support-native-fix.v1', 'source_sha256': HOME_SHA,
               'source_nodes': list(NODES), 'support': proof, 'delta_ue_cm': [0, 0, proof['delta_z_cm']],
               'screen_expected_center_ue_cm': [200, -327.6, 118.5], 'native_visual_verified': False,
-              'native_pc_input_verified': False, 'runtime_binding_expectation_update_required': True}
+              'native_pc_input_verified': False, 'runtime_binding_expectation_update_required': True,
+              'full_source_native_proof_required_before_activation': True}
     if dry_run:
         return dict(result, dry_run=True, mutations=0)
     backup = project/'Saved/PrivateMapBackups'/('monitor-support-'+str(time.time_ns()))
@@ -186,11 +196,19 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
         if folder.exists():
             shutil.copytree(folder, backup/directory)
     before = snapshot(u, actors)
-    states = [(a, a.get_actor_transform(), c, c.get_world_transform(), list(c.get_materials())) for _, a, c, _ in rows]
+    states = [(a, a.get_actor_transform(), c, c.get_world_transform(), list(c.get_materials()), c.get_editor_property('static_mesh')) for _, a, c, _ in rows]
     protected = [a for a in actors if all(a != row[1] for row in rows)]
     wanted_protected = {a.get_path_name(): before[a.get_path_name()] for a in protected}
     save_attempted = False
     try:
+        eas = u.get_editor_subsystem(u.EditorActorSubsystem)
+        geometry = source_geometry.stage(u, eas, rows, native_triangles)
+        if snapshot(u, actors) != before:
+            raise RuntimeError('Monitor source staging changed original actors')
+        result['full_source_geometry'] = {k: v for k, v in geometry.items() if k != 'replacements'}
+        for node, _, component, _ in rows:
+            if node in geometry['replacements']:
+                component.set_static_mesh(geometry['replacements'][node])
         for _, a, _, _ in rows:
             p = a.get_actor_location()
             if not a.set_actor_location(u.Vector(p.x, p.y, p.z+proof['delta_z_cm']), False, False):
@@ -202,7 +220,9 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
             expected = [[[p[0], p[1], p[2]+proof['delta_z_cm']] for p in t] for t in original]
             if not same_triangles(expected, moved, .001):
                 raise RuntimeError('Whole monitor rigid move differs '+str(node))
-            old = before[a.get_path_name()]
+            old = copy.deepcopy(before[a.get_path_name()])
+            if node in geometry['replacements']:
+                old['components'][0]['mesh'] = geometry['replacements'][node].get_path_name()
             now = snapshot(u, [a])[a.get_path_name()]
             # Only actor/component world translation may change; all mesh,
             # materials, tags, visibility, collision, rotation/scale stay exact.
@@ -229,7 +249,8 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
         pending.replace(root/'monitor-support-native.json')
         return result
     except Exception:
-        for a, transform, c, world, materials in states:
+        for a, transform, c, world, materials, original_mesh in states:
+            c.set_static_mesh(original_mesh)
             a.set_actor_transform(transform, False, False)
             c.set_world_transform(world, False, False)
             for slot, material in enumerate(materials):
