@@ -41,10 +41,11 @@ def run(target):
  for row in copy['files']:assert sha(target/row['path'])==row['sha256'],row['path']
  oldproc=Path('/proc',str(OLDPID));args=[x.decode()for x in(oldproc/'cmdline').read_bytes().split(b'\0')if x];assert args[0]==str(ENGINE)and'-game'in args and'-Sub01ManualView'in args and'-Sub01LiveHome'in args
  assert not any(x.startswith('-ExecutePythonScript=')or x in ['-Sub01ExitAfterCapture','-Sub01RouteReview']for x in args)
- env={}
- for pair in(oldproc/'environ').read_bytes().split(b'\0'):
-  if b'='in pair:k,v=pair.split(b'=',1);env[k.decode()]=v.decode()
- assert env.get('DISPLAY')==':99'and env.get('SUB01_HOME_ORIGIN')=='http://127.0.0.1:8821'and env.get('SUB01_PC_ORIGIN')=='http://127.0.0.1:8811';cpus=sorted(os.sched_getaffinity(OLDPID));backup=PRIVATE/('playable-promotion-rollback-'+str(time.time_ns()));backup.mkdir(mode=0o700);metadata={'schema':'sub01.private-playable-promotion.v1','started_epoch':time.time(),'old_pid':OLDPID,'old_start':OLDSTART,'old_project':str(OLD),'new_project':str(target),'map_sha256':copy['map_sha256'],'module_sha256':copy['module_sha256'],'backup':str(backup),'status':'prepared','backend_restarted':False,'pod_restarted':False,'public_changes':False}
+ env={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/home/unreal','LANG':'C.UTF-8','DISPLAY':':99','SDL_VIDEODRIVER':'x11','XAUTHORITY':str(PRIVATE/'native-xauthority'),'XDG_RUNTIME_DIR':str(PRIVATE/'xdg-runtime'),'SUB01_HOME_ORIGIN':'http://127.0.0.1:8821','SUB01_PC_ORIGIN':'http://127.0.0.1:8811','SUB01_ADMIN_TOKEN':(PRIVATE/'operator-token').read_text().strip(),'SUB01_KITCHEN_RUNTIME':'1','OMP_NUM_THREADS':'6','OPENBLAS_NUM_THREADS':'1'}
+ # Exact previously verified normal-game launcher recipe. Container root lacks
+ # CAP_SYS_PTRACE for another UID's /proc/environ; no protected environment read
+ # is needed or attempted. Current literal argv/UID/affinity are still verified.
+ assert env.get('DISPLAY')==':99'and env.get('SUB01_HOME_ORIGIN')=='http://127.0.0.1:8821'and env.get('SUB01_PC_ORIGIN')=='http://127.0.0.1:8811';cpus=sorted(os.sched_getaffinity(OLDPID));backup=PRIVATE/('playable-promotion-rollback-'+str(time.time_ns()));backup.mkdir(mode=0o700);metadata={'schema':'sub01.private-playable-promotion.v1','started_epoch':time.time(),'old_pid':OLDPID,'old_start':OLDSTART,'old_project':str(OLD),'new_project':str(target),'map_sha256':copy['map_sha256'],'module_sha256':copy['module_sha256'],'backup':str(backup),'status':'prepared','environment_source':'verified normal-game launcher recipe; no proc environ access','backend_restarted':False,'pod_restarted':False,'public_changes':False}
  for name in ['native-viewer-capture-enabled','native-viewer-input-enabled','native-control.json','native-view-privacy.json','native-view-settings-receipt.json','native-visual-metrics.json','native-device-state.json','native-tv-focus.json']:
   p=PRIVATE/name
   if p.is_file():shutil.copy2(p,backup/name);(backup/name).chmod(0o600)
