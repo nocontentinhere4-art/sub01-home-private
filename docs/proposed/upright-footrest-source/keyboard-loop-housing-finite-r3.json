@@ -1,0 +1,340 @@
+{
+  "schema": "sub01.fp-keyboard-housing-contact-classification.v1",
+  "clip_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "exact_source_node": 185,
+  "source_node_name": "mesh_1",
+  "source_material": "plastic_black",
+  "source_housing_bounds_ue_cm": [
+    [
+      181.4499998132149,
+      -302.04641269367585,
+      84.60000157356262
+    ],
+    [
+      218.5500001867851,
+      -285.95359875041595,
+      86.53733377437334
+    ]
+  ],
+  "housing_exact_zero_area_source_triangles": 16,
+  "housing_positive_area_triangles": 136,
+  "housing_open_or_nonmanifold_edges": 12,
+  "housing_collision_samples": 2,
+  "witnesses": [
+    {
+      "time_s": 1.4416667222976685,
+      "source_selected_triangle": 84825,
+      "source_influences": [
+        {
+          "source_body_vertex": 160876,
+          "weights": {
+            "LeftHandThumb3": 0.8392156862745098,
+            "LeftHandThumb2": 0.1607843137254902
+          }
+        },
+        {
+          "source_body_vertex": 160909,
+          "weights": {
+            "LeftHandThumb3": 0.9254901960784314,
+            "LeftHandThumb2": 0.07450980392156863
+          }
+        },
+        {
+          "source_body_vertex": 160875,
+          "weights": {
+            "LeftHandThumb3": 0.9176470588235294,
+            "LeftHandThumb2": 0.08235294117647059
+          }
+        }
+      ],
+      "actual_skin_triangle_ue_cm": [
+        [
+          187.2244813896375,
+          -286.2490886813789,
+          86.65235071018539
+        ],
+        [
+          187.15980084644457,
+          -286.6568666815941,
+          86.5005567361437
+        ],
+        [
+          187.3482105787598,
+          -286.60736620589165,
+          86.63431301762871
+        ]
+      ],
+      "nearest_surface_samples": [
+        {
+          "skin_point_ue_cm": [
+            187.2244813896375,
+            -286.2490886813789,
+            86.65235071018539
+          ],
+          "housing_point_ue_cm": [
+            187.20852661132812,
+            -286.5135498046875,
+            86.4598388671875
+          ],
+          "housing_triangle": 140,
+          "unsigned_nearest_cm": 0.3275022506713867,
+          "authored_oriented_local_signed_plane_cm": 0.051519142062802975
+        },
+        {
+          "skin_point_ue_cm": [
+            187.15980084644457,
+            -286.6568666815941,
+            86.5005567361437
+          ],
+          "housing_point_ue_cm": [
+            187.15980529785156,
+            -286.6568603515625,
+            86.5373306274414
+          ],
+          "housing_triangle": 117,
+          "unsigned_nearest_cm": 0.036773681640625,
+          "authored_oriented_local_signed_plane_cm": -0.036773891297713135
+        },
+        {
+          "skin_point_ue_cm": [
+            187.3482105787598,
+            -286.60736620589165,
+            86.63431301762871
+          ],
+          "housing_point_ue_cm": [
+            187.34710693359375,
+            -286.6254577636719,
+            86.5373306274414
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.09866493195295334,
+          "authored_oriented_local_signed_plane_cm": 0.0884232055866759
+        },
+        {
+          "skin_point_ue_cm": [
+            187.24416427161395,
+            -286.5044405229549,
+            86.5957401546526
+          ],
+          "housing_point_ue_cm": [
+            187.23867797851562,
+            -286.57354736328125,
+            86.5033187866211
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.11552388221025467,
+          "authored_oriented_local_signed_plane_cm": 0.11552418392441183
+        },
+        {
+          "skin_point_ue_cm": [
+            187.19214111804104,
+            -286.4529776814865,
+            86.57645372316455
+          ],
+          "housing_point_ue_cm": [
+            187.18882751464844,
+            -286.530517578125,
+            86.47328186035156
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.12910747528076172,
+          "authored_oriented_local_signed_plane_cm": 0.1290967694313005
+        },
+        {
+          "skin_point_ue_cm": [
+            187.25400571260218,
+            -286.6321164437429,
+            86.56743487688621
+          ],
+          "housing_point_ue_cm": [
+            187.25401306152344,
+            -286.6321105957031,
+            86.5373306274414
+          ],
+          "housing_triangle": 117,
+          "unsigned_nearest_cm": 0.0301055908203125,
+          "authored_oriented_local_signed_plane_cm": 0.030104249444804054
+        },
+        {
+          "skin_point_ue_cm": [
+            187.28634598419865,
+            -286.42822744363525,
+            86.64333186390705
+          ],
+          "housing_point_ue_cm": [
+            187.2793731689453,
+            -286.54864501953125,
+            86.48279571533203
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.2008047103881836,
+          "authored_oriented_local_signed_plane_cm": 0.20080034379348366
+        }
+      ],
+      "minimum_local_signed_plane_cm": -0.036773891297713135,
+      "maximum_unsigned_distance_cm": 0.3275022506713867
+    },
+    {
+      "time_s": 1.4500000476837158,
+      "source_selected_triangle": 84825,
+      "source_influences": [
+        {
+          "source_body_vertex": 160876,
+          "weights": {
+            "LeftHandThumb3": 0.8392156862745098,
+            "LeftHandThumb2": 0.1607843137254902
+          }
+        },
+        {
+          "source_body_vertex": 160909,
+          "weights": {
+            "LeftHandThumb3": 0.9254901960784314,
+            "LeftHandThumb2": 0.07450980392156863
+          }
+        },
+        {
+          "source_body_vertex": 160875,
+          "weights": {
+            "LeftHandThumb3": 0.9176470588235294,
+            "LeftHandThumb2": 0.08235294117647059
+          }
+        }
+      ],
+      "actual_skin_triangle_ue_cm": [
+        [
+          187.22295500861608,
+          -286.27178042806605,
+          86.64672309099373
+        ],
+        [
+          187.15841522883437,
+          -286.6794446601274,
+          86.49456889457421
+        ],
+        [
+          187.3467980269662,
+          -286.6300017126838,
+          86.62838430092394
+        ]
+      ],
+      "nearest_surface_samples": [
+        {
+          "skin_point_ue_cm": [
+            187.22295500861608,
+            -286.27178042806605,
+            86.64672309099373
+          ],
+          "housing_point_ue_cm": [
+            187.2083740234375,
+            -286.5135498046875,
+            86.4598388671875
+          ],
+          "housing_triangle": 140,
+          "unsigned_nearest_cm": 0.30591779947280884,
+          "authored_oriented_local_signed_plane_cm": 0.03940480246242534
+        },
+        {
+          "skin_point_ue_cm": [
+            187.15841522883437,
+            -286.6794446601274,
+            86.49456889457421
+          ],
+          "housing_point_ue_cm": [
+            187.15841674804688,
+            -286.679443359375,
+            86.5373306274414
+          ],
+          "housing_triangle": 117,
+          "unsigned_nearest_cm": 0.04276275634765625,
+          "authored_oriented_local_signed_plane_cm": -0.042761732867191427
+        },
+        {
+          "skin_point_ue_cm": [
+            187.3467980269662,
+            -286.6300017126838,
+            86.62838430092394
+          ],
+          "housing_point_ue_cm": [
+            187.3468017578125,
+            -286.6300048828125,
+            86.5373306274414
+          ],
+          "housing_triangle": 117,
+          "unsigned_nearest_cm": 0.09105682373046875,
+          "authored_oriented_local_signed_plane_cm": 0.09105367348253424
+        },
+        {
+          "skin_point_ue_cm": [
+            187.24272275480556,
+            -286.52707560029245,
+            86.58989209549729
+          ],
+          "housing_point_ue_cm": [
+            187.23812866210938,
+            -286.5853576660156,
+            86.51219940185547
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.09723377972841263,
+          "authored_oriented_local_signed_plane_cm": 0.09722605711421245
+        },
+        {
+          "skin_point_ue_cm": [
+            187.19068511872524,
+            -286.47561254409675,
+            86.57064599278397
+          ],
+          "housing_point_ue_cm": [
+            187.18545532226562,
+            -286.54193115234375,
+            86.48200988769531
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.11082319170236588,
+          "authored_oriented_local_signed_plane_cm": 0.11081682888465824
+        },
+        {
+          "skin_point_ue_cm": [
+            187.2526066279003,
+            -286.6547231864056,
+            86.56147659774908
+          ],
+          "housing_point_ue_cm": [
+            187.2526092529297,
+            -286.65472412109375,
+            86.5373306274414
+          ],
+          "housing_triangle": 117,
+          "unsigned_nearest_cm": 0.02414703369140625,
+          "authored_oriented_local_signed_plane_cm": 0.024145970307671405
+        },
+        {
+          "skin_point_ue_cm": [
+            187.28487651779113,
+            -286.45089107037495,
+            86.63755369595884
+          ],
+          "housing_point_ue_cm": [
+            187.27877807617188,
+            -286.56048583984375,
+            86.49169158935547
+          ],
+          "housing_triangle": 150,
+          "unsigned_nearest_cm": 0.18254230916500092,
+          "authored_oriented_local_signed_plane_cm": 0.182547720241863
+        }
+      ],
+      "minimum_local_signed_plane_cm": -0.042761732867191427,
+      "maximum_unsigned_distance_cm": 0.30591779947280884
+    }
+  ],
+  "inside_volume_certified": false,
+  "limitations": [
+    "Local signed nearest-plane distance uses the authored outward normal; it is not certified closed-solid penetration depth",
+    "All original triangle intersections are retained; no collision exemption or contact gate changed",
+    "Source/native/activity acceptance remain false; this is a private visual-review candidate"
+  ],
+  "elapsed_s": 1.330051152035594,
+  "source_ready": false,
+  "native_ready": false
+}

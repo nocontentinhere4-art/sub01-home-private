@@ -1,0 +1,388 @@
+{
+  "schema": "sub01.fp-keyboard-loop-derivation.v1",
+  "captured_key_range": [
+    105,
+    210
+  ],
+  "captured_time_range_s": [
+    3.5,
+    7.0
+  ],
+  "captured_keys_exact_rows": 106,
+  "captured_duration_s": 3.5,
+  "bridge_intervals": 12,
+  "bridge_seconds": 0.4,
+  "total_keys": 235,
+  "duration_s": 3.9,
+  "original_prefix_unchanged": true,
+  "captured_track_rows_exact": false,
+  "last_rows_equal_first_exact": true,
+  "bridge_tracks": [
+    {
+      "name": "mixamorig:Hips",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:Hips",
+      "path": "translation"
+    },
+    {
+      "name": "mixamorig:Spine",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:Spine1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:Spine2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:Neck",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:Head",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:HeadTop_End",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightShoulder",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightArm",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightForeArm",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHand",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandThumb1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandThumb2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandThumb3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandThumb4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandIndex1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandIndex2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandIndex3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandIndex4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandMiddle1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandMiddle2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandMiddle3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandMiddle4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandRing1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandRing2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandRing3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandRing4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandPinky1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandPinky2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandPinky3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightHandPinky4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftShoulder",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftArm",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftForeArm",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHand",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandThumb1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandThumb2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandThumb3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandThumb4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandIndex1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandIndex2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandIndex3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandIndex4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandMiddle1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandMiddle2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandMiddle3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandMiddle4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandRing1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandRing2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandRing3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandRing4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandPinky1",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandPinky2",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandPinky3",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftHandPinky4",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightUpLeg",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightLeg",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightFoot",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightToeBase",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:RightToe_End",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftUpLeg",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftLeg",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftFoot",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftToeBase",
+      "path": "rotation"
+    },
+    {
+      "name": "mixamorig:LeftToe_End",
+      "path": "rotation"
+    }
+  ],
+  "bridge_method": "Normalized quaternion/component cubic Hermite using captured endpoint velocities; explicit derived bridge, not untouched capture",
+  "source_ready": false,
+  "native_ready": false,
+  "original_30hz_keys": 118,
+  "explicit_60hz_interpolants": true,
+  "elbow_sleeve_search": {
+    "method": "Minimum raising swivel, capped30deg; periodic existing max/Gaussian upper envelope, actual repaired forearm skin search; full triangle proof remains separate",
+    "search_skin_vertices": 1588,
+    "maximum_swivel_deg": 16.99010571035468,
+    "search_unresolved_samples": [],
+    "conservative_tabletop_bounds_ue_cm": [
+      [
+        134.08211910172017,
+        -337.29801195030973,
+        81.45894019019525
+      ],
+      [
+        285.91788089827986,
+        -266.70198804969027,
+        84.49999948211064
+      ]
+    ]
+  },
+  "source_clip_sha256": "bf87abeb7bcdc1a992c1e388b867f18f9d970f9966d0ebe11ef1d9b2524899e6",
+  "output_glb": "/workspace/sub01-home-private/fp-keyboard-loop-r2/SUB01_FirstPersonKeyboard_LoopCandidate.glb",
+  "output_sha256": "34c9b4c07cbd8a89b7dc864258c0f2c6ab2a14c26a877a0268d9ec9d07bf4a4c",
+  "animation_only": true,
+  "output_sha_source_original_window_bytes": false,
+  "captured_original30hz_finger_and_nonarm_rows_exact": true,
+  "arm_correction_all60hz_keys": true,
+  "corrected_local_arms": [
+    "LeftArm",
+    "LeftForeArm",
+    "LeftHand",
+    "RightArm",
+    "RightForeArm",
+    "RightHand"
+  ],
+  "derived_arm_rows_updated": 1410,
+  "maximum_written_bone_length_delta_cm": 4.440892098500626e-14,
+  "maximum_finger_local_matrix_delta_from_declared_loop": 7.105427357601002e-14,
+  "source_samples": 469,
+  "hands": {
+    "left": {
+      "minimum_key_gap_cm": 0.01057120821988633,
+      "maximum_key_gap_cm": 0.2994455159982863,
+      "minimum_over_key_distal_vertices": 168,
+      "gap_over0_2cm_samples": [
+        35,
+        149,
+        155,
+        167,
+        173,
+        179,
+        203,
+        207,
+        297
+      ],
+      "penetration_over0_1cm_samples": [],
+      "wrist_flexion_deg": [
+        14.02994875823058,
+        23.155867088804207
+      ],
+      "wrist_deviation_deg": [
+        -15.632210409577098,
+        -6.311586697808964
+      ],
+      "wrist_twist_deg": [
+        42.507804457425706,
+        49.697928247694904
+      ]
+    },
+    "right": {
+      "minimum_key_gap_cm": -0.01930031945596511,
+      "maximum_key_gap_cm": 0.28547155993048534,
+      "minimum_over_key_distal_vertices": 192,
+      "gap_over0_2cm_samples": [
+        153,
+        183,
+        193,
+        211,
+        295,
+        353
+      ],
+      "penetration_over0_1cm_samples": [],
+      "wrist_flexion_deg": [
+        14.555220608836573,
+        25.966800657791186
+      ],
+      "wrist_deviation_deg": [
+        -5.338688959765841,
+        4.3170719961493145
+      ],
+      "wrist_twist_deg": [
+        -42.95622170382254,
+        -31.828413572918983
+      ]
+    }
+  },
+  "loop_world_endpoint_error_cm": 0.0,
+  "whole_arm_collision_accepted": false,
+  "elapsed_s": 7.625174693763256
+}

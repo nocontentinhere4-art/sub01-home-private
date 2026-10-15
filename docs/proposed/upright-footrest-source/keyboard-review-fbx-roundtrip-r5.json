@@ -1,0 +1,174 @@
+{
+  "schema": "sub01.fp-keyboard-review-fbx.v1",
+  "label": "Private native visual/skin-contact DIAGNOSTIC candidate only",
+  "arms_mesh_glb_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "derived_clip_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "merged_glb_sha256": "a0df3d238ee1d1f6e748de6956e961f35ca43386bd3338603b7f04f318d1e6cf",
+  "fbx_sha256": "07baf00adbe6e9fa49f22ea954787e3590ba602a5c7ab6f247cc990a50205d53",
+  "fbx": "/workspace/sub01-home-private/fp-keyboard-review-fbx-r5/FirstPersonKeyboardReview.fbx",
+  "editable_blend": "/workspace/sub01-home-private/fp-keyboard-review-fbx-r5/first-person-keyboard-review.blend",
+  "original_joint_names": [
+    "mixamorig:Hips",
+    "mixamorig:Spine",
+    "mixamorig:Spine1",
+    "mixamorig:Spine2",
+    "mixamorig:Neck",
+    "mixamorig:Head",
+    "mixamorig:HeadTop_End",
+    "mixamorig:RightShoulder",
+    "mixamorig:RightArm",
+    "mixamorig:RightForeArm",
+    "mixamorig:RightHand",
+    "mixamorig:RightHandThumb1",
+    "mixamorig:RightHandThumb2",
+    "mixamorig:RightHandThumb3",
+    "mixamorig:RightHandThumb4",
+    "mixamorig:RightHandIndex1",
+    "mixamorig:RightHandIndex2",
+    "mixamorig:RightHandIndex3",
+    "mixamorig:RightHandIndex4",
+    "mixamorig:RightHandMiddle1",
+    "mixamorig:RightHandMiddle2",
+    "mixamorig:RightHandMiddle3",
+    "mixamorig:RightHandMiddle4",
+    "mixamorig:RightHandRing1",
+    "mixamorig:RightHandRing2",
+    "mixamorig:RightHandRing3",
+    "mixamorig:RightHandRing4",
+    "mixamorig:RightHandPinky1",
+    "mixamorig:RightHandPinky2",
+    "mixamorig:RightHandPinky3",
+    "mixamorig:RightHandPinky4",
+    "mixamorig:LeftShoulder",
+    "mixamorig:LeftArm",
+    "mixamorig:LeftForeArm",
+    "mixamorig:LeftHand",
+    "mixamorig:LeftHandThumb1",
+    "mixamorig:LeftHandThumb2",
+    "mixamorig:LeftHandThumb3",
+    "mixamorig:LeftHandThumb4",
+    "mixamorig:LeftHandIndex1",
+    "mixamorig:LeftHandIndex2",
+    "mixamorig:LeftHandIndex3",
+    "mixamorig:LeftHandIndex4",
+    "mixamorig:LeftHandMiddle1",
+    "mixamorig:LeftHandMiddle2",
+    "mixamorig:LeftHandMiddle3",
+    "mixamorig:LeftHandMiddle4",
+    "mixamorig:LeftHandRing1",
+    "mixamorig:LeftHandRing2",
+    "mixamorig:LeftHandRing3",
+    "mixamorig:LeftHandRing4",
+    "mixamorig:LeftHandPinky1",
+    "mixamorig:LeftHandPinky2",
+    "mixamorig:LeftHandPinky3",
+    "mixamorig:LeftHandPinky4",
+    "mixamorig:RightUpLeg",
+    "mixamorig:RightLeg",
+    "mixamorig:RightFoot",
+    "mixamorig:RightToeBase",
+    "mixamorig:RightToe_End",
+    "mixamorig:LeftUpLeg",
+    "mixamorig:LeftLeg",
+    "mixamorig:LeftFoot",
+    "mixamorig:LeftToeBase",
+    "mixamorig:LeftToe_End"
+  ],
+  "original_joints": 65,
+  "fps": 120,
+  "keys": 409,
+  "duration_s": 3.4,
+  "source_frame_range": [
+    0,
+    408
+  ],
+  "actual_roundtrip_frame_range": [
+    1.0,
+    409.0
+  ],
+  "actual_roundtrip_curve_counts": [
+    409
+  ],
+  "actual_roundtrip_curves": 659,
+  "all409_keys_all65_joint_heads_max_error_cm": 0.000433137694340634,
+  "original_source_material_slots": [
+    "tripo_material_6bf04053-4eb9-4c81-aed9-ebf290057e82"
+  ],
+  "source_GLTF_to_Blender_skin_geometry": [
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 0.0008871143090562526,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 0.0007143073963151749,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 0.0007036375739277084,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 0.00090691402041677,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    }
+  ],
+  "FBX_roundtrip_skin_geometry": [
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 6.041061049038462e-05,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 7.798547626553238e-05,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 5.7788847177223314e-05,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    },
+    {
+      "same_triangle_count": true,
+      "triangles": 88592,
+      "maximum_nearest_triangle_corner_error_cm": 7.091763040000674e-05,
+      "all_triangles_within0_02cm": true,
+      "comparison": "Every target triangle matched to a source triangle with3corners; original source count preserved; not a uniqueness/UV proof"
+    }
+  ],
+  "probe_frames": [
+    0,
+    120,
+    240,
+    396
+  ],
+  "elapsed_s": 18.861726321280003,
+  "source_ready": false,
+  "native_ready": false,
+  "activity_ready": false,
+  "source_native_skeleton_mutated": false,
+  "limitations": [
+    "4extra240Hz hover diagnostics up0.276cm remain explicitlyunaccepted",
+    "Keyboard housing/proximal contacts are diagnostic observations, not blanket fullcontact acceptance",
+    "Mesh exported with exact original names; actual existing66UEskeleton/skin/material binding must be checked by sole Editor owner",
+    "No full-take/mouse/body/seat readiness claim"
+  ]
+}

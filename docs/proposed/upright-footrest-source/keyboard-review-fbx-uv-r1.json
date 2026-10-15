@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.fp-keyboard-review-fbx-uv.v1",
+  "fbx_sha256": "07baf00adbe6e9fa49f22ea954787e3590ba602a5c7ab6f247cc990a50205d53",
+  "triangles": 88592,
+  "one_to_one_position_AND_UV_triangle_matches": 88592,
+  "all_source_and_target_triangles_used_once": true,
+  "position_tolerance_cm": 0.02,
+  "uv_tolerance": 1e-06,
+  "max_nearest_valid_position_error_cm": 6.041061049038462e-05,
+  "max_nearest_valid_uv_error": 0.0,
+  "source_material_slots": [
+    "tripo_material_6bf04053-4eb9-4c81-aed9-ebf290057e82"
+  ],
+  "FBX_material_slots": [
+    "tripo_material_6bf04053-4eb9-4c81-aed9-ebf290057e82"
+  ],
+  "native_material_policy": "Reuse exact existing original owner material; FBX shader conversion is not native PBR proof",
+  "source_glb_original_UV_PBR_accessors_unchanged": "See source arms index-only manifest and mergedGLB accessor hash audit; no texture edits",
+  "elapsed_s": 6.170566411688924,
+  "source_ready": false,
+  "native_ready": false,
+  "activity_ready": false
+}

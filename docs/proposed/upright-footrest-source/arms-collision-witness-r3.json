@@ -1,0 +1,845 @@
+{
+  "schema": "sub01.fp-arms-real-mesh-collision.v1",
+  "clip_sha256": "bf87abeb7bcdc1a992c1e388b867f18f9d970f9966d0ebe11ef1d9b2524899e6",
+  "arms_mesh_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "samples": 12,
+  "samples_per_original_key": 1,
+  "explicit_probe_keys": [
+    0,
+    45,
+    90,
+    150,
+    228,
+    288,
+    300,
+    315,
+    375,
+    402,
+    450,
+    494
+  ],
+  "original_arm_triangles": 88592,
+  "actual_protected_objects": [
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 0,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node000",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 1,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node001",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 2,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node002",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 3,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node003",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 4,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node004",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 5,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node005",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 6,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node006",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 7,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node007",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 8,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node008",
+      "primitive": 0,
+      "triangles": 764,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 9,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node009",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 10,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node010",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 11,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node011",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 12,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node012",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 13,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node013",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 14,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node014",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 15,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node015",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 16,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node016",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 17,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node017",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 18,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node018",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 19,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node019",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 20,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node020",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 21,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node021",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 22,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node022",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 23,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node023",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 24,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node024",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 25,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node025",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 26,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node026",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 27,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node027",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 28,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node028",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 29,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node029",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 30,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node030",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 31,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node031",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 31,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node031",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 32,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node032",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 32,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node032",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 33,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node033",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 33,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node033",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 34,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node034",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 34,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node034",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 35,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node035",
+      "primitive": 0,
+      "triangles": 768,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 36,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node036",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 37,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node037",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 38,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node038",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 39,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node039",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 40,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node040",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 41,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node041",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 42,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node042",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 43,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node043",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 0,
+      "triangles": 888,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 1,
+      "triangles": 144,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 45,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node045",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 46,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node046",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 47,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node047",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 48,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node048",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 49,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node049",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 50,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node050",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 51,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node051",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 52,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node052",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 53,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node053",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 53,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node053",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 184,
+      "name": "mesh_0",
+      "primitive": 0,
+      "triangles": 28,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "triangles": 136,
+      "discarded_exact_zero_area_triangles": 16
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 186,
+      "name": "mesh_2",
+      "primitive": 0,
+      "triangles": 12,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "triangles": 3828,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 237,
+      "name": "mouse",
+      "primitive": 0,
+      "triangles": 8788,
+      "discarded_exact_zero_area_triangles": 104
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 238,
+      "name": "mousepad",
+      "primitive": 0,
+      "triangles": 84,
+      "discarded_exact_zero_area_triangles": 0
+    }
+  ],
+  "bvh_broadphase_tests": 27,
+  "triangle_intersection_pairs": 524,
+  "issues": [
+    {
+      "sample": 2,
+      "time_s": 3.0,
+      "source_arm_selected_triangle": 25922,
+      "arm_world_triangle_ue_cm": [
+        [
+          204.20046537178055,
+          -287.2922451795731,
+          86.10255452895511
+        ],
+        [
+          204.25406975262302,
+          -287.50767225443803,
+          86.33214860230538
+        ],
+        [
+          204.41512046984454,
+          -287.3559226673599,
+          86.31258078345354
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 13,
+      "triangle_intersection_pairs": 56
+    },
+    {
+      "sample": 4,
+      "time_s": 7.599999904632568,
+      "source_arm_selected_triangle": 86667,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.24229020842552,
+          -291.3348355985566,
+          87.46976030535022
+        ],
+        [
+          187.0179658625691,
+          -291.5051071393558,
+          87.34798561601956
+        ],
+        [
+          187.21239883853005,
+          -291.5765955724421,
+          87.38426410351202
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 7
+    },
+    {
+      "sample": 5,
+      "time_s": 9.600000381469727,
+      "source_arm_selected_triangle": 65512,
+      "arm_world_triangle_ue_cm": [
+        [
+          180.74600838326583,
+          -266.768039145958,
+          84.20757214870396
+        ],
+        [
+          180.9036182407199,
+          -266.82988236371716,
+          84.28047984429902
+        ],
+        [
+          180.6846976598074,
+          -266.014818354956,
+          84.17115519860315
+        ]
+      ],
+      "object": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 0,
+      "object_source_triangle": 523,
+      "triangle_intersection_pairs": 125
+    },
+    {
+      "sample": 5,
+      "time_s": 9.600000381469727,
+      "source_arm_selected_triangle": 84825,
+      "arm_world_triangle_ue_cm": [
+        [
+          186.73605096511872,
+          -286.6223967562209,
+          86.67048551842632
+        ],
+        [
+          186.75063711790605,
+          -287.0236175796157,
+          86.53045107782015
+        ],
+        [
+          186.9334285014173,
+          -286.9109133180012,
+          86.633162856335
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 16
+    },
+    {
+      "sample": 5,
+      "time_s": 9.600000381469727,
+      "source_arm_selected_triangle": 84952,
+      "arm_world_triangle_ue_cm": [
+        [
+          186.89802038385199,
+          -288.25377018452014,
+          87.46615657407638
+        ],
+        [
+          186.74765749184428,
+          -288.3014263553087,
+          87.3350309953672
+        ],
+        [
+          186.68084824519443,
+          -288.3265043126085,
+          87.55595822898005
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3425,
+      "triangle_intersection_pairs": 14
+    },
+    {
+      "sample": 6,
+      "time_s": 10.0,
+      "source_arm_selected_triangle": 79690,
+      "arm_world_triangle_ue_cm": [
+        [
+          181.10852214222066,
+          -266.98427235664644,
+          84.41216528108964
+        ],
+        [
+          180.94512128004428,
+          -266.2989782179622,
+          84.31677112839833
+        ],
+        [
+          180.76946599248396,
+          -267.1757551788688,
+          84.19640230938494
+        ]
+      ],
+      "object": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 0,
+      "object_source_triangle": 690,
+      "triangle_intersection_pairs": 146
+    },
+    {
+      "sample": 6,
+      "time_s": 10.0,
+      "source_arm_selected_triangle": 84824,
+      "arm_world_triangle_ue_cm": [
+        [
+          186.72699289286462,
+          -286.59965272142114,
+          86.60074217287763
+        ],
+        [
+          186.65430716721886,
+          -286.754084484869,
+          86.51977874265346
+        ],
+        [
+          186.74929170442192,
+          -287.00738732164046,
+          86.47801184875895
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 18
+    },
+    {
+      "sample": 7,
+      "time_s": 10.5,
+      "source_arm_selected_triangle": 65586,
+      "arm_world_triangle_ue_cm": [
+        [
+          181.58676279348958,
+          -267.149605045322,
+          84.74177041440822
+        ],
+        [
+          181.48627899260185,
+          -266.7353928805567,
+          84.68204269645686
+        ],
+        [
+          181.14343773413253,
+          -267.2232187028376,
+          84.45506046788053
+        ]
+      ],
+      "object": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 0,
+      "object_source_triangle": 770,
+      "triangle_intersection_pairs": 134
+    },
+    {
+      "sample": 7,
+      "time_s": 10.5,
+      "source_arm_selected_triangle": 84923,
+      "arm_world_triangle_ue_cm": [
+        [
+          186.50505711128957,
+          -288.1526960813684,
+          87.19297760553177
+        ],
+        [
+          186.48318586532713,
+          -288.354954498307,
+          87.4697610004543
+        ],
+        [
+          186.7662558851401,
+          -288.2686119878025,
+          87.3729486478875
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3388,
+      "triangle_intersection_pairs": 4
+    },
+    {
+      "sample": 10,
+      "time_s": 15.0,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.13442050716785,
+          -290.3814612382056,
+          87.42626196733677
+        ],
+        [
+          187.08939223490768,
+          -290.6224340000004,
+          87.3446077075075
+        ],
+        [
+          187.32853169560906,
+          -290.61872949914687,
+          87.46975946064688
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4
+    }
+  ],
+  "all_tested_source_triangle_surfaces_disjoint": false,
+  "elapsed_s": 2.1948389392346144,
+  "contact_accepted": false,
+  "native_ready": false,
+  "limitations": [
+    "Triangle intersection audit does not alone establish anatomical comfort, camera readiness or working PC input",
+    "Actual positive-area geometry used; exact zero-area source padding counted separately",
+    "Finite original keys plus requested midpoints, not mathematical continuous-time proof"
+  ]
+}

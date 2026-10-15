@@ -1,0 +1,45 @@
+{
+  "schema": "sub01.fp-arms-derived-frustum.v1",
+  "clip_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "original_mask_scope": "full_arm",
+  "arm_weight_threshold": 0.5,
+  "keys": 409,
+  "original_cut_edges": 358,
+  "horizontal_fov_deg": 75,
+  "aspect": 1.7777777777777777,
+  "near_cm": 1,
+  "actual_iris_source_camera": true,
+  "pitches": [
+    {
+      "additional_down_pitch_deg": 0,
+      "frames_with_visible_new_cut": 0,
+      "maximum_visible_new_cut_edges": 0,
+      "first_visible_key": null
+    },
+    {
+      "additional_down_pitch_deg": 20,
+      "frames_with_visible_new_cut": 0,
+      "maximum_visible_new_cut_edges": 0,
+      "first_visible_key": null
+    },
+    {
+      "additional_down_pitch_deg": 35,
+      "frames_with_visible_new_cut": 0,
+      "maximum_visible_new_cut_edges": 0,
+      "first_visible_key": null
+    },
+    {
+      "additional_down_pitch_deg": 50,
+      "frames_with_visible_new_cut": 0,
+      "maximum_visible_new_cut_edges": 0,
+      "first_visible_key": null
+    },
+    {
+      "additional_down_pitch_deg": 65,
+      "frames_with_visible_new_cut": 0,
+      "maximum_visible_new_cut_edges": 0,
+      "first_visible_key": null
+    }
+  ],
+  "native_ready": false
+}

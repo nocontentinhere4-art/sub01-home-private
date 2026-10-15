@@ -1,0 +1,1755 @@
+{
+  "schema": "sub01.fp-arms-real-mesh-collision.v1",
+  "clip_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "arms_mesh_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "samples": 409,
+  "samples_per_original_key": 1,
+  "explicit_probe_keys": null,
+  "original_arm_triangles": 88592,
+  "actual_protected_objects": [
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 0,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node000",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 1,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node001",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 2,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node002",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 3,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node003",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 4,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node004",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 5,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node005",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 6,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node006",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 7,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node007",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 8,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node008",
+      "primitive": 0,
+      "triangles": 764,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 9,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node009",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 10,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node010",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 11,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node011",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 12,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node012",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 13,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node013",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 14,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node014",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 15,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node015",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 16,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node016",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 17,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node017",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 18,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node018",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 19,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node019",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 20,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node020",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 21,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node021",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 22,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node022",
+      "primitive": 0,
+      "triangles": 508,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 23,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node023",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 24,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node024",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 25,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node025",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 26,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node026",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 27,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node027",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 28,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node028",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 29,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node029",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 30,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node030",
+      "primitive": 0,
+      "triangles": 284,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 31,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node031",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 31,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node031",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 32,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node032",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 32,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node032",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 33,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node033",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 33,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node033",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 34,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node034",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 34,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node034",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 35,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node035",
+      "primitive": 0,
+      "triangles": 768,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 36,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node036",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 37,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node037",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 38,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node038",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 39,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node039",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 40,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node040",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 41,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node041",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 42,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node042",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 43,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node043",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 0,
+      "triangles": 888,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 44,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node044",
+      "primitive": 1,
+      "triangles": 144,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 45,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node045",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 46,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node046",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 47,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node047",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 48,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node048",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 49,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node049",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 50,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node050",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 51,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node051",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 52,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node052",
+      "primitive": 0,
+      "triangles": 300,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 53,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node053",
+      "primitive": 0,
+      "triangles": 264,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "genuine_LINEA_desk",
+      "node": 53,
+      "name": "SUB01_RealLinea140_99bdf3fd_Node053",
+      "primitive": 1,
+      "triangles": 36,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 184,
+      "name": "mesh_0",
+      "primitive": 0,
+      "triangles": 28,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "triangles": 136,
+      "discarded_exact_zero_area_triangles": 16
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 186,
+      "name": "mesh_2",
+      "primitive": 0,
+      "triangles": 12,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "triangles": 3828,
+      "discarded_exact_zero_area_triangles": 0
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 237,
+      "name": "mouse",
+      "primitive": 0,
+      "triangles": 8788,
+      "discarded_exact_zero_area_triangles": 104
+    },
+    {
+      "label": "actual_keyboard_mouse_pad",
+      "node": 238,
+      "name": "mousepad",
+      "primitive": 0,
+      "triangles": 84,
+      "discarded_exact_zero_area_triangles": 0
+    }
+  ],
+  "bvh_broadphase_tests": 151,
+  "triangle_intersection_pairs": 292,
+  "issues": [
+    {
+      "sample": 4,
+      "time_s": 0.03333330154418945,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.41807266457516,
+          -288.9603592047026,
+          87.2679065161069
+        ],
+        [
+          202.472249209399,
+          -289.2575514280993,
+          87.3236719369293
+        ],
+        [
+          202.58499915985547,
+          -288.99702999274587,
+          87.25727144389717
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3520,
+      "triangle_intersection_pairs": 14,
+      "conservative_keycap_top_penetration_cm": 0.13248873702897868,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 5,
+      "time_s": 0.041666626930236816,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.4285616393094,
+          -288.94395582456156,
+          87.26522379924441
+        ],
+        [
+          202.4811140810939,
+          -289.2410961659324,
+          87.32276694706474
+        ],
+        [
+          202.59535082413728,
+          -288.9814727998823,
+          87.25544713370185
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3557,
+      "triangle_intersection_pairs": 12,
+      "conservative_keycap_top_penetration_cm": 0.13431304722429616,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 6,
+      "time_s": 0.04999995231628418,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.4389823090562,
+          -288.9274755708808,
+          87.26255775222072
+        ],
+        [
+          202.48990397654012,
+          -289.2245468316889,
+          87.3218726993616
+        ],
+        [
+          202.60562668311704,
+          -288.9658336868078,
+          87.25364268827674
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3557,
+      "triangle_intersection_pairs": 10,
+      "conservative_keycap_top_penetration_cm": 0.13611749264940443,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 7,
+      "time_s": 0.05833327770233154,
+      "source_arm_selected_triangle": 25850,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.66468012389518,
+          -289.5055363363548,
+          87.5463568477527
+        ],
+        [
+          202.7298330065566,
+          -289.1316090545326,
+          87.31732532409285
+        ],
+        [
+          202.49858898437537,
+          -289.20789977799336,
+          87.32099305912647
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3558,
+      "triangle_intersection_pairs": 6,
+      "conservative_keycap_top_penetration_cm": 0.07243485683329709,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 119,
+      "time_s": 0.9916666746139526,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.1889670888085,
+          -290.1463999299965,
+          87.50230674254733
+        ],
+        [
+          187.175596017097,
+          -290.37023733117417,
+          87.37536351359701
+        ],
+        [
+          187.4070529120451,
+          -290.36726975938603,
+          87.51395891792338
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 12,
+      "conservative_keycap_top_penetration_cm": 0.08132875022999997,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 125,
+      "time_s": 1.0416666269302368,
+      "source_arm_selected_triangle": 86662,
+      "arm_world_triangle_ue_cm": [
+        [
+          186.33397634711727,
+          -291.30115338071096,
+          87.36409040963628
+        ],
+        [
+          186.50034853742042,
+          -291.36110555268016,
+          87.3060027543485
+        ],
+        [
+          186.37809884958588,
+          -291.13209102703087,
+          87.40258557633814
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2806,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.08375742657764818,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 141,
+      "time_s": 1.1749998331069946,
+      "source_arm_selected_triangle": 87541,
+      "arm_world_triangle_ue_cm": [
+        [
+          184.48192218138053,
+          -292.09856565777005,
+          87.4969598205625
+        ],
+        [
+          184.16941165461571,
+          -291.95993643983593,
+          87.36448734800386
+        ],
+        [
+          184.24111225354096,
+          -292.21093910336094,
+          87.50893014452188
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2238,
+      "triangle_intersection_pairs": 6,
+      "conservative_keycap_top_penetration_cm": 0.025272832922283328,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 151,
+      "time_s": 1.258333444595337,
+      "source_arm_selected_triangle": 87541,
+      "arm_world_triangle_ue_cm": [
+        [
+          184.49372641668225,
+          -292.12732690599506,
+          87.48975897708142
+        ],
+        [
+          184.1795406454309,
+          -291.9889498683861,
+          87.36043436546386
+        ],
+        [
+          184.2544532634563,
+          -292.24439407759166,
+          87.49817918928805
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2231,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.056405445005566435,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 155,
+      "time_s": 1.291666865348816,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.10693550895877,
+          -291.13636055521744,
+          87.45051135805069
+        ],
+        [
+          187.08429946718408,
+          -291.37350543735204,
+          87.35210588492225
+        ],
+        [
+          187.31608829215915,
+          -291.36248930032065,
+          87.48975920387436
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 11,
+      "conservative_keycap_top_penetration_cm": 0.07377377716204592,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 156,
+      "time_s": 1.3000001907348633,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.11699184629424,
+          -290.9121846209352,
+          87.46111915795427
+        ],
+        [
+          187.09483779517058,
+          -291.14720394116836,
+          87.35751221982055
+        ],
+        [
+          187.3269231107198,
+          -291.13839037930956,
+          87.49484011143323
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 6,
+      "conservative_keycap_top_penetration_cm": 0.0322479611055968,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 157,
+      "time_s": 1.3083335161209106,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.1146785521659,
+          -290.83559116411567,
+          87.46119499985116
+        ],
+        [
+          187.09182537521536,
+          -291.07068346227584,
+          87.35777629953913
+        ],
+        [
+          187.32420779991128,
+          -291.0621132448056,
+          87.49463368416754
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 6,
+      "conservative_keycap_top_penetration_cm": 0.031983881387020574,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 158,
+      "time_s": 1.316666841506958,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.11194682224675,
+          -290.7580631448369,
+          87.46127114824205
+        ],
+        [
+          187.08839867120315,
+          -290.99322858665835,
+          87.35804529123676
+        ],
+        [
+          187.32108148071572,
+          -290.98489347751774,
+          87.49442400614275
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.03171488968938263,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 163,
+      "time_s": 1.3583334684371948,
+      "source_arm_selected_triangle": 18506,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.6362982118801,
+          -294.9425104098654,
+          87.37450921273116
+        ],
+        [
+          200.98860564633273,
+          -295.0758718459583,
+          87.55538979508343
+        ],
+        [
+          200.85554477765498,
+          -294.8522972296778,
+          87.35490869976093
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 1886,
+      "triangle_intersection_pairs": 8,
+      "conservative_keycap_top_penetration_cm": 0.0696862432292562,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 167,
+      "time_s": 1.3916667699813843,
+      "source_arm_selected_triangle": 25851,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.64528248054856,
+          -289.4253212374206,
+          87.49667457610079
+        ],
+        [
+          202.40093455823802,
+          -289.1616045562492,
+          87.30238984204517
+        ],
+        [
+          202.3325819258089,
+          -289.44793855437604,
+          87.48976178007553
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3558,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.08737033888097301,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 168,
+      "time_s": 1.4000000953674316,
+      "source_arm_selected_triangle": 25849,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.78630083789952,
+          -288.892013231348,
+          87.09536727193361
+        ],
+        [
+          202.6529674407105,
+          -288.850450946195,
+          87.03536203713178
+        ],
+        [
+          202.6844463465666,
+          -289.2254383508473,
+          87.26869118269346
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3520,
+      "triangle_intersection_pairs": 21,
+      "conservative_keycap_top_penetration_cm": 0.35439814379436996,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 173,
+      "time_s": 1.4416667222976685,
+      "source_arm_selected_triangle": 84825,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.2244813896375,
+          -286.2490886813789,
+          86.65235071018539
+        ],
+        [
+          187.15980084644457,
+          -286.6568666815941,
+          86.5005567361437
+        ],
+        [
+          187.3482105787598,
+          -286.60736620589165,
+          86.63431301762871
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 22,
+      "conservative_keycap_top_penetration_cm": null,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 174,
+      "time_s": 1.4500000476837158,
+      "source_arm_selected_triangle": 84825,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.22295500861608,
+          -286.27178042806605,
+          86.64672309099373
+        ],
+        [
+          187.15841522883437,
+          -286.6794446601274,
+          86.49456889457421
+        ],
+        [
+          187.3467980269662,
+          -286.6300017126838,
+          86.62838430092394
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 22,
+      "conservative_keycap_top_penetration_cm": null,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 193,
+      "time_s": 1.6083332300186157,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.09953585722658,
+          -290.8910135731834,
+          87.45156608681583
+        ],
+        [
+          187.07209647716073,
+          -291.12879713305335,
+          87.35523625557319
+        ],
+        [
+          187.30584252164672,
+          -291.119413133759,
+          87.48975923149206
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.03452392535295701,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 194,
+      "time_s": 1.616666555404663,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.1123592445077,
+          -290.7762314914994,
+          87.45197360494463
+        ],
+        [
+          187.0843901015831,
+          -291.0140614027154,
+          87.3557300242554
+        ],
+        [
+          187.31843834471854,
+          -291.004776415258,
+          87.489760208052
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.034030156670752376,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 195,
+      "time_s": 1.6249998807907104,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.12422503996922,
+          -290.65862829182595,
+          87.45238122331256
+        ],
+        [
+          187.0957365289778,
+          -290.896507379278,
+          87.3562309513898
+        ],
+        [
+          187.3300907704932,
+          -290.88730476222247,
+          87.48975904018134
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.03352922953634163,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 196,
+      "time_s": 1.6333332061767578,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.13512846897427,
+          -290.53832701850797,
+          87.45278995780436
+        ],
+        [
+          187.10613158163753,
+          -290.7762582927919,
+          87.35674020327899
+        ],
+        [
+          187.340795295113,
+          -290.7671209416981,
+          87.48975733485779
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 6,
+      "conservative_keycap_top_penetration_cm": 0.03301997764715736,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 197,
+      "time_s": 1.6416665315628052,
+      "source_arm_selected_triangle": 86668,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.12733472738165,
+          -290.60576314107686,
+          87.44893508173237
+        ],
+        [
+          187.0965913692269,
+          -290.84528898516385,
+          87.35740335084824
+        ],
+        [
+          187.33159449322676,
+          -290.8350941663993,
+          87.48975846527172
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.03235683007790158,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 204,
+      "time_s": 1.6999998092651367,
+      "source_arm_selected_triangle": 86671,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.0211776479939,
+          -291.5255605507736,
+          87.29811927223494
+        ],
+        [
+          187.28248755832635,
+          -291.49374824027046,
+          87.48976027908482
+        ],
+        [
+          187.0710703130897,
+          -291.33787164265203,
+          87.45822294650063
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 17,
+      "conservative_keycap_top_penetration_cm": 0.14882119566215124,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 231,
+      "time_s": 1.9250000715255737,
+      "source_arm_selected_triangle": 24444,
+      "arm_world_triangle_ue_cm": [
+        [
+          201.9962429461323,
+          -296.1934435020216,
+          87.37552592689944
+        ],
+        [
+          201.91220732578188,
+          -295.99389410143505,
+          87.49377215221985
+        ],
+        [
+          201.78435263549014,
+          -296.2551511328158,
+          87.40921790753103
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 1883,
+      "triangle_intersection_pairs": 8,
+      "conservative_keycap_top_penetration_cm": 0.07687183715486867,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 269,
+      "time_s": 2.241666555404663,
+      "source_arm_selected_triangle": 24434,
+      "arm_world_triangle_ue_cm": [
+        [
+          203.2715207921141,
+          -294.2147227858998,
+          87.48976014494428
+        ],
+        [
+          203.17706675760428,
+          -294.50905921436333,
+          87.31300325487011
+        ],
+        [
+          203.40295152095797,
+          -294.44630408081684,
+          87.3838289449886
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2670,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.07675692605603501,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 294,
+      "time_s": 2.450000047683716,
+      "source_arm_selected_triangle": 18505,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.2885693164889,
+          -292.93123097674504,
+          87.30148792359051
+        ],
+        [
+          200.51216107651095,
+          -292.92271272784643,
+          87.3506189974358
+        ],
+        [
+          200.1665660623963,
+          -292.72526468920876,
+          87.23099034162959
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2552,
+      "triangle_intersection_pairs": 13,
+      "conservative_keycap_top_penetration_cm": 0.15876983929655353,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 295,
+      "time_s": 2.4583334922790527,
+      "source_arm_selected_triangle": 18531,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.36424154441013,
+          -292.3364655635978,
+          87.36367736321503
+        ],
+        [
+          200.72203387584446,
+          -292.2520405051126,
+          87.54852894153501
+        ],
+        [
+          200.52656176568618,
+          -292.1761042997194,
+          87.48976061765546
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3154,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.05058552051168874,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 297,
+      "time_s": 2.4749999046325684,
+      "source_arm_selected_triangle": 18505,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.422188561949,
+          -292.89866280264795,
+          87.30465555429475
+        ],
+        [
+          200.6426747714486,
+          -292.89946934887064,
+          87.3625450025207
+        ],
+        [
+          200.30743962872188,
+          -292.6839788316018,
+          87.24207047985094
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2552,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.1476897010752083,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 312,
+      "time_s": 2.5999999046325684,
+      "source_arm_selected_triangle": 87878,
+      "arm_world_triangle_ue_cm": [
+        [
+          184.14582557942668,
+          -293.8507217664881,
+          87.37226472721379
+        ],
+        [
+          183.80846757733138,
+          -293.86750917238436,
+          87.37952187426416
+        ],
+        [
+          184.102879258502,
+          -294.1103658397003,
+          87.5107863987342
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 1490,
+      "triangle_intersection_pairs": 4,
+      "conservative_keycap_top_penetration_cm": 0.017495453712356834,
+      "intentional_key_contact_within_existing0_1cm_rule": true
+    },
+    {
+      "sample": 395,
+      "time_s": 3.2916665077209473,
+      "source_arm_selected_triangle": 18504,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.59899325814442,
+          -291.19721672943496,
+          87.37451798151069
+        ],
+        [
+          202.67480046856832,
+          -290.95750572796095,
+          87.40923465321212
+        ],
+        [
+          202.48861291287287,
+          -290.87504317441665,
+          87.31738079655743
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3206,
+      "triangle_intersection_pairs": 19,
+      "conservative_keycap_top_penetration_cm": 0.10449027592005677,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    }
+  ],
+  "all_tested_source_triangle_surfaces_disjoint": false,
+  "nonkey_or_excessive_key_contact_issues": [
+    {
+      "sample": 4,
+      "time_s": 0.03333330154418945,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.41807266457516,
+          -288.9603592047026,
+          87.2679065161069
+        ],
+        [
+          202.472249209399,
+          -289.2575514280993,
+          87.3236719369293
+        ],
+        [
+          202.58499915985547,
+          -288.99702999274587,
+          87.25727144389717
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3520,
+      "triangle_intersection_pairs": 14,
+      "conservative_keycap_top_penetration_cm": 0.13248873702897868,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 5,
+      "time_s": 0.041666626930236816,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.4285616393094,
+          -288.94395582456156,
+          87.26522379924441
+        ],
+        [
+          202.4811140810939,
+          -289.2410961659324,
+          87.32276694706474
+        ],
+        [
+          202.59535082413728,
+          -288.9814727998823,
+          87.25544713370185
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3557,
+      "triangle_intersection_pairs": 12,
+      "conservative_keycap_top_penetration_cm": 0.13431304722429616,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 6,
+      "time_s": 0.04999995231628418,
+      "source_arm_selected_triangle": 25833,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.4389823090562,
+          -288.9274755708808,
+          87.26255775222072
+        ],
+        [
+          202.48990397654012,
+          -289.2245468316889,
+          87.3218726993616
+        ],
+        [
+          202.60562668311704,
+          -288.9658336868078,
+          87.25364268827674
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3557,
+      "triangle_intersection_pairs": 10,
+      "conservative_keycap_top_penetration_cm": 0.13611749264940443,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 168,
+      "time_s": 1.4000000953674316,
+      "source_arm_selected_triangle": 25849,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.78630083789952,
+          -288.892013231348,
+          87.09536727193361
+        ],
+        [
+          202.6529674407105,
+          -288.850450946195,
+          87.03536203713178
+        ],
+        [
+          202.6844463465666,
+          -289.2254383508473,
+          87.26869118269346
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3520,
+      "triangle_intersection_pairs": 21,
+      "conservative_keycap_top_penetration_cm": 0.35439814379436996,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 173,
+      "time_s": 1.4416667222976685,
+      "source_arm_selected_triangle": 84825,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.2244813896375,
+          -286.2490886813789,
+          86.65235071018539
+        ],
+        [
+          187.15980084644457,
+          -286.6568666815941,
+          86.5005567361437
+        ],
+        [
+          187.3482105787598,
+          -286.60736620589165,
+          86.63431301762871
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 22,
+      "conservative_keycap_top_penetration_cm": null,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 174,
+      "time_s": 1.4500000476837158,
+      "source_arm_selected_triangle": 84825,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.22295500861608,
+          -286.27178042806605,
+          86.64672309099373
+        ],
+        [
+          187.15841522883437,
+          -286.6794446601274,
+          86.49456889457421
+        ],
+        [
+          187.3467980269662,
+          -286.6300017126838,
+          86.62838430092394
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 185,
+      "name": "mesh_1",
+      "primitive": 0,
+      "object_source_triangle": 117,
+      "triangle_intersection_pairs": 22,
+      "conservative_keycap_top_penetration_cm": null,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 204,
+      "time_s": 1.6999998092651367,
+      "source_arm_selected_triangle": 86671,
+      "arm_world_triangle_ue_cm": [
+        [
+          187.0211776479939,
+          -291.5255605507736,
+          87.29811927223494
+        ],
+        [
+          187.28248755832635,
+          -291.49374824027046,
+          87.48976027908482
+        ],
+        [
+          187.0710703130897,
+          -291.33787164265203,
+          87.45822294650063
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2846,
+      "triangle_intersection_pairs": 17,
+      "conservative_keycap_top_penetration_cm": 0.14882119566215124,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 294,
+      "time_s": 2.450000047683716,
+      "source_arm_selected_triangle": 18505,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.2885693164889,
+          -292.93123097674504,
+          87.30148792359051
+        ],
+        [
+          200.51216107651095,
+          -292.92271272784643,
+          87.3506189974358
+        ],
+        [
+          200.1665660623963,
+          -292.72526468920876,
+          87.23099034162959
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2552,
+      "triangle_intersection_pairs": 13,
+      "conservative_keycap_top_penetration_cm": 0.15876983929655353,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 297,
+      "time_s": 2.4749999046325684,
+      "source_arm_selected_triangle": 18505,
+      "arm_world_triangle_ue_cm": [
+        [
+          200.422188561949,
+          -292.89866280264795,
+          87.30465555429475
+        ],
+        [
+          200.6426747714486,
+          -292.89946934887064,
+          87.3625450025207
+        ],
+        [
+          200.30743962872188,
+          -292.6839788316018,
+          87.24207047985094
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 2552,
+      "triangle_intersection_pairs": 9,
+      "conservative_keycap_top_penetration_cm": 0.1476897010752083,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    },
+    {
+      "sample": 395,
+      "time_s": 3.2916665077209473,
+      "source_arm_selected_triangle": 18504,
+      "arm_world_triangle_ue_cm": [
+        [
+          202.59899325814442,
+          -291.19721672943496,
+          87.37451798151069
+        ],
+        [
+          202.67480046856832,
+          -290.95750572796095,
+          87.40923465321212
+        ],
+        [
+          202.48861291287287,
+          -290.87504317441665,
+          87.31738079655743
+        ]
+      ],
+      "object": "actual_keyboard_mouse_pad",
+      "node": 187,
+      "name": "mesh_3",
+      "primitive": 0,
+      "object_source_triangle": 3206,
+      "triangle_intersection_pairs": 19,
+      "conservative_keycap_top_penetration_cm": 0.10449027592005677,
+      "intentional_key_contact_within_existing0_1cm_rule": false
+    }
+  ],
+  "keyboard_contact_rule": "Existing fit_seat_pose_trial.KEY_PENETRATION_MAX_CM=.1; exact intersections retained/reported, not asserted absent",
+  "elapsed_s": 56.162848679348826,
+  "contact_accepted": false,
+  "native_ready": false,
+  "limitations": [
+    "Triangle intersection audit does not alone establish anatomical comfort, camera readiness or working PC input",
+    "Actual positive-area geometry used; exact zero-area source padding counted separately",
+    "Finite original keys plus requested midpoints, not mathematical continuous-time proof"
+  ]
+}

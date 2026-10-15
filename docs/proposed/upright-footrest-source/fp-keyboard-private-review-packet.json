@@ -1,0 +1,77 @@
+{
+  "schema": "sub01.fp-keyboard-private-review-packet.v1",
+  "label": "Derived authentic arms/keyboard PRIVATE REVIEW ONLY",
+  "source_owner_original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "repaired_owner_sha256": "831790a62b81e7e2faa5a201e04740d0911c5bfebd49aa03b124808521e3a2b1",
+  "arms_mesh_glb_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "derived_clip_glb_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "merged_glb_sha256": "a0df3d238ee1d1f6e748de6956e961f35ca43386bd3338603b7f04f318d1e6cf",
+  "fbx_sha256": "07baf00adbe6e9fa49f22ea954787e3590ba602a5c7ab6f247cc990a50205d53",
+  "gpu_export_root": "/workspace/sub01-home-private/fp-keyboard-review-fbx-r5",
+  "fbx_filename": "FirstPersonKeyboardReview.fbx",
+  "editable_blend": "first-person-keyboard-review.blend",
+  "triangles": 88592,
+  "original_bones": 65,
+  "expected_native_bones_including_structural_root": 66,
+  "keys": 409,
+  "fps": 120,
+  "duration_s": 3.4,
+  "fbx_frame_range": [
+    1,
+    409
+  ],
+  "native_time_s": [
+    0,
+    3.4
+  ],
+  "source_world_placement": {
+    "body_component_translation_cm": [
+      203.9,
+      -232.3,
+      -0.6
+    ],
+    "body_component_yaw_deg": 180,
+    "scale": 1,
+    "glTF_metres_to_UE_world_cm": "Rz(180) * (x,z,y)*100 + body_component_translation_cm",
+    "not_a_pawn_capsule_transform": true
+  },
+  "source_camera": {
+    "receipt": "FPS-keyboard-loop-r3/source-view-receipt.json",
+    "animated_eye": "Mean of barycentric actual left/right iris surface witnesses",
+    "basis": "Current Head skin forward/up, additional35deg downward pitch",
+    "source_t0_eye_world_cm": [
+      193.33710451729544,
+      -253.50731592605362,
+      142.23846802386348
+    ]
+  },
+  "authentic_material_name": "tripo_material_6bf04053-4eb9-4c81-aed9-ebf290057e82",
+  "native_material_policy": "Reuse unique corresponding actual original owner material slot; no FBX shader conversion acceptance",
+  "derived_scope": {
+    "captured_window_original_keys": [
+      105,
+      195
+    ],
+    "captured_window_seconds": [
+      3.5,
+      6.5
+    ],
+    "retained_captured_rows": 91,
+    "finger_nonarm_rows_exact": true,
+    "closure_bridge_s": 0.4,
+    "bridge": "Declared normalized quaternion/translation Hermite endpoint bridge; derived, not original capture",
+    "arm_changes": "Nonstretch shoulder/elbow/wrist pose tracks; no finger sculpt/skin or geometry changes",
+    "fullbody_and_seating_unchanged": true
+  },
+  "known_limits": [
+    "Four extra240Hz distal hover samples, up0.276342cm;409written120Hz keys and60Hz subset pass documented distal gap band",
+    "Two shallow open-housing thumb contacts: nearest authored-normal plane gaps\u22120.036774/\u22120.042762cm; not watertight solid penetration proof",
+    "Source keyboard activity only; no mouse or full495key take acceptance",
+    "FBX/native wrist local basis differs; real native skin/keycap/camera inspection remains necessary",
+    "No new gameplay action binding, native/body/seat/activity acceptance or config writes"
+  ],
+  "source_ready": false,
+  "native_ready": false,
+  "activity_ready": false,
+  "visual_acceptance": false
+}

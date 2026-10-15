@@ -1,0 +1,70 @@
+{
+  "schema": "sub01.fp-arms-source-view.v1",
+  "clip_sha256": "0cd1395b0b1d8187c928aeb93950df69abc67f7eeefa91ed1df58c1ea761f5db",
+  "arms_mesh_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "exact_original_triangles_uv_pbr": true,
+  "preview_uv_convention": "Blender UV=(glTF u,1-glTF v); source GLB UV bytes unchanged",
+  "explicit_double_precision_skinning_not_Blender_armature_retarget": true,
+  "diagnostic_studio_not_Game_lighting": true,
+  "source_contact_accepted": false,
+  "native_ready": false,
+  "views": [
+    {
+      "frame": 0,
+      "time_s": 0.0,
+      "camera_actual_source_iris_ue_cm": [
+        193.33710451729544,
+        -253.50731592605362,
+        142.23846802386348
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-keyboard-loop-r3/source-views/fps-source-frame000.png",
+      "sha256": "9b54e9e3e1b55b743b16bd4bd93e2ceae044f5bab12635c1d22f488ec61d5849",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    },
+    {
+      "frame": 42,
+      "time_s": 1.4,
+      "camera_actual_source_iris_ue_cm": [
+        196.21359175732772,
+        -255.47745950077737,
+        142.082310824476
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-keyboard-loop-r3/source-views/fps-source-frame042.png",
+      "sha256": "1f393e20b2e7df546d8e29d3ea3f57ce599cbe04128fcecff541eafe2b598b7b",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    },
+    {
+      "frame": 90,
+      "time_s": 3.0,
+      "camera_actual_source_iris_ue_cm": [
+        197.8437696422359,
+        -254.76791590847984,
+        141.23734158624825
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-keyboard-loop-r3/source-views/fps-source-frame090.png",
+      "sha256": "fd81dda56aeb0cdcb6c717bc71b35d962d5e92fe6da87724392bdfbe0d9eaaf2",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    },
+    {
+      "frame": 99,
+      "time_s": 3.3,
+      "camera_actual_source_iris_ue_cm": [
+        194.03301873846831,
+        -253.3276100387559,
+        142.20917033676528
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-keyboard-loop-r3/source-views/fps-source-frame099.png",
+      "sha256": "baf3a0b43b4c577461e639cbcbf631518f2afa44ed7f6d321925650f2081d919",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    }
+  ],
+  "elapsed_s": 37.735548505559564
+}
