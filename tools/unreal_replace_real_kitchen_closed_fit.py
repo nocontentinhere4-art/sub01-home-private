@@ -137,6 +137,11 @@ def run():
             actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);c.set_editor_property('component_tags',[t for t in c.get_editor_property('component_tags')if not str(t).startswith('SUB01Kitchen:')])
         for actor,c in originals:actor.set_actor_hidden_in_game(False);c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
         result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink,import_revision=6)
+        # The inner importer retires these source objects, but toggling collision
+        # can change Unreal's collision profile. Exposure is temporary: restore
+        # their exact captured state rather than guessing only hidden/collision.
+        original_paths={a.get_path_name()for a,c in originals}
+        restore_states([row for row in states if row[0].get_path_name()in original_paths])
         after=importer.snapshot(u,actors)
         if after!=expected:
             differences={path:{'expected':expected.get(path),'actual':after.get(path)}for path in set(expected)|set(after)if expected.get(path)!=after.get(path)}
@@ -147,7 +152,9 @@ def run():
         # Carry the already-proved full-source sink identity into this receipt;
         # no clone/replacement was needed during this second kitchen import.
         result['retained_sink_full_source_restore']=copy.deepcopy(previous['retained_sink_full_source_restore'])
-        guard();result['replacement']={'schema':'sub01.exact-R5-lower-fit-replacement.v1','previous_receipt_sha256':PREVIOUS_SHA,'previous_export_sha256':OLD_EXPORT,'retired_preserved_components':[c.get_path_name()for a,c in parts],'retired_count':152,'old_assets_deleted':False,'original_map_backup':str(backup),'preserved_actor_transforms_and_materials':True,'originals_exposed_only_within_transaction':True,'native_runtime_rebind_required':True};result['native_visual_verified']=False;result['native_hinge_motion_verified']=False;result['interactions_enabled']=False
+        guard()
+        if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Final exact kitchen replacement save failed')
+        result['replacement']={'schema':'sub01.exact-R5-lower-fit-replacement.v1','previous_receipt_sha256':PREVIOUS_SHA,'previous_export_sha256':OLD_EXPORT,'retired_preserved_components':[c.get_path_name()for a,c in parts],'retired_count':152,'old_assets_deleted':False,'original_map_backup':str(backup),'preserved_actor_transforms_and_materials':True,'originals_exposed_only_within_transaction':True,'native_runtime_rebind_required':True};result['native_visual_verified']=False;result['native_hinge_motion_verified']=False;result['interactions_enabled']=False
         pending=ROOT/'native-kitchen-replacement.pending.json';pending.write_text(json.dumps(result,indent=2));pending.replace(ROOT/'native-kitchen-import.json')
         return result
     except Exception:
