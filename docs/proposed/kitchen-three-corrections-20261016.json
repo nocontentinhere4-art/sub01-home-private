@@ -40,7 +40,19 @@
       219
     ],
     "terracotta_source_approval_withdrawn": true,
-    "replacement_white_ceramic_source_pending": true
+    "replacement_white_ceramic_source_pending": false,
+    "approved_source_sha256": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af",
+    "actual_native_task": 110,
+    "actual_native_receipt": "private-audit/genuine-indoor-syngonium-props-native.json",
+    "retired_only_nodes": [
+      216,
+      217,
+      218,
+      219
+    ],
+    "static_cosmetic_internal_leaf_rim_triangle_pairs": 65,
+    "raw_independent_sourceFitPassed": false,
+    "external_protected_kitchen_intersections": 0
   },
   "promoted_to_live": false,
   "same_pid_open_evaluation": {
@@ -54,5 +66,6 @@
     ],
     "feasible_only_after_cached_package_new_world_validation": true,
     "live_executed": false
-  }
+  },
+  "native_close_review_task": 111
 }
