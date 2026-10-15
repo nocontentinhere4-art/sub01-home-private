@@ -1,0 +1,82 @@
+{
+  "schema": "sub01.independent-serialized-original-body-preservation.v1",
+  "original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "candidate_sha256": "9dc705a63b4f071fa28b8bc141d2a58502d1d21a94558dd33792702b19e2b826",
+  "original_binary_prefix_exact": true,
+  "original_body_nodes_and_ibms_exact": 25,
+  "changed_finger_bones": 40,
+  "retained_original_vertices": 237267,
+  "retained_original_changed_finger_influences": 0,
+  "original_primitives": [
+    {
+      "mesh": 0,
+      "primitive": 0,
+      "retained_vertices": 151152,
+      "retained_triangles": 286134,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    },
+    {
+      "mesh": 0,
+      "primitive": 1,
+      "retained_vertices": 52649,
+      "retained_triangles": 61296,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    },
+    {
+      "mesh": 1,
+      "primitive": 0,
+      "retained_vertices": 15786,
+      "retained_triangles": 28848,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    },
+    {
+      "mesh": 2,
+      "primitive": 0,
+      "retained_vertices": 2880,
+      "retained_triangles": 5520,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    },
+    {
+      "mesh": 3,
+      "primitive": 0,
+      "retained_vertices": 247,
+      "retained_triangles": 237,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    },
+    {
+      "mesh": 4,
+      "primitive": 0,
+      "retained_vertices": 14553,
+      "retained_triangles": 25801,
+      "changed_finger_influences": 0,
+      "all_original_attributes_exact": true
+    }
+  ],
+  "retired_original_triangles": 22422,
+  "independently_matched_crossing_triangles": 482,
+  "clipped_sleeve_triangles": 722,
+  "clipped_sleeve_vertices": 2166,
+  "max_fragment_position_error_mesh_units": 4.831322830727177e-8,
+  "max_fragment_uv_error": 0.000007641077762798876,
+  "max_fragment_normalized_weight_error": 0,
+  "clipped_sleeve_changed_finger_influences": 0,
+  "fragments": [
+    {
+      "source_material": 0,
+      "fragment_triangles": 360
+    },
+    {
+      "source_material": 0,
+      "fragment_triangles": 362
+    }
+  ],
+  "static_skin_algebra": "Every retained original vertex has byte-exact position/UV/weights and exclusively unchanged nonfinger joint transforms/IBMs. Therefore its world skin is identical under equivalent body joint transforms.",
+  "clipped_sleeve_deformed_surface_audit_pending": true,
+  "walking_pose_audit_pending": true,
+  "native_or_contact_accepted": false
+}

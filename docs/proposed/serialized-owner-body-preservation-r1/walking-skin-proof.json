@@ -1,0 +1,209 @@
+{
+  "schema": "sub01.independent-serialized-owner-captured-walking-skin.v1",
+  "original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "candidate_sha256": "9dc705a63b4f071fa28b8bc141d2a58502d1d21a94558dd33792702b19e2b826",
+  "actual_equivalent_body_channels_exact": 26,
+  "frames": 32,
+  "retained_original_vertex_frame_checks": 7592544,
+  "clipped_sleeve_vertex_frame_checks": 69312,
+  "max_unchanged_body_skin_matrix_error": 0,
+  "max_retained_original_skin_world_error_m": 0,
+  "max_clipped_sleeve_vs_deformed_original_surface_error_m": 4.831323130924464e-8,
+  "records": [
+    {
+      "frame": 0,
+      "time_s": 0,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132268186898e-8
+    },
+    {
+      "frame": 1,
+      "time_s": 0.03333333507180214,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322916399045e-8
+    },
+    {
+      "frame": 2,
+      "time_s": 0.06666667014360428,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132257005935e-8
+    },
+    {
+      "frame": 3,
+      "time_s": 0.10000000149011612,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322746538343e-8
+    },
+    {
+      "frame": 4,
+      "time_s": 0.13333334028720856,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322572672156e-8
+    },
+    {
+      "frame": 5,
+      "time_s": 0.1666666716337204,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313225851667514e-8
+    },
+    {
+      "frame": 6,
+      "time_s": 0.20000000298023224,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313225874430135e-8
+    },
+    {
+      "frame": 7,
+      "time_s": 0.23333333432674408,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322771359001e-8
+    },
+    {
+      "frame": 8,
+      "time_s": 0.2666666805744171,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313226985750014e-8
+    },
+    {
+      "frame": 9,
+      "time_s": 0.30000001192092896,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322526996264e-8
+    },
+    {
+      "frame": 10,
+      "time_s": 0.3333333432674408,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313224818394084e-8
+    },
+    {
+      "frame": 11,
+      "time_s": 0.36666667461395264,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313227900302664e-8
+    },
+    {
+      "frame": 12,
+      "time_s": 0.4000000059604645,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132251188736e-8
+    },
+    {
+      "frame": 13,
+      "time_s": 0.4333333373069763,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132262437091e-8
+    },
+    {
+      "frame": 14,
+      "time_s": 0.46666666865348816,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322708469452e-8
+    },
+    {
+      "frame": 15,
+      "time_s": 0.5,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322895139961e-8
+    },
+    {
+      "frame": 16,
+      "time_s": 0.5333333611488342,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322872766494e-8
+    },
+    {
+      "frame": 17,
+      "time_s": 0.5666666626930237,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322382551829e-8
+    },
+    {
+      "frame": 18,
+      "time_s": 0.6000000238418579,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132275012117e-8
+    },
+    {
+      "frame": 19,
+      "time_s": 0.6333333253860474,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831323063305136e-8
+    },
+    {
+      "frame": 20,
+      "time_s": 0.6666666865348816,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322535988763e-8
+    },
+    {
+      "frame": 21,
+      "time_s": 0.699999988079071,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313226257957654e-8
+    },
+    {
+      "frame": 22,
+      "time_s": 0.7333333492279053,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313224740048903e-8
+    },
+    {
+      "frame": 23,
+      "time_s": 0.7666666507720947,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.83132310317106e-8
+    },
+    {
+      "frame": 24,
+      "time_s": 0.800000011920929,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322613888775e-8
+    },
+    {
+      "frame": 25,
+      "time_s": 0.8333333134651184,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322286503259e-8
+    },
+    {
+      "frame": 26,
+      "time_s": 0.8666666746139526,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.8313227197412066e-8
+    },
+    {
+      "frame": 27,
+      "time_s": 0.8999999761581421,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831323130924464e-8
+    },
+    {
+      "frame": 28,
+      "time_s": 0.9333333373069763,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322829888588e-8
+    },
+    {
+      "frame": 29,
+      "time_s": 0.9666666388511658,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831323092299273e-8
+    },
+    {
+      "frame": 30,
+      "time_s": 1,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322284916291e-8
+    },
+    {
+      "frame": 31,
+      "time_s": 1.0333333015441895,
+      "retained_original_max_world_error_m": 0,
+      "clipped_sleeve_vs_deformed_original_triangle_max_error_m": 4.831322536901793e-8
+    }
+  ],
+  "all_5_original_body_meshes_checked": true,
+  "new_hand_and_cuff_meshes_excluded": true,
+  "native_or_contact_accepted": false
+}
