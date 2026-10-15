@@ -22,13 +22,13 @@ def selected_source(name):
     p = Path(name)
     if p.is_absolute() or '..' in p.parts:
         return False
-    return (p.suffix in {'.py', '.cjs', '.js', '.json', '.html', '.css', '.wasm'}
+    return (p.suffix in {'.py', '.cjs', '.js', '.json', '.html', '.css', '.wasm', '.csv', '.npz'}
             and ('/' not in name or name.startswith((
                 'computer/', 'games/minecraft/', 'scripts/home_',
                 'tools/unreal_home_state_bridge',
                 'tools/pixel_streaming/native_live',
                 'tools/pixel_streaming/native_view',
-                'tools/pixel_streaming/native_input', 'twin/data/'))))
+                'tools/pixel_streaming/native_input', 'twin/', 'spiking/', 'web/'))))
 
 
 def prepare(root, output):
