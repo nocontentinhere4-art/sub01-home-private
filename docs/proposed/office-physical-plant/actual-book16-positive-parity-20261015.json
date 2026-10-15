@@ -1,0 +1,70 @@
+{
+  "schema": "sub01.book16-positive-surface-parity.v1",
+  "read_only": true,
+  "actual_gzip_sha256": "570a057f489b890c9634deffa7c259ae480e41c3fb4050ffc58839096176f935",
+  "source_nominal_triangles": 3364,
+  "discarded_exact_zero_area_triangle_indices": [
+    3268,
+    3269,
+    3270,
+    3271,
+    3272,
+    3273,
+    3274,
+    3275,
+    3276,
+    3277,
+    3278,
+    3279,
+    3280,
+    3281,
+    3282,
+    3283,
+    3284,
+    3285,
+    3286,
+    3287,
+    3288,
+    3289,
+    3290,
+    3291
+  ],
+  "positive_area_source": {
+    "triangles": 3340,
+    "world_bounds_cm": [
+      [
+        188.23285102844238,
+        -372.9687072336674,
+        206.80000779310603
+      ],
+      [
+        190.05725169554353,
+        -356.10395818948746,
+        230.92226535081863
+      ]
+    ],
+    "exact_zero_area_triangle_count": 0,
+    "first_zero_area_triangle_indices": [],
+    "minimum_area_squared_cm4": 1.9875225391602327e-11
+  },
+  "native_clone": {
+    "triangles": 3340,
+    "world_bounds_cm": [
+      [
+        188.23285102844238,
+        -372.96870708465576,
+        206.80000779310603
+      ],
+      [
+        190.05725169181824,
+        -356.1039581298828,
+        230.9222650527954
+      ]
+    ],
+    "exact_zero_area_triangle_count": 0,
+    "first_zero_area_triangle_indices": [],
+    "minimum_area_squared_cm4": 1.9881946247330165e-11
+  },
+  "all_positive_area_triangles_match_existing_002cm_tolerance": true,
+  "comparison_seconds": 0.04292637499747798
+}

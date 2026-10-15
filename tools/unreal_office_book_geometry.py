@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 from home_asset_audit import read_gltf
+from plant_physical_geometry import partition
 from real_office_plant import native_geometry_api_audit
 import importlib,unreal_owned_mesh_source_geometry
 prepare=importlib.reload(unreal_owned_mesh_source_geometry).prepare
@@ -14,12 +15,22 @@ SOURCE=Path('/workspace/sub01-home-private/out/real-books-complete/real-shelf-bo
 DEST='/Game/Sub01Home/RealOfficeBooks/V_611a3d848858_FullSource'
 
 
+def physical_source(raw,book):
+ positive,zero=partition(raw)
+ if zero and (book!='SUB01_RealBook_16' or len(raw)!=3364 or zero!=list(range(3268,3292))):raise RuntimeError('Unreviewed complete book zero-area source padding')
+ return positive,zero
+
+
 def preflight(u,c,plan,surface,close):
+ nominal=plan['actual_source_triangle_count'];expected=nominal
+ if plan['id']=='SUB01_RealBook_16':
+  if nominal!=3364:raise RuntimeError('Exact611 book16 nominal source count changed')
+  expected=3340
  points,count=surface(u,c);bounds=[[f(p[k]for p in points)for k in range(3)]for f in(min,max)]
  wanted=[[v*100 for v in b]for b in plan['old_bounds_ue_m']]
- if count==plan['actual_source_triangle_count']and all(close(a,b)for a,b in zip(bounds,wanted)):return False
+ if count==expected and all(close(a,b)for a,b in zip(bounds,wanted)):return False
  mesh=c.get_editor_property('static_mesh');audit=native_geometry_api_audit(u,mesh)
- details={'book':plan['id'],'mesh':mesh.get_path_name(),'actual_triangle_count':count,'expected_source_triangle_count':plan['actual_source_triangle_count'],'actual_bounds_cm':bounds,'expected_bounds_cm':wanted,'geometry_api_audit':audit}
+ details={'book':plan['id'],'mesh':mesh.get_path_name(),'actual_triangle_count':count,'expected_source_triangle_count':expected,'nominal_source_triangle_count':nominal,'discarded_exact_zero_area_triangle_indices':list(range(3268,3292))if plan['id']=='SUB01_RealBook_16'else[],'actual_bounds_cm':bounds,'expected_bounds_cm':wanted,'geometry_api_audit':audit}
  target=Path(u.Paths.project_dir())/'private-audit'/'office-book-native-refusal.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(details,indent=2)+'\n')
  settings=audit.get('nanite_settings',{});apis=audit.get('subsystem_apis',{})
  if settings.get('enabled')is True and settings.get('keep_percent_triangles')==1. and settings.get('trim_relative_error')==0. and apis.get('get_nanite_settings')and apis.get('set_nanite_settings'):return True
@@ -54,11 +65,11 @@ def stage(u,books,eas,needed):
    temp.set_actor_label('SUB01_OfficeBook_SourceProof_'+p['id']);temp.set_actor_hidden_in_game(True)
    tc=temp.get_component_by_class(u.StaticMeshComponent);temporary[-1]=(temp,tc);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
    for slot,material in enumerate(c.get_materials()):tc.set_material(slot,material)
-   wanted=triangles(doc,binary,nodes[p['id']]);actual=native_triangles(u,tc)
-   if len(wanted)!=p['actual_source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned complete book full source triangles differ '+p['id'])
+   raw=triangles(doc,binary,nodes[p['id']]);wanted,zero=physical_source(raw,p['id']);actual=native_triangles(u,tc)
+   if len(raw)!=p['actual_source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned complete book full source triangles differ '+p['id'])
    if [m.get_path_name()if m else None for m in tc.get_materials()]!=[m.get_path_name()if m else None for m in c.get_materials()]:raise RuntimeError('Owned full-source book material bindings changed')
    replacements[c.get_path_name()]=clone
-   proof.append({'book':p['id'],'original_mesh':key,'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
+   proof.append({'book':p['id'],'original_mesh':key,'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'nominal_source_triangles':len(raw),'discarded_exact_zero_area_triangle_indices':zero,'all_positive_area_source_surfaces_preserved':True,'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
    release_temporary(eas,temp,tc);temporary.pop();temp=tc=clone=None
   return {'destination':dest,'replacements':replacements,'proof':proof}
  finally:

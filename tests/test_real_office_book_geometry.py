@@ -45,6 +45,14 @@ class CompleteBooks(unittest.TestCase):
      self.assertEqual(len({m.get_path_name()for m in created}),20)
    for i,(a,c,p)in enumerate(books):self.assertIs(c.mesh,originals[i%20])
    self.assertTrue(all(m.settings['enabled']for m in originals))
+ def test_only_actual24_padding_faces_can_be_excluded_and_tiny_surfaces_survive(self):
+  tiny=[[[0.,0.,0.],[1e-12,0.,0.],[0.,1e-12,0.]]]
+  zero=[[[0.,0.,0.],[1.,0.,0.],[1.,0.,0.]]]
+  raw=TRI*3268+zero*24+tiny+TRI*71
+  positive,ids=B.physical_source(raw,'SUB01_RealBook_16')
+  self.assertEqual(len(positive),3340);self.assertEqual(ids,list(range(3268,3292)));self.assertIn(tiny[0],positive)
+  with self.assertRaisesRegex(RuntimeError,'Unreviewed'):B.physical_source(raw,'SUB01_RealBook_17')
+  with self.assertRaisesRegex(RuntimeError,'Unreviewed'):B.physical_source(TRI+zero,'SUB01_RealBook_16')
  def test_complete46_world_proofs_share_only20_owned_rebuilds(self):self.exercise()
  def test_failed_later_book_proof_detaches_and_quarantines_without_binding_originals(self):self.exercise(True)
 if __name__=='__main__':unittest.main()
