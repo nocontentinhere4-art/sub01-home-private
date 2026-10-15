@@ -19,7 +19,7 @@ from unreal_owned_import_cleanup import detach_added
 from unreal_import_real_home_windows import clear_glass
 ROOT=Path('/workspace/sub01-home-private/authentic-bath-doors-fit-r3/output')
 SHA='b8d190b7d7cf274126b4be35cf2ccf447b25c742da037cc222c43fe57f437a92'
-REMAINDERS={163:('1e5d7bfa523fdf9f279a699e6a6de0be598a36640867fe6b795e57ee47aef1ec',1680,8),167:('fc5d6a36471ff6192628149685a21f4478d53a0ab75dc4c6bdc9cbfaf6e2296d',192,68)}
+REMAINDERS={167:('fc5d6a36471ff6192628149685a21f4478d53a0ab75dc4c6bdc9cbfaf6e2296d',192,68)}
 
 def source_proof(root=ROOT):
  report=json.loads((root/'source-report.json').read_text());proof=json.loads((root/'remainder-proof.json').read_text());source=root/'bath-fixtures.glb'
@@ -77,10 +77,23 @@ def run(dry_run=True):
   if not m or(mesh_path and m.get_path_name()!=mesh_path)or bool(a.get_editor_property('hidden'))or not c.get_editor_property('visible'):raise RuntimeError('Exact live retiredfixture binding required '+a.get_path_name())
   if expected is not None and not same_triangles(expected,native_triangles(u,c)):raise RuntimeError('Retiredfixture full native surface differs '+a.get_path_name())
   old.append((a,c,bool(a.get_editor_property('hidden')),bool(c.get_editor_property('visible')),a.is_temporarily_hidden_in_editor(),capture(u,c)));return c
- for ni in (119,121,122,163,167):
+ for ni in (119,121,122,167):
   found=[a for a in original if a.get_name()==f'full-home_node_{ni}']
   if len(found)!=1:raise RuntimeError('Exact existing bathroom source node required '+str(ni))
   c=take(found[0],expected_triangles(hd,hb,ni));originals[ni]=c
+ # Rails and office already retired the fullchrome163; its sole live160face
+ # union is EXACTLY the old bathroom tap+shower pipe. Retire that union only,
+ # never restore the1680 unrelatedfaces (approved realstairs replaced them).
+ found=[a for a in original if a.get_name()=='full-home_node_163']
+ if len(found)!=1:raise RuntimeError('Exact hidden originalchrome163 required')
+ cs=found[0].get_components_by_class(u.StaticMeshComponent)
+ if len(cs)!=1 or not bool(found[0].get_editor_property('hidden'))or cs[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION or cs[0].get_editor_property('static_mesh').get_path_name()!='/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_122.Mesh_122':raise RuntimeError('Fullchrome163 must remain alreadyhidden/NoCollision')
+ union=json.loads((audit/'native-structural-lamp-union.json').read_text())
+ if union.get('union_sha256')!='920edd7a573eaddf186929f026365e3d20fb7db0bcfaa215bcd3f26d3e41e74e' or union.get('source_sha256')!=SOURCE_SHA or not union.get('roundtrip',{}).get('ok'):raise RuntimeError('Exact saved160face bathroom-only chrome union required')
+ path=union['new_union_component'];matches=[a for a in original if any(c.get_path_name()==path for c in a.get_components_by_class(u.StaticMeshComponent))]
+ if len(matches)!=1:raise RuntimeError('Current bathroom-only chrome union not unique')
+ c=take(matches[0],expected_triangles(hd,hb,163)[1640:1800])
+ if not c.get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/StructuralLampUnionMeshOnly/V_920edd7a573e/')or c.get_material(0)!=cs[0].get_material(0):raise RuntimeError('Exact160face union ownedmesh/material differs')
  # Prior picture retirement left only bathroom mirrorframe+cabinet. Do not
  # resurrect the first600 picture backings which were intentionally removed.
  frames=json.loads((audit/'frame-backings-retired.json').read_text());path=frames['remainder_actor'];a=by_path.get(path)
