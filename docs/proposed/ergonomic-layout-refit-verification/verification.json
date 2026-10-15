@@ -1742,7 +1742,7 @@
    },
    "SitToType_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_SitToType_seated_refit.glb",
-    "sha256": "0a62bdbb32b7d63e4b0d7d8f744035533545e10e75e1145e4c1ca93b981136c8",
+    "sha256": "b47ac95e9e5ecb5b72c9612f568cd458be005046e2773fce7135e57cf470085d",
     "clip_source": "proposal",
     "frames": 37,
     "chair_rule": "explicit per-frame translations (proposal)",
@@ -2026,13 +2026,13 @@
       },
       "forearm": {
        "worktop": {
-        "value": 2.2041,
+        "value": 2.2116,
         "frame": 25,
         "t": 0.8333,
         "node": 44
        },
        "apron": {
-        "value": 6.676,
+        "value": 6.6854,
         "frame": 26,
         "t": 0.8667,
         "node": 47
@@ -2044,7 +2044,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 7.396,
+        "value": 7.405,
         "frame": 26,
         "t": 0.8667,
         "node": 32
@@ -2070,13 +2070,13 @@
       },
       "hand": {
        "worktop": {
-        "value": 0.5961,
+        "value": 0.5976,
         "frame": 17,
         "t": 0.5667,
         "node": 44
        },
        "apron": {
-        "value": 4.9735,
+        "value": 4.981,
         "frame": 26,
         "t": 0.8667,
         "node": 47
@@ -2088,7 +2088,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 5.6563,
+        "value": 5.664,
         "frame": 26,
         "t": 0.8667,
         "node": 32
@@ -2114,9 +2114,9 @@
       },
       "fingers": {
        "worktop": {
-        "value": -1.5205,
-        "frame": 18,
-        "t": 0.6,
+        "value": -1.5193,
+        "frame": 17,
+        "t": 0.5667,
         "node": 44
        },
        "apron": {
@@ -2132,7 +2132,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 2.6358,
+        "value": 2.6284,
         "frame": 36,
         "t": 1.2,
         "node": 32
@@ -2157,8 +2157,8 @@
        }
       }
      },
-     "min_cm_excluding_fingers": 0.5961,
-     "fingers_min_cm_diagnostic": -1.5205,
+     "min_cm_excluding_fingers": 0.5976,
+     "fingers_min_cm_diagnostic": -1.5193,
      "pass": true
     },
     "torso_head_vs_desk": {
@@ -2231,7 +2231,7 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "f4f132f1c0385487ce7b0b1b52e449072ea72790a3d87dd162213270eca2eef2",
+    "sha256": "d5a85367a6e40471b8362db5018f2cd98546b6d2356b6f49a67d95db71792bd1",
     "clip_source": "proposal",
     "frames": 989,
     "chair_rule": "roll * smootherstep(s), s 1.0",
@@ -2471,9 +2471,9 @@
       },
       "upper_arm": {
        "worktop": {
-        "value": 13.2472,
-        "frame": 779,
-        "t": 12.9833,
+        "value": 13.2953,
+        "frame": 790,
+        "t": 13.1667,
         "node": 44
        },
        "apron": {
@@ -2515,13 +2515,13 @@
       },
       "forearm": {
        "worktop": {
-        "value": 0.2581,
-        "frame": 747,
-        "t": 12.45,
+        "value": 0.293,
+        "frame": 669,
+        "t": 11.15,
         "node": 44
        },
        "apron": {
-        "value": 6.0062,
+        "value": 6.4933,
         "frame": 947,
         "t": 15.7833,
         "node": 47
@@ -2533,10 +2533,10 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.9471,
-        "frame": 948,
-        "t": 15.8,
-        "node": 32
+        "value": 7.1719,
+        "frame": 642,
+        "t": 10.7,
+        "node": 53
        },
        "grommet": {
         "value": 15.0,
@@ -2559,15 +2559,15 @@
       },
       "hand": {
        "worktop": {
-        "value": 1.8117,
+        "value": 1.7906,
         "frame": 572,
         "t": 9.5333,
         "node": 44
        },
        "apron": {
-        "value": 5.4265,
-        "frame": 583,
-        "t": 9.7167,
+        "value": 5.4144,
+        "frame": 573,
+        "t": 9.55,
         "node": 47
        },
        "leg": {
@@ -2577,9 +2577,9 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.0678,
-        "frame": 150,
-        "t": 2.5,
+        "value": 6.1754,
+        "frame": 600,
+        "t": 10.0,
         "node": 32
        },
        "grommet": {
@@ -2621,7 +2621,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 1.9865,
+        "value": 1.9635,
         "frame": 746,
         "t": 12.4333,
         "node": 32
@@ -2646,7 +2646,7 @@
        }
       }
      },
-     "min_cm_excluding_fingers": 0.2581,
+     "min_cm_excluding_fingers": 0.293,
      "fingers_min_cm_diagnostic": -1.5205,
      "pass": true
     },
@@ -2710,20 +2710,20 @@
       }
      },
      "right": {
-      "frames_over_keys": 606,
+      "frames_over_keys": 607,
       "gap_cm_range": [
-       -4.2095,
-       4.4209
+       -4.1942,
+       3.8131
       ],
       "worst_penetration": {
-       "value": -4.2095,
+       "value": -4.1942,
        "frame": 750,
        "t": 12.5
       },
       "worst_gap": {
-       "value": 4.4209,
-       "frame": 166,
-       "t": 2.7667
+       "value": 3.8131,
+       "frame": 165,
+       "t": 2.75
       }
      }
     },
@@ -2731,7 +2731,7 @@
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "21807715f6aef3584d407f22de0a5c92343594192e6542934e51d74c9a05f779",
+    "sha256": "896a6fc4c3758379fc7c3923f5662d26b6e3db64b3d1e2f9a67c2517575c4de9",
     "clip_source": "proposal",
     "frames": 29,
     "chair_rule": "explicit per-frame translations (proposal)",
@@ -3015,13 +3015,13 @@
       },
       "forearm": {
        "worktop": {
-        "value": 2.5797,
+        "value": 2.5809,
         "frame": 1,
         "t": 0.0333,
         "node": 44
        },
        "apron": {
-        "value": 6.8286,
+        "value": 6.8589,
         "frame": 1,
         "t": 0.0333,
         "node": 47
@@ -3033,7 +3033,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 7.5385,
+        "value": 7.5693,
         "frame": 1,
         "t": 0.0333,
         "node": 32
@@ -3065,7 +3065,7 @@
         "node": 44
        },
        "apron": {
-        "value": 5.3981,
+        "value": 5.4063,
         "frame": 1,
         "t": 0.0333,
         "node": 47
@@ -3077,7 +3077,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.1769,
+        "value": 6.1859,
         "frame": 1,
         "t": 0.0333,
         "node": 32
@@ -3103,13 +3103,13 @@
       },
       "fingers": {
        "worktop": {
-        "value": -1.5195,
-        "frame": 11,
-        "t": 0.3667,
+        "value": -1.5194,
+        "frame": 8,
+        "t": 0.2667,
         "node": 44
        },
        "apron": {
-        "value": 1.339,
+        "value": 1.2293,
         "frame": 9,
         "t": 0.3,
         "node": 47
@@ -3121,7 +3121,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 1.7529,
+        "value": 1.691,
         "frame": 10,
         "t": 0.3333,
         "node": 53
@@ -3147,7 +3147,7 @@
       }
      },
      "min_cm_excluding_fingers": 0.6,
-     "fingers_min_cm_diagnostic": -1.5195,
+     "fingers_min_cm_diagnostic": -1.5194,
      "pass": true
     },
     "torso_head_vs_desk": {
@@ -3802,13 +3802,13 @@
      "Right": 0.0
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 5.5764,
+     "value": 5.5766,
      "joint": "HeadTop_End"
     },
-    "velocity_delta_cm_s_hips": 0.7566,
+    "velocity_delta_cm_s_hips": 0.7568,
     "velocity_delta_cm_s_hands": {
-     "Left": 0.4878,
-     "Right": 0.4142
+     "Left": 0.4882,
+     "Right": 0.4146
     },
     "neighbour_step_cm_max_body": 0.1647,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0,
@@ -3838,13 +3838,13 @@
      "Right": 0.0321
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 5.3049,
+     "value": 5.3367,
      "joint": "RightHand"
     },
-    "velocity_delta_cm_s_hips": 0.7518,
+    "velocity_delta_cm_s_hips": 0.751,
     "velocity_delta_cm_s_hands": {
-     "Left": 4.7894,
-     "Right": 5.3049
+     "Left": 4.7899,
+     "Right": 5.3367
     },
     "neighbour_step_cm_max_body": 0.1691,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0425,
@@ -3852,12 +3852,12 @@
     "seam_accel_ratio_vs_capture_peak": {
      "Hips": 1.172,
      "LeftHand": 1.916,
-     "RightHand": 0.208
+     "RightHand": 0.209
     },
     "seam_accel_cm_s2": {
      "Hips": 43.3,
      "LeftHand": 288.7,
-     "RightHand": 319.4
+     "RightHand": 321.3
     },
     "accel_over_capture_peak": true
    },
@@ -3865,35 +3865,35 @@
     "from": "DeskTyping_seated.last",
     "to": "DeskTyping_seated.first",
     "position_delta_cm_max_body": {
-     "value": 0.5354,
+     "value": 0.0261,
      "joint": "RightForeArm"
     },
     "position_delta_cm_hips": 0.0127,
     "position_delta_cm_hands": {
      "Left": 0.0161,
-     "Right": 0.0051
+     "Right": 0.0058
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 4.6177,
+     "value": 4.627,
      "joint": "RightForeArm"
     },
     "velocity_delta_cm_s_hips": 0.3843,
     "velocity_delta_cm_s_hands": {
      "Left": 0.3838,
-     "Right": 0.0176
+     "Right": 0.0855
     },
     "neighbour_step_cm_max_body": 0.0669,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0168,
-    "abrupt": true,
+    "abrupt": false,
     "seam_accel_ratio_vs_capture_peak": {
      "Hips": 0.369,
      "LeftHand": 0.153,
-     "RightHand": 0.001
+     "RightHand": 0.003
     },
     "seam_accel_cm_s2": {
      "Hips": 23.1,
      "LeftHand": 23.0,
-     "RightHand": 1.1
+     "RightHand": 5.1
     },
     "accel_over_capture_peak": false
    },
@@ -3910,13 +3910,13 @@
      "Right": 0.034
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 12.5968,
+     "value": 12.5971,
      "joint": "HeadTop_End"
     },
-    "velocity_delta_cm_s_hips": 0.5555,
+    "velocity_delta_cm_s_hips": 0.5553,
     "velocity_delta_cm_s_hands": {
-     "Left": 7.4769,
-     "Right": 7.1415
+     "Left": 7.4768,
+     "Right": 7.1229
     },
     "neighbour_step_cm_max_body": 0.448,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0486,
@@ -3929,7 +3929,7 @@
     "seam_accel_cm_s2": {
      "Hips": 15.4,
      "LeftHand": 223.4,
-     "RightHand": 213.8
+     "RightHand": 213.2
     },
     "accel_over_capture_peak": true
    },
@@ -3946,13 +3946,13 @@
      "Right": 0.0
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 5.4911,
+     "value": 5.4919,
      "joint": "HeadTop_End"
     },
-    "velocity_delta_cm_s_hips": 0.744,
+    "velocity_delta_cm_s_hips": 0.7447,
     "velocity_delta_cm_s_hands": {
-     "Left": 0.7582,
-     "Right": 0.6179
+     "Left": 0.7592,
+     "Right": 0.6196
     },
     "neighbour_step_cm_max_body": 0.1607,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0,
@@ -3960,7 +3960,7 @@
     "seam_accel_ratio_vs_capture_peak": {
      "Hips": 34.426,
      "LeftHand": 3.397,
-     "RightHand": 1.131
+     "RightHand": 1.133
     },
     "seam_accel_cm_s2": {
      "Hips": 20.7,
@@ -4113,8 +4113,8 @@
      "first_frames_over": [
       26
      ],
-     "world_with_roll_peak_cm_s2": 70.1,
-     "world_ratio": 1.901
+     "world_with_roll_peak_cm_s2": 70.0,
+     "world_ratio": 1.897
     },
     "LeftHand": {
      "capture_peak_cm_s2": 2052.5,
@@ -4137,7 +4137,7 @@
      "ratio": 0.399,
      "frames_over_capture_peak": 0,
      "first_frames_over": [],
-     "world_with_roll_peak_cm_s2": 618.1,
+     "world_with_roll_peak_cm_s2": 618.2,
      "world_ratio": 0.402
     }
    },
@@ -4194,11 +4194,11 @@
     "RightHand": {
      "capture_peak_cm_s2": 1582.1,
      "clip_peak_chair_frame": {
-      "value": 3730.9,
+      "value": 4075.1,
       "frame": 150
      },
-     "ratio": 2.358,
-     "frames_over_capture_peak": 18,
+     "ratio": 2.576,
+     "frames_over_capture_peak": 24,
      "first_frames_over": [
       148,
       149,
@@ -4209,22 +4209,24 @@
       156,
       157,
       158,
+      159,
+      568,
+      569,
+      570,
+      571,
+      743,
       744,
       745,
       746,
       747,
-      748,
-      752,
-      753,
-      754,
-      755
+      748
      ],
-     "world_with_roll_peak_cm_s2": 3730.9,
-     "world_ratio": 2.358
+     "world_with_roll_peak_cm_s2": 4075.1,
+     "world_ratio": 2.576
     }
    },
    "TypeToSit_seated": {
-    "chair_roll_peak_accel_cm_s2": 48.9,
+    "chair_roll_peak_accel_cm_s2": 48.7,
     "capture": "web/room/mh_mx/room_mx_type_to_sit.glb",
     "capture_fps": 30.0,
     "clip_fps": 30.0,
@@ -4258,8 +4260,8 @@
       19,
       20
      ],
-     "world_with_roll_peak_cm_s2": 62.3,
-     "world_ratio": 104.872
+     "world_with_roll_peak_cm_s2": 62.2,
+     "world_ratio": 104.623
     },
     "LeftHand": {
      "capture_peak_cm_s2": 799.8,
@@ -4276,16 +4278,16 @@
     "RightHand": {
      "capture_peak_cm_s2": 1027.3,
      "clip_peak_chair_frame": {
-      "value": 1092.3,
+      "value": 1087.6,
       "frame": 5
      },
-     "ratio": 1.063,
+     "ratio": 1.059,
      "frames_over_capture_peak": 1,
      "first_frames_over": [
       5
      ],
-     "world_with_roll_peak_cm_s2": 1082.7,
-     "world_ratio": 1.054
+     "world_with_roll_peak_cm_s2": 1075.9,
+     "world_ratio": 1.047
     }
    },
    "GetUp_seated": {
@@ -4338,9 +4340,7 @@
     }
    }
   },
-  "abrupt_seams": [
-   "DeskTyping_seated.last -> DeskTyping_seated.first"
-  ],
+  "abrupt_seams": [],
   "seams_accel_over_capture_peak": [
    "SitDown_seated.last -> SeatedIdle.first",
    "SeatedIdle.last -> SeatedIdle.first",
@@ -4525,19 +4525,19 @@
    },
    "right": {
     "elbow_above_top_cm_min_med_max": [
-     -0.7,
-     1.35,
-     14.45
+     -0.83,
+     2.11,
+     15.82
     ],
     "elbow_z_cm_min_med_max": [
-     83.8,
-     85.85,
-     98.95
+     83.67,
+     86.61,
+     100.32
     ],
     "upper_arm_from_vertical_deg_min_med_max": [
-     27.75,
-     40.65,
-     74.3
+     31.72,
+     42.53,
+     77.41
     ],
     "clavicle_elevation_vs_idle_deg_min_med_max": [
      -11.22,
@@ -4545,24 +4545,24 @@
      5.43
     ],
     "wrist_flexion_deg_min_med_max": [
-     -33.72,
-     2.74,
-     26.73
+     -37.15,
+     0.68,
+     27.49
     ],
     "wrist_deviation_deg_min_med_max": [
-     -14.77,
-     2.26,
-     25.05
+     -17.71,
+     1.41,
+     22.71
     ],
     "context_wrist_joint_line_flexion_deg_min_med_max": [
-     -35.85,
-     -13.16,
-     1.7
+     -41.5,
+     -13.34,
+     1.3
     ],
     "context_wrist_joint_line_deviation_deg_min_med_max": [
-     -44.61,
-     -5.41,
-     22.79
+     -47.48,
+     -8.82,
+     23.16
     ],
     "context_bind_hand_joint_line_deg": [
      -14.91,
@@ -4571,19 +4571,19 @@
     "palm_down_share": 1.0,
     "worst": {
      "elbow_highest": {
-      "value": 14.4516,
-      "frame": 752,
-      "t": 12.5333
+      "value": 15.818,
+      "frame": 750,
+      "t": 12.5
      },
      "elbow_lowest": {
-      "value": -0.7007,
-      "frame": 501,
-      "t": 8.35
+      "value": -0.831,
+      "frame": 554,
+      "t": 9.2333
      },
      "upper_arm_max": {
-      "value": 74.2966,
-      "frame": 752,
-      "t": 12.5333
+      "value": 77.413,
+      "frame": 750,
+      "t": 12.5
      },
      "shoulder_shrug_max": {
       "value": 5.4339,
@@ -4591,32 +4591,32 @@
       "t": 3.7
      },
      "wrist_flexion_max": {
-      "value": 26.7321,
-      "frame": 735,
-      "t": 12.25
+      "value": 27.4866,
+      "frame": 732,
+      "t": 12.2
      },
      "wrist_extension_max": {
-      "value": -33.7159,
-      "frame": 794,
-      "t": 13.2333
+      "value": -37.1493,
+      "frame": 755,
+      "t": 12.5833
      },
      "wrist_radial_max": {
-      "value": 25.0469,
-      "frame": 149,
-      "t": 2.4833
+      "value": 22.713,
+      "frame": 148,
+      "t": 2.4667
      },
      "wrist_ulnar_max": {
-      "value": -14.7701,
-      "frame": 765,
-      "t": 12.75
+      "value": -17.712,
+      "frame": 766,
+      "t": 12.7667
      }
     },
     "share_of_frames_meeting": {
-     "elbow_above_desk": 0.7867,
+     "elbow_above_desk": 0.8655,
      "upper_arm": 0.0,
      "shoulder_elevation": 0.9757,
-     "wrist_flexion": 0.6724,
-     "wrist_deviation": 0.9484
+     "wrist_flexion": 0.6673,
+     "wrist_deviation": 0.9252
     },
     "pass": {
      "elbow_above_desk": false,
@@ -4637,21 +4637,21 @@
       ],
       "wrist_flexion_deg_min_max": [
        -24.97,
-       13.38
+       13.48
       ]
      },
      "TypeToSit_seated": {
       "elbow_above_top_cm_min_max": [
        -2.39,
-       7.92
+       7.93
       ],
       "upper_arm_deg_min_max": [
        25.27,
-       54.13
+       54.14
       ],
       "wrist_flexion_deg_min_max": [
        -24.99,
-       33.05
+       31.62
       ]
      },
      "SeatedIdle": {
@@ -4682,10 +4682,10 @@
   "5_ergonomics": false
  },
  "all_pass": false,
- "elapsed_s": 180.0,
+ "elapsed_s": 174.5,
  "layout": {
   "proposal_file": "docs/proposed/ergonomic-layout-refit/ergonomic-layout-refit.proposal.json",
-  "proposal_sha256": "bda603e87bbd1f34d56e3464aa7625ec581bdffe5cff0640d9969a0b292ce7aa",
+  "proposal_sha256": "8ff4cc903362c7d2b514005192061601b177229667f2e05a555197eb317fca00",
   "status": "final_candidate",
   "keyboard_delta_cm": [
    8.0,
@@ -4726,7 +4726,7 @@
    },
    "SitToType_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_SitToType_seated_refit.glb",
-    "sha256": "0a62bdbb32b7d63e4b0d7d8f744035533545e10e75e1145e4c1ca93b981136c8",
+    "sha256": "b47ac95e9e5ecb5b72c9612f568cd458be005046e2773fce7135e57cf470085d",
     "source": "proposal",
     "chair_translation_per_frame_cm": [
      [
@@ -4735,178 +4735,178 @@
       63.187678
      ],
      [
-      200.020745,
-      -186.6913,
+      200.020752,
+      -186.691311,
       63.187678
      ],
      [
-      200.026053,
-      -186.6999,
+      200.026059,
+      -186.69991,
       63.187678
      ],
      [
-      200.039691,
-      -186.722,
+      200.039671,
+      -186.721967,
       63.187678
      ],
      [
-      200.064624,
-      -186.7624,
+      200.064645,
+      -186.762435,
       63.187678
      ],
      [
-      200.103318,
-      -186.8251,
+      200.103347,
+      -186.825146,
       63.187678
      ],
      [
-      200.157503,
-      -186.9129,
+      200.157494,
+      -186.912886,
       63.187678
      ],
      [
-      200.228227,
-      -187.0275,
+      200.228206,
+      -187.027467,
       63.187678
      ],
      [
-      200.316045,
-      -187.1698,
+      200.316049,
+      -187.169806,
       63.187678
      ],
      [
-      200.421082,
-      -187.34,
+      200.421079,
+      -187.339995,
       63.187678
      ],
      [
-      200.542904,
-      -187.5374,
+      200.542893,
+      -187.537381,
       63.187678
      ],
      [
-      200.680649,
-      -187.7606,
+      200.680671,
+      -187.760636,
       63.187678
      ],
      [
-      200.833205,
-      -188.0078,
+      200.833227,
+      -188.007835,
       63.187678
      ],
      [
-      200.99903,
-      -188.2765,
+      200.999049,
+      -188.27653,
       63.187678
      ],
      [
-      201.176333,
-      -188.5638,
+      201.176348,
+      -188.563823,
       63.187678
      ],
      [
-      201.363079,
-      -188.8664,
+      201.363106,
+      -188.866444,
       63.187678
      ],
      [
-      201.557107,
-      -189.1808,
+      201.55712,
+      -189.180821,
       63.187678
      ],
      [
-      201.756071,
-      -189.5032,
+      201.756047,
+      -189.503161,
       63.187678
      ],
      [
-      201.957443,
-      -189.8295,
+      201.957456,
+      -189.829521,
       63.187678
      ],
      [
-      202.158876,
-      -190.1559,
+      202.158863,
+      -190.155879,
       63.187678
      ],
      [
-      202.357779,
-      -190.4782,
+      202.357792,
+      -190.47822,
       63.187678
      ],
      [
-      202.551807,
-      -190.7926,
+      202.551805,
+      -190.792597,
       63.187678
      ],
      [
-      202.738553,
-      -191.0952,
+      202.738563,
+      -191.095218,
       63.187678
      ],
      [
-      202.915856,
-      -191.3825,
+      202.915862,
+      -191.382511,
       63.187678
      ],
      [
-      203.08168,
-      -191.6512,
+      203.081684,
+      -191.651206,
       63.187678
      ],
      [
-      203.234237,
-      -191.8984,
+      203.23424,
+      -191.898405,
       63.187678
      ],
      [
-      203.372043,
-      -192.1217,
+      203.372019,
+      -192.12166,
       63.187678
      ],
      [
-      203.493804,
-      -192.319,
+      203.493832,
+      -192.319046,
       63.187678
      ],
      [
-      203.598841,
-      -192.4892,
+      203.598862,
+      -192.489235,
       63.187678
      ],
      [
-      203.686721,
-      -192.6316,
+      203.686705,
+      -192.631573,
       63.187678
      ],
      [
-      203.757445,
-      -192.7462,
+      203.757417,
+      -192.746155,
       63.187678
      ],
      [
-      203.811568,
-      -192.8339,
+      203.811564,
+      -192.833894,
       63.187678
      ],
      [
-      203.850262,
-      -192.8966,
+      203.850266,
+      -192.896606,
       63.187678
      ],
      [
-      203.875256,
-      -192.9371,
+      203.875241,
+      -192.937074,
       63.187678
      ],
      [
-      203.888833,
-      -192.9591,
+      203.888853,
+      -192.959131,
       63.187678
      ],
      [
-      203.894141,
-      -192.9677,
+      203.894159,
+      -192.96773,
       63.187678
      ],
      [
@@ -4919,14 +4919,14 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "f4f132f1c0385487ce7b0b1b52e449072ea72790a3d87dd162213270eca2eef2",
+    "sha256": "d5a85367a6e40471b8362db5018f2cd98546b6d2356b6f49a67d95db71792bd1",
     "source": "proposal",
     "chair_translation_per_frame_cm": null,
     "report": null
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/ergonomic-layout-refit/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "21807715f6aef3584d407f22de0a5c92343594192e6542934e51d74c9a05f779",
+    "sha256": "896a6fc4c3758379fc7c3923f5662d26b6e3db64b3d1e2f9a67c2517575c4de9",
     "source": "proposal",
     "chair_translation_per_frame_cm": [
      [
@@ -4935,138 +4935,138 @@
       63.187678
      ],
      [
-      203.893277,
-      -192.9663,
+      203.893284,
+      -192.966311,
       63.187678
      ],
      [
-      203.882292,
-      -192.9485,
+      203.882304,
+      -192.94852,
       63.187678
      ],
      [
-      203.854644,
-      -192.9037,
+      203.854626,
+      -192.903671,
       63.187678
      ],
      [
-      203.804779,
-      -192.8229,
+      203.804807,
+      -192.822945,
       63.187678
      ],
      [
-      203.72918,
-      -192.7004,
+      203.729185,
+      -192.700408,
       63.187678
      ],
      [
-      203.625748,
-      -192.5328,
+      203.625721,
+      -192.532756,
       63.187678
      ],
      [
-      203.493804,
-      -192.319,
+      203.493833,
+      -192.319046,
       63.187678
      ],
      [
-      203.334213,
-      -192.0604,
+      203.334237,
+      -192.060439,
       63.187678
      ],
      [
-      203.148763,
-      -191.7599,
+      203.148784,
+      -191.759934,
       63.187678
      ],
      [
-      202.940295,
-      -191.4221,
+      202.940298,
+      -191.422106,
       63.187678
      ],
      [
-      202.712386,
-      -191.0528,
+      202.712413,
+      -191.052844,
       63.187678
      ],
      [
-      202.469419,
-      -190.6591,
+      202.469411,
+      -190.659087,
       63.187678
      ],
      [
-      202.216085,
-      -190.2486,
+      202.216061,
+      -190.248561,
       63.187678
      ],
      [
-      201.957443,
-      -189.8295,
+      201.957456,
+      -189.829521,
       63.187678
      ],
      [
-      201.698863,
-      -189.4105,
+      201.69885,
+      -189.41048,
       63.187678
      ],
      [
-      201.445528,
-      -189.0,
+      201.4455,
+      -188.999954,
       63.187678
      ],
      [
-      201.2025,
-      -188.6062,
+      201.202498,
+      -188.606197,
       63.187678
      ],
      [
-      200.974591,
-      -188.2369,
+      200.974613,
+      -188.236934,
       63.187678
      ],
      [
-      200.766123,
-      -187.8991,
+      200.766127,
+      -187.899107,
       63.187678
      ],
      [
-      200.580673,
-      -187.5986,
+      200.580674,
+      -187.598602,
       63.187678
      ],
      [
-      200.421082,
-      -187.34,
+      200.421079,
+      -187.339995,
       63.187678
      ],
      [
-      200.2892,
-      -187.1263,
+      200.289191,
+      -187.126285,
       63.187678
      ],
      [
-      200.185706,
-      -186.9586,
+      200.185726,
+      -186.958633,
       63.187678
      ],
      [
-      200.110107,
-      -186.8361,
+      200.110104,
+      -186.836096,
       63.187678
      ],
      [
-      200.060304,
-      -186.7554,
+      200.060285,
+      -186.75537,
       63.187678
      ],
      [
-      200.032594,
-      -186.7105,
+      200.032608,
+      -186.710522,
       63.187678
      ],
      [
-      200.021609,
-      -186.6927,
+      200.021628,
+      -186.69273,
       63.187678
      ],
      [
