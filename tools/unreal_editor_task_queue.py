@@ -17,10 +17,12 @@ TASKS = {
     'desk_preflight': 'unreal_real_desk_import_preflight',
     'real_office': 'unreal_import_real_office_bundle',
     'gaming_grip': 'unreal_import_gaming_grip',
+    'real_kitchen': 'unreal_import_real_kitchen',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
 OFFICE_EXPORT = Path('/workspace/sub01-home-private/out/real-office-bundle')
+KITCHEN_EXPORT = Path('/workspace/sub01-private-kitchen-3eb5419-20261015/proof-output-r2/uid1001')
 
 
 def owned(path, directory=False):
@@ -88,6 +90,8 @@ def dispatch(task):
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'real_kitchen':
+        return module.run(KITCHEN_EXPORT, dry_run=False)
     if task == 'gaming_grip':
         # Import verified source on the existing skeleton; this does not bind gameplay.
         return module.main(importlib.import_module('unreal'))

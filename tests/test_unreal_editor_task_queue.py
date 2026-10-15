@@ -181,3 +181,14 @@ def test_grip_dispatch_uses_loaded_editor_and_no_request_supplied_path(monkeypat
     monkeypatch.setattr(module.importlib,'reload',lambda value:value)
     module.dispatch('gaming_grip')
     assert calls==[native]
+
+
+def test_kitchen_dispatch_uses_frozen_proven_export_and_no_runtime_enable(monkeypatch):
+    import tools.unreal_editor_task_queue as module
+    from types import SimpleNamespace
+    calls=[]
+    importer=SimpleNamespace(run=lambda root,**kw:calls.append((str(root),kw)))
+    monkeypatch.setattr(module.importlib,'import_module',lambda name:importer)
+    monkeypatch.setattr(module.importlib,'reload',lambda value:value)
+    module.dispatch('real_kitchen')
+    assert calls==[('/workspace/sub01-private-kitchen-3eb5419-20261015/proof-output-r2/uid1001',{'dry_run':False})]
