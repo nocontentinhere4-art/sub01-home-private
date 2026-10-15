@@ -28,7 +28,7 @@ def deploy():
                         (proc / 'stat').read_text().rsplit(')', 1)[1].split()[0] != 'Z'), 'Live Unreal module must never be overwritten'
         except OSError:
             continue
-    proof = json.loads((SIBLING / 'actual-native-compile-kitchen-reload-artifact-proof.json').read_text())
+    proof = json.loads((SIBLING / 'actual-native-compile-coherent-phone-artifact-proof.json').read_text())
     assert proof['actual_exit'] == 0 and proof['build_id'] == '55116800'
     source, target = SIBLING / 'Binaries/Linux', PROJECT / 'Binaries/Linux'
     for name, expected in HASHES.items():
