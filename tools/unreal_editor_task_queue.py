@@ -41,6 +41,7 @@ TASKS = {
     'phone_grip': 'unreal_import_phone_grip',
     'frame_backings': 'unreal_remove_frame_backings',
     'real_wc': 'unreal_import_real_wc',
+    'real_bathroom_pendant': 'unreal_import_real_bathroom_pendant',
     'architecture_lumen_audit': 'unreal_architecture_lumen_audit',
     'desk_lamp_shadow_audit': 'unreal_desk_lamp_shadow_audit',
     'lumen_surface_review': 'unreal_lumen_surface_review',
@@ -49,6 +50,7 @@ TASKS = {
 DESK_EXPORT = None
 OFFICE_EXPORT = Path('/workspace/sub01-home-private/out/real-office-bundle')
 KITCHEN_EXPORT = Path('/workspace/sub01-private-kitchen-3eb5419-20261015/proof-output-r2/uid1001')
+BATHROOM_PENDANT_EXPORT = Path('/workspace/sub01-home-private/real-bathroom-pendant-source/split-v3/bathroom-pendant.glb')
 
 
 def owned(path, directory=False):
@@ -124,6 +126,8 @@ def dispatch(task):
         # The importer owns its frozen, proved source path and preserves shared
         # vanity/balcony geometry. Queue requests cannot override that packet.
         return module.run(dry_run=False)
+    if task == 'real_bathroom_pendant':
+        return module.run(BATHROOM_PENDANT_EXPORT, dry_run=False)
     if task == 'nanite_materials_preflight':
         report = module.run(dry_run=True)
         audit = Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/nanite-material-preflight.json')
