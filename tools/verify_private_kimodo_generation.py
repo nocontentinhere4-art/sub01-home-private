@@ -1,10 +1,48 @@
 """One bounded offline Runpod-only motion generation, with CPU text encoding."""
 import json
+import math
+import re
 import os
 import sys
 import time
 from pathlib import Path
 
+
+
+def cli_prompt_segments(prompt):
+    """Match the pinned official CLI's period-delimited multi-prompt handling."""
+    segments = [part.strip() + '.' for part in prompt.split('.') if part.strip()]
+    if not segments:
+        raise ValueError('An actual prompt is required')
+    return segments
+
+
+def measured_generation_timing(bvh_text, npz_frames, requested_per_prompt_s, prompt,
+                               model_fps):
+    """Read the exported clock; duration is never inferred from requested seconds."""
+    frame_match = re.search(r'^Frames:\s*(\d+)\s*$', bvh_text, re.M)
+    clock_match = re.search(r'^Frame Time:\s*([0-9.eE+-]+)\s*$', bvh_text, re.M)
+    if not frame_match or not clock_match:
+        raise ValueError('BVH frame count and clock are required')
+    frames, dt = int(frame_match[1]), float(clock_match[1])
+    if frames < 2 or frames != npz_frames or not math.isfinite(dt) or dt <= 0:
+        raise ValueError('BVH and NPZ frame count/clock disagree')
+    if not math.isfinite(model_fps) or model_fps <= 0 or abs(1 / dt - model_fps) > 1e-5:
+        raise ValueError('Exported BVH clock differs from the actual model clock')
+    if not math.isfinite(requested_per_prompt_s) or requested_per_prompt_s <= 0:
+        raise ValueError('A positive per-prompt request is required')
+    segments = cli_prompt_segments(prompt)
+    expected = requested_per_prompt_s * len(segments)
+    actual = frames * dt
+    if abs(actual - expected) > dt + 1e-8:
+        raise ValueError('Actual frame duration differs from the segmented CLI request')
+    return {'requested_seconds_per_cli_prompt': requested_per_prompt_s,
+            'cli_prompt_segments': segments, 'cli_prompt_count': len(segments),
+            'requested_total_seconds': expected, 'actual_model_fps': model_fps,
+            'actual_bvh_fps': 1 / dt, 'actual_frame_count': frames,
+            'actual_sample_duration_seconds': actual,
+            'actual_last_sample_time_seconds': (frames - 1) * dt,
+            'clock_source': 'exported BVH Frame Time checked against pinned model config'}
 
 def main():
     import argparse
@@ -42,15 +80,21 @@ def main():
     output.mkdir(exist_ok=not args.steady_walk)
     basename = 'steady-walk' if args.steady_walk else 'relaxed-walk-stop'
     prompt = ('A person walks forward continuously at a steady comfortable walking pace, '
-              'with relaxed shoulders, natural alternating arm swing, and balanced footfalls. '
-              'They keep walking throughout, without starting, stopping, turning, or changing speed.'
+              'with relaxed shoulders, natural alternating arm swing, and balanced footfalls, '
+              'continuing throughout without starting, stopping, turning, or changing speed.'
               if args.steady_walk else
               'A person walks slowly forward with relaxed shoulders and natural arm swing, then gently comes to a stop')
     duration, seed = (6.0, 106) if args.steady_walk else (3.0, 105)
+    assert len(cli_prompt_segments(prompt)) == 1, 'Bounded generation requires exactly one CLI prompt'
     receipt = output / 'generation-receipt.json'
     report = {'schema': 'sub01.private-kimodo-generation.v1', 'started_epoch': time.time(),
               'prompt': prompt,
-              'duration_seconds': duration, 'seed': seed, 'text_encoder_device': 'cpu',
+              'duration_seconds': duration,
+              'duration_seconds_semantics': 'requested seconds per official CLI prompt segment',
+              'requested_seconds_per_cli_prompt': duration,
+              'cli_prompt_segments': cli_prompt_segments(prompt),
+              'requested_total_seconds': duration * len(cli_prompt_segments(prompt)),
+              'seed': seed, 'text_encoder_device': 'cpu',
               'gpu_memory_fraction_limit': 0.15, 'finished': False,
               'native_imported': False, 'contact_accepted': False}
     receipt.write_text(json.dumps(report, indent=2) + '\n')
@@ -105,6 +149,13 @@ def main():
             arrays = {k: {'shape': list(motion[k].shape), 'dtype': str(motion[k].dtype)} for k in motion.files}
             for key in ['posed_joints', 'global_rot_mats']:
                 assert np.isfinite(motion[key]).all(), 'Non-finite generated body motion'
+        import yaml
+        model_config = root / 'hf-cache/hub/models--nvidia--Kimodo-SOMA-RP-v1.1/snapshots/6c9233af1180b8151e3c4703477104af5dce9dd5/config.yaml'
+        config = yaml.safe_load(model_config.read_text())
+        model_fps = float(config['fps'])
+        report['timing'] = measured_generation_timing(
+            (output / (basename + '.bvh')).read_text(),
+            arrays['posed_joints']['shape'][0], duration, prompt, model_fps)
         report.update(finished=True, completed_epoch=time.time(), arrays=arrays,
                       npz_bytes=path.stat().st_size, gpu_peak_allocated_bytes=torch.cuda.max_memory_allocated())
     except Exception as error:
