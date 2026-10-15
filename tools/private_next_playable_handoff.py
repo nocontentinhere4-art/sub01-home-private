@@ -120,6 +120,7 @@ def run(target):
    with urllib.request.urlopen('http://127.0.0.1:8892/health',timeout=3)as response:return json.load(response)
   viewer_before=viewer_state();assert viewer_before.get('nativeAlive')and viewer_before.get('inputEnabled')and viewer_before.get('captureEnabled')and viewer_before.get('privacy')is False and viewer_before.get('viewMode')=='manual'
   assert type(viewer_before.get('acceptedInputs'))is int
+  assert viewer_before['acceptedInputs']==approval['pose_accepted_inputs'],'Human moved since pose readback: refresh exact pose before handoff'
   snapshot=device_phase('preflight_before_handoff')
   viewer_after=viewer_state();assert viewer_after.get('acceptedInputs')==viewer_before['acceptedInputs'],'Human input arrived: preserve original Game and do not hand off'
   assert fresh(OLDPID,OLDSTART)
