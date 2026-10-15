@@ -441,6 +441,7 @@ SEARCH_CONTACT_PASSES = 4
 SWIVEL_ENVELOPE_S, SWIVEL_SMOOTH_S = .15, .1       # the seat fit's own envelope/smoothing rule (max filter, Gaussian)
 LIFT_STEP_CM, LIFT_MAX_CM = .25, 15.
 POLISH_GRID_CM = np.round(np.arange(-3., 3.0001, .05), 4)   # contact polish: vertical wrist corrections around the current
+POLISH_XY_CM = (.25, .5, 1.)                                 # horizontal hand moves tried when the gap jumps
 POLISH_ACCEPT_GAP_CM = (0., .16)                             # inside the 0.2 cm gap / 0.1 cm penetration key gate
 ROLL_OFFSET_CM = (3.875, -32.5)      # the seat fit's chair offset (docs/proposed/seat-pose-fit, chosen dy -32.5)
 SEARCH_REACH_CM = FOREARM_TARGET_CLEARANCE_CM + 1.5
@@ -1119,23 +1120,7 @@ class ClipArmIK:
         delta, phi, lift = ({s: np.array(v[s], float) for s in SIDES} for v in (self.delta, self.phi, self.lift))
         history = []
         if loop_frames:
-            n = int(loop_frames)
-            w = smootherstep((np.arange(n) + 1) / n)
-            for s in SIDES:
-                for arr in (phi[s], lift[s]):
-                    arr[F - n:] += (arr[0] - arr[F - n:]) * w
-                self.girdle[s] = np.array(self.girdle[s], float)
-                self.girdle[s][F - n:] += (self.girdle[s][0] - self.girdle[s][F - n:]) * w[:, None]
-                A, pole, wrist, hw, x = self.inputs[s]
-                pole, wrist, hw = pole.copy(), wrist.copy(), hw.copy()
-                pole[F - n:] += (pole[0] - pole[F - n:]) * w[:, None]
-                wrist[F - n:] += (wrist[0] - wrist[F - n:]) * w[:, None]
-                q = P.slerp_arrays(P.quat_from_matrix(unit_rot(hw[F - n:]))[:, None],
-                                   np.repeat(P.quat_from_matrix(unit_rot(hw[:1]))[:, None], n, axis=0), w)[:, 0]
-                hw[F - n:] = quat_to_matrix(q)
-                self.inputs[s] = (A, pole, wrist, hw, x)
-                dz = np.cross((wrist - A) / np.linalg.norm(wrist - A, axis=-1, keepdims=True), pole - A)[:, 1]
-                self.raise_sign[s] = np.where(dz >= 0, 1., -1.)
+            self.close_loop(int(loop_frames), phi, lift)
         self.exact_audit = True
         for s in SIDES:
             delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
@@ -1146,6 +1131,11 @@ class ClipArmIK:
             if girdle[s]['frames']:
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
                 self.clear_side(s, delta, phi, lift, history, 1)
+        if loop_frames:      # the clearance envelopes reach the clip ends: the tail parameters are blended again
+            self.close_loop(int(loop_frames), phi, lift, inputs=False)
+            n = int(loop_frames)
+            for s in SIDES:
+                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], np.arange(F - n, F), passes=CONTACT_PASSES)
         polish = {s: self.contact_polish(s, delta, phi, lift) for s in SIDES}
         self.delta, self.phi, self.lift = delta, phi, lift
         self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'girdle_clearance': girdle,
@@ -1155,6 +1145,29 @@ class ClipArmIK:
                               'segmentation_rule': keyboard_between_keys.__doc__.strip()}
         return self.pose_all()
 
+
+    def close_loop(self, n, phi, lift, inputs=True):
+        """Loop closure inputs: the last n frames' captured wrist, elbow pole and hand world rotation, and the swivel,
+        girdle and lift, C1-blended (quintic, weight 1 on the last frame) to frame 0's. Mutates inputs / phi / lift."""
+        F = len(self.times)
+        w = smootherstep((np.arange(n) + 1) / n)
+        for s in SIDES:
+            for arr in (phi[s], lift[s]):
+                arr[F - n:] += (arr[0] - arr[F - n:]) * w
+            self.girdle[s] = np.array(self.girdle[s], float)
+            self.girdle[s][F - n:] += (self.girdle[s][0] - self.girdle[s][F - n:]) * w[:, None]
+            if not inputs:
+                continue
+            A, pole, wrist, hw, x = self.inputs[s]
+            pole, wrist, hw = pole.copy(), wrist.copy(), hw.copy()
+            pole[F - n:] += (pole[0] - pole[F - n:]) * w[:, None]
+            wrist[F - n:] += (wrist[0] - wrist[F - n:]) * w[:, None]
+            q = P.slerp_arrays(P.quat_from_matrix(unit_rot(hw[F - n:]))[:, None],
+                               np.repeat(P.quat_from_matrix(unit_rot(hw[:1]))[:, None], n, axis=0), w)[:, 0]
+            hw[F - n:] = quat_to_matrix(q)
+            self.inputs[s] = (A, pole, wrist, hw, x)
+            dz = np.cross((wrist - A) / np.linalg.norm(wrist - A, axis=-1, keepdims=True), pole - A)[:, 1]
+            self.raise_sign[s] = np.where(dz >= 0, 1., -1.)
 
     def girdle_clear(self, s, delta, phi, lift):
         """Frames whose every-vertex desk clearance is still below the target after the swivel search: the first
@@ -1200,36 +1213,51 @@ class ClipArmIK:
         """Keyboard frames outside the key gate (fewer than KEY_MIN_OVER_VERTICES over the keys, gap over the accept band
         or penetration): every vertical correction of a grid around the current one is posed (exact keycap test,
         every arm vertex); the one whose gap is nearest KeyTop + 0.08 cm inside `accept` and whose desk clearance stays
-        at least min(target, current) wins. Frames with no such correction keep theirs (reported). Mutates delta."""
+        at least min(target, current) wins. Where the lowest fingertip vertex switches keys / edges (the gap jumps over
+        the band), the same grid is tried after a small horizontal hand move (POLISH_XY_CM, 8 directions, smallest
+        first). Frames with no such correction keep theirs (reported). Mutates delta / hand_xy."""
         top = self.keys['top_cm']
         W = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
         a = self.key_audit(W)[s]
         gap = a['over_min'] - top
         bad = np.nonzero((self.mode[s] == MODE_KEY) & ((a['over'] < KEY_MIN_OVER_VERTICES) | ~((gap >= accept[0]) & (gap <= accept[1]))))[0]
         if not len(bad):
-            return {'frames': [], 'fixed': [], 'kept': []}
-        cl0 = self.clearance(W[bad], s, 1, bad, SEARCH_REACH_CM, posed_frames=True)[0]
-        fixed, kept = [], []
-        for c0 in range(0, len(bad), 8):
-            fb = bad[c0:c0 + 8]
-            fr = np.repeat(fb, len(grid))
-            d = delta[s][fr] + np.tile(grid, len(fb))
-            Wt = self.pose(self.W_fit[fr].copy(), s, d, phi[s][fr], lift[s][fr], fr)[0]
-            at = self.key_audit(Wt, fr)[s]
-            g = (at['over_min'] - top).reshape(len(fb), -1)
-            ov = at['over'].reshape(len(fb), -1)
-            cl = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0].reshape(len(fb), -1)
-            need = np.minimum(FOREARM_TARGET_CLEARANCE_CM, cl0[c0:c0 + 8])[:, None]
-            ok = (ov >= KEY_MIN_OVER_VERTICES) & (g >= accept[0]) & (g <= accept[1]) & (cl >= need) & (cl > 0)
-            cost = np.where(ok, np.abs(g - KEY_TOP_TARGET_CM) + 1e-3 * np.abs(grid)[None], np.inf)
-            for i, f in enumerate(fb):
-                j = int(cost[i].argmin())
-                if np.isfinite(cost[i, j]):
-                    delta[s][f] = d[i * len(grid) + j]
-                    fixed.append(int(f))
-                else:
-                    kept.append(int(f))
-        return {'frames': [int(f) for f in bad], 'fixed': fixed, 'kept': kept}
+            return {'frames': [], 'fixed': [], 'kept': [], 'moved_xy_cm': {}}
+        cl0 = dict(zip(bad.tolist(), self.clearance(W[bad], s, 1, bad, SEARCH_REACH_CM, posed_frames=True)[0]))
+        offsets = [(0., 0.)] + [(r * math.cos(t), r * math.sin(t)) for r in POLISH_XY_CM for t in np.arange(8) * math.pi / 4]
+        todo, fixed, moved = list(bad), [], {}
+        for dxy in offsets:
+            if not todo:
+                break
+            fbs = np.array(todo)
+            sh = gltf_shift(np.array([[dxy[0], dxy[1], 0.]]))[0]
+            nxt = []
+            for c0 in range(0, len(fbs), 8):
+                fb = fbs[c0:c0 + 8]
+                fr = np.repeat(fb, len(grid))
+                d = delta[s][fr] + np.tile(grid, len(fb))
+                hxy = self.hand_xy[s].copy()
+                self.hand_xy[s][fb] += sh
+                Wt = self.pose(self.W_fit[fr].copy(), s, d, phi[s][fr], lift[s][fr], fr)[0]
+                at = self.key_audit(Wt, fr)[s]
+                g = (at['over_min'] - top).reshape(len(fb), -1)
+                ov = at['over'].reshape(len(fb), -1)
+                cl = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0].reshape(len(fb), -1)
+                need = np.minimum(FOREARM_TARGET_CLEARANCE_CM, np.array([cl0[int(f)] for f in fb]))[:, None]
+                ok = (ov >= KEY_MIN_OVER_VERTICES) & (g >= accept[0]) & (g <= accept[1]) & (cl >= need) & (cl > 0)
+                cost = np.where(ok, np.abs(g - KEY_TOP_TARGET_CM) + 1e-3 * np.abs(grid)[None], np.inf)
+                for i, f in enumerate(fb):
+                    j = int(cost[i].argmin())
+                    if np.isfinite(cost[i, j]):
+                        delta[s][f] = d[i * len(grid) + j]
+                        fixed.append(int(f))
+                        if dxy != (0., 0.):
+                            moved[int(f)] = [_r(dxy[0], 3), _r(dxy[1], 3)]
+                    else:
+                        self.hand_xy[s][f] = hxy[f]
+                        nxt.append(int(f))
+            todo = nxt
+        return {'frames': [int(f) for f in bad], 'fixed': sorted(fixed), 'kept': sorted(todo), 'moved_xy_cm': moved}
 
 
 # ---------------------------------------------------------------- the chair roll ACTIVITY (declared, reversible)
