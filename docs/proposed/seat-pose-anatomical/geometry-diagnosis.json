@@ -1,0 +1,70 @@
+{
+ "thigh_hip_to_knee_cm": {
+  "Left": 36.322,
+  "Right": 35.907
+ },
+ "shin_knee_to_ankle_cm": {
+  "Left": 39.767,
+  "Right": 40.255
+ },
+ "ankle_above_lowest_plantar_bind_cm": {
+  "Left": 7.4573,
+  "Right": 7.4218
+ },
+ "measured": {
+  "cushion_flat_top_cm": 50.4,
+  "cushion_max_cm": 51.4075,
+  "cushion_front_edge_y_cm": -214.06,
+  "cushion_back_edge_y_cm": -166.34,
+  "cushion_depth_cm": 47.72,
+  "legs": {
+   "Left": {
+    "hip_joint_z_cm": 57.18,
+    "knee_joint_z_cm": 46.79,
+    "ankle_joint_z_cm": 10.01,
+    "thigh_slope_down_to_knee_deg": 16.62,
+    "shin_tilt_from_vertical_deg": 22.33,
+    "hip_y_cm": -222.01,
+    "knee_y_cm": -256.05
+   },
+   "Right": {
+    "hip_joint_z_cm": 57.75,
+    "knee_joint_z_cm": 46.41,
+    "ankle_joint_z_cm": 9.97,
+    "thigh_slope_down_to_knee_deg": 18.41,
+    "shin_tilt_from_vertical_deg": 25.14,
+    "hip_y_cm": -222.34,
+    "knee_y_cm": -255.91
+   }
+  },
+  "max_knee_height_flat_foot_vertical_shin_cm": 49.64
+ },
+ "lifted": {
+  "cushion_flat_top_cm": 52.9,
+  "cushion_max_cm": 53.9076,
+  "cushion_front_edge_y_cm": -214.06,
+  "cushion_back_edge_y_cm": -166.34,
+  "cushion_depth_cm": 47.72,
+  "legs": {
+   "Left": {
+    "hip_joint_z_cm": 59.15,
+    "knee_joint_z_cm": 46.89,
+    "ankle_joint_z_cm": 10.01,
+    "thigh_slope_down_to_knee_deg": 19.72,
+    "shin_tilt_from_vertical_deg": 21.96,
+    "hip_y_cm": -222.88,
+    "knee_y_cm": -255.23
+   },
+   "Right": {
+    "hip_joint_z_cm": 59.72,
+    "knee_joint_z_cm": 45.76,
+    "ankle_joint_z_cm": 9.97,
+    "thigh_slope_down_to_knee_deg": 22.88,
+    "shin_tilt_from_vertical_deg": 27.24,
+    "hip_y_cm": -223.2,
+    "knee_y_cm": -254.07
+   }
+  },
+  "max_knee_height_flat_foot_vertical_shin_cm": 49.64
+ }
+}

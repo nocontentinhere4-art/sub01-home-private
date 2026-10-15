@@ -190,3 +190,26 @@ def test_committed_report_is_labelled_and_main_judged():
             glb = ROOT / c['glb']
             assert glb.exists() and hashlib.sha256(glb.read_bytes()).hexdigest() == c['sha256']
     assert seen
+
+
+def _clip(**over):
+    c = {'main_rule': {'pass_main_rule': True}, 'anatomical_limits_ok': True,
+         'clearance': {'chair_complete': {'clear': True}, 'desk': {'clear': True}}}
+    for k, v in over.items():
+        if k == 'desk':
+            c['clearance']['desk']['clear'] = v
+        else:
+            c[k] = v
+    return c
+
+
+def test_source_ready_requires_every_clip_and_check():
+    good = {n: _clip() for n in A.REQUIRED_CLIPS}
+    assert A.source_ready(good)
+    r = A.readiness({'x': good})
+    assert r['source_ready'] == {'x': True} and r['native_ready'] is False and r['ready'] is False
+    assert not A.source_ready(dict(good, SitDown=_clip(desk=False)))                 # desk clearance failed
+    assert not A.source_ready(dict(good, SeatedIdle=_clip(anatomical_limits_ok=False)))  # ankle over the limit
+    assert not A.source_ready(dict(good, GetUp={'skipped': 'wall-clock cap'}))       # skipped transition
+    assert not A.source_ready({k: v for k, v in good.items() if k != 'GetUp'})       # missing transition
+    assert not A.source_ready(dict(good, GetUp=_clip(main_rule={'pass_main_rule': False})))

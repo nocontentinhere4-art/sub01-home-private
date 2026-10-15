@@ -516,6 +516,10 @@ CHAIR_LIFT_CM = 2.5001          # caster bottoms (z 0.0) onto the actual floor t
 # Warm start found by this solver on the 13-frame probe of SeatedIdle (pelvis axis of the idle capture); the run
 # re-solves from it on the gated frames and verifies every frame.
 WARM_START = (30.35, 12.44, -10.49, 4.17, 2.67, 3.99, .89, -.51, -4.65)
+# The committed chair-lift packet (docs/proposed/seat-pose-anatomical/PACKET.md): the bounded re-solve's parameters
+# with both ankle_forward +0.4 cm (dorsiflexion 20.01 -> 19.50 deg), reproduced with
+#   --only-lift --fixed --warm-start <LIFT_PACKET_PARAMS>
+LIFT_PACKET_PARAMS = (32.6275, 10.7546, -11.7619, 5.5008, 2.3593, 3.8009, 1.1309, -7.5939, 1.7734)
 SEAM_A_STEP, SEAM_MIN_FRAMES = 3, 3
 
 
@@ -593,6 +597,12 @@ def solve_idle(ctx, clock, report, cand, x0=WARM_START, max_rounds=4):
     frames = np.unique(np.r_[np.arange(0, F, 10), F - 1])
     x = np.asarray(x0, float)
     history = []
+    if max_rounds == 0:                       # fixed parameters: evaluate and verify only
+        W, m, mg, worst, ang, ex = sol.evaluate(x, np.arange(F))
+        history.append({'round': 'fixed', 'params': [_r(v, 4) for v in x], 'all_frames_worst_margin_cm': _r(worst.min()),
+                        'failing_frames': int((worst < 0).sum()), 'anatomical_excess_deg_max': _r(ex.max(), 4),
+                        'per_patch': patch_table(ctx.V, m)})
+        cand['idle_solve_history'] = history
     for rnd in range(max_rounds):
         budget = min(clock.left() * .5, 420.)
         if budget < 30:
@@ -743,6 +753,32 @@ def seam_window_search(ctx, tr, W_loop, end, deadline):
     return ev, info
 
 
+REQUIRED_CLIPS = ('SeatedIdle', 'SitDown', 'GetUp')
+
+
+def clip_checks(c):
+    """The actual per-clip checks: main's strong rule on every gated frame, anatomical limits on the gated frames,
+    the complete chair and the desk clearances."""
+    mr = c.get('main_rule') or {}
+    cl = c.get('clearance') or {}
+    return {'main_rule': bool(mr.get('pass_main_rule')), 'anatomical_limits': bool(c.get('anatomical_limits_ok')),
+            'chair_clearance': bool((cl.get('chair_complete') or {}).get('clear')),
+            'desk_clearance': bool((cl.get('desk') or {}).get('clear'))}
+
+
+def source_ready(cand):
+    """True only when every required clip is present (never skipped) and passes every check."""
+    return all(isinstance(cand.get(n), dict) and 'main_rule' in cand[n] and all(clip_checks(cand[n]).values())
+               for n in REQUIRED_CLIPS)
+
+
+def readiness(candidates):
+    """source_ready per candidate (all required clips present and passing); native_ready stays false (no native
+    re-audit here); ready = source_ready and native_ready."""
+    src = {k: source_ready(v) for k, v in candidates.items()}
+    return {'source_ready': src, 'native_ready': False, 'ready': False}
+
+
 def run(args):
     import recheck_seat_fit_main_rule as R
     import solve_seated_typing_arm_ik as S
@@ -789,8 +825,11 @@ def run(args):
                                 'cushion_height_change_cm': lift,
                                 'cushion_top_cm': {'measured': _r(ctx.tri[..., 2].max() - lift, 4),
                                                    'lifted': _r(ctx.tri[..., 2].max(), 4)}}
+        if lift:
+            cand['proposal']['lifted_chair_bounds_min_z_cm'] = _r(complete['lowest_cm'] + lift, 4)
         clock.checkpoint(f'{vname}: start', report)
-        idle = solve_idle(ctx, clock, report, cand, x0=args.warm_start or WARM_START)
+        idle = solve_idle(ctx, clock, report, cand, x0=args.warm_start or WARM_START,
+                          max_rounds=0 if args.fixed else 4)
         sk = idle['fit'].sk
         x = idle['x']
         labels = {'label': 'proposal', 'verified': False, 'requires_server_reaudit': True,
@@ -826,10 +865,12 @@ def run(args):
             clock.checkpoint(f'{vname}: {name} written', report)
         cand['summary'] = {k: {'pass_main_rule': v['main_rule']['pass_main_rule'],
                                'failing_frames': v['main_rule']['failing_frame_count'],
-                               'gated_frames': v['main_rule']['gated_frames'], 'sha256': v['sha256']}
+                               'gated_frames': v['main_rule']['gated_frames'], 'sha256': v['sha256'],
+                               'checks': clip_checks(v)}
                            for k, v in cand.items() if isinstance(v, dict) and 'main_rule' in v}
+        cand['source_ready'] = source_ready(cand)
     report['summary'] = {k: v.get('summary') for k, v in report['candidates'].items()}
-    report['ready'] = True
+    report.update(readiness(report['candidates']))
     report['elapsed_s'] = round(time.time() - clock.t0, 1)
     clock.path.write_text(json.dumps(report, indent=1, default=_json) + '\n')
     return report
@@ -844,6 +885,7 @@ def main(argv=None):
     ap.add_argument('--chair-lift', action='store_true', help='also solve on the +2.5001 cm chair-lift PROPOSAL')
     ap.add_argument('--only-lift', action='store_true', help='solve only the chair-lift proposal')
     ap.add_argument('--warm-start', type=float, nargs=len(PARAMS), default=None)
+    ap.add_argument('--fixed', action='store_true', help='use --warm-start as the parameters (no optimisation)')
     args = ap.parse_args(argv)
     rep = run(args)
     print(json.dumps(rep['summary'], indent=1))
