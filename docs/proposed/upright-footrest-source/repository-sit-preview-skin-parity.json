@@ -1,0 +1,195 @@
+{
+  "schema": "sub01.raw-capture-preview-skin-parity.v1",
+  "canonical_owner_joint_indexing_equals_npz": true,
+  "document_bind_times_ibm_first": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      1.1837119825997e-11
+    ],
+    [
+      0.0,
+      0.999999971760898,
+      -3.561746579963665e-09,
+      0.009205163636490599
+    ],
+    [
+      0.0,
+      3.561746579963665e-09,
+      0.999999971760898,
+      -6.515204764578897e-10
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "document_bind_times_ibm_max_difference_from_first": 1.7215309844991937,
+  "source_time_s": 0.6666666666666666,
+  "blender_frame": 20,
+  "sample_stride": 97,
+  "matching": "unchanged UV + named joint weights + material; ambiguous UV/weight duplicates excluded",
+  "compared_vertices": 2515,
+  "unmatched_samples": 56,
+  "unmatched_examples": [
+    {
+      "object": "slides",
+      "vertex": 5044,
+      "uv": [
+        0.10011444240808487,
+        0.2852216362953186
+      ],
+      "material": "feet",
+      "source_candidates": 5
+    },
+    {
+      "object": "slides",
+      "vertex": 5335,
+      "uv": [
+        0.125520721077919,
+        0.24565500020980835
+      ],
+      "material": "feet",
+      "source_candidates": 0
+    },
+    {
+      "object": "slides",
+      "vertex": 6305,
+      "uv": [
+        0.29181352257728577,
+        0.5682612657546997
+      ],
+      "material": "feet",
+      "source_candidates": 2
+    },
+    {
+      "object": "slides",
+      "vertex": 6596,
+      "uv": [
+        0.32796216011047363,
+        0.5682612657546997
+      ],
+      "material": "feet",
+      "source_candidates": 2
+    },
+    {
+      "object": "slides",
+      "vertex": 7372,
+      "uv": [
+        0.3338216245174408,
+        0.5252765417098999
+      ],
+      "material": "feet",
+      "source_candidates": 4
+    },
+    {
+      "object": "slides",
+      "vertex": 7469,
+      "uv": [
+        0.32576486468315125,
+        0.5252765417098999
+      ],
+      "material": "feet",
+      "source_candidates": 4
+    },
+    {
+      "object": "slides",
+      "vertex": 11155,
+      "uv": [
+        0.22710002958774567,
+        0.7450522184371948
+      ],
+      "material": "feet",
+      "source_candidates": 3
+    },
+    {
+      "object": "slides",
+      "vertex": 13095,
+      "uv": [
+        0.3345540463924408,
+        0.7572747468948364
+      ],
+      "material": "feet",
+      "source_candidates": 5
+    },
+    {
+      "object": "slides",
+      "vertex": 15617,
+      "uv": [
+        0.29108110070228577,
+        0.5252765417098999
+      ],
+      "material": "feet",
+      "source_candidates": 3
+    },
+    {
+      "object": "slides",
+      "vertex": 15714,
+      "uv": [
+        0.3003585934638977,
+        0.5252765417098999
+      ],
+      "material": "feet",
+      "source_candidates": 5
+    },
+    {
+      "object": "socks",
+      "vertex": 0,
+      "uv": [
+        0.8598306179046631,
+        0.5238116979598999
+      ],
+      "material": "feet",
+      "source_candidates": 7
+    },
+    {
+      "object": "socks",
+      "vertex": 194,
+      "uv": [
+        0.8717936873435974,
+        0.5123369097709656
+      ],
+      "material": "feet",
+      "source_candidates": 6
+    }
+  ],
+  "max_source_lbs_vs_blender_world_error_cm": 0.0005015024994745172,
+  "objects": [
+    {
+      "object": "hood_lining",
+      "vertices": 2880,
+      "compared": 30,
+      "maximum_error_cm": 6.500482698588254e-05
+    },
+    {
+      "object": "hood_patches",
+      "vertices": 247,
+      "compared": 3,
+      "maximum_error_cm": 4.919400073527438e-05
+    },
+    {
+      "object": "slides",
+      "vertices": 15786,
+      "compared": 153,
+      "maximum_error_cm": 0.00048600230326607255
+    },
+    {
+      "object": "socks",
+      "vertices": 14553,
+      "compared": 123,
+      "maximum_error_cm": 0.0004102833475364868
+    },
+    {
+      "object": "tripo_node_6bf04053-4eb9-4c81-aed9-ebf290057e82",
+      "vertices": 215682,
+      "compared": 2206,
+      "maximum_error_cm": 0.0005015024994745172
+    }
+  ],
+  "native_readiness": false,
+  "repository_fitted_clip_untouched": true,
+  "provider_raw_capture_available": false
+}

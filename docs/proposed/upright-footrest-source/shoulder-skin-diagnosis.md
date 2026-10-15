@@ -1,0 +1,13 @@
+# Canonical owner shoulder skin defect — source evidence
+
+The unchanged repository-fitted SitDown clip reproduces the large shoulder/back web. It is not provider-raw capture: `room_build/kimodo/mx_fit.py` previously baked leg, arm and arm-clearance fitting; the original SitDown FBX is unavailable in this repository. The diagnostic keeps that existing clip unchanged.
+
+Official Blender and direct glTF linear-blend skinning agree on 2,515 independently identified sampled vertices (UV, named weights, material), maximum error 0.000502 cm. Fifty-six ambiguous/unmatched samples are excluded. This proves the visible defect is not a Blender-only preview artifact; it does not prove every unsampled vertex.
+
+The exact original mesh edge 27901–27902 is 0.366638 cm long as modelled and 25.177179 cm in SitDown frame 20. Vertex 27901 has 100% RightArm; vertex 27902 has RightShoulder 43.92%, Spine 36.86%, Spine1 13.33%, Hips 5.88%. The successful upright Idle still stretches a neighboring edge to 15.044771 cm. The authored reference pose also exhibits the defect. All measurements use unchanged canonical owner SHA45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8.
+
+This matches `room_build/rig/autorig/fit.py`'s explicit warning: the sleeve/torso hard ownership cut prevents seated sleeve penetration but creates an arm-raise web; a corrective shape was not implemented. Existing per-bone inverse bind maps intentionally map as-modelled geometry to the reference rig. Resetting them would also destroy authored hand bind curl and is not a repair.
+
+A viable repair experiment should target the identified sleeve/torso boundary, preserve every IBM and skeleton transform, and compare the same original reference, seated Idle, SitDown and typing poses. A pose-dependent local cloth corrective can preserve original seated clearance while removing the web during raised-arm motion. It must constrain surface edge strain, avoid sleeve/torso penetration, preserve the hands and lower body, and export actual corrective geometry/animation that Unreal can reproduce. A global weight blur is unapproved: the original source records a 2.3 cm armpit intersection when the hard cut is removed. No corrective, weight edit or native change is included here.
+
+`shoulder-strain-source-audit.json` contains exact edge/weight witnesses; `repository-sit-preview-skin-parity.json` contains the independent preview parity result. Source-ready/native-ready remain false for the transition set. Existing upright Idle support results remain valid for that candidate's measured contact gates; its clothing quality is not accepted by those gates.
