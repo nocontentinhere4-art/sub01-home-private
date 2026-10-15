@@ -13,6 +13,7 @@ INCLUDES=r'''
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstance.h"
+#include "CoreGlobals.h"
 '''
 FIELDS=r'''
  void PublishPrivateVisualMetrics();
@@ -26,6 +27,8 @@ void ASub01HomeCharacter::PublishPrivateVisualMetrics(){
  Doc->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());Doc->SetNumberField(TEXT("native_start_ticks"),PrivateSettingsStartTicks());
  Doc->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);
  auto Num=[](const TSharedPtr<FJsonObject>& O,const TCHAR* Key,double Value){if(FMath::IsFinite(Value))O->SetNumberField(Key,Value);};
+ Num(Doc,TEXT("actual_near_clip_cm"),GNearClippingPlane);
+ if(auto* C=GetCapsuleComponent()){Num(Doc,TEXT("actual_capsule_radius_cm"),C->GetScaledCapsuleRadius());Num(Doc,TEXT("actual_capsule_half_height_cm"),C->GetScaledCapsuleHalfHeight());}
  auto Color=[&](const FLinearColor& C){auto O=MakeShared<FJsonObject>();Num(O,TEXT("r"),C.R);Num(O,TEXT("g"),C.G);Num(O,TEXT("b"),C.B);Num(O,TEXT("a"),C.A);return O;};
  auto PP=[&](const FPostProcessSettings& S){auto O=MakeShared<FJsonObject>();O->SetNumberField(TEXT("method"),int32(S.AutoExposureMethod));Num(O,TEXT("min_brightness"),S.AutoExposureMinBrightness);Num(O,TEXT("max_brightness"),S.AutoExposureMaxBrightness);Num(O,TEXT("bias"),S.AutoExposureBias);Num(O,TEXT("white_temperature"),S.WhiteTemp);Num(O,TEXT("white_tint"),S.WhiteTint);O->SetBoolField(TEXT("override_method"),S.bOverride_AutoExposureMethod);O->SetBoolField(TEXT("override_min"),S.bOverride_AutoExposureMinBrightness);O->SetBoolField(TEXT("override_max"),S.bOverride_AutoExposureMaxBrightness);O->SetBoolField(TEXT("override_bias"),S.bOverride_AutoExposureBias);O->SetBoolField(TEXT("override_white_temperature"),S.bOverride_WhiteTemp);return O;};
  const auto* EV=IConsoleManager::Get().FindConsoleVariable(TEXT("r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange"));Doc->SetBoolField(TEXT("extended_luminance_cvar_available"),EV!=nullptr);if(EV)Doc->SetNumberField(TEXT("extended_luminance_cvar"),EV->GetInt());
