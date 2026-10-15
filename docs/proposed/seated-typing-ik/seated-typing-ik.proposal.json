@@ -1,0 +1,365 @@
+{
+ "schema": "sub01.seated-typing-arm-ik.v1",
+ "label": "proposal",
+ "verified": false,
+ "requires_server_reaudit": true,
+ "requires_native_collision_audit": true,
+ "never_a_receipt": true,
+ "method": "whole-arm IK on the seat-fit clips (tools/solve_seated_typing_arm_ik.py)",
+ "geometry": {
+  "file": "docs/proposed/seated-typing-ik/real-linea140-geometry.json",
+  "sha256": "0cf8588aa6f33a900ce641d0d6914991ac889c962cbeb9a76fde082c4dd50f81",
+  "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "provenance": {
+   "placement": "origin/main tools/prepare_real_linea140_placement.py (place_bytes, SCALE, DESK_Y) @ b17952c",
+   "ue_mapping": "origin/main tools/real_linea_edge_clamp.py contact_coverage: (2.1 + x S, DESK_Y + z S, .025 + y S) * 100",
+   "record": "origin/main docs/proposed/real-linea140-guarded-placement-20261014.json @ bb24ae5",
+   "source": "origin/main web/house/assets/real-linea140/originalsource.glb"
+  },
+  "overall_dims_cm": [
+   152.053,
+   70.596,
+   82.3584
+  ],
+  "floor_cm": 2.5,
+  "tabletop_slab": {
+   "node": 44,
+   "name": "Solid walnut worktop | 1400 x 650 x 28 mm",
+   "min_cm": [
+    133.9735,
+    -337.298,
+    81.4589
+   ],
+   "max_cm": [
+    286.0265,
+    -266.702,
+    84.5
+   ],
+   "top_cm": 84.5,
+   "bottom_cm": 81.4589,
+   "thickness_cm": 3.0411,
+   "front_edge_y_cm": -266.702,
+   "rear_edge_y_cm": -337.298,
+   "centre_xy_cm": [
+    210.0,
+    -302.0
+   ],
+   "front_is_positive_ue_y": true,
+   "note": "AABB of the worktop node: the eased top/bottom edges (84.283 / 81.785 cm) and rounded plan corners lie inside it, so box clearance is conservative"
+  },
+  "front_apron": {
+   "node": 47,
+   "min_cm": [
+    140.4901,
+    -275.7166,
+    78.0921
+   ],
+   "max_cm": [
+    279.5099,
+    -273.1099,
+    81.1331
+   ],
+   "bottom_cm": 78.0921
+  },
+  "knee_bay_cm": {
+   "x": [
+    143.694,
+    237.2066
+   ],
+   "below_z": 78.0921,
+   "left_leg_inner_x": 143.694,
+   "drawer_carcass_left_x": 237.2066
+  },
+  "grommet_rim_top_cm": 84.8584
+ },
+ "chair": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+  "translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   60.68757772445679
+  ],
+  "rotation_xyzw": [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ],
+  "scale": [
+   0.6068757772445679,
+   0.6068757772445679,
+   0.6068757772445679
+  ],
+  "component_world_bounds_cm": {
+   "min": [
+    173.44425362141465,
+    -214.67331536053598,
+    40.09784507431823
+   ],
+   "max": [
+    226.2919141738521,
+    -161.0329571237644,
+    73.68187262235301
+   ]
+  }
+ },
+ "keyboard": {
+  "source": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+  "key_top_cm": 87.3898,
+  "keycaps": 87,
+  "key_field_min_cm": [
+   182.173,
+   -301.297,
+   86.537
+  ],
+  "key_field_max_cm": [
+   217.749,
+   -287.917,
+   87.39
+  ],
+  "root_home_keyboard_nodes_184_187_xy_cm": [
+   [
+    181.45,
+    -302.0464
+   ],
+   [
+    218.55,
+    -285.9536
+   ]
+  ],
+  "provenance": "repo web/house/home.js furnished(\"keyboard\", 2, .846, -2.94, .371) = the home's keyboard source nodes 184-187 in root's LINEA record (same XY footprint): the keyboard did not move with the new desk"
+ },
+ "gates_from": [
+  "tools/validate_unreal_seat_contact.py (SEAT_BAND_CM, SOLE_BAND_CM, MIN_PATCH_VERTICES, MIN_SUPPORT_VERTICES)",
+  "tools/validate_unreal_contact_profile.py (KEY_GAP_MAX_CM, validate())",
+  "tools/fit_seat_pelvis_pitch.py gates() / contact_per_frame()"
+ ],
+ "constants": {
+  "key_contact_target_cm": 0.08,
+  "key_gap_max_cm": 0.2,
+  "key_penetration_max_cm": 0.1,
+  "seat_band_cm": [
+   -2.5,
+   0.5
+  ],
+  "sole_band_cm": [
+   0.0,
+   1.0
+  ],
+  "min_support_vertices": 12,
+  "forearm_target_clearance_cm": 0.5,
+  "desk_clearance_gate": "> 0 cm every frame",
+  "wrist_soft_flexion_deg": [
+   -15.0,
+   15.0
+  ],
+  "wrist_soft_deviation_deg": [
+   -20.0,
+   10.0
+  ],
+  "wrist_note": "soft targets (smooth saturation), never gates"
+ },
+ "roll_scan": {
+  "probe_keys": [
+   180,
+   205,
+   230,
+   255,
+   280,
+   305,
+   330,
+   355,
+   380,
+   405,
+   430,
+   455,
+   480
+  ],
+  "rule": "every probe frame clear of the desk with key contact; then the smallest largest\nelbow swivel; then the smallest hand lift; then the smallest extra pull-in.",
+  "rows": [
+   {
+    "extra_pull_in_dy_cm": 0.0,
+    "sides": {
+     "left": {
+      "min_clearance_cm": 0.53,
+      "max_swivel_deg": 82.5,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -15.0
+      ],
+      "wrist_deviation_deg": [
+       -19.3,
+       -15.4
+      ]
+     },
+     "right": {
+      "min_clearance_cm": 0.505,
+      "max_swivel_deg": 105.0,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -10.8
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -19.2
+      ]
+     }
+    },
+    "all_clear_with_contact": true,
+    "max_swivel_deg": 105.0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "extra_pull_in_dy_cm": -2.5,
+    "sides": {
+     "left": {
+      "min_clearance_cm": 0.512,
+      "max_swivel_deg": 85.0,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -15.0
+      ],
+      "wrist_deviation_deg": [
+       -19.8,
+       -18.6
+      ]
+     },
+     "right": {
+      "min_clearance_cm": 0.528,
+      "max_swivel_deg": 107.5,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -12.7
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -19.8
+      ]
+     }
+    },
+    "all_clear_with_contact": true,
+    "max_swivel_deg": 107.5,
+    "max_lift_cm": 0.0
+   },
+   {
+    "extra_pull_in_dy_cm": -5.0,
+    "sides": {
+     "left": {
+      "min_clearance_cm": 0.596,
+      "max_swivel_deg": 87.5,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -15.0
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -19.6
+      ]
+     },
+     "right": {
+      "min_clearance_cm": 0.609,
+      "max_swivel_deg": 95.0,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": false,
+      "wrist_flexion_deg": [
+       -15.0,
+       -13.5
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -19.9
+      ]
+     }
+    },
+    "all_clear_with_contact": false,
+    "max_swivel_deg": 95.0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "extra_pull_in_dy_cm": -7.5,
+    "sides": {
+     "left": {
+      "min_clearance_cm": 0.513,
+      "max_swivel_deg": 92.5,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": true,
+      "wrist_flexion_deg": [
+       -15.0,
+       -15.0
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -19.9
+      ]
+     },
+     "right": {
+      "min_clearance_cm": -1.262,
+      "max_swivel_deg": 95.0,
+      "max_lift_cm": 0.0,
+      "on_key_frames": 13,
+      "contact": false,
+      "wrist_flexion_deg": [
+       -15.0,
+       -14.1
+      ],
+      "wrist_deviation_deg": [
+       -20.0,
+       -20.0
+      ]
+     }
+    },
+    "all_clear_with_contact": false,
+    "max_swivel_deg": 95.0,
+    "max_lift_cm": 0.0
+   }
+  ],
+  "chosen_extra_pull_in_dy_cm": 0.0
+ },
+ "bounded": {
+  "max_wall_seconds": 1320.0,
+  "swivel_grid_deg": [
+   0.0,
+   120.0
+  ],
+  "swivel_outer_passes": 3,
+  "contact_passes": 8,
+  "search_contact_passes": 4,
+  "lift_max_cm": 15.0,
+  "post_contact_iterations": 16,
+  "stages_done": [
+   "DeskTyping_seated"
+  ],
+  "elapsed_seconds": 1586.0
+ },
+ "clips": {
+  "DeskTyping_seated": {
+   "glb": "docs/proposed/seated-typing-ik/SUB01_DeskTyping_seated.glb",
+   "sha256": "ee15462015c534e7f5a16d1e28edd4df90ccf3bee77d5ecda9d2d6fa41447d39",
+   "all_gates_pass": false
+  }
+ },
+ "ready": false,
+ "native_verified": false,
+ "partial": {
+  "stage_reached": "DeskTyping_seated",
+  "blocker": "wall-clock bound 1320.0 s reached before stage SitToType_seated"
+ }
+}

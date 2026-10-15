@@ -1663,7 +1663,8 @@ def main(argv=None):
         GEOMETRY_JSON.parent.mkdir(parents=True, exist_ok=True)
         GEOMETRY_JSON.write_text(json.dumps(desk_geometry(args.desk_source), indent=1) + '\n')
     summary, _ = run(args)
-    print(json.dumps({'ready': summary['ready'], 'gates': summary['gates'], 'roll_cm': summary['chair_roll_activity']['roll_cm']}, indent=1))
+    print(json.dumps({'ready': summary.get('ready'), 'gates': summary.get('gates'), 'partial': summary.get('partial'),
+                      'bounded': summary.get('bounded')}, indent=1))
     return exit_code(summary)
 
 

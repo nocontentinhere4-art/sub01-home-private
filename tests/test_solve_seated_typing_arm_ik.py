@@ -312,7 +312,7 @@ def test_exit_code_refuses_unless_every_gate_passes(monkeypatch):
     assert K.exit_code({'ready': False, 'gates': {'a': True}}) == K.EXIT_REFUSED
     assert K.exit_code({}) == K.EXIT_REFUSED
     for ready, want in ((False, K.EXIT_REFUSED), (True, 0)):
-        summary = {'ready': ready, 'gates': {'g': ready}, 'chair_roll_activity': {'roll_cm': [0, 0, 0]}}
+        summary = {'ready': ready, 'gates': {'g': ready}}
         monkeypatch.setattr(K, 'run', lambda args, s=summary: (s, {}))
         assert K.main(['--out-dir', '/nonexistent-not-written']) == want
 
@@ -326,12 +326,16 @@ def test_committed_proposal_is_labelled_and_consistent():
     p = json.loads(PROPOSAL.read_text())
     assert p['label'] == 'proposal' and p['verified'] is False and p['requires_server_reaudit'] is True
     assert p['geometry']['sha256'] == hashlib.sha256(K.GEOMETRY_JSON.read_bytes()).hexdigest()
-    roll = p['chair_roll_activity']
-    assert np.allclose(roll['start_transform_cm'], p['chair']['translation_cm'], atol=1e-3)
-    assert roll['reversibility']['reversible'] and roll['reversibility']['final_equals_initial_exact']
-    assert p['gates']['roll_reversible_exact'] is True
-    assert p['ready'] == all(p['gates'].values()) and p['native_verified'] is False
-    assert p['gates']['roll_complete_chair_clear_of_desk'] == roll['complete_chair_clearance_along_path']['desk_clear_all_samples']
+    assert p['native_verified'] is False and 'bounded' in p
+    if 'partial' in p:          # a bounded run that stopped between stages: never ready, stage and blocker stated
+        assert p['ready'] is False and p['partial']['stage_reached'] and p['partial']['blocker']
+    else:
+        roll = p['chair_roll_activity']
+        assert np.allclose(roll['start_transform_cm'], p['chair']['translation_cm'], atol=1e-3)
+        assert roll['reversibility']['reversible'] and roll['reversibility']['final_equals_initial_exact']
+        assert p['gates']['roll_reversible_exact'] is True
+        assert p['ready'] == all(p['gates'].values())
+        assert p['gates']['roll_complete_chair_clear_of_desk'] == roll['complete_chair_clearance_along_path']['desk_clear_all_samples']
     for name, clip in p['clips'].items():
         path = ROOT / clip['glb']
         assert path.exists() and hashlib.sha256(path.read_bytes()).hexdigest() == clip['sha256']
