@@ -78,6 +78,43 @@
         "cause": "GCC -Werror=misleading-indentation in test harness for-loop; actual product source not implicated"
       },
       "private_failed_log_sha256": "b4b871dcd67357bd27d4e27fd84e472839f207a2aa37b5f052fd1b4f7e0881a9"
+    },
+    {
+      "run_id": 38735360860,
+      "url": "https://github.com/nocontentinhere4-art/sub01-home-private/actions/runs/38735360860",
+      "head_sha": "1d01a8ede66b259b5668dcef644255ddf2be53af",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 116423169354,
+          "name": "pytest",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "sub01-ci-1"
+        },
+        {
+          "id": 116423169751,
+          "name": "smoke",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "sub01-ci-2"
+        },
+        {
+          "id": 116423171164,
+          "name": "visual (${{ matrix.part.name }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "runner_name": null
+        }
+      ],
+      "pytest_summary": {
+        "passed": 3101,
+        "skipped": 29,
+        "subtests_passed": 120,
+        "duration_seconds": 264.58
+      },
+      "private_success_log_sha256": "3e8e8a4f548c78ace01cff723ee7065bb4e0b5f9784c82422f4460385c4e453d",
+      "scope": "Exact 1d01a8e; later corridor import/runtime changes have separate focused validation and are not claimed covered by this earlier run"
     }
   ]
 }
