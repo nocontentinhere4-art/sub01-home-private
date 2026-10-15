@@ -42,6 +42,7 @@ TASKS = {
     'frame_backings': 'unreal_remove_frame_backings',
     'real_wc': 'unreal_import_real_wc',
     'real_bathroom_pendant': 'unreal_import_real_bathroom_pendant',
+    'controller_material_audit': 'unreal_controller_material_audit',
     'architecture_lumen_audit': 'unreal_architecture_lumen_audit',
     'desk_lamp_shadow_audit': 'unreal_desk_lamp_shadow_audit',
     'lumen_surface_review': 'unreal_lumen_surface_review',
