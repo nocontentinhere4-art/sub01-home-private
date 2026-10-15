@@ -358,6 +358,12 @@ def swivel_pole(shoulder, target, pole, phi):
 # ~15 deg each way; AAOS joint motion). The girdle is a rotation of the Shoulder (clavicle) joint carrying the arm.
 GIRDLE_DEPRESSION_DEG = (0., 10.)
 GIRDLE_PROTRACTION_DEG = (-15., 15.)
+# Clearance only (a HARD gate outranks the soft ergonomic targets): where the arm is fully extended to the keys (the
+# non-stretch two-bone chain saturated, so no elbow swivel changes it) and the sleeve still meets the desk, the shoulder
+# girdle may ELEVATE up to 10 deg (clavicular elevation reaches ~30-40 deg: Kapandji, The Physiology of the Joints,
+# vol. 1; Neumann, Kinesiology of the Musculoskeletal System, ch. 5), with retraction inside the cited +-15 deg.
+# Candidates in order (depression < 0 is elevation; protraction < 0 is retraction):
+GIRDLE_CLEAR_CANDIDATES = ((-2.5, 0.), (-5., 0.), (-7.5, 0.), (-10., 0.), (-10., -7.5), (-10., -15.))
 
 
 def shoulder_girdle(sk, W, side, g):
@@ -434,6 +440,8 @@ SWIVEL_COARSE_DEG = tuple(float(v) for v in np.arange(0., SWIVEL_GRID_DEG[-1] + 
 SEARCH_CONTACT_PASSES = 4
 SWIVEL_ENVELOPE_S, SWIVEL_SMOOTH_S = .15, .1       # the seat fit's own envelope/smoothing rule (max filter, Gaussian)
 LIFT_STEP_CM, LIFT_MAX_CM = .25, 15.
+POLISH_GRID_CM = np.round(np.arange(-3., 3.0001, .05), 4)   # contact polish: vertical wrist corrections around the current
+POLISH_ACCEPT_GAP_CM = (0., .16)                             # inside the 0.2 cm gap / 0.1 cm penetration key gate
 ROLL_OFFSET_CM = (3.875, -32.5)      # the seat fit's chair offset (docs/proposed/seat-pose-fit, chosen dy -32.5)
 SEARCH_REACH_CM = FOREARM_TARGET_CLEARANCE_CM + 1.5
 CLEARANCE_STRIDE = 1                 # arm skin sampling for the search; reports use every vertex
@@ -536,6 +544,41 @@ def segment_hand(on_keys, palm_ue, dt, keys, mouse):
             mode[k:e] = MODE_MOUSE
         k = e
     return mode
+
+
+def keyboard_between_keys(mode):
+    """Segmentation rule (docs/qa/contact.md, seated "type": both hands' fingertips touch the keycaps, 0 to +2 mm, through
+    the whole clip): a TRANSIT run with a KEYBOARD segment on BOTH sides (the hand does not visit the mouse in between)
+    is the hand between keystrokes on the keyboard, so it is KEYBOARD (full keycap contact). Only the runs between the
+    keyboard and the mouse (or a clip end) stay TRANSIT, and the segment blends live in them."""
+    mode = np.array(mode, copy=True)
+    F = len(mode)
+    k = 0
+    while k < F:
+        if mode[k] != MODE_TRANSIT:
+            k += 1
+            continue
+        e = k
+        while e < F and mode[e] == MODE_TRANSIT:
+            e += 1
+        if k > 0 and e < F and mode[k - 1] == MODE_KEY and mode[e] == MODE_KEY:
+            mode[k:e] = MODE_KEY
+        k = e
+    return mode
+
+
+KEY_FIELD_MARGIN_CM = .5          # a keyboard frame's finger target is pulled this far inside the key field ...
+KEY_FIELD_MIN_OVER = 2 * T.KEY_MIN_OVER_VERTICES    # ... while fewer distal vertices than this are over the keycaps
+
+
+def key_field_pull(p_xy, key_min, key_max, n=KEY_FIELD_MIN_OVER, margin=KEY_FIELD_MARGIN_CM):
+    """(F, V, 2) distal finger skin XY -> (F, 2) the move of the n-th nearest vertex into the key field (shrunk by
+    margin): the nearer vertices need less, so at least n distal vertices end up over the field."""
+    lo, hi = np.asarray(key_min[:2], float) + margin, np.asarray(key_max[:2], float) - margin
+    d = np.clip(p_xy, lo, hi) - p_xy
+    nrm = np.linalg.norm(d, axis=-1)
+    idx = np.argsort(nrm, axis=1)[:, n - 1]
+    return d[np.arange(len(d)), idx]
 
 
 def mouse_geometry(cache=None):
@@ -705,8 +748,14 @@ class ClipArmIK:
             self.on = {s: np.asarray(self.on_mask[s], bool) & self.contact for s in SIDES}
         else:
             self.on = {s: (audit[s]['over'] >= KEY_MIN_OVER_VERTICES) if self.contact else np.zeros(F, bool) for s in SIDES}
-        self.mode = {s: segment_hand(self.on[s], self.palm_ue(self.W_fit, s, np.arange(F)), self.dt, self.keys,
-                                     self.mouse if (self.mouse is not None and s == 'right') else None) for s in SIDES}
+        if getattr(self, 'mode_override', None) is not None:
+            self.mode = {s: np.asarray(self.mode_override[s]).copy() for s in SIDES}
+        else:
+            self.mode = {s: keyboard_between_keys(segment_hand(
+                self.on[s], self.palm_ue(self.W_fit, s, np.arange(F)), self.dt, self.keys,
+                self.mouse if (self.mouse is not None and s == 'right') else None)) for s in SIDES}
+        # every KEYBOARD frame is gated as on the keys (the base's over-key frames plus the reclassified runs)
+        self.on = {s: self.on[s] | (self.mode[s] == MODE_KEY) for s in SIDES}
 
     def pose_all(self):
         W = self.W_fit.copy()
@@ -714,54 +763,61 @@ class ClipArmIK:
             W = self.pose(W, s, self.delta[s], self.phi[s], self.lift[s])[0]
         return W
 
+    def clear_side(self, s, delta, phi, lift, history, outer_passes=3):
+        """Every-arm-vertex desk clearance for one side (mutates the delta / phi / lift dicts): the smallest elbow swivel
+        (coarse-to-fine grid) whose contact-resolved pose keeps FOREARM_TARGET_CLEARANCE_CM, a smooth envelope over time,
+        and on TRANSIT frames that no swivel clears a smooth hand lift."""
+        for outer in range(outer_passes):
+            Wc = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
+            cl = self.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0]
+            bad = np.nonzero(cl < FOREARM_TARGET_CLEARANCE_CM)[0]
+            history.append({'side': s, 'pass': outer, 'frames_below_target': int(len(bad)), 'min_cm': float(cl.min())})
+            if not len(bad):
+                break
+            need = phi[s].copy()
+            best_cl, best_phi = np.full(len(bad), -np.inf), phi[s][bad].copy()
+            found_at = np.full(len(bad), np.nan)
+
+            def probe(g, sel):
+                fr = bad[sel]
+                ph = phi[s].copy()
+                ph[fr] = np.maximum(phi[s][fr], math.radians(g))
+                dl = self.solve_contact_side(s, delta[s], ph, lift[s], fr, passes=SEARCH_CONTACT_PASSES)
+                Wt = self.pose(self.W_fit[fr].copy(), s, dl[fr], ph[fr], lift[s][fr], fr)[0]
+                clt = self.clearance(Wt, s, CLEARANCE_STRIDE, fr, SEARCH_REACH_CM, posed_frames=True)[0]
+                idx = np.nonzero(sel)[0]
+                better = clt > best_cl[idx]
+                best_cl[idx[better]], best_phi[idx[better]] = clt[better], ph[fr][better]
+                return idx, clt >= FOREARM_TARGET_CLEARANCE_CM, ph[fr]
+            # coarse-to-fine: the first coarse step that clears, then the fine grid inside the step before it
+            todo = np.ones(len(bad), bool)
+            for g in SWIVEL_COARSE_DEG:
+                if not todo.any():
+                    break
+                idx, ok, ph = probe(g, todo)
+                found_at[idx[ok]] = g
+                todo[idx[ok]] = False
+            fine = ~np.isnan(found_at)
+            for g in SWIVEL_GRID_DEG:
+                sel = fine & (g > found_at - SWIVEL_COARSE_STEP_DEG) & (g < found_at)
+                if not sel.any():
+                    continue
+                idx, ok, ph = probe(g, sel)
+                found_at[idx[ok]] = np.minimum(found_at[idx[ok]], g)
+            for k in np.nonzero(fine)[0]:
+                need[bad[k]] = max(phi[s][bad[k]], math.radians(found_at[k]))
+            need[bad[todo]] = best_phi[todo]                  # no swivel clears: the best one (reported)
+            phi[s] = envelope(need, self.dt)
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
+            off = bad[todo][self.mode[s][bad[todo]] == MODE_TRANSIT]
+            if len(off):                                      # transit: lift the hand (no contact required)
+                lift[s] = np.maximum(lift[s], self.lift_need(s, delta[s], phi[s], lift[s], off))
+                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
+
     def _solve(self, F, zero, delta, phi, lift, history):
         def clear_side(s, outer_passes=3):
-            for outer in range(outer_passes):
-                Wc = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
-                cl = self.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0]
-                bad = np.nonzero(cl < FOREARM_TARGET_CLEARANCE_CM)[0]
-                history.append({'side': s, 'pass': outer, 'frames_below_target': int(len(bad)), 'min_cm': float(cl.min())})
-                if not len(bad):
-                    break
-                need = phi[s].copy()
-                best_cl, best_phi = np.full(len(bad), -np.inf), phi[s][bad].copy()
-                found_at = np.full(len(bad), np.nan)
+            self.clear_side(s, delta, phi, lift, history, outer_passes)
 
-                def probe(g, sel):
-                    fr = bad[sel]
-                    ph = phi[s].copy()
-                    ph[fr] = np.maximum(phi[s][fr], math.radians(g))
-                    dl = self.solve_contact_side(s, delta[s], ph, lift[s], fr, passes=SEARCH_CONTACT_PASSES)
-                    Wt = self.pose(self.W_fit[fr].copy(), s, dl[fr], ph[fr], lift[s][fr], fr)[0]
-                    clt = self.clearance(Wt, s, CLEARANCE_STRIDE, fr, SEARCH_REACH_CM, posed_frames=True)[0]
-                    idx = np.nonzero(sel)[0]
-                    better = clt > best_cl[idx]
-                    best_cl[idx[better]], best_phi[idx[better]] = clt[better], ph[fr][better]
-                    return idx, clt >= FOREARM_TARGET_CLEARANCE_CM, ph[fr]
-                # coarse-to-fine: the first coarse step that clears, then the fine grid inside the step before it
-                todo = np.ones(len(bad), bool)
-                for g in SWIVEL_COARSE_DEG:
-                    if not todo.any():
-                        break
-                    idx, ok, ph = probe(g, todo)
-                    found_at[idx[ok]] = g
-                    todo[idx[ok]] = False
-                fine = ~np.isnan(found_at)
-                for g in SWIVEL_GRID_DEG:
-                    sel = fine & (g > found_at - SWIVEL_COARSE_STEP_DEG) & (g < found_at)
-                    if not sel.any():
-                        continue
-                    idx, ok, ph = probe(g, sel)
-                    found_at[idx[ok]] = np.minimum(found_at[idx[ok]], g)
-                for k in np.nonzero(fine)[0]:
-                    need[bad[k]] = max(phi[s][bad[k]], math.radians(found_at[k]))
-                need[bad[todo]] = best_phi[todo]                  # no swivel clears: the best one (reported)
-                phi[s] = envelope(need, self.dt)
-                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
-                off = bad[todo][self.mode[s][bad[todo]] == MODE_TRANSIT]
-                if len(off):                                      # transit: lift the hand (no contact required)
-                    lift[s] = np.maximum(lift[s], self.lift_need(s, delta[s], phi[s], lift[s], off))
-                    delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
         for s in SIDES:
             delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
             clear_side(s)
@@ -931,7 +987,19 @@ class ClipArmIK:
                 Wt = self.pose(self.W_fit[fr].copy(), s, delta[fr], phi[fr], lift[fr], fr)[0]
                 dxy = np.zeros((len(fr), 2))
                 if self.finger_xy_target is not None and key.any():
-                    cen = self.trial.skin_ue(f'{s}_fingers', Wt[key])[0].mean(axis=1)[:, :2] + self.body_shift[fr[key]][:, :2]
+                    pk = self.trial.skin_ue(f'{s}_fingers', Wt[key])[0] + self.body_shift[fr[key]][:, None, :]
+                    cen = pk.mean(axis=1)[:, :2]
+                    kmin, kmax = self.keys['key_min'], self.keys['key_max']
+                    inb = ((pk[..., 0] >= kmin[0]) & (pk[..., 0] <= kmax[0]) & (pk[..., 1] >= kmin[1]) & (pk[..., 1] <= kmax[1])).sum(1)
+                    on_caps = self.raster.over(pk[..., :2]).sum(1) if getattr(self, 'raster', None) is not None else inb
+                    low = on_caps < KEY_FIELD_MIN_OVER
+                    if low.any():      # the fit's path leaves the keycaps: its target moves (persistently) back in
+                        pull = key_field_pull(pk[low][..., :2], kmin, kmax)
+                        # inside the field but between / beside the keycaps: a 0.5 cm step toward the field centre
+                        mid = (np.asarray(kmin[:2]) + np.asarray(kmax[:2])) / 2 - cen[low]
+                        step = KEY_FIELD_MARGIN_CM * mid / np.maximum(np.linalg.norm(mid, axis=1, keepdims=True), 1e-9)
+                        pull = np.where((np.linalg.norm(pull, axis=1) < 1e-6)[:, None], step, pull)
+                        self.finger_xy_target[s][fr[key][low]] = cen[low] + pull
                     dxy[key] = self.finger_xy_target[s][fr[key]] - cen
                 if mouse.any():
                     dxy[mouse] = (self.mouse['palm_target_cm'][None] - self.palm_ue(Wt[mouse], s, fr[mouse]))[:, :2]
@@ -1033,6 +1101,135 @@ class ClipArmIK:
                 arr[k:e] = va + (vb - va) * w
             k = e
         return delta
+
+
+    def finish(self, loop_frames=0, deadline=None):
+        """Full-clip pass on a stitched chunked solve (the chunk states are the warm start; the segmentation is the
+        whole clip's, so no run is cut by a chunk edge):
+        (1) loop closure: over the last `loop_frames` frames the IK inputs (captured wrist, elbow pole and hand world
+            rotation) and the swivel, shoulder girdle and transit lift are C1-blended (quintic smootherstep, weight 1 on
+            the last frame) to frame 0's, so the loop's last frame solves to its first pose again (contact and
+            clearance re-solved below, never assumed);
+        (2) contact on every frame by segment with the exact keycap test;
+        (3) every-arm-vertex desk clearance (swivel search / transit lift) and the contact again;
+        (4) contact polish: keyboard frames still outside the key gate take the vertical wrist correction from a
+            0.05 cm grid that gives contact without reducing the desk clearance below the target."""
+        F = len(self.times)
+        t0 = time.time()
+        delta, phi, lift = ({s: np.array(v[s], float) for s in SIDES} for v in (self.delta, self.phi, self.lift))
+        history = []
+        if loop_frames:
+            n = int(loop_frames)
+            w = smootherstep((np.arange(n) + 1) / n)
+            for s in SIDES:
+                for arr in (phi[s], lift[s]):
+                    arr[F - n:] += (arr[0] - arr[F - n:]) * w
+                self.girdle[s] = np.array(self.girdle[s], float)
+                self.girdle[s][F - n:] += (self.girdle[s][0] - self.girdle[s][F - n:]) * w[:, None]
+                A, pole, wrist, hw, x = self.inputs[s]
+                pole, wrist, hw = pole.copy(), wrist.copy(), hw.copy()
+                pole[F - n:] += (pole[0] - pole[F - n:]) * w[:, None]
+                wrist[F - n:] += (wrist[0] - wrist[F - n:]) * w[:, None]
+                q = P.slerp_arrays(P.quat_from_matrix(unit_rot(hw[F - n:]))[:, None],
+                                   np.repeat(P.quat_from_matrix(unit_rot(hw[:1]))[:, None], n, axis=0), w)[:, 0]
+                hw[F - n:] = quat_to_matrix(q)
+                self.inputs[s] = (A, pole, wrist, hw, x)
+                dz = np.cross((wrist - A) / np.linalg.norm(wrist - A, axis=-1, keepdims=True), pole - A)[:, 1]
+                self.raise_sign[s] = np.where(dz >= 0, 1., -1.)
+        self.exact_audit = True
+        for s in SIDES:
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
+            self.clear_side(s, delta, phi, lift, history, 2)
+        girdle = {}
+        for s in SIDES:
+            girdle[s] = self.girdle_clear(s, delta, phi, lift)
+            if girdle[s]['frames']:
+                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
+                self.clear_side(s, delta, phi, lift, history, 1)
+        polish = {s: self.contact_polish(s, delta, phi, lift) for s in SIDES}
+        self.delta, self.phi, self.lift = delta, phi, lift
+        self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'girdle_clearance': girdle,
+                              'seconds': round(time.time() - t0, 1),
+                              'segments': {s: {'key': int((self.mode[s] == MODE_KEY).sum()), 'mouse': int((self.mode[s] == MODE_MOUSE).sum()),
+                                               'transit': int((self.mode[s] == MODE_TRANSIT).sum())} for s in SIDES},
+                              'segmentation_rule': keyboard_between_keys.__doc__.strip()}
+        return self.pose_all()
+
+
+    def girdle_clear(self, s, delta, phi, lift):
+        """Frames whose every-vertex desk clearance is still below the target after the swivel search: the first
+        GIRDLE_CLEAR_CANDIDATES girdle offset (elevation, then elevation with retraction) whose contact-resolved pose
+        clears (and, on keyboard frames, keeps the key gate) is the need; the girdle offset is its smooth upper envelope
+        over time (never below a frame's need), added to the girdle already there. Mutates self.girdle / delta."""
+        F = len(self.times)
+        top = self.keys['top_cm']
+        W = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
+        cl = self.clearance(W, s, 1, reach=SEARCH_REACH_CM)[0]
+        bad = np.nonzero(cl < FOREARM_TARGET_CLEARANCE_CM)[0]
+        out = {'frames': [int(f) for f in bad], 'min_before_cm': _r(cl.min(), 4)}
+        if not len(bad):
+            return out
+        g0 = np.array(self.girdle[s], float)
+        need = np.zeros((F, 2))
+        found = np.zeros(len(bad), bool)
+        for cand in GIRDLE_CLEAR_CANDIDATES:
+            todo = np.nonzero(~found)[0]
+            if not len(todo):
+                break
+            fr = bad[todo]
+            self.girdle[s] = g0.copy()
+            self.girdle[s][fr] = cand
+            dl = self.solve_contact_side(s, delta[s], phi[s], lift[s], fr)
+            Wt = self.pose(self.W_fit[fr].copy(), s, dl[fr], phi[s][fr], lift[s][fr], fr)[0]
+            c = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0]
+            a = self.key_audit(Wt, fr)[s]
+            g = a['over_min'] - top
+            keyok = (self.mode[s][fr] != MODE_KEY) | ((a['over'] >= KEY_MIN_OVER_VERTICES) & (g >= POLISH_ACCEPT_GAP_CM[0])
+                                                      & (g <= POLISH_ACCEPT_GAP_CM[1]))
+            ok = (c >= FOREARM_TARGET_CLEARANCE_CM) & keyok
+            need[fr[ok]] = np.asarray(cand) - g0[fr[ok]]
+            found[todo[ok]] = True
+        env = np.stack([-envelope(np.maximum(0., -need[:, i]), self.dt) for i in range(2)], 1)
+        self.girdle[s] = g0 + env
+        out.update({'cleared_by_candidate': int(found.sum()), 'not_cleared': [int(f) for f in bad[~found]],
+                    'elevation_deg': rng(-env[:, 0], 2), 'retraction_deg': rng(-env[:, 1], 2),
+                    'frames_with_girdle_offset': int((np.abs(env).sum(1) > 1e-9).sum())})
+        return out
+
+    def contact_polish(self, s, delta, phi, lift, grid=POLISH_GRID_CM, accept=POLISH_ACCEPT_GAP_CM):
+        """Keyboard frames outside the key gate (fewer than KEY_MIN_OVER_VERTICES over the keys, gap over the accept band
+        or penetration): every vertical correction of a grid around the current one is posed (exact keycap test,
+        every arm vertex); the one whose gap is nearest KeyTop + 0.08 cm inside `accept` and whose desk clearance stays
+        at least min(target, current) wins. Frames with no such correction keep theirs (reported). Mutates delta."""
+        top = self.keys['top_cm']
+        W = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
+        a = self.key_audit(W)[s]
+        gap = a['over_min'] - top
+        bad = np.nonzero((self.mode[s] == MODE_KEY) & ((a['over'] < KEY_MIN_OVER_VERTICES) | ~((gap >= accept[0]) & (gap <= accept[1]))))[0]
+        if not len(bad):
+            return {'frames': [], 'fixed': [], 'kept': []}
+        cl0 = self.clearance(W[bad], s, 1, bad, SEARCH_REACH_CM, posed_frames=True)[0]
+        fixed, kept = [], []
+        for c0 in range(0, len(bad), 8):
+            fb = bad[c0:c0 + 8]
+            fr = np.repeat(fb, len(grid))
+            d = delta[s][fr] + np.tile(grid, len(fb))
+            Wt = self.pose(self.W_fit[fr].copy(), s, d, phi[s][fr], lift[s][fr], fr)[0]
+            at = self.key_audit(Wt, fr)[s]
+            g = (at['over_min'] - top).reshape(len(fb), -1)
+            ov = at['over'].reshape(len(fb), -1)
+            cl = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0].reshape(len(fb), -1)
+            need = np.minimum(FOREARM_TARGET_CLEARANCE_CM, cl0[c0:c0 + 8])[:, None]
+            ok = (ov >= KEY_MIN_OVER_VERTICES) & (g >= accept[0]) & (g <= accept[1]) & (cl >= need) & (cl > 0)
+            cost = np.where(ok, np.abs(g - KEY_TOP_TARGET_CM) + 1e-3 * np.abs(grid)[None], np.inf)
+            for i, f in enumerate(fb):
+                j = int(cost[i].argmin())
+                if np.isfinite(cost[i, j]):
+                    delta[s][f] = d[i * len(grid) + j]
+                    fixed.append(int(f))
+                else:
+                    kept.append(int(f))
+        return {'frames': [int(f) for f in bad], 'fixed': fixed, 'kept': kept}
 
 
 # ---------------------------------------------------------------- the chair roll ACTIVITY (declared, reversible)
@@ -2008,7 +2205,9 @@ def post_contact(ctx, ik, W, window, seam_frame=None):
                 need[seam_frame] = 0.
                 if a[s]['over'][seam_frame] >= KEY_MIN_OVER_VERTICES:
                     res = top + KEY_TOP_TARGET_CM - a[s]['over_min'][seam_frame]
-                    if abs(res) > CONTACT_TOL_CM:
+                    gap_s = a[s]['over_min'][seam_frame] - top
+                    # the seam frame IS the neighbour's written pose: it is only corrected when outside the key gate
+                    if not (POLISH_ACCEPT_GAP_CM[0] <= gap_s <= POLISH_ACCEPT_GAP_CM[1]) and abs(res) > CONTACT_TOL_CM:
                         seam_d[s] += float(res)
                         more = True
             if need.any():
@@ -2128,6 +2327,9 @@ def strip(rep):
     return {k: v for k, v in rep.items() if not k.startswith('_')}
 
 
+LOOP_BLEND_S = .5              # DeskTyping loop closure: C1 blend of the last 0.5 s to frame 0's swivel / girdle / lift
+FINISH_RESERVE_S = 1200.       # measured full-clip finish (+ the measurement) on the 989-frame DeskTyping
+FINISH_KEYS = ('delta', 'phi', 'lift', 'hand_xy', 'girdle', 'finger_xy_target', 'mode', 'on')
 CHUNK_RESERVE_S = 240.          # a chunk is only started with at least this much of the bound left
 ERGO_BUDGET_S_PER_CHUNK = 60.   # the ergonomic candidate search per chunk stops after this (the clearance pose is kept)
 MEASURE_S_PER_FRAME = .5        # measured (seated-arms profile, 60-frame subset): ~0.5 s per frame for every gate
@@ -2176,6 +2378,10 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
         # fingers keep THIS clip's captured curls on every frame (gate (a): all-frame invariance, no seam exemption)
         W3 = finger_override(ctx, W3, r_c.joint_world, [])
     W3, seam_lift = post_contact(ctx, ikc, W3, w_dt, seam_frame=F - 1 if at_end else 0)
+    # the SitDown / GetUp desk-clearance pass (every arm vertex, every frame); both seam frames never move
+    protect = np.zeros(F, bool)
+    protect[[0, F - 1]] = True
+    W3, desk_pass = desk_clear_arms(ctx, W3, shift_c, t_c, protect)
     path, sha = write(ctx, g_c, W3, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role))
     Wcb = readback(ctx, path, t_c)
     seam_frame = F - 1 if at_end else 0
@@ -2186,6 +2392,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
                             'window_frames': n, 'fingers': 'captured curls kept on every frame (all-frame invariance gate)',
                             'legs': {'seated_idle_side': legs_idle, 'desk_typing_side': legs_dt},
                             'desk_typing_side_wrist_contact': seam_lift},
+           'desk_clear_pass': desk_pass,
            'arm_weights': weights, 'ik_history': ikc.history,
            'measure': measure(ctx, role, Wcb, r_c.joint_world, t_c, shift_c, off, ikc, key_seam=seam_frame,
                               finger_seams=(), base=W_fit if ARMS_ONLY else None)}
@@ -2306,11 +2513,29 @@ def run(args):
                              f'{progress["chunks_total"]} chunks (checkpointed); rerun the same command to resume')
             return summary, reports
         summary['bounded']['desk_typing_chunks'] = {'chunks': ik.chunks, 'chunk_frames': CHUNK_FRAMES, 'overlap_frames': CHUNK_OVERLAP}
+        # full-clip finish (whole-clip segmentation, loop closure, contact, every-vertex clearance), itself checkpointed
+        fin = out_dir / 'SUB01_DeskTyping_seated.finish-checkpoint.npz'
+        sig = hashlib.sha256(b''.join((out_dir / 'DeskTyping_seated.chunks' / c).read_bytes() for c in ik.chunks)
+                             + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER)).encode()).hexdigest()
+        if fin.exists() and str(np.load(fin)['signature']) == sig:
+            z = np.load(fin)
+            for k in FINISH_KEYS:
+                setattr(ik, k, {s_: z[f'{k}_{s_}'] for s_ in SIDES})
+            ik.finish_report = json.loads(str(z['report'])) | {'resumed_from_checkpoint': fin.name}
+            W = ik.pose_all()
+        else:
+            if args.max_seconds and time.time() - t_start > args.max_seconds - FINISH_RESERVE_S:
+                checkpoint(None, f'wall-clock bound {args.max_seconds} s: every DeskTyping chunk is solved (checkpointed) '
+                                 'but the full-clip finish does not fit in this run; rerun the same command')
+                return summary, reports
+            W = ik.finish(loop_frames=int(round(LOOP_BLEND_S / ik.dt)))
+            np.savez_compressed(fin, signature=sig, report=json.dumps(ik.finish_report),
+                                **{f'{k}_{s_}': np.asarray(getattr(ik, k)[s_]) for k in FINISH_KEYS for s_ in SIDES})
+        summary['bounded']['desk_typing_finish'] = {k: v for k, v in ik.finish_report.items() if k != 'clearance_history'}
         if args.max_seconds and time.time() - t_start > args.max_seconds - MEASURE_S_PER_FRAME * F:
-            checkpoint(None, f'wall-clock bound {args.max_seconds} s: every DeskTyping chunk is solved (checkpointed) but '
+            checkpoint(None, f'wall-clock bound {args.max_seconds} s: DeskTyping is solved and finished (checkpointed) but '
                              'the measurement does not fit in this run; rerun the same command to measure')
             return summary, reports
-        W = ik.pose_all()
         path, sha = write(ctx, g_dt, W, t_dt, out_dir, 'SUB01_DeskTyping_seated', dict(LABELS, role='DeskTyping_seated'))
         np.savez_compressed(out_dir / 'SUB01_DeskTyping_seated.solve-checkpoint.npz', **{
             f'{k}_{s_}': np.asarray(getattr(ik, k)[s_], float) for k in ('phi', 'lift', 'delta', 'mode', 'on', 'girdle') for s_ in SIDES})
@@ -2319,7 +2544,7 @@ def run(args):
         rep = {'role': 'DeskTyping_seated', 'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size,
                'keys': F, 'input_fit_clip': rel(Path(FIT_DIR) / CLIPS['DeskTyping_seated'][0]),
                'raw_capture': CLIPS['DeskTyping_seated'][1], 'readback_max_world_error_cm': _r(np.abs(Wb[..., :3, 3] - W[..., :3, 3]).max() * 100, 6),
-               'ik_history': ik.history, 'measure': measure(ctx, 'DeskTyping_seated', Wb, r_dt.joint_world, t_dt, shift,
+               'ik_history': ik.history, 'finish': ik.finish_report, 'measure': measure(ctx, 'DeskTyping_seated', Wb, r_dt.joint_world, t_dt, shift,
                                                             np.tile(roll.roll, (F, 1)), ik,
                                                             base=f_dt.joint_world if ARMS_ONLY else None)}
         rep['contact_profile'] = profile_validation(ctx, Wb, f_dt.joint_world, r_dt.joint_world, t_dt, shift) if not args.quick \

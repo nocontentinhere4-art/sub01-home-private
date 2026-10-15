@@ -473,6 +473,38 @@ def test_segment_hand_key_mouse_transit():
     assert (K.segment_hand(on, palm, 1 / 30, keys, None)[20:] == K.MODE_TRANSIT).all()
 
 
+def test_keyboard_between_keys_reclassifies_only_runs_flanked_by_keyboard():
+    K_, M_, T_ = K.MODE_KEY, K.MODE_MOUSE, K.MODE_TRANSIT
+    mode = np.array([T_, T_, K_, K_, T_, T_, K_, T_, T_, M_, M_, T_, K_, T_])
+    out = K.keyboard_between_keys(mode)
+    assert out[4:6].tolist() == [K_, K_]                       # between two keyboard segments: keyboard
+    assert out[:2].tolist() == [T_, T_] and out[-1] == T_      # clip ends stay transit
+    assert out[7:9].tolist() == [T_, T_] and out[11] == T_     # keyboard <-> mouse stays transit
+    assert (out[mode != T_] == mode[mode != T_]).all()         # keyboard / mouse frames never change
+    assert (K.keyboard_between_keys(out) == out).all()
+
+
+def test_key_field_pull_brings_enough_vertices_inside_the_field():
+    lo, hi = np.array([180., -300., 0.]), np.array([220., -290., 0.])
+    p = np.zeros((2, 20, 2))
+    p[0] = np.c_[np.linspace(222, 230, 20), np.full(20, -295.)]   # right of the field
+    p[1] = np.c_[np.linspace(200, 210, 20), np.full(20, -295.)]   # already inside
+    pull = K.key_field_pull(p, lo, hi, n=8, margin=.5)
+    q = p[0] + pull[0]
+    assert ((q[:, 0] <= hi[0]) & (q[:, 0] >= lo[0])).sum() >= 8
+    assert np.allclose(pull[1], 0.)
+
+
+def test_girdle_clearance_candidates_stay_inside_the_cited_ranges():
+    for dep, pro in K.GIRDLE_CLEAR_CANDIDATES:
+        assert -10. <= dep <= 0.                                       # elevation only, at most 10 deg
+        assert K.GIRDLE_PROTRACTION_DEG[0] <= pro <= 0.                # retraction inside the cited +-15 deg
+    deps = [d for d, _ in K.GIRDLE_CLEAR_CANDIDATES]
+    assert deps == sorted(deps, reverse=True)                          # smallest elevation first
+    assert K.POLISH_ACCEPT_GAP_CM[0] >= 0. and K.POLISH_ACCEPT_GAP_CM[1] < K.contact_profile.KEY_GAP_MAX_CM
+    assert K.POLISH_ACCEPT_GAP_CM[0] >= -K.P.KEY_PENETRATION_MAX_CM
+
+
 def test_transit_blend_is_c1_and_meets_the_segment_values():
     ik = K.ClipArmIK.__new__(K.ClipArmIK)
     F = 30
