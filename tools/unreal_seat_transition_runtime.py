@@ -479,7 +479,6 @@ void ASub01HomeCharacter::LoadSeatTransition(){
     UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_CUSHION area=%.2fcm2 bounds=%s"),Area,*Cushion.ToString());
    }
   }
-  }
  }
  // Contact evidence: only an accepted, quantitative report (build_evidence()).
  FString EvidenceText;TSharedPtr<FJsonObject> E;
@@ -532,13 +531,13 @@ void ASub01HomeCharacter::LoadSeatTransition(){
     if(RowValue.IsValid()&&RowValue->TryGetObject(Row)&&(*Row)->TryGetStringField(TEXT("role"),Role)&&Role==TEXT("@@SEATED_TYPING_ROLE@@")&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==SeatedTyping->GetPathName()
        &&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A&&(*Row)->TryGetBoolField(TEXT("fit_pass"),F)&&F&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same){(*Row)->TryGetStringField(TEXT("glb_sha256"),TypingGlb);(*Row)->TryGetStringField(TEXT("fbx_sha256"),TypingFbx);
      TypingCommitted=Sub01SeatedFitCommitted(SeatedFitVerdicts,SeatedFitVerdictCount,TEXT("@@SEATED_TYPING_ROLE@@"),A,F,*TypingGlb);}}
-  FString TypingSchema,TypingClipPath,TypingProfileGlb,TypingProfileFbx;double TypingSpread=NAN,TypingYaw=NAN;bool TypingReady=false;
+  FString TypingSchema,TypingProfileClip,TypingProfileGlb,TypingProfileFbx;double TypingSpread=NAN,TypingYaw=NAN;bool TypingReady=false;
   if(!TypingHands)TypingWhy=TEXT("no hands instance");
   else if(TypingHands->ContactTimes.Num()&&TypingHands->ContactSequence!=SeatedTyping)TypingWhy=TEXT("another clip's contact profile is already bound (launch without -Sub01ContactProfile)");
   else if(TypingGlb.IsEmpty()||TypingFbx.IsEmpty())TypingWhy=TEXT("no accepted import receipt row for the seated typing clip");
   else if(!FFileHelper::LoadFileToString(TypingProfileText,*FPaths::Combine(Audit,TEXT("@@SEATED_TYPING_PROFILE_FILE@@")))||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(TypingProfileText),TypingProfile)||!TypingProfile.IsValid())TypingWhy=TEXT("no seated typing profile");
   else if(!TypingProfile->TryGetStringField(TEXT("schema"),TypingSchema)||TypingSchema!=TEXT("@@SEATED_TYPING_PROFILE_SCHEMA@@")||!TypingProfile->TryGetBoolField(TEXT("ready"),TypingReady)||!TypingReady)TypingWhy=TEXT("profile schema/readiness");
-  else if(!TypingProfile->TryGetStringField(TEXT("clip_object_path"),TypingClipPath)||TypingClipPath!=SeatedTyping->GetPathName()||!TypingProfile->TryGetStringField(TEXT("glb_sha256"),TypingProfileGlb)||TypingProfileGlb!=TypingGlb||!TypingProfile->TryGetStringField(TEXT("fbx_sha256"),TypingProfileFbx)||TypingProfileFbx!=TypingFbx)TypingWhy=TEXT("profile is bound to another clip, GLB or FBX");
+  else if(!TypingProfile->TryGetStringField(TEXT("clip_object_path"),TypingProfileClip)||TypingProfileClip!=SeatedTyping->GetPathName()||!TypingProfile->TryGetStringField(TEXT("glb_sha256"),TypingProfileGlb)||TypingProfileGlb!=TypingGlb||!TypingProfile->TryGetStringField(TEXT("fbx_sha256"),TypingProfileFbx)||TypingProfileFbx!=TypingFbx)TypingWhy=TEXT("profile is bound to another clip, GLB or FBX");
   else if(!TypingProfile->TryGetNumberField(TEXT("key_top_spread_cm"),TypingSpread)||!TypingProfile->TryGetArrayField(TEXT("samples"),TypingSamples)||TypingSamples->Num()!=FSub01TypingProfileRules::Samples)TypingWhy=TEXT("profile samples");
   else if(!TypingProfile->TryGetArrayField(TEXT("body_cm"),TypingBody)||TypingBody->Num()!=3||!TypingProfile->TryGetNumberField(TEXT("body_yaw"),TypingYaw)||!TypingProfile->TryGetArrayField(TEXT("body_rotation_pyr"),TypingRotation)||TypingRotation->Num()!=3||!TypingProfile->TryGetArrayField(TEXT("body_scale_xyz"),TypingScale)||TypingScale->Num()!=3
           ||(*TypingRotation)[0]->AsNumber()!=0||(*TypingRotation)[1]->AsNumber()!=TypingYaw||(*TypingRotation)[2]->AsNumber()!=0||(*TypingScale)[0]->AsNumber()!=1||(*TypingScale)[1]->AsNumber()!=1||(*TypingScale)[2]->AsNumber()!=1)TypingWhy=TEXT("profile body transform (pitch/roll-free, unit scale)");

@@ -454,7 +454,7 @@ def test_native_binding_accepts_only_the_seated_profile_for_the_bound_clip():
     assert 'SeatedTyping->GetPathName()==TEXT("/Game/Sub01Hands/Seating/SUB01_DeskTypingSeated.SUB01_DeskTypingSeated")' in block
     assert 'TEXT("desk-typing-seated-contact-profile.json")' in block and 'TEXT("sub01.desk-typing-seated-contact-profile.v1")' in block
     assert 'TEXT("private-audit/unreal-seated-fit-import.json")' in block and 'Role==TEXT("DeskTypingSeated")' in block
-    for gate in ('TypingClipPath!=SeatedTyping->GetPathName()', 'TypingProfileGlb!=TypingGlb', 'TypingProfileFbx!=TypingFbx',
+    for gate in ('TypingProfileClip!=SeatedTyping->GetPathName()', 'TypingProfileGlb!=TypingGlb', 'TypingProfileFbx!=TypingFbx',
                  'TypingSamples->Num()!=FSub01TypingProfileRules::Samples', 'Sub01TypingProfileSample(I,Time,TypingSpread,Bone,Finger,Invalid,Top,Low,Pen,Over)',
                  'TypingHands->ContactTimes.Num()&&TypingHands->ContactSequence!=SeatedTyping', 'TypingNames.Num()!=6'):
         assert gate in block
