@@ -55,7 +55,7 @@ def test_continuous_rotating_leaf_bound_contains_all_corners_over_arc():
  # directions. Native expansion uses the distancebound radius*halfAngle;
  # no real endpoint-only gap or an omitted handle corner may escape it.
  pivot=(154.3,402.2,2.5);center=(199.5,402.6,105.55);extent=(45.2,4.8,101.25)
- radius=math.dist(center,pivot)+math.sqrt(sum(x*x for x in extent))
+ radius=math.hypot(abs(center[0]-pivot[0])+extent[0],abs(center[1]-pivot[1])+extent[1])
  for start,end in [(0,.25),(41.75,42.),(86.4,86.15),(3.5,0)]:
   mid=math.radians((start+end)/2);extra=radius*abs(math.radians(end-start))/2+.0001
   for sample in range(101):

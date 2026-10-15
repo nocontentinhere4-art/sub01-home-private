@@ -78,7 +78,7 @@ bool ASub01HomeCharacter::AuthenticDoorBlocked(int32 Group,float From,float To) 
  if(Group==0){const FVector Pivot(154.3,402.2,2.5);const float Middle=(From+To)*.5f;Rotation=FQuat(FVector::UpVector,FMath::DegreesToRadians(Middle));Center=Pivot+Rotation.RotateVector(Center-Pivot);
   // Bounding every corner over the complete arc, not sampling endpoints only:
   // distance from any midpoint corner <= radius*halfAngle for each arc segment.
-  const float Radius=FVector::Dist(AuthenticDoorCenter[0],Pivot)+AuthenticDoorExtent[0].Size();const float Expand=Radius*FMath::Abs(FMath::DegreesToRadians(To-From))*.5f+.0001f;Extent+=FVector(Expand);
+  const FVector Offset=AuthenticDoorCenter[0]-Pivot;const float Radius=FMath::Sqrt(FMath::Square(FMath::Abs(Offset.X)+AuthenticDoorExtent[0].X)+FMath::Square(FMath::Abs(Offset.Y)+AuthenticDoorExtent[0].Y));const float Expand=Radius*FMath::Abs(FMath::DegreesToRadians(To-From))*.5f+.0001f;Extent.X+=Expand;Extent.Y+=Expand;
  }else{const FVector Axis=Group==1?FVector(0,1,0):FVector(1,0,0);Center+=Axis*((From+To)*.5f);Extent+=Axis*(FMath::Abs(To-From)*.5f);}
  const bool Blocked=GetWorld()->OverlapBlockingTestByChannel(Center,Rotation,ECC_Pawn,FCollisionShape::MakeBox(Extent),Q);
  const double Now=FPlatformTime::Seconds();if(Blocked&&Now-AuthenticDoorBlockedLogAt>1){AuthenticDoorBlockedLogAt=Now;UE_LOG(LogTemp,Display,TEXT("SUB01_AUTHENTIC_DOOR_BLOCKED group=%d from=%.5f to=%.5f realPawnAndWallsRetained=1"),Group,From,To);}return Blocked;
@@ -115,7 +115,7 @@ def receipt_profile(project):
   if not re.fullmatch(r'SUB01_AuthenticDoor_\d{3}',row.get('name',''))or row['name']in names or not row.get('mesh','').startswith(r['owned_destination']+'/')or row['mesh']in paths or row.get('full_source_geometry_verified')is not True or row.get('assembly')not in GROUP:raise ValueError('Exact uniqueactualdoor component proof required')
   names.add(row['name']);paths.add(row['mesh'])
   if row.get('moving_group'):
-   if row['moving_group']not in GROUP:raise ValueError('Unknown movingdoor role')
+   if row['moving_group']not in GROUP or row['moving_group']!=row['assembly']:raise ValueError('Unknown or cross-assembly movingdoor role')
    counts[row['moving_group']]+=1
   for field in ('world_center_cm','world_extent_cm'):
    v=row.get(field,[])
