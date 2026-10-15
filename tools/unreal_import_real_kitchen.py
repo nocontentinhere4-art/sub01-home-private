@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 from home_asset_audit import read_gltf
+from kitchen_render_surface import compare as compare_render_surface, native_triangles
 from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
 from prepare_real_kitchen_bundle import HOME_SHA
 from prepare_real_kitchen_native_bundle import validate_manifest, OLD
@@ -28,7 +29,7 @@ NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
 # R1 failed native validation and is quarantined, not force-deleted while the
 # warm Editor may still compile its UObjects. R2 keeps the identical source
 # proof and strict checks, with corrected failure diagnostics/rollback.
-IMPORT_REVISION = 2
+IMPORT_REVISION = 3
 
 
 def detach_failed_import(u, eas, before):
@@ -274,6 +275,9 @@ def run(root, dry_run=True, u=None):
             raise RuntimeError('Importer added an unowned/unexpected actor')
         by_name, components, rows = {}, [], []
         geometry_checks = []
+        doc, binary = read_gltf(source)
+        source_matrices = world_matrices(doc)
+        source_nodes = {n.get('name'): i for i, n in enumerate(doc['nodes']) if 'mesh' in n}
         moving = {name: hinge['index'] for hinge in proof['hinges'] for name in hinge['parts']}
         mesh_subsystem = u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
         for expected in proof['parts']:
@@ -295,7 +299,16 @@ def run(root, dry_run=True, u=None):
             geometry_checks.append({'part': expected['name'], 'mesh': mesh.get_path_name(),
                                     'actual_triangles': count, 'expected_triangles': expected['triangles'],
                                     'actual_bounds_cm': actual, 'expected_bounds_cm': wanted})
-            if count != expected['triangles'] or not all(close(a, b, .02) for a, b in zip(actual, wanted)):
+            source_node = source_nodes[expected['name']]
+            expected_surface = []
+            for primitive in doc['meshes'][doc['nodes'][source_node]['mesh']]['primitives']:
+                vertices = [transformed(source_matrices[source_node], p) for p in accessor(doc, binary, primitive['attributes']['POSITION'])]
+                vertices = [[p[k]*100 for k in (0, 2, 1)] for p in vertices]
+                indices = [r[0] for r in accessor(doc, binary, primitive['indices'])]
+                expected_surface.extend([[vertices[k] for k in indices[i:i+3]] for i in range(0, len(indices), 3)])
+            surface_proof = compare_render_surface(expected_surface, native_triangles(u, c))
+            geometry_checks[-1]['surface_parity'] = surface_proof
+            if len(expected_surface) != expected['triangles'] or not all(close(a, b, .02) for a, b in zip(actual, wanted)):
                 raise RuntimeError('Actual native kitchen triangle count/world placement changed '+expected['name'])
             body = mesh.get_editor_property('body_setup')
             if not body:
@@ -323,7 +336,8 @@ def run(root, dry_run=True, u=None):
             by_name[expected['name']] = (actor, c)
             components.append(c)
             rows.append({'part': expected['name'], 'component': c.get_path_name(), 'mesh': mesh.get_path_name(),
-                         'triangles': count, 'bounds_cm': actual, 'moving_hinge': moving.get(expected['name'])})
+                         'triangles': count, 'surface_parity': surface_proof,
+                         'bounds_cm': actual, 'moving_hinge': moving.get(expected['name'])})
         owned_mesh_components = [c for a in added for c in a.get_components_by_class(u.StaticMeshComponent)]
         if len(owned_mesh_components) != 152 or set(c.get_path_name() for c in components) != set(c.get_path_name() for c in owned_mesh_components):
             raise RuntimeError('Actual native import contains extra/missing geometry')
