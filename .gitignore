@@ -142,3 +142,4 @@ out/migration-device-restore/
 # Seat-fit trial runtime data (tools/export_seat_fit_source.py, fit_seat_pose_trial.py); keep out of Git
 private-audit/
 out/seat-fit-cache/
+docs/proposed/ergonomic-layout-refit/search-checkpoint.json

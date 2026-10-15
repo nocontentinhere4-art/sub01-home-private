@@ -1092,6 +1092,61 @@ def final(setup, layout, out_dir, search_rows=None, t_start=None):
     return proposal
 
 
+HAND_MODEL_PACKET = 'docs/proposed/canonical-anatomical-hand-cuffs-source-packet-20261015.json'
+HAND_MODEL_PACKET_SHA256 = 'd1da823eff18f7c0415aa876c35999542803db1ee796964e1911cbcd4b2aa994'   # origin/main (19ca7aa / f928346)
+ORIGINAL_RECORD = {
+    'keyboard': {'home_js': KEYBOARD_HOME_JS, 'three_m': list(KEYBOARD_THREE_M), 'width_m': 0.371,
+                 'footprint_ue_cm': [[181.45, -302.046, 84.6], [218.55, -285.954, 87.39]],
+                 'key_field_ue_cm': [[182.173, -301.297, 86.537], [217.749, -287.917, 87.39]]},
+    'mouse': {'home_js': MOUSE_HOME_JS, 'three_m': list(MOUSE_THREE_M), 'width_m': 0.22,
+              'footprint_ue_cm_root_record': [[229.0, -301.45], [251.0, -280.55]]},
+    'chair_initial_translation_cm': list(CHAIR_INITIAL_CM), 'chair_roll_cm': [*CHAIR_ROLL_ORIGINAL_CM, 0.0],
+    'chair_rolled_translation_cm': [203.895, -207.969, 63.1877],
+    'body_placement': 'audited body [203.9, -232.3, -0.6] cm yaw 180, offset (-3.875, +32.5) at the initial chair; rolls rigidly with the chair'}
+
+
+def postprocess(setup, out_dir, status='final_candidate'):
+    """Verifier-facing fields (original / proposed / clips / hand model) and the DeskTyping GLB with the solved arms."""
+    out_dir = Path(out_dir)
+    pp = out_dir / 'ergonomic-layout-refit.proposal.json'
+    prop = json.loads(pp.read_text())
+    z = np.load(out_dir / 'arm-solution.npz')
+    W = np.array(setup.Wb, copy=True)
+    for s_ in A.SIDES:
+        for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s_]):
+            W[:, setup.ctx.sk.j(n)] = z[f'{s_}_{b}_world_gltf']
+        h = setup.ctx.sk.j(A.ARM_BONES[s_][2])
+        carry = W[:, h] @ np.linalg.inv(setup.Wb[:, h])
+        for k in setup.ctx.sk.subtree(h):
+            if k != h:
+                W[:, k] = carry @ setup.Wb[:, k]
+    _, _, g_f, t = setup.ctx.clip('DeskTyping_seated')
+    labels = dict(A.LABELS, ergonomic_layout_refit=True, finger_rests='OLD (known wrong) base locals carried; contact to be '
+                  'redone on ' + HAND_MODEL_PACKET)
+    path, sha = A.write(setup.ctx, g_f, W, t, out_dir, 'SUB01_DeskTyping_seated_refit', labels)
+    Wr = A.readback(setup.ctx, path, t)
+    arm_j = [setup.ctx.sk.j(n) for s_ in A.SIDES for n in A.ARM_BONES[s_]]
+    rb = float(np.abs(Wr[:, arm_j, :3, 3] - W[:, arm_j, :3, 3]).max() * 100)
+    cfg = prop['configuration']
+    prop.update({
+        'status': status,
+        'original': ORIGINAL_RECORD,
+        'proposed': {'keyboard': cfg['keyboard'], 'mouse': cfg['mouse'], 'chair': cfg['chair'], 'body': cfg['body'],
+                     'solver_frame_chair_offset_cm': list(SOLVER_CHAIR_OFFSET_CM),
+                     'clips': {'DeskTyping_seated': {'glb': A.rel(path), 'sha256': sha,
+                                                     'note': 'base DeskTyping (anatomical chair-lift base) with ONLY the six arm '
+                                                             'bones re-solved by this refit; fingers carried with their base locals',
+                                                     'readback_arm_joint_max_error_cm': round(rb, 6)}},
+                     'clips_not_resolved_here': ['SitToType_seated', 'TypeToSit_seated (the longer / shorter roll and the arm '
+                                                 'transitions to this DeskTyping pose are for the transition step)']},
+        'hand_model_for_contact': {'packet': HAND_MODEL_PACKET, 'sha256': HAND_MODEL_PACKET_SHA256,
+                                   'rule': 'the hand contact (keys / mouse) is redone on this frozen 65-bone owner (same 25 body '
+                                           'joints / IBM and wrist tracks; new finger rests, hand geometry and cuff weights). '
+                                           'NO work was done on the old finger rests; PC / phone / contact are NOT claimed ready.'}})
+    pp.write_text(json.dumps(prop, indent=1, allow_nan=False, default=_np) + '\n')
+    return prop
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--source', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
@@ -1101,11 +1156,17 @@ def main(argv=None):
     ap.add_argument('--layout', type=lambda v: [float(x) for x in v.split(',')], default=None,
                     help='kb_dy,chair_dy,mouse_dx[,kb_dx]: skip the pick and solve this one')
     ap.add_argument('--max-seconds', type=float, default=3000.)
+    ap.add_argument('--postprocess-only', action='store_true', help='add the verifier fields and the GLB to a written proposal')
+    ap.add_argument('--status', default='final_candidate')
     args = ap.parse_args(argv)
     t_start = time.time()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     setup = Setup(args.source, args.cache)
+    if args.postprocess_only:
+        prop = postprocess(setup, out, args.status)
+        print(json.dumps({k: prop[k] for k in ('status', 'source_ready', 'native_ready', 'ready')}, default=_np))
+        return 0
     rows = None
     if args.search:
         done = search(setup, out, t_start + args.max_seconds - 900)
@@ -1124,6 +1185,7 @@ def main(argv=None):
         k = best['layout_key']
         layout = Layout((k[0], k[1]), (k[2], k[3]), k[4])
     prop = final(setup, layout, out, rows, t_start)
+    prop = postprocess(setup, out, args.status)
     print(json.dumps({k: prop[k] for k in ('source_ready', 'native_ready', 'ready', 'gates')}, indent=1, default=_np))
     return 0 if prop['source_ready'] else 3
 
