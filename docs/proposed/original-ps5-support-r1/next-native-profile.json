@@ -1,0 +1,57 @@
+{
+  "schema": "sub01.original-whole-ps5-next-native-support-profile.v1",
+  "originalSourceGltf": "/workspace/sub01-home-private/ps5-datsketch-original-r1/scene.gltf",
+  "originalSourceBin": "/workspace/sub01-home-private/ps5-datsketch-original-r1/scene.bin",
+  "sourceGltfSha256": "b9a0248fcc589d9d4add5d4579f4b7294ae94563bf3c51a4ad88e119aea9a260",
+  "sourceBinSha256": "1c82f48f3b8f950e6c4133ea909b10faa4b2c2cc071baa2db855af41374f0f97",
+  "uniformUnitScaleMPerOriginalUnit": 0.001200652897522776,
+  "externalRootMatrixForOriginalGLTFColumnMajor": [
+    -0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    -0.001200652897522776,
+    0,
+    -3.673836744485184,
+    1.2581061602240176,
+    -1.2264476154201611,
+    1
+  ],
+  "externalUEYawDegrees": 180,
+  "externalUETranslationCm": [
+    -367.3836744485184,
+    -122.64476154201611,
+    125.81061602240176
+  ],
+  "newOwnedSupportSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+  "newOwnedSupportSha256": "4d489429c66d60520fc47d3d7eb042389317ac6a9d72182a0903d54b3185b8a4",
+  "old6768SteelWholeActorMustBeReplaced": true,
+  "onlyFourOldGenericConsolePlasticGroupsRetired": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "currentDockAndControllerDisplayRigidYDeltaCm": 4,
+  "newWholeArtistModelHasAll24Meshes13Materials37707Triangles": true,
+  "modelGeometryImagesMaterialsOrTopologyEditsPermitted": false,
+  "newSupportHas1948TrianglesAndOriginalSteelPBR": true,
+  "sourceSupportOnlyChangesTwoManufacturedLips": true,
+  "sourceFitProofPassed": true,
+  "nativeWorldActorSnapshotAndPBRVerificationStillRequired": true,
+  "noOriginalGameOrInputChanges": true,
+  "playstationHardwareOrTitlesConfigured": false,
+  "visualModelOnly": true,
+  "privateCandidateOnly": true,
+  "sourceProofsSha256": {
+    "independent-body-base-unit-audit.json": "3359eae40f80ff75280981b2b8501be3e93775a8c0e10f77895c6a64b31ba3f9",
+    "independent-whole-wall-support.json": "76b9f335325068c3f7b9a1c17a74d0fb1dfdddc9248c5ade3da825db57d5d279",
+    "owned-support-source-report.json": "93f2278a6da2149196d57257332c39761ac7ed7fc0c0934af7ea745816dd3f52"
+  }
+}

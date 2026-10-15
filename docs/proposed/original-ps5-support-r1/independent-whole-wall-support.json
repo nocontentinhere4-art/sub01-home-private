@@ -1,0 +1,1284 @@
+{
+  "schema": "sub01.original-whole-ps5-wall-support.v1",
+  "supportSourcePath": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+  "supportSourceSha256": "4d489429c66d60520fc47d3d7eb042389317ac6a9d72182a0903d54b3185b8a4",
+  "supportLipRevisionOnly": "Two own manufactured retention lips4mm above tray; all other hardware/artistmodel retained",
+  "sourceGltfSha256": "b9a0248fcc589d9d4add5d4579f4b7294ae94563bf3c51a4ad88e119aea9a260",
+  "sourceBinSha256": "1c82f48f3b8f950e6c4133ea909b10faa4b2c2cc071baa2db855af41374f0f97",
+  "allOriginal24Meshes13Materials37707TrianglesRetained": true,
+  "uniformUnitScaleMPerOriginalUnit": 0.001200652897522776,
+  "newExternalRootYawBlenderDegrees": 180,
+  "newExternalRootYawUEDegrees": 180,
+  "newExternalRootTranslationBlenderM": [
+    -3.673836744485184,
+    1.2264476154201611,
+    1.2581061602240176
+  ],
+  "externalOriginalGLTFRootMatrixColumnMajor": [
+    -0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    -0.001200652897522776,
+    0,
+    -3.673836744485184,
+    1.2581061602240176,
+    -1.2264476154201611,
+    1
+  ],
+  "frontOrientation": "Original front\u2212BlenderY turned180deg to face actual approach camera; wholebody/base unchanged",
+  "externalNativeRootTranslationUEcm": [
+    -367.3836744485184,
+    -122.64476154201611,
+    125.81061602240176
+  ],
+  "mountDockAndDisplayDeltaFromOriginal6768UEcm": [
+    0.5,
+    -16,
+    0
+  ],
+  "additionalMountDockDisplayDeltaFromCurrentCandidateUEcm": [
+    0,
+    4,
+    0
+  ],
+  "bodyCentreYUEcm": -119.7,
+  "actualShelfTopUEcm": 125.79999542236328,
+  "wholePS5BoundsUEcm": [
+    [
+      -375.5,
+      -135.63768005371094,
+      125.79999542236328
+    ],
+    [
+      -359.61767578125,
+      -103.76232147216797,
+      165.3186798095703
+    ]
+  ],
+  "solidPierYcm": [
+    -140,
+    -94.2
+  ],
+  "pierMinimumSideMarginCm": 4.3623199462890625,
+  "sourceColliderScope": "All HOME955 original geometry,9R4wallboards,207newwindows,76doors,only retained steelmount+controllerdisplay. Four obsolete consoleplasticgroups intentionally replaced whole, not cut fromoriginalartistasset.",
+  "sourceBroadphaseChecks": [
+    {
+      "newPS5Mesh": 0,
+      "newPS5Name": "PS5_PS5_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 0,
+      "newPS5Name": "PS5_PS5_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 1,
+      "newPS5Name": "PS5_PSLOGO_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 2,
+      "newPS5Name": "PS5BODY_PS Body (plastic)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 2,
+      "newPS5Name": "PS5BODY_PS Body (plastic)_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 3,
+      "newPS5Name": "PS5BODY_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 3,
+      "newPS5Name": "PS5BODY_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 4,
+      "newPS5Name": "PS5BODY_PS Light_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 4,
+      "newPS5Name": "PS5BODY_PS Light_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 5,
+      "newPS5Name": "Cube.001_PS Fan_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 5,
+      "newPS5Name": "Cube.001_PS Fan_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 6,
+      "newPS5Name": "PS Fan_PS Fan_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 6,
+      "newPS5Name": "PS Fan_PS Fan_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 7,
+      "newPS5Name": "PS Back Fan_PS Fan_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 8,
+      "newPS5Name": "PS STAND_PS Stand_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 8,
+      "newPS5Name": "PS STAND_PS Stand_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 68
+    },
+    {
+      "newPS5Mesh": 9,
+      "newPS5Name": "PS Bottom_PS Body (matte)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 9,
+      "newPS5Name": "PS Bottom_PS Body (matte)_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 10,
+      "newPS5Name": "PS Back_PS Body (matte)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 11,
+      "newPS5Name": "POWERBUTTON_POWERBUTTON_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 12,
+      "newPS5Name": "USB Port_ports (blue)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 13,
+      "newPS5Name": "USB Port_ports (black)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 14,
+      "newPS5Name": "USB Port_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 15,
+      "newPS5Name": "USB PORT2_ports (blue)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 16,
+      "newPS5Name": "USB PORT2_ports (black)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 17,
+      "newPS5Name": "USB PORT2_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 18,
+      "newPS5Name": "HDMIPORT_ports (black)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 19,
+      "newPS5Name": "HDMIPORT_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 20,
+      "newPS5Name": "HDMIPORT_ports (gold)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 21,
+      "newPS5Name": "POWERPORT2_powerport_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 22,
+      "newPS5Name": "POWERPORT_powerport_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    },
+    {
+      "newPS5Mesh": 23,
+      "newPS5Name": "POWERPORT_ports (silver)_0",
+      "protectedSource": "/workspace/sub01-private-recovered-project/Sub01HomeLab/SourceAssets/full-home.glb",
+      "protectedName": "house-static-67",
+      "protectedNode": 158,
+      "intersectionPairs": 0
+    }
+  ],
+  "exactTrayContacts": [
+    {
+      "newPS5Mesh": 8,
+      "newPS5Name": "PS STAND_PS Stand_0",
+      "protectedSource": "/workspace/sub01-home-private/ps5-datsketch-original-r1/support-r1/ps5-whole-base-support.glb",
+      "protectedName": "PS5WholeBaseMount",
+      "protectedNode": 0,
+      "intersectionPairs": 68,
+      "classification": "Exact separated vertical halfspaces; complete original base seated on actual tray top"
+    }
+  ],
+  "unresolvedSourceIntersections": [],
+  "actualOriginalStandFootSupport": [
+    {
+      "pointUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -369.10809326171875,
+        -112.34779357910156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -369.10809326171875,
+        -112.34779357910156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -370.5977783203125,
+        -112.79969024658203,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -370.5977783203125,
+        -112.79969024658203,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -371.970703125,
+        -113.53353118896484,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -371.970703125,
+        -113.53353118896484,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -373.174072265625,
+        -114.5211181640625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -373.174072265625,
+        -114.5211181640625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.16168212890625,
+        -115.72449493408203,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.16168212890625,
+        -115.72449493408203,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.8955078125,
+        -117.097412109375,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.8955078125,
+        -117.097412109375,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.347412109375,
+        -118.58712005615234,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.347412109375,
+        -118.58712005615234,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.5,
+        -120.13636779785156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.5,
+        -120.13636779785156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.347412109375,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.347412109375,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.8955078125,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.8955078125,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.16168212890625,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.16168212890625,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -373.174072265625,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -373.174072265625,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -371.970703125,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -371.970703125,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -370.5977783203125,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -370.5977783203125,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -369.10809326171875,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -369.10809326171875,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -367.558837890625,
+        -128.07752990722656,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -367.558837890625,
+        -128.07752990722656,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -366.00958251953125,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -366.00958251953125,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -364.5198669433594,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -364.5198669433594,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -363.14697265625,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -363.14697265625,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -361.9435729980469,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -361.9435729980469,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.95599365234375,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.95599365234375,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.22216796875,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.22216796875,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.770263671875,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.770263671875,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.61767578125,
+        -120.13636016845703,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.61767578125,
+        -120.13636016845703,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.770263671875,
+        -118.58711242675781,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.770263671875,
+        -118.58711242675781,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.22216796875,
+        -117.09740447998047,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.22216796875,
+        -117.09740447998047,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.95599365234375,
+        -115.7244873046875,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.95599365234375,
+        -115.7244873046875,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -361.943603515625,
+        -114.52111053466797,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -361.943603515625,
+        -114.52111053466797,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -363.14697265625,
+        -113.53352355957031,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -363.14697265625,
+        -113.53352355957031,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -364.5198974609375,
+        -112.7996826171875,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -364.5198974609375,
+        -112.7996826171875,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -366.0096130371094,
+        -112.34778594970703,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -366.0096130371094,
+        -112.34778594970703,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -367.558837890625,
+        -112.19520568847656,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -369.10809326171875,
+        -112.34779357910156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -369.10809326171875,
+        -112.34779357910156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -370.5977783203125,
+        -112.79969024658203,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -370.5977783203125,
+        -112.79969024658203,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -371.970703125,
+        -113.53353118896484,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -371.970703125,
+        -113.53353118896484,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -373.174072265625,
+        -114.5211181640625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -373.174072265625,
+        -114.5211181640625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.16168212890625,
+        -115.72449493408203,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.16168212890625,
+        -115.72449493408203,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.8955078125,
+        -117.097412109375,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.8955078125,
+        -117.097412109375,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.347412109375,
+        -118.58712005615234,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.347412109375,
+        -118.58712005615234,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.5,
+        -120.13636779785156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.5,
+        -120.13636779785156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -375.347412109375,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -375.347412109375,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.8955078125,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.8955078125,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -374.16168212890625,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -374.16168212890625,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -373.174072265625,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -373.174072265625,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -371.970703125,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -371.970703125,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -370.5977783203125,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -370.5977783203125,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -369.10809326171875,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -369.10809326171875,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -367.558837890625,
+        -128.07752990722656,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -367.558837890625,
+        -128.07752990722656,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -366.00958251953125,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -366.00958251953125,
+        -127.92494201660156,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -364.5198669433594,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -364.5198669433594,
+        -127.4730453491211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -363.14697265625,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -363.14697265625,
+        -126.73920440673828,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -361.9435729980469,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -361.9435729980469,
+        -125.75161743164062,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.95599365234375,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.95599365234375,
+        -124.5482406616211,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.22216796875,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.22216796875,
+        -123.1753158569336,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.770263671875,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.770263671875,
+        -121.68560791015625,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.61767578125,
+        -120.13636016845703,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.61767578125,
+        -120.13636016845703,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -359.770263671875,
+        -118.58711242675781,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -359.770263671875,
+        -118.58711242675781,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.22216796875,
+        -117.09740447998047,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.22216796875,
+        -117.09740447998047,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -360.95599365234375,
+        -115.7244873046875,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -360.95599365234375,
+        -115.7244873046875,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -361.943603515625,
+        -114.52111053466797,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -361.943603515625,
+        -114.52111053466797,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -363.14697265625,
+        -113.53352355957031,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -363.14697265625,
+        -113.53352355957031,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -364.5198974609375,
+        -112.7996826171875,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -364.5198974609375,
+        -112.7996826171875,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    },
+    {
+      "pointUEcm": [
+        -366.0096130371094,
+        -112.34778594970703,
+        125.79999542236328
+      ],
+      "actualTrayHitUEcm": [
+        -366.0096130371094,
+        -112.34778594970703,
+        125.79999542236328
+      ],
+      "verticalGapCm": 0.0
+    }
+  ],
+  "projections": [
+    {
+      "eyeRole": "actual_native_photo067",
+      "eyeUEcm": [
+        -230,
+        -210,
+        160
+      ],
+      "projectedAtUnchangedTVPlaneYZcm": [
+        [
+          -134.41421053002668,
+          121.82047986467677
+        ],
+        [
+          -94.70312724469686,
+          165.82909484268168
+        ]
+      ],
+      "screenSeparationCm": 6.703127244696859
+    },
+    {
+      "eyeRole": "south_approach",
+      "eyeUEcm": [
+        -65,
+        -220,
+        165
+      ],
+      "projectedAtUnchangedTVPlaneYZcm": [
+        [
+          -134.88830552732904,
+          123.79323470493986
+        ],
+        [
+          -99.33432101010193,
+          165.33226616226705
+        ]
+      ],
+      "screenSeparationCm": 11.334321010101931
+    },
+    {
+      "eyeRole": "seated",
+      "eyeUEcm": [
+        -145,
+        -5,
+        115
+      ],
+      "projectedAtUnchangedTVPlaneYZcm": [
+        [
+          -143.06244608705893,
+          125.76251170723144
+        ],
+        [
+          -105.1876199251698,
+          168.2690435982458
+        ]
+      ],
+      "screenSeparationCm": 17.1876199251698
+    },
+    {
+      "eyeRole": "north_approach",
+      "eyeUEcm": [
+        -65,
+        185,
+        165
+      ],
+      "projectedAtUnchangedTVPlaneYZcm": [
+        [
+          -149.17751013917814,
+          123.79323470493986
+        ],
+        [
+          -106.83574976751862,
+          165.33226616226705
+        ]
+      ],
+      "screenSeparationCm": 18.83574976751862
+    }
+  ],
+  "sourceOriginalFilesUnchanged": true,
+  "sourceArtistBodyNotExactSonyCAD": true,
+  "modelCutReshapedOrRetextured": false,
+  "TVFunctionalPlaneUnchanged": {
+    "x": -374.7,
+    "y": [
+      -88,
+      78
+    ],
+    "z": [
+      117.5,
+      212.5
+    ]
+  },
+  "nativeChanged": false,
+  "nativeInputChanged": false,
+  "sourceFitPassed": true,
+  "nativeVisualAndSupportAccepted": false
+}

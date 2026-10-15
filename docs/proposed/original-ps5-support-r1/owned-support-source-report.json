@@ -1,0 +1,61 @@
+{
+  "schema": "sub01.owned-ps5-whole-base-support.v1",
+  "originalSourceBlend": "/workspace/sub01-home-private/reference-wall-console-r1/output/wall-console.blend",
+  "originalSourceBlendSha256": "ccbdf73d5fe3965d2d781b7805b6e36ca003b25e84d82deab7f11e57e274a40e",
+  "original6768HardwareOnly": true,
+  "artistPS5OrControllerModified": false,
+  "retainedHardwareObjects": 13,
+  "changedOnlyTwoManufacturedLips": [
+    {
+      "name": "Console tray retention side lip",
+      "oldBottomTopBlenderM": [
+        1.25,
+        1.2799999713897705
+      ],
+      "newBottomTopBlenderM": [
+        1.25,
+        1.2620000839233398
+      ],
+      "retentionAboveTrayM": 0.004000083923339837
+    },
+    {
+      "name": "Console tray retention side lip.001",
+      "oldBottomTopBlenderM": [
+        1.25,
+        1.2799999713897705
+      ],
+      "newBottomTopBlenderM": [
+        1.25,
+        1.2620000839233398
+      ],
+      "retentionAboveTrayM": 0.004000083923339837
+    }
+  ],
+  "allOtherLocalVerticesExact": true,
+  "allHardwareDeltaUEcmFromOriginal6768": [
+    0.5,
+    -16,
+    0
+  ],
+  "additionalDeltaFromCurrentCandidateUEcm": [
+    0,
+    4,
+    0
+  ],
+  "originalPBR": {
+    "baseColor": [
+      0.01899999938905239,
+      0.023000000044703484,
+      0.028999999165534973,
+      1.0
+    ],
+    "roughness": 0.3400000035762787,
+    "metallic": 0.7200000286102295
+  },
+  "triangles": 1948,
+  "nativeChanged": false,
+  "files": {
+    "ps5-whole-base-support.glb": "4d489429c66d60520fc47d3d7eb042389317ac6a9d72182a0903d54b3185b8a4",
+    "ps5-whole-base-support.blend": "920d9d8ab2ade66950d0e4e6999238b84918c7c7c31b23a99b363b11ffb2782a"
+  }
+}

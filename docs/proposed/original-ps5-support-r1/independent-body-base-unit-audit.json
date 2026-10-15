@@ -1,0 +1,699 @@
+{
+  "schema": "sub01.independent-original-ps5-body-base-units.v1",
+  "sourceGltfSha256": "b9a0248fcc589d9d4add5d4579f4b7294ae94563bf3c51a4ad88e119aea9a260",
+  "sourceBinSha256": "1c82f48f3b8f950e6c4133ea909b10faa4b2c2cc071baa2db855af41374f0f97",
+  "originalSourceFilesModified": false,
+  "originalNodeMeshMaterialCounts": [
+    42,
+    24,
+    13
+  ],
+  "originalTriangles": 37707,
+  "standExcludedOnlyForUnitMeasurement": {
+    "originalMeshIndex": 8,
+    "originalMeshName": "PS STAND_PS Stand_0",
+    "triangles": 140,
+    "actuallyRetiredOrCut": false
+  },
+  "sourceBodyBoundsBlenderUnits": [
+    [
+      -46.220311522483826,
+      -108.21541445392529,
+      4.231626119733921
+    ],
+    [
+      46.22030556201935,
+      157.26808484837207,
+      329.0548958629378
+    ]
+  ],
+  "sourceCompleteBoundsBlenderUnits": [
+    [
+      -64.68149423599243,
+      -108.21541445392529,
+      -0.08845687259308999
+    ],
+    [
+      67.59926676750183,
+      157.26808484837207,
+      329.0548958629378
+    ]
+  ],
+  "sourceStandBoundsBlenderUnits": [
+    [
+      -64.68149423599243,
+      -45.24846078406187,
+      -0.08845687259308999
+    ],
+    [
+      67.59926676750183,
+      87.03230021943065,
+      20.77662280754275
+    ]
+  ],
+  "sourceBodyHeight": 324.8232697432039,
+  "externalUniformMetersPerSourceUnit": 0.001200652897522776,
+  "scaleDerivation": "Sony official DigitalEdition2020 height390mm excludingbase / actual original source body height; no nonuniform reshaping",
+  "bodyDimensionsM": [
+    0.11098909475130216,
+    0.31875353268178913,
+    0.39
+  ],
+  "completeOriginalDimensionsM": [
+    0.15882327898536322,
+    0.31875353268178913,
+    0.3951869201622763
+  ],
+  "standBoundsM": [
+    [
+      -0.07766002347054704,
+      -0.05432769554882958,
+      -0.00010620600038469651
+    ],
+    [
+      0.08116325551481617,
+      0.10449558343653154,
+      0.024945512374613996
+    ]
+  ],
+  "bodyBoundsM": [
+    [
+      -0.05549455095387555,
+      -0.12992915092073348,
+      0.005080714161891593
+    ],
+    [
+      0.055494543797426604,
+      0.1888243817610557,
+      0.3950807141618916
+    ]
+  ],
+  "completeBoundsM": [
+    [
+      -0.07766002347054704,
+      -0.12992915092073348,
+      -0.00010620600038469651
+    ],
+    [
+      0.08116325551481617,
+      0.1888243817610557,
+      0.3950807141618916
+    ]
+  ],
+  "officialReference": "https://blog.playstation.com/2020/11/09/ps5-the-ultimate-faq/",
+  "officialDimensionsMExcludingBase": {
+    "height": 0.39,
+    "width": 0.092,
+    "depth": 0.26
+  },
+  "artistApproximationResiduals": {
+    "widthVsSony92mm": {
+      "sourceM": 0.11098909475130216,
+      "referenceM": 0.092,
+      "relativeError": 0.20640320381850175
+    },
+    "depthVsSony260mm": {
+      "sourceM": 0.31875353268178913,
+      "referenceM": 0.26,
+      "relativeError": 0.22597512569918887
+    }
+  },
+  "notDimensionallyExactSonyCAD": true,
+  "allOriginalPartsRetained": true,
+  "originalTextureMaterialRolesRetained": true,
+  "originalBodyVerticesOrTopologyModified": false,
+  "proposedExternalScaleMatrix": [
+    0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    0.001200652897522776,
+    0,
+    0,
+    0,
+    0,
+    1
+  ],
+  "sourceParts": [
+    {
+      "node": 5,
+      "nodeName": "PS5_PS5_0",
+      "mesh": 0,
+      "meshName": "PS5_PS5_0",
+      "materials": [
+        "material"
+      ],
+      "triangles": 9653,
+      "vertices": 6325,
+      "boundsSourceBlenderUnits": [
+        [
+          -46.220311522483826,
+          -108.21541445392529,
+          4.818527588302999
+        ],
+        [
+          46.22030556201935,
+          157.26808484837207,
+          329.0548958629378
+        ]
+      ]
+    },
+    {
+      "node": 6,
+      "nodeName": "PS5_PSLOGO_0",
+      "mesh": 1,
+      "meshName": "PS5_PSLOGO_0",
+      "materials": [
+        "PSLOGO"
+      ],
+      "triangles": 271,
+      "vertices": 256,
+      "boundsSourceBlenderUnits": [
+        [
+          -33.60848128795624,
+          91.61491953586487,
+          281.83081739804766
+        ],
+        [
+          -27.950966358184814,
+          131.72365359831505,
+          312.8191281224202
+        ]
+      ]
+    },
+    {
+      "node": 8,
+      "nodeName": "PS5BODY_PS Body (plastic)_0",
+      "mesh": 2,
+      "meshName": "PS5BODY_PS Body (plastic)_0",
+      "materials": [
+        "PS_Body_plastic"
+      ],
+      "triangles": 13301,
+      "vertices": 7591,
+      "boundsSourceBlenderUnits": [
+        [
+          -25.002479553222656,
+          -102.10270105868777,
+          12.249681779242245
+        ],
+        [
+          25.002479553222656,
+          144.32129999895147,
+          322.1642415349864
+        ]
+      ]
+    },
+    {
+      "node": 9,
+      "nodeName": "PS5BODY_ports (silver)_0",
+      "mesh": 3,
+      "meshName": "PS5BODY_ports (silver)_0",
+      "materials": [
+        "ports_silver"
+      ],
+      "triangles": 288,
+      "vertices": 336,
+      "boundsSourceBlenderUnits": [
+        [
+          -2.073735184967518,
+          -101.6534806363106,
+          84.695178722375
+        ],
+        [
+          14.611691236495972,
+          143.56571823803486,
+          177.88972125651887
+        ]
+      ]
+    },
+    {
+      "node": 10,
+      "nodeName": "PS5BODY_PS Light_0",
+      "mesh": 4,
+      "meshName": "PS5BODY_PS Light_0",
+      "materials": [
+        "PS_Light"
+      ],
+      "triangles": 280,
+      "vertices": 284,
+      "boundsSourceBlenderUnits": [
+        [
+          -24.968935549259186,
+          -102.06758759102497,
+          13.081014933042017
+        ],
+        [
+          24.171799421310425,
+          142.91606011866583,
+          320.4706776525682
+        ]
+      ]
+    },
+    {
+      "node": 12,
+      "nodeName": "Cube.001_PS Fan_0",
+      "mesh": 5,
+      "meshName": "Cube.001_PS Fan_0",
+      "materials": [
+        "PS_Fan"
+      ],
+      "triangles": 776,
+      "vertices": 1176,
+      "boundsSourceBlenderUnits": [
+        [
+          -35.61075031757355,
+          -99.2833024263166,
+          26.163695787940046
+        ],
+        [
+          35.61075031757355,
+          131.56708777821183,
+          304.3147797042298
+        ]
+      ]
+    },
+    {
+      "node": 14,
+      "nodeName": "PS Fan_PS Fan_0",
+      "mesh": 6,
+      "meshName": "PS Fan_PS Fan_0",
+      "materials": [
+        "PS_Fan"
+      ],
+      "triangles": 2400,
+      "vertices": 3840,
+      "boundsSourceBlenderUnits": [
+        [
+          -35.39426028728485,
+          -92.68818046745129,
+          168.00642226165908
+        ],
+        [
+          35.39426326751709,
+          124.00315077525096,
+          312.8079994696478
+        ]
+      ]
+    },
+    {
+      "node": 16,
+      "nodeName": "PS Back Fan_PS Fan_0",
+      "mesh": 7,
+      "meshName": "PS Back Fan_PS Fan_0",
+      "materials": [
+        "PS_Fan"
+      ],
+      "triangles": 4996,
+      "vertices": 6696,
+      "boundsSourceBlenderUnits": [
+        [
+          -36.17631793022156,
+          127.42908282669023,
+          16.683689174724925
+        ],
+        [
+          36.669352650642395,
+          143.98894158921388,
+          291.1736970421611
+        ]
+      ]
+    },
+    {
+      "node": 18,
+      "nodeName": "PS STAND_PS Stand_0",
+      "mesh": 8,
+      "meshName": "PS STAND_PS Stand_0",
+      "materials": [
+        "PS_Stand"
+      ],
+      "triangles": 140,
+      "vertices": 154,
+      "boundsSourceBlenderUnits": [
+        [
+          -64.68149423599243,
+          -45.24846078406187,
+          -0.08845687259308999
+        ],
+        [
+          67.59926676750183,
+          87.03230021943065,
+          20.77662280754275
+        ]
+      ]
+    },
+    {
+      "node": 20,
+      "nodeName": "PS Bottom_PS Body (matte)_0",
+      "mesh": 9,
+      "meshName": "PS Bottom_PS Body (matte)_0",
+      "materials": [
+        "PS_Body_matte"
+      ],
+      "triangles": 1664,
+      "vertices": 1025,
+      "boundsSourceBlenderUnits": [
+        [
+          -38.495758175849915,
+          -85.53265856860517,
+          4.231626119733921
+        ],
+        [
+          38.52245807647705,
+          125.13872585939852,
+          12.541956323889142
+        ]
+      ]
+    },
+    {
+      "node": 22,
+      "nodeName": "PS Back_PS Body (matte)_0",
+      "mesh": 10,
+      "meshName": "PS Back_PS Body (matte)_0",
+      "materials": [
+        "PS_Body_matte"
+      ],
+      "triangles": 1626,
+      "vertices": 1588,
+      "boundsSourceBlenderUnits": [
+        [
+          -24.17962998151779,
+          136.40128614576074,
+          12.624826724500057
+        ],
+        [
+          24.17962998151779,
+          144.32130276545746,
+          296.5676789101737
+        ]
+      ]
+    },
+    {
+      "node": 24,
+      "nodeName": "POWERBUTTON_POWERBUTTON_0",
+      "mesh": 11,
+      "meshName": "POWERBUTTON_POWERBUTTON_0",
+      "materials": [
+        "POWERBUTTON"
+      ],
+      "triangles": 480,
+      "vertices": 257,
+      "boundsSourceBlenderUnits": [
+        [
+          -1.4840510673820972,
+          -103.47736343646882,
+          43.189002774682734
+        ],
+        [
+          1.7829803749918938,
+          -101.84384805499742,
+          59.60079302641439
+        ]
+      ]
+    },
+    {
+      "node": 26,
+      "nodeName": "USB Port_ports (blue)_0",
+      "mesh": 12,
+      "meshName": "USB Port_ports (blue)_0",
+      "materials": [
+        "ports_blue"
+      ],
+      "triangles": 18,
+      "vertices": 32,
+      "boundsSourceBlenderUnits": [
+        [
+          8.26379656791687,
+          135.61566914703752,
+          136.92487652982507
+        ],
+        [
+          12.40605115890503,
+          142.3863655860627,
+          150.65511639798896
+        ]
+      ]
+    },
+    {
+      "node": 27,
+      "nodeName": "USB Port_ports (black)_0",
+      "mesh": 13,
+      "meshName": "USB Port_ports (black)_0",
+      "materials": [
+        "ports_black"
+      ],
+      "triangles": 26,
+      "vertices": 34,
+      "boundsSourceBlenderUnits": [
+        [
+          7.979217916727066,
+          135.61566909826004,
+          136.62548097376083
+        ],
+        [
+          12.690626084804535,
+          144.36445077932072,
+          150.95451052869575
+        ]
+      ]
+    },
+    {
+      "node": 28,
+      "nodeName": "USB Port_ports (silver)_0",
+      "mesh": 14,
+      "meshName": "USB Port_ports (silver)_0",
+      "materials": [
+        "ports_silver"
+      ],
+      "triangles": 16,
+      "vertices": 32,
+      "boundsSourceBlenderUnits": [
+        [
+          7.979218661785126,
+          135.61566914703752,
+          136.6254810529643
+        ],
+        [
+          12.690621614456177,
+          143.87830571009866,
+          150.9545091825437
+        ]
+      ]
+    },
+    {
+      "node": 30,
+      "nodeName": "USB PORT2_ports (blue)_0",
+      "mesh": 15,
+      "meshName": "USB PORT2_ports (blue)_0",
+      "materials": [
+        "ports_blue"
+      ],
+      "triangles": 18,
+      "vertices": 28,
+      "boundsSourceBlenderUnits": [
+        [
+          8.263793587684631,
+          135.61566491809376,
+          110.96780474866696
+        ],
+        [
+          12.40604743361473,
+          142.38636135711894,
+          124.69804461683084
+        ]
+      ]
+    },
+    {
+      "node": 31,
+      "nodeName": "USB PORT2_ports (black)_0",
+      "mesh": 16,
+      "meshName": "USB PORT2_ports (black)_0",
+      "materials": [
+        "ports_black"
+      ],
+      "triangles": 26,
+      "vertices": 34,
+      "boundsSourceBlenderUnits": [
+        [
+          7.979214936494827,
+          135.61566486931628,
+          110.66840919260272
+        ],
+        [
+          12.690621614456177,
+          144.36444655037695,
+          124.99742682660867
+        ]
+      ]
+    },
+    {
+      "node": 32,
+      "nodeName": "USB PORT2_ports (silver)_0",
+      "mesh": 17,
+      "meshName": "USB PORT2_ports (silver)_0",
+      "materials": [
+        "ports_silver"
+      ],
+      "triangles": 16,
+      "vertices": 32,
+      "boundsSourceBlenderUnits": [
+        [
+          7.979214936494827,
+          135.61566491809376,
+          110.6684092718062
+        ],
+        [
+          12.690620124340057,
+          143.87830148115296,
+          124.99742548045663
+        ]
+      ]
+    },
+    {
+      "node": 34,
+      "nodeName": "HDMIPORT_ports (black)_0",
+      "mesh": 18,
+      "meshName": "HDMIPORT_ports (black)_0",
+      "materials": [
+        "ports_black"
+      ],
+      "triangles": 600,
+      "vertices": 1301,
+      "boundsSourceBlenderUnits": [
+        [
+          6.823758780956268,
+          138.6041019335517,
+          56.489951017819045
+        ],
+        [
+          12.50414252281189,
+          144.2844861684143,
+          69.47375595899624
+        ]
+      ]
+    },
+    {
+      "node": 35,
+      "nodeName": "HDMIPORT_ports (silver)_0",
+      "mesh": 19,
+      "meshName": "HDMIPORT_ports (silver)_0",
+      "materials": [
+        "ports_silver"
+      ],
+      "triangles": 12,
+      "vertices": 24,
+      "boundsSourceBlenderUnits": [
+        [
+          7.229500263929367,
+          144.28448411918754,
+          56.89569149131985
+        ],
+        [
+          12.098401039838791,
+          144.28448610229813,
+          69.06793747062878
+        ]
+      ]
+    },
+    {
+      "node": 36,
+      "nodeName": "HDMIPORT_ports (gold)_0",
+      "mesh": 20,
+      "meshName": "HDMIPORT_ports (gold)_0",
+      "materials": [
+        "ports_gold"
+      ],
+      "triangles": 100,
+      "vertices": 191,
+      "boundsSourceBlenderUnits": [
+        [
+          9.104036539793015,
+          138.76639379206608,
+          59.33751526469006
+        ],
+        [
+          9.761340171098709,
+          142.66152270654237,
+          66.62611488712646
+        ]
+      ]
+    },
+    {
+      "node": 38,
+      "nodeName": "POWERPORT2_powerport_0",
+      "mesh": 21,
+      "meshName": "POWERPORT2_powerport_0",
+      "materials": [
+        "powerport"
+      ],
+      "triangles": 172,
+      "vertices": 266,
+      "boundsSourceBlenderUnits": [
+        [
+          2.363014966249466,
+          126.78830915961052,
+          17.9433408527479
+        ],
+        [
+          13.516463339328766,
+          144.42023644051804,
+          37.14614531055015
+        ]
+      ]
+    },
+    {
+      "node": 40,
+      "nodeName": "POWERPORT_powerport_0",
+      "mesh": 22,
+      "meshName": "POWERPORT_powerport_0",
+      "materials": [
+        "powerport"
+      ],
+      "triangles": 320,
+      "vertices": 360,
+      "boundsSourceBlenderUnits": [
+        [
+          3.6361321806907654,
+          138.89531215214183,
+          19.52321116284852
+        ],
+        [
+          11.999525874853134,
+          144.25759893309487,
+          35.55367710290824
+        ]
+      ]
+    },
+    {
+      "node": 41,
+      "nodeName": "POWERPORT_ports (silver)_0",
+      "mesh": 23,
+      "meshName": "POWERPORT_ports (silver)_0",
+      "materials": [
+        "ports_silver"
+      ],
+      "triangles": 508,
+      "vertices": 518,
+      "boundsSourceBlenderUnits": [
+        [
+          5.87114617228508,
+          138.13881036829002,
+          21.77975460395444
+        ],
+        [
+          9.60208848118782,
+          143.6710051246841,
+          33.29713478192899
+        ]
+      ]
+    }
+  ],
+  "nativeChanged": false,
+  "placementAccepted": false
+}
