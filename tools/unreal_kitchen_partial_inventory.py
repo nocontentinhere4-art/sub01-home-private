@@ -63,9 +63,19 @@ def run(u=None):
     result['failed_r2_mesh'] = {'path': exact, 'loaded': loaded is not None,
                               'assets_force_loaded': False}
     if loaded is not None:
-        from unreal_loaded_plant_clone_audit import build_settings
+        from unreal_loaded_plant_clone_audit import build_settings, extract
+        import gzip
         sub = u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
+        local_triangles, local_sections = extract(u, loaded, u.Transform())
+        triangle_output = Path(u.Paths.project_dir())/'private-audit/kitchen-r2-mesh11-local-triangles.json.gz'
+        triangle_output.write_bytes(gzip.compress(json.dumps({
+            'schema': 'sub01.loaded-kitchen-mesh-triangles.v1', 'mesh': exact,
+            'coordinate_space': 'native asset local centimetres; identity transform',
+            'sections': local_sections, 'triangles': local_triangles,
+            'scene_mutations': 0, 'assets_force_loaded': False}).encode()))
         result['failed_r2_mesh'].update({
+            'local_triangles_gzip': str(triangle_output),
+            'local_triangles_count': len(local_triangles),
             'build_settings': build_settings(u, loaded),
             'geometry_api_audit': native_geometry_api_audit(u, loaded),
             'set_lod_build_settings_doc': str(getattr(sub, 'set_lod_build_settings', None).__doc__)})
