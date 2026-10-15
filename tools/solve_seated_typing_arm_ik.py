@@ -421,6 +421,128 @@ def envelope(need, dt, half_s=SWIVEL_ENVELOPE_S, sigma_s=SWIVEL_SMOOTH_S):
     return np.maximum(smooth, need)
 
 
+KEY_RASTER_CM = .02
+
+
+class KeyRaster:
+    """The keycap over-key test of the existing rule (fit_seat_pose_trial.Trial.key_audit: inside the key field and
+    over a keycap top triangle, Sub01SurfaceHeightAt) precomputed on a KEY_RASTER_CM grid of cell centres, for the
+    SOLVER's inner loop only; every reported gate re-measures with the exact triangle test."""
+
+    def __init__(self, keys, res=KEY_RASTER_CM):
+        from fit_seat_rigid_placement import Surface
+        self.lo, self.hi, self.res = np.asarray(keys['key_min'][:2], float), np.asarray(keys['key_max'][:2], float), res
+        self.n = np.ceil((self.hi - self.lo) / res).astype(int) + 1
+        gx, gy = np.meshgrid(self.lo[0] + (np.arange(self.n[0]) + .5) * res, self.lo[1] + (np.arange(self.n[1]) + .5) * res, indexing='ij')
+        found, _ = Surface(keys['triangles']).height(np.c_[gx.ravel(), gy.ravel()])
+        self.mask = found.reshape(self.n)
+
+    def over(self, xy):
+        i = np.floor((xy - self.lo) / self.res).astype(int)
+        inb = np.all((xy >= self.lo) & (xy <= self.hi), axis=-1) & np.all((i >= 0) & (i < self.n), axis=-1)
+        i = np.clip(i, 0, self.n - 1)
+        return inb & self.mask[i[..., 0], i[..., 1]]
+
+
+class HeightRaster:
+    """A surface height map (Sub01SurfaceHeightAt rule at cell centres, KEY_RASTER_CM grid) for the SOLVER's inner loop;
+    the reported gates use the exact triangle test."""
+
+    def __init__(self, triangles, res=KEY_RASTER_CM):
+        from fit_seat_rigid_placement import Surface
+        t = np.asarray(triangles, float)
+        self.lo, self.hi, self.res = t[..., :2].reshape(-1, 2).min(0), t[..., :2].reshape(-1, 2).max(0), res
+        self.n = np.ceil((self.hi - self.lo) / res).astype(int) + 1
+        gx, gy = np.meshgrid(self.lo[0] + (np.arange(self.n[0]) + .5) * res, self.lo[1] + (np.arange(self.n[1]) + .5) * res, indexing='ij')
+        found, h = Surface(t).height(np.c_[gx.ravel(), gy.ravel()])
+        self.found, self.h = found.reshape(self.n), np.nan_to_num(h).reshape(self.n)
+
+    def height(self, xy):
+        xy = np.asarray(xy, float)
+        i = np.floor((xy - self.lo) / self.res).astype(int)
+        inb = np.all((i >= 0) & (i < self.n), axis=-1)
+        i = np.clip(i, 0, self.n - 1)
+        return inb & self.found[i[..., 0], i[..., 1]], self.h[i[..., 0], i[..., 1]]
+
+
+MODE_KEY, MODE_MOUSE, MODE_TRANSIT = 0, 1, 2
+MOUSE_PALM_FRACTION = .6                 # main desk-hands contact README: the palm is 60% from wrist to middle knuckle
+MOUSE_PALM_BEHIND_CM, MOUSE_PALM_RIGHT_CM = 2.2, 1.2   # ... 2.2 cm behind and 1.2 cm right of the shell's top
+MOUSE_PALM_SKIN_CM = 1.6                 # ... the palm rests on the shell: palm skin 16 mm below the bones' line
+SEGMENT_SETTLED_CM_S = 20.               # a hand off the keys moving slower than this (smoothed) has arrived
+SEGMENT_MIN_S = .2                       # a mouse segment lasts at least this long, else it is transit
+
+
+def segment_hand(on_keys, palm_ue, dt, keys, mouse):
+    """Per frame: KEYBOARD where the existing contact rule has the hand over the keys (the base's own over-key frames);
+    MOUSE where the hand is off the keys, beyond the key field's right edge and settled (palm speed below
+    SEGMENT_SETTLED_CM_S, Gaussian-smoothed over 0.1 s) for at least SEGMENT_MIN_S; TRANSIT otherwise."""
+    F = len(on_keys)
+    mode = np.full(F, MODE_TRANSIT)
+    mode[on_keys] = MODE_KEY
+    if mouse is None:
+        return mode
+    sp = np.r_[0., np.linalg.norm(np.diff(palm_ue[:, :2], axis=0), axis=1) / dt]
+    sig = .1 / dt
+    x = np.arange(-3 * int(math.ceil(sig)), 3 * int(math.ceil(sig)) + 1)
+    ker = np.exp(-.5 * (x / sig) ** 2)
+    sp = np.convolve(np.pad(sp, len(x) // 2, mode='edge'), ker / ker.sum(), mode='valid')
+    cand = ~on_keys & (palm_ue[:, 0] > keys['key_max'][0]) & (sp < SEGMENT_SETTLED_CM_S)
+    k = 0
+    while k < F:
+        if not cand[k]:
+            k += 1
+            continue
+        e = k
+        while e < F and cand[e]:
+            e += 1
+        if (e - k) * dt >= SEGMENT_MIN_S:
+            mode[k:e] = MODE_MOUSE
+        k = e
+    return mode
+
+
+def mouse_geometry(cache=None):
+    """The actual mouse: web/room/mouse.glb at the home.js placement furnished("mouse", 2.4, .846, -2.91, .22) (width
+    0.22 m along x, bottom at .846 m, centred); its pad's UE footprint equals root's LINEA record mouse nodes 236-238
+    (X 229..251, Y -301.45..-280.55). The shell top and main's palm target on it (README: 2.2 cm behind, 1.2 cm right
+    of the shell's top; palm bone line 1.6 cm over the shell)."""
+    path = ROOT / 'web/room/mouse.glb'
+    g = G.Gltf(E.decoded(path, Path(cache or ROOT / 'out/seat-fit-cache')))
+    w = G.world_pose(g, G.RestPose, 0.)
+    parts = {}
+    for i, n in enumerate(g.nodes):
+        if 'mesh' not in n:
+            continue
+        M = E.trs(*w[i])
+        for pr in g.doc['meshes'][n['mesh']]['primitives']:
+            P_ = E.accessor(g, pr['attributes']['POSITION']) @ M[:3, :3].T + M[:3, 3]
+            idx = E.accessor(g, pr['indices']).astype(int).reshape(-1, 3)
+            parts[n.get('name', str(i))] = (P_, idx)
+    A = np.concatenate([v for v, _ in parts.values()])
+    lo, hi = A.min(0), A.max(0)
+    sc = .22 / (hi[0] - lo[0])
+    c = (lo + hi) / 2
+    off = np.array([2.4 - c[0] * sc, .846 - lo[1] * sc, -2.91 - c[2] * sc])
+    ue = {k: ((v * sc + off)[:, [0, 2, 1]] * 100., idx) for k, (v, idx) in parts.items()}
+    shell, sidx = ue['mouse']
+    top = shell[shell[:, 2].argmax()]
+    tri = shell[sidx][:, [0, 2, 1]]
+    from fit_seat_rigid_placement import Surface
+    surf = Surface(tri)
+    xy = top[:2] + [MOUSE_PALM_RIGHT_CM, MOUSE_PALM_BEHIND_CM]   # +X is his right, +Y toward him (faces -Y)
+    found, h = surf.height(xy[None])
+    z = float(h[0]) if found[0] else float(top[2])
+    allp = np.concatenate([v for v, _ in ue.values()])
+    return {'source': rel(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+            'placement': 'web/house/home.js furnished("mouse", 2.4, 0.846, -2.91, 0.22): width .22 m on x, bottom .846 m',
+            'footprint_ue_cm': [allp.min(0).tolist(), allp.max(0).tolist()],
+            'root_record_mouse_nodes_236_238_xy_cm': [[229.0, -301.45], [251.0, -280.55]],
+            'shell_top_cm': top.tolist(), 'shell_surface_at_palm_cm': z,
+            'palm_target_cm': np.array([xy[0], xy[1], z + MOUSE_PALM_SKIN_CM]), 'shell_triangles_cm': tri,
+            'rule': 'origin/main docs/design/desk-hands/contact/README.md (resolver step 2-3, mouse)'}
+
+
 class ClipArmIK:
     """Whole-arm IK on one seated clip. W_fit: the seat-fitted clip's joint worlds (solver frame = the rolled world);
     W_raw: the raw capture at the same times (wrist relative rotation and elbow pole). body_shift_cm (F, 3): the body's
@@ -447,6 +569,7 @@ class ClipArmIK:
         # captured horizontal hand path the existing contact pipeline placed over the keycaps. The wrist target gets a
         # per-frame horizontal correction (self.hand_xy, glTF metres) so the IK hand lands on the same keycaps.
         self.finger_xy_target = finger_xy_target
+        self.mouse = None                 # set by Context.ik: main's mouse contact target at the actual mouse
         self.on_mask = on_mask
         self.hand_xy = {s: np.zeros((F, 3)) for s in SIDES}
 
@@ -457,7 +580,7 @@ class ClipArmIK:
         sel = slice(None, None, stride)
         Wf = W if (frames is None or posed_frames) else W[frames]
         shift = self.body_shift if frames is None else self.body_shift[frames]
-        pts = E.to_ue(P.skin_points((pos[sel], jts[sel], wts[sel]), self.ibm, Wf)) + shift[:, None, :]
+        pts = E.to_ue(lbs((pos[sel], jts[sel], wts[sel]), self.ibm, Wf)) + shift[:, None, :]
         return pts, part[sel]
 
     def clearance(self, W, side, stride=1, frames=None, reach=None, posed_frames=False):
@@ -466,8 +589,17 @@ class ClipArmIK:
         return d.min(axis=1), d, which, pts, part
 
     def key_audit(self, W, frames=None):
-        """The existing keyboard rule at each frame's actual body placement (hands translated with the body)."""
+        """The existing keyboard rule at each frame's actual body placement (hands translated with the body). With a
+        KeyRaster (solver inner loop) the over-key test is the precomputed raster; otherwise the exact triangle test."""
         shift = self.body_shift if frames is None else self.body_shift[frames]
+        if getattr(self, 'raster', None) is not None and not getattr(self, 'exact_audit', False):
+            out = {}
+            for s in SIDES:
+                p, _ = self.trial.skin_ue(f'{s}_fingers', W)
+                p = p + shift[:, None, :]
+                over = self.raster.over(p[..., :2])
+                out[s] = {'over': over.sum(axis=1), 'over_min': np.where(over, p[..., 2], np.inf).min(axis=1)}
+            return out
         if not shift.any():
             return self.trial.key_audit(W)
         Ws = np.array(W, copy=True)
@@ -516,6 +648,8 @@ class ClipArmIK:
             self.on = {s: np.asarray(self.on_mask[s], bool) & self.contact for s in SIDES}
         else:
             self.on = {s: (audit[s]['over'] >= KEY_MIN_OVER_VERTICES) if self.contact else np.zeros(F, bool) for s in SIDES}
+        self.mode = {s: segment_hand(self.on[s], self.palm_ue(self.W_fit, s, np.arange(F)), self.dt, self.keys,
+                                     self.mouse if (self.mouse is not None and s == 'right') else None) for s in SIDES}
         delta = {s: zero.copy() for s in SIDES}
         phi = {s: zero.copy() for s in SIDES}
         lift = {s: zero.copy() for s in SIDES}
@@ -572,6 +706,9 @@ class ClipArmIK:
         if self.ergonomic:
             for s in SIDES:
                 phi[s], delta[s], self.ergonomics[s] = self.ergonomic_refine(s, delta[s], phi[s], lift[s])
+        self.exact_audit = True                  # final contact passes with the exact keycap triangle test
+        for s in SIDES:
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=4)
         W = self.W_fit.copy()
         for s in SIDES:
             W = self.pose(W, s, delta[s], phi[s], lift[s])[0]
@@ -662,34 +799,102 @@ class ClipArmIK:
         out[todo] = lift[todo] + LIFT_MAX_CM
         return envelope(out, self.dt)
 
+    def mouse_gap(self, W, s, frames):
+        """Lowest hand/finger skin height over the mouse shell (cm; +inf where no skin is over the shell)."""
+        pos, jts, wts = self.arm_skins[s]['skin']
+        sel = np.isin(self.arm_skins[s]['part'], ('hand', 'fingers'))
+        key = ('mouse_skin', s)
+        if key not in self.__dict__.setdefault('_sub', {}):
+            self._sub[key] = (pos[sel], jts[sel], wts[sel])
+        pts = E.to_ue(lbs(self._sub[key], self.ibm, W)) + self.body_shift[frames][:, None, :]
+        found, h = self.mouse_surface.height(pts[..., :2].reshape(-1, 2))
+        g = np.where(found, pts[..., 2].reshape(-1) - np.nan_to_num(h), np.inf).reshape(pts.shape[:2])
+        return g.min(axis=1)
+
+    def palm_ue(self, W, s, frames):
+        """Main's mouse palm point (docs/design/desk-hands/contact/README.md): 60% from the wrist to the middle knuckle."""
+        p = SIDES[s]
+        wr = E.to_ue(W[:, self.sk.j(f'{p}Hand'), :3, 3])
+        m1 = E.to_ue(W[:, self.sk.j(f'{p}HandMiddle1'), :3, 3])
+        return wr + MOUSE_PALM_FRACTION * (m1 - wr) + self.body_shift[frames]
+
     def solve_contact_side(self, s, delta, phi, lift, frames=None, passes=CONTACT_PASSES):
-        """Vertical wrist correction so the over-key distal skin minimum sits at KeyTop + 0.08 cm on every on-key frame
-        (iterated: the hand rides on the forearm, so its orientation follows the IK), and the horizontal correction that
-        keeps the distal finger centroid on the fit's hand path. Off-key frames start from the time interpolation of the
-        neighbouring on-key corrections (the hand travels at typing height) and are only ever lifted, so a hand passing
-        over the keyboard never enters the keycaps."""
+        """Per frame by segment (self.mode): KEYBOARD frames - the over-key distal skin minimum to KeyTop + 0.08 cm and the
+        distal finger centroid on the fit's hand path; MOUSE frames - main's mouse contact (palm point onto
+        self.mouse['palm_target_cm'], the palm bone line MOUSE_PALM_SKIN_CM over the shell); TRANSIT frames - the
+        corrections are the C1 (quintic smootherstep) blend of the neighbouring segment-end corrections, and are only
+        ever lifted over the keys. Iterated (the hand rides on the forearm, so its orientation follows the IK), with a
+        damped update after the first passes."""
         top = self.keys['top_cm'] + KEY_TOP_TARGET_CM
         delta = delta.copy()
         fr = np.arange(len(self.times)) if frames is None else np.asarray(frames)
-        on = self.on[s][fr]
-        if frames is None and self.on[s].any():
-            idx = np.nonzero(self.on[s])[0]
-            delta[~self.on[s]] = np.interp(np.nonzero(~self.on[s])[0], idx, delta[idx])
-        for _ in range(passes):
+        mode = self.mode[s][fr]
+        key, mouse = mode == MODE_KEY, mode == MODE_MOUSE
+        for it in range(passes):
+            damp = 1. if it < 3 else .7
             Wt = self.pose(self.W_fit[fr].copy(), s, delta[fr], phi[fr], lift[fr], fr)[0]
             hres = 0.
-            if self.finger_xy_target is not None:
-                cen = self.trial.skin_ue(f'{s}_fingers', Wt)[0].mean(axis=1)[:, :2] + self.body_shift[fr][:, :2]
-                dxy = self.finger_xy_target[s][fr] - cen
-                self.hand_xy[s][fr] += gltf_shift(np.c_[dxy, np.zeros(len(fr))])
+            dxy = np.zeros((len(fr), 2))
+            if self.finger_xy_target is not None and key.any():
+                cen = self.trial.skin_ue(f'{s}_fingers', Wt[key])[0].mean(axis=1)[:, :2] + self.body_shift[fr[key]][:, :2]
+                dxy[key] = self.finger_xy_target[s][fr[key]] - cen
+            vres = np.zeros(len(fr))
+            if mouse.any():
+                pm = self.palm_ue(Wt[mouse], s, fr[mouse])
+                d3 = self.mouse['palm_target_cm'][None] - pm
+                dxy[mouse] = d3[:, :2]
+                gap = self.mouse_gap(Wt[mouse], s, fr[mouse])
+                vres[mouse] = np.where(np.isfinite(gap), KEY_TOP_TARGET_CM - gap, d3[:, 2])
+            if dxy.any():
+                self.hand_xy[s][fr] += damp * gltf_shift(np.c_[dxy, np.zeros(len(fr))])
                 hres = float(np.abs(dxy).max())
                 Wt = self.pose(self.W_fit[fr].copy(), s, delta[fr], phi[fr], lift[fr], fr)[0]
             a = self.key_audit(Wt, fr)[s]
-            res = np.where(on, top - a['over_min'], np.where(a['over'] > 0, np.maximum(top - a['over_min'], 0.), 0.))
+            kres = top - a['over_min']
+            res = np.where(key, kres, np.where(mouse, vres, np.where(a['over'] > 0, np.maximum(kres, 0.), 0.)))
             res = np.where(np.isfinite(res), res, 0.)
-            delta[fr] = delta[fr] + res
+            delta[fr] = delta[fr] + damp * res
             if np.abs(res).max() < CONTACT_TOL_CM and hres < CONTACT_TOL_CM * 10:
                 break
+        if frames is None:
+            delta = self.blend_transit(s, delta)
+            tr = self.mode[s] == MODE_TRANSIT
+            for _ in range(passes if tr.any() else 0):         # transit: only ever lifted over the keycaps
+                Wt = self.pose(self.W_fit.copy(), s, delta, phi, lift)[0]
+                a = self.key_audit(Wt)[s]
+                up = np.where(tr & (a['over'] > 0), np.maximum(top - a['over_min'], 0.), 0.)
+                up = np.nan_to_num(up)
+                if up.max() < CONTACT_TOL_CM:
+                    break
+                delta = delta + envelope(up, self.dt) * tr
+        return delta
+
+    def blend_transit(self, s, delta):
+        """Transit runs take the C1 blend (quintic smootherstep, zero slope at both ends) of the corrections at the
+        frames just before and after the run; a run at either end of the clip holds its one neighbour."""
+        mode = self.mode[s]
+        F = len(mode)
+        tr = mode == MODE_TRANSIT
+        if not tr.any() or tr.all():
+            return delta
+        delta = delta.copy()
+        k = 0
+        while k < F:
+            if not tr[k]:
+                k += 1
+                continue
+            e = k
+            while e < F and tr[e]:
+                e += 1
+            a_, b_ = k - 1, e                     # neighbouring segment frames (may be out of range)
+            n = e - k
+            u = smootherstep((np.arange(n) + 1) / (n + 1))
+            for arr in (delta, self.hand_xy[s]):
+                va = arr[a_] if a_ >= 0 else arr[b_]
+                vb = arr[b_] if b_ < F else arr[a_]
+                w = u.reshape((-1,) + (1,) * (np.ndim(arr) - 1))
+                arr[k:e] = va + (vb - va) * w
+            k = e
         return delta
 
 
@@ -847,20 +1052,34 @@ def load_complete_chair(measured, cache=None):
 
 
 class ChairCollider:
-    """Signed distance of points to the complete chair at a roll offset: exact distance to the nearest of the K_TRI
-    nearest-centroid triangles, signed by that triangle's outward normal (negative = inside). Upholstery may be pressed
-    in down to the seat band's lower edge (SEAT_BAND_CM[0], the cushion compression the seat gates allow); every other
-    part (plastic frame and arms, arm pads, back mesh, base, castors, gas lift) allows no penetration."""
-    K_TRI, REACH_CM = 8, 3.     # exact within REACH_CM of the surface; farther points report REACH_CM (>= REACH, never small)
+    """Signed distance of points to the complete chair at a roll offset, signed by the nearest triangle's outward normal
+    (negative = inside). Broad phase: a KD-tree over surface samples of every chair triangle at <= SAMPLE_CM spacing
+    (each sample knows its triangle); a point with no sample within REACH_CM + SAMPLE_CM is farther than REACH_CM from
+    the chair and reports REACH_CM. Narrow phase: exact point-to-triangle distance to the triangles of the K_SAMPLES
+    nearest samples. Upholstery may be pressed in down to the seat band's lower edge (SEAT_BAND_CM[0], the cushion
+    compression the seat gates allow); every other part (plastic frame and arms, arm pads, back mesh, base, castors, gas
+    lift) allows no penetration."""
+    K_SAMPLES, REACH_CM, SAMPLE_CM = 6, 3., 1.
 
     def __init__(self, complete):
         from scipy.spatial import cKDTree
         self.c = complete
-        self.cen = complete['triangles_cm'].mean(1)
-        self.tree = cKDTree(self.cen)
-        self.allow = np.where(np.isin(complete['material'], UPHOLSTERY), seat_contact.SEAT_BAND_CM[0], 0.)
         tri = complete['triangles_cm']
-        self.radius = float(np.linalg.norm(tri - self.cen[:, None], axis=-1).max())   # largest centroid-to-vertex reach
+        self.cen = tri.mean(1)
+        self.allow = np.where(np.isin(complete['material'], UPHOLSTERY), seat_contact.SEAT_BAND_CM[0], 0.)
+        L = np.max(np.linalg.norm(tri[:, [1, 2, 0]] - tri, axis=-1), axis=1)
+        pts, ids = [], []
+        for k in np.unique(np.maximum(1, np.ceil(L / self.SAMPLE_CM)).astype(int)):
+            sel = np.nonzero(np.maximum(1, np.ceil(L / self.SAMPLE_CM)).astype(int) == k)[0]
+            u, v = np.meshgrid(np.arange(k + 1) / k, np.arange(k + 1) / k)
+            m = (u + v) <= 1 + 1e-9
+            u, v = u[m], v[m]
+            t = tri[sel]
+            P_ = t[:, None, 0] + u[None, :, None] * (t[:, None, 1] - t[:, None, 0]) + v[None, :, None] * (t[:, None, 2] - t[:, None, 0])
+            pts.append(P_.reshape(-1, 3))
+            ids.append(np.repeat(sel, len(u)))
+        self.samples, self.sample_tri = np.concatenate(pts), np.concatenate(ids)
+        self.tree = cKDTree(self.samples)
 
     def margin(self, points, offset):
         """(signed distance - allowed depth) per point (REACH_CM where no triangle is near), and the nearest material."""
@@ -868,17 +1087,22 @@ class ChairCollider:
         p = np.asarray(points, float).reshape(-1, 3) - np.asarray(offset, float)
         m = np.full(len(p), self.REACH_CM)
         mat = np.full(len(p), '', dtype=object)
-        d0, _ = self.tree.query(p, distance_upper_bound=self.REACH_CM + self.radius)
+        lo, hi = self.samples.min(0) - self.REACH_CM - self.SAMPLE_CM, self.samples.max(0) + self.REACH_CM + self.SAMPLE_CM
+        box = np.nonzero(np.all((p >= lo) & (p <= hi), axis=1))[0]          # broad phase: the chair's AABB
+        d0 = np.full(len(p), np.inf)
+        if len(box):
+            d0[box], _ = self.tree.query(p[box], distance_upper_bound=self.REACH_CM + self.SAMPLE_CM, workers=-1)
         near = np.nonzero(np.isfinite(d0))[0]
         if len(near):
-            _, ii = self.tree.query(p[near], k=self.K_TRI)
+            _, ii = self.tree.query(p[near], k=self.K_SAMPLES, workers=-1)
+            cand = self.sample_tri[ii]
             T_ = self.c['triangles_cm']
             best, arg = np.full(len(near), np.inf), np.zeros(len(near), int)
-            for k in range(self.K_TRI):
-                tri = T_[ii[:, k]]
+            for k in range(self.K_SAMPLES):
+                tri = T_[cand[:, k]]
                 d = point_triangle_distance(p[near], tri[:, 0], tri[:, 1], tri[:, 2])
                 better = d < best
-                best[better], arg[better] = d[better], ii[better, k]
+                best[better], arg[better] = d[better], cand[better, k]
             sgn = np.sign(np.sum((p[near] - self.cen[arg]) * self.c['face_normals'][arg], axis=1))
             sd = best * np.where(sgn == 0, 1., sgn)
             m[near] = np.minimum(sd - self.allow[arg], self.REACH_CM)
@@ -1001,8 +1225,39 @@ def worst_frame(values, times, lowest=True):
     return {'value': _r(v[i]), 'frame': i, 't': _r(times[i], 4)}
 
 
+_UE_TO_GLTF = None
+
+
 def gltf_shift(shift_ue):
-    return np.stack([P.ue_delta_to_gltf(v) for v in np.asarray(shift_ue, float)])
+    """UE cm translations (..., 3) as glTF metre translations under the audited body transform (vectorised
+    fit_seat_pelvis_pitch.ue_delta_to_gltf: the map is linear)."""
+    global _UE_TO_GLTF
+    if _UE_TO_GLTF is None:
+        _UE_TO_GLTF = np.stack([P.ue_delta_to_gltf(e) for e in np.eye(3)])       # row i: glTF for a unit UE axis i
+    return np.asarray(shift_ue, float) @ _UE_TO_GLTF
+
+
+_LBS_CACHE = {}
+
+
+def lbs(skin, ibm, W):
+    """(F, V, 3) glTF metres: linear blend skinning, identical in result to fit_seat_pelvis_pitch.skin_points but as one
+    dense operator per skin (the export_seat_fit_source.Source.skin formulation), built once and cached."""
+    pos, jts, wts = skin
+    key = (id(pos), pos.shape, id(jts))
+    if key not in _LBS_CACHE:
+        J, V = len(ibm), len(pos)
+        hom = np.hstack([pos, np.ones((V, 1))])
+        S = np.zeros((J * 4, V))
+        cols = np.arange(V)
+        for k in range(jts.shape[1]):
+            for c in range(4):
+                np.add.at(S, (jts[:, k] * 4 + c, cols), wts[:, k] * hom[:, c])
+        _LBS_CACHE[key] = (S, pos, jts)
+    S = _LBS_CACHE[key][0]
+    M = (np.asarray(W) @ ibm[None])[..., :3, :]                     # (F, J, 3, 4)
+    lin = M.transpose(0, 2, 1, 3).reshape(len(W), 3, -1)            # (F, 3, J*4)
+    return (lin @ S).transpose(0, 2, 1)
 
 
 def body_parts(names):
@@ -1045,6 +1300,11 @@ class Context:
         self.collider = ChairCollider(self.complete_chair)
         self.finger_joints = [k for k, n in enumerate(self.base.names) if any(f in n for f in FINGERS)]
         self.keys = keycaps_from_world_json(keycaps) if keycaps else T.keycaps_from_glb()
+        self.mouse = mouse_geometry(cache)
+        self.key_raster = KeyRaster(self.keys)
+        self.mouse_raster = HeightRaster(self.mouse['shell_triangles_cm'])
+        from fit_seat_rigid_placement import Surface
+        self.mouse_surface = Surface(self.mouse['shell_triangles_cm'])
         self.arms = arm_skin(self.base.names, stride=1, cache=cache)
         self.body_skin = P.owner_skin(stride=BODY_SKIN_STRIDE, cache=cache)
         dom = self.body_skin[1][np.arange(len(self.body_skin[1])), self.body_skin[2].argmax(1)]
@@ -1072,8 +1332,12 @@ class Context:
         ka = tr.key_audit(Wr)
         on = {s: ka[s]['over'] >= KEY_MIN_OVER_VERTICES for s in SIDES}
         target = {s: tr.skin_ue(f'{s}_fingers', Wr)[0].mean(axis=1)[:, :2] for s in SIDES}
-        return ClipArmIK(self.base, W_fit, W_raw, times, self.keys, self.tri, self.arms, self.geometry,
-                         body_shift_cm=shift, contact=contact, finger_xy_target=target, on_mask=on, roll=ROLL_OFFSET_CM)
+        ik = ClipArmIK(self.base, W_fit, W_raw, times, self.keys, self.tri, self.arms, self.geometry,
+                       body_shift_cm=shift, contact=contact, finger_xy_target=target, on_mask=on, roll=ROLL_OFFSET_CM)
+        ik.mouse = self.mouse
+        ik.mouse_surface = self.mouse_raster
+        ik.raster = self.key_raster
+        return ik
 
     def seat_fit(self, W_raw, times, chair_offset):
         d = dict(self.base.d)
@@ -1086,12 +1350,14 @@ class Context:
 # band's high edge and at least MIN_BAND_COVERAGE (0.5) of the over-surface patch inside the band. Applied as main
 # applies it, to the seat patches and the soles. This branch's validator has no coverage constant: the value is main's.
 MAIN_MIN_BAND_COVERAGE = .5
+SEAT_BAND, SOLE_BAND = seat_contact.SEAT_BAND_CM, seat_contact.SOLE_BAND_CM
 MAIN_SEAT_RULE = 'origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)'
 
 
-def main_strong_seat_rule(fit, W, times):
-    """Main's strong seat rule on every frame (see MAIN_SEAT_RULE), per region: pass, worst median, lowest coverage."""
-    s, so = fit.trial.seat(W), fit.trial.soles(W)
+def main_strong_seat_rule(fit, W, times, metrics=None):
+    """Main's strong seat rule on every frame (see MAIN_SEAT_RULE), per region: pass, worst median, lowest coverage.
+    metrics: (seat, soles) already measured on W (same rule, measured once)."""
+    s, so = metrics if metrics is not None else (fit.trial.seat(W), fit.trial.soles(W))
     out = {}
     for name, m in list(s.items()) + list(so.items()):
         low, high = seat_contact.band(name)
@@ -1207,18 +1473,30 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     F = len(times)
     out = {'frames': F}
     fit = ctx.seat_fit(W_raw, times, ROLL_OFFSET_CM)
-    g = P.gates(fit, W, None, seated=np.ones(F, bool), with_keys=False)
-    out['seat_sole_gates_solver_frame'] = {k: g[k] for k in ('seat', 'soles', 'bone_length_max_error_cm',
-                                                               'foot_world_rotation_max_change_deg', 'upper_body_world')}
-    # literal re-measure at the final rolled position (constant part of the shift; rigid roll of chair + body)
+    seat_m, sole_m = fit.trial.seat(W), fit.trial.soles(W)          # the patches, measured ONCE on every frame
+    g = {'seat': {}, 'soles': {}}
+    for grp, ms, band in (('seat', seat_m, SEAT_BAND), ('soles', sole_m, SOLE_BAND)):
+        for n, m in ms.items():
+            passed, fails = T.support_gate(m, band)
+            g[grp][n] = {'pass_all_frames': bool(passed.all()), 'failing_frames': int((~passed).sum()),
+                         'failures': {k: int(v.sum()) for k, v in fails.items() if v.any()},
+                         'corrected': {'lowest_gap_cm': [_r(np.nanmin(m['lowest'])), _r(np.nanmax(m['lowest']))],
+                                       'min_band_vertices': int(m['band'].min()), 'min_over_surface_vertices': int(m['over'].min())}}
+    g['bone_length_max_error_cm'] = _r(max(float(np.abs(np.linalg.norm(W[:, k, :3, 3] - W[:, p_, :3, 3], axis=1)
+                                                        - np.linalg.norm(W_raw[:, k, :3, 3] - W_raw[:, p_, :3, 3], axis=1)).max())
+                                           for k, p_ in enumerate(ctx.sk.parents) if p_ >= 0) * 100, 7)
+    out['seat_sole_gates_solver_frame'] = g
+    # literal re-measure at the final rolled position (rigid roll of chair + body), on every 10th frame
     final = shift[-1] if key_seam is None or key_seam == len(times) - 1 else shift[0]
-    fit_r = ctx.seat_fit(P.place_body(W_raw, final[:2]), times, np.asarray(ROLL_OFFSET_CM) + final[:2])
-    g_r = P.gates(fit_r, P.place_body(W, final[:2]), None, seated=np.ones(F, bool), with_keys=False)
+    sub = np.arange(0, F, 10)
+    fit_r = ctx.seat_fit(P.place_body(W_raw[sub], final[:2]), np.asarray(times)[sub], np.asarray(ROLL_OFFSET_CM) + final[:2])
+    g_r = P.gates(fit_r, P.place_body(W[sub], final[:2]), None, seated=np.ones(len(sub), bool), with_keys=False)
     out['seat_sole_gates_at_rolled_chair'] = {'chair_translation_cm': [_r(v) for v in np.asarray(ctx.chair['translation_cm']) + [*(np.asarray(ROLL_OFFSET_CM) + final[:2]), 0.]],
+                                             'frames': 'every 10th frame (the rigid roll keeps the chair-relative geometry)',
                                              'seat': g_r['seat'], 'soles': g_r['soles']}
     seat_pass = all(v['pass_all_frames'] for v in g['seat'].values()) and all(v['pass_all_frames'] for v in g['soles'].values())
     seat_pass_r = all(v['pass_all_frames'] for v in g_r['seat'].values()) and all(v['pass_all_frames'] for v in g_r['soles'].values())
-    c = P.contact_per_frame(fit, W)
+    c = {n: {'lowest': m['lowest'], 'band': m['band'], 'over': m['over']} for n, m in list(seat_m.items()) + list(sole_m.items())}
     pf = {'t': [_r(t, 4) for t in times],
           'chair_offset_cm': [[_r(v) for v in o[:2]] for o in chair_offset_world],
           'body_shift_from_solver_frame_cm': [[_r(v) for v in o[:2]] for o in shift]}
@@ -1257,6 +1535,35 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
                        'worst_penetration': worst_frame(gap, times, lowest=True),
                        'frames_gap_over_0_2cm': int(bad_gap.sum()), 'frames_penetration_over_0_1cm': int(bad_pen.sum())}
     out['keys'] = keys_out
+    # segments and the mouse (right hand): main's mouse contact on MOUSE frames
+    if ik is not None and hasattr(ik, 'mode'):
+        seg = {}
+        for s in SIDES:
+            mo = ik.mode[s]
+            pf[f'{s}_segment'] = ['key' if m == MODE_KEY else 'mouse' if m == MODE_MOUSE else 'transit' for m in mo]
+            seg[s] = {'key_frames': int((mo == MODE_KEY).sum()), 'mouse_frames': int((mo == MODE_MOUSE).sum()),
+                      'transit_frames': int((mo == MODE_TRANSIT).sum())}
+        mm = ik.mode['right'] == MODE_MOUSE
+        if mm.any():
+            palm = ik.palm_ue(W[mm], 'right', np.nonzero(mm)[0])
+            err = np.linalg.norm(palm - ctx.mouse['palm_target_cm'][None], axis=1)
+            pos, jts, wts = ctx.arms['right']['skin']
+            pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W[mm])) + shift[mm][:, None, :]
+            found, h = ctx.mouse_surface.height(pts[..., :2].reshape(-1, 2))
+            gap = np.where(found, pts[..., 2].reshape(-1) - np.nan_to_num(h), np.inf).reshape(pts.shape[:2]).min(1)
+            exy = np.linalg.norm(palm[:, :2] - ctx.mouse['palm_target_cm'][None, :2], axis=1)
+            tm = np.asarray(times)[mm]
+            seg['mouse'] = {'palm_target_cm': [_r(v, 3) for v in ctx.mouse['palm_target_cm']],
+                            'palm_xy_error_cm': worst_frame(exy, tm, lowest=False),
+                            'palm_error_cm': worst_frame(err, tm, lowest=False),
+                            'hand_skin_over_shell_gap_cm': [worst_frame(gap, tm), worst_frame(gap, tm, lowest=False)],
+                            'pass': bool(exy.max() <= contact_profile.KEY_GAP_MAX_CM and np.isfinite(gap).all()
+                                         and gap.min() >= -P.KEY_PENETRATION_MAX_CM and gap.max() <= contact_profile.KEY_GAP_MAX_CM),
+                            'rule': 'main\'s mouse contact (palm point 2.2 cm behind / 1.2 cm right of the shell top) with '
+                                    'the key gates: palm XY within 0.2 cm, the lowest hand skin over the shell within '
+                                    '-0.1..+0.2 cm of it (penetration <= 0.1, gap <= 0.2)'}
+            pf['right_mouse_palm_error_cm'] = [_r(v, 3) if m else None for v, m in zip(np.interp(np.arange(F), np.nonzero(mm)[0], err), mm)]
+        out['segments'] = seg
     # arms vs the real desk (every arm skin vertex), wrist angles, elbows
     arms_out = {}
     chair_box = np.array(ctx.chair['component_world_bounds_cm']['min']), np.array(ctx.chair['component_world_bounds_cm']['max'])
@@ -1269,7 +1576,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
         chair_min = np.full(F, np.inf)
         for a in range(0, F, 60):
             sl = slice(a, a + 60)
-            pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
+            pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
             d, which = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
             v, _ = slab_clearance(pts, ctx.geometry['tabletop_slab'])
             for p in rows:
@@ -1327,7 +1634,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     body_min = {k: np.full(F, np.inf) for k in ('legs', 'torso_head', 'arms')}
     for a in range(0, F, 40):
         sl = slice(a, a + 40)
-        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
+        pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W[sl])) + shift[sl][:, None, :]
         d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
         for k in body_min:
             m = ctx.body_group == k
@@ -1337,7 +1644,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     out['body_vs_desk'] = {k: worst_frame(v, times) for k, v in body_min.items()}
     out['body_vs_desk']['legs_and_torso_clear'] = bool((body_min['legs'] > 0).all() and (body_min['torso_head'] > 0).all())
     out['body_vs_desk']['sampling'] = f'every {BODY_SKIN_STRIDE}th owner skin vertex'
-    out['seat_main_strong_rule'] = main_strong_seat_rule(fit, W, times)
+    out['seat_main_strong_rule'] = main_strong_seat_rule(fit, W, times, (seat_m, sole_m))
     out['seat_pass_branch_rule'] = bool(seat_pass)
     seat_pass = bool(seat_pass and out['seat_main_strong_rule']['pass'])
     out['seat_pass'] = bool(seat_pass)
@@ -1357,7 +1664,7 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     body_chair = np.full(F, np.inf)
     body_part = np.full(F, '', dtype=object)
     for f in range(F):
-        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
+        pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
         m, mat = ctx.collider.margin(pts, chair_offset_world[f])
         k = int(np.argmin(m))
         body_chair[f], body_part[f] = m[k], f'{ctx.body_group[k]} vs {mat[k]}'
@@ -1378,7 +1685,8 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
                                  and g['bone_length_max_error_cm'] <= .01 and out['fingers']['pass']
                                  and out['chair']['chair_vs_desk_pass'] and out['chair']['floor_pass']
                                  and out['chair']['body_vs_chair_pass']
-                                 and (out['base_invariance'] is None or out['base_invariance']['pass']))
+                                 and (out['base_invariance'] is None or out['base_invariance']['pass'])
+                                 and out.get('segments', {}).get('mouse', {}).get('pass', True))
     out['per_frame'] = pf
     return out
 
@@ -1961,7 +2269,7 @@ def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES):
         more = False
         for s in sides:
             pos, jts, wts = ctx.arms[s]['skin']             # every arm skin vertex (the gate's own sampling)
-            pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, Wc)) + shift[:, None, :]
+            pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, Wc)) + shift[:, None, :]
             d, which = boxes_min_distance(pts, ctx.boxes, reach_cm=SEARCH_REACH_CM)
             k = d.argmin(1)
             dmin = d[np.arange(F), k]
@@ -2003,7 +2311,7 @@ def measure_base_clip(ctx, role, W, W_raw, times, shift, chair_offset, gated, W_
     for s in SIDES:
         pos, jts, wts = ctx.arms[s]['skin']
         part = ctx.arms[s]['part']
-        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W)) + shift[:, None, :]
+        pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W)) + shift[:, None, :]
         d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
         per = {pp: d[:, part == pp].min(1) for pp in ('upper_arm', 'forearm', 'hand', 'fingers')}
         m = np.min(list(per.values()), axis=0)
@@ -2020,7 +2328,7 @@ def measure_base_clip(ctx, role, W, W_raw, times, shift, chair_offset, gated, W_
     body = {k: np.full(F, np.inf) for k in ('legs', 'torso_head')}
     chair_m = np.full(F, np.inf)
     for f in range(F):
-        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
+        pts = E.to_ue(lbs((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
         d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
         for k in body:
             body[k][f] = d[ctx.body_group == k].min()
