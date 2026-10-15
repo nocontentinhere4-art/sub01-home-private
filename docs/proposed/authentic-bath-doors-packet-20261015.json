@@ -1,0 +1,162 @@
+{
+  "schema": "sub01.authentic-bath-doors-source-packet.v1",
+  "sources": [
+    {
+      "name": "entry-door",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/panel-panel-entry-door-c7a6a51c",
+      "public_download": "https://www.innerscene.com/api/library/panel-panel-entry-door-c7a6a51c/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "353b872e5b0dd352c9b8e29cc7caf021203aed4244e6bf160ba2b4a0c1afe50b",
+      "bytes": 984896
+    },
+    {
+      "name": "patio-door",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/patio-sliding-patio-door-3091ad71",
+      "public_download": "https://www.innerscene.com/api/library/patio-sliding-patio-door-3091ad71/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "21cbdec583c798ac5aa94822e3f7275492e637887981d248620516fc0f226d84",
+      "bytes": 290136
+    },
+    {
+      "name": "pocket-door",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/pocket-pocket-door-assembly-51a74d8d",
+      "public_download": "https://www.innerscene.com/api/library/pocket-pocket-door-assembly-51a74d8d/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "52cfbedd202e2259d23a9e78c3a3eabc3c782cb5dab62d3c63a2bf7ea1e25d9e",
+      "bytes": 849728
+    },
+    {
+      "name": "shower-head",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/rain-disk-rain-shower-head-1dd6fe53",
+      "public_download": "https://www.innerscene.com/api/library/rain-disk-rain-shower-head-1dd6fe53/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "22dbe36180d61054a86f835dcad0777601e8c3978eafdb0428aeb78b738d3691",
+      "bytes": 459428
+    },
+    {
+      "name": "shower-mixer",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/thermostat-exposed-shower-mixer-67df7192",
+      "public_download": "https://www.innerscene.com/api/library/thermostat-exposed-shower-mixer-67df7192/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "1c0cc1d06113eedffbe624b844d987faabf5159ff98226b5d6e6d8854f4dc7f4",
+      "bytes": 147816
+    },
+    {
+      "name": "shower-screen",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/walk-in-screen-frameless-shower-screen-5556877c",
+      "public_download": "https://www.innerscene.com/api/library/walk-in-screen-frameless-shower-screen-5556877c/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "1f821d9e4fa6107dd0250fc675df8633d60fda95b05140b79a000bcbae84880d",
+      "bytes": 126424
+    },
+    {
+      "name": "vanity",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/bathroom-vanity-set-original-hotel-furnishing-7fab4282",
+      "public_download": "https://www.innerscene.com/api/library/bathroom-vanity-set-original-hotel-furnishing-7fab4282/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "637357db5437087725b99993ca2682811ef01b38e8a7e1dd621b838fef4e1d5a",
+      "bytes": 392808
+    },
+    {
+      "name": "wallhung-wc",
+      "public_source": "https://www.innerscene.com/tools/library/3d-parts/floating-wc-wall-hung-toilet-1db044d9",
+      "public_download": "https://www.innerscene.com/api/library/floating-wc-wall-hung-toilet-1db044d9/download",
+      "license": "CC0 verified on source page 2026-10-15",
+      "sha256": "11ceb10fcded6ca14c18bdc6a8b71bca371f40ab126d847148e6d7979b665401",
+      "bytes": 171576
+    }
+  ],
+  "bath_fixture_packet": {
+    "source_root": "/workspace/sub01-home-private/authentic-bath-doors-fit-r3/output",
+    "glb": "bath-fixtures.glb",
+    "sha256": "b8d190b7d7cf274126b4be35cf2ccf447b25c742da037cc222c43fe57f437a92",
+    "actual_meshes": 90,
+    "world_architecture_bvh_positive_crossings": 0,
+    "contact_tolerance_cm": 0.001,
+    "unrelated_original167_corner_bytes_preserved": true,
+    "original163_policy": "Already retired by approved structural rails; replace only existing160face bathroomchrome union and neverrestore1680oldrailfaces",
+    "native_proof_required": "private-audit/authentic-bath-fixtures-native.json"
+  },
+  "door_packet": {
+    "source_root": "/workspace/sub01-home-private/authentic-bath-doors-fit-r6/output",
+    "glb": "door-assemblies.glb",
+    "sha256": "5b8a2bb8b4bb8fe19af1d0c086fb78f3e7f9dff9e06170a06642a8f3d1761a0c",
+    "actual_meshes": 76,
+    "source_motion_pose_witnesses": 59,
+    "positive_wall_floor_crossings_at_source_witnesses": 0,
+    "roles": {
+      "bathroom": {
+        "moving_parts": [
+          "SUB01_pocket_door_007",
+          "SUB01_pocket_door_011",
+          "SUB01_pocket_door_012"
+        ],
+        "motion": "native Y +95cm",
+        "closed_leaf_bounds_ue_cm": [
+          [
+            -88.50000500679016,
+            88.95000219345093,
+            307.99999237060547
+          ],
+          [
+            -84.69999432563782,
+            171.0499882698059,
+            511.1000061035156
+          ]
+        ],
+        "native_runtime_binding_ready": false
+      },
+      "entry": {
+        "moving_parts": [
+          "SUB01_entry_door_000",
+          "SUB01_entry_door_001",
+          "SUB01_entry_door_002",
+          "SUB01_entry_door_003",
+          "SUB01_entry_door_004",
+          "SUB01_entry_door_005",
+          "SUB01_entry_door_006",
+          "SUB01_entry_door_007",
+          "SUB01_entry_door_008",
+          "SUB01_entry_door_009",
+          "SUB01_entry_door_010",
+          "SUB01_entry_door_011",
+          "SUB01_entry_door_012",
+          "SUB01_entry_door_013",
+          "SUB01_entry_door_014",
+          "SUB01_entry_door_015",
+          "SUB01_entry_door_016",
+          "SUB01_entry_door_017",
+          "SUB01_entry_door_018",
+          "SUB01_entry_door_025",
+          "SUB01_entry_door_026",
+          "SUB01_entry_door_027",
+          "SUB01_entry_door_028"
+        ],
+        "hinge_ue_cm": [
+          154.3,
+          402.2,
+          2.5
+        ],
+        "native_runtime_binding_ready": false
+      },
+      "balcony": {
+        "moving_parts": [
+          "SUB01_patio_door_006",
+          "SUB01_patio_door_007",
+          "SUB01_patio_door_010",
+          "SUB01_patio_door_012",
+          "SUB01_patio_door_013",
+          "SUB01_patio_door_019",
+          "SUB01_patio_door_021",
+          "SUB01_patio_door_022"
+        ],
+        "motion": "native X +91cm",
+        "native_runtime_binding_ready": false
+      }
+    },
+    "native_proof_required": "private-audit/authentic-doors-native.json",
+    "runtime_module": "tools/unreal_authentic_doors_runtime.py"
+  },
+  "native_physical_visual_verified": false,
+  "note": "Frozen source evidence is not native visual/physical acceptance. Sole native integration agent owns actual Editor imports, coherent runtime compile and movement tests."
+}
