@@ -29,7 +29,7 @@ if missing:
 if hasattr(unreal.EditorLevelLibrary, 'editor_set_game_view'):
     unreal.EditorLevelLibrary.editor_set_game_view(True)
 unreal.EditorLevelLibrary.set_level_viewport_camera_info(
-    unreal.Vector(200, 310, 165), unreal.Rotator(-5, -90, 0))
+    unreal.Vector(200, 310, 165), unreal.Rotator(pitch=-5, yaw=-90, roll=0))
 Path('/home/unreal/.sub01-private/persistent-editor-ready.json').write_text(json.dumps({
     'editor_pid': os.getpid(), 'project_path': unreal.Paths.project_dir(),
     'engine_path': unreal.Paths.engine_dir(), 'world': world.get_path_name(),
