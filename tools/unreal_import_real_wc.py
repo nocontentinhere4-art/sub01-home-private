@@ -81,6 +81,16 @@ def run(dry_run=True):
     eas=u.get_editor_subsystem(u.EditorActorSubsystem);original=list(eas.get_all_level_actors());before=fingerprint(u,original)
     hidden={a.get_path_name():bool(a.get_editor_property('hidden'))for a in original}
     if any(a.get_actor_label().startswith(LABEL)for a in original):raise RuntimeError('Genuine WC already installed; inspect receipt')
+    floor_actors=[a for a in original if a.get_name()=='full-home_node_117']
+    if len(floor_actors)!=1:raise RuntimeError('Actual unchanged bathroom support slab required')
+    floor_components=floor_actors[0].get_components_by_class(u.StaticMeshComponent)
+    if len(floor_components)!=1:raise RuntimeError('Actual bathroom support component differs')
+    floor_component=floor_components[0];floor_mesh=floor_component.get_editor_property('static_mesh')
+    if not floor_mesh or floor_mesh.get_path_name()!='/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_100.Mesh_100' or hidden[floor_actors[0].get_path_name()] or not floor_component.get_editor_property('visible') or floor_component.get_collision_enabled()==u.CollisionEnabled.NO_COLLISION:
+        raise RuntimeError('Actual original tile support identity/visibility/collision differs')
+    home_doc,home_blob=read_gltf(project/'SourceAssets/full-home.glb')
+    if not same_triangles(expected_triangles(home_doc,home_blob,117),native_triangles(u,floor_component)):
+        raise RuntimeError('Actual bathroom support slab differs proven source world geometry')
     targets={};states={}
     for node,(_,mesh_id,material_id,_) in REMAINDERS.items():
         actors=[a for a in original if a.get_name()==f'full-home_node_{node}']
