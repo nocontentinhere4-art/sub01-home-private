@@ -1,0 +1,68 @@
+{
+  "schema": "sub01.genuine-dualsense-owned-dock-support.v1",
+  "source_sha256": "0c86d9bda650856c51946aefe2497e176d4c6aeb57aa806e7789e33c32428598",
+  "support_sha256": "4d489429c66d60520fc47d3d7eb042389317ac6a9d72182a0903d54b3185b8a4",
+  "rootTranslationUEcm": [
+    -368.3,
+    -119.5,
+    105.505
+  ],
+  "yawUEdegrees": 90,
+  "sourceCanonicalBottomZ": 0,
+  "actualControllerBoundsUEcm": [
+    [
+      -373.5870361328125,
+      -127.5,
+      105.50499725341797
+    ],
+    [
+      -363.0129699707031,
+      -111.5,
+      112.01673126220703
+    ]
+  ],
+  "actualTrayTopUEcm": 105.5,
+  "actualTrayBoundsXYcm": [
+    [
+      -376,
+      -128.5
+    ],
+    [
+      -359.5,
+      -110.5
+    ]
+  ],
+  "actualLowestSourceVertices": [
+    {
+      "controllerPointUEcm": [
+        -371.81573486328125,
+        -112.88903045654297,
+        105.50499725341797
+      ],
+      "actualSupportPointUEcm": [
+        -371.81573486328125,
+        -112.88903045654297,
+        105.5
+      ],
+      "verticalGapCm": 0.00499725341796875
+    },
+    {
+      "controllerPointUEcm": [
+        -371.81573486328125,
+        -126.1109848022461,
+        105.50499725341797
+      ],
+      "actualSupportPointUEcm": [
+        -371.81573486328125,
+        -126.1109848022461,
+        105.5
+      ],
+      "verticalGapCm": 0.00499725341796875
+    }
+  ],
+  "completeControllerSteelIntersectionPairs": 0,
+  "ok": true,
+  "nativeChanged": false,
+  "nativePhysicalContactAccepted": false,
+  "placementGapCm": 0.005
+}

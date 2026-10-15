@@ -1,0 +1,22 @@
+[
+  {
+    "name": "modelpika_updated.glb",
+    "bytes": 6515100,
+    "sha256": "e42bda19c96673408ca03647099365b8116ddb34ad1d4ee8f97ce3139085da78"
+  },
+  {
+    "name": "modelpika_texture.png",
+    "bytes": 6338061,
+    "sha256": "c8fa8ab3d513b29eaab8f82b24c36ff8eaab45cb31019d0afe83d755fda01f5b"
+  },
+  {
+    "name": "README.md",
+    "bytes": 2475,
+    "sha256": "fcccf8027720e3dae0656a940a9a85d91f625de6e820dd28df221ce746c78823"
+  },
+  {
+    "name": "LICENSE",
+    "bytes": 1071,
+    "sha256": "6403910fdbfc5b00683ce078122ec7e8525f6f4e93593d879c17601ca8b38eb8"
+  }
+]

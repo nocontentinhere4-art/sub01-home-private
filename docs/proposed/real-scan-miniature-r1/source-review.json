@@ -1,0 +1,26 @@
+{
+  "source_sha256": "e42bda19c96673408ca03647099365b8116ddb34ad1d4ee8f97ce3139085da78",
+  "source": "https://github.com/paulinamoskwa/detect-pikachu/tree/8d3d026b08e19b89ef4a737a6e73da22d565befb",
+  "license": "Repository MIT; character trademark separate; private source review only",
+  "meshCount": 1,
+  "triangles": 6969,
+  "originalDimensions": [
+    0.12146569788455963,
+    0.0843645017594099,
+    0.15695729851722717
+  ],
+  "uniformExternalScale": 1.2742319209708404,
+  "miniatureDimensionsM": [
+    0.15477546954750615,
+    0.10749994113864073,
+    0.2
+  ],
+  "heightM": 0.2,
+  "originalVerticesImagesMaterialsUnchanged": true,
+  "proposedCabinetAnchorUEcm": [
+    -351,
+    60,
+    56.73
+  ],
+  "nativeInstalled": false
+}

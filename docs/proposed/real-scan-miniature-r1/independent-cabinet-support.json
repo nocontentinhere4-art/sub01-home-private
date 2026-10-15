@@ -1,0 +1,32 @@
+{
+  "schema": "sub01.real-scan-miniature-cabinet-support.v1",
+  "source_sha256": "e42bda19c96673408ca03647099365b8116ddb34ad1d4ee8f97ce3139085da78",
+  "cabinet_sha256": "63e025252dfaa4d0db66800d5b1b36de54d46b61af2bff64e878a39287985979",
+  "uniformExternalScale": 1.274231911293031,
+  "rootTranslationUEcm": [
+    -348.9580383300781,
+    62.04484176635742,
+    61.775725437164304
+  ],
+  "heightCm": 20,
+  "boundsUEcm": [
+    [
+      -358.7388000488281,
+      54.625003814697266,
+      56.73100280761719
+    ],
+    [
+      -343.26123046875,
+      65.37499237060547,
+      76.73100280761719
+    ]
+  ],
+  "lowestSourceFootVerticesSupported": 1,
+  "minimumFootGapCm": 0.001,
+  "completeSourceTriangleIntersectionPairs": 0,
+  "screenBottomHeightCm": 117.5,
+  "verticalScreenClearanceCm": 40.76899719238281,
+  "sourceMeshMaterialsUnchanged": true,
+  "ok": true,
+  "nativeInstalled": false
+}

@@ -1,0 +1,145 @@
+{
+  "actualCountertopFootSupport": [
+    {
+      "new": "LiveBoard_000",
+      "lowestFootVerticesTested": 1,
+      "minimumMeasuredGapCm": 0.001007080078125,
+      "maximumMeasuredGapCm": 0.001007080078125
+    },
+    {
+      "new": "LiveBowl_000",
+      "lowestFootVerticesTested": 1,
+      "minimumMeasuredGapCm": 0.00101470947265625,
+      "maximumMeasuredGapCm": 0.00101470947265625
+    }
+  ],
+  "supportAdjustments": [
+    {
+      "new": "LivePlant_003",
+      "sampleCount": 650,
+      "requiredVerticalLiftCm": -3.265380859374979e-06,
+      "maxSupportMinusActualSkinCm": -0.001003265380859375
+    },
+    {
+      "new": "LiveApple_000",
+      "sampleCount": 893,
+      "requiredVerticalLiftCm": -0.0025400390625,
+      "maxSupportMinusActualSkinCm": -0.0035400390625
+    }
+  ],
+  "schema": "sub01.independent-real-lived-props-source.v1",
+  "sourceSHA": {
+    "genuine-kitchen-lived-props.glb": "966f2798427c6726cbdca404f73792474e69349016662dc8f1e18c084b363626",
+    "genuine-around-plant.glb": "17f547cd694ceb85d15f7eb49890ec0f8a4de6e0f8c23eec08d19ab63c728abf"
+  },
+  "bounds": [
+    {
+      "name": "LiveBoard_000",
+      "bounds": [
+        [
+          -226.49447631835938,
+          -362.3326110839844,
+          92.25100708007812
+        ],
+        [
+          -181.50550842285156,
+          -337.6673583984375,
+          96.37631225585938
+        ]
+      ]
+    },
+    {
+      "name": "LiveBowl_000",
+      "bounds": [
+        [
+          -178.65408325195312,
+          -380.4571228027344,
+          92.25101470947266
+        ],
+        [
+          -147.34591674804688,
+          -349.5428771972656,
+          101.62026977539062
+        ]
+      ]
+    },
+    {
+      "name": "LiveApple_000",
+      "bounds": [
+        [
+          -208.87806701660156,
+          -354.7950744628906,
+          95.97906494140625
+        ],
+        [
+          -199.1219482421875,
+          -345.2049255371094,
+          104.51805877685547
+        ]
+      ]
+    },
+    {
+      "name": "LivePlant_001",
+      "bounds": [
+        [
+          -261.22991943359375,
+          -3.393387794494629,
+          50.666927337646484
+        ],
+        [
+          -246.49652099609375,
+          11.494791984558105,
+          52.84005355834961
+        ]
+      ]
+    },
+    {
+      "name": "LivePlant_000",
+      "bounds": [
+        [
+          -261.6876525878906,
+          -3.706657886505127,
+          50.8165168762207
+        ],
+        [
+          -246.04957580566406,
+          11.916465759277344,
+          52.73252487182617
+        ]
+      ]
+    },
+    {
+      "name": "LivePlant_002",
+      "bounds": [
+        [
+          -260.0383605957031,
+          -3.0751638412475586,
+          50.942169189453125
+        ],
+        [
+          -245.4272003173828,
+          14.237571716308594,
+          64.17628479003906
+        ]
+      ]
+    },
+    {
+      "name": "LivePlant_003",
+      "bounds": [
+        [
+          -262.1943359375,
+          -4.2375712394714355,
+          37.43052291870117
+        ],
+        [
+          -245.40570068359375,
+          12.551060676574707,
+          52.937965393066406
+        ]
+      ]
+    }
+  ],
+  "triangleIntersectionFindings": [],
+  "nativeChanged": false,
+  "accepted": true
+}
