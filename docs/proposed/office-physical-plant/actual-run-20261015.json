@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.office-physical-plant-source-run.v1",
+  "source_only": true,
+  "source_commit": "d6768d9",
+  "frozen_packet_sha256": "e55a3aa36e171b050041caf4d7a6c0ef16b8fde5329dac865507510cfdd4c03c",
+  "actual_run_seconds": 24.497795581817627,
+  "actual_exit_code": 0,
+  "output_root": "/workspace/sub01-private-office-physical-d6768d9-r2/uid1001/output",
+  "actual_full_bvh_issues": [],
+  "whole_plant_delta_ue_cm": [
+    -40.0,
+    0.0,
+    -1.5775411128997803
+  ],
+  "true_pot_node": 223,
+  "positive_boundary_triangles": 192,
+  "actual_flat_contact_triangles": 64,
+  "actual_flat_contact_area_cm2": 27.428831379795607,
+  "discarded_exact_zero_area_padding_count": 132,
+  "native_scene_mutations": 0,
+  "native_visual_verified": false,
+  "limitation": "Source proof only. Full native import, visual review and physical input remain separate. The preceding run failed before geometry because Blender ignored PYTHONPATH; it did not produce an office receipt."
+}
