@@ -166,6 +166,13 @@ def main(u, root: Path | None = None, repo: Path = seated_import.REPO) -> Path:
     except capture_tool.Refused as error:
         raise Refused(str(error)) from None
     place = fit_placement(summary_raw, row)
+    try:                                                   # the receipt never overrides the committed verdict
+        committed = {r['role']: r for r in seated_import.plan_clips(Path(repo))}
+    except (RuntimeError, ValueError, KeyError, OSError) as error:
+        raise Refused(f'FitUnverifiable: {error}') from None
+    if committed.get(ROLE, {}).get('fit_pass') is not True:
+        raise Refused(f'FitFailed: the committed actual-chair verdict for {ROLE} is not passing; '
+                      'a receipt row cannot make it evidence')
     chair = json.loads(chair_raw)
     seat_contact.cushion_triangles(chair)                  # the audited cushion, no errors (ValueError otherwise)
 

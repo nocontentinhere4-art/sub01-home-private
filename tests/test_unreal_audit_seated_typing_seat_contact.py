@@ -120,7 +120,7 @@ def engine_module(monkeypatch):
 def run(project, **kw):
     # The committed fit summary, solved on the actual (unshifted) chair.
     u, seen = fake_unreal(project, **kw)
-    return wrapper.main(u, project, repo=seated_import.REPO), seen
+    return wrapper.main(u, project, repo=_summary_repo(project.parent / 'typing-pass', lambda d: None)), seen
 
 
 def test_root_audit_is_reused_unedited_and_restored(tmp_path):
@@ -183,11 +183,26 @@ def test_old_clip_evidence_is_not_retired_by_a_failing_seated_audit(tmp_path):
     assert (project / 'private-audit/native-seat-evidence.json').read_text() == old
 
 
+FIT_KEY = wrapper.FIT_KEY
+
+
 def _summary_repo(tmp_path, mutate):
+    """SYNTHETIC full copy of the committed fit where DeskTypingSeated's verdict is consistently True (GLB bytes and
+    pins unchanged), then `mutate` applied to the summary. The committed actual-chair verdict is False, so the passing
+    path of this wrapper is only reachable on such a copy; test_committed_failing_verdict_is_refused covers the real one."""
     repo = tmp_path / 'repo'
+    fit_dir = repo / seated_import.FIT_DIR
+    fit_dir.mkdir(parents=True, exist_ok=True)
+    for f in (ROOT / seated_import.FIT_DIR).iterdir():
+        (fit_dir / f.name).write_bytes(f.read_bytes())
+    report = fit_dir / 'SUB01_DeskTyping_seated.report.json'
+    data = json.loads(report.read_text())
+    data['all_gates_pass'] = True
+    report.write_text(json.dumps(data))
     target = repo / seated_import.SUMMARY_REPORT
-    target.parent.mkdir(parents=True, exist_ok=True)
-    data = json.loads((ROOT / seated_import.SUMMARY_REPORT).read_text())
+    data = json.loads(target.read_text())
+    data['clips'][FIT_KEY]['all_gates_pass'] = True
+    data['trial_gates_pass'][FIT_KEY] = True
     mutate(data)
     target.write_text(json.dumps(data))
     return repo
@@ -237,3 +252,14 @@ def test_refuses_without_receipt_or_chair(tmp_path):
     (project / 'private-audit/native-chair-surface.json').unlink()
     with pytest.raises(wrapper.Refused, match='ChairUnmeasured'):
         run(project)
+
+
+def test_committed_failing_verdict_is_refused_even_with_an_accepted_receipt_row(tmp_path):
+    """The actual-chair DeskTyping fit fails; a hand-edited accepted receipt row must not turn it into seat evidence."""
+    plan = {r['role']: r for r in seated_import.plan_clips()}
+    assert plan['DeskTypingSeated']['fit_pass'] is False
+    project = make_project(tmp_path)
+    u, _ = fake_unreal(project)
+    with pytest.raises(wrapper.Refused, match='FitFailed'):
+        wrapper.main(u, project, repo=seated_import.REPO)
+    assert sorted(p.name for p in (project / 'private-audit').iterdir()) == ['native-chair-surface.json', 'unreal-seated-fit-import.json']
