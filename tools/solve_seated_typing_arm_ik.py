@@ -40,6 +40,7 @@ import argparse
 import hashlib
 import json
 import math
+import time
 import sys
 from pathlib import Path
 
@@ -352,6 +353,38 @@ def swivel_pole(shoulder, target, pole, phi):
     return shoulder + rotate_about(pole - shoulder, target - shoulder, phi)
 
 
+# Shoulder girdle (sternoclavicular) ranges used as HARD limits of the ergonomic search: depression 0..10 deg,
+# protraction/retraction +-15 deg (Kapandji, The Physiology of the Joints vol. 1: SC depression ~10 deg, pro/retraction
+# ~15 deg each way; AAOS joint motion). The girdle is a rotation of the Shoulder (clavicle) joint carrying the arm.
+GIRDLE_DEPRESSION_DEG = (0., 10.)
+GIRDLE_PROTRACTION_DEG = (-15., 15.)
+
+
+def shoulder_girdle(sk, W, side, g):
+    """Rotate the Shoulder (clavicle) joint about its own position by depression g[:,0] (lateral end down, about the
+    body's forward axis, glTF +z) and protraction g[:,1] (lateral end forward, about the vertical, glTF +y); the
+    whole arm is carried (locals below unchanged). Mirrored per side."""
+    g = np.asarray(g, float)
+    sgn = -1. if side == 'left' else 1.              # left clavicle points +x, right -x
+    dep = np.radians(g[:, 0]) * sgn
+    pro = np.radians(g[:, 1]) * sgn
+    def rot(axis, a):
+        c, s_ = np.cos(a), np.sin(a)
+        R = np.tile(np.eye(3), (len(a), 1, 1))
+        i, j = [(1, 2), (2, 0), (0, 1)][axis]
+        R[:, i, i], R[:, i, j], R[:, j, i], R[:, j, j] = c, -s_, s_, c
+        return R
+    R = rot(1, pro) @ rot(2, dep)
+    k = sk.j(f'{SIDES[side]}Shoulder')
+    piv = W[:, k, :3, 3].copy()
+    M = np.tile(np.eye(4), (len(g), 1, 1))
+    M[:, :3, :3] = R
+    M[:, :3, 3] = piv - np.einsum('fij,fj->fi', R, piv)
+    for j in sk.subtree(k):
+        W[:, j] = M @ W[:, j]
+    return W
+
+
 def solve_arm(sk, W, side, target, pole, ibm, hand_world=None, D=None, limit=True):
     """Non-stretch two-bone IK of shoulder -> elbow -> wrist (UE SolveTwoBoneIK, fit_seat_pose_trial.two_bone) with the
     given elbow pole. The hand then rides on the NEW forearm: its wrist-relative rotation is D, or the one implied by the
@@ -392,7 +425,8 @@ SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
 ERGO_ELBOW_ABOVE_DESK_CM = (0., 10.)
 ERGO_UPPER_ARM_MAX_DEG = 20.
 ERGO_ELBOW_SCALE_CM, ERGO_UPPER_ARM_SCALE_DEG = 1., 5.
-ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-30., 120.01, 10.))
+ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-30., 120.01, 15.))
+ERGO_GIRDLE = ((0., 0.), (10., 0.), (10., 15.))      # (depression, protraction) candidates, deg
 SWIVEL_COARSE_STEP_DEG = 10.
 SWIVEL_COARSE_DEG = tuple(float(v) for v in np.arange(0., SWIVEL_GRID_DEG[-1] + .01, SWIVEL_COARSE_STEP_DEG))
 SEARCH_CONTACT_PASSES = 4
@@ -572,6 +606,8 @@ class ClipArmIK:
         self.mouse = None                 # set by Context.ik: main's mouse contact target at the actual mouse
         self.on_mask = on_mask
         self.hand_xy = {s: np.zeros((F, 3)) for s in SIDES}
+        self.girdle = {s: np.zeros((F, 2)) for s in SIDES}      # (depression, protraction) degrees per frame
+        self.deadline = None
 
     # --- measurements (UE cm, at each frame's actual body placement)
     def arm_points(self, W, side, stride=1, frames=None, posed_frames=False):
@@ -616,10 +652,17 @@ class ClipArmIK:
         hand_world = self.W_raw[:, c, :3, :3]        # the upper body keeps its captured world orientation in the fit
         return A, pole, wrist, hand_world, None
 
-    def pose(self, W, side, delta_cm, phi_rad, lift_cm=None, frames=None):
+    def pose(self, W, side, delta_cm, phi_rad, lift_cm=None, frames=None, girdle=None):
         A, pole, wrist, hand_world, _ = self.inputs[side]
         if frames is not None:
             A, pole, wrist, hand_world = A[frames], pole[frames], wrist[frames], hand_world[frames]
+        g = self.girdle[side] if girdle is None else girdle
+        g = g if frames is None or girdle is not None else g[frames]
+        if np.any(g):
+            W = shoulder_girdle(self.sk, W.copy(), side, g)
+            A2 = W[:, self.sk.j(ARM_BONES[side][0]), :3, 3]
+            pole = pole + (A2 - A)
+            A = A2
         hxy = self.hand_xy[side] if frames is None else self.hand_xy[side][frames]
         tgt = wrist + hxy + UP * (np.asarray(delta_cm) + (0. if lift_cm is None else np.asarray(lift_cm)))[:, None] / 100.
         sign = self.raise_sign[side] if frames is None else self.raise_sign[side][frames]
@@ -746,19 +789,35 @@ class ClipArmIK:
         best_cost[ok0] = self.ergonomic_cost(ez, ua)[ok0]
         before = {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)}
         hxy0 = self.hand_xy[s].copy()
-        best_hxy = hxy0.copy()
-        for g in ERGO_SWIVEL_DEG:
-            ph = np.full(F, math.radians(g))
-            self.hand_xy[s] = hxy0.copy()           # every candidate starts from the same horizontal correction
-            dl = self.solve_contact_side(s, delta, ph, lift, fr, passes=SEARCH_CONTACT_PASSES)
-            Wt = self.pose(self.W_fit.copy(), s, dl, ph, lift)[0]
-            ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
-            ez, ua = self.arm_ergonomics(Wt, s, fr)
-            c = np.where(ok, self.ergonomic_cost(ez, ua) + 1e-6 * abs(g), np.inf)
-            better = c < best_cost
-            best_cost[better], best_phi[better], best_delta[better] = c[better], ph[better], dl[better]
-            best_hxy[better] = self.hand_xy[s][better]
+        g0 = self.girdle[s].copy()
+        best_hxy, best_g = hxy0.copy(), g0.copy()
+        tried, stopped = 0, None
+        for gd in ERGO_GIRDLE:
+            for g in ERGO_SWIVEL_DEG:
+                if self.deadline is not None and time.time() > self.deadline:
+                    stopped = f'wall-clock bound reached after {tried} candidates'
+                    break
+                tried += 1
+                ph = np.full(F, math.radians(g))
+                self.hand_xy[s] = hxy0.copy()           # every candidate starts from the same horizontal correction
+                self.girdle[s] = np.tile(gd, (F, 1))
+                dl = self.solve_contact_side(s, delta, ph, lift, fr, passes=SEARCH_CONTACT_PASSES)
+                Wt = self.pose(self.W_fit.copy(), s, dl, ph, lift)[0]
+                ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
+                ez, ua = self.arm_ergonomics(Wt, s, fr)
+                c = np.where(ok, self.ergonomic_cost(ez, ua) + 1e-6 * (abs(g) + abs(gd[0]) + abs(gd[1])), np.inf)
+                better = c < best_cost
+                best_cost[better], best_phi[better], best_delta[better] = c[better], ph[better], dl[better]
+                best_hxy[better] = self.hand_xy[s][better]
+                best_g[better] = gd
+            if stopped:
+                break
         self.hand_xy[s] = best_hxy
+        sigg = SWIVEL_SMOOTH_S / self.dt
+        xg = np.arange(-3 * int(math.ceil(sigg)), 3 * int(math.ceil(sigg)) + 1)
+        kg = np.exp(-.5 * (xg / sigg) ** 2)
+        kg /= kg.sum()
+        self.girdle[s] = np.stack([np.convolve(np.pad(best_g[:, i], len(xg) // 2, mode='edge'), kg, mode='valid') for i in range(2)], 1)
         sig = SWIVEL_SMOOTH_S / self.dt
         x = np.arange(-3 * int(math.ceil(sig)), 3 * int(math.ceil(sig)) + 1)
         ker = np.exp(-.5 * (x / sig) ** 2)
@@ -778,9 +837,12 @@ class ClipArmIK:
         bad = (clf < FOREARM_TARGET_CLEARANCE_CM) | (self.on[s] & ~(np.abs(np.nan_to_num(gap, nan=9.)) < .01))
         out, dl = np.where(bad, phi, out), np.where(bad, delta, dl)
         self.hand_xy[s][bad] = hxy0[bad]
+        self.girdle[s][bad] = g0[bad]
         Wt = self.pose(self.W_fit.copy(), s, dl, out, lift)[0]
         ez, ua = self.arm_ergonomics(Wt, s, fr)
         return out, dl, {'before': before, 'after': {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)},
+                         'girdle_depression_deg': rng(self.girdle[s][:, 0], 2), 'girdle_protraction_deg': rng(self.girdle[s][:, 1], 2),
+                         'candidates_tried': tried, 'bounded_stop': stopped,
                          'frames_unsmoothed': int((~ok).sum()), 'frames_reverted_to_clearance_pose': int(bad.sum()),
                          'swivel_deg': rng(np.degrees(out), 2)}
 
@@ -1160,7 +1222,7 @@ def blend_arm_locals(sk, W_a, W_b, w, sides=SIDES):
     La, Lb = arm_locals(sk, W_a), arm_locals(sk, W_b)
     W = np.array(W_a, copy=True)
     for s in sides:
-        bones = [sk.j(n) for n in ARM_BONES[s]]
+        bones = [sk.j(f'{SIDES[s]}Shoulder')] + [sk.j(n) for n in ARM_BONES[s]]
         L = La.copy()
         for k in bones:
             qa, qb = P.quat_from_matrix(unit_rot(La[:, k, :3, :3])), P.quat_from_matrix(unit_rot(Lb[:, k, :3, :3]))
@@ -1373,6 +1435,10 @@ def main_strong_seat_rule(fit, W, times, metrics=None):
     return {'rule': MAIN_SEAT_RULE, 'regions': out, 'pass': all(v['pass_all_frames'] for v in out.values())}
 
 
+# Owner skin, measured in bind space (ARM_SKIN radial distance of ForeArm-dominant vertices from the elbow->wrist axis,
+# 2..10 cm from the elbow): p90 about 10.7-11.3 cm (a bulky sleeve, the joint off-centre). An elbow over the slab must be
+# at least this far above the top for its sleeve to clear it.
+SLEEVE_RADIUS_NEAR_ELBOW_CM = 10.7
 MEASURE_REACH_CM = 10.          # distances beyond this report as 10 (never a false small value)
 FINGER_LOCAL_GATE_DEG = .1      # tools/validate_unreal_contact_profile.py: captured finger rotation change <= 0.1 deg
 
@@ -1455,7 +1521,7 @@ def base_invariance(ctx, W, W_base, times):
     rotation change; the pelvis, spine, shoulders, head and legs must be the base's (float32 storage only)."""
     arm = set()
     for s in SIDES:
-        arm |= set(ctx.sk.subtree(ctx.sk.j(ARM_BONES[s][0])))
+        arm |= set(ctx.sk.subtree(ctx.sk.j(f'{SIDES[s]}Shoulder')))     # the girdle may move (arms-only + girdle)
     other = [k for k in range(len(ctx.sk.names)) if k not in arm]
     dp = np.linalg.norm(W[:, other][..., :3, 3] - W_base[:, other][..., :3, 3], axis=-1).max(1) * 100
     dr = np.max([P.rot_angle_deg(unit_rot(W[:, k, :3, :3]), unit_rot(W_base[:, k, :3, :3])) for k in other], axis=0)
@@ -1603,6 +1669,15 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
         elev0 = E.to_ue(W_raw[:, ctx.sk.j(ARM_BONES[s][0]), :3, 3]) - E.to_ue(W_raw[:, ctx.sk.j(f'{SIDES[s]}Shoulder'), :3, 3])
         elev0 = np.degrees(np.arctan2(elev0[:, 2], np.linalg.norm(elev0[:, :2], axis=1)))
         pf[f'{s}_upper_arm_from_vertical_deg'] = [_r(x, 2) for x in ua]
+        # geometric floor: the elbow lies within the forearm length of the wrist, so its horizontal offset from the
+        # shoulder is at least (shoulder-wrist horizontal distance - forearm); the upper arm can be no closer to
+        # vertical than asin(that / upper arm)
+        wr_ = E.to_ue(W[:, ctx.sk.j(ARM_BONES[s][2]), :3, 3]) + shift
+        l1 = np.linalg.norm(el - sh, axis=1)
+        l2 = np.linalg.norm(wr_ - el, axis=1)
+        dh = np.linalg.norm((wr_ - sh)[:, :2], axis=1)
+        floor = np.degrees(np.arcsin(np.clip(np.maximum(dh - l2, 0.) / l1, 0, 1)))
+        pf[f'{s}_upper_arm_geometric_floor_deg'] = [_r(x, 2) for x in floor]
         pf[f'{s}_shoulder_ue_cm'] = [[_r(x, 2) for x in e] for e in sh]
         pf[f'{s}_shoulder_elevation_deg'] = [_r(x, 2) for x in elev]
         top = ctx.geometry['tabletop_slab']['top_cm']
@@ -1624,6 +1699,11 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
             'wrist_frames_outside_soft_zone': int(soft_out.sum()),
             'upper_arm_from_vertical_deg': rng(ua, 2), 'elbow_height_cm': rng(el[:, 2], 2),
             'shoulder_elevation_deg': rng(elev, 2), 'shoulder_elevation_capture_deg': rng(elev0, 2),
+            'reach_geometry': {'shoulder_to_wrist_horizontal_cm': rng(dh, 2), 'upper_arm_cm': _r(l1.mean(), 3),
+                               'forearm_cm': _r(l2.mean(), 3), 'upper_arm_floor_deg': rng(floor, 2),
+                               'frames_floor_above_soft_target': int((floor > ERGO_UPPER_ARM_MAX_DEG).sum()),
+                               'sleeve_radius_near_elbow_cm': SLEEVE_RADIUS_NEAR_ELBOW_CM,
+                               'elbow_height_needed_over_slab_cm': _r(ctx.geometry['tabletop_slab']['top_cm'] + SLEEVE_RADIUS_NEAR_ELBOW_CM, 2)},
             'ergonomic_soft_targets': {'elbow_above_desk_cm': list(ERGO_ELBOW_ABOVE_DESK_CM), 'upper_arm_max_deg': ERGO_UPPER_ARM_MAX_DEG,
                                        'frames_outside': int(ergo_out.sum()), 'worst_elbow_height': worst_frame(el[:, 2], times, lowest=False),
                                        'worst_upper_arm': worst_frame(ua, times, lowest=False), 'gate': False},
@@ -1932,6 +2012,8 @@ def strip(rep):
     return {k: v for k, v in rep.items() if not k.startswith('_')}
 
 
+MEASURE_S_PER_FRAME = .5        # measured (seated-arms profile, 60-frame subset): ~0.5 s per frame for every gate
+TRANSITIONS_RESERVE_S = 420.
 SEAM_FULL_S = .3                # full-pose seam windows of the transitions (SeatedIdle side and DeskTyping side)
 
 
@@ -2096,8 +2178,14 @@ def run(args):
         summary['bounded']['stages_done'] = ['DeskTyping_seated']
     else:
         ik = ctx.ik(f_dt.joint_world, r_dt.joint_world, t_dt, shift)
+        # per-frame bound: the ergonomic candidate search stops at this deadline (the clearance/contact solve is kept);
+        # the reserve is the measured per-frame measurement cost and the transitions
+        ik.deadline = t_start + args.max_seconds - (MEASURE_S_PER_FRAME * F + TRANSITIONS_RESERVE_S) if args.max_seconds else None
         W = ik.solve()
         path, sha = write(ctx, g_dt, W, t_dt, out_dir, 'SUB01_DeskTyping_seated', dict(LABELS, role='DeskTyping_seated'))
+        np.savez_compressed(out_dir / 'SUB01_DeskTyping_seated.solve-checkpoint.npz', **{
+            f'{k}_{s_}': np.asarray(getattr(ik, k)[s_], float) for k in ('phi', 'lift', 'delta', 'mode', 'on', 'girdle') for s_ in SIDES})
+        checkpoint('DeskTyping_seated_solve')
         Wb = readback(ctx, path, t_dt)
         rep = {'role': 'DeskTyping_seated', 'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size,
                'keys': F, 'input_fit_clip': rel(Path(FIT_DIR) / CLIPS['DeskTyping_seated'][0]),

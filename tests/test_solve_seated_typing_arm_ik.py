@@ -449,10 +449,85 @@ def test_base_invariance_allows_only_the_arm_chains():
         K.SIDES = {'left': 'Left'}
         W2 = pose_hand(W, rot((0, 0, 1), 20))               # an arm change: allowed
         r = K.base_invariance(ctx, W2, W, np.array([0.]))
-        assert r['pass'] and r['joints_checked'] == 2       # Hips, LeftShoulder
+        assert r['pass'] and r['joints_checked'] == 1       # Hips (the shoulder girdle belongs to the arm step)
         W3 = W2.copy()
         W3[:, 0, :3, 3] += [0, .001, 0]                     # the pelvis moves 0.1 cm: refused
         r = K.base_invariance(ctx, W3, W, np.array([0.]))
         assert not r['pass'] and r['max_position_cm']['value'] == pytest.approx(.1)
     finally:
         K.SIDES = old
+
+
+# ---------------------------------------------------------------- segmentation, mouse, girdle, fast paths
+def test_segment_hand_key_mouse_transit():
+    keys = {'key_max': np.array([218.55, -287.9, 87.4])}
+    F = 60
+    on = np.zeros(F, bool)
+    on[:20] = True
+    palm = np.zeros((F, 3))
+    palm[:20, 0] = 205.
+    palm[20:30, 0] = np.linspace(205, 235, 10)      # fast travel to the mouse
+    palm[30:, 0] = 235.                             # resting on the mouse
+    mode = K.segment_hand(on, palm, 1 / 30, keys, mouse={'palm_target_cm': np.zeros(3)})
+    assert (mode[:20] == K.MODE_KEY).all() and (mode[45:] == K.MODE_MOUSE).all() and (mode[20:28] == K.MODE_TRANSIT).all()
+    assert (K.segment_hand(on, palm, 1 / 30, keys, None)[20:] == K.MODE_TRANSIT).all()
+
+
+def test_transit_blend_is_c1_and_meets_the_segment_values():
+    ik = K.ClipArmIK.__new__(K.ClipArmIK)
+    F = 30
+    ik.mode = {'right': np.r_[np.full(10, K.MODE_KEY), np.full(10, K.MODE_TRANSIT), np.full(10, K.MODE_MOUSE)]}
+    ik.hand_xy = {'right': np.r_[np.zeros((10, 3)), np.zeros((10, 3)), np.tile([.1, 0, 0], (10, 1))]}
+    d = ik.blend_transit('right', np.r_[np.full(10, 2.), np.zeros(10), np.full(10, 5.)])
+    assert np.all(np.diff(d[9:21]) >= -1e-12) and d[9] == 2. and d[20] == 5.
+    steps = np.diff(d[9:21])
+    assert steps[0] < steps[5] and steps[-1] < steps[5]                     # slow at both ends (zero slope)
+    assert np.isclose(ik.hand_xy['right'][14, 0], .1 * float(K.smootherstep(np.array(5 / 11))))
+
+
+def test_shoulder_girdle_depression_and_protraction_carry_the_arm():
+    sk, W, ibm = synthetic()
+    k, a = NAMES.index('LeftShoulder'), NAMES.index('LeftArm')
+    out = K.shoulder_girdle(sk, W.copy(), 'left', np.array([[10., 0.]]))
+    v0, v1 = W[0, a, :3, 3] - W[0, k, :3, 3], out[0, a, :3, 3] - out[0, k, :3, 3]
+    assert np.isclose(np.linalg.norm(v0), np.linalg.norm(v1)) and v1[1] < v0[1] - 1e-6        # lateral end down
+    assert np.isclose(math.degrees(math.atan2(-v1[1], v1[0])), 10., atol=1e-6)
+    out = K.shoulder_girdle(sk, W.copy(), 'left', np.array([[0., 15.]]))
+    v1 = out[0, a, :3, 3] - out[0, k, :3, 3]
+    assert v1[2] > 0 and np.isclose(math.degrees(math.atan2(v1[2], v1[0])), 15., atol=1e-6)    # forward (+z)
+    assert np.allclose(K.arm_locals(sk, out)[:, NAMES.index('LeftForeArm')], K.arm_locals(sk, W)[:, NAMES.index('LeftForeArm')])
+
+
+def test_fast_lbs_and_shift_match_the_reference():
+    sk, W, ibm = synthetic()
+    rng_ = np.random.default_rng(3)
+    pos = rng_.normal(0, .3, (50, 3)) + [.5, 1.3, 0]
+    jts = rng_.integers(0, len(NAMES), (50, 4))
+    wts = rng_.random((50, 4))
+    wts /= wts.sum(1, keepdims=True)
+    Wp = pose_hand(W, rot((1, 1, 0), 30))
+    assert np.allclose(K.lbs((pos, jts, wts), ibm, Wp), K.P.skin_points((pos, jts, wts), ibm, Wp), atol=1e-12)
+    d = np.array([[1., -2., 3.], [0., 5., -1.]])
+    assert np.allclose(K.gltf_shift(d), np.stack([K.P.ue_delta_to_gltf(v) for v in d]))
+
+
+def test_rasters_agree_with_the_exact_surface_test():
+    from fit_seat_rigid_placement import Surface
+    tri = np.array([[[0., 0, 1], [2, 0, 1], [0, 2, 1]], [[3., 3, 2], [5, 3, 2], [3, 5, 2]]])
+    keys = {'key_min': np.array([0., 0, 0]), 'key_max': np.array([5., 5, 2]), 'triangles': tri}
+    r, h = K.KeyRaster(keys), K.HeightRaster(tri)
+    xy = np.random.default_rng(4).uniform(0, 5, (20000, 2))
+    f, z = Surface(tri).height(xy)
+    assert (r.over(xy) != f).mean() < .01
+    fh, zh = h.height(xy)
+    both = fh & f
+    assert (fh != f).mean() < .01 and np.allclose(zh[both], z[both])
+
+
+def test_mouse_is_the_actual_mouse_at_its_record_footprint():
+    m = K.mouse_geometry()
+    lo, hi = np.array(m['footprint_ue_cm'][0]), np.array(m['footprint_ue_cm'][1])
+    assert np.allclose(lo[:2], [229., -301.45], atol=1e-3) and np.allclose(hi[:2], [251., -280.55], atol=1e-3)
+    t = m['palm_target_cm']
+    assert np.isclose(t[0], m['shell_top_cm'][0] + 1.2) and np.isclose(t[1], m['shell_top_cm'][1] + 2.2)
+    assert np.isclose(t[2], m['shell_surface_at_palm_cm'] + 1.6) and lo[2] == pytest.approx(84.6)
