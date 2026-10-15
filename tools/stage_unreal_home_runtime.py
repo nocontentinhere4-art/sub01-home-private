@@ -32,6 +32,7 @@ from unreal_native_daylight_exposure import install as install_native_daylight_e
 from unreal_native_capture_warmup import install as install_native_capture_warmup, stage as stage_native_capture_warmup
 from unreal_bathroom_lamp_runtime import install as install_bathroom_lamp
 from unreal_actual_hand_skin_inspect import install as install_actual_hand_skin_inspect
+from unreal_fp_keyboard_visual_review import install as install_fp_keyboard_visual_review
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -198,6 +199,7 @@ def stage(project):
     header,cpp=install_native_visual_metrics(header,cpp)
     header,cpp=install_interaction_trace_witness(header,cpp)
     header,cpp=install_actual_hand_skin_inspect(header,cpp)
+    header,cpp=install_fp_keyboard_visual_review(header,cpp)
     # The renderer writes this receipt only after the actual new corridor map
     # is saved. Old maps keep their original geometry and privacy rules.
     from unreal_bathroom_corridor_runtime import install as install_bathroom_corridor
