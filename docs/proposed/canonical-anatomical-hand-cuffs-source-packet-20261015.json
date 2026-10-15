@@ -44,5 +44,22 @@
   ],
   "native_imported": false,
   "contact_accepted": false,
-  "first_person_visual_accepted": false
+  "first_person_visual_accepted": false,
+  "independent_static_contact_proof": {
+    "remote_file": "independent-static-cuff-contact.json",
+    "hand_cuff_candidate_pairs": {
+      "Left": 0,
+      "Right": 0
+    },
+    "hand_body_candidate_pairs": {
+      "Left": 0,
+      "Right": 0
+    },
+    "cuff_body_seam_candidate_pairs": {
+      "Left": 278,
+      "Right": 459
+    },
+    "all_candidate_body_triangles_at_or_proximal_to_cut_plane_m": -0.05499993311241269,
+    "interpretation": "Surface candidates are confined to actual garment seam; solidification extends proximal overlap to56.9/57.46mm from wrist. This is a documented physical source attachment, not animated/contact acceptance."
+  }
 }
