@@ -24,6 +24,7 @@ TASKS = {
     'review_kitchen': 'unreal_scene_review',
     'review_stairs': 'unreal_scene_review',
     'hands_inventory': 'unreal_hands_inventory',
+    'walk_pose_audit': 'unreal_walk_pose_audit',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
