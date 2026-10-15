@@ -62,8 +62,10 @@ def create_app(base, token, port):
                 raise web.HTTPNotFound()
             try:
                 remote_ws = await client.ws_connect(target, origin=origin, heartbeat=20, max_msg_size=2*1024*1024)
-            except Exception:
+            except Exception as error:
+                print('LOCAL_NATIVE_WS_UPSTREAM_ERROR',type(error).__name__,getattr(error,'status',None),str(getattr(error,'message',''))[:160],flush=True)
                 raise web.HTTPServiceUnavailable(text='Private house stream is warming up') from None
+            print('LOCAL_NATIVE_WS_UPSTREAM_OPEN',flush=True)
             local_ws = web.WebSocketResponse(heartbeat=20, max_msg_size=4096)
             await local_ws.prepare(request)
 
