@@ -27,7 +27,7 @@ def selected_source(name):
     return (p.suffix in {'.py', '.cjs', '.js', '.json', '.html', '.css', '.wasm', '.csv', '.npz'}
             and ('/' not in name or name.startswith((
                 'computer/', 'games/minecraft/', 'scripts/home_',
-                'tools/unreal_home_state_bridge',
+                'tools/unreal_home_state_bridge', 'tools/unreal_home_coordinates',
                 'tools/pixel_streaming/native_live',
                 'tools/pixel_streaming/native_view',
                 'tools/pixel_streaming/native_input', 'twin/', 'spiking/', 'web/'))))
