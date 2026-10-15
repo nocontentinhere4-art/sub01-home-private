@@ -753,7 +753,7 @@ class ClipArmIK:
                 phi[s], delta[s], self.ergonomics[s] = self.ergonomic_refine(s, delta[s], phi[s], lift[s])
         self.exact_audit = True                  # final contact passes with the exact keycap triangle test
         for s in SIDES:
-            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=4)
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
         W = self.W_fit.copy()
         for s in SIDES:
             W = self.pose(W, s, delta[s], phi[s], lift[s])[0]
@@ -924,6 +924,13 @@ class ClipArmIK:
             act = key | mouse
             if not act.any():
                 break
+            if passes <= SEARCH_CONTACT_PASSES:
+                # search probes (clearance / ergonomics only): a few plain residual steps are enough there; every
+                # kept pose is re-solved by the bisection below
+                for _p in range(passes):
+                    r_ = residual(delta[fr])[0]
+                    delta[fr] = delta[fr] + np.where(act & np.isfinite(r_), r_, 0.)
+                continue
             d0 = delta[fr].copy()
             lo, hi = d0 - CONTACT_BRACKET_CM, d0 + CONTACT_BRACKET_CM
             flo, fhi = residual(lo)[0], residual(hi)[0]
