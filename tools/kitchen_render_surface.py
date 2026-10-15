@@ -14,7 +14,7 @@ def area(triangle):
                                      a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])))/2
 
 
-def compare(source, actual, tolerance_cm=.02):
+def compare(source, actual, tolerance_cm=.0001):
     for group in (source, actual):
         if any(len(t) != 3 or any(len(p) != 3 or not all(map(math.isfinite, p)) for p in t) for t in group):
             raise ValueError('Nonfinite/incomplete kitchen surface')
@@ -27,17 +27,16 @@ def compare(source, actual, tolerance_cm=.02):
     discarded, matched = [], 0
     # Consume resolvable surfaces first; coincident padding may not steal them.
     for i in sorted(range(len(source)), key=lambda i: area(source[i]), reverse=True):
-        triangle, found = source[i], None
+        triangle, found, best = source[i], None, math.inf
         center = key(triangle)
         for offset in itertools.product((-1, 0, 1), repeat=3):
             bucket = buckets.get(tuple(a+b for a, b in zip(center, offset)), set())
             for j in bucket:
-                if any(all(math.dist(a, b) <= tolerance_cm for a, b in zip(triangle, order))
-                       for order in itertools.permutations(actual[j])):
-                    found = bucket, j
-                    break
-            if found:
-                break
+                for order in itertools.permutations(actual[j]):
+                    distances = [math.dist(a, b) for a, b in zip(triangle, order)]
+                    score = sum(x*x for x in distances)
+                    if max(distances) <= tolerance_cm and score < best:
+                        found, best = (bucket, j), score
         if found:
             found[0].remove(found[1])
             matched += 1
