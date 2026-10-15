@@ -238,3 +238,32 @@ def install(header, cpp, proof, native_receipt=None):
     cpp = cpp.replace(' Super::Tick(DeltaSeconds);', ' Super::Tick(DeltaSeconds);\n UpdateActualKitchen(DeltaSeconds);', 1)
     cpp = cpp.replace(' FString Device;\n', ' if(TryNativeKitchen(Hit.GetComponent()))return;\n FString Device;\n', 1)
     return header, INCLUDES+cpp+methods(proof, native_receipt)
+
+
+def rebind_installed(cpp, proof, native_receipt):
+    """Replace only the proved R5 binding table after actual lower-fit import.
+
+    Existing native movement, obstacle checks, input and backend logic are kept
+    byte-for-byte. No guessed future namespace or synthetic receipt is accepted.
+    """
+    previous = 'c5b8f73361d819efced9ab1f7f567f6c9adb284126eebb7de3b03db33229eec5'
+    wanted = 'accd954c120a60f4eb68bd869fe2f1b578517880d71b82e673af5834c32fb79d'
+    if proof.get('export_sha256') != wanted:
+        raise ValueError('Exact measured lower-fit source required')
+    opening = 'namespace {\nstruct FSub01KitchenSpec '
+    closing = '\n}\nvoid ASub01HomeCharacter::InspectActualKitchen(){'
+    if cpp.count(opening) != 1 or cpp.count(closing) != 1:
+        raise ValueError('Exactly one existing kitchen binding table required')
+    start = cpp.index(opening)
+    end = cpp.index(closing, start) + len('\n}')
+    old = cpp[start:end]
+    if ('const TCHAR* KitchenOwnedPrefix=TEXT("/Game/Sub01Home/RealKitchen/V_'+previous[:12]+'_R5/");') not in old:
+        raise ValueError('Exact previous saved R5 native namespace required')
+    tags = re.findall(r'SUB01Kitchen:([0-9a-f]{64}):D([0-7]):(mesh-[0-4])', old)
+    if len(tags) != 40 or set(tags) != {(previous, str(i), 'mesh-'+str(j)) for i in range(8) for j in range(5)}:
+        raise ValueError('Exact unique forty previous runtime bindings required')
+    generated = methods(proof, native_receipt)
+    new_start = generated.index(opening)
+    new_end = generated.index(closing, new_start) + len('\n}')
+    replacement = generated[new_start:new_end]
+    return cpp[:start] + replacement + cpp[end:]

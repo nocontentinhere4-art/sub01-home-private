@@ -183,7 +183,7 @@ def audit_original_kitchen(u, actors, source, project):
     return target
 
 
-def preflight(root, u):
+def preflight(root, u, retained_owned_paths=None):
     root = Path(root)
     proof = validate_manifest(json.loads((root/'native-kitchen.json').read_text()))
     source = root/'native-kitchen.glb'
@@ -215,7 +215,7 @@ def preflight(root, u):
             raise RuntimeError('Original cabinet binding/visibility differs; no batch guesses; source_node='+str(node)+' expected_label='+label+' expected_mesh='+expected+' full_audit='+str(audit_path))
         old.append((actor, components[0]))
     # Actual source geometry, not just actor names or coincident bounding boxes.
-    retained = verify_retained_native(u, original, project/'SourceAssets/full-home.glb', allow_owned_nanite_rebuild=True)
+    retained = verify_retained_native(u, original, project/'SourceAssets/full-home.glb', allow_owned_nanite_rebuild=True, owned_paths=retained_owned_paths)
     if any(any(str(tag).startswith('SUB01Kitchen:') for tag in c.get_editor_property('component_tags'))
            for a in original for c in a.get_components_by_class(u.StaticMeshComponent)):
         raise RuntimeError('Owned kitchen already present; inspect receipt before any reimport')
@@ -225,11 +225,11 @@ def preflight(root, u):
     return proof, source, project, eas, original, old, destination, retained
 
 
-def run(root, dry_run=True, u=None):
+def run(root, dry_run=True, u=None, retained_owned_paths=None):
     if u is None:
         import unreal as u
     root = Path(root)
-    proof, source, project, eas, original, old, dest, retained = preflight(root, u)
+    proof, source, project, eas, original, old, dest, retained = preflight(root, u, retained_owned_paths=retained_owned_paths)
     before = snapshot(u, original)
     result = {'schema': 'sub01.real-kitchen-native-import.v1', 'export_sha256': proof['export_sha256'],
               'retire_only_original_nodes': [63, 178], 'native_visual_verified': False,
@@ -391,8 +391,9 @@ def run(root, dry_run=True, u=None):
             c.set_static_mesh(clone)
             for slot, material in enumerate(component_materials):
                 c.set_material(slot, material)
-        retained_after = verify_retained_native(u, original, project/'SourceAssets/full-home.glb',
-                            owned_paths={164: retained_restore['proof'][0]['owned_mesh']} if retained_restore['proof'] else None)
+        retained_paths=dict(retained_owned_paths or {})
+        retained_paths.update({r['node']:r['owned_mesh'] for r in retained_restore['proof']})
+        retained_after = verify_retained_native(u, original, project/'SourceAssets/full-home.glb',owned_paths=retained_paths or None)
 
         for actor, c in old:
             actor.set_actor_hidden_in_game(True)
