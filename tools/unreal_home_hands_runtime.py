@@ -113,6 +113,7 @@ CHARACTER_FIELDS = r'''
  UFUNCTION(BlueprintCallable,Category="SUB01|Hands") bool SetHandsPosture(FName Posture);
  UFUNCTION(BlueprintPure,Category="SUB01|Hands") FString GetHandsReadiness() const;
  UFUNCTION(Exec) void PreviewHandsPose(FName Posture);
+ UFUNCTION(Exec) void ReloadPrivateWalkingHands();
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString HandsMeshPath;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString IdleClipPath;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString WalkClipPath;
@@ -255,6 +256,18 @@ FString ASub01HomeCharacter::GetHandsReadiness() const {
 void ASub01HomeCharacter::PreviewHandsPose(FName Posture) {
  SetHandsPosture(Posture);
  UE_LOG(LogTemp,Display,TEXT("SUB01_HANDS_PREVIEW_ONLY %s; backend/device activity unchanged."),*GetHandsReadiness());
+}
+void ASub01HomeCharacter::ReloadPrivateWalkingHands() {
+ // Manual private QA only: never tear down an active seat/device pose.
+ if(HandsDiagnostic||HandsPosture!=TEXT("Walk")||NativeSeatVerified||MinecraftFocused||
+    (PCBridge&&PCBridge->HasOperatorFocus())){
+  UE_LOG(LogTemp,Warning,TEXT("SUB01_WALKING_CONFIG_RELOAD_REFUSED active posture/device"));return;
+ }
+ ReloadConfig();
+ HandsClips.Empty();
+ FirstPersonBody->SetVisibility(false);
+ LoadHandsAssets();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_WALKING_CONFIG_RELOADED binding=%s; floor/POV acceptance remains separate"),*GetHandsReadiness());
 }
 void ASub01HomeCharacter::Tick(float DeltaSeconds) {
  Super::Tick(DeltaSeconds);
