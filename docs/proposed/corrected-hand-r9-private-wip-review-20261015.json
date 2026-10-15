@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.corrected-hand-rig-source-review.v1",
+  "rig_sha256": "edf71e368cc82c0441e7282df4a296ac7568c1aeea9fff9fa533b398164991c2",
+  "independent_original_sculpt_boundary_joints": 30,
+  "independent_joint_identity_pass": true,
+  "actual_marker_images_viewed": [
+    {
+      "path": "out/house-evidence/official-hand-digit-identity-r9/left-digit-identity-x+1.png",
+      "sha256": "fb1a6d340ce80bb736c069742eade7e8149611bb5c0c8ddf50028b6562bb7fcd"
+    },
+    {
+      "path": "out/house-evidence/official-hand-digit-identity-r9/right-digit-identity-x+1.png",
+      "sha256": "f62fc3ec565e3596225c542085b612bcb4f46a9bdc6dbea9acbc698aea172b44"
+    }
+  ],
+  "actual_raw_captured_pose_both_sides_viewed": true,
+  "visual_source_improvement_selected": true,
+  "remaining_limitation": "Small shared palm/web skin folds remain (R9 conservative overlap candidates left9\u201319/right18\u201324 over32 frames); no zero-overlap or prop-contact acceptance",
+  "authored_digit_weight_derivative_r10": "Not selected: exclusive digit cleanup preserved source geometry but did not remove shared web folds",
+  "next_priority": "Actual private first-person owner/cuff integration and real PC/controller contact, with limitations explicit. Do not block every house improvement on microscopic isolated mesh polish.",
+  "native_imported": false,
+  "device_contact_accepted": false
+}
