@@ -252,6 +252,7 @@ class HomeStateModel:
             doc["lights"] = {"master": lights.get("master"), "dark": lights.get("dark"),
                              "rooms": {r: {k: lights["rooms"][r].get(k) for k in ("on", "mode")}
                                        for r in hi.LIGHT_ROOMS if isinstance(lights["rooms"].get(r), dict)}}
+        doc["kitchen"] = kitchen_state(home, status, privacy)
         if privacy:
             return doc   # flag + doors/lights/presence only
         names, path_source = remaining_route(home)
@@ -421,7 +422,7 @@ async def read_json(request):
     return data
 
 
-def validate_controls(data):
+def _validate_base_controls(data):
     """Only door / light-room operator modes, validated exactly like home_api."""
     if not data or set(data) - {"doors", "lights"}:
         raise ValueError("Use {\"doors\": {...}} and/or {\"lights\": {...}} only")
@@ -431,6 +432,12 @@ def validate_controls(data):
     if "lights" in data:
         patch["lights"] = hi.validate_modes(data["lights"], hi.LIGHT_ROOMS, hi.LIGHT_MODES, "light room")
     return patch
+
+
+from unreal_kitchen_state_bridge import kitchen_state, validate_controls_patch
+
+def validate_controls(data):
+    return validate_controls_patch(data, _validate_base_controls)
 
 
 SESSION = web.AppKey("session", aiohttp.ClientSession)

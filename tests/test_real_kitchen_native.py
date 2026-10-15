@@ -150,9 +150,9 @@ class KitchenGuards(unittest.TestCase):
         foot_side = [triangle[0], triangle[1], [-3., .125, -3.8]]
         self.assertTrue(bundle.allowed_contact(foot_side, triangle, 0, actual))
 
-    def test_real_bridge_installer_preserves_existing_controls_and_masks_private_stale(self):
+    def test_shipped_bridge_preserves_existing_controls_and_masks_private_stale(self):
         original = (ROOT/'tools/unreal_home_state_bridge.py').read_text()
-        patched = bridge.install(original)
+        patched = original  # Exercise the actual shipped bridge, not an optional installer.
         ast.parse(patched)
         module = types.ModuleType('kitchen_bridge_test')
         module.__file__ = str(ROOT/'tools/unreal_home_state_bridge.py')
