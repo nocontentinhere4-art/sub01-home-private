@@ -1,0 +1,12 @@
+{
+  "actual_exit": 2,
+  "start_utc": 1792046962.324835,
+  "finished_utc": 1792046975.8042207,
+  "cpu_affinity": [
+    12,
+    13
+  ],
+  "threads": 2,
+  "source_sha256": "80708e4113d6a2174e8aabe96af5332ace57b3a3b078a9ea4b5768e42d8f445b",
+  "native_imported": false
+}
