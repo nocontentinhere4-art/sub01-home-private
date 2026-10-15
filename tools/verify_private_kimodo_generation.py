@@ -152,7 +152,7 @@ def main():
         import yaml
         model_config = root / 'hf-cache/hub/models--nvidia--Kimodo-SOMA-RP-v1.1/snapshots/6c9233af1180b8151e3c4703477104af5dce9dd5/config.yaml'
         config = yaml.safe_load(model_config.read_text())
-        model_fps = float(config['fps'])
+        model_fps = float(config['denoiser']['motion_rep']['fps'])
         report['timing'] = measured_generation_timing(
             (output / (basename + '.bvh')).read_text(),
             arrays['posed_joints']['shape'][0], duration, prompt, model_fps)
