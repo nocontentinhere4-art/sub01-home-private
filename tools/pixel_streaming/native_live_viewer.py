@@ -256,7 +256,7 @@ async function deliver(event){const r=await fetch(base+'input',{method:'POST',he
 function send(event){
  const fast=sendNativeSocketInput(event);
  if(fast){
-  const operation=fast.catch(error=>{active=false;status.textContent='Control connection interrupted';deliver({action:'release'}).catch(()=>{});throw error;});
+  const operation=fast.catch(error=>{active=false;status.textContent='Control connection interrupted';window.nativeViewerSocket?.close();deliver({action:'release'}).catch(()=>{});throw error;});
   inputQueue=Promise.allSettled([inputQueue,operation]).then(()=>{});return operation;
  }
  const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;
@@ -632,6 +632,7 @@ class Handler(BaseHTTPRequestHandler):
                         except Exception:
                             status,reply=503,{'error':'Native input unavailable'}
                         send(1,json.dumps({'type':'input-ack','id':identifier,'status':status,**reply},separators=(',',':')).encode())
+                        if status!=200:break  # refused control cannot leave later key-downs queued
                     elif opcode!=10:break
             except (OSError,ConnectionResetError):pass
             finally:ended.set()
