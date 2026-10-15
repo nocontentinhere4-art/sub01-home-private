@@ -1,0 +1,41 @@
+{
+  "schema": "sub01.reference-bed-finish-next-native.v1",
+  "status": "source-built-viewed-proved-not-native",
+  "remote_root": "/workspace/sub01-home-private/reference-bed-finish-r2/output",
+  "bed_sha256": "fbdee3c59a43a4693f5aab0e22bf173cff42c5fe678360932153c6f63b217859",
+  "cloth_material_sha256": "d5936142290790c5fb4fad059537c862547439bd9763d95fcb56a3ef3088e08c",
+  "new_bed_parts": 6,
+  "only_retire_actual_original_source_nodes": [
+    240,
+    260,
+    261
+  ],
+  "require_current_actor_ownership_snapshot_before_hiding": true,
+  "preserve_source_nodes": [
+    262,
+    265,
+    195,
+    196,
+    197,
+    198,
+    199
+  ],
+  "preserve_mattress_top_m": 3.600000023841858,
+  "actual_installed_bedding_source_required": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
+  "cloth_operation": "Per-component material overrides only. Preserve exact four installed 72200-triangle meshes/transforms; new ivory pillow/duvet and beige throw use unchanged original photo/UV/binary, only reviewed factors change.",
+  "native_importer_implemented": false,
+  "next_window_required": [
+    "Human input release",
+    "Exact actual current source240/260/261 native ownership inventory",
+    "Full positive native triangle/PBR verification",
+    "Only verified original wood source240/260/261 retire",
+    "Keep actual bedside lamp source195_199/device and all material emission bindings unchanged",
+    "Native new cloth per-component PBR overrides with all4 meshbindings retained",
+    "Actual whole bed/foot/side/nightstand frame review",
+    "Actual upstairs walk/egress route and sleeping height unchanged"
+  ],
+  "source_only": true,
+  "native_saved": false,
+  "physical_contact_accepted": false,
+  "public_changes": false
+}

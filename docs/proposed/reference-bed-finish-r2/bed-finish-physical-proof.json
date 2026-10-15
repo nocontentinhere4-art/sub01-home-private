@@ -1,0 +1,622 @@
+{
+  "schema": "sub01.reference-bed-finish-physical-proof.v1",
+  "source_sha256": "fbdee3c59a43a4693f5aab0e22bf173cff42c5fe678360932153c6f63b217859",
+  "unchanged_geometry": [
+    {
+      "original_node": 260,
+      "new_source_node": 5,
+      "triangles": 1692,
+      "every_world_triangle_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    },
+    {
+      "original_node": 240,
+      "new_source_node": 4,
+      "triangles": 2756,
+      "every_world_triangle_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    }
+  ],
+  "new_headboard_inside_original_261": [
+    {
+      "part": "BFLeftPost",
+      "new_bounds_native_cm": [
+        [
+          -323.2500046491623,
+          -345.2500067651272,
+          337.9999965429306
+        ],
+        [
+          -316.7500048875809,
+          -340.75000658631325,
+          394.99999582767487
+        ]
+      ],
+      "inside_old_headboard_AABB": true
+    },
+    {
+      "part": "BFRightPost",
+      "new_bounds_native_cm": [
+        [
+          -163.2500022649765,
+          -345.2500067651272,
+          337.9999965429306
+        ],
+        [
+          -156.75000250339508,
+          -340.75000658631325,
+          394.99999582767487
+        ]
+      ],
+      "inside_old_headboard_AABB": true
+    },
+    {
+      "part": "BFLowerPanel",
+      "new_bounds_native_cm": [
+        [
+          -316.7500078678131,
+          -344.3000067025423,
+          344.5049911737442
+        ],
+        [
+          -163.25001120567322,
+          -341.7000066488981,
+          368.8949912786484
+        ]
+      ],
+      "inside_old_headboard_AABB": true
+    },
+    {
+      "part": "BFUpperPanel",
+      "new_bounds_native_cm": [
+        [
+          -316.7500078678131,
+          -344.3000067025423,
+          369.1150099039078
+        ],
+        [
+          -163.25001120567322,
+          -341.7000066488981,
+          393.50501000881195
+        ]
+      ],
+      "inside_old_headboard_AABB": true
+    }
+  ],
+  "preserved_actual_cloth_sha256": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
+  "new_cloth_material_variant_sha256": "d5936142290790c5fb4fad059537c862547439bd9763d95fcb56a3ef3088e08c",
+  "all_cloth_geometry_UV_and_binary_exact": true,
+  "mattress262_and_slats265_unchanged": true,
+  "functional_nightstand_lamp195_199_unchanged": true,
+  "new_head_source_bvh": {
+    "exported_glb_reimported": true,
+    "epsilon_m": 0,
+    "retained_meshes": 234,
+    "unresolved_intersections": [],
+    "measured_headboard_support_contacts": [
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 248,
+        "source_polygon": 955643,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 248,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 248,
+        "source_polygon": 955831,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 248,
+        "source_polygon": 955868,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 96,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 96,
+        "source_polygon": 955868,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 97,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 97,
+        "source_polygon": 955868,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 249,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 249,
+        "source_polygon": 955868,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955643,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955644,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955540,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955541,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955832,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955831,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955728,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955729,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955625,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955813,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 288,
+        "source_polygon": 955643,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 288,
+        "source_polygon": 955831,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955625,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955813,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFLeftPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955868,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955597,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955596,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955643,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955973,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 956019,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955972,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955642,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 955641,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 956017,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 289,
+        "source_polygon": 956018,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 273,
+        "source_polygon": 955679,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 273,
+        "source_polygon": 956056,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955679,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 955642,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 956055,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 956056,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 272,
+        "source_polygon": 956018,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 1,
+        "source_polygon": 955679,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 1,
+        "source_polygon": 956056,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 0,
+        "source_polygon": 955679,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 0,
+        "source_polygon": 956056,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 192,
+        "source_polygon": 955643,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 192,
+        "source_polygon": 956019,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 192,
+        "source_polygon": 955679,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 192,
+        "source_polygon": 955680,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      },
+      {
+        "head_part": "BFRightPost",
+        "source_part": "BFFrame",
+        "head_polygon": 192,
+        "source_polygon": 956056,
+        "post_bottom_m": 3.379999876022339,
+        "frame_top_m": 3.380000114440918,
+        "maximum_vertical_overlap_m": 2.384185791015625e-07,
+        "actual_float32_roundoff_bound_m": 1.6117096492962446e-06
+      }
+    ],
+    "only_contact_exception": "Exact headboard post bottoms meet the unchanged frame top, bounded by four actual float32 coordinate roundoffs; no other owner or intersection is ignored"
+  },
+  "native_imported": false,
+  "runtime_accepted": false
+}

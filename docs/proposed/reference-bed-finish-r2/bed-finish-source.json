@@ -1,0 +1,25 @@
+{
+  "schema": "sub01.reference-bed-finish-source.v1",
+  "source_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "new_source_sha256": "fbdee3c59a43a4693f5aab0e22bf173cff42c5fe678360932153c6f63b217859",
+  "cloth_source_original_unchanged_sha256": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
+  "cloth_material_variant_sha256": "d5936142290790c5fb4fad059537c862547439bd9763d95fcb56a3ef3088e08c",
+  "all72200cloth_triangles_and_original_binary_unchanged": true,
+  "retire_only_source_nodes": [
+    240,
+    260,
+    261
+  ],
+  "source260_and240_vertex_geometry_unchanged": true,
+  "mattress262_unchanged": true,
+  "slats265_unchanged": true,
+  "functional_bedside_lamp195_199_unchanged": true,
+  "cloth263_264_already_replaced_native_not_touched": true,
+  "reference": "Owner supplied second low warm wood bed image",
+  "geometry": "CC0 Innerscene bed frame and CC0 side_table_01 retained, new original Blender four-part low solid wood headboard with expansion reveal",
+  "headboard_top_m": 3.95,
+  "headboard_lower_than_original_by_m": 0.32,
+  "mattress_surface_m": 3.600000023841858,
+  "new_parts": 6,
+  "native_ready": false
+}
