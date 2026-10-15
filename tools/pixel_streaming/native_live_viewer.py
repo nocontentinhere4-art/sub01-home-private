@@ -281,7 +281,8 @@ document.addEventListener('mousemove',e=>{if(!active||(document.pointerLockEleme
 for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&!privateEgress&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down}).catch(()=>{});}});game.oncontextmenu=e=>e.preventDefault();
 async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);let retained=false;try{if(generation!==streamGeneration)return;const decoded=new Image();decoded.src=url;await Promise.race([decoded.decode(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Frame decode timeout')),1500))]);if(generation!==streamGeneration)return;game.src=url;if(previous)URL.revokeObjectURL(previous);previous=url;retained=true;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;window.nativeViewerLastDecodedAt=performance.now();game.hidden=false;empty.hidden=true;}catch(e){throw e;}finally{if(!retained)URL.revokeObjectURL(url);}}
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
-function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLastDecodedAt=0;const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(typeof e.data==='string'){acknowledgeNativeSocketInput(ws,e.data);return;}if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{closeNativeSocketInputs(ws);if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';clearPixels();empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},2500);}
+let nativeWsRetryDelay=500;
+function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLastDecodedAt=0;const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(typeof e.data==='string'){acknowledgeNativeSocketInput(ws,e.data);return;}if(decoding||e.data.byteLength<18)return;nativeWsRetryDelay=500;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{closeNativeSocketInputs(ws);if(generation!==streamGeneration||!streaming)return;const delay=nativeWsRetryDelay;nativeWsRetryDelay=Math.min(nativeWsRetryDelay*2,8000);setTimeout(()=>{if(generation===streamGeneration&&streaming&&live)streamNative();},delay);finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';clearPixels();empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},2500);}
 async function readHealth(){const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),1500);try{const r=await fetch(base+'health'+(active?'?hold=1':''),{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error('Health unavailable');return await r.json();}finally{clearTimeout(timer);}}
 async function ready(){try{const h=await readHealth();live=h.nativeAlive&&h.captureEnabled;document.querySelector('.private').textContent=h.privacy===false&&h.viewMode==='manual'?'Explore home':h.privacy===false&&h.viewMode==='live'?'Live home':h.privacy===false&&h.viewMode==='diagnostic'?'Animation review':'Private home';permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;takeControlAvailable=h.takeControlAvailable===true;control.disabled=takingControl||(!permission&&!privateEgress&&!takeControlAvailable);control.textContent=takingControl?'Taking control…':takeControlAvailable&&!permission?'Take control':privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent=!h.nativeAlive?'Home unavailable':h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=!h.nativeAlive?'The home is paused. Waiting for a fresh live session.':h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&performance.now()-(window.nativeViewerLastDecodedAt||streamOpenedAt)>3500){streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=h.viewMode==='live'&&h.activity&&typeof h.activity.awake==='boolean'?(h.activity.awake?'Awake':'Asleep')+(h.activity.activity?' · '+h.activity.activity:''):active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){active=false;permission=false;privateEgress=false;takeControlAvailable=false;live=false;streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;control.disabled=true;if(document.pointerLockElement)document.exitPointerLock();status.textContent='Private connection unavailable';document.querySelector('#emptyText').textContent='Live view is paused until the private connection returns.';}}
 
@@ -342,7 +343,7 @@ class LiveState:
         if codec not in ('jpeg','h264_nvenc'):raise ValueError('Supported capture codec required')
         self.codec=codec
         self.deadline = deadline
-        self.fps=fps;self.width=width;self.viewer_lock=threading.Lock()
+        self.fps=fps;self.width=width;self.viewer_lock=threading.BoundedSemaphore(4)
         self.private = Path('/home/unreal/.sub01-private')
         self.session = uuid.uuid4().hex
         self.capture_lock = threading.Lock()
@@ -629,8 +630,8 @@ class Handler(BaseHTTPRequestHandler):
             if len(base64.b64decode(key,validate=True))!=16 or self.headers.get('Sec-WebSocket-Version')!='13':raise ValueError()
         except ValueError:self.json(400,{'error':'Invalid websocket request'});return
         if not state.viewer_lock.acquire(blocking=False):
-            self.json(409,{'error':'One private viewer is already connected'});return
-        ended=threading.Event();writing=threading.Lock();used_controls=threading.Event()
+            self.json(409,{'error':'Private viewer stream capacity reached'});return
+        ended=threading.Event();writing=threading.Lock();used_controls=threading.Event();close_reason={'value':'capture-ended'}
         def send(opcode,payload):
             size=len(payload)
             header=bytes([0x80|opcode])+(bytes([size]) if size<126 else bytes([126])+struct.pack('!H',size) if size<65536 else bytes([127])+struct.pack('!Q',size))
@@ -640,9 +641,9 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 while not ended.is_set():
                     head=self.rfile.read(2)
-                    if len(head)!=2:break
+                    if len(head)!=2:close_reason['value']='control-eof';break
                     opcode=head[0]&15;size=head[1]&127
-                    if not head[0]&128 or not head[1]&128 or size>125:break
+                    if not head[0]&128 or not head[1]&128 or size>125:close_reason['value']='control-frame-shape-'+str(opcode)+'-'+str(size);break
                     mask=self.rfile.read(4);raw=self.rfile.read(size)
                     if len(mask)!=4 or len(raw)!=size:break
                     data=bytes(b^mask[i%4] for i,b in enumerate(raw))
@@ -662,9 +663,11 @@ class Handler(BaseHTTPRequestHandler):
                         send(1,json.dumps({'type':'input-ack','id':identifier,'status':status,**reply},separators=(',',':')).encode())
                         if status!=200:break  # refused control cannot leave later key-downs queued
                     elif opcode!=10:break
-            except (OSError,ConnectionResetError):pass
+            except (OSError,ConnectionResetError) as error:close_reason['value']='control-'+type(error).__name__
             finally:ended.set()
         try:
+            # RFC6455 handshake must remain HTTP/1.1 through Jupyter's WS proxy.
+            self.protocol_version='HTTP/1.1'
             self.send_response(101);self.send_header('Upgrade','websocket');self.send_header('Connection','Upgrade')
             self.send_header('Sec-WebSocket-Accept',base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode());self.end_headers();self.wfile.flush()
             threading.Thread(target=controls,daemon=True).start();sequence=state.sequence
@@ -676,8 +679,9 @@ class Handler(BaseHTTPRequestHandler):
                     frame=state.latest_frame;sequence=state.sequence;captured=state.capture_utc
                 if not state.enabled('native-viewer-capture-enabled'):break
                 send(2,struct.pack('!Qd',sequence,captured)+frame);state.frames+=1
-        except (OSError,BrokenPipeError,ConnectionResetError):pass
+        except (OSError,BrokenPipeError,ConnectionResetError) as error:close_reason['value']='video-'+type(error).__name__
         finally:
+            print('PRIVATE_NATIVE_WS_CLOSED',close_reason['value'],flush=True)
             ended.set()
             try:
                 try:

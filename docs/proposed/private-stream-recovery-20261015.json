@@ -1,0 +1,71 @@
+{
+  "schema": "sub01.private-stream-recovery-20261015.v1",
+  "cause": "One authenticated native WebSocket held the single-viewer lock; secondary tabs got an inner409 hidden behind the outer Jupyter101 and remained in slow sequential HTTP fallback. Configuredcapture60 was not browser FPS.",
+  "fixes_active": [
+    "Four bounded authenticated WebSocket view streams share one capture encoder",
+    "WebSocket handshake responds HTTP1.1",
+    "Frontend bounded reconnect/backoff500ms..8s prevents permanent fallback after transientclose",
+    "Same authenticated origin/token/canonical privacy/actual native identity/input-grant checks; no expanded authorization"
+  ],
+  "actual_runtime_source_sha256": "31cbe043ab6fd13cbda419c04b41b907a3ec518a1a9cb6489f3966a3f2a2af0a",
+  "actual_viewer_rollout": {
+    "schema": "sub01.viewer-http11-only-rollout.v1",
+    "old_viewer_pid": 185280,
+    "old_start_ticks": 978045220,
+    "new_launcher_pid": 187987,
+    "source_before_sha256": "463c52f284112e3f7cfb51678ddf1a51783cec83878ab657783110b91c15aa7f",
+    "source_after_sha256": "31cbe043ab6fd13cbda419c04b41b907a3ec518a1a9cb6489f3966a3f2a2af0a",
+    "actual_game_pid": 159171,
+    "actual_game_start_ticks": 976840968,
+    "game_restarted": false,
+    "input_acquired": false,
+    "captured_utc": 1792090462.8359408
+  },
+  "capture_input_grant_hashes_unchanged": {
+    "native-viewer-capture-enabled": "2ff2a055b9b117f015b5cccdbdb9773388833352655b2815f4b1d9ea1584ba74",
+    "native-viewer-input-enabled": "de8e3ffb3c4b7c4ab748b78ab29a1cf0cdd24da19129b5a181ee12609596e9b0"
+  },
+  "transport_actual_30_second_measurement": {
+    "schema": "sub01.actual-loopback-ws-transport-proof.v1",
+    "upgrade_seconds": 0.23469725000904873,
+    "first_binary_seconds": 0.27422170800855383,
+    "duration_s": 30.00581395899644,
+    "frames": 1802,
+    "received_fps": 60.021701209675676,
+    "sequence_fps": 60.021701209675676,
+    "socket_still_open": true,
+    "input_messages_sent": 0,
+    "browser_decode_verified": false,
+    "native_restarted": false
+  },
+  "transport_full_sample_sha256": "ba81c8eb9b2a6723113572a62919cfaf7896aa675a2b13e82fd6762cf177ba25",
+  "browser_actual_isolated_measurement": {
+    "evidence_path": "out/coordination/actual-isolated-browser-decode-proof.json",
+    "evidence_sha256": "4ca9a2dd0992dc9fab06f547f07eab1f63a5b423cf2a5aee6e1ac0fc300220e0",
+    "websocket_state": "OPEN",
+    "canvas_dimensions": [
+      1280,
+      720
+    ],
+    "decoded_frames": 865,
+    "elapsed_s": 15.0008,
+    "decoded_fps": 57.6636,
+    "rolling_fps": 57.77,
+    "ui_fps": 58,
+    "input_acquired": false,
+    "source": "Root actual isolated Playwright measurement after reload; independently distinct from transport sample"
+  },
+  "focused_tests_passed": 124,
+  "protocol_and_resource_tests": [
+    "ActualHTTP1.1upgrade +realWSinputacks/release regression",
+    "Four concurrent view upgrades, fifth409 refusal, freed slot reusable",
+    "Privacy/identity deny gate stops all four before nextprivateframe",
+    "Four concurrent ensure_capture calls launch oneencoder",
+    "Existing origin/DNS-rebinding/privacy/nativeidentity/input pacing tests unchanged"
+  ],
+  "source_only_deferred_cosmetic_change": "H264 labels wss-h264/https-h264 implemented and tested but not deployed; no extra viewer restart for labels",
+  "game_restarted": false,
+  "camera_or_pose_changed": false,
+  "input_acquired": false,
+  "public_changed": false
+}

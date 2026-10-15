@@ -174,7 +174,7 @@ def test_actual_websocket_wire_acks_and_disconnect_releases_keys():
         connection.sendall((f'GET /socket HTTP/1.1\r\nHost: localhost\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\nOrigin: {PRIVATE_VIEWER_ORIGIN}\r\n\r\n').encode())
         headers=b''
         while not headers.endswith(b'\r\n\r\n'):headers+=exact(1)
-        assert headers.startswith(b'HTTP/1.0 101')
+        assert headers.startswith(b'HTTP/1.1 101')
         send({'id':1,'event':{'action':'key','code':'KeyW','down':True}})
         send({'id':2,'event':{'action':'key','code':'KeyW','down':False}})
         acks=[];pixels=False
@@ -208,3 +208,58 @@ def test_socket_disconnect_during_pacing_cannot_leave_a_pressed_key():
     def wait(seconds):clock.sleep(seconds);ended.set()
     assert deliver(value,{'action':'key','code':'KeyW','down':True},clock,pace=True,sleeper=wait,cancelled=ended.is_set)[0]==409
     assert value.input.events==[]
+
+
+def test_four_authenticated_video_streams_share_capture_and_release_capacity():
+    """Real HTTP/WS framing: four viewers, fifth refused, no input is granted."""
+    import base64,socket,time
+    from http.server import ThreadingHTTPServer
+    from tools.pixel_streaming.native_live_viewer import Handler,PRIVATE_VIEWER_ORIGIN
+    value=state();value.viewer_lock=threading.BoundedSemaphore(4);value.condition=threading.Condition()
+    value.sequence=0;value.latest_frame=b'frame';value.capture_utc=time.time();value.frames=0
+    value.ensure_capture=lambda:None
+    server=ThreadingHTTPServer(('127.0.0.1',0),Handler);server.daemon_threads=True;server.state=value
+    serving=threading.Thread(target=server.serve_forever,daemon=True);serving.start();connections=[]
+    def connect():
+        c=socket.create_connection(server.server_address,timeout=2)
+        key=base64.b64encode(b'0123456789abcdef').decode()
+        c.sendall((f'GET /socket HTTP/1.1\r\nHost: localhost\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\nOrigin: {PRIVATE_VIEWER_ORIGIN}\r\n\r\n').encode())
+        header=b''
+        while not header.endswith(b'\r\n\r\n'):header+=c.recv(1)
+        return c,header
+    try:
+        for _ in range(4):
+            c,h=connect();connections.append(c);assert h.startswith(b'HTTP/1.1 101')
+        extra,h=connect();assert b'409' in h.splitlines()[0];extra.close()
+        connections[0].shutdown(socket.SHUT_RDWR);connections[0].close()
+        for _ in range(100):
+            if value.viewer_lock.acquire(False):value.viewer_lock.release();break
+            time.sleep(.01)
+        c,h=connect();connections.append(c);assert h.startswith(b'HTTP/1.1 101')
+        assert value.input.events==[],'View-only sockets must never synthesize input'
+        assert all(c is not None for c in connections)
+        # A privacy/identity revocation stops every stream before its next frame.
+        value.allowed=False
+        with value.condition:
+            value.sequence+=1;value.latest_frame=b'private-frame-must-not-be-sent';value.condition.notify_all()
+        for _ in range(4):assert value.viewer_lock.acquire(timeout=2)
+        for _ in range(4):value.viewer_lock.release()
+        assert value.frames==0
+    finally:
+        for c in connections:
+            try:c.shutdown(socket.SHUT_RDWR)
+            except OSError:pass
+            c.close()
+        server.shutdown();server.server_close();serving.join(timeout=2)
+
+
+def test_multiple_viewers_reuse_one_capture_encoder(monkeypatch):
+    from tools.pixel_streaming import native_live_viewer as viewer
+    calls=[]
+    proc=SimpleNamespace(poll=lambda:None)
+    monkeypatch.setattr(viewer.subprocess,'Popen',lambda *a,**k:(calls.append(a[0])or proc))
+    value=SimpleNamespace(capture_lock=threading.Lock(),proc=None,condition=threading.Condition(),latest_frame=b'',capture_utc=0,codec='h264_nvenc',fps=60,width=1280,capture=lambda p:None)
+    workers=[threading.Thread(target=viewer.LiveState.ensure_capture,args=(value,))for _ in range(4)]
+    for worker in workers:worker.start()
+    for worker in workers:worker.join(timeout=2)
+    assert len(calls)==1 and value.proc is proc

@@ -41,3 +41,12 @@ assert.throws(()=>ctx.h264ParameterSets(new Uint8Array([0,0,1,65,1])));
  p=tmp_path/'h264-wrapper.cjs';p.write_text(script)
  r=subprocess.run(['node',str(p)],capture_output=True,text=True)
  assert r.returncode==0,r.stderr
+
+
+def test_h264_viewer_reports_actual_transport_codec():
+    from tools.pixel_streaming.native_h264_frontend import h264_html
+    from tools.pixel_streaming.native_live_viewer import HTML
+    actual=h264_html(HTML)
+    assert "'wss-h264'"in actual and "'https-h264'"in actual
+    assert "'wss-jpeg'"not in actual and "'https-jpeg'"not in actual
+    assert "'wss-jpeg'"in HTML

@@ -85,6 +85,7 @@ def h264_html(html):
     end=html.index('\nasync function finite(',start)
     html=html[:start]+H264_JS+'\n'+DECODE+html[end:]
     html=html.replace("type:'image/jpeg'","type:'video/h264'",1)
+    html=html.replace("'wss-jpeg'","'wss-h264'",1).replace("'https-jpeg'","'https-h264'",1)
     clear="function clearPixels(){game.hidden=true;game.removeAttribute('src');if(previous){URL.revokeObjectURL(previous);previous=null;}}"
     if html.count(clear)!=1:
         raise ValueError('Exact privacy clear hook required')
