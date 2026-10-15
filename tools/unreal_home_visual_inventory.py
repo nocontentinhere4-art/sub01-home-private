@@ -17,7 +17,7 @@ def run(output):
     actors = u.get_editor_subsystem(u.EditorActorSubsystem).get_all_level_actors()
     library = u.MaterialEditingLibrary
     materials = {}
-    bindings, lights, post = [], [], []
+    bindings, lights, sky, post = [], [], [], []
     for actor in actors:
         label = actor.get_actor_label()
         for component in actor.get_components_by_class(u.StaticMeshComponent):
@@ -53,7 +53,8 @@ def run(output):
                             row['errors'].append(kind + ':' + type(error).__name__)
                 materials[path] = row
         for component in actor.get_components_by_class(u.LightComponent):
-            row = {'actor': label, 'class': component.get_class().get_name()}
+            row = {'actor': label, 'class': component.get_class().get_name(),
+                   'rotation': str(actor.get_actor_rotation()), 'component': component.get_path_name()}
             for name in ('intensity', 'light_color', 'temperature', 'use_temperature', 'intensity_units'):
                 try:
                     value = component.get_editor_property(name)
@@ -61,9 +62,26 @@ def run(output):
                 except Exception:
                     pass
             lights.append(row)
+        for component in actor.get_components_by_class(u.SkyLightComponent):
+            row = {'actor': label, 'component': component.get_path_name(), 'errors': {}}
+            for name in ('intensity', 'indirect_lighting_intensity', 'light_color',
+                         'real_time_capture', 'source_type', 'cubemap_resolution',
+                         'lower_hemisphere_is_black', 'lower_hemisphere_color',
+                         'cast_shadows', 'mobility'):
+                try:
+                    value = component.get_editor_property(name)
+                    row[name] = value if isinstance(value, (bool, int, float, str)) else str(value)
+                except Exception as error:
+                    row['errors'][name] = str(error)
+            sky.append(row)
         if isinstance(actor, u.PostProcessVolume):
             settings = actor.get_editor_property('settings')
             row = {'actor': label}
+            for name in ('unbound', 'priority', 'blend_weight', 'enabled'):
+                try:
+                    row[name] = actor.get_editor_property(name)
+                except Exception:
+                    pass
             for name in ('auto_exposure_method', 'auto_exposure_min_brightness', 'auto_exposure_max_brightness',
                          'auto_exposure_bias', 'white_temp', 'white_tint', 'color_saturation'):
                 try:
@@ -75,7 +93,7 @@ def run(output):
             post.append(row)
     report = {'schema': 'sub01-private-actual-visual-inventory-v1', 'level': world.get_path_name(),
               'read_only': True, 'bindings': bindings, 'materials': materials,
-              'lights': lights, 'post_processing': post}
+              'lights': lights, 'sky_lights': sky, 'post_processing': post}
     Path(output).write_text(json.dumps(report, indent=2) + '\n')
     u.log('SUB01_VISUAL_INVENTORY bindings=%d materials=%d lights=%d' % (len(bindings), len(materials), len(lights)))
     return report
