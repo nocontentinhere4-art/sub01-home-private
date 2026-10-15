@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "errors": [],
+  "derived_sha256": "81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2",
+  "changed_channels": [
+    "mixamorig:RightHand",
+    "mixamorig:RightHandIndex1",
+    "mixamorig:RightHandIndex2",
+    "mixamorig:RightHandIndex3",
+    "mixamorig:RightHandMiddle1",
+    "mixamorig:RightHandMiddle2",
+    "mixamorig:RightHandMiddle3",
+    "mixamorig:RightHandPinky1",
+    "mixamorig:RightHandPinky2",
+    "mixamorig:RightHandPinky3",
+    "mixamorig:RightHandRing1",
+    "mixamorig:RightHandRing2",
+    "mixamorig:RightHandRing3",
+    "mixamorig:RightHandThumb1",
+    "mixamorig:RightHandThumb2"
+  ],
+  "report_sha256": "67b85378a21c4e7764cebb416f04b9e97e559b9426d6ead692c97a8b46016bb7",
+  "audit_sha256": "056bbc6713e561046084de56f225897b6afa597204039fffcb707996a4dd9acb"
+}

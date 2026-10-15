@@ -1,0 +1,21 @@
+{
+  "schema": "sub01.phone-grip-fbx-source-roundtrip.v1",
+  "derived_glb_sha256": "81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2",
+  "source_commit": "e5dbdac",
+  "bones": 65,
+  "curves": 659,
+  "actual_fbx_key_counts": [
+    557
+  ],
+  "actual_fbx_unique_times": 557,
+  "actual_frame_range": [
+    1.0,
+    557.0
+  ],
+  "all557_frames_all65_joint_heads_max_error_cm": 0.0007035594038073368,
+  "joint_head_tolerance_cm": 0.02,
+  "fbx_sha256": "30ce52419d204f914bda05d1a73aefbd49affd0c3f3bfd62f2ccfeacdb82e9d4",
+  "native_ready": false,
+  "phone_contact_accepted": false,
+  "ue_imported": false
+}
