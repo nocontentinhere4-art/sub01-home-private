@@ -41,8 +41,11 @@ def run(idle=False):
   if idle:
    samples={'body-front':1.25,'hands-down-phase-03':0.,'hands-down-phase-15':1.25,'hands-down-phase-28':2.5,'body-side':1.25}
   def set_pose(name):
-   assert active_candidate_guard();record_pose('previous-before-'+name);c.override_animation_data(clip,False,False,samples[name],0);c.set_position(samples[name],False);c.set_update_animation_in_editor(True);phase['last']=samples[name]
+   assert active_candidate_guard()
+   if name.startswith('body-'):c.un_hide_bone_by_name('Head')
+   else:c.hide_bone_by_name('Head',u.PhysBodyOp.PBO_NONE)
+   record_pose('previous-before-'+name);c.override_animation_data(clip,False,False,samples[name],0);c.set_position(samples[name],False);c.set_update_animation_in_editor(True);phase['last']=samples[name]
   result=review.run(views,capture_delay=3,initial_delay=3,before_view=set_pose,on_finish=restore)
-  (r/('anatomical-idle-first-person-review.json'if idle else'anatomical-first-person-review.json')).write_text(json.dumps({'schema':'sub01.anatomical-first-person-review.v1','actual_candidate_editor':True,'review':result,'mesh':mesh.get_path_name(),'clip':clip.get_path_name(),'normal_hidden_head_bones':['Head'],'normal_component_policy':True,'temporary_only':True,'native_game_owner_changed':False,'contact_accepted':False,'epoch':time.time()},indent=2)+'\n');return result
+  (r/('anatomical-idle-first-person-review.json'if idle else'anatomical-first-person-review.json')).write_text(json.dumps({'schema':'sub01.anatomical-first-person-review.v1','actual_candidate_editor':True,'review':result,'mesh':mesh.get_path_name(),'clip':clip.get_path_name(),'normal_hidden_head_bones':['Head'],'external_body_diagnostic_head_visible':True,'fps_head_hidden_only_in_fps_views':True,'visitor_mode_implemented':False,'normal_component_policy':True,'temporary_only':True,'native_game_owner_changed':False,'contact_accepted':False,'epoch':time.time()},indent=2)+'\n');return result
  except Exception:
   restore('setup refused');raise
