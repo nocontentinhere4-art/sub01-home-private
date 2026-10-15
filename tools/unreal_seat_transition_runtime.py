@@ -170,7 +170,6 @@ void ASub01HomeCharacter::LoadSeatTransition(){
     UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_CUSHION area=%.2fcm2 bounds=%s"),Area,*Cushion.ToString());
    }
   }
-  }
  }
  // Contact evidence: only an accepted, quantitative report (build_evidence()).
  FString EvidenceText;TSharedPtr<FJsonObject> E;
