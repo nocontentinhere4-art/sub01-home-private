@@ -51,3 +51,47 @@ def test_prepared_native_mesh_identities_change_no_payload_or_world_geometry(tmp
     assert {m['name'] for m in actual['meshes']}=={n['name'] for n in original['nodes']}
     for index,mesh in enumerate(original['meshes']):actual['meshes'][index]['name']=mesh['name']
     assert original==actual
+
+
+def test_actual_source_slot_survives_unreal_truncated_material_asset_names():
+    from types import SimpleNamespace
+    from unreal_import_real_bathroom_pendant import source_slot_binding
+    _,doc,_=validate(SOURCE);source=next(m for m in doc['materials'] if m['name']=='modern_ceiling_globe')
+    dest='/Game/Sub01Home/RealBathroomPendant/V_c953ce762552/Attempt_test'
+    # Exact observed native failure: source slot is modern_ceiling_globe but
+    # UE shortened its long generated asset basename to mode_lobe.
+    material=SimpleNamespace(get_path_name=lambda:dest+'/source/Materials/mode_lobe.mode_lobe')
+    values={'material_slot_name':'modern_ceiling_globe','material_interface':material}
+    slot=SimpleNamespace(get_editor_property=lambda key:values[key])
+    mesh=SimpleNamespace(get_editor_property=lambda key:[slot])
+    component=SimpleNamespace(get_editor_property=lambda key:mesh,get_material=lambda index:material)
+    assert source_slot_binding(component,source,dest)=={source['name']:material.get_path_name()}
+    for wrong in ['modern_ceiling_lamp_01','modern_ceiling_lamp_01_glass','mode_lobe']:
+        values['material_slot_name']=wrong
+        with pytest.raises(RuntimeError,match='Exact original material slot'):source_slot_binding(component,source,dest)
+    values['material_slot_name']=source['name'];values['material_interface']=object()
+    with pytest.raises(RuntimeError):source_slot_binding(component,source,dest)
+    values['material_interface']=material
+    with pytest.raises(RuntimeError):source_slot_binding(component,source,'/Game/AnotherNamespace')
+
+
+def test_explicit_slot_binding_still_runs_every_original_pbr_factor_gate():
+    from types import SimpleNamespace
+    from unreal_import_real_linea140 import verify_materials
+    class Mat:
+        def get_path_name(self):return '/Game/Owned/Materials/mode_lobe.mode_lobe'
+        def get_name(self):return 'mode_lobe'
+    mat=Mat();value=[1.,1.,1.,1.]
+    mel=SimpleNamespace(get_vector_parameter_names=lambda m:['BaseColorFactor','EmissiveFactor'],
+        get_scalar_parameter_names=lambda m:['MetallicFactor','RoughnessFactor'],get_texture_parameter_names=lambda m:[],
+        get_material_instance_vector_parameter_value=lambda m,p:SimpleNamespace(**dict(zip(['r','g','b','a'],value if p=='BaseColorFactor' else [0.,0.,0.,0.]))),
+        get_material_instance_scalar_parameter_value=lambda m,p:1.)
+    u=SimpleNamespace(MaterialEditingLibrary=mel,MaterialInstanceConstant=Mat,TextureCompressionSettings=SimpleNamespace(TC_DEFAULT=0,TC_MASKS=1,TC_NORMALMAP=2))
+    c=SimpleNamespace(get_materials=lambda:[mat]);doc={'materials':[{'name':'modern_ceiling_globe'}]}
+    binding={'modern_ceiling_globe':mat.get_path_name()}
+    assert verify_materials(u,[c],doc,'/Game/Owned',material_bindings=binding)[0]['source_material']=='modern_ceiling_globe'
+    value[0]=.5
+    with pytest.raises(RuntimeError,match='base factor'):verify_materials(u,[c],doc,'/Game/Owned',material_bindings=binding)
+    value[0]=1.
+    for bad in [{},{'modern_ceiling_globe':'/Game/Other.Other'},{'wrong':mat.get_path_name()}]:
+        with pytest.raises(RuntimeError,match='Explicit source material bindings'):verify_materials(u,[c],doc,'/Game/Owned',material_bindings=bad)

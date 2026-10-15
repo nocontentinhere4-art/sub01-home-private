@@ -60,8 +60,20 @@ def prepare_native_input(source, target):
             'native_mesh_names':[m['name'] for m in actual['meshes']]}
 
 
+def source_slot_binding(c,source,dest):
+    """Bind preserved glTF material slot, never a truncated UE asset basename."""
+    mesh=c.get_editor_property('static_mesh');slots=list(mesh.get_editor_property('static_materials'))
+    mat=c.get_material(0)
+    if (len(slots)!=1 or str(slots[0].get_editor_property('material_slot_name'))!=source['name']
+            or not mat or slots[0].get_editor_property('material_interface')!=mat
+            or not mat.get_path_name().startswith(dest+'/')):
+        raise RuntimeError('Exact original material slot and assigned owned instance required')
+    return {source['name']:mat.get_path_name()}
+
+
 def verify_owned_material(u,c,source,dest):
     from unreal_import_real_linea140 import verify_materials
+    binding=source_slot_binding(c,source,dest)
     mat=c.get_material(0);mel=u.MaterialEditingLibrary
     if not mat or not mat.get_path_name().startswith(dest+'/'):
         raise RuntimeError('Only newly owned imported fixture materials may be checked')
@@ -74,7 +86,7 @@ def verify_owned_material(u,c,source,dest):
     # exact authored emission even when another PBR check refuses the import.
     if any(wanted):mel.set_material_instance_vector_parameter_value(mat,'EmissiveFactor',u.LinearColor(0,0,0,0))
     try:
-        result=verify_materials(u,[c],{'materials':[source]},dest)
+        result=verify_materials(u,[c],{'materials':[source]},dest,material_bindings=binding)
     finally:
         if any(wanted):mel.set_material_instance_vector_parameter_value(mat,'EmissiveFactor',factor)
     restored=mel.get_material_instance_vector_parameter_value(mat,'EmissiveFactor')
@@ -119,10 +131,12 @@ def run(source,dry_run=True):
         for a in added:a.set_actor_hidden_in_game(True)
         parts=[];materials=[];total=0;by_mesh={};inventory=[]
         for actor in added:
-            record={'actor':actor.get_path_name(),'label':actor.get_actor_label(),'components':[]}
+            record={'actor':actor.get_path_name(),'label':actor.get_actor_label(),'components':[],'material_bindings':[]}
             for component in actor.get_components_by_class(u.StaticMeshComponent):
                 mesh=component.get_editor_property('static_mesh')
                 record['components'].append(mesh.get_path_name() if mesh else None)
+                record['material_bindings'].append({'materials':[m.get_path_name() if m else None for m in component.get_materials()],
+                    'source_slots':[str(v.get_editor_property('material_slot_name')) for v in mesh.get_editor_property('static_materials')] if mesh else []})
                 if mesh and mesh.get_path_name().startswith(dest+'/'):
                     by_mesh.setdefault(mesh.get_name(),[]).append(actor)
             inventory.append(record)
@@ -137,7 +151,7 @@ def run(source,dry_run=True):
             if not same_triangles(expected,actual,tolerance=.0001):raise RuntimeError('Full actual native source triangle corners differ')
             total+=len(actual);role=n['name'][len(PREFIX):]
             source_material=doc['materials'][doc['meshes'][n['mesh']]['primitives'][0]['material']]
-            if source_material['name'].lower() not in c.get_material(0).get_name().lower():raise RuntimeError('Actual assigned source material role differs')
+            source_slot_binding(c,source_material,dest)
             materials.append(verify_owned_material(u,c,source_material,dest))
             c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
             # Opal emitter and surrounding glass transmit light; the metal

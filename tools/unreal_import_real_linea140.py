@@ -58,13 +58,19 @@ def surface(u,c):
  return points,triangles
 
 
-def verify_materials(u,components,doc,dest):
+def verify_materials(u,components,doc,dest,material_bindings=None):
  unique={m.get_path_name():m for c in components for m in c.get_materials() if m}
  if len(unique)!=len(doc['materials']):raise RuntimeError('Real furniture imported material count differs original source')
+ if material_bindings is not None:
+  if (set(material_bindings)!={m['name'] for m in doc['materials']}
+      or len(set(material_bindings.values()))!=len(material_bindings)
+      or any(path not in unique for path in material_bindings.values())):
+   raise RuntimeError('Explicit source material bindings must identify every actual assigned material exactly once')
  def canon(s):return re.sub('[^a-z0-9]','',s.lower())
  rows=[];mel=u.MaterialEditingLibrary
  for source in doc['materials']:
-  matches=[m for m in unique.values()if canon(source['name']) in canon(m.get_name())]
+  matches=([unique[material_bindings[source['name']]]] if material_bindings is not None else
+           [m for m in unique.values()if canon(source['name']) in canon(m.get_name())])
   if len(matches)!=1:raise RuntimeError('Original material identity ambiguous '+source['name'])
   mat=matches[0]
   if not mat.get_path_name().startswith(dest+'/') or not isinstance(mat,u.MaterialInstanceConstant):raise RuntimeError('Material is not exact owned imported instance')
