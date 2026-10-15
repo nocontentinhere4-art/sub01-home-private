@@ -37,6 +37,7 @@ TASKS = {
     'finish_editor_handoff': 'unreal_finish_editor_handoff',
     'nanite_materials': 'unreal_fix_private_nanite_materials',
     'nanite_materials_preflight': 'unreal_fix_private_nanite_materials',
+    'phone_grip': 'unreal_import_phone_grip',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
