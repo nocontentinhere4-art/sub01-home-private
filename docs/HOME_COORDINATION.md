@@ -1,12 +1,20 @@
 # Private SUB-01 home — Codex / Claude coordination
 
-Updated 2026-10-15 23:18 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
+Updated 2026-10-15 23:34 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
 
 ## Goal and boundaries
 
 Build the real functioning first-person home, not a promotional video. Primary reference: https://x.com/SimbasJungles/status/2109095401273938072. Ground-floor entrance, wooden stairs/loft, bathroom privacy, actual PC/phone/TV interactions and eventual brain-controlled activities. English UI. Keep the fictional character separate from the MRI donor; do not claim consciousness.
 
 Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
+
+## Actual localhost promotion and browser acceptance — 23:34 UTC
+
+The owner explicitly requested “METTI tutto su local host voglio vedere” after returning from bathroom privacy. The authorized maintenance pause froze4151 input messages; fresh supported reflection preserved capsule[-66.906241,271.915124,95.650083] and control rotation[349.463333,241.815719,0]. Both PlayerStarts were saved from that exact pose. Original Game193148 exited cleanly only after actual Java flush ACK, PC snapshot and copied world/player state. The independent target is /workspace/sub01-private-playable-next-20261016/Sub01HomeLab,3687verifiedfiles/1.184GB, map8af53924a1749df2f023d1428103bbec9fff182a25b9bf3570aa8a33a6c0a6e7, samee571 module, protected current anatomical assets and new verified Idle binding. Old baseline audit marker was hash-verified and preserved under a distinct name before sealing; no source data was deleted.
+
+Actual new Game209503/start979714171 is running. Real first1280x720 screenshot passed; preserved camera error0.000000391cm. Exact Minecraft backend consumer policy was refreshed before grants; backend210047/start979741214, PC62755/VM62757 and existing world preserved, no pod restart/public changes. Capture and input were restored23:32:27. Root then personally opened localhost8791 with isolated Playwright in passive mode: decoded59.9568FPS over5seconds,392total frames, English Explore home/Enter home/Video60FPS UI. Actual pixels show the new Muuto furniture, potted plant/controller separation, Pikachu, kitchen props and genuine devices in the real house. No deliberate movement or guest commands were sent by this QA. Post-handoff manual PC/MC actions are not newly accepted by this passive proof. Normal held-controller contact/ergonomic typing and autonomous life still require their own unfinished checks.
+
+This completed the existing owner-requested update after23:28:41; no new automation work is authorized after that cutoff. Native is finishing only required exact next-generation candidate scope/safe cleanup, preserving the user's active session. GPU absolute stop02:19:35UTC, total cap100/reserve10 unchanged.
 
 ## Final actual candidate decoration/light acceptance — 23:18 UTC
 
