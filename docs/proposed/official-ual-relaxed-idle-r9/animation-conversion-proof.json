@@ -1,0 +1,31 @@
+{
+  "schema": "sub01.serialized-owner-animation-only-fbx-roundtrip.v1",
+  "source_sha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "fbx_sha256": "98ea2abdfa5158583b58781d7ace025701dea66af5b7cbc7ae60e219e5989419",
+  "fbx": "/workspace/sub01-home-private/official-ual-direct-idle-r9/Idle-animation-fbx-r1/captured-animation-only.fbx",
+  "fps": 30,
+  "samples": 76,
+  "source_Blender_frame_range": [
+    0.0,
+    75.0
+  ],
+  "FBX_Blender_frame_range": [
+    0.0,
+    75.0
+  ],
+  "duration_seconds": 2.5,
+  "all65_joint_pose_samples": 4940,
+  "maximum_world_joint_head_error_m": 3.48801777418813e-06,
+  "maximum_pose_matrix_component_error": 3.3676624298095703e-06,
+  "maximum_bind_matrix_component_error": 2.1457672119140625e-06,
+  "FBX_curve_key_counts": [
+    76
+  ],
+  "FBX_contains_meshes": true,
+  "native_import_mode_required": "animation-only; never replace owner mesh",
+  "same_axis_flags_as_validated_final_owner": true,
+  "source_new_owner_family_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "native_skeleton_binding_pending": true,
+  "controller_prop_contact_accepted": false,
+  "native_imported": false
+}

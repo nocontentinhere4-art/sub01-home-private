@@ -1,0 +1,563 @@
+{
+  "schema": "sub01.shared65-actual-wrist-skin-matrix-diagnostic.v1",
+  "original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "clips": [
+    {
+      "source_sha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+      "seconds": 0.0,
+      "sides": {
+        "Left": {
+          "original_forearm_hand_IBMs_byte_values_equal": true,
+          "ForeArm_jointWorld_times_originalIBM": [
+            [
+              0.7749714956308922,
+              0.14653502149398445,
+              -0.6147739305475393,
+              -0.15584453731590298
+            ],
+            [
+              -0.20197792032856882,
+              0.9791601544455004,
+              -0.021220522369908568,
+              0.04009791745270075
+            ],
+            [
+              0.5988523863401389,
+              0.14061604250705884,
+              0.7884179082874947,
+              -0.2994741597136983
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "Hand_jointWorld_times_originalIBM": [
+            [
+              0.7363045746967174,
+              0.22821890090001418,
+              -0.6370024221571722,
+              -0.21470389748378071
+            ],
+            [
+              -0.2547986167973044,
+              0.9656253009396156,
+              0.05143563121704631,
+              0.07454125540372214
+            ],
+            [
+              0.6268439520193825,
+              0.124434965776409,
+              0.7691439805301332,
+              -0.2962903156031613
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "ForeArm_determinant": 1.000000083156564,
+          "Hand_determinant": 1.0000002120266964,
+          "relative_skin_rotation_angle_degrees": 5.48733385182687,
+          "relative_skin_twist_about_posed_forearm_axis_degrees": -0.09735256711292095,
+          "regions": [
+            {
+              "mesh": "original_body_forearm",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 285,
+              "skin_blend_determinant_range": [
+                0.9660529408229802,
+                0.9990214439280918
+              ],
+              "minimum_singular_value_range": [
+                0.9828782216300141,
+                0.9995105665332021
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.0784313725490196,
+                0.8627450980392157
+              ],
+              "Hand_weight_range": [
+                0.13725490196078433,
+                0.8862745098039215
+              ]
+            },
+            {
+              "mesh": "AnatomicalFittedHoodieCuffLeft",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 368,
+              "skin_blend_determinant_range": [
+                0.9862393795392773,
+                0.9996014368838798
+              ],
+              "minimum_singular_value_range": [
+                0.9930952943129179,
+                0.9998006375943851
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.29486286640167236,
+                0.9544256329536438
+              ],
+              "Hand_weight_range": [
+                0.0455743707716465,
+                0.6577847003936768
+              ]
+            },
+            {
+              "mesh": "CC0AdultLeftOriginalSurface",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 6464,
+              "skin_blend_determinant_range": [
+                0.9691739112392824,
+                0.9998280968788815
+              ],
+              "minimum_singular_value_range": [
+                0.9844662916929016,
+                0.9999139923212695
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.02461022324860096,
+                0.980873703956604
+              ],
+              "Hand_weight_range": [
+                0.019126281142234802,
+                0.9753897786140442
+              ]
+            }
+          ]
+        },
+        "Right": {
+          "original_forearm_hand_IBMs_byte_values_equal": true,
+          "ForeArm_jointWorld_times_originalIBM": [
+            [
+              0.9271777931976424,
+              -0.20835667461175378,
+              0.3113339803832622,
+              0.3198069307975082
+            ],
+            [
+              0.19687932206304826,
+              0.9780508527441878,
+              0.0682264615264998,
+              0.05450336201693062
+            ],
+            [
+              -0.31871578114077037,
+              -0.0019627259286538745,
+              0.9478480856944858,
+              -0.1849308859307328
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "Hand_jointWorld_times_originalIBM": [
+            [
+              0.8832137123041033,
+              -0.31954476977708346,
+              0.34325597897892823,
+              0.4048182639637252
+            ],
+            [
+              0.27650563547278395,
+              0.9460013612834253,
+              0.1691921714069089,
+              0.11574485960064074
+            ],
+            [
+              -0.37878498373491887,
+              -0.05452055898826913,
+              0.9238771966403192,
+              -0.16038415378527837
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "ForeArm_determinant": 0.9999996972266867,
+          "Hand_determinant": 0.9999997755948778,
+          "relative_skin_rotation_angle_degrees": 8.091473246488462,
+          "relative_skin_twist_about_posed_forearm_axis_degrees": 0.21417894330241438,
+          "regions": [
+            {
+              "mesh": "original_body_forearm",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 510,
+              "skin_blend_determinant_range": [
+                0.9744479226608084,
+                0.9990363920369197
+              ],
+              "minimum_singular_value_range": [
+                0.987145143382271,
+                0.9995180660752407
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.09411764705882353,
+                0.9490196078431372
+              ],
+              "Hand_weight_range": [
+                0.050980392156862744,
+                0.8627450980392157
+              ]
+            },
+            {
+              "mesh": "AnatomicalFittedHoodieCuffRight",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 370,
+              "skin_blend_determinant_range": [
+                0.98385655055389,
+                0.9994077373205138
+              ],
+              "minimum_singular_value_range": [
+                0.9918930625961067,
+                0.9997037962648181
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.3048912584781647,
+                0.969323992729187
+              ],
+              "Hand_weight_range": [
+                0.030676035210490227,
+                0.6503547430038452
+              ]
+            },
+            {
+              "mesh": "CC0AdultRightOriginalSurface",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 6167,
+              "skin_blend_determinant_range": [
+                0.9754898761944829,
+                0.9996296648793704
+              ],
+              "minimum_singular_value_range": [
+                0.9876685978496774,
+                0.9998147863096415
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.02532598003745079,
+                0.9810521602630615
+              ],
+              "Hand_weight_range": [
+                0.018947867676615715,
+                0.9746689796447754
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+      "seconds": 0.7,
+      "sides": {
+        "Left": {
+          "original_forearm_hand_IBMs_byte_values_equal": true,
+          "ForeArm_jointWorld_times_originalIBM": [
+            [
+              0.15218441853814657,
+              0.5944858353267999,
+              -0.7895735902394234,
+              -0.4500147955845737
+            ],
+            [
+              0.24896265646865612,
+              0.7500601329054493,
+              0.6127210592063033,
+              0.15450607576631192
+            ],
+            [
+              0.9564819337782424,
+              -0.2898208652610269,
+              -0.033857355527723954,
+              0.29963625086901
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "Hand_jointWorld_times_originalIBM": [
+            [
+              0.09607661529692724,
+              0.3686290632309799,
+              -0.924598219738975,
+              -0.21056504976096235
+            ],
+            [
+              0.45745482934586246,
+              0.8086328096410469,
+              0.3699294953134409,
+              0.012735269987572018
+            ],
+            [
+              0.8840274775986701,
+              -0.4585034741434786,
+              -0.09094051862747676,
+              0.4910210229810028
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "ForeArm_determinant": 0.9999999039233062,
+          "Hand_determinant": 0.9999999691559451,
+          "relative_skin_rotation_angle_degrees": 18.87971862070952,
+          "relative_skin_twist_about_posed_forearm_axis_degrees": 15.94643038779887,
+          "regions": [
+            {
+              "mesh": "original_body_forearm",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 285,
+              "skin_blend_determinant_range": [
+                0.9517187031459611,
+                0.9885093650200033
+              ],
+              "minimum_singular_value_range": [
+                0.9758548095658887,
+                0.9942379636208996
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.0784313725490196,
+                0.8627450980392157
+              ],
+              "Hand_weight_range": [
+                0.13725490196078433,
+                0.8862745098039215
+              ]
+            },
+            {
+              "mesh": "AnatomicalFittedHoodieCuffLeft",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 368,
+              "skin_blend_determinant_range": [
+                0.9608832396920507,
+                0.9953195933870197
+              ],
+              "minimum_singular_value_range": [
+                0.9802123081217475,
+                0.997656940705048
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.29486286640167236,
+                0.9544256329536438
+              ],
+              "Hand_weight_range": [
+                0.0455743707716465,
+                0.6577847003936768
+              ]
+            },
+            {
+              "mesh": "CC0AdultLeftOriginalSurface",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 6464,
+              "skin_blend_determinant_range": [
+                0.9586148288911176,
+                0.997981229994449
+              ],
+              "minimum_singular_value_range": [
+                0.9790482466065701,
+                0.9989900033474417
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.02461022324860096,
+                0.980873703956604
+              ],
+              "Hand_weight_range": [
+                0.019126281142234802,
+                0.9753897786140442
+              ]
+            }
+          ]
+        },
+        "Right": {
+          "original_forearm_hand_IBMs_byte_values_equal": true,
+          "ForeArm_jointWorld_times_originalIBM": [
+            [
+              0.9346371987320949,
+              -0.2946108873226799,
+              0.19914215851080874,
+              0.40973263060763276
+            ],
+            [
+              0.3537748895264924,
+              0.8270560021849025,
+              -0.43683099748966275,
+              0.23189317598527648
+            ],
+            [
+              -0.03600670681196272,
+              0.47873009480236917,
+              0.8772234365048509,
+              -0.6436210683586427
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "Hand_jointWorld_times_originalIBM": [
+            [
+              0.5400372884339557,
+              -0.5906407753262872,
+              0.5995858422994518,
+              0.5129095778117572
+            ],
+            [
+              0.8416265938179475,
+              0.383144605323686,
+              -0.3806109010031511,
+              0.8510138171264643
+            ],
+            [
+              -0.004923862428487524,
+              0.7101716430025231,
+              0.7040113576449918,
+              -0.8436258973877129
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "ForeArm_determinant": 0.9999997176074159,
+          "Hand_determinant": 0.9999998746374904,
+          "relative_skin_rotation_angle_degrees": 39.790667198689135,
+          "relative_skin_twist_about_posed_forearm_axis_degrees": -22.038285148711992,
+          "regions": [
+            {
+              "mesh": "original_body_forearm",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 510,
+              "skin_blend_determinant_range": [
+                0.8678490253865664,
+                0.9775882818003819
+              ],
+              "minimum_singular_value_range": [
+                0.9314056094849922,
+                0.988730608328196
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.09411764705882353,
+                0.9490196078431372
+              ],
+              "Hand_weight_range": [
+                0.050980392156862744,
+                0.8627450980392157
+              ]
+            },
+            {
+              "mesh": "AnatomicalFittedHoodieCuffRight",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 370,
+              "skin_blend_determinant_range": [
+                0.8724492203883373,
+                0.9862258188708938
+              ],
+              "minimum_singular_value_range": [
+                0.9338506585919449,
+                0.9930889815797177
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.3048912584781647,
+                0.969323992729187
+              ],
+              "Hand_weight_range": [
+                0.030676035210490227,
+                0.6503547430038452
+              ]
+            },
+            {
+              "mesh": "CC0AdultRightOriginalSurface",
+              "wrist_axial_window_m": [
+                -0.03,
+                0.03
+              ],
+              "source_vertices": 6167,
+              "skin_blend_determinant_range": [
+                0.8709999772434496,
+                0.991388995883677
+              ],
+              "minimum_singular_value_range": [
+                0.9330638853833808,
+                0.9956851420912112
+              ],
+              "vertices_with_min_singular_value_below_0p2": 0,
+              "ForeArm_weight_range": [
+                0.02532598003745079,
+                0.9810521602630615
+              ],
+              "Hand_weight_range": [
+                0.018947867676615715,
+                0.9746689796447754
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "source_geometry_weights_body_and_poses_changed": false
+}

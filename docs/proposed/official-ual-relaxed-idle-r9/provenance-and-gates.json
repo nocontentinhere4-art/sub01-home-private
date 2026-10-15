@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.authentic-ual-source-provenance.v1",
+  "officialPackPage": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "officialDownloadPage": "https://quaternius.itch.io/universal-animation-library",
+  "downloadBrowser": "configured playwright-isolated; free Standard download; no personal Chrome or imported profile",
+  "archiveSha256": "cc73fc4e495b82958207316596317a3f40b9fa38065bde1027937452da537724",
+  "originalGLBSha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+  "license": "CC0-1.0; exact included License.txt",
+  "sourceAnimation": "Idle_Loop",
+  "sourceReference": "A_TPose actual reference sample0",
+  "captureMethod": "Official authored animation; motion-capture method not asserted",
+  "rejectedPriorIdle": "Derived old intermediate fingerless rig caused~167deg wrist twist; never selected",
+  "retarget": "Gravity-preserving yaw-only global alignment; complete actual palm landmarks; physical target inverse-bind frame; no changes to existing mesh, weights,25body serialized rest/IBMs",
+  "handStyle": "Exact final Walk sample15/0.5s held in hand-local frame, not UAL curled fingers or manual curl",
+  "support": "Measured source-owner sole minimum\u2192floor by4.5\u20136.7mm root raise; no knee IK; right contact/left3.29\u20133.47mm sole clearance",
+  "visualAndNativeAccepted": false,
+  "remainingChecks": [
+    "Parent visual review of actual source renders",
+    "Candidate animation-only native import to same65Skeleton",
+    "Actual native contact/capsule/Idle-loop review",
+    "Horizontal stance drift2.2/2.95mm over2.5s remains measured, not certified zero"
+  ]
+}

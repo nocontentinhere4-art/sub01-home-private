@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.actual-serialized-owner-source-render.v1",
+  "source_sha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "clip": "SUB01_OfficialUAL_Idle",
+  "seconds": 0.0,
+  "actual_serialized_skin_world_evaluated_directly": true,
+  "materials_imported_from_same_glTF": true,
+  "pose_not_Blender_retargeted": true,
+  "left_wrist_world_blender": [
+    0.3109680712223053,
+    -0.11549130082130432,
+    0.8671238422393799
+  ],
+  "right_wrist_world_blender": [
+    -0.2574664056301117,
+    0.03277891129255295,
+    0.8893944025039673
+  ],
+  "head_world_blender": [
+    -0.004147280473262072,
+    -0.12662969529628754,
+    1.4147602319717407
+  ],
+  "source_camera_eye_reference": "HeadTop minus65mm +130mm body-anterior from actual shoulder axis; look70deg down anatomical forward, original Head subtree hidden as native FPS does",
+  "native_house_verified": false,
+  "contact_accepted": false
+}

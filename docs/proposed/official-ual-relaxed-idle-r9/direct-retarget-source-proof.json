@@ -1,0 +1,1194 @@
+{
+  "sourceSha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+  "targetSha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "outputSha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "sourceClip": "Idle_Loop",
+  "referenceClip": "A_TPose",
+  "frames": 76,
+  "firstSeconds": 0,
+  "lastSeconds": 2.5,
+  "boneLengthsUnchanged": true,
+  "originalBinaryPrefixExact": true,
+  "originalSerializedRestNodesExact": true,
+  "physicalTargetCalibration": "inverse(original owner IBM), preserving serialized nodes and IBMs themselves",
+  "originalSkinsAndInverseBindsExact": true,
+  "sourceAnatomicalFrames": "actual full-finger palm normal and measured child directions; gravity-preserving yaw-only global alignment from projected hip lateral axis",
+  "rootLegLengthRatio": 0.9169743724976896,
+  "fingerRetargetIntermediateReport": {
+    "schema": "sub01.captured-anatomical-direction-retarget.v1",
+    "sourceSha256": "31f17c107d7ce9a86b7414990c0c28dc538b7ba041b77ec292e6f25135ddde39",
+    "targetSha256": "f3e9815a374b5784ecfe48054a07f1d82d523ffaa236aade9c2673c2113dd0ea",
+    "outputSha256": "c760c69b4298ed71f426bacf1918b0f3ca9204e91981bf7912ad3780b12eed2d",
+    "frames": 76,
+    "durationSeconds": 2.5,
+    "wristBaselineSeconds": 0,
+    "handChannels": 30,
+    "segments": [
+      {
+        "name": "LeftHandThumb1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000031293502857648657
+      },
+      {
+        "name": "LeftHandThumb2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000035751609247582294
+      },
+      {
+        "name": "LeftHandThumb3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000007019807193748257
+      },
+      {
+        "name": "LeftHandIndex1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000030425748345663778
+      },
+      {
+        "name": "LeftHandIndex2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000036396067151042763
+      },
+      {
+        "name": "LeftHandIndex3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000031553538692580487
+      },
+      {
+        "name": "LeftHandMiddle1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000034912310863307406
+      },
+      {
+        "name": "LeftHandMiddle2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.00000809668000564549
+      },
+      {
+        "name": "LeftHandMiddle3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000003320585940971463
+      },
+      {
+        "name": "LeftHandRing1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000005440189266626267
+      },
+      {
+        "name": "LeftHandRing2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000006841548119671033
+      },
+      {
+        "name": "LeftHandRing3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000062292735549989434
+      },
+      {
+        "name": "LeftHandPinky1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000035796298776587768
+      },
+      {
+        "name": "LeftHandPinky2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000011117684367242633
+      },
+      {
+        "name": "LeftHandPinky3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000007712023960237623
+      },
+      {
+        "name": "RightHandThumb1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000026637258399436627
+      },
+      {
+        "name": "RightHandThumb2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000002368300386439379
+      },
+      {
+        "name": "RightHandThumb3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000006160292147183221
+      },
+      {
+        "name": "RightHandIndex1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000056005573772970876
+      },
+      {
+        "name": "RightHandIndex2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000058886553526278385
+      },
+      {
+        "name": "RightHandIndex3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000003504910230360402
+      },
+      {
+        "name": "RightHandMiddle1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000004853960340179595
+      },
+      {
+        "name": "RightHandMiddle2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000004448464593042902
+      },
+      {
+        "name": "RightHandMiddle3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.00000370335078919283
+      },
+      {
+        "name": "RightHandRing1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.00000894101956900173
+      },
+      {
+        "name": "RightHandRing2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000006911745844285356
+      },
+      {
+        "name": "RightHandRing3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000003511935310505942
+      },
+      {
+        "name": "RightHandPinky1",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000030088171409052565
+      },
+      {
+        "name": "RightHandPinky2",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.0000048941411572538155
+      },
+      {
+        "name": "RightHandPinky3",
+        "maxDirectionErrorRadians": 2.1073424255447017e-8,
+        "maxSourceLocalDirectionVariationRadians": 0.000007165986854775275
+      }
+    ],
+    "maxPostFKDirectionErrorRadians": 2.1073424255447017e-8,
+    "sourceGeometryWeightsAndTargetRestUnchanged": true,
+    "nondeformingEndpointRotationsHeldAtRest": true,
+    "noAuthoredFingerCurl": true,
+    "originalBodyChannelsPreserved": true,
+    "visualAccepted": false,
+    "nativeImported": false,
+    "contactAccepted": false,
+    "limitations": [
+      "Wrist baseline still requires reviewed owner cuff alignment",
+      "Twist is transported from the captured bone and anatomical dorsal frames; skin deformation must be rendered",
+      "Matching measured segment directions does not establish fingertip contact or self-intersection freedom"
+    ]
+  },
+  "finalFingerPolicy": {
+    "source": "same final owner Walk",
+    "sourceSha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+    "sample": 15,
+    "seconds": 0.5,
+    "heldLocalRotationChannels": 30,
+    "manualCurl": false
+  },
+  "contactProof": [
+    {
+      "seconds": 0,
+      "beforeSolesM": {
+        "Left": -0.0029981736163310494,
+        "Right": -0.006468287546835353
+      },
+      "hipsSupportRaiseM": 0.006468287546835353,
+      "afterSolesM": {
+        "Left": 0.003470113930504322,
+        "Right": 1.9837078182054736e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.03333333507180214,
+      "beforeSolesM": {
+        "Left": -0.0030901780835618023,
+        "Right": -0.006560669625367409
+      },
+      "hipsSupportRaiseM": 0.006560669625367409,
+      "afterSolesM": {
+        "Left": 0.003470491541805585,
+        "Right": -2.078480217091389e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.06666667014360428,
+      "beforeSolesM": {
+        "Left": -0.0031677186074766123,
+        "Right": -0.006635159020571569
+      },
+      "hipsSupportRaiseM": 0.006635159020571569,
+      "afterSolesM": {
+        "Left": 0.0034674404130950443,
+        "Right": -2.3354177354736305e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.10000000149011612,
+      "beforeSolesM": {
+        "Left": -0.0032280661734155384,
+        "Right": -0.006689944859170483
+      },
+      "hipsSupportRaiseM": 0.006689944859170483,
+      "afterSolesM": {
+        "Left": 0.003461878685754977,
+        "Right": 3.228111383413103e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.13333334028720856,
+      "beforeSolesM": {
+        "Left": -0.0032688148669122474,
+        "Right": -0.0067239728556629085
+      },
+      "hipsSupportRaiseM": 0.0067239728556629085,
+      "afterSolesM": {
+        "Left": 0.003455157988750593,
+        "Right": -6.78620099504137e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.1666666716337204,
+      "beforeSolesM": {
+        "Left": -0.0032726318973344557,
+        "Right": -0.006734268800164721
+      },
+      "hipsSupportRaiseM": 0.006734268800164721,
+      "afterSolesM": {
+        "Left": 0.003461636902830355,
+        "Right": 9.050560276302e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.20000000298023224,
+      "beforeSolesM": {
+        "Left": -0.0032549762957419714,
+        "Right": -0.006707330777202116
+      },
+      "hipsSupportRaiseM": 0.006707330777202116,
+      "afterSolesM": {
+        "Left": 0.0034523544814601204,
+        "Right": -2.4906547210314572e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.23333333432674408,
+      "beforeSolesM": {
+        "Left": -0.003196017110843819,
+        "Right": -0.0066278062100739495
+      },
+      "hipsSupportRaiseM": 0.0066278062100739495,
+      "afterSolesM": {
+        "Left": 0.003431789099230153,
+        "Right": 2.2037451403339694e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.2666666805744171,
+      "beforeSolesM": {
+        "Left": -0.0031042283311219186,
+        "Right": -0.006522470972887725
+      },
+      "hipsSupportRaiseM": 0.006522470972887725,
+      "afterSolesM": {
+        "Left": 0.0034182426417657986,
+        "Right": -7.83337062237512e-18
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.30000001192092896,
+      "beforeSolesM": {
+        "Left": -0.0029821766729467665,
+        "Right": -0.006385535962123519
+      },
+      "hipsSupportRaiseM": 0.006385535962123519,
+      "afterSolesM": {
+        "Left": 0.0034033592891766678,
+        "Right": -8.576315793557178e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.3333333432674408,
+      "beforeSolesM": {
+        "Left": -0.002835269285671925,
+        "Right": -0.006222722445681992
+      },
+      "hipsSupportRaiseM": 0.006222722445681992,
+      "afterSolesM": {
+        "Left": 0.003387453160009969,
+        "Right": -9.863697678159592e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.36666667461395264,
+      "beforeSolesM": {
+        "Left": -0.0026533470796610763,
+        "Right": -0.006029908704251449
+      },
+      "hipsSupportRaiseM": 0.006029908704251449,
+      "afterSolesM": {
+        "Left": 0.0033765616245903865,
+        "Right": 1.2891838148488001e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.4000000059604645,
+      "beforeSolesM": {
+        "Left": -0.0024716826762530212,
+        "Right": -0.00583751750496368
+      },
+      "hipsSupportRaiseM": 0.00583751750496368,
+      "afterSolesM": {
+        "Left": 0.003365834828710619,
+        "Right": -3.8880814056054764e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.4333333373069763,
+      "beforeSolesM": {
+        "Left": -0.002282892045773423,
+        "Right": -0.0056380701559653615
+      },
+      "hipsSupportRaiseM": 0.0056380701559653615,
+      "afterSolesM": {
+        "Left": 0.0033551781101919787,
+        "Right": 4.033539131089456e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.46666666865348816,
+      "beforeSolesM": {
+        "Left": -0.002092894203213902,
+        "Right": -0.005437413638829994
+      },
+      "hipsSupportRaiseM": 0.005437413638829994,
+      "afterSolesM": {
+        "Left": 0.003344519435616089,
+        "Right": -3.732050326659599e-18
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.5,
+      "beforeSolesM": {
+        "Left": -0.0019075938027899148,
+        "Right": -0.005227603434006168
+      },
+      "hipsSupportRaiseM": 0.005227603434006168,
+      "afterSolesM": {
+        "Left": 0.0033200096312162738,
+        "Right": 2.1592927850876148e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.5333333611488342,
+      "beforeSolesM": {
+        "Left": -0.0017351211270759575,
+        "Right": -0.005043435766119601
+      },
+      "hipsSupportRaiseM": 0.005043435766119601,
+      "afterSolesM": {
+        "Left": 0.0033083146390435842,
+        "Right": -5.927193450367507e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.5666666626930237,
+      "beforeSolesM": {
+        "Left": -0.0015804711721029996,
+        "Right": -0.004880504435980619
+      },
+      "hipsSupportRaiseM": 0.004880504435980619,
+      "afterSolesM": {
+        "Left": 0.003300033263877538,
+        "Right": -8.223005447239853e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.6000000238418579,
+      "beforeSolesM": {
+        "Left": -0.001447898874420951,
+        "Right": -0.004742322321082767
+      },
+      "hipsSupportRaiseM": 0.004742322321082767,
+      "afterSolesM": {
+        "Left": 0.0032944234466617856,
+        "Right": -3.0540815160825616e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.6333333253860474,
+      "beforeSolesM": {
+        "Left": -0.0013443634548569712,
+        "Right": -0.004635758545055564
+      },
+      "hipsSupportRaiseM": 0.004635758545055564,
+      "afterSolesM": {
+        "Left": 0.0032913950901985187,
+        "Right": -7.344901941816836e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.6666666865348816,
+      "beforeSolesM": {
+        "Left": -0.0012760218138073002,
+        "Right": -0.0045666891331090104
+      },
+      "hipsSupportRaiseM": 0.0045666891331090104,
+      "afterSolesM": {
+        "Left": 0.0032906673193016807,
+        "Right": -3.011299734801319e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.699999988079071,
+      "beforeSolesM": {
+        "Left": -0.0012487290922730118,
+        "Right": -0.004541669839404873
+      },
+      "hipsSupportRaiseM": 0.004541669839404873,
+      "afterSolesM": {
+        "Left": 0.0032929407471318376,
+        "Right": -2.3138081382790502e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.7333333492279053,
+      "beforeSolesM": {
+        "Left": -0.0012561855771917611,
+        "Right": -0.0045538648828580604
+      },
+      "hipsSupportRaiseM": 0.0045538648828580604,
+      "afterSolesM": {
+        "Left": 0.003297679305666377,
+        "Right": 7.731403075648973e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.7666666507720947,
+      "beforeSolesM": {
+        "Left": -0.00128754986647912,
+        "Right": -0.00459033429887876
+      },
+      "hipsSupportRaiseM": 0.00459033429887876,
+      "afterSolesM": {
+        "Left": 0.0033027844323996643,
+        "Right": 2.3551938041224258e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.800000011920929,
+      "beforeSolesM": {
+        "Left": -0.0013408455515507788,
+        "Right": -0.004651220929882267
+      },
+      "hipsSupportRaiseM": 0.004651220929882267,
+      "afterSolesM": {
+        "Left": 0.003310375378331459,
+        "Right": -1.3975079467973964e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.8333333134651184,
+      "beforeSolesM": {
+        "Left": -0.0014122283096878322,
+        "Right": -0.004746023239447292
+      },
+      "hipsSupportRaiseM": 0.004746023239447292,
+      "afterSolesM": {
+        "Left": 0.00333379492975934,
+        "Right": -1.2030154178224161e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.8666666746139526,
+      "beforeSolesM": {
+        "Left": -0.0014999806100782806,
+        "Right": -0.004842335473287371
+      },
+      "hipsSupportRaiseM": 0.004842335473287371,
+      "afterSolesM": {
+        "Left": 0.003342354863209104,
+        "Right": 1.308587486785824e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.8999999761581421,
+      "beforeSolesM": {
+        "Left": -0.0016161968790050804,
+        "Right": -0.004952959471722442
+      },
+      "hipsSupportRaiseM": 0.004952959471722442,
+      "afterSolesM": {
+        "Left": 0.0033367625927172816,
+        "Right": -8.09754200065026e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.9333333373069763,
+      "beforeSolesM": {
+        "Left": -0.0017258695039641242,
+        "Right": -0.005075276838358287
+      },
+      "hipsSupportRaiseM": 0.005075276838358287,
+      "afterSolesM": {
+        "Left": 0.0033494073343941647,
+        "Right": 1.9713202922241245e-18
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 0.9666666388511658,
+      "beforeSolesM": {
+        "Left": -0.0018439041744859196,
+        "Right": -0.005219178050546052
+      },
+      "hipsSupportRaiseM": 0.005219178050546052,
+      "afterSolesM": {
+        "Left": 0.0033752738760601383,
+        "Right": 5.923817560851555e-18
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1,
+      "beforeSolesM": {
+        "Left": -0.0019683377728639323,
+        "Right": -0.00535961676627607
+      },
+      "hipsSupportRaiseM": 0.00535961676627607,
+      "afterSolesM": {
+        "Left": 0.003391278993412122,
+        "Right": -1.6178643621189907e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.0333333015441895,
+      "beforeSolesM": {
+        "Left": -0.0020992860405184576,
+        "Right": -0.005504499678000454
+      },
+      "hipsSupportRaiseM": 0.005504499678000454,
+      "afterSolesM": {
+        "Left": 0.003405213637482027,
+        "Right": 3.121911318928645e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.0666667222976685,
+      "beforeSolesM": {
+        "Left": -0.0022345968090889986,
+        "Right": -0.005650978943443053
+      },
+      "hipsSupportRaiseM": 0.005650978943443053,
+      "afterSolesM": {
+        "Left": 0.003416382134354131,
+        "Right": 7.744999939685875e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.100000023841858,
+      "beforeSolesM": {
+        "Left": -0.0023832669670331786,
+        "Right": -0.0058057807687828455
+      },
+      "hipsSupportRaiseM": 0.0058057807687828455,
+      "afterSolesM": {
+        "Left": 0.0034225138017496184,
+        "Right": -4.727041070081259e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.1333333253860474,
+      "beforeSolesM": {
+        "Left": -0.0025147758216662723,
+        "Right": -0.005950023543354447
+      },
+      "hipsSupportRaiseM": 0.005950023543354447,
+      "afterSolesM": {
+        "Left": 0.0034352477216882263,
+        "Right": 5.1491384326495134e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.1666666269302368,
+      "beforeSolesM": {
+        "Left": -0.0026422327352410495,
+        "Right": -0.0060889415295516894
+      },
+      "hipsSupportRaiseM": 0.0060889415295516894,
+      "afterSolesM": {
+        "Left": 0.0034467087943107003,
+        "Right": 6.031657759054584e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.2000000476837158,
+      "beforeSolesM": {
+        "Left": -0.002763681246915426,
+        "Right": -0.006219537835570126
+      },
+      "hipsSupportRaiseM": 0.006219537835570126,
+      "afterSolesM": {
+        "Left": 0.0034558565886547397,
+        "Right": 3.978249055457432e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.2333333492279053,
+      "beforeSolesM": {
+        "Left": -0.0028772505429586308,
+        "Right": -0.0063399439096710804
+      },
+      "hipsSupportRaiseM": 0.0063399439096710804,
+      "afterSolesM": {
+        "Left": 0.003462693366712333,
+        "Right": -1.165660570016787e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.2666666507720947,
+      "beforeSolesM": {
+        "Left": -0.0029813402631150973,
+        "Right": -0.006447435564085656
+      },
+      "hipsSupportRaiseM": 0.006447435564085656,
+      "afterSolesM": {
+        "Left": 0.003466095300970571,
+        "Right": 1.1067315945212437e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.2999999523162842,
+      "beforeSolesM": {
+        "Left": -0.003073271311696835,
+        "Right": -0.00654001083687045
+      },
+      "hipsSupportRaiseM": 0.00654001083687045,
+      "afterSolesM": {
+        "Left": 0.0034667395251735565,
+        "Right": -5.910884757410411e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.3333333730697632,
+      "beforeSolesM": {
+        "Left": -0.0031510872221012652,
+        "Right": -0.006615048622880382
+      },
+      "hipsSupportRaiseM": 0.006615048622880382,
+      "afterSolesM": {
+        "Left": 0.003463961400779161,
+        "Right": 4.3527416774648916e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.3666666746139526,
+      "beforeSolesM": {
+        "Left": -0.0032124425545041538,
+        "Right": -0.006670944004814674
+      },
+      "hipsSupportRaiseM": 0.006670944004814674,
+      "afterSolesM": {
+        "Left": 0.0034585014503105615,
+        "Right": 4.2409771689997893e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.399999976158142,
+      "beforeSolesM": {
+        "Left": -0.003254085236613101,
+        "Right": -0.006704705473677358
+      },
+      "hipsSupportRaiseM": 0.006704705473677358,
+      "afterSolesM": {
+        "Left": 0.0034506202370643067,
+        "Right": 4.9532630562136915e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.4333332777023315,
+      "beforeSolesM": {
+        "Left": -0.0032738655380465144,
+        "Right": -0.0067148815199540735
+      },
+      "hipsSupportRaiseM": 0.0067148815199540735,
+      "afterSolesM": {
+        "Left": 0.0034410159819076268,
+        "Right": 6.675345888941708e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.4666666984558105,
+      "beforeSolesM": {
+        "Left": -0.0032589960098052444,
+        "Right": -0.0066881340142342345
+      },
+      "hipsSupportRaiseM": 0.0066881340142342345,
+      "afterSolesM": {
+        "Left": 0.0034291380044289364,
+        "Right": -5.30835150997576e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.5,
+      "beforeSolesM": {
+        "Left": -0.0031866818627117243,
+        "Right": -0.006610446825445995
+      },
+      "hipsSupportRaiseM": 0.006610446825445995,
+      "afterSolesM": {
+        "Left": 0.003423764962734256,
+        "Right": -1.2769868712805832e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.5333333015441895,
+      "beforeSolesM": {
+        "Left": -0.0030917271066235466,
+        "Right": -0.006505138992453781
+      },
+      "hipsSupportRaiseM": 0.006505138992453781,
+      "afterSolesM": {
+        "Left": 0.003413411885830204,
+        "Right": -2.9659014158064486e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.5666667222976685,
+      "beforeSolesM": {
+        "Left": -0.0029706746177484812,
+        "Right": -0.0063688063382377974
+      },
+      "hipsSupportRaiseM": 0.0063688063382377974,
+      "afterSolesM": {
+        "Left": 0.0033981317204892945,
+        "Right": -2.236322821578758e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.600000023841858,
+      "beforeSolesM": {
+        "Left": -0.0028251792385939854,
+        "Right": -0.0062066850662429816
+      },
+      "hipsSupportRaiseM": 0.0062066850662429816,
+      "afterSolesM": {
+        "Left": 0.0033815058276489038,
+        "Right": -9.243152076578231e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.6333333253860474,
+      "beforeSolesM": {
+        "Left": -0.0026606033890140186,
+        "Right": -0.006015887034432204
+      },
+      "hipsSupportRaiseM": 0.006015887034432204,
+      "afterSolesM": {
+        "Left": 0.0033552836454183244,
+        "Right": 1.397744355016464e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.6666666269302368,
+      "beforeSolesM": {
+        "Left": -0.0024660705130954393,
+        "Right": -0.005824791476681523
+      },
+      "hipsSupportRaiseM": 0.005824791476681523,
+      "afterSolesM": {
+        "Left": 0.003358720963586028,
+        "Right": -5.584284238508547e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.7000000476837158,
+      "beforeSolesM": {
+        "Left": -0.0022781619155108845,
+        "Right": -0.005626687540911628
+      },
+      "hipsSupportRaiseM": 0.005626687540911628,
+      "afterSolesM": {
+        "Left": 0.003348525625400783,
+        "Right": 3.9401980855355024e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.7333333492279053,
+      "beforeSolesM": {
+        "Left": -0.002089031431981754,
+        "Right": -0.005413669483774208
+      },
+      "hipsSupportRaiseM": 0.005413669483774208,
+      "afterSolesM": {
+        "Left": 0.0033246380517923317,
+        "Right": -1.2123184038431673e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.7666666507720947,
+      "beforeSolesM": {
+        "Left": -0.0019046588301825551,
+        "Right": -0.005219100856306507
+      },
+      "hipsSupportRaiseM": 0.005219100856306507,
+      "afterSolesM": {
+        "Left": 0.0033144420261239467,
+        "Right": -5.390537528661069e-18
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.7999999523162842,
+      "beforeSolesM": {
+        "Left": -0.0017316483836771694,
+        "Right": -0.005037534996487088
+      },
+      "hipsSupportRaiseM": 0.005037534996487088,
+      "afterSolesM": {
+        "Left": 0.0033058866128099,
+        "Right": -1.81065766359244e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.8333333730697632,
+      "beforeSolesM": {
+        "Left": -0.0015780711883670332,
+        "Right": -0.0048769614905412526
+      },
+      "hipsSupportRaiseM": 0.0048769614905412526,
+      "afterSolesM": {
+        "Left": 0.003298890302174253,
+        "Right": 3.4784536253353366e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.8666666746139526,
+      "beforeSolesM": {
+        "Left": -0.0014470831079968355,
+        "Right": -0.004740941040804953
+      },
+      "hipsSupportRaiseM": 0.004740941040804953,
+      "afterSolesM": {
+        "Left": 0.0032938579328080776,
+        "Right": -4.008362069349057e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.899999976158142,
+      "beforeSolesM": {
+        "Left": -0.001344783374838365,
+        "Right": -0.004636366868639647
+      },
+      "hipsSupportRaiseM": 0.004636366868639647,
+      "afterSolesM": {
+        "Left": 0.0032915834938012974,
+        "Right": 1.5924662777189175e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.9333332777023315,
+      "beforeSolesM": {
+        "Left": -0.0012776352313096009,
+        "Right": -0.004569308686813578
+      },
+      "hipsSupportRaiseM": 0.004569308686813578,
+      "afterSolesM": {
+        "Left": 0.0032916734555038882,
+        "Right": -8.863985056929234e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 1.9666666984558105,
+      "beforeSolesM": {
+        "Left": -0.0012515305287373148,
+        "Right": -0.004546381630382496
+      },
+      "hipsSupportRaiseM": 0.004546381630382496,
+      "afterSolesM": {
+        "Left": 0.0032948511016452527,
+        "Right": 7.210689571324392e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2,
+      "beforeSolesM": {
+        "Left": -0.001260649309159677,
+        "Right": -0.004560552964836775
+      },
+      "hipsSupportRaiseM": 0.004560552964836775,
+      "afterSolesM": {
+        "Left": 0.00329990365567714,
+        "Right": 4.1116312674871174e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.0333333015441895,
+      "beforeSolesM": {
+        "Left": -0.0012918192181900904,
+        "Right": -0.004599878948085446
+      },
+      "hipsSupportRaiseM": 0.004599878948085446,
+      "afterSolesM": {
+        "Left": 0.003308059729895355,
+        "Right": -4.65117040993667e-19
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.066666603088379,
+      "beforeSolesM": {
+        "Left": -0.001344815330771716,
+        "Right": -0.00466306439089794
+      },
+      "hipsSupportRaiseM": 0.00466306439089794,
+      "afterSolesM": {
+        "Left": 0.003318249060126203,
+        "Right": -2.0862097236073297e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.0999999046325684,
+      "beforeSolesM": {
+        "Left": -0.0014173952898110047,
+        "Right": -0.004758691606107686
+      },
+      "hipsSupportRaiseM": 0.004758691606107686,
+      "afterSolesM": {
+        "Left": 0.003341296316296641,
+        "Right": -4.05598120285251e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.133333444595337,
+      "beforeSolesM": {
+        "Left": -0.0015055961124891817,
+        "Right": -0.004856556919993183
+      },
+      "hipsSupportRaiseM": 0.004856556919993183,
+      "afterSolesM": {
+        "Left": 0.0033509608075039114,
+        "Right": -8.993296878600669e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.1666667461395264,
+      "beforeSolesM": {
+        "Left": -0.0016072927188274056,
+        "Right": -0.00496812617239444
+      },
+      "hipsSupportRaiseM": 0.00496812617239444,
+      "afterSolesM": {
+        "Left": 0.0033608334535669884,
+        "Right": -4.5891212760833526e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.200000047683716,
+      "beforeSolesM": {
+        "Left": -0.001735994674944681,
+        "Right": -0.005091239904829795
+      },
+      "hipsSupportRaiseM": 0.005091239904829795,
+      "afterSolesM": {
+        "Left": 0.003355245229885055,
+        "Right": -5.870653008521547e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.2333333492279053,
+      "beforeSolesM": {
+        "Left": -0.0018556430126594292,
+        "Right": -0.005237435987146895
+      },
+      "hipsSupportRaiseM": 0.005237435987146895,
+      "afterSolesM": {
+        "Left": 0.003381792974487447,
+        "Right": -1.8921266821227877e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.2666666507720947,
+      "beforeSolesM": {
+        "Left": -0.001981446276665105,
+        "Right": -0.0053783444940071045
+      },
+      "hipsSupportRaiseM": 0.0053783444940071045,
+      "afterSolesM": {
+        "Left": 0.003396898217341987,
+        "Right": -1.2476523997814927e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.299999952316284,
+      "beforeSolesM": {
+        "Left": -0.0021114845939844756,
+        "Right": -0.005523377361843198
+      },
+      "hipsSupportRaiseM": 0.005523377361843198,
+      "afterSolesM": {
+        "Left": 0.003411892767858687,
+        "Right": -1.4659179341251244e-16
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.3333332538604736,
+      "beforeSolesM": {
+        "Left": -0.002244532563262356,
+        "Right": -0.005669955407723343
+      },
+      "hipsSupportRaiseM": 0.005669955407723343,
+      "afterSolesM": {
+        "Left": 0.0034254228444610584,
+        "Right": 7.105422235698649e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.366666555404663,
+      "beforeSolesM": {
+        "Left": -0.002380527799652295,
+        "Right": -0.005826350806474513
+      },
+      "hipsSupportRaiseM": 0.005826350806474513,
+      "afterSolesM": {
+        "Left": 0.0034458230068221273,
+        "Right": -9.02957073369459e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.4000000953674316,
+      "beforeSolesM": {
+        "Left": -0.0025145931149000017,
+        "Right": -0.005970570429214629
+      },
+      "hipsSupportRaiseM": 0.005970570429214629,
+      "afterSolesM": {
+        "Left": 0.0034559773143145586,
+        "Right": -6.763655360265624e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.433333396911621,
+      "beforeSolesM": {
+        "Left": -0.0026577974141977225,
+        "Right": -0.006108762934565356
+      },
+      "hipsSupportRaiseM": 0.006108762934565356,
+      "afterSolesM": {
+        "Left": 0.003450965520367692,
+        "Right": 5.798576791282862e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.4666666984558105,
+      "beforeSolesM": {
+        "Left": -0.002780058945730854,
+        "Right": -0.006239006841444233
+      },
+      "hipsSupportRaiseM": 0.006239006841444233,
+      "afterSolesM": {
+        "Left": 0.003458947895713329,
+        "Right": -5.0014645248683815e-17
+      },
+      "kneeAnglesChanged": false
+    },
+    {
+      "seconds": 2.5,
+      "beforeSolesM": {
+        "Left": -0.0028940993984836036,
+        "Right": -0.006360036599075797
+      },
+      "hipsSupportRaiseM": 0.006360036599075797,
+      "afterSolesM": {
+        "Left": 0.0034659372005920873,
+        "Right": -1.058387486841725e-16
+      },
+      "kneeAnglesChanged": false
+    }
+  ],
+  "physicalContactPolicy": "lowest authentic-pose owner sole placed on floor by measured bounded root raise only; all source knee/ankle rotations retained, no leg IK or forced both-foot constraints",
+  "nativeAccepted": false,
+  "cuffAccepted": false,
+  "visualAccepted": false
+}

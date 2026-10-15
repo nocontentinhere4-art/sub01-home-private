@@ -1,0 +1,1618 @@
+{
+  "approvedHandStyleProof": {
+    "sourceSha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+    "sourceSeconds": 0.5,
+    "sourceSample": 15,
+    "checks": 3040,
+    "maximumHandLocalJointPositionErrorM": 3.8379688967915495e-16,
+    "maximumHandLocalJointRotationErrorRadians": 4.2146848510894035e-8,
+    "manualCurl": false
+  },
+  "loopMaximumJointRotationDegrees": 0.39100803223962866,
+  "loopMaximumTranslationM": 0.00018442369973889234,
+  "schema": "sub01.official-idle-independent-landmark-fk.v1",
+  "sourceSemanticSha256": "31f17c107d7ce9a86b7414990c0c28dc538b7ba041b77ec292e6f25135ddde39",
+  "candidateSha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "samples": 76,
+  "maximumArmSegmentDirectionErrorDegrees": 0.00005629081871388913,
+  "maximumPalmNormalErrorDegrees": 0.000017663006536443448,
+  "records": [
+    {
+      "seconds": 0,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.029003927316184e-7,
+            4.712160915387242e-8,
+            9.541398640621977e-8
+          ],
+          "palmNormalErrorRadians": 2.827296549232355e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.321268900057064e-7,
+            8.024520884654679e-8,
+            1.5269146510898484e-7
+          ],
+          "palmNormalErrorRadians": 1.8250120749944311e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.03333333507180214,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.446573162823108e-7,
+            0,
+            1.144579909424277e-7
+          ],
+          "palmNormalErrorRadians": 2.4978897890806576e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.168756045648872e-7,
+            1.5628469708117136e-7,
+            8.161702118890975e-8
+          ],
+          "palmNormalErrorRadians": 1.6792755826688794e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.06666667014360428,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.033417270795916e-7,
+            8.296615425989067e-8,
+            7.598131170262078e-8
+          ],
+          "palmNormalErrorRadians": 2.1645186910530892e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.110448579569639e-7,
+            8.024520884654679e-8,
+            1.3493575361575816e-7
+          ],
+          "palmNormalErrorRadians": 2.1283115233608674e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.10000000149011612,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.09262308199264e-7,
+            7.884953353001449e-8,
+            1.0950072449966577e-7
+          ],
+          "palmNormalErrorRadians": 3.031937770452482e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.326031940173756e-7,
+            1.7249341164216756e-7,
+            6.989264130329237e-8
+          ],
+          "palmNormalErrorRadians": 1.6049041769309372e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.13333334028720856,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.031211082975361e-7,
+            0,
+            9.541398640621977e-8
+          ],
+          "palmNormalErrorRadians": 2.0754915888881898e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.48069913422314e-7,
+            1.3738191809196613e-7,
+            1.144579909424277e-7
+          ],
+          "palmNormalErrorRadians": 1.4057727354849297e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.1666666716337204,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.105686694089174e-7,
+            4.712160915387242e-8,
+            1.1733186057227575e-7
+          ],
+          "palmNormalErrorRadians": 2.6945980370082225e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.50409097618018e-7,
+            1.264405455326822e-7,
+            1.264405455326822e-7
+          ],
+          "palmNormalErrorRadians": 1.5196262340524166e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.20000000298023224,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.116547558721775e-7,
+            4.942156062059701e-8,
+            1.3160349229466696e-7
+          ],
+          "palmNormalErrorRadians": 2.5023304855446086e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.924539191835846e-7,
+            6.664001874625058e-8,
+            1.8966081829902343e-7
+          ],
+          "palmNormalErrorRadians": 2.048570973406366e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.23333333432674408,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.245124073862505e-7,
+            3.942476676500724e-8,
+            1.20137002293744e-7
+          ],
+          "palmNormalErrorRadians": 2.200130084191774e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.299805031198554e-7,
+            1.666000468656266e-7,
+            6.322027276634106e-8
+          ],
+          "palmNormalErrorRadians": 1.4975481660844235e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.2666666805744171,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.217534720901189e-7,
+            3.332000937312528e-8,
+            1.20137002293744e-7
+          ],
+          "palmNormalErrorRadians": 2.6193850981067117e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.444327281410344e-7,
+            1.8730469182098736e-7,
+            1.0536712127723512e-7
+          ],
+          "palmNormalErrorRadians": 1.591008641128439e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.30000001192092896,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.01574059716076e-7,
+            3.942476676500724e-8,
+            7.598131170262078e-8
+          ],
+          "palmNormalErrorRadians": 2.303663616439751e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.129925776744439e-7,
+            1.332800374925012e-7,
+            7.146345858741881e-8
+          ],
+          "palmNormalErrorRadians": 1.92565440883042e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.3333333432674408,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.318691819183516e-7,
+            2.1073424255447017e-8,
+            1.1348386266624797e-7
+          ],
+          "palmNormalErrorRadians": 2.711028665104554e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.50409097618018e-7,
+            1.666000468656266e-7,
+            4.2146848510894035e-8
+          ],
+          "palmNormalErrorRadians": 1.4751396978812924e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.36666667461395264,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.187659020879687e-7,
+            5.16191365590357e-8,
+            1.1638178938488153e-7
+          ],
+          "palmNormalErrorRadians": 2.4027400458748843e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.770191055275579e-7,
+            5.771194914292421e-8,
+            1.4057727354849297e-7
+          ],
+          "palmNormalErrorRadians": 1.948579673561758e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.4000000059604645,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.138200417031902e-7,
+            7.300048299977716e-8,
+            1.1151007970493862e-7
+          ],
+          "palmNormalErrorRadians": 2.8075938942159465e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.134788587090156e-7,
+            8.560065398421929e-8,
+            1.1733186057227575e-7
+          ],
+          "palmNormalErrorRadians": 1.7249341164216756e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.4333333373069763,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.293583771089262e-7,
+            2.9802322387695312e-8,
+            1.2818463544611084e-7
+          ],
+          "palmNormalErrorRadians": 2.815491501642949e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.374713575855736e-7,
+            2.021291846968317e-7,
+            7.598131170262078e-8
+          ],
+          "palmNormalErrorRadians": 1.534168443230839e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.46666666865348816,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.374756096861259e-7,
+            6.828569911354543e-8,
+            1.788139343261721e-7
+          ],
+          "palmNormalErrorRadians": 2.1747528790423948e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.381816529451472e-7,
+            1.3738191809196613e-7,
+            1.1151007970493862e-7
+          ],
+          "palmNormalErrorRadians": 1.5269146510898484e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.5,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.249355719628554e-7,
+            6.495265578539184e-8,
+            1.4975481660844235e-7
+          ],
+          "palmNormalErrorRadians": 2.950279395762593e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.594774265292803e-7,
+            1.460009659995544e-7,
+            9.771344846937065e-8
+          ],
+          "palmNormalErrorRadians": 1.3657139822709094e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.5333333611488342,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.228163240208934e-7,
+            5.960464477539064e-8,
+            1.0745380149674388e-7
+          ],
+          "palmNormalErrorRadians": 2.471078031029856e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.156639275394531e-7,
+            8.815645848363069e-8,
+            1.4751396978812924e-7
+          ],
+          "palmNormalErrorRadians": 1.818918528517145e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.5666666626930237,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.413860715802066e-7,
+            5.771194914292421e-8,
+            1.6924465733171346e-7
+          ],
+          "palmNormalErrorRadians": 1.9880628681371146e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.453726962544018e-7,
+            1.2555941601360387e-7,
+            1.3493575361575816e-7
+          ],
+          "palmNormalErrorRadians": 1.5196262340524166e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.6000000238418579,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.04003003993271e-7,
+            6.989264130329237e-8,
+            5.372690074837192e-8
+          ],
+          "palmNormalErrorRadians": 2.751676039788044e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.965497587020295e-7,
+            0,
+            2.2891598188485577e-7
+          ],
+          "palmNormalErrorRadians": 2.3371558102008936e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.6333333253860474,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.6329542909372e-7,
+            5.771194914292421e-8,
+            1.4214801809444226e-7
+          ],
+          "palmNormalErrorRadians": 2.5593584831532414e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.160275989356172e-7,
+            6.989264130329237e-8,
+            1.591008641128439e-7
+          ],
+          "palmNormalErrorRadians": 2.0047462056687076e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.6666666865348816,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.230286352272166e-7,
+            3.6500241499888574e-8,
+            1.3493575361575816e-7
+          ],
+          "palmNormalErrorRadians": 2.2450863083182865e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.227898243303052e-7,
+            1.3493575361575816e-7,
+            1.0106459234841571e-7
+          ],
+          "palmNormalErrorRadians": 1.625524776374657e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.699999988079071,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            4.924151790695927e-7,
+            4.2146848510894035e-8,
+            5.771194914292421e-8
+          ],
+          "palmNormalErrorRadians": 2.511188320272082e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.334361412147518e-7,
+            1.9082797281243975e-7,
+            4.712160915387242e-8
+          ],
+          "palmNormalErrorRadians": 1.3898877878619466e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.7333333492279053,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.280984981855618e-7,
+            6.322027276634106e-8,
+            1.1920928955078133e-7
+          ],
+          "palmNormalErrorRadians": 2.8701663440850806e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.271109241427683e-7,
+            1.144579909424277e-7,
+            1.0745380149674388e-7
+          ],
+          "palmNormalErrorRadians": 1.8066697795662518e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.7666666507720947,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.164064005364075e-7,
+            2.1073424255447017e-8,
+            9.541398640621977e-8
+          ],
+          "palmNormalErrorRadians": 2.3560804576936265e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.995168371669697e-7,
+            6.989264130329237e-8,
+            1.5840151626966388e-7
+          ],
+          "palmNormalErrorRadians": 1.8066697795662518e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.800000011920929,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.262030238810116e-7,
+            2.9802322387695312e-8,
+            1.2555941601360387e-7
+          ],
+          "palmNormalErrorRadians": 2.811545470969866e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.932000142721061e-7,
+            6.322027276634106e-8,
+            1.7377590819732272e-7
+          ],
+          "palmNormalErrorRadians": 1.9936394930272808e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.8333333134651184,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.458789790873059e-7,
+            6.322027276634106e-8,
+            1.7249341164216756e-7
+          ],
+          "palmNormalErrorRadians": 1.9768624248238833e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.207422557935687e-7,
+            8.940696716308596e-8,
+            1.2287812309317777e-7
+          ],
+          "palmNormalErrorRadians": 1.818918528517145e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.8666666746139526,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            4.980199029168063e-7,
+            4.942156062059701e-8,
+            6.828569911354543e-8
+          ],
+          "palmNormalErrorRadians": 2.475566823160081e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.185692672385563e-7,
+            1.4751396978812924e-7,
+            7.742870483855356e-8
+          ],
+          "palmNormalErrorRadians": 1.8491854736195318e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.8999999761581421,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.397430144630388e-7,
+            8.560065398421929e-8,
+            1.5979715130870968e-7
+          ],
+          "palmNormalErrorRadians": 2.1798519549262258e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.824601252006051e-7,
+            1.3075715880680275e-7,
+            1.144579909424277e-7
+          ],
+          "palmNormalErrorRadians": 1.460009659995544e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.9333333373069763,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.347835554160647e-7,
+            5.575503985246929e-8,
+            1.4370159448672777e-7
+          ],
+          "palmNormalErrorRadians": 2.3981149404393316e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.416071938264467e-7,
+            1.3818768405162858e-7,
+            9.65705618025044e-8
+          ],
+          "palmNormalErrorRadians": 1.7120130796843874e-7
+        }
+      }
+    },
+    {
+      "seconds": 0.9666666388511658,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.166213459777805e-7,
+            6.495265578539184e-8,
+            8.560065398421929e-8
+          ],
+          "palmNormalErrorRadians": 2.7797755757239e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.823198880605663e-7,
+            4.2146848510894035e-8,
+            1.3978528260658483e-7
+          ],
+          "palmNormalErrorRadians": 2.3228611451566115e-7
+        }
+      }
+    },
+    {
+      "seconds": 1,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.541549319561508e-7,
+            9.771344846937065e-8,
+            1.7249341164216756e-7
+          ],
+          "palmNormalErrorRadians": 1.92565440883042e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.082376931709827e-7,
+            4.4703483581542975e-8,
+            1.8491854736195318e-7
+          ],
+          "palmNormalErrorRadians": 2.2101993820356363e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.0333333015441895,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.291486056019339e-7,
+            1.4901161193847656e-8,
+            1.2467205919833125e-7
+          ],
+          "palmNormalErrorRadians": 2.4530407239726735e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.406634630016811e-7,
+            1.2904784139758934e-7,
+            6.989264130329237e-8
+          ],
+          "palmNormalErrorRadians": 1.7504900879369298e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.0666667222976685,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.114377230921597e-7,
+            3.332000937312528e-8,
+            1.0641557616804321e-7
+          ],
+          "palmNormalErrorRadians": 2.471078031029856e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.346247780661161e-7,
+            1.5269146510898484e-7,
+            9.996002811937589e-8
+          ],
+          "palmNormalErrorRadians": 1.8848643661548996e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.100000023841858,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.456755585551495e-7,
+            2.1073424255447017e-8,
+            1.444721179430584e-7
+          ],
+          "palmNormalErrorRadians": 2.546311540996299e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.290249616364776e-7,
+            1.1542389828584848e-7,
+            1.2731557704981472e-7
+          ],
+          "palmNormalErrorRadians": 1.7184857420132772e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.1333333253860474,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.240889011344068e-7,
+            5.771194914292421e-8,
+            1.1348386266624797e-7
+          ],
+          "palmNormalErrorRadians": 2.775778771966281e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.494741154953593e-7,
+            9.996002811937589e-8,
+            1.2818463544611084e-7
+          ],
+          "palmNormalErrorRadians": 1.5557269020245316e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.1666666269302368,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.39331468071165e-7,
+            5.575503985246929e-8,
+            1.3575603930867175e-7
+          ],
+          "palmNormalErrorRadians": 2.9950963321688554e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.006269714988521e-7,
+            9.771344846937065e-8,
+            1.0745380149674388e-7
+          ],
+          "palmNormalErrorRadians": 1.9198803196437874e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.2000000476837158,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.426150994310781e-7,
+            2.1073424255447017e-8,
+            1.490116119384767e-7
+          ],
+          "palmNormalErrorRadians": 2.269677253324963e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.346247780661161e-7,
+            1.4057727354849297e-7,
+            1.1050996910178164e-7
+          ],
+          "palmNormalErrorRadians": 1.4675941767984797e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.2333333492279053,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.335364875187983e-7,
+            3.6500241499888574e-8,
+            1.1827430029502178e-7
+          ],
+          "palmNormalErrorRadians": 2.5156055414876605e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.17117747868875e-7,
+            6.828569911354543e-8,
+            1.639127731323244e-7
+          ],
+          "palmNormalErrorRadians": 1.8066697795662518e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.2666666507720947,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.372690074837256e-7,
+            2.9802322387695312e-8,
+            1.444721179430584e-7
+          ],
+          "palmNormalErrorRadians": 2.6739177770802997e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.17843794490995e-7,
+            1.2197126108217918e-7,
+            1.1151007970493862e-7
+          ],
+          "palmNormalErrorRadians": 1.6726511955740805e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.2999999523162842,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.539545504880352e-7,
+            4.2146848510894035e-8,
+            1.7756782901008428e-7
+          ],
+          "palmNormalErrorRadians": 2.3560804576936265e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.889638625547376e-7,
+            8.429369702178808e-8,
+            1.2105760581248948e-7
+          ],
+          "palmNormalErrorRadians": 1.9824705564454334e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.3333333730697632,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.123053025505326e-7,
+            3.6500241499888574e-8,
+            9.996002811937589e-8
+          ],
+          "palmNormalErrorRadians": 2.682209014892586e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.202598128703269e-7,
+            6.989264130329237e-8,
+            1.591008641128439e-7
+          ],
+          "palmNormalErrorRadians": 1.948579673561758e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.3666666746139526,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.48111622266464e-7,
+            6.322027276634106e-8,
+            1.639127731323244e-7
+          ],
+          "palmNormalErrorRadians": 2.200130084191774e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.191733904654789e-7,
+            6.143906154658886e-8,
+            1.948579673561758e-7
+          ],
+          "palmNormalErrorRadians": 1.9880628681371146e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.399999976158142,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.395372805068461e-7,
+            5.16191365590357e-8,
+            1.2731557704981472e-7
+          ],
+          "palmNormalErrorRadians": 2.475566823160081e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.368790334235861e-7,
+            1.20137002293744e-7,
+            1.1920928955078133e-7
+          ],
+          "palmNormalErrorRadians": 1.6458870496134868e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.4333332777023315,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.219662156145928e-7,
+            2.1073424255447017e-8,
+            1.1151007970493862e-7
+          ],
+          "palmNormalErrorRadians": 2.5023304855446086e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.99640253074413e-7,
+            1.0641557616804321e-7,
+            1.1542389828584848e-7
+          ],
+          "palmNormalErrorRadians": 1.6924465733171346e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.4666666984558105,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.236650523783498e-7,
+            9.65705618025044e-8,
+            1.1542389828584848e-7
+          ],
+          "palmNormalErrorRadians": 3.0827761986221797e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.300998767809747e-7,
+            1.3575603930867175e-7,
+            8.940696716308596e-8
+          ],
+          "palmNormalErrorRadians": 1.6924465733171346e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.5,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            4.98910815798741e-7,
+            0,
+            1.0745380149674388e-7
+          ],
+          "palmNormalErrorRadians": 2.0967792390987746e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.310543150790854e-7,
+            8.560065398421929e-8,
+            1.5196262340524166e-7
+          ],
+          "palmNormalErrorRadians": 1.855179607568495e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.5333333015441895,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.354060001141398e-7,
+            9.305772182939053e-8,
+            1.6323404237781964e-7
+          ],
+          "palmNormalErrorRadians": 2.1900144899933185e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.658074764212611e-7,
+            2.9802322387695312e-8,
+            1.4523855365528125e-7
+          ],
+          "palmNormalErrorRadians": 2.568019619526585e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.5666667222976685,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.366487236431039e-7,
+            4.2146848510894035e-8,
+            1.3244441773467654e-7
+          ],
+          "palmNormalErrorRadians": 2.7717762049642705e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.425499797385367e-7,
+            1.4826468186179114e-7,
+            8.161702118890975e-8
+          ],
+          "palmNormalErrorRadians": 1.6526187220825896e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.600000023841858,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.264139691786736e-7,
+            4.4703483581542975e-8,
+            1.2904784139758934e-7
+          ],
+          "palmNormalErrorRadians": 2.632069845893345e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.43138742354348e-7,
+            1.0950072449966577e-7,
+            1.3657139822709094e-7
+          ],
+          "palmNormalErrorRadians": 1.4751396978812924e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.6333333253860474,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.349911174481051e-7,
+            3.332000937312528e-8,
+            1.0323827311807144e-7
+          ],
+          "palmNormalErrorRadians": 2.466581070012881e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.867130009420113e-7,
+            7.884953353001449e-8,
+            1.2555941601360387e-7
+          ],
+          "palmNormalErrorRadians": 1.92565440883042e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.6666666269302368,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.452684898237054e-7,
+            1.4901161193847656e-8,
+            1.264405455326822e-7
+          ],
+          "palmNormalErrorRadians": 2.303663616439751e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.452552513572155e-7,
+            1.7184857420132772e-7,
+            9.185692672385244e-8
+          ],
+          "palmNormalErrorRadians": 1.460009659995544e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.7000000476837158,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.374756096861259e-7,
+            0,
+            1.1348386266624797e-7
+          ],
+          "palmNormalErrorRadians": 2.488984627796726e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.037035226855767e-7,
+            6.828569911354543e-8,
+            1.444721179430584e-7
+          ],
+          "palmNormalErrorRadians": 1.8491854736195318e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.7333333492279053,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.438413498072291e-7,
+            0,
+            1.3738191809196613e-7
+          ],
+          "palmNormalErrorRadians": 2.6780666046755734e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.454901265630661e-7,
+            9.771344846937065e-8,
+            1.4370159448672777e-7
+          ],
+          "palmNormalErrorRadians": 1.7756782901008428e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.7666666507720947,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.234529993012695e-7,
+            7.884953353001449e-8,
+            1.1348386266624797e-7
+          ],
+          "palmNormalErrorRadians": 2.184939130934359e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.391278777473753e-7,
+            1.659323085197815e-7,
+            1.490116119384767e-7
+          ],
+          "palmNormalErrorRadians": 1.698993779866605e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.7999999523162842,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.499315883888652e-7,
+            7.45058059692383e-8,
+            1.9428737179048833e-7
+          ],
+          "palmNormalErrorRadians": 2.593829510439822e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.13843399671465e-7,
+            6.828569911354543e-8,
+            1.8310853432781287e-7
+          ],
+          "palmNormalErrorRadians": 1.8491854736195318e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.8333333730697632,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.234529993012695e-7,
+            4.2146848510894035e-8,
+            1.0323827311807144e-7
+          ],
+          "palmNormalErrorRadians": 2.827296549232355e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.31292771816272e-7,
+            1.5196262340524166e-7,
+            7.146345858741881e-8
+          ],
+          "palmNormalErrorRadians": 1.569934748538248e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.8666666746139526,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.310335660340092e-7,
+            5.372690074837192e-8,
+            1.2904784139758934e-7
+          ],
+          "palmNormalErrorRadians": 2.303663616439751e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.255528541368299e-7,
+            1.2197126108217918e-7,
+            8.429369702178808e-8
+          ],
+          "palmNormalErrorRadians": 1.4975481660844235e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.899999976158142,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.440454561569961e-7,
+            7.146345858741881e-8,
+            1.6049041769309372e-7
+          ],
+          "palmNormalErrorRadians": 2.2302015940987762e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.111667124158726e-7,
+            1.0215721428991925e-7,
+            1.0106459234841571e-7
+          ],
+          "palmNormalErrorRadians": 2.0047462056687076e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.9333332777023315,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.324950333000973e-7,
+            3.6500241499888574e-8,
+            1.3075715880680275e-7
+          ],
+          "palmNormalErrorRadians": 2.5288109106536486e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.086043369428319e-7,
+            5.960464477539064e-8,
+            1.34110450744629e-7
+          ],
+          "palmNormalErrorRadians": 2.1900144899933185e-7
+        }
+      }
+    },
+    {
+      "seconds": 1.9666666984558105,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.107860714496015e-7,
+            5.16191365590357e-8,
+            9.305772182939053e-8
+          ],
+          "palmNormalErrorRadians": 2.1126042125758308e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.06524728194216e-7,
+            1.2818463544611084e-7,
+            8.940696716308596e-8
+          ],
+          "palmNormalErrorRadians": 2.0047462056687076e-7
+        }
+      }
+    },
+    {
+      "seconds": 2,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.403597463509132e-7,
+            2.9802322387695312e-8,
+            1.0950072449966577e-7
+          ],
+          "palmNormalErrorRadians": 2.669762502188827e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.523928869530796e-7,
+            1.9082797281243975e-7,
+            5.960464477539064e-8
+          ],
+          "palmNormalErrorRadians": 1.3738191809196613e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.0333333015441895,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.670278546345443e-7,
+            4.4703483581542975e-8,
+            1.4751396978812924e-7
+          ],
+          "palmNormalErrorRadians": 2.2202230134235873e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.925783116741439e-7,
+            8.560065398421929e-8,
+            1.1920928955078133e-7
+          ],
+          "palmNormalErrorRadians": 2.149076029934881e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.066666603088379,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.448611169690623e-7,
+            6.322027276634106e-8,
+            1.3493575361575816e-7
+          ],
+          "palmNormalErrorRadians": 2.7957056521317034e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.189317888341623e-7,
+            1.0215721428991925e-7,
+            1.1050996910178164e-7
+          ],
+          "palmNormalErrorRadians": 1.9140888122715278e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.0999999046325684,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.417960573046822e-7,
+            5.960464477539064e-8,
+            1.6458870496134868e-7
+          ],
+          "palmNormalErrorRadians": 2.318076668099177e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.940696716308891e-7,
+            1.0430812835693365e-7,
+            1.0536712127723512e-7
+          ],
+          "palmNormalErrorRadians": 1.8005141576520485e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.133333444595337,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.118716966306524e-7,
+            1.4901161193847656e-8,
+            1.1920928955078133e-7
+          ],
+          "palmNormalErrorRadians": 2.2101993820356363e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.899624181771042e-7,
+            9.541398640621977e-8,
+            1.2818463544611084e-7
+          ],
+          "palmNormalErrorRadians": 2.0593814493842838e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.1666667461395264,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.399486700294512e-7,
+            3.942476676500724e-8,
+            1.4975481660844235e-7
+          ],
+          "palmNormalErrorRadians": 2.5244167962815556e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.127493400045685e-7,
+            1.0323827311807144e-7,
+            1.0106459234841571e-7
+          ],
+          "palmNormalErrorRadians": 1.8848643661548996e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.200000047683716,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.131714152611123e-7,
+            4.712160915387242e-8,
+            6.989264130329237e-8
+          ],
+          "palmNormalErrorRadians": 2.3934808975769653e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.128709669409474e-7,
+            1.0641557616804321e-7,
+            1.0950072449966577e-7
+          ],
+          "palmNormalErrorRadians": 1.8005141576520485e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.2333333492279053,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.09480267682044e-7,
+            1.4901161193847656e-8,
+            1.34110450744629e-7
+          ],
+          "palmNormalErrorRadians": 2.2500259981366294e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.151788075437917e-7,
+            1.460009659995544e-7,
+            7.45058059692383e-8
+          ],
+          "palmNormalErrorRadians": 1.794337418495463e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.2666666507720947,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.215406417846739e-7,
+            5.16191365590357e-8,
+            1.3738191809196613e-7
+          ],
+          "palmNormalErrorRadians": 1.855179607568495e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.070144768675401e-7,
+            8.161702118890975e-8,
+            1.264405455326822e-7
+          ],
+          "palmNormalErrorRadians": 1.9198803196437874e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.299999952316284,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.166213459777805e-7,
+            2.1073424255447017e-8,
+            1.20137002293744e-7
+          ],
+          "palmNormalErrorRadians": 2.5766516425893653e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.429032814238644e-7,
+            1.1733186057227575e-7,
+            1.332800374925012e-7
+          ],
+          "palmNormalErrorRadians": 1.5628469708117136e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.3333332538604736,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.417960573046822e-7,
+            3.6500241499888574e-8,
+            1.4057727354849297e-7
+          ],
+          "palmNormalErrorRadians": 2.471078031029856e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.61788866705033e-7,
+            1.6726511955740805e-7,
+            6.989264130329237e-8
+          ],
+          "palmNormalErrorRadians": 1.4136482746161737e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.366666555404663,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.291486056019339e-7,
+            2.9802322387695312e-8,
+            1.4523855365528125e-7
+          ],
+          "palmNormalErrorRadians": 2.4119636500237414e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            8.872136859062125e-7,
+            8.815645848363069e-8,
+            9.996002811937589e-8
+          ],
+          "palmNormalErrorRadians": 2.0647654623614315e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.4000000953674316,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.283086866508735e-7,
+            3.942476676500724e-8,
+            1.2467205919833125e-7
+          ],
+          "palmNormalErrorRadians": 2.568019619526585e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.15542671639095e-7,
+            6.664001874625058e-8,
+            2.2202230134235873e-7
+          ],
+          "palmNormalErrorRadians": 2.070135472632919e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.433333396911621,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.013526630777388e-7,
+            5.16191365590357e-8,
+            7.146345858741881e-8
+          ],
+          "palmNormalErrorRadians": 2.475566823160081e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.000103992546802e-7,
+            7.598131170262078e-8,
+            9.884312124119404e-8
+          ],
+          "palmNormalErrorRadians": 2.037703146215881e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.4666666984558105,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.131714152611123e-7,
+            4.4703483581542975e-8,
+            8.429369702178808e-8
+          ],
+          "palmNormalErrorRadians": 2.8036367479304735e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.006269714988521e-7,
+            1.0950072449966577e-7,
+            1.1638178938488153e-7
+          ],
+          "palmNormalErrorRadians": 1.8310853432781287e-7
+        }
+      }
+    },
+    {
+      "seconds": 2.5,
+      "sides": {
+        "Left": {
+          "armSegmentDirectionErrorsRadians": [
+            5.064202984561506e-7,
+            3.332000937312528e-8,
+            8.815645848363069e-8
+          ],
+          "palmNormalErrorRadians": 2.5023304855446086e-7
+        },
+        "Right": {
+          "armSegmentDirectionErrorsRadians": [
+            9.002570788260535e-7,
+            1.3244441773467654e-7,
+            1.0641557616804321e-7
+          ],
+          "palmNormalErrorRadians": 1.6858739404357632e-7
+        }
+      }
+    }
+  ],
+  "nativeOrContactAccepted": false
+}
