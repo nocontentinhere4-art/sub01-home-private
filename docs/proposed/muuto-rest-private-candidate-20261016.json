@@ -56,9 +56,9 @@
       "sha256": "cf8a13fee03c57a5ed6f7351c504651264652bcb7b1b44dd8ccb49b87bf26300"
     },
     "sofa_glb_sha256": "286115af3c6dc71f679f34bca3d639d2689df7cd377053893189ae1651dc0b4e",
-    "around_source_sha256": "1a7c531c5ddc58a55a965daa2f1e0f5932e1b76ed67811375ca65c46548a99e3",
+    "around_source_sha256": "34c7b528c0587426ab847bd202007c4365a959023f40b2150ebff730540947c5",
     "around_candidate_translation_UE_cm": [
-      5.2,
+      0,
       0,
       0
     ],
@@ -108,5 +108,16 @@
   "previous_rejected_candidates": [
     "Haven b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
     "table c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9"
-  ]
+  ],
+  "final_around_source": {
+    "path": "/workspace/sub01-home-private/manufacturer-around-large-r1/placed-dark-r3/muuto-around-large-dark.glb",
+    "sha256": "34c7b528c0587426ab847bd202007c4365a959023f40b2150ebff730540947c5",
+    "independent_layout_proof": "/workspace/sub01-home-private/manufacturer-around-large-r1/placed-dark-r3/independent-living-layout.json",
+    "gaps_cm": {
+      "cabinet_table": 38.09269,
+      "table_sofa": 38.3927,
+      "sofa_stair": 57.26556
+    },
+    "top_appearance_source_review_pending": true
+  }
 }
