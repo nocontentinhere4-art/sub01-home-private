@@ -1,53 +1,968 @@
 {
-  "schema": "sub01.reference-teal-bathroom-independent-packet.v1",
-  "status": "R3 inspected, R4 source requested and ON HOLD while current user task is joystick; no native execution",
-  "source_root": "/workspace/sub01-home-private/reference-teal-bathroom-r3/output",
-  "independent_proof": "/workspace/sub01-home-private/reference-teal-bathroom-r3/independent-proof-r2/independent-source-proof.json",
-  "independent_proof_sha256": "32ee26d77132dead52af5d0000d45393dde9ee847e5a4ef7e14d0ffd93cd63c5",
-  "independent_fixture_corner_bijection": {
-    "parts": 90,
-    "unmatched": 0,
+  "schema": "sub01.reference-teal-bathroom-independent-packet.v2",
+  "status": "R5 source independently verified, image viewed; future atomic native importer prepared and unexecuted",
+  "source_root": "/workspace/sub01-home-private/reference-teal-bathroom-r5/output",
+  "independent_proof": "/workspace/sub01-home-private/reference-teal-bathroom-r5/independent-proof-r2/independent-source-proof.json",
+  "independent_proof_sha256": "63d470b9ca616cd64150966d20f7cd5b9ca27b29b601aff89d8fcfc10b68b0fc",
+  "local_source_image": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/reference-teal-bathroom-r5/teal-bathroom-source-review.png",
+  "source_image_sha256": "9d658435f54770daaaad56f408a61ab6c616ba7f96d80580cb1434a7d15dee7e",
+  "fixture_corner_parity": {
+    "source_parts": 90,
+    "styled_parts": 90,
+    "matched_parts": 90,
+    "unmatched_styled_parts": 0,
     "tolerance_cm": 0.0001,
-    "passed": true
-  },
-  "wood_uv": {
-    "positive_area_triangles_with_exact_zero_uv_area": 0,
-    "source_image_metric_metres": 1.83,
-    "front_formula_max_uv_error": 2.7489792442381145e-07,
-    "projection_area_ratio_min": 0.5772536418269459,
-    "projection_area_ratio_max": 1.000006312611329,
-    "scope": "Metric dominant-plane projection, including noncollapsed side/bevel faces; not a claim that oblique bevels have isotropic texel area"
-  },
-  "blocking_contact": {
-    "dressing": "TB_NorthUpperPaint",
-    "fixed_existing_part": "SUB01_shower_screen_005",
-    "reason": "0.5mm paint intersects the rear portion of the existing north-wall metal shower channel",
-    "finite_positive_crossing_triangle_pairs": 25,
-    "required_fix": "Cut/mask the actual existing channel mounting footprint in paint; keep all90 fixture vertices/placements unchanged. Do not waive as painted attachment.",
-    "channel_world_bounds_native_cm": [
-      [
-        -199.54999685,
-        262.10000515,
-        305.24997711
-      ],
-      [
-        -196.45000696,
-        264.99998569,
-        503.84998322
-      ]
+    "errors": [],
+    "rows": [
+      {
+        "source_node": 0,
+        "source_name": "SUB01_vanity_000",
+        "styled_node": 0,
+        "styled_name": "SUB01_vanity_000",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 508
+      },
+      {
+        "source_node": 1,
+        "source_name": "SUB01_vanity_001",
+        "styled_node": 1,
+        "styled_name": "SUB01_vanity_001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 252
+      },
+      {
+        "source_node": 2,
+        "source_name": "SUB01_vanity_002",
+        "styled_node": 2,
+        "styled_name": "SUB01_vanity_002",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 252
+      },
+      {
+        "source_node": 3,
+        "source_name": "SUB01_vanity_003",
+        "styled_node": 3,
+        "styled_name": "SUB01_vanity_003",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 252
+      },
+      {
+        "source_node": 4,
+        "source_name": "SUB01_vanity_004",
+        "styled_node": 4,
+        "styled_name": "SUB01_vanity_004",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 5,
+        "source_name": "SUB01_vanity_005",
+        "styled_node": 5,
+        "styled_name": "SUB01_vanity_005",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 6,
+        "source_name": "SUB01_vanity_006",
+        "styled_node": 6,
+        "styled_name": "SUB01_vanity_006",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 192
+      },
+      {
+        "source_node": 7,
+        "source_name": "SUB01_vanity_007",
+        "styled_node": 7,
+        "styled_name": "SUB01_vanity_007",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 192
+      },
+      {
+        "source_node": 8,
+        "source_name": "SUB01_vanity_008",
+        "styled_node": 8,
+        "styled_name": "SUB01_vanity_008",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 9,
+        "source_name": "SUB01_vanity_009",
+        "styled_node": 9,
+        "styled_name": "SUB01_vanity_009",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 10,
+        "source_name": "SUB01_vanity_010",
+        "styled_node": 10,
+        "styled_name": "SUB01_vanity_010",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 11,
+        "source_name": "SUB01_vanity_011",
+        "styled_node": 11,
+        "styled_name": "SUB01_vanity_011",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 12,
+        "source_name": "SUB01_vanity_012",
+        "styled_node": 12,
+        "styled_name": "SUB01_vanity_012",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 13,
+        "source_name": "SUB01_vanity_013",
+        "styled_node": 13,
+        "styled_name": "SUB01_vanity_013",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 560
+      },
+      {
+        "source_node": 14,
+        "source_name": "SUB01_vanity_014",
+        "styled_node": 14,
+        "styled_name": "SUB01_vanity_014",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 92
+      },
+      {
+        "source_node": 15,
+        "source_name": "SUB01_vanity_015",
+        "styled_node": 15,
+        "styled_name": "SUB01_vanity_015",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 16,
+        "source_name": "SUB01_vanity_016",
+        "styled_node": 16,
+        "styled_name": "SUB01_vanity_016",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 17,
+        "source_name": "SUB01_vanity_017",
+        "styled_node": 17,
+        "styled_name": "SUB01_vanity_017",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 18,
+        "source_name": "SUB01_vanity_018",
+        "styled_node": 18,
+        "styled_name": "SUB01_vanity_018",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 19,
+        "source_name": "SUB01_wallhung_wc_000",
+        "styled_node": 19,
+        "styled_name": "SUB01_wallhung_wc_000",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 1232
+      },
+      {
+        "source_node": 20,
+        "source_name": "SUB01_wallhung_wc_001",
+        "styled_node": 20,
+        "styled_name": "SUB01_wallhung_wc_001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 508
+      },
+      {
+        "source_node": 21,
+        "source_name": "SUB01_wallhung_wc_002",
+        "styled_node": 21,
+        "styled_name": "SUB01_wallhung_wc_002",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 300
+      },
+      {
+        "source_node": 22,
+        "source_name": "SUB01_wallhung_wc_003",
+        "styled_node": 22,
+        "styled_name": "SUB01_wallhung_wc_003",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 316
+      },
+      {
+        "source_node": 23,
+        "source_name": "SUB01_wallhung_wc_004",
+        "styled_node": 23,
+        "styled_name": "SUB01_wallhung_wc_004",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 316
+      },
+      {
+        "source_node": 24,
+        "source_name": "SUB01_wallhung_wc_005",
+        "styled_node": 24,
+        "styled_name": "SUB01_wallhung_wc_005",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 448
+      },
+      {
+        "source_node": 25,
+        "source_name": "SUB01_WCServiceLeft",
+        "styled_node": 25,
+        "styled_name": "SUB01_WCServiceLeft",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 26,
+        "source_name": "SUB01_WCServiceRight",
+        "styled_node": 26,
+        "styled_name": "SUB01_WCServiceRight",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 27,
+        "source_name": "SUB01_WCServiceAboveMount",
+        "styled_node": 27,
+        "styled_name": "SUB01_WCServiceAboveMount",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 28,
+        "source_name": "SUB01_WCServiceBelowMount",
+        "styled_node": 28,
+        "styled_name": "SUB01_WCServiceBelowMount",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 29,
+        "source_name": "SUB01_WCServiceTop",
+        "styled_node": 29,
+        "styled_name": "SUB01_WCServiceTop",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 30,
+        "source_name": "SUB01_WCFlushPlate",
+        "styled_node": 30,
+        "styled_name": "SUB01_WCFlushPlate",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 31,
+        "source_name": "SUB01_WCFlushButton",
+        "styled_node": 31,
+        "styled_name": "SUB01_WCFlushButton",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 32,
+        "source_name": "SUB01_WCFlushButton.001",
+        "styled_node": 32,
+        "styled_name": "SUB01_WCFlushButton.001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 188
+      },
+      {
+        "source_node": 33,
+        "source_name": "SUB01_shower_screen_000",
+        "styled_node": 33,
+        "styled_name": "SUB01_shower_screen_000",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 34,
+        "source_name": "SUB01_shower_screen_001",
+        "styled_node": 34,
+        "styled_name": "SUB01_shower_screen_001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 300
+      },
+      {
+        "source_node": 35,
+        "source_name": "SUB01_shower_screen_002",
+        "styled_node": 35,
+        "styled_name": "SUB01_shower_screen_002",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 300
+      },
+      {
+        "source_node": 36,
+        "source_name": "SUB01_shower_screen_003",
+        "styled_node": 36,
+        "styled_name": "SUB01_shower_screen_003",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 300
+      },
+      {
+        "source_node": 37,
+        "source_name": "SUB01_shower_screen_004",
+        "styled_node": 37,
+        "styled_name": "SUB01_shower_screen_004",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 508
+      },
+      {
+        "source_node": 38,
+        "source_name": "SUB01_shower_screen_005",
+        "styled_node": 38,
+        "styled_name": "SUB01_shower_screen_005",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 300
+      },
+      {
+        "source_node": 39,
+        "source_name": "SUB01_shower_mixer_000",
+        "styled_node": 39,
+        "styled_name": "SUB01_shower_mixer_000",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 444
+      },
+      {
+        "source_node": 40,
+        "source_name": "SUB01_shower_mixer_001",
+        "styled_node": 40,
+        "styled_name": "SUB01_shower_mixer_001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 444
+      },
+      {
+        "source_node": 41,
+        "source_name": "SUB01_shower_mixer_002",
+        "styled_node": 41,
+        "styled_name": "SUB01_shower_mixer_002",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 192
+      },
+      {
+        "source_node": 42,
+        "source_name": "SUB01_shower_mixer_003",
+        "styled_node": 42,
+        "styled_name": "SUB01_shower_mixer_003",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 43,
+        "source_name": "SUB01_shower_mixer_004",
+        "styled_node": 43,
+        "styled_name": "SUB01_shower_mixer_004",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 44,
+        "source_name": "SUB01_shower_mixer_005",
+        "styled_node": 44,
+        "styled_name": "SUB01_shower_mixer_005",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 45,
+        "source_name": "SUB01_shower_mixer_006",
+        "styled_node": 45,
+        "styled_name": "SUB01_shower_mixer_006",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 46,
+        "source_name": "SUB01_shower_mixer_007",
+        "styled_node": 46,
+        "styled_name": "SUB01_shower_mixer_007",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 508
+      },
+      {
+        "source_node": 47,
+        "source_name": "SUB01_shower_head_000",
+        "styled_node": 47,
+        "styled_name": "SUB01_shower_head_000",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 528
+      },
+      {
+        "source_node": 48,
+        "source_name": "SUB01_shower_head_001",
+        "styled_node": 48,
+        "styled_name": "SUB01_shower_head_001",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 764
+      },
+      {
+        "source_node": 49,
+        "source_name": "SUB01_shower_head_002",
+        "styled_node": 49,
+        "styled_name": "SUB01_shower_head_002",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 192
+      },
+      {
+        "source_node": 50,
+        "source_name": "SUB01_shower_head_003",
+        "styled_node": 50,
+        "styled_name": "SUB01_shower_head_003",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 764
+      },
+      {
+        "source_node": 51,
+        "source_name": "SUB01_shower_head_004",
+        "styled_node": 51,
+        "styled_name": "SUB01_shower_head_004",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 52,
+        "source_name": "SUB01_shower_head_005",
+        "styled_node": 52,
+        "styled_name": "SUB01_shower_head_005",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 53,
+        "source_name": "SUB01_shower_head_006",
+        "styled_node": 53,
+        "styled_name": "SUB01_shower_head_006",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 54,
+        "source_name": "SUB01_shower_head_007",
+        "styled_node": 54,
+        "styled_name": "SUB01_shower_head_007",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 55,
+        "source_name": "SUB01_shower_head_008",
+        "styled_node": 55,
+        "styled_name": "SUB01_shower_head_008",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 56,
+        "source_name": "SUB01_shower_head_009",
+        "styled_node": 56,
+        "styled_name": "SUB01_shower_head_009",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 57,
+        "source_name": "SUB01_shower_head_010",
+        "styled_node": 57,
+        "styled_name": "SUB01_shower_head_010",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 58,
+        "source_name": "SUB01_shower_head_011",
+        "styled_node": 58,
+        "styled_name": "SUB01_shower_head_011",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 59,
+        "source_name": "SUB01_shower_head_012",
+        "styled_node": 59,
+        "styled_name": "SUB01_shower_head_012",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 60,
+        "source_name": "SUB01_shower_head_013",
+        "styled_node": 60,
+        "styled_name": "SUB01_shower_head_013",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 61,
+        "source_name": "SUB01_shower_head_014",
+        "styled_node": 61,
+        "styled_name": "SUB01_shower_head_014",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 62,
+        "source_name": "SUB01_shower_head_015",
+        "styled_node": 62,
+        "styled_name": "SUB01_shower_head_015",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 63,
+        "source_name": "SUB01_shower_head_016",
+        "styled_node": 63,
+        "styled_name": "SUB01_shower_head_016",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 64,
+        "source_name": "SUB01_shower_head_017",
+        "styled_node": 64,
+        "styled_name": "SUB01_shower_head_017",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 65,
+        "source_name": "SUB01_shower_head_018",
+        "styled_node": 65,
+        "styled_name": "SUB01_shower_head_018",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 66,
+        "source_name": "SUB01_shower_head_019",
+        "styled_node": 66,
+        "styled_name": "SUB01_shower_head_019",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 67,
+        "source_name": "SUB01_shower_head_020",
+        "styled_node": 67,
+        "styled_name": "SUB01_shower_head_020",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 68,
+        "source_name": "SUB01_shower_head_021",
+        "styled_node": 68,
+        "styled_name": "SUB01_shower_head_021",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 69,
+        "source_name": "SUB01_shower_head_022",
+        "styled_node": 69,
+        "styled_name": "SUB01_shower_head_022",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 70,
+        "source_name": "SUB01_shower_head_023",
+        "styled_node": 70,
+        "styled_name": "SUB01_shower_head_023",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 71,
+        "source_name": "SUB01_shower_head_024",
+        "styled_node": 71,
+        "styled_name": "SUB01_shower_head_024",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 72,
+        "source_name": "SUB01_shower_head_025",
+        "styled_node": 72,
+        "styled_name": "SUB01_shower_head_025",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 73,
+        "source_name": "SUB01_shower_head_026",
+        "styled_node": 73,
+        "styled_name": "SUB01_shower_head_026",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 74,
+        "source_name": "SUB01_shower_head_027",
+        "styled_node": 74,
+        "styled_name": "SUB01_shower_head_027",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 75,
+        "source_name": "SUB01_shower_head_028",
+        "styled_node": 75,
+        "styled_name": "SUB01_shower_head_028",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 76,
+        "source_name": "SUB01_shower_head_029",
+        "styled_node": 76,
+        "styled_name": "SUB01_shower_head_029",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 77,
+        "source_name": "SUB01_shower_head_030",
+        "styled_node": 77,
+        "styled_name": "SUB01_shower_head_030",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 78,
+        "source_name": "SUB01_shower_head_031",
+        "styled_node": 78,
+        "styled_name": "SUB01_shower_head_031",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 79,
+        "source_name": "SUB01_shower_head_032",
+        "styled_node": 79,
+        "styled_name": "SUB01_shower_head_032",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 80,
+        "source_name": "SUB01_shower_head_033",
+        "styled_node": 80,
+        "styled_name": "SUB01_shower_head_033",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 81,
+        "source_name": "SUB01_shower_head_034",
+        "styled_node": 81,
+        "styled_name": "SUB01_shower_head_034",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 82,
+        "source_name": "SUB01_shower_head_035",
+        "styled_node": 82,
+        "styled_name": "SUB01_shower_head_035",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 83,
+        "source_name": "SUB01_shower_head_036",
+        "styled_node": 83,
+        "styled_name": "SUB01_shower_head_036",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 84,
+        "source_name": "SUB01_shower_head_037",
+        "styled_node": 84,
+        "styled_name": "SUB01_shower_head_037",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 85,
+        "source_name": "SUB01_shower_head_038",
+        "styled_node": 85,
+        "styled_name": "SUB01_shower_head_038",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 86,
+        "source_name": "SUB01_shower_head_039",
+        "styled_node": 86,
+        "styled_name": "SUB01_shower_head_039",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 380
+      },
+      {
+        "source_node": 87,
+        "source_name": "SUB01_ShowerWallArm",
+        "styled_node": 87,
+        "styled_name": "SUB01_ShowerWallArm",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 124
+      },
+      {
+        "source_node": 88,
+        "source_name": "SUB01_ShowerHeadDrop",
+        "styled_node": 88,
+        "styled_name": "SUB01_ShowerHeadDrop",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 124
+      },
+      {
+        "source_node": 89,
+        "source_name": "SUB01_ShowerSupplyCap",
+        "styled_node": 89,
+        "styled_name": "SUB01_ShowerSupplyCap",
+        "all_world_triangle_corners_matched": true,
+        "triangles": 124
+      }
     ],
-    "overlapping_paint_zone_native_cm": {
-      "y": [
-        264.95,
-        265.0
-      ],
-      "z": [
-        427.3,
-        503.85
-      ]
-    }
+    "ok": true
   },
-  "measured_attachments": [
+  "source_files": {
+    "bath-style-fixtures.glb": "bb771d03e1095e482ba0a78c75afd575f6cb48eb0ef75a911ff4aec770bd66f1",
+    "bath-style-dressing.glb": "4e83c49d16316a5d04492799237daa36a1ac7226e9e2bc496f4a8024adb3816f"
+  },
+  "import_preparation": {
+    "pure_source_contract_passed": true,
+    "native_executed": false,
+    "rows": [
+      {
+        "source": "bath-style-fixtures.glb",
+        "source_sha256": "bb771d03e1095e482ba0a78c75afd575f6cb48eb0ef75a911ff4aec770bd66f1",
+        "prepared": "bath-style-fixtures-prepared.glb",
+        "prepared_sha256": "52312cfca7f6bc84a7f9e2bc3d3167998cfef1a4f58b625e414747712c9fd619",
+        "parts": 90,
+        "exact_zero_triangles_removed": 96,
+        "all_positive_triangle_corner_bytes_exact": true,
+        "original_binary_prefix_exact": true,
+        "material_count": 15,
+        "image_count": 14
+      },
+      {
+        "source": "bath-style-dressing.glb",
+        "source_sha256": "4e83c49d16316a5d04492799237daa36a1ac7226e9e2bc496f4a8024adb3816f",
+        "prepared": "bath-style-dressing-prepared.glb",
+        "prepared_sha256": "fcd535d2004bfff96f7cc530a5bf09bf31ea36697eea4d97795ff13744a267b3",
+        "parts": 23,
+        "exact_zero_triangles_removed": 0,
+        "all_positive_triangle_corner_bytes_exact": true,
+        "original_binary_prefix_exact": true,
+        "material_count": 3,
+        "image_count": 3
+      }
+    ]
+  },
+  "wood_uv": [
+    {
+      "part": "SUB01_vanity_004",
+      "node": 4,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5772712558222413,
+      "maximum_projected_texel_area_ratio": 1.000000149889656,
+      "front_metric_formula_max_uv_error": 1.2442062446993418e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "SUB01_vanity_016",
+      "node": 16,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5773151086161143,
+      "maximum_projected_texel_area_ratio": 1.0000000066598156,
+      "front_metric_formula_max_uv_error": 2.149675712992405e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "SUB01_vanity_017",
+      "node": 17,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5772760574853932,
+      "maximum_projected_texel_area_ratio": 0.9999998043120856,
+      "front_metric_formula_max_uv_error": 2.0454490101684542e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "SUB01_vanity_018",
+      "node": 18,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5772536418269459,
+      "maximum_projected_texel_area_ratio": 0.9999996791282355,
+      "front_metric_formula_max_uv_error": 2.0454490101684542e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "TB_MirrorMitre_0",
+      "node": 19,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.6620687588009903,
+      "maximum_projected_texel_area_ratio": 1.000006312611329,
+      "front_metric_formula_max_uv_error": 2.2017890621839342e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "TB_MirrorMitre_1",
+      "node": 20,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5833422906076995,
+      "maximum_projected_texel_area_ratio": 0.9999980130750568,
+      "front_metric_formula_max_uv_error": 2.7489792442381145e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "TB_MirrorMitre_2",
+      "node": 21,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.5847585520323308,
+      "maximum_projected_texel_area_ratio": 0.9999980673414214,
+      "front_metric_formula_max_uv_error": 1.6285422077544354e-07,
+      "all_positive_faces_have_uv_area": true
+    },
+    {
+      "part": "TB_MirrorMitre_3",
+      "node": 22,
+      "primitive": 0,
+      "positive_triangles": 188,
+      "exact_collapsed_uv_positive_triangles": 0,
+      "texture_coverage_metres": 1.83,
+      "minimum_projected_texel_area_ratio": 0.583587192977812,
+      "maximum_projected_texel_area_ratio": 0.999998832645229,
+      "front_metric_formula_max_uv_error": 2.7489792442381145e-07,
+      "all_positive_faces_have_uv_area": true
+    }
+  ],
+  "positive_crossings": [],
+  "mutual_dressing_positive_crossings": [],
+  "continuous_real_door_sweeps": [
+    {
+      "group": "entry",
+      "complete_moving_parts": 23,
+      "continuous_enclosure_cm": [
+        [
+          64.30654049860556,
+          312.20654049860553,
+          4.2999982833862305
+        ],
+        [
+          244.29345950139447,
+          492.19345950139444,
+          206.8000078201294
+        ]
+      ],
+      "method": "Full360degree cylindrical enclosure of every authored moving triangle",
+      "dressing_enclosure_conflicts": [],
+      "clear_for_entire_motion": true
+    },
+    {
+      "group": "bathroom",
+      "complete_moving_parts": 3,
+      "continuous_enclosure_cm": [
+        [
+          -88.50000500679016,
+          88.95000219345093,
+          307.99999237060547
+        ],
+        [
+          -83.85000228881836,
+          266.0499882698059,
+          511.1000061035156
+        ]
+      ],
+      "method": "Exact full translated bounding enclosure of every authored moving triangle",
+      "dressing_enclosure_conflicts": [],
+      "clear_for_entire_motion": true
+    },
+    {
+      "group": "balcony",
+      "complete_moving_parts": 8,
+      "continuous_enclosure_cm": [
+        [
+          -314.94998931884766,
+          400.5500316619873,
+          304.75001335144043
+        ],
+        [
+          -125.05000495910645,
+          409.60001945495605,
+          515.0500297546387
+        ]
+      ],
+      "method": "Exact full translated bounding enclosure of every authored moving triangle",
+      "dressing_enclosure_conflicts": [],
+      "clear_for_entire_motion": true
+    }
+  ],
+  "actual_surface_gap_checks": [
+    {
+      "minimum_distance_cm": 0.0629957384566537,
+      "certified_minimum_lower_bound_cm": 0.0629957384566537,
+      "exact_triangle_pairs_tested": 13166,
+      "closest_triangle_pair": [
+        221,
+        2756
+      ],
+      "query_range_cm": 0.2,
+      "includes_triangle_vertex_face_AND_edge_edge_distances": true,
+      "part": "TB_WCFlushServiceCover",
+      "obstacle": "All six actual WC ceramic/outlet/lid/seat/hinge parts",
+      "required_minimum_cm": 0.05,
+      "ok": true
+    },
+    {
+      "minimum_distance_cm": 0.0019350884984611048,
+      "certified_minimum_lower_bound_cm": 0.0019350884984611048,
+      "exact_triangle_pairs_tested": 5046,
+      "closest_triangle_pair": [
+        14,
+        44
+      ],
+      "query_range_cm": 0.01,
+      "includes_triangle_vertex_face_AND_edge_edge_distances": true,
+      "part": "TB_NorthUpperPaint",
+      "obstacle": "Actual rear shower channel005",
+      "required_minimum_cm": 0.001,
+      "ok": true
+    }
+  ],
+  "attachments": [
     {
       "part": "TB_WestPaintFilm",
       "support": "SUB01_BathCorridor_SourceNode_158",
@@ -55,11 +970,12 @@
       "axis": 0,
       "plane_cm": -391,
       "part_plane_triangles": 2,
-      "support_plane_triangles": 16,
+      "support_plane_triangles": 20,
       "part_backface_area_cm2": 59373.39980278012,
       "support_intersection_area_cm2": 59373.399802780106,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_SouthPaintFilm",
@@ -68,11 +984,12 @@
       "axis": 1,
       "plane_cm": 55,
       "part_plane_triangles": 2,
-      "support_plane_triangles": 6,
-      "part_backface_area_cm2": 79636.20152358999,
-      "support_intersection_area_cm2": 79636.20152358999,
+      "support_plane_triangles": 8,
+      "part_backface_area_cm2": 80655.00187396989,
+      "support_intersection_area_cm2": 80654.99850034712,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_NorthUpperPaint",
@@ -80,12 +997,13 @@
       "kind": "paint_to_exact_architecture",
       "axis": 1,
       "plane_cm": 265,
-      "part_plane_triangles": 2,
-      "support_plane_triangles": 2,
-      "part_backface_area_cm2": 45305.40584526078,
-      "support_intersection_area_cm2": 45305.40584526077,
+      "part_plane_triangles": 12,
+      "support_plane_triangles": 4,
+      "part_backface_area_cm2": 45708.311852547144,
+      "support_intersection_area_cm2": 45708.309933277385,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_NorthLeftPaint",
@@ -94,11 +1012,12 @@
       "axis": 1,
       "plane_cm": 265,
       "part_plane_triangles": 2,
-      "support_plane_triangles": 2,
-      "part_backface_area_cm2": 7606.700018214935,
-      "support_intersection_area_cm2": 7606.700018214935,
+      "support_plane_triangles": 4,
+      "part_backface_area_cm2": 8045.900105571491,
+      "support_intersection_area_cm2": 8045.900105571462,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestLowerLeft_L",
@@ -111,7 +1030,8 @@
       "part_backface_area_cm2": 113.28005516648773,
       "support_intersection_area_cm2": 113.28005516648773,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestLowerLeft_R",
@@ -124,7 +1044,8 @@
       "part_backface_area_cm2": 113.28005516647681,
       "support_intersection_area_cm2": 113.28005516647681,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestLowerLeft_B",
@@ -137,7 +1058,8 @@
       "part_backface_area_cm2": 187.5214796174114,
       "support_intersection_area_cm2": 187.5214796174114,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestLowerLeft_T",
@@ -150,7 +1072,8 @@
       "part_backface_area_cm2": 187.51868535154426,
       "support_intersection_area_cm2": 187.5186853515479,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestUpper_L",
@@ -163,7 +1086,8 @@
       "part_backface_area_cm2": 198.07938447401466,
       "support_intersection_area_cm2": 198.07938447401466,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestUpper_R",
@@ -176,7 +1100,8 @@
       "part_backface_area_cm2": 198.0801223796734,
       "support_intersection_area_cm2": 198.0801223796807,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestUpper_B",
@@ -189,7 +1114,8 @@
       "part_backface_area_cm2": 185.92146858759224,
       "support_intersection_area_cm2": 185.92146858759588,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestUpper_T",
@@ -202,7 +1128,8 @@
       "part_backface_area_cm2": 185.92146858759224,
       "support_intersection_area_cm2": 185.92146858759224,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestSide_L",
@@ -215,7 +1142,8 @@
       "part_backface_area_cm2": 343.6801748049329,
       "support_intersection_area_cm2": 343.6801748049329,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestSide_R",
@@ -228,7 +1156,8 @@
       "part_backface_area_cm2": 343.6776141891023,
       "support_intersection_area_cm2": 343.6776141891023,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestSide_B",
@@ -241,7 +1170,8 @@
       "part_backface_area_cm2": 107.52085183150484,
       "support_intersection_area_cm2": 107.52085183150484,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_WestSide_T",
@@ -254,7 +1184,8 @@
       "part_backface_area_cm2": 107.52085183149029,
       "support_intersection_area_cm2": 107.52085183149029,
       "positive_area_supported": true,
-      "full_backface_supported": true
+      "full_backface_supported": true,
+      "attachment_verified": true
     },
     {
       "part": "TB_MirrorMitre_0",
@@ -267,7 +1198,11 @@
       "part_backface_area_cm2": 502.64583687180857,
       "support_intersection_area_cm2": 231.9630347002767,
       "positive_area_supported": true,
-      "full_backface_supported": false
+      "full_backface_supported": false,
+      "attachment_verified": true,
+      "maximum_cosmetic_lip_overhang_cm": 2.0000457763671875,
+      "backface_bond_fraction": 0.46148404638917756,
+      "attachment_role": "Rigid non-load-bearing finishing profile bonded to existing mirror backplate; full-backface support is NOT claimed"
     },
     {
       "part": "TB_MirrorMitre_1",
@@ -280,7 +1215,11 @@
       "part_backface_area_cm2": 425.8410711156612,
       "support_intersection_area_cm2": 195.64441209178767,
       "positive_area_supported": true,
-      "full_backface_supported": false
+      "full_backface_supported": false,
+      "attachment_verified": true,
+      "maximum_cosmetic_lip_overhang_cm": 1.9999980926513672,
+      "backface_bond_fraction": 0.4594305842299776,
+      "attachment_role": "Rigid non-load-bearing finishing profile bonded to existing mirror backplate; full-backface support is NOT claimed"
     },
     {
       "part": "TB_MirrorMitre_2",
@@ -293,7 +1232,11 @@
       "part_backface_area_cm2": 502.64084356897365,
       "support_intersection_area_cm2": 231.96308588892134,
       "positive_area_supported": true,
-      "full_backface_supported": false
+      "full_backface_supported": false,
+      "attachment_verified": true,
+      "maximum_cosmetic_lip_overhang_cm": 1.9999980926513672,
+      "backface_bond_fraction": 0.4614887326741699,
+      "attachment_role": "Rigid non-load-bearing finishing profile bonded to existing mirror backplate; full-backface support is NOT claimed"
     },
     {
       "part": "TB_MirrorMitre_3",
@@ -306,25 +1249,173 @@
       "part_backface_area_cm2": 425.84265750193117,
       "support_intersection_area_cm2": 195.64386565015593,
       "positive_area_supported": true,
+      "full_backface_supported": false,
+      "attachment_verified": true,
+      "maximum_cosmetic_lip_overhang_cm": 2.0000159740448,
+      "backface_bond_fraction": 0.45942758951824525,
+      "attachment_role": "Rigid non-load-bearing finishing profile bonded to existing mirror backplate; full-backface support is NOT claimed"
+    },
+    {
+      "part": "TB_CornerWallEnd_North",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "solid_wall_end_extension_exact_plane_join",
+      "axis": 0,
+      "plane_cm": -391,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 16,
+      "part_backface_area_cm2": 2849.9974250792,
+      "support_intersection_area_cm2": 2849.9974250792,
+      "positive_area_supported": true,
+      "full_backface_supported": true,
+      "attachment_verified": true
+    },
+    {
+      "part": "TB_CornerWallEnd_North",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "solid_wall_end_extension_exact_plane_join",
+      "axis": 0,
+      "plane_cm": -387.5,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 4,
+      "part_backface_area_cm2": 2849.9974250792,
+      "support_intersection_area_cm2": 2849.996948242522,
+      "positive_area_supported": true,
+      "full_backface_supported": true,
+      "attachment_verified": true
+    },
+    {
+      "part": "TB_CornerWallEnd_South",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "solid_wall_end_extension_exact_plane_join",
+      "axis": 0,
+      "plane_cm": -391,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 16,
+      "part_backface_area_cm2": 2850.0008225441343,
+      "support_intersection_area_cm2": 2850.0008225441325,
+      "positive_area_supported": true,
+      "full_backface_supported": true,
+      "attachment_verified": true
+    },
+    {
+      "part": "TB_CornerWallEnd_South",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "solid_wall_end_extension_exact_plane_join",
+      "axis": 0,
+      "plane_cm": -387.5,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 4,
+      "part_backface_area_cm2": 2850.0008225441343,
+      "support_intersection_area_cm2": 2850.0003457068615,
+      "positive_area_supported": true,
+      "full_backface_supported": true,
+      "attachment_verified": true
+    },
+    {
+      "part": "TB_WCFlushServiceCover",
+      "kind": "two_cm_solid_service_panel_edge_mounted_to_existing_measured_cistern_frame",
+      "patches": [
+        {
+          "support": "SUB01_WCServiceLeft",
+          "axis": 0,
+          "plane_cm": -310,
+          "part_plane_triangles": 2,
+          "support_plane_triangles": 2,
+          "part_backface_area_cm2": 69.4999508857436,
+          "support_intersection_area_cm2": 66.02437338810705,
+          "positive_area_supported": true,
+          "full_backface_supported": false
+        },
+        {
+          "support": "SUB01_WCServiceRight",
+          "axis": 0,
+          "plane_cm": -270,
+          "part_plane_triangles": 2,
+          "support_plane_triangles": 2,
+          "part_backface_area_cm2": 69.4999508857436,
+          "support_intersection_area_cm2": 66.02437338810705,
+          "positive_area_supported": true,
+          "full_backface_supported": false
+        },
+        {
+          "support": "SUB01_WCServiceAboveMount",
+          "axis": 2,
+          "plane_cm": 350,
+          "part_plane_triangles": 2,
+          "support_plane_triangles": 2,
+          "part_backface_area_cm2": 79.99989509583975,
+          "support_intersection_area_cm2": 71.64045845001237,
+          "positive_area_supported": true,
+          "full_backface_supported": false
+        },
+        {
+          "support": "SUB01_WCServiceBelowMount",
+          "axis": 2,
+          "plane_cm": 315.25,
+          "part_plane_triangles": 2,
+          "support_plane_triangles": 2,
+          "part_backface_area_cm2": 79.99989509583975,
+          "support_intersection_area_cm2": 71.64045845001237,
+          "positive_area_supported": true,
+          "full_backface_supported": false
+        }
+      ],
+      "total_positive_mount_area_cm2": 275.32966367623885,
+      "attachment_verified": true,
       "full_backface_supported": false
     }
   ],
-  "mirror_edge_findings": "BVH candidates on shared/beveled edges are not positive finite penetration at existing0.001cm epsilon. Actual new mirror profiles have195.64..231.96cm\u00b2 contact patches with existing backplate, approximately46% of their backfaces and2cm external overhang; do not claim full support.",
-  "r4_pending": "Root plans measured WC service cover and3.5cm corner wall-end extensions. Those new solids require independent contact/attachment/collision-policy proof; R3 proof cannot authorize them.",
-  "future_importer_draft": "tools/unreal_import_reference_teal_bathroom.py",
-  "future_importer_frozen": false,
-  "future_importer_design": [
-    "Fail closed without complete source-ready proof tied to actual GLBs",
-    "Require actual current saved90part b8 bath,5ff corridor and76part real-door receipts",
-    "Keep all90 original fixture actor/component transforms, tags, collision, and existing clear glass helper",
-    "Apply source materials; UV-only owned mesh replacements for vanity004/016/017/018 after complete physical corner equivalence at existing transforms",
-    "Temporary owned imported actors hidden/NoCollision; verify full native geometry/PBR before activation",
-    "Exact originals snapshot, map backup, component/material/collision rollback; no original asset modifications",
-    "Decorative R3 dressing NoCollision; R4 structural corner/cover collider policy must be explicitly added after source proof",
-    "No runtime, door/privacy, browser input or activity gates modified"
+  "dressing_collision_policies": {
+    "TB_WestPaintFilm": "NoCollision",
+    "TB_SouthPaintFilm": "NoCollision",
+    "TB_NorthUpperPaint": "NoCollision",
+    "TB_NorthLeftPaint": "NoCollision",
+    "TB_CornerWallEnd_North": "BlockAll",
+    "TB_CornerWallEnd_South": "BlockAll",
+    "TB_WCFlushServiceCover": "BlockAll",
+    "TB_WestLowerLeft_L": "NoCollision",
+    "TB_WestLowerLeft_R": "NoCollision",
+    "TB_WestLowerLeft_B": "NoCollision",
+    "TB_WestLowerLeft_T": "NoCollision",
+    "TB_WestUpper_L": "NoCollision",
+    "TB_WestUpper_R": "NoCollision",
+    "TB_WestUpper_B": "NoCollision",
+    "TB_WestUpper_T": "NoCollision",
+    "TB_WestSide_L": "NoCollision",
+    "TB_WestSide_R": "NoCollision",
+    "TB_WestSide_B": "NoCollision",
+    "TB_WestSide_T": "NoCollision",
+    "TB_MirrorMitre_0": "NoCollision",
+    "TB_MirrorMitre_1": "NoCollision",
+    "TB_MirrorMitre_2": "NoCollision",
+    "TB_MirrorMitre_3": "NoCollision"
+  },
+  "material_provenance": {
+    "source": "https://polyhaven.com/a/oak_veneer_01",
+    "license": "CC0-1.0",
+    "world_uv_metric_m": 1.83,
+    "projection": "Dominant world normal plane; oblique bevel area is projected, not isotropic",
+    "reference_photos": "Owner supplied photographs, not embedded texture assets"
+  },
+  "source_changes": [
+    "Measured 2cm solid WC service cover, four genuine frame-edge mounting patches, closed conservative envelopes of actual ceramic/outlet/seat for measured clearance",
+    "Both 3.5cm solid corner wall-end gaps closed with full original-plane support; painted surfaces extend to X-391cm",
+    "Rear shower005 actual mounting shape masked from thin paint with positive measured clearance",
+    "All90 original fixture physical surfaces unchanged, four vanity UV-only meshes corrected, teak-colored real oak maps, brass and warm white finishes"
   ],
-  "checks": "10 source contact/import contract tests pass; native importer unexecuted and not frozen",
-  "actual_native_imported": false,
+  "future_importer": "tools/unreal_import_reference_teal_bathroom.py",
+  "future_importer_sha256": "d182a8b9bb5c6cd6214d8c4db5acc22b28b634f858ab155513cf0b81834db4de",
+  "future_importer_scope": [
+    "Require exact current saved bath90/corridor5ff/doors76 receipts and complete source proof",
+    "Preserve original actor transforms/tags/collision, existing glass helpers and door/privacy runtime",
+    "New material assignment plus four proved UV-only owned mesh replacements; no original asset mutation",
+    "Only three new solid parts BlockAll;20 paint and decorative profiles NoCollision",
+    "Full backup, original snapshots, hidden staging, native complete geometry/PBR verification before commit, rollback on refusal"
+  ],
+  "checks": "16 focused source contact/import-contract tests pass; pure source contract and exact import preparation pass",
+  "native_api_execution_verified": false,
+  "native_imported": false,
   "native_visual_physical_accepted": false,
-  "human_walk_untouched": true
+  "human_walk_untouched": true,
+  "source_render_is_not_native_house_evidence": true
 }

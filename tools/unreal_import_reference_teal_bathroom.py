@@ -6,7 +6,7 @@ Keeps existing90 actors and physical transforms/collision. Only four wood meshes
 may receive UV-only owned replacements; other opaque parts receive materials.
 Existing clear-glass helper bindings remain exact. Source dressing is additive.
 """
-import copy,hashlib,json,shutil,time,uuid
+import copy,hashlib,json,math,shutil,time,uuid
 from pathlib import Path
 ORIGINAL=Path('/workspace/sub01-home-private/authentic-bath-doors-fit-r3/output/bath-fixtures.glb')
 BASE_SHA='b8d190b7d7cf274126b4be35cf2ccf447b25c742da037cc222c43fe57f437a92'
@@ -25,6 +25,13 @@ def contract(root,proof_path):
   path=root/name;value=digest(path)
   if report['files'].get(name)!=value or proof['inputs'].get(str(path))!=value:raise RuntimeError('Actual proved style source changed '+name)
  if any(not r.get('all_positive_faces_have_uv_area')for r in proof.get('wood_uv',[])):raise RuntimeError('Collapsed positive wood UV face refused')
+ if proof.get('mutual_dressing_positive_crossings')!=[]or proof.get('unclassified_attachment_parts')!=[]or not all(p.get('attachment_verified')is True for p in proof.get('attachments',[])):raise RuntimeError('Every new attachment and mutual source contact must be proved')
+ sweeps=proof.get('continuous_real_door_sweeps',[])
+ if len(sweeps)!=3 or {r.get('group'):r.get('complete_moving_parts')for r in sweeps}!={'entry':23,'bathroom':3,'balcony':8}or any(r.get('clear_for_entire_motion')is not True or r.get('dressing_enclosure_conflicts')!=[]for r in sweeps):raise RuntimeError('Complete continuous source door clearance required')
+ gaps=proof.get('actual_surface_gap_checks',[])
+ if len(gaps)!=2 or any(r.get('ok')is not True or r.get('certified_minimum_lower_bound_cm',-1)<r.get('required_minimum_cm',math.inf)for r in gaps):raise RuntimeError('Measured true source surface gaps required')
+ policies=proof.get('dressing_collision_policies',{})
+ if len(policies)!=proof.get('dressing_parts')or any(v not in('NoCollision','BlockAll')for v in policies.values())or {k for k,v in policies.items()if v=='BlockAll'}!={'TB_CornerWallEnd_North','TB_CornerWallEnd_South','TB_WCFlushServiceCover'}:raise RuntimeError('Exactly three independently proved added solid colliders required')
  return proof,report
 
 def run(style_root,proof_path,dry_run=True):
@@ -73,7 +80,7 @@ def run(style_root,proof_path,dry_run=True):
  destination='/Game/Sub01Home/ReferenceTealBath/Attempt_'+attempt;all_added=[];staged={};active=False;material_proofs={}
  try:
   for kind,prefix in [('fixtures','SUB01_TealFixture_'),('dressing','SUB01_TealDressing_')]:
-   path=root/('bath-style-'+kind+'.glb');doc,blob,prepared=prepare_import(path,inputs/(kind+'.glb'),prefix);dest=destination+'/'+kind
+   path=root/('bath-style-'+kind+'.glb');original_doc,_=read_gltf(path);doc,blob,prepared=prepare_import(path,inputs/(kind+'.glb'),prefix);dest=destination+'/'+kind
    prior={a.get_path_name()for a in eas.get_all_level_actors()};manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
    if not manager.import_scene(dest,manager.create_source_data(str(inputs/(kind+'.glb'))),params):raise RuntimeError('Owned style scene import refused')
    manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in prior];all_added.extend(added)
@@ -97,9 +104,9 @@ def run(style_root,proof_path,dry_run=True):
      old=bindings.setdefault(material['name'],actual.get_path_name())
      if old!=actual.get_path_name():raise RuntimeError('One explicit source material binding required')
      opaque.append(c)
-    parts[ni]=(a,c,is_glass);c.set_editor_property('cast_shadow',kind!='dressing'or'Paint'not in str(node.get('name','')))
+    parts[ni]=(a,c,is_glass);c.set_editor_property('cast_shadow',kind!='dressing'or'Paint'not in original_doc['nodes'][ni].get('name',''))
    dd=copy.deepcopy(doc);glass_names={m['name']for m in dd['materials']if m.get('extensions',{}).get('KHR_materials_transmission',{}).get('transmissionFactor',0)>.5};dd['materials']=[m for m in dd['materials']if m['name']not in glass_names];material_proofs[kind]=verify_materials(u,opaque,dd,dest,bindings)
-   staged[kind]={'parts':parts,'doc':doc,'blob':blob,'added':added,'source_prepare':prepared}
+   staged[kind]={'parts':parts,'doc':doc,'blob':blob,'added':added,'source_prepare':prepared,'original_doc':original_doc}
   if len(staged['fixtures']['parts'])!=90 or len(staged['dressing']['parts'])!=proof['dressing_parts']:raise RuntimeError('Complete proved style parts required')
   # Verify UV-only incoming meshes at EXISTING actor/component transforms in
   # disposable hidden NoCollision actors BEFORE altering an existing component.
@@ -121,9 +128,14 @@ def run(style_root,proof_path,dry_run=True):
    if not same_triangles(expected_triangles(bd,bb,row['source_node']),native_triangles(u,old),tolerance=.0001):raise RuntimeError('Activated fixture geometry changed')
    current_transform=fingerprint(u,[a])[a.get_path_name()]['components'][0]['transform'];old_transform=before[a.get_path_name()]['components'][0]['transform']
    if current_transform!=old_transform or signature(capture(u,old))!=signature(state['collision']):raise RuntimeError('Fixture physical transform/collision changed')
-  # Decorative coatings/joinery remain NoCollision: no corridor/navigation/
-  # privacy-state modification is authorized by the style transaction.
-  for a,c,_ in staged['dressing']['parts'].values():a.set_actor_hidden_in_game(False);c.set_visibility(True)
+  # Coatings/joinery remain NoCollision. Only the THREE independently proved
+  # added solid panels/corner closures receive collision; current corridor,
+  # real doors, privacy state and all existing fixture collision stay exact.
+  for ni,(a,c,_)in staged['dressing']['parts'].items():
+   name=staged['dressing']['original_doc']['nodes'][ni]['name'];policy=proof['dressing_collision_policies'][name]
+   if policy=='BlockAll':c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
+   else:c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+   tags=list(c.get_editor_property('component_tags'));tags.append(u.Name('SUB01TealBath:'+result['source_dressing_sha256']+':'+name));c.set_editor_property('component_tags',tags);a.set_actor_hidden_in_game(False);c.set_visibility(True)
   for a in staged['fixtures']['added']:
    if not eas.destroy_actor(a):raise RuntimeError('Temporary fixture import actor cleanup failed')
    all_added.remove(a)

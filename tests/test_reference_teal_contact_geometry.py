@@ -21,3 +21,9 @@ def test_below_existing_contact_epsilon_grazing_does_not_inflate():
 def test_positive_area_support_uses_finite_overlap():
  assert M.clipping_area([(0,0),(2,0),(0,2)],[(0,0),(2,0),(0,2)])==2
  assert M.clipping_area([(0,0),(1,0),(0,1)],[(2,2),(3,2),(2,3)])==0
+
+def test_triangle_surface_gap_includes_edges_and_vertices():
+ assert M.edge_edge_distance((0,0,0),(2,0,0),(1,-1,.063),(1,1,.063))==.063
+ assert M.edge_edge_distance((0,0,0),(2,0,0),(0,1,0),(2,1,0))==1
+ point=M.closest_triangle((.2,.2,.05),(0,0,0),(1,0,0),(0,1,0))
+ assert abs(point[0]-.2)<1e-12 and abs(point[1]-.2)<1e-12 and point[2]==0
