@@ -26,10 +26,13 @@ def fixture_config_text(text,before,after):
     """Replace only three identity fields; preserve every other byte/setting."""
     lines=text.splitlines(keepends=True)
     starts=[i for i,l in enumerate(lines) if l.strip()=='[/Script/Sub01HomeLab.Sub01HomeCharacter]']
-    if len(starts)!=1:raise RuntimeError('Unique character Game config section required')
-    start=starts[0]+1;end=next((i for i in range(start,len(lines)) if lines[i].lstrip().startswith('[')),len(lines))
+    if not starts:raise RuntimeError('Character Game config section required')
+    # UE merges repeated physical sections of the same class. Read identity
+    # keys across that logical section; keep every header/other field in place.
+    ranges=[(header+1,next((i for i in range(header+1,len(lines)) if lines[i].lstrip().startswith('[')),len(lines)))for header in starts]
+    end=ranges[-1][1]
     values={}
-    for i in range(start,end):
+    for i in (i for start,stop in ranges for i in range(start,stop)):
         match=re.match(r'^\s*(NativeFixtureEmissionParent\w+)\s*=\s*(.*?)\s*$',lines[i])
         if match:
             key,value=match.groups()

@@ -69,6 +69,20 @@ class FixTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'Existing reviewed'):
             fix.fixture_config_text(text,dict(old,**{'63':'unexpected'}),dict(new,**{'63':'unexpected-new'}))
 
+    def test_ue_repeated_class_sections_merge_without_touching_posture_block(self):
+        old={n:'/InterchangeAssets/glTF/MI_Original' for n in fix.FIXTURE_FIELDS}
+        new={n:'/Game/Sub01Home/NaniteMaterials/Owned'+n for n in fix.FIXTURE_FIELDS}
+        first='[/Script/Sub01HomeLab.Sub01HomeCharacter]\n'+''.join(f'{key}={old[n]}\n'for n,key in fix.FIXTURE_FIELDS.items())
+        posture='[/Script/Sub01HomeLab.Sub01HomeCharacter]\nWalkClip=/Game/Owner/Walk\nNativePhoneClipVerified=False\n'
+        result=fix.fixture_config_text(first+'[Other]\nvalue=keep\n'+posture,old,new)
+        self.assertEqual(result.count('[/Script/Sub01HomeLab.Sub01HomeCharacter]'),2)
+        self.assertTrue(result.endswith(posture))
+        self.assertIn('[Other]\nvalue=keep\n',result)
+        for n,key in fix.FIXTURE_FIELDS.items():self.assertEqual(result.count(key+'='+new[n]),1)
+        # Repeated headers are valid; duplicated identity keys are still refused.
+        with self.assertRaisesRegex(RuntimeError,'Duplicate fixture parent config'):
+            fix.fixture_config_text(first+posture+'NativeFixtureEmissionParentMaterial13='+old['13']+'\n',old,new)
+
     def test_owned_ancestor_clone_preserves_plugin_and_exact_original_bindings(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td);u,originals,base,external,changes,eff=self.setup_world(root)
