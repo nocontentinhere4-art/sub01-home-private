@@ -405,3 +405,37 @@ def test_configure_warm_start_inputs():
         assert d == ROOT / 'docs/proposed/seat-pose-anatomical' and r == (3.875, -30.)
     finally:
         K.FIT_DIR, K.ROLL_OFFSET_CM = old
+
+
+# ---------------------------------------------------------------- SitDown / GetUp desk-clearance arm pass
+def test_box_push_directions():
+    lo, hi = np.zeros(3), np.array([10., 10., 2.])
+    d = K.box_push(np.array([[5, 5, 1.9], [5, 5, .1], [5, 9.9, 1.], [12, 5, 1.]]), lo, hi)
+    assert np.allclose(d, [[0, 0, 1], [0, 0, -1], [0, 1, 0], [1, 0, 0]])
+
+
+def test_desk_clear_arms_lifts_the_hand_out_of_a_slab_and_keeps_protected_frames():
+    sk, W, ibm = synthetic()
+    F = 6
+    W = np.repeat(W, F, axis=0)
+    h = NAMES.index('LeftHand')
+    # skin: two points riding on the hand (the wrist and a little below it)
+    pos = np.array([BIND['LeftHand'], np.add(BIND['LeftHand'], (.02, -.02, 0))], float)
+    jts = np.full((2, 4), h)
+    wts = np.array([[1., 0, 0, 0]] * 2)
+    hand_ue = K.E.to_ue(W[0, h, :3, 3])
+    slab = np.array([[[hand_ue[0] - 20, hand_ue[1] - 20, hand_ue[2] - 5], [hand_ue[0] + 20, hand_ue[1] + 20, hand_ue[2] + 1.]]])
+    ctx = SimpleNamespace(sk=sk, base=SimpleNamespace(ibm=ibm, names=NAMES), boxes=slab,
+                          arms={'left': {'skin': (pos, jts, wts), 'part': np.array(['hand', 'hand'])}})
+    protect = np.zeros(F, bool)
+    protect[-1] = True
+    times = np.arange(F) / 30.
+    shift = np.zeros((F, 3))
+    out, info = K.desk_clear_arms(ctx, W, shift, times, protect, sides=('left',))
+    pts = K.E.to_ue(K.P.skin_points((pos, jts, wts), ibm, out))
+    d, _ = K.boxes_min_distance(pts, slab)
+    assert (d.min(1)[:-1] >= K.FOREARM_TARGET_CLEARANCE_CM - 1e-6).all()
+    assert np.allclose(out[-1], W[-1])                                         # protected frame untouched
+    for a, b in ((2, 3), (3, 4)):                                              # no stretch
+        assert np.allclose(np.linalg.norm(out[:, b, :3, 3] - out[:, a, :3, 3], axis=1), np.linalg.norm(W[:, b, :3, 3] - W[:, a, :3, 3], axis=1))
+    assert np.allclose(K.arm_locals(sk, out)[:, NAMES.index('LeftHandMiddle2')], K.arm_locals(sk, W)[:, NAMES.index('LeftHandMiddle2')])

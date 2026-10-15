@@ -1853,6 +1853,219 @@ def audit_main_seat_rule(out_dir, source, cache=None):
     return res
 
 
+# ---------------------------------------------------------------- SitDown / GetUp: desk-clearance arm pass on a base
+DESK_PASS_ITERATIONS = 40
+DESK_PASS_STEP_MARGIN_CM = .1
+
+
+def box_push(points, lo, hi):
+    """Unit direction that moves each point out of (or away from) the box along the shortest way."""
+    p = np.asarray(points, float)
+    lo, hi = np.asarray(lo, float), np.asarray(hi, float)
+    q = np.clip(p, lo, hi)
+    out = p - q
+    n = np.linalg.norm(out, axis=-1)
+    inside = n < 1e-9
+    dirs = np.where(inside[..., None], 0., out / np.maximum(n, 1e-12)[..., None])
+    if inside.any():
+        pin = p[inside]
+        d = np.concatenate([pin - lo, hi - pin], axis=-1)            # distance to each face
+        k = d.argmin(-1)
+        v = np.zeros((len(pin), 3))
+        v[np.arange(len(pin)), k % 3] = np.where(k < 3, -1., 1.)
+        dirs[inside] = v
+    return dirs
+
+
+def desk_clear_arms(ctx, W, shift, times, protect, sides=SIDES):
+    """Whole-arm desk-clearance pass (SitDown / GetUp): wherever arm skin (upper arm, forearm, hand, fingers) is closer
+    than FOREARM_TARGET_CLEARANCE_CM to a real LINEA part, the wrist moves out of the part along the shortest way
+    (smoothly over time), with non-stretch two-bone IK, the elbow pole carried with the hand, the captured hand WORLD
+    rotation (the natural reach attitude) and the fingers carried (captured curls). Frames in `protect` (the settled
+    frames that ARE the validated loop) never move; the correction tapers to them. Returns the pose and a summary."""
+    F = len(times)
+    dt = float(np.median(np.diff(times))) if F > 1 else 1 / 30
+    protect = np.asarray(protect, bool)
+    W0 = np.array(W, copy=True)
+    disp = {s: np.zeros((F, 3)) for s in sides}            # UE cm
+    hist = []
+
+    def apply(disp):
+        Wc = np.array(W0, copy=True)
+        for s in sides:
+            if not disp[s].any():
+                continue
+            a_, b_, c_ = (ctx.sk.j(n) for n in ARM_BONES[s])
+            g = gltf_shift(disp[s])
+            Wc, _, _, _, _ = solve_arm(ctx.sk, Wc, s, W0[:, c_, :3, 3] + g, W0[:, b_, :3, 3] + .5 * g, ctx.base.ibm,
+                                       hand_world=W0[:, c_, :3, :3], limit=False)
+        return Wc
+    Wc = W0
+    for it in range(DESK_PASS_ITERATIONS):
+        more = False
+        for s in sides:
+            pos, jts, wts = ctx.arms[s]['skin']             # every arm skin vertex (the gate's own sampling)
+            pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, Wc)) + shift[:, None, :]
+            d, which = boxes_min_distance(pts, ctx.boxes, reach_cm=SEARCH_REACH_CM)
+            k = d.argmin(1)
+            dmin = d[np.arange(F), k]
+            bad = (dmin < FOREARM_TARGET_CLEARANCE_CM) & ~protect
+            hist.append({'iter': it, 'side': s, 'frames_below_target': int(bad.sum()), 'min_cm': _r(dmin.min(), 4)})
+            if not bad.any():
+                continue
+            more = True
+            f = np.nonzero(bad)[0]
+            b = which[f, k[f]]
+            lo, hi = ctx.boxes[b, 0], ctx.boxes[b, 1]
+            dirs = np.stack([box_push(pts[i, k[i]][None], lo[j], hi[j])[0] for j, i in enumerate(f)])
+            need = (FOREARM_TARGET_CLEARANCE_CM - dmin[f] + DESK_PASS_STEP_MARGIN_CM)[:, None] * dirs
+            step = np.zeros((F, 3))
+            step[f] = need
+            for a in range(3):                             # smooth in time, never below a frame's own need
+                pos_, neg_ = np.maximum(step[:, a], 0), np.maximum(-step[:, a], 0)
+                step[:, a] = envelope(pos_, dt) - envelope(neg_, dt)
+            step[protect] = 0.
+            disp[s] += step
+        if not more:
+            break
+        Wc = apply(disp)
+    return Wc, {'iterations': len(hist) // len(sides), 'history_tail': hist[-4:],
+                'wrist_displacement_cm': {s: {'max': _r(np.linalg.norm(v, axis=1).max(), 4),
+                                              'frames_moved': [int(i) for i in np.nonzero(np.linalg.norm(v, axis=1) > 1e-9)[0]]}
+                                          for s, v in disp.items()},
+                'protected_frames': [int(i) for i in np.nonzero(protect)[0]]}
+
+
+def measure_base_clip(ctx, role, W, W_raw, times, shift, chair_offset, gated, W_base=None):
+    """Gates of a non-typing seated clip on the given chair: desk clearance of the whole body (arms every vertex, legs
+    and torso), the complete chair (margin), main's strong seat rule on the gated settled frames, all-frame finger
+    invariance, bone lengths; wrist angles and elbows reported."""
+    F = len(times)
+    pf = {'t': [_r(t, 4) for t in times]}
+    arms = {}
+    allmin = np.full(F, np.inf)
+    for s in SIDES:
+        pos, jts, wts = ctx.arms[s]['skin']
+        part = ctx.arms[s]['part']
+        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W)) + shift[:, None, :]
+        d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
+        per = {pp: d[:, part == pp].min(1) for pp in ('upper_arm', 'forearm', 'hand', 'fingers')}
+        m = np.min(list(per.values()), axis=0)
+        allmin = np.minimum(allmin, m)
+        fl, dv, _ = wrist_angles(W, ctx.base.names, ctx.base.ibm, s)
+        el = E.to_ue(W[:, ctx.sk.j(ARM_BONES[s][1]), :3, 3]) + shift
+        pf[f'{s}_arm_desk_clearance_cm'] = [_r(v, 3) for v in m]
+        pf[f'{s}_elbow_height_cm'] = [_r(v, 2) for v in el[:, 2]]
+        pf[f'{s}_wrist_flexion_deg'] = [_r(v, 2) for v in fl]
+        pf[f'{s}_wrist_deviation_deg'] = [_r(v, 2) for v in dv]
+        arms[s] = {'desk_clearance_pass': bool((m > 0).all()), **{f'min_{pp}_cm': worst_frame(v, times) for pp, v in per.items()},
+                   'wrist_flexion_deg': rng(fl, 2), 'wrist_deviation_deg': rng(dv, 2)}
+    pos, jts, wts = ctx.body_skin
+    body = {k: np.full(F, np.inf) for k in ('legs', 'torso_head')}
+    chair_m = np.full(F, np.inf)
+    for f in range(F):
+        pts = E.to_ue(P.skin_points((pos, jts, wts), ctx.base.ibm, W[f:f + 1]))[0] + shift[f]
+        d, _ = boxes_min_distance(pts, ctx.boxes, reach_cm=MEASURE_REACH_CM)
+        for k in body:
+            body[k][f] = d[ctx.body_group == k].min()
+        chair_m[f] = ctx.collider.margin(pts, chair_offset[f])[0].min()
+    pf['body_vs_complete_chair_margin_cm'] = [_r(v, 3) for v in chair_m]
+    fit = ctx.seat_fit(W_raw, times, ROLL_OFFSET_CM)
+    gated = np.asarray(gated, bool)
+    main_rule = main_strong_seat_rule(fit, W[gated], np.asarray(times)[gated]) if gated.any() else {'pass': True, 'regions': {}}
+    # fingers: this step never changes them; gated against the BASE clip on every frame (the base's own seam windows
+    # blend its fingers into SeatedIdle, so the change vs the raw capture is reported, not gated here)
+    fingers = finger_contract(ctx, W, W_raw if W_base is None else W_base, times)
+    fingers['reference'] = 'raw capture' if W_base is None else 'the seated base clip'
+    fingers['vs_raw_capture_max_deg'] = _r(P.finger_local_error_deg(ctx.sk, W_raw, W, np.eye(4)), 4)
+    bl = max(abs(np.linalg.norm(W[:, k, :3, 3] - W[:, p_, :3, 3], axis=1) - np.linalg.norm(W_raw[:, k, :3, 3] - W_raw[:, p_, :3, 3], axis=1)).max()
+             for k, p_ in enumerate(ctx.sk.parents) if p_ >= 0) * 100
+    out = {'frames': F, 'gated_frames': int(gated.sum()), 'arms': arms,
+           'arm_desk_clearance': worst_frame(allmin, times), 'arm_desk_clearance_pass': bool((allmin > 0).all()),
+           'body_vs_desk': {k: worst_frame(v, times) for k, v in body.items()},
+           'body_vs_desk_pass': bool(all((v > 0).all() for v in body.values())),
+           'body_vs_complete_chair': worst_frame(chair_m, times), 'body_vs_chair_pass': bool((chair_m > 0).all()),
+           'seat_main_strong_rule_on_gated_frames': main_rule, 'fingers': fingers, 'bone_length_max_error_cm': _r(bl, 7)}
+    out['all_gates_pass'] = bool(out['arm_desk_clearance_pass'] and out['body_vs_desk_pass'] and out['body_vs_chair_pass']
+                                 and main_rule['pass'] and fingers['pass'] and bl <= .01)
+    out['per_frame'] = pf
+    return out
+
+
+def run_base_transitions(args):
+    """SitDown / GetUp on the seated base (--base-dir) at the given chair: the desk-clearance arm pass, written and
+    re-read; SeatedIdle measured unchanged; seams to SeatedIdle. Writes into --out-dir."""
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ctx = Context(args.source, cache=args.cache, chair_translation=args.chair_translation, keycaps=args.keycaps)
+    r0 = np.array([*ROLL_OFFSET_CM, 0.])
+    reports, worlds = {}, {}
+    for role in ('SeatedIdle', 'SitDown_seated', 'GetUp_seated'):
+        f_c, r_c, g_c, t_c = ctx.clip(role)
+        F = len(t_c)
+        shift = np.tile(-r0, (F, 1))                # the body on the (unrolled) chair: actual placement
+        chair_off = np.zeros((F, 3))
+        base_rep = json.loads((Path(FIT_DIR) / f'SUB01_{role}.report.json').read_text())
+        gi = base_rep.get('main_rule', {}).get('gated_frame_indices')
+        gated = np.zeros(F, bool)
+        gated[gi if gi is not None else slice(None)] = True
+        W = f_c.joint_world
+        info = None
+        if role != 'SeatedIdle':
+            W, info = desk_clear_arms(ctx, W, shift, t_c, gated)
+            path, sha = write(ctx, g_c, W, t_c, out_dir, f'SUB01_{role}', dict(LABELS, role=role, base=rel(Path(FIT_DIR))))
+            W = readback(ctx, path, t_c)
+        else:
+            path = Path(FIT_DIR) / f'SUB01_{role}.glb'
+            sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        rep = {'role': role, 'glb': rel(path), 'sha256': sha, 'base_glb': rel(Path(FIT_DIR) / f'SUB01_{role}.glb'),
+               'base_sha256': hashlib.sha256((Path(FIT_DIR) / f'SUB01_{role}.glb').read_bytes()).hexdigest(),
+               'raw_capture': CLIPS[role][1], 'unchanged_from_base': role == 'SeatedIdle', 'desk_clear_pass': info,
+               'measure': measure_base_clip(ctx, role, W, r_c.joint_world, t_c, shift, chair_off, gated, W_base=f_c.joint_world)}
+        rep['all_gates_pass'] = rep['measure']['all_gates_pass']
+        reports[role], worlds[role] = rep, (W, shift, t_c)
+        print(role, rep['all_gates_pass'], flush=True)
+    seams = []
+    for a, b in (('SitDown_seated', 'SeatedIdle'), ('SeatedIdle', 'GetUp_seated')):
+        Wa, sa, ta = worlds[a]
+        Wb_, sb, tb = worlds[b]
+        seams.append({'from': f'{a}.last', 'to': f'{b}.first',
+                      **seam(ctx, Wa, sa, Wb_, sb, 1. / float(np.median(np.diff(ta))), 1. / float(np.median(np.diff(tb))))})
+    for k, v in reports.items():
+        (out_dir / f'SUB01_{k}.report.json').write_text(json.dumps(v, indent=1, allow_nan=False) + '\n')
+    return reports, seams, ctx
+
+
+def base_transitions_packet(args):
+    """Run the SitDown/GetUp arm pass on the base and write <out-dir>/seated-arms.packet.json (ready stays false)."""
+    reports, seams, ctx = run_base_transitions(args)
+    base_dir = Path(FIT_DIR)
+    packet = {'schema': 'sub01.seated-arms-on-base.v1', **LABELS, 'ready': False, 'native_verified': False,
+              'installer_or_readiness_written': False,
+              'base': {'dir': rel(base_dir), 'solver_frame_chair_offset_cm': list(ROLL_OFFSET_CM),
+                       'files': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(base_dir.glob('*.glb'))}},
+              'chair': {k: ctx.chair[k] for k in ('file', 'sha256', 'translation_cm', 'measured_translation_cm', 'proposed_delta_cm',
+                                                  'rotation_xyzw', 'scale')},
+              'complete_chair': {k: v for k, v in ctx.complete_chair.items() if k not in ('triangles_cm', 'face_normals', 'material', 'vertices_cm')},
+              'desk_geometry': {'file': rel(GEOMETRY_JSON), 'sha256': ctx.geometry_sha256, 'source_sha256': LINEA_SHA256},
+              'models': {'owner': {'file': rel(E.OWNER), 'sha256': hashlib.sha256(Path(E.OWNER).read_bytes()).hexdigest()},
+                         'chair': {'file': rel(CHAIR_SOURCE), 'sha256': CHAIR_SOURCE_SHA256}},
+              'gates_from': [MAIN_SEAT_RULE + ' (seat, on the base\'s gated settled frames)',
+                             'real LINEA part boxes: whole-arm and body clearance > 0 on EVERY frame',
+                             'complete chair margin > 0 every frame', 'fingers unchanged vs the base on every frame (<= 0.1 deg)'],
+              'clips': {k: {'glb': v['glb'], 'sha256': v['sha256'], 'base_sha256': v['base_sha256'], 'all_gates_pass': v['all_gates_pass'],
+                            'arm_desk_clearance': v['measure']['arm_desk_clearance'],
+                            'body_vs_complete_chair': v['measure']['body_vs_complete_chair'],
+                            'seat_main_strong_rule_on_gated_frames': v['measure']['seat_main_strong_rule_on_gated_frames']['pass'],
+                            'fingers_pass': v['measure']['fingers']['pass'],
+                            'wrist_displacement_cm': (v['desk_clear_pass'] or {}).get('wrist_displacement_cm')}
+                        for k, v in reports.items()},
+              'seams': seams}
+    packet['gates'] = {f'clip_{k}': v['all_gates_pass'] for k, v in reports.items()}
+    Path(args.out_dir, 'seated-arms.packet.json').write_text(json.dumps(packet, indent=1, allow_nan=False) + '\n')
+    return packet
+
+
 def configure(base_dir=None, base_chair_offset=None):
     """Warm-start inputs: the seated base clip directory and its solver-frame chair offset."""
     global FIT_DIR, ROLL_OFFSET_CM
@@ -1883,6 +2096,8 @@ def main(argv=None):
     ap.add_argument('--chair-translation', type=lambda v: [float(x) for x in v.split(',')], default=None,
                     help='x,y,z: the given INITIAL chair translation (default root\'s measured one), e.g. a proposed lift')
     ap.add_argument('--keycaps', default=None, help='keyboard-keycaps-world.json keyboard IK targets (default: home.js keyboard)')
+    ap.add_argument('--base-transitions', action='store_true', help='SitDown/GetUp desk-clearance arm pass on --base-dir '
+                    '(SeatedIdle measured unchanged); writes the clips and seated-arms.packet.json into --out-dir')
     ap.add_argument('--audit-main-seat-rule', action='store_true', help='gate the committed clips\' seat base with main\'s '
                     'strong seat rule and update the reports (no solve)')
     ap.add_argument('--max-seconds', type=float, default=3600., help='wall-clock bound; a partial, ready:false report is '
@@ -1893,6 +2108,10 @@ def main(argv=None):
     ap.add_argument('--desk-source', help='LINEA140 source GLB: re-derive docs/proposed/seated-typing-ik/real-linea140-geometry.json')
     args = ap.parse_args(argv)
     configure(args.base_dir, args.base_chair_offset)
+    if args.base_transitions:
+        packet = base_transitions_packet(args)
+        print(json.dumps(packet['gates']))
+        return EXIT_REFUSED if not all(packet['gates'].values()) else 0
     if args.audit_main_seat_rule:
         res = audit_main_seat_rule(args.out_dir, args.source, args.cache)
         print(json.dumps({k: v['pass'] for k, v in res.items()}))
