@@ -1,0 +1,83 @@
+{
+  "schema": "sub01.actual-private-ci-runs.v1",
+  "environment": "Existing private RTX4090 pod dgtgepkz7h1zy5 CPU13/14, ephemeral dedicated UID2101/2102 with Landlock filesystem/network isolation",
+  "hosted_runner_block": "Actual account payments/spending-limit annotation before tests; account billing not changed",
+  "temporary_runner_registration": "Official short-lived repository registration; one job, auto-unregister; no credential in repo or argv",
+  "public_services_changed": false,
+  "test_failures_hidden_or_disabled": false,
+  "runs": [
+    {
+      "run_id": 38730148413,
+      "url": "https://github.com/nocontentinhere4-art/sub01-home-private/actions/runs/38730148413",
+      "head_sha": "4138a18d33a61e379d862870f2bf364f7515571a",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 116405648361,
+          "name": "pytest",
+          "status": "completed",
+          "conclusion": "failure",
+          "runner_name": "sub01-ci-2"
+        },
+        {
+          "id": 116405648398,
+          "name": "smoke",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "sub01-ci-1"
+        },
+        {
+          "id": 116405649873,
+          "name": "visual (${{ matrix.part.name }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "runner_name": null
+        }
+      ],
+      "pytest_summary": {
+        "failed": 28,
+        "test_output_complete": false
+      },
+      "private_failed_log_sha256": "12c07c7340c4dcad87db77121eb442197ed5d1756689b988aaf5b27757fed8c8"
+    },
+    {
+      "run_id": 38733851273,
+      "url": "https://github.com/nocontentinhere4-art/sub01-home-private/actions/runs/38733851273",
+      "head_sha": "c5835746a76caeb5302965853dcd5530fc4cf297",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 116418044631,
+          "name": "pytest",
+          "status": "completed",
+          "conclusion": "failure",
+          "runner_name": "sub01-ci-1"
+        },
+        {
+          "id": 116418045170,
+          "name": "smoke",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "sub01-ci-2"
+        },
+        {
+          "id": 116418047256,
+          "name": "visual (${{ matrix.part.name }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "runner_name": null
+        }
+      ],
+      "pytest_summary": {
+        "failed": 1,
+        "passed": 3076,
+        "skipped": 29,
+        "subtests_passed": 120,
+        "duration_seconds": 265.08,
+        "remaining_failure": "tests/test_unreal_seat_transition_runtime.py::test_actual_imported_seating_assets_bind_to_semantic_roles",
+        "cause": "GCC -Werror=misleading-indentation in test harness for-loop; actual product source not implicated"
+      },
+      "private_failed_log_sha256": "b4b871dcd67357bd27d4e27fd84e472839f207a2aa37b5f052fd1b4f7e0881a9"
+    }
+  ]
+}
