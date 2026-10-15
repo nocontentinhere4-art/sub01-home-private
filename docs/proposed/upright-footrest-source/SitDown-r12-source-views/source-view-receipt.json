@@ -1,0 +1,32 @@
+{
+  "schema": "sub01.upright-source-sequence-preview.v1",
+  "clip_sha256": "3da7b1f46a7e503f1bea8c3f33a07cdbcf8d931924dbe3a39c1be5123d9700ea",
+  "owner_sha256": "831790a62b81e7e2faa5a201e04740d0911c5bfebd49aa03b124808521e3a2b1",
+  "same_fixed_camera": true,
+  "diagnostic_studio_lights_not_Game": true,
+  "frames": [
+    {
+      "blender_frame": 0,
+      "source_time_s": 0.0,
+      "written65_joint_head_error_max_cm": 0.0009274329472095656,
+      "png": "/workspace/sub01-home-private/upright-transition-preview-r12/uid1001/output/source-phase-frame000.png",
+      "sha256": "04340639a20a77a0fa13cdff750ab0f467669a1260e628ed815c9bfd2efe10d2"
+    },
+    {
+      "blender_frame": 52,
+      "source_time_s": 1.7333333333333334,
+      "written65_joint_head_error_max_cm": 0.0008618012888632426,
+      "png": "/workspace/sub01-home-private/upright-transition-preview-r12/uid1001/output/source-phase-frame052.png",
+      "sha256": "a6047f5c5d9736f40366161f6e0eb804f5459eee2c9829ee40f4d8bc3a92e188"
+    },
+    {
+      "blender_frame": 78,
+      "source_time_s": 2.6,
+      "written65_joint_head_error_max_cm": 0.0008841697700575538,
+      "png": "/workspace/sub01-home-private/upright-transition-preview-r12/uid1001/output/source-phase-frame078.png",
+      "sha256": "f03cc79975066022309681b44e516733f7e2d3d2195de5d669f9e02765dfff7f"
+    }
+  ],
+  "native_imported": false,
+  "source_ready": false
+}

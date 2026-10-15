@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_sha='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8'):
+def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_sha='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8',action_name='SUB01_SeatedIdle_upright_footrest',time_s=2.):
     import bpy
     from mathutils import Vector
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
@@ -22,12 +22,12 @@ def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_s
     if len(arms)!=1 or len(arms[0].data.bones)!=65:raise ValueError('Actual65-bone owner required')
     arm=arms[0]
     for track in arm.animation_data.nla_tracks:track.mute=True
-    actions=[a for a in bpy.data.actions if a.name.startswith('SUB01_SeatedIdle_upright_footrest')]
+    actions=[a for a in bpy.data.actions if a.name.startswith(action_name)]
     if len(actions)!=1:raise ValueError('Exact candidate action not unique')
     arm.animation_data.action=actions[0]
     if len(actions[0].slots)==1:arm.animation_data.action_slot=actions[0].slots[0]
     else:raise ValueError('Unexpected actual owner animation slots')
-    scene.frame_set(60)
+    scene.frame_set(round(time_s*30))
     body=bpy.data.objects.new('DiagnosticActualBodyPlacement',None);bpy.context.collection.objects.link(body);body.location=(2.00025,1.998,-.006);body.rotation_euler.z=math.pi
     for o in owner:
         if o.parent is None:o.parent=body
@@ -37,7 +37,7 @@ def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_s
     c.scale=tuple(measured['scale'])
     load(desk)
     foot_objects=load(footrest);placement=bpy.data.objects.new('DiagnosticRigidFootrestPlacement',None);bpy.context.collection.objects.link(placement)
-    placement.location.y=-report['params'][10]/100
+    placement.location.y=-report.get('params',[0.]*10+[8.692038729505747])[10]/100
     for o in foot_objects:
         if o.parent is None:o.parent=placement
     witness=report.get('collision',{}).get('footrest',{}).get('worst_witness')
@@ -56,7 +56,7 @@ def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_s
     import life_gltf as G
     import export_seat_fit_source as E
     names=[E.short(b.name)for b in arm.pose.bones]
-    W,_=E.joint_worlds(G.Gltf(Path(report['written_glb'])),names,[2.])
+    W,_=E.joint_worlds(G.Gltf(Path(report['written_glb'])),names,[time_s])
     expected=E.to_ue(W[0,:,:3,3]);expected[:,:2]+=np.asarray([-3.875,32.5])
     actual=np.asarray([[p.x*100,-p.y*100,p.z*100]for p in(arm.matrix_world@b.head for b in arm.pose.bones)])
     error=float(np.max(np.linalg.norm(actual-expected,axis=1)))
@@ -67,11 +67,12 @@ def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_s
     bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(output/'upright-source-diagnostic.blend'))
     scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=16;scene.render.resolution_x=960;scene.render.resolution_y=720;scene.render.resolution_percentage=100
     scene.render.filepath=str(output/'upright-source-diagnostic.png');bpy.ops.render.render(write_still=True)
-    (output/'source-preview-receipt.json').write_text(json.dumps({'schema':'sub01.upright-source-diagnostic.v1','candidate_sha256':report['written_glb_sha256'],'frame':60,'whole_chair_lift_cm':2.5001,'rigid_footrest_delta_y_cm':report['params'][10],'original65_bones':True,'all65_blender_joint_head_world_error_max_cm':error,'actual_chair_castor_min_z_m':chair_min,'diagnostic_markers_not_production_geometry':True,'native_imported':False,'source_ready':False,'png_sha256':hashlib.sha256((output/'upright-source-diagnostic.png').read_bytes()).hexdigest()},indent=2)+'\n')
+    (output/'source-preview-receipt.json').write_text(json.dumps({'schema':'sub01.upright-source-diagnostic.v1','candidate_sha256':report['written_glb_sha256'],'frame':scene.frame_current,'whole_chair_lift_cm':2.5001,'rigid_footrest_delta_y_cm':report.get('params',[0.]*10+[8.692038729505747])[10],'original65_bones':True,'all65_blender_joint_head_world_error_max_cm':error,'actual_chair_castor_min_z_m':chair_min,'diagnostic_markers_not_production_geometry':True,'native_imported':False,'source_ready':False,'png_sha256':hashlib.sha256((output/'upright-source-diagnostic.png').read_bytes()).hexdigest()},indent=2)+'\n')
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     for name in('merged','chair','chair-report','desk','footrest','fit-report','output'):p.add_argument('--'+name,required=True)
     p.add_argument('--candidate-sha',default='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8')
-    args=sys.argv[sys.argv.index('--')+1:]if '--'in sys.argv else sys.argv[1:];a=p.parse_args(args);render(a.merged,a.chair,a.chair_report,a.desk,a.footrest,a.fit_report,a.output,a.candidate_sha)
+    p.add_argument('--action-name',default='SUB01_SeatedIdle_upright_footrest');p.add_argument('--time-s',type=float,default=2.)
+    args=sys.argv[sys.argv.index('--')+1:]if '--'in sys.argv else sys.argv[1:];a=p.parse_args(args);render(a.merged,a.chair,a.chair_report,a.desk,a.footrest,a.fit_report,a.output,a.candidate_sha,a.action_name,a.time_s)
