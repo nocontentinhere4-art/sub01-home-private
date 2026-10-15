@@ -126,6 +126,8 @@ def run(target):
   assert fresh(OLDPID,OLDSTART)
   metadata['device_snapshot_directory']=snapshot;metadata['accepted_inputs_unchanged_during_saves']=viewer_before['acceptedInputs'];persist()
   (PRIVATE/'native-viewer-input-enabled').unlink(missing_ok=True);(PRIVATE/'native-viewer-capture-enabled').unlink(missing_ok=True);time.sleep(1.2)
+  assert viewer_state().get('acceptedInputs')==viewer_before['acceptedInputs'],'Last human input arrived while grants were closing: preserve old Game'
+  stopped_metrics=json.loads((PRIVATE/'native-visual-metrics.json').read_text());assert time.time()-stopped_metrics['captured_utc']<2 and stopped_metrics['actual_speed_cm_s']<.01
   assert proc(OLDPID)[0]==OLDSTART;os.kill(OLDPID,signal.SIGTERM);until=time.time()+45
   while time.time()<until:
    try:
@@ -159,7 +161,14 @@ def run(target):
   while matching(target)and time.time()<until:time.sleep(.2)
   if matching(target):raise RuntimeError('New Game still exiting; keep grants disabled instead of launching duplicates')from error
   if not matching(OLD):child,log=launch(OLD,'rollback');metadata.update(rollback_wrapper_pid=child.pid,rollback_log=log)
-  pid,start=wait(OLD);grants(pid,start);metadata.update(status='rolled-back-original-private',rollback_pid=pid,rollback_start=start,finished_epoch=time.time());persist();raise
+  pid,start=wait(OLD)
+  if(pid,start)==(OLDPID,OLDSTART):
+   grants(pid,start);metadata.update(status='original-game-preserved-after-preflight-refusal',rollback_pid=pid,rollback_start=start,finished_epoch=time.time())
+  else:
+   # Relaunching the old project creates a NEW identity. Its backend consumer
+   # remains bound to the departed old PID until an exact refresh is verified.
+   metadata.update(status='rolled-back-renderer-awaiting-exact-device-policy',rollback_pid=pid,rollback_start=start,devices_operational=False,grants_refreshed=False,finished_epoch=time.time(),required_action='Refresh exact rollback PID/start in backend before enabling grants or claiming devices')
+  persist();raise
 if __name__=='__main__':
  import sys
  if len(sys.argv)!=2:raise SystemExit('Expected exact independently verified playable project path')
