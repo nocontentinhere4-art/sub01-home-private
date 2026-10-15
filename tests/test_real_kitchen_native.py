@@ -2,6 +2,7 @@
 import ast
 import copy
 import json
+import math
 from pathlib import Path
 import shutil
 import subprocess
@@ -48,6 +49,15 @@ def fixture():
 
 
 class KitchenGuards(unittest.TestCase):
+    def test_analytic_swept_bound_contains_between_endpoint_extremum(self):
+        # Endpoint-only AABBs miss x=sqrt(2) halfway through this real circular arc.
+        box = bundle.swept_bounds([(1., 1., 2.)], (0., 0., 0.), -math.pi/2)
+        self.assertGreaterEqual(box[1][0], math.sqrt(2))
+        for i in range(1001):
+            angle = -math.pi/2*i/1000
+            point = (math.cos(angle)-math.sin(angle), math.sin(angle)+math.cos(angle), 2.)
+            self.assertTrue(all(box[0][k] <= point[k] <= box[1][k] for k in range(3)))
+
     def test_native_retained_triangle_check_detects_changed_shape_with_same_bounds(self):
         source = [[[0., 0., 0.], [100., 0., 0.], [0., 100., 0.]],
                   [[100., 0., 0.], [100., 100., 0.], [0., 100., 0.]]]

@@ -5,6 +5,7 @@ every pair of independently positioned doors and exact exported part metadata.
 No Blender is imported by the lightweight validation/manifest functions.
 """
 import argparse
+import faulthandler
 import hashlib
 import itertools
 import json
@@ -12,6 +13,7 @@ import math
 import re
 import struct
 import sys
+import time
 from pathlib import Path
 
 import prepare_real_kitchen_bundle as base
@@ -28,6 +30,25 @@ def bounds(points):
 
 def intersects(a, b):
     return all(a[0][k] <= b[1][k] and b[0][k] <= a[1][k] for k in range(3))
+
+
+def swept_bounds(points, hinge, angle=-math.pi*.49):
+    """Analytic full-arc bound of the actual closed AABB; no angular sampling."""
+    closed = bounds(points)
+    swept = []
+    for corner in itertools.product(*zip(*closed)):
+        x, y = corner[0]-hinge[0], corner[1]-hinge[1]
+        phase = math.atan2(y, x)
+        angles = [0., angle]
+        # Rotated x/y extrema occur at cardinal phases, including between endpoints.
+        angles += [k*math.pi/2-phase for k in range(-4, 5)
+                   if min(phase, phase+angle) <= k*math.pi/2 <= max(phase, phase+angle)]
+        for theta in angles:
+            c, s = math.cos(theta), math.sin(theta)
+            swept.append((hinge[0]+c*x-s*y, hinge[1]+s*x+c*y, corner[2]))
+    result = bounds(swept)
+    return [[math.nextafter(v, -math.inf if side == 0 else math.inf) for v in row]
+            for side, row in enumerate(result)]
 
 
 def allowed_contact(points, source_points, node, contacts):
@@ -65,7 +86,7 @@ def protected_triangles(home, region):
     return rows
 
 
-def full_collision_proof(bpy, report, home):
+def full_collision_proof(bpy, report, home, progress=lambda phase, **kw: None):
     from mathutils.bvhtree import BVHTree
     objects = [o for o in bpy.data.objects if o.type == 'MESH']
     parents = sorted([o for o in bpy.data.objects if o.type == 'EMPTY' and
@@ -74,10 +95,12 @@ def full_collision_proof(bpy, report, home):
         raise ValueError('Exactly eight complete hinges required')
     # Covers full retained source and every 88.2° door arc, not only closed cabinetry.
     region = [[-3.95, 0., -4.05], [-.35, 2.6, -2.25]]
+    progress('protected-source-decode')
     rows = protected_triangles(home, region)
     protected = BVHTree.FromPolygons([(p[0], -p[2], p[1]) for r in rows for p in r['points']],
         [tuple(range(3*i, 3*i+3)) for i in range(len(rows))], all_triangles=True, epsilon=0.)
-    issues, contacts, poses = [], [], {}
+    issues, contacts, poses, swept = [], [], {}, {}
+    progress('protected-source-bvh-built', protected_triangles=len(rows))
 
     def check_home(parts, identity):
         tree, owners = base.source_bvh(bpy, parts)
@@ -101,18 +124,38 @@ def full_collision_proof(bpy, report, home):
     check_home([o for o in objects if '_cabinet_body_' in o.name], 'static')
     try:
         for parent in parents:
+            progress('door-home-start', door=parent.name)
+            parts = [o for o in parent.children if o.type == 'MESH']
+            closed_points = [(p.x, p.y, p.z) for o in parts for p in (o.matrix_world @ v.co for v in o.data.vertices)]
+            hinge = tuple(parent.matrix_world.translation)
+            swept[parent.name] = swept_bounds(closed_points, hinge)
             states = []
             for step in range(90):
+                if step % 15 == 0:
+                    progress('door-home-pose', door=parent.name, pose=step)
                 parent.rotation_euler.z = -math.pi*.49*step/89
                 bpy.context.view_layer.update()
                 states.append(check_home([o for o in parent.children if o.type == 'MESH'],
                                          parent.name+':'+str(step)))
             poses[parent.name] = states
+            # Also enclose actual float32 evaluated poses, without widening BVH epsilon.
+            swept[parent.name] = bounds([tuple(p) for _, box in states for p in box]+swept[parent.name])
             parent.rotation_euler.z = 0
             bpy.context.view_layer.update()
-        tests, broad_rejects = 0, 0
+            progress('door-home-complete', door=parent.name, completed_doors=len(poses))
+        tests, broad_rejects, swept_rejects, pair_rows = 0, 0, 0, []
         for left, right in itertools.combinations(poses, 2):
+            progress('door-pair-start', left=left, right=right, completed_pairs=len(pair_rows))
+            if not intersects(swept[left], swept[right]):
+                swept_rejects += 1
+                broad_rejects += 90*90
+                pair_rows.append({'left': left, 'right': right, 'swept_aabb_disjoint': True,
+                                  'left_swept_bounds_blender_m': swept[left], 'right_swept_bounds_blender_m': swept[right]})
+                continue
+            before_tests = tests
             for ai, (a, ab) in enumerate(poses[left]):
+                if ai % 15 == 0:
+                    progress('door-pair-pose', left=left, right=right, left_pose=ai, bvh_calls=tests)
                 for bi, (b, bb) in enumerate(poses[right]):
                     if not intersects(ab, bb):
                         broad_rejects += 1
@@ -122,6 +165,10 @@ def full_collision_proof(bpy, report, home):
                     if hits and len(issues) < 32:
                         issues.append({'left': left, 'right': right, 'left_pose': ai,
                                        'right_pose': bi, 'triangle_pairs': len(hits)})
+            pair_rows.append({'left': left, 'right': right, 'swept_aabb_disjoint': False,
+                              'actual_triangle_bvh_calls': tests-before_tests})
+        progress('full-collision-complete', completed_pairs=28, bvh_calls=tests,
+                 disjoint_whole_arc_pairs=swept_rejects, issues=len(issues))
     finally:
         for parent in parents:
             parent.rotation_euler.z = 0
@@ -130,6 +177,7 @@ def full_collision_proof(bpy, report, home):
             'retired_source_nodes': [63, 178], 'protected_triangle_count': len(rows),
             'door_home_poses': 720, 'door_pair_bvh_tests': tests,
             'door_pair_aabb_rejects': broad_rejects, 'measured_planar_contacts': contacts,
+            'analytic_swept_pair_rejects': swept_rejects, 'door_pair_proof': pair_rows,
             'contact_float_bound_m': 1e-6, 'all_poses_inside_audited_region': True, 'native_ready': False}
 
 
@@ -258,24 +306,49 @@ def main():
     parser.add_argument('--root', type=Path, required=True)
     parser.add_argument('--home', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--max-seconds', type=float, default=110.)
     args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else None)
+    if not math.isfinite(args.max_seconds) or not 10 <= args.max_seconds <= 110:
+        raise ValueError('Internal source budget must be10..110seconds; external job max120seconds')
     import bpy
+    faulthandler.dump_traceback_later(45, repeat=True)
+    started = time.monotonic()
+    if args.output.exists() and any(args.output.iterdir()):
+        raise ValueError('Fresh empty owned output required; never leave an old proof beside a new failed run')
+    args.output.mkdir(parents=True, exist_ok=True)
+
+    def progress(phase, **fields):
+        elapsed = time.monotonic()-started
+        record = {'phase': phase, 'elapsed_s': elapsed, 'budget_s': args.max_seconds,
+                  'source_only': True, 'native_mutations': 0, **fields}
+        pending = args.output/'source-progress.pending.json'
+        pending.write_text(json.dumps(record, indent=2)+'\n')
+        pending.replace(args.output/'source-progress.json')
+        print('KITCHEN_SOURCE_PROGRESS '+json.dumps(record), flush=True)
+        if elapsed > args.max_seconds:
+            raise TimeoutError('Bounded source budget reached at '+phase)
     previous = base.verify_source_collisions
 
     def verify(actual_bpy, report):
         result = previous(actual_bpy, report)
-        full = full_collision_proof(actual_bpy, report, args.home)
+        progress('reviewed-sink-feet-door-carcass-check-complete', reviewed_checks_passed=result['passed'])
+        full = full_collision_proof(actual_bpy, report, args.home, progress)
         result['protected_home_and_cross_doors'] = full
         result['passed'] = result['passed'] and full['ok']
         return result
     base.verify_source_collisions = verify
+    progress('inventory-and-source-contacts')
     report = base.plan(base.inventory(args.root), base.home_contacts(args.home))
     try:
+        progress('authentic-assembly-and-reviewed-source-checks')
         base.export_blender(args.root, args.output, report)
+        progress('export-complete-manifest-verification')
         proof = validate_manifest(make_manifest(args.output, report))
+        progress('source-proof-pass')
         (args.output/'native-kitchen.json').write_text(json.dumps(proof, indent=2)+'\n')
     finally:
         base.verify_source_collisions = previous
+        faulthandler.cancel_dump_traceback_later()
 
 
 if __name__ == '__main__':

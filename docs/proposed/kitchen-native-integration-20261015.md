@@ -6,7 +6,7 @@ The new code is source preparation only. No October 15 Blender, Unreal import, n
 
 ## One source job
 
-Use official Blender 4.5.3 on the verified target, UID1001, nice19, isolated source CPUs and a bounded job with guard checks before and after. Keep the frozen office files unchanged. The asset root must be a fresh owned `/workspace/...` directory containing the packaged `tools` and `web/house/assets` files.
+Use official Blender 4.5.3 on the verified target, UID1001, nice19, isolated source CPUs and a **maximum120second** job with guard checks before and after. Keep the frozen office files unchanged. The asset root must be a fresh owned `/workspace/...` directory containing the packaged `tools` and `web/house/assets` files. Output must be fresh/empty. The helper has a110second internal budget, atomic `source-progress.json` phase/door/pair receipts and45second stack dumps; a bounded refusal should be profiled rather than blindly retried.
 
 ```text
 blender -t 2 -b --factory-startup --python-exit-code 2 \
@@ -14,7 +14,7 @@ blender -t 2 -b --factory-startup --python-exit-code 2 \
   --root <asset-root> --home <actual-955-full-home.glb> --output <owned-output>
 ```
 
-The job retains the reviewed sink/feet/eight-door checks, then checks every static part and 720 door poses against the actual retained source triangles. It skips only retired cabinet nodes63/178. Only measured floor-top/counter-underside coplanar contact faces receive a 1µm floating-point contact bound; sink, wall and other geometry have no exemption. Every pair of doors is checked at all 90×90 independently positioned configurations, using AABB rejection before exact epsilon-zero BVHs. All proposed vertices must remain inside the audited house region. A failure prevents `native-kitchen.json` generation and must be solved physically.
+The job retains the reviewed sink/feet/eight-door checks, then checks every static part and 720 door poses against the actual retained source triangles. It skips only retired cabinet nodes63/178. Only measured floor-top/counter-underside coplanar contact faces receive a 1µm floating-point contact bound; sink, wall and other geometry have no exemption. First, an analytic whole-arc AABB checks each door pair, including between-endpoint extrema. Proven disjoint pairs reject all8100 configurations without a triangle call. Remaining pairs use cached per-pose AABBs before exact epsilon-zero BVHs. All28 pairs/90×90 configurations are accounted for. All proposed vertices must remain inside the audited house region. A failure prevents `native-kitchen.json` generation and must be solved physically.
 
 Success produces `native-kitchen.glb` and `native-kitchen.json`. All16 assemblies and152 authored parts remain present. All node, scene and mesh names receive a deterministic unique prefix; this JSON-only rename must leave the complete GLB BIN bytes, geometry attributes and embedded PBR unchanged. Positions, triangle counts, eight original hinge pivots and five moving parts per hinge are recorded from the actual exported bytes. Identified feet and door pulls retain their reviewed rigid sizes; the reviewed fitted body/panel geometry remains explicitly derived rather than original manufacturer sizing.
 
@@ -50,4 +50,4 @@ Movement is bounded to0..88.2° at70°/s and0.25° substeps, including a sagitta
 out/server-api-client/bin/python -m unittest discover -s tests -p test_real_kitchen_native.py -v
 ```
 
-Six tests exercise old-receipt refusal, missing/changed part/hinge guards, narrowly allowed contact planes, retained native shape comparison, the actual patched bridge's live/stale/private behavior and C++ motion-policy execution through intermediate obstacles. Full UE compilation and the next-window source job are additional required evidence.
+Seven tests exercise old-receipt refusal, missing/changed part/hinge guards, narrowly allowed contact planes, retained native shape comparison, between-endpoint swept bounds, the actual patched bridge's live/stale/private behavior and C++ motion-policy execution through intermediate obstacles. Full UE compilation and the next-window source job are additional required evidence.
