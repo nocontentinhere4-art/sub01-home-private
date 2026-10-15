@@ -1,0 +1,38 @@
+{
+  "schema": "sub01.private-viewer-bounded-wss-rollout.v1",
+  "pod": "dgtgepkz7h1zy5",
+  "source_commits": [
+    "224dbea",
+    "004087d",
+    "b879474",
+    "427c7b3"
+  ],
+  "actual_viewer_pid": 60916,
+  "actual_viewer_start_ticks": 974966898,
+  "replaced_viewer_pid": 2726,
+  "replaced_viewer_start_ticks": 972346811,
+  "source_sha256": "4d74783e7c1b19447576043d403767762a167d85296094f34568a2a38c5a920a",
+  "input_helper_sha256": "9d6ebc278605e8c77b29989baef963102f3ce63d03fe3440a71c57e8ffac4956",
+  "deadline_epoch": 1792117175,
+  "capture_width": 1280,
+  "capture_fps": 24,
+  "rollout_verified_utc_epoch": 1792059410.880234,
+  "rollout_state": {
+    "game_absent_for_editor_batch": true,
+    "input_enabled": false,
+    "capture_enabled": false,
+    "native_alive": false
+  },
+  "rollback_source_backup": "/home/unreal/.sub01-private/viewer-before-wss-427c7b3",
+  "unchanged": "GPU pod, Xorg, Unreal project, guest PC, backend and other listening services were not restarted by this viewer rollout.",
+  "runtime_followup": {
+    "game_pid": 62592,
+    "game_start_ticks": 975054032,
+    "isolated_browser_capture_reviewed": true,
+    "decoded_frames_observed_by_browser_owner": 387,
+    "screenshot": "out/house-evidence/dgt-final62592-isolated-WSS-capture-baseline.png",
+    "actual_wss_input_ack_and_native_response_verified": false
+  },
+  "scope": "Existing same-origin authenticated private WSS only; bounded physical input uses same identity/privacy/egress/rate gates as HTTP; no activity or body readiness promoted.",
+  "performance_limit": "Browser HTTP health RTT median111.9ms is not input-to-photon latency. Actual WSS control improvement still requires browser/native response evidence."
+}
