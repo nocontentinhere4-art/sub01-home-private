@@ -134,6 +134,26 @@ def preflight(root, u):
         if not old.get_editor_property('hidden') or not oldcs or any(c.get_collision_enabled() != u.CollisionEnabled.NO_COLLISION for c in oldcs):
             raise RuntimeError('Original generated desk must already be retired by genuine office transaction')
     doc, binary = read_gltf(home)
+    # Record every exact native identity before evaluating the bundled guard.
+    identities = []
+    for node in NODES:
+        candidates = [a for a in actors if a.get_name() == f'full-home_node_{node}']
+        for actor in candidates:
+            parent = actor.get_attach_parent_actor()
+            rc = actor.get_editor_property('root_component')
+            identities.append({'node': node, 'actor': actor.get_path_name(),
+                'parent': parent.get_path_name() if parent else None,
+                'root_component': rc.get_path_name() if rc else None,
+                'hidden': bool(actor.get_editor_property('hidden')),
+                'components': [{'path': c.get_path_name(),
+                    'mesh': c.get_editor_property('static_mesh').get_path_name() if c.get_editor_property('static_mesh') else None,
+                    'visible': bool(c.get_editor_property('visible')),
+                    'is_root': c == rc,
+                    'profile': str(c.get_collision_profile_name())}
+                    for c in actor.get_components_by_class(u.StaticMeshComponent)]})
+    audit_path = project/'Saved/private-audit/monitor-source-identities.json'
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    audit_path.write_text(json.dumps({'identities': identities, 'snapshot': snapshot(u, [a for a in actors if a.get_name() in {f'full-home_node_{n}' for n in NODES}])}, indent=2)+'\n')
     rows = []
     for node, (mesh_index, material_index, count) in NODES.items():
         actor = _only([a for a in actors if a.get_name() == f'full-home_node_{node}'], str(node))
