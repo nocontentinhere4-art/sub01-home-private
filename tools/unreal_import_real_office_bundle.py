@@ -5,7 +5,7 @@ shelves, lamp or46 owned books move. One final map save. Failure restores every
 original actor/component reference and removes only actors/assets newly owned by
 this transaction. No level load, pod operation, controller edit or restart.
 """
-import copy,hashlib,json
+import copy,hashlib,json,sys
 from pathlib import Path
 from home_asset_audit import read_gltf
 from unreal_import_reference_dressing import fingerprint
@@ -56,7 +56,7 @@ def verify_native_structural_union(u,actors):
 
 def run(root,dry_run=True,u=None):
  if u is None:import unreal as u
- if getattr(u,'__name__',None)=='unreal':
+ if sys.modules.get('unreal') is u:
   from unreal_editor_queue_refresh import refresh
   refresh()  # Reviewed same-instance queue refresh; helper authenticates ownership/guard.
  # A warm Editor retains dependency modules across reviewed source retries.
