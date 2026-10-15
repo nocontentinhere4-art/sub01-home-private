@@ -1,0 +1,48 @@
+{
+  "schema": "sub01.canonical-anatomical-hand-cuffs-source-packet.v1",
+  "scope": "Private source geometry only; original serialized owner65 is authoritative",
+  "original_owner_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "anatomy_source": {
+    "name": "Official Blender Human Base Meshes 1.4.1, GEO-body_male_realistic",
+    "license": "CC0",
+    "bundle_sha256": "811f43accbb31a88266d932f8f5563b2d13586fca0ba2693aad1f5fe582b3515",
+    "corrected_r9_rig_sha256": "edf71e368cc82c0441e7282df4a296ac7568c1aeea9fff9fa533b398164991c2",
+    "digit_identity": "Original sculpt face-set shared boundaries, independently verified; both genuine anatomical sides, no mirroring",
+    "uv": "Original authored multires loop UDIM charts; separate actual authored nail regions, neutral PBR skin, no scanned skin texture claim"
+  },
+  "remote_directory": "/workspace/sub01-home-private/human-base-hands-r1/canonical-hand-cuffs-r1",
+  "geometry_glb": "canonical-anatomical-hand-cuffs.glb",
+  "geometry_sha256": "3aece8b34eebede7296ae83543c49d283e4a27018ec4a7aa625a0747cd3bedd0",
+  "source_blend": "canonical-anatomical-hand-cuffs.blend",
+  "assembly_report": "canonical-source-report.json",
+  "assembly_report_sha256": "0b8dbc68eaa368ac6b8bf9a69c9d8c61b8b73188a3e8f136b2150e6f99d7a1e2",
+  "geometry_coordinates": "Export GLB is glTF Y-up, physical metres. Source report matrices/planes are Blender Z-up, metre translations, uniform0.01 bind linear scale. Convert report matrices with left-multiplied Blender-to-glTF basis before assembly.",
+  "assembly_contract": [
+    "Preserve authoritative original body node graph, 25 nonfinger inverse-bind matrices, original body buffers and original default-node/IBM discrepancy.",
+    "Append the four source geometry meshes sharing original65 skin; use exact source-to-target joint names. The supplied44-bone source armature/IBMs are geometry-authoring helpers, not the integration skeleton.",
+    "Update exactly40 finger bind worlds from report; derive their default node graph relative to the original Hand skin deformation. Preserve original body root/arms/wrists.",
+    "Retire only listed original main-mesh primitive triangle IDs. For crossing triangles, retain clipped negative-halfspace remainder with interpolated original UV, normals and weights. Do not drop crossing whole triangles or mutate unrelated body attributes.",
+    "Retarget original captured finger motion into corrected genuine finger rests. Walking finger source must be the original raw Mixamo capture, not the already distorted old owner clip.",
+    "Verify evaluated final serialized skin world positions at equivalent captured poses. Equal local accessor values or Blender-import rest matrices alone do not prove compatible skinning."
+  ],
+  "independent_source_geometry_proof": {
+    "remote_file": "independent-digit-preservation-proof.json",
+    "left_original_authored_digit_vertices": 27933,
+    "right_original_authored_digit_vertices": 27933,
+    "max_rigid_fit_surface_error_m": 0,
+    "all_authored_digits_retained": true,
+    "no_anatomical_scaling_or_mirroring": true
+  },
+  "source_body_review": "canonical-body-review/actual-canonical-owner-upperbody-cuffs.png",
+  "reviewed_limitations": [
+    "Cuff colour/transition finish remains visibly imperfect in source review.",
+    "Residual R9 thumb/pinky web motion intersections remain a known WIP; not zero-contact accepted.",
+    "Actual first-person native house, PC/phone/controller contacts, skin material coherence and clip compatibility remain pending final assembled source and native verification."
+  ],
+  "rejected_earlier_artifacts": [
+    "owner65-r9-r1/owner65-anatomical-rest.glb SHA34abf703 and its311d8910/8576daea clip derivatives: Blender whole-body import/export changed bind/mesh relationships; NOT FOR NATIVE IMPORT."
+  ],
+  "native_imported": false,
+  "contact_accepted": false,
+  "first_person_visual_accepted": false
+}
