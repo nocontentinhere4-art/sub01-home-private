@@ -392,7 +392,7 @@ SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
 ERGO_ELBOW_ABOVE_DESK_CM = (0., 10.)
 ERGO_UPPER_ARM_MAX_DEG = 20.
 ERGO_ELBOW_SCALE_CM, ERGO_UPPER_ARM_SCALE_DEG = 1., 5.
-ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-60., 120.01, 10.))
+ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-30., 120.01, 10.))
 SWIVEL_COARSE_STEP_DEG = 10.
 SWIVEL_COARSE_DEG = tuple(float(v) for v in np.arange(0., SWIVEL_GRID_DEG[-1] + .01, SWIVEL_COARSE_STEP_DEG))
 SEARCH_CONTACT_PASSES = 4
@@ -632,10 +632,20 @@ class ClipArmIK:
         ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
         out = np.where(ok, sm, best_phi)
         dl = self.solve_contact_side(s, best_delta, out, lift)
+        # final verification on EVERY arm vertex: a frame the objective left closer than the target (or off its key
+        # contact) returns exactly to its clearance-solved pose (phi, delta and horizontal correction)
+        Wt = self.pose(self.W_fit.copy(), s, dl, out, lift)[0]
+        clf = self.clearance(Wt, s, 1, reach=SEARCH_REACH_CM)[0]
+        a = self.key_audit(Wt)[s]
+        gap = a['over_min'] - (self.keys['top_cm'] + KEY_TOP_TARGET_CM)
+        bad = (clf < FOREARM_TARGET_CLEARANCE_CM) | (self.on[s] & ~(np.abs(np.nan_to_num(gap, nan=9.)) < .01))
+        out, dl = np.where(bad, phi, out), np.where(bad, delta, dl)
+        self.hand_xy[s][bad] = hxy0[bad]
         Wt = self.pose(self.W_fit.copy(), s, dl, out, lift)[0]
         ez, ua = self.arm_ergonomics(Wt, s, fr)
         return out, dl, {'before': before, 'after': {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)},
-                         'frames_unsmoothed': int((~ok).sum()), 'swivel_deg': rng(np.degrees(out), 2)}
+                         'frames_unsmoothed': int((~ok).sum()), 'frames_reverted_to_clearance_pose': int(bad.sum()),
+                         'swivel_deg': rng(np.degrees(out), 2)}
 
     def lift_need(self, s, delta, phi, lift, frames):
         out = lift.copy()
@@ -1711,7 +1721,14 @@ def run(args):
     # ---- roll: the seat fit's chair offset plus the scanned extra pull-in
     f_dt, r_dt, g_dt, t_dt = ctx.clip('DeskTyping_seated')
     prior = None
-    if args.roll_dy is not None:
+    if args.roll_from_base:
+        dy = base_upper_body_shift_y(ctx)
+        scan = {'fixed': True, 'chosen_extra_pull_in_dy_cm': dy,
+                'rule': 'the base moved the upper body (Spine2, DeskTyping 3..8 s mean) by -dy in UE Y relative to the '
+                        'seat-fit base the roll and the keyboard contact were validated on; the chair is pulled in dy less, '
+                        'so the captured upper body - keyboard relation is kept'}
+        pick = {'extra_pull_in_dy_cm': dy}
+    elif args.roll_dy is not None:
         scan = {'fixed': True, 'chosen_extra_pull_in_dy_cm': args.roll_dy,
                 'rule': 'fixed by --roll-dy (the earlier probe scan on the seat-fit base chose 0: docs/proposed/seated-typing-ik)'}
         pick = {'extra_pull_in_dy_cm': args.roll_dy}
@@ -2105,6 +2122,15 @@ def base_transitions_packet(args):
     return packet
 
 
+def base_upper_body_shift_y(ctx):
+    """Mean UE Y of the base DeskTyping Spine2 minus the seat-fit DeskTyping Spine2 over the 3..8 s audit window."""
+    t = list(np.arange(AUDIT_KEYS[0], AUDIT_KEYS[1] + 1, 10) / 60)
+    a, _ = P.clip_source(ctx.base, Path(FIT_DIR) / CLIPS['DeskTyping_seated'][0], t)
+    b, _ = P.clip_source(ctx.base, ROOT / 'docs/proposed/seat-pose-fit' / CLIPS['DeskTyping_seated'][0], t)
+    j = ctx.sk.j('Spine2')
+    return -round(float((E.to_ue(a.joint_world[:, j, :3, 3]) - E.to_ue(b.joint_world[:, j, :3, 3]))[:, 1].mean()), 3)
+
+
 def configure(base_dir=None, base_chair_offset=None):
     """Warm-start inputs: the seated base clip directory and its solver-frame chair offset."""
     global FIT_DIR, ROLL_OFFSET_CM
@@ -2137,6 +2163,8 @@ def main(argv=None):
     ap.add_argument('--keycaps', default=None, help='keyboard-keycaps-world.json keyboard IK targets (default: home.js keyboard)')
     ap.add_argument('--arms-only', action='store_true', help='only the arm chains may change: no full-pose seam blends; the '
                     'lower body / pelvis are gated identical to the base')
+    ap.add_argument('--roll-from-base', action='store_true', help='extra pull-in = minus the base\'s upper-body Y shift vs the '
+                    'seat-fit base (keeps the validated upper body - keyboard relation)')
     ap.add_argument('--roll-dy', type=float, default=None, help='fixed extra pull-in (skips the probe scan)')
     ap.add_argument('--base-transitions', action='store_true', help='SitDown/GetUp desk-clearance arm pass on --base-dir '
                     '(SeatedIdle measured unchanged); writes the clips and seated-arms.packet.json into --out-dir')
