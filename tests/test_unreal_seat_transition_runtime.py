@@ -348,3 +348,162 @@ def test_failing_seated_contact_is_still_refused(tmp_path):
     with pytest.raises(ValueError, match='posterior_thigh'):
         adapter.write_evidence(project)
     assert not (project / 'private-audit/native-seat-evidence.json').exists()
+
+
+# ------------------------------------------------------------------ committed seated-fit verdicts (receipt alone never binds)
+import unreal_import_seated_fit_fbx as seated_fit  # noqa: E402
+
+PASSING = ('SeatedIdle', 'SitDownSeated', 'GetUpSeated')
+FAILING = ('DeskTypingSeated', 'SitToTypeSeated', 'TypeToSitSeated')
+SLOT_OF = {role: slot for role, (slot, _) in adapter.SEATED_FIT_SLOTS.items()}
+
+
+def genuine_receipt():
+    """Rows exactly as the importer writes them for the committed fit (failed fits: not imported, not accepted)."""
+    rows = [{'role': r['role'], 'object_path': adapter.seated_fit_object_path(r['role']), 'glb_sha256': r['glb_sha256'],
+             'fbx_sha256': 'f' * 64, 'fit_pass': r['fit_pass'], 'imported': r['fit_pass'], 'accepted': r['fit_pass'],
+             'same_existing_skeleton': True} for r in seated_fit.plan_clips()]
+    return {'schema': adapter.SEATED_FIT_RECEIPT_SCHEMA, 'skeleton': adapter.OWNER_SKELETON, 'clips': rows}
+
+
+def forged(receipt, role, **change):
+    out = copy.deepcopy(receipt)
+    for row in out['clips']:
+        if row['role'] == role:
+            row.update(change)
+    return out
+
+
+def test_committed_verdicts_are_plan_clips_and_the_table_is_deterministic():
+    verdicts = adapter.committed_seated_fit_verdicts()
+    assert verdicts == {r['role']: {'glb_sha256': r['glb_sha256'], 'all_gates_pass': r['fit_pass']} for r in seated_fit.plan_clips()}
+    assert sorted(r for r, v in verdicts.items() if v['all_gates_pass']) == sorted(PASSING)
+    assert all(verdicts[r]['glb_sha256'] == seated_fit.GLB_SHA256[r] for r in verdicts)
+    table = adapter.seated_fit_verdict_table_cpp(verdicts)
+    assert table == adapter.seated_fit_verdict_table_cpp(dict(reversed(list(verdicts.items()))))   # order-independent
+    assert table == adapter.seated_fit_verdict_table_cpp(adapter.committed_seated_fit_verdicts())
+    assert table.startswith('{"DeskTypingSeated","%s",false},' % seated_fit.GLB_SHA256['DeskTypingSeated'])
+    assert table.count('true') == 3 and table.count('false') == 3 and '@@' not in table
+
+
+@pytest.mark.parametrize('bad', [
+    lambda v: v.pop('SeatedIdle'),
+    lambda v: v['GetUpSeated'].update(glb_sha256='A' * 64),
+    lambda v: v['GetUpSeated'].update(glb_sha256='a' * 63),
+    lambda v: v['GetUpSeated'].update(all_gates_pass=1),
+    lambda v: v.update(Sitting={'glb_sha256': 'a' * 64, 'all_gates_pass': True}),
+])
+def test_table_generation_refuses_an_incomplete_or_malformed_verdict_set(bad):
+    verdicts = copy.deepcopy(adapter.committed_seated_fit_verdicts())
+    bad(verdicts)
+    with pytest.raises(RuntimeError, match=adapter.SEATED_FIT_VERDICTS_UNAVAILABLE):
+        adapter.seated_fit_verdict_table_cpp(verdicts)
+
+
+def test_plan_clips_refusal_generates_nothing_installs_nothing_and_binds_nothing(monkeypatch):
+    receipt = genuine_receipt()
+
+    def refuse(*_):
+        raise RuntimeError('SUB01_SeatedIdle.glb is not the committed fit GLB')
+    monkeypatch.setattr(seated_fit, 'plan_clips', refuse)
+    with pytest.raises(RuntimeError, match='committed seated-fit verdicts unavailable: SUB01_SeatedIdle.glb'):
+        adapter.committed_seated_fit_verdicts()
+    sources = {'header': '#include "Sub01HomeLab.generated.h"\n void Forward(float Value);\n',
+               'cpp': ' BeginLiveHome();\n UpdateNativeFeedback();\n if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus(\n '
+                      + adapter.SEAT_RATE_ANCHOR,
+               'hands_header': ' protected:\n', 'hands_cpp': ' float Progress=1;\n  Current.SetPlayRate(Hands->TargetRate);\n  Blend.Evaluate_AnyThread(Output);\n'}
+    with pytest.raises(RuntimeError, match='verdicts unavailable'):
+        adapter.install(sources)
+    bound = adapter.seated_fit_bindings(receipt, set(adapter.SEATED_FIT_SLOTS))
+    assert not any(v['bound'] for v in bound.values())
+    assert {v['refusal'] for k, v in bound.items() if v['role'] in PASSING} == {adapter.SEATED_FIT_VERDICTS_UNAVAILABLE}
+
+
+def test_genuine_rows_bind_only_the_passing_committed_fits():
+    bound = adapter.seated_fit_bindings(genuine_receipt(), set(adapter.SEATED_FIT_SLOTS))
+    for role in PASSING:
+        assert bound[SLOT_OF[role]] == {'bound': True, 'role': role, 'object_path': adapter.seated_fit_object_path(role)}
+    assert not bound['DeskTyping']['bound'] and not bound['SitToType']['bound']
+
+
+@pytest.mark.parametrize('role', PASSING + FAILING[:2])
+@pytest.mark.parametrize('change, passing_refusal', [
+    ({'fit_pass': False}, 'fit gates failed or row not accepted'),
+    ({'accepted': False}, 'fit gates failed or row not accepted'),
+    ({'glb_sha256': 'b' * 64}, adapter.SEATED_FIT_UNCOMMITTED),
+    ({'glb_sha256': None}, adapter.SEATED_FIT_UNCOMMITTED),
+    ({'glb_sha256': ''}, adapter.SEATED_FIT_UNCOMMITTED),
+])
+def test_forged_receipt_rows_never_bind(role, change, passing_refusal):
+    receipt = genuine_receipt()
+    if role in FAILING:   # a failed fit relabelled as an accepted, passing import of the committed GLB
+        receipt = forged(receipt, role, fit_pass=True, accepted=True, imported=True)
+        refusal = adapter.SEATED_FIT_UNCOMMITTED
+        assert adapter.seated_fit_bindings(receipt, {role})[SLOT_OF[role]]['refusal'] == refusal
+        if change.get('fit_pass') is False or change.get('accepted') is False:
+            refusal = 'fit gates failed or row not accepted'
+    else:
+        refusal = passing_refusal
+    out = adapter.seated_fit_bindings(forged(receipt, role, **change), set(adapter.SEATED_FIT_SLOTS))[SLOT_OF[role]]
+    assert out == {'bound': False, 'role': role, 'refusal': refusal}
+
+
+@pytest.mark.parametrize('role', PASSING)
+def test_missing_rows_and_forged_verdict_tables_never_bind(role):
+    receipt = genuine_receipt()
+    receipt['clips'] = [r for r in receipt['clips'] if r['role'] != role]
+    assert adapter.seated_fit_bindings(receipt, {role})[SLOT_OF[role]]['refusal'] == 'role not in the import receipt'
+    # a verdict table that lacks the role (or calls it failing) refuses a genuine row
+    verdicts = copy.deepcopy(adapter.committed_seated_fit_verdicts())
+    verdicts[role]['all_gates_pass'] = False
+    assert adapter.seated_fit_bindings(genuine_receipt(), {role}, verdicts)[SLOT_OF[role]]['refusal'] == adapter.SEATED_FIT_UNCOMMITTED
+    verdicts.pop(role)
+    assert adapter.seated_fit_bindings(genuine_receipt(), {role}, verdicts)[SLOT_OF[role]]['refusal'] == adapter.SEATED_FIT_UNCOMMITTED
+
+
+def test_compiled_verdict_check_mirrors_python_over_genuine_and_forged_rows():
+    verdicts = adapter.committed_seated_fit_verdicts()
+    table = adapter.seated_fit_verdict_table_cpp(verdicts)
+    cases = []
+    for role in list(verdicts) + ['Sitting', 'SeatedIdl', 'SeatedIdleX', '']:
+        sha = verdicts.get(role, {}).get('glb_sha256', 'a' * 64)
+        for accepted in (True, False):
+            for fit_pass in (True, False):
+                for glb in (sha, 'b' * 64, sha[:-1], sha.upper(), ''):
+                    cases.append((role, accepted, fit_pass, glb))
+    expected = [adapter.seated_fit_committed(verdicts, *c) for c in cases]
+    assert sum(expected) == 3                     # exactly the three genuine passing rows
+    rows = ','.join('{u"%s",%s,%s,u"%s"}' % (r, 'true' if a else 'false', 'true' if f else 'false', g) for r, a, f, g in cases)
+    out = run_cpp('#include <cstdio>\n#include "Sub01SeatTransition.h"\n'
+                  'static const FSub01SeatedFitVerdict Table[]={' + table + '};\n'
+                  'struct Row{const char16_t* Role;bool A,F;const char16_t* Glb;};static const Row Rows[]={' + rows + '};\n'
+                  'int main(){for(const Row& R:Rows)std::printf("%d",Sub01SeatedFitCommitted(Table,int(sizeof(Table)/sizeof(Table[0])),R.Role,R.A,R.F,R.Glb)?1:0);'
+                  # duplicated, empty or malformed tables refuse even a genuine row
+                  'const FSub01SeatedFitVerdict Dup[]={{"SeatedIdle","' + verdicts['SeatedIdle']['glb_sha256'] + '",true},{"SeatedIdle","'
+                  + verdicts['SeatedIdle']['glb_sha256'] + '",true}};'
+                  'const FSub01SeatedFitVerdict Short[]={{"SeatedIdle","abc",true}};'
+                  'std::printf(" %d%d%d%d",Sub01SeatedFitCommitted(Dup,2,u"SeatedIdle",true,true,u"' + verdicts['SeatedIdle']['glb_sha256'] + '")?1:0,'
+                  'Sub01SeatedFitCommitted(Table,0,u"SeatedIdle",true,true,u"' + verdicts['SeatedIdle']['glb_sha256'] + '")?1:0,'
+                  'Sub01SeatedFitCommitted(Short,1,u"SeatedIdle",true,true,u"abc")?1:0,'
+                  'Sub01SeatedFitCommitted(Table,6,"SeatedIdle",true,true,"' + verdicts['SeatedIdle']['glb_sha256'] + '")?1:0);return 0;}')
+    flags, extra = out.split(' ')
+    assert [c == '1' for c in flags] == expected
+    assert extra == '0001'                        # plain char strings work too
+
+
+def test_installed_binders_require_the_committed_verdict(installed):
+    _, after, header = installed
+    assert 'Sub01SeatedFitCommitted' in header
+    load = after['Sub01HomeLab.cpp'].split('void ASub01HomeCharacter::LoadSeatTransition(){', 1)[1].split('\n}\n', 1)[0]
+    table = adapter.seated_fit_verdict_table_cpp(adapter.committed_seated_fit_verdicts())
+    assert load.count(' static const FSub01SeatedFitVerdict SeatedFitVerdicts[]={' + table + '};') == 1
+    fit_block = load.split('struct FSeatFitSlot', 1)[1].split(' // Chair:', 1)[0]
+    assert ('if((*Row)->TryGetStringField(TEXT("glb_sha256"),Glb)&&Sub01SeatedFitCommitted(SeatedFitVerdicts,SeatedFitVerdictCount,S.Role,A,P,*Glb))'
+            'Accepted=true;') in fit_block
+    assert fit_block.count('Accepted=true') == 1
+    typing = load.split(' // Seated typing profile (tools/desk_typing_seated_contact_profile.py).', 1)[1]
+    assert 'TypingCommitted=Sub01SeatedFitCommitted(SeatedFitVerdicts,SeatedFitVerdictCount,TEXT("DeskTypingSeated"),A,F,*TypingGlb);' in typing
+    assert f'else if(!TypingCommitted)TypingWhy=TEXT("{adapter.SEATED_TYPING_UNCOMMITTED}");' in typing
+    # the refusal precedes the only place a profile is bound
+    assert typing.index('else if(!TypingCommitted)') < typing.index('TypingHands->ContactSequence=SeatedTyping;')
+    assert '@@' not in after['Sub01HomeLab.cpp']

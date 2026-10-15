@@ -231,3 +231,27 @@ def test_no_teleport_or_seat_assumption_in_the_module():
     text = HEADER.read_text()
     for forbidden in ('SetActorLocation', 'Teleport', 'NativeSeatVerified', 'HipHeight', '49.'):
         assert forbidden not in text
+
+
+def test_committed_verdict_table_compiled_refuses_forged_receipt_rows():
+    """The generated FSub01SeatedFitVerdict table (plan_clips()) with the header's check, as LoadSeatTransition uses them."""
+    sys.path.insert(0, str(ROOT / 'tools'))
+    import unreal_seat_transition_runtime as seat
+    verdicts = seat.committed_seated_fit_verdicts()
+    table = seat.seated_fit_verdict_table_cpp(verdicts)
+    sha = {role: v['glb_sha256'] for role, v in verdicts.items()}
+    checks = []
+    for n, role in enumerate(sorted(verdicts)):
+        genuine = verdicts[role]['all_gates_pass']
+        checks += [(f'u"{role}",true,true,u"{sha[role]}"', genuine, 300 + n),   # genuine row: binds iff the committed fit passed
+                   (f'u"{role}",true,false,u"{sha[role]}"', False, 310 + n),    # fit_pass flipped off
+                   (f'u"{role}",false,true,u"{sha[role]}"', False, 320 + n),    # not accepted
+                   (f'u"{role}",true,true,u"{"0" * 64}"', False, 330 + n),      # another GLB
+                   (f'u"{role}",true,true,u""', False, 340 + n)]                # no GLB
+    checks.append(('u"Sitting",true,true,u"%s"' % sha['SeatedIdle'], False, 350))  # a role the table does not hold
+    body = ''.join('CHECK(Sub01SeatedFitCommitted(Table,N,%s)==%s,%d)\n' % (args, 'true' if want else 'false', code)
+                   for args, want, code in checks)
+    assert sum(want for _, want, _ in checks) == 3
+    compile_and_run('#include <cstdio>\n#include "Sub01SeatTransition.h"\n#define CHECK(c,n) if(!(c)){std::printf("failed %d\\n",n);return n;}\n'
+                    'static const FSub01SeatedFitVerdict Table[]={' + table + '};\n'
+                    'int main(){const int N=int(sizeof(Table)/sizeof(Table[0]));CHECK(N==6,299)\n' + body + 'return 0;}')

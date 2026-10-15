@@ -53,6 +53,21 @@ def receipt_row(**override):
     return row
 
 
+def hypothetical_passing_verdicts():
+    """The committed verdicts with DeskTypingSeated passing for the SAME committed GLB: what a future passing seat fit
+    would commit. The profile's own gates are exercised under it; the real committed verdict refuses (tested below)."""
+    verdicts = copy.deepcopy(seat.committed_seated_fit_verdicts())
+    verdicts['DeskTypingSeated']['all_gates_pass'] = True
+    return verdicts
+
+
+@pytest.fixture
+def passing_typing_fit(monkeypatch):
+    verdicts = hypothetical_passing_verdicts()
+    monkeypatch.setattr(seat, 'committed_seated_fit_verdicts', lambda repo=None: copy.deepcopy(verdicts))
+    return verdicts
+
+
 def make_project(tmp, row=None, evidence=None):
     project = Path(tmp) / 'srv' / 'project' / 'Sub01HomeLab'
     audit = project / 'private-audit'
@@ -247,7 +262,7 @@ def native_accepts(profile):
         return int(subprocess.run([str(exe)], capture_output=True, text=True, check=True).stdout)
 
 
-def test_passing_native_capture_writes_a_profile_every_gate_reader_accepts(tmp_path):
+def test_passing_native_capture_writes_a_profile_every_gate_reader_accepts(tmp_path, passing_typing_fit):
     project = make_project(tmp_path)
     old = (project / ev.OLD_PROFILE).read_bytes()
     capture(project)
@@ -320,7 +335,7 @@ def test_evidence_with_pitch_is_refused_not_approximated(tmp_path):
     assert record['ready'] is False and 'PlacementTransform' in record['error']
 
 
-def test_a_newer_failing_capture_retires_the_seated_profile_and_keeps_the_old_one(tmp_path):
+def test_a_newer_failing_capture_retires_the_seated_profile_and_keeps_the_old_one(tmp_path, passing_typing_fit):
     project = make_project(tmp_path)
     old = (project / ev.OLD_PROFILE).read_bytes()
     capture(project)
@@ -333,6 +348,40 @@ def test_a_newer_failing_capture_retires_the_seated_profile_and_keeps_the_old_on
     [moved] = record['retired']
     assert Path(moved).read_bytes() == accepted and f'.superseded-{record["capture_sha256"][:12]}.json' in moved
     assert (project / ev.OLD_PROFILE).read_bytes() == old
+
+
+def test_committed_failing_typing_fit_refuses_even_a_passing_capture(tmp_path):
+    # The committed DeskTypingSeated verdict is false (typing is infeasible on the actual chair): the adapter's reader,
+    # and so the writer, refuse a profile that passes every contact gate, even with a receipt row claiming the fit.
+    assert seat.committed_seated_fit_verdicts()['DeskTypingSeated']['all_gates_pass'] is False
+    project = make_project(tmp_path)
+    capture(project)
+    record = ev.write(project)
+    assert record['ready'] is False and 'AdapterReader' in record['error'] and seat.SEATED_TYPING_UNCOMMITTED in record['error']
+    assert not (project / 'private-audit' / seat.SEATED_TYPING_PROFILE_FILE).exists()
+
+
+@pytest.mark.parametrize('row, verdict', [
+    (dict(fit_pass=False), True), (dict(accepted=False), True), (dict(glb_sha256='b' * 64), True),
+    (dict(glb_sha256=None), True), ({}, False),
+])
+def test_forged_receipt_rows_never_bind_the_seated_typing_profile(tmp_path, monkeypatch, row, verdict):
+    verdicts = hypothetical_passing_verdicts()
+    monkeypatch.setattr(seat, 'committed_seated_fit_verdicts', lambda repo=None: copy.deepcopy(verdicts))
+    project = make_project(tmp_path)
+    capture(project)
+    assert ev.write(project)['ready'] is True
+    profile = json.loads((project / 'private-audit' / seat.SEATED_TYPING_PROFILE_FILE).read_text())
+    path = profile['clip_object_path']
+    genuine = {'clips': [receipt_row()]}
+    assert seat.seated_typing_profile_binding(profile, genuine, path, verdicts)['bound'] is True
+    verdicts['DeskTypingSeated']['all_gates_pass'] = verdict
+    out = seat.seated_typing_profile_binding(profile, {'clips': [receipt_row(**row)]}, path, verdicts)
+    assert out['bound'] is False
+    # a genuine row under a failing committed verdict (today's) refuses as well
+    failing = copy.deepcopy(verdicts)
+    failing['DeskTypingSeated']['all_gates_pass'] = False
+    assert seat.seated_typing_profile_binding(profile, genuine, path, failing)['refusal'] == seat.SEATED_TYPING_UNCOMMITTED
 
 
 def test_python_reader_refuses_profiles_for_another_clip_or_import():
@@ -417,6 +466,7 @@ def test_native_binding_accepts_only_the_seated_profile_for_the_bound_clip():
     assert ('In.TypingProfileReady=Instance&&TypingClip&&Instance->ContactSequence==TypingClip&&Instance->ContactTimes.Num()==301'
             '&&Instance->ContactLocalTransforms.Num()==301*6\n  &&SeatProfilePoseLoaded&&HasBody&&Sub01SeatSameTransform(SeatProfilePose,Live);') in cpp
     # locals never shadow the function's own (UE treats shadowing as an error)
-    function_scope = {'Mesh', 'Roles', 'Audit', 'ChairText', 'Chair', 'EvidenceText', 'E', 'ProfilePath', 'ProfileText', 'Profile'}
+    function_scope = {'Mesh', 'Roles', 'Audit', 'ChairText', 'Chair', 'EvidenceText', 'E', 'ProfilePath', 'ProfileText', 'Profile',
+                      'SeatedFitVerdicts', 'SeatedFitVerdictCount'}
     declared = set(re.findall(r'(?:FString|TSharedPtr<FJsonObject>|double|bool|auto\*|TArray<[^>]+>)\s+\*?(\w+)', block))
     assert not (declared & function_scope), declared & function_scope

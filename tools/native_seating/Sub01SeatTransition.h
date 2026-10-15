@@ -320,3 +320,30 @@ inline bool Sub01TypingProfileSample(int Index,double Time,double CapSpread,doub
  }
  return true;
 }
+
+// Committed seated-fit verdicts. tools/unreal_seat_transition_runtime.py generates the table at adapter install time
+// from tools/unreal_import_seated_fit_fbx.plan_clips() (role, committed GLB sha256, the per-clip report's
+// all_gates_pass, which plan_clips checks against the summary report) and compiles it into LoadSeatTransition. The
+// import receipt alone never binds a seated-fit clip: a receipt row must be accepted with fit_pass, name exactly the
+// committed GLB, and the committed verdict must pass. A hand-edited receipt cannot change any of the three.
+struct FSub01SeatedFitVerdict {const char* Role;const char* GlbSha256;bool AllGatesPass;};
+// Exact text equality of an engine string (char, char16_t, wchar_t) with an ASCII table literal.
+template<class C> inline bool Sub01SeatTextEquals(const C* A,const char* B){
+ if(!A||!B)return false;
+ for(;*A&&*B;++A,++B)if(uint32_t(*A)!=uint32_t((unsigned char)*B))return false;
+ return !*A&&!*B;
+}
+inline bool Sub01SeatSha256Text(const char* S){
+ if(!S)return false;int N=0;
+ for(;S[N];++N)if(!((S[N]>='0'&&S[N]<='9')||(S[N]>='a'&&S[N]<='f')))return false;
+ return N==64;
+}
+// True only when the role occurs exactly once in the committed table, its committed verdict passes, its committed GLB
+// is a sha256, and the receipt row (accepted, fit_pass) names that very GLB.
+template<class C> inline bool Sub01SeatedFitCommitted(const FSub01SeatedFitVerdict* Table,int Count,const C* Role,
+                                                     bool ReceiptAccepted,bool ReceiptFitPass,const C* ReceiptGlbSha256){
+ if(!Table||Count<=0||!ReceiptAccepted||!ReceiptFitPass)return false;
+ const FSub01SeatedFitVerdict* Found=nullptr;
+ for(int I=0;I<Count;++I)if(Sub01SeatTextEquals(Role,Table[I].Role)){if(Found)return false;Found=&Table[I];}
+ return Found&&Found->AllGatesPass&&Sub01SeatSha256Text(Found->GlbSha256)&&Sub01SeatTextEquals(ReceiptGlbSha256,Found->GlbSha256);
+}

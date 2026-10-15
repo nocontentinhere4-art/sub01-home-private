@@ -42,7 +42,8 @@ SEAT_ROLES = tuple(SEAT_ROLE_ASSETS)
 OWNER_SKELETON = '/Game/Sub01Hands/FBX/SUB01_OriginalOwner_Skeleton.SUB01_OriginalOwner_Skeleton'
 # Seated-fit clips (docs/proposed/seat-pose-fit/, imported by tools/unreal_import_seated_fit_fbx.py). Each may replace
 # the captured clip in ONE existing slot, only when that importer's receipt ACCEPTED the row (its per-clip fit gates
-# passed) and the renderer's ValidatedHandsPostures lists the role. Without the receipt nothing changes.
+# passed), the row names the committed GLB whose committed verdict passes (plan_clips(), compiled in at install) and the
+# renderer's ValidatedHandsPostures lists the role. Without the receipt nothing changes.
 SEATED_FIT_RECEIPT = 'private-audit/unreal-seated-fit-import.json'
 SEATED_FIT_RECEIPT_SCHEMA = 'sub01.unreal-seated-fit-import.v1'
 # SitDown/GetUp seated bind only once their per-clip fit passes (the importer never imports a failed fit). TypeToSit has
@@ -64,13 +65,80 @@ def seated_fit_object_path(role: str) -> str:
     return f'{SEAT_CLIP_DIR}/SUB01_{role}.SUB01_{role}'
 
 
-def seated_fit_bindings(receipt, validated=()) -> dict:
+# Committed seated-fit verdicts: the receipt alone never binds. LoadSeatTransition() carries an immutable table generated
+# at install time from tools/unreal_import_seated_fit_fbx.plan_clips() (role -> committed GLB sha256 -> the per-clip
+# report's all_gates_pass, checked there against the summary report); Sub01SeatedFitCommitted() in the header and
+# seated_fit_committed() here require the receipt row to name exactly that GLB and the committed verdict to pass.
+SEATED_FIT_UNCOMMITTED = 'receipt row is not the committed GLB with a passing committed verdict'
+SEATED_TYPING_UNCOMMITTED = 'committed fit verdict refuses the seated typing clip'
+SEATED_FIT_VERDICTS_UNAVAILABLE = 'committed seated-fit verdicts unavailable'
+
+
+def _sha256_text(value) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
+
+
+def _checked_verdicts(rows) -> dict:
+    import unreal_import_seated_fit_fbx as fit
+    table = {}
+    for row in rows:
+        role, digest, verdict = row.get('role'), row.get('glb_sha256'), row.get('fit_pass')
+        if role not in fit.ROLES or role in table:
+            raise RuntimeError(f'{SEATED_FIT_VERDICTS_UNAVAILABLE}: unexpected or repeated role {role!r}')
+        if not _sha256_text(digest) or not isinstance(verdict, bool):
+            raise RuntimeError(f'{SEATED_FIT_VERDICTS_UNAVAILABLE}: {role} has no committed GLB sha256 and verdict')
+        table[role] = {'glb_sha256': digest, 'all_gates_pass': verdict}
+    if set(table) != set(fit.ROLES):
+        raise RuntimeError(f'{SEATED_FIT_VERDICTS_UNAVAILABLE}: expected exactly the roles {sorted(fit.ROLES)}')
+    return dict(sorted(table.items()))
+
+
+def committed_seated_fit_verdicts(repo=None) -> dict:
+    """role -> {'glb_sha256', 'all_gates_pass'}, re-read from plan_clips(); RuntimeError when plan_clips refuses."""
+    import unreal_import_seated_fit_fbx as fit
+    try:
+        rows = fit.plan_clips() if repo is None else fit.plan_clips(Path(repo))
+    except Exception as error:   # any refusal of the committed fit: nothing is generated, nothing binds
+        raise RuntimeError(f'{SEATED_FIT_VERDICTS_UNAVAILABLE}: {error}') from error
+    return _checked_verdicts({'role': r.get('role'), 'glb_sha256': r.get('glb_sha256'), 'fit_pass': r.get('fit_pass')}
+                             for r in rows)
+
+
+def seated_fit_verdict_table_cpp(verdicts: dict) -> str:
+    """The C++ initializer of LoadSeatTransition()'s FSub01SeatedFitVerdict table: deterministic, sorted by role."""
+    table = _checked_verdicts({'role': role, 'glb_sha256': v.get('glb_sha256'), 'fit_pass': v.get('all_gates_pass')}
+                              for role, v in verdicts.items())
+    return ','.join('{"%s","%s",%s}' % (role, v['glb_sha256'], 'true' if v['all_gates_pass'] else 'false')
+                    for role, v in table.items())
+
+
+def seated_fit_committed(verdicts: dict, role, accepted, fit_pass, glb_sha256) -> bool:
+    """Python mirror of Sub01SeatedFitCommitted()."""
+    committed = verdicts.get(role) if isinstance(verdicts, dict) else None
+    return (accepted is True and fit_pass is True and isinstance(committed, dict)
+            and committed.get('all_gates_pass') is True and _sha256_text(committed.get('glb_sha256'))
+            and glb_sha256 == committed['glb_sha256'])
+
+
+def _verdicts_or_none(verdicts):
+    if verdicts is not None:
+        return verdicts
+    try:
+        return committed_seated_fit_verdicts()
+    except RuntimeError:
+        return None
+
+
+def seated_fit_bindings(receipt, validated=(), verdicts=None) -> dict:
     """Python mirror of the native seated-fit binding in LoadSeatTransition(): slot -> what binds there.
 
     A slot binds its seated-fit role only for an accepted, fit-passing row on the owner skeleton at the exact path,
-    and only when `validated` (the renderer's ValidatedHandsPostures) lists the role. Otherwise the slot keeps the
-    clip it binds today (captured Sitting / the renderer's DeskTyping) and the refusal says why.
+    and only when `validated` (the renderer's ValidatedHandsPostures) lists the role. The row must also name exactly
+    the committed GLB whose committed verdict passes (`verdicts`, default re-read from plan_clips(); unavailable
+    verdicts bind nothing). Otherwise the slot keeps the clip it binds today (captured Sitting / the renderer's
+    DeskTyping) and the refusal says why.
     """
+    verdicts = _verdicts_or_none(verdicts)
     rows = {}
     ok_receipt = (isinstance(receipt, dict) and receipt.get('schema') == SEATED_FIT_RECEIPT_SCHEMA
                   and receipt.get('skeleton') == OWNER_SKELETON)
@@ -89,6 +157,10 @@ def seated_fit_bindings(receipt, validated=()) -> dict:
             why = 'fit gates failed or row not accepted'
         elif row.get('same_existing_skeleton') is not True or row.get('object_path') != seated_fit_object_path(role):
             why = f'not imported at {seated_fit_object_path(role)} on the owner skeleton'
+        elif verdicts is None:
+            why = SEATED_FIT_VERDICTS_UNAVAILABLE
+        elif not seated_fit_committed(verdicts, role, row.get('accepted'), row.get('fit_pass'), row.get('glb_sha256')):
+            why = SEATED_FIT_UNCOMMITTED
         elif role not in validated:
             why = f'ValidatedHandsPostures does not list {role}'
         else:
@@ -126,8 +198,12 @@ def typing_profile_sample(index: int, row: dict, spread) -> bool:
     return True
 
 
-def seated_typing_profile_binding(profile, receipt, bound_object_path: str) -> dict:
-    """Python mirror of the seated typing profile binding in LoadSeatTransition(): {'bound': bool, 'refusal': str}."""
+def seated_typing_profile_binding(profile, receipt, bound_object_path: str, verdicts=None) -> dict:
+    """Python mirror of the seated typing profile binding in LoadSeatTransition(): {'bound': bool, 'refusal': str}.
+
+    Also requires the committed DeskTypingSeated verdict (`verdicts`, default re-read from plan_clips()) for exactly
+    the receipt row's GLB.
+    """
     def refuse(why):
         return {'bound': False, 'refusal': why}
     if bound_object_path != seated_fit_object_path(SEATED_TYPING_ROLE):
@@ -153,6 +229,10 @@ def seated_typing_profile_binding(profile, receipt, bound_object_path: str) -> d
     if (not isinstance(body, list) or len(body) != 3 or not isinstance(yaw, (int, float))
             or profile.get('body_rotation_pyr') != [0, yaw, 0] or profile.get('body_scale_xyz') != [1, 1, 1]):
         return refuse('profile body transform (pitch/roll-free, unit scale)')
+    verdicts = _verdicts_or_none(verdicts)
+    if verdicts is None or not seated_fit_committed(verdicts, SEATED_TYPING_ROLE, row.get('accepted'), row.get('fit_pass'),
+                                                    row.get('glb_sha256')):
+        return refuse(SEATED_TYPING_UNCOMMITTED)
     names = None
     for i, row_ in enumerate(samples):
         if not isinstance(row_, dict) or not typing_profile_sample(i, row_, spread):
@@ -315,6 +395,10 @@ CHARACTER_METHODS = r'''
 void ASub01HomeCharacter::LoadSeatTransition(){
  SeatRoles=0;SeatClips.Empty();SeatChairMeasured=false;SeatAnchorValid=false;SeatEvidence=FSub01SeatEvidence();
  USkeletalMesh* Mesh=FirstPersonBody?FirstPersonBody->GetSkeletalMeshAsset():nullptr;if(!Mesh)return;
+ // Committed seated-fit verdicts (role, committed GLB sha256, all_gates_pass), generated at install from
+ // tools/unreal_import_seated_fit_fbx.plan_clips(). No receipt can bind a seated-fit clip this table refuses.
+ static const FSub01SeatedFitVerdict SeatedFitVerdicts[]={@@SEATED_FIT_VERDICTS@@};
+ const int32 SeatedFitVerdictCount=int32(sizeof(SeatedFitVerdicts)/sizeof(SeatedFitVerdicts[0]));
  // Seat clips: the imported captures on the SAME owner skeleton, or nothing (fail closed).
  struct FSeatRoleBinding{const TCHAR* Key;const TCHAR* Asset;uint32 Value;};
  const FSeatRoleBinding Roles[]={@@SEAT_ROLE_BINDINGS@@};
@@ -327,9 +411,10 @@ void ASub01HomeCharacter::LoadSeatTransition(){
  }
  if(UAnimSequence* Typing=HandsClips.FindRef(TEXT("DeskTyping"))){SeatClips.Add(TEXT("DeskTyping"),Typing);SeatRoles|=SeatRoleDeskTyping;}
  // Seated-fit clips (tools/unreal_import_seated_fit_fbx.py) replace the clip in their slot only when the import
- // receipt ACCEPTED the row (its seat-pose-fit gates passed), at the exact path, on this owner skeleton, and the
- // renderer's ValidatedHandsPostures lists the role. Otherwise every slot keeps what it bound above. They never
- // verify a seat: contact evidence and the keyboard profile still compare against the clip actually bound.
+ // receipt ACCEPTED the row (its seat-pose-fit gates passed), at the exact path, on this owner skeleton, for exactly
+ // the committed GLB whose committed verdict passes (SeatedFitVerdicts), and the renderer's ValidatedHandsPostures
+ // lists the role. Otherwise every slot keeps what it bound above. They never verify a seat:
+ // contact evidence and the keyboard profile still compare against the clip actually bound.
  {FString FitText,FitSchema,FitSkeleton;TSharedPtr<FJsonObject> Fit;const TArray<TSharedPtr<FJsonValue>>* FitRows=nullptr;
   if(FFileHelper::LoadFileToString(FitText,*FPaths::Combine(FPaths::ProjectDir(),TEXT("@@SEATED_FIT_RECEIPT@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(FitText),Fit)&&Fit.IsValid()
      &&Fit->TryGetStringField(TEXT("schema"),FitSchema)&&FitSchema==TEXT("@@SEATED_FIT_SCHEMA@@")&&Fit->TryGetStringField(TEXT("skeleton"),FitSkeleton)
@@ -337,10 +422,14 @@ void ASub01HomeCharacter::LoadSeatTransition(){
    struct FSeatFitSlot{const TCHAR* Role;const TCHAR* Slot;uint32 Value;};
    const FSeatFitSlot FitSlots[]={@@SEATED_FIT_BINDINGS@@};
    for(const auto& S:FitSlots){
-    const FString Path=FString::Printf(TEXT("%s/SUB01_%s.SUB01_%s"),TEXT("@@SEAT_CLIP_DIR@@"),S.Role,S.Role);bool Accepted=false;
-    for(const auto& RowValue:*FitRows){const TSharedPtr<FJsonObject>* Row=nullptr;FString Role,Object;bool A=false,P=false,Same=false;
+    const FString Path=FString::Printf(TEXT("%s/SUB01_%s.SUB01_%s"),TEXT("@@SEAT_CLIP_DIR@@"),S.Role,S.Role);bool Accepted=false,Claimed=false;
+    for(const auto& RowValue:*FitRows){const TSharedPtr<FJsonObject>* Row=nullptr;FString Role,Object,Glb;bool A=false,P=false,Same=false;
      if(RowValue.IsValid()&&RowValue->TryGetObject(Row)&&(*Row)->TryGetStringField(TEXT("role"),Role)&&Role==S.Role&&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A
-        &&(*Row)->TryGetBoolField(TEXT("fit_pass"),P)&&P&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==Path)Accepted=true;}
+        &&(*Row)->TryGetBoolField(TEXT("fit_pass"),P)&&P&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==Path){
+      Claimed=true;
+      // The receipt's claim counts only for exactly the committed GLB whose committed verdict passes.
+      if((*Row)->TryGetStringField(TEXT("glb_sha256"),Glb)&&Sub01SeatedFitCommitted(SeatedFitVerdicts,SeatedFitVerdictCount,S.Role,A,P,*Glb))Accepted=true;}}
+    if(Claimed&&!Accepted)UE_LOG(LogTemp,Warning,TEXT("SUB01_SEAT_FIT_REFUSED %s (receipt row is not the committed GLB with a passing committed verdict)"),*Path);
     auto* Clip=Accepted&&ValidatedHandsPostures.Contains(FName(S.Role))?LoadObject<UAnimSequence>(nullptr,*Path):nullptr;
     if(Clip&&Clip->GetSkeleton()==Mesh->GetSkeleton()){SeatClips.Add(FName(S.Slot),Clip);SeatRoles|=S.Value;UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_FIT_BOUND %s=%s"),S.Slot,*Path);}
     else if(Accepted)UE_LOG(LogTemp,Warning,TEXT("SUB01_SEAT_FIT_REFUSED %s (not validated, missing or another skeleton)"),*Path);
@@ -423,11 +512,12 @@ void ASub01HomeCharacter::LoadSeatTransition(){
  // profile is already bound (the proxy copies arm samples only when their count changes); otherwise typing stays pending.
  if(UAnimSequence* SeatedTyping=SeatClips.FindRef(TEXT("DeskTyping"))){if(SeatedTyping->GetPathName()==TEXT("@@SEATED_TYPING_PATH@@")){
   SeatProfilePoseLoaded=false;FString TypingWhy;auto* TypingHands=FirstPersonBody?Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()):nullptr;
-  FString TypingReceiptText,TypingProfileText,TypingGlb,TypingFbx;TSharedPtr<FJsonObject> TypingReceipt,TypingProfile;const TArray<TSharedPtr<FJsonValue>> *TypingRows=nullptr,*TypingSamples=nullptr,*TypingBody=nullptr,*TypingRotation=nullptr,*TypingScale=nullptr;
+  FString TypingReceiptText,TypingProfileText,TypingGlb,TypingFbx;bool TypingCommitted=false;TSharedPtr<FJsonObject> TypingReceipt,TypingProfile;const TArray<TSharedPtr<FJsonValue>> *TypingRows=nullptr,*TypingSamples=nullptr,*TypingBody=nullptr,*TypingRotation=nullptr,*TypingScale=nullptr;
   if(FFileHelper::LoadFileToString(TypingReceiptText,*FPaths::Combine(FPaths::ProjectDir(),TEXT("@@SEATED_FIT_RECEIPT@@")))&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(TypingReceiptText),TypingReceipt)&&TypingReceipt.IsValid()&&TypingReceipt->TryGetArrayField(TEXT("clips"),TypingRows))
    for(const auto& RowValue:*TypingRows){const TSharedPtr<FJsonObject>* Row=nullptr;FString Role,Object;bool A=false,F=false,Same=false;
     if(RowValue.IsValid()&&RowValue->TryGetObject(Row)&&(*Row)->TryGetStringField(TEXT("role"),Role)&&Role==TEXT("@@SEATED_TYPING_ROLE@@")&&(*Row)->TryGetStringField(TEXT("object_path"),Object)&&Object==SeatedTyping->GetPathName()
-       &&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A&&(*Row)->TryGetBoolField(TEXT("fit_pass"),F)&&F&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same){(*Row)->TryGetStringField(TEXT("glb_sha256"),TypingGlb);(*Row)->TryGetStringField(TEXT("fbx_sha256"),TypingFbx);}}
+       &&(*Row)->TryGetBoolField(TEXT("accepted"),A)&&A&&(*Row)->TryGetBoolField(TEXT("fit_pass"),F)&&F&&(*Row)->TryGetBoolField(TEXT("same_existing_skeleton"),Same)&&Same){(*Row)->TryGetStringField(TEXT("glb_sha256"),TypingGlb);(*Row)->TryGetStringField(TEXT("fbx_sha256"),TypingFbx);
+     TypingCommitted=Sub01SeatedFitCommitted(SeatedFitVerdicts,SeatedFitVerdictCount,TEXT("@@SEATED_TYPING_ROLE@@"),A,F,*TypingGlb);}}
   FString TypingSchema,TypingClipPath,TypingProfileGlb,TypingProfileFbx;double TypingSpread=NAN,TypingYaw=NAN;bool TypingReady=false;
   if(!TypingHands)TypingWhy=TEXT("no hands instance");
   else if(TypingHands->ContactTimes.Num()&&TypingHands->ContactSequence!=SeatedTyping)TypingWhy=TEXT("another clip's contact profile is already bound (launch without -Sub01ContactProfile)");
@@ -438,6 +528,7 @@ void ASub01HomeCharacter::LoadSeatTransition(){
   else if(!TypingProfile->TryGetNumberField(TEXT("key_top_spread_cm"),TypingSpread)||!TypingProfile->TryGetArrayField(TEXT("samples"),TypingSamples)||TypingSamples->Num()!=FSub01TypingProfileRules::Samples)TypingWhy=TEXT("profile samples");
   else if(!TypingProfile->TryGetArrayField(TEXT("body_cm"),TypingBody)||TypingBody->Num()!=3||!TypingProfile->TryGetNumberField(TEXT("body_yaw"),TypingYaw)||!TypingProfile->TryGetArrayField(TEXT("body_rotation_pyr"),TypingRotation)||TypingRotation->Num()!=3||!TypingProfile->TryGetArrayField(TEXT("body_scale_xyz"),TypingScale)||TypingScale->Num()!=3
           ||(*TypingRotation)[0]->AsNumber()!=0||(*TypingRotation)[1]->AsNumber()!=TypingYaw||(*TypingRotation)[2]->AsNumber()!=0||(*TypingScale)[0]->AsNumber()!=1||(*TypingScale)[1]->AsNumber()!=1||(*TypingScale)[2]->AsNumber()!=1)TypingWhy=TEXT("profile body transform (pitch/roll-free, unit scale)");
+  else if(!TypingCommitted)TypingWhy=TEXT("@@SEATED_TYPING_UNCOMMITTED@@");
   TArray<float> TypingTimes;TArray<FName> TypingNames;TArray<FTransform> TypingValues;
   for(int32 I=0;TypingWhy.IsEmpty()&&I<TypingSamples->Num();++I){
    const TSharedPtr<FJsonObject>* Row=nullptr;const TSharedPtr<FJsonObject> *Corrected=nullptr,*Arms=nullptr;const TArray<TSharedPtr<FJsonValue>>* HandRows=nullptr;double Time=NAN,Bone=NAN,Finger=NAN,Invalid=NAN,Top=NAN;
@@ -674,8 +765,13 @@ EDITS = [
 ]
 
 
-def install(sources: dict) -> dict:
-    """Apply the seat integration to staged sources {'header','cpp','hands_header','hands_cpp'}."""
+def install(sources: dict, verdicts=None) -> dict:
+    """Apply the seat integration to staged sources {'header','cpp','hands_header','hands_cpp'}.
+
+    The committed seated-fit verdict table is generated here (committed_seated_fit_verdicts(), i.e. plan_clips());
+    if plan_clips refuses, nothing is installed.
+    """
+    table = seated_fit_verdict_table_cpp(committed_seated_fit_verdicts() if verdicts is None else verdicts)
     out = dict(sources)
     for key, anchor, replacement in EDITS:
         if anchor == SEAT_RATE_ANCHOR:
@@ -690,6 +786,8 @@ def install(sources: dict) -> dict:
     out['cpp'] += (CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
                    .replace('@@SEATED_FIT_BINDINGS@@', fits).replace('@@SEATED_FIT_RECEIPT@@', SEATED_FIT_RECEIPT)
                    .replace('@@SEATED_FIT_SCHEMA@@', SEATED_FIT_RECEIPT_SCHEMA)
+                   .replace('@@SEATED_FIT_VERDICTS@@', table)
+                   .replace('@@SEATED_TYPING_UNCOMMITTED@@', SEATED_TYPING_UNCOMMITTED)
                    .replace('@@SEATED_TYPING_PATH@@', seated_fit_object_path(SEATED_TYPING_ROLE))
                    .replace('@@SEATED_TYPING_ROLE@@', SEATED_TYPING_ROLE)
                    .replace('@@SEATED_TYPING_PROFILE_FILE@@', SEATED_TYPING_PROFILE_FILE)
