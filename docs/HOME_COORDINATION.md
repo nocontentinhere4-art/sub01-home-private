@@ -1,12 +1,18 @@
 # Private SUB-01 home — Codex / Claude coordination
 
-Updated 2026-10-15 23:10 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
+Updated 2026-10-15 23:18 UTC. Historical acceptance notes below are explicitly superseded by the current state section. This file describes the new private home; the inherited docs/HANDOFF.md describes the older public room and is not the current deployment plan.
 
 ## Goal and boundaries
 
 Build the real functioning first-person home, not a promotional video. Primary reference: https://x.com/SimbasJungles/status/2109095401273938072. Ground-floor entrance, wooden stairs/loft, bathroom privacy, actual PC/phone/TV interactions and eventual brain-controlled activities. English UI. Keep the fictional character separate from the MRI donor; do not claim consciousness.
 
 Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
+
+## Final actual candidate decoration/light acceptance — 23:18 UTC
+
+Root personally viewed and approved all three final actual-house captures103: candidate-final-genuine-complete-living.png, candidate-final-genuine-table-controller.png, candidate-final-genuine-ps5-front-lightband.png. Seven genuine kitchen/plant parts097, the original scanned Pikachu100 and the rigid table-controller clearance102 are SAVED in the actual candidate. The new controller root is[-257,-25,37.4262532]cm, preserving original geometry/materials and exact support; source full BVH gives zero plant/table intersections. Native102 verifies the corresponding rigid transformation. The real PS5 front close-up shows the narrow blue internal band, with nonemissive white panels. Native096 and root's direct front image review show only the controller side strips emit, with no cyan stick rings. All these are candidate-house acceptance, NOT live touring Game promotion or normal held-controller contact.
+
+Actual isolated browser DOM confirmed the current physical-private session has a working “Move to exit” button and WASD/mouse-only privacy egress. There is NO movement deadlock and no privacy policy change is needed. Root closed its read-only QA page without input. Current original Game193148 remains preserved in the bathroom; no private pixels were captured. Exact fresh safe pose is required before final playable seal/handoff. Root's final handoff helper8271e22 also checks new actual camera position within5mm before backend identity/grants. Native is preparing only the necessary next-generation candidate-scope adapter and asset synchronization, with no further visual redesign.
 
 ## Actual devices, new decorations and safe next revision — 23:10 UTC
 
