@@ -22,7 +22,7 @@ def run(u=None):
     structural = [str(n) for n in names if parents[str(n)] not in parents]
     if len(structural) != 1:
         raise RuntimeError('One actual structural root required')
-    tracked = structural + [str(n) for n in names if str(n).endswith(('Hips', 'Head', 'LeftHand', 'RightHand', 'LeftFoot', 'RightFoot'))]
+    tracked = structural + [str(n) for n in names if str(n).endswith(('Hips', 'Head', 'LeftHand', 'RightHand', 'LeftFoot', 'RightFoot', 'LeftToeBase', 'RightToeBase'))]
     results = []
     for role, path in (('Walk', '/Game/Sub01Hands/FBX/SUB01_Walk'),
                        ('Idle', '/Game/Sub01Hands/Life/SUB01_Idle')):
@@ -50,7 +50,14 @@ def run(u=None):
                 if not all(map(math.isfinite, point)):
                     raise RuntimeError('Nonfinite actual pose')
                 positions[name] = point
-            rows.append({'time_s': t, 'component_space_cm': positions})
+            forward = {}
+            for side in ('Left', 'Right'):
+                foot = next((n for n in tracked if n.endswith(side+'Foot')), None)
+                toe = next((n for n in tracked if n.endswith(side+'ToeBase')), None)
+                if foot and toe:
+                    forward[side] = [positions[toe][k]-positions[foot][k] for k in range(3)]
+            rows.append({'time_s': t, 'component_space_cm': positions,
+                         'ankle_to_toe_vector_cm': forward})
         movement = {}
         for name in tracked:
             points = [r['component_space_cm'][name] for r in rows]
