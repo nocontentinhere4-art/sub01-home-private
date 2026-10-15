@@ -17,6 +17,7 @@ from home_asset_audit import read_gltf
 from structural_rail_source_patch import accessor, world_matrices, transformed
 from unreal_import_real_kitchen import same_triangles, snapshot
 import unreal_monitor_source_geometry as source_geometry
+import unreal_component_collision_state as collision_state
 
 HOME_SHA = '9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 DESK_SHA = '99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d'
@@ -161,7 +162,8 @@ def preflight(root, u):
         c = _only(cs, 'component '+str(node))
         mesh = c.get_editor_property('static_mesh')
         if (not mesh or mesh.get_path_name() != PREFIX+f'StaticMeshes/Mesh_{mesh_index}.Mesh_{mesh_index}'
-                or actor.get_attach_parent_actor() or c != actor.get_editor_property('root_component')
+                or (actor.get_attach_parent_actor() is None or actor.get_attach_parent_actor().get_path_name() != LEVEL+'.ActualHome:PersistentLevel.Scene')
+                or c != actor.get_editor_property('root_component')
                 or actor.get_editor_property('hidden') or not c.get_editor_property('visible')):
             raise RuntimeError('Exact independent visible source monitor assembly required')
         paths = [m.get_path_name() if m else None for m in c.get_materials()]
@@ -216,7 +218,7 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
         if folder.exists():
             shutil.copytree(folder, backup/directory)
     before = snapshot(u, actors)
-    states = [(a, a.get_actor_transform(), c, c.get_world_transform(), list(c.get_materials()), c.get_editor_property('static_mesh')) for _, a, c, _ in rows]
+    states = [(a, a.get_actor_transform(), c, c.get_world_transform(), list(c.get_materials()), c.get_editor_property('static_mesh'), collision_state.capture(u, c)) for _, a, c, _ in rows]
     protected = [a for a in actors if all(a != row[1] for row in rows)]
     wanted_protected = {a.get_path_name(): before[a.get_path_name()] for a in protected}
     save_attempted = False
@@ -229,6 +231,8 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
         for node, _, component, _ in rows:
             if node in geometry['replacements']:
                 component.set_static_mesh(geometry['replacements'][node])
+                state = next(state for state in states if state[2] == component)
+                collision_state.restore(u, component, state[6], force_response_copy=True)
         for _, a, _, _ in rows:
             p = a.get_actor_location()
             if not a.set_actor_location(u.Vector(p.x, p.y, p.z+proof['delta_z_cm']), False, False):
@@ -269,12 +273,15 @@ def run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=Tru
         pending.replace(root/'monitor-support-native.json')
         return result
     except Exception:
-        for a, transform, c, world, materials, original_mesh in states:
-            c.set_static_mesh(original_mesh)
-            a.set_actor_transform(transform, False, False)
-            c.set_world_transform(world, False, False)
+        for a, transform, c, world, materials, original_mesh, collision in states:
+            if c.get_editor_property('static_mesh') != original_mesh:
+                c.set_static_mesh(original_mesh)
+            if a.get_actor_transform() != transform:
+                a.set_actor_transform(transform, False, False)
+            collision_state.restore(u, c, collision, force_response_copy=True)
             for slot, material in enumerate(materials):
-                c.set_material(slot, material)
+                if c.get_materials()[slot] != material:
+                    c.set_material(slot, material)
         if snapshot(u, actors) != before:
             raise RuntimeError('Monitor rollback incomplete; preserve backup '+str(backup))
         if save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():

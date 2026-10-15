@@ -64,7 +64,7 @@ class AtomicMove(unittest.TestCase):
             project=Path(tmp);(project/'Content/Sub01Home').mkdir(parents=True)
             (project/'Content/Sub01Home/ActualHome.umap').write_bytes(b'original')
             proof={'delta_z_cm':2.5,'native_desk_top_cm':84.5}
-            with patch.object(M,'preflight',return_value=(actors,rows,proof,project)),patch.object(M,'snapshot',side_effect=snapshot),patch.object(M,'native_triangles',side_effect=triangles),patch.object(M.source_geometry,'stage',return_value={'replacements':{73:SimpleNamespace(get_path_name=lambda:'owned73'),74:SimpleNamespace(get_path_name=lambda:'owned74')},'proof':[], 'screen75_copied':False}):
+            with patch.object(M.collision_state,'capture',return_value={}),patch.object(M.collision_state,'restore'),patch.object(M,'preflight',return_value=(actors,rows,proof,project)),patch.object(M,'snapshot',side_effect=snapshot),patch.object(M,'native_triangles',side_effect=triangles),patch.object(M.source_geometry,'stage',return_value={'replacements':{73:SimpleNamespace(get_path_name=lambda:'owned73'),74:SimpleNamespace(get_path_name=lambda:'owned74')},'proof':[], 'screen75_copied':False}):
                 if fail_save:
                     with self.assertRaisesRegex(RuntimeError,'level save failed'):M.run(tmp,False,u)
                     self.assertEqual([a.z for a in actors],[0,0,0,0]);self.assertEqual(len(saves),2)
