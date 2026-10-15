@@ -101,7 +101,8 @@ def run():
         result={'schema':'sub01.generated-frame-backings-retired.v1','source_proof':proof,'original_shared_actor':old.get_path_name(),
                 'remainder_actor':new.get_path_name(),'remainder_mesh':replacement.get_path_name(),'preserved_native_triangles':600,
                 'original_material':MATERIAL,'removed_only_source_triangles':list(range(600)),'protected_original_fingerprints_equal':True,
-                'backup':str(backup),'native_visual_verified':False}
+                'backup':str(backup),'original_state_before':before[old.get_path_name()],'original_hidden_before':hidden[old.get_path_name()],
+                'original_component_visible_before':True,'native_visual_verified':False}
         audit=project/'private-audit';audit.mkdir(exist_ok=True);(audit/'frame-backings-retired.json').write_text(json.dumps(result,indent=2)+'\n')
         return result
     except Exception:
