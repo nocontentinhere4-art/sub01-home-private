@@ -13,8 +13,8 @@ from launch_private_persistent_editor import PROJECT, PRIVATE, verified_window
 SIBLING = Path('/workspace/sub01-private-native-build/Sub01HomeLab')
 HASHES = {
     'libUnrealEditor-Sub01HomeLab.so': MODULE_SHA,
-    'libUnrealEditor-Sub01HomeLab.debug': '94d71a3c01c219e277d98bd44865031869ead4e4be677a6e8b09cefc7ade40ed',
-    'libUnrealEditor-Sub01HomeLab.sym': 'ae60974e6519f674b1f098528de5625f41cf14c37715468db9958659062f5849',
+    'libUnrealEditor-Sub01HomeLab.debug': 'ab5b05bb0f7f3b61ca587f89d2414565a2238688239d7b61660caa9bfda5b0f1',
+    'libUnrealEditor-Sub01HomeLab.sym': '48d230de9b08e2f757298104157fa7fa6f7b3bf5a608e3e814e50fc5b8e11108',
     'UnrealEditor.modules': '9c051a8a7c90657a24e2718e9cd4f41e16dcbdf37374940848e092eaa79df653',
     'Sub01HomeLabEditor.target': '26948e7c25f9deb5bb45cf8cdf5ac3fec6cfeb96623d58e1b494c86287aa530a',
 }
@@ -30,7 +30,7 @@ def deploy():
                         (proc / 'stat').read_text().rsplit(')', 1)[1].split()[0] != 'Z'), 'Live Unreal module must never be overwritten'
         except OSError:
             continue
-    proof = json.loads((SIBLING / 'final-phone-policy-456445b-artifact-proof.json').read_text())
+    proof = json.loads((SIBLING / 'final-controller-basis-phone-witness-b704640-artifact-proof.json').read_text())
     assert proof['actual_exit'] == 0 and proof['schema'] == 'sub01.actual-sibling-native-artifacts.v1'
     assert proof['target'] == 'dgtgepkz7h1zy5'
     assert proof['result']['exit'] == 0
