@@ -8,6 +8,7 @@ this transaction. Compiling assets remain quarantined. No level load, pod operat
 import copy,hashlib,json,sys
 from uuid import uuid4
 from unreal_owned_import_cleanup import detach_added
+from unreal_fingerprint_diagnostics import persist as persist_fingerprint_difference
 from pathlib import Path
 from home_asset_audit import read_gltf
 from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
@@ -189,13 +190,15 @@ def run(root,dry_run=True,u=None):
     exact_component=[r for r in expected['components']if r['path']==c.get_path_name()]
     if len(exact_component)!=1:raise RuntimeError('Owned full book fingerprint identity missing')
     exact_component[0]['mesh']=replacement.get_path_name()
-   actual_fingerprint=fingerprint(u,[actor])[actor.get_path_name()]
+   actual_fingerprint=fingerprint(u,[actor])[actor.get_path_name()];raw_actual_fingerprint=copy.deepcopy(actual_fingerprint)
    # Float transforms may differ by ulps; compare exact non-transform fields and bounded poses.
    for got,want in [(actual_fingerprint['transform'],expected['transform'])]+[(g['transform'],w['transform'])for g,w in zip(actual_fingerprint['components'],expected['components'])]:
     if not close(got['translation'],want['translation'])or not close(got['rotation'],want['rotation'],1e-5)or not close(got['scale'],want['scale'],1e-5):raise RuntimeError('Book pose changed beyond proven rigid translation')
    actual_fingerprint['transform']=expected['transform']
    for got,want in zip(actual_fingerprint['components'],expected['components']):got['transform']=want['transform']
-   if actual_fingerprint!=expected:raise RuntimeError('Book mesh/PBR/collision changed during rigid retarget')
+   if actual_fingerprint!=expected:
+    persist_fingerprint_difference(root/'native-office-book-activation-refusal.json',expected,actual_fingerprint,{'book':plan['id'],'actor':actor.get_path_name(),'raw_actual_before_transform_normalization':raw_actual_fingerprint,'original_before_activation':before[actor.get_path_name()]})
+    raise RuntimeError('Book mesh/PBR/collision changed during rigid retarget '+plan['id'])
    book_rows.append({'id':plan['id'],'actor':actor.get_path_name(),'new_bounds_cm':actual,'source_geometry_unchanged':True})
   old_targets=ctx['old']+old_shelves+[plantctx['oldbase']]
   for actor in old_targets:
@@ -231,7 +234,9 @@ def run(root,dry_run=True,u=None):
     for slot,mat in enumerate(mats):c.set_material(slot,mat)
   cleanup=detach_added(u,eas,before)
   quarantined=[p for p in(dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else []),*([book_geometry['destination']]if 'book_geometry'in locals()and book_geometry['destination']else []))if p]
-  (root/'native-office-bundle.failed.json').write_text(json.dumps({'error':str(error),'quarantined_asset_directories':quarantined,'cleanup':cleanup,'original_rollback_verified':fingerprint(u,original)==before},indent=2)+'\n')
-  if fingerprint(u,original)!=before:raise RuntimeError('Whole office original rollback fingerprint differs; preserve map backup')
+  rollback_actual=fingerprint(u,original);rollback_diff=[]
+  if rollback_actual!=before:rollback_diff=persist_fingerprint_difference(root/'native-office-rollback-refusal.json',before,rollback_actual,{'activation_error':str(error),'level_save_attempted':level_save_attempted})
+  (root/'native-office-bundle.failed.json').write_text(json.dumps({'error':str(error),'quarantined_asset_directories':quarantined,'cleanup':cleanup,'original_rollback_verified':rollback_actual==before,'exact_rollback_fingerprint_differences':rollback_diff},indent=2)+'\n')
+  if rollback_actual!=before:raise RuntimeError('Whole office original rollback fingerprint differs; preserve map backup')
   if level_save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office rollback map save failed; restore map backup')
   raise
