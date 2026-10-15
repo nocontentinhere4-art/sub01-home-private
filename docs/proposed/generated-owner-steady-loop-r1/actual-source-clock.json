@@ -1,0 +1,33 @@
+{
+  "schema": "sub01.actual-kimodo-source-timing.v1",
+  "original_generation_receipt_sha256": "1f63c681966a80a57657559f72f7f1fee6a6b7d85e5f44b703b8cf0b535f90b0",
+  "original_generation_receipt_preserved": true,
+  "source_npz_sha256": "d7ca868c20e0682f52740fc35d62455d435a21b1a8aa8e29d2ad14d9edf4194c",
+  "actual_bvh_sha256": "2fb00de89872c24080ef3597703c6c87b476ad737be230e064d71d64d7b3eea5",
+  "actual_bvh_frame_time_s": 0.03333333333333333,
+  "verified_fps": 30,
+  "model_config_sha256": "905664ad05779b0e28c391b85dc81c9de166418bd5f471ef605f75ab746ce391",
+  "model_config_fps": 30,
+  "model_snapshot_revision": "6c9233af1180b8151e3c4703477104af5dce9dd5",
+  "actual_kimodo_cli_source_sha256": "b9e3395a495dff1af91d7ffd516c0a842b2145bf16a2f281c33a20960cd1be5e",
+  "actual_generation_log_sha256": "33180a3e8ed46172441a4a9f92a0ae8a3814c0d5c0510db8528c30ddc20c0eb7",
+  "actual_logged_prompt_segments": [
+    {
+      "prompt": "A person walks forward continuously at a steady comfortable walking pace, with relaxed shoulders, natural alternating arm swing, and balanced footfalls.",
+      "frames": 180,
+      "duration_s": 6.0
+    },
+    {
+      "prompt": "They keep walking throughout, without starting, stopping, turning, or changing speed.",
+      "frames": 180,
+      "duration_s": 6.0
+    }
+  ],
+  "cli_behavior": "get_texts_and_num_frames_from_prompt splits on period and applies duration to each text; get_generation_inputs uses actual model.fps; multi_prompt=True concatenates",
+  "requested_duration_each_prompt_s": 6,
+  "actual_samples": 360,
+  "actual_sample_duration_s": 12,
+  "actual_last_sample_time_s": 11.966666666666667,
+  "wrong_60fps_derivatives_quarantined": true,
+  "native_changed": false
+}

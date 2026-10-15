@@ -95,7 +95,7 @@ export function createFootPlantSolver(THREE,rig,calibration,options={}){
      for(let iteration=0;iteration<4;iteration++){
       const measured=options.measureSoleSurface(side);assert(Number.isFinite(measured));
       const error=targetClearance-measured;if(Math.abs(error)<1e-5||(error<0&&!plans[side]))break;
-      assert(Math.abs(error)<.025,'Exact sole correction exceeds bounded25mm contact refinement');
+      assert(Math.abs(error)<.025,`Exact sole correction exceeds bounded25mm contact refinement: ${side} frame=${frame} measured=${measured}m error=${error}m`);
       const f=feet[side];applyLeg(side,pos(f.foot).add(new THREE.Vector3(0,error,0)),f.foot.getWorldQuaternion(Q()));correction+=error;
      }
      report.feet[side]={...report.feet[side],actual_skinned_sole_min_y_m:options.measureSoleSurface(side),measured_surface_refinement_m:correction};

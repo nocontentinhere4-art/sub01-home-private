@@ -1,0 +1,350 @@
+{
+  "schema": "sub01.bounded-source-locomotion-loop-proposal.v1",
+  "candidate_sha256": "b7ed1488ab94d744bd5aba01f1175eefe29f0e4ce3a54700a38ff697708c2635",
+  "candidate_path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/cozy-motion/generated-r3-steady-walk/steady-106-138-cyclic-contact-owner.glb",
+  "source_frames": [
+    106,
+    138
+  ],
+  "actual_fps": 30,
+  "cycle_duration_s": 1.0666666666666667,
+  "fixed_bone_lengths": true,
+  "original_skin_meshes_and_nonanimation_binary_unchanged": true,
+  "endpoint_all_animation_values_byte_equal": true,
+  "correction": "Quaternion endpoint midpoint, distributed over eight source boundary frames, max3.50degrees; cyclic reachable pelvis smoothing, full-source skin sole reprojection",
+  "max_allowed_rotation_correction_deg": 5,
+  "full_skin_support_audit_passed": true,
+  "skin_support_summary": {
+    "Left": {
+      "stance_frames": 16,
+      "stance_minima_range_m": [
+        -2.288818308215923e-07,
+        2.212524350397871e-06
+      ],
+      "swing_minima_range_m": [
+        0.002999648917466402,
+        0.044980239123106
+      ],
+      "joint_length_ranges_m": {
+        "thigh_m": [
+          0.36322649796631085,
+          0.363229305004229
+        ],
+        "calf_m": [
+          0.39767877177059396,
+          0.39768139245847517
+        ]
+      }
+    },
+    "Right": {
+      "stance_frames": 11,
+      "stance_minima_range_m": [
+        -5.340576194612368e-07,
+        7.629394360719743e-08
+      ],
+      "swing_minima_range_m": [
+        0.0029990386683493853,
+        0.028249740600585938
+      ],
+      "joint_length_ranges_m": {
+        "thigh_m": [
+          0.3590711236239973,
+          0.35907397457468976
+        ],
+        "calf_m": [
+          0.40254094948362773,
+          0.40254370189232347
+        ]
+      }
+    }
+  },
+  "angular_velocity_seam": [
+    {
+      "bone": "mixamorig:Hips",
+      "incoming_angular_velocity_rad_s": [
+        0.31907127877513103,
+        0.006191650000060028,
+        0.10497776089981452
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        0.27692482932560397,
+        0.0017434383767615128,
+        0.11999551225110675
+      ],
+      "velocity_jump_rad_s": 0.04496268056395689
+    },
+    {
+      "bone": "mixamorig:Spine",
+      "incoming_angular_velocity_rad_s": [
+        -0.2610123020704491,
+        -0.2618359058953508,
+        -0.4807184872205258
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.16757450924005213,
+        -0.22778996307932003,
+        -0.4286250967894531
+      ],
+      "velocity_jump_rad_s": 0.11226517125917904
+    },
+    {
+      "bone": "mixamorig:Spine1",
+      "incoming_angular_velocity_rad_s": [
+        -2.208004872631236e-06,
+        4.1956014030927096e-07,
+        -3.8184840274739193e-07
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -4.043419464642547e-06,
+        6.620418538029032e-07,
+        -3.062697893045854e-07
+      ],
+      "velocity_jump_rad_s": 1.8529048094159593e-06
+    },
+    {
+      "bone": "mixamorig:Spine2",
+      "incoming_angular_velocity_rad_s": [
+        0.02883847149572432,
+        -0.14550879074480416,
+        0.0597826511744387
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        0.0875605761582727,
+        -0.11604755738739914,
+        -0.04916687314927939
+      ],
+      "velocity_jump_rad_s": 0.12722518892618395
+    },
+    {
+      "bone": "mixamorig:Neck",
+      "incoming_angular_velocity_rad_s": [
+        -0.3638113802779951,
+        -0.3539635148009086,
+        0.7345023848969566
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.5676862576378852,
+        -0.48351051661169864,
+        0.8106522059160307
+      ],
+      "velocity_jump_rad_s": 0.2532709745271101
+    },
+    {
+      "bone": "mixamorig:Head",
+      "incoming_angular_velocity_rad_s": [
+        -0.16086468732039153,
+        -0.41494275871040237,
+        -0.18163500386937484
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.20029289160958758,
+        -0.1541405284378926,
+        -0.03615716887408291
+      ],
+      "velocity_jump_rad_s": 0.3012244795555354
+    },
+    {
+      "bone": "mixamorig:RightShoulder",
+      "incoming_angular_velocity_rad_s": [
+        -0.09012911044082444,
+        -0.5666731607531572,
+        0.32434730894260383
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.029367319644975767,
+        -0.45721515132767865,
+        0.3973886744052774
+      ],
+      "velocity_jump_rad_s": 0.14494168522808917
+    },
+    {
+      "bone": "mixamorig:RightArm",
+      "incoming_angular_velocity_rad_s": [
+        0.08413315348053395,
+        -0.7444270180745896,
+        1.3070010928479852
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.12366429361835947,
+        -0.4671396787414169,
+        1.1326507228158469
+      ],
+      "velocity_jump_rad_s": 0.38789959925943596
+    },
+    {
+      "bone": "mixamorig:RightForeArm",
+      "incoming_angular_velocity_rad_s": [
+        -0.03856281303014063,
+        -0.005609121123137202,
+        0.21556031960168748
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.012471472464966658,
+        -0.004249236132901256,
+        0.5213552416892933
+      ],
+      "velocity_jump_rad_s": 0.3069090121098425
+    },
+    {
+      "bone": "mixamorig:LeftShoulder",
+      "incoming_angular_velocity_rad_s": [
+        -0.15265691318575159,
+        -0.5663363757949925,
+        0.2652916586606281
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.14180143401308243,
+        -0.5379174223388538,
+        0.07057187404498383
+      ],
+      "velocity_jump_rad_s": 0.19708189380146854
+    },
+    {
+      "bone": "mixamorig:LeftArm",
+      "incoming_angular_velocity_rad_s": [
+        -0.2657086751320242,
+        -1.2117816176769225,
+        0.286679122116763
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.5422997278374262,
+        -1.256151170663324,
+        0.1957900536432466
+      ],
+      "velocity_jump_rad_s": 0.2945031246640333
+    },
+    {
+      "bone": "mixamorig:LeftForeArm",
+      "incoming_angular_velocity_rad_s": [
+        -0.07394289541685116,
+        0.015609047406678875,
+        1.1080538081820894
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        0.19471232474356842,
+        0.0660830507008221,
+        0.8337253980231848
+      ],
+      "velocity_jump_rad_s": 0.38727164748828813
+    },
+    {
+      "bone": "mixamorig:RightUpLeg",
+      "incoming_angular_velocity_rad_s": [
+        0.5725521151821527,
+        -0.41287117613044544,
+        -0.22488186450323122
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.6591853156202895,
+        -0.02745095617141923,
+        -0.32202181041517947
+      ],
+      "velocity_jump_rad_s": 1.2942805003108255
+    },
+    {
+      "bone": "mixamorig:RightLeg",
+      "incoming_angular_velocity_rad_s": [
+        7.389432614856623,
+        -0.04112033380096922,
+        -0.0442052285338449
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        2.519328669720288,
+        -0.11243510561459145,
+        -0.04712641309413365
+      ],
+      "velocity_jump_rad_s": 4.87062693771865
+    },
+    {
+      "bone": "mixamorig:RightFoot",
+      "incoming_angular_velocity_rad_s": [
+        -0.16151589745843584,
+        0.47505768602991655,
+        0.9582158046745524
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        1.292189154005676,
+        0.3773030479608051,
+        0.6274116004596201
+      ],
+      "velocity_jump_rad_s": 1.4940702016446796
+    },
+    {
+      "bone": "mixamorig:RightToeBase",
+      "incoming_angular_velocity_rad_s": [
+        -0.11211015677457944,
+        0.02415424295410551,
+        0.034508265311945535
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        0.03496665536054585,
+        0.03603432341100034,
+        -0.009629920382837429
+      ],
+      "velocity_jump_rad_s": 0.15401592260516567
+    },
+    {
+      "bone": "mixamorig:LeftUpLeg",
+      "incoming_angular_velocity_rad_s": [
+        1.1763348972844185,
+        0.09265125332119639,
+        0.6372708634630417
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        1.3376562809280115,
+        0.09577029640369375,
+        0.7463777756470928
+      ],
+      "velocity_jump_rad_s": 0.1947784267745584
+    },
+    {
+      "bone": "mixamorig:LeftLeg",
+      "incoming_angular_velocity_rad_s": [
+        -0.6684102742717001,
+        0.030852211013686123,
+        -0.1116855615554198
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.473671139644655,
+        0.05440143538787761,
+        -0.12115707441820184
+      ],
+      "velocity_jump_rad_s": 0.19638636938399326
+    },
+    {
+      "bone": "mixamorig:LeftFoot",
+      "incoming_angular_velocity_rad_s": [
+        0.39811589937414554,
+        1.6282499516581295,
+        -0.06862688192035042
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        -0.2633021501229902,
+        1.470838915045263,
+        -0.24701872039770698
+      ],
+      "velocity_jump_rad_s": 0.7029051989304561
+    },
+    {
+      "bone": "mixamorig:LeftToeBase",
+      "incoming_angular_velocity_rad_s": [
+        0.7988039451679773,
+        -0.021061348990078606,
+        0.028415088888600434
+      ],
+      "outgoing_angular_velocity_rad_s": [
+        1.4208763221860727,
+        -0.008722725621050507,
+        -0.016136296325194362
+      ],
+      "velocity_jump_rad_s": 0.6237877121265328
+    }
+  ],
+  "maximum_angular_velocity_seam_jump_rad_s": 4.87062693771865,
+  "continuous_velocity_accepted": false,
+  "world_horizontal_stance_accepted": false,
+  "native_changed": false,
+  "native_input_acquired": false,
+  "visual_review_pending": true,
+  "next_gate": "Review full rendered loop and smooth seam tangents with measured stance constraints, then native collision-limited capsule/phase/skin-foot trace; do not install as accepted looping locomotion yet."
+}

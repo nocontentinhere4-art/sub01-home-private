@@ -22,7 +22,7 @@ arm.animation_data_create();arm.animation_data.action=actions[0]
 for track in arm.animation_data.nla_tracks:track.mute=True
 start,end=actions[0].frame_range
 assert abs((end-start)/fps-review['duration_seconds'])<1e-4
-assert all(start<=f<=end for f in review['frames'])
+assert all(start-1e-4<=f<=end+1e-4 for f in review['frames'])
 hips=arm.pose.bones['mixamorig:Hips']
 world=bpy.data.worlds.new('Neutral motion review');world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.16,.17,.19,1);world.node_tree.nodes['Background'].inputs[1].default_value=.35;s.world=world
 floor_mat=bpy.data.materials.new('Measured model floor Y0');floor_mat.diffuse_color=(.14,.15,.17,1)
@@ -34,7 +34,7 @@ for energy,size in[(180,3),(90,2)]:
 s.render.engine='CYCLES';s.cycles.device='CPU';s.cycles.samples=8;s.cycles.use_denoising=True;s.render.resolution_x=480;s.render.resolution_y=640;s.render.resolution_percentage=100;s.render.image_settings.file_format='PNG';s.view_settings.view_transform='AgX'
 records=[]
 for frame in review['frames']:
- s.frame_set(frame);bpy.context.view_layer.update();center=arm.matrix_world@hips.head;target=Vector((center.x,center.y,.95))
+ actual_frame=min(end,max(start,frame));s.frame_set(math.floor(actual_frame),subframe=actual_frame%1);bpy.context.view_layer.update();center=arm.matrix_world@hips.head;target=Vector((center.x,center.y,.95))
  camera.location=target+Vector((2.8,-5,1.0));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
  for light,offset in zip(lights,[Vector((-2,-3,4)),Vector((3,2,2))]):light.location=target+offset;light.rotation_euler=(target-light.location).to_track_quat('-Z','Y').to_euler()
  s.render.filepath=str(output/f'cozy-owner-frame-{frame:03}.png');bpy.ops.render.render(write_still=True)

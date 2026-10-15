@@ -1,7 +1,7 @@
 // Offline WIP adapter; original geometry and physical root XZ remain immutable.
 import fs from 'node:fs';import crypto from 'node:crypto';import assert from 'node:assert/strict';
 import * as T from '../web/house/vendor/three.core.js';import {createFootPlantSolver} from './generated_owner_footplant_ik.mjs';
-const [input,calPath,contactPath,output,pinnedInputSha]=process.argv.slice(2);assert(output,'INPUT CALIBRATION CONTACTS OUTPUT');
+const [input,calPath,contactPath,output,pinnedInputSha,mode]=process.argv.slice(2);assert(output,'INPUT CALIBRATION CONTACTS OUTPUT');
 const raw=fs.readFileSync(input),hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 assert.equal(hash(raw),pinnedInputSha||'16b8ab6a32931f9abd175bcbca5b47a332bd7f17d4176e017929ae49c2d03000');
 let doc,bin;for(let i=12;i<raw.length;){const n=raw.readUInt32LE(i),kind=raw.readUInt32LE(i+4);if(kind===0x4e4f534a)doc=JSON.parse(raw.subarray(i+8,i+8+n));else if(kind===0x004e4942)bin=Buffer.from(raw.subarray(i+8,i+8+n));i+=8+n;}
@@ -22,7 +22,8 @@ return reports;}
 const preliminary=run();let planned=preliminary.map(r=>r.pelvis_vertical_body_offset_m);
 // Offline lookahead smooths the body correction into upcoming stance; hard
 // per-frame leg reach is never relaxed. Contact feet still solve exact surface.
-for(let pass=0;pass<1200;pass++)for(let i=0;i<count;i++){const r=preliminary[i],[lo,hi]=r.pelvis_feasible_interval_m,w=r.pelvis_preferred_offset_m===null?0:.025,target=r.pelvis_preferred_offset_m??0;const left=planned[Math.max(0,i-1)],right=planned[Math.min(count-1,i+1)];planned[i]=Math.max(lo,Math.min(hi,(left+right+w*target)/(2+w)));}
+for(let pass=0;pass<1200;pass++)for(let i=0;i<count;i++){const r=preliminary[i],[lo,hi]=r.pelvis_feasible_interval_m,w=r.pelvis_preferred_offset_m===null?0:.025,target=r.pelvis_preferred_offset_m??0;const left=planned[mode==='--cyclic'?(i===0?count-2:i-1):Math.max(0,i-1)],right=planned[mode==='--cyclic'?(i===count-1?1:i+1):Math.min(count-1,i+1)];planned[i]=Math.max(lo,Math.min(hi,(left+right+w*target)/(2+w)));}
+if(mode==='--cyclic'){assert.deepEqual(contact.contacts[0],contact.contacts.at(-1));const lo=Math.max(preliminary[0].pelvis_feasible_interval_m[0],preliminary.at(-1).pelvis_feasible_interval_m[0]),hi=Math.min(preliminary[0].pelvis_feasible_interval_m[1],preliminary.at(-1).pelvis_feasible_interval_m[1]);assert(lo<=hi);planned[0]=planned[count-1]=Math.max(lo,Math.min(hi,(planned[0]+planned[count-1])/2));}
 const reports=run(planned);
 const inputBin=(()=>{let at=12;while(at<raw.length){const len=raw.readUInt32LE(at),kind=raw.readUInt32LE(at+4);if(kind===0x004e4942)return raw.subarray(at+8,at+8+len);at+=8+len;}throw new Error('Missing inputBIN');})();
 const intervals=channels.map(c=>[c.offset,c.offset+count*c.size*4]).sort((a,b)=>a[0]-b[0]);let cursor=0;for(const[a,b]of intervals){assert(bin.subarray(cursor,a).equals(inputBin.subarray(cursor,a)),'Non-animation source binary changed');cursor=b;}assert(bin.subarray(cursor).equals(inputBin.subarray(cursor)),'Trailing source binary changed');
