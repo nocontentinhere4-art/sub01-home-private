@@ -3,6 +3,7 @@ import configparser
 import json
 import os
 import subprocess
+import shutil
 import stat
 import time
 from pathlib import Path
@@ -95,7 +96,10 @@ def run():
             '-corelimit=10', '-physicalcorelimit=10',
             '-ExecutePythonScript=' + str(BOOTSTRAP), '-log', '-stdout',
             '-FullStdOutLogOutput', '-ResX=1280', '-ResY=720', '-Windowed']
-    log = (PRIVATE / 'persistent-editor-launch.log').open('w')
+    log_path = PRIVATE / 'persistent-editor-launch.log'
+    if log_path.exists():
+        shutil.copy2(log_path, PRIVATE / f'previous-editor-launch-{time.time_ns()}.log')
+    log = log_path.open('w')
     child = subprocess.Popen(args, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     receipt = {'wrapper_pid': child.pid, 'engine_root': str(ENGINE),
                'project_root': str(PROJECT), 'deadline_epoch': deadline,
