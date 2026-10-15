@@ -1,0 +1,19 @@
+{
+ "schema": "sub01.ergonomic-layout-refit.v1",
+ "status": "in_progress",
+ "label": "proposal",
+ "source_only": true,
+ "verified": false,
+ "source_ready": false,
+ "native_ready": false,
+ "ready": false,
+ "note": "Early skeleton so the verifier can start. The ORIGINAL transforms below are final (the reversibility record); the proposed configuration is filled in by tools/ergonomic_layout_refit.py and replaces this file.",
+ "original": {
+  "keyboard": {"home_js": "furnished(\"keyboard\", 2, 0.846, -2.94, 0.371, 0, \"/house/assets/keyboard/keyboard.glb\")", "three_m": [2.0, 0.846, -2.94], "width_m": 0.371, "footprint_ue_cm": [[181.45, -302.046, 84.6], [218.55, -285.954, 87.39]], "key_field_ue_cm": [[182.173, -301.297, 86.537], [217.749, -287.917, 87.39]]},
+  "mouse": {"home_js": "furnished(\"mouse\", 2.4, 0.846, -2.91, 0.22, 0, \"/room/mouse.glb\")", "three_m": [2.4, 0.846, -2.91], "width_m": 0.22, "footprint_ue_cm_root_record": [[229.0, -301.45], [251.0, -280.55]]},
+  "chair_initial_translation_cm": [200.0199556350708, -186.69002056121826, 63.1876777245],
+  "chair_roll_cm": [3.875, -21.279, 0.0],
+  "chair_rolled_translation_cm": [203.895, -207.969, 63.1877],
+  "body_placement": "audited body [203.9, -232.3, -0.6] cm yaw 180, offset (-3.875, +32.5) at the initial chair; rolls rigidly with the chair"
+ }
+}
