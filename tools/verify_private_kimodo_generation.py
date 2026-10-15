@@ -7,6 +7,11 @@ from pathlib import Path
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--steady-walk', action='store_true',
+                        help='Generate a separate continuous walking source, never overwrite walk-stop evidence')
+    args = parser.parse_args()
     root = Path('/workspace/sub01-home-private/motion-runtime')
     window = json.loads(Path('/run/sub01-home-private/runtime-window.json').read_text())
     assert time.time() < window['deadline_epoch'] and window['stop_guards_authenticated']
@@ -33,12 +38,19 @@ def main():
     torch.cuda.set_per_process_memory_fraction(0.15)
     free, total = torch.cuda.mem_get_info()
     assert free > 6 * 2**30, 'Preserve original home GPU headroom'
-    output = root / 'generated-r2-verified-adapters'
-    output.mkdir(exist_ok=True)
+    output = root / ('generated-r3-steady-walk' if args.steady_walk else 'generated-r2-verified-adapters')
+    output.mkdir(exist_ok=not args.steady_walk)
+    basename = 'steady-walk' if args.steady_walk else 'relaxed-walk-stop'
+    prompt = ('A person walks forward continuously at a steady comfortable walking pace, '
+              'with relaxed shoulders, natural alternating arm swing, and balanced footfalls. '
+              'They keep walking throughout, without starting, stopping, turning, or changing speed.'
+              if args.steady_walk else
+              'A person walks slowly forward with relaxed shoulders and natural arm swing, then gently comes to a stop')
+    duration, seed = (6.0, 106) if args.steady_walk else (3.0, 105)
     receipt = output / 'generation-receipt.json'
     report = {'schema': 'sub01.private-kimodo-generation.v1', 'started_epoch': time.time(),
-              'prompt': 'A person walks slowly forward with relaxed shoulders and natural arm swing, then gently comes to a stop',
-              'duration_seconds': 3.0, 'seed': 105, 'text_encoder_device': 'cpu',
+              'prompt': prompt,
+              'duration_seconds': duration, 'seed': seed, 'text_encoder_device': 'cpu',
               'gpu_memory_fraction_limit': 0.15, 'finished': False,
               'native_imported': False, 'contact_accepted': False}
     receipt.write_text(json.dumps(report, indent=2) + '\n')
@@ -83,12 +95,12 @@ def main():
         PeftModel.from_pretrained = classmethod(verified_load)
         from kimodo.scripts.generate import main as generate
         sys.argv = ['kimodo_gen', report['prompt'], '--model', 'Kimodo-SOMA-RP-v1.1',
-                    '--duration', '3', '--num_samples', '1', '--diffusion_steps', '50',
-                    '--seed', '105', '--output', str(output / 'relaxed-walk-stop'), '--bvh']
+                    '--duration', str(duration), '--num_samples', '1', '--diffusion_steps', '50',
+                    '--seed', str(seed), '--output', str(output / basename), '--bvh']
         generate()
         assert len(audits) == 2, 'Both official encoder adapters must be verified'
         report['adapter_weight_audits'] = audits
-        path = output / 'relaxed-walk-stop.npz'
+        path = output / (basename + '.npz')
         with np.load(path, allow_pickle=False) as motion:
             arrays = {k: {'shape': list(motion[k].shape), 'dtype': str(motion[k].dtype)} for k in motion.files}
             for key in ['posed_joints', 'global_rot_mats']:
