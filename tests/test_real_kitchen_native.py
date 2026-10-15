@@ -107,6 +107,13 @@ class KitchenGuards(unittest.TestCase):
         self.assertFalse(bundle.allowed_contact(penetrating, triangle, 0, actual))
         slab_top = [[x, .9225, z] for x, y, z in triangle]
         self.assertFalse(bundle.allowed_contact(slab_top, slab_top, 65, actual))
+        underside = [[x, .8675, z] for x, y, z in triangle]
+        board_side = [underside[0], underside[1], [-3., .8495, -3.8]]
+        self.assertTrue(bundle.allowed_contact(board_side, underside, 65, actual))
+        board_side[2][1] = .86751
+        self.assertFalse(bundle.allowed_contact(board_side, underside, 65, actual))
+        foot_side = [triangle[0], triangle[1], [-3., .125, -3.8]]
+        self.assertTrue(bundle.allowed_contact(foot_side, triangle, 0, actual))
 
     def test_real_bridge_installer_preserves_existing_controls_and_masks_private_stale(self):
         original = (ROOT/'tools/unreal_home_state_bridge.py').read_text()

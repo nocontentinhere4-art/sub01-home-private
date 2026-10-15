@@ -54,7 +54,14 @@ def swept_bounds(points, hinge, angle=-math.pi*.49):
 def allowed_contact(points, source_points, node, contacts):
     """Only actual floor top / countertop underside planar contacts, 1µm float bound."""
     plane = contacts['floor_m'] if node == 0 else contacts['counter_underside_m'] if node == 65 else None
-    return plane is not None and all(abs(p[1]-plane) <= 1e-6 for p in points+source_points)
+    if plane is None or not all(abs(p[1]-plane) <= 1e-6 for p in source_points):
+        return False
+    signed = [p[1]-plane for p in points]
+    # A board's vertical side can meet the slab at its TOP EDGE. Its whole face
+    # need not be coplanar: every vertex must stay in the non-penetrating halfspace.
+    # Conversely a foot must stay ABOVE the actual floor top. No other node is exempt.
+    return (any(abs(v) <= 1e-6 for v in signed)
+            and (min(signed) >= -1e-6 if node == 0 else max(signed) <= 1e-6))
 
 
 def protected_triangles(home, region):
@@ -99,7 +106,7 @@ def full_collision_proof(bpy, report, home, progress=lambda phase, **kw: None):
     rows = protected_triangles(home, region)
     protected = BVHTree.FromPolygons([(p[0], -p[2], p[1]) for r in rows for p in r['points']],
         [tuple(range(3*i, 3*i+3)) for i in range(len(rows))], all_triangles=True, epsilon=0.)
-    issues, contacts, poses, swept = [], [], {}, {}
+    issues, contacts, poses, swept, issue_counts = [], [], {}, {}, {}
     progress('protected-source-bvh-built', protected_triangles=len(rows))
 
     def check_home(parts, identity):
@@ -116,9 +123,16 @@ def full_collision_proof(bpy, report, home, progress=lambda phase, **kw: None):
             detail = {'object': owners[a], 'pose': identity, 'source_node': target['node'],
                       'source_primitive': target['primitive'], 'source_triangle': target['triangle']}
             if allowed_contact(points, target['points'], target['node'], report['actual_home_contacts']):
+                plane = report['actual_home_contacts']['floor_m' if target['node'] == 0 else 'counter_underside_m']
+                detail['candidate_signed_height_range_m'] = [min(p[1]-plane for p in points), max(p[1]-plane for p in points)]
                 contacts.append(detail)
-            elif len(issues) < 32:
-                issues.append(detail)
+            else:
+                key = str(target['node'])+':'+owners[a]
+                issue_counts[key] = issue_counts.get(key, 0)+1
+                if len(issues) < 32:
+                    detail['candidate_vertices_browser_m'] = points
+                    detail['protected_triangle_browser_m'] = target['points']
+                    issues.append(detail)
         return tree, bounds([(p.x, p.y, p.z) for o in parts for p in (o.matrix_world @ v.co for v in o.data.vertices)])
 
     check_home([o for o in objects if '_cabinet_body_' in o.name], 'static')
@@ -152,7 +166,7 @@ def full_collision_proof(bpy, report, home, progress=lambda phase, **kw: None):
                 pair_rows.append({'left': left, 'right': right, 'swept_aabb_disjoint': True,
                                   'left_swept_bounds_blender_m': swept[left], 'right_swept_bounds_blender_m': swept[right]})
                 continue
-            before_tests = tests
+            before_tests, pair_hits = tests, 0
             for ai, (a, ab) in enumerate(poses[left]):
                 if ai % 15 == 0:
                     progress('door-pair-pose', left=left, right=right, left_pose=ai, bvh_calls=tests)
@@ -162,18 +176,22 @@ def full_collision_proof(bpy, report, home, progress=lambda phase, **kw: None):
                         continue
                     tests += 1
                     hits = a.overlap(b)
-                    if hits and len(issues) < 32:
-                        issues.append({'left': left, 'right': right, 'left_pose': ai,
-                                       'right_pose': bi, 'triangle_pairs': len(hits)})
+                    if hits:
+                        pair_hits += len(hits)
+                        key = 'door_pair:'+left+':'+right
+                        issue_counts[key] = issue_counts.get(key, 0)+len(hits)
+                        if len(issues) < 32:
+                            issues.append({'left': left, 'right': right, 'left_pose': ai,
+                                           'right_pose': bi, 'triangle_pairs': len(hits)})
             pair_rows.append({'left': left, 'right': right, 'swept_aabb_disjoint': False,
-                              'actual_triangle_bvh_calls': tests-before_tests})
+                              'actual_triangle_bvh_calls': tests-before_tests, 'intersecting_triangle_pairs': pair_hits})
         progress('full-collision-complete', completed_pairs=28, bvh_calls=tests,
                  disjoint_whole_arc_pairs=swept_rejects, issues=len(issues))
     finally:
         for parent in parents:
             parent.rotation_euler.z = 0
         bpy.context.view_layer.update()
-    return {'ok': not issues, 'issues': issues, 'epsilon_m': 0., 'retained_source_sha256': base.HOME_SHA,
+    return {'ok': not issue_counts, 'issues': issues, 'issue_counts': issue_counts, 'epsilon_m': 0., 'retained_source_sha256': base.HOME_SHA,
             'retired_source_nodes': [63, 178], 'protected_triangle_count': len(rows),
             'door_home_poses': 720, 'door_pair_bvh_tests': tests,
             'door_pair_aabb_rejects': broad_rejects, 'measured_planar_contacts': contacts,
@@ -258,6 +276,7 @@ def validate_manifest(proof):
         raise ValueError('Authentic three source-model identities required')
     collision = proof.get('full_collision_proof', {})
     if (not collision.get('ok') or collision.get('epsilon_m') != 0.
+            or collision.get('issues') or collision.get('issue_counts')
             or collision.get('retained_source_sha256') != base.HOME_SHA
             or collision.get('retired_source_nodes') != [63, 178]
             or collision.get('protected_triangle_count', 0) < 1
