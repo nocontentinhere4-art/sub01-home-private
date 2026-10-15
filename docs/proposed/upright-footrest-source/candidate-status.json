@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.upright-footrest-candidate.v1",
+  "clip_sha256": "5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da",
+  "status": "Source SeatedIdle visual candidate only",
+  "all126_mainstrong_anatomy_and_sampled_source_collision_pass": true,
+  "native_imported": false,
+  "runtime_ready": false,
+  "source_ready": false,
+  "pending": [
+    "Coherent authentic SitDown/GetUp contact transitions against this finite footrest",
+    "Typing/SitToType/TypeToSit against this upright base",
+    "Native chair lift plus footrest collision/source-support integration and actual first-person pixel/contact acceptance"
+  ],
+  "physical_world": {
+    "chair_whole_lift_cm": 2.5001,
+    "footrest_center_ue_cm": [
+      200.0,
+      -251.30796127049425
+    ],
+    "actual_floor_z_cm": 2.5,
+    "wood_top_z_cm": 14.5,
+    "rubber_top_z_cm": 14.7,
+    "desk_top_z_cm": 84.5
+  },
+  "native_footrest": "footrest-one-component.glb retains all19 physical sourceparts in oneMesh20primitives; originaleditable.blend remains19parts",
+  "readable_preview": "source-idle-preview.png; studio diagnostic source view, no native lighting/acceptance"
+}

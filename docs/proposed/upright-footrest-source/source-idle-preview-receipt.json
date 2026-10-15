@@ -1,0 +1,14 @@
+{
+  "schema": "sub01.upright-source-diagnostic.v1",
+  "candidate_sha256": "5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da",
+  "frame": 60,
+  "whole_chair_lift_cm": 2.5001,
+  "rigid_footrest_delta_y_cm": 8.692038729505747,
+  "original65_bones": true,
+  "all65_blender_joint_head_world_error_max_cm": 0.0008689822569212289,
+  "actual_chair_castor_min_z_m": 0.02500098943710327,
+  "diagnostic_markers_not_production_geometry": true,
+  "native_imported": false,
+  "source_ready": false,
+  "png_sha256": "9b35de52655b17d6ab452132e3fc6c08f5962cef6f07772c63790e85a1bda77f"
+}

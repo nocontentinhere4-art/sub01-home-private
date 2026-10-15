@@ -1,0 +1,26 @@
+{
+  "schema": "sub01.reference-footrest-one-component.v1",
+  "source_sha256": "d805f7bcc58b919734a966e084d16aa509655f3d7df8c5088efbd6a17d425c50",
+  "output_sha256": "34869299fd7c8428b224e2c4f95cf39186ab2094fd38e54183235eb21cb9876a",
+  "physical_idle_sha256": "5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da",
+  "original_parts": 19,
+  "native_mesh_components": 1,
+  "primitives": 20,
+  "original_buffer_prefix_unchanged": true,
+  "source_indices_uv_pbr_unchanged": true,
+  "position_bake_max_error_m": 1.6867997644347592e-07,
+  "normal_bake_max_error": 4.323909052428167e-08,
+  "source_world_rigid_placement_only": [
+    0.0,
+    0.0,
+    0.08692038729505747
+  ],
+  "rigid_delta_ue_cm": [
+    0.0,
+    8.692038729505747,
+    0.0
+  ],
+  "editable_source_remains19_parts": true,
+  "native_imported": false,
+  "runtime_ready": false
+}

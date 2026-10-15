@@ -18,7 +18,7 @@ OWNER_SHA='45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8'
 STRONG_SHA='dd95f1b1a8c3fc9a7d08b6d599985b86440c84752d85ae9f12fa8d480397a18f'
 
 
-def run(root,owner,footrest,desk,output,seconds=105,resume=None):
+def run(root,owner,footrest,desk,output,seconds=105,resume=None,left_inward_cm=0.,right_inward_cm=0.):
     start=time.monotonic();root=Path(root);output=Path(output);output.mkdir(parents=True,exist_ok=False)
     sys.path.insert(0,str(Path(__file__).resolve().parent))
     sys.path.insert(0,'/workspace/sub01-home-private/upright-footrest-python/scipy-1.14.1-cp311')
@@ -136,6 +136,15 @@ def run(root,owner,footrest,desk,output,seconds=105,resume=None):
             if old_doc['materials']!=new_doc['materials']or image_payloads(old_doc,old_bin)!=image_payloads(new_doc,new_bin):raise ValueError('Topology repair changed authored PBR')
             report['footrest_topology_repair']={'previous_sha256':PREVIOUS_FOOTREST_SHA,'new_sha256':FOOTREST_SHA,'all19_closed':True,'pbr_and_embedded_images_identical':True,'change':'Deduplicate coincident capsule endpoints before bevel; original shape and physical top heights retained'}
         best=(0.,np.asarray(previous['params'],float));report['resumed_exact_candidate_sha256']=previous['written_glb_sha256']
+        if left_inward_cm:
+            if not 0<left_inward_cm<=3:raise ValueError('Measured inward correction must be at most3cm within original anatomical parameter bounds')
+            best[1][4]-=left_inward_cm
+            report['measured_left_ankle_inward_correction_cm']=left_inward_cm
+            report['previous_failure_witness']=previous.get('collision',{}).get('footrest',{}).get('worst_witness')
+        if right_inward_cm:
+            if not 0<right_inward_cm<=4:raise ValueError('Measured right correction must remain within4cm and original anatomical bounds')
+            best[1][6]-=right_inward_cm
+            report['measured_right_ankle_inward_correction_cm']=right_inward_cm
     else:
         try:
             cost(seed)
@@ -149,7 +158,7 @@ def run(root,owner,footrest,desk,output,seconds=105,resume=None):
     checkpoint('all126 full plantar and posterior skin measured')
     labels={'label':'source candidate','verified':False,'native_ready':False,'source_capture_sha256':original_hash,'finite_real_footrest':FOOTREST_SHA}
     path=output/'SUB01_SeatedIdle_upright_footrest.glb'
-    if previous:path.write_bytes(Path(previous['written_glb']).read_bytes())
+    if previous and not(left_inward_cm or right_inward_cm):path.write_bytes(Path(previous['written_glb']).read_bytes())
     else:P.write_clip(g,fit.sk,pose,times,path,'SUB01_SeatedIdle_upright_footrest',labels,{})
     # Preserve raw finger local rotation and all nonroot translation/scale bytes.
     od,ob=read_gltf(path);sd,sb=read_gltf(g.path);ob=bytearray(ob)
@@ -233,6 +242,6 @@ def run(root,owner,footrest,desk,output,seconds=105,resume=None):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     for name in('root','owner','footrest','desk','output'):p.add_argument('--'+name,required=True)
-    p.add_argument('--seconds',type=float,default=105.);p.add_argument('--resume')
+    p.add_argument('--seconds',type=float,default=105.);p.add_argument('--resume');p.add_argument('--left-inward-cm',type=float,default=0.);p.add_argument('--right-inward-cm',type=float,default=0.)
     argv=sys.argv[sys.argv.index('--')+1:]if '--'in sys.argv else sys.argv[1:];a=p.parse_args(argv)
-    result=run(a.root,a.owner,a.footrest,a.desk,a.output,a.seconds,a.resume);print('ACTUAL_UPRIGHT_SOURCE_RESULT',result.get('source_idle_candidate_pass',False),result.get('phase'),flush=True)
+    result=run(a.root,a.owner,a.footrest,a.desk,a.output,a.seconds,a.resume,a.left_inward_cm,a.right_inward_cm);print('ACTUAL_UPRIGHT_SOURCE_RESULT',result.get('source_idle_candidate_pass',False),result.get('phase'),flush=True)

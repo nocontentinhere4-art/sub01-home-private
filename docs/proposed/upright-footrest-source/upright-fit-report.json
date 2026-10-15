@@ -1,0 +1,781 @@
+{
+  "schema": "sub01.upright-footrest-skinned-fit.v1",
+  "source_branch": "9cd2ec7",
+  "strong_rule_sha256": "dd95f1b1a8c3fc9a7d08b6d599985b86440c84752d85ae9f12fa8d480397a18f",
+  "owner_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "footrest_sha256": "d805f7bcc58b919734a966e084d16aa509655f3d7df8c5088efbd6a17d425c50",
+  "global_floor_cm": 2.5,
+  "whole_chair_lift_cm": 2.5001,
+  "actual_desk_top_cm": 84.5,
+  "source_ready": false,
+  "native_imported": false,
+  "runtime_ready": false,
+  "transitions_solved": false,
+  "typing_solved": false,
+  "plantar_source_metadata": {
+    "source": "root fixed native plantar witness",
+    "witness_vertices": {
+      "left": 1923,
+      "right": 2248
+    },
+    "unique_owner_vertices": {
+      "left": 1849,
+      "right": 2177
+    },
+    "match_error_cm": {
+      "3.0": {
+        "max_cm": 0.0017906165207612456,
+        "median_cm": 0.0003274699491414674
+      },
+      "6.0": {
+        "max_cm": 0.0018127119602405631,
+        "median_cm": 0.0003355691824056594
+      },
+      "8.0": {
+        "max_cm": 0.0018143601956838978,
+        "median_cm": 0.0003284047948807636
+      }
+    },
+    "file": "/workspace/sub01-home-private/upright-footrest-full-9cd/docs/proposed/native-chair-measured/20261014-actual-native-plantar-witness.json.gz"
+  },
+  "original_capture_unchanged": true,
+  "history": [],
+  "phase": "bounded source candidate complete",
+  "elapsed_s": 40.653734266757965,
+  "finite_support_source_triangles": 194,
+  "discarded_exact_zero_area_footrest_triangles": 0,
+  "resumed_exact_candidate_sha256": "5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8",
+  "measured_left_ankle_inward_correction_cm": 2.0,
+  "previous_failure_witness": {
+    "frame": 21,
+    "sample_index": 36767,
+    "body_point_ue_cm": [
+      181.00006861199705,
+      -263.9200417542726,
+      15.083344257965452
+    ],
+    "nearest_surface_ue_cm": [
+      181.1999969482422,
+      -263.9200744628906,
+      15.083353042602539
+    ],
+    "outward_normal": [
+      0.9999999403953552,
+      0.0,
+      0.0
+    ],
+    "distance_cm": 0.1999359130859375,
+    "signed_margin_cm": -0.1999359130859375,
+    "triangle_index": 5568,
+    "part": {
+      "material": "Charcoal fine-textured powdercoat",
+      "node": 4,
+      "name": "SUB01_ReferenceFootrest_PiercedSidePlate_-1"
+    }
+  },
+  "measured_right_ankle_inward_correction_cm": 3.7,
+  "params": [
+    10.512424924145865,
+    8.406046604019526,
+    -10.906481482298782,
+    14.94932519826499,
+    -9.553020509809983,
+    14.330541274290223,
+    -14.33725923410326,
+    6.9911210063332225,
+    -17.483631339666253,
+    1.258656151282839,
+    8.692038729505747
+  ],
+  "parameter_names": [
+    "pelvis_tilt_deg",
+    "root_down_cm",
+    "root_back_cm",
+    "left_ankle_forward_cm",
+    "left_ankle_lateral_cm",
+    "right_ankle_forward_cm",
+    "right_ankle_lateral_cm",
+    "left_hip_swivel_deg",
+    "right_hip_swivel_deg",
+    "torso_forward_lean_deg",
+    "footrest_rigid_delta_y_cm"
+  ],
+  "evaluations": 0,
+  "all126_support_worst_margin_cm": 0.0499998256564087,
+  "all126_support_failing_frames": [],
+  "anatomy": {
+    "pelvis_posterior_tilt": {
+      "range_deg": [
+        16.27,
+        17.05
+      ],
+      "limit_deg": [
+        0.0,
+        45.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        5.76,
+        6.55
+      ],
+      "max_change_deg": 10.5
+    },
+    "pelvis_obliquity": {
+      "range_deg": [
+        -2.0,
+        -1.61
+      ],
+      "capture_range_deg": [
+        -2.52,
+        -2.13
+      ],
+      "max_change_deg": 0.52
+    },
+    "pelvis_heading": {
+      "range_deg": [
+        -1.86,
+        -1.66
+      ],
+      "capture_range_deg": [
+        -1.93,
+        -1.7
+      ],
+      "max_change_deg": 0.07
+    },
+    "lumbar_flexion": {
+      "range_deg": [
+        17.13,
+        17.96
+      ],
+      "limit_deg": [
+        -16.0,
+        52.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        12.25,
+        12.37
+      ],
+      "max_change_deg": 5.68
+    },
+    "left_hip_flexion": {
+      "range_deg": [
+        81.84,
+        82.61
+      ],
+      "limit_deg": [
+        -30.0,
+        120.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        73.12,
+        73.85
+      ],
+      "max_change_deg": 8.79
+    },
+    "left_hip_abduction": {
+      "range_deg": [
+        -0.27,
+        0.16
+      ],
+      "limit_deg": [
+        -30.0,
+        45.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        4.25,
+        4.74
+      ],
+      "max_change_deg": 4.59
+    },
+    "left_hip_internal_rotation": {
+      "range_deg": [
+        4.4,
+        4.82
+      ],
+      "limit_deg": [
+        -45.0,
+        45.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        3.8,
+        4.19
+      ],
+      "max_change_deg": 0.65
+    },
+    "left_knee_flexion": {
+      "range_deg": [
+        100.05,
+        100.25
+      ],
+      "limit_deg": [
+        -5.0,
+        135.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        80.26,
+        80.47
+      ],
+      "max_change_deg": 19.82
+    },
+    "left_knee_varus": {
+      "range_deg": [
+        -7.69,
+        -7.54
+      ],
+      "capture_range_deg": [
+        3.03,
+        3.14
+      ],
+      "max_change_deg": 10.72
+    },
+    "left_knee_axial": {
+      "range_deg": [
+        -9.28,
+        -8.76
+      ],
+      "capture_range_deg": [
+        -5.25,
+        -4.71
+      ],
+      "max_change_deg": 4.05
+    },
+    "left_ankle_dorsiflexion": {
+      "range_deg": [
+        1.98,
+        2.07
+      ],
+      "limit_deg": [
+        -50.0,
+        20.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        -54.23,
+        -54.0
+      ],
+      "max_change_deg": 56.23
+    },
+    "left_subtalar_inversion": {
+      "range_deg": [
+        -4.67,
+        -4.45
+      ],
+      "limit_deg": [
+        -15.0,
+        35.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        -1.47,
+        -0.98
+      ],
+      "max_change_deg": 3.53
+    },
+    "left_foot_adduction": {
+      "range_deg": [
+        1.18,
+        1.68
+      ],
+      "capture_range_deg": [
+        2.41,
+        2.66
+      ],
+      "max_change_deg": 1.28
+    },
+    "left_mtp_extension": {
+      "range_deg": [
+        0.0,
+        0.0
+      ],
+      "limit_deg": [
+        -45.0,
+        70.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        1.34,
+        1.55
+      ],
+      "max_change_deg": 1.55
+    },
+    "right_hip_flexion": {
+      "range_deg": [
+        80.4,
+        81.29
+      ],
+      "limit_deg": [
+        -30.0,
+        120.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        67.42,
+        68.29
+      ],
+      "max_change_deg": 13.03
+    },
+    "right_hip_abduction": {
+      "range_deg": [
+        -0.64,
+        -0.31
+      ],
+      "limit_deg": [
+        -30.0,
+        45.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        9.36,
+        9.74
+      ],
+      "max_change_deg": 10.12
+    },
+    "right_hip_internal_rotation": {
+      "range_deg": [
+        -2.5,
+        -2.03
+      ],
+      "limit_deg": [
+        -45.0,
+        45.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        -3.29,
+        -2.84
+      ],
+      "max_change_deg": 0.86
+    },
+    "right_knee_flexion": {
+      "range_deg": [
+        98.16,
+        98.41
+      ],
+      "limit_deg": [
+        -5.0,
+        135.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        71.54,
+        71.76
+      ],
+      "max_change_deg": 26.71
+    },
+    "right_knee_varus": {
+      "range_deg": [
+        -13.45,
+        -13.33
+      ],
+      "capture_range_deg": [
+        -5.27,
+        -5.16
+      ],
+      "max_change_deg": 8.19
+    },
+    "right_knee_axial": {
+      "range_deg": [
+        -13.41,
+        -13.14
+      ],
+      "capture_range_deg": [
+        -2.75,
+        -2.5
+      ],
+      "max_change_deg": 10.68
+    },
+    "right_ankle_dorsiflexion": {
+      "range_deg": [
+        3.96,
+        4.07
+      ],
+      "limit_deg": [
+        -50.0,
+        20.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        -31.74,
+        -31.63
+      ],
+      "max_change_deg": 35.71
+    },
+    "right_subtalar_inversion": {
+      "range_deg": [
+        -13.27,
+        -13.06
+      ],
+      "limit_deg": [
+        -15.0,
+        35.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        -6.79,
+        -6.63
+      ],
+      "max_change_deg": 6.61
+    },
+    "right_foot_adduction": {
+      "range_deg": [
+        -1.88,
+        -1.55
+      ],
+      "capture_range_deg": [
+        -5.16,
+        -4.9
+      ],
+      "max_change_deg": 3.37
+    },
+    "right_mtp_extension": {
+      "range_deg": [
+        0.0,
+        0.0
+      ],
+      "limit_deg": [
+        -45.0,
+        70.0
+      ],
+      "within_limit": true,
+      "capture_range_deg": [
+        0.51,
+        0.74
+      ],
+      "max_change_deg": 0.74
+    }
+  },
+  "anatomical_max_excess_deg": 0.0,
+  "finite_sole_coverage": {
+    "left_sole": [
+      0.9167966718668746,
+      0.9183567342693708
+    ],
+    "right_sole": [
+      0.9986654804270463,
+      0.9995551601423488
+    ]
+  },
+  "unchanged_edit_bounds_excess": 0.0,
+  "written_glb_sha256": "5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da",
+  "written_glb": "/workspace/sub01-home-private/upright-footrest-fit-r8/SUB01_SeatedIdle_upright_footrest.glb",
+  "readback_world_error_cm": 1.9467149584007082e-05,
+  "readback_all126_main_rule_pass": true,
+  "readback_main_rule_failures": [],
+  "readback_anatomical_max_excess_deg": 0.0,
+  "finger_and_nonroot_tracks_preserved": [
+    [
+      "mixamorig:RightHandThumb1",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandThumb2",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandThumb3",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandThumb4",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandIndex1",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandIndex2",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandIndex3",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandIndex4",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandMiddle1",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandMiddle2",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandMiddle3",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandMiddle4",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandRing1",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandRing2",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandRing3",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandRing4",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandPinky1",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandPinky2",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandPinky3",
+      "rotation"
+    ],
+    [
+      "mixamorig:RightHandPinky4",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandThumb1",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandThumb2",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandThumb3",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandThumb4",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandIndex1",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandIndex2",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandIndex3",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandIndex4",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandMiddle1",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandMiddle2",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandMiddle3",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandMiddle4",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandRing1",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandRing2",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandRing3",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandRing4",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandPinky1",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandPinky2",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandPinky3",
+      "rotation"
+    ],
+    [
+      "mixamorig:LeftHandPinky4",
+      "rotation"
+    ]
+  ],
+  "bone_length_error_cm": 6.106226635438361e-14,
+  "closed_footrest_component_proof": [
+    {
+      "node": 0,
+      "triangles": 1036,
+      "welded_vertices": 520,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 1,
+      "triangles": 996,
+      "welded_vertices": 500,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 2,
+      "triangles": 996,
+      "welded_vertices": 500,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 3,
+      "triangles": 996,
+      "welded_vertices": 500,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 4,
+      "triangles": 1728,
+      "welded_vertices": 864,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 5,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 6,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 7,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 8,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 9,
+      "triangles": 1728,
+      "welded_vertices": 864,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 10,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 11,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 12,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 13,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 14,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 15,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 16,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 17,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    },
+    {
+      "node": 18,
+      "triangles": 252,
+      "welded_vertices": 128,
+      "boundary_or_nonmanifold_edges": 0
+    }
+  ],
+  "closed_footrest_known_point_tests": {
+    "known_exterior_knob_rim": true,
+    "SUB01_ReferenceFootrest_PiercedSidePlate_-1_carry_hole_and_solid": true,
+    "SUB01_ReferenceFootrest_AdjustmentKnob_-1_interior": true,
+    "SUB01_ReferenceFootrest_PiercedSidePlate_1_carry_hole_and_solid": true,
+    "SUB01_ReferenceFootrest_AdjustmentKnob_1_interior": true
+  },
+  "collision": {
+    "chair": {
+      "minimum_margin_cm": 0.2711772918701172,
+      "frames_with_penetration": [],
+      "frames_checked": 126
+    },
+    "footrest": {
+      "minimum_margin_cm": 0.04999544098973274,
+      "frames_with_penetration": [],
+      "frames_checked": 126
+    },
+    "desk": {
+      "minimum_margin_cm": 3.0,
+      "frames_with_penetration": [],
+      "frames_checked": 126
+    }
+  },
+  "collision_skin_sampling": "every6th source skinned vertex, ALL126frames required; exact nearest BVH triangle normals; no mesh geometry omitted",
+  "actual_floor_clearance_cm": 12.249995378865636,
+  "footrest_rigid_delta_ue_cm": [
+    0.0,
+    8.692038729505747,
+    0.0
+  ],
+  "source_idle_candidate_pass": true
+}

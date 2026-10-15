@@ -9,12 +9,12 @@ import sys
 from pathlib import Path
 
 
-def render(merged,chair,chair_report,desk,footrest,fit_report,output):
+def render(merged,chair,chair_report,desk,footrest,fit_report,output,candidate_sha='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8'):
     import bpy
     from mathutils import Vector
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     report=json.loads(Path(fit_report).read_text());measured=json.loads(Path(chair_report).read_text())['chair']['transform']
-    if report['written_glb_sha256']!='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8':raise ValueError('Preserve exact failed candidate for diagnosis')
+    if report['written_glb_sha256']!=candidate_sha:raise ValueError('Exact pinned candidate required')
     bpy.ops.wm.read_factory_settings(use_empty=True);scene=bpy.context.scene;scene.render.fps=30
     def load(path):
         before=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=str(path));return set(bpy.data.objects)-before
@@ -73,4 +73,5 @@ def render(merged,chair,chair_report,desk,footrest,fit_report,output):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     for name in('merged','chair','chair-report','desk','footrest','fit-report','output'):p.add_argument('--'+name,required=True)
-    args=sys.argv[sys.argv.index('--')+1:]if '--'in sys.argv else sys.argv[1:];a=p.parse_args(args);render(a.merged,a.chair,a.chair_report,a.desk,a.footrest,a.fit_report,a.output)
+    p.add_argument('--candidate-sha',default='5e216ec4af102fbfcd919b91adb510229f2d1468098153d1c3cc983760de6de8')
+    args=sys.argv[sys.argv.index('--')+1:]if '--'in sys.argv else sys.argv[1:];a=p.parse_args(args);render(a.merged,a.chair,a.chair_report,a.desk,a.footrest,a.fit_report,a.output,a.candidate_sha)
