@@ -33,9 +33,13 @@ def run(u=None):
     default.set_editor_property('send_unattended_bug_reports', False)
     if default.get_editor_property('send_unattended_bug_reports'):
         raise RuntimeError('Actual crash privacy CDO refused the owned setting')
-    # Obj.cpp implements this exact fixed class reload and SafeUnloadBranch;
-    # clearing GConfig matters because UnixEnsure reads cached EditorSettings.
-    u.SystemLibrary.execute_console_command(world, COMMAND)
+    # Do not mistake a void Blueprint command request for actual Editor Exec.
+    # Record the installed reflected APIs before choosing a proven execution path.
+    apis = {}
+    for name in ('EditorLevelLibrary', 'LevelEditorSubsystem', 'UnrealEditorSubsystem'):
+        cls_api = getattr(u, name, None)
+        apis[name] = {n: str(getattr(cls_api, n).__doc__)[:1800]
+                     for n in dir(cls_api) if 'console' in n.lower() or 'exec' in n.lower()}
     after = bool(default.get_editor_property('send_unattended_bug_reports'))
     if after or not disk_disabled():
         raise RuntimeError('Actual reloaded crash privacy setting is not disabled')
@@ -44,7 +48,8 @@ def run(u=None):
               'previous_send_unattended_bug_reports': before,
               'current_send_unattended_bug_reports': after,
               'disk_explicitly_disabled': True, 'fixed_reload_command': COMMAND,
-              'source_verified_cache_reload': True, 'crash_triggered_for_test': False,
+              'cache_reload_requested': False, 'cache_reload_execution_verified': False,
+              'reflected_editor_command_apis': apis, 'crash_triggered_for_test': False,
               'scene_mutations': 0, 'native_game_accepted': False}
     path = Path(u.Paths.project_dir())/'private-audit/private-editor-crash-policy.json'
     path.write_text(json.dumps(report, indent=2)+'\n')
