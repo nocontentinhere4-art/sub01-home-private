@@ -1,10 +1,10 @@
 # Root packet: minimal seat + controller install on origin/main (2026-10-15)
 
-Private, source only. Nothing deployed; no target, provider or pod touched. Proven against origin/main
-**57d41bb** (the newest main the remote serves; `380baa8` named by root is not on `origin` at 04:15 UTC:
-`git ls-remote origin` -> `57d41bb refs/heads/main`, `git cat-file -t 380baa8` -> not a valid object).
-None of the packet's inputs from main (seat runtime, seat header, seat validator, clip contract, staging, motion,
-PC runtime) needs to change for a later main, unless root edits those files; rerun the commands below on 380baa8.
+Private, source only. Nothing deployed; no target, provider or pod touched. Proven in clean worktrees of origin/main
+**57d41bb** (full suite), **380baa8** (root's named main; became fetchable at ~04:30 UTC) and **d9827e5** (main at
+04:35 UTC; 380baa8 is its ancestor). On all three the main inputs are byte-identical (seat runtime 534903e1...,
+validator dd95f1b1..., contract aa9a3f9e...), the brace patch applies, closure `--only seat,controller` PASSES with
+g++ and clang++, and the 17 packet tests pass. Main's motion, PC runtime, grip importer and validator are used as is.
 
 ## Why
 
