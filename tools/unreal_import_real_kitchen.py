@@ -29,7 +29,7 @@ NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
 # R1 failed native validation and is quarantined, not force-deleted while the
 # warm Editor may still compile its UObjects. R2 keeps the identical source
 # proof and strict checks, with corrected failure diagnostics/rollback.
-IMPORT_REVISION = 3
+IMPORT_REVISION = 4
 
 
 def detach_failed_import(u, eas, before):
@@ -323,7 +323,7 @@ def run(root, dry_run=True, u=None):
                 if mesh_subsystem.add_simple_collisions(mesh, u.ScriptingCollisionShapeType.BOX) < 0:
                     raise RuntimeError('Actual moving hinge simple collision creation refused')
                 body.set_editor_property('collision_trace_flag', u.CollisionTraceFlag.CTF_USE_SIMPLE_AND_COMPLEX)
-                actor.get_root_component().set_mobility(u.ComponentMobility.MOVABLE)
+                actor.get_editor_property('root_component').set_mobility(u.ComponentMobility.MOVABLE)
                 c.set_mobility(u.ComponentMobility.MOVABLE)
                 tag = f"SUB01Kitchen:{proof['export_sha256']}:D{moving[expected['name']]}:{expected['source_part']}"
                 c.set_editor_property('component_tags', list(c.get_editor_property('component_tags'))+[tag])

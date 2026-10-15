@@ -141,7 +141,7 @@ def preflight(root, u):
         c = _only(cs, 'component '+str(node))
         mesh = c.get_editor_property('static_mesh')
         if (not mesh or mesh.get_path_name() != PREFIX+f'StaticMeshes/Mesh_{mesh_index}.Mesh_{mesh_index}'
-                or actor.get_attach_parent_actor() or c != actor.get_root_component()
+                or actor.get_attach_parent_actor() or c != actor.get_editor_property('root_component')
                 or actor.get_editor_property('hidden') or not c.get_editor_property('visible')):
             raise RuntimeError('Exact independent visible source monitor assembly required')
         paths = [m.get_path_name() if m else None for m in c.get_materials()]
