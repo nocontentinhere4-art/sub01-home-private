@@ -55,13 +55,13 @@ def test_privacy_disconnect_and_lost_grip_send_release():
 
 def test_protected_receipt_requires_registered_actual_assets_and_same_seat_epoch(tmp_path):
  path=tmp_path/'receipt';home=Home();sha='a'*64
- d={'schema':'sub01-native-controller-v1','mode':'live','privacy':False,'activity':'play_console','node':'sofa','chair':'sofa','route_sequence':7,'epoch':'fixture-epoch','frame_id':'fixture-frame','seat_verified':True,'grip_verified':True,'assembly_asset':'fixture-assembly','source_sha':sha,'import_sha':'d'*64,'capture_time':4.,'contact_review_sha':'b'*64,'owner_asset':'/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner','capture_asset':'/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming','captured_utc':100.,'native_pid':123,'native_start_ticks':456}
+ d={'schema':'sub01-native-controller-v1','mode':'live','privacy':False,'activity':'play_console','node':'sofa','chair':'sofa','route_sequence':7,'epoch':'fixture-epoch','frame_id':'fixture-frame','seat_verified':True,'grip_verified':True,'assembly_asset':'fixture-assembly','source_sha':sha,'import_sha':'d'*64,'capture_time':4.,'contact_review_sha':'b'*64,'owner_asset':'/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner','capture_asset':'/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip','captured_utc':100.,'native_pid':123,'native_start_ticks':456}
  def write():path.write_text(json.dumps(d));path.chmod(0o600)
  write();uid=path.stat().st_uid
  e=ControllerEvidence(path,process=lambda pid:(uid,456,[PROJECT.encode(),b'-game']),wall=lambda:100.,uid=uid,assembly='fixture-assembly',source_sha=sha,import_sha='d'*64,contact_review='b'*64)
  assert e(home,'fixture-frame')
  assert not ControllerEvidence(path,uid=uid,assembly='',source_sha=sha)(home,'fixture-frame')
- for key,value in [('grip_verified',False),('seat_verified',False),('mode','manual'),('epoch','old'),('route_sequence',6),('native_start_ticks',457),('captured_utc',99.),('capture_asset','other'),('capture_time',6.),('contact_review_sha','c'*64),('import_sha','e'*64),('frame_id','old-frame')]:
+ for key,value in [('grip_verified',False),('seat_verified',False),('mode','manual'),('epoch','old'),('route_sequence',6),('native_start_ticks',457),('captured_utc',99.),('capture_asset','other'),('capture_asset','/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming'),('capture_time',6.),('contact_review_sha','c'*64),('import_sha','e'*64),('frame_id','old-frame')]:
   before=d[key];d[key]=value;write();assert not e(home,'fixture-frame');d[key]=before
  write();home.seat=False;assert not e(home,'fixture-frame');home.seat=True;path.chmod(0o644);assert not e(home,'fixture-frame')
 
@@ -79,7 +79,7 @@ def test_real_home_model_sequence_and_native_seat_are_required(tmp_path):
  world=HomeWorld({'node':'sofa','seated':1,'sequence':7,'native_consumer_required':True,'console_game':'minecraft'})
  world.activity='play_console'
  p=tmp_path/'receipt';uid=__import__('os').getuid();sha='a'*64;review='b'*64
- d={'schema':'sub01-native-controller-v1','mode':'live','privacy':False,'activity':'play_console','node':'sofa','chair':'sofa','route_sequence':7,'epoch':'fixture-epoch','frame_id':'fixture-frame','seat_verified':True,'grip_verified':True,'assembly_asset':'fixture-assembly','source_sha':sha,'import_sha':'d'*64,'owner_asset':'/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner','capture_asset':'/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming','capture_time':4.,'contact_review_sha':review,'captured_utc':100.,'native_pid':123,'native_start_ticks':456}
+ d={'schema':'sub01-native-controller-v1','mode':'live','privacy':False,'activity':'play_console','node':'sofa','chair':'sofa','route_sequence':7,'epoch':'fixture-epoch','frame_id':'fixture-frame','seat_verified':True,'grip_verified':True,'assembly_asset':'fixture-assembly','source_sha':sha,'import_sha':'d'*64,'owner_asset':'/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner','capture_asset':'/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip','capture_time':4.,'contact_review_sha':review,'captured_utc':100.,'native_pid':123,'native_start_ticks':456}
  p.write_text(json.dumps(d));p.chmod(0o600)
  e=ControllerEvidence(p,process=lambda pid:(uid,456,[PROJECT.encode(),b'-game']),wall=lambda:100.,uid=uid,assembly='fixture-assembly',source_sha=sha,import_sha='d'*64,contact_review=review)
  assert not e(world,'fixture-frame') # saved timer seating is insufficient

@@ -57,7 +57,8 @@ class ControllerEvidence:
                 or d.get('assembly_asset')!=self.assembly or d.get('source_sha')!=self.source_sha
                 or d.get('import_sha')!=self.import_sha
                 or d.get('owner_asset')!='/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner'
-                or d.get('capture_asset')!='/Game/Sub01Hands/Controller/SUB01_Gaming.SUB01_Gaming'):
+                # The original retarget never held the prop: only the reviewed derived clip is eligible.
+                or d.get('capture_asset')!='/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip'):
             return None
         uid,ticks,args=self.process(d.get('native_pid'))
         if uid!=self.uid or ticks!=d.get('native_start_ticks')or PROJECT.encode()not in args or b'-game'not in args:return None
