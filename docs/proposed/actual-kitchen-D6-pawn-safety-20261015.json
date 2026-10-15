@@ -1,0 +1,78 @@
+{
+  "schema": "sub01.actual-kitchen-real-pawn-obstacle.v1",
+  "native_pid": 77178,
+  "native_start_ticks": 975360109,
+  "actual_game_module_sha256": "089345fa2c32f843fc4d4dad17d0d63afcb70bef25030d8f716c0800292072c4",
+  "source_export_sha256": "c5b8f73361d819efced9ab1f7f567f6c9adb284126eebb7de3b03db33229eec5",
+  "door": 6,
+  "genuine_input": "Configured isolated browser WASD/mouse/E over authenticated physical WSS/XTest; fixed read-only console InspectActualKitchen",
+  "opening_ray_utc": "2026-10-15T12:51:03.971Z",
+  "opening_ray_distance_cm": 117.454437,
+  "opening_exact_component": "SUB01_RealKitchen_687d9c6d9bda_Scene_node_607.StaticMeshComponent0",
+  "held_actual_degrees": 28.000490189,
+  "held_target_degrees": 88.2,
+  "held_backend_open": true,
+  "blocker": "/Game/Sub01Home/ActualHome.ActualHome:PersistentLevel.Sub01HomeCharacter_0.CollisionCylinder",
+  "blocked_log_rows": 23,
+  "collision_retained": true,
+  "fresh_held_inspect_utc": "2026-10-15T12:51:10.089Z",
+  "held_state_age_seconds": 0.228875,
+  "pawn_before_backout_cm": [
+    -188.344,
+    -271.274,
+    95.65
+  ],
+  "pawn_after_genuine_backout_cm": [
+    -188.378,
+    -197.985,
+    95.65
+  ],
+  "envelope": {
+    "radius_cm": 25,
+    "half_height_cm": 91,
+    "near_clip_cm": 1
+  },
+  "first_cleanup_ray_missed_floor": true,
+  "restoring_genuine_E_utc": "2026-10-15T12:52:28.157Z",
+  "restoring_ray_distance_cm": 142.835663,
+  "final_inspect_utc": "2026-10-15T12:52:32.997Z",
+  "final_state_age_seconds": 0.551148,
+  "final_eight_actual_angles_degrees": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "final_backend_open": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "final_actual_closed_TRS_match_count": 40,
+  "requested_trial_bound_seconds": 45,
+  "restoring_E_elapsed_seconds": 84.513,
+  "final_inspect_elapsed_seconds": 89.353,
+  "completed_within_requested_bound": false,
+  "timing_limitation": "Successful native pawn-block witness; rollback needed an additional corrected real E after first cleanup ray hit floor, so the requested45s bound was exceeded. No bounded45s success claim.",
+  "closing_direction_obstacle_tested": false,
+  "direct_backend_settings_writes": false,
+  "teleport_or_collision_bypass": false,
+  "native_contact_or_seat_accepted": false,
+  "raw_log": {
+    "path": "/workspace/sub01-home-private/evidence/native/kitchen-D6-real-pawn-obstacle-77178.txt",
+    "bytes": 103434,
+    "sha256": "77215d9b4568a7d8e8fa52bc40f9c9da3645c86d36b42445c1ccbec6ab14f2f5"
+  },
+  "local_raw_log": "out/house-evidence/kitchen-D6-real-pawn-obstacle-77178.txt",
+  "opening_direction_obstacle_proven": true,
+  "all_eight_doors_obstacle_proven": false
+}
