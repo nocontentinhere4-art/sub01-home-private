@@ -8,6 +8,16 @@ Build the real functioning first-person home, not a promotional video. Primary r
 
 Everything remains private. No public deployment, Railway change or edits to subzerone.live/city.subzerone.live. Heavy work stays on the single continuous Runpod dgtgepkz7h1zy5 (RTX4090, $0.89/h), not the owner's Mac. Do not stop/restart the pod for edits or touch the separate brain pod. Current owner authorization: $100 total cap, $10 reserve, keep this pod continuous up to 2026-10-16 02:19:35 UTC. Active v13 guard enforces that deadline and budget. Earlier one-hour/$10/$20 limits in historical notes are superseded. Six-hour 2026-10-15 08:14 UTC milestone has passed without full acceptance; it is not a shutdown deadline. Continue under the latest owner instruction until they return or the absolute budget/time limit is reached. Credentials stay out of Git and issue comments.
 
+## Actual private checkpoint — 2026-10-15 20:12 UTC
+
+- Actual private Game is **193148/start978377926**, sealed project `/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab`, map14acd9d355c6/modulee571937b708c. Original159171 exited during the controlled reviewed promotion; original fallback remains preserved. Same pod/devices/world; public production untouched.
+- Configured isolated Playwright personally verified localhost8791 real WASD/mouse movement, roughly60 decodedFPS (60.2867 measured), and actual PC interaction. The actual graphical guest executed `echo sub01-private-qa-2003` and returned the marker, independently viewed from guest VGA. Playwright keyboard.type does not emit physicalShift, so uppercase was not verified in this run. Standing PC use passed; natural seated hands are still gated.
+- TV displays actual Minecraft frame and physicalE sets minecraftFocus=true, but shortW/mouse input did not visibly alter the leaf scene. Read-only diagnosis is assigned; do not claim full gameplay response. Root released focus (minecraftFocus=false) afterward.
+- New genuine anatomical hands preserve original serialized65-bone body and26 body/wrist motion tracks; original body deformation independently unchanged. Final Walkfd2f3b8e… has corrected cuff skin fields and measured-colour fabric. All32 evaluated source Walk frames have0 cuff/hand intersections both sides; residual finger-web/contact/native limitations remain explicit.
+- Fresh direct glTF native import was refused: one old hood-lining part has zero vertices and imports split. Final measured FBX fallback is being checked/imported in an isolated candidate namespace. No active owner replacement or normal device-contact gates enabled yet.
+- Claude confirmed two ergonomic refit/verifier agents running on source layout/typing; no runtime permissions. Private main pushed through19ca7aa; newer source packets may follow.
+- Work remains incomplete: full-house bathroom/privacy/phone/exit checks, responsive Minecraft, native anatomical owner/contact acceptance and visual quality remain outstanding. GPU deadline/budget/reserve unchanged. Six-hour heartbeat must not initiate work beyond23:28:41UTC.
+
 ## Current integration state (2026-10-15 14:08 UTC)
 
 ### Actual integration checkpoint — 15:34 UTC (supersedes pending-import bullets below)
