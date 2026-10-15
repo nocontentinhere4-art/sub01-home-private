@@ -1,0 +1,2343 @@
+{
+ "schema": "sub01.seat-pose-anatomical.v1",
+ "role": "SitToType_seated",
+ "asset": "/Game/Sub01Hands/Seating/SUB01_SitToType_seated",
+ "labels": {
+  "label": "proposal",
+  "verified": false,
+  "requires_server_reaudit": true,
+  "requires_native_collision_audit": true,
+  "chair_lift_cm": 2.5001,
+  "params": {
+   "pelvis_tilt_deg": 25.5309,
+   "root_down_cm": 11.5447,
+   "root_back_cm": -11.1917,
+   "left_ankle_forward_cm": 2.2412,
+   "left_ankle_lateral_cm": 2.4405,
+   "right_ankle_forward_cm": 9.4749,
+   "right_ankle_lateral_cm": 2.3368,
+   "left_hip_swivel_deg": 11.2326,
+   "right_hip_swivel_deg": 3.4952
+  },
+  "derived_edits": [
+   "pelvis_tilt_about_lateral_axis_pivot_spine_spine_counter_rotated",
+   "root_vertical_and_fore_aft_translation",
+   "flat_foot_heel_down_bind_plantar_heading_kept",
+   "toes_to_bind_local",
+   "non_stretch_two_bone_leg_ik_ankle_offset_hip_swivel",
+   "full_pose_seam_blend_with_anatomical_SeatedIdle"
+  ],
+  "role": "SitToType_seated",
+  "source_clip": "web/room/mh_mx/room_mx_sit_to_type.glb"
+ },
+ "glb": "docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SitToType_seated.glb",
+ "sha256": "23547c5264e3545f1e24d2806df9057fd3bd45ff2d42a1c35662b7307f75c1e8",
+ "bytes": 66016,
+ "key_count": 37,
+ "duration_s": 1.2,
+ "readback_max_joint_error_cm": 2.5e-05,
+ "actual_chair": {
+  "body_offset_from_audited_transform_cm": [
+   -3.875,
+   32.5
+  ],
+  "chair_lift_cm": 2.5001,
+  "per_frame": {
+   "support_mask": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "keys": "every key",
+   "patches": {
+    "buttocks": {
+     "lowest_cm": [
+      -1.952867,
+      -1.946845,
+      -1.93808,
+      -1.931244,
+      -1.924947,
+      -1.917935,
+      -1.910293,
+      -1.90198,
+      -1.896181,
+      -1.890655,
+      -1.905309,
+      -1.926127,
+      -1.937833,
+      -1.95154,
+      -1.986991,
+      -1.998856,
+      -1.985685,
+      -1.958965,
+      -1.920914,
+      -1.880855,
+      -1.840848,
+      -1.799717,
+      -1.765016,
+      -1.735562,
+      -1.71137,
+      -1.707048,
+      -1.730017,
+      -1.803279,
+      -1.877647,
+      -1.956023,
+      -2.031057,
+      -2.096908,
+      -2.149106,
+      -2.178304,
+      -2.183455,
+      -2.18152,
+      -2.180992
+     ],
+     "median_cm": [
+      0.19233,
+      0.200244,
+      0.21114,
+      0.218498,
+      0.216549,
+      0.198883,
+      0.159241,
+      0.096505,
+      0.005065,
+      -0.094624,
+      -0.198515,
+      -0.305581,
+      -0.403761,
+      -0.489115,
+      -0.542143,
+      -0.543621,
+      -0.524655,
+      -0.477812,
+      -0.418584,
+      -0.353556,
+      -0.290236,
+      -0.230092,
+      -0.172515,
+      -0.124983,
+      -0.090666,
+      -0.073989,
+      -0.085369,
+      -0.16779,
+      -0.251937,
+      -0.337749,
+      -0.421209,
+      -0.496089,
+      -0.558011,
+      -0.600837,
+      -0.619925,
+      -0.629667,
+      -0.641049
+     ],
+     "band_vertices": [
+      384,
+      384,
+      384,
+      382,
+      382,
+      384,
+      389,
+      412,
+      422,
+      429,
+      449,
+      481,
+      486,
+      499,
+      505,
+      509,
+      503,
+      491,
+      478,
+      470,
+      461,
+      453,
+      444,
+      432,
+      427,
+      424,
+      424,
+      439,
+      446,
+      455,
+      463,
+      480,
+      489,
+      495,
+      496,
+      500,
+      497
+     ],
+     "over_vertices": [
+      672,
+      670,
+      670,
+      670,
+      670,
+      669,
+      668,
+      664,
+      657,
+      658,
+      654,
+      648,
+      642,
+      641,
+      637,
+      636,
+      632,
+      628,
+      628,
+      628,
+      628,
+      625,
+      622,
+      622,
+      618,
+      616,
+      615,
+      614,
+      613,
+      613,
+      614,
+      615,
+      615,
+      614,
+      612,
+      608,
+      605
+     ]
+    },
+    "left_posterior_thigh": {
+     "lowest_cm": [
+      -2.210599,
+      -2.206242,
+      -2.198605,
+      -2.192115,
+      -2.183414,
+      -2.169513,
+      -2.149521,
+      -2.1227,
+      -2.092513,
+      -2.057371,
+      -2.027436,
+      -2.001366,
+      -1.978156,
+      -1.962745,
+      -1.963212,
+      -1.946111,
+      -1.921336,
+      -1.890094,
+      -1.854943,
+      -1.820511,
+      -1.787504,
+      -1.756733,
+      -1.732027,
+      -1.714618,
+      -1.705726,
+      -1.706811,
+      -1.730027,
+      -1.803263,
+      -1.879252,
+      -1.961406,
+      -2.039875,
+      -2.108921,
+      -2.164158,
+      -2.196411,
+      -2.204681,
+      -2.213331,
+      -2.221585
+     ],
+     "median_cm": [
+      -0.51542,
+      -0.511684,
+      -0.506585,
+      -0.503718,
+      -0.493818,
+      -0.486554,
+      -0.478097,
+      -0.464387,
+      -0.455761,
+      -0.456364,
+      -0.427805,
+      -0.413035,
+      -0.401434,
+      -0.392419,
+      -0.353744,
+      -0.324018,
+      -0.281572,
+      -0.229181,
+      -0.196106,
+      -0.147257,
+      -0.122626,
+      -0.10824,
+      -0.090896,
+      -0.073779,
+      -0.071564,
+      -0.086949,
+      -0.127433,
+      -0.227264,
+      -0.33007,
+      -0.426414,
+      -0.527046,
+      -0.612019,
+      -0.692169,
+      -0.744066,
+      -0.783239,
+      -0.81235,
+      -0.849295
+     ],
+     "band_vertices": [
+      927,
+      926,
+      923,
+      922,
+      921,
+      915,
+      910,
+      902,
+      898,
+      894,
+      882,
+      868,
+      856,
+      845,
+      835,
+      807,
+      794,
+      775,
+      764,
+      751,
+      740,
+      725,
+      714,
+      702,
+      701,
+      699,
+      710,
+      737,
+      772,
+      793,
+      820,
+      836,
+      850,
+      861,
+      861,
+      863,
+      867
+     ],
+     "over_vertices": [
+      1241,
+      1241,
+      1240,
+      1239,
+      1238,
+      1233,
+      1229,
+      1220,
+      1216,
+      1210,
+      1196,
+      1178,
+      1163,
+      1150,
+      1134,
+      1114,
+      1101,
+      1094,
+      1089,
+      1080,
+      1071,
+      1061,
+      1055,
+      1044,
+      1039,
+      1032,
+      1030,
+      1031,
+      1033,
+      1037,
+      1039,
+      1042,
+      1045,
+      1047,
+      1045,
+      1044,
+      1038
+     ]
+    },
+    "right_posterior_thigh": {
+     "lowest_cm": [
+      -1.943593,
+      -1.932767,
+      -1.921613,
+      -1.914084,
+      -1.908335,
+      -1.908782,
+      -1.904461,
+      -1.945253,
+      -1.958851,
+      -2.008201,
+      -2.073078,
+      -2.112915,
+      -2.163851,
+      -2.24976,
+      -2.280076,
+      -2.309255,
+      -2.313664,
+      -2.291994,
+      -2.252432,
+      -2.215931,
+      -2.17905,
+      -2.14351,
+      -2.0997,
+      -2.057021,
+      -2.024118,
+      -2.002811,
+      -2.009112,
+      -2.068236,
+      -2.128297,
+      -2.192648,
+      -2.254351,
+      -2.307529,
+      -2.347789,
+      -2.363071,
+      -2.350525,
+      -2.32971,
+      -2.31175
+     ],
+     "median_cm": [
+      0.05934,
+      0.067753,
+      0.074828,
+      0.078614,
+      0.068898,
+      0.040544,
+      -0.018517,
+      -0.097732,
+      -0.204684,
+      -0.347553,
+      -0.487982,
+      -0.639675,
+      -0.799124,
+      -0.952536,
+      -1.053307,
+      -1.131023,
+      -1.167954,
+      -1.165891,
+      -1.142889,
+      -1.109671,
+      -1.06446,
+      -1.030332,
+      -0.996387,
+      -0.971501,
+      -0.959058,
+      -0.954179,
+      -0.97179,
+      -1.016046,
+      -1.065408,
+      -1.119426,
+      -1.165554,
+      -1.210155,
+      -1.229791,
+      -1.240994,
+      -1.218816,
+      -1.187538,
+      -1.160654
+     ],
+     "band_vertices": [
+      1022,
+      1016,
+      1013,
+      1012,
+      1007,
+      1012,
+      1006,
+      1016,
+      1024,
+      1048,
+      1064,
+      1106,
+      1123,
+      1136,
+      1145,
+      1135,
+      1118,
+      1103,
+      1090,
+      1074,
+      1063,
+      1046,
+      1029,
+      1019,
+      1004,
+      989,
+      981,
+      986,
+      995,
+      1003,
+      1010,
+      1012,
+      1023,
+      1028,
+      1025,
+      1021,
+      1018
+     ],
+     "over_vertices": [
+      1588,
+      1584,
+      1583,
+      1582,
+      1573,
+      1571,
+      1544,
+      1527,
+      1498,
+      1467,
+      1437,
+      1423,
+      1384,
+      1353,
+      1326,
+      1292,
+      1265,
+      1242,
+      1233,
+      1222,
+      1211,
+      1202,
+      1188,
+      1174,
+      1159,
+      1147,
+      1135,
+      1133,
+      1133,
+      1135,
+      1137,
+      1134,
+      1144,
+      1146,
+      1143,
+      1137,
+      1132
+     ]
+    },
+    "left_sole": {
+     "lowest_cm": [
+      0.049996,
+      0.050002,
+      0.050004,
+      0.050001,
+      0.05,
+      0.049996,
+      0.049999,
+      0.050002,
+      0.050006,
+      0.049999,
+      0.050001,
+      0.05,
+      0.050002,
+      0.049998,
+      0.049998,
+      0.050003,
+      0.049997,
+      0.05,
+      0.049999,
+      0.05,
+      0.05,
+      0.050001,
+      0.049998,
+      0.049997,
+      0.050005,
+      0.049998,
+      0.050001,
+      0.049996,
+      0.050001,
+      0.050003,
+      0.050005,
+      0.049999,
+      0.05,
+      0.050001,
+      0.050004,
+      0.050002,
+      0.049999
+     ],
+     "median_cm": [
+      0.227775,
+      0.227781,
+      0.227782,
+      0.227779,
+      0.227777,
+      0.227775,
+      0.227776,
+      0.227781,
+      0.227785,
+      0.227778,
+      0.227779,
+      0.227779,
+      0.227781,
+      0.227776,
+      0.227777,
+      0.227781,
+      0.227775,
+      0.227779,
+      0.227776,
+      0.227778,
+      0.227778,
+      0.227779,
+      0.227776,
+      0.227776,
+      0.227782,
+      0.227777,
+      0.227779,
+      0.227773,
+      0.227779,
+      0.227782,
+      0.227783,
+      0.227778,
+      0.227779,
+      0.227779,
+      0.227782,
+      0.227779,
+      0.227777
+     ],
+     "band_vertices": [
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923
+     ],
+     "over_vertices": [
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923,
+      1923
+     ]
+    },
+    "right_sole": {
+     "lowest_cm": [
+      0.049999,
+      0.050005,
+      0.050004,
+      0.050007,
+      0.050003,
+      0.05,
+      0.05,
+      0.050005,
+      0.050008,
+      0.050002,
+      0.050003,
+      0.050003,
+      0.050007,
+      0.050001,
+      0.05,
+      0.050004,
+      0.050001,
+      0.050002,
+      0.05,
+      0.05,
+      0.050002,
+      0.050002,
+      0.05,
+      0.049999,
+      0.050005,
+      0.050001,
+      0.050003,
+      0.049999,
+      0.050003,
+      0.050007,
+      0.050008,
+      0.050001,
+      0.050003,
+      0.050003,
+      0.050004,
+      0.050005,
+      0.050002
+     ],
+     "median_cm": [
+      0.232991,
+      0.232997,
+      0.232997,
+      0.232999,
+      0.232995,
+      0.232992,
+      0.232993,
+      0.232997,
+      0.233,
+      0.232994,
+      0.232995,
+      0.232995,
+      0.232999,
+      0.232993,
+      0.232992,
+      0.232996,
+      0.232993,
+      0.232994,
+      0.232993,
+      0.232993,
+      0.232994,
+      0.232994,
+      0.232992,
+      0.232991,
+      0.232998,
+      0.232994,
+      0.232996,
+      0.232991,
+      0.232995,
+      0.232999,
+      0.233,
+      0.232993,
+      0.232996,
+      0.232995,
+      0.232996,
+      0.232997,
+      0.232994
+     ],
+     "band_vertices": [
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248
+     ],
+     "over_vertices": [
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248,
+      2248
+     ]
+    }
+   }
+  }
+ },
+ "seam_blend": {
+  "mode": "full-pose seam blend with the anatomical SeatedIdle (loop head into the clip)",
+  "end": "start",
+  "window_frames": [
+   2,
+   19
+  ],
+  "chosen": {
+   "a": 2,
+   "b": 19,
+   "failing_frames": 0,
+   "peak_ratio_to_capture": 1.0,
+   "feet_within_capture": false,
+   "captured_frames_kept": 18,
+   "lifted_frames": 0,
+   "max_lift_cm": 0.0
+  },
+  "candidates": 49,
+  "gated_frames": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36
+  ],
+  "search_rule": "(1) no failing frame - main's rule on the support frames,\nno penetration elsewhere; (2) pelvis peak acceleration ratio <= 1 and no added sole sliding; (3) most captured\nframes kept; (4) smallest ratio (the order of seam_blend_search).",
+  "rows": [
+   {
+    "a": 1,
+    "b": 4,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 15.9572,
+    "feet_within_capture": false,
+    "captured_frames_kept": 33,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 6,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 7.5375,
+    "feet_within_capture": false,
+    "captured_frames_kept": 31,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 8,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 3.9156,
+    "feet_within_capture": false,
+    "captured_frames_kept": 29,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 10,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 2.2616,
+    "feet_within_capture": false,
+    "captured_frames_kept": 27,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 12,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.5205,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 14,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0752,
+    "feet_within_capture": false,
+    "captured_frames_kept": 23,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 16,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0674,
+    "feet_within_capture": false,
+    "captured_frames_kept": 21,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 18,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0098,
+    "feet_within_capture": false,
+    "captured_frames_kept": 19,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 20,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 17,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 22,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 15,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 24,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 13,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 26,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0275,
+    "feet_within_capture": false,
+    "captured_frames_kept": 11,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 28,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2128,
+    "feet_within_capture": false,
+    "captured_frames_kept": 9,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 30,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2487,
+    "feet_within_capture": false,
+    "captured_frames_kept": 7,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 32,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1989,
+    "feet_within_capture": false,
+    "captured_frames_kept": 5,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 34,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1127,
+    "feet_within_capture": false,
+    "captured_frames_kept": 3,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 1,
+    "b": 36,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0149,
+    "feet_within_capture": false,
+    "captured_frames_kept": 1,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 5,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 15.2544,
+    "feet_within_capture": false,
+    "captured_frames_kept": 32,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 7,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 7.2393,
+    "feet_within_capture": false,
+    "captured_frames_kept": 30,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 9,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 3.8627,
+    "feet_within_capture": false,
+    "captured_frames_kept": 28,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 11,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 2.2442,
+    "feet_within_capture": false,
+    "captured_frames_kept": 26,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 13,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.503,
+    "feet_within_capture": false,
+    "captured_frames_kept": 24,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 15,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1666,
+    "feet_within_capture": false,
+    "captured_frames_kept": 22,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 17,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0912,
+    "feet_within_capture": false,
+    "captured_frames_kept": 20,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 19,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 18,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 21,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 16,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 23,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 14,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 25,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 12,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 27,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1516,
+    "feet_within_capture": false,
+    "captured_frames_kept": 10,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 29,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2704,
+    "feet_within_capture": false,
+    "captured_frames_kept": 8,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 31,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2485,
+    "feet_within_capture": false,
+    "captured_frames_kept": 6,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 33,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1661,
+    "feet_within_capture": false,
+    "captured_frames_kept": 4,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 2,
+    "b": 35,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0624,
+    "feet_within_capture": false,
+    "captured_frames_kept": 2,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 6,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 13.6329,
+    "feet_within_capture": false,
+    "captured_frames_kept": 31,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 8,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 7.0726,
+    "feet_within_capture": false,
+    "captured_frames_kept": 29,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 10,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 3.4854,
+    "feet_within_capture": false,
+    "captured_frames_kept": 27,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 12,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 2.2063,
+    "feet_within_capture": false,
+    "captured_frames_kept": 25,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 14,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.4354,
+    "feet_within_capture": false,
+    "captured_frames_kept": 23,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 16,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1726,
+    "feet_within_capture": false,
+    "captured_frames_kept": 21,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 18,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0609,
+    "feet_within_capture": false,
+    "captured_frames_kept": 19,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 20,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 17,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 22,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 15,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 24,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0,
+    "feet_within_capture": false,
+    "captured_frames_kept": 13,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 26,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0352,
+    "feet_within_capture": false,
+    "captured_frames_kept": 11,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 28,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2629,
+    "feet_within_capture": false,
+    "captured_frames_kept": 9,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 30,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2953,
+    "feet_within_capture": false,
+    "captured_frames_kept": 7,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 32,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.2254,
+    "feet_within_capture": false,
+    "captured_frames_kept": 5,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 34,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.1175,
+    "feet_within_capture": false,
+    "captured_frames_kept": 3,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   },
+   {
+    "a": 3,
+    "b": 36,
+    "failing_frames": 0,
+    "peak_ratio_to_capture": 1.0012,
+    "feet_within_capture": false,
+    "captured_frames_kept": 1,
+    "lifted_frames": 0,
+    "max_lift_cm": 0.0
+   }
+  ],
+  "weight": "quintic smootherstep",
+  "no_penetration_lift_max_cm": 0.0,
+  "foot_lift_max_cm": {
+   "left": 0.0,
+   "right": 0.0
+  },
+  "choice_rule": "every frame of these seated clips is gated, so the window is chosen by (1) no failing frame, (2) the smallest pelvis peak acceleration ratio to the capture, (3) most captured frames kept"
+ },
+ "bone_length_max_error_cm": 0.0,
+ "joint_edits_vs_capture": {
+  "Hips": {
+   "max_deg": 29.2981,
+   "mean_deg": 26.2249,
+   "frames_changed": 37,
+   "root_translation_cm": {
+    "max": 18.2715,
+    "mean_xyz_gltf": [
+     0.0838,
+     -9.1592,
+     14.9069
+    ]
+   }
+  },
+  "Spine": {
+   "max_deg": 27.0962,
+   "mean_deg": 26.1358,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "Spine1": {
+   "max_deg": 8.6729,
+   "mean_deg": 1.9257,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "Spine2": {
+   "max_deg": 8.6766,
+   "mean_deg": 1.9285,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "Neck": {
+   "max_deg": 9.0735,
+   "mean_deg": 2.7615,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "Head": {
+   "max_deg": 23.8644,
+   "mean_deg": 6.415,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightShoulder": {
+   "max_deg": 15.6477,
+   "mean_deg": 4.8212,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightArm": {
+   "max_deg": 30.5045,
+   "mean_deg": 8.9053,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightForeArm": {
+   "max_deg": 45.6734,
+   "mean_deg": 10.2092,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHand": {
+   "max_deg": 46.8481,
+   "mean_deg": 13.199,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb1": {
+   "max_deg": 26.9857,
+   "mean_deg": 7.8343,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb2": {
+   "max_deg": 27.7426,
+   "mean_deg": 7.0634,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandThumb3": {
+   "max_deg": 32.7239,
+   "mean_deg": 8.2188,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex1": {
+   "max_deg": 13.8364,
+   "mean_deg": 2.7776,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex2": {
+   "max_deg": 16.0885,
+   "mean_deg": 3.401,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandIndex3": {
+   "max_deg": 11.0394,
+   "mean_deg": 3.3096,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle1": {
+   "max_deg": 11.0511,
+   "mean_deg": 2.0147,
+   "frames_changed": 18,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle2": {
+   "max_deg": 7.5403,
+   "mean_deg": 1.7045,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandMiddle3": {
+   "max_deg": 9.2433,
+   "mean_deg": 2.7251,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing1": {
+   "max_deg": 7.4836,
+   "mean_deg": 1.36,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing2": {
+   "max_deg": 8.0885,
+   "mean_deg": 2.0898,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandRing3": {
+   "max_deg": 4.4824,
+   "mean_deg": 0.9171,
+   "frames_changed": 18,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky1": {
+   "max_deg": 8.1123,
+   "mean_deg": 2.059,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky2": {
+   "max_deg": 6.9529,
+   "mean_deg": 2.0205,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightHandPinky3": {
+   "max_deg": 11.6745,
+   "mean_deg": 3.6086,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftShoulder": {
+   "max_deg": 14.6435,
+   "mean_deg": 4.2914,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftArm": {
+   "max_deg": 17.7873,
+   "mean_deg": 5.6844,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftForeArm": {
+   "max_deg": 6.391,
+   "mean_deg": 2.315,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHand": {
+   "max_deg": 34.5599,
+   "mean_deg": 11.1521,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb1": {
+   "max_deg": 29.4898,
+   "mean_deg": 9.2075,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb2": {
+   "max_deg": 27.1557,
+   "mean_deg": 7.9575,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandThumb3": {
+   "max_deg": 5.2422,
+   "mean_deg": 1.6221,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex1": {
+   "max_deg": 25.3517,
+   "mean_deg": 4.4465,
+   "frames_changed": 18,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex2": {
+   "max_deg": 16.8162,
+   "mean_deg": 5.2025,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandIndex3": {
+   "max_deg": 11.2658,
+   "mean_deg": 3.5412,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle1": {
+   "max_deg": 20.6685,
+   "mean_deg": 3.5921,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle2": {
+   "max_deg": 3.3972,
+   "mean_deg": 0.9547,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandMiddle3": {
+   "max_deg": 22.8867,
+   "mean_deg": 7.0506,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing1": {
+   "max_deg": 13.0659,
+   "mean_deg": 2.518,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing2": {
+   "max_deg": 2.1145,
+   "mean_deg": 0.3546,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandRing3": {
+   "max_deg": 20.9903,
+   "mean_deg": 6.3989,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky1": {
+   "max_deg": 6.1051,
+   "mean_deg": 1.0962,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky2": {
+   "max_deg": 3.8574,
+   "mean_deg": 1.2861,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftHandPinky3": {
+   "max_deg": 17.8066,
+   "mean_deg": 5.0658,
+   "frames_changed": 19,
+   "local_translation_change_cm": 0.0
+  },
+  "RightUpLeg": {
+   "max_deg": 37.1643,
+   "mean_deg": 26.26,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "RightLeg": {
+   "max_deg": 30.2614,
+   "mean_deg": 21.4792,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "RightFoot": {
+   "max_deg": 62.0144,
+   "mean_deg": 51.3407,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "RightToeBase": {
+   "max_deg": 0.2173,
+   "mean_deg": 0.0984,
+   "frames_changed": 36,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftUpLeg": {
+   "max_deg": 34.3908,
+   "mean_deg": 31.0583,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftLeg": {
+   "max_deg": 25.5405,
+   "mean_deg": 23.3596,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftFoot": {
+   "max_deg": 82.3032,
+   "mean_deg": 81.3578,
+   "frames_changed": 37,
+   "local_translation_change_cm": 0.0
+  },
+  "LeftToeBase": {
+   "max_deg": 0.3076,
+   "mean_deg": 0.151,
+   "frames_changed": 33,
+   "local_translation_change_cm": 0.0
+  }
+ },
+ "joints_unchanged": [
+  "HeadTop_End",
+  "RightHandThumb4",
+  "RightHandIndex4",
+  "RightHandMiddle4",
+  "RightHandRing4",
+  "RightHandPinky4",
+  "LeftHandThumb4",
+  "LeftHandIndex4",
+  "LeftHandMiddle4",
+  "LeftHandRing4",
+  "LeftHandPinky4",
+  "RightToe_End",
+  "LeftToe_End"
+ ],
+ "upper_body_world_vs_capture": {
+  "Spine1": {
+   "world_rotation_change_deg_max": 5.59149,
+   "world_translation_cm": [
+    0.267,
+    -11.1,
+    10.649
+   ],
+   "translation_spread_cm": 2.791
+  },
+  "Spine2": {
+   "world_rotation_change_deg_max": 13.04588,
+   "world_translation_cm": [
+    0.257,
+    -11.117,
+    10.944
+   ],
+   "translation_spread_cm": 2.3422
+  },
+  "Neck": {
+   "world_rotation_change_deg_max": 9.09496,
+   "world_translation_cm": [
+    0.149,
+    -11.212,
+    12.078
+   ],
+   "translation_spread_cm": 1.9857
+  },
+  "Head": {
+   "world_rotation_change_deg_max": 27.51589,
+   "world_translation_cm": [
+    -0.119,
+    -11.341,
+    12.283
+   ],
+   "translation_spread_cm": 2.6379
+  },
+  "LeftShoulder": {
+   "world_rotation_change_deg_max": 19.74571,
+   "world_translation_cm": [
+    0.199,
+    -11.588,
+    12.138
+   ],
+   "translation_spread_cm": 2.7498
+  },
+  "RightShoulder": {
+   "world_rotation_change_deg_max": 17.40857,
+   "world_translation_cm": [
+    0.199,
+    -11.623,
+    12.188
+   ],
+   "translation_spread_cm": 2.9321
+  },
+  "LeftArm": {
+   "world_rotation_change_deg_max": 34.2411,
+   "world_translation_cm": [
+    0.038,
+    -11.639,
+    10.729
+   ],
+   "translation_spread_cm": 2.407
+  },
+  "RightArm": {
+   "world_rotation_change_deg_max": 46.76033,
+   "world_translation_cm": [
+    0.35,
+    -11.592,
+    10.953
+   ],
+   "translation_spread_cm": 2.282
+  },
+  "LeftForeArm": {
+   "world_rotation_change_deg_max": 28.42269,
+   "world_translation_cm": [
+    0.878,
+    -11.905,
+    7.661
+   ],
+   "translation_spread_cm": 3.802
+  },
+  "RightForeArm": {
+   "world_rotation_change_deg_max": 29.13054,
+   "world_translation_cm": [
+    -1.811,
+    -12.53,
+    6.738
+   ],
+   "translation_spread_cm": 4.3527
+  },
+  "LeftHand": {
+   "world_rotation_change_deg_max": 47.34783,
+   "world_translation_cm": [
+    3.75,
+    -12.746,
+    7.505
+   ],
+   "translation_spread_cm": 3.2735
+  },
+  "RightHand": {
+   "world_rotation_change_deg_max": 60.59035,
+   "world_translation_cm": [
+    -3.439,
+    -12.303,
+    7.582
+   ],
+   "translation_spread_cm": 3.4179
+  }
+ },
+ "anatomical_angles": {
+  "pelvis_posterior_tilt": {
+   "range_deg": [
+    33.1,
+    40.59
+   ],
+   "limit_deg": [
+    0.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    7.35,
+    14.58
+   ],
+   "max_change_deg": 29.1
+  },
+  "pelvis_obliquity": {
+   "range_deg": [
+    -0.58,
+    4.41
+   ],
+   "capture_range_deg": [
+    1.39,
+    3.13
+   ],
+   "max_change_deg": 3.11
+  },
+  "pelvis_heading": {
+   "range_deg": [
+    -1.85,
+    -0.93
+   ],
+   "capture_range_deg": [
+    -1.01,
+    -0.23
+   ],
+   "max_change_deg": 1.12
+  },
+  "lumbar_flexion": {
+   "range_deg": [
+    38.74,
+    44.94
+   ],
+   "limit_deg": [
+    -16.0,
+    52.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    13.1,
+    20.3
+   ],
+   "max_change_deg": 26.93
+  },
+  "left_hip_flexion": {
+   "range_deg": [
+    33.77,
+    42.58
+   ],
+   "limit_deg": [
+    -30.0,
+    120.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    64.41,
+    71.65
+   ],
+   "max_change_deg": 33.54
+  },
+  "left_hip_abduction": {
+   "range_deg": [
+    -2.08,
+    16.22
+   ],
+   "limit_deg": [
+    -30.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    6.31,
+    7.77
+   ],
+   "max_change_deg": 8.54
+  },
+  "left_hip_internal_rotation": {
+   "range_deg": [
+    -7.4,
+    -4.5
+   ],
+   "limit_deg": [
+    -45.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -3.67,
+    -2.38
+   ],
+   "max_change_deg": 4.32
+  },
+  "left_knee_flexion": {
+   "range_deg": [
+    92.39,
+    95.21
+   ],
+   "limit_deg": [
+    -5.0,
+    135.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    75.26,
+    76.22
+   ],
+   "max_change_deg": 19.28
+  },
+  "left_knee_varus": {
+   "range_deg": [
+    3.97,
+    10.77
+   ],
+   "capture_range_deg": [
+    -4.59,
+    -4.24
+   ],
+   "max_change_deg": 15.23
+  },
+  "left_knee_axial": {
+   "range_deg": [
+    -6.13,
+    3.61
+   ],
+   "capture_range_deg": [
+    2.73,
+    3.78
+   ],
+   "max_change_deg": 8.89
+  },
+  "left_ankle_dorsiflexion": {
+   "range_deg": [
+    17.45,
+    19.48
+   ],
+   "limit_deg": [
+    -50.0,
+    20.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -62.79,
+    -61.74
+   ],
+   "max_change_deg": 81.72
+  },
+  "left_subtalar_inversion": {
+   "range_deg": [
+    1.92,
+    8.95
+   ],
+   "limit_deg": [
+    -15.0,
+    35.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -0.96,
+    0.28
+   ],
+   "max_change_deg": 8.83
+  },
+  "left_foot_adduction": {
+   "range_deg": [
+    -5.73,
+    3.83
+   ],
+   "capture_range_deg": [
+    -6.05,
+    -4.88
+   ],
+   "max_change_deg": 9.84
+  },
+  "left_mtp_extension": {
+   "range_deg": [
+    0.0,
+    0.0
+   ],
+   "limit_deg": [
+    -45.0,
+    70.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -0.31,
+    0.0
+   ],
+   "max_change_deg": 0.31
+  },
+  "right_hip_flexion": {
+   "range_deg": [
+    32.94,
+    49.47
+   ],
+   "limit_deg": [
+    -30.0,
+    120.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    64.03,
+    71.32
+   ],
+   "max_change_deg": 36.17
+  },
+  "right_hip_abduction": {
+   "range_deg": [
+    8.82,
+    15.51
+   ],
+   "limit_deg": [
+    -30.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    4.65,
+    5.62
+   ],
+   "max_change_deg": 10.5
+  },
+  "right_hip_internal_rotation": {
+   "range_deg": [
+    -11.94,
+    -6.12
+   ],
+   "limit_deg": [
+    -45.0,
+    45.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -3.16,
+    -1.84
+   ],
+   "max_change_deg": 10.1
+  },
+  "right_knee_flexion": {
+   "range_deg": [
+    85.37,
+    91.8
+   ],
+   "limit_deg": [
+    -5.0,
+    135.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    69.95,
+    70.45
+   ],
+   "max_change_deg": 21.61
+  },
+  "right_knee_varus": {
+   "range_deg": [
+    2.49,
+    7.74
+   ],
+   "capture_range_deg": [
+    -4.24,
+    -3.22
+   ],
+   "max_change_deg": 11.91
+  },
+  "right_knee_axial": {
+   "range_deg": [
+    -8.19,
+    3.73
+   ],
+   "capture_range_deg": [
+    -13.39,
+    -12.56
+   ],
+   "max_change_deg": 17.1
+  },
+  "right_ankle_dorsiflexion": {
+   "range_deg": [
+    5.36,
+    19.47
+   ],
+   "limit_deg": [
+    -50.0,
+    20.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -41.16,
+    -40.61
+   ],
+   "max_change_deg": 60.58
+  },
+  "right_subtalar_inversion": {
+   "range_deg": [
+    -5.73,
+    0.13
+   ],
+   "limit_deg": [
+    -15.0,
+    35.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -16.53,
+    -15.59
+   ],
+   "max_change_deg": 16.66
+  },
+  "right_foot_adduction": {
+   "range_deg": [
+    -2.56,
+    -0.48
+   ],
+   "capture_range_deg": [
+    -9.79,
+    -8.49
+   ],
+   "max_change_deg": 8.12
+  },
+  "right_mtp_extension": {
+   "range_deg": [
+    0.0,
+    0.0
+   ],
+   "limit_deg": [
+    -45.0,
+    70.0
+   ],
+   "within_limit": true,
+   "capture_range_deg": [
+    -0.22,
+    0.12
+   ],
+   "max_change_deg": 0.22
+  }
+ },
+ "anatomical_limits_ok": true,
+ "anatomical_limits_ok_all_frames": true,
+ "anatomical_limit_frames": {
+  "gated_frames_outside": [],
+  "frames_outside_absolute_ranges": [],
+  "frames_outside_pelvis_edit_bound_only": [],
+  "capture_itself_outside_absolute_ranges": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36
+  ],
+  "max_excess_deg": 0.0,
+  "note": "the ranges are SEATED / normal-ROM ranges; ungated stand/sit motion frames keep the capture, which already leaves them (e.g. anterior pelvic tilt while rising)"
+ },
+ "seam_to_SeatedIdle": {
+  "pair": "loop.last -> clip.first",
+  "fps": 30.0,
+  "position_delta": {
+   "hips_cm": 0.0,
+   "max_joint_cm": 0.0,
+   "hips_rotation_deg": 0.0,
+   "max_joint_rotation_deg": 1e-06
+  },
+  "velocity_delta": {
+   "hips_cm_s": 0.7326,
+   "max_joint_cm_s": 5.543,
+   "hips_ang_deg_s": 2.8183,
+   "max_joint_ang_deg_s": 5.9561
+  },
+  "velocity": {
+   "incoming_hips_cm_s": [
+    0.1322,
+    0.195,
+    0.108
+   ],
+   "outgoing_hips_cm_s": [
+    -0.1587,
+    -0.4237,
+    -0.1552
+   ]
+  },
+  "loop_own_seam_velocity_delta_reference": {
+   "hips_cm_s": 0.6896,
+   "max_joint_cm_s": 5.4788,
+   "hips_ang_deg_s": 2.8183,
+   "max_joint_ang_deg_s": 5.9591
+  }
+ },
+ "clearance": {
+  "chair_complete": {
+   "min_margin_cm": 0.578,
+   "frames_with_penetration": 0,
+   "frames_checked": 8,
+   "deepest_by_chair_part_cm": {},
+   "clear": true,
+   "skin_sampling": "every 6th skinned owner vertex",
+   "rule": "ChairCollider (tools/solve_seated_typing_arm_ik.py): margin = signed distance - allowed depth; chair_fabric allows -2.5 cm (seat band), every other part 0"
+  },
+  "desk": {
+   "min_clearance_under_desk_structure_cm": 0.004,
+   "highest_skin_under_desk_structure_cm": 81.444,
+   "desktop_underside_cm": 81.2,
+   "skin_samples_inside_desk_structure": 3184,
+   "frames_with_skin_inside_desk_structure": 13,
+   "deepest_inside_below_desk_top_cm": 3.299,
+   "inside_by_dominant_joint": {
+    "RightForeArm": 498,
+    "RightHand": 428,
+    "RightHandRing1": 161,
+    "RightHandMiddle1": 150,
+    "RightHandIndex1": 144,
+    "LeftHandIndex1": 141,
+    "LeftHandMiddle1": 131,
+    "LeftHandRing1": 125
+   },
+   "clear": false
+  }
+ }
+}

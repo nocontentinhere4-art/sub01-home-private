@@ -213,3 +213,12 @@ def test_source_ready_requires_every_clip_and_check():
     assert not A.source_ready(dict(good, GetUp={'skipped': 'wall-clock cap'}))       # skipped transition
     assert not A.source_ready({k: v for k, v in good.items() if k != 'GetUp'})       # missing transition
     assert not A.source_ready(dict(good, GetUp=_clip(main_rule={'pass_main_rule': False})))
+
+
+def test_refine_curve_is_exactly_the_shared_set_at_pinned_seams():
+    F = 60
+    knots = np.unique(np.r_[np.arange(0, F, 6), F - 1])
+    delta = np.random.default_rng(1).normal(0, 2, (len(knots), len(A.PARAMS)))
+    dense = A._smooth_dense(knots, delta, F, 2., (0, F - 1), 6)
+    assert np.all(dense[0] == 0) and np.all(dense[-1] == 0)
+    assert np.abs(np.diff(dense, axis=0)).max() < np.abs(delta).max()      # smoothed, no step

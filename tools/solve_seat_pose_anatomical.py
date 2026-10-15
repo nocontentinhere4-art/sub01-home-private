@@ -930,62 +930,85 @@ class SharedSolver:
         return best[1], best[0]
 
 
-REFINE_PARAMS = (0, 1, 2, 3, 5)      # pelvis tilt, root down, root back, both ankle-forward offsets
-REFINE_KNOT_FRAMES = 12
-REFINE_SIGMA_FRAMES = 4.
+REFINE_PARAMS = (0, 1, 2, 3, 5, 7, 8)   # pelvis tilt, root down/back, both ankle-forward offsets, both hip swivels
+REFINE_STEPS = (3., 1.5, 1.5, 2., 2., 6., 6.)
+REFINE_SCALE = (5., 2.5, 2.5, 3., 3., 10., 10.)
+REFINE_STAGES = ((12, 4., 3), (6, 2., 4))   # (knot spacing in keys, Gaussian sigma in keys, rounds)
 
 
-def refine_per_frame(sol, x, deadline, pinned=(), target=.08, rounds=6):
-    """Time-varying residual edits where the shared constant set leaves frames failing: a residual delta of
-    REFINE_PARAMS on knots every REFINE_KNOT_FRAMES keys, each knot solved (Nelder-Mead) on the keys around it with a
-    pull toward zero, then linearly interpolated, Gaussian smoothed (sigma REFINE_SIGMA_FRAMES) and verified on every
-    key. Knots on `pinned` keys (chain seams) stay exactly 0 so the seams keep the shared set. Returns (F, 9) params."""
+def _smooth_dense(knots, delta, F, sigma, pinned, spacing):
+    dense = np.stack([np.interp(np.arange(F), knots, delta[:, c]) for c in range(len(PARAMS))], 1)
+    if sigma > 0:
+        xk = np.arange(-int(3 * sigma), int(3 * sigma) + 1)
+        ker = np.exp(-.5 * (xk / sigma) ** 2)
+        ker /= ker.sum()
+        dense = np.stack([np.convolve(np.pad(dense[:, c], len(xk) // 2, mode='edge'), ker, mode='valid')
+                          for c in range(len(PARAMS))], 1)
+    for p_ in pinned:                                       # exactly the shared set at the chain seams
+        dense *= P.smootherstep(np.clip(np.abs(np.arange(F) - p_) / spacing, 0, 1))[:, None]
+    return dense
+
+
+def refine_per_frame(sol, x, deadline, pinned=(), target=.08, stages=REFINE_STAGES):
+    """Time-varying residual edits where the shared constant set leaves frames failing. Per stage: a residual delta of
+    REFINE_PARAMS on knots every `spacing` keys, each knot whose neighbourhood fails solved (Nelder-Mead) on the keys
+    around it with a pull toward zero, then linearly interpolated, Gaussian smoothed and verified on every key; the
+    best verified curve (fewest failing keys, then the largest worst margin) is kept across rounds and stages. Knots on
+    `pinned` keys (chain seams) stay exactly 0 so the seams keep the shared set. Returns ((F, 9) params, log)."""
     from scipy.optimize import minimize
     F = len(sol.W0)
-    prm = np.tile(np.asarray(x, float), (F, 1))
-    knots = np.unique(np.r_[np.arange(0, F, REFINE_KNOT_FRAMES), F - 1])
-    delta = np.zeros((len(knots), len(PARAMS)))
+    base = np.tile(np.asarray(x, float), (F, 1))
+    best = None
+    dense = np.zeros((F, len(PARAMS)))
     log = []
-    for rnd in range(rounds):
-        _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
-        w = solver_cost_worst(mg)
-        bad = (w < target) | (ex > 0)
-        log.append({'round': rnd, 'failing_main_frames': int((worst < 0).sum()), 'below_target_frames': int(bad.sum()),
-                    'worst_margin_cm': _r(worst.min())})
-        if not (worst < 0).any() and not (ex > 0).any() or time.time() > deadline:
-            break
-        for ki, k in enumerate(knots):
-            if time.time() > deadline:
+    cols = list(REFINE_PARAMS)
+    for si, (spacing, sigma, rounds) in enumerate(stages):
+        knots = np.unique(np.r_[np.arange(0, F, spacing), F - 1])
+        for rnd in range(rounds):
+            prm = base + dense
+            _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
+            w = solver_cost_worst(mg)
+            score = (int(((worst < 0) | (ex > 0)).sum()), -float(worst.min()))
+            log.append({'stage': si, 'round': rnd, 'failing_main_frames': int((worst < 0).sum()),
+                        'anatomical_excess_frames': int((ex > 0).sum()), 'worst_margin_cm': _r(worst.min())})
+            if best is None or score < best[0]:
+                best = (score, dense.copy())
+            if score[0] == 0 or time.time() > deadline:
                 break
-            lo, hi = max(0, k - REFINE_KNOT_FRAMES), min(F, k + REFINE_KNOT_FRAMES + 1)
-            if not bad[lo:hi].any() or any(abs(k - p) < 1 for p in pinned):
-                continue
-            fr = np.arange(lo, hi, 2)
+            bad = (w < target) | (ex > 0)
+            delta = dense[knots].copy()
+            for ki, k in enumerate(knots):
+                if time.time() > deadline:
+                    break
+                lo, hi = max(0, k - spacing), min(F, k + spacing + 1)
+                if not bad[lo:hi].any() or any(abs(k - p_) < 1 for p_ in pinned):
+                    continue
+                fr = np.arange(lo, hi, max(1, spacing // 6))
+                q0 = prm[fr].copy()
 
-            def cost(d):
-                q = prm[fr].copy()
-                q[:, REFINE_PARAMS] += d
-                _, _, mg_, _, _, ex_ = sol.evaluate(q, fr)
-                ww = np.minimum(solver_cost_worst(mg_), target + .05)
-                return -ww.min() - .1 * ww.mean() + 20. * float(ex_.max()) + .002 * float(np.sum((d / [5., 2.5, 2.5, 3., 3.]) ** 2))
-            d0 = delta[ki, list(REFINE_PARAMS)]
-            simplex = np.vstack([d0] + [d0 + np.eye(len(d0))[i] * [3., 1.5, 1.5, 2., 2.][i] for i in range(len(d0))])
-            r = minimize(cost, d0, method='Nelder-Mead', options={'initial_simplex': simplex, 'maxfev': 120,
-                                                                   'xatol': 1e-3, 'fatol': 1e-5})
-            delta[ki, list(REFINE_PARAMS)] = r.x
-        dense = np.stack([np.interp(np.arange(F), knots, delta[:, c]) for c in range(len(PARAMS))], 1)
-        if REFINE_SIGMA_FRAMES > 0:
-            xk = np.arange(-int(3 * REFINE_SIGMA_FRAMES), int(3 * REFINE_SIGMA_FRAMES) + 1)
-            ker = np.exp(-.5 * (xk / REFINE_SIGMA_FRAMES) ** 2)
-            ker /= ker.sum()
-            dense = np.stack([np.convolve(np.pad(dense[:, c], len(xk) // 2, mode='edge'), ker, mode='valid')
-                              for c in range(len(PARAMS))], 1)
-        for p_ in pinned:                                   # exactly the shared set at the chain seams
-            wpin = np.clip(np.abs(np.arange(F) - p_) / REFINE_KNOT_FRAMES, 0, 1)
-            dense *= P.smootherstep(wpin)[:, None]
-        prm = np.tile(np.asarray(x, float), (F, 1)) + dense
+                def cost(d):
+                    q = q0.copy()
+                    q[:, cols] += d
+                    _, _, mg_, _, _, ex_ = sol.evaluate(q, fr)
+                    ww = np.minimum(solver_cost_worst(mg_), target + .05)
+                    tot = (dense[k, cols] + d) / REFINE_SCALE
+                    return -ww.min() - .1 * ww.mean() + 20. * float(ex_.max()) + .002 * float(np.sum(tot ** 2))
+                d0 = np.zeros(len(cols))
+                simplex = np.vstack([d0] + [d0 + np.eye(len(cols))[i] * REFINE_STEPS[i] for i in range(len(cols))])
+                r = minimize(cost, d0, method='Nelder-Mead', options={'initial_simplex': simplex, 'maxfev': 150,
+                                                                       'xatol': 1e-3, 'fatol': 1e-5})
+                delta[ki, cols] += r.x
+            dense = _smooth_dense(knots, delta, F, sigma, pinned, spacing)
+        if best[0][0] == 0 or time.time() > deadline:
+            break
+        dense = best[1].copy()
+    prm = base + dense
     _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
-    log.append({'round': 'final', 'failing_main_frames': int((worst < 0).sum()), 'worst_margin_cm': _r(worst.min()),
+    score = (int(((worst < 0) | (ex > 0)).sum()), -float(worst.min()))
+    if score > best[0]:
+        prm = base + best[1]
+        _, _, mg, worst, _, ex = sol.evaluate(prm, np.arange(F))
+    log.append({'round': 'final (best kept)', 'failing_main_frames': int((worst < 0).sum()), 'worst_margin_cm': _r(worst.min()),
                 'anatomical_excess_frames': int((ex > 0).sum())})
     return prm, log
 
@@ -1063,6 +1086,7 @@ def run_typing(args):
         budget = min(clock.left() * .6, 2400.) if name == 'DeskTyping' else min(clock.left() * .2, 600.)
         prm, log = refine_per_frame(sd['solver'], x, time.time() + budget, pinned)
         sd['prm'] = prm
+        np.save(out_dir / f'.{name}.params.npy', prm) if args.save_params else None
         dlt = prm - np.asarray(x, float)
         report['per_frame_refine'][name] = {'log': log, 'pinned_keys': list(pinned),
                                             'max_abs_delta': dict(zip(PARAMS, [_r(v, 4) for v in np.abs(dlt).max(0)])),
@@ -1146,6 +1170,7 @@ def main(argv=None):
     ap.add_argument('--only-lift', action='store_true', help='solve only the chair-lift proposal')
     ap.add_argument('--warm-start', type=float, nargs=len(PARAMS), default=None)
     ap.add_argument('--fixed', action='store_true', help='use --warm-start as the parameters (no optimisation)')
+    ap.add_argument('--save-params', action='store_true', help='also save the per-frame typing params (.npy)')
     ap.add_argument('--typing', action='store_true', help='the typing base (SitToType, DeskTyping, TypeToSit) on the '
                     'chair-lift proposal, seamed to the committed anatomical SeatedIdle')
     args = ap.parse_args(argv)

@@ -114,3 +114,79 @@ The bounded re-solve stopped at 20.01° dorsiflexion. Both `ankle_forward` param
 - **Cushion:** the flat top is 50.4 cm (52.9 cm lifted), the maximum 51.4 cm (53.9 cm lifted), and the depth 47.7 cm.
 - **Consequence:** the thigh cannot lie level on the cushion with the heels down. It slopes down 16.6–18.4° (measured chair) and 19.7–22.9° (lifted) to knees at about 46–47 cm. The base therefore sits forward, perched: the hip joints are about 8 cm forward of the cushion's front edge, the ischial and buttock skin is on the front of the flat top, and the posterior thighs are on the front waterfall.
 - **Result:** main's median and coverage pass with this shape. No footrest is needed (root confirmed). The lift makes the thigh slope about 3° steeper but still passes.
+
+## Typing base: SitToType, DeskTyping, TypeToSit (same lifted chair, same placement)
+
+These are seated BASE clips only. The upper body and arms are left as captured, so they still need the arm/typing step. The results come from `python tools/solve_seat_pose_anatomical.py --typing --fixed --save-params --warm-start 25.5309 11.5447 -11.1917 2.2412 2.4405 9.4749 2.3368 11.2326 3.4952 --out-dir <dir>`. The full report is `chair-lift-proposal/typing-base.report.json`.
+
+**Readiness:** `source_ready: false`, `native_ready: false`, `ready: false`. Main's rule, the joint limits and the complete-chair check pass on every clip. The only failing check is desk clearance (see the table below).
+
+| Clip | GLB sha256 | Gated | Fail (main) | Anatomy (gated) | Complete chair | Desk |
+|---|---|---|---|---|---|---|
+| `SUB01_SitToType_seated.glb` (37 keys) | `23547c5264e3545f1e24d2806df9057fd3bd45ff2d42a1c35662b7307f75c1e8` | 37 | 0 | pass | clear | **fail**: the captured right forearm/hand is up to 3.3 cm inside the desk |
+| `SUB01_DeskTyping_seated.glb` (989 keys at 60 Hz) | `ab875ed3f8bae6d510d8e3e6da50f13a325019c4290ab03a299c48079770334f` | 301 native audit samples (3–8 s); also all 989 keys: 0 fail | 0 | pass | +0.286 cm | **fail**: the captured right forearm is up to 3.3 cm inside the desk on 969 keys |
+| `SUB01_TypeToSit_seated.glb` (29 keys) | `237a5be2fb926926de987d79e41719bde2d27deafa522e3c5d15cff39124363e` | 29 | 0 | pass | clear | **fail**: as SitToType |
+
+Worst value per patch on the gated frames (min gap / max median / min coverage / min over-surface vertices):
+
+| Clip | buttocks | L thigh | R thigh | soles |
+|---|---|---|---|---|
+| SitToType | −2.18 / 0.219 / 0.570 / 605 | −2.22 / −0.072 / 0.672 / 1030 | −2.36 / 0.079 / 0.640 / 1132 | 0.05 / ≤0.233 / 1.0 |
+| DeskTyping (301) | −2.09 / 0.144 / 0.622 / 577 | **−2.45** / −0.858 / 0.798 / 1071 | −1.75 / **0.483** / **0.503** / 1074 | 0.05 / ≤0.233 / 1.0 |
+| TypeToSit | −2.14 / 0.204 / 0.571 / 604 | −2.22 / −0.492 / 0.742 / 1041 | −2.38 / 0.073 / 0.642 / 1126 | 0.05 / ≤0.233 / 1.0 |
+
+**DeskTyping is thin.** It passes, but the margins are small:
+
+- The right posterior thigh's median is 0.4834 cm and its coverage 0.5032. Both are at key 212 (3.53 s), against limits of 0.5 cm and 0.5.
+- The left thigh's minimum gap is −2.45 cm against −2.5 cm.
+
+All 989 keys pass. Over all keys, the worst right-thigh median is 0.483 cm (key 212) and the worst left-thigh minimum gap is −2.362 cm (key 134).
+
+### Edits
+
+- **One shared perch edit set** for the three typing clips, so the chain keeps the capture's own continuity:
+
+  | Parameter | Value |
+  |---|---|
+  | Pelvis tilt | +25.53° |
+  | Root down / forward | 11.54 / 11.19 cm |
+  | L / R ankle forward | 2.24 / 9.47 cm |
+  | L / R ankle lateral | 2.44 / 2.34 cm |
+  | L / R hip swivel | 11.23° / 3.50° |
+  | Feet | flat, heels down |
+
+- **A bounded per-frame residual** on top of it, where the shared set left frames failing (`refine_per_frame`). It uses knots every 12 keys and Gaussian smoothing (σ 4 keys). It is pinned to exactly 0 at the chain seams.
+  - DeskTyping: 716 keys get a residual. Maximum residuals: tilt 1.76°, root down 0.11 cm, root back 0.39 cm, ankle forward L/R 2.95/5.29 cm, hip swivel L/R 25.1/4.8°.
+  - SitToType: residual of at most 0.9° tilt / 0.3 cm.
+  - TypeToSit: none.
+  - The left hip swivel parameter reaches 11.2 + 25.1 = 36.4°. The 25° bound applies to the constant set only. The resulting hip rotation stays at −7.7 to −4.5° (L) and −8.8 to −5.6° (R), inside the ±45° limit.
+- **DeskTyping joint angles:**
+  - pelvis tilt 33.3–39.1° (limit 45);
+  - lumbar flexion 39.2–51.9° (limit 52);
+  - hip flexion 38–45° (L) and 41–49° (R);
+  - ankle dorsiflexion 11.2–18.3° (L) and −2.8–5.6° (R) (limit 20);
+  - MTP at the bind pose.
+- **DeskTyping per-joint maximum local rotation change vs capture:**
+  - Hips and Spine 27.3°;
+  - UpLeg L/R 31.4/23.2°;
+  - Leg L/R 25.8/19.1°;
+  - Foot L/R 82.2/47.8°;
+  - RightToeBase 0.13°;
+  - the other 56 joints, including the whole upper body and arms, are unchanged.
+
+  The upper-body world rotation change is at most 5e-5°. It translates by (0, −11.54, +11.21) cm in glTF with 0.33 cm spread. Bone-length error is 0.
+
+### Seams (written, read-back clips)
+
+| Pair | Position Δ (hips / max joint) | Velocity Δ (hips / max joint) | Angular Δ (hips / max joint) | Raw capture, same pair |
+|---|---|---|---|---|
+| SeatedIdle.last → SitToType.first | 0 / 0 cm | 0.73 / 5.54 cm/s | 2.82 / 5.96 °/s | seam blend (loop head, window 2–19) |
+| SitToType.last → DeskTyping.first | 0.029 / 0.239 cm | 0.72 / 14.77 cm/s | 9.77 / 105.0 °/s | 0.244 cm, 14.77 cm/s, 105.0 °/s |
+| DeskTyping.last → TypeToSit.first | 0.022 / 0.353 cm | 0.51 / 43.88 cm/s | 1.21 / 196.2 °/s | 0.459 cm, 43.81 cm/s, 196.4 °/s |
+| TypeToSit.last → SeatedIdle.first | 0 / 0 cm | 0.69 / 5.42 cm/s | 2.82 / 5.96 °/s | seam blend (loop tail, window 0–27) |
+
+- **Inside the chain:** the internal seams keep the raw capture's own mismatch, at or below the raw values, because the same edit set is pinned there. The large angular steps are the captured arms. Lower-body position deltas are 0.24 and 0.35 cm.
+- **Seams to SeatedIdle:** the existing full-pose seam blend. Every frame of these seated clips is gated, so the window is chosen by (1) no failing frame, then (2) the smallest pelvis peak-acceleration ratio, then (3) the most captured frames kept.
+  - SitToType keeps 18 captured frames, with a peak ratio of 1.0.
+  - TypeToSit is blended over the whole clip (window 0–27) to the loop tail. Its pelvis peaks at 17 cm/s² and 40 °/s², against an almost static capture (0.6 cm/s²), so the ratio is 28. The typing perch differs from the idle perch in the capture itself (upper body up to 25 cm apart), so this 0.93 s clip carries the whole change.
+  - Within the blend windows the upper body moves between the loop's and the capture's: up to 27.5° of head world rotation. These windows are not arms-as-captured.
