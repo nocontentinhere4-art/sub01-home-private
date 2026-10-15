@@ -71,4 +71,5 @@ def install(header,cpp):
     header=header.replace(' private: UPROPERTY() TObjectPtr<UCameraComponent> ViewCamera;', ' private: UPROPERTY() TObjectPtr<UCameraComponent> ViewCamera;'+FIELDS,1)
     if 'void PublishPrivateVisualMetrics();' not in header:raise ValueError('Character declaration hook missing')
     cpp=cpp.replace(anchor,anchor+INCLUDES,1).replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n PublishPrivateVisualMetrics();',1)+METHODS
-    return header,cpp
+    from unreal_native_projection_metrics import install as install_projection
+    return header,install_projection(cpp)

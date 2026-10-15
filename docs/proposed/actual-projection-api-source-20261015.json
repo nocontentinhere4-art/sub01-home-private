@@ -1,0 +1,21 @@
+{
+  "schema": "sub01.actual-projection-api-source-validation.v1",
+  "native_modified": false,
+  "native_compiled": false,
+  "native_measured": false,
+  "actual_engine_root": "/workspace/sub01-private-recovered-engine/Engine",
+  "actual_api": {
+    "Engine/Classes/Engine/LocalPlayer.h:623": "virtual bool GetProjectionData(FViewport* Viewport, FSceneViewProjectionData& ProjectionData, int32 StereoViewIndex = INDEX_NONE) const",
+    "Engine/Public/SceneView.h:97": "const FIntRect& GetViewRect() const",
+    "Engine/Public/SceneView.h:98": "const FIntRect& GetConstrainedViewRect() const",
+    "Engine/Classes/Camera/CameraComponent.h:114": "TEnumAsByte<EAspectRatioAxisConstraint> AspectRatioAxisConstraint",
+    "Engine/Classes/Camera/CameraComponent.h:126": "uint8 bOverrideAspectRatioAxisConstraint : 1"
+  },
+  "actual_readonly_install": {
+    "before_cpp_sha256": "49db185d4de81b9ae5ff93554e93531e36e83c4eb7dfddb91553cc181f19b79b",
+    "candidate_cpp_sha256": "27c9c0b5308d46b78fb91312bef4cc799372b3d93f6acb6fe31b5353a769fa57",
+    "projection_object_count": 1,
+    "actual_projection_query_count": 1
+  },
+  "tests": "7 focused tests passed; shipped portable C++ policy compiled and executed for75deg horizontal16:9, asymmetric ray roundtrips, infinite-far perspective, orthographic/NaN/infinity/nonpositive-scale refusal. No Unreal compile or actual metrics witness claimed."
+}
