@@ -1,0 +1,179 @@
+{
+  "schema": "sub01.reference-kitchen-finish-physical-proof.v1",
+  "cabinet_source_sha256": "accd954c120a60f4eb68bd869fe2f1b578517880d71b82e673af5834c32fb79d",
+  "finish_variant_sha256": "d2fca368e7bff558736f912c904749ea4f3e6ece23748c54895083c6d9fbb4b3",
+  "all152_geometry_uv_binary_and_hierarchy_exact": true,
+  "counter_tap_carriers": [
+    {
+      "source_node": 65,
+      "carrier_node": 0,
+      "triangles": 32,
+      "every_world_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    },
+    {
+      "source_node": 69,
+      "carrier_node": 1,
+      "triangles": 640,
+      "every_world_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    },
+    {
+      "source_node": 70,
+      "carrier_node": 2,
+      "triangles": 96,
+      "every_world_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    },
+    {
+      "source_node": 71,
+      "carrier_node": 3,
+      "triangles": 40,
+      "every_world_corner_unchanged": true,
+      "tolerance_cm": 0.0001
+    }
+  ],
+  "counter_tap_sha256": "d905e64aed0539122775005d5b7cd854238a03780b6f75345a37b9d0c9256047",
+  "led_sha256": "69c55bb3b9706c1da87047b995e091d6acddfdc52e90c75480a2dcded1db232d",
+  "actual_exported_led_bounds_m": [
+    [
+      -3.7109999656677246,
+      3.5979998111724854,
+      1.6865999698638916
+    ],
+    [
+      -0.6889999508857727,
+      3.621999979019165,
+      1.6990000009536743
+    ]
+  ],
+  "source_bvh": {
+    "exported_glb_reimported": true,
+    "epsilon_m": 0,
+    "tested_retained_meshes": 382,
+    "led_parts": 4,
+    "intersection_pairs": [],
+    "retired_original_nodes_with_exact_replacements": [
+      63,
+      66,
+      178
+    ]
+  },
+  "eight_full_continuous_hinge_sweeps_against_new_led": [
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Lower_cabinet_hinge_1",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        0.12699878215789795,
+        0.8655000329017639
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.8210999369621277,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Lower_cabinet_hinge_2",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        0.12699878215789795,
+        0.8655000329017639
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.8210999369621277,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Lower_cabinet_hinge_3",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        0.12699878215789795,
+        0.8655000329017639
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.8210999369621277,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Lower_cabinet_hinge_4",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        0.12699878215789795,
+        0.8655000329017639
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.8210999369621277,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Cabinet hinge 1",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        1.71999990940094,
+        2.380000114440918
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.020999908447265625,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Cabinet hinge 2",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        1.71999990940094,
+        2.380000114440918
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.020999908447265625,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Cabinet hinge 3",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        1.71999990940094,
+        2.380000114440918
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.020999908447265625,
+      "all_angles_clear_by_Z_invariance": true
+    },
+    {
+      "hinge": "SUB01_RealKitchen_bf4a71cc24d1_Cabinet hinge 4",
+      "source_leaf_parts": 5,
+      "moving_height_m": [
+        1.71999990940094,
+        2.380000114440918
+      ],
+      "led_height_m": [
+        1.6865999698638916,
+        1.6990000009536743
+      ],
+      "minimum_vertical_separation_m": 0.020999908447265625,
+      "all_angles_clear_by_Z_invariance": true
+    }
+  ],
+  "native_ready": false,
+  "native_saved": false,
+  "runtime_motion_verified": false
+}

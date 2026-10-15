@@ -1,0 +1,52 @@
+{
+  "schema": "sub01.reference-kitchen-finish-next-native-packet.v1",
+  "status": "source-reviewed-physical-proof-passed-native-not-applied",
+  "remote_root": "/workspace/sub01-home-private/reference-kitchen-finish-r2/output",
+  "required_live_installed_r7_receipt_sha256": "6b12c76f4c3df583efd664eadaf64191a83d2a82e336b26117e50c30f7fb4c2f",
+  "cabinet_finish_variant_sha256": "d2fca368e7bff558736f912c904749ea4f3e6ece23748c54895083c6d9fbb4b3",
+  "apply_after_human_input_release": true,
+  "phase_A": {
+    "operation": "owned per-component material overrides only, no152partreimport",
+    "preserve": [
+      "all152meshbindings",
+      "all40movingtags",
+      "all8R7hingeaxes",
+      "allactorcomponentTRS",
+      "allcollisionprofiles",
+      "allsinkcookcountergeometry",
+      "allarchitecture"
+    ],
+    "new_owned_materials": 3,
+    "photographed_wood_textures": "copy alreadyownedverifiednativeR7textureassets into newfinishnamespace; do not mutate oldtextures",
+    "sourcePBR_verified_before_and_after_required": true,
+    "original_nodes_material_only": [
+      65,
+      69,
+      70,
+      71
+    ],
+    "carrier_meshes_are_temporary_only": true,
+    "counter_tap_source_sha256": "d905e64aed0539122775005d5b7cd854238a03780b6f75345a37b9d0c9256047"
+  },
+  "phase_B": {
+    "new_source": "under-cabinet-led.glb",
+    "sha256": "69c55bb3b9706c1da87047b995e091d6acddfdc52e90c75480a2dcded1db232d",
+    "parts": 4,
+    "new_geometry_collision": "None",
+    "old66collision_preserved": true,
+    "old66_visual_retirement_requires_actual_saved_LED_receipt": true,
+    "runtime_requirement": "Bind owned new diffuser MID to existing KitchenWork toggle after actual receipt/source/PBR validation. Existing seven source fixture bindings remain unchanged. Noalwaysonfakefunctionalclaim."
+  },
+  "acceptance_required": [
+    "actualnativePBRnumeric/textures",
+    "actualGamefullkitchenframe",
+    "all8hingesopenandclose",
+    "KitchenWorklighton/off",
+    "normalPC/phone/TVunchanged",
+    "walk/egress/collisionsunchanged"
+  ],
+  "native_imported": false,
+  "native_motion_verified": false,
+  "native_contact_gates_changed": false,
+  "public_changes": false
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "sub01.reference-kitchen-finish-source.v1",
+  "actual_r7_source_sha256": "accd954c120a60f4eb68bd869fe2f1b578517880d71b82e673af5834c32fb79d",
+  "variant_sha256": "d2fca368e7bff558736f912c904749ea4f3e6ece23748c54895083c6d9fbb4b3",
+  "all_nonmaterial_gltf_json_exact": true,
+  "all_binary_geometry_uv_images_exact": true,
+  "eight_hinges_exact": true,
+  "source_nodes_exact": 168,
+  "source_meshes_exact": 152,
+  "new_layout": false,
+  "original_cook_sink_positions_unchanged": true,
+  "material_changes": [
+    {
+      "doubleSided": true,
+      "name": "KFOak00",
+      "normalTexture": {
+        "index": 0,
+        "scale": 0.34
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "index": 2
+        },
+        "baseColorFactor": [
+          0.38,
+          0.315,
+          0.235,
+          1
+        ],
+        "roughnessFactor": 0.7
+      }
+    },
+    {
+      "name": "KFMetal1",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.016,
+          0.019,
+          0.021,
+          1
+        ],
+        "metallicFactor": 0.3,
+        "roughnessFactor": 0.42
+      }
+    },
+    {
+      "name": "KFMetal2",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.016,
+          0.019,
+          0.021,
+          1
+        ],
+        "metallicFactor": 0.3,
+        "roughnessFactor": 0.42
+      }
+    }
+  ],
+  "native_imported": false,
+  "runtime_hinges_verified": false
+}

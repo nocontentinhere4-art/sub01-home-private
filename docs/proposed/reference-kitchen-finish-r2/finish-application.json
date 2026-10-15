@@ -1,0 +1,38 @@
+{
+  "schema": "sub01.reference-kitchen-finish-application.v1",
+  "source_sha256": "accd954c120a60f4eb68bd869fe2f1b578517880d71b82e673af5834c32fb79d",
+  "variant_sha256": "d2fca368e7bff558736f912c904749ea4f3e6ece23748c54895083c6d9fbb4b3",
+  "cabinet_152_geometry_replace": false,
+  "cabinet_finish_only": true,
+  "retained_source_nodes": {
+    "65": "cream stone same slab and sink cutout",
+    "69": "matte black existing faucet spout",
+    "70": "matte black existing faucet base",
+    "71": "matte black existing lever"
+  },
+  "replace_old_light_visual_only": 66,
+  "new_led_sha256": "69c55bb3b9706c1da87047b995e091d6acddfdc52e90c75480a2dcded1db232d",
+  "led_source_bounds_m": [
+    [
+      -3.7109999656677246,
+      3.5979998111724854,
+      1.6865999698638916
+    ],
+    [
+      -0.6889999508857727,
+      3.621999979019165,
+      1.6990000009536743
+    ]
+  ],
+  "led_no_physics_required": true,
+  "light": {
+    "temperature_K": 2900,
+    "continuous_diffuser": true,
+    "actual_source_emission_strength": 5,
+    "native_lighting_verified": false
+  },
+  "native_fixture_rebind_required_before_led_activation": true,
+  "existing_66_fixture_runtime_preserved_until_verified_rebind": true,
+  "counter_tap_sha256": "d905e64aed0539122775005d5b7cd854238a03780b6f75345a37b9d0c9256047",
+  "native_ready": false
+}
