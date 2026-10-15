@@ -1,0 +1,185 @@
+{
+  "schema": "sub01.existing-actual-native-capsule-route.v1",
+  "read_only": true,
+  "actual_native_pid": 159171,
+  "actual_native_start_ticks": 976840968,
+  "log_currently_open_by_exact_game": true,
+  "log_path": "/workspace/sub01-private-recovered-project/Sub01HomeLab/Saved/Logs/Sub01HomeLab.log",
+  "log_prefix_sha256": "8ad37338c3b934c691fdb96be11d7b90a3b67affb141c2d68ecded27e9919ccc",
+  "log_prefix_bytes": 1003427,
+  "segments": [
+    {
+      "from": "door",
+      "to": "front",
+      "elapsed_s": 0.7690000534057617,
+      "actual_net_planar_capsule_displacement_m": 0.5899292880506952,
+      "net_average_m_s": 0.7671381626542227,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "front",
+      "to": "stair_approach",
+      "elapsed_s": 1.0329999923706055,
+      "actual_net_planar_capsule_displacement_m": 1.0019151541423055,
+      "net_average_m_s": 0.9699081912314789,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_approach",
+      "to": "stair_bottom",
+      "elapsed_s": 0.7170000076293945,
+      "actual_net_planar_capsule_displacement_m": 0.5397050121130992,
+      "net_average_m_s": 0.7527266476572533,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_bottom",
+      "to": "stair_top",
+      "elapsed_s": 3.3499999046325684,
+      "actual_net_planar_capsule_displacement_m": 4.250895347959062,
+      "net_average_m_s": 1.2689240205889811,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_top",
+      "to": "landing",
+      "elapsed_s": 0.5829999446868896,
+      "actual_net_planar_capsule_displacement_m": 0.39766008499722466,
+      "net_average_m_s": 0.682092834864324,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "landing",
+      "to": "loft",
+      "elapsed_s": 0.8340001106262207,
+      "actual_net_planar_capsule_displacement_m": 0.6937269296344204,
+      "net_average_m_s": 0.8318067597299547,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "loft",
+      "to": "bed",
+      "elapsed_s": 1.0499999523162842,
+      "actual_net_planar_capsule_displacement_m": 1.0312264062270708,
+      "net_average_m_s": 0.9821204314840213,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "bed",
+      "to": "loft-return",
+      "elapsed_s": 0.9670000076293945,
+      "actual_net_planar_capsule_displacement_m": 0.8270130727503647,
+      "net_average_m_s": 0.8552358492507063,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "loft-return",
+      "to": "landing-return",
+      "elapsed_s": 0.8659999370574951,
+      "actual_net_planar_capsule_displacement_m": 0.7643812690666877,
+      "net_average_m_s": 0.8826574187336681,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "landing-return",
+      "to": "stair_top-return",
+      "elapsed_s": 0.5340001583099365,
+      "actual_net_planar_capsule_displacement_m": 0.3087608877432502,
+      "net_average_m_s": 0.5782037382169535,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_top-return",
+      "to": "stair_bottom-return",
+      "elapsed_s": 3.4659998416900635,
+      "actual_net_planar_capsule_displacement_m": 4.284822537760461,
+      "net_average_m_s": 1.2362442970196819,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_bottom-return",
+      "to": "stair_approach-return",
+      "elapsed_s": 0.7840001583099365,
+      "actual_net_planar_capsule_displacement_m": 0.6120000640522841,
+      "net_average_m_s": 0.7806121689714556,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "stair_approach-return",
+      "to": "front-return",
+      "elapsed_s": 0.9659998416900635,
+      "actual_net_planar_capsule_displacement_m": 0.88827743290033,
+      "net_average_m_s": 0.9195420067007937,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "front-return",
+      "to": "door-return",
+      "elapsed_s": 0.817000150680542,
+      "actual_net_planar_capsule_displacement_m": 0.7061456226586693,
+      "net_average_m_s": 0.8643151682046405,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "door-return",
+      "to": "front-desk",
+      "elapsed_s": 0.7170000076293945,
+      "actual_net_planar_capsule_displacement_m": 0.47545189136231225,
+      "net_average_m_s": 0.6631128121383026,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "front-desk",
+      "to": "aisle",
+      "elapsed_s": 3.065999984741211,
+      "actual_net_planar_capsule_displacement_m": 3.8168077018498057,
+      "net_average_m_s": 1.2448818398059998,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    },
+    {
+      "from": "aisle",
+      "to": "desk",
+      "elapsed_s": 0.75,
+      "actual_net_planar_capsule_displacement_m": 0.5878396941343786,
+      "net_average_m_s": 0.7837862588458382,
+      "includes_turn_approach_or_stairs": true,
+      "instantaneous_speed_measured": false
+    }
+  ],
+  "native_route_success": true,
+  "physical_movement_type": "Actual CharacterMovement input; no teleport as recorded in same native route log",
+  "limits": [
+    "Historical same-process route; no current movement actuated",
+    "Checkpoint net distance/time includes turning and approach braking; not instantaneous speed or path arc length",
+    "No synchronized animation phase or actual sole skin worldpoints available, so horizontal footplant not accepted"
+  ],
+  "native_input_acquired": false,
+  "native_changed": false,
+  "actual_checkpoint_count": 18,
+  "full_route_evidence_sha256": "6b6f5f1ee7a632176955c8b9cd2928dbcd821a5aea052fd954416bf2b9760f99",
+  "stationary_existing_metrics_sample": {
+    "samples": 16,
+    "duration_s": 15.066999912261963,
+    "measured_planar_velocity_cm_s_range": [
+      0,
+      0
+    ],
+    "camera_used_as_capsule_witness": false
+  }
+}

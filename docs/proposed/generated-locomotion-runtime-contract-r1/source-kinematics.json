@@ -1,0 +1,540 @@
+{
+  "schema": "sub01.generated-locomotion-source-contract.v1",
+  "owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "candidate_sha256": "9412f921716c49603b71bb1a9121760f45e5a302d5584707ee6be06765f21bac",
+  "cskel_motion_sha256": "c8c3326817b0bc07ee9c21e0865769d3fad9e0d6a1568234ede17cd0efa7eedf",
+  "source_contacts_soma_sha256": "eebe9f866971deef376fb1d336ce0663bcd0038d8da1b54d8d18f934cc8b1c6c",
+  "fps": 30,
+  "duration_s": 2.966666666666667,
+  "owner_reference_root_path_m": 2.2831260473186132,
+  "owner_reference_net_displacement_m": 2.2264579286086787,
+  "owner_reference_average_speed_m_s": 0.7695930496579595,
+  "owner_reference_speed_m_s": {
+    "min": 0.011203222360260851,
+    "max": 1.7256471982855273
+  },
+  "cozy_prep_scale_localunits_per_m": 95.39494756274864,
+  "current_native_reference_speed_m_s": 1.4,
+  "current_native_max_walk_speed_m_s": 1.4,
+  "current_native_rate_cap": 1.2,
+  "source_endpoint_channels": [
+    {
+      "bone": "mixamorig:Hips",
+      "path": "rotation",
+      "endpoint_angle_degrees": 4.404021744874058,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Hips",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0.8503952026367188
+    },
+    {
+      "bone": "mixamorig:Spine",
+      "path": "rotation",
+      "endpoint_angle_degrees": 6.46654299926286,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Spine",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:Spine1",
+      "path": "rotation",
+      "endpoint_angle_degrees": 0,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Spine1",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:Spine2",
+      "path": "rotation",
+      "endpoint_angle_degrees": 0.2127114777147757,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Spine2",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:Neck",
+      "path": "rotation",
+      "endpoint_angle_degrees": 3.8672957706571727,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Neck",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:Head",
+      "path": "rotation",
+      "endpoint_angle_degrees": 13.096907367855389,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:Head",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightShoulder",
+      "path": "rotation",
+      "endpoint_angle_degrees": 8.043230589276494,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightShoulder",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightArm",
+      "path": "rotation",
+      "endpoint_angle_degrees": 13.742866465104028,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightArm",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightForeArm",
+      "path": "rotation",
+      "endpoint_angle_degrees": 1.2672630717812319,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightForeArm",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftShoulder",
+      "path": "rotation",
+      "endpoint_angle_degrees": 6.8441612434555905,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftShoulder",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftArm",
+      "path": "rotation",
+      "endpoint_angle_degrees": 10.030678934509274,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftArm",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftForeArm",
+      "path": "rotation",
+      "endpoint_angle_degrees": 5.2905542657260405,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftForeArm",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightUpLeg",
+      "path": "rotation",
+      "endpoint_angle_degrees": 20.14736846805978,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightUpLeg",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightLeg",
+      "path": "rotation",
+      "endpoint_angle_degrees": 47.70905366682325,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightLeg",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightFoot",
+      "path": "rotation",
+      "endpoint_angle_degrees": 14.55031256062751,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightFoot",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:RightToeBase",
+      "path": "rotation",
+      "endpoint_angle_degrees": 6.153063690070358,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:RightToeBase",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftUpLeg",
+      "path": "rotation",
+      "endpoint_angle_degrees": 10.449850070834744,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftUpLeg",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftLeg",
+      "path": "rotation",
+      "endpoint_angle_degrees": 4.171087015248826,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftLeg",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftFoot",
+      "path": "rotation",
+      "endpoint_angle_degrees": 7.885609818504182,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftFoot",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    },
+    {
+      "bone": "mixamorig:LeftToeBase",
+      "path": "rotation",
+      "endpoint_angle_degrees": 2.5140980450141397,
+      "endpoint_translation_local_units": null
+    },
+    {
+      "bone": "mixamorig:LeftToeBase",
+      "path": "translation",
+      "endpoint_angle_degrees": null,
+      "endpoint_translation_local_units": 0
+    }
+  ],
+  "source_motion_loop_accepted": false,
+  "source_contact_endpoint_match": false,
+  "physical_live_capsule_motion_measured": false,
+  "native_changed": false,
+  "native_contact_accepted": false,
+  "stance_feature_intervals": [
+    {
+      "side": "Left",
+      "feature": "heel",
+      "start_frame": 0,
+      "end_frame": 4,
+      "duration_s": 0.13333333333333333,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.022396858529694225,
+        0,
+        1.1930572012479774
+      ],
+      "reference_root_average_speed_m_s": 1.362103453253897,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.22766738164330536,
+        "max": 0.2933765403438853
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "heel",
+      "start_frame": 26,
+      "end_frame": 38,
+      "duration_s": 0.4,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.0532370976983676,
+        0,
+        0.990591378227918
+      ],
+      "reference_root_average_speed_m_s": 1.0890164063419272,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.11372412449158607,
+        "max": 0.14144201395908093
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "heel",
+      "start_frame": 56,
+      "end_frame": 89,
+      "duration_s": 1.1,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        0.04096519906831161,
+        0,
+        0.09695773702026157
+      ],
+      "reference_root_average_speed_m_s": 0.13054589608584358,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.02325940014035644,
+        "max": 0.05640210305678636
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_inner",
+      "start_frame": 0,
+      "end_frame": 8,
+      "duration_s": 0.26666666666666666,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.0525069324869637,
+        0,
+        1.3305488707781516
+      ],
+      "reference_root_average_speed_m_s": 1.489558109253052,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.24704837095612703,
+        "max": 0.3621578001744821
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_inner",
+      "start_frame": 26,
+      "end_frame": 39,
+      "duration_s": 0.43333333333333335,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.05649719878515286,
+        0,
+        0.9861695843413237
+      ],
+      "reference_root_average_speed_m_s": 1.09102793140743,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.14737211627940855,
+        "max": 0.23134496018827827
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_inner",
+      "start_frame": 56,
+      "end_frame": 89,
+      "duration_s": 1.1,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        0.027082320237550507,
+        0,
+        0.1020352933557078
+      ],
+      "reference_root_average_speed_m_s": 0.13054589608584358,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.03305562811972428,
+        "max": 0.09753176055808953
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_outer",
+      "start_frame": 0,
+      "end_frame": 8,
+      "duration_s": 0.26666666666666666,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.043911903887177764,
+        0,
+        1.3507562118364893
+      ],
+      "reference_root_average_speed_m_s": 1.489558109253052,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.22944792574979586,
+        "max": 0.3539097475076649
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_outer",
+      "start_frame": 26,
+      "end_frame": 39,
+      "duration_s": 0.43333333333333335,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.054443443239181745,
+        0,
+        0.9899669261012998
+      ],
+      "reference_root_average_speed_m_s": 1.09102793140743,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.14459740260960588,
+        "max": 0.2548443992024597
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Left",
+      "feature": "toe_outer",
+      "start_frame": 56,
+      "end_frame": 89,
+      "duration_s": 1.1,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        0.025274049154765235,
+        0,
+        0.09914159332624178
+      ],
+      "reference_root_average_speed_m_s": 0.13054589608584358,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.03250905482442204,
+        "max": 0.10041520038512423
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "heel",
+      "start_frame": 11,
+      "end_frame": 22,
+      "duration_s": 0.36666666666666664,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        0.0003119023846017939,
+        0,
+        1.1938100392516142
+      ],
+      "reference_root_average_speed_m_s": 1.3501088817897209,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.20406933507152525,
+        "max": 0.2835071282225819
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "heel",
+      "start_frame": 42,
+      "end_frame": 89,
+      "duration_s": 1.5666666666666667,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.012187902821578367,
+        0,
+        0.2372181372094427
+      ],
+      "reference_root_average_speed_m_s": 0.28465135886355303,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.042708152429073026,
+        "max": 0.13911651583764645
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "toe_inner",
+      "start_frame": 11,
+      "end_frame": 22,
+      "duration_s": 0.36666666666666664,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.09134694514762712,
+        0,
+        1.1773660140477782
+      ],
+      "reference_root_average_speed_m_s": 1.3501088817897209,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.23067252593770304,
+        "max": 0.350465997837016
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "toe_inner",
+      "start_frame": 42,
+      "end_frame": 89,
+      "duration_s": 1.5666666666666667,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.0012622878620619658,
+        0,
+        0.23933838671195026
+      ],
+      "reference_root_average_speed_m_s": 0.28465135886355303,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.05509773637703923,
+        "max": 0.3052894911125106
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "toe_outer",
+      "start_frame": 11,
+      "end_frame": 22,
+      "duration_s": 0.36666666666666664,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.08851420803416375,
+        0,
+        1.1592177944261852
+      ],
+      "reference_root_average_speed_m_s": 1.3501088817897209,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.24396680655927377,
+        "max": 0.36818363310128827
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    },
+    {
+      "side": "Right",
+      "feature": "toe_outer",
+      "start_frame": 42,
+      "end_frame": 89,
+      "duration_s": 1.5666666666666667,
+      "in_place_patch_required_net_actor_velocity_m_s": [
+        -0.0019466747633089673,
+        0,
+        0.24170824819621045
+      ],
+      "reference_root_average_speed_m_s": 0.28465135886355303,
+      "source_reference_plus_inplace_patch_slip_speed_m_s": {
+        "mean": 0.05627664629538811,
+        "max": 0.30715931993274814
+      },
+      "note": "Measured sole proxy support trajectory, not native skinned contact acceptance"
+    }
+  ],
+  "full_source_sample_sha256": "d77ba283c95f7833f65196972b5f00372ec2d34a0f7d6d2a1ed599ee246e84e7"
+}

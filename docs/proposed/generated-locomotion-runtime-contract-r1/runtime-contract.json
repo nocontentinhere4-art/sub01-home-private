@@ -1,0 +1,109 @@
+{
+  "schema": "sub01.generated-locomotion-runtime-contract.v1",
+  "status": "read-only-proposal-not-installed",
+  "current_actual_game": {
+    "pid": 159171,
+    "start_ticks": 976840968,
+    "compiled_source_sha256": "be016bca02559ab0981c4fe0642264395978b8db8fbff1fce41e80abfb48ceef",
+    "walk_clip_config": "/Game/Sub01Hands/FBX/SUB01_Walk.SUB01_Walk",
+    "owner_mesh_config": "/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner",
+    "max_walk_speed_cm_s": 140,
+    "max_acceleration_cm_s2": 450,
+    "braking_deceleration_cm_s2": 700,
+    "playback_rate_reference_cm_s": 140,
+    "playback_rate_max": 1.2,
+    "generated9412_is_not_current_native_clip": true
+  },
+  "reject_direct_substitution_reason": {
+    "clip_sha256": "9412f921716c49603b71bb1a9121760f45e5a302d5584707ee6be06765f21bac",
+    "duration_s": 2.966666666666667,
+    "contact_start": [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ],
+    "contact_end": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "right_stop_stance_frames": [
+      42,
+      89
+    ],
+    "left_stop_stance_frames": [
+      56,
+      89
+    ],
+    "loop_endpoint_max_local_angle_degrees": 47.70905366682325,
+    "owner_hip_path_m": 2.2831260473186132,
+    "owner_hip_path_is_not_measured_native_capsule_path": true,
+    "reason": "Walk then stop with mismatched contact/pose endpoints, not a cyclic steady locomotion clip"
+  },
+  "runtime_alignment_proposal": {
+    "state_roles": [
+      "Idle",
+      "Start",
+      "SteadyLoop",
+      "Stop",
+      "Turn"
+    ],
+    "physical_travel_owner": "Existing CharacterMovement only; no generated root position writes or capsule scaling",
+    "phase_clock": "Advance steady-loop phase from actual measured capsule planar distance against an independently measured owner-space stride-distance curve; use unwrapped phase and actual collision-limited travel, not key state or configured max speed",
+    "reference_curve_warning": "Generated Hips trajectory includes pelvis sway and proportional retarget error; use smoothed source travel plus actual same-owner stance skin trajectories, not unverified model speed metadata",
+    "rate_equation": "rate(t)=actual_capsule_planar_speed/reference_owner_speed(phase); zero/invalid reference speed cannot drive a steady loop",
+    "rate_safety": "If required rate exceeds validated playback range, choose an appropriate captured/generated gait or blend state; do not silently clamp while claiming footplant",
+    "contact_ik": "At each actual stance onset retain each heel/toe support point in world coordinates, preserve its stable anchor through that support phase, transform through measured current body world placement, and solve fixed-length legs/pelvis-Y without altering physical root/capsule",
+    "turning": "Keep grounded world anchors while body turns only within measured reach; release/pivot only at explicit heel/toe support transition, never reset an active support anchor every frame",
+    "collision_stop": "Blocked physical movement must stop steady walking phase and blend to Idle/Stop while stance anchors remain fixed",
+    "stairs": "Ground supports and normals must come from actual collision hits per foot, not global plane0; reject unreachable supports rather than bypassing collision"
+  },
+  "required_read_only_native_trace_before_acceptance": {
+    "sampling_hz_min": 30,
+    "duration_seconds_min": 10,
+    "same_native_identity_every_sample": true,
+    "fields": [
+      "monotonic timestamp and actual native identity",
+      "actual capsule world transform/velocity and grounded state",
+      "actual FirstPersonBody world transform and exact skeletal asset identity",
+      "actual animation asset, unwrapped phase, playback rate and blend weights",
+      "actual final native bone transforms matched to original skin weights",
+      "actual evaluated heel/toe/sole world support geometry",
+      "actual collision floor/support normals per foot",
+      "source stance labels aligned to sample phase"
+    ],
+    "insufficient_existing_metrics": "Published metrics currently1Hz, speed plus camera position only; camera is not capsule witness and has no synchronized sole/phase data",
+    "required_scenarios": [
+      "start",
+      "steady straight walk",
+      "stop",
+      "blocked movement",
+      "turn",
+      "stairs"
+    ]
+  },
+  "proposed_hard_kinematic_gates": {
+    "per_support_horizontal_anchor_displacement_m_max": 0.005,
+    "stance_horizontal_slip_p95_m_s_max": 0.02,
+    "stance_horizontal_slip_instantaneous_m_s_max": 0.05,
+    "grounded_sole_signed_clearance_m_min": -0.001,
+    "grounded_sole_signed_clearance_m_max": 0.003,
+    "leg_length_change_m_max": 0.0001,
+    "zero_nonhip_translation_or_scale_edits": true,
+    "zero_physical_root_or_capsule_writes": true,
+    "max_trace_gap_seconds": 0.05,
+    "actual_vs_phase_reference_speed_residual_m_s_max": 0.05,
+    "no_blanket_turn_contact_exclusion": true,
+    "thresholds_are_proposed_not_native_passes": true
+  },
+  "pending_source": "Separate seed106 six-second steady-walk generation; actual cadence and loop seam must be measured after receipt, prompt alone is not proof",
+  "native_files_modified": false,
+  "native_input_acquired": false,
+  "horizontal_contact_accepted": false
+}
