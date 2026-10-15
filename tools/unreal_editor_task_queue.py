@@ -41,6 +41,7 @@ TASKS = {
     'frame_backings': 'unreal_remove_frame_backings',
     'real_wc': 'unreal_import_real_wc',
     'architecture_lumen_audit': 'unreal_architecture_lumen_audit',
+    'desk_lamp_shadow_audit': 'unreal_desk_lamp_shadow_audit',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
