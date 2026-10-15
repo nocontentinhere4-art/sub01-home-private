@@ -22,6 +22,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 
+try:
+    from .native_input_channel import packet as input_packet, dispatch as dispatch_input, INPUT_SOCKET_JS
+except ImportError:
+    from native_input_channel import packet as input_packet, dispatch as dispatch_input, INPUT_SOCKET_JS
+
 AUTHORIZED_POD = 'dgtgepkz7h1zy5'
 AUTHORIZED_NATIVE_EXECUTABLE = b'/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
 
@@ -245,7 +250,15 @@ function release(){if(active)releaseNativeFocus();active=false;send({action:'rel
 document.querySelector('#settings').onclick=()=>{release();settings();};document.querySelector('#close').onclick=()=>panel.close();
 document.querySelector('#full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.querySelector('#view').requestFullscreen();};
 async function deliver(event){const r=await fetch(base+'input',{method:'POST',headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify(event)});const p=await r.json();if(r.ok){accepted=p.acceptedInputs;window.nativeViewerAcceptedInputs=accepted;}else{active=false;status.textContent=p.error;}return p;}
-function send(event){const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;}
+%INPUT_SOCKET_CODE%
+function send(event){
+ const fast=sendNativeSocketInput(event);
+ if(fast){
+  const operation=fast.catch(error=>{active=false;status.textContent='Control connection interrupted';deliver({action:'release'}).catch(()=>{});throw error;});
+  inputQueue=Promise.allSettled([inputQueue,operation]).then(()=>{});return operation;
+ }
+ const operation=inputQueue.then(()=>deliver(event));inputQueue=operation.catch(()=>{active=false;status.textContent='Control connection interrupted';});return operation;
+}
 control.onclick=async()=>{try{const h=await readHealth();if(!h.inputEnabled&&!h.privacyEgressEnabled){if(!h.takeControlAvailable||takingControl)return;takingControl=true;control.disabled=true;status.textContent='Taking control…';const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),5000);try{const r=await fetch(base+'mode',{method:'POST',signal:abort.signal,headers:{'Content-Type':'application/json','X-XSRFToken':decodeURIComponent(xsrf())},body:JSON.stringify({mode:'manual'})});if(!r.ok)throw Error('Manual ownership unavailable');const ack=await r.json();if(ack.mode!=='manual'||ack.inputEnabled!==true)throw Error('Manual ownership unavailable');await ready();}finally{clearTimeout(timer);takingControl=false;}await ready();return;}privateEgress=!h.inputEnabled&&h.privacyEgressEnabled;panel.close();active=true;(privateEgress?document.querySelector('#view'):game).requestPointerLock();}catch(e){active=false;permission=false;control.disabled=true;status.textContent='Control unavailable';await ready();}};
 document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==game&&document.pointerLockElement!==document.querySelector('#view')){const was=active;if(was)releaseNativeFocus();active=false;send({action:'release'}).catch(()=>{});if(was)settings();}});window.addEventListener('blur',()=>release());
 const allowed=new Set(%KEYS%);
@@ -254,7 +267,7 @@ document.addEventListener('mousemove',e=>{if(!active||(document.pointerLockEleme
 for(const[name,down]of[['mousedown',true],['mouseup',false]])game.addEventListener(name,e=>{if(active&&!privateEgress&&(e.button===0||e.button===2)){e.preventDefault();send({action:'button',button:e.button===0?1:3,down}).catch(()=>{});}});game.oncontextmenu=e=>e.preventDefault();
 async function decode(blob,sequence,captured,generation){const url=URL.createObjectURL(blob);let retained=false;try{if(generation!==streamGeneration)return;const decoded=new Image();decoded.src=url;await Promise.race([decoded.decode(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Frame decode timeout')),1500))]);if(generation!==streamGeneration)return;game.src=url;if(previous)URL.revokeObjectURL(previous);previous=url;retained=true;window.nativeViewerDecodedFrames++;window.nativeViewerLastSequence=sequence;window.nativeViewerLastCaptureUtc=captured;window.nativeViewerLastDecodedAt=performance.now();game.hidden=false;empty.hidden=true;}catch(e){throw e;}finally{if(!retained)URL.revokeObjectURL(url);}}
 async function finite(generation){window.nativeViewerTransport='https-jpeg';let after=0;while(streaming&&generation===streamGeneration){const r=await fetch(base+'frame.jpg?after='+after,{cache:'no-store'});if(!r.ok)throw new Error('Capture unavailable');after=Number(r.headers.get('X-Native-Sequence'));await decode(await r.blob(),after,Number(r.headers.get('X-Native-Capture-Utc')),generation);}}
-function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLastDecodedAt=0;const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';clearPixels();empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},2500);}
+function streamNative(){streamOpenedAt=performance.now();window.nativeViewerLastDecodedAt=0;const generation=++streamGeneration;let decoding=false,opened=false;const ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+base+'socket');window.nativeViewerSocket=ws;ws.binaryType='arraybuffer';ws.onopen=()=>{opened=true;window.nativeViewerTransport='wss-jpeg';};ws.onmessage=async e=>{if(typeof e.data==='string'){acknowledgeNativeSocketInput(ws,e.data);return;}if(decoding||e.data.byteLength<18)return;decoding=true;try{const d=new DataView(e.data);await decode(new Blob([e.data.slice(16)],{type:'image/jpeg'}),Number(d.getBigUint64(0)),d.getFloat64(8),generation);}catch(e){}finally{decoding=false;}};ws.onclose=()=>{closeNativeSocketInputs(ws);if(generation!==streamGeneration||!streaming)return;finite(generation).catch(()=>{if(generation===streamGeneration){streaming=false;status.textContent='Live view unavailable';clearPixels();empty.hidden=false;}});};ws.onerror=()=>{};setTimeout(()=>{if(!opened&&generation===streamGeneration)ws.close();},2500);}
 async function readHealth(){const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),1500);try{const r=await fetch(base+'health'+(active?'?hold=1':''),{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error('Health unavailable');return await r.json();}finally{clearTimeout(timer);}}
 async function ready(){try{const h=await readHealth();live=h.nativeAlive&&h.captureEnabled;document.querySelector('.private').textContent=h.privacy===false&&h.viewMode==='manual'?'Explore home':h.privacy===false&&h.viewMode==='live'?'Live home':h.privacy===false&&h.viewMode==='diagnostic'?'Animation review':'Private home';permission=live&&h.inputEnabled;privateEgress=h.privacy===true&&h.privacyEgressEnabled;takeControlAvailable=h.takeControlAvailable===true;control.disabled=takingControl||(!permission&&!privateEgress&&!takeControlAvailable);control.textContent=takingControl?'Taking control…':takeControlAvailable&&!permission?'Take control':privateEgress?'Move to exit':active?'In the home':'Enter home';document.querySelector('#help').hidden=!permission&&!privateEgress;document.querySelector('#help').textContent=privateEgress?'WASD move to leave · Mouse look · Esc release':'WASD move · Mouse look · E interact · Esc release';dot.classList.toggle('live',live);document.querySelector('#sessionState').textContent=live?(permission?'Private connection · Control available':'Private connection · View only'):'Private connection · Home unavailable';if(!live){if(active&&!privateEgress)release();streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent=!h.nativeAlive?'Home unavailable':h.privacy===true?(privateEgress?'Private · Movement only':'Privacy'):h.privacy===null?'Privacy state unavailable':h.nativeAlive?'Preparing live view':'Home unavailable';document.querySelector('#emptyText').textContent=!h.nativeAlive?'The home is paused. Waiting for a fresh live session.':h.privacy===true?(privateEgress?'The view stays private. Use movement controls to leave the bathroom.':'The home is private. Live view and controls are paused.'):h.privacy===null?'Live view is paused until privacy can be verified.':h.nativeAlive?'The private session is preparing the view.':'The native session is not running.';return;}if(streaming&&performance.now()-(window.nativeViewerLastDecodedAt||streamOpenedAt)>3500){streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;status.textContent='Live view interrupted';document.querySelector('#emptyText').textContent='Waiting for fresh frames from the home.';if(active)release();control.disabled=true;return;}status.textContent=h.viewMode==='live'&&h.activity&&typeof h.activity.awake==='boolean'?(h.activity.awake?'Awake':'Asleep')+(h.activity.activity?' · '+h.activity.activity:''):active?'You are in control':permission?'Live · Ready to enter':'Live · View only';if(!streaming){streaming=true;streamNative();}}catch(e){active=false;permission=false;privateEgress=false;takeControlAvailable=false;live=false;streaming=false;streamGeneration++;window.nativeViewerSocket?.close();clearPixels();empty.hidden=false;control.disabled=true;if(document.pointerLockElement)document.exitPointerLock();status.textContent='Private connection unavailable';document.querySelector('#emptyText').textContent='Live view is paused until the private connection returns.';}}
 
@@ -308,7 +321,7 @@ async function refreshSettings(){
 setInterval(()=>{if(permission)refreshSettings();else{document.querySelector('#nativeSettings').hidden=true;supported='';}},1500);
 setInterval(ready,1000);ready();
 </script></body></html>
-'''.replace('%KEYS%', json.dumps(list(KEYS))).replace('%SETTINGS_QUEUE%',VIEW_SETTINGS_QUEUE_JS)
+'''.replace('%KEYS%', json.dumps(list(KEYS))).replace('%SETTINGS_QUEUE%',VIEW_SETTINGS_QUEUE_JS).replace('%INPUT_SOCKET_CODE%',INPUT_SOCKET_JS)
 
 class LiveState:
     def __init__(self, deadline, fps=8, width=960):
@@ -587,12 +600,13 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:self.json(400,{'error':'Invalid websocket request'});return
         if not state.viewer_lock.acquire(blocking=False):
             self.json(409,{'error':'One private viewer is already connected'});return
-        ended=threading.Event();writing=threading.Lock()
+        ended=threading.Event();writing=threading.Lock();used_controls=threading.Event()
         def send(opcode,payload):
             size=len(payload)
             header=bytes([0x80|opcode])+(bytes([size]) if size<126 else bytes([126])+struct.pack('!H',size) if size<65536 else bytes([127])+struct.pack('!Q',size))
             with writing:self.wfile.write(header+payload);self.wfile.flush()
         def controls():
+            last_id=0
             try:
                 while not ended.is_set():
                     head=self.rfile.read(2)
@@ -604,6 +618,18 @@ class Handler(BaseHTTPRequestHandler):
                     data=bytes(b^mask[i%4] for i,b in enumerate(raw))
                     if opcode==8:send(8,b'');break
                     if opcode==9:send(10,data)
+                    elif opcode==1:
+                        try:
+                            identifier,event=input_packet(json.loads(data),last_id)
+                        except (ValueError,TypeError,UnicodeError):break
+                        last_id=identifier
+                        try:
+                            status,reply=dispatch_input(state,event,validate_input,PhysicalInput,private_egress_event,pace=True)
+                            if status==200:used_controls.set()
+                        except (ValueError,TypeError,UnicodeError):break
+                        except Exception:
+                            status,reply=503,{'error':'Native input unavailable'}
+                        send(1,json.dumps({'type':'input-ack','id':identifier,'status':status,**reply},separators=(',',':')).encode())
                     elif opcode!=10:break
             except (OSError,ConnectionResetError):pass
             finally:ended.set()
@@ -621,7 +647,14 @@ class Handler(BaseHTTPRequestHandler):
                 send(2,struct.pack('!Qd',sequence,captured)+frame);state.frames+=1
         except (OSError,BrokenPipeError,ConnectionResetError):pass
         finally:
-            ended.set();state.viewer_lock.release();self.close_connection=True
+            ended.set()
+            try:
+                if used_controls.is_set() and state.input is not None:
+                    with state.input_lock:state.input.send({'action':'release'})
+            except Exception:
+                pass  # Capture must still close if the native X connection died.
+            finally:
+                state.viewer_lock.release();self.close_connection=True
 
 
     def do_POST(self):
@@ -642,13 +675,8 @@ class Handler(BaseHTTPRequestHandler):
             length=int(self.headers.get('Content-Length','0'))
             if not 0<length<=1024:raise ValueError('Input size exceeded')
             event=validate_input(json.loads(self.rfile.read(length)))
-            with state.input_lock:
-                if not state.enabled('native-viewer-input-enabled') and not (state.can_private_egress() and private_egress_event(event)):
-                    self.json(409,{'error':'Private movement only; devices and settings remain locked'});return
-                if event['action']!='release' and event.get('down',True) and time.monotonic()-state.last_input<.005:self.json(429,{'error':'Input rate exceeded'});return
-                if state.input is None:state.input=PhysicalInput()
-                state.input.send(event);state.last_input=time.monotonic();state.last_lease=state.last_input;state.accepted+=1
-                self.json(200,{'acceptedInputs':state.accepted,'physicalDelivery':'XTest','session':state.session})
+            status,reply=dispatch_input(state,event,validate_input,PhysicalInput,private_egress_event)
+            self.json(status,reply)
         except (ValueError,TypeError,json.JSONDecodeError):self.json(400,{'error':'Unsupported input'})
         except Exception:self.json(503,{'error':'Native input unavailable'})
 
