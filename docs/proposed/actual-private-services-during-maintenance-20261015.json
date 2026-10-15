@@ -1,0 +1,25 @@
+{
+  "schema": "sub01.actual-private-services-maintenance.v1",
+  "observed_epoch": 1792073632.5734713,
+  "source_bridge": {
+    "port": 8821,
+    "status": "live",
+    "last_message_age_s": 0.02,
+    "privacy": false,
+    "brain_stage": "AWAKE",
+    "activity": "eat"
+  },
+  "pc_proxy": {
+    "port": 8811,
+    "health_endpoint": "/healthz",
+    "http_status": 200
+  },
+  "private_viewer": {
+    "port": 8892,
+    "health_endpoint": "/health",
+    "http_status": 200
+  },
+  "native_maintenance": true,
+  "proof_scope": "Actual read-only service replies; this is not proof of native autonomous eating, working hands, device actions or resumed video.",
+  "native_acceptance_pending": true
+}
