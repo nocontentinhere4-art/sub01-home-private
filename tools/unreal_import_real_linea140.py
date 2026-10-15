@@ -20,6 +20,31 @@ def close(a,b,tolerance=.05):return len(a)==len(b) and max(abs(x-y)for x,y in zi
 
 def vec(v):return [float(v.x),float(v.y),float(v.z)]
 
+
+def audit_original_support(u,original,lamp_component,mount,old_desk):
+ """One read-only report for all remaining office/monitor source-geometry guards."""
+ from real_office_plant import native_geometry_api_audit
+ source=Path(u.Paths.project_dir())/'SourceAssets/full-home.glb'
+ doc,binary=read_gltf(source)
+ from unreal_monitor_support_fix import triangles
+ report={'schema':'sub01.office-original-support-audit.v1','source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'scene_mutations':0,'components':[]}
+ targets=[('saved_DeskLamp',lamp_component,{'triangles':mount['lamp_source_triangle_count'],'bounds_cm':mount['old_native_aabb_cm']})]
+ for ni in (181,182,73,74,75):
+  found=[a for a in original if a.get_name()=='full-home_node_'+str(ni)]
+  if len(found)!=1:
+   report['components'].append({'source_node':ni,'actor_matches':len(found)});continue
+  wanted=triangles(doc,binary,ni);box=[[f(p[k]for t in wanted for p in t)for k in range(3)]for f in(min,max)]
+  for c in found[0].get_components_by_class(u.StaticMeshComponent):targets.append((str(ni),c,{'triangles':len(wanted),'bounds_cm':box}))
+ for role,c,wanted in targets:
+  mesh=c.get_editor_property('static_mesh');row={'role':role,'component':c.get_path_name(),'mesh':mesh.get_path_name()if mesh else None,'expected_source':wanted,'materials':[m.get_path_name()if m else None for m in c.get_materials()]}
+  try:
+   points,count=surface(u,c);row.update({'actual_cpu_triangles':count,'actual_world_bounds_cm':[[f(p[k]for p in points)for k in range(3)]for f in(min,max)],'geometry_api_audit':native_geometry_api_audit(u,mesh)})
+  except Exception as error:row['geometry_error']=str(error)
+  report['components'].append(row)
+ target=Path(u.Paths.project_dir())/'private-audit'/'office-original-support-audit.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(report,indent=2)+'\n')
+ return target
+
+
 def surface(u,c):
  mesh=c.get_editor_property('static_mesh');points=[];triangles=0
  if not mesh or not hasattr(u,'ProceduralMeshLibrary'):raise RuntimeError('Actual native triangle API unavailable')
@@ -95,8 +120,9 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  if len(lc)!=1 or len(lights)!=1:raise RuntimeError('Lamp component/light binding ambiguous')
  if [m.get_path_name()for m in lc[0].get_materials()]!=mount['actual_saved_material_paths']:raise RuntimeError('Actual saved lamp material binding changed')
  if not close(vec(lamp.get_actor_location()),mount['actual_saved_origin_cm']) or not close(vec(lights[0].get_world_location()),mount['actual_old_light_ue_cm']):raise RuntimeError('Actual saved lamp/light transform changed')
+ support_audit=audit_original_support(u,original,lc[0],mount,old)
  lamp_points,lamp_triangles=surface(u,lc[0]);lamp_bounds=[[min(p[a]for p in lamp_points)for a in range(3)],[max(p[a]for p in lamp_points)for a in range(3)]]
- if lamp_triangles!=mount['lamp_source_triangle_count'] or not all(close(a,b)for a,b in zip(lamp_bounds,mount['old_native_aabb_cm'])):raise RuntimeError('Actual native lamp source geometry differs measured support model')
+ if lamp_triangles!=mount['lamp_source_triangle_count'] or not all(close(a,b)for a,b in zip(lamp_bounds,mount['old_native_aabb_cm'])):raise RuntimeError('Actual native lamp source geometry differs measured support model; full_audit='+str(support_audit))
  old_points=[]
  for c in old[1].get_components_by_class(u.StaticMeshComponent):old_points.extend(surface(u,c)[0])
  if abs(max(p[2]for p in old_points)-84.5)>.05:raise RuntimeError('Actual old desk support top differs84.5; no assumed offset')
