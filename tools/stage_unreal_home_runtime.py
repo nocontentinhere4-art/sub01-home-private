@@ -30,6 +30,7 @@ from unreal_interaction_trace_witness import install as install_interaction_trac
 from unreal_native_fixture_emission import install as install_native_fixture_emission, stage as stage_native_fixture_emission
 from unreal_native_daylight_exposure import install as install_native_daylight_exposure, stage as stage_native_daylight_exposure
 from unreal_native_capture_warmup import install as install_native_capture_warmup, stage as stage_native_capture_warmup
+from unreal_bathroom_lamp_runtime import install as install_bathroom_lamp
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -181,6 +182,7 @@ def stage(project):
     stage_native_daylight_exposure(module)
     header,cpp=install_native_capture_warmup(header,cpp)
     stage_native_capture_warmup(module)
+    header,cpp=install_bathroom_lamp(header,cpp)
     cpp=patch_native_view_settings(cpp)
     header,cpp=install_minecraft_tv_input(header,cpp)
     header,cpp=install_native_viewer_handoff(header,cpp)

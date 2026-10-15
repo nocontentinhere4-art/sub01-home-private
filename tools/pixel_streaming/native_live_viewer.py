@@ -88,7 +88,7 @@ def validate_input(value):
             return value
     raise ValueError("Unsupported input")
 
-LAMPS = {"DeskLamp", "BedLamp", "KitchenWork", "LowerPendant", "UpperPendant"}
+LAMPS = {"DeskLamp", "BedLamp", "KitchenWork", "LowerPendant", "UpperPendant", "BathroomCeiling"}
 
 def validate_settings(value, capabilities):
     """Validate the whole request before altering any native control file."""
