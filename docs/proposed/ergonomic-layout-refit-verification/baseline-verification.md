@@ -27,6 +27,8 @@ Verifier: `tools/verify_ergonomic_layout_refit.py` (independent of the layout so
 | keyboard | 0.1 (original 0.1) | 102/102 | [[181.45, -302.0464], [218.55, -285.9536]] | 19.2516 | none | **FAIL** |
 | mouse | 0.1 (original 0.1) | 930/930 | [[229.0, -301.45], [251.0, -280.55]] | 13.848 | none | **FAIL** |
 
+Static envelope: with its feet on the top the keyboard passes the support/item checks up to 17.0 cm toward the body (1 cm steps).
+
 Keyboard clearance to desk items (horizontal gap cm): monitor_frame 26.2036, monitor_stand 23.4536, monitor_root_envelope 23.4536, phone_root_envelope 47.55, clamp_lamp 15.522, grommet_node35 28.9, mouse 10.45
 
 Monitor provenance: web/house/home.js @ d03e673 (sha256 881340cfc23db38a9747b94bd23a873e7c6e30ca25cc739935eaea7ddcc228a1); docs/proposed/monitor-support-fix-20261015.json @ 9e720c6 (sha256 7ed7b57f87add30de4b90f288cbd7248d946f8fc169b1d2100b9076396e1a326): +2.5000 cm (stand bottom 82 -> top 84.5), screen centre z 118.5.
@@ -110,7 +112,7 @@ Verdict: **FAIL**
 
 ## Geometry used (origin/main bytes)
 
-- ref `origin/main` @ `6aba6d4`
+- ref `origin/main` @ `19ca7aa`
 - LINEA140 `web/house/assets/real-linea140/originalsource.glb` sha256 `99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d`; placement `tools/prepare_real_linea140_placement.py` sha256 `a857a14fe7a77b742634eb7b37836b9a535a6a713c9d52afd133c04f00fbff76` @ b17952c: scale 1.086093, translation [2.1, 0.025, -3.02] m; top 84.5 cm, floor 2.5 cm
 - placement: `tools/prepare_real_linea140_placement.py` sha256 `a857a14fe7a77b742634eb7b37836b9a535a6a713c9d52afd133c04f00fbff76` @ b17952c
 - home_js: `web/house/home.js` sha256 `881340cfc23db38a9747b94bd23a873e7c6e30ca25cc739935eaea7ddcc228a1` @ d03e673
@@ -125,4 +127,4 @@ Verdict: **FAIL**
 - chair report `docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json` sha256 `84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8`
 - seat-fit source npz sha256 `8a14f32ac1aea622f9a8b20fbe284d694d7d873ed16bb940792ba481dca1e9a4`; owner skin (fit_seat_pelvis_pitch.owner_skin, every 2th vertex: 124576 vertices), segments by dominant joint; desk parts as conservative node AABBs
 
-Elapsed 266.1 s. All checks: **FAIL**. `ready: false` (native unverified).
+Elapsed 320.8 s. All checks: **FAIL**. `ready: false` (native unverified).

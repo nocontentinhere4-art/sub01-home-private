@@ -1022,6 +1022,15 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
         res['devices'][name] = sup
     kd = layout['keyboard_delta_cm']
     res['devices']['keyboard']['moved_toward_body_cm'] = r_(kd[1])
+    env = []
+    for dy in np.arange(0., 20.01, 1.):        # static envelope: keyboard straight toward the body, feet on the top
+        k = device_geometry('keyboard', [kd[0], dy, -(kb0['bottom_cm'] - desk['top_cm'])], ref)
+        env.append((float(dy), device_support(k, desk, items, other_devices=(ms,))['pass']))
+    ok = [d for d, p in env if p]
+    res['devices']['keyboard']['static_envelope'] = {
+        'rule': 'keyboard moved by (proposed dx, dy, -float) toward the body (+UE Y) with its feet on the top; same support '
+                'and item checks', 'max_dy_toward_body_passing_cm': max(ok) if ok else None,
+        'rows': [{'dy_cm': d, 'pass': p} for d, p in env]}
     log(f'devices done {time.time() - t0:.0f}s')
     # ---- 2. chair
     chair = chair_geometry(layout['chair_start_cm'], ref, cache)
@@ -1380,6 +1389,10 @@ def markdown(res, layout):
         col = [k for k, c in d['items'].items() if c['collides']]
         L.append(f"| {n} | {d['bottom_minus_top_cm']} (original {d['original_transform_bottom_minus_top_cm']}) | {d['feet_over_flat_top']}/{d['feet_points']} | {d['footprint_cm']} | "
                  f"{d['footprint_margin_to_slab_aabb_cm']} | {', '.join(col) or 'none'} | {pf(d['pass'])} |")
+    env = res['devices']['keyboard'].get('static_envelope')
+    if env:
+        L.append(f"\nStatic envelope: with its feet on the top the keyboard passes the support/item checks up to "
+                 f"{env['max_dy_toward_body_passing_cm']} cm toward the body (1 cm steps).")
     kb = res['devices']['keyboard']['items']
     L.append('\nKeyboard clearance to desk items (horizontal gap cm): ' + ', '.join(f"{k} {v['horizontal_gap_cm']}" for k, v in kb.items()))
     L.append(f"\nMonitor provenance: {res['geometry']['monitor_provenance']['home_js']}; {res['geometry']['monitor_provenance']['lift']}.\n")
