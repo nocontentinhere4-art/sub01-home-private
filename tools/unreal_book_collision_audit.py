@@ -1,5 +1,6 @@
 """Read-only saved-book collision API/configuration inventory; no BodyInstance copies."""
 import json
+import hashlib
 from pathlib import Path
 
 
@@ -45,5 +46,29 @@ def run(u=None):
             try:result['body_instance_properties'][name]=str(body.get_editor_property(name))
             except Exception as error:result['errors']['body_instance.'+name]=str(error)
     except Exception as error:result['errors']['body_instance']=str(error)
+    try:result['use_default_collision']=bool(c.get_editor_property('use_default_collision'))
+    except Exception as error:result['errors']['use_default_collision']=str(error)
+    result['default_instances']={}
+    original=c.get_editor_property('static_mesh');key=original.get_path_name();name='Mesh_'+hashlib.sha256(key.encode()).hexdigest()[:12]
+    clone_path='/Game/Sub01Home/RealOfficeBooks/V_611a3d848858_FullSource_9279b89011474be0afe7704b39f800f9/'+name+'.'+name
+    clone=u.find_object(None,clone_path)
+    for label,mesh in(('original',original),('loaded_clone',clone)):
+        row={'loaded':mesh is not None}
+        if mesh is not None:
+            try:
+                default=mesh.get_editor_property('body_setup').get_editor_property('default_instance')
+                for field in('collision_profile_name','object_type','collision_enabled','collision_responses'):
+                    value=default.get_editor_property(field);row[field]=str(value)
+                    if field=='collision_responses':
+                        row['responses_copy_available']=callable(getattr(value,'copy',None))
+                        row['responses_export_available']=callable(getattr(value,'export_text',None))
+                        if row['responses_export_available']:row['responses_export_text']=value.export_text()
+            except Exception as error:row['error']=str(error)
+        result['default_instances'][label]=row
+    try:
+        response=c.get_editor_property('body_instance').get_editor_property('collision_responses')
+        result['component_responses_copy_available']=callable(getattr(response,'copy',None))
+        if callable(getattr(response,'export_text',None)):result['component_responses_export_text']=response.export_text()
+    except Exception as error:result['errors']['component_responses_export_text']=str(error)
     out=Path(u.Paths.project_dir())/'private-audit'/'saved-book-collision-state-audit.json'
     out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,indent=2)+'\n');return result
