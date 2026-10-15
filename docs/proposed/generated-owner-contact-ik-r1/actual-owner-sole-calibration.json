@@ -1,0 +1,137 @@
+{
+  "schema": "sub01.actual-owner-sole-calibration.v1",
+  "owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "reference_graph_sha256": "577e10d5de0dbdb97652a2ef8251e8322eab73d8ba53598a2f8dbbc0b6d208dc",
+  "source_mesh": "slides",
+  "coordinate_system": "glTF Y-up; world points metres, inverse full original bone matrix produces local centimetres for this0.01-scaled owner",
+  "feet": {
+    "Left": {
+      "patches": {
+        "heel": {
+          "bone": "mixamorig:LeftFoot",
+          "local_offset_cm": [
+            -2.494415283203125,
+            0.8300189971923828,
+            -8.699804306030273
+          ],
+          "actual_reference_world_m": [
+            0.14221058785915375,
+            0.00962000247091055,
+            -0.02265828847885132
+          ],
+          "reference_surface_samples": 20,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 6.780130685568338e-09
+        },
+        "toe_inner": {
+          "bone": "mixamorig:LeftToeBase",
+          "local_offset_cm": [
+            -4.854421615600586,
+            3.813971996307373,
+            -0.13173165917396545
+          ],
+          "actual_reference_world_m": [
+            0.16581064462661743,
+            0.0047309063374996185,
+            0.1575726866722107
+          ],
+          "reference_surface_samples": 96,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 1.4930236657970956e-08
+        },
+        "toe_outer": {
+          "bone": "mixamorig:LeftToeBase",
+          "local_offset_cm": [
+            -0.9414386749267578,
+            5.268082618713379,
+            -0.09967894107103348
+          ],
+          "actual_reference_world_m": [
+            0.12668082118034363,
+            0.005050364416092634,
+            0.1721138209104538
+          ],
+          "reference_surface_samples": 102,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 9.313225746154785e-10
+        }
+      },
+      "shoe_weighted_vertices": 7129,
+      "reference_sole_plane_normal_world": [
+        0.017390135675668716,
+        0.9995402693748474,
+        0.02483724243938923
+      ],
+      "reference_sole_pitch_tilt_degrees": 1.7374246848758574,
+      "joint_head_chain_lengths_m": {
+        "UpLeg->Leg": 0.36322259894534537,
+        "Leg->Foot": 0.39767286835867305
+      }
+    },
+    "Right": {
+      "patches": {
+        "heel": {
+          "bone": "mixamorig:RightFoot",
+          "local_offset_cm": [
+            0.26909542083740234,
+            0.33288976550102234,
+            -9.709046363830566
+          ],
+          "actual_reference_world_m": [
+            -0.10007936507463455,
+            0.00025924795772880316,
+            -0.02325279638171196
+          ],
+          "reference_surface_samples": 69,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 1.490161593425986e-08
+        },
+        "toe_inner": {
+          "bone": "mixamorig:RightToeBase",
+          "local_offset_cm": [
+            1.8494253158569336,
+            3.6034483909606934,
+            2.304396629333496
+          ],
+          "actual_reference_world_m": [
+            -0.11588267236948013,
+            0.011030958965420723,
+            0.1815289556980133
+          ],
+          "reference_surface_samples": 2,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 1.862645149230957e-09
+        },
+        "toe_outer": {
+          "bone": "mixamorig:RightToeBase",
+          "local_offset_cm": [
+            5.970359802246094,
+            3.2969048023223877,
+            1.9647434949874878
+          ],
+          "actual_reference_world_m": [
+            -0.15709201991558075,
+            0.007634648121893406,
+            0.17846328020095825
+          ],
+          "reference_surface_samples": 7,
+          "max_band_above_actual_patch_min_m": 0.0005,
+          "roundtrip_world_error_m": 1.501712528671799e-08
+        }
+      },
+      "shoe_weighted_vertices": 8063,
+      "reference_sole_plane_normal_world": [
+        -0.07768554240465164,
+        0.9952690601348877,
+        -0.058347187936306
+      ],
+      "reference_sole_pitch_tilt_degrees": 5.575485763871505,
+      "joint_head_chain_lengths_m": {
+        "UpLeg->Leg": 0.3590721663821119,
+        "Leg->Foot": 0.40254770590781513
+      }
+    }
+  },
+  "native_imported": false,
+  "contact_accepted": false
+}

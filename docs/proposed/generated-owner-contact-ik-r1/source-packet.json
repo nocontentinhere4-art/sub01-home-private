@@ -1,0 +1,73 @@
+{
+  "schema": "sub01.generated-owner-contact-ik-source-evidence.v1",
+  "original_owner_sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb",
+  "rigid_input_sha256": "16b8ab6a32931f9abd175bcbca5b47a332bd7f17d4176e017929ae49c2d03000",
+  "candidate_sha256": "d26e9db52feabed7ec9aaf6f45cf89f777673e73172877553a67596f2a8b5864",
+  "candidate_server_path": "/home/unreal/runtime-tools/generated-walk-contact-ik-owner.glb",
+  "audit_sha256": "231d953f54b5245b4cb437e673145ea372b59ca4a227227b5b8304c80ffd8f66",
+  "audit_remote_path": "/workspace/sub01-home-private/motion-runtime/footplant-audit-r4-contact-ik/actual-footplant-audit.json",
+  "source_soma_sha256": "eebe9f866971deef376fb1d336ce0663bcd0038d8da1b54d8d18f934cc8b1c6c",
+  "actual_full_deformed_skin_results": {
+    "Left": {
+      "stance_frames": 59,
+      "stance_minimum_sole_z_range_m": [
+        -3.8146970382513246e-07,
+        1.678466787780053e-06
+      ],
+      "swing_minimum_sole_z_range_m": [
+        0.0030000305268913507,
+        0.04057914763689041
+      ],
+      "actual_joint_head_lengths": {
+        "UpLeg->Leg": {
+          "min_m": 0.36322644639972473,
+          "max_m": 0.36322819883452595,
+          "range_m": 1.7524348012165625e-06
+        },
+        "Leg->Foot": {
+          "min_m": 0.3976786698736961,
+          "max_m": 0.39768157410755656,
+          "range_m": 2.9042338604567952e-06
+        }
+      }
+    },
+    "Right": {
+      "stance_frames": 60,
+      "stance_minimum_sole_z_range_m": [
+        -3.0517577442878974e-07,
+        3.8146970382513246e-07
+      ],
+      "swing_minimum_sole_z_range_m": [
+        0.0029993439093232155,
+        0.02181342989206314
+      ],
+      "actual_joint_head_lengths": {
+        "UpLeg->Leg": {
+          "min_m": 0.35907108217514194,
+          "max_m": 0.35907386901312377,
+          "range_m": 2.786837981827439e-06
+        },
+        "Leg->Foot": {
+          "min_m": 0.40254094843566707,
+          "max_m": 0.4025439235112958,
+          "range_m": 2.9750756287416635e-06
+        }
+      }
+    }
+  },
+  "physical_ground_assumption": "model-world floor Y=0; native actual CharacterMovement floor distance unqueried",
+  "max_pelvis_vertical_body_correction_m": 0.04953024691732588,
+  "preserved": [
+    "all non-animation mesh/skin/texture bytes exact",
+    "all non-Hips translations original or exact float32 serialization",
+    "hips XZ / physical root / capsule unchanged"
+  ],
+  "limits": [
+    "Horizontal foot world locking disabled without verified physical placement and compatible measured speed",
+    "Contact transitions and knee motion need actual visual review",
+    "Model world sole geometry is not native capsule/floor/physical-contact acceptance"
+  ],
+  "native_changed": false,
+  "native_contact_accepted": false,
+  "native_visual_accepted": false
+}
