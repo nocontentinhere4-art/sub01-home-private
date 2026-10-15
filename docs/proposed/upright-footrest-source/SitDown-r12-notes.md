@@ -1,0 +1,9 @@
+# Derived SitDown R12 — written source contact/anatomy pass
+
+Clip SHA3da7b1f46a7e503f1bea8c3f33a07cdbcf8d931924dbe3a39c1be5123d9700ea has68 keys/2.903333s. It derives the existing repository-fitted SitDown68086a… onto Idle535446… and actual closed19-part footrest/real chair/LINEA desk. Collision skin uses the separately derived owner831790…; source bones/IBMs/PBR/geometry remain unchanged.
+
+All68 WRITTEN frames pass the unchanged limited-joint anatomy rules, reach and measured body-versus-furniture samples (body every6th vertex; complete hand/foot geometry used to solve their clearance). Chair minimum+.2712cm, footrest+.0500cm, desk+.4123cm; actual floor minimum2.54078cm. Stationary end frames pass the unchanged strong seated rule. Bone-length error<5e−14cm; written65-joint world error0.0000178cm. Combined pole/hinge correction stays≤17.484° within the original25° edit cap. Peak pelvis acceleration is measured against the existing source capture, not assumed natural.
+
+Corrections are explicit: preserve original.01 world scales; functional heel/toe roll within unchanged ankle ROM; reconstruct actual knee hinge orientation instead of retaining bad captured axial twist; true full-shoe floor clearance; staggered step;4cm wrist retraction+2cm lift only when required by actual desk triangles, preserving captured wrist/finger rotations. Original repository finger tracks blend to genuine Idle endpoint quaternions during the reported seam window, so this clip is DERIVED, not raw capture.
+
+This is not native acceptance or proof of every surface triangle. Standing/walking seam integration, explicit handshape/self-contact, source visual movement review, GetUp and typing chain remain pending. All readiness flags remain false. Floor/chair/footrest dimensions and existing thresholds are unchanged.
