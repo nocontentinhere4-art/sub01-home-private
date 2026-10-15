@@ -18,7 +18,39 @@
   "original_x99_game_viewer_input_grants_and_device_services_untouched": true,
   "active_home_guard_unchanged_outside_exact_authorized_candidate": true,
   "deadline_epoch": 1792117175,
-  "actual_candidate_map_probe": "pending at checkpoint, do not infer readiness from launch",
-  "candidate_native_assets_saved": false,
-  "promoted_to_live": false
+  "actual_candidate_map_probe": {
+    "schema": "sub01.private-next-home-candidate-probe.v1",
+    "editor_pid": 172010,
+    "editor_start_ticks": 977377746,
+    "candidate_project": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab",
+    "world": "/Game/Sub01Home/ActualHome.ActualHome",
+    "nullrhi_requested": true,
+    "actor_count": 1414,
+    "static_component_count": 1293,
+    "missing_static_meshes": [],
+    "live_home_unchanged": true,
+    "map_saved": false,
+    "epoch": 1792083882.282208,
+    "receipt_sha256": "f7b8da0118cb23877d7ce200a353a9fdd2bdcf39a491e58c711015f304f15be4"
+  },
+  "candidate_native_assets_saved": true,
+  "promoted_to_live": false,
+  "actual_saved_native_receipts": {
+    "reference-wall-console-native.json": {
+      "receipt_sha256": "a63a31100d2b1cca7643e10c469fdd3dcf6be1c028716c7628029c5ee8ec7b9d",
+      "schema": "sub01.reference-wall-console-native.v1",
+      "saved": true,
+      "visual_acceptance": false
+    },
+    "reference-teal-bathroom-native.json": {
+      "receipt_sha256": "25a2744408f71f4f9337b8a78432d0a78b4c2b1be8420f604d64c51c9022959f",
+      "schema": "sub01.reference-teal-bathroom-native.v1",
+      "saved": true,
+      "visual_acceptance": false
+    }
+  },
+  "candidate_map_sha256_after_bath_and_console": "f9f1497cb14e3f3b0015dfc11a620d39fb90ec1dfeb9603c8b005f787e994c94",
+  "actual_rendered_visual_acceptance": false,
+  "no_second_game_started_shared_device_bus_preserved": true,
+  "bed_retry_status": "Preflight passed; exact empty-source-root cleanup required. Failed native transactions rolled back; no map change claimed."
 }
