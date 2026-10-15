@@ -1,0 +1,292 @@
+{
+ "schema": "sub01.desk-original-scale-ergonomics-comparison.v1",
+ "ready": false,
+ "baseline_scale_1_086": "docs/proposed/ergonomic-layout-refit-verification/verification.json",
+ "variant": "docs/proposed/desk-original-scale-verification/full-verification-9f4e199-layout-at-scale1.json",
+ "rows": [
+  {
+   "metric": "LINEA140 scale",
+   "scale_1_086": 1.086093,
+   "scale_1_0_variant": 1.0
+  },
+  {
+   "metric": "worktop top cm",
+   "scale_1_086": 84.5,
+   "scale_1_0_variant": 78.0
+  },
+  {
+   "metric": "keyboard delta cm",
+   "scale_1_086": [
+    8.0,
+    17.0,
+    -0.1
+   ],
+   "scale_1_0_variant": [
+    8.0,
+    17.0,
+    -6.6
+   ]
+  },
+  {
+   "metric": "keyboard bottom - top cm",
+   "scale_1_086": 0.0,
+   "scale_1_0_variant": 0.0
+  },
+  {
+   "metric": "mouse bottom - top cm",
+   "scale_1_086": 0.0,
+   "scale_1_0_variant": 0.0
+  },
+  {
+   "metric": "left elbow_above_top_cm_min_med_max",
+   "scale_1_086": [
+    -2.16,
+    -0.16,
+    2.25
+   ],
+   "scale_1_0_variant": [
+    4.34,
+    6.34,
+    8.75
+   ]
+  },
+  {
+   "metric": "left elbow_z_cm_min_med_max",
+   "scale_1_086": [
+    82.34,
+    84.34,
+    86.75
+   ],
+   "scale_1_0_variant": [
+    82.34,
+    84.34,
+    86.75
+   ]
+  },
+  {
+   "metric": "left upper_arm_from_vertical_deg_min_med_max",
+   "scale_1_086": [
+    29.02,
+    39.03,
+    43.5
+   ],
+   "scale_1_0_variant": [
+    29.02,
+    39.03,
+    43.5
+   ]
+  },
+  {
+   "metric": "left clavicle_elevation_vs_idle_deg_min_med_max",
+   "scale_1_086": [
+    -11.47,
+    -6.15,
+    1.94
+   ],
+   "scale_1_0_variant": [
+    -11.47,
+    -6.15,
+    1.94
+   ]
+  },
+  {
+   "metric": "left wrist_flexion_deg_min_med_max",
+   "scale_1_086": [
+    -14.65,
+    -5.24,
+    0.29
+   ],
+   "scale_1_0_variant": [
+    -14.65,
+    -5.24,
+    0.29
+   ]
+  },
+  {
+   "metric": "left wrist_deviation_deg_min_med_max",
+   "scale_1_086": [
+    -12.24,
+    -5.44,
+    -1.58
+   ],
+   "scale_1_0_variant": [
+    -12.24,
+    -5.44,
+    -1.58
+   ]
+  },
+  {
+   "metric": "left share meeting elbow_above_desk",
+   "scale_1_086": 0.2083,
+   "scale_1_0_variant": 1.0
+  },
+  {
+   "metric": "left share meeting upper_arm",
+   "scale_1_086": 0.0,
+   "scale_1_0_variant": 0.0
+  },
+  {
+   "metric": "left share meeting shoulder_elevation",
+   "scale_1_086": 1.0,
+   "scale_1_0_variant": 1.0
+  },
+  {
+   "metric": "left share meeting wrist_flexion",
+   "scale_1_086": 1.0,
+   "scale_1_0_variant": 1.0
+  },
+  {
+   "metric": "left share meeting wrist_deviation",
+   "scale_1_086": 1.0,
+   "scale_1_0_variant": 1.0
+  },
+  {
+   "metric": "right elbow_above_top_cm_min_med_max",
+   "scale_1_086": [
+    -0.83,
+    2.11,
+    15.82
+   ],
+   "scale_1_0_variant": [
+    5.67,
+    8.61,
+    22.32
+   ]
+  },
+  {
+   "metric": "right elbow_z_cm_min_med_max",
+   "scale_1_086": [
+    83.67,
+    86.61,
+    100.32
+   ],
+   "scale_1_0_variant": [
+    83.67,
+    86.61,
+    100.32
+   ]
+  },
+  {
+   "metric": "right upper_arm_from_vertical_deg_min_med_max",
+   "scale_1_086": [
+    31.72,
+    42.53,
+    77.41
+   ],
+   "scale_1_0_variant": [
+    31.72,
+    42.53,
+    77.41
+   ]
+  },
+  {
+   "metric": "right clavicle_elevation_vs_idle_deg_min_med_max",
+   "scale_1_086": [
+    -11.22,
+    -2.56,
+    5.43
+   ],
+   "scale_1_0_variant": [
+    -11.22,
+    -2.56,
+    5.43
+   ]
+  },
+  {
+   "metric": "right wrist_flexion_deg_min_med_max",
+   "scale_1_086": [
+    -37.15,
+    0.68,
+    27.49
+   ],
+   "scale_1_0_variant": [
+    -37.15,
+    0.68,
+    27.49
+   ]
+  },
+  {
+   "metric": "right wrist_deviation_deg_min_med_max",
+   "scale_1_086": [
+    -17.71,
+    1.41,
+    22.71
+   ],
+   "scale_1_0_variant": [
+    -17.71,
+    1.41,
+    22.71
+   ]
+  },
+  {
+   "metric": "right share meeting elbow_above_desk",
+   "scale_1_086": 0.8655,
+   "scale_1_0_variant": 0.7058
+  },
+  {
+   "metric": "right share meeting upper_arm",
+   "scale_1_086": 0.0,
+   "scale_1_0_variant": 0.0
+  },
+  {
+   "metric": "right share meeting shoulder_elevation",
+   "scale_1_086": 0.9757,
+   "scale_1_0_variant": 0.9757
+  },
+  {
+   "metric": "right share meeting wrist_flexion",
+   "scale_1_086": 0.6673,
+   "scale_1_0_variant": 0.6673
+  },
+  {
+   "metric": "right share meeting wrist_deviation",
+   "scale_1_086": 0.9252,
+   "scale_1_0_variant": 0.9252
+  },
+  {
+   "metric": "check 0_desk_variant_items",
+   "scale_1_086": null,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "check 1_keyboard_supported",
+   "scale_1_086": true,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "check 1_mouse_supported",
+   "scale_1_086": true,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "check 2_chair_path_and_reversible",
+   "scale_1_086": true,
+   "scale_1_0_variant": true
+  },
+  {
+   "metric": "check 3_body_all_clips",
+   "scale_1_086": true,
+   "scale_1_0_variant": true
+  },
+  {
+   "metric": "check 4_continuity",
+   "scale_1_086": false,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "check 5_ergonomics",
+   "scale_1_086": false,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "all_pass",
+   "scale_1_086": false,
+   "scale_1_0_variant": false
+  },
+  {
+   "metric": "ready",
+   "scale_1_086": false,
+   "scale_1_0_variant": false
+  }
+ ]
+}

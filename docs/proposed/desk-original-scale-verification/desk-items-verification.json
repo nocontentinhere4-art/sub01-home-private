@@ -1,0 +1,885 @@
+{
+ "schema": "sub01.desk-original-scale-verification.v1",
+ "ready": false,
+ "source_only": true,
+ "native_verified": false,
+ "proposal": "docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json",
+ "proposal_sha256": "f301ad414cb978760ed3499547fb072582dc45e70f768eecca02312977aaba0f",
+ "proposal_status": "in_progress",
+ "note": "proposal still in_progress at 22:51 UTC (no final clips, no monitor/lamp transforms). Keyboard/mouse deltas are the planned_layout (kb_dx, kb_dy, device_z_cm); mouse dy = 9f4e199 11.848 - 2.798 front-edge move (the proposal says \"clamped to the 2 cm front margin\" without a number: verifier assumption). Monitor/lamp: the proposal declares no offset (as_declared) vs the brief's -6.5 cm (with_brief...).",
+ "runs": {
+  "as_declared": {
+   "variant": {
+    "proposal_file": "docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json",
+    "proposal_sha256": "f301ad414cb978760ed3499547fb072582dc45e70f768eecca02312977aaba0f",
+    "status": "in_progress",
+    "scale": 1.0,
+    "translation_m": [
+     2.1,
+     0.025,
+     -3.02
+    ],
+    "offsets_cm": {
+     "keyboard": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "mouse": [
+      0.0,
+      0.0,
+      -6.5
+     ]
+    },
+    "ignored_keys": []
+   },
+   "desk": {
+    "scale": 1.0,
+    "root_scale": 1.086093,
+    "scale_source": "desk variant override (uniform)",
+    "translation_m": [
+     2.1,
+     0.025,
+     -3.02
+    ],
+    "declared_translation_matches_root": true,
+    "top_cm": 78.0,
+    "slab_bottom_cm": 75.2,
+    "apron_bottom_cm": 72.1,
+    "floor_cm": 2.5,
+    "worktop_aabb_cm": [
+     [
+      140.0,
+      -334.5,
+      75.2
+     ],
+     [
+      280.0,
+      -269.5,
+      78.0
+     ]
+    ],
+    "root_scale_top_cm": 84.5,
+    "top_change_cm": -6.5,
+    "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d"
+   },
+   "items": {
+    "monitor_stand": {
+     "bottom_minus_top_cm": 6.5,
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "footprint_cm": [
+      [
+       194.0,
+       -334.5
+      ],
+      [
+       206.0,
+       -325.5
+      ]
+     ],
+     "original_footprint": true,
+     "footprint_over_flat_top": false,
+     "footprint_grown_by_margin_over_flat_top": false,
+     "screen_moves_with_stand": true,
+     "pass": false
+    },
+    "clamp_lamp": {
+     "origin_minus_top_cm": 6.5,
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "grommet_centre_cm": [
+      163.0,
+      -324.0,
+      78.1
+     ],
+     "root_scale_grommet_centre_cm": [
+      158.9536,
+      -325.894,
+      84.6086
+     ],
+     "lamp_to_grommet_xy_cm": [
+      -2.8581,
+      -1.894
+     ],
+     "root_lamp_to_grommet_xy_cm": [
+      1.1883,
+      0.0
+     ],
+     "pin_drift_vs_grommet_cm": 4.4677,
+     "radial_pin_clearance_cm": 0.6154,
+     "original_footprint": true,
+     "pass": false
+    },
+    "keyboard": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 102,
+     "feet_over_flat_top": 102,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       189.45,
+       -287.8444
+      ],
+      [
+       226.55,
+       -271.7516
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.2516,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 40.4056,
+       "vertical_overlap_cm": -15.7102,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 37.6556,
+       "vertical_overlap_cm": -3.7102,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 37.6556,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 39.55,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 29.724,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z)"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 41.2656,
+       "vertical_overlap_cm": 0.33,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "mouse": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "original_footprint": true
+    },
+    "mouse": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 930,
+     "feet_over_flat_top": 930,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       229.0,
+       -292.4
+      ],
+      [
+       251.0,
+       -271.5
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.0,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 35.85,
+       "vertical_overlap_cm": -14.1031,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 40.3065,
+       "vertical_overlap_cm": -2.1031,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 33.1,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 15.1,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 46.5795,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z)"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 69.8105,
+       "vertical_overlap_cm": 0.33,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "keyboard": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "original_footprint": true
+    }
+   },
+   "device_offsets_added_to_layout_cm": {
+    "keyboard": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "mouse": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "device_total_delta_cm": {
+    "keyboard": [
+     8.0,
+     14.202,
+     -6.6
+    ],
+    "mouse": [
+     0.0,
+     9.05,
+     -6.6
+    ]
+   },
+   "overlaps": {
+    "horizontal_gap_cm": {
+     "clamp_lamp|keyboard": 29.724,
+     "clamp_lamp|monitor_stand": 4.1943,
+     "clamp_lamp|mouse": 46.5795,
+     "keyboard|monitor_stand": 37.6556,
+     "keyboard|mouse": 2.45,
+     "monitor_stand|mouse": 40.3065
+    },
+    "min_margin_cm": 1.0,
+    "pass": true
+   },
+   "pass": false,
+   "ready": false
+  },
+  "with_brief_monitor_lamp_minus_6p5": {
+   "variant": {
+    "proposal_file": "docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json",
+    "proposal_sha256": "f301ad414cb978760ed3499547fb072582dc45e70f768eecca02312977aaba0f",
+    "status": "in_progress",
+    "scale": 1.0,
+    "translation_m": [
+     2.1,
+     0.025,
+     -3.02
+    ],
+    "offsets_cm": {
+     "keyboard": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "mouse": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "monitor_frame": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "monitor_stand": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "clamp_lamp": [
+      0.0,
+      0.0,
+      -6.5
+     ]
+    },
+    "ignored_keys": []
+   },
+   "desk": {
+    "scale": 1.0,
+    "root_scale": 1.086093,
+    "scale_source": "desk variant override (uniform)",
+    "translation_m": [
+     2.1,
+     0.025,
+     -3.02
+    ],
+    "declared_translation_matches_root": true,
+    "top_cm": 78.0,
+    "slab_bottom_cm": 75.2,
+    "apron_bottom_cm": 72.1,
+    "floor_cm": 2.5,
+    "worktop_aabb_cm": [
+     [
+      140.0,
+      -334.5,
+      75.2
+     ],
+     [
+      280.0,
+      -269.5,
+      78.0
+     ]
+    ],
+    "root_scale_top_cm": 84.5,
+    "top_change_cm": -6.5,
+    "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d"
+   },
+   "items": {
+    "monitor_stand": {
+     "bottom_minus_top_cm": 0.0,
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "footprint_cm": [
+      [
+       194.0,
+       -334.5
+      ],
+      [
+       206.0,
+       -325.5
+      ]
+     ],
+     "original_footprint": true,
+     "footprint_over_flat_top": false,
+     "footprint_grown_by_margin_over_flat_top": false,
+     "screen_moves_with_stand": true,
+     "pass": false
+    },
+    "clamp_lamp": {
+     "origin_minus_top_cm": 0.0,
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "grommet_centre_cm": [
+      163.0,
+      -324.0,
+      78.1
+     ],
+     "root_scale_grommet_centre_cm": [
+      158.9536,
+      -325.894,
+      84.6086
+     ],
+     "lamp_to_grommet_xy_cm": [
+      -2.8581,
+      -1.894
+     ],
+     "root_lamp_to_grommet_xy_cm": [
+      1.1883,
+      0.0
+     ],
+     "pin_drift_vs_grommet_cm": 4.4677,
+     "radial_pin_clearance_cm": 0.6154,
+     "original_footprint": true,
+     "pass": false
+    },
+    "keyboard": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 102,
+     "feet_over_flat_top": 102,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       189.45,
+       -287.8444
+      ],
+      [
+       226.55,
+       -271.7516
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.2516,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 40.4056,
+       "vertical_overlap_cm": -9.2102,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 37.6556,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 37.6556,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 39.55,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 29.724,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 41.2656,
+       "vertical_overlap_cm": 0.33,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "mouse": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "original_footprint": true
+    },
+    "mouse": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 930,
+     "feet_over_flat_top": 930,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       229.0,
+       -292.4
+      ],
+      [
+       251.0,
+       -271.5
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.0,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 35.85,
+       "vertical_overlap_cm": -7.6031,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 40.3065,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 33.1,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 15.1,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 46.5795,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z) + variant offset [0.0, 0.0, -6.5] cm"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 69.8105,
+       "vertical_overlap_cm": 0.33,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "keyboard": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      -6.5
+     ],
+     "original_footprint": true
+    }
+   },
+   "device_offsets_added_to_layout_cm": {
+    "keyboard": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "mouse": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "device_total_delta_cm": {
+    "keyboard": [
+     8.0,
+     14.202,
+     -6.6
+    ],
+    "mouse": [
+     0.0,
+     9.05,
+     -6.6
+    ]
+   },
+   "overlaps": {
+    "horizontal_gap_cm": {
+     "clamp_lamp|keyboard": 29.724,
+     "clamp_lamp|monitor_stand": 4.1943,
+     "clamp_lamp|mouse": 46.5795,
+     "keyboard|monitor_stand": 37.6556,
+     "keyboard|mouse": 2.45,
+     "monitor_stand|mouse": 40.3065
+    },
+    "min_margin_cm": 1.0,
+    "pass": true
+   },
+   "pass": false,
+   "ready": false
+  },
+  "default_scale_1p086_refit_9f4e199": {
+   "variant": {
+    "proposal_file": null,
+    "proposal_sha256": null,
+    "status": "default",
+    "scale": null,
+    "translation_m": null,
+    "offsets_cm": {},
+    "ignored_keys": []
+   },
+   "desk": {
+    "scale": 1.086093,
+    "root_scale": 1.086093,
+    "scale_source": "root place_bytes SCALE",
+    "translation_m": [
+     2.1,
+     0.025,
+     -3.02
+    ],
+    "declared_translation_matches_root": true,
+    "top_cm": 84.5,
+    "slab_bottom_cm": 81.459,
+    "apron_bottom_cm": 78.092,
+    "floor_cm": 2.5,
+    "worktop_aabb_cm": [
+     [
+      133.974,
+      -337.298,
+      81.459
+     ],
+     [
+      286.026,
+      -266.702,
+      84.5
+     ]
+    ],
+    "root_scale_top_cm": 84.5,
+    "top_change_cm": 0.0,
+    "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d"
+   },
+   "items": {
+    "monitor_stand": {
+     "bottom_minus_top_cm": 0.0,
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "footprint_cm": [
+      [
+       194.0,
+       -334.5
+      ],
+      [
+       206.0,
+       -325.5
+      ]
+     ],
+     "original_footprint": true,
+     "footprint_over_flat_top": true,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "screen_moves_with_stand": true,
+     "pass": true
+    },
+    "clamp_lamp": {
+     "origin_minus_top_cm": 0.0,
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "grommet_centre_cm": [
+      158.9536,
+      -325.894,
+      84.6086
+     ],
+     "root_scale_grommet_centre_cm": [
+      158.9536,
+      -325.894,
+      84.6086
+     ],
+     "lamp_to_grommet_xy_cm": [
+      1.1883,
+      0.0
+     ],
+     "root_lamp_to_grommet_xy_cm": [
+      1.1883,
+      0.0
+     ],
+     "pin_drift_vs_grommet_cm": 0.0,
+     "radial_pin_clearance_cm": 0.6154,
+     "original_footprint": true,
+     "pass": true
+    },
+    "keyboard": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 102,
+     "feet_over_flat_top": 102,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       189.45,
+       -285.0464
+      ],
+      [
+       226.55,
+       -268.9536
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.2516,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 43.2036,
+       "vertical_overlap_cm": -9.2102,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 40.4536,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 40.4536,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 39.55,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 32.522,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z)"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 47.1336,
+       "vertical_overlap_cm": 0.3584,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "mouse": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "original_footprint": true
+    },
+    "mouse": {
+     "bottom_minus_top_cm": 0.0,
+     "feet_points": 930,
+     "feet_over_flat_top": 930,
+     "all_feet_over_flat_top": true,
+     "footprint_cm": [
+      [
+       229.0,
+       -289.602
+      ],
+      [
+       251.0,
+       -268.702
+      ]
+     ],
+     "footprint_grid_over_flat_top": true,
+     "footprint_margin_to_slab_aabb_cm": 2.0,
+     "footprint_grown_by_margin_over_flat_top": true,
+     "items": {
+      "monitor_frame": {
+       "horizontal_gap_cm": 38.648,
+       "vertical_overlap_cm": -7.6031,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 782 box(0.72, 0.44, 0.035, 2.0, 1.16, -3.3, M.black) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_stand": {
+       "horizontal_gap_cm": 42.6341,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:web/house/home.js line 783 box(0.12, 0.12, 0.09, 2.0, 0.88, -3.3, M.metal) + 2.5000 cm rigid lift (docs/proposed/monitor-support-fix-20261015.json)"
+      },
+      "monitor_root_envelope": {
+       "horizontal_gap_cm": 35.898,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['monitor'] (XY support envelope)"
+      },
+      "phone_root_envelope": {
+       "horizontal_gap_cm": 15.1,
+       "vertical_overlap_cm": 2.0,
+       "collides": false,
+       "provenance": "origin/main:tools/prepare_real_linea140_placement.py device_bounds['phone'] (XY support envelope)"
+      },
+      "clamp_lamp": {
+       "horizontal_gap_cm": 48.1489,
+       "vertical_overlap_cm": 4.3969,
+       "collides": false,
+       "provenance": "origin/main:docs/proposed/real-linea-grommet-lamp-mount-20261014.json lamp_world_aabb_m (UE metres x, y, z)"
+      },
+      "grommet_node35": {
+       "horizontal_gap_cm": 75.1951,
+       "vertical_overlap_cm": 0.3584,
+       "collides": false,
+       "provenance": "LINEA node 35 Flush cable grommet | charcoal rim"
+      },
+      "keyboard": {
+       "horizontal_gap_cm": 2.45,
+       "vertical_overlap_cm": 2.7898,
+       "collides": false,
+       "provenance": "device GLB at its proposed transform"
+      }
+     },
+     "pass": true,
+     "rule": "lowest device point within (-0.01, 0.05) cm of the worktop top; every foot point and a 1 cm footprint grid (also grown by 1.0 cm) over the worktop's flat top faces (eased edges and the grommet opening excluded); footprint >= 1.0 cm from every other desk item's footprint (items resting on the slab collide on footprint overlap; floating ones only with vertical overlap)",
+     "offset_cm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "original_footprint": true
+    }
+   },
+   "device_offsets_added_to_layout_cm": {
+    "keyboard": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "mouse": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "device_total_delta_cm": {
+    "keyboard": [
+     8.0,
+     17.0,
+     -0.1
+    ],
+    "mouse": [
+     0.0,
+     11.848,
+     -0.1
+    ]
+   },
+   "overlaps": {
+    "horizontal_gap_cm": {
+     "clamp_lamp|keyboard": 32.522,
+     "clamp_lamp|monitor_stand": 4.1943,
+     "clamp_lamp|mouse": 48.1489,
+     "keyboard|monitor_stand": 40.4536,
+     "keyboard|mouse": 2.45,
+     "monitor_stand|mouse": 42.6341
+    },
+    "min_margin_cm": 1.0,
+    "pass": true
+   },
+   "pass": true,
+   "ready": false
+  }
+ }
+}
