@@ -416,7 +416,8 @@ def solve_arm(sk, W, side, target, pole, ibm, hand_world=None, D=None, limit=Tru
 # ---------------------------------------------------------------- the per-clip solve
 KEY_TOP_TARGET_CM = T.KEY_CONTACT_TARGET_CM          # over-key distal minimum -> KeyTop + 0.08 cm (native rule)
 KEY_MIN_OVER_VERTICES = T.KEY_MIN_OVER_VERTICES      # >= 4 over-key distal vertices: the hand is on the keys
-CONTACT_PASSES, CONTACT_TOL_CM = 8, 1e-4
+CONTACT_PASSES, CONTACT_TOL_CM = 12, 1e-4
+CONTACT_BRACKET_CM, CONTACT_BISECTIONS = 2., 14
 FOREARM_TARGET_CLEARANCE_CM = .5     # design target for arm skin to the real desk (the gate is > 0, every frame)
 SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
 # Ergonomic SOFT targets (never gates): elbow at or just above the desk / keyboard home-row height (ANSI/HFES 100-2007:
@@ -434,7 +435,7 @@ SWIVEL_ENVELOPE_S, SWIVEL_SMOOTH_S = .15, .1       # the seat fit's own envelope
 LIFT_STEP_CM, LIFT_MAX_CM = .25, 15.
 ROLL_OFFSET_CM = (3.875, -32.5)      # the seat fit's chair offset (docs/proposed/seat-pose-fit, chosen dy -32.5)
 SEARCH_REACH_CM = FOREARM_TARGET_CLEARANCE_CM + 1.5
-CLEARANCE_STRIDE = 3                 # arm skin sampling for the search; reports use every vertex
+CLEARANCE_STRIDE = 1                 # arm skin sampling for the search; reports use every vertex
 
 
 def envelope(need, dt, half_s=SWIVEL_ENVELOPE_S, sigma_s=SWIVEL_SMOOTH_S):
@@ -607,6 +608,7 @@ class ClipArmIK:
         self.on_mask = on_mask
         self.hand_xy = {s: np.zeros((F, 3)) for s in SIDES}
         self.girdle = {s: np.zeros((F, 2)) for s in SIDES}      # (depression, protraction) degrees per frame
+        self.gain = {s: np.ones(F) for s in SIDES}               # per-frame vertical contact response (secant)
         self.deadline = None
 
     # --- measurements (UE cm, at each frame's actual body placement)
@@ -859,7 +861,8 @@ class ClipArmIK:
             out[todo[ok]] = trial[todo[ok]]
             todo = todo[~ok]
         out[todo] = lift[todo] + LIFT_MAX_CM
-        return envelope(out, self.dt)
+        # never on a keyboard / mouse frame (contact owns those): the fit's smooth lift, tapered to zero next to them
+        return P.smooth_lift(out, self.mode[s] != MODE_TRANSIT)
 
     def mouse_gap(self, W, s, frames):
         """Lowest hand/finger skin height over the mouse shell (cm; +inf where no skin is over the shell)."""
@@ -892,32 +895,58 @@ class ClipArmIK:
         fr = np.arange(len(self.times)) if frames is None else np.asarray(frames)
         mode = self.mode[s][fr]
         key, mouse = mode == MODE_KEY, mode == MODE_MOUSE
-        for it in range(passes):
-            damp = 1. if it < 3 else .7
-            Wt = self.pose(self.W_fit[fr].copy(), s, delta[fr], phi[fr], lift[fr], fr)[0]
-            hres = 0.
-            dxy = np.zeros((len(fr), 2))
-            if self.finger_xy_target is not None and key.any():
-                cen = self.trial.skin_ue(f'{s}_fingers', Wt[key])[0].mean(axis=1)[:, :2] + self.body_shift[fr[key]][:, :2]
-                dxy[key] = self.finger_xy_target[s][fr[key]] - cen
+        def residual(d):
+            Wt = self.pose(self.W_fit[fr].copy(), s, d, phi[fr], lift[fr], fr)[0]
+            a_ = self.key_audit(Wt, fr)[s]
+            kres = top - a_['over_min']
             vres = np.zeros(len(fr))
             if mouse.any():
-                pm = self.palm_ue(Wt[mouse], s, fr[mouse])
-                d3 = self.mouse['palm_target_cm'][None] - pm
-                dxy[mouse] = d3[:, :2]
                 gap = self.mouse_gap(Wt[mouse], s, fr[mouse])
-                vres[mouse] = np.where(np.isfinite(gap), KEY_TOP_TARGET_CM - gap, d3[:, 2])
-            if dxy.any():
-                self.hand_xy[s][fr] += damp * gltf_shift(np.c_[dxy, np.zeros(len(fr))])
-                hres = float(np.abs(dxy).max())
+                vres[mouse] = np.where(np.isfinite(gap), KEY_TOP_TARGET_CM - gap, np.nan)
+            r_ = np.where(key, kres, np.where(mouse, vres, np.nan))
+            return np.where(np.isfinite(r_), r_, np.nan), Wt, a_
+        rounds = max(1, passes // 6)
+        for _ in range(rounds):
+            # (1) horizontal: keyboard frames follow the fit's finger path, mouse frames put the palm on main's point
+            for _h in range(3):
                 Wt = self.pose(self.W_fit[fr].copy(), s, delta[fr], phi[fr], lift[fr], fr)[0]
-            a = self.key_audit(Wt, fr)[s]
-            kres = top - a['over_min']
-            res = np.where(key, kres, np.where(mouse, vres, np.where(a['over'] > 0, np.maximum(kres, 0.), 0.)))
-            res = np.where(np.isfinite(res), res, 0.)
-            delta[fr] = delta[fr] + damp * res
-            if np.abs(res).max() < CONTACT_TOL_CM and hres < CONTACT_TOL_CM * 10:
+                dxy = np.zeros((len(fr), 2))
+                if self.finger_xy_target is not None and key.any():
+                    cen = self.trial.skin_ue(f'{s}_fingers', Wt[key])[0].mean(axis=1)[:, :2] + self.body_shift[fr[key]][:, :2]
+                    dxy[key] = self.finger_xy_target[s][fr[key]] - cen
+                if mouse.any():
+                    dxy[mouse] = (self.mouse['palm_target_cm'][None] - self.palm_ue(Wt[mouse], s, fr[mouse]))[:, :2]
+                if np.abs(dxy).max() < CONTACT_TOL_CM * 10:
+                    break
+                self.hand_xy[s][fr] += gltf_shift(np.c_[dxy, np.zeros(len(fr))])
+            # (2) vertical: bracketed bisection of the contact residual per frame (robust to the hand turning with
+            # the forearm, where 1 cm of wrist is not 1 cm of fingertip and can even act the other way)
+            act = key | mouse
+            if not act.any():
                 break
+            d0 = delta[fr].copy()
+            lo, hi = d0 - CONTACT_BRACKET_CM, d0 + CONTACT_BRACKET_CM
+            flo, fhi = residual(lo)[0], residual(hi)[0]
+            for _e in range(4):
+                same = act & np.isfinite(flo) & np.isfinite(fhi) & (np.sign(flo) == np.sign(fhi))
+                if not same.any():
+                    break
+                w_ = hi - lo
+                lo, hi = np.where(same, lo - w_, lo), np.where(same, hi + w_, hi)
+                flo, fhi = residual(lo)[0], residual(hi)[0]
+            ok = act & np.isfinite(flo) & np.isfinite(fhi) & (np.sign(flo) != np.sign(fhi))
+            for _b in range(CONTACT_BISECTIONS):
+                mid = .5 * (lo + hi)
+                fm = residual(mid)[0]
+                left = ok & np.isfinite(fm) & (np.sign(fm) == np.sign(flo))
+                lo, flo = np.where(left, mid, lo), np.where(left, fm, flo)
+                hi, fhi = np.where(ok & ~left, mid, hi), np.where(ok & ~left, fm, fhi)
+            # regula falsi finish inside the final bracket
+            with np.errstate(divide='ignore', invalid='ignore'):
+                rf = lo - flo * (hi - lo) / (fhi - flo)
+            new = np.where(ok, np.where(np.isfinite(rf), rf, .5 * (lo + hi)), d0)
+            delta[fr] = new
+        # frames that are neither keyboard nor mouse: only ever lifted over the keycaps (below)
         if frames is None:
             delta = self.blend_transit(s, delta)
             tr = self.mode[s] == MODE_TRANSIT
@@ -1306,8 +1335,10 @@ def lbs(skin, ibm, W):
     """(F, V, 3) glTF metres: linear blend skinning, identical in result to fit_seat_pelvis_pitch.skin_points but as one
     dense operator per skin (the export_seat_fit_source.Source.skin formulation), built once and cached."""
     pos, jts, wts = skin
-    key = (id(pos), pos.shape, id(jts))
+    key = tuple((a.__array_interface__['data'][0], a.shape, a.strides) for a in (pos, jts, wts))
     if key not in _LBS_CACHE:
+        if len(_LBS_CACHE) >= 16:                                  # bounded memory (views of one skin share a key)
+            _LBS_CACHE.pop(next(iter(_LBS_CACHE)))
         J, V = len(ibm), len(pos)
         hom = np.hstack([pos, np.ones((V, 1))])
         S = np.zeros((J * 4, V))
