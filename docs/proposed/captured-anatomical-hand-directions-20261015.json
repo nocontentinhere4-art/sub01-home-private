@@ -1,0 +1,34 @@
+{
+  "schema": "sub01.captured-anatomical-hand-directions-packet.v1",
+  "problem": "Baseline-only variation preserved the new source's open/splayed rest fingers. Applying the entire old curl would instead double bend an already curved anatomical rest.",
+  "implementation": "tools/retarget_anatomical_hand_directions.mjs",
+  "method": "Calibrate actual local phalange leading directions and anatomical dorsal normals, transfer measured recorded segment directions in knuckle-defined palm coordinates, reconstruct target hierarchy rotations. No authored finger curl, geometry or weight changes.",
+  "source_capture_sha256": "9a7937e050a96c8f58dad1ffcfc8f5ff61f0c0699237afd5b996035f006d3f70",
+  "anatomical_target_sha256": "066c8a30cee02cfeb5f615cb69d4f00fbebaf1c7be1c694c6d9b6d78ddfa05f4",
+  "output_sha256": "8b4050c7821c131679e51686fe2bd48a32d24b9e653c9b2a5e794e9d276a6a04",
+  "frames": 32,
+  "channels": 32,
+  "deforming_phalanges": 30,
+  "wrists": 2,
+  "nondeforming_endpoint4_rotations": "held at original target rest",
+  "independent_verifier": "tools/prove_anatomical_hand_directions.py",
+  "independent_method": "Standard-library serialized 4x4 matrix forward kinematics, measured actual posed segment vectors in actual posed knuckle palm frames; no reuse of generator's calibration code",
+  "max_serialized_segment_direction_error_degrees": 0.000008144481502960801,
+  "both_hands_verified": true,
+  "original_binary_geometry_skin_weights_materials_and_rest_exact": true,
+  "existing_target_animations_preserved": true,
+  "actual_new_source_skin_previous_variant_viewed": [
+    "out/house-evidence/actual-new-hand-rig-r8-walk/actual-new-left-walk-021.png",
+    "out/house-evidence/actual-new-hand-rig-r8-walk/actual-new-right-walk-021.png"
+  ],
+  "rendered_new_direction_variant": "pending; do not inherit prior variant's visual assessment",
+  "native_imported": false,
+  "contact_accepted": false,
+  "remaining": [
+    "Render and inspect actual direction-retargeted skin on both sides",
+    "Independent self-intersection check of the actual new deformation",
+    "Fit both wrists/forearms under actual owner cuffs and review first-person camera",
+    "Coherent skin material and actual keyboard/controller/phone contacts",
+    "Native integration and real interaction acceptance"
+  ]
+}

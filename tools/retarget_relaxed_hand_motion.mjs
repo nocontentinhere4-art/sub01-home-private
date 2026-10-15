@@ -21,7 +21,7 @@ export function relativeHandRotation(targetRest, sourceBaseline, sourcePose, sou
  return Q(targetRest).multiply(axis).multiply(delta).multiply(axis.clone().invert()).normalize().toArray();
 }
 
-function read(file){
+export function read(file){
  const raw=fs.readFileSync(file);assert.equal(raw.toString('ascii',0,4),'glTF');
  assert.equal(raw.readUInt32LE(4),2);assert.equal(raw.readUInt32LE(8),raw.length);
  let doc,bin;
@@ -37,8 +37,8 @@ function read(file){
  const names=new Map();doc.nodes.forEach((n,i)=>{if(selected(n.name)){assert(!names.has(key(n.name)),'Duplicate hand name');names.set(key(n.name),i);}});
  return {raw,doc,bin,parents,names};
 }
-function accessor(f,i){
- const a=f.doc.accessors[i],v=f.doc.bufferViews[a.bufferView],width={SCALAR:1,VEC4:4}[a.type];
+export function accessor(f,i){
+ const a=f.doc.accessors[i],v=f.doc.bufferViews[a.bufferView],width={SCALAR:1,VEC3:3,VEC4:4}[a.type];
  assert(width&&a.componentType===5126&&!a.sparse&&!v.extensions&&v.buffer===0,'Decoded float accessor required');
  const start=(v.byteOffset||0)+(a.byteOffset||0),stride=v.byteStride||width*4;
  assert(start+(a.count-1)*stride+width*4<=f.bin.length);
@@ -46,7 +46,7 @@ function accessor(f,i){
   const x=f.bin.readFloatLE(start+j*stride+k*4);assert(Number.isFinite(x));return x;
  }));
 }
-function worldRotations(f,local){
+export function worldRotations(f,local){
  const cache=new Map(),visiting=new Set();
  function get(i){if(cache.has(i))return cache.get(i);assert(!visiting.has(i),'Cyclic hierarchy');visiting.add(i);
   const scale=f.doc.nodes[i].scale||[1,1,1];
