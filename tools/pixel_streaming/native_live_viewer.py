@@ -32,6 +32,11 @@ try:
 except ImportError:
     from native_h264_capture import AnnexBAccessUnits, capture_command as h264_capture_command
 
+try:
+    from .native_gamepad_input import GamepadIntent, validate_gamepad, gamepad_html
+except ImportError:
+    from native_gamepad_input import GamepadIntent, validate_gamepad, gamepad_html
+
 
 AUTHORIZED_POD = 'dgtgepkz7h1zy5'
 AUTHORIZED_NATIVE_EXECUTABLE = b'/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
@@ -88,6 +93,7 @@ def validate_input(value):
     if not isinstance(value, dict):
         raise ValueError("Expected input object")
     action = value.get("action")
+    if action == "gamepad":return validate_gamepad(value)
     if action == "release" and set(value) == {"action"}:
         return value
     if action == "key" and set(value) == {"action", "code", "down"}:
@@ -359,6 +365,7 @@ class LiveState:
         self.last_view_request = 0
         self.native_checked_at = 0
         self.native_identity = None
+        self.gamepad = GamepadIntent(self.private,self.session,self.native,lambda:self.enabled('native-viewer-input-enabled'))
 
     def enabled(self, name):
         if time.time()>=self.deadline:return False
@@ -580,15 +587,15 @@ class Handler(BaseHTTPRequestHandler):
             self.json(200, {'transport':'live-native-X11-H264' if state.codec=='h264_nvenc' else 'live-native-X11-JPEG','captureCodec':state.codec,'session':state.session,
                            'expiresEpoch':state.deadline,'captureEnabled':state.enabled('native-viewer-capture-enabled'),
                            'inputEnabled':state.enabled('native-viewer-input-enabled'),'privacyEgressEnabled':state.can_private_egress(),
-                           'takeControlAvailable':state.take_control_available(),
+                           'takeControlAvailable':state.take_control_available(),'minecraftFocus':state.gamepad.focus() is not None,
                            'framesDelivered':state.frames,'acceptedInputs':state.accepted,'nativeAlive':state.native() is not None,'nativeIdentity':state.native(),'viewMode':state.view_mode(),'activity':state.live_activity(),'privacy':state.privacy(),'captureFps':state.fps,'captureWidth':state.width})
             return
         if self.path.split('?')[0] in ('/', '/index.html'):
             if state.codec=='h264_nvenc':
                 try:from .native_h264_frontend import h264_html
                 except ImportError:from native_h264_frontend import h264_html
-                data=h264_html(HTML).encode()
-            else:data=HTML.encode()
+                data=gamepad_html(h264_html(HTML)).encode()
+            else:data=gamepad_html(HTML).encode()
             self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data);return
         if urlsplit(self.path).path != '/frame.jpg':
             self.json(404, {'error':'Unknown route'});return
@@ -673,8 +680,11 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             ended.set()
             try:
-                if used_controls.is_set() and state.input is not None:
-                    with state.input_lock:state.input.send({'action':'release'})
+                try:
+                    if used_controls.is_set() and hasattr(state,'gamepad'):state.gamepad.release()
+                finally:
+                    if used_controls.is_set() and state.input is not None:
+                        with state.input_lock:state.input.send({'action':'release'})
             except Exception:
                 pass  # Capture must still close if the native X connection died.
             finally:

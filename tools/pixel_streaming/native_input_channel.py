@@ -33,6 +33,13 @@ def dispatch(state,event,validate,physical_factory,egress_allowed,clock=time.mon
             if not permitted():return 409,{'error':'Native input permission changed'}
             if clock()-state.last_input<.005-1e-9:
                 return 429,{'error':'Input rate exceeded'}
+        if event['action']=='gamepad':
+            try:state.gamepad.deliver(event)
+            except PermissionError:
+                return 200,{'acceptedInputs':state.accepted,'gamepadAccepted':False,'delivery':'none','session':state.session}
+            state.last_input=clock();state.last_lease=state.last_input;state.accepted+=1
+            return 200,{'acceptedInputs':state.accepted,'gamepadAccepted':True,'delivery':'nativeTVGamepadIntent','session':state.session}
+        if event['action']=='release' and hasattr(state,'gamepad'):state.gamepad.release()
         if state.input is None:state.input=physical_factory()
         state.input.send(event);state.last_input=clock();state.last_lease=state.last_input;state.accepted+=1
         return 200,{'acceptedInputs':state.accepted,'physicalDelivery':'XTest','session':state.session}
