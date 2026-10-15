@@ -25,7 +25,7 @@ bool ASub01HomeCharacter::SwitchNativeWalkView(bool UseLiveSource){
  RouteActive=false;GetCharacterMovement()->StopMovementImmediately();
  HandsDiagnosticSeat=false;HandsClips.Add(TEXT("Walk"),Walk);SetHandsPosture(TEXT("Walk"));
  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
- ViewCamera->SetUsingAbsoluteRotation(false);ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ViewCamera->FieldOfView=75;
+ ViewCamera->SetUsingAbsoluteRotation(false);ViewCamera->SetRelativeLocation(WalkingCameraOffset.ContainsNaN()?FVector(0,0,74):WalkingCameraOffset);ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ViewCamera->FieldOfView=75;
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
  PrivateViewMode=UseLiveSource?EPrivateViewMode::Live:EPrivateViewMode::Manual;
  UE_LOG(LogTemp,Display,TEXT("SUB01_EXPLICIT_VIEW_MODE_SWITCH mode=%s actualpawnretained; no actor teleport or seating claim"),UseLiveSource?TEXT("live"):TEXT("manual"));

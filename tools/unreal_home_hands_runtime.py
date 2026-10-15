@@ -122,6 +122,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FString PhoneClipPath;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") TArray<FName> ValidatedHandsPostures;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector WalkMeshOffset=FVector(0,0,-91);
+ UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector WalkingCameraOffset=FVector(0,0,74);
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FVector DeskMeshOffset=FVector(0,0,-128);
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") FRotator HandsMeshRotation=FRotator::ZeroRotator;
  UPROPERTY(EditAnywhere,Config,Category="SUB01|Hands") TArray<FName> HiddenHeadBones;
@@ -245,6 +246,8 @@ bool ASub01HomeCharacter::SetHandsPosture(FName Posture) {
   Instance->TargetSequence=HandsClips.FindRef(Posture);
   Instance->TargetRate=Posture==TEXT("Walk")?0.f:1.f;
  }
+ // Stable eye offset is reviewed independently of floor/body alignment.
+ if(Posture==TEXT("Walk")&&!HandsDiagnostic&&ViewCamera->GetAttachParent()==GetRootComponent()&&!WalkingCameraOffset.ContainsNaN())ViewCamera->SetRelativeLocation(WalkingCameraOffset);
  FirstPersonBody->SetRelativeLocation(HandsBaseOffset);
  FirstPersonBody->SetVisibility(true);HandsFailure.Empty();
  return true;
