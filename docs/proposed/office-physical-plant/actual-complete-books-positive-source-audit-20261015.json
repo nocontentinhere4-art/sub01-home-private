@@ -1,0 +1,1551 @@
+{
+  "schema": "sub01.complete-book-positive-source-audit.v1",
+  "source_sha256": "611a3d84885876f5417a4e6b283a940bee24e793bc68b4d9e47e9ed53f62f459",
+  "read_only": true,
+  "all46_books_accounted": true,
+  "books": [
+    {
+      "id": "SUB01_RealBook_01",
+      "source_node": 0,
+      "source_mesh": 0,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          116.17794819176197,
+          -373.0440631508827,
+          206.8000078300429
+        ],
+        [
+          119.76093668490648,
+          -356.23989030718803,
+          230.88086247444153
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          116.17794819176197,
+          -373.0440631508827,
+          206.8000078300429
+        ],
+        [
+          119.76093668490648,
+          -356.23989030718803,
+          230.88086247444153
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_02",
+      "source_node": 1,
+      "source_mesh": 1,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          119.93311364203691,
+          -373.45621287822723,
+          206.80000784402637
+        ],
+        [
+          123.54177236557007,
+          -356.5728448331356,
+          230.93388229608536
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          119.93311364203691,
+          -373.45621287822723,
+          206.80000784402637
+        ],
+        [
+          123.54177236557007,
+          -356.5728448331356,
+          230.93388229608536
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_03",
+      "source_node": 2,
+      "source_mesh": 2,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          123.66146147251129,
+          -373.3341008424759,
+          206.8000078266209
+        ],
+        [
+          125.85717216134071,
+          -356.5210074186325,
+          230.88568449020386
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          123.66146147251129,
+          -373.3341008424759,
+          206.8000078266209
+        ],
+        [
+          125.85717216134071,
+          -356.5210074186325,
+          230.88568449020386
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_04",
+      "source_node": 3,
+      "source_mesh": 3,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          126.03277200832963,
+          -373.51464331150055,
+          206.80000784632284
+        ],
+        [
+          127.96915443614125,
+          -356.4488969743252,
+          231.05666637420654
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          126.03277200832963,
+          -373.51464331150055,
+          206.80000784632284
+        ],
+        [
+          127.96915443614125,
+          -356.4488969743252,
+          231.05666637420654
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_05",
+      "source_node": 4,
+      "source_mesh": 4,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          128.0864229425788,
+          -373.30583930015564,
+          206.80000781285344
+        ],
+        [
+          130.27803925797343,
+          -356.31628558039665,
+          231.00549578666687
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          128.0864229425788,
+          -373.30583930015564,
+          206.80000781285344
+        ],
+        [
+          130.27803925797343,
+          -356.31628558039665,
+          231.00549578666687
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_06",
+      "source_node": 5,
+      "source_mesh": 1,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          130.32975056692808,
+          -373.76353442668915,
+          206.82320249349425
+        ],
+        [
+          141.38944051571062,
+          -356.8801663815975,
+          230.81807461112547
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          130.32975056692808,
+          -373.76353442668915,
+          206.82320249349425
+        ],
+        [
+          141.38944051571062,
+          -356.8801663815975,
+          230.81807461112547
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_07",
+      "source_node": 6,
+      "source_mesh": 5,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          144.49656008657746,
+          -373.40758219361305,
+          206.8000105419173
+        ],
+        [
+          168.7199102143048,
+          -356.3912123441696,
+          209.2330630696511
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          144.49656008657746,
+          -373.40758219361305,
+          206.8000105419173
+        ],
+        [
+          168.7199102143048,
+          -356.3912123441696,
+          209.2330630696511
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_08",
+      "source_node": 7,
+      "source_mesh": 6,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          144.56431869447982,
+          -373.11379313468933,
+          209.2830564180654
+        ],
+        [
+          168.55171473394716,
+          -356.4451515674591,
+          213.00087832682232
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          144.56431869447982,
+          -373.11379313468933,
+          209.2830564180654
+        ],
+        [
+          168.55171473394716,
+          -356.4451515674591,
+          213.00087832682232
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_10",
+      "source_node": 8,
+      "source_mesh": 7,
+      "nominal_triangles": 3392,
+      "positive_triangles": 3392,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          171.7734744772315,
+          -373.3479507267475,
+          206.8000078201294
+        ],
+        [
+          175.6985493004322,
+          -356.3215732574463,
+          231.0274675488472
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          171.7734744772315,
+          -373.3479507267475,
+          206.8000078201294
+        ],
+        [
+          175.6985493004322,
+          -356.3215732574463,
+          231.0274675488472
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_11",
+      "source_node": 9,
+      "source_mesh": 8,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          175.8900361135602,
+          -373.8469772040844,
+          206.8000078201294
+        ],
+        [
+          178.09913754463196,
+          -356.8765461444855,
+          230.99279552698135
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          175.8900361135602,
+          -373.8469772040844,
+          206.8000078201294
+        ],
+        [
+          178.09913754463196,
+          -356.8765461444855,
+          230.99279552698135
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_12",
+      "source_node": 10,
+      "source_mesh": 9,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          178.18993022665381,
+          -373.18771928548813,
+          206.80000782204502
+        ],
+        [
+          180.6048414669931,
+          -356.21439442038536,
+          230.9945747256279
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          178.18993022665381,
+          -373.18771928548813,
+          206.80000782204502
+        ],
+        [
+          180.6048414669931,
+          -356.21439442038536,
+          230.9945747256279
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_13",
+      "source_node": 11,
+      "source_mesh": 9,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          180.78170707449317,
+          -373.65633100271225,
+          206.80000782204502
+        ],
+        [
+          183.19661831483245,
+          -356.6830061376095,
+          230.9945747256279
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          180.78170707449317,
+          -373.65633100271225,
+          206.80000782204502
+        ],
+        [
+          183.19661831483245,
+          -356.6830061376095,
+          230.9945747256279
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_14",
+      "source_node": 12,
+      "source_mesh": 2,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          183.37487280368805,
+          -373.21286499500275,
+          206.8000078266209
+        ],
+        [
+          185.57058349251747,
+          -356.39977157115936,
+          230.88568449020386
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          183.37487280368805,
+          -373.21286499500275,
+          206.8000078266209
+        ],
+        [
+          185.57058349251747,
+          -356.39977157115936,
+          230.88568449020386
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_15",
+      "source_node": 13,
+      "source_mesh": 10,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          185.73353178799152,
+          -373.03845807909966,
+          206.80000780568548
+        ],
+        [
+          188.03911358118057,
+          -356.26313760876656,
+          230.86124658584595
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          185.73353178799152,
+          -373.03845807909966,
+          206.80000780568548
+        ],
+        [
+          188.03911358118057,
+          -356.26313760876656,
+          230.86124658584595
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_16",
+      "source_node": 14,
+      "source_mesh": 11,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3340,
+      "exact_zero_area_triangle_indices": [
+        3268,
+        3269,
+        3270,
+        3271,
+        3272,
+        3273,
+        3274,
+        3275,
+        3276,
+        3277,
+        3278,
+        3279,
+        3280,
+        3281,
+        3282,
+        3283,
+        3284,
+        3285,
+        3286,
+        3287,
+        3288,
+        3289,
+        3290,
+        3291
+      ],
+      "nominal_world_bounds_cm": [
+        [
+          188.23285102844238,
+          -372.9687072336674,
+          206.80000779310603
+        ],
+        [
+          190.05725169554353,
+          -356.10395818948746,
+          230.92226535081863
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          188.23285102844238,
+          -372.9687072336674,
+          206.80000779310603
+        ],
+        [
+          190.05725169554353,
+          -356.10395818948746,
+          230.92226535081863
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_17",
+      "source_node": 15,
+      "source_mesh": 12,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          190.2564669959247,
+          -373.3105845749378,
+          206.80000780880619
+        ],
+        [
+          192.11169332265854,
+          -356.17020577192307,
+          231.10631555318832
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          190.2564669959247,
+          -373.3105845749378,
+          206.80000780880619
+        ],
+        [
+          192.11169332265854,
+          -356.17020577192307,
+          231.10631555318832
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_18",
+      "source_node": 16,
+      "source_mesh": 13,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          192.2564385458827,
+          -373.2288293540478,
+          206.80000782958814
+        ],
+        [
+          194.75589711219072,
+          -356.4925730228424,
+          230.83410263061523
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          192.2564385458827,
+          -373.2288293540478,
+          206.80000782958814
+        ],
+        [
+          194.75589711219072,
+          -356.4925730228424,
+          230.83410263061523
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_19",
+      "source_node": 17,
+      "source_mesh": 2,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          194.84764635562897,
+          -373.12317192554474,
+          206.8000078266209
+        ],
+        [
+          197.0433570444584,
+          -356.31007850170135,
+          230.88568449020386
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          194.84764635562897,
+          -373.12317192554474,
+          206.8000078266209
+        ],
+        [
+          197.0433570444584,
+          -356.31007850170135,
+          230.88568449020386
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_20",
+      "source_node": 18,
+      "source_mesh": 14,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          197.13689861819148,
+          -373.6369453370571,
+          206.80000781139825
+        ],
+        [
+          199.4395598769188,
+          -356.8622753024101,
+          230.86057901382446
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          197.13689861819148,
+          -373.6369453370571,
+          206.80000781139825
+        ],
+        [
+          199.4395598769188,
+          -356.8622753024101,
+          230.86057901382446
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_21",
+      "source_node": 19,
+      "source_mesh": 7,
+      "nominal_triangles": 3392,
+      "positive_triangles": 3392,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          199.52164199203253,
+          -373.72179105877876,
+          206.8000078201294
+        ],
+        [
+          203.44671681523323,
+          -356.69541358947754,
+          231.0274675488472
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          199.52164199203253,
+          -373.72179105877876,
+          206.8000078201294
+        ],
+        [
+          203.44671681523323,
+          -356.69541358947754,
+          231.0274675488472
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_22",
+      "source_node": 20,
+      "source_mesh": 5,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          203.5524639301002,
+          -373.2978142797947,
+          206.80000781212584
+        ],
+        [
+          205.98551938310266,
+          -356.28144443035126,
+          231.0233548283577
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          203.5524639301002,
+          -373.2978142797947,
+          206.80000781212584
+        ],
+        [
+          205.98551938310266,
+          -356.28144443035126,
+          231.0233548283577
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_23",
+      "source_node": 21,
+      "source_mesh": 12,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          206.18450893089175,
+          -373.41141179203987,
+          206.80000780880619
+        ],
+        [
+          208.03973525762558,
+          -356.2710329890251,
+          231.10631555318832
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          206.18450893089175,
+          -373.41141179203987,
+          206.80000780880619
+        ],
+        [
+          208.03973525762558,
+          -356.2710329890251,
+          231.10631555318832
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_24",
+      "source_node": 22,
+      "source_mesh": 15,
+      "nominal_triangles": 3362,
+      "positive_triangles": 3362,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          116.1425828692783,
+          -373.8031268119812,
+          251.799992899286
+        ],
+        [
+          140.30093863947818,
+          -356.8836338818073,
+          253.73322344820096
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          116.1425828692783,
+          -373.8031268119812,
+          251.799992899286
+        ],
+        [
+          140.30093863947818,
+          -356.8836338818073,
+          253.73322344820096
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_25",
+      "source_node": 23,
+      "source_mesh": 14,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          116.17974041806902,
+          -373.50583896040916,
+          253.78323926830527
+        ],
+        [
+          140.24031471859595,
+          -356.7311689257622,
+          256.0858976053006
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          116.17974041806902,
+          -373.50583896040916,
+          253.78323926830527
+        ],
+        [
+          140.24031471859595,
+          -356.7311689257622,
+          256.0858976053006
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_26",
+      "source_node": 24,
+      "source_mesh": 15,
+      "nominal_triangles": 3362,
+      "positive_triangles": 3362,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          143.28455040231347,
+          -373.03794622421265,
+          251.7999887239057
+        ],
+        [
+          145.21778393536806,
+          -356.1184532940388,
+          275.95834136009216
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          143.28455040231347,
+          -373.03794622421265,
+          251.7999887239057
+        ],
+        [
+          145.21778393536806,
+          -356.1184532940388,
+          275.95834136009216
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_27",
+      "source_node": 25,
+      "source_mesh": 14,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          145.3523593954742,
+          -373.25228080153465,
+          251.79998873791192
+        ],
+        [
+          147.6550206542015,
+          -356.47761076688766,
+          275.86055994033813
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          145.3523593954742,
+          -373.25228080153465,
+          251.79998873791192
+        ],
+        [
+          147.6550206542015,
+          -356.47761076688766,
+          275.86055994033813
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_28",
+      "source_node": 26,
+      "source_mesh": 16,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          147.8084784001112,
+          -373.42641949653625,
+          251.799988737082
+        ],
+        [
+          151.1228507384658,
+          -356.66090846061707,
+          275.8535787463188
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          147.8084784001112,
+          -373.42641949653625,
+          251.799988737082
+        ],
+        [
+          151.1228507384658,
+          -356.66090846061707,
+          275.8535787463188
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_29",
+      "source_node": 27,
+      "source_mesh": 8,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          151.20381880551577,
+          -373.8665275275707,
+          251.79998874664307
+        ],
+        [
+          153.41292023658752,
+          -356.8960964679718,
+          275.992776453495
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          151.20381880551577,
+          -373.8665275275707,
+          251.79998874664307
+        ],
+        [
+          153.41292023658752,
+          -356.8960964679718,
+          275.992776453495
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_30",
+      "source_node": 28,
+      "source_mesh": 12,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          153.58789218589664,
+          -373.91070798039436,
+          251.79998873531986
+        ],
+        [
+          155.44311851263046,
+          -356.7703291773796,
+          276.106296479702
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          153.58789218589664,
+          -373.91070798039436,
+          251.79998873531986
+        ],
+        [
+          155.44311851263046,
+          -356.7703291773796,
+          276.106296479702
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_31",
+      "source_node": 29,
+      "source_mesh": 17,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          155.61951594427228,
+          -373.61546605825424,
+          251.79998876711807
+        ],
+        [
+          158.48856968805194,
+          -356.7285433411598,
+          275.93544870615005
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          155.61951594427228,
+          -373.61546605825424,
+          251.79998876711807
+        ],
+        [
+          158.48856968805194,
+          -356.7285433411598,
+          275.93544870615005
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_32",
+      "source_node": 30,
+      "source_mesh": 2,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          158.5404371689058,
+          -373.70376884937286,
+          251.81902959173735
+        ],
+        [
+          167.70237913603842,
+          -356.8906754255295,
+          275.457325094181
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          158.5404371689058,
+          -373.70376884937286,
+          251.81902959173735
+        ],
+        [
+          167.70237913603842,
+          -356.8906754255295,
+          275.457325094181
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_33",
+      "source_node": 31,
+      "source_mesh": 12,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          170.72311891242862,
+          -373.63154366612434,
+          251.79998873531986
+        ],
+        [
+          172.57834523916245,
+          -356.4911648631096,
+          276.106296479702
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          170.72311891242862,
+          -373.63154366612434,
+          251.79998873531986
+        ],
+        [
+          172.57834523916245,
+          -356.4911648631096,
+          276.106296479702
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_34",
+      "source_node": 32,
+      "source_mesh": 15,
+      "nominal_triangles": 3362,
+      "positive_triangles": 3362,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          172.70597526803613,
+          -373.7929701805115,
+          251.7999887239057
+        ],
+        [
+          174.63920880109072,
+          -356.8734772503376,
+          275.95834136009216
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          172.70597526803613,
+          -373.7929701805115,
+          251.7999887239057
+        ],
+        [
+          174.63920880109072,
+          -356.8734772503376,
+          275.95834136009216
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_35",
+      "source_node": 33,
+      "source_mesh": 2,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          174.75644648075104,
+          -372.9979783296585,
+          251.79998875313458
+        ],
+        [
+          176.95215716958046,
+          -356.1848849058151,
+          275.88566541671753
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          174.75644648075104,
+          -372.9979783296585,
+          251.79998875313458
+        ],
+        [
+          176.95215716958046,
+          -356.1848849058151,
+          275.88566541671753
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_36",
+      "source_node": 34,
+      "source_mesh": 14,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          177.05902634188533,
+          -373.53869304060936,
+          251.79998873791192
+        ],
+        [
+          179.36168760061264,
+          -356.7640230059624,
+          275.86055994033813
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          177.05902634188533,
+          -373.53869304060936,
+          251.79998873791192
+        ],
+        [
+          179.36168760061264,
+          -356.7640230059624,
+          275.86055994033813
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_37",
+      "source_node": 35,
+      "source_mesh": 13,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          179.4623849913478,
+          -373.1460265815258,
+          251.7999887561018
+        ],
+        [
+          181.9618435576558,
+          -356.40977025032043,
+          275.8340835571289
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          179.4623849913478,
+          -373.1460265815258,
+          251.7999887561018
+        ],
+        [
+          181.9618435576558,
+          -356.40977025032043,
+          275.8340835571289
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_38",
+      "source_node": 36,
+      "source_mesh": 8,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          182.16144610196352,
+          -373.3279399573803,
+          251.79998874664307
+        ],
+        [
+          184.37054753303528,
+          -356.3575088977814,
+          275.992776453495
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          182.16144610196352,
+          -373.3279399573803,
+          251.79998874664307
+        ],
+        [
+          184.37054753303528,
+          -356.3575088977814,
+          275.992776453495
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_39",
+      "source_node": 37,
+      "source_mesh": 15,
+      "nominal_triangles": 3362,
+      "positive_triangles": 3362,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          184.48378155007958,
+          -373.36710691452026,
+          251.7999887239057
+        ],
+        [
+          186.41701508313417,
+          -356.4476139843464,
+          275.95834136009216
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          184.48378155007958,
+          -373.36710691452026,
+          251.7999887239057
+        ],
+        [
+          186.41701508313417,
+          -356.4476139843464,
+          275.95834136009216
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_40",
+      "source_node": 38,
+      "source_mesh": 14,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          186.5058141760528,
+          -373.1838069856167,
+          251.79998873791192
+        ],
+        [
+          188.80847543478012,
+          -356.4091369509697,
+          275.86055994033813
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          186.5058141760528,
+          -373.1838069856167,
+          251.79998873791192
+        ],
+        [
+          188.80847543478012,
+          -356.4091369509697,
+          275.86055994033813
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_41",
+      "source_node": 39,
+      "source_mesh": 13,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          188.89464121311903,
+          -372.9736976325512,
+          251.7999887561018
+        ],
+        [
+          191.39409977942705,
+          -356.2374413013458,
+          275.8340835571289
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          188.89464121311903,
+          -372.9736976325512,
+          251.7999887561018
+        ],
+        [
+          191.39409977942705,
+          -356.2374413013458,
+          275.8340835571289
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_42",
+      "source_node": 40,
+      "source_mesh": 8,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          191.5245370939374,
+          -373.31165596842766,
+          251.79998874664307
+        ],
+        [
+          193.73363852500916,
+          -356.34122490882874,
+          275.992776453495
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          191.5245370939374,
+          -373.31165596842766,
+          251.79998874664307
+        ],
+        [
+          193.73363852500916,
+          -356.34122490882874,
+          275.992776453495
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_43",
+      "source_node": 41,
+      "source_mesh": 5,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          193.8402566127479,
+          -373.795036226511,
+          251.7999887386395
+        ],
+        [
+          196.27331206575036,
+          -356.77866637706757,
+          276.02333575487137
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          193.8402566127479,
+          -373.795036226511,
+          251.7999887386395
+        ],
+        [
+          196.27331206575036,
+          -356.77866637706757,
+          276.02333575487137
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_44",
+      "source_node": 42,
+      "source_mesh": 15,
+      "nominal_triangles": 3362,
+      "positive_triangles": 3362,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          196.36547872796655,
+          -373.3889698982239,
+          251.7999887239057
+        ],
+        [
+          198.29871226102114,
+          -356.46947696805,
+          275.95834136009216
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          196.36547872796655,
+          -373.3889698982239,
+          251.7999887239057
+        ],
+        [
+          198.29871226102114,
+          -356.46947696805,
+          275.95834136009216
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_45",
+      "source_node": 43,
+      "source_mesh": 3,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          198.40114349499345,
+          -373.63223135471344,
+          251.7999887728365
+        ],
+        [
+          200.33752592280507,
+          -356.56648501753807,
+          276.0566473007202
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          198.40114349499345,
+          -373.63223135471344,
+          251.7999887728365
+        ],
+        [
+          200.33752592280507,
+          -356.56648501753807,
+          276.0566473007202
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_46",
+      "source_node": 44,
+      "source_mesh": 10,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          200.44125206768513,
+          -373.34132120013237,
+          251.79998873219915
+        ],
+        [
+          202.74683386087418,
+          -356.56600072979927,
+          275.8612275123596
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          200.44125206768513,
+          -373.34132120013237,
+          251.79998873219915
+        ],
+        [
+          202.74683386087418,
+          -356.56600072979927,
+          275.8612275123596
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    },
+    {
+      "id": "SUB01_RealBook_47",
+      "source_node": 45,
+      "source_mesh": 1,
+      "nominal_triangles": 3364,
+      "positive_triangles": 3364,
+      "exact_zero_area_triangle_indices": [],
+      "nominal_world_bounds_cm": [
+        [
+          202.90078837424517,
+          -373.5181301832199,
+          251.79998877054004
+        ],
+        [
+          206.50944709777832,
+          -356.6347621381283,
+          275.93386322259903
+        ]
+      ],
+      "physical_world_bounds_cm": [
+        [
+          202.90078837424517,
+          -373.5181301832199,
+          251.79998877054004
+        ],
+        [
+          206.50944709777832,
+          -356.6347621381283,
+          275.93386322259903
+        ]
+      ],
+      "physical_bounds_equal_nominal": true
+    }
+  ]
+}
