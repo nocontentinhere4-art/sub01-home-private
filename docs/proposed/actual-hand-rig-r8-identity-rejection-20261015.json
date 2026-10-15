@@ -1,0 +1,24 @@
+{
+  "schema": "sub01.actual-hand-rig-identity-rejection.v1",
+  "rig_sha256": "066c8a30cee02cfeb5f615cb69d4f00fbebaf1c7be1c694c6d9b6d78ddfa05f4",
+  "decision": "REJECTED: anatomical digit identity is wrong on both hands",
+  "actual_images_viewed": [
+    {
+      "path": "out/house-evidence/official-hand-digit-identity-r1/left-digit-identity-x+1.png",
+      "sha256": "5229ce1b34f7ee4b3a347eac0406b89086db35c5833d5aa172a2d3949fb84c54"
+    },
+    {
+      "path": "out/house-evidence/official-hand-digit-identity-r1/right-digit-identity-x-1.png",
+      "sha256": "c6c9b1c53a736a4a309af942bac26cb3493bc539f15249af96173e5bccc39548"
+    }
+  ],
+  "observations": [
+    "Actual physical index has no intended Index chain",
+    "Index chain follows physical middle; Middle follows physical ring",
+    "Ring and Pinky both follow physical little finger"
+  ],
+  "earlier_inside_skin_and_weight_sum_checks_insufficient": true,
+  "bounded_cleanup_refused_ambiguous_branches": true,
+  "native_imported": false,
+  "next_step": "Rebuild bone identity from original authored sculpt face sets and actual separate finger topology, then independently verify overlay before heat weighting and captured animation."
+}
