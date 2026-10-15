@@ -1,0 +1,58 @@
+{
+  "schema": "sub01.private-kitchen-three-corrections.v1",
+  "actual_live_game_preserved": {
+    "pid": 209503,
+    "start_ticks": 979714171
+  },
+  "candidate_editor": {
+    "pid": 203351,
+    "start_ticks": 978985107
+  },
+  "inventory106_sha256": "0546829c39e6aa6e250265fe22d14946e020f44cf2ba010dbbf6d92d97857a1b",
+  "cylinder": {
+    "source_node": 72,
+    "saved": true,
+    "candidate_map_after_retirement": "59937780f269703ac3bb6c5ead838aec11f5f8f87dbdfafc7d7fc6cfcb05129a",
+    "receipt": "private-audit/kitchen-beige-cylinder-retired.json",
+    "replacement_added": false
+  },
+  "faucet": {
+    "official_manufacturer": "GROHE Concetto32663003",
+    "source_sha256": "89c7ba8c7d303c9f2e65f9616337a9c3d3dfbcfaea20fbfc7d096457901bebfc",
+    "actual_native_task": 108,
+    "actual_native_receipt": "private-audit/grohe-concetto-native.json",
+    "new_parts": 6,
+    "triangles": 84500,
+    "retired_only_nodes": [
+      69,
+      70,
+      71
+    ],
+    "sink164_worktop65_unchanged": true,
+    "actual_close_capture": "out/house-evidence/candidate-correction-genuine-grohe-close.png",
+    "dynamic_water_lever_ready": false
+  },
+  "plant": {
+    "old_nodes": [
+      216,
+      217,
+      218,
+      219
+    ],
+    "terracotta_source_approval_withdrawn": true,
+    "replacement_white_ceramic_source_pending": true
+  },
+  "promoted_to_live": false,
+  "same_pid_open_evaluation": {
+    "engine_source": "Engine/Source/Runtime/Engine/Private/UnrealEngine.cpp",
+    "cleanup_lines": [
+      16262,
+      16302,
+      16315,
+      16403,
+      16408
+    ],
+    "feasible_only_after_cached_package_new_world_validation": true,
+    "live_executed": false
+  }
+}
