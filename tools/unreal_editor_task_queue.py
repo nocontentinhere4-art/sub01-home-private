@@ -35,6 +35,7 @@ TASKS = {
     'collision_restore_proof': 'unreal_book_collision_restore_proof',
     'scene_visual_inventory': 'unreal_home_visual_inventory',
     'finish_editor_handoff': 'unreal_finish_editor_handoff',
+    'nanite_materials': 'unreal_fix_private_nanite_materials',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -109,6 +110,8 @@ def dispatch(task):
     module = importlib.reload(importlib.import_module(TASKS[task]))
     if task == 'scene_visual_inventory':
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
+    if task == 'nanite_materials':
+        return module.run(dry_run=False)
     if task == 'refresh_queue':
         return {'refreshed_existing_queue': module.refresh(), 'native_game_accepted': False}
     if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs'):
