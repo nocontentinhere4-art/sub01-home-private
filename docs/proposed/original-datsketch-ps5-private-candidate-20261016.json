@@ -299,5 +299,22 @@
     "source_geometry_material_hierarchy_modified": false,
     "sony_comparison": "Height calibrated only. Original artist depth/thickness proportions preserved; do not claim exact manufacturer CAD dimensions."
   },
-  "root_approved_unit_conversion": "Uniform external root scale .001200652897522776 m/sourceunit; calibrate body excluding original stand to390mm. Original source itself unchanged; no nonuniform rescale."
+  "root_approved_unit_conversion": "Uniform external root scale .001200652897522776 m/sourceunit; calibrate body excluding original stand to390mm. Original source itself unchanged; no nonuniform rescale.",
+  "asset_only_import_helper": {
+    "source": "tools/unreal_import_original_ps5_assets.py",
+    "sha256": "9338c8ff84dfd0f838b6c68dcf76fa74c9a2d97a01d1846bebb2ee7e947604ca",
+    "remote": "/home/unreal/runtime-tools/unreal_import_original_ps5_assets.py",
+    "native_execution_owner": "native_integration",
+    "receipt": "private-audit/original-ps5-native-assets.json",
+    "whole_source_parts": 24,
+    "source_PBR_materials": 13,
+    "new_assignment_or_old_device_retirement": false,
+    "map_and_existing_world_exact_restored": true,
+    "physical_world_geometry_tolerance_cm": 0.0001,
+    "root_canonical_front_direction_UE": [
+      0,
+      1,
+      0
+    ]
+  }
 }
