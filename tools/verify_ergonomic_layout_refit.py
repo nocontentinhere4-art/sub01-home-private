@@ -955,13 +955,14 @@ def desk_variant_from_proposal(path):
     path = Path(path)
     raw = path.read_bytes()
     doc = json.loads(raw)
-    scopes = [doc] + [doc[k] for k in ('proposed', 'proposal', 'variant') if isinstance(doc.get(k), dict)]
+    scopes = [doc] + [doc[k] for k in ('desk_variant', 'proposed', 'proposal', 'variant') if isinstance(doc.get(k), dict)]
     desk, scale, items, translation = {}, None, None, None
     for sc in scopes:
         desk = _first(sc, 'desk', 'linea140', 'LINEA140') or desk
         scale = scale if scale is not None else (_first(desk, 'scale', 'uniform_scale') if isinstance(desk, dict) else None)
         scale = scale if scale is not None else _first(sc, 'desk_scale', 'linea140_scale')
-        translation = translation or (_first(desk, 'translation_m') if isinstance(desk, dict) else None)
+        translation = translation or (_first(desk, 'translation_m') if isinstance(desk, dict) else None) \
+            or (_first(sc, 'translation_m') if sc is not doc else None)
         items = items or _first(sc, 'items', 'item_offsets_cm', 'item_transforms', 'offsets', 'item_offsets')
         if items is None and isinstance(desk, dict):
             items = _first(desk, 'items', 'item_offsets_cm', 'item_transforms')
@@ -972,6 +973,14 @@ def desk_variant_from_proposal(path):
     if scale is None:
         raise ValueError('desk variant: no desk.scale')
     offsets, ignored = {}, []
+    # group dz keys (e.g. desk_variant.device_dz_cm: keyboard + mouse; monitor_dz_cm; lamp_dz_cm)
+    for sc in scopes:
+        for key, targets in (('device_dz_cm', ('keyboard', 'mouse')), ('devices_dz_cm', ('keyboard', 'mouse')),
+                             ('monitor_dz_cm', ('monitor_frame', 'monitor_stand')), ('lamp_dz_cm', ('clamp_lamp',)),
+                             ('items_dz_cm', ('monitor_frame', 'monitor_stand', 'clamp_lamp', 'keyboard', 'mouse'))):
+            if isinstance(sc.get(key), (int, float)):
+                for t in targets:
+                    offsets.setdefault(t, np.array([0., 0., float(sc[key])]))
     for k, v in (items or {}).items():
         targets = _ITEM_ALIASES.get(k.lower())
         if targets is None:
@@ -979,9 +988,7 @@ def desk_variant_from_proposal(path):
             continue
         o = _offset_vec(v, k)
         for t in targets:
-            if t in offsets and not np.allclose(offsets[t], o):
-                raise ValueError(f'{t}: conflicting offsets')
-            offsets[t] = o
+            offsets[t] = o          # explicit per-item entries override group dz keys
     return {'proposal_file': str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path),
             'proposal_sha256': sha256(raw), 'status': doc.get('status'), 'scale': float(scale),
             'translation_m': translation, 'offsets_cm': offsets, 'ignored_keys': ignored}
@@ -1001,6 +1008,17 @@ def grommet_centre(desk):
     g = [p for p in desk['parts'] if p['kind'] == 'grommet' and 'rim' in p['name'].lower()] or \
         [p for p in desk['parts'] if p['kind'] == 'grommet']
     return np.mean([(p['min'] + p['max']) / 2 for p in g], axis=0) if g else None
+
+
+def device_offsets_to_add(variant, base_deltas):
+    """The variant's keyboard / mouse offsets to add to a layout's deltas: none when the layout's own z delta already
+    includes the drop (a variant refit proposal declares its final device transforms itself)."""
+    add = {}
+    for n in ('keyboard', 'mouse'):
+        o = np.asarray(variant['offsets_cm'].get(n, np.zeros(3)), float)
+        already = o[2] != 0 and float(np.asarray(base_deltas[n], float)[2]) <= o[2] / 2
+        add[n] = np.zeros(3) if already else o
+    return add
 
 
 def desk_variant_check(variant=None, base_deltas=None, ref=MAIN_REF):
@@ -1056,9 +1074,12 @@ def desk_variant_check(variant=None, base_deltas=None, ref=MAIN_REF):
             'pass': bool(gap_lo <= g <= gap_hi and drift <= clr)}
     # keyboard / mouse
     devs = {}
+    add = device_offsets_to_add(variant, base_deltas)
+    out['device_offsets_added_to_layout_cm'] = {n: [r_(x) for x in v] for n, v in add.items()}
     for name in ('keyboard', 'mouse'):
-        d = np.asarray(base_deltas[name], float) + off.get(name, np.zeros(3))
+        d = np.asarray(base_deltas[name], float) + add[name]
         devs[name] = device_geometry(name, d, ref)
+        out.setdefault('device_total_delta_cm', {})[name] = [r_(x) for x in d]
     for name, other in (('keyboard', 'mouse'), ('mouse', 'keyboard')):
         sup = device_support(devs[name], desk, items, other_devices=(devs[other],))
         sup['offset_cm'] = [r_(v) for v in off.get(name, np.zeros(3))]
@@ -1168,8 +1189,9 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
     dv = desk_variant or DEFAULT_DESK_VARIANT
     if desk_variant is not None:
         res['desk_variant'] = desk_variant_check(dv, {'keyboard': layout['keyboard_delta_cm'], 'mouse': layout['mouse_delta_cm']}, ref)
-        layout = dict(layout, keyboard_delta_cm=np.asarray(layout['keyboard_delta_cm'], float) + dv['offsets_cm'].get('keyboard', np.zeros(3)),
-                      mouse_delta_cm=np.asarray(layout['mouse_delta_cm'], float) + dv['offsets_cm'].get('mouse', np.zeros(3)))
+        add = device_offsets_to_add(dv, {n: layout[f'{n}_delta_cm'] for n in ('keyboard', 'mouse')})
+        layout = dict(layout, keyboard_delta_cm=np.asarray(layout['keyboard_delta_cm'], float) + add['keyboard'],
+                      mouse_delta_cm=np.asarray(layout['mouse_delta_cm'], float) + add['mouse'])
     desk = desk_geometry(ref, dv['scale'])
     items, item_meta = desk_items(desk, ref, {k: v for k, v in dv['offsets_cm'].items() if k in ('monitor_frame', 'monitor_stand', 'clamp_lamp')})
     js = git_bytes(MAIN_SOURCES['home_js'], ref).decode()
