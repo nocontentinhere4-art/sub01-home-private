@@ -1,0 +1,124 @@
+{
+  "schema": "sub01.actual-lumen-detail-sdf-ab.v1",
+  "pod": "dgtgepkz7h1zy5",
+  "native_pid": 39931,
+  "native_start_ticks": 974207379,
+  "module_sha256": "ac53fbedad394ada48344b5eca338a251cba90e734403e4124d8a1661a6e1036",
+  "cvar": "r.Lumen.TraceMeshSDFs",
+  "prerequisite_allow_readback": 1,
+  "hardware_ray_tracing_cvar": 1,
+  "ray_tracing_enabled_readback": 0,
+  "generate_mesh_distance_fields_readback": 1,
+  "sequence": [
+    0,
+    1,
+    0
+  ],
+  "final_numeric_value_readback": 0,
+  "final_set_by": "Console",
+  "original_constructor_priority_restored": false,
+  "experiments": [
+    {
+      "actual_view": "living",
+      "all_three_native_images_visually_reviewed": true,
+      "same_camera_world_cm": {
+        "x": 218.20114446105134,
+        "y": 331.6836888968825,
+        "z": 160.26029592662408
+      },
+      "fov": 75,
+      "hour": 11,
+      "all_five_practical_lamps_off": true,
+      "postprocess_and_light_settings_unchanged": true,
+      "phases": [
+        {
+          "phase": "baseline0",
+          "path": "out/house-evidence/sdf39931-baseline0.png",
+          "sha256": "a7acb22d54c9e6f3fb997500a43208bf95707ee8d48f4cba8e4ab931411c6eb7",
+          "numeric_readback": 0,
+          "epoch": 1792053996.3368158,
+          "auto_exposure_scale": 16.090471267700195,
+          "average_scene_luminance": 0.022362299263477325
+        },
+        {
+          "phase": "detail1",
+          "path": "out/house-evidence/sdf39931-detail1.png",
+          "sha256": "7d4aeb611326fb2e9200e0a85527b3edc5f2a026668b8c15faa37f355831261d",
+          "numeric_readback": 1,
+          "epoch": 1792054063.4395428,
+          "auto_exposure_scale": 13.707557678222656,
+          "average_scene_luminance": 0.026264777407050133
+        },
+        {
+          "phase": "restored0",
+          "path": "out/house-evidence/sdf39931-restored0.png",
+          "sha256": "b480c844873fb1d9d229398a7ba965c7a386b88c9e98aa879fd2b21296347995",
+          "numeric_readback": 0,
+          "epoch": 1792054199.9748569,
+          "auto_exposure_scale": 16.08989143371582,
+          "average_scene_luminance": 0.02236846461892128
+        }
+      ],
+      "display_RGB_mean_absolute_difference_0_to_255": {
+        "detail1": 5.404512803819444,
+        "restored0": 0.9218934461805556
+      }
+    },
+    {
+      "actual_view": "office",
+      "all_three_native_images_visually_reviewed": true,
+      "same_camera_world_cm": {
+        "x": 238.66170510384532,
+        "y": 323.8082344510894,
+        "z": 160.26029592662408
+      },
+      "fov": 75,
+      "hour": 11,
+      "all_five_practical_lamps_off": true,
+      "postprocess_and_light_settings_unchanged": true,
+      "phases": [
+        {
+          "phase": "baseline0",
+          "path": "out/house-evidence/sdf-office39931-baseline0.png",
+          "sha256": "16da7e457f702aa88bbc786c969ae1d85b4d5fe2c6eee0377daf2bf2f6f99d00",
+          "numeric_readback": 0,
+          "epoch": 1792054387.152503,
+          "auto_exposure_scale": 31.110271453857422,
+          "average_scene_luminance": 0.011573942378163338
+        },
+        {
+          "phase": "detail1",
+          "path": "out/house-evidence/sdf-office39931-detail1.png",
+          "sha256": "a5ba7c317cd6e5adc35e7089c3fac409e568a66549a9174db585c4da8c358677",
+          "numeric_readback": 1,
+          "epoch": 1792054545.414061,
+          "auto_exposure_scale": 28.029151916503906,
+          "average_scene_luminance": 0.012836899608373642
+        },
+        {
+          "phase": "restored0",
+          "path": "out/house-evidence/sdf-office39931-restored0.png",
+          "sha256": "79b8b4ea1226f0f1608a3b895e545339013985f203cdccb937a914ca3d4d2834",
+          "numeric_readback": 0,
+          "epoch": 1792054734.243791,
+          "auto_exposure_scale": 31.111454010009766,
+          "average_scene_luminance": 0.011564967222511768
+        }
+      ],
+      "display_RGB_mean_absolute_difference_0_to_255": {
+        "detail1": 5.124091796875,
+        "restored0": 0.8000484664351851
+      }
+    }
+  ],
+  "office_baseline_already_bright_before_detail_1": true,
+  "substantial_office_visual_improvement_from_detail_1_confirmed": false,
+  "stale_decoded_office_frame_excluded": true,
+  "exposure_settings_changed": false,
+  "automatic_metering_changed_as_recorded": true,
+  "geometry_material_light_camera_setters_used": false,
+  "no_engine_or_gpu_restart": true,
+  "warmup_scope": "Earlier dark startup PNG was actual Game frame1. Settled office baseline0 is readable. This comparison does not isolate why startup and settled views differed. Capture-warmup source18d0cf7 is not deployed.",
+  "raw_media_committed": false,
+  "scope": "Same-camera0/1/0 diagnostic with active auto metering. Display RGB differences are not lux/albedo. No light/exposure/geometry retune justified solely by these images."
+}
