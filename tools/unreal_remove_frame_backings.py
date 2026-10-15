@@ -35,7 +35,13 @@ def native_triangles(u,c):
 def same_triangles(expected,actual,tolerance=.001):
     """Nearest complete triangle, including all positive source faces; no pruning."""
     if len(expected)!=len(actual):return False
-    def key(t):return tuple(math.floor(sum(p[a]for p in t)/3)for a in range(3))
+    if not math.isfinite(tolerance)or tolerance<=0:raise ValueError('Positive finite triangle tolerance required')
+    # Complete corner agreement within tolerance implies centroid agreement
+    # within that same tolerance (triangle inequality). Two-tolerance cells
+    # therefore retain every possible match in the same 27 adjacent buckets,
+    # while avoiding quadratic scans for dense submillimeter furniture meshes.
+    cell=2*tolerance
+    def key(t):return tuple(math.floor(sum(p[a]for p in t)/(3*cell))for a in range(3))
     buckets={}
     for i,t in enumerate(actual):buckets.setdefault(key(t),set()).add(i)
     for triangle in expected:
