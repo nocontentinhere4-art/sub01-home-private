@@ -449,8 +449,9 @@ void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance
 }
 void ASub01HomeCharacter::UpdateControllerPlayCamera(float Dt){
  if(!ControllerPlayCameraEasing||!ViewCamera||!FirstPersonBody)return;
- // Standing eye: the renderer's capsule-relative camera (0,0,74). Seated: the captured Head socket at the eye.
- const FVector Standing=GetRootComponent()->GetComponentTransform().TransformPosition(FVector(0,0,74));
+ // Return to the reviewed walking eye, not the legacy collar-intersecting offset.
+ const FVector StandingOffset=WalkingCameraOffset.ContainsNaN()?FVector(0,0,74):WalkingCameraOffset;
+ const FVector Standing=GetRootComponent()->GetComponentTransform().TransformPosition(StandingOffset);
  FVector Target=Standing;
  if(ControllerPlayActive){const FTransform H=FirstPersonBody->GetSocketTransform(ControllerPlayHead,RTS_World);Target=H.GetLocation()+H.GetRotation().GetNormalized().RotateVector(ControllerPlayEyeOffset);}
  if(Target.ContainsNaN())return;
@@ -459,7 +460,7 @@ void ASub01HomeCharacter::UpdateControllerPlayCamera(float Dt){
  if(!ControllerPlayActive&&FVector::Dist(ControllerPlayEye,Standing)<.5f){
   ViewCamera->SetUsingAbsoluteLocation(false);ViewCamera->SetUsingAbsoluteRotation(false);
   ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
-  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ControllerPlayCameraEasing=false;
+  ViewCamera->SetRelativeLocation(StandingOffset);ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);ControllerPlayCameraEasing=false;
  }
 }
 '''

@@ -326,7 +326,7 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
   SeatBodyAttached=true;
  }else if(!Seated&&SeatBodyAttached){
   ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);
-  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);SeatBodyAttached=false;
+  ViewCamera->SetRelativeLocation(WalkingCameraOffset.ContainsNaN()?FVector(0,0,74):WalkingCameraOffset);ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);SeatBodyAttached=false;
  }
  // Movement: only CharacterMovement input toward the approach point, a bounded turn in place, a
  // bounded swept settle while standing, or nothing. A seated body never moves.
