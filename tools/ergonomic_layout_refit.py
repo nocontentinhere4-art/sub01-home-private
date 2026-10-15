@@ -310,7 +310,7 @@ class ArmSolver:
         self.kbg = kbg
         self.arms = A.arm_skin(self.names, stride=stride) if stride != 1 else ctx.arms
         # torso / thigh skin of the owner (dominant joint), for the arm-vs-own-body gap
-        pos, jts, wts = P.owner_skin(stride=2)
+        pos, jts, wts = P.owner_skin(stride=3)
         dom = jts[np.arange(len(jts)), wts.argmax(1)]
         g = A.body_parts(self.names)
         grp = np.array([g[int(j)] for j in dom])
@@ -342,40 +342,53 @@ class ArmSolver:
         return np.stack(out), reach
 
     # -- clearances of one posed side
-    def side_clearance(self, W, side, shift, roll, kb_delta, frames_times=None, chunk=64):
+    def body_trees(self, frames):
+        """Per base frame (cached): KD-trees of the owner's torso and thigh skin in the SOLVER frame (UE cm, no shift):
+        the base body never changes, so arm points are compared in the same frame."""
+        from scipy.spatial import cKDTree
+        cache = self.__dict__.setdefault('_trees', {})
+        need = [int(f) for f in frames if int(f) not in cache]
+        for s0 in range(0, len(need), 64):
+            fr = np.asarray(need[s0:s0 + 64])
+            tor = E.to_ue(A.lbs(self.torso_skin, self.ibm, self.Wb[fr]))
+            leg = E.to_ue(A.lbs(self.legs_skin, self.ibm, self.Wb[fr]))
+            for i, f in enumerate(fr):
+                cache[int(f)] = (cKDTree(tor[i]), cKDTree(leg[i]))
+        return [cache[int(f)] for f in frames]
+
+    def side_clearance(self, W, side, layout, frames, chunk=64):
         """Per frame: min desk distance per arm part, torso and thigh gaps, chair margin, keyboard-case distance."""
         ctx = self.ctx
+        shift, roll, kb_delta = layout.shift, layout.roll, layout.kb
         pos, jts, wts = self.arms[side]['skin']
         part = self.arms[side]['part']
+        nf = part != 'fingers'
         a = self.sk.j(A.ARM_BONES[side][0])
         F = len(W)
         res = {k: np.full(F, np.inf) for k in ('upper_arm', 'forearm', 'hand', 'fingers', 'torso', 'legs', 'chair', 'keyboard_case', 'slab_vertical')}
         lo, hi = (np.asarray(v, float) + kb_delta for v in self.kbg['case_box_cm'])
-        from scipy.spatial import cKDTree
+        trees = self.body_trees(frames)
         for s0 in range(0, F, chunk):
             sl = slice(s0, min(F, s0 + chunk))
             Wc = W[sl]
-            pts = E.to_ue(A.lbs((pos, jts, wts), self.ibm, Wc)) + shift
+            solver = E.to_ue(A.lbs((pos, jts, wts), self.ibm, Wc))
+            pts = solver + shift
             d, _ = A.boxes_min_distance(pts, ctx.boxes, reach_cm=A.MEASURE_REACH_CM)
             v, _ = A.slab_clearance(pts, ctx.geometry['tabletop_slab'])
             for p_ in ('upper_arm', 'forearm', 'hand', 'fingers'):
-                m = part == p_
-                res[p_][sl] = d[:, m].min(1)
-            res['slab_vertical'][sl] = v[:, part != 'fingers'].min(1)
-            nf = part != 'fingers'
+                res[p_][sl] = d[:, part == p_].min(1)
+            res['slab_vertical'][sl] = v[:, nf].min(1)
             res['keyboard_case'][sl] = A.box_signed_distance(pts[:, nf], lo, hi).min(1)
             cm, _ = ctx.collider.margin(pts[:, nf], roll)
             res['chair'][sl] = cm.min(1)
-            sh = E.to_ue(Wc[:, a, :3, 3]) + shift
-            far = np.linalg.norm(pts - sh[:, None], axis=-1) > SHOULDER_CAP_EXCLUDE_CM
-            tor = E.to_ue(A.lbs(self.torso_skin, self.ibm, Wc)) + shift
-            leg = E.to_ue(A.lbs(self.legs_skin, self.ibm, Wc)) + shift
+            sh = E.to_ue(Wc[:, a, :3, 3])
+            far = np.linalg.norm(solver - sh[:, None], axis=-1) > SHOULDER_CAP_EXCLUDE_CM
             for i in range(len(Wc)):
-                q = pts[i][far[i] & (part != 'fingers')]
-                if len(q) == 0:
-                    continue
-                res['torso'][s0 + i] = cKDTree(tor[i]).query(q, k=1, distance_upper_bound=20.)[0].min()
-                res['legs'][s0 + i] = cKDTree(leg[i]).query(pts[i][part != 'fingers'], k=1, distance_upper_bound=20.)[0].min()
+                tt, lt = trees[s0 + i]
+                q = solver[i][far[i] & nf]
+                if len(q):
+                    res['torso'][s0 + i] = tt.query(q, k=1, distance_upper_bound=20.)[0].min()
+                res['legs'][s0 + i] = lt.query(solver[i][nf], k=1, distance_upper_bound=20.)[0].min()
         res['desk_min'] = np.minimum.reduce([res[p_] for p_ in ('upper_arm', 'forearm', 'hand', 'fingers')])
         return res
 
@@ -399,7 +412,7 @@ class ArmSolver:
         while len(todo) and rounds < max_rounds:
             ph = phis[order[rnk[todo], todo]]
             W, _, _ = self.pose(frames[todo], side, wrist_t[todo], ph)
-            ok = self.clear(self.side_clearance(W, side, layout.shift, layout.roll, layout.kb))
+            ok = self.clear(self.side_clearance(W, side, layout, frames[todo]))
             chosen[todo[ok]] = ph[ok]
             rnk[todo[~ok]] += 1
             todo = todo[~ok]
@@ -417,7 +430,7 @@ class ArmSolver:
                 ps = gaussian(phi, sig, periodic)
                 ps = np.where(pinned, phi, ps)
                 W, _, _ = self.pose(frames, side, wrist_t, ps)
-                ok = self.clear(self.side_clearance(W, side, layout.shift, layout.roll, layout.kb))
+                ok = self.clear(self.side_clearance(W, side, layout, frames))
                 if ok.all() or (~ok & ~pinned & ~unresolved).sum() == 0:
                     break
                 pinned |= ~ok
@@ -565,3 +578,317 @@ def readiness(gates):
     """source_ready = every real source gate passes; native_ready is never set by a source run; ready = both."""
     src = bool(gates) and all(bool(v) for v in gates.values())
     return {'source_ready': src, 'native_ready': False, 'ready': False}
+
+
+# ---------------------------------------------------------------- search objective
+SCORE_SCALE = {'elbow_cm': 3., 'upper_arm_deg': 10., 'wrist_deg': 5.}
+MOVE_COST_PER_CM = 1e-3            # tie-break only: the smaller change wins among equal postures
+
+
+def ergo_violation(m):
+    eat = m['elbow_above_top_cm']
+    ev = np.maximum(0., ERGO_ELBOW_ABOVE_DESK_CM[0] - eat) + np.maximum(0., eat - ERGO_ELBOW_ABOVE_DESK_CM[1])
+    uv = np.maximum(0., m['upper_arm_deg'] - ERGO_UPPER_ARM_MAX_DEG)
+    fl, dv = m['wrist_flexion_deg'], m['wrist_deviation_deg']
+    fv = np.maximum(0., WRIST_FLEX_DEG[0] - fl) + np.maximum(0., fl - WRIST_FLEX_DEG[1])
+    dvv = np.maximum(0., WRIST_DEV_DEG[0] - dv) + np.maximum(0., dv - WRIST_DEV_DEG[1])
+    return ev, uv, fv, dvv
+
+
+def ergo_score(ms, layout):
+    tot = []
+    for m in ms:
+        ev, uv, fv, dvv = ergo_violation(m)
+        tot.append((ev / SCORE_SCALE['elbow_cm']) ** 2 + (uv / SCORE_SCALE['upper_arm_deg']) ** 2
+                   + (fv / SCORE_SCALE['wrist_deg']) ** 2 + (dvv / SCORE_SCALE['wrist_deg']) ** 2)
+    move = abs(layout.kb[0]) + abs(layout.kb[1]) + abs(layout.mouse[0]) + abs(layout.mouse[1]) + abs(layout.chair_dy)
+    return float(np.mean(np.concatenate(tot))) + MOVE_COST_PER_CM * move
+
+
+# ---------------------------------------------------------------- pipeline
+SEARCH_STRIDE = 20                 # search frames: every 20th DeskTyping key (50 frames)
+SEARCH_ARM_STRIDE = 3              # arm skin stride for the swivel search; every report re-measures every vertex
+FINAL_CHECK_STRIDE = 10            # seat / body / envelope frames in the final run
+SEARCH_GRID = {'kb_dy': (0., 5., 10., 13., 15., 17.),
+               'chair_dy': (0., -3., -6., -9., -12.),
+               'mouse_dx': (0., -8.),
+               }
+
+
+def mouse_dy_for(kb_dy, mouse_front_y, slab_front_y):
+    """The mouse moves with the keyboard toward the body, but never closer than SLAB_EDGE_MARGIN_MIN_CM to the edge."""
+    return float(min(kb_dy, slab_front_y - SLAB_EDGE_MARGIN_MIN_CM - mouse_front_y))
+
+
+class Setup:
+    def __init__(self, source, cache, arm_stride=SEARCH_ARM_STRIDE):
+        A.configure(BASE_DIR, SOLVER_CHAIR_OFFSET_CM)
+        self.ctx = ctx = A.Context(source, cache=cache, chair_translation=list(CHAIR_INITIAL_CM))
+        f, r, _, t = ctx.clip('DeskTyping_seated')
+        self.times, self.Wb, self.Wr = t, f.joint_world, r.joint_world
+        if hashlib.sha256(SOLVED_GLB.read_bytes()).hexdigest() != SOLVED_SHA256:
+            raise ValueError('source-ready DeskTyping GLB differs from 26b3a8e3')
+        self.Ws = A.readback(ctx, SOLVED_GLB, t)
+        self.finish = dict(np.load(SOLVED_FINISH))
+        self.kbg = keyboard_geometry()
+        self.targets = Targets(ctx, self.Wb, self.Ws, self.finish, t)
+        self.solver = ArmSolver(ctx, self.Wb, self.kbg, stride=arm_stride)
+        self.dt = float(np.mean(np.diff(t)))
+
+    def layout_for(self, kb_dy, chair_dy, mouse_dx, kb_dx=0.):
+        slab = self.ctx.geometry['tabletop_slab']
+        mdy = mouse_dy_for(kb_dy, self.ctx.mouse['footprint_ue_cm'][1][1], slab['front_edge_y_cm'])
+        return Layout((kb_dx, kb_dy), (mouse_dx, mdy), chair_dy)
+
+    def evaluate(self, layout, frames, smooth=False, extra_ue=None):
+        """Solve both arms on `frames`; returns (W, per-side metrics, per-side solve info, per-side wrist targets)."""
+        W = np.array(self.Wb[frames], copy=True)
+        ms, infos, phis, palms = {}, {}, {}, {}
+        for s in A.SIDES:
+            wt, palm = self.targets.wrist_target(s, layout, extra_ue)
+            phi, info = self.solver.solve_side(frames, s, wt[frames], layout, smooth=smooth, dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
+            W, reach, ratio = self.solver.pose(frames, s, wt[frames], phi, W=W)
+            info['reach_all_frames'] = bool(np.all(reach))
+            info['max_distance_over_chain_length'] = _r(ratio.max(), 4)
+            ms[s] = arm_metrics(self.ctx, W, self.Wb[frames], s, layout.shift)
+            infos[s], phis[s], palms[s] = info, phi, palm[frames]
+        return W, ms, infos, phis, palms
+
+
+def search(setup, out_dir, deadline):
+    ckpt = Path(out_dir) / 'search-checkpoint.json'
+    done = json.loads(ckpt.read_text()) if ckpt.exists() else {'rows': []}
+    seen = {tuple(r['layout_key']) for r in done['rows']}
+    frames = np.arange(0, len(setup.times), SEARCH_STRIDE)
+    complete = True
+    for kb_dy in SEARCH_GRID['kb_dy']:
+        for chair_dy in SEARCH_GRID['chair_dy']:
+            for mouse_dx in SEARCH_GRID['mouse_dx']:
+                lay = setup.layout_for(kb_dy, chair_dy, mouse_dx)
+                if lay.key() in seen:
+                    continue
+                if deadline and time.time() > deadline:
+                    complete = False
+                    break
+                t0 = time.time()
+                dev = device_check(setup.ctx, setup.kbg, lay)
+                body = body_check(setup.ctx, setup.Wb, lay, frames)
+                row = {'layout_key': list(lay.key()), 'device_pass': dev['pass'], 'device_gates': dev['gates'],
+                       'body_pass': body['pass'], 'body_gates': body['gates'], 'torso_desk_min_cm': body['torso_head']['min_cm']}
+                if dev['pass'] and body['pass']:
+                    _, ms, infos, _, _ = setup.evaluate(lay, frames)
+                    row['unresolved_frames'] = {s: infos[s]['unresolved_frames'] for s in A.SIDES}
+                    row['reach_all'] = all(infos[s]['reach_all_frames'] for s in A.SIDES)
+                    row['score'] = ergo_score(list(ms.values()), lay)
+                    for s, m in ms.items():
+                        e, u, w, d = ergo_flags(m)
+                        row[s] = {'elbow_above_top_cm': rng(m['elbow_above_top_cm'], 2), 'upper_arm_deg': rng(m['upper_arm_deg'], 1),
+                                  'wrist_flexion_deg': rng(m['wrist_flexion_deg'], 1), 'wrist_deviation_deg': rng(m['wrist_deviation_deg'], 1),
+                                  'frames_ok': {'elbow': int(e.sum()), 'upper_arm': int(u.sum()), 'wrist_flex': int(w.sum()),
+                                                'wrist_dev': int(d.sum()), 'of': len(frames)}}
+                row['seconds'] = round(time.time() - t0, 1)
+                done['rows'].append(row)
+                seen.add(lay.key())
+                ckpt.write_text(json.dumps(done, indent=1) + '\n')
+                print('search', row['layout_key'], row.get('score'), row.get('unresolved_frames'), row['seconds'], flush=True)
+    done['complete'] = complete
+    ckpt.write_text(json.dumps(done, indent=1) + '\n')
+    return done
+
+
+def pick(rows):
+    ok = [r for r in rows if r['device_pass'] and r['body_pass'] and 'score' in r and r['reach_all']
+          and all(v == 0 for v in r['unresolved_frames'].values())]
+    if not ok:
+        return None
+    return min(ok, key=lambda r: r['score'])
+
+
+def continuity(points, dt):
+    """Max speed / acceleration (cm/s, cm/s^2) of a per-frame path and the loop step (last -> first frame)."""
+    p = np.asarray(points, float)
+    v = np.diff(p, axis=0) / dt
+    acc = np.diff(v, axis=0) / dt
+    return {'max_speed_cm_s': _r(np.linalg.norm(v, axis=1).max(), 2), 'max_accel_cm_s2': _r(np.linalg.norm(acc, axis=1).max(), 1),
+            'loop_step_cm': _r(np.linalg.norm(p[-1] - p[0]), 4), 'max_frame_step_cm': _r(np.linalg.norm(np.diff(p, axis=0), axis=1).max(), 4)}
+
+
+def side_report(setup, layout, frames, W, side, m, res, info, phi, palm):
+    e, u, w, d = ergo_flags(m)
+    ev, uv, fv, dvv = ergo_violation(m)
+    t = setup.times[frames]
+    dt = float(np.mean(np.diff(t)))
+    return {
+        'ik': info, 'swivel_deg': rng(phi, 2),
+        'elbow_height_cm': rng(m['elbow'][:, 2], 2), 'elbow_above_desk_top_cm': rng(m['elbow_above_top_cm'], 2),
+        'upper_arm_from_vertical_deg': rng(m['upper_arm_deg'], 2),
+        'upper_arm_deg_if_elbow_at_desk_top': rng(m['upper_arm_deg_if_elbow_at_top'], 2),
+        'shoulder_height_cm': rng(m['shoulder'][:, 2], 2), 'shoulder_above_desk_top_cm': rng(m['shoulder_above_top_cm'], 2),
+        'shoulder_elevation_deg': rng(m['shoulder_elevation_deg'], 2), 'shoulder_elevation_capture_deg': rng(m['shoulder_elevation_capture_deg'], 2),
+        'shoulder_girdle': 'unchanged (captured): only Arm, ForeArm, Hand (+ carried fingers) change',
+        'wrist_flexion_deg_raw': rng(m['wrist_flexion_deg'], 2), 'wrist_deviation_deg_raw': rng(m['wrist_deviation_deg'], 2),
+        'wrist_twist_deg': rng(m['wrist_twist_deg'], 2),
+        'wrist_flexion_capture_deg': rng(m['wrist_flexion_capture_deg'], 2), 'wrist_deviation_capture_deg': rng(m['wrist_deviation_capture_deg'], 2),
+        'wrist_note': 'RAW: the captured hand attitude on the new forearm; no soft limit and no added flexion applied',
+        'forearm_slope_deg': rng(m['forearm_slope_deg'], 2),
+        'shoulder_to_wrist_horizontal_cm': rng(m['shoulder_wrist_horizontal_cm'], 2),
+        'upper_arm_cm': _r(m['upper_arm_cm'].mean()), 'forearm_cm': _r(m['forearm_cm'].mean()),
+        'upper_arm_reach_floor_deg': rng(m['upper_arm_reach_floor_deg'], 2),
+        'clearance_cm': {'desk_upper_arm': rng(res['upper_arm']), 'desk_forearm': rng(res['forearm']), 'desk_hand': rng(res['hand']),
+                         'desk_fingers': rng(res['fingers']), 'vertical_over_worktop_non_finger': rng(res['slab_vertical']),
+                         'own_torso': rng(res['torso']), 'own_thighs': rng(res['legs']), 'complete_chair': rng(res['chair']),
+                         'keyboard_case_non_finger': rng(res['keyboard_case'])},
+        'clearance_frames_failing': {'desk_gt_0': int((res['desk_min'] <= 0).sum()), 'desk_design_0p5': int((res['desk_min'] < ARM_DESK_TARGET_CM).sum()),
+                                     'torso': int((res['torso'] < ARM_BODY_MIN_CM).sum()), 'thighs': int((res['legs'] < ARM_BODY_MIN_CM).sum()),
+                                     'chair': int((res['chair'] <= 0).sum()), 'keyboard_case': int((res['keyboard_case'] <= 0).sum())},
+        'ergonomic_soft_targets': {'elbow_above_desk_cm': list(ERGO_ELBOW_ABOVE_DESK_CM), 'upper_arm_max_deg': ERGO_UPPER_ARM_MAX_DEG,
+                                   'wrist_flexion_deg': list(WRIST_FLEX_DEG), 'wrist_deviation_deg': list(WRIST_DEV_DEG),
+                                   'frames': len(frames), 'frames_ok': {'elbow': int(e.sum()), 'upper_arm': int(u.sum()),
+                                                                         'wrist_flexion': int(w.sum()), 'wrist_deviation': int(d.sum()),
+                                                                         'all_four': int((e & u & w & d).sum())},
+                                   'worst_excess': {'elbow_cm': _r(ev.max(), 2), 'upper_arm_deg': _r(uv.max(), 2),
+                                                    'wrist_flexion_deg': _r(fv.max(), 2), 'wrist_deviation_deg': _r(dvv.max(), 2)}},
+        'continuity': {'elbow': continuity(m['elbow'], dt), 'wrist': continuity(m['wrist'], dt), 'palm_target': continuity(palm, dt)},
+    }
+
+
+def per_frame_rows(frames, times, side, m, res, phi, palm, mode, wmouse):
+    out = []
+    for i, f in enumerate(frames):
+        out.append({'frame': int(f), 't': _r(times[f], 4), 'device': ['keyboard', 'mouse', 'transit'][int(mode[f])], 'mouse_weight': _r(wmouse[f], 3),
+                    'palm_target_cm': [_r(v, 3) for v in palm[i]], 'wrist_cm': [_r(v, 3) for v in m['wrist'][i]],
+                    'elbow_cm': [_r(v, 3) for v in m['elbow'][i]], 'shoulder_cm': [_r(v, 3) for v in m['shoulder'][i]],
+                    'swivel_deg': _r(phi[i], 2), 'elbow_above_top_cm': _r(m['elbow_above_top_cm'][i], 2),
+                    'upper_arm_deg': _r(m['upper_arm_deg'][i], 2), 'shoulder_elevation_deg': _r(m['shoulder_elevation_deg'][i], 2),
+                    'wrist_flexion_deg': _r(m['wrist_flexion_deg'][i], 2), 'wrist_deviation_deg': _r(m['wrist_deviation_deg'][i], 2),
+                    'desk_min_cm': _r(res['desk_min'][i], 3), 'forearm_desk_cm': _r(res['forearm'][i], 3),
+                    'torso_gap_cm': _r(res['torso'][i], 3), 'thigh_gap_cm': _r(res['legs'][i], 3), 'chair_margin_cm': _r(res['chair'][i], 3)})
+    return out
+
+
+def final(setup, layout, out_dir, search_rows=None, t_start=None):
+    """The ONE proposed configuration on every DeskTyping key: solve, full-skin measurement, envelope, packet."""
+    out_dir = Path(out_dir)
+    ctx = setup.ctx
+    frames = np.arange(len(setup.times))
+    t0 = time.time()
+    W, ms, infos, phis, palms = setup.evaluate(layout, frames, smooth=True)
+    np.savez_compressed(out_dir / 'arm-solution.npz', **{
+        **{f'{s}_{b}_world_gltf': W[:, ctx.sk.j(n)] for s in A.SIDES for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s])},
+        **{f'{s}_swivel_deg': phis[s] for s in A.SIDES}, **{f'{s}_palm_target_ue_cm': palms[s] for s in A.SIDES},
+        **{f'{s}_mouse_weight': setup.targets.w_mouse[s] for s in A.SIDES}, **{f'{s}_mode': setup.targets.mode[s] for s in A.SIDES},
+        'times': setup.times, 'solver_to_world_shift_cm': layout.shift, 'keyboard_delta_cm': layout.kb, 'mouse_delta_cm': layout.mouse})
+    solve_s = time.time() - t0
+    full = ArmSolver(ctx, setup.Wb, setup.kbg, stride=1)
+    sides, rows, diag = {}, {}, {}
+    for s in A.SIDES:
+        res = full.side_clearance(W, s, layout, frames)
+        sides[s] = side_report(setup, layout, frames, W, s, ms[s], res, infos[s], phis[s], palms[s])
+        rows[s] = per_frame_rows(frames, setup.times, s, ms[s], res, phis[s], palms[s], setup.targets.mode[s], setup.targets.w_mouse[s])
+        diag[s] = old_finger_diagnostic(ctx, W, layout, layout.shift, s, setup.targets.mode[s])
+    sub = frames[::FINAL_CHECK_STRIDE]
+    dev = device_check(ctx, setup.kbg, layout)
+    body = body_check(ctx, setup.Wb, layout, sub)
+    seat = seat_check(ctx, setup.Wb, setup.Wr, setup.times, layout, sub)
+    env = {}
+    for axis, (lo, hi) in ENVELOPE_CM.items():
+        for v in (lo, hi):
+            ex = np.zeros(3)
+            ex['xyz'.index(axis)] = v
+            _, me, ie, _, _ = setup.evaluate(layout, sub, extra_ue=ex)
+            env[f'{axis}{v:+.1f}cm'] = {s: {'unresolved_frames': ie[s]['unresolved_frames'], 'reach_all': ie[s]['reach_all_frames'],
+                                            'elbow_above_top_cm': rng(me[s]['elbow_above_top_cm'], 2), 'upper_arm_deg': rng(me[s]['upper_arm_deg'], 1),
+                                            'wrist_flexion_deg': rng(me[s]['wrist_flexion_deg'], 1)} for s in A.SIDES}
+    orig = Layout()
+    _, m0, i0, _, _ = setup.evaluate(orig, sub)
+    before = {s: {'elbow_above_top_cm': rng(m0[s]['elbow_above_top_cm'], 2), 'upper_arm_deg': rng(m0[s]['upper_arm_deg'], 1),
+                  'wrist_flexion_deg_raw': rng(m0[s]['wrist_flexion_deg'], 1), 'shoulder_to_wrist_horizontal_cm': rng(m0[s]['shoulder_wrist_horizontal_cm'], 1),
+                  'unresolved_frames': i0[s]['unresolved_frames']} for s in A.SIDES}
+    arm_gates = {}
+    for s, r in sides.items():
+        cf = r['clearance_frames_failing']
+        arm_gates[f'{s}_arm_desk_clear_every_frame'] = cf['desk_gt_0'] == 0
+        arm_gates[f'{s}_arm_clear_of_own_body'] = cf['torso'] == 0 and cf['thighs'] == 0
+        arm_gates[f'{s}_arm_clear_of_chair'] = cf['chair'] == 0
+        arm_gates[f'{s}_arm_clear_of_keyboard_case'] = cf['keyboard_case'] == 0
+        arm_gates[f'{s}_ik_non_stretch_reached_every_frame'] = r['ik']['reach_all_frames']
+        arm_gates[f'{s}_swivel_resolved_every_frame'] = r['ik']['unresolved_frames'] == 0
+        arm_gates[f'{s}_wrist_flexion_raw_within_soft_zone'] = r['ergonomic_soft_targets']['frames_ok']['wrist_flexion'] == len(frames)
+    gates = {**{f'device_{k}': v for k, v in dev['gates'].items()}, **{f'body_{k}': v for k, v in body['gates'].items()},
+             'seat_main_strong_rule_at_new_roll': bool(seat['pass']), **arm_gates}
+    ready = readiness(gates)
+    proposal = {
+        'schema': SCHEMA, 'status': 'complete', 'label': 'proposal', 'source_only': True, 'verified': False,
+        'requires_native_collision_audit': True, 'requires_server_reaudit': True, 'never_a_receipt': True,
+        **ready, 'ready_rule': 'source_ready = every gate below true; native_ready never set by a source run; ready = both',
+        'configuration': layout.describe(), 'reversibility': {
+            'original_preserved': True, 'original': Layout().describe(),
+            'rule': 'the refit is three transform deltas (keyboard, mouse, chair typing roll); restoring the original values '
+                    'restores the original layout exactly; the chair roll path is the exact time reverse (push-back)',
+            'chair_roll': body['roll_reversibility']},
+        'devices': dev, 'body': body, 'seat': seat, 'arms': sides,
+        'old_finger_contact_diagnostic': diag,
+        'palm_target_envelope_for_new_hands': {'offsets_cm': ENVELOPE_CM, 'frames': f'every {FINAL_CHECK_STRIDE}th', 'results': env,
+                                               'meaning': "root's new-hand contact may move the palm target inside this box; the arm "
+                                                          'solution stays resolved with these ergonomics'},
+        'before_after_same_method': {'original_layout': before, 'frames': f'every {FINAL_CHECK_STRIDE}th'},
+        'gates': gates,
+        'method': {'module': 'tools/ergonomic_layout_refit.py', 'hand_frame': 'palm point (60% wrist -> middle MCP) on the source-ready '
+                   'palm path relative to the device under the hand (keyboard / mouse / quintic transit blend) + captured hand attitude',
+                   'swivel': 'lowest elbow (relaxed) among clear swivels -90..90 deg (5 deg) about the shoulder-wrist axis from the '
+                             'captured elbow plane, periodic Gaussian smoothing sigma 0.15 s, failing frames pinned',
+                   'search_arm_skin_stride': SEARCH_ARM_STRIDE, 'reported_arm_skin_stride': 1,
+                   'inputs': {'base_dir': BASE_DIR, 'solved_desk_typing_glb': A.rel(SOLVED_GLB), 'solved_sha256': SOLVED_SHA256,
+                              'geometry_sha256': ctx.geometry_sha256, 'chair_source_sha256': A.CHAIR_SOURCE_SHA256,
+                              'keyboard_sha256': setup.kbg['sha256'], 'mouse_sha256': ctx.mouse['sha256']}},
+        'solution_file': 'docs/proposed/ergonomic-layout-refit/arm-solution.npz',
+        'per_frame_file': 'docs/proposed/ergonomic-layout-refit/per-frame.json',
+        'timing_s': {'solve': round(solve_s, 1), 'total': round(time.time() - (t_start or t0), 1)}}
+    if search_rows is not None:
+        proposal['search'] = {'grid': SEARCH_GRID, 'frames': f'every {SEARCH_STRIDE}th DeskTyping key', 'rows': len(search_rows),
+                              'objective': 'mean over frames/sides of (elbow band excess/3 cm)^2 + (upper-arm excess/10 deg)^2 + '
+                                           '(wrist flex/dev excess/5 deg)^2, + 0.001/cm of total move; hard gates first',
+                              'file': 'docs/proposed/ergonomic-layout-refit/search-checkpoint.json'}
+    (out_dir / 'per-frame.json').write_text(json.dumps(rows, separators=(',', ':')) + '\n')
+    (out_dir / 'ergonomic-layout-refit.proposal.json').write_text(json.dumps(proposal, indent=1, allow_nan=False) + '\n')
+    return proposal
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    ap.add_argument('--source', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
+    ap.add_argument('--cache', default=str(ROOT / 'out/seat-fit-cache'))
+    ap.add_argument('--out-dir', default=str(OUT_DIR))
+    ap.add_argument('--search', action='store_true', help='run / resume the layout grid search (checkpointed)')
+    ap.add_argument('--layout', type=lambda v: [float(x) for x in v.split(',')], default=None,
+                    help='kb_dy,chair_dy,mouse_dx[,kb_dx]: skip the pick and solve this one')
+    ap.add_argument('--max-seconds', type=float, default=3000.)
+    args = ap.parse_args(argv)
+    t_start = time.time()
+    out = Path(args.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    setup = Setup(args.source, args.cache)
+    rows = None
+    if args.search:
+        done = search(setup, out, t_start + args.max_seconds - 900)
+        rows = done['rows']
+        if not done.get('complete'):
+            print('search stopped on the bound; rerun --search to resume', flush=True)
+            return 3
+    if args.layout:
+        layout = setup.layout_for(*args.layout)
+    else:
+        rows = rows or json.loads((out / 'search-checkpoint.json').read_text())['rows']
+        best = pick(rows)
+        if best is None:
+            print('no layout passes the hard gates', flush=True)
+            return 3
+        k = best['layout_key']
+        layout = Layout((k[0], k[1]), (k[2], k[3]), k[4])
+    prop = final(setup, layout, out, rows, t_start)
+    print(json.dumps({k: prop[k] for k in ('source_ready', 'native_ready', 'ready', 'gates')}, indent=1))
+    return 0 if prop['source_ready'] else 3
+
+
+if __name__ == '__main__':
+    sys.exit(main())
