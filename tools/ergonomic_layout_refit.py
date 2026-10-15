@@ -439,7 +439,7 @@ def posed_with_normals(skin, ibm, W):
 HULL_BIN_CM = 2.0
 ARM_BODY_SOLVER_MIN_CM = 1.0       # solver design margin to the torso / thigh section (search skin stride 3); the GATE stays
                                    # >= 0 on every arm vertex
-PATH_SWIVEL_DEG = tuple(float(v) for v in np.arange(-120., 120.01, 10.))
+PATH_SWIVEL_DEG = tuple(float(v) for v in np.arange(-120., 120.01, 5.))
 PATH_SMOOTH_WEIGHT = .05           # per cm^2 of elbow step between keys
 
 
@@ -506,7 +506,11 @@ class ArmSolver:
             if it == passes - 1:
                 break
             palm = np.asarray(wrist_t, float) + palm_off
-            u0 = E.to_ue_dir(palm_off)
+            # the hand's NEUTRAL axis = the bind forearm axis carried by the hand (wrist_frame_bind b): a forearm along
+            # it is a neutral wrist (the right hand's wrist -> MCP line sits ~15 deg off it at bind)
+            bb, _, _ = A.wrist_frame_bind(self.names, self.ibm, side)
+            Rh0 = A.unit_rot(np.linalg.inv(self.ibm)[c][:3, :3])
+            u0 = E.to_ue_dir(np.einsum('fij,j->fi', A.unit_rot(hand_rot[:, :3, :3]), Rh0.T @ bb))
             u0 /= np.linalg.norm(u0, axis=-1, keepdims=True)
             fore = E.to_ue_dir(W[:, c, :3, 3] - W[:, b, :3, 3])
             fore /= np.linalg.norm(fore, axis=-1, keepdims=True)
@@ -688,7 +692,7 @@ class ArmSolver:
         back = np.zeros((K, F), int)
         for f in range(1, F):
             step = np.linalg.norm(el[:, f][:, None] - el[:, f - 1][None], axis=-1)        # (K new, K old)
-            bound = ELBOW_STEP_MAX_CM + wstep[f]
+            bound = ELBOW_STEP_MAX_CM
             trans = PATH_SMOOTH_WEIGHT * step ** 2 + 1e4 * np.maximum(0., step - bound)
             tot = D[None] + trans
             back[:, f] = np.argmin(tot, axis=1)
@@ -705,7 +709,7 @@ class ArmSolver:
         info = {'method': 'dynamic-programming swivel path', 'candidates_deg': [float(phis[0]), float(phis[-1]), float(phis[1] - phis[0])],
                 'unresolved_frames': int((~chosen_ok).sum()), 'frames_without_any_clear_swivel': int(none.sum()),
                 'reach_all': bool(np.all(reach)), 'elbow_max_step_cm': _r(estep.max(), 3),
-                'elbow_steps_over_bound': int((estep > ELBOW_STEP_MAX_CM + wstep + 1e-9).sum()),
+                'elbow_steps_over_bound': int((estep > ELBOW_STEP_MAX_CM + 1e-9).sum()),
                 'loop_elbow_step_cm': _r(np.linalg.norm(e[-1] - e[0]), 3)}
         return phi.astype(float), info
 
