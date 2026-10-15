@@ -363,6 +363,10 @@ GIRDLE_PROTRACTION_DEG = (-15., 15.)
 # girdle may ELEVATE up to 10 deg (clavicular elevation reaches ~30-40 deg: Kapandji, The Physiology of the Joints,
 # vol. 1; Neumann, Kinesiology of the Musculoskeletal System, ch. 5), with retraction inside the cited +-15 deg.
 # Candidates in order (depression < 0 is elevation; protraction < 0 is retraction):
+# Clearance first by the WRIST (a six-arm-bone change): added palmar flexion toward neutral, where the captured hand
+# attitude holds the wrist at the soft extension limit (-15 deg) and the sleeve under the forearm meets the desk; the
+# result is still soft-limited to the +-15 deg RULA zone. The girdle (below) is only the fallback.
+PITCH_CLEAR_CANDIDATES = (5., 10., 15., 20., 25., 30.)
 GIRDLE_CLEAR_CANDIDATES = ((-2.5, 0.), (-5., 0.), (-7.5, 0.), (-10., 0.), (-10., -7.5), (-10., -15.))
 
 
@@ -391,7 +395,15 @@ def shoulder_girdle(sk, W, side, g):
     return W
 
 
-def solve_arm(sk, W, side, target, pole, ibm, hand_world=None, D=None, limit=True):
+def axis_rotation(axis, ang):
+    """(F, 3, 3) rotations by ang (F,) radians about one fixed unit axis (Rodrigues)."""
+    k = np.asarray(axis, float) / np.linalg.norm(axis)
+    K_ = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    a = np.asarray(ang, float)[:, None, None]
+    return np.eye(3)[None] + np.sin(a) * K_[None] + (1 - np.cos(a)) * (K_ @ K_)[None]
+
+
+def solve_arm(sk, W, side, target, pole, ibm, hand_world=None, D=None, limit=True, flex_add_deg=None):
     """Non-stretch two-bone IK of shoulder -> elbow -> wrist (UE SolveTwoBoneIK, fit_seat_pose_trial.two_bone) with the
     given elbow pole. The hand then rides on the NEW forearm: its wrist-relative rotation is D, or the one implied by the
     captured hand WORLD rotation `hand_world` (the genuine hand-to-keyboard attitude), with flexion/deviation softly
@@ -404,6 +416,10 @@ def solve_arm(sk, W, side, target, pole, ibm, hand_world=None, D=None, limit=Tru
         B = bind_worlds(ibm)
         a, h = names.index(chain[1]), names.index(chain[2])
         D = unit_rot(B[a][:3, :3]) @ np.swapaxes(unit_rot(W[:, a, :3, :3]), -1, -2) @ unit_rot(hand_world) @ unit_rot(B[h][:3, :3]).T
+    if flex_add_deg is not None and np.any(flex_add_deg):
+        # extra palmar flexion (deg) of the wrist about its radial axis (wrist_frame_bind), before the soft limit
+        b_, r_, n_ = wrist_frame_bind(names, ibm, side)
+        D = axis_rotation(r_, np.radians(flex_add_deg)) @ D
     info = None
     if limit:
         D, info = limit_wrist(D, names, ibm, side)
@@ -653,6 +669,7 @@ class ClipArmIK:
         self.on_mask = on_mask
         self.hand_xy = {s: np.zeros((F, 3)) for s in SIDES}
         self.girdle = {s: np.zeros((F, 2)) for s in SIDES}      # (depression, protraction) degrees per frame
+        self.pitch = {s: np.zeros(F) for s in SIDES}             # added palmar wrist flexion (deg), finish() only
         self.gain = {s: np.ones(F) for s in SIDES}               # per-frame vertical contact response (secant)
         self.deadline = None
 
@@ -714,7 +731,9 @@ class ClipArmIK:
         tgt = wrist + hxy + UP * (np.asarray(delta_cm) + (0. if lift_cm is None else np.asarray(lift_cm)))[:, None] / 100.
         sign = self.raise_sign[side] if frames is None else self.raise_sign[side][frames]
         p = swivel_pole(A, tgt, pole, np.asarray(phi_rad) * sign)
-        W, reach, length, dist, _ = solve_arm(self.sk, W.copy(), side, tgt, p, self.ibm, hand_world=hand_world)
+        fl = getattr(self, 'pitch', None)
+        fl = None if fl is None else (fl[side] if frames is None else fl[side][frames])
+        W, reach, length, dist, _ = solve_arm(self.sk, W.copy(), side, tgt, p, self.ibm, hand_world=hand_world, flex_add_deg=fl)
         return W, reach, length, dist
 
     def solve(self):
@@ -1125,8 +1144,12 @@ class ClipArmIK:
         for s in SIDES:
             delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
             self.clear_side(s, delta, phi, lift, history, 2)
-        girdle = {}
+        girdle, pitch = {}, {}
         for s in SIDES:
+            pitch[s] = self.girdle_clear(s, delta, phi, lift, 'pitch', PITCH_CLEAR_CANDIDATES)
+            if pitch[s]['frames']:
+                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
+                self.clear_side(s, delta, phi, lift, history, 1)
             girdle[s] = self.girdle_clear(s, delta, phi, lift)
             if girdle[s]['frames']:
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
@@ -1138,7 +1161,7 @@ class ClipArmIK:
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], np.arange(F - n, F), passes=CONTACT_PASSES)
         polish = {s: self.contact_polish(s, delta, phi, lift) for s in SIDES}
         self.delta, self.phi, self.lift = delta, phi, lift
-        self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'girdle_clearance': girdle,
+        self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'wrist_clearance': pitch, 'girdle_clearance': girdle,
                               'seconds': round(time.time() - t0, 1),
                               'segments': {s: {'key': int((self.mode[s] == MODE_KEY).sum()), 'mouse': int((self.mode[s] == MODE_MOUSE).sum()),
                                                'transit': int((self.mode[s] == MODE_TRANSIT).sum())} for s in SIDES},
@@ -1156,6 +1179,8 @@ class ClipArmIK:
                 arr[F - n:] += (arr[0] - arr[F - n:]) * w
             self.girdle[s] = np.array(self.girdle[s], float)
             self.girdle[s][F - n:] += (self.girdle[s][0] - self.girdle[s][F - n:]) * w[:, None]
+            self.pitch[s] = np.array(self.pitch[s], float)
+            self.pitch[s][F - n:] += (self.pitch[s][0] - self.pitch[s][F - n:]) * w
             if not inputs:
                 continue
             A, pole, wrist, hw, x = self.inputs[s]
@@ -1169,7 +1194,7 @@ class ClipArmIK:
             dz = np.cross((wrist - A) / np.linalg.norm(wrist - A, axis=-1, keepdims=True), pole - A)[:, 1]
             self.raise_sign[s] = np.where(dz >= 0, 1., -1.)
 
-    def girdle_clear(self, s, delta, phi, lift):
+    def girdle_clear(self, s, delta, phi, lift, attr='girdle', candidates=GIRDLE_CLEAR_CANDIDATES):
         """Frames whose every-vertex desk clearance is still below the target after the swivel search: the first
         GIRDLE_CLEAR_CANDIDATES girdle offset (elevation, then elevation with retraction) whose contact-resolved pose
         clears (and, on keyboard frames, keeps the key gate) is the need; the girdle offset is its smooth upper envelope
@@ -1182,16 +1207,18 @@ class ClipArmIK:
         out = {'frames': [int(f) for f in bad], 'min_before_cm': _r(cl.min(), 4)}
         if not len(bad):
             return out
-        g0 = np.array(self.girdle[s], float)
-        need = np.zeros((F, 2))
+        store = getattr(self, attr)
+        g0 = np.array(store[s], float)
+        sign = -1. if attr == 'girdle' else 1.          # girdle: elevation / retraction are negative; pitch positive
+        need = np.zeros(g0.shape)
         found = np.zeros(len(bad), bool)
-        for cand in GIRDLE_CLEAR_CANDIDATES:
+        for cand in candidates:
             todo = np.nonzero(~found)[0]
             if not len(todo):
                 break
             fr = bad[todo]
-            self.girdle[s] = g0.copy()
-            self.girdle[s][fr] = cand
+            store[s] = g0.copy()
+            store[s][fr] = cand
             dl = self.solve_contact_side(s, delta[s], phi[s], lift[s], fr)
             Wt = self.pose(self.W_fit[fr].copy(), s, dl[fr], phi[s][fr], lift[s][fr], fr)[0]
             c = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0]
@@ -1202,11 +1229,15 @@ class ClipArmIK:
             ok = (c >= FOREARM_TARGET_CLEARANCE_CM) & keyok
             need[fr[ok]] = np.asarray(cand) - g0[fr[ok]]
             found[todo[ok]] = True
-        env = np.stack([-envelope(np.maximum(0., -need[:, i]), self.dt) for i in range(2)], 1)
-        self.girdle[s] = g0 + env
-        out.update({'cleared_by_candidate': int(found.sum()), 'not_cleared': [int(f) for f in bad[~found]],
-                    'elevation_deg': rng(-env[:, 0], 2), 'retraction_deg': rng(-env[:, 1], 2),
-                    'frames_with_girdle_offset': int((np.abs(env).sum(1) > 1e-9).sum())})
+        nd = need.reshape(F, -1)
+        env = np.stack([sign * envelope(np.maximum(0., sign * nd[:, i]), self.dt) for i in range(nd.shape[1])], 1)
+        store[s] = g0 + env.reshape(g0.shape)
+        out.update({'dof': attr, 'cleared_by_candidate': int(found.sum()), 'not_cleared': [int(f) for f in bad[~found]],
+                    'frames_with_offset': int((np.abs(env).sum(1) > 1e-9).sum())})
+        if attr == 'girdle':
+            out.update({'elevation_deg': rng(-env[:, 0], 2), 'retraction_deg': rng(-env[:, 1], 2)})
+        else:
+            out.update({'added_palmar_flexion_deg': rng(env[:, 0], 2)})
         return out
 
     def contact_polish(self, s, delta, phi, lift, grid=POLISH_GRID_CM, accept=POLISH_ACCEPT_GAP_CM):
@@ -2312,6 +2343,7 @@ def profile_validation(ctx, W_out, W_in, W_raw, times, shift):
     sel = {s: int(len(ctx.base.patch(f'{s}_fingers')['pos'])) for s in SIDES}
     fingers = [k for k, n in enumerate(ctx.sk.names) if any(f in n for f in FINGERS)]
     L0, L1 = arm_locals(ctx.sk, Wr), Lo
+    Li = arm_locals(ctx.sk, Wi)
     rows = []
     for i in range(len(t)):
         def hands(k, corrected):
@@ -2329,7 +2361,11 @@ def profile_validation(ctx, W_out, W_in, W_raw, times, shift):
                  for k, p in enumerate(ctx.sk.parents) if p >= 0) * 100
         arms = {}
         for s in SIDES:
-            for n in ARM_BONES[s]:
+            # the clavicle is reported too whenever its local differs from the input clip's (a girdle correction):
+            # the profile then states truthfully that more than the six arm bones changed (and is refused)
+            sb = ctx.sk.j(f'{SIDES[s]}Shoulder')
+            extra = [f'{SIDES[s]}Shoulder'] if float(P.rot_angle_deg(Li[i:i + 1, sb, :3, :3], Lo[i:i + 1, sb, :3, :3]).max()) > 1e-3 else []
+            for n in list(ARM_BONES[s]) + extra:
                 L = Lo[i, ctx.sk.j(n)]
                 sc = np.linalg.norm(L[:3, :3], axis=0)
                 q = P.quat_from_matrix((L[:3, :3] / sc)[None])[0]
@@ -2359,7 +2395,7 @@ def strip(rep):
 
 LOOP_BLEND_S = .5              # DeskTyping loop closure: C1 blend of the last 0.5 s to frame 0's swivel / girdle / lift
 FINISH_RESERVE_S = 1200.       # measured full-clip finish (+ the measurement) on the 989-frame DeskTyping
-FINISH_KEYS = ('delta', 'phi', 'lift', 'hand_xy', 'girdle', 'finger_xy_target', 'mode', 'on')
+FINISH_KEYS = ('delta', 'phi', 'lift', 'hand_xy', 'girdle', 'pitch', 'finger_xy_target', 'mode', 'on')
 CHUNK_RESERVE_S = 240.          # a chunk is only started with at least this much of the bound left
 ERGO_BUDGET_S_PER_CHUNK = 60.   # the ergonomic candidate search per chunk stops after this (the clearance pose is kept)
 MEASURE_S_PER_FRAME = .5        # measured (seated-arms profile, 60-frame subset): ~0.5 s per frame for every gate
@@ -2546,7 +2582,8 @@ def run(args):
         # full-clip finish (whole-clip segmentation, loop closure, contact, every-vertex clearance), itself checkpointed
         fin = out_dir / 'SUB01_DeskTyping_seated.finish-checkpoint.npz'
         sig = hashlib.sha256(b''.join((out_dir / 'DeskTyping_seated.chunks' / c).read_bytes() for c in ik.chunks)
-                             + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER)).encode()).hexdigest()
+                             + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER, PITCH_CLEAR_CANDIDATES,
+                                    GIRDLE_CLEAR_CANDIDATES, POLISH_XY_CM, 'v2')).encode()).hexdigest()
         if fin.exists() and str(np.load(fin)['signature']) == sig:
             z = np.load(fin)
             ik.close_loop(int(round(LOOP_BLEND_S / ik.dt)), {s_: np.array(ik.phi[s_], float) for s_ in SIDES},

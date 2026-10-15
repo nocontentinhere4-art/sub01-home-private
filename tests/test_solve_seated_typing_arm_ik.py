@@ -507,6 +507,13 @@ def test_girdle_clearance_candidates_stay_inside_the_cited_ranges():
     assert K.POLISH_ACCEPT_GAP_CM[0] >= -K.P.KEY_PENETRATION_MAX_CM
 
 
+def test_axis_rotation_and_clearance_candidates():
+    R = K.axis_rotation([0., 0., 1.], np.radians([90., 0.]))
+    assert np.allclose(R[0] @ [1., 0., 0.], [0., 1., 0.]) and np.allclose(R[1], np.eye(3))
+    assert all(0. < c <= 30. for c in K.PITCH_CLEAR_CANDIDATES)       # added flexion; the soft +-15 deg limit follows
+    assert list(K.PITCH_CLEAR_CANDIDATES) == sorted(K.PITCH_CLEAR_CANDIDATES)
+
+
 def test_seam_taper_is_zero_at_the_seam_and_c1():
     w = K.seam_taper(40, [0, 39], 1 / 30, .2)
     assert w[0] == 0. and w[39] == 0. and np.allclose(w[6:34], 1.)
