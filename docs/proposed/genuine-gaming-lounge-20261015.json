@@ -107,8 +107,7 @@
     "native_or_contact_acceptance": false
   },
   "preview_local": "out/house-evidence/reference-gaming-lounge-r1/haven-output-r2/genuine-navy-haven-source-review.png",
-  "root_viewed_approved_private_candidate": true,
-  "integration_order": "Native sole owner; table/wall065 actual image first, then sofa. Preserve active user tour/world/devices.",
+  "integration_order": "STOP: user rejected c05a table and b69d Haven. Preserve recoverable sources only.",
   "preserve": [
     "TV plane/UV/live Minecraft",
     "PCguest/world",
@@ -116,5 +115,8 @@
     "retired rug61/62 remains hidden NoCollision"
   ],
   "native_imported": false,
-  "functional_seating_or_contact_ready": false
+  "functional_seating_or_contact_ready": false,
+  "historical_root_preview_approval_superseded": true,
+  "current_owner_status": "REJECTED: source sofa/table too smooth and stylized; do not import",
+  "current_approval": false
 }

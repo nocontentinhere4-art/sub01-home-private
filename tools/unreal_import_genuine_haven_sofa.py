@@ -35,6 +35,7 @@ def original_identity(state,node):
  return True
 
 def run(dry_run=True):
+ raise RuntimeError("OWNER REJECTED b69d Haven source: do not import; select a different realistic model")
  import unreal as u
  from private_home_candidate_scope import active_candidate_guard
  from home_asset_audit import read_gltf
