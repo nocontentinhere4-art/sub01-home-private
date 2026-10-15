@@ -16,6 +16,7 @@
 #include "Engine/Texture2D.h"
 #include "ImageCore.h"
 #include "Sub01GuestFrameLayout.h"
+#include "Sub01PCInputAckPolicy.h"
 
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/Application/IInputProcessor.h"
@@ -183,10 +184,14 @@ void USub01PCBridge::SendGraphicalInput(const TSharedPtr<FJsonObject>& Body){
 void USub01PCBridge::PumpGraphicalInput(){
  TSharedPtr<FJsonObject> Body;std::uint64_t Ticket=0;
  if(!GraphicalInputs.Begin(Body,Ticket))return;
+ const uint64 Epoch=Generation;
+ const bool Correlated=FSub01PCInputAckPolicy::BoundedIdentity(Ticket)&&FSub01PCInputAckPolicy::BoundedIdentity(Epoch);
+ FString Operation;Body->TryGetStringField(TEXT("type"),Operation);
+ const FString ExpectedLevel=Operation==TEXT("vga-keyboard")?TEXT("GuestKeyboardInjected"):Operation==TEXT("vga-mouse")?TEXT("GuestMouseInjected"):TEXT("");
+ if(Correlated){auto Receipt=MakeShared<FJsonObject>();Receipt->SetNumberField(TEXT("input_id"),static_cast<double>(Ticket));Receipt->SetNumberField(TEXT("generation"),static_cast<double>(Epoch));Body->SetObjectField(TEXT("native_receipt"),Receipt);}
  FString JSON;auto Writer=TJsonWriterFactory<>::Create(&JSON);FJsonSerializer::Serialize(Body.ToSharedRef(),Writer);
  auto Request=FHttpModule::Get().CreateRequest();Request->SetURL(Origin+TEXT("/pc/graphical-input"));Request->SetVerb(TEXT("POST"));Request->SetTimeout(3);
  Request->SetHeader(TEXT("Content-Type"),TEXT("application/json"));Request->SetHeader(TEXT("X-Admin-Token"),OperatorToken);Request->SetContentAsString(JSON);
- const uint64 Epoch=Generation;
  auto Finish=[this,Epoch,Ticket](bool OK){
   if(Epoch!=Generation||!GraphicalInputs.Complete(Ticket))return;
   if(!OK){
@@ -196,7 +201,20 @@ void USub01PCBridge::PumpGraphicalInput(){
   }
   PumpGraphicalInput();
  };
- Request->OnProcessRequestComplete().BindWeakLambda(this,[Finish](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){Finish(OK&&Response&&Response->GetResponseCode()==200);});
+ Request->OnProcessRequestComplete().BindWeakLambda(this,[Finish,Correlated,Ticket,Epoch,ExpectedLevel](FHttpRequestPtr,FHttpResponsePtr Response,bool OK){
+  bool Accepted=false;TSharedPtr<FJsonObject> Result;
+  if(OK&&Response&&Response->GetResponseCode()==200&&Response->GetContent().Num()<=16384){
+   auto Reader=TJsonReaderFactory<>::Create(Response->GetContentAsString());
+   if(FJsonSerializer::Deserialize(Reader,Result)&&Result)Result->TryGetBoolField(TEXT("ok"),Accepted);
+  }
+  if(Accepted&&Correlated){
+   const TSharedPtr<FJsonObject>* Receipt=nullptr;double InputId=0,ReceiptGeneration=0,QueuedAt=-1,AckAt=-1,WorkerStarted=-1,WorkerFinished=-1;FString Level;
+   const bool Fields=Result->TryGetObjectField(TEXT("native_receipt"),Receipt)&&Receipt&&Receipt->IsValid()&&(*Receipt)->Values.Num()==2&&(*Receipt)->TryGetNumberField(TEXT("input_id"),InputId)&&(*Receipt)->TryGetNumberField(TEXT("generation"),ReceiptGeneration);
+   Result->TryGetStringField(TEXT("ack_level"),Level);Result->TryGetNumberField(TEXT("queued_at"),QueuedAt);Result->TryGetNumberField(TEXT("ack_received_at"),AckAt);Result->TryGetNumberField(TEXT("worker_started_ms"),WorkerStarted);Result->TryGetNumberField(TEXT("worker_finished_ms"),WorkerFinished);
+   Accepted=FSub01PCInputAckPolicy::Correlated(Accepted,Fields,InputId,ReceiptGeneration,Ticket,Epoch,!ExpectedLevel.IsEmpty()&&Level==ExpectedLevel,QueuedAt,AckAt,WorkerStarted,WorkerFinished);
+  }
+  Finish(Accepted);
+ });
  if(!Request->ProcessRequest())Finish(false);
 }
 void USub01PCBridge::SendGraphicalKey(uint32 Scan,bool Shift,bool Control,bool Alt){

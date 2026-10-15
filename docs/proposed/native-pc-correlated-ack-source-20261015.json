@@ -1,0 +1,23 @@
+{
+  "schema": "sub01.native-pc-correlated-ack-source.v1",
+  "source_only": true,
+  "native_deployed": false,
+  "runner_deployed": false,
+  "actual_game_or_guest_restarted": false,
+  "behavior": [
+    "The existing serialized input queue still assigns and completes the only native Ticket; closure Generation checks remain unchanged.",
+    "HTTP 200 requires a parsed JSON object with boolean ok=true. A refusal body is no longer accepted.",
+    "Positive JavaScript-safe Ticket/Generation values are carried in optional native_receipt metadata on the same existing endpoint.",
+    "A correlated response requires exactly matching Ticket/Generation, the correct keyboard or mouse API-injection level and finite ordered bounded worker/runner timestamps.",
+    "A generation-zero legacy request remains transport-only; no injected receipt is manufactured.",
+    "Failures use the existing queue cancellation, modifier reset, focus release and guest session pause path."
+  ],
+  "source_dependencies": ["da660b5", "8f7d21b"],
+  "tests": "Five focused tests pass, including compiled real queue/ACK policy and observer timeline executables.",
+  "limitations": [
+    "The Unreal translation unit has not yet been compiled against this change.",
+    "The running Game and runner remain the previously verified versions; no tour interruption occurred.",
+    "This does not wire a hand animation cue, validate per-key reach/contact or prove guest application consumption.",
+    "Deploy only with coordinated matching runner support, exact preservation snapshots and native compile verification."
+  ]
+}
