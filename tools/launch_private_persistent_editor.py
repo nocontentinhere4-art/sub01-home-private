@@ -1,4 +1,5 @@
 """Launch the single private recovered Editor within its authenticated window."""
+import configparser
 import json
 import os
 import subprocess
@@ -40,9 +41,22 @@ def verified_window(guard):
     return window
 
 
+def verified_private_crash_preference(engine):
+    # This exact active layer was independently read back through UE GetIni.
+    # A user Saved/Config file was ignored by the recovered installed build.
+    path = Path(engine) / 'Engine/Config/BaseEditorSettings.ini'
+    config = configparser.ConfigParser(strict=False, interpolation=None)
+    config.read(path)
+    section = '/Script/UnrealEd.CrashReportsPrivacySettings'
+    assert config.getboolean(section, 'bSendUnattendedBugReports', fallback=True) is False, (
+        'Private target must explicitly disable unattended reports before Editor startup')
+    return path
+
+
 def run():
     window = verified_window(Path('/run/sub01-home-private/runtime-window.json'))
     deadline = window['deadline_epoch']
+    verified_private_crash_preference(ENGINE)
     assert json.loads((ENGINE / 'private-plugin-descriptor-recovery-receipt.json').read_text())['all_selected_crc_verified']
     assert json.loads((PROJECT / 'private-original-source-project-sha-receipt.json').read_text())['all1038_source_original_sha_matched']
     for process in Path('/proc').iterdir():
