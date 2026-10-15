@@ -1,0 +1,233 @@
+diff --git a/tools/unreal_home_hands_runtime.py b/tools/unreal_home_hands_runtime.py
+index 37323b5..570f7e3 100644
+--- a/tools/unreal_home_hands_runtime.py
++++ b/tools/unreal_home_hands_runtime.py
+@@ -67,12 +67,21 @@ struct FSub01HandsProxy : FAnimInstanceProxy {
+   auto* Hands=Cast<USub01HomeHandsInstance>(Instance);
+   if(!Hands)return;
+   if(Current.GetSequence()!=Hands->TargetSequence) {
++   if(Progress<1&&Hands->TargetSequence&&Previous.GetSequence()==Hands->TargetSequence.Get()){
++    // Reversal of an unfinished blend: swap the players with their own sample times and loop flags,
++    // so the blended pose is unchanged at this frame and the way back takes Progress*0.24 s.
++    UAnimSequenceBase* Out=Current.GetSequence();const float OutTime=Current.GetAccumulatedTime();const bool OutLoop=Current.GetLoopAnimation();
++    Current.SetSequence(Previous.GetSequence());Current.SetAccumulatedTime(Previous.GetAccumulatedTime());Current.SetLoopAnimation(Previous.GetLoopAnimation());
++    Previous.SetSequence(Out);Previous.SetAccumulatedTime(OutTime);Previous.SetLoopAnimation(OutLoop);Previous.SetPlayRate(0);
++    Hands->PreviousSequence=Cast<UAnimSequence>(Out);Progress=1-Progress;
++   }else{
+    Hands->PreviousSequence=Cast<UAnimSequence>(Current.GetSequence());
+    Previous.SetSequence(Hands->PreviousSequence?Hands->PreviousSequence.Get():Hands->TargetSequence.Get());
+-   Previous.SetAccumulatedTime(Current.GetAccumulatedTime());
++   Previous.SetAccumulatedTime(Current.GetAccumulatedTime());Previous.SetLoopAnimation(Current.GetLoopAnimation());
+    Previous.SetPlayRate(0);
+    Current.SetSequence(Hands->TargetSequence); Current.SetAccumulatedTime(0);
+    Progress=Hands->PreviousSequence?0:1;
++   }
+   }
+   Current.SetPlayRate(Hands->TargetRate);
+  }
+diff --git a/tests/test_unreal_hands_blend_reversal.py b/tests/test_unreal_hands_blend_reversal.py
+new file mode 100644
+index 0000000..2ab26ea
+--- /dev/null
++++ b/tests/test_unreal_hands_blend_reversal.py
+@@ -0,0 +1,200 @@
++"""Numerical continuity of the hands Idle/Walk blend when a switch is reversed mid-blend.
++
++The real generated FSub01HandsProxy (tools/unreal_home_hands_runtime.py CPP, with the contact
++profile already installed) is extracted, compiled against a minimal Unreal mock and driven at
++30/60/144/240 fps: A->B, back to A before the 0.24 s blend ends, and A->B->A->B chains.
++"""
++import json,re,shutil,subprocess,sys,tempfile,unittest
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'tools'))
++
++MOCK=r'''
++#include <cmath>
++#include <cstdio>
++#include <vector>
++#include <algorithm>
++typedef int int32;
++struct UObject{virtual ~UObject(){}};
++struct UAnimSequenceBase:UObject{int Id=0;float Period=1,Length=60;};
++struct UAnimSequence:UAnimSequenceBase{};
++struct UAnimInstance:UObject{};
++template<class T> struct TObjectPtr{T* P=nullptr;TObjectPtr(){}TObjectPtr(T* p):P(p){}T* Get()const{return P;}operator T*()const{return P;}};
++template<class T> T* Cast(UObject* O){return dynamic_cast<T*>(O);}
++template<class T> struct TArray{std::vector<T> V;int32 Num()const{return (int32)V.size();}T& operator[](int32 I){return V[I];}T& Last(){return V.back();}};
++struct FName{};struct FTransform{};
++namespace FMath{template<class T> T Min(T A,T B){return A<B?A:B;}template<class T> T Max(T A,T B){return A>B?A:B;}template<class T> T Clamp(T X,T L,T H){return X<L?L:(X>H?H:X);}}
++struct FAnimInstanceProxy;
++struct FAnimationInitializeContext{FAnimationInitializeContext(FAnimInstanceProxy*){}};
++struct FAnimationCacheBonesContext{FAnimationCacheBonesContext(FAnimInstanceProxy*){}};
++struct FAnimationUpdateContext{float Dt;};
++struct FPoseContext{};
++struct FAnimNode_SequencePlayer_Standalone{
++ UAnimSequenceBase* Seq=nullptr;float Time=0,Rate=1;bool Loop=true;
++ bool SetSequence(UAnimSequenceBase* S){Seq=S;return true;}UAnimSequenceBase* GetSequence()const{return Seq;}
++ void SetAccumulatedTime(float T){Time=T;}float GetAccumulatedTime()const{return Time;}
++ void SetPlayRate(float R){Rate=R;}float GetPlayRate()const{return Rate;}
++ void SetLoopAnimation(bool L){Loop=L;}bool GetLoopAnimation()const{return Loop;}
++ void Tick(float Dt){if(!Seq)return;Time+=Rate*Dt;if(Loop)Time=std::fmod(Time,Seq->Length);else Time=std::min(Time,Seq->Length);}
++};
++struct FPoseLink{FAnimNode_SequencePlayer_Standalone* N=nullptr;void SetLinkNode(FAnimNode_SequencePlayer_Standalone* L){N=L;}};
++// UE5 FAnimNode_TwoWayBlend: weight(B)=clamped Alpha; a child is only updated while relevant.
++struct FAnimNode_TwoWayBlend{FPoseLink A,B;float Alpha=0;
++ float W()const{return Alpha<0?0:(Alpha>1?1:Alpha);}
++ void Initialize_AnyThread(const FAnimationInitializeContext&){}void CacheBones_AnyThread(const FAnimationCacheBonesContext&){}
++ void Update_AnyThread(const FAnimationUpdateContext& C){const float Wb=W();if(1-Wb>1e-5f)A.N->Tick(C.Dt);if(Wb>1e-5f)B.N->Tick(C.Dt);}
++};
++struct FAnimInstanceProxy{FAnimInstanceProxy(UAnimInstance*){}virtual ~FAnimInstanceProxy(){}
++ virtual void Initialize(UAnimInstance*){}virtual void PreUpdate(UAnimInstance*,float){}virtual void CacheBones(){}
++ virtual void Update(float){}virtual void UpdateAnimationNode(const FAnimationUpdateContext&){}};
++struct USub01HomeHandsInstance:UAnimInstance{
++@FIELDS@
++};
++'''
++
++DRIVER=r'''
++static UAnimSequence ClipA,ClipB;
++static double Pose(const UAnimSequenceBase* S,float T){return S?S->Id+0.1*std::sin(2*M_PI*T/S->Period):0;}
++struct Sim{
++ FSub01HandsProxy P;USub01HomeHandsInstance H;float Dt;
++ double Out=0,WA=0;float TA=0,TB=0;bool HasA=false,HasB=false;
++ explicit Sim(float D):P(&H),Dt(D){P.Initialize(&H);}
++ void Sample(){
++  const float Wb=P.Blend.W();auto* Pn=P.Blend.A.N;auto* Cn=P.Blend.B.N;
++  Out=(1-Wb)*Pose(Pn->Seq,Pn->Time)+Wb*Pose(Cn->Seq,Cn->Time);
++  WA=(Pn->Seq==&ClipA?1-Wb:0)+(Cn->Seq==&ClipA?Wb:0);
++  HasA=Pn->Seq==&ClipA||Cn->Seq==&ClipA;HasB=Pn->Seq==&ClipB||Cn->Seq==&ClipB;
++  // Sample time of each clip on the node that holds it (Current wins when both hold it).
++  if(Pn->Seq==&ClipA)TA=Pn->Time;if(Cn->Seq==&ClipA)TA=Cn->Time;
++  if(Pn->Seq==&ClipB)TB=Pn->Time;if(Cn->Seq==&ClipB)TB=Cn->Time;
++ }
++ void Frame(){P.PreUpdate(&H,Dt);P.Update(Dt);FAnimationUpdateContext C{Dt};P.UpdateAnimationNode(C);Sample();}
++};
++// Settles on A, then switches at the given frame offsets (after the first switch, alternating B,A,B..).
++static void Run(float Fps,const std::vector<int>& Offsets,const char* Label){
++ const float Dt=1.f/Fps;Sim S(Dt);S.H.TargetRate=1;S.H.TargetSequence=&ClipA;
++ for(int I=0;I<int(Fps);++I)S.Frame();
++ const int Start=int(Fps);std::vector<int> SwitchFrames;for(int O:Offsets)SwitchFrames.push_back(Start+O);
++ const int End=SwitchFrames.back()+int(Fps*1.5f);
++ double MaxDOut=0,MaxDW=0,PrevOut=S.Out,PrevW=S.WA;float PrevTA=S.TA,PrevTB=0;bool SeenB=false,TimesMonotonic=true;
++ double SwitchDOut=0,SwitchDW=0,MaxTimeJump=0;int SettleFrames=-1;
++ std::vector<double> ProgressAtSwitch;
++ for(int F=Start;F<End;++F){
++  for(size_t K=0;K<SwitchFrames.size();++K)if(F==SwitchFrames[K]){
++   if(K)ProgressAtSwitch.push_back(S.P.Progress);
++   S.H.TargetSequence=(K%2==0)?&ClipB:&ClipA;}
++  S.Frame();
++  if(F>=SwitchFrames.back()&&SettleFrames<0&&S.P.Progress>=1)SettleFrames=F-SwitchFrames.back()+1;
++  const double DOut=std::fabs(S.Out-PrevOut),DW=std::fabs(S.WA-PrevW);
++  MaxDOut=std::max(MaxDOut,DOut);MaxDW=std::max(MaxDW,DW);
++  for(size_t K=1;K<SwitchFrames.size();++K)if(F==SwitchFrames[K]){SwitchDOut=std::max(SwitchDOut,DOut);SwitchDW=std::max(SwitchDW,DW);}
++  if(S.TA<PrevTA-1e-6f)TimesMonotonic=false;MaxTimeJump=std::max(MaxTimeJump,double(S.TA-PrevTA));
++  if(SeenB){if(S.TB<PrevTB-1e-6f)TimesMonotonic=false;MaxTimeJump=std::max(MaxTimeJump,double(S.TB-PrevTB));}
++  if(S.HasB)SeenB=true;
++  PrevOut=S.Out;PrevW=S.WA;PrevTA=S.TA;PrevTB=S.TB;
++ }
++ UAnimSequenceBase* Want=(Offsets.size()%2==1)?(UAnimSequenceBase*)&ClipB:(UAnimSequenceBase*)&ClipA;
++ auto* Cn=S.P.Blend.B.N;
++ const bool FinalOk=Cn->Seq==Want&&S.P.Progress==1&&S.P.Blend.W()==1&&std::fabs(S.Out-Pose(Want,Cn->Time))<1e-9
++  &&S.H.PreviousSequence.Get()==(Want==&ClipA?&ClipB:&ClipA);
++ std::printf("{\"label\":\"%s\",\"fps\":%g,\"offsets\":[",Label,Fps);
++ for(size_t K=0;K<Offsets.size();++K)std::printf("%s%d",K?",":"",Offsets[K]);
++ std::printf("],\"progress_at_switch\":[");
++ for(size_t K=0;K<ProgressAtSwitch.size();++K)std::printf("%s%.6f",K?",":"",ProgressAtSwitch[K]);
++ std::printf("],\"max_dout\":%.9f,\"max_dw\":%.9f,\"switch_dout\":%.9f,\"switch_dw\":%.9f,\"times_monotonic\":%s,\"max_time_step\":%.9f,\"settle_frames\":%d,\"final_ok\":%s}\n",
++  MaxDOut,MaxDW,SwitchDOut,SwitchDW,TimesMonotonic?"true":"false",MaxTimeJump,SettleFrames,FinalOk?"true":"false");
++}
++int main(){
++ ClipA.Id=0;ClipA.Period=1.0f;ClipB.Id=1;ClipB.Period=0.97f;
++ const float Rates[]={30,60,144,240};
++ const float Reverse[]={0.f,.125f,.25f,.5f,.75f,.9f,1.f}; // fraction of the blend's frames; clamped to [1,N-1]
++ for(float Fps:Rates){
++  const int N=int(std::ceil(.24f*Fps-1e-3f)); // frames an uninterrupted blend takes
++  auto At=[&](float Q){return std::max(1,std::min(N-1,int(std::lround(Q*N))));};
++  auto Sec=[&](float T){return int(std::lround(T*Fps));};
++  Run(Fps,{0},"normal_ab");Run(Fps,{0,int(Fps)},"normal_aba");
++  for(float Q:Reverse)Run(Fps,{0,At(Q)},"reverse_aba");
++  Run(Fps,{0,Sec(.1f),Sec(.15f),Sec(.2f)},"chain_abab");
++  Run(Fps,{0,Sec(.1f),Sec(.15f),Sec(.2f),Sec(.23f)},"chain_ababa");
++  Run(Fps,{0,2,3},"chain_fast_pingpong");
++ }
++}
++'''
++
++def _block(text,start):
++ """Text from `start` through its brace-matched end."""
++ i=text.index(start);j=text.index('{',i);depth=0
++ for k in range(j,len(text)):
++  depth+={'{':1,'}':-1}.get(text[k],0)
++  if depth==0:return text[i:k+1]
++ raise ValueError(start)
++
++def harness_source(header,cpp):
++ fields='\n'.join(re.sub(r'^\s*UPROPERTY\([^)]*\)\s*',' ',l) for l in header.splitlines() if l.strip().startswith('UPROPERTY('))
++ proxy=_block(cpp,'struct FSub01HandsProxy : FAnimInstanceProxy')+';'
++ # Pose output is computed by the driver; the bone-level Evaluate needs the full engine.
++ proxy=proxy.replace(_block(proxy,' virtual bool Evaluate('),'')
++ return MOCK.replace('@FIELDS@',fields)+proxy+DRIVER
++
++def run_harness(header,cpp):
++ with tempfile.TemporaryDirectory() as d:
++  src=Path(d)/'blend.cpp';exe=Path(d)/'blend';src.write_text(harness_source(header,cpp))
++  subprocess.run(['g++','-std=c++17','-O1','-Wall','-o',str(exe),str(src)],check=True,capture_output=True,text=True)
++  out=subprocess.run([str(exe)],check=True,capture_output=True,text=True).stdout
++ return [json.loads(l) for l in out.splitlines() if l.strip()]
++
++@unittest.skipUnless(shutil.which('g++'),'g++ required')
++class HandsBlendReversal(unittest.TestCase):
++ @classmethod
++ def setUpClass(cls):
++  from unreal_home_hands_runtime import HEADER,CPP
++  cls.cpp=CPP;cls.rows=run_harness(HEADER,CPP)
++
++ def normal(self,fps):
++  rows=[r for r in self.rows if r['fps']==fps and r['label'].startswith('normal')]
++  return max(r['max_dout'] for r in rows),max(r['max_dw'] for r in rows)
++
++ def test_anchors_other_installers_rely_on_stay_unique(self):
++  for anchor in ('  if(Current.GetSequence()!=Hands->TargetSequence)','  Current.SetPlayRate(Hands->TargetRate);\n',' float Progress=1;\n','  Blend.Evaluate_AnyThread(Output);\n'):
++   self.assertEqual(self.cpp.count(anchor),1,anchor)
++  # SEQUENCE_START (contact runtime) is installed only on the fresh-start branch, not on a reversal.
++  self.assertEqual(self.cpp.count('   Current.SetLoopAnimation(true);\n'),1)
++  self.assertLess(self.cpp.index('Progress=1-Progress;'),self.cpp.index('   Current.SetLoopAnimation(true);\n'))
++
++ def test_normal_blend_is_the_reference(self):
++  for fps in (30,60,144,240):
++   dout,dw=self.normal(fps)
++   self.assertAlmostEqual(dw,min(1/fps,.1)/.24,places=5)
++   self.assertLess(dout,dw*1.2)
++
++ def test_reversal_is_continuous_at_every_rate_and_progress(self):
++  rows=[r for r in self.rows if not r['label'].startswith('normal')]
++  self.assertEqual(len(rows),4*10)
++  self.assertTrue(all(r['progress_at_switch'] and all(0<p<1 for p in r['progress_at_switch']) for r in rows))
++  for r in rows:
++   with self.subTest(label=r['label'],fps=r['fps'],offsets=r['offsets']):
++    dout,dw=self.normal(r['fps'])
++    self.assertLessEqual(r['max_dw'],dw+1e-6)
++    self.assertLessEqual(r['switch_dw'],dw+1e-6)
++    self.assertLessEqual(r['max_dout'],dout+1e-6)
++    self.assertLessEqual(r['switch_dout'],dout+1e-6)
++    self.assertTrue(r['times_monotonic'])
++    self.assertLessEqual(r['max_time_step'],1/r['fps']+1e-5)
++    self.assertTrue(r['final_ok'])
++
++ def test_reversal_covers_progress_near_zero_and_one(self):
++  for fps in (30,60,144,240):
++   ps=[r['progress_at_switch'][0] for r in self.rows if r['fps']==fps and r['label']=='reverse_aba']
++   self.assertAlmostEqual(min(ps),min(1/fps,.1)/.24,places=5)
++   self.assertGreater(max(ps),.97)
++  # Every chained switch lands mid-blend (none restarts a finished blend).
++  for r in self.rows:
++   if r['label'].startswith('chain'):self.assertTrue(all(0<p<1 for p in r['progress_at_switch']),r)
++
++ def test_way_back_takes_progress_times_blend_time(self):
++  # Reversal at progress p: the return finishes p*0.24 s later (within one frame), not a full 0.24 s.
++  for r in self.rows:
++   if r['label']!='reverse_aba':continue
++   p=r['progress_at_switch'][0];self.assertTrue(0<p<1)
++   self.assertLessEqual(abs(r['settle_frames']-p*.24*r['fps']),1.01)
++
++if __name__=='__main__':unittest.main()

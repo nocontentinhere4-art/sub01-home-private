@@ -67,12 +67,21 @@ struct FSub01HandsProxy : FAnimInstanceProxy {
   auto* Hands=Cast<USub01HomeHandsInstance>(Instance);
   if(!Hands)return;
   if(Current.GetSequence()!=Hands->TargetSequence) {
+   if(Progress<1&&Hands->TargetSequence&&Previous.GetSequence()==Hands->TargetSequence.Get()){
+    // Reversal of an unfinished blend: swap the players with their own sample times and loop flags,
+    // so the blended pose is unchanged at this frame and the way back takes Progress*0.24 s.
+    UAnimSequenceBase* Out=Current.GetSequence();const float OutTime=Current.GetAccumulatedTime();const bool OutLoop=Current.GetLoopAnimation();
+    Current.SetSequence(Previous.GetSequence());Current.SetAccumulatedTime(Previous.GetAccumulatedTime());Current.SetLoopAnimation(Previous.GetLoopAnimation());
+    Previous.SetSequence(Out);Previous.SetAccumulatedTime(OutTime);Previous.SetLoopAnimation(OutLoop);Previous.SetPlayRate(0);
+    Hands->PreviousSequence=Cast<UAnimSequence>(Out);Progress=1-Progress;
+   }else{
    Hands->PreviousSequence=Cast<UAnimSequence>(Current.GetSequence());
    Previous.SetSequence(Hands->PreviousSequence?Hands->PreviousSequence.Get():Hands->TargetSequence.Get());
-   Previous.SetAccumulatedTime(Current.GetAccumulatedTime());
+   Previous.SetAccumulatedTime(Current.GetAccumulatedTime());Previous.SetLoopAnimation(Current.GetLoopAnimation());
    Previous.SetPlayRate(0);
    Current.SetSequence(Hands->TargetSequence); Current.SetAccumulatedTime(0);
    Progress=Hands->PreviousSequence?0:1;
+   }
   }
   Current.SetPlayRate(Hands->TargetRate);
  }
