@@ -5,11 +5,11 @@ import numpy as np
 from mathutils import Vector
 IK='--contact-ik'in sys.argv
 RIGID='--rigid'in sys.argv
-ROOT=Path('/workspace/sub01-home-private/motion-runtime')/('footplant-audit-r4-contact-ik'if IK else'footplant-audit-r3-rigid'if RIGID else'footplant-audit-r2');ROOT.mkdir(exist_ok=True)
+ROOT=Path('/workspace/sub01-home-private/motion-runtime')/('footplant-audit-r5-contact-smoothed'if IK else'footplant-audit-r3-rigid'if RIGID else'footplant-audit-r2');ROOT.mkdir(exist_ok=True)
 GENERATED=Path('/home/unreal/runtime-tools/generated-walk-owner.glb');WALK=Path('/home/unreal/runtime-tools/original-walking-owner-clip.glb');SOMA=Path('/workspace/sub01-home-private/motion-runtime/generated-r2-verified-adapters/relaxed-walk-stop.npz')
 if RIGID:GENERATED=Path('/home/unreal/runtime-tools/generated-walk-rigid-owner.glb')
-if IK:GENERATED=Path('/home/unreal/runtime-tools/generated-walk-contact-ik-owner.glb')
-assert hashlib.sha256(GENERATED.read_bytes()).hexdigest()==('d26e9db52feabed7ec9aaf6f45cf89f777673e73172877553a67596f2a8b5864'if IK else'16b8ab6a32931f9abd175bcbca5b47a332bd7f17d4176e017929ae49c2d03000'if RIGID else'd7349ae34d74c0f7f36fc38f64e4d77612f5f397e6f4fe6e9fbe2c6e103056da')
+if IK:GENERATED=Path('/home/unreal/runtime-tools/generated-walk-contact-smoothed-owner.glb')
+assert hashlib.sha256(GENERATED.read_bytes()).hexdigest()==('9412f921716c49603b71bb1a9121760f45e5a302d5584707ee6be06765f21bac'if IK else'16b8ab6a32931f9abd175bcbca5b47a332bd7f17d4176e017929ae49c2d03000'if RIGID else'd7349ae34d74c0f7f36fc38f64e4d77612f5f397e6f4fe6e9fbe2c6e103056da')
 assert hashlib.sha256(WALK.read_bytes()).hexdigest()=='9a7937e050a96c8f58dad1ffcfc8f5ff61f0c0699237afd5b996035f006d3f70'
 def read(path):
  raw=path.read_bytes();length=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[20:20+length]);at=20+length;size=struct.unpack_from('<I',raw,at)[0];return doc,raw[at+8:at+8+size]

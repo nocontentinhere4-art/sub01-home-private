@@ -1,0 +1,46 @@
+{
+  "schema": "sub01.smoothed-generated-owner-sole-source.v1",
+  "candidate_sha256": "9412f921716c49603b71bb1a9121760f45e5a302d5584707ee6be06765f21bac",
+  "remote_candidate": "/home/unreal/runtime-tools/generated-walk-contact-smoothed-owner.glb",
+  "audit_sha256": "868b235b6d1a34d51f7b5f6ace0f5a4a8ffbf65fdf75bc5cd6c15b51c4e79d50",
+  "audit_remote": "/workspace/sub01-home-private/motion-runtime/footplant-audit-r5-contact-smoothed/actual-footplant-audit.json",
+  "pelvis_policy": "Offline minimum first-difference trajectory with source knee-distance preference constrained to every measured two-bone reach interval; no physical root XZ/capsule change",
+  "max_adjacent_pelvis_correction_m": 0.0007746743322948751,
+  "max_pelvis_correction_m": 0.04813967487822657,
+  "complete_full_skin_surface_measurement": {
+    "Left": {
+      "stance_frames": 59,
+      "stance_sole_minima_m": [
+        -5.340576194612368e-07,
+        1.8310546465727384e-06
+      ],
+      "swing_sole_minima_m": [
+        0.002999877789989114,
+        0.04069434851408005
+      ]
+    },
+    "Right": {
+      "stance_frames": 60,
+      "stance_sole_minima_m": [
+        -3.8146970382513246e-07,
+        3.8146970382513246e-07
+      ],
+      "swing_sole_minima_m": [
+        0.0029991150368005037,
+        0.013965759426355362
+      ]
+    }
+  },
+  "all_nonanimation_binary_unchanged": true,
+  "horizontal_world_lock": false,
+  "native_changed": false,
+  "native_contact_accepted": false,
+  "native_visual_accepted": false,
+  "render_remote": "/workspace/sub01-home-private/motion-runtime/footplant-smoothed-body-review-r1",
+  "visual_and_physical_limitations": [
+    "Model-space source floor0 is not actual native floor-distance verification",
+    "Offline source take only; live moving body needs verified world speed/placement",
+    "Contact foot orientation at transitions and gait need visual review",
+    "Original hands unchanged; not hand/prop contact acceptance"
+  ]
+}

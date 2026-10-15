@@ -1,0 +1,26 @@
+{
+  "schema": "sub01.kitchen-grain-r3-native-handoff.v1",
+  "source_proof_sha256": "ed957bae618c6edc17e08536cc12b79494bdf179cab91b1ee172b0e2352a09ea",
+  "remote_root": "/workspace/sub01-home-private/reference-kitchen-grain-r3/output",
+  "full_variant_sha256": "961900d8c57d1c143b44417878778e5b74cc4a91f166c167b0bf444314e1b2c6",
+  "three_source_part_carrier_sha256": "dae5de70b8c53f3659facb208c0ef58dedd6c802fee540c9d49434c55b536479",
+  "material_carrier_short_aliases": {
+    "KG30": "KG3Mat0 oak; real existing source node0",
+    "KG31": "KG3Mat1 metal; real existing source node6",
+    "KG32": "KG3Mat2 metal; real existing source node21"
+  },
+  "operation": "Candidate material overrides only; do not replace152meshes or hinges",
+  "must_verify_native": [
+    "KHR_texture_transform scale3 reaches actual base/normal/metalRough sampling",
+    "Three genuine source parts world geometry equals source; temporary import actors removed",
+    "All152 mesh bindings and40 moving tags and8 hinge axes/TRS/collision exact",
+    "Actual kitchen view before accepting material scale"
+  ],
+  "source_binary_exact": true,
+  "source_physical_front_texture_repeat_m": [
+    0.6100000093031083,
+    0.6100000087803096
+  ],
+  "native_changed": false,
+  "native_visual_accepted": false
+}

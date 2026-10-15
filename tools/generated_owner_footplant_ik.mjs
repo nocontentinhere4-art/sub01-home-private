@@ -41,7 +41,7 @@ export function createFootPlantSolver(THREE,rig,calibration,options={}){
   const actualK=pos(f.lower),actualA=pos(f.foot);const lowerDelta=Q().setFromUnitVectors(actualA.clone().sub(actualK).normalize(),target.clone().sub(actualK).normalize());setWorldQ(f.lower,lowerDelta.multiply(f.lower.getWorldQuaternion(Q())));setWorldQ(f.foot,orientation);
   assert(pos(f.foot).distanceTo(target)<2e-5,'Actual ankle FK did not reach solved target');
  }
- return{apply({frame,contacts,dt=1/30,grounded=true,placement=null,physicalPlacementVerified=false,referencePlanarSpeedMps=null,actualPlanarSpeedMps=null,groundPlanes=null}){
+ return{apply({frame,contacts,dt=1/30,grounded=true,placement=null,physicalPlacementVerified=false,referencePlanarSpeedMps=null,actualPlanarSpeedMps=null,groundPlanes=null,pelvisVerticalOffsetM=null}){
   assert(Number.isInteger(frame)&&Array.isArray(contacts)&&contacts.length===6&&dt>0&&dt<=.1);
   assert(state.lastFrame===null||frame===state.lastFrame+1,'Contact IK must run sequentially; reset state for a new take');
   const savedState={pelvis:state.pelvis,lastFrame:state.lastFrame,feet:Object.fromEntries(Object.entries(state.feet).map(([k,v])=>[k,{...v,anchor:v.anchor?.clone()}]))};
@@ -74,9 +74,10 @@ export function createFootPlantSolver(THREE,rig,calibration,options={}){
     plans[side]={target,orientation:goalQ,phase,plane,ground:normalModel,preferredPelvisY};
    }
    assert(interval[0]<=interval[1],'Both stance constraints exceed bounded pelvis-Y reach');
-   const preferred=Object.values(plans).map(p=>p.preferredPelvisY).filter(Number.isFinite),eased=state.pelvis*Math.exp(-8*dt),desired=preferred.length?preferred.reduce((a,b)=>a+b,0)/preferred.length:eased,delta=clamp(desired,interval[0],interval[1]);const rootWorld=pos(hips).add(new THREE.Vector3(0,delta,0));const local=hips.parent.worldToLocal(rootWorld);
+   if(pelvisVerticalOffsetM!==null)assert(Number.isFinite(pelvisVerticalOffsetM)&&pelvisVerticalOffsetM>=interval[0]-1e-9&&pelvisVerticalOffsetM<=interval[1]+1e-9,'Planned pelvis correction must remain within measured stance reach');
+   const preferred=Object.values(plans).map(p=>p.preferredPelvisY).filter(Number.isFinite),eased=state.pelvis*Math.exp(-8*dt),desired=preferred.length?preferred.reduce((a,b)=>a+b,0)/preferred.length:eased,delta=clamp(pelvisVerticalOffsetM??desired,interval[0],interval[1]);const rootWorld=pos(hips).add(new THREE.Vector3(0,delta,0));const local=hips.parent.worldToLocal(rootWorld);
    assert(Math.abs(local.x-hipsXZ[0])<1e-5&&Math.abs(local.z-hipsXZ[1])<1e-5,'Pelvis-Y correction changed physical root XZ');hips.position.y=local.y;rig.updateMatrixWorld(true);
-   report.pelvis_vertical_body_offset_m=delta;report.source_hips_local_y=hipsY;
+   report.pelvis_feasible_interval_m=interval;report.pelvis_preferred_offset_m=preferred.length?preferred.reduce((a,b)=>a+b,0)/preferred.length:null;report.pelvis_vertical_body_offset_m=delta;report.source_hips_local_y=hipsY;
    for(const side of['Left','Right']){
     const f=feet[side],plan=plans[side];
     if(plan){applyLeg(side,plan.target,plan.orientation);report.feet[side]={mode:'measured-sole-stance-IK',phase:plan.phase,ankle_target_world_model_m:plan.target.toArray()};}
