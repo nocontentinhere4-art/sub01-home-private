@@ -31,3 +31,20 @@ def test_promoted_generation_cannot_adopt_other_game_or_assets(field,value):
  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*promoted_contexts(),1792094100)
 def test_promoted_scope_does_not_accept_departed_original_game():
  with pytest.raises(AssertionError):m.validate_scope(promoted_scope(),m.CANDIDATE,*contexts(),1792094100)
+
+def next_scope():
+ s=scope();s.update(live_generation=m.NEXT_GENERATION,game_pid=240000,game_start_ticks=999999999,live_playable_project=str(m.NEXT_PLAYABLE),live_map_sha256='a'*64,live_module_sha256=m.PLAYABLE_MODULE_SHA);return s
+
+def next_contexts():
+ return ((999999999,'S',[str(m.NEXT_PLAYABLE/'Sub01HomeLab.uproject').encode(),b'-game']),contexts()[1])
+
+def test_next_sealed_project_uses_exact_new_process_and_never_adopts_old():
+ assert m.validate_scope(next_scope(),m.CANDIDATE,*next_contexts(),1792106200)
+ with pytest.raises(AssertionError):m.validate_scope(next_scope(),m.CANDIDATE,*promoted_contexts(),1792106200)
+ for path in (m.NEXT_PLAYABLE,m.PLAYABLE,m.SOURCE):
+  with pytest.raises(AssertionError):m.validate_scope(next_scope(),path,*next_contexts(),1792106200)
+
+@pytest.mark.parametrize('field,value',[('game_pid',0),('game_start_ticks',999999998),('live_playable_project',str(m.PLAYABLE)),('live_map_sha256','bad'),('live_module_sha256',m.MODULE_SHA)])
+def test_next_revision_identity_cannot_broaden_project_or_module(field,value):
+ s=next_scope();s[field]=value
+ with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*next_contexts(),1792106200)
