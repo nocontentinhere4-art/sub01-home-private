@@ -55,6 +55,10 @@ def prepare(root, output):
             'minecraft-prepared/source/games/minecraft/node_modules',
             'minecraft-prepared/playwright-browsers',
             'device-runtime/wheels', 'device-runtime/public-debs']],
+        'backend_brain_files_verify_after_source_restore': [
+            ROOTFS + '/out/connectome.npz', ROOTFS + '/out/atlas_names.json'],
+        'shutdown_policy': 'Read authenticated runtime-window deadline at service launch; '
+                           'work milestone does not shorten authorized GPU retention.',
         'protected_rootfs_operator_file': '/home/unreal/.sub01-private/operator-token',
         'credential_policy': 'Restore same authorized operator role through private channel; '
                              '0600 owner1001, parent0700; never on volume or in source archive.',
