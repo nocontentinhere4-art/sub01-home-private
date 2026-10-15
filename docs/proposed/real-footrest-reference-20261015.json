@@ -1,0 +1,31 @@
+{
+  "schema": "sub01.real-footrest-reference.v1",
+  "source_url": "https://shop.humanscale.com/products/fr300-foot-rocker",
+  "brand_product_reference": "Humanscale FR300; inspiration/reference only, no claim of official CAD",
+  "manufacturer_overview_url": "https://www.humanscale.com/products/ergonomic-foot-rests/ergonomic-foot-rocker",
+  "line_drawing_url": "https://humanscale.getbynder.com/m/2bc66d884344904/original/FR300-Foot-Rocker-Natural.svg",
+  "reference_photo_url": "https://shop.humanscale.com/cdn/shop/files/humanscale-fr300-workstation-closeup-birdseye-front-rocking-lf.jpg?crop=center&height=1000&v=1773784654&width=1000",
+  "verified_with": "configured isolated Playwright official rendered product page/specification/drawing 2026-10-15",
+  "nominal_footprint_m": [
+    0.406,
+    0.302
+  ],
+  "published_height_mm": [
+    95,
+    152
+  ],
+  "published_height_in": [
+    3.8,
+    6.8
+  ],
+  "published_height_unit_inconsistency": "6.8in is not152mm; use conservative shared range and do not claim a corrected manufacturer dimension",
+  "materials_reference": [
+    "solid wood platform",
+    "metal side plates and adjustment knobs",
+    "three non-slip rounded grip strips",
+    "ball-bearing rollers"
+  ],
+  "modelling": "Original Blender model inspired by the real reference, physically present support mesh/collider, no manufacturer logo/endorsement. No altered floor plane. Final platform height and location must be selected from measured upright owner leg/desk/chair geometry.",
+  "native_imported": false,
+  "runtime_ready": false
+}
