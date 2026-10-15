@@ -1,0 +1,66 @@
+{
+  "schema": "sub01.private-cozy-motion-integration.v1",
+  "upstream": "https://github.com/NomaDamas/CozyClay",
+  "package_version": "2.1.1",
+  "source_inspection_commit": "405deaf61d6ed41c174b80411f13fdcebca1a5e7",
+  "external_library_license": "AGPL-3.0-or-later; upstream runtime remains external, not copied into application source",
+  "private_ui": "http://127.0.0.1:5180/app/",
+  "telemetry_enabled": false,
+  "package_source_hashes": {
+    "src/ardy/playback.js": "14334c34d25c1f99c2e177f2e4b8be9fb751d974468a73d58eb844e77f32aedd",
+    "src/ardy/npz.js": "f9a443015a405234e3ac02abbc9bb9f223060d8cacb358905616c7cf40dd1e3a"
+  },
+  "review_only_body_bake": {
+    "schema": "sub01.cozy-bake-independent.v1",
+    "frames": 360,
+    "duration_seconds": 17.950000762939453,
+    "body_bones": 20,
+    "root_start_to_end_m": 9.202394053761651,
+    "max_quaternion_squared_norm_error": 1.0046942833241701e-07,
+    "original_geometry_skin_images_graphs_unchanged": true,
+    "hand_tracks_overridden": false,
+    "native_visual_accepted": false,
+    "candidate_sha256": "c484d5a7a60be814727507f18cee868bac1e64ae68b5f60c36ee3bed1eb32967"
+  },
+  "physical_locomotion_candidate": {
+    "schema": "sub01.cozy-bake-independent.v1",
+    "frames": 360,
+    "duration_seconds": 17.950000762939453,
+    "body_bones": 20,
+    "root_start_to_end_m": 0.03582122802734375,
+    "horizontal_root_drift_m": 0.0,
+    "in_place": true,
+    "max_quaternion_squared_norm_error": 1.0046942833241701e-07,
+    "original_geometry_skin_images_graphs_unchanged": true,
+    "hand_tracks_overridden": false,
+    "native_visual_accepted": false,
+    "candidate_sha256": "c44c6e212c7e66adb4a34db011077d18db3b5ea71ac3add7e9c02144447281ba"
+  },
+  "source_visual_findings": [
+    "Actual owner was evaluated in Blender on Runpod at frames1/90/240/360",
+    "Cozy body animation transfers, but its standard playback leaves wrists and fingers at reference pose",
+    "Original character fingertip anatomy is visibly coarse; changing only joint curl is not final acceptance",
+    "Captured hand layer is a separate candidate and must retain independent side motion and receive mesh/phase/contact review"
+  ],
+  "runpod_runtime": {
+    "pod": "dgtgepkz7h1zy5",
+    "kimodo_commit": "58e781898b3d7e328a676a75d3e338c45dce3ad9",
+    "python_environment": "/home/unreal/.venvs/sub01-kimodo",
+    "torch": "2.8.0+cu128",
+    "model": "nvidia/Kimodo-SOMA-RP-v1.1",
+    "model_revision": "6c9233af1180b8151e3c4703477104af5dce9dd5",
+    "motion_checkpoint_acquired": true,
+    "new_motion_inference_verified": false,
+    "text_encoder_access": "Meta Llama repository returned GatedRepoError; no existing local token and no access bypass attempted",
+    "gpu_deadline_epoch": 1792117175
+  },
+  "native_imported": false,
+  "hand_contact_accepted": false,
+  "full_objective_complete": false,
+  "next_required": [
+    "Review corrected hand anatomy and captured articulation together",
+    "Align locomotion with real physical movement and house collision checks",
+    "Generate custom takes once authorized text-encoder model access exists",
+    "Import and verify clips in real private native home; body file/Blender image alone does not satisfy objective"
+  ]
+}
