@@ -54,8 +54,13 @@ def run(dry_run=True):
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors());before=snapshot(u,actors)
  destination='/Game/Sub01Home/ControllerWIP/V_'+HELD_SHA[:12]+'/A_'+uuid4().hex;prepared=project/'Saved/ControllerWIP'/uuid4().hex
  result.update(owned_destination=destination,parts=[])
+ deadline=time.monotonic()+300
+ def progress(stage):
+  if time.monotonic()>=deadline:raise TimeoutError('Controller candidate complete proof300s deadline; rollback required')
+  (project/'private-audit/reference-controller-r11-import-progress.json').write_text(json.dumps({'epoch':time.time(),'stage':stage,'destination':destination,'elapsed_s':300-(deadline-time.monotonic()),'proof_complete':False}))
  try:
   for role,filename,prefix in [('held','controller-r11-held.glb','C11H'),('display_lod','controller-r11-display-lod.glb','C11D')]:
+   progress('prepare:'+role)
    target=prepared/(role+'.glb');doc,blob=prepare_groups(ROOT/filename,target,prefix);names={n['name']for n in doc['nodes']}
    manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
    if not manager.import_scene(destination+'/'+role,manager.create_source_data(str(target)),params):raise RuntimeError('Candidate source import refused')
@@ -71,13 +76,14 @@ def run(dry_run=True):
    for ni,node in enumerate(doc['nodes']):
     found=list(matches.get(node['name'],{}).values())
     if len(found)!=1:raise RuntimeError('Exact newly owned complete primitive label required')
+    progress('full-geometry:'+role+':'+node['name'])
     a,c=found[0];mesh=c.get_editor_property('static_mesh');owned_geometry(u,mesh,destination)
-    wanted,zero=positive_triangles(expected_triangles(doc,blob,ni));actual=native_triangles(u,c)
-    if not same_triangles(wanted,actual,tolerance=.0001):raise RuntimeError('Actual positive source/controller primitive geometry differs')
+    wanted,zero=positive_triangles(expected_triangles(doc,blob,ni));actual_raw=native_triangles(u,c);actual,native_zero=positive_triangles(actual_raw)
+    if not same_triangles(wanted,actual,tolerance=.0001,deadline_monotonic=min(deadline,time.monotonic()+45)):raise RuntimeError('Actual positive source/controller primitive geometry differs')
     primitive=doc['meshes'][node['mesh']]['primitives'][0];material=doc['materials'][primitive['material']]
     pbr=verify_owned_material(u,c,material,destination,source_primitive_verified=True)
     c.set_collision_profile_name('NoCollision');c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
-    result['parts'].append({'role':role,'source_node':node['name'],'actor':a.get_path_name(),'component':c.get_path_name(),'mesh':mesh.get_path_name(),'positive_triangles':len(actual),'source_exact_zero_triangle_indices':zero,'pbr':pbr})
+    result['parts'].append({'role':role,'source_node':node['name'],'actor':a.get_path_name(),'component':c.get_path_name(),'mesh':mesh.get_path_name(),'positive_triangles':len(actual),'source_exact_zero_triangle_indices':zero,'native_exact_zero_triangle_indices':native_zero,'pbr':pbr})
   if snapshot(u,actors)!=before:raise RuntimeError('Candidate original actors changed')
   if not u.EditorAssetLibrary.save_directory(destination,only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned candidate controller assets could not save')
   # Imported scene actors were temporary geometry/PBR probes only. Save only owned
@@ -87,7 +93,7 @@ def run(dry_run=True):
   if not active_candidate_guard(project):raise RuntimeError('Candidate scope expired before asset receipt')
   for part in result['parts']:part['temporary_actor_destroyed_after_verification']=True
   audit=project/'private-audit';audit.mkdir(exist_ok=True);result.update(saved_assets=True,map_saved=False,protected_candidate_actors_exact=True,all_temporary_review_actors_destroyed=True,complete_candidate_world_snapshot_restored_exact=True)
-  (audit/'reference-controller-r11-candidate-import.json').write_text(json.dumps(result,indent=2));return result
+  (audit/'reference-controller-r11-candidate-import.json').write_text(json.dumps(result,indent=2));(audit/'reference-controller-r11-import-progress.json').write_text(json.dumps({'epoch':time.time(),'stage':'complete','destination':destination,'elapsed_s':300-(deadline-time.monotonic()),'proof_complete':True,'saved_assets':True,'world_restored_exact':True}));return result
  except Exception:
   detach_added(u,eas,before)
   if snapshot(u,actors)!=before:raise RuntimeError('Candidate rollback changed original actors')

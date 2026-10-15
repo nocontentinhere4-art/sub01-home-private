@@ -32,8 +32,13 @@ def native_triangles(u,c):
     return result
 
 
-def same_triangles(expected,actual,tolerance=.001):
+def same_triangles(expected,actual,tolerance=.001,deadline_monotonic=None):
     """Nearest complete triangle, including all positive source faces; no pruning."""
+    import time
+    def check_deadline():
+        if deadline_monotonic is not None and time.monotonic()>=deadline_monotonic:raise TimeoutError('Complete triangle proof exceeded explicit budget; no partial acceptance')
+    if deadline_monotonic is not None and not math.isfinite(deadline_monotonic):raise ValueError('Finite absolute proof deadline required')
+    check_deadline()
     if len(expected)!=len(actual):return False
     if not math.isfinite(tolerance)or tolerance<=0:raise ValueError('Positive finite triangle tolerance required')
     # Complete corner agreement within tolerance implies centroid agreement
@@ -43,12 +48,16 @@ def same_triangles(expected,actual,tolerance=.001):
     cell=2*tolerance
     def key(t):return tuple(math.floor(sum(p[a]for p in t)/(3*cell))for a in range(3))
     buckets={}
-    for i,t in enumerate(actual):buckets.setdefault(key(t),set()).add(i)
-    for triangle in expected:
+    for i,t in enumerate(actual):
+        if i%256==0:check_deadline()
+        buckets.setdefault(key(t),set()).add(i)
+    for triangle_index,triangle in enumerate(expected):
+        if triangle_index%128==0:check_deadline()
         center=key(triangle);choices=[]
         for offset in itertools.product((-1,0,1),repeat=3):
             bucket=buckets.get(tuple(a+b for a,b in zip(center,offset)),set())
-            for i in bucket:
+            for candidate_index,i in enumerate(bucket):
+                if candidate_index%128==0:check_deadline()
                 error=min(max(math.dist(a,b)for a,b in zip(triangle,order))for order in itertools.permutations(actual[i]))
                 if error<=tolerance:choices.append((error,i,bucket))
         if not choices:return False

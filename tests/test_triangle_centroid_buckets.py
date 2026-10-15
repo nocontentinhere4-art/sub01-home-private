@@ -40,3 +40,11 @@ def test_duplicate_missing_positive_surface_or_deformed_corner_still_refuses():
 @pytest.mark.parametrize('tol',[0,-1,float('nan'),float('inf')])
 def test_bad_tolerance_refuses(tol):
  with pytest.raises(ValueError):same([],[],tol)
+
+
+def test_explicit_elapsed_proof_deadline_never_returns_partial_acceptance():
+ import time
+ t=[[0,0,0],[1,0,0],[0,1,0]]
+ with pytest.raises(TimeoutError):same([t],[t],.0001,deadline_monotonic=time.monotonic()-1)
+ assert same([t],[t],.0001,deadline_monotonic=time.monotonic()+1)
+ with pytest.raises(ValueError):same([t],[t],.0001,deadline_monotonic=float('nan'))

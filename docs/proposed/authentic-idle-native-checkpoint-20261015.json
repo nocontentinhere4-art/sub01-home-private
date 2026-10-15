@@ -1,0 +1,29 @@
+{
+  "schema": "sub01.authentic-idle-native-candidate-checkpoint.v1",
+  "status": "actual-import-and76-component-poses-and-lit-images-verified-not-live",
+  "source_sha256": "6ed602728f0455e57e1377752cfa44306c3fb58da9935de8b8d1bbe62a69b8d2",
+  "fbx_sha256": "98ea2abdfa5158583b58781d7ace025701dea66af5b7cbc7ae60e219e5989419",
+  "owner_family_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "actual_candidate_clip": "/Game/Sub01Hands/AnatomicalCandidate/Idle_V_98ea2abdfa51/Attempt_33d9478e29ba4c0c86f1404ad7408035/AnatomicalAuthenticIdle.AnatomicalAuthenticIdle",
+  "same_existing_skeleton": true,
+  "native_keys": 76,
+  "duration_s": 2.5,
+  "no_transport_mesh_material_or_new_skeleton_imported": true,
+  "existing_skeleton_file_unchanged": true,
+  "actual_component_fk_all76": true,
+  "max_position_error_cm": 0.009077620554502893,
+  "max_rotation_error_degrees": 0.016126864132129437,
+  "actual_finger_anchor_loop_endpoint_max_distance_cm": 0.40662703930137617,
+  "first_person_policy_head_hidden": true,
+  "actual_home_images_viewed": [
+    "out/house-evidence/candidate-authentic-idle-hands-down-phase-15.png",
+    "out/house-evidence/candidate-authentic-idle-body-front.png"
+  ],
+  "all5_images_complete": true,
+  "temporary_actor_destroyed_world_map_camera_restored": true,
+  "approved_hand_mesh_changed": false,
+  "live_game_changed": false,
+  "live_idle_still_frozen_pending_safe_binding": true,
+  "contact_accepted": false,
+  "source_and_native_scope_regression_tests": 16
+}
