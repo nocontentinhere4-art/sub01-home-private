@@ -11,6 +11,18 @@ from pathlib import Path
 DESK_SHA='99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d'
 
 
+def rounded_outline(width,depth,radius,segments=12):
+    """Rounded rectangle/capsule without analytically coincident end vertices."""
+    if width<=0 or depth<=0 or not 0<radius<=min(width,depth)/2:raise ValueError('Valid physical rounded dimensions required')
+    points=[]
+    for cx,cy,start in[(width/2-radius,depth/2-radius,0),(-width/2+radius,depth/2-radius,90),(-width/2+radius,-depth/2+radius,180),(width/2-radius,-depth/2+radius,270)]:
+        for i in range(segments+1):
+            angle=math.radians(start+90*i/segments);point=(cx+radius*math.cos(angle),cy+radius*math.sin(angle))
+            if not points or math.dist(point,points[-1])>1e-12:points.append(point)
+    if math.dist(points[0],points[-1])<=1e-12:points.pop()
+    return points
+
+
 def build(desk,output,center_x=200.,center_y=-260.,floor=2.5,height=120.):
     import bpy
     import numpy as np
@@ -64,12 +76,7 @@ def build(desk,output,center_x=200.,center_y=-260.,floor=2.5,height=120.):
             mod=obj.modifiers.new('Machined edge radius','BEVEL');mod.width=bevel;mod.segments=4
             bpy.context.view_layer.objects.active=obj;obj.select_set(True);bpy.ops.object.modifier_apply(modifier=mod.name);obj.select_set(False)
         return finish(obj,name,material)
-    def rounded(width,depth,radius,segments=12):
-        points=[]
-        for cx,cy,start in[(width/2-radius,depth/2-radius,0),(-width/2+radius,depth/2-radius,90),(-width/2+radius,-depth/2+radius,180),(width/2-radius,-depth/2+radius,270)]:
-            for i in range(segments+1):
-                angle=math.radians(start+90*i/segments);points.append((cx+radius*math.cos(angle),cy+radius*math.sin(angle)))
-        return points
+    rounded=rounded_outline
     board=prism('SolidWalnutPlatform',rounded(.374,.284,.013),h-.018,h,wood,.002)
     board.data.materials.append(endgrain);uv=board.data.uv_layers.new(name='ProviderScaleWoodUV')
     for poly in board.data.polygons:
@@ -121,7 +128,7 @@ def build(desk,output,center_x=200.,center_y=-260.,floor=2.5,height=120.):
     bpy.context.view_layer.update();bpy.ops.file.pack_all()
     blend=output/'reference-footrest.blend';bpy.ops.wm.save_as_mainfile(filepath=str(blend))
     export=output/'reference-footrest.glb';bpy.ops.export_scene.gltf(filepath=str(export),export_format='GLB',use_selection=True,export_apply=True)
-    gd,gb=read_gltf(export);gm=world_matrices(gd);points=[];triangles=0;support=[]
+    gd,gb=read_gltf(export);gm=world_matrices(gd);points=[];triangles=0;support=[];solid_triangles=[];solid_nodes=[]
     for ni,n in enumerate(gd['nodes']):
         if 'mesh'not in n:continue
         for p in gd['meshes'][n['mesh']]['primitives']:
@@ -129,11 +136,14 @@ def build(desk,output,center_x=200.,center_y=-260.,floor=2.5,height=120.):
             ids=[i[0]for i in accessor(gd,gb,p['indices'])];triangles+=len(ids)//3
             for k in range(0,len(ids),3):
                 t=[ps[j]for j in ids[k:k+3]]
+                solid_triangles.append([[v[0]*100,v[2]*100,v[1]*100]for v in t]);solid_nodes.append(ni)
                 if max(v[1]for v in t)-min(v[1]for v in t)<1e-7 and abs(t[0][1]-(floor/100+h+.002))<1e-7:
                     support.append([[v[0]*100,v[2]*100,v[1]*100]for v in t])
     lo=[min(p[a]for p in points)for a in range(3)];hi=[max(p[a]for p in points)for a in range(3)]
     if abs(lo[1]-floor/100)>1e-6 or not support:raise ValueError('Actual exported rollers/floor or physical grip support differs')
-    report={'schema':'sub01.original-reference-footrest.v1','reference':'Humanscale FR300 inspiration only; original editable model, not official CAD',
+    from closed_footrest_contact import ClosedFootrest
+    closed=ClosedFootrest(solid_triangles,solid_nodes)
+    report={'closed_component_topology':closed.proof,'schema':'sub01.original-reference-footrest.v1','reference':'Humanscale FR300 inspiration only; original editable model, not official CAD',
             'source_wood_glb_sha256':DESK_SHA,'wood_uv_affine_max_error':uv_error,'wood_uv_affine_coefficients':coeff.tolist(),
             'center_ue_cm':[center_x,center_y],'actual_floor_ue_cm':floor,'wood_top_ue_cm':floor+h*100,'rubber_support_top_ue_cm':floor+(h+.002)*100,
             'width_reference_m':.406,'depth_reference_m':.302,'actual_bounds_gltf_m':[lo,hi],'actual_dimensions_m':[b-a for a,b in zip(lo,hi)],

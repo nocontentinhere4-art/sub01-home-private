@@ -1,0 +1,14 @@
+{
+  "schema": "sub01.reference-footrest-closed-source.v1",
+  "reference": "docs/proposed/real-footrest-reference-20261015.json",
+  "kind": "Original editable model inspired by Humanscale FR300; not vendor CAD",
+  "previous_glb_sha256": "0ca7c626dcca1b658da783b944d85db7e1247ed580d33022b5499ee2df5167b2",
+  "glb_sha256": "d805f7bcc58b919734a966e084d16aa509655f3d7df8c5088efbd6a17d425c50",
+  "blend_sha256": "791f1f4ac5792e36ea37a49d8780f5568b8603ed4ad5df64033d303b103e4906",
+  "change": "Remove analytically coincident capsule endpoints before bevel; all19 parts now closed. Original PBR/image payloads and overall dimensions unchanged.",
+  "actual_closed_component_tests": "All19 topology certificates and actual knob/carryhole interior-exterior ray checks passed GPU Blender",
+  "pose_acceptance": false,
+  "pose_limitation": "Written upright candidate5e216ec4 retains real0.199935913cm left shoe/sideplate overlap and is diagnostic only",
+  "native_imported": false,
+  "runtime_ready": false
+}
