@@ -101,6 +101,52 @@ def snapshot(u, actors):
     return result
 
 
+
+def audit_original_kitchen(u, actors, source, project):
+    """Read-only native/source closure for both old cabinets and all retained fixtures."""
+    from real_office_plant import native_geometry_api_audit
+    doc, binary = read_gltf(source)
+    matrices = world_matrices(doc)
+    report = {'schema': 'sub01.kitchen-original-native-audit.v1', 'source_sha256': HOME_SHA,
+              'scene_mutations': 0, 'nodes': []}
+    for node in (63, 178, 65, 66, 164):
+        row = {'source_node': node, 'source_name': doc['nodes'][node].get('name')}
+        source_points, source_count = [], 0
+        for primitive in doc['meshes'][doc['nodes'][node]['mesh']]['primitives']:
+            source_points += [[p[k]*100 for k in (0, 2, 1)] for p in
+                              (transformed(matrices[node], v) for v in accessor(doc, binary, primitive['attributes']['POSITION']))]
+            source_count += len(accessor(doc, binary, primitive['indices']))//3
+        row['source_triangles'] = source_count
+        row['source_world_bounds_cm'] = [[f(p[k] for p in source_points) for k in range(3)] for f in (min, max)]
+        found = [a for a in actors if a.get_name() == 'full-home_node_'+str(node)]
+        row['actor_matches'] = len(found)
+        if len(found) == 1:
+            a = found[0]
+            row.update({'actor_name': a.get_name(), 'actor_label': a.get_actor_label(),
+                        'actor_hidden': bool(a.get_editor_property('hidden')),
+                        'actor_transform': str(a.get_actor_transform()), 'components': []})
+            for c in a.get_components_by_class(u.StaticMeshComponent):
+                mesh = c.get_editor_property('static_mesh')
+                item = {'component': c.get_path_name(), 'mesh': mesh.get_path_name() if mesh else None,
+                        'visible': bool(c.get_editor_property('visible')),
+                        'collision': str(c.get_collision_enabled()), 'collision_profile': str(c.get_collision_profile_name()),
+                        'materials': [m.get_path_name() if m else None for m in c.get_materials()]}
+                if mesh:
+                    try:
+                        points, count = surface(u, c)
+                        item.update({'actual_cpu_triangles': count, 'actual_world_bounds_cm':
+                                     [[f(p[k] for p in points) for k in range(3)] for f in (min, max)],
+                                     'geometry_api_audit': native_geometry_api_audit(u, mesh)})
+                    except Exception as error:
+                        item['geometry_query_error'] = str(error)
+                row['components'].append(item)
+        report['nodes'].append(row)
+    target = project/'private-audit'/'kitchen-original-native-audit.json'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(report, indent=2)+'\n')
+    return target
+
+
 def preflight(root, u):
     root = Path(root)
     proof = validate_manifest(json.loads((root/'native-kitchen.json').read_text()))
@@ -115,6 +161,7 @@ def preflight(root, u):
         raise RuntimeError('Sole owner must already have ActualHome loaded')
     eas = u.get_editor_subsystem(u.EditorActorSubsystem)
     original = list(eas.get_all_level_actors())
+    audit_path = audit_original_kitchen(u, original, project/'SourceAssets/full-home.glb', project)
     old = []
     for node, (label, mesh_index) in OLD.items():
         matches = [a for a in original if a.get_name() == 'full-home_node_'+str(node)]
@@ -126,7 +173,7 @@ def preflight(root, u):
         if (actor.get_actor_label() != label or len(components) != 1
                 or components[0].get_editor_property('static_mesh').get_path_name() != expected
                 or bool(actor.get_editor_property('hidden'))):
-            raise RuntimeError('Original cabinet binding/visibility differs; no batch guesses')
+            raise RuntimeError('Original cabinet binding/visibility differs; no batch guesses; source_node='+str(node)+' expected_label='+label+' expected_mesh='+expected+' full_audit='+str(audit_path))
         old.append((actor, components[0]))
     # Actual source geometry, not just actor names or coincident bounding boxes.
     retained = verify_retained_native(u, original, project/'SourceAssets/full-home.glb')
