@@ -395,8 +395,9 @@ EDITS = [
      ' // A seated body never walks off: the captured get-up must finish first.\n'
      ' if(!SeatOut.MovementInput&&LiveHomePath.Num()){GetCharacterMovement()->StopMovementImmediately();if(PCBridge)PCBridge->SetOperatorFocus(false);return;}\n'
      ' if(!LiveHomePath.Num()){if(PCBridge)PCBridge->SetOperatorFocus('),
-    ('cpp', 'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n',
-     'Instance->TargetRate=HandsPosture==TEXT("Walk")?(Moving?FMath::Clamp(Speed/140.f,.1f,1.2f):(PlayingIdle?1.f:0.f)):1.f;\n ApplySeatAnimation(Instance);\n'),
+    # The motion adapter rewrites the Moving arm; preserve it and anchor on the unique stable tail.
+    ('cpp', ':(PlayingIdle?1.f:0.f)):1.f;\n',
+     ':(PlayingIdle?1.f:0.f)):1.f;\n ApplySeatAnimation(Instance);\n'),
     ('hands_header', ' protected:', HANDS_FIELDS + ' protected:'),
     ('hands_cpp', ' float Progress=1;\n',
      ' float Progress=1;int32 SeatSerial=0,SeatEvaluatedSerial=0;UAnimSequence* SeatEvaluatedSequence=nullptr;float SeatEvaluatedTime=-1;\n'),
