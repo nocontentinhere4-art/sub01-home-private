@@ -8,6 +8,9 @@ def owner():
  return {'label':'Haven_linen','transform':copy.deepcopy(m.OLD_TRS),'hidden':False,'editor_hidden':False,'components':[{'mesh':'/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/Mesh_133.Mesh_133','transform':copy.deepcopy(m.OLD_TRS)}]}
 
 class ContractTests(unittest.TestCase):
+ def test_owner_rejection_blocks_before_unreal_or_mutation(self):
+  with self.assertRaisesRegex(RuntimeError,"OWNER REJECTED"):
+   m.run(dry_run=False)
  def test_complete_pinned_owner(self):
   self.assertTrue(m.original_identity(owner(),174))
  def test_refuses_wrong_or_partial_retirement(self):
