@@ -22,7 +22,7 @@ def run(u=None):
     skeleton = owner.get_editor_property('skeleton')
     component = u.SkeletalMeshComponent()
     component.set_skeletal_mesh_asset(owner)
-    bones = [str(n) for n in component.get_bone_names()]
+    bones = [str(component.get_bone_name(i)) for i in range(component.get_num_bones())]
     extent = owner.get_bounds().box_extent
     result['owner'] = {'mesh': owner.get_path_name(), 'skeleton': skeleton.get_path_name(),
                        'bounds_extent_cm': [extent.x, extent.y, extent.z],
