@@ -1,0 +1,585 @@
+{
+  "schema": "sub01.actual-frozen-living-footprints.v1",
+  "units": "UE cm",
+  "capsuleRadiusCm": 16,
+  "capsuleHalfHeightCm": 91,
+  "requiredSurfaceMarginCm": 3,
+  "gaps": {
+    "console_to_table_cm": 38.79999220371246,
+    "table_to_sofa_cm": 38.24999788810425,
+    "sofa_back_to_stairs_cm": 77.25000623264248
+  },
+  "minimumPassageWidthCm": 38,
+  "localCapsuleRouteChecks": [
+    {
+      "name": "south approach to sofa",
+      "checks": [
+        {
+          "from": [
+            -65,
+            -220
+          ],
+          "to": [
+            -65,
+            -180
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 83.18429086142761,
+          "surfaceClearanceCm": 67.18429086142761
+        },
+        {
+          "from": [
+            -65,
+            -220
+          ],
+          "to": [
+            -65,
+            -180
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 200.24975335840304,
+          "surfaceClearanceCm": 184.24975335840304
+        },
+        {
+          "from": [
+            -65,
+            -220
+          ],
+          "to": [
+            -65,
+            -180
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 275.746415633997,
+          "surfaceClearanceCm": 259.746415633997
+        },
+        {
+          "from": [
+            -65,
+            -220
+          ],
+          "to": [
+            -65,
+            -180
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 44.91102314577124,
+          "surfaceClearanceCm": 28.91102314577124
+        },
+        {
+          "from": [
+            -65,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -180
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 76.25000545342817,
+          "surfaceClearanceCm": 60.25000545342817
+        },
+        {
+          "from": [
+            -65,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -180
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 116.48917856764722,
+          "surfaceClearanceCm": 100.48917856764722
+        },
+        {
+          "from": [
+            -65,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -180
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 144.49412550833156,
+          "surfaceClearanceCm": 128.49412550833156
+        },
+        {
+          "from": [
+            -65,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -180
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 44.91102314577124,
+          "surfaceClearanceCm": 28.91102314577124
+        },
+        {
+          "from": [
+            -209.875,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -5
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 19.124995742337035,
+          "surfaceClearanceCm": 3.1249957423370347
+        },
+        {
+          "from": [
+            -209.875,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -5
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 19.125002145767212,
+          "surfaceClearanceCm": 3.125002145767212
+        },
+        {
+          "from": [
+            -209.875,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -5
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 117.92499673366547,
+          "surfaceClearanceCm": 101.92499673366547
+        },
+        {
+          "from": [
+            -209.875,
+            -180
+          ],
+          "to": [
+            -209.875,
+            -5
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 188.875,
+          "surfaceClearanceCm": 172.875
+        }
+      ]
+    },
+    {
+      "name": "sofa to north stair-side passage",
+      "checks": [
+        {
+          "from": [
+            -209.875,
+            -5
+          ],
+          "to": [
+            -209.875,
+            185
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 19.124995742337035,
+          "surfaceClearanceCm": 3.1249957423370347
+        },
+        {
+          "from": [
+            -209.875,
+            -5
+          ],
+          "to": [
+            -209.875,
+            185
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 19.125002145767212,
+          "surfaceClearanceCm": 3.125002145767212
+        },
+        {
+          "from": [
+            -209.875,
+            -5
+          ],
+          "to": [
+            -209.875,
+            185
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 117.92499673366547,
+          "surfaceClearanceCm": 101.92499673366547
+        },
+        {
+          "from": [
+            -209.875,
+            -5
+          ],
+          "to": [
+            -209.875,
+            185
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 188.875,
+          "surfaceClearanceCm": 172.875
+        },
+        {
+          "from": [
+            -209.875,
+            185
+          ],
+          "to": [
+            -65,
+            185
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 61.2500006830944,
+          "surfaceClearanceCm": 45.2500006830944
+        },
+        {
+          "from": [
+            -209.875,
+            185
+          ],
+          "to": [
+            -65,
+            185
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 131.30873434625116,
+          "surfaceClearanceCm": 115.30873434625116
+        },
+        {
+          "from": [
+            -209.875,
+            185
+          ],
+          "to": [
+            -65,
+            185
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 153.65075168234523,
+          "surfaceClearanceCm": 137.65075168234523
+        },
+        {
+          "from": [
+            -209.875,
+            185
+          ],
+          "to": [
+            -65,
+            185
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 44.0,
+          "surfaceClearanceCm": 28.0
+        },
+        {
+          "from": [
+            -65,
+            185
+          ],
+          "to": [
+            -65,
+            330
+          ],
+          "obstacle": "sofa",
+          "centrelineMinimumDistanceCm": 69.69308070497263,
+          "surfaceClearanceCm": 53.69308070497263
+        },
+        {
+          "from": [
+            -65,
+            185
+          ],
+          "to": [
+            -65,
+            330
+          ],
+          "obstacle": "coffeeTable",
+          "centrelineMinimumDistanceCm": 209.21811277313063,
+          "surfaceClearanceCm": 193.21811277313063
+        },
+        {
+          "from": [
+            -65,
+            185
+          ],
+          "to": [
+            -65,
+            330
+          ],
+          "obstacle": "console",
+          "centrelineMinimumDistanceCm": 280.6529652811979,
+          "surfaceClearanceCm": 264.6529652811979
+        },
+        {
+          "from": [
+            -65,
+            185
+          ],
+          "to": [
+            -65,
+            330
+          ],
+          "obstacle": "stairs",
+          "centrelineMinimumDistanceCm": 44.0,
+          "surfaceClearanceCm": 28.0
+        }
+      ]
+    }
+  ],
+  "TVSightline": {
+    "eyeToScreenPlaneCm": 219.7,
+    "horizontalScreenAngleDegrees": 41.39191577712434,
+    "pitchToScreenCentreDegrees": 12.821172794400185,
+    "cornerRayVerticalClearances": [
+      {
+        "obstacle": "coffeeTable",
+        "TVCorner": [
+          -88,
+          117.5
+        ],
+        "verticalClearanceCm": 74.3370588702346
+      },
+      {
+        "obstacle": "console",
+        "TVCorner": [
+          -88,
+          117.5
+        ],
+        "verticalClearanceCm": 60.23631252372162
+      },
+      {
+        "obstacle": "coffeeTable",
+        "TVCorner": [
+          -88,
+          212.5
+        ],
+        "verticalClearanceCm": 106.33523913353858
+      },
+      {
+        "obstacle": "console",
+        "TVCorner": [
+          -88,
+          212.5
+        ],
+        "verticalClearanceCm": 134.9563839379147
+      },
+      {
+        "obstacle": "coffeeTable",
+        "TVCorner": [
+          78,
+          117.5
+        ],
+        "verticalClearanceCm": 74.3370588702346
+      },
+      {
+        "obstacle": "console",
+        "TVCorner": [
+          78,
+          117.5
+        ],
+        "verticalClearanceCm": 60.23631252372162
+      },
+      {
+        "obstacle": "coffeeTable",
+        "TVCorner": [
+          78,
+          212.5
+        ],
+        "verticalClearanceCm": 106.33523913353858
+      },
+      {
+        "obstacle": "console",
+        "TVCorner": [
+          78,
+          212.5
+        ],
+        "verticalClearanceCm": 134.9563839379147
+      }
+    ]
+  },
+  "TVCaseOpeningMarginsCm": [
+    1,
+    1,
+    1,
+    1
+  ],
+  "TVRearToNicheBackCm": 0.75,
+  "tvPlaneAndInputBoundsUnchanged": true,
+  "fullHouseGeometrySweepAccepted": false,
+  "nativePlacementVerified": false,
+  "otherNewAssetsAndDoorSweepsPending": true,
+  "frozenSourceVertexEvidence": {
+    "sofa": {
+      "path": "/workspace/sub01-home-private/reference-gaming-lounge-r1/haven-output-r2/genuine-navy-haven-with-pillows.glb",
+      "sha256": "b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
+      "actualPositionAccessorVertices": 76581,
+      "minimumCm": [
+        -190.75000425766297,
+        -103.74999454657183,
+        2.5049997959285975
+      ],
+      "maximumCm": [
+        -98.25000623264248,
+        123.7499993169056,
+        94.23439719780579
+      ]
+    },
+    "coffeeTable": {
+      "path": "/workspace/sub01-home-private/reference-gaming-lounge-r1/table-output/genuine-coffee-table.glb",
+      "sha256": "c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9",
+      "actualPositionAccessorVertices": 3995,
+      "minimumCm": [
+        -289.000004529953,
+        -65.0915015488863,
+        2.5049999356269836
+      ],
+      "maximumCm": [
+        -229.0000021457672,
+        55.09150139987469,
+        41.50499850511551
+      ]
+    },
+    "console": {
+      "path": "/workspace/sub01-home-private/reference-living-tv-wall-r3/output/living-cabinet.glb",
+      "sha256": "63e025252dfaa4d0db66800d5b1b36de54d46b61af2bff64e878a39287985979",
+      "actualPositionAccessorVertices": 21762,
+      "minimumCm": [
+        -376.00001096725464,
+        -96.50001525878906,
+        2.5049999356269836
+      ],
+      "maximumCm": [
+        -327.79999673366547,
+        86.5000069141388,
+        56.73000514507294
+      ]
+    }
+  },
+  "sourceConfiguration": {
+    "sourceInventory": "Frozen actual source POSITION accessors plus native R16/H91 contract; current native placement remains separate",
+    "actualMetricsContract": "193148, R16/H91 confirmed native owner20:54UTC",
+    "capsuleRadiusCm": 16,
+    "capsuleHalfHeightCm": 91,
+    "requiredSurfaceMarginCm": 3,
+    "tvFunctionalPlane": {
+      "x": -374.7,
+      "y": [
+        -88,
+        78
+      ],
+      "z": [
+        117.5,
+        212.5
+      ]
+    },
+    "furniture": {
+      "sofa": [
+        -190.75000425766297,
+        -98.25000623264248,
+        -103.74999454657183,
+        123.7499993169056
+      ],
+      "coffeeTable": [
+        -289.000004529953,
+        -229.0000021457672,
+        -65.0915015488863,
+        55.09150139987469
+      ],
+      "console": [
+        -376.00001096725464,
+        -327.79999673366547,
+        -96.50001525878906,
+        86.5000069141388
+      ]
+    },
+    "sourceScalePolicy": "Exact final genuine Haven b69d4 and PolyHaven table c05a5 vertices; no sofa03 placeholder or asset rescaling",
+    "sofaTranslationDeltaCm": [
+      35.5,
+      0,
+      0
+    ],
+    "stairs": [
+      -21,
+      81,
+      -171,
+      256
+    ],
+    "maximumFurnitureHeightCm": {
+      "coffeeTable": 41.50499850511551,
+      "console": 56.73000514507294,
+      "sofa": 94.23439719780579
+    },
+    "proposedSeatedEyeCm": [
+      -155,
+      -5,
+      115
+    ],
+    "wallTVOpeningYZ": [
+      -93,
+      83,
+      113,
+      217
+    ],
+    "actualTVCaseYZ": [
+      -92,
+      82,
+      114,
+      216
+    ],
+    "nicheBackFrontXcm": -385,
+    "proposedLocalRoutes": [
+      {
+        "name": "south approach to sofa",
+        "points": [
+          [
+            -65,
+            -220
+          ],
+          [
+            -65,
+            -180
+          ],
+          [
+            -209.875,
+            -180
+          ],
+          [
+            -209.875,
+            -5
+          ]
+        ]
+      },
+      {
+        "name": "sofa to north stair-side passage",
+        "points": [
+          [
+            -209.875,
+            -5
+          ],
+          [
+            -209.875,
+            185
+          ],
+          [
+            -65,
+            185
+          ],
+          [
+            -65,
+            330
+          ]
+        ]
+      }
+    ],
+    "minimumTVCaseOpeningMarginCm": 1
+  },
+  "actualSourceGeometryOnly": true
+}

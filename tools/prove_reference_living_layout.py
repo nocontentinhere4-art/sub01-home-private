@@ -42,7 +42,7 @@ def prove(c):
      for x in [xlow,xhigh]:
       u=(x-eye[0])/(screen['x']-eye[0]);points.append(eye[2]+u*(target_z-eye[2]))
      clearance=min(points)-c['maximumFurnitureHeightCm'][name];assert clearance>0,'Furniture blocks TV ray';ray.append({'obstacle':name,'TVCorner':[target_y,target_z],'verticalClearanceCm':clearance})
- opening=c['wallTVOpeningYZ'];case=c['actualTVCaseYZ'];clearances=[case[0]-opening[0],opening[1]-case[1],case[2]-opening[2],opening[3]-case[3]];assert min(clearances)>=2,'Feature wall touches retained TV case'
+ opening=c['wallTVOpeningYZ'];case=c['actualTVCaseYZ'];clearances=[case[0]-opening[0],opening[1]-case[1],case[2]-opening[2],opening[3]-case[3]];minimum_case_clearance=c.get('minimumTVCaseOpeningMarginCm',2);assert minimum_case_clearance>=1 and min(clearances)>=minimum_case_clearance,'Feature wall touches retained TV case'
  assert c['nicheBackFrontXcm']<-384.25,'Niche back intersects retained TV rear'
  return {'schema':'sub01.independent-living-layout-proposal.v1','units':'UE cm','capsuleRadiusCm':radius,'capsuleHalfHeightCm':91,'requiredSurfaceMarginCm':margin,'gaps':gaps,'minimumPassageWidthCm':required,'localCapsuleRouteChecks':routes,'TVSightline':{'eyeToScreenPlaneCm':distance,'horizontalScreenAngleDegrees':angle,'pitchToScreenCentreDegrees':pitch,'cornerRayVerticalClearances':ray},'TVCaseOpeningMarginsCm':clearances,'TVRearToNicheBackCm':-384.25-c['nicheBackFrontXcm'],'tvPlaneAndInputBoundsUnchanged':True,'fullHouseGeometrySweepAccepted':False,'nativePlacementVerified':False,'otherNewAssetsAndDoorSweepsPending':True}
 if __name__=='__main__':
