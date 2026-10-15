@@ -1,0 +1,17 @@
+{
+  "schema": "sub01.official-manufacturer-kitchen-mixer.v1",
+  "manufacturer": "GROHE AG",
+  "product": "Concetto single-lever kitchen sink mixer 32663003",
+  "productURL": "https://www.grohe.com/en-GB/product/concetto-single-lever-sink-mixer-1-2-high-chrome-32663003",
+  "access": "Public official For professionals > CAD Files; no login or access bypass",
+  "license": "Official manufacturer architecture/CAD download; not CC0; private candidate only",
+  "step": {"url":"https://cdn.cloud.grohe.com/CAD/2000/2100/2190/2192/2192393/original/2192393.stp","sha256":"72cecffe4e0a473068f6d6fc6a837bb6f9638cb9a64acd2197a7d2f8f375aff6","bytes":1211163},
+  "reference3DDXF": {"url":"https://cdn.cloud.grohe.com/CAD/2000/2100/2130/2135/2135588/original/2135588.dxf","sha256":"c4401024eb8c8a1116edd992ee7d6c35e79d8f9eb282a1cf9ba20c303206f914","bytes":1827743},
+  "dimensionalDrawing": {"url":"https://cdn.cloud.grohe.com/dimdraw/100000/100000/100000/100300/100340/100347/100347051/1500/100347051.jpg","sha256":"42189a87bcd5a4d072c2f0292748bd8c4c0979a85bd3124756df9617d455321c","visuallyReviewed":true},
+  "officialDimensionsMm": {"heightAboveCounter":360,"outletHeight":214,"outletReach":215,"baseDiameter":51,"mountingBore":34,"leverSweepDegrees":55},
+  "conversion": "OpenCascade genuine STEP tessellation: 0.1mm requested linear deflection, 0.08rad angular deflection, millimetres to metres only",
+  "geometryReconstruction": false,
+  "shader": "Authored chrome PBR based on official photo, not claimed original manufacturer material",
+  "nativeImportApproved": false,
+  "actualGameChanged": false
+}
