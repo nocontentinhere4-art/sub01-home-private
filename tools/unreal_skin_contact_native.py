@@ -139,3 +139,8 @@ CPP += FOOT_WITNESS_CPP
 from unreal_fixed_plantar_support import HEADER as FIXED_FOOT_HEADER, CPP as FIXED_FOOT_CPP
 HEADER += FIXED_FOOT_HEADER
 CPP += FIXED_FOOT_CPP
+
+# Read-only actual imported hand/finger samples; no contact verdict.
+from unreal_hand_skin_witness import HEADER as HAND_WITNESS_HEADER, CPP as HAND_WITNESS_CPP
+HEADER += HAND_WITNESS_HEADER
+CPP += HAND_WITNESS_CPP

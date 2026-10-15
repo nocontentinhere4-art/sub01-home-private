@@ -31,6 +31,7 @@ from unreal_native_fixture_emission import install as install_native_fixture_emi
 from unreal_native_daylight_exposure import install as install_native_daylight_exposure, stage as stage_native_daylight_exposure
 from unreal_native_capture_warmup import install as install_native_capture_warmup, stage as stage_native_capture_warmup
 from unreal_bathroom_lamp_runtime import install as install_bathroom_lamp
+from unreal_actual_hand_skin_inspect import install as install_actual_hand_skin_inspect
 
 HEADER = r'''#pragma once
 #include "CoreMinimal.h"
@@ -196,6 +197,7 @@ def stage(project):
     header,cpp=install_first_person_motion(header,cpp)
     header,cpp=install_native_visual_metrics(header,cpp)
     header,cpp=install_interaction_trace_witness(header,cpp)
+    header,cpp=install_actual_hand_skin_inspect(header,cpp)
     stage_first_person_motion(module)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
