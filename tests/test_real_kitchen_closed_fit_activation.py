@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -15,6 +16,18 @@ from test_real_kitchen_native import fixture, native_fixture
 
 
 class ClosedFitActivation(unittest.TestCase):
+    def test_retiring_collision_intentionally_changes_only_disabled_profile(self):
+        actor=SimpleNamespace(get_path_name=lambda:'actor')
+        component=SimpleNamespace(get_path_name=lambda:'component')
+        before={'actor':{'hidden':False,'components':[{'path':'component','collision':'QueryAndPhysics','profile':'BlockAll','tags':['SUB01Kitchen:old','protected']}],'materials':['original']}}
+        u=SimpleNamespace(CollisionEnabled=SimpleNamespace(NO_COLLISION='NoCollision'))
+        after=activation.retired_snapshot_expected(u,before,[(actor,component)])
+        self.assertEqual(after['actor']['components'][0]['profile'],'Custom')
+        self.assertEqual(after['actor']['components'][0]['tags'],['protected'])
+        self.assertTrue(after['actor']['hidden'])
+        self.assertEqual(before['actor']['components'][0]['profile'],'BlockAll')
+        self.assertEqual(after['actor']['materials'],before['actor']['materials'])
+
     def old_receipt(self):
         rows=[]
         for i in range(152):

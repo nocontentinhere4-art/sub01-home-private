@@ -99,7 +99,7 @@ def retired_snapshot_expected(u,before,parts):
     expected=copy.deepcopy(before)
     for a,c in parts:
         row=expected[a.get_path_name()];row['hidden']=True
-        target=next(x for x in row['components']if x['path']==c.get_path_name());target['collision']=str(u.CollisionEnabled.NO_COLLISION);target['tags']=[t for t in target['tags']if not t.startswith('SUB01Kitchen:')]
+        target=next(x for x in row['components']if x['path']==c.get_path_name());target['collision']=str(u.CollisionEnabled.NO_COLLISION);target['profile']='Custom';target['tags']=[t for t in target['tags']if not t.startswith('SUB01Kitchen:')]
     return expected
 
 
@@ -136,7 +136,7 @@ def run():
         for actor,c in parts:
             actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);c.set_editor_property('component_tags',[t for t in c.get_editor_property('component_tags')if not str(t).startswith('SUB01Kitchen:')])
         for actor,c in originals:actor.set_actor_hidden_in_game(False);c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
-        result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink,import_revision=6)
+        result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink,import_revision=7)
         # The inner importer retires these source objects, but toggling collision
         # can change Unreal's collision profile. Exposure is temporary: restore
         # their exact captured state rather than guessing only hidden/collision.
