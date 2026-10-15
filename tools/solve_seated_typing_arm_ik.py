@@ -762,7 +762,7 @@ class ChairCollider:
     nearest-centroid triangles, signed by that triangle's outward normal (negative = inside). Upholstery may be pressed
     in down to the seat band's lower edge (SEAT_BAND_CM[0], the cushion compression the seat gates allow); every other
     part (plastic frame and arms, arm pads, back mesh, base, castors, gas lift) allows no penetration."""
-    K_TRI, REACH_CM = 8, 15.
+    K_TRI, REACH_CM = 8, 3.     # exact within REACH_CM of the surface; farther points report REACH_CM (>= REACH, never small)
 
     def __init__(self, complete):
         from scipy.spatial import cKDTree
@@ -770,6 +770,8 @@ class ChairCollider:
         self.cen = complete['triangles_cm'].mean(1)
         self.tree = cKDTree(self.cen)
         self.allow = np.where(np.isin(complete['material'], UPHOLSTERY), seat_contact.SEAT_BAND_CM[0], 0.)
+        tri = complete['triangles_cm']
+        self.radius = float(np.linalg.norm(tri - self.cen[:, None], axis=-1).max())   # largest centroid-to-vertex reach
 
     def margin(self, points, offset):
         """(signed distance - allowed depth) per point (REACH_CM where no triangle is near), and the nearest material."""
@@ -777,7 +779,7 @@ class ChairCollider:
         p = np.asarray(points, float).reshape(-1, 3) - np.asarray(offset, float)
         m = np.full(len(p), self.REACH_CM)
         mat = np.full(len(p), '', dtype=object)
-        d0, _ = self.tree.query(p, distance_upper_bound=self.REACH_CM + 10.)
+        d0, _ = self.tree.query(p, distance_upper_bound=self.REACH_CM + self.radius)
         near = np.nonzero(np.isfinite(d0))[0]
         if len(near):
             _, ii = self.tree.query(p[near], k=self.K_TRI)
@@ -1539,6 +1541,30 @@ def run(args):
     summary['roll_scan'] = scan
     print('roll', roll.roll, flush=True)
     reports, worlds = {}, {}
+    import time
+    t_start = time.time()
+    summary['bounded'] = {'max_wall_seconds': args.max_seconds, 'swivel_grid_deg': [SWIVEL_GRID_DEG[0], SWIVEL_GRID_DEG[-1]],
+                          'swivel_outer_passes': 3, 'contact_passes': CONTACT_PASSES, 'search_contact_passes': SEARCH_CONTACT_PASSES,
+                          'lift_max_cm': LIFT_MAX_CM, 'post_contact_iterations': 16, 'stages_done': []}
+
+    def checkpoint(stage, blocker=None):
+        b = summary['bounded']
+        b['elapsed_seconds'] = round(time.time() - t_start, 1)
+        if stage:
+            b['stages_done'].append(stage)
+        summary['clips'] = {k: {'glb': v['glb'], 'sha256': v['sha256'], 'all_gates_pass': v['all_gates_pass']} for k, v in reports.items()}
+        summary['ready'] = False
+        summary['native_verified'] = False
+        summary['partial'] = {'stage_reached': b['stages_done'][-1] if b['stages_done'] else 'setup', 'blocker': blocker}
+        for k, v in reports.items():
+            (out_dir / f'SUB01_{k}.report.json').write_text(json.dumps(strip(v), indent=1, allow_nan=False) + '\n')
+        (out_dir / 'seated-typing-ik.proposal.json').write_text(json.dumps(summary, indent=1, allow_nan=False) + '\n')
+
+    def over_budget(next_stage):
+        if args.max_seconds and time.time() - t_start > args.max_seconds:
+            checkpoint(None, f'wall-clock bound {args.max_seconds} s reached before stage {next_stage}')
+            return True
+        return False
     # ---- DeskTyping (every 60 Hz key of the loop)
     F = len(t_dt)
     shift = np.tile(roll.roll - r0, (F, 1))
@@ -1556,14 +1582,18 @@ def run(args):
     rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'] and rep['contact_profile']['pass'])
     reports['DeskTyping_seated'], worlds['DeskTyping_seated'] = rep, (Wb, shift, t_dt)
     print('DeskTyping', rep['all_gates_pass'], flush=True)
+    checkpoint('DeskTyping_seated')
     # ---- transitions: the roll is played over them (pull-in over SitToType, push-back over TypeToSit)
     f_i, r_i, _, t_i = ctx.clip('SeatedIdle')
     W_idle = f_i.joint_world
     for role, at_end in (('SitToType_seated', True), ('TypeToSit_seated', False)):
+        if over_budget(role):
+            return summary, reports
         rep, Wcb, shift_c, t_c = transition(ctx, role, at_end, roll, r0, W_idle, Wb, out_dir,
                                             (r_i.joint_world, t_i), (r_dt.joint_world, t_dt))
         reports[role], worlds[role] = rep, (Wcb, shift_c, t_c)
         print(role, rep['all_gates_pass'], flush=True)
+        checkpoint(role)
     # ---- unchanged neighbours (seat-pose-fit GLBs) for the seams: at the measured chair (body at its actual placement)
     for role in ('SeatedIdle', 'SitDown_seated', 'GetUp_seated'):
         f_c, r_c, g_c, t_c = ctx.clip(role)
@@ -1602,6 +1632,9 @@ def run(args):
     summary['ready'] = bool(all(summary['gates'].values()))
     summary['native_verified'] = False
     summary['ready_rule'] = 'every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits %d when not ready)' % EXIT_REFUSED
+    summary.pop('partial', None)
+    summary['bounded']['elapsed_seconds'] = round(time.time() - t_start, 1)
+    summary['bounded']['stages_done'].append('seams_roll_gates')
     for k, v in reports.items():
         (out_dir / f'SUB01_{k}.report.json').write_text(json.dumps(strip(v), indent=1, allow_nan=False) + '\n')
     (out_dir / 'seated-typing-ik.proposal.json').write_text(json.dumps(summary, indent=1, allow_nan=False) + '\n')
@@ -1621,6 +1654,8 @@ def main(argv=None):
     ap.add_argument('--source', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
     ap.add_argument('--cache', default=str(ROOT / 'out/seat-fit-cache'))
     ap.add_argument('--out-dir', default=str(OUT_DIR))
+    ap.add_argument('--max-seconds', type=float, default=3600., help='wall-clock bound; a partial, ready:false report is '
+                    'written when it is reached between stages')
     ap.add_argument('--quick', action='store_true', help='smoke run on a DeskTyping subset (never a proposal)')
     ap.add_argument('--desk-source', help='LINEA140 source GLB: re-derive docs/proposed/seated-typing-ik/real-linea140-geometry.json')
     args = ap.parse_args(argv)
