@@ -74,3 +74,16 @@ def test_ergo_flags_use_unchanged_targets():
     assert u.tolist() == [True, False, True, True]
     assert w.tolist() == [True, True, False, True]
     assert R.ERGO_ELBOW_ABOVE_DESK_CM == (0., 10.) and R.ERGO_UPPER_ARM_MAX_DEG == 20.
+
+
+def test_section_gap_inside_and_outside():
+    rng = np.random.default_rng(1)
+    ang = rng.uniform(0, 2 * np.pi, 4000)
+    z = rng.uniform(0, 10, 4000)
+    body = np.c_[10 * np.cos(ang), 5 * np.sin(ang), z]          # elliptic cylinder 20 x 10 cm
+    out = np.array([[13., 0., 5.], [0., 8., 3.]])
+    assert R.section_gap(body, out) == pytest.approx(2.9, abs=.15)
+    inside = np.array([[9., 0., 5.]])
+    assert R.section_gap(body, inside) == pytest.approx(-1., abs=.15)
+    above = np.array([[0., 0., 30.]])
+    assert R.section_gap(body, above) == 20.

@@ -15,17 +15,22 @@ Inputs (all committed, the same ones as tools/solve_seated_typing_arm_ik.py):
 
 Arm/finger separation (the old finger rests are known WRONG; root builds a 65-bone owner with the same root, arms and
 wrists and new CC0 finger rests):
-* the IK target of every frame is a HAND FRAME: the palm point (60% from the wrist joint to the middle MCP, main's
-  desk-hands contact rule) relative to the device under the hand, plus the hand's CAPTURED world attitude (no added
-  flexion, no soft wrist limit). Fingers are carried rigidly and never drive the solve;
-* the old fingertips are reported only as `old_finger_contact_diagnostic` (never a gate);
-* the per-frame solution is stored as targets + elbow swivel + six arm-bone worlds, so root can re-run the hand
-  contact with the new hands on the same arm/layout solution (a robustness envelope of the palm target is reported).
+* the IK target of every frame is a HAND FRAME defined without any finger: the home-row frame (middle MCP 5.5 cm toward
+  the body from the middle finger's home key, D / K, and 3.5 cm over the key tops; level hand, fingers at the rows,
+  palm down) or main's mouse palm target (hand pitched 15 deg over the shell), blended over the source-ready solve's
+  keyboard / mouse / transit segmentation, plus that solve's device-relative HORIZONTAL typing motion of the palm;
+* the target point is the palm (60% wrist -> middle MCP, main's desk-hands rule); the wrist angle on the solved forearm
+  is an OUTCOME, reported raw (no soft limit, no added flexion);
+* fingers are carried rigidly with their base locals and never gate or drive the solve; the old fingertips are
+  reported only as `old_finger_contact_diagnostic` (and fingers vs the desk as a reported, ungated number);
+* the per-frame solution is stored as palm targets + elbow swivel + six arm-bone worlds (arm-solution.npz), with a
+  palm-target robustness envelope, so root can re-run the hand contact with the new hands on the same solution.
 
 Arm IK (palm/wrist-target mode): non-stretch two-bone IK (UE SolveTwoBoneIK form) shoulder -> elbow -> wrist with the
-captured elbow pole swivelled about the shoulder-wrist axis. The swivel is the RELAXED one: among the swivels whose arm
-skin clears the real desk (>= 0.5 cm design target), the complete chair, the keyboard case and the owner's own torso and
-thighs, the one with the LOWEST elbow (gravity; the shoulder girdle stays as captured), smoothed in time (periodic).
+captured elbow pole swivelled about the shoulder-wrist axis (-120..120 deg, 5 deg). Per frame the swivel with the lowest
+ergonomic cost (elbow band, raw wrist zone, then upper arm; elbow height breaks ties) whose arm skin clears the real
+desk (>= 0.5 cm design target), the complete chair, the keyboard case and the owner's own torso and thighs is kept,
+then smoothed in time (periodic Gaussian, failing frames pinned). The shoulder girdle stays as captured.
 
     python tools/ergonomic_layout_refit.py [--search] [--max-seconds 3000] [--out-dir docs/proposed/ergonomic-layout-refit]
 """
@@ -76,13 +81,15 @@ SLAB_EDGE_MARGIN_MIN_CM = 2.0      # a device footprint stays >= 2 cm inside eve
 DEVICE_GAP_MIN_CM = 1.0            # keyboard case to mouse pad, plan view
 TORSO_DESK_MIN_CM = 5.0            # torso skin to every desk part (design: no abdomen against the worktop edge)
 ARM_DESK_TARGET_CM = A.FOREARM_TARGET_CLEARANCE_CM   # 0.5 cm design target (the gate is > 0, every frame)
-ARM_BODY_MIN_CM = 1.0              # arm skin (shoulder cap excluded) to torso / thigh skin vertices: a real gap, never through
+ARM_BODY_MIN_CM = 0.0              # arm skin (shoulder cap excluded) vs the torso / thigh skin: no arm vertex inside the
+                                   # body's convex plan section (section_gap; conservative), contact allowed, never through
+BODY_SKIN_STRIDE = 2               # torso / thigh skin sampling for the signed self-collision test
 SHOULDER_CAP_EXCLUDE_CM = 12.      # arm vertices this close to the Arm joint are the shoulder cap / armpit (always touching)
 ERGO_ELBOW_ABOVE_DESK_CM = A.ERGO_ELBOW_ABOVE_DESK_CM   # (0, 10): soft target, unchanged
 ERGO_UPPER_ARM_MAX_DEG = A.ERGO_UPPER_ARM_MAX_DEG       # 20: soft target, unchanged
 WRIST_FLEX_DEG, WRIST_DEV_DEG = A.WRIST_SOFT_FLEX_DEG, A.WRIST_SOFT_DEV_DEG
 PALM_FRACTION = A.MOUSE_PALM_FRACTION                   # main desk-hands rule: palm 60% from wrist to middle MCP
-SWIVEL_DEG = tuple(float(v) for v in np.arange(-90., 90.01, 5.))
+SWIVEL_DEG = tuple(float(v) for v in np.arange(-120., 120.01, 5.))
 SWIVEL_SMOOTH_S = .15
 ENVELOPE_CM = {'z': (-1.5, 1.5), 'y': (-1.0, 1.0)}      # palm-target robustness envelope for root's new-hand contact
 MODE_KEY, MODE_MOUSE, MODE_TRANSIT = A.MODE_KEY, A.MODE_MOUSE, A.MODE_TRANSIT
@@ -265,34 +272,108 @@ def segment_weights(mode, dt, blend_s=None):
     return w
 
 
+# The HOME-ROW HAND FRAME (independent of any finger rest): the middle-finger MCP over the middle finger's home key (D for
+# the left hand, K for the right), MCP_BEHIND_CM toward the body and MCP_ABOVE_CM over the key tops -- a relaxed curled
+# middle finger of this rig (3.84 + 2.45 + 2.17 = 8.5 cm, natural MCP/PIP/DIP curl) reaches the key top from there;
+# root's new CC0 finger rests re-solve the contact INSIDE the palm-target envelope (ENVELOPE_CM). The hand attitude is
+# fixed relative to the keyboard: fingers pointing straight at the key rows (-UE Y), palm facing the desk, pitched down
+# HAND_PITCH_DEG. The wrist angle on the solved forearm is an OUTCOME (reported raw; no correction is ever added).
+HOME_KEYS_UE_CM = {'left': ('D', (190.52, -293.02)), 'right': ('K', (200.02, -293.59))}   # keycap top centres, home.js keyboard
+MCP_BEHIND_CM, MCP_ABOVE_CM = 5.5, 3.5
+HAND_PITCH_DEG = 0.                # keyboard: level hand (bind-neutral axis)
+MOUSE_HAND_PITCH_DEG = 15.         # mouse: the hand drapes over the shell
+PALM_LENGTH_CM = {'left': 7.07, 'right': 8.76}     # bind wrist -> middle MCP (owner rig, measured)
+
+
+def ue_dir_to_gltf(v):
+    """Inverse of E.to_ue_dir (yaw 180)."""
+    v = np.asarray(v, float)
+    a = np.radians(E.BODY_YAW)
+    c, s_ = np.cos(a), np.sin(a)
+    cx, cy = c * v[..., 0] + s_ * v[..., 1], -s_ * v[..., 0] + c * v[..., 1]
+    return np.stack([cx, v[..., 2], cy], -1)
+
+
+def home_hand_rotation(names, ibm, side, pitch_deg=HAND_PITCH_DEG):
+    """(3, 3) unit glTF world rotation of the hand bone for the home-row attitude: the bind anatomical triad (b forearm/
+    hand axis, r radial, n palmar) mapped to b -> -UE Y pitched down, n -> down (palm on the desk side); proper rotation,
+    so the thumb side follows the hand's own chirality."""
+    b, r, n = A.wrist_frame_bind(names, ibm, side)
+    pb = math.radians(pitch_deg)
+    bw = ue_dir_to_gltf(np.array([0., -math.cos(pb), -math.sin(pb)]))
+    down = ue_dir_to_gltf(np.array([0., 0., -1.]))
+    nw = down - down.dot(bw) * bw
+    nw /= np.linalg.norm(nw)
+    sgn = np.sign(np.dot(r, np.cross(n, b)))
+    rw = sgn * np.cross(nw, bw)
+    Mb = np.stack([b, r, n], 1)
+    Mw = np.stack([bw, rw, nw], 1)
+    Rw = Mw @ np.linalg.inv(Mb)
+    h = names.index(A.ARM_BONES[side][2])
+    return A.unit_rot(Rw @ A.unit_rot(np.linalg.inv(ibm)[h][:3, :3]))
+
+
 class Targets:
     """Per side, per frame: the hand-frame target in the world (palm point, UE cm) relative to the device under the
-    hand, the captured hand attitude (solver glTF rotation, unchanged), and the device weight. Built from the
-    source-ready solve's palm path (device-relative), never its fingers."""
+    hand, the hand's home attitude (constant relative to the keyboard), and the device weight.
+
+    palm(f) = anchor_blend(f) + XY of (old palm path(f) - its device-mean blend(f)) + device delta blend(f):
+    the anchors are the home-row hand frame (keyboard) and main's mouse palm target (mouse); the source-ready solve's
+    palm path contributes only its device-relative horizontal typing motion and its keyboard / mouse / transit
+    segmentation, never its height or fingertips."""
 
     def __init__(self, ctx, W_base, W_solved, finish, times):
         self.sk = ctx.sk
         self.times = np.asarray(times, float)
         self.dt = float(np.mean(np.diff(self.times)))
         old_shift = Layout().shift
-        self.mode, self.w_mouse, self.palm0_ue, self.R_cap, self.palm_off = {}, {}, {}, {}, {}
+        top = float(ctx.keys['top_cm'])
+        self.mode, self.w_mouse, self.palm0_ue, self.R_cap, self.palm_off, self.anchor = {}, {}, {}, {}, {}, {}
         for s in A.SIDES:
             mode = np.asarray(finish[f'mode_{s}'], int)
             self.mode[s] = mode
-            self.w_mouse[s] = segment_weights(mode, self.dt)
+            w = segment_weights(mode, self.dt)
+            self.w_mouse[s] = w
             _, _, palm = hand_points(self.sk, W_solved, s)
-            self.palm0_ue[s] = E.to_ue(palm) + old_shift                # world, original layout
-            h = self.sk.j(f'{A.SIDES[s]}Hand')
-            self.R_cap[s] = A.unit_rot(W_base[:, h, :3, :3])           # captured hand attitude (base clip)
-            wb, _, pb = hand_points(self.sk, W_base, s)
-            self.palm_off[s] = pb - wb                                  # palm - wrist under the captured attitude (glTF m)
+            p0 = E.to_ue(palm) + old_shift
+            kf, mf = mode == MODE_KEY, mode == MODE_MOUSE
+            mk = p0[kf].mean(0)
+            mm = p0[mf].mean(0) if mf.any() else mk
+            dev = p0 - ((1 - w)[:, None] * mk + w[:, None] * mm)
+            dev[:, 2] = 0.
+            key, (kx, ky) = HOME_KEYS_UE_CM[s]
+            mcp = np.array([kx, ky + MCP_BEHIND_CM, top + MCP_ABOVE_CM])
+            pb = math.radians(HAND_PITCH_DEG)
+            axis = np.array([0., -math.cos(pb), -math.sin(pb)])            # wrist -> MCP, UE
+            palm_k = mcp - (1 - PALM_FRACTION) * PALM_LENGTH_CM[s] * axis
+            palm_m = np.asarray(ctx.mouse['palm_target_cm'], float)
+            self.anchor[s] = {'home_key': key, 'home_key_centre_cm': [kx, ky], 'middle_mcp_cm': mcp.tolist(),
+                              'keyboard_palm_cm': palm_k.tolist(), 'mouse_palm_cm': palm_m.tolist(),
+                              'typing_motion_xy_cm': {'x': rng(dev[:, 0], 2), 'y': rng(dev[:, 1], 2)}}
+            self.palm0_ue[s] = (1 - w)[:, None] * palm_k + w[:, None] * palm_m + dev
+            Rk = home_hand_rotation(ctx.base.names, ctx.base.ibm, s, HAND_PITCH_DEG)
+            Rm = home_hand_rotation(ctx.base.names, ctx.base.ibm, s, MOUSE_HAND_PITCH_DEG)
+            qk, qm = P.quat_from_matrix(Rk[None]), P.quat_from_matrix(Rm[None])
+            R = A.quat_to_matrix(P.slerp_arrays(np.repeat(qk, len(w), 0)[:, None], np.repeat(qm, len(w), 0)[:, None], w)[:, 0])
+            h = self.sk.j(A.ARM_BONES[s][2])
+            sc = np.linalg.norm(W_base[:, h, :3, 0], axis=-1)[:, None, None]
+            M = np.array(W_base[:, h], copy=True)
+            M[:, :3, :3] = R * sc
+            self.R_cap[s] = M
+            Bw = np.linalg.inv(ctx.base.ibm)
+            v_bind = Bw[self.sk.j(f'{A.SIDES[s]}HandMiddle1')][:3, 3] - Bw[h][:3, 3]           # wrist -> middle MCP, bind
+            v_world = R @ (A.unit_rot(Bw[h][:3, :3]).T @ v_bind)                                # the same bones, home attitude
+            self.anchor[s]['wrist_to_mcp_ue_dir_keyboard'] = [_r(x, 4) for x in E.to_ue_dir(v_world[0] / np.linalg.norm(v_world[0]))] if not w[0] else None
+            self.anchor[s]['hand_pitch_deg'] = {'keyboard': HAND_PITCH_DEG, 'mouse': MOUSE_HAND_PITCH_DEG, 'transit': 'slerp by the device weight'}
+            self.palm_off[s] = PALM_FRACTION * v_world
 
     def device_delta(self, s, layout):
         w = self.w_mouse[s][:, None]
         return (1. - w) * layout.kb[None] + w * layout.mouse[None]
 
     def wrist_target(self, s, layout, extra_ue=None):
-        """(F, 3) glTF solver-frame wrist target: palm target (world) -> solver frame, minus the captured palm offset."""
+        """(F, 3) glTF solver-frame wrist target (palm target -> solver frame, minus the palm offset along the hand
+        axis) and the world palm target (UE cm)."""
         palm = self.palm0_ue[s] + self.device_delta(s, layout)
         if extra_ue is not None:
             palm = palm + np.asarray(extra_ue, float)
@@ -301,6 +382,65 @@ class Targets:
 
 
 # ---------------------------------------------------------------- arm IK with the relaxed swivel
+def owner_skin_normals(stride=2, cache=None):
+    """Every stride-th skinned owner vertex with its bind NORMAL (P.owner_skin plus normals)."""
+    g = A.G.Gltf(E.decoded(E.OWNER, cache or ROOT / 'out/seat-fit-cache'))
+    d = g.doc
+    pos, nrm, jts, wts = [], [], [], []
+    seen = set()
+    for node in d['nodes']:
+        if 'mesh' not in node or node.get('skin') != 0 or node['mesh'] in seen:
+            continue
+        seen.add(node['mesh'])
+        for pr in d['meshes'][node['mesh']]['primitives']:
+            a = pr['attributes']
+            pos.append(E.accessor(g, a['POSITION'])[::stride])
+            nrm.append(E.accessor(g, a['NORMAL'])[::stride])
+            jts.append(E.accessor(g, a['JOINTS_0']).astype(int)[::stride])
+            wts.append(E.accessor(g, a['WEIGHTS_0'])[::stride])
+    pos, nrm, jts, wts = (np.concatenate(x) for x in (pos, nrm, jts, wts))
+    keep = wts.sum(1) > 0
+    return pos[keep], nrm[keep], jts[keep], wts[keep] / wts[keep].sum(1, keepdims=True)
+
+
+def posed_with_normals(skin, ibm, W):
+    """UE cm positions and unit normals (LBS is affine per vertex, so the normal is the posed difference of a 1 cm
+    step along the bind normal) in the solver frame."""
+    pos, nrm, jts, wts = skin
+    p = E.to_ue(A.lbs((pos, jts, wts), ibm, W))
+    q = E.to_ue(A.lbs((pos + .01 * nrm, jts, wts), ibm, W))
+    n = q - p
+    return p, n / np.maximum(np.linalg.norm(n, axis=-1, keepdims=True), 1e-9)
+
+
+HULL_BIN_CM = 2.0
+
+
+def section_gap(body_pts, q, bin_cm=HULL_BIN_CM, reach=20.):
+    """Smallest plan-section gap (cm) of points q to a body part: per horizontal slice of bin_cm, the CONVEX HULL of the
+    body skin vertices in that slice (conservative: concavities are filled); for each point in the slice the largest
+    hull-plane value (> 0 outside, < 0 inside = penetration depth). Robust to double-sided clothing / lining normals."""
+    from scipy.spatial import ConvexHull, QhullError
+    zq, zb = q[:, 2], body_pts[:, 2]
+    lo = max(zq.min(), zb.min())
+    hi = min(zq.max(), zb.max())
+    if lo > hi:
+        return reach
+    best = reach
+    for z0 in np.arange(np.floor(lo / bin_cm) * bin_cm, hi + bin_cm, bin_cm):
+        bp = body_pts[(zb >= z0) & (zb < z0 + bin_cm)][:, :2]
+        qq = q[(zq >= z0) & (zq < z0 + bin_cm)][:, :2]
+        if len(bp) < 4 or not len(qq):
+            continue
+        try:
+            h = ConvexHull(bp)
+        except QhullError:
+            continue
+        v = (qq @ h.equations[:, :2].T + h.equations[:, 2]).max(1)
+        best = min(best, float(v.min()))
+    return best
+
+
 class ArmSolver:
     """Palm/wrist-target arm IK on a fixed seated base (only Arm, ForeArm, Hand + carried fingers change)."""
 
@@ -309,23 +449,23 @@ class ArmSolver:
         self.names, self.ibm = ctx.base.names, ctx.base.ibm
         self.kbg = kbg
         self.arms = A.arm_skin(self.names, stride=stride) if stride != 1 else ctx.arms
-        # torso / thigh skin of the owner (dominant joint), for the arm-vs-own-body gap
-        pos, jts, wts = P.owner_skin(stride=3)
+        # torso / thigh skin of the owner (dominant joint) WITH bind normals, for the signed arm-vs-own-body test
+        pos, nrm, jts, wts = owner_skin_normals(stride=BODY_SKIN_STRIDE)
         dom = jts[np.arange(len(jts)), wts.argmax(1)]
         g = A.body_parts(self.names)
         grp = np.array([g[int(j)] for j in dom])
-        self.torso_skin = (pos[grp == 'torso_head'], jts[grp == 'torso_head'], wts[grp == 'torso_head'])
-        self.legs_skin = (pos[grp == 'legs'], jts[grp == 'legs'], wts[grp == 'legs'])
+        self.torso_skin = tuple(x[grp == 'torso_head'] for x in (pos, nrm, jts, wts))
+        self.legs_skin = tuple(x[grp == 'legs'] for x in (pos, nrm, jts, wts))
 
     # -- posing
-    def pose(self, frames, side, wrist_t, phi_deg, W=None):
+    def pose(self, frames, side, wrist_t, phi_deg, W=None, hand_rot=None):
         """Two-bone IK of `side` on base frames to the wrist targets with the captured elbow pole swivelled by phi;
         the hand keeps its CAPTURED world attitude (no limit, no added flexion)."""
         W = np.array(self.Wb[frames] if W is None else W, copy=True)
         a, b, c = (self.sk.j(n) for n in A.ARM_BONES[side])
         S_, E0 = W[:, a, :3, 3], self.Wb[frames][:, b, :3, 3]
         pole = A.swivel_pole(S_, wrist_t, E0, np.radians(np.broadcast_to(phi_deg, len(frames)).astype(float)))
-        hand_world = W[:, c].copy()
+        hand_world = W[:, c].copy() if hand_rot is None else np.array(hand_rot, copy=True)
         W, reach, length, dist = self.sk.two_bone_pose(W, A.ARM_BONES[side], wrist_t, pole, end_world_rot=hand_world)
         return W, reach, dist / np.maximum(length, 1e-12)
 
@@ -350,10 +490,10 @@ class ArmSolver:
         need = [int(f) for f in frames if int(f) not in cache]
         for s0 in range(0, len(need), 64):
             fr = np.asarray(need[s0:s0 + 64])
-            tor = E.to_ue(A.lbs(self.torso_skin, self.ibm, self.Wb[fr]))
-            leg = E.to_ue(A.lbs(self.legs_skin, self.ibm, self.Wb[fr]))
+            tor, tn = posed_with_normals(self.torso_skin, self.ibm, self.Wb[fr])
+            leg, ln = posed_with_normals(self.legs_skin, self.ibm, self.Wb[fr])
             for i, f in enumerate(fr):
-                cache[int(f)] = (cKDTree(tor[i]), cKDTree(leg[i]))
+                cache[int(f)] = (tor[i], leg[i])
         return [cache[int(f)] for f in frames]
 
     def side_clearance(self, W, side, layout, frames, chunk=64):
@@ -387,9 +527,11 @@ class ArmSolver:
                 tt, lt = trees[s0 + i]
                 q = solver[i][far[i] & nf]
                 if len(q):
-                    res['torso'][s0 + i] = tt.query(q, k=1, distance_upper_bound=20.)[0].min()
-                res['legs'][s0 + i] = lt.query(solver[i][nf], k=1, distance_upper_bound=20.)[0].min()
-        res['desk_min'] = np.minimum.reduce([res[p_] for p_ in ('upper_arm', 'forearm', 'hand', 'fingers')])
+                    res['torso'][s0 + i] = section_gap(tt, q)
+                res['legs'][s0 + i] = section_gap(lt, solver[i][nf])
+        # the gate: upper arm, forearm and hand (palm). The OLD finger rests are known wrong: fingers vs desk is
+        # reported, never gated (root re-runs the hand contact with the new CC0 finger rests)
+        res['desk_min'] = np.minimum.reduce([res[p_] for p_ in ('upper_arm', 'forearm', 'hand')])
         return res
 
     @staticmethod
@@ -398,12 +540,26 @@ class ArmSolver:
                 & (res['chair'] > 0) & (res['keyboard_case'] > 0))
 
     # -- the relaxed swivel
-    def solve_side(self, frames, side, wrist_t, layout, max_rounds=12, smooth=True, periodic=True, dt=1 / 60.):
-        """Lowest-elbow swivel whose posed arm clears everything; then a periodic Gaussian smoothing of the swivel with
-        failing frames pinned to their own clear swivel (3 passes)."""
+    def candidate_costs(self, frames, side, wrist_t, hand_rot, layout, phis):
+        """(K, F) ergonomic cost of every swivel (soft targets, unchanged) + a 1e-3/cm elbow-height tie-break (the
+        relaxed, gravity-low elbow among equals)."""
+        out = []
+        for ph in phis:
+            W, _, _ = self.pose(frames, side, wrist_t, ph, hand_rot=hand_rot)
+            m = arm_metrics(self.ctx, W, self.Wb[frames], side, layout.shift)
+            ev, uv, fv, dvv = ergo_violation(m)
+            out.append((ev / SCORE_SCALE['elbow_cm']) ** 2 + (uv / SCORE_SCALE['upper_arm_deg']) ** 2
+                       + (fv / SCORE_SCALE['wrist_deg']) ** 2 + (dvv / SCORE_SCALE['wrist_deg']) ** 2
+                       + 1e-3 * m['elbow_above_top_cm'])
+        return np.stack(out)
+
+    def solve_side(self, frames, side, wrist_t, hand_rot, layout, max_rounds=len(SWIVEL_DEG), smooth=True, periodic=True, dt=1 / 60.):
+        """Per frame, the swivel with the lowest ergonomic cost (elbow band, upper arm, RAW wrist angles; ties to the
+        lowest elbow) whose posed arm clears everything; then a periodic Gaussian smoothing of the swivel with failing
+        frames pinned to their own clear swivel (3 passes)."""
         phis = np.asarray(SWIVEL_DEG)
-        el, reach = self.elbows(frames, side, wrist_t, phis)
-        order = np.argsort(E.to_ue(el)[..., 2], axis=0)                    # (K, F): lowest elbow first
+        cost = self.candidate_costs(frames, side, wrist_t, hand_rot, layout, phis)
+        order = np.argsort(cost, axis=0)                                   # (K, F): best first
         F = len(frames)
         chosen = np.full(F, np.nan)
         rnk = np.zeros(F, int)
@@ -411,7 +567,7 @@ class ArmSolver:
         rounds = 0
         while len(todo) and rounds < max_rounds:
             ph = phis[order[rnk[todo], todo]]
-            W, _, _ = self.pose(frames[todo], side, wrist_t[todo], ph)
+            W, _, _ = self.pose(frames[todo], side, wrist_t[todo], ph, hand_rot=hand_rot[todo])
             ok = self.clear(self.side_clearance(W, side, layout, frames[todo]))
             chosen[todo[ok]] = ph[ok]
             rnk[todo[~ok]] += 1
@@ -419,9 +575,8 @@ class ArmSolver:
             todo = todo[rnk[todo] < len(phis)]
             rounds += 1
         unresolved = np.isnan(chosen)
-        # unresolved frames keep the lowest-elbow swivel (reported as failing; never hidden)
-        base_phi = phis[order[0]]
-        phi = np.where(unresolved, base_phi, chosen)
+        phi = np.where(unresolved, phis[order[0]], chosen)       # unresolved frames are reported failing, never hidden
+        _, reach, _ = self.pose(frames, side, wrist_t, phi, hand_rot=hand_rot)
         info = {'rounds': rounds, 'unresolved_frames': int(unresolved.sum()), 'reach_all': bool(np.all(reach))}
         if smooth and F > 3:
             sig = SWIVEL_SMOOTH_S / dt
@@ -429,7 +584,7 @@ class ArmSolver:
             for _ in range(3):
                 ps = gaussian(phi, sig, periodic)
                 ps = np.where(pinned, phi, ps)
-                W, _, _ = self.pose(frames, side, wrist_t, ps)
+                W, _, _ = self.pose(frames, side, wrist_t, ps, hand_rot=hand_rot)
                 ok = self.clear(self.side_clearance(W, side, layout, frames))
                 if ok.all() or (~ok & ~pinned & ~unresolved).sum() == 0:
                     break
@@ -581,7 +736,10 @@ def readiness(gates):
 
 
 # ---------------------------------------------------------------- search objective
-SCORE_SCALE = {'elbow_cm': 3., 'upper_arm_deg': 10., 'wrist_deg': 5.}
+# Solver trade-off weights (the TARGETS are unchanged): the upper-arm target (<= 20 deg) is geometrically incompatible with
+# the elbow band (>= desk top) on this rig at this desk (upper_arm_deg_if_elbow_at_top >= 26 deg on every frame), so the
+# upper arm is minimised AFTER the elbow band and the wrist zone (a weaker weight), and reported as missed.
+SCORE_SCALE = {'elbow_cm': 2., 'upper_arm_deg': 30., 'wrist_deg': 5.}
 MOVE_COST_PER_CM = 1e-3            # tie-break only: the smaller change wins among equal postures
 
 
@@ -606,12 +764,12 @@ def ergo_score(ms, layout):
 
 
 # ---------------------------------------------------------------- pipeline
-SEARCH_STRIDE = 20                 # search frames: every 20th DeskTyping key (50 frames)
+SEARCH_STRIDE = 40                 # search frames: every 40th DeskTyping key (25 frames)
 SEARCH_ARM_STRIDE = 3              # arm skin stride for the swivel search; every report re-measures every vertex
 FINAL_CHECK_STRIDE = 10            # seat / body / envelope frames in the final run
-SEARCH_GRID = {'kb_dy': (0., 5., 10., 13., 15., 17.),
-               'chair_dy': (0., -3., -6., -9., -12.),
-               'mouse_dx': (0., -8.),
+SEARCH_GRID = {'kb_dy': (10., 13., 15., 17.),          # keyboard toward the body (17: front feet 2.25 cm inside the edge)
+               'chair_dy': (3., 0., -3.),             # extra roll vs the original typing roll (- = further in)
+               'mouse_dx': (-8.,),                    # mouse beside the keyboard (pad 1.45 cm from the case)
                }
 
 
@@ -646,8 +804,9 @@ class Setup:
         ms, infos, phis, palms = {}, {}, {}, {}
         for s in A.SIDES:
             wt, palm = self.targets.wrist_target(s, layout, extra_ue)
-            phi, info = self.solver.solve_side(frames, s, wt[frames], layout, smooth=smooth, dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
-            W, reach, ratio = self.solver.pose(frames, s, wt[frames], phi, W=W)
+            hr = self.targets.R_cap[s][frames]
+            phi, info = self.solver.solve_side(frames, s, wt[frames], hr, layout, smooth=smooth, dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
+            W, reach, ratio = self.solver.pose(frames, s, wt[frames], phi, W=W, hand_rot=hr)
             info['reach_all_frames'] = bool(np.all(reach))
             info['max_distance_over_chain_length'] = _r(ratio.max(), 4)
             ms[s] = arm_metrics(self.ctx, W, self.Wb[frames], s, layout.shift)
