@@ -45,7 +45,7 @@ def run(root,owner,idle,footrest,desk,output,role,seconds=105):
     strong=(root/'strong-validator.py').read_bytes()
     if hashlib.sha256(strong).hexdigest()!='dd95f1b1a8c3fc9a7d08b6d599985b86440c84752d85ae9f12fa8d480397a18f':raise ValueError('Strong main rule differs')
     V=R.load_main_validator(strong);E.OWNER=Path(owner);base=E.Source.load(root/'private-audit/seat-fit-source.npz')
-    filename,source_sha,end,leg_windows={'SitDown':('room_mx_stand_to_sit.glb','68086a284360c59f03479346f06375ad3ed8d4b16647388f078e5e54a4909cb0','end',{'left':(0,20),'right':(20,40)}),'GetUp':('room_mx_sit_to_stand.glb','b8d9c1803116cf06b779a0e7db7898a9e8512d6e29054a953de66f0750713470','start',{'left':(8,28),'right':(20,40)})}[role]
+    filename,source_sha,end,leg_windows={'SitDown':('room_mx_stand_to_sit.glb','68086a284360c59f03479346f06375ad3ed8d4b16647388f078e5e54a4909cb0','end',{'left':(0,20),'right':(20,40)}),'GetUp':('room_mx_sit_to_stand.glb','b8d9c1803116cf06b779a0e7db7898a9e8512d6e29054a953de66f0750713470','start',{'left':(8,28),'right':(28,48)})}[role]
     path=root/'web/room/mh_mx'/filename
     if hashlib.sha256(path.read_bytes()).hexdigest()!=source_sha:raise ValueError('Exact authentic captured transition required')
     src,g=P.clip_source(base,path);W0=src.joint_world;source_times=np.asarray(src.times);times=(source_times-source_times[0])*1.3;F=len(W0);B=np.linalg.inv(base.ibm);capture_angles=A.joint_angles(W0,B,src.names)

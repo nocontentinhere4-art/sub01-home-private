@@ -1,0 +1,76 @@
+{
+  "schema": "sub01.derived-reverse-upright-getup.v1",
+  "source_sitdown_sha256": "3da7b1f46a7e503f1bea8c3f33a07cdbcf8d931924dbe3a39c1be5123d9700ea",
+  "written_glb": "/workspace/sub01-home-private/upright-transition-getup-derived-reverse-r2/SUB01_GetUp_upright_footrest_DerivedReverse.glb",
+  "written_glb_sha256": "7b0ac721bc84cffcd9f3a1cadffa4cd7ab7e021e371d8fb40c77e02968dfd799",
+  "frames": 68,
+  "duration_s": 2.9033334255218506,
+  "initial_Idle_joint_head_velocity_discontinuity_max_cm_s": 3.9791603997450533,
+  "original_GetUp_unchanged": true,
+  "not_original_GetUp_capture": true,
+  "all65_written_world_matrix_max_difference_from_reversed_passed_pose": 4.440892098500626e-16,
+  "all_original_node_rest_transforms_unchanged": true,
+  "bone_length_error_cm": 3.3306690738754696e-14,
+  "anatomical_excess_max_deg": 0.0,
+  "initial_Idle_endpoint_matrix_max_error": 0.0,
+  "final_standing_endpoint_matrix_max_error": 0.0,
+  "physical_predicates": "Transferred by all-frame exact written world-matrix equality, same owner831790, same source chair/desk/footrest; not a new surface collision measurement",
+  "passed_source_physical_margins": {
+    "chair": {
+      "minimum_margin_cm": 0.2712099552154541,
+      "frames_checked": 68,
+      "failing_frames": []
+    },
+    "footrest": {
+      "minimum_margin_cm": 0.04999542236328125,
+      "frames_checked": 68,
+      "failing_frames": []
+    },
+    "desk": {
+      "minimum_margin_cm": 0.41225117444992065,
+      "frames_checked": 68,
+      "failing_frames": []
+    }
+  },
+  "actual_floor_min_z_cm": 2.5407783208096917,
+  "strong_seated_mask_frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "strong_seated_all_pass": true,
+  "geometry_and_main_support_pass": true,
+  "source_ready": false,
+  "native_imported": false,
+  "runtime_ready": false,
+  "pending": [
+    "Visual naturalness and original walking/standing seam",
+    "Explicit handshape/selfcontact",
+    "Coherent typing chain and native verification"
+  ]
+}
