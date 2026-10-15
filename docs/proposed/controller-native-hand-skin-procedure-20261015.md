@@ -1,0 +1,22 @@
+# Controller4s actual skin comparison
+
+This is a read-only diagnostic procedure. It sets no contact, sofa, body, gameplay or activity acceptance. The previous201-phase proof established joint-position correspondence and a native-to-source wrist-frame correction of local+90°X. It did **not** establish skin-vertex correspondence or contact.
+
+Renderer owns native input. In the existing public diagnostic review, freeze the exact derived `/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip` at4s using the existing review control, then invoke `InspectCapturedHandSkin` once. This inspector itself refuses an unfrozen clip, a different owner/clip, private view, or invalid imported influences. Preserve `private-audit/native-hand-skin-<actualPID>.json` before another inspector call replaces it, together with the actual PID/start identity and the current physical `private-audit/native-controller-asset.json`. Do not move the pawn or mount for this measurement.
+
+The new verifier consumes that actual JSON. It requires:
+
+- Canonical actual owner `SourceAssets/owner-with-clips-unreal.glb`, SHA45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8.
+- Derived152-key source `SUB01_GamingGrip_derived.glb`, SHAbf31d64518d85f6eefd8150009a758ddddc95ca6afd63d5d83bdf29a2dcdaaf9, and its unchanged report SHAa022ab5bff0ceb5d544c4e3e558ec5f9d2560b7f7b8f5356e31e21c157f76c02.
+- Decoded actual controller SHAafe4b65092017fc7a0ea6991352ef0d738479ef10d45b980623cf6a00d02a132, corresponding to originalc034a1444711a44f0726e7264b1e2e2b47b1bbdba0e5dd615eef27001a4717e4. Existing official decoder can produce this input before the verifier; the verifier never decodes, imports or mutates assets.
+- Pinned pure `life_gltf.py` source reader SHAd9d271e9dff76412448f340000014adfd85aceffcf2500e822055342793f32e5 (existing `out/controller-source-review/tools` / preserved controller source packet).
+
+Run `tools/verify_native_controller_hand_skin.py` on the authorized GPU CPU lane, with explicit `--native`, `--owner`, `--clip`, `--controller`, `--grip-report`, `--asset-receipt`, `--helpers`, `--output` and `--max-seconds60`. No Blender, Editor import, browser, pose fitting or native change is involved. Keep the actual input/output JSON private.
+
+Time and units are explicit: native4s corresponds to source4.033333335071802s because the original source starts at0.03333333507180214s. Source metres map to native component centimetres as`(x,z,y)*100`, then the **actual captured body-world TRS** is applied. Wrist rotations are not substituted into the source skin. Each source point uses its authored inverse bind, normalized vertex weights and captured joint-world pose.
+
+Native imported vertex identities are`section/vertex/globalVertex`. Source identities are`mesh-node/primitive/vertex`. The fixed mapping requires both bind-position correspondence within0.02cm and normalized bone-weight correspondence within the actual integer weight quantization step. No fitted registration, ICP, arbitrary offset or joint-centre matching is allowed. Equivalent split/seam candidates are listed rather than pretending global source and imported vertex indices are identical. Native triangle IDs are retained, but only triangles fully inside the inspector's30% hand selection exist in this witness; shared hand/forearm boundary triangles are absent.
+
+The actual held prop is validated against the saved physical component/mesh identity, never `controller_contact`. Canonical full physical controller triangles are transformed by actual component TRS times inverse original-source TRS from that same receipt. The verifier independently compares this actual mount with the source report's fixed controller-in-hand transform. It measures hand **skin vertex** distance to those triangles, retaining source triangle/nearest-point witnesses. Open seams and throughholes mean unsigned proximity is reported; a local triangle-winding plane sign is not certified penetration. The broad30% hand selection is not a palm support/distal-pad set, so proximity cannot produce thumb/trigger/support/activity acceptance.
+
+Output is a measurement only: source/native skin-position parity may pass or fail at the existing0.02cm correspondence tolerance, while `contact_accepted`, `activity_ready` and `native_ready` remain false. Missing mappings, changed identities or an expired CPU bound produce an incomplete refusal JSON, never a partial pass. No actual native4s skin JSON has been supplied or compared by this source commit.
