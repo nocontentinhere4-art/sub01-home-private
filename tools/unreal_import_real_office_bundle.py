@@ -82,24 +82,17 @@ def run(root,dry_run=True,u=None):
  for a,name in zip(old_shelves,('Oak_shelves','Shelf_hardware')):
   comps=a.get_components_by_class(u.StaticMeshComponent)
   if a.get_actor_label()!=name or len(comps)!=1 or not comps[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/'):raise RuntimeError('Exact original shelf source identity differs; no shared batch hide')
- books=[]
+ import unreal_office_book_geometry
+ book_geometry_module=importlib.reload(unreal_office_book_geometry)
+ books=[];book_rebuild_needed=[]
  for plan in proof['books']:
   actor=exact(lambda a:a.get_actor_label()==plan['id'],plan['id']);comps=actor.get_components_by_class(u.StaticMeshComponent)
   if len(comps)!=1 or not comps[0].get_editor_property('static_mesh').get_path_name().startswith('/Game/Sub01Home/RealBooks/V_'+BOOKS_SHA[:12]+'/'):raise RuntimeError('Book is not exact COMPLETE owned source version '+plan['id'])
-  points,count=surface(u,comps[0]);bounds=[[min(p[a]for p in points)for a in range(3)],[max(p[a]for p in points)for a in range(3)]]
-  if count!=plan['actual_source_triangle_count'] or not all(close(a,[v*100 for v in b])for a,b in zip(bounds,plan['old_bounds_ue_m'])):
-   mesh=comps[0].get_editor_property('static_mesh');wanted=[[v*100 for v in b]for b in plan['old_bounds_ue_m']]
-   details={'book':plan['id'],'mesh':mesh.get_path_name(),'actual_triangle_count':count,'expected_source_triangle_count':plan['actual_source_triangle_count'],'actual_bounds_cm':bounds,'expected_bounds_cm':wanted,'actual_minus_expected_bounds_cm':[[x-y for x,y in zip(a,b)]for a,b in zip(bounds,wanted)],'geometry_api_audit':real_office_plant.native_geometry_api_audit(u,mesh)}
-   try:
-    imported=mesh.get_editor_property('asset_import_data')
-    details['imported_source_filenames']=list(imported.extract_filenames())if imported and hasattr(imported,'extract_filenames')else []
-   except Exception as error:details['source_filename_error']=str(error)
-   audit=Path(u.Paths.project_dir())/'private-audit'/'office-book-native-refusal.json';audit.parent.mkdir(parents=True,exist_ok=True);audit.write_text(json.dumps(details,indent=2)+'\n')
-   raise RuntimeError('Actual complete book geometry differs source '+plan['id']+'; full diagnostics saved to '+str(audit))
+  if book_geometry_module.preflight(u,comps[0],plan,surface,close):book_rebuild_needed.append(plan['id'])
   if not close(vec(actor.get_actor_location()),plan['old_pivot_ue_cm']):raise RuntimeError('Actual owned book pivot differs source; no guessed relative transform')
   books.append((actor,comps[0],plan))
  desk_preflight=stage_desk(root/'desk.glb',dry_run=True,u=u)
- if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'structural_union_prerequisite':union_prerequisite,'plant_native_preflight':{'native_source_geometry_verified':plantctx['native_source_geometry_verified'],'requires_owned_geometry_rebuild':[r['source_node']for r in plantctx['requires_owned_geometry_rebuild']],'root':plantctx['root'].get_path_name(),'members':[a.get_path_name()for a,c,p in plantctx['rows']],'move_once':[a.get_path_name()for a in plantctx['move']],'rigid_delta_ue_cm':plantproof['rigid_delta_ue_cm'],'watering_native_activity_verified':False,'obsolete259_actual_hidden_before':plantctx['oldbase_actual_hidden_before'],'obsolete259_actual_collision_before':plantctx['oldbase_actual_collision_before']},'mutations':0}
+ if dry_run:return {'schema':'sub01.real-office-native-preflight.v1','desk':desk_preflight,'complete_native_books_verified':46-len(book_rebuild_needed),'requires_owned_book_geometry_rebuild':book_rebuild_needed,'old_shelf_paths':[a.get_path_name()for a in old_shelves],'structural_union_prerequisite':union_prerequisite,'plant_native_preflight':{'native_source_geometry_verified':plantctx['native_source_geometry_verified'],'requires_owned_geometry_rebuild':[r['source_node']for r in plantctx['requires_owned_geometry_rebuild']],'root':plantctx['root'].get_path_name(),'members':[a.get_path_name()for a,c,p in plantctx['rows']],'move_once':[a.get_path_name()for a in plantctx['move']],'rigid_delta_ue_cm':plantproof['rigid_delta_ue_cm'],'watering_native_activity_verified':False,'obsolete259_actual_hidden_before':plantctx['oldbase_actual_hidden_before'],'obsolete259_actual_collision_before':plantctx['oldbase_actual_collision_before']},'mutations':0}
  states=[]
  for actor in original:
   comps=[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in actor.get_components_by_class(u.StaticMeshComponent)]
@@ -137,6 +130,7 @@ def run(root,dry_run=True,u=None):
    a,b=board['xy_bounds_m']
    if not close([min(p[0]for p in plane),min(p[1]for p in plane)],[a[0]*100,a[1]*100]) or not close([max(p[0]for p in plane),max(p[1]for p in plane)],[b[0]*100,b[1]*100]):raise RuntimeError('Actual native full board footprint differs source')
   plant_geometry=real_office_plant.stage_exact_owned_geometry(u,plantctx,eas)
+  book_geometry=book_geometry_module.stage(u,books,eas,book_rebuild_needed)
   if fingerprint(u,original)!=before:raise RuntimeError('Owned PBR/collision setup changed originals before activation')
   # Activation starts only after ALL native/source geometry, PBR and board proofs.
   for hardware in ctx['mount']['opened_hardware_source_nodes']:
@@ -178,6 +172,10 @@ def run(root,dry_run=True,u=None):
    if actual!=expected:raise RuntimeError('Genuine plant PBR/mesh/collision changed')
   book_rows=[]
   for actor,c,plan in books:
+   replacement=book_geometry['replacements'].get(c.get_path_name())
+   if replacement:
+    materials=list(c.get_materials());c.set_static_mesh(replacement)
+    for slot,material in enumerate(materials):c.set_material(slot,material)
    location=vec(actor.get_actor_location());new=[location[a]+plan['delta_ue_cm'][a]for a in range(3)];actor.set_actor_location(u.Vector(*new),False,False)
    pts,count=surface(u,c);actual=[[min(p[a]for p in pts)for a in range(3)],[max(p[a]for p in pts)for a in range(3)]]
    if not all(close(a,[v*100 for v in b])for a,b in zip(actual,plan['new_bounds_ue_m'])):raise RuntimeError('Actual book retarget missed physical board '+plan['id'])
@@ -185,6 +183,10 @@ def run(root,dry_run=True,u=None):
    for a in range(3):expected['transform']['translation'][a]+=plan['delta_ue_cm'][a]
    for row in expected['components']:
     for a in range(3):row['transform']['translation'][a]+=plan['delta_ue_cm'][a]
+   if replacement:
+    exact_component=[r for r in expected['components']if r['path']==c.get_path_name()]
+    if len(exact_component)!=1:raise RuntimeError('Owned full book fingerprint identity missing')
+    exact_component[0]['mesh']=replacement.get_path_name()
    actual_fingerprint=fingerprint(u,[actor])[actor.get_path_name()]
    # Float transforms may differ by ulps; compare exact non-transform fields and bounded poses.
    for got,want in [(actual_fingerprint['transform'],expected['transform'])]+[(g['transform'],w['transform'])for g,w in zip(actual_fingerprint['components'],expected['components'])]:
@@ -203,11 +205,12 @@ def run(root,dry_run=True,u=None):
   for actor,transform,label,hidden,comps in states:
    expected=True if actor in old_targets else hidden
    if bool(actor.get_editor_property('hidden'))!=expected:raise RuntimeError('Office activation changed unplanned visibility')
+  if book_geometry['destination']and not u.EditorAssetLibrary.save_directory(book_geometry['destination'],only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned exact book meshes save failed')
   if plant_geometry['destination']and not u.EditorAssetLibrary.save_directory(plant_geometry['destination'],only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned exact plant meshes save failed')
   if not u.EditorAssetLibrary.save_directory(ctx['lampdest'],only_if_is_dirty=False,recursive=True)or not u.EditorAssetLibrary.save_directory(deskdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True):raise RuntimeError('Whole office owned asset save failed')
   level_save_attempted=True
   if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office map save failed')
-  result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'structural_union_prerequisite':union_prerequisite,'desk':desk_result,'shelf_native_triangles':alltris,'plant':plantproof,'plant_full_source_geometry_restore':plant_geometry['proof'],'plant_native_world_deltas_verified':4,'plant_parent225_relocated':True,'watering_native_activity_verified':False,'shelf_materials':materials,'books':book_rows,'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
+  result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'structural_union_prerequisite':union_prerequisite,'desk':desk_result,'shelf_native_triangles':alltris,'plant':plantproof,'plant_full_source_geometry_restore':plant_geometry['proof'],'plant_native_world_deltas_verified':4,'plant_parent225_relocated':True,'watering_native_activity_verified':False,'shelf_materials':materials,'books':book_rows,'book_full_source_geometry_restore':book_geometry['proof'],'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
   (root/'native-office-bundle.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception:
   def depth(actor):
@@ -226,7 +229,7 @@ def run(root,dry_run=True,u=None):
     for slot,mat in enumerate(mats):c.set_material(slot,mat)
   for actor in list(eas.get_all_level_actors()):
    if actor.get_path_name()not in before:eas.destroy_actor(actor)
-  for owned in (dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else [])):
+  for owned in (dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else []),*([book_geometry['destination']]if 'book_geometry'in locals()and book_geometry['destination']else [])):
    if u.EditorAssetLibrary.does_directory_exist(owned):u.EditorAssetLibrary.delete_directory(owned)
   if fingerprint(u,original)!=before:raise RuntimeError('Whole office original rollback fingerprint differs; preserve map backup')
   if level_save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office rollback map save failed; restore map backup')

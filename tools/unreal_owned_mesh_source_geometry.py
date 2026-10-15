@@ -5,7 +5,8 @@ owned mesh rebuild; saving completes pending asset compilation. Existing caller
 triangle/PBR/placement checks still decide whether the result is acceptable.
 """
 OWNED = ('/Game/Sub01Home/RealLinea140/V_', '/Game/Sub01Home/RealEdgeClampLamp/V_',
-         '/Game/Sub01Home/RealSteelShelves/V_', '/Game/Sub01Home/RealKitchen/V_')
+         '/Game/Sub01Home/RealSteelShelves/V_', '/Game/Sub01Home/RealKitchen/V_',
+         '/Game/Sub01Home/RealOfficeBooks/V_')
 
 
 def prepare(u, mesh, destination):
