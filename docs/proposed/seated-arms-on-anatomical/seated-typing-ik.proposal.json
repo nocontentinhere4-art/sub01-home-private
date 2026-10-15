@@ -219,26 +219,198 @@
    "chunk_frames": 100,
    "overlap_frames": 12
   },
-  "elapsed_seconds": 891.5
+  "desk_typing_finish": {
+   "loop_blend_frames": 30,
+   "contact_polish": {
+    "left": {
+     "frames": [],
+     "fixed": [],
+     "kept": [],
+     "moved_xy_cm": {}
+    },
+    "right": {
+     "frames": [
+      214,
+      215,
+      240,
+      295,
+      304,
+      405,
+      406,
+      407
+     ],
+     "fixed": [
+      214,
+      215,
+      240,
+      295,
+      304,
+      405,
+      406,
+      407
+     ],
+     "kept": [],
+     "moved_xy_cm": {
+      "214": [
+       0.25,
+       0.0
+      ],
+      "215": [
+       0.25,
+       0.0
+      ],
+      "295": [
+       0.25,
+       0.0
+      ],
+      "405": [
+       0.177,
+       0.177
+      ],
+      "406": [
+       0.354,
+       0.354
+      ],
+      "407": [
+       0.707,
+       0.707
+      ]
+     }
+    }
+   },
+   "wrist_clearance": {
+    "left": [
+     {
+      "frames": [],
+      "min_before_cm": 0.5613
+     }
+    ],
+    "right": [
+     {
+      "frames": [
+       405,
+       414,
+       415,
+       416,
+       473,
+       474,
+       475,
+       476,
+       477,
+       478,
+       479,
+       480,
+       481,
+       482,
+       483,
+       484,
+       495,
+       496,
+       497,
+       498,
+       869,
+       870,
+       871,
+       872,
+       880,
+       887,
+       888,
+       889,
+       890,
+       891,
+       892,
+       893,
+       894,
+       895
+      ],
+      "min_before_cm": -0.33,
+      "dof": "pitch",
+      "cleared_by_candidate": 34,
+      "not_cleared": [],
+      "frames_with_offset": 241,
+      "added_palmar_flexion_deg": [
+       0.0,
+       40.0
+      ]
+     },
+     {
+      "frames": [
+       405,
+       406,
+       407
+      ],
+      "min_before_cm": -0.3774,
+      "dof": "pitch",
+      "cleared_by_candidate": 3,
+      "not_cleared": [],
+      "frames_with_offset": 0,
+      "added_palmar_flexion_deg": [
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "reach_clearance": {
+    "left": [
+     {
+      "frames": [],
+      "min_before_cm": 0.5613
+     }
+    ],
+    "right": [
+     {
+      "frames": [],
+      "min_before_cm": 0.5082
+     }
+    ]
+   },
+   "girdle_clearance": {
+    "left": {
+     "frames": [],
+     "min_before_cm": 0.5613
+    },
+    "right": {
+     "frames": [],
+     "min_before_cm": 0.5082
+    }
+   },
+   "seconds": 1018.8,
+   "segments": {
+    "left": {
+     "key": 989,
+     "mouse": 0,
+     "transit": 0
+    },
+    "right": {
+     "key": 574,
+     "mouse": 349,
+     "transit": 66
+    }
+   },
+   "segmentation_rule": "Segmentation rule (docs/qa/contact.md, seated \"type\": both hands' fingertips touch the keycaps, 0 to +2 mm, through\nthe whole clip): a TRANSIT run with a KEYBOARD segment on BOTH sides (the hand does not visit the mouse in between)\nis the hand between keystrokes on the keyboard, so it is KEYBOARD (full keycap contact). Only the runs between the\nkeyboard and the mouse (or a clip end) stay TRANSIT, and the segment blends live in them.",
+   "resumed_from_checkpoint": "SUB01_DeskTyping_seated.finish-checkpoint.npz"
+  },
+  "elapsed_seconds": 573.0
  },
  "clips": {
   "DeskTyping_seated": {
    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_DeskTyping_seated.glb",
-   "sha256": "9a8253ec94cc81f12144065fdb421e9cc80137eff60c177ae29c275cadb636f0",
-   "all_gates_pass": false
+   "sha256": "26b3a8e324259779394ef9e1576bbeac30d6ddfc876f4c818139ba98c4899134",
+   "all_gates_pass": true
   },
   "SitToType_seated": {
    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_SitToType_seated.glb",
-   "sha256": "adb7547ed8c6ca1ee434c2891240404ae4f88d16528ee9e1a5d4f309e75e3f48",
-   "all_gates_pass": false
+   "sha256": "a141cae85439b2e808ab161ca9fc30f24b35c47d9fe413186ba9c6f6293fb8a6",
+   "all_gates_pass": true
   },
   "TypeToSit_seated": {
    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_TypeToSit_seated.glb",
-   "sha256": "ed0911cc7cbf1c1ade8371a565ac563d24238b4a2b057f41538825d5c37c4d18",
-   "all_gates_pass": false
+   "sha256": "7e3fbadf363ac510594ffb4a100dcff0e011bac83b8d7865776eb0edbd392530",
+   "all_gates_pass": true
   }
  },
- "ready": false,
+ "ready": true,
  "native_verified": false,
  "seams": [
   {
@@ -284,9 +456,9 @@
    },
    "velocity_delta_cm_s": {
     "hips": 0.838,
-    "max_joint": 7.745,
-    "max_arm_joint": 7.745,
-    "max_joint_name": "RightForeArm"
+    "max_joint": 5.664,
+    "max_arm_joint": 5.664,
+    "max_joint_name": "LeftHand"
    }
   },
   {
@@ -304,12 +476,12 @@
    },
    "rotation_delta_deg": {
     "hips": 0.0151,
-    "max_joint": 0.4015
+    "max_joint": 0.4131
    },
    "velocity_delta_cm_s": {
     "hips": 0.803,
-    "max_joint": 15.948,
-    "max_arm_joint": 9.954,
+    "max_joint": 15.942,
+    "max_arm_joint": 10.187,
     "max_joint_name": "LeftHandThumb4"
    }
   },
@@ -322,18 +494,18 @@
    ],
    "position_delta_cm": {
     "hips": 0.0127,
-    "max_joint": 2.7064,
-    "max_arm_joint": 2.7064,
-    "max_joint_name": "LeftArm"
+    "max_joint": 0.0188,
+    "max_arm_joint": 0.0188,
+    "max_joint_name": "RightForeArm"
    },
    "rotation_delta_deg": {
     "hips": 0.0017,
-    "max_joint": 9.9858
+    "max_joint": 0.0474
    },
    "velocity_delta_cm_s": {
     "hips": 0.384,
-    "max_joint": 6.976,
-    "max_arm_joint": 4.608,
+    "max_joint": 6.891,
+    "max_arm_joint": 4.591,
     "max_joint_name": "LeftHandIndex4"
    }
   },
@@ -346,18 +518,18 @@
    ],
    "position_delta_cm": {
     "hips": 0.0224,
-    "max_joint": 2.5528,
-    "max_arm_joint": 1.5005,
-    "max_joint_name": "RightHandMiddle4"
+    "max_joint": 0.3527,
+    "max_arm_joint": 0.0491,
+    "max_joint_name": "LeftLeg"
    },
    "rotation_delta_deg": {
     "hips": 0.0206,
-    "max_joint": 3.8685
+    "max_joint": 1.4482
    },
    "velocity_delta_cm_s": {
     "hips": 0.729,
-    "max_joint": 34.321,
-    "max_arm_joint": 12.421,
+    "max_joint": 26.229,
+    "max_arm_joint": 17.357,
     "max_joint_name": "RightHandRing4"
    }
   },
@@ -380,9 +552,9 @@
    },
    "velocity_delta_cm_s": {
     "hips": 0.93,
-    "max_joint": 9.305,
-    "max_arm_joint": 8.466,
-    "max_joint_name": "LeftHandRing4"
+    "max_joint": 7.242,
+    "max_arm_joint": 7.242,
+    "max_joint_name": "LeftHand"
    }
   },
   {
@@ -590,14 +762,14 @@
   "feet": "the body rolls rigidly with the chair: sole gaps are unchanged and the soles slide on the floor at the roll speed (a seated scoot); per-frame sole gates are in each transition report"
  },
  "all_gates_pass": {
-  "DeskTyping_seated": false,
-  "SitToType_seated": false,
-  "TypeToSit_seated": false
+  "DeskTyping_seated": true,
+  "SitToType_seated": true,
+  "TypeToSit_seated": true
  },
  "gates": {
-  "clip_DeskTyping_seated": false,
-  "clip_SitToType_seated": false,
-  "clip_TypeToSit_seated": false,
+  "clip_DeskTyping_seated": true,
+  "clip_SitToType_seated": true,
+  "clip_TypeToSit_seated": true,
   "roll_complete_chair_clear_of_desk": true,
   "roll_complete_chair_floor_no_penetration": true,
   "roll_floor_contact_unchanged": true,

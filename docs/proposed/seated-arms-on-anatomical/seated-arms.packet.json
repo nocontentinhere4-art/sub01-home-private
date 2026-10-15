@@ -6,7 +6,7 @@
  "requires_native_collision_audit": true,
  "never_a_receipt": true,
  "method": "whole-arm IK on the seat-fit clips (tools/solve_seated_typing_arm_ik.py)",
- "ready": false,
+ "ready": true,
  "native_verified": false,
  "installer_or_readiness_written": false,
  "base": {
@@ -275,11 +275,68 @@
  "gates": {
   "clip_SeatedIdle": true,
   "clip_SitDown_seated": true,
-  "clip_GetUp_seated": true
+  "clip_GetUp_seated": true,
+  "typing_clip_DeskTyping_seated": true,
+  "typing_clip_SitToType_seated": true,
+  "typing_clip_TypeToSit_seated": true,
+  "typing_roll_complete_chair_clear_of_desk": true,
+  "typing_roll_complete_chair_floor_no_penetration": true,
+  "typing_roll_floor_contact_unchanged": true,
+  "typing_roll_reversible_exact": true
  },
  "typing": {
-  "status": "BLOCKED",
-  "blocker": "the anatomical base (docs/proposed/seat-pose-anatomical @ bfe7dc8, PACKET.md) holds only SeatedIdle, SitDown and GetUp; there is no anatomical DeskTyping / SitToType / TypeToSit base, so the ergonomic typing warm start cannot run. When those base clips exist: tools/solve_seated_typing_arm_ik.py --base-dir <dir> --chair-translation 200.0199556350708,-186.69002056121826,63.1876777245 --max-seconds 1320"
+  "status": "every source gate passes (proposal; native unverified)",
+  "run": "tools/solve_seated_typing_arm_ik.py --arms-only --roll-from-base --base-dir docs/proposed/seat-pose-anatomical/chair-lift-proposal --chair-translation 200.0199556350708,-186.69002056121826,63.1876777245 --out-dir docs/proposed/seated-arms-on-anatomical --max-seconds 1320 (rerun until no partial)",
+  "proposal": "seated-typing-ik.proposal.json",
+  "clips": {
+   "DeskTyping_seated": {
+    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_DeskTyping_seated.glb",
+    "sha256": "26b3a8e324259779394ef9e1576bbeac30d6ddfc876f4c818139ba98c4899134",
+    "all_gates_pass": true
+   },
+   "SitToType_seated": {
+    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_SitToType_seated.glb",
+    "sha256": "a141cae85439b2e808ab161ca9fc30f24b35c47d9fe413186ba9c6f6293fb8a6",
+    "all_gates_pass": true
+   },
+   "TypeToSit_seated": {
+    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_TypeToSit_seated.glb",
+    "sha256": "7e3fbadf363ac510594ffb4a100dcff0e011bac83b8d7865776eb0edbd392530",
+    "all_gates_pass": true
+   }
+  },
+  "gates": {
+   "clip_DeskTyping_seated": true,
+   "clip_SitToType_seated": true,
+   "clip_TypeToSit_seated": true,
+   "roll_complete_chair_clear_of_desk": true,
+   "roll_complete_chair_floor_no_penetration": true,
+   "roll_floor_contact_unchanged": true,
+   "roll_reversible_exact": true
+  },
+  "contact_profile": {
+   "validator": "tools/validate_unreal_contact_profile.py validate()",
+   "pass": true,
+   "result": {
+    "samples": 301,
+    "sample_rate_hz": 60.0,
+    "max_corrected_top_penetration_cm": 0.0,
+    "max_corrected_key_gap_cm": {
+     "left": 0.08000380981955857,
+     "right": 0.13388393437276136
+    },
+    "acceptance": "distal skin against extracted keytop triangles at60Hz only; palm/bevel/midpoint/POV not certified"
+   }
+  },
+  "soft_ergonomics": "elbow 0-10 cm over the desk and upper arm <= 20 deg missed on every DeskTyping frame (reach geometry; root decides chair/keyboard distance)",
+  "pending_root_confirmations": [
+   "desk centre Y -302 (script) vs -310 (record)",
+   "chair lift +2.5001 cm",
+   "keyboard foot contact",
+   "native swept collision audit",
+   "left clavicle depression (ergonomic, 51 DeskTyping frames outside the 3-8 s profile window) vs the six-arm-bone native correction",
+   "chair-to-keyboard distance (ergonomic soft targets)"
+  ]
  },
  "base_packet": {
   "file": "docs/proposed/seat-pose-anatomical/PACKET.md",

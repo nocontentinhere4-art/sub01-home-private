@@ -512,6 +512,7 @@ def test_axis_rotation_and_clearance_candidates():
     assert np.allclose(R[0] @ [1., 0., 0.], [0., 1., 0.]) and np.allclose(R[1], np.eye(3))
     assert all(0. < c <= 45. for c in K.PITCH_CLEAR_CANDIDATES)       # added flexion; the soft +-15 deg limit follows
     assert list(K.PITCH_CLEAR_CANDIDATES) == sorted(K.PITCH_CLEAR_CANDIDATES)
+    assert list(K.REACH_CLEAR_DY_CM) == sorted(K.REACH_CLEAR_DY_CM) and 0. < K.REACH_CLEAR_DY_CM[0]
 
 
 def test_seam_taper_is_zero_at_the_seam_and_c1():

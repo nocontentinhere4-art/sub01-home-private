@@ -129,3 +129,87 @@ the upper arm within 20° of vertical. Both arms miss them on all 989 frames.
 3. SitToType f6–7 hands into the desk (the arm pass does not yet run on its early transit frames).
 4. TypeToSit seam-frame key penetration.
 5. The DeskTyping loop and exit seams on the right arm.
+
+## Typing: hard gates fixed (every source gate passes; native unverified)
+
+This replaces the two typing sections above. The solver commits are 48742c3, 1b0feac, d500d55, 1b500fa, 10c7da8,
+cb9f770 and 5b24f9e. The setup is unchanged:
+
+- same base, lifted chair, `--arms-only`;
+- roll (3.875, −21.279) cm, keyboard unchanged; the chair/keyboard ergonomic decision stays with root.
+
+DeskTyping resumes from the 10 committed chunk checkpoints, which serve as the warm start. A whole-clip **finish** stage
+follows, checkpointed in `SUB01_DeskTyping_seated.finish-checkpoint.npz` (1019 s). The measurement and the transitions
+ran in the next bounded run (573 s).
+
+**What changed:**
+
+1. **Segmentation.** A transit run with a KEYBOARD segment on both sides becomes KEYBOARD. The rule is cited from
+   docs/qa/contact.md for seated "type": fingertips on the keycaps, 0 to +2 mm, through the whole clip.
+   - Right hand: 574 key, 349 mouse and 66 transit frames.
+   - Transit is left only between the keyboard and the mouse, and the C1 blends live there.
+   - Every KEYBOARD frame is gated as on the keys.
+   - A keyboard frame whose fit path leaves the keycaps has its finger target pulled back into the key field.
+2. **Contact polish.** Keyboard frames still outside the gate take a vertical correction from a 0.05 cm grid.
+   - Where the lowest fingertip switches keys, the grid is tried again after a 0.25–1.0 cm horizontal hand move.
+   - Frames polished: 214, 215, 240, 295, 304, 405, 406, 407 (all fixed). Single-frame horizontal moves were needed at
+     214, 215, 295 (0.25 cm) and 405–407 (0.25, 0.5, 1.0 cm).
+3. **Clearance where the right arm is fully extended.** The swivel cannot help there.
+   - Added palmar wrist flexion toward neutral (six arm bones only) on 241 frames, up to 40° before the soft ±15° limit.
+     The resulting wrist flexion stays between −15° and 13.7°.
+   - A reach step (finger target up to 14 cm toward the body) and a clavicle fallback exist, but this run used neither.
+   - The contact profile now reports a changed clavicle truthfully: it lists it, and the validator refuses.
+4. **Loop closure.**
+   - The last 0.5 s of IK inputs and parameters is C1-blended to frame 0.
+   - The finish checkpoint restores those inputs.
+5. **Transitions.**
+   - The SitDown/GetUp desk pass (38fb963) now runs on SitToType and TypeToSit, on every frame and every arm vertex. It
+     never pushes an arm down through a desk part.
+   - Seam-frame corrections taper to exactly zero over 0.2 s (quintic).
+   - TypeToSit's frame 0 therefore keeps DeskTyping's written last arm pose.
+
+| Clip (sha256) | Keys L / R | Arms vs desk L / R (min cm) | Mouse | Seat (main) / base invariance / fingers / chair |
+|---|---|---|---|---|
+| DeskTyping `26b3a8e3…` | pass (gap ≤ 0.160) / pass (key-frame penetration ≤ 0.014) | +0.507 / +0.508 | pass: XY 0.0002 cm, skin 0.072–0.090 cm | pass / 0 cm / 0° / +0.279 cm |
+| SitToType `a141cae8…` | pass / pass | +0.508 / +0.565 | – | pass / 0 / 0° / +0.567 |
+| TypeToSit `7e3fbadf…` | pass (frame-0 gap 0.13; worst penetration ≤ 0.011) / pass | +0.578 / +0.500 | – | pass / 0 / 0° / +0.554 |
+
+- **`validate_unreal_contact_profile.validate()`** on the 301-row window **passes**. The maximum corrected key gap is
+  0.080 cm (left) and 0.134 cm (right); penetration is 0. No clavicle changes inside the window.
+- **Roll gates pass:** complete chair vs desk and floor, floor contact unchanged, exactly reversible.
+- **Not gated:** 18 right-hand transit frames hover over the keys while approaching or leaving them (158–159, 753–756,
+  935–946).
+
+**Seams** (position Δ max joint / arm joint, rotation Δ, arm velocity Δ):
+
+| Seam | Position Δ max / arm (cm) | Rotation Δ | Arm velocity Δ (cm/s) |
+|---|---|---|---|
+| SitDown → Idle | 0 / 0 | 0 | 2.9 |
+| Idle → SitToType | 0 / 0 | 0 | 5.7 |
+| SitToType → DeskTyping | 0.239 (RightFoot, base) / 0.032 | 0.41° | 10.2 |
+| DeskTyping loop | 0.019 / 0.019 | 0.05° | 4.6 |
+| DeskTyping → TypeToSit | 0.353 (LeftLeg, the base's own seam) / 0.049 | 1.45° | 17.4 |
+| TypeToSit → Idle | 0 / 0 | 0 | 7.2 |
+| Idle → GetUp | 0 / 0 | 0 | 2.9 |
+
+**Ergonomics (soft targets) are still missed on every DeskTyping frame.** The reason is the reach geometry in the
+section above; the chair/keyboard distance is root's decision.
+
+| | Elbow height (cm) | Upper arm from vertical | Shoulder elevation |
+|---|---|---|---|
+| Left | 97.2–101.0 | 65.8–77.3° | −26.7 to −9.0° |
+| Right | 95.4–108.4 | 61.3–94.3° | −21.8 to −5.2° |
+
+**Bounding:**
+- DeskTyping uses chunks with checkpoints, plus a checkpointed whole-clip finish stage.
+- The finish is one stage. It took 1019 s in this run; an earlier variant took 1876 s, over the 1320 s bound, because
+  the bound is checked between stages.
+
+**For root to confirm:**
+1. Desk centre Y: −302 in the script vs −310 in the record.
+2. The +2.5001 cm chair lift.
+3. Keyboard foot contact.
+4. A native swept collision audit.
+5. The left clavicle depression from the ergonomic objective, on 51 DeskTyping frames outside the 3–8 s window, against a
+   six-arm-bone native correction.
+6. The chair-to-keyboard distance (ergonomics).
