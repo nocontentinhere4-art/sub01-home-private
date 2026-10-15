@@ -118,7 +118,16 @@ def run(target):
   assert fresh(OLDPID,OLDSTART),'No current public manual physical view'
   def viewer_state():
    with urllib.request.urlopen('http://127.0.0.1:8892/health',timeout=3)as response:return json.load(response)
-  viewer_before=viewer_state();assert viewer_before.get('nativeAlive')and viewer_before.get('inputEnabled')and viewer_before.get('captureEnabled')and viewer_before.get('privacy')is False and viewer_before.get('viewMode')=='manual'
+  viewer_before=viewer_state()
+  input_ready=viewer_before.get('inputEnabled')is True
+  if not input_ready:
+   assert approval.get('authorized_input_pause')is True,'No input grant and no explicitly authorized maintenance pause'
+   pause=trusted_json('/run/sub01-home-private/input-maintenance-pause.json')
+   assert pause.get('purpose')=='owner-requested-localhost-update'and pause.get('old_game_identity')==[OLDPID,OLDSTART]
+   assert 0<=time.time()-pause['started_epoch']<=600 and type(pause.get('accepted_inputs'))is int
+   assert pause['accepted_inputs']==approval['pose_accepted_inputs']==viewer_before.get('acceptedInputs')
+   input_ready=True
+  assert viewer_before.get('nativeAlive')and input_ready and viewer_before.get('captureEnabled')and viewer_before.get('privacy')is False and viewer_before.get('viewMode')=='manual'
   assert type(viewer_before.get('acceptedInputs'))is int
   assert viewer_before['acceptedInputs']==approval['pose_accepted_inputs'],'Human moved since pose readback: refresh exact pose before handoff'
   snapshot=device_phase('preflight_before_handoff')
