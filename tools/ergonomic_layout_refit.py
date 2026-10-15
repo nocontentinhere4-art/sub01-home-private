@@ -1177,12 +1177,8 @@ ORIGINAL_RECORD = {
     'body_placement': 'audited body [203.9, -232.3, -0.6] cm yaw 180, offset (-3.875, +32.5) at the initial chair; rolls rigidly with the chair'}
 
 
-def postprocess(setup, out_dir, status='final_candidate'):
-    """Verifier-facing fields (original / proposed / clips / hand model) and the DeskTyping GLB with the solved arms."""
-    out_dir = Path(out_dir)
-    pp = out_dir / 'ergonomic-layout-refit.proposal.json'
-    prop = json.loads(pp.read_text())
-    z = np.load(out_dir / 'arm-solution.npz')
+def refit_worlds(setup, z):
+    """Full DeskTyping joint worlds: the base with the six solved arm bones; fingers carried with their base locals."""
     W = np.array(setup.Wb, copy=True)
     for s_ in A.SIDES:
         for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s_]):
@@ -1192,6 +1188,81 @@ def postprocess(setup, out_dir, status='final_candidate'):
         for k in setup.ctx.sk.subtree(h):
             if k != h:
                 W[:, k] = carry @ setup.Wb[:, k]
+    return W
+
+
+class _FrameLayout:
+    def __init__(self, layout, shift, roll):
+        self.kb, self.mouse, self.shift, self.roll = layout.kb, layout.mouse, shift, roll
+
+
+def transitions(setup, out_dir, layout, W_dt):
+    """SitToType / TypeToSit for the NEW layout: the base transition body (unchanged), the chair rolling along the new
+    roll (quintic pull-in / exact push-back), and the six arm bones' LOCAL rotations slerped (quintic, same s) from the
+    base transition's own arms (= the SeatedIdle seam) to the refit DeskTyping's first / last frame. Arm skin vs the desk,
+    the complete chair, the keyboard case and the own body is measured on every frame at that frame's roll."""
+    ctx = setup.ctx
+    out = {}
+    roll = np.asarray(layout.roll, float)
+    r0 = np.array([*SOLVER_CHAIR_OFFSET_CM, 0.])
+    labels = dict(A.LABELS, ergonomic_layout_refit=True, finger_rests='OLD base locals carried (contact redone on ' + HAND_MODEL_PACKET + ')')
+    for role, pull in (('SitToType_seated', True), ('TypeToSit_seated', False)):
+        f, r, g, t = ctx.clip(role)
+        Wt = f.joint_world
+        F = len(t)
+        s_ = A.ChairRoll.pull_in_s(t) if pull else A.ChairRoll.push_back_s(t)
+        sm = A.smootherstep(s_)
+        w = sm if pull else sm                     # arms follow the roll: 0 at the idle seam, 1 at the typing seam
+        tgt = np.repeat((W_dt[0] if pull else W_dt[-1])[None], F, 0)
+        W = A.blend_arm_locals(ctx.sk, Wt, tgt, w)
+        # the existing transition desk pass (38fb963 / 336b5f8): wrists out of any desk part, smooth, never down through
+        # a part, tapering to exactly zero at both seam frames (protected)
+        shifts = np.stack([roll * sm[i] - r0 for i in range(F)])
+        protect = np.zeros(F, bool)
+        protect[[0, -1]] = True
+        import types
+        nf = {sd: {'skin': tuple(x[ctx.arms[sd]['part'] != 'fingers'] for x in ctx.arms[sd]['skin']),
+                   'part': ctx.arms[sd]['part'][ctx.arms[sd]['part'] != 'fingers']} for sd in A.SIDES}
+        cx = types.SimpleNamespace(sk=ctx.sk, base=ctx.base, boxes=ctx.boxes, arms=nf)   # non-finger arm skin only
+        W, desk_pass = A.desk_clear_arms(cx, W, shifts, t, protect, no_down=True, taper_s=A.SEAM_TAPER_S)
+        path, sha = A.write(ctx, g, W, t, out_dir, f'SUB01_{role}_refit', labels)
+        sol = ArmSolver(ctx, Wt, setup.kbg, stride=SEARCH_ARM_STRIDE)
+        rows = {sd: {k: [] for k in ('desk_min', 'forearm', 'upper_arm', 'hand', 'fingers', 'torso', 'legs', 'chair', 'keyboard_case')} for sd in A.SIDES}
+        chair_t = []
+        for i in range(F):
+            off = roll * sm[i]
+            fl = _FrameLayout(layout, off - r0, off)
+            chair_t.append([_r(v, 4) for v in np.asarray(CHAIR_INITIAL_CM) + off])
+            for sd in A.SIDES:
+                res = sol.side_clearance(W[i:i + 1], sd, fl, np.array([i]))
+                for k in rows[sd]:
+                    rows[sd][k].append(float(res[k][0]))
+        seam_frame = W_dt[0] if pull else W_dt[-1]
+        end = W[-1] if pull else W[0]
+        arm_j = [ctx.sk.j(n) for sd in A.SIDES for n in A.ARM_BONES[sd]]
+        seam = float(np.linalg.norm(end[arm_j, :3, 3] - seam_frame[arm_j, :3, 3], axis=-1).max() * 100)
+        rep_ = {'glb': A.rel(path), 'sha256': sha, 'frames': F, 'chair_translation_per_frame_cm': chair_t,
+                'arms': 'base transition arms (SeatedIdle seam) slerped in local rotation to the refit DeskTyping '
+                        + ('first' if pull else 'last') + ' frame with the quintic roll parameter',
+                'seam_to_desk_typing_arm_joint_max_cm': _r(seam, 4), 'desk_pass': desk_pass,
+                'clearance_min_cm': {sd: {k: _r(min(v), 3) for k, v in rows[sd].items()} for sd in A.SIDES},
+                'clearance_frames_failing': {sd: {'desk_non_finger_gt_0': int(sum(x <= 0 for x in rows[sd]['desk_min'])),
+                                                  'own_body': int(sum(x < ARM_BODY_MIN_CM for x in rows[sd]['torso'] + rows[sd]['legs'])),
+                                                  'chair': int(sum(x <= 0 for x in rows[sd]['chair'])),
+                                                  'keyboard_case': int(sum(x <= 0 for x in rows[sd]['keyboard_case']))} for sd in A.SIDES},
+                'fingers_note': 'old finger rests: fingers vs desk reported, not gated'}
+        rep_['pass'] = all(v == 0 for sd in A.SIDES for v in rep_['clearance_frames_failing'][sd].values())
+        out[role] = rep_
+    return out
+
+
+def postprocess(setup, out_dir, status='final_candidate'):
+    """Verifier-facing fields (original / proposed / clips / hand model) and the DeskTyping GLB with the solved arms."""
+    out_dir = Path(out_dir)
+    pp = out_dir / 'ergonomic-layout-refit.proposal.json'
+    prop = json.loads(pp.read_text())
+    z = np.load(out_dir / 'arm-solution.npz')
+    W = refit_worlds(setup, z)
     _, _, g_f, t = setup.ctx.clip('DeskTyping_seated')
     labels = dict(A.LABELS, ergonomic_layout_refit=True, finger_rests='OLD (known wrong) base locals carried; contact to be '
                   'redone on ' + HAND_MODEL_PACKET)
@@ -1200,6 +1271,12 @@ def postprocess(setup, out_dir, status='final_candidate'):
     arm_j = [setup.ctx.sk.j(n) for s_ in A.SIDES for n in A.ARM_BONES[s_]]
     rb = float(np.abs(Wr[:, arm_j, :3, 3] - W[:, arm_j, :3, 3]).max() * 100)
     cfg = prop['configuration']
+    c = cfg['chair']['proposed_typing_roll_cm']
+    k, m = cfg['keyboard']['delta_ue_cm'], cfg['mouse']['delta_ue_cm']
+    layout = Layout(k, m, c[1] - CHAIR_ROLL_ORIGINAL_CM[1])
+    tr = transitions(setup, out_dir, layout, W)
+    for role, v in tr.items():
+        prop['gates'][f'transition_{role}_arms_clear'] = bool(v['pass'])
     for s_ in A.SIDES:      # continuity: no swivel jump (an elbow step over ELBOW_STEP_MAX_CM between 60 Hz keys)
         prop['gates'][f'{s_}_elbow_path_continuous'] = bool(prop['arms'][s_]['continuity']['elbow']['max_frame_step_cm'] <= ELBOW_STEP_MAX_CM)
     prop.update(readiness(prop['gates']))
@@ -1208,12 +1285,11 @@ def postprocess(setup, out_dir, status='final_candidate'):
         'original': ORIGINAL_RECORD,
         'proposed': {'keyboard': cfg['keyboard'], 'mouse': cfg['mouse'], 'chair': cfg['chair'], 'body': cfg['body'],
                      'solver_frame_chair_offset_cm': list(SOLVER_CHAIR_OFFSET_CM),
-                     'clips': {'DeskTyping_seated': {'glb': A.rel(path), 'sha256': sha,
+                     'clips': {**tr, 'DeskTyping_seated': {'glb': A.rel(path), 'sha256': sha,
                                                      'note': 'base DeskTyping (anatomical chair-lift base) with ONLY the six arm '
                                                              'bones re-solved by this refit; fingers carried with their base locals',
                                                      'readback_arm_joint_max_error_cm': round(rb, 6)}},
-                     'clips_not_resolved_here': ['SitToType_seated', 'TypeToSit_seated (the longer / shorter roll and the arm '
-                                                 'transitions to this DeskTyping pose are for the transition step)']},
+                     },
         'hand_model_for_contact': {'packet': HAND_MODEL_PACKET, 'sha256': HAND_MODEL_PACKET_SHA256,
                                    'rule': 'the hand contact (keys / mouse) is redone on this frozen 65-bone owner (same 25 body '
                                            'joints / IBM and wrist tracks; new finger rests, hand geometry and cuff weights). '
