@@ -1,0 +1,341 @@
+{
+  "schema": "sub01.original-real-home-window-plan.v1",
+  "original_source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "construction_dimensions": {
+    "rough_v": [
+      0.7,
+      2.575
+    ],
+    "installation_gap_m": 0.02,
+    "wall_depth_m": 0.18,
+    "overall_profile_depth_m": 0.149,
+    "mainframe_reference_depth_m": 0.114,
+    "mainframe_sightline_m": 0.035,
+    "sash_sightline_m": 0.035,
+    "glass_pane_thickness_m": 0.004,
+    "glass_cavity_m": 0.012,
+    "glass_layers": 3,
+    "sill_thickness_m": 0.02,
+    "interior_sill_projection_from_wall_m": 0.06
+  },
+  "units": [
+    {
+      "id": "WestSouth",
+      "facade": "west",
+      "rough_u": [
+        -3.84,
+        -1.41
+      ],
+      "lights": 3,
+      "operable_light": 0,
+      "old_nodes": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        -3.82,
+        -1.43
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 2.3899999999999997,
+      "unit_height_m": 1.8350000000000002
+    },
+    {
+      "id": "WestMiddleTV",
+      "facade": "west",
+      "rough_u": [
+        -1.29,
+        1.29
+      ],
+      "lights": 3,
+      "operable_light": null,
+      "old_nodes": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        -1.27,
+        1.27
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 2.54,
+      "unit_height_m": 1.8350000000000002
+    },
+    {
+      "id": "WestNorth",
+      "facade": "west",
+      "rough_u": [
+        1.41,
+        3.84
+      ],
+      "lights": 3,
+      "operable_light": 2,
+      "old_nodes": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        1.43,
+        3.82
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 2.3899999999999997,
+      "unit_height_m": 1.8350000000000002
+    },
+    {
+      "id": "FrontWest",
+      "facade": "front",
+      "rough_u": [
+        -3.91,
+        -0.15
+      ],
+      "lights": 4,
+      "operable_light": 0,
+      "old_nodes": [
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        -3.89,
+        -0.16999999999999998
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 3.72,
+      "unit_height_m": 1.8350000000000002
+    },
+    {
+      "id": "FrontMiddle",
+      "facade": "front",
+      "rough_u": [
+        0.2,
+        1.1
+      ],
+      "lights": 1,
+      "operable_light": 0,
+      "old_nodes": [
+        29,
+        30,
+        31,
+        32,
+        33
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        0.22,
+        1.08
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 0.8600000000000001,
+      "unit_height_m": 1.8350000000000002
+    },
+    {
+      "id": "FrontEast",
+      "facade": "front",
+      "rough_u": [
+        2.8,
+        3.7
+      ],
+      "lights": 1,
+      "operable_light": 0,
+      "old_nodes": [
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "unit_u": [
+        2.82,
+        3.68
+      ],
+      "unit_v": [
+        0.72,
+        2.555
+      ],
+      "unit_width_m": 0.8600000000000003,
+      "unit_height_m": 1.8350000000000002
+    }
+  ],
+  "new_front_wall_infill_piers_u_m": [
+    [
+      -0.15,
+      0.2
+    ],
+    [
+      1.1,
+      1.45
+    ],
+    [
+      2.55,
+      2.8
+    ],
+    [
+      3.7,
+      3.91
+    ]
+  ],
+  "entry_boundary_renderer_owned": {
+    "rough_u": [
+      1.45,
+      2.55
+    ],
+    "authentic_frame_u": [
+      1.48,
+      2.51
+    ],
+    "renderer_owned_packer_gaps": [
+      [
+        1.45,
+        1.48
+      ],
+      [
+        2.51,
+        2.55
+      ]
+    ],
+    "renderer_owned_transom_v": [
+      2.145,
+      2.575
+    ]
+  },
+  "upper_fenestration_renderer_owned": {
+    "retire_nodes": [
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48
+    ],
+    "rough_floor_m": 3.025,
+    "rough_header_m": 5.45
+  },
+  "protected_tv_backer": {
+    "source_node": 158,
+    "u_m": [
+      -1.125,
+      1.025
+    ],
+    "interior_normal_m": [
+      0.09,
+      0.23
+    ],
+    "v_m": [
+      0,
+      2.8
+    ],
+    "policy": "Middle west glazing fixed behind actual backer; no new trim/sill may enter that protected volume"
+  },
+  "exact_old_lower_frame_nodes": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    21,
+    23,
+    24,
+    25,
+    26,
+    27,
+    29,
+    30,
+    31,
+    32,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "references": [
+    {
+      "url": "https://velfac.co.uk/windows/velfac-products/velfac-200/",
+      "observed_via": "playwright-isolated",
+      "used_for": "Composite timber/aluminium frames; distinguish actual fixed and outward-operating units; three-layer glazing and consistent sightlines. Not a copied product model."
+    },
+    {
+      "url": "https://products-domestic.velfac.co.uk/downloads/31467/33604/33607/#p-28240",
+      "observed_via": "playwright-isolated",
+      "used_for": "Sill/head/jamb interfaces, weather seal, packers, air barrier and supported sill rather than a floating four-bar box."
+    },
+    {
+      "url": "https://cdn.velfac.com/files/18522/V200E.W1.02.A.C.002.A%20-%20Clipped%20cill.pdf/Preview?mimetype=image/jpg",
+      "observed_via": "playwright-isolated actual drawing viewed",
+      "drawing": "V200E.W1.02.A.C.002.A",
+      "used_for": "Drawing labels149mm overall/114mm mainframe option, nominal20mm opening allowance, clipped exterior cill/drip. Our wall remains180mm; surrounding masonry/insulation layers are not copied."
+    },
+    {
+      "url": "https://www.andersenwindows.com/windows-and-doors/windows/casement-windows/400-series-casement-window",
+      "observed_via": "playwright-isolated",
+      "used_for": "Independent residential reference for wood interiors, stepped profiles and real operating hardware. No claim this model matches400Series dimensions or licensed CAD."
+    }
+  ],
+  "manufacturer_cad_reused": false,
+  "all_new_profile_geometry_original": true,
+  "source_ready": false,
+  "native_ready": false,
+  "windows_activity_ready": false
+}

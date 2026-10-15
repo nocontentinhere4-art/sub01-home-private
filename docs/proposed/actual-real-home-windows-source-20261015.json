@@ -1,0 +1,4881 @@
+{
+  "schema": "sub01.original-real-home-windows-source.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "plan": {
+    "schema": "sub01.original-real-home-window-plan.v1",
+    "original_source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+    "construction_dimensions": {
+      "rough_v": [
+        0.7,
+        2.575
+      ],
+      "installation_gap_m": 0.02,
+      "wall_depth_m": 0.18,
+      "overall_profile_depth_m": 0.149,
+      "mainframe_reference_depth_m": 0.114,
+      "mainframe_sightline_m": 0.035,
+      "sash_sightline_m": 0.035,
+      "glass_pane_thickness_m": 0.004,
+      "glass_cavity_m": 0.012,
+      "glass_layers": 3,
+      "sill_thickness_m": 0.02,
+      "interior_sill_projection_from_wall_m": 0.06
+    },
+    "units": [
+      {
+        "id": "WestSouth",
+        "facade": "west",
+        "rough_u": [
+          -3.84,
+          -1.41
+        ],
+        "lights": 3,
+        "operable_light": 0,
+        "old_nodes": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          -3.82,
+          -1.43
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 2.3899999999999997,
+        "unit_height_m": 1.8350000000000002
+      },
+      {
+        "id": "WestMiddleTV",
+        "facade": "west",
+        "rough_u": [
+          -1.29,
+          1.29
+        ],
+        "lights": 3,
+        "operable_light": null,
+        "old_nodes": [
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          -1.27,
+          1.27
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 2.54,
+        "unit_height_m": 1.8350000000000002
+      },
+      {
+        "id": "WestNorth",
+        "facade": "west",
+        "rough_u": [
+          1.41,
+          3.84
+        ],
+        "lights": 3,
+        "operable_light": 2,
+        "old_nodes": [
+          17,
+          18,
+          19,
+          20,
+          21
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          1.43,
+          3.82
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 2.3899999999999997,
+        "unit_height_m": 1.8350000000000002
+      },
+      {
+        "id": "FrontWest",
+        "facade": "front",
+        "rough_u": [
+          -3.91,
+          -0.15
+        ],
+        "lights": 4,
+        "operable_light": 0,
+        "old_nodes": [
+          23,
+          24,
+          25,
+          26,
+          27
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          -3.89,
+          -0.16999999999999998
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 3.72,
+        "unit_height_m": 1.8350000000000002
+      },
+      {
+        "id": "FrontMiddle",
+        "facade": "front",
+        "rough_u": [
+          0.2,
+          1.1
+        ],
+        "lights": 1,
+        "operable_light": 0,
+        "old_nodes": [
+          29,
+          30,
+          31,
+          32,
+          33
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          0.22,
+          1.08
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 0.8600000000000001,
+        "unit_height_m": 1.8350000000000002
+      },
+      {
+        "id": "FrontEast",
+        "facade": "front",
+        "rough_u": [
+          2.8,
+          3.7
+        ],
+        "lights": 1,
+        "operable_light": 0,
+        "old_nodes": [
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "rough_v": [
+          0.7,
+          2.575
+        ],
+        "unit_u": [
+          2.82,
+          3.68
+        ],
+        "unit_v": [
+          0.72,
+          2.555
+        ],
+        "unit_width_m": 0.8600000000000003,
+        "unit_height_m": 1.8350000000000002
+      }
+    ],
+    "new_front_wall_infill_piers_u_m": [
+      [
+        -0.15,
+        0.2
+      ],
+      [
+        1.1,
+        1.45
+      ],
+      [
+        2.55,
+        2.8
+      ],
+      [
+        3.7,
+        3.91
+      ]
+    ],
+    "entry_boundary_renderer_owned": {
+      "rough_u": [
+        1.45,
+        2.55
+      ],
+      "authentic_frame_u": [
+        1.48,
+        2.51
+      ],
+      "renderer_owned_packer_gaps": [
+        [
+          1.45,
+          1.48
+        ],
+        [
+          2.51,
+          2.55
+        ]
+      ],
+      "renderer_owned_transom_v": [
+        2.145,
+        2.575
+      ]
+    },
+    "upper_fenestration_renderer_owned": {
+      "retire_nodes": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ],
+      "rough_floor_m": 3.025,
+      "rough_header_m": 5.45
+    },
+    "protected_tv_backer": {
+      "source_node": 158,
+      "u_m": [
+        -1.125,
+        1.025
+      ],
+      "interior_normal_m": [
+        0.09,
+        0.23
+      ],
+      "v_m": [
+        0,
+        2.8
+      ],
+      "policy": "Middle west glazing fixed behind actual backer; no new trim/sill may enter that protected volume"
+    },
+    "exact_old_lower_frame_nodes": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      19,
+      20,
+      21,
+      23,
+      24,
+      25,
+      26,
+      27,
+      29,
+      30,
+      31,
+      32,
+      33,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "references": [
+      {
+        "url": "https://velfac.co.uk/windows/velfac-products/velfac-200/",
+        "observed_via": "playwright-isolated",
+        "used_for": "Composite timber/aluminium frames; distinguish actual fixed and outward-operating units; three-layer glazing and consistent sightlines. Not a copied product model."
+      },
+      {
+        "url": "https://products-domestic.velfac.co.uk/downloads/31467/33604/33607/#p-28240",
+        "observed_via": "playwright-isolated",
+        "used_for": "Sill/head/jamb interfaces, weather seal, packers, air barrier and supported sill rather than a floating four-bar box."
+      },
+      {
+        "url": "https://cdn.velfac.com/files/18522/V200E.W1.02.A.C.002.A%20-%20Clipped%20cill.pdf/Preview?mimetype=image/jpg",
+        "observed_via": "playwright-isolated actual drawing viewed",
+        "drawing": "V200E.W1.02.A.C.002.A",
+        "used_for": "Drawing labels149mm overall/114mm mainframe option, nominal20mm opening allowance, clipped exterior cill/drip. Our wall remains180mm; surrounding masonry/insulation layers are not copied."
+      },
+      {
+        "url": "https://www.andersenwindows.com/windows-and-doors/windows/casement-windows/400-series-casement-window",
+        "observed_via": "playwright-isolated",
+        "used_for": "Independent residential reference for wood interiors, stepped profiles and real operating hardware. No claim this model matches400Series dimensions or licensed CAD."
+      }
+    ],
+    "manufacturer_cad_reused": false,
+    "all_new_profile_geometry_original": true,
+    "source_ready": false,
+    "native_ready": false,
+    "windows_activity_ready": false
+  },
+  "units": [
+    {
+      "unit": "WestSouth",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            -3.7809999999999997,
+            -3.0331666666666663
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": true
+        },
+        {
+          "index": 1,
+          "opening_u_m": [
+            -2.990166666666666,
+            -2.2598333333333334
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 2,
+          "opening_u_m": [
+            -2.216833333333333,
+            -1.4689999999999999
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        }
+      ],
+      "rough_u_m": [
+        -3.84,
+        -1.41
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        -3.82,
+        -1.43
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": true,
+      "tv_backer_projection_excluded": false
+    },
+    {
+      "unit": "WestMiddleTV",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            -1.231,
+            -0.43316666666666676
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 1,
+          "opening_u_m": [
+            -0.3901666666666667,
+            0.3901666666666666
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 2,
+          "opening_u_m": [
+            0.43316666666666664,
+            1.231
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        }
+      ],
+      "rough_u_m": [
+        -1.29,
+        1.29
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        -1.27,
+        1.27
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": false,
+      "tv_backer_projection_excluded": true
+    },
+    {
+      "unit": "WestNorth",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            1.4689999999999999,
+            2.216833333333333
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 1,
+          "opening_u_m": [
+            2.2598333333333334,
+            2.9901666666666666
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 2,
+          "opening_u_m": [
+            3.033166666666667,
+            3.7809999999999997
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": true
+        }
+      ],
+      "rough_u_m": [
+        1.41,
+        3.84
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        1.43,
+        3.82
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": false,
+      "tv_backer_projection_excluded": false
+    },
+    {
+      "unit": "FrontWest",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            -3.851,
+            -2.964
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": true
+        },
+        {
+          "index": 1,
+          "opening_u_m": [
+            -2.921,
+            -2.0515000000000003
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 2,
+          "opening_u_m": [
+            -2.0085,
+            -1.1390000000000002
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        },
+        {
+          "index": 3,
+          "opening_u_m": [
+            -1.096,
+            -0.20900000000000007
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": false
+        }
+      ],
+      "rough_u_m": [
+        -3.91,
+        -0.15
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        -3.89,
+        -0.16999999999999998
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": false,
+      "tv_backer_projection_excluded": false
+    },
+    {
+      "unit": "FrontMiddle",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            0.259,
+            1.0410000000000001
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": true
+        }
+      ],
+      "rough_u_m": [
+        0.2,
+        1.1
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        0.22,
+        1.08
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": false,
+      "tv_backer_projection_excluded": false
+    },
+    {
+      "unit": "FrontEast",
+      "lights": [
+        {
+          "index": 0,
+          "opening_u_m": [
+            2.859,
+            3.641
+          ],
+          "opening_v_m": [
+            0.759,
+            2.516
+          ],
+          "closed_operable_candidate": true
+        }
+      ],
+      "rough_u_m": [
+        2.8,
+        3.7
+      ],
+      "rough_v_m": [
+        0.7,
+        2.575
+      ],
+      "frame_u_m": [
+        2.82,
+        3.68
+      ],
+      "frame_v_m": [
+        0.72,
+        2.555
+      ],
+      "normal_bounds_m": [
+        -0.0745,
+        0.0745
+      ],
+      "sill_projection_omitted_for_kitchen": false,
+      "tv_backer_projection_excluded": false
+    }
+  ],
+  "parts": [
+    {
+      "name": "SUB01_RealWindow_WestSouth_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          -381.9999933242798,
+          72.00000286102295
+        ],
+        [
+          -392.549991607666,
+          -142.99999475479126,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -407.450008392334,
+          -381.9999933242798,
+          72.00000286102295
+        ],
+        [
+          -403.95002365112305,
+          -142.99999475479126,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.80001068115234,
+          -379.29999828338623,
+          74.6999979019165
+        ],
+        [
+          -403.39999198913574,
+          -145.70000171661377,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -405.4999828338623,
+          -383.89999866485596,
+          70.09999752044678
+        ],
+        [
+          -405.0000190734863,
+          -141.10000133514404,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          -378.09998989105225,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          -303.31666469573975,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          -375.0999927520752,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          -306.3166618347168,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          -375.0999927520752,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          -306.3166618347168,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          -375.0999927520752,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          -306.3166618347168,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          -375.0999927520752,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          -306.3166618347168,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          -375.0999927520752,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          -306.3166618347168,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          -375.600004196167,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          -305.8166742324829,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          -375.600004196167,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          -305.8166742324829,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Hinge_0_0.18",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          -378.39999198913574,
+          107.52600431442261
+        ],
+        [
+          -395.6000089645386,
+          -377.09999084472656,
+          114.02599811553955
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Hinge_0_0.78",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          -378.39999198913574,
+          212.9460096359253
+        ],
+        [
+          -395.6000089645386,
+          -377.09999084472656,
+          219.44599151611328
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_HandleEscutcheon_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          -306.0166597366333,
+          160.24999618530273
+        ],
+        [
+          -396.09999656677246,
+          -304.51667308807373,
+          167.25000143051147
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_HandleLever_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.09999656677246,
+          -305.7166576385498,
+          162.95000314712524
+        ],
+        [
+          -394.1999912261963,
+          -304.7166585922241,
+          172.74999618530273
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Mullion_1",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          -302.91666984558105,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          -299.4166612625122,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Sash_1",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          -299.0166664123535,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          -225.98333358764648,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_1_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          -296.01666927337646,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          -228.98333072662354,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_1_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          -296.01666927337646,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          -228.98333072662354,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_1_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          -296.01666927337646,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          -228.98333072662354,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          -296.01666927337646,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          -228.98333072662354,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          -296.01666927337646,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          -228.98333072662354,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          -296.51665687561035,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          -228.48334312438965,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          -296.51665687561035,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          -228.48334312438965,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Mullion_2",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          -225.5833387374878,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          -222.08333015441895,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Sash_2",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          -221.68333530426025,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          -146.8999981880188,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_2_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          -218.6833381652832,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          -149.89999532699585,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_2_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          -218.6833381652832,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          -149.89999532699585,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_Glass_2_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          -218.6833381652832,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          -149.89999532699585,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          -218.6833381652832,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          -149.89999532699585,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_IGUSpacer_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          -218.6833381652832,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          -149.89999532699585,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          -219.1833257675171,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          -149.399995803833,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_GlazingGasket_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          -219.1833257675171,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          -149.399995803833,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          -383.50000381469727,
+          70.01000046730042
+        ],
+        [
+          -407.450008392334,
+          -141.49999618530273,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          -383.50000381469727,
+          68.4000015258789
+        ],
+        [
+          -411.8000030517578,
+          -141.49999618530273,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          -374.4999885559082,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          -369.4999933242798,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestSouth_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          -155.49999475479126,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          -150.49999952316284,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          -126.99999809265137,
+          72.00000286102295
+        ],
+        [
+          -392.549991607666,
+          126.99999809265137,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -407.450008392334,
+          -126.99999809265137,
+          72.00000286102295
+        ],
+        [
+          -403.95002365112305,
+          126.99999809265137,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.80001068115234,
+          -124.30000305175781,
+          74.6999979019165
+        ],
+        [
+          -403.39999198913574,
+          124.30000305175781,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -405.4999828338623,
+          -128.90000343322754,
+          70.09999752044678
+        ],
+        [
+          -405.0000190734863,
+          128.90000343322754,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          -123.09999465942383,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          -43.316665291786194,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          -120.09999752044678,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          -46.31666541099548,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          -120.09999752044678,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          -46.31666541099548,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          -120.09999752044678,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          -46.31666541099548,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          -120.09999752044678,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          -46.31666541099548,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          -120.09999752044678,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          -46.31666541099548,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          -120.59999704360962,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          -45.81666588783264,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          -120.59999704360962,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          -45.81666588783264,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Mullion_1",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          -42.916667461395264,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          -39.41666781902313,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Sash_1",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          -39.01666700839996,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          39.01666700839996,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_1_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          -36.016666889190674,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          36.016666889190674,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_1_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          -36.016666889190674,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          36.016666889190674,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_1_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          -36.016666889190674,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          36.016666889190674,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          -36.016666889190674,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          36.016666889190674,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          -36.016666889190674,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          36.016666889190674,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          -36.516666412353516,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          36.516666412353516,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          -36.516666412353516,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          36.516666412353516,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Mullion_2",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          39.41666781902313,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          42.916667461395264,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Sash_2",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          43.316665291786194,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          123.09999465942383,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_2_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          46.31666541099548,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          120.09999752044678,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_2_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          46.31666541099548,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          120.09999752044678,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_Glass_2_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          46.31666541099548,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          120.09999752044678,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          46.31666541099548,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          120.09999752044678,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_IGUSpacer_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          46.31666541099548,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          120.09999752044678,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          45.81666588783264,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          120.59999704360962,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_GlazingGasket_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          45.81666588783264,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          120.59999704360962,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          -128.4999966621399,
+          70.01000046730042
+        ],
+        [
+          -407.450008392334,
+          128.4999966621399,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          -128.4999966621399,
+          68.4000015258789
+        ],
+        [
+          -411.8000030517578,
+          128.4999966621399,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_InteriorWalnutSill_0",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          -392.549991607666,
+          -126.99999809265137,
+          69.9999988079071
+        ],
+        [
+          -384.99999046325684,
+          -112.60000467300415,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_InteriorWalnutSill_1",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          -392.549991607666,
+          102.60000228881836,
+          69.9999988079071
+        ],
+        [
+          -384.99999046325684,
+          126.99999809265137,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          -119.50000524520874,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          -114.49999809265137,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestMiddleTV_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          114.49999809265137,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          119.50000524520874,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          142.99999475479126,
+          72.00000286102295
+        ],
+        [
+          -392.549991607666,
+          381.9999933242798,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -407.450008392334,
+          142.99999475479126,
+          72.00000286102295
+        ],
+        [
+          -403.95002365112305,
+          381.9999933242798,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.80001068115234,
+          145.70000171661377,
+          74.6999979019165
+        ],
+        [
+          -403.39999198913574,
+          379.29999828338623,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -405.4999828338623,
+          141.10000133514404,
+          70.09999752044678
+        ],
+        [
+          -405.0000190734863,
+          383.89999866485596,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          146.8999981880188,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          221.68333530426025,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          149.89999532699585,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          218.6833381652832,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          149.89999532699585,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          218.6833381652832,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          149.89999532699585,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          218.6833381652832,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          149.89999532699585,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          218.6833381652832,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          149.89999532699585,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          218.6833381652832,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          149.399995803833,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          219.1833257675171,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          149.399995803833,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          219.1833257675171,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Mullion_1",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          222.08333015441895,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          225.5833387374878,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Sash_1",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          225.98333358764648,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          299.0166664123535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_1_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          228.98333072662354,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          296.01666927337646,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_1_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          228.98333072662354,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          296.01666927337646,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_1_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          228.98333072662354,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          296.01666927337646,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          228.98333072662354,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          296.01666927337646,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          228.98333072662354,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          296.01666927337646,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          228.48334312438965,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          296.51665687561035,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          228.48334312438965,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          296.51665687561035,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Mullion_2",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.95002365112305,
+          299.4166612625122,
+          75.49999952316284
+        ],
+        [
+          -392.549991607666,
+          302.91666984558105,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Sash_2",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.20000648498535,
+          303.31666469573975,
+          75.90000033378601
+        ],
+        [
+          -397.00000286102295,
+          378.09998989105225,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_2_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.19998359680176,
+          306.3166618347168,
+          78.89999747276306
+        ],
+        [
+          -401.800012588501,
+          375.0999927520752,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_2_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.600004196167,
+          306.3166618347168,
+          78.89999747276306
+        ],
+        [
+          -400.1999855041504,
+          375.0999927520752,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Glass_2_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -399.0000009536743,
+          306.3166618347168,
+          78.89999747276306
+        ],
+        [
+          -398.6000061035156,
+          375.0999927520752,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -401.800012588501,
+          306.3166618347168,
+          78.89999747276306
+        ],
+        [
+          -400.600004196167,
+          375.0999927520752,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_IGUSpacer_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -400.1999855041504,
+          306.3166618347168,
+          78.89999747276306
+        ],
+        [
+          -399.0000009536743,
+          375.0999927520752,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -402.40001678466797,
+          305.8166742324829,
+          78.39999794960022
+        ],
+        [
+          -402.19998359680176,
+          375.600004196167,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_GlazingGasket_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -398.6000061035156,
+          305.8166742324829,
+          78.39999794960022
+        ],
+        [
+          -398.3999967575073,
+          375.600004196167,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Hinge_2_0.18",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          303.01666259765625,
+          107.52600431442261
+        ],
+        [
+          -395.6000089645386,
+          304.31666374206543,
+          114.02599811553955
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_Hinge_2_0.78",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          303.01666259765625,
+          212.9460096359253
+        ],
+        [
+          -395.6000089645386,
+          304.31666374206543,
+          219.44599151611328
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_HandleEscutcheon_2",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.90001010894775,
+          375.3999948501587,
+          160.24999618530273
+        ],
+        [
+          -396.09999656677246,
+          376.9000053405762,
+          167.25000143051147
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_HandleLever_2",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -396.09999656677246,
+          375.6999969482422,
+          162.95000314712524
+        ],
+        [
+          -394.1999912261963,
+          376.69999599456787,
+          172.74999618530273
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          141.49999618530273,
+          70.01000046730042
+        ],
+        [
+          -407.450008392334,
+          383.50000381469727,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -411.9999885559082,
+          141.49999618530273,
+          68.4000015258789
+        ],
+        [
+          -411.8000030517578,
+          383.50000381469727,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_InteriorWalnutSill_0",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          -392.549991607666,
+          142.99999475479126,
+          69.9999988079071
+        ],
+        [
+          -384.99999046325684,
+          381.9999933242798,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          150.49999952316284,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          155.49999475479126,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_WestNorth_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -403.49998474121094,
+          369.4999933242798,
+          69.9999988079071
+        ],
+        [
+          -396.49999141693115,
+          374.4999885559082,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -389.0000104904175,
+          392.549991607666,
+          72.00000286102295
+        ],
+        [
+          -17.000000178813934,
+          403.95002365112305,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -389.0000104904175,
+          403.95002365112305,
+          72.00000286102295
+        ],
+        [
+          -17.000000178813934,
+          407.450008392334,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -386.299991607666,
+          403.39999198913574,
+          74.6999979019165
+        ],
+        [
+          -19.699999690055847,
+          403.80001068115234,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -390.89999198913574,
+          405.0000190734863,
+          70.09999752044678
+        ],
+        [
+          -15.09999930858612,
+          405.4999828338623,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -385.10000705718994,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          -296.39999866485596,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.1000099182129,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          -299.399995803833,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.1000099182129,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          -299.399995803833,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.1000099182129,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          -299.399995803833,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.1000099182129,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          -299.399995803833,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.1000099182129,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          -299.399995803833,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.5999975204468,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          -298.9000082015991,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -382.5999975204468,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          -298.9000082015991,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Hinge_0_0.18",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -385.40000915527344,
+          395.6000089645386,
+          107.52600431442261
+        ],
+        [
+          -384.10000801086426,
+          396.90001010894775,
+          114.02599811553955
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Hinge_0_0.78",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -385.40000915527344,
+          395.6000089645386,
+          212.9460096359253
+        ],
+        [
+          -384.10000801086426,
+          396.90001010894775,
+          219.44599151611328
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_HandleEscutcheon_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -299.0999937057495,
+          396.09999656677246,
+          160.24999618530273
+        ],
+        [
+          -297.60000705718994,
+          396.90001010894775,
+          167.25000143051147
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_HandleLever_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          -298.799991607666,
+          394.1999912261963,
+          162.95000314712524
+        ],
+        [
+          -297.79999256134033,
+          396.09999656677246,
+          172.74999618530273
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Mullion_1",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -296.00000381469727,
+          392.549991607666,
+          75.49999952316284
+        ],
+        [
+          -292.4999952316284,
+          403.95002365112305,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Sash_1",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -292.1000003814697,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          -205.15000820159912,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_1_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.1000032424927,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          -208.15000534057617,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_1_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.1000032424927,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          -208.15000534057617,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_1_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.1000032424927,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          -208.15000534057617,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.1000032424927,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          -208.15000534057617,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.1000032424927,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          -208.15000534057617,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_1_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.59999084472656,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          -207.64999389648438,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_1_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -289.59999084472656,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          -207.64999389648438,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Mullion_2",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -204.74998950958252,
+          392.549991607666,
+          75.49999952316284
+        ],
+        [
+          -201.25000476837158,
+          403.95002365112305,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Sash_2",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -200.8500099182129,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          -113.90000581741333,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_2_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -197.85000085830688,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          -116.90000295639038,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_2_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -197.85000085830688,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          -116.90000295639038,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_2_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -197.85000085830688,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          -116.90000295639038,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -197.85000085830688,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          -116.90000295639038,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -197.85000085830688,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          -116.90000295639038,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_2_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -198.35000038146973,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          -116.40000343322754,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_2_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -198.35000038146973,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          -116.40000343322754,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Mullion_3",
+      "triangles": 188,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -113.49999904632568,
+          392.549991607666,
+          75.49999952316284
+        ],
+        [
+          -110.00000238418579,
+          403.95002365112305,
+          251.99999809265137
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Sash_3",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          -109.59999561309814,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          -20.900000631809235,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_3_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -106.5999984741211,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          -23.899999260902405,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_3_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -106.5999984741211,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          -23.899999260902405,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_Glass_3_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          -106.5999984741211,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          -23.899999260902405,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_3_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -106.5999984741211,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          -23.899999260902405,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_IGUSpacer_3_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -106.5999984741211,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          -23.899999260902405,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_3_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -107.09999799728394,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          -23.399999737739563,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_GlazingGasket_3_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -107.09999799728394,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          -23.399999737739563,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -390.49999713897705,
+          407.450008392334,
+          70.01000046730042
+        ],
+        [
+          -15.50000011920929,
+          411.9999885559082,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          -390.49999713897705,
+          411.8000030517578,
+          68.4000015258789
+        ],
+        [
+          -15.50000011920929,
+          411.9999885559082,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_InteriorWalnutSill_0",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          -389.0000104904175,
+          384.99999046325684,
+          69.9999988079071
+        ],
+        [
+          -17.000000178813934,
+          392.549991607666,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -381.5000057220459,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          -376.5000104904175,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontWest_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          -29.499998688697815,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          -24.500000476837158,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          21.99999988079071,
+          392.549991607666,
+          72.00000286102295
+        ],
+        [
+          108.00000429153442,
+          403.95002365112305,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          21.99999988079071,
+          403.95002365112305,
+          72.00000286102295
+        ],
+        [
+          108.00000429153442,
+          407.450008392334,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          24.699999392032623,
+          403.39999198913574,
+          74.6999979019165
+        ],
+        [
+          105.29999732971191,
+          403.80001068115234,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          20.100000500679016,
+          405.0000190734863,
+          70.09999752044678
+        ],
+        [
+          109.89999771118164,
+          405.4999828338623,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          25.90000033378601,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          104.10000085830688,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.9000004529953,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          101.10000371932983,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.9000004529953,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          101.10000371932983,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.9000004529953,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          101.10000371932983,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.9000004529953,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          101.10000371932983,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.9000004529953,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          101.10000371932983,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.40000092983246,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          101.60000324249268,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          28.40000092983246,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          101.60000324249268,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Hinge_0_0.18",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          25.600001215934753,
+          395.6000089645386,
+          107.52600431442261
+        ],
+        [
+          26.899999380111694,
+          396.90001010894775,
+          114.02599811553955
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_Hinge_0_0.78",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          25.600001215934753,
+          395.6000089645386,
+          212.9460096359253
+        ],
+        [
+          26.899999380111694,
+          396.90001010894775,
+          219.44599151611328
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_HandleEscutcheon_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          101.40000581741333,
+          396.09999656677246,
+          160.24999618530273
+        ],
+        [
+          102.90000438690186,
+          396.90001010894775,
+          167.25000143051147
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_HandleLever_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          101.69999599456787,
+          394.1999912261963,
+          162.95000314712524
+        ],
+        [
+          102.69999504089355,
+          396.09999656677246,
+          172.74999618530273
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          20.499999821186066,
+          407.450008392334,
+          70.01000046730042
+        ],
+        [
+          109.50000286102295,
+          411.9999885559082,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          20.499999821186066,
+          411.8000030517578,
+          68.4000015258789
+        ],
+        [
+          109.50000286102295,
+          411.9999885559082,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_InteriorWalnutSill_0",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          21.99999988079071,
+          384.99999046325684,
+          69.9999988079071
+        ],
+        [
+          108.00000429153442,
+          392.549991607666,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          29.499998688697815,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          34.49999988079071,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontMiddle_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          95.49999833106995,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          100.49999952316284,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_TimberMainframe",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          281.9999933242798,
+          392.549991607666,
+          72.00000286102295
+        ],
+        [
+          368.0000066757202,
+          403.95002365112305,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_ExteriorCladding",
+      "triangles": 96,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          281.9999933242798,
+          403.95002365112305,
+          72.00000286102295
+        ],
+        [
+          368.0000066757202,
+          407.450008392334,
+          255.50000667572021
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_FrameWeatherSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          284.69998836517334,
+          403.39999198913574,
+          74.6999979019165
+        ],
+        [
+          365.30001163482666,
+          403.80001068115234,
+          252.80001163482666
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_PerimeterSeal",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          280.1000118255615,
+          405.0000190734863,
+          70.09999752044678
+        ],
+        [
+          369.8999881744385,
+          405.4999828338623,
+          257.3999881744385
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Sash_0",
+      "triangles": 96,
+      "materials": [
+        "Window warm white factory coating"
+      ],
+      "bounds_ue_cm": [
+        [
+          285.8999967575073,
+          397.00000286102295,
+          75.90000033378601
+        ],
+        [
+          364.1000032424927,
+          403.20000648498535,
+          251.60000324249268
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Glass_0_0",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.8999938964844,
+          401.800012588501,
+          78.89999747276306
+        ],
+        [
+          361.1000061035156,
+          402.19998359680176,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Glass_0_1",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.8999938964844,
+          400.1999855041504,
+          78.89999747276306
+        ],
+        [
+          361.1000061035156,
+          400.600004196167,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Glass_0_2",
+      "triangles": 12,
+      "materials": [
+        "Window clear insulated glass"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.8999938964844,
+          398.6000061035156,
+          78.89999747276306
+        ],
+        [
+          361.1000061035156,
+          399.0000009536743,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_IGUSpacer_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.8999938964844,
+          400.600004196167,
+          78.89999747276306
+        ],
+        [
+          361.1000061035156,
+          401.800012588501,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_IGUSpacer_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.8999938964844,
+          399.0000009536743,
+          78.89999747276306
+        ],
+        [
+          361.1000061035156,
+          400.1999855041504,
+          248.60000610351562
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_GlazingGasket_0_0",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.4000062942505,
+          402.19998359680176,
+          78.39999794960022
+        ],
+        [
+          361.5999937057495,
+          402.40001678466797,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_GlazingGasket_0_1",
+      "triangles": 32,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          288.4000062942505,
+          398.3999967575073,
+          78.39999794960022
+        ],
+        [
+          361.5999937057495,
+          398.6000061035156,
+          249.0999937057495
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Hinge_0_0.18",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          285.5999946594238,
+          395.6000089645386,
+          107.52600431442261
+        ],
+        [
+          286.899995803833,
+          396.90001010894775,
+          114.02599811553955
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_Hinge_0_0.78",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          285.5999946594238,
+          395.6000089645386,
+          212.9460096359253
+        ],
+        [
+          286.899995803833,
+          396.90001010894775,
+          219.44599151611328
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_HandleEscutcheon_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          361.4000082015991,
+          396.09999656677246,
+          160.24999618530273
+        ],
+        [
+          362.8999948501587,
+          396.90001010894775,
+          167.25000143051147
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_HandleLever_0",
+      "triangles": 188,
+      "materials": [
+        "Window stainless hardware"
+      ],
+      "bounds_ue_cm": [
+        [
+          361.7000102996826,
+          394.1999912261963,
+          162.95000314712524
+        ],
+        [
+          362.7000093460083,
+          396.09999656677246,
+          172.74999618530273
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_ExteriorSill",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          280.5000066757202,
+          407.450008392334,
+          70.01000046730042
+        ],
+        [
+          369.4999933242798,
+          411.9999885559082,
+          70.20999789237976
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_ExteriorDrip",
+      "triangles": 12,
+      "materials": [
+        "Window exterior bronze aluminium"
+      ],
+      "bounds_ue_cm": [
+        [
+          280.5000066757202,
+          411.8000030517578,
+          68.4000015258789
+        ],
+        [
+          369.4999933242798,
+          411.9999885559082,
+          70.01000046730042
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_InteriorWalnutSill_0",
+      "triangles": 188,
+      "materials": [
+        "Satin walnut | longitudinal grain"
+      ],
+      "bounds_ue_cm": [
+        [
+          281.9999933242798,
+          384.99999046325684,
+          69.9999988079071
+        ],
+        [
+          368.0000066757202,
+          392.549991607666,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_SupportPacker_0",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          289.49999809265137,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          294.4999933242798,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FrontEast_SupportPacker_1",
+      "triangles": 12,
+      "materials": [
+        "Window EPDM weather seal"
+      ],
+      "bounds_ue_cm": [
+        [
+          355.5000066757202,
+          396.49999141693115,
+          69.9999988079071
+        ],
+        [
+          360.50000190734863,
+          403.49998474121094,
+          72.00000286102295
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FacadePier_0",
+      "triangles": 188,
+      "materials": [
+        "Window pier matte mineral plaster"
+      ],
+      "bounds_ue_cm": [
+        [
+          -15.000000596046448,
+          391.00000858306885,
+          69.9999988079071
+        ],
+        [
+          20.000000298023224,
+          409.00001525878906,
+          257.5000047683716
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FacadePier_1",
+      "triangles": 188,
+      "materials": [
+        "Window pier matte mineral plaster"
+      ],
+      "bounds_ue_cm": [
+        [
+          110.00000238418579,
+          391.00000858306885,
+          69.9999988079071
+        ],
+        [
+          145.00000476837158,
+          409.00001525878906,
+          257.5000047683716
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FacadePier_2",
+      "triangles": 188,
+      "materials": [
+        "Window pier matte mineral plaster"
+      ],
+      "bounds_ue_cm": [
+        [
+          254.99999523162842,
+          391.00000858306885,
+          69.9999988079071
+        ],
+        [
+          279.9999952316284,
+          409.00001525878906,
+          257.5000047683716
+        ]
+      ],
+      "closed_manifold": true
+    },
+    {
+      "name": "SUB01_RealWindow_FacadePier_3",
+      "triangles": 188,
+      "materials": [
+        "Window pier matte mineral plaster"
+      ],
+      "bounds_ue_cm": [
+        [
+          370.0000047683716,
+          391.00000858306885,
+          69.9999988079071
+        ],
+        [
+          391.00000858306885,
+          409.00001525878906,
+          257.5000047683716
+        ]
+      ],
+      "closed_manifold": true
+    }
+  ],
+  "part_count": 207,
+  "triangles": 13056,
+  "wood_uv_affine_max_error": 3.008420002004186e-08,
+  "glb_sha256": "7119c36483ec3ba22aa71c0cab6a5a7d46d6daf1e544410a6d8fa5f8e933aa57",
+  "original_source_changed": false,
+  "old_nodes_to_retire": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    21,
+    23,
+    24,
+    25,
+    26,
+    27,
+    29,
+    30,
+    31,
+    32,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "protected_wall_node": 158,
+  "all_parts_closed_manifold": true,
+  "source_fit_policy": "149mm profile centered inside180mm actual wall;20mm perimeter installation gap; exact surveyed pier/opening intervals; kitchen no interior sill; TV backer exclusions",
+  "full_protected_triangle_bvh_proof": false,
+  "source_ready": false,
+  "native_ready": false,
+  "windows_activity_ready": false,
+  "caveats": [
+    "Source topology and measured aperture fit only; final native geometry/PBR and real glass parents require actual importer validation",
+    "No operational hinge/runtime claim",
+    "New front piers are original missing architectural infill, not furnitureboxes",
+    "Exterior panorama unchanged; finite photograph cannot provide balcony translation parallax"
+  ]
+}

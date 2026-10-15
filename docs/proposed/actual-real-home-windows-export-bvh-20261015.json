@@ -1,0 +1,938 @@
+{
+  "schema": "sub01.window-protected-source-bvh-candidates.v1",
+  "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "actual_export_glb_sha256": "7119c36483ec3ba22aa71c0cab6a5a7d46d6daf1e544410a6d8fa5f8e933aa57",
+  "tested_export_meshes": 207,
+  "pairs": [
+    {
+      "part": "SUB01_RealWindow_WestSouth_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          76
+        ],
+        [
+          10,
+          76
+        ],
+        [
+          11,
+          76
+        ],
+        [
+          2,
+          76
+        ],
+        [
+          3,
+          76
+        ],
+        [
+          8,
+          76
+        ],
+        [
+          1,
+          76
+        ],
+        [
+          0,
+          76
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestSouth_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          77
+        ],
+        [
+          9,
+          76
+        ],
+        [
+          10,
+          77
+        ],
+        [
+          11,
+          76
+        ],
+        [
+          2,
+          77
+        ],
+        [
+          3,
+          77
+        ],
+        [
+          8,
+          76
+        ],
+        [
+          1,
+          76
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestMiddleTV_InteriorWalnutSill_0",
+      "protected_source_node": 158,
+      "pairs": 10,
+      "exact_measured_boundary_contact_pairs": 10,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          157,
+          72
+        ],
+        [
+          1,
+          77
+        ],
+        [
+          0,
+          77
+        ],
+        [
+          177,
+          72
+        ],
+        [
+          105,
+          77
+        ],
+        [
+          104,
+          77
+        ],
+        [
+          176,
+          72
+        ],
+        [
+          159,
+          77
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestMiddleTV_InteriorWalnutSill_1",
+      "protected_source_node": 158,
+      "pairs": 11,
+      "exact_measured_boundary_contact_pairs": 11,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          157,
+          72
+        ],
+        [
+          1,
+          77
+        ],
+        [
+          0,
+          77
+        ],
+        [
+          177,
+          72
+        ],
+        [
+          105,
+          77
+        ],
+        [
+          104,
+          77
+        ],
+        [
+          176,
+          72
+        ],
+        [
+          158,
+          72
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestMiddleTV_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          77
+        ],
+        [
+          9,
+          76
+        ],
+        [
+          10,
+          77
+        ],
+        [
+          11,
+          76
+        ],
+        [
+          2,
+          77
+        ],
+        [
+          3,
+          77
+        ],
+        [
+          8,
+          76
+        ],
+        [
+          1,
+          76
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestMiddleTV_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          77
+        ],
+        [
+          9,
+          76
+        ],
+        [
+          10,
+          77
+        ],
+        [
+          11,
+          76
+        ],
+        [
+          2,
+          77
+        ],
+        [
+          3,
+          77
+        ],
+        [
+          8,
+          76
+        ],
+        [
+          1,
+          76
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestNorth_InteriorWalnutSill_0",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          1,
+          77
+        ],
+        [
+          0,
+          77
+        ],
+        [
+          177,
+          72
+        ],
+        [
+          105,
+          77
+        ],
+        [
+          104,
+          77
+        ],
+        [
+          176,
+          72
+        ],
+        [
+          13,
+          77
+        ],
+        [
+          159,
+          77
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestNorth_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          77
+        ],
+        [
+          9,
+          76
+        ],
+        [
+          10,
+          77
+        ],
+        [
+          11,
+          76
+        ],
+        [
+          2,
+          77
+        ],
+        [
+          3,
+          77
+        ],
+        [
+          8,
+          76
+        ],
+        [
+          1,
+          76
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_WestNorth_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          77
+        ],
+        [
+          10,
+          77
+        ],
+        [
+          11,
+          77
+        ],
+        [
+          2,
+          77
+        ],
+        [
+          3,
+          77
+        ],
+        [
+          8,
+          77
+        ],
+        [
+          1,
+          77
+        ],
+        [
+          0,
+          77
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontWest_InteriorWalnutSill_0",
+      "protected_source_node": 158,
+      "pairs": 10,
+      "exact_measured_boundary_contact_pairs": 10,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          158,
+          166
+        ],
+        [
+          159,
+          160
+        ],
+        [
+          13,
+          160
+        ],
+        [
+          14,
+          160
+        ],
+        [
+          177,
+          166
+        ],
+        [
+          105,
+          160
+        ],
+        [
+          104,
+          160
+        ],
+        [
+          176,
+          166
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontWest_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          160
+        ],
+        [
+          10,
+          160
+        ],
+        [
+          11,
+          160
+        ],
+        [
+          2,
+          160
+        ],
+        [
+          3,
+          160
+        ],
+        [
+          8,
+          160
+        ],
+        [
+          1,
+          160
+        ],
+        [
+          0,
+          160
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontWest_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          161
+        ],
+        [
+          9,
+          160
+        ],
+        [
+          10,
+          160
+        ],
+        [
+          11,
+          161
+        ],
+        [
+          2,
+          160
+        ],
+        [
+          3,
+          160
+        ],
+        [
+          8,
+          161
+        ],
+        [
+          1,
+          161
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontMiddle_InteriorWalnutSill_0",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          159,
+          161
+        ],
+        [
+          13,
+          161
+        ],
+        [
+          14,
+          161
+        ],
+        [
+          177,
+          166
+        ],
+        [
+          105,
+          160
+        ],
+        [
+          104,
+          161
+        ],
+        [
+          176,
+          166
+        ],
+        [
+          1,
+          160
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontMiddle_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          161
+        ],
+        [
+          10,
+          161
+        ],
+        [
+          11,
+          161
+        ],
+        [
+          2,
+          161
+        ],
+        [
+          3,
+          161
+        ],
+        [
+          8,
+          161
+        ],
+        [
+          1,
+          161
+        ],
+        [
+          0,
+          161
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontMiddle_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          161
+        ],
+        [
+          10,
+          161
+        ],
+        [
+          11,
+          161
+        ],
+        [
+          2,
+          161
+        ],
+        [
+          3,
+          161
+        ],
+        [
+          8,
+          161
+        ],
+        [
+          1,
+          161
+        ],
+        [
+          0,
+          161
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontEast_InteriorWalnutSill_0",
+      "protected_source_node": 158,
+      "pairs": 9,
+      "exact_measured_boundary_contact_pairs": 9,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          159,
+          172
+        ],
+        [
+          13,
+          172
+        ],
+        [
+          14,
+          172
+        ],
+        [
+          177,
+          178
+        ],
+        [
+          176,
+          178
+        ],
+        [
+          104,
+          172
+        ],
+        [
+          105,
+          172
+        ],
+        [
+          1,
+          172
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontEast_SupportPacker_0",
+      "protected_source_node": 158,
+      "pairs": 8,
+      "exact_measured_boundary_contact_pairs": 8,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          172
+        ],
+        [
+          10,
+          172
+        ],
+        [
+          11,
+          172
+        ],
+        [
+          2,
+          172
+        ],
+        [
+          3,
+          172
+        ],
+        [
+          8,
+          172
+        ],
+        [
+          1,
+          172
+        ],
+        [
+          0,
+          172
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FrontEast_SupportPacker_1",
+      "protected_source_node": 158,
+      "pairs": 10,
+      "exact_measured_boundary_contact_pairs": 10,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          9,
+          173
+        ],
+        [
+          9,
+          172
+        ],
+        [
+          10,
+          173
+        ],
+        [
+          11,
+          173
+        ],
+        [
+          2,
+          172
+        ],
+        [
+          3,
+          173
+        ],
+        [
+          3,
+          172
+        ],
+        [
+          8,
+          173
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FacadePier_0",
+      "protected_source_node": 158,
+      "pairs": 32,
+      "exact_measured_boundary_contact_pairs": 32,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          99,
+          187
+        ],
+        [
+          174,
+          187
+        ],
+        [
+          175,
+          187
+        ],
+        [
+          40,
+          186
+        ],
+        [
+          39,
+          186
+        ],
+        [
+          147,
+          187
+        ],
+        [
+          120,
+          186
+        ],
+        [
+          121,
+          186
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FacadePier_1",
+      "protected_source_node": 158,
+      "pairs": 32,
+      "exact_measured_boundary_contact_pairs": 32,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          99,
+          187
+        ],
+        [
+          175,
+          187
+        ],
+        [
+          174,
+          187
+        ],
+        [
+          40,
+          186
+        ],
+        [
+          39,
+          186
+        ],
+        [
+          121,
+          186
+        ],
+        [
+          120,
+          186
+        ],
+        [
+          147,
+          187
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FacadePier_2",
+      "protected_source_node": 158,
+      "pairs": 32,
+      "exact_measured_boundary_contact_pairs": 32,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          99,
+          187
+        ],
+        [
+          175,
+          187
+        ],
+        [
+          174,
+          187
+        ],
+        [
+          40,
+          186
+        ],
+        [
+          39,
+          186
+        ],
+        [
+          147,
+          187
+        ],
+        [
+          120,
+          186
+        ],
+        [
+          121,
+          186
+        ]
+      ]
+    },
+    {
+      "part": "SUB01_RealWindow_FacadePier_3",
+      "protected_source_node": 158,
+      "pairs": 41,
+      "exact_measured_boundary_contact_pairs": 41,
+      "unresolved_pairs": 0,
+      "first_unresolved_pairs": [],
+      "first_pairs": [
+        [
+          99,
+          187
+        ],
+        [
+          175,
+          187
+        ],
+        [
+          174,
+          187
+        ],
+        [
+          40,
+          186
+        ],
+        [
+          39,
+          186
+        ],
+        [
+          147,
+          187
+        ],
+        [
+          120,
+          186
+        ],
+        [
+          121,
+          186
+        ]
+      ]
+    }
+  ],
+  "ok": true,
+  "unresolved_pair_count": 0,
+  "contact_epsilon_m": 1e-06,
+  "contact_planes": "Only source158 actual topbase Z.70/header2.575 and rightjambX3.91; only named supported sill/packer/pier parts, one-sided, never frame/glass/furniture",
+  "note": "Exact BVH surface candidates include boundary/coplanar contact; every noncontact must be resolved before native installation",
+  "native_changed": false
+}
