@@ -18,6 +18,7 @@ from unreal_native_view_settings import install as install_native_view_settings
 from unreal_exit_door_runtime import install as install_exit_doors
 from unreal_minecraft_tv_input import install as install_minecraft_tv_input
 from unreal_phone_grip_diagnostic import install as install_phone_grip_diagnostic
+from unreal_derived_phone_visual_review import install as install_derived_phone_visual_review
 from unreal_native_viewer_handoff import install as install_native_viewer_handoff
 from unreal_controller_grip_diagnostic import install as install_controller_grip_diagnostic
 from exterior_backdrop_geometry import patch_native_view_settings
@@ -178,6 +179,7 @@ def stage(project):
     header,cpp=install_minecraft_tv_input(header,cpp)
     header,cpp=install_native_viewer_handoff(header,cpp)
     header,cpp=install_phone_grip_diagnostic(header,cpp)
+    header,cpp=install_derived_phone_visual_review(header,cpp)
     header,cpp=install_controller_grip_diagnostic(header,cpp)
     header,cpp=install_exit_doors(header,cpp)
     header,cpp=install_first_person_motion(header,cpp)
