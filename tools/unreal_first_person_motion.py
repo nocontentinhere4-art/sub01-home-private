@@ -53,7 +53,7 @@ AUTHORED_ONLY=' // The captured skeletal clip supplies motion; no extra procedur
 WALK_RATE='FMath::Clamp(Speed/140.f,.1f,1.2f)'
 MEASURED_WALK_RATE='float(Sub01FirstPersonMotion::AuthoredWalkRate(Speed))'
 LIVE_MOVE='AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f));'
-ALIGNED_MOVE='AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f)*float(Sub01FirstPersonMotion::HeadingWalkScale(Controller->GetControlRotation().Yaw,Delta.Rotation().Yaw)));'
+ALIGNED_MOVE='AddMovementInput(Delta/Distance,FMath::Clamp(Distance/45.f,.15f,1.f)*float(Sub01FirstPersonMotion::HeadingWalkScale(GetActorRotation().Yaw,Delta.Rotation().Yaw)));'
 
 def stage(module):
     (Path(module)/'Sub01FirstPersonMotionPolicy.h').write_text(POLICY)
