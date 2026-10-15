@@ -1,4 +1,6 @@
 """Private full-source book meshes; original shared books remain untouched until activation."""
+from uuid import uuid4
+from unreal_owned_import_cleanup import release_temporary
 import hashlib
 import json
 from pathlib import Path
@@ -35,33 +37,33 @@ def stage(u,books,eas,needed):
    if n.get('name')in nodes:raise RuntimeError('Ambiguous complete source book identity')
    nodes[n.get('name')]=i
  if set(nodes)!={p['id']for a,c,p in books}or len(books)!=46:raise RuntimeError('Exact complete46 source book assembly required')
- if u.EditorAssetLibrary.does_directory_exist(DEST):raise RuntimeError('Private full-source book version already exists')
+ dest=DEST+'_'+uuid4().hex
+ if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Private full-source book version already exists')
  temporary=[];clones={};replacements={};proof=[]
  try:
   for actor,c,p in books:
    original=c.get_editor_property('static_mesh');key=original.get_path_name()
    if key not in clones:
     if len(clones)>=20:raise RuntimeError('Complete provider set exceeds exact20 shared source book meshes')
-    name=DEST+'/Mesh_'+hashlib.sha256(key.encode()).hexdigest()[:12]
+    name=dest+'/Mesh_'+hashlib.sha256(key.encode()).hexdigest()[:12]
     clone=u.EditorAssetLibrary.duplicate_asset(key,name)
     if not clone or clone.get_path_name().split('.',1)[0]!=name:raise RuntimeError('Exact owned complete book duplication failed')
-    prepare(u,clone,DEST);clones[key]=clone
+    prepare(u,clone,dest);clones[key]=clone
    clone=clones[key]
-   temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));temporary.append(temp)
+   temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));temporary.append((temp,None))
    temp.set_actor_label('SUB01_OfficeBook_SourceProof_'+p['id']);temp.set_actor_hidden_in_game(True)
-   tc=temp.get_component_by_class(u.StaticMeshComponent);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+   tc=temp.get_component_by_class(u.StaticMeshComponent);temporary[-1]=(temp,tc);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
    for slot,material in enumerate(c.get_materials()):tc.set_material(slot,material)
    wanted=triangles(doc,binary,nodes[p['id']]);actual=native_triangles(u,tc)
    if len(wanted)!=p['actual_source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned complete book full source triangles differ '+p['id'])
    if [m.get_path_name()if m else None for m in tc.get_materials()]!=[m.get_path_name()if m else None for m in c.get_materials()]:raise RuntimeError('Owned full-source book material bindings changed')
    replacements[c.get_path_name()]=clone
    proof.append({'book':p['id'],'original_mesh':key,'owned_full_mesh':clone.get_path_name(),'source_triangles':len(wanted),'native_full_triangles':len(actual),'full_world_triangle_tolerance_cm':.02,'nanite_enabled':False})
-   eas.destroy_actor(temp);temporary.pop()
-  return {'destination':DEST,'replacements':replacements,'proof':proof}
- except Exception:
-  for temp in temporary:eas.destroy_actor(temp)
-  temporary=[]
-  if u.EditorAssetLibrary.does_directory_exist(DEST):u.EditorAssetLibrary.delete_directory(DEST)
-  raise
+   release_temporary(eas,temp,tc);temporary.pop();temp=tc=clone=None
+  return {'destination':dest,'replacements':replacements,'proof':proof}
  finally:
-  for temp in temporary:eas.destroy_actor(temp)
+  try:
+   for temp,tc in reversed(temporary):release_temporary(eas,temp,tc)
+  finally:
+   temporary.clear();temp=tc=clone=None
+  # No force-deletion while asynchronous compilation or UObject refs survive.

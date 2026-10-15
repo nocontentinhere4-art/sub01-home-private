@@ -2,10 +2,12 @@
 
 All imports/native geometry/material/support checks happen before original desk/
 shelves, lamp or46 owned books move. One final map save. Failure restores every
-original actor/component reference and removes only actors/assets newly owned by
-this transaction. No level load, pod operation, controller edit or restart.
+original actor/component reference and detaches/removes only actors newly owned by
+this transaction. Compiling assets remain quarantined. No level load, pod operation, controller edit or restart.
 """
 import copy,hashlib,json,sys
+from uuid import uuid4
+from unreal_owned_import_cleanup import detach_added
 from pathlib import Path
 from home_asset_audit import read_gltf
 from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
@@ -98,11 +100,11 @@ def run(root,dry_run=True,u=None):
   comps=[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in actor.get_components_by_class(u.StaticMeshComponent)]
   states.append((actor,actor.get_actor_transform(),actor.get_actor_label(),bool(actor.get_editor_property('hidden')),comps))
  light_values={c.get_path_name():c.get_editor_property('intensity')for a in original for c in a.get_components_by_class(u.LightComponent)}
- dest='/Game/Sub01Home/RealSteelShelves/V_'+digest[:12];deskdigest=proof['desk']['output_sha256'];deskdest='/Game/Sub01Home/RealLinea140/V_'+deskdigest[:12]
- if u.EditorAssetLibrary.does_directory_exist(dest)or u.EditorAssetLibrary.does_directory_exist(deskdest):raise RuntimeError('This office asset version already exists; preserve it and inspect its receipt rather than duplicate import')
+ dest='/Game/Sub01Home/RealSteelShelves/V_'+digest[:12]+'/Attempt_'+uuid4().hex;deskdigest=proof['desk']['output_sha256'];deskdest=None
+ if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Unique owned office attempt already exists')
  level_save_attempted=False
  try:
-  desk_result,ctx=stage_desk(root/'desk.glb',dry_run=False,u=u,defer_activation=True)
+  desk_result,ctx=stage_desk(root/'desk.glb',dry_run=False,u=u,defer_activation=True);deskdest=ctx['dest']
   manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True);data=manager.create_source_data(str(shelfpath))
   if not manager.import_scene(dest,data,params):raise RuntimeError('Authentic shelf scene import refused')
   manager.wait_until_all_tasks_done(False)
@@ -212,7 +214,7 @@ def run(root,dry_run=True,u=None):
   if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office map save failed')
   result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'structural_union_prerequisite':union_prerequisite,'desk':desk_result,'shelf_native_triangles':alltris,'plant':plantproof,'plant_full_source_geometry_restore':plant_geometry['proof'],'plant_native_world_deltas_verified':4,'plant_parent225_relocated':True,'watering_native_activity_verified':False,'shelf_materials':materials,'books':book_rows,'book_full_source_geometry_restore':book_geometry['proof'],'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
   (root/'native-office-bundle.json').write_text(json.dumps(result,indent=2)+'\n');return result
- except Exception:
+ except Exception as error:
   def depth(actor):
    level=0;parent=actor.get_attach_parent_actor();seen=set()
    while parent:
@@ -227,10 +229,9 @@ def run(root,dry_run=True,u=None):
    for c,world,mesh,mats,tags,visible,collision,profile in comps:
     c.set_static_mesh(mesh);c.set_world_transform(world,False,False);c.set_editor_property('component_tags',tags);c.set_visibility(visible);c.set_collision_profile_name(profile);c.set_collision_enabled(collision)
     for slot,mat in enumerate(mats):c.set_material(slot,mat)
-  for actor in list(eas.get_all_level_actors()):
-   if actor.get_path_name()not in before:eas.destroy_actor(actor)
-  for owned in (dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else []),*([book_geometry['destination']]if 'book_geometry'in locals()and book_geometry['destination']else [])):
-   if u.EditorAssetLibrary.does_directory_exist(owned):u.EditorAssetLibrary.delete_directory(owned)
+  cleanup=detach_added(u,eas,before)
+  quarantined=[p for p in(dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else []),*([book_geometry['destination']]if 'book_geometry'in locals()and book_geometry['destination']else []))if p]
+  (root/'native-office-bundle.failed.json').write_text(json.dumps({'error':str(error),'quarantined_asset_directories':quarantined,'cleanup':cleanup,'original_rollback_verified':fingerprint(u,original)==before},indent=2)+'\n')
   if fingerprint(u,original)!=before:raise RuntimeError('Whole office original rollback fingerprint differs; preserve map backup')
   if level_save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Whole office rollback map save failed; restore map backup')
   raise

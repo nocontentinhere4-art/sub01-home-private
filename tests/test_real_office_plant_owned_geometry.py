@@ -44,11 +44,14 @@ class OwnedGeometry(unittest.TestCase):
    root=Path(td);(root/'SourceAssets').mkdir();(root/'SourceAssets/full-home.glb').write_bytes(b'source')
    u=NS(Paths=NS(project_dir=lambda:td),StaticMeshEditorSubsystem=object,StaticMeshActor=object,StaticMeshComponent=object,Vector=lambda *x:x,CollisionEnabled=NS(NO_COLLISION=0),EditorAssetLibrary=library,get_editor_subsystem=lambda cls:sub)
    ctx={'requires_owned_geometry_rebuild':[{'source_node':221}],'rows':[(NS(),component,{'node':221,'source_triangle_count':1})]}
-   eas=NS(spawn_actor_from_class=spawn,destroy_actor=lambda a:destroyed.append(a))
+   def destroy(a):
+    self.assertIsNone(a.c.mesh,'Mesh must detach before actor destruction')
+    destroyed.append(a);return True
+   eas=NS(spawn_actor_from_class=spawn,destroy_actor=destroy)
    with patch.object(P.hashlib,'sha256',return_value=NS(hexdigest=lambda:'9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b')),patch.object(H,'read_gltf',return_value=({},b'')),patch.object(G,'triangles',return_value=TRI),patch.object(G,'native_triangles',return_value=[]if bad else TRI):
     if bad:
      with self.assertRaisesRegex(RuntimeError,'differs exact source'):P.stage_exact_owned_geometry(u,ctx,eas)
-     self.assertEqual(len(deleted),1)
+     self.assertEqual(deleted,[])
     else:
      result=P.stage_exact_owned_geometry(u,ctx,eas);self.assertEqual(result['proof'][0]['native_full_triangles'],1)
      self.assertIs(result['replacements']['originalComponent'],created[0]);self.assertFalse(deleted)
@@ -58,5 +61,5 @@ class OwnedGeometry(unittest.TestCase):
    self.assertEqual(created[0].settings['fallback_relative_error'],0.)
    self.assertEqual(len(destroyed),1)
  def test_owned_rebuild_does_not_modify_shared_mesh_or_original_component(self):self.exercise()
- def test_reduced_or_wrong_geometry_refuses_and_cleans_owned_staging(self):self.exercise(True)
+ def test_wrong_geometry_refuses_detaches_and_quarantines_owned_assets(self):self.exercise(True)
 if __name__=='__main__':unittest.main()

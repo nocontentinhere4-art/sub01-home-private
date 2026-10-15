@@ -7,6 +7,8 @@ grommet hardware, then hides exactly original181/182. Rollback restores
 original component/actor states on failure. No level loading or runtime restart.
 """
 import hashlib,json,math,re,shutil,time
+from uuid import uuid4
+from unreal_owned_import_cleanup import detach_added
 from pathlib import Path
 from home_asset_audit import read_gltf
 from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
@@ -134,7 +136,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
  result['old_saved_lamp_full_geometry_verified']=not saved_lamp_deferred
  result['requires_temporary_saved_lamp_source_proof']=saved_lamp_deferred
  if dry_run:return result
- dest='/Game/Sub01Home/RealLinea140/V_'+digest[:12]
+ dest='/Game/Sub01Home/RealLinea140/V_'+digest[:12]+'/Attempt_'+uuid4().hex
  if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Desk version already imported; inspect saved receipt instead of duplicate import')
  states=[(a,a.get_actor_transform(),a.get_actor_label(),bool(a.get_editor_property('hidden')),[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in a.get_components_by_class(u.StaticMeshComponent)])for a in original]
  project=Path(u.Paths.project_dir());backup=project/'Saved/PrivateMapBackups'/('real-linea140-'+str(time.time_ns()));backup.mkdir(parents=True)
@@ -177,7 +179,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   if fingerprint(u,original)!=before:raise RuntimeError('New owned material/collision setup changed originals')
   posed_path=source.parent/'lamp-posed.glb';posed_hash=hashlib.sha256(posed_path.read_bytes()).hexdigest()
   if posed_hash!=mount['posed_lamp']['sha256']or not mount['posed_lamp']['other_positions_normals_uv_indices_unchanged']:raise RuntimeError('Actual rigid screw derivative proof differs')
-  lampdest='/Game/Sub01Home/RealEdgeClampLamp/V_'+posed_hash[:12]
+  lampdest='/Game/Sub01Home/RealEdgeClampLamp/V_'+posed_hash[:12]+'/Attempt_'+uuid4().hex
   if u.EditorAssetLibrary.does_directory_exist(lampdest):raise RuntimeError('Posed lamp version already exists; preserve prior asset')
   task=u.AssetImportTask();task.set_editor_property('filename',str(posed_path));task.set_editor_property('destination_path',lampdest);task.set_editor_property('automated',True);task.set_editor_property('replace_existing',False);task.set_editor_property('save',False)
   created_lampdest=lampdest
@@ -214,13 +216,13 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   result.update(native_triangle_count=triangles,native_bounds_cm=actual,desk_original_states=before,lamp_mount=mount,added_actors=[a.get_path_name()for a in added],opened_exact_hardware_actors=[by_node[i][0].get_path_name()for i in mount['opened_hardware_source_nodes']],device_contact='Actual worktop matches baseline84.5cm; device mesh/transform/material bindings remain byte-identical in native fingerprint. Existing device penetration is not corrected or called perfect.')
   if not u.EditorAssetLibrary.save_directory(lampdest,only_if_is_dirty=False,recursive=True) or not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True) or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Real desk asset/map save failed')
   source.with_name('native-real-linea140-import.json').write_text(json.dumps(result,indent=2)+'\n');return result
- except Exception:
+ except Exception as error:
   for actor,transform,label,hidden,comps in states:
    actor.set_actor_transform(transform,False,False);actor.set_actor_label(label);actor.set_actor_hidden_in_game(hidden)
    for c,world,mesh,materials,tags,visible,collision,profile in comps:
     c.set_static_mesh(mesh);c.set_world_transform(world,False,False);c.set_editor_property('component_tags',tags);c.set_visibility(visible);c.set_collision_profile_name(profile);c.set_collision_enabled(collision)
     for slot,material in enumerate(materials):c.set_material(slot,material)
-  for a in added:eas.destroy_actor(a)
-  for owned in (dest,created_lampdest):
-   if owned and u.EditorAssetLibrary.does_directory_exist(owned):u.EditorAssetLibrary.delete_directory(owned)
+  cleanup=detach_added(u,eas,before)
+  if fingerprint(u,original)!=before:raise RuntimeError('Desk original rollback fingerprint differs; preserve '+str(backup))from error
+  (source.parent/'native-real-linea140-failed.json').write_text(json.dumps({'error':str(error),'quarantined_asset_directories':[p for p in(dest,created_lampdest)if p],'cleanup':cleanup,'original_rollback_verified':True,'map_backup':str(backup)},indent=2)+'\n')
   raise

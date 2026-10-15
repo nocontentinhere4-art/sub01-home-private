@@ -27,7 +27,10 @@ class CompleteBooks(unittest.TestCase):
   sub=NS(get_nanite_settings=lambda m:Settings(m.settings),set_nanite_settings=apply)
   lib=NS(does_directory_exist=lambda d:bool(created)and not deleted,duplicate_asset=duplicate,save_loaded_asset=lambda *a,**k:True,delete_directory=lambda d:deleted.append(d))
   u=NS(StaticMeshEditorSubsystem=object,get_editor_subsystem=lambda x:sub,EditorAssetLibrary=lib,StaticMeshActor=object,StaticMeshComponent=object,Vector=lambda *x:x,CollisionEnabled=NS(NO_COLLISION=0))
-  eas=NS(spawn_actor_from_class=spawn,destroy_actor=lambda a:destroyed.append(a))
+  def destroy(a):
+   self.assertIsNone(a.c.mesh,'Mesh must detach before actor destruction')
+   destroyed.append(a);return True
+  eas=NS(spawn_actor_from_class=spawn,destroy_actor=destroy)
   def actual(*args):queries.append(1);return []if bad and len(queries)==40 else TRI
   with tempfile.TemporaryDirectory()as td:
    source=Path(td)/'source.glb';source.write_bytes(b'authentic fixture')
@@ -35,7 +38,7 @@ class CompleteBooks(unittest.TestCase):
    with patch.object(B,'SOURCE',source),patch.object(B,'SHA',hashlib.sha256(source.read_bytes()).hexdigest()),patch.object(B,'read_gltf',return_value=(doc,b'')),patch.object(G,'triangles',return_value=TRI),patch.object(G,'native_triangles',side_effect=actual):
     if bad:
      with self.assertRaisesRegex(RuntimeError,'full source triangles differ'):B.stage(u,books,eas,True)
-     self.assertEqual(len(deleted),1);self.assertEqual(len(destroyed),40)
+     self.assertEqual(deleted,[]);self.assertEqual(len(destroyed),40)
     else:
      result=B.stage(u,books,eas,True);self.assertEqual(len(result['proof']),46);self.assertEqual(len(result['replacements']),46)
      self.assertEqual(len(created),20);self.assertEqual(len(rebuild),20);self.assertEqual(len(destroyed),46)
@@ -43,5 +46,5 @@ class CompleteBooks(unittest.TestCase):
    for i,(a,c,p)in enumerate(books):self.assertIs(c.mesh,originals[i%20])
    self.assertTrue(all(m.settings['enabled']for m in originals))
  def test_complete46_world_proofs_share_only20_owned_rebuilds(self):self.exercise()
- def test_failed_later_book_proof_deletes_private_assets_without_binding_originals(self):self.exercise(True)
+ def test_failed_later_book_proof_detaches_and_quarantines_without_binding_originals(self):self.exercise(True)
 if __name__=='__main__':unittest.main()

@@ -1,5 +1,7 @@
 """Rigid placement of the exact genuine office plant; preserve all other plants."""
 import hashlib,json
+from uuid import uuid4
+from unreal_owned_import_cleanup import release_temporary
 from real_linea_lamp_mount import geometry
 from pathlib import Path
 NODES=(221,222,223,224);ROOT_NODE=225;DELTA=(-.4,0.,-.01)
@@ -111,7 +113,7 @@ def stage_exact_owned_geometry(u,ctx,eas):
  source=Path(u.Paths.project_dir())/'SourceAssets/full-home.glb'
  if hashlib.sha256(source.read_bytes()).hexdigest()!='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b':raise RuntimeError('Exact retained plant source955 required for rebuild')
  doc,binary=read_gltf(source)
- dest='/Game/Sub01Home/RealOfficePlant/V_9556495fa816_FullSource'
+ dest='/Game/Sub01Home/RealOfficePlant/V_9556495fa816_'+uuid4().hex+'_FullSource'
  if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Owned full-source plant version already exists; inspect prior transaction')
  sub=u.get_editor_subsystem(u.StaticMeshEditorSubsystem);temporary=[];replacements={};proof=[]
  original_settings={c.get_editor_property('static_mesh').get_path_name():native_geometry_api_audit(u,c.get_editor_property('static_mesh'))['nanite_settings']for a,c,p in ctx['rows']}
@@ -128,9 +130,9 @@ def stage_exact_owned_geometry(u,ctx,eas):
    # Asset save completes pending mesh compilation before CPU triangle extraction.
    if not u.EditorAssetLibrary.save_loaded_asset(clone,only_if_is_dirty=False):raise RuntimeError('Owned full-source plant mesh rebuild/save failed')
    if sub.get_nanite_settings(clone).get_editor_property('enabled'):raise RuntimeError('Owned full-source plant clone still uses Nanite fallback')
-   temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));temporary.append(temp)
+   temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0));temporary.append((temp,None))
    temp.set_actor_label('SUB01_OfficePlant_SourceProof_'+str(plan['node']));temp.set_actor_hidden_in_game(True)
-   tc=temp.get_component_by_class(u.StaticMeshComponent);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+   tc=temp.get_component_by_class(u.StaticMeshComponent);temporary[-1]=(temp,tc);tc.set_static_mesh(clone);tc.set_world_transform(c.get_world_transform(),False,False);tc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
    for slot,material in enumerate(c.get_materials()):tc.set_material(slot,material)
    wanted=triangles(doc,binary,plan['node']);actual=native_triangles(u,tc)
    if len(wanted)!=plan['source_triangle_count']or not same_triangles(wanted,actual):raise RuntimeError('Owned rebuilt full plant triangle geometry differs exact source '+str(plan['node']))
@@ -140,10 +142,9 @@ def stage_exact_owned_geometry(u,ctx,eas):
   after={c.get_editor_property('static_mesh').get_path_name():native_geometry_api_audit(u,c.get_editor_property('static_mesh'))['nanite_settings']for a,c,p in ctx['rows']}
   if after!=original_settings:raise RuntimeError('Shared original plant Nanite settings changed')
   return {'destination':dest,'replacements':replacements,'proof':proof}
- except Exception:
-  for temp in temporary:eas.destroy_actor(temp)
-  temporary=[]
-  if u.EditorAssetLibrary.does_directory_exist(dest):u.EditorAssetLibrary.delete_directory(dest)
-  raise
  finally:
-  for temp in temporary:eas.destroy_actor(temp)
+  try:
+   for temp,tc in reversed(temporary):release_temporary(eas,temp,tc)
+  finally:
+   temporary.clear();temp=tc=clone=None
+  # Retain owned assets on success/failure; compilation can outlive this call.
