@@ -1,5 +1,14 @@
 # Root packet: minimal seat + controller install on origin/main (2026-10-15)
 
+## Root integration
+
+Integrated from Claude `64a5e18` with main's motion, PC, hands, and strong seat validator preserved.
+Root additionally rejects unmeasured leading, trailing, or interior clip intervals longer than 1/30 second;
+a dense sample count alone cannot prove whole-clip coverage. The packet's original file hashes below therefore
+describe the delivered packet, not this amended integration. Root validation: 20 packet tests passed, plus
+g++/clang stub closure passed for both adapters. Real Unreal compilation, physical poses, and live device use
+remain separate requirements; these source checks do not enable readiness.
+
 Private, source only. Nothing deployed; no target, provider or pod touched. Proven in clean worktrees of origin/main
 **57d41bb** (full suite), **380baa8** (root's named main; became fetchable at ~04:30 UTC) and **d9827e5** (main at
 04:35 UTC; 380baa8 is its ancestor). On all three the main inputs are byte-identical (seat runtime 534903e1...,
