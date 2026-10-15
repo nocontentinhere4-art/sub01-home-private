@@ -118,6 +118,10 @@ void ASub01HomeCharacter::UpdatePrivatePhoneGripReview(){
  static double LastPhoneTelemetry=-1;const double Now=FPlatformTime::Seconds();
  if(LastPhoneTelemetry<0||Now-LastPhoneTelemetry>=2){
   LastPhoneTelemetry=Now;
+  // Paired native/source frame witness only; no pose, mount or eye changes.
+  const auto* Active=FirstPersonBody->GetSingleNodeInstance();const double Phase=Active?Active->GetCurrentTime():-1.;
+  const bool HasHead=FirstPersonBody->DoesSocketExist(TEXT("Head"));const FTransform HeadFrame=HasHead?FirstPersonBody->GetSocketTransform(TEXT("Head"),RTS_World):FTransform::Identity;
+  UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_CAPTURED_BONE_FRAME time=%.6f wrist=%s wristQ=%s wristScale=%s headAvailable=%d head=%s headQ=%s headScale=%s body=%s; read_only=true"),Phase,*W.GetLocation().ToString(),*W.GetRotation().ToString(),*W.GetScale3D().ToString(),int(HasHead),*HeadFrame.GetLocation().ToString(),*HeadFrame.GetRotation().ToString(),*HeadFrame.GetScale3D().ToString(),*FirstPersonBody->GetComponentTransform().ToString());
   UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_REVIEW_GEOMETRY unaccepted eye=%s forward=%s wrist=%s phoneCenter=%s cameraParent=%s cameraSocket=%s"),*ViewCamera->GetComponentLocation().ToString(),*ViewCamera->GetForwardVector().ToString(),*W.GetLocation().ToString(),*Center.ToString(),*GetNameSafe(ViewCamera->GetAttachParent()),*ViewCamera->GetAttachSocketName().ToString());
   for(int32 I=0;I<PhoneGripParts.Num();++I)if(PhoneGripParts[I]){const auto B=PhoneGripParts[I]->CalcBounds(PhoneGripParts[I]->GetComponentTransform());UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_REVIEW_PART index=%d center=%s extent=%s transform=%s"),I,*B.Origin.ToString(),*B.BoxExtent.ToString(),*PhoneGripParts[I]->GetComponentTransform().ToString());}
  }
