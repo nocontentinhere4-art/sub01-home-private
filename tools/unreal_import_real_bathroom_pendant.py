@@ -64,10 +64,15 @@ def source_slot_binding(c,source,dest):
     """Bind preserved glTF material slot, never a truncated UE asset basename."""
     mesh=c.get_editor_property('static_mesh');slots=list(mesh.get_editor_property('static_materials'))
     mat=c.get_material(0)
-    if (len(slots)!=1 or str(slots[0].get_editor_property('material_slot_name'))!=source['name']
+    # Actual Interchange preserves the full slot identity but replaces spaces
+    # with underscores (independently observed on frozen window import111).
+    # Permit exactly that complete spelling, never shortened asset basenames,
+    # substring matching or a generic alphanumeric/fuzzy canonicalization.
+    allowed_slots={source['name'],source['name'].replace(' ','_')}
+    if (len(slots)!=1 or str(slots[0].get_editor_property('material_slot_name'))not in allowed_slots
             or not mat or slots[0].get_editor_property('material_interface')!=mat
             or not mat.get_path_name().startswith(dest+'/')):
-        raise RuntimeError('Exact original material slot and assigned owned instance required')
+        raise RuntimeError('Exact original material slot and assigned owned instance required: source='+repr(source['name'])+' actual='+repr([str(s.get_editor_property('material_slot_name'))for s in slots])+' slot_material='+repr([s.get_editor_property('material_interface').get_path_name()if s.get_editor_property('material_interface')else None for s in slots])+' assigned='+repr(mat.get_path_name()if mat else None)+' owned='+repr(dest))
     return {source['name']:mat.get_path_name()}
 
 

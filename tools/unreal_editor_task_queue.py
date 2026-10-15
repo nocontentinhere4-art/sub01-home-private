@@ -55,10 +55,14 @@ TASKS = {
     'fp_keyboard_import_diagnostic': 'unreal_fp_review_import_diagnostic',
     'authentic_bath_preflight': 'unreal_import_authentic_bath_fixtures',
     'authentic_bath': 'unreal_import_authentic_bath_fixtures',
+    'real_doors_preflight': 'unreal_import_authentic_doors',
+    'real_doors': 'unreal_import_authentic_doors',
     'reference_bedding': 'unreal_import_reference_bedding',
     'reference_media': 'unreal_import_reference_media',
+    'reference_entry': 'unreal_import_reference_entry',
     'residential_windows': 'unreal_import_real_home_windows',
     'exterior_readonly': 'unreal_exterior_readonly',
+    'window_material_diagnostic': 'unreal_window_material_diagnostic',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -125,6 +129,8 @@ def guard_valid(path=GUARD, now=None, trusted_uid=0):
 
 
 def dispatch(task):
+    if task in ('residential_windows','reference_media','reference_bedding','authentic_bath_preflight','authentic_bath'):
+        importlib.reload(importlib.import_module('unreal_import_real_bathroom_pendant'))
     if task == 'real_office':
         # Fixed reviewed dependencies allow corrected contact/import code to be
         # retried in the same Editor. Requests cannot supply modules or paths.
@@ -138,8 +144,12 @@ def dispatch(task):
         return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
     if task == 'nanite_materials':
         return module.run(dry_run=False)
+    if task in ('real_doors_preflight','real_doors'):
+        return module.run(dry_run=task=='real_doors_preflight')
     if task in ('authentic_bath_preflight','authentic_bath'):
         return module.run(dry_run=task=='authentic_bath_preflight')
+    if task == 'reference_entry':
+        return module.run(dry_run=False)
     if task == 'reference_media':
         return module.run(dry_run=False)
     if task == 'reference_bedding':
