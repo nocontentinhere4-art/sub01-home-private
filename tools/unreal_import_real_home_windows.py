@@ -21,6 +21,22 @@ def triangles(doc,blob,node):
  return [[[float(p[0])*100,float(p[2])*100,float(p[1])*100]for p in(row['points'][j]for j in face)]for row in node_geometry(doc,blob,node,world_matrices(doc))for face in row['faces']]
 
 
+def positive_area_triangles(source):
+ """Match UE's removal of exact zero-area source faces, never positive geometry.
+
+ The pinned207-part source contains432 exact-zero-area bevel triangles. Their
+ coincident vertices have no surface; every strictly positive source face must
+ still match one actual native face. No area epsilon or index-count waiver.
+ """
+ kept=[];removed=[]
+ for index,t in enumerate(source):
+  a=[t[1][k]-t[0][k]for k in range(3)];b=[t[2][k]-t[0][k]for k in range(3)]
+  cross=(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+  if all(v==0. for v in cross):removed.append(index)
+  else:kept.append(t)
+ return kept,removed
+
+
 def clear_glass(u,dest):
  """Owned clear runtimeglass: actual thick geometry, low surface opacity, no opaqueimport fallback."""
  m=u.AssetToolsHelpers.get_asset_tools().create_asset('M_ResidentialClearGlass',dest,u.Material,u.MaterialFactoryNew())
@@ -71,21 +87,23 @@ def run(dry_run=True):
   manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before]
   for a in added:a.set_actor_hidden_in_game(True)
   if fingerprint(u,original)!=before:raise RuntimeError('Import changed protected originals beforeactivation')
-  components=[];glass_components=[];parts=[]
+  components=[];glass_components=[];parts=[];geometry_parts=[]
   for ni,node in enumerate(doc['nodes']):
    if'mesh'not in node:continue
    matches=[a for a in added if a.get_actor_label()==node['name']]
    if len(matches)!=1:raise RuntimeError('Actualwindow part not unique '+node['name'])
    a=matches[0];cs=a.get_components_by_class(u.StaticMeshComponent)
    if len(cs)!=1:raise RuntimeError('Windowpart component count differs')
-   c=cs[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest);expected=triangles(doc,blob,ni);actual=native_triangles(u,c)
+   c=cs[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest);full=triangles(doc,blob,ni);expected,zero_faces=positive_area_triangles(full);actual=native_triangles(u,c)
    if not same_triangles(expected,actual):
     (audit/'residential-window-geometry-refusal.json').write_text(json.dumps({'node':ni,'name':node['name'],'expected':len(expected),'actual':len(actual)},indent=2));raise RuntimeError('Full residential geometry/worldplacement differs '+node['name'])
+   geometry_parts.append({'node':ni,'source_triangles':len(full),'exact_zero_area_source_indices':zero_faces,'positive_source_triangles':len(expected),'actual_native_triangles':len(actual),'all_positive_triangles_matched':True})
    c.set_collision_profile_name('BlockAll');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
    components.append(c);parts.append((a,c));pr=doc['meshes'][node['mesh']]['primitives']
    if len(pr)!=1 or c.get_num_materials()!=1:raise RuntimeError('Exact perpart source material required')
    sm=doc['materials'][pr[0]['material']]['name']
    if sm=='Window clear insulated glass':glass_components.append(c)
+  if sum(len(x['exact_zero_area_source_indices'])for x in geometry_parts)!=432 or sum(x['positive_source_triangles']for x in geometry_parts)!=12624:raise RuntimeError('Pinned complete positive source surface counts differ')
   if len(parts)!=207 or len(glass_components)!=45:raise RuntimeError('Complete207parts/45glass solids required')
   opaque=copy.deepcopy(doc);opaque['materials']=[m for m in opaque['materials']if m['name']!='Window clear insulated glass'];material_report=verify_materials(u,[c for c in components if c not in glass_components],opaque,dest)
   glass=clear_glass(u,dest)
@@ -103,7 +121,7 @@ def run(dry_run=True):
   excluded={a.get_path_name()for a,c,*_ in old};untouched=[a for a in original if a.get_path_name()not in excluded]
   if fingerprint(u,untouched)!={k:v for k,v in before.items()if k not in excluded}:raise RuntimeError('Windowactivation changed unrelated architecture/devices')
   if not u.EditorAssetLibrary.save_directory(dest,only_if_is_dirty=False,recursive=True)or not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Residentialwindow asset/map save refused')
-  result.update(parts=len(parts),glass_parts=45,retired_original_actors=[a.get_path_name()for a,c,*_ in old],material_proof=material_report,glass_material=glass.get_path_name(),owned_destination=dest,map_backup=str(backup));(audit/'real-home-windows-native.json').write_text(json.dumps(result,indent=2)+'\n');return result
+  result.update(parts=len(parts),glass_parts=45,positive_surface_geometry=geometry_parts,retired_original_actors=[a.get_path_name()for a,c,*_ in old],material_proof=material_report,glass_material=glass.get_path_name(),owned_destination=dest,map_backup=str(backup));(audit/'real-home-windows-native.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception as error:
   for a,c,h,v,e in old:
    if bool(a.get_editor_property('hidden'))!=h:a.set_actor_hidden_in_game(h)

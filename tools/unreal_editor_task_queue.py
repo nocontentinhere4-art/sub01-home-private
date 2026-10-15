@@ -160,7 +160,8 @@ def dispatch(task):
         return module.run(OFFICE_EXPORT, dry_run=False)
     if task == 'kitchen_closed_fit':
         # Exact authenticated R5 retirement/import wrapper owns the frozen paths.
-        importlib.reload(importlib.import_module('unreal_import_real_kitchen'))
+        for name in ('prepare_real_kitchen_bundle', 'prepare_real_kitchen_native_bundle', 'unreal_import_real_kitchen'):
+            importlib.reload(importlib.import_module(name))
         return module.run()
     if task == 'real_kitchen':
         return module.run(KITCHEN_EXPORT, dry_run=False)
