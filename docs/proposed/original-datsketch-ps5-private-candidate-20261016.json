@@ -1,6 +1,6 @@
 {
   "schema": "sub01.private-original-ps5-source-packet.v1",
-  "status": "candidate source images delivered to root; not imported",
+  "status": "root viewed both source renders and approved unmodified private candidate; native sole integration owner",
   "artist": "DatSketch",
   "title": "Playstation 5 Digital Edition (2020 original, not Slim)",
   "artist_url": "https://sketchfab.com/DatSketch",
@@ -67,5 +67,237 @@
     "primary_license": "out/house-evidence/ps5-datsketch-primary-license.png"
   },
   "native_imported": false,
-  "contact_or_gameplay_acceptance": false
+  "contact_or_gameplay_acceptance": false,
+  "format_only_glb": {
+    "path": "/workspace/sub01-home-private/ps5-datsketch-original-r1/original-unmodified-console.glb",
+    "sha256": "cbe651c6e8064eaba6da3fb0aa8c9b9ad616eaa02fd4ef3821c86b64d8ed94b9",
+    "bytes": 2154048,
+    "original_binary_exact": true,
+    "original_JSON_exact_except_buffer_uri_removed": true,
+    "all_original_node_TRS_materials_meshes_unchanged": true
+  },
+  "external_root_unit_fit": {
+    "schema": "sub01.original-ps5-unit-fit.v1",
+    "complete24mesh_inventory": [
+      {
+        "node_index": 5,
+        "mesh_index": 0,
+        "node_name": "PS5_PS5_0",
+        "material": "material",
+        "triangles": 9653
+      },
+      {
+        "node_index": 6,
+        "mesh_index": 1,
+        "node_name": "PS5_PSLOGO_0",
+        "material": "PSLOGO",
+        "triangles": 271
+      },
+      {
+        "node_index": 8,
+        "mesh_index": 2,
+        "node_name": "PS5BODY_PS Body (plastic)_0",
+        "material": "PS_Body_plastic",
+        "triangles": 13301
+      },
+      {
+        "node_index": 9,
+        "mesh_index": 3,
+        "node_name": "PS5BODY_ports (silver)_0",
+        "material": "ports_silver",
+        "triangles": 288
+      },
+      {
+        "node_index": 10,
+        "mesh_index": 4,
+        "node_name": "PS5BODY_PS Light_0",
+        "material": "PS_Light",
+        "triangles": 280
+      },
+      {
+        "node_index": 12,
+        "mesh_index": 5,
+        "node_name": "Cube.001_PS Fan_0",
+        "material": "PS_Fan",
+        "triangles": 776
+      },
+      {
+        "node_index": 14,
+        "mesh_index": 6,
+        "node_name": "PS Fan_PS Fan_0",
+        "material": "PS_Fan",
+        "triangles": 2400
+      },
+      {
+        "node_index": 16,
+        "mesh_index": 7,
+        "node_name": "PS Back Fan_PS Fan_0",
+        "material": "PS_Fan",
+        "triangles": 4996
+      },
+      {
+        "node_index": 18,
+        "mesh_index": 8,
+        "node_name": "PS STAND_PS Stand_0",
+        "material": "PS_Stand",
+        "triangles": 140
+      },
+      {
+        "node_index": 20,
+        "mesh_index": 9,
+        "node_name": "PS Bottom_PS Body (matte)_0",
+        "material": "PS_Body_matte",
+        "triangles": 1664
+      },
+      {
+        "node_index": 22,
+        "mesh_index": 10,
+        "node_name": "PS Back_PS Body (matte)_0",
+        "material": "PS_Body_matte",
+        "triangles": 1626
+      },
+      {
+        "node_index": 24,
+        "mesh_index": 11,
+        "node_name": "POWERBUTTON_POWERBUTTON_0",
+        "material": "POWERBUTTON",
+        "triangles": 480
+      },
+      {
+        "node_index": 26,
+        "mesh_index": 12,
+        "node_name": "USB Port_ports (blue)_0",
+        "material": "ports_blue",
+        "triangles": 18
+      },
+      {
+        "node_index": 27,
+        "mesh_index": 13,
+        "node_name": "USB Port_ports (black)_0",
+        "material": "ports_black",
+        "triangles": 26
+      },
+      {
+        "node_index": 28,
+        "mesh_index": 14,
+        "node_name": "USB Port_ports (silver)_0",
+        "material": "ports_silver",
+        "triangles": 16
+      },
+      {
+        "node_index": 30,
+        "mesh_index": 15,
+        "node_name": "USB PORT2_ports (blue)_0",
+        "material": "ports_blue",
+        "triangles": 18
+      },
+      {
+        "node_index": 31,
+        "mesh_index": 16,
+        "node_name": "USB PORT2_ports (black)_0",
+        "material": "ports_black",
+        "triangles": 26
+      },
+      {
+        "node_index": 32,
+        "mesh_index": 17,
+        "node_name": "USB PORT2_ports (silver)_0",
+        "material": "ports_silver",
+        "triangles": 16
+      },
+      {
+        "node_index": 34,
+        "mesh_index": 18,
+        "node_name": "HDMIPORT_ports (black)_0",
+        "material": "ports_black",
+        "triangles": 600
+      },
+      {
+        "node_index": 35,
+        "mesh_index": 19,
+        "node_name": "HDMIPORT_ports (silver)_0",
+        "material": "ports_silver",
+        "triangles": 12
+      },
+      {
+        "node_index": 36,
+        "mesh_index": 20,
+        "node_name": "HDMIPORT_ports (gold)_0",
+        "material": "ports_gold",
+        "triangles": 100
+      },
+      {
+        "node_index": 38,
+        "mesh_index": 21,
+        "node_name": "POWERPORT2_powerport_0",
+        "material": "powerport",
+        "triangles": 172
+      },
+      {
+        "node_index": 40,
+        "mesh_index": 22,
+        "node_name": "POWERPORT_powerport_0",
+        "material": "powerport",
+        "triangles": 320
+      },
+      {
+        "node_index": 41,
+        "mesh_index": 23,
+        "node_name": "POWERPORT_ports (silver)_0",
+        "material": "ports_silver",
+        "triangles": 508
+      }
+    ],
+    "original_triangles": 37707,
+    "stand_role_exact_mesh_index": 8,
+    "stand_role_name": "PS STAND_PS Stand_0",
+    "source_bounds_Blender_units": {
+      "body": [
+        [
+          -46.220311522483826,
+          -108.21541445392529,
+          4.231626119733921
+        ],
+        [
+          46.22030556201935,
+          157.26808484837207,
+          329.0548958629378
+        ]
+      ],
+      "base": [
+        [
+          -64.68149423599243,
+          -45.24846078406187,
+          -0.08845687259308999
+        ],
+        [
+          67.59926676750183,
+          87.03230021943065,
+          20.77662280754275
+        ]
+      ]
+    },
+    "source_unit_to_m_external_uniform_conversion": 0.001200652897522776,
+    "body_height_excluding_base_m": 0.39,
+    "body_plus_original_base_dimensions_m": [
+      0.15882327898536322,
+      0.31875353268178913,
+      0.3951869201622763
+    ],
+    "stand_bounds_m_relative_original_base_bottom": [
+      [
+        -0.07766002347054704,
+        -0.05432769554882958,
+        0.0
+      ],
+      [
+        0.08116325551481617,
+        0.10449558343653154,
+        0.02505171837499869
+      ]
+    ],
+    "source_geometry_material_hierarchy_modified": false,
+    "sony_comparison": "Height calibrated only. Original artist depth/thickness proportions preserved; do not claim exact manufacturer CAD dimensions."
+  },
+  "root_approved_unit_conversion": "Uniform external root scale .001200652897522776 m/sourceunit; calibrate body excluding original stand to390mm. Original source itself unchanged; no nonuniform rescale."
 }
