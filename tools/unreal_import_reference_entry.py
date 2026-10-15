@@ -107,7 +107,7 @@ def run(dry_run=True):
  from unreal_extend_private_entry import world_bounds
  from unreal_owned_import_cleanup import detach_added
  guard();source=ROOT/'reference-entry.glb';source_report=json.loads((ROOT/'source-report.json').read_text());doc,blob=validate_source(source,source_report)
- project=Path(u.Paths.project_dir());home=project/'SourceAssets/full-home.glb'
+ project=Path(u.Paths.project_dir()).resolve();home=project/'SourceAssets/full-home.glb'
  if project!=Path('/workspace/sub01-private-recovered-project/Sub01HomeLab')or hashlib.sha256(home.read_bytes()).hexdigest()!=HOME_SHA:
   raise RuntimeError('Exact private recovered project and home source required')
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
