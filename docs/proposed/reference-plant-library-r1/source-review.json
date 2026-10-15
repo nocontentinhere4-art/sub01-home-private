@@ -1,0 +1,486 @@
+{
+  "schema": "sub01.reference-plant-library-source.v1",
+  "source_license": "CC0-1.0 original Innerscene models, verified primary pages in configured isolated Playwright",
+  "plants": [
+    {
+      "slug": "potted-areca-palm-aee9b13e",
+      "source_url": "https://www.innerscene.com/tools/library/3d-parts/potted-areca-palm-aee9b13e",
+      "download_url": "https://www.innerscene.com/api/library/potted-areca-palm-aee9b13e/download",
+      "license": "CC0-1.0",
+      "license_verified_in_configured_playwright": true,
+      "sha256": "518be187a8a3aeeb50b77b7da728486b10782e9cde6410ffb6fde66fe4a3044e",
+      "bytes": 2135496,
+      "triangles": 55904,
+      "meshes": 34,
+      "materials": 4,
+      "images": 4,
+      "prepared_sha256": "bf9aee1cbda96dc0714357f318f4fc895c3252f910b0048069f0c08c7a2d6848",
+      "prepared_bytes": 1341632,
+      "prepared_triangles": 31704,
+      "original_triangle_count_from_import": 55904,
+      "original_parts": [
+        {
+          "name": "Areca paired leaflets",
+          "triangles": 44000
+        },
+        {
+          "name": "Areca palm rachis",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.001",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.002",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.003",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.004",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.005",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.006",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.007",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.008",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.009",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.010",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.011",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.012",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.013",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.014",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.015",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.016",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.017",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.018",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.019",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.020",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.021",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.022",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.023",
+          "triangles": 396
+        },
+        {
+          "name": "Areca palm rachis.024",
+          "triangles": 396
+        },
+        {
+          "name": "Palm cane",
+          "triangles": 44
+        },
+        {
+          "name": "Palm cane.001",
+          "triangles": 44
+        },
+        {
+          "name": "Palm cane.002",
+          "triangles": 44
+        },
+        {
+          "name": "Palm cane.003",
+          "triangles": 44
+        },
+        {
+          "name": "Palm cane.004",
+          "triangles": 44
+        },
+        {
+          "name": "Plain ceramic planter",
+          "triangles": 768
+        },
+        {
+          "name": "Planter foot",
+          "triangles": 508
+        },
+        {
+          "name": "Soil surface",
+          "triangles": 508
+        }
+      ],
+      "decimation": 0.45,
+      "native_installed": false,
+      "source_original_unchanged": true
+    },
+    {
+      "slug": "potted-trailing-pothos-bfe0ed29",
+      "source_url": "https://www.innerscene.com/tools/library/3d-parts/potted-trailing-pothos-bfe0ed29",
+      "download_url": "https://www.innerscene.com/api/library/potted-trailing-pothos-bfe0ed29/download",
+      "license": "CC0-1.0",
+      "license_verified_in_configured_playwright": true,
+      "sha256": "9e65a7dea4fd1fa1773b9cd3a5402d7883b850a9207185d17500afa0a6cfc349",
+      "bytes": 242668,
+      "triangles": 6684,
+      "meshes": 11,
+      "materials": 4,
+      "images": 4,
+      "prepared_sha256": "0b76c0e03e1b8c267177ad0c6aa7c581075e44a3f33e920557524634a93b5144",
+      "prepared_bytes": 250200,
+      "prepared_triangles": 6684,
+      "original_triangle_count_from_import": 6684,
+      "original_parts": [
+        {
+          "name": "Heart shaped pothos leaves",
+          "triangles": 2800
+        },
+        {
+          "name": "Plain ceramic planter.001",
+          "triangles": 768
+        },
+        {
+          "name": "Planter foot.001",
+          "triangles": 508
+        },
+        {
+          "name": "Soil surface.001",
+          "triangles": 508
+        },
+        {
+          "name": "Trailing pothos vine",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.001",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.002",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.003",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.004",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.005",
+          "triangles": 300
+        },
+        {
+          "name": "Trailing pothos vine.006",
+          "triangles": 300
+        }
+      ],
+      "decimation": null,
+      "native_installed": false,
+      "source_original_unchanged": true
+    },
+    {
+      "slug": "potted-split-leaf-monstera-c29ea101",
+      "source_url": "https://www.innerscene.com/tools/library/3d-parts/potted-split-leaf-monstera-c29ea101",
+      "download_url": "https://www.innerscene.com/api/library/potted-split-leaf-monstera-c29ea101/download",
+      "license": "CC0-1.0",
+      "license_verified_in_configured_playwright": true,
+      "sha256": "e94b760465a65694194b3ff4492b5f09b513f5715c467535d45fde21fcdfff0c",
+      "bytes": 243392,
+      "triangles": 6680,
+      "meshes": 13,
+      "materials": 4,
+      "images": 4,
+      "prepared_sha256": "21497997ed43c0b24d4cb381bc54296c123abf55bd031645084b0fa039f31ea9",
+      "prepared_bytes": 251176,
+      "prepared_triangles": 6680,
+      "original_triangle_count_from_import": 6680,
+      "original_parts": [
+        {
+          "name": "Leaf petiole",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.001",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.002",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.003",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.004",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.005",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.006",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.007",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.008",
+          "triangles": 176
+        },
+        {
+          "name": "Plain ceramic planter.002",
+          "triangles": 768
+        },
+        {
+          "name": "Planter foot.002",
+          "triangles": 508
+        },
+        {
+          "name": "Soil surface.002",
+          "triangles": 508
+        },
+        {
+          "name": "Split leaves",
+          "triangles": 3312
+        }
+      ],
+      "decimation": null,
+      "native_installed": false,
+      "source_original_unchanged": true
+    },
+    {
+      "slug": "potted-fiddle-leaf-fig-ae693937",
+      "source_url": "https://www.innerscene.com/tools/library/3d-parts/potted-fiddle-leaf-fig-ae693937",
+      "download_url": "https://www.innerscene.com/api/library/potted-fiddle-leaf-fig-ae693937/download",
+      "license": "CC0-1.0",
+      "license_verified_in_configured_playwright": true,
+      "sha256": "663652ddf2598a9c7e9aa557ed3706bea310485f833014be29e3fe45ecccddac",
+      "bytes": 394288,
+      "triangles": 5668,
+      "meshes": 20,
+      "materials": 5,
+      "images": 5,
+      "prepared_sha256": "f7917d3af6abce5386a3a0eeb48747c0152f2af1fe85f46c23891604d981d1c7",
+      "prepared_bytes": 402560,
+      "prepared_triangles": 5668,
+      "original_triangle_count_from_import": 5668,
+      "original_parts": [
+        {
+          "name": "Broad sculpted foliage",
+          "triangles": 1200
+        },
+        {
+          "name": "Fig woody stem",
+          "triangles": 44
+        },
+        {
+          "name": "Leaf petiole.009",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.010",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.011",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.012",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.013",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.014",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.015",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.016",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.017",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.018",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.019",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.020",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.021",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.022",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.023",
+          "triangles": 176
+        },
+        {
+          "name": "Plain ceramic planter.003",
+          "triangles": 768
+        },
+        {
+          "name": "Planter foot.003",
+          "triangles": 508
+        },
+        {
+          "name": "Soil surface.003",
+          "triangles": 508
+        }
+      ],
+      "decimation": null,
+      "native_installed": false,
+      "source_original_unchanged": true
+    },
+    {
+      "slug": "potted-bird-of-paradise-6a42d416",
+      "source_url": "https://www.innerscene.com/tools/library/3d-parts/potted-bird-of-paradise-6a42d416",
+      "download_url": "https://www.innerscene.com/api/library/potted-bird-of-paradise-6a42d416/download",
+      "license": "CC0-1.0",
+      "license_verified_in_configured_playwright": true,
+      "sha256": "aeccfcf2dc593290c3f576fa075a28297db65549b607bf9b461c7c2c685fc19d",
+      "bytes": 143116,
+      "triangles": 4088,
+      "meshes": 13,
+      "materials": 4,
+      "images": 4,
+      "prepared_sha256": "0493ff0d94259ea4199b8e5f62ff293107d93cb50c7fc74f0cb6575fe1d5e101",
+      "prepared_bytes": 150852,
+      "prepared_triangles": 4088,
+      "original_triangle_count_from_import": 4088,
+      "original_parts": [
+        {
+          "name": "Broad sculpted foliage.001",
+          "triangles": 720
+        },
+        {
+          "name": "Leaf petiole.024",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.025",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.026",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.027",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.028",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.029",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.030",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.031",
+          "triangles": 176
+        },
+        {
+          "name": "Leaf petiole.032",
+          "triangles": 176
+        },
+        {
+          "name": "Plain ceramic planter.004",
+          "triangles": 768
+        },
+        {
+          "name": "Planter foot.004",
+          "triangles": 508
+        },
+        {
+          "name": "Soil surface.004",
+          "triangles": 508
+        }
+      ],
+      "decimation": null,
+      "native_installed": false,
+      "source_original_unchanged": true
+    }
+  ],
+  "prepared_total_triangles": 54824,
+  "existing_home_untouched": true,
+  "native_ready": false,
+  "plant_quality_acceptance": false,
+  "placement_collision_acceptance": false,
+  "reviewed_result": "Actual source render viewed. Species silhouette variety is useful but plain shared foliage materials appear pale/stylized against owner real references. Not accepted as photoreal hero assets. Do not import this packet blindly."
+}
