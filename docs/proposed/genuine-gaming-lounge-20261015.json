@@ -1,0 +1,120 @@
+{
+  "schema": "sub01.private-gaming-lounge-handoff.v1",
+  "sofa": {
+    "remote_glb": "/workspace/sub01-home-private/reference-gaming-lounge-r1/haven-output-r2/genuine-navy-haven-with-pillows.glb",
+    "sha256": "b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
+    "size_bytes": 7056808,
+    "remote_report": "/workspace/sub01-home-private/reference-gaming-lounge-r1/haven-output-r2/haven-source-report.json",
+    "retire_only": [
+      172,
+      173,
+      174,
+      175
+    ],
+    "source_model": "genuine CC0 Innerscene Haven224, existing geometry retained",
+    "bounds_UE_cm": [
+      [
+        -190.75001525878906,
+        -103.74999237060547,
+        2.5049996376037598
+      ],
+      [
+        -98.25,
+        123.74999237060547,
+        94.2343978881836
+      ]
+    ],
+    "rigid_base_shift_UE_cm": [
+      35.5,
+      0,
+      2.505
+    ],
+    "floor_top_UE_cm": 2.5,
+    "source_rest_not_seating_contact_acceptance": true
+  },
+  "table": {
+    "remote_glb": "/workspace/sub01-home-private/reference-gaming-lounge-r1/table-output/genuine-coffee-table.glb",
+    "sha256": "c05a5d343ff55dd9e486f62626374e4879cab24e456fa14b8da58605ff88abb9",
+    "retire_only": [
+      275
+    ],
+    "node": "GamingCoffeeTable_000",
+    "bounds_UE_cm": [
+      [
+        -289,
+        -65.09149932861328,
+        2.504999876022339
+      ],
+      [
+        -229,
+        55.09149932861328,
+        41.50499725341797
+      ]
+    ],
+    "import_helper_owner": "kitchen_activation"
+  },
+  "source_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "material_serialized_proof": {
+    "source_sha256": "acad7fd3d9431929c303b1ae5cd476d7a108ce352a99ddf40e4e78ea7b9f2643",
+    "candidate_sha256": "b69d4cbcf53ad4603bcc852a3dc158b1424d2969bbf688d7ce4b39ae108e24f3",
+    "original_normal_and_roughness_bytes_exact": true,
+    "legal_ascii_nodes": true,
+    "mesh_count": 33,
+    "materials": [
+      {
+        "material": "GamingNavy_1",
+        "normal_image_sha256": "2eaebf45bd8812b3a2166c937d58e43267895f78f678795ee65ca74f65279a2d",
+        "roughness_image_sha256": "cbef38e9e9c2504249468664573137f1d5e2ce5384605f27dec6596734cbc4f7",
+        "dyed_albedo_sha256": "5b43d28f784a39f143586592746e097c1878a6bb1d3a37ca14b8ead19bae0339",
+        "sheen": {
+          "sheenColorFactor": [
+            0.03447899594902992,
+            0.054336439818143845,
+            0.08416418731212616
+          ],
+          "sheenRoughnessFactor": 0.5
+        }
+      },
+      {
+        "material": "GamingPillow_0_0",
+        "normal_image_sha256": "2eaebf45bd8812b3a2166c937d58e43267895f78f678795ee65ca74f65279a2d",
+        "roughness_image_sha256": "cbef38e9e9c2504249468664573137f1d5e2ce5384605f27dec6596734cbc4f7",
+        "dyed_albedo_sha256": "2cff993599cd2064b2a86a7a3894e332068bacf9f99e547ddadff99d4ecf3a4c",
+        "sheen": {
+          "sheenColorFactor": [
+            0.3946312963962555,
+            0.41968366503715515,
+            0.45301640033721924
+          ],
+          "sheenRoughnessFactor": 0.5
+        }
+      },
+      {
+        "material": "GamingPillow_1_0",
+        "normal_image_sha256": "2eaebf45bd8812b3a2166c937d58e43267895f78f678795ee65ca74f65279a2d",
+        "roughness_image_sha256": "cbef38e9e9c2504249468664573137f1d5e2ce5384605f27dec6596734cbc4f7",
+        "dyed_albedo_sha256": "d67d7043b144b024fbb0d0d6ff7876bbdf0dffb658c83380c9ce4dc1a22f1721",
+        "sheen": {
+          "sheenColorFactor": [
+            0.01977253518998623,
+            0.032030683010816574,
+            0.054336439818143845
+          ],
+          "sheenRoughnessFactor": 0.5
+        }
+      }
+    ],
+    "native_or_contact_acceptance": false
+  },
+  "preview_local": "out/house-evidence/reference-gaming-lounge-r1/haven-output-r2/genuine-navy-haven-source-review.png",
+  "root_viewed_approved_private_candidate": true,
+  "integration_order": "Native sole owner; table/wall065 actual image first, then sofa. Preserve active user tour/world/devices.",
+  "preserve": [
+    "TV plane/UV/live Minecraft",
+    "PCguest/world",
+    "stairs/egress",
+    "retired rug61/62 remains hidden NoCollision"
+  ],
+  "native_imported": false,
+  "functional_seating_or_contact_ready": false
+}
