@@ -35,7 +35,35 @@ written. The captures and the base clips are untouched; every output here is der
 - **Seams:** SitDown.last → SeatedIdle.first and SeatedIdle.last → GetUp.first both have a position Δ of 0. The
   velocity Δ at the hips is 0.69 and 0.73 cm/s; this is the loop's own step.
 
-## Typing: BLOCKED
+## Typing: bounded run, partial (`ready: false`)
 
-The base has no anatomical DeskTyping, SitToType or TypeToSit clips, so the ergonomic typing warm start cannot run yet.
-The command for it is recorded in `seated-arms.packet.json` under `typing`.
+The run used the base's DeskTyping, SitToType and TypeToSit clips (8bc5c2c / 136195b), the lifted chair and
+`--arms-only`. Only the six arm bones may change; the pelvis, spine, legs and fingers are gated to be identical to the
+base.
+
+- **Chair roll:** (3.875, −21.279) cm. The base moved the upper body 11.221 cm toward the desk (the Spine2 mean in
+  DeskTyping, 3–8 s). The chair is therefore pulled in 11.221 cm less, which keeps the upper-body-to-keyboard
+  relation that the contact pipeline was validated on.
+- **Where it stopped:** after the DeskTyping stage. It hit the 1320 s bound (elapsed 1985 s; the bound is checked
+  between stages). SitToType and TypeToSit were not written, so `seated-typing-ik.proposal.json` holds
+  `partial.stage_reached` and the blocker.
+
+DeskTyping, 989 keys, `SUB01_DeskTyping_seated.glb` sha256 `7d1c205c…`:
+
+| Gate | Result |
+|---|---|
+| Seat (main's strong rule, every frame) | **pass** |
+| Lower body and pelvis vs base | **pass**: 0 cm, 0° |
+| Fingers vs base | **pass**: 0° |
+| Complete chair (floor, desk, body) | **pass**: body margin +0.279 cm |
+| Left arm vs desk | **pass**: forearm 0.50 cm (f272) |
+| Right arm vs desk | **FAIL**: forearm −0.020 cm (f477) |
+| Key contact (left / right) | **FAIL**: right gap up to 8.7 cm (f536), penetration −0.96 cm (f760); left gap up to 0.37 cm |
+| `validate_unreal_contact_profile.validate()`, 301 rows | **FAIL**: fingertips hover over 2 mm |
+| Ergonomics (soft) | **FAIL**: elbows 96.7–105.6 cm, upper arm 63–88° from vertical, shoulder elevation as captured (−22 to −5°) |
+
+**Blocker.** On this base the contact solve does not converge on the right hand. It runs on the base's own over-key
+frames, and its mouse/keyboard switching is part of that. The ergonomic objective found no swivel that brings the
+elbows to 0–10 cm above the desk while the bulky sleeves keep clearance. 299 and 350 frames returned to the
+clearance-solved pose. The next step is a per-segment contact solve for the right hand: keys versus mouse, with a
+mouse contact model. After that, rerun with `--resume` for the transitions.

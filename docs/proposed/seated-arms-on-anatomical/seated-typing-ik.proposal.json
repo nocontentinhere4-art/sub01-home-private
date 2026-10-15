@@ -182,8 +182,8 @@
  },
  "roll_scan": {
   "fixed": true,
-  "chosen_extra_pull_in_dy_cm": 0.0,
-  "rule": "fixed by --roll-dy (the earlier probe scan on the seat-fit base chose 0: docs/proposed/seated-typing-ik)"
+  "chosen_extra_pull_in_dy_cm": 11.221,
+  "rule": "the base moved the upper body (Spine2, DeskTyping 3..8 s mean) by -dy in UE Y relative to the seat-fit base the roll and the keyboard contact were validated on; the chair is pulled in dy less, so the captured upper body - keyboard relation is kept"
  },
  "bounded": {
   "max_wall_seconds": 1320.0,
@@ -199,12 +199,12 @@
   "stages_done": [
    "DeskTyping_seated"
   ],
-  "elapsed_seconds": 2395.5
+  "elapsed_seconds": 1995.4
  },
  "clips": {
   "DeskTyping_seated": {
    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_DeskTyping_seated.glb",
-   "sha256": "b61342874aa2949dbab544cbdbc9869af9ac58c99bbdfb82aeb05f2bda9d4a7a",
+   "sha256": "7d1c205cbc3fe7e880084d88234619163ed72ab1de82ae38fde05ec1e247fdad",
    "all_gates_pass": false
   }
  },
