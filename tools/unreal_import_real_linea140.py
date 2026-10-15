@@ -9,6 +9,7 @@ original component/actor states on failure. No level loading or runtime restart.
 import hashlib,json,math,re,shutil,time
 from pathlib import Path
 from home_asset_audit import read_gltf
+from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
 from unreal_import_reference_dressing import fingerprint
 from prepare_real_linea140_placement import SHA
 LEVEL='/Game/Sub01Home/ActualHome'
@@ -125,6 +126,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
    if len(comps)!=1:raise RuntimeError('Source node component count differs')
    c=comps[0];mesh=c.get_editor_property('static_mesh')
    if not mesh or not mesh.get_path_name().startswith(dest+'/'):raise RuntimeError('New desk reused existing mesh identity')
+   prepare_owned_geometry(u,mesh,dest)
    points,count=surface(u,c);allpoints.extend(points);triangles+=count;components.append(c);by_node[int(index)]=(actor,c,points)
   if triangles!=20024:raise RuntimeError('Actual native desk lost original triangles')
   wanted=[[b[0]*100,b[2]*100,b[1]*100]for b in report['actual_export_bounds_m']]
@@ -147,7 +149,7 @@ def run(export_glb,dry_run=True,u=None,defer_activation=False):
   posed_meshes=[u.EditorAssetLibrary.load_asset(path)for path in u.EditorAssetLibrary.list_assets(lampdest,recursive=True,include_folder=False)]
   posed_meshes=[m for m in posed_meshes if isinstance(m,u.StaticMesh)]
   if len(posed_meshes)!=1:raise RuntimeError('Authentic posed C-clamp must import one complete source mesh')
-  posed_mesh=posed_meshes[0];slots=list(posed_mesh.get_editor_property('static_materials'))
+  posed_mesh=posed_meshes[0];prepare_owned_geometry(u,posed_mesh,lampdest);slots=list(posed_mesh.get_editor_property('static_materials'))
   if len(slots)!=2 or posed_mesh.get_num_sections(0)!=2:raise RuntimeError('Source body/light material slots changed')
   counts=[len(u.ProceduralMeshLibrary.get_section_from_static_mesh(posed_mesh,0,i)[1])//3 for i in range(2)]
   if counts!=[22598,1504]:raise RuntimeError('Actual posed body/light section identities differ; no guessed material order')

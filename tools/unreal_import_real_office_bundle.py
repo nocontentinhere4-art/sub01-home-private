@@ -8,6 +8,7 @@ this transaction. No level load, pod operation, controller edit or restart.
 import copy,hashlib,json,sys
 from pathlib import Path
 from home_asset_audit import read_gltf
+from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
 from unreal_import_reference_dressing import fingerprint
 from unreal_import_real_linea140 import run as stage_desk,surface,verify_materials,close,vec
 from prepare_real_office_bundle import BOOKS_SHA,SHELF_SHA
@@ -112,6 +113,7 @@ def run(root,dry_run=True,u=None):
    if len(found)!=1:raise RuntimeError('Authentic shelf source UID not unique '+label)
    comps=found[0].get_components_by_class(u.StaticMeshComponent)
    if len(comps)!=1 or not comps[0].get_editor_property('static_mesh').get_path_name().startswith(dest+'/'):raise RuntimeError('Shelf reused unowned existing geometry')
+   prepare_owned_geometry(u,comps[0].get_editor_property('static_mesh'),dest)
    pts,count=surface(u,comps[0]);alltris+=count;shelf_points[label]=pts;shelf_components.append(comps[0])
    if count!=proof['shelf']['triangles_per_authentic_shelf']:raise RuntimeError('Native shelf lost source triangles')
   shelfdoc,_=read_gltf(shelfpath);materials=verify_materials(u,shelf_components,shelfdoc,dest)

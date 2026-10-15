@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 from home_asset_audit import read_gltf
+from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
 from prepare_real_kitchen_bundle import HOME_SHA
 from prepare_real_kitchen_native_bundle import validate_manifest, OLD
 from unreal_import_real_linea140 import surface, verify_materials, close
@@ -201,6 +202,7 @@ def run(root, dry_run=True, u=None):
             mesh = c.get_editor_property('static_mesh')
             if not mesh or not mesh.get_path_name().startswith(dest+'/'):
                 raise RuntimeError('Kitchen reused an unowned mesh')
+            prepare_owned_geometry(u, mesh, dest)
             points, count = surface(u, c)
             actual = [[f(p[k] for p in points) for k in range(3)] for f in (min, max)]
             wanted = [[b[k]*100 for k in (0, 2, 1)] for b in expected['bounds_browser_m']]
