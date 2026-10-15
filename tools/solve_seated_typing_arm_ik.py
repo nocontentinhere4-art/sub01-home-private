@@ -418,6 +418,7 @@ KEY_TOP_TARGET_CM = T.KEY_CONTACT_TARGET_CM          # over-key distal minimum -
 KEY_MIN_OVER_VERTICES = T.KEY_MIN_OVER_VERTICES      # >= 4 over-key distal vertices: the hand is on the keys
 CONTACT_PASSES, CONTACT_TOL_CM = 12, 1e-4
 CONTACT_BRACKET_CM, CONTACT_BISECTIONS = 2., 14
+CONTACT_ACCEPT_CM = .02          # well inside the 0..0.2 cm key gate around the 0.08 cm target
 FOREARM_TARGET_CLEARANCE_CM = .5     # design target for arm skin to the real desk (the gate is > 0, every frame)
 SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
 # Ergonomic SOFT targets (never gates): elbow at or just above the desk / keyboard home-row height (ANSI/HFES 100-2007:
@@ -678,6 +679,17 @@ class ClipArmIK:
         then a smooth upper envelope over time and the contact is re-solved. Off-key frames that no swivel clears lift
         the hand; on-key frames that no swivel clears keep the best swivel and are reported (never hidden)."""
         F = len(self.times)
+        self.prepare()
+        zero = np.zeros(F)
+        delta = {s: zero.copy() for s in SIDES}
+        phi = {s: zero.copy() for s in SIDES}
+        lift = {s: zero.copy() for s in SIDES}
+        history = []
+        return self._solve(F, zero, delta, phi, lift, history)
+
+    def prepare(self):
+        """Inputs, swivel sign, on-key mask and hand segments (also used to rebuild a stitched chunked solve)."""
+        F = len(self.times)
         self.inputs = {s: self.side_inputs(s) for s in SIDES}
         self.raise_sign = {}
         for s in SIDES:
@@ -695,13 +707,16 @@ class ClipArmIK:
             self.on = {s: (audit[s]['over'] >= KEY_MIN_OVER_VERTICES) if self.contact else np.zeros(F, bool) for s in SIDES}
         self.mode = {s: segment_hand(self.on[s], self.palm_ue(self.W_fit, s, np.arange(F)), self.dt, self.keys,
                                      self.mouse if (self.mouse is not None and s == 'right') else None) for s in SIDES}
-        delta = {s: zero.copy() for s in SIDES}
-        phi = {s: zero.copy() for s in SIDES}
-        lift = {s: zero.copy() for s in SIDES}
-        history = []
+
+    def pose_all(self):
+        W = self.W_fit.copy()
         for s in SIDES:
-            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
-            for outer in range(3):
+            W = self.pose(W, s, self.delta[s], self.phi[s], self.lift[s])[0]
+        return W
+
+    def _solve(self, F, zero, delta, phi, lift, history):
+        def clear_side(s, outer_passes=3):
+            for outer in range(outer_passes):
                 Wc = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
                 cl = self.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0]
                 bad = np.nonzero(cl < FOREARM_TARGET_CLEARANCE_CM)[0]
@@ -743,10 +758,13 @@ class ClipArmIK:
                 need[bad[todo]] = best_phi[todo]                  # no swivel clears: the best one (reported)
                 phi[s] = envelope(need, self.dt)
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
-                off = bad[todo][~self.on[s][bad[todo]]]
-                if len(off):                                      # off-key: lift the hand (no key contact required)
+                off = bad[todo][self.mode[s][bad[todo]] == MODE_TRANSIT]
+                if len(off):                                      # transit: lift the hand (no contact required)
                     lift[s] = np.maximum(lift[s], self.lift_need(s, delta[s], phi[s], lift[s], off))
                     delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
+        for s in SIDES:
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
+            clear_side(s)
         self.ergonomics = {}
         if self.ergonomic:
             for s in SIDES:
@@ -754,6 +772,7 @@ class ClipArmIK:
         self.exact_audit = True                  # final contact passes with the exact keycap triangle test
         for s in SIDES:
             delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
+            clear_side(s, 2)                     # the final contact must not undo the clearance (every arm vertex)
         W = self.W_fit.copy()
         for s in SIDES:
             W = self.pose(W, s, delta[s], phi[s], lift[s])[0]
@@ -934,7 +953,7 @@ class ClipArmIK:
             d0 = delta[fr].copy()
             lo, hi = d0 - CONTACT_BRACKET_CM, d0 + CONTACT_BRACKET_CM
             flo, fhi = residual(lo)[0], residual(hi)[0]
-            for _e in range(4):
+            for _e in range(2):
                 same = act & np.isfinite(flo) & np.isfinite(fhi) & (np.sign(flo) == np.sign(fhi))
                 if not same.any():
                     break
@@ -952,7 +971,27 @@ class ClipArmIK:
             with np.errstate(divide='ignore', invalid='ignore'):
                 rf = lo - flo * (hi - lo) / (fhi - flo)
             new = np.where(ok, np.where(np.isfinite(rf), rf, .5 * (lo + hi)), d0)
-            delta[fr] = new
+            # a root is kept only if it really is contact (the residual is not continuous where the lowest finger
+            # changes or the hand leaves the key field); otherwise the frame keeps its previous correction
+            fn = residual(new)[0]
+            good = ok & np.isfinite(fn) & (np.abs(fn) <= CONTACT_ACCEPT_CM)
+            delta[fr] = np.where(good, new, d0)
+            # frames the bracket did not resolve: plain residual steps from the previous correction, kept per frame
+            # whenever they reduce the residual (never a wild jump)
+            rest = act & ~good
+            if rest.any():
+                d = delta[fr].copy()
+                r_ = residual(d)[0]
+                best_d, best_r = d.copy(), np.where(np.isfinite(r_), np.abs(r_), np.inf)
+                for _p in range(CONTACT_PASSES):
+                    d = d + np.where(rest & np.isfinite(r_), np.clip(r_, -CONTACT_BRACKET_CM, CONTACT_BRACKET_CM), 0.)
+                    r_ = residual(d)[0]
+                    ar = np.where(np.isfinite(r_), np.abs(r_), np.inf)
+                    imp = rest & (ar < best_r)
+                    best_d[imp], best_r[imp] = d[imp], ar[imp]
+                    if (best_r[rest] <= CONTACT_TOL_CM).all():
+                        break
+                delta[fr] = np.where(rest, best_d, delta[fr])
         # frames that are neither keyboard nor mouse: only ever lifted over the keycaps (below)
         if frames is None:
             delta = self.blend_transit(s, delta)
@@ -1846,6 +1885,45 @@ def roll_scan(ctx, src_f, src_r, times, dys=ROLL_SCAN_DY_CM):
                   'rows': rows, 'chosen_extra_pull_in_dy_cm': pick['extra_pull_in_dy_cm']}
 
 
+CHUNK_FRAMES, CHUNK_OVERLAP = 100, 12
+STATE_KEYS = ('delta', 'phi', 'lift', 'hand_xy', 'girdle', 'gain')
+
+
+def solve_chunked(ctx, W_fit, W_raw, times, shift, state_dir, deadline=None, chunk=CHUNK_FRAMES, ov=CHUNK_OVERLAP,
+                  ergo_budget_s=None):
+    """Per-frame bounded solve: the clip is solved in chunks of `chunk` frames, each with `ov` frames of context on both
+    sides (its envelopes and blends see the neighbours), and only its core frames are kept. Every finished chunk is a
+    checkpoint (<state_dir>/chunk-AAAA-BBBB.npz); a run that reaches `deadline` stops between chunks and a later run
+    resumes from the checkpoints. Returns (ik with the stitched per-frame state, None) or (None, progress)."""
+    state_dir = Path(state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    F = len(times)
+    done, info = [], []
+    for a in range(0, F, chunk):
+        b = min(F, a + chunk)
+        f = state_dir / f'chunk-{a:04d}-{b:04d}.npz'
+        if not f.exists():
+            if deadline is not None and time.time() > deadline:
+                return None, {'chunks_done': len(done), 'chunks_total': int(math.ceil(F / chunk)), 'stopped_before_chunk': [a, b]}
+            lo, hi = max(0, a - ov), min(F, b + ov)
+            ikc = ctx.ik(W_fit[lo:hi], W_raw[lo:hi], times[lo:hi], shift[lo:hi])
+            if ergo_budget_s is not None:
+                ikc.deadline = time.time() + ergo_budget_s
+            ikc.solve()
+            core = slice(a - lo, b - lo)
+            np.savez_compressed(f, **{f'{k}_{s}': np.asarray(getattr(ikc, k)[s])[core] for k in STATE_KEYS for s in SIDES},
+                                ergonomics=json.dumps(ikc.ergonomics), history=json.dumps(ikc.history), lo=lo, hi=hi)
+        done.append(f)
+    ik = ctx.ik(W_fit, W_raw, times, shift)
+    ik.prepare()
+    for k in STATE_KEYS:
+        setattr(ik, k, {s: np.concatenate([np.load(f)[f'{k}_{s}'] for f in done]) for s in SIDES})
+    ik.ergonomics = {s: [json.loads(str(np.load(f)['ergonomics'])).get(s) for f in done] for s in SIDES}
+    ik.history = [json.loads(str(np.load(f)['history'])) for f in done]
+    ik.chunks = [f.name for f in done]
+    return ik, None
+
+
 def readback(ctx, path, times):
     t = np.asarray(times, float)
     W, parents = E.joint_worlds(G.Gltf(path), ctx.base.names, list(map(float, t - t[0])))
@@ -2050,6 +2128,8 @@ def strip(rep):
     return {k: v for k, v in rep.items() if not k.startswith('_')}
 
 
+CHUNK_RESERVE_S = 240.          # a chunk is only started with at least this much of the bound left
+ERGO_BUDGET_S_PER_CHUNK = 60.   # the ergonomic candidate search per chunk stops after this (the clearance pose is kept)
 MEASURE_S_PER_FRAME = .5        # measured (seated-arms profile, 60-frame subset): ~0.5 s per frame for every gate
 TRANSITIONS_RESERVE_S = 420.
 SEAM_FULL_S = .3                # full-pose seam windows of the transitions (SeatedIdle side and DeskTyping side)
@@ -2215,11 +2295,22 @@ def run(args):
                                   desk_typing_stage_max_wall_seconds=pb.get('max_wall_seconds'))
         summary['bounded']['stages_done'] = ['DeskTyping_seated']
     else:
-        ik = ctx.ik(f_dt.joint_world, r_dt.joint_world, t_dt, shift)
-        # per-frame bound: the ergonomic candidate search stops at this deadline (the clearance/contact solve is kept);
-        # the reserve is the measured per-frame measurement cost and the transitions
-        ik.deadline = t_start + args.max_seconds - (MEASURE_S_PER_FRAME * F + TRANSITIONS_RESERVE_S) if args.max_seconds else None
-        W = ik.solve()
+        # per-frame bound: chunked solve with a checkpoint per chunk; the run stops between chunks at the deadline
+        # (reserving the measured per-frame measurement cost and the transitions) and the next run resumes
+        deadline = t_start + args.max_seconds - CHUNK_RESERVE_S if args.max_seconds else None
+        ik, progress = solve_chunked(ctx, f_dt.joint_world, r_dt.joint_world, t_dt, shift, out_dir / 'DeskTyping_seated.chunks',
+                                     deadline, ergo_budget_s=ERGO_BUDGET_S_PER_CHUNK)
+        if ik is None:
+            summary['bounded']['desk_typing_chunks'] = progress
+            checkpoint(None, f'wall-clock bound {args.max_seconds} s: DeskTyping solved in {progress["chunks_done"]} of '
+                             f'{progress["chunks_total"]} chunks (checkpointed); rerun the same command to resume')
+            return summary, reports
+        summary['bounded']['desk_typing_chunks'] = {'chunks': ik.chunks, 'chunk_frames': CHUNK_FRAMES, 'overlap_frames': CHUNK_OVERLAP}
+        if args.max_seconds and time.time() - t_start > args.max_seconds - MEASURE_S_PER_FRAME * F:
+            checkpoint(None, f'wall-clock bound {args.max_seconds} s: every DeskTyping chunk is solved (checkpointed) but '
+                             'the measurement does not fit in this run; rerun the same command to measure')
+            return summary, reports
+        W = ik.pose_all()
         path, sha = write(ctx, g_dt, W, t_dt, out_dir, 'SUB01_DeskTyping_seated', dict(LABELS, role='DeskTyping_seated'))
         np.savez_compressed(out_dir / 'SUB01_DeskTyping_seated.solve-checkpoint.npz', **{
             f'{k}_{s_}': np.asarray(getattr(ik, k)[s_], float) for k in ('phi', 'lift', 'delta', 'mode', 'on', 'girdle') for s_ in SIDES})
