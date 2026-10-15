@@ -1,0 +1,50 @@
+{
+  "schema": "sub01.independent-actual-import-receipt-check.v1",
+  "observed_epoch": 1792075103.6017401,
+  "native_game_visual_acceptance": false,
+  "receipts": {
+    "bedding": {
+      "schema": "sub01.reference-bedding-native-import.v1",
+      "saved": true,
+      "dry_run": false,
+      "source_sha256": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
+      "complete_native_triangles": 72200,
+      "protected_originals_unchanged": true,
+      "originals_preserved": true,
+      "native_visual_verified": false,
+      "receipt_sha256": "77de956255c33cca5c17f37fdb134c71d9de4f985c1431d79b1ff7a36854e194",
+      "path": "/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/reference-bedding-native-import.json",
+      "part_count": 4
+    },
+    "corridor": {
+      "schema": "sub01.bathroom-corridor-native-import.v1",
+      "saved": true,
+      "source_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+      "originals_preserved": true,
+      "receipt_sha256": "12aedfc9333ad2bf53219280307d4d806da164ce9833a9a688567c7e14b73cd1",
+      "path": "/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/bathroom-corridor-native-import.json",
+      "part_count": 9,
+      "native_world_triangles": 876,
+      "all_full_source_triangle_parity": true
+    },
+    "keyboard_review": {
+      "schema": "sub01.unreal-fp-keyboard-review-import.v1",
+      "keys": 409,
+      "fps": 120,
+      "duration_s": 3.4,
+      "native_ready": false,
+      "activity_ready": false,
+      "original_owner_untouched": true,
+      "receipt_sha256": "41811c6902bf558f7320ad5cd986b9ad4001476ceb3abfbbb594f77bdb176976",
+      "path": "/workspace/sub01-private-recovered-project/Sub01HomeLab/unreal-fp-keyboard-review-import.json"
+    },
+    "windows": {
+      "http_status": 404,
+      "acceptance_proven": false
+    },
+    "courtyard": {
+      "http_status": 404,
+      "acceptance_proven": false
+    }
+  }
+}
