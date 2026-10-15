@@ -1,0 +1,47 @@
+{
+  "schema": "sub01.actual-kitchen-physical-interaction-checkpoint.v1",
+  "native_pid": 62592,
+  "native_start_ticks": 975054032,
+  "module_sha256": "486be2e5be4ce6b0af7110f78dae1ad0593824052d018d564c752f61023804d3",
+  "physical_movement": "Real W/A/S/D from right desk aisle through public front corridor and kitchen gate; no teleport or collision changes.",
+  "actual_pawn_cm": [
+    -176.072,
+    -208.223,
+    95.65
+  ],
+  "capsule_radius_cm": 16,
+  "near_clip_cm": 10,
+  "actual_E_utc": "2026-10-15T11:18:40.714Z",
+  "ray_hit": true,
+  "range_cm": 200,
+  "distance_cm": 135.569214,
+  "native_hit_tag": "SUB01Kitchen:c5b8f73361d819efced9ab1f7f567f6c9adb284126eebb7de3b03db33229eec5:D2:mesh-1",
+  "hit_world_cm": [
+    -216.51,
+    -353.5,
+    203.32
+  ],
+  "collision_enabled": 3,
+  "collision_profile": "BlockAll",
+  "backend_bridge_status": "live",
+  "backend_bridge_privacy": false,
+  "backend_bridge_kitchen": null,
+  "native_door_motion_accepted": false,
+  "source_causal_read": "PollActualKitchen requires a non-null kitchen object with both four-bool arrays; null source export prevents any fresh KitchenStateAt and TryNativeKitchen refuses motion. No range/collision guard changed.",
+  "all_eight_door_acceptance": false,
+  "next_step": "Root owns bridge-state export correction; new coherent module includes readonly angle/40-part inspection.",
+  "images": {
+    "kitchen62592-physical-approach-baseline.png": {
+      "local_path": "out/house-evidence/kitchen62592-physical-approach-baseline.png",
+      "sha256": "56fb9a168b278b3576e3851c456481f10eb56ae6a2b89d99779cf86b2b71062d"
+    },
+    "kitchen62592-upper-before-E.png": {
+      "local_path": "out/house-evidence/kitchen62592-upper-before-E.png",
+      "sha256": "92dbd8c286715db2ee543b021ea5334ace40752c6f23d3e316bf9791178ee5f1"
+    },
+    "kitchen62592-upper-after-E.png": {
+      "local_path": "out/house-evidence/kitchen62592-upper-after-E.png",
+      "sha256": "4be1d52370de281e3004ca96b219b8570700ec0a84bd08e0066940ee8c5446eb"
+    }
+  }
+}
