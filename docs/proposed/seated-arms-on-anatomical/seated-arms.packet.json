@@ -6,7 +6,7 @@
  "requires_native_collision_audit": true,
  "never_a_receipt": true,
  "method": "whole-arm IK on the seat-fit clips (tools/solve_seated_typing_arm_ik.py)",
- "ready": true,
+ "ready": false,
  "native_verified": false,
  "installer_or_readiness_written": false,
  "base": {
@@ -341,5 +341,7 @@
  "base_packet": {
   "file": "docs/proposed/seat-pose-anatomical/PACKET.md",
   "commit": "bfe7dc8"
- }
+ },
+ "source_ready": true,
+ "native_ready": false
 }

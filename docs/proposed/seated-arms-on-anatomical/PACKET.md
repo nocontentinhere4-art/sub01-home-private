@@ -1,5 +1,7 @@
 # Seated arms on the anatomical chair-lift base (SOURCE packet, `ready: false`)
 
+> **Readiness labels (corrected):** the final segmented-rerun typing proposal has `source_ready: true` (every aggregate source gate passes) and `native_ready: false`; `ready` = source_ready AND native_ready = **false**. The CLI exits 0 only on source_ready. Nothing native is claimed.
+
 This is a proposal. It is not verified and needs a native re-audit. Nothing is installed, and no readiness or pin is
 written. The captures and the base clips are untouched; every output here is derived.
 

@@ -307,12 +307,13 @@ def test_finger_contract_refuses_any_finger_change():
 
 
 def test_exit_code_refuses_unless_every_gate_passes(monkeypatch):
-    assert K.exit_code({'ready': True, 'gates': {'a': True, 'b': True}}) == 0
-    assert K.exit_code({'ready': True, 'gates': {'a': True, 'b': False}}) == K.EXIT_REFUSED != 0
-    assert K.exit_code({'ready': False, 'gates': {'a': True}}) == K.EXIT_REFUSED
+    assert K.exit_code({'source_ready': True, 'gates': {'a': True, 'b': True}}) == 0
+    assert K.exit_code({'source_ready': True, 'gates': {'a': True, 'b': False}}) == K.EXIT_REFUSED != 0
+    assert K.exit_code({'source_ready': False, 'gates': {'a': True}}) == K.EXIT_REFUSED
+    assert K.exit_code({'ready': True, 'gates': {'a': True}}) == K.EXIT_REFUSED      # legacy `ready` alone never passes
     assert K.exit_code({}) == K.EXIT_REFUSED
     for ready, want in ((False, K.EXIT_REFUSED), (True, 0)):
-        summary = {'ready': ready, 'gates': {'g': ready}}
+        summary = {'source_ready': ready, 'gates': {'g': ready}}
         monkeypatch.setattr(K, 'run', lambda args, s=summary: (s, {}))
         assert K.main(['--out-dir', '/nonexistent-not-written']) == want
 
@@ -328,13 +329,14 @@ def test_committed_proposal_is_labelled_and_consistent():
     assert p['geometry']['sha256'] == hashlib.sha256(K.GEOMETRY_JSON.read_bytes()).hexdigest()
     assert p['native_verified'] is False and 'bounded' in p
     if 'partial' in p:          # a bounded run that stopped between stages: never ready, stage and blocker stated
-        assert p['ready'] is False and p['partial']['stage_reached'] and p['partial']['blocker']
+        assert p['ready'] is False and p['source_ready'] is False and p['partial']['stage_reached'] and p['partial']['blocker']
     else:
         roll = p['chair_roll_activity']
         assert np.allclose(roll['start_transform_cm'], p['chair']['translation_cm'], atol=1e-3)
         assert roll['reversibility']['reversible'] and roll['reversibility']['final_equals_initial_exact']
         assert p['gates']['roll_reversible_exact'] is True
-        assert p['ready'] == all(p['gates'].values())
+        assert p['source_ready'] == all(p['gates'].values())
+        assert p['native_ready'] is False and p['ready'] is False      # a source solve never claims native readiness
         assert p['gates']['roll_complete_chair_clear_of_desk'] == roll['complete_chair_clearance_along_path']['desk_clear_all_samples']
     for name, clip in p['clips'].items():
         path = ROOT / clip['glb']

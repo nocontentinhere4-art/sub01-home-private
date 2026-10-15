@@ -2603,6 +2603,8 @@ def run(args):
         if stage:
             b['stages_done'].append(stage)
         summary['clips'] = {k: {'glb': v['glb'], 'sha256': v['sha256'], 'all_gates_pass': v['all_gates_pass']} for k, v in reports.items()}
+        summary['source_ready'] = False
+        summary['native_ready'] = False
         summary['ready'] = False
         summary['native_verified'] = False
         summary['partial'] = {'stage_reached': b['stages_done'][-1] if b['stages_done'] else 'setup', 'blocker': blocker}
@@ -2732,9 +2734,12 @@ def run(args):
                             roll_complete_chair_floor_no_penetration=path_['floor_no_penetration'],
                             roll_floor_contact_unchanged=path_['floor_gap_constant_along_roll'],
                             roll_reversible_exact=act['reversibility']['reversible'])
-    summary['ready'] = bool(all(summary['gates'].values()))
+    summary['source_ready'] = bool(all(summary['gates'].values()))
+    summary['native_ready'] = False            # only native observations can set this; never this source solver
+    summary['ready'] = summary['source_ready'] and summary['native_ready']
     summary['native_verified'] = False
-    summary['ready_rule'] = 'every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits %d when not ready)' % EXIT_REFUSED
+    summary['ready_rule'] = ('source_ready: every aggregate source gate true; native_ready: never set here; ready = source_ready '
+                             'and native_ready. The CLI exits %d unless source_ready.' % EXIT_REFUSED)
     summary.pop('partial', None)
     summary['bounded']['elapsed_seconds'] = round(time.time() - t_start, 1)
     summary['bounded']['stages_done'].append('seams_roll_gates')
@@ -3043,8 +3048,9 @@ EXIT_REFUSED = 3
 
 
 def exit_code(summary):
-    """0 only when every aggregate gate passed (summary['ready']); EXIT_REFUSED otherwise (the report is still written)."""
-    return 0 if summary.get('ready') is True and all(summary.get('gates', {False: False}).values()) else EXIT_REFUSED
+    """0 only when every aggregate source gate passed (summary['source_ready']); EXIT_REFUSED otherwise (the report is
+    still written). Exit 0 is a source verdict only; native_ready stays false."""
+    return 0 if summary.get('source_ready') is True and all(summary.get('gates', {False: False}).values()) else EXIT_REFUSED
 
 
 def main(argv=None):
@@ -3090,7 +3096,7 @@ def main(argv=None):
         GEOMETRY_JSON.parent.mkdir(parents=True, exist_ok=True)
         GEOMETRY_JSON.write_text(json.dumps(desk_geometry(args.desk_source), indent=1) + '\n')
     summary, _ = run(args)
-    print(json.dumps({'ready': summary.get('ready'), 'gates': summary.get('gates'), 'partial': summary.get('partial'),
+    print(json.dumps({'source_ready': summary.get('source_ready'), 'native_ready': summary.get('native_ready'), 'ready': summary.get('ready'), 'gates': summary.get('gates'), 'partial': summary.get('partial'),
                       'bounded': summary.get('bounded')}, indent=1))
     return exit_code(summary)
 

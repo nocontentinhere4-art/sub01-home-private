@@ -771,5 +771,7 @@
    ]
   }
  },
- "not_ready_because": "the seat base (docs/proposed/seat-pose-fit clips) fails main's strong seat rule (median gap <= band high and band coverage >= 0.5; origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)), not only this branch's MIN_SUPPORT_VERTICES rule; and the measured chair's castors sit 2.5 cm below the floor support plane. The arm step must be re-run on the corrected seated base (docs/proposed/seat-pose-anatomical) with its chair transform."
+ "not_ready_because": "the seat base (docs/proposed/seat-pose-fit clips) fails main's strong seat rule (median gap <= band high and band coverage >= 0.5; origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)), not only this branch's MIN_SUPPORT_VERTICES rule; and the measured chair's castors sit 2.5 cm below the floor support plane. The arm step must be re-run on the corrected seated base (docs/proposed/seat-pose-anatomical) with its chair transform.",
+ "source_ready": false,
+ "native_ready": false
 }

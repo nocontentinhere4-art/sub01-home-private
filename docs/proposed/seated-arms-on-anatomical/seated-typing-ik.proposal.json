@@ -410,7 +410,7 @@
    "all_gates_pass": true
   }
  },
- "ready": true,
+ "ready": false,
  "native_verified": false,
  "seams": [
   {
@@ -775,5 +775,7 @@
   "roll_floor_contact_unchanged": true,
   "roll_reversible_exact": true
  },
- "ready_rule": "every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits 3 when not ready)"
+ "ready_rule": "source_ready: every aggregate source gate true; native_ready: never set here; ready = source_ready and native_ready. The CLI exits 3 unless source_ready.",
+ "source_ready": true,
+ "native_ready": false
 }
