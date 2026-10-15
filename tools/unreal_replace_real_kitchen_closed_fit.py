@@ -159,3 +159,50 @@ def run():
         # Only persist a proven rollback if the inner importer actually changed disk.
         if hashlib.sha256(map_path.read_bytes()).hexdigest()!=map_sha and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Known-original rollback save failed')
         raise
+
+
+def preflight_retirement():
+    """Exercise only reversible visibility/tag/collision retirement, no import/save.
+
+    This identifies Unreal side effects of the precise152 old parts and original
+    two source actors before another costly import. All captured state is restored
+    and independently compared, even if the diagnostic finds a mismatch.
+    """
+    import unreal as u
+    import unreal_import_real_kitchen as importer
+    guard();previous=validate_previous(PREVIOUS.read_bytes())
+    world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
+    if not world or world.get_path_name().split('.',1)[0]!=importer.LEVEL:
+        raise RuntimeError('ActualHome must already be loaded')
+    eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors())
+    parts=resolve_parts(u,actors,previous);states=capture_states(u,actors)
+    originals=[]
+    for index in (63,178):
+        found=[a for a in actors if a.get_name()=='full-home_node_'+str(index)]
+        if len(found)!=1:raise RuntimeError('Exact preserved source original missing')
+        cs=found[0].get_components_by_class(u.StaticMeshComponent)
+        if len(cs)!=1 or not found[0].get_editor_property('hidden') or cs[0].get_collision_enabled()!=u.CollisionEnabled.NO_COLLISION:
+            raise RuntimeError('Original source actors must remain retired')
+        originals.append((found[0],cs[0]))
+    before=importer.snapshot(u,actors);expected=retired_snapshot_expected(u,before,parts)
+    map_path=Path(u.Paths.project_dir())/'Content/Sub01Home/ActualHome.umap';map_sha=hashlib.sha256(map_path.read_bytes()).hexdigest()
+    result={'schema':'sub01.exact-R5-retirement-preflight.v1','imported':False,'saved':False,'native_accepted':False}
+    try:
+        guard()
+        for actor,c in parts:
+            actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+            c.set_editor_property('component_tags',[t for t in c.get_editor_property('component_tags')if not str(t).startswith('SUB01Kitchen:')])
+        for actor,c in originals:
+            actor.set_actor_hidden_in_game(False);c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
+        for actor,c in originals:
+            actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
+        after=importer.snapshot(u,actors)
+        result['differences']={p:{'expected':expected.get(p),'actual':after.get(p)}for p in set(expected)|set(after)if expected.get(p)!=after.get(p)}
+        result['retirement_matches_expected']=not result['differences']
+    finally:
+        restore_states(states)
+        if importer.snapshot(u,actors)!=before:raise RuntimeError('Exact diagnostic state rollback failed; do not save')
+        if hashlib.sha256(map_path.read_bytes()).hexdigest()!=map_sha:raise RuntimeError('Diagnostic unexpectedly changed disk map')
+    result['original_state_restored_exactly']=True
+    (ROOT/'native-kitchen-retirement-preflight.json').write_text(json.dumps(result,indent=2))
+    return result
