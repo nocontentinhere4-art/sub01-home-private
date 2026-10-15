@@ -624,7 +624,7 @@ class Handler(BaseHTTPRequestHandler):
                         except (ValueError,TypeError,UnicodeError):break
                         last_id=identifier
                         try:
-                            status,reply=dispatch_input(state,event,validate_input,PhysicalInput,private_egress_event,pace=True)
+                            status,reply=dispatch_input(state,event,validate_input,PhysicalInput,private_egress_event,pace=True,cancelled=ended.is_set)
                             if status==200:used_controls.set()
                         except (ValueError,TypeError,UnicodeError):break
                         except Exception:

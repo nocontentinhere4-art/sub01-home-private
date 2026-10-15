@@ -195,3 +195,16 @@ def test_actual_websocket_wire_acks_and_disconnect_releases_keys():
         assert value.input.events[-1]=={'action':'release'}
     finally:
         connection.close();server.shutdown();server.server_close();serving.join(timeout=2)
+
+
+def test_disconnected_socket_cannot_actuate_after_release():
+    value=state();clock=Clock();ended=threading.Event();ended.set()
+    assert deliver(value,{'action':'key','code':'KeyW','down':True},clock,cancelled=ended.is_set)[0]==409
+    assert value.input.events==[]
+
+
+def test_socket_disconnect_during_pacing_cannot_leave_a_pressed_key():
+    value=state();clock=Clock();value.last_input=clock.now;ended=threading.Event()
+    def wait(seconds):clock.sleep(seconds);ended.set()
+    assert deliver(value,{'action':'key','code':'KeyW','down':True},clock,pace=True,sleeper=wait,cancelled=ended.is_set)[0]==409
+    assert value.input.events==[]

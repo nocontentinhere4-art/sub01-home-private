@@ -14,11 +14,11 @@ def packet(value, previous_id=0):
 
 
 def dispatch(state,event,validate,physical_factory,egress_allowed,clock=time.monotonic,
-             *,pace=False,sleeper=time.sleep):
+             *,pace=False,sleeper=time.sleep,cancelled=lambda:False):
     event=validate(event)
     with state.input_lock:
         def permitted():
-            return state.enabled('native-viewer-input-enabled') or (state.can_private_egress() and egress_allowed(event))
+            return not cancelled() and (state.enabled('native-viewer-input-enabled') or (state.can_private_egress() and egress_allowed(event)))
         if not permitted():
             return 409,{'error':'Private movement only; devices and settings remain locked'}
         now=clock()
