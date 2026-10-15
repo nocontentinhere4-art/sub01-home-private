@@ -1,8 +1,8 @@
 """Canonical original body bind-space cuff review, not actual native motion."""
-import bpy,json
+import bpy,json,sys
 from pathlib import Path
 from mathutils import Vector
-R=Path('/workspace/sub01-home-private/human-base-hands-r1/canonical-hand-cuffs-r1');bpy.ops.wm.open_mainfile(filepath=str(R/'canonical-anatomical-hand-cuffs.blend'));s=bpy.context.scene;out=R/'canonical-body-review';out.mkdir(exist_ok=True)
+R=Path('/workspace/sub01-home-private/human-base-hands-r1/canonical-hand-cuffs-r1');source=Path(sys.argv[sys.argv.index('--')+1])if '--'in sys.argv else R/'canonical-anatomical-hand-cuffs.blend';bpy.ops.wm.open_mainfile(filepath=str(source));s=bpy.context.scene;out=source.parent/'canonical-body-review';out.mkdir(exist_ok=True)
 for o in s.objects:
  if o.type=='MESH':o.hide_render=not(o.name.startswith('CC0Adult_')or o.name.startswith('AnatomicalFittedHoodieCuff')or o.name=='EXACT_SERIALIZED_ORIGINAL_BODY_BIND_REFERENCE')
 w=bpy.data.worlds.new('Bind source studio');w.use_nodes=True;w.node_tree.nodes['Background'].inputs[0].default_value=(.15,.17,.2,1);w.node_tree.nodes['Background'].inputs[1].default_value=.4;s.world=w

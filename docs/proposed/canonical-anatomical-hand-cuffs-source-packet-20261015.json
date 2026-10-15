@@ -11,8 +11,8 @@
     "uv": "Original authored multires loop UDIM charts; separate actual authored nail regions, neutral PBR skin, no scanned skin texture claim"
   },
   "remote_directory": "/workspace/sub01-home-private/human-base-hands-r1/canonical-hand-cuffs-r1",
-  "geometry_glb": "canonical-anatomical-hand-cuffs.glb",
-  "geometry_sha256": "3aece8b34eebede7296ae83543c49d283e4a27018ec4a7aa625a0747cd3bedd0",
+  "geometry_glb": "portable-materials-r4/canonical-anatomical-hand-cuffs-portable.glb",
+  "geometry_sha256": "7261809ae6e74bb3d1394005c029a4e9885b1dd9248c10a2ca02b1f29d110ac0",
   "source_blend": "canonical-anatomical-hand-cuffs.blend",
   "assembly_report": "canonical-source-report.json",
   "assembly_report_sha256": "0b8dbc68eaa368ac6b8bf9a69c9d8c61b8b73188a3e8f136b2150e6f99d7a1e2",
@@ -33,9 +33,9 @@
     "all_authored_digits_retained": true,
     "no_anatomical_scaling_or_mirroring": true
   },
-  "source_body_review": "canonical-body-review/actual-canonical-owner-upperbody-cuffs.png",
+  "source_body_review": "portable-materials-r4/canonical-body-review/actual-canonical-owner-upperbody-cuffs.png",
   "reviewed_limitations": [
-    "Cuff colour/transition finish remains visibly imperfect in source review.",
+    "Source cuff shape transition remains WIP; erroneous white/asymmetric photographed palette from unnormalized uint16 body-reference UV is corrected in R4; verify actual final assembled/native materials.",
     "Residual R9 thumb/pinky web motion intersections remain a known WIP; not zero-contact accepted.",
     "Actual first-person native house, PC/phone/controller contacts, skin material coherence and clip compatibility remain pending final assembled source and native verification."
   ],
@@ -61,5 +61,17 @@
     },
     "all_candidate_body_triangles_at_or_proximal_to_cut_plane_m": -0.05499993311241269,
     "interpretation": "Surface candidates are confined to actual garment seam; solidification extends proximal overlap to56.9/57.46mm from wrist. This is a documented physical source attachment, not animated/contact acceptance."
+  },
+  "canonical_geometry_before_material_fix_sha256": "3aece8b34eebede7296ae83543c49d283e4a27018ec4a7aa625a0747cd3bedd0",
+  "portable_materials": {
+    "report": "portable-materials-r4/portable-material-report.json",
+    "report_sha256": "bd1c6156b7ac35cef3cda7eeb82876f6e8380857719d84e860b1867f386d2abf",
+    "all_geometry_attributes_and_indices_byte_exact": true,
+    "proof_tool": "tools/prove_canonical_material_only.mjs",
+    "normal_texture_transform_required": "KHR_texture_transform scale[625,625] on metric cuff UV;128px normal represents1.6mm physical wale period/0.16mm relief. Preserve this in native material; do not ignore transform.",
+    "source_palette_normalized_uint16_uv_corrected": true,
+    "genuine_hand_uvs_exact": true,
+    "cuff_uvs_exact": true,
+    "body_reference_preview_uvs_fixed": true
   }
 }
