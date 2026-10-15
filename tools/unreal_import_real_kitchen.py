@@ -29,7 +29,7 @@ NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
 # R1 failed native validation and is quarantined, not force-deleted while the
 # warm Editor may still compile its UObjects. R2 keeps the identical source
 # proof and strict checks, with corrected failure diagnostics/rollback.
-IMPORT_REVISION = 4
+IMPORT_REVISION = 5
 
 
 def detach_failed_import(u, eas, before):
@@ -278,10 +278,27 @@ def run(root, dry_run=True, u=None):
         doc, binary = read_gltf(source)
         source_matrices = world_matrices(doc)
         source_nodes = {n.get('name'): i for i, n in enumerate(doc['nodes']) if 'mesh' in n}
+        source_mesh_names = [m.get('name') for m in doc['meshes']]
+        if any(not isinstance(n, str) or not n.startswith(proof['prefix']) for n in source_mesh_names) or len(set(source_mesh_names)) != len(source_mesh_names):
+            raise RuntimeError('Unique explicit owned source mesh identities required')
+        added_meshes, added_inventory = {}, []
+        for actor in added:
+            inventory = {'actor': actor.get_path_name(), 'label': actor.get_actor_label(), 'meshes': []}
+            for component in actor.get_components_by_class(u.StaticMeshComponent):
+                mesh = component.get_editor_property('static_mesh')
+                inventory['meshes'].append(mesh.get_path_name() if mesh else None)
+                if mesh and mesh.get_path_name().startswith(dest+'/'):
+                    added_meshes.setdefault(mesh.get_name(), []).append(actor)
+            added_inventory.append(inventory)
         moving = {name: hinge['index'] for hinge in proof['hinges'] for name in hinge['parts']}
         mesh_subsystem = u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
         for expected in proof['parts']:
-            matches = [a for a in added if a.get_actor_label() == expected['name']]
+            source_node = source_nodes[expected['name']]
+            expected_mesh_name = doc['meshes'][doc['nodes'][source_node]['mesh']]['name']
+            # Interchange may sanitize a display label containing spaces. The
+            # unique source mesh identity plus full surface/placement checks is
+            # authoritative; do not guess a text-normalization mapping.
+            matches = added_meshes.get(expected_mesh_name, [])
             if len(matches) != 1:
                 raise RuntimeError('Actual kitchen source part not unique '+expected['name'])
             actor = matches[0]
@@ -297,9 +314,10 @@ def run(root, dry_run=True, u=None):
             actual = [[f(p[k] for p in points) for k in range(3)] for f in (min, max)]
             wanted = [[b[k]*100 for k in (0, 2, 1)] for b in expected['bounds_browser_m']]
             geometry_checks.append({'part': expected['name'], 'mesh': mesh.get_path_name(),
+                                    'actual_actor_label': actor.get_actor_label(),
+                                    'exact_source_mesh_name': expected_mesh_name,
                                     'actual_triangles': count, 'expected_triangles': expected['triangles'],
                                     'actual_bounds_cm': actual, 'expected_bounds_cm': wanted})
-            source_node = source_nodes[expected['name']]
             expected_surface = []
             for primitive in doc['meshes'][doc['nodes'][source_node]['mesh']]['primitives']:
                 vertices = [transformed(source_matrices[source_node], p) for p in accessor(doc, binary, primitive['attributes']['POSITION'])]
@@ -407,6 +425,7 @@ def run(root, dry_run=True, u=None):
         failure_report = {'schema': 'sub01.real-kitchen-native-failure.v1',
                           'accepted': False, 'error': str(failure),
                           'geometry_checks': locals().get('geometry_checks', []),
+                          'added_actor_inventory': locals().get('added_inventory', []),
                           'quarantined_asset_directory': dest, 'map_backup': str(backup)}
         (root/'native-kitchen-import.failed.json').write_text(json.dumps(failure_report, indent=2)+'\n')
         def depth(actor):
