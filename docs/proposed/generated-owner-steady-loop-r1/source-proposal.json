@@ -346,5 +346,16 @@
   "native_changed": false,
   "native_input_acquired": false,
   "visual_review_pending": true,
-  "next_gate": "Review full rendered loop and smooth seam tangents with measured stance constraints, then native collision-limited capsule/phase/skin-foot trace; do not install as accepted looping locomotion yet."
+  "next_gate": "Review full rendered loop and smooth seam tangents with measured stance constraints, then native collision-limited capsule/phase/skin-foot trace; do not install as accepted looping locomotion yet.",
+  "source_review_video": {
+    "path": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/steady-loop-106-138-r1/actual-owner-four-source-cycles.mp4",
+    "sha256": "7faf8df4138df8c52d37596663f39191edf2d86f6dfb26b6ff5ddb815227f654",
+    "fps": 30,
+    "frames": 128,
+    "duration_s": 4.266666666666667,
+    "rendered_unique_source_frames": 33,
+    "cycles": 4,
+    "duplicate_last_sample_excluded_at_wrap": true,
+    "scope": "Actual source owner Blender skin; no native integration or accepted seam velocity"
+  }
 }
