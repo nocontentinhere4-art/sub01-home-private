@@ -1,0 +1,58 @@
+{
+  "schema": "sub01.actual-bath-light-and-corridor-checkpoint.v1",
+  "native_pid": 77178,
+  "native_start_ticks": 975360109,
+  "bathroom_native_fixture_ready": true,
+  "actual_UI_BathroomCeiling_on_off_on": true,
+  "native_accepted_revisions": [
+    0,
+    3,
+    4
+  ],
+  "other_five_lamps_unchanged_off": true,
+  "hour_unchanged": 11,
+  "fov_unchanged": 75,
+  "original_bathroom_on_restored": true,
+  "independent_actual_candela_readback": false,
+  "bathroom_private_entry_test_completed": false,
+  "bathroom_room_visual_light_AB_completed": false,
+  "R25_candidate_passage_blocked": true,
+  "actual_stopped_pawn_cm": [
+    -52.912,
+    40.396,
+    395.65
+  ],
+  "actual_radius_cm": 25,
+  "actual_half_height_cm": 91,
+  "actual_near_cm": 1,
+  "source_955_rail_node": 162,
+  "source_rail_min_X_cm": -27.853170037269592,
+  "source_front_wall_right_X_cm": -77.50000357627869,
+  "nominal_wall_rail_clearance_cm": 49.6468335390091,
+  "capsule_diameter_cm": 50,
+  "source_right_wall_skirting_max_X_cm": -77.25000260397792,
+  "collision_disabled_or_capsule_shrunk_or_actor_teleported": false,
+  "media": [
+    {
+      "path": "out/house-evidence/bathroom77178-settings-revision-0.json",
+      "sha256": "87b6a27c71500c54945e3bf0db098fb8d50574b259953f4f6db229a40f37701d"
+    },
+    {
+      "path": "out/house-evidence/bathroom77178-settings-revision-3.json",
+      "sha256": "bd1ba4fdd64bb960c6c56e14e434c2be412cd6580826512ebf95a2426a5adf13"
+    },
+    {
+      "path": "out/house-evidence/bathroom77178-settings-revision-4.json",
+      "sha256": "7017b46f4f2d13079dcdc47fe13f5a948e04ca10fe1dec444e85c98fa10219a0"
+    },
+    {
+      "path": "out/house-evidence/bath77178-R25-blocked-aisle-facing-door.png",
+      "sha256": "8f685ec01d61e4b462d1273975b3884714ef5a1aa268e5565e5678b968217785"
+    },
+    {
+      "path": "out/house-evidence/bath-corridor-source-nearby-bounds.json",
+      "sha256": "fc1012fc14cc32ae9568b80841f15468510a575513a1ef38cdc86807539b3909"
+    }
+  ],
+  "next": "Owned coherent architectural widening source proof; no current map edits."
+}
