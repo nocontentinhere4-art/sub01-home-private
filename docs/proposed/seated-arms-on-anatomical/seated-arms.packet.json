@@ -1,0 +1,288 @@
+{
+ "schema": "sub01.seated-arms-on-base.v1",
+ "label": "proposal",
+ "verified": false,
+ "requires_server_reaudit": true,
+ "requires_native_collision_audit": true,
+ "never_a_receipt": true,
+ "method": "whole-arm IK on the seat-fit clips (tools/solve_seated_typing_arm_ik.py)",
+ "ready": false,
+ "native_verified": false,
+ "installer_or_readiness_written": false,
+ "base": {
+  "dir": "docs/proposed/seat-pose-anatomical/chair-lift-proposal",
+  "solver_frame_chair_offset_cm": [
+   3.875,
+   -32.5
+  ],
+  "files": {
+   "SUB01_GetUp_seated.glb": "b5836fba3616237896cb59e8b80c593feabb42df942d8bd1a944766acece8e2f",
+   "SUB01_SeatedIdle.glb": "da9ad30e691a9028b4ccce9f2438cffe2eae6f27ce386806d17b8dd3199b3ab4",
+   "SUB01_SitDown_seated.glb": "ad79b820276014e7e49dcc7ad3d342111095bdbb54305a19ed4c2dc3f19a88ac"
+  }
+ },
+ "chair": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+  "translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   63.1876777245
+  ],
+  "measured_translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   60.68757772445679
+  ],
+  "proposed_delta_cm": [
+   0.0,
+   0.0,
+   2.5001000000432114
+  ],
+  "rotation_xyzw": [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ],
+  "scale": [
+   0.6068757772445679,
+   0.6068757772445679,
+   0.6068757772445679
+  ]
+ },
+ "complete_chair": {
+  "source": "web/room/chair_owner.glb",
+  "source_sha256": "d27084af80035c7ab278f90daf77a422fabe738095dad0b015a531f86249e2dc",
+  "placement": "measured native transform (root chair report)",
+  "triangles_by_material": {
+   "chair_armpad": 602,
+   "chair_base": 2533,
+   "chair_caster": 3609,
+   "chair_fabric": 5465,
+   "chair_lift": 312,
+   "chair_mesh": 18880,
+   "chair_plastic": 22648
+  },
+  "measured_shell_on_source_surface_cm": {
+   "median": 0.048273452953307316,
+   "max": 0.41624387089233333,
+   "tolerance": 0.5,
+   "measured_vertices": 1121
+  },
+  "edge_length_median_cm": 0.8766649797022356,
+  "bounds_cm": [
+   [
+    162.56690235756707,
+    -221.89092702903727,
+    2.5001000000432114
+   ],
+   [
+    237.47300891257453,
+    -151.48911409339925,
+    123.87525544895678
+   ]
+  ],
+  "armrest_top_cm": 69.5218406267383,
+  "lowest_cm": 2.5001000000432114
+ },
+ "desk_geometry": {
+  "file": "docs/proposed/seated-typing-ik/real-linea140-geometry.json",
+  "sha256": "0cf8588aa6f33a900ce641d0d6914991ac889c962cbeb9a76fde082c4dd50f81",
+  "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d"
+ },
+ "models": {
+  "owner": {
+   "file": "web/room/char_mixamo.glb",
+   "sha256": "7609eccbe81631c00d123e69c54241597e28861d1dc947999425cd6c3257adbb"
+  },
+  "chair": {
+   "file": "web/room/chair_owner.glb",
+   "sha256": "d27084af80035c7ab278f90daf77a422fabe738095dad0b015a531f86249e2dc"
+  }
+ },
+ "gates_from": [
+  "origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5) (seat, on the base's gated settled frames)",
+  "real LINEA part boxes: whole-arm and body clearance > 0 on EVERY frame",
+  "complete chair margin > 0 every frame",
+  "fingers unchanged vs the base on every frame (<= 0.1 deg)"
+ ],
+ "clips": {
+  "SeatedIdle": {
+   "glb": "docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SeatedIdle.glb",
+   "sha256": "da9ad30e691a9028b4ccce9f2438cffe2eae6f27ce386806d17b8dd3199b3ab4",
+   "base_sha256": "da9ad30e691a9028b4ccce9f2438cffe2eae6f27ce386806d17b8dd3199b3ab4",
+   "all_gates_pass": true,
+   "arm_desk_clearance": {
+    "value": 10.0,
+    "frame": 0,
+    "t": 0.0
+   },
+   "body_vs_complete_chair": {
+    "value": 0.645,
+    "frame": 31,
+    "t": 1.0333
+   },
+   "seat_main_strong_rule_on_gated_frames": true,
+   "fingers_pass": true,
+   "wrist_displacement_cm": null
+  },
+  "SitDown_seated": {
+   "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_SitDown_seated.glb",
+   "sha256": "d242f87dc9fe66afa703b2c83c3a0574a5bd7b7be3591acaa237e405d44514cd",
+   "base_sha256": "ad79b820276014e7e49dcc7ad3d342111095bdbb54305a19ed4c2dc3f19a88ac",
+   "all_gates_pass": true,
+   "arm_desk_clearance": {
+    "value": 0.6,
+    "frame": 19,
+    "t": 0.6333
+   },
+   "body_vs_complete_chair": {
+    "value": 0.4985,
+    "frame": 41,
+    "t": 1.3667
+   },
+   "seat_main_strong_rule_on_gated_frames": true,
+   "fingers_pass": true,
+   "wrist_displacement_cm": {
+    "left": {
+     "max": 0.0,
+     "frames_moved": []
+    },
+    "right": {
+     "max": 6.052,
+     "frames_moved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44
+     ]
+    }
+   }
+  },
+  "GetUp_seated": {
+   "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_GetUp_seated.glb",
+   "sha256": "54594b2909fc7db84a6eb2428a0bcc1c29ad5cb5f23f2d94856c5b521b14256b",
+   "base_sha256": "b5836fba3616237896cb59e8b80c593feabb42df942d8bd1a944766acece8e2f",
+   "all_gates_pass": true,
+   "arm_desk_clearance": {
+    "value": 7.1538,
+    "frame": 46,
+    "t": 1.5333
+   },
+   "body_vs_complete_chair": {
+    "value": 0.4054,
+    "frame": 25,
+    "t": 0.8333
+   },
+   "seat_main_strong_rule_on_gated_frames": true,
+   "fingers_pass": true,
+   "wrist_displacement_cm": {
+    "left": {
+     "max": 0.0,
+     "frames_moved": []
+    },
+    "right": {
+     "max": 0.0,
+     "frames_moved": []
+    }
+   }
+  }
+ },
+ "seams": [
+  {
+   "from": "SitDown_seated.last",
+   "to": "SeatedIdle.first",
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.689,
+    "max_joint": 5.419,
+    "max_arm_joint": 2.907,
+    "max_joint_name": "HeadTop_End"
+   }
+  },
+  {
+   "from": "SeatedIdle.last",
+   "to": "GetUp_seated.first",
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "Hips"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.733,
+    "max_joint": 5.543,
+    "max_arm_joint": 2.901,
+    "max_joint_name": "HeadTop_End"
+   }
+  }
+ ],
+ "gates": {
+  "clip_SeatedIdle": true,
+  "clip_SitDown_seated": true,
+  "clip_GetUp_seated": true
+ },
+ "typing": {
+  "status": "BLOCKED",
+  "blocker": "the anatomical base (docs/proposed/seat-pose-anatomical @ bfe7dc8, PACKET.md) holds only SeatedIdle, SitDown and GetUp; there is no anatomical DeskTyping / SitToType / TypeToSit base, so the ergonomic typing warm start cannot run. When those base clips exist: tools/solve_seated_typing_arm_ik.py --base-dir <dir> --chair-translation 200.0199556350708,-186.69002056121826,63.1876777245 --max-seconds 1320"
+ },
+ "base_packet": {
+  "file": "docs/proposed/seat-pose-anatomical/PACKET.md",
+  "commit": "bfe7dc8"
+ }
+}
