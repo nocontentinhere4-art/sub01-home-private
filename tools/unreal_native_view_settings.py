@@ -49,7 +49,11 @@ void ASub01HomeCharacter::PublishPrivateNativeCameraPrivacy(bool Hidden){
  Receipt->SetNumberField(TEXT("captured_utc"),double(UTC.ToUnixTimestamp())+double(UTC.GetMillisecond())/1000.0);Receipt->SetBoolField(TEXT("physical_camera_private"),Hidden);Receipt->SetBoolField(TEXT("private_egress_ready"),EgressReady);
  Receipt->SetStringField(TEXT("view_mode"),PrivateViewMode==EPrivateViewMode::Manual&&!LiveHome&&!RouteActive&&!HandsDiagnosticSeat?TEXT("manual"):PrivateViewMode==EPrivateViewMode::Live&&LiveHome?TEXT("live"):TEXT("diagnostic"));
  FString Raw;FJsonSerializer::Serialize(Receipt,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-view-privacy.tmp");
- if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-view-privacy.json"),*Temp,true,true);
+ // IFileManager::Move(...Replace=true) unlinks Dest first on this platform.
+ // POSIX rename replaces the complete same-directory file atomically, leaving
+ // the prior complete receipt intact if publication fails. Readers remain strict.
+ if(FFileHelper::SaveStringToFile(Raw,*Temp)&&std::rename(TCHAR_TO_UTF8(*Temp),"/home/unreal/.sub01-private/native-view-privacy.json")!=0)
+  UE_LOG(LogTemp,Error,TEXT("SUB01_NATIVE_PRIVACY_ATOMIC_PUBLICATION_FAILED"));
 }
 AActor* ASub01HomeCharacter::FindAuthoredSettingsActor(const FString& Label) const{
  AActor* Found=nullptr;
