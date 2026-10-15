@@ -301,8 +301,10 @@ HAND_PITCH_DEG = 0.                # keyboard: level hand (bind-neutral axis)
 HAND_YAW_ADAPT_DEG = 20.           # the hand frame may turn toward the forearm about the palm point (fingers at <= 20 deg
                                    # to the key columns, as touch typists do) ...
 HAND_PITCH_ADAPT_DEG = 10.         # ... and pitch within +-10 deg of its device attitude
-HAND_ADAPT_SMOOTH_KEYS = 9.        # Gaussian sigma (60 Hz keys, 0.15 s) of the hand-frame yaw / pitch adaptation
-PALM_MOTION_SMOOTH_KEYS = 4.       # Gaussian sigma (0.067 s) of the source-ready palm motion (its single-key polish moves)
+HAND_ADAPT_SMOOTH_KEYS = {'left': 9., 'right': 15.}    # Gaussian sigma (60 Hz keys; 0.15 / 0.25 s) of the hand-frame
+                                                       # yaw / pitch adaptation
+PALM_MOTION_SMOOTH_KEYS = {'left': 4., 'right': 8.}    # Gaussian sigma of the source-ready palm motion (its single-key
+                                                       # polish moves; the right's mouse transits)
 MOUSE_HAND_PITCH_DEG = 15.         # mouse: the hand drapes over the shell
 PALM_LENGTH_CM = {'left': 7.07, 'right': 8.76}     # bind wrist -> middle MCP (owner rig, measured)
 
@@ -363,7 +365,7 @@ class Targets:
             mm = p0[mf].mean(0) if mf.any() else mk
             dev = p0 - ((1 - w)[:, None] * mk + w[:, None] * mm)
             dev[:, 2] = 0.
-            dev[:, 0], dev[:, 1] = gaussian(dev[:, 0], PALM_MOTION_SMOOTH_KEYS), gaussian(dev[:, 1], PALM_MOTION_SMOOTH_KEYS)
+            dev[:, 0], dev[:, 1] = gaussian(dev[:, 0], PALM_MOTION_SMOOTH_KEYS[s]), gaussian(dev[:, 1], PALM_MOTION_SMOOTH_KEYS[s])
             key, (kx, ky) = HOME_KEYS_UE_CM[s]
             mcp = np.array([kx, ky + MCP_BEHIND_CM, top + MCP_ABOVE_CM])
             pb = math.radians(HAND_PITCH_DEG)
@@ -441,6 +443,9 @@ ARM_BODY_SOLVER_MIN_CM = 1.0       # solver design margin to the torso / thigh s
                                    # >= 0 on every arm vertex
 PATH_SWIVEL_DEG = tuple(float(v) for v in np.arange(-120., 120.01, 5.))
 PATH_SMOOTH_WEIGHT = .05           # per cm^2 of elbow step between keys
+RIGHT_BODY_SOLVER_MIN_CM = 2.0     # right re-solve: solver margin to the torso section (the gate stays >= 0, full skin)
+RIGHT_STEP_SOLVER_MAX_CM = 1.8     # right re-solve: DP elbow step bound (the gate stays <= 2.0 cm on the posed skeleton)
+LOOP_BLEND_KEYS = 30               # 0.5 s loop-closure blend of the swivel toward frame 0
 
 
 def section_gap(body_pts, q, bin_cm=HULL_BIN_CM, reach=20.):
@@ -519,7 +524,7 @@ class ArmSolver:
             dy = np.clip((yf - y0 + np.pi) % (2 * np.pi) - np.pi, -math.radians(HAND_YAW_ADAPT_DEG), math.radians(HAND_YAW_ADAPT_DEG))
             dp = np.clip(pf - p0, -math.radians(HAND_PITCH_ADAPT_DEG), math.radians(HAND_PITCH_ADAPT_DEG))
             if len(frames) > 10 and np.all(np.diff(frames) == 1):          # a contiguous clip: smooth the adaptation in time
-                dy, dp = gaussian(dy, HAND_ADAPT_SMOOTH_KEYS), gaussian(dp, HAND_ADAPT_SMOOTH_KEYS)
+                dy, dp = gaussian(dy, HAND_ADAPT_SMOOTH_KEYS[side]), gaussian(dp, HAND_ADAPT_SMOOTH_KEYS[side])
             y1, p1 = y0 + dy, p0 + dp
             d = np.stack([np.cos(p1) * np.sin(y1), -np.cos(p1) * np.cos(y1), np.sin(p1)], -1)
             Q = T.find_between(ue_dir_to_gltf(u0), ue_dir_to_gltf(d))
@@ -659,7 +664,8 @@ class ArmSolver:
         return phi_out, info
 
 
-    def solve_side_path(self, frames, side, wrist_t, hand_rot, layout, palm_off=None, phis=None):
+    def solve_side_path(self, frames, side, wrist_t, hand_rot, layout, palm_off=None, phis=None, body_min=None,
+                        step_max=None, loop_blend=0):
         """CONTINUOUS swivel path (dynamic programming over every frame): node cost = the ergonomic cost of the swivel,
         +inf where the arm skin is not clear (desk >= 0.5 cm, own torso / thighs >= ARM_BODY_SOLVER_MIN_CM, chair,
         keyboard case); transition cost = PATH_SMOOTH_WEIGHT * elbow step^2, with a steep penalty above
@@ -679,9 +685,10 @@ class ArmSolver:
             node[k] = ((ev / SCORE_SCALE['elbow_cm']) ** 2 + (uv / SCORE_SCALE['upper_arm_deg']) ** 2
                        + (fv / SCORE_SCALE['wrist_deg']) ** 2 + (dvv / SCORE_SCALE['wrist_deg']) ** 2 + 1e-3 * m['elbow_above_top_cm'])
             res = self.side_clearance(W, side, layout, frames)
-            ok[k] = self.clear(res, body_min=ARM_BODY_SOLVER_MIN_CM)
-            viol[k] = (np.maximum(0, ARM_DESK_TARGET_CM - res['desk_min']) + np.maximum(0, ARM_BODY_SOLVER_MIN_CM - res['torso'])
-                       + np.maximum(0, ARM_BODY_SOLVER_MIN_CM - res['legs']) + np.maximum(0, -res['chair']) + np.maximum(0, -res['keyboard_case']))
+            bm = ARM_BODY_SOLVER_MIN_CM if body_min is None else body_min
+            ok[k] = self.clear(res, body_min=bm)
+            viol[k] = (np.maximum(0, ARM_DESK_TARGET_CM - res['desk_min']) + np.maximum(0, bm - res['torso'])
+                       + np.maximum(0, bm - res['legs']) + np.maximum(0, -res['chair']) + np.maximum(0, -res['keyboard_case']))
             el[k] = E.to_ue(W[:, b, :3, 3])
         none = ~ok.any(0)
         cost = np.where(ok, node, np.inf)
@@ -692,7 +699,7 @@ class ArmSolver:
         back = np.zeros((K, F), int)
         for f in range(1, F):
             step = np.linalg.norm(el[:, f][:, None] - el[:, f - 1][None], axis=-1)        # (K new, K old)
-            bound = ELBOW_STEP_MAX_CM
+            bound = ELBOW_STEP_MAX_CM if step_max is None else step_max
             trans = PATH_SMOOTH_WEIGHT * step ** 2 + 1e4 * np.maximum(0., step - bound)
             tot = D[None] + trans
             back[:, f] = np.argmin(tot, axis=1)
@@ -701,7 +708,12 @@ class ArmSolver:
         idx[-1] = int(np.argmin(D))
         for f in range(F - 1, 0, -1):
             idx[f - 1] = back[idx[f], f]
-        phi = phis[idx]
+        phi = phis[idx].astype(float)
+        if loop_blend and F > 2 * loop_blend:
+            # loop closure: the last `loop_blend` keys blend (quintic) toward frame 0's swivel, so last -> first is a
+            # normal step (the DeskTyping clip loops)
+            wq = A.smootherstep(np.arange(1, loop_blend + 1) / loop_blend)
+            phi[-loop_blend:] = phi[-loop_blend:] + wq * (phi[0] - phi[-loop_blend:])
         chosen_ok = ok[idx, np.arange(F)]
         e = el[idx, np.arange(F)]
         estep = np.r_[0., np.linalg.norm(np.diff(e, axis=0), axis=1)]
@@ -918,16 +930,30 @@ class Setup:
         mdy = mouse_dy_for(kb_dy, self.ctx.mouse['footprint_ue_cm'][1][1], slab['front_edge_y_cm'])
         return Layout((kb_dx, kb_dy, DEVICE_Z_CM), (mouse_dx, mdy, DEVICE_Z_CM), chair_dy)
 
-    def evaluate(self, layout, frames, smooth=False, extra_ue=None, path=False):
+    def evaluate(self, layout, frames, smooth=False, extra_ue=None, path=False, keep=None, path_kw=None):
         """Solve both arms on `frames`; returns (W, per-side metrics, per-side solve info, per-side wrist targets)."""
         W = np.array(self.Wb[frames], copy=True)
         ms, infos, phis, palms = {}, {}, {}, {}
         for s in A.SIDES:
             wt, palm = self.targets.wrist_target(s, layout, extra_ue)
+            if keep is not None and s in keep['sides']:
+                z, prev = keep['npz'], keep['info'][s]
+                for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s]):
+                    W[:, self.ctx.sk.j(n)] = z[f'{s}_{b}_world_gltf'][frames]
+                h = self.ctx.sk.j(A.ARM_BONES[s][2])
+                carry = W[:, h] @ np.linalg.inv(self.Wb[frames][:, h])
+                for k in self.ctx.sk.subtree(h):
+                    if k != h:
+                        W[:, k] = carry @ self.Wb[frames][:, k]
+                self.last_hand = getattr(self, 'last_hand', {})
+                self.last_hand[s] = {'hand_yaw_deg': z[f'{s}_hand_frame_yaw_deg'][frames], 'hand_pitch_deg': z[f'{s}_hand_frame_pitch_deg'][frames]}
+                ms[s] = arm_metrics(self.ctx, W, self.Wb[frames], s, layout.shift)
+                infos[s], phis[s], palms[s] = dict(prev, kept_from=keep['source']), z[f'{s}_swivel_deg'][frames], palm[frames]
+                continue
             hr = self.targets.R_cap[s][frames]
             po = np.asarray(self.targets.palm_off[s])[frames]
             if path:
-                phi, info = self.solver.solve_side_path(frames, s, wt[frames], hr, layout, palm_off=po)
+                phi, info = self.solver.solve_side_path(frames, s, wt[frames], hr, layout, palm_off=po, **((path_kw or {}).get(s, {})))
             else:
                 phi, info = self.solver.solve_side(frames, s, wt[frames], hr, layout, smooth=smooth, palm_off=po,
                                                    dt=self.dt * (frames[1] - frames[0] if len(frames) > 1 else 1))
@@ -1077,13 +1103,13 @@ def per_frame_rows(frames, times, side, m, res, phi, palm, mode, wmouse):
     return out
 
 
-def final(setup, layout, out_dir, search_rows=None, t_start=None):
+def final(setup, layout, out_dir, search_rows=None, t_start=None, keep=None, path_kw=None):
     """The ONE proposed configuration on every DeskTyping key: solve, full-skin measurement, envelope, packet."""
     out_dir = Path(out_dir)
     ctx = setup.ctx
     frames = np.arange(len(setup.times))
     t0 = time.time()
-    W, ms, infos, phis, palms = setup.evaluate(layout, frames, path=True)
+    W, ms, infos, phis, palms = setup.evaluate(layout, frames, path=True, keep=keep, path_kw=path_kw)
     np.savez_compressed(out_dir / 'arm-solution.npz', **{
         **{f'{s}_{b}_world_gltf': W[:, ctx.sk.j(n)] for s in A.SIDES for b, n in zip(('upper_arm', 'forearm', 'hand'), A.ARM_BONES[s])},
         **{f'{s}_swivel_deg': phis[s] for s in A.SIDES}, **{f'{s}_palm_target_ue_cm': palms[s] for s in A.SIDES},
@@ -1313,6 +1339,8 @@ def main(argv=None):
     ap.add_argument('--max-seconds', type=float, default=3000.)
     ap.add_argument('--postprocess-only', action='store_true', help='add the verifier fields and the GLB to a written proposal')
     ap.add_argument('--status', default='final_candidate')
+    ap.add_argument('--resolve-right', action='store_true', help='keep the committed LEFT arm; re-solve only the right arm '
+                    '(torso margin 2 cm, elbow step bound 1.8 cm, loop-closure blend, smoother right palm / hand frame)')
     args = ap.parse_args(argv)
     t_start = time.time()
     out = Path(args.out_dir)
@@ -1339,7 +1367,13 @@ def main(argv=None):
             return 3
         k = best['layout_key']
         layout = Layout((k[0], k[1]), (k[2], k[3]), k[4])
-    prop = final(setup, layout, out, rows, t_start)
+    keep = path_kw = None
+    if args.resolve_right:
+        prev = json.loads((out / 'ergonomic-layout-refit.proposal.json').read_text())
+        z = dict(np.load(out / 'arm-solution.npz'))
+        keep = {'sides': ('left',), 'npz': z, 'info': {'left': prev['arms']['left']['ik']}, 'source': 'arm-solution.npz @ 4fca1fd'}
+        path_kw = {'right': {'body_min': RIGHT_BODY_SOLVER_MIN_CM, 'step_max': RIGHT_STEP_SOLVER_MAX_CM, 'loop_blend': LOOP_BLEND_KEYS}}
+    prop = final(setup, layout, out, rows, t_start, keep=keep, path_kw=path_kw)
     prop = postprocess(setup, out, args.status)
     print(json.dumps({k: prop[k] for k in ('source_ready', 'native_ready', 'ready', 'gates')}, indent=1, default=_np))
     return 0 if prop['source_ready'] else 3
