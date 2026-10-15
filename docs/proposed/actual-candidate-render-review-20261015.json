@@ -1,0 +1,65 @@
+{
+  "schema": "sub01.actual-candidate-render-review-checkpoint.v1",
+  "review_receipt_sha256": "2aa04ae486354fef09a9fb15d830f80f057895bd7b30edeacf60421fa9a1cb19",
+  "candidate_map_sha256": "98d7298aec45a710d39d7376360e50fb0f5e935d639a99c70fe2bfcda2420926",
+  "editor_pid": 175718,
+  "original_game_preserved": true,
+  "second_game_started": false,
+  "mode": "real saved home Editor Vulkan viewport, not gameplay",
+  "all_eight_complete_pngs_verified": true,
+  "images": [
+    {
+      "view": "living",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/living.png",
+      "sha256": "92b8b83023d67492fb2a0e1f3b591e68e51ddcfb03912e6abf63f6f497193267"
+    },
+    {
+      "view": "kitchen",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/kitchen.png",
+      "sha256": "785ae2f5c5c8c7bedd4b6fe0563c594589423baf3836cee87254ce5462a9e5ab"
+    },
+    {
+      "view": "media",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/media.png",
+      "sha256": "2577a21ab1a55d7cf8e8c5077cfca5296eb1a884df77b1629d23091809dfb78c"
+    },
+    {
+      "view": "desk",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/desk.png",
+      "sha256": "1da78b830ff114a7ab8863d3209fca73b57d88f74b5d92f45f9709f8d3b0b94a"
+    },
+    {
+      "view": "bedroom",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/bedroom.png",
+      "sha256": "3f6fd2ad7d6d5e47d99cb1a85c471414bbfe09805951ae3c1177574a9c6fe069"
+    },
+    {
+      "view": "bathroom",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/bathroom.png",
+      "sha256": "594e740772711ff956d05f74da022fec26ebd4280059b990c74fc001469d150a"
+    },
+    {
+      "view": "balcony",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/balcony.png",
+      "sha256": "767ab101fb8075f63feb61d8787300aafcdb511f01096fdb0657460827752548"
+    },
+    {
+      "view": "courtyard",
+      "native_path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/evidence/actual-candidate-review/1792087625652424540/courtyard.png",
+      "sha256": "c9c01df692db4f74c8ddda9efee73ae60aa7e41fd4f06710dd2ca4a24ea0dfdf"
+    }
+  ],
+  "actually_viewed_all_eight_images": true,
+  "overall_visual_acceptance": false,
+  "gameplay_or_contact_accepted": false,
+  "discarded_prior_batch": "017: synchronous screenshot loading pumped Slate; multiple camera requests reentered. No visual acceptance. Candidate-only callback was canceled and guarded;019 serialized every PNG before advancing. Regression test simulates the real native-call reentry.",
+  "review_findings": {
+    "bedroom": "Too dark; identical camera with15seconds exposure settling queued before any relighting.",
+    "bathroom": "Warm lighting shifts teal olive. Old plant intersects cistern-side panel; exact-owner photographic replacement is in progress.",
+    "kitchen": "Lower closed fit looks correct; wood grain scale remains too large/wavy. Finish tints/roughness alone cannot fix UV scale.",
+    "living": "Staircase obscures the initial overview. Clear sofa-side overview queued.",
+    "media": "Actual saved wall-mounted console/dock visible besideTV. No console gameplay claim.",
+    "desk": "Real original desk/functional device bindings retained. Editor screenshot does not demonstrate live PC commands.",
+    "courtyard": "Saved genuine courtyard visuals present; distant panorama still lacks real near-scene parallax."
+  }
+}

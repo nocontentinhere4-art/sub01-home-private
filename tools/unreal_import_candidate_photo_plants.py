@@ -84,7 +84,7 @@ def run(dry_run=True):
    # office transaction. Their private full-source copies are not the old
    # untouched scene transforms; retain that proved rigid placement in audit.
    delta=office_plan['rigid_delta_ue_cm']
-   if delta!=[-40.,0.,-1.57754111289978]or not bindings[node].startswith('/Game/Sub01Home/RealOfficePlant/V_9556495fa816_')or not bindings[node].endswith('_FullSource/SourceNode%d.SourceNode%d'%(node,node)):raise RuntimeError('Exact previously proved office plant placement and ownership required')
+   if delta!=[v*100 for v in(-.4,0.,-.0157754111289978)]or not bindings[node].startswith('/Game/Sub01Home/RealOfficePlant/V_9556495fa816_')or not bindings[node].endswith('_FullSource/SourceNode%d.SourceNode%d'%(node,node)):raise RuntimeError('Exact previously proved office plant placement and ownership required')
    expected=[[[p[i]+delta[i]for i in range(3)]for p in t]for t in expected]
   try:audits.append(audit_original_full_source(u,eas,c,expected,node,bindings,destination,dry_run))
   except Exception as exc:raise RuntimeError('Exact retiring plant source node%d failed: %s'%(node,str(exc)))from exc
