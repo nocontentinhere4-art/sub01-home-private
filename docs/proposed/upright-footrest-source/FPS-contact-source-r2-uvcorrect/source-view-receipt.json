@@ -1,0 +1,56 @@
+{
+  "schema": "sub01.fp-arms-source-view.v1",
+  "clip_sha256": "1653694aca1925e12b5244b72039054c2a80cd1d0a2566566b7c98a224da9c83",
+  "arms_mesh_sha256": "a862cbd3457c2b25da227c0eea2e04dcd8fe1f637115da0ccc69fbcf888ad154",
+  "exact_original_triangles_uv_pbr": true,
+  "preview_uv_convention": "Blender UV=(glTF u,1-glTF v); source GLB UV bytes unchanged",
+  "explicit_double_precision_skinning_not_Blender_armature_retarget": true,
+  "diagnostic_studio_not_Game_lighting": true,
+  "source_contact_accepted": false,
+  "native_ready": false,
+  "views": [
+    {
+      "frame": 45,
+      "time_s": 1.5,
+      "camera_actual_source_iris_ue_cm": [
+        206.972349235011,
+        -252.82480562823758,
+        143.0443336059945
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-arms-contact-views-r2-uvcorrect/fps-source-frame045.png",
+      "sha256": "f06a064c811966d8431d86a1ad931358476c730ffa55e2e8e661b3f583bf4276",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    },
+    {
+      "frame": 150,
+      "time_s": 5.0,
+      "camera_actual_source_iris_ue_cm": [
+        195.67388368392028,
+        -255.71771286680487,
+        141.89622002476082
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-arms-contact-views-r2-uvcorrect/fps-source-frame150.png",
+      "sha256": "54cf428812f2c99d1e4471ef480af93e2a68622e7c93c85c26663bbb8f78d07a",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    },
+    {
+      "frame": 315,
+      "time_s": 10.5,
+      "camera_actual_source_iris_ue_cm": [
+        203.4325775003534,
+        -261.21227310078234,
+        140.69125682168786
+      ],
+      "additional_down_pitch_deg": 35,
+      "png": "/workspace/sub01-home-private/fp-arms-contact-views-r2-uvcorrect/fps-source-frame315.png",
+      "sha256": "e9daac4ca41170b3031b36ba4332fe659b58c7311b3e8f4ae14bebf7c21bcf0e",
+      "mesh_triangles": 88592,
+      "vertices": 46535
+    }
+  ],
+  "elapsed_s": 28.919063763692975
+}

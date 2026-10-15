@@ -39,3 +39,28 @@ and pass source view/collision review first.
 The frustum clipping, protected hand-face selection, new-boundary identification,
 and behind-camera rejection passed four geometric tests in the bounded GPU job.
 The original full-body pose/anatomy/seating checks remain unchanged and pending.
+
+## Explicit R2 contact trial (not accepted)
+
+`arms-contact-fit-trial-r2.json` records the measured trial. It preserves all65
+bone lengths to7.5e-14 cm, original captured finger local matrices to7.1e-14,
+and untouched joint worlds exactly. The owned animation-only source SHA is
+`1653694aca1925e12b5244b72039054c2a80cd1d0a2566566b7c98a224da9c83`.
+All495 left-hand keys and291 right-hand key-phase samples place the distal
+minimum at actual keytop+0.08 cm. Wrist displacement remains below15 cm.
+There are112 right-arm reach failures and3 mouse-upper-surface penetration
+samples. Thus contact is not accepted and no FBX/native integration follows.
+
+The local polar hand carry preserves the complete authored hand stretch tensor.
+The shared helper's scalar column normalization caused7.6e-7 cm finger-length
+drift in the refused first trial; the bound was not relaxed. R2 original finger
+motion is matrix-equivalent; a separate exact-row helper also preserves the
+original quaternion float32 bytes/signs for future accepted derivatives.
+
+`FPS-contact-source-r2-uvcorrect/` contains actual CPU source views, with explicit
+skinning into exact retained triangles and original PBR/UV. The preview converts
+glTF V to Blender1-V; original source UV bytes remain unchanged. Frame150 shows
+both hands over keys. Frame045 exposes the right hand left of the mouse; this
+is a visible defect. Diagnostic studio lighting and captured source iris/head
+camera are not the native Game. No sleeve cut appears at the tested35-degree
+additional downlook. Complete arm/desk/device collisions are still pending.
