@@ -3,6 +3,8 @@
 Positions use actual imported inverse binds and the actual component pose.
 The broad >=30% hand-weight selection is neither finger-pad selection nor a
 contact verdict; downstream reviewers must use surface geometry and topology.
+Only triangles whose three vertices are in this selected set are exported;
+shared hand/forearm boundary triangles are explicitly outside this witness.
 No pose, material, device, activity or readiness state changes here.
 """
 HEADER = r'''
@@ -28,10 +30,10 @@ FString USub01HomeHandsInstance::DumpImportedHandWitness(USkeletalMesh* Mesh,con
    if(Mesh->GetMaterials().IsValidIndex(Section.MaterialIndex)){const auto& Mat=Mesh->GetMaterials()[Section.MaterialIndex];Item->SetStringField(TEXT("materialSlot"),Mat.MaterialSlotName.ToString());Item->SetStringField(TEXT("materialPath"),Mat.MaterialInterface?Mat.MaterialInterface->GetPathName():TEXT(""));}
    Item->SetArrayField(TEXT("bindPositionCm"),Vector(FVector(V.Position)));Item->SetArrayField(TEXT("bindNormal"),Vector(FVector(V.TangentZ.X,V.TangentZ.Y,V.TangentZ.Z)));Item->SetArrayField(TEXT("worldPositionCm"),Vector(BodyWorld.TransformPosition(P)));Item->SetArrayField(TEXT("weights"),Weights);Vertices.Add(MakeShared<FJsonValueObject>(Item));
   }
-  for(uint32 T=0;T<Section.NumTriangles;++T){const uint32 Offset=Section.BaseIndex+3*T;if(Offset+2>=uint32(Model->LODModels[0].IndexBuffer.Num())){++Invalid;break;}const auto& Indices=Model->LODModels[0].IndexBuffer;const int32 A=Indices[Offset],B=Indices[Offset+1],C=Indices[Offset+2];if(!Selected.Contains(A)&&!Selected.Contains(B)&&!Selected.Contains(C))continue;TArray<TSharedPtr<FJsonValue>> Tri;Tri.Add(MakeShared<FJsonValueNumber>(A));Tri.Add(MakeShared<FJsonValueNumber>(B));Tri.Add(MakeShared<FJsonValueNumber>(C));Triangles.Add(MakeShared<FJsonValueArray>(Tri));}
+  for(uint32 T=0;T<Section.NumTriangles;++T){const uint32 Offset=Section.BaseIndex+3*T;if(Offset+2>=uint32(Model->LODModels[0].IndexBuffer.Num())){++Invalid;break;}const auto& Indices=Model->LODModels[0].IndexBuffer;const int32 A=Indices[Offset],B=Indices[Offset+1],C=Indices[Offset+2];if(!Selected.Contains(A)||!Selected.Contains(B)||!Selected.Contains(C))continue;TArray<TSharedPtr<FJsonValue>> Tri;Tri.Add(MakeShared<FJsonValueNumber>(A));Tri.Add(MakeShared<FJsonValueNumber>(B));Tri.Add(MakeShared<FJsonValueNumber>(C));Triangles.Add(MakeShared<FJsonValueArray>(Tri));}
   ++SectionId;
  }
- Root->SetStringField(TEXT("selection"),TEXT("fixed imported hand/finger weight >=30%; NOT contact acceptance"));Root->SetNumberField(TEXT("invalidInfluences"),Invalid);Root->SetArrayField(TEXT("vertices"),Vertices);Root->SetArrayField(TEXT("adjacentTrianglesGlobalIds"),Triangles);FString Output;FJsonSerializer::Serialize(Root,TJsonWriterFactory<>::Create(&Output));return Output;
+ Root->SetStringField(TEXT("selection"),TEXT("fixed imported hand/finger weight >=30%; NOT contact acceptance"));Root->SetNumberField(TEXT("invalidInfluences"),Invalid);Root->SetArrayField(TEXT("vertices"),Vertices);Root->SetArrayField(TEXT("fullySelectedTrianglesGlobalIds"),Triangles);FString Output;FJsonSerializer::Serialize(Root,TJsonWriterFactory<>::Create(&Output));return Output;
 #else
  return TEXT("{\"error\":\"editor only\"}");
 #endif

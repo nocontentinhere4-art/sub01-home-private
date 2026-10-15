@@ -16,7 +16,7 @@ void ASub01HomeCharacter::InspectCapturedHandSkin(){
  const FVector Eye=ViewCamera->GetComponentLocation();
  if(Eye.ContainsNaN()||(Eye.Z>300&&Eye.X>-378&&Eye.X<-85&&Eye.Y>50&&Eye.Y<270)){Refuse(TEXT("physical privacy"));return;}
  auto* Mesh=FirstPersonBody->GetSkeletalMeshAsset();auto* Anim=FirstPersonBody->GetSingleNodeInstance();
- if(!Mesh||Mesh->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner")||!Anim||Anim->IsPlaying()){Refuse(TEXT("actual original owner and already-paused diagnostic required"));return;}
+ if(!Mesh||Mesh->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner")||!Anim||!FMath::IsFinite(Anim->GetPlayRate())||FMath::Abs(Anim->GetPlayRate())>1.e-8){Refuse(TEXT("actual original owner and already-frozen zero-rate diagnostic required"));return;}
  auto* Clip=Cast<UAnimSequence>(Anim->GetCurrentAsset());
  const FString Expected=DerivedControllerVisualReview?TEXT("/Game/Sub01Hands/Play/SUB01_GamingGrip.SUB01_GamingGrip"):TEXT("/Game/Sub01Hands/Phone/SUB01_PhoneGrip.SUB01_PhoneGrip");
  const double Phase=Anim->GetCurrentTime();
