@@ -368,6 +368,10 @@ GIRDLE_PROTRACTION_DEG = (-15., 15.)
 # result is still soft-limited to the +-15 deg RULA zone. The girdle (below) is only the fallback.
 PITCH_CLEAR_CANDIDATES = (5., 10., 15., 20., 25., 30., 35., 40., 45.)
 PITCH_CLEAR_ROUNDS = 3
+# Then by REACH (six arm bones): where the arm is fully extended toward a far key row (the chair-to-keyboard distance
+# is root's decision and stays), the keyboard frame's horizontal finger target moves toward the body by the smallest
+# of these (UE +Y), smoothly over time, as long as the key gate still holds (the hand types on a nearer row).
+REACH_CLEAR_DY_CM = (2., 4., 6., 8., 10., 12., 14.)
 GIRDLE_CLEAR_CANDIDATES = ((-2.5, 0.), (-5., 0.), (-7.5, 0.), (-10., 0.), (-10., -7.5), (-10., -15.))
 
 
@@ -1145,18 +1149,22 @@ class ClipArmIK:
         for s in SIDES:
             delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
             self.clear_side(s, delta, phi, lift, history, 2)
-        girdle, pitch = {}, {}
+        girdle, pitch, reach = {}, {}, {}
         for s in SIDES:
             pitch[s] = []
             for _r_ in range(PITCH_CLEAR_ROUNDS):      # the full-clip contact re-solve can move neighbours: repeat
                 pitch[s].append(self.girdle_clear(s, delta, phi, lift, 'pitch', PITCH_CLEAR_CANDIDATES))
-                if not pitch[s][-1]['frames']:
+                if not pitch[s][-1]['frames'] or not pitch[s][-1].get('frames_with_offset'):
+                    break                              # cleared, or no larger flexion helps (reach is next)
+                self.clear_side(s, delta, phi, lift, history, 1)
+            reach[s] = []
+            for _r_ in range(2):
+                reach[s].append(self.reach_clear(s, delta, phi, lift))
+                if not reach[s][-1]['frames']:
                     break
-                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
                 self.clear_side(s, delta, phi, lift, history, 1)
             girdle[s] = self.girdle_clear(s, delta, phi, lift)
             if girdle[s]['frames']:
-                delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], passes=CONTACT_PASSES)
                 self.clear_side(s, delta, phi, lift, history, 1)
         if loop_frames:      # the clearance envelopes reach the clip ends: the tail parameters are blended again
             self.close_loop(int(loop_frames), phi, lift, inputs=False)
@@ -1165,7 +1173,7 @@ class ClipArmIK:
                 delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], np.arange(F - n, F), passes=CONTACT_PASSES)
         polish = {s: self.contact_polish(s, delta, phi, lift) for s in SIDES}
         self.delta, self.phi, self.lift = delta, phi, lift
-        self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'wrist_clearance': pitch, 'girdle_clearance': girdle,
+        self.finish_report = {'loop_blend_frames': int(loop_frames), 'clearance_history': history, 'contact_polish': polish, 'wrist_clearance': pitch, 'reach_clearance': reach, 'girdle_clearance': girdle,
                               'seconds': round(time.time() - t0, 1),
                               'segments': {s: {'key': int((self.mode[s] == MODE_KEY).sum()), 'mouse': int((self.mode[s] == MODE_MOUSE).sum()),
                                                'transit': int((self.mode[s] == MODE_TRANSIT).sum())} for s in SIDES},
@@ -1197,6 +1205,51 @@ class ClipArmIK:
             self.inputs[s] = (A, pole, wrist, hw, x)
             dz = np.cross((wrist - A) / np.linalg.norm(wrist - A, axis=-1, keepdims=True), pole - A)[:, 1]
             self.raise_sign[s] = np.where(dz >= 0, 1., -1.)
+
+    def reach_clear(self, s, delta, phi, lift, candidates=REACH_CLEAR_DY_CM):
+        """Keyboard frames still below the clearance target: the first REACH_CLEAR_DY_CM move of the horizontal finger
+        target toward the body whose contact-resolved pose clears and keeps the key gate; the move is the smooth upper
+        envelope over time (never below a frame's need). Mutates finger_xy_target / delta (reported)."""
+        F = len(self.times)
+        top = self.keys['top_cm']
+        W = self.pose(self.W_fit.copy(), s, delta[s], phi[s], lift[s])[0]
+        cl = self.clearance(W, s, 1, reach=SEARCH_REACH_CM)[0]
+        bad = np.nonzero((cl < FOREARM_TARGET_CLEARANCE_CM) & (self.mode[s] == MODE_KEY))[0]
+        out = {'frames': [int(f) for f in bad], 'min_before_cm': _r(cl.min(), 4)}
+        if not len(bad):
+            return out
+        t0, h0 = self.finger_xy_target[s].copy(), self.hand_xy[s].copy()
+        need = np.zeros(F)
+        found = np.zeros(len(bad), bool)
+        for dy in candidates:
+            todo = np.nonzero(~found)[0]
+            if not len(todo):
+                break
+            fr = bad[todo]
+            self.finger_xy_target[s] = t0.copy()
+            self.finger_xy_target[s][fr, 1] += dy
+            self.hand_xy[s] = h0.copy()
+            dl = self.solve_contact_side(s, delta[s], phi[s], lift[s], fr)
+            Wt = self.pose(self.W_fit[fr].copy(), s, dl[fr], phi[s][fr], lift[s][fr], fr)[0]
+            c = self.clearance(Wt, s, 1, fr, SEARCH_REACH_CM, posed_frames=True)[0]
+            a = self.key_audit(Wt, fr)[s]
+            g = a['over_min'] - top
+            ok = (c >= FOREARM_TARGET_CLEARANCE_CM) & (a['over'] >= KEY_MIN_OVER_VERTICES) & (g >= POLISH_ACCEPT_GAP_CM[0]) \
+                & (g <= POLISH_ACCEPT_GAP_CM[1])
+            need[fr[ok]] = dy
+            delta[s][fr[ok]] = dl[fr[ok]]
+            found[todo[ok]] = True
+        env = envelope(need, self.dt)
+        self.finger_xy_target[s] = t0.copy()
+        self.finger_xy_target[s][:, 1] += env
+        self.hand_xy[s] = h0
+        moved = np.nonzero(env > 1e-9)[0]
+        if len(moved):
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], moved, passes=CONTACT_PASSES)
+        out.update({'dof': 'finger target toward the body (UE +Y)', 'cleared_by_candidate': int(found.sum()),
+                    'not_cleared': [int(f) for f in bad[~found]], 'frames_with_offset': int(len(moved)),
+                    'target_move_cm': rng(env, 2)})
+        return out
 
     def girdle_clear(self, s, delta, phi, lift, attr='girdle', candidates=GIRDLE_CLEAR_CANDIDATES):
         """Frames whose every-vertex desk clearance is still below the target after the swivel search: the first
@@ -1232,10 +1285,16 @@ class ClipArmIK:
                                                       & (g <= POLISH_ACCEPT_GAP_CM[1]))
             ok = (c >= FOREARM_TARGET_CLEARANCE_CM) & keyok
             need[fr[ok]] = np.asarray(cand) - g0[fr[ok]]
+            delta[s][fr[ok]] = dl[fr[ok]]            # keep the contact solution that was verified to clear
             found[todo[ok]] = True
         nd = need.reshape(F, -1)
         env = np.stack([sign * envelope(np.maximum(0., sign * nd[:, i]), self.dt) for i in range(nd.shape[1])], 1)
         store[s] = g0 + env.reshape(g0.shape)
+        # the frames whose offset changed (the found ones and their smooth envelope) are re-solved locally, from the
+        # verified solutions, so the clip-wide contact pass cannot jump to another fingertip root there
+        moved = np.nonzero(np.abs(env).sum(1) > 1e-9)[0]
+        if len(moved):
+            delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s], moved, passes=CONTACT_PASSES)
         out.update({'dof': attr, 'cleared_by_candidate': int(found.sum()), 'not_cleared': [int(f) for f in bad[~found]],
                     'frames_with_offset': int((np.abs(env).sum(1) > 1e-9).sum())})
         if attr == 'girdle':
@@ -2587,7 +2646,7 @@ def run(args):
         fin = out_dir / 'SUB01_DeskTyping_seated.finish-checkpoint.npz'
         sig = hashlib.sha256(b''.join((out_dir / 'DeskTyping_seated.chunks' / c).read_bytes() for c in ik.chunks)
                              + repr((LOOP_BLEND_S, KEY_FIELD_MARGIN_CM, KEY_FIELD_MIN_OVER, PITCH_CLEAR_CANDIDATES,
-                                    GIRDLE_CLEAR_CANDIDATES, POLISH_XY_CM, PITCH_CLEAR_ROUNDS, 'v3')).encode()).hexdigest()
+                                    GIRDLE_CLEAR_CANDIDATES, POLISH_XY_CM, PITCH_CLEAR_ROUNDS, REACH_CLEAR_DY_CM, 'v5')).encode()).hexdigest()
         if fin.exists() and str(np.load(fin)['signature']) == sig:
             z = np.load(fin)
             ik.close_loop(int(round(LOOP_BLEND_S / ik.dt)), {s_: np.array(ik.phi[s_], float) for s_ in SIDES},
