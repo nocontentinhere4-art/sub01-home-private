@@ -1,0 +1,50 @@
+{
+  "schema": "sub01.licensed-controller-source.v1",
+  "author": "Chizuko V (https://sketchfab.com/chizuk0)",
+  "title": "Dualsense",
+  "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+  "original_artist_url": "https://sketchfab.com/3d-models/dualsense-98bcc300aba0450a83f7a044f616b544",
+  "primary_license_verified_utc": "2026-10-15T22:23:00Z",
+  "mirror_repo": "https://github.com/KevzPeter/Online-Controller-Tester",
+  "mirror_commit": "34fad6f5dcc03b02bf5d2acb133198a92b497b4f",
+  "files": [
+    {
+      "path": "dualsense.gltf",
+      "bytes": 7866,
+      "sha256": "efb6114ec711cd3a697a8ce11c401e18b47449c026e82005ffde6047ef7a1df6"
+    },
+    {
+      "path": "dualsense.bin",
+      "bytes": 4118072,
+      "sha256": "4b6b096e7185285a68f0cb96c72e461c6d0e1356bbdb98269313829130df6436"
+    },
+    {
+      "path": "textures/dualsense_baseColor.png",
+      "bytes": 4456507,
+      "sha256": "85201760d0d66c5d8df344228ecfe292dff0b2bc4f3995e463102e99fdb5e9ad"
+    },
+    {
+      "path": "textures/dualsense_metallicRoughness.png",
+      "bytes": 345530,
+      "sha256": "48d3dcf6cd339bb5ca9a1f75c527b12248e7b6b0ea529e1587c3a9a85e57b288"
+    },
+    {
+      "path": "textures/dualsense_emissive.png",
+      "bytes": 137914,
+      "sha256": "a8f27e4affec055d68080727700ce1e44a56c1eae12c4edebd9167af6231e191"
+    },
+    {
+      "path": "textures/dualsense_normal.png",
+      "bytes": 14963961,
+      "sha256": "dd4491a4f3ec6e2552b07057926baaeeb36367dd40ee5c99437b605c6a012ca6"
+    },
+    {
+      "path": "textures/dualsense_specularf0.png",
+      "bytes": 361824,
+      "sha256": "5ee1b0bea9ea3e5a372e3f9df4bffbe8052f9b1c59059ca701886c960cbd8420"
+    }
+  ],
+  "native_imported": false,
+  "hand_contact_verified": false,
+  "changes": "None; source glTF/bin/images byte preserved. Artist recreation, not Sony CAD."
+}

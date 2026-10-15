@@ -1,0 +1,24 @@
+{
+  "mirror_commit": "01f2a6a744f407abb95b0dc6f433dd1a11dd4c3f",
+  "source": "https://sketchfab.com/3d-models/playstation-5-digital-edition-ea891a5332934095a5c6407b3b14b296",
+  "artist": "DatSketch",
+  "primary_license_current": "CC-BY-ND-4.0",
+  "historical_embedded_metadata": {
+    "author": "DatSketch (https://sketchfab.com/DatSketch)",
+    "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+    "source": "https://sketchfab.com/3d-models/playstation-5-digital-edition-ea891a5332934095a5c6407b3b14b296",
+    "title": "Playstation 5 Digital Edition"
+  },
+  "attribution": "Playstation 5 Digital Edition by DatSketch https://sketchfab.com/DatSketch \u2014 current primary CC BY-ND 4.0; unmodified source private inspection only",
+  "private_only": true,
+  "source_files": {
+    "scene.gltf": {
+      "bytes": 60150,
+      "sha256": "b9a0248fcc589d9d4add5d4579f4b7294ae94563bf3c51a4ad88e119aea9a260"
+    },
+    "scene.bin": {
+      "bytes": 2122284,
+      "sha256": "1c82f48f3b8f950e6c4133ea909b10faa4b2c2cc071baa2db855af41374f0f97"
+    }
+  }
+}
