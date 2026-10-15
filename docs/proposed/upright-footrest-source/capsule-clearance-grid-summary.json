@@ -1,0 +1,188 @@
+{
+  "schema": "sub01.upright-clearance-grid-summary.v1",
+  "actual_job_exit": 0,
+  "actual_job_elapsed_s": 16.933368682861328,
+  "geometry_elapsed_s": 7.568792002275586,
+  "tests_pass": true,
+  "chair_lift_for_frozen_source_candidate_cm": 2.5001,
+  "report_uncompressed_sha256": "d2b4e54e92115cfa1641f13c695f96f4b1df3126af0f887cc926326117168709",
+  "proposed_anchor": [
+    {
+      "center_ue_cm": [
+        200.025,
+        -232.3,
+        95.65
+      ],
+      "radius_cm": 16.0,
+      "halfheight_cm": 91.0,
+      "minimum": {
+        "obstacle": "footrest",
+        "triangle": 364,
+        "distance_to_axis_cm": 7.888570832071078,
+        "clearance_cm": -8.111429167928922,
+        "actual_triangle_ue_cm": [
+          [
+            182.6019138097763,
+            -237.166529223604,
+            14.441421814262867
+          ],
+          [
+            217.3980861902237,
+            -237.166529223604,
+            14.441421814262867
+          ],
+          [
+            217.3959657549858,
+            -237.23141483990648,
+            14.484776742756367
+          ]
+        ]
+      },
+      "locally_surface_clear": false
+    },
+    {
+      "center_ue_cm": [
+        200.025,
+        -232.3,
+        95.65
+      ],
+      "radius_cm": 25.0,
+      "halfheight_cm": 91.0,
+      "minimum": {
+        "obstacle": "footrest",
+        "triangle": 365,
+        "distance_to_axis_cm": 15.946875830873365,
+        "clearance_cm": -9.053124169126635,
+        "actual_triangle_ue_cm": [
+          [
+            182.6019138097763,
+            -237.166529223604,
+            14.441421814262867
+          ],
+          [
+            217.3959657549858,
+            -237.23141483990648,
+            14.484776742756367
+          ],
+          [
+            182.6040342450142,
+            -237.23141483990648,
+            14.484776742756367
+          ]
+        ]
+      },
+      "locally_surface_clear": false
+    }
+  ],
+  "grid": [
+    {
+      "radius_cm": 16.0,
+      "queries": 143,
+      "free_count": 37,
+      "closest_locally_free_anchors": [
+        {
+          "center_ue_cm": [
+            240.0,
+            -230.0,
+            95.65
+          ],
+          "radius_cm": 16.0,
+          "halfheight_cm": 91.0,
+          "minimum": null,
+          "locally_surface_clear": true
+        },
+        {
+          "center_ue_cm": [
+            160.0,
+            -230.0,
+            95.65
+          ],
+          "radius_cm": 16.0,
+          "halfheight_cm": 91.0,
+          "minimum": null,
+          "locally_surface_clear": true
+        }
+      ]
+    },
+    {
+      "radius_cm": 25.0,
+      "queries": 143,
+      "free_count": 22,
+      "closest_locally_free_anchors": [
+        {
+          "center_ue_cm": [
+            240.0,
+            -230.0,
+            95.65
+          ],
+          "radius_cm": 25.0,
+          "halfheight_cm": 91.0,
+          "minimum": {
+            "obstacle": "chair",
+            "triangle": 27632,
+            "distance_to_axis_cm": 26.31911865004654,
+            "clearance_cm": 1.3191186500465406,
+            "actual_triangle_ue_cm": [
+              [
+                222.50623393801675,
+                -210.29496389134314,
+                48.785791546736036
+              ],
+              [
+                222.6395847359586,
+                -210.10975444975722,
+                48.31165537627609
+              ],
+              [
+                221.1430924479444,
+                -211.62847187076173,
+                47.931976021024965
+              ]
+            ]
+          },
+          "locally_surface_clear": true
+        },
+        {
+          "center_ue_cm": [
+            160.0,
+            -230.0,
+            95.65
+          ],
+          "radius_cm": 25.0,
+          "halfheight_cm": 91.0,
+          "minimum": {
+            "obstacle": "chair",
+            "triangle": 24933,
+            "distance_to_axis_cm": 25.80720716509937,
+            "clearance_cm": 0.8072071650993706,
+            "actual_triangle_ue_cm": [
+              [
+                176.4520541932631,
+                -209.3911418164039,
+                49.282152850186286
+              ],
+              [
+                177.8448291939892,
+                -211.22101109927272,
+                48.919142344677894
+              ],
+              [
+                177.61516948642264,
+                -211.1395189449749,
+                48.40055590823733
+              ]
+            ]
+          },
+          "locally_surface_clear": true
+        }
+      ]
+    }
+  ],
+  "source_only": true,
+  "native_ready": false,
+  "limitations": [
+    "Local chair/desk/footrest only; architecture and reachable route still require proof",
+    "Exact distance to physical triangles; no solid-containment classification for a whole capsule entirely enclosed in a solid",
+    "No full source body/skin acceptance from capsule clearance"
+  ]
+}

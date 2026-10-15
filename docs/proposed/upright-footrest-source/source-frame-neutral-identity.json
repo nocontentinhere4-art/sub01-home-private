@@ -1,0 +1,54 @@
+{
+  "schema": "sub01.upright-source-frame-neutral-identity.v1",
+  "old_source_body_origin_ue_cm": [
+    200.025,
+    -199.8,
+    -0.6
+  ],
+  "new_source_body_origin_ue_cm": [
+    200.025,
+    -232.3,
+    4.65
+  ],
+  "hips_local_delta_cm": [
+    0.0,
+    -5.25,
+    -32.5
+  ],
+  "clips": [
+    {
+      "source": "docs/proposed/upright-footrest-source/SUB01_SeatedIdle_upright_footrest.glb",
+      "source_sha256": "5354462f74fe3d4e417fc5c8975144e9c3bd69daa2a08c08757ef7929c38a0da",
+      "all_frames": 126,
+      "all_joints": 65,
+      "maximum_physical_world_translation_error_cm": 5.818755025955795e-14,
+      "world_linear_matrix_difference": 0.0,
+      "nodes_unchanged": true,
+      "original_binary_prefix_unchanged": true
+    },
+    {
+      "source": "docs/proposed/upright-footrest-source/SUB01_SitDown_upright_footrest.glb",
+      "source_sha256": "3da7b1f46a7e503f1bea8c3f33a07cdbcf8d931924dbe3a39c1be5123d9700ea",
+      "all_frames": 68,
+      "all_joints": 65,
+      "maximum_physical_world_translation_error_cm": 6.355287432313019e-14,
+      "world_linear_matrix_difference": 0.0,
+      "nodes_unchanged": true,
+      "original_binary_prefix_unchanged": true
+    },
+    {
+      "source": "docs/proposed/upright-footrest-source/SUB01_GetUp_upright_footrest_ShortStart.glb",
+      "source_sha256": "b68f15891a759d236595f4821fab32d881d9613990dd0d32daac85234568d3b7",
+      "all_frames": 47,
+      "all_joints": 65,
+      "maximum_physical_world_translation_error_cm": 6.355287432313019e-14,
+      "world_linear_matrix_difference": 0.0,
+      "nodes_unchanged": true,
+      "original_binary_prefix_unchanged": true
+    }
+  ],
+  "skin_implication": "Identical linear bone transforms plus uniformly bounded world translation error bound every normalized-weight LBS point by the same translation error; no vertex weights/IBMs/shape changed. Full vertex skin simulation not performed.",
+  "no_new_clip_written": true,
+  "no_native_activation": true,
+  "anchor_clearance_pass": false
+}
