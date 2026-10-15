@@ -172,8 +172,10 @@ def test_install_applies_to_the_actual_staged_sources(installed):
 
 def test_added_code_never_places_the_actor_and_owns_seat_verification(installed):
     methods = adapter.CHARACTER_METHODS
-    for forbidden in ('SetActorLocation', 'Teleport', 'SetWorldLocation', 'SetActorTransform', 'SetActorRotation'):
+    for forbidden in ('SetActorLocation', 'Teleport', 'SetActorTransform', 'SetActorRotation'):
         assert forbidden not in methods
+    # The only world placement is the eased eye camera (tests/test_seat_eye_camera.py); never the actor or body.
+    assert methods.count('SetWorldLocation') == 1 and 'ViewCamera->SetWorldLocation(SeatEye);' in methods
     assert methods.count('NativeSeatVerified=') == 1 and 'NativeSeatVerified=SeatOut.ContactVerified;' in methods
     assert 'if(!SeatOut.PCFocusAllowed&&PCBridge)PCBridge->SetOperatorFocus(false);' in methods
     assert 'In.Receipt=Sub01SeatReceipt(SeatEvidence,L)||Sub01SeatMeasuredReceipt(SeatMeasurement,L,In.ClipSerial,Now);' in methods

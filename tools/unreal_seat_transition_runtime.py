@@ -32,6 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import validate_unreal_seat_contact as seat_contact  # noqa: E402
+import unreal_controller_play_runtime as controller_play  # noqa: E402
 
 HEADER_FILE = Path(__file__).resolve().parent / 'native_seating' / 'Sub01SeatTransition.h'
 OWNER_MESH = '/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner'
@@ -375,6 +376,16 @@ def write_evidence(project: Path) -> Path:
 # ---------------------------------------------------------------- native integration
 CHARACTER_INCLUDE = '#include "Sub01SeatTransition.h"\n'
 
+# Seated desk camera: the SAME measured eye and easing as controller play (tools/unreal_controller_play_runtime.py):
+# the iris-midpoint offset in the owner's Head bone frame, applied only on the original owner skin, reached with
+# 1-exp(-rate*min(dt,.1)) (95% in 0.30 s at any frame rate), and eased back to the standing eye before the camera is
+# handed back to the capsule. A camera attached to the hidden (zero-scale) Head bone would collapse any relative
+# offset, so the eye is placed in world space. The alpha function gets its own name (both adapters share one .cpp).
+assert OWNER_MESH == controller_play.OWNER_MESH_OBJECT_PATH
+EYE_OFFSET_HEAD_CM = controller_play.EYE_OFFSET_HEAD_CM
+EYE_EASE_RATE = controller_play.EYE_EASE_RATE
+SEAT_EYE_ALPHA_CPP = controller_play.EYE_ALPHA_CPP.replace('Sub01ControllerPlayEyeAlpha', 'Sub01SeatEyeAlpha')
+
 CHARACTER_FIELDS = r'''
  // Native seat transition (tools/unreal_seat_transition_runtime.py).
  void LoadSeatTransition(); void UpdateSeatTransition(float Dt); void ApplySeatAnimation(class USub01HomeHandsInstance* Instance);
@@ -382,6 +393,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY() TMap<FName,TObjectPtr<UAnimSequence>> SeatClips;
  uint32 SeatRoles=0,SeatAppliedSerial=0; uint64 SeatChairRevision=0; ESub01SeatPhase SeatLoggedPhase=ESub01SeatPhase::Standing;
  bool SeatChairMeasured=false,SeatAnchorValid=false,SeatBodyAttached=false; float SeatYaw=-90;
+ void UpdateSeatCamera(float Dt); FVector SeatEye=FVector::ZeroVector,SeatEyeOffset=FVector::ZeroVector; FName SeatHead; bool SeatCameraEasing=false;
  FVector2D SeatApproach=FVector2D::ZeroVector;
  // Live skin measurement at the actual seated transform, the audited cushion it is measured
  // against, the bounded settle, and the transform the keyboard contact profile was audited at.
@@ -392,6 +404,8 @@ CHARACTER_FIELDS = r'''
 
 CHARACTER_METHODS = r'''
 #include "Misc/FileHelper.h"
+#include <cmath>
+@@SEAT_EYE_ALPHA@@
 void ASub01HomeCharacter::LoadSeatTransition(){
  SeatRoles=0;SeatClips.Empty();SeatChairMeasured=false;SeatAnchorValid=false;SeatEvidence=FSub01SeatEvidence();
  USkeletalMesh* Mesh=FirstPersonBody?FirstPersonBody->GetSkeletalMeshAsset():nullptr;if(!Mesh)return;
@@ -668,12 +682,19 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
  if(Seated&&!SeatBodyAttached&&FirstPersonBody&&FirstPersonBody->GetSkeletalMeshAsset()){
   if(!SetHandsPosture(TEXT("Walk")))UE_LOG(LogTemp,Warning,TEXT("SUB01_SEAT_POSTURE_GATE %s"),*HandsFailure);FName Head;const auto& Ref=FirstPersonBody->GetSkeletalMeshAsset()->GetRefSkeleton();
   for(int32 I=0;I<Ref.GetNum();++I)if(Ref.GetBoneName(I).ToString().EndsWith(TEXT("Head")))Head=Ref.GetBoneName(I);
-  if(!Head.IsNone()){ViewCamera->AttachToComponent(FirstPersonBody,FAttachmentTransformRules::SnapToTargetNotIncludingScale,Head);ViewCamera->SetUsingAbsoluteRotation(true);}
+  // Eye camera in world space, eased from wherever the view is now (never a one-frame drop to the Head joint).
+  // The measured eye offset belongs to the original owner skin only; any other skin keeps the Head joint.
+  if(!Head.IsNone()){
+   SeatHead=Head;SeatEyeOffset=FirstPersonBody->GetSkeletalMeshAsset()->GetPathName()==TEXT("@@OWNER_MESH@@")?FVector(@@EYE_OFFSET@@):FVector::ZeroVector;
+   if(!SeatCameraEasing)SeatEye=ViewCamera->GetComponentLocation();
+   SeatCameraEasing=true;ViewCamera->SetUsingAbsoluteLocation(true);ViewCamera->SetUsingAbsoluteRotation(true);
+  }
   SeatBodyAttached=true;
  }else if(!Seated&&SeatBodyAttached){
-  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);ViewCamera->SetUsingAbsoluteRotation(false);
-  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);SeatBodyAttached=false;
+  // The camera eases back to the standing eye in UpdateSeatCamera and is then handed back to the capsule.
+  SeatBodyAttached=false;
  }
+ UpdateSeatCamera(Dt);
  // Movement: only CharacterMovement input toward the approach point, a bounded turn in place, a
  // bounded swept settle while standing, or nothing. A seated body never moves.
  if(SeatOut.Phase!=ESub01SeatPhase::Aligning){SeatSettleTravel=0;SeatSettleBlocked=false;}
@@ -698,6 +719,21 @@ void ASub01HomeCharacter::UpdateSeatTransition(float Dt){
  // NativeSeatVerified only from a live, pose-matched receipt; PC focus never without it.
  NativeSeatVerified=SeatOut.ContactVerified;
  if(!SeatOut.PCFocusAllowed&&PCBridge)PCBridge->SetOperatorFocus(false);
+}
+void ASub01HomeCharacter::UpdateSeatCamera(float Dt){
+ if(!SeatCameraEasing||!ViewCamera||!FirstPersonBody)return;
+ // Standing eye: the renderer's capsule-relative camera (0,0,74). Seated: the captured Head socket at the eye.
+ const FVector Standing=GetRootComponent()->GetComponentTransform().TransformPosition(FVector(0,0,74));
+ FVector Target=Standing;
+ if(SeatBodyAttached&&!SeatHead.IsNone()){const FTransform H=FirstPersonBody->GetSocketTransform(SeatHead,RTS_World);Target=H.GetLocation()+H.GetRotation().GetNormalized().RotateVector(SeatEyeOffset);}
+ if(Target.ContainsNaN())return;
+ SeatEye=FMath::Lerp(SeatEye,Target,float(Sub01SeatEyeAlpha(Dt)));
+ ViewCamera->SetWorldLocation(SeatEye);
+ if(!SeatBodyAttached&&FVector::Dist(SeatEye,Standing)<.5f){
+  ViewCamera->SetUsingAbsoluteLocation(false);ViewCamera->SetUsingAbsoluteRotation(false);
+  ViewCamera->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepWorldTransform);
+  ViewCamera->SetRelativeLocation(FVector(0,0,74));ViewCamera->SetRelativeRotation(FRotator::ZeroRotator);SeatCameraEasing=false;
+ }
 }
 void ASub01HomeCharacter::ApplySeatAnimation(USub01HomeHandsInstance* Instance){
  if(!Instance||SeatOut.Clip==ESub01SeatClip::None||!HandsFailure.IsEmpty()||HandsPosture!=TEXT("Walk"))return;
@@ -783,7 +819,9 @@ def install(sources: dict, verdicts=None) -> dict:
     bindings = ','.join('{TEXT("%s"),TEXT("%s"),SeatRole%s}' % (role, asset, role)
                         for role, asset in SEAT_ROLE_ASSETS.items())
     fits = ','.join('{TEXT("%s"),TEXT("%s"),%s}' % (role, slot, bit) for role, (slot, bit) in SEATED_FIT_SLOTS.items())
-    out['cpp'] += (CHARACTER_METHODS.replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
+    out['cpp'] += (CHARACTER_METHODS.replace('@@SEAT_EYE_ALPHA@@', SEAT_EYE_ALPHA_CPP).replace('@@OWNER_MESH@@', OWNER_MESH)
+                   .replace('@@EYE_OFFSET@@', ','.join(repr(v) for v in EYE_OFFSET_HEAD_CM))
+                   .replace('@@SEAT_CLIP_DIR@@', SEAT_CLIP_DIR).replace('@@SEAT_ROLE_BINDINGS@@', bindings)
                    .replace('@@SEATED_FIT_BINDINGS@@', fits).replace('@@SEATED_FIT_RECEIPT@@', SEATED_FIT_RECEIPT)
                    .replace('@@SEATED_FIT_SCHEMA@@', SEATED_FIT_RECEIPT_SCHEMA)
                    .replace('@@SEATED_FIT_VERDICTS@@', table)
