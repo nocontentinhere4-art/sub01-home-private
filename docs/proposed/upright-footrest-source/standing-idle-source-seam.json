@@ -1,0 +1,1445 @@
+{
+  "schema": "sub01.upright-standing-idle-source-seam.v1",
+  "runtime_idle_object_path": "/Game/Sub01Hands/Life/SUB01_Idle.SUB01_Idle",
+  "declared_idle_source": "out/first-person-assets/ReferenceT/idle-source-review.glb",
+  "declared_idle_source_sha256": "3d9876d91a7d5829e112648184bad049c5d5e977f8d67c008db15b3f2a0ccc37",
+  "getup_source_sha256": "b68f15891a759d236595f4821fab32d881d9613990dd0d32daac85234568d3b7",
+  "getup_end_vs_Idle_start": [
+    {
+      "joint": "mixamorig:RightForeArm",
+      "joint_head_difference_cm": 43.682852638285794,
+      "position_delta_gltf_cm": [
+        -12.864265373053135,
+        0.47600744691012054,
+        41.74297195864646
+      ],
+      "world_rotation_difference_deg": 47.824550694823856,
+      "joint_head_difference_after_hips_translation_alignment_cm": 15.259226945763615
+    },
+    {
+      "joint": "mixamorig:RightHand",
+      "joint_head_difference_cm": 38.99786073076041,
+      "position_delta_gltf_cm": [
+        -18.863915909718052,
+        0.7290334537054854,
+        34.124101868770836
+      ],
+      "world_rotation_difference_deg": 176.97875904311954,
+      "joint_head_difference_after_hips_translation_alignment_cm": 17.959718312437673
+    },
+    {
+      "joint": "mixamorig:RightHandIndex1",
+      "joint_head_difference_cm": 37.828500902395255,
+      "position_delta_gltf_cm": [
+        -21.149731974951063,
+        -0.3652167517084637,
+        31.361615625387078
+      ],
+      "world_rotation_difference_deg": 179.71753523610954,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.216129728666402
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle1",
+      "joint_head_difference_cm": 37.269312580769075,
+      "position_delta_gltf_cm": [
+        -24.35796891774638,
+        -1.5890636662493685,
+        28.163200938632304
+      ],
+      "world_rotation_difference_deg": 175.39181855951614,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.857479264324223
+    },
+    {
+      "joint": "mixamorig:RightHandIndex2",
+      "joint_head_difference_cm": 36.72312366686056,
+      "position_delta_gltf_cm": [
+        -22.79169716689026,
+        -1.4955999359043015,
+        28.755686966859685
+      ],
+      "world_rotation_difference_deg": 171.67801425095337,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.21730627212582
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle2",
+      "joint_head_difference_cm": 35.85823840669297,
+      "position_delta_gltf_cm": [
+        -25.47176978651414,
+        -2.806727122482622,
+        25.082354124642624
+      ],
+      "world_rotation_difference_deg": 167.04657388864152,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.79107584806429
+    },
+    {
+      "joint": "mixamorig:RightHandIndex3",
+      "joint_head_difference_cm": 35.80839112254287,
+      "position_delta_gltf_cm": [
+        -23.349717164980138,
+        -2.179382124009477,
+        27.0607072460789
+      ],
+      "world_rotation_difference_deg": 168.00579842461534,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.173228970805354
+    },
+    {
+      "joint": "mixamorig:RightHandRing1",
+      "joint_head_difference_cm": 35.692939220962536,
+      "position_delta_gltf_cm": [
+        -25.697808894335893,
+        -3.136853628493097,
+        24.571704816209365
+      ],
+      "world_rotation_difference_deg": 172.6670201085206,
+      "joint_head_difference_after_hips_translation_alignment_cm": 26.203664597516244
+    },
+    {
+      "joint": "mixamorig:RightHandThumb1",
+      "joint_head_difference_cm": 34.82291188153313,
+      "position_delta_gltf_cm": [
+        -15.035077761732468,
+        -0.8168659378432253,
+        31.399273218456358
+      ],
+      "world_rotation_difference_deg": 176.49750491224432,
+      "joint_head_difference_after_hips_translation_alignment_cm": 14.200403566518137
+    },
+    {
+      "joint": "mixamorig:RightHandIndex4",
+      "joint_head_difference_cm": 34.7694751210325,
+      "position_delta_gltf_cm": [
+        -23.606810255109984,
+        -2.782559167756027,
+        25.375032497501728
+      ],
+      "world_rotation_difference_deg": 168.0056137561462,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.941780285955005
+    },
+    {
+      "joint": "mixamorig:RightUpLeg",
+      "joint_head_difference_cm": 34.67635518911508,
+      "position_delta_gltf_cm": [
+        -2.38742485240598,
+        3.2135178083963822,
+        34.44449324741042
+      ],
+      "world_rotation_difference_deg": 17.167546967516532,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.2430856656084233
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle3",
+      "joint_head_difference_cm": 34.58745098739945,
+      "position_delta_gltf_cm": [
+        -25.82245680212666,
+        -3.5915588703188006,
+        22.72868661821655
+      ],
+      "world_rotation_difference_deg": 158.47870800678234,
+      "joint_head_difference_after_hips_translation_alignment_cm": 26.989993401956973
+    },
+    {
+      "joint": "mixamorig:RightHandRing2",
+      "joint_head_difference_cm": 34.347055224394055,
+      "position_delta_gltf_cm": [
+        -26.269204171787464,
+        -4.1922117695917365,
+        21.727274915355014
+      ],
+      "world_rotation_difference_deg": 162.67086213717965,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.875032069494612
+    },
+    {
+      "joint": "mixamorig:LeftLeg",
+      "joint_head_difference_cm": 34.174178032727944,
+      "position_delta_gltf_cm": [
+        3.3193943887534467,
+        0.5113494765856097,
+        34.008742799716856
+      ],
+      "world_rotation_difference_deg": 30.360527647395276,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.795871006786812
+    },
+    {
+      "joint": "mixamorig:LeftUpLeg",
+      "joint_head_difference_cm": 34.16261163990746,
+      "position_delta_gltf_cm": [
+        -2.150917735025283,
+        -0.9150957712172558,
+        34.08254959192159
+      ],
+      "world_rotation_difference_deg": 27.524809654523732,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.185908469466407
+    },
+    {
+      "joint": "mixamorig:RightHandPinky1",
+      "joint_head_difference_cm": 33.96717367932451,
+      "position_delta_gltf_cm": [
+        -25.934559778602274,
+        -4.54940012697389,
+        21.458575333329815
+      ],
+      "world_rotation_difference_deg": 169.82769992341466,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.748966363789055
+    },
+    {
+      "joint": "mixamorig:RightHandThumb2",
+      "joint_head_difference_cm": 33.84379998433936,
+      "position_delta_gltf_cm": [
+        -13.658112462937227,
+        -1.1975786691156065,
+        30.94227798112167
+      ],
+      "world_rotation_difference_deg": 158.0951858553697,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.948588441417801
+    },
+    {
+      "joint": "mixamorig:RightHandRing3",
+      "joint_head_difference_cm": 33.487024040421836,
+      "position_delta_gltf_cm": [
+        -26.58810031718121,
+        -4.782257739686169,
+        19.788474208955837
+      ],
+      "world_rotation_difference_deg": 154.48398840727444,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.05737719727573
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle4",
+      "joint_head_difference_cm": 32.88228449549026,
+      "position_delta_gltf_cm": [
+        -25.533245565283195,
+        -4.068680994456598,
+        20.316098038517456
+      ],
+      "world_rotation_difference_deg": 158.47860667409182,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.757451604820297
+    },
+    {
+      "joint": "mixamorig:RightHandPinky2",
+      "joint_head_difference_cm": 32.76510035275689,
+      "position_delta_gltf_cm": [
+        -26.020645082535797,
+        -5.280946472982528,
+        19.198683157040445
+      ],
+      "world_rotation_difference_deg": 161.36971460620305,
+      "joint_head_difference_after_hips_translation_alignment_cm": 28.930169613846388
+    },
+    {
+      "joint": "mixamorig:RightArm",
+      "joint_head_difference_cm": 32.5554620353597,
+      "position_delta_gltf_cm": [
+        -3.041757418888852,
+        -1.9274857933394118,
+        32.355689123504334
+      ],
+      "world_rotation_difference_deg": 60.33982892278422,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.8632217786583176
+    },
+    {
+      "joint": "mixamorig:RightHandThumb3",
+      "joint_head_difference_cm": 32.47249506953281,
+      "position_delta_gltf_cm": [
+        -13.46614209036357,
+        -1.6003523096855266,
+        29.5053355467762
+      ],
+      "world_rotation_difference_deg": 161.9314302021987,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.062789810938408
+    },
+    {
+      "joint": "mixamorig:RightHandPinky3",
+      "joint_head_difference_cm": 32.344459392590394,
+      "position_delta_gltf_cm": [
+        -26.312866232911382,
+        -5.656699076255823,
+        17.93875356786328
+      ],
+      "world_rotation_difference_deg": 153.6611885804927,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.850089532885843
+    },
+    {
+      "joint": "mixamorig:RightHandRing4",
+      "joint_head_difference_cm": 32.22673128470011,
+      "position_delta_gltf_cm": [
+        -26.379478507118705,
+        -5.091446680466638,
+        17.79782272326299
+      ],
+      "world_rotation_difference_deg": 154.4838949484561,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.846540651343307
+    },
+    {
+      "joint": "mixamorig:Hips",
+      "joint_head_difference_cm": 32.204128742781826,
+      "position_delta_gltf_cm": [
+        -1.0231918096542358,
+        1.360557556152342,
+        32.15910243988037
+      ],
+      "world_rotation_difference_deg": 23.692766018509793,
+      "joint_head_difference_after_hips_translation_alignment_cm": 0.0
+    },
+    {
+      "joint": "mixamorig:RightHandThumb4",
+      "joint_head_difference_cm": 31.793838374178385,
+      "position_delta_gltf_cm": [
+        -13.820615095526383,
+        -1.716877336002931,
+        28.581306638392267
+      ],
+      "world_rotation_difference_deg": 161.931504017398,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.639841313973683
+    },
+    {
+      "joint": "mixamorig:RightHandPinky4",
+      "joint_head_difference_cm": 31.653961157279763,
+      "position_delta_gltf_cm": [
+        -26.259943633451044,
+        -5.85926413358383,
+        16.675060453487063
+      ],
+      "world_rotation_difference_deg": 153.66109599702972,
+      "joint_head_difference_after_hips_translation_alignment_cm": 30.47581047460243
+    },
+    {
+      "joint": "mixamorig:LeftForeArm",
+      "joint_head_difference_cm": 31.064522128409614,
+      "position_delta_gltf_cm": [
+        7.268044672057469,
+        1.364838128217838,
+        30.171464641200142
+      ],
+      "world_rotation_difference_deg": 40.94205366895381,
+      "joint_head_difference_after_hips_translation_alignment_cm": 8.526155331549308
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex2",
+      "joint_head_difference_cm": 29.502840146578045,
+      "position_delta_gltf_cm": [
+        15.11909162761016,
+        1.8670631704951202,
+        25.265484760594763
+      ],
+      "world_rotation_difference_deg": 148.26395473970783,
+      "joint_head_difference_after_hips_translation_alignment_cm": 17.559949521980418
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex3",
+      "joint_head_difference_cm": 29.267609492066736,
+      "position_delta_gltf_cm": [
+        15.45733697678638,
+        1.756463615748649,
+        24.79069451493319
+      ],
+      "world_rotation_difference_deg": 147.38489689255672,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.057076342452213
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex4",
+      "joint_head_difference_cm": 28.859752438828394,
+      "position_delta_gltf_cm": [
+        15.497038148551345,
+        1.7042046184084558,
+        24.286267849782952
+      ],
+      "world_rotation_difference_deg": 147.38478287508434,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.30348643451364
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex1",
+      "joint_head_difference_cm": 28.835952504531043,
+      "position_delta_gltf_cm": [
+        13.3480897916474,
+        1.9383442960495212,
+        25.486927573712393
+      ],
+      "world_rotation_difference_deg": 150.70540011202294,
+      "joint_head_difference_after_hips_translation_alignment_cm": 15.855140801186081
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle2",
+      "joint_head_difference_cm": 28.63163799297861,
+      "position_delta_gltf_cm": [
+        18.474702074269363,
+        1.2705135990467742,
+        21.836709290151774
+      ],
+      "world_rotation_difference_deg": 146.034180050863,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.061907763394363
+    },
+    {
+      "joint": "mixamorig:Spine",
+      "joint_head_difference_cm": 28.604450560959787,
+      "position_delta_gltf_cm": [
+        1.1054671175810167,
+        0.7853071025448521,
+        28.57229124695869
+      ],
+      "world_rotation_difference_deg": 10.644419420906718,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.210381983447844
+    },
+    {
+      "joint": "mixamorig:RightFoot",
+      "joint_head_difference_cm": 28.153744568262166,
+      "position_delta_gltf_cm": [
+        0.34589426120718303,
+        1.7180214597790913,
+        28.09914754291941
+      ],
+      "world_rotation_difference_deg": 17.05882357877309,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.299466347952977
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle1",
+      "joint_head_difference_cm": 28.08931750039724,
+      "position_delta_gltf_cm": [
+        17.011648226644198,
+        1.4396310744665297,
+        22.30562809293803
+      ],
+      "world_rotation_difference_deg": 148.50729402460095,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.55122051027681
+    },
+    {
+      "joint": "mixamorig:Spine1",
+      "joint_head_difference_cm": 27.730693251330802,
+      "position_delta_gltf_cm": [
+        1.3089478248891704,
+        0.6633653821359609,
+        27.69183905342701
+      ],
+      "world_rotation_difference_deg": 10.580510063841928,
+      "joint_head_difference_after_hips_translation_alignment_cm": 5.0873759804505
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle3",
+      "joint_head_difference_cm": 27.67574306724959,
+      "position_delta_gltf_cm": [
+        18.111529933919922,
+        1.2855273023101965,
+        20.88699732685748
+      ],
+      "world_rotation_difference_deg": 144.29209208829596,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.2081867657411
+    },
+    {
+      "joint": "mixamorig:RightToe_End",
+      "joint_head_difference_cm": 27.671076381685978,
+      "position_delta_gltf_cm": [
+        3.1404509236163394,
+        -1.934086488089719,
+        27.42417447388427
+      ],
+      "world_rotation_difference_deg": 5.242914156394106,
+      "joint_head_difference_after_hips_translation_alignment_cm": 7.114080617462
+    },
+    {
+      "joint": "mixamorig:RightToeBase",
+      "joint_head_difference_cm": 27.352015036458752,
+      "position_delta_gltf_cm": [
+        2.6786442608084187,
+        -1.2415264932496455,
+        27.19220850621117
+      ],
+      "world_rotation_difference_deg": 5.242913881263493,
+      "joint_head_difference_after_hips_translation_alignment_cm": 6.71896324153143
+    },
+    {
+      "joint": "mixamorig:Spine2",
+      "joint_head_difference_cm": 26.934009362836534,
+      "position_delta_gltf_cm": [
+        1.2566636147076409,
+        0.5694199786434595,
+        26.898650854731688
+      ],
+      "world_rotation_difference_deg": 24.510976555352936,
+      "joint_head_difference_after_hips_translation_alignment_cm": 5.787572055899796
+    },
+    {
+      "joint": "mixamorig:RightLeg",
+      "joint_head_difference_cm": 26.765255806621916,
+      "position_delta_gltf_cm": [
+        -3.3777776317240162,
+        2.6274787209917605,
+        26.42093662676001
+      ],
+      "world_rotation_difference_deg": 28.607961734796387,
+      "joint_head_difference_after_hips_translation_alignment_cm": 6.33053793372043
+    },
+    {
+      "joint": "mixamorig:LeftArm",
+      "joint_head_difference_cm": 26.748797871981438,
+      "position_delta_gltf_cm": [
+        3.545207617258514,
+        -0.2755168130869068,
+        26.51138964732625
+      ],
+      "world_rotation_difference_deg": 38.30000752902713,
+      "joint_head_difference_after_hips_translation_alignment_cm": 7.446050795735805
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle4",
+      "joint_head_difference_cm": 26.363030249535285,
+      "position_delta_gltf_cm": [
+        17.195514876370304,
+        1.6455737627209088,
+        19.915213256851775
+      ],
+      "world_rotation_difference_deg": 144.29197962405664,
+      "joint_head_difference_after_hips_translation_alignment_cm": 21.95257000616754
+    },
+    {
+      "joint": "mixamorig:LeftHand",
+      "joint_head_difference_cm": 26.15091766145171,
+      "position_delta_gltf_cm": [
+        12.62953891781342,
+        1.3332463995046062,
+        22.860177061818028
+      ],
+      "world_rotation_difference_deg": 151.94540160270074,
+      "joint_head_difference_after_hips_translation_alignment_cm": 16.518711069656398
+    },
+    {
+      "joint": "mixamorig:LeftHandRing1",
+      "joint_head_difference_cm": 25.38045007500589,
+      "position_delta_gltf_cm": [
+        18.115679839518293,
+        0.5155896374867908,
+        17.768611574561845
+      ],
+      "world_rotation_difference_deg": 147.48753696399217,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.96031314761746
+    },
+    {
+      "joint": "mixamorig:LeftHandRing2",
+      "joint_head_difference_cm": 25.16607984508995,
+      "position_delta_gltf_cm": [
+        18.524171714827965,
+        0.3854778411347737,
+        17.03050333616139
+      ],
+      "world_rotation_difference_deg": 144.8333599928625,
+      "joint_head_difference_after_hips_translation_alignment_cm": 24.73711203940231
+    },
+    {
+      "joint": "mixamorig:LeftHandRing3",
+      "joint_head_difference_cm": 25.116413686248887,
+      "position_delta_gltf_cm": [
+        18.794215452570466,
+        0.30020706430460287,
+        16.65897889126742
+      ],
+      "world_rotation_difference_deg": 143.51696657165772,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.181497250654175
+    },
+    {
+      "joint": "mixamorig:LeftHandRing4",
+      "joint_head_difference_cm": 24.606054917248798,
+      "position_delta_gltf_cm": [
+        18.511932552445703,
+        0.45665677827817497,
+        16.20363404768256
+      ],
+      "world_rotation_difference_deg": 143.51685599325938,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.239157911336413
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb2",
+      "joint_head_difference_cm": 22.838118204363344,
+      "position_delta_gltf_cm": [
+        5.3337212229707776,
+        0.7503133144272867,
+        22.19387507764916
+      ],
+      "world_rotation_difference_deg": 163.22962653400862,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.835898686617673
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb4",
+      "joint_head_difference_cm": 22.67731172487254,
+      "position_delta_gltf_cm": [
+        5.065981775102108,
+        0.6789476929062399,
+        22.09378477653098
+      ],
+      "world_rotation_difference_deg": 154.45840999377756,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.783600749138696
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb3",
+      "joint_head_difference_cm": 22.585304104446326,
+      "position_delta_gltf_cm": [
+        4.907784008345955,
+        0.5983208792997852,
+        22.037505070745592
+      ],
+      "world_rotation_difference_deg": 154.45843296685243,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.756028760092345
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky1",
+      "joint_head_difference_cm": 22.576948179563683,
+      "position_delta_gltf_cm": [
+        18.345651715900885,
+        -0.47114088520827657,
+        13.150425030692048
+      ],
+      "world_rotation_difference_deg": 146.46971452000463,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.199945506270925
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb1",
+      "joint_head_difference_cm": 22.293711364858417,
+      "position_delta_gltf_cm": [
+        6.61085034838334,
+        0.6807695854991413,
+        21.280102839562513
+      ],
+      "world_rotation_difference_deg": 151.61305516211456,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.307642302806906
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky2",
+      "joint_head_difference_cm": 22.281423722080177,
+      "position_delta_gltf_cm": [
+        18.529197863177895,
+        -0.5595711146155091,
+        12.361939564557375
+      ],
+      "world_rotation_difference_deg": 144.24256752679162,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.89104684200011
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky3",
+      "joint_head_difference_cm": 22.22649598277128,
+      "position_delta_gltf_cm": [
+        18.555964696104056,
+        -0.5673591656652599,
+        12.221759343327921
+      ],
+      "world_rotation_difference_deg": 142.9151294815333,
+      "joint_head_difference_after_hips_translation_alignment_cm": 28.00996040898467
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky4",
+      "joint_head_difference_cm": 21.849820255491604,
+      "position_delta_gltf_cm": [
+        18.238503030435567,
+        -0.4070879667508409,
+        12.0252206546662
+      ],
+      "world_rotation_difference_deg": 142.91494442662005,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.91971802415563
+    },
+    {
+      "joint": "mixamorig:Head",
+      "joint_head_difference_cm": 21.028282313419528,
+      "position_delta_gltf_cm": [
+        1.8480265716978466,
+        0.019963307189119206,
+        20.94691042396318
+      ],
+      "world_rotation_difference_deg": 0.7944655558735676,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.651366346294523
+    },
+    {
+      "joint": "mixamorig:HeadTop_End",
+      "joint_head_difference_cm": 20.71221454366887,
+      "position_delta_gltf_cm": [
+        1.7085315739686011,
+        0.11680608766733158,
+        20.64129616815777
+      ],
+      "world_rotation_difference_deg": 4.642438048771298,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.902482584441067
+    },
+    {
+      "joint": "mixamorig:RightShoulder",
+      "joint_head_difference_cm": 20.368014056473235,
+      "position_delta_gltf_cm": [
+        2.7147529347305346,
+        2.530724534215034,
+        20.02702040843783
+      ],
+      "world_rotation_difference_deg": 58.24114704949406,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.748683700142264
+    },
+    {
+      "joint": "mixamorig:Neck",
+      "joint_head_difference_cm": 20.10257821393727,
+      "position_delta_gltf_cm": [
+        1.841175871782795,
+        0.25505315678284735,
+        20.016459980322328
+      ],
+      "world_rotation_difference_deg": 11.681094340289519,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.524795730555772
+    },
+    {
+      "joint": "mixamorig:LeftShoulder",
+      "joint_head_difference_cm": 19.07240737338748,
+      "position_delta_gltf_cm": [
+        2.897314689421749,
+        2.6425068858288103,
+        18.664925608350373
+      ],
+      "world_rotation_difference_deg": 33.25598177942371,
+      "joint_head_difference_after_hips_translation_alignment_cm": 14.110512877062831
+    },
+    {
+      "joint": "mixamorig:LeftToe_End",
+      "joint_head_difference_cm": 17.495206096099295,
+      "position_delta_gltf_cm": [
+        9.307827202172067,
+        -0.3766502025656024,
+        14.808940669217463
+      ],
+      "world_rotation_difference_deg": 23.10331727632659,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.267608593216888
+    },
+    {
+      "joint": "mixamorig:LeftFoot",
+      "joint_head_difference_cm": 16.87961039985532,
+      "position_delta_gltf_cm": [
+        3.178780977682219,
+        1.7317130935527865,
+        16.486896873227764
+      ],
+      "world_rotation_difference_deg": 21.886670269935916,
+      "joint_head_difference_after_hips_translation_alignment_cm": 16.229983335231005
+    },
+    {
+      "joint": "mixamorig:LeftToeBase",
+      "joint_head_difference_cm": 16.125506232326494,
+      "position_delta_gltf_cm": [
+        6.067202545649561,
+        -0.2655239260480044,
+        14.938222838194648
+      ],
+      "world_rotation_difference_deg": 23.1033168563988,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.69429130393111
+    }
+  ],
+  "sit_start_vs_Idle_start": [
+    {
+      "joint": "mixamorig:RightForeArm",
+      "joint_head_difference_cm": 43.682852638285794,
+      "position_delta_gltf_cm": [
+        -12.864265373053135,
+        0.47600744691012054,
+        41.74297195864646
+      ],
+      "world_rotation_difference_deg": 47.824550694823856,
+      "joint_head_difference_after_hips_translation_alignment_cm": 15.259226945763615
+    },
+    {
+      "joint": "mixamorig:RightHand",
+      "joint_head_difference_cm": 38.99786073076041,
+      "position_delta_gltf_cm": [
+        -18.863915909718052,
+        0.7290334537054854,
+        34.124101868770836
+      ],
+      "world_rotation_difference_deg": 176.97875904311954,
+      "joint_head_difference_after_hips_translation_alignment_cm": 17.959718312437673
+    },
+    {
+      "joint": "mixamorig:RightHandIndex1",
+      "joint_head_difference_cm": 37.828500902395255,
+      "position_delta_gltf_cm": [
+        -21.149731974951063,
+        -0.3652167517084637,
+        31.361615625387078
+      ],
+      "world_rotation_difference_deg": 179.71753523610954,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.216129728666402
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle1",
+      "joint_head_difference_cm": 37.269312580769075,
+      "position_delta_gltf_cm": [
+        -24.35796891774638,
+        -1.5890636662493685,
+        28.163200938632304
+      ],
+      "world_rotation_difference_deg": 175.39181855951614,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.857479264324223
+    },
+    {
+      "joint": "mixamorig:RightHandIndex2",
+      "joint_head_difference_cm": 36.72312366686056,
+      "position_delta_gltf_cm": [
+        -22.79169716689026,
+        -1.4955999359043015,
+        28.755686966859685
+      ],
+      "world_rotation_difference_deg": 171.67801425095337,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.21730627212582
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle2",
+      "joint_head_difference_cm": 35.85823840669297,
+      "position_delta_gltf_cm": [
+        -25.47176978651414,
+        -2.806727122482622,
+        25.082354124642624
+      ],
+      "world_rotation_difference_deg": 167.04657388864152,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.79107584806429
+    },
+    {
+      "joint": "mixamorig:RightHandIndex3",
+      "joint_head_difference_cm": 35.80839112254287,
+      "position_delta_gltf_cm": [
+        -23.349717164980138,
+        -2.179382124009477,
+        27.0607072460789
+      ],
+      "world_rotation_difference_deg": 168.00579842461534,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.173228970805354
+    },
+    {
+      "joint": "mixamorig:RightHandRing1",
+      "joint_head_difference_cm": 35.692939220962536,
+      "position_delta_gltf_cm": [
+        -25.697808894335893,
+        -3.136853628493097,
+        24.571704816209365
+      ],
+      "world_rotation_difference_deg": 172.6670201085206,
+      "joint_head_difference_after_hips_translation_alignment_cm": 26.203664597516244
+    },
+    {
+      "joint": "mixamorig:RightHandThumb1",
+      "joint_head_difference_cm": 34.82291188153313,
+      "position_delta_gltf_cm": [
+        -15.035077761732468,
+        -0.8168659378432253,
+        31.399273218456358
+      ],
+      "world_rotation_difference_deg": 176.49750491224432,
+      "joint_head_difference_after_hips_translation_alignment_cm": 14.200403566518137
+    },
+    {
+      "joint": "mixamorig:RightHandIndex4",
+      "joint_head_difference_cm": 34.7694751210325,
+      "position_delta_gltf_cm": [
+        -23.606810255109984,
+        -2.782559167756027,
+        25.375032497501728
+      ],
+      "world_rotation_difference_deg": 168.0056137561462,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.941780285955005
+    },
+    {
+      "joint": "mixamorig:RightUpLeg",
+      "joint_head_difference_cm": 34.67635518911508,
+      "position_delta_gltf_cm": [
+        -2.38742485240598,
+        3.2135178083963822,
+        34.44449324741042
+      ],
+      "world_rotation_difference_deg": 17.167546967516532,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.2430856656084233
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle3",
+      "joint_head_difference_cm": 34.58745098739945,
+      "position_delta_gltf_cm": [
+        -25.82245680212666,
+        -3.5915588703188006,
+        22.72868661821655
+      ],
+      "world_rotation_difference_deg": 158.47870800678234,
+      "joint_head_difference_after_hips_translation_alignment_cm": 26.989993401956973
+    },
+    {
+      "joint": "mixamorig:RightHandRing2",
+      "joint_head_difference_cm": 34.347055224394055,
+      "position_delta_gltf_cm": [
+        -26.269204171787464,
+        -4.1922117695917365,
+        21.727274915355014
+      ],
+      "world_rotation_difference_deg": 162.67086213717965,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.875032069494612
+    },
+    {
+      "joint": "mixamorig:LeftLeg",
+      "joint_head_difference_cm": 34.174178032727944,
+      "position_delta_gltf_cm": [
+        3.3193943887534467,
+        0.5113494765856097,
+        34.008742799716856
+      ],
+      "world_rotation_difference_deg": 30.360527647395276,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.795871006786812
+    },
+    {
+      "joint": "mixamorig:LeftUpLeg",
+      "joint_head_difference_cm": 34.16261163990746,
+      "position_delta_gltf_cm": [
+        -2.150917735025283,
+        -0.9150957712172558,
+        34.08254959192159
+      ],
+      "world_rotation_difference_deg": 27.524809654523732,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.185908469466407
+    },
+    {
+      "joint": "mixamorig:RightHandPinky1",
+      "joint_head_difference_cm": 33.96717367932451,
+      "position_delta_gltf_cm": [
+        -25.934559778602274,
+        -4.54940012697389,
+        21.458575333329815
+      ],
+      "world_rotation_difference_deg": 169.82769992341466,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.748966363789055
+    },
+    {
+      "joint": "mixamorig:RightHandThumb2",
+      "joint_head_difference_cm": 33.84379998433936,
+      "position_delta_gltf_cm": [
+        -13.658112462937227,
+        -1.1975786691156065,
+        30.94227798112167
+      ],
+      "world_rotation_difference_deg": 158.0951858553697,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.948588441417801
+    },
+    {
+      "joint": "mixamorig:RightHandRing3",
+      "joint_head_difference_cm": 33.487024040421836,
+      "position_delta_gltf_cm": [
+        -26.58810031718121,
+        -4.782257739686169,
+        19.788474208955837
+      ],
+      "world_rotation_difference_deg": 154.48398840727444,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.05737719727573
+    },
+    {
+      "joint": "mixamorig:RightHandMiddle4",
+      "joint_head_difference_cm": 32.88228449549026,
+      "position_delta_gltf_cm": [
+        -25.533245565283195,
+        -4.068680994456598,
+        20.316098038517456
+      ],
+      "world_rotation_difference_deg": 158.47860667409182,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.757451604820297
+    },
+    {
+      "joint": "mixamorig:RightHandPinky2",
+      "joint_head_difference_cm": 32.76510035275689,
+      "position_delta_gltf_cm": [
+        -26.020645082535797,
+        -5.280946472982528,
+        19.198683157040445
+      ],
+      "world_rotation_difference_deg": 161.36971460620305,
+      "joint_head_difference_after_hips_translation_alignment_cm": 28.930169613846388
+    },
+    {
+      "joint": "mixamorig:RightArm",
+      "joint_head_difference_cm": 32.5554620353597,
+      "position_delta_gltf_cm": [
+        -3.041757418888852,
+        -1.9274857933394118,
+        32.355689123504334
+      ],
+      "world_rotation_difference_deg": 60.33982892278422,
+      "joint_head_difference_after_hips_translation_alignment_cm": 3.8632217786583176
+    },
+    {
+      "joint": "mixamorig:RightHandThumb3",
+      "joint_head_difference_cm": 32.47249506953281,
+      "position_delta_gltf_cm": [
+        -13.46614209036357,
+        -1.6003523096855266,
+        29.5053355467762
+      ],
+      "world_rotation_difference_deg": 161.9314302021987,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.062789810938408
+    },
+    {
+      "joint": "mixamorig:RightHandPinky3",
+      "joint_head_difference_cm": 32.344459392590394,
+      "position_delta_gltf_cm": [
+        -26.312866232911382,
+        -5.656699076255823,
+        17.93875356786328
+      ],
+      "world_rotation_difference_deg": 153.6611885804927,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.850089532885843
+    },
+    {
+      "joint": "mixamorig:RightHandRing4",
+      "joint_head_difference_cm": 32.22673128470011,
+      "position_delta_gltf_cm": [
+        -26.379478507118705,
+        -5.091446680466638,
+        17.79782272326299
+      ],
+      "world_rotation_difference_deg": 154.4838949484561,
+      "joint_head_difference_after_hips_translation_alignment_cm": 29.846540651343307
+    },
+    {
+      "joint": "mixamorig:Hips",
+      "joint_head_difference_cm": 32.204128742781826,
+      "position_delta_gltf_cm": [
+        -1.0231918096542358,
+        1.360557556152342,
+        32.15910243988037
+      ],
+      "world_rotation_difference_deg": 23.692766018509793,
+      "joint_head_difference_after_hips_translation_alignment_cm": 0.0
+    },
+    {
+      "joint": "mixamorig:RightHandThumb4",
+      "joint_head_difference_cm": 31.793838374178385,
+      "position_delta_gltf_cm": [
+        -13.820615095526383,
+        -1.716877336002931,
+        28.581306638392267
+      ],
+      "world_rotation_difference_deg": 161.931504017398,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.639841313973683
+    },
+    {
+      "joint": "mixamorig:RightHandPinky4",
+      "joint_head_difference_cm": 31.653961157279763,
+      "position_delta_gltf_cm": [
+        -26.259943633451044,
+        -5.85926413358383,
+        16.675060453487063
+      ],
+      "world_rotation_difference_deg": 153.66109599702972,
+      "joint_head_difference_after_hips_translation_alignment_cm": 30.47581047460243
+    },
+    {
+      "joint": "mixamorig:LeftForeArm",
+      "joint_head_difference_cm": 31.064522128409614,
+      "position_delta_gltf_cm": [
+        7.268044672057469,
+        1.364838128217838,
+        30.171464641200142
+      ],
+      "world_rotation_difference_deg": 40.94205366895381,
+      "joint_head_difference_after_hips_translation_alignment_cm": 8.526155331549308
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex2",
+      "joint_head_difference_cm": 29.502840146578045,
+      "position_delta_gltf_cm": [
+        15.11909162761016,
+        1.8670631704951202,
+        25.265484760594763
+      ],
+      "world_rotation_difference_deg": 148.26395473970783,
+      "joint_head_difference_after_hips_translation_alignment_cm": 17.559949521980418
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex3",
+      "joint_head_difference_cm": 29.267609492066736,
+      "position_delta_gltf_cm": [
+        15.45733697678638,
+        1.756463615748649,
+        24.79069451493319
+      ],
+      "world_rotation_difference_deg": 147.38489689255672,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.057076342452213
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex4",
+      "joint_head_difference_cm": 28.859752438828394,
+      "position_delta_gltf_cm": [
+        15.497038148551345,
+        1.7042046184084558,
+        24.286267849782952
+      ],
+      "world_rotation_difference_deg": 147.38478287508434,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.30348643451364
+    },
+    {
+      "joint": "mixamorig:LeftHandIndex1",
+      "joint_head_difference_cm": 28.835952504531043,
+      "position_delta_gltf_cm": [
+        13.3480897916474,
+        1.9383442960495212,
+        25.486927573712393
+      ],
+      "world_rotation_difference_deg": 150.70540011202294,
+      "joint_head_difference_after_hips_translation_alignment_cm": 15.855140801186081
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle2",
+      "joint_head_difference_cm": 28.63163799297861,
+      "position_delta_gltf_cm": [
+        18.474702074269363,
+        1.2705135990467742,
+        21.836709290151774
+      ],
+      "world_rotation_difference_deg": 146.034180050863,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.061907763394363
+    },
+    {
+      "joint": "mixamorig:Spine",
+      "joint_head_difference_cm": 28.604450560959787,
+      "position_delta_gltf_cm": [
+        1.1054671175810167,
+        0.7853071025448521,
+        28.57229124695869
+      ],
+      "world_rotation_difference_deg": 10.644419420906718,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.210381983447844
+    },
+    {
+      "joint": "mixamorig:RightFoot",
+      "joint_head_difference_cm": 28.153744568262166,
+      "position_delta_gltf_cm": [
+        0.34589426120718303,
+        1.7180214597790913,
+        28.09914754291941
+      ],
+      "world_rotation_difference_deg": 17.05882357877309,
+      "joint_head_difference_after_hips_translation_alignment_cm": 4.299466347952977
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle1",
+      "joint_head_difference_cm": 28.08931750039724,
+      "position_delta_gltf_cm": [
+        17.011648226644198,
+        1.4396310744665297,
+        22.30562809293803
+      ],
+      "world_rotation_difference_deg": 148.50729402460095,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.55122051027681
+    },
+    {
+      "joint": "mixamorig:Spine1",
+      "joint_head_difference_cm": 27.730693251330802,
+      "position_delta_gltf_cm": [
+        1.3089478248891704,
+        0.6633653821359609,
+        27.69183905342701
+      ],
+      "world_rotation_difference_deg": 10.580510063841928,
+      "joint_head_difference_after_hips_translation_alignment_cm": 5.0873759804505
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle3",
+      "joint_head_difference_cm": 27.67574306724959,
+      "position_delta_gltf_cm": [
+        18.111529933919922,
+        1.2855273023101965,
+        20.88699732685748
+      ],
+      "world_rotation_difference_deg": 144.29209208829596,
+      "joint_head_difference_after_hips_translation_alignment_cm": 22.2081867657411
+    },
+    {
+      "joint": "mixamorig:RightToe_End",
+      "joint_head_difference_cm": 27.671076381685978,
+      "position_delta_gltf_cm": [
+        3.1404509236163394,
+        -1.934086488089719,
+        27.42417447388427
+      ],
+      "world_rotation_difference_deg": 5.242914156394106,
+      "joint_head_difference_after_hips_translation_alignment_cm": 7.114080617462
+    },
+    {
+      "joint": "mixamorig:RightToeBase",
+      "joint_head_difference_cm": 27.352015036458752,
+      "position_delta_gltf_cm": [
+        2.6786442608084187,
+        -1.2415264932496455,
+        27.19220850621117
+      ],
+      "world_rotation_difference_deg": 5.242913881263493,
+      "joint_head_difference_after_hips_translation_alignment_cm": 6.71896324153143
+    },
+    {
+      "joint": "mixamorig:Spine2",
+      "joint_head_difference_cm": 26.934009362836534,
+      "position_delta_gltf_cm": [
+        1.2566636147076409,
+        0.5694199786434595,
+        26.898650854731688
+      ],
+      "world_rotation_difference_deg": 24.510976555352936,
+      "joint_head_difference_after_hips_translation_alignment_cm": 5.787572055899796
+    },
+    {
+      "joint": "mixamorig:RightLeg",
+      "joint_head_difference_cm": 26.765255806621916,
+      "position_delta_gltf_cm": [
+        -3.3777776317240162,
+        2.6274787209917605,
+        26.42093662676001
+      ],
+      "world_rotation_difference_deg": 28.607961734796387,
+      "joint_head_difference_after_hips_translation_alignment_cm": 6.33053793372043
+    },
+    {
+      "joint": "mixamorig:LeftArm",
+      "joint_head_difference_cm": 26.748797871981438,
+      "position_delta_gltf_cm": [
+        3.545207617258514,
+        -0.2755168130869068,
+        26.51138964732625
+      ],
+      "world_rotation_difference_deg": 38.30000752902713,
+      "joint_head_difference_after_hips_translation_alignment_cm": 7.446050795735805
+    },
+    {
+      "joint": "mixamorig:LeftHandMiddle4",
+      "joint_head_difference_cm": 26.363030249535285,
+      "position_delta_gltf_cm": [
+        17.195514876370304,
+        1.6455737627209088,
+        19.915213256851775
+      ],
+      "world_rotation_difference_deg": 144.29197962405664,
+      "joint_head_difference_after_hips_translation_alignment_cm": 21.95257000616754
+    },
+    {
+      "joint": "mixamorig:LeftHand",
+      "joint_head_difference_cm": 26.15091766145171,
+      "position_delta_gltf_cm": [
+        12.62953891781342,
+        1.3332463995046062,
+        22.860177061818028
+      ],
+      "world_rotation_difference_deg": 151.94540160270074,
+      "joint_head_difference_after_hips_translation_alignment_cm": 16.518711069656398
+    },
+    {
+      "joint": "mixamorig:LeftHandRing1",
+      "joint_head_difference_cm": 25.38045007500589,
+      "position_delta_gltf_cm": [
+        18.115679839518293,
+        0.5155896374867908,
+        17.768611574561845
+      ],
+      "world_rotation_difference_deg": 147.48753696399217,
+      "joint_head_difference_after_hips_translation_alignment_cm": 23.96031314761746
+    },
+    {
+      "joint": "mixamorig:LeftHandRing2",
+      "joint_head_difference_cm": 25.16607984508995,
+      "position_delta_gltf_cm": [
+        18.524171714827965,
+        0.3854778411347737,
+        17.03050333616139
+      ],
+      "world_rotation_difference_deg": 144.8333599928625,
+      "joint_head_difference_after_hips_translation_alignment_cm": 24.73711203940231
+    },
+    {
+      "joint": "mixamorig:LeftHandRing3",
+      "joint_head_difference_cm": 25.116413686248887,
+      "position_delta_gltf_cm": [
+        18.794215452570466,
+        0.30020706430460287,
+        16.65897889126742
+      ],
+      "world_rotation_difference_deg": 143.51696657165772,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.181497250654175
+    },
+    {
+      "joint": "mixamorig:LeftHandRing4",
+      "joint_head_difference_cm": 24.606054917248798,
+      "position_delta_gltf_cm": [
+        18.511932552445703,
+        0.45665677827817497,
+        16.20363404768256
+      ],
+      "world_rotation_difference_deg": 143.51685599325938,
+      "joint_head_difference_after_hips_translation_alignment_cm": 25.239157911336413
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb2",
+      "joint_head_difference_cm": 22.838118204363344,
+      "position_delta_gltf_cm": [
+        5.3337212229707776,
+        0.7503133144272867,
+        22.19387507764916
+      ],
+      "world_rotation_difference_deg": 163.22962653400862,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.835898686617673
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb4",
+      "joint_head_difference_cm": 22.67731172487254,
+      "position_delta_gltf_cm": [
+        5.065981775102108,
+        0.6789476929062399,
+        22.09378477653098
+      ],
+      "world_rotation_difference_deg": 154.45840999377756,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.783600749138696
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb3",
+      "joint_head_difference_cm": 22.585304104446326,
+      "position_delta_gltf_cm": [
+        4.907784008345955,
+        0.5983208792997852,
+        22.037505070745592
+      ],
+      "world_rotation_difference_deg": 154.45843296685243,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.756028760092345
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky1",
+      "joint_head_difference_cm": 22.576948179563683,
+      "position_delta_gltf_cm": [
+        18.345651715900885,
+        -0.47114088520827657,
+        13.150425030692048
+      ],
+      "world_rotation_difference_deg": 146.46971452000463,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.199945506270925
+    },
+    {
+      "joint": "mixamorig:LeftHandThumb1",
+      "joint_head_difference_cm": 22.293711364858417,
+      "position_delta_gltf_cm": [
+        6.61085034838334,
+        0.6807695854991413,
+        21.280102839562513
+      ],
+      "world_rotation_difference_deg": 151.61305516211456,
+      "joint_head_difference_after_hips_translation_alignment_cm": 13.307642302806906
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky2",
+      "joint_head_difference_cm": 22.281423722080177,
+      "position_delta_gltf_cm": [
+        18.529197863177895,
+        -0.5595711146155091,
+        12.361939564557375
+      ],
+      "world_rotation_difference_deg": 144.24256752679162,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.89104684200011
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky3",
+      "joint_head_difference_cm": 22.22649598277128,
+      "position_delta_gltf_cm": [
+        18.555964696104056,
+        -0.5673591656652599,
+        12.221759343327921
+      ],
+      "world_rotation_difference_deg": 142.9151294815333,
+      "joint_head_difference_after_hips_translation_alignment_cm": 28.00996040898467
+    },
+    {
+      "joint": "mixamorig:LeftHandPinky4",
+      "joint_head_difference_cm": 21.849820255491604,
+      "position_delta_gltf_cm": [
+        18.238503030435567,
+        -0.4070879667508409,
+        12.0252206546662
+      ],
+      "world_rotation_difference_deg": 142.91494442662005,
+      "joint_head_difference_after_hips_translation_alignment_cm": 27.91971802415563
+    },
+    {
+      "joint": "mixamorig:Head",
+      "joint_head_difference_cm": 21.028282313419528,
+      "position_delta_gltf_cm": [
+        1.8480265716978466,
+        0.019963307189119206,
+        20.94691042396318
+      ],
+      "world_rotation_difference_deg": 0.7944655558735676,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.651366346294523
+    },
+    {
+      "joint": "mixamorig:HeadTop_End",
+      "joint_head_difference_cm": 20.71221454366887,
+      "position_delta_gltf_cm": [
+        1.7085315739686011,
+        0.11680608766733158,
+        20.64129616815777
+      ],
+      "world_rotation_difference_deg": 4.642438048771298,
+      "joint_head_difference_after_hips_translation_alignment_cm": 11.902482584441067
+    },
+    {
+      "joint": "mixamorig:RightShoulder",
+      "joint_head_difference_cm": 20.368014056473235,
+      "position_delta_gltf_cm": [
+        2.7147529347305346,
+        2.530724534215034,
+        20.02702040843783
+      ],
+      "world_rotation_difference_deg": 58.24114704949406,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.748683700142264
+    },
+    {
+      "joint": "mixamorig:Neck",
+      "joint_head_difference_cm": 20.10257821393727,
+      "position_delta_gltf_cm": [
+        1.841175871782795,
+        0.25505315678284735,
+        20.016459980322328
+      ],
+      "world_rotation_difference_deg": 11.681094340289519,
+      "joint_head_difference_after_hips_translation_alignment_cm": 12.524795730555772
+    },
+    {
+      "joint": "mixamorig:LeftShoulder",
+      "joint_head_difference_cm": 19.07240737338748,
+      "position_delta_gltf_cm": [
+        2.897314689421749,
+        2.6425068858288103,
+        18.664925608350373
+      ],
+      "world_rotation_difference_deg": 33.25598177942371,
+      "joint_head_difference_after_hips_translation_alignment_cm": 14.110512877062831
+    },
+    {
+      "joint": "mixamorig:LeftToe_End",
+      "joint_head_difference_cm": 17.495206096099295,
+      "position_delta_gltf_cm": [
+        9.307827202172067,
+        -0.3766502025656024,
+        14.808940669217463
+      ],
+      "world_rotation_difference_deg": 23.10331727632659,
+      "joint_head_difference_after_hips_translation_alignment_cm": 20.267608593216888
+    },
+    {
+      "joint": "mixamorig:LeftFoot",
+      "joint_head_difference_cm": 16.87961039985532,
+      "position_delta_gltf_cm": [
+        3.178780977682219,
+        1.7317130935527865,
+        16.486896873227764
+      ],
+      "world_rotation_difference_deg": 21.886670269935916,
+      "joint_head_difference_after_hips_translation_alignment_cm": 16.229983335231005
+    },
+    {
+      "joint": "mixamorig:LeftToeBase",
+      "joint_head_difference_cm": 16.125506232326494,
+      "position_delta_gltf_cm": [
+        6.067202545649561,
+        -0.2655239260480044,
+        14.938222838194648
+      ],
+      "world_rotation_difference_deg": 23.1033168563988,
+      "joint_head_difference_after_hips_translation_alignment_cm": 18.69429130393111
+    }
+  ],
+  "native_ready": false,
+  "note": "65 direct glTF joint matrices only; no skin simulation/native action. Runtime FBX/source relationship declared by renderer existing audit; not independently reimported here.",
+  "all65_rest_world_matrix_max_difference": 1.942890293094024e-16,
+  "interpretation": "The65source rest-world bases match. Hips translation alignment removes only constant placement; substantial remaining pose differences require captured approach/exit integration. Native actor transforms/actual framebuffer not measured here."
+}

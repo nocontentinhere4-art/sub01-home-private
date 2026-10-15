@@ -1,0 +1,7 @@
+# Runtime standing source seam remains unresolved
+
+Renderer identified the actual configured standing role `/Game/Sub01Hands/Life/SUB01_Idle.SUB01_Idle`; its saved LifeFBX audit declares `out/first-person-assets/ReferenceT/idle-source-review.glb`,2.1s, with Idle FBX SHA0d6e53c081507adc025dcc22c9890e0fe0565d68a6b240f2f4375acc32d0e833.
+
+A light direct-glTF matrix comparison of all65joints shows that the source rest-world bases agree within1.95e−16. Therefore the measured pose differences are not explained by different reference bone axes. The passing SitDown start/GetUp end is a staggered shallow crouch, not the configured standing Idle: source Hips differs32.20cm, predominantly fore/aft. After aligning that constant Hips translation, right forearm still differs about15cm, fingertips up to30.48cm; right wrist orientation differs176.98°. The full exact-source comparison is recorded beside this note.
+
+The translation difference includes source placement and must not be called a measured native jump without applying actual actor transforms. Nevertheless the remaining pose discrepancy blocks a claim of a coherent automatic standing-Idle swap. A captured approach/exit phase with physical foot placement and full collision proof is required before enabling this chain. No native state, original clip, joint limits or readiness flag changed. The current seated/transition source contact passes remain valid within their explicit finite-footrest scene.
