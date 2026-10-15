@@ -29,6 +29,7 @@ TASKS = {
     'kitchen_partial_inventory': 'unreal_kitchen_partial_inventory',
     'private_crash_policy': 'unreal_private_crash_policy',
     'plant_clone_audit': 'unreal_loaded_plant_clone_audit',
+    'scene_visual_inventory': 'unreal_home_visual_inventory',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -101,6 +102,8 @@ def dispatch(task):
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'scene_visual_inventory':
+        return module.run(Path('/workspace/sub01-private-recovered-project/Sub01HomeLab/private-audit/current-editor-visual-inventory.json'))
     if task == 'refresh_queue':
         return {'refreshed_existing_queue': module.refresh(), 'native_game_accepted': False}
     if task in ('review_living', 'review_desk', 'review_kitchen', 'review_stairs'):
