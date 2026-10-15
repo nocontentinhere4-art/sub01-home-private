@@ -266,7 +266,9 @@ private:
  bool Started(const FSub01SeatInputs& In)const{return In.ClipPlaying&&In.ClipSerial==Serial&&Serial!=0;}
  bool Finished(const FSub01SeatInputs& In,double Duration)const{return Started(In)&&In.ClipSeconds>=Duration-EndToleranceSeconds;}
  double Progress(const FSub01SeatInputs& In,double Duration)const{
-  if(!Started(In)||!(Duration>0))return 0;const double P=In.ClipSeconds/Duration;return P<0?0:P>1?1:P;
+  if(!Started(In)||!(Duration>0)){return 0;}
+  const double P=In.ClipSeconds/Duration;
+  return P<0?0:P>1?1:P;
  }
  void BeginStandUp(double FromFraction,double Now){
   State=ESub01SeatPhase::StandingUp;Request(ESub01SeatClip::SitToStand,(FromFraction<0?0:FromFraction>1?1:FromFraction)*FSub01SeatClips::GetUpSeconds,Now);

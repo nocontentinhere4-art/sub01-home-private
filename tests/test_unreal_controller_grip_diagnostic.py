@@ -47,7 +47,8 @@ if(Reject(true,"Gaming",&body,&clip)||BadTime(4,&clip))return 1;
 if(!Reject(false,"Gaming",&body,&clip)||!Reject(true,"Phone",&body,&clip)||!Reject(true,"Gaming",nullptr,&clip)||!Reject(true,"Gaming",&body,nullptr))return 2;
 owner.path="OtherOwner";if(!Reject(true,"Gaming",&body,&clip))return 3;owner.path="/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner";
 clip.skeleton=2;if(!Reject(true,"Gaming",&body,&clip))return 4;clip.skeleton=1;clip.path="OtherClip";if(!Reject(true,"Gaming",&body,&clip))return 5;
-if(!BadTime(NAN,&clip)||!BadTime(-1,&clip)||!BadTime(6,&clip))return 6;return 0;}
+if(!BadTime(NAN,&clip)||!BadTime(-1,&clip)||!BadTime(6,&clip)){return 6;}
+return 0;}
 ''')
     result=subprocess.run([compiler,'-std=c++17','-Wall','-Werror',str(cpp),'-o',str(tmp_path/'gate')],capture_output=True,text=True)
     assert result.returncode==0,result.stderr

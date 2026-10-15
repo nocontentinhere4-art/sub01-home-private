@@ -133,7 +133,8 @@ IDENTITY_CASES = r"""
 TSharedPtr<FJsonObject> State(const char* Kind, bool Available, const char* Id, const char* Browser) {
   auto S = Obj();
   if (Kind) { auto P = Obj(); P->Strings["device"] = "phone"; P->Strings["kind"] = Kind; P->Bools["available"] = Available;
-    if (Id) P->Strings["frame_id"] = Id; P->Strings["app"] = "notes"; S->Objects["phone_screen"] = P; }
+    if (Id) { P->Strings["frame_id"] = Id; }
+    P->Strings["app"] = "notes"; S->Objects["phone_screen"] = P; }
   if (Browser) { auto B = Obj(); B->Strings["frame_id"] = Browser; S->Objects["phone_browser_screen"] = B; }
   return S;
 }

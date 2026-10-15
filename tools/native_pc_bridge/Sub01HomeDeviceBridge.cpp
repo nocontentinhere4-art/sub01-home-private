@@ -34,7 +34,8 @@ static FString Sub01PhoneIdentity(const TSharedPtr<FJsonObject>& State,bool* Own
  if(State.IsValid()&&State->TryGetObjectField(TEXT("phone_screen"),Screen)&&Screen&&(*Screen).IsValid()){
   if(!(*Screen)->TryGetBoolField(TEXT("available"),Available)||!Available||!(*Screen)->TryGetStringField(TEXT("kind"),Kind)||(Kind!=TEXT("owned_app")&&Kind!=TEXT("browser"))
    ||!(*Screen)->TryGetStringField(TEXT("frame_id"),Id)||Id.IsEmpty()||Id.Len()>100)return FString();
-  if(OwnedApp)*OwnedApp=Kind==TEXT("owned_app");return Id;
+  if(OwnedApp){*OwnedApp=Kind==TEXT("owned_app");}
+  return Id;
  }
  if(State.IsValid()&&State->TryGetObjectField(TEXT("phone_browser_screen"),Screen)&&Screen&&(*Screen).IsValid()&&(*Screen)->TryGetStringField(TEXT("frame_id"),Id)&&!Id.IsEmpty()&&Id.Len()<=100)return Id;
  return FString();
@@ -53,7 +54,9 @@ static FSub01DeviceScreenInputs Sub01ScreenInputs(const TSharedPtr<FJsonObject>&
  const TSharedPtr<FJsonObject>* Minecraft=nullptr;
  if(State.IsValid()&&State->TryGetObjectField(TEXT("minecraft"),Minecraft)&&Minecraft&&(*Minecraft).IsValid()){(*Minecraft)->TryGetBoolField(TEXT("enabled"),In.MinecraftEnabled);(*Minecraft)->TryGetBoolField(TEXT("has_frame"),In.MinecraftFrame);}
  bool OwnedApp=false;const FString Identity=Sub01PhoneIdentity(State,&OwnedApp);In.PhoneAppFrame=OwnedApp;In.PhoneFrame=!OwnedApp&&!Identity.IsEmpty();
- if(PhoneIdentity)*PhoneIdentity=Identity;if(Game)*Game=Console;return In;
+ if(PhoneIdentity){*PhoneIdentity=Identity;}
+ if(Game){*Game=Console;}
+ return In;
 }
 // Downloaded bytes may be painted only if the fresh state still allows that exact
 // frame by the same policy Poll used: same phone identity and still showable

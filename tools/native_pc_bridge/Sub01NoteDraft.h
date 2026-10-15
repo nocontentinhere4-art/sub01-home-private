@@ -15,7 +15,8 @@ template<class C> inline bool Sub01NoteSpace(C Ch){
 }
 // Length without leading/trailing whitespace (as the backend's str.strip()).
 template<class C> inline std::size_t Sub01TrimmedLength(const C* Chars,std::size_t Length){
- if(!Chars)return 0;std::size_t Begin=0,End=Length;
+ if(!Chars){return 0;}
+ std::size_t Begin=0,End=Length;
  while(Begin<End&&Sub01NoteSpace(Chars[Begin]))++Begin;
  while(End>Begin&&Sub01NoteSpace(Chars[End-1]))--End;
  return End-Begin;
@@ -79,7 +80,8 @@ struct FSub01NoteComposer{
  // Only on the phone's own Notes app, with a current frame, while the home is public,
  // and never while a save is pending (its reply must find the draft it sent).
  bool TryOpen(bool PublicHome,bool NotesApp,bool HasFrame){
-  if(Saving||!PublicHome||!NotesApp||!HasFrame)return false;Open=true;return true;
+  if(Saving||!PublicHome||!NotesApp||!HasFrame){return false;}
+  Open=true;return true;
  }
  // Editing is allowed only while open and not saving (the editor is read-only otherwise).
  bool CanEdit()const{return Open&&!Saving;}
@@ -88,13 +90,16 @@ struct FSub01NoteComposer{
  bool Edited(){++Revision;return CanEdit();}
  // Returns the request id for a valid draft, or 0 (nothing sent).
  unsigned long long TryBeginSave(ESub01NoteCheck Check){
-  if(!Open||Saving||Check!=ESub01NoteCheck::Ok)return 0;Saving=true;SentRevision=Revision;return ++Request;
+  if(!Open||Saving||Check!=ESub01NoteCheck::Ok){return 0;}
+  Saving=true;SentRevision=Revision;return ++Request;
  }
  // True only when this reply confirms the save of the draft still held: then (and
  // only then) clear it. A newer revision is kept even after its predecessor is saved.
  bool Finish(unsigned long long Id,ESub01NoteSave Outcome){
-  if(!Saving||Id!=Request)return false;Saving=false;
-  if(Outcome!=ESub01NoteSave::Saved||Revision!=SentRevision)return false;Open=false;return true;
+  if(!Saving||Id!=Request){return false;}
+  Saving=false;
+  if(Outcome!=ESub01NoteSave::Saved||Revision!=SentRevision){return false;}
+  Open=false;return true;
  }
  // Close the editor and keep the draft (Escape, focus released).
  void Close(){Open=false;}
