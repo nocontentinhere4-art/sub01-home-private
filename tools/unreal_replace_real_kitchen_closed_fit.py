@@ -137,7 +137,11 @@ def run():
             actor.set_actor_hidden_in_game(True);c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);c.set_editor_property('component_tags',[t for t in c.get_editor_property('component_tags')if not str(t).startswith('SUB01Kitchen:')])
         for actor,c in originals:actor.set_actor_hidden_in_game(False);c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
         result=importer.run(ROOT,dry_run=False,u=u,retained_owned_paths=owned_sink)
-        if importer.snapshot(u,actors)!=expected:raise RuntimeError('Replacement changed protected originals or retired R5 transforms/materials')
+        after=importer.snapshot(u,actors)
+        if after!=expected:
+            differences={path:{'expected':expected.get(path),'actual':after.get(path)}for path in set(expected)|set(after)if expected.get(path)!=after.get(path)}
+            (ROOT/'native-kitchen-protected-differences.json').write_text(json.dumps(differences,indent=2))
+            raise RuntimeError('Replacement changed protected originals or retired R5 transforms/materials; inspect native-kitchen-protected-differences.json')
         actual=[str(t)for a in eas.get_all_level_actors()for c in a.get_components_by_class(u.StaticMeshComponent)for t in c.get_editor_property('component_tags')if str(t).startswith('SUB01Kitchen:')]
         if len(actual)!=40 or any(not t.startswith('SUB01Kitchen:'+NEW_EXPORT+':')for t in actual):raise RuntimeError('Exactly40 new runtime tags required; old tags must remain retired')
         # Carry the already-proved full-source sink identity into this receipt;
