@@ -176,5 +176,6 @@
     136
   ],
   "native_game_or_input_touched": false,
-  "next": "Preserve approved anatomy. Only consider independently measured cloth weight/clearance fix with Walk/Grip/Phone regression; do not fix via finger/hand pose edits."
+  "next": "Preserve approved anatomy. Only consider independently measured cloth weight/clearance fix with Walk/Grip/Phone regression; do not fix via finger/hand pose edits.",
+  "sampling_metadata_note": "The fast32 diagnostic inherited an incorrect hardcoded completeness flag from the all-frame helper. It is not all557 evidence; the separate557-row receipt is the authority. The phone-specific helper now computes completeness from the actual557 count."
 }
