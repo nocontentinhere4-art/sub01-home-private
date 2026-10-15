@@ -1,0 +1,39 @@
+{
+  "schema": "sub01.serialized-owner-fbx-fallback-source-route.v1",
+  "source_sha256": "9dc705a63b4f071fa28b8bc141d2a58502d1d21a94558dd33792702b19e2b826",
+  "fbx_sha256": "ca59dd3f51eb21f61a72a33726b21235cf684b3d26ab296a2a7540cd33ec8e20",
+  "remote_fbx": "/workspace/sub01-home-private/serialized-owner-fbx-source-experiment-r2/serialized-owner-diagnostic.fbx",
+  "source_validator": "tools/validate_serialized_owner_fbx_roundtrip_blender.py",
+  "source_validator_sha256": "5a10fcdbef324d570cc90ad891e9723da0f7b7d12f6575598c127860588cca49",
+  "bind_probe": "tools/probe_serialized_body_fbx_bind_frames_blender.py",
+  "all32_original_captured_samples_evaluated": true,
+  "all9_skinned_meshes_evaluated": true,
+  "every_unique_ordered_triangle_compared": true,
+  "nearest_neighbour_matching_used": false,
+  "maximum_world_triangle_corner_error_m": 1.0676007828901426e-05,
+  "original25_body_bind_frame_max_component_error": 2.1457672119140625e-06,
+  "original_vs_anatomical_GLTF_body_bind_component_error": 9.313225746154785e-10,
+  "raw_triangle_multiplicity_preserved": false,
+  "exact_opposite_winding_double_sided_duplicate_faces_compacted": 628,
+  "material_culling_requirement": "Native materials corresponding to original glTF material1 and3 must remain TwoSided=true; FBX PBR/material import is NOT certified by this skin proof.",
+  "serialized_IBMs_bit_identical_in_FBX": false,
+  "bind_statement": "A format conversion cannot promise identical serialized GLB matrix bytes. Physical original25 bind frames are compared against the legacy original-owner Blender convention; posed surface equivalence is measured at all32 actual captured samples. No pose-as-rest or edit-bone alignment was applied.",
+  "clock": {
+    "fps": 30,
+    "samples": 32,
+    "source_Blender_range": [
+      0.0,
+      31.0
+    ],
+    "FBX_Blender_range": [
+      0.0,
+      31.0
+    ],
+    "duration_s": 1.0333333333333334
+  },
+  "native_imported": false,
+  "native_skeleton_compatibility_accepted": false,
+  "native_materials_accepted": false,
+  "native_contact_accepted": false,
+  "scope": "Validated source-only fallback path; current native owner independently tries fresh isolated GLTF first. No new native importer or runtime edits."
+}
