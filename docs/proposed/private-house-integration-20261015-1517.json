@@ -1,0 +1,64 @@
+{
+  "schema": "sub01.private-house-integration-observation.v1",
+  "observed_epoch": 1792077497.6721334,
+  "actual_native_compile": {
+    "child_pid": 156613,
+    "child_start_ticks": 976700431,
+    "exit": 0,
+    "module_sha256": "97c3395e01e03c2df5f549c7920df289fa69a1073bee71c0b9a93fbfe8f5506a",
+    "deployed_game_verified": false
+  },
+  "actual_root_observed_saved_receipts": {
+    "bath_fixtures": {
+      "parts": 90,
+      "receipt_sha256": "8d0db7243624fd0b6d3c730ff690218de4d5d1c82c5bbc221bb6dc4c1b4d2509"
+    },
+    "doors": {
+      "parts": 76,
+      "receipt_sha256": "5938ae309aa31046a29c61d541cf47e784d2a42d99bd70e30007744d6a39d9f6"
+    },
+    "bedding": {
+      "parts": 4,
+      "receipt_sha256": "77de956255c33cca5c17f37fdb134c71d9de4f985c1431d79b1ff7a36854e194"
+    },
+    "entry": {
+      "parts": 4,
+      "receipt_sha256": "1726d51986d95c60b5f911991a7ad8c38cafe4e6e8297c352fdcfcb1f4b51608"
+    }
+  },
+  "actual_gamepad_viewer_rollout": {
+    "source_commit": "9a1c65c",
+    "actual_python_pid": 158713,
+    "actual_start_ticks": 976762666,
+    "capture_fps_setting": 60,
+    "capture_width": 1280,
+    "codec": "h264_nvenc",
+    "prior_encoder_and_decoder_source_bytes_preserved": true,
+    "input_and_capture_stay_locked_during_native_maintenance": true,
+    "actual_new_gameplay_or_browser_fps_verified": false,
+    "persistent_source_overlay_sha256": "4f21064cca41a1033a7d0318bd4be1d8688402e15fb32ab248e5ed52c0d67dc6"
+  },
+  "source_visual_review": {
+    "curtain_full_pair_viewed": true,
+    "actual_native_shader_render_verified": false
+  },
+  "native_media_import": {
+    "revision": 132,
+    "accepted": false,
+    "error": "Actual world media cabinet triangles differ from source",
+    "existing_world_preserved": true
+  },
+  "local_focused_tests_this_continuation": {
+    "door_window_entry_projection": 22,
+    "media_material_identity": 1
+  },
+  "goal_complete": false,
+  "pending": [
+    "Actual updated GameViewport review and projection metrics",
+    "Physical route and every room/device interaction",
+    "Actual gamepad to Minecraft worker acknowledgement",
+    "Controller/keyboard hands and sofa contact verification",
+    "Brain-driven activity readiness and bathroom privacy verification",
+    "Native media and curtain acceptance"
+  ]
+}
