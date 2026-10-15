@@ -1,0 +1,31 @@
+{
+  "schema": "sub01.final-aux-source-handoff.v1",
+  "restSha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "GamingGrip": {
+    "sourceSha256": "7e74f67fca8af0e93d55e7023809f7d7ec84f70f15fbfeb3d659e545dea2a212",
+    "sourceRemote": "/workspace/sub01-home-private/serialized-owner-aux-final-r1/owner65-anatomical-GamingGrip.glb",
+    "fbxSha256": "49c01512d4b6c192374c441ad710fdacfa9b78b138265ee050d0d0a4d121fa47",
+    "fbxRemote": "/workspace/sub01-home-private/serialized-owner-aux-final-r1/GamingGrip-bind-transport-fbx-r2/captured-animation-only.fbx",
+    "nativeRequiredMode": "ANIMATION ONLY on existing validated65Skeleton; transport meshes must NOT replace owner",
+    "cuffAll152CandidatePairs": 0,
+    "actualPhysicalControllerContactsAccepted": false,
+    "sourceTimingOffsetSeconds": 0.03333333507180214,
+    "fbxRelativeSampleClockSeconds": [
+      0,
+      5.033333333333333
+    ]
+  },
+  "oldIdle": {
+    "sha256": "62a7786843c3d16859b4e81067997200130340ae72921411fe7d5f1f658e1a88",
+    "status": "REJECTED; authentic replacement under construction",
+    "correctedProvenance": "Derived Quaternius retarget through fingerless intermediate, seam blend and leg IK, NOT untouched raw capture",
+    "maximumCuffPairs": [
+      3460,
+      2615
+    ],
+    "cause": "~167 degree relative Hand vs ForeArm skin rotation; singular-value collapse in original body, cuffs and genuine hand; not a finger collision",
+    "nativeActivationAllowed": false
+  },
+  "WalkUnchanged": true,
+  "nativeImportedByThisTool": false
+}

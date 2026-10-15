@@ -1,0 +1,31 @@
+{
+  "schema": "sub01.serialized-owner-animation-only-fbx-roundtrip.v1",
+  "source_sha256": "7e74f67fca8af0e93d55e7023809f7d7ec84f70f15fbfeb3d659e545dea2a212",
+  "fbx_sha256": "49c01512d4b6c192374c441ad710fdacfa9b78b138265ee050d0d0a4d121fa47",
+  "fbx": "/workspace/sub01-home-private/serialized-owner-aux-final-r1/GamingGrip-bind-transport-fbx-r2/captured-animation-only.fbx",
+  "fps": 30,
+  "samples": 152,
+  "source_Blender_frame_range": [
+    1.0,
+    152.0
+  ],
+  "FBX_Blender_frame_range": [
+    1.0,
+    152.0
+  ],
+  "duration_seconds": 5.033333333333333,
+  "all65_joint_pose_samples": 9880,
+  "maximum_world_joint_head_error_m": 4.895825209195441e-06,
+  "maximum_pose_matrix_component_error": 4.351139068603516e-06,
+  "maximum_bind_matrix_component_error": 2.1457672119140625e-06,
+  "FBX_curve_key_counts": [
+    152
+  ],
+  "FBX_contains_meshes": true,
+  "native_import_mode_required": "animation-only; never replace owner mesh",
+  "same_axis_flags_as_validated_final_owner": true,
+  "source_new_owner_family_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "native_skeleton_binding_pending": true,
+  "controller_prop_contact_accepted": false,
+  "native_imported": false
+}

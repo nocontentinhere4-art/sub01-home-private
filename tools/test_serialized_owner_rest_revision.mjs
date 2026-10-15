@@ -1,0 +1,12 @@
+import assert from'node:assert/strict';
+import{verifyRestRevision,ORIGINAL_PORTABLE_REST_SHA}from'./verify_serialized_owner_rest_revision.mjs';
+const final='fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e';
+const packet={schema:'sub01.portable-cuff-photo-tinted-sheen.v1',afterSha256:final,binaryGeometryExact:true};
+assert.equal(verifyRestRevision(ORIGINAL_PORTABLE_REST_SHA),ORIGINAL_PORTABLE_REST_SHA);
+assert.equal(verifyRestRevision(final,final,packet),final);
+assert.throws(()=>verifyRestRevision(final),'Unpinned changed rest cannot replace original');
+assert.throws(()=>verifyRestRevision(final,final,null),'Explicit revision needs source packet');
+assert.throws(()=>verifyRestRevision(final,final,{...packet,afterSha256:ORIGINAL_PORTABLE_REST_SHA}));
+assert.throws(()=>verifyRestRevision(final,final,{...packet,binaryGeometryExact:false}));
+assert.throws(()=>verifyRestRevision(final,'fd2f3b8e',packet));
+console.log('PASS original pin, explicit verified revision, mismatched/unverified/non-geometric source refusal');
