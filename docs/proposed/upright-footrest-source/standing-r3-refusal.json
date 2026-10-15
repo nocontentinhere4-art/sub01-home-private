@@ -1,0 +1,43 @@
+{
+  "schema": "sub01.upright-two-step-approach.v1",
+  "runtime_walk_body_z_cm": 4.65,
+  "source_evaluation_body_z_cm": -0.6,
+  "walk_origin_conversion_hips_y_cm": 5.25,
+  "original_Idle_immutable": true,
+  "standing_seam_derived": true,
+  "native_ready": false,
+  "source_ready": false,
+  "geometry_and_main_support_pass": false,
+  "steps": {
+    "left": [
+      3,
+      19
+    ],
+    "right": [
+      19,
+      35
+    ]
+  },
+  "captured_walk_source_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "captured_walk_action": "walking",
+  "walk_usage": "Actual captured knee bend-plane prior only; full physical endpoints/root/foot paths explicitly derived",
+  "limits_changed": false,
+  "left_standing_leg": {
+    "all_reached": false,
+    "swivel_and_hinge_max_deg": 0.0,
+    "swivel_deg": [
+      0.0
+    ]
+  },
+  "right_standing_leg": {
+    "all_reached": true,
+    "swivel_and_hinge_max_deg": 1.4381380436169748e-14,
+    "swivel_deg": [
+      0.0
+    ]
+  },
+  "derived_stance_anatomical_excess_deg": 0.0,
+  "phase": "REFUSED original15cm horizontal IK bound",
+  "elapsed_s": 7.538241095840931,
+  "left_IK_world_horizontal_edit_max_cm": 19.2606642535157
+}

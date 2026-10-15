@@ -1,0 +1,35 @@
+{
+  "schema": "sub01.proposed-standing-anchor-source-capsule-witness.v1",
+  "footrest_source_sha256": "34869299fd7c8428b224e2c4f95cf39186ab2094fd38e54183235eb21cb9876a",
+  "proposed_body_anchor_ue_cm": [
+    200.025,
+    -232.3,
+    4.65
+  ],
+  "capsule_center_ue_cm": [
+    200.025,
+    -232.3,
+    95.65
+  ],
+  "radius_cm": 25.0,
+  "halfheight_cm": 91.0,
+  "geometry": {
+    "node": 0,
+    "primitive": 0,
+    "triangle": 366,
+    "actual_triangle_centroid_ue_cm": [
+      205.79782724380493,
+      -237.25691966740587,
+      14.48985089858373
+    ],
+    "nearest_axis_point_ue_cm": [
+      200.025,
+      -232.3,
+      29.650000000000006
+    ],
+    "distance_to_capsule_axis_cm": 16.96250888734046,
+    "penetration_inside_radius_cm": 8.037491112659541
+  },
+  "geometric_refusal": true,
+  "note": "A physical positive-area footrest triangle centroid inside capsule proves this proposed anchor blocked if footrest has intendedBlockAll. Source-only proposedanchor, not nativepose/collision query."
+}

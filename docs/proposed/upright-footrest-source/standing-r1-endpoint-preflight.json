@@ -1,0 +1,116 @@
+{
+  "schema": "sub01.upright-standing-endpoint-feasibility.v1",
+  "runtime_idle_object_path": "/Game/Sub01Hands/Life/SUB01_Idle.SUB01_Idle",
+  "idle_source_sha256": "3d9876d91a7d5829e112648184bad049c5d5e977f8d67c008db15b3f2a0ccc37",
+  "angles_deg": {
+    "pelvis_posterior_tilt": -1.7911623592600154,
+    "pelvis_obliquity": 7.379439741984027,
+    "pelvis_heading": -6.271055056441927,
+    "lumbar_flexion": 2.891473913456975,
+    "left_hip_flexion": 24.219904631476297,
+    "left_hip_abduction": 0.2743723735184193,
+    "left_hip_internal_rotation": 7.896489436092664,
+    "left_knee_flexion": 12.433770119718382,
+    "left_knee_varus": 0.14088369687308938,
+    "left_knee_axial": -12.981535512165513,
+    "left_ankle_dorsiflexion": 0.3571631972523024,
+    "left_subtalar_inversion": 6.373815213612331,
+    "left_foot_adduction": 2.713898665205831,
+    "left_mtp_extension": -10.242090243901337,
+    "right_hip_flexion": 19.507222472653694,
+    "right_hip_abduction": 10.016892085271689,
+    "right_hip_internal_rotation": -1.1258900339955509,
+    "right_knee_flexion": 38.9128007501792,
+    "right_knee_varus": 6.928847040678134,
+    "right_knee_axial": -41.64833175181935,
+    "right_ankle_dorsiflexion": 26.218506043546125,
+    "right_subtalar_inversion": 24.449954944135484,
+    "right_foot_adduction": 7.7879224675690555,
+    "right_mtp_extension": -10.659163240936168
+  },
+  "anatomical_violations": [
+    {
+      "angle": "pelvis_posterior_tilt",
+      "actual_deg": -1.7911623592600154,
+      "limits_deg": [
+        0.0,
+        45.0
+      ]
+    },
+    {
+      "angle": "right_ankle_dorsiflexion",
+      "actual_deg": 26.218506043546125,
+      "limits_deg": [
+        -50.0,
+        20.0
+      ]
+    }
+  ],
+  "unchanged_strong_anatomical_limits": {
+    "pelvis_posterior_tilt": [
+      0.0,
+      45.0
+    ],
+    "hip_flexion": [
+      -30.0,
+      120.0
+    ],
+    "hip_abduction": [
+      -30.0,
+      45.0
+    ],
+    "hip_internal_rotation": [
+      -45.0,
+      45.0
+    ],
+    "knee_flexion": [
+      -5.0,
+      135.0
+    ],
+    "ankle_dorsiflexion": [
+      -50.0,
+      20.0
+    ],
+    "subtalar_inversion": [
+      -15.0,
+      35.0
+    ],
+    "mtp_extension": [
+      -45.0,
+      70.0
+    ],
+    "lumbar_flexion": [
+      -16.0,
+      52.0
+    ]
+  },
+  "actual_complete_owner_floor_min_z_cm": -0.5990034911208364,
+  "floor_witness_ue_cm": [
+    174.99355357331729,
+    -215.42167743343558,
+    -0.5990034911208364
+  ],
+  "floor_witness_joints": [
+    {
+      "joint": "LeftFoot",
+      "weight": 0.9019607843137255
+    },
+    {
+      "joint": "LeftToeBase",
+      "weight": 0.09803921568627451
+    }
+  ],
+  "all_source_vertices_checked": 249148,
+  "start_actor_body_ue_cm": [
+    200.025,
+    -199.8,
+    -0.6
+  ],
+  "source_ready": false,
+  "native_ready": false,
+  "pending": [
+    "Physicalstep candidate",
+    "Furniture collision and support",
+    "Actual native actor placement"
+  ]
+}
