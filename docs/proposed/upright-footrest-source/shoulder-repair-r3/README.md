@@ -1,0 +1,9 @@
+# Local shoulder skin repair R3 — source candidate only
+
+Original owner45e917… remains unchanged. Derived owner is SHA831790a62b81e7e2faa5a201e04740d0911c5bfebd49aa03b124808521e3a2b1, currently `/workspace/sub01-home-private/owner-shoulder-derived-r3/owner-shoulder-derived.glb`. This modifies only declared joint/weight slots of8,099 upper garment vertices in a6cm surface-geodesic band around the measured discontinuity. All original document data and all unlisted binary bytes remain exact, including65bones, inverse binds, geometry, normals, UVs, PBR and protected hand/lower-body weights. Originally equal coincident seam weights stay equal exactly.
+
+The sparse patch is retained in repair-report.json.gz with every affected vertex's original/new indices/weights. It recreates the exact derived GLB using tools/write_local_skin_weight_clone.py against the pinned original owner; retain the original source's life_gltf helper on the Python path. The builder/audit are server-only and refer to the authenticated source environment; no Mac heavy work is required.
+
+The original and repaired PNGs use the same repository-fitted SitDown frame20, camera, chair, desk, real footrest and diagnostic illumination. The original rectangular shoulder web is substantially reduced. This is a source view, not Unreal acceptance.
+
+Readback covers all68 existing SitDown and126 upright Idle frames plus the authored reference pose. Maximum affected-edge extension is5.8204cm in SitDown and2.8691cm in Idle; zero coincident-seam weight mismatch. These are measured residuals, not passed strain thresholds. The trial still reports nonadjacent garment intersection candidates; collision clearance and the complete transition set remain unaccepted. No native owner, mesh, animation, config or readiness flag has changed.

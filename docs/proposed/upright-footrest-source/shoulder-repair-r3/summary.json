@@ -1,0 +1,206 @@
+{
+  "schema": "sub01.local-owner-shoulder-weight-trial.v1",
+  "original_owner_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
+  "derived_owner_sha256": "831790a62b81e7e2faa5a201e04740d0911c5bfebd49aa03b124808521e3a2b1",
+  "all_unlisted_attribute_bytes_exact": true,
+  "sparse_byte_proof": {
+    "changed_bytes": 48073,
+    "allowed_attribute_bytes": 64792,
+    "affected_vertex_entries": 8099,
+    "all_unlisted_bytes_exact": true
+  },
+  "all_original65_nodes_ibms_uv_materials_positions_normals_unchanged": true,
+  "hand_lower_body_weights_unchanged": true,
+  "selected_rounds": 100,
+  "selection": "lowest summed patch maximum edge extension only; collision and appearance NOT acceptance",
+  "trials": [
+    {
+      "rounds": 12,
+      "metrics": [
+        {
+          "mesh": 0,
+          "primitive": 0,
+          "changed_vertices": 8099,
+          "source_geodesic_radius_cm": 6.0,
+          "coincident_seams_preserve_equal_source_weights": true,
+          "poses": [
+            {
+              "pose": "SitDown_0.00000",
+              "max_patch_edge_extension_before_cm": 15.390778429975402,
+              "after_cm": 6.2873652451786315,
+              "max_changed_vertex_shift_cm": 12.78401301990667
+            },
+            {
+              "pose": "SitDown_0.66667",
+              "max_patch_edge_extension_before_cm": 24.81054136560973,
+              "after_cm": 9.153323093945115,
+              "max_changed_vertex_shift_cm": 16.53515415795286,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 29,
+              "after": 15
+            },
+            {
+              "pose": "SitDown_1.33333",
+              "max_patch_edge_extension_before_cm": 27.188754617004612,
+              "after_cm": 9.158567658515791,
+              "max_changed_vertex_shift_cm": 16.506909496118293
+            },
+            {
+              "pose": "SitDown_2.23333",
+              "max_patch_edge_extension_before_cm": 21.85740829600444,
+              "after_cm": 7.542821788303336,
+              "max_changed_vertex_shift_cm": 14.280250354581888
+            },
+            {
+              "pose": "Idle_0.00000",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 4.530189602700012,
+              "max_changed_vertex_shift_cm": 10.306507148563954
+            },
+            {
+              "pose": "Idle_2.00000",
+              "max_patch_edge_extension_before_cm": 14.44038926855182,
+              "after_cm": 4.540869281746604,
+              "max_changed_vertex_shift_cm": 10.247215266584982,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 373,
+              "after": 226
+            },
+            {
+              "pose": "Idle_4.16667",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 4.53017858413536,
+              "max_changed_vertex_shift_cm": 10.306479457252873
+            }
+          ]
+        }
+      ],
+      "strain_score": 45.743315254524845
+    },
+    {
+      "rounds": 40,
+      "metrics": [
+        {
+          "mesh": 0,
+          "primitive": 0,
+          "changed_vertices": 8099,
+          "source_geodesic_radius_cm": 6.0,
+          "coincident_seams_preserve_equal_source_weights": true,
+          "poses": [
+            {
+              "pose": "SitDown_0.00000",
+              "max_patch_edge_extension_before_cm": 15.390778429975402,
+              "after_cm": 3.8064131308629303,
+              "max_changed_vertex_shift_cm": 13.43160259502691
+            },
+            {
+              "pose": "SitDown_0.66667",
+              "max_patch_edge_extension_before_cm": 24.81054136560973,
+              "after_cm": 5.691596698440053,
+              "max_changed_vertex_shift_cm": 17.512638604922888,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 29,
+              "after": 15
+            },
+            {
+              "pose": "SitDown_1.33333",
+              "max_patch_edge_extension_before_cm": 27.188754617004612,
+              "after_cm": 5.710158143547001,
+              "max_changed_vertex_shift_cm": 17.83077864856987
+            },
+            {
+              "pose": "SitDown_2.23333",
+              "max_patch_edge_extension_before_cm": 21.85740829600444,
+              "after_cm": 4.63403855194213,
+              "max_changed_vertex_shift_cm": 15.138800382216294
+            },
+            {
+              "pose": "Idle_0.00000",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 3.4208282152869827,
+              "max_changed_vertex_shift_cm": 10.542809273748912
+            },
+            {
+              "pose": "Idle_2.00000",
+              "max_patch_edge_extension_before_cm": 14.44038926855182,
+              "after_cm": 3.3970965258210355,
+              "max_changed_vertex_shift_cm": 10.48158632006045,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 373,
+              "after": 203
+            },
+            {
+              "pose": "Idle_4.16667",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 3.420819949699062,
+              "max_changed_vertex_shift_cm": 10.542780609519019
+            }
+          ]
+        }
+      ],
+      "strain_score": 30.080951215599192
+    },
+    {
+      "rounds": 100,
+      "metrics": [
+        {
+          "mesh": 0,
+          "primitive": 0,
+          "changed_vertices": 8099,
+          "source_geodesic_radius_cm": 6.0,
+          "coincident_seams_preserve_equal_source_weights": true,
+          "poses": [
+            {
+              "pose": "SitDown_0.00000",
+              "max_patch_edge_extension_before_cm": 15.390778429975402,
+              "after_cm": 3.5693244251873,
+              "max_changed_vertex_shift_cm": 13.431414648389595
+            },
+            {
+              "pose": "SitDown_0.66667",
+              "max_patch_edge_extension_before_cm": 24.81054136560973,
+              "after_cm": 4.589895395325021,
+              "max_changed_vertex_shift_cm": 18.384277968440745,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 29,
+              "after": 16
+            },
+            {
+              "pose": "SitDown_1.33333",
+              "max_patch_edge_extension_before_cm": 27.188754617004612,
+              "after_cm": 4.661730783642907,
+              "max_changed_vertex_shift_cm": 18.724057579586663
+            },
+            {
+              "pose": "SitDown_2.23333",
+              "max_patch_edge_extension_before_cm": 21.85740829600444,
+              "after_cm": 3.6750240119438407,
+              "max_changed_vertex_shift_cm": 15.465981521517744
+            },
+            {
+              "pose": "Idle_0.00000",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 2.842792659978341,
+              "max_changed_vertex_shift_cm": 10.663110395586761
+            },
+            {
+              "pose": "Idle_2.00000",
+              "max_patch_edge_extension_before_cm": 14.44038926855182,
+              "after_cm": 2.8238162777755362,
+              "max_changed_vertex_shift_cm": 10.702172419069262,
+              "nonadjacent_patch_vs_rest_triangle_pairs_before": 373,
+              "after": 283
+            },
+            {
+              "pose": "Idle_4.16667",
+              "max_patch_edge_extension_before_cm": 14.319172521020931,
+              "after_cm": 2.8427857762522204,
+              "max_changed_vertex_shift_cm": 10.663081163084879
+            }
+          ]
+        }
+      ],
+      "strain_score": 25.005369330105164
+    }
+  ],
+  "source_ready": false,
+  "native_ready": false,
+  "changed_weight_patch_gzip_sha256": "cf997a5ae9177d230a9af58e8d9a0f5124264d40b893723a2a8b1c5cc0e49718",
+  "actual_changed_vertex_entries": 8099,
+  "unresolved": "Garment intersection candidates remain; complete garment collision clearance and transitions are not accepted."
+}
