@@ -67,3 +67,65 @@ frames, and its mouse/keyboard switching is part of that. The ergonomic objectiv
 elbows to 0–10 cm above the desk while the bulky sleeves keep clearance. 299 and 350 frames returned to the
 clearance-solved pose. The next step is a per-segment contact solve for the right hand: keys versus mouse, with a
 mouse contact model. After that, rerun with `--resume` for the transitions.
+
+## Typing: segmented rerun, complete but failing (`ready: false`)
+
+This replaces the partial run above. Solver commits: 0d1dfc3, 593a370, 2ea922f, 85c5e6f and 1ca44a2. The run used the
+same base clips, the lifted chair, `--arms-only` and roll (3.875, −21.279) cm. DeskTyping was solved in 10 chunks of
+100 frames, with 12 frames of overlap and a checkpoint per chunk (`DeskTyping_seated.chunks/`). Run 1 stopped at 8 of
+10 chunks on the 1320 s bound. Run 2 (`--resume`) solved the last 2 chunks, then SitToType, TypeToSit, the seams and the
+roll gates, in 891.5 s.
+
+**Right-hand segmentation.** Each frame is classed as keyboard (K), mouse (M) or transit (T): 422 K, 349 M and 218 T.
+K and M are taken from the fit's on-key mask and the palm's distance to the mouse.
+
+- **Keyboard frames:** IK to the keycaps under the key gates.
+- **Mouse frames:** IK to main's `desk-hands/contact` mouse rule at the real `web/room/mouse.glb` placement
+  (home.js `furnished("mouse", 2.4, 0.846, -2.91, 0.22)`). The palm point is 2.2 cm behind and 1.2 cm right of the
+  shell top, giving target (241.2, −286.577, 90.041).
+- **Transit frames:** desk clearance only, with quintic C1 blends at the segment boundaries.
+
+The left hand is on the keys on all 989 frames.
+
+| Clip (sha256) | Seat, main rule | Lower body / fingers vs base | Complete chair | Keys L / R | Mouse | Arms vs desk L / R |
+|---|---|---|---|---|---|---|
+| DeskTyping `9a8253ec…` | pass | 0 cm, 0° / 0° | pass (+0.279 cm) | pass (gap 0.065–0.146) / **FAIL**: 127 K frames gap > 0.2, worst 5.35 cm f158 | pass: XY 0.0008 cm, skin over shell 0.071–0.090 cm | pass (forearm +0.54 f555) / **FAIL**: fingers −1.52 f555 (T), forearm −0.088 f477 |
+| SitToType `adb7547e…` | pass | 0 / 0 | pass (+0.567) | pass / pass | – | **FAIL**: L fingers −1.52 f7, hand −1.01 f6; R similar f6–7 |
+| TypeToSit `ed0911cc…` | pass | 0 / 0 | pass (+0.554) | **FAIL**: L penetration −0.59 f0 / pass | – | **FAIL**: L fingers −0.57 f23 |
+
+- **`validate_unreal_contact_profile.validate()`** on DeskTyping refuses with "Fingertips hover above the keycaps
+  (gap over 2 mm)". These are the right-hand K frames next to segment switches.
+- **Roll gates pass:** the complete chair clears the desk (20 cm) and the floor (+0.0001 cm), floor contact is
+  unchanged, and the roll is exactly reversible.
+- **Seams:**
+  - Position Δ is 0 at SitDown→Idle, Idle→SitToType, TypeToSit→Idle and Idle→GetUp. It is 0.24 cm at
+    SitToType→DeskTyping.
+  - The DeskTyping loop (last→first) is **2.71 cm / 9.99°** on the right arm. DeskTyping→TypeToSit is **2.55 cm**.
+    These come from the right hand's segment state differing at the clip ends. **Not continuous.**
+
+**Ergonomics: soft targets, unreachable, with numbers.** The targets are elbows 0–10 cm above the 84.5 cm top and
+the upper arm within 20° of vertical. Both arms miss them on all 989 frames.
+
+- **Reached:**
+  - Left: elbow 97.2–101.0 cm, upper arm 65.5–77.4°.
+  - Right: elbow 94.6–106.6 cm, upper arm 59.6–90.0°.
+  - Shoulder elevation: L −26.7 to −9.0° (captured −22.4 to −9.0°), R −21.8 to −5.2°.
+- **Why they cannot be reached:**
+  - **Reach.** The shoulder is 44.1–50.2 cm (L) and 37.4–49.3 cm (R) horizontally from the wrist on the keys or the
+    mouse. The segments are only l1 28.1 + l2 23.3 cm long, which puts a floor of asin(max(0, d_h − l2)/l1) =
+    **47.7–72.9° (L) and 31.0–70.6° (R)** on the upper arm. That is above 20° on every frame.
+  - **Sleeves.** The sleeve is 10.7 cm thick at the elbow, so clearing the slab needs the elbow at ≥ 95.2 cm. That
+    is above the 94.5 cm the target allows.
+  - **Girdle.** The girdle allows depression 0–10° and pro/retraction ±15° (Kapandji). The per-chunk ergonomic budget
+    (60 s) stopped the search before a girdle candidate was kept, so the girdle stays at 0°/0°. Even at full
+    retraction, a 15° girdle moves the shoulder by about 4 cm, and the reach floor stays above 20°.
+- **Fix:** the base posture or the chair-to-desk distance has to change. The chair would need to roll in about
+  15–20 cm, or the keyboard come toward the body. That is a base/root decision.
+
+**Remaining blockers:**
+
+1. Right-hand K frames hover next to segment switches (127 frames).
+2. Transit f555 fingers and f477 forearm.
+3. SitToType f6–7 hands into the desk (the arm pass does not yet run on its early transit frames).
+4. TypeToSit seam-frame key penetration.
+5. The DeskTyping loop and exit seams on the right arm.

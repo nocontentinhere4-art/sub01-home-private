@@ -192,26 +192,416 @@
    120.0
   ],
   "swivel_outer_passes": 3,
-  "contact_passes": 8,
+  "contact_passes": 12,
   "search_contact_passes": 4,
   "lift_max_cm": 15.0,
   "post_contact_iterations": 48,
   "stages_done": [
-   "DeskTyping_seated"
+   "DeskTyping_seated_solve",
+   "DeskTyping_seated",
+   "SitToType_seated",
+   "TypeToSit_seated",
+   "seams_roll_gates"
   ],
-  "elapsed_seconds": 1995.4
+  "desk_typing_chunks": {
+   "chunks": [
+    "chunk-0000-0100.npz",
+    "chunk-0100-0200.npz",
+    "chunk-0200-0300.npz",
+    "chunk-0300-0400.npz",
+    "chunk-0400-0500.npz",
+    "chunk-0500-0600.npz",
+    "chunk-0600-0700.npz",
+    "chunk-0700-0800.npz",
+    "chunk-0800-0900.npz",
+    "chunk-0900-0989.npz"
+   ],
+   "chunk_frames": 100,
+   "overlap_frames": 12
+  },
+  "elapsed_seconds": 891.5
  },
  "clips": {
   "DeskTyping_seated": {
    "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_DeskTyping_seated.glb",
-   "sha256": "7d1c205cbc3fe7e880084d88234619163ed72ab1de82ae38fde05ec1e247fdad",
+   "sha256": "9a8253ec94cc81f12144065fdb421e9cc80137eff60c177ae29c275cadb636f0",
+   "all_gates_pass": false
+  },
+  "SitToType_seated": {
+   "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_SitToType_seated.glb",
+   "sha256": "adb7547ed8c6ca1ee434c2891240404ae4f88d16528ee9e1a5d4f309e75e3f48",
+   "all_gates_pass": false
+  },
+  "TypeToSit_seated": {
+   "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_TypeToSit_seated.glb",
+   "sha256": "ed0911cc7cbf1c1ade8371a565ac563d24238b4a2b057f41538825d5c37c4d18",
    "all_gates_pass": false
   }
  },
  "ready": false,
  "native_verified": false,
- "partial": {
-  "stage_reached": "DeskTyping_seated",
-  "blocker": "wall-clock bound 1320.0 s reached before stage SitToType_seated"
- }
+ "seams": [
+  {
+   "from": "SitDown_seated.last",
+   "to": "SeatedIdle.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.689,
+    "max_joint": 5.419,
+    "max_arm_joint": 2.907,
+    "max_joint_name": "HeadTop_End"
+   }
+  },
+  {
+   "from": "SeatedIdle.last",
+   "to": "SitToType_seated.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.838,
+    "max_joint": 7.745,
+    "max_arm_joint": 7.745,
+    "max_joint_name": "RightForeArm"
+   }
+  },
+  {
+   "from": "SitToType_seated.last",
+   "to": "DeskTyping_seated.first",
+   "fps": [
+    30.0,
+    60.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0287,
+    "max_joint": 0.2392,
+    "max_arm_joint": 0.0323,
+    "max_joint_name": "RightFoot"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0151,
+    "max_joint": 0.4015
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.803,
+    "max_joint": 15.948,
+    "max_arm_joint": 9.954,
+    "max_joint_name": "LeftHandThumb4"
+   }
+  },
+  {
+   "from": "DeskTyping_seated.last",
+   "to": "DeskTyping_seated.first",
+   "fps": [
+    60.0,
+    60.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0127,
+    "max_joint": 2.7064,
+    "max_arm_joint": 2.7064,
+    "max_joint_name": "LeftArm"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0017,
+    "max_joint": 9.9858
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.384,
+    "max_joint": 6.976,
+    "max_arm_joint": 4.608,
+    "max_joint_name": "LeftHandIndex4"
+   }
+  },
+  {
+   "from": "DeskTyping_seated.last",
+   "to": "TypeToSit_seated.first",
+   "fps": [
+    60.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0224,
+    "max_joint": 2.5528,
+    "max_arm_joint": 1.5005,
+    "max_joint_name": "RightHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0206,
+    "max_joint": 3.8685
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.729,
+    "max_joint": 34.321,
+    "max_arm_joint": 12.421,
+    "max_joint_name": "RightHandRing4"
+   }
+  },
+  {
+   "from": "TypeToSit_seated.last",
+   "to": "SeatedIdle.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.93,
+    "max_joint": 9.305,
+    "max_arm_joint": 8.466,
+    "max_joint_name": "LeftHandRing4"
+   }
+  },
+  {
+   "from": "SeatedIdle.last",
+   "to": "GetUp_seated.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "Hips"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.733,
+    "max_joint": 5.543,
+    "max_arm_joint": 2.901,
+    "max_joint_name": "HeadTop_End"
+   }
+  }
+ ],
+ "chair_roll_activity": {
+  "model": "'Pull chair in' / 'push back': a runtime XY offset of the chair actor AND the seated body together.\noffset(s) = roll_cm * smootherstep(s), s in [0, 1]; start transform = the measured chair (s = 0), end = start +\nroll_cm (s = 1). Pull-in plays s = t / D over SitToType; push-back plays s = 1 - t / D over TypeToSit, i.e. the\nexact reverse path (same positions, reversed order), ending on the measured transform. Rotation, scale and Z are\nnever changed (a castor roll on the floor). Zero velocity and acceleration at both ends (quintic).",
+  "start_transform_cm": [
+   200.02,
+   -186.69,
+   63.1877
+  ],
+  "end_transform_cm": [
+   203.895,
+   -207.969,
+   63.1877
+  ],
+  "roll_cm": [
+   3.875,
+   -21.279,
+   0.0
+  ],
+  "seat_fit_chair_offset_cm": [
+   3.875,
+   -32.5
+  ],
+  "extra_pull_in_dy_cm": 11.221,
+  "played_over": {
+   "pull_in": "SitToType_seated",
+   "push_back": "TypeToSit_seated"
+  },
+  "held_rolled_during": "DeskTyping_seated",
+  "at_measured_transform_during": [
+   "SitDown_seated",
+   "SeatedIdle",
+   "GetUp_seated"
+  ],
+  "complete_chair": {
+   "source": "web/room/chair_owner.glb",
+   "source_sha256": "d27084af80035c7ab278f90daf77a422fabe738095dad0b015a531f86249e2dc",
+   "placement": "measured native transform (root chair report)",
+   "triangles_by_material": {
+    "chair_armpad": 602,
+    "chair_base": 2533,
+    "chair_caster": 3609,
+    "chair_fabric": 5465,
+    "chair_lift": 312,
+    "chair_mesh": 18880,
+    "chair_plastic": 22648
+   },
+   "measured_shell_on_source_surface_cm": {
+    "median": 0.048273452953307316,
+    "max": 0.41624387089233333,
+    "tolerance": 0.5,
+    "measured_vertices": 1121
+   },
+   "edge_length_median_cm": 0.8766649797022356,
+   "bounds_cm": [
+    [
+     162.56690235756707,
+     -221.89092702903727,
+     2.5001000000432114
+    ],
+    [
+     237.47300891257453,
+     -151.48911409339925,
+     123.87525544895678
+    ]
+   ],
+   "armrest_top_cm": 69.5218406267383,
+   "lowest_cm": 2.5001000000432114
+  },
+  "complete_chair_clearance_along_path": {
+   "samples": 101,
+   "worst_desk": {
+    "s": 0.0,
+    "desk_min_cm": 20.0,
+    "nearest_desk_node": null,
+    "chair_part": "chair_armpad",
+    "floor_gap_cm": 0.0001
+   },
+   "desk_clear_all_samples": true,
+   "floor_gap_cm": [
+    0.0001,
+    0.0001
+   ],
+   "floor_gap_constant_along_roll": true,
+   "floor_no_penetration": true,
+   "rows": [
+    {
+     "s": 0.0,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.1,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.2,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.3,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.4,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.5,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.6,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.7,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.8,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 0.9,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    },
+    {
+     "s": 1.0,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": 0.0001
+    }
+   ],
+   "method": "every vertex of the complete chair source (shell, arms, arm pads, back mesh, base, castors, gas lift) at the measured transform + the roll offset, signed distance to each real desk part AABB (conservative, 20 cm reach) and height above the floor support plane"
+  },
+  "reversibility": {
+   "pull_in_start_equals_measured": true,
+   "pull_in_end_cm": [
+    203.895,
+    -207.969,
+    63.1877
+   ],
+   "push_back_start_equals_pull_in_end": true,
+   "push_back_end_equals_measured": true,
+   "same_path_max_deviation_cm": 5.684341886080802e-14,
+   "final_equals_initial_exact": true,
+   "reversible": true
+  },
+  "feet": "the body rolls rigidly with the chair: sole gaps are unchanged and the soles slide on the floor at the roll speed (a seated scoot); per-frame sole gates are in each transition report"
+ },
+ "all_gates_pass": {
+  "DeskTyping_seated": false,
+  "SitToType_seated": false,
+  "TypeToSit_seated": false
+ },
+ "gates": {
+  "clip_DeskTyping_seated": false,
+  "clip_SitToType_seated": false,
+  "clip_TypeToSit_seated": false,
+  "roll_complete_chair_clear_of_desk": true,
+  "roll_complete_chair_floor_no_penetration": true,
+  "roll_floor_contact_unchanged": true,
+  "roll_reversible_exact": true
+ },
+ "ready_rule": "every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits 3 when not ready)"
 }
