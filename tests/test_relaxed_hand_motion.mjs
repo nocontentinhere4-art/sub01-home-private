@@ -30,3 +30,10 @@ test('quaternion signs do not reverse either hand motion',()=>{
   same(relativeHandRotation(rest,base,pose,id,id),relativeHandRotation(rest,base.map(x=>-x),pose.map(x=>-x),id,id));
  }
 });
+test('invalid bone frames cannot silently become identity rotations',()=>{
+ const id=[0,0,0,1];
+ for(const bad of [[0,0,0,0],[NaN,0,0,1],[0,0,Infinity,1]]){
+  assert.throws(()=>relativeHandRotation(bad,id,id,id,id));
+  assert.throws(()=>relativeHandRotation(id,id,id,bad,id));
+ }
+});

@@ -6,7 +6,11 @@ import assert from 'node:assert/strict';
 import {pathToFileURL} from 'node:url';
 import {Quaternion} from '../web/house/vendor/three.core.js';
 
-const Q=v=>new Quaternion().fromArray(v).normalize();
+const Q=v=>{
+ assert(v.length===4&&v.every(Number.isFinite),'Finite XYZW quaternion required');
+ const q=new Quaternion().fromArray(v);assert(q.lengthSq()>1e-12,'Zero quaternion cannot define a joint frame');
+ return q.normalize();
+};
 const key=n=>(n||'').replace(/^mixamorig[:_]?/i,'');
 const selected=n=>/^(Left|Right)Hand(?:(?:Thumb|Index|Middle|Ring|Pinky)[1-4])?$/.test(key(n));
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
