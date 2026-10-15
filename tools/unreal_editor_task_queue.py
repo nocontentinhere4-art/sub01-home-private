@@ -18,6 +18,7 @@ TASKS = {
     'real_office': 'unreal_import_real_office_bundle',
     'gaming_grip': 'unreal_import_gaming_grip',
     'real_kitchen': 'unreal_import_real_kitchen',
+    'monitor_support': 'unreal_monitor_support_fix',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
@@ -90,6 +91,8 @@ def dispatch(task):
                      'prepare_real_office_bundle', 'unreal_import_real_linea140'):
             importlib.reload(importlib.import_module(name))
     module = importlib.reload(importlib.import_module(TASKS[task]))
+    if task == 'monitor_support':
+        return module.run(OFFICE_EXPORT, dry_run=False)
     if task == 'real_kitchen':
         return module.run(KITCHEN_EXPORT, dry_run=False)
     if task == 'gaming_grip':
