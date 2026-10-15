@@ -42,5 +42,18 @@
     "Offline source take only; live moving body needs verified world speed/placement",
     "Contact foot orientation at transitions and gait need visual review",
     "Original hands unchanged; not hand/prop contact acceptance"
-  ]
+  ],
+  "actual_source_render": {
+    "frames": 90,
+    "fps": 30,
+    "size": [
+      480,
+      640
+    ],
+    "floor_blender_z_m": 0,
+    "video_local_absolute": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/contact-smoothed-body-r1/actual-owner-contact-smoothed.mp4",
+    "video_sha256": "8b2f472ccdfb77561e5537127315f9a11757f5204c293ad6b48227a7a617baaa",
+    "render_report_sha256": "d1388da1e79d7d6114643d790598da87101d30248e46b4d6ab97197567048cf9",
+    "actual_native_home": false
+  }
 }
