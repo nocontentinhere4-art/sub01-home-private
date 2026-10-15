@@ -55,11 +55,13 @@ def run():
         except OSError:
             continue
     assert Path('/tmp/.X11-unix/X99').exists() and BOOTSTRAP.is_file()
+    assert (ENGINE / 'Engine/DerivedDataCache/Compressed.ddp').stat().st_size == 1134102445, 'Verified baked shader cache is not yet transferred'
     # Preserve the already warm Zen store; all writable DDC remains on the volume.
     cache = Path('/workspace/sub01-private-derived-cache/ZenData')
     assert cache.is_dir()
     default_zen = Path('/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Data')
-    default_zen.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(['/usr/sbin/runuser', '-u', 'unreal', '--',
+                    'mkdir', '-p', str(default_zen.parent)], check=True)
     if not default_zen.exists() and not default_zen.is_symlink():
         default_zen.symlink_to(cache, target_is_directory=True)
     assert default_zen.resolve() == cache.resolve()
