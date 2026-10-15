@@ -28,10 +28,19 @@ def run(u=None):
     if not cls:
         raise RuntimeError('Actual reflected crash privacy class unavailable')
     default = u.get_default_object(cls)
-    before = bool(default.get_editor_property('send_unattended_bug_reports'))
+    property_name = None
+    for candidate in ('send_unattended_bug_reports', 'bSendUnattendedBugReports'):
+        try:
+            before = bool(default.get_editor_property(candidate))
+            property_name = candidate
+            break
+        except Exception:
+            continue
+    if property_name is None:
+        raise RuntimeError('Actual source-defined crash privacy property is unavailable')
     # set_editor_property notifies the verified PostEditChangeProperty delegate.
-    default.set_editor_property('send_unattended_bug_reports', False)
-    if default.get_editor_property('send_unattended_bug_reports'):
+    default.set_editor_property(property_name, False)
+    if default.get_editor_property(property_name):
         raise RuntimeError('Actual crash privacy CDO refused the owned setting')
     marker = str(time.time_ns())
     begin = 'SUB01_PRIVATE_CRASH_RELOAD_BEGIN_'+marker
@@ -42,11 +51,12 @@ def run(u=None):
     u.SystemLibrary.execute_console_command(world, COMMAND)
     u.SystemLibrary.execute_console_command(world, 'GetIni EditorSettings:/Script/UnrealEd.CrashReportsPrivacySettings bSendUnattendedBugReports')
     u.log(end)
-    after = bool(default.get_editor_property('send_unattended_bug_reports'))
+    after = bool(default.get_editor_property(property_name))
     if after or not disk_disabled():
         raise RuntimeError('Actual reloaded crash privacy setting is not disabled')
     report = {'schema': 'sub01.private-editor-crash-policy.v1', 'editor_pid': os.getpid(),
               'applied_epoch': time.time(), 'class': cls.get_path_name(),
+              'property_name': property_name,
               'previous_send_unattended_bug_reports': before,
               'current_send_unattended_bug_reports': after,
               'disk_explicitly_disabled': True, 'fixed_reload_command': COMMAND,
