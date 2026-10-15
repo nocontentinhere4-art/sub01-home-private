@@ -48,6 +48,9 @@ def run():
   assert sha(path)==row['sha256']and path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
  config=(OLD/'Config/DefaultGame.ini').read_text()
  protected=set(approval.get('additional_preserved_asset_paths',[]))
+ for prefix in approval.get('additional_preserved_asset_prefixes',[]):
+  assert prefix.startswith('Content/')and '..'not in Path(prefix).parts
+  protected.update(str(p.relative_to(OLD))for p in (OLD/prefix).rglob('*')if p.is_file())
  for asset in re.findall(r'/Game/[A-Za-z0-9_/]+',config):
   protected.add('Content/'+asset.removeprefix('/Game/')+'.uasset')
  for relative in protected:
@@ -55,8 +58,8 @@ def run():
   old=OLD/relative
   if old.is_file():assert sha(TARGET/relative)==sha(old)
  idle=approval['validated_idle'];idle_path=idle['asset_path']
- assert re.fullmatch(r'/Game/[A-Za-z0-9_/]+',idle_path)
- idle_file='Content/'+idle_path.removeprefix('/Game/')+'.uasset'
+ assert re.fullmatch(r'/Game/[A-Za-z0-9_/]+(?:\.[A-Za-z0-9_]+)?',idle_path)
+ idle_file='Content/'+idle_path.split('.',1)[0].removeprefix('/Game/')+'.uasset'
  assert idle_file not in protected and sha(CANDIDATE/idle_file)==idle['sha256']
  receipt=Path(idle['receipt_path']).resolve()
  assert receipt.is_relative_to(CANDIDATE/'private-audit')and sha(receipt)==idle['receipt_sha256']
