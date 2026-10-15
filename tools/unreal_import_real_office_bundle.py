@@ -9,6 +9,7 @@ import copy,hashlib,json,sys
 from uuid import uuid4
 from unreal_owned_import_cleanup import detach_added
 from unreal_fingerprint_diagnostics import persist as persist_fingerprint_difference
+from unreal_component_collision_state import capture as capture_collision,restore as restore_collision
 from pathlib import Path
 from home_asset_audit import read_gltf
 from unreal_owned_mesh_source_geometry import prepare as prepare_owned_geometry
@@ -17,6 +18,41 @@ from unreal_import_real_linea140 import run as stage_desk,surface,verify_materia
 from prepare_real_office_bundle import BOOKS_SHA,SHELF_SHA
 from real_office_plant import native_preflight as plant_preflight
 LEVEL='/Game/Sub01Home/ActualHome'
+
+
+def restore_originals(u,states,before,collision_states):
+ """Restore only changed fields; a root component follows its actor once."""
+ def depth(actor):
+  n=0;parent=actor.get_attach_parent_actor();seen=set()
+  while parent:
+   path=parent.get_path_name()
+   if path in seen:raise RuntimeError('Native attachment cycle during rollback')
+   seen.add(path);n+=1;parent=parent.get_attach_parent_actor()
+  return n
+ for actor,transform,label,hidden,comps in sorted(states,key=lambda row:depth(row[0])):
+  wanted=before[actor.get_path_name()]['transform'];actual=fingerprint(u,[actor])[actor.get_path_name()]['transform']
+  if actual!=wanted:
+   if actual['rotation']==wanted['rotation']and actual['scale']==wanted['scale']:
+    actor.set_actor_location(u.Vector(*wanted['translation']),False,False)
+   else:actor.set_actor_transform(transform,False,False)
+ for actor,transform,label,hidden,comps in states:
+  wanted_actor=before[actor.get_path_name()]
+  wanted_components={r['path']:r for r in wanted_actor['components']}
+  root_component=actor.get_editor_property('root_component')
+  for c,world,mesh,mats,tags,visible,collision,profile in comps:
+   mesh_changed=c.get_editor_property('static_mesh')!=mesh
+   if mesh_changed:c.set_static_mesh(mesh)
+   current=fingerprint(u,[actor])[actor.get_path_name()]
+   current_component=next(r for r in current['components']if r['path']==c.get_path_name())
+   if c!=root_component and current_component['transform']!=wanted_components[c.get_path_name()]['transform']:
+    c.set_world_transform(world,False,False)
+   if list(c.get_materials())!=mats:
+    for slot,mat in enumerate(mats):c.set_material(slot,mat)
+   if list(c.get_editor_property('component_tags'))!=tags:c.set_editor_property('component_tags',tags)
+   if bool(c.get_editor_property('visible'))!=visible:c.set_visibility(visible)
+   restore_collision(u,c,collision_states[c.get_path_name()],force_response_copy=mesh_changed)
+  if actor.get_actor_label()!=label:actor.set_actor_label(label)
+  if bool(actor.get_editor_property('hidden'))!=hidden:actor.set_actor_hidden_in_game(hidden)
 
 
 def verify_native_structural_union(u,actors):
@@ -100,6 +136,7 @@ def run(root,dry_run=True,u=None):
  for actor in original:
   comps=[(c,c.get_world_transform(),c.get_editor_property('static_mesh'),list(c.get_materials()),list(c.get_editor_property('component_tags')),bool(c.get_editor_property('visible')),c.get_collision_enabled(),c.get_collision_profile_name())for c in actor.get_components_by_class(u.StaticMeshComponent)]
   states.append((actor,actor.get_actor_transform(),actor.get_actor_label(),bool(actor.get_editor_property('hidden')),comps))
+ collision_states={c.get_path_name():capture_collision(u,c)for actor,transform,label,hidden,comps in states for c,*_ in comps}
  light_values={c.get_path_name():c.get_editor_property('intensity')for a in original for c in a.get_components_by_class(u.LightComponent)}
  dest='/Game/Sub01Home/RealSteelShelves/V_'+digest[:12]+'/Attempt_'+uuid4().hex;deskdigest=proof['desk']['output_sha256'];deskdest=None
  if u.EditorAssetLibrary.does_directory_exist(dest):raise RuntimeError('Unique owned office attempt already exists')
@@ -140,6 +177,7 @@ def run(root,dry_run=True,u=None):
    cap,cc,_=ctx['by_node'][hardware];cap.set_actor_hidden_in_game(True);cc.set_visibility(False);cc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
   mount=ctx['mount'];ctx['lamp_component'].set_static_mesh(ctx['posed_mesh'])
   for slot,material in enumerate(mount['actual_saved_material_paths']):ctx['lamp_component'].set_material(slot,u.EditorAssetLibrary.load_asset(material))
+  restore_collision(u,ctx['lamp_component'],collision_states[ctx['lamp_component'].get_path_name()],force_response_copy=True)
   ctx['lamp'].set_actor_location(u.Vector(*mount['new_origin_ue_cm']),False,False);ctx['light'].set_actor_location(u.Vector(*[vec(ctx['light'].get_actor_location())[a]+mount['new_bulb_ue_cm'][a]-vec(ctx['lights'][0].get_world_location())[a]for a in range(3)]),False,False)
   if not close(vec(ctx['lights'][0].get_world_location()),mount['new_bulb_ue_cm']):raise RuntimeError('Actual paired light did not reach verified bulb')
   lamp_points,count=surface(u,ctx['lamp_component']);lamp_bounds=[[min(p[a]for p in lamp_points)for a in range(3)],[max(p[a]for p in lamp_points)for a in range(3)]]
@@ -152,6 +190,7 @@ def run(root,dry_run=True,u=None):
    if replacement:
     component_materials=list(c.get_materials());c.set_static_mesh(replacement)
     for slot,material in enumerate(component_materials):c.set_material(slot,material)
+   restore_collision(u,c,collision_states[c.get_path_name()],force_response_copy=replacement is not None)
   # Move the exact genuine225 group once; independent children each move once.
   plant_old={a.get_path_name():vec(a.get_actor_location())for a,c,p in plantctx['rows']}
   for actor in plantctx['move']:
@@ -179,6 +218,7 @@ def run(root,dry_run=True,u=None):
    if replacement:
     component_materials=list(c.get_materials());c.set_static_mesh(replacement)
     for slot,material in enumerate(component_materials):c.set_material(slot,material)
+   restore_collision(u,c,collision_states[c.get_path_name()],force_response_copy=replacement is not None)
    location=vec(actor.get_actor_location());new=[location[a]+plan['delta_ue_cm'][a]for a in range(3)];actor.set_actor_location(u.Vector(*new),False,False)
    pts,count=surface(u,c);actual=[[min(p[a]for p in pts)for a in range(3)],[max(p[a]for p in pts)for a in range(3)]]
    if not all(close(a,[v*100 for v in b])for a,b in zip(actual,plan['new_bounds_ue_m'])):raise RuntimeError('Actual book retarget missed physical board '+plan['id'])
@@ -218,20 +258,7 @@ def run(root,dry_run=True,u=None):
   result={'schema':'sub01.real-office-native-import.v1','source_bundle':proof,'structural_union_prerequisite':union_prerequisite,'desk':desk_result,'shelf_native_triangles':alltris,'plant':plantproof,'plant_full_source_geometry_restore':plant_geometry['proof'],'plant_native_world_deltas_verified':4,'plant_parent225_relocated':True,'watering_native_activity_verified':False,'shelf_materials':materials,'books':book_rows,'book_full_source_geometry_restore':book_geometry['proof'],'hidden_originals':[a.get_path_name()for a in old_targets],'native_protected_original_fingerprints_verified':len(before)-len(allowed),'native_visual_verified':False,'contact_limit':'Original device foot penetration is unchanged at actual baseline top; not described as perfect.'}
   (root/'native-office-bundle.json').write_text(json.dumps(result,indent=2)+'\n');return result
  except Exception as error:
-  def depth(actor):
-   level=0;parent=actor.get_attach_parent_actor();seen=set()
-   while parent:
-    path=parent.get_path_name()
-    if path in seen:raise RuntimeError('Native attachment cycle during rollback')
-    seen.add(path);level+=1;parent=parent.get_attach_parent_actor()
-   return level
-  # Restore parent225 before child worlds, then every component world last.
-  for actor,transform,label,hidden,comps in sorted(states,key=lambda row:depth(row[0])):actor.set_actor_transform(transform,False,False)
-  for actor,transform,label,hidden,comps in states:
-   actor.set_actor_label(label);actor.set_actor_hidden_in_game(hidden)
-   for c,world,mesh,mats,tags,visible,collision,profile in comps:
-    c.set_static_mesh(mesh);c.set_world_transform(world,False,False);c.set_editor_property('component_tags',tags);c.set_visibility(visible);c.set_collision_profile_name(profile);c.set_collision_enabled(collision)
-    for slot,mat in enumerate(mats):c.set_material(slot,mat)
+  restore_originals(u,states,before,collision_states)
   cleanup=detach_added(u,eas,before)
   quarantined=[p for p in(dest,deskdest,*([ctx['lampdest']]if 'ctx'in locals()else []),*([plant_geometry['destination']]if 'plant_geometry'in locals()and plant_geometry['destination']else []),*([book_geometry['destination']]if 'book_geometry'in locals()and book_geometry['destination']else []))if p]
   rollback_actual=fingerprint(u,original);rollback_diff=[]
