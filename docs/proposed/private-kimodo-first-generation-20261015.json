@@ -1,0 +1,81 @@
+{
+  "schema": "sub01.private-kimodo-generation.v1",
+  "started_epoch": 1792085894.2354617,
+  "prompt": "A person walks slowly forward with relaxed shoulders and natural arm swing, then gently comes to a stop",
+  "duration_seconds": 3.0,
+  "seed": 105,
+  "text_encoder_device": "cpu",
+  "gpu_memory_fraction_limit": 0.15,
+  "finished": true,
+  "native_imported": false,
+  "contact_accepted": false,
+  "adapter_weight_audits": [
+    {
+      "repo": "McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp",
+      "official_tensors_exact_after_dtype_cast": 448
+    },
+    {
+      "repo": "McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp-supervised",
+      "official_tensors_exact_after_dtype_cast": 448
+    }
+  ],
+  "completed_epoch": 1792086002.544832,
+  "arrays": {
+    "local_rot_mats": {
+      "shape": [
+        90,
+        77,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "global_rot_mats": {
+      "shape": [
+        90,
+        77,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "posed_joints": {
+      "shape": [
+        90,
+        77,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "root_positions": {
+      "shape": [
+        90,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "smooth_root_pos": {
+      "shape": [
+        90,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "foot_contacts": {
+      "shape": [
+        90,
+        6
+      ],
+      "dtype": "bool"
+    },
+    "global_root_heading": {
+      "shape": [
+        90,
+        2
+      ],
+      "dtype": "float32"
+    }
+  },
+  "npz_bytes": 587390,
+  "gpu_peak_allocated_bytes": 1207738368
+}
