@@ -1346,6 +1346,9 @@ def main(argv=None):
     ap.add_argument('--max-seconds', type=float, default=3000.)
     ap.add_argument('--postprocess-only', action='store_true', help='add the verifier fields and the GLB to a written proposal')
     ap.add_argument('--status', default='final_candidate')
+    ap.add_argument('--right-body-min', type=float, default=RIGHT_BODY_SOLVER_MIN_CM, help='right re-solve torso solver margin (cm)')
+    ap.add_argument('--right-step-max', type=float, default=RIGHT_STEP_SOLVER_MAX_CM, help='right re-solve DP elbow step bound (cm)')
+    ap.add_argument('--keep-source', default='arm-solution.npz @ 4fca1fd', help='provenance of the kept left arm')
     ap.add_argument('--geometry', default=None, help='desk geometry JSON (default: root SCALE geometry); e.g. the original-scale variant')
     ap.add_argument('--device-dz', type=float, default=0., help='drop of every desk device with the worktop top (UE cm, e.g. -6.5)')
     ap.add_argument('--right-path-params', action='store_true', help='solve both arms, the right with the right re-solve DP '
@@ -1384,8 +1387,8 @@ def main(argv=None):
     if args.resolve_right:
         prev = json.loads((out / 'ergonomic-layout-refit.proposal.json').read_text())
         z = dict(np.load(out / 'arm-solution.npz'))
-        keep = {'sides': ('left',), 'npz': z, 'info': {'left': prev['arms']['left']['ik']}, 'source': 'arm-solution.npz @ 4fca1fd'}
-        path_kw = {'right': {'body_min': RIGHT_BODY_SOLVER_MIN_CM, 'step_max': RIGHT_STEP_SOLVER_MAX_CM, 'loop_blend': LOOP_BLEND_KEYS}}
+        keep = {'sides': ('left',), 'npz': z, 'info': {'left': prev['arms']['left']['ik']}, 'source': args.keep_source}
+        path_kw = {'right': {'body_min': args.right_body_min, 'step_max': args.right_step_max, 'loop_blend': LOOP_BLEND_KEYS}}
     prop = final(setup, layout, out, rows, t_start, keep=keep, path_kw=path_kw)
     prop = postprocess(setup, out, args.status)
     print(json.dumps({k: prop[k] for k in ('source_ready', 'native_ready', 'ready', 'gates')}, indent=1, default=_np))
