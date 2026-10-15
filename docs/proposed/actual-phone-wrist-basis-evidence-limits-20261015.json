@@ -1,0 +1,40 @@
+{
+  "schema": "sub01.phone-native-source-basis-audit.v1",
+  "log_sha256": "dac59ff7e8da71b1ca94cae745e6fd6038cfdc4bc7f2ff94b450c1564270bc83",
+  "derived_source_sha256": "81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2",
+  "actual_import_receipt_sha256": "638680e68dba5e0d7948f0a25e00684d33d984da3844d1b589b735bdb5b62ef1",
+  "source_first_key_s": 0,
+  "source_last_key_s": 18.53333282470703,
+  "source_keys": 557,
+  "native_time_mapping": "source_time=native_time; no controller first-key offset",
+  "available_legacy_geometry_groups": 167,
+  "available_legacy_part_rows": 835,
+  "actual_paired_frame_count": 0,
+  "unpaired_frame_lines_excluded": 0,
+  "summary": {
+    "RightHand": {
+      "actual_paired_samples": 0,
+      "basis_observed": false
+    },
+    "LeftHand": {
+      "actual_paired_samples": 0,
+      "basis_observed": false
+    },
+    "Head": {
+      "actual_paired_samples": 0,
+      "basis_observed": false
+    }
+  },
+  "samples": [],
+  "enough_existing_evidence_for_mount_change": false,
+  "limitations": [
+    "Current64089ca readback includes RH/head, not LH",
+    "Old167five-part centre groups establish assembly rigidity only, not joint-frame orientation",
+    "Constant basis is measured only at captured phases; no unmeasured557key proof",
+    "Quaternion basis is not skin/contact/eye/phone-screen acceptance"
+  ],
+  "mount_changed": false,
+  "bones_head_camera_materials_changed": false,
+  "contact_accepted": false,
+  "activity_ready": false
+}
