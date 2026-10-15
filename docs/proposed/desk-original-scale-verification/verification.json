@@ -41,7 +41,7 @@
  "desk_variant": {
   "variant": {
    "proposal_file": "docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json",
-   "proposal_sha256": "1567f1bfbaf84ac026ec78bc0672551e6194707df2961c1a2ccf9b95867fb6da",
+   "proposal_sha256": "495ed9a716177d98e18fb5db2d0bd52a0ed2b5c97b1cfcfb0b6c3b0ce8628901",
    "status": "final_candidate",
    "scale": 1.0,
    "translation_m": [
@@ -127,10 +127,11 @@
      ]
     ],
     "original_footprint": false,
+    "plan_move_approved": "private issue #1 comment 6204026225, 2026-10-15 22:59 UTC: monitor/support shift (+4, +2, -6.5 cm) approved at source scale 1.0",
     "footprint_over_flat_top": true,
     "footprint_grown_by_margin_over_flat_top": true,
     "screen_moves_with_stand": true,
-    "pass": false
+    "pass": true
    },
    "clamp_lamp": {
     "origin_minus_top_cm": 0.0,
@@ -341,7 +342,7 @@
    "min_margin_cm": 1.0,
    "pass": true
   },
-  "pass": false,
+  "pass": true,
   "ready": false
  },
  "geometry": {
@@ -2053,7 +2054,7 @@
    },
    "SitToType_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_SitToType_seated_refit.glb",
-    "sha256": "628f3725c41bc7a0cb17aea39e0984e2c408188713337bed55eae8f9550144fc",
+    "sha256": "83712a7e2aeb2f044bce893eccf4a578198f2860ddc2aae2275f79d4f4228e8f",
     "clip_source": "proposal",
     "frames": 37,
     "chair_rule": "explicit per-frame translations (proposal)",
@@ -2337,13 +2338,13 @@
       },
       "forearm": {
        "worktop": {
-        "value": 3.2232,
+        "value": 3.2227,
         "frame": 36,
         "t": 1.2,
         "node": 44
        },
        "apron": {
-        "value": 6.9962,
+        "value": 6.9957,
         "frame": 36,
         "t": 1.2,
         "node": 47
@@ -2355,7 +2356,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 7.7939,
+        "value": 7.7936,
         "frame": 26,
         "t": 0.8667,
         "node": 32
@@ -2381,13 +2382,13 @@
       },
       "hand": {
        "worktop": {
-        "value": 2.1279,
+        "value": 2.1276,
         "frame": 26,
         "t": 0.8667,
         "node": 44
        },
        "apron": {
-        "value": 5.4453,
+        "value": 5.445,
         "frame": 26,
         "t": 0.8667,
         "node": 47
@@ -2399,7 +2400,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.1666,
+        "value": 6.1663,
         "frame": 26,
         "t": 0.8667,
         "node": 32
@@ -2425,13 +2426,13 @@
       },
       "fingers": {
        "worktop": {
-        "value": -1.398,
+        "value": -1.3982,
         "frame": 16,
         "t": 0.5333,
         "node": 44
        },
        "apron": {
-        "value": 2.3323,
+        "value": 2.3327,
         "frame": 36,
         "t": 1.2,
         "node": 47
@@ -2443,7 +2444,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 3.1631,
+        "value": 3.1632,
         "frame": 36,
         "t": 1.2,
         "node": 32
@@ -2468,8 +2469,8 @@
        }
       }
      },
-     "min_cm_excluding_fingers": 2.1279,
-     "fingers_min_cm_diagnostic": -1.398,
+     "min_cm_excluding_fingers": 2.1276,
+     "fingers_min_cm_diagnostic": -1.3982,
      "pass": true
     },
     "torso_head_vs_desk": {
@@ -2542,7 +2543,7 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "38fb1ef82c220e323dd97b15f34302db908170a8f8e6eec93a51f6c8c265aedf",
+    "sha256": "183d814579a4f56985640ede9a37a1a6ee25ba7385237a5cbc71d14dc75a54fe",
     "clip_source": "proposal",
     "frames": 989,
     "chair_rule": "roll * smootherstep(s), s 1.0",
@@ -2782,7 +2783,7 @@
       },
       "upper_arm": {
        "worktop": {
-        "value": 13.818,
+        "value": 13.824,
         "frame": 800,
         "t": 13.3333,
         "node": 44
@@ -2826,15 +2827,15 @@
       },
       "forearm": {
        "worktop": {
-        "value": 0.2197,
-        "frame": 944,
-        "t": 15.7333,
+        "value": 0.3473,
+        "frame": 942,
+        "t": 15.7,
         "node": 44
        },
        "apron": {
-        "value": 6.1584,
-        "frame": 743,
-        "t": 12.3833,
+        "value": 6.1983,
+        "frame": 742,
+        "t": 12.3667,
         "node": 47
        },
        "leg": {
@@ -2844,7 +2845,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.8918,
+        "value": 6.9419,
         "frame": 748,
         "t": 12.4667,
         "node": 32
@@ -2870,15 +2871,15 @@
       },
       "hand": {
        "worktop": {
-        "value": 1.8119,
-        "frame": 608,
-        "t": 10.1333,
+        "value": 1.8089,
+        "frame": 606,
+        "t": 10.1,
         "node": 44
        },
        "apron": {
-        "value": 5.0402,
-        "frame": 610,
-        "t": 10.1667,
+        "value": 5.0375,
+        "frame": 607,
+        "t": 10.1167,
         "node": 47
        },
        "leg": {
@@ -2888,7 +2889,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 5.8421,
+        "value": 5.8838,
         "frame": 747,
         "t": 12.45,
         "node": 32
@@ -2915,8 +2916,8 @@
       "fingers": {
        "worktop": {
         "value": -1.4,
-        "frame": 472,
-        "t": 7.8667,
+        "frame": 148,
+        "t": 2.4667,
         "node": 44
        },
        "apron": {
@@ -2932,7 +2933,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 2.14,
+        "value": 2.0743,
         "frame": 747,
         "t": 12.45,
         "node": 32
@@ -2957,7 +2958,7 @@
        }
       }
      },
-     "min_cm_excluding_fingers": 0.2197,
+     "min_cm_excluding_fingers": 0.3473,
      "fingers_min_cm_diagnostic": -1.4,
      "pass": true
     },
@@ -3023,16 +3024,16 @@
      "right": {
       "frames_over_keys": 607,
       "gap_cm_range": [
-       -3.8269,
-       3.244
+       -3.9042,
+       3.229
       ],
       "worst_penetration": {
-       "value": -3.8269,
+       "value": -3.9042,
        "frame": 750,
        "t": 12.5
       },
       "worst_gap": {
-       "value": 3.244,
+       "value": 3.229,
        "frame": 560,
        "t": 9.3333
       }
@@ -3042,7 +3043,7 @@
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "4bb4b220cb90bbd36e33268f86df5081ed07911a10725ebf092377b55b991252",
+    "sha256": "69174a7bc66f76669e6fdce93be96227ceeb4cd2b3ecf050154ca32d86984c8a",
     "clip_source": "proposal",
     "frames": 29,
     "chair_rule": "explicit per-frame translations (proposal)",
@@ -3326,13 +3327,13 @@
       },
       "forearm": {
        "worktop": {
-        "value": 2.9852,
+        "value": 2.9847,
         "frame": 1,
         "t": 0.0333,
         "node": 44
        },
        "apron": {
-        "value": 6.797,
+        "value": 6.7965,
         "frame": 1,
         "t": 0.0333,
         "node": 47
@@ -3344,7 +3345,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 7.6422,
+        "value": 7.6418,
         "frame": 1,
         "t": 0.0333,
         "node": 32
@@ -3376,7 +3377,7 @@
         "node": 44
        },
        "apron": {
-        "value": 5.3102,
+        "value": 5.3099,
         "frame": 1,
         "t": 0.0333,
         "node": 47
@@ -3388,7 +3389,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 6.5526,
+        "value": 6.5522,
         "frame": 1,
         "t": 0.0333,
         "node": 32
@@ -3420,7 +3421,7 @@
         "node": 44
        },
        "apron": {
-        "value": 0.2576,
+        "value": 0.2575,
         "frame": 10,
         "t": 0.3333,
         "node": 47
@@ -3432,7 +3433,7 @@
         "node": -1
        },
        "drawer_carcass": {
-        "value": 0.9157,
+        "value": 0.9156,
         "frame": 10,
         "t": 0.3333,
         "node": 32
@@ -4149,13 +4150,13 @@
      "Right": 0.0326
     },
     "velocity_delta_cm_s_max_body": {
-     "value": 5.2485,
+     "value": 5.2503,
      "joint": "RightHand"
     },
     "velocity_delta_cm_s_hips": 0.7753,
     "velocity_delta_cm_s_hands": {
      "Left": 4.7716,
-     "Right": 5.2485
+     "Right": 5.2503
     },
     "neighbour_step_cm_max_body": 0.1699,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0425,
@@ -4168,7 +4169,7 @@
     "seam_accel_cm_s2": {
      "Hips": 43.3,
      "LeftHand": 289.6,
-     "RightHand": 318.0
+     "RightHand": 318.1
     },
     "accel_over_capture_peak": true
    },
@@ -4182,7 +4183,7 @@
     "position_delta_cm_hips": 0.0127,
     "position_delta_cm_hands": {
      "Left": 0.0165,
-     "Right": 0.0038
+     "Right": 0.0039
     },
     "velocity_delta_cm_s_max_body": {
      "value": 4.5915,
@@ -4191,7 +4192,7 @@
     "velocity_delta_cm_s_hips": 0.3843,
     "velocity_delta_cm_s_hands": {
      "Left": 0.3863,
-     "Right": 0.0709
+     "Right": 0.0715
     },
     "neighbour_step_cm_max_body": 0.0669,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0164,
@@ -4227,7 +4228,7 @@
     "velocity_delta_cm_s_hips": 0.6383,
     "velocity_delta_cm_s_hands": {
      "Left": 7.4381,
-     "Right": 7.2981
+     "Right": 7.2995
     },
     "neighbour_step_cm_max_body": 0.445,
     "fingers_position_delta_cm_max_DIAGNOSTIC": 0.0504,
@@ -4505,7 +4506,7 @@
     "RightHand": {
      "capture_peak_cm_s2": 1582.1,
      "clip_peak_chair_frame": {
-      "value": 4079.6,
+      "value": 4080.9,
       "frame": 150
      },
      "ratio": 2.579,
@@ -4532,7 +4533,7 @@
       747,
       748
      ],
-     "world_with_roll_peak_cm_s2": 4079.6,
+     "world_with_roll_peak_cm_s2": 4080.9,
      "world_ratio": 2.579
     }
    },
@@ -4589,13 +4590,13 @@
     "RightHand": {
      "capture_peak_cm_s2": 1027.3,
      "clip_peak_chair_frame": {
-      "value": 795.4,
+      "value": 795.3,
       "frame": 5
      },
      "ratio": 0.774,
      "frames_over_capture_peak": 0,
      "first_frames_over": [],
-     "world_with_roll_peak_cm_s2": 791.4,
+     "world_with_roll_peak_cm_s2": 791.3,
      "world_ratio": 0.77
     }
    },
@@ -4835,18 +4836,18 @@
    "right": {
     "elbow_above_top_cm_min_med_max": [
      3.14,
-     6.68,
-     13.48
+     7.59,
+     13.42
     ],
     "elbow_z_cm_min_med_max": [
      81.14,
-     84.68,
-     91.48
+     85.59,
+     91.42
     ],
     "upper_arm_from_vertical_deg_min_med_max": [
-     19.73,
-     34.63,
-     51.52
+     23.17,
+     37.55,
+     51.18
     ],
     "clavicle_elevation_vs_idle_deg_min_med_max": [
      -11.22,
@@ -4854,24 +4855,24 @@
      5.43
     ],
     "wrist_flexion_deg_min_med_max": [
-     -33.88,
-     -8.43,
-     23.85
+     -33.55,
+     -11.67,
+     23.24
     ],
     "wrist_deviation_deg_min_med_max": [
-     -12.53,
-     1.51,
-     21.2
+     -13.12,
+     2.05,
+     20.82
     ],
     "context_wrist_joint_line_flexion_deg_min_med_max": [
-     -32.58,
-     -15.48,
-     -5.7
+     -30.36,
+     -15.96,
+     -5.55
     ],
     "context_wrist_joint_line_deviation_deg_min_med_max": [
-     -44.7,
-     -19.36,
-     22.66
+     -44.42,
+     -22.93,
+     22.6
     ],
     "context_bind_hand_joint_line_deg": [
      -14.91,
@@ -4880,9 +4881,9 @@
     "palm_down_share": 1.0,
     "worst": {
      "elbow_highest": {
-      "value": 13.4793,
-      "frame": 943,
-      "t": 15.7167
+      "value": 13.4203,
+      "frame": 944,
+      "t": 15.7333
      },
      "elbow_lowest": {
       "value": 3.1413,
@@ -4890,7 +4891,7 @@
       "t": 10.4
      },
      "upper_arm_max": {
-      "value": 51.5179,
+      "value": 51.1779,
       "frame": 943,
       "t": 15.7167
      },
@@ -4900,32 +4901,32 @@
       "t": 3.7
      },
      "wrist_flexion_max": {
-      "value": 23.8474,
+      "value": 23.2448,
       "frame": 749,
       "t": 12.4833
      },
      "wrist_extension_max": {
-      "value": -33.8827,
+      "value": -33.5508,
       "frame": 797,
       "t": 13.2833
      },
      "wrist_radial_max": {
-      "value": 21.201,
+      "value": 20.8206,
       "frame": 744,
       "t": 12.4
      },
      "wrist_ulnar_max": {
-      "value": -12.5297,
+      "value": -13.1192,
       "frame": 160,
       "t": 2.6667
      }
     },
     "share_of_frames_meeting": {
      "elbow_above_desk": 0.9899,
-     "upper_arm": 0.0081,
+     "upper_arm": 0.003,
      "shoulder_elevation": 0.9757,
-     "wrist_flexion": 0.9221,
-     "wrist_deviation": 0.7048
+     "wrist_flexion": 0.8504,
+     "wrist_deviation": 0.7068
     },
     "pass": {
      "elbow_above_desk": true,
@@ -4946,7 +4947,7 @@
       ],
       "wrist_flexion_deg_min_max": [
        -24.97,
-       13.3
+       13.29
       ]
      },
      "TypeToSit_seated": {
@@ -4960,7 +4961,7 @@
       ],
       "wrist_flexion_deg_min_max": [
        -24.99,
-       26.02
+       26.01
       ]
      },
      "SeatedIdle": {
@@ -4989,13 +4990,13 @@
   "3_body_all_clips": true,
   "4_continuity": false,
   "5_ergonomics": false,
-  "0_desk_variant_items": false
+  "0_desk_variant_items": true
  },
  "all_pass": false,
- "elapsed_s": 175.8,
+ "elapsed_s": 180.4,
  "layout": {
   "proposal_file": "docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json",
-  "proposal_sha256": "1567f1bfbaf84ac026ec78bc0672551e6194707df2961c1a2ccf9b95867fb6da",
+  "proposal_sha256": "495ed9a716177d98e18fb5db2d0bd52a0ed2b5c97b1cfcfb0b6c3b0ce8628901",
   "status": "final_candidate",
   "keyboard_delta_cm": [
    8.0,
@@ -5036,7 +5037,7 @@
    },
    "SitToType_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_SitToType_seated_refit.glb",
-    "sha256": "628f3725c41bc7a0cb17aea39e0984e2c408188713337bed55eae8f9550144fc",
+    "sha256": "83712a7e2aeb2f044bce893eccf4a578198f2860ddc2aae2275f79d4f4228e8f",
     "source": "proposal",
     "chair_translation_per_frame_cm": [
      [
@@ -5229,14 +5230,14 @@
    },
    "DeskTyping_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_DeskTyping_seated_refit.glb",
-    "sha256": "38fb1ef82c220e323dd97b15f34302db908170a8f8e6eec93a51f6c8c265aedf",
+    "sha256": "183d814579a4f56985640ede9a37a1a6ee25ba7385237a5cbc71d14dc75a54fe",
     "source": "proposal",
     "chair_translation_per_frame_cm": null,
     "report": null
    },
    "TypeToSit_seated": {
     "glb": "docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_TypeToSit_seated_refit.glb",
-    "sha256": "4bb4b220cb90bbd36e33268f86df5081ed07911a10725ebf092377b55b991252",
+    "sha256": "69174a7bc66f76669e6fdce93be96227ceeb4cd2b3ecf050154ca32d86984c8a",
     "source": "proposal",
     "chair_translation_per_frame_cm": [
      [

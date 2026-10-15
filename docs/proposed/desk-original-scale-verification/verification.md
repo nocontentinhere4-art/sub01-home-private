@@ -1,6 +1,6 @@
 # Ergonomic layout refit: independent verification (source only, `ready: false`)
 
-Verifier: `tools/verify_ergonomic_layout_refit.py` (independent of the layout solver). Proposal: `docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json` (sha256 `1567f1bfbaf84ac026ec78bc0672551e6194707df2961c1a2ccf9b95867fb6da`, status `final_candidate`). Nothing native is verified; `ready` stays false.
+Verifier: `tools/verify_ergonomic_layout_refit.py` (independent of the layout solver). Proposal: `docs/proposed/desk-original-scale/ergonomic-layout-refit.proposal.json` (sha256 `495ed9a716177d98e18fb5db2d0bd52a0ed2b5c97b1cfcfb0b6c3b0ce8628901`, status `final_candidate`). Nothing native is verified; `ready` stays false.
 
 ## Verdicts
 
@@ -12,14 +12,14 @@ Verifier: `tools/verify_ergonomic_layout_refit.py` (independent of the layout so
 | 3_body_all_clips | **PASS** |
 | 4_continuity | **FAIL** |
 | 5_ergonomics | **FAIL** |
-| 0_desk_variant_items | **FAIL** |
+| 0_desk_variant_items | **PASS** |
 
 ## Layout under test
 
 - Keyboard delta (UE cm): [8.0, 14.202, -6.6] (explicit UE delta (= proposed_three_m difference))
 - Mouse delta (UE cm): [0.0, 9.05, -6.6] (explicit UE delta (= proposed_three_m difference))
 - Chair start [200.02, -186.69, 63.1877], roll [3.875, -13.577, 0.0], pulled in [203.895, -200.267, 63.1877]
-- Clips: SitDown_seated `docs/proposed/seated-arms-on-anatomical/SUB01_SitDown_seated.glb` (d242f87dc9fe…, BASELINE (not in the proposal)), SeatedIdle `docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SeatedIdle.glb` (da9ad30e691a…, BASELINE (not in the proposal)), SitToType_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_SitToType_seated_refit.glb` (628f3725c41b…, proposal), DeskTyping_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_DeskTyping_seated_refit.glb` (38fb1ef82c22…, proposal), TypeToSit_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_TypeToSit_seated_refit.glb` (4bb4b220cb90…, proposal), GetUp_seated `docs/proposed/seated-arms-on-anatomical/SUB01_GetUp_seated.glb` (54594b2909fc…, BASELINE (not in the proposal))
+- Clips: SitDown_seated `docs/proposed/seated-arms-on-anatomical/SUB01_SitDown_seated.glb` (d242f87dc9fe…, BASELINE (not in the proposal)), SeatedIdle `docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SeatedIdle.glb` (da9ad30e691a…, BASELINE (not in the proposal)), SitToType_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_SitToType_seated_refit.glb` (83712a7e2aeb…, proposal), DeskTyping_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_DeskTyping_seated_refit.glb` (183d814579a4…, proposal), TypeToSit_seated `docs/proposed/desk-original-scale/chair-roll-7p702/SUB01_TypeToSit_seated_refit.glb` (69174a7bc66f…, proposal), GetUp_seated `docs/proposed/seated-arms-on-anatomical/SUB01_GetUp_seated.glb` (54594b2909fc…, BASELINE (not in the proposal))
 
 ## 1. Devices on the worktop
 
@@ -47,8 +47,8 @@ Monitor provenance: web/house/home.js @ d03e673 (sha256 881340cfc23db38a9747b94b
 |---|---|---|---|---|---|---|
 | SitDown_seated | pass | 0.001 cm (f17) | 15.0 | 5.3428 | 15.0 | **PASS** |
 | SeatedIdle | pass | 0.05 cm (f64) | 15.0 | 15.0 | 15.0 | **PASS** |
-| SitToType_seated | pass | 0.05 cm (f27) | 10.2321 | 2.1279 | 15.0 | **PASS** |
-| DeskTyping_seated | pass | 0.05 cm (f660) | 9.4065 | 0.2197 | 15.0 | **PASS** |
+| SitToType_seated | pass | 0.05 cm (f27) | 10.2321 | 2.1276 | 15.0 | **PASS** |
+| DeskTyping_seated | pass | 0.05 cm (f660) | 9.4065 | 0.3473 | 15.0 | **PASS** |
 | TypeToSit_seated | pass | 0.05 cm (f9) | 10.2844 | 0.6 | 15.0 | **PASS** |
 | GetUp_seated | pass | 0.001 cm (f52) | 15.0 | 9.4575 | 15.0 | **PASS** |
 
@@ -60,15 +60,15 @@ Worst frames per segment (cm, frame, desk node):
 
 - SitDown_seated: forearm 6.9915 f26 n44; hand 5.3428 f24 n44; fingers 2.8881 f23 n44
 - SeatedIdle: all > 15 cm
-- SitToType_seated: thigh 10.2321 f32 n32; knee_shin 11.3834 f33 n32; forearm 3.2232 f36 n44; hand 2.1279 f26 n44; fingers -1.398 f16 n44
-- DeskTyping_seated: thigh 9.4065 f130 n32; knee_shin 10.5945 f129 n32; upper_arm 13.818 f800 n44; forearm 0.2197 f944 n44; hand 1.8119 f608 n44; fingers -1.4 f472 n44
-- TypeToSit_seated: thigh 10.2844 f2 n32; knee_shin 11.3634 f1 n32; forearm 2.9852 f1 n44; hand 0.6 f11 n44; fingers -1.3998 f8 n44
+- SitToType_seated: thigh 10.2321 f32 n32; knee_shin 11.3834 f33 n32; forearm 3.2227 f36 n44; hand 2.1276 f26 n44; fingers -1.3982 f16 n44
+- DeskTyping_seated: thigh 9.4065 f130 n32; knee_shin 10.5945 f129 n32; upper_arm 13.824 f800 n44; forearm 0.3473 f942 n44; hand 1.8089 f606 n44; fingers -1.4 f148 n44
+- TypeToSit_seated: thigh 10.2844 f2 n32; knee_shin 11.3634 f1 n32; forearm 2.9847 f1 n44; hand 0.6 f11 n44; fingers -1.3998 f8 n44
 - GetUp_seated: upper_arm 12.9063 f38 n44; forearm 10.3859 f44 n44; hand 9.4575 f48 n44; fingers 9.4238 f48 n44
 
 Fingertip contact (DIAGNOSTIC ONLY; old finger rests, new hands pending):
 
 - DeskTyping_seated left: over keys 989 frames, gap range [-4.5304, 0.7599]
-- DeskTyping_seated right: over keys 607 frames, gap range [-3.8269, 3.244]
+- DeskTyping_seated right: over keys 607 frames, gap range [-3.9042, 3.229]
 
 ## 4. Continuity
 
@@ -77,7 +77,7 @@ Fingertip contact (DIAGNOSTIC ONLY; old finger rests, new hands pending):
 | SitDown_seated.last → SeatedIdle.first | 0.0 (Hips) | 0.0 | 5.4194 (HeadTop_End) | 1.878/1.335/0.827 | no |
 | SeatedIdle.last → SeatedIdle.first | 0.0058 (LeftForeArm) | 0.0058 | 5.4788 (HeadTop_End) | 1.881/1.124/0.629 | no |
 | SeatedIdle.last → SitToType_seated.first | 0.0 (Hips) | 0.0 | 5.6181 (HeadTop_End) | 1.998/2.173/0.742 | no |
-| SitToType_seated.last → DeskTyping_seated.first | 0.2392 (RightFoot) | 0.0287 | 5.2485 (RightHand) | 1.172/1.922/0.207 | no |
+| SitToType_seated.last → DeskTyping_seated.first | 0.2392 (RightFoot) | 0.0287 | 5.2503 (RightHand) | 1.172/1.922/0.207 | no |
 | DeskTyping_seated.last → DeskTyping_seated.first | 0.0261 (RightForeArm) | 0.0127 | 4.5915 (LeftArm) | 0.369/0.154/0.003 | no |
 | DeskTyping_seated.last → TypeToSit_seated.first | 0.3527 (LeftLeg) | 0.0224 | 12.5073 (HeadTop_End) | 25.711/1.467/0.212 | no |
 | TypeToSit_seated.last → SeatedIdle.first | 0.0 (Hips) | 0.0 | 5.581 (HeadTop_End) | 34.426/3.085/0.96 | no |
@@ -104,10 +104,10 @@ Targets: {'ergo_elbow_above_desk_cm': [0.0, 12.0], 'ergo_upper_arm_from_vertical
 | Side | Elbow above top cm (min/med/max) | Upper arm ° | Shoulder elev. vs idle ° | Wrist flex ° | Wrist dev ° |
 |---|---|---|---|---|---|
 | left | [1.82, 3.94, 7.45] | [16.88, 30.55, 36.34] | [-11.47, -6.15, 1.94] | [-21.3, -13.52, -9.43] | [-4.15, -2.8, -0.43] |
-| right | [3.14, 6.68, 13.48] | [19.73, 34.63, 51.52] | [-11.22, -2.56, 5.43] | [-33.88, -8.43, 23.85] | [-12.53, 1.51, 21.2] |
+| right | [3.14, 7.59, 13.42] | [23.17, 37.55, 51.18] | [-11.22, -2.56, 5.43] | [-33.55, -11.67, 23.24] | [-13.12, 2.05, 20.82] |
 
 - left: share of frames meeting each target {'elbow_above_desk': 1.0, 'upper_arm': 0.1628, 'shoulder_elevation': 1.0, 'wrist_flexion': 0.9889, 'wrist_deviation': 1.0}; worst: elbow_highest 7.4522  (f0), elbow_lowest 1.8214  (f656), upper_arm_max 36.3381  (f188), shoulder_shrug_max 1.9387  (f116), wrist_flexion_max -9.4295  (f760), wrist_extension_max -21.3032  (f188), wrist_radial_max -0.4336  (f966), wrist_ulnar_max -4.15  (f163)
-- right: share of frames meeting each target {'elbow_above_desk': 0.9899, 'upper_arm': 0.0081, 'shoulder_elevation': 0.9757, 'wrist_flexion': 0.9221, 'wrist_deviation': 0.7048}; worst: elbow_highest 13.4793  (f943), elbow_lowest 3.1413  (f624), upper_arm_max 51.5179  (f943), shoulder_shrug_max 5.4339  (f222), wrist_flexion_max 23.8474  (f749), wrist_extension_max -33.8827  (f797), wrist_radial_max 21.201  (f744), wrist_ulnar_max -12.5297  (f160)
+- right: share of frames meeting each target {'elbow_above_desk': 0.9899, 'upper_arm': 0.003, 'shoulder_elevation': 0.9757, 'wrist_flexion': 0.8504, 'wrist_deviation': 0.7068}; worst: elbow_highest 13.4203  (f944), elbow_lowest 3.1413  (f624), upper_arm_max 51.1779  (f943), shoulder_shrug_max 5.4339  (f222), wrist_flexion_max 23.2448  (f749), wrist_extension_max -33.5508  (f797), wrist_radial_max 20.8206  (f744), wrist_ulnar_max -13.1192  (f160)
 
 Verdict: **FAIL**
 
@@ -128,4 +128,4 @@ Verdict: **FAIL**
 - chair report `docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json` sha256 `84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8`
 - seat-fit source npz sha256 `8a14f32ac1aea622f9a8b20fbe284d694d7d873ed16bb940792ba481dca1e9a4`; owner skin (fit_seat_pelvis_pitch.owner_skin, every 2th vertex: 124576 vertices), segments by dominant joint; desk parts as conservative node AABBs
 
-Elapsed 175.8 s. All checks: **FAIL**. `ready: false` (native unverified).
+Elapsed 180.4 s. All checks: **FAIL**. `ready: false` (native unverified).
