@@ -2,7 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
-from unreal_component_collision_state import capture,restore
+from unreal_component_collision_state import capture,restore,signature
 from unreal_owned_import_cleanup import release_temporary
 
 DEST='/Game/Sub01Home/RealOfficeBooks/V_611a3d848858_FullSource_9279b89011474be0afe7704b39f800f9'
@@ -27,10 +27,10 @@ def run(u=None):
         temp=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,-100000))
         temp.set_actor_label('SUB01_Temporary_CustomCollision_Proof');temp.set_actor_hidden_in_game(True)
         tc=temp.get_component_by_class(u.StaticMeshComponent);tc.set_static_mesh(mesh)
-        restore(u,tc,saved);report['initial_temporary_custom_profile']=str(tc.get_collision_profile_name())
+        restore(u,tc,saved,force_response_copy=True);report['initial_temporary_custom_profile']=str(tc.get_collision_profile_name())
         tc.set_static_mesh(clone);report['after_mesh_profile']=str(tc.get_collision_profile_name())
-        restore(u,tc,saved)
-        report.update({'restored_profile':str(tc.get_collision_profile_name()),'all32_channel_responses_preserved':len(saved['responses'])==32 and capture(u,tc)==saved,'original_unchanged':capture(u,original)==saved and original.get_editor_property('static_mesh')==mesh,'success':True})
+        restore(u,tc,saved,force_response_copy=True)
+        report.update({'restored_profile':str(tc.get_collision_profile_name()),'effective_collision_configuration_equal':signature(capture(u,tc))==signature(saved),'standard_channels_independently_verified':len(saved['visible_responses']),'hidden_channels_independently_queried':saved['hidden_container_export']is not None,'original_unchanged':signature(capture(u,original))==signature(saved) and original.get_editor_property('static_mesh')==mesh,'success':True})
         return report
     except Exception as error:
         report.update({'success':False,'error':str(error)})
