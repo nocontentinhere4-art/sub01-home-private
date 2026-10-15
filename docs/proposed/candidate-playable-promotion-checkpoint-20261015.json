@@ -62,7 +62,7 @@
   "actual_render_capture_receipt": "out/house-evidence/candidate-chosen-full-home-review.json",
   "root_reviewed_and_approved_private_playable_promotion": true,
   "independent_playable_copy_pid": 192135,
-  "copy_status": "actual file copy progressing, final SHA manifest not yet sealed",
+  "copy_status": "sealed: 982717159 bytes; all file hashes verified and independent writable copies",
   "old_known_owner_and_walk_idle_retained": true,
   "held_new_anatomical_hands_excluded": true,
   "functional_gameplay_QA_after_handoff_required": [
@@ -85,5 +85,25 @@
     159171,
     976840968
   ],
-  "promotion_complete": false
+  "promotion_complete": true,
+  "private_playable_game_identity": [
+    193148,
+    978377926
+  ],
+  "private_playable_project": "/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab",
+  "promotion_status": "promoted-private-awaiting-functional-QA",
+  "functional_acceptance_complete": false,
+  "identity_bound_grants_refreshed": true,
+  "backend_restarted": false,
+  "pod_restarted": false,
+  "actual_first_game_frame": {
+    "local_path": "out/house-evidence/private-playable-first-e571.png",
+    "sha256": "9b768130c1d4260262c0ce2091177cc75683e573554bd072bad829eaa24283e4",
+    "personally_viewed": true,
+    "view": "entry, stairs, real guest terminal and photographic desk plant"
+  },
+  "actual_initial_tick_rate_hz": [
+    59.999617,
+    59.997028
+  ]
 }
