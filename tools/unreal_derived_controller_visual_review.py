@@ -41,7 +41,7 @@ void ASub01HomeCharacter::UpdateDerivedControllerVisualReview(){
  const FVector P=W.GetLocation()+Q.RotateVector(FVector(-.4953816746105376,9.019971890640429,10.536509174570956));
  const FQuat R=Q*FQuat(-.6482862729184252,.5822889827099884,-.373853500296671,.31764446992829865);
  if(P.ContainsNaN()||R.ContainsNaN())return;
- ControllerPlayProp->SetWorldLocationAndRotation(P,R);ControllerPlayProp->SetVisibility(true);
+ ControllerPlayProp->SetWorldLocationAndRotation(Sub01ControllerSourceMountPosition(P,R,ControllerPlaySourceOffset),R*ControllerPlaySourceRotation);ControllerPlayProp->SetVisibility(true);
 }
 '''
 CLEANUP=r'''

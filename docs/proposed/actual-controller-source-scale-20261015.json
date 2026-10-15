@@ -25,5 +25,24 @@
   "original_source_glb": "web/room/controller.glb",
   "native_fixed_prop_bounds_verified": false,
   "held_visual_accepted": false,
-  "contact_or_gameplay_readiness_changed": false
+  "contact_or_gameplay_readiness_changed": false,
+  "actual_native_import_component_translation_cm": [
+    0.0,
+    0.0,
+    2.7927687391638756
+  ],
+  "actual_native_import_component_quaternion": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "actual_native_import_world_centre_cm": [
+    0.0,
+    0.0,
+    2.7927687391638756
+  ],
+  "scale_only_root_origin_error_cm": 2.7927687391638756,
+  "derived_grip_contract": "bf31 root matrix applies to original controller node-frame geometry after full source node TRS; fit_controller_grip.load_controller applies that TRS before fitting",
+  "native_fixed_full_transform_verified": false
 }

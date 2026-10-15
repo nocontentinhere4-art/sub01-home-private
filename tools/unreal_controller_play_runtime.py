@@ -319,6 +319,7 @@ CHARACTER_FIELDS = r'''
  UPROPERTY() TObjectPtr<UAnimSequence> ControllerPlayClip;
  UPROPERTY() TObjectPtr<UStaticMeshComponent> ControllerPlayProp;
  FName ControllerPlayHand,ControllerPlayHead; FVector ControllerPlayGripOffset=FVector::ZeroVector; FQuat ControllerPlayGripRotation=FQuat::Identity;
+ FVector ControllerPlaySourceOffset=FVector::ZeroVector;FQuat ControllerPlaySourceRotation=FQuat::Identity;
  void UpdateControllerPlayCamera(float Dt); FVector ControllerPlayEye=FVector::ZeroVector,ControllerPlayEyeOffset=FVector::ZeroVector; bool ControllerPlayCameraEasing=false;
  FVector ControllerPlayBodyOffset=FVector::ZeroVector; float ControllerPlayBodyYaw=0; FVector2D ControllerPlayApproach=FVector2D::ZeroVector; float ControllerPlayYaw=0;
  bool ControllerPlayEvidence=false,ControllerPlayRuntimeProof=false,ControllerPlayActive=false,ControllerPlayLoggedReady=false; FString ControllerPlayRefusal=TEXT("not loaded");
@@ -351,6 +352,9 @@ static bool Sub01ControllerPhysicalExtentMatches(const FVector& Local,const FVec
  for(int32 I=0;I<3;++I)if(!FMath::IsFinite(Local[I])||!FMath::IsFinite(Scale[I])||!FMath::IsFinite(Expected[I])||Local[I]<=0||Scale[I]<=0||Expected[I]<=0||FMath::Abs(Local[I]*Scale[I]-Expected[I])>.001)return false;
  return true;
 }
+static FVector Sub01ControllerSourceMountPosition(const FVector& GripPosition,const FQuat& GripRotation,const FVector& SourceOffset){
+ return GripPosition+GripRotation.RotateVector(SourceOffset);
+}
 bool ASub01HomeCharacter::ControllerPlayReady() const{return ControllerPlayEvidence&&ControllerPlayRuntimeProof&&ControllerPlayClip&&ControllerPlayProp&&!ControllerPlayHand.IsNone()&&!ControllerPlayHead.IsNone();}
 void ASub01HomeCharacter::LoadControllerPlay(){
  ControllerPlayEvidence=false;ControllerPlayClip=nullptr;
@@ -376,15 +380,24 @@ void ASub01HomeCharacter::LoadControllerPlay(){
  // Interchange preserves this source's authored node scale. Reusing only its
  // mesh at unit scale makes the 15.38 cm controller two metres wide. Restore
  // the actual imported component scale, validated against its native bounds.
- FVector PropScale=FVector::ZeroVector,SourceExtent=FVector::ZeroVector;
+ FVector PropScale=FVector::ZeroVector,SourceExtent=FVector::ZeroVector,SourceOffset=FVector::ZeroVector,SourceCentre=FVector::ZeroVector;
  const TSharedPtr<FJsonObject> *SourceTransform=nullptr,*SourceBounds=nullptr;
- const TArray<TSharedPtr<FJsonValue>> *ScaleValues=nullptr,*ExtentValues=nullptr;
+ const TArray<TSharedPtr<FJsonValue>> *ScaleValues=nullptr,*ExtentValues=nullptr,*OffsetValues=nullptr,*RotationValues=nullptr,*CentreValues=nullptr;
  bool ScaleValid=!MeshPath.IsEmpty()&&(*Physical)->TryGetObjectField(TEXT("original_source_transform"),SourceTransform)&&(*Physical)->TryGetObjectField(TEXT("original_source_bounds_cm"),SourceBounds)
-  &&(*SourceTransform)->TryGetArrayField(TEXT("scale"),ScaleValues)&&ScaleValues->Num()==3&&(*SourceBounds)->TryGetArrayField(TEXT("extent"),ExtentValues)&&ExtentValues->Num()==3;
- if(ScaleValid)for(int32 I=0;I<3;++I){double S=0,E=0;if(!(*ScaleValues)[I]->TryGetNumber(S)||!(*ExtentValues)[I]->TryGetNumber(E)){ScaleValid=false;break;}PropScale[I]=S;SourceExtent[I]=E;}
+  &&(*SourceTransform)->TryGetArrayField(TEXT("scale"),ScaleValues)&&ScaleValues->Num()==3&&(*SourceBounds)->TryGetArrayField(TEXT("extent"),ExtentValues)&&ExtentValues->Num()==3
+  &&(*SourceTransform)->TryGetArrayField(TEXT("translation"),OffsetValues)&&OffsetValues->Num()==3&&(*SourceTransform)->TryGetArrayField(TEXT("quaternion"),RotationValues)&&RotationValues->Num()==4
+  &&(*SourceBounds)->TryGetArrayField(TEXT("center"),CentreValues)&&CentreValues->Num()==3;
+ if(ScaleValid)for(int32 I=0;I<3;++I){double S=0,E=0,T=0,C=0;if(!(*ScaleValues)[I]->TryGetNumber(S)||!(*ExtentValues)[I]->TryGetNumber(E)||!(*OffsetValues)[I]->TryGetNumber(T)||!(*CentreValues)[I]->TryGetNumber(C)||!FMath::IsFinite(T)||!FMath::IsFinite(C)){ScaleValid=false;break;}PropScale[I]=S;SourceExtent[I]=E;SourceOffset[I]=T;SourceCentre[I]=C;}
+ double SourceQ[4]={0,0,0,0};if(ScaleValid)for(int32 I=0;I<4;++I)if(!(*RotationValues)[I]->TryGetNumber(SourceQ[I])||!FMath::IsFinite(SourceQ[I])){ScaleValid=false;break;}
+ if(ScaleValid&&FMath::Abs(SourceQ[0]*SourceQ[0]+SourceQ[1]*SourceQ[1]+SourceQ[2]*SourceQ[2]+SourceQ[3]*SourceQ[3]-1.)>1.e-6)ScaleValid=false;
  if(!ScaleValid){MeshPath.Empty();ControllerPlayRefusal=TEXT("ControllerSourceScaleMissing");}
  if(auto* Prop=MeshPath.IsEmpty()?nullptr:LoadObject<UStaticMesh>(nullptr,*MeshPath)){
   if(!Sub01ControllerPhysicalExtentMatches(Prop->GetBounds().BoxExtent,PropScale,SourceExtent)){ControllerPlayRefusal=TEXT("ControllerSourceScaleBoundsMismatch");return;}
+  const FQuat SourceRotation=FQuat(SourceQ[0],SourceQ[1],SourceQ[2],SourceQ[3]).GetNormalized();
+  const FVector LocalOrigin=Prop->GetBounds().Origin;
+  const FVector RestoredCentre=SourceOffset+SourceRotation.RotateVector(FVector(LocalOrigin.X*PropScale.X,LocalOrigin.Y*PropScale.Y,LocalOrigin.Z*PropScale.Z));
+  if((RestoredCentre-SourceCentre).Size()>.001){ControllerPlayRefusal=TEXT("ControllerSourceOriginBoundsMismatch");return;}
+  ControllerPlaySourceOffset=SourceOffset;ControllerPlaySourceRotation=SourceRotation;
   ControllerPlayProp=NewObject<UStaticMeshComponent>(this,TEXT("ActualControllerPlayProp"));ControllerPlayProp->SetStaticMesh(Prop);
   ControllerPlayProp->SetCollisionEnabled(ECollisionEnabled::NoCollision);ControllerPlayProp->SetMobility(EComponentMobility::Movable);
   ControllerPlayProp->SetUsingAbsoluteLocation(true);ControllerPlayProp->SetUsingAbsoluteRotation(true);
@@ -459,7 +472,8 @@ void ASub01HomeCharacter::UpdateControllerPlay(USub01HomeHandsInstance* Instance
  FirstPersonBody->SetRelativeLocation(ControllerPlayBodyOffset);FirstPersonBody->SetRelativeRotation(HandsMeshRotation+FRotator(0,ControllerPlayBodyYaw,0));
  // Rigid at the captured right Hand socket: socket rotation and location, imported bone scale excluded.
  const FTransform W=FirstPersonBody->GetSocketTransform(ControllerPlayHand,RTS_World);const FQuat R=W.GetRotation().GetNormalized();
- ControllerPlayProp->SetWorldLocationAndRotation(W.GetLocation()+R.RotateVector(ControllerPlayGripOffset),R*ControllerPlayGripRotation);
+ const FVector GripPosition=W.GetLocation()+R.RotateVector(ControllerPlayGripOffset);const FQuat GripRotation=R*ControllerPlayGripRotation;
+ ControllerPlayProp->SetWorldLocationAndRotation(Sub01ControllerSourceMountPosition(GripPosition,GripRotation,ControllerPlaySourceOffset),GripRotation*ControllerPlaySourceRotation);
  ControllerPlayProp->SetVisibility(true);
  UpdateControllerPlayCamera(Dt);
 }
