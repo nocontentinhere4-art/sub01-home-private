@@ -29,6 +29,16 @@ def run(u=None):
         if not name.startswith('ECC_')or name in('ECC_MAX','ECC_OVERLAP_ALL_DEPRECATED'):continue
         try:result['channels'][name]=str(c.get_collision_response_to_channel(getattr(u.CollisionChannel,name)))
         except Exception as error:result['errors']['channel.'+name]=str(error)
+    result['enum_cast_available']=callable(getattr(u.CollisionChannel,'cast',None))
+    result['all32_indexed_channels']={}
+    if result['enum_cast_available']:
+        for index in range(32):
+            try:
+                channel=u.CollisionChannel.cast(index)
+                result['all32_indexed_channels'][str(index)]={'enum':str(channel),'response':str(c.get_collision_response_to_channel(channel))}
+            except Exception as error:result['errors']['indexed_channel.'+str(index)]=str(error)
+    try:result['generate_overlap_events_property']=bool(c.get_editor_property('generate_overlap_events'))
+    except Exception as error:result['errors']['generate_overlap_events_property']=str(error)
     try:
         body=c.get_editor_property('body_instance')
         for name in ('collision_profile_name','object_type','collision_enabled','collision_responses','notify_rigid_body_collision','use_ccd'):
