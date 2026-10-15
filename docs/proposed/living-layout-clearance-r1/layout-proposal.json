@@ -1,0 +1,25 @@
+{
+  "sourceInventory": "out/house-evidence/plant-placement-inventory.json; exact current unchanged sofa/table/TV/window extents separately read by native owner",
+  "actualMetricsContract": "193148, R16/H91 confirmed native owner20:54UTC",
+  "capsuleRadiusCm": 16,
+  "capsuleHalfHeightCm": 91,
+  "requiredSurfaceMarginCm": 3,
+  "tvFunctionalPlane": {"x": -374.7, "y": [-88,78], "z": [117.5,212.5]},
+  "furniture": {
+    "sofa": [-190.75,-98.25,-126.56,146.56],
+    "coffeeTable": [-289,-229,-65.1,55.1],
+    "console": [-376,-327.8,-96.5,86.5]
+  },
+  "sourceScalePolicy": "Proposed genuine sofa_03 full scale273.12x92.5cm and modern_coffee_table_01 full scale60x120.2x39cm; sources/render/style not yet accepted",
+  "sofaTranslationDeltaCm": [35.5,0,0],
+  "stairs": [-21,81,-171,256],
+  "maximumFurnitureHeightCm": {"coffeeTable":39,"console":56.73},
+  "proposedSeatedEyeCm": [-155,-5,115],
+  "wallTVOpeningYZ": [-94,84,112,218],
+  "actualTVCaseYZ": [-92,82,114,216],
+  "nicheBackFrontXcm": -385,
+  "proposedLocalRoutes": [
+    {"name":"south approach to sofa","points":[[-65,-220],[-65,-180],[-209.875,-180],[-209.875,-5]]},
+    {"name":"sofa to north stair-side passage","points":[[-209.875,-5],[-209.875,185],[-65,185],[-65,330]]}
+  ]
+}
