@@ -48,6 +48,10 @@ def native_preflight(u,actors,plan,surface,close):
    wanted=[[v*100 for v in b]for b in p['old_bounds_ue_m']]
    mesh=comps[0].get_editor_property('static_mesh');parent=actor.get_attach_parent_actor()
    details={'source_node':p['node'],'actor':actor.get_name(),'expected_mesh':expected,'actual_mesh':mesh.get_path_name(),'expected_triangle_count':p['source_triangle_count'],'actual_triangle_count':count,'expected_world_bounds_ue_cm':wanted,'actual_world_bounds_ue_cm':box,'actual_minus_expected_bounds_cm':[[x-y for x,y in zip(a,b)]for a,b in zip(box,wanted)],'attach_parent_actor':parent.get_name()if parent else None,'actor_transform':str(actor.get_actor_transform())if hasattr(actor,'get_actor_transform')else None,'component_world_transform':str(comps[0].get_world_transform())if hasattr(comps[0],'get_world_transform')else None,'native_lod0_sections':mesh.get_num_sections(0)if hasattr(mesh,'get_num_sections')else None,'native_lod_count':mesh.get_num_lods()if hasattr(mesh,'get_num_lods')else None}
+   if hasattr(u,'Paths'):
+    audit=Path(u.Paths.project_dir())/'private-audit'/'office-plant-native-refusal.json'
+    audit.parent.mkdir(parents=True,exist_ok=True)
+    audit.write_text(json.dumps(details,indent=2,sort_keys=True)+'\n')
    raise RuntimeError('Actual genuine plant geometry/world bounds differ: '+json.dumps(details,sort_keys=True))
   rows.append((actor,comps[0],p))
  root=[a for a in actors if a.get_name()=='full-home_node_225']
