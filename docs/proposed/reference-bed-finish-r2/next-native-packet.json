@@ -23,7 +23,7 @@
   "preserve_mattress_top_m": 3.600000023841858,
   "actual_installed_bedding_source_required": "e1c4a48e4d6c391a428a20fa56a5575c50963e08a0a914e2df5c50b6d6fbc2f7",
   "cloth_operation": "Per-component material overrides only. Preserve exact four installed 72200-triangle meshes/transforms; new ivory pillow/duvet and beige throw use unchanged original photo/UV/binary, only reviewed factors change.",
-  "native_importer_implemented": false,
+  "native_importer_implemented": true,
   "next_window_required": [
     "Human input release",
     "Exact actual current source240/260/261 native ownership inventory",
@@ -37,5 +37,11 @@
   "source_only": true,
   "native_saved": false,
   "physical_contact_accepted": false,
-  "public_changes": false
+  "public_changes": false,
+  "native_importer": "tools/unreal_import_reference_bed_finish.py",
+  "native_importer_sha256": "08fa5fdadab4aa67334fda89eefa7bb7679806abe363279139c27e569e49d0c1",
+  "candidate_only": true,
+  "original_collisions_retained_exact": true,
+  "cloth_import_probe_actors_destroyed_before_save": true,
+  "focused_source_contract_tests_passed": 9
 }
