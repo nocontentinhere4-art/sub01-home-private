@@ -1,0 +1,33 @@
+{
+  "schema": "sub01.relaxed-hand-delta-retarget-packet.v1",
+  "status": "Offline retarget implemented and checked; new anatomical target deformation remains pending",
+  "tool": "tools/retarget_relaxed_hand_motion.mjs",
+  "baseline_policy": "Explicit visually reviewed source time is required. Its hand rotations map to the target's own relaxed rest, rather than adding the captured preexisting finger bend to curved anatomical geometry.",
+  "axis_policy": "Conjugate the captured baseline-relative local increment from the source baseline world bone frame into the target rest world bone frame; retain target local rest rotation.",
+  "test_command": "node --test tests/test_relaxed_hand_motion.mjs",
+  "tests_passed": 4,
+  "independent_oracle": "Matrix world-space increment comparison for noncommuting source/target axes",
+  "actual_old_owner_tooling_check": {
+    "source": "web/house/assets/first-person/walking.glb",
+    "source_sha256": "9a7937e050a96c8f58dad1ffcfc8f5ff61f0c0699237afd5b996035f006d3f70",
+    "output_sha256": "290a66b82b99c49c441d4dfa8b3f5ef95503512032cbbd80c1599bd241f3b12d",
+    "hand_channels": 42,
+    "original_target_binary_nodes_skins_images_materials_exact": true,
+    "original_body_animations_exact": true,
+    "new_anatomical_target": false,
+    "baseline_time_seconds": 0,
+    "baseline_visually_accepted": false
+  },
+  "captured_layer_repair": {
+    "finding": "Last two hand samples stored the same float32 timestamp; strict glTF time ordering was violated.",
+    "fix": "Round timestamps to float32 before deduplicating. Independent verifier now requires strictly increasing stored hand times.",
+    "original_artifact_preserved": true,
+    "repaired_r2_sha256": "ab85d57934afbcfc324c2938409b1f7a6df2b98e69917d66eb699d4a34cfd3f8",
+    "same_side_capture_max_error_degrees": 0.0000034150945850063755,
+    "original_owner_and_body_unchanged": true
+  },
+  "native_imported": false,
+  "visual_accepted": false,
+  "contact_accepted": false,
+  "next": "Apply to actual anatomical rig only after rest frames, source relaxed baseline and both-hand deformation review; then verify actual device contacts in Unreal."
+}

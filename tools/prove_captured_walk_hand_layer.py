@@ -30,6 +30,7 @@ def prove(body,capture,candidate,output):
  rows=[];duration=max(accessor(sd,sb,s['input'])[-1][0]for s in sd['animations'][0]['samplers'])
  for ch in new['channels'][len(base['channels']):]:
   name=nd['nodes'][ch['target']['node']]['name'];assert 'Hand'in name and ch['target']['path']=='rotation';sc=source[name];sp=sd['animations'][0]['samplers'][sc['sampler']];st=[r[0]for r in accessor(sd,sb,sp['input'])];sv=accessor(sd,sb,sp['output']);np=new['samplers'][ch['sampler']];nt=[r[0]for r in accessor(nd,nb,np['input'])];nv=accessor(nd,nb,np['output']);maximum=0
+  assert len(nt)==len(nv) and all(nt[i]>nt[i-1] for i in range(1,len(nt))),'Non-increasing stored float32 hand times '+name
   for time,q in zip(nt,nv):
    phase=time%duration;hi=min(bisect.bisect_left(st,phase),len(st)-1);lo=hi if st[hi]==phase else max(0,hi-1);alpha=0 if hi==lo else(phase-st[lo])/(st[hi]-st[lo]);maximum=max(maximum,angle(q,slerp(sv[lo],sv[hi],alpha)))
   assert maximum<1e-5,'Capture layer changed same-side bend '+name
