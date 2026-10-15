@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.actual-primary-reference-inspection.v1",
+  "inspected_via": "Configured playwright-isolated browser; public official X embedded player; no personal cookies/account",
+  "tweet": "https://x.com/SimbasJungles/status/2109095401273938072",
+  "actual_player": "https://platform.twitter.com/embed/Tweet.html?id=2109095401273938072",
+  "duration_s": 39.75,
+  "observed_video_dimensions": [
+    638,
+    360
+  ],
+  "observed_timestamps_s": [
+    0,
+    7,
+    21
+  ],
+  "visual_observations": [
+    "Warm directional sunlight with distinct window/cast shadows across floor and furniture.",
+    "Soft cream upholstered seating and layered neutral bedding with separate pillows.",
+    "Wall-mounted TV over a detailed oak media cabinet; dark wood door trim defines the bedroom opening.",
+    "Floor-length translucent curtains soften a large glazed opening.",
+    "First-person movement includes mild motion blur; screenshots of moving frames are not static texture benchmarks."
+  ],
+  "use": "Visual direction for the actual functioning private home. Preserve SUB-01 floor plan, accepted stair/chair, Tokyo identity and real devices.",
+  "media_copied_into_production_assets": false,
+  "house_match_verified": false,
+  "remaining_comparison": "Requires actual updated Unreal GameViewport images and movement after current integrated map/module return."
+}
