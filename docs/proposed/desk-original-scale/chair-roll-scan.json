@@ -1,0 +1,583 @@
+{
+ "method": "tools/ergonomic_layout_refit.py Setup(scale-1 geometry, device_dz -6.5), layout_for(kb_dy 14.202, chair_dy, mouse_dx 0, kb_dx 8): body_check + per-frame swivel solve on every 40th DeskTyping key (search mode, arm skin stride 3); ergo_score = the refit search objective (lower is better)",
+ "chair_dy_meaning": "added to the original typing roll -21.279 (UE Y; + = farther from the desk)",
+ "best": 7.702,
+ "rows": [
+  {
+   "chair_dy": 3.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 8.47,
+   "torso_min_cm": 22.683,
+   "thigh_top_under_apron_cm": 58.627,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -223.149,
+      67.581
+     ],
+     [
+      237.725,
+      -196.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 46.941,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 5.4653763965988595,
+   "left": {
+    "elbow_above_top_cm": [
+     1.38,
+     6.02
+    ],
+    "upper_arm_deg": [
+     13.2,
+     28.1
+    ],
+    "wrist_flex_deg": [
+     0.1,
+     2.5
+    ],
+    "wrist_dev_deg": [
+     -29.2,
+     -19.2
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     1.65,
+     16.76
+    ],
+    "upper_arm_deg": [
+     20.0,
+     61.8
+    ],
+    "wrist_flex_deg": [
+     -50.2,
+     11.9
+    ],
+    "wrist_dev_deg": [
+     -65.8,
+     10.0
+    ],
+    "resolved": true
+   },
+   "s": 25.9
+  },
+  {
+   "chair_dy": 6.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 9.069,
+   "torso_min_cm": 24.948,
+   "thigh_top_under_apron_cm": 57.716,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -220.149,
+      67.581
+     ],
+     [
+      237.725,
+      -193.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 49.906,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 0.2894210723068386,
+   "left": {
+    "elbow_above_top_cm": [
+     1.64,
+     6.72
+    ],
+    "upper_arm_deg": [
+     15.4,
+     30.8
+    ],
+    "wrist_flex_deg": [
+     -0.3,
+     1.4
+    ],
+    "wrist_dev_deg": [
+     -23.8,
+     -13.6
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     2.57,
+     8.86
+    ],
+    "upper_arm_deg": [
+     20.5,
+     38.1
+    ],
+    "wrist_flex_deg": [
+     -0.7,
+     9.6
+    ],
+    "wrist_dev_deg": [
+     -28.0,
+     9.7
+    ],
+    "resolved": true
+   },
+   "s": 23.3
+  },
+  {
+   "chair_dy": 7.702,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 9.458,
+   "torso_min_cm": 26.136,
+   "thigh_top_under_apron_cm": 56.848,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -218.649,
+      67.581
+     ],
+     [
+      237.725,
+      -191.733,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 51.389,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 0.1874355403680138,
+   "left": {
+    "elbow_above_top_cm": [
+     1.84,
+     6.92
+    ],
+    "upper_arm_deg": [
+     16.8,
+     32.6
+    ],
+    "wrist_flex_deg": [
+     -0.4,
+     1.0
+    ],
+    "wrist_dev_deg": [
+     -20.3,
+     -10.8
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     2.13,
+     10.17
+    ],
+    "upper_arm_deg": [
+     19.5,
+     42.3
+    ],
+    "wrist_flex_deg": [
+     -2.1,
+     8.0
+    ],
+    "wrist_dev_deg": [
+     -25.1,
+     9.5
+    ],
+    "resolved": true
+   },
+   "s": 20.3
+  },
+  {
+   "chair_dy": 9.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 9.94,
+   "torso_min_cm": 27.355,
+   "thigh_top_under_apron_cm": 56.718,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -217.149,
+      67.581
+     ],
+     [
+      237.725,
+      -190.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 52.874,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 0.22953264346714944,
+   "left": {
+    "elbow_above_top_cm": [
+     2.08,
+     7.24
+    ],
+    "upper_arm_deg": [
+     18.4,
+     34.8
+    ],
+    "wrist_flex_deg": [
+     -0.4,
+     0.8
+    ],
+    "wrist_dev_deg": [
+     -17.1,
+     -8.2
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     2.19,
+     11.89
+    ],
+    "upper_arm_deg": [
+     19.8,
+     47.3
+    ],
+    "wrist_flex_deg": [
+     -5.5,
+     6.3
+    ],
+    "wrist_dev_deg": [
+     -21.5,
+     8.8
+    ],
+    "resolved": true
+   },
+   "s": 18.9
+  },
+  {
+   "chair_dy": 10.702,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 10.536,
+   "torso_min_cm": 28.601,
+   "thigh_top_under_apron_cm": 55.796,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -215.649,
+      67.581
+     ],
+     [
+      237.725,
+      -188.733,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 54.36,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 0.4743333653526499,
+   "left": {
+    "elbow_above_top_cm": [
+     2.17,
+     7.71
+    ],
+    "upper_arm_deg": [
+     19.0,
+     37.4
+    ],
+    "wrist_flex_deg": [
+     -0.5,
+     0.6
+    ],
+    "wrist_dev_deg": [
+     -13.7,
+     -3.6
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     2.37,
+     14.52
+    ],
+    "upper_arm_deg": [
+     20.9,
+     54.3
+    ],
+    "wrist_flex_deg": [
+     -4.4,
+     4.2
+    ],
+    "wrist_dev_deg": [
+     -20.3,
+     7.7
+    ],
+    "resolved": true
+   },
+   "s": 15.6
+  },
+  {
+   "chair_dy": 12.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 11.216,
+   "torso_min_cm": 29.87,
+   "thigh_top_under_apron_cm": 54.872,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -214.149,
+      67.581
+     ],
+     [
+      237.725,
+      -187.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 55.846,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 1.216805731989192,
+   "left": {
+    "elbow_above_top_cm": [
+     2.61,
+     8.35
+    ],
+    "upper_arm_deg": [
+     21.6,
+     40.3
+    ],
+    "wrist_flex_deg": [
+     -0.6,
+     0.4
+    ],
+    "wrist_dev_deg": [
+     -10.9,
+     -0.8
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     2.42,
+     17.77
+    ],
+    "upper_arm_deg": [
+     21.2,
+     61.9
+    ],
+    "wrist_flex_deg": [
+     -4.5,
+     1.8
+    ],
+    "wrist_dev_deg": [
+     -16.9,
+     6.3
+    ],
+    "resolved": false
+   },
+   "s": 14.5
+  },
+  {
+   "chair_dy": 15.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 12.892,
+   "torso_min_cm": 30.0,
+   "thigh_top_under_apron_cm": 50.74,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -211.149,
+      67.581
+     ],
+     [
+      237.725,
+      -184.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 58.821,
+    "nearest_desk_node": 44,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 2.0531216572354505,
+   "left": {
+    "elbow_above_top_cm": [
+     3.68,
+     10.13
+    ],
+    "upper_arm_deg": [
+     26.9,
+     47.4
+    ],
+    "wrist_flex_deg": [
+     -0.6,
+     0.2
+    ],
+    "wrist_dev_deg": [
+     -4.5,
+     -0.1
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     3.35,
+     18.39
+    ],
+    "upper_arm_deg": [
+     26.0,
+     65.1
+    ],
+    "wrist_flex_deg": [
+     -3.3,
+     0.3
+    ],
+    "wrist_dev_deg": [
+     -9.2,
+     4.5
+    ],
+    "resolved": false
+   },
+   "s": 9.3
+  },
+  {
+   "chair_dy": 18.202,
+   "body_pass": true,
+   "body_gates": {
+    "legs_clear_of_desk": true,
+    "torso_clear_of_desk_min": true,
+    "complete_chair_clear_of_desk_along_roll": true,
+    "chair_floor_no_penetration": true,
+    "roll_reversible_exact": true
+   },
+   "legs_min_cm": 14.866,
+   "torso_min_cm": 30.0,
+   "thigh_top_under_apron_cm": 10.158,
+   "arm_pads": {
+    "top_cm": 69.522,
+    "bounds_cm": [
+     [
+      169.494,
+      -208.149,
+      67.581
+     ],
+     [
+      237.725,
+      -181.233,
+      69.522
+     ]
+    ],
+    "min_desk_distance_cm": 60.0,
+    "nearest_desk_node": null,
+    "below_front_apron_by_cm": 2.578
+   },
+   "ergo_score": 3.7053269317906268,
+   "left": {
+    "elbow_above_top_cm": [
+     5.28,
+     13.91
+    ],
+    "upper_arm_deg": [
+     33.4,
+     58.7
+    ],
+    "wrist_flex_deg": [
+     -7.6,
+     0.0
+    ],
+    "wrist_dev_deg": [
+     -2.9,
+     0.1
+    ],
+    "resolved": true
+   },
+   "right": {
+    "elbow_above_top_cm": [
+     4.97,
+     18.96
+    ],
+    "upper_arm_deg": [
+     32.8,
+     67.2
+    ],
+    "wrist_flex_deg": [
+     -3.9,
+     0.2
+    ],
+    "wrist_dev_deg": [
+     -5.6,
+     2.9
+    ],
+    "resolved": false
+   },
+   "s": 6.3
+  }
+ ]
+}
