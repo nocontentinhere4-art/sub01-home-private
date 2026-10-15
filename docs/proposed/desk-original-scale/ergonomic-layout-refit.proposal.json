@@ -21,10 +21,12 @@
  },
  "planned_layout": {
   "kb_dy": 14.202,
-  "chair_dy": 12.202,
+  "chair_dy": 7.702,
   "mouse_dx": 0.0,
   "kb_dx": 8.0,
   "device_z_cm": -6.6,
-  "rule": "9f4e199 layout translated by the worktop front-edge move (-269.5 - -266.702 = -2.798 cm UE Y); devices -6.5 cm with the top"
+  "rule": "9f4e199 keyboard XY translated by the worktop front-edge move (-269.5 - -266.702 = -2.798 cm UE Y); mouse clamped to the 2 cm front margin; devices -6.5 cm with the top; chair roll = best of the chair-roll scan (chair-roll-scan.json)",
+  "solve_out_dir": "docs/proposed/desk-original-scale/chair-roll-7p702 (in progress; this file is replaced by its proposal when it finishes)",
+  "not_run": "the scale-only isolation (chair_dy 12.202, same relative roll as 9f4e199) was stopped for CPU before its solve finished; its search-mode numbers are in chair-roll-scan.json"
  }
 }
