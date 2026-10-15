@@ -1,0 +1,330 @@
+{
+  "schema": "sub01.reference-teal-bathroom-independent-packet.v1",
+  "status": "R3 inspected, R4 source requested and ON HOLD while current user task is joystick; no native execution",
+  "source_root": "/workspace/sub01-home-private/reference-teal-bathroom-r3/output",
+  "independent_proof": "/workspace/sub01-home-private/reference-teal-bathroom-r3/independent-proof-r2/independent-source-proof.json",
+  "independent_proof_sha256": "32ee26d77132dead52af5d0000d45393dde9ee847e5a4ef7e14d0ffd93cd63c5",
+  "independent_fixture_corner_bijection": {
+    "parts": 90,
+    "unmatched": 0,
+    "tolerance_cm": 0.0001,
+    "passed": true
+  },
+  "wood_uv": {
+    "positive_area_triangles_with_exact_zero_uv_area": 0,
+    "source_image_metric_metres": 1.83,
+    "front_formula_max_uv_error": 2.7489792442381145e-07,
+    "projection_area_ratio_min": 0.5772536418269459,
+    "projection_area_ratio_max": 1.000006312611329,
+    "scope": "Metric dominant-plane projection, including noncollapsed side/bevel faces; not a claim that oblique bevels have isotropic texel area"
+  },
+  "blocking_contact": {
+    "dressing": "TB_NorthUpperPaint",
+    "fixed_existing_part": "SUB01_shower_screen_005",
+    "reason": "0.5mm paint intersects the rear portion of the existing north-wall metal shower channel",
+    "finite_positive_crossing_triangle_pairs": 25,
+    "required_fix": "Cut/mask the actual existing channel mounting footprint in paint; keep all90 fixture vertices/placements unchanged. Do not waive as painted attachment.",
+    "channel_world_bounds_native_cm": [
+      [
+        -199.54999685,
+        262.10000515,
+        305.24997711
+      ],
+      [
+        -196.45000696,
+        264.99998569,
+        503.84998322
+      ]
+    ],
+    "overlapping_paint_zone_native_cm": {
+      "y": [
+        264.95,
+        265.0
+      ],
+      "z": [
+        427.3,
+        503.85
+      ]
+    }
+  },
+  "measured_attachments": [
+    {
+      "part": "TB_WestPaintFilm",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "paint_to_exact_architecture",
+      "axis": 0,
+      "plane_cm": -391,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 16,
+      "part_backface_area_cm2": 59373.39980278012,
+      "support_intersection_area_cm2": 59373.399802780106,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_SouthPaintFilm",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "paint_to_exact_architecture",
+      "axis": 1,
+      "plane_cm": 55,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 6,
+      "part_backface_area_cm2": 79636.20152358999,
+      "support_intersection_area_cm2": 79636.20152358999,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_NorthUpperPaint",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "paint_to_exact_architecture",
+      "axis": 1,
+      "plane_cm": 265,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 45305.40584526078,
+      "support_intersection_area_cm2": 45305.40584526077,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_NorthLeftPaint",
+      "support": "SUB01_BathCorridor_SourceNode_158",
+      "kind": "paint_to_exact_architecture",
+      "axis": 1,
+      "plane_cm": 265,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 7606.700018214935,
+      "support_intersection_area_cm2": 7606.700018214935,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestLowerLeft_L",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 113.28005516648773,
+      "support_intersection_area_cm2": 113.28005516648773,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestLowerLeft_R",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 113.28005516647681,
+      "support_intersection_area_cm2": 113.28005516647681,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestLowerLeft_B",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 187.5214796174114,
+      "support_intersection_area_cm2": 187.5214796174114,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestLowerLeft_T",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 187.51868535154426,
+      "support_intersection_area_cm2": 187.5186853515479,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestUpper_L",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 198.07938447401466,
+      "support_intersection_area_cm2": 198.07938447401466,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestUpper_R",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 198.0801223796734,
+      "support_intersection_area_cm2": 198.0801223796807,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestUpper_B",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 185.92146858759224,
+      "support_intersection_area_cm2": 185.92146858759588,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestUpper_T",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 185.92146858759224,
+      "support_intersection_area_cm2": 185.92146858759224,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestSide_L",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 343.6801748049329,
+      "support_intersection_area_cm2": 343.6801748049329,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestSide_R",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 343.6776141891023,
+      "support_intersection_area_cm2": 343.6776141891023,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestSide_B",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 107.52085183150484,
+      "support_intersection_area_cm2": 107.52085183150484,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_WestSide_T",
+      "support": "TB_WestPaintFilm",
+      "kind": "trim_to_paint_front",
+      "axis": 0,
+      "plane_cm": -390.95,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 107.52085183149029,
+      "support_intersection_area_cm2": 107.52085183149029,
+      "positive_area_supported": true,
+      "full_backface_supported": true
+    },
+    {
+      "part": "TB_MirrorMitre_0",
+      "support": "SUB01_vanity_016",
+      "kind": "moulding_to_actual_existing_backplate_front",
+      "axis": 0,
+      "plane_cm": -386.75,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 502.64583687180857,
+      "support_intersection_area_cm2": 231.9630347002767,
+      "positive_area_supported": true,
+      "full_backface_supported": false
+    },
+    {
+      "part": "TB_MirrorMitre_1",
+      "support": "SUB01_vanity_016",
+      "kind": "moulding_to_actual_existing_backplate_front",
+      "axis": 0,
+      "plane_cm": -386.75,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 425.8410711156612,
+      "support_intersection_area_cm2": 195.64441209178767,
+      "positive_area_supported": true,
+      "full_backface_supported": false
+    },
+    {
+      "part": "TB_MirrorMitre_2",
+      "support": "SUB01_vanity_016",
+      "kind": "moulding_to_actual_existing_backplate_front",
+      "axis": 0,
+      "plane_cm": -386.75,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 502.64084356897365,
+      "support_intersection_area_cm2": 231.96308588892134,
+      "positive_area_supported": true,
+      "full_backface_supported": false
+    },
+    {
+      "part": "TB_MirrorMitre_3",
+      "support": "SUB01_vanity_016",
+      "kind": "moulding_to_actual_existing_backplate_front",
+      "axis": 0,
+      "plane_cm": -386.75,
+      "part_plane_triangles": 2,
+      "support_plane_triangles": 2,
+      "part_backface_area_cm2": 425.84265750193117,
+      "support_intersection_area_cm2": 195.64386565015593,
+      "positive_area_supported": true,
+      "full_backface_supported": false
+    }
+  ],
+  "mirror_edge_findings": "BVH candidates on shared/beveled edges are not positive finite penetration at existing0.001cm epsilon. Actual new mirror profiles have195.64..231.96cm\u00b2 contact patches with existing backplate, approximately46% of their backfaces and2cm external overhang; do not claim full support.",
+  "r4_pending": "Root plans measured WC service cover and3.5cm corner wall-end extensions. Those new solids require independent contact/attachment/collision-policy proof; R3 proof cannot authorize them.",
+  "future_importer_draft": "tools/unreal_import_reference_teal_bathroom.py",
+  "future_importer_frozen": false,
+  "future_importer_design": [
+    "Fail closed without complete source-ready proof tied to actual GLBs",
+    "Require actual current saved90part b8 bath,5ff corridor and76part real-door receipts",
+    "Keep all90 original fixture actor/component transforms, tags, collision, and existing clear glass helper",
+    "Apply source materials; UV-only owned mesh replacements for vanity004/016/017/018 after complete physical corner equivalence at existing transforms",
+    "Temporary owned imported actors hidden/NoCollision; verify full native geometry/PBR before activation",
+    "Exact originals snapshot, map backup, component/material/collision rollback; no original asset modifications",
+    "Decorative R3 dressing NoCollision; R4 structural corner/cover collider policy must be explicitly added after source proof",
+    "No runtime, door/privacy, browser input or activity gates modified"
+  ],
+  "checks": "10 source contact/import contract tests pass; native importer unexecuted and not frozen",
+  "actual_native_imported": false,
+  "native_visual_physical_accepted": false,
+  "human_walk_untouched": true
+}
