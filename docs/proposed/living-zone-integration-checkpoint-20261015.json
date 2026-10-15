@@ -1,0 +1,56 @@
+{
+  "schema": "sub01.private-living-integration-checkpoint.v1",
+  "recorded_utc": "2026-10-15T21:35:00Z",
+  "public_deployment": false,
+  "runtime_modified_for_living": false,
+  "current_game": {
+    "pid": 193148,
+    "start_ticks": 978377926,
+    "backend_pid": 198702,
+    "backend_start_ticks": 978621779,
+    "human_manual_control_preserved": true,
+    "readonly_accepted_inputs": 3340
+  },
+  "candidate_recovery": {
+    "previous_editor_pid": 175718,
+    "previous_start_ticks": 977713981,
+    "replacement_editor_pid": 203351,
+    "replacement_start_ticks": 978985107,
+    "accepted_asset_bytes_sha_verified": 890176950,
+    "accepted_map_preserved": true,
+    "interrupted_unaccepted_tasks": [
+      58,
+      59
+    ],
+    "pod_game_backend_restarted": false
+  },
+  "living_zone": {
+    "polyhaven_sofa03": "rejected after actual visual review: wrong ornate form",
+    "polyhaven_modern_coffee_table01": "source image approved; actual import pending",
+    "tv_wall": "recessed source in review; preserve actual TV functional plane",
+    "cabinet": "R2 rejected because two unparented foot spindles stayed at old position; R3 correction pending",
+    "rug": "old generated rug61/62 intentionally retired; verify current hidden and NoCollision state before excluding",
+    "sofa": "existing genuine modern Haven composition in progress; no claim of entirely new sofa geometry"
+  },
+  "hands": {
+    "approved_walk_preserved": true,
+    "compatible_idle_r9": "root viewed body and both wrists; candidate import approved, native acceptance pending",
+    "existing_transition_blend_seconds": 0.24,
+    "device_contact_ready": false
+  },
+  "budget": {
+    "actual_balance_usd_at_2128": 67.0649894807,
+    "total_cap_usd": 100,
+    "reserve_usd": 10,
+    "pod_hourly_usd": 0.89,
+    "absolute_stop_epoch": 1792117175,
+    "guard_pid": 145,
+    "guard_start_ticks": 972144905,
+    "guard_alive_readonly_verified": true
+  },
+  "next": [
+    "integrate corrected living source in candidate",
+    "view actual native lit zone",
+    "preserve user session and device state during any later controlled handoff"
+  ]
+}
