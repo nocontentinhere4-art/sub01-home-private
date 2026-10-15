@@ -1,0 +1,292 @@
+{
+  "schema": "sub01.bathroom-pendant-source-surface-collision.v1",
+  "fixture_sha256": "0ec188ac44e20e72fb936d2623c6c0ea5fd2d1a615170696ff565b1d0e4a5c82",
+  "fixture_full_triangles": 5602,
+  "fixture_world_bounds_gltf_m": [
+    [
+      -2.816402852535248,
+      5.308448314666748,
+      1.3353836983442307
+    ],
+    [
+      -2.3847535252571106,
+      5.949999809265137,
+      1.7670444548130035
+    ]
+  ],
+  "source_meshes_tested_after_aabb_filter": [
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "tested_triangles": 492,
+      "surface_overlap_pairs": 36
+    },
+    {
+      "source": "original955",
+      "node": 165,
+      "primitive": 0,
+      "tested_triangles": 1200,
+      "surface_overlap_pairs": 0
+    }
+  ],
+  "actual_roof_canopy_boundary_contacts": [
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4626,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4627,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4633,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4632,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4619,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4618,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4623,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4622,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4614,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4615,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4610,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4611,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4604,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4605,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4602,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4603,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4598,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4599,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4609,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4608,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4612,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4613,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4628,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4629,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4616,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4617,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4620,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4621,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4625,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4624,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4630,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4631,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4601,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4600,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4607,
+      "source_triangle": 42
+    },
+    {
+      "source": "original955",
+      "node": 158,
+      "primitive": 0,
+      "fixture_triangle": 4606,
+      "source_triangle": 42
+    }
+  ],
+  "forbidden_surface_overlaps": [],
+  "source_surface_collision_pass": true,
+  "scope": "Exact original955 full geometry and genuine WC source; remaining native owned assets and containment require independent native verification",
+  "native_imported": false,
+  "runtime_ready": false
+}

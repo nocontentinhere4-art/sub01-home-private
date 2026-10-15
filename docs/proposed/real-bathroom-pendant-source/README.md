@@ -10,7 +10,7 @@ is shortened axially from34cm to3cm; the canopy/globe remain real size. The actu
 original roof underside (source node158, triangle42) was measured at nine canopy
 points, all5.949999809m. Lowest fixture point leaves2.25595m above the real
 bathroom floor. The body stays clear of the dry-zone walls/shower by its measured
-bounds. Full source/native collision validation is still pending.
+bounds. A subsequent full-triangle surface audit against original955 and genuine WC source found no forbidden overlaps:36 contacts lie exactly on the measured canopy/roof boundary, and every fixture point is below that plane. The initial whole-face-only predicate incorrectly rejected side faces touching the roof at an edge; its preserved failed report was corrected using the actual plane boundary, without moving geometry or permitting penetration. Other owned native assets and containment/native collision validation remain pending.
 
 The bulb position is measured in the JSON; it is not an installed light. Nothing
 has been imported into the native map or exposed publicly. The material's source
