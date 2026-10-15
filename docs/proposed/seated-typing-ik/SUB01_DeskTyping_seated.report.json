@@ -525,7 +525,7 @@
    "legs_and_torso_clear": true,
    "sampling": "every 6th owner skin vertex"
   },
-  "seat_pass": true,
+  "seat_pass": false,
   "seat_pass_at_rolled_chair": true,
   "fingers": {
    "rule": "Finger gate on EVERY frame. Outside the seam windows: every finger local equals the clip's capture within\nFINGER_LOCAL_GATE_DEG. Inside a full-pose seam window (weight w toward a neighbour pose whose fingers are that\nneighbour's capture): every finger local equals slerp(capture, neighbour capture, w) within FINGER_LOCAL_GATE_DEG,\nand every per-frame finger step is at most the largest step either capture itself makes in the same time\n(max captured angular speed x dt) + FINGER_LOCAL_GATE_DEG. Overlapping windows compose in order.",
@@ -55048,7 +55048,124 @@
     0.822,
     0.823
    ]
-  }
+  },
+  "seat_main_strong_rule": {
+   "rule": "origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)",
+   "regions": {
+    "buttocks": {
+     "pass_all_frames": false,
+     "failing_frames": 989,
+     "worst_median_gap": {
+      "value": 3.836,
+      "frame": 642,
+      "t": 10.7
+     },
+     "lowest_coverage": {
+      "value": 0.0632,
+      "frame": 613,
+      "t": 10.2167
+     },
+     "band_vertices": [
+      62,
+      163
+     ],
+     "over_surface_vertices": [
+      923,
+      983
+     ]
+    },
+    "left_posterior_thigh": {
+     "pass_all_frames": false,
+     "failing_frames": 989,
+     "worst_median_gap": {
+      "value": 2.067,
+      "frame": 584,
+      "t": 9.7333
+     },
+     "lowest_coverage": {
+      "value": 0.149,
+      "frame": 584,
+      "t": 9.7333
+     },
+     "band_vertices": [
+      272,
+      836
+     ],
+     "over_surface_vertices": [
+      1824,
+      1919
+     ]
+    },
+    "right_posterior_thigh": {
+     "pass_all_frames": false,
+     "failing_frames": 787,
+     "worst_median_gap": {
+      "value": 1.804,
+      "frame": 212,
+      "t": 3.5333
+     },
+     "lowest_coverage": {
+      "value": 0.239,
+      "frame": 212,
+      "t": 3.5333
+     },
+     "band_vertices": [
+      493,
+      1332
+     ],
+     "over_surface_vertices": [
+      2062,
+      2158
+     ]
+    },
+    "left_sole": {
+     "pass_all_frames": false,
+     "failing_frames": 989,
+     "worst_median_gap": {
+      "value": 7.9749,
+      "frame": 541,
+      "t": 9.0167
+     },
+     "lowest_coverage": {
+      "value": 0.069,
+      "frame": 211,
+      "t": 3.5167
+     },
+     "band_vertices": [
+      94,
+      101
+     ],
+     "over_surface_vertices": [
+      1165,
+      1429
+     ]
+    },
+    "right_sole": {
+     "pass_all_frames": false,
+     "failing_frames": 989,
+     "worst_median_gap": {
+      "value": 7.6215,
+      "frame": 578,
+      "t": 9.6333
+     },
+     "lowest_coverage": {
+      "value": 0.0702,
+      "frame": 79,
+      "t": 1.3167
+     },
+     "band_vertices": [
+      151,
+      155
+     ],
+     "over_surface_vertices": [
+      2143,
+      2156
+     ]
+    }
+   },
+   "pass": false
+  },
+  "seat_pass_branch_rule": true
  },
  "contact_profile": {
   "validator": "tools/validate_unreal_contact_profile.py validate()",
@@ -55064,5 +55181,6 @@
    "acceptance": "distal skin against extracted keytop triangles at60Hz only; palm/bevel/midpoint/POV not certified"
   }
  },
- "all_gates_pass": false
+ "all_gates_pass": false,
+ "resumed_from_stage": "DeskTyping_seated (bounded run, same code path; GLB sha256 re-checked)"
 }

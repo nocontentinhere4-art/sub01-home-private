@@ -343,3 +343,65 @@ def test_committed_proposal_is_labelled_and_consistent():
         rep = json.loads((path.parent / (path.stem + '.report.json')).read_text())
         assert rep['all_gates_pass'] == clip['all_gates_pass']
     assert p['constants']['key_gap_max_cm'] == .2 and p['constants']['min_support_vertices'] == 12
+
+
+# ---------------------------------------------------------------- main's strong seat rule, ergonomics, warm-start inputs
+def test_main_strong_seat_rule_needs_median_touch_and_half_coverage():
+    def metrics(over, band, lowest, median):
+        F = len(over)
+        return {'over': np.array(over), 'band': np.array(band), 'lowest': np.array(lowest, float), 'median': np.array(median, float),
+                'facing': np.array(over)}
+    good = metrics([100, 100], [60, 50], [-1., -.5], [.3, .5])
+    sparse = metrics([100, 100], [60, 12], [-1., -.5], [.3, .4])      # passes the branch's 12-vertex rule, not coverage
+    floating = metrics([100, 100], [60, 60], [-1., -.5], [.3, .6])    # median above the band
+    fit = SimpleNamespace(trial=SimpleNamespace(seat=lambda W: {'buttocks': good, 'left_posterior_thigh': sparse,
+                                                                'right_posterior_thigh': floating},
+                                                soles=lambda W: {'left_sole': metrics([50, 50], [30, 30], [0., 0.], [.2, .9]),
+                                                                 'right_sole': metrics([50, 50], [30, 30], [0., 0.], [.2, 1.2])}))
+    r = K.main_strong_seat_rule(fit, None, np.array([0., 1.]))
+    reg = r['regions']
+    assert reg['buttocks']['pass_all_frames'] and reg['left_sole']['pass_all_frames']
+    assert not reg['left_posterior_thigh']['pass_all_frames'] and reg['left_posterior_thigh']['failing_frames'] == 1
+    assert not reg['right_posterior_thigh']['pass_all_frames'] and not reg['right_sole']['pass_all_frames']
+    assert not r['pass'] and K.MAIN_MIN_BAND_COVERAGE == .5 and 'origin/main' in r['rule']
+
+
+def test_ergonomic_cost_is_zero_inside_the_soft_targets_and_grows_outside():
+    ik = K.ClipArmIK.__new__(K.ClipArmIK)
+    ik.geometry = {'tabletop_slab': {'top_cm': 84.5}}
+    c = ik.ergonomic_cost(np.array([84.5, 90., 94.5, 100., 80.]), np.array([0., 15., 20., 20., 10.]))
+    assert np.allclose(c[:3], 0.) and c[3] > 0 and c[4] > 0
+    assert ik.ergonomic_cost(np.array([90.]), np.array([40.]))[0] > ik.ergonomic_cost(np.array([90.]), np.array([30.]))[0]
+
+
+def test_given_chair_transform_moves_the_whole_chair_rigidly():
+    pytest.importorskip('scipy')
+    m = K.load_chair()
+    lifted = K.load_chair(translation_cm=np.asarray(m['translation_cm']) + [0, 0, 2.5])
+    assert np.allclose(lifted['proposed_delta_cm'], [0, 0, 2.5]) and not lifted['translation_is_measured']
+    assert np.allclose(lifted['cushion_triangles_cm'], m['cushion_triangles_cm'] + [0, 0, 2.5])
+    c = K.load_complete_chair(lifted)
+    assert c['lowest_cm'] == pytest.approx(2.5)
+    B, nodes = K.desk_boxes(K.load_geometry())
+    rep = K.chair_path_clearance(c, K.ChairRoll(lifted['translation_cm'], K.ROLL_OFFSET_CM), B, nodes, samples=11)
+    assert rep['floor_no_penetration'] and rep['desk_clear_all_samples']
+
+
+def test_keycaps_from_world_json(tmp_path):
+    tri = [[[0, 0, 87.], [1, 0, 87.], [0, 1, 87.]]]
+    doc = {'keycaps': [{'topTrianglesUECm': tri, 'topCm': 87., 'minCm': [0, 0, 86], 'maxCm': [1, 1, 87]},
+                       {'topTrianglesUECm': [], 'topCm': 86.5, 'minCm': [2, 0, 86], 'maxCm': [3, 1, 86.5]}]}
+    p = tmp_path / 'keyboard-keycaps-world.json'
+    p.write_text(json.dumps(doc))
+    k = K.keycaps_from_world_json(p)
+    assert k['triangles'].shape == (1, 3, 3) and k['top_cm'] == 87. and k['keycaps'] == 1
+    assert np.allclose(k['key_min'], [0, 0, 86]) and np.allclose(k['key_max'], [3, 1, 87])
+
+
+def test_configure_warm_start_inputs():
+    old = (K.FIT_DIR, K.ROLL_OFFSET_CM)
+    try:
+        d, r = K.configure('docs/proposed/seat-pose-anatomical', (3.875, -30.))
+        assert d == ROOT / 'docs/proposed/seat-pose-anatomical' and r == (3.875, -30.)
+    finally:
+        K.FIT_DIR, K.ROLL_OFFSET_CM = old

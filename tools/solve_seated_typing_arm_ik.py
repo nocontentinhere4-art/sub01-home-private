@@ -386,6 +386,13 @@ KEY_MIN_OVER_VERTICES = T.KEY_MIN_OVER_VERTICES      # >= 4 over-key distal vert
 CONTACT_PASSES, CONTACT_TOL_CM = 8, 1e-4
 FOREARM_TARGET_CLEARANCE_CM = .5     # design target for arm skin to the real desk (the gate is > 0, every frame)
 SWIVEL_GRID_DEG = tuple(float(v) for v in np.arange(0., 120.01, 2.5))
+# Ergonomic SOFT targets (never gates): elbow at or just above the desk / keyboard home-row height (ANSI/HFES 100-2007:
+# keyboard at or slightly below elbow height, forearms about horizontal) -> elbow 0..10 cm above the 84.5 cm top;
+# relaxed upper arm close to vertical (RULA upper-arm score 1: within 20 deg of the trunk line).
+ERGO_ELBOW_ABOVE_DESK_CM = (0., 10.)
+ERGO_UPPER_ARM_MAX_DEG = 20.
+ERGO_ELBOW_SCALE_CM, ERGO_UPPER_ARM_SCALE_DEG = 1., 5.
+ERGO_SWIVEL_DEG = tuple(float(v) for v in np.arange(-60., 120.01, 5.))
 SWIVEL_COARSE_STEP_DEG = 10.
 SWIVEL_COARSE_DEG = tuple(float(v) for v in np.arange(0., SWIVEL_GRID_DEG[-1] + .01, SWIVEL_COARSE_STEP_DEG))
 SEARCH_CONTACT_PASSES = 4
@@ -420,7 +427,7 @@ class ClipArmIK:
     UE offset from the rolled placement at each frame (the roll still to go; zero once rolled)."""
 
     def __init__(self, base, W_fit, W_raw, times, keys, cushion_tri, arm_skins, geometry, body_shift_cm=None,
-                 contact=True, roll=ROLL_OFFSET_CM, finger_xy_target=None, on_mask=None):
+                 contact=True, roll=ROLL_OFFSET_CM, finger_xy_target=None, on_mask=None, ergonomic=True):
         d = dict(base.d)
         d['joint_world'], d['times'] = np.asarray(W_fit), np.asarray(times, float)
         self.src = E.Source(d)
@@ -435,6 +442,7 @@ class ClipArmIK:
         F = len(self.times)
         self.body_shift = np.zeros((F, 3)) if body_shift_cm is None else np.asarray(body_shift_cm, float)
         self.contact = contact
+        self.ergonomic = ergonomic
         # Horizontal fingertip targets (UE world XY per frame): the seat fit's own distal finger skin centroid, i.e. the
         # captured horizontal hand path the existing contact pipeline placed over the keycaps. The wrist target gets a
         # per-frame horizontal correction (self.hand_xy, glTF metres) so the IK hand lands on the same keycaps.
@@ -560,11 +568,69 @@ class ClipArmIK:
                 if len(off):                                      # off-key: lift the hand (no key contact required)
                     lift[s] = np.maximum(lift[s], self.lift_need(s, delta[s], phi[s], lift[s], off))
                     delta[s] = self.solve_contact_side(s, delta[s], phi[s], lift[s])
+        self.ergonomics = {}
+        if self.ergonomic:
+            for s in SIDES:
+                phi[s], delta[s], self.ergonomics[s] = self.ergonomic_refine(s, delta[s], phi[s], lift[s])
         W = self.W_fit.copy()
         for s in SIDES:
             W = self.pose(W, s, delta[s], phi[s], lift[s])[0]
         self.delta, self.phi, self.lift, self.history = delta, phi, lift, history
         return W
+
+    def arm_ergonomics(self, W, s, frames):
+        """Elbow height (UE cm, world) and upper-arm angle from vertical-down (deg) of the posed frames."""
+        a, b = (self.sk.j(n) for n in ARM_BONES[s][:2])
+        sh = E.to_ue(W[:, a, :3, 3]) + self.body_shift[frames]
+        el = E.to_ue(W[:, b, :3, 3]) + self.body_shift[frames]
+        ua = np.degrees(np.arccos(np.clip((sh[:, 2] - el[:, 2]) / np.linalg.norm(el - sh, axis=1), -1, 1)))
+        return el[:, 2], ua
+
+    def ergonomic_cost(self, elbow_z, upper_arm_deg):
+        top = self.geometry['tabletop_slab']['top_cm']
+        lo, hi = top + ERGO_ELBOW_ABOVE_DESK_CM[0], top + ERGO_ELBOW_ABOVE_DESK_CM[1]
+        ez = np.maximum(0., elbow_z - hi) + np.maximum(0., lo - elbow_z)
+        ua = np.maximum(0., upper_arm_deg - ERGO_UPPER_ARM_MAX_DEG)
+        return (ez / ERGO_ELBOW_SCALE_CM) ** 2 + (ua / ERGO_UPPER_ARM_SCALE_DEG) ** 2
+
+    def ergonomic_refine(self, s, delta, phi, lift):
+        """Ergonomic objective (SOFT targets, never gates): among the elbow swivels (signed grid, lowering as well as
+        raising) whose contact-resolved pose keeps every arm skin vertex FOREARM_TARGET_CLEARANCE_CM from the real desk
+        and the keys unpenetrated, take the one with the lowest cost: elbow height outside [desk top + 0, + 10] cm and
+        upper arm beyond 20 deg from vertical (ERGO_*). Then a Gaussian smoothing over time, kept only where it still
+        clears. The clearance gate is never traded for the objective."""
+        F = len(self.times)
+        fr = np.arange(F)
+        best_cost = np.full(F, np.inf)
+        best_phi, best_delta = phi.copy(), delta.copy()
+        Wc = self.pose(self.W_fit.copy(), s, delta, phi, lift)[0]
+        ez, ua = self.arm_ergonomics(Wc, s, fr)
+        ok0 = self.clearance(Wc, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
+        best_cost[ok0] = self.ergonomic_cost(ez, ua)[ok0]
+        before = {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)}
+        for g in ERGO_SWIVEL_DEG:
+            ph = np.full(F, math.radians(g))
+            dl = self.solve_contact_side(s, delta, ph, lift, fr, passes=SEARCH_CONTACT_PASSES)
+            Wt = self.pose(self.W_fit.copy(), s, dl, ph, lift)[0]
+            ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
+            ez, ua = self.arm_ergonomics(Wt, s, fr)
+            c = np.where(ok, self.ergonomic_cost(ez, ua) + 1e-6 * abs(g), np.inf)
+            better = c < best_cost
+            best_cost[better], best_phi[better], best_delta[better] = c[better], ph[better], dl[better]
+        sig = SWIVEL_SMOOTH_S / self.dt
+        x = np.arange(-3 * int(math.ceil(sig)), 3 * int(math.ceil(sig)) + 1)
+        ker = np.exp(-.5 * (x / sig) ** 2)
+        ker /= ker.sum()
+        sm = np.convolve(np.pad(best_phi, len(x) // 2, mode='edge'), ker, mode='valid')
+        dl = self.solve_contact_side(s, best_delta, sm, lift)
+        Wt = self.pose(self.W_fit.copy(), s, dl, sm, lift)[0]
+        ok = self.clearance(Wt, s, CLEARANCE_STRIDE, reach=SEARCH_REACH_CM)[0] >= FOREARM_TARGET_CLEARANCE_CM
+        out = np.where(ok, sm, best_phi)
+        dl = self.solve_contact_side(s, best_delta, out, lift)
+        Wt = self.pose(self.W_fit.copy(), s, dl, out, lift)[0]
+        ez, ua = self.arm_ergonomics(Wt, s, fr)
+        return out, dl, {'before': before, 'after': {'elbow_z_cm': rng(ez, 2), 'upper_arm_deg': rng(ua, 2)},
+                         'frames_unsmoothed': int((~ok).sum()), 'swivel_deg': rng(np.degrees(out), 2)}
 
     def lift_need(self, s, delta, phi, lift, frames):
         out = lift.copy()
@@ -621,18 +687,26 @@ def smootherstep(x):
     return x * x * x * (x * (6 * x - 15) + 10)
 
 
-def load_chair(path=CHAIR_REPORT):
-    """The measured native chair: transform (the INITIAL state, never changed), shell vertices and cushion triangles."""
+def load_chair(path=CHAIR_REPORT, translation_cm=None):
+    """The measured native chair: transform (the INITIAL state), shell vertices and cushion triangles. translation_cm
+    (optional): a GIVEN initial chair translation (e.g. a proposed rigid lift so the castors touch the floor); every
+    measured vertex and cushion triangle moves rigidly by (given - measured), recorded as proposed_delta_cm."""
     path = Path(path)
     rep = json.loads(path.read_text())
     ch = rep['chair']
     verts = np.concatenate([np.asarray(s['vertices_world_cm'], float) for s in ch['sections']])
-    return {'file': rel(path) if path.is_relative_to(ROOT) else str(path),
+    measured = np.asarray(ch['transform']['translation_cm'], float)
+    delta = np.zeros(3) if translation_cm is None else np.asarray(translation_cm, float) - measured
+    cushion = np.asarray(seat_contact.cushion_triangles(rep), float).reshape(-1, 3, 3) + delta
+    out = {'measured_translation_cm': measured.tolist(), 'proposed_delta_cm': delta.tolist(),
+           'translation_is_measured': bool(not delta.any())}
+    verts = verts + delta
+    return out | {'file': rel(path) if path.is_relative_to(ROOT) else str(path),
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
-            'translation_cm': list(map(float, ch['transform']['translation_cm'])),
+            'translation_cm': list(map(float, measured + delta)),
             'rotation_xyzw': ch['transform']['rotation_xyzw'], 'scale': ch['transform']['scale'],
-            'component_world_bounds_cm': ch['component_world_bounds_cm'], 'shell_vertices_cm': verts,
-            'cushion_triangles_cm': np.asarray(seat_contact.cushion_triangles(rep), float).reshape(-1, 3, 3)}
+            'component_world_bounds_cm': {k: (np.asarray(v, float) + delta).tolist() for k, v in ch['component_world_bounds_cm'].items()},
+            'shell_vertices_cm': verts, 'cushion_triangles_cm': cushion}
 
 
 class ChairRoll:
@@ -928,20 +1002,34 @@ def body_parts(names):
     return group
 
 
+def keycaps_from_world_json(path):
+    """Keyboard IK targets from a keyboard-keycaps-world.json (tools/extract_keyboard_keycaps.py producer): the keycap
+    top triangles (topTrianglesUECm) and the key field bounds, in the same dict shape as keycaps_from_glb()."""
+    path = Path(path)
+    d = json.loads(path.read_text())
+    tri = np.array([t for k in d['keycaps'] for t in k['topTrianglesUECm']], float)
+    tops = [k['topCm'] for k in d['keycaps'] if k['topTrianglesUECm']]
+    lo = np.array([min(k['minCm'][a] for k in d['keycaps']) for a in range(3)])
+    hi = np.array([max(k['maxCm'][a] for k in d['keycaps']) for a in range(3)])
+    return {'triangles': tri, 'key_min': lo, 'key_max': hi, 'top_cm': float(max(tops)), 'keycaps': len(tops),
+            'top_spread_cm': float(max(tops) - min(tops)),
+            'source': f'{rel(path)} (sha256 {hashlib.sha256(path.read_bytes()).hexdigest()})'}
+
+
 class Context:
     """Everything shared by the clips: source, real desk, chair, keys, skins."""
 
-    def __init__(self, source, geometry=GEOMETRY_JSON, cache=None):
+    def __init__(self, source, geometry=GEOMETRY_JSON, cache=None, chair_translation=None, keycaps=None):
         self.base = E.Source.load(source)
         self.geometry = load_geometry(geometry)
         self.geometry_sha256 = hashlib.sha256(Path(geometry).read_bytes()).hexdigest()
         self.boxes, self.box_nodes = desk_boxes(self.geometry)
-        self.chair = load_chair()
+        self.chair = load_chair(translation_cm=chair_translation)
         self.tri = self.chair['cushion_triangles_cm']
         self.complete_chair = load_complete_chair(self.chair, cache)
         self.collider = ChairCollider(self.complete_chair)
         self.finger_joints = [k for k, n in enumerate(self.base.names) if any(f in n for f in FINGERS)]
-        self.keys = T.keycaps_from_glb()
+        self.keys = keycaps_from_world_json(keycaps) if keycaps else T.keycaps_from_glb()
         self.arms = arm_skin(self.base.names, stride=1, cache=cache)
         self.body_skin = P.owner_skin(stride=BODY_SKIN_STRIDE, cache=cache)
         dom = self.body_skin[1][np.arange(len(self.body_skin[1])), self.body_skin[2].argmax(1)]
@@ -951,7 +1039,7 @@ class Context:
 
     def clip(self, role, times=None):
         fit, raw = CLIPS[role]
-        src_f, g_f = P.clip_source(self.base, FIT_DIR / fit, times)
+        src_f, g_f = P.clip_source(self.base, Path(FIT_DIR) / fit, times)
         times = src_f.times
         src_r, _ = P.clip_source(self.base, ROOT / raw, times)
         return src_f, src_r, g_f, np.asarray(times, float)
@@ -970,12 +1058,38 @@ class Context:
         on = {s: ka[s]['over'] >= KEY_MIN_OVER_VERTICES for s in SIDES}
         target = {s: tr.skin_ue(f'{s}_fingers', Wr)[0].mean(axis=1)[:, :2] for s in SIDES}
         return ClipArmIK(self.base, W_fit, W_raw, times, self.keys, self.tri, self.arms, self.geometry,
-                         body_shift_cm=shift, contact=contact, finger_xy_target=target, on_mask=on)
+                         body_shift_cm=shift, contact=contact, finger_xy_target=target, on_mask=on, roll=ROLL_OFFSET_CM)
 
     def seat_fit(self, W_raw, times, chair_offset):
         d = dict(self.base.d)
         d['joint_world'], d['times'] = W_raw, np.asarray(times, float)
         return P.SeatFit(E.Source(d), self.tri, self.keys, tuple(chair_offset))
+
+
+# origin/main tools/validate_unreal_seat_contact.py validate() (9792a35): per region and frame, at least
+# MIN_PATCH_VERTICES facing skin over the surface, the deepest point >= the band's low edge, the MEDIAN gap <= the
+# band's high edge and at least MIN_BAND_COVERAGE (0.5) of the over-surface patch inside the band. Applied as main
+# applies it, to the seat patches and the soles. This branch's validator has no coverage constant: the value is main's.
+MAIN_MIN_BAND_COVERAGE = .5
+MAIN_SEAT_RULE = 'origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)'
+
+
+def main_strong_seat_rule(fit, W, times):
+    """Main's strong seat rule on every frame (see MAIN_SEAT_RULE), per region: pass, worst median, lowest coverage."""
+    s, so = fit.trial.seat(W), fit.trial.soles(W)
+    out = {}
+    for name, m in list(s.items()) + list(so.items()):
+        low, high = seat_contact.band(name)
+        over = np.asarray(m['over'], float)
+        cov = np.where(over > 0, m['band'] / np.maximum(over, 1), 0.)
+        med = np.nan_to_num(np.asarray(m['median'], float), nan=np.inf)
+        ok = (over >= seat_contact.MIN_PATCH_VERTICES) & (np.nan_to_num(m['lowest'], nan=-np.inf) >= low) & \
+             (med <= high) & (cov >= MAIN_MIN_BAND_COVERAGE)
+        out[name] = {'pass_all_frames': bool(ok.all()), 'failing_frames': int((~ok).sum()),
+                     'worst_median_gap': worst_frame(med, times, lowest=False), 'lowest_coverage': worst_frame(cov, times),
+                     'band_vertices': [int(np.min(m['band'])), int(np.max(m['band']))],
+                     'over_surface_vertices': [int(over.min()), int(over.max())]}
+    return {'rule': MAIN_SEAT_RULE, 'regions': out, 'pass': all(v['pass_all_frames'] for v in out.values())}
 
 
 MEASURE_REACH_CM = 10.          # distances beyond this report as 10 (never a false small value)
@@ -1096,6 +1210,11 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
             on = ik.on[s] if ik is not None else over
             ok = not (bad_gap & on).any() and not bad_pen.any() and bool(over[on].all() if on.any() else True)
             rule = 'gap <= 0.2 cm and penetration <= 0.1 cm on every frame the hand is on the keys; penetration on all'
+        elif not over[key_seam] and ik is not None and not ik.on[s][key_seam]:
+            # fit_seat_pelvis_pitch.gates() key_seam rule: the hand is not on the keys at the seam (it is on the mouse in
+            # the capture and in the neighbour pose), so no contact is required there; no penetration on any frame
+            ok = not bad_pen.any()
+            rule = f'hand not on the keys at the seam frame {key_seam} (capture and neighbour): penetration <= 0.1 cm on every frame'
         else:
             ok = not bad_pen.any() and bool(over[key_seam]) and not bad_gap[key_seam]
             rule = f'contact at the seam frame {key_seam}; penetration <= 0.1 cm on every frame'
@@ -1138,6 +1257,16 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
         pf[f'{s}_wrist_flexion_deg'] = [_r(v, 2) for v in fl]
         pf[f'{s}_wrist_deviation_deg'] = [_r(v, 2) for v in dv]
         pf[f'{s}_elbow_ue_cm'] = [[_r(x, 2) for x in e] for e in el]
+        cl_ = E.to_ue(W[:, ctx.sk.j(f'{SIDES[s]}Shoulder'), :3, 3]) + shift
+        v = sh - cl_
+        elev = np.degrees(np.arctan2(v[:, 2], np.linalg.norm(v[:, :2], axis=1)))
+        elev0 = E.to_ue(W_raw[:, ctx.sk.j(ARM_BONES[s][0]), :3, 3]) - E.to_ue(W_raw[:, ctx.sk.j(f'{SIDES[s]}Shoulder'), :3, 3])
+        elev0 = np.degrees(np.arctan2(elev0[:, 2], np.linalg.norm(elev0[:, :2], axis=1)))
+        pf[f'{s}_upper_arm_from_vertical_deg'] = [_r(x, 2) for x in ua]
+        pf[f'{s}_shoulder_ue_cm'] = [[_r(x, 2) for x in e] for e in sh]
+        pf[f'{s}_shoulder_elevation_deg'] = [_r(x, 2) for x in elev]
+        top = ctx.geometry['tabletop_slab']['top_cm']
+        ergo_out = (el[:, 2] > top + ERGO_ELBOW_ABOVE_DESK_CM[1]) | (el[:, 2] < top + ERGO_ELBOW_ABOVE_DESK_CM[0]) | (ua > ERGO_UPPER_ARM_MAX_DEG)
         if ik is not None and hasattr(ik, 'phi'):
             pf[f'{s}_elbow_swivel_deg'] = [_r(math.degrees(v), 2) for v in ik.phi[s]]
             pf[f'{s}_hand_lift_cm'] = [_r(v, 3) for v in ik.lift[s]]
@@ -1153,7 +1282,12 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
             'chair_has_armrests': False,
             'wrist_flexion_deg': rng(fl, 2), 'wrist_deviation_deg': rng(dv, 2), 'wrist_twist_deg': rng(tw, 2),
             'wrist_frames_outside_soft_zone': int(soft_out.sum()),
-            'upper_arm_from_vertical_deg': rng(ua, 2), 'elbow_height_cm': rng(el[:, 2], 2)}
+            'upper_arm_from_vertical_deg': rng(ua, 2), 'elbow_height_cm': rng(el[:, 2], 2),
+            'shoulder_elevation_deg': rng(elev, 2), 'shoulder_elevation_capture_deg': rng(elev0, 2),
+            'ergonomic_soft_targets': {'elbow_above_desk_cm': list(ERGO_ELBOW_ABOVE_DESK_CM), 'upper_arm_max_deg': ERGO_UPPER_ARM_MAX_DEG,
+                                       'frames_outside': int(ergo_out.sum()), 'worst_elbow_height': worst_frame(el[:, 2], times, lowest=False),
+                                       'worst_upper_arm': worst_frame(ua, times, lowest=False), 'gate': False},
+            'ik_ergonomics': getattr(ik, 'ergonomics', {}).get(s) if ik is not None else None}
     out['arms'] = arms_out
     # whole body vs the real desk (knees / thighs / torso)
     pos, jts, wts = ctx.body_skin
@@ -1170,6 +1304,9 @@ def measure(ctx, role, W, W_raw, times, shift, chair_offset_world, ik=None, key_
     out['body_vs_desk'] = {k: worst_frame(v, times) for k, v in body_min.items()}
     out['body_vs_desk']['legs_and_torso_clear'] = bool((body_min['legs'] > 0).all() and (body_min['torso_head'] > 0).all())
     out['body_vs_desk']['sampling'] = f'every {BODY_SKIN_STRIDE}th owner skin vertex'
+    out['seat_main_strong_rule'] = main_strong_seat_rule(fit, W, times)
+    out['seat_pass_branch_rule'] = bool(seat_pass)
+    seat_pass = bool(seat_pass and out['seat_main_strong_rule']['pass'])
     out['seat_pass'] = bool(seat_pass)
     out['seat_pass_at_rolled_chair'] = bool(seat_pass_r)
     out['fingers'] = finger_contract(ctx, W, W_raw, times, finger_seams)
@@ -1303,6 +1440,9 @@ def transition_arms(ctx, ik, W_fit, W_ik, s, keep_fit):
     return Wb, {'ik_weight': [_r(v, 4) for v in w], 'frames_raised_for_clearance_or_keys': sorted(raised)}
 
 
+POST_CONTACT_ITERATIONS = 48
+
+
 def post_contact(ctx, ik, W, window, seam_frame=None):
     """After the DeskTyping-side seam blend (and with the captured finger curls kept on every frame), per side a smooth
     vertical wrist correction (non-stretch two-bone IK, current elbow as pole, current wrist-relative hand rotation,
@@ -1317,7 +1457,7 @@ def post_contact(ctx, ik, W, window, seam_frame=None):
     seam_d = {s: 0. for s in SIDES}
     W0 = np.array(W, copy=True)
     Wc = W0
-    for _ in range(16):
+    for _ in range(POST_CONTACT_ITERATIONS):
         a = ik.key_audit(Wc)
         more = False
         for s in SIDES:
@@ -1490,7 +1630,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
     Wcb = readback(ctx, path, t_c)
     seam_frame = F - 1 if at_end else 0
     rep = {'role': role, 'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size, 'keys': F,
-           'input_fit_clip': f'docs/proposed/seat-pose-fit/{CLIPS[role][0]}', 'raw_capture': CLIPS[role][1],
+           'input_fit_clip': rel(Path(FIT_DIR) / CLIPS[role][0]), 'raw_capture': CLIPS[role][1],
            'chair_roll': roll.describe(t_c, s) | {'activity': 'pull chair in' if at_end else 'push chair back'},
            'seam_windows': {'seated_idle_side_weight': [_r(v, 4) for v in w_idle], 'desk_typing_side_weight': [_r(v, 4) for v in w_dt],
                             'window_frames': n, 'fingers': 'captured curls kept on every frame (all-frame invariance gate)',
@@ -1506,7 +1646,7 @@ def transition(ctx, role, at_end, roll, r0, W_idle, W_dt, out_dir, idle_capture=
 def run(args):
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    ctx = Context(args.source, cache=args.cache)
+    ctx = Context(args.source, cache=args.cache, chair_translation=args.chair_translation, keycaps=args.keycaps)
     T0 = np.asarray(ctx.chair['translation_cm'], float)
     r0 = np.array([*ROLL_OFFSET_CM, 0.])
     summary = {'schema': SCHEMA, **LABELS, 'geometry': {'file': str(GEOMETRY_JSON.relative_to(ROOT)), 'sha256': ctx.geometry_sha256,
@@ -1514,7 +1654,11 @@ def run(args):
                                                              'provenance', 'overall_dims_cm', 'floor_cm', 'tabletop_slab',
                                                              'front_apron', 'knee_bay_cm', 'grommet_rim_top_cm')}},
                'chair': {k: ctx.chair[k] for k in ('file', 'sha256', 'translation_cm', 'rotation_xyzw', 'scale',
-                                                     'component_world_bounds_cm')},
+                                                     'component_world_bounds_cm', 'measured_translation_cm',
+                                                     'proposed_delta_cm', 'translation_is_measured')},
+               'base': {'dir': rel(Path(FIT_DIR)), 'solver_frame_chair_offset_cm': list(ROLL_OFFSET_CM),
+                        'warm_start': 'the seated base clips (pelvis/legs/seat contact) are inputs; only the six arm bones '
+                                      'are re-solved (transitions also seam-blend to their neighbours)'},
                'keyboard': {'source': ctx.keys['source'], 'key_top_cm': _r(ctx.keys['top_cm']), 'keycaps': ctx.keys['keycaps'],
                             'key_field_min_cm': [_r(v, 3) for v in ctx.keys['key_min']],
                             'key_field_max_cm': [_r(v, 3) for v in ctx.keys['key_max']],
@@ -1522,8 +1666,9 @@ def run(args):
                             'provenance': 'repo web/house/home.js furnished("keyboard", 2, .846, -2.94, .371) = the home\'s '
                                           'keyboard source nodes 184-187 in root\'s LINEA record (same XY footprint): the '
                                           'keyboard did not move with the new desk'},
-               'gates_from': ['tools/validate_unreal_seat_contact.py (SEAT_BAND_CM, SOLE_BAND_CM, MIN_PATCH_VERTICES, '
-                              'MIN_SUPPORT_VERTICES)', 'tools/validate_unreal_contact_profile.py (KEY_GAP_MAX_CM, validate())',
+               'gates_from': [MAIN_SEAT_RULE + ' -- the seat gate', 'branch tools/validate_unreal_seat_contact.py (SEAT_BAND_CM, '
+                              'SOLE_BAND_CM, MIN_PATCH_VERTICES, MIN_SUPPORT_VERTICES; also reported, weaker than main)',
+                              'tools/validate_unreal_contact_profile.py (KEY_GAP_MAX_CM, validate())',
                               'tools/fit_seat_pelvis_pitch.py gates() / contact_per_frame()'],
                'constants': {'key_contact_target_cm': KEY_TOP_TARGET_CM, 'key_gap_max_cm': contact_profile.KEY_GAP_MAX_CM,
                              'key_penetration_max_cm': P.KEY_PENETRATION_MAX_CM, 'seat_band_cm': list(seat_contact.SEAT_BAND_CM),
@@ -1533,7 +1678,13 @@ def run(args):
                              'wrist_note': 'soft targets (smooth saturation), never gates'}}
     # ---- roll: the seat fit's chair offset plus the scanned extra pull-in
     f_dt, r_dt, g_dt, t_dt = ctx.clip('DeskTyping_seated')
-    pick, scan = roll_scan(ctx, f_dt, r_dt, t_dt, dys=(0.,) if args.quick else ROLL_SCAN_DY_CM)
+    prior = None
+    if args.resume:
+        prior = json.loads((out_dir / 'seated-typing-ik.proposal.json').read_text())
+        scan = prior['roll_scan']
+        pick = {'extra_pull_in_dy_cm': scan['chosen_extra_pull_in_dy_cm']}
+    else:
+        pick, scan = roll_scan(ctx, f_dt, r_dt, t_dt, dys=(0.,) if args.quick else ROLL_SCAN_DY_CM)
     if args.quick:                      # smoke run only: a subset of DeskTyping keys, no profile gate
         f_dt, r_dt, g_dt, t_dt = ctx.clip('DeskTyping_seated', list(t_dt[AUDIT_KEYS[0]:AUDIT_KEYS[1] + 1:30]))
     dy = float(pick['extra_pull_in_dy_cm'])
@@ -1545,7 +1696,7 @@ def run(args):
     t_start = time.time()
     summary['bounded'] = {'max_wall_seconds': args.max_seconds, 'swivel_grid_deg': [SWIVEL_GRID_DEG[0], SWIVEL_GRID_DEG[-1]],
                           'swivel_outer_passes': 3, 'contact_passes': CONTACT_PASSES, 'search_contact_passes': SEARCH_CONTACT_PASSES,
-                          'lift_max_cm': LIFT_MAX_CM, 'post_contact_iterations': 16, 'stages_done': []}
+                          'lift_max_cm': LIFT_MAX_CM, 'post_contact_iterations': POST_CONTACT_ITERATIONS, 'stages_done': []}
 
     def checkpoint(stage, blocker=None):
         b = summary['bounded']
@@ -1568,21 +1719,35 @@ def run(args):
     # ---- DeskTyping (every 60 Hz key of the loop)
     F = len(t_dt)
     shift = np.tile(roll.roll - r0, (F, 1))
-    ik = ctx.ik(f_dt.joint_world, r_dt.joint_world, t_dt, shift)
-    W = ik.solve()
-    path, sha = write(ctx, g_dt, W, t_dt, out_dir, 'SUB01_DeskTyping_seated', dict(LABELS, role='DeskTyping_seated'))
-    Wb = readback(ctx, path, t_dt)
-    rep = {'role': 'DeskTyping_seated', 'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size,
-           'keys': F, 'input_fit_clip': f'docs/proposed/seat-pose-fit/{CLIPS["DeskTyping_seated"][0]}',
-           'raw_capture': CLIPS['DeskTyping_seated'][1], 'readback_max_world_error_cm': _r(np.abs(Wb[..., :3, 3] - W[..., :3, 3]).max() * 100, 6),
-           'ik_history': ik.history, 'measure': measure(ctx, 'DeskTyping_seated', Wb, r_dt.joint_world, t_dt, shift,
-                                                        np.tile(roll.roll, (F, 1)), ik)}
-    rep['contact_profile'] = profile_validation(ctx, Wb, f_dt.joint_world, r_dt.joint_world, t_dt, shift) if not args.quick \
-        else {'pass': False, 'skipped': 'quick smoke run'}
-    rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'] and rep['contact_profile']['pass'])
+    if args.resume:
+        # the committed bounded run's DeskTyping stage: the written GLB (sha256 checked) and its report, re-read
+        rep = json.loads((out_dir / 'SUB01_DeskTyping_seated.report.json').read_text())
+        path = ROOT / rep['glb']
+        if hashlib.sha256(path.read_bytes()).hexdigest() != rep['sha256'] or prior['clips']['DeskTyping_seated']['sha256'] != rep['sha256']:
+            raise ValueError('resumed DeskTyping GLB differs from its report')
+        Wb = readback(ctx, path, t_dt)
+        rep['resumed_from_stage'] = 'DeskTyping_seated (bounded run, same code path; GLB sha256 re-checked)'
+        pb = prior.get('bounded', {})
+        summary['bounded'] = dict(summary['bounded'], resumed=True, desk_typing_stage_elapsed_seconds=pb.get('elapsed_seconds'),
+                                  desk_typing_stage_max_wall_seconds=pb.get('max_wall_seconds'))
+        summary['bounded']['stages_done'] = ['DeskTyping_seated']
+    else:
+        ik = ctx.ik(f_dt.joint_world, r_dt.joint_world, t_dt, shift)
+        W = ik.solve()
+        path, sha = write(ctx, g_dt, W, t_dt, out_dir, 'SUB01_DeskTyping_seated', dict(LABELS, role='DeskTyping_seated'))
+        Wb = readback(ctx, path, t_dt)
+        rep = {'role': 'DeskTyping_seated', 'glb': rel(path), 'sha256': sha, 'bytes': path.stat().st_size,
+               'keys': F, 'input_fit_clip': rel(Path(FIT_DIR) / CLIPS['DeskTyping_seated'][0]),
+               'raw_capture': CLIPS['DeskTyping_seated'][1], 'readback_max_world_error_cm': _r(np.abs(Wb[..., :3, 3] - W[..., :3, 3]).max() * 100, 6),
+               'ik_history': ik.history, 'measure': measure(ctx, 'DeskTyping_seated', Wb, r_dt.joint_world, t_dt, shift,
+                                                            np.tile(roll.roll, (F, 1)), ik)}
+        rep['contact_profile'] = profile_validation(ctx, Wb, f_dt.joint_world, r_dt.joint_world, t_dt, shift) if not args.quick \
+            else {'pass': False, 'skipped': 'quick smoke run'}
+        rep['all_gates_pass'] = bool(rep['measure']['all_gates_pass'] and rep['contact_profile']['pass'])
     reports['DeskTyping_seated'], worlds['DeskTyping_seated'] = rep, (Wb, shift, t_dt)
     print('DeskTyping', rep['all_gates_pass'], flush=True)
-    checkpoint('DeskTyping_seated')
+    if not args.resume:
+        checkpoint('DeskTyping_seated')
     # ---- transitions: the roll is played over them (pull-in over SitToType, push-back over TypeToSit)
     f_i, r_i, _, t_i = ctx.clip('SeatedIdle')
     W_idle = f_i.joint_world
@@ -1641,6 +1806,63 @@ def run(args):
     return summary, reports
 
 
+def audit_main_seat_rule(out_dir, source, cache=None):
+    """Re-read every committed clip of out_dir and gate its seat base with main's strong rule (MAIN_SEAT_RULE); the
+    verdicts are written into the reports and the proposal (ready stays false unless everything passes)."""
+    out_dir = Path(out_dir)
+    base = E.Source.load(source)
+    chair = load_chair()
+    keys = T.keycaps_from_glb()
+    prop = json.loads((out_dir / 'seated-typing-ik.proposal.json').read_text())
+    res = {}
+    for role, clip in prop['clips'].items():
+        rp = out_dir / f'SUB01_{role}.report.json'
+        rep = json.loads(rp.read_text())
+        path = ROOT / rep['glb']
+        if hashlib.sha256(path.read_bytes()).hexdigest() != rep['sha256']:
+            raise ValueError(f'{role}: committed GLB differs from its report')
+        g = G.Gltf(path)
+        t = np.asarray(g.animation().key_times(), float)
+        W, _ = E.joint_worlds(g, base.names, list(t))
+        raw = ROOT / rep['raw_capture']
+        Wr, _ = E.joint_worlds(G.Gltf(raw), base.names, list(t))
+        d = dict(base.d, joint_world=Wr, times=t)
+        fit = P.SeatFit(E.Source(d), chair['cushion_triangles_cm'], keys, tuple(ROLL_OFFSET_CM))
+        r = main_strong_seat_rule(fit, W, t)
+        m = rep['measure']
+        m['seat_main_strong_rule'] = r
+        m['seat_pass_branch_rule'] = m.get('seat_pass_branch_rule', m['seat_pass'])
+        m['seat_pass'] = bool(m['seat_pass_branch_rule'] and r['pass'])
+        m['all_gates_pass'] = bool(m['all_gates_pass'] and r['pass'])
+        rep['all_gates_pass'] = bool(rep['all_gates_pass'] and r['pass'])
+        rp.write_text(json.dumps(rep, indent=1, allow_nan=False) + '\n')
+        prop['clips'][role]['all_gates_pass'] = rep['all_gates_pass']
+        prop.setdefault('gates', {})[f'clip_{role}'] = rep['all_gates_pass']
+        res[role] = r
+    prop['all_gates_pass'] = {k: v['all_gates_pass'] for k, v in prop['clips'].items()}
+    prop['seat_base_main_strong_rule'] = {k: {'pass': v['pass'], 'failing_regions': [n for n, x in v['regions'].items() if not x['pass_all_frames']]}
+                                          for k, v in res.items()}
+    prop['ready'] = False
+    prop['not_ready_because'] = (
+        'the seat base (docs/proposed/seat-pose-fit clips) fails main\'s strong seat rule (median gap <= band high and '
+        'band coverage >= 0.5; ' + MAIN_SEAT_RULE + '), not only this branch\'s MIN_SUPPORT_VERTICES rule; and the measured '
+        'chair\'s castors sit 2.5 cm below the floor support plane. The arm step must be re-run on the corrected seated '
+        'base (docs/proposed/seat-pose-anatomical) with its chair transform.')
+    prop['gates_from'] = [MAIN_SEAT_RULE + ' -- the seat gate'] + [x for x in prop.get('gates_from', []) if 'MAIN' not in x and 'origin/main' not in x]
+    (out_dir / 'seated-typing-ik.proposal.json').write_text(json.dumps(prop, indent=1, allow_nan=False) + '\n')
+    return res
+
+
+def configure(base_dir=None, base_chair_offset=None):
+    """Warm-start inputs: the seated base clip directory and its solver-frame chair offset."""
+    global FIT_DIR, ROLL_OFFSET_CM
+    if base_dir is not None:
+        FIT_DIR = Path(base_dir) if Path(base_dir).is_absolute() else ROOT / base_dir
+    if base_chair_offset is not None:
+        ROLL_OFFSET_CM = tuple(map(float, base_chair_offset))
+    return FIT_DIR, ROLL_OFFSET_CM
+
+
 EXIT_REFUSED = 3
 
 
@@ -1654,11 +1876,27 @@ def main(argv=None):
     ap.add_argument('--source', default=str(ROOT / 'private-audit/seat-fit-source.npz'))
     ap.add_argument('--cache', default=str(ROOT / 'out/seat-fit-cache'))
     ap.add_argument('--out-dir', default=str(OUT_DIR))
+    ap.add_argument('--base-dir', default=str(FIT_DIR), help='seated base clips SUB01_<role>.glb (warm start), e.g. '
+                    'docs/proposed/seat-pose-anatomical')
+    ap.add_argument('--base-chair-offset', type=lambda v: tuple(float(x) for x in v.split(',')), default=None,
+                    help='dx,dy: chair offset (from the initial chair) of the base clips\' solver frame (default the seat fit\'s)')
+    ap.add_argument('--chair-translation', type=lambda v: [float(x) for x in v.split(',')], default=None,
+                    help='x,y,z: the given INITIAL chair translation (default root\'s measured one), e.g. a proposed lift')
+    ap.add_argument('--keycaps', default=None, help='keyboard-keycaps-world.json keyboard IK targets (default: home.js keyboard)')
+    ap.add_argument('--audit-main-seat-rule', action='store_true', help='gate the committed clips\' seat base with main\'s '
+                    'strong seat rule and update the reports (no solve)')
     ap.add_argument('--max-seconds', type=float, default=3600., help='wall-clock bound; a partial, ready:false report is '
                     'written when it is reached between stages')
+    ap.add_argument('--resume', action='store_true', help='reuse the bounded run\'s committed DeskTyping stage (sha256 '
+                    'checked) and run the remaining stages')
     ap.add_argument('--quick', action='store_true', help='smoke run on a DeskTyping subset (never a proposal)')
     ap.add_argument('--desk-source', help='LINEA140 source GLB: re-derive docs/proposed/seated-typing-ik/real-linea140-geometry.json')
     args = ap.parse_args(argv)
+    configure(args.base_dir, args.base_chair_offset)
+    if args.audit_main_seat_rule:
+        res = audit_main_seat_rule(args.out_dir, args.source, args.cache)
+        print(json.dumps({k: v['pass'] for k, v in res.items()}))
+        return EXIT_REFUSED if not all(v['pass'] for v in res.values()) else 0
     if args.desk_source:
         GEOMETRY_JSON.parent.mkdir(parents=True, exist_ok=True)
         GEOMETRY_JSON.write_text(json.dumps(desk_geometry(args.desk_source), indent=1) + '\n')

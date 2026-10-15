@@ -131,6 +131,7 @@
   "provenance": "repo web/house/home.js furnished(\"keyboard\", 2, .846, -2.94, .371) = the home's keyboard source nodes 184-187 in root's LINEA record (same XY footprint): the keyboard did not move with the new desk"
  },
  "gates_from": [
+  "origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5) -- the seat gate",
   "tools/validate_unreal_seat_contact.py (SEAT_BAND_CM, SOLE_BAND_CM, MIN_PATCH_VERTICES, MIN_SUPPORT_VERTICES)",
   "tools/validate_unreal_contact_profile.py (KEY_GAP_MAX_CM, validate())",
   "tools/fit_seat_pelvis_pitch.py gates() / contact_per_frame()"
@@ -334,7 +335,7 @@
   "chosen_extra_pull_in_dy_cm": 0.0
  },
  "bounded": {
-  "max_wall_seconds": 1320.0,
+  "max_wall_seconds": 1200.0,
   "swivel_grid_deg": [
    0.0,
    120.0
@@ -343,23 +344,432 @@
   "contact_passes": 8,
   "search_contact_passes": 4,
   "lift_max_cm": 15.0,
-  "post_contact_iterations": 16,
+  "post_contact_iterations": 48,
   "stages_done": [
-   "DeskTyping_seated"
+   "DeskTyping_seated",
+   "SitToType_seated",
+   "TypeToSit_seated",
+   "seams_roll_gates"
   ],
-  "elapsed_seconds": 1586.0
+  "resumed": true,
+  "desk_typing_stage_elapsed_seconds": 108.8,
+  "desk_typing_stage_max_wall_seconds": 1200.0,
+  "elapsed_seconds": 111.5
  },
  "clips": {
   "DeskTyping_seated": {
    "glb": "docs/proposed/seated-typing-ik/SUB01_DeskTyping_seated.glb",
    "sha256": "ee15462015c534e7f5a16d1e28edd4df90ccf3bee77d5ecda9d2d6fa41447d39",
    "all_gates_pass": false
+  },
+  "SitToType_seated": {
+   "glb": "docs/proposed/seated-typing-ik/SUB01_SitToType_seated.glb",
+   "sha256": "79d8641847ab854254462b5e0487d33ed5f11d275e1bffc2b7b1890dea6ca169",
+   "all_gates_pass": false
+  },
+  "TypeToSit_seated": {
+   "glb": "docs/proposed/seated-typing-ik/SUB01_TypeToSit_seated.glb",
+   "sha256": "81046f4491ac21569265f14971871667142db7630b1df464bfe38ee5bf2b00ba",
+   "all_gates_pass": false
   }
  },
  "ready": false,
  "native_verified": false,
- "partial": {
-  "stage_reached": "DeskTyping_seated",
-  "blocker": "wall-clock bound 1320.0 s reached before stage SitToType_seated"
- }
+ "seams": [
+  {
+   "from": "SitDown_seated.last",
+   "to": "SeatedIdle.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "Hips"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.641,
+    "max_joint": 5.475,
+    "max_arm_joint": 2.899,
+    "max_joint_name": "HeadTop_End"
+   }
+  },
+  {
+   "from": "SeatedIdle.last",
+   "to": "SitToType_seated.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 3.4385,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 41.4318
+   },
+   "velocity_delta_cm_s": {
+    "hips": 2.143,
+    "max_joint": 13.172,
+    "max_arm_joint": 8.261,
+    "max_joint_name": "LeftHandIndex4"
+   }
+  },
+  {
+   "from": "SitToType_seated.last",
+   "to": "DeskTyping_seated.first",
+   "fps": [
+    30.0,
+    60.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.009,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandThumb4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.3998
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.252,
+    "max_joint": 9.986,
+    "max_arm_joint": 3.997,
+    "max_joint_name": "LeftHandThumb4"
+   }
+  },
+  {
+   "from": "DeskTyping_seated.last",
+   "to": "DeskTyping_seated.first",
+   "fps": [
+    60.0,
+    60.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0127,
+    "max_joint": 2.5129,
+    "max_arm_joint": 2.307,
+    "max_joint_name": "RightHandRing4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0017,
+    "max_joint": 4.82
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.384,
+    "max_joint": 14.347,
+    "max_arm_joint": 7.009,
+    "max_joint_name": "RightHandMiddle4"
+   }
+  },
+  {
+   "from": "DeskTyping_seated.last",
+   "to": "TypeToSit_seated.first",
+   "fps": [
+    60.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0083,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandThumb4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.4035
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.808,
+    "max_joint": 27.487,
+    "max_arm_joint": 10.485,
+    "max_joint_name": "RightHandRing4"
+   }
+  },
+  {
+   "from": "TypeToSit_seated.last",
+   "to": "SeatedIdle.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 3.4385,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "LeftHandMiddle4"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 41.4319
+   },
+   "velocity_delta_cm_s": {
+    "hips": 2.309,
+    "max_joint": 14.506,
+    "max_arm_joint": 11.203,
+    "max_joint_name": "RightHandRing4"
+   }
+  },
+  {
+   "from": "SeatedIdle.last",
+   "to": "GetUp_seated.first",
+   "fps": [
+    30.0,
+    30.0
+   ],
+   "position_delta_cm": {
+    "hips": 0.0,
+    "max_joint": 0.0,
+    "max_arm_joint": 0.0,
+    "max_joint_name": "Hips"
+   },
+   "rotation_delta_deg": {
+    "hips": 0.0,
+    "max_joint": 0.0
+   },
+   "velocity_delta_cm_s": {
+    "hips": 0.737,
+    "max_joint": 5.607,
+    "max_arm_joint": 2.913,
+    "max_joint_name": "HeadTop_End"
+   }
+  }
+ ],
+ "chair_roll_activity": {
+  "model": "'Pull chair in' / 'push back': a runtime XY offset of the chair actor AND the seated body together.\noffset(s) = roll_cm * smootherstep(s), s in [0, 1]; start transform = the measured chair (s = 0), end = start +\nroll_cm (s = 1). Pull-in plays s = t / D over SitToType; push-back plays s = 1 - t / D over TypeToSit, i.e. the\nexact reverse path (same positions, reversed order), ending on the measured transform. Rotation, scale and Z are\nnever changed (a castor roll on the floor). Zero velocity and acceleration at both ends (quintic).",
+  "start_transform_cm": [
+   200.02,
+   -186.69,
+   60.6876
+  ],
+  "end_transform_cm": [
+   203.895,
+   -219.19,
+   60.6876
+  ],
+  "roll_cm": [
+   3.875,
+   -32.5,
+   0.0
+  ],
+  "seat_fit_chair_offset_cm": [
+   3.875,
+   -32.5
+  ],
+  "extra_pull_in_dy_cm": 0.0,
+  "played_over": {
+   "pull_in": "SitToType_seated",
+   "push_back": "TypeToSit_seated"
+  },
+  "held_rolled_during": "DeskTyping_seated",
+  "at_measured_transform_during": [
+   "SitDown_seated",
+   "SeatedIdle",
+   "GetUp_seated"
+  ],
+  "complete_chair": {
+   "source": "web/room/chair_owner.glb",
+   "source_sha256": "d27084af80035c7ab278f90daf77a422fabe738095dad0b015a531f86249e2dc",
+   "placement": "measured native transform (root chair report)",
+   "triangles_by_material": {
+    "chair_armpad": 602,
+    "chair_base": 2533,
+    "chair_caster": 3609,
+    "chair_fabric": 5465,
+    "chair_lift": 312,
+    "chair_mesh": 18880,
+    "chair_plastic": 22648
+   },
+   "measured_shell_on_source_surface_cm": {
+    "median": 0.048273452953307316,
+    "max": 0.41624387089233333,
+    "tolerance": 0.5,
+    "measured_vertices": 1121
+   },
+   "edge_length_median_cm": 0.8766649797022356,
+   "bounds_cm": [
+    [
+     162.56690235756707,
+     -221.89092702903727,
+     0.0
+    ],
+    [
+     237.47300891257453,
+     -151.48911409339925,
+     121.37515544891357
+    ]
+   ],
+   "armrest_top_cm": 67.02174062669508,
+   "lowest_cm": 0.0
+  },
+  "complete_chair_clearance_along_path": {
+   "samples": 101,
+   "worst_desk": {
+    "s": 0.0,
+    "desk_min_cm": 20.0,
+    "nearest_desk_node": null,
+    "chair_part": "chair_armpad",
+    "floor_gap_cm": -2.5
+   },
+   "desk_clear_all_samples": true,
+   "floor_gap_cm": [
+    -2.5,
+    -2.5
+   ],
+   "floor_gap_constant_along_roll": true,
+   "floor_no_penetration": false,
+   "rows": [
+    {
+     "s": 0.0,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.1,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.2,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.3,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.4,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.5,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.6,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.7,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.8,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 0.9,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    },
+    {
+     "s": 1.0,
+     "desk_min_cm": 20.0,
+     "nearest_desk_node": null,
+     "chair_part": "chair_armpad",
+     "floor_gap_cm": -2.5
+    }
+   ],
+   "method": "every vertex of the complete chair source (shell, arms, arm pads, back mesh, base, castors, gas lift) at the measured transform + the roll offset, signed distance to each real desk part AABB (conservative, 20 cm reach) and height above the floor support plane"
+  },
+  "reversibility": {
+   "pull_in_start_equals_measured": true,
+   "pull_in_end_cm": [
+    203.895,
+    -219.19,
+    60.6876
+   ],
+   "push_back_start_equals_pull_in_end": true,
+   "push_back_end_equals_measured": true,
+   "same_path_max_deviation_cm": 8.526512829121202e-14,
+   "final_equals_initial_exact": true,
+   "reversible": true
+  },
+  "feet": "the body rolls rigidly with the chair: sole gaps are unchanged and the soles slide on the floor at the roll speed (a seated scoot); per-frame sole gates are in each transition report"
+ },
+ "all_gates_pass": {
+  "DeskTyping_seated": false,
+  "SitToType_seated": false,
+  "TypeToSit_seated": false
+ },
+ "gates": {
+  "clip_DeskTyping_seated": false,
+  "clip_SitToType_seated": false,
+  "clip_TypeToSit_seated": false,
+  "roll_complete_chair_clear_of_desk": true,
+  "roll_complete_chair_floor_no_penetration": false,
+  "roll_floor_contact_unchanged": true,
+  "roll_reversible_exact": true
+ },
+ "ready_rule": "every aggregate gate true; consumers must read `ready` and `gates` (the CLI exits 3 when not ready)",
+ "seat_base_main_strong_rule": {
+  "DeskTyping_seated": {
+   "pass": false,
+   "failing_regions": [
+    "buttocks",
+    "left_posterior_thigh",
+    "right_posterior_thigh",
+    "left_sole",
+    "right_sole"
+   ]
+  },
+  "SitToType_seated": {
+   "pass": false,
+   "failing_regions": [
+    "buttocks",
+    "left_posterior_thigh",
+    "right_posterior_thigh",
+    "left_sole",
+    "right_sole"
+   ]
+  },
+  "TypeToSit_seated": {
+   "pass": false,
+   "failing_regions": [
+    "buttocks",
+    "left_posterior_thigh",
+    "right_posterior_thigh",
+    "left_sole",
+    "right_sole"
+   ]
+  }
+ },
+ "not_ready_because": "the seat base (docs/proposed/seat-pose-fit clips) fails main's strong seat rule (median gap <= band high and band coverage >= 0.5; origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5)), not only this branch's MIN_SUPPORT_VERTICES rule; and the measured chair's castors sit 2.5 cm below the floor support plane. The arm step must be re-run on the corrected seated base (docs/proposed/seat-pose-anatomical) with its chair transform."
 }
