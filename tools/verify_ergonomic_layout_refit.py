@@ -834,9 +834,12 @@ def device_delta(orig, prop, name):
     if prop is None:
         return np.zeros(3), 'unchanged (no proposed entry)'
     d = _first(prop, 'delta_ue_cm', 'delta_cm', 'offset_ue_cm', 'offset_cm', 'translation_delta_ue_cm')
+    t = _first(prop, 'proposed_three_m', 'three_m')
     if d is not None:
-        return np.asarray(d, float), 'explicit UE delta'
-    t = _first(prop, 'three_m')
+        d = np.asarray(d, float)
+        if t is not None and not np.allclose(three_to_ue(t) - three_to_ue(orig['three_m']), d, atol=1e-3):
+            raise ValueError(f'{name}: delta_ue_cm {d.tolist()} disagrees with proposed_three_m {t}')
+        return d, 'explicit UE delta' + (' (= proposed_three_m difference)' if t is not None else '')
     if t is not None:
         w0, w1 = orig.get('width_m'), prop.get('width_m', orig.get('width_m'))
         if w0 is not None and abs(float(w0) - float(w1)) > 1e-12:
@@ -856,14 +859,23 @@ def layout_from_proposal(path):
     prop = _first(doc, 'proposed', 'proposal', 'layout') or {}
     kd, kdr = device_delta(orig['keyboard'], _first(prop, 'keyboard'), 'keyboard')
     md, mdr = device_delta(orig['mouse'], _first(prop, 'mouse'), 'mouse')
-    chair_start = np.asarray(_first(prop, 'chair_initial_translation_cm') or orig['chair_initial_translation_cm'], float)
-    roll = _first(prop, 'chair_roll_cm', 'chair_roll_ue_cm')
+    pc = _first(prop, 'chair') or {}
+    chair_start = np.asarray(_first(prop, 'chair_initial_translation_cm') or _first(pc, 'initial_translation_cm')
+                             or orig['chair_initial_translation_cm'], float)
+    roll = _first(prop, 'chair_roll_cm', 'chair_roll_ue_cm') or _first(pc, 'proposed_typing_roll_cm', 'roll_cm')
+    if roll is None and _first(pc, 'proposed_typing_translation_cm') is not None:
+        roll = np.asarray(pc['proposed_typing_translation_cm'], float) - chair_start
     if roll is None and _first(prop, 'chair_rolled_translation_cm') is not None:
         roll = np.asarray(prop['chair_rolled_translation_cm'], float) - chair_start
     if roll is None:
         roll = orig['chair_roll_cm']
     roll = np.asarray(roll, float)[:3] if len(roll) >= 3 else np.r_[np.asarray(roll, float), 0.]
     r0 = np.asarray(_first(prop, 'solver_frame_chair_offset_cm') or _first(doc, 'solver_frame_chair_offset_cm') or R0_DEFAULT, float)
+    declared_shift = _first(_first(prop, 'body') or {}, 'solver_to_world_shift_cm')
+    if declared_shift is not None:     # cross-check: the declared body shift must equal roll - r0 (rigid roll)
+        want = np.r_[roll[:2] - r0, 0.]
+        if not np.allclose(np.asarray(declared_shift, float)[:2], want[:2], atol=1e-3):
+            raise ValueError(f'declared body shift {declared_shift} != roll - r0 {want.tolist()}')
     clips_in = _first(prop, 'clips') or _first(doc, 'clips') or {}
     clips = {}
     for role in ROLES:
@@ -948,6 +960,18 @@ def body_desk_clearance(body, W, shift, desk, chunk=20, reach=15.):
     return out, node_at
 
 
+def declared_gate(glb, F):
+    """The support-gated frames declared by the seated base report for this clip (main_rule.gated_frame_indices), found
+    next to the GLB or in the anatomical base dir; None if absent."""
+    p = ROOT / glb
+    for cand in (p.with_suffix('.report.json'), ROOT / 'docs/proposed/seat-pose-anatomical/chair-lift-proposal' / (p.stem + '.report.json')):
+        if cand.exists():
+            gi = json.loads(cand.read_text()).get('main_rule', {}).get('gated_frame_indices')
+            if gi is not None and max(gi) < F:
+                return np.asarray(gi, int), f'declared support mask ({cand.relative_to(ROOT)} main_rule.gated_frame_indices)'
+    return None
+
+
 def accel(x, dt):
     return np.linalg.norm(np.diff(x, 2, axis=0), axis=-1) / dt ** 2
 
@@ -989,6 +1013,8 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
     for dev, other, d0 in ((kb, ms, kb0), (ms, kb, None)):
         name = dev['name']
         sup = device_support(dev, desk, items, other_devices=(other,))
+        orig_dev = device_geometry(name, np.zeros(3), ref)
+        sup['original_transform_bottom_minus_top_cm'] = r_(orig_dev['bottom_cm'] - desk['top_cm'])
         sup.update({'source': dev['source'], 'sha256': dev['sha256'], 'home_js_params': dev['home_params'],
                     'home_js_call_matches': furnished_check(js, name, dev['source'], dev['home_params']),
                     'delta_cm': [r_(v) for v in dev['delta_cm']],
@@ -1071,6 +1097,14 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
         else:
             gated = np.arange(F)
             gate_rule = 'every frame (seated clip)'
+        declared = declared_gate(c['glb'], F) if role in ('SitDown_seated', 'GetUp_seated') else None
+        settled_fails = None
+        if declared is not None:
+            settled_fails = main_rule_frames(V, metrics, gated)
+            settled = {'gate_rule': gate_rule, 'gated_frames': int(len(gated)), 'failing_frames': sorted(settled_fails),
+                       'messages': {str(k): v for k, v in sorted(settled_fails.items())},
+                       'extra_frames_vs_declared': sorted(set(gated.tolist()) - set(declared[0].tolist()))}
+            gated, gate_rule = declared
         fails = main_rule_frames(V, metrics, gated)
         seat_res = {'gated_frames': int(len(gated)), 'gate_rule': gate_rule, 'pass_main_rule': not fails,
                     'failing_frames': sorted(fails)[:50], 'failing_frame_count': len(fails),
@@ -1079,6 +1113,8 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
                                   'max_median_gap_cm': worst(m['median'][gated], times[gated], lowest=False),
                                   'min_coverage': worst(np.where(m['over'][gated] > 0, m['band'][gated] / np.maximum(m['over'][gated], 1), 0.), times[gated])}
                               for n, m in metrics.items()}}
+        if settled_fails is not None:
+            seat_res['independent_settled_gate_crosscheck'] = settled
         for n in seat_res['worst']:     # map back to clip frame indices
             for k, w in seat_res['worst'][n].items():
                 if w:
@@ -1114,6 +1150,7 @@ def run_verification(layout, source_npz, ref=MAIN_REF, stride=2, cache=None, fra
         erg = ergonomics(body, W, shift, desk['top_cm'])
         erg_all[role] = erg
         joints_world[role] = body.joints_ue(W, shift)
+        joints_world[role + '#chair'] = body.joints_ue(W, np.zeros_like(shift))
         body_out[role] = {
             'glb': c['glb'], 'sha256': c['sha256'], 'clip_source': c['clip_source'], 'frames': F,
             'chair_rule': c['chair_rule'],
@@ -1182,7 +1219,8 @@ def continuity(body, clips, J, log=print):
         abrupt = dp[kp] > TH['seam_position_cm'] or dv[kv] > TH['seam_velocity_cm_s']
         row['abrupt'] = bool(abrupt)
         seams.append(row)
-    # within-clip acceleration (pelvis, hands) vs the capture's own peak
+    # within-clip acceleration (pelvis, hands) vs the capture's own peak: JUDGED in the chair frame (the body's own
+    # motion); the world value (body + the declared quintic chair roll) is reported next to the roll's own peak
     import life_gltf as G
     acc = {}
     for role, c in clips.items():
@@ -1192,28 +1230,45 @@ def continuity(body, clips, J, log=print):
         Jc = body.E.to_ue(Wc[..., :3, 3])
         dtc = float(np.diff(tcap).mean())
         dt = float(np.diff(c['times']).mean())
-        acc[role] = {}
+        roll_acc = accel(c['chair_off'], dt) if len(c['chair_off']) > 2 else np.zeros(1)
+        acc[role] = {'chair_roll_peak_accel_cm_s2': r_(roll_acc.max(), 1), 'capture': CAPTURES[role],
+                     'capture_fps': r_(1 / dtc, 2), 'clip_fps': r_(1 / dt, 2)}
         for jn in ('Hips', 'LeftHand', 'RightHand'):
             k = body.j[jn]
             a_c = accel(Jc[:, k], dtc)
-            a_p = accel(J[role][:, k], dt)
+            a_p = accel(J[role + '#chair'][:, k], dt)
+            a_w = accel(J[role][:, k], dt)
             peak = float(a_c.max())
             over = np.nonzero(a_p > peak * TH['accel_vs_capture_peak_ratio'])[0] + 1
-            acc[role][jn] = {'capture_peak_cm_s2': r_(peak, 1), 'clip_peak': {'value': r_(a_p.max(), 1), 'frame': int(np.argmax(a_p)) + 1},
+            acc[role][jn] = {'capture_peak_cm_s2': r_(peak, 1),
+                             'clip_peak_chair_frame': {'value': r_(a_p.max(), 1), 'frame': int(np.argmax(a_p)) + 1},
                              'ratio': r_(a_p.max() / peak, 3), 'frames_over_capture_peak': int(len(over)),
-                             'first_frames_over': over[:20].tolist()}
-    # seam acceleration: the velocity change across a seam over one frame, vs the capture peaks of both neighbours
+                             'first_frames_over': over[:20].tolist(),
+                             'world_with_roll_peak_cm_s2': r_(a_w.max(), 1), 'world_ratio': r_(a_w.max() / peak, 3)}
+    # seam acceleration: the velocity change across a seam over one frame (chair frame), vs the capture peaks
     for row, (a, b) in zip(seams, SEQUENCE):
+        Ja, Jb = J[a + '#chair'], J[b + '#chair']
+        dta = float(np.diff(clips[a]['times']).mean())
+        dtb = float(np.diff(clips[b]['times']).mean())
+        row['seam_accel_ratio_vs_capture_peak'] = {}
+        row['seam_accel_cm_s2'] = {}
         for jn in ('Hips', 'LeftHand', 'RightHand'):
-            key = 'velocity_delta_cm_s_hips' if jn == 'Hips' else None
-            dv = row['velocity_delta_cm_s_hips'] if jn == 'Hips' else row['velocity_delta_cm_s_hands'][jn[:-4]]
-            dt = float(np.diff(clips[b]['times']).mean())
+            k = body.j[jn]
+            dv = np.linalg.norm((Jb[1, k] - Jb[0, k]) / dtb - (Ja[-1, k] - Ja[-2, k]) / dta)
+            a_s = dv / dtb
             peak = min(acc[a][jn]['capture_peak_cm_s2'], acc[b][jn]['capture_peak_cm_s2'])
-            row.setdefault('seam_accel_ratio_vs_capture_peak', {})[jn] = r_(dv / dt / peak, 3)
-        row['abrupt'] = bool(row['abrupt'] or max(row['seam_accel_ratio_vs_capture_peak'].values()) > TH['accel_vs_capture_peak_ratio'])
-    within_ok = all(v['frames_over_capture_peak'] == 0 for r in acc.values() for v in r.values())
-    return {'seams': seams, 'acceleration_vs_capture': acc, 'abrupt_seams': [f"{s['from']} -> {s['to']}" for s in seams if s['abrupt']],
-            'within_clip_ok': bool(within_ok), 'pass': bool(within_ok and not any(s['abrupt'] for s in seams)),
+            row['seam_accel_cm_s2'][jn] = r_(a_s, 1)
+            row['seam_accel_ratio_vs_capture_peak'][jn] = r_(a_s / peak, 3)
+        row['accel_over_capture_peak'] = bool(max(row['seam_accel_ratio_vs_capture_peak'].values()) > TH['accel_vs_capture_peak_ratio'])
+    within_ok = all(v['frames_over_capture_peak'] == 0 for r in acc.values() for v in r.values() if isinstance(v, dict))
+    return {'seams': seams, 'acceleration_vs_capture': acc,
+            'abrupt_seams': [f"{s['from']} -> {s['to']}" for s in seams if s['abrupt']],
+            'seams_accel_over_capture_peak': [f"{s['from']} -> {s['to']}" for s in seams if s['accel_over_capture_peak']],
+            'within_clip_ok': bool(within_ok),
+            'pass': bool(within_ok and not any(s['abrupt'] or s['accel_over_capture_peak'] for s in seams)),
+            'abrupt_rule': f"position jump > {TH['seam_position_cm']} cm or velocity change > {TH['seam_velocity_cm_s']} cm/s "
+                           "on any body joint (fingers reported separately); accel_over_capture_peak: the one-frame seam "
+                           "acceleration of hips/hands exceeds the smaller capture peak of the two neighbours (chair frame)",
             'method': 'world joint positions (body shift with the chair) at the clip keys; seam velocity from one-frame '
                       'differences on each side; acceleration = second difference / dt^2; captures: the raw mh_mx clips '
                       '(their whole key range) under the same formula'}
@@ -1323,7 +1378,7 @@ def markdown(res, layout):
     L.append('| Device | Bottom − top (cm) | Feet on flat top | Footprint (UE cm) | Margin to slab AABB | Colliding items | Pass |\n|---|---|---|---|---|---|---|')
     for n, d in res['devices'].items():
         col = [k for k, c in d['items'].items() if c['collides']]
-        L.append(f"| {n} | {d['bottom_minus_top_cm']} | {d['feet_over_flat_top']}/{d['feet_points']} | {d['footprint_cm']} | "
+        L.append(f"| {n} | {d['bottom_minus_top_cm']} (original {d['original_transform_bottom_minus_top_cm']}) | {d['feet_over_flat_top']}/{d['feet_points']} | {d['footprint_cm']} | "
                  f"{d['footprint_margin_to_slab_aabb_cm']} | {', '.join(col) or 'none'} | {pf(d['pass'])} |")
     kb = res['devices']['keyboard']['items']
     L.append('\nKeyboard clearance to desk items (horizontal gap cm): ' + ', '.join(f"{k} {v['horizontal_gap_cm']}" for k, v in kb.items()))
@@ -1344,6 +1399,12 @@ def markdown(res, layout):
         L.append(f"| {r} | {'pass' if s['pass_main_rule'] else 'FAIL ' + str(s['failing_frame_count']) + '/' + str(s['gated_frames'])} | "
                  f"{fmt_w(b['soles']['lowest_sole_minus_floor_cm'])} | {b['legs_vs_desk']['min_cm']} | "
                  f"{b['arms_vs_desk']['min_cm_excluding_fingers']} | {b['torso_head_vs_desk']['min_cm']} | {pf(b['pass'])} |")
+    for r in ('SitDown_seated', 'GetUp_seated'):
+        x = res['body']['clips'][r]['seat_main_rule'].get('independent_settled_gate_crosscheck')
+        if x:
+            L.append(f"\n{r}: gate = {res['body']['clips'][r]['seat_main_rule']['gate_rule']}. Cross-check with this verifier's own "
+                     f"settled gate ({x['gate_rule']}, {x['gated_frames']} frames): failing {x['failing_frames']} {x['messages']}; "
+                     f"frames it adds: {x['extra_frames_vs_declared']}")
     L.append('\nWorst frames per segment (cm, frame, desk node):\n')
     for r in ROLES:
         b = res['body']['clips'][r]
@@ -1365,9 +1426,12 @@ def markdown(res, layout):
         L.append(f"| {s['from']} → {s['to']} | {s['position_delta_cm_max_body']['value']} ({s['position_delta_cm_max_body']['joint']}) | "
                  f"{s['position_delta_cm_hips']} | {s['velocity_delta_cm_s_max_body']['value']} ({s['velocity_delta_cm_s_max_body']['joint']}) | "
                  f"{a['Hips']}/{a['LeftHand']}/{a['RightHand']} | {'**yes**' if s['abrupt'] else 'no'} |")
-    L.append('\nWithin-clip acceleration vs the capture\'s own peak (ratio, frames over):\n')
+    L.append(f"\nRule: {res['continuity']['abrupt_rule']}.\n")
+    L.append('\nWithin-clip acceleration (chair frame, judged) vs the capture\'s own peak:\n')
     for r, d in res['continuity']['acceleration_vs_capture'].items():
-        L.append(f"- {r}: " + ', '.join(f"{j} {v['ratio']} ({v['frames_over_capture_peak']} fr, peak f{v['clip_peak']['frame']})" for j, v in d.items()))
+        L.append(f"- {r} (chair roll peak {d['chair_roll_peak_accel_cm_s2']} cm/s², clip {d['clip_fps']} fps, capture {d['capture_fps']} fps): " +
+                 ', '.join(f"{j} {v['ratio']}× of {v['capture_peak_cm_s2']} cm/s² ({v['frames_over_capture_peak']} fr over, peak f{v['clip_peak_chair_frame']['frame']}; world+roll {v['world_ratio']}×)"
+                           for j, v in d.items() if isinstance(v, dict)))
     L.append(f"\nVerdict: {pf(res['continuity']['pass'])}\n")
     L.append('## 5. Ergonomics (DeskTyping, measured independently, total angles)\n')
     L.append(f"Targets: {res['ergonomics']['targets']}\n")
