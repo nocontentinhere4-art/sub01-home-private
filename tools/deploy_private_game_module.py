@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -44,10 +45,17 @@ def deploy():
             before[name] = hashlib.sha256(existing.read_bytes()).hexdigest()
     for name, expected in HASHES.items():
         pending = target / ('.' + name + '.verified-new')
-        shutil.copy2(source / name, pending)
-        os.chown(pending, 1001, 1001)
-        assert hashlib.sha256(pending.read_bytes()).hexdigest() == expected
-        os.replace(pending, target / name)
+        # The portable volume refuses root chown. Receive as its actual owner.
+        if pending.exists():
+            assert hashlib.sha256(pending.read_bytes()).hexdigest() == expected
+            pending.unlink()
+        script = ('import hashlib,os,shutil,sys;from pathlib import Path;'
+                  'src,tmp,dst,digest=map(str,sys.argv[1:]);'
+                  'shutil.copy2(src,tmp);'
+                  'assert hashlib.sha256(Path(tmp).read_bytes()).hexdigest()==digest;'
+                  'os.replace(tmp,dst)')
+        subprocess.run(['/usr/sbin/runuser', '-u', 'unreal', '--', 'python3', '-c', script,
+                        str(source / name), str(pending), str(target / name), expected], check=True)
     receipt = {'schema': 'sub01.private-game-binary-deployment.v1', 'deployed_epoch': time.time(),
                'backup': str(backup), 'before': before, 'after': HASHES,
                'build_id': '55116800', 'map_config_source_unchanged': True,
