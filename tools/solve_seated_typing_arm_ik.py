@@ -299,9 +299,10 @@ def softplus(x, w):
 
 
 def soft_limit(a, lo, hi, knee=WRIST_SOFT_KNEE_DEG):
-    """Smooth saturation of angle(s) a into [lo, hi]: ~identity well inside, asymptotic to the limits outside."""
-    a = hi - softplus(hi - np.asarray(a, float), knee)
-    return lo + softplus(a - lo, knee)
+    """Smooth saturation of angle(s) a into (lo, hi): lo + softplus(a - lo) - softplus(a - hi). Monotone, ~identity
+    well inside, asymptotic to lo / hi outside, never beyond them."""
+    a = np.asarray(a, float)
+    return lo + softplus(a - lo, knee) - softplus(a - hi, knee)
 
 
 def wrist_relative(W, names, ibm, side):
