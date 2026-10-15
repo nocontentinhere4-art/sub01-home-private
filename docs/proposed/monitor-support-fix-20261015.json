@@ -1,0 +1,32 @@
+{
+  "schema": "sub01.monitor-support-source-review.v1",
+  "source_home_sha256": "9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b",
+  "source_desk_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "source_placed_desk_sha256": "3ab6c6439670f30c3207bb3e210b6b2ee273fe3f726e8a838212ef45b381ff67",
+  "actual_guarded_source_check_target": "dgtgepkz7h1zy5",
+  "source_nodes": [73, 74, 75],
+  "source_mesh_indices": [56, 57, 58],
+  "source_material_indices": [14, 17, 18],
+  "source_triangle_counts": [300, 300, 2],
+  "source_parent_lists": [[], [], []],
+  "actual_source_support": {
+    "stand_bottom_cm": 81.99999965727329,
+    "desk_top_cm": 84.49999948211064,
+    "derived_delta_z_cm": 2.499999824837346,
+    "flat_foot_triangles": 2,
+    "flat_top_triangles": 132,
+    "supported_foot_area_cm2": 87.99999755620956,
+    "full_flat_foot_triangle_area_covered": true,
+    "method": "Exact 2D convex triangle intersections, summed over every coplanar walnut face for each full stand bottom triangle; rejects gaps and duplicate overlapping support. No corner-only ray certification."
+  },
+  "native_module": "unreal_monitor_support_fix",
+  "native_api": "run(root='/workspace/sub01-home-private/out/real-office-bundle', dry_run=True, u=None)",
+  "required_order": "completed native office import, monitor support preflight, reviewed native activation, matching compiled ConfigureActualPC expectation before final PC test",
+  "new_screen_expected_center_ue_cm": [200, -327.6, 118.5],
+  "screen_extent_ue_cm_unchanged": [34, 0, 20],
+  "historical_home_state_calibration_pivots_unchanged": true,
+  "native_actor_moves": 0,
+  "native_support_verified": false,
+  "native_pc_display_and_input_verified": false,
+  "runtime_note": "An existing configured screen MID/component pointer survives a rigid actor move, but ConfigureActualPC's former116cm expectation cannot rediscover the lifted screen. Its expected center is updated in source to118.5cm; no C++ compilation performed by this source task."
+}

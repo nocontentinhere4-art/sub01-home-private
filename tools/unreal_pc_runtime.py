@@ -13,7 +13,7 @@ METHODS=r'''
 #include "Sub01HomeDeviceBridge.h"
 void ASub01HomeCharacter::ConfigureActualPC(){
  UStaticMeshComponent* Screen=nullptr;int32 Count=0;
- const FVector Expected(200,-327.6,116),Extent(34,0,20);
+ const FVector Expected(200,-327.6,118.5),Extent(34,0,20);
  for(TActorIterator<AActor> It(GetWorld());It;++It){
   TArray<UStaticMeshComponent*> Components;It->GetComponents(Components);
   for(auto* C:Components){
