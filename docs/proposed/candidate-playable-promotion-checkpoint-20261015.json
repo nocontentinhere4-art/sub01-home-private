@@ -1,0 +1,89 @@
+{
+  "schema": "sub01.actual-private-playable-promotion-checkpoint.v1",
+  "candidate_project": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab",
+  "actual_editor_pid": 175718,
+  "candidate_editor_warm_idle_fps": 1,
+  "saved_map_sha256": "14acd9d355c66741b7ddfd17d34acbdc5f5f75f8fc71f0a708504f06ff0eeb00",
+  "owned_runtime_compile": {
+    "exit": 0,
+    "module_sha256": "e571937b708c8e860d05373f1d3de428bc22a4c547cf80ded1ef80db706ace96",
+    "header_sha256": "20c63070b01ebce5fbe4af4e7143d9bfd05d32809aa2c460f6dc28f5424252cd",
+    "cpp_sha256": "e661f370d33bf2e505f17bfe5b27e8130552b2d4ac82e8c3ad7ab830183df63a",
+    "build_id": "55116800",
+    "runtime_changes": [
+      "Configured Walk and optional controller-grip clip paths with unchanged legacy defaults",
+      "Finite checked configurable bedside ON power, default legacy3.5cd; reviewed candidate config0.35cd"
+    ],
+    "readiness_gate_changes": false
+  },
+  "actual_saved_assets": [
+    "wall-mounted console/dock",
+    "teal bathroom with UV-correct real vanity wood",
+    "six-part low wood bed/frame/nightstands with original cloth geometry",
+    "152 original kitchen components with3x measured real grain sampling and source PBR",
+    "four photographic potted plants18parts; exact16oldplants retired",
+    "existing bathroom real fixture4000K",
+    "real bedside bulb aligned6.964cm to true glass center, equivalent finite radius1.09696cm,0.35cd3500K"
+  ],
+  "actual_viewed_images": [
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-living.png",
+      "sha256": "0e04b9d560dd2ce1c5107bc9d9b1ae0a3772f8453f4ff921e038a565566b2572"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-kitchen.png",
+      "sha256": "b0d50ac3c0326e9742a769a5692b3f91c8cbca17e4bae4817fd02155dd80dbc9"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-media.png",
+      "sha256": "d33e617760d71a04162bb7ccc2c0aa57fbf076379576c17289a8c4215028f594"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-desk.png",
+      "sha256": "e37333a1c1f06eb2dce3fcdcd1f97cf04a4ea48bcede06eba5deaaf6a7e5faee"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-bedroom.png",
+      "sha256": "2a38e04b8cd1f15a2cfbb35815262807fa1f12f703fa0ddca457fe4a401c372c"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-bathroom.png",
+      "sha256": "123f8362ea2065a45807fd2d7ad6d15f714afb77067726407e29eb72928d5e1f"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-balcony.png",
+      "sha256": "635e6b61fe4c4fbb699218a21bc55c97bc554fd575a5342f966ad423c81b3760"
+    },
+    {
+      "local_path": "out/house-evidence/candidate-chosen-home-courtyard.png",
+      "sha256": "e0774e8cd1b4961b0b80f4941055352581e2824d72985ead3f37badaac8e6867"
+    }
+  ],
+  "actual_render_capture_receipt": "out/house-evidence/candidate-chosen-full-home-review.json",
+  "root_reviewed_and_approved_private_playable_promotion": true,
+  "independent_playable_copy_pid": 192135,
+  "copy_status": "actual file copy progressing, final SHA manifest not yet sealed",
+  "old_known_owner_and_walk_idle_retained": true,
+  "held_new_anatomical_hands_excluded": true,
+  "functional_gameplay_QA_after_handoff_required": [
+    "actual fresh Game/browser frame+manual input",
+    "guest PC display and real input/ack",
+    "phone apps",
+    "TVMinecraft gamepad/focus",
+    "bathroom physical privacy",
+    "bedside real switch0.35cd",
+    "all8 kitchen hinges"
+  ],
+  "known_limits": [
+    "Offscreen mirror reflection remains dark pending actual Game investigation",
+    "Flat near360outside panorama lacks depth/parallax",
+    "Device hand clips are posture/background; real input tickets not yet coupled to individual hand press phases",
+    "New anatomical65source/rest candidates held until serialized bind/pose equivalence proof"
+  ],
+  "public_changes": false,
+  "original_live_game_still_running_during_copy": [
+    159171,
+    976840968
+  ],
+  "promotion_complete": false
+}

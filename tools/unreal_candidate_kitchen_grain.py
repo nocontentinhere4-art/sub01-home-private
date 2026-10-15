@@ -32,10 +32,10 @@ def run(dry_run=True):
  carrier=ROOT/'kitchen-grain-real-source-carrier.glb';variant=ROOT/'kitchen-grain-152.glb'
  if hashlib.sha256(variant.read_bytes()).hexdigest()!=VARIANT_SHA or hashlib.sha256(carrier.read_bytes()).hexdigest()!=CARRIER_SHA:raise RuntimeError('Frozen kitchen R3 source required')
  vd,vb=read_gltf(variant);cd,cb=read_gltf(carrier)
- if len(vd['nodes'])!=152 or len(cd['nodes'])!=3 or len(cd['materials'])!=3:raise RuntimeError('Exact152 installed roles and3 genuine carrier parts required')
+ if len([n for n in vd['nodes']if'mesh'in n])!=152 or len(cd['nodes'])!=3 or len(cd['materials'])!=3:raise RuntimeError('Exact152 installed roles and3 genuine carrier parts required')
  original=Path('/workspace/sub01-home-private/kitchen-lowerfit-source-20261015/output/native-kitchen-import.json');rb=original.read_bytes()
  if hashlib.sha256(rb).hexdigest()!=RECEIPT_SHA:raise RuntimeError('Exact actual saved R7 receipt required')
- receipt=json.loads(rb);parts=receipt['parts'];eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors());before=snapshot(u,actors);components={c.get_path_name():(a,c)for a in actors for c in a.get_components_by_class(u.StaticMeshComponent)};nodes={n['name']:n for n in vd['nodes']};installed=[]
+ receipt=json.loads(rb);parts=receipt['parts'];eas=u.get_editor_subsystem(u.EditorActorSubsystem);actors=list(eas.get_all_level_actors());before=snapshot(u,actors);components={c.get_path_name():(a,c)for a in actors for c in a.get_components_by_class(u.StaticMeshComponent)};nodes={n['name']:n for n in vd['nodes']if'mesh'in n};installed=[]
  if len(parts)!=152 or len(receipt['hinges'])!=8 or len(nodes)!=152:raise RuntimeError('Exact R7 part/hinge ownership required')
  for p in parts:
   a,c=components.get(p['component'],(None,None));n=nodes.get(p['part'])

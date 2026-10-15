@@ -3,7 +3,7 @@ import hashlib,json,os,time,struct
 from pathlib import Path
 _handle=globals().get('_handle')
 _active_finish_hook=globals().get('_active_finish_hook')
-VIEWS=[('living',(100,180,165),(-9,-150,0)),('kitchen',(-125,-190,165),(-8,-134,0)),('media',(-170,-35,165),(-9,-171,0)),('desk',(200,-180,155),(-22,-90,0)),('bedroom',(-110,-80,465),(-26,-128,0)),('bathroom',(-230,120,465),(-22,123,0)),('balcony',(-140,455,465),(-12,180,0)),('courtyard',(200,560,165),(-12,90,0))]
+VIEWS=[('living',(-100,260,165),(-7,-115,0)),('kitchen',(-125,-190,165),(-8,-134,0)),('media',(-170,-35,165),(-9,-171,0)),('desk',(200,-180,155),(-22,-90,0)),('bedroom',(-110,-80,465),(-26,-128,0)),('bathroom',(-230,120,465),(-22,123,0)),('balcony',(-140,455,465),(-12,180,0)),('courtyard',(200,560,165),(-12,90,0))]
 def complete(path,after):
  if not path.exists()or path.stat().st_mtime<after:return False
  b=path.read_bytes();return len(b)>100 and b[:8]==b'\x89PNG\r\n\x1a\n'and struct.unpack('>II',b[16:24])==(1280,720)and b[-12:]==b'\0\0\0\0IEND\xaeB`\x82'

@@ -51,10 +51,17 @@ def apply_owned_alpha_cutoff(u,component,source,destination):
  if source.get('alphaMode','OPAQUE')!='MASK':return
  material=component.get_material(0)
  if not isinstance(material,u.MaterialInstanceConstant)or not material.get_path_name().startswith(destination+'/'):raise RuntimeError('Only fresh owned botanical MASK material may receive source clipping override')
+ # Fresh Interchange MI update can overwrite its clip override during deferred
+ # initialization. Actual owned-alpha probe029 proved independent duplicates
+ # preserve both stored and rendered values after update. Copy source params
+ # into one new owned MI; the original imported/shared parent remains untouched.
+ material=u.EditorAssetLibrary.duplicate_asset(material.get_path_name().split('.',1)[0],destination+'/AlphaCorrect/A_'+uuid4().hex)
+ if not isinstance(material,u.MaterialInstanceConstant)or not material.get_path_name().startswith(destination+'/AlphaCorrect/'):raise RuntimeError('Independent owned alpha MI copy refused')
+ component.set_material(0,material)
  cutoff=float(source.get('alphaCutoff',.5))
  if not 0<=cutoff<=1:raise RuntimeError('Authored alpha cutoff outside glTF range')
- overrides=material.get_editor_property('base_property_overrides');overrides.set_editor_property('opacity_mask_clip_value',cutoff);overrides.set_editor_property('override_opacity_mask_clip_value',True);material.set_editor_property('base_property_overrides',overrides);u.MaterialEditingLibrary.update_material_instance(material)
- if abs(float(actual_material_property(material,'opacity_mask_clip_value','override_opacity_mask_clip_value'))-cutoff)>1e-5:raise RuntimeError('Owned source alpha cutoff did not apply')
+ overrides=material.get_editor_property('base_property_overrides');overrides.set_editor_property('override_opacity_mask_clip_value',True);overrides.set_editor_property('opacity_mask_clip_value',cutoff);material.set_editor_property('base_property_overrides',overrides);u.MaterialEditingLibrary.update_material_instance(material)
+ if abs(float(actual_material_property(material,'opacity_mask_clip_value','override_opacity_mask_clip_value'))-cutoff)>1e-5:raise RuntimeError('Owned source alpha cutoff did not apply: '+str({'actual':actual_material_property(material,'opacity_mask_clip_value','override_opacity_mask_clip_value'),'wanted':cutoff,'flag':material.get_editor_property('base_property_overrides').get_editor_property('override_opacity_mask_clip_value'),'stored':material.get_editor_property('base_property_overrides').get_editor_property('opacity_mask_clip_value')}))
 
 def verify_leaf_mode(u,component,source):
  material=component.get_material(0);mode=actual_material_property(material,'blend_mode','override_blend_mode');two=actual_material_property(material,'two_sided','override_two_sided')
@@ -92,17 +99,19 @@ def run(dry_run=True):
  destination='/Game/Sub01Home/PhotoPlants/V_'+hashlib.sha256((ROOT/'placement-proof.json').read_bytes()).hexdigest()[:12]+'/A_'+uuid4().hex
  from real_office_plant import source_plan
  office_plan,_=source_plan(home)
- for node,(a,c)in zip(OLD_NODES,old):
-  expected=expected_triangles(hd,hb,node)
-  if node in(221,222,223,224):
-   # These exact actors were already moved by the previously saved genuine
-   # office transaction. Their private full-source copies are not the old
-   # untouched scene transforms; retain that proved rigid placement in audit.
-   delta=office_plan['rigid_delta_ue_cm']
-   if delta!=[v*100 for v in(-.4,0.,-.0157754111289978)]or not bindings[node].startswith('/Game/Sub01Home/RealOfficePlant/V_9556495fa816_')or not bindings[node].endswith('_FullSource/SourceNode%d.SourceNode%d'%(node,node)):raise RuntimeError('Exact previously proved office plant placement and ownership required')
-   expected=[[[p[i]+delta[i]for i in range(3)]for p in t]for t in expected]
-  try:audits.append(audit_original_full_source(u,eas,c,expected,node,bindings,destination,dry_run))
-  except Exception as exc:raise RuntimeError('Exact retiring plant source node%d failed: %s'%(node,str(exc)))from exc
+ def audit_sources(preflight):
+  for node,(a,c)in zip(OLD_NODES,old):
+   expected=expected_triangles(hd,hb,node)
+   if node in(221,222,223,224):
+    # These exact actors were already moved by the previously saved genuine
+    # office transaction. Their private full-source copies are not the old
+    # untouched scene transforms; retain that proved rigid placement in audit.
+    delta=office_plan['rigid_delta_ue_cm']
+    if delta!=[v*100 for v in(-.4,0.,-.0157754111289978)]or not bindings[node].startswith('/Game/Sub01Home/RealOfficePlant/V_9556495fa816_')or not bindings[node].endswith('_FullSource/SourceNode%d.SourceNode%d'%(node,node)):raise RuntimeError('Exact previously proved office plant placement and ownership required')
+    expected=[[[p[i]+delta[i]for i in range(3)]for p in t]for t in expected]
+   try:audits.append(audit_original_full_source(u,eas,c,expected,node,bindings,destination,preflight))
+   except Exception as exc:raise RuntimeError('Exact retiring plant source node%d failed: %s'%(node,str(exc)))from exc
+ if dry_run:audit_sources(True)
  result={'schema':'sub01.actual-candidate-photo-plants-native.v1','dry_run':dry_run,'placement_proof_sha256':hashlib.sha256((ROOT/'placement-proof.json').read_bytes()).hexdigest(),'inventory_sha256':hashlib.sha256(inventory_bytes).hexdigest(),'retired_original_nodes':OLD_NODES,'old_source_audits':audits,'native_visual_verified':False,'runtime_contact_accepted':False,'promoted_to_live':False,'advanced_material_extension_render_acceptance':False}
  if dry_run:return result
  backup=project/'Saved/PrivateMapBackups'/('photo-plants-'+str(time.time_ns()));backup.mkdir(parents=True);shutil.copy2(map_path,backup/'ActualHome.umap');parts=[];geometry=[];materials=[];save_attempted=False
@@ -134,6 +143,10 @@ def run(dry_run=True):
     source_mat=doc['materials'][primitives[0]['material']];pbr=verify_owned_material(u,c,source_mat,destination,source_primitive_verified=True);apply_owned_alpha_cutoff(u,c,source_mat,destination);mode=verify_leaf_mode(u,c,source_mat)
     original_material=original_doc['materials'][primitives[0]['material']];solid='plant pot'in original_material.get('name','').lower();c.set_collision_profile_name('BlockAll'if solid else'NoCollision');c.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS if solid else u.CollisionEnabled.NO_COLLISION);c.set_cast_shadow(True);a.set_actor_label('SUB01PhotoPlant_'+node['name']);parts.append((a,c));geometry.append({'node':node['name'],'variant':variant,'positive_triangles':len(actual),'source_exact_zero_indices':zero,'component':c.get_path_name()});materials.append({'source':source_mat['name'],'core_pbr':pbr,'botanical_mode':mode})
   if len(parts)!=18 or sum(p['positive_triangles']for p in geometry)>42128 or snapshot(u,actors)!=before:raise RuntimeError('Complete four source plants and unchanged originals required')
+  # Verify inexpensive new-source material/geometry first; every full original
+  # retirement audit still completes before any original actor can be hidden.
+  audit_sources(False)
+  if snapshot(u,actors)!=before:raise RuntimeError('Complete original plant source audits must leave protected world exact')
   if not u.EditorAssetLibrary.save_directory(destination,only_if_is_dirty=False,recursive=True):raise RuntimeError('Owned exact plant assets save refused')
   expected_after=copy.deepcopy(before)
   for a,c in old:
