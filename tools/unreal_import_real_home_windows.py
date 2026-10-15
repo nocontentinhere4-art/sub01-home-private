@@ -9,6 +9,7 @@ from structural_rail_source_patch import world_matrices
 from prepare_real_wc_bundle import node_geometry
 from unreal_remove_frame_backings import native_triangles,same_triangles
 from unreal_import_real_linea140 import verify_materials
+from unreal_import_real_bathroom_pendant import source_slot_binding
 from unreal_import_reference_dressing import fingerprint
 from unreal_import_real_wc import owned_geometry
 from unreal_owned_import_cleanup import detach_added
@@ -107,7 +108,7 @@ def run(dry_run=True):
   manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before]
   for a in added:a.set_actor_hidden_in_game(True)
   if fingerprint(u,original)!=before:raise RuntimeError('Import changed protected originals beforeactivation')
-  components=[];glass_components=[];parts=[];geometry_parts=[]
+  components=[];glass_components=[];parts=[];geometry_parts=[];material_bindings={}
   for ni,node in enumerate(doc['nodes']):
    if'mesh'not in node:continue
    matches=[a for a in added if a.get_actor_label()==node['name']]
@@ -123,9 +124,13 @@ def run(dry_run=True):
    if len(pr)!=1 or c.get_num_materials()!=1:raise RuntimeError('Exact perpart source material required')
    sm=doc['materials'][pr[0]['material']]['name']
    if sm=='Window clear insulated glass':glass_components.append(c)
+   else:
+    binding=source_slot_binding(c,doc['materials'][pr[0]['material']],dest)
+    if sm in material_bindings and material_bindings[sm]!=binding[sm]:raise RuntimeError('Source window material maps to multiple actual instances')
+    material_bindings.update(binding)
   if sum(len(x['exact_zero_area_source_indices'])for x in geometry_parts)!=432 or sum(x['positive_source_triangles']for x in geometry_parts)!=12624:raise RuntimeError('Pinned complete positive source surface counts differ')
   if len(parts)!=207 or len(glass_components)!=45:raise RuntimeError('Complete207parts/45glass solids required')
-  opaque=copy.deepcopy(doc);opaque['materials']=[m for m in opaque['materials']if m['name']!='Window clear insulated glass'];material_report=verify_materials(u,[c for c in components if c not in glass_components],opaque,dest)
+  opaque=copy.deepcopy(doc);opaque['materials']=[m for m in opaque['materials']if m['name']!='Window clear insulated glass'];material_report=verify_materials(u,[c for c in components if c not in glass_components],opaque,dest,material_bindings=material_bindings)
   glass=clear_glass(u,dest)
   for c in glass_components:c.set_material(0,glass);c.set_editor_property('cast_shadow',False)
   # Match actual house mineral wall PBR, without mutating original wall158 or its assets.

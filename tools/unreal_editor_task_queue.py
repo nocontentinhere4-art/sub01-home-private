@@ -58,6 +58,7 @@ TASKS = {
     'reference_bedding': 'unreal_import_reference_bedding',
     'reference_media': 'unreal_import_reference_media',
     'residential_windows': 'unreal_import_real_home_windows',
+    'exterior_readonly': 'unreal_exterior_readonly',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None

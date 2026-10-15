@@ -111,7 +111,13 @@ def main(u,root=None):
     try:
         u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task]);paths=list(map(str,task.imported_object_paths))
         if not paths or any(not p.startswith(dest+'/')for p in paths):raise RuntimeError('Import escaped unique owned review namespace')
-        objects=[u.load_asset(p)for p in paths];meshes=[o for o in objects if isinstance(o,u.SkeletalMesh)];clips=[o for o in objects if isinstance(o,u.AnimSequence)]
+        # The legacy FBX task returns the mesh before its generated animation is
+        # listed in imported_object_paths. Finish actual asset compilation, then
+        # enumerate only this fresh unique owned namespace (never another import).
+        u.Sub01HomeHandsInstance.finish_pending_skin_compilation()
+        owned_paths=list(map(str,lib.list_assets(dest,recursive=True,include_folder=False)))
+        if not owned_paths or any(not p.startswith(dest+'/')for p in owned_paths):raise RuntimeError('Actual review assets escaped fresh owned namespace')
+        objects=[u.load_asset(p)for p in owned_paths];meshes=[o for o in objects if isinstance(o,u.SkeletalMesh)];clips=[o for o in objects if isinstance(o,u.AnimSequence)]
         if len(objects)!=2 or len(meshes)!=1 or len(clips)!=1:raise RuntimeError('Expected one authentic arms mesh and one review clip')
         mesh,clip=meshes[0],clips[0];u.Sub01HomeHandsInstance.finish_pending_skin_compilation()
         if mesh.get_editor_property('skeleton')!=skeleton or clip.get_editor_property('skeleton')!=skeleton or skeleton_state(u,original)!=before:raise RuntimeError('Existing original skeleton changed or review skeleton differs')
