@@ -35,7 +35,7 @@ def run():
         for c in actor.get_components_by_class(cls):
             p=c.get_world_location()
             row={'kind':kind,'component':c.get_path_name(),'world_location_cm':[p.x,p.y,p.z],
-                 'properties':properties(c,('cast_shadow','cast_dynamic_shadow','cast_static_shadow',
+                 'properties':properties(c,('cast_shadow','cast_dynamic_shadow','cast_static_shadow','cast_shadow_as_two_sided',
                    'affect_dynamic_indirect_lighting','affect_distance_field_lighting','visible_in_ray_tracing',
                    'intensity','intensity_units','attenuation_radius','use_inverse_squared_falloff',
                    'source_radius','soft_source_radius','source_length','indirect_lighting_intensity'))}
