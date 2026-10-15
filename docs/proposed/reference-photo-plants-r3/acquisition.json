@@ -1,0 +1,182 @@
+{
+  "schema": "sub01.reference-plants-polyhaven-acquisition.v1",
+  "epoch": 1792082041.7748888,
+  "assets": [
+    {
+      "name": "calathea_orbifolia_01",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata_primary_observed_in_configured_playwright": "https://api.polyhaven.com/files/calathea_orbifolia_01",
+      "files": [
+        {
+          "filename": "calathea_orbifolia_01_1k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/calathea_orbifolia_01/calathea_orbifolia_01_1k.gltf",
+          "source_md5": "7ff4de041509fbaa45f8f3dd52b3113d",
+          "sha256": "399130c01bfff6b493f885652112c3c841c3814b024a3d3c87773e0c5ab4f156",
+          "bytes": 9309
+        },
+        {
+          "filename": "textures/calathea_orbifolia_01_arm_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_arm_1k.jpg",
+          "source_md5": "195b131e3812528555d2f8c18e148910",
+          "sha256": "df4ea4dfc74a6965476200cffea69886ac26d3c089f356a7b69518149ef585e0",
+          "bytes": 421555
+        },
+        {
+          "filename": "textures/calathea_orbifolia_01_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_diff_1k.jpg",
+          "source_md5": "a84ed342fdc66b44ddebdb1fd9bee1d5",
+          "sha256": "a105a093d74317a3853319a06fdc78cad2a13e353962298d2094195720b9b4a0",
+          "bytes": 455819
+        },
+        {
+          "filename": "calathea_orbifolia_01.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/calathea_orbifolia_01/calathea_orbifolia_01.bin",
+          "source_md5": "71dd2ea7aaba98bbd675db12ae382bbd",
+          "sha256": "df1668bcb44914abac046217bbdae9867a3702198f7c374135f2b4456df8b038",
+          "bytes": 407968
+        },
+        {
+          "filename": "textures/calathea_orbifolia_01_nor_gl_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_nor_gl_1k.jpg",
+          "source_md5": "93ff03e73a6483a29c272f8704f9d8dd",
+          "sha256": "52aac88c18bf42c369aad9b2b5e41dbe58b015ca2fac7ff6ed4cb21147cb49c8",
+          "bytes": 581558
+        }
+      ],
+      "triangles": 16688,
+      "materials": [
+        {
+          "alphaCutoff": 0.5,
+          "alphaMode": "MASK",
+          "doubleSided": true,
+          "extensions": {
+            "KHR_materials_specular": {
+              "specularColorFactor": [
+                1.1200000047683716,
+                1.1200000047683716,
+                1.1200000047683716
+              ]
+            },
+            "KHR_materials_ior": {
+              "ior": 1.4500000476837158
+            }
+          },
+          "name": "calathea_orbifolia_01",
+          "normalTexture": {
+            "index": 0
+          },
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 1
+            },
+            "metallicFactor": 0,
+            "metallicRoughnessTexture": {
+              "index": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pachira_aquatica_01",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata_primary_observed_in_configured_playwright": "https://api.polyhaven.com/files/pachira_aquatica_01",
+      "files": [
+        {
+          "filename": "pachira_aquatica_01_1k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/pachira_aquatica_01/pachira_aquatica_01_1k.gltf",
+          "source_md5": "52839b556e333d0ec6460051e2723447",
+          "sha256": "e73b77c0ffadd8b9fa686faabfecf37799123fe4bc756f816145a4f8c9f53364",
+          "bytes": 13730
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_bark_nor_gl_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_bark_nor_gl_1k.jpg",
+          "source_md5": "de36315221e10e1d594946a825678eae",
+          "sha256": "389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8",
+          "bytes": 723624
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_leaves_nor_gl_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_leaves_nor_gl_1k.jpg",
+          "source_md5": "ce579513b75d94b077eb45107f78a513",
+          "sha256": "3a442aa75df0e6f37bb7410f8ae09927b419d2dba202943cda40f52a7194804c",
+          "bytes": 490166
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_leaves_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_leaves_diff_1k.jpg",
+          "source_md5": "32dde4e411de4fcaf3d4b88fb3a72913",
+          "sha256": "b3211c240dd2ea7913326e7f21f9db9d029ee487b5e59d58d0e10c8cc77d203f",
+          "bytes": 320484
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_bark_arm_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_bark_arm_1k.jpg",
+          "source_md5": "3b3a69f6e56a58eef1b3f314c855b2a8",
+          "sha256": "7c44f930e3a6c14acb9043e50d8244da7869f8937233c58276d1b3212a3a6960",
+          "bytes": 588614
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_bark_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_bark_diff_1k.jpg",
+          "source_md5": "70e2a72e0146e333f40ce8d2c36ddb7c",
+          "sha256": "9ca175a1c105a3555c47626ebead36505c29482ea0018f4c6e9a5828ce6d7b25",
+          "bytes": 592488
+        },
+        {
+          "filename": "textures/pachira_aquatica_01_leaves_arm_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pachira_aquatica_01/pachira_aquatica_01_leaves_arm_1k.jpg",
+          "source_md5": "dd5afb417b488286d57ba5bf5fb71192",
+          "sha256": "42824afde27e7f0111a2e673f0a7cfe0b18bc21d2201b85d9737fce48c1016a3",
+          "bytes": 372937
+        },
+        {
+          "filename": "pachira_aquatica_01.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/pachira_aquatica_01/pachira_aquatica_01.bin",
+          "source_md5": "4e3aa7e0cfa77099421a2b3b65211f1c",
+          "sha256": "a803777635a4744cc304bd936806242d8875430cc588295c9fa2792a64747c8e",
+          "bytes": 2036788
+        }
+      ],
+      "triangles": 76914,
+      "materials": [
+        {
+          "doubleSided": true,
+          "name": "pachira_aquatica_01_bark",
+          "normalTexture": {
+            "index": 0
+          },
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 1
+            },
+            "metallicFactor": 0,
+            "metallicRoughnessTexture": {
+              "index": 2
+            }
+          }
+        },
+        {
+          "doubleSided": true,
+          "name": "pachira_aquatica_01_leaves",
+          "normalTexture": {
+            "index": 3
+          },
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 4
+            },
+            "metallicFactor": 0,
+            "metallicRoughnessTexture": {
+              "index": 5
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "native_changes": false
+}

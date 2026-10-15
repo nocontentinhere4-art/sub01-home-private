@@ -1,0 +1,59 @@
+{
+  "schema": "sub01.reference-photo-plants-positive-source-proof.v1",
+  "plants": [
+    {
+      "source": "photo-plant-0",
+      "sha256": "6664e1f86ca83a7b5e267574d2d555ce17f4203506881082d9140617953b0633",
+      "complete_positive_and_zero_source_triangle_count": 6875,
+      "all_original_plant_triangles_exact_after_translation": true,
+      "all_original_pot_triangles_exact_after_uniform_scale": true,
+      "tolerance_cm": 0.0001,
+      "source_export_reimported": true,
+      "source_leaf_or_stem_pot_wall_BVH_epsilon_m": 0,
+      "source_leaf_or_stem_pot_wall_intersections": [],
+      "root_burial_depth_m": 0.012,
+      "home_placement_not_tested": true
+    },
+    {
+      "source": "photo-plant-1",
+      "sha256": "211f9669e1f1c6730bf1dae281ba3b8c13b49a636016d457a774949c4ebccfcd",
+      "complete_positive_and_zero_source_triangle_count": 7688,
+      "all_original_plant_triangles_exact_after_translation": true,
+      "all_original_pot_triangles_exact_after_uniform_scale": true,
+      "tolerance_cm": 0.0001,
+      "source_export_reimported": true,
+      "source_leaf_or_stem_pot_wall_BVH_epsilon_m": 0,
+      "source_leaf_or_stem_pot_wall_intersections": [],
+      "root_burial_depth_m": 0.012,
+      "home_placement_not_tested": true
+    },
+    {
+      "source": "photo-plant-2",
+      "sha256": "7fe1534d81742d608f8f43c014a57f480380df0be5257d64a515b1a75c238b12",
+      "complete_positive_and_zero_source_triangle_count": 22335,
+      "all_original_plant_triangles_exact_after_translation": true,
+      "all_original_pot_triangles_exact_after_uniform_scale": true,
+      "tolerance_cm": 0.0001,
+      "source_export_reimported": true,
+      "source_leaf_or_stem_pot_wall_BVH_epsilon_m": 0,
+      "source_leaf_or_stem_pot_wall_intersections": [],
+      "root_burial_depth_m": 0.012,
+      "home_placement_not_tested": true
+    },
+    {
+      "source": "photo-plant-3",
+      "sha256": "3250808c4991a8dc25e1dc4664a31c67e0587103027ab40d205086aadb67335d",
+      "complete_positive_and_zero_source_triangle_count": 5230,
+      "all_original_plant_triangles_exact_after_translation": true,
+      "all_original_pot_triangles_exact_after_uniform_scale": true,
+      "tolerance_cm": 0.0001,
+      "source_export_reimported": true,
+      "source_leaf_or_stem_pot_wall_BVH_epsilon_m": 0,
+      "source_leaf_or_stem_pot_wall_intersections": [],
+      "root_burial_depth_m": 0.012,
+      "home_placement_not_tested": true
+    }
+  ],
+  "native_changes": false,
+  "runtime_accepted": false
+}

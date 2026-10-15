@@ -1,0 +1,197 @@
+{
+  "schema": "sub01.reference-photo-plants-source.v1",
+  "plants": [
+    {
+      "name": "photo-plant-0",
+      "species": "pachira_aquatica_01",
+      "authored_variant": "b",
+      "source_license": "CC0-1.0 Poly Haven plus original CC0 Innerscene planter",
+      "plant_triangles": 5091,
+      "pot_uniform_scale": 0.66,
+      "soil_top_m": 0.2626799941062927,
+      "root_burial_depth_m": 0.012,
+      "pot_triangles": 1784,
+      "total_triangles": 6875,
+      "source_geometry_decimation": false,
+      "worldscale_preserved": true,
+      "source_translation_only_m": [
+        -0.0,
+        -0.0,
+        0.25832599401474
+      ],
+      "bounds_m": [
+        [
+          -0.2374652475118637,
+          -0.3916022479534149,
+          0.0
+        ],
+        [
+          0.2656799554824829,
+          0.2157546728849411,
+          0.9857274293899536
+        ]
+      ],
+      "pot_bounds_m": [
+        [
+          -0.16500000655651093,
+          -0.16500000655651093,
+          0.0
+        ],
+        [
+          0.16500000655651093,
+          0.16500000655651093,
+          0.28380000591278076
+        ]
+      ],
+      "plant_root_min_z_m": 0.25067999958992004,
+      "prepared_sha256": "6664e1f86ca83a7b5e267574d2d555ce17f4203506881082d9140617953b0633",
+      "prepared_bytes": 3291100,
+      "native_placement_accepted": false
+    },
+    {
+      "name": "photo-plant-1",
+      "species": "calathea_orbifolia_01",
+      "authored_variant": "a",
+      "source_license": "CC0-1.0 Poly Haven plus original CC0 Innerscene planter",
+      "plant_triangles": 5904,
+      "pot_uniform_scale": 0.56,
+      "soil_top_m": 0.22288000583648682,
+      "root_burial_depth_m": 0.012,
+      "pot_triangles": 1784,
+      "total_triangles": 7688,
+      "source_geometry_decimation": false,
+      "worldscale_preserved": true,
+      "source_translation_only_m": [
+        1.0,
+        0.0,
+        0.21930605173110962
+      ],
+      "bounds_m": [
+        [
+          -0.2937181890010834,
+          -0.21012963354587555,
+          0.0
+        ],
+        [
+          0.30688172578811646,
+          0.315498024225235,
+          0.6351742744445801
+        ]
+      ],
+      "pot_bounds_m": [
+        [
+          -0.14000000059604645,
+          -0.14000000059604645,
+          0.0
+        ],
+        [
+          0.14000000059604645,
+          0.14000000059604645,
+          0.24080000817775726
+        ]
+      ],
+      "plant_root_min_z_m": 0.21088001132011414,
+      "prepared_sha256": "211f9669e1f1c6730bf1dae281ba3b8c13b49a636016d457a774949c4ebccfcd",
+      "prepared_bytes": 2412196,
+      "native_placement_accepted": false
+    },
+    {
+      "name": "photo-plant-2",
+      "species": "pachira_aquatica_01",
+      "authored_variant": "c",
+      "source_license": "CC0-1.0 Poly Haven plus original CC0 Innerscene planter",
+      "plant_triangles": 20551,
+      "pot_uniform_scale": 0.84,
+      "soil_top_m": 0.33431997895240784,
+      "root_burial_depth_m": 0.012,
+      "pot_triangles": 1784,
+      "total_triangles": 22335,
+      "source_geometry_decimation": false,
+      "worldscale_preserved": true,
+      "source_translation_only_m": [
+        -1.9785430431365967,
+        0.001834876835346222,
+        0.3283882737159729
+      ],
+      "bounds_m": [
+        [
+          -0.35765019059181213,
+          -0.36629387736320496,
+          0.0
+        ],
+        [
+          0.6176366806030273,
+          0.5573891401290894,
+          1.471358299255371
+        ]
+      ],
+      "pot_bounds_m": [
+        [
+          -0.20999999344348907,
+          -0.20999999344348907,
+          0.0
+        ],
+        [
+          0.20999999344348907,
+          0.20999999344348907,
+          0.3612000048160553
+        ]
+      ],
+      "plant_root_min_z_m": 0.32231998443603516,
+      "prepared_sha256": "7fe1534d81742d608f8f43c014a57f480380df0be5257d64a515b1a75c238b12",
+      "prepared_bytes": 3710076,
+      "native_placement_accepted": false
+    },
+    {
+      "name": "photo-plant-3",
+      "species": "calathea_orbifolia_01",
+      "authored_variant": "b",
+      "source_license": "CC0-1.0 Poly Haven plus original CC0 Innerscene planter",
+      "plant_triangles": 3446,
+      "pot_uniform_scale": 0.56,
+      "soil_top_m": 0.22288000583648682,
+      "root_burial_depth_m": 0.012,
+      "pot_triangles": 1784,
+      "total_triangles": 5230,
+      "source_geometry_decimation": false,
+      "worldscale_preserved": true,
+      "source_translation_only_m": [
+        -0.0,
+        -0.0,
+        0.21689727902412415
+      ],
+      "bounds_m": [
+        [
+          -0.178414985537529,
+          -0.24281249940395355,
+          0.0
+        ],
+        [
+          0.16900880634784698,
+          0.1974693387746811,
+          0.5140827894210815
+        ]
+      ],
+      "pot_bounds_m": [
+        [
+          -0.14000000059604645,
+          -0.14000000059604645,
+          0.0
+        ],
+        [
+          0.14000000059604645,
+          0.14000000059604645,
+          0.24080000817775726
+        ]
+      ],
+      "plant_root_min_z_m": 0.21088001132011414,
+      "prepared_sha256": "3250808c4991a8dc25e1dc4664a31c67e0587103027ab40d205086aadb67335d",
+      "prepared_bytes": 2352712,
+      "native_placement_accepted": false
+    }
+  ],
+  "total_triangles": 42128,
+  "native_changes": false,
+  "native_ready": false,
+  "source_visual_review_pending": true
+}

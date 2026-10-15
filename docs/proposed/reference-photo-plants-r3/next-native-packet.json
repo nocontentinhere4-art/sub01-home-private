@@ -1,0 +1,88 @@
+{
+  "schema": "sub01.reference-photo-plants-next-native-packet.v1",
+  "source_root": "/workspace/sub01-home-private/reference-plants-ph-r1/output-r3",
+  "source_visual_review": "Actual generated Blender source-review image viewed. Genuine leaf veins/albedo/normal/ARM and distinct authored variants are stronger than the rejected flat Innerscene foliage. The live house is unchanged.",
+  "source_image": "out/house-evidence/photo-plants-source-review.png",
+  "source_license": "CC0-1.0 original Poly Haven plants and original Innerscene ceramic planter",
+  "plants": [
+    {
+      "name": "photo-plant-0",
+      "sha256": "6664e1f86ca83a7b5e267574d2d555ce17f4203506881082d9140617953b0633",
+      "triangles": 6875,
+      "bounds_m": [
+        [
+          -0.2374652475118637,
+          -0.3916022479534149,
+          0.0
+        ],
+        [
+          0.2656799554824829,
+          0.2157546728849411,
+          0.9857274293899536
+        ]
+      ]
+    },
+    {
+      "name": "photo-plant-1",
+      "sha256": "211f9669e1f1c6730bf1dae281ba3b8c13b49a636016d457a774949c4ebccfcd",
+      "triangles": 7688,
+      "bounds_m": [
+        [
+          -0.2937181890010834,
+          -0.21012963354587555,
+          0.0
+        ],
+        [
+          0.30688172578811646,
+          0.315498024225235,
+          0.6351742744445801
+        ]
+      ]
+    },
+    {
+      "name": "photo-plant-2",
+      "sha256": "7fe1534d81742d608f8f43c014a57f480380df0be5257d64a515b1a75c238b12",
+      "triangles": 22335,
+      "bounds_m": [
+        [
+          -0.35765019059181213,
+          -0.36629387736320496,
+          0.0
+        ],
+        [
+          0.6176366806030273,
+          0.5573891401290894,
+          1.471358299255371
+        ]
+      ]
+    },
+    {
+      "name": "photo-plant-3",
+      "sha256": "3250808c4991a8dc25e1dc4664a31c67e0587103027ab40d205086aadb67335d",
+      "triangles": 5230,
+      "bounds_m": [
+        [
+          -0.178414985537529,
+          -0.24281249940395355,
+          0.0
+        ],
+        [
+          0.16900880634784698,
+          0.1974693387746811,
+          0.5140827894210815
+        ]
+      ]
+    }
+  ],
+  "total_triangles": 42128,
+  "native_steps": [
+    "Inventory exact current plant ownership in the PC packet and actual house. Do not blindly hide any shared original batch.",
+    "Choose measured supports and positions outside real R16/H91 movement, stair, doors and PC/TV/device space. Source review is a catalogue layout, not home placement.",
+    "Prove exported placed GLB leaf/pot support and full actual home/window/door/furniture collision geometry, with no unmeasured exceptions.",
+    "Import into new owned namespaces with complete positive-triangle and actual assigned PBR/1K texture parity. Retire only exact previously verified plant owners.",
+    "Review actual native house viewpoints and walk both floors before marking accepted."
+  ],
+  "native_imported": false,
+  "native_placement_accepted": false,
+  "ready_to_promote": false
+}
