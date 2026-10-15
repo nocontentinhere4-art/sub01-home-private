@@ -1,0 +1,78 @@
+{
+  "schema": "sub01.captured-hand-layer-packet.v1",
+  "status": "Captured motion transfer proved; owner mesh anatomy rejected for professional first-person use, replacement source under review",
+  "candidate": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/cozy-motion/walk-owner-captured-hands.glb",
+  "candidate_sha256": "9258cf17cc7f192e90205894a9a439f0d668a4eef808fd467756567f1d95c2a2",
+  "body_source_sha256": "48fdd0db549c843491f615368d7f1fa74f332558ebcc4289548d6718f9d32618",
+  "captured_walk_source_sha256": "9a7937e050a96c8f58dad1ffcfc8f5ff61f0c0699237afd5b996035f006d3f70",
+  "raw_walking_fbx_provenance": {
+    "source": "User downloaded Mixamo Walking.fbx",
+    "sha256": "a4d2b808cf81b3d8b8d4b4b837bd1e4088f8f83f49fa1dd8d27273607d68ea62",
+    "mesh_count": 0,
+    "skin_count": 0,
+    "terms_reference": "docs/design/mixamo/README.md",
+    "use": "Private end-use application only, no standalone source redistribution"
+  },
+  "original_owner_mesh_binary_preserved": true,
+  "cozy_body_channels_and_samplers_exact": true,
+  "hand_rotation_channels": 42,
+  "left_and_right_captures_used_independently": true,
+  "max_repeated_capture_loop_seam_degrees": 2.606457820835492e-05,
+  "max_independent_capture_quaternion_error_degrees": 0.00022480688571995208,
+  "actual_skin_images_viewed": [
+    "out/house-evidence/cozy-captured-hands-r1/captured-left-frame-090.png",
+    "out/house-evidence/cozy-captured-hands-r1/captured-right-frame-090.png",
+    "out/house-evidence/cozy-captured-hands-r1/captured-left-frame-240.png",
+    "out/house-evidence/cozy-captured-hands-r1/captured-right-frame-240.png"
+  ],
+  "full_body_images_viewed": [
+    "out/house-evidence/cozy-captured-body-r1/captured-owner-frame-090.png",
+    "out/house-evidence/cozy-captured-body-r1/captured-owner-frame-240.png"
+  ],
+  "findings": [
+    "Captured flexion bends down with visible exterior knuckles, no side mirroring or custom curl",
+    "Angular/coarse fingertips and thumb remain; motion alone does not repair source anatomy",
+    "Byte comparison of all geometry, normals,UV, joint indices, weights and triangle indices shows original7609 mesh matches canonical native merged owner45e917 exactly",
+    "Current native configured HandsMeshPath remains /Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner per native owner read-only observation; no native pose invoked"
+  ],
+  "official_replacement_source": {
+    "official_page": "https://www.blender.org/download/demo-files/",
+    "version": "Human Base Meshes1.4.1",
+    "license": "CC0",
+    "archive_sha256": "811f43accbb31a88266d932f8f5563b2d13586fca0ba2693aad1f5fe582b3515",
+    "source_blend_sha256": "3c121505651140ceb4d69fd1d8923f7788ffadd81672f5be14845a5f2c75c137",
+    "private_root": "/workspace/sub01-home-private/human-base-hands-r1",
+    "standalone_hand": "831vertices820faces,1 original multires level, DanUlrich CC0 scan-data description; source image viewed and insufficient surface detail",
+    "adult_male_base": "10582vertices10590faces,3 original multires levels; actual hand source rendered and viewed with genuine nail, pad, knuckle and thenar forms; skin texture and anatomical rig still missing",
+    "rig_or_weights_present": false,
+    "adult_male_source_images_viewed": [
+      "out/house-evidence/official-adult-male-hands-r1/official-realistic-hand-side-a.png",
+      "out/house-evidence/official-adult-male-hands-r1/official-realistic-hand-side-b.png"
+    ],
+    "extracted_pair": {
+      "file": "/workspace/sub01-home-private/human-base-hands-r1/adult-hand-pair-source-r1/official-adult-hand-pair-unrigged.glb",
+      "sha256": "dd355e9a42b0b3df69e932e57007c27ad8e2374066948c42ef5edeb1e2007a6e",
+      "left_triangles": 128207,
+      "right_triangles": 128137,
+      "all_actual_written_corners_bijective_to_authored_original_source": true,
+      "independent_written_proof": "/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-home-private/out/house-evidence/official-adult-male-hands-r1/independent-written-surface-proof.json",
+      "proof_coordinate_quantum_m": 1e-07,
+      "source_geometry_fitting_or_mirroring": false,
+      "open_forearm_ends": "Exact retained source triangle boundary, no invented caps. Must fit underneath cuff.",
+      "current_density": "Sculpt-review3-level source; not yet performance LOD",
+      "new_rig_weights_textures_contact": false
+    }
+  },
+  "next_required": [
+    "Choose anatomically credible source hand after actual lit review",
+    "Fit both separate source hand regions to existing wrist and finger rest frames, retaining physical hand dimensions and existing owner binary as recoverable baseline",
+    "Create/verify proper skinning and deformation topology including nails and pads",
+    "Replay captured joint motion and review both sides, actual first-person framing and functional device contact",
+    "Confirm runtime locomotion gait phase and navigation before activation"
+  ],
+  "native_imported": false,
+  "visual_accepted": false,
+  "hand_contact_accepted": false,
+  "autonomous_ready": false,
+  "source_geometry_recommendation": "Extract both original adult male forearm+hand surfaces, fit an anatomical hand rig in its own rest pose then rest-delta retarget captured motion. Do not copy the old Tripo weights or alter joint curls to hide malformed tips."
+}
