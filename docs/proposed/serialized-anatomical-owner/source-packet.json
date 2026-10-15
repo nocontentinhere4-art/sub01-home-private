@@ -1,8 +1,7 @@
 {
   "status": "source_only_private_WIP",
-  "selected_weighted_walk_sha256": "04878a70440d116cd9df73fce0ab670d1540bcadd12d79b030911b3b00505e9a",
   "body_original_sha256": "45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8",
-  "geometry_source_sha256": "9a0f98531b66b10e9147f0c88b8682ae11375debf9d4a1026a4d58a2cbdfcbf7",
+  "geometry_source_sha256": "f34829d3ae8b81dbcee30eaf2a93e84a00cb43b7c2bf54d04bb630b036cd8db8",
   "method": "Preserve original serialized body buffers and25 nonfinger joints/binds; append genuine Blender anatomical hands and fitted cuffs; barycentric clip original sleeve crossing triangles with all skin influences. Retarget only captured palm-frame finger directions while preserving26 original body/wrist channels.",
   "frames": 32,
   "sample_fps": 30,
@@ -11,8 +10,17 @@
   "native_imported": false,
   "contact_accepted": false,
   "pending": [
-    "Actual full-skin weighted cuff motion audit",
     "Native skeletal import equivalence and visual review",
+    "Residual genuine-finger web deformation review",
     "Actual PC/phone/controller contact acceptance"
-  ]
+  ],
+  "superseded_weighted_walk_sha256": "04878a70440d116cd9df73fce0ab670d1540bcadd12d79b030911b3b00505e9a",
+  "selected_final_pbr_walk_sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+  "actual_source_walk_cuff_intersections": {
+    "frames": 32,
+    "left": 0,
+    "right": 0,
+    "full8_influence_skin": true
+  },
+  "source_packet": "docs/proposed/canonical-anatomical-hand-cuffs-source-packet-20261015.json"
 }
