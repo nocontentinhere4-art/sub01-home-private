@@ -27,6 +27,7 @@ Operator modes: "auto" (closed unless the character passes or is near),
 """
 
 import math
+from home_geometry_profile import corridor_enabled
 
 # Same rectangle as `bathroomBounds` in home.js and the original server rule.
 BATHROOM_BOUNDS = (-3.78, -0.85, 0.5, 2.7)  # x0, x1, z0, z1 on the upper floor
@@ -44,6 +45,10 @@ DOORS = {
     "bathroom": {"centre": (-0.85, 1.35), "radius": 1.6, "upper": True, "edge": ("bath_door", "bathroom")},
     "balcony": {"centre": (-2.2, 3.85), "radius": 1.7, "upper": True, "edge": ("balcony_door", "balcony")},
 }
+if corridor_enabled():
+    BATHROOM_BOUNDS = (-3.78, -1.0, 0.5, 2.7)
+    BATHROOM_CLOSE_X = -1.35
+    DOORS['bathroom'] = {**DOORS['bathroom'], 'centre': (-1.0, 1.35)}
 DOOR_NAMES = tuple(DOORS)
 DOOR_MODES = ("auto", "open", "closed")
 DOOR_STATES = ("open", "closed", "locked")
@@ -113,6 +118,9 @@ PRIVATE_ACTOR = {
     "destination": "bathroom",
     "path": [],
 }
+if corridor_enabled():
+    PRIVATE_ACTOR.update(position=[-.567, 4.65, 1.35],
+                         entry_position=[-.567, 4.65, 1.35])
 
 
 def private_view(view):

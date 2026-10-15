@@ -13,6 +13,7 @@ from console_requests import valid_choice
 import home_interactions as hi
 from home_native_feedback import NativeFeedback
 from home_phone import APPS as PHONE_APPS
+from home_geometry_profile import CORRIDOR_PROFILE, apply_walking_nodes, corridor_enabled
 
 # xyz = walking-eye positions in the rendered house, metres.
 NODES = {
@@ -42,6 +43,7 @@ NODES = {
     "door": (2, 1.65, 3.2),
     "outside": (2, 1.65, 7.25),
 }
+apply_walking_nodes(NODES)
 EDGES = [
     ("desk", "aisle"),
     ("aisle", "back"),
@@ -284,6 +286,13 @@ class HomeWorld:
             # A fully seated sofa snapshot keeps the same visible seat pose.
             self.position = list(NODES[self.node])
             self.path = route(self.node, self.target)[1:]
+        if (corridor_enabled() and s.get('native_geometry_profile') != CORRIDOR_PROFILE
+                and self.path and (self.node in ('bath_aisle', 'bath_door', 'bathroom')
+                                   or any(n in self.path for n in ('bath_aisle', 'bath_door', 'bathroom')))):
+            # Replan only the backend plan after a geometry migration; no
+            # measured native pawn position or arrival evidence is changed.
+            self.position = list(NODES[self.node])
+            self.path = route(self.node, self.target)[1:]
         self.bladder = max(0, min(1, float(s.get("bladder", 0.1))))
         self.last_bathroom = s.get("last_bathroom", 0)
         self.pong = Pong(s.get("pong"))
@@ -524,11 +533,14 @@ class HomeWorld:
             "memories": self.memories[-20:] if not compact else [],
         }
         # One privacy decision masks the actor for every viewer (WS and API).
+        if corridor_enabled():
+            view['native_geometry_profile'] = CORRIDOR_PROFILE
         return hi.private_view(view) if privacy else view
 
     def to_dict(self):
         return {
             "navigation_version": 2,
+            **({'native_geometry_profile': CORRIDOR_PROFILE} if corridor_enabled() else {}),
             "native_consumer_required": self.native_feedback.required,
             "node": self.node,
             "last_console_choice": self.last_console_choice,

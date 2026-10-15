@@ -48,6 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import home_interactions as hi  # noqa: E402  (validation + floor constants only)
 from home_world import EDGES, NODES, route  # noqa: E402  (read-only graph)
+from home_geometry_profile import CORRIDOR_PROFILE, corridor_enabled  # noqa: E402
 from unreal_home_coordinates import convert_position, infer_import_transform  # noqa: E402
 
 SCHEMA = "sub01.home-state.v1"
@@ -240,6 +241,8 @@ class HomeStateModel:
                                "transform_source": self.transform.get("source", "unknown")}}
         if status == "unavailable":
             return doc   # nothing about the house is known well enough to publish
+        if corridor_enabled() and home.get('native_geometry_profile') == CORRIDOR_PROFILE:
+            doc['native_geometry_profile'] = CORRIDOR_PROFILE
         privacy = bool(home.get("privacy"))
         doc["privacy"] = privacy
         doc["presence"] = home.get("presence") if home.get("presence") in hi.PRESENCE else None
@@ -566,6 +569,8 @@ def create_app(model, token, feed=None, session_factory=None, ticker=0.5):
             raise web.HTTPConflict(text='Native control requires live source')
         command = await read_native_command(request)
         return web.json_response({'schema': SCHEMA, 'epoch': model.epoch,
+            **({'native_geometry_profile': CORRIDOR_PROFILE}
+               if doc.get('native_geometry_profile') == CORRIDOR_PROFILE else {}),
             'source': {'status': 'live'}, 'privacy': command['privacy'],
             'coordinates': {'units': 'cm', 'waypoint_height': 'floor'},
             'actor': {'target': command['target'], 'route_sequence': command['sequence']},

@@ -47,6 +47,10 @@ TASKS = {
     'architecture_lumen_audit': 'unreal_architecture_lumen_audit',
     'desk_lamp_shadow_audit': 'unreal_desk_lamp_shadow_audit',
     'lumen_surface_review': 'unreal_lumen_surface_review',
+    # Frozen source-only packets reviewed before enabling these fixed tasks.
+    # Neither accepts caller-supplied paths, modules or map/runtime settings.
+    'bathroom_corridor': 'unreal_import_bathroom_corridor',
+    'fp_keyboard_review': 'unreal_import_fp_keyboard_review',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None

@@ -198,6 +198,10 @@ def stage(project):
     header,cpp=install_native_visual_metrics(header,cpp)
     header,cpp=install_interaction_trace_witness(header,cpp)
     header,cpp=install_actual_hand_skin_inspect(header,cpp)
+    # The renderer writes this receipt only after the actual new corridor map
+    # is saved. Old maps keep their original geometry and privacy rules.
+    from unreal_bathroom_corridor_runtime import install as install_bathroom_corridor
+    header,cpp=install_bathroom_corridor(header,cpp,project)
     stage_first_person_motion(module)
     header=header.replace(' void Forward(float Value);',' bool ActualNativeTickLogged=false;\n void Forward(float Value);',1)
     cpp=cpp.replace(' Super::Tick(DeltaSeconds);',' Super::Tick(DeltaSeconds);\n if(!ActualNativeTickLogged){ActualNativeTickLogged=true;UE_LOG(LogTemp,Display,TEXT("SUB01_FIRST_ACTUAL_GAME_TICK dt=%.6f pawn=%s"),DeltaSeconds,*GetActorLocation().ToString());}',1)
