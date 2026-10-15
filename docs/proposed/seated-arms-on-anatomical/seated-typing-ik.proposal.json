@@ -1,0 +1,217 @@
+{
+ "schema": "sub01.seated-typing-arm-ik.v1",
+ "label": "proposal",
+ "verified": false,
+ "requires_server_reaudit": true,
+ "requires_native_collision_audit": true,
+ "never_a_receipt": true,
+ "method": "whole-arm IK on the seat-fit clips (tools/solve_seated_typing_arm_ik.py)",
+ "geometry": {
+  "file": "docs/proposed/seated-typing-ik/real-linea140-geometry.json",
+  "sha256": "0cf8588aa6f33a900ce641d0d6914991ac889c962cbeb9a76fde082c4dd50f81",
+  "source_sha256": "99bdf3fd42eea5fc4cb2fadd52c8cae18c4459a94000b85f7df4c515234ba43d",
+  "provenance": {
+   "placement": "origin/main tools/prepare_real_linea140_placement.py (place_bytes, SCALE, DESK_Y) @ b17952c",
+   "ue_mapping": "origin/main tools/real_linea_edge_clamp.py contact_coverage: (2.1 + x S, DESK_Y + z S, .025 + y S) * 100",
+   "record": "origin/main docs/proposed/real-linea140-guarded-placement-20261014.json @ bb24ae5",
+   "source": "origin/main web/house/assets/real-linea140/originalsource.glb"
+  },
+  "overall_dims_cm": [
+   152.053,
+   70.596,
+   82.3584
+  ],
+  "floor_cm": 2.5,
+  "tabletop_slab": {
+   "node": 44,
+   "name": "Solid walnut worktop | 1400 x 650 x 28 mm",
+   "min_cm": [
+    133.9735,
+    -337.298,
+    81.4589
+   ],
+   "max_cm": [
+    286.0265,
+    -266.702,
+    84.5
+   ],
+   "top_cm": 84.5,
+   "bottom_cm": 81.4589,
+   "thickness_cm": 3.0411,
+   "front_edge_y_cm": -266.702,
+   "rear_edge_y_cm": -337.298,
+   "centre_xy_cm": [
+    210.0,
+    -302.0
+   ],
+   "front_is_positive_ue_y": true,
+   "note": "AABB of the worktop node: the eased top/bottom edges (84.283 / 81.785 cm) and rounded plan corners lie inside it, so box clearance is conservative"
+  },
+  "front_apron": {
+   "node": 47,
+   "min_cm": [
+    140.4901,
+    -275.7166,
+    78.0921
+   ],
+   "max_cm": [
+    279.5099,
+    -273.1099,
+    81.1331
+   ],
+   "bottom_cm": 78.0921
+  },
+  "knee_bay_cm": {
+   "x": [
+    143.694,
+    237.2066
+   ],
+   "below_z": 78.0921,
+   "left_leg_inner_x": 143.694,
+   "drawer_carcass_left_x": 237.2066
+  },
+  "grommet_rim_top_cm": 84.8584
+ },
+ "chair": {
+  "file": "docs/proposed/native-chair-measured/20261014-actual-native-chair-surface.json",
+  "sha256": "84b976f967511cb06ea526c7ed21ea143d7a1ab8438133213035301243e7a8e8",
+  "translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   63.1876777245
+  ],
+  "rotation_xyzw": [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ],
+  "scale": [
+   0.6068757772445679,
+   0.6068757772445679,
+   0.6068757772445679
+  ],
+  "component_world_bounds_cm": {
+   "min": [
+    173.44425362141465,
+    -214.67331536053598,
+    42.59794507436144
+   ],
+   "max": [
+    226.2919141738521,
+    -161.0329571237644,
+    76.18197262239622
+   ]
+  },
+  "measured_translation_cm": [
+   200.0199556350708,
+   -186.69002056121826,
+   60.68757772445679
+  ],
+  "proposed_delta_cm": [
+   0.0,
+   0.0,
+   2.5001000000432114
+  ],
+  "translation_is_measured": false
+ },
+ "base": {
+  "dir": "docs/proposed/seat-pose-anatomical/chair-lift-proposal",
+  "solver_frame_chair_offset_cm": [
+   3.875,
+   -32.5
+  ],
+  "warm_start": "the seated base clips (pelvis/legs/seat contact) are inputs; only the six arm bones are re-solved (transitions also seam-blend to their neighbours)"
+ },
+ "keyboard": {
+  "source": "web/house/assets/keyboard/keyboard.glb at home.js placement (UE keycap top check vs root 87.38975858)",
+  "key_top_cm": 87.3898,
+  "keycaps": 87,
+  "key_field_min_cm": [
+   182.173,
+   -301.297,
+   86.537
+  ],
+  "key_field_max_cm": [
+   217.749,
+   -287.917,
+   87.39
+  ],
+  "root_home_keyboard_nodes_184_187_xy_cm": [
+   [
+    181.45,
+    -302.0464
+   ],
+   [
+    218.55,
+    -285.9536
+   ]
+  ],
+  "provenance": "repo web/house/home.js furnished(\"keyboard\", 2, .846, -2.94, .371) = the home's keyboard source nodes 184-187 in root's LINEA record (same XY footprint): the keyboard did not move with the new desk"
+ },
+ "gates_from": [
+  "origin/main tools/validate_unreal_seat_contact.py validate() @ 9792a35 (median gap <= band high, coverage >= 0.5) -- the seat gate",
+  "branch tools/validate_unreal_seat_contact.py (SEAT_BAND_CM, SOLE_BAND_CM, MIN_PATCH_VERTICES, MIN_SUPPORT_VERTICES; also reported, weaker than main)",
+  "tools/validate_unreal_contact_profile.py (KEY_GAP_MAX_CM, validate())",
+  "tools/fit_seat_pelvis_pitch.py gates() / contact_per_frame()"
+ ],
+ "constants": {
+  "key_contact_target_cm": 0.08,
+  "key_gap_max_cm": 0.2,
+  "key_penetration_max_cm": 0.1,
+  "seat_band_cm": [
+   -2.5,
+   0.5
+  ],
+  "sole_band_cm": [
+   0.0,
+   1.0
+  ],
+  "min_support_vertices": 12,
+  "forearm_target_clearance_cm": 0.5,
+  "desk_clearance_gate": "> 0 cm every frame",
+  "wrist_soft_flexion_deg": [
+   -15.0,
+   15.0
+  ],
+  "wrist_soft_deviation_deg": [
+   -20.0,
+   10.0
+  ],
+  "wrist_note": "soft targets (smooth saturation), never gates"
+ },
+ "roll_scan": {
+  "fixed": true,
+  "chosen_extra_pull_in_dy_cm": 0.0,
+  "rule": "fixed by --roll-dy (the earlier probe scan on the seat-fit base chose 0: docs/proposed/seated-typing-ik)"
+ },
+ "bounded": {
+  "max_wall_seconds": 1320.0,
+  "swivel_grid_deg": [
+   0.0,
+   120.0
+  ],
+  "swivel_outer_passes": 3,
+  "contact_passes": 8,
+  "search_contact_passes": 4,
+  "lift_max_cm": 15.0,
+  "post_contact_iterations": 48,
+  "stages_done": [
+   "DeskTyping_seated"
+  ],
+  "elapsed_seconds": 2395.5
+ },
+ "clips": {
+  "DeskTyping_seated": {
+   "glb": "docs/proposed/seated-arms-on-anatomical/SUB01_DeskTyping_seated.glb",
+   "sha256": "b61342874aa2949dbab544cbdbc9869af9ac58c99bbdfb82aeb05f2bda9d4a7a",
+   "all_gates_pass": false
+  }
+ },
+ "ready": false,
+ "native_verified": false,
+ "partial": {
+  "stage_reached": "DeskTyping_seated",
+  "blocker": "wall-clock bound 1320.0 s reached before stage SitToType_seated"
+ }
+}
