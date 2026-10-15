@@ -12,22 +12,23 @@ FIELDS=r'''
 METHODS=r'''
 #include "Animation/Skeleton.h"
 void ASub01HomeCharacter::ReviewDerivedPhone(bool Play){
- if(PrivateViewMode!=EPrivateViewMode::Manual||LiveHome||HandsDiagnostic||NativeSeatVerified||MinecraftFocused||(PCBridge&&PCBridge->HasOperatorFocus())||!FirstPersonBody||!FirstPersonBody->GetSkeletalMeshAsset())return;
+ auto Refuse=[](const TCHAR* Why){UE_LOG(LogTemp,Warning,TEXT("SUB01_DERIVED_PHONE_REVIEW_REFUSED %s"),Why);};
+ if(PrivateViewMode!=EPrivateViewMode::Manual||LiveHome||HandsDiagnostic||NativeSeatVerified||MinecraftFocused||(PCBridge&&PCBridge->HasOperatorFocus())||!FirstPersonBody||!FirstPersonBody->GetSkeletalMeshAsset()){UE_LOG(LogTemp,Warning,TEXT("SUB01_DERIVED_PHONE_REVIEW_REFUSED state mode=%d live=%d diagnostic=%d seat=%d minecraft=%d pc=%d owner=%d"),int32(PrivateViewMode),LiveHome?1:0,HandsDiagnostic?1:0,NativeSeatVerified?1:0,MinecraftFocused?1:0,(PCBridge&&PCBridge->HasOperatorFocus())?1:0,(FirstPersonBody&&FirstPersonBody->GetSkeletalMeshAsset())?1:0);return;}
  auto* Owner=FirstPersonBody->GetSkeletalMeshAsset();
- if(Owner->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner"))return;
+ if(Owner->GetPathName()!=TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner")){Refuse(TEXT("original owner identity"));return;}
  FString Raw;TSharedPtr<FJsonObject> R;
- if(!FFileHelper::LoadFileToString(Raw,*FPaths::Combine(FPaths::ProjectDir(),TEXT("unreal-phone-grip-import.json")))||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Raw),R)||!R.IsValid())return;
+ if(!FFileHelper::LoadFileToString(Raw,*FPaths::Combine(FPaths::ProjectDir(),TEXT("unreal-phone-grip-import.json")))||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Raw),R)||!R.IsValid()){Refuse(TEXT("actual import receipt unavailable"));return;}
  FString Schema,Derived,FBX,Object,Skeleton;double Keys=0,Duration=0;
  if(!R->TryGetStringField(TEXT("schema"),Schema)||Schema!=TEXT("sub01.unreal-phone-grip-import.v1")||!R->TryGetStringField(TEXT("derived_glb_sha256"),Derived)||Derived!=TEXT("81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2")||!R->TryGetStringField(TEXT("fbx_sha256"),FBX)||FBX!=TEXT("30ce52419d204f914bda05d1a73aefbd49affd0c3f3bfd62f2ccfeacdb82e9d4")||!R->TryGetStringField(TEXT("object_path"),Object)||Object!=TEXT("/Game/Sub01Hands/Phone/SUB01_PhoneGrip.SUB01_PhoneGrip")||!R->TryGetStringField(TEXT("skeleton"),Skeleton)||!R->TryGetNumberField(TEXT("sampled_keys"),Keys)||Keys!=557||!R->TryGetNumberField(TEXT("duration_s"),Duration)||!FMath::IsFinite(Duration)||FMath::Abs(Duration-556./30.)>.001)return;
  auto* Clip=LoadObject<UAnimSequence>(nullptr,*Object);
- if(!Clip||Clip->GetSkeleton()!=Owner->GetSkeleton()||!Owner->GetSkeleton()||Owner->GetSkeleton()->GetPathName()!=Skeleton||FMath::Abs(Clip->GetPlayLength()-Duration)>.001)return;
- if(!FirstPersonBody->DoesSocketExist(TEXT("RightHand"))||!FirstPersonBody->DoesSocketExist(TEXT("Head")))return;
+ if(!Clip||Clip->GetSkeleton()!=Owner->GetSkeleton()||!Owner->GetSkeleton()||Owner->GetSkeleton()->GetPathName()!=Skeleton||FMath::Abs(Clip->GetPlayLength()-Duration)>.001){Refuse(TEXT("actual clip/skeleton/duration mismatch"));return;}
+ if(!FirstPersonBody->DoesSocketExist(TEXT("RightHand"))||!FirstPersonBody->DoesSocketExist(TEXT("Head"))){Refuse(TEXT("actual owner sockets unavailable"));return;}
  struct Part{FVector Center,Extent;};const Part Expected[]={
  {FVector(270,-292,85.8),FVector(3.75,7.5,.75)},{FVector(270,-298.2,86.7),FVector(.95,.15,.05)},
  {FVector(266.2,-294,85.8),FVector(.1,1.25,.2)},{FVector(273.8,-294,85.8),FVector(.1,.7,.2)},
  {FVector(270,-292,86.6),FVector(3.35,6.85,0)}};
  TArray<UStaticMeshComponent*> Found;
- for(const auto& E:Expected){UStaticMeshComponent* Match=nullptr;int32 Count=0;for(TActorIterator<AActor> It(GetWorld());It;++It){TArray<UStaticMeshComponent*> Cs;It->GetComponents(Cs);for(auto* C:Cs){if(!C->GetStaticMesh())continue;const auto B=C->CalcBounds(C->GetComponentTransform());if(FVector::Dist(B.Origin,E.Center)<.1&&FVector::Dist(B.BoxExtent,E.Extent)<.1){Match=C;++Count;}}}if(Count!=1)return;Found.Add(Match);}
+ for(const auto& E:Expected){UStaticMeshComponent* Match=nullptr;int32 Count=0;for(TActorIterator<AActor> It(GetWorld());It;++It){TArray<UStaticMeshComponent*> Cs;It->GetComponents(Cs);for(auto* C:Cs){if(!C->GetStaticMesh())continue;const auto B=C->CalcBounds(C->GetComponentTransform());if(FVector::Dist(B.Origin,E.Center)<.1&&FVector::Dist(B.BoxExtent,E.Extent)<.1){Match=C;++Count;}}}if(Count!=1){UE_LOG(LogTemp,Warning,TEXT("SUB01_DERIVED_PHONE_REVIEW_REFUSED assembly part=%d expectedCenter=%s expectedExtent=%s actualMatchCount=%d"),Found.Num(),*E.Center.ToString(),*E.Extent.ToString(),Count);for(int32 I=0;I<PhoneGripParts.Num();++I)if(PhoneGripParts[I]){auto* C=PhoneGripParts[I].Get();const auto B=C->CalcBounds(C->GetComponentTransform());UE_LOG(LogTemp,Display,TEXT("SUB01_PHONE_RESTORE_WITNESS index=%d component=%s parent=%s mobility=%d center=%s extent=%s current=%s original=%s"),I,*C->GetPathName(),*GetNameSafe(C->GetAttachParent()),int32(C->Mobility),*B.Origin.ToString(),*B.BoxExtent.ToString(),*C->GetComponentTransform().ToString(),PhoneGripOriginalTransforms.IsValidIndex(I)?*PhoneGripOriginalTransforms[I].ToString():TEXT("absent"));}return;}Found.Add(Match);}
  PhoneGripParts.Empty();PhoneGripOriginalTransforms.Empty();DerivedPhoneOriginalMobility.Empty();
  for(auto* C:Found){PhoneGripParts.Add(C);PhoneGripOriginalTransforms.Add(C->GetComponentTransform());DerivedPhoneOriginalMobility.Add(C->Mobility);C->SetMobility(EComponentMobility::Movable);}
  GetCharacterMovement()->StopMovementImmediately();RouteActive=false;

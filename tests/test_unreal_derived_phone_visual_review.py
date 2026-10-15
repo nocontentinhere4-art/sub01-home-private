@@ -15,10 +15,10 @@ def test_real_staged_runtime_contains_review_and_restoration_in_order():
         header=(Path(tmp)/'Source/Sub01HomeLab/Sub01HomeLab.h').read_text()
     assert header.count('UFUNCTION(Exec) void ReviewDerivedPhone(bool Play);')==1
     walk=cpp[cpp.index('bool ASub01HomeCharacter::SwitchNativeWalkView'):cpp.index('void ASub01HomeCharacter::UpdatePrivateNativeControl')]
-    assert walk.index('SetWorldTransform(PhoneGripOriginalTransforms[I])') < walk.index('SetMobility(DerivedPhoneOriginalMobility[I])')
+    assert walk.index('ApplyPrivatePhoneAssemblyTransforms(PhoneGripOriginalTransforms)') < walk.index('SetMobility(DerivedPhoneOriginalMobility[I])')
     assert walk.index('HandsDiagnostic=false') < walk.index('HandsDiagnosticSeat=false')
     method=review.METHODS
-    assert method.index('Count!=1)return;Found.Add(Match)') < method.index('C->SetMobility(EComponentMobility::Movable)')
+    assert method.index('if(Count!=1){') < method.index('return;}Found.Add(Match)') < method.index('C->SetMobility(EComponentMobility::Movable)')
     assert method.index('Owner->GetSkeleton()->GetPathName()!=Skeleton') < method.index('PlayAnimation(Clip,Play)')
     assert 'NativeSeatVerified=true' not in method
     assert 'SaveStringToFile' not in method and 'SetActorLocation' not in method

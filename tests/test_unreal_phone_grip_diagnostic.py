@@ -17,7 +17,7 @@ def test_install_is_explicit_diagnostic_only_and_preserves_five_parts():
  # No finger/bone pose replacement, altered readiness, added static phone image, or duplicate prop.
  assert 'SetBone' not in phone.METHODS and 'NativeSeatVerified=' not in phone.METHODS
  assert 'NewObject<UStaticMeshComponent>' not in cpp and 'SetMaterial' not in cpp
- assert 'PhoneGripOriginalTransforms[I]*FromOriginal*Rigid' in cpp
+ assert 'Targets.Add(Original*FromOriginal*Rigid)' in cpp
 
 
 def test_rejects_ambiguous_header_and_setup_hooks():
@@ -94,27 +94,44 @@ def test_walk_cleanup_restores_assembly_animation_and_camera_before_walk(tmp_pat
  compiler=shutil.which('c++')
  if not compiler:pytest.skip('C++ compiler unavailable')
  src=tmp_path/'walk_cleanup.cpp';exe=tmp_path/'walk_cleanup'
+ helper=phone.METHODS.split('bool ASub01HomeCharacter::ApplyPrivatePhoneAssemblyTransforms(const TArray<FTransform>& Targets){',1)[1].split('\n}',1)[0]
  src.write_text(r'''
 #include <vector>
 #include <cassert>
+#include <algorithm>
+#define TEXT(x) x
+#define UE_LOG(...) ((void)0)
 using int32=int;
-template<class T>struct Array:std::vector<T>{using std::vector<T>::vector;int Num(){return this->size();}};
+template<class T>struct TArray:std::vector<T>{using std::vector<T>::vector;int Num()const{return this->size();}bool Contains(T x)const{return std::find(this->begin(),this->end(),x)!=this->end();}void Add(T x){this->push_back(x);}};
+struct FTransform{int value;bool ContainsNaN()const{return false;}};
 struct Anim{virtual ~Anim()=default;};
 struct USub01HomeHandsInstance:Anim{static int StaticClass(){return 1;}};
 template<class T>T* Cast(Anim* a){return dynamic_cast<T*>(a);}
-struct Part{int transform=100,writes=0;void SetWorldTransform(int t){transform=t;++writes;}};
+struct Part{int transform=100,writes=0;Part* parent=nullptr;std::vector<Part*>children;Part* GetAttachParent(){return parent;}void Shift(int delta){transform+=delta;for(auto* c:children)c->Shift(delta);}void SetWorldTransform(FTransform t){Shift(t.value-transform);++writes;}};
+struct Ptr{Part* p;Part* Get()const{return p;}Part* operator->()const{return p;}operator bool()const{return p!=nullptr;}};
+bool IsValid(Ptr p){return bool(p);}
 struct Body{Anim* anim;USub01HomeHandsInstance walk;int resets=0;Anim* GetAnimInstance(){return anim;}void SetAnimInstanceClass(int){anim=&walk;++resets;}};
 struct Camera{bool absolute=true;void SetUsingAbsoluteLocation(bool x){absolute=x;}};
-struct Fixture{bool PhoneGripMounted=true,PhoneGripReview=true;Array<Part*> PhoneGripParts;Array<int> PhoneGripOriginalTransforms;Body* FirstPersonBody;Camera* ViewCamera;void Leave(){
+struct Fixture{bool PhoneGripMounted=true,PhoneGripReview=true;TArray<Ptr> PhoneGripParts;TArray<FTransform> PhoneGripOriginalTransforms;Body* FirstPersonBody;Camera* ViewCamera;
+bool ApplyPrivatePhoneAssemblyTransforms(const TArray<FTransform>&Targets){
+'''+helper+r'''
+}
+bool Leave(){
 '''+phone.WALK_CLEANUP+r'''
-}};
+return true;}};
 int main(){Anim single;Body body{&single};Camera camera;Part parts[5];Fixture f;f.FirstPersonBody=&body;f.ViewCamera=&camera;
- for(int i=0;i<5;++i){f.PhoneGripParts.push_back(&parts[i]);f.PhoneGripOriginalTransforms.push_back(i+10);}
- f.Leave();assert(!f.PhoneGripReview&&!f.PhoneGripMounted&&!camera.absolute&&body.resets==1);
+ for(int i=0;i<5;++i){f.PhoneGripParts.push_back({&parts[i]});f.PhoneGripOriginalTransforms.push_back({i+10});}
+ for(int i:{1,2,3}){parts[i].parent=&parts[4];parts[4].children.push_back(&parts[i]);}
+ // Source order really breaks a one-shot restore when part4 owns buttons1..3.
+ Part old[5];for(int i:{1,2,3}){old[i].parent=&old[4];old[4].children.push_back(&old[i]);}
+ for(int i=0;i<5;++i)old[i].SetWorldTransform({i+10});assert(old[1].transform!=11);
+ assert(f.Leave());assert(!f.PhoneGripReview&&!f.PhoneGripMounted&&!camera.absolute&&body.resets==1);
  for(int i=0;i<5;++i)assert(parts[i].transform==i+10&&parts[i].writes==1);
- f.Leave();assert(body.resets==1);for(auto& p:parts)assert(p.writes==1);
- // Missing destroyed component or truncated evidence cannot index outside saved transforms.
- f.PhoneGripMounted=true;f.PhoneGripParts[0]=nullptr;f.PhoneGripOriginalTransforms.resize(2);f.Leave();assert(parts[1].writes==2&&parts[2].writes==1);
+ assert(f.Leave());assert(body.resets==1);for(auto& p:parts)assert(p.writes==1);
+ // A cycle, destroyed part or truncated evidence is refused before ANY write.
+ parts[4].parent=&parts[1];assert(!f.ApplyPrivatePhoneAssemblyTransforms(f.PhoneGripOriginalTransforms));parts[4].parent=nullptr;
+ f.PhoneGripMounted=true;f.PhoneGripParts[0]={nullptr};f.PhoneGripOriginalTransforms.resize(2);assert(!f.Leave());assert(f.PhoneGripReview==false&&f.PhoneGripMounted);
+ for(auto& p:parts)assert(p.writes==1);
 }
 ''')
  subprocess.run([compiler,'-std=c++17',str(src),'-o',str(exe)],check=True,capture_output=True)

@@ -13,6 +13,7 @@ FIELDS=r'''
  FRotator PhoneGripRotation=FRotator::ZeroRotator;
  UPROPERTY()TArray<TObjectPtr<UStaticMeshComponent>> PhoneGripParts;
  TArray<FTransform> PhoneGripOriginalTransforms;
+ bool ApplyPrivatePhoneAssemblyTransforms(const TArray<FTransform>& Targets);
  void ConfigurePrivatePhoneGripReview();
  void UpdatePrivatePhoneGripReview();
 '''
@@ -22,8 +23,7 @@ CONTROL=r'''
 WALK_CLEANUP=r'''
  // Restore the authored assembly before leaving a private captured-pose review.
  if(PhoneGripMounted){
-  for(int32 I=0;I<PhoneGripParts.Num()&&I<PhoneGripOriginalTransforms.Num();++I)
-   if(PhoneGripParts[I])PhoneGripParts[I]->SetWorldTransform(PhoneGripOriginalTransforms[I]);
+  if(!ApplyPrivatePhoneAssemblyTransforms(PhoneGripOriginalTransforms)){UE_LOG(LogTemp,Error,TEXT("SUB01_PHONE_RESTORE_REFUSED incomplete assembly or attachment cycle"));return false;}
  }
  PhoneGripReview=false;PhoneGripMounted=false;
  if(!Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()))
@@ -32,6 +32,25 @@ WALK_CLEANUP=r'''
 '''
 METHODS=r'''
 #include "Animation/AnimSingleNodeInstance.h"
+bool ASub01HomeCharacter::ApplyPrivatePhoneAssemblyTransforms(const TArray<FTransform>& Targets){
+ const int32 N=PhoneGripParts.Num();if(N!=5||Targets.Num()!=N)return false;
+ for(int32 I=0;I<N;++I)if(!IsValid(PhoneGripParts[I])||Targets[I].ContainsNaN())return false;
+ TArray<int32> Order;
+ // The source's three buttons are children of the display (part4). Build
+ // actual parent-first order BEFORE changing anything; keep source indices.
+ for(int32 Pass=0;Pass<N&&Order.Num()<N;++Pass){bool Progress=false;
+  for(int32 I=0;I<N;++I){if(Order.Contains(I))continue;bool Ready=true;
+   auto* Parent=PhoneGripParts[I]->GetAttachParent();int32 Depth=0;
+   while(Parent&&Depth++<128){for(int32 J=0;J<N;++J)if(PhoneGripParts[J].Get()==Parent&&!Order.Contains(J))Ready=false;Parent=Parent->GetAttachParent();}
+   if(Parent)return false;
+   if(Ready){Order.Add(I);Progress=true;}
+  }
+  if(!Progress)return false;
+ }
+ if(Order.Num()!=N)return false;
+ for(int32 I:Order)PhoneGripParts[I]->SetWorldTransform(Targets[I]);
+ return true;
+}
 void ASub01HomeCharacter::ConfigurePrivatePhoneGripReview(){
  if(!FParse::Param(FCommandLine::Get(),TEXT("Sub01PhoneGripDiagnostic")))return;
  FString Role;FParse::Value(FCommandLine::Get(),TEXT("Sub01HandsDiagnostic="),Role);
@@ -94,7 +113,8 @@ void ASub01HomeCharacter::UpdatePrivatePhoneGripReview(){
  const FQuat Rotation=W.GetRotation()*PhoneGripRotation.Quaternion();
  const FVector Center=W.GetLocation()+W.GetRotation().RotateVector(PhoneGripOffset);
  const FTransform Rigid(Rotation,Center,FVector::OneVector),FromOriginal(FQuat::Identity,FVector(-270,292,-85.8));
- for(int32 I=0;I<PhoneGripParts.Num();++I)if(PhoneGripParts[I])PhoneGripParts[I]->SetWorldTransform(PhoneGripOriginalTransforms[I]*FromOriginal*Rigid);
+ TArray<FTransform> Targets;for(const auto& Original:PhoneGripOriginalTransforms)Targets.Add(Original*FromOriginal*Rigid);
+ if(!ApplyPrivatePhoneAssemblyTransforms(Targets))return;
  static double LastPhoneTelemetry=-1;const double Now=FPlatformTime::Seconds();
  if(LastPhoneTelemetry<0||Now-LastPhoneTelemetry>=2){
   LastPhoneTelemetry=Now;

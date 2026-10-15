@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.phone-assembly-parent-order.v1",
+  "source_hierarchy": {
+    "file": "web/house/home.js",
+    "operation": "phoneDisplay.attach(part)",
+    "parent_part_index": 4,
+    "child_part_indices": [1, 2, 3]
+  },
+  "actual_previous_game": {
+    "pid": 28701,
+    "start_ticks": 973703999,
+    "complete_five_part_groups": 117,
+    "first_group_utc": "2026-10-15T07:21:18.137Z",
+    "first_group_max_distance_from_case_cm": 605.7707456769433,
+    "subsequent_stable_groups": 116,
+    "subsequent_max_distance_from_case_cm": 6.265040223334577,
+    "true_play_console_command_entered": true,
+    "true_play_accepted": false
+  },
+  "diagnosis": "Source order applies children before their display parent. Repeated mounts converge, but a one-shot restore can leave the children displaced and prevent the next exact assembly preflight.",
+  "change": "Determine actual attachment ancestry and apply all five unchanged target world transforms parent first. Preserve source array indices, bones, fingers, geometry, materials, screen and exact bounds. Refuse incomplete arrays or attachment cycles before any write.",
+  "regression": "Executed C++ hierarchy fixture reproduces the old child displacement, verifies the corrected one-shot restore and checks cycle/incomplete-input atomic refusal.",
+  "native_corrected_restore_verified": false,
+  "native_corrected_playback_verified": false,
+  "contact_accepted": false,
+  "activity_ready": false
+}
