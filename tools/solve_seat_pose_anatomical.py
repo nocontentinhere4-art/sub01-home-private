@@ -576,7 +576,7 @@ class IdleSolver(Solver):
         self.evals += 1
         _, _, mg, _, _, ex = self.evaluate(prm, frames)
         w = np.minimum(solver_cost_worst(mg), self.target)
-        return -np.min(w) - .1 * np.mean(w) + float(ex.max()) + 5. * param_bounds_excess(prm) + \
+        return -np.min(w) - .1 * np.mean(w) + 20. * float(ex.max()) + 5. * param_bounds_excess(prm) + \
             self.edit_weight * edit_cost(prm)
 
 
@@ -769,8 +769,8 @@ def run(args):
                         'measured_translation_cm': measured['translation_cm'],
                         'caster_bottom_cm': _r(complete['lowest_cm'], 4), 'floor_top_cm': P.FLOOR_CM},
               'candidates': {}}
-    variants = [('measured_chair', 0., out_dir)]
-    if args.chair_lift:
+    variants = [] if args.only_lift else [('measured_chair', 0., out_dir)]
+    if args.chair_lift or args.only_lift:
         variants.append(('chair_lift_proposal', CHAIR_LIFT_CM, out_dir / 'chair-lift-proposal'))
     for vname, lift, vdir in variants:
         vdir.mkdir(parents=True, exist_ok=True)
@@ -790,7 +790,7 @@ def run(args):
                                 'cushion_top_cm': {'measured': _r(ctx.tri[..., 2].max() - lift, 4),
                                                    'lifted': _r(ctx.tri[..., 2].max(), 4)}}
         clock.checkpoint(f'{vname}: start', report)
-        idle = solve_idle(ctx, clock, report, cand)
+        idle = solve_idle(ctx, clock, report, cand, x0=args.warm_start or WARM_START)
         sk = idle['fit'].sk
         x = idle['x']
         labels = {'label': 'proposal', 'verified': False, 'requires_server_reaudit': True,
@@ -842,6 +842,8 @@ def main(argv=None):
     ap.add_argument('--out-dir', default=str(OUT_DIR))
     ap.add_argument('--max-seconds', type=float, default=3000.)
     ap.add_argument('--chair-lift', action='store_true', help='also solve on the +2.5001 cm chair-lift PROPOSAL')
+    ap.add_argument('--only-lift', action='store_true', help='solve only the chair-lift proposal')
+    ap.add_argument('--warm-start', type=float, nargs=len(PARAMS), default=None)
     args = ap.parse_args(argv)
     rep = run(args)
     print(json.dumps(rep['summary'], indent=1))

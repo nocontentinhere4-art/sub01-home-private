@@ -1455,7 +1455,678 @@
   },
   "chair_lift_proposal": {
    "chair_lift_cm": 2.5001,
-   "status": "running (bounded); committed separately"
+   "proposal": {
+    "derived": true,
+    "needs_native_chair_review": true,
+    "rule": "rigid lift of the WHOLE chair model (no rotation/scale change) so the caster bottoms sit on the actual floor top 2.5001 cm; floor plane not redefined",
+    "measured_translation_cm": [
+     200.0199556350708,
+     -186.69002056121826,
+     60.68757772445679
+    ],
+    "lifted_translation_cm": [
+     200.0199556350708,
+     -186.69002056121826,
+     63.187678
+    ],
+    "caster_bottom_to_floor_gap_cm": {
+     "measured": -2.5001,
+     "lifted": 0.0
+    },
+    "cushion_height_change_cm": 2.5001,
+    "cushion_top_cm": {
+     "measured": 51.4075,
+     "lifted": 53.9076
+    }
+   },
+   "status": "passes main rule on every gated frame; SeatedIdle ankle dorsiflexion reaches 20.01 deg (limit 20): 0.01 deg over, bounded re-solve with a stiffer limit penalty running",
+   "clips": {
+    "SeatedIdle": {
+     "glb": "docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SeatedIdle.glb",
+     "sha256": "1127806748ff5d98b2d67e932903be90609da9092b5e5ba1fa2541de8d9fe3e8",
+     "main_rule": {
+      "pass_main_rule": true,
+      "failing_frames": 0,
+      "gated_frames": 126,
+      "per_patch": {
+       "buttocks": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -1.9849,
+         "frame": 31
+        },
+        "max_median_gap_cm": {
+         "value": 0.2526,
+         "frame": 49
+        },
+        "min_coverage": {
+         "value": 0.5602,
+         "frame": 3
+        },
+        "min_over_surface_vertices": {
+         "value": 672,
+         "frame": 6
+        }
+       },
+       "left_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -2.2507,
+         "frame": 31
+        },
+        "max_median_gap_cm": {
+         "value": -0.4915,
+         "frame": 3
+        },
+        "min_coverage": {
+         "value": 0.7418,
+         "frame": 3
+        },
+        "min_over_surface_vertices": {
+         "value": 1241,
+         "frame": 4
+        }
+       },
+       "right_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -2.0286,
+         "frame": 101
+        },
+        "max_median_gap_cm": {
+         "value": 0.1398,
+         "frame": 41
+        },
+        "min_coverage": {
+         "value": 0.6227,
+         "frame": 38
+        },
+        "min_over_surface_vertices": {
+         "value": 1585,
+         "frame": 46
+        }
+       },
+       "left_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 5
+        },
+        "max_median_gap_cm": {
+         "value": 0.2278,
+         "frame": 33
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 0
+        },
+        "min_over_surface_vertices": {
+         "value": 1923,
+         "frame": 0
+        }
+       },
+       "right_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 73
+        },
+        "max_median_gap_cm": {
+         "value": 0.233,
+         "frame": 66
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 0
+        },
+        "min_over_surface_vertices": {
+         "value": 2248,
+         "frame": 0
+        }
+       }
+      },
+      "binding": [
+       {
+        "patch": "buttocks",
+        "condition": "median",
+        "margin": 0.2474,
+        "frame": 49,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "left_posterior_thigh",
+        "condition": "min_gap",
+        "margin": 0.2493,
+        "frame": 31,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "right_posterior_thigh",
+        "condition": "median",
+        "margin": 0.3602,
+        "frame": 41,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "buttocks",
+        "condition": "coverage",
+        "margin": 0.3611,
+        "frame": 3,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       }
+      ],
+      "repro_cm": {
+       "buttocks": 1e-06,
+       "left_posterior_thigh": 1e-06,
+       "right_posterior_thigh": 1e-06,
+       "left_sole": 0.0,
+       "right_sole": 0.0
+      }
+     },
+     "bone_length_max_error_cm": 0.0,
+     "anatomical_limits_ok_gated": false,
+     "clearance": {
+      "chair_complete": {
+       "min_margin_cm": 0.64,
+       "frames_with_penetration": 0,
+       "frames_checked": 26,
+       "deepest_by_chair_part_cm": {},
+       "clear": true,
+       "skin_sampling": "every 6th skinned owner vertex",
+       "rule": "ChairCollider (tools/solve_seated_typing_arm_ik.py): margin = signed distance - allowed depth; chair_fabric allows -2.5 cm (seat band), every other part 0"
+      },
+      "desk": {
+       "min_clearance_under_desk_structure_cm": 36.403,
+       "highest_skin_under_desk_structure_cm": 45.047,
+       "desktop_underside_cm": 81.2,
+       "skin_samples_inside_desk_structure": 0,
+       "frames_with_skin_inside_desk_structure": 0,
+       "deepest_inside_below_desk_top_cm": 0.0,
+       "inside_by_dominant_joint": {},
+       "clear": true
+      }
+     },
+     "loop_closure": {
+      "pose_cm": 0.00575,
+      "hips_world_cm": 0.00575,
+      "velocity_cm_s": 3.1996,
+      "pass": true
+     },
+     "params": {
+      "pelvis_tilt_deg": 32.6295,
+      "root_down_cm": 10.7541,
+      "root_back_cm": -11.7621,
+      "left_ankle_forward_cm": 5.1135,
+      "left_ankle_lateral_cm": 2.3182,
+      "right_ankle_forward_cm": 3.5089,
+      "right_ankle_lateral_cm": 0.9535,
+      "left_hip_swivel_deg": -7.5806,
+      "right_hip_swivel_deg": 0.2967
+     }
+    },
+    "SitDown_seated": {
+     "glb": "docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_SitDown_seated.glb",
+     "sha256": "ff531e976547ab308356ba409178e613efb7bd516b84e99d1e8b6a17a2c372fd",
+     "main_rule": {
+      "pass_main_rule": true,
+      "failing_frames": 0,
+      "gated_frames": 18,
+      "per_patch": {
+       "buttocks": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -1.9741,
+         "frame": 50
+        },
+        "max_median_gap_cm": {
+         "value": 0.2256,
+         "frame": 62
+        },
+        "min_coverage": {
+         "value": 0.5617,
+         "frame": 58
+        },
+        "min_over_surface_vertices": {
+         "value": 673,
+         "frame": 57
+        }
+       },
+       "left_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -2.2271,
+         "frame": 50
+        },
+        "max_median_gap_cm": {
+         "value": -0.5047,
+         "frame": 65
+        },
+        "min_coverage": {
+         "value": 0.7452,
+         "frame": 61
+        },
+        "min_over_surface_vertices": {
+         "value": 1244,
+         "frame": 54
+        }
+       },
+       "right_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -2.0052,
+         "frame": 50
+        },
+        "max_median_gap_cm": {
+         "value": 0.1079,
+         "frame": 59
+        },
+        "min_coverage": {
+         "value": 0.6281,
+         "frame": 58
+        },
+        "min_over_surface_vertices": {
+         "value": 1590,
+         "frame": 59
+        }
+       },
+       "left_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 65
+        },
+        "max_median_gap_cm": {
+         "value": 0.2278,
+         "frame": 56
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 50
+        },
+        "min_over_surface_vertices": {
+         "value": 1923,
+         "frame": 50
+        }
+       },
+       "right_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 65
+        },
+        "max_median_gap_cm": {
+         "value": 0.233,
+         "frame": 56
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 50
+        },
+        "min_over_surface_vertices": {
+         "value": 2248,
+         "frame": 50
+        }
+       }
+      },
+      "binding": [
+       {
+        "patch": "left_posterior_thigh",
+        "condition": "min_gap",
+        "margin": 0.2729,
+        "frame": 50,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "buttocks",
+        "condition": "median",
+        "margin": 0.2744,
+        "frame": 62,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "buttocks",
+        "condition": "coverage",
+        "margin": 0.37,
+        "frame": 58,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "right_posterior_thigh",
+        "condition": "median",
+        "margin": 0.3921,
+        "frame": 59,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       }
+      ],
+      "repro_cm": {
+       "buttocks": 1e-06,
+       "left_posterior_thigh": 1e-06,
+       "right_posterior_thigh": 2e-06,
+       "left_sole": 0.0,
+       "right_sole": 0.0
+      }
+     },
+     "bone_length_max_error_cm": 0.0,
+     "anatomical_limits_ok_gated": true,
+     "clearance": {
+      "chair_complete": {
+       "min_margin_cm": 0.516,
+       "frames_with_penetration": 0,
+       "frames_checked": 14,
+       "deepest_by_chair_part_cm": {},
+       "clear": true,
+       "skin_sampling": "every 6th skinned owner vertex",
+       "rule": "ChairCollider (tools/solve_seated_typing_arm_ik.py): margin = signed distance - allowed depth; chair_fabric allows -2.5 cm (seat band), every other part 0"
+      },
+      "desk": {
+       "min_clearance_under_desk_structure_cm": 0.002,
+       "highest_skin_under_desk_structure_cm": 81.436,
+       "desktop_underside_cm": 81.2,
+       "skin_samples_inside_desk_structure": 2303,
+       "frames_with_skin_inside_desk_structure": 16,
+       "deepest_inside_below_desk_top_cm": 3.299,
+       "inside_by_dominant_joint": {
+        "RightForeArm": 627,
+        "RightHand": 532,
+        "RightHandRing1": 221,
+        "RightHandThumb2": 186,
+        "RightHandThumb1": 135,
+        "RightHandPinky1": 125,
+        "RightHandIndex1": 114,
+        "RightHandMiddle1": 109
+       },
+       "clear": false
+      }
+     },
+     "seam_to_SeatedIdle": {
+      "pair": "clip.last -> loop.first",
+      "fps": 30.0,
+      "position_delta": {
+       "hips_cm": 0.0,
+       "max_joint_cm": 1e-06,
+       "hips_rotation_deg": 0.0,
+       "max_joint_rotation_deg": 2e-06
+      },
+      "velocity_delta": {
+       "hips_cm_s": 0.6885,
+       "max_joint_cm_s": 5.4196,
+       "hips_ang_deg_s": 2.8183,
+       "max_joint_ang_deg_s": 5.9622
+      },
+      "velocity": {
+       "incoming_hips_cm_s": [
+        0.1322,
+        0.195,
+        -0.0643
+       ],
+       "outgoing_hips_cm_s": [
+        -0.1587,
+        -0.4237,
+        0.0174
+       ]
+      },
+      "loop_own_seam_velocity_delta_reference": {
+       "hips_cm_s": 0.6896,
+       "max_joint_cm_s": 5.479,
+       "hips_ang_deg_s": 2.8183,
+       "max_joint_ang_deg_s": 5.9592
+      }
+     },
+     "seam_window_frames": [
+      23,
+      50
+     ]
+    },
+    "GetUp_seated": {
+     "glb": "docs/proposed/seat-pose-anatomical/chair-lift-proposal/SUB01_GetUp_seated.glb",
+     "sha256": "bffdb223c9a30f3c232c1dad08225945dcb73b2b44ffd65a338ce7edb062965c",
+     "main_rule": {
+      "pass_main_rule": true,
+      "failing_frames": 0,
+      "gated_frames": 17,
+      "per_patch": {
+       "buttocks": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -1.9662,
+         "frame": 0
+        },
+        "max_median_gap_cm": {
+         "value": 0.2436,
+         "frame": 8
+        },
+        "min_coverage": {
+         "value": 0.5602,
+         "frame": 3
+        },
+        "min_over_surface_vertices": {
+         "value": 672,
+         "frame": 6
+        }
+       },
+       "left_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -2.2192,
+         "frame": 16
+        },
+        "max_median_gap_cm": {
+         "value": -0.4915,
+         "frame": 3
+        },
+        "min_coverage": {
+         "value": 0.7418,
+         "frame": 3
+        },
+        "min_over_surface_vertices": {
+         "value": 1241,
+         "frame": 4
+        }
+       },
+       "right_posterior_thigh": {
+        "band_cm": [
+         -2.5,
+         0.5
+        ],
+        "min_gap_cm": {
+         "value": -1.9916,
+         "frame": 0
+        },
+        "max_median_gap_cm": {
+         "value": 0.1274,
+         "frame": 11
+        },
+        "min_coverage": {
+         "value": 0.6236,
+         "frame": 11
+        },
+        "min_over_surface_vertices": {
+         "value": 1593,
+         "frame": 10
+        }
+       },
+       "left_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 5
+        },
+        "max_median_gap_cm": {
+         "value": 0.2278,
+         "frame": 3
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 0
+        },
+        "min_over_surface_vertices": {
+         "value": 1923,
+         "frame": 0
+        }
+       },
+       "right_sole": {
+        "band_cm": [
+         0.0,
+         1.0
+        ],
+        "min_gap_cm": {
+         "value": 0.05,
+         "frame": 13
+        },
+        "max_median_gap_cm": {
+         "value": 0.233,
+         "frame": 3
+        },
+        "min_coverage": {
+         "value": 1.0,
+         "frame": 0
+        },
+        "min_over_surface_vertices": {
+         "value": 2248,
+         "frame": 0
+        }
+       }
+      },
+      "binding": [
+       {
+        "patch": "buttocks",
+        "condition": "median",
+        "margin": 0.2564,
+        "frame": 8,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "left_posterior_thigh",
+        "condition": "min_gap",
+        "margin": 0.2808,
+        "frame": 16,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "buttocks",
+        "condition": "coverage",
+        "margin": 0.3611,
+        "frame": 3,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       },
+       {
+        "patch": "right_posterior_thigh",
+        "condition": "median",
+        "margin": 0.3726,
+        "frame": 11,
+        "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+       }
+      ],
+      "repro_cm": {
+       "buttocks": 2e-06,
+       "left_posterior_thigh": 1e-06,
+       "right_posterior_thigh": 2e-06,
+       "left_sole": 0.0,
+       "right_sole": 0.0
+      }
+     },
+     "bone_length_max_error_cm": 0.0,
+     "anatomical_limits_ok_gated": false,
+     "clearance": {
+      "chair_complete": {
+       "min_margin_cm": 0.411,
+       "frames_with_penetration": 0,
+       "frames_checked": 13,
+       "deepest_by_chair_part_cm": {},
+       "clear": true,
+       "skin_sampling": "every 6th skinned owner vertex",
+       "rule": "ChairCollider (tools/solve_seated_typing_arm_ik.py): margin = signed distance - allowed depth; chair_fabric allows -2.5 cm (seat band), every other part 0"
+      },
+      "desk": {
+       "min_clearance_under_desk_structure_cm": 6.544,
+       "highest_skin_under_desk_structure_cm": 74.906,
+       "desktop_underside_cm": 81.2,
+       "skin_samples_inside_desk_structure": 0,
+       "frames_with_skin_inside_desk_structure": 0,
+       "deepest_inside_below_desk_top_cm": 0.0,
+       "inside_by_dominant_joint": {},
+       "clear": true
+      }
+     },
+     "seam_to_SeatedIdle": {
+      "pair": "loop.last -> clip.first",
+      "fps": 30.0,
+      "position_delta": {
+       "hips_cm": 0.0,
+       "max_joint_cm": 0.0,
+       "hips_rotation_deg": 0.0,
+       "max_joint_rotation_deg": 1e-06
+      },
+      "velocity_delta": {
+       "hips_cm_s": 0.7326,
+       "max_joint_cm_s": 5.5431,
+       "hips_ang_deg_s": 2.8183,
+       "max_joint_ang_deg_s": 5.9562
+      },
+      "velocity": {
+       "incoming_hips_cm_s": [
+        0.1322,
+        0.195,
+        0.1083
+       ],
+       "outgoing_hips_cm_s": [
+        -0.1587,
+        -0.4237,
+        -0.1552
+       ]
+      },
+      "loop_own_seam_velocity_delta_reference": {
+       "hips_cm_s": 0.6896,
+       "max_joint_cm_s": 5.479,
+       "hips_ang_deg_s": 2.8183,
+       "max_joint_ang_deg_s": 5.9592
+      }
+     },
+     "seam_window_frames": [
+      16,
+      37
+     ]
+    }
+   }
   }
  }
 }

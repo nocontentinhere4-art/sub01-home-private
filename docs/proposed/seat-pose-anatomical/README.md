@@ -49,6 +49,32 @@ Two issues remain on ungated frames:
 - **Desk clearance in SitDown:** the right forearm and hand dip up to 3.29 cm into the desk structure on 16 frames. These are the captured arms; the old fit has the same values (3.297 cm), and they will be addressed in the arm step.
 - **Joint ranges on ungated stand/sit frames:** the capture itself leaves the seated ranges there (for example, anterior pelvic tilt while rising). See `anatomical_angles` in the reports.
 
+## Chair-lift proposal (+2.5001 cm)
+
+This is a derived proposal and needs a native chair review before use.
+
+**The lift:** the whole chair model is lifted rigidly by +2.5001 cm, with no rotation or scale change. This moves the caster bottoms from 2.5001 cm below the actual floor top to the floor top (2.5001 cm). The floor plane is not redefined.
+
+- **Transform:** the chair translation goes from `[200.01996, -186.69002, 60.68758]` to `[200.01996, -186.69002, 63.18768]` cm.
+- **Caster-to-floor gap:** −2.5001 cm becomes 0.0 cm.
+- **Cushion:** the top rises by +2.5001 cm (51.41 → 53.91 cm).
+
+The base was re-solved on the lifted chair, and the outputs are in `chair-lift-proposal/`.
+
+| Clip | Gated | Fail (main rule) | Binding margin | Chair clearance |
+|---|---|---|---|---|
+| SeatedIdle | 126 | 0 | buttocks median 0.247 cm (f49); L thigh min gap 0.249 cm | +0.64 cm |
+| SitDown_seated | 18 | 0 | L thigh min gap 0.273 cm | +0.52 cm |
+| GetUp_seated | 17 | 0 | buttocks median 0.256 cm | +0.41 cm |
+
+- **SeatedIdle parameters on the lifted chair:**
+  - pelvis tilt +32.6°;
+  - root 10.75 cm down and 11.76 cm forward;
+  - ankles 5.1 cm (left) and 3.5 cm (right) forward.
+
+  The root drops 2.07 cm less than on the measured chair.
+- **Ankle limit:** both ankles reach 20.01° dorsiflexion against the 20° limit, so this candidate is 0.01° over. A bounded re-solve with a stiffer limit penalty is running.
+
 ## Still pending
 
-The chair-lift proposal (+2.5001 cm, so the casters sit on the floor) is still running in a bounded run and will be committed separately.
+The lifted SeatedIdle still needs its ankle limit cleared (0.01° over), and then the arm step can follow.

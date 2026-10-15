@@ -1,0 +1,467 @@
+{
+ "SeatedIdle": {
+  "pass_main_rule": true,
+  "failing_frames": 0,
+  "gated_frames": 126,
+  "sha256": "1127806748ff5d98b2d67e932903be90609da9092b5e5ba1fa2541de8d9fe3e8",
+  "per_patch": {
+   "buttocks": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -1.9849,
+     "frame": 31
+    },
+    "max_median_gap_cm": {
+     "value": 0.2526,
+     "frame": 49
+    },
+    "min_coverage": {
+     "value": 0.5602,
+     "frame": 3
+    },
+    "min_over_surface_vertices": {
+     "value": 672,
+     "frame": 6
+    }
+   },
+   "left_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.2507,
+     "frame": 31
+    },
+    "max_median_gap_cm": {
+     "value": -0.4915,
+     "frame": 3
+    },
+    "min_coverage": {
+     "value": 0.7418,
+     "frame": 3
+    },
+    "min_over_surface_vertices": {
+     "value": 1241,
+     "frame": 4
+    }
+   },
+   "right_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0286,
+     "frame": 101
+    },
+    "max_median_gap_cm": {
+     "value": 0.1398,
+     "frame": 41
+    },
+    "min_coverage": {
+     "value": 0.6227,
+     "frame": 38
+    },
+    "min_over_surface_vertices": {
+     "value": 1585,
+     "frame": 46
+    }
+   },
+   "left_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 5
+    },
+    "max_median_gap_cm": {
+     "value": 0.2278,
+     "frame": 33
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 1923,
+     "frame": 0
+    }
+   },
+   "right_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 73
+    },
+    "max_median_gap_cm": {
+     "value": 0.233,
+     "frame": 66
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 2248,
+     "frame": 0
+    }
+   }
+  },
+  "binding": [
+   {
+    "patch": "buttocks",
+    "condition": "median",
+    "margin": 0.2474,
+    "frame": 49,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "left_posterior_thigh",
+    "condition": "min_gap",
+    "margin": 0.2493,
+    "frame": 31,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "right_posterior_thigh",
+    "condition": "median",
+    "margin": 0.3602,
+    "frame": 41,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "buttocks",
+    "condition": "coverage",
+    "margin": 0.3611,
+    "frame": 3,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   }
+  ],
+  "repro_cm": {
+   "buttocks": 1e-06,
+   "left_posterior_thigh": 1e-06,
+   "right_posterior_thigh": 1e-06,
+   "left_sole": 0.0,
+   "right_sole": 0.0
+  }
+ },
+ "SitDown_seated": {
+  "pass_main_rule": true,
+  "failing_frames": 0,
+  "gated_frames": 18,
+  "sha256": "ff531e976547ab308356ba409178e613efb7bd516b84e99d1e8b6a17a2c372fd",
+  "per_patch": {
+   "buttocks": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -1.9741,
+     "frame": 50
+    },
+    "max_median_gap_cm": {
+     "value": 0.2256,
+     "frame": 62
+    },
+    "min_coverage": {
+     "value": 0.5617,
+     "frame": 58
+    },
+    "min_over_surface_vertices": {
+     "value": 673,
+     "frame": 57
+    }
+   },
+   "left_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.2271,
+     "frame": 50
+    },
+    "max_median_gap_cm": {
+     "value": -0.5047,
+     "frame": 65
+    },
+    "min_coverage": {
+     "value": 0.7452,
+     "frame": 61
+    },
+    "min_over_surface_vertices": {
+     "value": 1244,
+     "frame": 54
+    }
+   },
+   "right_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.0052,
+     "frame": 50
+    },
+    "max_median_gap_cm": {
+     "value": 0.1079,
+     "frame": 59
+    },
+    "min_coverage": {
+     "value": 0.6281,
+     "frame": 58
+    },
+    "min_over_surface_vertices": {
+     "value": 1590,
+     "frame": 59
+    }
+   },
+   "left_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 65
+    },
+    "max_median_gap_cm": {
+     "value": 0.2278,
+     "frame": 56
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 50
+    },
+    "min_over_surface_vertices": {
+     "value": 1923,
+     "frame": 50
+    }
+   },
+   "right_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 65
+    },
+    "max_median_gap_cm": {
+     "value": 0.233,
+     "frame": 56
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 50
+    },
+    "min_over_surface_vertices": {
+     "value": 2248,
+     "frame": 50
+    }
+   }
+  },
+  "binding": [
+   {
+    "patch": "left_posterior_thigh",
+    "condition": "min_gap",
+    "margin": 0.2729,
+    "frame": 50,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "buttocks",
+    "condition": "median",
+    "margin": 0.2744,
+    "frame": 62,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "buttocks",
+    "condition": "coverage",
+    "margin": 0.37,
+    "frame": 58,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "right_posterior_thigh",
+    "condition": "median",
+    "margin": 0.3921,
+    "frame": 59,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   }
+  ],
+  "repro_cm": {
+   "buttocks": 1e-06,
+   "left_posterior_thigh": 1e-06,
+   "right_posterior_thigh": 2e-06,
+   "left_sole": 0.0,
+   "right_sole": 0.0
+  }
+ },
+ "GetUp_seated": {
+  "pass_main_rule": true,
+  "failing_frames": 0,
+  "gated_frames": 17,
+  "sha256": "bffdb223c9a30f3c232c1dad08225945dcb73b2b44ffd65a338ce7edb062965c",
+  "per_patch": {
+   "buttocks": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -1.9662,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.2436,
+     "frame": 8
+    },
+    "min_coverage": {
+     "value": 0.5602,
+     "frame": 3
+    },
+    "min_over_surface_vertices": {
+     "value": 672,
+     "frame": 6
+    }
+   },
+   "left_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -2.2192,
+     "frame": 16
+    },
+    "max_median_gap_cm": {
+     "value": -0.4915,
+     "frame": 3
+    },
+    "min_coverage": {
+     "value": 0.7418,
+     "frame": 3
+    },
+    "min_over_surface_vertices": {
+     "value": 1241,
+     "frame": 4
+    }
+   },
+   "right_posterior_thigh": {
+    "band_cm": [
+     -2.5,
+     0.5
+    ],
+    "min_gap_cm": {
+     "value": -1.9916,
+     "frame": 0
+    },
+    "max_median_gap_cm": {
+     "value": 0.1274,
+     "frame": 11
+    },
+    "min_coverage": {
+     "value": 0.6236,
+     "frame": 11
+    },
+    "min_over_surface_vertices": {
+     "value": 1593,
+     "frame": 10
+    }
+   },
+   "left_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 5
+    },
+    "max_median_gap_cm": {
+     "value": 0.2278,
+     "frame": 3
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 1923,
+     "frame": 0
+    }
+   },
+   "right_sole": {
+    "band_cm": [
+     0.0,
+     1.0
+    ],
+    "min_gap_cm": {
+     "value": 0.05,
+     "frame": 13
+    },
+    "max_median_gap_cm": {
+     "value": 0.233,
+     "frame": 3
+    },
+    "min_coverage": {
+     "value": 1.0,
+     "frame": 0
+    },
+    "min_over_surface_vertices": {
+     "value": 2248,
+     "frame": 0
+    }
+   }
+  },
+  "binding": [
+   {
+    "patch": "buttocks",
+    "condition": "median",
+    "margin": 0.2564,
+    "frame": 8,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "left_posterior_thigh",
+    "condition": "min_gap",
+    "margin": 0.2808,
+    "frame": 16,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "buttocks",
+    "condition": "coverage",
+    "margin": 0.3611,
+    "frame": 3,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   },
+   {
+    "patch": "right_posterior_thigh",
+    "condition": "median",
+    "margin": 0.3726,
+    "frame": 11,
+    "margin_unit": "cm (coverage: (cov-0.5)*6 cm)"
+   }
+  ],
+  "repro_cm": {
+   "buttocks": 2e-06,
+   "left_posterior_thigh": 1e-06,
+   "right_posterior_thigh": 2e-06,
+   "left_sole": 0.0,
+   "right_sole": 0.0
+  }
+ }
+}
