@@ -1,0 +1,68 @@
+{
+  "schema": "sub01.actual-phone-parent-order-acceptance.v1",
+  "source_fix_commit": "d788361fbaaa13587e0b3b0828b72a947f16f683",
+  "deployed_module_sha256": "ac53fbedad394ada48344b5eca338a251cba90e734403e4124d8a1661a6e1036",
+  "pod": "dgtgepkz7h1zy5",
+  "native_pid": 39931,
+  "native_start_ticks": 974207379,
+  "level": "/Game/Sub01Home/ActualHome",
+  "derived_clip": "/Game/Sub01Hands/Phone/SUB01_PhoneGrip.SUB01_PhoneGrip",
+  "derived_source_sha256": "81c1d4e10c0a71f46cb4aac36eafd605f92f2fa9397f8d444cc10775445823b2",
+  "derived_clip_keys": 557,
+  "clip_duration_s": 18.5333328,
+  "ordered_native_markers": [
+    "[2026.10.15-08.19.43:051][958]LogTemp: Warning: SUB01_DERIVED_PHONE_VISUAL_REVIEW play=0 source=81c1d4e1 exact imported557keys; not activity/contact acceptance",
+    "[2026.10.15-08.20.52:426][121]LogTemp: Display: SUB01_EXPLICIT_VIEW_MODE_SWITCH mode=manual actualpawnretained; no actor teleport or seating claim",
+    "[2026.10.15-08.22.31:091][ 39]LogTemp: Warning: SUB01_DERIVED_PHONE_VISUAL_REVIEW play=1 source=81c1d4e1 exact imported557keys; not activity/contact acceptance",
+    "[2026.10.15-08.26.03:016][755]LogTemp: Display: SUB01_EXPLICIT_VIEW_MODE_SWITCH mode=manual actualpawnretained; no actor teleport or seating claim",
+    "[2026.10.15-08.26.30:227][385]LogTemp: Warning: SUB01_DERIVED_PHONE_VISUAL_REVIEW play=0 source=81c1d4e1 exact imported557keys; not activity/contact acceptance",
+    "[2026.10.15-08.27.22:831][542]LogTemp: Display: SUB01_EXPLICIT_VIEW_MODE_SWITCH mode=manual actualpawnretained; no actor teleport or seating claim"
+  ],
+  "first_five_part_mount_coherent": true,
+  "manual_restore_true_reentry_accepted": true,
+  "post_playback_manual_restore_false_reentry_accepted": true,
+  "final_manual_restore_confirmed": true,
+  "continuous_loop_record": {
+    "movie": {
+      "local_path": "out/house-evidence/phone39931-phone-review-playing-loop-24s.mp4",
+      "bytes": 10969788,
+      "sha256": "8190dcd171c13ca8432707285e9751e8669510a67c75d1688f58d87e20e99cab"
+    },
+    "duration_s": 24.0,
+    "requested_fps": 15,
+    "privacy_identity_guard_checks": 93,
+    "modes_seen": [
+      "diagnostic"
+    ],
+    "play1_marker_seen": true,
+    "started_epoch": 1792052611.3575673,
+    "finished_epoch": 1792052635.8176978,
+    "scope": "24 seconds of the already-playing native loop, not an aligned frame-zero start."
+  },
+  "world_center_rigidity": {
+    "complete_five_part_groups": 167,
+    "pair_count": 10,
+    "max_distance_variation_cm": 0.0018917780113749672,
+    "logged_coordinate_resolution_cm": 0.001,
+    "scope": "World AABB center spacings only; not all surface vertices or attachment identity.",
+    "source_log": {
+      "local_path": "out/house-evidence/phone39931-complete-native-phone-session-with-reentry.txt",
+      "bytes": 254313,
+      "sha256": "dac59ff7e8da71b1ca94cae745e6fd6038cfdc4bc7f2ff94b450c1564270bc83"
+    }
+  },
+  "visually_reviewed_record_frame_times_s": [
+    1,
+    10,
+    20
+  ],
+  "raw_media_committed": false,
+  "first_record_missed_playback": true,
+  "first_record_scope": "Manual console attempt only; excluded from playback acceptance.",
+  "native_contact_verified": false,
+  "all_557_keys_individually_visually_reviewed": false,
+  "normal_phone_activity_ready": false,
+  "phone_browser_content_verified": false,
+  "visible_phone_ui": "Browser unavailable. No browser content is being shown.",
+  "scope": "Accepts the parent-order first-mount/one-shot-restore/reentry correction and native diagnostic playback recording only. No activity, skin-contact or phone-browser gate is enabled."
+}
