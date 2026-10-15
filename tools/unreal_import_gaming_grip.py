@@ -87,7 +87,10 @@ def resolve_owner(u, root: Path):
     return mesh, skeleton, basis
 
 
-def owner_parents_default():
+def owner_parents_default(root: Path | None = None):
+    if root is not None:
+        from verified_owner_skeleton import read_project_owner_parents
+        return read_project_owner_parents(root)
     import inventory_native_life_clips as inventory_tool
     ref = inventory_tool.owner_reference()
     return {n: (p if p in ref['skin_joints'] else None)
@@ -136,7 +139,7 @@ def main(u, root: Path | None = None, owner_parents: dict | None = None) -> dict
     probe.set_skeletal_mesh_asset(mesh)
     ue_names = [str(probe.get_bone_name(i)) for i in range(probe.get_num_bones())]
     ue_parents = {n: (None if str(probe.get_parent_bone(n)) in ('None', '') else str(probe.get_parent_bone(n))) for n in ue_names}
-    owner = parity.map_owner_parents_to_ue(owner_parents or owner_parents_default(), ue_names)
+    owner = parity.map_owner_parents_to_ue(owner_parents or owner_parents_default(root), ue_names)
     skeleton_parity = parity.structural_root_parity(ue_names, ue_parents, owner, structure_only=True)
     if not skeleton_parity['pass']:
         raise RuntimeError('UE skeleton is not the owner skeleton: ' + '; '.join(skeleton_parity['failures']))
