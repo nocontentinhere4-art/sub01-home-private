@@ -104,7 +104,9 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
   for ni,n in enumerate(doc['nodes']):
    matches=by.get(n['name'],[])
    if len(matches)!=1:raise RuntimeError('Unique exact imported bedding part required: '+n['name'])
-   actor,c=matches[0];owned_geometry(u,c.get_editor_property('static_mesh'),dest)
+   actor,c=matches[0]
+   if len(actor.get_components_by_class(u.StaticMeshComponent))!=1:raise RuntimeError('Standalone exact source media actor required')
+   owned_geometry(u,c.get_editor_property('static_mesh'),dest)
    actual=native_triangles(u,c);expected=expected_triangles(doc,blob,ni)
    if not same_triangles(expected,actual,tolerance=.0001):raise RuntimeError('Actual world media cabinet triangles differ from source')
    material=doc['materials'][doc['meshes'][n['mesh']]['primitives'][0]['material']]
