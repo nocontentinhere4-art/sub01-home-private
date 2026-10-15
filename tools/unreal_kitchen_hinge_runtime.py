@@ -5,6 +5,7 @@ Closed-pose visual import works without this adapter; activation additionally
 requires SUB01_KITCHEN_RUNTIME=1 and fresh authenticated nonprivate backend state.
 """
 import json
+import re
 from prepare_real_kitchen_native_bundle import validate_manifest
 
 POLICY = r'''
@@ -159,8 +160,35 @@ void ASub01HomeCharacter::UpdateActualKitchen(float DeltaSeconds){
 '''
 
 
-def methods(proof):
+def native_asset_root(proof, native_receipt):
+    """Use the actual saved import namespace, including reviewed retry versions."""
     validate_manifest(proof)
+    if not isinstance(native_receipt, dict) or native_receipt.get('schema') != 'sub01.real-kitchen-native-import.v1':
+        raise ValueError('Actual saved kitchen import receipt required; no guessed asset prefix')
+    rows = native_receipt.get('parts', [])
+    if (native_receipt.get('export_sha256') != proof['export_sha256']
+            or len(rows) != 152 or len({r.get('part') for r in rows}) != 152
+            or {r.get('part') for r in rows} != {p['name'] for p in proof['parts']}
+            or native_receipt.get('hinges') != proof['hinges']
+            or type(native_receipt.get('protected_originals_verified')) is not int
+            or native_receipt['protected_originals_verified'] <= 0
+            or any(r.get('surface_parity', {}).get('all_native_triangles_matched') is not True for r in rows)):
+        raise ValueError('Complete source-matching 152-part/eight-hinge native import required')
+    pattern = re.compile(r'^(/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+r'(?:_R[1-9][0-9]{0,2})?)/')
+    roots = set()
+    for row in rows:
+        path = row.get('mesh')
+        match = pattern.match(path) if isinstance(path, str) else None
+        if not match or '/StaticMeshes/' not in path:
+            raise ValueError('Actual native kitchen asset is outside the exact owned namespace')
+        roots.add(match.group(1)+'/')
+    if len(roots) != 1:
+        raise ValueError('Native kitchen mixes distinct import versions')
+    return roots.pop()
+
+
+def methods(proof, native_receipt=None):
+    asset_root = native_asset_root(proof, native_receipt)
     parts = {p['name']: p for p in proof['parts']}
     specs, hinges = [], []
     vector = lambda values: 'FVector('+','.join(format(float(v), '.12g') for v in values)+')'
@@ -173,10 +201,10 @@ def methods(proof):
             lo, hi = [[p[k]*100 for k in (0, 2, 1)] for p in part['bounds_browser_m']]
             specs.append('{'+str(hinge['index'])+',TEXT('+json.dumps(tag)+'),'+vector(lo)+','+vector(hi)+'}')
     return METHODS.replace('@@SPECS@@', ',\n'.join(specs)).replace('@@HINGES@@', ','.join(hinges)).replace(
-        '@@DEST@@', '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+'/')
+        '@@DEST@@', asset_root)
 
 
-def install(header, cpp, proof):
+def install(header, cpp, proof, native_receipt=None):
     """Optional later compile; never required for the closed-pose visual import."""
     validate_manifest(proof)
     if 'ConfigureActualKitchen' in cpp:
@@ -193,4 +221,4 @@ def install(header, cpp, proof):
     cpp = cpp.replace(' ConfigureActualPC();', ' ConfigureActualPC();\n ConfigureActualKitchen();', 1)
     cpp = cpp.replace(' Super::Tick(DeltaSeconds);', ' Super::Tick(DeltaSeconds);\n UpdateActualKitchen(DeltaSeconds);', 1)
     cpp = cpp.replace(' FString Device;\n', ' if(TryNativeKitchen(Hit.GetComponent()))return;\n FString Device;\n', 1)
-    return header, INCLUDES+cpp+methods(proof)
+    return header, INCLUDES+cpp+methods(proof, native_receipt)

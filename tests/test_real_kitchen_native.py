@@ -48,6 +48,14 @@ def fixture():
                 'door_pair_bvh_tests': 0, 'door_pair_aabb_rejects': 28*90*90}}
 
 
+def native_fixture(proof, suffix='_R5'):
+    root = '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+suffix+'/'
+    return {'schema': 'sub01.real-kitchen-native-import.v1', 'export_sha256': proof['export_sha256'],
+            'parts': [{'part': p['name'], 'mesh': root+'Scene/StaticMeshes/Mesh_'+str(i)+'.Mesh_'+str(i),
+                       'surface_parity': {'all_native_triangles_matched': True}} for i, p in enumerate(proof['parts'])],
+            'hinges': copy.deepcopy(proof['hinges']), 'protected_originals_verified': 583}
+
+
 class KitchenGuards(unittest.TestCase):
     def test_failed_import_detaches_every_new_mesh_before_any_actor_destroy(self):
         events = []
@@ -180,12 +188,32 @@ class KitchenGuards(unittest.TestCase):
     def test_optional_adapter_requires_exact_packet_and_unique_generator_hooks(self):
         header = ' void Forward(float Value);'
         cpp = ' ConfigureActualPC();\n Super::Tick(DeltaSeconds);\n FString Device;\n'
-        h, c = runtime.install(header, cpp, fixture())
+        proof = fixture()
+        h, c = runtime.install(header, cpp, proof, native_fixture(proof))
+        self.assertIn('/V_aaaaaaaaaaaa_R5/', c)
         self.assertIn('SUB01_KITCHEN_RUNTIME', c)
         self.assertIn('if(TryNativeKitchen(Hit.GetComponent()))return;', c)
         self.assertNotIn('@@', c)
         with self.assertRaises(ValueError):
-            runtime.install(h, c, fixture())
+            runtime.install(h, c, proof, native_fixture(proof))
+
+    def test_adapter_refuses_absent_or_mixed_wrong_native_asset_versions(self):
+        proof = fixture()
+        with self.assertRaises(ValueError):
+            runtime.methods(proof)
+        native = native_fixture(proof)
+        self.assertEqual(runtime.native_asset_root(proof, native), '/Game/Sub01Home/RealKitchen/V_aaaaaaaaaaaa_R5/')
+        for mutate in (
+            lambda d: d['parts'][0].update(mesh=d['parts'][0]['mesh'].replace('_R5/', '_R6/')),
+            lambda d: d['parts'][0].update(mesh=d['parts'][0]['mesh'].replace('aaaaaaaaaaaa', 'bbbbbbbbbbbb')),
+            lambda d: d['parts'].pop(),
+            lambda d: d['hinges'].pop(),
+            lambda d: d['parts'][0].update(surface_parity={'all_native_triangles_matched': False}),
+        ):
+            bad = copy.deepcopy(native)
+            mutate(bad)
+            with self.assertRaises(ValueError):
+                runtime.native_asset_root(proof, bad)
 
     @unittest.skipUnless(shutil.which('c++'), 'C++ compiler required')
     def test_native_policy_stops_at_intermediate_obstacles_both_directions_without_teleport(self):
