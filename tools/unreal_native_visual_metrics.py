@@ -49,6 +49,14 @@ void ASub01HomeCharacter::PublishPrivateVisualMetrics(){
    TArray<FMaterialParameterInfo> Info;TArray<FGuid> IDs;auto Scalars=MakeShared<FJsonObject>();M->GetAllScalarParameterInfo(Info,IDs);for(const auto& P:Info){float V;if(M->GetScalarParameterValue(FHashedMaterialParameterInfo(P),V))Num(Scalars,*P.Name.ToString(),V);}S->SetObjectField(TEXT("scalars"),Scalars);
    Info.Reset();IDs.Reset();auto Vectors=MakeShared<FJsonObject>();M->GetAllVectorParameterInfo(Info,IDs);for(const auto& P:Info){FLinearColor V;if(M->GetVectorParameterValue(FHashedMaterialParameterInfo(P),V))Vectors->SetObjectField(P.Name.ToString(),Color(V));}S->SetObjectField(TEXT("vectors"),Vectors);Slots.Add(MakeShared<FJsonValueObject>(S));}}
   O->SetArrayField(TEXT("slots"),Slots);Fixtures.Add(MakeShared<FJsonValueObject>(O));}Doc->SetArrayField(TEXT("fixtures"),Fixtures);
+ // Native owner/camera witness only; no camera or body placement mutation.
+ if(ViewCamera){auto V=MakeShared<FJsonObject>();const FVector P=ViewCamera->GetComponentLocation();Num(V,TEXT("x"),P.X);Num(V,TEXT("y"),P.Y);Num(V,TEXT("z"),P.Z);Doc->SetObjectField(TEXT("actual_camera_world_cm"),V);}
+ if(FirstPersonBody&&FirstPersonBody->GetSkeletalMeshAsset()&&FirstPersonBody->GetSkeletalMeshAsset()->GetPathName()==TEXT("/Game/Sub01Hands/FBX/SUB01_OriginalOwner.SUB01_OriginalOwner")&&FirstPersonBody->DoesSocketExist(TEXT("Head"))){
+  const FTransform H=FirstPersonBody->GetSocketTransform(TEXT("Head"),RTS_World);
+  const FVector Eye=H.GetLocation()+H.GetRotation().GetNormalized().RotateVector(FVector(.11885198390986161,-13.382490930007885,12.634526097714183));
+  auto V=MakeShared<FJsonObject>();Num(V,TEXT("x"),Eye.X);Num(V,TEXT("y"),Eye.Y);Num(V,TEXT("z"),Eye.Z);Doc->SetObjectField(TEXT("owner_iris_surface_midpoint_world_cm"),V);
+  Doc->SetStringField(TEXT("eye_witness_source"),TEXT("45e917725f02836dee6d051d9b47dd2785208c78b503fa935ddb322fe69adea8"));
+ }
  Num(Doc,TEXT("actual_speed_cm_s"),GetVelocity().Size2D());if(auto* Anim=FirstPersonBody?Cast<USub01HomeHandsInstance>(FirstPersonBody->GetAnimInstance()):nullptr)Num(Doc,TEXT("target_animation_rate"),Anim->TargetRate);
  FString Raw;FJsonSerializer::Serialize(Doc,TJsonWriterFactory<>::Create(&Raw));const FString Temp=TEXT("/home/unreal/.sub01-private/native-visual-metrics.tmp");if(FFileHelper::SaveStringToFile(Raw,*Temp))IFileManager::Get().Move(TEXT("/home/unreal/.sub01-private/native-visual-metrics.json"),*Temp,true,true);
 }
