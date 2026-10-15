@@ -32,6 +32,45 @@ def prepare(source,target):
  if restored!=original_doc or bytes(actual_blob)!=bytes(original_blob):raise RuntimeError('Names-only bedding preparation changed original source document/binary')
  return actual,actual_blob
 
+def audit_original_full_source(u,eas,component,expected,source_node,allow_clone):
+ """Measure a fresh full-source clone, never change original Nanite/settings."""
+ from unreal_remove_frame_backings import native_triangles,same_triangles
+ from unreal_import_real_wc import owned_geometry
+ mesh=component.get_editor_property('static_mesh')
+ expected_name={263:'CC0_queen_3',264:'CC0_queen_4'}[source_node]
+ prefix='/Game/Sub01Home/ImportedScene/full-home/StaticMeshes/'
+ if not mesh or mesh.get_name()!=expected_name or not mesh.get_path_name().startswith(prefix):
+  raise RuntimeError('Exact original textile asset binding required before full-source audit')
+ sub=u.get_editor_subsystem(u.StaticMeshEditorSubsystem)
+ keys=('enabled','fallback_target','fallback_relative_error','fallback_percent_triangles','keep_percent_triangles','trim_relative_error')
+ original_settings={k:str(sub.get_nanite_settings(mesh).get_editor_property(k))for k in keys}
+ actual=native_triangles(u,component)
+ if same_triangles(expected,actual,tolerance=.0001):
+  return {'source_node':source_node,'method':'actual original CPU surface','triangles':len(actual)}
+ if not sub.get_nanite_settings(mesh).get_editor_property('enabled') or not allow_clone:
+  raise RuntimeError('Original render fallback differs; execute requires owned full-source clone audit')
+ destination='/Game/Sub01Home/ReferenceBedding/OriginalSourceAudit/Attempt_'+uuid.uuid4().hex
+ clone=u.EditorAssetLibrary.duplicate_asset(mesh.get_path_name().split('.',1)[0],destination+'/'+expected_name)
+ if not clone:raise RuntimeError('Owned textile source clone failed')
+ actor=None
+ try:
+  owned_geometry(u,clone,destination)
+  if u.Sub01HomeHandsInstance.finish_pending_static_compilation()!=0:
+   raise RuntimeError('Owned source clone compilation incomplete')
+  actor=eas.spawn_actor_from_class(u.StaticMeshActor,u.Vector(0,0,0))
+  actor.set_actor_label('SUB01_TemporaryOriginalBeddingAudit_'+str(source_node));actor.set_actor_hidden_in_game(True)
+  c=actor.get_component_by_class(u.StaticMeshComponent);c.set_static_mesh(clone)
+  c.set_collision_enabled(u.CollisionEnabled.NO_COLLISION);c.set_world_transform(component.get_world_transform(),False,True)
+  full=native_triangles(u,c)
+  if not same_triangles(expected,full,tolerance=.0001):
+   raise RuntimeError('Full-source clone geometry differs: source='+str(len(expected))+' clone='+str(len(full)))
+  return {'source_node':source_node,'method':'actual independently rebuilt owned full-source clone','original_mesh':mesh.get_path_name(),'clone_mesh':clone.get_path_name(),'source_triangles':len(expected),'original_render_fallback_triangles':len(actual),'full_source_clone_triangles':len(full),'original_nanite_settings_unchanged':True,'tolerance_cm':.0001}
+ finally:
+  if actor and not eas.destroy_actor(actor):raise RuntimeError('Temporary full-source textile audit actor cleanup failed')
+  after={k:str(sub.get_nanite_settings(mesh).get_editor_property(k))for k in keys}
+  if after!=original_settings or component.get_editor_property('static_mesh')!=mesh:
+   raise RuntimeError('Original textile binding/settings changed during source clone audit')
+
 def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output/bedding.glb',dry_run=True):
  import unreal as u
  from home_asset_audit import read_gltf
@@ -46,7 +85,7 @@ def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output
  if not world or world.get_path_name().split('.',1)[0]!='/Game/Sub01Home/ActualHome':raise RuntimeError('ActualHome must already be loaded')
  eas=u.get_editor_subsystem(u.EditorActorSubsystem);original=list(eas.get_all_level_actors());before=fingerprint(u,original)
  if any(a.get_actor_label().startswith('SUB01ReferenceBedding_')for a in original):raise RuntimeError('Bedding already installed; inspect existing receipt')
- olddoc,oldblob=read_gltf(home);old=[]
+ olddoc,oldblob=read_gltf(home);old=[];original_source_proofs=[]
  for ni in OLD:
   matches=[a for a in original if a.get_name()==f'full-home_node_{ni}']
   if len(matches)!=1:raise RuntimeError('Unique exact original textile actor required')
@@ -60,10 +99,10 @@ def run(source='/workspace/sub01-home-private/reference-bedding-source-r1/output
    settings=u.get_editor_subsystem(u.StaticMeshEditorSubsystem).get_nanite_settings(mesh)
    details={'schema':'sub01.original-bedding-native-refusal.v1','source_node':ni,'source_node_name':olddoc['nodes'][ni].get('name'),'actor':actor.get_path_name(),'mesh':mesh.get_path_name()if mesh else None,'source_triangles':len(expected_old),'native_cpu_triangles':len(actual_old),'source_bounds_ue_cm':bounds(expected_old),'native_bounds_ue_cm':bounds(actual_old),'material_paths':[m.get_path_name()if m else None for m in cs[0].get_materials()],'nanite':{k:str(settings.get_editor_property(k))for k in('enabled','fallback_target','fallback_relative_error','fallback_percent_triangles','keep_percent_triangles','trim_relative_error')},'native_changed':False}
    refusal=project/'private-audit/reference-bedding-original-refusal.json';refusal.parent.mkdir(exist_ok=True);refusal.write_text(json.dumps(details,indent=2)+'\n')
-   raise RuntimeError('Original textile fullsource geometry differs CPU surface; inspect reference-bedding-original-refusal.json')
+  original_source_proofs.append(audit_original_full_source(u,eas,cs[0],expected_old,ni,not dry_run))
   old.append((actor,cs[0],bool(actor.get_editor_property('hidden')),actor.is_temporarily_hidden_in_editor(),cs[0].get_collision_enabled()))
  prepared=project/'Saved/PrivateImportInputs'/('reference-bedding-'+uuid.uuid4().hex+'.glb');doc,blob=prepare(source,prepared)
- result={'schema':'sub01.reference-bedding-native-import.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'activity_gates_changed':False,'retired_source_nodes':list(OLD)}
+ result={'schema':'sub01.reference-bedding-native-import.v1','source_sha256':SHA,'dry_run':dry_run,'native_visual_verified':False,'activity_gates_changed':False,'retired_source_nodes':list(OLD),'original_source_proofs':original_source_proofs}
  if dry_run:return result
  backup=project/'Saved/PrivateMapBackups'/('reference-bedding-'+str(time.time_ns()));backup.mkdir(parents=True);shutil.copy2(project/'Content/Sub01Home/ActualHome.umap',backup/'ActualHome.umap')
  dest='/Game/Sub01Home/ReferenceBedding/V_'+SHA[:12]+'/Attempt_'+uuid.uuid4().hex;audit=project/'private-audit';audit.mkdir(exist_ok=True)
