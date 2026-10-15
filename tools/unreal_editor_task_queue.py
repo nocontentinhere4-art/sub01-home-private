@@ -26,6 +26,7 @@ TASKS = {
     'hands_inventory': 'unreal_hands_inventory',
     'walk_pose_audit': 'unreal_walk_pose_audit',
     'refresh_queue': 'unreal_editor_queue_refresh',
+    'kitchen_partial_inventory': 'unreal_kitchen_partial_inventory',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
