@@ -25,6 +25,10 @@ LEVEL = '/Game/Sub01Home/ActualHome'
 # Native Interchange names differ from source glTF mesh index135 for node178.
 NATIVE_OLD_MESH = {63: 47, 178: 136}
 NATIVE_OLD_MATERIAL = {63: 11, 178: 68}
+# R1 failed native validation and is quarantined, not force-deleted while the
+# warm Editor may still compile its UObjects. R2 keeps the identical source
+# proof and strict checks, with corrected failure diagnostics/rollback.
+IMPORT_REVISION = 2
 
 
 def detach_failed_import(u, eas, before):
@@ -214,7 +218,7 @@ def preflight(root, u):
     if any(any(str(tag).startswith('SUB01Kitchen:') for tag in c.get_editor_property('component_tags'))
            for a in original for c in a.get_components_by_class(u.StaticMeshComponent)):
         raise RuntimeError('Owned kitchen already present; inspect receipt before any reimport')
-    destination = '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]
+    destination = '/Game/Sub01Home/RealKitchen/V_'+proof['export_sha256'][:12]+'_R'+str(IMPORT_REVISION)
     if u.EditorAssetLibrary.does_directory_exist(destination):
         raise RuntimeError('Kitchen asset version exists; no duplicate scene import')
     return proof, source, project, eas, original, old, destination, retained
