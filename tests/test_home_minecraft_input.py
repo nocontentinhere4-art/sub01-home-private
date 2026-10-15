@@ -22,7 +22,7 @@ def receipt():
 def fixture(tmp_path,enabled=True):
  p=tmp_path/'receipt.json';p.write_text(json.dumps(receipt()));p.chmod(0o600);clock=[100.]
  policy=NativeTVInput(enabled=enabled,receipt=p,uid=os.getuid(),wall=lambda:clock[0],monotonic=lambda:clock[0],
-                      process=lambda pid:(os.getuid(),456,[PROJECT.encode(),b'-game']))
+                      process=lambda pid:(os.getuid(),456,[PROJECT.encode(),b'-game']),native_identity=(123,456))
  return policy,p,clock
 
 def focus():return {'consumer_id':C,'focus_event_id':E,'frame_id':'actual-fixture-frame'}
@@ -133,13 +133,15 @@ def test_cancel_revokes_focus_lease_even_with_stale_frame(tmp_path):
  with pytest.raises(PermissionError):p.control(packet(2),'actual-fixture-frame',False)
 
 
-def test_recovered_project_is_exact_and_legacy_or_editor_receipts_refuse(tmp_path):
+def test_promoted_project_is_exact_and_legacy_or_editor_receipts_refuse(tmp_path):
  import pytest
- assert PROJECT == '/workspace/sub01-private-recovered-project/Sub01HomeLab/Sub01HomeLab.uproject'
+ assert PROJECT == '/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab/Sub01HomeLab.uproject'
  policy, file, clock = fixture(tmp_path)
  policy.focus(focus(), 'actual-fixture-frame', False)
  for args in [
   [b'/workspace/sub01-home-private/project/Sub01HomeLab/Sub01HomeLab.uproject', b'-game'],
+  [b'/workspace/sub01-private-recovered-project/Sub01HomeLab/Sub01HomeLab.uproject', b'-game'],
+  [b'/workspace/sub01-private-playable-14acd9d355c6-other/Sub01HomeLab/Sub01HomeLab.uproject',b'-game'],
   [PROJECT.encode() + b'.other', b'-game'],
   [PROJECT.encode(), b'-run=pythonscript'],
   [PROJECT.encode(), b'-game-other'],
@@ -149,3 +151,18 @@ def test_recovered_project_is_exact_and_legacy_or_editor_receipts_refuse(tmp_pat
   with pytest.raises(ValueError, match='Native process identity changed'):
    policy.focus(focus(), 'actual-fixture-frame', False)
   assert policy.owner is None and policy.until == 0
+
+
+def test_exact_promoted_pid_start_and_malformed_pins_refuse(tmp_path):
+ import pytest
+ from home_minecraft_input import NATIVE_PID,NATIVE_START_TICKS
+ assert (NATIVE_PID,NATIVE_START_TICKS)==(193148,978377926)
+ p,file,clock=fixture(tmp_path);p.native_pid=NATIVE_PID;p.native_start_ticks=NATIVE_START_TICKS
+ d={**receipt(),'native_pid':NATIVE_PID,'native_start_ticks':NATIVE_START_TICKS};file.write_text(json.dumps(d));p.process=lambda pid:(os.getuid(),NATIVE_START_TICKS,[PROJECT.encode(),b'-game'])
+ assert p.focus(focus(),'actual-fixture-frame',False)['ok']
+ for patch in [{'native_pid':193149},{'native_pid':True},{'native_start_ticks':978377927},{'native_start_ticks':True}]:
+  p.owner=None;p.until=0;file.write_text(json.dumps({**d,**patch}))
+  with pytest.raises((ValueError,TypeError)):p.focus(focus(),'actual-fixture-frame',False)
+  assert p.owner is None and p.until==0
+ for pin in [(True,456),(123,False),(0,456),(123,0),[123,456],(123,)]:
+  with pytest.raises(ValueError,match='Invalid exact'):NativeTVInput(native_identity=pin)

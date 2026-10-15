@@ -14,7 +14,10 @@ from pathlib import Path
 from aiohttp import web
 
 RECEIPT = Path('/home/unreal/.sub01-private/native-tv-focus.json')
-PROJECT = '/workspace/sub01-private-recovered-project/Sub01HomeLab/Sub01HomeLab.uproject'
+# Exact promoted private consumer, independently checked against its sealed receipt.
+PROJECT = '/workspace/sub01-private-playable-14acd9d355c6/Sub01HomeLab/Sub01HomeLab.uproject'
+NATIVE_PID = 193148
+NATIVE_START_TICKS = 978377926
 MAX_COUNTER = 2**53-1
 CONTROLS = {'forward','back','left','right','jump','sneak','sprint'}
 
@@ -43,9 +46,13 @@ def native_process(pid):
 
 class NativeTVInput:
     def __init__(self, *, enabled=None, receipt=RECEIPT, process=native_process,
-                 uid=1001, wall=time.time, monotonic=time.monotonic):
+                 uid=1001, wall=time.time, monotonic=time.monotonic,
+                 native_identity=(NATIVE_PID,NATIVE_START_TICKS)):
         self.enabled=(os.environ.get('HOME_NATIVE_MANUAL_TV_INPUT')=='1') if enabled is None else enabled
         self.receipt=Path(receipt);self.process=process;self.uid=uid
+        if not isinstance(native_identity,tuple) or len(native_identity)!=2 or any(type(x)is not int or x<1 for x in native_identity):
+            raise ValueError('Invalid exact native process identity')
+        self.native_pid,self.native_start_ticks=native_identity
         self.wall=wall;self.monotonic=monotonic
         self.owner=None;self.until=0;self.counter=0
 
@@ -65,7 +72,7 @@ class NativeTVInput:
         if not isinstance(d.get('frame_id'),str) or not d['frame_id'] or len(d['frame_id'])>128 or (frame is not None and d['frame_id']!=frame):
             raise ValueError('Displayed native frame changed')
         pid=d.get('native_pid');uid,ticks,args=self.process(pid)
-        if uid!=self.uid or ticks!=d.get('native_start_ticks') or PROJECT.encode()not in args or b'-game'not in args:
+        if pid!=self.native_pid or uid!=self.uid or ticks!=self.native_start_ticks or ticks!=d.get('native_start_ticks') or PROJECT.encode()not in args or b'-game'not in args:
             raise ValueError('Native process identity changed')
         if d.get('surface_tag')!='SUB01Device:tv' or d.get('surface_unique') is not True or not isinstance(d.get('component_identity'),str) or not d['component_identity']:
             raise ValueError('Actual unique TV component is absent')
