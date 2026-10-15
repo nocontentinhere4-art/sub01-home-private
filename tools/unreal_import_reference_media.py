@@ -5,10 +5,26 @@ Source/render validation is separate from native visual acceptance.
 """
 import copy,hashlib,json,shutil,struct,time,uuid
 from pathlib import Path
-SHA='77b0e0d6af6585c67d8fa71c6174d5ee498cdef3b1ea111c031abc73219e87ae'
+SHA='7a27cdf114d219968c7e5aa39f491be2ff979d58d3965344acf0ebdb6a651a96'
 HOME_SHA='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 NAMES={f'SUB01ReferenceMedia_{i}':f'SUB01ReferenceMedia_{i}'for i in range(11)}
 OLD=()
+
+def validate_source_layout(proof, leveling):
+ if (proof.get('schema')!='sub01.reference-media-source-bvh.v1' or proof.get('ok')is not True
+     or proof.get('sha256')!=SHA or proof.get('parts')!=11 or proof.get('pairs')!=[]
+     or proof.get('epsilon_m')!=0 or proof.get('ignored_collision_pairs')!=0
+     or proof.get('retained_source_sha256')!=HOME_SHA):
+  raise RuntimeError('Actual zero-intersection media/home source proof required')
+ feet=leveling.get('floor_side_feet',[])
+ if (leveling.get('schema')!='sub01.reference-media-real-leveling.v1' or leveling.get('sha256')!=SHA
+     or leveling.get('unchanged_coffee_table')is not True or leveling.get('unchanged_sofa')is not True
+     or leveling.get('cabinet_dimensions_unchanged')is not True or leveling.get('material_groups')!=11
+     or len(feet)!=2 or any(abs(f.get('extension_m',0)-.00775)>1e-9
+                          or not 0<=f.get('clearance_m',-1)<=.0001 for f in feet)):
+  raise RuntimeError('Actual level cabinet and two floor-side adjustable feet required')
+ return True
+
 
 def prepare(source,target):
  from home_asset_audit import read_gltf
@@ -32,7 +48,7 @@ def prepare(source,target):
  if restored!=original_doc or bytes(actual_blob)!=bytes(original_blob):raise RuntimeError('Names-only bedding preparation changed original source document/binary')
  return actual,actual_blob
 
-def run(source='/workspace/sub01-home-private/real-media-console-source-r1/output/media-console-native.glb',dry_run=True):
+def run(source='/workspace/sub01-home-private/real-media-console-source-r1/output/media-console-side-native.glb',dry_run=True):
  import unreal as u
  from home_asset_audit import read_gltf
  from unreal_import_reference_dressing import fingerprint
@@ -40,6 +56,8 @@ def run(source='/workspace/sub01-home-private/real-media-console-source-r1/outpu
  from unreal_remove_frame_backings import native_triangles,same_triangles
  from unreal_import_real_bathroom_pendant import verify_owned_material
  from unreal_owned_import_cleanup import detach_added
+ source_root=Path(source).parent
+ validate_source_layout(json.loads((source_root/'side-source-collision-proof.json').read_text()),json.loads((source_root/'side-native-packet.json').read_text()))
  project=Path(u.Paths.project_dir());home=project/'SourceAssets/full-home.glb'
  if hashlib.sha256(home.read_bytes()).hexdigest()!=HOME_SHA:raise RuntimeError('Actual full-home source changed')
  world=u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()

@@ -1,0 +1,25 @@
+{
+  "schema": "sub01.actual-reference-media-side-source.v1",
+  "native_verified": false,
+  "native_imported": false,
+  "gameplay_available": false,
+  "source_sha256": "7a27cdf114d219968c7e5aa39f491be2ff979d58d3965344acf0ebdb6a651a96",
+  "remote_source": "/workspace/sub01-home-private/real-media-console-source-r1/output/media-console-side-native.glb",
+  "source_parts": 11,
+  "triangles": 67436,
+  "placement_gltf_m": [
+    -3.66,
+    0.0328,
+    2.05
+  ],
+  "coffee_table_and_sofa_unchanged": true,
+  "cabinet_dimensions_unchanged": true,
+  "floor_side_adjustable_feet": 2,
+  "foot_extension_m": 0.00775,
+  "minimum_foot_floor_clearance_m": 4.8787198664967946e-05,
+  "home_bvh_epsilon_m": 0,
+  "ignored_home_collision_pairs": 0,
+  "unresolved_home_collision_pairs": 0,
+  "source_collision_proof_remote": "/workspace/sub01-home-private/real-media-console-source-r1/output/side-source-collision-proof.json",
+  "actual_native_visual_acceptance_pending": true
+}
