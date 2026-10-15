@@ -6,7 +6,7 @@ import stat
 import time
 from pathlib import Path
 
-POD = 'kjsxms1gk4rmv6'  # Officially verified migration target; never read from requests.
+POD = 'dgtgepkz7h1zy5'  # Verified continuous RTX4090 target; never read from requests.
 PRIVATE = Path('/home/unreal/.sub01-private')
 GUARD = Path('/run/sub01-home-private/runtime-window.json')
 TASKS = {

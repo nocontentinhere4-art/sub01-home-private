@@ -82,7 +82,7 @@ def test_private_directory_permissions_required(setup):
     with pytest.raises(PermissionError): EditorTaskQueue(q.private, q.guard)
 
 
-@pytest.mark.parametrize('field,value', [('pod', 'brain'), ('total_cap', 101), ('stop_guards_authenticated', False), ('root_guard_pid', 0), ('external_guard_pid', True)])
+@pytest.mark.parametrize('field,value', [('pod', 'brain'), ('pod', 'kjsxms1gk4rmv6'), ('total_cap', 101), ('stop_guards_authenticated', False), ('root_guard_pid', 0), ('external_guard_pid', True)])
 def test_guard_identity_and_authenticated_budget_required(setup, field, value):
     q, calls, request, guard = setup
     doc=json.loads(guard.read_text()); doc[field]=value; guard.write_text(json.dumps(doc))
