@@ -34,6 +34,7 @@ TASKS = {
     'collision_state_audit': 'unreal_book_collision_audit',
     'collision_restore_proof': 'unreal_book_collision_restore_proof',
     'scene_visual_inventory': 'unreal_home_visual_inventory',
+    'finish_editor_handoff': 'unreal_finish_editor_handoff',
 }
 # Reviewed source export path must be frozen by the owner before this task is enabled.
 DESK_EXPORT = None
