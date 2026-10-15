@@ -1092,6 +1092,7 @@ def final(setup, layout, out_dir, search_rows=None, t_start=None):
     return proposal
 
 
+ELBOW_STEP_MAX_CM = 2.0            # 120 cm/s at 60 Hz between consecutive keys (a design bound for a swivel jump)
 HAND_MODEL_PACKET = 'docs/proposed/canonical-anatomical-hand-cuffs-source-packet-20261015.json'
 HAND_MODEL_PACKET_SHA256 = 'd1da823eff18f7c0415aa876c35999542803db1ee796964e1911cbcd4b2aa994'   # origin/main (19ca7aa / f928346)
 ORIGINAL_RECORD = {
@@ -1128,6 +1129,9 @@ def postprocess(setup, out_dir, status='final_candidate'):
     arm_j = [setup.ctx.sk.j(n) for s_ in A.SIDES for n in A.ARM_BONES[s_]]
     rb = float(np.abs(Wr[:, arm_j, :3, 3] - W[:, arm_j, :3, 3]).max() * 100)
     cfg = prop['configuration']
+    for s_ in A.SIDES:      # continuity: no swivel jump (an elbow step over ELBOW_STEP_MAX_CM between 60 Hz keys)
+        prop['gates'][f'{s_}_elbow_path_continuous'] = bool(prop['arms'][s_]['continuity']['elbow']['max_frame_step_cm'] <= ELBOW_STEP_MAX_CM)
+    prop.update(readiness(prop['gates']))
     prop.update({
         'status': status,
         'original': ORIGINAL_RECORD,
