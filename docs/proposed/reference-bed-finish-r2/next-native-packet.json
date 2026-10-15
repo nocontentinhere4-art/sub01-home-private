@@ -1,6 +1,6 @@
 {
   "schema": "sub01.reference-bed-finish-next-native.v1",
-  "status": "source-built-viewed-proved-not-native",
+  "status": "candidate-native-saved-awaiting-visual-review",
   "remote_root": "/workspace/sub01-home-private/reference-bed-finish-r2/output",
   "bed_sha256": "fbdee3c59a43a4693f5aab0e22bf173cff42c5fe678360932153c6f63b217859",
   "cloth_material_sha256": "d5936142290790c5fb4fad059537c862547439bd9763d95fcb56a3ef3088e08c",
@@ -34,14 +34,19 @@
     "Actual whole bed/foot/side/nightstand frame review",
     "Actual upstairs walk/egress route and sleeping height unchanged"
   ],
-  "source_only": true,
-  "native_saved": false,
+  "source_only": false,
+  "native_saved": true,
   "physical_contact_accepted": false,
   "public_changes": false,
   "native_importer": "tools/unreal_import_reference_bed_finish.py",
-  "native_importer_sha256": "08fa5fdadab4aa67334fda89eefa7bb7679806abe363279139c27e569e49d0c1",
+  "native_importer_sha256": "62dfa9d65970fb9f4844acd5fedeecbe94f476d22e81c1f1a33ab2a91ea90297",
   "candidate_only": true,
   "original_collisions_retained_exact": true,
   "cloth_import_probe_actors_destroyed_before_save": true,
-  "focused_source_contract_tests_passed": 9
+  "focused_source_contract_tests_passed": 9,
+  "native_project_scope": "isolated_candidate_only",
+  "live_game_unchanged": true,
+  "native_visual_accepted": false,
+  "native_receipt_sha256": "50e22fa85e58d2422e11b7b89bbfae70781d84f03c8f93945b01e44b07754ac2",
+  "native_receipt_remote": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/reference-bed-finish-native.json"
 }

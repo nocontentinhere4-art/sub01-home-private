@@ -3,9 +3,44 @@ import bpy,bmesh,json,math
 from pathlib import Path
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+def dominant_bones(obj,indices):
+ from collections import Counter
+ weights=Counter()
+ for i in indices:
+  for group in obj.data.vertices[i].groups:weights[obj.vertex_groups[group.group].name]+=group.weight/len(indices)
+ return weights.most_common(4)
+
+def audit_motion():
+ import sys,hashlib,numpy as np
+ source=Path('/home/unreal/runtime-tools/official-hands-walk-candidate-r8.glb');out=Path('/workspace/sub01-home-private/human-base-hands-r1/rig-r8-motion-independent-audit.json')
+ assert hashlib.sha256(source.read_bytes()).hexdigest()=='3b1660eacf58203f3e87dfa2fa00799c27d104306bf5370c9fce2fa82fee3862'
+ bpy.ops.wm.read_factory_settings(use_empty=True);scene=bpy.context.scene;scene.render.fps=30;bpy.ops.import_scene.gltf(filepath=str(source));arm=next(o for o in scene.objects if o.type=='ARMATURE');assert len(arm.data.bones)==44
+ arm.animation_data_create();arm.animation_data.action=list(bpy.data.actions)[0]
+ for track in arm.animation_data.nla_tracks:track.mute=True
+ meshes=[o for o in scene.objects if o.type=='MESH'and o.name.startswith('CC0Adult_')];assert len(meshes)==2
+ glyphs={p.custom_shape for p in arm.pose.bones if p.custom_shape};assert all(o in glyphs for o in scene.objects if o.type=='MESH'and o not in meshes)
+ base={};depsgraph=bpy.context.evaluated_depsgraph_get()
+ for o in meshes:
+  o.data.calc_loop_triangles();triangles=[tuple(t.vertices)for t in o.data.loop_triangles];edge=np.array([tuple(e.vertices)for e in o.data.edges],dtype=np.int64);pts=np.array([list(o.matrix_world@v.co)for v in o.data.vertices]);lengths=np.linalg.norm(pts[edge[:,1]]-pts[edge[:,0]],axis=1);base[o.name]={'triangles':triangles,'triangle_sets':[set(t)for t in triangles],'edges':edge,'edge_lengths':lengths}
+ result={'schema':'sub01.actual-captured-hand-motion-independent-audit.v1','source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_animations_used':True,'action_frame_range':list(arm.animation_data.action.frame_range),'fps':30,'samples':32,'frame_records':[],'self_overlap_method':'Complete evaluated triangle BVH overlap, excluding only identical/shared-vertex topology pairs; remaining pairs are conservative candidates, not silently waived','native_imported':False,'visual_accepted':False,'self_contact_accepted':False,'prop_contact_verified':False,'prop_contact_limitation':'No actual keyboard/controller/phone prop in this captured walk source'}
+ for frame in range(32):
+  scene.frame_set(frame);bpy.context.view_layer.update();trees=[];record={'frame':frame,'time_s':frame/30,'hands':[]}
+  for o in meshes:
+   evaluated=o.evaluated_get(depsgraph);mesh=evaluated.to_mesh();assert len(mesh.vertices)==len(o.data.vertices);points=[evaluated.matrix_world@v.co for v in mesh.vertices];assert all(math.isfinite(x)for v in points for x in v);d=base[o.name];tree=BVHTree.FromPolygons(points,d['triangles'],all_triangles=True,epsilon=0);raw=tree.overlap(tree);nonadj=[];excluded=0
+   for a,b in raw:
+    if a>=b:continue
+    if d['triangle_sets'][a].intersection(d['triangle_sets'][b]):excluded+=1;continue
+    nonadj.append((a,b))
+   positions=np.array([list(p)for p in points]);edge=d['edges'];valid=d['edge_lengths']>1e-6;ratios=np.linalg.norm(positions[edge[:,1]]-positions[edge[:,0]],axis=1)[valid]/d['edge_lengths'][valid]
+   record['hands'].append({'mesh':o.name,'vertices':len(points),'triangles':len(d['triangles']),'raw_self_bvh_pairs':len(raw),'topologically_adjacent_pairs_excluded':excluded,'nonadjacent_self_overlap_candidates':len(nonadj),'first_nonadjacent_triangle_pairs':nonadj[:40],'first_overlap_regions':[{'triangles':[a,b],'dominant_bones':dominant_bones(o,d['triangles'][a]+d['triangles'][b]),'centroids_world':[[float(x)for x in sum((points[i]for i in d['triangles'][j]),Vector())/3]for j in(a,b)]}for a,b in nonadj[:40]],'edge_stretch_ratio_median':float(np.median(ratios)),'edge_stretch_ratio_p99':float(np.quantile(ratios,.99)),'edge_stretch_ratio_max':float(max(ratios)),'source_edges_under_1um_excluded_from_ratio':int(sum(~valid)),'bounds_world':[[min(p[k]for p in points)for k in range(3)],[max(p[k]for p in points)for k in range(3)]]});trees.append(tree);evaluated.to_mesh_clear()
+  record['between_hands_surface_overlap_candidates']=len(trees[0].overlap(trees[1]));result['frame_records'].append(record);out.write_text(json.dumps(result,indent=2)+'\n');print('ACTUAL_MOTION_AUDIT_FRAME',frame,[h['nonadjacent_self_overlap_candidates']for h in record['hands']],record['between_hands_surface_overlap_candidates'],flush=True)
+ result['complete_all_source_integer_frames']=len(result['frame_records'])==32;result['any_surface_overlap_candidates']=any(f['between_hands_surface_overlap_candidates']or any(h['nonadjacent_self_overlap_candidates']for h in f['hands'])for f in result['frame_records']);out.write_text(json.dumps(result,indent=2)+'\n');print('ACTUAL_MOTION_AUDIT_COMPLETE',result['any_surface_overlap_candidates'],flush=True)
+import sys
+if '--motion'in sys.argv:
+ audit_motion();raise SystemExit(0)
 ROOT=Path('/workspace/sub01-home-private/human-base-hands-r1')
-INPUT=ROOT/'rig-r4-diagnostic/FAILED_OR_PENDING_NOT_ACCEPTED.blend'
-OUT=ROOT/'rig-r4-independent-audit.json'
+INPUT=ROOT/'rig-r8/official-adult-hand-pair-rig.blend'
+OUT=ROOT/'rig-r8-independent-audit.json'
 bpy.ops.wm.open_mainfile(filepath=str(INPUT))
 rig=bpy.data.objects['CC0AnatomicalHandRig'];result={'schema':'sub01.official-hand-independent-rig-audit.v1','source_blend':str(INPUT),'read_only':True,'accepted':False,'sides':{}}
 directions=[Vector((1,.179,.317)).normalized(),Vector((.237,1,.119)).normalized(),Vector((.131,.229,1)).normalized()]
@@ -27,9 +62,9 @@ for side in('Left','Right'):
   head=rig.matrix_world@b.head_local;tail=rig.matrix_world@b.tail_local
   probes=[{'t':t,'position':list(head.lerp(tail,t)),**inside(head.lerp(tail,t))}for t in(0,.05,.25,.5,.75,.95,1)]
   bones.append({'name':b.name,'head_world':list(head),'tail_world':list(tail),'length_m':(tail-head).length,'deform':b.use_deform,'probes':probes,'interior_fraction':sum(p['inside_majority']for p in probes)/len(probes)})
- weights=[]
+ weights=[];wrong_side=0
  for v in o.data.vertices:
-  assignments=[(o.vertex_groups[g.group].name,g.weight)for g in v.groups if g.weight>1e-8];weights.append(sum(w for _,w in assignments))
+  assignments=[(o.vertex_groups[g.group].name,g.weight)for g in v.groups if g.weight>1e-8];weights.append(sum(w for _,w in assignments));wrong_side+=int(any(not name.startswith('mixamorig:'+side)for name,weight in assignments))
  # Independent finger identity from actual disconnected skin branches below palm.
  active={v.index for v in o.data.vertices if (o.matrix_world@v.co).z<.79};adj={i:set()for i in active}
  for edge in o.data.edges:
@@ -52,7 +87,7 @@ for side in('Left','Right'):
   for c,label in zip(components,('Index','Middle','Ring','Pinky')):c['tentative_identity_from_actual_skin_y_order']=label
  else:
   for c in components:c['identity_unresolved_wrong_branch_count']=True
- result['sides'][side]={'mesh_world_matrix':[list(r)for r in o.matrix_world],'rig_world_matrix':[list(r)for r in rig.matrix_world],'bounds_world':[[min(p[k]for p in verts)for k in range(3)],[max(p[k]for p in verts)for k in range(3)]],'mesh_vertices':len(o.data.vertices),'temporary_analysis_cuff_boundary_edges_closed':n_boundary,'analysis_domain_closed':closed,'analysis_signed_volume_local':volume,'bone_probes':bones,'actual_skin_finger_branches_below_z079':components,'vertices_with_positive_weight':sum(w>0 for w in weights),'zero_weight_vertices':sum(w<=0 for w in weights)}
+ result['sides'][side]={'mesh_world_matrix':[list(r)for r in o.matrix_world],'rig_world_matrix':[list(r)for r in rig.matrix_world],'bounds_world':[[min(p[k]for p in verts)for k in range(3)],[max(p[k]for p in verts)for k in range(3)]],'mesh_vertices':len(o.data.vertices),'temporary_analysis_cuff_boundary_edges_closed':n_boundary,'analysis_domain_closed':closed,'analysis_signed_volume_local':volume,'bone_probes':bones,'actual_skin_finger_branches_below_z079':components,'vertices_with_positive_weight':sum(w>0 for w in weights),'zero_weight_vertices':sum(w<=0 for w in weights),'wrong_side_weight_vertices':wrong_side,'max_positive_weight_sum_error':max((abs(w-1)for w in weights if w>0),default=None)}
 OUT.write_text(json.dumps(result,indent=2)+'\n')
 for side,row in result['sides'].items():
  print('INDEPENDENT_ANATOMY_AUDIT',side,'closed',row['analysis_domain_closed'],'weighted',row['vertices_with_positive_weight'],'/',row['mesh_vertices'],flush=True)

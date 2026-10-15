@@ -108,13 +108,22 @@ def run(dry_run=True):
  for name in('__ExternalActors__','__ExternalObjects__'):
   folder=project/'Content'/name/'Sub01Home/ActualHome'
   if folder.exists():shutil.copytree(folder,backup/name)
- new_bed=[];temp_cloth=[];new_cloth_materials={};pbr=[];geometry=[];save_attempted=False
+ new_bed=[];temp_cloth=[];import_roots=[];new_cloth_materials={};pbr=[];geometry=[];save_attempted=False
  try:
   for role,path,prefix in [('bed',ROOT/'bed-finish.glb','BFN'),('cloth',ROOT/'bedding-finish.glb','BFC')]:
    prepared=project/'Saved/PrivateImportInputs'/('bed-finish-'+role+'-'+uuid4().hex+'.glb');doc,blob,mapping=prepare(path,prepared,prefix)
+   role_before={a.get_path_name()for a in eas.get_all_level_actors()}
    manager=u.InterchangeManager.get_interchange_manager_scripted();params=u.ImportAssetParameters();params.set_editor_property('is_automated',True)
    if not manager.import_scene(dest+'/'+role,manager.create_source_data(str(prepared)),params):raise RuntimeError('Reviewed bed/cloth source import refused')
    manager.wait_until_all_tasks_done(False);added=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before];by={}
+   for a in added:
+    if a.get_path_name()not in role_before and not a.get_components_by_class(u.StaticMeshComponent):
+     kind=a.get_class().get_name();components=list(a.get_components_by_class(u.ActorComponent));parent=a.get_attach_parent_actor()
+     if kind not in('Actor','InterchangeSceneActor'):raise RuntimeError('Unexpected newly imported non-mesh actor class: '+kind)
+     if kind=='Actor'and(len(components)!=1 or components[0].get_class().get_name()!='SceneComponent'):raise RuntimeError('New generic source root must contain only one SceneComponent')
+     if parent and parent.get_path_name()in role_before:raise RuntimeError('Fresh source root attached outside exact scoped source import')
+     if any(child.get_path_name()in role_before for child in a.get_attached_actors()):raise RuntimeError('Fresh source root owns an existing actor')
+     import_roots.append(a)
    for a in added:
     a.set_actor_hidden_in_game(True)
     for c in a.get_components_by_class(u.StaticMeshComponent):
@@ -141,6 +150,18 @@ def run(dry_run=True):
   for a in temp_cloth:
    if not eas.destroy_actor(a):raise RuntimeError('Temporary material-source actor cleanup failed')
   for a,c,h,eh in old:a.set_actor_hidden_in_game(True);a.set_is_temporarily_hidden_in_editor(True);expected_after[a.get_path_name()]['hidden']=True;expected_after[a.get_path_name()]['editor_hidden']=True
+  # Retain exact approved part world transforms, then remove only newly created
+  # exact InterchangeSceneActor roots from the two scoped scene imports.
+  root_paths={a.get_path_name()for a in import_roots};part_states=snapshot(u,[a for a,c in new_bed])
+  for a,c in new_bed:
+   parent=a.get_attach_parent_actor()
+   if parent:
+    if parent.get_path_name()not in root_paths:raise RuntimeError('Imported bed part attached outside new owned roots')
+    a.detach_from_actor(u.DetachmentRule.KEEP_WORLD,u.DetachmentRule.KEEP_WORLD,u.DetachmentRule.KEEP_WORLD)
+  if snapshot(u,[a for a,c in new_bed])!=part_states:raise RuntimeError('Root detachment changed exact retained bed part world state')
+  for root in reversed(import_roots):
+   if root.get_components_by_class(u.StaticMeshComponent)or root.get_class().get_name()not in('Actor','InterchangeSceneActor')or root.get_attached_actors():raise RuntimeError('Only exact newly imported empty scene roots may be destroyed')
+   if not eas.destroy_actor(root):raise RuntimeError('Empty owned import root cleanup failed')
   for a,c in new_bed:a.set_actor_hidden_in_game(False)
   if snapshot(u,actors)!=expected_after:raise RuntimeError('Only three original visual flags and four cloth materials may change')
   live_new=[a for a in eas.get_all_level_actors()if a.get_path_name()not in before]
@@ -151,10 +172,12 @@ def run(dry_run=True):
   pending=project/'private-audit/reference-bed-finish-native.pending.json';pending.write_text(json.dumps(result,indent=2));save_attempted=True
   if not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Candidate bed map save refused')
   result['saved']=True;pending.write_text(json.dumps(result,indent=2));pending.replace(project/'private-audit/reference-bed-finish-native.json');return result
- except Exception:
+ except Exception as error:
+  refusal={'schema':'sub01.reference-bed-finish-refusal.v1','error':str(error),'added_before_rollback':[{'actor':a.get_path_name(),'class':a.get_class().get_name(),'label':a.get_actor_label(),'parent':a.get_attach_parent_actor().get_path_name()if a.get_attach_parent_actor()else None,'components':[{'path':c.get_path_name(),'class':c.get_class().get_name()}for c in a.get_components_by_class(u.ActorComponent)]}for a in eas.get_all_level_actors()if a.get_path_name()not in before]}
   for a,c,name,mat,mesh in cloth:c.set_material(0,mat)
   for a,c,h,eh in old:a.set_actor_hidden_in_game(h);a.set_is_temporarily_hidden_in_editor(eh)
   detach_added(u,eas,before)
   if snapshot(u,list(eas.get_all_level_actors()))!=before:raise RuntimeError('Bed rollback did not restore complete candidate world')
   if save_attempted and not u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level():raise RuntimeError('Candidate rollback map save refused')
+  refusal['complete_candidate_world_restored_exact']=True;(project/'private-audit/reference-bed-finish-refusal.json').write_text(json.dumps(refusal,indent=2))
   raise
