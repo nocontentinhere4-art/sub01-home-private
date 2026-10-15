@@ -8,7 +8,7 @@ from pathlib import Path
 from mathutils import Vector
 sys.path.insert(0,'/home/unreal/runtime-tools')
 from home_asset_audit import read_gltf
-ROOT=Path('/workspace/sub01-home-private');OUT=ROOT/'reference-living-tv-wall-r1/output';OUT.mkdir(parents=True,exist_ok=True)
+ROOT=Path('/workspace/sub01-home-private');OUT=ROOT/'reference-living-tv-wall-r3/output';OUT.mkdir(parents=True,exist_ok=True)
 MEDIA=ROOT/'real-media-console-source-r1/output'
 bpy.ops.wm.open_mainfile(filepath=str(MEDIA/'media-console-side.blend'))
 MATNAMES={'Oak | natural satin finish','Elastomer | feet and drawer stops','Graphite | fine powder-coated steel','Bronze | brushed satin hardware','Nickel | brushed steel hardware'}
@@ -18,6 +18,12 @@ for o in list(bpy.context.scene.objects):
  if o.type=='MESH'and o not in cabinet:bpy.data.objects.remove(o,do_unlink=True)
 anchor=bpy.data.objects['SUB01_MediaCabinetPlacement'];assert (anchor.location-Vector((-3.66,-2.05,.0328))).length<1e-6
 anchor.location=(-3.54,.05,.0328);bpy.context.view_layer.update()
+# The previous placement authored two root-level spindles after the cabinet
+# anchor existed. They must receive the same rigid delta explicitly.
+old_stems=[o for o in cabinet if o.name.startswith('Floor side adjustable steel foot spindle')];assert len(old_stems)==2
+for o in old_stems:
+ world=o.matrix_world.copy();world.translation+=Vector((.12,2.10,0));o.matrix_world=world
+bpy.context.view_layer.update()
 # All four adjustable glides now rest on the same measured 25mm floor. The
 # earlier side placement straddled a 7.75mm support difference; do not float feet.
 feet=[];new_stems=[]
@@ -32,6 +38,10 @@ for o in cabinet:
  points=[o.matrix_world@Vector(v)for v in o.bound_box];feet.append({'part':o.name,'extension_m':max(0,extension),'actual_bottom_m':min(v.z for v in points)})
 assert len(feet)==4 and len(new_stems)==2
 cabinet+=new_stems
+islands=[]
+for o in cabinet:
+ pts=[o.matrix_world@Vector(v)for v in o.bound_box];lo=[min(v[i]for v in pts)for i in range(3)];hi=[max(v[i]for v in pts)for i in range(3)];assert lo[0]>=-3.761 and hi[0]<=-3.277 and lo[1]>=-.866 and hi[1]<=.966,(o.name,lo,hi);islands.append({'name':o.name,'bounds_blender_m':[lo,hi]})
+allpts=[o.matrix_world@Vector(v)for o in cabinet for v in o.bound_box];cabinet_bounds=[[min(v[i]for v in allpts)for i in range(3)],[max(v[i]for v in allpts)for i in range(3)]];assert 1.829<cabinet_bounds[1][1]-cabinet_bounds[0][1]<1.832
 # Detach exactly at the current world pose; the original manufacturer geometry
 # remains untouched except the two newly extended real levelling pads/spindles.
 for o in cabinet:w=o.matrix_world.copy();o.parent=None;o.matrix_world=w
@@ -56,7 +66,7 @@ def board(name,bounds,material):
  o.data.materials.append(material);uv=o.data.uv_layers.active or o.data.uv_layers.new(name='Physical_610mm_veneer')
  for face in o.data.polygons:
   for li in face.loop_indices:
-   q=o.matrix_world@o.data.vertices[o.data.loops[li].vertex_index].co;uv.data[li].uv=(q.y/.61,q.z/.61)
+   q=o.matrix_world@o.data.vertices[o.data.loops[li].vertex_index].co;axis=max(range(3),key=lambda i:abs(face.normal[i]));uv.data[li].uv=((q.y if axis==0 else q.x)/.61,(q.y if axis==2 else q.z)/.61)
  parts.append(o);return o
 # Discrete plywood panels with 2mm expansion reveals; recess rear stays 7.5mm
 # behind the measured TV rear (-384.25cm). Screen plane X=-374.7cm is unchanged.
@@ -75,5 +85,5 @@ bpy.ops.object.select_all(action='DESELECT')
 for o in parts:o.select_set(True)
 bpy.ops.export_scene.gltf(filepath=str(OUT/'living-tv-wall.glb'),export_format='GLB',use_selection=True,export_cameras=False,export_lights=False)
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'living-tv-wall.blend'))
-r={'schema':'sub01.reference-living-tv-wall-source.v1','native_imported':False,'live_game_changed':False,'tv_screen_plane_x_cm':-374.7,'tv_geometry_changed':False,'tv_case_bounds_cm':[[-384.25,-92,114],[-375.75,82,216]],'recess_clear_bounds_cm':[[-385,-93,113],[-377,83,217]],'rear_tv_clearance_cm':.75,'wall_bounds_cm':[[-389,-140,2.505],[-377,140,285]],'wall_parts':len(parts),'wood_uv_repeat_m':.61,'cabinet_source':'Existing CC0 Innerscene CHANNEL183 original Blender manufacturer model','cabinet_delta_UE_cm':[12,-210,0],'cabinet_modified_only_real_leveling_glides':True,'cabinet_feet':feet,'cabinet_new_spindles':len(new_stems),'old_central_west_windows_visual_retirement_proposed':list(range(38,74)),'window_affordance_retirement_required':True,'source_photos_are_not_textures':True,'source_reference':'Owner warm wood gaming room with navy upholstery','files':{name:hashlib.sha256((OUT/name).read_bytes()).hexdigest()for name in ['living-tv-wall.glb','living-cabinet.glb','living-tv-wall.blend']}}
+r={'schema':'sub01.reference-living-tv-wall-source.v1','native_imported':False,'live_game_changed':False,'tv_screen_plane_x_cm':-374.7,'tv_geometry_changed':False,'tv_case_bounds_cm':[[-384.25,-92,114],[-375.75,82,216]],'recess_clear_bounds_cm':[[-385,-93,113],[-377,83,217]],'rear_tv_clearance_cm':.75,'wall_bounds_cm':[[-389,-140,2.505],[-377,140,285]],'wall_parts':len(parts),'wood_uv_repeat_m':.61,'cabinet_source':'Existing CC0 Innerscene CHANNEL183 original Blender manufacturer model','cabinet_delta_UE_cm':[12,-210,0],'cabinet_modified_only_real_leveling_glides':True,'cabinet_feet':feet,'cabinet_new_spindles':len(new_stems),'existing_root_spindles_rigid_delta_applied':len(old_stems),'cabinet_bounds_blender_m':cabinet_bounds,'cabinet_component_bounds':islands,'old_central_west_windows_visual_retirement_proposed':list(range(38,74)),'window_affordance_retirement_required':True,'source_photos_are_not_textures':True,'source_reference':'Owner warm wood gaming room with navy upholstery','files':{name:hashlib.sha256((OUT/name).read_bytes()).hexdigest()for name in ['living-tv-wall.glb','living-cabinet.glb','living-tv-wall.blend']}}
 (OUT/'source-report.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r),flush=True)

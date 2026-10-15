@@ -1,0 +1,53 @@
+{
+  "schema": "sub01.actual-private-living-tv-zone-checkpoint.v1",
+  "candidate_editor": {
+    "pid": 203351,
+    "start_ticks": 978985107,
+    "isolated_display": ":100"
+  },
+  "live_game_preserved": {
+    "pid": 193148,
+    "start_ticks": 978377926,
+    "backend_pid": 198702,
+    "backend_start_ticks": 978621779,
+    "input_capture_grants_unchanged": true
+  },
+  "actual_saved_import": {
+    "task": "062-living_tv_zone",
+    "finished_epoch": 1792100341.8444264,
+    "duration_s": 17.80536,
+    "parts": 14,
+    "complete_positive_triangles": 31372,
+    "source_geometry_and_actual_assigned_PBR_verified": true,
+    "candidate_map_sha256": "808ee6fbb5cd90b6e87daa3721a791948404ec41dd8dba7edfe075fc806ea7d0",
+    "wall_sha256": "828d7078120975c830db7016152936378617295c86a54cde5b6888b79940bc0a",
+    "cabinet_sha256": "63e025252dfaa4d0db66800d5b1b36de54d46b61af2bff64e878a39287985979",
+    "source_root": "/workspace/sub01-home-private/reference-living-tv-wall-r3/output",
+    "native_receipt": "private-audit/reference-living-tv-zone-native.json"
+  },
+  "scope": {
+    "tv_case_screen_plane_input_unchanged": true,
+    "new_wall_geometry_BlockAll": true,
+    "old_cabinet_exact_five_parts_retired": true,
+    "only_middle_west_window_parts_38_through_73_visually_retired": true,
+    "original_window_collision_preserved": true,
+    "new_cabinet_real_dimensions_cm": [
+      183,
+      48.2,
+      54.225
+    ],
+    "all_four_real_glides_bare_floor_clearance_mm": 0.05,
+    "approved_generated_rug_remains_hidden_NoCollision": true
+  },
+  "detected_and_fixed_before_native_import": [
+    "R2 original root-level levelling spindles failed to follow cabinet anchor; actual independent full geometry bounds375cm exposed defect. R3 explicitly moved only those two old spindles, all real islands now fit183cm footprint.",
+    "Old full-home rug61 conflicts in source955, but it was explicitly retired by user-generated-decor removal. Actual fresh native fingerprint proves exact hidden/NoCollision original state; no rug silently restored or collision ignored."
+  ],
+  "pending": [
+    "Retire obsolete table275 / install approved genuine coffee table c05a5d immediately after this guarded wall import.",
+    "Actual lit native candidate viewport review; no visual match or finished-room acceptance yet.",
+    "Improved sofa remains source work.",
+    "Controlled private Game promotion only when human input is safely released; preserve already approved anatomical Walk config/assets and exact device consumer identity."
+  ],
+  "public_changes": false
+}
