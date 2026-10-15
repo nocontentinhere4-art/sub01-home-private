@@ -11,8 +11,8 @@
     "uv": "Original authored multires loop UDIM charts; separate actual authored nail regions, neutral PBR skin, no scanned skin texture claim"
   },
   "remote_directory": "/workspace/sub01-home-private/human-base-hands-r1/canonical-hand-cuffs-r1",
-  "geometry_glb": "portable-materials-r4/canonical-anatomical-hand-cuffs-portable.glb",
-  "geometry_sha256": "7261809ae6e74bb3d1394005c029a4e9885b1dd9248c10a2ca02b1f29d110ac0",
+  "geometry_glb": "weight-transfer-r6/canonical-anatomical-hand-cuffs-final-pbr.glb",
+  "geometry_sha256": "f34829d3ae8b81dbcee30eaf2a93e84a00cb43b7c2bf54d04bb630b036cd8db8",
   "source_blend": "canonical-anatomical-hand-cuffs.blend",
   "assembly_report": "canonical-source-report.json",
   "assembly_report_sha256": "0b8dbc68eaa368ac6b8bf9a69c9d8c61b8b73188a3e8f136b2150e6f99d7a1e2",
@@ -33,9 +33,9 @@
     "all_authored_digits_retained": true,
     "no_anatomical_scaling_or_mirroring": true
   },
-  "source_body_review": "portable-materials-r4/canonical-body-review/actual-canonical-owner-upperbody-cuffs.png",
+  "source_body_review": "../final-serialized-owner65-final-pbr-Walk-review-r7/actual-serialized-owner-Walk021-firstperson.png",
   "reviewed_limitations": [
-    "Source cuff shape transition remains WIP; erroneous white/asymmetric photographed palette from unnormalized uint16 body-reference UV is corrected in R4; verify actual final assembled/native materials.",
+    "Cuff white sheen is corrected to actual measured photographed hoodie albedo; source Walk cuff/hand intersections0 over32frames. Actual native material/animation/device contact verification remains pending.",
     "Residual R9 thumb/pinky web motion intersections remain a known WIP; not zero-contact accepted.",
     "Actual first-person native house, PC/phone/controller contacts, skin material coherence and clip compatibility remain pending final assembled source and native verification."
   ],
@@ -99,7 +99,37 @@
     "max_cuff_influences": 3,
     "max_weight_sum_error": 4.156026989221573e-08,
     "method": "Distal cuff nearest genuine skin barycentric complete weight field; proximal cuff original serialized real hoodie boundary field; continuous52-to30mm axial blend. No enlargement/pose edits.",
-    "posed_contact_recheck_pending": true,
+    "posed_contact_recheck_pending": false,
     "native_imported": false
+  },
+  "source_walk_cuff_verification": {
+    "assembled_source_sha256": "04878a70440d116cd9df73fce0ab670d1540bcadd12d79b030911b3b00505e9a",
+    "clip": "SUB01_Anatomical_Walk",
+    "samples": 32,
+    "cuff_hand_triangle_candidates": {
+      "Left": 0,
+      "Right": 0
+    },
+    "remote_proof": "final-serialized-Walk-cuff-weighted-r6.json",
+    "proof_sha256": "d89e669ed3b55e7fbe616dfc7adfc940b950aea695ed59ed7e8cce8d6b20cbf9",
+    "scope": "Actual serialized source Walk cuff/hand surface condition only; global/native/prop-contact readiness still false"
+  },
+  "final_material_only_fix": {
+    "tool": "tools/fix_portable_cuff_sheen.mjs",
+    "source_weighted_sha256": "9a0f98531b66b10e9147f0c88b8682ae11375debf9d4a1026a4d58a2cbdfcbf7",
+    "source_final_sha256": "f34829d3ae8b81dbcee30eaf2a93e84a00cb43b7c2bf54d04bb630b036cd8db8",
+    "change": "Two white sheen vectors replaced with each actual photographed hoodie baseColorFactor RGB; no arbitrary black",
+    "same_entire_binary_geometry_weights_uvs_normals_and_animations": true,
+    "same_entire_json_except_two_sheen_color_vectors": true,
+    "actual_source_32frame_zero_cuff_result_inherited": true
+  },
+  "final_assembled_walk": {
+    "remote_glb": "/home/unreal/runtime-tools/bath-owner65-Walk-final-pbr.glb",
+    "sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+    "single_original65_skin": true,
+    "original25_body_bind_matrices_preserved": true,
+    "original_body_wrist_clip_channels_preserved": true,
+    "native_imported": false,
+    "still_requires_native_format_import_and_actual_frame_proof": true
   }
 }
