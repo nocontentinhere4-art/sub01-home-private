@@ -13,7 +13,14 @@ def run():
  env={'PATH':'/usr/bin:/bin','DISPLAY':':99','XAUTHORITY':str(P/'native-xauthority'),'HOME':'/home/unreal'}
  def xd(*args):return subprocess.run(['/usr/bin/xdotool',*args],env=env,capture_output=True,text=True,check=True).stdout.strip()
  windows=xd('search','--pid','215923','.').split();windows=[x for x in windows if xd('getwindowpid',x)=='215923'and'Sub01HomeLab'in xd('getwindowname',x)];assert len(windows)==1
- log=Path(json.loads((P/'playable-promotion-result.json').read_text())['new_log']);offset=log.stat().st_size
+ promotion=json.loads((P/'playable-promotion-result.json').read_text())
+ if promotion.get('status')=='original-game-preserved-after-preflight-refusal':
+  assert (promotion['rollback_pid'],promotion['rollback_start'])==(215923,979985246)
+  log=P/'playable-promotion-rollback-1792109557064465073.log'
+ else:
+  assert (promotion['new_pid'],promotion['new_start'])==(215923,979985246)
+  log=Path(promotion['new_log'])
+ offset=log.stat().st_size
  for command in ['getall PlayerController ControlRotation','getall CapsuleComponent RelativeLocation']:
   xd('windowfocus',windows[0]);xd('key','--clearmodifiers','Escape');xd('key','--clearmodifiers','grave');time.sleep(.15);xd('type','--clearmodifiers','--delay','2',command);xd('key','Return');time.sleep(.6);xd('key','Escape')
  with log.open(errors='replace')as f:f.seek(offset);text=f.read()

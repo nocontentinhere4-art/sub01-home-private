@@ -11,7 +11,7 @@ NEXT_PROJECT='/workspace/sub01-private-playable-kitchen-r1-20261016/Sub01HomeLab
 OLD_PROJECT='/workspace/sub01-private-playable-next-20261016/Sub01HomeLab/Sub01HomeLab.uproject'
 OLD_GAME=(215923,979985246);BACKEND=(217597,980033668);PC=(62755,975065256);VM=(62757,975065274)
 POLICY_SHA='7586b04ae2e5703dc650f34643900f3ad13a678ab8500e7ff3d16f757160b606'
-TEMPLATE_SHA={'prepare_minecraft_policy_refresh.py': '3399311f8fff470d939d7e038f196cde65c309c3dc688b8ec03ffceb6c4d52dc', 'apply_minecraft_policy_refresh.py': '2dc996601b982e862816ce5f21480ccd12e18896075f35b4653b79c0db92ab97'}
+TEMPLATE_SHA={'prepare_minecraft_policy_refresh_r2.py': '1c4b058e8569ae5219079300de69641099c96bc25a61747238e86f0198b8b92d', 'apply_minecraft_policy_refresh.py': '2dc996601b982e862816ce5f21480ccd12e18896075f35b4653b79c0db92ab97'}
 
 def template(name):
  raw=(HERE/name).read_bytes();assert hashlib.sha256(raw).hexdigest()==TEMPLATE_SHA[name],'Exact proven maintenance recipe required';return raw.decode()
@@ -53,7 +53,7 @@ def current_services():
  return java[0],worker[0]
 
 def preflight_before_handoff():
- java,worker=current_services();text=template('prepare_minecraft_policy_refresh.py')
+ java,worker=current_services();text=template('prepare_minecraft_policy_refresh_r2.py')
  ids={BACKEND[0]:BACKEND[1],java[0]:java[1],worker[0]:worker[1],PC[0]:PC[1],VM[0]:VM[1],OLD_GAME[0]:OLD_GAME[1]}
  text=re.sub(r'^EXPECTED=.*$', 'EXPECTED='+repr(ids),text,flags=re.M)
  for old,new in [('158534',str(BACKEND[0])),('158535',str(java[0])),('158580',str(worker[0])),('976752252',str(BACKEND[1])),('976752327',str(java[1])),('976753319',str(worker[1])),('d52edeaaedeae5d597731532f5b40a3af62334dd4f067545e2d882930013b386',POLICY_SHA)]:text=text.replace(old,new)
