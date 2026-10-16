@@ -1,0 +1,32 @@
+{
+  "schema": "sub01.phone-grasp-independent-read-only-source-audit.v1",
+  "inspected_sources": [
+    {
+      "path": "tools/device_motion_phone_bootstrap.mjs",
+      "sha256": "ed04432110e8939b4cf0c167c41a29877640821536cb9134745f7dcd58cc3168"
+    },
+    {
+      "path": "tools/device_motion_phone_compose.mjs",
+      "sha256": "33a905b1c04d7e09591b4670e6925b877382149dfd80a662f4c3903cda23e2ed"
+    },
+    {
+      "path": "tools/device_motion_phone_refine_contact.py",
+      "sha256": "43a7714540c203cc4e6189356d27d7ebdfe1effa14e6a51c8e6d535321581659"
+    },
+    {
+      "path": "tools/device_motion_phone_review_blender.py",
+      "sha256": "fa2a2442bd9f449ea3412e58f999ac8ed5cf1b6eaf320420d0434ee887a27c90"
+    },
+    {
+      "path": "docs/proposed/device-motion-integration/actual-review-status.json",
+      "sha256": "5373d8437cb830af6357b81cae873eda3e782490cdd6ab50732de9d2a40e1565"
+    }
+  ],
+  "r5_source_sha256": "35f5146fe48d57d68024d0dc5fed8ed58dae7c7686fa1e73746cf58741dce0c1",
+  "source_geometry_evaluated_by_this_audit": false,
+  "new_numeric_variant_created": false,
+  "runtime_or_input_changed": false,
+  "heavy_compute_used": false,
+  "unit_bug_demonstrated": false,
+  "preserve_mesh_rest_ibm_weights": true
+}
