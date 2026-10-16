@@ -34,7 +34,13 @@ def validate_scope(scope,project,game,editor,now):
  assert Path(project).resolve()==CANDIDATE,'Candidate scope cannot authorize the original project'
  assert scope.get('schema')=='sub01.private-next-home-candidate-scope.v1'and scope.get('candidate_project')==str(CANDIDATE)and scope.get('source_project')==str(SOURCE)
  assert scope.get('original_map_sha256')==MAP_SHA and scope.get('module_sha256')==MODULE_SHA
- assert now < scope.get('deadline_epoch',0)<=1792117175 and scope.get('no_live_promotion')is True
+ assert now < scope.get('deadline_epoch',0)<=1792203575 and scope.get('no_live_promotion')is True
+ if scope.get('deadline_epoch',0)>1792117175:
+  assert scope['deadline_epoch']==1792203575,'Only the exact explicit additional24h deadline is authorized'
+  window=trusted_json(SCOPE.parent/'runtime-window.json')
+  assert window.get('deadline_epoch')==1792203575 and scope['deadline_epoch']<=window['deadline_epoch']
+  assert window.get('extension_authorization')=='explicit-human-additional-24-hours-20261016'and window.get('stop_guards_authenticated')is True
+  assert window.get('total_cap')==100 and window.get('minimum_balance_reserve')==10
  if scope.get('live_generation')in NEXT_REVISIONS:
   identity=(scope.get('game_pid'),scope.get('game_start_ticks'));assert all(type(v)is int and v>0 for v in identity)
   assert scope.get('live_playable_project')==str(NEXT_REVISIONS[scope['live_generation']])and scope.get('live_module_sha256')==PLAYABLE_MODULE_SHA
@@ -58,7 +64,21 @@ def active_candidate_guard(project=None):
  if Path(project).resolve()!=CANDIDATE:return False
  from unreal_editor_task_queue import guard_valid
  assert guard_valid(now=time.time()+60),'Authenticated private GPU window required'
- scope=trusted_json(SCOPE);validate_scope(scope,project,proc(scope['game_pid']),proc(os.getpid()),time.time())
+ scope=trusted_json(SCOPE)
+ if scope.get('recovery_task')=='recover_observed_spawn':
+  approval=trusted_json(SCOPE.parent/'expired-runtime-recovery-approved.json');window=trusted_json(SCOPE.parent/'runtime-window.json')
+  assert scope.get('allowed_tasks')==['recover_observed_spawn']and approval['game_identity']==[225250,980289227]and not Path('/proc/225250').exists()
+  assert approval['candidate_editor_identity']==[203351,978985107]and os.getpid()==203351 and proc(203351)[0]==978985107
+  assert approval['deadline_epoch']==window['deadline_epoch']==1792203575 and window['stop_guards_authenticated']and time.time()<window['deadline_epoch']
+  candidate_hash=sha(CANDIDATE/'Content/Sub01Home/ActualHome.umap')
+  if candidate_hash not in approval['allowed_candidate_map_hashes']:
+   recovered=json.loads((CANDIDATE/'private-audit/expired-runtime-spawn-recovery.json').read_text())
+   assert recovered['only_two_playerstarts_changed']and recovered['map_before_sha256']==approval['live_map_before_sha256']and recovered['map_after_sha256']==candidate_hash
+  assert sha(Path('/home/unreal/runtime-tools/unreal_recover_observed_spawn.py'))==approval['recovery_script_sha256']
+  assert sha(KITCHEN_PLAYABLE/'Content/Sub01Home/ActualHome.umap')==approval['live_map_before_sha256']
+  assert sha(CANDIDATE/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==MODULE_SHA and sha(KITCHEN_PLAYABLE/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==PLAYABLE_MODULE_SHA
+  return True
+ validate_scope(scope,project,proc(scope['game_pid']),proc(os.getpid()),time.time())
  if scope.get('live_generation'):
   receipt=CANDIDATE/'private-audit/approved-playable-promotion.json';assert sha(receipt)==scope['promotion_receipt_sha256']
   promoted=json.loads(receipt.read_text());assert promoted.get('status')=='promoted-private-awaiting-functional-QA'and promoted.get('grants_refreshed')is True and promoted.get('first_frame_png_verified')is True

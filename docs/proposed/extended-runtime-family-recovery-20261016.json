@@ -1,0 +1,83 @@
+{
+  "schema": "sub01.expired-relative-runtime-family-restored.v1",
+  "restored_epoch": 1792118138.8884406,
+  "deadline_epoch": 1792203575,
+  "game": [
+    239638,
+    980813701
+  ],
+  "backend": [
+    239981,
+    980826789
+  ],
+  "pc": [
+    239336,
+    980770368
+  ],
+  "vm": [
+    239341,
+    980770393
+  ],
+  "root_guard": [
+    239097,
+    980716622
+  ],
+  "map_sha256": "5efc164c7bf8e11a49cec3d8c18bf9d8cb9ba19cb4fb1cd202043641b7657976",
+  "policy_sha256": "65e4f856ee8637cffab3e9127f188c4b5aecce817145a00facbce11becce823e",
+  "first_frame": "/workspace/sub01-private-playable-kitchen-r1-20261016/Sub01HomeLab/evidence/extension-recovery-first.png",
+  "first_frame_sha256": "3da82713e897b85f4d46b6aebef3560ce22c5c0e22ef4654117c10308b3082a9",
+  "public_manual_privacy_fresh": true,
+  "grants_refreshed": true,
+  "preserved_camera_error_cm": 0.0006272097440791856,
+  "last_pitch_preserved_claim": false,
+  "native_pc_animation_ready": false,
+  "actual_minecraft_input_qa": false,
+  "persistent_guest_world_files_reused": true,
+  "cause": "Root and external pod guards were extended, but the pre-existing relative timeout wrappers for X99, PC/backend/bridge and Game retained the old duration. Those services expired; Game then exited with fatal X11 IO on lost display. They were recovered from persistent state and authentic launch recipes using the extended deadline.",
+  "continuity_limit": "Original Game225250, backend226089, PC62755 and VM62757 did exit. New identities are recorded; no false same-PID continuity claim. Latest observed position preserved from tick log; exact last pitch was not available.",
+  "actual_relative_wrapper_deadlines": [
+    {
+      "role": "X99",
+      "pid": 239323,
+      "start_ticks": 980770356,
+      "duration_seconds": 86166,
+      "effective_timeout_end_epoch": 1792203573.56
+    },
+    {
+      "role": "PC and child VM",
+      "pid": 239333,
+      "start_ticks": 980770368,
+      "duration_seconds": 86131,
+      "effective_timeout_end_epoch": 1792203538.68
+    },
+    {
+      "role": "bridge",
+      "pid": 239335,
+      "start_ticks": 980770368,
+      "duration_seconds": 86131,
+      "effective_timeout_end_epoch": 1792203538.68
+    },
+    {
+      "role": "Game",
+      "pid": 239637,
+      "start_ticks": 980813701,
+      "duration_seconds": 85733,
+      "effective_timeout_end_epoch": 1792203574.01
+    },
+    {
+      "role": "backend and Java",
+      "pid": 239980,
+      "start_ticks": 980826789,
+      "duration_seconds": 85567,
+      "effective_timeout_end_epoch": 1792203538.89
+    },
+    {
+      "role": "viewer",
+      "pid": 239133,
+      "start_ticks": 980726248,
+      "duration_seconds": 86607,
+      "effective_timeout_end_epoch": 1792203573.48
+    }
+  ],
+  "verified_epoch": 1792118512.5407333
+}

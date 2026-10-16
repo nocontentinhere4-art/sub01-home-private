@@ -56,3 +56,19 @@ def test_kitchen_revision_never_accepts_prior_project_or_unknown_sibling():
  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*next_contexts(),1792109500)
  s['live_playable_project']='/workspace/sub01-private-playable-kitchen-r2/Sub01HomeLab'
  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,game,contexts()[1],1792109500)
+
+
+def test_extended_deadline_requires_authenticated_explicit_window(monkeypatch):
+ s=scope();s['deadline_epoch']=1792203575
+ good={'deadline_epoch':1792203575,'extension_authorization':'explicit-human-additional-24-hours-20261016','stop_guards_authenticated':True,'total_cap':100,'minimum_balance_reserve':10}
+ monkeypatch.setattr(m,'trusted_json',lambda _:good)
+ assert m.validate_scope(s,m.CANDIDATE,*contexts(),1792118300)
+ for key,value in [('extension_authorization','unreviewed'),('deadline_epoch',1792117175),('stop_guards_authenticated',False),('total_cap',101),('minimum_balance_reserve',9)]:
+  bad=dict(good);bad[key]=value;monkeypatch.setattr(m,'trusted_json',lambda _,bad=bad:bad)
+  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*contexts(),1792118300)
+
+def test_extended_scope_does_not_authorize_intermediate_or_further_deadlines(monkeypatch):
+ monkeypatch.setattr(m,'trusted_json',lambda _:(_ for _ in()).throw(AssertionError('must reject before reading window')))
+ for deadline in [1792117176,1792203576]:
+  s=scope();s['deadline_epoch']=deadline
+  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*contexts(),1792117000)

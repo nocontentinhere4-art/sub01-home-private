@@ -1,0 +1,88 @@
+{
+  "schema": "sub01.actual-pc-r9-input-packet-handoff.v1",
+  "actual_task_id": 127,
+  "actual_task_seconds": 3.5378905,
+  "remote_output": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/actual-pc-fixture-1792118309675871023",
+  "report_sha256": "50364a5c6df89112476326c355de48f3e146421ab82f29df8ec555fb0506e5bf",
+  "files": {
+    "visible-components.json": {
+      "sha256": "5d48c602f8e0cfa027caa50b813420ac1b7939232eb2901a43e501803f22f9c6",
+      "bytes": 98658
+    },
+    "excluded-hidden-components.json": {
+      "sha256": "8767ac5fc10f1c5917cb81fc5c9ade6c3382930c4c81b1f8fcf0f27a28bbb28e",
+      "bytes": 2234
+    },
+    "native-section-geometry.json": {
+      "sha256": "dde35eb17192992d46dd3abf7871d6b89b8d2a157cd7bce7e409c61b5fee0d8e",
+      "bytes": 5760229
+    },
+    "approved-r9-current-bindings.json": {
+      "sha256": "5111ae2cf550dfe4527333950c218903e59f0556bfb75f52bdc4b3648377bcb5",
+      "bytes": 1667482
+    }
+  },
+  "actual_visible_components": 68,
+  "hidden_labels": [
+    "Desk_hardware",
+    "Oak_desk"
+  ],
+  "nanite_enabled_component_labels": [
+    "mousepad",
+    "mouse",
+    "mesh_0",
+    "mesh_1",
+    "mesh_2",
+    "mesh_3",
+    "chair_owner_1",
+    "chair_owner_2",
+    "chair_owner_3",
+    "chair_owner_4",
+    "chair_owner_5",
+    "chair_owner_6",
+    "chair_owner_7",
+    "mouse_contact"
+  ],
+  "coordinate_frame": "UE world centimetres: vertices_world_cm already transformed; never apply worldTRS a second time",
+  "normals": "native local normals plus exact component worldTRS; inverse-transpose normalization needed for world normals",
+  "source_to_scene_4x4_verified": false,
+  "r9_source": {
+    "path": "/home/unreal/runtime-tools/bath-owner65-Walk-final-pbr.glb",
+    "sha256": "fd2f3b8e521b99f8c02d142d1b80f9df0fe3d37bd762b2ca587e0408d53c9f0e",
+    "role": "source Walk and serialized anatomical rest/skin basis; not Typing",
+    "native_reference_pose_exported": false
+  },
+  "native_r9_receipts": {
+    "anatomical-owner-fbx-candidate.json": {
+      "path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/anatomical-owner-fbx-candidate.json",
+      "sha256": "f97b1c2ee1941b520f37bc78fa07d64e4351e531ad34ec6244ee52590dbdeb78"
+    },
+    "anatomical-body-pose-audit.json": {
+      "path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/anatomical-body-pose-audit.json",
+      "sha256": "3634ff18576fe691b269e91e1a76cf68d5a0fac45ef625822e757a6cde8c017f"
+    },
+    "anatomical-source-material-binding.json": {
+      "path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/anatomical-source-material-binding.json",
+      "sha256": "94efae04c5cfa6504cd9d198efbd8462e1c258e8e36bb24f83e66c870f469931"
+    },
+    "anatomical-idle-candidate.json": {
+      "path": "/workspace/sub01-private-candidate-20261015/Sub01HomeLab/private-audit/anatomical-idle-candidate.json",
+      "sha256": "3a5d0ff86fd473f54285272b888cf42055bb74ddaafff344e4d25609a8b7c60b"
+    }
+  },
+  "effective_validated_roles": [
+    "Walk",
+    "Idle"
+  ],
+  "compatible_current_typing_clip": null,
+  "typing_role_explanation": "TypingClipPath empty and DeskTyping absent from current validated configuration. Current per-frame live role is not queried. Real Walk/Idle local transforms supplied without relabelling. New R9-compatible finger animation is permitted by main, while mesh/rest/weights/IBM/material identity must remain.",
+  "visibility_scope": "actual saved candidate world with exactly same UMAP bytes as live; no live actor queries or input",
+  "world_unchanged": true,
+  "input_delivered": false,
+  "camera_changed": false,
+  "source_full_geometry_verified": false,
+  "collision_render_triangle_equivalence_verified": false,
+  "contact_ready": false,
+  "typing_ready": false,
+  "native_extractor_source_sha256": "e6cff19f78c30e9b0407e08e81c5f94e1d88e3bbaf36b05b200821ad4ea24558"
+}
