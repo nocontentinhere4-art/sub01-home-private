@@ -5,7 +5,7 @@ def run():
  import unreal as u
  from private_home_candidate_scope import active_candidate_guard,CANDIDATE,trusted_json
  from unreal_import_reference_entry import snapshot
- assert active_candidate_guard();approved=trusted_json(Path('/run/sub01-home-private/next-pawn-pose-approved.json'));assert approved['native_pid']==209503 and approved['native_start_ticks']==979714171 
+ assert active_candidate_guard();approved=trusted_json(Path('/run/sub01-home-private/next-pawn-pose-approved.json'));assert approved['native_pid']==215923 and approved['native_start_ticks']==979985246 
  LOCATION=approved['location'];ROTATION=approved['rotation'];assert len(LOCATION)==len(ROTATION)==3
  import math
  assert all(isinstance(v,(float,int))and math.isfinite(v)for v in LOCATION+ROTATION)and max(abs(v)for v in LOCATION)<2000
@@ -22,7 +22,7 @@ def run():
   after=snapshot(u,actors);check=copy.deepcopy(after)
   for a in starts:
    key=a.get_path_name();assert all(abs(after[key]['transform']['translation'][i]-LOCATION[i])<1e-6 for i in range(3));check[key]=before[key]
-  assert check==before and active_candidate_guard();assert u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level();r={'schema':'sub01.next-private-spawn-pose-preserved.v1','saved':True,'source_game_identity':[209503,979714171],'location':LOCATION,'rotation':ROTATION,'only_existing_two_playerstarts_changed':True,'before':{a.get_path_name():before[a.get_path_name()]for a in starts},'after':{a.get_path_name():after[a.get_path_name()]for a in starts},'backup':str(backup),'map_sha256':hashlib.sha256((CANDIDATE/'Content/Sub01Home/ActualHome.umap').read_bytes()).hexdigest(),'epoch':time.time()};(CANDIDATE/'private-audit/next-spawn-pose-preserved.json').write_text(json.dumps(r,indent=2)+'\n');return r
+  assert check==before and active_candidate_guard();assert u.get_editor_subsystem(u.LevelEditorSubsystem).save_current_level();r={'schema':'sub01.next-private-spawn-pose-preserved.v1','saved':True,'source_game_identity':[215923,979985246],'location':LOCATION,'rotation':ROTATION,'only_existing_two_playerstarts_changed':True,'before':{a.get_path_name():before[a.get_path_name()]for a in starts},'after':{a.get_path_name():after[a.get_path_name()]for a in starts},'backup':str(backup),'map_sha256':hashlib.sha256((CANDIDATE/'Content/Sub01Home/ActualHome.umap').read_bytes()).hexdigest(),'epoch':time.time()};(CANDIDATE/'private-audit/next-spawn-pose-preserved.json').write_text(json.dumps(r,indent=2)+'\n');return r
  except Exception:
   for a in starts:
    t=before[a.get_path_name()]['transform'];tr=u.Transform();tr.translation=u.Vector(*t['translation']);tr.rotation=u.Quat(*t['rotation']);tr.scale3d=u.Vector(*t['scale']);a.set_actor_transform(tr,False,True)
