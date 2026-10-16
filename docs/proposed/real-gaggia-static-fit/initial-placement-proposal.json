@@ -1,0 +1,59 @@
+{
+  "schema": "sub01.real-gaggia-static-placement-proposal.v1",
+  "status": "SOURCE_PROPOSAL_ONLY; derivative cup and complete geometry not yet independently accepted",
+  "original_source_sha256": "72acd995c06761ea7470f828c080bedc77d528a61232533dc0240877b5efc098",
+  "actual_original_complete_source_bounds_blender_m": [
+    [
+      -0.019012130796909332,
+      -0.10166539996862411,
+      8.106233195803725e-08
+    ],
+    [
+      0.0654403567314148,
+      -0.03938111290335655,
+      0.08611218631267548
+    ]
+  ],
+  "external_original_scale_by_height300mm": 3.483830747463966,
+  "artist_dimensions_after_height_normalization_cm": {
+    "width": 21.698791436185132,
+    "complete_depth_with_portafilter": 29.421817275099272,
+    "height": 30
+  },
+  "official_manual_numeric_dimensions": [
+    210,
+    300,
+    280
+  ],
+  "manual_units_caveat": "Printed cm label inconsistent with millimetre numeric size; height300mm chosen, no manufacturerCADaccuracy claimed",
+  "proposed_full_bounds_UEcm": [
+    [
+      -134.89939571809256,
+      -360.71090863754966,
+      92.251
+    ],
+    [
+      -113.20060428190743,
+      -331.28909136245034,
+      122.251
+    ]
+  ],
+  "proposed_full_bounds_center_XY_UEcm": [
+    -124.05,
+    -346.0
+  ],
+  "external_rotation_blender_Z_degrees": -90,
+  "external_rotation_UE_yaw_degrees": 90,
+  "original_source_external_root_translation_blender_m": [
+    -0.9948089108170108,
+    3.540874040530417,
+    0.9225097175925555
+  ],
+  "derivative_already_scaled_warning": "Idle derivative already contains height normalization; do not apply original source scale twice. Recompute exact derivative bounds after cup reposition before finalfreeze.",
+  "lateral_AABB_gap_to_actual_white_plant_cm": 16.566487155442587,
+  "lateral_AABB_gap_to_actual_bowl_cm": 12.446521029954312,
+  "source_triangle_intersection_test_passed": false,
+  "base_contact_measured": false,
+  "empty_cup_support_verified": false,
+  "native_changed": false
+}
