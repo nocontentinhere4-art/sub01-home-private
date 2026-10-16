@@ -1,0 +1,52 @@
+{
+  "schema": "sub01.private-playable-promotion.v1",
+  "started_epoch": 1792112588.0526054,
+  "old_pid": 215923,
+  "old_start": 979985246,
+  "old_project": "/workspace/sub01-private-playable-next-20261016/Sub01HomeLab",
+  "new_project": "/workspace/sub01-private-playable-kitchen-r1-20261016/Sub01HomeLab",
+  "map_sha256": "bdd37971064ec9f66ec2d54ce3f6b0f224323321a17e2422fdfb47992f721894",
+  "module_sha256": "e571937b708c8e860d05373f1d3de428bc22a4c547cf80ded1ef80db706ace96",
+  "status": "promoted-private-awaiting-functional-QA",
+  "environment_source": "verified normal-game launcher recipe; no proc environ access",
+  "backend_restarted": true,
+  "pod_restarted": false,
+  "public_changes": false,
+  "device_snapshot_directory": "/workspace/sub01-home-private/minecraft-policy-refresh-20261016T010308Z",
+  "accepted_inputs_unchanged_during_saves": 4,
+  "new_wrapper_pid": 225248,
+  "new_log": "/home/unreal/.sub01-private/playable-promotion-new-1792112596881864019.log",
+  "first_frame": "/workspace/sub01-private-playable-kitchen-r1-20261016/Sub01HomeLab/evidence/promotion-first-new.png",
+  "first_frame_sha256": "c9b132aaa0f88135e08e4e5b4c9786d419b6aa1b1fdc03344b6d7af5b69986e0",
+  "first_frame_png_verified": true,
+  "preserved_camera_error_cm": 4.263256414560601e-14,
+  "new_pid": 225250,
+  "new_start": 980289227,
+  "grants_refreshed": true,
+  "minecraft_consumer_policy": {
+    "exact_consumer_project_pid_start_verified": true,
+    "backend_pid": 226089,
+    "backend_start_ticks": 980313355,
+    "policy_sha256": "6ad5321aaacf9ed144518d46211cbc516fdd825352d6a6ad0e30f7d72a29a258",
+    "backend_started_after_policy_install": true,
+    "functional_input_frame_QA_still_required": true
+  },
+  "finished_epoch": 1792112865.771373,
+  "devices_operational": false,
+  "actual_view_personally_reviewed": true,
+  "actual_first_frame_local": "out/house-evidence/live-kitchen-r2-first-225250.png",
+  "current_scope_refreshed": true,
+  "read_only_motion_inventory": "private-audit/device-motion-scene-inventory-1792113072090967669.json",
+  "minecraft_passive_status_after_restore": {
+    "active": false,
+    "connected": false,
+    "frame_kind": "initial_idle",
+    "functional_QA": false
+  },
+  "pc_vm_identities_preserved": [
+    62755,
+    62757
+  ],
+  "orientation_runtime_readback_performed": false,
+  "no_post_restore_game_input_from_native_owner": true
+}
