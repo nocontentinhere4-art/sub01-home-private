@@ -1,0 +1,35 @@
+{
+  "schema": "sub01.genuine-gaggia-final-static-source-packet.v1",
+  "source_path": "/workspace/sub01-home-private/real-gaggia-gran-iraida-r1/placed-idle-r4/gaggia-gran-idle-placed.glb",
+  "source_sha256": "5fdf89fbf47a5a8851a84183ac5526a94ac153f12360e4e2d89bd95fb14fdba2",
+  "proof_remote_path": "/workspace/sub01-home-private/real-gaggia-gran-iraida-r1/placed-idle-r4/independent-fit.json",
+  "proof_sha256": "f788be9ca09691db69b39806ea988ba2a8f2fc71a8c4a117f17ebb53b624967d",
+  "original_source_sha256": "72acd995c06761ea7470f828c080bedc77d528a61232533dc0240877b5efc098",
+  "parts": 36,
+  "triangles": 54529,
+  "retire_only_original_nodes": [
+    267,
+    268,
+    269,
+    270,
+    271,
+    272
+  ],
+  "exact_cup_only_rigid_delta_UEcm": [
+    0,
+    0,
+    0.014916015625000001
+  ],
+  "entire_binary_and_all_other_json_exact": true,
+  "final_external_intersections": [],
+  "final_cup_vs_other35_parts_intersections": [],
+  "numerical_static_placement_accepted": true,
+  "actual_touch_verified": false,
+  "dynamic_stability_verified": false,
+  "native_imported": false,
+  "actual_interaction_verified": false,
+  "not_manufacturer_CAD": true,
+  "copyright": "iraida, CC-BY-4.0, original+derivative attribution in Bath sourcepacket; not CC0",
+  "before_failed_source_report": "failed-cup312-source-fit.json",
+  "before_failed_source_report_unchanged": true
+}

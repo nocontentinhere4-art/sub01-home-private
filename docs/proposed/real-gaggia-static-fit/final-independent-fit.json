@@ -1,0 +1,203 @@
+{
+  "schema": "sub01.genuine-gaggia-independent-fit.v1",
+  "source_sha256": "5fdf89fbf47a5a8851a84183ac5526a94ac153f12360e4e2d89bd95fb14fdba2",
+  "original_source_sha256": "72acd995c06761ea7470f828c080bedc77d528a61232533dc0240877b5efc098",
+  "parts": 36,
+  "triangles": 54529,
+  "onlyRetiredOriginalSourceNodes": [
+    267,
+    268,
+    269,
+    270,
+    271,
+    272
+  ],
+  "officialHeightCalibrationOnlyM": 0.3,
+  "notManufacturerCAD": true,
+  "actualCompleteBoundsUEcm": [
+    [
+      -134.89939880371094,
+      -360.7109069824219,
+      92.25100708007812
+    ],
+    [
+      -113.20059967041016,
+      -331.2890625,
+      122.25100708007812
+    ]
+  ],
+  "sourceFrontDirectionUE": "+Y",
+  "externalFullSourceIntersections": [],
+  "currentWhitePlantSourceSHA": "216360732abb3e660e499d4aa5fefbdb7764a724c1f6d8220649b875464f26af",
+  "currentKitchenPropsSourceSHA": "966f2798427c6726cbdca404f73792474e69349016662dc8f1e18c084b363626",
+  "base": {
+    "actualLowestVertices": 216,
+    "actualCounterGapCm": {
+      "min": 0.001007080078125,
+      "max": 0.001007080078125
+    },
+    "passed": true
+  },
+  "cup": {
+    "sourceName": "polySurface69_Kruzhka_2_0",
+    "sourceColor": "blue per root actual source review; not inferred from meshname",
+    "grateSourceName": "polySurface44_Metallic_0",
+    "footRingProbeBandCm": 0.05,
+    "ringProbes": 781,
+    "actualGrateTopHits": 501,
+    "perforationMisses": 280,
+    "actualGrateGapCm": {
+      "min": 0.00099945068359375,
+      "max": 0.0159149169921875
+    },
+    "sourceContactBandCm": 0.025,
+    "contactPoints": 501,
+    "contactHullXYcm": [
+      [
+        -127.00757598876953,
+        -344.5718994140625
+      ],
+      [
+        -126.34135437011719,
+        -346.10418701171875
+      ],
+      [
+        -126.12515258789062,
+        -346.2314758300781
+      ],
+      [
+        -125.89173126220703,
+        -346.323486328125
+      ],
+      [
+        -125.64677429199219,
+        -346.37774658203125
+      ],
+      [
+        -125.39634704589844,
+        -346.3930969238281
+      ],
+      [
+        -125.1466064453125,
+        -346.3690185546875
+      ],
+      [
+        -124.90369415283203,
+        -346.30621337890625
+      ],
+      [
+        -124.67362213134766,
+        -346.2061462402344
+      ],
+      [
+        -123.8255615234375,
+        -344.7665100097656
+      ],
+      [
+        -123.84965515136719,
+        -344.51678466796875
+      ],
+      [
+        -123.91243743896484,
+        -344.27386474609375
+      ],
+      [
+        -124.01251983642578,
+        -344.0437927246094
+      ],
+      [
+        -124.14729309082031,
+        -343.8321533203125
+      ],
+      [
+        -124.3135757446289,
+        -343.6442565917969
+      ],
+      [
+        -124.50714874267578,
+        -343.4846496582031
+      ],
+      [
+        -124.72335052490234,
+        -343.3573303222656
+      ],
+      [
+        -124.95677185058594,
+        -343.2653503417969
+      ],
+      [
+        -125.20172882080078,
+        -343.2110900878906
+      ],
+      [
+        -125.45215606689453,
+        -343.19573974609375
+      ],
+      [
+        -125.70189666748047,
+        -343.2198181152344
+      ],
+      [
+        -125.94481658935547,
+        -343.2825927734375
+      ],
+      [
+        -126.17488861083984,
+        -343.3826904296875
+      ],
+      [
+        -126.38651275634766,
+        -343.5174560546875
+      ],
+      [
+        -126.57439422607422,
+        -343.6837463378906
+      ],
+      [
+        -126.73401641845703,
+        -343.8773193359375
+      ],
+      [
+        -126.861328125,
+        -344.093505859375
+      ],
+      [
+        -126.95331573486328,
+        -344.3269348144531
+      ]
+    ],
+    "cupCompleteSourceIntersectionFindings": [],
+    "closedCeramicMesh": true,
+    "weldedBoundaryEdges": 0,
+    "weldedNonmanifoldEdges": 0,
+    "signedCeramicVolumeCm3": -21.35116139984407,
+    "uniformCeramicMassCOMcm": [
+      -125.20475006103516,
+      -344.6298522949219,
+      98.93610382080078
+    ],
+    "gravityCOMInsideContactHull": true,
+    "minimumSupportPolygonMarginCm": 1.2576930633284573,
+    "numericalStaticPlacementAccepted": true,
+    "dynamicStabilityVerified": false
+  },
+  "passed": true,
+  "nativeChanged": false,
+  "nativeInteractionAccepted": false,
+  "ok": true,
+  "intersections": [],
+  "cupSupportAccepted": true,
+  "cupSupportAcceptanceType": "Root-reviewed numerical-static projection support with source gaps<=0.25mm; no actual touch/dynamic claim",
+  "cupActualTouchVerified": false,
+  "cupDynamicStabilityVerified": false,
+  "finalSerializedOnlyCupTranslationChanged": true,
+  "entireOriginalBinaryAndAllOtherJsonExact": true,
+  "exactCupOnlyRigidDeltaUEcm": [
+    0,
+    0,
+    0.014916015625000001
+  ],
+  "failedBeforeSourceSHA256": "9ce39013852ae7ce44541f86eaa662cb0c50dbb1e31eb3f7885f703e8db78acd",
+  "failedBeforeCupGratePairs": 312,
+  "failedBeforeFitReportUnchanged": true
+}

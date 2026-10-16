@@ -1,0 +1,27 @@
+{
+  "schema": "sub01.gaggia-cup-one-pass-actual-triangle-clearance.v1",
+  "source_sha256": "9ce39013852ae7ce44541f86eaa662cb0c50dbb1e31eb3f7885f703e8db78acd",
+  "beforeFullBVHIntersectionPairs": 312,
+  "projectedCandidateTrianglePairs": 17517,
+  "overlappingProjectionPairs": 2932,
+  "maxActualGrateMinusCupSurfaceCm": 0.013916015625,
+  "minimumRigidCupLiftWith10MicrometreSeparationCm": 0.014916015625000001,
+  "extremalActualSurfaceWitness": {
+    "cupFace": 3714,
+    "grateFace": 3026,
+    "XYcm": [
+      -125.6576919555664,
+      -343.47052001953125
+    ],
+    "cupSurfaceZcm": 95.91092681884766,
+    "grateSurfaceZcm": 95.92484283447266
+  },
+  "exactVerticalProjectedFacesExcludedFromPlaneFit": {
+    "cup": 0,
+    "grate": 1576
+  },
+  "afterWholeCupGrateFullBVHPairs": 0,
+  "runtimeSeconds": 0.11359822936356068,
+  "sourceChanged": false,
+  "staticSupportAfterLiftVerified": false
+}
