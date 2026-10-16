@@ -16,6 +16,9 @@ PLAYABLE_MODULE_SHA='e571937b708c8e860d05373f1d3de428bc22a4c547cf80ded1ef80db706
 PLAYABLE_IDENTITY=(193148,978377926)
 NEXT_PLAYABLE=Path('/workspace/sub01-private-playable-next-20261016/Sub01HomeLab')
 NEXT_GENERATION='playable-next-20261016-e571937b708c'
+KITCHEN_PLAYABLE=Path('/workspace/sub01-private-playable-kitchen-r1-20261016/Sub01HomeLab')
+KITCHEN_GENERATION='playable-kitchen-r1-20261016-e571937b708c'
+NEXT_REVISIONS={NEXT_GENERATION:NEXT_PLAYABLE,KITCHEN_GENERATION:KITCHEN_PLAYABLE}
 HOME_SHA='9556495fa81632cf0afd17212c142cbda48d9531d303acf961d28c8ce34e481b'
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def trusted_json(path):
@@ -32,11 +35,11 @@ def validate_scope(scope,project,game,editor,now):
  assert scope.get('schema')=='sub01.private-next-home-candidate-scope.v1'and scope.get('candidate_project')==str(CANDIDATE)and scope.get('source_project')==str(SOURCE)
  assert scope.get('original_map_sha256')==MAP_SHA and scope.get('module_sha256')==MODULE_SHA
  assert now < scope.get('deadline_epoch',0)<=1792117175 and scope.get('no_live_promotion')is True
- if scope.get('live_generation')==NEXT_GENERATION:
+ if scope.get('live_generation')in NEXT_REVISIONS:
   identity=(scope.get('game_pid'),scope.get('game_start_ticks'));assert all(type(v)is int and v>0 for v in identity)
-  assert scope.get('live_playable_project')==str(NEXT_PLAYABLE)and scope.get('live_module_sha256')==PLAYABLE_MODULE_SHA
+  assert scope.get('live_playable_project')==str(NEXT_REVISIONS[scope['live_generation']])and scope.get('live_module_sha256')==PLAYABLE_MODULE_SHA
   assert isinstance(scope.get('live_map_sha256'),str)and len(scope['live_map_sha256'])==64
-  assert game[0]==identity[1]and game[1]!='Z'and str(NEXT_PLAYABLE/'Sub01HomeLab.uproject').encode()in game[2]and b'-game'in game[2]
+  assert game[0]==identity[1]and game[1]!='Z'and str(NEXT_REVISIONS[scope['live_generation']]/'Sub01HomeLab.uproject').encode()in game[2]and b'-game'in game[2]
  elif scope.get('live_generation')=='playable-14acd9d355c6-e571937b708c':
   assert (scope.get('game_pid'),scope.get('game_start_ticks'))==PLAYABLE_IDENTITY
   assert scope.get('live_playable_project')==str(PLAYABLE)and scope.get('live_map_sha256')==PLAYABLE_MAP_SHA and scope.get('live_module_sha256')==PLAYABLE_MODULE_SHA
@@ -59,12 +62,12 @@ def active_candidate_guard(project=None):
  if scope.get('live_generation'):
   receipt=CANDIDATE/'private-audit/approved-playable-promotion.json';assert sha(receipt)==scope['promotion_receipt_sha256']
   promoted=json.loads(receipt.read_text());assert promoted.get('status')=='promoted-private-awaiting-functional-QA'and promoted.get('grants_refreshed')is True and promoted.get('first_frame_png_verified')is True
-  expected_project=NEXT_PLAYABLE if scope.get('live_generation')==NEXT_GENERATION else PLAYABLE
-  expected_identity=(scope['game_pid'],scope['game_start_ticks'])if scope.get('live_generation')==NEXT_GENERATION else PLAYABLE_IDENTITY
-  expected_map=scope['live_map_sha256']if scope.get('live_generation')==NEXT_GENERATION else PLAYABLE_MAP_SHA
-  if scope.get('live_generation')==NEXT_GENERATION:
-   copy_path=NEXT_PLAYABLE/'private-audit/playable-copy.json';assert sha(copy_path)==scope['live_copy_receipt_sha256']
-   sealed=json.loads(copy_path.read_text());assert sealed['playable_project']==str(NEXT_PLAYABLE)and sealed['map_sha256']==expected_map and sealed['module_sha256']==PLAYABLE_MODULE_SHA and sealed['all_file_hashes_verified']and sealed['independent_writable_copies']
+  expected_project=NEXT_REVISIONS[scope['live_generation']] if scope.get('live_generation')in NEXT_REVISIONS else PLAYABLE
+  expected_identity=(scope['game_pid'],scope['game_start_ticks'])if scope.get('live_generation')in NEXT_REVISIONS else PLAYABLE_IDENTITY
+  expected_map=scope['live_map_sha256']if scope.get('live_generation')in NEXT_REVISIONS else PLAYABLE_MAP_SHA
+  if scope.get('live_generation')in NEXT_REVISIONS:
+   copy_path=expected_project/'private-audit/playable-copy.json';assert sha(copy_path)==scope['live_copy_receipt_sha256']
+   sealed=json.loads(copy_path.read_text());assert sealed['playable_project']==str(expected_project)and sealed['map_sha256']==expected_map and sealed['module_sha256']==PLAYABLE_MODULE_SHA and sealed['all_file_hashes_verified']and sealed['independent_writable_copies']
   assert (promoted.get('new_pid'),promoted.get('new_start'))==expected_identity and promoted.get('new_project')==str(expected_project)and promoted.get('map_sha256')==expected_map and promoted.get('module_sha256')==PLAYABLE_MODULE_SHA
   assert sha(expected_project/'Content/Sub01Home/ActualHome.umap')==expected_map and sha(expected_project/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==PLAYABLE_MODULE_SHA,'Promoted live home must remain immutable'
  assert sha(SOURCE/'Content/Sub01Home/ActualHome.umap')==MAP_SHA and sha(SOURCE/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==MODULE_SHA,'Live home map/module must remain unchanged'

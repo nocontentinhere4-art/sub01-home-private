@@ -48,3 +48,11 @@ def test_next_sealed_project_uses_exact_new_process_and_never_adopts_old():
 def test_next_revision_identity_cannot_broaden_project_or_module(field,value):
  s=next_scope();s[field]=value
  with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*next_contexts(),1792106200)
+
+def test_kitchen_revision_never_accepts_prior_project_or_unknown_sibling():
+ s=next_scope();s.update(live_generation=m.KITCHEN_GENERATION,live_playable_project=str(m.KITCHEN_PLAYABLE))
+ game=(999999999,'S',[str(m.KITCHEN_PLAYABLE/'Sub01HomeLab.uproject').encode(),b'-game'])
+ assert m.validate_scope(s,m.CANDIDATE,game,contexts()[1],1792109500)
+ with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,*next_contexts(),1792109500)
+ s['live_playable_project']='/workspace/sub01-private-playable-kitchen-r2/Sub01HomeLab'
+ with pytest.raises(AssertionError):m.validate_scope(s,m.CANDIDATE,game,contexts()[1],1792109500)
