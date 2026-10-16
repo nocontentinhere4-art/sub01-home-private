@@ -1,0 +1,43 @@
+{
+  "schema": "sub01.authorized-repaired-native-capture-verification.v1",
+  "verified_epoch": 1792116712.1510446,
+  "output": "/workspace/sub01-private-wholeclip-diagnostic-20261016/Sub01WholeClipWitness/capture-output-human-world-repair",
+  "files": {
+    "capture-report.json": {
+      "sha256": "00eae08b3da147af836290f3f47c71219034d05403006555660f327b768ec7f6",
+      "bytes": 3737064
+    },
+    "posed-position-normal-f32le.bin": {
+      "sha256": "a619cded35ccf26a3b1669484da5607a0f9a40db3a2829eb39b03572c1f28a7a",
+      "bytes": 265282568
+    },
+    "static-witness.json": {
+      "sha256": "c49758fa32c804281d2732b3932513b52914698a133501bc7e9003e186921ba9",
+      "bytes": 61889184
+    }
+  },
+  "samples": 152,
+  "selected_vertices": 72720,
+  "distinct_evaluation_stamps": 152,
+  "distinct_component_pose": true,
+  "asset_hashes_unchanged": 24,
+  "live_identities_unchanged": [
+    [
+      145,
+      972144905
+    ],
+    [
+      225250,
+      980289227
+    ],
+    [
+      203351,
+      978985107
+    ]
+  ],
+  "candidate_and_live_map_unchanged": true,
+  "contact_ready": false,
+  "native_seat_ready": false,
+  "live_demo_complete": false,
+  "module_sha256": "a8d107a9246a999f4d371bb12ac8f958f2cdc48abc01a7b58463f734158891d1"
+}

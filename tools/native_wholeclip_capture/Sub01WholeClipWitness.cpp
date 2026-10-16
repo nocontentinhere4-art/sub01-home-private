@@ -38,7 +38,9 @@ FString USub01WholeClipWitnessLibrary::Capture(const FString& Manifest,const FSt
  const FSkeletalMeshModel* Imported=Mesh->GetImportedModel();if(!Imported||Imported->LODModels.Num()!=1)return Fail(TEXT("actual imported LOD0 required"));const FSkeletalMeshLODModel& LOD=Imported->LODModels[0];
  const FReferenceSkeleton& Ref=Mesh->GetRefSkeleton();const auto& Inv=Mesh->GetRefBasesInvMatrix();if(Inv.Num()!=Ref.GetNum())return Fail(TEXT("incomplete inverse bind set"));
  UWorld* W=UWorld::CreateWorld(EWorldType::EditorPreview,false,FName(TEXT("Sub01OfflineSkinCapture")));
- if(!W)return Fail(TEXT("transient world allocation failed"));W->InitializeNewWorld(UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false).SetTransactional(false));
+ // CreateWorld initializes this preview world; a second InitializeNewWorld
+ // creates duplicate WorldSettings and aborts before the first skin sample.
+ if(!W)return Fail(TEXT("transient world allocation failed"));
  USkeletalMeshComponent* C=NewObject<USkeletalMeshComponent>(W);C->SetSkeletalMeshAsset(Mesh);C->SetAnimationMode(EAnimationMode::AnimationSingleNode);C->SetWorldTransform(FTransform::Identity);C->RegisterComponentWithWorld(W);C->PlayAnimation(Clip,false);C->SetPlayRate(0);C->SetForcedLOD(1);C->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;C->SetUpdateAnimationInEditor(true);
  auto Cleanup=[&](){C->UnregisterComponent();C->DestroyComponent();W->DestroyWorld(false);};
  TArray<FSelected> Selected;TArray<TSharedPtr<FJsonValue>> Verts,Bones,Triangles;int32 Counts[5]={0,0,0,0,0};const TCHAR* Regions[5]={TEXT("hips"),TEXT("left_up_leg"),TEXT("right_up_leg"),TEXT("left_foot_toe"),TEXT("right_foot_toe")};
