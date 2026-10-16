@@ -478,5 +478,49 @@
   "meta_fields_differing": [
    "plantar_witness.file"
   ]
- }
+ },
+ "joint_world_witness": {
+  "file": "docs/proposed/seat-fit-source-handoff/seat-fit-source-joint-world-witness.npz",
+  "sha256": "59ed6ebc45ee9ede8a851e5f428ad2d7011dd13310e752e5a293ace042bccba6",
+  "bytes": 1787847,
+  "contents": "joint_world (301,65,4,4) float64, times (301,), names (65,), parents (65,), meta_nonpath (JSON string)",
+  "joint_world_data_sha256": "ba0b18f174f01a0ef2b8888ac6a5965d04e00a0b2b2eb5ea4ddb4488bf78c991",
+  "nature": "offline geometry only: captured joint world matrices (glTF metres) of the PUBLIC repo clip web/room/mh_mx/room_mx_typing.glb at 301 fixed times; no runtime, device, credential or personal data",
+  "derivation": {
+   "function": "tools/export_seat_fit_source.py joint_worlds(): for t in TIMES: life_gltf.world_pose(clip, clip.animation(), t); out[f,k] = trs(*world[node(k)])",
+   "TIMES": "tuple(3 + i/60 for i in range(301)) seconds",
+   "joint_order": "names array (owner skin joint order, mixamorig prefix stripped)",
+   "clip": {
+    "path": "web/room/mh_mx/room_mx_typing.glb",
+    "sha256": "d2d0a83f165a52e36304720be3cef975351baa46d1fa584f97e7fe45d44ee696",
+    "meshopt_compressed": false,
+    "note": "used directly, no node decode"
+   },
+   "gltf_sampler": {
+    "path": "tools/life_gltf.py",
+    "sha256": "d9d271e9dff76412448f340000014adfd85aceffcf2500e822055342793f32e5",
+    "last_commit": "d6f386febe6867d271ed8c5c506232886ba6707d",
+    "on_origin_main": false
+   },
+   "exporter": {
+    "path": "tools/export_seat_fit_source.py",
+    "sha256": "fae3e6a70f87690f6c6422464b01ffff0cc5fcf8dbd9682fc68f01dcff4e5353",
+    "on_origin_main": false
+   },
+   "environment": {
+    "python": "3.13.16",
+    "numpy": "2.5.3",
+    "node": "v22.22.0 (only for the owner meshopt decode; not used for joint_world)"
+   }
+  },
+  "reproduced": "2026-10-16 01:00 UTC with an EMPTY decode cache: joint_world data sha ba0b18f1\u2026 byte-identical; all 47 numeric arrays identical",
+  "likely_causes_of_561c0c8b": [
+   "a different glTF animation sampler: tools/life_gltf.py is branch-only (not on origin/main); a different interpolation (e.g. slerp vs nlerp, step/cubic handling, time clamping) or TRS composition changes joint_world at float level while the skin arrays (from the owner GLB) stay equal",
+   "different sample times (TIMES must be exactly 3 + i/60, i=0..300, float64)",
+   "a different clip file (check sha d2d0a83f\u2026)",
+   "float accumulation differences (numpy/BLAS version) would usually show as ~1e-15 level deltas; compare max |delta| to tell a sampler difference from rounding"
+  ],
+  "not_asserted": "no equivalence between 561c0c8b and ba0b18f1 is asserted; readiness unchanged (false)"
+ },
+ "meta_difference_note": "Stored meta differs from a re-export only in plantar_witness.file (absolute vs relative path). meta_nonpath (sha above) normalises that path; if the animation chat's non-path meta still differs, the fields to compare are times, body_cm, body_yaw, counts, rules and plantar_witness.match_error_cm (computed against the posed owner, so they change if joint_world changes)."
 }
