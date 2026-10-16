@@ -1,0 +1,92 @@
+{
+  "old_guard": [
+    145,
+    972144905
+  ],
+  "new_guard": [
+    239097,
+    980716622
+  ],
+  "deadline_epoch": 1792203575,
+  "actual_balance": 59.9507010969,
+  "conservative_spent_upper": 31.724434922800008,
+  "remaining_home_pod_cost_upper": 21.435196975774232,
+  "conservative_total_upper": 53.15963189857424,
+  "cap": 100,
+  "reserve": 10,
+  "window_sha256": "6d214524d3809066830bcefaaed35f7233c4a9263ad0444c12a8af285e04d9da",
+  "guard_source_sha256": "032b8fdaa42dfc018f3c851c92fe4e584ceb278db2aef3b7829c5fae5473f7da",
+  "external_guards_refresh_pending": false,
+  "schema": "sub01.effective-additional24h-extension.v1",
+  "verified_epoch": 1792117009.875419,
+  "root_window": {
+    "pod": "dgtgepkz7h1zy5",
+    "name": "sub01-home-private-continuous-20261015",
+    "deadline_epoch": 1792203575,
+    "start_epoch": 1792031154,
+    "total_cap": 100,
+    "minimum_balance_reserve": 10,
+    "initial_actual_balance": 91.6751360197,
+    "maximum_runtime_hours": 48,
+    "root_guard_pid": 239097,
+    "root_guard_authenticated": true,
+    "stop_guards_authenticated": true,
+    "external_guard_pid": 29974,
+    "second_external_guard_pid": 29976,
+    "work_target_epoch": 1792052072,
+    "conservative_total_upper": 53.15963189857424,
+    "extension_authorization": "explicit-human-additional-24-hours-20261016",
+    "extension_verified_epoch": 1792116870.8324575,
+    "extension_actual_balance": 59.9507010969,
+    "conservative_spent_upper": 31.724434922800008,
+    "remaining_pod_cost_upper": 21.435196975774232,
+    "root_guard_start_ticks": 980716622
+  },
+  "live_identities_preserved": {
+    "239097": 980716622,
+    "225250": 980289227,
+    "203351": 978985107,
+    "226089": 980313355,
+    "62755": 975065256,
+    "62757": 975065274
+  },
+  "old_deadline_active_argv": [],
+  "viewer": {
+    "pid": 239134,
+    "start": 980726248,
+    "deadline": "1792203575"
+  },
+  "viewer_health": {
+    "transport": "live-native-X11-H264",
+    "captureCodec": "h264_nvenc",
+    "session": "53838845f24b43f8a404fe1757539913",
+    "expiresEpoch": 1792203575,
+    "captureEnabled": true,
+    "inputEnabled": true,
+    "privacyEgressEnabled": false,
+    "takeControlAvailable": false,
+    "minecraftFocus": false,
+    "framesDelivered": 1569,
+    "acceptedInputs": 0,
+    "nativeAlive": true,
+    "nativeIdentity": [
+      225250,
+      980289227
+    ],
+    "viewMode": "manual",
+    "activity": null,
+    "privacy": false,
+    "captureFps": 60,
+    "captureWidth": 1280
+  },
+  "old_root_guard_retired": true,
+  "external_guard_pids": [
+    29974,
+    29976
+  ],
+  "additional_authorized_pod_hours": 24,
+  "additional_pod_cost_usd": 21.36,
+  "account_balance_is_not_project_budget": true,
+  "historical_guarded_scripts_not_broadened": true,
+  "external_local_verification_epoch": 1792117023.296721
+}
