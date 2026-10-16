@@ -1,0 +1,43 @@
+{
+  "schema": "sub01.single-wholeclip-capture-refusal.v1",
+  "build_succeeded": true,
+  "single_commandlet_started_epoch": 1792115909.2524898,
+  "commandlet_alive": false,
+  "raw_frames_produced": false,
+  "only_one_explicitly_authorized_dependency_retry_started": true,
+  "no_third_commandlet_started": true,
+  "failure_phase": "transient world initialized twice; CreateWorld already initialized it; explicit InitializeNewWorld then refuses duplicate WorldSettings",
+  "asset_load_succeeded_after_genuine_plugin_correction": true,
+  "capture_error_excerpt": [
+    "Failed to find symbol file, expected location:",
+    "\"/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd.sym\"",
+    "Fatal error: [File:./Runtime/Engine/Private/LevelActor.cpp] [Line: 586] ",
+    "Cannot generate unique name for 'WorldSettings' in level 'Level /Temp/Untitled_1.Sub01OfflineSkinCapture:PersistentLevel'.",
+    "[2026.10.16-01.59.35:438][  0]LogCore: Error: appError called: Fatal error: [File:./Runtime/Engine/Private/LevelActor.cpp] [Line: 586] ",
+    "Cannot generate unique name for 'WorldSettings' in level 'Level /Temp/Untitled_1.Sub01OfflineSkinCapture:PersistentLevel'.",
+    "0x00007c8e621535d8 libUnrealEditor-Engine.so!_ZN6UWorld10SpawnActorEP6UClassPKN2UE4Math10TTransformIdEERK21FActorSpawnParameters(+0x8c7)",
+    "Fatal error: [File:./Runtime/Engine/Private/LevelActor.cpp] [Line: 586] ",
+    "Cannot generate unique name for 'WorldSettings' in level 'Level /Temp/Untitled_1.Sub01OfflineSkinCapture:PersistentLevel'.",
+    "[2026.10.16-01.59.35:438][  0]LogCore: Error: appError called: Fatal error: [File:./Runtime/Engine/Private/LevelActor.cpp] [Line: 586] ",
+    "Cannot generate unique name for 'WorldSettings' in level 'Level /Temp/Untitled_1.Sub01OfflineSkinCapture:PersistentLevel'.",
+    "0x00007c8e621535d8 libUnrealEditor-Engine.so!_ZN6UWorld10SpawnActorEP6UClassPKN2UE4Math10TTransformIdEERK21FActorSpawnParameters(+0x8c7)",
+    "0x00007c8e6215440e libUnrealEditor-Engine.so!_ZN6UWorld10SpawnActorEP6UClassPKN2UE4Math7TVectorIdEEPKNS3_8TRotatorIdEERK21FActorSpawnParameters(+0x9d)",
+    "0x00007c8e634b2728 libUnrealEditor-Engine.so!_ZN6UWorld18InitializeNewWorldE26FWorldInitializationValuesb(+0x5c7)",
+    "Unhandled Exception: SIGSEGV: invalid attempt to write memory at address 0x0000000000000003",
+    "",
+    "[2026.10.16-01.59.35:490][  0]LogCore: Fatal error: [File:./Runtime/Engine/Private/LevelActor.cpp] [Line: 586] ",
+    "Cannot generate unique name for 'WorldSettings' in level 'Level /Temp/Untitled_1.Sub01OfflineSkinCapture:PersistentLevel'.",
+    "0x00007c8e621535d8 libUnrealEditor-Engine.so!_ZN6UWorld10SpawnActorEP6UClassPKN2UE4Math10TTransformIdEERK21FActorSpawnParameters(+0x8c7)",
+    "0x00007c8e6215440e libUnrealEditor-Engine.so!_ZN6UWorld10SpawnActorEP6UClassPKN2UE4Math7TVectorIdEEPKNS3_8TRotatorIdEERK21FActorSpawnParameters(+0x9d)",
+    "0x00007c8e634b2728 libUnrealEditor-Engine.so!_ZN6UWorld18InitializeNewWorldE26FWorldInitializationValuesb(+0x5c7)"
+  ],
+  "capture_log_sha256": "cf929f87a0a756a16c3d7e0dfb42358428a7ae949277b7b9a4245a340b2748fe",
+  "asset_copies_and_candidate_source_bytes_unchanged": true,
+  "preserved_process_identities": {
+    "145": 972144905,
+    "225250": 980289227,
+    "203351": 978985107
+  },
+  "all_contact_readiness": false,
+  "epoch": 1792116009.679741
+}

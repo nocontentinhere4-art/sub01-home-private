@@ -1,1 +1,26 @@
-{"FileVersion":3,"EngineAssociation":"","DisableEnginePluginsByDefault":true,"Modules":[{"Name":"Sub01WholeClipWitness","Type":"Editor","LoadingPhase":"Default"}],"Plugins":[{"Name":"InterchangeAssets","Enabled":true}]}
+{
+  "FileVersion": 3,
+  "EngineAssociation": "",
+  "DisableEnginePluginsByDefault": true,
+  "Modules": [
+    {
+      "Name": "Sub01WholeClipWitness",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "InterchangeAssets",
+      "Enabled": true
+    },
+    {
+      "Name": "AnimationData",
+      "Enabled": true
+    },
+    {
+      "Name": "ControlRig",
+      "Enabled": true
+    }
+  ]
+}
