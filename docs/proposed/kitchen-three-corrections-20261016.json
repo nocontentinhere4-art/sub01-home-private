@@ -67,5 +67,35 @@
     "feasible_only_after_cached_package_new_world_validation": true,
     "live_executed": false
   },
-  "native_close_review_task": 111
+  "native_close_review_task": 111,
+  "all_three_actual_candidate_views_approved": true,
+  "sealed_candidate_map_sha256": "754edf69151f9735e29fcc10433a683d3cc4262815f08b3071fa2d6c0c6d5efd",
+  "private_handoff_attempt": {
+    "new_game": [
+      215318,
+      979957857
+    ],
+    "first_frame_sha256": "a202034bcf10ef15fcf047f05c638cf8b8ddf668cb991b460196084e3171e8f2",
+    "preserved_camera_error_cm": 1.2445996861484133e-06,
+    "consumer_refresh_failed": "Expected backend210047 had been replaced by another concurrent runtime owner before exact policy refresh",
+    "rolled_back_to_prior_revision": true,
+    "candidate_kitchen_source_and_seal_preserved": true
+  },
+  "current_recovered_session": {
+    "game": [
+      215923,
+      979985246
+    ],
+    "backend": [
+      217597,
+      980033668
+    ],
+    "policy_sha256": "7586b04ae2e5703dc650f34643900f3ad13a678ab8500e7ff3d16f757160b606",
+    "project": "/workspace/sub01-private-playable-next-20261016/Sub01HomeLab",
+    "controls_restored": true,
+    "prior_upstairs_pose_preserved": false,
+    "kitchen_three_fix_revision_live": false,
+    "PC62755_VM62757_preserved": true
+  },
+  "coordination_doc": "docs/private-runtime-coordination.md"
 }
