@@ -36,15 +36,29 @@ def original_identity(state,node):
  return True
 
 def verify_alpha(u,c,source,dest):
- mat=c.get_material(0);assert mat and mat.get_path_name().startswith(dest+'/');root=mat
- overrides=mat.get_editor_property('base_property_overrides')
- while isinstance(root,u.MaterialInstanceConstant):
-  parent=root.get_editor_property('parent');assert parent and parent!=root;root=parent
- assert isinstance(root,u.Material)
- actual=overrides.get_editor_property('blend_mode')if overrides.get_editor_property('override_blend_mode')else root.get_editor_property('blend_mode')
- wanted=u.BlendMode.BLEND_TRANSLUCENT if source.get('alphaMode','OPAQUE')=='BLEND'else u.BlendMode.BLEND_OPAQUE
+ mat=c.get_material(0);assert mat and mat.get_path_name().startswith(dest+'/')
+ current=mat;seen=set();chain=[];actual=None;effective_from=None
+ # Interchange deliberately puts glTF blend overrides on an intermediate MI.
+ # Resolve the closest explicit override, not only the assigned MI or root.
+ for _ in range(16):
+  path=current.get_path_name();assert path not in seen,'Cyclic material inheritance';seen.add(path)
+  if isinstance(current,u.MaterialInstanceConstant):
+   overrides=current.get_editor_property('base_property_overrides')
+   override=bool(overrides.get_editor_property('override_blend_mode'))
+   value=overrides.get_editor_property('blend_mode')
+   chain.append({'path':path,'override_blend_mode':override,'blend_mode':str(value)})
+   if actual is None and override:actual=value;effective_from=path
+   parent=current.get_editor_property('parent');assert parent and parent!=current;current=parent
+  else:
+   assert isinstance(current,u.Material),'Unsupported material inheritance root'
+   value=current.get_editor_property('blend_mode');chain.append({'path':path,'root_blend_mode':str(value)})
+   if actual is None:actual=value;effective_from=path
+   break
+ else:raise AssertionError('Material inheritance exceeds bounded depth')
+ mode=source.get('alphaMode','OPAQUE');assert mode in ('BLEND','OPAQUE'),'Unsupported source alpha mode'
+ wanted=u.BlendMode.BLEND_TRANSLUCENT if mode=='BLEND'else u.BlendMode.BLEND_OPAQUE
  assert actual==wanted,'Authored source opacity/blend differs '+source['name']
- return {'alpha_mode':source.get('alphaMode','OPAQUE'),'actual_blend_mode':str(actual),'base_alpha_verified_with_PBR':True}
+ return {'alpha_mode':mode,'actual_blend_mode':str(actual),'effective_blend_from':effective_from,'inheritance_chain':chain,'base_alpha_verified_with_PBR':True}
 
 def run(dry_run=True):
  import unreal as u
