@@ -7,8 +7,10 @@ import json,math,re,struct
 from pathlib import Path
 
 EXPECTED_SEAT_CM=50.5
-# r15_chair_place (-50.98 Y) then r15_chair_render_clearance (+12.73,-65.69): the reviewed SALJAN desk position.
-EXPECTED_ORIGIN=[212.73,-306.67,0]
+# Reviewed SALJAN desk positions: r15_chair_roll (parked under the desk, +12.73,-65.69) and the
+# r15_chair_place position it was rolled from, where a standing approach fits before the desk.
+EXPECTED_ORIGINS=[[212.73,-306.67,0],[200.0,-240.98,0]]
+EXPECTED_ORIGIN=EXPECTED_ORIGINS[0]
 
 def cushion_top(vertices,indices,normals=None):
  if not vertices or len(indices)%3:raise ValueError('Missing/invalid real section triangles')
@@ -42,7 +44,7 @@ def cushion_top(vertices,indices,normals=None):
  candidates=[]
  for patch in patches:
   lo=patch['world_bounds_cm']['min'];hi=patch['world_bounds_cm']['max']
-  if hi[0]-lo[0]>=20 and hi[1]-lo[1]>=20 and patch['projected_area_cm2']>=200 and 25<=lo[2]<=hi[2]<=80 and abs((lo[0]+hi[0])/2-EXPECTED_ORIGIN[0])<40 and abs((lo[1]+hi[1])/2-EXPECTED_ORIGIN[1])<40:candidates.append(patch)
+  if hi[0]-lo[0]>=20 and hi[1]-lo[1]>=20 and patch['projected_area_cm2']>=200 and 25<=lo[2]<=hi[2]<=80 and any(abs((lo[0]+hi[0])/2-o[0])<40 and abs((lo[1]+hi[1])/2-o[1])<40 for o in (EXPECTED_ORIGINS if EXPECTED_ORIGIN==EXPECTED_ORIGINS[0] else [EXPECTED_ORIGIN])):candidates.append(patch)
  if not candidates or (len(candidates)>1 and candidates[1]['projected_area_cm2']>=.5*candidates[0]['projected_area_cm2']):
   error=ValueError('No unambiguous broad load-bearing seat patch among actual fabric surfaces');error.measured_surface={'patches':patches};raise error
  seat=candidates[0];bounds=seat['world_bounds_cm']
