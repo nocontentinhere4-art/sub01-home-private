@@ -23,10 +23,12 @@ static bool Sub01SeatDetourRoute(UWorld* World,const ACharacter* Self,const FVec
  Out.Reset();const FVector2D Start(Here.X,Here.Y);
  if(Sub01SeatLegClear(World,Self,Start,Approach,Here.Z))return false;
  const float R=FMath::DegreesToRadians(YawDeg);const FVector2D Facing(FMath::Cos(R),FMath::Sin(R)),Side(-Facing.Y,Facing.X);
+ // The approach itself grazes the cushion front: end 8 cm toward the desk, inside the 12 cm arrival radius.
+ const FVector2D Target=Approach+Facing*8.f;
  for(const float Offset:{60.f,80.f,100.f})for(const float Sign:{1.f,-1.f}){
   const FVector2D Beside=Approach+Side*Offset*Sign,Behind=Beside-Facing*120.f;
-  if(Sub01SeatLegClear(World,Self,Start,Beside,Here.Z)&&Sub01SeatLegClear(World,Self,Beside,Approach,Here.Z)){Out={Beside};return true;}
-  if(Sub01SeatLegClear(World,Self,Start,Behind,Here.Z)&&Sub01SeatLegClear(World,Self,Behind,Beside,Here.Z)&&Sub01SeatLegClear(World,Self,Beside,Approach,Here.Z)){Out={Behind,Beside};return true;}
+  if(Sub01SeatLegClear(World,Self,Start,Beside,Here.Z)&&Sub01SeatLegClear(World,Self,Beside,Target,Here.Z)){Out={Beside,Target};return true;}
+  if(Sub01SeatLegClear(World,Self,Start,Behind,Here.Z)&&Sub01SeatLegClear(World,Self,Behind,Beside,Here.Z)&&Sub01SeatLegClear(World,Self,Beside,Target,Here.Z)){Out={Behind,Beside,Target};return true;}
  }
  return false;
 }
@@ -41,7 +43,8 @@ MOVE_OLD = ''' else if(In.WantSeat&&In.Fresh&&!In.Private&&!In.Blocked&&SeatOut.
 MOVE_NEW = ''' else if(In.WantSeat&&In.Fresh&&!In.Private&&!In.Blocked&&SeatOut.Phase==ESub01SeatPhase::Standing&&!In.AtApproach&&Controller){
   if(SeatDetourCommand!=In.Command){
    SeatDetourCommand=In.Command;
-   if(Sub01SeatDetourRoute(GetWorld(),this,Here,SeatApproach,SeatYaw,SeatDetour))UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_DETOUR legs=%d first=(%.1f,%.1f) approach=(%.1f,%.1f)"),SeatDetour.Num()+1,SeatDetour[0].X,SeatDetour[0].Y,SeatApproach.X,SeatApproach.Y);
+   if(Sub01SeatDetourRoute(GetWorld(),this,Here,SeatApproach,SeatYaw,SeatDetour))UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_DETOUR legs=%d first=(%.1f,%.1f) approach=(%.1f,%.1f)"),SeatDetour.Num(),SeatDetour[0].X,SeatDetour[0].Y,SeatApproach.X,SeatApproach.Y);
+   else UE_LOG(LogTemp,Display,TEXT("SUB01_SEAT_DETOUR none: direct leg clear or no clear route; approach=(%.1f,%.1f)"),SeatApproach.X,SeatApproach.Y);
   }
   if(SeatDetour.Num()&&(SeatDetour[0]-FVector2D(Here.X,Here.Y)).Size()<12)SeatDetour.RemoveAt(0);
   const FVector2D ToGoal=(SeatDetour.Num()?SeatDetour[0]:SeatApproach)-FVector2D(Here.X,Here.Y);
