@@ -53,6 +53,6 @@
     "operator_actions": [
       "owner-approved /api/wake at Tokyo 00:10 for the seat test, then use_computer intent nudges"
     ],
-    "seat_result": "pending"
+    "seat_result": "not exercised: after the owner-approved wake (Tokyo 00:10) the brain chose phone in bed and kept it through 01:34 despite use_computer nudges every 10 min; the detour and unparked chair await the first desk activity"
   }
 }
