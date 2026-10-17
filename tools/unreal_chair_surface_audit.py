@@ -7,7 +7,8 @@ import json,math,re,struct
 from pathlib import Path
 
 EXPECTED_SEAT_CM=50.5
-EXPECTED_ORIGIN=[200,-190,0]
+# r15_chair_place (-50.98 Y) then r15_chair_render_clearance (+12.73,-65.69): the reviewed SALJAN desk position.
+EXPECTED_ORIGIN=[212.73,-306.67,0]
 
 def cushion_top(vertices,indices,normals=None):
  if not vertices or len(indices)%3:raise ValueError('Missing/invalid real section triangles')
@@ -41,7 +42,7 @@ def cushion_top(vertices,indices,normals=None):
  candidates=[]
  for patch in patches:
   lo=patch['world_bounds_cm']['min'];hi=patch['world_bounds_cm']['max']
-  if hi[0]-lo[0]>=20 and hi[1]-lo[1]>=20 and patch['projected_area_cm2']>=200 and 25<=lo[2]<=hi[2]<=80 and abs((lo[0]+hi[0])/2-200)<40 and abs((lo[1]+hi[1])/2+190)<40:candidates.append(patch)
+  if hi[0]-lo[0]>=20 and hi[1]-lo[1]>=20 and patch['projected_area_cm2']>=200 and 25<=lo[2]<=hi[2]<=80 and abs((lo[0]+hi[0])/2-EXPECTED_ORIGIN[0])<40 and abs((lo[1]+hi[1])/2-EXPECTED_ORIGIN[1])<40:candidates.append(patch)
  if not candidates or (len(candidates)>1 and candidates[1]['projected_area_cm2']>=.5*candidates[0]['projected_area_cm2']):
   error=ValueError('No unambiguous broad load-bearing seat patch among actual fabric surfaces');error.measured_surface={'patches':patches};raise error
  seat=candidates[0];bounds=seat['world_bounds_cm']
@@ -49,6 +50,13 @@ def cushion_top(vertices,indices,normals=None):
 
 def material_identity(names):
  return any(re.search(r'(^|[^a-z0-9])chair_fabric([^a-z0-9]|$)',str(name).lower())for name in names)
+
+def owner_chair_component(component):
+ # The r15 replacement chair is the owner's own mesh (chair_owner_N components)
+ # with its source materials; geometry selection below stays unchanged.
+ owner=component.get_owner()
+ labels=[str(component.get_name()),owner.get_actor_label()if owner else'']
+ return any(re.match(r'chair_owner(_[0-9]+)?$',label.lower())for label in labels)
 
 def run():
  import unreal as u
@@ -75,7 +83,7 @@ def run():
      # The assigned material object and actual slot name remain authoritative.
      imported=str(getattr(slots[slot],'imported_material_slot_name',''))
      names=[str(slots[slot].material_slot_name),imported,material.get_name()if material else'',material.get_path_name()if material else'']
-     if not material_identity(names):continue
+     if not material_identity(names) and not owner_chair_component(component):continue
      if material is None:raise RuntimeError('Chair fabric section has no actual assigned material')
      local,indices,local_normals,*_=u.ProceduralMeshLibrary.get_section_from_static_mesh(mesh,0,section);transform=component.get_world_transform();points=[];normals=[]
      for p in local:

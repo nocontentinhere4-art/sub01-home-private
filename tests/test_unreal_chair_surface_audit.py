@@ -1,6 +1,8 @@
 import importlib.util,math,unittest
 from pathlib import Path
 p=Path(__file__).resolve().parents[1]/'tools/unreal_chair_surface_audit.py';s=importlib.util.spec_from_file_location('audit',p);a=importlib.util.module_from_spec(s);s.loader.exec_module(a)
+# Synthetic fixtures sit at the pre-r15 chair position.
+a.EXPECTED_ORIGIN=[200,-190,0]
 class Surface(unittest.TestCase):
  def test_actual_triangles_not_box_and_lumbar_excluded(self):
   vertices=[[180,-210,50.5],[220,-210,50.5],[220,-170,50.5],[180,-170,50.5],[180,-210,85],[220,-210,85],[220,-170,85]]
@@ -24,3 +26,10 @@ class Surface(unittest.TestCase):
   self.assertEqual(len(measured['patches']),2);self.assertEqual(measured['triangle_indices'],[[0,1,2],[0,2,3]])
   self.assertEqual(measured['world_bounds_cm']['max'][2],48)
 if __name__=='__main__':unittest.main()
+
+class R15Position(unittest.TestCase):
+ def test_reviewed_r15_cushion_position_is_accepted(self):
+  # Actual r21 Mesh_174 cushion bounds after r15_chair_place and render clearance.
+  b=importlib.util.module_from_spec(s);s.loader.exec_module(b)
+  measured=b.cushion_top([[186,-331,50],[239,-331,50],[239,-283,50],[186,-283,50]],[0,2,1,0,3,2],[[0,0,1]]*4)
+  self.assertGreater(measured['projected_area_cm2'],2000)

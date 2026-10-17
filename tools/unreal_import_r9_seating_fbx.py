@@ -28,6 +28,16 @@ bones = lambda: [str(component.get_bone_name(i)) for i in range(component.get_nu
 original = bones()
 world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
 u.SystemLibrary.execute_console_command(world, 'Interchange.FeatureFlags.Import.FBX 0')
+for asset in ASSETS.values():
+    # Older Seating clips are bound to the retired OriginalOwner skeleton; a
+    # replace_existing reimport keeps that skeleton, so remove them in this copy.
+    existing_path = DEST + '/SUB01_' + asset
+    if u.EditorAssetLibrary.does_asset_exist(existing_path):
+        existing = u.load_asset(existing_path)
+        if existing.get_editor_property('skeleton').get_path_name() != skeleton.get_path_name():
+            if not u.EditorAssetLibrary.delete_asset(existing_path):
+                raise RuntimeError('Could not remove retired-skeleton clip ' + existing_path)
+            u.log('SUB01_R9_SEAT_RETIRED_CLIP_REMOVED ' + existing_path)
 rows = []
 for role, asset in ASSETS.items():
     path = SOURCE / role / 'captured-animation-only.fbx'
@@ -46,9 +56,14 @@ for role, asset in ASSETS.items():
     task.destination_name = 'SUB01_' + asset; task.automated = True; task.replace_existing = True
     task.save = True; task.options = options
     u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
-    clips = [c for c in (u.load_asset(p) for p in task.imported_object_paths) if isinstance(c, u.AnimSequence)]
-    if len(clips) != 1 or clips[0].get_editor_property('skeleton') != skeleton:
+    # imported_object_paths can be empty for legacy FBX animation imports; the saved asset is authoritative.
+    clip = u.load_asset(DEST + '/SUB01_' + asset)
+    clip_skeleton = clip.get_editor_property('skeleton') if isinstance(clip, u.AnimSequence) else None
+    u.log('SUB01_R9_SEAT_IMPORTED %s class=%s skeleton=%s expected=%s paths=%s' % (role, type(clip).__name__,
+          clip_skeleton.get_path_name() if clip_skeleton else None, skeleton.get_path_name(), list(task.imported_object_paths)))
+    if clip_skeleton is None or clip_skeleton.get_path_name() != skeleton.get_path_name():
         raise RuntimeError(role + ' did not import onto the active owner skeleton')
+    clips = [clip]
     if bones() != original:
         raise RuntimeError('Import changed the active owner bone identities')
     duration = clips[0].get_editor_property('sequence_length')
