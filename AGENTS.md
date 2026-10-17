@@ -1,5 +1,11 @@
 # Private local home
 
+## Latest owner restart — 17 October, six hours
+
+The 24-hour window ended at 2026-10-17 02:19:35 UTC and `dgtgepkz7h1zy5` was EXITED. The owner explicitly authorized a six-hour restart, then explicitly approved a replacement pod because the original host had no free GPU. Replacement: **jofornuokzg0ll**, name `sub01-home-private-continuous-20261017`, Secure Cloud EU-RO-1, RTX 4090, 16 vCPU, 61GB, $0.89/hour, same 150GB volume `dvrlt6yk2k` at /workspace. Deadline **2026-10-17 17:35:01 UTC, epoch 1792258501**; balance-reserve stop at $10. Guards: root boot guard plus two on-pod exact-identity guards (deadline, balance) and one cloud-session exact-identity guard. Actual balance at restart $20.96 with $0.477/hour other account spend. `dgtgepkz7h1zy5` stays EXITED; do not extend.
+
+Container disk was fresh: rootfs runtime (unreal user, /home/unreal/sub01-backend, runtime-tools, Java link, Xorg) was rebuilt from the volume archives. Xorg :99 refused modesetting on this host, so :99 is an authenticated Xvfb with NVIDIA Vulkan. The newest Mac-side backend modules (`home_impulses`, `home_minecraft_brain_choice`, `home_streamer`) are not on the volume or in Git; the backend runs the consistent 15 October base archive until they are pushed.
+
 ## Latest owner continuation — six hours from 15 October 17:29 UTC
 
 The owner explicitly instructed six continuous hours without further input, asked that everything remain operational, and requested caffeinate on the Mac. Record exact work-until epoch in out/coordination/owner-six-hour-continuation-20261015.json. Continue real implementation and verification with the already authorized parallel agents; all changes remain private, heavy work on Runpod. This does not extend the GPU deadline 2026-10-16 02:19:35 UTC, the $100 TOTAL cap or $10 reserve. Do not publish or alter the public sites/brain pod. A separate local caffeinate process prevents Mac sleep for six hours; it does not authorize local rendering or inference.
