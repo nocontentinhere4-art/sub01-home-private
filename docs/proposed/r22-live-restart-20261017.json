@@ -17,7 +17,8 @@
     "native_consumer": "bound=true phase=arrived physical_ready=true after the bridge received the corridor profile",
     "brain_driven_routes": [
       "loft -> stair_top -> stair_bottom -> stair_approach -> front -> door -> outside (buy_bread)",
-      "outside -> door -> front -> aisle -> back -> kitchen_gate -> kitchen (eat)"
+      "outside -> door -> front -> aisle -> back -> kitchen_gate -> kitchen (eat)",
+      "kitchen -> loft -> bath_aisle -> bath_door -> bathroom -> back -> stair_top -> stair_bottom -> front -> aisle -> desk (use_bathroom, then use_computer after an operator intent nudge)"
     ],
     "every_reached_node_floor_contact": true,
     "lights": "backend auto lights followed through relay: living+kitchen while walking at 22:45 Tokyo, kitchen only on arrival",
@@ -33,5 +34,11 @@
     "night with all lamps off renders fully black (no residual sky/city light)",
     "physical keyboard/mouse/gamepad input QA (no X11 window on this host)",
     "backend modules home_impulses, home_minecraft_brain_choice, home_streamer exist only on the Mac"
-  ]
+  ],
+  "desk_seat_blocker": {
+    "observed": "pawn stops at (196.4,-259.8) against the chair backrest; backend expects seated, physical_ready=false",
+    "cause": "r15_chair_roll parked the chair under the SALJAN desk (cushion centre y=-306.9, desk front y=-317.7). The seat machine stands at cushion+37.857 cm toward the desk = (212.6,-344.7), inside the desk, and walks there in a straight line from the graph desk node (200,-75), through the chair.",
+    "not_fixed_by": "moving the chair back to the r15_chair_place position alone: the straight path from the desk node still crosses the chair.",
+    "proposed_fix": "C++: a side approach waypoint beside the chair plus a rigid chair roll-out before StandToSit and roll-in during SitToType (the chair travels with the hips), then a live seat receipt."
+  }
 }
