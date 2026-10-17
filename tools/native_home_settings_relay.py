@@ -55,7 +55,8 @@ def main():
     args = parser.parse_args()
     assert args.backend.startswith('http://127.0.0.1:'), 'Loopback backend only'
     control, request = PRIVATE / 'native-control.json', PRIVATE / 'capture-request.txt'
-    published = None
+    receipt = PRIVATE / 'native-view-settings-receipt.json'
+    published, game = None, None
     while time.time() < args.deadline_epoch:
         try:
             with urllib.request.urlopen(args.backend + '/api/home', timeout=3) as response:
@@ -64,6 +65,13 @@ def main():
             print('BACKEND_READ_RETRY', type(error).__name__, flush=True)
             time.sleep(args.interval)
             continue
+        try:
+            current_game = json.loads(receipt.read_text()).get('native_pid')
+        except (OSError, ValueError):
+            current_game = game
+        if current_game != game:
+            # A restarted Game boots at its authored defaults; publish again.
+            published, game = None, current_game
         capture = None
         if request.exists():
             capture = safe_capture(request.read_text())
