@@ -40,5 +40,19 @@
     "cause": "r15_chair_roll parked the chair under the SALJAN desk (cushion centre y=-306.9, desk front y=-317.7). The seat machine stands at cushion+37.857 cm toward the desk = (212.6,-344.7), inside the desk, and walks there in a straight line from the graph desk node (200,-75), through the chair.",
     "not_fixed_by": "moving the chair back to the r15_chair_place position alone: the straight path from the desk node still crosses the chair.",
     "proposed_fix": "C++: a side approach waypoint beside the chair plus a rigid chair roll-out before StandToSit and roll-in during SitToType (the chair travels with the hips), then a live seat receipt."
+  },
+  "r23": {
+    "playable_project": "/workspace/sub01-private-playable-r23-seat-detour-20261017/Sub01HomeLab",
+    "module_sha256_prefix": "f247ad89047d",
+    "map_sha256_prefix": "aca1a904b875",
+    "changes": [
+      "chair restored to r15_chair_place translations (tools/unreal_chair_unpark.py, 7 actors)",
+      "swept seat detour around the chair (tools/unreal_seat_detour.py)"
+    ],
+    "seat_transition": "roles=23 chairMeasured=1 approach=(199.892,-279.037); cushion y -265.0..-217.3",
+    "operator_actions": [
+      "owner-approved /api/wake at Tokyo 00:10 for the seat test, then use_computer intent nudges"
+    ],
+    "seat_result": "pending"
   }
 }
