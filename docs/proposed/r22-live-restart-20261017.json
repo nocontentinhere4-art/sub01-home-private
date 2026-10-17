@@ -1,0 +1,37 @@
+{
+  "schema": "sub01.r22-live-restart.v1",
+  "pod": "jofornuokzg0ll",
+  "deadline_epoch": 1792258501,
+  "playable_project": "/workspace/sub01-private-playable-r22-seat-20261017/Sub01HomeLab",
+  "source_revision": "/workspace/sub01-private-playable-r21-static-20261016/Sub01HomeLab",
+  "module_sha256": "7e6c06dafb10953cb79d4b3768cb72cef9cadfa4a83188a3beb500c9988f212b",
+  "config_sha256": "5b7b26edaff696f1915d65349dad03d7086f21b6cd50716f1d01c2af2d2221db",
+  "map_sha256": "e11e46e9e96be2bf1205aa252e511468c1243521d0c430f3fcacb322ade7d0f6",
+  "r9_seat_import_sha256": "08040b8e2615d6831d79c5132ae052457ce2c7d74e07a7f6f93fb8bca7e48351",
+  "native_chair_surface_sha256": "774e70b5c740cd65e68f0c7e6175f53c310a1b55715d727c868a2c48b44db233",
+  "render_mode": "RenderOffScreen; host refused NVIDIA Xorg modesetting, so no X11 viewer or XTest input",
+  "observed": {
+    "game_tick_hz": 60.0,
+    "seat_transition": "SUB01_SEAT_TRANSITION_READY roles=23 chairMeasured=1 contactEvidence=0 approach=(212.624,-344.728)",
+    "seat_cushion_cm2": 2344.59,
+    "native_consumer": "bound=true phase=arrived physical_ready=true after the bridge received the corridor profile",
+    "brain_driven_routes": [
+      "loft -> stair_top -> stair_bottom -> stair_approach -> front -> door -> outside (buy_bread)",
+      "outside -> door -> front -> aisle -> back -> kitchen_gate -> kitchen (eat)"
+    ],
+    "every_reached_node_floor_contact": true,
+    "lights": "backend auto lights followed through relay: living+kitchen while walking at 22:45 Tokyo, kitchen only on arrival",
+    "lamp_capture_sha256": {
+      "r21-e2e-bedroom-on.png": "4ee6c6827f70e04383c9c26afc1b0e6175be3ea2d2f1c8df2aa60c4befd9a10f",
+      "r21-e2e-bedroom-off.png": "9585ba154c3fb6fbe150daa84eff7326cd96a2dff0a7eb22a6a791614323b07e",
+      "r21-livewalk-1792244314-1.png": "7925dbc2be4b4f348ffbf2ee6824197037ce92cf1bb1cb69c2175e8b72627edc"
+    }
+  },
+  "not_accepted": [
+    "seat contact and NativeSeatVerified (no live seat receipt yet)",
+    "DeskTyping role absent (roles=23 lacks 8)",
+    "night with all lamps off renders fully black (no residual sky/city light)",
+    "physical keyboard/mouse/gamepad input QA (no X11 window on this host)",
+    "backend modules home_impulses, home_minecraft_brain_choice, home_streamer exist only on the Mac"
+  ]
+}
