@@ -2313,12 +2313,18 @@ async function pongInput(direction) {
   } catch { return false; }
   finally { clearTimeout(timeout); pongSending = false; }
 }
+// A failed paddle send is retried at most 3 times (one send plus 3 retries); then sending
+// waits for the next key event, which starts a fresh count.
+let pongFailures = 0, pongFailureVersion = -1;
 setInterval(async () => {
   if (panelKind !== "pong" || tvGame !== "pong" || document.hidden)
     pongHeld.clear();
   if (!pongHeld.active && !pongHeld.changed) return;
   const version = pongHeld.version;
-  if (await pongInput(pongHeld.direction)) pongHeld.acknowledge(version);
+  if (version !== pongFailureVersion) { pongFailureVersion = version; pongFailures = 0; }
+  if (pongFailures > 3 || pongSending || Date.now() - lastPongInput < 100) return;
+  if (await pongInput(pongHeld.direction)) { pongHeld.acknowledge(version); pongFailures = 0; }
+  else if (pongFailureVersion === version) pongFailures++;
 }, 110);
 function drawPong(canvas, state) {
   if (!canvas) return;
@@ -2458,20 +2464,38 @@ interactions.push({
   fn: () => openPanel("pong"),
 });
 drawPong(tvCanvas);
+// Minecraft frames are requested only while the TV is in the camera view or its panel is open.
+// Each failed request doubles the wait (150 ms up to 10 s); a painted frame restores 150 ms.
+const tvFrustum = new T.Frustum(), tvViewProjection = new T.Matrix4();
+function tvInView() {
+  camera.updateMatrixWorld();
+  tvViewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  tvFrustum.setFromProjectionMatrix(tvViewProjection);
+  return tvFrustum.intersectsObject(tv);
+}
+let minecraftFrameWait = 150;
+function backOffMinecraftFrame() { minecraftFrameWait = Math.min(minecraftFrameWait * 2, 10000); }
 minecraftBitmapPainter = createMinecraftFrameFeed({
   getContextKey: () => tvGame === 'minecraft' && minecraftState.has_frame ? 'minecraft' : null,
-  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden,
+  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden &&
+    ((!panel.hidden && panelKind === 'pong' && tvGame === 'minecraft') || tvInView()),
   getURL: () => '/api/home/minecraft/frame.jpg',
-  onUnavailable: () => paintMinecraftUnavailable(),
-  onError: () => paintMinecraftUnavailable('Minecraft picture unavailable.'),
-  onTimeout: () => paintMinecraftUnavailable('Minecraft is taking a moment…'),
+  onUnavailable: () => { backOffMinecraftFrame(); paintMinecraftUnavailable(); },
+  onError: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft picture unavailable.'); },
+  onTimeout: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft is taking a moment…'); },
   paint: image => {
+    minecraftFrameWait = 150;
     tvCanvas.getContext('2d').drawImage(image, 0, 0, 800, 460);
     tvTexture.needsUpdate = true;
     panelBody.querySelector('[data-minecraft-frame]')?.getContext('2d').drawImage(image, 0, 0, 800, 460);
   },
 });
-setInterval(() => { void minecraftBitmapPainter.update(); }, 150);
+// The tick is local only: update() sends nothing while the feed is inactive.
+function pollMinecraftFrame() {
+  void minecraftBitmapPainter.update();
+  setTimeout(pollMinecraftFrame, minecraftFrameWait);
+}
+setTimeout(pollMinecraftFrame, 150);
 const phoneMesh = box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014);
 // A shared-state display, rather than a second application or browser instance.
 const phoneCanvas = document.createElement("canvas");
@@ -2660,7 +2684,7 @@ function acceptHome(state) {
 let lastFullHome = null;
 // Optional WebSocket device identities: refresh on change (polling remains the fallback).
 const deviceRevisions = createDeviceRevisions({
-  refresh: () => syncState(),
+  refresh: () => (document.hidden ? undefined : syncState()),
   onPrivacy: () => {
     browserScreen = phoneBrowserScreen = null;
     computerState = { ...computerState, output: "", last_command: null };
@@ -2668,19 +2692,32 @@ const deviceRevisions = createDeviceRevisions({
     invalidateDeviceBitmaps();
   },
 });
+// Each home request gets a 5 s AbortController deadline, which also covers reading its JSON body.
+async function homeRequest(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return { ok: response.ok, data: response.ok ? await response.json() : null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 async function syncState() {
   const epoch = deviceRevisions.epoch;
+  let healthy = false;
   try {
-    const r = await fetch("/api/home");
+    const r = await homeRequest("/api/home");
     if (!r.ok) {
       notice("The home is not enabled on this server yet.");
-      return;
+      return false;
     }
-    const s = await r.json();
-    try {
-      chessState = await (await fetch("/api/chess")).json();
-    } catch {}
-    if (epoch !== deviceRevisions.epoch) return; // requested before a privacy entry/exit
+    const s = r.data;
+    // A failed chess request counts against this poll but keeps the last board.
+    const chess = await homeRequest("/api/chess").catch(() => ({ ok: false }));
+    if (chess.ok) chessState = chess.data;
+    healthy = chess.ok;
+    if (epoch !== deviceRevisions.epoch) return healthy; // requested before a privacy entry/exit
     lastFullHome = s.home;
     computerState = s.computer;
     browserState = s.browser || null;
@@ -2697,8 +2734,22 @@ async function syncState() {
     else await updateRealBrowser();
     refreshPanelScreens();
   } catch {}
+  return healthy;
 }
-let socket, reconnectTimer, pendingImpulse;
+// Home poll: every 3 s while healthy; each consecutive failure doubles the wait (3, 6, 12 ... up to 60 s).
+// Polls pause while the tab is hidden, and a tab that becomes visible polls at once.
+let syncFailures = 0, syncTimer = 0;
+function scheduleSync(wait = syncFailures ? Math.min(3000 * 2 ** (syncFailures - 1), 60000) : 3000) {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    if (!document.hidden) syncFailures = (await syncState().catch(() => false)) ? 0 : syncFailures + 1;
+    scheduleSync();
+  }, wait);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) scheduleSync(0);
+});
+let socket, reconnectTimer, pendingImpulse, socketAttempts = 0;
 function finishImpulse(ok, message) {
   if (!pendingImpulse) return;
   clearTimeout(pendingImpulse.timer);
@@ -2713,6 +2764,7 @@ function connect() {
       location.host +
       "/ws?rate=5&lite=1",
   );
+  socket.onopen = () => { socketAttempts = 0; };
   socket.onmessage = (e) => {
     try {
       const m = JSON.parse(e.data);
@@ -2733,12 +2785,14 @@ function connect() {
   socket.onclose = () => {
     finishImpulse(false, 'Connection lost. Your impulse was not confirmed.');
     clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(connect, 2000);
+    // Exponential back-off with jitter: about 2 s, doubling per failed attempt, at most 60 s.
+    const cap = Math.min(2000 * 2 ** socketAttempts, 60000);
+    socketAttempts++;
+    reconnectTimer = setTimeout(connect, cap / 2 + Math.random() * cap / 2);
   };
 }
 connect();
-syncState();
-setInterval(syncState, 3000);
+scheduleSync(0);
 setInterval(() => {
   const fresh = performance.now() - onlineAt < 5000;
   document.getElementById("connection").textContent = fresh
