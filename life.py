@@ -253,6 +253,7 @@ class Life:
         self.heading = 0.0
         self.arrival_check = None             # optional inhabited-house arrival, supplied by its owner
         self.path = []                         # remaining waypoints while walking
+        self.sleep_on_way = False              # a sleep stage began on the way (set on each walking tick): sleep waits for home
         self.activity = s.get("activity", "window")
         if self.activity not in ACTIVITIES:    # a save from before S1 (the chart is gone): he reads instead
             self.activity = "research"
@@ -595,6 +596,7 @@ class Life:
             self.boredom = max(0.0, self.boredom - dt_sim / (30 * 60))
         # walking (real time, so viewers see continuous motion)
         if self.path:
+            self.sleep_on_way = stage != "AWAKE"   # a sleep stage on the way: he walks on, and sleep waits for home
             tx, tz = PLACES[self.path[0]]
             dx, dz = tx - self.x, tz - self.z
             d = math.hypot(dx, dz)
@@ -625,7 +627,9 @@ class Life:
         if self.arrival_check is not None and arrived and self.dur is not None:
             self.until = self.timer(t)
             self.dur = None
-        # Arrival gates expiry/effects; urgent needs and sleep can still interrupt travel.
+        # Arrival gates expiry/effects. Travel is not interrupted: needs, and a sleep stage that begins on the way, wait
+        # for arrival (only the courier turns him back, above). A sleep stage that began on the way is applied at home:
+        # from an outdoor stop he walks home first, and falls asleep on arrival there (below).
         if self.activity == "sleep" and stage != "AWAKE":
             return                                        # asleep: nothing to decide until the brain wakes up
         must_sleep = stage != "AWAKE"
@@ -685,6 +689,13 @@ class Life:
                 why = f"hungry: eats the {(self.food_items[0] if self.food_items else 'meal').replace('konbini_', '')} at the table"
             if woke:
                 why = "wakes up"
+            if must_sleep and self.sleep_on_way and self.place not in ("door_in", "bed", "table", "desk", "window"):
+                # a sleep stage that began on the way: from an outdoor stop he walks home first, and falls asleep there
+                self.dur = None                       # the stop's time is not clocked on the way home
+                self.path = route(self.place, "bed")[1:]
+                self.trip = trip_of(self.place, self.path)
+                self.until = self.timer(t, self.walk_s())
+                return
             self.start(nxt, t, why)
 
     def music_bg_ok(self):
