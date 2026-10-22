@@ -13,12 +13,13 @@ Hard rules (enforced here):
 - every job appends {tag, pod, kind, cost_per_hr, minutes, usd, status} to data/analysis/costs.jsonl.
 
 Pod side: a tiny HTTP server (pod/server.py, sent base64 in env) on port 8000 accepts PUT uploads into /in and serves
-/out; the job script waits for /in/READY, writes /out/log.txt and finally /out/STATUS (DONE or FAILED).
+/out, only to requests that carry the per-run token (X-Job-Token); the job script waits for /in/READY, writes /out/log.txt and finally /out/STATUS (DONE or FAILED).
 RunPod auth is injected by the environment for rest.runpod.io (no key in this repo).
 """
 import argparse
 import base64
 import json
+import secrets
 import signal
 import sys
 import time
@@ -77,11 +78,13 @@ def log_cost(rec):
         f.write(json.dumps(rec) + "\n")
 
 
-def http(method, url, data=None, timeout=120, tries=1):
-    """One HTTP call through the RunPod proxy; `tries` > 1 retries transient errors (the proxy 404s now and then)."""
+def http(method, url, data=None, timeout=120, tries=1, token=None):
+    """One HTTP call through the RunPod proxy; `tries` > 1 retries transient errors (the proxy 404s now and then).
+    `token` is the per-run job token that the pod file server requires on every request."""
+    headers = {"User-Agent": UA, **({"X-Job-Token": token} if token else {})}
     for k in range(tries):
         try:
-            req = urllib.request.Request(url, method=method, data=data, headers={"User-Agent": UA})
+            req = urllib.request.Request(url, method=method, data=data, headers=headers)
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
         except Exception:
@@ -132,9 +135,10 @@ def main():
         sys.exit(f"refusing: pod-time budget used ({spent_minutes(preview):.1f} of {cap} min)")
     max_min = min(a.max_min, left)
 
+    token = secrets.token_urlsafe(32)                     # per run: the pod server and this job share it, nothing is written to disk
     env = {"SERVER": base64.b64encode((HERE / "pod" / "server.py").read_bytes()).decode(),
            "JOB": base64.b64encode(Path(a.script).read_bytes()).decode(),
-           "JOB_MIN": str(int(max_min - 9))}              # leave time to fetch results before the hard stop
+           "JOB_MIN": str(int(max_min - 9)), "SUB01_JOB_TOKEN": token}              # leave time to fetch results before the hard stop
     env.update(dict(kv.split("=", 1) for kv in a.env))
     boot = ("mkdir -p /in /out /work && echo up > /out/UP && echo $SERVER | base64 -d > /server.py && echo $JOB | base64 -d > /job.sh && "
             "(cd /work && timeout $(( JOB_MIN * 60 )) bash /job.sh > /out/log.txt 2>&1 "
@@ -182,16 +186,16 @@ def main():
             if time.time() - t0 > max_min * 60:
                 raise TimeoutError("pod never came up")
             try:                                                     # the proxy answers 404 until the pod is up
-                if http("GET", base + "/UP", timeout=20).strip() == b"up":
+                if http("GET", base + "/UP", timeout=20, token=token).strip() == b"up":
                     break
             except Exception:
                 pass
             time.sleep(10)
         print(f"pod up after {time.time() - t0:.0f} s", flush=True)
         for f in a.upload:
-            http("PUT", f"{base}/in/{Path(f).name}", Path(f).read_bytes(), timeout=600, tries=6)
+            http("PUT", f"{base}/in/{Path(f).name}", Path(f).read_bytes(), timeout=600, tries=6, token=token)
             print("uploaded", Path(f).name, flush=True)
-        http("PUT", f"{base}/in/READY", b"1", tries=6)
+        http("PUT", f"{base}/in/READY", b"1", tries=6, token=token)
         last = ""
         while not stopped["flag"]:
             time.sleep(20)
@@ -199,11 +203,11 @@ def main():
                 status = "timeout"
                 break
             try:
-                logtxt = http("GET", base + "/log.txt", timeout=30).decode(errors="replace")
+                logtxt = http("GET", base + "/log.txt", timeout=30, token=token).decode(errors="replace")
                 if logtxt != last:
                     print(logtxt[len(last):] if logtxt.startswith(last) else logtxt[-2000:], end="", flush=True)
                     last = logtxt
-                st = http("GET", base + "/STATUS", timeout=30).decode().strip()
+                st = http("GET", base + "/STATUS", timeout=30, token=token).decode().strip()
             except Exception:
                 continue
             if st in ("DONE", "FAILED"):
@@ -214,7 +218,7 @@ def main():
         for f in a.fetch + ["log.txt"]:
             try:
                 (dest / f"{a.tag}_{Path(f).name}" if f == "log.txt" else dest / Path(f).name).write_bytes(
-                    http("GET", f"{base}/{f}", timeout=1200, tries=4))
+                    http("GET", f"{base}/{f}", timeout=1200, tries=4, token=token))
                 print("fetched", f, flush=True)
             except Exception as e:
                 print("fetch failed", f, e, flush=True)
