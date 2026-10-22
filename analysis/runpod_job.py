@@ -4,7 +4,7 @@
         --upload /path/5tt.nii.gz ... --fetch connectome.tar.gz --tag tract
 
 Hard rules (enforced here):
-- only an RTX A5000 GPU pod or a CPU pod; one pod at a time (refuses if one of OUR pods is still alive);
+- only an RTX A5000 GPU pod or a CPU pod; one pod at a time (refuses if one of OUR pods is still alive or its state cannot be read);
 - pods are only ever created, read and deleted by id from data/analysis/my_pods.json - pods we did not create
   (e.g. "BRAIN") are never touched;
 - the pod is deleted when the job finishes, fails, on Ctrl-C / SIGTERM, and at the latest after --max-min (<= 60) minutes;
@@ -36,12 +36,22 @@ PREVIEW_TAG, PREVIEW_CAP_MIN = "gpu-preview", 600.0   # tools/gpu_preview.py run
 UA = "sub01-analysis/1.0 (curl-compatible)"          # Cloudflare rejects the default Python-urllib agent
 
 
-def api(method, path, body=None, timeout=60):
-    req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json", "User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        txt = r.read().decode()
-    return json.loads(txt) if txt.strip() else {}
+def api(method, path, body=None, timeout=60, tries=1):
+    """One RunPod REST call. `tries` > 1 retries GET on 5xx and network errors only; a 429 is never retried."""
+    for k in range(tries):
+        req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json", "User-Agent": UA})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                txt = r.read().decode()
+            return json.loads(txt) if txt.strip() else {}
+        except urllib.error.HTTPError as e:
+            if k == tries - 1 or method != "GET" or e.code == 429 or e.code < 500:
+                raise
+        except OSError:                                    # URL errors, timeouts, resets
+            if k == tries - 1 or method != "GET":
+                raise
+        time.sleep(min(120.0, 5.0 * 2 ** k))    # capped exponential backoff: 5 s, then 10 s
 
 
 def mine():
@@ -98,17 +108,23 @@ def main():
     a = p.parse_args()
     a.max_min = min(a.max_min, 60.0)
 
-    # one pod at a time: any of our pods still alive?
-    alive = []
+    # one pod at a time: is any of our pods alive, or not known to be gone? Only HTTP 404 means gone
+    keep, why = [], []
     for pid in mine():
         try:
-            api("GET", f"/pods/{pid}")
-            alive.append(pid)
-        except urllib.error.HTTPError:
-            pass
-    remember(alive)
-    if alive:
-        sys.exit(f"refusing: our pod(s) {alive} still exist - delete them first")
+            api("GET", f"/pods/{pid}", tries=3)
+            why.append(f"{pid} alive")
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                continue
+            why.append(f"{pid} state unknown: {e}")
+        except Exception as e:                            # URL error, timeout or bad reply: unknown as well
+            why.append(f"{pid} state unknown: {e}")
+        keep.append(pid)
+    remember(keep)                                        # pods not known to be gone stay on record
+    if keep:
+        sys.exit(f"refusing before any create: {'; '.join(why)}. Still on record in {MINE}: "
+                 "check RunPod, delete any pod still running, then rerun")
     preview = a.tag.startswith(PREVIEW_TAG)
     cap = PREVIEW_CAP_MIN if preview else TOTAL_CAP_MIN
     left = cap - spent_minutes(preview)
@@ -150,7 +166,7 @@ def main():
             time.sleep(90)
     t0 = time.time()
     pid = pod["id"]
-    remember([pid])
+    remember([pid])                                       # the check above left the record empty
     cost_hr = float(pod.get("costPerHr") or 0)
     print(f"created pod {pid} ({kind}, {pod.get('vcpuCount')} vCPU, {pod.get('memoryInGb')} GB, ${cost_hr}/h, max {max_min:.0f} min)", flush=True)
     status = "error"
@@ -205,22 +221,30 @@ def main():
     except Exception as e:
         print("job error:", repr(e), flush=True)
     finally:
+        gone = False
         for attempt in range(5):
             try:
                 api("DELETE", f"/pods/{pid}")
+                gone = True
                 break
             except urllib.error.HTTPError as e:
-                if e.code == 404:
+                if e.code == 404:                         # already gone
+                    gone = True
+                    break
+                if e.code == 429:                         # never retry a DELETE on a rate limit
                     break
                 time.sleep(5)
             except Exception:
                 time.sleep(5)
-        remember([])
+        remember([] if gone else [pid])                   # only a confirmed delete clears the record
         minutes = (time.time() - t0) / 60
         log_cost({"tag": a.tag, "pod": pid, "kind": kind, "vcpu": pod.get("vcpuCount"), "image": a.image, "cost_per_hr": cost_hr,
                   "minutes": round(minutes, 2), "usd": round(cost_hr * minutes / 60, 4), "status": status,
                   "ended": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
-        print(f"pod {pid} deleted; {minutes:.1f} min, ~${cost_hr * minutes / 60:.2f}; status {status}", flush=True)
+        state = "deleted" if gone else "NOT deleted"
+        print(f"pod {pid} {state}; {minutes:.1f} min, ~${cost_hr * minutes / 60:.2f}; status {status}", flush=True)
+        if not gone:
+            print(f"WARNING: pod {pid} stays in {MINE} and blocks new pods until it is deleted on RunPod", flush=True)
 
 
 if __name__ == "__main__":
