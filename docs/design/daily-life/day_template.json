@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "persona": "SUB-01: a 20-year-old university student who lives alone in a small apartment in Kichijoji, Tokyo. Part-time job on weekend shifts. An ordinary young adult, not special.",
+  "time": {
+    "clock": "simulated Tokyo wall clock, 24-hour HH:MM",
+    "scale": "24x: one real hour is one simulated day, so one simulated hour is 2.5 real minutes",
+    "after_midnight": "24:00 or later is after midnight of the same template day (25:00 is 01:00)",
+    "durations": "simulated minutes as [min, max], drawn uniformly as life.py draws its ACTIVITIES ranges"
+  },
+  "weekly_rules": {
+    "class_days": 3,
+    "class_blocks_per_class_day": 2,
+    "non_class_weekdays": 2,
+    "weekend_days": ["Saturday", "Sunday"],
+    "weekend_shifts": "one or two: the Saturday shift always happens (weight 1.0), the Sunday shift half the time (weight 0.5)",
+    "weekly_chores": "laundry and cleaning once a week, both on Sunday"
+  },
+  "shared": {
+    "sleep": [
+      {"id": "sleep_weekday", "nights": "Sunday to Thursday", "activity": "sleep", "place": "bed", "earliest_start": "23:00", "latest_start": "24:00", "target_start": "23:30", "wake": {"earliest": "06:45", "target": "07:00", "latest": "07:15"}, "duration_min": [0, 0], "need": "energy", "weight": 1.0},
+      {"id": "sleep_weekend", "nights": "Friday and Saturday", "activity": "sleep", "place": "bed", "earliest_start": "23:30", "latest_start": "25:00", "target_start": "00:30", "wake": {"earliest": "07:00", "target": "08:00", "latest": "08:30"}, "duration_min": [0, 0], "need": "energy", "weight": 1.0}
+    ],
+    "daily": [
+      {"id": "hyg_body_am", "activity": null, "proposal": "P1", "place": null, "earliest_start": "07:00", "latest_start": "09:00", "duration_min": [10, 15], "need": "hygiene", "weight": 0.9},
+      {"id": "hyg_teeth_am", "activity": null, "proposal": "P2", "place": null, "earliest_start": "07:00", "latest_start": "09:00", "duration_min": [3, 5], "need": "hygiene", "weight": 1.0},
+      {"id": "hyg_teeth_pm", "activity": null, "proposal": "P2", "place": null, "earliest_start": "22:30", "latest_start": "23:15", "duration_min": [3, 5], "need": "hygiene", "weight": 1.0},
+      {"id": "errand_bread_stock", "activity": "buy_bread", "place": "counter", "route": "home-bakery", "gate": "G8", "earliest_start": "09:30", "latest_start": "11:00", "duration_min": [2, 4], "need": "hunger", "weight": 0.4},
+      {"id": "chore_after_meal", "activity": null, "proposal": "P4", "place": null, "earliest_start": "20:30", "latest_start": "22:00", "duration_min": [10, 15], "need": "chores", "weight": 0.7}
+    ],
+    "meals": [
+      {"group": "breakfast", "earliest_start": "07:00", "latest_start": "10:00", "options": [
+        {"id": "bf_stock", "weight": 0.40, "steps": [
+          {"id": "bf_stock_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "07:30", "latest_start": "10:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "bf_bakery", "weight": 0.10, "steps": [
+          {"id": "bf_bakery_buy", "activity": "buy_bread", "place": "counter", "route": "home-bakery", "earliest_start": "07:00", "latest_start": "09:30", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "bf_bakery_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "07:10", "latest_start": "10:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "bf_konbini", "weight": 0.15, "steps": [
+          {"id": "bf_konbini_buy", "activity": "buy_konbini", "place": "counter", "route": "home-bakery", "gate": "G1", "earliest_start": "07:00", "latest_start": "09:30", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "bf_konbini_eat", "activity": "eat", "place": "table", "food": "onigiri or konbini_bento", "earliest_start": "07:10", "latest_start": "10:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "bf_home", "weight": 0.35, "steps": [
+          {"id": "bf_home_make", "activity": null, "proposal": "P5", "place": null, "food": "home-cooked", "earliest_start": "07:30", "latest_start": "09:30", "duration_min": [10, 15], "need": "hunger", "weight": 1.0},
+          {"id": "bf_home_eat", "activity": "eat", "place": "table", "food": "home-cooked", "earliest_start": "07:45", "latest_start": "10:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]}
+      ]},
+      {"group": "lunch", "earliest_start": "11:30", "latest_start": "12:30", "options": [
+        {"id": "ln_stock", "weight": 0.30, "steps": [
+          {"id": "ln_stock_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "ln_ramen", "weight": 0.25, "steps": [
+          {"id": "ln_ramen_order", "activity": "order_food", "place": "bed", "food": "ramen", "gate": "G2", "earliest_start": "11:30", "latest_start": "11:50", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "ln_ramen_delivery", "activity": "get_delivery", "place": "door_in", "food": "ramen", "earliest_start": "11:45", "latest_start": "12:15", "duration_min": [1, 2], "need": "hunger", "weight": 1.0},
+          {"id": "ln_ramen_eat", "activity": "eat", "place": "table", "food": "ramen", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "ln_home", "weight": 0.25, "steps": [
+          {"id": "ln_home_make", "activity": null, "proposal": "P5", "place": null, "food": "home-cooked", "earliest_start": "11:30", "latest_start": "11:50", "duration_min": [10, 15], "need": "hunger", "weight": 1.0},
+          {"id": "ln_home_eat", "activity": "eat", "place": "table", "food": "home-cooked", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "ln_konbini", "weight": 0.20, "steps": [
+          {"id": "ln_konbini_buy", "activity": "buy_konbini", "place": "counter", "route": "home-bakery", "gate": "G1", "earliest_start": "11:45", "latest_start": "12:00", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "ln_konbini_eat", "activity": "eat", "place": "table", "food": "onigiri or konbini_bento", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]}
+      ]},
+      {"group": "dinner", "earliest_start": "18:00", "latest_start": "21:00", "options": [
+        {"id": "dn_stock", "weight": 0.15, "steps": [
+          {"id": "dn_stock_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "18:00", "latest_start": "20:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "dn_ramen", "weight": 0.25, "steps": [
+          {"id": "dn_ramen_order", "activity": "order_food", "place": "bed", "food": "ramen", "gate": "G2", "earliest_start": "18:00", "latest_start": "19:30", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "dn_ramen_delivery", "activity": "get_delivery", "place": "door_in", "food": "ramen", "earliest_start": "18:10", "latest_start": "19:45", "duration_min": [1, 2], "need": "hunger", "weight": 1.0},
+          {"id": "dn_ramen_eat", "activity": "eat", "place": "table", "food": "ramen", "earliest_start": "18:20", "latest_start": "20:15", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "dn_home", "weight": 0.35, "steps": [
+          {"id": "dn_home_make", "activity": null, "proposal": "P5", "place": null, "food": "home-cooked", "earliest_start": "18:15", "latest_start": "19:15", "duration_min": [10, 15], "need": "hunger", "weight": 1.0},
+          {"id": "dn_home_eat", "activity": "eat", "place": "table", "food": "home-cooked", "earliest_start": "18:45", "latest_start": "20:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]},
+        {"id": "dn_konbini", "weight": 0.25, "steps": [
+          {"id": "dn_konbini_buy", "activity": "buy_konbini", "place": "counter", "route": "home-bakery", "earliest_start": "20:00", "latest_start": "20:45", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
+          {"id": "dn_konbini_eat", "activity": "eat", "place": "table", "food": "onigiri or konbini_bento", "earliest_start": "20:05", "latest_start": "21:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
+        ]}
+      ]}
+    ],
+    "leisure": {
+      "group": "leisure",
+      "draw": "drawn again and again to fill free time; only entries whose window contains the current time take part, weights renormalised among them",
+      "entries": [
+        {"id": "lz_research", "activity": "research", "place": "desk", "earliest_start": "09:30", "latest_start": "23:00", "duration_min": [15, 45], "need": "curiosity", "weight": 0.20},
+        {"id": "lz_phone", "activity": "phone", "place": "bed", "earliest_start": "07:10", "latest_start": "23:30", "duration_min": [12, 40], "need": "boredom", "weight": 0.15},
+        {"id": "lz_console", "activity": "play_console", "place": "window", "gate": "G4", "earliest_start": "09:30", "latest_start": "23:00", "duration_min": [5, 15], "need": "boredom", "weight": 0.15},
+        {"id": "lz_chat", "activity": "chat", "place": "desk", "gate": "G5", "earliest_start": "09:30", "latest_start": "23:00", "duration_min": [6, 15], "need": "boredom", "weight": 0.12},
+        {"id": "lz_computer", "activity": "use_computer", "place": "desk", "gate": "G4", "earliest_start": "09:30", "latest_start": "23:00", "duration_min": [4, 12], "need": "boredom", "weight": 0.08},
+        {"id": "lz_music", "activity": "listen_music", "place": "bed", "earliest_start": "18:00", "latest_start": "24:00", "duration_min": [8, 25], "need": "boredom", "weight": 0.12},
+        {"id": "lz_park", "activity": "park", "place": "bench", "route": "home-park", "gate": "G3", "earliest_start": "09:00", "latest_start": "19:30", "duration_min": [20, 45], "need": "boredom", "weight": 0.18}
+      ]
+    }
+  },
+  "day_types": {
+    "class_day": {"per_week": 3, "entries": [
+      {"id": "class_block_1", "activity": null, "proposal": "P3", "place": null, "away": true, "earliest_start": "12:50", "latest_start": "13:05", "duration_min": [90, 90], "need": "obligation", "weight": 1.0},
+      {"id": "class_block_2", "activity": null, "proposal": "P3", "place": null, "away": true, "earliest_start": "14:35", "latest_start": "14:50", "duration_min": [90, 90], "need": "obligation", "weight": 1.0}
+    ]},
+    "non_class_weekday": {"per_week": 2, "entries": [
+      {"id": "outside_library", "group": "outside", "activity": null, "proposal": "P7", "place": null, "away": true, "earliest_start": "09:30", "latest_start": "10:00", "duration_min": [90, 120], "need": "obligation", "weight": 0.6},
+      {"id": "outside_job", "group": "outside", "activity": null, "proposal": "P6", "place": null, "away": true, "earliest_start": "12:50", "latest_start": "13:10", "duration_min": [300, 300], "need": "obligation", "weight": 0.4}
+    ]},
+    "weekend": {"days": ["Saturday", "Sunday"], "entries": [
+      {"id": "weekend_job_sat", "days": ["Saturday"], "activity": null, "proposal": "P6", "place": null, "away": true, "earliest_start": "12:50", "latest_start": "13:10", "duration_min": [300, 300], "need": "obligation", "weight": 1.0},
+      {"id": "weekend_job_sun", "days": ["Sunday"], "activity": null, "proposal": "P6", "place": null, "away": true, "earliest_start": "12:50", "latest_start": "13:10", "duration_min": [300, 300], "need": "obligation", "weight": 0.5},
+      {"id": "weekend_chore_clean", "days": ["Sunday"], "frequency": "weekly", "activity": null, "proposal": "P8", "place": null, "earliest_start": "09:00", "latest_start": "10:00", "duration_min": [30, 45], "need": "chores", "weight": 1.0},
+      {"id": "weekend_chore_laundry", "days": ["Sunday"], "frequency": "weekly", "activity": null, "proposal": "P9", "place": null, "earliest_start": "10:00", "latest_start": "11:00", "duration_min": [60, 90], "need": "hygiene", "weight": 1.0}
+    ]}
+  },
+  "notes": [
+    "Reading of the brief: teeth are daily (weight 1.0) and the shower is daily at 0.9; laundry and cleaning are once a week, both on Sunday; dishes come after 70% of days. Travel to campus, the library and the job is not modelled, so a consumer keeps him away for the whole block plus travel.",
+    "P1 shower: proposed activity 'shower', place 'bathroom' (new, see P11), 10-15 simulated min, need hygiene.",
+    "P2 teeth: proposed activity 'brush_teeth', place 'bathroom', 3-5 min, need hygiene; morning and night.",
+    "P3 class blocks: proposed activity 'attend_class', away at 'campus' (new, no route), 90 min per block, two per class day, need obligation.",
+    "P4 after-meal chore: proposed activity 'dishes', place 'kitchen' (new, see P11), 10-15 min, need chores, weight 0.7.",
+    "P5 home cooking: proposed activity 'cook', place 'kitchen', 10-15 min, need hunger. Instant noodles count as home cooking.",
+    "P6 part-time job: proposed activity 'work_shift', away at 'job' (new, see P11), 300 min, need obligation. Saturday always, Sunday half the time, and 40% of non-class weekdays.",
+    "P7 library study: proposed activity 'library_study', away at 'library' (new, see P11), 90-120 min, need obligation; the other 60% of non-class weekdays.",
+    "P8 cleaning: proposed activity 'clean_apartment', once a week on Sunday, 30-45 min, need chores; the place is a point inside the apartment, to be chosen.",
+    "P9 laundry: proposed activity 'laundry', once a week on Sunday, 60-90 min, need hygiene; place bathroom or a washer point.",
+    "P10 needs not in life.py: hygiene, chores, obligation and curiosity (life.py's research why-text says 'curious'). life.py uses hunger and boredom; energy appears only in its module docstring.",
+    "P11 places not in life.py PLACES: bathroom, kitchen, campus, job and library. Away places need no point in the world; a consumer only keeps him off the apartment.",
+    "G1 konbini: life.py scores buy_konbini only while the bakery is closed (about 20:00 to 07:00), with no food in stock and no delivery on its way. The breakfast and lunch konbini options need that gate relaxed; the dinner option at 20:00 fits as it is.",
+    "G2 ramen: life.py opens order_food from 10:00, only with hunger 0.55 or more, only with no food in stock and no delivery on its way, and at most once every 3 simulated hours. The courier arrives on its own, so get_delivery windows are targets. No ramen at breakfast.",
+    "G3 park: life.py opens the park at 08:00 on weekdays and 07:00 on weekends, and he must leave by 20:00. home-park is 1275 m (about 5 simulated min each way) and home-bakery 456 m (about 2 min), from web/tokyo_routes.json and life.py WALK_S.",
+    "G4 home devices: life.py scores play_console, use_computer and use_bathroom only when home_enabled is set. play_console offers pong, and Minecraft when configured.",
+    "G5 chat: life.py scores chat only while viewer messages wait (chat_waiting), so the chat window is a cap, not a guarantee.",
+    "G6 day counts: life.py counts meals and research per day from 04:00 (DAY_RESET_H) and weights research past 3 sessions a day to a quarter. This template uses calendar days, so a consumer must map the counts.",
+    "G7 not scheduled: watch_video, play_chess (one game a day in life.py), window and use_bathroom (bladder need). Sleep stages come from the sleep engine; the sleep times here are targets.",
+    "G8 bread: buy_bread here is a daily chance. life.py triggers bakery trips from bread stock (4 rolls a trip, 2 a meal), so a consumer should check stock before a bread option.",
+    "G9 meal windows: life.py meal slots are 07-10, 12-14 and 18-21. Preparation steps may start before a slot (lunch 11:30) so that eating starts inside it.",
+    "Risk: null activities cannot run in life.py until their proposals are approved and named, and no code reads this file yet. The konbini and kitchen decisions (G1, P11) are the owner's to make."
+  ]
+}
