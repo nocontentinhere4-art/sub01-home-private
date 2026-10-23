@@ -421,6 +421,8 @@ def echoes_chat(value, chat_texts):
         n = norm(t)
         if len(n) >= 8 and (n in v or (len(v) >= 8 and v in n and len(v) >= 0.8 * len(n))):
             return True
+        if len(str(value).split()) >= 4 and v in n:   # four or more consecutive words lifted from a message
+            return True
         a, b = set(str(value).lower().split()), set(str(t).lower().split())
         if len(a) >= 3 and len(a & b) / len(a | b) >= 0.8:
             return True
@@ -1588,7 +1590,9 @@ class Agent:
         att = attention_of(action, obs["marks"], obs["screen"])
         hold = {"type": max(1.5, len(action.get("text", "")) * 0.07) + 0.8, "click": 2.0, "navigate": 2.0,
                 "search": 2.5, "back": 1.5}.get(kind, 3.0)
-        self.visual.set_action("typing" if kind == "type" else "mouse" if kind in ("click", "navigate", "search", "back")
+        # 2026-10-23: the native "mouse" state plays the AuthoredReach clip, which took the body out of the spectator
+        # frame during the first rehearsal; clicks keep the reading pose until that clip is reviewed.
+        self.visual.set_action("typing" if kind == "type" else "reading" if kind in ("click", "navigate", "search", "back")
                                else "reading", hold, att)
         self.counters["actions"] += 1
         self.last_action = {"action": action_label(action), "source": source}
