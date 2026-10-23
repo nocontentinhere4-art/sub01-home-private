@@ -504,10 +504,13 @@ def clean_action(a, marks, screen=SCREEN, chat_texts=()):
     if kind == "back":
         return {"action": "back"}, None
     if kind == "search":
-        q = query_clean(a.get("query"))
+        raw = " ".join(str(a.get("query") or "").split())
+        q = query_clean(raw)
         if not q:
             return None, "query not allowed"
-        return ({"action": "search", "query": q}, None) if not echoes_chat(q, chat_texts) else (None, "copied from chat")
+        if echoes_chat(raw, chat_texts) or echoes_chat(q, chat_texts):   # the full query too: truncation must not hide a copy
+            return None, "copied from chat"
+        return {"action": "search", "query": q}, None
     return {"action": "wait", "seconds": round(clamp(num(a.get("seconds"), 2.0), 0.5, 10.0), 1)}, None
 
 
