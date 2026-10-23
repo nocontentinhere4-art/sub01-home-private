@@ -16,7 +16,7 @@ from live_server import Live
 @pytest.mark.parametrize('activity,device', [('research', 'desk'), ('watch_video', 'desk'), ('phone', 'phone')])
 def test_screen_waits_for_new_house_route(activity, device):
     live = Live.__new__(Live)
-    live.life = SimpleNamespace(activity=activity, path=[])
+    live.life = SimpleNamespace(activity=activity, path=[], phone_app='tiktok')   # the phone shows a browser page only for shorts
     live.engine = SimpleNamespace(stage='AWAKE')
     home = live.home = HomeWorld()
     # The old route has already ended, but the real house has not.
