@@ -1,6 +1,8 @@
 from pathlib import Path
 import json
+import sys
 import pytest
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import stage_unreal_home_runtime as runtime
 from unreal_import_real_bathroom_pendant import validate
 from tools.pixel_streaming.native_live_viewer import validate_settings
@@ -73,6 +75,29 @@ def test_actual_source_slot_survives_unreal_truncated_material_asset_names():
     with pytest.raises(RuntimeError):source_slot_binding(component,source,dest)
     values['material_interface']=material
     with pytest.raises(RuntimeError):source_slot_binding(component,source,'/Game/AnotherNamespace')
+
+
+def test_source_slot_refuses_non_material_and_empty_interfaces_with_runtime_error():
+    from types import SimpleNamespace
+    from unreal_import_real_bathroom_pendant import source_slot_binding
+    _,doc,_=validate(SOURCE);source=next(m for m in doc['materials'] if m['name']=='modern_ceiling_globe')
+    dest='/Game/Sub01Home/RealBathroomPendant/V_c953ce762552/Attempt_test'
+    material=SimpleNamespace(get_path_name=lambda:dest+'/source/Materials/mode_lobe.mode_lobe');foreign=object()
+    values={'material_slot_name':source['name'],'material_interface':None}
+    slot=SimpleNamespace(get_editor_property=lambda key:values[key])
+    mesh=SimpleNamespace(get_editor_property=lambda key:[slot])
+    component=SimpleNamespace(get_editor_property=lambda key:mesh,get_material=lambda index:material)
+    with pytest.raises(RuntimeError,match='Exact original material slot')as error:source_slot_binding(component,source,dest)
+    assert 'slot_material=[None]' in str(error.value)
+    values['material_interface']=foreign
+    with pytest.raises(RuntimeError,match='Exact original material slot')as error:source_slot_binding(component,source,dest)
+    assert repr(type(foreign)) in str(error.value)
+    component.get_material=lambda index:foreign
+    with pytest.raises(RuntimeError,match='Exact original material slot')as error:source_slot_binding(component,source,dest)
+    assert repr(type(foreign)) in str(error.value)
+    values['material_interface']=None;component.get_material=lambda index:None
+    with pytest.raises(RuntimeError,match='Exact original material slot'):source_slot_binding(component,source,dest)
+    with pytest.raises(RuntimeError,match='Exact original material slot'):source_slot_binding(SimpleNamespace(get_editor_property=lambda key:None,get_material=lambda index:material),source,dest)
 
 
 def test_explicit_slot_binding_still_runs_every_original_pbr_factor_gate():
