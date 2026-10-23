@@ -1074,3 +1074,89 @@ def test_pinfix_logic_runs_and_v2_face_unchanged(pinfix_patched, tmp_path):
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
     run = _run_driver(build_units(pinfix_patched, tmp_path / 'b', end=FACE_END), tmp_path / 'b')
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+# ================================================================================================ no pin (measure only)
+NOPIN_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_no_pin.py'
+NOPIN_MARKER = '// SUB01_STREAMER_VISUAL_V2_NOPIN'
+
+
+def install_nopin(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(NOPIN_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+@pytest.fixture
+def pod_pinfix(tmp_path) -> Path:
+    target = tmp_path / 'pinfix-src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0 and install_pinfix(target)[0] == 0
+    return target
+
+
+@pytest.fixture(scope='module')
+def nopin_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('nopin') / 'src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0 and install_pinfix(target)[0] == 0
+    code, report = install_nopin(target)
+    assert code == 0, report
+    return target
+
+
+def test_nopin_plans_applies_refuses_twice_and_needs_pinfix(pod_pinfix, pod_face):
+    before = {p.name: sha(p) for p in pod_pinfix.iterdir()}
+    code, planned = install_nopin(pod_pinfix, '--dry-run')
+    assert code == 0 and len(planned['edits']) == 3 and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in pod_pinfix.iterdir()} == before
+    code, report = install_nopin(pod_pinfix)
+    assert code == 0 and report['status'] == 'applied' and report['pin'] == {'applied': False, 'measured': report['pin']['measured']}
+    changed = {name for name in before if sha(pod_pinfix / name) != before[name]}
+    assert changed == {'Sub01HomeHands.cpp'}
+    name = 'Sub01HomeHands.cpp'
+    assert sha(pod_pinfix / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+    raw = (pod_pinfix / name).read_bytes()
+    assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    after = {p.name: sha(p) for p in pod_pinfix.iterdir()}
+    assert install_nopin(pod_pinfix)[0] == 2 and install_pinfix(pod_pinfix)[0] == 2
+    assert {p.name: sha(p) for p in pod_pinfix.iterdir()} == after
+    face_before = {p.name: sha(p) for p in pod_face.iterdir()}
+    code, refused = install_nopin(pod_face)
+    assert code == 2 and 'lacks the pin fix' in refused['reason'] and {p.name: sha(p) for p in pod_face.iterdir()} == face_before
+
+
+def test_nopin_text(nopin_patched):
+    proxy = lf(nopin_patched / 'Sub01HomeHands.cpp')
+    assert proxy.count(NOPIN_MARKER) == 3
+    assert ' static constexpr bool StreamerV2PinEnabled=false;' in proxy
+    pin = proxy[proxy.index(' void PinStreamerV2('):proxy.index(FACE_END, proxy.index(' void PinStreamerV2('))]
+    record = pin.index('if(Record){FTransform Pelvis=FTransform::Identity;')
+    gate = pin.index('if(!StreamerV2PinEnabled)return;')
+    assert record < gate < pin.index('const auto& Bones=Composed.GetBoneContainer();')  # measured, then nothing moved
+    assert 'applied=0 (measure only)' in proxy
+    assert 'PinStreamerV2(Probe.Pose,false,Seq);' in proxy and 'PinStreamerV2(Output.Pose,true);' in proxy  # call sites untouched
+    for name in PATCHED:
+        text = lf(nopin_patched / name)
+        assert closure.brace_walk(closure.strip(text)) == closure.brace_walk(closure.strip(lf(SOURCE / name))), name
+    for name in ('Sub01HomeLab.h', 'Sub01HomeLab.cpp', 'Sub01HomeHands.h'):  # byte-identical to the pin fix
+        assert NOPIN_MARKER not in lf(nopin_patched / name)
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_nopin_cpp_compiles_syntax_only_against_stub(nopin_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units(nopin_patched, tmp_path, end=FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_nopin_logic_runs_and_v2_face_pinfix_unchanged(nopin_patched, tmp_path):
+    run = _run_driver(build_units(nopin_patched, tmp_path / 'a', end=FACE_END, driver=PINFIX_DRIVER), tmp_path / 'a')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(build_units(nopin_patched, tmp_path / 'b', end=FACE_END), tmp_path / 'b')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr

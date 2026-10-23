@@ -70,11 +70,14 @@ EOF
 M=<project>/Source/Sub01HomeLab ; cp -a "$M" "$M.before-face"     # installers keep no backup
 python3 tools/native_streamer_visual_v2/install.py --source "$M" --dry-run            # only on pre-v2 sources
 python3 tools/native_streamer_visual_v2/install_face_camera.py --source "$M" --dry-run  # only on v2 sources
-python3 tools/native_streamer_visual_v2/install_pin_fix.py --source "$M" --dry-run      # then without --dry-run
+python3 tools/native_streamer_visual_v2/install_pin_fix.py --source "$M" --dry-run      # only on v2+face sources
+python3 tools/native_streamer_visual_v2/install_no_pin.py --source "$M" --dry-run       # then without --dry-run
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
 Launch with `-Sub01StreamerVisual` (not `-Sub01AuthoredCinematicReview`), `SUB01_PC_ORIGIN=http://127.0.0.1:8832`,
 `SUB01_ADMIN_TOKEN`. Logs: `SUB01_STREAMER_VISUAL_V2_READY`, `..._FACE_READY`, `..._DRIFT_GUARD`, `..._DRIFT_REFERENCE`,
-`..._CLIP_AUDIT`, `..._MOUSE_AS_SITTING_LOOP`, `..._STATE a -> b`, `..._FACE_CAMERA`. Offline checks only (stub
+`..._CLIP_AUDIT`, `..._MOUSE_AS_SITTING_LOOP`, `..._STATE a -> b`, `..._FACE_CAMERA`. With `install_no_pin.py` (build v14)
+the guard only measures (`DRIFT_GUARD ... applied=0`): both the R9 pin (v11) and the per-clip guard (v13) moved the body
+out of the chair on the pod, while the clips alone sit on the authored transform. Offline checks only (stub
 compile + logic runs): `tests/test_native_streamer_visual_v2.py`; the spine pitch axis and the visual result need the pod.
