@@ -24,8 +24,13 @@ Owner decisions (2026-10-23 21:45 UTC):
 - **Chat source = the chat on his site** (subzerone.live), which sends impulses to SUB-01's brain (site WebSocket
   `/ws` → `live_server.handle_chat` → impulse/brain + streamer chat batches to the agent).
 - **All sites and all games are approved.** Still blocked by design (owner's standing rules and a public stream):
-  purchases/payments/wallets, logins/credentials/account pages, downloads/installs, adult content. Tell the owner if a
-  request hits these; he can override explicitly.
+  purchases/payments/wallets, downloads/installs, adult content. Tell the owner if a request hits these; he can
+  override explicitly.
+- **Credentials block lifted** (owner, ~21:50 UTC: "Può accedere a tutto quello che vuole"): SUB-01's own decisions may
+  log in, use logged-in sessions and account pages on the owner's PC (`--allow-credentials`, default on). Kept: chat
+  viewers cannot direct credential or account changes (the owner's original chat rule; he may lift it too); typed
+  secrets are never spoken, captioned or logged; the director cuts to the webcam layout while a login/account page is
+  on screen.
 - "Looks real" is accepted by the visual-QA matrix plus his approval.
 
 ## Working rules (non-negotiable)
