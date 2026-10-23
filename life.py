@@ -243,6 +243,18 @@ def trip_of(place, path):
     return None
 
 
+def day_plan_hint(t):
+    """The day plan's activity for this hour of the Tokyo day (daily_plan.hint), or None. Optional: without the module
+    life runs as before. Imported here, not at the top, because daily_plan may import life."""
+    try:
+        import daily_plan
+    except ImportError:
+        return None
+    lt = local(t)
+    name = daily_plan.hint(lt.hour + lt.minute / 60 + lt.second / 3600)
+    return name if name in ACTIVITIES else None
+
+
 class Life:
     def __init__(self, state=None, rng=None, body=None):
         """body: a twin.body.Body stepped by the caller (live_server). Without one, Life makes and steps its own."""
@@ -253,7 +265,7 @@ class Life:
         self.heading = 0.0
         self.arrival_check = None             # optional inhabited-house arrival, supplied by its owner
         self.path = []                         # remaining waypoints while walking
-        self.sleep_on_way = False              # a sleep stage began on the way (set on each walking tick): sleep waits for home
+        self.impulse = None                    # (activity, why, sim time) of the chat request to carry out (request_impulse)
         self.activity = s.get("activity", "window")
         if self.activity not in ACTIVITIES:    # a save from before S1 (the chart is gone): he reads instead
             self.activity = "research"
@@ -283,6 +295,7 @@ class Life:
         self.wish = s.get("wish")              # [dish, sim time] a viewer asked for
         self._t = 0.0
         self.plan_hint = None                  # life activity of the day plan's next step (live_server, mind.py)
+        self.day_hint = None                   # the daily template's activity for this hour (daily_plan), when plan_hint has none
         self.chat_waiting = 0                  # chat messages he may answer at the computer (live_server)
         # (sim t, activity) of the latest starts: read by live_server, and here the repeat penalty, the day's reading
         # sessions and meals (L1, L2); saved, so a restart does not reset the day's counts
@@ -330,6 +343,14 @@ class Life:
             if re.search(pat, low):
                 w = self.desires.get(act, [0, t])[0]
                 self.desires[act] = [min(1.5, w + 0.6), t]
+
+    def request_impulse(self, imp, t):
+        """A chat request for an activity (live_server, from impulse.py). Only the latest is kept; update carries it out at
+        once when he is awake and not walking. Sleep is not a request: it follows its stage, as a vote does. Never raises."""
+        act = getattr(imp, "activity", None)
+        if getattr(imp, "kind", None) == "activity" and isinstance(act, str) and act in ACTIVITIES and act != "sleep":
+            why = getattr(imp, "why", None)
+            self.impulse = (act, why if isinstance(why, str) else "", t)
 
     def desire(self, act, t):
         w, t0 = self.desires.get(act, [0.0, t])
@@ -416,8 +437,9 @@ class Life:
                               + self.desire("play_console",t))*desk,
                 use_computer=(.22 + .2*max(0,rel.get("attention",1)-1) + self.desire("use_computer",t))*desk,
                 use_bathroom=max(0,(getattr(self,"home_bladder",0)-.45)*4)+self.desire("use_bathroom",t))
-        if s.get(self.plan_hint, 0.0) > 0:              # the plan only tilts what is possible now
-            s[self.plan_hint] += PLAN_BONUS
+        hint_now = self.plan_hint or self.day_hint      # the mind's next step, else the template's step for this hour
+        if s.get(hint_now, 0.0) > 0:                    # the plan only tilts what is possible now
+            s[hint_now] += PLAN_BONUS
         nudge = self.nudge(t)
         if nudge and s.get(nudge, 0.0) > 0:             # viewers' vote: the same, stronger; never the impossible
             s[nudge] += VOTE_BONUS
@@ -596,7 +618,6 @@ class Life:
             self.boredom = max(0.0, self.boredom - dt_sim / (30 * 60))
         # walking (real time, so viewers see continuous motion)
         if self.path:
-            self.sleep_on_way = stage != "AWAKE"   # a sleep stage on the way: he walks on, and sleep waits for home
             tx, tz = PLACES[self.path[0]]
             dx, dz = tx - self.x, tz - self.z
             d = math.hypot(dx, dz)
@@ -627,17 +648,27 @@ class Life:
         if self.arrival_check is not None and arrived and self.dur is not None:
             self.until = self.timer(t)
             self.dur = None
-        # Arrival gates expiry/effects. Travel is not interrupted: needs, and a sleep stage that begins on the way, wait
-        # for arrival (only the courier turns him back, above). A sleep stage that began on the way is applied at home:
-        # from an outdoor stop he walks home first, and falls asleep on arrival there (below).
-        if self.activity == "sleep" and stage != "AWAKE":
-            return                                        # asleep: nothing to decide until the brain wakes up
+        # Arrival gates expiry/effects. Travel is not interrupted: needs, a chat impulse and a sleep stage that begins on the
+        # way wait for arrival (only the courier turns him back, above). Sleep starts only in bed: from anywhere else the
+        # sleep start walks him there first (start() routes him, and his activity is 'sleep' on the way).
+        if self.activity == "sleep" and stage != "AWAKE" and self.place == "bed":
+            return                                        # asleep in bed: nothing to decide until the brain wakes up
         must_sleep = stage != "AWAKE"
         woke = stage == "AWAKE" and self.activity == "sleep"
-        # an interruption names what he gets up for: the food action (needs first), else the wish or the vote
+        self.day_hint = day_plan_hint(t)                  # the daily template's step for this hour, if it has one
+        # a chat impulse is carried out at once when he is awake (a walk or a sleep stage keeps it pending). The activity he
+        # is already doing in its place is done, not started again: its arrival effects would apply twice
+        impulse = None
+        if self.impulse and stage == "AWAKE":
+            want = self.impulse[0]
+            if want == "sleep" or want not in ACTIVITIES or (want == self.activity and self.place == ACTIVITIES[want][0]):
+                self.impulse = None                       # not carried out: sleep follows its stage; or he is at it already
+            else:
+                impulse = self.impulse
+        # an interruption names what he gets up for: the chat impulse, else the food action (needs first), else wish or vote
         hungry = self.hungry_now(t, rel, hot, pressure) if stage == "AWAKE" else False
         wish = (not hungry and self.wish_now(t, rel, hot, pressure)) if stage == "AWAKE" else False
-        if (arrived and t >= self.until) or must_sleep or woke or hungry or wish:
+        if (arrived and t >= self.until) or must_sleep or woke or hungry or wish or impulse:
             if arrived:
                 if self.activity == "buy_bread" and self.place == "counter":
                     self.bread += BREAD_PER_TRIP
@@ -661,7 +692,10 @@ class Life:
                     self.food_items.append(self.delivery.get("dish", "bento"))
                     self.delivery = None
                     self.food += 1
-            nxt = (hungry or wish) if (hungry or wish) and not must_sleep else self.choose(t, stage, rel, hot, pressure)
+            if impulse:
+                nxt = impulse[0]                          # the chat impulse wins over the needs, the wishes and the choice
+            else:
+                nxt = (hungry or wish) if (hungry or wish) and not must_sleep else self.choose(t, stage, rel, hot, pressure)
             why = {
                 "sleep": "falls asleep" if self.place == "bed" else "goes to bed",
                 "eat": "hungry: eats some bread",
@@ -689,14 +723,11 @@ class Life:
                 why = f"hungry: eats the {(self.food_items[0] if self.food_items else 'meal').replace('konbini_', '')} at the table"
             if woke:
                 why = "wakes up"
-            if must_sleep and self.sleep_on_way and self.place not in ("door_in", "bed", "table", "desk", "window"):
-                # a sleep stage that began on the way: from an outdoor stop he walks home first, and falls asleep there
-                self.dur = None                       # the stop's time is not clocked on the way home
-                self.path = route(self.place, "bed")[1:]
-                self.trip = trip_of(self.place, self.path)
-                self.until = self.timer(t, self.walk_s())
-                return
-            self.start(nxt, t, why)
+            if impulse:
+                why = impulse[1] or why                   # the request's own words
+            self.start(nxt, t, why)                       # sleep from elsewhere: start() walks him to bed first
+            if impulse:
+                self.impulse = None                       # carried out
 
     def music_bg_ok(self):
         """Background music is possible now (#68): at the desk reading or playing chess, on the park bench, or walking
@@ -758,6 +789,8 @@ class Life:
                 "order": self.order_dish if self.activity == "order_food" else None, "courier": self.courier(self._t), "log": [{"t": e["t"], "what": e["what"]} for e in self.log[-8:]], "console_choice": self.console_choice, "console_wish": self.console_wish}
 
     def label(self):
+        if self.activity == "sleep" and self.path:
+            return "walking to bed"
         if self.activity == "eat" and self.eating in EAT_LABEL:
             return EAT_LABEL[self.eating]
         if self.activity == "order_food" and self.order_dish:

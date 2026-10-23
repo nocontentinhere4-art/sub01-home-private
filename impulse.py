@@ -57,7 +57,7 @@ REACTIONS = {
     'buy_konbini': 'Konbini it is. Be right back.',
     'park': 'The park sounds nice. Heading out.',
     'window': 'Okay, I will look out the window.',
-    'sleep': 'Okay, bed. Good night.',
+    'sleep': 'I sleep when my body says so.',
     'use_bathroom': 'One sec, heading to the bathroom.',
     'chat': 'Okay, I will answer at the computer.',
 }
