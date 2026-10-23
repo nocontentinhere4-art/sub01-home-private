@@ -4,6 +4,8 @@ import math
 import re
 from pathlib import Path
 
+import pytest
+
 from home_world import HomeWorld, NODES, EDGES, route, Pong
 
 
@@ -202,3 +204,61 @@ def test_ground_routes_do_not_cut_across_the_stair_treads():
     assert home.view()['position'][0] == -1.8
     assert home.view()['position'][2] == .1
     assert home.view()['look'][2] == .1
+
+
+@pytest.mark.parametrize("seat", ["desk", "sofa", "bed"])
+def test_getting_up_from_a_seat_takes_a_human_pace(seat):
+    # Seated falls at 0.55 a second of real time: a seat is left in about 1.8 s, never at once and never slowly.
+    h = HomeWorld({"node": seat, "seated": 1})
+    eye = h.view()["position"]
+    started = stepped = None
+    for i in range(1, 400):
+        h.update(.05, .05, {"activity": "park"}, {})
+        if h.path and started is None:
+            started = i * .05
+        if h.position != list(NODES[seat]):
+            stepped = i * .05
+            break
+        now = h.view()["position"]
+        assert math.dist(eye, now) <= 1.25 * .05 + 1e-6, (i, eye, now)
+        eye = now
+    assert started is not None and stepped is not None
+    assert 1.2 <= stepped - started <= 2.5, stepped - started
+
+
+def test_changing_course_on_a_node_plans_from_that_node_not_back_along_the_last_edge():
+    h = HomeWorld({"node": "front", "position": list(NODES["front"]), "target": "outside",
+                   "path": ["door", "outside"], "activity": "park"})
+    h.update(.05, .05, {"activity": "research"}, {})
+    assert h.path == ["aisle", "desk"]
+
+
+def test_changing_course_while_getting_up_does_not_walk_off_and_back():
+    # Still getting up from the desk, he has taken no step: a new target is planned from the seat,
+    # not from the next waypoint he never reached (that walked him to the aisle and back).
+    h = HomeWorld({"node": "desk", "seated": 1})
+    for _ in range(10):
+        h.update(.05, .05, {"activity": "park"}, {})
+    h.update(.05, .05, {"activity": "research"}, {})
+    for _ in range(100):
+        h.update(.05, .05, {"activity": "research"}, {})
+        assert h.position == list(NODES["desk"])
+    assert h.node == "desk" and not h.path and h.seated == 1
+
+
+@pytest.mark.parametrize("scale", [1, 24, 60])
+def test_bathroom_visit_empties_a_full_bladder_in_sim_time_at_any_acceleration(scale):
+    # A visit lasts one to two sim minutes. Emptying runs on sim time, as filling does, so 20 sim s
+    # empties .9 at 1x, 24x and 60x alike (with a real-time drain a 60x visit left the bladder almost full).
+    h = HomeWorld({"node": "bathroom", "bladder": .9})
+    for _ in range(int(20 / (.05 * scale))):
+        h.update(.05, .05 * scale, {"activity": "use_bathroom"}, {})
+    assert h.bladder == 0
+
+
+@pytest.mark.parametrize("scale", [1, 24, 60])
+def test_bladder_fills_over_five_sim_hours_at_any_acceleration(scale):
+    h = HomeWorld({"node": "desk", "seated": 1, "bladder": 0})
+    for _ in range(int(5 * 3600 / (.5 * scale))):
+        h.update(.5, .5 * scale, {"activity": "research"}, {})
+    assert h.bladder > .999

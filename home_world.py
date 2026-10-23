@@ -92,8 +92,6 @@ DESTINATIONS = {
     "play_chess": "desk",
     "use_computer": "desk",
 }
-# Indoor life places a walk home can end at, as home nodes (the rooms DESTINATIONS uses for them).
-WALK_HOME_NODES = {"bed": "bed", "desk": "desk", "table": "kitchen", "window": "balcony", "door_in": "door"}
 LOOKS = {
     "desk": (2, 1.16, -3.3),
     "sofa": (-3.85, 1.65, 0.1),
@@ -382,16 +380,13 @@ class HomeWorld:
             # Still out on the real streets: stay outside the front door
             # until the life walk is back at it, then return through it.
             target = "outside"
-        elif target == "outside" and life.get("walking") and life.get("place") not in hi.OUTDOOR_PLACES:
-            # A walk home from an outdoor stop keeps the stop's activity name when a sleep stage
-            # begins on the way (life.py walks on to bed without a new activity): once back at the
-            # door, come in to where that walk leads.
-            target = WALK_HOME_NODES.get(life.get("path_to"), target)
         self.bladder = min(1, self.bladder + max(0, sim_dt) / 18000)
         if target != self.target:
-            # Finish current edge before replanning; no teleports through furniture.
-            origin = self.path[0] if self.path else self.node
-            self.path = ([origin] if self.path else []) + route(origin, target)[1:]
+            # Finish the edge he is on before replanning; no teleports through furniture. Standing on a node
+            # (or still getting up from a seat) he has not stepped onto an edge yet: the route starts there.
+            on_edge = bool(self.path) and self.position != list(NODES[self.node])
+            origin = self.path[0] if on_edge else self.node
+            self.path = ([origin] if on_edge else []) + route(origin, target)[1:]
             self.target = target
             self.sequence += 1
         self.activity = activity
@@ -438,7 +433,7 @@ class HomeWorld:
             )
             if self.node == "bathroom" and (not self.native_feedback.required
                                            or self.activity_ready('use_bathroom')):
-                self.bladder = max(0, self.bladder - dt * 0.06)
+                self.bladder = max(0, self.bladder - max(0, sim_dt) * 0.06)   # sim time, as the filling above
                 self.last_bathroom = self.time
             if activity != self.last_activity and self.activity_ready(activity):
                 self.memories.append(
