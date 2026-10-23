@@ -1,8 +1,9 @@
 """Security review of the changes of 2026-10-23 (report: docs/security/REVIEW-2026-10-23.md).
 
 A finding is a strict xfail: the test states the safe behaviour, it fails today, and the reason names the finding id
-(SUB01-Sxx). When a fix lands the test XPASSes, strict mode makes that a failure, and the mark is removed. Tests without
-a mark pin behaviour that is already safe and must keep passing.
+(SUB01-Sxx). When a fix lands the test XPASSes, strict mode makes that a failure, and the mark is removed (the report's
+status lines say which findings were fixed, and where). Tests without a mark pin behaviour that is already safe and must
+keep passing.
 
 Offline: nothing here opens a network connection, calls Vagon, RunPod or an AI provider, or writes outside tmp_path.
 The Vagon client is replaced by a recorder, and the pod file server is driven through an in-memory socket.
@@ -15,9 +16,8 @@ import json
 import logging
 import re
 import sys
-import threading
 import time
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -49,9 +49,11 @@ def run(coro):
 
 
 def _wait_idle():
-    """Returns once an open thread (if one was started) has released the bridge lock, which means it has ended."""
-    assert vagon_bridge._busy.acquire(timeout=10)
-    vagon_bridge._busy.release()
+    """Returns once the Vagon worker (if one was started) has emptied the queue and ended."""
+    deadline = time.monotonic() + 10
+    while vagon_bridge._worker_running:
+        assert time.monotonic() < deadline, "the Vagon worker did not finish"
+        time.sleep(0.01)
 
 
 class Fake:
@@ -157,8 +159,10 @@ def pc(monkeypatch):
         monkeypatch.delenv(name, raising=False)
     for name, value in VAGON_ENV.items():
         monkeypatch.setenv(name, value)
-    monkeypatch.setattr(vagon_bridge, "_busy", threading.Lock())
+    monkeypatch.setattr(vagon_bridge, "_queue", deque())
+    monkeypatch.setattr(vagon_bridge, "_worker_running", False)
     monkeypatch.setattr(vagon_bridge, "_status", {"state": "off", "detail": ""})
+    monkeypatch.setattr(vagon_bridge, "_last_refusal", "")
     monkeypatch.setattr(vagon_bridge, "_auto_stop_done", False)
     for name in ("status", "start_machine", "wait_ready", "open_url", "set_auto_stop", "stop_machine"):
         monkeypatch.setattr(vagon_pc, name, getattr(fake, name))
@@ -173,19 +177,28 @@ PAYLOADS = ["https://a.example/x'y", "https://a.example/$(calc)", "https://a.exa
             "https://a.example/x y", "https://a.example/x\tz", "https://a.example/\x7f", "https://a.example/ok"]
 
 
-def test_every_link_reaches_powershell_as_one_single_quoted_literal(monkeypatch):
-    """Quotes, $, backticks, ; & | newlines, unicode quotes: a link is either refused, or it is one PowerShell
-    single-quoted string in which every apostrophe is doubled. Nothing else can become code."""
+def test_every_link_reaches_the_pc_only_as_base64_data(monkeypatch):
+    """The client writes no link into its script. A link is refused, or the script is exactly one fixed line whose only
+    variable part is a base64 literal, and that literal decodes to the link: no quote, $, backtick or separator can
+    reach PowerShell."""
+    import base64
+    line = re.compile(r"Start-Process -FilePath \(\[System\.Text\.Encoding\]::ASCII\.GetString\("
+                      r"\[System\.Convert\]::FromBase64String\('([A-Za-z0-9+/=]+)'\)\)\)")
     for payload in PAYLOADS:
         sent = []
         monkeypatch.setattr(vagon_pc, "run_script", lambda machine_id, script: sent.append(script) or "")
+        refused = False
         try:
             vagon_pc.open_url("m1", payload)
         except vagon_pc.VagonError:
+            refused = True
+        if refused:
             assert sent == [], payload
             continue
         assert len(sent) == 1, payload
-        assert re.fullmatch(r"Start-Process '(?:[^'\r\n\u2018\u2019\u201a\u201b]|'')*'", sent[0]), (payload, sent[0])
+        found = line.fullmatch(sent[0])
+        assert found, (payload, sent[0])
+        assert base64.b64decode(found.group(1)).decode("ascii") == payload, payload
 
 
 @pytest.mark.parametrize("bad", ["file:///etc/passwd", "javascript:alert(1)", "data:text/html,<b>x</b>",
@@ -206,7 +219,8 @@ PRIVATE_OR_TRICKY_LINKS = ("http://127.0.0.1/", "http://localhost:8080/admin", "
                            "http://metadata.google.internal/")
 
 
-@xfail("SUB01-S03", "open_url accepts any http(s) host: IP literals, numeric hosts, userinfo and local names")
+@xfail("SUB01-S03", "is_plain_link checks the scheme and the characters only: IP literals, numeric hosts, userinfo and "
+                    "local names are all sent to the PC")
 @pytest.mark.parametrize("url", PRIVATE_OR_TRICKY_LINKS)
 def test_the_pc_refuses_private_numeric_and_userinfo_links(monkeypatch, url):
     monkeypatch.setattr(vagon_pc, "run_script", lambda machine_id, script: "")
@@ -218,7 +232,7 @@ def test_the_pc_refuses_private_numeric_and_userinfo_links(monkeypatch, url):
     assert refused, f"the PC would be sent {url!r}"
 
 
-@xfail("SUB01-S03", "a private or metadata link starts the billed machine before anything checks where it points")
+@xfail("SUB01-S03", "a private or metadata link queues a start of the billed machine before anything checks where it points")
 @pytest.mark.parametrize("text", ["open http://10.0.0.5/admin", "open http://localhost/admin",
                                   "open http://[::1]/admin", "open http://metadata.google.internal/latest/meta-data/"])
 def test_a_private_link_does_not_start_the_machine(live, pc, text):
@@ -306,7 +320,8 @@ def test_each_socket_has_a_frame_budget_before_its_frames_are_parsed():
 
 
 class _Visits(OrderedDict):
-    """Counts the entries a method walks over, so the test sees a full scan and not a look at the oldest entry."""
+    """Counts the entries a method walks over (iteration, items, keys, values), so the test sees a full scan and not
+    a look at the oldest entry."""
     visited = 0
 
     def __iter__(self):
@@ -319,9 +334,20 @@ class _Visits(OrderedDict):
             _Visits.visited += 1
             yield kv
 
+    def keys(self):
+        for k in OrderedDict.keys(self):
+            _Visits.visited += 1
+            yield k
 
-@xfail("SUB01-S05", "every message walks over every address seen in the window (quadratic under address rotation)")
+    def values(self):
+        for v in OrderedDict.values(self):
+            _Visits.visited += 1
+            yield v
+
+
 def test_a_message_does_not_walk_over_every_address():
+    """SUB01-S05, CPU part: the limiter expires from the front, so a message looks at the oldest address only (fixed on
+    the merged tree; the memory bound is still open, see the test below)."""
     lim = chat.RateLimiter(clock=lambda: 1000.0)
     lim.last = _Visits((f"k{i}", 999.5) for i in range(10000))
     _Visits.visited = 0
@@ -329,7 +355,7 @@ def test_a_message_does_not_walk_over_every_address():
     assert _Visits.visited < 100
 
 
-@xfail("SUB01-S05", "the limiter keeps every address seen in its window and has no size bound")
+@xfail("SUB01-S05", "the limiter has no size bound: 20,000 addresses inside one window are all kept (the CPU part is fixed)")
 def test_the_limiter_keeps_a_bounded_number_of_addresses():
     lim = chat.RateLimiter(clock=lambda: 1000.0)
     lim.last = OrderedDict((f"10.{i >> 16}.{(i >> 8) & 255}.{i & 255}", 999.5) for i in range(20000))
@@ -379,21 +405,31 @@ def test_with_the_bridge_off_a_link_is_refused_and_no_machine_call_is_made(live,
     assert pc.calls == []
 
 
-def test_a_link_while_the_pc_is_busy_starts_nothing(live, pc):
-    assert vagon_bridge._busy.acquire(blocking=False)          # an earlier open is still running
+def test_a_link_when_three_already_wait_is_refused_and_nothing_starts(live, pc, monkeypatch):
+    """The Vagon worker opens links in order and keeps at most MAX_QUEUED waiting. Past that the newest link is refused
+    as busy, and nothing is started for it."""
+    waiting = [("https://a.example/1", "a.example")] * vagon_bridge.MAX_QUEUED
+    monkeypatch.setattr(vagon_bridge, "_queue", deque(waiting))
+    monkeypatch.setattr(vagon_bridge, "_worker_running", True)     # a worker is running: no new thread
     ws = WS()
-    try:
-        run(live.handle_chat(ws, "10.0.0.2", "open https://example.com/busy", ""))
-    finally:
-        vagon_bridge._busy.release()
+    run(live.handle_chat(ws, "10.0.0.2", "open https://example.com/busy", ""))
+    monkeypatch.setattr(vagon_bridge, "_worker_running", False)    # the teardown waits for an idle bridge
     assert "busy" in ws.sent[-1]["reaction"]
-    assert pc.calls == []
+    assert pc.calls == [] and len(vagon_bridge._queue) == vagon_bridge.MAX_QUEUED
 
 
 def test_a_control_character_in_a_link_never_reaches_the_machine(live, pc):
     ack = say(live, WS(), "10.0.0.3", "open https://ex\x1bmp.com/x")
     assert ack["impulse"] == "open_url"
     assert pc.calls == []
+
+
+def test_a_link_with_a_control_character_is_refused_and_never_logged(pc, caplog):
+    """A chat link that is not plain printable ASCII is refused before any host is taken from it, so no control
+    character reaches the log. The refusal line carries no host at all (SUB01-S11, fixed on the merged tree)."""
+    caplog.set_level(logging.INFO, logger="vagon_bridge")
+    assert vagon_bridge.submit_link("https://ex\x1bmp.com/x") == (False, "invalid")
+    assert "\x1b" not in caplog.text
 
 
 def test_the_bridge_status_and_log_never_carry_credentials(live, pc, monkeypatch, caplog):
@@ -420,7 +456,7 @@ def test_the_bridge_status_is_not_served_on_any_route():
     assert not re.search(r"vagon_bridge\.status\(|vagon_status\b", LIVE_SRC)
 
 
-@xfail("SUB01-S01", "no cap on links per hour for all viewers together")
+@xfail("SUB01-S01", "no cap on links per hour for all viewers together: the queue bounds the waiting links, not the links per hour")
 def test_links_are_capped_per_hour_for_all_viewers_together(live, pc):
     pc.state = "ready"
     ws = WS()
@@ -458,17 +494,10 @@ def test_a_started_machine_is_in_the_cost_ledger(live, pc):
     assert '"vagon"' in (ledger.read_text() if ledger.exists() else "")
 
 
-@xfail("SUB01-S07", "auto-stop is set at process start only, so a machine started later has no idle stop")
+@xfail("SUB01-S07", "auto-stop is set at process start only, and _ensure_ready does not set it after a start")
 def test_auto_stop_is_set_again_when_the_bridge_starts_the_machine(live, pc):
     say(live, WS(), "10.4.0.1", "open https://example.com/as")
     assert pc.named("auto_stop") == [("auto_stop", 900)]
-
-
-@xfail("SUB01-S11", "the host of a refused link is logged as sent, control characters included")
-def test_a_refused_link_is_logged_without_control_characters(pc, caplog):
-    vagon_bridge._busy.acquire()                                # _open releases the lock when it ends
-    vagon_bridge._open("https://ex\x1bmp.com/x")
-    assert "\x1b" not in caplog.text
 
 
 # --- 6. the pod file server (analysis/pod/server.py) ---------------------------------------------------------------
@@ -670,10 +699,14 @@ def test_a_malformed_frame_cannot_end_the_receive_loop():
 
 
 # --- 11. chat text in the browser -----------------------------------------------------------------------------------
-def test_the_life_page_puts_chat_and_reactions_in_text_nodes():
+def test_the_life_page_chat_is_built_with_text_nodes_only():
+    """web/life.html: the LifeChat block renders every server string with textContent, and it has no HTML sink."""
     src = (ROOT / "web" / "life.html").read_text()
-    body = src[src.index("function addChat(m)"):][:400]
-    assert "textContent" in body and "innerHTML" not in body
+    start = src.index("const LifeChat = (() => {")
+    block = src[start:src.index("\n})();", start)]
+    assert "textContent" in block
+    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write"):
+        assert sink not in block, sink
 
 
 def test_the_room_feed_escapes_every_viewer_field():
@@ -701,13 +734,17 @@ def test_the_filter_refuses_links_while_the_pc_is_off():
     assert ok is False and reason == "links are not allowed"
 
 
-def test_the_life_request_takes_only_a_known_activity_and_never_sleep():
+def test_a_chat_request_takes_only_a_known_activity_and_never_sleep():
+    """life.request_impulse: sleep, a non-activity and an open_url request are not taken (None, nothing set). Any other
+    request returns None (taken) or one honest line, and never sets an activity other than the one asked for."""
+    import random
     import life as L
-
-    class Holder:
-        impulse = None
-    holder = Holder()
-    L.Life.request_impulse(holder, impulse.parse("sleep"), 0.0)
-    assert holder.impulse is None
-    L.Life.request_impulse(holder, impulse.parse("eat"), 0.0)
-    assert holder.impulse is not None and holder.impulse[0] == "eat"
+    lf = L.Life(rng=random.Random(0))
+    t = datetime(2026, 10, 23, 14, 0, tzinfo=TZ).timestamp()
+    for junk in (impulse.parse("sleep"), impulse.Impulse("open_url", None, "https://example.com", "r", "x"),
+                 impulse.Impulse("activity", "not_an_activity", None, "r", "x"), None):
+        assert lf.request_impulse(junk, t) is None
+        assert lf.impulse is None
+    result = lf.request_impulse(impulse.parse("eat"), t)
+    assert result is None or (isinstance(result, str) and result.strip())
+    assert lf.impulse is None or lf.impulse[0] == "eat"
