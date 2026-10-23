@@ -14,7 +14,8 @@ from urllib.parse import urlsplit
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
 PREFIX = '/proxy/8892/'
-ROUTES = {'', 'index.html', 'health', 'settings', 'frame.jpg', 'socket', 'input', 'mode'}
+ROUTES = {'', 'index.html', 'health', 'settings', 'frame.jpg', 'socket', 'control-socket', 'input', 'mode'}
+SOCKETS = {'socket', 'control-socket'}      # the frame feed, and the current viewer's control channel (read-only on the pod)
 RESPONSE_HEADERS = {'content-type', 'cache-control', 'etag', 'x-native-sequence', 'x-native-capture-utc'}
 
 
@@ -62,7 +63,7 @@ def create_app(base, token, port, prefix=PREFIX):
         target = origin + request.path + ('?' + request.query_string if request.query_string else '')
         client = request.app[session_key]
         if websocket:
-            if suffix != 'socket':
+            if suffix not in SOCKETS:
                 raise web.HTTPNotFound()
             try:
                 remote_ws = await client.ws_connect(target, origin=origin, heartbeat=20, max_msg_size=2*1024*1024)
