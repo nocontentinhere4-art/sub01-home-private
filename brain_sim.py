@@ -17,7 +17,10 @@ Two layers:
 import copy
 from pathlib import Path
 
-import numpy as np
+from spiking.threads import cap_threads   # one BLAS / OpenMP thread unless the env says more (see spiking/threads.py)
+
+cap_threads()
+import numpy as np  # noqa: E402  (after the environment defaults: a venv start without them would spin the pool)
 
 HERE = Path(__file__).parent
 
