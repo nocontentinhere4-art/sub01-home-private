@@ -188,7 +188,7 @@ def test_an_impossible_request_is_dropped_with_an_honest_line(tmp_path):
     fed(life)
     settle(life, "window", t)
     cases = [("go to the bakery", "The bakery is closed at this hour."), ("take a walk", "The park is closed at this hour."),
-             ("are you hungry", "There is nothing to eat at home."), ("put on the TV", "There is no TV in this room."),
+             ("eat something", "There is nothing to eat at home."), ("put on the TV", "There is no TV in this room."),
              ("open the laptop", "The Linux computer is not set up here."),
              ("use the bathroom", "There is no bathroom in this room."),
              ("please reply to me", "No reply is possible right now.")]
@@ -317,3 +317,35 @@ def test_please_reply_is_taken_only_when_a_reply_is_possible(tmp_path):
     assert live.chat_inbox[-1]["text"] == "please answer me" and life.chat_waiting >= 1 and life.impulse[0] == "chat"
     tick(life, t + 1)
     assert life.activity == "chat" and life.path[-1] == "desk"
+
+
+def test_a_named_game_asked_at_the_tv_switches_it_without_a_new_start(tmp_path):
+    from home_world import HomeWorld
+    live = make_live(tmp_path)
+    t, life = live.clock.now(), live.life
+    fed(life)
+    life.home_enabled, life.console_games = True, {"pong", "minecraft"}
+    settle(life, "play_console", t)
+    life.console_choice = ("minecraft", t - 60)
+    home = HomeWorld({"console_game": "minecraft", "last_console_choice": ["minecraft", t - 60]})
+    ack = chat(live, "9.9.9.1", "switch to pong")                          # during the Minecraft session
+    assert ack["reaction"] == "Okay, switching the TV to pong." and life.impulse is None
+    assert life.activity == "play_console" and life.console_choice[0] == "pong" and life.console_wish is None
+    assert life.log[-1]["what"] == "asked in chat: the TV switches to pong"
+    home.update(0.05, 0.05, life.snapshot(), {})
+    assert home.console_game == "pong"
+    assert chat(live, "9.9.9.2", "play pong")["reaction"] == L.ALREADY_LINE   # the game on already: nothing to switch
+    assert life.console_choice[0] == "pong" and life.console_wish is None
+    # asked on the way to the TV: the same, before he gets there
+    settle(life, "research", t)
+    life.start("play_console", t + 1, "test")
+    assert life.path and life.console_choice is None
+    assert chat(live, "9.9.9.3", "play minecraft")["reaction"] == "Okay, switching the TV to minecraft."
+    assert life.console_choice[0] == "minecraft" and life.impulse is None
+    # a pending console request that finds him at the TV already does the same (the drop in update)
+    settle(life, "play_console", t + 2)
+    life.console_choice = ("minecraft", t + 2)
+    life.hear("switch to pong", t + 3)
+    life.impulse = ("play_console", "asked in chat: play_console", t + 3)
+    tick(life, t + 4)
+    assert life.impulse is None and life.console_choice[0] == "pong" and life.activity == "play_console"

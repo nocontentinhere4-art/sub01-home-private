@@ -384,14 +384,28 @@ class Life:
         act = getattr(imp, "activity", None)
         if getattr(imp, "kind", None) != "activity" or not isinstance(act, str) or act not in ACTIVITIES or act == "sleep":
             return None
-        if act == self.activity and (self.path or self.place == ACTIVITIES[act][0]):
-            return ALREADY_LINE                        # doing it, or on the way to it
+        if act == self.activity and (self.path or self.place == ACTIVITIES[act][0]):   # doing it, or on the way to it
+            game = self.switch_console(t) if act == "play_console" else None   # a named game: the TV switches now
+            return f"Okay, switching the TV to {game}." if game else ALREADY_LINE
         why = self.why_not(act, t)
         if why:
             return why
         asked = getattr(imp, "why", None)
         self.impulse = (act, asked if isinstance(asked, str) else "", t)
         return ASLEEP_LINE if self.stage != "AWAKE" else None
+
+    def switch_console(self, t):
+        """A named game asked for while he is at the TV, or on his way to it (console_wish, within CONSOLE_WISH_TTL), becomes
+        the choice now, so HomeWorld switches the game without a new console start (start() applies a wish to a new one).
+        Returns the game when the choice changed, else None: no live wish, or the game chosen already. The log says so."""
+        wish = self.console_wish
+        if not (wish and wish[0] in self.console_games and 0 <= t - wish[1] <= CONSOLE_WISH_TTL):
+            return None
+        before, self.console_choice, self.console_wish = self.console_choice, wish, None
+        if before and before[0] == wish[0]:
+            return None
+        self.log = (self.log + [{"t": t, "what": f"asked in chat: the TV switches to {wish[0]}"}])[-30:]
+        return wish[0]
 
     def why_not(self, act, t):
         """Why `act` cannot start now, as one impersonal line (<= 60 characters), or None when it can. Only the hard rules
@@ -743,6 +757,8 @@ class Life:
         if self.impulse and stage == "AWAKE":
             want, asked, t0 = self.impulse
             if want == "sleep" or want not in ACTIVITIES or (want == self.activity and self.place == ACTIVITIES[want][0]):
+                if want == "play_console" and want == self.activity:
+                    self.switch_console(t)                # at the TV already: a named game asked meanwhile switches it
                 self.impulse = None                       # not carried out: sleep follows its stage; or he is at it already
             else:
                 late = "That was more than an hour ago." if t - t0 > IMPULSE_TTL else self.why_not(want, t)
