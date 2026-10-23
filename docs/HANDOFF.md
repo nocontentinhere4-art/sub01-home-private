@@ -1,6 +1,63 @@
-# SUB-01 — handoff for new sessions (state on 2026-10-02)
+# SUB-01 — handoff for new sessions (newest state 2026-10-23 first; the rest is from 2026-10-02)
 
 Read this first. It replaces the local memory that cloud sessions cannot see.
+
+## State on 2026-10-23
+
+This is the newest state. The sections after it describe 2026-10-02 or earlier; where they disagree, this section wins.
+
+**Branch.** `claude/happy-einstein-1x0561` is 18 commits ahead of `main`. Railway deploys from `main`, so none of this is deployed. The private home runs on loopback only.
+
+**What changed** (commits from 2026-10-22 21:39 to 2026-10-23 00:38 UTC)
+- Chat drives life. `impulse.py` turns one message into one step: an activity, a link, or a short reply. `life.request_impulse` keeps the latest request; sleep is never a request. `life.update` carries the request out when he is awake and not walking.
+- Each accepted chat message gets one in-character reaction. `/life.html` shows it; the house page shows a status line instead.
+- A link is refused unless the Vagon PC bridge is on (`chat.check(..., links_open)`).
+- Vagon PC client and bridge (`vagon_pc.py`, `vagon_bridge.py`): off unless configured; one open at a time; 900 s idle auto-stop; reset is not exposed.
+- `daily_plan.py` reads `docs/design/daily-life/day_template.json`. `life.py` uses the step for the current hour (`day_hint`) as a score tilt, only when the mind has no plan step.
+- Walk at 1.2 m/s on the page. Sleep starts only in bed. A walk home that ends indoors brings the avatar in (`home_world.py`).
+- RunPod job: a pod create is recorded before it is sent, and a file lock stops two runs. The pod file server needs a per-run token.
+- Design only: `docs/design/brain-actor/README.md`. No code lets the brain choose activities.
+
+**Chat chain.** The page sends a `chat` message over `/ws`. `handle_chat` (`live_server.py:618`) runs the filter, stimulates the brain, stores the message, then parses it with `impulse.parse`. An activity goes to `life.request_impulse`. A link goes to the Vagon bridge when it is on; otherwise the reply is "I cannot open links yet." A plain message gets only its reply line. The sender gets `chat_ack`; every open page gets `reaction`.
+
+```json
+{"type": "chat", "text": "go outside", "nick": ""}
+{"type": "chat_ack", "ok": true, "queued": false, "reaction": "The park sounds nice. Heading out.", "impulse": "activity", "t": "HH:MM"}
+{"type": "reaction", "text": "The park sounds nice. Heading out.", "nick": "", "t": "HH:MM"}
+```
+
+**Environment variables** (names and defaults only; never put values in the repo)
+- `HOME_ENABLED` (0): `1` serves the house at `/` and `/house` and creates the home, computer and console objects. `HOME_ENTRYPOINT` (1): `0` keeps the classic room at `/`.
+- `BROWSE` (off): `1` shows the screens from Chromium. `BROWSE_SERVICE_URL`: use a separate browser service instead.
+- `HOST` (127.0.0.1), `PORT` (8765).
+- `MIND`, `CLIPS` (1): `0` turns off the AI mind (paid calls) and the clip jobs. `SUB01_SPIKING_LIVE` (1): `0` skips the CPU spiking process.
+- `SUB01_MINECRAFT` (0): `1` enables the console; it needs `HOME_ENABLED=1`.
+- `VAGON_PC_ENABLED=1` with `VAGON_MACHINE_ID`, `VAGON_API_KEY` and `VAGON_API_SECRET`: the PC bridge.
+- `SUB01_JOB_TOKEN`: set per run by the RunPod job, never by hand.
+
+**Run locally**
+- Python 3.12 (CI and Docker; 3.13 also works). `pip install -r requirements-server.txt`. For screens: `python -m playwright install chromium`. For the home's computer: Node.js on the PATH.
+- Classic room: `BROWSE=0 python live_server.py --demo`, then `http://localhost:8765/`. The classic room is also at `/room-classic` when the house is on.
+- House without screens: `HOME_ENABLED=1 BROWSE=0 MIND=0 CLIPS=0 SUB01_SPIKING_LIVE=0 python live_server.py --demo --data-dir data/house-test`, then `http://localhost:8765/`.
+- Private house with screens: `docs/PRIVATE_HOME.md`.
+
+**Not in the repo**
+- The native Unreal home (project `Sub01HomeLab`, map `ActualHome`). It lives only on the owner's RunPod network volume `dvrlt6yk2k`, viewed through a read-only viewer behind the pod's Jupyter proxy. The viewer port differs between the repo (8892) and the latest check (8893); confirm it before documenting. The pod's runtime checkout is separate and does not have today's changes.
+- Eight bathroom files: `web/house/assets/bath-fixtures-original/` (vanity, toilet), `bath-light-original/` and `bath-door-original/`, each a `.glb` and a `.json`. Without them the bathroom is drawn in code.
+- Vagon credentials and the machine ID.
+
+**Open decisions for the owner**
+1. Approve brain-chosen activities (route Option A in `docs/design/brain-actor/README.md`)?
+2. Chat requests never expire: one sent while he sleeps runs when he wakes. Keep that, or add a time limit?
+3. Keep refusing links unless the PC bridge is on? Turn the bridge on (needs credentials; questions for Vagon are in `docs/design/vagon-pc/README.md`)?
+4. The daily template has 45 entries; 15 have no activity yet (proposals). Which become activities?
+5. Pods still running the server from before `51b4519` accept requests without a token until they stop (the old server exits after 60 minutes). Stop them now?
+6. Bathroom files: restore them, rebuild them with `tools/build_home_bath_*.py` (Blender), or keep the code-drawn bathroom?
+
+**Known gaps (not fixed)**
+- Walk speed differs: `life.py:73` uses 1.3 m/s for the server's walk timing; `web/room.html:1841` uses 1.2 m/s.
+- `STRIDE_V` remains in `room_build/ardy_to_boy.mjs` and `room_build/ardy/README.md`.
+- The chat link rule (`chat.py:19-20`) misses bare domains outside its TLD list, so `open formo.family` passes the filter while links are off.
 
 ## What SUB-01 is now
 - A whole-brain model built from one real person's public MRI (MyConnectome, OpenNeuro ds000031, PDDL):

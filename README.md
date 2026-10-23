@@ -119,6 +119,7 @@ Each number comes from a file in this repository; negative results stay.
 python3.12 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-server.txt        # the live server (requirements.txt is the MRI pipeline)
 BROWSE=0 python live_server.py --demo         # http://localhost:8765 : room at /, brain at /brain, diary at /diary
+HOME_ENABLED=1 BROWSE=0 python live_server.py --demo   # the house at / (the classic room stays at /room-classic); see docs/PRIVATE_HOME.md
 python live_server.py --demo --time-scale 60 --start 23:55   # an accelerated night
 ```
 
@@ -131,7 +132,7 @@ BROWSE=0 python tests/smoke_demo.py           # starts the demo server, checks p
 python -m tests.visual.harness --out tests/visual/out   # room screenshots (needs Playwright + Chromium)
 ```
 
-`--demo` uses fake inputs and keeps its state in `data/demo/` (or a temporary directory for the smoke test). Paid
+`--demo` uses fake inputs. Its state goes to `--data-dir` when given, else to `data/demo/` when `--time-scale` is not 1, else to `data/`; the smoke test uses a temporary directory. Paid
 services (image generation, language model, GPUs) are optional and off without their keys. Rebuilding the brain from
 the raw MRI needs `requirements.txt` and `./fetch_data.sh` (~900 MB): see [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
