@@ -436,16 +436,23 @@ def test_a_chat_music_request_is_carried_out_at_once_and_a_track_starts(live_bas
     assert sent[-1]["embed"] == M.embed_url(now["id"]) and live.music.live_wishes(t) == []
 
 
-@pytest.mark.xfail(strict=True, reason="impulse.py has no rule for a song request ('play <song>'): it only raises life's "
-                   "desire, so he goes to bed when his choice says so (report: impulse.parse, live_server.handle_chat)")
 def test_a_chat_song_request_is_carried_out_at_once(live_base, tmp_path):
-    from impulse import parse as parse_impulse
+    """"play <song>" names no activity word: handle_chat turns the music wish itself into a listen_music request."""
     live, sent = live_listener(live_base, tmp_path)
-    t, text = live.clock.now(), "play Miki Matsubara"
-    live.life.hear(text, t)
-    live.life.request_impulse(parse_impulse(text), t)
-    live.music.hear(text, t)
-    live.life.update(t, 1.0, 1.0, "AWAKE", {})
+
+    class WS:
+        def __init__(self):
+            self.sent = []
+
+        async def send_json(self, message):
+            self.sent.append(message)
+
+    ws = WS()
+    asyncio.run(live.handle_chat(ws, "viewer-song", "play Miki Matsubara"))
+    ack = ws.sent[-1]
+    assert ack["ok"] and ack["impulse"] == "activity" and ack["reaction"]
+    assert live.music.live_wishes(live.clock.now()) == ["Miki Matsubara"]
+    live.life.update(live.clock.now(), 1.0, 1.0, "AWAKE", {})
     assert live.life.activity == "listen_music"
 
 

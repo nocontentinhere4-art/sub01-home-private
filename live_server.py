@@ -61,7 +61,7 @@ import screens
 import search_sources
 from readings import BrowseReadings
 from screens import DA_LABEL, DopamineBursts, ScreensStatus
-from impulse import parse as parse_impulse
+from impulse import REACTIONS as IMPULSE_REACTIONS, Impulse, parse as parse_impulse
 from vagon_bridge import (configure_auto_stop as vagon_auto_stop, enabled as vagon_enabled,
                           open_url_async as vagon_open_url_async)
 from eyes import Eyes
@@ -632,7 +632,7 @@ class Live:
         if self.eye:
             self.eye.hear(text, t)
         self.life.hear(text, t)
-        self.music.hear(text, t)                           # "play …" / "metti …": a wish (filtered above)
+        song = self.music.hear(text, t)                    # "play …" / "metti …": a wish (filtered above)
         ack = {"type": "chat_ack", "ok": True, "queued": False, "t": hhmm(t)}
         if getattr(self, "mind", None):                    # he may answer it later, at the computer (C1)
             why = await self.enqueue_chat(t, text, key, nick)
@@ -651,6 +651,10 @@ class Live:
                 reaction = imp.reaction if accepted else "The PC is busy with a link. Send it again shortly."
             else:
                 reaction = "I cannot open links yet."
+        if song and imp.kind != "activity":                # "play <song>" names no activity word: the wish itself asks for music
+            named = Impulse("activity", "listen_music", None, IMPULSE_REACTIONS["listen_music"], f"asked in chat: play {song}")
+            reaction = self.life.request_impulse(named, t) or named.reaction
+            imp = named
         shown_nick, _ = clean_nick(nick)                   # the reaction is public: the nickname is cleaned as in enqueue_chat
         ack.update(reaction=reaction, impulse=imp.kind)
         if self.spiking:                                   # no-op when no GPU pod is connected
@@ -1594,7 +1598,7 @@ class Live:
                 return await self.music_stop(t, "fell asleep")
             if now["mode"] == "activity" and not listening:
                 return await self.music_stop(t, "took the headphones off")
-            if now["mode"] == "background" and not bg and not listening:
+            if now["mode"] == "background" and (listening or not bg):   # headphones on: the bed starts its own track
                 return await self.music_stop(t, "stopped the music")
             if t < ends:
                 return
