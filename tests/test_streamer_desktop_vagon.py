@@ -279,6 +279,8 @@ class FakePage:
         if js is sd.VAGON_FOCUS_JS:
             self.focused += 1
             return True
+        if js is sd.VAGON_HIT_JS:                       # the stream is under every point (the hit test fails closed)
+            return {"ok": True, "tag": "canvas"}
         return None
 
     async def goto(self, url, **kw):
@@ -308,14 +310,14 @@ def test_primitives_are_mapped_onto_the_stream(tmp_path, monkeypatch):
         assert r["errors"] == [] and mouse == [("move", 960, 540), ("click", 960, 540)] and desk.cursor == [960.0, 540.0]
         mouse.clear()
         r = await desk.do({"action": "navigate", "url": "https://example.com/a?b=1"})
-        assert r["errors"] == [] and kb == [("press", "Control+l"), ("type", "https://example.com/a?b=1"), ("press", "Enter")]
+        assert r["errors"] == [] and kb == [("down", "Control"), ("press", "l"), ("up", "Control"), ("type", "https://example.com/a?b=1"), ("press", "Enter")]
         assert desk.page.focused == 1 and desk.page.goto_calls == []            # the remote browser navigates, not ours
         kb.clear()
         await desk.do({"action": "search", "query": "cats dogs"})
-        assert kb == [("press", "Control+l"), ("type", sd.SEARCH_URL + "cats+dogs"), ("press", "Enter")]
+        assert kb == [("down", "Control"), ("press", "l"), ("up", "Control"), ("type", sd.SEARCH_URL + "cats+dogs"), ("press", "Enter")]
         kb.clear()
         await desk.do({"action": "back"})
-        assert kb == [("press", "Alt+ArrowLeft")]
+        assert kb == [("down", "Alt"), ("press", "ArrowLeft"), ("up", "Alt")]
         kb.clear()
         await desk.do({"action": "type", "text": "hello", "submit": True})
         assert kb == [("type", "hello"), ("press", "Enter")]
@@ -324,7 +326,7 @@ def test_primitives_are_mapped_onto_the_stream(tmp_path, monkeypatch):
         assert kb == [("type", "no submit")]
         kb.clear()
         await desk.do({"action": "key", "key": "Control+a"})
-        assert kb == [("press", "Control+a")]
+        assert kb == [("down", "Control"), ("press", "a"), ("up", "Control")]    # held: Vagon drops a too-fast chord
         await desk.do({"action": "scroll", "direction": "down", "amount": 600})
         assert mouse[0] == ("move", 960, 540) and mouse[1:] == [("wheel", 0, 100.0)] * 6
         mouse.clear()
@@ -732,6 +734,14 @@ def test_vagon_mode_finds_the_stream_inside_the_dashboard_iframe_embed(tmp_path,
             ev = await h.mock_events(clear=True)
             down = next(e for e in ev if e["kind"] == "mousedown")
             assert res["ok"] is True and (down["x"], down["y"]) == (960, 500)         # frame coordinates: 540 - 40
+            # a dialog of the PARENT page over the stream's iframe: the frame's own hit test cannot see it; refused
+            await desk.page.evaluate("""() => { const d = document.createElement('div'); d.id = 'parent-dialog';
+              d.style.cssText = 'position:fixed;left:800px;top:400px;width:300px;height:200px;background:#fff;z-index:9';
+              document.body.appendChild(d); }""")
+            res = await h.act(action="click", point=[640, 360])
+            assert res["ok"] is False and "over the stream's frame" in res["outcome"]["errors"][0]
+            assert not [e for e in await h.mock_events(clear=True) if e["kind"] in ("mousedown", "click")]
+            await desk.page.evaluate("document.getElementById('parent-dialog').remove()")
             await h.act(action="type", text="abc")
             assert typed(await h.mock_events(clear=True)) == "abc"
             obs = await (await h.http.get("/desktop/observe", headers=AUTH)).json()

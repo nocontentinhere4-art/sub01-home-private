@@ -168,6 +168,44 @@ ICE runs (`vagon_diag.rtc.stats.pair`: `relay`/`tcp` means TURN-TCP only).
 connecting (page, iframes, video/canvas elements, WebGL, WebCodecs, codecs, WebRTC states/SDP codecs/candidate pairs/
 stats from an init script, console errors, failed requests and HTTP errors by host, network activity).
 
+### A6. Input on the connected desktop (measured live 2026-10-23, runner 8838, Google Chrome)
+
+**The page.** The stream is one `video#player` in the main document (1918x1079, pointer-events auto); nothing covers it
+(a 5x4 hit grid finds the video at all 20 points). Vagon's own handle ("Click to Open", a `div` at about x 707-757,
+y 16-66 of 1920x1080) opens its toolbar (Audio, Microphone, Webcam, Fullscreen, Display settings, System, Files, **Power**).
+Listeners (counted by `INPUT_INIT_JS`): keydown/keyup/keypress on `document` and the React root; mouse/pointer/wheel on
+the video. Input leaves on the data channel labelled `control` (idle between actions). No pointer lock, no keyboard lock
+outside fullscreen. WebRTC: H.264 1920x1080 at 30 fps, frames_decoded rising, 0 lost, srflx -> relay over UDP, RTT 70-100 ms.
+
+**Why input looked broken, and the fixes in `streamer_desktop.py`:**
+1. *Control chords never arrived.* Vagon's keyboard layer (client bundle: `keyDownHandler`, `startPendingCtrl`) holds a
+   Left-Control keydown 15 ms to tell it from AltGr and drops a key that arrives inside that window, the pending Control
+   with it. Playwright's `press("Control+a")` sends the "a" microseconds later: Ctrl+A, Ctrl+Escape and the navigate
+   action's Ctrl+L never reached Windows (measured: 2 keydowns, only the 2 keyups on the channel). Fix: `_vagon_chord`
+   holds the modifiers `VAGON_CHORD_HOLD_S` (0.1 s) before the key; the scancode path waits after a Control keydown.
+   After it: Ctrl+A selects the YouTube search text (8 control messages), Ctrl+Escape opens Start.
+2. *The "dim".* The player forwards Ctrl+A without preventing it, so Chrome also ran the HOST page's select-all and
+   painted its selection tint over the whole video until the selection was cleared (the dark overlay of the first
+   attempt). Fix: `VAGON_FOCUS_JS` clears a host Range selection before keys and adds, once, a window-bubble keydown
+   listener that cancels the host page's default for modifier chords, Tab, Escape and F1-F12 aimed at the stream
+   (after the player's own listeners; propagation and plain characters untouched). This also stops Alt+Left (`back`)
+   from navigating the host page.
+3. *Focus.* Keys need only the DOM focus on the stream element (Meta opened Start with no mouse event at all); no click,
+   hover or pointer lock first. Every key path focuses it and fails closed when it does not take the focus.
+4. *Clicks.* `VAGON_HIT_JS` lets a click/wheel through only when the stream element itself is the top element at the
+   point (and, for a stream inside an iframe, the iframe is the top element of the parent page there), checked before
+   the pointer moves, 0.1 s after it, and before every wheel step; anything but an explicit yes is a refusal. The handle,
+   its menu, dialogs, dim/backdrop and transparent layers are refused (`blocked` event, the error says why). A click on
+   the handle position was refused live.
+5. *The earlier session end and stop* (a click at the taskbar Start position, then "Rate Session" two minutes later with
+   no input) are not explained by the input path; the dashboard shows an idle setting "15 minutes" (unverified).
+
+**Diagnostics.** `GET /pc/vagon/diag` (token; at most one per 2 s) returns a fresh snapshot; `vagon_diag` rows come at
+connect, 8 s later (the first stats) and every 60 s while connected. `diag.rtc`: the live peer connection first
+(`live`, `bytes`, `frames_decoded`, `fps`, `pair`, `dc_out` per label, `ws_out`); `diag.input`: focused element, pointer
+lock, host selection, the cover grid and the counters (key/mouse/wheel events, how many the player prevented,
+listeners by target). Counts and element tags only: never a key, a character or page text.
+
 ## Part B. Vagon Streams research (kept for reference; not the owner's product)
 
 Sources: https://docs.vagon.io/streams and its sub-pages (introduction, guides, configurations, integrations, custom

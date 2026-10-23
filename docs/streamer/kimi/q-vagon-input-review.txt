@@ -1,0 +1,49 @@
+Code review request: the attached diff changes the Vagon input path of SUB-01's desktop runner
+(scripts/streamer_desktop.py, Python aiohttp + Playwright driving Google Chrome on the owner's Vagon Computer page) and adds
+tests (tests/test_streamer_desktop_workstation.py). You advised on this problem earlier; here is what was measured on the
+live page after deploying the diagnostics, and what the diff does.
+
+MEASURED LIVE (2026-10-23, connected session, 1920x1080)
+- The stream is video#player (pointer-events auto), the top element at all 20 points of a 5x4 grid over it (no overlay).
+- The page's own listeners (counted by INPUT_INIT_JS): keydown/keyup/keypress on document and on div#root (React);
+  mousedown/up/move, pointerdown/up/move and wheel on video#player; click/contextmenu on document/root/window.
+- Outbound: a data channel labelled "control" carries input (messages rise with each key); WebSocket sends are few.
+- No pointer lock requested, no navigator.keyboard.lock() call, no fullscreen change.
+- The Windows key alone, sent with keyboard.down/up after focusing the video (NO mouse event and NO click before it),
+  opened the Start menu; Escape closed it. keydown target video#player, the player called preventDefault.
+- press("Control+Escape"): keydowns reach the page and control messages are sent, but Windows does not open Start.
+- The earlier "dim" and the session end did not recur; the stats: H264 1920x1080 ~30 fps, frames_decoded rising,
+  candidate pair local srflx -> remote relay over UDP, RTT 70-100 ms.
+
+WHAT THE DIFF DOES
+1. parse_key accepts a lone modifier (Meta, Control, Alt, Shift).
+2. RTC_INIT_JS (every frame via context.add_init_script): keeps at most 8 peer-connection records, dropping a finished
+   one before a live one; first stats poll after 1 s; counts outbound data-channel messages per label and WebSocket sends
+   (counts and bytes only). Measured: the init script also runs in a script-created about:blank iframe, so no extra hook.
+3. INPUT_INIT_JS (vagon mode, every frame): wraps EventTarget.prototype.addEventListener to COUNT listeners by target and
+   type; capture/bubble listeners on window count key/mouse/wheel events, their last target, how many bubbled back and how
+   many were prevented; requestPointerLock / keyboard.lock calls; pointerlockchange / fullscreenchange. Never a key value.
+4. VAGON_DIAG_JS: an input block (active element, pointer lock, fullscreen, what is at centre/top/bottom, the hook
+   counters, a 5x4 cover grid over the largest video with background/opacity of any covering element).
+5. VAGON_HIT_JS: a click/wheel/hover point is accepted only when the top element is the stream element or inside it (your
+   advice); everything else is classified (host control, a layer that paints = dim/backdrop, transparent layer, container,
+   outside, no stream) and refused. On a real page an evaluate error refuses the input too.
+6. _vagon_input: click -> hit test, move, click; scroll -> hit test at the last point used on the stream (else the
+   centre), move, six wheel steps; key/type/navigate/back -> _vagon_keys_ready (once per session: hit test + mouse move to
+   the stream, never a click; then the video's DOM focus every time) then the keys. "Control+Escape" is sent as "Meta"
+   (VAGON_KEY_ALIASES). No automatic activation click (measured unnecessary; a click lands in a remote window).
+7. _rtc_summary prefers a live connection (state connected) over a finished one with more bytes (the old summary showed
+   the previous session's closed connection); a follow-up diag 8 s after connect (the first comes before any stats);
+   a diag every 60 s while connected; GET /pc/vagon/diag (token) for a fresh snapshot, at most one per 2 s.
+
+8. NEW, measured live after the first review request: Ctrl+A dimmed the whole stream again. The player prevented 14 of
+   16 keydowns (Meta, Escape, typed characters, Delete) but not Control and Ctrl+A, so Chrome also ran the HOST page's
+   select-all and painted its selection tint over the <video> (the "dim"; it stays until the selection is cleared).
+   VAGON_FOCUS_JS (run before every key action) now clears a host-page Range selection and, once per stream element, adds
+   a keydown listener on it that calls preventDefault() (never stopPropagation) for Ctrl/Meta/Alt combinations, Tab,
+   Escape and F1-F12; plain characters are left alone.
+
+PLEASE REVIEW FOR: correctness bugs (JS and Python), races (the act path holds the runner's _vagon_lock; the diag runs
+under the same lock), anything in the init scripts that could break or slow the owner's page, privacy (nothing typed or
+pressed must be recorded), whether the hit-test rule is right, whether the hover-before-keys or the Ctrl+Esc alias is
+wrong, and missing tests. Reply as a numbered list of AT MOST 10 findings, most important first, each with severity (bug / risk / nit) and the exact fix. Keep the reasoning short; the answer matters more than completeness.

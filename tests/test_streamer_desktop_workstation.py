@@ -9,6 +9,11 @@ vagon_mock_account.html, served by a loopback test server): the login page is de
 only then and forwards the owner's input (with the token, never without), the login survives a restart in the profile,
 Run/Connect/Reconnect are pressed, the model and the monitor get a neutral picture until the desktop is connected, account
 pages and external sites are blocked, and the console page works behind a path prefix in a second real browser.
+Part 3: the input path on the connected remote desktop (proven live on 2026-10-23): a lone modifier key, keys only after
+the stream element took the focus (fail closed), chords held past Vagon's 15 ms AltGr window, clicks/wheel only where the
+stream element is under the point (checked before and after the move), VAGON_HIT_JS and the init scripts in a real
+headless Chromium (host selection cleared, host defaults cancelled after the player, counters without key values, no
+typed text in the diag, data-channel sends counted per label), the RTC summary and the diag schedule.
 Nothing here talks to Vagon; the password typed into the mock is a test constant."""
 
 import asyncio
@@ -1186,4 +1191,412 @@ def test_workstation_step_skips_the_widget_logs_controls_and_never_reloads_a_liv
         assert desk.operator_allowed() is True
         text = (tmp_path / "events.jsonl").read_text()
         assert "launchFlags" not in text and ("vagon", "reload_requested") in [(e["kind"], e.get("state")) for e in events_of(tmp_path / "events.jsonl")]
+    run(body())
+
+
+# --- the input path on the connected remote desktop (2026-10-23: proven live on the owner's Vagon Computer) -------------
+def test_a_lone_modifier_is_a_key_of_its_own():
+    """"Meta" alone is the Windows key (Start menu); a lone modifier was refused before."""
+    assert sd.parse_key("Meta") == ((), "Meta") and sd.parse_key("Control") == ((), "Control") and sd.parse_key("Shift") == ((), "Shift")
+    assert sd.parse_key("Control+Escape") == (("Control",), "Escape") and sd.parse_key("Alt") == ((), "Alt")
+    assert sd.validate_action({"action": "key", "key": "Meta"})["key"] == "Meta"
+    assert sd.action_policy({"action": "key", "key": "Meta"}) is None
+    assert sd.action_policy({"action": "key", "key": "Meta+v"}).startswith("blocked")                # clipboard keys stay refused
+    for bad in ("Meta+", "Hyper", "Control+Hyper", "ControlOrMeta", "Meta+Meta", "Win"):
+        with pytest.raises(sd.ActionError):
+            sd.parse_key(bad)
+
+
+class OrderPage:
+    """A fake page logging, in order, what the vagon act path does: the hit test (VAGON_HIT_JS answered with `hit`, or
+    raising it; a list answers call by call, its last item repeating), the move, the focus (VAGON_FOCUS_JS, answering
+    `focused`), clicks, wheel steps and keys."""
+
+    def __init__(self):
+        self.log, self.hit, self.focused = [], {"ok": True, "tag": "video", "id": "player", "how": "stream"}, True
+        page = self
+
+        class Mouse:
+            async def move(self, x, y, steps=1):
+                page.log.append(("move", round(x), round(y)))
+
+            async def click(self, x, y, **kw):
+                page.log.append(("click", round(x), round(y)))
+
+            async def wheel(self, dx, dy):
+                page.log.append(("wheel", dx, dy))
+
+        class Keyboard:
+            async def press(self, key):
+                page.log.append(("press", key))
+
+            async def down(self, key):
+                page.log.append(("down", key))
+
+            async def up(self, key):
+                page.log.append(("up", key))
+
+            async def type(self, text, delay=0):
+                page.log.append(("type", text))
+
+        self.mouse, self.keyboard = Mouse(), Keyboard()
+
+    async def evaluate(self, js, arg=None):
+        if js is sd.VAGON_HIT_JS:
+            self.log.append(("hit", round(arg[0]), round(arg[1])))
+            answer = self.hit
+            if isinstance(answer, list):
+                answer = answer.pop(0) if len(answer) > 1 else answer[0]
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+        if js is sd.VAGON_FOCUS_JS:
+            self.log.append(("focus",))
+            return self.focused
+        return None
+
+
+def connected_ws(tmp_path, monkeypatch, page):
+    """A workstation Desktop whose remote desktop is connected (session 1, a playing video over the whole page)."""
+    monkeypatch.setattr(sd, "VAGON_SETTLE_S", 0)
+    monkeypatch.setattr(sd, "VAGON_NAV_SETTLE_S", 0)
+    desk = ws_desktop(tmp_path)
+    desk.status, desk.page, desk.view = "ready", page, (1920, 1080)
+    desk._input_lock = asyncio.Lock()
+    desk.vagon.connected, desk.vagon.sessions = True, 1
+    live = probe("", [], dict(VIDEO, frames=240))
+
+    async def fake_probe():
+        return json.loads(json.dumps(live))
+    desk._vagon_probe = fake_probe
+    return desk
+
+
+def test_vagon_keys_focus_the_stream_first_and_fail_closed_without_it(tmp_path, monkeypatch):
+    """Measured live: the stream element's DOM focus is all keys need (no click, hover or pointer lock). Every key path
+    focuses it first; when it does not take the focus nothing is sent to the host page."""
+    async def body():
+        page = OrderPage()
+        desk = connected_ws(tmp_path, monkeypatch, page)
+        r = await desk.do({"action": "key", "key": "Meta"})
+        assert r["errors"] == [] and page.log == [("focus",), ("press", "Meta")]       # no click, no move
+        page.log.clear()
+        await desk.do({"action": "type", "text": "sub01 test", "submit": False})
+        assert page.log == [("focus",), ("type", "sub01 test")]
+        page.log.clear()
+        await desk.do({"action": "key", "key": "Control+Escape"})                     # a chord: the modifier held first
+        assert page.log == [("focus",), ("down", "Control"), ("press", "Escape"), ("up", "Control")]
+        page.log.clear()
+        for action in ({"action": "navigate", "url": "https://example.com/"}, {"action": "back"},
+                       {"action": "type", "text": "x", "submit": True}):
+            await desk.do(action)
+            assert page.log[0] == ("focus",) and page.log[1][0] in ("down", "type") and not any(e[0] in ("click", "move", "hit") for e in page.log), action
+            page.log.clear()
+        # the stream does not take the focus (stale page, no stream element): fail closed on every key path
+        page.focused = False
+        for action in ({"action": "key", "key": "Meta"}, {"action": "type", "text": "x", "submit": False},
+                       {"action": "navigate", "url": "https://example.com/"}, {"action": "back"}):
+            r = await desk.do(action)
+            assert r["errors"] == ["the stream did not take the keyboard focus; nothing was sent; observe again"], action
+            assert page.log == [("focus",)], action
+            page.log.clear()
+        assert [e["what"] for e in events_of(tmp_path / "events.jsonl") if e["kind"] == "blocked" and e.get("what") == "keys"] == ["keys"] * 4
+        # not connected: nothing is focused or pressed
+        page.focused, desk.vagon.connected = True, False
+        r = await desk.do({"action": "key", "key": "Meta"})
+        assert r["errors"] and page.log == []
+    run(body())
+
+
+def test_vagon_clicks_and_wheel_only_where_the_stream_is_under_the_point(tmp_path, monkeypatch):
+    async def body():
+        page = OrderPage()
+        desk = connected_ws(tmp_path, monkeypatch, page)
+        r = await desk.do({"action": "click", "point": [640.0, 360.0]})
+        assert r["errors"] == [] and page.log == [("hit", 960, 540), ("move", 960, 540), ("hit", 960, 540), ("click", 960, 540)]
+        # anything but an explicit ok: true (no answer, a malformed one) is a refusal
+        for answer in (None, "yes", {"tag": "video"}, {"ok": 1}):
+            page.log.clear()
+            page.hit = answer
+            r = await desk.do({"action": "click", "point": [640.0, 360.0]})
+            assert r["errors"][0].startswith("blocked") and page.log == [("hit", 960, 540)], answer
+        page.log.clear()
+        # the Vagon handle ("Click to Open") over the stream: checked, never moved to, never pressed
+        page.hit = {"ok": False, "tag": "div", "id": "", "text": "Click to Open", "why": "host control"}
+        r = await desk.do({"action": "click", "point": [488.0, 28.0]})
+        assert len(r["errors"]) == 1 and r["errors"][0].startswith("blocked: that point is the stream page's own (host control")
+        assert page.log == [("hit", 732, 42)]
+        r = await desk.do({"action": "scroll", "direction": "down", "amount": 600})
+        assert r["errors"][0].startswith("blocked") and not any(e[0] in ("wheel", "move", "click") for e in page.log)
+        blocked = [e for e in events_of(tmp_path / "events.jsonl") if e["kind"] == "blocked" and "Click to Open" in e.get("element", "")]
+        assert [(e["what"], e["reason"]) for e in blocked] == [("click", "host control"), ("scroll", "host control")]
+        # the move itself opens a host menu under the point (a hover toolbar): checked again after the move, not clicked
+        page.log.clear()
+        page.hit = [{"ok": True, "tag": "video", "id": "player"}, {"ok": False, "tag": "div", "why": "host control"}]
+        r = await desk.do({"action": "click", "point": [640.0, 360.0]})
+        assert r["errors"][0].startswith("blocked") and page.log == [("hit", 960, 540), ("move", 960, 540), ("hit", 960, 540)]
+        # a page that cannot be checked (navigating, frame gone): refused, never clicked blind
+        page.log.clear()
+        page.hit = RuntimeError("Execution context was destroyed")
+        r = await desk.do({"action": "click", "point": [640.0, 360.0]})
+        assert "could not be checked" in r["errors"][0] and page.log == [("hit", 960, 540)]
+        # the stream under the point again: the wheel turns there, after both checks
+        page.hit, desk.cursor = {"ok": True, "tag": "video", "id": "player"}, [960.0, 540.0]
+        page.log.clear()
+        r = await desk.do({"action": "scroll", "direction": "down", "amount": 600})
+        assert r["errors"] == [] and page.log == [("hit", 960, 540), ("move", 960, 540), ("hit", 960, 540), ("wheel", 0, 100.0)] + [("hit", 960, 540), ("wheel", 0, 100.0)] * 5
+        # something of the host page appears under the wheel point mid-scroll: the remaining steps are not sent
+        page.log.clear()
+        page.hit = [{"ok": True}, {"ok": True}, {"ok": True}, {"ok": False, "tag": "div", "why": "host control"}]
+        r = await desk.do({"action": "scroll", "direction": "down", "amount": 600})
+        assert r["errors"][0].startswith("blocked") and [e[0] for e in page.log].count("wheel") == 2
+        page.hit = {"ok": True, "tag": "video", "id": "player"}
+        # the wheel rests where the agent last pointed on the stream, else the centre
+        desk.cursor = [300.0, 200.0]
+        page.log.clear()
+        await desk.do({"action": "scroll", "direction": "up", "amount": 60})
+        assert page.log[:3] == [("hit", 300, 200), ("move", 300, 200), ("hit", 300, 200)]
+    run(body())
+
+
+HIT_PAGE = """<!doctype html><html><head><style>body{margin:0;background:#000}</style></head><body>
+<div id="app" style="position:fixed;inset:0">
+  <video id="player" muted style="position:absolute;left:0;top:0;width:1280px;height:640px;background:#123"></video>
+  <div id="handle" title="Click to Open" style="position:absolute;left:470px;top:10px;width:36px;height:36px;background:#444;cursor:pointer"></div>
+  <button id="power" aria-label="Power" style="position:absolute;left:600px;top:10px;width:60px;height:30px">Power</button>
+</div></body></html>"""
+
+
+@needs_browser
+def test_hit_js_in_a_real_browser_tells_the_stream_from_the_host_page():
+    from playwright.async_api import async_playwright
+
+    async def body():
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(executable_path=CHROMIUM, headless=True)
+            try:
+                page = await browser.new_page(viewport={"width": 1280, "height": 720})
+                await page.set_content(HIT_PAGE)
+
+                async def hit(x, y):
+                    return await page.evaluate(sd.VAGON_HIT_JS, [x, y, 320, 180])
+                assert (await hit(640, 360))["ok"] is True and (await hit(640, 360))["id"] == "player"
+                handle = await hit(488, 28)
+                assert handle["ok"] is False and handle["id"] == "handle" and handle["why"] == "a host-page element over the stream"
+                assert (await hit(630, 25))["why"] == "host control" and (await hit(630, 25))["text"] == "Power"
+                assert (await hit(640, 690))["why"] == "outside the stream"
+                # a dim layer over the whole stream (a host backdrop): never pressed through
+                await page.evaluate("""() => { const d = document.createElement('div'); d.id = 'dim';
+                  d.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.5)'; document.getElementById('app').appendChild(d); }""")
+                dim = await hit(640, 360)
+                assert dim["ok"] is False and dim["id"] == "dim" and dim["why"] == "a layer that paints over the stream (dim/backdrop)"
+                await page.evaluate("document.getElementById('dim').style.background = 'transparent'")
+                assert (await hit(640, 360))["why"] == "a transparent layer over the stream"
+                await page.evaluate("document.getElementById('dim').remove(); document.getElementById('player').style.pointerEvents = 'none'")
+                assert (await hit(640, 360))["why"].startswith("a container of the stream")
+                await page.evaluate("document.getElementById('player').style.pointerEvents = 'auto'; document.getElementById('player').style.display = 'none'")
+                assert (await hit(640, 360))["why"] == "no stream element"
+            finally:
+                await browser.close()
+    run(body())
+
+
+@needs_browser
+def test_init_scripts_count_the_input_path_and_hook_a_child_window_peer_connection():
+    """INPUT_INIT_JS counts events and the page's listeners (never a key); RTC_INIT_JS also runs in a script-created
+    about:blank iframe (a page may make its RTCPeerConnection there), whose record the per-frame diag reads, and wraps the
+    outbound data-channel sends in both windows."""
+    from playwright.async_api import async_playwright
+
+    async def body():
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(executable_path=CHROMIUM, headless=True)
+            try:
+                context = await browser.new_context(viewport={"width": 1280, "height": 720})
+                await context.add_init_script(sd.RTC_INIT_JS)
+                await context.add_init_script(sd.INPUT_INIT_JS)
+                page = await context.new_page()
+                await page.route("http://sub01.test/", lambda route: route.fulfill(body=HIT_PAGE, content_type="text/html"))
+                await page.goto("http://sub01.test/")
+                await page.evaluate("""() => { document.addEventListener('keydown', e => { if (e.key === 'Meta') e.preventDefault(); });
+                  document.getElementById('player').addEventListener('mousedown', () => {}); }""")
+                assert await page.evaluate(sd.VAGON_FOCUS_JS, [320, 180]) is True
+                await page.keyboard.press("Meta")
+                await page.mouse.click(640, 360)
+                hooks = await page.evaluate("window.__sub01Input")
+                assert hooks["key"]["down"] == 1 and hooks["key"]["prevented"] == 1 and hooks["key"]["target"] == "video#player"
+                # Ctrl+A meant for the remote desktop: the player's document listener gets it, the HOST page selects nothing
+                # (its selection tinted the whole video: the "dim"); a host selection made earlier is cleared by the focus
+                await page.evaluate("""() => { window.__seen = []; document.addEventListener('keydown', e => window.__seen.push(e.key + (e.ctrlKey ? '+ctrl' : ''))); }""")
+                await page.evaluate("""() => { window.__unprevented = 0; document.addEventListener('keydown', e => { if (!e.defaultPrevented) window.__unprevented++; }); }""")
+                await page.keyboard.press("Control+a")
+                await page.keyboard.press("Tab")
+                assert await page.evaluate("[window.__seen, getSelection().type, document.activeElement.id]") == [["Control+ctrl", "a+ctrl", "Tab"], "None", "player"]
+                assert await page.evaluate("window.__unprevented") == 3                   # the player sees them untouched
+                await page.evaluate("document.getSelection().selectAllChildren(document.body)")
+                assert await page.evaluate("getSelection().type") == "Range"
+                assert await page.evaluate(sd.VAGON_FOCUS_JS, [320, 180]) is True and await page.evaluate("getSelection().type") != "Range"
+                await page.keyboard.press("x")                                             # a plain character: never prevented
+                # the runner's cancel runs last (window, bubble): the counter measures only the player's own preventDefault
+                assert await page.evaluate("[window.__sub01Input.key.down, window.__sub01Input.key.prevented]") == [5, 1]
+                assert hooks["mouse"]["down"] == 1 and hooks["mouse"]["target"] == "video#player"
+                assert hooks["listeners"]["document:keydown"] >= 1 and hooks["listeners"]["video#player:mousedown"] == 1
+                assert "Meta" not in json.dumps(hooks)                                     # counts, never which key
+                made = await page.evaluate("""() => { const f = document.createElement('iframe'); f.name = 'pristine'; document.body.appendChild(f);
+                  const pc = new f.contentWindow.RTCPeerConnection(); pc.createDataChannel('control');
+                  return {parent: window.__sub01Rtc.created, child: f.contentWindow.__sub01Rtc.created,
+                          wrapped: !!f.contentWindow.RTCDataChannel.prototype.send.__sub01 && !!RTCDataChannel.prototype.send.__sub01}; }""")
+                assert made == {"parent": 0, "child": 1, "wrapped": True}
+                child = next(f for f in page.frames if f.name == "pristine")
+                frames = [await page.evaluate(sd.VAGON_DIAG_JS), await child.evaluate(sd.VAGON_DIAG_JS)]
+                diag = frames[0]
+                assert diag["input"]["cover"] == {"stream": 20} and diag["input"]["active"]["id"] == "player"
+                assert diag["input"]["hooks"]["key"]["down"] == 5 and diag["input"]["selection"] != "Range"
+                assert diag["rtc"]["dc_out"] == {} and diag["rtc"]["created"] == 0
+                # outbound sends are counted per label after the native send (UTF-8 bytes), as own properties only
+                # ("__proto__" is a valid channel label); a refused send is not counted. A loopback pair in this page:
+                counted = await page.evaluate("""async () => {
+                  try { RTCDataChannel.prototype.send.call({label: 'control'}, 'refused'); } catch (e) {}
+                  const a = new RTCPeerConnection(), b = new RTCPeerConnection();
+                  a.onicecandidate = e => e.candidate && b.addIceCandidate(e.candidate); b.onicecandidate = e => e.candidate && a.addIceCandidate(e.candidate);
+                  const chans = ['control', '__proto__'].map(l => a.createDataChannel(l));
+                  await a.setLocalDescription(); await b.setRemoteDescription(a.localDescription); await b.setLocalDescription(); await a.setRemoteDescription(b.localDescription);
+                  await Promise.all(chans.map(c => new Promise((ok, no) => { if (c.readyState === 'open') ok(); c.onopen = ok; setTimeout(() => no(new Error('open timeout')), 10000); })));
+                  chans[0].send('abcd'); chans[0].send('\u00e9\u00e9'); chans[1].send(new Uint8Array(5));
+                  const o = window.__sub01Rtc.dc_out;
+                  return {own: Object.keys(o), control: o.control, proto: Object.getOwnPropertyDescriptor(o, '__proto__').value, polluted: ({}).n !== undefined}; }""")
+                assert counted == {"own": ["control", "__proto__"], "control": {"n": 2, "bytes": 8}, "proto": {"n": 1, "bytes": 5}, "polluted": False}
+                # privacy: text typed into a host field (here a contenteditable that has the focus) never reaches the diag
+                await page.evaluate("""() => { const d = document.createElement('div'); d.id = 'note'; d.contentEditable = 'true';
+                  d.style.cssText = 'position:absolute;left:0;top:660px;width:400px;height:40px'; document.body.appendChild(d); d.focus(); }""")
+                await page.keyboard.type("SECRET-owner-typed-7731")
+                leaked = json.dumps(await page.evaluate(sd.VAGON_DIAG_JS)) + json.dumps(await page.evaluate(sd.VAGON_HIT_JS, [200, 680, 320, 180]))
+                assert "SECRET" not in leaked and "7731" not in leaked
+                summary = sd.Desktop._rtc_summary(None, frames)                     # the per-frame diag finds it in the child
+                assert summary["created"] == 1 and summary["id"] == 1 and summary["live"] == 0
+            finally:
+                await browser.close()
+    run(body())
+
+
+def test_rtc_summary_prefers_the_live_connection_over_a_finished_bigger_one():
+    """The "empty rtc while connected" of 2026-10-23: the summary picked the previous session's closed connection (most
+    bytes) or a snapshot taken before the new one's first stats poll; the live connection now comes first."""
+    closed = {"id": 17, "state": {"connection": "closed"}, "tracks": 4, "stats": {"bytes": 45610786, "frames_decoded": 3932, "fps": 31}}
+    fresh = {"id": 18, "state": {"connection": "connected"}, "tracks": 4, "stats": None}
+    frame = {"host": "app.vagon.io", "rtc": {"created": 18, "pcs": [closed, fresh], "events": [], "dc_out": {"control": {"n": 4, "bytes": 132}}}}
+    s = sd.Desktop._rtc_summary(None, [frame])
+    assert s["id"] == 18 and s["live"] == 1 and s["bytes"] == 0 and s["dc_out"] == {"control": {"n": 4, "bytes": 132}}
+    later = dict(fresh, stats={"bytes": 3516949, "frames_decoded": 261, "fps": 30, "pair": {"local": "srflx", "remote": "relay", "protocol": "udp"}})
+    s = sd.Desktop._rtc_summary(None, [{"host": "app.vagon.io", "rtc": {"created": 18, "pcs": [closed, later]}}])
+    assert (s["id"], s["frames_decoded"], s["fps"], s["pair"]["remote"], s["pair"]["protocol"]) == (18, 261, 30, "relay", "udp")
+    assert sd.Desktop._rtc_summary(None, [{"error": "detached"}]) == {"created": 0, "live": 0}
+
+
+def test_vagon_diag_route_gives_a_fresh_snapshot_with_the_token_only(tmp_path):
+    class DiagDesk(StubDesk):
+        vagon_mode = True
+
+        def __init__(self):
+            super().__init__()
+            self.calls = 0
+
+        async def diag_now(self):
+            self.calls += 1
+            return {"phase": "connected", "rtc": {"frames_decoded": 3900, "fps": 30}}
+
+    async def body():
+        desk = DiagDesk()
+        runner, http = await client_for(desk, tmp_path)
+        try:
+            assert (await http.get("/pc/vagon/diag")).status == 403 and desk.calls == 0
+            r = await http.get("/pc/vagon/diag", headers=AUTH)
+            assert r.status == 200 and await r.json() == {"ok": True, "diag": {"phase": "connected", "rtc": {"frames_decoded": 3900, "fps": 30}}}
+            desk.vagon_mode = False
+            assert (await http.get("/pc/vagon/diag", headers=AUTH)).status == 409 and desk.calls == 1
+        finally:
+            await http.close()
+    run(body())
+
+
+def test_vagon_chords_hold_the_modifier_past_the_altgr_window_and_always_release_it(tmp_path, monkeypatch):
+    """Vagon's keyboard layer drops a key that follows a Left-Control keydown within 15 ms (and the Control with it):
+    chords go down, wait VAGON_CHORD_HOLD_S, key, up - also on the scancode path, whose batch arrives at once."""
+    async def body():
+        page = OrderPage()
+        desk = connected_ws(tmp_path, monkeypatch, page)
+        stamps = []
+        down, press = page.keyboard.down, page.keyboard.press
+
+        async def timed_down(key):
+            stamps.append(("down", time.monotonic()))
+            await down(key)
+
+        async def timed_press(key):
+            stamps.append(("press", time.monotonic()))
+            await press(key)
+        page.keyboard.down, page.keyboard.press = timed_down, timed_press
+        await desk._vagon_chord("Control+Shift+a")
+        assert page.log == [("down", "Control"), ("down", "Shift"), ("press", "a"), ("up", "Shift"), ("up", "Control")]
+        assert stamps[-1][1] - stamps[-2][1] >= sd.VAGON_CHORD_HOLD_S * 0.9 and sd.VAGON_CHORD_HOLD_S >= 0.05
+        page.log.clear()
+        await desk._vagon_chord("Escape")                                              # a plain key: no hold
+        assert page.log == [("press", "Escape")]
+        page.log.clear()
+
+        async def failing_press(key):
+            raise RuntimeError("target closed")
+        page.keyboard.press = failing_press
+        with pytest.raises(RuntimeError):
+            await desk._vagon_chord("Control+l")
+        assert page.log == [("down", "Control"), ("up", "Control")]                    # never left held
+        # the scancode path (native monitor): Ctrl+A in one batch is spaced out after the Control
+        page.log.clear()
+        page.keyboard.down, page.keyboard.press = timed_down, timed_press
+        stamps.clear()
+        t0 = time.monotonic()
+        assert await desk._keys([("down", "Control"), ("down", "KeyA"), ("up", "KeyA"), ("up", "Control")]) is True
+        assert [e for e in page.log if e[0] != "focus"] == [("down", "Control"), ("down", "KeyA"), ("up", "KeyA"), ("up", "Control")]
+        assert stamps[1][1] - stamps[0][1] >= sd.VAGON_CHORD_HOLD_S * 0.9 and time.monotonic() - t0 < 1.0
+    run(body())
+
+
+def test_diag_requests_share_one_snapshot_and_never_move_the_connected_schedule(tmp_path, monkeypatch):
+    async def body():
+        now = [1000.0]
+        monkeypatch.setattr(sd.time, "monotonic", lambda: now[0])
+        desk = ws_desktop(tmp_path)
+        desk.status, desk.page, desk.view = "ready", StepPage(), (1920, 1080)
+        desk._input_lock = asyncio.Lock()
+        calls = []
+
+        async def fake_diag(phase, force=False):          # (the clock is frozen: asyncio.sleep(0) only yields)
+            calls.append((phase, now[0]))
+            await asyncio.sleep(0)                          # the second request passes the first check meanwhile
+            desk.vagon.last_diag, desk.vagon.diag = now[0], {"phase": phase}
+            return desk.vagon.diag
+        desk._vagon_diag = fake_diag
+        # two requests at once: the second one queues behind the first and gets its snapshot
+        await asyncio.gather(desk.diag_now(), desk.diag_now())
+        assert len(calls) == 1
+        # connect: a snapshot now and a follow-up VAGON_DIAG_FOLLOW_S later, even with a manual snapshot in between
+        now[0] += 10
+        playing = probe("", [], {"tag": "video", "box": [0, 0, 1920, 1080], "playing": True, "frames": 240})
+        await desk._workstation_step(playing, now[0])
+        assert desk.vagon.connected and calls[-1] == ("connected", now[0])
+        connected_at = now[0]
+        now[0] += 3
+        await desk.diag_now()                                                            # the owner asks for one
+        now[0] = connected_at + sd.VAGON_DIAG_FOLLOW_S - 0.5
+        await desk._workstation_step(playing, now[0])
+        n = len(calls)
+        now[0] = connected_at + sd.VAGON_DIAG_FOLLOW_S + 0.5
+        await desk._workstation_step(playing, now[0])
+        assert len(calls) == n + 1 and calls[-1][0] == "connected"                        # the follow-up came on time
+        now[0] += sd.VAGON_DIAG_CONNECTED_S - 1
+        await desk._workstation_step(playing, now[0])
+        assert len(calls) == n + 1
+        now[0] += 2
+        await desk._workstation_step(playing, now[0])
+        assert len(calls) == n + 2                                                       # then every minute
     run(body())

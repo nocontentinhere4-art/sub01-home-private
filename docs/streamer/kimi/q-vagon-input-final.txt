@@ -1,0 +1,30 @@
+Final review of the Vagon input change in SUB-01's desktop runner (scripts/streamer_desktop.py, Playwright + Google
+Chrome on the owner's Vagon Computer page; tests in tests/test_streamer_desktop_workstation.py and two expectation updates
+in tests/test_streamer_desktop_vagon.py). The attached diff is the final one. Since your previous review:
+
+APPLIED FROM YOUR REVIEW
+1. Keys fail closed: VAGON_FOCUS_JS returns true only when the stream element itself has the focus; _vagon_keys_ready
+   raises ActFailed (nothing sent) otherwise, on key/type/navigate/back. Tested on all four paths.
+2. The host-default cancel is now a window-bubble keydown listener registered after the diagnostic one, restricted to
+   e.target === the current stream element; the player sees events untouched and the counter measures only the player.
+3. The hit test runs before AND after the pointer move (_vagon_point), for clicks and the wheel. Tested with a second
+   answer that is a host control.
+4. Element summaries in the diag and the hit test use only aria-label/title, never innerText. A test types a secret into
+   a focused contenteditable and checks it is absent from the diag and hit-test output.
+5. diag_now re-checks the 2 s gap after acquiring the lock; the connected schedule uses its own _vagon_next_diag (connect,
+   +8 s, then every 60 s), unaffected by manual snapshots. Tested (concurrent requests, a manual one between).
+6. dc_out uses own properties only (defineProperty), tested with a "__proto__" label and no Object.prototype pollution.
+7. No hover before keys (focus only, as measured); the pointer moves only for clicks and the wheel.
+
+NEW, FOUND LIVE AFTER YOUR REVIEW (the real cause of the missing Control chords)
+Vagon's client bundle (keyDownHandler/startPendingCtrl) holds a Left-Control keydown 15 ms to detect AltGr and, when
+another non-modifier key arrives inside that window, calls flushAsRealCtrlNow(), which only clears the timer: both the
+key and the pending Control are dropped (measured: Ctrl+A = 2 keydowns but only the 2 keyups on the control channel;
+Ctrl+Escape the same). Fix: _vagon_chord presses modifiers down, waits VAGON_CHORD_HOLD_S = 0.1 s, presses the key,
+releases the modifiers in a finally; the scancode path (_keys) waits after a Control keydown in vagon mode. The
+Control+Escape -> Meta alias was removed. Live after the fix: Ctrl+A selects the remote text (8 control messages),
+Delete clears it, Ctrl+Escape opens the Start menu.
+
+Please review the final diff for remaining bugs or risks only (no restating of fixed items). AT MOST 6 findings, most
+important first, each with severity (bug / risk / nit) and the exact fix; say "no blocking findings" if that is the case.
+Keep the reasoning short.

@@ -15,6 +15,7 @@ One Playwright Chromium (dedicated persistent profile inside --data-dir, never t
   Owner's console (vagon mode, workstation kind; the page needs no token, the rest does):
     GET  /operator          self-contained page, served only while the Vagon page needs his login (or --operator-console)
     GET  /operator/frame.jpg, POST /operator/input {mouse|key|text}, POST /pc/vagon/start (optional Teams API)
+    GET  /pc/vagon/diag     (token) a fresh diagnostic snapshot: WebRTC stats, input counters, what covers the stream
 
 Safety: banking/adult/gambling/trading/login/checkout/payment hosts and paths are refused (also redirects and
 sub-frames), no POST navigation, no downloads, file chooser, clipboard or popups, service workers blocked, dialogs
@@ -27,6 +28,12 @@ connect/play button, waits for the stream's video/canvas and re-enters after "se
 mapped onto the stream: click/scroll/type/key go to the stream element, navigate/search type the URL into the remote
 browser's address bar (Ctrl+L, text, Enter), observe returns the pixels with `mode: "vagon"` and `remote_ready` and no
 DOM summary. `/pc/state` carries `pc_mode` and a `vagon` sub-state. The stream URL's query string is never logged.
+Input path (measured on the owner's Vagon Computer, 2026-10-23; docs/streamer/VAGON.md A6): keys need only the DOM
+focus on the stream element (no click, hover or pointer lock), and fail closed without it; a chord's modifiers are held
+VAGON_CHORD_HOLD_S before the key (Vagon drops a key that follows Left-Control within 15 ms); the host page's own default
+for modifier chords, Tab, Escape and F-keys is cancelled after the player has seen them, and a host selection (Ctrl+A's
+dark tint over the video) is cleared; clicks and the wheel go only where VAGON_HIT_JS finds the stream element itself
+under the point, checked before and after the pointer moves, never on the Vagon toolbar handle, its menu or a dialog.
 
 Two Vagon products (`kind` in vagon.json, or `--vagon-kind`): `streams` (a public Vagon Streams link, the default) and
 `workstation` (the owner's Vagon Cloud Computer at https://app.vagon.io/workstation, which needs HIS login). In the
@@ -128,6 +135,9 @@ VAGON_API_START_GAP_S = 300.0 # at least this long between two API starts of the
 VAGON_WS_STUCK_S = {"blank": 120.0, "opening": 60.0, "dashboard": 180.0, "starting": 600.0, "connecting": 360.0}
 VAGON_DEAD_S = 60.0           # no request, WebSocket frame or WebRTC byte for this long, and no video/canvas: the page is dead
 VAGON_DIAG_EVERY_S = 30.0     # a `vagon_diag` row while the stream is connecting (and once when it connects, ends or reloads)
+VAGON_DIAG_CONNECTED_S = 60.0 # ... and while it is connected (frames decoded, candidate pair, focus: the input path's facts)
+VAGON_DIAG_FOLLOW_S = 8.0     # ... and this long after the connect (the first one comes before the stats poll has numbers)
+VAGON_DIAG_MIN_GAP_S = 2.0    # GET /pc/vagon/diag: at most one fresh snapshot this often
 NEUTRAL_TEXT = "PC not connected"
 VAGON_TICK_S = 2.0            # how often the stream page is probed for its connect / ended state
 VAGON_CLICK_GAP_S = 6.0       # at least this long between two presses of the stream's connect button
@@ -136,6 +146,12 @@ VAGON_BLANK_RELOAD_S = 60.0   # a stream page with neither a button nor a stream
 VAGON_MISSES = 3              # consecutive probes without the stream before "connected" is dropped
 VAGON_TYPE_DELAY_MS = 12      # per character: the stream client needs real key events, not inserted text
 VAGON_SETTLE_S = 0.8          # pixels need a round trip to the remote machine before they can be compared
+# Vagon's keyboard layer (its client bundle, 2026-10-23: keyDownHandler/startPendingCtrl) holds a Left-Control keydown for
+# 15 ms to tell it from AltGr and DROPS a key that arrives inside that window, the pending Control with it. Playwright's
+# press("Control+a") sends the "a" microseconds after the Control: Ctrl+A, Ctrl+L, Ctrl+Escape never reached Windows
+# (measured: 2 keydowns, only the 2 keyups on the control channel). A chord's modifiers are therefore held this long first.
+VAGON_CHORD_HOLD_S = 0.1
+VAGON_HOVER_S = 0.1           # after the pointer moved onto a click/wheel point, before the second hit test
 VAGON_NAV_SETTLE_S = 2.5
 VAGON_MIN_STREAM = (320, 180)
 
@@ -296,13 +312,16 @@ def field_blocked(info):
 
 
 def parse_key(key):
-    """('Control','Shift'), 'a' from "Control+Shift+a"; ActionError when it is not a plain key or combination."""
+    """('Control','Shift'), 'a' from "Control+Shift+a"; ActionError when it is not a plain key or combination. A lone
+    modifier ("Meta": the Windows key on a remote desktop) is a key of its own."""
     if not isinstance(key, str) or not 1 <= len(key) <= 40:
         raise ActionError("Expected a key name such as Enter or Control+a")
     parts = [key] if key == "+" else key.split("+")
     *mods, last = parts
-    if any(m not in MODS for m in mods) or not (last in NAMED_KEYS or (len(last) == 1 and last.isprintable() and last != " ")):
-        raise ActionError("Unsupported key; use a named key (Enter, ArrowDown, F5...), one character or Modifier+key")
+    lone_modifier = not mods and last in ("Meta", "Control", "Alt", "Shift")
+    if any(m not in MODS for m in mods) or not (lone_modifier or last in NAMED_KEYS
+                                                 or (len(last) == 1 and last.isprintable() and last != " ")):
+        raise ActionError("Unsupported key; use a named key (Enter, ArrowDown, F5, Meta...), one character or Modifier+key")
     return tuple(mods), last
 
 
@@ -1518,23 +1537,43 @@ VAGON_PROBE_JS = r"""([minW, minH]) => {
   }
   return out;
 }"""
+# Keyboard focus on the stream element before keys; true only when the stream element itself has the focus (no stream:
+# the body is focused, so no host field keeps it, and false is returned). Also: (1) any selection on the HOST page is
+# cleared - Ctrl+A that the player forwarded but did not prevent also ran the host page's select-all, which tints the whole
+# video dark (the "dim" of 2026-10-23); (2) once per window, a keydown listener registered after every other one (window,
+# bubble phase: the player's own document/root listeners have run and seen the event untouched) cancels the HOST page's
+# default action for keys aimed at the stream: modifier combinations (select all, find, print, back...), Tab (host
+# focus), Escape and F1-F12 (reload...). preventDefault only: plain characters and propagation are left alone.
 VAGON_FOCUS_JS = r"""([minW, minH]) => {
   let best = null, area = 0;
   for (const el of document.querySelectorAll('video, canvas')) {
     const r = el.getBoundingClientRect();
     if (r.width >= minW && r.height >= minH && r.width * r.height > area) { area = r.width * r.height; best = el; }
   }
+  try { const s = getSelection(); if (s && s.rangeCount && s.type === 'Range') s.removeAllRanges(); } catch (e) {}
+  window.__sub01Stream = best;
+  if (!window.__sub01HostKeys) {
+    window.__sub01HostKeys = true;
+    window.addEventListener('keydown', e => {
+      if (e.target === window.__sub01Stream && (e.ctrlKey || e.metaKey || e.altKey || /^(Tab|Escape|F\d{1,2})$/.test(e.key))) e.preventDefault();
+    });
+  }
   const el = best || document.body;
   if (!el) return false;
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   try { el.focus({preventScroll: true}); } catch (e) { return false; }
-  return document.activeElement === el;
+  return !!best && document.activeElement === best;
 }"""
 # Init script (every frame, before the page's own code): wraps RTCPeerConnection to record its state transitions, the
 # negotiated codecs (payload type and codec name per m= line, never ICE credentials), tracks/data channels, candidate
-# errors and a getStats poll every 5 s (selected candidate pair types/protocol, inbound video bytes, frames decoded/
-# dropped, packets lost, jitter, decoder, codec). Also counts HTMLMediaElement.play() calls and their refusals (autoplay
-# policy). Read back by VAGON_DIAG_JS as window.__sub01Rtc.
+# errors and a getStats poll (first after 1 s, then every 5 s: selected candidate pair types/protocol, inbound video
+# bytes, frames decoded/dropped, fps, packets lost, jitter, decoder, codec), and counts outbound data-channel messages
+# per label and WebSocket sends (counts and bytes only: where the input travels). Added with context.add_init_script, it
+# runs in every frame, a script-created about:blank iframe included (measured: the iframe keeps its own record, read by
+# the per-frame diag); workers have no RTCPeerConnection. At most 8 records: a finished connection is dropped before a
+# live one, so the connection that carries the stream is never pushed out by the page's later ones (Vagon makes one per
+# (re)connection). Also counts HTMLMediaElement.play() calls and their refusals (autoplay policy). Read back by
+# VAGON_DIAG_JS as window.__sub01Rtc.
 RTC_INIT_JS = r"""(() => {
   if (window.__sub01Rtc || typeof RTCPeerConnection !== 'function') return;
   const R = window.__sub01Rtc = {pcs: [], events: [], media: {play: 0, rejected: []}, created: 0};
@@ -1552,13 +1591,17 @@ RTC_INIT_JS = r"""(() => {
     }
     return out.map(m => m.media + ': ' + (m.codecs.join(', ') || m.pts) + (m.cands ? ' (' + m.cands + ' candidates)' : '')).join(' | ').slice(0, 500);
   };
-  const Native = RTCPeerConnection;
-  function Wrapped(config, ...rest) {
-    const pc = new Native(config, ...rest);
+  const keep = rec => {
+    R.pcs.push(rec);
+    if (R.pcs.length <= 8) return;
+    const i = R.pcs.findIndex(p => p !== rec && p.state.connection !== 'connected');
+    R.pcs.splice(i >= 0 ? i : 0, 1);
+  };
+  const watch = (pc, config) => {
     pc.__id = ++R.created;
     const rec = {id: pc.__id, t: t(), policy: (config && config.iceTransportPolicy) || 'all', state: {}, sdp: {}, stats: null, tracks: 0, channels: 0,
       servers: ((config && config.iceServers) || []).map(s => [].concat(s.urls || []).map(safeUrl).join(' ')).slice(0, 6)};
-    R.pcs.push(rec); if (R.pcs.length > 6) R.pcs.shift();
+    keep(rec);
     const states = {connectionstatechange: () => pc.connectionState, iceconnectionstatechange: () => pc.iceConnectionState,
       icegatheringstatechange: () => pc.iceGatheringState, signalingstatechange: () => pc.signalingState};
     for (const k of Object.keys(states)) pc.addEventListener(k, () => { const v = states[k](); rec.state[k.replace('statechange', '')] = v; ev(pc, k.replace('statechange', ''), v); });
@@ -1600,14 +1643,48 @@ RTC_INIT_JS = r"""(() => {
       } catch (e) { rec.stats_error = String((e && e.message) || e).slice(0, 80); }
       setTimeout(poll, 5000);
     };
-    setTimeout(poll, 2000);
-    return pc;
-  }
-  Wrapped.prototype = Native.prototype;
-  try { Object.setPrototypeOf(Wrapped, Native); } catch (e) {}
-  if (Native.generateCertificate) Wrapped.generateCertificate = Native.generateCertificate.bind(Native);
-  window.RTCPeerConnection = Wrapped;
-  if (window.webkitRTCPeerConnection) window.webkitRTCPeerConnection = Wrapped;
+    setTimeout(poll, 1000);
+  };
+  // outbound messages per data channel label and on WebSockets: COUNTS and bytes only (where the input travels)
+  R.dc_out = {}; R.ws_out = {n: 0, bytes: 0};
+  const utf8 = typeof TextEncoder === 'function' ? new TextEncoder() : null;
+  const size = d => { try { return typeof d === 'string' ? (utf8 ? utf8.encode(d).byteLength : d.length) : ((d && (d.byteLength !== undefined ? d.byteLength : d.size)) || 0); } catch (e) { return 0; } };
+  const hookSends = win => {   // counted after the native send returned (a refused send is not outbound)
+    try {
+      const P = win.RTCDataChannel && win.RTCDataChannel.prototype;
+      if (P && !P.send.__sub01) {
+        const send = P.send, w = function (data) {
+          const r = send.apply(this, arguments);
+          try {   // own properties only: a label such as "__proto__" or "toString" must not reach Object.prototype
+            const k = String(this.label || '?').slice(0, 24);
+            let o = Object.prototype.hasOwnProperty.call(R.dc_out, k) ? R.dc_out[k] : null;
+            if (!o && Object.keys(R.dc_out).length < 12) Object.defineProperty(R.dc_out, k, {value: o = {n: 0, bytes: 0}, enumerable: true, writable: true, configurable: true});
+            if (o) { o.n++; o.bytes += size(data); }
+          } catch (e) {}
+          return r;
+        };
+        w.__sub01 = true; P.send = w;
+      }
+      const W = win.WebSocket && win.WebSocket.prototype;
+      if (W && !W.send.__sub01) {
+        const send = W.send, w = function (data) { const r = send.apply(this, arguments); R.ws_out.n++; R.ws_out.bytes += size(data); return r; };
+        w.__sub01 = true; W.send = w;
+      }
+    } catch (e) {}
+  };
+  const install = win => {
+    hookSends(win);
+    let Native;
+    try { Native = win.RTCPeerConnection; if (typeof Native !== 'function' || Native.__sub01) return; } catch (e) { return; }
+    function Wrapped(config, ...rest) { const pc = new Native(config, ...rest); watch(pc, config); return pc; }
+    Wrapped.__sub01 = true;
+    Wrapped.prototype = Native.prototype;
+    try { Object.setPrototypeOf(Wrapped, Native); } catch (e) {}
+    if (Native.generateCertificate) Wrapped.generateCertificate = Native.generateCertificate.bind(Native);
+    win.RTCPeerConnection = Wrapped;
+    try { if (win.webkitRTCPeerConnection) win.webkitRTCPeerConnection = Wrapped; } catch (e) {}
+  };
+  install(window);
   const play = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function () {
     R.media.play++;
@@ -1615,6 +1692,40 @@ RTC_INIT_JS = r"""(() => {
     if (p && p.catch) p.catch(e => { R.media.rejected.push(String((e && e.name) || e).slice(0, 40)); if (R.media.rejected.length > 10) R.media.rejected.shift(); });
     return p;
   };
+})();"""
+# Init script (vagon mode, every frame): the input path's facts, as COUNTS only (never a key, a character or a position):
+# which targets the page's own code listens on for keyboard/mouse/wheel events (window, document, the video, a layer...),
+# how many key/mouse/wheel events reached the window (capture phase) and their last target, how many of them came back to
+# the window's bubble phase (the rest were stopped by the player) and how many the page prevented, pointer-lock requests
+# and changes, navigator.keyboard.lock() calls. Read back by VAGON_DIAG_JS as window.__sub01Input.
+INPUT_INIT_JS = r"""(() => {
+  if (window.__sub01Input) return;
+  const I = window.__sub01Input = {key: {down: 0, up: 0, bubbled: 0, prevented: 0, target: null}, mouse: {down: 0, up: 0, move: 0, bubbled: 0, prevented: 0, target: null},
+    wheel: {n: 0, bubbled: 0, prevented: 0, target: null}, listeners: {}, lock: {requests: 0, changes: 0, errors: 0, held: false, by: null}, kbd_lock: 0};
+  const name = t => { try { return t === window ? 'window' : t === document ? 'document' : (t && t.tagName ? t.tagName.toLowerCase() + (t.id ? '#' + String(t.id).slice(0, 24) : '') : '?'); } catch (e) { return '?'; } };
+  const WATCH = new Set(['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'mousemove', 'pointerdown', 'pointerup', 'pointermove', 'wheel', 'click', 'contextmenu']);
+  const add = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type) {
+    try { if (WATCH.has(type)) { const k = name(this) + ':' + type; if (k in I.listeners || Object.keys(I.listeners).length < 40) I.listeners[k] = (I.listeners[k] || 0) + 1; } } catch (e) {}
+    return add.apply(this, arguments);
+  };
+  for (const [type, slot, field] of [['keydown', 'key', 'down'], ['keyup', 'key', 'up'], ['mousedown', 'mouse', 'down'], ['mouseup', 'mouse', 'up'], ['wheel', 'wheel', 'n']]) {
+    add.call(window, type, e => { I[slot][field]++; I[slot].target = name(e.target); }, true);
+    add.call(window, type, e => { if (field !== 'up') { I[slot].bubbled++; if (e.defaultPrevented) I[slot].prevented++; } }, false);
+  }
+  add.call(window, 'mousemove', () => { I.mouse.move++; }, {capture: true, passive: true});
+  try {
+    const rpl = Element.prototype.requestPointerLock;
+    if (rpl) Element.prototype.requestPointerLock = function () {
+      I.lock.requests++; I.lock.by = name(this);
+      try { const p = rpl.apply(this, arguments); if (p && p.catch) p.catch(() => { I.lock.errors++; }); return p; } catch (e) { I.lock.errors++; throw e; }
+    };
+  } catch (e) {}
+  add.call(document, 'pointerlockchange', () => { I.lock.changes++; I.lock.held = !!document.pointerLockElement; }, true);
+  add.call(document, 'pointerlockerror', () => { I.lock.errors++; }, true);
+  I.fullscreen_changes = 0;
+  add.call(document, 'fullscreenchange', () => { I.fullscreen_changes++; }, true);
+  try { if (navigator.keyboard && navigator.keyboard.lock) { const kl = navigator.keyboard.lock.bind(navigator.keyboard); navigator.keyboard.lock = (...a) => { I.kbd_lock++; return kl(...a); }; } } catch (e) {}
 })();"""
 # One frame's diagnostic snapshot (async: WebCodecs support is a promise): where it is, its iframes (hosts), video and
 # canvas elements, WebGL (context kind and renderer), WebCodecs/WebGPU, the codecs this browser can receive/decode, the
@@ -1652,10 +1763,68 @@ VAGON_DIAG_JS = r"""async () => {
   try { out.codecs.mse_h264 = MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"'); out.codecs.mse_vp9 = MediaSource.isTypeSupported('video/webm; codecs="vp09.00.10.08"'); out.codecs.mse_av1 = MediaSource.isTypeSupported('video/mp4; codecs="av01.0.04M.08"'); } catch (e) {}
   if (out.webcodecs) for (const [k, c] of Object.entries({h264: 'avc1.42E01E', vp9: 'vp09.00.10.08', av1: 'av01.0.04M.08'})) { try { out.codecs['vd_' + k] = (await VideoDecoder.isConfigSupported({codec: c, codedWidth: 1920, codedHeight: 1080})).supported; } catch (e) { out.codecs['vd_' + k] = 'error'; } }
   const R = window.__sub01Rtc;
-  out.rtc = R ? {created: R.created, pcs: R.pcs.map(p => ({id: p.id, policy: p.policy, servers: p.servers, state: p.state, sdp: p.sdp, tracks: p.tracks, channels: p.channels, stats: p.stats, error: p.stats_error})), events: R.events.slice(-30), media: R.media} : null;
+  out.rtc = R ? {created: R.created, pcs: R.pcs.map(p => ({id: p.id, policy: p.policy, servers: p.servers, state: p.state, sdp: p.sdp, tracks: p.tracks, channels: p.channels, stats: p.stats, error: p.stats_error})),
+    events: R.events.slice(-30), media: R.media, dc_out: R.dc_out || null, ws_out: R.ws_out || null} : null;
   out.ua = navigator.userAgent.slice(0, 120); out.pointer_lock = 'requestPointerLock' in Element.prototype;
   out.activation = navigator.userActivation ? {active: navigator.userActivation.isActive, been: navigator.userActivation.hasBeenActive} : null;
+  // the input path: what has the keyboard focus, what sits over the stream's centre and top edge (overlays, prompts);
+  // element summaries carry only the page author's aria-label/title, never innerText (no typed or page text)
+  const brief = el => el ? {tag: el.tagName.toLowerCase(), id: (el.id || '').slice(0, 40), cls: (typeof el.className === 'string' ? el.className : '').slice(0, 60),
+    text: (el.getAttribute('aria-label') || el.title || '').replace(/\s+/g, ' ').trim().slice(0, 40), tabindex: el.getAttribute('tabindex')} : null;
+  out.input = {active: brief(document.activeElement), locked: !!document.pointerLockElement, fullscreen: !!document.fullscreenElement,
+    at_centre: brief(document.elementFromPoint(innerWidth / 2, innerHeight / 2)), at_top: brief(document.elementFromPoint(innerWidth / 2, 6)),
+    at_bottom: brief(document.elementFromPoint(innerWidth / 2, innerHeight - 24)), hooks: window.__sub01Input || null,
+    keyboard_lock: !!(navigator.keyboard && navigator.keyboard.lock), selection: (() => { try { return getSelection().type; } catch (e) { return null; } })()};
+  // what covers the largest video at a 5x4 grid of points: the video itself, or which element (with its background) sits on top
+  let big = null, area = 0;
+  for (const v of document.querySelectorAll('video, canvas')) { const r = v.getBoundingClientRect(); if (r.width * r.height > area) { area = r.width * r.height; big = v; } }
+  if (big && area > 0) {
+    const r = big.getBoundingClientRect(), cover = {};
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) {
+      const el = document.elementFromPoint(r.left + r.width * (i + 0.5) / 5, r.top + r.height * (j + 0.5) / 4);
+      const key = !el ? 'none' : el === big ? 'stream' : (() => { const b = brief(el), cs = getComputedStyle(el); return b.tag + (b.id ? '#' + b.id : '') + (b.cls ? '.' + b.cls.split(/\s+/)[0] : '') + ' bg=' + cs.backgroundColor + ' op=' + cs.opacity; })();
+      cover[key] = (cover[key] || 0) + 1;
+    }
+    out.input.cover = cover;
+    out.input.stream_pointer_events = getComputedStyle(big).pointerEvents;
+  }
   return out;
+}"""
+# What a click (or the wheel, or the hover before keys) at (x, y) of the stream page would hit. ok only when the top
+# element at the point is the stream element itself (the largest video/canvas; on Vagon `video#player`, which carries the
+# player's mouse/wheel/pointer listeners) or inside it. Anything else is the host page's and is never pressed: the
+# toolbar handle ("Click to Open") or its menu (Power, Display settings, Files...), a dialog, a dim/backdrop layer, a
+# container or a transparent layer of unknown purpose. `why` says which, for the `blocked` event.
+VAGON_HIT_JS = r"""([x, y, minW, minH]) => {
+  const el = document.elementFromPoint(x, y);
+  const brief = e => ({tag: e.tagName.toLowerCase(), id: (e.id || '').slice(0, 40), cls: (typeof e.className === 'string' ? e.className : '').slice(0, 60),
+    text: (e.getAttribute('aria-label') || e.title || '').replace(/\s+/g, ' ').trim().slice(0, 40)});
+  if (!el) return {ok: false, why: 'nothing at that point'};
+  const out = brief(el);
+  let stream = null, area = 0;
+  for (const c of document.querySelectorAll('video, canvas')) {
+    const r = c.getBoundingClientRect();
+    if (r.width >= minW && r.height >= minH && r.width * r.height > area) { area = r.width * r.height; stream = c; }
+  }
+  if (!stream) return Object.assign(out, {ok: false, why: 'no stream element'});
+  const r = stream.getBoundingClientRect();
+  if (x < r.left || x > r.right || y < r.top || y > r.bottom) return Object.assign(out, {ok: false, why: 'outside the stream'});
+  if (el === stream || stream.contains(el)) return Object.assign(out, {ok: true, how: 'stream'});
+  const CONTROL = 'button, a[href], input, select, textarea, label, summary, [role=button], [role=link], [role=menu], [role=menuitem], [role=dialog], [role=alertdialog], [role=tooltip], dialog, [aria-modal=true], [contenteditable=""], [contenteditable=true]';
+  if (el.closest(CONTROL)) return Object.assign(out, {ok: false, why: 'host control'});
+  const clear = (e, pseudo) => {
+    const cs = getComputedStyle(e, pseudo || null);
+    if (pseudo && (cs.content === 'none' || cs.content === 'normal' || cs.display === 'none')) return true;
+    const bg = cs.backgroundColor, m = /^rgba\([^)]*,\s*([\d.]+)\)$/.exec(bg);
+    const alpha = bg === 'transparent' ? 0 : m ? Number(m[1]) : 1;    // rgb(...) or an unknown format: it paints
+    return alpha === 0 && cs.backgroundImage === 'none' && (!cs.backdropFilter || cs.backdropFilter === 'none') && cs.visibility !== 'hidden';
+  };
+  if (el.contains(stream)) return Object.assign(out, {ok: false, why: 'a container of the stream (the stream itself is not under the point)'});
+  const er = el.getBoundingClientRect();
+  const covers = er.left <= r.left + 4 && er.top <= r.top + 4 && er.right >= r.right - 4 && er.bottom >= r.bottom - 4;
+  const paints = !(clear(el) && clear(el, '::before') && clear(el, '::after'));
+  return Object.assign(out, {ok: false, why: covers ? (paints ? 'a layer that paints over the stream (dim/backdrop)' : 'a transparent layer over the stream')
+    : 'a host-page element over the stream'});
 }"""
 
 
@@ -1864,6 +2033,7 @@ class Desktop:
         self._wake = self._frame_event = self._input_lock = self._task = self._publisher_task = None
         self.vagon = VagonState(api_key_file_status(cfg.vagon_api_key_file), cfg.vagon_kind)   # /pc/state "vagon" (vagon mode only)
         self._vagon_task, self._vagon_frame, self._vagon_offset = None, None, (0.0, 0.0)
+        self._vagon_next_diag = 0.0                       # connected: when the next periodic diag is due (monotonic)
         self._vagon_lock = asyncio.Lock()                 # the connect loop never presses a button during an action
         self.api, self._api_task, self._api_logged = None, None, None   # workstation: the optional Teams API (VagonApi), set by serve()
         self._operator, self._neutral = (0, None), None   # (sequence, latest raw screencast JPEG) for the owner's console
@@ -2022,6 +2192,7 @@ class Desktop:
         await self.ctx.add_init_script(CLIPBOARD_JS)
         if self.vagon_mode:
             await self.ctx.add_init_script(RTC_INIT_JS)       # WebRTC/media diagnostics (window.__sub01Rtc) in every frame
+            await self.ctx.add_init_script(INPUT_INIT_JS)     # the input path's counters (window.__sub01Input) in every frame
         await self.ctx.route("**/*", self._route)
         self.page = self.ctx.pages[0] if self.ctx.pages else await self.ctx.new_page()
         for extra in self.ctx.pages[1:]:
@@ -2352,6 +2523,19 @@ class Desktop:
             self.events.append("vagon_controls", phase=phase, controls=summary,
                                dropped_frames=list(probe.get("dropped_frames") or [])[:6])
 
+    async def diag_now(self):
+        """A fresh diagnostic snapshot on request (GET /pc/vagon/diag): the stats, the input counters and what covers
+        the stream right now; at most one every VAGON_DIAG_MIN_GAP_S (else the latest). Never presses anything."""
+        if self.status != "ready" or self.page is None:
+            raise DesktopUnavailable(self.status)
+        v = self.vagon
+        if time.monotonic() - v.last_diag < VAGON_DIAG_MIN_GAP_S:
+            return v.diag
+        async with self._vagon_lock:
+            if time.monotonic() - v.last_diag < VAGON_DIAG_MIN_GAP_S:   # a request that queued behind another one
+                return v.diag
+            return await self._vagon_diag(v.phase if v.connected else f"{v.phase} (request)", force=True)
+
     def request_reload(self, why="operator request"):
         """The owner asks for the workstation page to be opened again (POST /pc/vagon/reload): the loop does it at
         its next tick. The only reload that needs no evidence of a dead page."""
@@ -2379,9 +2563,18 @@ class Desktop:
                 log(f"vagon: remote desktop connected (session {v.sessions}, reconnects {v.reconnects})")
                 self.events.append("vagon", state="connected", session=v.sessions, reconnects=v.reconnects,
                                    evidence={"stream": probe.get("stream"), "repaint": repaint, "rtc": (v.diag or {}).get("rtc")})
+                self._set_machine("on", "page")
+                if v.set_phase("connected"):
+                    self.on_change()
+                await self._vagon_diag("connected", force=True)   # fresh: the peer connection's stats, not the pre-connection ones
+                self._vagon_next_diag = now + VAGON_DIAG_FOLLOW_S  # again once the stats poll has numbers
+                return
             self._set_machine("on", "page")
             if v.set_phase("connected"):
                 self.on_change()
+            if now >= self._vagon_next_diag:
+                await self._vagon_diag("connected", force=True)
+                self._vagon_next_diag = now + VAGON_DIAG_CONNECTED_S
             return
         if v.connected:
             v.misses += 1
@@ -2434,8 +2627,10 @@ class Desktop:
             await self._vagon_goto(f"{phase}: {reason} (attempts {v.attempts})")
 
     def _rtc_summary(self, frames):
-        """The peer connection that received most: its frame's host, states, negotiated codecs, servers and stats."""
-        best, created, events = None, 0, []
+        """The peer connection that carries the stream: a live one (connection state `connected`) before any finished
+        one, then the one that received most; its frame's host, states, negotiated codecs, servers and stats, with the
+        headline numbers (bytes, frames decoded, fps, candidate pair) at the top."""
+        best, created, events, live = None, 0, [], 0
         for f in frames:
             rtc = f.get("rtc") if isinstance(f, dict) else None
             if not rtc:
@@ -2443,17 +2638,21 @@ class Desktop:
             created += int(rtc.get("created") or 0)
             for pc in rtc.get("pcs") or []:
                 stats = pc.get("stats") or {}
-                score = (int(stats.get("bytes") or 0), int(pc.get("tracks") or 0), int(pc.get("id") or 0))
+                alive = (pc.get("state") or {}).get("connection") == "connected"
+                live += alive
+                score = (alive, int(stats.get("bytes") or 0), int(pc.get("tracks") or 0), int(pc.get("id") or 0))
                 if best is None or score > best[0]:
-                    best, events = (score, f.get("host"), pc), list(rtc.get("events") or [])[-12:]
+                    best, events = (score, f.get("host"), pc, rtc), list(rtc.get("events") or [])[-12:]
         if best is None:
-            return {"created": created}
-        _, host, pc = best
+            return {"created": created, "live": 0}
+        _, host, pc, rtc = best
         stats = pc.get("stats") or {}
-        return {"created": created, "host": host, "id": pc.get("id"), "policy": pc.get("policy"), "servers": pc.get("servers"),
-                "state": pc.get("state"), "sdp": pc.get("sdp"), "tracks": pc.get("tracks"), "channels": pc.get("channels"),
-                "stats": stats, "error": pc.get("error"), "bytes": int(stats.get("bytes") or 0),
-                "frames_decoded": int(stats.get("frames_decoded") or 0), "pair": stats.get("pair"), "events": events}
+        return {"created": created, "live": live, "host": host, "id": pc.get("id"),
+                "dc_out": rtc.get("dc_out"), "ws_out": rtc.get("ws_out"),
+                "policy": pc.get("policy"), "servers": pc.get("servers"), "state": pc.get("state"), "sdp": pc.get("sdp"),
+                "tracks": pc.get("tracks"), "channels": pc.get("channels"), "stats": stats, "error": pc.get("error"),
+                "bytes": int(stats.get("bytes") or 0), "frames_decoded": int(stats.get("frames_decoded") or 0),
+                "fps": stats.get("fps"), "pair": stats.get("pair"), "events": events}
 
     async def _vagon_diag(self, phase, force=False):
         """The diagnostic snapshot (module docstring): VAGON_DIAG_JS in the main frame and up to six sub-frames, the
@@ -2481,8 +2680,11 @@ class Desktop:
             self._rtc_bytes = rtc["bytes"]
             self._activity("rtc")
         media = next((f["rtc"].get("media") for f in frames if isinstance(f.get("rtc"), dict) and f["rtc"].get("media")), None)
+        # the input path of the frame that shows the stream (its cover grid exists), else of the main document
+        inputs = next((f.get("input") for f in frames if isinstance(f.get("input"), dict) and f["input"].get("cover")), None)
         diag = {"phase": phase, "host": main.get("host"), "path": main.get("path"), "title": main.get("title"),
                 "ready": main.get("ready"), "visible": main.get("visible"), "focus": main.get("focus"),
+                "input": inputs or main.get("input"),
                 "iframes": main.get("iframes"), "videos": [x for f in frames for x in (f.get("videos") or [])][:8],
                 "canvases": [x for f in frames for x in (f.get("canvases") or [])][:8],
                 "webgl": main.get("webgl"), "renderer": main.get("renderer"), "webcodecs": main.get("webcodecs"),
@@ -2672,39 +2874,111 @@ class Desktop:
                 raise ActFailed("there are no marks on the remote desktop; click by point")
             await self._vagon_input(a, probe["stream"]["box"])
 
+    async def _vagon_hit(self, x, y, what="click"):
+        """What a click (or the wheel) at page point (x, y) would land on (VAGON_HIT_JS, in the frame that holds the
+        stream); ActFailed unless it is the stream element itself (the Vagon toolbar handle, a menu, a dialog, a
+        dim/backdrop or any other layer is the host page's), when the stream's iframe (if any) is not on top of the
+        parent page at that point, and when it cannot be checked. Anything but an explicit `ok: true` is a refusal."""
+        main = getattr(self.page, "main_frame", None)
+        frame = self._vagon_frame or main or self.page
+        hit = None
+        try:
+            if main is not None and frame is not main:   # a stream in an iframe: nothing of the parent page may cover it
+                owner = await asyncio.wait_for(frame.frame_element(), 5)
+                if not await asyncio.wait_for(owner.evaluate("(el, p) => document.elementFromPoint(p[0], p[1]) === el", [x, y]), 5):
+                    hit = {"ok": False, "tag": "iframe", "why": "a host-page element over the stream's frame"}
+            if hit is None:
+                hit = await asyncio.wait_for(frame.evaluate(VAGON_HIT_JS, [x - self._vagon_offset[0], y - self._vagon_offset[1],
+                                                                             VAGON_MIN_STREAM[0], VAGON_MIN_STREAM[1]]), 5)
+        except Exception as error:
+            raise ActFailed(f"the point could not be checked on the stream page ({self._scrub(clean_error(error))[:60]}); observe again")
+        if not isinstance(hit, dict) or hit.get("ok") is not True:   # anything but an explicit yes is a no
+            hit = hit if isinstance(hit, dict) else {"why": "no answer from the hit test"}
+            element = " ".join(s for s in (hit.get("tag"), hit.get("id") and "#" + hit["id"], hit.get("text") and repr(hit["text"])) if s)
+            why = str(hit.get("why") or "host-page element")[:60]
+            self.events.append("blocked", what=what, reason=why, element=element[:120] or "?")
+            raise ActFailed(f"blocked: that point is the stream page's own ({why}: {element[:60]}), not the remote desktop")
+        return hit
+
+    def _stream_point(self, box):
+        """Where the pointer rests on the stream: the last point the agent used when it is inside the stream box, else
+        the centre of the stream."""
+        x, y = self.cursor
+        if box[0] + 2 <= x <= box[0] + box[2] - 2 and box[1] + 2 <= y <= box[1] + box[3] - 2:
+            return x, y
+        return box[0] + box[2] / 2, box[1] + box[3] / 2
+
+    async def _vagon_keys_ready(self):
+        """Before keys reach the remote desktop: the stream element has the DOM focus (measured 2026-10-23: that alone
+        is enough, no click, hover or pointer lock first; a click would land in a remote window). Fails closed: keys that
+        cannot be aimed at the stream are never sent to the host page."""
+        if not await self._vagon_focus():
+            self.events.append("blocked", what="keys", reason="the stream element did not take the keyboard focus")
+            raise ActFailed("the stream did not take the keyboard focus; nothing was sent; observe again")
+
+    async def _vagon_point(self, x, y, what):
+        """The pointer onto (x, y) of the stream, checked before the move and again VAGON_HOVER_S after it (moving can
+        open a host-page hover toolbar or menu under the point): ActFailed when either check says it is not the stream."""
+        await self._vagon_hit(x, y, what)
+        await self.page.mouse.move(x, y, steps=6)
+        self.cursor = [x, y]
+        await asyncio.sleep(VAGON_HOVER_S)
+        await self._vagon_hit(x, y, what)
+
+    async def _vagon_chord(self, key):
+        """One key or chord into the stream like a person presses it: the modifiers down, a hold (VAGON_CHORD_HOLD_S,
+        longer than Vagon's 15 ms AltGr window), the key, the modifiers up (always, even after an error)."""
+        mods, last = parse_key(key)
+        keyboard, held = self.page.keyboard, []
+        if not mods:
+            await keyboard.press(last)
+            return
+        try:
+            for mod in mods:
+                await keyboard.down(mod)
+                held.append(mod)
+            await asyncio.sleep(VAGON_CHORD_HOLD_S)
+            await keyboard.press(last)
+            await asyncio.sleep(0.03)
+        finally:
+            for mod in reversed(held):
+                await keyboard.up(mod)
+
     async def _vagon_input(self, a, box):
         page, kind, settle = self.page, a["action"], VAGON_SETTLE_S
         if kind == "click":
             x, y = image_point(a["point"], self.view)
-            await page.mouse.move(x, y, steps=6)
+            await self._vagon_point(x, y, "click")
             await page.mouse.click(x, y)
-            self.cursor = [x, y]
         elif kind == "scroll":
-            await page.mouse.move(box[0] + box[2] / 2, box[1] + box[3] / 2)
+            x, y = self._stream_point(box)
+            await self._vagon_point(x, y, "scroll")
             sign, step = (1 if a["direction"] == "down" else -1), a["amount"] / 6
-            for _ in range(6):
+            for i in range(6):
+                if i:
+                    await self._vagon_hit(x, y, "scroll")  # each step: the page may have put something there meanwhile
                 await page.mouse.wheel(0, sign * step)
                 await asyncio.sleep(0.05)
         elif kind == "type":
-            await self._vagon_focus()
+            await self._vagon_keys_ready()
             await page.keyboard.type(a["text"], delay=VAGON_TYPE_DELAY_MS)
             if a.get("submit"):
                 await page.keyboard.press("Enter")
         elif kind == "key":
-            await self._vagon_focus()
-            await page.keyboard.press(a["key"])
+            await self._vagon_keys_ready()
+            await self._vagon_chord(a["key"])
         elif kind in ("navigate", "search"):
             url = a["url"] if kind == "navigate" else SEARCH_URL + quote_plus(a["query"])
-            await self._vagon_focus()
-            await page.keyboard.press("Control+l")        # the remote browser's address bar (Chrome, Edge, Firefox)
+            await self._vagon_keys_ready()
+            await self._vagon_chord("Control+l")         # the remote browser's address bar (Chrome, Edge, Firefox)
             await asyncio.sleep(0.3)
             await page.keyboard.type(url, delay=8)
             await asyncio.sleep(0.1)
             await page.keyboard.press("Enter")
             settle = VAGON_NAV_SETTLE_S
         elif kind == "back":
-            await self._vagon_focus()
-            await page.keyboard.press("Alt+ArrowLeft")
+            await self._vagon_keys_ready()
+            await self._vagon_chord("Alt+ArrowLeft")     # the host page's own "back" is prevented (VAGON_FOCUS_JS)
             settle = VAGON_NAV_SETTLE_S
         await asyncio.sleep(settle)
 
@@ -3101,6 +3375,8 @@ class Desktop:
                     continue
                 await self.page.keyboard.down(key)
                 self.held.add(key)
+                if self.vagon_mode and mod_name(key) == "Control":   # a batch arrives at once: Vagon's 15 ms AltGr window
+                    await asyncio.sleep(VAGON_CHORD_HOLD_S)
             elif key in self.dropped:
                 self.dropped.discard(key)
             else:
@@ -3586,12 +3862,22 @@ def create_app(runner):
             raise web.HTTPConflict(text="Only the Vagon workstation page can be reloaded on request")
         return web.json_response(runner.desk.request_reload("operator request"), headers=no_store)
 
+    async def vagon_diag(request):
+        """A fresh Vagon diagnostic snapshot (WebRTC stats, input counters, what covers the stream); vagon mode only."""
+        if not getattr(runner.desk, "vagon_mode", False):
+            raise web.HTTPConflict(text="Only the Vagon mode has a stream diagnostic")
+        try:
+            return web.json_response({"ok": True, "diag": await runner.desk.diag_now()}, headers=no_store)
+        except DesktopUnavailable as error:
+            return unavailable(error)
+
     app = web.Application(middlewares=[guard], client_max_size=4096)
     app.router.add_get("/operator", operator_page)
     app.router.add_get("/operator/frame.jpg", operator_frame)
     app.router.add_post("/operator/input", operator_input)
     app.router.add_post("/pc/vagon/start", vagon_start)
     app.router.add_post("/pc/vagon/reload", vagon_reload)
+    app.router.add_get("/pc/vagon/diag", vagon_diag)
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/pc/state", state)
     app.router.add_get("/pc/frame.png", frame)
