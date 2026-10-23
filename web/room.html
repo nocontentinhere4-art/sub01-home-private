@@ -165,7 +165,7 @@
   #honest .ln { flex:none; } #honest.mind { flex-wrap:wrap; row-gap:2px; } #honest.mind .ln { flex-basis:100%; }
   #honest .cap { color:var(--dim); }
   #dock { position:fixed; right:24px; bottom:18px; width:350px; z-index:5; }
-  /* the room's chat feed: viewers' messages, and his replies, always with their AI-written tag */
+  /* the room's chat feed: viewers' messages, and his replies, always with the tag of what wrote them */
   #feed { display:flex; flex-direction:column; gap:5px; margin-bottom:8px; max-height:168px; overflow-y:auto; scrollbar-width:none; }
   #feed::-webkit-scrollbar { display:none; }
   #feed[hidden] { display:none; }
@@ -1485,8 +1485,9 @@ function drawFood(c){
   if (!pvTex) { pvTex = screenTexture(pv); } pvTex.needsUpdate = true; return pvTex;
 }
 
-// ---------- chat: viewers' messages and his replies (AI-written, always tagged) ----------
-const REPLY_TAG = "his reply (AI-written)";
+// ---------- chat: viewers' messages and his replies (always tagged by what wrote them: an AI, or prepared wording) ----------
+let REPLY_TAG = "his reply (AI-written)";                 // the tag of a reply the server sends none for; /api/mind sets both
+let REPLY_CAPTION = "his replies are written by an AI";   // ... with no AI key: prepared wording, not an AI
 let talk = [], typing = null;        // [{his, t, text, re}] oldest first; typing: the newest reply while it types out on the monitor
 function addTalk(x){ talk.push(x); if (talk.length > 40) talk = talk.slice(-40); }
 function hearReply(m, live){         // a reply is only ever shown with its tag
@@ -1521,7 +1522,7 @@ function drawChatWindow(now){
   g.fillStyle = "#0d0f15"; g.fillRect(0, 0, W, H);
   g.fillStyle = "#151924"; g.fillRect(0, 0, W, 60);
   g.fillStyle = "#e6e8ef"; g.font = "bold 24px sans-serif"; g.fillText("Chat", 28, 39);
-  g.fillStyle = "#7b8196"; g.font = "17px sans-serif"; g.fillText("messages from viewers · his replies are written by an AI", 102, 39);
+  g.fillStyle = "#7b8196"; g.font = "17px sans-serif"; g.fillText("messages from viewers · " + REPLY_CAPTION, 102, 39);
   // newest at the bottom: lay out from the bottom up until the window is full
   const rows = talk.slice(-8), blocks = [], BW = 640;
   for (const x of rows) {
@@ -1580,6 +1581,10 @@ function loadMind(){
     const on = !!d.on;
     if (shown.get("honest.mind") !== on) { shown.set("honest.mind", on); $("honest").classList.toggle("mind", on); }
     put("mind-cap", "textContent", on && d.caption ? d.caption : "");
+    if (on && d.reply_tag) {               // what writes his replies: an AI, or prepared wording when there is no key
+      REPLY_TAG = String(d.reply_tag);
+      REPLY_CAPTION = d.status && d.status.replies === "ai" ? "his replies are written by an AI" : "his replies are prepared wording, not an AI";
+    }
     mindResting = !!(on && d.status && d.status.resting);
     if (on) mindPlan = d.plan || null;
     renderPlan();

@@ -89,9 +89,8 @@ SAVE_S = 60                     # persist sleep state + memory every minute (rea
 TICK_RING = int(60 / TICK)      # tick durations kept for /api/health: the last minute
 HEALTHY_S = 5.0                 # /healthz: 200 while the brain loop ticked within this many seconds, else 503
 RESTING = "resting its eyes"    # what the pages say while the eye is over its daily cap
-CHAT_INBOX = 10                 # chat messages waiting for his reply at most (C1); older ones are let go with a note
-CHAT_PER_VIEWER = 3             # ... and at most this many from one viewer
-CHAT_WAIT_S = 1200              # simulated seconds a message waits for him, unless he is at the desk answering
+# the chat inbox is mind.Inbox (C1): its bounds, under their old names here (tests and tools read them)
+CHAT_INBOX, CHAT_PER_VIEWER, CHAT_WAIT_S = mind_mod.INBOX_MAX, mind_mod.INBOX_PER_VIEWER, mind_mod.INBOX_WAIT_S
 CHAT_RESERVE = 5                # hourly AI calls kept for chat: no page-read call starts while messages wait (C2)
 CAP_LINE = "He has answered 40 messages today and is resting; back tomorrow."   # the in-world cap notice (C2)
 GATED = web.AppKey("gated", bool)            # the app runs behind the password gate
@@ -459,10 +458,9 @@ class Live:
         self.spiking = None              # SpikingHub, set by spiking.server.attach in main()
         self.decider = None              # brain_vote.Backend (main()): a spiking network votes too, GPU or CPU (#55)
         self.mind = None                 # mind.py (main()): an AI reads and remembers for him; his brain model chooses
-        self.chat_inbox = []             # {t, text, key, nick, tries}: messages he may answer at the computer, FIFO (C1)
-        self.chat_served = {}            # viewer key -> sim t of their last answered message (round-robin, memory only)
+        self.chat_inbox = mind_mod.Inbox()   # messages he may answer at the computer: bounded, FIFO, one viewer at a time (C1)
         self.cap_noted = None            # Tokyo day the "resting, back tomorrow" chat line was posted (C2)
-        self.replies = []                # his recent replies (AI-written), for the hello and /api/mind
+        self.replies = []                # his recent replies, each tagged by what wrote it (mind.reply_tag): hello, /api/mind
         self.read_topics = {}            # page title -> topics an AI noted (the eye's dream scenes)
         self.interest = (0.0, None)      # (wall time, mind.next_interest()) cached for the browser
         self.search_rng = random.Random()  # which of his query sources the browser's next search comes from (#56)
@@ -668,29 +666,18 @@ class Live:
 
     # --- the chat inbox (C1/C2): FIFO, one viewer at a time, a visible outcome for every message -----------------
     async def enqueue_chat(self, t, text, key, nick=""):
-        """Queue a message for his reply at the computer; returns why a reply is not possible right now (or None).
-        A viewer keeps at most CHAT_PER_VIEWER messages waiting: their oldest one is let go with a note."""
+        """Queue a message for his reply at the computer (mind.Inbox: a viewer keeps at most INBOX_PER_VIEWER waiting,
+        INBOX_MAX in all, and what is let go to make room is shown as missed); returns why a reply is not possible
+        right now (or None)."""
         nick, _ = clean_nick(nick)
-        mine = [x for x in self.chat_inbox if x["key"] == key]
-        for x in mine[:max(0, len(mine) + 1 - CHAT_PER_VIEWER)]:
-            await self.chat_missed(x, "a newer message from the same viewer took its place")
-        self.chat_inbox.append({"t": t, "text": text, "key": key, "nick": nick, "tries": 0})
-        for x in self.chat_inbox[:-CHAT_INBOX]:
-            await self.chat_missed(x, "too many messages were waiting")
-        self.chat_inbox = self.chat_inbox[-CHAT_INBOX:]
+        for x, why in self.chat_inbox.add(t, text, key, nick):
+            await self.chat_missed(x, why)
         return (None if self.engine.stage == "AWAKE" else "asleep") or self.mind.reply_open()
 
     async def chat_missed(self, item, why):
-        """The message leaves the inbox unanswered: viewers see why (room.html: a dim line under the message)."""
-        if item in self.chat_inbox:
-            self.chat_inbox.remove(item)
+        """A message the inbox let go unanswered: viewers see why (room.html: a dim line under the message)."""
         await self.broadcast({"type": "chat_missed", "t": hhmm(self.clock.now()), "replying_to": item["text"],
                               "why": why, "tag": "not answered"})
-
-    def next_message(self, t=None):
-        """The message he answers next (C1): the viewer answered longest ago (or never) first, their oldest first."""
-        served = self.chat_served
-        return min(self.chat_inbox, key=lambda x: (served.get(x["key"], -1e18), x["t"]))
 
     def doing_now(self, t):
         """What he is really doing, for a reply's context (C4): the activity, the track playing, the article or the
@@ -1714,11 +1701,14 @@ class Live:
         for k in notes:
             for x in notes[k]:
                 x["t"] = hhmm(x["t"])
-        return {"on": True, "caption": mind_mod.CAPTION, "status": m.status(), "plan": m.plan_public(),
+        status = m.status()                               # status["replies"]: "ai" with a key, else "template"
+        note = ("An AI writes notes on what he reads, proposes day plans and writes his chat replies; his brain model votes "
+                "among the plans. It does not understand what it reads." if status["replies"] == "ai" else
+                "No AI key: his chat replies are prepared wording (fixed templates), not written by an AI, and the day "
+                "plan is a local one; his brain model votes among the plans. Nothing here understands what it reads.")
+        return {"on": True, "caption": mind_mod.CAPTION, "status": status, "plan": m.plan_public(),
                 "interests": self.interest[1] or [], "notes": notes, "replies": self.replies[-10:],
-                "budget": m.budget.summary(), "reply_tag": "his reply (AI-written)",
-                "note": "An AI writes notes on what he reads, proposes day plans and writes his chat replies; his brain "
-                        "model votes among the plans. It does not understand what it reads."}
+                "budget": m.budget.summary(), "reply_tag": mind_mod.reply_tag(status["replies"]), "note": note}
 
     async def run_mind(self):
         """Off the brain loop: the day plan (each Tokyo morning, revised at noon and in the evening, voted by a clone
@@ -1766,36 +1756,32 @@ class Live:
                        "tag": "a note from the room, not his words", "source": "note"}
                 self.replies = (self.replies + [rec])[-30:]
                 await self.broadcast({"type": "chat_reply", **rec})
-            for x in list(self.chat_inbox):
-                await self.chat_missed(x, "he has answered 40 messages today; back tomorrow")
-        for x in list(self.chat_inbox):
-            if t - x["t"] > CHAT_WAIT_S and not (awake and at_desk):
-                await self.chat_missed(x, "he missed that one: it waited too long")
+            for x, why in self.chat_inbox.clear("he has answered 40 messages today; back tomorrow"):
+                await self.chat_missed(x, why)
+        for x, why in self.chat_inbox.expire(t):                     # waited too long: missed, at the desk or not
+            await self.chat_missed(x, why)
         life.chat_waiting = len(self.chat_inbox) if awake and open_why is None else 0
         if self.chat_inbox and awake and at_desk:
-            item = self.next_message(t)                             # peek: popped only on a posted reply
+            item = self.chat_inbox.pick()                           # peek: it leaves the inbox on a posted reply
             ctx = {"awake": True, "at_desk": True, "mood": self.mood(t), "doing": self.doing_now(t),
-                   "brain": self.encoding(), "viewer": item["key"]}
+                   "brain": self.encoding(), "viewer": item["vkey"]}
             try:
                 r = await loop.run_in_executor(None, m.reply, item["text"], item["nick"] or None, ctx)
             except Exception as e:
                 print("mind: reply failed:", repr(e)[:160], flush=True)
                 r = {"reply": None, "why": "no AI reply", "source": None}
             if r["reply"]:
-                if item in self.chat_inbox:
-                    self.chat_inbox.remove(item)
-                self.chat_served[item["key"]] = t
-                while len(self.chat_served) > 200:
-                    self.chat_served.pop(next(iter(self.chat_served)))
+                self.chat_inbox.answered(item)
                 rec = {"t": hhmm(self.clock.now()), "text": r["reply"], "to": item["nick"] or "a viewer",
-                       "replying_to": item["text"], "tag": "his reply (AI-written)", "source": r["source"]}
+                       "replying_to": item["text"], "tag": mind_mod.reply_tag(r["source"]), "source": r["source"]}
                 self.replies = (self.replies + [rec])[-30:]
                 await self.broadcast({"type": "chat_reply", **rec})
             elif r["why"] == "no AI reply":                         # transient: one more try, then a visible miss
-                item["tries"] += 1
-                if item["tries"] >= 2:
-                    await self.chat_missed(item, "his reply did not come (the AI did not answer)")
+                why = self.chat_inbox.failed(item)
+                if why:
+                    await self.chat_missed(item, why)
             elif r["why"].startswith("message blocked"):
+                self.chat_inbox.drop(item)
                 await self.chat_missed(item, "the chat filter kept it")
             # else: it waits (the 2-min gap, the rule gap, the budget): chat_waiting says whether he will come back
 
