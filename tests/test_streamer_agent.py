@@ -1329,3 +1329,380 @@ def test_requests_wait_while_paused_and_the_stop_file_stops_them(tmp_path):
     world.chat_msgs = [msg(1, "search for otters", "a")]
     asyncio.run(sim(agent, clock, 20, dt=2))
     assert not world.acts and not world.spoken and agent.requests.current is None   # paused: chat is stale on return
+
+
+# --- 14. Kimi (Moonshot) provider and the fallback chain ----------------------------------------------------------------------
+KIMI_KEY = "sk-kimi-key-not-real-0123456789"
+
+
+def kimi_server(script):
+    """A loopback OpenAI-compatible /v1/chat/completions. `script`: (status, body) items or callables(request body) ->
+    (status, body); the last one repeats. Every request's (headers, body) lands in `seen`."""
+    seen = []
+
+    async def completions(request):
+        body = await request.json()
+        seen.append((dict(request.headers), body))
+        item = script[min(len(seen) - 1, len(script) - 1)]
+        status, payload = item(body) if callable(item) else item
+        return web.json_response(payload, status=status)
+
+    app = web.Application()
+    app.router.add_post("/v1/chat/completions", completions)
+    return app, seen
+
+
+def completion(content, tin=1200, tout=90, finish="stop", model="kimi-k3.1-pro"):
+    return 200, {"id": "cmpl-1", "object": "chat.completion", "model": model,
+                 "choices": [{"index": 0, "finish_reason": finish,
+                              "message": {"role": "assistant", "content": content, "reasoning_content": "private"}}],
+                 "usage": {"prompt_tokens": tin, "completion_tokens": tout, "total_tokens": tin + tout}}
+
+
+async def kimi_on(script, **kw):
+    app, seen = kimi_server(script)
+    server = TestServer(app)
+    await server.start_server()
+    kimi = SA.KimiVision(kw.pop("model", "kimi-k3.1-pro"), api_key=KIMI_KEY, base_url=str(server.make_url("/v1")).rstrip("/"),
+                         timeout=kw.pop("timeout", 5.0), **kw)
+    return kimi, server, seen
+
+
+def test_kimi_request_body_shape_headers_and_fenced_json_answer():
+    async def go():
+        fenced = "```json\n" + json.dumps(decision(say="")) + "\n```"
+        kimi, server, seen = await kimi_on([completion(fenced)], key_source="file")
+        text, tin, tout = await kimi.ask("SYS", "STATE", "QUJD")
+        await kimi.ask("SYS", "STATE2", None)
+        await kimi.close()
+        await server.close()
+        return seen, text, tin, tout
+    seen, text, tin, tout = asyncio.run(go())
+    headers, body = seen[0]
+    assert headers["Authorization"] == f"Bearer {KIMI_KEY}" and headers["Content-Type"] == "application/json"
+    assert body["model"] == "kimi-k3.1-pro" and body["response_format"] == {"type": "json_object"}
+    assert body["max_tokens"] == SA.KIMI_MAX_TOKENS and "temperature" not in body      # k3.1-pro takes only its default
+    assert body["messages"][0] == {"role": "system", "content": "SYS"}
+    user = body["messages"][1]
+    assert user["role"] == "user"
+    assert user["content"][0] == {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,QUJD"}}
+    assert user["content"][1] == {"type": "text", "text": "STATE"}
+    assert seen[1][1]["messages"][1]["content"] == [{"type": "text", "text": "STATE2"}]   # no screenshot: text only
+    assert (tin, tout) == (1200, 90) and text.startswith("```json")                     # usage from the API, text as is
+    dec = SA.validate_decision(text, {})                                                # the fence is no problem
+    assert dec["action"] == {"action": "scroll", "direction": "down", "amount": 300} and dec["state"] == "reading"
+
+
+def test_kimi_http_errors_timeouts_content_filter_and_feature_downgrades():
+    async def go():
+        out = {}
+        bad_fmt = (400, {"error": {"message": "invalid request: response_format is not supported by this model",
+                                   "type": "invalid_request_error"}})
+        bad_img = (400, {"error": {"message": "this model does not support image input", "type": "invalid_request_error"}})
+        script = [(429, {"error": {"message": "rate limit reached", "type": "rate_limit"}}),
+                  (503, {"error": {"message": "upstream busy"}}),
+                  completion("whatever", finish="content_filter"),
+                  completion(""),
+                  bad_fmt, completion('{"say": ""}'),           # downgrade 1: json mode off, the request retried once
+                  bad_img, completion('{"say": ""}'),           # downgrade 2: image off, retried once
+                  completion('{"say": ""}')]
+        kimi, server, seen = await kimi_on(script, model="kimi-k3")
+        for name in ("429", "503", "filter", "empty"):
+            with pytest.raises(SA.ModelError) as ei:
+                await kimi.ask("S", "T", "QUJD")
+            out[name] = (str(ei.value), ei.value.status)
+        assert kimi.json_mode and kimi.vision and not kimi.notes      # plain errors change nothing
+        text, *_ = await kimi.ask("S", "T", "QUJD")
+        out["after_fmt"] = (text, kimi.json_mode, kimi.vision, seen[-1][1])
+        text, *_ = await kimi.ask("S", "T", "QUJD")
+        out["after_img"] = (text, kimi.json_mode, kimi.vision, seen[-1][1], list(kimi.notes))
+        out["n_requests"] = len(seen)
+        await kimi.close()
+        await server.close()
+
+        async def slow(request):                               # the total timeout
+            await asyncio.sleep(0.5)
+            return web.json_response({})
+        app2 = web.Application()
+        app2.router.add_post("/v1/chat/completions", slow)
+        server2 = TestServer(app2)
+        await server2.start_server()
+        base2 = str(server2.make_url("/v1")).rstrip("/")
+        kimi2 = SA.KimiVision("kimi-k3", api_key=KIMI_KEY, base_url=base2, timeout=0.1)
+        with pytest.raises(SA.ModelError) as ei:
+            await kimi2.ask("S", "T", None)
+        out["timeout"] = (str(ei.value), ei.value.status)
+        await kimi2.close()
+        await server2.close()                                  # ... and now nothing listens there
+        kimi3 = SA.KimiVision("kimi-k3", api_key=KIMI_KEY, base_url=base2, timeout=1.0)
+        with pytest.raises(SA.ModelError) as ei:
+            await kimi3.ask("S", "T", None)
+        out["unreachable"] = str(ei.value)
+        await kimi3.close()
+        return out
+    out = asyncio.run(go())
+    assert out["429"] == ("kimi http 429: rate limit reached", 429)
+    assert out["503"][0].startswith("kimi http 503") and out["503"][1] == 503
+    assert out["filter"][0] == "the model declined" and "empty answer" in out["empty"][0]
+    text, jm, vis, body = out["after_fmt"]
+    assert text == '{"say": ""}' and jm is False and vis is True and "response_format" not in body
+    text, jm, vis, body, notes = out["after_img"]
+    assert text == '{"say": ""}' and vis is False and body["messages"][1]["content"][0]["type"] == "text"
+    assert body["messages"][1]["content"][0]["text"].startswith("(no screenshot")
+    assert len(notes) == 2 and "response_format" in notes[0] and "images" in notes[1]
+    assert out["n_requests"] == 8
+    assert "Timeout" in out["timeout"][0] and out["timeout"][0].startswith("kimi ") and out["timeout"][1] is None
+    assert out["unreachable"].startswith("kimi ") and "Connect" in out["unreachable"]
+    assert KIMI_KEY not in json.dumps(out)
+
+
+@pytest.mark.parametrize("raw, expect", [
+    ('{"state": "idle", "action": null, "say": ""}', "idle"),
+    ('```json\n{"state": "idle", "action": null}\n```', "idle"),
+    ('Sure. Here is my decision:\n```\n{"state":"reading","action":{"action":"scroll","direction":"down","amount":300}}\n```\nDone.',
+     "reading"),
+    ('Reasoning: the page {is} long {and} dense. {"state": "reading", "action": null} trailing words', "reading"),
+    ('{"meta": {"x": 1}} then the real one {"state": "typing", "say": ""}', "typing"),
+    ('{"state": "mouse", "thought": "braces } in { strings", "say": ""}', "mouse"),
+    ('  \n{"state":"talking"}  \n', "talking"),
+])
+def test_parse_json_obj_fenced_stray_text_and_braces(raw, expect):
+    assert SA.parse_json_obj(raw)["state"] == expect
+
+
+@pytest.mark.parametrize("raw", ["I would scroll down.", "", None, "[1, 2, 3]", "{not json at all", "```json\n```", "{} {"])
+def test_parse_json_obj_without_a_usable_object(raw):
+    d = SA.parse_json_obj(raw)
+    assert d is None or d == {}
+
+
+def chain(tmp_path, primary_script, fallback_script, clock=None, **cfg_kw):
+    """An agent with two scripted providers: `anthropic` (primary) and `kimi` (fallback), the World as services."""
+    clock = clock or Clock()
+    world = World(clock)
+    cfg = SA.Config(streamer_dir=str(tmp_path / "streamer"), event_file=str(tmp_path / "priv" / "event.json"),
+                    privacy_file=str(tmp_path / "priv" / "privacy.json"), native_pid=1, native_start_ticks=2, token="tok",
+                    status_port=0, **{"provider": "anthropic", "fallback_provider": "kimi", **cfg_kw})
+    primary, fallback = Provider(*primary_script), Provider(*fallback_script)
+    fallback.name, fallback.model = "kimi", "kimi-k3.1-pro"
+    agent = SA.Agent(cfg, services=world, provider=primary, fallback=fallback, clock=clock, rng=random.Random(7))
+    return agent, world, primary, fallback, clock
+
+
+def test_primary_error_switches_to_the_fallback_at_once_and_the_primary_returns_after_the_window(tmp_path):
+    agent, world, primary, fallback, clock = chain(tmp_path, [decision(say="")], [decision(say="")])
+    asyncio.run(agent.step())
+    assert len(primary.calls) == 1 and not fallback.calls and agent.active_name == "anthropic"
+    primary.script, primary.n = [RuntimeError("HTTP 503 overloaded")], 0
+    t_fail = clock.t = clock.t + 20
+    agent.next_think = 0
+    asyncio.run(agent.step())
+    assert len(primary.calls) == 2 and len(fallback.calls) == 1              # the failed call and the retry on the fallback
+    assert not agent.quiet.on and agent.phase == "running" and agent.provider is fallback
+    assert agent.counters["decisions"] == 2 and agent.counters["model_errors"] == 1 and agent.counters["provider_switches"] == 1
+    sw = [e for e in events(agent) if e["kind"] == "provider_switch"]
+    assert len(sw) == 1 and sw[0]["from"] == "anthropic" and sw[0]["to"] == "kimi" and sw[0]["back"] is False
+    assert "503" in sw[0]["reason"] and sw[0]["window_s"] == 600.0 and "injected" not in sw[0]
+    st = agent.status()["provider"]
+    assert st["primary"] == "anthropic" and st["fallback"] == "kimi" and st["active"] == "kimi" and st["model"] == "kimi-k3.1-pro"
+    assert st["switched_utc"] == SA.iso(t_fail) and "503" in st["reason"] and st["returns_in_s"] == 600
+    assert agent.status()["model"] == "kimi-k3.1-pro"
+    primary.script, primary.n = [decision(say="")], 0                        # the primary is back, but the window runs
+    asyncio.run(sim(agent, clock, 300, dt=5))
+    assert len(primary.calls) == 2 and len(fallback.calls) >= 8 and agent.provider is fallback
+    assert len([a for a in world.acts if a["action"] == "scroll"]) >= 8        # he kept browsing throughout
+    assert agent.status()["provider"]["returns_in_s"] == 300                 # 300 s into the 600 s window
+    clock.t = t_fail + 600                                                  # window over: the primary is tried again and kept
+    agent.next_think = 0
+    asyncio.run(agent.step())
+    assert agent.provider is primary and len(primary.calls) == 3
+    back = [e for e in events(agent) if e["kind"] == "provider_switch"][-1]
+    assert back["to"] == "anthropic" and back["from"] == "kimi" and back["back"] is True and "primary again" in back["reason"]
+    st = agent.status()["provider"]
+    assert st["active"] == "anthropic" and st["switched_utc"] is None and st["reason"] is None and st["switches"] == 2
+    n = len(fallback.calls)
+    asyncio.run(sim(agent, clock, 120, dt=5))
+    assert len(fallback.calls) == n and len(primary.calls) > 3                # the fallback rests
+
+
+def test_both_providers_failing_is_quiet_mode_and_either_one_recovering_leaves_it(tmp_path):
+    agent, world, primary, fallback, clock = chain(tmp_path, [RuntimeError("primary down")], [RuntimeError("fallback down")])
+    asyncio.run(agent.step())
+    assert agent.quiet.on and agent.quiet.kind == "error" and agent.phase == "quiet"
+    assert len(primary.calls) == 1 and len(fallback.calls) == 1              # both tried before giving up
+    assert agent.counters["model_errors"] == 2 and agent.counters["quiet_entries"] == 1
+    errs = [e for e in events(agent) if e["kind"] == "error" and e["where"] == "model"]
+    assert [e["provider"] for e in errs] == ["anthropic", "kimi"]
+    asyncio.run(sim(agent, clock, 400, dt=5))                               # probes with backoff keep trying both
+    assert agent.quiet.on and len(primary.calls) >= 3 and len(fallback.calls) >= 3
+    assert abs(len(primary.calls) - len(fallback.calls)) <= 1
+    assert len(primary.calls) + len(fallback.calls) <= 2 * 9                 # 5, 10, 20 ... s: not every tick
+    quiet_lines = [s for s in world.spoken if s["tag"] == "quiet"]
+    assert quiet_lines and all(s["priority"] == "low" for s in quiet_lines)
+    fallback.script, fallback.n = [decision(say="")], 0                      # only Kimi comes back
+    asyncio.run(sim(agent, clock, 700, dt=5))
+    assert not agent.quiet.on and agent.provider is fallback and agent.phase == "running"
+    assert any(e["kind"] == "quiet_end" for e in events(agent))
+    assert agent.status()["provider"]["active"] == "kimi" and agent.status()["quiet"]["on"] is False
+
+
+def test_injected_error_with_a_fallback_exercises_the_switch_not_quiet_mode(tmp_path):
+    agent, world, primary, fallback, clock = chain(tmp_path, [decision(say="")], [decision(say="")])
+    (agent.dir / "inject_error").write_text("")
+    asyncio.run(agent.step())
+    assert not agent.quiet.on and agent.provider is fallback and not primary.calls and len(fallback.calls) == 1
+    sw = [e for e in events(agent) if e["kind"] == "provider_switch"]
+    assert len(sw) == 1 and sw[0]["injected"] is True and sw[0]["to"] == "kimi"
+    assert any(e["kind"] == "error" and e["where"] == "model" and e["injected"] for e in events(agent))
+
+
+def test_kimi_key_never_reaches_events_state_costs_or_stdout(tmp_path, capsys):
+    async def go():
+        async def leaky(request):                                            # an error body that echoes the credential
+            return web.json_response({"error": {"message": "invalid auth header " + request.headers.get("Authorization", "")}},
+                                     status=500)
+        app = web.Application()
+        app.router.add_post("/v1/chat/completions", leaky)
+        server = TestServer(app)
+        await server.start_server()
+        keyfile = tmp_path / "kimi-key"
+        keyfile.write_text(KIMI_KEY + "\n")
+        keyfile.chmod(0o600)
+        clock = Clock()
+        world = World(clock)
+        cfg = SA.Config(streamer_dir=str(tmp_path / "s"), event_file=str(tmp_path / "e.json"), token="tok", provider="kimi",
+                        fallback_provider="none", kimi_key_file=str(keyfile), kimi_base_url=str(server.make_url("/v1")).rstrip("/"))
+        kimi = SA.make_provider("kimi", cfg)
+        agent = SA.Agent(cfg, services=world, provider=kimi, clock=clock, rng=random.Random(3))
+        await sim(agent, clock, 30)
+        st = agent.status()
+        await kimi.close()
+        await server.close()
+        return agent, st
+    agent, st = asyncio.run(go())
+    blob = json.dumps(st) + (agent.dir / "events.jsonl").read_text() + (agent.dir / "agent_costs.jsonl").read_text()
+    out = capsys.readouterr()
+    assert agent.quiet.on and agent.quiet.kind == "error" and "kimi http 500" in blob and "Bearer" in blob
+    assert KIMI_KEY not in blob + out.out + out.err                         # the error is logged, the key is not
+    assert st["provider"]["active"] == "kimi" and st["key_source"] == "file" and st["model"] == "kimi-k3.1-pro"
+    assert st["errors"][-1]["provider"] == "kimi" and st["errors"][-1]["error"].startswith("model: kimi http 500")
+
+
+def test_kimi_decision_drives_the_desktop_and_its_cost_uses_the_kimi_price(tmp_path):
+    async def go():
+        fenced = "Here you go:\n```json\n" + json.dumps(decision(say="")) + "\n```"
+        kimi, server, seen = await kimi_on([completion(fenced, tin=1000, tout=250)], price=(2.0, 8.0))
+        clock = Clock()
+        world = World(clock)
+        cfg = SA.Config(streamer_dir=str(tmp_path / "s"), event_file=str(tmp_path / "e.json"), token="tok", provider="kimi",
+                        fallback_provider="none", kimi_price=(2.0, 8.0))
+        agent = SA.Agent(cfg, services=world, provider=kimi, clock=clock, rng=random.Random(3))
+        await agent.step()
+        await kimi.close()
+        await server.close()
+        return agent, world, seen
+    agent, world, seen = asyncio.run(go())
+    assert world.acts == [{"action": "scroll", "direction": "down", "amount": 300}] and not agent.quiet.on
+    body = seen[0][1]
+    assert body["messages"][0]["content"] == SA.SYSTEM                      # the same contract as Claude's
+    user = body["messages"][1]["content"]
+    assert user[0]["image_url"]["url"] == "data:image/jpeg;base64,QUJD" and user[1]["text"].startswith("State as JSON.")
+    assert json.loads(user[1]["text"].split("\n", 1)[1])["page"]["url"] == world.url
+    s = agent.budget.summary()
+    assert s["calls_last_hour"] == 1 and s["usd_last_day"] == round((1000 * 2.0 + 250 * 8.0) / 1e6, 4)
+    row = json.loads((agent.dir / "agent_costs.jsonl").read_text().splitlines()[-1])
+    assert row["model"] == "kimi-k3.1-pro" and (row["in"], row["out"], row["ok"]) == (1000, 250, True)
+
+
+def test_provider_flags_env_and_the_default_fallback_resolution(tmp_path, monkeypatch):
+    for v in ("STREAMER_PROVIDER", "STREAMER_FALLBACK_PROVIDER", "STREAMER_FALLBACK_WINDOW_S", "STREAMER_KIMI_MODEL",
+              "STREAMER_KIMI_PRICE", "STREAMER_KIMI_KEY_FILE", "KIMI_BASE_URL", "MOONSHOT_API_KEY", "ANTHROPIC_API_KEY"):
+        monkeypatch.delenv(v, raising=False)
+    a = SA.parse_args([])
+    assert (a.provider, a.fallback_provider, a.kimi_model) == ("anthropic", "auto", "kimi-k3.1-pro")
+    assert a.kimi_key_file == "/home/unreal/.sub01-private/kimi-key" and a.kimi_base_url == "https://api.moonshot.ai/v1"
+    assert a.fallback_window == 600.0 and a.kimi_price is None
+    monkeypatch.setenv("STREAMER_PROVIDER", "kimi")
+    monkeypatch.setenv("STREAMER_KIMI_MODEL", "kimi-k2.6")
+    monkeypatch.setenv("STREAMER_KIMI_PRICE", "0.6,2.5")
+    cfg = SA.config_from_args(SA.parse_args(["--fallback-provider", "anthropic", "--fallback-window", "120"]))
+    assert (cfg.provider, cfg.fallback_provider, cfg.kimi_model, cfg.kimi_price, cfg.fallback_window_s) == \
+        ("kimi", "anthropic", "kimi-k2.6", (0.6, 2.5), 120.0)
+    cfg = SA.config_from_args(SA.parse_args(["--provider", "anthropic", "--kimi-price", "1,4", "--kimi-key-file", "/k"]))
+    assert cfg.provider == "anthropic" and cfg.kimi_price == (1.0, 4.0) and cfg.kimi_key_file == "/k"
+    for bad in (["--provider", "openai"], ["--fallback-provider", "gpt"], ["--kimi-price", "cheap"]):
+        with pytest.raises(SystemExit):
+            SA.parse_args(bad)
+    monkeypatch.setenv("STREAMER_PROVIDER", "openai")                        # a bad environment value is refused too
+    with pytest.raises(SystemExit):
+        SA.parse_args([])
+    monkeypatch.delenv("STREAMER_PROVIDER")
+    ak, kk = tmp_path / "anthropic-key", tmp_path / "kimi-key"
+    ak.write_text("sk-ant-not-real\n")
+    kk.write_text("sk-kimi-not-real\n")
+    ak.chmod(0o600)
+    kk.chmod(0o600)
+    assert SA.resolve_fallback(SA.Config(key_file=str(ak), kimi_key_file=str(kk))) == "kimi"
+    assert SA.resolve_fallback(SA.Config(key_file=str(ak), kimi_key_file=str(tmp_path / "missing"))) is None
+    assert SA.resolve_fallback(SA.Config(provider="kimi", key_file=str(ak), kimi_key_file=str(kk))) == "anthropic"
+    assert SA.resolve_fallback(SA.Config(provider="kimi", key_file=str(tmp_path / "missing"), kimi_key_file=str(kk))) is None
+    assert SA.resolve_fallback(SA.Config(fallback_provider="none", key_file=str(ak), kimi_key_file=str(kk))) is None
+    assert SA.resolve_fallback(SA.Config(fallback_provider="anthropic", key_file=str(ak), kimi_key_file=str(kk))) is None
+    assert SA.resolve_fallback(SA.Config(fallback_provider="kimi", key_file=str(ak))) == "kimi"    # explicit: asked for
+    p = SA.make_provider("kimi", SA.Config(kimi_key_file=str(kk), kimi_price=(1.0, 2.0)))
+    assert isinstance(p, SA.KimiVision) and p.key_source == "file" and p.model == "kimi-k3.1-pro" and p.price == (1.0, 2.0)
+    assert p.headers()["Authorization"] == "Bearer sk-kimi-not-real" and "sk-kimi-not-real" in SA.SECRETS
+    assert SA.redact("x sk-kimi-not-real y") == "x [secret] y"
+    assert SA.make_provider("kimi", SA.Config()) is None and SA.make_provider("none", SA.Config()) is None
+    monkeypatch.setenv("MOONSHOT_API_KEY", "sk-env-kimi-not-real")           # the environment wins, as for Anthropic
+    assert SA.make_provider("kimi", SA.Config(kimi_key_file=str(kk))).key_source == "env"
+    assert SA.key_available("kimi", SA.Config()) is True
+    monkeypatch.delenv("MOONSHOT_API_KEY")
+    assert SA.key_available("kimi", SA.Config()) is False
+    assert SA.KimiVision("kimi-k9", api_key="x").price == SA.KIMI_PRICE_DEFAULT          # an unknown model: the assumption
+    assert SA.KimiVision("kimi-k2.6", api_key="x").price == SA.PRICES["kimi-k2.6"]
+    assert all(m in SA.PRICES for m in SA.KIMI_MODELS)
+
+
+def test_agent_builds_the_chain_from_the_key_files(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("MOONSHOT_API_KEY", raising=False)
+    ak, kk = tmp_path / "ak", tmp_path / "kk"
+    ak.write_text("sk-ant-not-real")
+    kk.write_text("sk-kimi-not-real")
+    ak.chmod(0o600)
+    kk.chmod(0o600)
+    clock = Clock()
+    base = dict(streamer_dir=str(tmp_path / "s"), event_file=str(tmp_path / "e.json"), token="tok")
+    agent = SA.Agent(SA.Config(key_file=str(ak), kimi_key_file=str(kk), **base), services=World(clock), clock=clock)
+    assert isinstance(agent.primary, SA.ClaudeVision) and isinstance(agent.fallback, SA.KimiVision)
+    assert agent.status()["provider"] == {"primary": "anthropic", "fallback": "kimi", "active": "anthropic",
+                                          "model": SA.DEFAULT_MODEL, "switched_utc": None, "reason": None,
+                                          "window_s": 600.0, "returns_in_s": None, "switches": 0}
+    assert not agent.quiet.on and agent.status()["model"] == SA.DEFAULT_MODEL
+    agent = SA.Agent(SA.Config(provider="kimi", key_file=str(ak), kimi_key_file=str(kk), **base), services=World(clock), clock=clock)
+    assert isinstance(agent.primary, SA.KimiVision) and isinstance(agent.fallback, SA.ClaudeVision)
+    assert agent.status()["model"] == "kimi-k3.1-pro" and agent.status()["provider"]["fallback"] == "anthropic"
+    # only the Kimi key: an anthropic primary without a key means Kimi from the start, not quiet mode
+    async def go():
+        server = TestServer(web.Application())                              # a loopback port that nothing answers on
+        await server.start_server()
+        base_url = str(server.make_url("/v1")).rstrip("/")
+        await server.close()
+        agent = SA.Agent(SA.Config(key_file=str(tmp_path / "missing"), kimi_key_file=str(kk), kimi_base_url=base_url, **base),
+                         services=World(clock), clock=clock)
+        before = (agent.primary, agent.provider is agent.fallback, agent.quiet.on, agent.status()["provider"])
+        await agent.step()                                                  # fails on loopback; never a return to nothing
+        after = (agent.provider is agent.fallback, agent.quiet.kind)
+        await agent.fallback.close()
+        return agent, before, after
+    agent, (primary, on_fallback, quiet, st), (still_fallback, kind) = asyncio.run(go())
+    assert primary is None and on_fallback and not quiet
+    assert st["active"] == "kimi" and st["returns_in_s"] is None and st["reason"] == "no key for anthropic"
+    assert [e for e in events(agent) if e["kind"] == "provider_switch"][0]["to"] == "kimi"
+    assert still_fallback and kind == "error" and agent.counters["provider_switches"] == 1
+    # no key at all: quiet mode as before
+    agent = SA.Agent(SA.Config(key_file=str(tmp_path / "missing"), kimi_key_file=str(tmp_path / "missing2"),
+                               fallback_provider="kimi", **base), services=World(clock), clock=clock)
+    assert agent.quiet.on and agent.quiet.kind == "nokey" and agent.status()["provider"]["active"] is None
+    assert agent.status()["api_key"] is False

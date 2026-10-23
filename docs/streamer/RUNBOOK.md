@@ -20,9 +20,14 @@ $UP stop                           # SIGTERM in reverse order (director first), 
 
 `start` refuses to run as root (`--allow-root` overrides). Every path, port and interpreter is a flag
 (`start --help`); extra child flags: `--child-arg desktop='--flag value'`, `--child-env voice=KEY=VALUE`.
-The agent gets `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `STREAMER_MODEL`, `STREAMER_CALLS_PER_HOUR` from the
+The agent gets `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `MOONSHOT_API_KEY`, `STREAMER_MODEL`,
+`STREAMER_CALLS_PER_HOUR`, `STREAMER_PROVIDER`, `STREAMER_FALLBACK_PROVIDER`, `STREAMER_KIMI_MODEL` from the
 supervisor's own environment (set them on the command that starts the supervisor, never on a command line);
 no other child receives them. The operator token goes to the children in `SUB01_ADMIN_TOKEN` only.
+Providers (AGENT.md "Providers", KIMI.md): Claude is the primary and Kimi the fallback as soon as
+`/home/unreal/.sub01-private/kimi-key` (0600, uid 1001) exists; explicit `--child-arg "agent=--fallback-provider kimi"`,
+Kimi first `--child-arg "agent=--provider kimi --fallback-provider anthropic"`; `status`/`GET :8836/state` shows
+`provider.active`, `provider_switch` rows are in `events.jsonl`.
 
 `kill`: writes `STOP`, calls voice `/stop`, takes the agent down and keeps it down (`held`). The desktop runner,
 voice server, director and Xvfb keep running, so the stream shows the desktop and the idle character. It works

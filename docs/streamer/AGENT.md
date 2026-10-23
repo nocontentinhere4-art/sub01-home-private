@@ -1,7 +1,8 @@
 # streamer_agent.py (W5): observe, decide, act, verify, comment
 
 `python streamer_agent.py --token-file /home/unreal/.sub01-private/operator-token` (repo root, Python 3.12, aiohttp,
-`anthropic`). Tests: `python -m pytest tests/test_streamer_agent.py -q` (no network, fake provider and services).
+`anthropic`; Kimi needs no extra package). Tests: `python -m pytest tests/test_streamer_agent.py -q` (no network, fake
+providers and services; the Kimi HTTP shape against a loopback server).
 
 ## Flags and environment
 | Flag / env | Default |
@@ -9,7 +10,50 @@
 | `--token-file` / `SUB01_ADMIN_TOKEN` | `/home/unreal/.sub01-private/operator-token`; sent as `X-Admin-Token` |
 | `--key-file` / `ANTHROPIC_API_KEY` (env wins) | `/home/unreal/.sub01-private/anthropic-key` (mode 0600); never logged |
 | `--model` / `STREAMER_MODEL` | `claude-sonnet-5-5` (vision; `--effort` / `STREAMER_EFFORT` low) |
+| `--provider` / `STREAMER_PROVIDER` | `anthropic` (Claude); `kimi` for Moonshot's Kimi as the primary (see Providers) |
+| `--fallback-provider` / `STREAMER_FALLBACK_PROVIDER`, `--fallback-window` / `STREAMER_FALLBACK_WINDOW_S` | `auto` (the other provider when its key exists; `kimi`, `anthropic`, `none`), 600 s |
+| `--kimi-model` / `STREAMER_KIMI_MODEL`, `--kimi-key-file` / `STREAMER_KIMI_KEY_FILE` (env `MOONSHOT_API_KEY` wins), `--kimi-base-url` / `KIMI_BASE_URL`, `--kimi-price` / `STREAMER_KIMI_PRICE` | `kimi-k3.1-pro`, `/home/unreal/.sub01-private/kimi-key` (mode 0600, pod only), `https://api.moonshot.ai/v1`, the PRICES table |
 | `--calls-per-hour` / `STREAMER_CALLS_PER_HOUR`, `--max-usd-day` / `STREAMER_MAX_USD_PER_DAY` | 240, off |
+
+## Providers (owner, 2026-10-23: Kimi as extra help)
+Two decision models speak the same contract (the `SYSTEM` prompt, the compact JSON state, the marked screenshot, strict
+JSON back, `validate_decision` on the answer): **Claude** (`ClaudeVision`, the `anthropic` SDK, `--model`) and **Kimi**
+(`KimiVision`, Moonshot AI's OpenAI-compatible `POST /v1/chat/completions` through the agent's own aiohttp session, so the
+loop stays responsive). `--provider` picks the primary; the other one is the fallback when `--fallback-provider` is
+`auto` and its key exists, or when named. Kimi details: the screenshot goes as an `image_url` data URL, the state as the
+text part, `response_format: {"type": "json_object"}` asks for strict JSON, `max_tokens` 1500 (a thinking model spends
+part of it on reasoning; only `content` is read), no `temperature` (kimi-k3.1-pro accepts only its default), no SDK
+retries (as with Claude: backoff, fallback and quiet mode are the agent's). If the API answers 400 naming the
+`response_format` or the image, that feature is dropped for the rest of the run, the request retried once, and a
+`provider_note` row logged (the JSON then relies on the prompt; without images he decides from page text and marks).
+`parse_json_obj` reads fenced ```json blocks and an object inside stray prose (every `{` is tried), so a chatty answer is
+still a decision. Models seen with the owner's key: kimi-k3.1-pro (default), kimi-k3.1-pro-highspeed, kimi-k3,
+kimi-k2.6, kimi-k2.7-code, kimi-k2.7-code-highspeed. Full notes: `KIMI.md`.
+
+**Fallback chain.** A call that fails on the active provider (HTTP 4xx/5xx/429, timeout, connection error, a refusal, an
+answer without a JSON object: every case that enters quiet mode) is retried at once on the other provider; the switch is
+one `provider_switch` row in events.jsonl `{from, to, reason, back, window_s}` and the fallback stays active for
+`--fallback-window` seconds (600). After the window the primary is tried again on the next call (`provider_switch` with
+`back: true`); if it fails, the fallback takes over for a new window. Both failing in the same call enters quiet mode as
+before (one `quiet` row, backoff 5..300 s); each probe tries the active provider and then the other, so whichever comes
+back first ends the quiet stretch. A primary without a key (file missing) means the fallback from the start, no quiet
+mode (`reason: "no key for anthropic"`). `GET /state` shows `provider {primary, fallback, active, model, switched_utc,
+reason, window_s, returns_in_s, switches}` and `model` is the active provider's; `/inject` with a fallback configured
+exercises the switch (row marked `injected`) instead of quiet mode. The budget (`--calls-per-hour`, `--max-usd-day`) is
+shared by both providers: budget quiet mode has no fallback.
+
+**Cost assumption.** `agent_costs.jsonl` gets a row per call with the provider's model and USD from `PRICES` (per
+million tokens in/out). Claude's figures are the project's; Kimi's are ASSUMED and not verified against Moonshot's price
+list: kimi-k3.1-pro 1.00/4.00 (a guess on the high side, so a daily cap errs towards spending less), -highspeed
+2.00/8.00, kimi-k3 1.00/4.00, kimi-k2.6 and k2.7-code 0.60/2.50 (the published K2/K2.5 list price), k2.7-code-highspeed
+1.15/8.00, any other kimi-* 1.00/4.00. Set the real figures with `--kimi-price in,out` (env `STREAMER_KIMI_PRICE`).
+
+**Keys.** The Kimi key lives only on the pod at `/home/unreal/.sub01-private/kimi-key` (mode 0600, uid 1001 `unreal`,
+the user the agent runs as); it is read once at start, added to `SECRETS`, sent only in the `Authorization` header, and
+redacted (`[secret]`, also any `sk-...` token) from errors, events, state and stdout, like the Anthropic key. It is never
+in the repository or in a command line; `MOONSHOT_API_KEY` in the supervisor's environment is accepted the same way as
+`ANTHROPIC_API_KEY` (`AGENT_PASSTHROUGH` in `scripts/streamer_up.py`). Tests never reach either API: the Kimi tests use a
+loopback aiohttp server.
 | `--streamer-dir` / `STREAMER_DIR` | `/home/unreal/.sub01-private/streamer` (STOP, state.json, events.jsonl, agent_memory.json, agent_costs.jsonl) |
 | `--event-file`, `--privacy-file`, `--native-pid`, `--native-start-ticks` | `.../streamer-visual-event.json`; identity from the flags, else `native-view-privacy.json` |
 | `--desktop-url` `--backend-url` `--voice-url` `--director-url` `--status-port` | 8832, 8830, 8835, 8837, 8836 (status on 127.0.0.1) |
@@ -90,10 +134,12 @@ when one ends; `GET /state` has `requests {current, waiting, done}` and the `req
   `caption` rows in events.jsonl. Layout through `POST /director/layout {"layout"}`, at most once per 25 s.
 
 ## Quiet mode
-Entered on a model error, an unusable answer, an exhausted budget or no key. Scripted behaviour only: scroll 250 px every
-20-35 s (Home at the end), no model calls, one honest line (`QUIET_LINES`, priority low) after 45 s and then at most once
-per 10 min; the identity question is still answered honestly. Probes with backoff 5, 10, 20, 40, 80, 160, 300 s (max);
-a successful call leaves quiet mode. Budget: probes when the hour frees. No key: stays quiet.
+Entered on a model error or an unusable answer from the whole provider chain (with a fallback configured, only when both
+providers fail on the same call; see Providers), an exhausted budget or no key at all. Scripted behaviour only: scroll
+250 px every 20-35 s (Home at the end), no model calls, one honest line (`QUIET_LINES`, priority low) after 45 s and then
+at most once per 10 min; the identity question is still answered honestly. Probes with backoff 5, 10, 20, 40, 80, 160,
+300 s (max), each trying the active provider and then the other; a successful call leaves quiet mode. Budget: probes when
+the hour frees. No key: stays quiet.
 
 ## Kill switch, status, verification aids
 `<streamer-dir>/STOP`: watched every 0.25 s; actions and speech stop within 1 s (step cancelled, voice `/stop`), desktop

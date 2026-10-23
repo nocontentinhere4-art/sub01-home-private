@@ -67,7 +67,8 @@ HEALTH_PATH = {"desktop": "/healthz", "voice": "/healthz", "agent": "/healthz", 
 START_TIMEOUT = {"xvfb": 20.0, "desktop": 90.0, "voice": 240.0, "agent": 60.0, "director": 45.0}
 REQUIRES = {"desktop": ("xvfb",), "agent": ("desktop",), "director": ("xvfb",)}
 RESTART_WITH = {"desktop": ("xvfb",)}          # Chromium cannot survive its X server restarting
-AGENT_PASSTHROUGH = ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "STREAMER_MODEL", "STREAMER_CALLS_PER_HOUR",
+AGENT_PASSTHROUGH = ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "MOONSHOT_API_KEY", "STREAMER_MODEL",
+                     "STREAMER_CALLS_PER_HOUR", "STREAMER_PROVIDER", "STREAMER_FALLBACK_PROVIDER", "STREAMER_KIMI_MODEL",
                      "MIND", "SUB01_STREAMER")
 BASE_ENV_KEYS = ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR", "XDG_RUNTIME_DIR")
 MIN_TOKEN = 12
