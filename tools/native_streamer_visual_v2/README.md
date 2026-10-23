@@ -1,9 +1,9 @@
 # `-Sub01StreamerVisual` v2: curated desk animation driven by the streamer agent
 
-Two installers patch the pod module sources in place: string anchors each found exactly once, all or nothing, atomic
+Three installers patch the pod module sources in place: string anchors each found exactly once, all or nothing, atomic
 writes, CRLF/LF kept, JSON report with before/after sha256, refusal of a second run by marker.
 `install.py` (`// SUB01_STREAMER_VISUAL_V2`) builds v2; `install_face_camera.py` (`// SUB01_STREAMER_VISUAL_V2_FACE`)
-goes on top of it: the `face` camera and the desk root-motion guard. Same R9 gate, authored body placement, spectator
+goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that. Same R9 gate, spectator
 camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
@@ -14,24 +14,23 @@ camera and ghost views as v1; no new AnimGraph.
   wins); `reacting` applies at once. Missing clip or other skeleton: `SUB01_STREAMER_VISUAL_CLIP_MISSING <path>`, frozen R9.
 - **Liveliness** (deterministic, bounded): breathing 0.6 deg at 0.22 Hz on Spine1/Spine2; sway <= 1.5 deg on the gaze;
   `talking` adds <= 0.9/0.6 deg; entering `reacting` nods once. `intensity` scales sway and nod. No face rig: no lip sync.
-- **Desk guard** (face patch; field report: chair empty in `mouse`/`idle`, `body_world` unchanged). The streamer branch
-  never sets `RootMotionMode`, so the instance keeps RootMotionFromMontagesOnly: these players never extract root motion
-  and a clip's root track lands in the pose unless the asset has `bForceRootLock`. Every v2 frame the bones above the
-  pelvis take R9@0.7's locals and the pelvis stays within 8 cm / 25 deg of R9's. Each clip's pelvis is audited once
-  (5 phases, `SUB01_STREAMER_VISUAL_CLIP_AUDIT` with the root-motion flags); > 25 cm / 25 deg = another station.
+- **Drift guard** (chair empty in `mouse`/`idle`). The instance keeps RootMotionFromMontagesOnly: these players never
+  extract root motion, so a clip's root track lands in the pose. With the pin fix each clip keeps its OWN placement: bones
+  above the pelvis take the clip's locals at 0 s (frozen R9: 0.7 s) and the pelvis stays within 8 cm / 25 deg of the
+  clip's own reference (references blend in a crossfade). The pelvis-vs-R9 audit (Desk7 loops: 116 cm, yet seated
+  correctly) is a log line only. `mouse` plays the sitting loop: AuthoredReach is excluded.
 - **PC monitor**: refreshed by the bridge's own 0.5 s timer, no focus needed; the per-tick unfocused
   `SetOperatorFocus(false)` (a `/pc/session` POST per frame) now runs only when something is focused.
 - **Receipt** keeps every v1 field; adds `schema_version`, `state`, `requested_state`, `base_clip`, `clip_time`,
   `intensity`, `breathing`, `camera`, `camera_blend`, `camera_fov`, `face_camera_blend`, `face_camera_aim_source`,
-  `desk_offset_before_pin_cm`, `clip_audit_done`; `clip` names the clip actually playing.
+  `desk_offset_before_pin_cm` (pelvis drift from the clip's own reference), `clip_audit_done`; `clip` names the clip actually playing.
 
-| state | clip (`/Game/Sub01Hands/Cinematic20261022/...`) | playback | if the audit finds it off-desk |
-|---|---|---|---|
-| idle, reading, talking, reacting | `Desk7_f696.../SupportedWebsite` | loop, hand-matched phase | frozen R9 |
-| typing | `Desk7_1da8.../SupportedDeskTyping` | loop, hand-matched phase | sitting loop |
-| mouse | `Reach_c8ac.../AuthoredReach` | one play, held on last frame | sitting loop |
+| state | clip (`/Game/Sub01Hands/Cinematic20261022/...`) | playback |
+|---|---|---|
+| idle, reading, talking, reacting, mouse | `Desk7_f696.../SupportedWebsite` | loop, hand-matched phase |
+| typing | `Desk7_1da8.../SupportedDeskTyping` | loop, hand-matched phase |
 
-`talking` adds the speech cadence, `reacting` the nod. Before the audit is published only the pinned sitting loop plays.
+`talking` adds the speech cadence, `reacting` the nod. (`Reach_c8ac.../AuthoredReach` is loaded and audited, never played.)
 
 | `camera` | framing | FOV |
 |---|---|---|
@@ -70,11 +69,12 @@ EOF
 ```bash
 M=<project>/Source/Sub01HomeLab ; cp -a "$M" "$M.before-face"     # installers keep no backup
 python3 tools/native_streamer_visual_v2/install.py --source "$M" --dry-run            # only on pre-v2 sources
-python3 tools/native_streamer_visual_v2/install_face_camera.py --source "$M" --dry-run  # then without --dry-run
+python3 tools/native_streamer_visual_v2/install_face_camera.py --source "$M" --dry-run  # only on v2 sources
+python3 tools/native_streamer_visual_v2/install_pin_fix.py --source "$M" --dry-run      # then without --dry-run
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
 Launch with `-Sub01StreamerVisual` (not `-Sub01AuthoredCinematicReview`), `SUB01_PC_ORIGIN=http://127.0.0.1:8832`,
-`SUB01_ADMIN_TOKEN`. Logs: `SUB01_STREAMER_VISUAL_V2_READY`, `SUB01_STREAMER_VISUAL_FACE_READY`, `..._DESK_PIN`,
-`..._CLIP_AUDIT`, `..._STATE a -> b`, `..._FACE_CAMERA`. Not verified offline: the clips' authored station (the audit
-log says), the spine pitch axis, the visual result. Tests: `tests/test_native_streamer_visual_v2.py` (stub compile only).
+`SUB01_ADMIN_TOKEN`. Logs: `SUB01_STREAMER_VISUAL_V2_READY`, `..._FACE_READY`, `..._DRIFT_GUARD`, `..._DRIFT_REFERENCE`,
+`..._CLIP_AUDIT`, `..._MOUSE_AS_SITTING_LOOP`, `..._STATE a -> b`, `..._FACE_CAMERA`. Offline checks only (stub
+compile + logic runs): `tests/test_native_streamer_visual_v2.py`; the spine pitch axis and the visual result need the pod.

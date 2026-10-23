@@ -961,3 +961,116 @@ def test_v2_behaviour_unchanged_under_face_patch(face_patched, tmp_path):
     """The whole v2 driver (debounce, bounds, monitor framing, spectator/monitor blend) passes on the face-patched code."""
     run = _run_driver(build_units(face_patched, tmp_path, end=FACE_END), tmp_path)
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+# ================================================================================================ pin fix (per-clip drift guard)
+PINFIX_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_pin_fix.py'
+PINFIX_MARKER = '// SUB01_STREAMER_VISUAL_V2_PINFIX'
+FACE_COPY = SOURCE.parent / 'native-src-v2-face'
+
+
+def install_pinfix(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(PINFIX_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+@pytest.fixture
+def pod_face(tmp_path) -> Path:
+    target = tmp_path / 'face-src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0
+    return target
+
+
+@pytest.fixture(scope='module')
+def pinfix_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('pinfix') / 'src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0
+    code, report = install_pinfix(target)
+    assert code == 0, report
+    return target
+
+
+def test_face_install_reproduces_the_pod_sources(pod_face):
+    if not FACE_COPY.is_dir():
+        pytest.skip(f'{FACE_COPY} not available')
+    for name in PATCHED:
+        assert sha(pod_face / name) == sha(FACE_COPY / name), name
+
+
+def test_pinfix_plans_applies_refuses_twice_and_needs_face(pod_face, pod_v2):
+    before = {p.name: sha(p) for p in pod_face.iterdir()}
+    code, planned = install_pinfix(pod_face, '--dry-run')
+    assert code == 0 and all(e['count'] == 1 for e in planned['edits']) and {p.name: sha(p) for p in pod_face.iterdir()} == before
+    code, report = install_pinfix(pod_face)
+    assert code == 0 and report['status'] == 'applied'
+    changed = {name for name in before if sha(pod_face / name) != before[name]}
+    assert changed == {'Sub01HomeLab.cpp', 'Sub01HomeHands.cpp'}
+    for name in changed:
+        assert sha(pod_face / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (pod_face / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    after = {p.name: sha(p) for p in pod_face.iterdir()}
+    assert install_pinfix(pod_face)[0] == 2 and install_face(pod_face)[0] == 2
+    assert {p.name: sha(p) for p in pod_face.iterdir()} == after
+    v2_before = {p.name: sha(p) for p in pod_v2.iterdir()}
+    code, refused = install_pinfix(pod_v2)
+    assert code == 2 and 'lacks the face patch' in refused['reason'] and {p.name: sha(p) for p in pod_v2.iterdir()} == v2_before
+
+
+def test_pinfix_text(pinfix_patched):
+    cpp, proxy = lf(pinfix_patched / 'Sub01HomeLab.cpp'), lf(pinfix_patched / 'Sub01HomeHands.cpp')
+    face_cpp = lf(FACE_COPY / 'Sub01HomeLab.cpp') if FACE_COPY.is_dir() else None
+    desk = cpp[cpp.index('int32 ASub01HomeCharacter::StreamerVisualDeskSlot('):cpp.index(FACE_END, cpp.index('int32 ASub01HomeCharacter::StreamerVisualDeskSlot('))]
+    assert 'Safe(' not in desk and 'return -1' not in desk and 'if(Slot==2){' in desk and 'SUB01_STREAMER_VISUAL_MOUSE_AS_SITTING_LOOP' in desk
+    assert '(log only; per-clip drift guard)' in desk
+    camera = cpp[cpp.index('void ASub01HomeCharacter::ApplyStreamerVisualFaceCamera(float Dt){'):cpp.index('int32 ASub01HomeCharacter::StreamerVisualDeskSlot(')]
+    if face_cpp is not None:  # face camera byte-identical
+        assert camera in face_cpp
+    pin = proxy[proxy.index(' void PinStreamerV2('):proxy.index(FACE_END, proxy.index(' void PinStreamerV2('))]
+    assert 'StreamerV2PinLocals' not in pin and 'StreamerV2PinPelvis' not in pin  # never R9 as the pin reference
+    for text in ('StreamerV2ClipRef(Only?Only:Current.GetSequence())', 'Reference[I].Blend(From->Locals[I],To->Locals[I],Progress)',
+                 'if(I>0){T=Reference[I];continue;}', 'Reference[0].GetTranslation()+Delta*(StreamerV2PinRadiusCm/Cm)'):
+        assert text in pin, text
+    assert 'const float At=Seq==StreamerV2Reference?StreamerV2ReferenceSeconds:0.f;' in proxy
+    assert 'PinStreamerV2(Probe.Pose,false,Seq);' in proxy and 'PinStreamerV2(Output.Pose,true);' in proxy
+    evaluate = proxy[proxy.index('virtual bool Evaluate(FPoseContext& Output) override {'):]
+    assert evaluate.index('PrepareStreamerV2Pin(Output)') < evaluate.index('MatchStreamerV2Phase(Output);') < evaluate.index('Blend.Evaluate_AnyThread(Output);')
+    for name in PATCHED:
+        text = lf(pinfix_patched / name)
+        assert closure.brace_walk(closure.strip(text)) == closure.brace_walk(closure.strip(lf(SOURCE / name))), name
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_pinfix_cpp_compiles_syntax_only_against_stub(pinfix_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units(pinfix_patched, tmp_path, end=FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+PINFIX_DRIVER = FACE_DRIVER[:FACE_DRIVER.index(' // desk guard:')] + r''' // pin fix: the R9 audit no longer chooses clips; mouse always plays the sitting loop
+ USub01HomeHandsInstance Anim; UAnimSequence Sit, Type, Reach; C.StreamerVisualV2Clips.Reset(); C.StreamerVisualV2Clips.Add(&Sit); C.StreamerVisualV2Clips.Add(&Type); C.StreamerVisualV2Clips.Add(&Reach);
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 0) == 0 && C.StreamerVisualDeskSlot(&Anim, 1) == 1 && C.StreamerVisualDeskSlot(&Anim, 2) == 0, 30);
+ CHECK(Anim.StreamerVisualAuditClips.Num() == 3, 31);
+ Anim.StreamerVisualAuditDone = true; Anim.StreamerVisualClipOffsetCm = {116.1f, 116.1f, 19.4f}; Anim.StreamerVisualClipAngleDeg = {25.6f, 25.6f, 29.5f};
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 0) == 0 && C.StreamerVisualDeskSlot(&Anim, 1) == 1 && C.StreamerVisualDeskSlot(&Anim, 2) == 0, 32);  // field audit values
+ C.StreamerVisualV2Clips[0] = nullptr; CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 0 && C.StreamerVisualDeskSlot(&Anim, 0) == 0, 33);  // missing: frozen R9 in Apply
+ CHECK(C.StreamerVisualDeskSlot(nullptr, 2) == 0 && C.StreamerVisualDeskSlot(nullptr, 1) == 1, 34);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_pinfix_logic_runs_and_v2_face_unchanged(pinfix_patched, tmp_path):
+    run = _run_driver(build_units(pinfix_patched, tmp_path / 'a', end=FACE_END, driver=PINFIX_DRIVER), tmp_path / 'a')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(build_units(pinfix_patched, tmp_path / 'b', end=FACE_END), tmp_path / 'b')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
