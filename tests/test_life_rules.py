@@ -385,7 +385,7 @@ def test_a_save_taken_mid_leg_keeps_where_he_is():
 
 # --- the walk: speed, real routes, and the time it takes ----------------------------------------------------
 def test_walk_speed_and_the_outdoor_speedup_are_the_design_numbers():
-    assert L.WALK_SPEED == 1.3 and L.OUTDOOR_SPEEDUP == 3
+    assert L.WALK_SPEED == 1.2 and L.OUTDOOR_SPEEDUP == 3
 
 
 def test_walk_s_is_the_real_route_length_at_the_outdoor_pace():
@@ -411,7 +411,7 @@ def test_the_walk_home_from_the_bench_takes_walk_s_plus_the_indoor_steps():
     expect = lf.walk_s()
     assert L.WALK_S["home-park"] <= expect <= L.WALK_S["home-park"] + 30
     n = ticks_to_arrive(lf, t, "NREM")
-    assert abs(n - expect) <= 10 and 300 <= n <= 360          # about five and a half minutes
+    assert abs(n - expect) <= 10 and 330 <= n <= 390          # about six minutes at 1.2 m/s (1.3 km at 3x, plus the indoor steps)
 
 
 def test_the_walk_from_the_counter_to_bed_takes_the_bakery_walk_s_plus_the_indoor_steps():

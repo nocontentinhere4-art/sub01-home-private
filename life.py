@@ -77,9 +77,9 @@ WORLD = {"places": PLACES, "edges": EDGES,
          "apartment": [0, 0, 8, 6], "bakery": [17, 14, 25, 20], "park": [-19, 13, -7, 23],
          "street": [-22, 8.5, 30, 11.5]}
 
-WALK_SPEED = 1.3            # m / real second (indoors and in the 3D model)
-# outdoor legs run at OUTDOOR_SPEEDUP x the real walking pace (design choice, L3): the real park route is 1.3 km, a
-# quarter of an hour each way at 1.3 m/s, which left the room empty for most of a park trip; at 3x the map marker
+WALK_SPEED = 1.2            # m / real second (indoors and in the 3D model): the owner's pace, the same as the pages' WALK_V
+# outdoor legs run at OUTDOOR_SPEEDUP x the real walking pace (design choice, L3): the real park route is 1.3 km, about
+# eighteen minutes each way at 1.2 m/s, which left the room empty for most of a park trip; at 3x the map marker
 # still follows the real streets and a park walk is ~5 min each way, the bakery ~2 min
 OUTDOOR_SPEEDUP = 3
 

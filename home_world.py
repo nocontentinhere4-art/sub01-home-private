@@ -408,7 +408,7 @@ class HomeWorld:
                 arrival_speed = 0.4 + 0.85 * max(0, min(1, cosine))
             # Brake ahead of a corner or seat, instead of stopping abruptly
             # at the waypoint. Straight segments preserve walking momentum.
-            desired_speed = min(1.25, math.sqrt(arrival_speed ** 2 + 2 * 1.4 * distance))
+            desired_speed = min(1.2, math.sqrt(arrival_speed ** 2 + 2 * 1.4 * distance))   # his pace: 1.2 m/s, as in life.py
             if self.speed < desired_speed:
                 self.speed = min(desired_speed, self.speed + dt * 1.15)
             else:
