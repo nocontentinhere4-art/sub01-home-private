@@ -95,8 +95,12 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
   `streamer/mouth.json`), agent 8836 (Claude primary, Kimi fallback), director 8837 (24 fps libx264, recordings in
   `/home/unreal/.sub01-private/streamer/recordings`, verified rehearsal segments copied to `/workspace/sub01-streamer-recordings`).
 - Vagon runner 8838 (:103, Google Chrome 156 `/opt/google/chrome/chrome`, owner's authenticated profile
-  `streamer/desktop-vagon/profile`, backups `profile.bak-*`): last seen connected=true with real Windows frames;
-  input not yet proven. Owner login console: `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`.
+  `streamer/desktop-vagon/profile`, backups `profile.bak-*`, last 2 kept): connected, real Windows frames at 30 fps
+  (H.264 1080p, relay over UDP), keyboard and mouse PROVEN (typing/clearing YouTube search, Start menu, scroll; commit
+  45c6830). Starting the computer needs arming (`POST /pc/vagon/arm {"minutes":N}`, one start per arming; commit
+  7fc8bcc): it spends the owner's balance ($0.99/h; balance seen 8.88 USD) and the computer stops itself after his
+  idle setting (~15 min). The main runner 8832 still runs the bundled Chromium (its source file is updated; it picks
+  the new code up when restarted). Owner login console: `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`.
 - Director v2 (commit 9b3da99) is STAGED in the pod source but the running director is still the old 24 fps one:
   restart it after game l with `--child-arg "director=--game-pid-file $P/game.pid" --child-arg "director=--fps 60
   --desktop-fps 60 --encoder h264_nvenc --hls-dir /home/unreal/.sub01-private/streamer/hls"` and watch
@@ -105,9 +109,9 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
   monitor feed). Layouts: webcam, desktop, split, room (cam 2).
 - Build v20 compiled (stream pass + cam 2); the native worker is adding the QA fixes (wrong posture axis, loop-seam
   head snap, chair through his back, webcam re-aim, seat yaw, key light) before launch of game l at 60 fps.
-- Workers in flight: native (v20 QA fixes, then v21 monitor feed); Vagon input proof on 8838; agent safety (Kimi
+- Workers in flight: native (v20 QA fixes, then v21 monitor feed); agent safety (Kimi
   shadow mode, guard rails, credentials/installs flags, webcam/room layouts, privacy cut). Done today: visual QA
-  (`docs/streamer/VISUAL-QA-20261023.md`), director v2.
+  (`docs/streamer/VISUAL-QA-20261023.md`), director v2, Vagon input proof, arming gate.
 
 ## Where things are
 - `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,
