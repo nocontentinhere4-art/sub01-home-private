@@ -216,3 +216,15 @@ fallback, a subtle jaw before any new head, and no public output until the owner
 Not planned: a Twitch/YouTube/Kick connector (no destination named, no public stream requested), Wesnoth or any
 software installed on the owner's machine by us, a 30/60 fps program, a MetaHuman or replacement head before the jaw
 and blinks are judged.
+
+## Go-live target (owner, 2026-10-23 evening): subzerone.live with two cameras
+- The stream will go live on the owner's site subzerone.live (only on his explicit request; nothing is published
+  until then). Output path to prepare: the director adds an HLS output (ffmpeg segments under `<streamer-dir>/hls/`,
+  served by the backend at `/stream/live.m3u8`) so the site embeds it with hls.js; an RTMP output flag for a platform
+  if the owner names one. Tested locally with a recording, never pointed at a public endpoint without his request.
+- Two cameras at the desk, both from the native home: cam 1 = the frontal webcam (done: eye level in front of the
+  screen, FOV 100, tuning file); cam 2 = from behind him, showing part of the house and how he sits at the PC (the
+  spectator family, re-aimed). Both must be available at the same time: cam 2 is rendered by a SceneCapture2D in the
+  same game (1280x720, ~15 fps, read back and written as an MJPEG stream the director can read), while the viewport
+  keeps cam 1; the director composes layouts (desktop main + webcam PiP, room cam main + webcam PiP, webcam main) and
+  the agent's `layout` choices drive the cuts. Native work after the current hands/posture pass; director work after.
