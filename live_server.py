@@ -631,24 +631,27 @@ class Live:
         if self.eye:
             self.eye.hear(text, t)
         self.life.hear(text, t)
+        self.music.hear(text, t)                           # "play …" / "metti …": a wish (filtered above)
+        ack = {"type": "chat_ack", "ok": True, "queued": False, "t": hhmm(t)}
+        if getattr(self, "mind", None):                    # he may answer it later, at the computer (C1)
+            why = await self.enqueue_chat(t, text, key, nick)
+            ack.update(queued=True, will_reply=why is None, reason=why)
+            if why is None:                                # it is in the inbox: "please reply" can be taken before mind_step's count
+                self.life.chat_waiting = max(self.life.chat_waiting, len(self.chat_inbox))
+        # every accepted message gets one in-character line at once, with or without the mind and the spiking net: the
+        # canned reaction (impulse.py), or life's honest line when the request cannot be taken as asked (closed, asleep...)
         imp = parse_impulse(text)                          # an action asked for in chat is carried out at once
+        reaction = imp.reaction
         if imp.kind == "activity":
-            self.life.request_impulse(imp, t)
-            reaction = imp.reaction
+            reaction = self.life.request_impulse(imp, t) or imp.reaction
         elif imp.kind == "open_url":
             if links_open:
                 accepted = vagon_open_url_async(imp.url)
                 reaction = imp.reaction if accepted else "The PC is busy with a link. Send it again shortly."
             else:
                 reaction = "I cannot open links yet."
-        else:                                              # reply_only
-            reaction = imp.reaction
-        self.music.hear(text, t)                           # "play …" / "metti …": a wish (filtered above)
         shown_nick, _ = clean_nick(nick)                   # the reaction is public: the nickname is cleaned as in enqueue_chat
-        ack = {"type": "chat_ack", "ok": True, "queued": False, "reaction": reaction, "impulse": imp.kind, "t": hhmm(t)}
-        if getattr(self, "mind", None):                    # he may answer it later, at the computer (C1)
-            why = await self.enqueue_chat(t, text, key, nick)
-            ack.update(queued=True, will_reply=why is None, reason=why)
+        ack.update(reaction=reaction, impulse=imp.kind)
         if self.spiking:                                   # no-op when no GPU pod is connected
             self.spiking.forward_chat(text, emotion)
             if GOOD.search(text):
