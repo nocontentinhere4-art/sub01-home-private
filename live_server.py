@@ -26,6 +26,9 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 
+from spiking.threads import cap_threads
+cap_threads()                   # one BLAS thread per process before numpy builds its pool (a venv start sets no env vars)
+
 import aiohttp
 import numpy as np
 from aiohttp import web
