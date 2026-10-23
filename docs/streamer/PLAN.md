@@ -184,3 +184,35 @@ only, verify by pixels, wait while `remote_ready` is false) is the next worker's
 ## Blockers for the owner
 - `ANTHROPIC_API_KEY` (or `OPENROUTER_API_KEY`) on the pod, in a root-only file; without it the agent runs in quiet mode.
 - Voice choice among the candidates (A/B/C Kokoro blends) or a key for ElevenLabs Voice Design if a more realistic voice is wanted.
+- Rotate the API key that was pasted in chat (REPORT-20261023.md) and replace the file on the pod.
+- Vagon: the one-time login (VAGON.md A2) and the Windows preparation (dedicated browser profile, notifications off,
+  Steam logged in, en-US layout, a desktop shortcut `SUB-01 Detroit`, the save policy for SUB-01's playthrough).
+
+## Next (ranked, 2026-10-23 evening; reasons in `kimi/DECISIONS.md`)
+
+The inventory table at the top is the morning's state; REPORT-20261023.md is current (voice K07, kill switch, director
+all exist). Fixed for the first complete version: 1920x1080 at 24 fps, Chatterbox K07, 10-minute segments, the ffmpeg
+director (no OBS), the desktop as the readable main view, Vagon behind a feasibility gate with the local Chromium as the
+fallback, a subtle jaw before any new head, and no public output until the owner asks for it.
+
+| # | Item | Worker | Effort | Done when |
+|---|---|---|---|---|
+| 1 | Known-good candidate: backend restarted, agent redeployed, 8-line chat rehearsal, build tagged, pasted key rotated | pod + owner | S | rehearsal passes from fresh processes; no key in logs/recordings |
+| 2 | Program video gated like the observation (neutral while not `connected`); desktop runner honours `STOP` (no actions, no reconnects) | W1 (+W6) | M | login page never in a recording; kill drill passes with Vagon |
+| 3 | Owner-armed Vagon sessions: one machine start per arm, 3 reconnects, then `owner_required`; exact never-labels (`trial`, `& buy`) | W1 | M | M4 corpus test; no start after `ended`/`off` |
+| 4 | Recordings on the volume (`--recordings-dir`), `status --json` with disk/RSS/GPU/decision age; 2-hour local soak | W6 + rehearsal | M | 7200 s continuous, no restart, no memory growth |
+| 5 | Director: live cuts without ffmpeg restart (zmq/sendcmd), `desktop` as the normal live view, `POST /director/safety` (safe view + app mute) | W6 | L | 20 cuts in 60 min, 0 restarts; safety engages < 500 ms |
+| 6 | Application audio: null sink + monitor as input 3, ducking, limiter; `scripts/streamer_audio.sh` verified on the pod; `--audio` flag in the desktop runner | W6, W1 | M | tone, browser sound and voice in one segment; A/V within 50 ms |
+| 7 | Vagon pixel agent: `mode`/`remote_ready` kept, point-only, pause while not ready, pixel verification, no blind retries, remote "never" list as mode policy | W5 | L | 47/50 web actions, no input while not ready |
+| 8 | First Vagon session with the owner (pc.md part B of the test plan): transport, labels, `video`/`canvas`, audio presence, keyboard string, 20/20 clicks, hotkeys, kill drill | W1 + owner | M | go/no-go list in RUNBOOK; A3 unknowns answered |
+| 9 | Two-hour rundown (intro / web / game / requests / game / wrap), stored facts, fallback topics, no duplicate action across failover | W5 | M | 45-min unattended run, no repeated line |
+| 10 | Captions from the spoken text in the program (every layout), p95 say-to-playback measured | W6, W5 | M | captions within 80 ms of `timeline.jsonl` |
+| 11 | Lip sync v1: `Jaw` bone + mouth bag in Blender, reimport, driven by the existing `mouth.json` (LIPSYNC-OPTIONS.md) | Blender + W4 | L | `mouth_rig: jaw_bone`, 20 lines reviewed at PiP size |
+| 12 | Desk performance: `RestHands` as a second idle, no camera-induced displacement over 20 min; monitor refresh 8 fps (low) | W4 | M | 30-min review without a pose pop |
+| 13 | Detroit session manifest (shortcut, approved start action, story difficulty, consequences stand) | W5 + owner | M | launch reaches only the approved menu state |
+| 14 | Two-hour dress rehearsal with scheduled failures (browser 00:20, model 00:40, Vagon 01:00, voice 01:20), full 1x review | rehearsal | M | 120 min usable, no severity-1/2 defect |
+| 15 | Freeze: source, native build, prompts, routing, K07 and animation assets; RUNBOOK go/no-go is the only path to any public test, and only on the owner's request | all | S | one operator runs a day from RUNBOOK alone |
+
+Not planned: a Twitch/YouTube/Kick connector (no destination named, no public stream requested), Wesnoth or any
+software installed on the owner's machine by us, a 30/60 fps program, a MetaHuman or replacement head before the jaw
+and blinks are judged.

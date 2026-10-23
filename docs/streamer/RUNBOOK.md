@@ -86,6 +86,120 @@ First `status`, then `tail -50 logs/<name>.log`, then `grep '"service_' events.j
   growth. Also `df -h`, and `logs/director.log` for ffmpeg warnings.
 - **A service is `failed`.** Read its `last_error`, fix the cause, `restart <name>`.
 
+## Stream day (single operator; from Kimi's skeleton, `kimi/DECISIONS.md` B19)
+
+Still local only: there is no public output in v1 and none is started without the owner's request. Everything below
+uses the commands of REPORT-20261023.md as they are. Fill the header before starting:
+`Date/UTC ____  Operator ____  Build/tag ____  Planned duration ____  Vagon today: YES/NO  Local Chromium fallback ready: YES/NO`.
+
+### A. Go / no-go, T-60 to T-20
+
+- [ ] Exact candidate deployed (`$S` points at it); no unreviewed camera, agent or audio patch since the last rehearsal.
+- [ ] No credential in chat, screenshots, logs, command lines or recordings; the API key pasted in chat has been rotated
+      and the old one revoked. `ls -l /home/unreal/.sub01-private/{operator-token,anthropic-key,kimi-key}` all `0600`
+      uid 1001; `streamer/desktop/profile` and `streamer/vagon.json` not group/other readable; token >= 32 characters.
+- [ ] Keys reach only the agent: `tr '\0' '\n' </proc/$(cat $P/pids/agent.pid)/environ | grep -c API_KEY` (after start).
+- [ ] Disk: recordings on the volume, not the root disk (about 3.7 GB free there): `--child-arg director='--recordings-dir
+      /workspace/<...>/recordings'`; free space >= 2 x (bytes of the last run / its seconds x 9000) from `ls -l recordings/`.
+- [ ] Model and voice providers healthy, call budget covers 3 h (`STREAMER_CALLS_PER_HOUR` 240, observed 51 per 30 min).
+- [ ] GPU: Unreal + Chatterbox leave headroom (`nvidia-smi`), no CUDA OOM in `logs/voice.log`.
+- [ ] If Vagon: the owner's one-time login is done (VAGON.md A2), the machine's session/idle allowance covers the day, he
+      has armed exactly one machine start, the remote Windows is prepared (dedicated browser profile, notifications off,
+      Steam logged in, en-US layout, desktop shortcut `SUB-01 Detroit`, save policy approved), `/pc/state.vagon.phase` is
+      `connected` and the `remote_ready` neutral picture was seen before it.
+- [ ] A 2-hour local rehearsal passed with this candidate; no open severity-1/2 defect. Otherwise: another rehearsal.
+
+### B. Start (as root on the pod)
+
+```
+S=/home/unreal/.sub01-private/latest-source-20261023
+P=/home/unreal/.sub01-private/streamer
+T=/home/unreal/.sub01-private/operator-token
+curl -s -X POST -H "X-Admin-Token: $(cat $T)" -H 'Content-Type: application/json' \
+     --data '{"operation":"start"}' http://127.0.0.1:8830/api/home/streamer
+runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py start --source $S --streamer-dir $P \
+     --token-file $T --child-env "director=XAUTHORITY=/home/unreal/.sub01-private/native-xauthority" \
+     --child-arg "director=--game-pid-file $P/game.pid"
+runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py status --source $S --streamer-dir $P --token-file $T
+```
+
+- [ ] The native game runs with `-Sub01StreamerVisual`; `$P/game.pid` is its pid; `status` shows every service `up`, no
+      restart loop; `GET /api/home/streamer` says `active: true`, `activity: use_computer`, routines paused.
+- [ ] Director: `curl -s -H "X-Admin-Token: $(cat $T)" localhost:8837/director/state` shows `recording: true`, `voice:
+      true`, `game_source` a window (not `screen`); the newest segment grows.
+- [ ] Application audio (when enabled, section below): `pactl list short sinks` has `sub01_apps`, a Chromium sink-input
+      appears when a page plays sound.
+- [ ] Picture: no body displacement, face and hands in frame, desktop text readable in the PiP; the agent is not in quiet
+      mode unless intended (`curl -s -H "X-Admin-Token: $(cat $T)" localhost:8836/state`).
+- [ ] **Kill drill** before anything else: `streamer_up.py kill` -> actions and speech stop within 1 s, scene stays up ->
+      `streamer_up.py resume` -> one harmless action and one spoken line succeed. Vagon: no reconnect or machine start
+      happened while killed.
+- [ ] Watch and listen to the first completed segment (or 30 s of a test recording) with headphones: voice level, no
+      silence where speech was, layout as expected.
+
+### C. During
+
+- Every 5 minutes and at every 10-minute segment roll: `status`; agent last decision age and outcome (`:8836/state`);
+  provider active and errors (`provider_switch`, `quiet` rows in `events.jsonl`); voice queue and synthesis time
+  (`:8835/state`); chat pending/answered (`/api/home/streamer`); desktop/Vagon phase and `reconnects`; director PID,
+  segment growth, `df -h` of the recordings volume; GPU memory.
+- The operator watches the local output continuously with `kill` one command away; no manual clicking on `:102` while
+  the agent is active (the owner's input goes through the operator console only during a Vagon login).
+- Log every incident as UTC time, symptom, action, time to recovery.
+
+### D. Incidents (first action is always the safe one)
+
+| Symptom | Do |
+|---|---|
+| Unsafe speech, private content on screen, a secret visible | `streamer_up.py kill` at once; then `curl -s -X POST -H "X-Admin-Token: $(cat $T)" localhost:8835/stop`; note the UTC; resume only after the page/state is clean and checked by the operator. The recording may contain it: treat it as sensitive, do not share it. |
+| Browser dead / frozen | automatic (relaunch in ~2 s). If no useful action within 60 s: "When something fails" above; kill rather than let it click blindly |
+| Model errors, agent silent | quiet mode is by design; Kimi fallback engages by itself. Both down for 5 min: let him read (quiet mode scrolls) or end the session |
+| Voice stuck or repeating | `curl -s -X POST -H "X-Admin-Token: $(cat $T)" localhost:8835/stop`; then `restart voice`; never restart the director for a voice problem |
+| Application audio clipping or wrong | `streamer_audio.sh down` mutes applications (voice continues); fix later |
+| Vagon disconnected / `ended` / `login_required` | no input while not ready (built in); neutral picture; at most the armed reconnects, then it waits for the owner. Never type credentials for him; he uses the console himself. Say nothing about accounts aloud |
+| Director not recording / disk full | `director/state`, `df -h`; the watchdog relaunches ffmpeg; a full disk means stop, move recordings to the volume, restart |
+| Unreal crash, CUDA OOM, uncontrolled behaviour | `kill`, then `stop`; no live rebuild |
+
+### E. Stop and after
+
+```
+runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py stop   --source $S --streamer-dir $P --token-file $T
+curl -s -X POST -H "X-Admin-Token: $(cat $T)" -H 'Content-Type: application/json' --data '{"operation":"stop"}' http://127.0.0.1:8830/api/home/streamer
+```
+
+- [ ] Short outro first, then no new chat requests; `stop` lets ffmpeg close the last segment (check it plays).
+- [ ] Vagon: the owner ends the machine himself from his own browser (the runner never presses Stop) and confirms it is
+      off; the runner cannot know whether machine time stopped.
+- [ ] Keep `recordings/`, `events.jsonl`, `speech/timeline.jsonl`, `layout.jsonl`, `supervisor.json`, the incident list.
+- [ ] Record: duration, actions, chat answered, speech errors, restarts, provider switches, Vagon reconnects.
+- [ ] If a credential appeared anywhere: revoke and rotate it first, then treat recordings and chat history as sensitive.
+
+## Application audio (planned; `scripts/streamer_audio.sh`)
+
+The pod has no audio device and no PulseAudio today; browser and game sound are not recorded (voice only). The chain
+decided in `kimi/DECISIONS.md` B10-B11: one per-user PulseAudio (or pipewire-pulse, whichever the pod has) with a null
+sink `sub01_apps`, the desktop Chromium playing into it, the director recording `sub01_apps.monitor` as a fourth
+ffmpeg input, voice kept on its own FIFO (never into the sink: it would be recorded twice), applications about -9 dB
+and ducked under speech, a limiter at -1 dBFS, about -16 LUFS on the finished segment.
+
+```
+S=/home/unreal/.sub01-private/latest-source-20261023
+runuser -u unreal -- $S/scripts/streamer_audio.sh check        # what the pod has; installs nothing
+runuser -u unreal -- $S/scripts/streamer_audio.sh up           # server if needed + the sink, once; prints the env
+runuser -u unreal -- $S/scripts/streamer_audio.sh test         # tone into the sink, 6 s recorded from the monitor, verdict
+runuser -u unreal -- $S/scripts/streamer_audio.sh ffmpeg-args  # the director's input and filter lines (W6)
+```
+
+To verify on the pod before anyone relies on it (no pod access from here): a server binary exists (apt may be
+unavailable; a user-space install is the owner's call, the root disk has ~3.7 GB free); `ffmpeg -devices` lists `pulse`
+(else `parec` into a FIFO, documented in the script); `amix` knows `normalize`; the Playwright Chromium finds
+`libpulse.so.0`; the desktop runner is started with the printed env and **without `--mute-audio`** (hard-coded today:
+W1 adds `--audio`); `pactl list short sink-inputs` shows Chromium while a page plays; for Vagon, that the Cloud Computer
+sends audio to the web client at all (unknown until the first session: if not, no pod-side sink can recover it).
+Sync: record a page that flashes and beeps on one click, measure the offset in the segment, correct a constant
+offset with `adelay` on the early path; accept 50 ms locally, 80 ms through Vagon, drift under 20 ms over two hours.
+Until W6 merges the input, the recording stays voice-only and `director/state` does not mention application audio.
+
 ## Layouts
 
 `POST /director/layout {"layout": "character"|"desktop"|"split"}` is validated and appended to `layout.jsonl`
@@ -95,7 +209,11 @@ only the composite: the full-size desktop is not recoverable from it.
 
 ## Known limits
 
-- No application or browser audio: no audio device or PulseAudio on the pod. Only the voice PCM is recorded.
+- No application or browser audio yet: no audio device or PulseAudio on the pod. Only the voice PCM is recorded
+  ("Application audio" above is the planned chain; `scripts/streamer_audio.sh check` on the pod says what is missing).
+- The privacy lock's neutral picture covers the model and the monitor texture, not this recording: the director grabs
+  display `:102` itself, so during a Vagon login the kiosk's login page is in the local MP4 (fix: W1/W6, DECISIONS A2).
+  Until then, start the director after `phase: connected`, or treat that recording as private.
 - Layout changes are hard cuts and are not applied live in v1; no OBS, no RTMP, no public stream; local files only.
 - Audio and video come from separate clocks (two X grabs and a PCM FIFO): small drift is possible.
 - No lip sync or facial animation (the mesh has no face rig). Chat comes only from the site WebSocket.
