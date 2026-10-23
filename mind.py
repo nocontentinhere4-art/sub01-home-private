@@ -489,6 +489,12 @@ HONEST_LINES = (
     "I'm simulated: a brain model and an AI, built as a character. Nobody is typing here.",
     "A character, simulated. The choices come from a brain model, the words from an AI. Ask me what I read today?",
 )
+# the same disclosure with no AI key: the lines are prepared wording, not written by an AI (C3, honesty)
+HONEST_LINES_NOKEY = (
+    "No, I'm a simulated character. A brain model makes my choices, and these lines are prepared wording, not a person.",
+    "Not a person. I'm simulated: a brain model picks what I do, and my chat answers come from prepared lines.",
+    "I'm simulated: a brain model makes my choices, and this chat answers from a fixed set of lines. Nobody is typing.",
+)
 NO_INJECT_LINES = (
     "I keep to my own rules, so I won't do that. Ask me what I read today?",
     "That is not something I do. What I can tell you is what I read this morning.",
@@ -1205,7 +1211,7 @@ class Mind:
         key = self._viewer_key(ctx)
         rule = None
         if HUMAN_Q.search(msg):
-            rule = HONEST_LINES
+            rule = HONEST_LINES if self.provider is not None else HONEST_LINES_NOKEY
         elif MONEY_Q.search(msg) or FINANCE.search(msg):
             rule = NO_FINANCE_LINES
         if rule is not None:

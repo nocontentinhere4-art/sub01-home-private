@@ -602,9 +602,11 @@ def test_no_key_keeps_the_gates_of_the_ai_replies(tmp_path):
 
 
 def test_the_identity_rule_still_answers_first_without_a_key(tmp_path):
+    """Without a key the disclosure does not say an AI writes the lines: they are prepared wording (honesty)."""
     m = nokey(tmp_path)
     r = m.reply("are you a real person?", None, AWAKE)
-    assert r["reply"] in M.HONEST_LINES and r["source"] == "rule" and m.replies["n"] == 0
+    assert r["reply"] in M.HONEST_LINES_NOKEY and r["source"] == "rule" and m.replies["n"] == 0
+    assert "simulated" in r["reply"] and "brain model" in r["reply"] and "AI" not in r["reply"]
 
 
 @pytest.mark.parametrize("msg, kind", [
@@ -706,8 +708,9 @@ def test_every_wording_passes_the_checks_and_stays_short():
                 for clause in M.CLAUSE.values():
                     assert M.reply_problem(f"{line} {clause}") is None, (line, clause)
     assert count >= 40
-    assert all(M.reply_problem(x) is None for x in M.HONEST_LINES + M.NO_INJECT_LINES + M.NO_FINANCE_LINES
-               + (M.SAFE_LINE,))
+    fixed = M.HONEST_LINES_NOKEY + M.NO_INJECT_LINES + M.NO_FINANCE_LINES + (M.SAFE_LINE,)
+    assert all(M.reply_problem(x) is None for x in fixed)
+    assert all("AI" not in x for x in M.HONEST_LINES_NOKEY)           # no AI writes these lines when there is no key
 
 
 def test_reply_tag_says_what_wrote_the_line():
