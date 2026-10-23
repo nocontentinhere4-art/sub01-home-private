@@ -15,7 +15,10 @@ the live server):
   hunger and sleepiness interrupt it (next_step).
 - Mind.reply(message, nickname, context): a short chat reply (<= 40 words) from his memories and mood, at most one
   every 2 min and 40 a Tokyo day, only while awake and at the desk. Every message is untrusted; every reply passes
-  the chat filter and the checks below, or no reply is sent.
+  the chat filter and the checks below, or no reply is sent. With no AI key, a line from fixed wordings answers
+  instead (template_reply): built from the message's kind (chat.stimulus), what he is doing and the Tokyo time; no call,
+  no spend, no viewer text in it.
+- Inbox: the chat messages waiting for his reply (bounded, FIFO, one viewer at a time, old ones expire as missed).
 Budget: one ledger with eyes.py (<data>/eyes_costs.jsonl, one eyes.Budget per file: shared_budget), $2.00 per Tokyo
 day across both (BRAIN_DECIDES_MAX_USD_PER_DAY). Each part sees it through a Share with its own daily cap: the eyes
 keep their $1.00 (eyes_budget), the mind gets the other $1.00 (mind_budget); the 30 calls/hour cap is shared. Every
@@ -23,8 +26,8 @@ call is logged with its cost. Over the cap: no summaries (a keyword-only trace i
 AI replies (the fixed identity / money lines still answer), and status()["resting"] is True.
 Phase B (live_server.py): eyes pages and Wikipedia articles go to read() in a worker thread; next_interest() is the
 browser's interest; plan_day() runs off the brain loop and its next step tilts life.py's choice (needs come first);
-chat messages wait in an inbox and are answered while he sits at the computer (the "chat" activity), broadcast as
-"his reply (AI-written)"; the diary gets day_notes().
+chat messages wait in an Inbox and are answered while he sits at the computer (the "chat" activity); each reply is
+broadcast with reply_tag(source), so only an AI line is tagged "AI-written"; the diary gets day_notes().
 Nothing here understands, feels or is conscious: the AI writes notes and words, the brain model's simulated activity
 makes the choices.
 """
@@ -61,6 +64,10 @@ REPLIES_PER_DAY = 40
 REPLY_WORDS = 40
 RULE_EVERY_S = 15.0          # a rule reply (no AI call) has its own short gap and does not count toward the day's 40
 TURNS_KEPT = 3               # last exchanges per viewer (and globally) passed to the model as context (C4)
+REPEAT_KEEP = 8              # the last lines a repeat guard remembers: a wording comes back only when none is free (C3)
+INBOX_MAX = 10               # chat messages waiting for his reply at most (C1); the oldest is let go first, with a note
+INBOX_PER_VIEWER = 3         # ... and at most this many from one viewer (their oldest goes first)
+INBOX_WAIT_S = 1200          # simulated seconds a message may wait; then it is missed, at the desk or not
 
 # ---- activities a plan can hold (life.py's vocabulary; "chat" and "chess" arrive with phase B / #17) ----------------
 PLAN_ACTIVITIES = {          # activity -> (life.py activity, networks it mostly engages)
@@ -502,6 +509,132 @@ FALLBACK_LINES = ("I'll leave that one. Today I read about {topic}.",
 DAY_Q = re.compile(r"\b(today|yesterday|this\s+morning|tonight|read|reading|doing|did\s+you|what\s+(are|r)\s+(you|u)|"
                    r"what'?s\s+up|how\s+(are|r)\s+(you|u))\b", re.I)
 
+# ---- template replies (no AI key) ---------------------------------------------------------------------------------
+# One line from these wordings when there is no AI key: the family comes from the message's kind (template_kind), the
+# slots from what he is doing (ACT, STEP_PHRASE), the Tokyo time (WHEN, GREET) and a clean nickname. No slot takes the
+# viewer's words, their key or a raw nickname; wordings name actions only: no feelings, no understanding, no claim to be
+# human or alive; no links, money or instructions. Every line passes reply_problem() (tested for every wording).
+TEMPLATES = {
+    "threat": ("That's a heavy word{who}. I'd rather keep this calm. I'm {act}.",
+               "Let's keep it lighter{who}. I'm {act} right now.",
+               "I'll leave that one alone{who}. I'm {act}; ask me about the park instead.",
+               "That's harsh{who}. I'm {act}, and I'd rather talk about the bakery."),
+    "thanks": ("Thanks{who}. I'm {act} for now.",
+               "Thank you{who}. I'm {act}; I'll write more when I can.",
+               "That's kind{who}. I'm {act} right now.",
+               "Thanks{who}! I'm {act}. Next on my list: {step}."),
+    "day": ("Today I read about {topic}. I'm {act0} now.",
+            "So far today I've read about {topic}, and I'm {act0} now.",
+            "Mostly the desk so far today. I'm {act0} now.",
+            "I'm {act}. Ask me about the park later?"),
+    "question": ("Good question{who}. I'm {act}, so I'll answer when I've finished.",
+                 "I'm not sure yet{who}. I'm {act}; ask me again later.",
+                 "That one needs a think{who}. I'm {act} for now.",
+                 "I'd rather check than guess{who}. I'm {act} right now.",
+                 "Ask me again in a bit{who}. I'm {act}, so I'll know more then.",
+                 "Hmm, that's a fair question{who}. I'm {act}, so I'll check first.",
+                 "Good question{who}. I'm {act} between classes, so I'll answer later."),
+    "goodnight": ("Good night{who}. I'm {act} a little longer.",
+                  "Sleep well{who}. I'm {act} for a bit more, then bed.",
+                  "Night{who}. I'm {act} for now."),
+    "greeting": ("{greet}{who}. I'm {act} in Kichijoji.",
+                 "Hi{who}. It's {when} in Kichijoji, and I'm {act}.",
+                 "{greet}{who}. Next on my list: {step}.",
+                 "{greet}{who}. I'm {act}, and I'll say more soon.",
+                 "Hello{who}. I'm {act}; ask me about the park."),
+    "positive": ("Nice to hear it{who}. I'm {act}.",
+                 "That's nice{who}. I'm {act} for now.",
+                 "Thanks for the kind words{who}. I'm {act}.",
+                 "Good to hear it{who}. I'm {act} at the moment."),
+    "plain": ("Got your message{who}. I'm {act}, and I'll get back to it.",
+              "Noted{who}. I'm {act} right now.",
+              "Thanks for writing{who}. Right now I'm {act}.",
+              "I read it{who}. I'm {act}, and I'll say more later.",
+              "Message received{who}. I'm {act}.",
+              "I should be studying, but right now I'm {act}.",
+              "I see it{who}. I'm {act}; I'll get to it when I can."),
+}
+# a line about what he is into, added now and then when the message's topic words point somewhere (topic_clause)
+CLAUSE = {"reward": "Food and music come up a lot for me.", "language": "Books and words are my thing today.",
+          "somatomotor": "A walk to the park is on my list.", "attention": "Puzzles and maps keep me busy.",
+          "memory": "Old stories have been on my mind.", "visual": "Photos and light are what I look at.",
+          "limbic": "Home has been quiet."}
+ACT = {"research": "reading at the desk", "watch_video": "watching a muted video",
+       "chat": "answering messages at the desk", "play_chess": "playing chess at the desk"}
+ACT_DEFAULT = "at the desk"
+STEP_PHRASE = {"read": "more reading", "browse": "browsing the web", "video": "some videos", "window": "the window",
+               "park": "the park", "bakery": "the bakery", "cook": "cooking", "order_food": "ordering food",
+               "chat": "answering chat", "chess": "a game of chess"}
+WHEN = {"morning": "this morning", "afternoon": "this afternoon", "evening": "this evening", "late": "late at night"}
+GREET = {"morning": "Good morning", "afternoon": "Good afternoon", "evening": "Good evening", "late": "It's late here"}
+SAFE_LINE = "I'm at the desk. Ask me again in a bit?"        # the last resort: passes reply_problem (tested)
+GREETING = {"hi", "hello", "hey", "yo", "hiya", "gm", "konnichiwa", "ohayo", "konbanwa", "morning"}
+THANKS = {"thanks", "thank", "thx", "ty", "arigato", "arigatou", "domo"}
+GOODNIGHT = re.compile(r"\b(good\s+night|gn|oyasumi(?:\s*nasai)?|sleep\s+well|sweet\s+dreams)\b", re.I)
+GREET_TIME = re.compile(r"^\s*good\s+(morning|afternoon|evening)\b", re.I)
+# a question about what he has been doing (the "day" family): not every question that says "today" ("are you at the
+# park today?" is a question about the park, and gets the question wordings)
+DAY_TALK = re.compile(r"\b(what|how)\s+(did|have|are|r|do)\s+(you|u)\s+(read|reading|do|doing|done|eat|eating|watch|"
+                      r"watching|been|up)\b|\bwhat'?s\s+up\b|\bhow\s+(are|r)\s+(you|u)\b|\bhow'?s\s+it\s+going\b|"
+                      r"\bdid\s+you\s+(read|go|eat|do|sleep|watch)\b", re.I)
+NAME_OK = re.compile(r"\w[\w .'-]{0,15}")
+REPLY_TAGS = {"ai": "his reply (AI-written)", "template": "his reply (template, no AI)",
+              "rule": "his reply (fixed line, no AI)", "fallback": "his reply (fixed line, no AI)"}
+
+
+def reply_tag(source):
+    """The tag a reply carries on the page: only an AI line is 'AI-written'; the others say what wrote them (C3)."""
+    return REPLY_TAGS.get(source, REPLY_TAGS["fallback"])
+
+
+def viewer_name(nickname):
+    """A nickname for a reply, or "" (shown as "a viewer"): cleaned by chat.clean_nick (the chat filter, 16 characters),
+    plain letters, digits, spaces, dots, apostrophes and hyphens, and it must pass reply_problem()."""
+    nick, why = chat.clean_nick(str(nickname or ""))
+    nick = " ".join(str(nick).split())
+    if why or not nick or not NAME_OK.fullmatch(nick) or reply_problem(nick) is not None:
+        return ""
+    return nick
+
+
+def template_kind(msg):
+    """The wording family of a message: threat, thanks, goodnight, day (a question about his day), question, greeting,
+    positive or plain. The emotion is chat.stimulus's; the words only tell the kind of talk. Never echoed."""
+    _, _, emotion = chat.stimulus(msg)
+    words = re.findall(r"[a-z']+", str(msg).lower())
+    if emotion == "threat":
+        return "threat"
+    if THANKS.intersection(words):
+        return "thanks"
+    if GOODNIGHT.search(msg):
+        return "goodnight"
+    if "?" in msg or (words and words[0] in chat.QUESTION_START):
+        return "day" if DAY_TALK.search(msg) else "question"
+    if (words and words[0] in GREETING) or GREET_TIME.search(msg):
+        return "greeting"
+    return "positive" if emotion == "positive" else "plain"
+
+
+def topic_clause(msg):
+    """A CLAUSE line for the message's topic words (chat.TOPIC routes words to stimulus groups); "" when none applies.
+    The viewer's words are not used, only the fixed clause."""
+    groups = {}
+    for w in re.findall(r"[a-zà-ÿ']+", str(msg).lower()):
+        for g in chat.TOPIC.get(w) or chat.TOPIC.get(w[:-1] if w.endswith("s") else "") or []:
+            groups[g] = groups.get(g, 0) + 1
+    best = sorted(groups, key=lambda g: (-groups[g], g))
+    return next((CLAUSE[g] for g in best if g in CLAUSE), "")
+
+
+def fill_lines(kind, fill):
+    """The wordings of one kind, filled from `fill`; a wording whose slot is empty is left out ({who} may be empty)."""
+    out = []
+    for w in TEMPLATES[kind]:
+        slots = set(re.findall(r"\{(\w+)\}", w))
+        if all(fill.get(k) for k in slots - {"who"}):
+            out.append(w.format(**{k: fill.get(k, "") for k in slots}))
+    return out
+
 
 def _shingles(text, n=8):
     w = re.findall(r"[a-z']+", text.lower())
@@ -555,6 +688,7 @@ class Mind:
         self.rule_last = 0.0                                      # sim time of the last rule reply (RULE_EVERY_S)
         self.rng = random.Random()                                # wordings and local plans (tests seed it)
         self.last_line = None                                     # the last rule / fallback line, not repeated
+        self.said = deque(maxlen=REPEAT_KEEP)                     # the lines of the last replies (repeat guard, C3)
         self.turns = deque(maxlen=2 * TURNS_KEPT)                 # recent exchanges, all viewers (C4)
         self.turns_by = {}                                        # viewer key hash -> deque of their exchanges
         self.plan = (load_json(self.dir / "plan.json", {}) if self.dir else {}) or {}
@@ -596,6 +730,7 @@ class Mind:
 
     def status(self):
         return {"resting": self.over_cap(), "ai": self.why_not_ai() or "ok", "memories": len(self.memory.items),
+                "replies": "ai" if self.provider is not None else "template",
                 "replies_today": self.replies["n"], "plan": self.plan.get("steps"),
                 "caption": CAPTION}
 
@@ -930,15 +1065,18 @@ class Mind:
             self.replies = {"day": day, "n": 0, "last": self.replies["last"]}
 
     def reply_open(self):
-        """None when an AI reply is possible now, else why not (C2): the 2-min gap, the day's cap, the shared budget or
-        no key. live_server ties life.chat_waiting to it, so he does not sit down "to answer" when he cannot. Rule
-        replies (identity, money) are not bound by it: see reply()."""
+        """None when a reply is possible now, else why not (C2): the 2-min gap, the day's cap, or, with an AI, the shared
+        budget. With no AI key a template line answers (no call, no spend), so no key is no reason to rest. live_server
+        ties life.chat_waiting to this, so he sits down to answer only when he can. Rule replies (identity, money) are
+        not bound by it: see reply()."""
         now = self.clock()
         self._roll_day(now)
         if now - self.replies["last"] < REPLY_EVERY_S:
             return "one reply every 2 min"
         if self.replies["n"] >= REPLIES_PER_DAY:
             return f"{REPLIES_PER_DAY} replies today"
+        if self.provider is None:                                 # no AI key: the templates answer
+            return None
         if self.over_cap():                                       # over the cap he rests: no AI replies
             return "resting (daily AI budget reached)"
         if (w := self.why_not_ai()) is not None:
@@ -954,9 +1092,10 @@ class Mind:
         return self.reply_open()
 
     def _line(self, lines):
-        """One of the wordings, never the same as the last line posted (C3)."""
-        pick = [x for x in lines if x != self.last_line] or list(lines)
+        """One of the wordings (C3): not one of the last REPEAT_KEEP lines when another is free, never the last line."""
+        pick = [x for x in lines if x not in self.said] or [x for x in lines if x != self.last_line] or list(lines)
         self.last_line = self.rng.choice(pick)
+        self.said.append(self.last_line)
         return self.last_line
 
     def fallback(self):
@@ -967,6 +1106,40 @@ class Mind:
         lines = [x.format(topic=topic) for x in FALLBACK_LINES if "{topic}" not in x or topic]
         lines = [x for x in lines if reply_problem(x) is None] or [FALLBACK_LINES[-1]]
         return self._line(lines)
+
+    def _fill(self, who, act_key, now):
+        """The slots a template may use: what he is doing (ACT, and the topic of today's top reading when he reads), his
+        next open plan step, the Tokyo time, and the clean nickname. Nothing from the viewer's message."""
+        day = tokyo(now).date()                                   # "today" means this Tokyo day, not the last 24 hours
+        pages = sorted((it for it in self.memory.recent(24, kinds=("page",)) if tokyo(it["t"]).date() == day),
+                       key=lambda it: -it["importance"])
+        topic = next((tp for it in pages for tp in it.get("topics", []) if tp), "")
+        act0 = ACT.get(act_key, ACT_DEFAULT)
+        act = f"reading about {topic} at the desk" if act_key == "research" and topic else act0
+        steps = [s["activity"] for s in self.open_steps(hour=self.hour(now))
+                 if PLAN_ACTIVITIES[s["activity"]][0] != act_key]         # not the step he is doing now
+        h = tokyo(now).hour
+        part = "morning" if 5 <= h < 11 else "afternoon" if 11 <= h < 17 else "evening" if 17 <= h < 22 else "late"
+        return {"who": f", {who}" if who else "", "act": act, "act0": act0, "topic": topic,
+                "step": STEP_PHRASE.get(steps[0], "") if steps else "", "when": WHEN[part], "greet": GREET[part]}
+
+    def template_reply(self, msg, who="", ctx=None):
+        """One line with no AI (C1): a wording of the message's kind, filled from what he is doing and the Tokyo time,
+        with a topic clause now and then. The viewer's words, key and raw nickname are never in it; every line that
+        goes out passes reply_problem(). The repeat guard (_line) keeps a wording from coming back soon."""
+        ctx = ctx or {}
+        now = self.clock()
+        kind = template_kind(msg)
+        fill = self._fill(who, ctx.get("activity"), now)
+        base = fill_lines(kind, fill)
+        if fill["who"] and not any(reply_problem(x) is None for x in base):
+            fill = dict(fill, who="")                             # the name fails a check: the wordings without it
+            base = fill_lines(kind, fill)
+        ok = [x for x in base if reply_problem(x) is None]
+        clause = topic_clause(msg) if kind in ("plain", "positive") else ""
+        if clause:
+            ok += [f"{x} {clause}" for x in ok if reply_problem(f"{x} {clause}") is None]
+        return self._line(ok) if ok else SAFE_LINE
 
     @staticmethod
     def _viewer_key(ctx):
@@ -986,7 +1159,8 @@ class Mind:
         return out[-(TURNS_KEPT + 2):]
 
     def _post(self, text, source, msg, who, key, ctx, count, why="ok"):
-        """A reply is posted: the counters (AI replies only), the memory and the recent turns."""
+        """A reply is posted: the counters (AI and template replies; fixed rule lines have their own gap), the repeat guard,
+        the memory and the recent turns."""
         now = self.clock()
         if count:
             self.replies["n"] += 1
@@ -995,6 +1169,8 @@ class Mind:
                                       "last_reply": self.replies["last"]})
         else:
             self.rule_last = now
+        if source == "ai":
+            self.said.append(text)
         self.memory.add("chat", who=who or "a viewer", said=clean(msg, 50, 280) or "(message)", reply=text,
                         brain=ctx.get("brain"))
         turn = {"viewer": who or "a viewer", "said": clean(msg, 30, 160) or "(message)", "reply": text}
@@ -1006,15 +1182,18 @@ class Mind:
         return {"reply": text, "why": why, "source": source}
 
     def reply(self, message, nickname=None, context=None):
-        """-> {"reply": str or None, "why": str, "source": "ai" | "rule" | "fallback" | None}. The message is untrusted.
-        context: awake, at_desk, mood, doing (what he is really doing), brain, viewer (the viewer's key, hashed here).
+        """-> {"reply": str or None, "why": str, "source": "ai" | "template" | "rule" | "fallback" | None}. The message is
+        untrusted. context: awake, at_desk, mood, doing (what he is really doing, display only), activity (his life
+        activity: research, watch_video, chat ...), brain, viewer (the viewer's key, hashed here).
         Order (C3): the filter; asleep / not at the desk (the message waits); the rules (identity, money: a fixed line
-        even over the cap, not counted toward the 40); then the AI limits and one model call. A rejected model line
-        (reply_problem) becomes a neutral fallback, never silence (C1); a message that reads like an override
-        (INJECT) goes to the model as data and NO_INJECT is its fallback."""
+        even over the cap, not counted toward the 40); then the limits. With no AI key: a template line, no call (or the
+        fixed refusal for an override). With a key: one model call. A rejected model line (reply_problem) becomes a
+        neutral fallback, never silence (C1); a message that reads like an override (INJECT) goes to the model as data and
+        NO_INJECT is its fallback. A link is no reason to refuse a message here: chat.check decides about links, and a
+        reply never carries one (reply_problem)."""
         ctx = context or {}
         msg = " ".join(str(message or "").split())[:chat.MAX_LEN]
-        if not msg or chat.blocked(msg):
+        if not msg or chat.blocked(msg, skip_links=True):
             return {"reply": None, "why": "message blocked by the chat filter", "source": None}
         if not ctx.get("awake"):
             return {"reply": None, "why": "asleep", "source": None}
@@ -1022,7 +1201,7 @@ class Mind:
             return {"reply": None, "why": "not at the desk", "source": None}
         now = self.clock()
         self._roll_day(now)
-        who = clean(nickname, 3, 24) if nickname else ""
+        who = viewer_name(nickname)
         key = self._viewer_key(ctx)
         rule = None
         if HUMAN_Q.search(msg):
@@ -1040,6 +1219,12 @@ class Mind:
                 return self._post(self._line(NO_INJECT_LINES), "fallback", msg, who, key, ctx, count=False,
                                   why=f"{why}: fixed line")
             return {"reply": None, "why": why, "source": None}
+        if self.provider is None:                                  # no AI key: a template line, no call and no spend
+            if injected:
+                return self._post(self._line(NO_INJECT_LINES), "fallback", msg, who, key, ctx, count=True,
+                                  why="no AI key: fixed line")
+            return self._post(self.template_reply(msg, who, ctx), "template", msg, who, key, ctx, count=True,
+                              why="no AI key: template line")
         hits = self.memory.search(msg, k=4)                       # notes that match the words; his day only when asked
         notes = [(it.get("summary") or it.get("reply") or ", ".join(it.get("topics", [])))[:160]
                  for it in (hits or (self.memory.search("", k=3) if DAY_Q.search(msg) else []))]
@@ -1140,3 +1325,87 @@ class TasteView:
     def top(self, n=12):
         t = self._top or {"favoured": [], "avoided": []}
         return dict(t, favoured=t.get("favoured", [])[:n], avoided=t.get("avoided", [])[:n])
+
+
+# ---- the chat inbox (C1/C2) -----------------------------------------------------------------------------------------
+INBOX_WHY = {"viewer": "a newer message from the same viewer took its place", "full": "too many messages were waiting",
+             "wait": "he missed that one: it waited too long",
+             "tries": "his reply did not come (the AI did not answer)"}
+
+
+class Inbox:
+    """The chat messages waiting for his reply at the computer. Plain state, no I/O: its rules are tested alone, and
+    live_server keeps one per run.
+    - bounded: at most max_items; a viewer keeps at most per_viewer (their oldest goes first, with a note);
+    - FIFO, one viewer at a time: pick() is the oldest waiting message, except that the viewer answered last waits while
+      another viewer is waiting;
+    - expiry: a message older than wait_s is missed, at the desk or not;
+    - every message that leaves unanswered comes back as (item, why), so the caller can show it as missed.
+    A viewer is kept as a short hash of their key: no address is stored here."""
+
+    def __init__(self, max_items=INBOX_MAX, per_viewer=INBOX_PER_VIEWER, wait_s=INBOX_WAIT_S):
+        self.max_items, self.per_viewer, self.wait_s = max(1, int(max_items)), max(1, int(per_viewer)), float(wait_s)
+        self.items, self.last = [], None                           # arrival order; the viewer hash answered last
+
+    def __len__(self):
+        return len(self.items)
+
+    def __iter__(self):                                            # reads like the list it replaces (arrival order)
+        return iter(self.items)
+
+    def __getitem__(self, i):
+        return self.items[i]
+
+    @staticmethod
+    def viewer_of(key):
+        return hashlib.sha1(str(key or "").encode()).hexdigest()[:12]
+
+    def add(self, t, text, key, nick=""):
+        """Queue one message -> [(item, why)]: the messages let go to make room (a viewer's oldest, then the oldest)."""
+        vk = self.viewer_of(key)
+        mine = [x for x in self.items if x["vkey"] == vk]
+        out = [(x, INBOX_WHY["viewer"]) for x in mine[:max(0, len(mine) + 1 - self.per_viewer)]]
+        gone = {id(x) for x, _ in out}
+        self.items = [x for x in self.items if id(x) not in gone]
+        self.items.append({"t": float(t), "text": str(text), "vkey": vk, "nick": str(nick or ""), "tries": 0})
+        while len(self.items) > self.max_items:
+            out.append((self.items.pop(0), INBOX_WHY["full"]))
+        return out
+
+    def expire(self, t):
+        """The messages older than wait_s are missed -> [(item, why)]."""
+        t = float(t)
+        gone = [x for x in self.items if t - x["t"] > self.wait_s]
+        if gone:
+            self.items = [x for x in self.items if t - x["t"] <= self.wait_s]
+        return [(x, INBOX_WHY["wait"]) for x in gone]
+
+    def pick(self):
+        """The message he answers next, still queued (a reply may fail and wait): the oldest from a viewer other than
+        the one answered last, else the oldest. None when nothing waits."""
+        if not self.items:
+            return None
+        others = [x for x in self.items if x["vkey"] != self.last]
+        return (others or self.items)[0]
+
+    def answered(self, item):
+        """The reply to `item` was posted: it leaves the inbox, and its viewer is the one answered last."""
+        self.items = [x for x in self.items if x is not item]
+        self.last = item["vkey"]
+
+    def drop(self, item):
+        """Take `item` out without answering it (the chat filter kept it); the caller shows the miss."""
+        self.items = [x for x in self.items if x is not item]
+
+    def failed(self, item):
+        """A reply did not come: the message stays for one more try; the second time it is missed -> the why, else None."""
+        item["tries"] += 1
+        if item["tries"] < 2:
+            return None
+        self.items = [x for x in self.items if x is not item]
+        return INBOX_WHY["tries"]
+
+    def clear(self, why):
+        """Everything waiting is missed with `why` (the day's cap) -> [(item, why)]."""
+        gone, self.items = self.items, []
+        return [(x, why) for x in gone]
