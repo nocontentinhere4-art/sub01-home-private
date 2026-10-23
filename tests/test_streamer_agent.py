@@ -208,6 +208,7 @@ def test_twenty_seconds_between_unsolicited_lines_when_not_reading(tmp_path):
 
 def test_reaction_cooldown_and_level_rules(tmp_path):
     agent, world, prov, clock = make(tmp_path, decision(state="reacting", level=3, say="Oh. That is clever.", action=None))
+    agent.visual.motion = None                                          # the plain v2 fields (the motion director has its own tests)
     agent.pacing.opened = True
     asyncio.run(agent.step())
     assert agent.counters["reactions"] == 1
@@ -643,6 +644,7 @@ def test_native_event_file_schema_atomic_and_private(tmp_path):
 def test_native_event_state_follows_what_he_does(tmp_path):
     agent, world, prov, clock = make(tmp_path, decision())
     v = agent.visual
+    v.motion = None                                                     # the plain v2 fields (the motion director has its own tests)
     assert v.snapshot()["state"] == "idle"
     v.set_base("reading")
     assert v.snapshot()["state"] == "reading"
@@ -665,9 +667,33 @@ def test_native_event_state_follows_what_he_does(tmp_path):
     assert v.snapshot()["state"] == "paused"
 
 
+def test_motion_director_is_attached_by_default_and_refines_the_event(tmp_path):
+    agent, world, prov, clock = make(tmp_path, decision())
+    v = agent.visual
+    assert v.motion is not None and v.motion.camera == SA.CAMERA
+    v.set_base("reading")
+    s = v.snapshot()
+    assert s["schema"] == SA.SCHEMA and s["state"] in SA.INTENSITY and s["camera"] == SA.CAMERA
+    assert -20 <= s["gaze_yaw_deg"] <= 20 and -10 <= s["gaze_pitch_deg"] <= 10 and 0 <= s["intensity"] <= 1
+    assert set(s["motion"]) >= {"lean", "lean_back", "head_tilt_deg", "look_at_camera", "look_to_chat", "hand_left", "hand_right"}
+    agent.speak_until = clock() + 10                                    # talking: the director may look at the lens
+    v.chat_until = clock() + 10
+    looks = []
+    for _ in range(16):
+        clock.t += 0.5
+        s = v.snapshot()
+        assert s["state"] == "talking"
+        looks.append(s["motion"]["look_at_camera"])
+    assert max(looks) > 0                                               # a chat answer is given to the camera at some point
+    agent.speak_until = 0
+    v.paused = True
+    assert v.snapshot()["state"] == "paused" and "motion" not in v.snapshot()   # the kill switch keeps the plain paused event
+
+
 def test_gaze_follows_the_action_and_eases(tmp_path):
     agent, world, prov, clock = make(tmp_path, decision())
     v = agent.visual
+    v.motion = None                                                     # the plain v2 fields (the motion director has its own tests)
     v.set_action("mouse", 2.0, SA.attention_of({"action": "click", "mark": 3}, {3: {"box": [1000, 100, 200, 50]}}, SA.SCREEN))
     first = v.snapshot()
     assert 0 < first["gaze_yaw_deg"] < 14.38                            # moving, not jumping

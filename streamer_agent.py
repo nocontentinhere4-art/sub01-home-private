@@ -42,6 +42,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+try:                                                           # motion direction (scripts/streamer_motion.py): optional layer
+    from scripts import streamer_motion
+except ImportError:                                            # pragma: no cover - a copy without scripts/ keeps the v2 fields
+    streamer_motion = None
+
 import aiohttp
 from aiohttp import web
 
@@ -1341,13 +1346,18 @@ class Visual:
         self.paused, self.speaking, self.speaking_fn = False, False, None
         self.wake = None
         self.errors = 0
+        # motion direction (docs/streamer/ANIMATION-REFERENCES.md): set by the agent when scripts/streamer_motion is present
+        self.motion, self.action_kind, self.chat_until, self.reaction, self.base_since = None, "none", 0.0, "none", clock()
 
     def poke(self):
         if self.wake is not None:
             self.wake.set()
 
     def set_base(self, state):
-        self.base = "reading" if state == "reading" else "idle"
+        new = "reading" if state == "reading" else "idle"
+        if new != self.base:
+            self.base_since = self.clock()
+        self.base = new
 
     def set_action(self, state, hold, target=None):
         now = self.clock()
@@ -1359,6 +1369,7 @@ class Visual:
     def react(self, level):
         now = self.clock()
         self.react_level, self.react_until = level, now + (4.0 if level >= 3 else 2.5)
+        self.reaction = {1: "think", 2: "surprise"}.get(level, "laugh")
         if level >= 2:
             self.look_at_camera(1.5)                          # a clear reaction is shared with the viewers
         self.nod({1: 0.35, 2: 0.65, 3: 1.0}.get(level, 0.2))
@@ -1425,13 +1436,22 @@ class Visual:
             inten = clamp(0.4 + 0.2 * self.react_level, 0, 1)
         pid, ticks = self.read_identity(now)
         self.sequence += 1
-        return {"schema": SCHEMA, "source": "streamer_agent", "native_pid": pid if pid is not None else 0,
-                "native_start_ticks": ticks if ticks is not None else 0, "captured_utc": round(now, 3),
-                "expires_utc": round(now + 1.5, 3), "sequence": self.sequence, "state": state,
-                "gaze_yaw_deg": round(clamp(self.yaw, -20.0, 20.0), 2),
-                "gaze_pitch_deg": round(clamp(self.pitch, -10.0, 10.0), 2),
-                "nod_strength": round(clamp(nod, 0.0, 1.0), 3), "intensity": round(inten, 2),
-                "camera": CAMERA}      # the stream's framing: "face" = frontal webcam shot (owner's reference, 2026-10-23)
+        payload = {"schema": SCHEMA, "source": "streamer_agent", "native_pid": pid if pid is not None else 0,
+                   "native_start_ticks": ticks if ticks is not None else 0, "captured_utc": round(now, 3),
+                   "expires_utc": round(now + 1.5, 3), "sequence": self.sequence, "state": state,
+                   "gaze_yaw_deg": round(clamp(self.yaw, -20.0, 20.0), 2),
+                   "gaze_pitch_deg": round(clamp(self.pitch, -10.0, 10.0), 2),
+                   "nod_strength": round(clamp(nod, 0.0, 1.0), 3), "intensity": round(inten, 2),
+                   "camera": CAMERA}   # the stream's framing: "face" = frontal webcam shot (owner's reference, 2026-10-23)
+        if self.motion is not None and state != "paused":      # the motion director refines the six fields and adds `motion`
+            m = self.motion.tick(now, action=self.action_kind if now < self.act_until else ("read" if self.base == "reading" else "none"),
+                                 speaking=state == "talking", chat_addressed=now < self.chat_until,
+                                 reaction=self.reaction if now < self.react_until else "none",
+                                 seconds_in_state=now - self.base_since,
+                                 screen_target=self.target if now < self.target_until else None, paused=False)
+            payload.update(streamer_motion.event_fields(m))
+            payload["motion"] = m["motion"]
+        return payload
 
     def write(self):
         path = Path(self.cfg.event_file)
@@ -1469,6 +1489,9 @@ class Agent:
         self.last_refusal_line, self.last_ack = -1e9, None
         self.visual = Visual(cfg, clock)
         self.visual.speaking_fn = self.speaking_now
+        if streamer_motion is not None and os.environ.get("STREAMER_MOTION", "1") != "0":
+            # "mouse" once the sitting-loop build is confirmed on the pod (clicks keep the reading pose until then)
+            self.visual.motion = streamer_motion.MotionDirector(self.rng, camera=CAMERA, mouse_state="reading")
         self.started = clock()
         self.chat_since = self.memory.chat_since
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
@@ -1878,6 +1901,9 @@ class Agent:
         self.visual.nod(0.6 if item.kind in ("chat", "direct", "request") else 0.5)
         if item.kind in ("chat", "direct", "request"):
             self.visual.look_at_camera(est + 0.5)              # answers to viewers are given to the camera
+            self.visual.chat_until = now + est + 0.5
+        else:
+            self.visual.chat_until = 0.0
         self.memory.add("said", item.text)
         self.log("speech" if voiced else "caption", text=item.text, tag=item.kind, priority=item.priority,
                  max_seconds=item.max_seconds, seqs=list(item.seqs))
@@ -2074,6 +2100,8 @@ class Agent:
                 "search": 2.5, "back": 1.5}.get(kind, 3.0)
         # 2026-10-23: the native "mouse" state plays the AuthoredReach clip, which took the body out of the spectator
         # frame during the first rehearsal; clicks keep the reading pose until that clip is reviewed.
+        self.visual.action_kind = {"type": "type", "search": "search", "click": "click", "scroll": "scroll",
+                                   "navigate": "navigate", "back": "navigate"}.get(kind, "none")
         self.visual.set_action("typing" if kind == "type" else "reading" if kind in ("click", "navigate", "search", "back")
                                else "reading", hold, att)
         self.counters["actions"] += 1
