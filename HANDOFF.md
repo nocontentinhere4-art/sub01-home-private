@@ -77,22 +77,26 @@ Owner decisions (2026-10-23 21:45 UTC):
 8. **subzerone.live only on explicit request** — the requested private embed/platform test passes; publication is a
    separate authorisation.
 
-## Last-observed state (2026-10-23 ~21:35 UTC; verify before relying on it)
-Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
-- Native game k (build v19, t.MaxFPS 24): launcher `/root/.sub01-windows-recovery/launch-streamer-game-20261023k.py`;
-  verify with `pgrep -u unreal -f UnrealEditor-Cmd` and `/home/unreal/.sub01-private/streamer-visual-receipt.json`.
-  Main viewer port 8893 (`curl -s 127.0.0.1:8893/frame.jpg`). Live tuning file
-  `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` via `runuser -u unreal -- python3 /home/unreal/tune.py key=value`
-  (QA-kept 22:1x UTC: up 20, forward 2, side -6, aim_drop -2, fov 95, seat_back 36, posture_lean 0, posture_head 14
-  — posture_head 14 is a temporary yaw compensation for the wrong-axis bug; reset to ~0 after the native axis fix).
-  Visual bugs ranked in `docs/streamer/VISUAL-QA-20261023.md`. State/camera hold: `/home/unreal/camera-check.py <camera> <state> <seconds>`.
+## Last-observed state (2026-10-23 ~23:40 UTC; verify before relying on it)
+Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~2.9 GB free: clean before restarts).
+- Native game **l** (build v20: hands IK, cam 2, pose fix; launcher
+  `/root/.sub01-windows-recovery/launch-streamer-game-20261023l.py`, t.MaxFPS 60): pid 1607013, start_ticks 36459547,
+  log `/home/unreal/.sub01-private/streamer-game-20261023l/game.log`; game k retired (restorable from its launcher).
+  Main viewer 8893 bound to l; `streamer/game.pid` = 1607013. MEASURED: 15-20 fps (frame 50-65 ms, GPU ~11 ms: CPU or
+  present bound; display :99 is an Xvfb) — not 60 yet. Key light blew him out → `key_light=0` live. cam 2 shows the
+  desk with the chair EMPTY (he is not rendered in the SceneCapture). CHAIR_FIT finds no backrest. A native worker is on
+  v21 (60 fps cause and fix, cam 2 visibility, soft key light, chair fit, monitor feed).
+  Live tuning file `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` via
+  `runuser -u unreal -- python3 /home/unreal/tune.py key=value` (now: up 20, forward 2, side -6, aim_drop -2, fov 95,
+  seat_back 36, desk_props 1, posture_lean 0, posture_head 0, key_light 0). Visual bugs: `docs/streamer/VISUAL-QA-20261023.md`.
+  State/camera hold: `runuser -u unreal -- env CC_PID=<pid> CC_TICKS=<ticks> python3 /home/unreal/camera-check.py <camera> <state> <s>`.
 - Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
   `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
 - Backend: coordinator `/root/.sub01-windows-recovery/resume20.py` (ports 8830/8831); streamer hold re-armed with
   `POST /api/home/streamer {"operation":"start"}` (X-Admin-Token).
 - Supervisor `scripts/streamer_up.py` (start/status/kill/resume/restart/stop; see `docs/streamer/RUNBOOK.md`):
   desktop 8832 (bundled Chromium, :102; feeds the in-game monitor + director PiP), voice 8835 (Chatterbox K07,
-  `streamer/mouth.json`), agent 8836 (Claude primary, Kimi fallback), director 8837 (24 fps libx264, recordings in
+  `streamer/mouth.json`), agent 8836 (Claude primary, Kimi fallback + Kimi shadow on every decision, guard rails, lease required: HELD by STOP), director 8837 (24 fps libx264, recordings in
   `/home/unreal/.sub01-private/streamer/recordings`, verified rehearsal segments copied to `/workspace/sub01-streamer-recordings`).
 - Vagon runner 8838 (:103, Google Chrome 156 `/opt/google/chrome/chrome`, owner's authenticated profile
   `streamer/desktop-vagon/profile`, backups `profile.bak-*`, last 2 kept): connected, real Windows frames at 30 fps
@@ -107,11 +111,11 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
   `/director/state` `output.fps_measured`. New sidecars (not yet in the supervisor): `scripts/streamer_hls_serve.py`
   (127.0.0.1:8839), `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840; for the v21
   monitor feed). Layouts: webcam, desktop, split, room (cam 2).
-- Build v20 compiled (stream pass + cam 2); the native worker is adding the QA fixes (wrong posture axis, loop-seam
-  head snap, chair through his back, webcam re-aim, seat yaw, key light) before launch of game l at 60 fps.
-- Workers in flight: native (v20 QA fixes, then v21 monitor feed); agent safety (Kimi
-  shadow mode, guard rails, credentials/installs flags, webcam/room layouts, privacy cut). Done today: visual QA
-  (`docs/streamer/VISUAL-QA-20261023.md`), director v2, Vagon input proof, arming gate.
+- Watchdog `scripts/streamer_watchdog.py` running (pid in `pgrep -f streamer_watchdog.py`), pointed at the agent 8836
+  and desktop 8832; to act the agent needs STOP removed and `POST /lease {"minutes":60}` (only after plan step 5).
+- Workers in flight: native v21 (60 fps + visual fixes); privacy plumbing (director privacy ack with no desktop picture,
+  runner `--allow-credentials` for the remote PC). Done today: visual QA, director v2, Vagon input proof, arming gate,
+  agent shadow + guard rails (commit deccdef), build v20 (commit fa4e2c0).
 
 ## Where things are
 - `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,
