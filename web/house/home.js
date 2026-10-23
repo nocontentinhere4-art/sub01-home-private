@@ -1855,7 +1855,7 @@ function consoleChoice(label, game) {
       minecraftBitmapPainter?.invalidate();
       const changedGame = tvGame !== game;
       tvGame = game;
-      if (changedGame && game === 'minecraft') paintMinecraftUnavailable();
+      if (changedGame && game === 'minecraft') paintMinecraftUnavailable(minecraftScreenMessage());
       lastConsoleGame = game;
       renderPanel(true);
       drawTV();
@@ -2075,7 +2075,10 @@ function renderPanel(reset = false) {
         consoleChoice("Pong", "pong"),
         consoleChoice("Chess", "chess"),
       );
-      if (minecraftState.enabled) choices.append(consoleChoice("Minecraft", "minecraft"));
+      // The button stays while the console is configured but offline: the server answers the
+      // click with the reason (409), shown as a notice, instead of a silent switch to nothing.
+      if (minecraftState.enabled)
+        choices.append(consoleChoice(minecraftState.offline_reason ? "Minecraft (offline)" : "Minecraft", "minecraft"));
       panelBody.append(choices);
       if (tvGame === "minecraft") {
         // Mirrors the TV canvas; the TV's frame feed repaints it (no second download).
@@ -2084,8 +2087,6 @@ function renderPanel(reset = false) {
         image.dataset.minecraftFrame = "1";
         image.getContext("2d").drawImage(tvCanvas, 0, 0);
         panelBody.append(image, textEl("p", "His persistent Minecraft world. He plays when he chooses the console.", "muted"));
-        panelBody.append(textEl("p", "", "muted"));
-        panelBody.lastChild.id = "minecraft-status";
       } else {
       const c = document.createElement("canvas");
       c.id = "pong-panel";
@@ -2109,6 +2110,10 @@ function renderPanel(reset = false) {
           pongControlButton("↓", 1),
         );
       }
+      // One honest status line for every TV game: Minecraft's state while it is on, and why the
+      // TV shows Pong or chess when the configured Minecraft console is offline.
+      panelBody.append(textEl("p", "", "muted"));
+      panelBody.lastChild.id = "console-status";
       const ownerKey = document.createElement("input");
       ownerKey.type = "password";
       ownerKey.placeholder = "Owner access key · needed to change games";
@@ -2117,19 +2122,22 @@ function renderPanel(reset = false) {
       ownerKey.oninput = () => sessionStorage.setItem("sub01-operator-token", ownerKey.value);
       panelBody.append(ownerKey);
     }
+    const status = document.getElementById("console-status");
     if (tvGame === "minecraft") {
-      const status = document.getElementById("minecraft-status");
       const observation = minecraftState.observation || {};
       const supplies = (observation.inventory || []).map(item => `${item.count} ${item.name.replaceAll("_", " ")}`).join(" · ");
-      if (status) status.textContent = minecraftState.status === "needs_eula"
-        ? "Waiting for the owner to accept the Minecraft EULA. The game has not started."
+      if (status) status.textContent = minecraftState.offline_reason
+        ? "Minecraft " + minecraftScreenMessage().replace(/^Console/, "console") + ". The game has not started."
         : "Minecraft: " + minecraftState.status + (minecraftState.last_action ? " · " + minecraftState.last_action.replaceAll("_", " ") : "")
           + (observation.connected ? ` · Health ${observation.health}/20 · Food ${observation.food}/20` : "")
           + (supplies ? " · " + supplies : "")
           + (minecraftState.error ? " · " + minecraftState.error : "");
-    } else if (tvGame === "chess")
-      drawChess(document.getElementById("pong-panel"), chessState?.game);
-    else drawPong(document.getElementById("pong-panel"), homeState?.pong);
+    } else {
+      if (status) status.textContent = consoleFallbackNotice(" He plays " + (tvGame === "chess" ? "chess" : "Pong") + " meanwhile.");
+      if (tvGame === "chess") drawChess(document.getElementById("pong-panel"), chessState?.game);
+      else drawPong(document.getElementById("pong-panel"), homeState?.pong);
+      drawConsoleNotice(document.getElementById("pong-panel"));
+    }
   } else if (panelKind === "phone") {
     title.textContent = "Phone · " + (homeState?.phone.battery ?? "—") + "%";
     if (reset) {
@@ -2426,21 +2434,64 @@ function drawChess(canvas, game) {
     h - 12,
   );
 }
+// What the TV says while the Minecraft console has no picture: the server's own state and
+// reason (home_minecraft.view), never a guess. An offline console reads "Console offline: <why>".
+function minecraftScreenMessage() {
+  const s = minecraftState || {};
+  if (!s.enabled) return 'Minecraft is not configured on this server';
+  if (s.offline_reason || ['offline', 'needs_eula', 'error'].includes(s.status))
+    return 'Console offline: ' + (s.offline_reason || s.error || s.status);
+  if (s.status === 'preparing' || s.status === 'starting_server') return 'Starting the Minecraft server…';
+  if (s.status === 'ready' || s.status === 'connecting') return 'Connecting the player to his world…';
+  if (s.status === 'paused') return 'Paused · he is not at the TV';
+  if (s.status === 'playing') return 'Waiting for the first picture…';
+  return 'Waiting for Minecraft…';
+}
+// "Minecraft offline: <why>" while a configured console cannot run (the TV then shows Pong), else "".
+function consoleFallbackNotice(suffix = "") {
+  const reason = minecraftState?.enabled ? minecraftState.offline_reason : null;
+  return reason ? "Minecraft offline: " + reason + "." + suffix : "";
+}
+function wrapText(context, text, width) {
+  const lines = [];
+  let line = "";
+  for (const word of String(text).split(/\s+/)) {
+    const next = line ? line + " " + word : word;
+    if (line && context.measureText(next).width > width) { lines.push(line); line = word; }
+    else line = next;
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+}
 function paintMinecraftUnavailable(message = 'Waiting for Minecraft…') {
   const context = tvCanvas.getContext('2d');
   context.fillStyle = '#10201a'; context.fillRect(0, 0, 800, 460);
   context.fillStyle = '#ffae69'; context.textAlign = 'center'; context.font = '28px system-ui';
   context.fillText('Minecraft', 400, 205);
-  context.font = '18px system-ui'; context.fillText(message, 400, 245);
+  context.font = '18px system-ui';
+  wrapText(context, message, 720).forEach((line, index) => context.fillText(line, 400, 245 + index * 26));
   tvTexture.needsUpdate = true;
+}
+// A dim band over the Pong court / chess board while the configured Minecraft console is offline.
+function drawConsoleNotice(canvas) {
+  const text = consoleFallbackNotice();
+  if (!canvas || !text) return;
+  const context = canvas.getContext('2d'), w = canvas.width;
+  context.fillStyle = '#000000a0'; context.fillRect(0, 0, w, 22);
+  context.fillStyle = '#ffae69'; context.font = '13px system-ui'; context.textAlign = 'left'; context.textBaseline = 'middle';
+  let shown = text;
+  while (shown.length > 8 && context.measureText(shown).width > w - 24) shown = shown.slice(0, -2).trimEnd() + '…';
+  context.fillText(shown, 12, 11);
+  context.textBaseline = 'alphabetic';
 }
 function drawTV() {
   if (tvGame === "minecraft") {
-    if (!minecraftState.has_frame) paintMinecraftUnavailable(
-      minecraftState.status === 'needs_eula' ? 'Waiting for EULA approval' : minecraftState.status || 'Waiting for Minecraft…');
-  } else if (tvGame === "chess" || homeState?.activity === "play_chess")
-    drawChess(tvCanvas, chessState?.game);
-  else drawPong(tvCanvas, homeState?.pong);
+    if (!minecraftState.has_frame) paintMinecraftUnavailable(minecraftScreenMessage());
+  } else {
+    if (tvGame === "chess" || homeState?.activity === "play_chess") drawChess(tvCanvas, chessState?.game);
+    else drawPong(tvCanvas, homeState?.pong);
+    drawConsoleNotice(tvCanvas);
+  }
   tvTexture.needsUpdate = true;
 }
 const tvCanvas = document.createElement("canvas");
@@ -2480,7 +2531,7 @@ minecraftBitmapPainter = createMinecraftFrameFeed({
   isActive: () => !privacyActive && !homeState?.privacy && !document.hidden &&
     ((!panel.hidden && panelKind === 'pong' && tvGame === 'minecraft') || tvInView()),
   getURL: () => '/api/home/minecraft/frame.jpg',
-  onUnavailable: () => { backOffMinecraftFrame(); paintMinecraftUnavailable(); },
+  onUnavailable: () => { backOffMinecraftFrame(); paintMinecraftUnavailable(minecraftScreenMessage()); },
   onError: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft picture unavailable.'); },
   onTimeout: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft is taking a moment…'); },
   paint: image => {
@@ -2655,7 +2706,7 @@ function acceptHome(state) {
     minecraftBitmapPainter?.invalidate();
     lastConsoleGame = state.console_game;
     tvGame = state.console_game;
-    if (tvGame === 'minecraft') paintMinecraftUnavailable();
+    if (tvGame === 'minecraft') paintMinecraftUnavailable(minecraftScreenMessage());
     if (panelKind === "pong") renderPanel(true);
   }
   if (!state.notes?.length && homeState.notes?.length === 0 && lastFullHome)

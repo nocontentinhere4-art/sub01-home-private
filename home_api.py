@@ -317,8 +317,15 @@ def add_home_routes(app, live, admin_ok):
         chosen = data.get("game")
         if chosen not in ("pong", "chess", "minecraft"):
             raise web.HTTPBadRequest(text="Unknown console game")
-        if chosen == "minecraft" and not (getattr(live, "minecraft", None) and live.minecraft.enabled):
-            raise web.HTTPConflict(text="Minecraft is not configured")
+        if chosen == "minecraft":
+            console = getattr(live, "minecraft", None)
+            if not (console and console.enabled):
+                raise web.HTTPConflict(text="Minecraft is not configured")
+            # An offline console (runtime missing, EULA, crashed) is refused with its reason, so the
+            # TV is never switched to a game that cannot show anything.
+            reason = console.offline_reason() if callable(getattr(console, "offline_reason", None)) else None
+            if reason:
+                raise web.HTTPConflict(text=f"Minecraft console offline: {reason}")
         live.home.console_game = chosen
         if getattr(live, 'life', None):
             live.life.console_wish = None
