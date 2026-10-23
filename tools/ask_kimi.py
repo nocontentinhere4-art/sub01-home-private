@@ -49,8 +49,21 @@ def attach(files, cap: int) -> str:
     return "".join(parts)
 
 
-def ask(question: str, *, key: str, model: str, system: str, max_tokens: int, temperature: float, timeout: float):
-    body = {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": question}],
+def image_parts(images):
+    """OpenAI-style image_url parts (data URLs) for --image files (jpeg/png/webp)."""
+    import base64
+    parts = []
+    for name in images or []:
+        p = Path(name)
+        mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}.get(p.suffix.lower().lstrip("."), "image/jpeg")
+        data = base64.b64encode(p.read_bytes()).decode("ascii")
+        parts.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{data}"}})
+    return parts
+
+
+def ask(question: str, *, key: str, model: str, system: str, max_tokens: int, temperature: float, timeout: float, images=()):
+    user_content = question if not images else [{"type": "text", "text": question}, *image_parts(images)]
+    body = {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user_content}],
             "max_tokens": max_tokens}
     if temperature is not None:                     # kimi-k3.1-pro accepts only the default (1): leave it out unless asked
         body["temperature"] = temperature
@@ -81,6 +94,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("question", help="the question, or - to read it from stdin")
     p.add_argument("--file", action="append", default=[], help="text file to inline after the question (repeatable)")
+    p.add_argument("--image", action="append", default=[], help="image file to attach (jpeg/png/webp, repeatable)")
     p.add_argument("--file-chars", type=int, default=60000)
     p.add_argument("--system", default=SYSTEM)
     p.add_argument("--model", default=DEFAULT_MODEL)
@@ -93,7 +107,7 @@ def main(argv=None) -> int:
     question = sys.stdin.read() if args.question == "-" else args.question
     question = question.strip() + attach(args.file, args.file_chars)
     result = ask(question, key=read_key(args.key_file), model=args.model, system=args.system,
-                 max_tokens=args.max_tokens, temperature=args.temperature, timeout=args.timeout)
+                 max_tokens=args.max_tokens, temperature=args.temperature, timeout=args.timeout, images=args.image)
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=1))
     else:
