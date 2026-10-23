@@ -142,10 +142,28 @@ The v1 game accepts only `source: "human_vagon_observation"` and no `state`; v2 
    from the site WebSocket, Vagon not connected.
 
 ## The PC after v1: Vagon Streams
-The owner's final PC is Vagon Streams (https://docs.vagon.io/streams). The desktop runner keeps the same interfaces:
-it opens the Vagon stream page in kiosk mode instead of browsing itself, `/desktop/observe` returns the streamed
-pixels (no DOM marks on a video canvas), and `/desktop/act` sends clicks by point and keyboard through the stream's
-web client. The monitor texture, the director and the agent loop do not change. Needs the stream link/credentials.
+The owner's final PC is Vagon Streams (https://docs.vagon.io/streams; research in `docs/streamer/VAGON.md`).
+
+Done (2026-10-23, `scripts/streamer_desktop.py --pc-mode vagon`, `docs/streamer/DESKTOP.md` "Vagon mode"): the runner
+keeps every interface; in vagon mode its kiosk Chromium opens the stream link from `<streamer-dir>/vagon.json`, presses
+the connect/play button found by text, waits for the stream's video/canvas, notices "session ended" and re-enters
+(reconnect button, else reopen with backoff); `/desktop/observe` returns the pixels with `mode: "vagon"` and
+`remote_ready` and no marks; `/desktop/act` maps click/scroll/type/key onto the stream and navigate/search onto the
+remote browser's address bar (Ctrl+L, URL, Enter); `/pc/state` carries `pc_mode` and `vagon{connected, phase,
+reconnects, last_reconnect_utc, ...}`; the link's path and query are never logged. Default mode and behaviour are
+unchanged. Tests: `tests/test_streamer_desktop_vagon.py` (pure logic + a real headless Chromium on a mock stream page).
+
+Needs the owner (nothing is bought, signed up for or started by us): a Vagon Streams account with an uploaded
+application that is a browser and an active Stream; the Stream Link in `/home/unreal/.sub01-private/streamer/vagon.json`
+(schema `sub01.streamer-vagon.v1`, mode 0600, uid 1001); stream settings 1080p or scale-to-screen, Mouse Control, US
+keyboard, audio off, a session/idle limit and budget he accepts, the per-visitor restart decision, region Frankfurt or
+Stockholm; optionally the API key pair for a later start/stop/cost integration (not used today); his confirmation from
+Vagon that a scripted visitor on his own stream is acceptable (the terms do not address it). Cost as documented:
+$0.025-0.047 per machine minute ($1.50-2.82/h) plus $0.67/day storage per region and $0.67/day maintenance; plan fees
+unpublished. Open until his stream is seen: the connection page's real button texts and ended-state texts (heuristics
+in the runner may need one tuning pass), whether a visitor sees a desktop or only the browser window, whether the
+pod's UDP egress reaches Vagon. The agent (`streamer_agent.py`) still drops the `mode`/`remote_ready` fields in
+`normalize()` and expects marks: its vagon adaptation (click by point only, verify by pixels) is the next worker's job.
 
 ## Blockers for the owner
 - `ANTHROPIC_API_KEY` (or `OPENROUTER_API_KEY`) on the pod, in a root-only file; without it the agent runs in quiet mode.

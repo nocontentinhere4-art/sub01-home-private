@@ -17,6 +17,13 @@ Safety: banking/adult/gambling/trading/login/checkout/payment hosts and paths ar
 sub-frames), no POST navigation, no downloads, file chooser, clipboard or popups, service workers blocked, dialogs
 dismissed and reported. A crashed or hung browser is relaunched (`/pc/state.status` is "restarting" meanwhile).
 Everything the agent does is appended to <data-dir>/events.jsonl. Playwright is imported only by the Desktop class.
+
+PC modes (`--pc-mode`, docs/streamer/VAGON.md): `chromium` (default, everything above) or `vagon`: the same Chromium
+opens the owner's Vagon Streams page (`--vagon-url` or <streamer-dir>/vagon.json) in kiosk mode, presses its
+connect/play button, waits for the stream's video/canvas and re-enters after "session ended". The agent primitives are
+mapped onto the stream: click/scroll/type/key go to the stream element, navigate/search type the URL into the remote
+browser's address bar (Ctrl+L, text, Enter), observe returns the pixels with `mode: "vagon"` and `remote_ready` and no
+DOM summary. `/pc/state` carries `pc_mode` and a `vagon` sub-state. The stream URL's query string is never logged.
 """
 
 import argparse
@@ -72,6 +79,18 @@ SAFE_ENV = ("PATH", "HOME", "LANG", "LC_ALL", "TZ", "TMPDIR", "USER", "LD_LIBRAR
             "FONTCONFIG_PATH", "XAUTHORITY", "XDG_RUNTIME_DIR")
 FOREIGN_PROFILES = ("google-chrome", "/chromium", "application support/google", "appdata/local/google", "bravesoftware",
                     "microsoft edge", "/firefox", "/.mozilla")
+PC_MODES = ("chromium", "vagon")
+DEFAULT_STREAMER_DIR = "/home/unreal/.sub01-private/streamer"
+VAGON_SCHEMA = "sub01.streamer-vagon.v1"
+VAGON_TICK_S = 2.0            # how often the stream page is probed for its connect / ended state
+VAGON_CLICK_GAP_S = 6.0       # at least this long between two presses of the stream's connect button
+VAGON_RELOAD_BACKOFF = (15.0, 30.0, 60.0, 120.0, 300.0)   # seconds before the stream page is opened again
+VAGON_BLANK_RELOAD_S = 60.0   # a stream page with neither a button nor a stream for this long is opened again
+VAGON_MISSES = 3              # consecutive probes without the stream before "connected" is dropped
+VAGON_TYPE_DELAY_MS = 12      # per character: the stream client needs real key events, not inserted text
+VAGON_SETTLE_S = 0.8          # pixels need a round trip to the remote machine before they can be compared
+VAGON_NAV_SETTLE_S = 2.5
+VAGON_MIN_STREAM = (320, 180)
 
 
 def log(message):
@@ -503,10 +522,155 @@ def build_observation(snap, frame_id, size=SMALL, quality=78):
     draw_marks(img, marks)
     out = io.BytesIO()
     img.save(out, "JPEG", quality=quality)
-    return {"frame_id": frame_id, "url": snap.get("url", ""), "title": snap.get("title", ""),
-            "jpeg_b64": base64.b64encode(out.getvalue()).decode("ascii"), "width": size[0], "height": size[1],
-            "text": trim_text(snap.get("text")), "marks": marks, "scroll": snap.get("scroll") or {"y": 0, "max": 0},
-            "loading": bool(snap.get("loading")), "dialogs": list(snap.get("dialogs") or [])}
+    obs = {"frame_id": frame_id, "url": snap.get("url", ""), "title": snap.get("title", ""),
+           "jpeg_b64": base64.b64encode(out.getvalue()).decode("ascii"), "width": size[0], "height": size[1],
+           "text": trim_text(snap.get("text")), "marks": marks, "scroll": snap.get("scroll") or {"y": 0, "max": 0},
+           "loading": bool(snap.get("loading")), "dialogs": list(snap.get("dialogs") or [])}
+    if snap.get("mode"):                                 # vagon: pixels of a remote machine, no DOM to summarise
+        obs["mode"] = snap["mode"]
+        obs["remote_ready"] = bool(snap.get("remote_ready"))
+    return obs
+
+
+# --- Vagon Streams: the stream page's connect / ended states and the config file (pure) ----------------------------
+# The connection page's DOM is not documented (docs/streamer/VAGON.md), so buttons are found by their visible text.
+VAGON_RECONNECT_RX = re.compile(r"\b(reconnect|try again|retry|connect again|restart session|new session)\b", re.I)
+VAGON_CONNECT_RX = re.compile(r"\b(connect|start( stream(ing)?)?|play|launch|continue|enter|join|open stream|resume)\b", re.I)
+VAGON_ENDED_RX = re.compile(r"session (has )?(ended|expired|terminated|timed out|is over)|session end(ed)?\b|"
+                            r"(stream|session|link) is (expired|not available|paused|inactive)|disconnected|"
+                            r"connection (lost|failed|closed)|you (have been|were) disconnected|time is up|"
+                            r"(idle|inactivity) (limit|time ?out)|something went wrong|failed to connect|"
+                            r"no (available )?(capacity|machine)|insufficient capacity|stream (is )?(unavailable|offline)", re.I)
+VAGON_BUSY_RX = re.compile(r"connecting|initializ|preparing|loading|starting|installing|please wait|setting up|"
+                           r"waiting for|assigning|booting|queue", re.I)
+VAGON_PHASES = ("starting", "waiting", "busy", "ready", "ended", "blank", "restarting")
+
+
+def redact_url(url):
+    """What may be logged or shown of a stream link: scheme and host, the path replaced by an ellipsis; never the
+    query string (tokens, launch flags, visitor e-mail) or the fragment. Empty for an unusable value."""
+    try:
+        u = urlsplit(str(url or ""))
+    except ValueError:
+        return ""
+    if not u.scheme or not u.hostname:
+        return ""
+    host = u.hostname + (f":{u.port}" if u.port else "")
+    return f"{u.scheme}://{host}/" + ("…" if u.path.strip("/") or u.query else "")
+
+
+def vagon_url_problem(url, allow_private=False):
+    """Why a stream link cannot be used, or None: the page rules apply (https only, no credentials in the URL, no
+    private host unless tests allow it, no login/checkout path), plus the link must not be a bare origin."""
+    if not isinstance(url, str) or not url.strip() or any(c.isspace() for c in url.strip()):
+        return "expected a stream URL"
+    u = urlsplit(url.strip())
+    if u.scheme != "https" and not (allow_private and u.scheme == "http"):
+        return "the stream link must be https"
+    why = blocked_url(url.strip(), allow_private)
+    if why:
+        return why
+    if not u.path.strip("/") and not u.query:
+        return "the stream link has no path"
+    return None
+
+
+def load_vagon_config(path, allow_private=False):
+    """<streamer-dir>/vagon.json -> {"stream_url", "api_key_file"}; ValueError (without the URL) when unusable."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as error:
+        raise ValueError(f"cannot read the Vagon config: {error.strerror or error}")
+    except ValueError:
+        raise ValueError("the Vagon config is not valid JSON")
+    if not isinstance(data, dict) or data.get("schema") != VAGON_SCHEMA:
+        raise ValueError(f"the Vagon config must be an object with schema {VAGON_SCHEMA}")
+    url = data.get("stream_url")
+    if url is not None:
+        why = vagon_url_problem(url, allow_private)
+        if why:
+            raise ValueError(f"stream_url: {why}")
+        url = url.strip()
+    key_file = data.get("api_key_file")
+    if key_file is not None and (not isinstance(key_file, str) or not key_file.strip() or not os.path.isabs(key_file.strip())):
+        raise ValueError("api_key_file must be an absolute path")
+    unknown = set(data) - {"schema", "stream_url", "api_key_file"}
+    if unknown:
+        raise ValueError("unknown keys in the Vagon config: " + ", ".join(sorted(unknown)))
+    return {"stream_url": url or "", "api_key_file": (key_file or "").strip()}
+
+
+def api_key_file_status(path):
+    """'none' | 'configured' | 'missing' | 'permissive' for the optional API key file; its content is never read."""
+    if not path:
+        return "none"
+    try:
+        st = os.stat(path)
+    except OSError:
+        return "missing"
+    return "permissive" if st.st_mode & 0o077 else "configured"
+
+
+def choose_vagon_button(buttons):
+    """Index of the button to press on the stream page: a reconnect/try-again control first, then connect/start/play.
+    Buttons whose text names something else (settings, mute, full screen, sign in...) are never pressed."""
+    best, best_rank = None, None
+    for i, b in enumerate(buttons or []):
+        label = " ".join(str(b.get("label") or "").split())
+        if not label or LOGIN_LABEL.search(label) or MONEY_LABEL.search(label):
+            continue
+        rank = 0 if VAGON_RECONNECT_RX.search(label) else 1 if VAGON_CONNECT_RX.search(label) else None
+        if rank is not None and (best_rank is None or rank < best_rank):
+            best, best_rank = i, rank
+    return best
+
+
+def classify_vagon(probe):
+    """(phase, button index or None) from a probe of the stream page: ready (a video that plays or a canvas of a
+    useful size), ended (the page says so, or offers a reconnect), waiting (a connect button), busy (the page says
+    it is connecting), blank (nothing usable yet)."""
+    p = probe or {}
+    stream, text = p.get("stream") or None, " ".join(str(p.get("text") or "").split())
+    button = choose_vagon_button(p.get("buttons"))
+    reconnect = button is not None and VAGON_RECONNECT_RX.search(str(p["buttons"][button].get("label") or ""))
+    if stream and stream.get("playing", True) and not reconnect and not (VAGON_ENDED_RX.search(text) and button is not None):
+        return "ready", None
+    if VAGON_ENDED_RX.search(text) or reconnect:
+        return "ended", button
+    if button is not None:
+        return "waiting", button
+    if stream or VAGON_BUSY_RX.search(text):
+        return "busy", None
+    return "blank", None
+
+
+def image_point(point, view, size=SMALL):
+    """A point of the 1280x720 observation image -> page pixels, clamped to the viewport."""
+    x = min(view[0] - 1, max(0, point[0] * view[0] / size[0]))
+    y = min(view[1] - 1, max(0, point[1] * view[1] / size[1]))
+    return x, y
+
+
+class VagonState:
+    """What the runner knows about the remote session; `public()` is the `vagon` field of /pc/state."""
+
+    def __init__(self, api_key="none"):
+        self.connected, self.phase, self.api_key = False, "starting", api_key
+        self.sessions, self.reconnects, self.last_reconnect_utc, self.since = 0, 0, None, time.time()
+        self.attempts, self.reloads, self.reload_streak, self.misses = 0, 0, 0, 0
+        self.last_click, self.last_reload, self.blank_since, self.last_label = 0.0, 0.0, None, ""
+
+    def set_phase(self, phase):
+        changed = phase != self.phase
+        if changed:
+            self.phase, self.since = phase, time.time()
+        return changed
+
+    def public(self):
+        return {"connected": self.connected, "phase": self.phase, "reconnects": self.reconnects,
+                "last_reconnect_utc": self.last_reconnect_utc, "sessions": self.sessions, "reloads": self.reloads,
+                "since_utc": datetime.fromtimestamp(self.since, timezone.utc).isoformat(timespec="seconds"),
+                "api_key_file": self.api_key}
 
 
 # --- PS/2 scancodes and relative mouse from the native monitor -> page input --------------------------------------
@@ -716,6 +880,9 @@ class Config:
     proxy: str = ""
     chromium: str = ""
     start_url: str = "about:blank"
+    pc_mode: str = "chromium"            # "chromium" browses itself; "vagon" shows the owner's Vagon Streams page
+    vagon_url: str = ""                  # the stream link (never logged beyond scheme and host)
+    vagon_api_key_file: str = ""         # optional, recorded as present/absent only; the runner makes no API call
 
 
 class DesktopUnavailable(RuntimeError):
@@ -813,6 +980,65 @@ POINT_JS = r"""([x, y]) => {
 }"""
 CLIPBOARD_JS = r"""(() => { const deny = () => Promise.reject(new DOMException('Clipboard access is disabled', 'NotAllowedError'));
   try { Object.defineProperty(navigator, 'clipboard', {configurable: true, get: () => ({readText: deny, writeText: deny, read: deny, write: deny})}); } catch (e) {} })();"""
+# Vagon: the stream page (or one of its frames) -> its visible text, its buttons and the stream element (video/canvas)
+VAGON_PROBE_JS = r"""([minW, minH]) => {
+  const vw = innerWidth, vh = innerHeight;
+  const out = {url: location.href, title: document.title || '', vw, vh, loading: document.readyState !== 'complete', text: '', buttons: [], stream: null};
+  const shown = r => r.width >= 1 && r.height >= 1 && r.bottom > 0 && r.right > 0 && r.top < vh && r.left < vw;
+  const hide = cs => cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < 0.05;
+  let best = null, area = 0;
+  for (const el of document.querySelectorAll('video, canvas')) {
+    const r = el.getBoundingClientRect();
+    if (r.width < minW || r.height < minH || !shown(r) || hide(getComputedStyle(el))) continue;
+    if (r.width * r.height > area) {
+      area = r.width * r.height;
+      const video = el.tagName === 'VIDEO';
+      best = {tag: el.tagName.toLowerCase(), box: [r.left, r.top, r.width, r.height],
+        playing: video ? (el.readyState >= 2 && !el.paused && !el.ended && el.videoWidth > 0) : true};
+    }
+  }
+  out.stream = best;
+  const parts = [];
+  const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  let seen = 0, size = 0;
+  while (walker.nextNode() && seen < 2000 && size < 1200) {
+    seen++;
+    const node = walker.currentNode, s = node.nodeValue, p = node.parentElement;
+    if (!s || !s.trim() || !p || ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(p.tagName)) continue;
+    const r = p.getBoundingClientRect();
+    if (!shown(r) || hide(getComputedStyle(p))) continue;
+    const t = s.replace(/\s+/g, ' ').trim(); parts.push(t); size += t.length + 1;
+  }
+  out.text = parts.join(' ').slice(0, 1200);
+  const SEL = 'button, [role=button], a[href], input[type=button], input[type=submit], [onclick], [class*="play" i], [class*="connect" i], [class*="start" i], [class*="reconnect" i]';
+  for (const el of document.querySelectorAll(SEL)) {
+    if (out.buttons.length >= 30) break;
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 12 || r.height < 12 || r.width * r.height > 0.6 * vw * vh || !shown(r)) continue;
+    const cs = getComputedStyle(el);
+    if (hide(cs) || cs.pointerEvents === 'none') continue;
+    const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2)), cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
+    const top = document.elementFromPoint(cx, cy);
+    if (!top || !(top === el || el.contains(top) || top.contains(el))) continue;
+    let label = (el.getAttribute('aria-label') || el.innerText || el.value || el.title || el.getAttribute('alt') || '').toString().trim();
+    if (!label) { const m = /(reconnect|connect|play|start)/i.exec(el.className || ''); label = m ? m[1] : ''; }
+    out.buttons.push({label: label.replace(/\s+/g, ' ').slice(0, 80), box: [r.left, r.top, r.width, r.height]});
+  }
+  return out;
+}"""
+VAGON_FOCUS_JS = r"""([minW, minH]) => {
+  let best = null, area = 0;
+  for (const el of document.querySelectorAll('video, canvas')) {
+    const r = el.getBoundingClientRect();
+    if (r.width >= minW && r.height >= minH && r.width * r.height > area) { area = r.width * r.height; best = el; }
+  }
+  const el = best || document.body;
+  if (!el) return false;
+  if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+  try { el.focus({preventScroll: true}); } catch (e) { return false; }
+  return document.activeElement === el;
+}"""
 
 
 class Resolver:
@@ -859,18 +1085,27 @@ class Desktop:
         self.held, self.dropped, self.buttons, self.cursor = set(), set(), [False] * 3, [cfg.width // 2, cfg.height // 2]
         self.stopping, self._tearing, self._why, self._latest = False, False, None, None
         self._wake = self._frame_event = self._input_lock = self._task = self._publisher_task = None
+        self.vagon = VagonState(api_key_file_status(cfg.vagon_api_key_file))   # /pc/state "vagon" (vagon mode only)
+        self._vagon_task, self._vagon_frame, self._vagon_offset = None, None, (0.0, 0.0)
+        self._vagon_lock = asyncio.Lock()                 # the connect loop never presses a button during an action
+
+    @property
+    def vagon_mode(self):
+        return self.cfg.pc_mode == "vagon"
 
     # lifecycle
     def start(self):
         self._wake, self._frame_event, self._input_lock = asyncio.Event(), asyncio.Event(), asyncio.Lock()
         self._task = asyncio.create_task(self._supervise())
         self._publisher_task = asyncio.create_task(self._publisher())
+        if self.vagon_mode:
+            self._vagon_task = asyncio.create_task(self._vagon_loop())
 
     async def close(self):
         self.stopping = True
         if self._wake:
             self._wake.set()
-        for task in (self._task, self._publisher_task):
+        for task in (self._task, self._publisher_task, self._vagon_task):
             if task:
                 task.cancel()
                 try:
@@ -987,7 +1222,9 @@ class Desktop:
         if abs(self.view[0] - cfg.width) > 8 or abs(self.view[1] - cfg.height) > 8:
             log(f"warning: the page viewport is {self.view[0]}x{self.view[1]}, not {cfg.width}x{cfg.height} "
                 f"(no kiosk? check the X display size): the stream shows the page only, scaled")
-        if cfg.start_url and cfg.start_url != "about:blank" and not blocked_url(cfg.start_url, cfg.allow_private):
+        if self.vagon_mode:
+            await self._vagon_goto("launch")
+        elif cfg.start_url and cfg.start_url != "about:blank" and not blocked_url(cfg.start_url, cfg.allow_private):
             try:
                 await page.goto(cfg.start_url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
             except Exception as error:
@@ -996,6 +1233,9 @@ class Desktop:
     async def _teardown(self):
         self._tearing = True
         self.feed.clear()
+        if self.vagon_mode:
+            self.vagon.connected, self._vagon_frame = False, None
+            self.vagon.set_phase("restarting")
         self.on_change()
         for step in (self.ctx and self.ctx.close(), self.pw and self.pw.stop()):
             if step is not None:
@@ -1008,11 +1248,222 @@ class Desktop:
         self.held.clear()
         self.buttons = [False] * 3
 
+    # Vagon Streams: open the stream page, press its connect button, notice "session ended", re-enter
+    def _scrub(self, text):
+        """An error text that may quote the stream link (Playwright puts the URL in its messages) -> safe to log."""
+        text, url = str(text), self.cfg.vagon_url
+        if url:
+            text = text.replace(url, redact_url(url))
+            query = urlsplit(url).query
+            if query:
+                text = text.replace(query, "…")
+        return text[:200]
+
+    def _url_for_log(self, url):
+        return redact_url(url) if self.vagon_mode else str(url)[:200]
+
+    async def _vagon_goto(self, why):
+        """Open the stream page (at launch, and again after an ended session that offers no way back in)."""
+        v = self.vagon
+        v.connected, v.attempts, v.misses, v.blank_since = False, 0, 0, None
+        v.last_reload, self._vagon_frame, self._vagon_offset = time.monotonic(), None, (0.0, 0.0)
+        v.set_phase("starting")
+        self.on_change()
+        log(f"vagon: opening the stream page ({why}) at {redact_url(self.cfg.vagon_url)}")
+        self.events.append("vagon", state="open", why=why, host=redact_url(self.cfg.vagon_url))
+        try:
+            await self.page.goto(self.cfg.vagon_url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+        except Exception as error:
+            message = self._scrub(clean_error(error))
+            log(f"vagon: stream page not loaded: {message}")
+            self.events.append("error", where="vagon", message=message)
+
+    async def _vagon_loop(self):
+        while not self.stopping:
+            await asyncio.sleep(VAGON_TICK_S)
+            if self.status != "ready" or self.page is None or self._tearing:
+                continue
+            try:
+                await self._vagon_step()
+            except asyncio.CancelledError:
+                raise
+            except DesktopUnavailable as error:           # the supervisor is relaunching the browser
+                log(f"vagon: probe skipped: {self._scrub(error)}")
+            except Exception as error:
+                log(f"vagon: probe failed: {self._scrub(clean_error(error))}")
+
+    async def _vagon_probe(self):
+        """The stream page now: visible text, buttons and the stream element, from the main frame or the frame that
+        holds the stream (the dashboard's iframe embed). Boxes are in page pixels; `self.view` is the page viewport."""
+        page = self.page
+        frames = [page.main_frame] + [f for f in page.frames if f is not page.main_frame][:5]
+        best = None
+        for frame in frames:
+            try:
+                info = await self._guarded(frame.evaluate(VAGON_PROBE_JS, list(VAGON_MIN_STREAM)), "stream probe")
+            except DesktopUnavailable:
+                raise
+            except Exception:
+                continue                                  # a frame that navigated away or detached meanwhile
+            offset = (0.0, 0.0)
+            if frame is page.main_frame:
+                self.view = (int(info["vw"]), int(info["vh"]))
+            else:
+                try:
+                    box = await (await frame.frame_element()).bounding_box()
+                except Exception:
+                    box = None
+                if not box:
+                    continue
+                offset = (float(box["x"]), float(box["y"]))
+            if best is None:
+                best = (info, frame, offset)
+            if info.get("stream") or choose_vagon_button(info.get("buttons")) is not None:
+                best = (info, frame, offset)
+                break
+        if best is None:
+            raise DesktopUnavailable("the stream page cannot be read")
+        info, frame, offset = best
+        if offset != (0.0, 0.0):
+            for b in info.get("buttons") or []:
+                b["box"][0], b["box"][1] = b["box"][0] + offset[0], b["box"][1] + offset[1]
+            if info.get("stream"):
+                info["stream"]["box"][0] += offset[0]
+                info["stream"]["box"][1] += offset[1]
+        self._vagon_frame, self._vagon_offset = frame, offset
+        return info
+
+    async def _vagon_focus(self):
+        """Keyboard focus on the stream element (or the body), so key events reach the stream client."""
+        frame = self._vagon_frame or getattr(self.page, "main_frame", self.page)
+        try:
+            return bool(await asyncio.wait_for(frame.evaluate(VAGON_FOCUS_JS, list(VAGON_MIN_STREAM)), 5))
+        except Exception:
+            return False
+
+    async def _vagon_press(self, button):
+        v, x, y = self.vagon, button["box"][0] + button["box"][2] / 2, button["box"][1] + button["box"][3] / 2
+        label = str(button.get("label") or "")[:40]
+        v.last_click, v.attempts, v.last_label = time.monotonic(), v.attempts + 1, label
+        log(f"vagon: pressing '{label}' (attempt {v.attempts})")
+        self.events.append("vagon", state="press", label=label, attempt=v.attempts)
+        await self.page.mouse.move(x, y, steps=4)
+        await self.page.mouse.click(x, y)
+
+    async def _vagon_step(self):
+        async with self._vagon_lock:
+            await self._vagon_step_locked()
+
+    async def _vagon_step_locked(self):
+        v, now = self.vagon, time.monotonic()
+        probe = await self._vagon_probe()
+        phase, idx = classify_vagon(probe)
+        if phase == "ready":
+            v.misses, v.blank_since, v.reload_streak = 0, None, 0
+            if not v.connected:
+                v.connected, v.sessions, v.attempts = True, v.sessions + 1, 0
+                if v.sessions > 1:
+                    v.reconnects += 1
+                    v.last_reconnect_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
+                log(f"vagon: remote desktop connected (session {v.sessions}, reconnects {v.reconnects})")
+                self.events.append("vagon", state="connected", session=v.sessions, reconnects=v.reconnects)
+            if v.set_phase("ready"):
+                self.on_change()
+            return
+        if v.connected:
+            v.misses += 1
+            if v.misses < VAGON_MISSES and phase in ("busy", "blank"):
+                return                                    # a stalled video or a dropped frame: not an ended session yet
+            v.connected = False
+            log(f"vagon: remote session {phase}: {probe.get('text', '')[:80]!r}")
+            self.events.append("vagon", state="disconnected", phase=phase, text=str(probe.get("text") or "")[:120])
+        if v.set_phase(phase):
+            self.on_change()
+        if idx is not None and v.attempts < 6:
+            if now - v.last_click >= VAGON_CLICK_GAP_S:
+                await self._vagon_press(probe["buttons"][idx])
+            return
+        if phase == "blank":
+            v.blank_since = v.blank_since or now
+        reload_due = (phase == "ended" or v.attempts >= 6
+                      or (phase == "blank" and now - v.blank_since >= VAGON_BLANK_RELOAD_S))
+        if reload_due and now - v.last_reload >= VAGON_RELOAD_BACKOFF[min(v.reload_streak, len(VAGON_RELOAD_BACKOFF) - 1)]:
+            v.reloads, v.reload_streak = v.reloads + 1, v.reload_streak + 1
+            await self._vagon_goto(f"{phase}, attempts {v.attempts}")
+
+    async def _vagon_snapshot(self, obs):
+        probe = await self._vagon_probe()
+        try:
+            jpeg = await self._guarded(self.page.screenshot(type="jpeg", quality=80), "screenshot")
+        except DesktopUnavailable:
+            raise
+        except Exception as error:
+            raise DesktopUnavailable(f"screenshot failed: {self._scrub(clean_error(error))}")
+        phase, _ = classify_vagon(probe)
+        return {"url": redact_url(probe.get("url")) or redact_url(self.cfg.vagon_url),
+                "title": " ".join(str(probe.get("title") or "").split())[:160] or "remote desktop", "text": "",
+                "scroll": {"y": 0, "max": 0}, "loading": bool(probe.get("loading")), "width": self.view[0],
+                "height": self.view[1], "jpeg": jpeg, "marks": [], "dialogs": self.pop_dialogs() if obs else [],
+                "mode": "vagon", "remote_ready": phase == "ready"}
+
+    async def _do_vagon(self, a, errors):
+        """The agent primitives on the stream: clicks and wheel at page points over the stream element, keys to
+        the focused stream, navigate/search as Ctrl+L + URL + Enter in the remote browser, back as Alt+Left."""
+        page, kind = self.page, a["action"]
+        if kind == "wait":
+            await asyncio.sleep(a["seconds"])
+            return
+        async with self._vagon_lock:
+            probe = await self._vagon_probe()
+            phase, _ = classify_vagon(probe)
+            if phase != "ready":
+                errors.append(f"the remote desktop is not connected (stream {phase}); wait and observe again")
+                return
+            if "mark" in a:
+                raise ActFailed("there are no marks on the remote desktop; click by point")
+            await self._vagon_input(a, probe["stream"]["box"])
+
+    async def _vagon_input(self, a, box):
+        page, kind, settle = self.page, a["action"], VAGON_SETTLE_S
+        if kind == "click":
+            x, y = image_point(a["point"], self.view)
+            await page.mouse.move(x, y, steps=6)
+            await page.mouse.click(x, y)
+            self.cursor = [x, y]
+        elif kind == "scroll":
+            await page.mouse.move(box[0] + box[2] / 2, box[1] + box[3] / 2)
+            sign, step = (1 if a["direction"] == "down" else -1), a["amount"] / 6
+            for _ in range(6):
+                await page.mouse.wheel(0, sign * step)
+                await asyncio.sleep(0.05)
+        elif kind == "type":
+            await self._vagon_focus()
+            await page.keyboard.type(a["text"], delay=VAGON_TYPE_DELAY_MS)
+            if a.get("submit"):
+                await page.keyboard.press("Enter")
+        elif kind == "key":
+            await self._vagon_focus()
+            await page.keyboard.press(a["key"])
+        elif kind in ("navigate", "search"):
+            url = a["url"] if kind == "navigate" else SEARCH_URL + quote_plus(a["query"])
+            await self._vagon_focus()
+            await page.keyboard.press("Control+l")        # the remote browser's address bar (Chrome, Edge, Firefox)
+            await asyncio.sleep(0.3)
+            await page.keyboard.type(url, delay=8)
+            await asyncio.sleep(0.1)
+            await page.keyboard.press("Enter")
+            settle = VAGON_NAV_SETTLE_S
+        elif kind == "back":
+            await self._vagon_focus()
+            await page.keyboard.press("Alt+ArrowLeft")
+            settle = VAGON_NAV_SETTLE_S
+        await asyncio.sleep(settle)
+
     # events from the page
     def _refused(self, what, url):
         self.refused.append(what)
         log(f"{what} refused")
-        self.events.append("blocked", what=what, url=str(url)[:200])
+        self.events.append("blocked", what=what, url=self._url_for_log(url))
 
     async def _on_dialog(self, dialog):
         record = {"type": dialog.type, "message": (dialog.message or "")[:200], "action": "dismissed",
@@ -1058,7 +1509,7 @@ class Desktop:
         self.blocked_count += 1
         self.blocked_nav.append((why, host))
         log(f"blocked redirect/navigation to {host} ({why})")
-        self.events.append("blocked", what="redirect", reason=why, url=url[:200])
+        self.events.append("blocked", what="redirect", reason=why, url=self._url_for_log(url))
         asyncio.ensure_future(self._blank())
 
     async def _blank(self):
@@ -1073,7 +1524,7 @@ class Desktop:
             return
         self.popups.append(page.url or "")
         log("popup closed")
-        self.events.append("blocked", what="popup", url=(page.url or "")[:200])
+        self.events.append("blocked", what="popup", url=self._url_for_log(page.url or ""))
         asyncio.ensure_future(self._close_quietly(page))
 
     @staticmethod
@@ -1099,7 +1550,7 @@ class Desktop:
                 if main:
                     self.blocked_nav.append((why, urlsplit(req.url).hostname or ""))
                     log(f"blocked navigation to {urlsplit(req.url).hostname} ({why})")
-                    self.events.append("blocked", what="navigation", reason=why, url=req.url[:200])
+                    self.events.append("blocked", what="navigation", reason=why, url=self._url_for_log(req.url))
                 return await route.abort("blockedbyclient")
             await route.continue_()
         except Exception:
@@ -1167,8 +1618,11 @@ class Desktop:
             raise DesktopUnavailable(f"{what} timed out")
 
     async def snapshot(self, obs=None):
-        """Raw observation of the page now. With `obs` the clickable elements are numbered and tagged in the DOM."""
+        """Raw observation of the page now. With `obs` the clickable elements are numbered and tagged in the DOM.
+        Vagon mode: the pixels of the stream page, `mode` and `remote_ready`, no text and no marks."""
         self._ready()
+        if self.vagon_mode:
+            return await self._vagon_snapshot(obs)
         info = None
         for attempt in (1, 2):
             try:
@@ -1235,6 +1689,8 @@ class Desktop:
 
     async def _do(self, a, errors):
         page, kind = self.page, a["action"]
+        if self.vagon_mode:
+            return await self._do_vagon(a, errors)
         if kind in ("navigate", "search"):
             url = a["url"] if kind == "navigate" else SEARCH_URL + quote_plus(a["query"])
             try:
@@ -1351,11 +1807,14 @@ class Desktop:
             return False
 
     async def _keys(self, events):
-        info = await self.focus_info()
-        why = field_blocked(info)
-        if why:
-            self.events.append("blocked", what="keyboard", reason=why)
-            return False
+        if self.vagon_mode:                               # no DOM fields to protect: the keys go to the stream
+            await self._vagon_focus()
+        else:
+            info = await self.focus_info()
+            why = field_blocked(info)
+            if why:
+                self.events.append("blocked", what="keyboard", reason=why)
+                return False
         for op, key in events:
             if op == "down":
                 held_mods = {mod_name(k) for k in self.held} - {None}
@@ -1390,14 +1849,21 @@ class Desktop:
         """/pc/input: text into the focused field ("\\n" presses Enter); False when nothing safe is focused."""
         if self.status != "ready" or self.page is None:
             return False
-        info = await self.focus_info()
-        if not info or not info.get("editable") or field_blocked(info):
-            return False
+        if self.vagon_mode:
+            if not self.vagon.connected:
+                return False
+            await self._vagon_focus()
+        else:
+            info = await self.focus_info()
+            if not info or not info.get("editable") or field_blocked(info):
+                return False
         for i, part in enumerate(text.split("\n")):
             if i:
                 await self.page.keyboard.press("Enter")
             part = "".join(c for c in part if c >= " " and c != "\x7f")
-            if part:
+            if part and self.vagon_mode:
+                await self.page.keyboard.type(part, delay=VAGON_TYPE_DELAY_MS)   # real key events for the stream
+            elif part:
                 await self.page.keyboard.insert_text(part)
         return True
 
@@ -1452,11 +1918,14 @@ class Runner:
         if self.privacy:
             return {"status": d.status, "ready": d.status == "ready", "paused": True, "output": "",
                     "last_command": None, "revision": None, "privacy": True}
-        display = d.display()
-        return {"status": d.status, "ready": d.status == "ready", "paused": False, "output": "",
+        display, mode = d.display(), getattr(getattr(d, "cfg", None), "pc_mode", "chromium")
+        view = {"status": d.status, "ready": d.status == "ready", "paused": False, "output": "",
                 "last_command": self.last_command, "commands": self.commands, "revision": display["revision"],
                 "display": display, "error": d.error, "restarts": d.restarts, "privacy": False,
-                "session": self.clock() < self.session_until}
+                "session": self.clock() < self.session_until, "pc_mode": mode}
+        if mode == "vagon":
+            view["vagon"] = d.vagon.public()
+        return view
 
     async def set_privacy(self, active, source="native"):
         if source not in self.privacy_sources:
@@ -1748,8 +2217,15 @@ async def serve(args):
     events = Events(data / "events.jsonl")
     cfg = Config(profile=data / "profile", display=args.display, width=args.size[0], height=args.size[1],
                  headless=args.headless, kiosk=not args.no_kiosk, allow_private=args.allow_private,
-                 proxy=args.proxy or "", chromium=args.chromium or "", start_url=args.start_url)
+                 proxy=args.proxy or "", chromium=args.chromium or "", start_url=args.start_url,
+                 pc_mode=args.pc_mode, vagon_url=getattr(args, "vagon_url", "") or "",
+                 vagon_api_key_file=getattr(args, "vagon_api_key_file", "") or "")
     desk = Desktop(cfg, events)
+    if cfg.pc_mode == "vagon":
+        key_status = api_key_file_status(cfg.vagon_api_key_file)
+        log(f"vagon mode: stream at {redact_url(cfg.vagon_url)}; API key file {key_status} (not used by the runner)")
+        if key_status == "permissive":
+            log("warning: the Vagon API key file is readable by other users; make it mode 0600")
     runner = Runner(desk, token, events, allow_private=args.allow_private)
     desk.on_change = runner.notify
     if args.home_origin:
@@ -1759,10 +2235,11 @@ async def serve(args):
     await site_runner.setup()
     await web.TCPSite(site_runner, args.host, args.port).start()
     desk.start()
-    log(f"start on http://{args.host}:{args.port} display={args.display} {cfg.width}x{cfg.height} "
+    log(f"start on http://{args.host}:{args.port} display={args.display} {cfg.width}x{cfg.height} mode={cfg.pc_mode} "
         f"profile={cfg.profile} events={events.path} home={'yes' if args.home_origin else 'no'}")
     events.append("start", host=args.host, port=args.port, display=args.display, size=[cfg.width, cfg.height],
-                  profile=str(cfg.profile), headless=cfg.headless, pid=os.getpid())
+                  profile=str(cfg.profile), headless=cfg.headless, pid=os.getpid(), pc_mode=cfg.pc_mode,
+                  **({"vagon_host": redact_url(cfg.vagon_url)} if cfg.pc_mode == "vagon" else {}))
     stop = asyncio.Event()
     for name in ("SIGINT", "SIGTERM"):
         try:
@@ -1802,9 +2279,37 @@ def main(argv=None):
     parser.add_argument("--headless", action="store_true", help="no X display (tests and CI)")
     parser.add_argument("--no-kiosk", action="store_true", help="show the browser window frame instead of the page only")
     parser.add_argument("--allow-private", action="store_true", help="TESTS ONLY: allow loopback/LAN pages and ports")
+    parser.add_argument("--pc-mode", choices=PC_MODES, default="chromium",
+                        help="chromium: browse itself (default); vagon: show the owner's Vagon Streams page")
+    parser.add_argument("--vagon-url", help="vagon mode: the stream link (prefer stream_url in the config file: a "
+                                            "command line is visible to other users); never logged beyond its host")
+    parser.add_argument("--vagon-config", help=f"vagon mode: JSON file {{schema: {VAGON_SCHEMA}, stream_url, "
+                                               f"api_key_file?}} (default <streamer-dir>/vagon.json)")
+    parser.add_argument("--streamer-dir", default=os.environ.get("STREAMER_DIR", DEFAULT_STREAMER_DIR),
+                        help="streamer state directory: holds vagon.json (env STREAMER_DIR)")
     args = parser.parse_args(argv)
     if args.host not in LOOPBACK:
         parser.error("the streamer desktop binds only to loopback")
+    flag_url, args.vagon_url, args.vagon_api_key_file = (args.vagon_url or "").strip(), "", ""
+    if args.pc_mode == "vagon":
+        config_path = Path(args.vagon_config).expanduser() if args.vagon_config else Path(args.streamer_dir).expanduser() / "vagon.json"
+        conf = {"stream_url": "", "api_key_file": ""}
+        if args.vagon_config or config_path.is_file():
+            try:
+                conf = load_vagon_config(config_path, args.allow_private)
+            except ValueError as error:
+                parser.error(f"{config_path}: {error}")
+        url = flag_url or conf["stream_url"]
+        if not url:
+            parser.error(f"vagon mode needs the owner's stream link: --vagon-url or stream_url in {config_path}")
+        why = vagon_url_problem(url, args.allow_private)
+        if why:
+            parser.error(f"stream link refused: {why}")   # the link itself is never echoed
+        args.vagon_url, args.vagon_api_key_file = url, conf["api_key_file"]
+        if args.start_url != "about:blank":
+            log("--start-url is ignored in vagon mode")
+    elif flag_url or args.vagon_config:
+        parser.error("--vagon-url and --vagon-config need --pc-mode vagon")
     if len(load_token(args.token_file)) < MIN_TOKEN:
         parser.error("set SUB01_ADMIN_TOKEN or --token-file (at least 12 characters)")
     data = Path(args.data_dir).expanduser().resolve()
