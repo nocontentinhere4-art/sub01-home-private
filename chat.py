@@ -206,7 +206,7 @@ def blocked(text, media=False, skip_links=False):
         return "no personal data"
     if (MEDIA_MONEY if media else MONEY).search(text):
         return "no requests for money"
-    if (MEDIA_RE if media else SLUR_RE).search(normalise(text)) or media and incitement(text):
+    if (MEDIA_RE if media else SLUR_RE).search(normalise(text)) or incitement(text):   # a call to violence: in chat too
         return "insults are not allowed"
     if money_talk(text, chat=not media) or money_talk(normalise(text), chat=not media):     # (also de-leeted)
         return "no trading or get-rich talk"
