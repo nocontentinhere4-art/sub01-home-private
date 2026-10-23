@@ -513,24 +513,48 @@ def test_live_server_records_accepted_chat_and_answers_a_moving_request_with_the
 
     ack = chat("1.1.1.1", "let's go to the park", "mika")                   # before the mode: the normal reaction path
     assert ack["reaction"] != S.STREAMING_LINE and live.life.impulse and live.life.impulse[0] == "park"
+    canned = chat("1.1.1.9", "hello from Rome", "ana")["reaction"]
+    assert canned == "Not doing that one. Ask me something else."            # ... with the canned line for a remark
     live.life.impulse = None
     live.streamer.start(t)
     ack = chat("1.1.1.2", "go for a walk to the park", "mika")
     assert ack["ok"] and ack["impulse"] == "activity" and ack["reaction"] == S.STREAMING_LINE and live.life.impulse is None
     assert [m for m in live.sent if m["type"] == "reaction"][-1]["text"] == S.STREAMING_LINE
+    n_reactions = len([m for m in live.sent if m["type"] == "reaction"])
     ack = chat("1.1.1.3", "show me the computer")
-    assert ack["reaction"] == S.AT_DESK_LINE
+    assert ack["reaction"] == "" and "reaction" in ack and ack["impulse"] == "activity"   # the agent does it: no canned line
     ack = chat("1.1.1.4", "are you reading something?")
-    assert ack["impulse"] == "reply_only"
+    assert ack["impulse"] == "reply_only" and ack["reaction"] == ""
+    assert chat("1.1.1.6", "hello from Lisbon", "ana")["reaction"] == ""     # "Not doing that one..." is never shown now
+    assert chat("1.1.1.7", "can you look up otters?", "kei")["reaction"] == ""   # the agent searches; the voice answers
+    assert len([m for m in live.sent if m["type"] == "reaction"]) == n_reactions   # nothing more spoken in the room
+    assert len([m for m in live.sent if m["type"] == "chat"]) >= 6               # the messages themselves are shown
     ws = WS()
     asyncio.run(live.handle_chat(ws, "1.1.1.2", "another one right away"))     # the rate limit: refused, so not in the ring
     assert ws.sent[-1]["ok"] is False
     ring = live.streamer.messages(0)
     assert [(m["nick"], m["text"], m["kind"]) for m in ring["messages"]] == [
-        ("mika", "let's go to the park", "request"), ("mika", "go for a walk to the park", "request"),
-        ("", "show me the computer", "request"), ("", "are you reading something?", "question")]
+        ("mika", "let's go to the park", "request"), ("ana", "hello from Rome", "other"),
+        ("mika", "go for a walk to the park", "request"), ("", "show me the computer", "request"),
+        ("", "are you reading something?", "question"), ("ana", "hello from Lisbon", "other"),
+        ("kei", "can you look up otters?", "request")]
     live.streamer.stop(t)
     assert chat("1.1.1.5", "take a stroll in the park")["reaction"] != S.STREAMING_LINE      # the mode is over: as before
+    assert chat("1.1.1.8", "hello from Oslo", "ana")["reaction"] == canned                   # ... canned line and all
+
+
+def test_room_reaction_keeps_only_the_honest_moving_refusal_while_streaming(tmp_path):
+    life, _ = desk_life()
+    mode = make_mode(tmp_path, life)
+    imp = parse("hello from Rome")
+    for line in (imp.reaction, S.AT_DESK_LINE, S.STREAMING_LINE, "I cannot open links yet.", ""):
+        assert mode.room_reaction(imp, line) == line                      # off the mode: untouched
+    mode.start(at(14))
+    assert mode.room_reaction(imp, imp.reaction) == ""
+    assert mode.room_reaction(parse("show me the computer"), S.AT_DESK_LINE) == ""
+    assert mode.room_reaction(parse("open formo.family"), "I cannot open links yet.") == ""
+    assert mode.room_reaction(parse("go to the park"), S.STREAMING_LINE) == S.STREAMING_LINE
+    assert mode.room_reaction(imp, "") == ""
 
 
 def test_no_vote_round_opens_while_streaming_and_the_next_one_opens_after(tmp_path, monkeypatch):

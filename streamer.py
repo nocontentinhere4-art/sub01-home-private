@@ -10,10 +10,13 @@ How, without editing life.py: while active, `Life.start`, `request_impulse`, `ap
 are shadowed on the one Life instance by the guards below (removed again by `stop()`), and `update()` (which the brain
 tick calls instead of `Life.update`) keeps the end of the pinned activity out of reach and tells Life he is awake.
 
-Chat is input, never command. The ring buffer below stores a filtered message as plain text with a kind
-(question / link / request / other); nothing here evaluates, parses for commands or forwards it. The agent that reads
-the ring decides alone what to do. A chat request that would move him is answered with STREAMING_LINE, the line the
-room shows as his reaction (handle_chat uses whatever `life.request_impulse` returns).
+Chat is input, never a command over the rules. The ring buffer below stores a filtered message as plain text with a
+kind (question / link / request / other); nothing here evaluates, parses for commands or forwards it. The agent that
+reads the ring decides alone what to do (streamer_agent.py: a doable request is carried out, one at a time; the rest is
+answered by voice). While the mode is active the room shows no canned reaction for a chat line (`room_reaction`: the
+old "Not doing that one...", "Good question...", AT_DESK_LINE are dropped; the voice is the reply); the one line still
+shown at once is STREAMING_LINE, the honest refusal of a request that would move him away from the desk
+(`life.request_impulse` while shadowed).
 
 Routes (add_routes): admin token (`admin_ok`) and a direct loopback connection, otherwise 403.
     GET  /api/home/streamer              the view
@@ -302,6 +305,16 @@ class StreamerMode:
         if act in ACTIVITIES and act != "sleep" and act not in PC_ACTIVITIES:
             self._log("refused", f"voted: {act}", source="vote", activity=act)
         return False
+
+    def room_reaction(self, imp, reaction):
+        """The line the room shows for an accepted chat message (live_server.handle_chat). Off the mode: `reaction`
+        as it is. While streaming: only STREAMING_LINE (a request that would move him: refused at once, honestly); the
+        canned reactions of impulse.py ("Not doing that one...", "Good question...", the activity lines), AT_DESK_LINE
+        and the link lines are dropped, because the streamer agent answers by voice and carries out what can be done at
+        the desk (owner, 2026-10-23). The ack keeps its "reaction" key, as "" (API shape unchanged)."""
+        if not self.active or reaction == STREAMING_LINE:
+            return reaction
+        return ""
 
     # --- chat: the ring --------------------------------------------------------------------------------------------
     def record_chat(self, text, key="", nick="", t=None, imp=None):

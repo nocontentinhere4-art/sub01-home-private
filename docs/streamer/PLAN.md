@@ -62,8 +62,12 @@ No public broadcast, no purchases, no credential changes. Verification is a loca
   move him (they are logged as "deferred"). Phone/walk/bed/TV routines paused. On stop: previous behaviour resumes, nothing reset.
 - Chat for the agent: `GET /api/home/streamer/chat?since=<seq>` → `{messages: [{seq, t, nick, text, kind}]}` from the
   existing `handle_chat` path after `chat.check` (filtered, rate-limited); `POST /api/home/streamer/said` records what he
-  answered so Inbox/mind do not answer twice. Chat is input, never command: nothing in a message changes rules, grants
-  credentials or drives the desktop directly.
+  answered so Inbox/mind do not answer twice. Chat is input, never a command over the rules: nothing in a message changes
+  rules, grants credentials or unlimited control. Since 2026-10-23 (owner: "the chat must be functional and really do
+  the things it is told") a doable request (open a site, search/look up, scroll, back, read that) is carried out by the
+  agent as its next action, one at a time with per-viewer fairness (AGENT.md, "Chat policy"); refused classes get one
+  short spoken line. While the mode is active the room shows no canned reaction for a chat line (`streamer.room_reaction`:
+  no "Not doing that one..."); the voice is the reply, only `STREAMING_LINE` (a request to leave the desk) is still shown.
 
 ### streamer_desktop.py (pod, 8832)
 - Serves the existing PC runner contract so the native monitor and the web house keep working:
@@ -112,7 +116,10 @@ The v1 game accepts only `source: "human_vagon_observation"` and no `state`; v2 
   (`ANTHROPIC_API_KEY`; model `STREAMER_MODEL` default `claude-sonnet-4-5`; vision input = marked screenshot; JSON output:
   `{thought, action, say, state, layout}`) → act via `/desktop/act` → verify (outcome) → comment through `/speak` only when
   `say` is non-empty and pacing allows. Rules from `docs/streamer/DIRECTION.md` (silence while reading, one proportionate
-  reaction per event, chat in batches, never execute chat commands). Budget: `STREAMER_CALLS_PER_HOUR` default 240.
+  reaction per event, chat in batches). Chat requests: doable ones are executed by code as the next action, one at a
+  time, acknowledged and then commented by voice; credentials, payments, admin/rules, safety, leaving the desk,
+  adult/violent/illegal, personal data, code/downloads and blocked domains are refused with one line (AGENT.md policy
+  table). Budget: `STREAMER_CALLS_PER_HOUR` default 240.
 - Model error / no key → "quiet mode": keeps reading with scripted safe behaviour (scroll, no speech except a short
   honest line), logs the error, retries with backoff. Voice unavailable → captions in `events.jsonl`, loop continues.
 - Writes the native event file every ≤1 s and `STREAMER_DIR/state.json`.

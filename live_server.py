@@ -669,6 +669,8 @@ class Live:
             named = Impulse("activity", "listen_music", None, IMPULSE_REACTIONS["listen_music"], f"asked in chat: play {song}")
             reaction = self.life.request_impulse(named, t) or named.reaction
             imp = named
+        if self.streamer and self.streamer.active:         # streaming: the agent answers by voice; no canned line in the room
+            reaction = self.streamer.room_reaction(imp, reaction)
         shown_nick, _ = clean_nick(nick)                   # the reaction is public: the nickname is cleaned as in enqueue_chat
         ack.update(reaction=reaction, impulse=imp.kind)
         if self.spiking:                                   # no-op when no GPU pod is connected
