@@ -35,12 +35,18 @@
   .fill { height:100%; background:linear-gradient(90deg,#5a189a,#ff6a00); width:0; transition:width .4s; }
   #log div { font-size:12px; padding:3px 0; border-bottom:1px solid #111118; }
   #log span { color:var(--dim); margin-right:6px; }
-  #chat { font-size:12px; max-height:180px; overflow-y:auto; }
-  #chat div { padding:3px 0; border-bottom:1px solid #111118; }
-  form { display:flex; gap:6px; }
+  #chat { font-size:12px; max-height:180px; overflow-y:auto; overflow-wrap:anywhere; }
+  #chat .ln { padding:3px 0; border-bottom:1px solid #111118; }
+  #chat .tm, #chat .who { color:var(--dim); }
+  #chat .rx { color:var(--or); }
+  #f { display:flex; flex-direction:column; gap:6px; }
+  #f .row { display:flex; gap:6px; }
+  #nick { flex:none; }
   input { flex:1; background:#0c0c12; color:var(--fg); border:1px solid #2a2a36; padding:8px; font:inherit; font-size:12px; }
-  form button { background:var(--fg); color:#0a0a0a; border:0; padding:0 12px; font:inherit; font-size:12px; }
+  #f button { background:var(--fg); color:#0a0a0a; border:0; padding:0 12px; font:inherit; font-size:12px; min-width:76px; }
+  #f button[aria-disabled="true"] { opacity:.45; cursor:default; }
   #ack { font-size:11px; color:var(--dim); min-height:1.2em; }
+  #ack.err { color:#ff8a7a; }
   #note { font-size:10px; color:#55556a; }
   #music .mu { display:flex; gap:8px; align-items:center; margin-bottom:6px; font-size:12px; }
   #music .mu img { width:44px; height:44px; border-radius:4px; flex:none; object-fit:cover; }
@@ -107,9 +113,12 @@
     <div><div class="lbl">Today</div><div id="log"></div></div>
     <div><div class="lbl">His screens</div><div id="screens">…</div><div id="scr-music"></div><div id="scr-tt"></div></div>
     <div><div class="lbl">Talk to it · messages become desires and stimuli</div>
-      <div id="chat"></div>
-      <form id="f"><input id="in" maxlength="280" placeholder="e.g. go and buy some bread" autocomplete="off"><button>send</button></form>
-      <div id="ack"></div>
+      <div id="chat" role="log"></div>
+      <form id="f" autocomplete="off">
+        <input id="nick" maxlength="16" placeholder="nickname (optional)" aria-label="nickname">
+        <div class="row"><input id="in" maxlength="280" placeholder="e.g. go and buy some bread" aria-label="message"><button id="send" type="submit" aria-disabled="true">send</button></div>
+      </form>
+      <div id="ack" role="status"></div>
     </div>
     <div id="neurons"></div>
     <div id="note">It decides with its own needs and brain state: a suggestion makes an activity more likely, it does not command it. Phone: the real screen of his phone's browser (shown only when there is one); public TikTok videos play in TikTok's official embed player, muted, no autoplay.</div>
@@ -121,6 +130,178 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="/neurons.js"></script>
+<script id="chat-js">
+// ---------------- chat: what a viewer sees in it and what they send from it ----------------
+// Its own block so tests/js/life_chat_check.mjs can run this exact code against a fake DOM, a fake WebSocket and a fake
+// clock. connect() hands each socket to attach() and routes chat, reaction and chat_ack messages to onMessage().
+// Server text only goes in with textContent: a message is never read as HTML.
+const LifeChat = (() => {
+  const LINES = 40;                                 // lines kept: the log, and the model the desk screen draws from
+  const RATE_MS = 10000;                            // one message per 10 s per viewer (chat.RATE_S)
+  const RATE_REASON = /^one message every \d+ s$/;  // the server's refusal for that limit
+  const NICK_MAX = 16;                              // chat.NICK_MAX (the nickname field stops there too)
+  const TEXT_MAX = 280;                             // chat.MAX_LEN
+  const MATCH_MS = 10000;                           // an ack copy and its broadcast copy of a reaction meet within this time
+  const FALLBACK_MS = 2000;                         // an ack copy shows alone only when its broadcast copy has not come by then
+  const NICK_KEY = "sub01.life.nick";               // localStorage: the nickname last used here (a convenience, not state)
+  const WHY = {duplicate: "that exact text was just said here, say it another way"};
+
+  let env = null, el = null;
+  let lines = [];          // {kind: "chat" | "rx", t, text, nick}, oldest first, at most LINES
+  let lastChatKey = null;  // the last chat line shown (time + text): a hello's backlog resumes after it
+  let reactions = [];      // {text, t, nick, at, shown}: reactions from our own acks, awaiting their broadcast copy
+  let cooldownUntil = 0;   // the page's, not the socket's: the server's limit is per viewer, so a reconnect does not reset it
+  let current = null;      // the socket in use: {ws, pending}; pending = our messages no chat_ack has answered yet, oldest first
+  let ackFades = false;    // the ack line clears itself once the rate-limit wait is over
+  let connNote = false;    // the ack line says the connection dropped until the next open
+
+  const str = v => (v == null ? "" : String(v));
+  const keyOf = l => `${l.t}\u0001${l.text}`;
+  const secs = ms => Math.ceil(ms / 1000);
+  function cleanNick(v){ return Array.from(str(v).replace(/\s+/g, " ").trim()).slice(0, NICK_MAX).join("").trim(); }
+  function loadNick(){ try { return cleanNick(env.storage.getItem(NICK_KEY)); } catch (e) { return ""; } }
+  function saveNick(v){ try { env.storage.setItem(NICK_KEY, cleanNick(v)); } catch (e) { /* storage blocked: not remembered */ } }
+  function setAck(text, err, fades){ el.ack.textContent = text; el.ack.className = err ? "err" : ""; ackFades = !!fades; }
+
+  // one socket = one attach(): its unanswered messages start at zero, whatever the socket before it left behind
+  function attach(ws){ current = {ws, pending: []}; return current; }
+  function opened(sock){
+    if (sock === current && connNote) { connNote = false; setAck(""); }
+    refresh();
+  }
+  function closed(sock){
+    if (sock !== current) return;
+    connNote = true;
+    if (sock.pending.length) {                      // its answer will not come: he may or may not have heard it
+      sock.pending = [];
+      cooldownUntil = Math.max(cooldownUntil, env.now() + RATE_MS);   // the server may have counted it already
+      setAck("connection dropped: your last message may not have been sent", true);
+    } else setAck("reconnecting…", true);
+    refresh();
+  }
+
+  function submit(){
+    const text = el.msg.value.trim(), sock = current, now = env.now();
+    if (!text) { el.msg.focus(); return; }
+    if (Array.from(text).length > TEXT_MAX) { setAck(`not sent: max ${TEXT_MAX} characters`, true); return; }
+    if (!sock || sock.ws.readyState !== 1) { setAck("not connected yet: reconnecting…", true); return; }
+    if (sock.pending.length) { setAck("waiting for the answer to your last message", true); return; }
+    if (now < cooldownUntil) { setAck(`not sent: one message every ${RATE_MS / 1000} s`, true, true); return; }
+    const nick = cleanNick(el.nick.value);
+    saveNick(nick);
+    try { sock.ws.send(JSON.stringify({type: "chat", text, nick})); }
+    catch (e) { setAck("not sent: the connection is not ready", true); return; }
+    sock.pending.push({text, nick});
+    setAck("sending…", false);
+    refresh();
+  }
+
+  function onAck(sock, m){
+    const now = env.now(), sent = sock.pending.shift();   // the server answers each message on its socket, in the order sent
+    if (m.ok) {
+      cooldownUntil = now + RATE_MS;                      // counted from the ack, which comes after the server counted the message
+      if (sent && el.msg.value.trim() === sent.text) el.msg.value = "";   // (text edited while it waited stays)
+      const quiet = m.will_reply === false && m.reason;   // queued for his reply, but he may not get to it just now
+      setAck(quiet ? `sent · no reply just now (${m.reason})` : "sent — it heard you", false);
+      if (sent && m.reaction) ownReaction(sent, m);
+    } else {
+      const reason = str(m.reason) || "not sent";
+      if (RATE_REASON.test(reason) || reason === "duplicate") cooldownUntil = now + RATE_MS;   // the server counted these
+      setAck(`not sent: ${WHY[reason] || reason}`, true, RATE_REASON.test(reason));
+    }
+    refresh();
+  }
+
+  // A reaction to our own message comes twice: the ack copy, then the broadcast copy (on this socket the server sends the ack
+  // first, then the chat line, then the reaction). The broadcast copy is the line shown, so it lands after the message. The
+  // ack copy shows alone only when its broadcast copy never came (a congested socket is skipped for chat and reactions).
+  function ownReaction(sent, m){
+    const now = env.now();
+    reactions = reactions.filter(r => now - r.at <= MATCH_MS);
+    reactions.push({text: str(m.reaction), t: str(m.t), nick: typeof m.nick === "string" ? m.nick : sent.nick, at: now, shown: false});
+  }
+  function fallbacks(){
+    const now = env.now();
+    for (const r of reactions) if (!r.shown && now - r.at >= FALLBACK_MS) { r.shown = true; append([{kind: "rx", t: r.t, text: r.text, nick: r.nick}]); }
+  }
+  function onReaction(m){
+    const now = env.now(), text = str(m.text), t = str(m.t), nick = str(m.nick);
+    reactions = reactions.filter(r => now - r.at <= MATCH_MS);
+    // same text and time, and the same nickname (or the server blanked ours): anyone else's reaction is a line of its own
+    const k = reactions.findIndex(r => r.text === text && r.t === t && (r.nick === nick || (nick === "" && r.nick !== "")));
+    if (k >= 0) { const [r] = reactions.splice(k, 1); if (r.shown) return; }   // (already on screen from its ack copy)
+    append([{kind: "rx", t, text, nick}]);
+  }
+
+  function onMessage(sock, m){
+    if (m.type === "chat") {
+      if (m.text) { const line = {kind: "chat", t: str(m.t), text: str(m.text), nick: ""}; lastChatKey = keyOf(line); append([line]); }
+      return true;
+    }
+    if (m.type === "reaction") { if (m.text) onReaction(m); return true; }
+    if (m.type === "chat_ack") { onAck(sock, m); return true; }
+    return false;
+  }
+
+  // the hello carries the server's last messages, oldest first, and every reconnect sends them again: only the ones after
+  // the last line on screen are new, so nothing shows twice and nothing is missed
+  function backlog(list){
+    const items = (Array.isArray(list) ? list : []).map(x => ({kind: "chat", t: str(x && x.t), text: str(x && x.text), nick: ""}))
+      .filter(x => x.text);
+    let from = 0;
+    if (lastChatKey !== null) for (let i = items.length - 1; i >= 0; i--) if (keyOf(items[i]) === lastChatKey) { from = i + 1; break; }
+    const fresh = items.slice(from);
+    if (fresh.length) { lastChatKey = keyOf(fresh[fresh.length - 1]); append(fresh); }
+  }
+
+  function append(list){
+    const c = el.chat, d = env.doc;
+    const atEnd = c.scrollHeight - c.scrollTop - c.clientHeight < 8;   // someone reading older lines keeps their place
+    for (const line of list) {
+      lines.push(line);
+      const row = d.createElement("div");
+      row.className = line.kind === "rx" ? "ln rx" : "ln";
+      const tm = d.createElement("span"); tm.className = "tm"; tm.textContent = `${line.t} `; row.appendChild(tm);
+      if (line.kind === "rx") { const who = d.createElement("span"); who.textContent = "SUB-01: "; row.appendChild(who); }
+      const tx = d.createElement("span"); tx.textContent = line.text; row.appendChild(tx);
+      if (line.nick) { const nk = d.createElement("span"); nk.className = "who"; nk.textContent = ` — ${line.nick}`; row.appendChild(nk); }
+      c.appendChild(row);
+    }
+    lines = lines.slice(-LINES);
+    while (c.children.length > LINES) c.removeChild(c.children[0]);   // the page keeps the same LINES as the model
+    if (atEnd) c.scrollTop = c.scrollHeight;
+  }
+
+  // the last lines for the desk screen (the reactions carry SUB-01's prefix there, as on the page)
+  function recent(n){ return lines.slice(-n).map(l => ({t: l.t, text: l.kind === "rx" ? `SUB-01: ${l.text}` : l.text})); }
+
+  // the send button shows the state: connecting / offline / sending… / wait N s / send. It is aria-disabled, not disabled,
+  // so Enter still reaches submit() and the viewer is told why nothing was sent.
+  function refresh(){
+    if (!el) return;
+    fallbacks();
+    const now = env.now(), sock = current, open = !!sock && sock.ws.readyState === 1, left = Math.max(0, cooldownUntil - now);
+    const busy = open && sock.pending.length > 0;
+    const label = !open ? (!sock || sock.ws.readyState === 0 ? "connecting" : "offline")
+      : busy ? "sending…" : left > 0 ? `wait ${secs(left)} s` : "send";
+    if (el.send.textContent !== label) el.send.textContent = label;
+    el.send.setAttribute("aria-disabled", open && !busy && left === 0 ? "false" : "true");
+    if (ackFades && left === 0) setAck("");
+  }
+
+  function init(opts){
+    env = opts;
+    el = {chat: env.doc.getElementById("chat"), form: env.doc.getElementById("f"), msg: env.doc.getElementById("in"),
+      nick: env.doc.getElementById("nick"), send: env.doc.getElementById("send"), ack: env.doc.getElementById("ack")};
+    el.nick.value = loadNick();
+    el.nick.addEventListener("input", () => saveNick(el.nick.value));
+    el.form.addEventListener("submit", ev => { ev.preventDefault(); submit(); });
+    env.every(250, refresh);
+    refresh();
+  }
+  return {init, attach, opened, closed, onMessage, backlog, recent, submit};
+})();
+</script>
 <script>
 // "Neurons" panel in the side column: 1M simulated spiking neurons (a model, not a mind)
 Neurons.init({mount: document.getElementById("neurons"), open: true});
@@ -238,13 +419,12 @@ const zzz = label("z z z", "rgba(0,0,0,0)", "#bcd0ff", 0.8, 0.25); zzz.visible =
 // the model only and are never drawn on a screen ----------------
 const deskCv = document.createElement("canvas"); deskCv.width = 512; deskCv.height = 300;
 const deskTex = new THREE.CanvasTexture(deskCv);
-const chatLines = [];
 function drawChat(cv){
   const x = cv.getContext("2d"), W = cv.width, H = cv.height;
   x.fillStyle = "#0a0a10"; x.fillRect(0, 0, W, H); x.fillStyle = "#ff6a00"; x.fillRect(0, 0, W, 44);
   x.fillStyle = "#0a0a0a"; x.font = "bold 24px Menlo, monospace"; x.fillText("chat", 12, 30);
   x.font = "20px Menlo, monospace"; let y = 80;
-  for (const m of chatLines.slice(-9)) { x.fillStyle = "#9a9aae"; x.fillText(m.t || "", 12, y); x.fillStyle = "#ececf2";
+  for (const m of LifeChat.recent(9)) { x.fillStyle = "#9a9aae"; x.fillText(m.t || "", 12, y); x.fillStyle = "#ececf2";
     const words = m.text.split(" "); let line = ""; y += 26;
     for (const w of words) { if ((line + w).length > 26) { x.fillText(line, 12, y); y += 24; line = ""; } line += w + " "; }
     x.fillText(line, 12, y); y += 34; if (y > H - 20) break; }
@@ -293,31 +473,25 @@ const shown = {x: 1.6, z: 1.3, h: 0};
 let wsAttempts = 0;
 function connect(){
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
-  let unanswered = 0;                                  // chat messages this socket sent that no chat_ack has answered yet
-  ws.onopen = () => { wsAttempts = 0; };
+  const sock = LifeChat.attach(ws);                   // this socket's own chat state: a reconnect starts with nothing unanswered
+  ws.onopen = () => { wsAttempts = 0; LifeChat.opened(sock); };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === "spiking") { Neurons.onMessage(m); return; }
-    if (m.type === "hello") { if (m.world && !world) buildWorld(m.world); (m.chat || []).forEach(addChat); return; }
-    if (m.type === "chat") { addChat(m); return; }
-    if (m.type === "reaction") { if (m.text) showReaction(m.text, "broadcast", m.t); return; }
+    if (m.type === "hello") { if (m.world && !world) buildWorld(m.world); LifeChat.backlog(m.chat); return; }
+    if (LifeChat.onMessage(sock, m)) return;          // chat, reaction, chat_ack
     if (m.type === "music") { if (m.playing) showMusic(m); else if (musicNow && musicNow.id === m.id) showMusic(null); return; }
-    if (m.type === "chat_ack") {                       // an ack has no text or id: the server answers each message on the socket that sent it, in order
-      const ours = unanswered > 0; if (ours) unanswered--;
-      document.getElementById("ack").textContent = m.ok ? "sent — it heard you" : "not sent: " + m.reason;
-      if (ours && m.reaction) showReaction(m.reaction, "ack", m.t); return; }
     if (m.type === "eye") { if (m.thought) document.getElementById("thought").textContent = `“${m.thought}”`; return; }
     if (m.type !== "tick") return;
     stage = (m.sleep && m.sleep.stage) || "AWAKE"; clock = (m.sleep && m.sleep.clock) || clock;
     if (m.life) onLife(m.life, m.sleep);
   };
   ws.onclose = () => {
+    LifeChat.closed(sock);
     const cap = Math.min(1500 * 2 ** wsAttempts, 60000);
     wsAttempts++;
     setTimeout(connect, cap / 2 + Math.random() * cap / 2);
   };
-  document.getElementById("f").onsubmit = ev => { ev.preventDefault(); const i = document.getElementById("in");
-    if (i.value.trim()) { ws.send(JSON.stringify({type: "chat", text: i.value})); unanswered++; } i.value = ""; };
 }
 // music (#68): his brain model picks; Spotify's official embed, played on the visitor's own device (never by the server)
 let musicNow = null, musicEmbed = "";
@@ -332,19 +506,6 @@ function showMusic(m){
   $m("mu-why").textContent = [m.reason, m.why].filter(Boolean).join(" · ");
 }
 fetch("/api/music").then(r => r.json()).then(d => { if (d.now) showMusic(d.now); }).catch(() => {});
-function addChat(m){ chatLines.push(m); if (chatLines.length > 40) chatLines.shift();
-  const d = document.createElement("div"); d.textContent = [m.t, m.text].filter(Boolean).join(" "); const c = document.getElementById("chat"); c.appendChild(d); c.scrollTop = 1e9; }
-// A reaction shows once. Everyone gets it as a broadcast, and this page's own chat_ack can carry the same reaction; the
-// server may send either first. Each copy cancels one copy of the same text from the other source that came within 10 s.
-const reactionCopies = [];                            // {text, src, at}, oldest first
-function showReaction(text, src, t){
-  const now = Date.now();
-  while (reactionCopies.length && now - reactionCopies[0].at > 10000) reactionCopies.shift();
-  const k = reactionCopies.findIndex(r => r.text === text && r.src !== src);
-  if (k >= 0) { reactionCopies.splice(k, 1); return; }     // the other copy is already on screen
-  reactionCopies.push({text, src, at: now});
-  addChat({t, text: `SUB-01: ${text}`});
-}
 
 let lastLog = "";
 // ---------------- the real neighbourhood: live map (OpenStreetMap) + real street footage ----------------
@@ -523,6 +684,8 @@ function animate(t){
   controls.update(); renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
+LifeChat.init({doc: document, storage: (() => { try { return localStorage; } catch (e) { return null; } })(),
+  now: () => Date.now(), every: (ms, fn) => setInterval(fn, ms)});
 connect();
 </script>
 </body>
