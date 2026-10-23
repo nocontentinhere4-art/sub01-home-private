@@ -460,8 +460,7 @@ def test_links_are_capped_per_hour_for_all_viewers_together(live, pc):
     assert len(pc.named("open")) <= 20
 
 
-@xfail("SUB01-S01", "no per-viewer cap: the chat limit of one message per 10 s allows 360 links an hour from one address")
-def test_one_viewer_gets_a_few_links_an_hour(live, pc):
+def test_one_viewer_gets_a_few_links_an_hour(live, pc):           # S01 per-viewer cap: handle_chat passes the viewer's key
     pc.state = "ready"
     now = [1000.0]
     live.limiter.clock = lambda: now[0]
