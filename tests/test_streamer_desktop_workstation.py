@@ -978,3 +978,15 @@ def test_operator_console_page_works_behind_a_path_prefix_in_a_real_browser(tmp_
                 await pw.stop()
                 await proxy.close()
     run(body())
+
+
+# ---- money and trial controls are never pressed on the workstation page (Kimi review, 2026-10-23) -------------------
+def test_workstation_chooser_never_presses_trial_or_money_controls():
+    import scripts.streamer_desktop as sd
+    money = [{"label": "Start trial"}, {"label": "Start free trial"}, {"label": "Buy credits"}, {"label": "Add funds"},
+             {"label": "Subscribe"}, {"label": "Checkout"}, {"label": "Payment method"}, {"label": "Top up wallet"}]
+    assert sd.choose_workstation_button(money) == (None, None)
+    index, kind = sd.choose_workstation_button(money + [{"label": "Run"}])
+    assert (index, kind) == (len(money), "start")
+    index, kind = sd.choose_workstation_button([{"label": "Start trial"}, {"label": "Connect"}, {"label": "Start"}])
+    assert (index, kind) == (1, "connect")

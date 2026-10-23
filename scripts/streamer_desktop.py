@@ -577,7 +577,9 @@ VAGON_WS_START_RX = re.compile(r"\b(run|start|turn on|power on|boot( up)?|wake( 
 VAGON_WS_CONNECT_RX = re.compile(r"\b(connect|open|enter|launch|join|resume|go to (my |the )?(computer|desktop|workstation))\b", re.I)
 VAGON_WS_NEVER_RX = re.compile(r"\b(stop|shut ?down|turn off|power off|delete|remove|reset|restart|reboot|sign ?out|log ?out|"
                                r"invite|cancel|terminate|destroy|format|wipe|change|edit|rename|settings?|billing|team|members?|"
-                               r"profile|account|help|support|docs?|download|install|upgrade|plans?|storage|files?|new tab)\b", re.I)
+                               r"profile|account|help|support|docs?|download|install|upgrade|plans?|storage|files?|new tab|"
+                               r"trial|buy|purchase|pay(ment)?|subscribe|subscription|checkout|credits?|top ?up|add funds|"
+                               r"card|wallet|order)\b", re.I)   # money/trial controls are never pressed (Kimi review, 2026-10-23)
 VAGON_WS_STARTING_RX = re.compile(r"(turning|powering|switching|starting|booting|waking) (on|up)|is starting|"
                                   r"starting (your |the )?(computer|machine|workstation|pc)|getting (your |the )?(computer|machine|pc) ready|"
                                   r"preparing|initializ|please wait", re.I)
