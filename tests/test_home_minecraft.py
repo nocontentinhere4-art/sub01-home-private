@@ -151,7 +151,10 @@ def test_chat_request_reaches_the_tv_and_an_offline_console_falls_back_to_pong(t
     from live_server import Live
     monkeypatch.setenv("HOME_ENABLED", "1")
     monkeypatch.setenv("SUB01_MINECRAFT", "1")
-    live = Live("m", True, time_scale=1, data_dir=tmp_path)
+    from datetime import datetime
+    from sleep import TZ
+    start = datetime(2026, 10, 2, 10, 0, tzinfo=TZ).timestamp()      # mid-morning: the console is not refused at night
+    live = Live("m", True, time_scale=1.000001, data_dir=tmp_path, start=start)   # 1.0 ignores start
     live.engine.stage = "AWAKE"
     live.life.start("research", live.clock.now(), "test fixture")
     live.life.path = []
@@ -179,9 +182,9 @@ def test_chat_request_reaches_the_tv_and_an_offline_console_falls_back_to_pong(t
     asyncio.run(live.minecraft.agent_step(live.home, {}))
     assert live.home.console_game == "pong"
     assert live.minecraft.view()["fallback"]["reason"] == live.minecraft.error
-    # A later "play pong" is a named wish: it is honoured when the console activity (re)starts.
+    # A later "play pong" is a named wish: at the console (or on the way there) the TV switches at once.
     asyncio.run(live.handle_chat(WS(), "viewer-b", "switch to pong"))
-    assert live.life.console_wish[0] == "pong"
+    assert live.life.console_wish is None and live.life.console_choice[0] == "pong"
 
 
 def test_isolated_game_ports_keep_main_instance_separate(tmp_path,monkeypatch):

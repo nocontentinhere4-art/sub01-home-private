@@ -412,7 +412,8 @@ class Live:
             self.life.arrival_check = self.activity_arrived
         self.computer = Computer(data_dir) if self.home_enabled else None
         self.minecraft = MinecraftConsole(data_dir) if self.home_enabled else None
-        if self.minecraft and self.minecraft.enabled and "console_game" not in home_state:
+        if (self.minecraft and self.minecraft.enabled and not self.minecraft.requirements()
+                and "console_game" not in home_state):          # an incomplete runtime starts on Pong, not a blank TV
             self.home.console_game = "minecraft"
         elif self.home and not self.minecraft.enabled and self.home.console_game == "minecraft":
             self.home.console_game = "pong"
