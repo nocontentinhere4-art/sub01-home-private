@@ -27,6 +27,7 @@ import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { createMinecraftFrameFeed, actionErrorMessage } from "./device_requests.mjs?v=1";
+import { computerScreenLines, computerPanelText, browserUnavailableMessage, wrapLines } from "./computer_screen.mjs?v=1";
 import { createPhoneScreen } from "./phone_screen.mjs?v=1";
 import { createDeviceRevisions } from "./device_revisions.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
@@ -1802,12 +1803,6 @@ function notice(text) {
   clearTimeout(notice.timer);
   notice.timer = setTimeout(() => (n.style.display = "none"), 5000);
 }
-function terminalOutput() {
-  return (computerState.output || "Connecting to his Linux computer…")
-    .replace(/\r/g, "")
-    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "")
-    .replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "");
-}
 function operatorToken() {
   return sessionStorage.getItem("sub01-operator-token") || "";
 }
@@ -1832,7 +1827,10 @@ async function mutate(action, data) {
     }
     const result = await response.json();
     if (result.ok === false) {
-      notice("This device is not ready yet. Try again after it connects.");
+      // The computer route says why it is not ready (guest not installed, booting, worker exited).
+      const why = typeof result.error === "string" && result.error ? result.error : "";
+      const hint = typeof result.hint === "string" && result.hint ? " " + result.hint : "";
+      notice(why ? "Not ready: " + why + "." + hint : "This device is not ready yet. Try again after it connects.");
       return false;
     }
     return result;
@@ -1952,7 +1950,8 @@ function browserFrame(device, parent) {
       image.hidden = !state.frameId;
       message.hidden = !!state.frameId;
       if (!state.frameId) message.textContent = state.loading
-        ? 'Loading his current browser page…' : 'His browser has no current public page to show.';
+        ? 'Loading his current browser page…'
+        : browserUnavailableMessage(browserState, 'His browser has no current public page to show.');
     },
     onFeedback: text => { message.textContent = text; message.hidden = false; notice(text); },
     onStatus: status => {
@@ -2065,9 +2064,8 @@ function renderPanel(reset = false) {
     const pageLabel = document.getElementById('browser-page-label');
     if (pageLabel) pageLabel.textContent = browserScreen?.title
       ? 'On screen: ' + browserScreen.title : '';
-    if (terminal)
-      terminal.textContent =
-        terminalOutput() + "\n\n[" + (computerState.status || "offline") + "]";
+    // Output, or the honest placeholder, then "[status] summary" and the fix the server names.
+    if (terminal) terminal.textContent = computerPanelText(computerState);
   } else if (panelKind === "pong") {
     title.textContent = "Wall TV / " + (tvGame === "minecraft" ? "Minecraft" : tvGame === "chess" ? "Chess" : "Pong");
     if (reset) {
@@ -2658,14 +2656,18 @@ function drawComputer() {
   );
   sx.fillStyle = "#b7d9c4";
   sx.font = "15px monospace";
-  const lines = terminalOutput().split("\n").slice(-29);
+  // Guest output when there is any; otherwise the honest state (guest not installed,
+  // booting, worker exited) with the fix, so the monitor is never black or a fake shell.
+  const lines = computerScreenLines(computerState, 29);
   lines.forEach((l, i) => sx.fillText(l.slice(0, 105), 28, 68 + i * 17));
   st.needsUpdate = true;
 }
-function paintBrowserUnavailable(message = 'His browser has no public page to show right now.') {
+function paintBrowserUnavailable(message) {
+  // No wording given: name the browser's real state (off with BROWSE=0, restarting, idle).
+  message ??= browserUnavailableMessage(browserState, 'His browser has no public page to show right now.');
   sx.fillStyle = '#10201a'; sx.fillRect(0, 0, 1024, 600);
   sx.fillStyle = '#cbd6c8'; sx.font = '24px sans-serif'; sx.textAlign = 'left';
-  sx.fillText(message, 32, 300);
+  wrapLines(message, 70).slice(0, 4).forEach((line, i) => sx.fillText(line, 32, 270 + i * 34));
   st.needsUpdate = true;
 }
 deskBitmapPainter = createOwnedBitmapPainter({
@@ -2823,7 +2825,10 @@ function connect() {
     try {
       const m = JSON.parse(e.data);
       if (m.type === 'chat_ack')
-        finishImpulse(m.ok === true, m.ok ? 'Impulse received. He chooses what to do.' : 'Impulse not accepted. Edit it and try again.');
+        // The server's in-character reaction (impulse.py) says at once what he does with it.
+        finishImpulse(m.ok === true, m.ok
+          ? (typeof m.reaction === 'string' && m.reaction ? m.reaction : 'Impulse received. He chooses what to do.')
+          : 'Impulse not accepted. Edit it and try again.');
       if (m.type === "chess") {
         chessState = { ...chessState, game: m };
         drawTV();

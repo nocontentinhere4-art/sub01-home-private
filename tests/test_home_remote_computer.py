@@ -63,7 +63,33 @@ def test_gui_agent_does_not_claim_unrendered_serial_commands(tmp_path):
             raise RuntimeError('offline')
         c.request = unavailable
         await c.refresh()
-        assert c.view()['ready'] is False and c.output == ''
+        view = c.view()
+        assert view['ready'] is False and c.output == ''
+        # The house says what to check, like the local guest does (same summary/hint contract).
+        assert view['status'] == 'unavailable' and view['summary'] == view['error']
+        assert 'home_pc_runner.py' in view['hint'] and 'http://127.0.0.1:8811' in view['hint']
+    asyncio.run(check())
+
+
+def test_remote_availability_transitions_are_logged_once(tmp_path, capsys):
+    async def check():
+        c = client(tmp_path)
+        async def down(*args):
+            raise RuntimeError('connection refused')
+        c.request = down
+        await c.refresh()
+        await c.refresh()
+        async def up(method, path, data=None):
+            return json.dumps({'ready': True, 'paused': True, 'status': 'ready', 'output': '~# ',
+                               'summary': 'Buildroot Linux / x86 · paused while he is away from the desk',
+                               'display': {'kind': 'serial', 'available': False}}).encode()
+        c.request = up
+        await c.refresh()
+        assert c.view()['summary'] == 'Buildroot Linux / x86 · paused while he is away from the desk'
+        assert c.view()['hint'] == ''
+        out = capsys.readouterr().out
+        assert out.count('is unavailable (RuntimeError: connection refused)') == 1
+        assert out.count('answers (guest status: ready)') == 1
     asyncio.run(check())
 
 

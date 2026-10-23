@@ -60,6 +60,7 @@ def add_home_routes(app, live, admin_ok):
         if private():
             view = {"ready": False, "paused": True, "status": "private", "output": "",
                     "last_command": None, "revision": None, "privacy": True,
+                    "summary": "Bathroom privacy is active", "error": "", "hint": "",
                     "display": {"kind": "private", "available": False}}
         return view
 
@@ -148,7 +149,14 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPBadRequest(text="Input too long")
         if private():
             raise web.HTTPConflict(text="Bathroom privacy is active")
-        return web.json_response({"ok": await live.computer.input(text + "\n")})
+        if await live.computer.input(text + "\n"):
+            return web.json_response({"ok": True})
+        # Not ready: say why (guest not installed, booting, worker exited), so the
+        # operator is not left with a bare "not ready".
+        view = computer_view()
+        return web.json_response({"ok": False, "status": view.get("status"),
+                                  "error": view.get("error") or view.get("summary") or "",
+                                  "hint": view.get("hint") or ""})
 
     async def navigate(request):
         enabled()
