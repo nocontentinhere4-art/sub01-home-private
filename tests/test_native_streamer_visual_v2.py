@@ -333,6 +333,7 @@ struct FVector {
  FVector operator-() const { return {-X, -Y, -Z}; }
  FVector operator*(double S) const { return {X * S, Y * S, Z * S}; }
  double GetMin() const { return std::fmin(X, std::fmin(Y, Z)); }
+ double Size() const { return std::sqrt(X * X + Y * Y + Z * Z); }
  FVector GetSafeNormal() const { const double S = std::sqrt(X * X + Y * Y + Z * Z); return S > 0 ? FVector(X / S, Y / S, Z / S) : FVector(); }
  bool ContainsNaN() const { return !(std::isfinite(X) && std::isfinite(Y) && std::isfinite(Z)); }
  FRotator Rotation() const;
@@ -340,6 +341,7 @@ struct FVector {
  static double DotProduct(const FVector& A, const FVector& B) { return A.X * B.X + A.Y * B.Y + A.Z * B.Z; }
  static FVector CrossProduct(const FVector& A, const FVector& B) { return {A.Y * B.Z - A.Z * B.Y, A.Z * B.X - A.X * B.Z, A.X * B.Y - A.Y * B.X}; }
  static double DistSquared(const FVector& A, const FVector& B) { const FVector D = A - B; return DotProduct(D, D); }
+ static double Dist(const FVector& A, const FVector& B) { return std::sqrt(DistSquared(A, B)); }
 };
 inline const FVector FVector::ZeroVector{0, 0, 0};
 inline const FVector FVector::OneVector{1, 1, 1};
@@ -353,6 +355,7 @@ struct FQuat {
  FQuat GetNormalized() const { return *this; }
  FVector RotateVector(const FVector& V) const { const FVector Q(X, Y, Z); const FVector T = FVector::CrossProduct(Q, V) * 2.; return V + T * W + FVector::CrossProduct(Q, T); }  // UE formula
  FRotator Rotator() const;
+ double AngularDistance(const FQuat& Q) const { return 2 * std::acos(std::fmin(1.0, std::fabs(X * Q.X + Y * Q.Y + Z * Q.Z + W * Q.W))); }
  static FQuat Slerp(const FQuat& A, const FQuat&, double) { return A; }
 };
 struct FRotator {
@@ -374,6 +377,7 @@ struct FTransform {
  FTransform(const FQuat& R, const FVector& T, const FVector& S = FVector(1, 1, 1)) : Rotation(R), Translation(T), Scale3D(S) {}
  FQuat GetRotation() const { return Rotation; }
  void SetRotation(const FQuat& Q) { Rotation = Q; }
+ void SetTranslation(const FVector& V) { Translation = V; }
  FVector GetTranslation() const { return Translation; }
  FVector GetScale3D() const { return Scale3D; }
  FRotator Rotator() const { return FRotator(); }
@@ -395,6 +399,7 @@ struct FMath {
  static bool IsFinite(double X) { return std::isfinite(X); }
  static double FloorToDouble(double X) { return std::floor(X); }
  static double Sin(double X) { return std::sin(X); }
+ template<class T> static constexpr T RadiansToDegrees(T R) { return R * T(180 / 3.14159265358979323846); }
  static FRotator RInterpTo(const FRotator& Current, const FRotator&, float, float) { return Current; }
 };
 class FJsonObject {
@@ -440,7 +445,11 @@ template<class T> T* LoadObject(UObject*, const TCHAR*) { return nullptr; }
 class USkeleton : public UObject {};
 class USkeletalMesh : public UObject { public: USkeleton* GetSkeleton() const { return nullptr; } };
 class UAnimSequenceBase : public UObject { public: virtual float GetPlayLength() const { return 0; } USkeleton* GetSkeleton() const { return nullptr; } };
-class UAnimSequence : public UAnimSequenceBase {};
+namespace ERootMotionRootLock { enum Type { RefPose, AnimFirstFrame, Zero }; }
+template<class E> class TEnumAsByte { uint8 Value = 0; public: TEnumAsByte() = default; TEnumAsByte(E V) : Value(uint8(V)) {} E GetValue() const { return E(Value); } };
+class UAnimSequence : public UAnimSequenceBase { public: bool bEnableRootMotion = false, bForceRootLock = false; TEnumAsByte<ERootMotionRootLock::Type> RootMotionRootLock; };
+struct FByteProperty { uint8 GetPropertyValue_InContainer(const void*, int32 = 0) const { return 0; } };
+template<class T> T* FindFProperty(const UClass*, FName) { return nullptr; }
 enum class ETeleportType : uint8 { None, TeleportPhysics, ResetPhysics };
 struct FHitResult {};
 struct FAttachmentTransformRules { static const FAttachmentTransformRules KeepWorldTransform; };
@@ -462,13 +471,16 @@ public:
 };
 class USkeletalMeshComponent : public USceneComponent {
 public:
+ int32 StubHeadIndex = INDEX_NONE; FVector StubHead;
  USkeletalMesh* GetSkeletalMeshAsset() const { return nullptr; }
+ int32 GetBoneIndex(FName) const { return StubHeadIndex; }
+ FVector GetBoneLocation(FName) const { return StubHead; }
  UAnimInstance* GetAnimInstance() const { return nullptr; }
  void UnHideBoneByName(FName) {}
  void ShowMaterialSection(int32, int32, bool, int32) {}
  void SetAnimInstanceClass(UClass*) {}
 };
-class UCameraComponent : public USceneComponent { public: float FieldOfView = 90; };
+class UCameraComponent : public USceneComponent { public: float FieldOfView = 90; void SetFieldOfView(float F) { FieldOfView = F; } };
 class UCharacterMovementComponent : public UActorComponent { public: void StopMovementImmediately() {} void DisableMovement() {} };
 class AController : public UObject { public: void SetControlRotation(const FRotator&) {} };
 class AActor : public UObject {
@@ -483,6 +495,7 @@ class ACharacter : public APawn { public: UCharacterMovementComponent* GetCharac
 class FAnimInstanceProxy;
 class UAnimInstance : public UObject {
 public:
+ static UClass* StaticClass() { return nullptr; }
  AActor* GetOwningActor() const { return nullptr; }
  UWorld* GetWorld() const { return nullptr; }
  virtual void NativePostEvaluateAnimation() {}
@@ -665,13 +678,15 @@ def _function(text: str, head: str) -> tuple:
         k += 1
 
 
-def build_units(src: Path, work: Path) -> dict:
-    """Translation units from the patched files; #line keeps diagnostics on the patched sources."""
+def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str = None) -> dict:
+    """Translation units from the patched files; #line keeps diagnostics on the patched sources. `end` closes the
+    streamer fields (Sub01HomeLab.h) and the appended methods (Sub01HomeLab.cpp): the v2 END, or the face END on top."""
     stub, hands_inc, char_inc = work / 'stub', work / 'hands_inc', work / 'char_inc'
     for d in (stub / 'Animation', hands_inc, char_inc):
         d.mkdir(parents=True, exist_ok=True)
     (stub / 'ue_stub.h').write_text(STUB)
-    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h'):
+    (stub / 'UObject').mkdir(exist_ok=True)
+    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h', 'UObject/UnrealType.h'):
         (stub / name).write_text('#pragma once\n#include "ue_stub.h"\n')
     (stub / 'Sub01HomeHands.generated.h').write_text('#pragma once\n')
     (stub / 'native_cinematic_director.h').write_text('#pragma once\nnamespace Sub01Cinema { struct FPoseObservation {}; }\n')
@@ -687,14 +702,14 @@ def build_units(src: Path, work: Path) -> dict:
                        'void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy* Proxy){delete Proxy;}')
     (work / 'hands.cpp').write_text('#include "Sub01HomeHands.h"\n#include "Sub01HomeLab.h"\n#include "Sub01CapturedLayerClock.h"\n'
                                     f'#line {at} "{src / "Sub01HomeHands.cpp"}"\n{proxy}\n')
-    fields, _ = _block(header, ' bool TickPrivateStreamerVisual(float Dt);', MARKER + ' END')
-    methods, m_at = _block(cpp, MARKER + ' BEGIN', MARKER + ' END')
+    fields, _ = _block(header, ' bool TickPrivateStreamerVisual(float Dt);', end)
+    methods, m_at = _block(cpp, MARKER + ' BEGIN', end)
     tick, t_at = _function(cpp, 'bool ASub01HomeCharacter::TickPrivateStreamerVisual(float Dt){')
     unit = CHARACTER.replace('@@FIELDS@@', fields).replace(
         '@@METHODS@@', f'#line {m_at} "{src / "Sub01HomeLab.cpp"}"\n{methods}').replace(
         '@@TICK@@', f'#line {t_at} "{src / "Sub01HomeLab.cpp"}"\n{tick}')
     (work / 'character.cpp').write_text(unit)
-    (work / 'driver.cpp').write_text(unit + DRIVER)
+    (work / 'driver.cpp').write_text(unit + (DRIVER if driver is None else driver))
     return {'hands': (work / 'hands.cpp', hands_inc), 'character': (work / 'character.cpp', char_inc),
             'driver': (work / 'driver.cpp', char_inc), 'stub': stub}
 
@@ -742,4 +757,207 @@ def test_patched_character_logic_runs(patched, tmp_path):
                            capture_output=True, text=True)
     assert build.returncode == 0, build.stderr[-6000:]
     run = subprocess.run([str(binary)], capture_output=True, text=True, timeout=120)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+# ================================================================================================ face camera + desk guard
+FACE_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_face_camera.py'
+FACE_MARKER = '// SUB01_STREAMER_VISUAL_V2_FACE'
+FACE_END = FACE_MARKER + ' END'
+V2_COPY = SOURCE.parent / 'native-src-v2'
+
+
+def install_face(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(FACE_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+@pytest.fixture
+def pod_v2(tmp_path) -> Path:
+    target = tmp_path / 'src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0
+    return target
+
+
+@pytest.fixture(scope='module')
+def face_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('face') / 'src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0
+    code, report = install_face(target)
+    assert code == 0, report
+    return target
+
+
+def test_v2_install_reproduces_the_pod_sources(pod_v2):
+    """The face patch applies on top of the pod sources; they equal native-src-v2 (when that copy exists)."""
+    if not V2_COPY.is_dir():
+        pytest.skip(f'{V2_COPY} not available')
+    for name in PATCHED:
+        assert sha(pod_v2 / name) == sha(V2_COPY / name), name
+
+
+def test_face_install_on_v2_plans_applies_and_refuses_twice(pod_v2):
+    before = {p.name: sha(p) for p in pod_v2.iterdir()}
+    code, planned = install_face(pod_v2, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == before
+    code, report = install_face(pod_v2)
+    assert code == 0 and report['status'] == 'applied'
+    for name in PATCHED:
+        assert report['files'][name]['before_sha256'] == before[name]
+        assert sha(pod_v2 / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (pod_v2 / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    for name in set(before) - set(PATCHED):
+        assert sha(pod_v2 / name) == before[name]
+    after = {p.name: sha(p) for p in pod_v2.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_face(pod_v2, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert install(pod_v2)[0] == 2  # nor can v2 be installed again on top
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == after
+
+
+def test_face_install_refuses_without_v2(pod):
+    before = {p.name: sha(p) for p in pod.iterdir()}
+    code, report = install_face(pod)
+    assert code == 2 and 'lacks the v2 install' in report['reason']
+    assert {p.name: sha(p) for p in pod.iterdir()} == before
+
+
+def test_face_missing_anchor_refuses_without_writing(pod_v2):
+    lab = pod_v2 / 'Sub01HomeLab.cpp'
+    lab.write_bytes(lab.read_bytes().replace(b'||Camera==TEXT("monitor"))', b'||Camera==TEXT("monitor")||false)', 1))
+    before = {p.name: sha(p) for p in pod_v2.iterdir()}
+    code, report = install_face(pod_v2)
+    assert code == 2 and 'anchor missing in Sub01HomeLab.cpp' in report['reason']
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == before
+
+
+def test_face_patch_is_layered_on_v2(face_patched):
+    for name in PATCHED:
+        v2_text, face = lf(V2_COPY / name) if V2_COPY.is_dir() else None, lf(face_patched / name)
+        assert face.count(FACE_MARKER + ' BEGIN') == face.count(FACE_END) == 1, name
+        assert closure.brace_walk(closure.strip(face)) == closure.brace_walk(closure.strip(lf(SOURCE / name))), name
+        if v2_text is not None:  # every v2 line survives except these, which the face patch extends in place
+            gone = sorted(line.strip()[:40] for line in v2_text.split('\n') if line not in face.split('\n'))
+            expected = {'Sub01HomeLab.cpp': ['Camera=TEXT("spectator");if(J->HasField(', 'Receipt->SetStringField(TEXT("camera"),S',
+                                             'const int32 Slot=StreamerVisualState==TE'],
+                        'Sub01HomeHands.cpp': ['StreamerV2Probe.SetAccumulatedTime(Lengt']}  # probe poses pinned too
+            assert gone == sorted(expected.get(name, [])), (name, gone)
+    cpp, proxy = lf(face_patched / 'Sub01HomeLab.cpp'), lf(face_patched / 'Sub01HomeHands.cpp')
+    for text in ('Camera==TEXT("face")', 'StreamerVisualFaceLocation=Monitor+FVector(0,0,28)-Facing*10.;', 'FMath::Lerp(65.f,42.f,Ease)',
+                 'GetBoneIndex(TEXT("Head"))!=INDEX_NONE', 'Aim=BodyAt+FVector(0,0,120)', 'TEXT("face_camera_blend")', 'TEXT("camera_fov")',
+                 'StreamerVisualDeskSlot(Anim,StreamerVisualState==TEXT("typing")?1:StreamerVisualState==TEXT("mouse")?2:0)',
+                 'SUB01_STREAMER_VISUAL_CLIP_AUDIT', 'C->bEnableRootMotion', 'C->bForceRootLock', 'C->RootMotionRootLock.GetValue()',
+                 'FindFProperty<FByteProperty>(UAnimInstance::StaticClass(),TEXT("RootMotionMode"))', 'TEXT("desk_offset_before_pin_cm")'):
+        assert text in cpp, text
+    # spectator/monitor blend of v2 kept verbatim; face is a separate layer called after it
+    assert ' const float Goal=StreamerVisualCameraTarget==TEXT("monitor")?1.f:0.f;' in cpp
+    assert ' }\n ApplyStreamerVisualFaceCamera(Dt); // SUB01_STREAMER_VISUAL_V2_FACE' in cpp
+    for text in ('static constexpr double StreamerV2PinRadiusCm=8,', 'if(I>0){T=Reference;continue;}', 'PinStreamerV2(Output.Pose,true);',
+                 'PinStreamerV2(Probe.Pose,false);', 'AuditStreamerV2Clips(Output);', 'Ref.FindBoneIndex(FName(TEXT("Hips")))'):
+        assert text in proxy, text
+    # the desk pin runs before hands/breathing/head (EvaluateStreamerV2) and before the phase match / blend
+    eval_body = proxy[proxy.index('void EvaluateStreamerV2(FPoseContext& Output){'):]
+    assert eval_body.index('PinStreamerV2(Output.Pose,true);') < eval_body.index('StreamerV2HandsValid=')
+    evaluate = proxy[proxy.index('virtual bool Evaluate(FPoseContext& Output) override {'):]
+    assert evaluate.index('PrepareStreamerV2Pin(Output)') < evaluate.index('MatchStreamerV2Phase(Output);') < evaluate.index('Blend.Evaluate_AnyThread(Output);')
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_face_patched_cpp_compiles_syntax_only_against_stub(face_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units(face_patched, tmp_path, end=FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+FACE_DRIVER = r'''
+#include <cstdlib>
+void USub01HomeHandsInstance::NativePostEvaluateAnimation() {}
+FAnimInstanceProxy* USub01HomeHandsInstance::CreateAnimInstanceProxy() { return nullptr; }
+void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy*) {}
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+static void Ticks(ASub01HomeCharacter& C, int N) { for (int K = 0; K < N; ++K) C.ApplyStreamerVisualV2(0, .1f); }
+int main() {
+ USkeletalMeshComponent Body; UCameraComponent Camera; ASub01HomeCharacter C; C.FirstPersonBody = &Body; C.ViewCamera = &Camera;
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65;
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle");
+ // webcam above the monitor: centre + 28 cm up, 10 cm towards him along the facing (+Y axis of the body)
+ CHECK(Near(C.StreamerVisualFaceLocation.X, 219.520, .01) && Near(C.StreamerVisualFaceLocation.Y, -357.993, .01) && Near(C.StreamerVisualFaceLocation.Z, 142.75, 1e-9), 1);
+ // no Head bone: aim at body + (0,0,120); 1 s eased blend of location and FOV 65 -> 42
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 5);
+ CHECK(C.StreamerVisualFaceAimSource == TEXT("body+120") && Near(C.StreamerVisualFaceLook.Yaw, 94.593, .01) && Near(C.StreamerVisualFaceLook.Pitch, -13.510, .01), 2);
+ CHECK(Near(C.StreamerVisualFaceAlpha, .5, 1e-5) && Near(Camera.FieldOfView, 53.5, 1e-3) && Near(Camera.StubWorld.Translation.X, (334 + 219.52) / 2, .02), 3);
+ Ticks(C, 6);
+ CHECK(C.StreamerVisualFaceAlpha == 1 && Camera.FieldOfView == 42 && Near(Camera.StubWorld.Translation.Y, -357.993, .01) && Near(Camera.StubWorld.Translation.Z, 142.75, 1e-6), 4);
+ // back to spectator: exactly the authored view and FOV 65, then nothing touches the camera
+ C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11);
+ CHECK(C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334 && Camera.StubWorld.Translation.Y == -209 && Camera.StubWorld.Translation.Z == 151, 5);
+ Camera.StubWorld.Translation = FVector(1, 2, 3); Ticks(C, 3); CHECK(Camera.StubWorld.Translation.X == 1, 6);
+ Camera.StubWorld.Translation = FVector(334, -209, 151);
+ // monitor -> face -> monitor: the v2 blend runs underneath, face ends exactly framed, monitor comes back with FOV 65
+ C.StreamerVisualCameraTarget = TEXT("monitor"); Ticks(C, 11);
+ CHECK(C.StreamerVisualCameraAlpha == 1 && C.StreamerVisualFaceAlpha == 0 && Near(Camera.StubWorld.Translation.X, 275.19, .05), 7);
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 11);
+ CHECK(C.StreamerVisualCameraAlpha == 0 && C.StreamerVisualFaceAlpha == 1 && Near(Camera.StubWorld.Translation.X, 219.52, .01) && Camera.FieldOfView == 42, 8);
+ C.StreamerVisualCameraTarget = TEXT("monitor"); Ticks(C, 11);
+ CHECK(C.StreamerVisualCameraAlpha == 1 && C.StreamerVisualFaceAlpha == 0 && Near(Camera.StubWorld.Translation.X, 275.19, .05) && Camera.FieldOfView == 65, 9);
+ // Head bone available: aim at it (re-aimed on each selection); an implausible Head location falls back to body + 120
+ C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11);
+ Body.StubHeadIndex = 7; Body.StubHead = FVector(214, -290, 130);
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 1);
+ CHECK(C.StreamerVisualFaceAimSource == TEXT("head") && Near(C.StreamerVisualFaceLook.Yaw, 94.641, .01) && Near(C.StreamerVisualFaceLook.Pitch, -10.587, .01), 10);
+ C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11); Body.StubHead = FVector(0, 0, 0);
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 1); CHECK(C.StreamerVisualFaceAimSource == TEXT("body+120"), 11);
+ // a v1 event: the face layer fades out with the forced spectator target
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 11); CHECK(C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334, 12);
+ // desk guard: clip choice from the proxy's audit (slots 0 sitting loop, 1 typing, 2 reach)
+ USub01HomeHandsInstance Anim; UAnimSequence Sit, Type, Reach; C.StreamerVisualV2Clips.Reset(); C.StreamerVisualV2Clips.Add(&Sit); C.StreamerVisualV2Clips.Add(&Type); C.StreamerVisualV2Clips.Add(&Reach);
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 0 && C.StreamerVisualDeskSlot(&Anim, 1) == 0 && C.StreamerVisualDeskSlot(&Anim, 0) == 0, 20);  // before the audit
+ CHECK(Anim.StreamerVisualAuditClips.Num() == 3 && Anim.StreamerVisualAuditClips[2].Get() == &Reach, 21);
+ Anim.StreamerVisualAuditDone = true; Anim.StreamerVisualClipOffsetCm = {3.f, 5.f, 120.f}; Anim.StreamerVisualClipAngleDeg = {2.f, 4.f, 10.f};
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 0 && C.StreamerVisualDeskSlot(&Anim, 1) == 1 && C.StreamerVisualDeskSlot(&Anim, 0) == 0, 22);  // reach off-station
+ Anim.StreamerVisualClipOffsetCm = {3.f, 5.f, 6.f}; Anim.StreamerVisualClipAngleDeg = {2.f, 4.f, 40.f};
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 0, 23);  // turned > 25 deg
+ Anim.StreamerVisualClipAngleDeg = {2.f, 4.f, 10.f}; CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 2, 24);  // authored at the desk
+ Anim.StreamerVisualClipOffsetCm = {30.f, 30.f, 6.f};
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 0) == -1 && C.StreamerVisualDeskSlot(&Anim, 1) == -1 && C.StreamerVisualDeskSlot(&Anim, 2) == 2, 25);  // -1 = frozen R9
+ C.StreamerVisualV2Clips[2] = nullptr; CHECK(C.StreamerVisualDeskSlot(&Anim, 2) == 2, 26);  // missing clip: the v2 frozen-R9 rule
+ CHECK(C.StreamerVisualDeskSlot(nullptr, 2) == 2, 27);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+def _run_driver(units: dict, tmp_path: Path) -> subprocess.CompletedProcess:
+    name, path, _ = COMPILERS[0]
+    source, include = units['driver']
+    binary = tmp_path / 'driver-bin'
+    build = subprocess.run([path, '-std=c++20', '-O1', f'-I{include}', '-isystem', str(units['stub']), str(source), '-o', str(binary)],
+                           capture_output=True, text=True)
+    assert build.returncode == 0, build.stderr[-6000:]
+    return subprocess.run([str(binary)], capture_output=True, text=True, timeout=120)
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_face_camera_and_desk_slot_logic_runs(face_patched, tmp_path):
+    run = _run_driver(build_units(face_patched, tmp_path, end=FACE_END, driver=FACE_DRIVER), tmp_path)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v2_behaviour_unchanged_under_face_patch(face_patched, tmp_path):
+    """The whole v2 driver (debounce, bounds, monitor framing, spectator/monitor blend) passes on the face-patched code."""
+    run = _run_driver(build_units(face_patched, tmp_path, end=FACE_END), tmp_path)
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
