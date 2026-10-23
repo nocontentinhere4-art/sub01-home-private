@@ -4,6 +4,7 @@ word -> network lexicon also used for what it reads (research.py).
 Everything here is a transparent rule table; no external API and no language model.
 The filter runs first: blocked messages are never shown, stored or turned into stimuli.
 """
+import ipaddress
 import re
 import time
 import unicodedata
@@ -14,6 +15,9 @@ from state_io import load_json, save_json
 
 MAX_LEN = 280
 RATE_S = 10.0
+GLOBAL_PER_10S = 30         # accepted messages in any RATE_S window, from every viewer together (SUB01-S02)
+MAX_KEYS = 4096             # viewer keys the limiter remembers; the oldest is forgotten first (SUB01-S05)
+BUSY = "the chat is busy, try again in a moment"
 
 # --- filter --------------------------------------------------------------------------
 # a link: any scheme ("https://", "ftp://"), "www.", or a dotted name ending in one of these top-level domains (a bare
@@ -316,21 +320,50 @@ def stimulus(text):
 
 
 # --- limits --------------------------------------------------------------------------
-class RateLimiter:
-    """1 message per RATE_S per client key. Keys (IPs) are forgotten as soon as the window passes. They are kept in the
-    order they were allowed, so the expired ones sit at the front and a call drops them (memory stays at one window)."""
+def client_key(addr):
+    """The key the limits use for a client address. An IPv6 address is keyed by its /64, since one subscriber's
+    addresses share it: one allocation is one viewer, not 2**64 of them (SUB01-S06). An IPv4-mapped address is its
+    IPv4 address. IPv4 and anything that is not an address (a name, None) stay as they are."""
+    try:
+        ip = ipaddress.ip_address(addr)
+    except (TypeError, ValueError):
+        return addr
+    if ip.version == 4:
+        return addr
+    if ip.ipv4_mapped is not None:
+        return str(ip.ipv4_mapped)
+    return str(ipaddress.IPv6Address(int(ip) >> 64 << 64))
 
-    def __init__(self, window=RATE_S, clock=time.monotonic):
+
+class RateLimiter:
+    """1 message per RATE_S per client key, and at most GLOBAL_PER_10S accepted messages in any RATE_S window for all
+    the keys together: N addresses get N turns, not N times the budget (SUB01-S02). Keys are kept in arrival order,
+    so expiry looks only at the oldest one; at most MAX_KEYS are kept, the oldest forgotten first (SUB01-S05). A
+    refused message takes neither the key's turn nor a place in the budget."""
+
+    def __init__(self, window=RATE_S, clock=time.monotonic, global_per_window=GLOBAL_PER_10S):
         self.window, self.clock, self.last = window, clock, OrderedDict()
+        self.global_per_window, self.times = global_per_window, deque()
+
+    def refusal(self, key):
+        """None when `key` may send now, else the reason. The viewer's own turn is looked at first, then the budget."""
+        key, now = client_key(key), self.clock()
+        while self.last and now - next(iter(self.last.values())) >= self.window:    # purge old keys, the oldest first
+            self.last.popitem(last=False)
+        while self.times and now - self.times[0] >= self.window:
+            self.times.popleft()
+        if key in self.last:
+            return f"one message every {self.window:.0f} s"
+        if len(self.times) >= self.global_per_window:
+            return BUSY
+        self.last[key] = now
+        self.times.append(now)
+        while len(self.last) > MAX_KEYS:
+            self.last.popitem(last=False)
+        return None
 
     def allow(self, key):
-        now = self.clock()
-        while self.last and now - next(iter(self.last.values())) >= self.window:    # purge old IPs, the oldest first
-            self.last.popitem(last=False)
-        if key in self.last:
-            return False
-        self.last[key] = now
-        return True
+        return self.refusal(key) is None
 
 
 class Dedupe:
@@ -360,8 +393,9 @@ def check(text, key, limiter, dedupe, links_open=False):
         return False, reason
     if len(text) > MAX_LEN:
         return False, f"max {MAX_LEN} characters"
-    if not limiter.allow(key):
-        return False, f"one message every {RATE_S:.0f} s"
+    refused = limiter.refusal(key)                      # this viewer's turn, then the budget for every viewer
+    if refused:
+        return False, refused
     if dedupe.seen(text):
         return False, "duplicate"
     return True, None

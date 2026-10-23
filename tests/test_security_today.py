@@ -355,7 +355,6 @@ def test_a_message_does_not_walk_over_every_address():
     assert _Visits.visited < 100
 
 
-@xfail("SUB01-S05", "the limiter has no size bound: 20,000 addresses inside one window are all kept (the CPU part is fixed)")
 def test_the_limiter_keeps_a_bounded_number_of_addresses():
     lim = chat.RateLimiter(clock=lambda: 1000.0)
     lim.last = OrderedDict((f"10.{i >> 16}.{(i >> 8) & 255}.{i & 255}", 999.5) for i in range(20000))
@@ -363,7 +362,6 @@ def test_the_limiter_keeps_a_bounded_number_of_addresses():
     assert len(lim.last) <= 4096
 
 
-@xfail("SUB01-S02", "the chat limit is per address: N addresses get N messages through in one burst")
 def test_chat_messages_have_a_global_rate(live):
     ws, passed = WS(), 0
     for i in range(40):
@@ -388,7 +386,6 @@ def test_forwarded_headers_are_ignored_without_a_trusted_proxy():
     assert live_server.Live.client_ip(me, _req("10.0.0.2", "6.6.6.6")) == "10.0.0.2"
 
 
-@xfail("SUB01-S06", "the key is the full IPv6 address: one /64 (one subscriber) gives 2**64 keys")
 def test_addresses_of_one_ipv6_64_share_a_client_key():
     me = SimpleNamespace(trust_proxy=True)
     a = live_server.Live.client_ip(me, _req("10.0.0.2", "2001:db8:0:1::5"))

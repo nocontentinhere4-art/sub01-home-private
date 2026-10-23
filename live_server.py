@@ -35,7 +35,7 @@ from aiohttp import web
 
 from brain_sim import Brain
 from chat import (RULES, TEACH_MAX_WORDS, TEACH_PER_DAY, NICK_MAX, Dedupe, RateLimiter, TeachLimits,
-                  check as chat_check, check_teach, clean_nick, dedupe_key, stimulus as chat_stimulus)
+                  check as chat_check, check_teach, clean_nick, client_key, dedupe_key, stimulus as chat_stimulus)
 from sleep import ROME, TZ, Clock, Memory, SleepEngine, Store, day_of, hhmm, next_bedtime, night_date
 from eye import Eye, ReplicateLLM, load_env, market_mood
 from diary import Diary
@@ -898,7 +898,7 @@ class Live:
             xff = [p.strip() for p in request.headers.get("X-Forwarded-For", "").split(",") if p.strip()]
             real = request.headers.get("X-Real-IP", "").strip()
             key = xff[-1] if xff else real or key
-        return key
+        return client_key(key)                      # an IPv6 address keys by its /64 (SUB01-S06)
 
     def sleep_tick(self):
         """Advance the sleep engine, apply its parameters to the model, run REM replays and bursts."""

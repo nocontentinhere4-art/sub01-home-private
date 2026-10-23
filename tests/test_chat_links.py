@@ -190,3 +190,59 @@ def test_duplicate_check_and_teach_limits_stay_small_over_a_long_run():
     for i in range(5000):
         chat.check_teach(f"word {i}", "", f"ip{i}", lim, "d1", [])
     assert len(lim.keys) == 30 and lim.count == 30
+
+
+# --- one budget for every viewer (SUB01-S02), the key table (SUB01-S05), the viewer key (SUB01-S06) ------------------
+def test_forty_addresses_in_one_burst_get_no_more_than_the_budget():
+    lim, dd = chat.RateLimiter(clock=lambda: 0.0), chat.Dedupe()
+    replies = [chat.check(f"hello number {i}", f"10.7.0.{i}", lim, dd) for i in range(40)]
+    assert sum(ok for ok, _ in replies) == chat.GLOBAL_PER_10S
+    assert {reason for ok, reason in replies if not ok} == {"the chat is busy, try again in a moment"}
+
+
+def test_a_refused_viewer_keeps_its_turn_and_gets_in_once_the_budget_reopens():
+    now = [0.0]
+    lim, dd = chat.RateLimiter(clock=lambda: now[0]), chat.Dedupe()
+    for i in range(chat.GLOBAL_PER_10S):
+        assert lim.allow(f"10.9.0.{i}")
+    assert chat.check("hello", "10.9.9.9", lim, dd) == (False, chat.BUSY)
+    assert "10.9.9.9" not in lim.last                   # a busy refusal takes no turn
+    now[0] = chat.RATE_S + 0.5                          # the first messages are older than the window now
+    assert chat.check("hello", "10.9.9.9", lim, dd) == (True, None)
+
+
+def test_the_viewers_own_turn_is_judged_before_the_budget():
+    lim = chat.RateLimiter(clock=lambda: 0.0)
+    for i in range(chat.GLOBAL_PER_10S):
+        assert lim.allow(f"10.9.1.{i}")
+    assert lim.refusal("10.9.1.0") == "one message every 10 s"      # its own turn, and the budget is full too
+    assert lim.refusal("10.9.2.0") == chat.BUSY
+
+
+def test_a_refusal_for_the_viewers_own_turn_takes_no_place_in_the_budget():
+    lim = chat.RateLimiter(clock=lambda: 0.0)
+    assert lim.allow("10.9.3.1")
+    assert lim.refusal("10.9.3.1") is not None          # the same viewer again: refused
+    for i in range(2, chat.GLOBAL_PER_10S + 1):
+        assert lim.allow(f"10.9.3.{i}")                 # the budget still has its last place
+    assert lim.refusal("10.9.4.1") == chat.BUSY
+
+
+def test_the_key_table_is_capped_and_the_oldest_key_goes_first():
+    lim = chat.RateLimiter(clock=lambda: 0.0, global_per_window=10 ** 9)
+    keys = [f"10.8.{i >> 8}.{i & 255}" for i in range(chat.MAX_KEYS + 50)]
+    assert all(lim.allow(k) for k in keys)
+    assert len(lim.last) == chat.MAX_KEYS
+    assert keys[0] not in lim.last and keys[-1] in lim.last
+
+
+def test_addresses_of_one_slash_64_are_one_viewer_and_ipv4_stays_as_it_is():
+    assert chat.client_key("2001:db8:0:1::5") == chat.client_key("2001:db8:0:1:ffff::6") == "2001:db8:0:1::"
+    assert chat.client_key("2001:db8:0:2::5") == "2001:db8:0:2::"
+    assert chat.client_key("fe80::1%eth0") == "fe80::"                 # a scope id does not break the fold
+    assert chat.client_key("::ffff:203.0.113.7") == "203.0.113.7"      # IPv4-mapped: its IPv4 address
+    assert chat.client_key("203.0.113.7") == "203.0.113.7"
+    assert chat.client_key("viewer-a") == "viewer-a" and chat.client_key(None) is None
+    lim = chat.RateLimiter(clock=lambda: 0.0)
+    assert lim.allow("2001:db8:0:1::5") is True and lim.allow("2001:db8:0:1:ffff::6") is False
+    assert lim.allow("2001:db8:0:9::1") is True
