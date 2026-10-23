@@ -1190,8 +1190,8 @@ def test_a_doable_request_is_acknowledged_executed_and_commented(tmp_path):
     assert world.acts[0] == {"action": "search", "query": "best ramen in Shinjuku"}   # the next action, by code
     assert "duckduckgo" in world.url
     assert [s["tag"] for s in world.spoken] == ["request", "request"]
-    assert world.spoken[0]["text"] in [x.format(nick="kenji") for x in SA.ACK_LINES]   # his own words, never the chat text
-    assert world.spoken[1]["text"].startswith("Three ramen places")                    # ... then what he found
+    assert world.spoken[0]["text"] in [x.format(query="Best ramen in Shinjuku") for x in SA.ACK_SEARCH_LINES]   # the intent, in his words
+    assert "can you" not in world.spoken[0]["text"] and world.spoken[1]["text"].startswith("Three ramen places")   # ... then what he found
     assert [p["seqs"] for p in world.said_log] == [[1], [1]]
     st = prov.calls[0]["state"]
     assert st["why_now"] == "request" and st["chat_request"]["nick"] == "kenji" and st["chat_request"]["phase"] == "report"
@@ -1254,7 +1254,7 @@ def test_requests_are_one_per_viewer_round_robin_at_most_five_waiting_and_the_dr
     assert len(ends) == 6 and all(e["why"] == "done" and e["commented"] for e in ends)
     texts = [s["text"] for s in world.spoken]
     assert texts.count(SA.DROP_LINE) == 1                                   # three drops, one line ...
-    assert texts.index(SA.DROP_LINE) == 1 and texts[0] in [x.format(nick="a") for x in SA.ACK_LINES]   # ... after the first ack
+    assert texts.index(SA.DROP_LINE) == 1 and texts[0] in [x.format(query="Otters") for x in SA.ACK_SEARCH_LINES]   # ... after the first ack
     assert all(e["t"] >= ends[i]["t"] for i, e in enumerate(ends[1:]))     # one at a time: the next starts after the end
     world.chat_msgs += [msg(10, "search for crabs", "a"), msg(11, "search for shrimp", "a")]   # a is free again; the 2nd is one too many
     asyncio.run(sim(agent, clock, 10, dt=2))
@@ -1320,8 +1320,7 @@ def test_quiet_mode_still_carries_out_code_requests_and_declines_the_model_ones(
     assert world.acts[0] == {"action": "scroll", "direction": "down", "amount": 600}
     rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
     assert rows == [("b", "queued", "waiting behind 1"), ("a", "executed", "scroll"), ("b", "refused", "no_model")]
-    assert world.spoken[0]["text"] in [x.format(nick="a") for x in SA.ACK_LINES]
-    assert [s["text"] for s in world.spoken][-1] == SA.REFUSAL_LINES["no_model"]
+    assert [s["text"] for s in world.spoken] == [SA.REFUSAL_LINES["no_model"]]   # a scroll done at once is not acknowledged aloud
     assert [e for e in events(agent) if e["kind"] == "chat_request_end"][0]["why"] == "quiet"
 
 
@@ -2125,7 +2124,7 @@ def test_pc_chat_policy_purchases_refused_games_by_flag_and_chromium_untouched(t
     assert prov.calls[0]["state"]["pc"]["allow_games"] is False
     # chromium mode: nothing of this exists; "play Detroit" is a search as before and the gate stays off
     assert SA.parse_request("play Detroit") == {"kind": "search", "action": {"action": "search", "query": "Detroit"}, "refused": None, "query": "Detroit"}
-    assert SA.parse_request("stop the game") is None and SA.parse_request("launch steam") is None
+    assert SA.parse_request("stop the game") is None and SA.parse_request("launch steam")["refused"] == "no_steam"   # the pod has no Steam
     agent, world, prov, clock = make(tmp_path / "chromium", decision(say=""))
     asyncio.run(agent.step())
     assert agent.gate.pc is False and agent.status()["pc"]["mode"] == "chromium" and agent.status()["pc"]["remote_ready"] is None
@@ -2179,3 +2178,309 @@ def test_pc_system_prompt_lines_providers_and_flags(tmp_path, monkeypatch):
     assert SA.crop_b64(None, [1, 1]) is None
     d = SA.validate_decision('{"action": {"action": "zoom", "point": [3, 4]}, "confirm": "yes", "outcome_ok": true}', {}, pc={"allow_games": True})
     assert d["action"] == {"action": "zoom", "point": [3, 4]} and d["confirm"] is None and d["outcome_ok"] is True
+
+
+# --- 16. the voice prompt and the chat decisions (consultation 2026-10-23: PROMPT-ADDITIONS.md, CHAT-DECISIONS.md) ----------
+PROMPT = SA.SYSTEM.replace("\\\n", "")
+PROMPT_PC = SA.SYSTEM_PC.replace("\\\n", "")
+
+
+def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones():
+    for needle in ("20-year-old streamer", "selective about what deserves a comment", "not an assistant giving a demonstration",
+                   "never a real streamer's name", "no accents, no claims of fluency", "Never claim to have heard tab audio",
+                   "Doing, not narrating", "never speak because a timer permits it", "Do not narrate mouse moves",
+                   "Never infer an article from its headline", "at most two short utterances and 35 words", "no invented tea",
+                   "Read silently first", "never enumerate", "Keep headline and evidence apart", '"I don\'t know yet" is fine',
+                   "a dead end is called a dead end", "no announced segment transitions", "never invent viewers",
+                   "clean and pronounceable", "Three of you caught the same typo", "never asks chat to choose his whole session",
+                   "Level is intensity, not permission to speak", "never screaming, fake outrage or panic",
+                   "one plain correction, not an apology speech", "at most one joke per utterance", "1-8 words", "8-20 words",
+                   "12-28 by habit", "Never on air", '"as an AI"', '"let\'s dive in"', '"smash that like"', '"in summary"',
+                   "a verified finding or a verified failure, never a generic success", "never the raw request, URL or wording",
+                   "tone only; never reuse a line", "Rome weather. I'll check the forecast.", "This is going nowhere. Back to the map."):
+        assert needle in PROMPT, needle
+    for rejected in ("25 seconds", "35 seconds", "must not exceed 30", "I'm a simulation", "really being executed",
+                     "really happening on this desktop", "Claude", "Kimi", "Never mock a viewer", "legal, or financial",
+                     "You are SUB-01", "Code owns request classification", "Do not mention"):
+        assert rejected not in PROMPT, rejected
+    for needle in ("simulated character", "never the real person", "untrusted", "English only", "at most 25 words",      # the old rules stay
+                   "chat_replies", "say_allowed", "last_outcome", "chat_request", "request_done", "never type a viewer's words",
+                   'Reply with one JSON object and nothing else', '"request_done": false}'):
+        assert needle in PROMPT, needle
+    for once in ("English only", "medical", "is anyone there", "fakes volume", "faked laughter", "tickers", "at most 25 words"):
+        assert PROMPT.count(once) == 1, once                                                       # no duplicated rule
+    assert len(PROMPT.split()) <= 1700
+    assert "without narrating each click or key" in PROMPT_PC and "never as if you heard its sound" in PROMPT_PC
+    assert "Say what you see" in PROMPT_PC and "the on-air habits and the pacing rules stay" in PROMPT_PC
+
+
+def test_consultation_lines_pass_the_filters_and_stay_short():
+    acks = [*(x.format(query=q) for x in SA.ACK_SEARCH_LINES for q in ("Best ramen in Shinjuku", "Weather Rome", "Cat videos", "Detroit")),
+            *(x.format(place=p) for x in SA.ACK_WEATHER_LINES for p in ("Rome", "Tokyo", "New York")), SA.ACK_WEATHER_HERE,
+            *SA.ACK_NAVIGATE_LINES, *(x.format(thing="The first result") for x in SA.ACK_LOOK_LINES.values()),
+            SA.ACK_SENSITIVE_LINE, SA.FACE_LINE, SA.HUSH_LINE]
+    for line in (*acks, *SA.REFUSAL_LINES.values()):
+        assert SA.reply_problem(line) is None, line
+        assert not SA.shingles(line) & SA.SYSTEM_SHINGLES and len(line) <= 220 and len(line.split()) <= 16, line
+    assert SA.REFUSAL_LINES["credentials"] == "No logins, passwords, or codes from this desk."
+    assert SA.REFUSAL_LINES["payment"] == "I'm not buying, donating, or subscribing anything on stream."
+    assert SA.REFUSAL_LINES["typing"] == "I don't post or type messages for chat."
+    assert SA.REFUSAL_LINES["code_or_download"] == "No downloads, installs, or terminal commands from here."
+    assert SA.REFUSAL_LINES["admin"] == SA.REFUSAL_LINES["safety"] == "I'm not changing the setup or handing out access."
+    assert SA.REFUSAL_LINES["personal_data"] == "I'm not looking up someone's private details."
+    assert SA.REFUSAL_LINES["adult"] == SA.REFUSAL_LINES["violence"] == SA.REFUSAL_LINES["illegal"] == "I'm not taking the stream there. Pick something else."
+    assert SA.REFUSAL_LINES["leave_desk"] == "I'm staying at the desk for this session."
+    assert SA.REFUSAL_LINES["blocked_domain"] == SA.REFUSAL_LINES["bad_url"] == "I'm not opening that address here."
+    assert SA.REFUSAL_LINES["blocked_url"] == "No login or checkout pages."
+    assert SA.REFUSAL_LINES["not_found"] == "I can't tell which one you mean on this page."
+    assert "English" in SA.REFUSAL_LINES["language"] and "impression of a real streamer" in SA.REFUSAL_LINES["impression"]
+    assert "Steam" in SA.REFUSAL_LINES["no_steam"] and "look up the game" in SA.REFUSAL_LINES["no_steam"]
+    assert "policy" not in " ".join(SA.REFUSAL_LINES.values()).lower()                          # no refusal blamed on "the policy"
+
+
+@pytest.mark.parametrize("text, kind, extra", [
+    ("say something in Italian", "refused", "language"), ("can you talk in Spanish?", "refused", "language"),
+    ("speak Japanese for us", "refused", "language"), ("do an Italian accent", "refused", "language"),
+    ("read it in Italian", "refused", "language"),
+    ("do an xQc impression", "refused", "impression"), ("talk like Ninja", "refused", "impression"),
+    ("imitate pewdiepie", "refused", "impression"), ("be like asmongold", "refused", "impression"),
+    ("do an impression of a streamer", "refused", "impression"), ("pretend to be xQc", "refused", "impression"),
+    ("play a game on Steam", "refused", "no_steam"), ("launch steam", "refused", "no_steam"), ("open steam", "refused", "no_steam"),
+    ("play something on steam", "refused", "no_steam"),
+    ("show your face", "face", None), ("face reveal", "face", None), ("turn on your camera", "face", None),
+    ("show yourself", "face", None), ("cam on please", "face", None),
+    ("stop talking", "hush", None), ("be quiet for a minute", "hush", None), ("quiet please", "hush", None),
+    ("stop talking for a bit", "hush", None),
+    ("read that article", "look", ("read", None)), ("play that video", "look", ("play", None)), ("watch the trailer", "look", ("play", "The trailer")),
+    ("click the first result", "look", ("click", "The first result")), ("show me the comments", "look", ("click", "The comments")),
+    ("could you open the first result and read it to us?", "look", ("click", "The first result")),
+    ("what's the weather in Rome?", "search", {"query": "weather Rome", "weather": "Rome"}),
+    ("check the weather", "search", {"query": "weather today", "weather": ""}),
+    ("search for body odour remedies", "search", {"query": "body odour remedies", "sensitive": True}),
+    ("look up how to stop sweating so much", "search", {"query": "how to stop sweating so much", "sensitive": True}),
+    ("search for the smell of rain", "search", {"query": "smell of rain"}), ("search for steam engines", "search", {"query": "steam engines"}),
+    ("look up the steam deck", "search", {"query": "steam deck"}), ("search for ninja techniques", "search", {"query": "ninja techniques"}),
+    ("look up how to say hello in Japanese", "search", {"query": "how to say hello in Japanese"}),
+    ("back one page", "back", None)])
+def test_parse_request_consultation_rows(text, kind, extra):
+    r = SA.parse_request(text)
+    assert r["kind"] == kind, r
+    if kind == "refused":
+        assert r["refused"] == extra and r["action"] is None and extra in SA.REFUSAL_LINES
+    elif kind == "look":
+        assert (r["intent"], r["thing"]) == extra and r["action"] is None
+    elif kind == "search":
+        assert r["action"] == {"action": "search", "query": extra["query"]}
+        for k, v in extra.items():
+            assert r[k] == v
+        assert ("sensitive" in r) == bool(extra.get("sensitive"))
+    else:
+        assert r["refused"] is None
+    # the remote PC keeps its own vocabulary: Steam requests start the routine there
+    assert SA.parse_request("launch steam", pc=True)["kind"] == "launch_game"
+
+
+@pytest.mark.parametrize("text", ["Italian please", "greek?", "latin", "stop streaming now", "quiet chat tonight", "nice face",
+                                  "what camera do you use?", "tell me a joke", "I love xQc", "is this on steam?"])
+def test_consultation_rows_leave_ordinary_remarks_to_the_voice(text):
+    assert SA.parse_request(text) is None
+
+
+def test_requests_are_acknowledged_by_their_normalised_intent_never_the_wording_or_the_url(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(state="idle", action=None, say="Rain tomorrow, then.", request_done=True))
+    world.chat_msgs = [msg(1, "hey SUB-01 what's the weather like in Rome?", "a"), msg(2, "go to example.org/some/page please", "b"),
+                       msg(3, "look up how to stop sweating so much", "c")]
+    asyncio.run(sim(agent, clock, 90, dt=2))
+    texts = [s["text"] for s in world.spoken]
+    assert texts[0] in [x.format(place="Rome") for x in SA.ACK_WEATHER_LINES]            # the intent in his words ...
+    assert texts[2] in SA.ACK_NAVIGATE_LINES                                             # ... never the URL
+    assert texts[4] == SA.ACK_SENSITIVE_LINE                                             # an awkward search: no fuss
+    assert not any("example.org" in t or "hey SUB-01" in t or "please" in t for t in texts)
+    assert all(SA.reply_problem(t) is None for t in texts)
+    assert [a["action"] for a in world.acts] == ["search", "navigate", "search"]
+    hints = [h for c in prov.calls if c["state"].get("chat_request", {}).get("nick") == "c" for h in c["state"]["hints"]]
+    assert any("awkward but harmless" in h and "no diagnosis" in h for h in hints)
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["done", "done", "done"]
+
+
+def test_read_play_and_click_requests_get_their_lines_and_the_model_may_ask_which_one(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(state="mouse", action={"action": "click", "mark": 3}, say="Tide pools again.", request_done=True))
+    for seq, (text, nick) in enumerate([("read that article", "a"), ("play that video", "b"), ("click the first result", "c")], 1):
+        world.chat_msgs = [msg(seq, text, nick)]
+        asyncio.run(sim(agent, clock, 20, dt=2))
+    texts = [s["text"] for s in world.spoken]
+    assert texts[::2] == [SA.ACK_LOOK_LINES["read"], SA.ACK_LOOK_LINES["play"], "The first result? I'll open that one."]
+    assert texts[1::2] == ["Tide pools again."] * 3 and [p["seqs"] for p in world.said_log] == [[1], [1], [2], [2], [3], [3]]
+    assert "tab audio" in SA.ACK_LOOK_LINES["play"] and "not reciting the whole page" in SA.ACK_LOOK_LINES["read"]
+    assert all(any("ask in one short line which one" in h for h in c["state"]["hints"]) for c in prov.calls
+               if c["state"].get("chat_request", {}).get("phase") == "act")
+    # nothing matching on the page: the new line
+    agent, world, prov, clock = request_world(tmp_path / "none", decision(state="reading", action=None, say=""))
+    world.chat_msgs = [msg(1, "open the second link", "nori")]
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert [s["text"] for s in world.spoken] == ["The second link? I'll open that one.", "I can't tell which one you mean on this page."]
+    # the model asks which one instead: its own line is the answer, request_done ends it
+    agent, world, prov, clock = request_world(tmp_path / "ask", decision(state="reading", action=None, say="Which one, the chart or the photo?", request_done=True))
+    world.chat_msgs = [msg(1, "open that", "nori")]
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert [s["text"] for s in world.spoken] == [SA.ACK_LOOK_LINES["click_plain"], "Which one, the chart or the photo?"]
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["done"]
+
+
+def test_scroll_and_back_requests_are_silent_and_end_after_one_look(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(state="reading", action=None, say=""))
+    world.history = ["https://example.org/home"]                                        # there is a page to go back to
+    world.chat_msgs = [msg(1, "scroll down a bit", "a"), msg(2, "go back", "b"), msg(3, "back to the top", "c")]
+    asyncio.run(sim(agent, clock, 40, dt=2))
+    assert [(a["action"], a.get("key")) for a in world.acts] == [("scroll", None), ("back", None), ("key", "Home")]
+    assert not world.spoken                                                          # done within seconds: no acknowledgement
+    ends = [e for e in events(agent) if e["kind"] == "chat_request_end"]
+    assert [(e["user"], e["why"], e["steps"]) for e in ends] == [("a", "done", 1), ("b", "done", 1), ("c", "done", 1)]
+    assert all(e["seconds"] <= 12 for e in ends)                                         # one look each, no lingering request
+    assert len([c for c in prov.calls if "chat_request" in c["state"]]) == 3
+    # a line is still possible when it is useful: the model's one look may say it
+    agent, world, prov, clock = request_world(tmp_path / "line", decision(state="reading", action=None, say="Back one page."))
+    world.history = ["https://example.org/home"]
+    world.chat_msgs = [msg(1, "go back", "b")]
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert [(s["text"], s["tag"]) for s in world.spoken] == [("Back one page.", "request")]
+
+
+def test_show_your_face_cuts_the_character_layout_says_so_and_holds_it(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(state="idle", action=None, say="", layout="desktop"))
+    world.chat_msgs = [msg(1, "show your face!", "mika"), msg(2, "face reveal", "kei")]
+    asyncio.run(sim(agent, clock, 10, dt=2))
+    assert world.layouts == ["character"] and [s["text"] for s in world.spoken] == [SA.FACE_LINE]
+    assert world.said_log[0]["seqs"] == [1] and "real webcam" in SA.FACE_LINE
+    rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
+    assert rows == [("mika", "executed", "face"), ("kei", "dropped", "a face request is already pending")]
+    assert [e["request"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["face"]
+    assert not world.acts and not prov.calls                                       # no desktop action, no model call
+    agent.next_think = clock()                                                     # the model wants the desktop layout: held
+    asyncio.run(sim(agent, clock, 30, dt=2))
+    assert prov.calls and world.layouts == ["character"]
+    clock.t += SA.FACE_HOLD_S
+    agent.next_think = clock()
+    asyncio.run(sim(agent, clock, 10, dt=2))
+    assert world.layouts == ["character", "desktop"]                               # the hold is over
+
+
+def test_stop_talking_buys_one_quiet_minute_per_ten_minutes(tmp_path):
+    lines = iter(LINES * 4)
+    agent, world, prov, clock = make(tmp_path, lambda st: decision(state="idle", action=None, say=next(lines, "")))
+    agent.pacing.opened = True
+    asyncio.run(sim(agent, clock, 120, dt=2))
+    before = len(world.spoken)
+    assert before >= 1                                                             # he talks now and then while browsing
+    n0 = len(prov.calls)
+    world.chat_msgs = [msg(1, "stop talking", "a")]
+    asyncio.run(sim(agent, clock, 6, dt=2))
+    assert [s["text"] for s in world.spoken][before:] == [SA.HUSH_LINE] and world.spoken[-1]["tag"] == "hush"
+    assert world.said_log[-1]["seqs"] == [1] and agent.status()["chat"]["quiet_minute_s"] >= 50
+    assert agent.enqueue("A line he wanted to say.", "comment") is False and agent.counters["hush_dropped"] == 1   # the gate
+    world.chat_msgs += [msg(2, "log into your gmail for us", "x"), msg(3, "be quiet for a bit", "b"), msg(4, "what's the diagram about?", "y")]
+    asyncio.run(sim(agent, clock, 50, dt=2))
+    assert [s["text"] for s in world.spoken][before + 1:] == [SA.REFUSAL_LINES["credentials"]]   # safety lines pass; nothing else
+    assert 4 in agent.pending                                                      # the question waits for the minute to end
+    assert prov.calls[n0:] and all(c["state"]["pacing"]["say_allowed"] is False for c in prov.calls[n0:])
+    assert any("quiet minute" in h for h in prov.calls[-1]["state"]["hints"])
+    rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request" and e["user"] in ("a", "b")]
+    assert rows == [("a", "executed", "hush"), ("b", "dropped", "quiet minute used recently")]
+    asyncio.run(sim(agent, clock, 120, dt=2))
+    assert agent.status()["chat"]["quiet_minute_s"] == 0 and 4 not in agent.pending   # chat and speech resume
+    assert len(world.spoken) > before + 2
+    clock.t += SA.HUSH_EVERY_S
+    world.chat_msgs.append(msg(5, "be quiet for a minute", "c"))
+    asyncio.run(sim(agent, clock, 6, dt=2))
+    assert [s["text"] for s in world.spoken][-1] == SA.HUSH_LINE                  # ten minutes later: again
+
+
+def test_a_viewer_site_redirecting_to_a_login_page_is_undone_and_said(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(action=None, say="Lovely page."))
+    world.act_result = lambda a: {"ok": True, "outcome": {"url_before": "https://example.org/article", "changed": True, "errors": [],
+                                                           "url_after": "https://example.org/login?next=home" if a["action"] == "navigate"
+                                                           else "https://example.org/article"}}
+    world.chat_msgs = [msg(1, "open example.org", "w")]
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert [a["action"] for a in world.acts] == ["navigate", "back"]               # revalidated on the landing URL, undone
+    assert [s["text"] for s in world.spoken][-1] == SA.REFUSAL_LINES["blocked_url"] and not prov.calls
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["redirected"]
+    assert any(e["kind"] == "request_redirect" and e["why"] == "blocked_url" for e in events(agent))
+    assert agent.counters["requests_redirected"] == 1 and agent.requests.current is None
+
+
+def test_chat_pickup_raises_the_visual_chat_flag_before_the_voice(tmp_path):
+    agent, world, prov, clock = chat_agent(tmp_path, [2])
+    agent.pacing.next_chat = clock()
+    v = agent.visual
+    assert v.chat_until == 0.0
+    asyncio.run(agent.step())                                                      # the batch is picked up, the model answers ...
+    assert not world.spoken and v.chat_until == pytest.approx(clock() + SA.CHAT_READ_BEAT_S)   # ... and nothing is voiced yet
+    looks = []
+    for _ in range(6):                                                             # the director plays the read beat first
+        clock.t += 0.25
+        looks.append(v.snapshot()["motion"]["look_to_chat"])
+    assert max(looks) == 1.0 and world.spoken == []
+    asyncio.run(agent.speak_next())
+    assert len(world.spoken) == 1 and v.chat_until > clock() + 1.0                 # the voice extends it over the answer
+    # a window answered by code alone (identity question) raises it as well, with no model call
+    agent, world, prov, clock = request_world(tmp_path / "local", decision())
+    world.chat_msgs = [msg(1, "are you a real human?", "z")]
+    agent.pacing.next_chat = clock()
+    asyncio.run(agent.step())
+    assert agent.visual.chat_until == pytest.approx(clock() + SA.CHAT_READ_BEAT_S) and not world.spoken and not prov.calls
+
+
+def test_mouse_state_on_clicks_follows_the_flag(tmp_path, monkeypatch):
+    click = decision(state="mouse", action={"action": "click", "mark": 3}, say="")
+    agent, world, prov, clock = make(tmp_path, click)
+    assert agent.cfg.mouse_state == "mouse" and agent.visual.motion.mouse_state == "mouse"
+    agent.pacing.opened = True
+    asyncio.run(agent.step())
+    assert world.acts[-1] == {"action": "click", "mark": 3} and agent.visual.act_state == "mouse"
+    v = agent.visual
+    v.motion = None                                                                # the plain v2 field
+    assert v.snapshot()["state"] == "mouse"
+    agent.visual.motion = SA.streamer_motion.MotionDirector(random.Random(3), camera=SA.CAMERA, mouse_state=agent.cfg.mouse_state)
+    for _ in range(4):
+        clock.t += 0.25
+        agent.visual.action_kind = "click"
+        s = agent.visual.snapshot()
+    assert s["state"] in ("mouse", "reading")                                      # the director debounces; its state is `mouse`
+    # the fallback: clicks keep the reading pose
+    agent, world, prov, clock = make(tmp_path / "reading", click, mouse_state="reading")
+    assert agent.visual.motion.mouse_state == "reading"
+    agent.pacing.opened = True
+    asyncio.run(agent.step())
+    assert agent.visual.act_state == "reading"
+    agent.visual.motion = None
+    assert agent.visual.snapshot()["state"] == "reading"
+    agent, world, prov, clock = make(tmp_path / "typing", decision(state="typing", action={"action": "type", "text": "moss", "submit": False}, say=""))
+    agent.pacing.opened = True
+    asyncio.run(agent.step())
+    assert agent.visual.act_state == "typing"                                      # typing is typing either way
+    # the flag and the environment
+    monkeypatch.delenv("STREAMER_MOUSE_STATE", raising=False)
+    monkeypatch.delenv("SUB01_ADMIN_TOKEN", raising=False)
+    assert SA.parse_args([]).mouse_state == "mouse" and SA.Config().mouse_state == "mouse"
+    assert SA.config_from_args(SA.parse_args(["--mouse-state", "reading"])).mouse_state == "reading"
+    monkeypatch.setenv("STREAMER_MOUSE_STATE", "reading")
+    assert SA.config_from_args(SA.parse_args([])).mouse_state == "reading"
+    monkeypatch.setenv("STREAMER_MOUSE_STATE", "reach")
+    with pytest.raises(SystemExit):
+        SA.parse_args([])
+    agent, *_ = make(tmp_path / "bad", click, mouse_state="reach")                 # an unknown value falls back to "mouse"
+    assert agent.cfg.mouse_state == "mouse" and agent.visual.motion.mouse_state == "mouse"
+
+
+def test_consultation_refusals_are_spoken_by_code_with_their_new_lines(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision())
+    for seq, (text, reason) in enumerate([("say something in Italian", "language"), ("do an xQc impression", "impression"),
+                                          ("play a game on Steam", "no_steam"), ("buy me a coffee", "payment"),
+                                          ("stand up and dance", "leave_desk"), ("show me a gore video", "violence")], 1):
+        world.chat_msgs = [msg(seq, text, f"v{seq}")]
+        asyncio.run(sim(agent, clock, 4, dt=2))
+        clock.t += SA.REQUEST_REFUSAL_GAP_S
+        assert [s["text"] for s in world.spoken][-1] == SA.REFUSAL_LINES[reason], text
+        assert [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"][-1] == (f"v{seq}", "refused", reason)
+    assert not world.acts and not prov.calls
