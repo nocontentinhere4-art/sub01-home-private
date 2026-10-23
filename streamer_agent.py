@@ -59,6 +59,7 @@ DEFAULT_PRIVACY_FILE = f"{PRIVATE}/native-view-privacy.json"
 DEFAULT_TOKEN_FILE = f"{PRIVATE}/operator-token"
 DEFAULT_KEY_FILE = f"{PRIVATE}/anthropic-key"
 DEFAULT_MODEL = "claude-sonnet-5-5"
+CAMERA = os.environ.get("STREAMER_CAMERA", "face") if os.environ.get("STREAMER_CAMERA", "face") in ("face", "monitor", "spectator") else "face"
 SCHEMA = "sub01.private-streamer-visual-event.v2"
 STATE_SCHEMA = "sub01.streamer-agent-state.v1"
 STATES = ("idle", "reading", "typing", "mouse", "talking", "reacting")
@@ -1069,10 +1070,11 @@ class Visual:
         self.sequence += 1
         return {"schema": SCHEMA, "source": "streamer_agent", "native_pid": pid if pid is not None else 0,
                 "native_start_ticks": ticks if ticks is not None else 0, "captured_utc": round(now, 3),
-                "expires_utc": round(now + 2.0, 3), "sequence": self.sequence, "state": state,
+                "expires_utc": round(now + 1.5, 3), "sequence": self.sequence, "state": state,
                 "gaze_yaw_deg": round(clamp(self.yaw, -20.0, 20.0), 2),
                 "gaze_pitch_deg": round(clamp(self.pitch, -10.0, 10.0), 2),
-                "nod_strength": round(clamp(nod, 0.0, 1.0), 3), "intensity": round(inten, 2)}
+                "nod_strength": round(clamp(nod, 0.0, 1.0), 3), "intensity": round(inten, 2),
+                "camera": CAMERA}      # the stream's framing: "face" = frontal webcam shot (owner's reference, 2026-10-23)
 
     def write(self):
         path = Path(self.cfg.event_file)
