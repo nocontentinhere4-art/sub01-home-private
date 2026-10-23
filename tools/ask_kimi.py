@@ -66,11 +66,15 @@ def ask(question: str, *, key: str, model: str, system: str, max_tokens: int, te
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         raise SystemExit(f"kimi unreachable: {type(e).__name__}: {e}") from None
     choice = (data.get("choices") or [{}])[0]
-    text = ((choice.get("message") or {}).get("content") or "").strip()
+    message = choice.get("message") or {}
+    text = (message.get("content") or "").strip()
     usage = data.get("usage") or {}
+    reasoning = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens")
+    if not text and choice.get("finish_reason") == "length":     # a reasoning model spent the whole budget thinking
+        text = f"[no answer: max_tokens reached while reasoning ({reasoning} reasoning tokens); raise --max-tokens]"
     return {"model": data.get("model", model), "answer": text, "finish_reason": choice.get("finish_reason"),
             "prompt_tokens": usage.get("prompt_tokens"), "completion_tokens": usage.get("completion_tokens"),
-            "seconds": round(time.time() - t0, 1)}
+            "reasoning_tokens": reasoning, "seconds": round(time.time() - t0, 1)}
 
 
 def main(argv=None) -> int:
