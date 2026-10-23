@@ -78,7 +78,7 @@ def no_credentials_and_no_network(monkeypatch):
 
 @pytest.fixture
 def api(monkeypatch):
-    """Credentials set, clock and nonce fixed to the GET known answer. Returns a function that installs a fake opener."""
+    """Credentials set, clock and nonce fixed to the GET known answer. Returns a function that installs a fake."""
     monkeypatch.setenv("VAGON_API_KEY", KEY)
     monkeypatch.setenv("VAGON_API_SECRET", SECRET)
     monkeypatch.setattr(vagon_pc, "_now_ms", lambda: 1700000000000)
@@ -365,6 +365,40 @@ def test_run_script_returns_the_result_text(monkeypatch):
     assert vagon_pc.run_script("m1", "Write-Output hello") == "hello\r\n"
     monkeypatch.setattr(vagon_pc, "call", lambda *a, **k: ["odd"])
     assert vagon_pc.run_script("m1", "x") == ""
+
+
+REFUSED_HOSTS = [                       # SUB01-S03: addresses, numbers, userinfo, local names, wildcard DNS, odd marks
+    "http://127.0.0.1/", "http://10.0.0.5/admin", "http://192.168.1.1/", "http://172.16.0.9/",
+    "http://169.254.169.254/latest/meta-data/", "http://0.0.0.0/", "http://[::1]/", "http://[fe80::1]/",
+    "http://[::ffff:10.0.0.1]/", "http://0x7f000001/", "http://2130706433/", "http://0177.0.0.1/", "http://127.1/",
+    "http://0x7f.0.0.1/", "https://user:pw@formo.family/", "https://formo.family@203.0.113.9/",
+    "https://a.com\\@b.com/", "https://example.com\\b.com/", "https://localhost\\.example.com/",
+    "http://localhost/", "http://localhost:8080/admin",
+    "http://printer.local/", "http://metadata.google.internal/", "http://metadata/", "http://box.lan/",
+    "http://intranet.corp/", "http://1.0.0.127.in-addr.arpa/", "http://169.254.169.254.nip.io/",
+    "http://127.0.0.1.sslip.io/", "http://a.localtest.me/", "http://example.com:8080/", "http://example.com:22/",
+    "http://exa%6Dple.com/", "http://exa_mple.com/", "http://a..b.com/", "http://a-.com/", "http://[::1/",
+]
+PUBLIC_LINKS = ["https://example.com/", "http://example.com:80/x", "https://example.com:443/", "https://example.com./",
+                "https://formo.family/?q=1", "https://xn--80ak6aa92e.com/", "https://a.example/",
+                "https://EXAMPLE.org/Path", "https://sub.domain-name.co.uk/x?y=z&w=1#frag"]
+
+
+@pytest.mark.parametrize("url", REFUSED_HOSTS)
+def test_a_link_to_an_address_or_a_local_name_is_not_plain(url):
+    assert vagon_pc.is_plain_link(url) is False, url
+
+
+@pytest.mark.parametrize("url", PUBLIC_LINKS)
+def test_a_link_to_a_public_name_is_plain(url):
+    assert vagon_pc.is_plain_link(url) is True, url
+
+
+def test_open_url_sends_nothing_to_the_pc_for_a_private_host(monkeypatch):
+    monkeypatch.setattr(vagon_pc, "run_script", lambda machine_id, script: pytest.fail("a private link reached the PC"))
+    for url in REFUSED_HOSTS:
+        with pytest.raises(vagon_pc.VagonError):
+            vagon_pc.open_url("m1", url)
 
 
 def test_auto_stop_only_accepts_the_vendor_steps(monkeypatch):

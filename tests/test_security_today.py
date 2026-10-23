@@ -219,8 +219,6 @@ PRIVATE_OR_TRICKY_LINKS = ("http://127.0.0.1/", "http://localhost:8080/admin", "
                            "http://metadata.google.internal/")
 
 
-@xfail("SUB01-S03", "is_plain_link checks the scheme and the characters only: IP literals, numeric hosts, userinfo and "
-                    "local names are all sent to the PC")
 @pytest.mark.parametrize("url", PRIVATE_OR_TRICKY_LINKS)
 def test_the_pc_refuses_private_numeric_and_userinfo_links(monkeypatch, url):
     monkeypatch.setattr(vagon_pc, "run_script", lambda machine_id, script: "")
@@ -232,7 +230,6 @@ def test_the_pc_refuses_private_numeric_and_userinfo_links(monkeypatch, url):
     assert refused, f"the PC would be sent {url!r}"
 
 
-@xfail("SUB01-S03", "a private or metadata link queues a start of the billed machine before anything checks where it points")
 @pytest.mark.parametrize("text", ["open http://10.0.0.5/admin", "open http://localhost/admin",
                                   "open http://[::1]/admin", "open http://metadata.google.internal/latest/meta-data/"])
 def test_a_private_link_does_not_start_the_machine(live, pc, text):
@@ -455,7 +452,6 @@ def test_the_bridge_status_is_not_served_on_any_route():
     assert not re.search(r"vagon_bridge\.status\(|vagon_status\b", LIVE_SRC)
 
 
-@xfail("SUB01-S01", "no cap on links per hour for all viewers together: the queue bounds the waiting links, not the links per hour")
 def test_links_are_capped_per_hour_for_all_viewers_together(live, pc):
     pc.state = "ready"
     ws = WS()
@@ -476,7 +472,6 @@ def test_one_viewer_gets_a_few_links_an_hour(live, pc):
     assert len(pc.named("open")) <= 6
 
 
-@xfail("SUB01-S01", "no daily cap on machine starts: each link after an idle stop starts the billed machine again")
 def test_machine_starts_are_capped_per_day(live, pc):
     ws = WS()
     for i in range(10):
@@ -493,7 +488,6 @@ def test_a_started_machine_is_in_the_cost_ledger(live, pc):
     assert '"vagon"' in (ledger.read_text() if ledger.exists() else "")
 
 
-@xfail("SUB01-S07", "auto-stop is set at process start only, and _ensure_ready does not set it after a start")
 def test_auto_stop_is_set_again_when_the_bridge_starts_the_machine(live, pc):
     say(live, WS(), "10.4.0.1", "open https://example.com/as")
     assert pc.named("auto_stop") == [("auto_stop", 900)]

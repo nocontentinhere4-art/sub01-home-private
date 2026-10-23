@@ -35,6 +35,14 @@ MAX_RESPONSE_BYTES = 2_000_000
 MAX_LINK = 2000
 AUTO_STOP_STEPS = (0, 900, 3600, 10800, 21600)   # seconds of idle time the vendor accepts; 0 disables auto-stop
 WEB_LINK = re.compile(r"https?://[\x21-\x7e]+")  # http(s) only, no spaces or control characters
+LINK_PORTS = (None, 80, 443)                     # the ports a chat link may name: no probing of other services
+# A public DNS name, without the final dot: labels of letters, digits and hyphens, and a last label of letters or
+# punycode. No IP literal matches (10.0.0.5, 0x7f000001, 2130706433, 127.1 and [::1] all fail the last label).
+_PUBLIC_NAME = re.compile(r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})")
+LOCAL_SUFFIXES = (".local", ".localhost", ".localdomain", ".internal", ".lan", ".home", ".intranet", ".corp", ".arpa")
+# Wildcard DNS services answer for a name that spells an address (169.254.169.254.nip.io) or for any name below them.
+WILDCARD_ZONES = ("nip.io", "sslip.io", "xip.io", "localtest.me", "lvh.me", "vcap.me", "traefik.me")
+_SPELLED_IP = re.compile(r"(?<!\d)\d{1,3}(?:[.-]\d{1,3}){3}(?!\d)")
 WAIT_POLL_S = 15.0
 WAIT_MAX_S = 300.0
 
@@ -270,8 +278,29 @@ def run_script(machine_id, script):
 
 
 def is_plain_link(url):
-    """The one gate for a link: an http or https string of at most MAX_LINK printable ASCII characters, no space."""
-    return isinstance(url, str) and len(url) <= MAX_LINK and WEB_LINK.fullmatch(url) is not None
+    """The one gate for a link: an http or https string of at most MAX_LINK printable ASCII characters, no space, whose
+    host is a public DNS name (SUB01-S03). Refused: userinfo (user:pw@host); a port other than 80 or 443; any IP literal
+    (dotted, decimal, hex, octal or IPv6); a single-label name such as localhost; a local or internal name such as
+    printer.local or metadata.google.internal; a wildcard-DNS name that spells an address (169.254.169.254.nip.io); a
+    backslash, a percent sign or any character other than letters, digits, dots and hyphens. The name is not
+    resolved, so a public name whose DNS points at a private address is not caught here."""
+    if not isinstance(url, str) or len(url) > MAX_LINK or WEB_LINK.fullmatch(url) is None:
+        return False
+    try:
+        parts = urllib.parse.urlsplit(url)
+        port = parts.port                          # ValueError for a port that is not a number in range
+    except ValueError:
+        return False
+    name = parts.hostname or ""                    # lower case, brackets removed, userinfo removed
+    if name.endswith("."):
+        name = name[:-1]
+    if "@" in parts.netloc or port not in LINK_PORTS or len(name) > 253:
+        return False
+    if _PUBLIC_NAME.fullmatch(name) is None or name.endswith(LOCAL_SUFFIXES):
+        return False
+    if any(name == zone or name.endswith("." + zone) for zone in WILDCARD_ZONES):
+        return False
+    return _SPELLED_IP.search(name) is None
 
 
 # The link is never written into the script as text. Its bytes travel as one base64 literal, and base64 has no quote,
@@ -283,6 +312,6 @@ OPEN_SCRIPT = ("Start-Process -FilePath ([System.Text.Encoding]::ASCII.GetString
 def open_url(machine_id, url):
     """Opens one link in the machine's default browser. Only a link that passes is_plain_link is sent."""
     if not is_plain_link(url):
-        raise VagonError("only plain http or https links without spaces can be opened")
+        raise VagonError("only public http or https links without spaces can be opened")
     encoded = base64.b64encode(url.encode("ascii")).decode("ascii")
     return run_script(machine_id, OPEN_SCRIPT.format(encoded=encoded))
