@@ -6,6 +6,15 @@ The owner (2026-10-23) wants Kimi used as extra help across the project. It is u
    model behind the character's browsing and lines can be Kimi, and by default Kimi is the fallback when Claude fails.
 2. **Consultation CLI** (`tools/ask_kimi.py`): a second opinion on code, plans and animation questions, from the pod.
 
+## Working rule (owner, 2026-10-23: "devono lavorare insieme a Kimi, punto. Tutti gli agenti, tu incluso")
+Every agent on this project, the coordinator included, works together with Kimi (`kimi-k3.1-pro`):
+- **Before a design decision** (animation, camera, posture, direction, chat policy, browser/stream integration, ffmpeg
+  graph, priorities): ask Kimi with the relevant files and frames attached, weigh its answer, record what was adopted.
+- **Before a commit**: Kimi reviews the diff (code) or the frames (visual work). Findings are applied or rejected with a
+  reason; the report carries a "Kimi review" section and the consultation is saved under `docs/streamer/kimi/`.
+- **Visual work**: frames go to Kimi with `--image`; it ranks the defects and judges framing against real references.
+- Kimi never receives secrets, tokens, URLs with query strings, or anything the owner typed.
+
 The API is OpenAI-compatible: `POST https://api.moonshot.ai/v1/chat/completions`, `Authorization: Bearer <key>`,
 `{"model", "messages", "max_tokens", ...}`. The `.cn` endpoint refuses this key. Models available with the owner's key
 (seen 2026-10-23): `kimi-k3.1-pro` (the one the owner named; default everywhere), `kimi-k3.1-pro-highspeed`, `kimi-k3`,
