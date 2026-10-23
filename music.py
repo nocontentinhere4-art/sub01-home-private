@@ -11,16 +11,22 @@ Where the candidates come from:
   restricted for new apps since Nov 2024 and not used;
 - without keys (or when the API fails): music_curated.json, public tracks from public playlists per genre
   (analysis/build_music_list.py); each picked ID is checked once with Spotify's oEmbed endpoint (no key) and cached.
-Queries come from the time of day (morning chill, evening hip-hop, late-night lofi), his tastes (tastes.py), words
+Queries come from the time of day (morning chill, evening hip-hop, a quiet late night), his tastes (tastes.py), words
 taught in the last days, what he has been reading about (mind.next_interest) and viewer wishes in chat ("play …",
-"metti …", through chat.blocked).
+"metti …", through chat.blocked(media=True)).
+A failing network does not stall the music: a failed Spotify call backs off (API_BACKOFF_S), a failed oEmbed check is
+not asked again for OEMBED_BACKOFF_S, and one pick starts network calls only within NET_BUDGET_S. Without any network
+the curated list still yields a pick.
 
 His brain chooses: 3-5 candidates become brain_vote options whose stimulus comes from the genre tags, title and artist
-through chat.py's word-to-network lexicon (no audio analysis: the model never hears the music). The stay response while
-the track plays (tastes.PageWatch) feeds the tastes, so a music taste forms over days. It is a rule on simulated
-activity, not enjoyment: the pages say "his brain model leaned toward ...", never "he loves this song".
+through chat.py's word-to-network lexicon (no audio analysis: the model never hears the music). A viewer's wish that
+names tracks narrows the vote to those tracks while it lives (WISH_TTL). The stay response while the track plays
+(tastes.PageWatch) feeds the tastes, so a music taste forms over days. It is a rule on simulated activity, not
+enjoyment: the pages say "his brain model leaned toward ...", never "he loves this song".
+Every name that reaches a page passes clean_text (no markup, quotes or control characters) or is not shown at all.
 """
 import base64
+import http.client
 import json
 import os
 import re
@@ -32,7 +38,7 @@ from collections import deque
 from pathlib import Path
 from console_requests import game_request
 
-from chat import blocked, networks_for
+from chat import SLUR_RE, blocked, networks_for, normalise
 from sleep import local
 from state_io import append_jsonl, load_json, read_jsonl, save_json
 
@@ -52,14 +58,19 @@ TRACK = "https://open.spotify.com/track/{}"
 OEMBED = "https://open.spotify.com/oembed?url={}"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 API = "https://api.spotify.com/v1"
+ART = re.compile(r"https://(?:i\.scdn\.co|[a-z0-9-]+\.spotifycdn\.com)/image/[A-Za-z0-9]+")   # Spotify's image hosts only
 EMBED_HEIGHT = 80             # Spotify's compact player
 CANDIDATES = (3, 5)           # options per vote
 DEFAULT_MS = 210_000          # a track whose length is unknown: 3.5 min
-RECENT_N = 30                 # not offered again while among the last RECENT_N tracks
+RECENT_N = 30                 # not offered again while among his last RECENT_N picks (a viewer's wish may name one)
 NOVEL_DAYS = 7                # the vote's novelty bonus: not played in this many days
 WISH_TTL = 2 * 3600           # a viewer's "play ..." is remembered this long (simulated s)
 WISHES_MAX = 5
+WISH_PICKS = 3                # tracks a wish that names some takes from the Web API and from the curated list
 OEMBED_TTL = 7 * 86400        # a checked ID is trusted this long
+OEMBED_BACKOFF_S = 300.0      # Spotify's oEmbed gave no answer: not asked again for this long (offered unchecked)
+API_BACKOFF_S = (30.0, 900.0)  # the Web API failed: retried after 30 s, doubling, at most 15 min
+NET_BUDGET_S = 6.0            # a pick starts no network call after this many seconds (a call under way may take TIMEOUT)
 TIMEOUT = 8.0
 CARD = "his brain model picked this track; press play to listen on your own device"
 NOTE = ("Spotify's official player: a 30 s preview, or the whole track if you are logged in to Spotify in this "
@@ -78,6 +89,11 @@ DAYPARTS = [  # (from hour, name, {genre: weight}): morning chill, evening hip-h
 ]
 WISH = re.compile(r"^\s*(?:please\s+)?(?:play|put on|metti|mettimi|ascolta|suona|listen to)\s+(?:some\s+|un po' di\s+)?"
                   r"(.{2,60}?)\s*(?:on spotify|su spotify)?[.!]*\s*$", re.I)
+GENERIC = ("music", "musica", "a song", "some music", "something", "qualcosa", "una canzone")   # any track will do
+WISH_CHARS = re.compile(r"[^\w\s'’.,!?&$()/+\-]")     # what a viewer's wish may hold: words and a title's punctuation
+MARKUP = re.compile(r"[<>\"`\\\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")    # never shown on a page
+GAME = re.compile(r"\b(chess|scacchi|game|minecraft|pong)\b", re.I)   # a game, not music (as life.py's listen desire)
+MUSIC_WORD = re.compile(r"\b(music|musica|song|songs|soundtrack|theme|canzone|canzoni|spotify|playlist)\b", re.I)
 
 
 class SpotifyError(Exception):
@@ -86,6 +102,22 @@ class SpotifyError(Exception):
 
 def valid_id(tid):
     return isinstance(tid, str) and bool(ID.fullmatch(tid))
+
+
+def valid_art(url):
+    return isinstance(url, str) and bool(ART.fullmatch(url))
+
+
+def clean_text(text, limit=120):
+    """A name that may be shown (track, artist, album): whitespace squeezed, cut to `limit`. None when it is not text or
+    holds markup, quotes or control characters: then it is never shown."""
+    if not isinstance(text, str) or MARKUP.search(text):
+        return None
+    return " ".join(text.split())[:limit]
+
+
+def _num(value, default=0):
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else default
 
 
 def embed_url(tid):
@@ -112,22 +144,27 @@ def daypart(t):
 
 
 def wish(text):
-    """A viewer's "play …" / "metti …" -> the query (filtered), else None."""
-    if game_request(text):
+    """A viewer's "play …" / "metti …" -> the query, else None. The words are a song or artist name (chat.blocked with
+    media=True, as the titles on the pages are) and they are shown to everyone (the chat's slur list too). A game request
+    is not music; a query with a music word still is."""
+    if not isinstance(text, str) or game_request(text):
         return None
-    m = WISH.match(text or "")
+    m = WISH.match(text)
     if not m:
         return None
     q = " ".join(m.group(1).split())
-    if not q or blocked(q) or re.search(r"[<>{}\\]|https?:|www\.", q, re.I):
+    if not q or WISH_CHARS.search(q) or (GAME.search(q) and not MUSIC_WORD.search(q)):
         return None
-    if q.lower() in ("music", "musica", "a song", "some music", "something", "qualcosa", "una canzone"):
+    if blocked(q, media=True) or SLUR_RE.search(normalise(q)):
+        return None
+    if q.lower() in GENERIC:
         return "music"
     return q[:60]
 
 
 def http_json(method, url, headers=None, data=None, timeout=TIMEOUT):
-    """(status, json) for a JSON endpoint. Errors carry the status only, never the request's headers."""
+    """(status, json) for a JSON endpoint. Errors carry the status only, never the request's headers; a network failure
+    of any kind (timeout, reset, a broken HTTP reply) is (0, None)."""
     body = urllib.parse.urlencode(data).encode() if data is not None else None
     req = urllib.request.Request(url, data=body, method=method, headers=dict(headers or {}))
     try:
@@ -138,7 +175,7 @@ def http_json(method, url, headers=None, data=None, timeout=TIMEOUT):
             return r.status, json.loads(r.read(2_000_000).decode("utf-8", "replace"))
     except urllib.error.HTTPError as e:
         return e.code, None
-    except (urllib.error.URLError, OSError, ValueError):
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException):
         return 0, None
 
 
@@ -186,7 +223,11 @@ class SpotifyAPI:
 
     def search(self, query, limit=10):
         d = self._get("/search", {"q": query, "type": "track", "limit": limit, "market": self.market})
-        return [t for t in (track_from_api(x) for x in (d.get("tracks") or {}).get("items") or []) if t]
+        tracks = d.get("tracks")
+        items = tracks.get("items") if isinstance(tracks, dict) else None
+        if not isinstance(items, list):
+            return []
+        return [t for t in (track_from_api(x) for x in items) if t]
 
     def track(self, tid):
         if not valid_id(tid):
@@ -195,19 +236,29 @@ class SpotifyAPI:
 
 
 def track_from_api(x):
-    """A Web API track object -> our track dict (metadata only; preview_url is never read), or None."""
-    if not isinstance(x, dict) or not valid_id(x.get("id")) or x.get("is_playable") is False:
+    """A Web API track object -> our track dict (metadata only; preview_url is never read), or None. A name must pass
+    media_title_ok and hold no markup, since it may be shown; the art must be on Spotify's image hosts. A malformed
+    object is None, never an error."""
+    try:
+        if not isinstance(x, dict) or not valid_id(x.get("id")) or x.get("is_playable") is False:
+            return None
+        title = clean_text(x.get("name"))
+        artists = x.get("artists") if isinstance(x.get("artists"), list) else []
+        names = [clean_text(a.get("name")) for a in artists[:3] if isinstance(a, dict)]
+        album = x.get("album") if isinstance(x.get("album"), dict) else {}
+        album_name = clean_text(album.get("name") or "")
+        if not title or None in names or album_name is None:
+            return None
+        artist = ", ".join(n for n in names if n)[:120]
+        images = album.get("images") if isinstance(album.get("images"), list) else []
+        imgs = [i for i in images if isinstance(i, dict) and valid_art(i.get("url"))]
+        art = min(imgs, key=lambda i: abs(_num(i.get("width"), 300) - 300))["url"] if imgs else None
+        if not media_title_ok(title) or not media_title_ok(artist):        # explicit lyrics allowed (owner)
+            return None
+        return {"id": x["id"], "title": title, "artist": artist, "album": album_name,
+                "art": art, "ms": int(_num(x.get("duration_ms"), 0))}
+    except (AttributeError, TypeError, ValueError):
         return None
-    title = " ".join(str(x.get("name") or "").split())[:120]
-    artist = ", ".join(" ".join(str(a.get("name") or "").split()) for a in (x.get("artists") or [])[:3]
-                       if isinstance(a, dict))[:120]
-    album = x.get("album") if isinstance(x.get("album"), dict) else {}
-    imgs = [i for i in album.get("images") or [] if isinstance(i, dict) and str(i.get("url", "")).startswith("https://")]
-    art = min(imgs, key=lambda i: abs((i.get("width") or 300) - 300))["url"] if imgs else None
-    if not title or not media_title_ok(title) or not media_title_ok(artist):   # explicit lyrics allowed (owner)
-        return None
-    return {"id": x["id"], "title": title, "artist": artist, "album": " ".join(str(album.get("name") or "").split())[:120],
-            "art": art, "ms": int(x.get("duration_ms") or 0)}
 
 
 def album_only_match(track, query):
@@ -220,10 +271,27 @@ def album_only_match(track, query):
 
 
 def load_curated(path=CURATED):
-    d = json.loads(Path(path).read_text())
+    """{genre: {label, tags, tracks, playlists}} from music_curated.json. A track whose ID or names do not pass is left
+    out; a missing or unreadable file is an empty list (logged), never an error."""
+    try:
+        d = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        print("music: curated list unavailable:", repr(e)[:120], flush=True)
+        return {}
+    genres = d.get("genres") if isinstance(d, dict) else None
     out = {}
-    for g, v in d.get("genres", {}).items():
-        tracks = [dict(t, genre=g) for t in v.get("tracks", []) if valid_id(t.get("id"))]
+    for g, v in (genres if isinstance(genres, dict) else {}).items():
+        if not isinstance(v, dict):
+            continue
+        tracks = []
+        for t in v.get("tracks") if isinstance(v.get("tracks"), list) else []:
+            if not isinstance(t, dict) or not valid_id(t.get("id")):
+                continue
+            title, artist = clean_text(t.get("title")), clean_text(t.get("artist") or "")
+            if not title or artist is None:
+                continue
+            tracks.append({"id": t["id"], "title": title, "artist": artist,
+                           "album": clean_text(t.get("album") or "") or "", "ms": int(_num(t.get("ms"), 0)), "genre": g})
         out[g] = {"label": v.get("label", g), "tags": v.get("tags", ""), "tracks": tracks,
                   "playlists": v.get("playlists", [])}
     return out
@@ -238,9 +306,14 @@ class Music:
         self.genres = curated if curated is not None else load_curated()
         self.now = None                                  # the track playing (public record + private ends)
         self.wishes = deque(maxlen=WISHES_MAX)           # (sim t, query)
+        self.recent = deque(maxlen=RECENT_N)             # his picks in this process (kept without a data dir too)
         self.api_down = None                             # why the Web API was not used last time
+        self.api_fails, self.api_retry_at = 0, 0.0      # the Web API's backoff after a failure
+        self.oembed_retry_at = 0.0                       # Spotify's oEmbed gave no answer: not asked before this
+        self._deadline = 0.0                             # the network budget of the pick being made
         st = load_json(self.state_path, {}) if self.dir else {}
-        self.checked = st.get("checked", {}) if isinstance(st.get("checked"), dict) else {}
+        saved = st.get("checked") if isinstance(st.get("checked"), dict) else {}
+        self.checked = {k: v for k, v in saved.items() if isinstance(v, dict)}    # a damaged entry is checked again
 
     # --- files ---
     @property
@@ -274,9 +347,10 @@ class Music:
 
     # --- queries ---
     def genre_weights(self, t, taste_words=(), taught=(), interests=()):
-        """{genre: weight}: the time of day, plus genres whose tags meet his tastes, taught words and interests."""
-        _, w = daypart(t)
-        w = {g: float(w.get(g, 0.4)) for g in self.genres}
+        """{genre: weight}: the time of day, plus genres whose tags meet his tastes, taught words and interests. The late
+        night is quiet: only the genres its hours list are picked then (a viewer's wish still names any genre)."""
+        name, base = daypart(t)
+        w = {g: float(base.get(g, 0.4)) for g in self.genres}
         for src, bonus in ((taste_words, 1.5), (taught, 1.0), (interests, 0.8)):
             words = {x.lower() for s in src for x in re.findall(r"[\w-]+", str(s))}
             for g, v in self.genres.items():
@@ -284,14 +358,16 @@ class Music:
                 tags.discard("music")
                 if words & tags:
                     w[g] += bonus
+        if name == "late night" and any(g in base for g in w):                 # (a list with none of them: all genres)
+            w = {g: (x if g in base else 0.0) for g, x in w.items()}
         return w
 
     def queries(self, t, taste_words=(), taught=(), interests=()):
-        """-> [{genre, query, why}] in the order they are tried (a wish first, then genres by weight, sampled)."""
+        """-> [{genre, query, why}]: the viewers' wishes first, then the genres by weight (sampled)."""
         out = [{"genre": None, "query": q, "why": f"a viewer asked for “{q}”"} for q in self.live_wishes(t)[-2:]]
         part, base = daypart(t)
         w = self.genre_weights(t, taste_words, taught, interests)
-        pool = dict(w)
+        pool = {g: x for g, x in w.items() if x > 0}
         while pool and len(out) < 5:
             tot = sum(pool.values())
             r, acc = self.rng.random() * tot, 0.0
@@ -308,7 +384,8 @@ class Music:
 
     # --- candidates ---
     def recent_ids(self, n=RECENT_N):
-        ids = [r.get("id") for r in self.history(n)]
+        """The tracks not to offer again: his last n picks (the file's and this process's) and the one playing now."""
+        ids = [r.get("id") for r in self.history(n)] + list(self.recent)[-n:]
         return set(ids + ([self.now["id"]] if self.now else []))
 
     def novel(self, tid, now=None):
@@ -329,36 +406,102 @@ class Music:
 
     def candidates(self, t, taste_words=(), taught=(), interests=(), k=None):
         """3-5 candidate tracks [{id, title, artist, genre, why, ...}]. Network I/O with keys or for oEmbed checks:
-        call it off the event loop."""
+        call it off the event loop. A live wish that names tracks (found on the Web API or in the curated list) narrows
+        the candidates to those, up to 5, and may repeat a recent track (not the one playing). Otherwise the genres fill
+        the candidates, not taking any of his last RECENT_N picks."""
         k = k or self.rng.randint(*CANDIDATES)
-        avoid, out = self.recent_ids(), []
+        self._deadline = self.clock() + NET_BUDGET_S
+        playing = self.now["id"] if self.now else None
         qs = self.queries(t, taste_words, taught, interests)
-        if self.api:
-            try:
-                for q in qs[:3]:
-                    got = [x for x in self.api.search(q["query"]) if x["id"] not in avoid
-                           and (q["genre"] is None or not album_only_match(x, q["query"]))]
+        named = [q for q in qs if q["genre"] is None and q["query"] != "music"]
+        hits = self._named(named, playing)
+        if hits:
+            return hits[:CANDIDATES[1]]
+        rest = [q for q in qs if q not in named]
+        out = self._fill(rest, self.recent_ids(), k)
+        if not out:                                      # every track is recent: a repeat beats no pick
+            out = self._fill(rest, {playing} if playing else set(), k)
+        return out
+
+    def _budget_left(self):
+        return self.clock() < self._deadline
+
+    def _api_ready(self):
+        return self.api is not None and self.clock() >= self.api_retry_at and self._budget_left()
+
+    def _api_ok(self):
+        self.api_fails, self.api_retry_at, self.api_down = 0, 0.0, None
+
+    def _api_failed(self, err):
+        self.api_fails += 1
+        delay = min(API_BACKOFF_S[1], API_BACKOFF_S[0] * 2 ** min(self.api_fails - 1, 10))
+        self.api_retry_at = self.clock() + delay
+        reason = str(err) if isinstance(err, SpotifyError) else type(err).__name__
+        self.api_down = reason[:160]
+        print(f"music: Spotify Web API unavailable, using the curated list (next try in {delay:.0f} s):", reason,
+              flush=True)
+
+    def _named(self, named, playing):
+        """The tracks the live wishes name: the Web API's search and the curated match, WISH_PICKS of each at most. Empty
+        when no wish names a track he can find (offline, a song outside the curated list)."""
+        out = []
+        for q in named:
+            if self._api_ready():
+                try:
+                    got = [x for x in self.api.search(q["query"]) if x["id"] != playing
+                           and not album_only_match(x, q["query"])]
                     self.rng.shuffle(got)
-                    for x in got[:2 if q["genre"] is None else 1]:
-                        out.append(dict(x, genre=q["genre"] or self.guess_genre(x), why=q["why"], source="api"))
+                    self._api_ok()
+                    out += [dict(x, genre=self.guess_genre(x), why=q["why"], source="api") for x in got[:WISH_PICKS]]
+                except Exception as e:                   # a failed call (or an answer that does not fit): backs off
+                    self._api_failed(e)
+            taken = 0
+            for x in self.curated_match(q["query"], {playing}):
+                if taken >= WISH_PICKS:
+                    break
+                info = self.check(x["id"], ask=self._budget_left())
+                if info is False:
+                    continue
+                out.append(dict(x, art=(info or {}).get("art"), why=q["why"], source="curated"))
+                taken += 1
+        unique, seen = [], set()
+        for x in out:
+            if x["id"] not in seen:
+                seen.add(x["id"])
+                unique.append(x)
+        return unique
+
+    def _fill(self, qs, avoid, k):
+        """Up to k tracks for the queries in order (a wish for music first, then the genres by weight): the Web API's
+        search for the genres while it works, the curated list otherwise. Tracks in `avoid` are not taken."""
+        out = []
+        if self._api_ready():
+            try:
+                for q in [q for q in qs if q["genre"] is not None][:3]:
+                    got = [x for x in self.api.search(q["query"]) if x["id"] not in avoid
+                           and not album_only_match(x, q["query"])]
+                    self.rng.shuffle(got)
+                    for x in got[:1]:
+                        out.append(dict(x, genre=q["genre"], why=q["why"], source="api"))
                         avoid.add(x["id"])
-                self.api_down = None
-            except SpotifyError as e:
-                self.api_down = str(e)
-                print("music: Spotify Web API unavailable, using the curated list:", e, flush=True)
+                self._api_ok()
+            except Exception as e:                       # a failed call (or an answer that does not fit): backs off
+                self._api_failed(e)
         for q in qs:
             if len(out) >= k:
                 break
-            pool = (self.curated_match(q["query"], avoid) if q["genre"] is None
-                    else [x for x in self.genres[q["genre"]]["tracks"] if x["id"] not in avoid])
-            if not pool:
-                continue
-            x = self.rng.choice(pool)
-            info = self.check(x["id"])
-            if info is False:
-                continue
-            avoid.add(x["id"])
-            out.append(dict(x, art=(info or {}).get("art"), why=q["why"], source="curated"))
+            if q["genre"] is None:
+                pool = self.curated_match(q["query"], avoid)
+            else:
+                pool = [x for x in self.genres[q["genre"]]["tracks"] if x["id"] not in avoid]
+            self.rng.shuffle(pool)
+            for x in pool[:3]:                           # a track Spotify does not know is skipped: a few tries
+                info = self.check(x["id"], ask=self._budget_left())
+                if info is False:
+                    continue
+                avoid.add(x["id"])
+                out.append(dict(x, art=(info or {}).get("art"), why=q["why"], source="curated"))
+                break
         return out[:k]
 
     def guess_genre(self, track):
@@ -368,19 +511,27 @@ class Music:
                 return g
         return None
 
-    def check(self, tid):
-        """oEmbed check of a curated ID (no key): {title, art} if Spotify knows it, False if it does not,
-        None when Spotify could not be asked (then it is offered anyway; the embed says if it is gone)."""
+    def check(self, tid, ask=True):
+        """oEmbed check of a curated ID (no key): {title, art} if Spotify knows it, False if it does not, None when Spotify
+        could not be asked (then it is offered anyway; the embed says if it is gone). ask=False: the cache only."""
         c = self.checked.get(tid)
         if c and self.clock() - c.get("t", 0) < OEMBED_TTL:
-            return c if c.get("ok") else False
-        st, d = self.fetch("GET", OEMBED.format(urllib.parse.quote(TRACK.format(tid), safe="")), {}, None)
+            return dict(c, art=c.get("art") if valid_art(c.get("art")) else None) if c.get("ok") else False
+        if not ask or self.clock() < self.oembed_retry_at:
+            return None
+        try:
+            st, d = self.fetch("GET", OEMBED.format(urllib.parse.quote(TRACK.format(tid), safe="")), {}, None)
+        except Exception:                                # a fetch that raises is a failed call, as a status 0
+            st, d = 0, None
         if st == 200 and isinstance(d, dict) and d.get("type") == "rich":
-            art = d.get("thumbnail_url") if str(d.get("thumbnail_url", "")).startswith("https://") else None
-            c = {"ok": True, "t": self.clock(), "title": str(d.get("title", ""))[:120], "art": art}
+            art = d.get("thumbnail_url") if valid_art(d.get("thumbnail_url")) else None
+            c = {"ok": True, "t": self.clock(), "title": clean_text(d.get("title")) or "", "art": art}
         elif st in (400, 404):
             c = {"ok": False, "t": self.clock()}
-        else:
+        elif st == 200:                                  # an answer that is not a track: offered, asked again later
+            return None
+        else:                                            # no answer (status 0, 429, 5xx): not asked again for a while
+            self.oembed_retry_at = self.clock() + OEMBED_BACKOFF_S
             return None
         self.checked[tid] = c
         if len(self.checked) > 2000:
@@ -424,9 +575,19 @@ class Music:
                "options": [{"label": o["label"], "p": o.get("p"), "value": o.get("value"), "chosen": o.get("chosen"),
                             "networks": o.get("networks")} for o in dec.get("options", [])]}
         self.now = rec
-        self.wishes = deque([(t0, q) for t0, q in self.wishes if q.lower() not in
-                             f"{rec['title']} {rec['artist']} {rec['genre_label'] or ''}".lower()], maxlen=WISHES_MAX)
+        self.recent.append(rec["id"])
+        self.wishes = deque([(t0, q) for t0, q in self.wishes if not self.meets(q, rec)], maxlen=WISHES_MAX)
         return self.public(rec)
+
+    def meets(self, q, rec):
+        """Whether a track answers a wish: a generic wish any track does, a named one one whose name, artist, genre or
+        genre words contain it (the rule curated_match uses to find the wish's tracks)."""
+        if q == "music":
+            return True
+        g = self.genres.get(rec.get("genre") or "", {})
+        text = " ".join([rec.get("title", ""), rec.get("artist", ""), rec.get("genre") or "", g.get("label", ""),
+                         g.get("tags", "")])
+        return q.lower() in text.lower()
 
     def ends(self):
         return self.now["t"] + self.now["ms"] / 1000.0 if self.now else None

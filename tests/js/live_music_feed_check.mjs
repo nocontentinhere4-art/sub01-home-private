@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFileSync}from 'node:fs';
 import{createLiveMusicFeed,musicTracks}from '../../web/house/live_music_feed.mjs';
 const song=(id,title=id)=>({id,title,artist:'Artist',url:`https://open.spotify.com/track/${id}`});
 assert.deepEqual(musicTracks({now:song('A'),today:[song('A'),song('B'),song('B')]}).map(s=>[s.id,s.isNow]),[['A',true],['B',false]]);
@@ -34,4 +35,12 @@ await advance(5000);const closing=requests.at(-1);feed.stop();assert.ok(closing.
 activeOwner=ownerA;feed.setOwner(ownerA);const privacy=requests.at(-1);activeOwner=null;feed.refresh();assert.ok(privacy.signal.aborted);privacy.resolve({now:song('PRIVATE')});await flush();assert.equal(writes.length,3,'bathroom/app change cannot accept late data');assert.equal(timers.size,0);
 activeOwner=ownerA;feed.setOwner(ownerA);requests.at(-1).reject(new Error('offline'));await flush();assert.equal(errors.length,1);await advance(5000);assert.equal(requests.at(-1).at,time,'failed request retries at bounded interval');
 const timed=requests.at(-1);await advance(10000);assert.ok(timed.signal.aborted,'hung HTTP request has deadline');timed.reject(new Error('abort'));await flush();assert.equal(errors.length,1,'expected abort does not surface as error');feed.stop();assert.equal(timers.size,0);
+// #68: a track name (it may come from a viewer's wish) is set on the pages as text, never parsed as markup
+const page=file=>readFileSync(new URL(`../../web/${file}`,import.meta.url),'utf8');
+for(const file of ['house/home.js','life.html','room.html','index.html']){
+ const markup=page(file).split('\n').filter(line=>/innerHTML/.test(line)&&/mu-t|mu-a|mu-why|sc-music|scr-music|song\.|music\.|track/.test(line));
+ assert.deepEqual(markup,[],`${file}: a music title is set as markup`);
+}
+assert.match(page('house/home.js'),/textEl\('div', song\.title \+ ' · ' \+ song\.artist/,'phone music rows are text');
+console.log('PASS: music text on the pages is set as text, never as markup');
 console.log('PASS: now/today dedupe; active same-owner live updates;5s throttle/no overlap; unchanged-list suppression; close/app/privacy abort; ignored-abort stale isolation; timeout/retry; no audio/backend writes');
