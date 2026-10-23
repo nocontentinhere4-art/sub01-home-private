@@ -927,7 +927,8 @@ def live_interest(live, art=None, rng=None):
         pass
     try:
         if live.life.activity == "phone":
-            extra["feed"] = "shorts"                       # #89: on the phone he scrolls shorts (TikTok / Shorts)
+            if live.life.phone_app == "tiktok":            # the phone's app is TikTok / Shorts; the chat app has no feed
+                extra["feed"] = "shorts"                   # #89: on the phone he scrolls shorts (TikTok / Shorts)
         elif desk_video(live.clock.now(), interests.rhythm(hour)["video"]):
             extra["feed"] = "video"                        # #89 teen: part of the desk time is YouTube
     except Exception:

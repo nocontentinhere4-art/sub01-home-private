@@ -118,6 +118,7 @@ def add_home_routes(app, live, admin_ok):
             minecraft = {"enabled": bool(minecraft.get('enabled')), "status": "private",
                          "active": False, "has_frame": False, "observation": None,
                          "events": [], "last_action": None, "privacy": True}
+        life = {"privacy": True} if hidden else live.life.snapshot()
         return web.json_response(
             {
                 "home": home,
@@ -126,8 +127,9 @@ def add_home_routes(app, live, admin_ok):
                 "browser_screen": screen('desk'),
                 "phone_browser_screen": screen('phone'),
                 "phone_screen": None if hidden else home_phone.status(home_phone.snapshot(live.home, screen('phone'))),
+                "phone_view": None if hidden else home_phone.view_of(live, life, screen('phone')),
                 "minecraft": minecraft,
-                "life": {"privacy": True} if hidden else live.life.snapshot(),
+                "life": life,
                 "stage": None if hidden else live.engine.stage,
                 "time": live.clock.now(),
             },

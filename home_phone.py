@@ -171,3 +171,18 @@ def life_view(life, screen=None, lines=(), now=None):
             return {'app': 'short'}
         return chat_view(lines, NO_SHORT if life['phone'] == 'tiktok' else '')
     return None
+
+
+def view_of(live, life, screen=None):
+    """life_view for a live server, built the same way for the brain tick and /api/home: its public chat lines, his
+    replies and SUB-01's reactions (the last CHAT_LINES of each). None unless his phone or his order is in hand."""
+    if not isinstance(life, dict) or life.get('activity') not in ('phone', 'order_food'):
+        return None
+    memory, public = getattr(live, 'memory', None), getattr(live, 'public', None)
+    try:
+        viewer = [public(m) for m in memory.chat()[-CHAT_LINES:]] if memory is not None and public is not None else []
+    except (KeyError, TypeError, ValueError):       # a stored line missing a field is not shown; the brain loop goes on
+        viewer = []
+    lines = chat_lines(viewer=viewer, replies=list(getattr(live, 'replies', None) or [])[-CHAT_LINES:],
+                       reactions=list(getattr(live, 'sub01_reactions', None) or [])[-CHAT_LINES:])
+    return life_view(life, screen, lines)

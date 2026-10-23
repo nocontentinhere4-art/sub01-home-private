@@ -28,7 +28,7 @@ import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { createMinecraftFrameFeed, actionErrorMessage } from "./device_requests.mjs?v=1";
 import { computerScreenLines, computerPanelText, browserUnavailableMessage, wrapLines } from "./computer_screen.mjs?v=1";
-import { createPhoneScreen } from "./phone_screen.mjs?v=1";
+import { createPhoneScreen } from "./phone_screen.mjs?v=2";
 import { createDeviceRevisions } from "./device_revisions.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
@@ -1732,6 +1732,7 @@ let homeState = null,
   browserState = null,
   browserScreen = null,
   phoneBrowserScreen = null,
+  phoneLifeView = null,
   minecraftState = { enabled: false, status: "disabled" },
   lastConsoleGame = null,
   panelKind = "",
@@ -2576,7 +2577,7 @@ phoneScreen = createPhoneScreen({
   canvas: phoneCanvas, texture: phoneTexture,
   getState: () => ({
     activity: homeState?.activity, app: homeState?.phone?.app, battery: homeState?.phone?.battery,
-    frameId: phoneBrowserScreen?.frame_id, title: phoneBrowserScreen?.title,
+    frameId: phoneBrowserScreen?.frame_id, title: phoneBrowserScreen?.title, view: phoneLifeView,
     privacy: privacyActive || !!homeState?.privacy, hidden: document.hidden,
     time: phoneClockFormat.format(new Date(homeTime * 1000)),
   }),
@@ -2779,6 +2780,7 @@ async function syncState() {
     browserState = s.browser || null;
     browserScreen = s.browser_screen || null;
     phoneBrowserScreen = s.phone_browser_screen || null;
+    phoneLifeView = s.phone_view || null;
     minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;

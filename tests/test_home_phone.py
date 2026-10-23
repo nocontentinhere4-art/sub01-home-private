@@ -482,3 +482,27 @@ def test_a_stalled_short_on_the_glass_gives_way_to_the_chat_app():
     assert view == {'app': 'short'}
     view = home_phone.life_view(bed, stalled, lines, now=1000.0 + 10 * 60)
     assert view['app'] == 'chat' and view['why'] == home_phone.NO_SHORT
+
+
+def test_view_of_reads_the_live_chat_replies_and_reactions_the_same_way_for_the_tick_and_the_house():
+    import json
+    class Memory:
+        def __init__(self, items):
+            self.items = items
+
+        def chat(self):
+            return [m for m in self.items if m.get('source', 'chat') == 'chat']
+
+    items = [{'t': 1.0, 'text': 'check your phone', 'source': 'chat', 'networks': {}, 'emotion': 0},
+             {'t': 2.0, 'text': 'a reading, not a chat line', 'source': 'reading'}]
+    live = SimpleNamespace(memory=Memory(items), public=lambda m: {'text': m['text'], 't': '21:03', 'networks': m.get('networks')},
+                           replies=[], sub01_reactions=[{'t': '21:03', 'text': 'Okay, checking my phone.'}])
+    phone = {'activity': 'phone', 'phone': 'chat', 'walking': False, 'path': None}
+    view = home_phone.view_of(live, phone, None)
+    assert view['app'] == 'chat'
+    assert [(x['kind'], x['text']) for x in view['lines']] == [('viewer', 'check your phone'), ('reaction', 'Okay, checking my phone.')]
+    assert 'networks' not in json.dumps(view) and 'a reading' not in json.dumps(view)     # readings are never on the phone
+    assert home_phone.view_of(live, {'activity': 'research'}) is None and home_phone.view_of(live, None) is None
+    assert home_phone.view_of(live, {'activity': 'order_food', 'order': 'ramen', 'courier': None})['app'] == 'order'
+    bare = SimpleNamespace()                                  # a live server without its chat (a test double): no lines, no crash
+    assert home_phone.view_of(bare, phone)['lines'] == []

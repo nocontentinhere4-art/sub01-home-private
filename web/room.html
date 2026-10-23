@@ -517,7 +517,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree; THREE.Buff
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
-import { PhoneScreen, phoneGlow as phoneGlowLevel, batteryAt } from "./room_phone.js";
+import { PhoneScreen, phoneGlow as phoneGlowLevel, batteryAt, lifeAppCanvas } from "./room_phone.js";
 import { createWindowView } from "./room/window_view.js";
 
 const $ = id => document.getElementById(id);
@@ -1279,13 +1279,14 @@ let screenOn = null;               // "desk" | "phone" | null (from the server)
 let phoneWanted = false;           // the activity has the phone in his hand (he may also take it out for a look: peek)
 let chatting = false;              // at the desk answering chat: the monitor shows the chat window
 let lastStatus = {};               // device -> status
+let phoneLife = false;             // the phone shows his life's view (phone_view: the chat or the order app), not a browser page
 // (no trade feed reaches this page: the coin's trades are a stimulus inside the model only, never a picture on a screen)
 function showScreen(st){
   if (!st) return;
   if (st.restarting) { lastStatus[st.device] = st; if (screenOn === st.device) panel(st); return; }
   lastStatus[st.device] = st;
   const target = st.device === "desk" ? monitor : phone.userData.screen;
-  if (!target || target.id === st.id || target.failed === st.id) return;   // (failed: a 404'd shot is not asked for again)
+  if (!target || target.id === st.id || target.failed === st.id || (st.device === "phone" && phoneLife)) return;   // (failed: a 404'd shot is not asked for again; his life's view is on the phone)
   target.id = st.id;
   const url = `/api/screen/${st.device}.jpg?id=${st.id}`;
   const img = new Image(); img.decoding = "async";
@@ -3380,9 +3381,13 @@ function screens(life, st){
   // phone: the delivery app while he orders; otherwise only a page that is really on it now, else dark glass
   // (#R2: no stale picture: the food app after the order, or the last page when the browser is down or a shot 404'd)
   const ps = phone.userData.screen, psc = life.screen && life.screen.device === "phone" && !life.screen.restarting ? life.screen : null;
-  if (life.activity === "order_food" && onPhone) { ps.id = null; const t = foodTex(life.courier); if (ps.tex !== t || ps.mesh.material !== ps.on) ps.set(t); ps.id = "food"; }
-  else if (ps.tex && (ps.id === "food" || (life.activity === "phone" && (!psc || ps.failed === psc.id)))) ps.off();
-  panel(chessOn ? null : screenOn ? lastStatus[screenOn] : null);
+  // his life's view from the tick (phone_view: the chat app, or the order app while he orders; a 'short' keeps the browser's page)
+  const pv = life.phone_view || null;
+  phoneLife = !!pv && pv.app !== "short" && onPhone;
+  if (phoneLife) { const k = "life:" + JSON.stringify(pv); if (ps.id !== k) { ps.id = k; ps.set(screenTexture(lifeAppCanvas(pv, 390, 844, 30))); } }
+  else if (life.activity === "order_food" && onPhone) { ps.id = null; const t = foodTex(life.courier); if (ps.tex !== t || ps.mesh.material !== ps.on) ps.set(t); ps.id = "food"; }
+  else if (ps.tex && (ps.id === "food" || String(ps.id).startsWith("life:") || (life.activity === "phone" && (!psc || ps.failed === psc.id)))) ps.off();
+  panel(chessOn ? null : screenOn && !phoneLife ? lastStatus[screenOn] : null);
 }
 
 // ---------- map ----------

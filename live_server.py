@@ -59,6 +59,7 @@ import costs
 from browse_service import BrowserClient, BrowserDown, FrameChanged, LocalBrowser
 from search_sources import live_interest
 import interests
+import home_phone
 import novelty
 import screens
 import search_sources
@@ -666,6 +667,7 @@ class Live:
         await self.broadcast({"type": "chat", "gain": round(gain, 2), **self.public(m)})
         if reaction:
             await self.broadcast({"type": "reaction", "text": reaction, "nick": shown_nick, "t": hhmm(t)})
+            self.sub01_reactions = (getattr(self, "sub01_reactions", []) + [{"t": hhmm(t), "text": reaction}])[-8:]
 
     # --- the chat inbox (C1/C2): FIFO, one viewer at a time, a visible outcome for every message -----------------
     async def enqueue_chat(self, t, text, key, nick=""):
@@ -1023,6 +1025,10 @@ class Live:
             if self.browser and (dev := self.screen_device()):
                 msg["life"]["screen"] = self.screen_status(dev)
                 self.pagewatch.feed(rel, now, TICK)
+            if msg["life"].get("activity") in ("phone", "order_food"):     # his phone in hand: the chat, a short or the order
+                phone_view = home_phone.view_of(self, msg["life"], self.screen_status("phone") if self.browser else None)
+                if phone_view is not None:
+                    msg["life"]["phone_view"] = phone_view
             await self.audience_tick(msg, tsim, rel, hot)
             await self.broadcast(msg)
             if events:
@@ -1118,6 +1124,8 @@ class Live:
     def screen_device(self):
         if not self.activity_arrived() or self.engine.stage != "AWAKE":
             return None
+        if self.life.activity == "phone" and self.life.phone_app != "tiktok":
+            return None                                  # his phone shows the chat app (phone_view): no browser page for it
         return {"research": "desk", "phone": "phone", "watch_video": "desk"}.get(self.life.activity)
 
     def screen_status(self, dev):

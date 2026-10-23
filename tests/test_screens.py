@@ -203,8 +203,11 @@ def test_wikipedia_is_at_most_once_an_hour_while_the_wanted_browser_is_down(tmp_
 def test_phone_time_is_shorts():
     live = SimpleNamespace(mind=None, clock=SimpleNamespace(now=lambda: 1_791_010_800.0),          # 16:00 Tokyo
                            memory=SimpleNamespace(items=[]), tastes=SimpleNamespace(pref={}, top=lambda n=8: {"favoured": []}),
-                           life=SimpleNamespace(activity="phone", phone_app="chart", place="bed", path=[]))
+                           life=SimpleNamespace(activity="phone", phone_app="tiktok", place="bed", path=[]))
     assert S.live_interest(live, None, random.Random(0))["feed"] == "shorts"
+    live.life.phone_app = "chat"                          # the chat app on his phone has no short-video feed
+    assert S.live_interest(live, None, random.Random(0))["feed"] != "shorts"
+    live.life.phone_app = "tiktok"
     live.life.activity = "research"
     assert S.live_interest(live, None, random.Random(0))["feed"] is None
 
