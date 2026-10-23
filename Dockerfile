@@ -29,6 +29,7 @@ COPY audience.py brain_sim.py sleep.py chat.py eye.py real_baseline.py life.py l
      impulse.py daily_plan.py vagon_pc.py vagon_bridge.py ./
 COPY console_requests.py home_http.py home_interactions.py home_minecraft.py home_minecraft_input.py home_minecraft_controller.py home_remote_computer.py \
      home_world.py home_computer.py home_api.py home_native_feedback.py home_phone.py home_geometry_profile.py ./
+COPY docs/design/daily-life/day_template.json ./docs/design/daily-life/
 COPY scripts ./scripts
 COPY games ./games
 # Build dependencies from the lockfile, never from a developer's node_modules.
