@@ -79,6 +79,7 @@ from eyes import Eyes
 import mind as mind_mod
 from tastes import PageWatch, Tastes
 import state_io
+import streamer as streamer_mod                  # SUB01_STREAMER=1: the owner's streaming mode (off: untouched)
 from state_io import append_jsonl, load_json, read_jsonl, save_json
 
 try:                                             # the GPU spiking brain is optional: the server runs without it
@@ -365,6 +366,7 @@ def local_accounts():
 
 class Live:
     ca = ""                            # the coin's address (set in __init__; a bare instance in tests has none)
+    streamer = None                    # streamer.StreamerMode with SUB01_STREAMER=1 (end of __init__), else None
     def __init__(self, mint, demo, time_scale=1.0, data_dir=HERE / "data", start=None, trust_proxy=False):
         self.brain = Brain()
         self.mint, self.demo = mint, demo
@@ -493,6 +495,7 @@ class Live:
         # viewers (preview/interactive, audience.py): the vote on what he does next, the viewer count, the reactions
         self.votes = audience.Votes(rng=random.Random(int(seed) + 7 if seed else None))
         self.reactions = audience.Reactions()
+        self.streamer = streamer_mod.attach(self)
 
     # --- trades -> stimuli ---------------------------------------------------
     def apply(self, tr):
@@ -651,6 +654,8 @@ class Live:
         # every accepted message gets one in-character line at once, with or without the mind and the spiking net: the
         # canned reaction (impulse.py), or life's honest line when the request cannot be taken as asked (closed, asleep...)
         imp = parse_impulse(text)                          # an action asked for in chat is carried out at once
+        if self.streamer:                                  # the ring the streamer agent reads: input only, never a command
+            self.streamer.record_chat(text, key, nick, t, imp)
         reaction = imp.reaction
         if imp.kind == "activity":
             reaction = self.life.request_impulse(imp, t) or imp.reaction
@@ -1002,8 +1007,8 @@ class Live:
             tsim = self.clock.now()
             if self.home:
                 self.life.home_bladder = self.home.bladder
-            self.life.update(tsim, TICK, TICK * self.time_scale, self.engine.stage, rel, hot,
-                             self.engine.pressure(tsim))
+            (self.streamer.update if self.streamer else self.life.update)(   # streamer mode pins him at the desk
+                tsim, TICK, TICK * self.time_scale, self.engine.stage, rel, hot, self.engine.pressure(tsim))
             self.life.music = self.music.tick_view()
             msg["life"] = self.life.snapshot()
             if self.home:
@@ -1912,7 +1917,7 @@ class Live:
         reactions makes him glance at the camera."""
         v = self.votes
         now = v.clock()
-        awake = self.engine.stage == "AWAKE"
+        awake = self.engine.stage == "AWAKE" and not (self.streamer and self.streamer.active)   # no vote while streaming
         if v.due(now):
             res = v.close(tsim)
             if res:
@@ -2329,6 +2334,9 @@ async def main(args):
 
     add_ops_routes(app, live, data_dir)
     add_home_routes(app, live, admin_ok)
+    if live.streamer:                             # SUB01_STREAMER=1: /api/home/streamer*, and {"streamer": {"active"}} in /api/home
+        streamer_mod.add_routes(app, live.streamer, admin_ok)
+        app.middlewares.append(streamer_mod.home_payload_middleware(live.streamer))
     if os.environ.get("CLIPS", "1") != "0":       # #59: daily clips for the social accounts, made in nice'd children
         live.clips = clips.ClipMaker(data_dir)
         live.clips.ledger = live.ledger
@@ -2537,6 +2545,8 @@ async def main(args):
                     task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             live.store.save(live.engine, live.memory)
+            if live.streamer:
+                live.streamer.save()
             if manager:
                 manager.shutdown()
             if cpu_net:
