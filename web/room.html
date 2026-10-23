@@ -509,6 +509,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createGlance } from "./room/glance.js";
 import { createGlanceCam } from "./room/glance_cam.js";   // (the camera turns to him while he answers viewers)
+import { strideShare, clipStep, clipRate } from "./room/gait.js";   // (the walk's stride and rate from his speed: no foot slide at any pace)
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from "three-mesh-bvh";
 // (bounding-volume trees for the room's meshes: the camera's collision casts rays into them every frame)
@@ -1008,7 +1009,12 @@ function loadMoves(){
       for (const [k, v] of Object.entries(ALIAS)) if (v === slot && !actions[k]) HIPS[k] = HIPS[slot];   // dine (eating) sits like sit, listen lies like sleep (poses of the old clips keep theirs)
       const was = actions[slot], a = actions[slot] = mixer.clipAction(c); clips[slot] = c;
       if (was && current === was) { was.stop(); a.reset().play(); current = a; } }
-    REF_SPEED = 0.86;                                  // the new walk's feet move back at 0.86 m/s
+    // the new walk's reference foot speed: 0.803 m/s, two steps a loop (1.333 s, stride 1.071 m), measured on the shipped clip by
+    // room_build/kimodo_g12/walk_metrics.py (H13, 2026-10-23; the code said 0.86, 6.6 % fast); room/boy_moves_walk.json, when
+    // room_build/boy_post.mjs has written it, carries the measurement for the clip as built
+    setStride(0.803, 2);
+    fetch("room/boy_moves_walk.json", {cache: "no-cache"}).then(r => r.ok ? r.json() : null)
+      .then(j => { if (j && j.refFootSpeed > 0 && actions.walk && clipName(actions.walk) === MOVE.walk) setStride(j.refFootSpeed, 2); }).catch(() => {});   // (while this walk is the one installed)
     movesOn = true; if (placed && goal) snap(goal.anchor, goal.clip);   // already placed for the old clips: again
   }).catch(() => {});
 }
@@ -1838,9 +1844,15 @@ let visible = true, lastLife = null;
 // consistent blend that stays out of the bed and the chair (debug: penetration()). He walks at y = F; the height of a
 // seat or the bed only comes in inside those steps. A new goal mid-walk re-plans from where he is.
 let at = null, goal = null, plan = [], step = null, holdW = 0, placed = false;
-const WALK_V = 1.2; let REF_SPEED = 0.65;             // m/s: the default walk (adults walk 0.94-1.43 m/s; 1.2 is the middle)
-// REF_SPEED (m/s): the walk clip's authored foot speed, as the code states it. setStride() sets it for each installed walk clip
-// (room_walk 0.67, the ARDY walk 0.65, the UAL walk 0.86). The clip plays at speed / REF_SPEED, so its feet keep to the ground
+const WALK_V = 1.2; let REF_SPEED = 0.65, WALK_STEPS = 6;   // m/s: the default walk (adults walk 0.94-1.43 m/s; 1.2 is the middle)
+// REF_SPEED (m/s): the walk clip's authored foot speed, as the code states it, and WALK_STEPS the steps in its loop. setStride()
+// sets them for each installed walk clip (room_walk 0.67, the ARDY walk 0.65, the UAL walk 0.86, two steps a loop each; the
+// first clip, boy_walk, 0.65 over six). The clip's step is REF_SPEED · duration / WALK_STEPS (room/gait.js clipStep). Below
+// the speed whose step that is, the gait model shortens the stride: the walk blends toward the stand by its stride share
+// (the MakeHuman layer's pivot() from step.stride; the first rig: strideBlend()), and the clip plays at v / (share · REF_SPEED),
+// so its planted foot keeps to the floor at any pace (clipRate). At cruise the clip's own step, at v / step steps a second
+let strideLayer = "page";                              // who blends the walk toward the stand: the page (the first rig) or the MakeHuman layer
+const setStride = (v, steps = 2) => { REF_SPEED = v; WALK_STEPS = steps; };
 const WALK_A = 1.4, TURN_V = 2.2, STEP_TS = 0.6, DINE_DX = -0.12;   // DINE_DX: the chair rolls left to the dish      // m/s² up and down; turning on the spot (rad/s) he steps round, the walk clip at 0.6x
 // where each clip has the hips, from the root (facing +z; measured): a move between two poses is planned for the hips
 const HIPS = {sit:[0.235, 0.655, -0.364], eat:[-0.014, 0.48, 0.018], idle:[-0.016, 0.994, 0.026], walk:[0.003, 0.977, 0.012], sleep:[-0.006, 1.123, 0.065]};
@@ -2019,8 +2031,12 @@ function route(a, b){                                 // shortest path a -> b ov
 const _h0 = new THREE.Vector3(), _h1 = new THREE.Vector3(), _hm = new THREE.Vector3(), _ho = new THREE.Vector3();
 function startPose(S){
   const A = current, B = actions[S.clip] || actions[ALIAS[S.clip]] || actions.idle;
-  for (const a of Object.values(actions)) if (a !== A && a !== B && a.isRunning()) a.stop();
-  if (B !== A) { B.reset().play(); B.stopFading(); B.setEffectiveWeight(0); } if (A) { A.stopFading(); A.setEffectiveWeight(1); }
+  // the stand under the walk (short strides as he slowed, strideBlend / halfSteps) is not stopped: its share stays under A
+  // and leaves over 0.3 s in posePose (stopped, the walk's share jumped to 1: a 15 cm pop at the feet)
+  const St = actions.stand, sigma = St && St !== A && St !== B && A && St.isRunning() ? clamp(St.getEffectiveWeight(), 0, 0.85) : 0;
+  for (const a of Object.values(actions)) if (a !== A && a !== B && a.isRunning() && !(a === St && sigma > 0.002)) a.stop();
+  if (B !== A) { B.reset().play(); B.stopFading(); B.setEffectiveWeight(0); } if (A) { A.stopFading(); A.setEffectiveWeight(1 - sigma); }
+  if (sigma > 0.002) { St.stopFading(); St.setEffectiveWeight(sigma); S.sigma = sigma; }
   current = B; want = S.clip; S.A = A; S.B = B; S.from = at; at = null;
   const r0 = boy.rotation.y, hA = hipsOf(A), hB = hipsOf(B);
   toWorld(hA, r0, boy.position, _h0);
@@ -2050,7 +2066,9 @@ function posePose(S){                                 // place him at S.t along 
   const K = S.keys; let i = 1; while (i < K.length - 1 && S.t > K[i][0]) i++;
   const a = K[i - 1], b = K[i], u = clamp((S.t - a[0]) / (b[0] - a[0] || 1), 0, 1), e = u * u * (3 - 2 * u);
   const w = a[1] + (b[1] - a[1]) * e, r = a[5] + (b[5] - a[5]) * e;
-  if (S.A && S.A !== S.B) S.A.setEffectiveWeight(1 - w); S.B.setEffectiveWeight(S.A === S.B ? 1 : w);
+  const sg = S.sigma ? S.sigma * (1 - smooth(0, 0.3, S.t * S.d)) : 0;   // the stand's share under A (startPose), gone within 0.3 s
+  if (S.A && S.A !== S.B) S.A.setEffectiveWeight((1 - w) * (1 - sg)); S.B.setEffectiveWeight(S.A === S.B ? 1 : w);
+  if (S.sigma) { const St = actions.stand; if (sg > 0.002) St.setEffectiveWeight((1 - w) * sg); else if (!S.sigmaOff) { S.sigmaOff = true; St.setEffectiveWeight(0); St.stop(); } }
   const hA = hipsOf(S.A), hB = hipsOf(S.B); for (let k = 0; k < 3; k++) _ho.setComponent(k, hA[k] + (hB[k] - hA[k]) * (S.A === S.B ? 1 : w));
   toWorld([_ho.x, _ho.y, _ho.z], r, _hm.set(0, 0, 0), _hm);              // the hips' offset from the root at this blend
   boy.position.set(a[2] + (b[2] - a[2]) * e - _hm.x, a[3] + (b[3] - a[3]) * e - _hm.y, a[4] + (b[4] - a[4]) * e - _hm.z); boy.rotation.y = r;
@@ -2106,9 +2124,27 @@ function turnTo(r, rate, dt){ let dr = r - boy.rotation.y; dr = Math.atan2(Math.
 // close under him (full strides swept round would kick the bed or the chair)
 function halfSteps(on){
   const W = actions.walk, St = actions.stand; if (!W || !St) return;
-  if (on) { const k = Math.min(0.5, (St.isRunning() ? St.getEffectiveWeight() : 0) + 0.06);   // eases in over a few frames
+  if (on) { const cur = St.isRunning() ? St.getEffectiveWeight() : 0, k = cur < 0.5 ? Math.min(0.5, cur + 0.06) : Math.max(0.5, cur - 0.06);   // eases in (or down from a shorter stride's share) over a few frames
+    if (!St.isRunning()) St.reset();                   // (faded out, the stand is disabled: play() alone left it at weight 0, and he turned with full strides)
     St.play(); St.stopFading(); St.setEffectiveWeight(k); W.stopFading(); W.setEffectiveWeight(1 - k); W.timeScale = STEP_TS; }
-  else { W.setEffectiveWeight(1); St.fadeOut(0.3); }
+  else { const w0 = Math.min(1, W.getEffectiveWeight()); W.stopFading(); W.setEffectiveWeight(1); St.fadeOut(0.3);   // the stand leaves over 0.3 s and the walk takes
+    if (w0 < 0.999) { W.fadeIn(0.3); W._weightInterpolant.sampleValues[0] = w0; } }                                   // its share as it goes: the two sum to 1 throughout (set to 1 at once, the walk's share jumped 0.5 -> 0.67)
+}
+// the walk's share of what the mixer blends now (the stand under it, or the pose it fades in from: both shorten the stride)
+function walkShare(W){
+  let sum = 0; for (const a of new Set(Object.values(actions))) if (a.isRunning()) sum += a.getEffectiveWeight();
+  return sum > 1e-3 ? clamp(W.getEffectiveWeight() / sum, 0, 1) : 1;
+}
+// the first rig (room/boy_motion.js): on his way the walk blends toward the stand by the gait model's stride share
+// (step.stride, drive()); the MakeHuman layer does the same in its pivot(). The clip's rate follows the share either way
+const SB = {w: 1};
+function strideBlend(S, dt){
+  const W = actions.walk, St = actions.stand; if (!W || !St || current !== W || S.turn0 != null) return;
+  if (W._weightInterpolant) { SB.w = 1; return; }     // (the walk still fading in from what came before: that fade is the blend, and the rate follows it)
+  SB.w += (S.stride - SB.w) * (1 - Math.exp(-dt / (S.stride < SB.w ? 0.3 : 0.15)));   // (the strides shrink over 0.3 s, grow back over 0.15: as pivot())
+  if (SB.w > 0.995 && !(St.isRunning() && St.getEffectiveWeight() > 0.001)) { SB.w = 1; return; }
+  if (!St.isRunning()) { St.reset(); St.play(); }
+  St.stopFading(); St.setEffectiveWeight(1 - SB.w); W.setEffectiveWeight(SB.w);
 }
 function drive(dt){                                   // one frame of the plan; returns whether he moves
   if (!goal || !boy) return false;
@@ -2142,7 +2178,10 @@ function drive(dt){                                   // one frame of the plan; 
       const turn = Math.abs(wrapA(Math.atan2(q[0] - p[0], q[1] - p[1]) - Math.atan2(p[0] - boy.position.x, p[1] - boy.position.z)));
       const slow = WALK_V * (1 - 0.6 * Math.min(1, turn / 1.2)); vc = slow + (WALK_V - slow) * smooth(0.15, 0.7, d0); }
     S.v = Math.min(vc, 0.12 + Math.sqrt(2 * WALK_A * rem), S.v + WALK_A * dt);
-    if (actions.walk) actions.walk.timeScale = Math.max(0.2, S.v / REF_SPEED);
+    const W = actions.walk;
+    if (W) { S.stride = strideShare(S.v, clipStep(REF_SPEED, W.getClip().duration, WALK_STEPS));   // the gait model's stride share at this speed (room/gait.js)
+      if (strideLayer === "page") strideBlend(S, dt);                                           // (the MakeHuman layer blends from S.stride itself: pivot())
+      W.timeScale = clipRate(S.v, walkShare(W), REF_SPEED); }                                     // the rate for the share the walk has in the blend now: its planted foot keeps still
     let left = S.v * dt;
     while (left > 0 && S.pts.length) { const q = S.pts[0]; _w.set(q[0] - boy.position.x, 0, q[1] - boy.position.z); const d = _w.length();
       if (d > 0.03) turnTo(Math.atan2(_w.x, _w.z), 4, dt);
@@ -2314,6 +2353,14 @@ function variants(c, dt){
   if (IV.cur) doVariant(IV.cur, c);
 }
 function endVariant(V){ if (V.n === "phone") peek = false; if (V.n === "drink") drop("bottle"); }
+// an arm's target (a hand, an elbow) inside the desk chair's footprint and no higher than its backrest goes up over it: the
+// stretch beside the chair put the rising hands through its back. CHAIR_TOP: the backrest's top over the pivot (handOn rests there)
+const CHAIR_TOP = 1.26;
+function overChair(p){
+  const n = CHAIR.node, b = BLOCK[2]; if (!n || !b) return p;
+  if (p.x > b[0] && p.x < b[1] && p.z > b[2] && p.z < b[3]) p.y = Math.max(p.y, n.position.y + CHAIR_TOP + 0.08);
+  return p;
+}
 let peek = false;                                     // he takes the phone out for a look (the "phone" variant)
 function doVariant(V, c){
   const B = bones, u = V.t / V.d, e = env(u, 0.22);
@@ -2334,6 +2381,7 @@ function doVariant(V, c){
     for (const [side, sx] of [["Left", 1], ["Right", -1]]) { if (side === "Right" && phoneWanted) continue;
       B[side + "Arm"].getWorldPosition(_l1).addScaledVector(TU, 0.54).addScaledVector(TL, -sx * 0.05).addScaledVector(TF, sat ? 0.16 : 0.05);
       B[side + "Arm"].getWorldPosition(_l2).addScaledVector(TL, sx * 0.4).addScaledVector(TF, sat ? 0.25 : -0.2);
+      overChair(_l1); overChair(_l2);                      // (neither the hand nor the elbow through the chair's back: up and over it)
       armTo(side, _l1, _l2, e * 0.95); }
     if (e > 0.4) gazeAt(head.getWorldPosition(_l3).addScaledVector(TU, 1.2).addScaledVector(TF, 1), 0.6, 0.3, "up");
     return;
@@ -3895,7 +3943,7 @@ if (DEBUG) { Object.assign(window, {THREE, scene, camera, controls, renderer, cl
   const animate0 = animate; let motion = null, mh = null, rig = null;
   // preview/room-mh: with the MakeHuman body (room/boy.glb = boy_mh.glb) room/boy_mh.js drives him instead (desk modes
   // from the real mocap); it waits for the old clips to finish loading, then takes over every slot
-  const mhEnv = () => ({THREE, load, bones, actions, HIPS, F, DISH_AT, chairNode, room: () => room, scene, setStride: v => { REF_SPEED = v; }, get boy(){ return boy; }, get mixer(){ return mixer; },
+  const mhEnv = () => ({THREE, load, bones, actions, HIPS, F, DISH_AT, chairNode, room: () => room, scene, setStride: (v, s) => { setStride(v, s); strideLayer = "mh"; }, get boy(){ return boy; }, get mixer(){ return mixer; },
     ...(V5 ? {clipDir: "room/mh_v5", fixClip: c => V5.m.fixClip(THREE, c, V5.conv), pageHips: h => V5.m.legacyHips(THREE, h, V5.conv), seatUp: 0, seatIn: 0.06, noHair: true} : {}),   // (v5: its clips, the live chair, its own hair)
     ...(V5 && V5.mx ? {clipDir: "room/mh_mx", ...V5.m.ROOM} : {}),   // (?char=mixamo: its clips, which clip plays which slot, the clips' keyboard and mouse)
     ...(DESK_EV ? {anim: "sova", deskEvents: () => DESK_EV.splice(0)} : {}),   // (&anim=sova: the desk states and what they react to)
@@ -3939,8 +3987,8 @@ if (DEBUG) { Object.assign(window, {THREE, scene, camera, controls, renderer, cl
       held:Object.keys(PROP.held).length > 0 || bag === "hand" || !!(trash && trash.held)}),
     setCurrent: a => { current = a; },
     movesDone: () => !MOVES || movesOn,            // #76's clips go in first (same slots); these take over after them
-    HIPS0: JSON.parse(JSON.stringify(HIPS)), stride0: REF_SPEED,   // the table and stride before any clip swap (?motion=old)
-    setStride: v => { REF_SPEED = v; }}); if (DEBUG) window.motion = motion; }).catch(e => console.warn("motion layer off:", e));
+    HIPS0: JSON.parse(JSON.stringify(HIPS)), stride0: REF_SPEED, steps0: WALK_STEPS,   // the table and stride before any clip swap (?motion=old)
+    setStride: (v, s) => { setStride(v, s); strideLayer = "page"; }}); if (DEBUG) window.motion = motion; }).catch(e => console.warn("motion layer off:", e));
   animate = dt => { let moving;
     if (pickRig() === "mh") moving = mh ? mh.animate(dt) : mhEnv().step0(dt);   // (the old rig's layers stay off)
     else { moving = animate0(dt); if (motion) motion.update(dt); }

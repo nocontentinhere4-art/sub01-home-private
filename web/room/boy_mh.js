@@ -50,7 +50,10 @@ const BED = {hips: [-0.90, 0.89], head: -1,               // where his hips lie 
   // 10 cm from it since the 1.90 m bed: the back of his head was 5 cm into its oak),
   edge: [-0.40, 0.36], face: Math.PI,                        // where he sits on its edge (ANCHOR.bedside's seat), facing the desk (-z),
   box: [-1.90, 0.05, 0.25, 1.50], top: 0.805};                // and the mattress (x0, x1, z0, z1) with its top less 1.5 cm of give
-const WALK_V = 0.67;                                         // room_walk's travel speed (m/s)
+// room_walk's reference foot speed (m/s: its planted foot moves back under the hips at this rate), measured on the shipped
+// clips by room_build/kimodo_g12/walk_metrics.py (H13, 2026-10-23): 0.675 on v5, 0.714 on the Mixamo rig (room/mh_mx/),
+// cycle 1.267 s, stride 0.855 m. The page plays the walk at speed / (stride share · this), room.html drive()
+const WALK_V = 0.675, WALK_V_MX = 0.714;
 // the Mixamo typing capture (room_mx_typing, G12): where the performer's index fingers were, in the clip's frame as the page
 // has it (fixClip: body = (-z, y + 0.02, x) of the GLB's): G12's measured F (left index) and J (right index) last joints,
 // means over the clip, 1.5 cm on to the fingertips and 1 cm down to the key tops under them. Each hand is carried by its
@@ -277,7 +280,7 @@ export function createMH(env) {
     for (const k of ["dine", "eat"]) { A[k] = M.actions.act_eat; H[k] = H.act_eat.slice(); }
     for (const k of onEdge) { A[k] = M.actions.edge; H[k] = H.mh_edge.slice(); }
     for (const k of upright) { A[k] = M.actions.stand; H[k] = H.mh_stand.slice(); }
-    A.walk = M.actions.walk; H.walk = H.room_walk.slice(); if (env.setStride) env.setStride(WALK_V);
+    A.walk = M.actions.walk; H.walk = H.room_walk.slice(); if (env.setStride) env.setStride(/mh_mx/.test(env.clipDir || "") ? WALK_V_MX : WALK_V, 2);
     for (const k of lying) { A[k] = M.actions.lie; H[k] = H.mh_lie.slice(); }
     if (seg.bt) {                                             // asleep: lying as room_bedtime ends (it is how he got there)
       const sl = stillClip("mh_sleep", got.bedtime, got.bedtime.duration); M.actions.sleep = make(sl); H.mh_sleep = pageHips(sl, 0);
@@ -1887,7 +1890,10 @@ export function createMH(env) {
     const speed = M.lpOk ? Math.hypot(b.position.x - _lp.x, b.position.z - _lp.z) / Math.max(dt, 1e-3) : 1;
     _lp.copy(b.position); M.lpOk = true;
     const walking = !!(S && (S.k === "walk" || S.k === "turn") && st.current === W);
-    const want = walking ? Math.min(1, Math.max(0.15, speed / 0.35)) : 1;
+    // on his way (not turning on the spot) the stride is the page's gait model's share for his speed (room/gait.js, drive():
+    // shorter steps at a slower pace, the clip's rate set from the share so the planted foot keeps still); turning, as before
+    const straight = walking && S.k === "walk" && S.turn0 == null && S.stride != null;
+    const want = walking ? (straight ? S.stride : Math.min(1, Math.max(0.15, speed / 0.35))) : 1;
     // (from standing: the first steps are short ones; after the get-up he is mid-stride. From the walk itself - its last
     // step ended and a turn on the spot begins - from the walk's share as it is: set to 0.15 at once, 85 % of the standing
     // pose landed in one frame, a foot 24 cm)
@@ -1909,11 +1915,12 @@ export function createMH(env) {
         if (st.current !== W && st.current !== St && !(S && S.k === "pose") && St.isRunning() && St.getEffectiveWeight() > 0 && !St._weightInterpolant) St.fadeOut(0.3);
       }
       M.ww = 1; return; }
-    if (M.ry0 == null || M.ww > 0.99) M.ry0 = b.rotation.y;    // (where this turn on the spot started)
+    if (M.ry0 == null || M.ww > 0.99 || straight) M.ry0 = b.rotation.y;    // (where this turn on the spot started; on his way, wherever he faces)
     if (M.ww > 0.995 && !M.pivoting) return;
     M.pivoting = M.ww <= 0.995;
     if (!St.isRunning()) { St.reset(); St.play(); }
     W.setEffectiveWeight(M.ww); St.setEffectiveWeight(1 - M.ww); env.mixer.update(0);
+    if (straight) return;                                      // (the hips stay the clip's: walking on, he does not turn about his feet)
     // and he turns about his feet, not the root (the stand's feet are ahead of it: at the sill his toes would reach the
     // bed): his hips move by the turn of that offset (the mixer sets them anew each frame), fading out as he walks off
     const H = env.bones.Hips, f = M.standFeet; if (!H || !f) return;

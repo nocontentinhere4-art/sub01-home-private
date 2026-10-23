@@ -186,6 +186,29 @@ def test_module_and_its_single_hook():
         assert word not in js.lower()
 
 
+def test_gait_model_drives_the_walk():
+    """The walk's stride and rate come from the gait model (room/gait.js): the page imports it, drive() sets the step's
+    stride share and the clip's rate from the share the walk has in the blend, the MakeHuman layer's pivot() reads that
+    share on his way, and the motion layer's contact lock engages within the owner's centimetre of the floor."""
+    html = (ROOT / "web" / "room.html").read_text()
+    js = (WEB / "boy_motion.js").read_text()
+    mh = (WEB / "boy_mh.js").read_text()
+    gait = (WEB / "gait.js").read_text()
+    assert 'from "./room/gait.js"' in html
+    for s in ("S.stride = strideShare(S.v, clipStep(REF_SPEED, W.getClip().duration, WALK_STEPS))",
+              "W.timeScale = clipRate(S.v, walkShare(W), REF_SPEED)", "function strideBlend(S, dt)", "function walkShare(W)",
+              "const setStride = (v, steps = 2)", "setStride(0.803, 2)", 'fetch("room/boy_moves_walk.json"', "function overChair(p)"):
+        assert s in html, s
+    assert "Math.max(0.2, S.v / REF_SPEED)" not in html                           # (the rule up to 5e45c84: speed over REF_SPEED alone)
+    assert "REF_SPEED = 0.86" not in html                                         # (the UAL walk's measured 0.803, not the old constant)
+    assert "const ref = info.refFootSpeed || info.stride;" in js                   # (the manifest's measured speed first)
+    assert "const WALK_V = 0.675, WALK_V_MX = 0.714;" in mh                        # (room_walk on v5 and on the Mixamo rig: walk_metrics.py)
+    for s in ("export const WALK_RATIO = 0.32", "export function gaitAt(", "export function strideShare(", "export function clipRate(", "export function clipStep("):
+        assert s in gait, s
+    assert "const straight = walking && S.k === \"walk\" && S.turn0 == null && S.stride != null" in mh
+    assert "const CONTACT = 0.01;" in js and "low < F + CONTACT && vel < 0.35" in js
+
+
 def test_licences_recorded():
     credits = (WEB / "CREDITS.md").read_text()
     for s in ("ARDY", "Apache-2.0", "NVIDIA Open Model", "Llama 3", "boy_m_"):

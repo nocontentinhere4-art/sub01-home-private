@@ -3178,7 +3178,8 @@ renderer.setAnimationLoop(() => {
   // Away (presence "away"): no body; the camera still follows homeState.position
   // and the body returns on the first frame he is back (step() sets visibility).
   firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,
-    following && !privacyActive && actorVisible(homeState), camera);
+    following && !privacyActive && actorVisible(homeState), camera,
+    (x, z) => floorAt(x, z, camera.position.y - 1.65));   // (the floor under the camera: the body stands on it, its eyes at the camera)
   for (const panel of curtainPanels)
     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;
