@@ -2,7 +2,10 @@
 import importlib.util
 import json
 import math
+import os
+import re
 import struct
+import subprocess
 import zlib
 from pathlib import Path
 
@@ -222,3 +225,108 @@ box(0.65, 0.6, 0.16, -1.2, 3.77, 4.8, M.cream, 0.07);
     current = audit.procedural_box_furnishings(ROOT / 'web/house/home.js')
     assert not any('modern_arm_chair_01' in c['overlapping_assets']
                    and c['role'] == 'visible-furnishing' for c in current)
+
+
+# ---------------------------------------------------------------- git-tracked house references
+
+ASSETS = 'web/house/assets'
+REFERENCE_EXT = ('.glb', '.gltf', '.bin', '.jpg', '.jpeg', '.png', '.webp', '.hdr', '.json', '.html',
+                 '.exr', '.blend', '.step', '.ktx2')
+# Repo-relative files that committed JSON or the page reference but git does not track.
+# This allowlist may only shrink. A file that is committed must leave this set in the same
+# change (the test fails on a stale entry); any other dangling reference fails the test.
+KNOWN_MISSING = frozenset({
+    # Requested by home.js through web/house/assets/optional-manifest.json; placeholders stay.
+    'web/house/assets/bath-door-original/bath-door.glb',
+    'web/house/assets/bath-door-original/bath-door.json',
+    'web/house/assets/bath-fixtures-original/toilet.glb',
+    'web/house/assets/bath-fixtures-original/toilet.json',
+    'web/house/assets/bath-fixtures-original/vanity.glb',
+    'web/house/assets/bath-fixtures-original/vanity.json',
+    'web/house/assets/bath-light-original/bath-light.glb',
+    'web/house/assets/bath-light-original/bath-light.json',
+    # Provenance pointers inside committed JSON; the page never loads these files.
+    'web/house/assets/lighting/components/indirect/bake.json',
+    'web/house/assets/lighting/components/indirect/indirect.exr',
+    'web/house/assets/lighting/components/sky-direct/bake.json',
+    'web/house/assets/lighting/components/sky-direct/indirect.exr',
+    'web/house/assets/real-linea140/20261014-linea140-inventory.json',
+    'web/house/assets/real-steel-shelf/20261014-steel-frame-shelf-inventory.json',
+})
+PAGE_LITERAL = re.compile(r'''["'`](/(?:house/assets|room)/[^"'`\s?${}+]+\.(?:glb|gltf|bin|jpg|jpeg|png|webp|hdr|json|html))(?:\?[^"'`\s]*)?["'`]''')
+
+
+def _git_tracked():
+    try:
+        listed = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip('git metadata is unavailable; the tracked-asset check needs a git checkout')
+    return {item for item in listed.decode().split('\0') if item}
+
+
+def _json_strings(node):
+    if isinstance(node, dict):
+        for value in node.values():
+            yield from _json_strings(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _json_strings(value)
+    elif isinstance(node, str):
+        yield node
+
+
+def _resolve(json_dir, value):
+    # Same order the page's own files use: beside the JSON, then the asset root, then the repo root.
+    candidates = [os.path.normpath(os.path.join(json_dir, value)),
+                  os.path.normpath(os.path.join(ROOT, ASSETS, value)),
+                  os.path.normpath(os.path.join(ROOT, value))]
+    for candidate in candidates:
+        if os.path.isfile(candidate):
+            return os.path.relpath(candidate, ROOT).replace(os.sep, '/')
+    return os.path.relpath(candidates[0], ROOT).replace(os.sep, '/')
+
+
+def _referenced_files():
+    found = []  # (repo-relative key, where it is referenced)
+    for path in sorted((ROOT / ASSETS).rglob('*.json')):
+        for value in _json_strings(json.loads(path.read_text())):
+            text = value.strip()
+            if text.lower().endswith(REFERENCE_EXT) and ' ' not in text and not text.startswith(('/', 'http://', 'https://', 'data:')):
+                found.append((_resolve(str(path.parent), text), path.relative_to(ROOT).as_posix() + ' :: ' + text))
+    for source in [ROOT / 'web/house/home.js', *sorted((ROOT / 'web/house').glob('*.mjs'))]:
+        for match in PAGE_LITERAL.finditer(source.read_text()):
+            found.append(('web' + match.group(1), source.relative_to(ROOT).as_posix() + ' :: ' + match.group(1)))
+    return found
+
+
+def test_house_asset_references_are_tracked_or_known_missing():
+    tracked = _git_tracked()
+    unresolved = {}
+    for key, where in _referenced_files():
+        if key not in tracked:
+            unresolved.setdefault(key, where)
+    new = sorted(key for key in unresolved if key not in KNOWN_MISSING)
+    stale = sorted(key for key in KNOWN_MISSING if key not in unresolved)
+    assert not new, 'untracked asset references; commit the files or review them into KNOWN_MISSING: ' + '; '.join(
+        f'{key} <- {unresolved[key]}' for key in new)
+    assert not stale, 'KNOWN_MISSING entries are tracked or no longer referenced; remove them: ' + ', '.join(stale)
+
+
+def test_optional_manifest_matches_home_js_requests():
+    manifest = json.loads((ROOT / ASSETS / 'optional-manifest.json').read_text())
+    assert manifest['schema'] == 'sub01-house-optional-assets/1' and manifest['noun'] == 'fixture'
+    ids = [item['id'] for item in manifest['assets']]
+    assert len(ids) == len(set(ids)) == 4
+    for item in manifest['assets']:
+        assert item['label'] and item['placeholder'], item['id']
+        assert (ROOT / item['builder']).is_file(), item['builder']
+        # The sidecar and the GLB sit side by side, so one folder holds both files.
+        assert os.path.dirname(item['glb']) == os.path.dirname(item['sidecar']), item['id']
+    home = (ROOT / 'web/house/home.js').read_text()
+    primitives = (ROOT / 'web/house/replaced_primitives.mjs').read_text()
+    fallback_ids = set(re.findall(r'^  (\w+): Object\.freeze\(\[', primitives, re.M))
+    literal_ids = set(re.findall(r"optionalAssets\.(?:get|fail)\('([^']+)'", home))
+    assert fallback_ids <= set(ids) and literal_ids <= set(ids)
+    assert set(ids) == fallback_ids | literal_ids, 'every optional-manifest entry must be requested by home.js'
+    assert 'Object.keys(BATH_FALLBACK_CALLS).map(name =>' in home and 'optionalAssets.get(name)' in home
+    assert 'optionalAssets.noteText()' in home

@@ -48,6 +48,7 @@ import { createHouseControlsPanel, operatorMutate } from './house_controls_panel
 import { applyHavenSeamDetail, applyQueenBedOak } from './furnishing_detail.mjs';
 import { createBathFixtureMaterials, installBathFixture } from './bath_fixture_materials.mjs';
 import { BATH_FALLBACK_CALLS, findReplacedPrimitives, sameCalls } from './replaced_primitives.mjs';
+import { createOptionalAssets } from './optional_assets.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
@@ -966,10 +967,12 @@ box(0.42, 0.42, 0.6, -2.9, 3.24, 2.23, M.white, 0.11);
 box(0.43, 0.64, 0.18, -2.9, 3.47, 2.49, M.white, 0.07);
 box(0.36, 0.04, 0.46, -2.9, 3.48, 2.18, M.cream, 0.08);
 obstacle(-2.9, 2.23, 0.45, 0.72, 1);
-// Original bath vanity/toilet, ceiling light and oak door leaf (tools/build_home_bath_*.py).
-// The primitives above stay unbatched and are hidden only after the matching
-// GLB + sidecar loaded; any missing asset or mismatch keeps them as they are.
+// Original bath vanity/toilet, ceiling light and oak door leaf (tools/build_home_bath_*.py),
+// listed in assets/optional-manifest.json. The primitives above stay unbatched and are
+// hidden only after the matching GLB + sidecar loaded; a missing or mismatched asset keeps
+// them as they are, is logged once and is named in the House panel.
 const bathMaterials = createBathFixtureMaterials(T, { oak: M.architectureOak, brass: M.brass, metal: M.metal });
+const optionalAssets = createOptionalAssets({ loadGltf: url => gltfLoader.loadAsync(url) });
 const bathFallback = {};
 for (const [name, calls] of Object.entries(BATH_FALLBACK_CALLS)) {
   try {
@@ -978,25 +981,16 @@ for (const [name, calls] of Object.entries(BATH_FALLBACK_CALLS)) {
   } catch (error) { console.warn('Bath ' + name + ' stays procedural:', error.message); }
 }
 let bathLight = null;
-function loadBathAsset(dir, name) {
-  return Promise.all([
-    fetch('/house/assets/' + dir + '/' + name + '.json?v=1').then(r => {
-      if (!r.ok) throw Error('sidecar ' + r.status);
-      return r.json();
-    }),
-    gltfLoader.loadAsync('/house/assets/' + dir + '/' + name + '.glb?v=1'),
-  ]);
-}
 const bathFixturesReady = Promise.all(Object.keys(BATH_FALLBACK_CALLS).map(name =>
-  loadBathAsset('bath-fixtures-original', name).then(([sidecar, gltf]) => {
+  optionalAssets.get(name).then(({sidecar, gltf}) => {
     if (!bathFallback[name] || !sameCalls(sidecar.replaces_home_js, BATH_FALLBACK_CALLS[name]))
       throw Error('sidecar does not match the home.js fallback');
     scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
     for (const mesh of bathFallback[name]) mesh.visible = false;
     document.getElementById('status').dataset['bath' + name[0].toUpperCase() + name.slice(1)] = 'original';
     renderer.shadowMap.needsUpdate = true;
-  }).catch(error => console.warn('Bath ' + name + ' fallback:', error.message))));
-const bathLightReady = loadBathAsset('bath-light-original', 'bath-light').then(([sidecar, gltf]) => {
+  }).catch(error => optionalAssets.fail(name, error))));
+const bathLightReady = optionalAssets.get('bath-light').then(({sidecar, gltf}) => {
   const spec = sidecar.light;
   if (spec?.type !== 'PointLight' || spec.room !== 'bathroom') throw Error('unexpected light spec');
   scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
@@ -1006,14 +1000,14 @@ const bathLightReady = loadBathAsset('bath-light-original', 'bath-light').then((
   scene.add(bathLight);
   switchedMaterials.add(bathMaterials.diffuser);
   applyRoomLights();
-}).catch(error => console.warn('Bath light fallback:', error.message));
-const bathDoorReady = loadBathAsset('bath-door-original', 'bath-door').then(([sidecar, gltf]) => {
+}).catch(error => optionalAssets.fail('bath-light', error));
+const bathDoorReady = optionalAssets.get('bath-door').then(({sidecar, gltf}) => {
   if (sidecar.runtime_parent !== 'bathDoor') throw Error('unexpected door parent');
   // The slab keeps sliding and colliding; only its look is replaced.
   bathDoor.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
   bathDoor.material = new T.MeshBasicMaterial({ visible: false });
   renderer.shadowMap.needsUpdate = true;
-}).catch(error => console.warn('Bath door fallback:', error.message));
+}).catch(error => optionalAssets.fail('bath-door', error));
 box(0.9, 0.1, 1, -1.5, 3.08, 2.15, tiles, 0.015);
 const showerGlass = new T.MeshStandardMaterial({
   color: "#c2d5d1",
@@ -1479,10 +1473,19 @@ document.getElementById("curtain").onclick = toggleCurtain;
 const houseControlsBox = document.createElement('details');
 houseControlsBox.id = 'house-controls';
 houseControlsBox.append(Object.assign(document.createElement('summary'), { textContent: 'House' }));
+// One line naming optional house assets that did not load; their placeholders stay in the room.
+const optionalAssetNote = Object.assign(document.createElement('p'), { className: 'muted', hidden: true });
+houseControlsBox.append(optionalAssetNote);
 document.querySelector('footer').append(houseControlsBox);
 const houseControls = createHouseControlsPanel(houseControlsBox,
   { mutate: operatorMutate(fetch, operatorToken), operatorKey: operatorToken });
 houseControlsBox.addEventListener('toggle', () => houseControls.refreshOperator());
+Promise.allSettled([bathFixturesReady, bathLightReady, bathDoorReady]).then(() => {
+  const text = optionalAssets.noteText();
+  optionalAssetNote.textContent = text;
+  optionalAssetNote.hidden = !text;
+  document.getElementById('status').dataset.optionalAssets = JSON.stringify(optionalAssets.summary());
+});
 addEventListener("keydown", (e) => {
   if (e.key === "Escape" && (panelKind === "view" || !e.target.matches("input,textarea"))) {
     if (panelKind) { e.preventDefault(); closePanel(); }
