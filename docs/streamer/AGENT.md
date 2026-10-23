@@ -14,6 +14,8 @@ providers and services; the Kimi HTTP shape against a loopback server).
 | `--fallback-provider` / `STREAMER_FALLBACK_PROVIDER`, `--fallback-window` / `STREAMER_FALLBACK_WINDOW_S` | `auto` (the other provider when its key exists; `kimi`, `anthropic`, `none`), 600 s |
 | `--kimi-model` / `STREAMER_KIMI_MODEL`, `--kimi-key-file` / `STREAMER_KIMI_KEY_FILE` (env `MOONSHOT_API_KEY` wins), `--kimi-base-url` / `KIMI_BASE_URL`, `--kimi-price` / `STREAMER_KIMI_PRICE` | `kimi-k3.1-pro`, `/home/unreal/.sub01-private/kimi-key` (mode 0600, pod only), `https://api.moonshot.ai/v1`, the PRICES table |
 | `--calls-per-hour` / `STREAMER_CALLS_PER_HOUR`, `--max-usd-day` / `STREAMER_MAX_USD_PER_DAY` | 240, off |
+| `--desktop-url` / `STREAMER_DESKTOP_URL` | `http://127.0.0.1:8832`: the desktop runner, in `chromium` or `vagon` mode (the agent reads the mode from each observation) |
+| `--pc-allow-games` / `--no-pc-allow-games` / `STREAMER_PC_ALLOW_GAMES` | on: on the remote PC, Steam and a game from its library may be started (see "On the remote PC") |
 
 ## Providers (owner, 2026-10-23: Kimi as extra help)
 Two decision models speak the same contract (the `SYSTEM` prompt, the compact JSON state, the marked screenshot, strict
@@ -140,6 +142,97 @@ providers fail on the same call; see Providers), an exhausted budget or no key a
 at most once per 10 min; the identity question is still answered honestly. Probes with backoff 5, 10, 20, 40, 80, 160,
 300 s (max), each trying the active provider and then the other; a successful call leaves quiet mode. Budget: probes when
 the hour frees. No key: stays quiet.
+
+## On the remote PC (the desktop runner in `--pc-mode vagon`; DESKTOP.md "Vagon mode", VAGON.md Part A)
+When the runner shows the owner's Vagon Cloud Computer, `/desktop/observe` carries `mode: "vagon"`, `remote_ready` and a
+plain screenshot (the Windows desktop scaled to 1280x720, or the grey "PC not connected" picture), with no marks and no
+page text. Nothing of this exists in `chromium` mode, whose behaviour is unchanged.
+
+**Perception.** `normalize` keeps `mode` and `remote_ready`; `GET /pc/state` is read at most every 10 s for
+`vagon.phase` (`login_required|dashboard|starting|connecting|connected|ended|blocked`), `logged_in`, `machine`. Every
+screenshot is reduced to a 32x18 grey thumbnail (`frame_signature`) and a 64-bit difference hash (`frame_hash`); both go
+into events.jsonl. **Not connected** (`remote_ready` false): no action is sent, the loop looks every 10 s (`PC_POLL_S`),
+no model call is made for actions (a chat batch may still be answered; every action in that answer is dropped), new
+viewer requests are refused with "My PC isn't connected right now." (`pc_offline`), a request or game routine in flight
+ends, and one fixed line (`PC_WAIT_LINES`: "The PC is still connecting; give it a minute." and three others, priority
+low) is said after 30 s and then every 2-3 minutes at most. `GET /state` shows `pc {mode, remote_ready, phase,
+logged_in, machine, frame_hash, allow_games, pillow, routine, game}`.
+
+**Actions when connected** (`SYSTEM_PC` is appended to the prompt; `clean_pc_action` validates): decisions are
+screenshot-only. `click {"point":[x,y]}` in **pixels of the 1280x720 screenshot the model sees** (x 0..1279, y 0..719;
+the runner scales them to the 1920x1080 remote frame; the same space as `click{point}` in chromium mode); `type {text,
+submit}`; `key` with named keys and combos written as the model likes (`enter`, `escape`, `space`, `tab`, `backspace`,
+arrows, `home/end/pageup/pagedown`, `f1`-`f12`, a letter or digit, `ctrl+l`, `ctrl+t`, `ctrl+w`, `alt+tab`,
+`alt+left`; `normalize_key` turns them into the runner's `Control+l` form; a bare `win` is the Start menu, sent as
+`Control+Escape` because the runner refuses a lone modifier); `scroll`; `navigate`/`search` (the runner presses Ctrl+L
+in the remote browser, types the address or the DuckDuckGo URL and Enter: only meaningful with a browser window in
+front); `back` (Alt+Left); `wait {seconds}` 0.5-10; `zoom {"point":[x,y]}` (no input: the next model call carries a
+second image, a 2x crop of the 320x180 box around the point, with `zoom {center, box, scale, image: 2}` in the state);
+`launch_game {"name"}` and `stop_game` (the routine below). The model is also told to narrate what it sees (the
+desktop, Steam, the game) in his own words; the pacing rules are the same as everywhere else.
+
+**Verification.** The runner has no load state on a stream, so every input but `wait` is `pending` until the next
+observation: `track_pc` compares the thumbnails before and after (mean grey difference, `pixel_diff`; `PC_CHANGE_MIN` =
+2) and the runner's own 0.8 s comparison, and writes `verdict: changed|unchanged`, `hash_before`, `hash_after` into the
+`outcome` row and `last_outcome`. An unchanged input is a failure as in chromium mode (`fail_counts`, `avoid`, the loop
+breaker, which on the PC replaces the third attempt by a 3 s `wait`). A click that changed nothing earns the model an
+automatic 2x crop around its point with the next look; asked for or automatic, there is at most one crop per action.
+The state then asks the model to confirm the intended outcome: `"outcome_ok": true|false` is logged
+(`outcome_confirm`), and `false` after a `changed` verdict (something moved, not what he meant) counts as a failure too.
+
+**Guard rails, in code** (the prompt repeats them, the code enforces them): `type` is refused for credential patterns
+(`CREDS`), card-like numbers, e-mail addresses, `sk-` keys and IBANs, install/system commands (`PC_SYSTEM_WORDS`:
+install, download, setup, winget, powershell, cmd, regedit, shutdown, runas, administrator, `.exe` ...), purchase words
+(`PC_MONEY_WORDS`: buy, purchase, checkout, wallet, cart, add funds, redeem, gift card, pre-order ...), blocked hosts or
+URLs inside the text, the site's chat filter, and text copied from chat. `key` is refused for every Control+Alt
+combination (ctrl+alt+del), Alt+F4 (only the stop routine may press it), `PC_KEYS_NEVER` (win+l, task manager,
+Alt+Space, Alt+Escape, Shift+F10), any Windows-key combination outside `PC_META_ALLOWED` (win+s, win+d, win+tab, window
+snapping arrows), and the clipboard combinations. `navigate`/`search` pass `url_problem`, `BLOCKED_HOST`/`BLOCKED_PATH`
+(banking, payment, adult, login/account, owner services, checkout/cart/download paths) and the chat-copy rules; what
+the runner still refuses (`blocked: ...` in `outcome.errors`) is recorded as a `pc_blocked` row and counter. Pixels
+cannot tell a password field, which is why the rules are on the text and the keys. Chat requests to download, install
+or "run as administrator" are refused (`code_or_download`, `admin`), purchases with "I don't buy or pay for anything on
+stream." (`payment`; on the PC any cart/wallet/redeem line is a payment request). `--no-pc-allow-games` turns the game
+routine off: the model's `launch_game`/`stop_game` are dropped and "play Detroit" gets "Games are off on this stream
+today." (`games_off`).
+
+**The game routine** (`launch_game`, one action for the model or the chat; `start_routine`, `routine_step`): a state
+machine driven by the main loop, inputs by code, waits on the clock, screenshots compared, the model confirming each
+checkpoint with `"confirm": true|false` (and allowed only the one kind of action a step needs): `Control+Escape` (the
+Start menu; `Meta+s`, Windows search, as the fallback when the picture did not change), type `Steam`, Enter, wait for
+the Steam window (pixel change, then the model: up to 60 s), the model clicks the LIBRARY tab (confirmed), the Library
+search box, the code types the name, the model clicks the game, then the green PLAY button (its question forbids
+Install/Buy/cart/wallet), wait up to 120 s for the game window (pixel change, then the model). `launch_game` with an
+empty name opens Steam only. Then the **gentle play loop**: `pc.playing` is set, the model is called at most every 2-4 s
+(`GAME_STEP_S`, stretched by the call budget), one input per turn from the whitelist `GAME_KEYS` (w a s d, Space,
+Enter, Escape, arrows), a left `click{point}`, `wait`, `zoom` or `stop_game`; everything else is dropped. `stop_game`:
+Escape, the model confirms the game is still in front (else nothing more happens: `not_foreground`), the one Alt+F4 the
+code may press, the model confirms the desktop or Steam is back. Every step is a `routine` row with the frame hashes
+(`routine_start`, `routine`, `routine_end {why, stages, hashes}`); the end is said with a fixed line (`GAME_LINES`:
+"Steam is up and the game is running." / "Steam is open." / "Game closed; back to the desktop." / "Steam isn't
+cooperating right now; another time."). A whole launch is capped at 8 minutes; a stage without its change or
+confirmation fails (`start_menu`, `steam_missing`, `library`, `not_in_library`, `no_play`, `game_missing`); a
+disconnect ends it (`pc_disconnected`). Chat: "play Detroit", "can you play Detroit: Become Human", "open/launch
+Steam" are executed as the routine (`chat_request executed launch_game`, acknowledged, finished with the fixed line);
+"stop the game", "quit playing" as `stop_game`.
+
+**Deploy.** The agent needs no new origin: the supervisor already passes `--desktop-url http://127.0.0.1:8832`, and the
+same runner serves both modes, so pointing the runner at the Vagon page is enough:
+`python3 scripts/streamer_up.py start --child-arg desktop='--pc-mode vagon'` (workstation kind from `vagon.json`, VAGON.md
+A2). Games off: add `--child-arg "agent=--no-pc-allow-games"`. A runner on another port: `--child-arg "agent=--desktop-url
+http://127.0.0.1:8838"` (the child argument comes after the supervisor's own flag and wins). `STREAMER_PC_ALLOW_GAMES` is
+not in the supervisor's `AGENT_PASSTHROUGH`: use the flag. The log says `the desktop is the remote PC (vagon mode) ...`
+on the first observation and `remote PC connected / not connected (PC <phase>)` on every change.
+
+**Limits.** The runner's vocabulary has no mouse move without a click, no right or double click, no drag: a game that
+needs them is out of reach, and "mouse moves of small amplitude" are not available. The Windows key alone is refused by
+the runner (hence Control+Escape). Steam's Library navigation relies on the model's clicks (two attempts per step).
+Verification is by pixels only: a static game scene reads as "unchanged" and a video playing as "changed". The play
+loop spends one model call per input, so with the default 240 calls/hour the gaps stretch to 10-15 s near the cap and
+quiet mode ends the loop at the cap; raise `--calls-per-hour` for a long session. Windows must be unlocked and Steam
+logged in on the machine (the owner's part, VAGON.md A2); the agent never sees the login page (privacy lock) and only
+notices `remote_ready` false. Without Pillow in the agent's venv (`requirements.txt` has it) change detection falls back
+to byte identity and no crop is made (`pc.pillow` false in `/state`).
 
 ## Kill switch, status, verification aids
 `<streamer-dir>/STOP`: watched every 0.25 s; actions and speech stop within 1 s (step cancelled, voice `/stop`), desktop

@@ -5,6 +5,8 @@ event file, the injected provider error and the HTTP contract with the other ser
 No network and no AI calls: the provider is scripted, the services are in-process fakes (or aiohttp servers on loopback).
 """
 import asyncio
+import base64
+import io
 import json
 import os
 import random
@@ -17,6 +19,7 @@ from types import SimpleNamespace
 import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -1706,3 +1709,473 @@ def test_agent_builds_the_chain_from_the_key_files(tmp_path, monkeypatch):
                                fallback_provider="kimi", **base), services=World(clock), clock=clock)
     assert agent.quiet.on and agent.quiet.kind == "nokey" and agent.status()["provider"]["active"] is None
     assert agent.status()["api_key"] is False
+
+
+# --- 15. the remote PC (desktop runner in vagon mode): perception, guard rails, the game routine, chat ----------------------
+def frame(color, size=(64, 36)):
+    """A tiny synthetic screenshot (a PNG: the agent decodes whatever Pillow reads) standing for the runner's jpeg_b64.
+    Stripes whose period depends on the colour give different pictures different difference hashes."""
+    img = Image.new("RGB", size, color)
+    step = 6 + sum(color) % 7
+    for x in range(0, size[0], step):
+        img.paste((255 - color[0], color[1], 255 - color[2]), (x, 0, x + step // 2, size[1] // 3))
+    out = io.BytesIO()
+    img.save(out, "PNG")
+    return base64.b64encode(out.getvalue()).decode("ascii")
+
+
+F_GREY, F_DESKTOP, F_START, F_STEAM, F_LIB, F_FILTER, F_PAGE, F_GAME, F_GAME2 = (
+    frame(c) for c in ((72, 74, 78), (20, 60, 120), (40, 40, 40), (23, 29, 37), (60, 70, 90), (90, 100, 120), (120, 130, 150),
+                       (200, 120, 40), (205, 125, 45)))
+
+
+class PCWorld(World):
+    """The desktop runner in vagon mode: the remote PC's pixels (synthetic frames), `remote_ready`, `/pc/state`; an action
+    changes the frame as `on_act` scripts it; the runner reports no load state (changed False), so the agent must compare
+    frames. `block` scripts the runner's own policy refusals ("blocked: ..." in outcome.errors, as the real one)."""
+
+    def __init__(self, clock, ready=True):
+        super().__init__(clock)
+        self.ready, self.frame = ready, F_DESKTOP
+        self.phase, self.logged_in, self.machine = ("connected", True, "on") if ready else ("connecting", True, "starting")
+        self.on_act, self.block, self.polls, self.act_times = None, None, 0, []
+
+    async def observe(self):
+        self._check("desktop")
+        self.observes += 1
+        return {"frame_id": self.observes, "url": "https://app.vagon.io", "title": "remote desktop",
+                "jpeg_b64": self.frame if self.ready else F_GREY, "width": 1280, "height": 720, "text": "", "marks": [],
+                "scroll": {"y": 0, "max": 0}, "loading": False, "dialogs": [], "mode": "vagon", "remote_ready": self.ready}
+
+    async def pc_state(self):
+        self._check("desktop")
+        self.polls += 1
+        return {"status": "ready", "pc_mode": "vagon", "vagon": {"kind": "workstation", "phase": self.phase, "connected": self.ready,
+                                                                   "logged_in": self.logged_in, "machine": self.machine}}
+
+    async def act(self, action):
+        self._check("desktop")
+        self.acts.append(action)
+        self.act_times.append(self.clock())
+        if not self.ready and action["action"] != "wait":
+            return {"ok": False, "outcome": {"errors": ["the remote desktop is not connected (PC connecting); wait and observe again"],
+                                             "changed": False}}
+        why = self.block(action) if self.block else None
+        if why:
+            return {"ok": False, "outcome": {"errors": [why], "changed": False, "load_ms": 0}}
+        if self.on_act:
+            self.on_act(action)
+        return {"ok": True, "outcome": {"url_before": "", "url_after": "", "title_after": "", "changed": False, "errors": [],
+                                        "load_ms": 800, "dialog": None}}
+
+
+def pc_make(tmp_path, *script, ready=True, clock=None, **cfg_kw):
+    clock = clock or Clock()
+    world = PCWorld(clock, ready=ready)
+    cfg = SA.Config(streamer_dir=str(tmp_path / "streamer"), event_file=str(tmp_path / "priv" / "event.json"),
+                    privacy_file=str(tmp_path / "priv" / "privacy.json"), native_pid=1, native_start_ticks=2, token="tok",
+                    status_port=0, **cfg_kw)
+    provider = Provider(*script) if script else None
+    agent = SA.Agent(cfg, services=world, provider=provider, clock=clock, rng=random.Random(11))
+    agent.pacing.opened = True
+    return agent, world, provider, clock
+
+
+async def sim_ticks(agent, clock, seconds):
+    """Like sim(), but the clock advances by the agent's own tick_delay (the polling cadence under test)."""
+    end = clock() + seconds
+    while clock() < end:
+        await agent.step()
+        for _ in range(3):
+            if not await agent.speak_next():
+                break
+        clock.t += agent.tick_delay()
+
+
+def test_pc_not_connected_no_actions_a_look_every_ten_seconds_and_one_fixed_line(tmp_path):
+    click = decision(state="mouse", action={"action": "click", "point": [100, 100]}, say="Clicking the icon now.")
+    agent, world, prov, clock = pc_make(tmp_path, click, ready=False)
+    t0 = clock()
+    world.chat_msgs = [msg(1, "play Detroit", "kenji")]
+    asyncio.run(sim_ticks(agent, clock, 400))
+    assert not world.acts and not prov.calls                            # nothing on the PC, no model call for actions
+    assert 38 <= world.observes <= 42 and 38 <= world.polls <= 42          # a look and /pc/state every 10 s
+    lines = [s for s in world.spoken if s["tag"] == "pc"]
+    assert 2 <= len(lines) <= 3 and all(s["text"] in SA.PC_WAIT_LINES and s["priority"] == "low" for s in lines)
+    assert lines[0]["t"] - t0 >= SA.PC_WAIT_FIRST_S
+    assert all(b["t"] - a["t"] >= SA.PC_WAIT_LINE_EVERY_S[0] for a, b in zip(lines, lines[1:]))
+    assert all(a["text"] != b["text"] for a, b in zip(lines, lines[1:]))   # never the same line twice in a row
+    st = agent.status()["pc"]
+    assert (st["mode"], st["remote_ready"], st["phase"], st["machine"]) == ("vagon", False, "connecting", "starting")
+    assert st["routine"] is None and st["game"] is None and st["frame_hash"]
+    rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
+    assert rows == [("kenji", "refused", "pc_offline")]                 # a game request while the PC is off: one line
+    assert SA.REFUSAL_LINES["pc_offline"] in [s["text"] for s in world.spoken]
+    assert any(e["kind"] == "pc" and e.get("mode") == "vagon" for e in events(agent))
+    assert any(e["kind"] == "pc" and e.get("phase") == "connecting" for e in events(agent))
+    world.ready, world.phase = True, "connected"                        # connected: the model is asked, and may act
+    asyncio.run(sim_ticks(agent, clock, 20))
+    assert prov.calls and world.acts and world.acts[0] == {"action": "click", "point": [100, 100]}
+    assert agent.status()["pc"]["remote_ready"] is True and agent.status()["pc"]["phase"] == "connected"
+    assert prov.calls[0]["system"].endswith(SA.SYSTEM_PC) and prov.calls[0]["system"].startswith(SA.SYSTEM)
+    assert agent.tick_delay() < SA.PC_POLL_S
+
+
+def test_pc_ready_decides_from_the_screenshot_by_coordinates_and_verifies_by_pixels(tmp_path):
+    steps = [decision(state="mouse", action={"action": "click", "point": [100.4, 200]}, say=""),
+             decision(state="typing", action={"action": "type", "text": "Steam"}, say=""),
+             decision(state="idle", action={"action": "key", "key": "ctrl+l"}, say="", outcome_ok=False),
+             decision(state="idle", action={"action": "wait", "seconds": 2}, say="", outcome_ok=False),
+             decision(state="idle", action=None, say="")]
+    agent, world, prov, clock = pc_make(tmp_path, *steps)
+    frames = {"click": F_STEAM, "key": F_LIB}                           # the click and the key change the picture, the type does not
+    world.on_act = lambda a: frames.get(a["action"]) and setattr(world, "frame", frames[a["action"]])
+    asyncio.run(sim(agent, clock, 60, dt=3))
+    assert world.acts[:4] == [{"action": "click", "point": [100, 200]}, {"action": "type", "text": "Steam", "submit": False},
+                              {"action": "key", "key": "Control+l"}, {"action": "wait", "seconds": 2.0}]
+    s0, s1, s2, s3 = (c["state"] for c in prov.calls[:4])
+    assert "marks" not in s0 and "page" not in s0                      # screenshot only
+    assert s0["pc"]["mode"] == "vagon" and s0["pc"]["remote_ready"] is True and s0["pc"]["screen"] == [1280, 720]
+    assert s0["pc"]["frame_hash"] and len(s0["pc"]["frame_hash"]) == 16
+    assert s1["last_outcome"]["verdict"] == "changed" and s1["last_outcome"]["pixel_diff"] >= SA.PC_CHANGE_MIN
+    assert s1["last_outcome"]["hash_before"] != s1["last_outcome"]["hash_after"]
+    assert "outcome_ok" in s1["last_outcome"]["verify"] and any("outcome_ok" in h for h in s1["hints"])
+    assert s2["last_outcome"]["verdict"] == "unchanged" and s2["last_outcome"]["pixel_diff"] == 0   # the type changed nothing
+    assert s2["avoid"] and "type Steam" in s2["avoid"][0]
+    assert s3["last_outcome"]["verdict"] == "changed"                   # the key did change the picture ...
+    conf = [e for e in events(agent) if e["kind"] == "outcome_confirm"]
+    assert [(c["verdict"], c["ok"]) for c in conf] == [("unchanged", False), ("changed", False)]
+    assert agent.counters["outcome_denied"] == 2
+    assert agent.counters["actions_failed"] == 2                        # the unchanged type, and the key the model denied
+    outs = [e for e in events(agent) if e["kind"] == "outcome" and e["action"].startswith("click")]
+    assert outs[0]["verdict"] == "pending" and outs[0]["hash_before"] and outs[1]["verdict"] == "changed" and outs[1]["hash_after"]
+    assert all(isinstance(c["image"], str) for c in prov.calls)         # no crop was asked for
+    assert prov.calls[0]["text"].startswith("State as JSON.")
+    assert agent.status()["pc"]["mode"] == "vagon" and agent.status()["pc"]["pillow"] is True
+
+
+def test_pc_zoom_on_request_and_after_a_failed_click_at_most_once_per_action(tmp_path):
+    steps = [decision(state="idle", action={"action": "zoom", "point": [300, 300]}, say=""),
+             decision(state="mouse", action={"action": "click", "point": [50, 50]}, say=""),      # changes nothing
+             decision(state="idle", action={"action": "zoom", "point": [50, 50]}, say=""),         # already used
+             decision(state="idle", action=None, say="")]
+    agent, world, prov, clock = pc_make(tmp_path, *steps)
+    asyncio.run(sim(agent, clock, 40, dt=2))
+    assert world.acts == [{"action": "click", "point": [50, 50]}]       # zoom is never an input on the PC
+    imgs = [c["image"] for c in prov.calls[:4]]
+    assert isinstance(imgs[0], str) and isinstance(imgs[1], list) and len(imgs[1]) == 2 and isinstance(imgs[1][1], str)
+    crop = Image.open(io.BytesIO(base64.b64decode(imgs[1][1])))
+    assert crop.size == (SA.PC_CROP[0] * 2, SA.PC_CROP[1] * 2)          # the 2x crop
+    z = prov.calls[1]["state"]["zoom"]
+    assert z["center"] == [300, 300] and z["box"] == [140, 210, 460, 390] and z["scale"] == 2 and z["image"] == 2
+    assert any("image 2 is a 2x crop" in h for h in prov.calls[1]["state"]["hints"])
+    assert isinstance(imgs[2], list) and prov.calls[2]["state"]["zoom"]["center"] == [50, 50]   # after the failed click: automatic
+    assert prov.calls[2]["state"]["last_outcome"]["verdict"] == "unchanged"
+    assert any("failed click" in h for h in prov.calls[2]["state"]["hints"])
+    assert isinstance(imgs[3], str)                                     # the third request: one crop per action, dropped
+    assert any("zoom: already used" in d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"])
+    zooms = [e for e in events(agent) if e["kind"] == "zoom"]
+    assert [(e["why"], e["ok"]) for e in zooms] == [("asked", True), ("failed click", True)]
+    assert agent.counters["zooms"] == 2
+
+
+@pytest.mark.parametrize("action, why", [
+    ({"action": "type", "text": "my password is hunter2"}, "credentials"),
+    ({"action": "type", "text": "card 4111 1111 1111 1111"}, "card-like number"),
+    ({"action": "type", "text": "owner@example.com"}, "e-mail address"),
+    ({"action": "type", "text": "sk-abcdefghijklmnop"}, "secret or account number"),
+    ({"action": "type", "text": "winget install something"}, "install or system command"),
+    ({"action": "type", "text": "powershell"}, "install or system command"),
+    ({"action": "type", "text": "add to cart"}, "purchase"),
+    ({"action": "type", "text": "buy the dlc"}, "purchase"),
+    ({"action": "type", "text": "see https://paypal.com/x"}, "blocked url"),
+    ({"action": "type", "text": "bet365.com"}, "blocked host"),
+    ({"action": "key", "key": "win+l"}, "locks, logs out"), ({"action": "key", "key": "ctrl+alt+del"}, "ctrl+alt"),
+    ({"action": "key", "key": "Control+Alt+Delete"}, "ctrl+alt"), ({"action": "key", "key": "alt+f4"}, "alt+f4 closes windows"),
+    ({"action": "key", "key": "ctrl+shift+esc"}, "system menu"), ({"action": "key", "key": "alt+space"}, "system menu"),
+    ({"action": "key", "key": "win+r"}, "windows key combinations are limited"), ({"action": "key", "key": "win+x"}, "limited"),
+    ({"action": "key", "key": "ctrl+v"}, "clipboard"), ({"action": "key", "key": "Power"}, "unknown key"),
+    ({"action": "navigate", "url": "https://paypal.com/"}, "blocked"), ({"action": "navigate", "url": "https://example.org/cart"}, "blocked"),
+    ({"action": "navigate", "url": "https://example.org/setup.exe"}, "blocked"), ({"action": "navigate", "url": "https://accounts.google.com/"}, "blocked"),
+    ({"action": "click", "mark": 3}, "needs a point"), ({"action": "click", "point": [1280, 10]}, "needs a point"),
+    ({"action": "launch_game", "name": "buy Detroit"}, "game name not allowed"),
+    ({"action": "scroll_lock"}, "unknown action")])
+def test_pc_guard_rails_refuse_each_class_in_code(action, why):
+    out, reason = SA.clean_pc_action(action)
+    assert out is None and why in reason
+
+
+def test_pc_guard_rails_allow_the_harmless_keys_and_games_by_flag():
+    for key, expect in (("ctrl+l", "Control+l"), ("alt+tab", "Alt+Tab"), ("alt+left", "Alt+ArrowLeft"), ("enter", "Enter"),
+                        ("escape", "Escape"), ("win", "Control+Escape"), ("space", "Space"), ("f5", "F5"), ("W", "w"),
+                        ("pgdn", "PageDown"), ("ctrl+t", "Control+t"), ("Meta+s", "Meta+s"), ("shift+Tab", "Shift+Tab")):
+        assert SA.clean_pc_action({"action": "key", "key": key})[0] == {"action": "key", "key": expect}, key
+    assert SA.clean_pc_action({"action": "type", "text": "Detroit: Become Human"})[0] == {"action": "type", "text": "Detroit: Become Human", "submit": False}
+    assert SA.clean_pc_action({"action": "click", "point": [1279.4, 719]})[0] == {"action": "click", "point": [1279, 719]}
+    assert SA.clean_pc_action({"action": "launch_game", "name": "Detroit: Become Human"})[0] == {"action": "launch_game", "name": "Detroit: Become Human"}
+    assert SA.clean_pc_action({"action": "launch_game"})[0] == {"action": "launch_game", "name": ""}   # Steam only
+    assert SA.clean_pc_action({"action": "stop_game"})[0] == {"action": "stop_game"}
+    assert SA.clean_pc_action({"action": "launch_game", "name": "x"}, allow_games=False)[1].startswith("games are off")
+    assert SA.clean_pc_action({"action": "stop_game"}, allow_games=False)[0] is None
+    assert SA.clean_pc_action({"action": "navigate", "url": "https://en.wikipedia.org/wiki/Steam"})[0]["url"].endswith("/Steam")
+    assert SA.clean_pc_action({"action": "wait", "seconds": 99})[0] == {"action": "wait", "seconds": 10.0}
+    # a routine's step allows one kind; the game loop its whitelist
+    assert SA.clean_pc_action({"action": "type", "text": "x"}, allowed=("click",))[1] == "type is not allowed in this step"
+    assert SA.clean_pc_action({"action": "click", "point": [1, 1]}, allowed=())[1] == "click is not allowed in this step"
+    assert SA.clean_pc_action({"action": "key", "key": "q"}, allowed=SA.GAME_ALLOWED, game=True)[1] == "key not in the game whitelist"
+    assert SA.clean_pc_action({"action": "key", "key": "w"}, allowed=SA.GAME_ALLOWED, game=True)[0] == {"action": "key", "key": "w"}
+    assert SA.clean_pc_action({"action": "type", "text": "hi"}, allowed=SA.GAME_ALLOWED, game=True)[0] is None
+    assert SA.clean_pc_action({"action": "key", "key": "alt+f4"}, allowed=SA.GAME_ALLOWED, game=True)[0] is None
+    assert SA.clean_pc_action({"action": "stop_game"}, allowed=SA.GAME_ALLOWED, game=True)[0] == {"action": "stop_game"}
+    chat = ["please type hello there dear friends in the box"]
+    assert SA.clean_pc_action({"action": "type", "text": "hello there dear friends"}, chat_texts=chat)[1] == "copied from chat"
+
+
+def test_pc_model_keys_and_urls_are_dropped_in_the_agent_and_runner_refusals_are_recorded(tmp_path):
+    steps = [decision(state="idle", action={"action": "key", "key": "win+l"}, say=""),
+             decision(state="idle", action={"action": "navigate", "url": "https://paypal.com/"}, say=""),
+             decision(state="idle", action={"action": "navigate", "url": "https://example.org/notes"}, say="Opening my notes."),
+             decision(state="idle", action=None, say="")]
+    agent, world, prov, clock = pc_make(tmp_path, *steps)
+    world.block = lambda a: "blocked: download" if a["action"] == "navigate" else None   # the runner's own blocklist
+    asyncio.run(sim(agent, clock, 40, dt=2))
+    assert world.acts == [{"action": "navigate", "url": "https://example.org/notes"}]   # only the third reached the runner
+    dropped = [d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"]]
+    assert any("locks, logs out" in d for d in dropped) and any("action: blocked" in d for d in dropped)
+    blocked = [e for e in events(agent) if e["kind"] == "pc_blocked"]
+    assert len(blocked) == 1 and blocked[0]["why"] == "blocked: download" and agent.counters["pc_blocked"] == 1
+    assert agent.last_outcome["verdict"] == "error" or any(e["kind"] == "outcome" and e["verdict"] == "error" for e in events(agent))
+    assert not [s for s in world.spoken if s["text"].startswith("Opening")]   # nothing claimed after a refusal
+
+
+def steam_world_script(world):
+    """How the scripted PC reacts to the routine's inputs: each step changes the picture as Windows and Steam would."""
+    def on_act(a):
+        if a == {"action": "key", "key": "Control+Escape"}:
+            world.frame = F_START
+        elif a == {"action": "key", "key": "Enter"}:
+            world.frame = F_STEAM
+        elif a == {"action": "click", "point": [200, 50]}:
+            world.frame = F_LIB
+        elif a.get("text") == SA.DEFAULT_GAME:
+            world.frame = F_FILTER
+        elif a == {"action": "click", "point": [100, 200]}:
+            world.frame = F_PAGE
+        elif a == {"action": "click", "point": [400, 300]}:
+            world.frame = F_GAME
+        elif a == {"action": "key", "key": "w"}:                                # walking: the picture moves a little
+            world.frame = F_GAME2 if world.frame == F_GAME else F_GAME
+        elif a == {"action": "key", "key": "Alt+F4"}:
+            world.frame = F_DESKTOP
+    world.on_act = on_act
+
+
+def steam_brain(st):
+    """The scripted model: confirms each checkpoint from the (fake) screenshot, clicks where a step allows it, and in the
+    game presses w. At the first checkpoint it also tries an action the step does not allow (dropped)."""
+    r = st.get("routine")
+    if r:
+        stage = r["stage"]
+        if stage == "steam_wait":
+            return decision(state="idle", action={"action": "type", "text": "oops"}, say="Steam is coming up.", confirm=True)
+        if stage in ("library_click", "search_click", "game_click", "play_click"):
+            point = {"library_click": [200, 50], "search_click": [100, 100], "game_click": [100, 200], "play_click": [400, 300]}[stage]
+            return decision(state="mouse", action={"action": "click", "point": point}, say="")
+        if stage in ("library_confirm", "game_wait", "stop_confirm", "closed_wait"):
+            return decision(state="idle", action=None, say="There it is, the game itself." if stage == "game_wait" else "", confirm=True)
+        return decision(state="idle", action=None, say="")
+    if st.get("game"):
+        return decision(state="idle", action={"action": "key", "key": "w"}, say="Walking a bit; the rain looks good.")
+    return decision(state="idle", action=None, say="")
+
+
+def test_pc_play_detroit_from_chat_runs_the_launch_routine_then_the_gentle_play_loop_then_stop_game(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, steam_brain)
+    steam_world_script(world)
+    agent.last_decision = {"state": "idle"}
+    agent.next_think = clock() + 1000                                       # only the request wakes the model
+    world.chat_msgs = [msg(1, "can you play Detroit?", "kenji")]
+    asyncio.run(sim(agent, clock, 120, dt=2))
+    inputs = [(a["action"], a.get("key") or a.get("text") or a.get("point")) for a in world.acts]
+    assert inputs[:8] == [("key", "Control+Escape"), ("type", "Steam"), ("key", "Enter"), ("click", [200, 50]), ("click", [100, 100]),
+                          ("type", SA.DEFAULT_GAME), ("click", [100, 200]), ("click", [400, 300])]
+    game = [(a, t) for a, t in zip(world.acts, world.act_times)][8:]
+    assert len(game) >= 10 and all(a == {"action": "key", "key": "w"} for a, _ in game)   # the whitelist, one key per turn
+    assert all(b - a >= SA.GAME_STEP_S[0] for (_, a), (_, b) in zip(game, game[1:]))      # at most one input per 2 s
+    assert "oops" not in json.dumps(world.acts)                              # the step's unallowed action was dropped
+    rows = [e for e in events(agent) if e["kind"] == "chat_request"]
+    assert [(r["user"], r["decision"], r["reason"]) for r in rows] == [("kenji", "executed", "launch_game")]
+    assert rows[0]["action"] == "launch_game " + SA.DEFAULT_GAME
+    start = [e for e in events(agent) if e["kind"] == "routine_start"][0]
+    assert start["name"] == "launch_game" and start["game"] == SA.DEFAULT_GAME and start["source"] == "chat" and start["frame_hash"]
+    end = [e for e in events(agent) if e["kind"] == "routine_end"][0]
+    assert end["why"] == "started" and end["stages"][:3] == ["start_wait", "type_steam", "enter"] and end["stages"][-1] == "game_wait"
+    assert len(end["hashes"]) >= 6 and len(set(end["hashes"])) >= 2 and all(len(h) == 16 for h in end["hashes"])
+    steps = [e for e in events(agent) if e["kind"] == "routine"]
+    assert all(e["name"] == "launch_game" and ("hash_before" in e or "frame_hash" in e) for e in steps)
+    asked = [e for e in steps if "question" in e]
+    assert [e["stage"] for e in asked] == ["steam_wait", "library_click", "library_confirm", "search_click", "game_click",
+                                            "play_click", "game_wait"]
+    assert all(e["confirm"] is True for e in asked if e["stage"] in ("steam_wait", "library_confirm", "game_wait"))
+    play_q = next(c["state"]["routine"] for c in prov.calls if c["state"].get("routine", {}).get("stage") == "play_click")
+    assert "Never Install, Buy" in play_q["question"] and play_q["allowed_actions"] == ["click"] and play_q["game"] == SA.DEFAULT_GAME
+    chk = next(c["state"] for c in prov.calls if c["state"].get("routine", {}).get("stage") == "steam_wait")
+    assert chk["routine"]["allowed_actions"] == [] and any("routine in progress" in h for h in chk["hints"])
+    assert any("type is not allowed in this step" in d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"])
+    chat_end = [e for e in events(agent) if e["kind"] == "chat_request_end"]
+    assert len(chat_end) == 1 and chat_end[0]["why"] == "done" and chat_end[0]["commented"] and agent.requests.current is None
+    texts = [s["text"] for s in world.spoken]
+    assert texts[0] in [x.format(nick="kenji") for x in SA.ACK_LINES]      # his own words: acknowledged ...
+    assert "Steam is coming up." in texts and SA.GAME_LINES["started"] in texts   # ... commented, then the fixed end line
+    assert texts.index("Steam is coming up.") < texts.index(SA.GAME_LINES["started"])
+    assert world.spoken[texts.index(SA.GAME_LINES["started"])]["tag"] == "request"
+    assert agent.status()["pc"]["game"]["name"] == SA.DEFAULT_GAME and agent.status()["pc"]["game"]["inputs"] >= 10
+    g = next(c["state"] for c in prov.calls if c["state"].get("game"))
+    assert g["game"]["keys"] == list(SA.GAME_KEYS) and g["game"]["actions"] == list(SA.GAME_ALLOWED) and "pc" in g
+    assert any("you are playing" in h for h in g["hints"])
+    comments = [s for s in world.spoken if s["text"].startswith("Walking")]
+    assert comments and all(s["tag"] == "comment" for s in comments)         # the commentary keeps the pacing (not every turn)
+    assert len(comments) < len(game) / 2
+    assert "Alt+F4" not in json.dumps(world.acts)
+    # "stop the game": Escape, the game confirmed in front, then the one Alt+F4 the routine itself may press
+    n = len(world.acts)
+    world.chat_msgs.append(msg(2, "stop the game please", "kenji"))
+    asyncio.run(sim(agent, clock, 30, dt=2))
+    tail = [(a["action"], a.get("key")) for a in world.acts[n:]]
+    assert tail[:2] == [("key", "Escape"), ("key", "Alt+F4")] and tail.count(("key", "Alt+F4")) == 1
+    end2 = [e for e in events(agent) if e["kind"] == "routine_end"][-1]
+    assert end2["name"] == "stop_game" and end2["why"] == "stopped" and end2["stages"] == ["stop_confirm", "closed_wait"]
+    assert agent.pc.playing is None and agent.status()["pc"]["game"] is None
+    assert [s["text"] for s in world.spoken][-1] == SA.GAME_LINES["stopped"]
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["done", "done"]
+    assert world.frame == F_DESKTOP
+
+
+def test_pc_stop_game_leaves_a_window_alone_unless_the_game_is_confirmed_in_front(tmp_path):
+    asked = []
+    brain = lambda st: decision(state="idle", action=None, say="", confirm=False) if st.get("routine") else \
+        decision(state="idle", action={"action": "stop_game"} if not asked.append(1) and len(asked) == 1 else None, say="")
+    agent, world, prov, clock = pc_make(tmp_path, brain)
+    agent.pc.playing = {"name": SA.DEFAULT_GAME, "since": clock(), "inputs": 3}
+    asyncio.run(sim(agent, clock, 30, dt=2))
+    assert [a["key"] for a in world.acts] == ["Escape"]                     # no Alt+F4 without the confirmation
+    end = [e for e in events(agent) if e["kind"] == "routine_end"][0]
+    assert end["name"] == "stop_game" and end["why"] == "not_foreground" and end["source"] == "model"
+    assert SA.GAME_LINES["not_foreground"] in [s["text"] for s in world.spoken]
+
+
+def test_pc_launch_routine_fails_honestly_when_the_start_menu_does_not_open(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, steam_brain)              # the picture never changes
+    world.chat_msgs = [msg(1, "open steam", "mika")]
+    agent.last_decision = {"state": "idle"}
+    agent.next_think = clock() + 1000
+    asyncio.run(sim(agent, clock, 30, dt=2))
+    assert world.acts == [{"action": "key", "key": "Control+Escape"}, {"action": "key", "key": "Meta+s"}]   # then it gives up
+    assert not [c for c in prov.calls if "routine" in c["state"]]           # nothing to confirm: no checkpoint call
+    end = [e for e in events(agent) if e["kind"] == "routine_end"][0]
+    assert end["why"] == "start_menu" and end["game"] == "" and end["stages"] == ["start_wait", "start", "start_wait"]
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["failed"]
+    assert [s["text"] for s in world.spoken][-1] == SA.GAME_LINES["failed"]
+    assert agent.status()["pc"]["routine"] is None
+
+
+def test_pc_disconnecting_ends_the_routine_and_the_request(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, steam_brain)
+    steam_world_script(world)
+    agent.last_decision = {"state": "idle"}
+    agent.next_think = clock() + 1000
+    world.chat_msgs = [msg(1, "play detroit become human", "kenji")]
+    asyncio.run(agent.step())
+    assert agent.pc.routine is not None and world.acts == [{"action": "key", "key": "Control+Escape"}]
+    world.ready, world.phase = False, "ended"
+    clock.t += 2
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert len(world.acts) == 1 and agent.pc.routine is None and agent.requests.current is None
+    end = [e for e in events(agent) if e["kind"] == "routine_end"][0]
+    assert end["why"] == "pc_disconnected"
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["failed"]
+    assert SA.REFUSAL_LINES["pc_offline"] in [s["text"] for s in world.spoken]
+    assert agent.status()["pc"]["phase"] == "ended" and agent.status()["pc"]["remote_ready"] is False
+
+
+def test_pc_chat_policy_purchases_refused_games_by_flag_and_chromium_untouched(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, decision(state="idle", action=None, say=""))
+    world.chat_msgs = [msg(1, "buy the DLC", "a"), msg(2, "install steam for me", "b"), msg(3, "run it as administrator", "c"),
+                       msg(4, "download the new patch", "d"), msg(5, "add funds to your steam wallet", "e"),
+                       msg(6, "redeem a gift card on steam", "f"), msg(7, "add the dlc to your cart", "g"),
+                       msg(8, "open the steam checkout", "h")]
+    asyncio.run(sim(agent, clock, 12, dt=2))
+    rows = [(e["user"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request" and e["decision"] == "refused"]
+    assert rows == [("a", "payment"), ("b", "code_or_download"), ("c", "code_or_download"), ("d", "code_or_download"),
+                    ("f", "payment"), ("g", "payment"), ("h", "payment")]        # "run as administrator": R_CODE, as before
+    assert any(e["kind"] == "chat" and e["seq"] == 5 and e["ignored"] == "filtered" for e in events(agent))   # the site's filter got that one first
+    assert not world.acts and agent.pc.routine is None
+    assert [s["text"] for s in world.spoken][0] == SA.REFUSAL_LINES["payment"]
+    assert not [c for c in prov.calls if c["state"].get("chat")]         # none of them reached the model as chat
+    assert SA.parse_request("add the dlc to your cart") is None           # chromium: unchanged (a remark for the voice)
+    # games off: "play Detroit" is refused with a line, and the model's launch_game is dropped
+    launch = decision(state="idle", action={"action": "launch_game", "name": SA.DEFAULT_GAME}, say="")
+    agent, world, prov, clock = pc_make(tmp_path / "off", launch, pc_allow_games=False)
+    world.chat_msgs = [msg(1, "play Detroit", "kenji")]
+    asyncio.run(sim(agent, clock, 12, dt=2))
+    rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
+    assert rows == [("kenji", "refused", "games_off")] and SA.REFUSAL_LINES["games_off"] in [s["text"] for s in world.spoken]
+    assert not world.acts and agent.pc.routine is None and agent.status()["pc"]["allow_games"] is False
+    assert any("games are off" in d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"])
+    assert prov.calls[0]["state"]["pc"]["allow_games"] is False
+    # chromium mode: nothing of this exists; "play Detroit" is a search as before and the gate stays off
+    assert SA.parse_request("play Detroit") == {"kind": "search", "action": {"action": "search", "query": "Detroit"}, "refused": None, "query": "Detroit"}
+    assert SA.parse_request("stop the game") is None and SA.parse_request("launch steam") is None
+    agent, world, prov, clock = make(tmp_path / "chromium", decision(say=""))
+    asyncio.run(agent.step())
+    assert agent.gate.pc is False and agent.status()["pc"]["mode"] == "chromium" and agent.status()["pc"]["remote_ready"] is None
+    assert "confirm" not in agent.last_decision and "marks" in prov.calls[0]["state"] and prov.calls[0]["system"] == SA.SYSTEM
+    assert SA.Agent.normalize({"mode": "vagon", "remote_ready": False})["remote_ready"] is False
+    assert SA.Agent.normalize({"mode": "vagon", "remote_ready": True})["mode"] == "vagon"
+    assert (SA.Agent.normalize({})["mode"], SA.Agent.normalize({})["remote_ready"]) == ("", True)
+
+
+def test_pc_system_prompt_lines_providers_and_flags(tmp_path, monkeypatch):
+    for needle in ("Remote PC", "1280x720", "no numbered marks", '"point":[x,y]', "ctrl+l", "alt+tab", '"win" opens the Start menu',
+                   '"zoom"', '"launch_game"', '"stop_game"', "win+l, ctrl+alt+del, alt+f4", "store purchase", "pixel_diff",
+                   '"outcome_ok"', '"confirm"', "whitelist", "Say what you see"):
+        assert needle in SA.SYSTEM_PC.replace("\\\n", ""), needle
+    for line in (*SA.PC_WAIT_LINES, *SA.GAME_LINES.values(), SA.REFUSAL_LINES["pc_offline"], SA.REFUSAL_LINES["games_off"]):
+        assert SA.reply_problem(line) is None and len(line.split()) <= 12, line
+    for q in SA.ROUTINE_QUESTIONS.values():
+        assert "confirm" in q or "Click" in q
+    # both providers send the screenshot and the crop as two image blocks, a plain screenshot as one
+    v = SA.ClaudeVision.__new__(SA.ClaudeVision)
+    v.model, v.effort = "claude-haiku-4-5", None
+    kw = v.request("S", "T", ["AAAA", "BBBB"])
+    assert [b["type"] for b in kw["messages"][0]["content"]] == ["image", "image", "text"]
+    assert [b["source"]["data"] for b in kw["messages"][0]["content"][:2]] == ["AAAA", "BBBB"]
+    assert [b["type"] for b in v.request("S", "T", "AAAA")["messages"][0]["content"]] == ["image", "text"]
+    k = SA.KimiVision("kimi-k3", api_key="x")
+    parts = k.request("S", "T", ["AAAA", "BBBB"])["messages"][1]["content"]
+    assert [p["type"] for p in parts] == ["image_url", "image_url", "text"] and parts[1]["image_url"]["url"].endswith("BBBB")
+    k.vision = False
+    parts = k.request("S", "T", ["AAAA", "BBBB"])["messages"][1]["content"]
+    assert len(parts) == 1 and parts[0]["text"].startswith("(no screenshot")
+    # flags: --pc-allow-games (default on, env STREAMER_PC_ALLOW_GAMES), --desktop-url (env STREAMER_DESKTOP_URL)
+    for var in ("STREAMER_PC_ALLOW_GAMES", "STREAMER_DESKTOP_URL", "SUB01_ADMIN_TOKEN"):
+        monkeypatch.delenv(var, raising=False)
+    a = SA.parse_args([])
+    assert a.pc_allow_games is True and a.desktop_url == "http://127.0.0.1:8832"
+    assert SA.parse_args(["--no-pc-allow-games"]).pc_allow_games is False
+    assert SA.config_from_args(SA.parse_args(["--pc-allow-games"])).pc_allow_games is True
+    monkeypatch.setenv("STREAMER_PC_ALLOW_GAMES", "0")
+    monkeypatch.setenv("STREAMER_DESKTOP_URL", "http://127.0.0.1:8838")
+    cfg = SA.config_from_args(SA.parse_args([]))
+    assert cfg.pc_allow_games is False and cfg.desktop_url == "http://127.0.0.1:8838"
+    assert SA.config_from_args(SA.parse_args(["--desktop-url", "http://127.0.0.1:8832"])).desktop_url == "http://127.0.0.1:8832"
+    assert SA.Config().pc_allow_games is True
+    # the pixel helpers: a flat frame vs itself, vs another; the hash is 16 hex chars; the crop is clamped at the frame edge
+    a_sig, b_sig = SA.frame_signature(F_DESKTOP), SA.frame_signature(F_GAME)
+    assert SA.frame_diff(a_sig, a_sig) == 0 and SA.frame_diff(a_sig, b_sig) >= SA.PC_CHANGE_MIN and SA.frame_changed(a_sig, b_sig)
+    assert len(SA.frame_hash(a_sig)) == 16 and SA.frame_hash(a_sig) != SA.frame_hash(b_sig) and SA.frame_hash(None) is None
+    assert SA.frame_signature(None) is None and SA.frame_diff(None, a_sig) is None and SA.frame_signature("not base64!!") is None
+    assert SA.crop_b64(F_DESKTOP, [0, 0])["box"] == [0, 0, 320, 180] and SA.crop_b64(F_DESKTOP, [1279, 719])["box"] == [960, 540, 1280, 720]
+    assert SA.crop_b64(None, [1, 1]) is None
+    d = SA.validate_decision('{"action": {"action": "zoom", "point": [3, 4]}, "confirm": "yes", "outcome_ok": true}', {}, pc={"allow_games": True})
+    assert d["action"] == {"action": "zoom", "point": [3, 4]} and d["confirm"] is None and d["outcome_ok"] is True
