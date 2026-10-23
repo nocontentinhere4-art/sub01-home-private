@@ -728,3 +728,129 @@ def test_a_fifo_is_created_over_a_regular_file(tmp_path):
     path.write_bytes(b"not a fifo")
     vs.PcmSink(path)
     assert path.is_fifo()
+
+
+# ---------------------------------------------------------------- mouth signal (mouth.json)
+
+def mouth(path):
+    return json.loads((Path(path) / "mouth.json").read_text())
+
+
+def stereo_block(level, blocks=1):
+    """`blocks` 20 ms stereo s16le blocks at a constant sample value."""
+    return np.full(vs.BLOCK_FRAMES * vs.OUT_CHANNELS * blocks, level, dtype=np.int16).tobytes()
+
+
+class Pulsed(vs.MockEngine):
+    """The mock tone switched on and off every `period` seconds: equal bursts and gaps."""
+
+    def __init__(self, period=0.2, **options):
+        super().__init__(**options)
+        self.period = period
+
+    def _tone(self, text):
+        samples, rate = super()._tone(text)
+        on = (np.floor(np.arange(len(samples)) / rate / self.period) % 2) == 0
+        return (samples * on).astype(np.int16), rate
+
+
+def test_block_rms():
+    assert vs.block_rms(b"").size == 0
+    levels = vs.block_rms(stereo_block(8000, 3) + stereo_block(0, 2) + stereo_block(400)[:100])
+    assert levels.tolist() == pytest.approx([8000 / 32768] * 3 + [0.0, 0.0])  # the trailing partial block is ignored
+    assert vs.block_rms(stereo_block(8000)[:400]).tolist() == pytest.approx([8000 / 32768])  # shorter than a block: one block
+
+
+def test_mouth_envelope_follows_the_blocks_being_played(tmp_path):
+    tracker = vs.MouthTracker(tmp_path / "mouth.json")
+    loud, quiet, silent = stereo_block(8000), stereo_block(400), stereo_block(0)
+    tracker.feed(loud)
+    assert tracker.open == 0  # nothing is being spoken: blocks are ignored
+    tracker.begin("u1")
+    tracker.reference(stereo_block(8000, 10))
+    assert tracker.level == pytest.approx(8000 / 32768)
+    tracker.feed(loud)
+    assert tracker.open == pytest.approx(1 - np.exp(-1), abs=1e-9)  # 20 ms attack: 63 % after one 20 ms block
+    tracker.feed(loud)
+    tracker.feed(loud)
+    assert tracker.open > 0.9 and tracker.energy < tracker.open  # energy is the slower loudness
+    peak = tracker.open
+    tracker.feed(silent)
+    assert tracker.open == pytest.approx(peak * np.exp(-0.25), abs=1e-9)  # 80 ms release: 22 % down per block
+    for _ in range(30):
+        tracker.feed(silent)
+    assert tracker.open == 0  # closed exactly, not asymptotically
+    tracker.feed(quiet)
+    assert tracker.open == 0  # 5 % of the level: under the gate
+    tracker.reference(stereo_block(16000, 10))  # a louder sentence raises the utterance level
+    assert tracker.level == pytest.approx(16000 / 32768)
+    for _ in range(12):
+        tracker.feed(loud)
+    assert tracker.open == pytest.approx((0.5 - vs.MOUTH_GATE) / (1 - vs.MOUTH_GATE), abs=0.01)  # half the level: 0.456
+    snapshot = tracker.snapshot()
+    assert snapshot["speaking"] is True and snapshot["id"] == "u1" and snapshot["schema"] == vs.MOUTH_SCHEMA
+    started = time.perf_counter()
+    for _ in range(1000):
+        tracker.feed(loud)
+    assert time.perf_counter() - started < 0.5  # cheap enough for the 20 ms clock thread (about 15 us a block)
+    tracker.finish()
+    assert tracker.open == 0 and tracker.speaking is False
+    data = mouth(tmp_path)
+    assert data == {"schema": vs.MOUTH_SCHEMA, "utc": data["utc"], "open": 0, "energy": 0, "speaking": False, "id": None}
+    assert abs(data["utc"] - time.time()) < 1 and oct(os.stat(tmp_path / "mouth.json").st_mode & 0o777) == "0o600"
+    tracker.begin("u2")
+    tracker.reference(stereo_block(0, 10))  # a silent sentence: the floor keeps noise from opening the mouth
+    assert tracker.level == vs.MOUTH_FLOOR
+    tracker.feed(stereo_block(30))
+    assert tracker.open == 0
+
+
+def test_mouth_json_tracks_the_audio_being_played(make_service, tmp_path):
+    svc = make_service(Pulsed(period=0.2, seconds_per_char=FAST))
+    first = mouth(tmp_path)  # written at start: closed
+    assert (first["open"], first["speaking"], first["id"]) == (0, False, None) and svc.state()["mouth"] == {"open": 0, "energy": 0}
+    writes = svc.mouth.writes
+    result = svc.submit("x" * 160, tag="pulse")  # 1.6 s: tone during 0-0.2, 0.4-0.6, ... and silence between
+    until(lambda: speaking(tmp_path)["speaking"])
+    started = speaking(tmp_path)["started_utc"]
+    samples = []
+    while not idle(svc):
+        try:
+            samples.append(mouth(tmp_path))
+        except (OSError, ValueError):
+            pass
+        time.sleep(0.005)
+    final = mouth(tmp_path)
+    assert final["open"] == 0 and final["speaking"] is False and final["id"] is None
+    live = [s for s in samples if s["speaking"]]
+    assert len(live) > 20 and all(s["id"] == result["id"] and s["schema"] == vs.MOUTH_SCHEMA for s in live)
+    phases = [((s["utc"] - started) % 0.4, s["open"]) for s in live]
+    burst = [o for p, o in phases if 0.10 <= p <= 0.18]  # mid-burst: open
+    gap = [o for p, o in phases if 0.36 <= p <= 0.40]  # end of the gap: released
+    assert burst and gap and min(burst) > 0.6 and max(gap) < 0.35, (burst, gap)
+    assert max(o for _, o in phases) > 0.9 and min(o for _, o in phases) < 0.15  # a 0.2 s gap releases to about e^-2.2
+    assert all(0 <= s["energy"] <= 1 for s in live) and max(s["energy"] for s in live) > 0.5
+    assert 1.6 * 25 * 0.6 < svc.mouth.writes - writes < 1.6 * 25 * 1.4 + 4  # about 25 writes per second while speaking
+    assert svc.state()["mouth"] == {"open": 0, "energy": 0}
+
+
+def test_mouth_closes_at_once_when_speech_is_cut(make_service, tmp_path):
+    svc = make_service()
+    svc.submit(LONG, tag="long")
+    until(lambda: mouth(tmp_path)["open"] > 0.5, what="the mouth to open")
+    assert svc.stop(wait=1.0)["stopped"] is True
+    data = mouth(tmp_path)  # written by the cut itself, before /stop returns
+    assert data["open"] == 0 and data["speaking"] is False and data["id"] is None
+    svc.submit(LONG, tag="killed")
+    until(lambda: mouth(tmp_path)["open"] > 0.5)
+    (tmp_path / "STOP").write_text("")
+    until(lambda: idle(svc), timeout=1.5, what="the kill file to cut speech")
+    assert mouth(tmp_path)["open"] == 0 and mouth(tmp_path)["speaking"] is False
+    (tmp_path / "STOP").unlink()
+    cut = svc.submit(LONG, tag="cut")
+    until(lambda: mouth(tmp_path)["id"] == cut["id"] and mouth(tmp_path)["open"] > 0.5)
+    urgent = svc.submit("Urgent message now, said twice over.", "high", tag="urgent")
+    until(lambda: mouth(tmp_path)["id"] == urgent["id"] and mouth(tmp_path)["open"] > 0.5, what="the urgent utterance to open the mouth")
+    until(lambda: idle(svc) and len(timeline(tmp_path)) == 4)
+    assert [e["cut"] for e in timeline(tmp_path)] == [True, True, True, False]
+    assert mouth(tmp_path)["open"] == 0 and svc.state()["mouth"]["open"] == 0

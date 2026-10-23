@@ -13,6 +13,9 @@ and played into:
                                     {id, tag, text, start_utc, end_utc, cut} per utterance
   <streamer-dir>/speaking.json      {speaking, started_utc, ends_utc, text, id}, replaced
                                     atomically on every change (the native talking animation)
+  <streamer-dir>/mouth.json         {schema, utc, open, energy, speaking, id}, replaced atomically
+                                    at 25 Hz while speaking: `open` 0..1 follows the RMS of the
+                                    audio being played right now (the native mouth / head emphasis)
 
 All *_utc values are Unix seconds (float, UTC), like the other native files.
 
@@ -79,6 +82,13 @@ FADE_FRAMES = 480                         # 10 ms ramp when an utterance is cut
 LOOKAHEAD = 0.25                          # next sentence is pushed when this much audio is left
 FIFO_RETRY = 0.1                          # seconds between attempts to open the FIFO
 FIFO_PENDING_MAX = OUT_RATE * FRAME_BYTES  # a reader that stalls for 1 s loses audio
+
+MOUTH_SCHEMA = "sub01.streamer-mouth.v1"
+MOUTH_INTERVAL = 0.04                     # mouth.json is replaced at 25 Hz while speaking
+MOUTH_ATTACK, MOUTH_RELEASE = 0.02, 0.08  # envelope time constants in seconds
+MOUTH_ENERGY_SECONDS = 0.15               # slower loudness for `energy`
+MOUTH_GATE = 0.08                         # below this fraction of the utterance level the mouth is closed
+MOUTH_FLOOR = 0.02                        # full-scale RMS: the quietest level an utterance is normalised to
 
 QUEUE_BOUND = 3
 MAX_AGE = 20.0
@@ -281,6 +291,21 @@ def fade_out(pcm):
 
 def silence(seconds):
     return bytes(max(0, int(round(seconds * OUT_RATE))) * FRAME_BYTES)
+
+
+def block_rms(pcm):
+    """Full-scale RMS (0..1) of the left channel of every 20 ms block of a stereo s16le buffer.
+
+    A buffer shorter than one block is one block; a trailing partial block is ignored."""
+    frames = len(pcm) // FRAME_BYTES
+    if frames == 0:
+        return np.zeros(0)
+    if frames < BLOCK_FRAMES:
+        data = np.frombuffer(pcm, dtype="<i2", count=frames * OUT_CHANNELS)[::OUT_CHANNELS].astype(np.float64)
+        return np.array([math.sqrt(float(np.dot(data, data)) / data.size) / 32768.0])
+    blocks = frames // BLOCK_FRAMES
+    data = np.frombuffer(pcm, dtype="<i2", count=blocks * BLOCK_FRAMES * OUT_CHANNELS)[::OUT_CHANNELS].astype(np.float64)
+    return np.sqrt(np.mean(data.reshape(blocks, BLOCK_FRAMES) ** 2, axis=1)) / 32768.0
 
 
 # ---------------------------------------------------------------- engines
@@ -611,6 +636,7 @@ class PcmSink:
         self._last_warning = 0.0
         self.blocks = 0
         self.dropped_bytes = 0
+        self.on_block = None  # observer of every emitted block (the mouth signal); runs on the clock thread, must stay cheap
         if self.path:
             ensure_fifo(self.path)
 
@@ -696,9 +722,15 @@ class PcmSink:
                     break
             elif wait < -1.0:
                 next_time = self._clock()  # stalled for over a second: resync, no burst
-            self._emit(self._take(BLOCK_FRAMES * FRAME_BYTES))
+            block = self._take(BLOCK_FRAMES * FRAME_BYTES)
+            self._emit(block)
             self.blocks += 1
             next_time += interval
+            if self.on_block is not None:
+                try:
+                    self.on_block(block)
+                except Exception as error:  # an observer never stalls the clock
+                    self._warn(f"block observer failed: {error}")
 
     def _warn(self, message):
         now = self._clock()
@@ -762,6 +794,134 @@ class PcmSink:
             self._warn(f"fifo reader is not keeping up: dropped {drop / (FRAME_BYTES * OUT_RATE) * 1000:.0f} ms of audio")
 
 
+# ---------------------------------------------------------------- mouth signal
+
+class MouthTracker:
+    """<streamer-dir>/mouth.json: how open the mouth is for the audio the sink is emitting right now.
+
+    The sink's clock thread feeds every 20 ms block (one RMS and a few scalar updates); a separate
+    thread replaces the file atomically at 25 Hz while speaking, so playback never waits on the disk.
+    `open` = the block RMS over the utterance's level (the 95th percentile block RMS of every sentence
+    pushed so far, at least MOUTH_FLOOR), closed below MOUTH_GATE, then smoothed with a 20 ms attack
+    and an 80 ms release; `energy` is the same level with a 150 ms time constant. Zero when idle and
+    zero at once when the utterance ends or is cut (/stop, the STOP file, a high-priority item)."""
+
+    def __init__(self, path, wall=time.time, interval=MOUTH_INTERVAL):
+        self.path = Path(path)
+        self._wall = wall
+        self.interval = interval
+        self._lock = threading.Lock()     # state: sink thread, player thread, writer thread
+        self._io_lock = threading.Lock()  # one file replacement at a time, in state order
+        self._stop = threading.Event()
+        self._thread = None
+        self._dirty = True
+        self._attack = 1 - math.exp(-BLOCK_SECONDS / MOUTH_ATTACK)
+        self._release = 1 - math.exp(-BLOCK_SECONDS / MOUTH_RELEASE)
+        self._slow = 1 - math.exp(-BLOCK_SECONDS / MOUTH_ENERGY_SECONDS)
+        self.speaking = False
+        self.id = None
+        self.level = 0.0  # full-scale RMS the current utterance is normalised to
+        self.open = 0.0
+        self.energy = 0.0
+        self.writes = 0
+        self.last_error = None
+        self._last_warning = 0.0
+
+    # -- lifecycle
+    def start(self):
+        if self._thread is None:
+            self._publish(force=True)  # a closed mouth from the first moment
+            self._thread = threading.Thread(target=self._run, name="voice-mouth", daemon=True)
+            self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(2)
+        self.finish()
+
+    # -- player thread
+    def begin(self, ident):
+        """A new utterance is about to play: its level starts over and the mouth starts closed."""
+        with self._lock:
+            self.speaking, self.id, self.level = True, ident, 0.0
+            self.open = self.energy = 0.0
+            self._dirty = True
+
+    def reference(self, pcm):
+        """Raise the utterance's level to the 95th percentile block RMS of a sentence about to be pushed."""
+        levels = block_rms(pcm)
+        voiced = levels[levels > 0]
+        level = float(np.percentile(voiced, 95)) if voiced.size else 0.0
+        with self._lock:
+            self.level = max(self.level, level, MOUTH_FLOOR)
+
+    def finish(self):
+        """Closed at once (end of the utterance, a cut, shutdown) and written before returning."""
+        with self._lock:
+            self.speaking, self.id = False, None
+            self.open = self.energy = 0.0
+        self._publish(force=True)
+
+    # -- sink clock thread, once per 20 ms block
+    def feed(self, block):
+        if not self.speaking:
+            return
+        data = np.frombuffer(block, dtype="<i2")[::OUT_CHANNELS].astype(np.float64)
+        rms = math.sqrt(float(np.dot(data, data)) / data.size) / 32768.0 if data.size else 0.0
+        with self._lock:
+            if not self.speaking:
+                return
+            level = rms / self.level if self.level > 0 else 0.0
+            raw = min(1.0, max(0.0, (level - MOUTH_GATE) / (1.0 - MOUTH_GATE)))
+            self.open += (raw - self.open) * (self._attack if raw > self.open else self._release)
+            if raw == 0.0 and self.open < 0.002:
+                self.open = 0.0
+            self.energy += (min(1.0, level) - self.energy) * self._slow
+            self._dirty = True
+
+    # -- any thread
+    def snapshot(self):
+        with self._lock:
+            return self._snapshot_locked()
+
+    def _snapshot_locked(self):
+        return {"schema": MOUTH_SCHEMA, "utc": round(self._wall(), 3), "open": round(self.open, 3),
+                "energy": round(self.energy, 3), "speaking": self.speaking, "id": self.id}
+
+    # -- writer thread
+    def _run(self):
+        while not self._stop.wait(self.interval):
+            self._publish()
+
+    def _publish(self, force=False):
+        with self._io_lock:  # snapshot and write together: a later state is never overwritten by an earlier one
+            with self._lock:
+                if not force and not self._dirty and not self.speaking:
+                    return
+                self._dirty = False
+                data = self._snapshot_locked()
+            self._write(data)
+
+    def _write(self, data):
+        tmp = self.path.with_name(self.path.name + ".tmp")
+        try:
+            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            try:
+                os.fchmod(fd, 0o600)  # the native reader rejects a file that others could write
+                os.write(fd, json.dumps(data).encode())
+            finally:
+                os.close(fd)
+            os.replace(tmp, self.path)
+            self.writes += 1
+        except OSError as error:
+            self.last_error = f"cannot write mouth.json: {error}"
+            now = time.monotonic()
+            if now - self._last_warning > 5.0:
+                self._last_warning = now
+                log(self.last_error)
+
+
 # ---------------------------------------------------------------- service
 
 class Refused(Exception):
@@ -822,10 +982,13 @@ class VoiceService:
         self.ready = False
         self.last_error = None
         self.stats = {"spoken": 0, "dropped": 0, "cut": 0, "errors": 0, "rejected": 0}
+        self.mouth = MouthTracker(self.dir / "mouth.json", wall=wall)
 
     # -- lifecycle
     def start(self):
         self._write_speaking(None)
+        self.sink.on_block = self.mouth.feed
+        self.mouth.start()
         self.sink.start()
         for target, name in ((self._player, "voice-player"), (self._watchdog, "voice-watchdog")):
             thread = threading.Thread(target=target, name=name, daemon=True)
@@ -845,6 +1008,7 @@ class VoiceService:
             thread.join(2)
         self._pool.shutdown(wait=False, cancel_futures=True)
         self.sink.stop()
+        self.mouth.stop()
         self._write_speaking(None)
 
     def warmup(self):
@@ -923,6 +1087,7 @@ class VoiceService:
             return {"ok": True, "stopped": current is not None, "dropped": dropped}
 
     def state(self):
+        mouth = self.mouth.snapshot()
         with self._cond:
             self._prune_locked(self._clock())
             current = self.current
@@ -939,6 +1104,7 @@ class VoiceService:
                 "fallback": getattr(self.engine, "fallback_reason", None),
                 "killed": self.kill_active(),
                 "fifo": self.sink.fifo_state(),
+                "mouth": {"open": mouth["open"], "energy": mouth["energy"]},
                 "last_error": self.last_error,
                 "stats": dict(self.stats),
             }
@@ -1046,6 +1212,9 @@ class VoiceService:
                             break
                     if item.cut.is_set():
                         break
+                    if item.started_wall is None:
+                        self.mouth.begin(item.id)
+                    self.mouth.reference(pcm)  # the sentence's level, known before its first block is emitted
                     now = self._wall()
                     if item.started_wall is None:
                         item.started_wall = now
@@ -1076,6 +1245,7 @@ class VoiceService:
         dropped = kept = 0
         if item.cut.is_set():
             dropped, kept = self.sink.cut()
+            self.mouth.finish()  # closed at once: from here the stream carries only the 10 ms fade
         audio = b"".join(parts)
         if dropped:
             audio = audio[: max(0, len(audio) - dropped)]
@@ -1099,6 +1269,7 @@ class VoiceService:
         self._end(item)
 
     def _end(self, item):
+        self.mouth.finish()
         self._write_speaking(None)
         with self._cond:
             if self.current is item:

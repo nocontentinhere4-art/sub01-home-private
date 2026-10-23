@@ -6,6 +6,14 @@ Each utterance also lands in `speech/<id>.wav` (as played) and `speech/timeline.
 `{id, tag, text, start_utc, end_utc, cut}`; `speaking.json` `{speaking, started_utc, ends_utc, text, id}` is replaced
 atomically on every change. All `*_utc` are Unix seconds (float). WAVs older than `--keep-hours` (24) are deleted.
 
+`mouth.json` (`sub01.streamer-mouth.v1` `{schema, utc, open, energy, speaking, id}`, mode 0600) is replaced atomically at
+25 Hz while speaking: `open` 0..1 is the RMS of the 20 ms block being written to the FIFO right now, normalised to the
+utterance (95th percentile block RMS of each sentence pushed so far, floor 2 % full scale), closed below 8 % of that
+level, smoothed with a 20 ms attack and an 80 ms release; `energy` is the same level with a 150 ms time constant. Zero
+when idle and at once when speech ends or is cut (`/stop`, the STOP file, a `high` item). Computed on the clock thread
+(one RMS per block), written by its own thread: playback never waits on the disk. `/state` shows `mouth: {open, energy}`.
+The native home reads the file (`tools/native_streamer_visual_v2/install_mouth.py`).
+
 ## Run on the pod
 Both engines live in one environment, `/home/unreal/voice-rt-venv` (CUDA torch, Kokoro, Chatterbox, aiohttp, numpy).
 ```
@@ -45,7 +53,8 @@ The fallback is logged once and shown in `/state` (`engine`, `fallback`). Kokoro
 - A synthesis error drops the utterance (or its remaining sentences), is logged and counted; the server keeps running.
 
 ## Limits
-One utterance at a time; no mixing with other audio; English only. Lip sync is not provided (no face rig). The Kokoro
+One utterance at a time; no mixing with other audio; English only. No lip sync: the body mesh has no jaw bone or morph
+targets, so `mouth.json` only drives a head emphasis in the native home (a jaw rotation once a face rig exists). The Kokoro
 fallback sounds different from Chatterbox. `/state.current.started` is null while the first sentence still renders.
 `estimated_seconds` uses 0.07 s per character (Chatterbox about 0.9 s rendering per second of speech, Kokoro 0.3:
 assumptions). If the FIFO reader stalls for more than 1 s, audio is dropped (the WAV still has it).
