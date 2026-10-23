@@ -61,6 +61,9 @@ import screens
 import search_sources
 from readings import BrowseReadings
 from screens import DA_LABEL, DopamineBursts, ScreensStatus
+from impulse import parse as parse_impulse
+from vagon_bridge import (configure_auto_stop as vagon_auto_stop, enabled as vagon_enabled,
+                          open_url_async as vagon_open_url_async)
 from eyes import Eyes
 import mind as mind_mod
 from tastes import PageWatch, Tastes
@@ -613,7 +616,8 @@ class Live:
         return public_why(art)
 
     async def handle_chat(self, ws, key, text, nick=""):
-        ok, reason = chat_check(text, key, self.limiter, self.dedupe)      # filter first; blocked = never stored
+        links_open = vagon_enabled()                       # the PC can open a link: then a link is accepted
+        ok, reason = chat_check(text, key, self.limiter, self.dedupe, links_open)   # filter first; blocked = never stored
         if not ok:
             await ws.send_json({"type": "chat_ack", "ok": False, "reason": reason})
             return
@@ -627,8 +631,21 @@ class Live:
         if self.eye:
             self.eye.hear(text, t)
         self.life.hear(text, t)
+        imp = parse_impulse(text)                          # an action asked for in chat is carried out at once
+        if imp.kind == "activity":
+            self.life.request_impulse(imp, t)
+            reaction = imp.reaction
+        elif imp.kind == "open_url":
+            if links_open:
+                accepted = vagon_open_url_async(imp.url)
+                reaction = imp.reaction if accepted else "The PC is busy with a link. Send it again shortly."
+            else:
+                reaction = "I cannot open links yet."
+        else:                                              # reply_only
+            reaction = imp.reaction
         self.music.hear(text, t)                           # "play …" / "metti …": a wish (filtered above)
-        ack = {"type": "chat_ack", "ok": True, "queued": False}
+        shown_nick, _ = clean_nick(nick)                   # the reaction is public: the nickname is cleaned as in enqueue_chat
+        ack = {"type": "chat_ack", "ok": True, "queued": False, "reaction": reaction, "impulse": imp.kind, "t": hhmm(t)}
         if getattr(self, "mind", None):                    # he may answer it later, at the computer (C1)
             why = await self.enqueue_chat(t, text, key, nick)
             ack.update(queued=True, will_reply=why is None, reason=why)
@@ -638,6 +655,8 @@ class Live:
                 self.spiking.forward_good()
         await ws.send_json(ack)
         await self.broadcast({"type": "chat", "gain": round(gain, 2), **self.public(m)})
+        if reaction:
+            await self.broadcast({"type": "reaction", "text": reaction, "nick": shown_nick, "t": hhmm(t)})
 
     # --- the chat inbox (C1/C2): FIFO, one viewer at a time, a visible outcome for every message -----------------
     async def enqueue_chat(self, t, text, key, nick=""):
@@ -2481,6 +2500,8 @@ async def main(args):
             tasks.append(supervised("spiking live", cpu_net.run))
         if getattr(live, "clips", None):
             tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
+        if vagon_enabled():                              # the machine's idle auto-stop, once per process; it blocks, so a thread
+            tasks.append(asyncio.to_thread(vagon_auto_stop))
         tasks = [asyncio.create_task(task) for task in tasks]
         me, stopping = asyncio.current_task(), []
 

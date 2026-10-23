@@ -293,14 +293,19 @@ const shown = {x: 1.6, z: 1.3, h: 0};
 let wsAttempts = 0;
 function connect(){
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  let unanswered = 0;                                  // chat messages this socket sent that no chat_ack has answered yet
   ws.onopen = () => { wsAttempts = 0; };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === "spiking") { Neurons.onMessage(m); return; }
     if (m.type === "hello") { if (m.world && !world) buildWorld(m.world); (m.chat || []).forEach(addChat); return; }
     if (m.type === "chat") { addChat(m); return; }
+    if (m.type === "reaction") { if (m.text) showReaction(m.text, "broadcast", m.t); return; }
     if (m.type === "music") { if (m.playing) showMusic(m); else if (musicNow && musicNow.id === m.id) showMusic(null); return; }
-    if (m.type === "chat_ack") { document.getElementById("ack").textContent = m.ok ? "sent — it heard you" : "not sent: " + m.reason; return; }
+    if (m.type === "chat_ack") {                       // an ack has no text or id: the server answers each message on the socket that sent it, in order
+      const ours = unanswered > 0; if (ours) unanswered--;
+      document.getElementById("ack").textContent = m.ok ? "sent — it heard you" : "not sent: " + m.reason;
+      if (ours && m.reaction) showReaction(m.reaction, "ack", m.t); return; }
     if (m.type === "eye") { if (m.thought) document.getElementById("thought").textContent = `“${m.thought}”`; return; }
     if (m.type !== "tick") return;
     stage = (m.sleep && m.sleep.stage) || "AWAKE"; clock = (m.sleep && m.sleep.clock) || clock;
@@ -312,7 +317,7 @@ function connect(){
     setTimeout(connect, cap / 2 + Math.random() * cap / 2);
   };
   document.getElementById("f").onsubmit = ev => { ev.preventDefault(); const i = document.getElementById("in");
-    if (i.value.trim()) ws.send(JSON.stringify({type: "chat", text: i.value})); i.value = ""; };
+    if (i.value.trim()) { ws.send(JSON.stringify({type: "chat", text: i.value})); unanswered++; } i.value = ""; };
 }
 // music (#68): his brain model picks; Spotify's official embed, played on the visitor's own device (never by the server)
 let musicNow = null, musicEmbed = "";
@@ -328,7 +333,18 @@ function showMusic(m){
 }
 fetch("/api/music").then(r => r.json()).then(d => { if (d.now) showMusic(d.now); }).catch(() => {});
 function addChat(m){ chatLines.push(m); if (chatLines.length > 40) chatLines.shift();
-  const d = document.createElement("div"); d.textContent = `${m.t || ""} ${m.text}`; const c = document.getElementById("chat"); c.appendChild(d); c.scrollTop = 1e9; }
+  const d = document.createElement("div"); d.textContent = [m.t, m.text].filter(Boolean).join(" "); const c = document.getElementById("chat"); c.appendChild(d); c.scrollTop = 1e9; }
+// A reaction shows once. Everyone gets it as a broadcast, and this page's own chat_ack can carry the same reaction; the
+// server may send either first. Each copy cancels one copy of the same text from the other source that came within 10 s.
+const reactionCopies = [];                            // {text, src, at}, oldest first
+function showReaction(text, src, t){
+  const now = Date.now();
+  while (reactionCopies.length && now - reactionCopies[0].at > 10000) reactionCopies.shift();
+  const k = reactionCopies.findIndex(r => r.text === text && r.src !== src);
+  if (k >= 0) { reactionCopies.splice(k, 1); return; }     // the other copy is already on screen
+  reactionCopies.push({text, src, at: now});
+  addChat({t, text: `SUB-01: ${text}`});
+}
 
 let lastLog = "";
 // ---------------- the real neighbourhood: live map (OpenStreetMap) + real street footage ----------------
