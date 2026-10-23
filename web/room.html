@@ -1008,7 +1008,7 @@ function loadMoves(){
       for (const [k, v] of Object.entries(ALIAS)) if (v === slot && !actions[k]) HIPS[k] = HIPS[slot];   // dine (eating) sits like sit, listen lies like sleep (poses of the old clips keep theirs)
       const was = actions[slot], a = actions[slot] = mixer.clipAction(c); clips[slot] = c;
       if (was && current === was) { was.stop(); a.reset().play(); current = a; } }
-    STRIDE_V = 0.86;                                  // the new walk's feet move back at 0.86 m/s
+    REF_SPEED = 0.86;                                  // the new walk's feet move back at 0.86 m/s
     movesOn = true; if (placed && goal) snap(goal.anchor, goal.clip);   // already placed for the old clips: again
   }).catch(() => {});
 }
@@ -1838,7 +1838,9 @@ let visible = true, lastLife = null;
 // consistent blend that stays out of the bed and the chair (debug: penetration()). He walks at y = F; the height of a
 // seat or the bed only comes in inside those steps. A new goal mid-walk re-plans from where he is.
 let at = null, goal = null, plan = [], step = null, holdW = 0, placed = false;
-const WALK_V = 0.9; let STRIDE_V = 0.65;             // m/s; the walk clip's feet move back at 0.65 m/s: it plays faster to match
+const WALK_V = 1.2; let REF_SPEED = 0.65;             // m/s: the default walk (adults walk 0.94-1.43 m/s; 1.2 is the middle)
+// REF_SPEED (m/s): the walk clip's authored foot speed, as the code states it. setStride() sets it for each installed walk clip
+// (room_walk 0.67, the ARDY walk 0.65, the UAL walk 0.86). The clip plays at speed / REF_SPEED, so its feet keep to the ground
 const WALK_A = 1.4, TURN_V = 2.2, STEP_TS = 0.6, DINE_DX = -0.12;   // DINE_DX: the chair rolls left to the dish      // m/s² up and down; turning on the spot (rad/s) he steps round, the walk clip at 0.6x
 // where each clip has the hips, from the root (facing +z; measured): a move between two poses is planned for the hips
 const HIPS = {sit:[0.235, 0.655, -0.364], eat:[-0.014, 0.48, 0.018], idle:[-0.016, 0.994, 0.026], walk:[0.003, 0.977, 0.012], sleep:[-0.006, 1.123, 0.065]};
@@ -2140,7 +2142,7 @@ function drive(dt){                                   // one frame of the plan; 
       const turn = Math.abs(wrapA(Math.atan2(q[0] - p[0], q[1] - p[1]) - Math.atan2(p[0] - boy.position.x, p[1] - boy.position.z)));
       const slow = WALK_V * (1 - 0.6 * Math.min(1, turn / 1.2)); vc = slow + (WALK_V - slow) * smooth(0.15, 0.7, d0); }
     S.v = Math.min(vc, 0.12 + Math.sqrt(2 * WALK_A * rem), S.v + WALK_A * dt);
-    if (actions.walk) actions.walk.timeScale = Math.max(0.2, S.v / STRIDE_V);
+    if (actions.walk) actions.walk.timeScale = Math.max(0.2, S.v / REF_SPEED);
     let left = S.v * dt;
     while (left > 0 && S.pts.length) { const q = S.pts[0]; _w.set(q[0] - boy.position.x, 0, q[1] - boy.position.z); const d = _w.length();
       if (d > 0.03) turnTo(Math.atan2(_w.x, _w.z), 4, dt);
@@ -3893,7 +3895,7 @@ if (DEBUG) { Object.assign(window, {THREE, scene, camera, controls, renderer, cl
   const animate0 = animate; let motion = null, mh = null, rig = null;
   // preview/room-mh: with the MakeHuman body (room/boy.glb = boy_mh.glb) room/boy_mh.js drives him instead (desk modes
   // from the real mocap); it waits for the old clips to finish loading, then takes over every slot
-  const mhEnv = () => ({THREE, load, bones, actions, HIPS, F, DISH_AT, chairNode, room: () => room, scene, setStride: v => { STRIDE_V = v; }, get boy(){ return boy; }, get mixer(){ return mixer; },
+  const mhEnv = () => ({THREE, load, bones, actions, HIPS, F, DISH_AT, chairNode, room: () => room, scene, setStride: v => { REF_SPEED = v; }, get boy(){ return boy; }, get mixer(){ return mixer; },
     ...(V5 ? {clipDir: "room/mh_v5", fixClip: c => V5.m.fixClip(THREE, c, V5.conv), pageHips: h => V5.m.legacyHips(THREE, h, V5.conv), seatUp: 0, seatIn: 0.06, noHair: true} : {}),   // (v5: its clips, the live chair, its own hair)
     ...(V5 && V5.mx ? {clipDir: "room/mh_mx", ...V5.m.ROOM} : {}),   // (?char=mixamo: its clips, which clip plays which slot, the clips' keyboard and mouse)
     ...(DESK_EV ? {anim: "sova", deskEvents: () => DESK_EV.splice(0)} : {}),   // (&anim=sova: the desk states and what they react to)
@@ -3937,8 +3939,8 @@ if (DEBUG) { Object.assign(window, {THREE, scene, camera, controls, renderer, cl
       held:Object.keys(PROP.held).length > 0 || bag === "hand" || !!(trash && trash.held)}),
     setCurrent: a => { current = a; },
     movesDone: () => !MOVES || movesOn,            // #76's clips go in first (same slots); these take over after them
-    HIPS0: JSON.parse(JSON.stringify(HIPS)), stride0: STRIDE_V,   // the table and stride before any clip swap (?motion=old)
-    setStride: v => { STRIDE_V = v; }}); if (DEBUG) window.motion = motion; }).catch(e => console.warn("motion layer off:", e));
+    HIPS0: JSON.parse(JSON.stringify(HIPS)), stride0: REF_SPEED,   // the table and stride before any clip swap (?motion=old)
+    setStride: v => { REF_SPEED = v; }}); if (DEBUG) window.motion = motion; }).catch(e => console.warn("motion layer off:", e));
   animate = dt => { let moving;
     if (pickRig() === "mh") moving = mh ? mh.animate(dt) : mhEnv().step0(dt);   // (the old rig's layers stay off)
     else { moving = animate0(dt); if (motion) motion.update(dt); }

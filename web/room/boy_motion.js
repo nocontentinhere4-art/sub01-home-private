@@ -126,7 +126,7 @@ export function createMotion(env){
       const old = env.actions[sw.action], a = env.mixer.clipAction(clip);
       env.actions[sw.action] = a;
       if (env.HIPS0 && env.HIPS0[sw.action]) env.HIPS[sw.action] = env.HIPS0[sw.action].slice();
-      if (sw.slot === "walk" && env.setStride && env.stride0) env.setStride(env.stride0);   // room.html's STRIDE_V for the first walk clip
+      if (sw.slot === "walk" && env.setStride && env.stride0) env.setStride(env.stride0);   // room.html's REF_SPEED for the first walk clip
       M.swapped[sw.action] = {from: old, to: a, old: true};
       handOver(old, a);
     } catch (e) { M.log.push(`old ${sw.slot}: ${e.message}`); }
