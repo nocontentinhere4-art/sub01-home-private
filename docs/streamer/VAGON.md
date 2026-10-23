@@ -118,6 +118,56 @@ the token, the login done through it, Run/Connect/Reconnect/Run again, the neutr
 against billing/settings/external pages, the login surviving a restart in the profile, and the console page working
 behind a `/proxy/8832/` path prefix in a second real browser.
 
+### A5. The real page, seen on 2026-10-23: what stalled, and what the runner does now
+
+The owner has a personal Vagon Computer (plan "Planet"; Streams and Teams only show onboarding pages on this account). He
+logged in through the operator console on the second runner (port 8838, display :103, data dir `streamer/desktop-vagon`,
+profile kept). The page then stayed on Vagon's loading cubes for an hour. What `events.jsonl` and the new `vagon_diag` rows
+showed, in order:
+
+1. **Widget pressed as a control.** The dashboard's first "connect" candidate was Intercom's launcher, `Open Intercom
+   Messenger` (a `role=button` in the main document; "Open" matched `VAGON_WS_CONNECT_RX`). It opened the support panel
+   (`Close`, `Send us a message`, `Search for help`, ...). Fixed: `control_verdict` never presses widgets (`VAGON_WS_WIDGET_RX`
+   on the label, the `widget` flag the probe sets from the element's ancestors, and sub-frames named/hosted like widgets
+   such as `intercom-frame` and `consentcdn.cookiebot.com` lose their controls); the main document's controls come first;
+   every candidate set is logged once per page state as `vagon_controls` (labels only, e-mail addresses masked).
+2. **Blind reloads.** `connecting` was reloaded every 120 s (10 reloads in an hour). Fixed: `workstation_reload_reason`:
+   a connecting page is opened again only after 6 minutes AND when it is dead (`page_dead`: no request, WebSocket frame or
+   WebRTC byte for 60 s and no video/canvas), on an explicit ended text without a way back in, or on the owner's request
+   (`POST /pc/vagon/reload`, token). `connected` needs `stream_evidence` (decoded frames, or a repainting canvas), not an
+   element.
+3. **Console closing.** The console vanished 10 minutes after the login although nothing was connected. Fixed:
+   `operator_allowed` serves it the whole time the desktop is not connected (and `OPERATOR_CONNECTED_GRACE_S` after).
+4. **The actual stall: no H.264 in the kiosk browser.** Vagon's player is Unreal Pixel Streaming's web client
+   (`/webRtcPlayer.js`, `getSupportedVideoCodecs`, `PreferredCodec`, `intersectUEAndBrowserCodecs`). The server's WebRTC
+   offer carries **H264 only** (`video: 123 H264 pl=42e01f` on all four video m-lines, `111 opus`, a data channel, TURN
+   `prod-turn-int-stockholm-1.proxy.vagontech.com:443` udp and tls). Playwright's bundled Chromium 140.0.7339.16
+   (`~/.cache/ms-playwright/chromium-1187`) has no H.264 at all: `RTCRtpReceiver.getCapabilities('video')` = VP8, VP9, AV1;
+   `MediaSource.isTypeSupported(avc1)` false; `VideoDecoder.isConfigSupported(avc1)` false (the Playwright docs say so: the
+   bundled Chromium lacks the proprietary codecs). The browser's answer therefore **rejects every video m-line**
+   (`video: 0 | video: 0 | video: 0 | audio: 111 opus | ... | application`), the received video track ends at once
+   (`video:ended`, 2x2, hidden `<video>`), ICE never starts (`dtls new`, `ice new`, no candidate pair), the server closes
+   the peer connection after about a minute and the client makes a new one (`created` 1, 4, 6, 8...). WebGL2 works (ANGLE/
+   SwiftShader, also with `--disable-gpu`), WebCodecs and WebGPU exist, `play()` was never refused, user activation is
+   true: GPU, autoplay and rendering are not the cause, and no flag of the bundled Chromium adds H.264.
+
+**What is needed:** a browser with H.264 decoding on the pod, used ONLY with the runner's own profile. None is installed
+(`find` for google-chrome/chromium/firefox/libffmpeg: only the Playwright build; Unreal's CEF is not a browser). The runner
+already takes `--chromium PATH` (and the supervisor `--child-arg "desktop=--chromium PATH"`); Google Chrome stable
+(`google-chrome-stable` .deb, ~110 MB, or `playwright install chrome`) would open the Chromium 140 profile with the login
+intact. Installing it is a decision for the owner (disk: 3.7 GB free). A Vagon-side codec change is not available to the
+client: the codec intersection is done against the server's H264-only offer. UDP egress from the pod works (STUN binding
+requests to stun.l.google.com, stun.cloudflare.com and Vagon's TURN host over UDP all answered, public address mapped;
+TCP 443 to the TURN host open), so the H.264 browser is the only missing piece; the `701 STUN host lookup` candidate
+errors Chromium logged are internal to it (relay candidates were still gathered over TURN-TLS). Judge the final path once
+ICE runs (`vagon_diag.rtc.stats.pair`: `relay`/`tcp` means TURN-TCP only).
+
+**Chromium flags** (`streamer_desktop.py`): `--gpu off|swiftshader|on` (default `off` = `--disable-gpu`), `--autoplay`
+(`--autoplay-policy=no-user-gesture-required`), `--chromium-arg=--flag=value` (repeatable). They are recorded in the
+`start` event and in `vagon_diag.browser`. Diagnostics: `/pc/state.vagon.diag` and `vagon_diag` rows every 30 s while
+connecting (page, iframes, video/canvas elements, WebGL, WebCodecs, codecs, WebRTC states/SDP codecs/candidate pairs/
+stats from an init script, console errors, failed requests and HTTP errors by host, network activity).
+
 ## Part B. Vagon Streams research (kept for reference; not the owner's product)
 
 Sources: https://docs.vagon.io/streams and its sub-pages (introduction, guides, configurations, integrations, custom

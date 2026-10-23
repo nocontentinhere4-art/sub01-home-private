@@ -33,12 +33,28 @@ Two Vagon products (`kind` in vagon.json, or `--vagon-kind`): `streams` (a publi
 workstation kind the runner never has or types credentials: when the page asks for a login it enters the phase
 `login_required` and serves an operator console (`GET /operator`, a self-contained page that shows the live desktop and
 forwards the owner's mouse and keyboard with the admin token he pastes once) so the owner logs in himself; the login
-survives restarts in the persistent profile. After the login it presses Run/Start/Turn on and Connect/Open/Enter (found by
-text, logged as `vagon_button`), waits for the stream and re-connects after an ended session. Privacy lock: until the
-remote desktop is connected, /desktop/observe and /pc/frame.png return a neutral "PC not connected" picture, never the
-account pages, and the host page may navigate only within the workstation/login pages of app.vagon.io and the stream it
-opens (billing, team, settings, external sites are blocked and logged). An optional Teams API key (vagon_pc.py) gives the
-`machine` field and `POST /pc/vagon/start`.
+survives restarts in the persistent profile. The console stays available the whole time the remote desktop is NOT
+connected (login_required, dashboard, starting, connecting, ended, blocked) and closes only while it is connected. After
+the login it presses Run/Start/Turn on and Connect/Open/Enter (found by text in the main document first, logged as
+`vagon_button`; every candidate control and its verdict is logged once per page state as `vagon_controls`); chat, support,
+help, cookie and feedback widgets (Intercom and the like, in the page or in their iframes) are never pressed. It waits for
+the stream and re-connects after an ended session. The page is never reloaded blindly while it may be connecting: a
+`connecting` page is opened again only after 6 minutes AND when it is dead (no request, WebSocket frame or WebRTC byte for
+60 s and no video/canvas), on an explicit ended/error text without a way back in, or on the owner's request
+(`POST /pc/vagon/reload`). While connecting, a diagnostic snapshot (`vagon_diag` rows every 30 s, the latest in
+`/pc/state.vagon.diag`) records the page (title, frames, video/canvas elements, WebGL, WebCodecs, codecs), the WebRTC
+peer connections (states, candidate pair types, negotiated codecs, bytes/frames decoded, from an init script), console
+errors, failed requests and HTTP errors by host, so a stall can be told apart: ICE/UDP, media/codec, rendering or a dead
+page. `connected` is set only on evidence (a video with decoded frames, or a canvas while the page repaints / WebRTC
+frames are decoded). A new tab or popup that stays on the Vagon site (the stream window) is adopted as the page instead of
+being closed. Privacy lock: until the remote desktop is connected, /desktop/observe and /pc/frame.png return a neutral
+"PC not connected" picture, never the account pages, and the host page may navigate only within the workstation/login
+pages of app.vagon.io and the stream it opens (billing, team, settings, external sites are blocked and logged). An
+optional Teams API key (vagon_pc.py) gives the `machine` field and `POST /pc/vagon/start`.
+
+Chromium flags (documented here and in docs/streamer/VAGON.md): `--gpu off` (default, --disable-gpu) | `swiftshader`
+(software WebGL through ANGLE/SwiftShader) | `on` (Chromium decides), `--autoplay` (--autoplay-policy=no-user-gesture-
+required) and `--chromium-arg FLAG` (repeatable, verbatim). The flags in use are recorded in the `start` event.
 """
 
 import argparse
@@ -104,10 +120,14 @@ VAGON_KINDS = ("streams", "workstation")
 DEFAULT_WORKSTATION_URL = "https://app.vagon.io/workstation"
 DEFAULT_STREAMER_DIR = "/home/unreal/.sub01-private/streamer"
 VAGON_SCHEMA = "sub01.streamer-vagon.v1"
-OPERATOR_GRACE_S = 600.0      # the console stays this long after the login page went away (2FA, consent), never while connected
+OPERATOR_CONNECTED_GRACE_S = 30.0   # the console stays this long after the desktop connected (a flapping session); never longer
 VAGON_API_POLL_S = 60.0       # how often the optional Teams API is asked for the machine's status
 VAGON_API_START_GAP_S = 300.0 # at least this long between two API starts of the machine
-VAGON_WS_STUCK_S = {"blank": 60.0, "opening": 60.0, "dashboard": 180.0, "starting": 600.0, "connecting": 120.0}
+# Minimum time in a phase before the page may be opened again. `connecting` and `blank` additionally need a DEAD page
+# (workstation_reload_reason): a Vagon connection in progress is never interrupted by a blind reload.
+VAGON_WS_STUCK_S = {"blank": 120.0, "opening": 60.0, "dashboard": 180.0, "starting": 600.0, "connecting": 360.0}
+VAGON_DEAD_S = 60.0           # no request, WebSocket frame or WebRTC byte for this long, and no video/canvas: the page is dead
+VAGON_DIAG_EVERY_S = 30.0     # a `vagon_diag` row while the stream is connecting (and once when it connects, ends or reloads)
 NEUTRAL_TEXT = "PC not connected"
 VAGON_TICK_S = 2.0            # how often the stream page is probed for its connect / ended state
 VAGON_CLICK_GAP_S = 6.0       # at least this long between two presses of the stream's connect button
@@ -596,6 +616,18 @@ VAGON_WS_PHASES = ("login_required", "dashboard", "starting", "connecting", "con
                    "opening", "restarting")
 VAGON_WS_CANVAS_FRACTION = 0.5    # a canvas counts as the remote desktop only when it covers half the viewport (not a chart)
 VAGON_MACHINE_STATES = ("unknown", "off", "starting", "on")
+# Third-party widgets on the page (chat/support launchers such as Intercom, cookie and feedback banners): never a connect
+# control, whatever verb their label starts with ("Open Intercom Messenger"). Applied to labels, to the element's ancestors
+# (VAGON_PROBE_JS flags `widget`) and to iframe names/hosts (the probe drops those frames' controls).
+VAGON_WS_WIDGET_RX = re.compile(r"intercom|messenger|live ?chat|\bchat\b|support|\bhelp\b|feedback|survey|cookie|consent|"
+                                r"notification|announcement|crisp|zendesk|drift|hubspot|freshchat|tawk|olark|"
+                                r"send us a message|search for|\bclose\b|dismiss|minimi[sz]e|widget|launcher", re.I)
+VAGON_CONTROL_VERDICTS = ("reconnect", "connect", "start", "widget", "login", "money", "never", "none")
+EMAIL_RX = re.compile(r"\S+@\S+")
+GPU_MODES = ("off", "swiftshader", "on")
+GPU_ARGS = {"off": ["--disable-gpu"],
+            "swiftshader": ["--use-gl=angle", "--use-angle=swiftshader", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"],
+            "on": []}
 
 
 def redact_url(url):
@@ -740,21 +772,98 @@ def workstation_request_blocked(url, base_url, main_frame=False, method="GET", a
     return request_blocked(url, False, method, allow_private)
 
 
+def control_verdict(button):
+    """What the runner makes of one control of the workstation page: `reconnect`, `connect` or `start` (pressable, in
+    that order of preference), or why it is never pressed: `widget` (a chat/support/cookie/feedback widget by its label or
+    its ancestors, e.g. Intercom's "Open Intercom Messenger"), `login`, `money`, `never` (stop, delete, sign out,
+    settings, help, trial... VAGON_WS_NEVER_RX) or `none` (no label, too long, or nothing the runner understands)."""
+    b = button or {}
+    label = " ".join(str(b.get("label") or "").split())
+    if b.get("widget") or VAGON_WS_WIDGET_RX.search(label):
+        return "widget"
+    if not label or len(label) > 60:
+        return "none"
+    if LOGIN_LABEL.search(label):
+        return "login"
+    if MONEY_LABEL.search(label):
+        return "money"
+    if VAGON_WS_NEVER_RX.search(label):
+        return "never"
+    if VAGON_RECONNECT_RX.search(label):
+        return "reconnect"
+    if VAGON_WS_CONNECT_RX.search(label):
+        return "connect"
+    if VAGON_WS_START_RX.search(label):
+        return "start"
+    return "none"
+
+
 def choose_workstation_button(buttons):
     """(index, kind) of the control to press on the workstation page: a reconnect/try-again control first, then
-    connect/open/enter (the computer is on), then run/start/turn on (it is off). Never a login or money control, never
-    stop/delete/sign out/settings and the like (VAGON_WS_NEVER_RX). (None, None) when nothing fits."""
+    connect/open/enter (the computer is on), then run/start/turn on (it is off). Never a widget, a login or money control,
+    never stop/delete/sign out/settings and the like (control_verdict). (None, None) when nothing fits."""
+    ranks = {"reconnect": 0, "connect": 1, "start": 2}
     best, best_rank = None, None
     for i, b in enumerate(buttons or []):
-        label = " ".join(str(b.get("label") or "").split())
-        if (not label or len(label) > 60 or LOGIN_LABEL.search(label) or MONEY_LABEL.search(label)
-                or VAGON_WS_NEVER_RX.search(label)):
-            continue
-        rank = (0 if VAGON_RECONNECT_RX.search(label) else 1 if VAGON_WS_CONNECT_RX.search(label)
-                else 2 if VAGON_WS_START_RX.search(label) else None)
+        rank = ranks.get(control_verdict(b))
         if rank is not None and (best_rank is None or rank < best_rank):
             best, best_rank = i, rank
     return best, (None if best is None else ("reconnect", "connect", "start")[best_rank])
+
+
+def controls_summary(buttons, limit=30):
+    """The `vagon_controls` log: every candidate control's label (40 chars, e-mail addresses masked) and its verdict,
+    plus the frame it came from when it was not the main document. Never a typed value: labels are captions only."""
+    out = []
+    for b in (buttons or [])[:limit]:
+        label = EMAIL_RX.sub("<email>", " ".join(str(b.get("label") or "").split()))[:40]
+        item = {"label": label, "verdict": control_verdict(b)}
+        if b.get("frame"):
+            item["frame"] = str(b["frame"])[:60]
+        out.append(item)
+    return out
+
+
+def workstation_reload_reason(phase, stuck_for, attempts, dead, requested=False):
+    """Why the workstation page is opened again now, or None (no blind reload). The owner's request (`POST
+    /pc/vagon/reload`) and an `ended` page without a way back in reload at once (after the backoff); six presses without
+    effect too. Otherwise the phase must have lasted its VAGON_WS_STUCK_S minimum, and `connecting` and `blank` (a page
+    that may still be setting the stream up: Vagon can take minutes) reload only when the page is DEAD: no request,
+    WebSocket frame or WebRTC byte for VAGON_DEAD_S and no video/canvas element (`dead`, see page_dead)."""
+    if requested:
+        return "operator request"
+    if phase == "ended":
+        return "ended"
+    if attempts >= 6:
+        return "six presses without effect"
+    stuck = VAGON_WS_STUCK_S.get(phase)
+    if stuck is None or stuck_for < stuck:
+        return None
+    if phase in ("connecting", "blank"):
+        return "dead page" if dead else None
+    return f"stuck in {phase}"
+
+
+def page_dead(now, activity, has_stream):
+    """The page is dead: it holds no video/canvas and nothing happened on the network (`activity`: monotonic times of the
+    last request, WebSocket frame and WebRTC byte) for VAGON_DEAD_S."""
+    if has_stream:
+        return False
+    last = max([t for t in (activity or {}).values() if t] or [0.0])
+    return now - last >= VAGON_DEAD_S
+
+
+def stream_evidence(stream, rtc=None, repaint=False):
+    """`connected` needs evidence that the stream element shows pictures, not just that it exists: a video with decoded
+    frames (its playback quality, or the WebRTC inbound stats), or a canvas while the page repainted (the screencast sent
+    a new frame) or WebRTC frames were decoded. A video element without data, or a blank canvas, is still `connecting`."""
+    if not stream:
+        return False
+    frames = int(stream.get("frames") or 0)
+    decoded = int((rtc or {}).get("frames_decoded") or 0)
+    if stream.get("tag") == "video":
+        return frames > 0 or decoded > 0
+    return decoded > 0 or bool(repaint)
 
 
 def login_page_reason(path, passwords, text, buttons=None):
@@ -960,7 +1069,8 @@ def choose_vagon_button(buttons):
     best, best_rank = None, None
     for i, b in enumerate(buttons or []):
         label = " ".join(str(b.get("label") or "").split())
-        if not label or LOGIN_LABEL.search(label) or MONEY_LABEL.search(label):
+        if (not label or LOGIN_LABEL.search(label) or MONEY_LABEL.search(label) or b.get("widget")
+                or VAGON_WS_WIDGET_RX.search(label)):
             continue
         rank = 0 if VAGON_RECONNECT_RX.search(label) else 1 if VAGON_CONNECT_RX.search(label) else None
         if rank is not None and (best_rank is None or rank < best_rank):
@@ -1005,6 +1115,8 @@ class VagonState:
         self.last_click, self.last_reload, self.blank_since, self.last_label = 0.0, 0.0, None, ""
         self.logged_in, self.machine, self.machine_source, self.blocked = False, "unknown", "none", 0
         self.login_seen, self.login_why, self.stuck_since, self.last_api_start = None, "", None, 0.0
+        self.connected_at, self.reload_requested, self.last_reload_why = None, False, ""
+        self.diag, self.diag_at, self.last_diag, self.last_controls = None, None, 0.0, None
 
     def set_phase(self, phase):
         changed = phase != self.phase
@@ -1019,7 +1131,10 @@ class VagonState:
                "api_key_file": self.api_key, "kind": self.kind}
         if self.kind == "workstation":
             out.update(logged_in=self.logged_in, machine=self.machine, machine_source=self.machine_source,
-                       blocked=self.blocked, login_why=self.login_why)
+                       blocked=self.blocked, login_why=self.login_why, reload_requested=self.reload_requested,
+                       last_reload_why=self.last_reload_why, diag=self.diag,
+                       diag_at_utc=(datetime.fromtimestamp(self.diag_at, timezone.utc).isoformat(timespec="seconds")
+                                    if self.diag_at else None))
         return out
 
 
@@ -1239,6 +1354,9 @@ class Config:
     vagon_kind: str = "streams"          # "streams" (public stream link) or "workstation" (the owner's Cloud Computer, his login)
     vagon_machine_id: str = ""           # workstation: the machine's id for the optional API
     operator_console: bool = False       # serve /operator always, not only while the Vagon page needs the owner's login
+    gpu: str = "off"                     # "off": --disable-gpu; "swiftshader": software WebGL (ANGLE/SwiftShader); "on": Chromium decides
+    autoplay: bool = False               # --autoplay-policy=no-user-gesture-required: a stream video may play without a click
+    extra_args: tuple = ()               # --chromium-arg, passed verbatim (documented in the start event)
 
 
 class DesktopUnavailable(RuntimeError):
@@ -1250,12 +1368,17 @@ class ActFailed(RuntimeError):
 
 
 def chromium_args(cfg):
+    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags."""
     args = ["--no-first-run", "--no-default-browser-check", "--disable-sync", "--disable-extensions",
-            "--disable-background-networking", "--mute-audio", "--password-store=basic", "--disable-gpu",
+            "--disable-background-networking", "--mute-audio", "--password-store=basic",
             "--disable-dev-shm-usage", "--deny-permission-prompts", "--disable-session-crashed-bubble",
             "--hide-crash-restore-bubble", "--disable-infobars", "--noerrdialogs",
             "--disable-features=Translate,AutofillServerCommunication", "--window-position=0,0",
             f"--window-size={cfg.width},{cfg.height}"]
+    args += GPU_ARGS.get(getattr(cfg, "gpu", "off") or "off", GPU_ARGS["off"])
+    if getattr(cfg, "autoplay", False):
+        args.append("--autoplay-policy=no-user-gesture-required")
+    args += [str(a) for a in (getattr(cfg, "extra_args", ()) or ()) if str(a).startswith("--")]
     return args + (["--kiosk"] if cfg.kiosk and not cfg.headless else [])
 
 
@@ -1353,11 +1476,15 @@ VAGON_PROBE_JS = r"""([minW, minH]) => {
     if (r.width * r.height > area) {
       area = r.width * r.height;
       const video = el.tagName === 'VIDEO';
+      let frames = null;
+      if (video) { try { frames = el.getVideoPlaybackQuality().totalVideoFrames; } catch (e) { frames = null; } }
       best = {tag: el.tagName.toLowerCase(), box: [r.left, r.top, r.width, r.height],
-        playing: video ? (el.readyState >= 2 && !el.paused && !el.ended && el.videoWidth > 0) : true};
+        playing: video ? (el.readyState >= 2 && !el.paused && !el.ended && el.videoWidth > 0) : true, frames};
     }
   }
   out.stream = best;
+  // chat/support/cookie widgets (Intercom's launcher lives in the main document): their controls are never connect buttons
+  const WIDGET = '[id*="intercom" i],[class*="intercom" i],[name*="intercom" i],[id*="launcher" i],[class*="launcher" i],[id*="widget" i],[class*="widget" i],[id*="cookie" i],[class*="cookie" i],[id*="consent" i],[class*="consent" i],[class*="crisp" i],[id*="crisp" i],[class*="zendesk" i],[id*="hubspot" i],[class*="hubspot" i],[class*="drift" i],[id*="drift" i],[class*="chat" i],[id*="chat" i]';
   const parts = [];
   const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
   let seen = 0, size = 0;
@@ -1381,9 +1508,13 @@ VAGON_PROBE_JS = r"""([minW, minH]) => {
     const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2)), cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
     const top = document.elementFromPoint(cx, cy);
     if (!top || !(top === el || el.contains(top) || top.contains(el))) continue;
-    let label = (el.getAttribute('aria-label') || el.innerText || el.value || el.title || el.getAttribute('alt') || '').toString().trim();
+    const tag = el.tagName.toLowerCase(), type = (el.getAttribute('type') || '').toLowerCase();
+    const caption = tag === 'input' ? (['button', 'submit', 'reset'].includes(type) ? el.value : '') : '';   // never a typed value
+    let label = (el.getAttribute('aria-label') || el.innerText || caption || el.title || el.getAttribute('alt') || '').toString().trim();
     if (!label) { const m = /(reconnect|connect|play|start)/i.exec(el.className || ''); label = m ? m[1] : ''; }
-    out.buttons.push({label: label.replace(/\s+/g, ' ').slice(0, 80), box: [r.left, r.top, r.width, r.height]});
+    let widget = false;
+    try { widget = !!el.closest(WIDGET); } catch (e) { widget = false; }
+    out.buttons.push({label: label.replace(/\s+/g, ' ').slice(0, 80), box: [r.left, r.top, r.width, r.height], widget});
   }
   return out;
 }"""
@@ -1399,14 +1530,142 @@ VAGON_FOCUS_JS = r"""([minW, minH]) => {
   try { el.focus({preventScroll: true}); } catch (e) { return false; }
   return document.activeElement === el;
 }"""
+# Init script (every frame, before the page's own code): wraps RTCPeerConnection to record its state transitions, the
+# negotiated codecs (payload type and codec name per m= line, never ICE credentials), tracks/data channels, candidate
+# errors and a getStats poll every 5 s (selected candidate pair types/protocol, inbound video bytes, frames decoded/
+# dropped, packets lost, jitter, decoder, codec). Also counts HTMLMediaElement.play() calls and their refusals (autoplay
+# policy). Read back by VAGON_DIAG_JS as window.__sub01Rtc.
+RTC_INIT_JS = r"""(() => {
+  if (window.__sub01Rtc || typeof RTCPeerConnection !== 'function') return;
+  const R = window.__sub01Rtc = {pcs: [], events: [], media: {play: 0, rejected: []}, created: 0};
+  const t = () => Math.round(performance.now());
+  const safeUrl = u => String(u).replace(/:[^:@\/]*@/, ':***@').slice(0, 80);
+  const ev = (pc, kind, value) => { R.events.push({t: t(), pc: pc.__id, k: kind, v: String(value).slice(0, 80)}); if (R.events.length > 200) R.events.splice(0, R.events.length - 200); };
+  const sdpSummary = sdp => {
+    const out = [];
+    for (const line of String(sdp || '').split(/\r?\n/)) {
+      if (line.startsWith('m=')) { const p = line.split(' '); out.push({media: p[0].slice(2), pts: p.slice(3).join(','), codecs: [], cands: 0}); }
+      else if (!out.length) continue;
+      else if (line.startsWith('a=rtpmap:')) { const m = /^a=rtpmap:(\d+) ([^/]+)\//.exec(line); if (m) out[out.length - 1].codecs.push(m[1] + ' ' + m[2]); }
+      else if (line.startsWith('a=candidate:')) out[out.length - 1].cands++;
+      else if (line.startsWith('a=fmtp:') && /profile-level-id=/.test(line)) { const m = /^a=fmtp:(\d+) .*profile-level-id=([0-9a-fA-F]+)/.exec(line); if (m) out[out.length - 1].codecs.push(m[1] + ' pl=' + m[2]); }
+    }
+    return out.map(m => m.media + ': ' + (m.codecs.join(', ') || m.pts) + (m.cands ? ' (' + m.cands + ' candidates)' : '')).join(' | ').slice(0, 500);
+  };
+  const Native = RTCPeerConnection;
+  function Wrapped(config, ...rest) {
+    const pc = new Native(config, ...rest);
+    pc.__id = ++R.created;
+    const rec = {id: pc.__id, t: t(), policy: (config && config.iceTransportPolicy) || 'all', state: {}, sdp: {}, stats: null, tracks: 0, channels: 0,
+      servers: ((config && config.iceServers) || []).map(s => [].concat(s.urls || []).map(safeUrl).join(' ')).slice(0, 6)};
+    R.pcs.push(rec); if (R.pcs.length > 6) R.pcs.shift();
+    const states = {connectionstatechange: () => pc.connectionState, iceconnectionstatechange: () => pc.iceConnectionState,
+      icegatheringstatechange: () => pc.iceGatheringState, signalingstatechange: () => pc.signalingState};
+    for (const k of Object.keys(states)) pc.addEventListener(k, () => { const v = states[k](); rec.state[k.replace('statechange', '')] = v; ev(pc, k.replace('statechange', ''), v); });
+    pc.addEventListener('track', e => { rec.tracks++; ev(pc, 'track', (e.track && e.track.kind) || '?'); });
+    pc.addEventListener('datachannel', () => { rec.channels++; ev(pc, 'datachannel', rec.channels); });
+    pc.addEventListener('icecandidateerror', e => ev(pc, 'icecandidateerror', (e.errorCode || '') + ' ' + safeUrl(e.url || '') + ' ' + String(e.errorText || '').slice(0, 40)));
+    const create = pc.createDataChannel.bind(pc);
+    pc.createDataChannel = (...a) => { rec.channels++; return create(...a); };
+    for (const name of ['setLocalDescription', 'setRemoteDescription']) {
+      const orig = pc[name].bind(pc), side = name === 'setLocalDescription' ? 'local' : 'remote';
+      pc[name] = async (...a) => {
+        const r = await orig(...a);
+        try { const d = side === 'local' ? pc.localDescription : pc.remoteDescription; if (d && d.sdp) { rec.sdp[side] = sdpSummary(d.sdp); rec.sdp[side + '_type'] = d.type; ev(pc, 'sdp-' + side, d.type); } } catch (e) {}
+        return r;
+      };
+    }
+    const poll = async () => {
+      if (pc.connectionState === 'closed') { rec.state.connection = 'closed'; return; }
+      try {
+        const st = await pc.getStats(), byId = {}, s = {t: t()};
+        st.forEach(r => { byId[r.id] = r; });
+        st.forEach(r => {
+          if (r.type === 'inbound-rtp' && (r.kind || r.mediaType) === 'video') {
+            const codec = r.codecId && byId[r.codecId];
+            Object.assign(s, {bytes: r.bytesReceived, packets: r.packetsReceived, lost: r.packetsLost, jitter: r.jitter, frames_received: r.framesReceived,
+              frames_decoded: r.framesDecoded, frames_dropped: r.framesDropped, fps: r.framesPerSecond, w: r.frameWidth, h: r.frameHeight,
+              decoder: r.decoderImplementation, hw: r.powerEfficientDecoder, keyframes: r.keyFramesDecoded, pli: r.pliCount, nack: r.nackCount, freeze: r.freezeCount,
+              codec: codec ? String(codec.mimeType) + ' ' + String(codec.sdpFmtpLine || '').replace(/.*profile-level-id=([0-9a-fA-F]+).*/, 'pl=$1').slice(0, 40) : undefined});
+          } else if (r.type === 'inbound-rtp') { s.audio_bytes = r.bytesReceived; }
+          else if (r.type === 'candidate-pair' && (r.nominated || r.state === 'succeeded')) {
+            const l = byId[r.localCandidateId] || {}, rm = byId[r.remoteCandidateId] || {};
+            s.pair = {state: r.state, nominated: !!r.nominated, local: l.candidateType, remote: rm.candidateType, protocol: l.protocol || rm.protocol, relay: l.relayProtocol, rtt: r.currentRoundTripTime, bytes_in: r.bytesReceived, bytes_out: r.bytesSent};
+          } else if (r.type === 'local-candidate') { s.local = s.local || {}; s.local[r.candidateType] = (s.local[r.candidateType] || 0) + 1; }
+          else if (r.type === 'remote-candidate') { s.remote = s.remote || {}; s.remote[r.candidateType] = (s.remote[r.candidateType] || 0) + 1; }
+          else if (r.type === 'data-channel') { s.dc = s.dc || {}; s.dc[r.state] = (s.dc[r.state] || 0) + 1; s.dc_bytes = (s.dc_bytes || 0) + (r.bytesReceived || 0); }
+          else if (r.type === 'transport') { s.dtls = r.dtlsState; s.ice = r.iceState; }
+        });
+        rec.stats = s;
+      } catch (e) { rec.stats_error = String((e && e.message) || e).slice(0, 80); }
+      setTimeout(poll, 5000);
+    };
+    setTimeout(poll, 2000);
+    return pc;
+  }
+  Wrapped.prototype = Native.prototype;
+  try { Object.setPrototypeOf(Wrapped, Native); } catch (e) {}
+  if (Native.generateCertificate) Wrapped.generateCertificate = Native.generateCertificate.bind(Native);
+  window.RTCPeerConnection = Wrapped;
+  if (window.webkitRTCPeerConnection) window.webkitRTCPeerConnection = Wrapped;
+  const play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () {
+    R.media.play++;
+    const p = play.apply(this, arguments);
+    if (p && p.catch) p.catch(e => { R.media.rejected.push(String((e && e.name) || e).slice(0, 40)); if (R.media.rejected.length > 10) R.media.rejected.shift(); });
+    return p;
+  };
+})();"""
+# One frame's diagnostic snapshot (async: WebCodecs support is a promise): where it is, its iframes (hosts), video and
+# canvas elements, WebGL (context kind and renderer), WebCodecs/WebGPU, the codecs this browser can receive/decode, the
+# WebRTC records of RTC_INIT_JS, user activation. No URL beyond host and path, no page text.
+VAGON_DIAG_JS = r"""async () => {
+  const out = {host: location.hostname, path: location.pathname.slice(0, 80), title: (document.title || '').slice(0, 80), ready: document.readyState,
+    visible: document.visibilityState, focus: document.hasFocus(), vw: innerWidth, vh: innerHeight, iframes: [], videos: [], canvases: []};
+  for (const f of document.querySelectorAll('iframe')) {
+    let h = ''; try { h = new URL(f.src || 'about:blank', location.href).hostname || (f.src || 'about:blank').slice(0, 30); } catch (e) { h = '?'; }
+    const r = f.getBoundingClientRect();
+    out.iframes.push({host: h, name: (f.name || f.id || f.className || '').toString().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height)});
+    if (out.iframes.length >= 12) break;
+  }
+  for (const v of document.querySelectorAll('video')) {
+    const r = v.getBoundingClientRect(); let q = null; try { q = v.getVideoPlaybackQuality(); } catch (e) {}
+    const tracks = v.srcObject && v.srcObject.getTracks ? v.srcObject.getTracks().map(t => t.kind + ':' + t.readyState + (t.muted ? ':muted' : '')).join(' ') : '';
+    out.videos.push({w: Math.round(r.width), h: Math.round(r.height), ready: v.readyState, vw: v.videoWidth, vh: v.videoHeight, paused: v.paused, muted: v.muted,
+      autoplay: v.autoplay, t: Math.round(v.currentTime * 10) / 10, src_object: !!v.srcObject, src: v.src ? v.src.split(':')[0] : '', tracks,
+      frames: q ? q.totalVideoFrames : null, dropped: q ? q.droppedVideoFrames : null, error: v.error ? v.error.code : null, display: getComputedStyle(v).display});
+    if (out.videos.length >= 6) break;
+  }
+  for (const c of document.querySelectorAll('canvas')) {
+    const r = c.getBoundingClientRect();
+    out.canvases.push({w: Math.round(r.width), h: Math.round(r.height), cw: c.width, ch: c.height, display: getComputedStyle(c).display});
+    if (out.canvases.length >= 8) break;
+  }
+  try {
+    const c = document.createElement('canvas'); let gl = null, kind = null;
+    for (const n of ['webgl2', 'webgl']) { try { gl = c.getContext(n); } catch (e) {} if (gl) { kind = n; break; } }
+    out.webgl = kind;
+    if (gl) { const d = gl.getExtension('WEBGL_debug_renderer_info'); out.renderer = String(d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).slice(0, 100); const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); }
+  } catch (e) { out.webgl = 'error'; }
+  out.webcodecs = 'VideoDecoder' in window; out.webgpu = 'gpu' in navigator; out.codecs = {};
+  try { out.codecs.rtc_video = (RTCRtpReceiver.getCapabilities('video').codecs || []).map(c => c.mimeType.replace('video/', '')).filter((v, i, a) => a.indexOf(v) === i && !['rtx', 'red', 'ulpfec', 'flexfec-03'].includes(v)); } catch (e) { out.codecs.rtc_video = 'n/a'; }
+  try { out.codecs.mse_h264 = MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"'); out.codecs.mse_vp9 = MediaSource.isTypeSupported('video/webm; codecs="vp09.00.10.08"'); out.codecs.mse_av1 = MediaSource.isTypeSupported('video/mp4; codecs="av01.0.04M.08"'); } catch (e) {}
+  if (out.webcodecs) for (const [k, c] of Object.entries({h264: 'avc1.42E01E', vp9: 'vp09.00.10.08', av1: 'av01.0.04M.08'})) { try { out.codecs['vd_' + k] = (await VideoDecoder.isConfigSupported({codec: c, codedWidth: 1920, codedHeight: 1080})).supported; } catch (e) { out.codecs['vd_' + k] = 'error'; } }
+  const R = window.__sub01Rtc;
+  out.rtc = R ? {created: R.created, pcs: R.pcs.map(p => ({id: p.id, policy: p.policy, servers: p.servers, state: p.state, sdp: p.sdp, tracks: p.tracks, channels: p.channels, stats: p.stats, error: p.stats_error})), events: R.events.slice(-30), media: R.media} : null;
+  out.ua = navigator.userAgent.slice(0, 120); out.pointer_lock = 'requestPointerLock' in Element.prototype;
+  out.activation = navigator.userActivation ? {active: navigator.userActivation.isActive, been: navigator.userActivation.hasBeenActive} : null;
+  return out;
+}"""
 
 
 # The operator console (GET /operator): one self-contained page, no external asset, every URL relative to its own
 # location so it works behind a path prefix (the pod's Jupyter proxy: .../proxy/8832/operator). The owner pastes the
 # admin token once (sessionStorage of this tab, sent as X-Admin-Token); the live desktop is polled at 2 fps from
 # operator/frame.jpg; mouse and keyboard go to operator/input. Nothing typed here is logged by the runner.
-OPERATOR_UNAVAILABLE = ("The operator console is served only while the Vagon page asks for the owner's login (phase "
-                        "login_required, and for 10 minutes after it) or when the runner runs with --operator-console.")
+OPERATOR_UNAVAILABLE = ("The operator console is served only while the Vagon workstation is not connected (phases "
+                        "login_required, dashboard, starting, connecting, ended, blocked) or when the runner runs with "
+                        "--operator-console.")
 OPERATOR_HTML = r"""<!doctype html>
 <html lang="en">
 <head>
@@ -1608,6 +1867,10 @@ class Desktop:
         self._vagon_lock = asyncio.Lock()                 # the connect loop never presses a button during an action
         self.api, self._api_task, self._api_logged = None, None, None   # workstation: the optional Teams API (VagonApi), set by serve()
         self._operator, self._neutral = (0, None), None   # (sequence, latest raw screencast JPEG) for the owner's console
+        self._net, self._counts, self._ws_hosts = {"request": time.monotonic()}, {}, set()   # network activity: page_dead, the diag
+        self._console, self._failed, self._http_errors = deque(maxlen=12), {}, {}
+        self._rtc_bytes, self._probe_seq, self.browser_version = 0, 0, ""
+        self._pages, self._attached = [], set()           # workstation: the dashboard page behind an adopted stream window
 
     @property
     def vagon_mode(self):
@@ -1618,14 +1881,18 @@ class Desktop:
         return self.vagon_mode and self.cfg.vagon_kind == "workstation"
 
     def operator_allowed(self):
-        """The owner's console is served with --operator-console, or in the workstation kind while the page needs his
-        login (phase login_required) and for OPERATOR_GRACE_S after that (2FA, consent pages), never once connected."""
+        """The owner's console is served with --operator-console, or in the workstation kind the whole time the remote
+        desktop is NOT connected (login_required, dashboard, starting, connecting, ended, blocked, blank...) and for
+        OPERATOR_CONNECTED_GRACE_S after it connected (a flapping session). It closes only while the desktop is connected;
+        the console closing is never what makes the desktop count as connected (that needs stream_evidence)."""
         if self.cfg.operator_console:
             return True
-        if not self.workstation or self.vagon.connected:
+        if not self.workstation:
             return False
         v = self.vagon
-        return v.phase == "login_required" or (v.login_seen is not None and time.monotonic() - v.login_seen < OPERATOR_GRACE_S)
+        if not v.connected:
+            return True
+        return v.connected_at is not None and time.monotonic() - v.connected_at < OPERATOR_CONNECTED_GRACE_S
 
     def privacy_locked(self):
         """Workstation kind: until the remote desktop is connected nothing but a neutral picture leaves the runner
@@ -1753,24 +2020,25 @@ class Desktop:
             options["proxy"] = {"server": cfg.proxy}
         self.ctx = await self.pw.chromium.launch_persistent_context(str(cfg.profile), **options)
         await self.ctx.add_init_script(CLIPBOARD_JS)
+        if self.vagon_mode:
+            await self.ctx.add_init_script(RTC_INIT_JS)       # WebRTC/media diagnostics (window.__sub01Rtc) in every frame
         await self.ctx.route("**/*", self._route)
         self.page = self.ctx.pages[0] if self.ctx.pages else await self.ctx.new_page()
         for extra in self.ctx.pages[1:]:
             await extra.close()
+        try:
+            self.browser_version = str(self.ctx.browser.version) if self.ctx.browser else ""
+        except Exception:
+            self.browser_version = ""
+        self._net, self._counts, self._ws_hosts = {"request": time.monotonic()}, {}, set()
+        self._console.clear()
+        self._failed, self._http_errors, self._rtc_bytes, self._pages, self._attached = {}, {}, 0, [], set()
         self.ctx.on("page", self._on_new_page)
+        self.ctx.on("request", lambda r: self._activity("request"))
         self.ctx.on("response", self._on_response)
         self.ctx.on("close", lambda *_: self._request_restart("browser closed"))
         page = self.page
-        page.on("dialog", self._on_dialog)
-        page.on("framenavigated", self._on_navigated)
-        page.on("crash", lambda *_: self._request_restart("page crashed"))
-        page.on("close", lambda *_: self._request_restart("page closed") if page is self.page else None)
-        page.on("download", lambda d: self._refused("download", d.url))
-        page.on("filechooser", lambda fc: self._refused("file chooser", ""))
-        self.cdp = await self.ctx.new_cdp_session(page)
-        self.cdp.on("Page.screencastFrame", self._on_frame)
-        await self.cdp.send("Page.startScreencast", {"format": "jpeg", "quality": 80, "maxWidth": cfg.width,
-                                                     "maxHeight": cfg.height, "everyNthFrame": 1})
+        await self._attach_page(page)
         try:
             self.view = tuple(await page.evaluate("[innerWidth, innerHeight]"))
         except Exception:
@@ -1787,10 +2055,89 @@ class Desktop:
             except Exception as error:
                 log(f"start page not loaded: {clean_error(error)}")
 
+    async def _attach_page(self, page):
+        """Listeners and the screencast for the page the runner watches: the first page, or an adopted stream window
+        (workstation). Listeners are registered once per page; the CDP screencast follows the current page."""
+        cfg = self.cfg
+        if id(page) not in self._attached:
+            self._attached.add(id(page))
+            page.on("dialog", self._on_dialog)
+            page.on("framenavigated", self._on_navigated)
+            page.on("crash", lambda *_: self._request_restart("page crashed") if page is self.page else None)
+            page.on("close", lambda *_: self._on_page_closed(page))
+            page.on("download", lambda d: self._refused("download", d.url))
+            page.on("filechooser", lambda fc: self._refused("file chooser", ""))
+            page.on("console", self._on_console)
+            page.on("pageerror", lambda e: self._note_console("pageerror", str(e)))
+            page.on("requestfailed", self._on_request_failed)
+            page.on("websocket", self._on_websocket)
+        self.cdp = await self.ctx.new_cdp_session(page)
+        self.cdp.on("Page.screencastFrame", self._on_frame)
+        await self.cdp.send("Page.startScreencast", {"format": "jpeg", "quality": 80, "maxWidth": cfg.width,
+                                                     "maxHeight": cfg.height, "everyNthFrame": 1})
+
+    def _on_page_closed(self, page):
+        """The watched page closed: in the workstation kind the dashboard page behind an adopted stream window takes
+        over (the session may offer Connect again); otherwise the browser is relaunched."""
+        if page is not self.page or self._tearing or self.stopping:
+            return
+        fallback = None
+        if self.workstation:
+            fallback = next((p for p in reversed(self._pages) if not p.is_closed()), None)
+            self._pages = [p for p in self._pages if p is not fallback and not p.is_closed()]
+        if fallback is not None:
+            asyncio.ensure_future(self._adopt(fallback, "the stream window closed; back to the"))
+        else:
+            self._request_restart("page closed")
+
+    async def _adopt(self, page, why):
+        """Workstation: `page` becomes the page the runner watches, screencasts and drives. The previous page stays open
+        behind it (the dashboard tab keeps the session) and is the fallback when the adopted window closes."""
+        old = self.page
+        if self.cdp is not None:
+            for step in (self.cdp.send("Page.stopScreencast"), self.cdp.detach()):
+                try:
+                    await asyncio.wait_for(step, 3)
+                except Exception:
+                    pass
+        self.page, self.cdp, self._vagon_frame, self._vagon_offset = page, None, None, (0.0, 0.0)
+        if old is not None and old is not page and not old.is_closed() and old not in self._pages:
+            self._pages.append(old)
+        try:
+            await self._attach_page(page)
+            await page.bring_to_front()
+        except Exception as error:
+            log(f"vagon: adopting the {why} window failed: {self._scrub(clean_error(error))}")
+            self._request_restart("adopted window unusable")
+            return
+        self.vagon.misses = 0
+        log(f"vagon: now watching the {why} window at {redact_url(page.url)}")
+        self.events.append("vagon", state="adopted", why=why, host=redact_url(page.url))
+        self.on_change()
+
+    async def _adopt_or_close(self, page):
+        """Workstation: a new tab or popup that stays on the Vagon site is the stream window and is adopted as the page
+        (never closed, the dashboard stays behind it); any other popup is closed as everywhere else."""
+        url = page.url
+        if url in ("", "about:blank"):
+            try:
+                await page.wait_for_url(lambda u: u not in ("", "about:blank"), timeout=4000)
+            except Exception:
+                pass
+            url = page.url
+        if url and url != "about:blank" and not url.startswith("chrome-error:") and self._main_blocked(url) is None:
+            await self._adopt(page, "popup")
+            return
+        self.popups.append(url or "")
+        log("popup closed")
+        self.events.append("blocked", what="popup", url=self._url_for_log(url or ""))
+        await self._close_quietly(page)
+
     async def _teardown(self):
         self._tearing = True
         self.feed.clear()
         self._operator = (self._operator[0], None)
+        self._pages, self._attached = [], set()
         if self.vagon_mode:
             self.vagon.connected, self._vagon_frame = False, None
             self.vagon.set_phase("restarting")
@@ -1825,7 +2172,8 @@ class Desktop:
         v = self.vagon
         v.connected, v.attempts, v.misses, v.blank_since = False, 0, 0, None
         v.last_reload, self._vagon_frame, self._vagon_offset = time.monotonic(), None, (0.0, 0.0)
-        v.stuck_since = time.monotonic()
+        v.stuck_since, v.reload_requested, v.last_reload_why = time.monotonic(), False, str(why)[:120]
+        self._net, self._rtc_bytes = {"request": time.monotonic()}, 0
         v.set_phase("opening" if self.workstation else "starting")
         self._lock_feed()
         self.on_change()
@@ -1857,7 +2205,7 @@ class Desktop:
         holds the stream (the dashboard's iframe embed). Boxes are in page pixels; `self.view` is the page viewport."""
         page = self.page
         frames = [page.main_frame] + [f for f in page.frames if f is not page.main_frame][:5]
-        best, main = None, None
+        best, main, dropped = None, None, []
         for frame in frames:
             try:
                 info = await self._guarded(frame.evaluate(VAGON_PROBE_JS, list(VAGON_MIN_STREAM)), "stream probe")
@@ -1877,9 +2225,18 @@ class Desktop:
                 if not box:
                     continue
                 offset = (float(box["x"]), float(box["y"]))
+                where = self._frame_origin(frame)
+                if self.workstation and self._widget_frame(frame):
+                    dropped.append(where)                 # a chat/support widget's frame or a third-party frame: no controls
+                    info["buttons"] = []
+                else:
+                    for b in info.get("buttons") or []:
+                        b["frame"] = where
             if best is None:
                 best = (info, frame, offset)
-            if info.get("stream") or choose_vagon_button(info.get("buttons")) is not None:
+            pressable = (choose_workstation_button(info.get("buttons"))[0] if self.workstation
+                         else choose_vagon_button(info.get("buttons"))) is not None
+            if info.get("stream") or pressable:           # the main document comes first: its controls win over any frame's
                 best = (info, frame, offset)
                 break
         if best is None:
@@ -1892,8 +2249,31 @@ class Desktop:
                 info["stream"]["box"][0] += offset[0]
                 info["stream"]["box"][1] += offset[1]
         info["main"] = main or {k: info.get(k) for k in ("url", "title", "text", "passwords", "vw", "vh")}
+        info["dropped_frames"] = dropped
         self._vagon_frame, self._vagon_offset = frame, offset
         return info
+
+    def _frame_origin(self, frame):
+        """'host' of a sub-frame for the logs (or its name for a blank frame): never a path or a query."""
+        url = str(getattr(frame, "url", "") or "")
+        try:
+            host = urlsplit(url).hostname
+        except ValueError:
+            host = None
+        return host or str(getattr(frame, "name", "") or "")[:30] or "about:blank"
+
+    def _widget_frame(self, frame):
+        """A sub-frame whose controls are never pressed: named like a chat/support/cookie widget (Intercom's
+        intercom-messenger-frame, launchers) or served by another site than the configured page's."""
+        if VAGON_WS_WIDGET_RX.search(str(getattr(frame, "name", "") or "")):
+            return True
+        url = str(getattr(frame, "url", "") or "")
+        if url in ("", "about:blank") or url.startswith(("data:", "blob:")):
+            return False
+        try:
+            return not same_site(urlsplit(url), urlsplit(self.cfg.vagon_url))
+        except ValueError:
+            return True
 
     async def _vagon_focus(self):
         """Keyboard focus on the stream element (or the body), so key events reach the stream client. On the workstation's
@@ -1953,19 +2333,52 @@ class Desktop:
         except Exception as error:
             log(f"vagon: return to the workstation page failed: {self._scrub(clean_error(error))}")
 
+    def _repainted(self):
+        """Did the screencast deliver a new frame since the previous probe (the page drew something)?"""
+        seq = self._operator[0]
+        changed, self._probe_seq = seq != self._probe_seq, seq
+        return changed
+
+    def _page_dead(self, now, probe):
+        return page_dead(now, self._net, bool((probe or {}).get("stream")))
+
+    def _log_controls(self, phase, probe):
+        """`vagon_controls`: every candidate control of this page state with its verdict, once per distinct set."""
+        v = self.vagon
+        summary = controls_summary(probe.get("buttons"))
+        key = (phase, tuple((s["label"], s["verdict"]) for s in summary), tuple(probe.get("dropped_frames") or []))
+        if key != v.last_controls:
+            v.last_controls = key
+            self.events.append("vagon_controls", phase=phase, controls=summary,
+                               dropped_frames=list(probe.get("dropped_frames") or [])[:6])
+
+    def request_reload(self, why="operator request"):
+        """The owner asks for the workstation page to be opened again (POST /pc/vagon/reload): the loop does it at
+        its next tick. The only reload that needs no evidence of a dead page."""
+        self.vagon.reload_requested = True
+        self.events.append("vagon", state="reload_requested", why=why)
+        return self.vagon.public()
+
     async def _workstation_step(self, probe, now):
         v = self.vagon
+        repaint = self._repainted()
         c = classify_workstation(probe)
+        self._log_controls(c["phase"], probe)
+        if c["phase"] == "connected" and not v.connected:   # evidence first: pictures, not merely a video/canvas element
+            diag = await self._vagon_diag("connected?", force=now - v.last_diag >= 5.0)
+            if not stream_evidence(probe.get("stream"), (diag or {}).get("rtc"), repaint):
+                c = dict(c, phase="connecting", button=None, kind=None, why="stream element without frames yet")
         phase, idx, kind = c["phase"], c["button"], c["kind"]
         if phase == "connected":
             v.misses, v.blank_since, v.reload_streak, v.stuck_since, v.logged_in = 0, None, 0, None, True
             if not v.connected:
-                v.connected, v.sessions, v.attempts = True, v.sessions + 1, 0
+                v.connected, v.sessions, v.attempts, v.connected_at = True, v.sessions + 1, 0, now
                 if v.sessions > 1:
                     v.reconnects += 1
                     v.last_reconnect_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
                 log(f"vagon: remote desktop connected (session {v.sessions}, reconnects {v.reconnects})")
-                self.events.append("vagon", state="connected", session=v.sessions, reconnects=v.reconnects)
+                self.events.append("vagon", state="connected", session=v.sessions, reconnects=v.reconnects,
+                                   evidence={"stream": probe.get("stream"), "repaint": repaint, "rtc": (v.diag or {}).get("rtc")})
             self._set_machine("on", "page")
             if v.set_phase("connected"):
                 self.on_change()
@@ -1978,6 +2391,8 @@ class Desktop:
             self._lock_feed()
             log(f"vagon: remote session {phase}")
             self.events.append("vagon", state="disconnected", phase=phase)
+            await self._vagon_diag(phase, force=True)
+            self.on_change()                              # the operator console is available again
         if phase == "login_required":
             v.logged_in, v.login_seen, v.attempts = False, now, 0
             if v.set_phase("login_required"):
@@ -1998,11 +2413,7 @@ class Desktop:
             self._set_machine(c["machine"], "page")
         if v.set_phase(phase):
             v.stuck_since = now
-            if idx is None:
-                labels = [" ".join(str(b.get("label") or "").split())[:32] for b in (probe.get("buttons") or [])[:12]]
-                self.events.append("vagon", state=phase, buttons=[l for l in labels if l], machine=v.machine)
-            else:
-                self.events.append("vagon", state=phase, machine=v.machine)
+            self.events.append("vagon", state=phase, machine=v.machine, **({"why": c["why"]} if c.get("why") else {}))
             self.on_change()
         if idx is not None and v.attempts < 6:
             if now - v.last_click >= VAGON_CLICK_GAP_S:
@@ -2013,12 +2424,128 @@ class Desktop:
             v.last_api_start = now
             await self.api_start("no start button on the page")
             return
-        stuck = VAGON_WS_STUCK_S.get(phase)
-        reload_due = (phase == "ended" or v.attempts >= 6
-                      or (stuck is not None and v.stuck_since is not None and now - v.stuck_since >= stuck))
-        if reload_due and now - v.last_reload >= VAGON_RELOAD_BACKOFF[min(v.reload_streak, len(VAGON_RELOAD_BACKOFF) - 1)]:
+        if phase in ("connecting", "blank", "starting", "ended"):
+            await self._vagon_diag(phase)                 # every VAGON_DIAG_EVERY_S: why the stream is not here yet
+        stuck_for = now - v.stuck_since if v.stuck_since is not None else 0.0
+        reason = workstation_reload_reason(phase, stuck_for, v.attempts, self._page_dead(now, probe), v.reload_requested)
+        if reason and now - v.last_reload >= VAGON_RELOAD_BACKOFF[min(v.reload_streak, len(VAGON_RELOAD_BACKOFF) - 1)]:
             v.reloads, v.reload_streak = v.reloads + 1, v.reload_streak + 1
-            await self._vagon_goto(f"{phase}, attempts {v.attempts}")
+            await self._vagon_diag(phase, force=True)     # the last picture of the page before it is opened again
+            await self._vagon_goto(f"{phase}: {reason} (attempts {v.attempts})")
+
+    def _rtc_summary(self, frames):
+        """The peer connection that received most: its frame's host, states, negotiated codecs, servers and stats."""
+        best, created, events = None, 0, []
+        for f in frames:
+            rtc = f.get("rtc") if isinstance(f, dict) else None
+            if not rtc:
+                continue
+            created += int(rtc.get("created") or 0)
+            for pc in rtc.get("pcs") or []:
+                stats = pc.get("stats") or {}
+                score = (int(stats.get("bytes") or 0), int(pc.get("tracks") or 0), int(pc.get("id") or 0))
+                if best is None or score > best[0]:
+                    best, events = (score, f.get("host"), pc), list(rtc.get("events") or [])[-12:]
+        if best is None:
+            return {"created": created}
+        _, host, pc = best
+        stats = pc.get("stats") or {}
+        return {"created": created, "host": host, "id": pc.get("id"), "policy": pc.get("policy"), "servers": pc.get("servers"),
+                "state": pc.get("state"), "sdp": pc.get("sdp"), "tracks": pc.get("tracks"), "channels": pc.get("channels"),
+                "stats": stats, "error": pc.get("error"), "bytes": int(stats.get("bytes") or 0),
+                "frames_decoded": int(stats.get("frames_decoded") or 0), "pair": stats.get("pair"), "events": events}
+
+    async def _vagon_diag(self, phase, force=False):
+        """The diagnostic snapshot (module docstring): VAGON_DIAG_JS in the main frame and up to six sub-frames, the
+        WebRTC records of RTC_INIT_JS, and what the runner saw on the network (requests, WebSockets, failed requests,
+        HTTP errors, console errors). Kept in vagon.diag (/pc/state) and appended as a `vagon_diag` row, at most every
+        VAGON_DIAG_EVERY_S unless forced. Returns the diag, or the previous one when it is too early."""
+        v, now = self.vagon, time.monotonic()
+        if not force and now - v.last_diag < VAGON_DIAG_EVERY_S:
+            return v.diag
+        v.last_diag = now
+        page, frames = self.page, []
+        main_frame = getattr(page, "main_frame", None)
+        others = [f for f in (getattr(page, "frames", None) or []) if f is not main_frame][:6]
+        for frame in ([main_frame] if main_frame is not None else []) + others:
+            try:
+                info = await asyncio.wait_for(frame.evaluate(VAGON_DIAG_JS), 8)
+            except Exception as error:
+                frames.append({"error": self._scrub(clean_error(error))[:80]})
+                continue
+            if isinstance(info, dict):
+                frames.append(info)
+        main = frames[0] if frames and "error" not in frames[0] else {}
+        rtc = self._rtc_summary(frames)
+        if rtc.get("bytes", 0) > self._rtc_bytes:
+            self._rtc_bytes = rtc["bytes"]
+            self._activity("rtc")
+        media = next((f["rtc"].get("media") for f in frames if isinstance(f.get("rtc"), dict) and f["rtc"].get("media")), None)
+        diag = {"phase": phase, "host": main.get("host"), "path": main.get("path"), "title": main.get("title"),
+                "ready": main.get("ready"), "visible": main.get("visible"), "focus": main.get("focus"),
+                "iframes": main.get("iframes"), "videos": [x for f in frames for x in (f.get("videos") or [])][:8],
+                "canvases": [x for f in frames for x in (f.get("canvases") or [])][:8],
+                "webgl": main.get("webgl"), "renderer": main.get("renderer"), "webcodecs": main.get("webcodecs"),
+                "webgpu": main.get("webgpu"), "codecs": main.get("codecs"), "activation": main.get("activation"),
+                "pointer_lock": main.get("pointer_lock"), "media": media, "rtc": rtc,
+                "sub_frames": [{"host": f.get("host"), "path": f.get("path"), "videos": len(f.get("videos") or []),
+                                "canvases": len(f.get("canvases") or []), "webgl": f.get("webgl"),
+                                "rtc": bool((f.get("rtc") or {}).get("created"))} if "error" not in f else f for f in frames[1:]],
+                "console": list(self._console)[-6:], "failed": dict(self._failed), "http_errors": dict(self._http_errors),
+                "net": {"age_s": {k: round(now - t, 1) for k, t in self._net.items()}, "counts": dict(self._counts),
+                        "ws_hosts": sorted(self._ws_hosts)[:10]},
+                "browser": {"version": self.browser_version, "executable": self.cfg.chromium or "playwright chromium",
+                            "ua": main.get("ua"), "gpu": self.cfg.gpu, "autoplay": self.cfg.autoplay,
+                            "extra_args": list(self.cfg.extra_args or ())}}
+        v.diag, v.diag_at = diag, time.time()
+        self.events.append("vagon_diag", **diag)
+        return diag
+
+    # network and console observations (the diag; never a URL beyond its host, never a page text)
+    def _activity(self, kind):
+        self._net[kind] = time.monotonic()
+        self._counts[kind] = self._counts.get(kind, 0) + 1
+
+    def _scrub_text(self, text, limit=160):
+        """A console/error text safe to log: URL queries, e-mail addresses and long opaque tokens removed, truncated."""
+        text = re.sub(r"\?\S*", "?…", str(text or ""))
+        text = EMAIL_RX.sub("<email>", text)
+        text = re.sub(r"[A-Za-z0-9_\-]{32,}", "<token>", text)
+        return (self._scrub(text) if self.vagon_mode else text)[:limit]
+
+    def _note_console(self, kind, text):
+        self._console.append({"t": datetime.now(timezone.utc).isoformat(timespec="seconds"), "kind": kind,
+                              "text": self._scrub_text(text)})
+
+    def _on_console(self, msg):
+        try:
+            if msg.type == "error":
+                self._note_console("console", msg.text)
+        except Exception:
+            pass
+
+    def _on_request_failed(self, request):
+        try:
+            host = urlsplit(request.url).hostname or request.url.split(":")[0][:20]
+            why = str(request.failure or "failed").split(";")[0][:60]
+            key = f"{host} {why}"
+            if key in self._failed or len(self._failed) < 20:
+                self._failed[key] = self._failed.get(key, 0) + 1
+        except Exception:
+            pass
+
+    def _on_websocket(self, ws):
+        try:
+            host = urlsplit(ws.url).hostname or "?"
+            if len(self._ws_hosts) < 10:
+                self._ws_hosts.add(host)
+            self._activity("ws_open")
+            ws.on("framereceived", lambda f: self._activity("ws"))
+            ws.on("framesent", lambda f: self._counts.__setitem__("ws_sent", self._counts.get("ws_sent", 0) + 1))
+            ws.on("close", lambda w: self._counts.__setitem__("ws_closed", self._counts.get("ws_closed", 0) + 1))
+            ws.on("socketerror", lambda e: self._note_console("websocket", f"{host}: {e}"))
+        except Exception:
+            pass
 
     async def _api_loop(self):
         """Workstation with a Teams API key: the machine's status every VAGON_API_POLL_S (blocking HTTP in a thread)."""
@@ -2214,6 +2741,10 @@ class Desktop:
 
     def _on_response(self, response):
         try:
+            if response.status >= 400:
+                key = f"{urlsplit(response.url).hostname or '?'} {response.status}"
+                if key in self._http_errors or len(self._http_errors) < 20:
+                    self._http_errors[key] = self._http_errors.get(key, 0) + 1
             request = response.request
             if (300 <= response.status < 400 and request.is_navigation_request() and request.frame.parent_frame is None
                     and request.frame.page is self.page):
@@ -2254,6 +2785,9 @@ class Desktop:
 
     def _on_new_page(self, page):
         if page is self.page:
+            return
+        if self.workstation:                              # the stream may open in its own window: adopt it, never close it
+            asyncio.ensure_future(self._adopt_or_close(page))
             return
         self.popups.append(page.url or "")
         log("popup closed")
@@ -3045,11 +3579,19 @@ def create_app(runner):
         result = await runner.desk.api_start("operator request")
         return web.json_response(result, status=200 if result["ok"] else 502, headers=no_store)
 
+    async def vagon_reload(request):
+        """The owner's request to open the workstation page again (the loop never reloads a connecting page on its own
+        unless it is dead)."""
+        if not getattr(runner.desk, "workstation", False):
+            raise web.HTTPConflict(text="Only the Vagon workstation page can be reloaded on request")
+        return web.json_response(runner.desk.request_reload("operator request"), headers=no_store)
+
     app = web.Application(middlewares=[guard], client_max_size=4096)
     app.router.add_get("/operator", operator_page)
     app.router.add_get("/operator/frame.jpg", operator_frame)
     app.router.add_post("/operator/input", operator_input)
     app.router.add_post("/pc/vagon/start", vagon_start)
+    app.router.add_post("/pc/vagon/reload", vagon_reload)
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/pc/state", state)
     app.router.add_get("/pc/frame.png", frame)
@@ -3075,7 +3617,9 @@ async def serve(args):
                  vagon_api_key_file=getattr(args, "vagon_api_key_file", "") or "",
                  vagon_kind=getattr(args, "vagon_kind", None) or "streams",
                  vagon_machine_id=getattr(args, "vagon_machine_id", "") or "",
-                 operator_console=bool(getattr(args, "operator_console", False)))
+                 operator_console=bool(getattr(args, "operator_console", False)),
+                 gpu=getattr(args, "gpu", None) or "off", autoplay=bool(getattr(args, "autoplay", False)),
+                 extra_args=tuple(getattr(args, "chromium_arg", None) or ()))
     desk = Desktop(cfg, events)
     if cfg.pc_mode == "vagon":
         key_status = api_key_file_status(cfg.vagon_api_key_file)
@@ -3106,6 +3650,7 @@ async def serve(args):
         f"profile={cfg.profile} events={events.path} home={'yes' if args.home_origin else 'no'}")
     events.append("start", host=args.host, port=args.port, display=args.display, size=[cfg.width, cfg.height],
                   profile=str(cfg.profile), headless=cfg.headless, pid=os.getpid(), pc_mode=cfg.pc_mode,
+                  gpu=cfg.gpu, autoplay=cfg.autoplay, chromium_args=list(cfg.extra_args), chromium=cfg.chromium or "playwright",
                   **({"vagon_host": redact_url(cfg.vagon_url), "vagon_kind": cfg.vagon_kind,
                       "operator_console": cfg.operator_console} if cfg.pc_mode == "vagon" else {}))
     stop = asyncio.Event()
@@ -3158,7 +3703,12 @@ def main(argv=None):
     parser.add_argument("--streamer-dir", default=os.environ.get("STREAMER_DIR", DEFAULT_STREAMER_DIR),
                         help="streamer state directory: holds vagon.json (env STREAMER_DIR)")
     parser.add_argument("--operator-console", action="store_true",
-                        help="vagon mode: serve the owner's console at /operator always, not only while a login is needed")
+                        help="vagon mode: serve the owner's console at /operator always, not only while the desktop is not connected")
+    parser.add_argument("--gpu", choices=GPU_MODES, default="off",
+                        help="Chromium GPU mode: off (--disable-gpu, default), swiftshader (software WebGL through ANGLE), on")
+    parser.add_argument("--autoplay", action="store_true", help="Chromium --autoplay-policy=no-user-gesture-required")
+    parser.add_argument("--chromium-arg", action="append", default=[], metavar="--FLAG[=VALUE]",
+                        help="extra Chromium flag, verbatim, written as --chromium-arg=--flag=value (repeatable; recorded in the start event)")
     args = parser.parse_args(argv)
     if args.host not in LOOPBACK:
         parser.error("the streamer desktop binds only to loopback")

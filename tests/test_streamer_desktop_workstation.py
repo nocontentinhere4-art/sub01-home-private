@@ -241,23 +241,27 @@ def ws_desktop(tmp_path, **cfg):
     return sd.Desktop(config, sd.Events(tmp_path / "events.jsonl"))
 
 
-def test_operator_console_is_allowed_while_a_login_is_needed_and_with_the_flag(tmp_path, monkeypatch):
+def test_operator_console_stays_available_while_not_connected_and_closes_only_when_connected(tmp_path, monkeypatch):
     desk = ws_desktop(tmp_path)
-    assert desk.workstation is True and desk.operator_allowed() is False and desk.privacy_locked() is True
     now = [1000.0]
     monkeypatch.setattr(sd.time, "monotonic", lambda: now[0])
-    desk.vagon.set_phase("login_required")
-    desk.vagon.login_seen = now[0]
-    assert desk.operator_allowed() is True
-    desk.vagon.set_phase("dashboard")                                                     # the owner just logged in: 2FA, consent...
-    assert desk.operator_allowed() is True
-    now[0] += sd.OPERATOR_GRACE_S - 1
-    assert desk.operator_allowed() is True
-    now[0] += 2
+    assert desk.workstation is True and desk.privacy_locked() is True
+    assert desk.operator_allowed() is True                                                  # opening: not connected -> served
+    for phase in ("login_required", "dashboard", "starting", "connecting", "ended", "blocked", "blank"):
+        desk.vagon.set_phase(phase)
+        desk.vagon.logged_in = phase != "login_required"
+        now[0] += 15 * 60                                                                  # far longer than any old grace
+        assert desk.operator_allowed() is True, phase
+    desk.vagon.set_phase("connecting")                                                      # the stall of 2026-10-23: 10+ minutes connecting
+    now[0] += 11 * 60
+    assert desk.operator_allowed() is True and desk.privacy_locked() is True
+    desk.vagon.connected, desk.vagon.connected_at = True, now[0]                             # connected: a short grace, then closed
+    desk.vagon.set_phase("connected")
+    assert desk.operator_allowed() is True and desk.privacy_locked() is False
+    now[0] += sd.OPERATOR_CONNECTED_GRACE_S + 1
     assert desk.operator_allowed() is False
-    desk.vagon.set_phase("login_required")
-    desk.vagon.connected = True                                                             # never while the desktop is connected
-    assert desk.operator_allowed() is False and desk.privacy_locked() is False
+    desk.vagon.connected = False                                                            # the session dropped: served again at once
+    assert desk.operator_allowed() is True
     flagged = ws_desktop(tmp_path / "b", operator_console=True)
     flagged.vagon.connected = True
     assert flagged.operator_allowed() is True
@@ -401,6 +405,11 @@ class StubDesk:
         self.status, self.restarts, self.error, self.allowed = "ready", 0, "", allowed
         self.feed, self.cfg = sd.FrameFeed(epoch="abc123"), SimpleNamespace(pc_mode=mode, vagon_kind=kind)
         self.vagon, self.api, self.inputs, self.jpeg = sd.VagonState("none", kind), None, [], None
+        self.workstation = mode == "vagon" and kind == "workstation"
+
+    def request_reload(self, why):
+        self.vagon.reload_requested = True
+        return self.vagon.public()
 
     def display(self):
         return self.feed.display()
@@ -492,6 +501,9 @@ def test_operator_routes_are_served_only_when_allowed_and_need_the_token(tmp_pat
             r = await http.post("/pc/vagon/start", headers=AUTH)
             assert r.status == 200 and (await r.json())["started"] is True
             assert (await http.post("/pc/vagon/start")).status == 403
+            assert (await http.post("/pc/vagon/reload")).status == 403                          # the owner's reload needs the token
+            r = await http.post("/pc/vagon/reload", headers=AUTH)
+            assert r.status == 200 and (await r.json())["reload_requested"] is True and desk.vagon.reload_requested is True
             text = (tmp_path / "e.jsonl").read_text()
             assert "hello" not in text and '"operator"' in text                                # the console is logged, its input never
         finally:
@@ -679,6 +691,7 @@ class Harness:
         monkeypatch.setattr(sd, "VAGON_SETTLE_S", 0.3)
         monkeypatch.setattr(sd, "VAGON_NAV_SETTLE_S", 0.3)
         monkeypatch.setattr(sd, "VAGON_RELOAD_BACKOFF", (0.5,))
+        monkeypatch.setattr(sd, "OPERATOR_CONNECTED_GRACE_S", 0.0)                        # the console closes as soon as connected
         self.tmp_path, self.logged_in, self.operator_console, self.delay = tmp_path, logged_in, operator_console, delay
         self.site = self.external = self.desk = self.runner = self.http = self.events = self.cfg = None
 
@@ -990,3 +1003,187 @@ def test_workstation_chooser_never_presses_trial_or_money_controls():
     assert (index, kind) == (len(money), "start")
     index, kind = sd.choose_workstation_button([{"label": "Start trial"}, {"label": "Connect"}, {"label": "Start"}])
     assert (index, kind) == (1, "connect")
+
+
+# ---- widgets are never connect controls; controls are logged; no blind reload while connecting (2026-10-23 stall) ----------
+def test_workstation_chooser_never_presses_chat_support_or_cookie_widgets():
+    choose, verdict = sd.choose_workstation_button, sd.control_verdict
+    launcher = dict(btn("Open Intercom Messenger", 1800, 1000, 60, 60), widget=True)
+    assert choose([launcher]) == (None, None) and choose([btn("Open Intercom Messenger")]) == (None, None)   # by flag or by label
+    assert choose([launcher, btn("Connect")]) == (1, "connect")
+    assert choose([btn("Connect"), launcher]) == (0, "connect")
+    for label in ("Send us a message", "Search for help", "Close", "Home", "Messages", "Help", "Help / Support", "Chat with us",
+                  "Open live chat", "Accept all cookies", "Cookie settings", "Give feedback", "Take our survey", "Dismiss"):
+        assert choose([btn(label)]) == (None, None), label                                      # the Intercom panel of 2026-10-23
+        assert verdict(btn(label)) not in ("reconnect", "connect", "start"), label
+    for label in ("Open Intercom Messenger", "Send us a message", "Search for help", "Close", "Help", "Chat with us", "Open live chat",
+                  "Accept all cookies", "Give feedback", "Dismiss"):
+        assert verdict(btn(label)) == "widget", label
+    assert choose([dict(btn("Connect"), widget=True), btn("Connect")]) == (1, "connect")         # a "Connect" inside a widget: not that one
+    assert verdict(btn("Connect")) == "connect" and verdict(btn("Run")) == "start" and verdict(btn("Try again")) == "reconnect"
+    assert verdict(btn("Sign in")) == "login" and verdict(btn("Buy credits")) == "money" and verdict(btn("Stop")) == "never"
+    assert verdict(btn("animation")) == "none" and verdict(btn("")) == "none" and verdict(None) == "none"
+    assert set(verdict(btn(l)) for l in ("Connect", "Run", "Try again", "Sign in", "Buy", "Stop", "x", "Chat")) <= set(sd.VAGON_CONTROL_VERDICTS)
+    assert sd.choose_vagon_button([btn("Open Intercom Messenger"), btn("Connect")]) == 1              # the streams kind too
+    assert sd.choose_vagon_button([dict(btn("Play"), widget=True)]) is None
+
+
+def test_controls_summary_masks_addresses_and_names_the_frame():
+    summary = sd.controls_summary([dict(btn("Open Intercom Messenger"), frame="intercom-messenger-frame"), btn("Connect"),
+                                   btn("owner.name@example.test"), btn("x" * 90)])
+    assert summary[0] == {"label": "Open Intercom Messenger", "verdict": "widget", "frame": "intercom-messenger-frame"}
+    assert summary[1] == {"label": "Connect", "verdict": "connect"}
+    assert summary[2]["label"] == "<email>" and "example.test" not in json.dumps(summary)
+    assert len(summary[3]["label"]) == 40 and summary[3]["verdict"] == "none"
+    assert sd.controls_summary(None) == [] and len(sd.controls_summary([btn("a")] * 50)) == 30
+
+
+def test_workstation_reload_is_never_blind_while_the_page_may_be_connecting():
+    reason = sd.workstation_reload_reason
+    # connecting: not before 6 minutes, and then only when the page is dead
+    assert reason("connecting", 119, 2, True) is None and reason("connecting", 300, 2, True) is None
+    assert reason("connecting", sd.VAGON_WS_STUCK_S["connecting"] - 1, 0, True) is None
+    assert reason("connecting", 400, 2, False) is None                                            # alive: requests, WS frames or RTC bytes
+    assert reason("connecting", 400, 2, True) == "dead page"
+    assert reason("blank", 60, 0, True) is None and reason("blank", 130, 0, False) is None and reason("blank", 130, 0, True) == "dead page"
+    # an explicit ended/error text, the owner's request and six fruitless presses: at once
+    assert reason("ended", 0, 0, False) == "ended" and reason("connecting", 0, 0, False, requested=True) == "operator request"
+    assert reason("dashboard", 0, 6, False) == "six presses without effect"
+    # the other phases keep their minimum, no deadness needed (a dashboard that offers nothing, a start that never ends)
+    assert reason("dashboard", 100, 0, False) is None and reason("dashboard", 181, 0, False) == "stuck in dashboard"
+    assert reason("starting", 599, 0, True) is None and reason("starting", 601, 0, False) == "stuck in starting"
+    assert reason("connected", 9999, 0, True) is None and reason("login_required", 9999, 0, True) is None
+    assert sd.VAGON_WS_STUCK_S["connecting"] >= 360
+
+
+def test_page_dead_needs_silence_and_no_stream_element():
+    dead = sd.page_dead
+    assert dead(1000.0, {"request": 900.0}, False) is True and dead(1000.0, {"request": 950.0}, False) is False
+    assert dead(1000.0, {"request": 900.0, "ws": 980.0}, False) is False                            # WebSocket frames keep it alive
+    assert dead(1000.0, {"request": 900.0, "rtc": 970.0}, False) is False                           # WebRTC bytes too
+    assert dead(1000.0, {"request": 900.0}, True) is False                                          # a video/canvas: never dead
+    assert dead(1000.0, {}, False) is True and dead(1000.0, None, False) is True
+
+
+def test_stream_evidence_needs_frames_or_painting():
+    ev = sd.stream_evidence
+    video = {"tag": "video", "box": [0, 0, 1920, 1080], "playing": True}
+    assert ev(None) is False and ev(dict(video, frames=0)) is False and ev(dict(video, frames=None)) is False
+    assert ev(dict(video, frames=12)) is True and ev(dict(video, frames=0), {"frames_decoded": 30}) is True
+    assert ev(dict(video, frames=0), {"frames_decoded": 0}, repaint=True) is False                 # a video needs decoded frames, not a repaint
+    canvas = {"tag": "canvas", "box": [0, 0, 1920, 1080], "playing": True}
+    assert ev(canvas) is False and ev(canvas, repaint=True) is True and ev(canvas, {"frames_decoded": 1}) is True
+
+
+def test_chromium_args_gpu_autoplay_and_extra_flags():
+    base = sd.chromium_args(sd.Config(profile=Path("/p")))
+    assert "--disable-gpu" in base and not any(a.startswith("--autoplay-policy") for a in base)
+    sw = sd.chromium_args(sd.Config(profile=Path("/p"), gpu="swiftshader", autoplay=True, extra_args=("--foo=1", "not-a-flag")))
+    assert "--disable-gpu" not in sw and {"--use-gl=angle", "--use-angle=swiftshader", "--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"} <= set(sw)
+    assert "--autoplay-policy=no-user-gesture-required" in sw and "--foo=1" in sw and "not-a-flag" not in sw and sw[-1] == "--kiosk"
+    on = sd.chromium_args(sd.Config(profile=Path("/p"), gpu="on"))
+    assert "--disable-gpu" not in on and "--use-angle=swiftshader" not in on
+
+
+def test_main_parses_the_chromium_flag_options(tmp_path, monkeypatch):
+    token = tmp_path / "token"
+    token.write_text("operator-credential-test\n")
+    seen = []
+
+    async def fake_serve(args):
+        seen.append(args)
+    monkeypatch.setattr(sd, "serve", fake_serve)
+    base = ["--token-file", str(token), "--data-dir", str(tmp_path / "d"), "--streamer-dir", str(tmp_path / "nothing")]
+    sd.main(base + ["--pc-mode", "vagon", "--vagon-kind", "workstation", "--gpu", "swiftshader", "--autoplay", "--chromium-arg=--x=1", "--chromium-arg=--y"])   # a flag value needs the = form
+    a = seen[-1]
+    assert a.gpu == "swiftshader" and a.autoplay is True and a.chromium_arg == ["--x=1", "--y"]
+    sd.main(base)
+    assert seen[-1].gpu == "off" and seen[-1].autoplay is False and seen[-1].chromium_arg == []
+    with pytest.raises(SystemExit):
+        sd.main(base + ["--gpu", "maybe"])
+
+
+class StepMouse:
+    def __init__(self):
+        self.log = []
+
+    async def move(self, x, y, steps=1):
+        self.log.append(("move", round(x), round(y)))
+
+    async def click(self, x, y):
+        self.log.append(("click", round(x), round(y)))
+
+
+class StepPage:
+    """What _workstation_step touches of the page: the mouse (presses) and goto (reloads); no frames (the diag then holds
+    only what the runner itself saw)."""
+
+    def __init__(self):
+        self.mouse, self.goto_calls = StepMouse(), []
+
+    async def goto(self, url, **kw):
+        self.goto_calls.append(url)
+
+
+def test_workstation_step_skips_the_widget_logs_controls_and_never_reloads_a_live_connecting_page(tmp_path, monkeypatch):
+    async def body():
+        now = [1000.0]
+        monkeypatch.setattr(sd.time, "monotonic", lambda: now[0])
+        monkeypatch.setattr(sd, "VAGON_CLICK_GAP_S", 0)
+        monkeypatch.setattr(sd, "VAGON_RELOAD_BACKOFF", (0.0,))
+        desk = ws_desktop(tmp_path)
+        desk.status, desk.page, desk.view = "ready", StepPage(), (1920, 1080)
+        desk._input_lock = asyncio.Lock()
+        v, mouse, page = desk.vagon, desk.page.mouse.log, desk.page
+        # 1. the dashboard of 2026-10-23: Intercom's launcher ("Open Intercom Messenger") came first and was pressed; not any more
+        dashboard = probe("Your computer is on", [dict(btn("Open Intercom Messenger", 1800, 1000, 60, 60), widget=True),
+                                                   btn("Help / Support", 100, 100), btn("Connect")])
+        await desk._workstation_step(dashboard, now[0])
+        assert v.phase == "dashboard" and v.machine == "on" and v.attempts == 1 and mouse[-1] == ("click", 900, 530)
+        events = events_of(tmp_path / "events.jsonl")
+        assert [e["label"] for e in events if e["kind"] == "vagon_button"] == ["Connect"]
+        controls = [e for e in events if e["kind"] == "vagon_controls"]
+        assert len(controls) == 1 and controls[0]["phase"] == "dashboard"
+        assert {c["label"]: c["verdict"] for c in controls[0]["controls"]} == {"Open Intercom Messenger": "widget", "Help / Support": "widget", "Connect": "connect"}
+        assert desk.operator_allowed() is True                                                  # the console: available all along
+        # 2. connecting (the loading cubes): the page keeps making requests -> alive -> no reload for ten minutes
+        connecting = probe("Loading", [btn("animation")])
+        for _ in range(30):
+            now[0] += 20
+            desk._activity("request")
+            await desk._workstation_step(connecting, now[0])
+        assert v.phase == "connecting" and v.connected is False and v.reloads == 0 and page.goto_calls == []
+        assert desk.operator_allowed() is True and desk.privacy_locked() is True
+        events = events_of(tmp_path / "events.jsonl")
+        diags = [e for e in events if e["kind"] == "vagon_diag"]
+        assert len(diags) >= 15 and all(d["phase"] == "connecting" for d in diags) and "net" in diags[-1] and "rtc" in diags[-1]
+        assert len([e for e in events if e["kind"] == "vagon_controls"]) == 2                   # once per page state, not per tick
+        # 3. the page goes dead: a minute without requests, WebSocket frames or WebRTC bytes and no video/canvas -> opened again
+        now[0] += 61
+        await desk._workstation_step(connecting, now[0])
+        assert v.reloads == 1 and page.goto_calls == [WS] and v.last_reload_why.startswith("connecting: dead page")
+        assert v.phase == "opening" and v.reload_requested is False
+        # 4. a video element without frames is not a connection (the element alone proves nothing)
+        now[0] += 5
+        stalled = probe("", [], {"tag": "video", "box": [0, 0, 1920, 1080], "playing": True, "frames": 0})
+        await desk._workstation_step(stalled, now[0])
+        assert v.connected is False and v.phase == "connecting" and desk.operator_allowed() is True
+        # 5. frames decoded -> connected; the console closes (after its grace)
+        now[0] += 5
+        playing = probe("", [], {"tag": "video", "box": [0, 0, 1920, 1080], "playing": True, "frames": 240})
+        await desk._workstation_step(playing, now[0])
+        assert v.connected is True and v.phase == "connected" and v.sessions == 1 and v.connected_at == now[0]
+        now[0] += sd.OPERATOR_CONNECTED_GRACE_S + 1
+        assert desk.operator_allowed() is False
+        connected_event = next(e for e in events_of(tmp_path / "events.jsonl") if e["kind"] == "vagon" and e.get("state") == "connected")
+        assert connected_event["evidence"]["stream"]["frames"] == 240
+        # 6. the owner asks for a reload while the session is dropping: honoured at once, with its reason
+        desk.request_reload("operator request")
+        for _ in range(sd.VAGON_MISSES):
+            now[0] += 2
+            await desk._workstation_step(connecting, now[0])
+        assert v.connected is False and v.reloads == 2 and page.goto_calls == [WS, WS] and "operator request" in v.last_reload_why
+        assert desk.operator_allowed() is True
+        text = (tmp_path / "events.jsonl").read_text()
+        assert "launchFlags" not in text and ("vagon", "reload_requested") in [(e["kind"], e.get("state")) for e in events_of(tmp_path / "events.jsonl")]
+    run(body())
