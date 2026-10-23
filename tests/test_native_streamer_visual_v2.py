@@ -13,6 +13,7 @@ Engine API signatures are only checked against the stub. A small driver then RUN
 (debounce, sway/nod bounds, determinism, monitor framing, 1 s camera blend) with the stub's real math.
 """
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -306,6 +307,9 @@ public:
  int32 Len() const { return int32(Data.size()); }
  void Empty() { Data.clear(); }
  bool EndsWith(const TCHAR* Suffix) const { std::u16string S(Suffix); return Data.size() >= S.size() && Data.compare(Data.size() - S.size(), S.size(), S) == 0; }
+ bool Contains(const TCHAR* Needle) const { auto Lower = [](std::u16string S) { for (auto& C : S) if (C >= u'A' && C <= u'Z') C = TCHAR(C + 32); return S; }; return Lower(Data).find(Lower(Needle)) != std::u16string::npos; }
+ FString& operator+=(const FString& S) { Data += S.Data; return *this; }
+ FString& operator+=(const TCHAR* S) { Data += S; return *this; }
  friend bool operator==(const FString& A, const FString& B) { return A.Data == B.Data; }
  friend bool operator==(const FString& A, const TCHAR* B) { return A.Data == B; }
  friend bool operator!=(const FString& A, const FString& B) { return A.Data != B.Data; }
@@ -349,27 +353,47 @@ inline const FVector FVector::UpVector{0, 0, 1};
 inline const FVector FVector::ForwardVector{1, 0, 0};
 struct FQuat {
  double X = 0, Y = 0, Z = 0, W = 1;
+ static const FQuat Identity;
  FQuat() = default;
  FQuat(double InX, double InY, double InZ, double InW) : X(InX), Y(InY), Z(InZ), W(InW) {}
- FQuat operator*(const FQuat& Q) const { return Q; }
- FQuat GetNormalized() const { return *this; }
+ // UE order: A * B applies B first, then A.
+ FQuat operator*(const FQuat& Q) const { return FQuat(W * Q.X + X * Q.W + Y * Q.Z - Z * Q.Y, W * Q.Y - X * Q.Z + Y * Q.W + Z * Q.X, W * Q.Z + X * Q.Y - Y * Q.X + Z * Q.W, W * Q.W - X * Q.X - Y * Q.Y - Z * Q.Z); }
+ FQuat operator*(double S) const { return FQuat(X * S, Y * S, Z * S, W * S); }
+ FQuat operator+(const FQuat& Q) const { return FQuat(X + Q.X, Y + Q.Y, Z + Q.Z, W + Q.W); }
+ double SizeSquared() const { return X * X + Y * Y + Z * Z + W * W; }
+ FQuat GetNormalized(double Tolerance = 1e-8) const { const double S = SizeSquared(); if (S < Tolerance) return Identity; const double I = 1 / std::sqrt(S); return FQuat(X * I, Y * I, Z * I, W * I); }
+ FQuat Inverse() const { return FQuat(-X, -Y, -Z, W); }
+ bool Equals(const FQuat& Q, double Tolerance = 1e-4) const { return (std::fabs(X - Q.X) <= Tolerance && std::fabs(Y - Q.Y) <= Tolerance && std::fabs(Z - Q.Z) <= Tolerance && std::fabs(W - Q.W) <= Tolerance) || (std::fabs(X + Q.X) <= Tolerance && std::fabs(Y + Q.Y) <= Tolerance && std::fabs(Z + Q.Z) <= Tolerance && std::fabs(W + Q.W) <= Tolerance); }
  FVector RotateVector(const FVector& V) const { const FVector Q(X, Y, Z); const FVector T = FVector::CrossProduct(Q, V) * 2.; return V + T * W + FVector::CrossProduct(Q, T); }  // UE formula
  FRotator Rotator() const;
  double AngularDistance(const FQuat& Q) const { return 2 * std::acos(std::fmin(1.0, std::fabs(X * Q.X + Y * Q.Y + Z * Q.Z + W * Q.W))); }
- static FQuat Slerp(const FQuat& A, const FQuat&, double) { return A; }
+ static FQuat Slerp(const FQuat& A, const FQuat& B, double T) {  // UE Slerp_NotNormalized + normalize
+  const double Raw = A.X * B.X + A.Y * B.Y + A.Z * B.Z + A.W * B.W, Cosom = Raw >= 0 ? Raw : -Raw; double S0, S1;
+  if (Cosom < 0.9999) { const double Omega = std::acos(Cosom), InvSin = 1 / std::sin(Omega); S0 = std::sin((1 - T) * Omega) * InvSin; S1 = std::sin(T * Omega) * InvSin; } else { S0 = 1 - T; S1 = T; }
+  S1 = Raw >= 0 ? S1 : -S1; return (A * S0 + B * S1).GetNormalized();
+ }
 };
+inline const FQuat FQuat::Identity{0, 0, 0, 1};
 struct FRotator {
  double Pitch = 0, Yaw = 0, Roll = 0;
  static const FRotator ZeroRotator;
  FRotator() = default;
  FRotator(double InPitch, double InYaw, double InRoll) : Pitch(InPitch), Yaw(InYaw), Roll(InRoll) {}
  FRotator& operator+=(const FRotator& R) { Pitch += R.Pitch; Yaw += R.Yaw; Roll += R.Roll; return *this; }
- FQuat Quaternion() const { return FQuat(); }
+ FQuat Quaternion() const {  // UE FRotator::Quaternion
+  const double H = 3.14159265358979323846 / 360; const double SP = std::sin(Pitch * H), CP = std::cos(Pitch * H), SY = std::sin(Yaw * H), CY = std::cos(Yaw * H), SR = std::sin(Roll * H), CR = std::cos(Roll * H);
+  return FQuat(CR * SP * SY - SR * CP * CY, -CR * SP * CY - SR * CP * SY, CR * CP * SY - SR * SP * CY, CR * CP * CY + SR * SP * SY);
+ }
  FString ToString() const { return FString(); }
 };
 inline const FRotator FRotator::ZeroRotator{0, 0, 0};
 inline FRotator FVector::Rotation() const { const double D = 180 / 3.14159265358979323846; return FRotator(std::atan2(Z, std::sqrt(X * X + Y * Y)) * D, std::atan2(Y, X) * D, 0); }
-inline FRotator FQuat::Rotator() const { return FRotator(); }
+inline FRotator FQuat::Rotator() const {  // UE FQuat::Rotator (non-singular branch, singular ones clamped to +-90 pitch)
+ const double D = 180 / 3.14159265358979323846, Test = Z * X - W * Y, YawY = 2 * (W * Z + X * Y), YawX = 1 - 2 * (Y * Y + Z * Z);
+ if (Test < -0.4999995) return FRotator(-90, std::atan2(YawY, YawX) * D, 0);
+ if (Test > 0.4999995) return FRotator(90, std::atan2(YawY, YawX) * D, 0);
+ return FRotator(std::asin(2 * Test) * D, std::atan2(YawY, YawX) * D, std::atan2(-2 * (W * X + Y * Z), 1 - 2 * (X * X + Y * Y)) * D);
+}
 struct FTransform {
  FQuat Rotation; FVector Translation{0, 0, 0}, Scale3D{1, 1, 1};
  static const FTransform Identity;
@@ -380,12 +404,21 @@ struct FTransform {
  void SetTranslation(const FVector& V) { Translation = V; }
  FVector GetTranslation() const { return Translation; }
  FVector GetScale3D() const { return Scale3D; }
- FRotator Rotator() const { return FRotator(); }
+ FRotator Rotator() const { return Rotation.Rotator(); }
  FVector GetUnitAxis(EAxis::Type Axis) const { return Rotation.RotateVector(Axis == EAxis::X ? FVector(1, 0, 0) : Axis == EAxis::Y ? FVector(0, 1, 0) : FVector(0, 0, 1)); }
  bool ContainsNaN() const { return Translation.ContainsNaN(); }
- void NormalizeRotation() {}
- void Blend(const FTransform& A, const FTransform&, float) { *this = A; }
- FTransform operator*(const FTransform& Other) const { return Other; }
+ void NormalizeRotation() { Rotation = Rotation.GetNormalized(); }
+ void Blend(const FTransform& A, const FTransform& B, float Alpha) {  // UE: lerp translation/scale, slerp rotation
+  Translation = A.Translation + (B.Translation - A.Translation) * Alpha; Scale3D = A.Scale3D + (B.Scale3D - A.Scale3D) * Alpha; Rotation = FQuat::Slerp(A.Rotation, B.Rotation, Alpha);
+ }
+ FTransform operator*(const FTransform& Other) const {  // UE: this first, then Other
+  const FVector Scaled(Translation.X * Other.Scale3D.X, Translation.Y * Other.Scale3D.Y, Translation.Z * Other.Scale3D.Z);
+  return FTransform(Other.Rotation * Rotation, Other.Rotation.RotateVector(Scaled) + Other.Translation, FVector(Scale3D.X * Other.Scale3D.X, Scale3D.Y * Other.Scale3D.Y, Scale3D.Z * Other.Scale3D.Z));
+ }
+ bool Equals(const FTransform& Other, double Tolerance = 1e-4) const {
+  return Rotation.Equals(Other.Rotation, Tolerance) && std::fabs(Translation.X - Other.Translation.X) <= Tolerance && std::fabs(Translation.Y - Other.Translation.Y) <= Tolerance && std::fabs(Translation.Z - Other.Translation.Z) <= Tolerance
+   && std::fabs(Scale3D.X - Other.Scale3D.X) <= Tolerance && std::fabs(Scale3D.Y - Other.Scale3D.Y) <= Tolerance && std::fabs(Scale3D.Z - Other.Scale3D.Z) <= Tolerance;
+ }
  FString ToString() const { return FString(); }
 };
 inline const FTransform FTransform::Identity{};
@@ -399,6 +432,7 @@ struct FMath {
  static bool IsFinite(double X) { return std::isfinite(X); }
  static double FloorToDouble(double X) { return std::floor(X); }
  static double Sin(double X) { return std::sin(X); }
+ static double Sqrt(double X) { return std::sqrt(X); }
  template<class T> static constexpr T RadiansToDegrees(T R) { return R * T(180 / 3.14159265358979323846); }
  static FRotator RInterpTo(const FRotator& Current, const FRotator&, float, float) { return Current; }
 };
@@ -421,13 +455,13 @@ struct FJsonSerializer {
 };
 struct FCommandLine { static const TCHAR* Get() { return u""; } };
 struct FParse { static bool Param(const TCHAR*, const TCHAR*) { return false; } };
-struct FPlatformTime { static double Seconds() { return 0; } };
+struct FPlatformTime { static inline double StubNow = 0; static double Seconds() { return StubNow; } };
 struct FPlatformProcess { static uint32 GetCurrentProcessId() { return 0; } };
 struct FDateTime { static FDateTime UtcNow() { return {}; } int64 ToUnixTimestamp() const { return 0; } int32 GetMillisecond() const { return 0; } };
 struct FFileHelper { static bool LoadFileToString(FString&, const TCHAR*) { return false; } static bool SaveStringToFile(const FString&, const TCHAR*) { return false; } };
 #define UTF8_TO_TCHAR(x) ((void)(x), u"")
 #define TCHAR_TO_UTF8(x) ((void)(x), "")
-class UObject { public: virtual ~UObject() = default; FString GetPathName() const { return FString(); } };
+class UObject { public: virtual ~UObject() = default; FString GetPathName() const { return FString(); } FString GetName() const { return FString(); } };
 template<class T> class TObjectPtr {
  T* Ptr = nullptr;
 public:
@@ -440,10 +474,13 @@ public:
  explicit operator bool() const { return Ptr != nullptr; }
  friend bool operator==(const TObjectPtr& A, const TObjectPtr& B) { return A.Ptr == B.Ptr; }
 };
-template<class T> T* Cast(UObject*) { return nullptr; }
+inline UObject* StubCastTarget = nullptr;  // a driver names the one object Cast<> may return (no RTTI/typeinfo needed from the unit)
+template<class T> T* Cast(UObject* Object) { return Object && Object == StubCastTarget ? static_cast<T*>(Object) : nullptr; }
 template<class T> T* LoadObject(UObject*, const TCHAR*) { return nullptr; }
 class USkeleton : public UObject {};
-class USkeletalMesh : public UObject { public: USkeleton* GetSkeleton() const { return nullptr; } };
+class UMorphTarget : public UObject {};
+struct FReferenceSkeleton;
+class USkeletalMesh : public UObject { public: USkeleton* GetSkeleton() const { return nullptr; } const FReferenceSkeleton& GetRefSkeleton() const; const TArray<TObjectPtr<UMorphTarget>>& GetMorphTargets() const { static TArray<TObjectPtr<UMorphTarget>> None; return None; } };
 class UAnimSequenceBase : public UObject { public: virtual float GetPlayLength() const { return 0; } USkeleton* GetSkeleton() const { return nullptr; } };
 namespace ERootMotionRootLock { enum Type { RefPose, AnimFirstFrame, Zero }; }
 template<class E> class TEnumAsByte { uint8 Value = 0; public: TEnumAsByte() = default; TEnumAsByte(E V) : Value(uint8(V)) {} E GetValue() const { return E(Value); } };
@@ -456,10 +493,14 @@ struct FAttachmentTransformRules { static const FAttachmentTransformRules KeepWo
 inline const FAttachmentTransformRules FAttachmentTransformRules::KeepWorldTransform{};
 class UWorld : public UObject { public: float GetDeltaSeconds() const { return 0; } };
 class UActorComponent : public UObject {};
+struct FBoxSphereBounds { FVector Origin, BoxExtent; double SphereRadius = 0; FString ToString() const { return FString(); } };
 class USceneComponent : public UActorComponent {
 public:
- FTransform StubWorld; FRotator StubRotation;
+ FTransform StubWorld, StubRelative; FRotator StubRotation; FBoxSphereBounds Bounds; float BoundsScale = 1; int32 StubBoundsUpdates = 0;
+ void UpdateBounds() { ++StubBoundsUpdates; }
  const FTransform& GetComponentTransform() const { return StubWorld; }
+ const FTransform& GetRelativeTransform() const { return StubRelative; }
+ void SetRelativeTransform(const FTransform& T, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubRelative = T; }
  FVector GetComponentLocation() const { return StubWorld.Translation; }
  bool AttachToComponent(USceneComponent*, const FAttachmentTransformRules&) { return true; }
  void SetUsingAbsoluteRotation(bool) {}
@@ -471,11 +512,12 @@ public:
 };
 class USkeletalMeshComponent : public USceneComponent {
 public:
- int32 StubHeadIndex = INDEX_NONE; FVector StubHead;
+ int32 StubHeadIndex = INDEX_NONE; FVector StubHead; UAnimInstance* StubAnim = nullptr;
  USkeletalMesh* GetSkeletalMeshAsset() const { return nullptr; }
  int32 GetBoneIndex(FName) const { return StubHeadIndex; }
  FVector GetBoneLocation(FName) const { return StubHead; }
- UAnimInstance* GetAnimInstance() const { return nullptr; }
+ FTransform GetBoneTransform(int32) const { return FTransform(FQuat::Identity, StubHead, FVector(1, 1, 1)); }
+ UAnimInstance* GetAnimInstance() const { return StubAnim; }
  void UnHideBoneByName(FName) {}
  void ShowMaterialSection(int32, int32, bool, int32) {}
  void SetAnimInstanceClass(UClass*) {}
@@ -490,7 +532,7 @@ public:
  bool SetActorLocationAndRotation(FVector, FRotator, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { return true; }
  template<class T> T* FindComponentByClass() const { return nullptr; }
 };
-class APawn : public AActor { public: TObjectPtr<AController> Controller; };
+class APawn : public AActor { public: TObjectPtr<AController> Controller; bool bUseControllerRotationYaw = true; };
 class ACharacter : public APawn { public: UCharacterMovementComponent* GetCharacterMovement() const { return nullptr; } };
 class FAnimInstanceProxy;
 class UAnimInstance : public UObject {
@@ -515,6 +557,7 @@ struct FReferenceSkeleton {
  int32 FindBoneIndex(const FName&) const { return INDEX_NONE; }
  FName GetBoneName(int32) const { return FName(); }
 };
+inline const FReferenceSkeleton& USkeletalMesh::GetRefSkeleton() const { static FReferenceSkeleton None; return None; }
 struct FBoneContainer {
  const FReferenceSkeleton& GetReferenceSkeleton() const { static FReferenceSkeleton None; return None; }
  FCompactPoseBoneIndex MakeCompactPoseIndex(const FMeshPoseBoneIndex&) const { return {}; }
@@ -678,15 +721,16 @@ def _function(text: str, head: str) -> tuple:
         k += 1
 
 
-def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str = None) -> dict:
+def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str = None, hands_driver: str = None) -> dict:
     """Translation units from the patched files; #line keeps diagnostics on the patched sources. `end` closes the
-    streamer fields (Sub01HomeLab.h) and the appended methods (Sub01HomeLab.cpp): the v2 END, or the face END on top."""
+    streamer fields (Sub01HomeLab.h) and the appended methods (Sub01HomeLab.cpp): the v2 END, or the face END on top.
+    `hands_driver` appends a main() to the proxy unit (static proxy helpers can be run without an instance)."""
     stub, hands_inc, char_inc = work / 'stub', work / 'hands_inc', work / 'char_inc'
     for d in (stub / 'Animation', hands_inc, char_inc):
         d.mkdir(parents=True, exist_ok=True)
     (stub / 'ue_stub.h').write_text(STUB)
     (stub / 'UObject').mkdir(exist_ok=True)
-    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h', 'UObject/UnrealType.h'):
+    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h', 'UObject/UnrealType.h', 'Animation/MorphTarget.h'):
         (stub / name).write_text('#pragma once\n#include "ue_stub.h"\n')
     (stub / 'Sub01HomeHands.generated.h').write_text('#pragma once\n')
     (stub / 'native_cinematic_director.h').write_text('#pragma once\nnamespace Sub01Cinema { struct FPoseObservation {}; }\n')
@@ -700,8 +744,10 @@ def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str =
         (d / 'Sub01HomeHands.h').write_text(f'#line 1 "{src / "Sub01HomeHands.h"}"\n' + hands_h)
     proxy, at = _block(hands_cpp, 'struct FSub01HandsProxy : FAnimInstanceProxy {',
                        'void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy* Proxy){delete Proxy;}')
-    (work / 'hands.cpp').write_text('#include "Sub01HomeHands.h"\n#include "Sub01HomeLab.h"\n#include "Sub01CapturedLayerClock.h"\n'
-                                    f'#line {at} "{src / "Sub01HomeHands.cpp"}"\n{proxy}\n')
+    hands_unit = ('#include "Sub01HomeHands.h"\n#include "Sub01HomeLab.h"\n#include "Sub01CapturedLayerClock.h"\n'
+                  f'#line {at} "{src / "Sub01HomeHands.cpp"}"\n{proxy}\n')
+    (work / 'hands.cpp').write_text(hands_unit)
+    (work / 'hands_driver.cpp').write_text(hands_unit + (hands_driver or ''))
     fields, _ = _block(header, ' bool TickPrivateStreamerVisual(float Dt);', end)
     methods, m_at = _block(cpp, MARKER + ' BEGIN', end)
     tick, t_at = _function(cpp, 'bool ASub01HomeCharacter::TickPrivateStreamerVisual(float Dt){')
@@ -711,7 +757,7 @@ def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str =
     (work / 'character.cpp').write_text(unit)
     (work / 'driver.cpp').write_text(unit + (DRIVER if driver is None else driver))
     return {'hands': (work / 'hands.cpp', hands_inc), 'character': (work / 'character.cpp', char_inc),
-            'driver': (work / 'driver.cpp', char_inc), 'stub': stub}
+            'driver': (work / 'driver.cpp', char_inc), 'hands_driver': (work / 'hands_driver.cpp', hands_inc), 'stub': stub}
 
 
 COMPILERS = closure.compilers()
@@ -940,10 +986,10 @@ int main() {
 '''
 
 
-def _run_driver(units: dict, tmp_path: Path) -> subprocess.CompletedProcess:
+def _run_driver(units: dict, tmp_path: Path, unit: str = 'driver') -> subprocess.CompletedProcess:
     name, path, _ = COMPILERS[0]
-    source, include = units['driver']
-    binary = tmp_path / 'driver-bin'
+    source, include = units[unit]
+    binary = tmp_path / f'{unit}-bin'
     build = subprocess.run([path, '-std=c++20', '-O1', f'-I{include}', '-isystem', str(units['stub']), str(source), '-o', str(binary)],
                            capture_output=True, text=True)
     assert build.returncode == 0, build.stderr[-6000:]
@@ -1159,4 +1205,466 @@ def test_nopin_logic_runs_and_v2_face_pinfix_unchanged(nopin_patched, tmp_path):
     run = _run_driver(build_units(nopin_patched, tmp_path / 'a', end=FACE_END, driver=PINFIX_DRIVER), tmp_path / 'a')
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
     run = _run_driver(build_units(nopin_patched, tmp_path / 'b', end=FACE_END), tmp_path / 'b')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+# ================================================================================================ mouth (voice server -> jaw bone / head emphasis)
+MOUTH_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_mouth.py'
+MOUTH_MARKER = '// SUB01_STREAMER_VISUAL_V2_MOUTH'
+MOUTH_END = MOUTH_MARKER + ' END'
+
+
+def install_mouth(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(MOUTH_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+def _stack(target: Path, *installers) -> dict:
+    """Apply the installers in order; every one must succeed. Returns the last report."""
+    report = None
+    for step in installers:
+        code, report = step(target)
+        assert code == 0, report
+    return report
+
+
+@pytest.fixture(scope='module')
+def mouth_on_v2(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('mouth-v2') / 'src'
+    shutil.copytree(SOURCE, target)
+    _stack(target, install, install_mouth)
+    return target
+
+
+@pytest.fixture(scope='module')
+def mouth_on_all(tmp_path_factory) -> Path:
+    """The pod stack (v2, face, pin fix, no pin) with the mouth layer last: what the coordinator builds."""
+    target = tmp_path_factory.mktemp('mouth-all') / 'src'
+    shutil.copytree(SOURCE, target)
+    _stack(target, install, install_face, install_pinfix, install_nopin, install_mouth)
+    return target
+
+
+def test_mouth_install_plans_applies_and_refuses_twice(pod_v2):
+    before = {p.name: sha(p) for p in pod_v2.iterdir()}
+    code, planned = install_mouth(pod_v2, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == 9 and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == before
+    code, report = install_mouth(pod_v2)
+    assert code == 0 and report['status'] == 'applied' and report['requires'] == MARKER
+    assert report['layers_present'] == {'face': False, 'pin_fix': False, 'no_pin': False}
+    assert report['rig']['lip_sync'] is False and report['rig']['found'].startswith('none')
+    assert report['mouth']['file'] == '/home/unreal/.sub01-private/streamer/mouth.json' and report['mouth']['poll_hz_max'] == 30
+    for name in PATCHED:
+        assert report['files'][name]['before_sha256'] == before[name]
+        assert sha(pod_v2 / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (pod_v2 / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    for name in set(before) - set(PATCHED):
+        assert sha(pod_v2 / name) == before[name]
+    after = {p.name: sha(p) for p in pod_v2.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_mouth(pod_v2, *extra)
+        assert code == 2 and again['status'] == 'refused' and 'already' in again['reason']
+    assert install(pod_v2)[0] == 2
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == after
+
+
+def test_mouth_install_refuses_without_v2(pod):
+    before = {p.name: sha(p) for p in pod.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, report = install_mouth(pod, *extra)
+        assert code == 2 and 'lacks the v2 install' in report['reason']
+    assert {p.name: sha(p) for p in pod.iterdir()} == before
+
+
+def test_mouth_missing_anchor_refuses_without_writing(pod_v2):
+    hands = pod_v2 / 'Sub01HomeHands.cpp'
+    hands.write_bytes(hands.read_bytes().replace(b'then breathing; head below', b'then breathing, head below', 1))
+    before = {p.name: sha(p) for p in pod_v2.iterdir()}
+    code, report = install_mouth(pod_v2)
+    assert code == 2 and 'anchor missing in Sub01HomeHands.cpp' in report['reason']
+    assert {p.name: sha(p) for p in pod_v2.iterdir()} == before  # Sub01HomeLab.* had valid anchors and are untouched too
+
+
+def test_mouth_applies_in_every_layer_order(tmp_path):
+    """Mouth after the pod stack (what the coordinator does) and mouth before the others: each layer applies exactly once."""
+    orders = {'last': (install, install_face, install_pinfix, install_nopin),
+              'first': (install, install_mouth, install_face, install_pinfix, install_nopin)}
+    for label, steps in orders.items():
+        target = tmp_path / label
+        shutil.copytree(SOURCE, target)
+        _stack(target, *steps)
+        if label == 'last':
+            code, report = install_mouth(target)
+            assert code == 0 and report['layers_present'] == {'face': True, 'pin_fix': True, 'no_pin': True}
+        for name in PATCHED:
+            text = lf(target / name)
+            assert text.count(MOUTH_MARKER + ' BEGIN') == text.count(MOUTH_END) == 1, (label, name)
+            assert text.count(FACE_MARKER + ' BEGIN') == text.count(FACE_END) == 1, (label, name)
+            assert closure.brace_walk(closure.strip(text)) == closure.brace_walk(closure.strip(lf(SOURCE / name))), (label, name)
+        for step in (install_mouth, install_face, install_pinfix, install_nopin, install):
+            assert step(target)[0] == 2, label
+
+
+def _mouth_blocks(text: str) -> set:
+    lines = set()
+    start = 0
+    while True:
+        i = text.find(MOUTH_MARKER + ' BEGIN', start)
+        if i < 0:
+            return lines
+        j = text.index(MOUTH_END, i)
+        lines.update(text[text.rfind('\n', 0, i) + 1:j].split('\n'))
+        start = j
+
+
+def test_mouth_text_and_other_layers_untouched(mouth_on_v2, mouth_on_all, patched, nopin_patched):
+    for src, plain, end in ((mouth_on_v2, patched, MOUTH_END), (mouth_on_all, nopin_patched, FACE_END)):
+        cpp, header = lf(src / 'Sub01HomeLab.cpp'), lf(src / 'Sub01HomeLab.h')
+        hands_h, proxy = lf(src / 'Sub01HomeHands.h'), lf(src / 'Sub01HomeHands.cpp')
+        for text in ('"/home/unreal/.sub01-private/streamer/mouth.json"', 'Schema==TEXT("sub01.streamer-mouth.v1")',
+                     'StreamerVisualMouthPollAt=Now+1./30;', 'FMath::Abs(Epoch-Utc)<=0.5',
+                     'S.st_uid==getuid()&&!(S.st_mode&0022)&&S.st_size>0&&S.st_size<=512', 'Open>=0&&Open<=1', 'FMath::Min(1.f,Dt*30.f)',
+                     ' ApplyStreamerVisualMouth(Now,Epoch,Dt); // SUB01_STREAMER_VISUAL_V2_MOUTH', 'TEXT("mouth_open")', 'TEXT("mouth_energy")',
+                     'TEXT("mouth_file_fresh")', 'TEXT("mouth_id")', 'TEXT("mouth_rig")', 'TEXT("jaw_bone")', 'TEXT("head_only")',
+                     'SUB01_STREAMER_VISUAL_MOUTH_READY', 'SUB01_STREAMER_VISUAL_MOUTH_FILE_REJECTED'):
+            assert text in cpp, text
+        assert 'Receipt->SetBoolField(TEXT("facial_animation_or_lipsync"),false);' in cpp  # no lip sync is claimed
+        assert 'void ApplyStreamerVisualMouth(double Now,double Epoch,float Dt);' in header
+        assert 'UPROPERTY(Transient) float StreamerVisualMouthOpen=0;' in hands_h and 'UPROPERTY(Transient) int32 StreamerVisualMouthRig=0;' in hands_h
+        mouth_proxy = proxy[proxy.index(MOUTH_MARKER + ' BEGIN'):proxy.index(MOUTH_END)]
+        for text in ('TEXT("Jaw"),TEXT("jaw"),TEXT("JawRoot")', 'EndsWith(TEXT("Jaw"))', 'FName(TEXT("Head"))', '?12.:2.',
+                     'FMath::Clamp(StreamerV2Mouth,0.f,1.f)', 'if(Compact.GetInt()<0)return;'):
+            assert text in mouth_proxy, text
+        assert 'Key->' not in mouth_proxy and 'UAnimSequence' not in mouth_proxy  # no raw UObject pointers in the proxy
+        assert '  StreamerV2Mouth=Hands->StreamerVisualMouthOpen; // SUB01_STREAMER_VISUAL_V2_MOUTH' in proxy
+        assert ' StreamerVisualMouthRig=Proxy.StreamerV2MouthRig; // SUB01_STREAMER_VISUAL_V2_MOUTH' in proxy
+        # evaluated inside the streamer block, after the v2 reference/breathing pass and before the gaze offset reaches the Head
+        evaluate = proxy[proxy.index('  if(StreamerVisualActive){\n'):]
+        assert evaluate.index('if(StreamerV2)EvaluateStreamerV2(Output);') < evaluate.index('EvaluateStreamerV2Mouth(Output);') < evaluate.index('FindBoneIndex(TEXT("Head"))')
+        # on the game thread: after the v2 clip/breathing/camera pass, before the receipt; the receipt line sits in the V2Anim block
+        tick = cpp[cpp.index('bool ASub01HomeCharacter::TickPrivateStreamerVisual(float Dt){'):]
+        assert tick.index('ApplyStreamerVisualV2(Now,Dt);') < tick.index('ApplyStreamerVisualMouth(Now,Epoch,Dt);') < tick.index('TEXT("mouth_open")')
+        assert tick.index('{auto* V2Anim=') < tick.index('TEXT("mouth_open")') < tick.index('TEXT("camera_blend")')
+        # the mouth block of Sub01HomeLab.cpp lies between the v2 END and whatever follows, so build_units(end=...) covers it
+        assert cpp.index(MARKER + ' END') < cpp.index(MOUTH_MARKER + ' BEGIN') < cpp.index(MOUTH_END) <= cpp.index(end) + len(end)
+        for name in PATCHED:  # every line of the stack without the mouth survives; every new line is the mouth layer
+            before, after = lf(plain / name), lf(src / name)
+            assert closure.brace_walk(closure.strip(after)) == closure.brace_walk(closure.strip(before)), name
+            assert not [line for line in before.split('\n') if line not in after.split('\n')], name
+            extra = [line for line in after.split('\n') if line not in before.split('\n')]
+            blocks = _mouth_blocks(after)
+            assert extra and all(MOUTH_MARKER in line or line in blocks for line in extra), (name, [l for l in extra if MOUTH_MARKER not in l and l not in blocks])
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+@pytest.mark.parametrize('stack', ['mouth_on_v2', 'mouth_on_all'])
+def test_mouth_cpp_compiles_syntax_only_against_stub(request, tmp_path, compiler, unit, stack):
+    src = request.getfixturevalue(stack)
+    name, path, flags = compiler
+    units = build_units(src, tmp_path, end=MOUTH_END if stack == 'mouth_on_v2' else FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+MOUTH_DRIVER = r'''
+#include <cstdlib>
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+int main() {
+ USkeletalMeshComponent Body; ASub01HomeCharacter C; C.FirstPersonBody = &Body;
+ // the stub's lstat is the real one and the pod path does not exist here: every poll finds no file and closes the mouth
+ C.StreamerVisualMouthTarget = 1; C.StreamerVisualMouthOpen = 1; C.StreamerVisualMouthFresh = true; C.ApplyStreamerVisualMouth(10, 1000, .05f);
+ CHECK(C.StreamerVisualMouthTarget == 0 && C.StreamerVisualMouthFresh == false && C.StreamerVisualMouthOpen < 1, 1);
+ CHECK(C.StreamerVisualMouthPollAt > 10 && Near(C.StreamerVisualMouthPollAt, 10 + 1. / 30, 1e-9), 2);  // at most 30 Hz
+ // between polls the target holds and the open value approaches it at 30/s: Dt .02 -> 60 % of the gap per tick
+ C.StreamerVisualMouthTarget = 1; C.StreamerVisualMouthOpen = 0; C.ApplyStreamerVisualMouth(10.01, 1000, .02f);
+ CHECK(C.StreamerVisualMouthTarget == 1 && Near(C.StreamerVisualMouthOpen, .6, 1e-6), 3);
+ for (int K = 0; K < 20; ++K) C.ApplyStreamerVisualMouth(10.02, 1000, .02f);
+ CHECK(C.StreamerVisualMouthOpen > .99 && C.StreamerVisualMouthOpen <= 1, 4);
+ // a target of 0 closes the mouth to exactly 0, not a lingering fraction
+ C.StreamerVisualMouthTarget = 0; for (int K = 0; K < 20; ++K) C.ApplyStreamerVisualMouth(10.03, 1000, .02f);
+ CHECK(C.StreamerVisualMouthOpen == 0, 5);
+ // a large frame time never overshoots
+ C.StreamerVisualMouthTarget = .4f; C.ApplyStreamerVisualMouth(10.03, 1000, .5f); CHECK(Near(C.StreamerVisualMouthOpen, .4, 1e-6), 6);
+ // the next poll (no file) closes it again; nothing is logged as "ready" without an anim instance
+ C.ApplyStreamerVisualMouth(10.04, 1000, .02f); CHECK(C.StreamerVisualMouthTarget == 0 && C.StreamerVisualMouthLogged == false, 7);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_mouth_logic_runs_and_earlier_layers_unchanged(mouth_on_v2, mouth_on_all, tmp_path):
+    run = _run_driver(build_units(mouth_on_v2, tmp_path / 'a', end=MOUTH_END, driver=MOUTH_DRIVER), tmp_path / 'a')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(build_units(mouth_on_all, tmp_path / 'b', end=FACE_END, driver=MOUTH_DRIVER), tmp_path / 'b')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(build_units(mouth_on_v2, tmp_path / 'c', end=MOUTH_END), tmp_path / 'c')  # the v2 driver
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(build_units(mouth_on_all, tmp_path / 'd', end=FACE_END, driver=PINFIX_DRIVER), tmp_path / 'd')  # face + pin fix driver
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+# ================================================================================================ seat fix (mesh component offset, measured face camera)
+SEATFIX_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_seat_fix.py'
+SEATFIX_MARKER = '// SUB01_STREAMER_VISUAL_V2_SEATFIX'
+_SEATFIX_SPEC = importlib.util.spec_from_file_location('sub01_streamer_visual_v2_seatfix', SEATFIX_INSTALL)
+seatfix = importlib.util.module_from_spec(_SEATFIX_SPEC)
+_SEATFIX_SPEC.loader.exec_module(seatfix)
+
+
+def install_seatfix(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(SEATFIX_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+@pytest.fixture
+def pod_nopin(tmp_path) -> Path:
+    target = tmp_path / 'nopin-src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0 and install_pinfix(target)[0] == 0 and install_nopin(target)[0] == 0
+    return target
+
+
+@pytest.fixture(scope='module')
+def seatfix_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('seatfix') / 'src'
+    shutil.copytree(SOURCE, target)
+    assert install(target)[0] == 0 and install_face(target)[0] == 0 and install_pinfix(target)[0] == 0 and install_nopin(target)[0] == 0
+    code, report = install_seatfix(target)
+    assert code == 0, report
+    return target
+
+
+def test_seatfix_plans_applies_refuses_twice_and_needs_nopin(pod_nopin, pod_pinfix):
+    before = {p.name: sha(p) for p in pod_nopin.iterdir()}
+    code, planned = install_seatfix(pod_nopin, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == 14 and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in pod_nopin.iterdir()} == before
+    code, report = install_seatfix(pod_nopin)
+    assert code == 0 and report['status'] == 'applied'
+    assert report['face']['fov'] == seatfix.FACE_FOV and report['seat']['controller_yaw'].startswith('bUseControllerRotationYaw=false')
+    changed = {name for name in before if sha(pod_nopin / name) != before[name]}
+    assert changed == set(PATCHED)
+    for name in PATCHED:
+        assert report['files'][name]['before_sha256'] == before[name]
+        assert sha(pod_nopin / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (pod_nopin / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    after = {p.name: sha(p) for p in pod_nopin.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_seatfix(pod_nopin, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert install_nopin(pod_nopin)[0] == 2 and install_pinfix(pod_nopin)[0] == 2 and install_face(pod_nopin)[0] == 2 and install(pod_nopin)[0] == 2
+    assert {p.name: sha(p) for p in pod_nopin.iterdir()} == after
+    pinfix_before = {p.name: sha(p) for p in pod_pinfix.iterdir()}
+    code, refused = install_seatfix(pod_pinfix)
+    assert code == 2 and 'lacks the no-pin patch' in refused['reason'] and {p.name: sha(p) for p in pod_pinfix.iterdir()} == pinfix_before
+
+
+def test_seatfix_missing_anchor_refuses_without_writing(pod_nopin):
+    hands = pod_nopin / 'Sub01HomeHands.cpp'
+    hands.write_bytes(hands.read_bytes().replace(b'PinStreamerV2(Output.Pose,true); // SUB01_STREAMER_VISUAL_V2_FACE: desk pin',
+                                                 b'PinStreamerV2(Output.Pose,true); // SUB01_STREAMER_VISUAL_V2_FACE: desk  pin', 1))
+    before = {p.name: sha(p) for p in pod_nopin.iterdir()}
+    code, report = install_seatfix(pod_nopin)
+    assert code == 2 and 'anchor missing in Sub01HomeHands.cpp' in report['reason']
+    assert {p.name: sha(p) for p in pod_nopin.iterdir()} == before
+
+
+def test_seatfix_text(seatfix_patched):
+    cpp, header = lf(seatfix_patched / 'Sub01HomeLab.cpp'), lf(seatfix_patched / 'Sub01HomeLab.h')
+    hands_h, proxy = lf(seatfix_patched / 'Sub01HomeHands.h'), lf(seatfix_patched / 'Sub01HomeHands.cpp')
+    for name in PATCHED:
+        text = lf(seatfix_patched / name)
+        assert text.count(SEATFIX_MARKER + ' BEGIN') == text.count(SEATFIX_MARKER + ' END') == 1, name
+        assert closure.brace_walk(closure.strip(text)) == closure.brace_walk(closure.strip(lf(SOURCE / name))), name
+        # the seat fix sits inside the v2 .. face range, so the fields/methods extraction of build_units(end=FACE_END) sees it
+        assert text.index(SEATFIX_MARKER + ' BEGIN') < text.index(FACE_MARKER + ' BEGIN') < text.index(FACE_END)
+    # root yaw decoupled from the camera look; authored relative transform remembered; offset applied to the mesh component only
+    start = cpp[cpp.index('void ASub01HomeCharacter::StartStreamerVisualV2('):cpp.index('bool ASub01HomeCharacter::ParseStreamerVisualV2(')]
+    assert 'StreamerVisualControllerYawWas=bUseControllerRotationYaw;bUseControllerRotationYaw=false;' in start
+    assert 'StreamerVisualBodyRelative=FirstPersonBody?FirstPersonBody->GetRelativeTransform():FTransform::Identity;' in start
+    assert 'SUB01_STREAMER_VISUAL_SEAT_FIX_READY' in start and 'SUB01_STREAMER_VISUAL_FACE_RIG' in start and 'BodyMesh->GetMorphTargets()' in start
+    assert f'FirstPersonBody->BoundsScale={seatfix.BOUNDS_SCALE:g}.f;FirstPersonBody->UpdateBounds();' in start
+    apply = cpp[cpp.index('void ASub01HomeCharacter::ApplyStreamerVisualV2('):cpp.index('// SUB01_STREAMER_VISUAL_V2 END')]
+    assert f'if(!Seat.Equals(StreamerVisualSeatApplied,{seatfix.SEAT_EPSILON:g})){{StreamerVisualSeatApplied=Seat;FirstPersonBody->SetRelativeTransform(Seat*StreamerVisualBodyRelative,false,nullptr,ETeleportType::TeleportPhysics);}}' in apply
+    assert 'const bool SeatValid=StreamerVisualSchemaVersion==2&&Anim&&Anim->StreamerVisualSeatOffsetValid;' in apply
+    assert apply.index('StreamerVisualSeatHas=SeatValid;') < apply.index('// Camera: "spectator" = the authored v1 view')
+    assert 'SetWorldTransform' not in apply and 'SetActorLocationAndRotation' not in apply
+    # face camera from the measured head towards the monitor; tuning file with the event's ownership rules; old formula gone
+    camera = cpp[cpp.index('void ASub01HomeCharacter::ApplyStreamerVisualFaceCamera(float Dt){'):cpp.index('int32 ASub01HomeCharacter::StreamerVisualDeskSlot(')]
+    for text in ('Towards=Towards.Size()>10?Towards.GetSafeNormal():FVector(0,1,0);', 'const FVector Side=FVector::CrossProduct(FVector::UpVector,-Towards);',
+                 'StreamerVisualFaceLocation=Monitor+Towards*double(StreamerVisualFaceForwardCm)+Side*double(StreamerVisualFaceSideCm)+FVector(0,0,StreamerVisualFaceUpCm);',
+                 'StreamerVisualFaceAim=Mean-FVector(0,0,StreamerVisualFaceAimDropCm);', 'FMath::Lerp(65.f,StreamerVisualFaceFov,Ease)',
+                 'const FVector Mean=StreamerVisualFaceHeadSum*(1./StreamerVisualFaceHeadCount);', f'Now-StreamerVisualFaceSampleAt>={seatfix.FACE_SAMPLE_SECONDS:g}',
+                 'if(Face&&!StreamerVisualFaceAimed)return;', 'Now-StreamerVisualFaceSelectedAt>=2', 'if(ReadStreamerVisualFaceTuning()){StreamerVisualFaceAimed=false;StreamerVisualFaceHeadCount=0;}',
+                 f'const FVector Monitor({seatfix.MONITOR[0]},{seatfix.MONITOR[1]},{seatfix.MONITOR[2]});', 'SUB01_STREAMER_VISUAL_FACE_CAMERA location=%s aim=%s headMean=%s samples=%d'):
+        assert text in camera, text
+    assert 'Monitor+FVector(0,0,28)' not in camera and '42.f' not in camera and 'StreamerVisualFaceDistanceCm' not in cpp
+    assert camera.index('const bool Settled=') < camera.index('if(Face&&!StreamerVisualFaceAimed&&(Settled||')
+    tuning = cpp[cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    assert f'"{seatfix.TUNING_PATH}"' in tuning and f'Schema!=TEXT("{seatfix.TUNING_SCHEMA}")' in tuning and 'Sequence<=StreamerVisualFaceTuningSequence' in tuning
+    for key, (lo, hi) in seatfix.TUNING_LIMITS.items():
+        assert f'Field(TEXT("{key}"),' in tuning and f',{lo},{hi});' in tuning, key
+    assert 'S.st_uid==getuid()&&!(S.st_mode&0077)&&S.st_size>0&&S.st_size<=2048' in cpp[cpp.index('static bool Sub01StreamerVisualPrivateJson('):]
+    # receipt fields (the existing ones kept)
+    for text in ('TEXT("seat_offset")', 'TEXT("seat_offset_cm")', 'TEXT("seat_offset_yaw_deg")', 'TEXT("seat_offset_applied")', 'TEXT("seat_offset_settled")',
+                 'TEXT("pelvis_world")', 'TEXT("head_world")', 'TEXT("face_camera_location")', 'TEXT("face_camera_aim")', 'TEXT("face_camera_tuning_sequence")',
+                 'TEXT("camera_world")', 'TEXT("body_bounds")', 'TEXT("clip_audit_done")', 'TEXT("desk_offset_before_pin_cm")', 'TEXT("face_camera_blend")', 'TEXT("camera_fov")'):
+        assert text in cpp, text
+    assert f'StreamerVisualFaceUpCm={seatfix.FACE_UP_CM:g}.f' in header and f'StreamerVisualFaceFov={seatfix.FACE_FOV:g}.f' in header and f'StreamerVisualFaceForwardCm={seatfix.FACE_FORWARD_CM:g}.f' in header
+    # proxy: per-clip D (yaw twist + exact translation), crossfade blend, published after evaluation; the no-pin guard still only measures
+    assert 'UPROPERTY(Transient) FTransform StreamerVisualSeatOffset;' in hands_h and 'UPROPERTY(Transient) int32 StreamerVisualPelvisBone=-1;' in hands_h
+    for text in ('static FQuat StreamerV2YawTwist(const FQuat& Q){const FQuat T(0,0,Q.Z,Q.W);', 'const FQuat Twist=StreamerV2YawTwist(R9.GetRotation()*Clip.GetRotation().Inverse());',
+                 'return FTransform(Twist,R9.GetTranslation()-Twist.RotateVector(Clip.GetTranslation()));',
+                 'StreamerV2Seat=To->Seat;if(From&&From->SeatValid)StreamerV2Seat.Blend(From->Seat,To->Seat,Progress);', 'StreamerV2SeatSettled=Progress>=1;',
+                 'if(PelvisValid){Entry.Seat=StreamerV2SeatFor(StreamerV2PinPelvis,Pelvis);Entry.SeatValid=true;', 'SUB01_STREAMER_VISUAL_SEAT_OFFSET clip=%s',
+                 'FTransform Seat=FTransform::Identity;bool SeatValid=false;};FStreamerV2ClipRef StreamerV2ClipRefs[6];',
+                 ' static constexpr bool StreamerV2PinEnabled=false;', 'if(!StreamerV2PinEnabled)return;',
+                 ' StreamerVisualSeatOffset=Proxy.StreamerV2Seat;StreamerVisualSeatOffsetValid=Proxy.StreamerV2SeatValid;StreamerVisualSeatSettled=Proxy.StreamerV2SeatSettled;'):
+        assert text in proxy, text
+    eval_body = proxy[proxy.index('void EvaluateStreamerV2(FPoseContext& Output){'):]
+    assert eval_body.index('PublishStreamerV2Seat();') < eval_body.index('PinStreamerV2(Output.Pose,true);') < eval_body.index('StreamerV2HandsValid=')
+    evaluate = proxy[proxy.index('virtual bool Evaluate(FPoseContext& Output) override {'):]
+    assert evaluate.index('PrepareStreamerV2Pin(Output)') < evaluate.index('Blend.Evaluate_AnyThread(Output);') < evaluate.index('EvaluateStreamerV2(Output);')
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_seatfix_cpp_compiles_syntax_only_against_stub(seatfix_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units(seatfix_patched, tmp_path, end=FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+def _seatfix_face_expectations() -> dict:
+    """The face camera the driver expects for Head (214,-300,135) from the installer's constants (same formula, Python)."""
+    import math
+    head = (214.0, -300.0, 135.0)
+    dx, dy = head[0] - seatfix.MONITOR[0], head[1] - seatfix.MONITOR[1]  # from the monitor towards him
+    n = math.hypot(dx, dy)
+    tx, ty = dx / n, dy / n
+    sx, sy = ty, -tx  # Up x (-Towards) (left-handed): his right
+    loc = (seatfix.MONITOR[0] + tx * seatfix.FACE_FORWARD_CM + sx * seatfix.FACE_SIDE_CM, seatfix.MONITOR[1] + ty * seatfix.FACE_FORWARD_CM + sy * seatfix.FACE_SIDE_CM,
+           seatfix.MONITOR[2] + seatfix.FACE_UP_CM)
+    aim = (head[0], head[1], head[2] - seatfix.FACE_AIM_DROP_CM)
+    d = (aim[0] - loc[0], aim[1] - loc[1], aim[2] - loc[2])
+    return {'loc': loc, 'yaw': math.degrees(math.atan2(d[1], d[0])), 'pitch': math.degrees(math.atan2(d[2], math.hypot(d[0], d[1]))),
+            'fov': seatfix.FACE_FOV, 'mid_fov': (65 + seatfix.FACE_FOV) / 2}
+
+
+SEATFIX_DRIVER = r'''
+#include <cstdlib>
+void USub01HomeHandsInstance::NativePostEvaluateAnimation() {}
+FAnimInstanceProxy* USub01HomeHandsInstance::CreateAnimInstanceProxy() { return nullptr; }
+void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy*) {}
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+static void Ticks(ASub01HomeCharacter& C, int N) { for (int K = 0; K < N; ++K) { FPlatformTime::StubNow += .1; C.ApplyStreamerVisualV2(0, .1f); } }  // 10 fps stub clock
+int main() {
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; ASub01HomeCharacter C; C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim;
+ const FTransform Rel0(FQuat::Identity, FVector(0, 0, -91), FVector(1, 1, 1));
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Body.StubRelative = Rel0; Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65; C.bUseControllerRotationYaw = true;
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle");
+ // the root no longer follows the camera look; the authored relative transform is remembered; the body bounds are scaled for the offset pose
+ CHECK(!C.bUseControllerRotationYaw && C.StreamerVisualControllerYawWas && C.StreamerVisualBodyRelativeValid && C.StreamerVisualBodyRelative.Equals(Rel0, 1e-9), 1);
+ CHECK(Near(Body.BoundsScale, @@BOUNDS@@, 1e-6) && Body.StubBoundsUpdates == 1, 9);
+ Ticks(C, 2); CHECK(!C.StreamerVisualSeatHas && Body.StubRelative.Equals(Rel0, 1e-9), 2);  // no offset published yet: the mesh is untouched
+ // the proxy publishes the field offset (Desk7 loops: ~99 cm along +Y, 15.5 cm up, -25.6 deg yaw): mesh relative = D * authored relative
+ const FQuat Yaw = FRotator(0, -25.6, 0).Quaternion(); const FTransform D(Yaw, FVector(1, 99, 15.5), FVector(1, 1, 1));
+ Anim.StreamerVisualSeatOffset = D; Anim.StreamerVisualSeatOffsetValid = true; Anim.StreamerVisualSeatSettled = true;
+ Ticks(C, 1); const FTransform Expected = D * Rel0;
+ CHECK(C.StreamerVisualSeatHas && Body.StubRelative.Equals(Expected, 1e-6) && Near(Body.StubRelative.GetTranslation().Y, 99, 1e-9) && Near(Body.StubRelative.GetTranslation().Z, -75.5, 1e-9) && Near(Body.StubRelative.Rotator().Yaw, -25.6, 1e-6), 3);
+ // below the epsilon nothing is re-applied; above it is; a v1 event restores the authored relative transform once, then nothing touches the mesh
+ Body.StubRelative = FTransform(); Anim.StreamerVisualSeatOffset = FTransform(Yaw, FVector(1, 99.005, 15.5), FVector(1, 1, 1)); Ticks(C, 1); CHECK(Body.StubRelative.Equals(FTransform(), 1e-9), 4);
+ Anim.StreamerVisualSeatOffset = FTransform(Yaw, FVector(1, 99.5, 15.5), FVector(1, 1, 1)); Ticks(C, 1); CHECK(Near(Body.StubRelative.GetTranslation().Y, 99.5, 1e-9), 5);
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 1); CHECK(!C.StreamerVisualSeatHas && Body.StubRelative.Equals(Rel0, 1e-9), 6);
+ Body.StubRelative = FTransform(); Ticks(C, 2); CHECK(Body.StubRelative.Equals(FTransform(), 1e-9), 7);
+ C.StreamerVisualSchemaVersion = 2; Anim.StreamerVisualSeatOffset = D; Ticks(C, 1); CHECK(C.StreamerVisualSeatHas && Body.StubRelative.Equals(Expected, 1e-6), 8);
+ // face camera: waits (camera untouched) until the seat offset is settled and applied, then samples the Head bone for @@SAMPLE@@ s and is placed on the monitor
+ Body.StubHeadIndex = 7; Body.StubHead = FVector(214, -300, 135); Anim.StreamerVisualSeatSettled = false;
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 5);
+ CHECK(!C.StreamerVisualFaceAimed && C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334 && C.StreamerVisualFaceHeadCount == 0, 10);
+ Anim.StreamerVisualSeatSettled = true; Ticks(C, 5);  // 0.5 s of samples: still waiting, the camera untouched
+ CHECK(!C.StreamerVisualFaceAimed && C.StreamerVisualFaceHeadCount == 5 && C.StreamerVisualFaceAlpha == 0 && Camera.StubWorld.Translation.X == 334, 11);
+ for (int K = 0; K < 8; ++K) { Body.StubHead = FVector(K % 2 ? 204 : 224, -300, 135); Ticks(C, 1); }  // sway +-10 around 214 over > 1 s: the mean is aimed at, not the last sample
+ CHECK(C.StreamerVisualFaceAimed && C.StreamerVisualFaceAimSource == TEXT("head") && Near(C.StreamerVisualFaceAim.X, 214, 1.5) && Near(C.StreamerVisualFaceAim.Y, -300, 1e-6) && Near(C.StreamerVisualFaceAim.Z, 135 - @@DROP@@, 1e-6), 12);
+ CHECK(Near(C.StreamerVisualFaceLocation.X, @@LX@@, .05) && Near(C.StreamerVisualFaceLocation.Y, @@LY@@, .05) && Near(C.StreamerVisualFaceLocation.Z, @@LZ@@, 1e-6) && Near(C.StreamerVisualFaceLook.Yaw, @@YAW@@, 2.5) && Near(C.StreamerVisualFaceLook.Pitch, @@PITCH@@, .5), 13);
+ Ticks(C, 4); CHECK(C.StreamerVisualFaceAlpha >= .5 - 1e-5 && C.StreamerVisualFaceAlpha <= .7 + 1e-5 && Camera.FieldOfView > 65 && Camera.FieldOfView < @@FOV@@, 14);  // the 1 s blend began with the aim
+ Ticks(C, 7);
+ CHECK(C.StreamerVisualFaceAlpha == 1 && Near(Camera.FieldOfView, @@FOV@@, 1e-6) && Near(Camera.StubWorld.Translation.X, @@LX@@, .05) && Near(Camera.StubWorld.Translation.Y, @@LY@@, .05) && Near(Camera.StubWorld.Translation.Z, @@LZ@@, 1e-6), 15);
+ // the 2 s fallback: an unsettled offset still gets a camera after 2 s of waiting (plus the sampling second)
+ C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11); CHECK(C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334 && C.StreamerVisualFaceSelectedAt < 0, 16);
+ Anim.StreamerVisualSeatSettled = false; FPlatformTime::StubNow = 100; C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 3); CHECK(!C.StreamerVisualFaceAimed && Near(C.StreamerVisualFaceSelectedAt, 100.1, 1e-9) && C.StreamerVisualFaceHeadCount == 0, 17);
+ FPlatformTime::StubNow = 101.9; Ticks(C, 1); CHECK(!C.StreamerVisualFaceAimed && C.StreamerVisualFaceHeadCount == 0, 18);
+ FPlatformTime::StubNow = 102.1; Ticks(C, 1); CHECK(!C.StreamerVisualFaceAimed && C.StreamerVisualFaceHeadCount == 1, 19);  // sampling started
+ Ticks(C, 11); CHECK(C.StreamerVisualFaceAimed, 20);
+ // an implausible Head location falls back to body + 120 at once; a v1 event fades the face layer out
+ C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11); Body.StubHead = FVector(0, 0, 0); Anim.StreamerVisualSeatSettled = true;
+ C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 1); CHECK(C.StreamerVisualFaceAimed && C.StreamerVisualFaceAimSource == TEXT("body+120") && Near(C.StreamerVisualFaceAim.Z, 6.191812330665947 + 120 - @@DROP@@, 1e-6), 21);
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 11); CHECK(C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334, 22);
+ // desk slot unchanged from the pin fix: mouse plays the sitting loop, typing its own
+ UAnimSequence Sit, Type, Reach; C.StreamerVisualV2Clips.Reset(); C.StreamerVisualV2Clips.Add(&Sit); C.StreamerVisualV2Clips.Add(&Type); C.StreamerVisualV2Clips.Add(&Reach);
+ CHECK(C.StreamerVisualDeskSlot(&Anim, 0) == 0 && C.StreamerVisualDeskSlot(&Anim, 1) == 1 && C.StreamerVisualDeskSlot(&Anim, 2) == 0, 23);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+SEAT_MATH_DRIVER = r'''
+#include <cstdlib>
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+int main() {
+ // the field numbers: R9's pelvis at 0.7 s and a Desk7 loop's at 0 s (component space), the loop also turned 25.6 deg and tilted 5 deg
+ const FTransform R9(FQuat::Identity, FVector(0.908, 6.407, 88.529), FVector(1, 1, 1));
+ const FTransform Clip(FRotator(5, 25.6, 0).Quaternion(), FVector(-0.058, -92.651, 73.049), FVector(1, 1, 1));
+ const FTransform D = FSub01HandsProxy::StreamerV2SeatFor(R9, Clip), Seated = Clip * D;
+ CHECK(Near(Seated.GetTranslation().X, 0.908, 1e-9) && Near(Seated.GetTranslation().Y, 6.407, 1e-9) && Near(Seated.GetTranslation().Z, 88.529, 1e-9), 1);  // pelvis exactly on R9's
+ CHECK(Near(Seated.Rotator().Yaw, 0, 1e-6) && Near(Seated.Rotator().Pitch, 5, 1e-6) && Near(Seated.Rotator().Roll, 0, 1e-6), 2);  // yaw matched, the clip's own tilt kept
+ CHECK(Near(D.Rotator().Yaw, -25.6, 1e-6) && Near(D.Rotator().Pitch, 0, 1e-9) && Near(D.Rotator().Roll, 0, 1e-9) && Near(D.GetTranslation().Z, 88.529 - 73.049, 1e-9), 3);
+ CHECK(D.GetTranslation().Size() > 95 && D.GetTranslation().Size() < 105, 4);  // about 1 m: the station offset
+ CHECK(FSub01HandsProxy::StreamerV2SeatFor(R9, R9).Equals(FTransform::Identity, 1e-9), 5);  // the frozen R9 itself: identity
+ CHECK(Near(FSub01HandsProxy::StreamerV2YawTwist(FRotator(30, 40, 0).Quaternion()).Rotator().Yaw, 40, 1e-6) && Near(FSub01HandsProxy::StreamerV2YawTwist(FRotator(30, 40, 0).Quaternion()).Rotator().Pitch, 0, 1e-9), 6);
+ CHECK(FSub01HandsProxy::StreamerV2YawTwist(FQuat(0, 0, 0, 0)).Equals(FQuat::Identity, 1e-12), 7);
+ // a crossfade blend of two offsets lands in between (what PublishStreamerV2Seat does with Progress)
+ FTransform Mid = FTransform::Identity; Mid.Blend(FTransform::Identity, D, .5f);
+ CHECK(Near(Mid.GetTranslation().Z, (88.529 - 73.049) / 2, 1e-6) && Near(Mid.Rotator().Yaw, -12.8, 1e-6), 8);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_seatfix_logic_runs(seatfix_patched, tmp_path):
+    e = _seatfix_face_expectations()
+    driver = (SEATFIX_DRIVER.replace('@@LX@@', repr(e['loc'][0])).replace('@@LY@@', repr(e['loc'][1])).replace('@@LZ@@', repr(e['loc'][2]))
+              .replace('@@YAW@@', repr(e['yaw'])).replace('@@PITCH@@', repr(e['pitch'])).replace('@@MIDFOV@@', repr(e['mid_fov']))
+              .replace('@@FOV@@', repr(e['fov'])).replace('@@DROP@@', repr(seatfix.FACE_AIM_DROP_CM)).replace('@@SAMPLE@@', repr(seatfix.FACE_SAMPLE_SECONDS))
+              .replace('@@BOUNDS@@', repr(seatfix.BOUNDS_SCALE)))
+    units = build_units(seatfix_patched, tmp_path, end=FACE_END, driver=driver, hands_driver=SEAT_MATH_DRIVER)
+    run = _run_driver(units, tmp_path)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    run = _run_driver(units, tmp_path, unit='hands_driver')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v2_behaviour_unchanged_under_seatfix(seatfix_patched, tmp_path):
+    """The whole v2 driver (debounce, bounds, monitor framing, spectator/monitor blend) passes on the seat-fixed code."""
+    run = _run_driver(build_units(seatfix_patched, tmp_path, end=FACE_END), tmp_path)
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr

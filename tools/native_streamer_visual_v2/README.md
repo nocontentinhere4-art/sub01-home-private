@@ -1,10 +1,11 @@
 # `-Sub01StreamerVisual` v2: curated desk animation driven by the streamer agent
 
-Three installers patch the pod module sources in place: string anchors each found exactly once, all or nothing, atomic
+The installers patch the pod module sources in place: string anchors each found exactly once, all or nothing, atomic
 writes, CRLF/LF kept, JSON report with before/after sha256, refusal of a second run by marker.
 `install.py` (`// SUB01_STREAMER_VISUAL_V2`) builds v2; `install_face_camera.py` (`// SUB01_STREAMER_VISUAL_V2_FACE`)
-goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that. Same R9 gate, spectator
-camera and ghost views as v1; no new AnimGraph.
+goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that, `install_no_pin.py`
+(`..._NOPIN`) next, `install_seat_fix.py` (`..._SEATFIX`, the one that actually seats him: below) last. Same R9 gate,
+spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
 - **Events**: v1 (`...event.v1`, source `human_vagon_observation`) is unchanged (frozen R9_Sitting at 0.7 s, gaze, nod
@@ -36,7 +37,7 @@ camera and ghost views as v1; no new AnimGraph.
 |---|---|---|
 | `spectator` (default, and when the event is > 2 s old) | authored v1 view (334,-209,151) -> (214,-289,116), untouched while held | 65 |
 | `monitor` | pivot -70 facing +45 right +45 up = (275.2,-232.6,161), aimed at the monitor centre (217,-367.67,114.75) | 65 |
-| `face` | monitor centre +28 up, 10 towards him = (219.5,-358.0,142.75), aimed at the Head bone (else body +120) | 42 |
+| `face` (seat fix) | webcam on the monitor: bounds centre +22 up, 2 towards him, 12 to his left = (205.1,-370.1,136.75), aimed at the mean Head bone of 1 s (else body +120) | 70 |
 
 Every switch blends over 1 s. The facing is the body axis that points at the monitor: +Y for this import.
 
@@ -71,7 +72,9 @@ M=<project>/Source/Sub01HomeLab ; cp -a "$M" "$M.before-face"     # installers k
 python3 tools/native_streamer_visual_v2/install.py --source "$M" --dry-run            # only on pre-v2 sources
 python3 tools/native_streamer_visual_v2/install_face_camera.py --source "$M" --dry-run  # only on v2 sources
 python3 tools/native_streamer_visual_v2/install_pin_fix.py --source "$M" --dry-run      # only on v2+face sources
-python3 tools/native_streamer_visual_v2/install_no_pin.py --source "$M" --dry-run       # then without --dry-run
+python3 tools/native_streamer_visual_v2/install_no_pin.py --source "$M" --dry-run       # only on v2+face+pinfix sources
+python3 tools/native_streamer_visual_v2/install_seat_fix.py --source "$M" --dry-run     # only on the full stack above; then without --dry-run
+python3 tools/native_streamer_visual_v2/install_mouth.py --source "$M" --dry-run        # on v2 alone or on any stack above
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -81,3 +84,50 @@ Launch with `-Sub01StreamerVisual` (not `-Sub01AuthoredCinematicReview`), `SUB01
 the guard only measures (`DRIFT_GUARD ... applied=0`): both the R9 pin (v11) and the per-clip guard (v13) moved the body
 out of the chair on the pod, while the clips alone sit on the authored transform. Offline checks only (stub
 compile + logic runs): `tests/test_native_streamer_visual_v2.py`; the spine pitch axis and the visual result need the pod.
+
+## Seat fix (`install_seat_fix.py`, `// SUB01_STREAMER_VISUAL_V2_SEATFIX`, builds v15/v16, games f/g 2026-10-23)
+Why the chair was empty: the Desk7 loops are authored ~1.15 m behind R9's station in component space (loop pelvis at
+0 s (-0.058,-92.651,73.049), R9's pelvis at 0.7 s (0.075,22.727,64.214); the (0.908,6.407,88.529) line in the
+`DRIFT_REFERENCE` log is the pre-v2 base clip, not R9) and these players never extract root motion. On top of that
+`ACharacter::bUseControllerRotationYaw` turned the root (and the attached mesh) to every `SetControlRotation` look: the
+receipt's `body_world` yaw read -146.31 (the spectator look) instead of the authored 165.4, and each camera switch (v11,
+v13) turned the body again. The fix never touches bones:
+- per clip, once, the proxy computes the component-space `D` with `clipPelvis(reference) * D = R9Pelvis@0.7` (translation
+  exact, rotation = the yaw twist of `R9 * clip^-1`, the clip's own pelvis tilt stays) and publishes it every evaluation,
+  blended with the crossfade weight from the previous clip's `D` (the frozen R9 gives the identity);
+- the character sets the mesh relative transform to `D * (authored relative)` when it changes by > 0.01 and restores
+  the authored one when v2 ends; `bUseControllerRotationYaw=false` at v2 start; `BoundsScale=4` on the body (the pose is
+  ~1.2 m from the offset component origin, the fixed ref-pose bounds were frustum-culled by the face camera: empty chair
+  in its frames while the spectator camera showed him).
+- Measured in game g: offset for both Desk7 loops 115.7 cm / 0.9 deg; `pelvis_world` (208,-311,70.4) = R9's pelvis on
+  the authored transform (the chair); `head_world` ~(203,-333,118) in `reading` (he leans in, ~35 cm from the screen).
+- Face camera: a fixed webcam on the monitor, bounds centre (217,-367.67,114.75) + 22 up + 2 towards him + 12 to his
+  left (over his head: the monitor is wider than his seat) = (205.1,-370.1,136.75), aimed at the mean Head bone of 1 s
+  (the loops sway the head ~5 cm) once per selection after the seat offset has settled (else 2 s), FOV 70, pitch ~-26.
+  Verified frames (game g): `reading`/`talking` = face and shoulders slightly from above, chair and hall behind him;
+  `typing` = mostly the top of his head (the typing loop hunches him into the camera). With his head 35 cm from the
+  screen the owner's FOV 40-45 shows the face alone and the upper torso cannot be framed from the monitor. Live tuning
+  without a rebuild: `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` (uid 1001, mode 0600,
+  `{"schema":"sub01.private-streamer-visual-face-tuning.v1","sequence":N,"up_cm":22,"forward_cm":2,"side_cm":-12,
+  "aim_drop_cm":0,"fov_deg":70}`, values clamped, applied when `sequence` grows; `/home/unreal/face-tune.py <up>
+  <forward> <side> <drop> <fov>` writes it, `clear` removes it); the compiled defaults are the verified framing.
+- Receipt adds `seat_offset`, `seat_offset_cm`, `seat_offset_yaw_deg`, `seat_offset_applied`, `seat_offset_settled`,
+  `pelvis_world`, `head_world`, `face_camera_location`, `face_camera_aim`, `face_camera_tuning_sequence`, `camera_world`,
+  `body_bounds`. Logs: `SUB01_STREAMER_VISUAL_SEAT_FIX_READY`, `..._SEAT_OFFSET` (per clip), `..._FACE_RIG` (66 Mixamo
+  bones, only Neck/Head/HeadTop_End near the face, 0 morph targets: no jaw or visemes to drive), `..._FACE_CAMERA`.
+
+## Mouth layer (`install_mouth.py`, `// SUB01_STREAMER_VISUAL_V2_MOUTH`)
+Goes on v2 alone or on v2 plus any of the layers above, in any order: its anchors are v2 lines no other installer edits.
+The voice server publishes `<streamer-dir>/mouth.json` (`sub01.streamer-mouth.v1`, 25 Hz while speaking, `open` 0..1
+from the RMS of the audio being played; docs/streamer/VOICE.md). The character polls
+`/home/unreal/.sub01-private/streamer/mouth.json` at most 30 Hz (regular file of the game's uid, not group/other
+writable, <= 512 bytes, `utc` within 0.5 s; anything else = closed, logged once as `SUB01_STREAMER_VISUAL_MOUTH_FILE_REJECTED`
+when the file exists but is foreign) and bridges the samples to the frame rate (30/s). Name-table scan of
+`AnatomicalOwner_Skeleton.uasset` / `AnatomicalOwner.uasset` (2026-10-23): 65 Mixamo bones (Hips, Spine, Spine1, Spine2,
+Neck, Head, HeadTop_End, shoulders/arms/hands with four finger bones each, legs/feet/toes), no jaw, mouth or facial
+bone, no morph target (only the engine's `MorphTargets` property names). So the proxy adds `2 deg * open` of Head pitch as
+emphasis in the same local-pitch convention as the gaze and the nod (flip the constant in the installer if the head rises
+on speech), composed with the gaze offset; a skeleton with a `Jaw` / `jaw` / `JawRoot` bone (or one ending in Jaw) gets
+`12 deg * open` on that bone instead. This is not lip sync: real mouth movement needs a face rig (jaw bone or visemes)
+on the body mesh. Receipt: `mouth_open`, `mouth_energy`, `mouth_file_fresh`, `mouth_id`, `mouth_rig` (`head_only` |
+`jaw_bone` | `none`); `facial_animation_or_lipsync` stays false. Log: `SUB01_STREAMER_VISUAL_MOUTH_READY rig=...` once.
