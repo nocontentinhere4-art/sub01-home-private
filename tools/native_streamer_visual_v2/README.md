@@ -37,7 +37,7 @@ spectator camera and ghost views as v1; no new AnimGraph.
 |---|---|---|
 | `spectator` (default, and when the event is > 2 s old) | authored v1 view (334,-209,151) -> (214,-289,116), untouched while held | 65 |
 | `monitor` | pivot -70 facing +45 right +45 up = (275.2,-232.6,161), aimed at the monitor centre (217,-367.67,114.75) | 65 |
-| `face` (seat fix) | webcam on the monitor: bounds centre +22 up, 2 towards him, 12 to his left = (205.1,-370.1,136.75), aimed at the mean Head bone of 1 s (else body +120) | 70 |
+| `face` (seat fix) | webcam at eye level in front of the screen: bounds centre +6 up, 2 towards him, 12 to his left = (204.9,-368.8,120.75), aimed at the mean Head bone of 1 s (else body +120) | 65 |
 
 Every switch blends over 1 s. The facing is the body axis that points at the monitor: +Y for this import.
 
@@ -52,7 +52,10 @@ increasing for the whole game process (epoch ms). Freshness: `now - captured_utc
 `0 < expires - captured <= 2` exactly: one clock read, +1.5. Required: `state`, gaze (+-20/+-10), `nod_strength` 0..1.
 Optional: `intensity` 0..1 (0.5), `camera` (`spectator`), `source_frame_id` (<= 128 chars). Stale events: idle, spectator.
 
-Manual check on the pod (stop the agent first; Ctrl-C ends it; the camera returns to spectator 2 s later):
+Manual check on the pod (stop the agent first; Ctrl-C ends it; the camera returns to spectator 2 s later). The game accepts
+only a growing `sequence` per game process and the agent counts from 0 per agent process: never hand-write a
+time-based sequence (`CC_SEQ=<epoch ms>`) into a game the agent will drive afterwards, it blocks the agent until the
+game is relaunched (`camera-check.py` continues from the receipt's `event_sequence` by default, which is safe):
 ```bash
 sudo -u unreal python3 - face <<'EOF'   # or: monitor / spectator
 import json, os, sys, time
@@ -101,19 +104,39 @@ v13) turned the body again. The fix never touches bones:
   in its frames while the spectator camera showed him).
 - Measured in game g: offset for both Desk7 loops 115.7 cm / 0.9 deg; `pelvis_world` (208,-311,70.4) = R9's pelvis on
   the authored transform (the chair); `head_world` ~(203,-333,118) in `reading` (he leans in, ~35 cm from the screen).
-- Face camera: a fixed webcam on the monitor, bounds centre (217,-367.67,114.75) + 22 up + 2 towards him + 12 to his
-  left (over his head: the monitor is wider than his seat) = (205.1,-370.1,136.75), aimed at the mean Head bone of 1 s
-  (the loops sway the head ~5 cm) once per selection after the seat offset has settled (else 2 s), FOV 70, pitch ~-26.
-  Verified frames (game g): `reading`/`talking` = face and shoulders slightly from above, chair and hall behind him;
-  `typing` = mostly the top of his head (the typing loop hunches him into the camera). With his head 35 cm from the
-  screen the owner's FOV 40-45 shows the face alone and the upper torso cannot be framed from the monitor. Live tuning
-  without a rebuild: `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` (uid 1001, mode 0600,
-  `{"schema":"sub01.private-streamer-visual-face-tuning.v1","sequence":N,"up_cm":22,"forward_cm":2,"side_cm":-12,
-  "aim_drop_cm":0,"fov_deg":70}`, values clamped, applied when `sequence` grows; `/home/unreal/face-tune.py <up>
-  <forward> <side> <drop> <fov>` writes it, `clear` removes it); the compiled defaults are the verified framing.
+- Face camera: a fixed webcam at EYE LEVEL just in front of the screen, bounds centre (217,-367.67,114.75) + 6 up,
+  2 towards him, 12 to his left (over his head: the monitor is wider than his seat) = (204.9,-368.8,120.75), aimed at
+  the mean Head bone of 1 s (the loops sway the head ~5 cm) once per selection after the seat offset has settled (else
+  2 s), FOV 65, pitch ~-5. With the 25 cm pull-back and the posture layer below: head-to-camera ~61 cm, a frontal face
+  with the hall, stairs and window behind him (games i/j frames). From above the monitor (up >= 22) the reading loop's
+  bowed head shows mostly hair; behind the screen plane (forward <= -8) the light bar cuts the lower frame; at eye level
+  the camera cannot go further back than the screen glass, so FOV is the only width lever. Live tuning without a
+  rebuild: `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` (uid 1001, mode 0600,
+  `{"schema":"sub01.private-streamer-visual-face-tuning.v1","sequence":N,"up_cm":6,"forward_cm":2,"side_cm":-12,
+  "aim_drop_cm":0,"fov_deg":65,"seat_back_cm":25,"seat_side_cm":0,"desk_props":1,"posture_lean_deg":-10,
+  "posture_head_deg":8}`, values clamped, applied when `sequence` grows; `/home/unreal/face-tune.py <up> <forward>
+  <side> <drop> <fov> [back [seat_side]]` writes the camera/seat keys, `clear` removes it); the compiled defaults are the
+  verified framing (pull-back and posture default to 0: the tuning file carries the recommended values).
+- Pull-back knob (`seat_back_cm` 0..40, `seat_side_cm` -20..20, `desk_props` 0/1 in the same tuning file; compiled
+  default 0, recommended 25): him and the keyboard move together away from the monitor along the body facing, composed
+  with the clip offset on the mesh component (restored when v2 ends), logged as `SUB01_STREAMER_VISUAL_SEAT_BACK
+  cm=...`. The keyboard on the pod level is the `R15Part*` pack split into ~107 small StaticMeshActors (body, keycaps,
+  knob, feet) in the zone X 188..245 / Y -348..-320 / Z 66..96; those (half extents <= 25/12/8 cm) and any actor named
+  mouse/keyboard with a static mesh follow (`SUB01_STREAMER_VISUAL_DESK_PROP_CANDIDATE ... follows=1`); the CHAIR
+  follows too: every chair-sized static mesh (half extents <= 60/60/80) around the authored pelvis (X 170..260,
+  Y -322..-250, Z -10..100; on the pod level the 14 `full-home_node_*` parts: seat/back/base 246..252 and the armrests
+  184..187, 236..238; `SUB01_STREAMER_VISUAL_CHAIR_CANDIDATE ... follows=1`, `..._DESK_PROPS found=107 chairParts=14
+  moved=121 delta=...`). The desk parts (`SUB01_RealLinea140_*`), the mat (R15Part0000/0016), the rug, the clock (X 253)
+  and the macro pad (X 182) never move. The glowing mouse is not a static-mesh actor in that zone, so it stays on the
+  mat ~25 cm ahead of his right hand. The tuning file is polled every 0.5 s whenever v2 runs (not only in `face`).
+- "Sit up" posture layer (`posture_lean_deg`, `posture_head_deg`, -20..20 each, compiled default 0, recommended
+  -10 / +8): the lean is split over Spine1/Spine2 as local pitch (the breathing axis), the head pitch is added to the
+  gaze/nod offset (the mouth layer's head emphasis stays separate), both eased at 12 deg/s; logged once per change as
+  `SUB01_STREAMER_VISUAL_POSTURE leanDeg=... headDeg=...`; receipt `posture_lean_deg` / `posture_head_deg` (applied).
 - Receipt adds `seat_offset`, `seat_offset_cm`, `seat_offset_yaw_deg`, `seat_offset_applied`, `seat_offset_settled`,
   `pelvis_world`, `head_world`, `face_camera_location`, `face_camera_aim`, `face_camera_tuning_sequence`, `camera_world`,
-  `body_bounds`. Logs: `SUB01_STREAMER_VISUAL_SEAT_FIX_READY`, `..._SEAT_OFFSET` (per clip), `..._FACE_RIG` (66 Mixamo
+  `body_bounds`, `seat_back_cm`, `seat_side_cm`, `desk_props_moved`, `desk_props_delta`, `chair_parts`,
+  `posture_lean_deg`, `posture_head_deg`. Logs: `SUB01_STREAMER_VISUAL_SEAT_FIX_READY`, `..._SEAT_OFFSET` (per clip), `..._FACE_RIG` (66 Mixamo
   bones, only Neck/Head/HeadTop_End near the face, 0 morph targets: no jaw or visemes to drive), `..._FACE_CAMERA`.
 
 ## Mouth layer (`install_mouth.py`, `// SUB01_STREAMER_VISUAL_V2_MOUTH`)

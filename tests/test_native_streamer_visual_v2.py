@@ -310,6 +310,7 @@ public:
  bool Contains(const TCHAR* Needle) const { auto Lower = [](std::u16string S) { for (auto& C : S) if (C >= u'A' && C <= u'Z') C = TCHAR(C + 32); return S; }; return Lower(Data).find(Lower(Needle)) != std::u16string::npos; }
  FString& operator+=(const FString& S) { Data += S.Data; return *this; }
  FString& operator+=(const TCHAR* S) { Data += S; return *this; }
+ bool StartsWith(const TCHAR* Prefix) const { std::u16string P(Prefix); return Data.compare(0, P.size(), P) == 0; }
  friend bool operator==(const FString& A, const FString& B) { return A.Data == B.Data; }
  friend bool operator==(const FString& A, const TCHAR* B) { return A.Data == B; }
  friend bool operator!=(const FString& A, const FString& B) { return A.Data != B.Data; }
@@ -325,6 +326,7 @@ public:
  friend bool operator!=(const FName& A, const FName& B) { return !(A == B); }
 };
 inline const FName NAME_None;
+class UClass { public: FString GetName() const { return FString(); } };
 namespace EAxis { enum Type { None, X, Y, Z }; }
 struct FRotator;
 struct FVector {
@@ -340,6 +342,8 @@ struct FVector {
  double Size() const { return std::sqrt(X * X + Y * Y + Z * Z); }
  FVector GetSafeNormal() const { const double S = std::sqrt(X * X + Y * Y + Z * Z); return S > 0 ? FVector(X / S, Y / S, Z / S) : FVector(); }
  bool ContainsNaN() const { return !(std::isfinite(X) && std::isfinite(Y) && std::isfinite(Z)); }
+ bool IsNearlyZero(double Tolerance = 1e-4) const { return std::fabs(X) <= Tolerance && std::fabs(Y) <= Tolerance && std::fabs(Z) <= Tolerance; }
+ bool Equals(const FVector& V, double Tolerance = 1e-4) const { return std::fabs(X - V.X) <= Tolerance && std::fabs(Y - V.Y) <= Tolerance && std::fabs(Z - V.Z) <= Tolerance; }
  FRotator Rotation() const;
  FString ToString() const { return FString(); }
  static double DotProduct(const FVector& A, const FVector& B) { return A.X * B.X + A.Y * B.Y + A.Z * B.Z; }
@@ -461,7 +465,15 @@ struct FDateTime { static FDateTime UtcNow() { return {}; } int64 ToUnixTimestam
 struct FFileHelper { static bool LoadFileToString(FString&, const TCHAR*) { return false; } static bool SaveStringToFile(const FString&, const TCHAR*) { return false; } };
 #define UTF8_TO_TCHAR(x) ((void)(x), u"")
 #define TCHAR_TO_UTF8(x) ((void)(x), "")
-class UObject { public: virtual ~UObject() = default; FString GetPathName() const { return FString(); } FString GetName() const { return FString(); } };
+class UObject { public: virtual ~UObject() = default; FString GetPathName() const { return FString(); } FString GetName() const { return FString(); } UClass* GetClass() const { static UClass None; return &None; } };
+template<class T> class TWeakObjectPtr {
+ T* Ptr = nullptr;
+public:
+ TWeakObjectPtr() = default;
+ TWeakObjectPtr(T* P) : Ptr(P) {}
+ bool IsValid() const { return Ptr != nullptr; }
+ T* Get() const { return Ptr; }
+};
 template<class T> class TObjectPtr {
  T* Ptr = nullptr;
 public:
@@ -527,11 +539,19 @@ class UCharacterMovementComponent : public UActorComponent { public: void StopMo
 class AController : public UObject { public: void SetControlRotation(const FRotator&) {} };
 class AActor : public UObject {
 public:
+ FVector StubLocation, StubExtent;
  UWorld* GetWorld() const { return nullptr; }
  USceneComponent* GetRootComponent() const { return nullptr; }
+ FVector GetActorLocation() const { return StubLocation; }
+ bool SetActorLocation(const FVector& L, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubLocation = L; return true; }
  bool SetActorLocationAndRotation(FVector, FRotator, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { return true; }
+ void GetActorBounds(bool, FVector& Origin, FVector& Extent, bool = false) const { Origin = StubLocation; Extent = StubExtent; }
  template<class T> T* FindComponentByClass() const { return nullptr; }
 };
+class UStaticMesh : public UObject {};
+class UStaticMeshComponent : public USceneComponent { public: UStaticMesh* GetStaticMesh() const { return nullptr; } };
+class AStaticMeshActor : public AActor { public: UStaticMeshComponent* GetStaticMeshComponent() const { return nullptr; } };
+template<class T> struct TActorIterator { explicit TActorIterator(UWorld*) {} explicit operator bool() const { return false; } void operator++() {} T* operator*() const { return nullptr; } };
 class APawn : public AActor { public: TObjectPtr<AController> Controller; bool bUseControllerRotationYaw = true; };
 class ACharacter : public APawn { public: UCharacterMovementComponent* GetCharacterMovement() const { return nullptr; } };
 class FAnimInstanceProxy;
@@ -730,7 +750,8 @@ def build_units(src: Path, work: Path, end: str = MARKER + ' END', driver: str =
         d.mkdir(parents=True, exist_ok=True)
     (stub / 'ue_stub.h').write_text(STUB)
     (stub / 'UObject').mkdir(exist_ok=True)
-    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h', 'UObject/UnrealType.h', 'Animation/MorphTarget.h'):
+    (stub / 'Engine').mkdir(exist_ok=True)
+    for name in ('CoreMinimal.h', 'Animation/AnimInstance.h', 'UObject/UnrealType.h', 'Animation/MorphTarget.h', 'Engine/StaticMeshActor.h'):
         (stub / name).write_text('#pragma once\n#include "ue_stub.h"\n')
     (stub / 'Sub01HomeHands.generated.h').write_text('#pragma once\n')
     (stub / 'native_cinematic_director.h').write_text('#pragma once\nnamespace Sub01Cinema { struct FPoseObservation {}; }\n')
@@ -1446,7 +1467,7 @@ def seatfix_patched(tmp_path_factory) -> Path:
 def test_seatfix_plans_applies_refuses_twice_and_needs_nopin(pod_nopin, pod_pinfix):
     before = {p.name: sha(p) for p in pod_nopin.iterdir()}
     code, planned = install_seatfix(pod_nopin, '--dry-run')
-    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == 14 and all(e['count'] == 1 for e in planned['edits'])
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == 15 and all(e['count'] == 1 for e in planned['edits'])
     assert {p.name: sha(p) for p in pod_nopin.iterdir()} == before
     code, report = install_seatfix(pod_nopin)
     assert code == 0 and report['status'] == 'applied'
@@ -1505,7 +1526,7 @@ def test_seatfix_text(seatfix_patched):
                  'StreamerVisualFaceLocation=Monitor+Towards*double(StreamerVisualFaceForwardCm)+Side*double(StreamerVisualFaceSideCm)+FVector(0,0,StreamerVisualFaceUpCm);',
                  'StreamerVisualFaceAim=Mean-FVector(0,0,StreamerVisualFaceAimDropCm);', 'FMath::Lerp(65.f,StreamerVisualFaceFov,Ease)',
                  'const FVector Mean=StreamerVisualFaceHeadSum*(1./StreamerVisualFaceHeadCount);', f'Now-StreamerVisualFaceSampleAt>={seatfix.FACE_SAMPLE_SECONDS:g}',
-                 'if(Face&&!StreamerVisualFaceAimed)return;', 'Now-StreamerVisualFaceSelectedAt>=2', 'if(ReadStreamerVisualFaceTuning()){StreamerVisualFaceAimed=false;StreamerVisualFaceHeadCount=0;}',
+                 'if(Face&&!StreamerVisualFaceAimed)return;', 'Now-StreamerVisualFaceSelectedAt>=2', 'if(StreamerVisualTuningChanged){StreamerVisualTuningChanged=false;if(Face){StreamerVisualFaceAimed=false;StreamerVisualFaceHeadCount=0;}}',
                  f'const FVector Monitor({seatfix.MONITOR[0]},{seatfix.MONITOR[1]},{seatfix.MONITOR[2]});', 'SUB01_STREAMER_VISUAL_FACE_CAMERA location=%s aim=%s headMean=%s samples=%d'):
         assert text in camera, text
     assert 'Monitor+FVector(0,0,28)' not in camera and '42.f' not in camera and 'StreamerVisualFaceDistanceCm' not in cpp
@@ -1514,6 +1535,29 @@ def test_seatfix_text(seatfix_patched):
     assert f'"{seatfix.TUNING_PATH}"' in tuning and f'Schema!=TEXT("{seatfix.TUNING_SCHEMA}")' in tuning and 'Sequence<=StreamerVisualFaceTuningSequence' in tuning
     for key, (lo, hi) in seatfix.TUNING_LIMITS.items():
         assert f'Field(TEXT("{key}"),' in tuning and f',{lo},{hi});' in tuning, key
+    assert 'seat_back_cm' in seatfix.TUNING_LIMITS and seatfix.TUNING_LIMITS['seat_back_cm'] == (0, 40) and seatfix.SEAT_BACK_CM == 0
+    assert 'ApplyStreamerVisualDeskProps(SeatValid&&StreamerVisualDeskPropsEnabled>0?' in apply
+    # pull-back: composed with the clip offset on the mesh component, polled from the tuning file in the seat block, desk props follow by the world delta
+    for text in ('const FVector PullLocal=StreamerVisualFacingLocal*double(-StreamerVisualSeatBackCm)+StreamerVisualRightLocal*double(StreamerVisualSeatSideCm);',
+                 'Seat=Anim->StreamerVisualSeatOffset*FTransform(FQuat::Identity,PullLocal);', 'SUB01_STREAMER_VISUAL_SEAT_BACK cm=%.1f sideCm=%.1f',
+                 'ApplyStreamerVisualDeskProps(SeatValid&&StreamerVisualDeskPropsEnabled>0?StreamerVisualBodyAuthoredWorld.GetRotation().RotateVector(PullLocal):FVector::ZeroVector);',
+                 'if(ReadStreamerVisualFaceTuning())StreamerVisualTuningChanged=true;'):
+        assert text in apply, text
+    props = cpp[cpp.index('void ASub01HomeCharacter::ScanStreamerVisualDeskProps(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    for text in ('TActorIterator<AActor> It(GetWorld())', 'A->FindComponentByClass<UStaticMeshComponent>()', f'Mesh.StartsWith(TEXT("{seatfix.DESK_PROP_MESH_PREFIX}"))',
+                 f'!Mesh.StartsWith(TEXT("{seatfix.DESK_MESH_PREFIX}"))', 'SUB01_STREAMER_VISUAL_%s_CANDIDATE', 'chairParts=%d',
+                 f'Extent.X<={seatfix.CHAIR_MAX_EXTENT[0]}&&Extent.Y<={seatfix.CHAIR_MAX_EXTENT[1]}&&Extent.Z<={seatfix.CHAIR_MAX_EXTENT[2]}',
+                 'Name.Contains(TEXT("mouse"))||Name.Contains(TEXT("keyboard"))', 'SUB01_STREAMER_VISUAL_DESK_PROPS found=%d',
+                 'SUB01_STREAMER_VISUAL_DESK_PROPS moved=%d delta=%s', 'A->SetActorLocation(StreamerVisualDeskPropOrigins[I]+WorldDelta,false,nullptr,ETeleportType::TeleportPhysics);',
+                 f'Extent.X<={seatfix.DESK_PROP_MAX_EXTENT[0]}&&Extent.Y<={seatfix.DESK_PROP_MAX_EXTENT[1]}&&Extent.Z<={seatfix.DESK_PROP_MAX_EXTENT[2]}'):
+        assert text in props, text
+    assert 'StreamerVisualFacingLocal=FVector(Chosen==0?1:Chosen==1?-1:0,Chosen==2?1:Chosen==3?-1:0,0);' in start
+    for text in ('TEXT("seat_back_cm")', 'TEXT("seat_side_cm")', 'TEXT("desk_props_moved")', 'TEXT("desk_props_delta")', 'TEXT("chair_parts")',
+                 'TEXT("posture_lean_deg")', 'TEXT("posture_head_deg")'):
+        assert text in cpp, text
+    # posture layer: eased, split over Spine1/Spine2 on the breathing axis, head on the gaze axis; the v2 breathing terms kept
+    assert 'Anim->StreamerVisualSpine1Offset=FRotator(.6*FMath::Sin(W)+StreamerVisualPostureLeanApplied*.5,0,0);Anim->StreamerVisualSpine2Offset=FRotator(.6*FMath::Sin(W-1.1)+StreamerVisualPostureLeanApplied*.5,0,0);Anim->StreamerVisualHeadOffset.Pitch+=StreamerVisualPostureHeadApplied;' in apply
+    assert 'SUB01_STREAMER_VISUAL_POSTURE leanDeg=%.1f' in apply and f'-{seatfix.POSTURE_RATE_DEG_PER_S:g}.f*Dt,{seatfix.POSTURE_RATE_DEG_PER_S:g}.f*Dt' in apply
     assert 'S.st_uid==getuid()&&!(S.st_mode&0077)&&S.st_size>0&&S.st_size<=2048' in cpp[cpp.index('static bool Sub01StreamerVisualPrivateJson('):]
     # receipt fields (the existing ones kept)
     for text in ('TEXT("seat_offset")', 'TEXT("seat_offset_cm")', 'TEXT("seat_offset_yaw_deg")', 'TEXT("seat_offset_applied")', 'TEXT("seat_offset_settled")',
@@ -1594,6 +1638,20 @@ int main() {
  C.StreamerVisualSchemaVersion = 1; Ticks(C, 1); CHECK(!C.StreamerVisualSeatHas && Body.StubRelative.Equals(Rel0, 1e-9), 6);
  Body.StubRelative = FTransform(); Ticks(C, 2); CHECK(Body.StubRelative.Equals(FTransform(), 1e-9), 7);
  C.StreamerVisualSchemaVersion = 2; Anim.StreamerVisualSeatOffset = D; Ticks(C, 1); CHECK(C.StreamerVisualSeatHas && Body.StubRelative.Equals(Expected, 1e-6), 8);
+ // pull-back knob: a constant translation away from the monitor (-facing, here -Y of the component) and to his right (-X), composed after the clip offset
+ CHECK(C.StreamerVisualFacingLocal.Equals(FVector(0, 1, 0), 1e-9) && C.StreamerVisualRightLocal.Equals(FVector(-1, 0, 0), 1e-9) && C.StreamerVisualSeatBackApplied == 0, 30);
+ C.StreamerVisualSeatBackCm = 22; C.StreamerVisualSeatSideCm = 5; Ticks(C, 1);
+ const FTransform Pulled = D * FTransform(FQuat::Identity, FVector(-5, -22, 0), FVector(1, 1, 1)) * Rel0;
+ CHECK(C.StreamerVisualSeatBackApplied == 22 && C.StreamerVisualSeatSideApplied == 5 && Body.StubRelative.Equals(Pulled, 1e-6) && Near(Body.StubRelative.GetTranslation().Y, 99 - 22, 1e-6) && Near(Body.StubRelative.GetTranslation().X, 1 - 5, 1e-6), 31);
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 1); CHECK(!C.StreamerVisualSeatHas && Body.StubRelative.Equals(Rel0, 1e-9), 32);  // v1: authored again, knob or not
+ C.StreamerVisualSchemaVersion = 2; C.StreamerVisualSeatBackCm = 0; C.StreamerVisualSeatSideCm = 0; Ticks(C, 1); CHECK(Body.StubRelative.Equals(Expected, 1e-6) && C.StreamerVisualSeatBackApplied == 0, 33);
+ // posture layer: eased at the rate (deg/s), half the lean on each spine bone, the head pitch added to the gaze offset
+ CHECK(Near(Anim.StreamerVisualSpine1Offset.Pitch, .6 * std::sin(2 * PI * .22 * 0), 1e-9) && C.StreamerVisualPostureLeanApplied == 0, 34);
+ C.StreamerVisualPostureLeanDeg = -10; C.StreamerVisualPostureHeadDeg = 8; Ticks(C, 1);
+ CHECK(Near(C.StreamerVisualPostureLeanApplied, -@@RATE@@ * .1, 1e-4) && Near(C.StreamerVisualPostureHeadApplied, @@RATE@@ * .1, 1e-4) && Near(Anim.StreamerVisualSpine1Offset.Pitch, -@@RATE@@ * .05, 1e-4) && Near(Anim.StreamerVisualSpine2Offset.Pitch - .6 * std::sin(-1.1), -@@RATE@@ * .05, 1e-4), 35);  // W = 0 in the stub (Now = StartedAt = 0): breathing only on Spine2's lag
+ Ticks(C, 20); CHECK(Near(C.StreamerVisualPostureLeanApplied, -10, 1e-4) && Near(C.StreamerVisualPostureHeadApplied, 8, 1e-4) && Near(Anim.StreamerVisualSpine1Offset.Pitch, -5, 1e-4) && Near(Anim.StreamerVisualSpine2Offset.Pitch - .6 * std::sin(-1.1), -5, 1e-4), 36);
+ Anim.StreamerVisualHeadOffset = FRotator(-4, 0, 0); C.ApplyStreamerVisualV2(0, .1f); CHECK(Near(Anim.StreamerVisualHeadOffset.Pitch, -4 + 8, 1e-4), 37);
+ C.StreamerVisualPostureLeanDeg = 0; C.StreamerVisualPostureHeadDeg = 0; Ticks(C, 20); CHECK(Near(C.StreamerVisualPostureLeanApplied, 0, 1e-4) && Near(C.StreamerVisualPostureHeadApplied, 0, 1e-4), 38);
  // face camera: waits (camera untouched) until the seat offset is settled and applied, then samples the Head bone for @@SAMPLE@@ s and is placed on the monitor
  Body.StubHeadIndex = 7; Body.StubHead = FVector(214, -300, 135); Anim.StreamerVisualSeatSettled = false;
  C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 5);
@@ -1602,10 +1660,10 @@ int main() {
  CHECK(!C.StreamerVisualFaceAimed && C.StreamerVisualFaceHeadCount == 5 && C.StreamerVisualFaceAlpha == 0 && Camera.StubWorld.Translation.X == 334, 11);
  for (int K = 0; K < 8; ++K) { Body.StubHead = FVector(K % 2 ? 204 : 224, -300, 135); Ticks(C, 1); }  // sway +-10 around 214 over > 1 s: the mean is aimed at, not the last sample
  CHECK(C.StreamerVisualFaceAimed && C.StreamerVisualFaceAimSource == TEXT("head") && Near(C.StreamerVisualFaceAim.X, 214, 1.5) && Near(C.StreamerVisualFaceAim.Y, -300, 1e-6) && Near(C.StreamerVisualFaceAim.Z, 135 - @@DROP@@, 1e-6), 12);
- CHECK(Near(C.StreamerVisualFaceLocation.X, @@LX@@, .05) && Near(C.StreamerVisualFaceLocation.Y, @@LY@@, .05) && Near(C.StreamerVisualFaceLocation.Z, @@LZ@@, 1e-6) && Near(C.StreamerVisualFaceLook.Yaw, @@YAW@@, 2.5) && Near(C.StreamerVisualFaceLook.Pitch, @@PITCH@@, .5), 13);
- Ticks(C, 4); CHECK(C.StreamerVisualFaceAlpha >= .5 - 1e-5 && C.StreamerVisualFaceAlpha <= .7 + 1e-5 && Camera.FieldOfView > 65 && Camera.FieldOfView < @@FOV@@, 14);  // the 1 s blend began with the aim
+ CHECK(Near(C.StreamerVisualFaceLocation.X, @@LX@@, .4) && Near(C.StreamerVisualFaceLocation.Y, @@LY@@, .4) && Near(C.StreamerVisualFaceLocation.Z, @@LZ@@, 1e-6) && Near(C.StreamerVisualFaceLook.Yaw, @@YAW@@, 2.5) && Near(C.StreamerVisualFaceLook.Pitch, @@PITCH@@, 1), 13);  // the mean head sits within +-1 cm of 214: the webcam point moves with the monitor->head direction
+ Ticks(C, 4); CHECK(C.StreamerVisualFaceAlpha >= .5 - 1e-5 && C.StreamerVisualFaceAlpha <= .7 + 1e-5 && (Camera.FieldOfView - 65) * (Camera.FieldOfView - @@FOV@@) <= 0, 14);  // the 1 s blend began with the aim: FOV between 65 and the face FOV
  Ticks(C, 7);
- CHECK(C.StreamerVisualFaceAlpha == 1 && Near(Camera.FieldOfView, @@FOV@@, 1e-6) && Near(Camera.StubWorld.Translation.X, @@LX@@, .05) && Near(Camera.StubWorld.Translation.Y, @@LY@@, .05) && Near(Camera.StubWorld.Translation.Z, @@LZ@@, 1e-6), 15);
+ CHECK(C.StreamerVisualFaceAlpha == 1 && Near(Camera.FieldOfView, @@FOV@@, 1e-6) && Near(Camera.StubWorld.Translation.X, @@LX@@, .4) && Near(Camera.StubWorld.Translation.Y, @@LY@@, .4) && Near(Camera.StubWorld.Translation.Z, @@LZ@@, 1e-6), 15);
  // the 2 s fallback: an unsettled offset still gets a camera after 2 s of waiting (plus the sampling second)
  C.StreamerVisualCameraTarget = TEXT("spectator"); Ticks(C, 11); CHECK(C.StreamerVisualFaceAlpha == 0 && Camera.FieldOfView == 65 && Camera.StubWorld.Translation.X == 334 && C.StreamerVisualFaceSelectedAt < 0, 16);
  Anim.StreamerVisualSeatSettled = false; FPlatformTime::StubNow = 100; C.StreamerVisualCameraTarget = TEXT("face"); Ticks(C, 3); CHECK(!C.StreamerVisualFaceAimed && Near(C.StreamerVisualFaceSelectedAt, 100.1, 1e-9) && C.StreamerVisualFaceHeadCount == 0, 17);
@@ -1655,7 +1713,7 @@ def test_seatfix_logic_runs(seatfix_patched, tmp_path):
     driver = (SEATFIX_DRIVER.replace('@@LX@@', repr(e['loc'][0])).replace('@@LY@@', repr(e['loc'][1])).replace('@@LZ@@', repr(e['loc'][2]))
               .replace('@@YAW@@', repr(e['yaw'])).replace('@@PITCH@@', repr(e['pitch'])).replace('@@MIDFOV@@', repr(e['mid_fov']))
               .replace('@@FOV@@', repr(e['fov'])).replace('@@DROP@@', repr(seatfix.FACE_AIM_DROP_CM)).replace('@@SAMPLE@@', repr(seatfix.FACE_SAMPLE_SECONDS))
-              .replace('@@BOUNDS@@', repr(seatfix.BOUNDS_SCALE)))
+              .replace('@@BOUNDS@@', repr(seatfix.BOUNDS_SCALE)).replace('@@RATE@@', repr(seatfix.POSTURE_RATE_DEG_PER_S)))
     units = build_units(seatfix_patched, tmp_path, end=FACE_END, driver=driver, hands_driver=SEAT_MATH_DRIVER)
     run = _run_driver(units, tmp_path)
     assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
