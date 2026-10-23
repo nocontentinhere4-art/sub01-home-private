@@ -4,8 +4,10 @@ The installers patch the pod module sources in place: string anchors each found 
 writes, CRLF/LF kept, JSON report with before/after sha256, refusal of a second run by marker.
 `install.py` (`// SUB01_STREAMER_VISUAL_V2`) builds v2; `install_face_camera.py` (`// SUB01_STREAMER_VISUAL_V2_FACE`)
 goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that, `install_no_pin.py`
-(`..._NOPIN`) next, `install_seat_fix.py` (`..._SEATFIX`, the one that actually seats him: below) last. Same R9 gate,
-spectator camera and ghost views as v1; no new AnimGraph.
+(`..._NOPIN`) next, `install_seat_fix.py` (`..._SEATFIX`, the one that actually seats him: below), then
+`install_stream_pass.py` (`..._STREAMPASS`), `install_cam2.py` (`..._CAM2`), `install_mouth.py` (anywhere on v2) and
+`install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer).
+Same R9 gate, spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
 - **Events**: v1 (`...event.v1`, source `human_vagon_observation`) is unchanged (frozen R9_Sitting at 0.7 s, gaze, nod
@@ -77,7 +79,10 @@ python3 tools/native_streamer_visual_v2/install_face_camera.py --source "$M" --d
 python3 tools/native_streamer_visual_v2/install_pin_fix.py --source "$M" --dry-run      # only on v2+face sources
 python3 tools/native_streamer_visual_v2/install_no_pin.py --source "$M" --dry-run       # only on v2+face+pinfix sources
 python3 tools/native_streamer_visual_v2/install_seat_fix.py --source "$M" --dry-run     # only on the full stack above; then without --dry-run
+python3 tools/native_streamer_visual_v2/install_stream_pass.py --source "$M" --dry-run  # only on the seat-fixed stack
+python3 tools/native_streamer_visual_v2/install_cam2.py --source "$M" --dry-run        # only on the stream-passed stack (v20)
 python3 tools/native_streamer_visual_v2/install_mouth.py --source "$M" --dry-run        # on v2 alone or on any stack above
+python3 tools/native_streamer_visual_v2/install_pose_fix.py --source "$M" --dry-run    # after the stream pass AND the mouth layer (v20)
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -138,6 +143,112 @@ v13) turned the body again. The fix never touches bones:
   `body_bounds`, `seat_back_cm`, `seat_side_cm`, `desk_props_moved`, `desk_props_delta`, `chair_parts`,
   `posture_lean_deg`, `posture_head_deg`. Logs: `SUB01_STREAMER_VISUAL_SEAT_FIX_READY`, `..._SEAT_OFFSET` (per clip), `..._FACE_RIG` (66 Mixamo
   bones, only Neck/Head/HeadTop_End near the face, 0 morph targets: no jaw or visemes to drive), `..._FACE_CAMERA`.
+
+## Stream pass (`install_stream_pass.py`, `// SUB01_STREAMER_VISUAL_V2_STREAMPASS`, build v20)
+On top of the seat fix; everything live from the same tuning file. Defaults follow the reviewed hands recipe
+(`docs/streamer/kimi/posture.md` section 3). The engine headers it needs are included at the TOP of `Sub01HomeLab.cpp`:
+`StartStreamerVisualV2` (which creates the key light) precedes the appended methods, and the first v20 build failed on an
+incomplete `USpotLightComponent` (log kept as `build-v20-failed-spotlight-include.log`).
+- **Hands IK**: an own two-bone solve in the proxy (no AnimationCore node) on `LeftArm/LeftForeArm/LeftHand` and the
+  right chain, in component space after breathing/posture and before the head offset: the upper arm turns by the minimal
+  rotation onto the new elbow, the forearm is carried with it and then bent at the elbow (no forearm roll), bone lengths
+  kept, the hand's local rotation untouched, slerp-blended by an alpha eased over 0.3 s. The bend plane is the clip's,
+  pulled towards an elbow pole (down 1, back 0.5, out 0.3 in his frame) by `elbow_pole` (default 0.5). Targets are WRIST
+  positions on the keyboard body (the widest follower of the keyboard pack, at its bounds centre): `hand_span_cm` 20
+  apart (recipe 18-22), `hand_back_cm` 13 towards him from the keyboard's centre line, `hand_height_cm` 4.5 above the
+  desk (the keyboard's bottom; recipe 4-5). In `mouse` the right wrist goes `mouse_back_cm` 7 behind the mouse prop if the
+  level has one (any actor with a primitive in X 225..256 / Y -346..-318 / Z 70..96, half extents <= 12/12/8, not the
+  keyboard/desk packs; `SUB01_STREAMER_VISUAL_MOUSE_CANDIDATE`/`..._MOUSE_PROP found=`; it then follows the pull-back)
+  else to the tuning point `mouse_x/y/z` (default 237,-333,82; a merged mouse does NOT follow the pull-back); the left hand
+  stays planted. A goal jump > 2 cm glides in `hand_move_s` 0.25 on a `hand_arc_cm` 4 arc (eased); smaller drift (props
+  following) is tracked. Finger curl: `finger_curl_deg` (default 0 = the clip's) added to the proximal (x1) and middle
+  (x1.2) phalanges of index..pinky about the local axis `finger_curl_axis` (0/1/2, default 2), scaled by the alpha; the
+  measured flexion is logged first so the recipe's 20-35 / 25-40 deg can be checked before turning it on. Keys:
+  `hands_ik` 0/1, `hand_height_cm`, `hand_span_cm`, `hand_back_cm`, `hand_move_s`, `hand_arc_cm`, `elbow_pole`,
+  `finger_curl_deg`, `finger_curl_axis`, `mouse_back_cm`, `mouse_x/y/z`. Log `SUB01_STREAMER_VISUAL_HANDS target=left:...
+  right:... reach=L/R alpha= elbow=L/R fingers=L mcp/pip R mcp/pip ...` (on target change and every 10 s); receipt
+  `hand_left`/`hand_right` ("<target> <wrist-to-target cm>"), `hands_alpha`, `elbow_left_deg`/`elbow_right_deg` (interior,
+  recipe 85-100), `finger_curl_deg_measured`, `mouse_prop`.
+- **Desk-work base**: `desk_base` 1 (default) plays the typing loop in every state but `reading`; `chair_back_cm` -1
+  (default) moves the chair with the seat pull-back, 0..40 by its own distance.
+- **Typing posture**: `typing_lean_deg` / `typing_head_deg` (defaults -6 / +15) added to the seat fix's posture
+  targets while the typing loop plays, same 12 deg/s easing.
+- **Body look**: `forced_lod` (default 1 = LOD0 forced) and `hide_slot` (a material slot hidden at LOD0, -1 = none)
+  applied on change; `SUB01_STREAMER_VISUAL_BODY_LOOK forcedLod= lods= materials=[i:name,...]` logs the body's slots once
+  so the hoodie collar can be matched to a slot (then `hide_slot` tests it live); receipt `hide_slot`, `forced_lod`.
+- **Key light**: a movable SpotLight (candelas, 4500 K, cones 25/45 deg, 300 cm, no shadows) created at v2 start, 25 cm
+  above the monitor centre, 6 cm towards him and the face camera's side offset to his left, aimed at the face camera's
+  head mean (else the Head bone sampled every 2 s); `key_light` 0..1 scales 2500 cd (0 hides it), `key_light_temp_k`,
+  `key_light_up_cm`. Log `SUB01_STREAMER_VISUAL_KEY_LIGHT`; receipt `key_light`.
+- **Perf**: `SUB01_STREAMER_VISUAL_PERF fps= ms= max_ms= gpu_ms= gpu_samples=` every 30 s (the wall clock between ticks;
+  the RHI GPU frame time sampled once per tick, -1 when the RHI reports none); receipt `fps`, `frame_ms`, `frame_max_ms`, `gpu_ms`. Launcher `launch-streamer-game-20261023l.py` runs
+  `t.MaxFPS 60` (owner: 60 fps everywhere).
+
+## Cam 2 (`install_cam2.py`, `// SUB01_STREAMER_VISUAL_V2_CAM2`, build v20)
+On top of the stream pass; only `Sub01HomeLab.h/.cpp` change. A second camera from behind him, at the same time as the
+webcam (the main view), written as MJPEG to a FIFO for ffmpeg (`-f mjpeg -i /home/unreal/.sub01-private/streamer/cam2.mjpeg`).
+- At v2 start: a `USceneCaptureComponent2D` (final colour LDR, persistent view state, the view camera's post-process
+  settings, no motion blur, no depth of field, manual captures only) and a 1280x720 BGRA8 render target; the FIFO is created with `mkfifo`
+  0600 when absent (an existing path that is not this uid's FIFO disables cam2 with a reason; it is never replaced).
+- Game thread: when the timer is due (`cam2_fps`, default 60; half a frame of tolerance, at most one capture per tick)
+  ONE render command (the readback) and `CaptureSceneDeferred()` (`cam2_deferred` 1, default: rendered with the frame's
+  main view, no mid-tick render-state flush, so each readback reads the PREVIOUS capture) or `CaptureScene()` (0: its own
+  capture); nothing waits on the GPU.
+- Render thread: a ring of 3 `FRHIGPUTextureReadback`; the fence is polled (`IsReady`), the newest finished copy locked,
+  its rows copied (row pitch honoured), unlocked and handed to one background JPEG encode at a time (`cam2_quality` 85);
+  older finished copies, frames arriving while an encode runs and captures with no free slot are dropped and counted.
+- Writer (background): `O_WRONLY|O_NONBLOCK` (no reader = ENXIO, frame dropped, reopen after 1 s), pipe buffer 1 MiB, a
+  frame is written only when the pipe has room for all of it (FIONREAD; a frame larger than the pipe only on an empty
+  pipe), a short write's rest is finished before any newer frame (a frame counts when its last byte is in), EINTR retried,
+  SIGPIPE blocked for the write and never left pending (reader gone: fd closed, its unfinished frame dropped, reopened
+  later): while a reader stays connected the stream is ordered whole JPEGs, never interleaved; a new reader starts on a
+  frame boundary. Copies taken before a pause (`cam2` 0) are dropped, never shown after it (`dropped_stale`); an open
+  error other than "no reader" is reported as `open_errno` in `cam2.json`.
+- `cam2.json` next to the FIFO every second (`sub01.streamer-cam2-status.v1`: fps, capture_fps, target_fps, frames,
+  captured, encoded, dropped_no_reader/full/busy/slots, reader, last_frame_utc, width, height, quality, fov, location,
+  rotation, encode_ms, kb_per_frame). Logs: `SUB01_STREAMER_VISUAL_CAM2 started=1 fifo=... location=... reason=-` at
+  start, `SUB01_STREAMER_VISUAL_CAM2 fps= capture_fps= target_fps= frames= reader= game_ms_per_capture=
+  game_ms_per_frame= readback_ms= encode_ms= kb= dropped_...` every 30 s, `..._CAM2_PLACED` on a placement change. The
+  GPU cost of the extra view is the difference in `SUB01_STREAMER_VISUAL_PERF gpu_ms` with `cam2` 1 vs 0.
+- Tuning keys: `cam2` 0/1, `cam2_x/y/z` (default 334,-209,160: the spectator point raised to 1.6 m, behind him and to his
+  right), `cam2_yaw/pitch` (default -132.5/-20.1: aimed at (214,-340,95), his back, the keyboard and the monitor),
+  `cam2_fov` 70 (horizontal), `cam2_fps` 1..60, `cam2_quality` 40..95, `cam2_deferred` 0/1. Receipt: `cam2_on`, `cam2_fps`,
+  `cam2_capture_fps`, `cam2_frames`, `cam2_reader`, `cam2_reason`.
+
+## Pose fix (`install_pose_fix.py`, `// SUB01_STREAMER_VISUAL_V2_POSEFIX`, build v20)
+On top of the stream pass AND the mouth layer (cam2 before or after); the visual QA of build v19
+(`docs/streamer/VISUAL-QA-20261023.md`). Pod order for v20: stream pass, cam2, mouth, pose fix.
+- **Offsets about HIS axes** (QA bug 3): on this Mixamo import `FRotator(Pitch)` post-multiplied into the local rotation of
+  Spine1/Spine2/Head turned the bones about their long (twist) axis (the sit-up twisted the torso, the nod was a shake,
+  gaze pitch turned the head). The proxy now reads his frame from the pose every evaluation (lateral = right thigh - left
+  thigh, flattened; else -X; up = Z; forward = lateral x up) and turns each bone in component space about its own pivot:
+  `local' = parent^-1 * Delta * parent * local`. Spine channel = the lean (posture_lean + typing_lean, FORWARD degrees,
+  negative = sit up) spread Spine 0.5 / Spine1 0.3 / Spine2 0.2 with a gain adapted every frame so the measured
+  Hips-to-Head inclination change equals the command (Kimi's acceptance: +10 -> 10 +- 1), then breathing on Spine1/Spine2.
+  Head channel over Neck 0.4 / Head 0.6: pitch (gaze, nod, talking cadence, `posture_head_deg`, `typing_head_deg`, the
+  mouth emphasis as 2 deg nose DOWN; nose UP positive) and yaw (gaze, sway, `head_yaw_deg`; to his RIGHT positive).
+  **After this build: set `posture_head_deg` back to ~0 and move the QA's +14 (a yaw stop-gap) to `head_yaw_deg`.**
+- **Loop seam** (QA bug 2): within `loop_fade_s` (default 0.5, at most 25% of the clip) of a desk loop's end, Previous
+  keeps the end while Current restarts at 0 through the state-change crossfade, faded over that time; counted in
+  `loop_seams`.
+- **Face camera aims once** (QA bug 7): the Head bone is tracked every tick while v2 runs (any camera) as an exponential
+  mean (tau 5 s); the first selection aims at once (>= 2 s of samples, else after 2 s), the aim is kept across camera
+  switches and re-aimed only after a tuning change (from a fresh mean; on screen it eases from the old aim over 1 s). Log
+  `..._FACE_CAMERA ... meanSeconds= ... kept until the tuning changes`.
+- **Seat yaw** (QA bug 8): `seat_yaw_deg` (-30..30, default 0; positive turns him to his right) about the seated pelvis
+  (R9's, published by the proxy) on the mesh component, between the clip offset and the pull-back; the chair parts turn with
+  him about the same vertical. He faces ~17-24 deg left of the monitor: try +17.
+- **Chair fit** (QA bug 4): `chair_fit` 1 (default): the chair parts >= 3 cm behind and reaching >= 15 cm above the pelvis,
+  within 20 cm sideways (not the armrests), are the backrest; their real surface is traced at sacrum height (Hips + 6 cm,
+  `LineTraceComponent` from in front of him backwards; the bounds' front is the fallback) along his facing and compared with
+  the sacrum (pelvis bone - facing * `sacrum_back_cm` 11) and the whole chair moves along the facing until the backrest
+  stands `backrest_gap_cm` (1; recipe 0-2) behind it: passes 1 s apart after the seat settles, at most 4 per tuning change,
+  clamped to +-25 cm, the chair gliding there at 60 cm/s. Log `SUB01_STREAMER_VISUAL_CHAIR_FIT pass= method=trace|bounds
+  backrest= parts= sacrum= backrestFront= gapCm= chairFitCm=`.
+- Log `SUB01_STREAMER_VISUAL_POSE leanCmd= leanMeasured= gain= headPitch= headYaw= seatYaw= loopSeams= bodyRight=` every 10 s;
+  receipt `lean_measured_deg`, `lean_gain`, `head_yaw_deg`, `seat_yaw_deg`, `loop_seams`, `backrest_gap_cm`, `chair_fit_cm`,
+  `backrest`, `face_aim_mean_s`. Tuning keys: `head_yaw_deg`, `seat_yaw_deg`, `loop_fade_s`, `chair_fit`, `sacrum_back_cm`,
+  `backrest_gap_cm`.
 
 ## Mouth layer (`install_mouth.py`, `// SUB01_STREAMER_VISUAL_V2_MOUTH`)
 Goes on v2 alone or on v2 plus any of the layers above, in any order: its anchors are v2 lines no other installer edits.
