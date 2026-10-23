@@ -109,16 +109,18 @@ def test_every_accepted_message_gets_a_reaction_without_the_mind_or_the_spiking_
     # the bridge on: the link goes to the PC with the canned line; a busy PC says so
     opened = []
     monkeypatch.setattr(live_server, "vagon_enabled", lambda: True)
-    monkeypatch.setattr(live_server, "vagon_open_url_async", lambda url: opened.append(url) or True)
+    monkeypatch.setattr(live_server, "vagon_submit_link", lambda url, viewer="": (opened.append((url, viewer)), (True, ""))[1])
     ack = chat(live, "1.1.1.4", "look at https://example.com/a?b=1 please")
     assert ack["impulse"] == "open_url" and ack["reaction"] == "On it, let me open that."
-    assert opened == ["https://example.com/a?b=1"]
-    monkeypatch.setattr(live_server, "vagon_open_url_async", lambda url: False)
+    assert opened == [("https://example.com/a?b=1", "1.1.1.4")]        # the viewer's key goes with the link (a per-viewer cap)
+    monkeypatch.setattr(live_server, "vagon_submit_link", lambda url, viewer="": (False, "full"))
     assert chat(live, "1.1.1.5", "and https://example.com/two")["reaction"].startswith("The PC is busy")
+    monkeypatch.setattr(live_server, "vagon_submit_link", lambda url, viewer="": (False, "hour"))
+    assert chat(live, "1.1.1.7", "and https://example.com/three")["reaction"] == live_server.VAGON_REFUSED["hour"]
     # a nickname the filter refuses is not shown with the reaction
     chat(live, "1.1.1.6", "check tiktok", "you idiot")
     assert reactions(live)[-1]["nick"] == ""
-    assert len(reactions(live)) == 6 and all(0 < len(m["text"]) <= 60 for m in reactions(live))
+    assert len(reactions(live)) == 7 and all(0 < len(m["text"]) <= 60 for m in reactions(live))
 
 
 def test_a_refused_message_gets_no_reaction_and_changes_nothing(tmp_path):

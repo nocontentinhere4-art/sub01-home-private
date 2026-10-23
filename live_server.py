@@ -67,7 +67,14 @@ from readings import BrowseReadings
 from screens import DA_LABEL, DopamineBursts, ScreensStatus
 from impulse import REACTIONS as IMPULSE_REACTIONS, Impulse, parse as parse_impulse
 from vagon_bridge import (configure_auto_stop as vagon_auto_stop, enabled as vagon_enabled,
-                          open_url_async as vagon_open_url_async)
+                          probe as vagon_probe, submit_link as vagon_submit_link)
+# what he says when a link cannot go to the PC (vagon_bridge.submit_link's reasons); every line is at most 60 characters
+VAGON_REFUSED = {"full": "The PC is busy with a link. Send it again shortly.",
+                 "thread": "The PC is busy with a link. Send it again shortly.",
+                 "hour": "This hour's links for the PC are used up. Try later.",
+                 "viewer": "You have used this hour's links for the PC. Try later.",
+                 "ontime": "The PC's time for today is used up. Try tomorrow.",
+                 "invalid": "I cannot open that link.", "off": "I cannot open links yet."}
 from eyes import Eyes
 import mind as mind_mod
 from tastes import PageWatch, Tastes
@@ -649,8 +656,8 @@ class Live:
             reaction = self.life.request_impulse(imp, t) or imp.reaction
         elif imp.kind == "open_url":
             if links_open:
-                accepted = vagon_open_url_async(imp.url)
-                reaction = imp.reaction if accepted else "The PC is busy with a link. Send it again shortly."
+                queued, why = vagon_submit_link(imp.url, key)   # the viewer's key: a per-viewer cap on top of the global ones
+                reaction = imp.reaction if queued else VAGON_REFUSED.get(why, "I cannot open that link.")
             else:
                 reaction = "I cannot open links yet."
         if song and imp.kind != "activity":                # "play <song>" names no activity word: the wish itself asks for music
@@ -2505,7 +2512,8 @@ async def main(args):
             tasks.append(supervised("spiking live", cpu_net.run))
         if getattr(live, "clips", None):
             tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
-        if vagon_enabled():                              # the machine's idle auto-stop, once per process; it blocks, so a thread
+        if vagon_enabled():                              # the PC: one listing at startup, then the idle auto-stop; both block, so threads
+            tasks.append(asyncio.to_thread(vagon_probe))
             tasks.append(asyncio.to_thread(vagon_auto_stop))
         tasks = [asyncio.create_task(task) for task in tasks]
         me, stopping = asyncio.current_task(), []
