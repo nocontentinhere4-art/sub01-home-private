@@ -15,12 +15,14 @@ DISPLAY=:102 LD_LIBRARY_PATH=/workspace/sub01-home-private/claude-12h/libs/usr/l
 Flags: `--host` (loopback only), `--port 8832`, `--data-dir` (required, outside the repo, never a browser profile folder:
 holds `profile/` and `events.jsonl`), `--display :102`, `--size 1920x1080`, `--home-origin` (`/devices/*` proxy),
 `--start-url`, `--proxy`, `--chromium PATH`, `--headless` (no X, CI), `--no-kiosk`, `--allow-private` (tests only),
-`--pc-mode chromium|vagon` (default `chromium`), `--vagon-url`, `--vagon-config`, `--streamer-dir` (see "Vagon mode").
+`--pc-mode chromium|vagon` (default `chromium`), `--vagon-kind streams|workstation`, `--vagon-url`, `--vagon-config`,
+`--streamer-dir`, `--operator-console` (see "Vagon mode").
 
 ## PC contract (same as `home_pc_runner.py`)
 `GET /pc/state[?since=REV&wait=S]`: `status` (`ready|starting|restarting`), `ready`, `display{kind:"graphical", available,
 revision, frame_id, width:1280, height:720}`, `privacy`, `session`, `restarts`, `pc_mode` (`chromium|vagon`; in vagon mode
-also `vagon{connected, phase, reconnects, last_reconnect_utc, sessions, reloads, since_utc, api_key_file}`; the privacy
+also `vagon{kind, connected, phase, reconnects, last_reconnect_utc, sessions, reloads, since_utc, api_key_file,
+operator_console}` plus, for the workstation kind, `logged_in, machine, machine_source, blocked, login_why`; the privacy
 view is unchanged). `GET /pc/frame.png[?revision=ID&full=1]`: PNG
 from a CDP screencast (acked at once, at most 10 fps; `full=1` is 1920x1080; 409 on a stale `revision`, 404 while restarting).
 `POST /pc/graphical-input`: PS/2 scancodes and relative mouse, forwarded to the page as key codes (Shift works) and mouse
@@ -52,21 +54,25 @@ with `blocked: ...`; malformed bodies get 400; a browser that is down gets 503. 
 - Logs: `streamer desktop: ...` on stdout; every action, outcome, block, dialog and relaunch in `<data-dir>/events.jsonl`.
 
 ## Vagon mode (`--pc-mode vagon`; research and the owner's part in VAGON.md)
-The same kiosk Chromium shows the owner's Vagon Streams page instead of browsing: the remote machine's pixels fill the
+The same kiosk Chromium shows the owner's Vagon page instead of browsing: the remote machine's pixels fill the
 1920x1080 display, so the monitor texture, the director and the agent loop do not change. Everything above stays as it
-is in `chromium` mode; nothing changes by default.
+is in `chromium` mode; nothing changes by default. Two kinds (`kind` in the config file, or `--vagon-kind`): `streams`
+(a public Vagon Streams link, the default, below) and `workstation` (the owner's Vagon Cloud Computer behind his login,
+see "Workstation kind" further down).
 
 Configuration: the stream link comes from `--vagon-url` or, preferably (a command line is visible to other users on the
 pod), from `<streamer-dir>/vagon.json` (`--streamer-dir`, default `$STREAMER_DIR` or `/home/unreal/.sub01-private/streamer`;
 `--vagon-config PATH` names another file), mode 0600:
 ```
 {"schema": "sub01.streamer-vagon.v1", "stream_url": "https://app.vagon.io/stream/...", "api_key_file": "/path (optional)"}
+{"schema": "sub01.streamer-vagon.v1", "kind": "workstation", "url": "https://app.vagon.io/workstation",
+ "api_key_file": "/path (optional)", "machine_id": "optional, for the API"}
 ```
-`stream_url` must be https, without credentials, on a host the page rules allow; `--vagon-url` wins over the file.
-`api_key_file` is only checked for presence and mode (`vagon.api_key_file`: `none|configured|missing|permissive`); the
-runner makes no Vagon API call. The link is a credential: logs, events and `/desktop/observe.url` carry only
-`https://app.vagon.io/…` (never the path, query string or fragment; Playwright error texts are scrubbed too). `--start-url`
-is ignored in this mode.
+`stream_url` must be https, without credentials, on a host the page rules allow; `--vagon-url` wins over the file (and
+`--vagon-kind` over `kind`). In the streams kind `api_key_file` is only checked for presence and mode
+(`vagon.api_key_file`: `none|configured|missing|permissive`) and the runner makes no Vagon API call. The link is a
+credential: logs, events and `/desktop/observe.url` carry only `https://app.vagon.io/…` (never the path, query string or
+fragment; Playwright error texts are scrubbed too). `--start-url` is ignored in this mode.
 
 Session handling (`events.jsonl` kind `vagon`): the page is opened at launch and after every relaunch; every 2 s the main
 frame and its frames (the dashboard's iframe embed works too) are probed for visible text, buttons and the largest
@@ -96,3 +102,65 @@ idle durations, capacity, cost per minute) are the owner's settings and are in V
 button texts are unknown until the owner's stream is seen. Tests: `tests/test_streamer_desktop_vagon.py` (pure mapping
 logic, and a real headless Chromium against the mock stream page `tests/fixtures/vagon_mock_stream.html` /
 `vagon_mock_embed.html` when a Chromium build is available; skipped with a reason otherwise).
+
+### Workstation kind (`kind: "workstation"` or `--vagon-kind workstation`; the owner's steps in VAGON.md, A2)
+The page is the owner's Vagon Cloud Computer, https://app.vagon.io/workstation (the default `url`), which needs his
+account login. The runner never has or types credentials; the persistent profile (`<data-dir>/profile`, reused across
+relaunches and restarts) keeps the login once he has done it.
+
+Phases (`/pc/state.vagon.phase`, `events.jsonl` kind `vagon` with `state`): `opening` (page being (re)opened),
+`login_required` (login page: URL path `/login|/signin|/auth|/verify|...`, a visible password field, or sign-in text on a
+page without a computer control; `login_why` says which), `dashboard` (a control was found: `Run|Start|Turn on` means
+`machine: off`, `Connect|Open|Enter` means `machine: on`), `starting` (the page says the computer is turning on),
+`connecting`, `connected` (a playing `video`, or a `canvas` covering at least half the viewport, and no ended text),
+`ended` (ended/disconnected text or a `Reconnect|Try again` control), `blocked` (an account page reached: the runner
+returns to the workstation page), `blank`, `restarting`. Every press is an event `vagon_button{label, button:
+start|connect|reconnect, phase, attempt}`; a phase without a matching control logs the visible button labels (first 12,
+32 chars) so the heuristics (`VAGON_WS_START_RX`, `VAGON_WS_CONNECT_RX`, `VAGON_WS_NEVER_RX`, `VAGON_ENDED_RX`) can be
+tuned against the real page. Never pressed: stop/shut down/turn off/delete/reset/restart/sign out/invite/settings/
+billing/team/members/profile/upgrade/download and every login or money control. Presses: at most one per 6 s, six per
+page load; `ended` → the control or the page reopened with 15 s to 5 min backoff; `starting` stuck 10 min, `connecting`
+2 min, `dashboard` without a control 3 min, `blank` 1 min → page reopened. `logged_in` is true once workstation content
+was seen and false on a login page; `machine` is `unknown|off|starting|on` from the page, or from the API when configured
+(`machine_source`).
+
+Operator console: `GET /operator` (no token: the page holds none) serves a self-contained HTML+JS page, available only
+while the phase is `login_required` and for 10 minutes after it (second factors, consent pages), never once connected,
+or always with `--operator-console`; otherwise 404 with a one-line explanation. It polls `GET /operator/frame.jpg` (the
+raw screencast JPEG of the kiosk, 2 fps, ETag/304; token required) and `GET /pc/state`, and forwards the owner's input to
+`POST /operator/input` (token required; refused without it): `{type: mouse, x, y}` as fractions 0..1 of the frame with
+optional `buttons: [l, m, r]` and `wheel`, `{type: key, key: <code such as Tab, Enter, Backspace, ShiftLeft, KeyA>, down}`
+and `{type: text, text}` (printable characters and pastes travel as text, so the owner's keyboard layout does not matter;
+newlines press Enter). Clipboard combinations are dropped as everywhere; nothing typed is logged (the served page is
+logged as `operator`). Every URL in the page is relative to its own location, so it works behind the pod's Jupyter proxy
+(`https://<pod>-8888.proxy.runpod.net/proxy/8832/operator`); the token lives in that tab's sessionStorage and is sent as
+`X-Admin-Token`. Bathroom privacy refuses the frame and the input with 409 like every other route.
+
+Privacy lock: until `connected`, `/desktop/observe` returns the grey "PC not connected" picture (1280x720,
+`remote_ready: false`, `title: "remote desktop"`, `url` host only, no text, no marks) and `/pc/frame.png` the same
+picture, so the model, the monitor texture and the recording never see the login page or the account; `/desktop/act`
+refuses everything but `wait` with `the remote desktop is not connected (PC <phase>)`. `/pc/input` and
+`/pc/graphical-input` reach the page only while connected or while the console is allowed (the house's own input is the
+owner's). Navigation lock: main-frame navigations (redirects, SPA route changes and link clicks included) may only stay
+on the configured page's site (`app.vagon.io` and `*.vagon.io`); login/verification paths are allowed, account paths
+(`VAGON_ACCOUNT_PATH`: billing, payments, invoices, subscription, plans, team, members, organization, settings, account,
+profile, api keys, security, usage, files, storage, sign-up, admin, users, credits, cards) and every other site are
+refused (`events.jsonl` kind `blocked`, host only; `/pc/state.vagon.blocked` counts them) and the kiosk is brought back to
+the workstation page; a login form may POST. Sub-resources from the site are allowed, others follow the generic host
+rules (CDNs yes, banks and the owner's services such as `accounts.google.com` no: Google sign-in cannot work here).
+
+Optional Teams API (`vagon_pc.py`, never verified live): `api_key_file` (mode 0600; `KEY:SECRET` on one line, or two
+lines) with `machine_id` → the key pair is read once into memory, `GET /machines` every 60 s feeds `machine`
+(`machine_source: api`; `off|stopped` → `off`, `creating|turning_on` → `starting`, `ready|running|on` → `on`),
+`POST /pc/vagon/start` (token) starts the computer when it is `off` (`{ok, machine, started, error}`; 409 without an
+API, 502 on an API error, at most one start per 5 min), and the connect loop starts it the same way when the page offers
+no start control and the API says `off`. Errors come from `vagon_pc` (credentials and links scrubbed); events
+`vagon_api{action: start, why, ok}` and `error{where: vagon-api}`.
+
+Limits of this kind: the real login page, control texts, stream element and ended texts are unknown until the owner's
+page is seen (VAGON.md A3); if Vagon opens the stream in a new tab the runner still closes popups (fix: adopt a same-site
+popup as the main page); social logins and popup-based second factors cannot be done through the console; the Windows
+side (Steam login, screen lock) is the owner's to prepare. Tests: `tests/test_streamer_desktop_workstation.py` (pure logic,
+HTTP routes with stub desks, and a real headless Chromium on `tests/fixtures/vagon_mock_login.html`,
+`vagon_mock_workstation.html`, `vagon_mock_account.html`, including the console in a second real browser behind a
+`/proxy/8832/` prefix).

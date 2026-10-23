@@ -148,29 +148,38 @@ The v1 game accepts only `source: "human_vagon_observation"` and no `state`; v2 
 3. Declared limits: no lip sync/facial animation (mesh has no face rig), no app audio capture (no PulseAudio), chat only
    from the site WebSocket, Vagon not connected.
 
-## The PC after v1: Vagon Streams
-The owner's final PC is Vagon Streams (https://docs.vagon.io/streams; research in `docs/streamer/VAGON.md`).
+## The PC after v1: the owner's Vagon Cloud Computer
+The owner's real PC is a **Vagon Cloud Computer** (Teams / workstation product) that already exists and works:
+https://app.vagon.io/workstation, Steam and *Detroit: Become Human* installed, behind HIS Vagon login. It is not a
+Streams link and he buys no Vagon Streams (that research stays in `docs/streamer/VAGON.md`, part B).
 
 Done (2026-10-23, `scripts/streamer_desktop.py --pc-mode vagon`, `docs/streamer/DESKTOP.md` "Vagon mode"): the runner
-keeps every interface; in vagon mode its kiosk Chromium opens the stream link from `<streamer-dir>/vagon.json`, presses
-the connect/play button found by text, waits for the stream's video/canvas, notices "session ended" and re-enters
-(reconnect button, else reopen with backoff); `/desktop/observe` returns the pixels with `mode: "vagon"` and
-`remote_ready` and no marks; `/desktop/act` maps click/scroll/type/key onto the stream and navigate/search onto the
-remote browser's address bar (Ctrl+L, URL, Enter); `/pc/state` carries `pc_mode` and `vagon{connected, phase,
-reconnects, last_reconnect_utc, ...}`; the link's path and query are never logged. Default mode and behaviour are
-unchanged. Tests: `tests/test_streamer_desktop_vagon.py` (pure logic + a real headless Chromium on a mock stream page).
+keeps every interface. Kind `streams` (default): the kiosk Chromium opens a stream link, presses connect/play, waits for
+the stream and re-enters after "session ended". Kind `workstation` (`vagon.json` `{"schema": "sub01.streamer-vagon.v1",
+"kind": "workstation"}`, or `--vagon-kind workstation`): the kiosk opens the workstation page in the persistent profile;
+the runner never has or types credentials: on a login page it enters `phase: login_required` and serves the owner's
+operator console at `GET /operator` (self-contained page, live screen at 2 fps, mouse/keyboard/paste forwarded with the
+admin token pasted once, relative URLs so it works at `https://<pod>-8888.proxy.runpod.net/proxy/8832/operator`); after
+his login it presses Run/Start/Turn on and Connect/Open/Enter found by text (`vagon_button` events), waits for the
+stream, then the stream mapping applies (click/scroll/type/key over the canvas; navigate/search as Ctrl+L, URL, Enter;
+back as Alt+Left) and ended/off states are re-pressed with backoff. Privacy lock: until connected, `/desktop/observe`
+and `/pc/frame.png` show a grey "PC not connected" picture (`remote_ready: false`), and the kiosk may navigate only
+within the site's workstation/login pages (billing, team, settings, external sites refused and logged). `/pc/state.vagon`
+carries `kind, phase, logged_in, machine, blocked, operator_console, reconnects, last_reconnect_utc`. Optional Teams API
+(`vagon_pc.py`, `api_key_file` + `machine_id`): the `machine` field and `POST /pc/vagon/start`. Default mode and
+behaviour unchanged. Tests: `tests/test_streamer_desktop_vagon.py`, `tests/test_streamer_desktop_workstation.py` (pure
+logic + a real headless Chromium on mock login/workstation/account pages, the console in a second browser behind a prefix).
 
-Needs the owner (nothing is bought, signed up for or started by us): a Vagon Streams account with an uploaded
-application that is a browser and an active Stream; the Stream Link in `/home/unreal/.sub01-private/streamer/vagon.json`
-(schema `sub01.streamer-vagon.v1`, mode 0600, uid 1001); stream settings 1080p or scale-to-screen, Mouse Control, US
-keyboard, audio off, a session/idle limit and budget he accepts, the per-visitor restart decision, region Frankfurt or
-Stockholm; optionally the API key pair for a later start/stop/cost integration (not used today); his confirmation from
-Vagon that a scripted visitor on his own stream is acceptable (the terms do not address it). Cost as documented:
-$0.025-0.047 per machine minute ($1.50-2.82/h) plus $0.67/day storage per region and $0.67/day maintenance; plan fees
-unpublished. Open until his stream is seen: the connection page's real button texts and ended-state texts (heuristics
-in the runner may need one tuning pass), whether a visitor sees a desktop or only the browser window, whether the
-pod's UDP egress reaches Vagon. The agent (`streamer_agent.py`) still drops the `mode`/`remote_ready` fields in
-`normalize()` and expects marks: its vagon adaptation (click by point only, verify by pixels) is the next worker's job.
+Needs the owner (nothing is bought, signed up for or started by us): the one-time login through the console
+(VAGON.md A2: config file, start the runner with `--pc-mode vagon`, open the console URL, paste the token from
+`/home/unreal/.sub01-private/operator-token`, log in with e-mail + password; Google sign-in does not work through the
+runner), Steam left logged in on the Windows side, the computer's auto-stop and his Teams plan's cost per hour accepted
+(each reconnect after an auto-stop is a machine start), optionally the Teams API key file (mode 0600) and the machine id.
+Open until his real page is seen: the login page's URL and form, the dashboard's control texts and whether the stream
+opens in the same tab (a new tab is still closed by the runner: fix = adopt a same-site popup), the stream element and the
+ended/off texts, Vagon's web session length, UDP egress and WebRTC decode on the pod. The agent (`streamer_agent.py`)
+still drops the `mode`/`remote_ready` fields in `normalize()` and expects marks: its vagon adaptation (click by point
+only, verify by pixels, wait while `remote_ready` is false) is the next worker's job.
 
 ## Blockers for the owner
 - `ANTHROPIC_API_KEY` (or `OPENROUTER_API_KEY`) on the pod, in a root-only file; without it the agent runs in quiet mode.

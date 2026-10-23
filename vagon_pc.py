@@ -156,10 +156,16 @@ def _http_message(where, e, key, secret):
     return msg + (f"; the vendor says: {vendor}" if vendor else "")
 
 
-def call(method, path, body=None, query=None, timeout=TIMEOUT_S):
+def _cred_kw(credentials):
+    """Keyword arguments that pass an explicit key pair down, or nothing (so a caller patched with a plain lambda works)."""
+    return {"credentials": credentials} if credentials else {}
+
+
+def call(method, path, body=None, query=None, timeout=TIMEOUT_S, credentials=None):
     """One signed request; returns the decoded JSON ({} for an empty answer). Every failure raises VagonError, and its
-    text holds no credential, signature or link. Nothing is retried: a 429 is raised at once."""
-    key, secret = _credentials()
+    text holds no credential, signature or link. Nothing is retried: a 429 is raised at once. `credentials` is an
+    explicit (key, secret) pair; without it the pair comes from the environment."""
+    key, secret = credentials if credentials else _credentials()
     raw = "" if body is None else json.dumps(body, separators=(",", ":"))
     url = BASE + PREFIX + path + (("?" + urllib.parse.urlencode(query)) if query else "")
     headers = {"Authorization": signed_header(method, PREFIX + path, raw, key, secret),
@@ -193,9 +199,9 @@ def _machine_path(machine_id, suffix=""):
     return "/machines/" + urllib.parse.quote(str(machine_id), safe="") + suffix
 
 
-def list_machines(q=None):
+def list_machines(q=None, credentials=None):
     """GET /machines: the team's machines as a list of dicts. The answer is {'machines': [...]} or a bare list."""
-    data = call("GET", "/machines", query={"q": q} if q else None)
+    data = call("GET", "/machines", query={"q": q} if q else None, **_cred_kw(credentials))
     if isinstance(data, dict):
         if "machines" not in data:
             raise VagonError("GET /machines answered without a 'machines' list")
@@ -205,8 +211,8 @@ def list_machines(q=None):
     return [m for m in data if isinstance(m, dict)]
 
 
-def find_machine(machine_id):
-    for m in list_machines():
+def find_machine(machine_id, credentials=None):
+    for m in list_machines(**_cred_kw(credentials)):
         if m.get("id") == machine_id:
             return m
     raise VagonError(f"machine {safe_token(machine_id)} is not listed by GET /machines")
@@ -227,9 +233,9 @@ def status_of(machine):
     return None
 
 
-def status(machine_id):
+def status(machine_id, credentials=None):
     """The machine's status string. There is no single-machine GET, so it is read from the list. None when absent."""
-    return status_of(find_machine(machine_id))
+    return status_of(find_machine(machine_id, **_cred_kw(credentials)))
 
 
 def create_machine(plan_id, region, os_name="Windows"):
@@ -238,12 +244,12 @@ def create_machine(plan_id, region, os_name="Windows"):
     return call("POST", "/machines", {"plan_id": plan_id, "quantity": 1, "region": region, "os": os_name})
 
 
-def start_machine(machine_id):
-    return call("POST", _machine_path(machine_id, "/start"))
+def start_machine(machine_id, credentials=None):
+    return call("POST", _machine_path(machine_id, "/start"), **_cred_kw(credentials))
 
 
-def stop_machine(machine_id, graceful=True):
-    return call("POST", _machine_path(machine_id, "/stop"), {"gracefully": bool(graceful)})
+def stop_machine(machine_id, graceful=True, credentials=None):
+    return call("POST", _machine_path(machine_id, "/stop"), {"gracefully": bool(graceful)}, **_cred_kw(credentials))
 
 
 def set_auto_stop(machine_id, seconds):

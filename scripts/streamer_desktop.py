@@ -12,6 +12,9 @@ One Playwright Chromium (dedicated persistent profile inside --data-dir, never t
   Agent API (docs/streamer/PLAN.md):
     GET  /desktop/observe   screenshot 1280x720 with numbered marks, visible text, marks, scroll, dialogs
     POST /desktop/act       navigate | click | type | scroll | key | back | search | wait -> {ok, outcome, frame_id}
+  Owner's console (vagon mode, workstation kind; the page needs no token, the rest does):
+    GET  /operator          self-contained page, served only while the Vagon page needs his login (or --operator-console)
+    GET  /operator/frame.jpg, POST /operator/input {mouse|key|text}, POST /pc/vagon/start (optional Teams API)
 
 Safety: banking/adult/gambling/trading/login/checkout/payment hosts and paths are refused (also redirects and
 sub-frames), no POST navigation, no downloads, file chooser, clipboard or popups, service workers blocked, dialogs
@@ -19,11 +22,23 @@ dismissed and reported. A crashed or hung browser is relaunched (`/pc/state.stat
 Everything the agent does is appended to <data-dir>/events.jsonl. Playwright is imported only by the Desktop class.
 
 PC modes (`--pc-mode`, docs/streamer/VAGON.md): `chromium` (default, everything above) or `vagon`: the same Chromium
-opens the owner's Vagon Streams page (`--vagon-url` or <streamer-dir>/vagon.json) in kiosk mode, presses its
+opens the owner's Vagon page (`--vagon-url` or <streamer-dir>/vagon.json) in kiosk mode, presses its
 connect/play button, waits for the stream's video/canvas and re-enters after "session ended". The agent primitives are
 mapped onto the stream: click/scroll/type/key go to the stream element, navigate/search type the URL into the remote
 browser's address bar (Ctrl+L, text, Enter), observe returns the pixels with `mode: "vagon"` and `remote_ready` and no
 DOM summary. `/pc/state` carries `pc_mode` and a `vagon` sub-state. The stream URL's query string is never logged.
+
+Two Vagon products (`kind` in vagon.json, or `--vagon-kind`): `streams` (a public Vagon Streams link, the default) and
+`workstation` (the owner's Vagon Cloud Computer at https://app.vagon.io/workstation, which needs HIS login). In the
+workstation kind the runner never has or types credentials: when the page asks for a login it enters the phase
+`login_required` and serves an operator console (`GET /operator`, a self-contained page that shows the live desktop and
+forwards the owner's mouse and keyboard with the admin token he pastes once) so the owner logs in himself; the login
+survives restarts in the persistent profile. After the login it presses Run/Start/Turn on and Connect/Open/Enter (found by
+text, logged as `vagon_button`), waits for the stream and re-connects after an ended session. Privacy lock: until the
+remote desktop is connected, /desktop/observe and /pc/frame.png return a neutral "PC not connected" picture, never the
+account pages, and the host page may navigate only within the workstation/login pages of app.vagon.io and the stream it
+opens (billing, team, settings, external sites are blocked and logged). An optional Teams API key (vagon_pc.py) gives the
+`machine` field and `POST /pc/vagon/start`.
 """
 
 import argparse
@@ -61,6 +76,11 @@ try:  # stdlib-only guard lists and banner helpers; importing browse.py starts n
 except Exception:  # the runner also works when only this file is deployed
     B = None
 
+try:  # the optional Vagon Teams API client (stdlib only; nothing is called until a key file is configured)
+    import vagon_pc  # noqa: E402
+except Exception:
+    vagon_pc = None
+
 LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 MIN_TOKEN = 12
 MAX_WAIT = 25
@@ -80,8 +100,15 @@ SAFE_ENV = ("PATH", "HOME", "LANG", "LC_ALL", "TZ", "TMPDIR", "USER", "LD_LIBRAR
 FOREIGN_PROFILES = ("google-chrome", "/chromium", "application support/google", "appdata/local/google", "bravesoftware",
                     "microsoft edge", "/firefox", "/.mozilla")
 PC_MODES = ("chromium", "vagon")
+VAGON_KINDS = ("streams", "workstation")
+DEFAULT_WORKSTATION_URL = "https://app.vagon.io/workstation"
 DEFAULT_STREAMER_DIR = "/home/unreal/.sub01-private/streamer"
 VAGON_SCHEMA = "sub01.streamer-vagon.v1"
+OPERATOR_GRACE_S = 600.0      # the console stays this long after the login page went away (2FA, consent), never while connected
+VAGON_API_POLL_S = 60.0       # how often the optional Teams API is asked for the machine's status
+VAGON_API_START_GAP_S = 300.0 # at least this long between two API starts of the machine
+VAGON_WS_STUCK_S = {"blank": 60.0, "opening": 60.0, "dashboard": 180.0, "starting": 600.0, "connecting": 120.0}
+NEUTRAL_TEXT = "PC not connected"
 VAGON_TICK_S = 2.0            # how often the stream page is probed for its connect / ended state
 VAGON_CLICK_GAP_S = 6.0       # at least this long between two presses of the stream's connect button
 VAGON_RELOAD_BACKOFF = (15.0, 30.0, 60.0, 120.0, 300.0)   # seconds before the stream page is opened again
@@ -544,6 +571,29 @@ VAGON_ENDED_RX = re.compile(r"session (has )?(ended|expired|terminated|timed out
 VAGON_BUSY_RX = re.compile(r"connecting|initializ|preparing|loading|starting|installing|please wait|setting up|"
                            r"waiting for|assigning|booting|queue", re.I)
 VAGON_PHASES = ("starting", "waiting", "busy", "ready", "ended", "blank", "restarting")
+# Workstation kind (the owner's Cloud Computer behind his login). Real texts are unknown until the page is seen: heuristics,
+# every press is logged as `vagon_button`. Controls that stop, delete, sign out or lead to account pages are never pressed.
+VAGON_WS_START_RX = re.compile(r"\b(run|start|turn on|power on|boot( up)?|wake( up)?)\b", re.I)
+VAGON_WS_CONNECT_RX = re.compile(r"\b(connect|open|enter|launch|join|resume|go to (my |the )?(computer|desktop|workstation))\b", re.I)
+VAGON_WS_NEVER_RX = re.compile(r"\b(stop|shut ?down|turn off|power off|delete|remove|reset|restart|reboot|sign ?out|log ?out|"
+                               r"invite|cancel|terminate|destroy|format|wipe|change|edit|rename|settings?|billing|team|members?|"
+                               r"profile|account|help|support|docs?|download|install|upgrade|plans?|storage|files?|new tab)\b", re.I)
+VAGON_WS_STARTING_RX = re.compile(r"(turning|powering|switching|starting|booting|waking) (on|up)|is starting|"
+                                  r"starting (your |the )?(computer|machine|workstation|pc)|getting (your |the )?(computer|machine|pc) ready|"
+                                  r"preparing|initializ|please wait", re.I)
+VAGON_WS_CONNECTING_RX = re.compile(r"connecting|establishing|loading (the )?(stream|desktop|session)|opening (the )?(stream|session)", re.I)
+VAGON_LOGIN_PATH = re.compile(r"/(log-?in|sign-?in|signin|auth|oauth2?|sso|verify|verification|two-?factor|2fa|mfa|otp|"
+                              r"password|forgot|reset|callback|invite|accept)(/|\?|$|\.)", re.I)   # sign-up is an account page
+VAGON_LOGIN_TEXT = re.compile(r"\b(sign in|log in|login|continue with (google|apple|microsoft|github)|forgot (your )?password|"
+                              r"don'?t have an account|create (an |your )?account|welcome back|remember me|verification code|"
+                              r"two-?factor|authenticator)\b", re.I)
+VAGON_ACCOUNT_PATH = re.compile(r"/(billing|payments?|invoices?|subscriptions?|plans?|pricing|checkout|teams?|members?|"
+                                r"organizations?|settings?|account|profile|api-?keys?|security|usage|files?|storage|register|"
+                                r"sign-?up|delete|admin|users?|credits?|balance|cards?)(/|\?|$|\.)", re.I)
+VAGON_WS_PHASES = ("login_required", "dashboard", "starting", "connecting", "connected", "ended", "blocked", "blank",
+                   "opening", "restarting")
+VAGON_WS_CANVAS_FRACTION = 0.5    # a canvas counts as the remote desktop only when it covers half the viewport (not a chart)
+VAGON_MACHINE_STATES = ("unknown", "off", "starting", "on")
 
 
 def redact_url(url):
@@ -576,7 +626,9 @@ def vagon_url_problem(url, allow_private=False):
 
 
 def load_vagon_config(path, allow_private=False):
-    """<streamer-dir>/vagon.json -> {"stream_url", "api_key_file"}; ValueError (without the URL) when unusable."""
+    """<streamer-dir>/vagon.json -> {"kind", "stream_url", "api_key_file", "machine_id"}; ValueError (without the URL)
+    when unusable. `kind` is `streams` (default; the link is `stream_url`) or `workstation` (the owner's Cloud Computer
+    page is `url`, default https://app.vagon.io/workstation). `stream_url` holds the page URL for either kind."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except OSError as error:
@@ -585,8 +637,21 @@ def load_vagon_config(path, allow_private=False):
         raise ValueError("the Vagon config is not valid JSON")
     if not isinstance(data, dict) or data.get("schema") != VAGON_SCHEMA:
         raise ValueError(f"the Vagon config must be an object with schema {VAGON_SCHEMA}")
+    kind = data.get("kind", "streams")
+    if kind not in VAGON_KINDS:
+        raise ValueError("kind must be one of " + ", ".join(VAGON_KINDS))
     url = data.get("stream_url")
-    if url is not None:
+    if kind == "workstation":
+        if url is not None:
+            raise ValueError("a workstation config names its page as url, not stream_url")
+        url = data.get("url", DEFAULT_WORKSTATION_URL)
+        why = workstation_url_problem(url, url, allow_private) if isinstance(url, str) else "expected a URL"
+        if why:
+            raise ValueError(f"url: {why}")
+        url = url.strip()
+    elif data.get("url") is not None:
+        raise ValueError("url is for kind workstation; a stream link is stream_url")
+    elif url is not None:
         why = vagon_url_problem(url, allow_private)
         if why:
             raise ValueError(f"stream_url: {why}")
@@ -594,10 +659,286 @@ def load_vagon_config(path, allow_private=False):
     key_file = data.get("api_key_file")
     if key_file is not None and (not isinstance(key_file, str) or not key_file.strip() or not os.path.isabs(key_file.strip())):
         raise ValueError("api_key_file must be an absolute path")
-    unknown = set(data) - {"schema", "stream_url", "api_key_file"}
+    machine_id = data.get("machine_id")
+    if machine_id is not None and (not isinstance(machine_id, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", machine_id)):
+        raise ValueError("machine_id must be a short identifier (letters, digits, _ . -)")
+    unknown = set(data) - {"schema", "kind", "stream_url", "url", "api_key_file", "machine_id"}
     if unknown:
         raise ValueError("unknown keys in the Vagon config: " + ", ".join(sorted(unknown)))
-    return {"stream_url": url or "", "api_key_file": (key_file or "").strip()}
+    return {"kind": kind, "stream_url": url or "", "api_key_file": (key_file or "").strip(), "machine_id": machine_id or ""}
+
+
+def _site_apex(host):
+    """'app.vagon.io' -> 'vagon.io'; an IP address or a single label -> itself."""
+    h = (host or "").strip("[]").lower().rstrip(".")
+    try:
+        ipaddress.ip_address(h)
+        return h
+    except ValueError:
+        parts = h.split(".")
+        return ".".join(parts[-2:]) if len(parts) >= 2 else h
+
+
+def same_site(url_parts, base_parts):
+    """The URL is on the configured page's host (same port) or on a sibling host of its site (login.vagon.io for
+    app.vagon.io)."""
+    host, base = (url_parts.hostname or "").lower(), (base_parts.hostname or "").lower()
+    if not host or not base:
+        return False
+    if host == base:
+        default = {"https": 443, "http": 80}
+        return (url_parts.port or default.get(url_parts.scheme)) == (base_parts.port or default.get(base_parts.scheme))
+    apex = _site_apex(base)
+    return "." in apex and not apex.replace(".", "").isdigit() and (host == apex or host.endswith("." + apex))
+
+
+def workstation_url_problem(url, base_url, allow_private=False):
+    """Why the host page may not go to `url` in the workstation kind, or None. Allowed: https (http only for tests), no
+    credentials, the configured page's site only (`external` otherwise), and on it no account page (billing, team,
+    settings, members, api keys, usage, files, sign-up...: `account-page`); login/verification paths are always allowed
+    because the owner's login flow needs them."""
+    if not isinstance(url, str) or not url.strip() or any(c.isspace() for c in url.strip()):
+        return "expected a URL"
+    try:
+        u, b = urlsplit(url.strip()), urlsplit(str(base_url or "").strip())
+        u.port, b.port
+    except ValueError:
+        return "invalid-url"
+    if u.scheme != "https" and not (allow_private and u.scheme == "http"):
+        return "scheme"
+    if u.username or u.password:
+        return "credentials-in-url"
+    if not u.hostname:
+        return "no-host"
+    if not b.hostname or not same_site(u, b):
+        return "external"
+    path = unquote(u.path)
+    if VAGON_LOGIN_PATH.search(path):
+        return None
+    if VAGON_ACCOUNT_PATH.search(path):
+        return "account-page"
+    return None
+
+
+def workstation_request_blocked(url, base_url, main_frame=False, method="GET", allow_private=False):
+    """Network verdict in the workstation kind: main-frame navigations must stay on the site and off its account pages
+    (POST is allowed: a login form may submit); sub-resources from the site are allowed, others get the generic host
+    rules (CDNs and fonts yes, banks and the owner's services no)."""
+    if url == "about:blank" or url.startswith(("data:", "blob:")):
+        return None
+    if main_frame:
+        if method.upper() not in ("GET", "HEAD", "POST"):
+            return "method"
+        return workstation_url_problem(url, base_url, allow_private)
+    try:
+        if same_site(urlsplit(url), urlsplit(base_url)):
+            return None
+    except ValueError:
+        return "invalid-url"
+    return request_blocked(url, False, method, allow_private)
+
+
+def choose_workstation_button(buttons):
+    """(index, kind) of the control to press on the workstation page: a reconnect/try-again control first, then
+    connect/open/enter (the computer is on), then run/start/turn on (it is off). Never a login or money control, never
+    stop/delete/sign out/settings and the like (VAGON_WS_NEVER_RX). (None, None) when nothing fits."""
+    best, best_rank = None, None
+    for i, b in enumerate(buttons or []):
+        label = " ".join(str(b.get("label") or "").split())
+        if (not label or len(label) > 60 or LOGIN_LABEL.search(label) or MONEY_LABEL.search(label)
+                or VAGON_WS_NEVER_RX.search(label)):
+            continue
+        rank = (0 if VAGON_RECONNECT_RX.search(label) else 1 if VAGON_WS_CONNECT_RX.search(label)
+                else 2 if VAGON_WS_START_RX.search(label) else None)
+        if rank is not None and (best_rank is None or rank < best_rank):
+            best, best_rank = i, rank
+    return best, (None if best is None else ("reconnect", "connect", "start")[best_rank])
+
+
+def login_page_reason(path, passwords, text, buttons=None):
+    """Why the page is a login page, or None: its path (/login, /signin, /auth, /verify...), a visible password field,
+    or sign-in text on a page that offers no computer control (a dashboard with 'Sign out' is not a login page)."""
+    if VAGON_LOGIN_PATH.search(unquote(str(path or ""))):
+        return "path"
+    if passwords:
+        return "password field"
+    if VAGON_LOGIN_TEXT.search(str(text or "")) and choose_workstation_button(buttons)[0] is None:
+        return "sign-in text"
+    return None
+
+
+def _stream_fraction(stream, probe):
+    try:
+        vw, vh = float(probe.get("vw") or 0), float(probe.get("vh") or 0)
+        return stream["box"][2] * stream["box"][3] / (vw * vh) if vw and vh else 0.0
+    except (KeyError, IndexError, TypeError, ValueError, ZeroDivisionError):
+        return 0.0
+
+
+def classify_workstation(probe):
+    """{phase, button, kind, machine, why} from a probe of the workstation page (`main` holds the main frame's url,
+    password-field count and text when the stream lives in an iframe). Phases: login_required (the owner must log in),
+    blocked (an account page), connected (a playing video or a canvas covering half the viewport, no ended text),
+    ended (ended text or a reconnect offer), dashboard (a connect button: machine on; a run/start button: machine off),
+    starting (the page says the computer is turning on), connecting, blank."""
+    p = probe or {}
+    main = p.get("main") or p
+    url = str(main.get("url") or p.get("url") or "")
+    try:
+        path = urlsplit(url).path
+    except ValueError:
+        path = ""
+    text = " ".join(str(p.get("text") or "").split())
+    main_text = " ".join(str(main.get("text") or text).split())
+    buttons, stream = p.get("buttons") or [], p.get("stream") or None
+    idx, kind = choose_workstation_button(buttons)
+    out = {"phase": "blank", "button": None, "kind": None, "machine": "unknown", "why": ""}
+    why = login_page_reason(path, main.get("passwords", 0), main_text, buttons)
+    if why:
+        return dict(out, phase="login_required", why=why)
+    if VAGON_ACCOUNT_PATH.search(unquote(path)):
+        return dict(out, phase="blocked", why="account-page")
+    view = main if main.get("vw") else p                  # the stream box is in main-frame pixels (iframe offset applied)
+    desktop_sized = bool(stream) and (stream.get("tag") == "video" or _stream_fraction(stream, view) >= VAGON_WS_CANVAS_FRACTION)
+    big = desktop_sized and stream.get("playing", True)
+    ended = bool(VAGON_ENDED_RX.search(text)) or kind == "reconnect"
+    if big and not ended:
+        return dict(out, phase="connected", machine="on")
+    if ended:
+        return dict(out, phase="ended", button=idx, kind=kind)
+    if kind == "connect":
+        return dict(out, phase="dashboard", button=idx, kind=kind, machine="on")
+    if kind == "start":
+        return dict(out, phase="dashboard", button=idx, kind=kind, machine="off")
+    if VAGON_WS_STARTING_RX.search(text):
+        return dict(out, phase="starting", machine="starting")
+    if desktop_sized or VAGON_WS_CONNECTING_RX.search(text) or VAGON_BUSY_RX.search(text):
+        return dict(out, phase="connecting", machine="on")   # a stalled video, or the page says so; a small canvas is a chart
+    return out
+
+
+_NEUTRAL = {}
+
+
+def neutral_jpeg(size=SMALL, text=NEUTRAL_TEXT):
+    """A grey picture saying "PC not connected": what leaves the runner instead of the owner's account pages."""
+    key = (tuple(size), text)
+    if key not in _NEUTRAL:
+        img = Image.new("RGB", tuple(size), (72, 74, 78))
+        draw, font = ImageDraw.Draw(img), _font(max(16, size[1] // 20))
+        tw = draw.textlength(text, font=font)
+        draw.text(((size[0] - tw) / 2, size[1] / 2 - size[1] / 40), text, fill=(200, 200, 204), font=font)
+        out = io.BytesIO()
+        img.save(out, "JPEG", quality=70)
+        _NEUTRAL[key] = out.getvalue()
+    return _NEUTRAL[key]
+
+
+OPERATOR_KEY_RX = re.compile(r"[A-Za-z][A-Za-z0-9]{0,24}")
+
+
+def validate_operator(data):
+    """The operator console's input: {type: mouse, x, y (fractions 0..1 of the frame), buttons?: [l, m, r], wheel?},
+    {type: key, key: a key code such as Tab, Enter, KeyA, ShiftLeft, down: bool} or {type: text, text}. ValueError with a
+    message (never echoing the text) when malformed."""
+    if not isinstance(data, dict):
+        raise ValueError("Expected an input object")
+    kind = data.get("type")
+    if kind == "mouse":
+        x, y = data.get("x"), data.get("y")
+        if not _num(x) or not _num(y) or not 0 <= x <= 1 or not 0 <= y <= 1:
+            raise ValueError("Expected x and y as fractions 0..1 of the frame")
+        clean = {"type": "mouse", "x": float(x), "y": float(y)}
+        if "buttons" in data:
+            b = data["buttons"]
+            if not isinstance(b, list) or len(b) != 3 or any(not isinstance(v, bool) for v in b):
+                raise ValueError("Expected three mouse buttons")
+            clean["buttons"] = list(b)
+        if "wheel" in data:
+            if not _num(data["wheel"]) or abs(data["wheel"]) > 2000:
+                raise ValueError("Expected a bounded wheel delta")
+            clean["wheel"] = float(data["wheel"])
+        return clean
+    if kind == "key":
+        key, down = data.get("key"), data.get("down", True)
+        if not isinstance(key, str) or not OPERATOR_KEY_RX.fullmatch(key) or not isinstance(down, bool):
+            raise ValueError("Expected a key code (Tab, Enter, KeyA, ShiftLeft...) and down true/false")
+        return {"type": "key", "key": key, "down": down}
+    if kind == "text":
+        text = data.get("text")
+        if (not isinstance(text, str) or not 1 <= len(text) <= 2000
+                or any((ord(c) < 32 and c != "\n") or ord(c) == 127 for c in text)):
+            raise ValueError("Expected text of 1-2000 characters (newlines press Enter)")
+        return {"type": "text", "text": text}
+    raise ValueError("Unknown operator input")
+
+
+class VagonApi:
+    """The optional Teams API (vagon_pc.py) for the workstation kind: the machine's status and a start. The key pair is
+    read once from `api_key_file` (mode 0600; one line `KEY:SECRET`, or the key on the first line and the secret on the
+    second), kept in memory, never logged; every error text comes from vagon_pc, which scrubs credentials and links."""
+
+    def __init__(self, credentials, machine_id):
+        self._credentials, self.machine_id = credentials, machine_id
+        self.status, self.read_at, self.error, self.started_at, self.starts = None, 0.0, "", 0.0, 0
+
+    @classmethod
+    def load(cls, key_file, machine_id):
+        if vagon_pc is None:
+            raise ValueError("vagon_pc.py is not importable here")
+        if not machine_id:
+            raise ValueError("machine_id is missing in the Vagon config")
+        state = api_key_file_status(key_file)
+        if state != "configured":
+            raise ValueError(f"the API key file is {state}" + (" (make it mode 0600)" if state == "permissive" else ""))
+        try:
+            lines = [l.strip() for l in Path(key_file).read_text(encoding="utf-8").splitlines() if l.strip()]
+        except (OSError, UnicodeDecodeError):
+            raise ValueError("the API key file cannot be read")
+        if len(lines) == 1 and lines[0].count(":") == 1:
+            key, secret = lines[0].split(":")
+        elif len(lines) == 2:
+            key, secret = lines
+        else:
+            raise ValueError("the API key file must hold KEY:SECRET on one line or the key and the secret on two lines")
+        if not key or not secret or any(c.isspace() for c in key + secret):
+            raise ValueError("the API key file holds an empty or malformed key pair")
+        return cls((key, secret), machine_id)
+
+    def machine(self):
+        """'unknown' | 'off' | 'starting' | 'on' from the last status reading."""
+        st = self.status
+        if st in vagon_pc.READY_STATUSES:
+            return "on"
+        if st in vagon_pc.STARTING_STATUSES:
+            return "starting"
+        if st in vagon_pc.OFF_STATUSES:
+            return "off"
+        return "unknown"
+
+    def fresh(self, within=2 * VAGON_API_POLL_S):
+        return self.status is not None and time.monotonic() - self.read_at < within
+
+    def refresh(self):
+        """Blocking: one GET /machines. Sets status (or error) and returns the machine state."""
+        try:
+            self.status, self.error = vagon_pc.status(self.machine_id, credentials=self._credentials), ""
+        except Exception as error:
+            self.status, self.error = None, clean_error(error)
+        self.read_at = time.monotonic()
+        return self.machine()
+
+    def start(self):
+        """Blocking: POST /machines/{id}/start; the error text (or '') is returned, never raised."""
+        try:
+            vagon_pc.start_machine(self.machine_id, credentials=self._credentials)
+            self.started_at, self.starts, self.error = time.monotonic(), self.starts + 1, ""
+            self.status = "turning_on"
+            self.read_at = self.started_at
+            return ""
+        except Exception as error:
+            self.error = clean_error(error)
+            return self.error
 
 
 def api_key_file_status(path):
@@ -652,13 +993,16 @@ def image_point(point, view, size=SMALL):
 
 
 class VagonState:
-    """What the runner knows about the remote session; `public()` is the `vagon` field of /pc/state."""
+    """What the runner knows about the remote session; `public()` is the `vagon` field of /pc/state. The workstation
+    kind adds `logged_in`, `machine` (unknown|off|starting|on), `blocked` (navigations refused) and `login_why`."""
 
-    def __init__(self, api_key="none"):
-        self.connected, self.phase, self.api_key = False, "starting", api_key
+    def __init__(self, api_key="none", kind="streams"):
+        self.connected, self.phase, self.api_key, self.kind = False, "starting" if kind == "streams" else "opening", api_key, kind
         self.sessions, self.reconnects, self.last_reconnect_utc, self.since = 0, 0, None, time.time()
         self.attempts, self.reloads, self.reload_streak, self.misses = 0, 0, 0, 0
         self.last_click, self.last_reload, self.blank_since, self.last_label = 0.0, 0.0, None, ""
+        self.logged_in, self.machine, self.machine_source, self.blocked = False, "unknown", "none", 0
+        self.login_seen, self.login_why, self.stuck_since, self.last_api_start = None, "", None, 0.0
 
     def set_phase(self, phase):
         changed = phase != self.phase
@@ -667,10 +1011,14 @@ class VagonState:
         return changed
 
     def public(self):
-        return {"connected": self.connected, "phase": self.phase, "reconnects": self.reconnects,
-                "last_reconnect_utc": self.last_reconnect_utc, "sessions": self.sessions, "reloads": self.reloads,
-                "since_utc": datetime.fromtimestamp(self.since, timezone.utc).isoformat(timespec="seconds"),
-                "api_key_file": self.api_key}
+        out = {"connected": self.connected, "phase": self.phase, "reconnects": self.reconnects,
+               "last_reconnect_utc": self.last_reconnect_utc, "sessions": self.sessions, "reloads": self.reloads,
+               "since_utc": datetime.fromtimestamp(self.since, timezone.utc).isoformat(timespec="seconds"),
+               "api_key_file": self.api_key, "kind": self.kind}
+        if self.kind == "workstation":
+            out.update(logged_in=self.logged_in, machine=self.machine, machine_source=self.machine_source,
+                       blocked=self.blocked, login_why=self.login_why)
+        return out
 
 
 # --- PS/2 scancodes and relative mouse from the native monitor -> page input --------------------------------------
@@ -712,7 +1060,10 @@ def plain_key(key):
 
 
 def mod_name(key):
-    base = key[:-5] if key.endswith("Right") and key[:-5] in MODS else key
+    base = key
+    for suffix in ("Right", "Left"):
+        if key.endswith(suffix) and key[:-len(suffix)] in MODS:
+            base = key[:-len(suffix)]
     return base if base in ("Control", "Shift", "Alt", "Meta") else None
 
 
@@ -880,9 +1231,12 @@ class Config:
     proxy: str = ""
     chromium: str = ""
     start_url: str = "about:blank"
-    pc_mode: str = "chromium"            # "chromium" browses itself; "vagon" shows the owner's Vagon Streams page
-    vagon_url: str = ""                  # the stream link (never logged beyond scheme and host)
-    vagon_api_key_file: str = ""         # optional, recorded as present/absent only; the runner makes no API call
+    pc_mode: str = "chromium"            # "chromium" browses itself; "vagon" shows the owner's Vagon page
+    vagon_url: str = ""                  # the stream link or the workstation page (never logged beyond scheme and host)
+    vagon_api_key_file: str = ""         # optional; streams: recorded as present/absent only; workstation: the Teams API
+    vagon_kind: str = "streams"          # "streams" (public stream link) or "workstation" (the owner's Cloud Computer, his login)
+    vagon_machine_id: str = ""           # workstation: the machine's id for the optional API
+    operator_console: bool = False       # serve /operator always, not only while the Vagon page needs the owner's login
 
 
 class DesktopUnavailable(RuntimeError):
@@ -983,9 +1337,13 @@ CLIPBOARD_JS = r"""(() => { const deny = () => Promise.reject(new DOMException('
 # Vagon: the stream page (or one of its frames) -> its visible text, its buttons and the stream element (video/canvas)
 VAGON_PROBE_JS = r"""([minW, minH]) => {
   const vw = innerWidth, vh = innerHeight;
-  const out = {url: location.href, title: document.title || '', vw, vh, loading: document.readyState !== 'complete', text: '', buttons: [], stream: null};
+  const out = {url: location.href, title: document.title || '', vw, vh, loading: document.readyState !== 'complete', text: '', buttons: [], stream: null, passwords: 0};
   const shown = r => r.width >= 1 && r.height >= 1 && r.bottom > 0 && r.right > 0 && r.top < vh && r.left < vw;
   const hide = cs => cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < 0.05;
+  for (const el of document.querySelectorAll('input[type=password]')) {
+    const r = el.getBoundingClientRect();
+    if (shown(r) && !hide(getComputedStyle(el))) out.passwords++;
+  }
   let best = null, area = 0;
   for (const el of document.querySelectorAll('video, canvas')) {
     const r = el.getBoundingClientRect();
@@ -1041,6 +1399,164 @@ VAGON_FOCUS_JS = r"""([minW, minH]) => {
 }"""
 
 
+# The operator console (GET /operator): one self-contained page, no external asset, every URL relative to its own
+# location so it works behind a path prefix (the pod's Jupyter proxy: .../proxy/8832/operator). The owner pastes the
+# admin token once (sessionStorage of this tab, sent as X-Admin-Token); the live desktop is polled at 2 fps from
+# operator/frame.jpg; mouse and keyboard go to operator/input. Nothing typed here is logged by the runner.
+OPERATOR_UNAVAILABLE = ("The operator console is served only while the Vagon page asks for the owner's login (phase "
+                        "login_required, and for 10 minutes after it) or when the runner runs with --operator-console.")
+OPERATOR_HTML = r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUB-01 PC operator console</title>
+<style>
+  html, body { margin: 0; background: #16181c; color: #e6e6e6; font: 14px/1.4 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 12px; background: #23262c; }
+  header strong { margin-right: 6px; }
+  input[type=password] { width: 260px; background: #111; color: #eee; border: 1px solid #555; padding: 4px 6px; }
+  button { background: #3b7ddd; color: #fff; border: 0; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+  button.quiet { background: #444; }
+  #phase { font-family: ui-monospace, monospace; color: #9ecbff; }
+  #stage { position: relative; margin: 10px auto; max-width: 1600px; }
+  #screen { display: block; width: 100%; background: #000; cursor: crosshair; user-select: none; -webkit-user-drag: none; }
+  #sink { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0.01; resize: none; border: 0; }
+  #hint, #status { margin: 6px 12px; color: #aaa; }
+  #status.bad { color: #ff9e9e; }
+</style>
+</head>
+<body>
+<header>
+  <strong>SUB-01 PC &middot; operator console</strong>
+  <span>phase: <span id="phase">…</span></span>
+  <input id="token" type="password" placeholder="paste the operator token" autocomplete="off" spellcheck="false">
+  <button id="save" type="button">Use token</button>
+  <button id="forget" type="button" class="quiet">Forget token</button>
+  <label><input id="keys" type="checkbox" checked> keyboard goes to the PC</label>
+</header>
+<p id="hint">The token is the content of /home/unreal/.sub01-private/operator-token on the pod; it stays in this browser tab
+(sessionStorage) and is sent as X-Admin-Token. Click the picture, then type: letters, Tab, Enter, Backspace, arrows and
+Ctrl+V (paste) go to the kiosk browser on the pod. The runner logs none of it. Log in on the Vagon page you see; the console
+closes by itself a few minutes after the login page is gone.</p>
+<div id="stage"><img id="screen" alt="the pod's desktop" draggable="false"><textarea id="sink" aria-label="keyboard"></textarea></div>
+<p id="status"></p>
+<script>
+(() => {
+  // relative to this page: ".../proxy/8832/operator" -> ".../proxy/8832/"; never an absolute path
+  const base = location.pathname.replace(/\/operator\/?$/, '/');
+  const STORE = 'sub01-operator-token';
+  const $ = id => document.getElementById(id);
+  const img = $('screen'), sink = $('sink'), status = $('status'), phase = $('phase');
+  let token = '';
+  try { token = sessionStorage.getItem(STORE) || ''; } catch (e) {}
+  let etag = '', buttons = [false, false, false], lastMove = 0, lastSent = '', frameTimer = 0, stateTimer = 0;
+  const headers = extra => Object.assign({'X-Admin-Token': token}, extra || {});
+  const say = (text, bad) => { status.textContent = text; status.className = bad ? 'bad' : ''; };
+  $('save').addEventListener('click', () => {
+    token = $('token').value.trim(); $('token').value = '';
+    try { sessionStorage.setItem(STORE, token); } catch (e) {}
+    etag = ''; say(token ? 'token stored for this tab' : 'no token'); frame(); state();
+  });
+  $('forget').addEventListener('click', () => { token = ''; try { sessionStorage.removeItem(STORE); } catch (e) {} say('token forgotten'); });
+  async function frame() {
+    clearTimeout(frameTimer);
+    if (!token) { say('paste the operator token first', true); frameTimer = setTimeout(frame, 1000); return; }
+    try {
+      const h = headers(); if (etag) h['If-None-Match'] = etag;
+      const r = await fetch(base + 'operator/frame.jpg', {headers: h, cache: 'no-store'});
+      if (r.status === 304) { /* unchanged */ }
+      else if (r.status === 403) say('the token was refused', true);
+      else if (r.status === 404) say(await r.text(), true);
+      else if (r.status === 409) say('bathroom privacy is active: nothing is shown', true);
+      else if (r.ok) {
+        etag = r.headers.get('ETag') || '';
+        const url = URL.createObjectURL(await r.blob()), old = img.src;
+        img.onload = () => { if (old && old.startsWith('blob:')) URL.revokeObjectURL(old); };
+        img.src = url;
+        if (status.className === 'bad') say('');
+      } else say('frame: HTTP ' + r.status, true);
+    } catch (e) { say('frame: ' + e.message, true); }
+    frameTimer = setTimeout(frame, 500);
+  }
+  async function state() {
+    clearTimeout(stateTimer);
+    if (token) {
+      try {
+        const r = await fetch(base + 'pc/state', {headers: headers(), cache: 'no-store'});
+        if (r.ok) {
+          const s = await r.json(), v = s.vagon || {};
+          phase.textContent = (v.phase || s.status || '?') + (v.kind === 'workstation' ? ' · logged_in=' + v.logged_in + ' · machine=' + v.machine : '')
+            + (v.operator_console === false ? ' · console closing' : '');
+        }
+      } catch (e) {}
+    }
+    stateTimer = setTimeout(state, 2000);
+  }
+  const OPERATOR_GONE = 'the console is no longer served (the login page is gone)';
+  function send(body) {
+    if (!token) return Promise.resolve();
+    return fetch(base + 'operator/input', {method: 'POST', headers: headers({'Content-Type': 'application/json'}), body: JSON.stringify(body), cache: 'no-store'})
+      .then(r => { if (r.status === 403) say('the token was refused', true); else if (r.status === 404) say(OPERATOR_GONE, true); })
+      .catch(() => {});
+  }
+  const clamp = v => Math.min(1, Math.max(0, v));
+  function frac(e) { const r = img.getBoundingClientRect(); return {x: clamp((e.clientX - r.left) / Math.max(1, r.width)), y: clamp((e.clientY - r.top) / Math.max(1, r.height))}; }
+  img.addEventListener('mousemove', e => {
+    const now = performance.now(); if (now - lastMove < 40) return; lastMove = now;
+    const p = frac(e), key = p.x.toFixed(4) + ',' + p.y.toFixed(4); if (key === lastSent) return; lastSent = key;
+    send({type: 'mouse', x: p.x, y: p.y});
+  });
+  img.addEventListener('mousedown', e => {
+    e.preventDefault(); sink.focus({preventScroll: true});
+    if (e.button >= 0 && e.button <= 2) buttons[e.button] = true;
+    const p = frac(e); send({type: 'mouse', x: p.x, y: p.y, buttons: buttons.slice()});
+  });
+  window.addEventListener('mouseup', e => {
+    if (!(e.button >= 0 && e.button <= 2) || !buttons[e.button]) return;
+    buttons[e.button] = false;
+    const p = frac(e); send({type: 'mouse', x: p.x, y: p.y, buttons: buttons.slice()});
+  });
+  img.addEventListener('contextmenu', e => e.preventDefault());
+  img.addEventListener('wheel', e => { e.preventDefault(); const p = frac(e); send({type: 'mouse', x: p.x, y: p.y, wheel: Math.max(-600, Math.min(600, e.deltaY))}); }, {passive: false});
+  const MODS = {ShiftLeft: 1, ShiftRight: 1, ControlLeft: 1, ControlRight: 1, AltLeft: 1, AltRight: 1, MetaLeft: 1, MetaRight: 1};
+  const held = new Set();
+  const printable = e => e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+  const pasteCombo = e => (e.ctrlKey || e.metaKey) && !e.altKey && e.code === 'KeyV';
+  const copyCombo = e => (e.ctrlKey || e.metaKey) && (e.code === 'KeyC' || e.code === 'KeyX');
+  sink.addEventListener('keydown', e => {
+    if (!$('keys').checked) return;
+    if (pasteCombo(e)) return;                       // let the browser raise the paste event below
+    e.preventDefault();
+    if (printable(e)) { send({type: 'text', text: e.key}); return; }   // layout-independent: the character itself
+    if (copyCombo(e) || !e.code) return;             // nothing to copy from here
+    if (MODS[e.code]) held.add(e.code);
+    send({type: 'key', key: e.code, down: true});
+  });
+  sink.addEventListener('keyup', e => {
+    if (!$('keys').checked || pasteCombo(e)) return;
+    e.preventDefault();
+    if (printable(e) || copyCombo(e) || !e.code) return;
+    held.delete(e.code);
+    send({type: 'key', key: e.code, down: false});
+  });
+  sink.addEventListener('paste', e => {
+    e.preventDefault();
+    const cd = e.clipboardData || window.clipboardData;
+    const text = cd && cd.getData ? (cd.getData('text') || '') : '';
+    if (text) send({type: 'text', text: text.slice(0, 2000)});
+  });
+  sink.addEventListener('input', () => { sink.value = ''; });
+  window.addEventListener('blur', () => { for (const m of held) send({type: 'key', key: m, down: false}); held.clear(); });
+  if (!token) $('token').focus();
+  frame(); state();
+})();
+</script>
+</body>
+</html>
+"""
+
+
 class Resolver:
     """DNS check for the network guard: a host is public only if every address it resolves to is global."""
 
@@ -1085,13 +1601,50 @@ class Desktop:
         self.held, self.dropped, self.buttons, self.cursor = set(), set(), [False] * 3, [cfg.width // 2, cfg.height // 2]
         self.stopping, self._tearing, self._why, self._latest = False, False, None, None
         self._wake = self._frame_event = self._input_lock = self._task = self._publisher_task = None
-        self.vagon = VagonState(api_key_file_status(cfg.vagon_api_key_file))   # /pc/state "vagon" (vagon mode only)
+        self.vagon = VagonState(api_key_file_status(cfg.vagon_api_key_file), cfg.vagon_kind)   # /pc/state "vagon" (vagon mode only)
         self._vagon_task, self._vagon_frame, self._vagon_offset = None, None, (0.0, 0.0)
         self._vagon_lock = asyncio.Lock()                 # the connect loop never presses a button during an action
+        self.api, self._api_task, self._api_logged = None, None, None   # workstation: the optional Teams API (VagonApi), set by serve()
+        self._operator, self._neutral = (0, None), None   # (sequence, latest raw screencast JPEG) for the owner's console
 
     @property
     def vagon_mode(self):
         return self.cfg.pc_mode == "vagon"
+
+    @property
+    def workstation(self):
+        return self.vagon_mode and self.cfg.vagon_kind == "workstation"
+
+    def operator_allowed(self):
+        """The owner's console is served with --operator-console, or in the workstation kind while the page needs his
+        login (phase login_required) and for OPERATOR_GRACE_S after that (2FA, consent pages), never once connected."""
+        if self.cfg.operator_console:
+            return True
+        if not self.workstation or self.vagon.connected:
+            return False
+        v = self.vagon
+        return v.phase == "login_required" or (v.login_seen is not None and time.monotonic() - v.login_seen < OPERATOR_GRACE_S)
+
+    def privacy_locked(self):
+        """Workstation kind: until the remote desktop is connected nothing but a neutral picture leaves the runner
+        through /pc/frame.png and /desktop/observe (the login page and the account pages are the owner's)."""
+        return self.workstation and not self.vagon.connected
+
+    def _neutral_pair(self):
+        if self._neutral is None:
+            jpeg = neutral_jpeg(SMALL)
+            self._neutral = (jpeg, render_frame(jpeg, SMALL))
+        return self._neutral
+
+    def _lock_feed(self):
+        """Publish the neutral frame now (the screencast only sends frames when the page changes)."""
+        if self.privacy_locked() and self.feed.publish(*self._neutral_pair()):
+            self.on_change()
+
+    def operator_frame(self):
+        """(tag, raw JPEG of the latest screencast frame) for the owner's console, or None before the first frame."""
+        seq, jpeg = self._operator
+        return (f"op-{seq:x}", jpeg) if jpeg else None
 
     # lifecycle
     def start(self):
@@ -1100,12 +1653,14 @@ class Desktop:
         self._publisher_task = asyncio.create_task(self._publisher())
         if self.vagon_mode:
             self._vagon_task = asyncio.create_task(self._vagon_loop())
+        if self.workstation and self.api is not None:
+            self._api_task = asyncio.create_task(self._api_loop())
 
     async def close(self):
         self.stopping = True
         if self._wake:
             self._wake.set()
-        for task in (self._task, self._publisher_task, self._vagon_task):
+        for task in (self._task, self._publisher_task, self._vagon_task, self._api_task):
             if task:
                 task.cancel()
                 try:
@@ -1233,6 +1788,7 @@ class Desktop:
     async def _teardown(self):
         self._tearing = True
         self.feed.clear()
+        self._operator = (self._operator[0], None)
         if self.vagon_mode:
             self.vagon.connected, self._vagon_frame = False, None
             self.vagon.set_phase("restarting")
@@ -1267,9 +1823,11 @@ class Desktop:
         v = self.vagon
         v.connected, v.attempts, v.misses, v.blank_since = False, 0, 0, None
         v.last_reload, self._vagon_frame, self._vagon_offset = time.monotonic(), None, (0.0, 0.0)
-        v.set_phase("starting")
+        v.stuck_since = time.monotonic()
+        v.set_phase("opening" if self.workstation else "starting")
+        self._lock_feed()
         self.on_change()
-        log(f"vagon: opening the stream page ({why}) at {redact_url(self.cfg.vagon_url)}")
+        log(f"vagon: opening the {'workstation' if self.workstation else 'stream'} page ({why}) at {redact_url(self.cfg.vagon_url)}")
         self.events.append("vagon", state="open", why=why, host=redact_url(self.cfg.vagon_url))
         try:
             await self.page.goto(self.cfg.vagon_url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
@@ -1297,7 +1855,7 @@ class Desktop:
         holds the stream (the dashboard's iframe embed). Boxes are in page pixels; `self.view` is the page viewport."""
         page = self.page
         frames = [page.main_frame] + [f for f in page.frames if f is not page.main_frame][:5]
-        best = None
+        best, main = None, None
         for frame in frames:
             try:
                 info = await self._guarded(frame.evaluate(VAGON_PROBE_JS, list(VAGON_MIN_STREAM)), "stream probe")
@@ -1308,6 +1866,7 @@ class Desktop:
             offset = (0.0, 0.0)
             if frame is page.main_frame:
                 self.view = (int(info["vw"]), int(info["vh"]))
+                main = {k: info.get(k) for k in ("url", "title", "text", "passwords", "vw", "vh")}
             else:
                 try:
                     box = await (await frame.frame_element()).bounding_box()
@@ -1330,23 +1889,30 @@ class Desktop:
             if info.get("stream"):
                 info["stream"]["box"][0] += offset[0]
                 info["stream"]["box"][1] += offset[1]
+        info["main"] = main or {k: info.get(k) for k in ("url", "title", "text", "passwords", "vw", "vh")}
         self._vagon_frame, self._vagon_offset = frame, offset
         return info
 
     async def _vagon_focus(self):
-        """Keyboard focus on the stream element (or the body), so key events reach the stream client."""
+        """Keyboard focus on the stream element (or the body), so key events reach the stream client. On the workstation's
+        own pages (login form, dashboard) the DOM focus is left where the owner put it."""
+        if self.workstation and not self.vagon.connected:
+            return False
         frame = self._vagon_frame or getattr(self.page, "main_frame", self.page)
         try:
             return bool(await asyncio.wait_for(frame.evaluate(VAGON_FOCUS_JS, list(VAGON_MIN_STREAM)), 5))
         except Exception:
             return False
 
-    async def _vagon_press(self, button):
+    async def _vagon_press(self, button, kind=None):
         v, x, y = self.vagon, button["box"][0] + button["box"][2] / 2, button["box"][1] + button["box"][3] / 2
         label = str(button.get("label") or "")[:40]
         v.last_click, v.attempts, v.last_label = time.monotonic(), v.attempts + 1, label
-        log(f"vagon: pressing '{label}' (attempt {v.attempts})")
-        self.events.append("vagon", state="press", label=label, attempt=v.attempts)
+        log(f"vagon: pressing '{label}' ({kind or 'connect'}, attempt {v.attempts})")
+        if self.workstation:
+            self.events.append("vagon_button", label=label, button=kind, phase=v.phase, attempt=v.attempts)
+        else:
+            self.events.append("vagon", state="press", label=label, attempt=v.attempts)
         await self.page.mouse.move(x, y, steps=4)
         await self.page.mouse.click(x, y)
 
@@ -1354,9 +1920,150 @@ class Desktop:
         async with self._vagon_lock:
             await self._vagon_step_locked()
 
+    def _set_machine(self, state, source):
+        """The machine's state for /pc/state: the API reading wins while it is fresh, else what the page shows."""
+        v = self.vagon
+        if source == "page" and self.api is not None and self.api.fresh():
+            return
+        if (state, source) != (v.machine, v.machine_source):
+            v.machine, v.machine_source = state, source
+            self.on_change()
+
+    async def _vagon_return(self, why):
+        """Workstation: back to the configured page after a navigation the lock refused. A refused request may leave the
+        page where it was (nothing to do) or commit Chromium's error page; a committed account page is replaced."""
+        v = self.vagon
+        if v.set_phase("blocked"):
+            self.on_change()
+        await asyncio.sleep(0.3)
+        page = self.page
+        if page is None:
+            return
+        url = page.url
+        if url and not url.startswith("chrome-error:") and workstation_request_blocked(url, self.cfg.vagon_url, True, "GET", self.cfg.allow_private) is None:
+            return                                        # the kiosk page stayed on an allowed page
+        try:
+            await self.cdp.send("Page.stopLoading")
+        except Exception:
+            pass
+        try:
+            await page.goto(self.cfg.vagon_url, wait_until="commit", timeout=NAV_TIMEOUT_MS)
+        except Exception as error:
+            log(f"vagon: return to the workstation page failed: {self._scrub(clean_error(error))}")
+
+    async def _workstation_step(self, probe, now):
+        v = self.vagon
+        c = classify_workstation(probe)
+        phase, idx, kind = c["phase"], c["button"], c["kind"]
+        if phase == "connected":
+            v.misses, v.blank_since, v.reload_streak, v.stuck_since, v.logged_in = 0, None, 0, None, True
+            if not v.connected:
+                v.connected, v.sessions, v.attempts = True, v.sessions + 1, 0
+                if v.sessions > 1:
+                    v.reconnects += 1
+                    v.last_reconnect_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
+                log(f"vagon: remote desktop connected (session {v.sessions}, reconnects {v.reconnects})")
+                self.events.append("vagon", state="connected", session=v.sessions, reconnects=v.reconnects)
+            self._set_machine("on", "page")
+            if v.set_phase("connected"):
+                self.on_change()
+            return
+        if v.connected:
+            v.misses += 1
+            if v.misses < VAGON_MISSES and phase in ("connecting", "blank"):
+                return                                    # a stalled video or a dropped frame: not an ended session yet
+            v.connected = False
+            self._lock_feed()
+            log(f"vagon: remote session {phase}")
+            self.events.append("vagon", state="disconnected", phase=phase)
+        if phase == "login_required":
+            v.logged_in, v.login_seen, v.attempts = False, now, 0
+            if v.set_phase("login_required"):
+                v.login_why = c["why"]
+                log(f"vagon: the Vagon page needs the owner's login ({c['why']}); the operator console is at /operator")
+                self.events.append("vagon", state="login_required", why=c["why"], host=redact_url(probe.get("url")))
+                self.on_change()
+            return
+        if phase == "blocked":
+            v.blocked += 1
+            log("vagon: the page is an account page; returning to the workstation page")
+            self.events.append("blocked", what="page", reason=c["why"], url=redact_url(probe.get("url")))
+            await self._vagon_return(c["why"])
+            return
+        if phase in ("dashboard", "starting", "connecting", "ended"):
+            v.logged_in = True
+        if c["machine"] != "unknown":
+            self._set_machine(c["machine"], "page")
+        if v.set_phase(phase):
+            v.stuck_since = now
+            if idx is None:
+                labels = [" ".join(str(b.get("label") or "").split())[:32] for b in (probe.get("buttons") or [])[:12]]
+                self.events.append("vagon", state=phase, buttons=[l for l in labels if l], machine=v.machine)
+            else:
+                self.events.append("vagon", state=phase, machine=v.machine)
+            self.on_change()
+        if idx is not None and v.attempts < 6:
+            if now - v.last_click >= VAGON_CLICK_GAP_S:
+                await self._vagon_press(probe["buttons"][idx], kind)
+            return
+        if (idx is None and phase in ("dashboard", "blank") and self.api is not None and self.api.fresh()
+                and self.api.machine() == "off" and now - v.last_api_start >= VAGON_API_START_GAP_S):
+            v.last_api_start = now
+            await self.api_start("no start button on the page")
+            return
+        stuck = VAGON_WS_STUCK_S.get(phase)
+        reload_due = (phase == "ended" or v.attempts >= 6
+                      or (stuck is not None and v.stuck_since is not None and now - v.stuck_since >= stuck))
+        if reload_due and now - v.last_reload >= VAGON_RELOAD_BACKOFF[min(v.reload_streak, len(VAGON_RELOAD_BACKOFF) - 1)]:
+            v.reloads, v.reload_streak = v.reloads + 1, v.reload_streak + 1
+            await self._vagon_goto(f"{phase}, attempts {v.attempts}")
+
+    async def _api_loop(self):
+        """Workstation with a Teams API key: the machine's status every VAGON_API_POLL_S (blocking HTTP in a thread)."""
+        while not self.stopping:
+            try:
+                state = await asyncio.to_thread(self.api.refresh)
+                if self.api.error:
+                    if self.api.error != self._api_logged:
+                        self._api_logged = self.api.error
+                        log(f"vagon API: {self.api.error}")
+                        self.events.append("error", where="vagon-api", message=self.api.error)
+                else:
+                    self._api_logged = None
+                    self._set_machine(state, "api")
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                log(f"vagon API: {clean_error(error)}")
+            await asyncio.sleep(VAGON_API_POLL_S)
+
+    async def api_start(self, why):
+        """Start the machine through the Teams API (the owner's /pc/vagon/start, or the loop when the page offers no
+        start button). {ok, machine, started, error}; never logs a key."""
+        if self.api is None:
+            return {"ok": False, "machine": self.vagon.machine, "started": False, "error": "the Vagon API is not configured"}
+        state = await asyncio.to_thread(self.api.refresh)
+        if self.api.error:
+            self.events.append("error", where="vagon-api", message=self.api.error)
+            return {"ok": False, "machine": state, "started": False, "error": self.api.error}
+        if state != "off":
+            self._set_machine(state, "api")
+            return {"ok": True, "machine": state, "started": False, "error": ""}
+        if self.api.started_at and time.monotonic() - self.api.started_at < VAGON_API_START_GAP_S:
+            return {"ok": False, "machine": state, "started": False, "error": "the machine was started a moment ago"}
+        error = await asyncio.to_thread(self.api.start)
+        self.events.append("vagon_api", action="start", why=why, ok=not error, error=error or None)
+        log(f"vagon API: start requested ({why}): {'ok' if not error else error}")
+        if error:
+            return {"ok": False, "machine": state, "started": False, "error": error}
+        self._set_machine("starting", "api")
+        return {"ok": True, "machine": "starting", "started": True, "error": ""}
+
     async def _vagon_step_locked(self):
         v, now = self.vagon, time.monotonic()
         probe = await self._vagon_probe()
+        if self.workstation:
+            return await self._workstation_step(probe, now)
         phase, idx = classify_vagon(probe)
         if phase == "ready":
             v.misses, v.blank_since, v.reload_streak = 0, None, 0
@@ -1391,20 +2098,32 @@ class Desktop:
             v.reloads, v.reload_streak = v.reloads + 1, v.reload_streak + 1
             await self._vagon_goto(f"{phase}, attempts {v.attempts}")
 
+    def _remote_ready(self, probe):
+        """Is the remote desktop on screen right now (the agent may act and see)? Workstation: the loop's `connected`
+        and a fresh probe must agree, so a page that just changed is never shown."""
+        if self.workstation:
+            return self.vagon.connected and classify_workstation(probe)["phase"] == "connected"
+        return classify_vagon(probe)[0] == "ready"
+
     async def _vagon_snapshot(self, obs):
         probe = await self._vagon_probe()
+        ready = self._remote_ready(probe)
+        if self.workstation and not ready:                # privacy lock: never the login or account pages
+            return {"url": redact_url(self.cfg.vagon_url), "title": "remote desktop", "text": "",
+                    "scroll": {"y": 0, "max": 0}, "loading": bool(probe.get("loading")), "width": SMALL[0],
+                    "height": SMALL[1], "jpeg": neutral_jpeg(SMALL), "marks": [], "dialogs": self.pop_dialogs() if obs else [],
+                    "mode": "vagon", "remote_ready": False}
         try:
             jpeg = await self._guarded(self.page.screenshot(type="jpeg", quality=80), "screenshot")
         except DesktopUnavailable:
             raise
         except Exception as error:
             raise DesktopUnavailable(f"screenshot failed: {self._scrub(clean_error(error))}")
-        phase, _ = classify_vagon(probe)
         return {"url": redact_url(probe.get("url")) or redact_url(self.cfg.vagon_url),
-                "title": " ".join(str(probe.get("title") or "").split())[:160] or "remote desktop", "text": "",
-                "scroll": {"y": 0, "max": 0}, "loading": bool(probe.get("loading")), "width": self.view[0],
+                "title": "remote desktop" if self.workstation else " ".join(str(probe.get("title") or "").split())[:160] or "remote desktop",
+                "text": "", "scroll": {"y": 0, "max": 0}, "loading": bool(probe.get("loading")), "width": self.view[0],
                 "height": self.view[1], "jpeg": jpeg, "marks": [], "dialogs": self.pop_dialogs() if obs else [],
-                "mode": "vagon", "remote_ready": phase == "ready"}
+                "mode": "vagon", "remote_ready": ready}
 
     async def _do_vagon(self, a, errors):
         """The agent primitives on the stream: clicks and wheel at page points over the stream element, keys to
@@ -1415,9 +2134,10 @@ class Desktop:
             return
         async with self._vagon_lock:
             probe = await self._vagon_probe()
-            phase, _ = classify_vagon(probe)
-            if phase != "ready":
-                errors.append(f"the remote desktop is not connected (stream {phase}); wait and observe again")
+            if not self._remote_ready(probe):
+                phase = classify_workstation(probe)["phase"] if self.workstation else classify_vagon(probe)[0]
+                phase = "connecting" if phase == "connected" else phase      # the probe is ahead of the connect loop
+                errors.append(f"the remote desktop is not connected ({'PC' if self.workstation else 'stream'} {phase}); wait and observe again")
                 return
             if "mark" in a:
                 raise ActFailed("there are no marks on the remote desktop; click by point")
@@ -1483,13 +2203,20 @@ class Desktop:
 
     # Playwright's route sees only the first request of a redirect chain, so redirects are checked here: a 3xx
     # whose target is refused stops the load before the target answers; the committed URL is checked again.
+    def _main_blocked(self, url, method="GET"):
+        """Why a main-frame navigation to `url` is refused: the workstation lock (site and account pages) in that kind,
+        the general page rules otherwise."""
+        if self.workstation:
+            return workstation_request_blocked(url, self.cfg.vagon_url, True, method, self.cfg.allow_private)
+        return request_blocked(url, True, method, self.cfg.allow_private)
+
     def _on_response(self, response):
         try:
             request = response.request
             if (300 <= response.status < 400 and request.is_navigation_request() and request.frame.parent_frame is None
                     and request.frame.page is self.page):
                 target = urljoin(response.url, response.headers.get("location", ""))
-                why = request_blocked(target, True, "GET", self.cfg.allow_private) if target != response.url else None
+                why = self._main_blocked(target) if target != response.url else None
                 if why:
                     self._kill_navigation(why, target)
         except Exception:
@@ -1498,7 +2225,7 @@ class Desktop:
     def _on_navigated(self, frame):
         try:
             if frame.parent_frame is None and frame.page is self.page and frame.url not in ("about:blank", ""):
-                why = None if frame.url.startswith("chrome-error:") else blocked_url(frame.url, self.cfg.allow_private)
+                why = None if frame.url.startswith("chrome-error:") else self._main_blocked(frame.url)
                 if why:
                     self._kill_navigation(why, frame.url)
         except Exception:
@@ -1510,7 +2237,11 @@ class Desktop:
         self.blocked_nav.append((why, host))
         log(f"blocked redirect/navigation to {host} ({why})")
         self.events.append("blocked", what="redirect", reason=why, url=self._url_for_log(url))
-        asyncio.ensure_future(self._blank())
+        if self.workstation:                              # back to the workstation page, not to a blank one
+            self.vagon.blocked += 1
+            asyncio.ensure_future(self._vagon_return(why))
+        else:
+            asyncio.ensure_future(self._blank())
 
     async def _blank(self):
         try:
@@ -1541,7 +2272,10 @@ class Desktop:
                 main = req.is_navigation_request() and req.frame.parent_frame is None
             except Exception:
                 main = False
-            why = request_blocked(req.url, main, req.method, self.cfg.allow_private)
+            if self.workstation:
+                why = workstation_request_blocked(req.url, self.cfg.vagon_url, main, req.method, self.cfg.allow_private)
+            else:
+                why = request_blocked(req.url, main, req.method, self.cfg.allow_private)
             if why is None and not self.cfg.allow_private and not self.cfg.proxy and not req.url.startswith(("data:", "blob:", "about:")):
                 if not await self.resolver.public(urlsplit(req.url).hostname or ""):
                     why = "unresolved-or-private"
@@ -1551,6 +2285,9 @@ class Desktop:
                     self.blocked_nav.append((why, urlsplit(req.url).hostname or ""))
                     log(f"blocked navigation to {urlsplit(req.url).hostname} ({why})")
                     self.events.append("blocked", what="navigation", reason=why, url=self._url_for_log(req.url))
+                    if self.workstation:
+                        self.vagon.blocked += 1
+                        asyncio.ensure_future(self._vagon_return(why))   # an aborted navigation may leave an error page
                 return await route.abort("blockedbyclient")
             await route.continue_()
         except Exception:
@@ -1581,7 +2318,11 @@ class Desktop:
             self.throttle.mark()                          # the gap counts from the start of the render: 10 fps, not 1/(0.1+render)
             try:
                 jpeg = base64.b64decode(data)
-                png = await asyncio.to_thread(render_frame, jpeg, SMALL)
+                self._operator = (self._operator[0] + 1, jpeg)   # the owner's console sees the real page
+                if self.privacy_locked():                 # the monitor and the model see the neutral picture
+                    jpeg, png = self._neutral_pair()
+                else:
+                    png = await asyncio.to_thread(render_frame, jpeg, SMALL)
             except Exception as error:
                 log(f"frame skipped: {clean_error(error)}")
                 continue
@@ -1850,7 +2591,7 @@ class Desktop:
         if self.status != "ready" or self.page is None:
             return False
         if self.vagon_mode:
-            if not self.vagon.connected:
+            if not self.vagon.connected and not self.operator_allowed():
                 return False
             await self._vagon_focus()
         else:
@@ -1866,6 +2607,51 @@ class Desktop:
             elif part:
                 await self.page.keyboard.insert_text(part)
         return True
+
+    async def operator_input(self, clean):
+        """The owner's console: an absolute mouse position (fractions of the frame), a key down/up by its code, or text
+        (newlines press Enter). Clipboard combinations are dropped as everywhere; nothing is logged but failures without
+        their content. False when not delivered."""
+        if self.status != "ready" or self.page is None:
+            return False
+        kind = clean["type"]
+        try:
+            async with self._input_lock:
+                if kind == "mouse":
+                    w, h = self.view
+                    x, y = min(w - 1, max(0, clean["x"] * w)), min(h - 1, max(0, clean["y"] * h))
+                    self.cursor = [x, y]
+                    await self.page.mouse.move(x, y)       # always: the console dedupes, and a press needs the position
+                    for i, name in enumerate(("left", "middle", "right")):
+                        if "buttons" in clean and clean["buttons"][i] != self.buttons[i]:
+                            await (self.page.mouse.down if clean["buttons"][i] else self.page.mouse.up)(button=name)
+                            self.buttons[i] = clean["buttons"][i]
+                    if clean.get("wheel"):
+                        await self.page.mouse.wheel(0, clean["wheel"])
+                elif kind == "key":
+                    key = clean["key"]
+                    if clean["down"]:
+                        held_mods = {mod_name(k) for k in self.held} - {None}
+                        if not mod_name(key) and clipboard_combo(held_mods, plain_key(key)):
+                            self.dropped.add(key)
+                            return False
+                        await self.page.keyboard.down(key)
+                        self.held.add(key)
+                    elif key in self.dropped:
+                        self.dropped.discard(key)
+                    else:
+                        await self.page.keyboard.up(key)
+                        self.held.discard(key)
+                else:
+                    for i, part in enumerate(clean["text"].split("\n")):
+                        if i:
+                            await self.page.keyboard.press("Enter")
+                        if part:
+                            await self.page.keyboard.type(part, delay=VAGON_TYPE_DELAY_MS if self.vagon.connected else 0)
+                return True
+        except Exception as error:
+            log(f"operator {kind} input not delivered" + (f": {clean_error(error)}" if kind != "text" else ""))
+            return False
 
     async def release_inputs(self):
         keys, buttons = list(self.held), [i for i, b in enumerate(self.buttons) if b]
@@ -1925,6 +2711,7 @@ class Runner:
                 "session": self.clock() < self.session_until, "pc_mode": mode}
         if mode == "vagon":
             view["vagon"] = d.vagon.public()
+            view["vagon"]["operator_console"] = bool(getattr(d, "operator_allowed", lambda: False)())
         return view
 
     async def set_privacy(self, active, source="native"):
@@ -1996,6 +2783,21 @@ class Runner:
             return None
         self.last_command = "input"
         return {"ok": bool(ok), "revision": self.desk.display()["revision"]}
+
+    async def operator_input(self, clean):
+        """The owner's console input; None when privacy refuses it. Never logged (it may be a password)."""
+        if self.privacy:
+            return None
+        epoch = self.privacy_epoch
+        try:
+            ok = await asyncio.wait_for(self.desk.operator_input(clean), 3.0)
+        except asyncio.TimeoutError:
+            ok = False
+        if self.privacy or epoch != self.privacy_epoch:
+            await self.desk.release_inputs()
+            return None
+        self.last_command = "operator"
+        return {"ok": bool(ok)}
 
     def next_frame_id(self):
         self.obs_count += 1
@@ -2080,7 +2882,8 @@ def create_app(runner):
 
     @web.middleware
     async def guard(request, handler):
-        if request.path != "/healthz" and not runner.authorized(request):
+        public = request.path == "/healthz" or (request.path == "/operator" and request.method == "GET")
+        if not public and not runner.authorized(request):
             raise web.HTTPForbidden(text="Operator authentication required")
         return await handler(request)
 
@@ -2196,7 +2999,55 @@ def create_app(runner):
         except DesktopUnavailable as error:
             return unavailable(error)
 
+    # the owner's console: the page itself needs no token (it holds none); the frame and the input do
+    def operator_gate():
+        if not getattr(runner.desk, "operator_allowed", lambda: False)():
+            raise web.HTTPNotFound(text=OPERATOR_UNAVAILABLE)
+
+    async def operator_page(request):
+        operator_gate()
+        runner.events.append("operator", state="served")
+        csp = "default-src 'none'; img-src 'self' blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'"
+        return web.Response(text=OPERATOR_HTML, content_type="text/html", charset="utf-8",
+                            headers=dict(no_store, **{"Content-Security-Policy": csp, "X-Frame-Options": "DENY",
+                                                      "Referrer-Policy": "no-referrer"}))
+
+    async def operator_frame(request):
+        operator_gate()
+        refuse_private()
+        got = runner.desk.operator_frame()
+        if not got:
+            raise web.HTTPNotFound(text="No desktop frame yet (browser starting or restarting)")
+        tag, jpeg = got
+        headers = dict(no_store, ETag=f'"{tag}"')
+        if request.headers.get("If-None-Match") == headers["ETag"]:
+            return web.Response(status=304, headers=headers)
+        return web.Response(body=jpeg, content_type="image/jpeg", headers=headers)
+
+    async def operator_input(request):
+        data = await read_json(request)
+        operator_gate()
+        refuse_private()
+        try:
+            clean = validate_operator(data)
+        except ValueError as error:
+            raise web.HTTPBadRequest(text=str(error))
+        result = await runner.operator_input(clean)
+        if result is None:
+            raise web.HTTPConflict(text="Bathroom privacy is active")
+        return web.json_response(result, headers=no_store)
+
+    async def vagon_start(request):
+        if getattr(runner.desk, "api", None) is None:
+            raise web.HTTPConflict(text="The Vagon API is not configured (api_key_file and machine_id in vagon.json)")
+        result = await runner.desk.api_start("operator request")
+        return web.json_response(result, status=200 if result["ok"] else 502, headers=no_store)
+
     app = web.Application(middlewares=[guard], client_max_size=4096)
+    app.router.add_get("/operator", operator_page)
+    app.router.add_get("/operator/frame.jpg", operator_frame)
+    app.router.add_post("/operator/input", operator_input)
+    app.router.add_post("/pc/vagon/start", vagon_start)
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/pc/state", state)
     app.router.add_get("/pc/frame.png", frame)
@@ -2219,13 +3070,27 @@ async def serve(args):
                  headless=args.headless, kiosk=not args.no_kiosk, allow_private=args.allow_private,
                  proxy=args.proxy or "", chromium=args.chromium or "", start_url=args.start_url,
                  pc_mode=args.pc_mode, vagon_url=getattr(args, "vagon_url", "") or "",
-                 vagon_api_key_file=getattr(args, "vagon_api_key_file", "") or "")
+                 vagon_api_key_file=getattr(args, "vagon_api_key_file", "") or "",
+                 vagon_kind=getattr(args, "vagon_kind", None) or "streams",
+                 vagon_machine_id=getattr(args, "vagon_machine_id", "") or "",
+                 operator_console=bool(getattr(args, "operator_console", False)))
     desk = Desktop(cfg, events)
     if cfg.pc_mode == "vagon":
         key_status = api_key_file_status(cfg.vagon_api_key_file)
-        log(f"vagon mode: stream at {redact_url(cfg.vagon_url)}; API key file {key_status} (not used by the runner)")
         if key_status == "permissive":
             log("warning: the Vagon API key file is readable by other users; make it mode 0600")
+        if cfg.vagon_kind == "workstation":
+            api_note = "none"
+            if cfg.vagon_api_key_file:
+                try:
+                    desk.api = VagonApi.load(cfg.vagon_api_key_file, cfg.vagon_machine_id)
+                    api_note = "Teams API configured (machine status, /pc/vagon/start)"
+                except ValueError as error:
+                    api_note = f"not used: {error}"
+            log(f"vagon mode (workstation): the owner's Cloud Computer page at {redact_url(cfg.vagon_url)}; API {api_note}; "
+                f"operator console {'always' if cfg.operator_console else 'while a login is needed'}")
+        else:
+            log(f"vagon mode (streams): stream at {redact_url(cfg.vagon_url)}; API key file {key_status} (not used by the runner)")
     runner = Runner(desk, token, events, allow_private=args.allow_private)
     desk.on_change = runner.notify
     if args.home_origin:
@@ -2239,7 +3104,8 @@ async def serve(args):
         f"profile={cfg.profile} events={events.path} home={'yes' if args.home_origin else 'no'}")
     events.append("start", host=args.host, port=args.port, display=args.display, size=[cfg.width, cfg.height],
                   profile=str(cfg.profile), headless=cfg.headless, pid=os.getpid(), pc_mode=cfg.pc_mode,
-                  **({"vagon_host": redact_url(cfg.vagon_url)} if cfg.pc_mode == "vagon" else {}))
+                  **({"vagon_host": redact_url(cfg.vagon_url), "vagon_kind": cfg.vagon_kind,
+                      "operator_console": cfg.operator_console} if cfg.pc_mode == "vagon" else {}))
     stop = asyncio.Event()
     for name in ("SIGINT", "SIGTERM"):
         try:
@@ -2280,36 +3146,46 @@ def main(argv=None):
     parser.add_argument("--no-kiosk", action="store_true", help="show the browser window frame instead of the page only")
     parser.add_argument("--allow-private", action="store_true", help="TESTS ONLY: allow loopback/LAN pages and ports")
     parser.add_argument("--pc-mode", choices=PC_MODES, default="chromium",
-                        help="chromium: browse itself (default); vagon: show the owner's Vagon Streams page")
-    parser.add_argument("--vagon-url", help="vagon mode: the stream link (prefer stream_url in the config file: a "
+                        help="chromium: browse itself (default); vagon: show the owner's Vagon page (streams or workstation)")
+    parser.add_argument("--vagon-kind", choices=VAGON_KINDS, help="vagon mode: streams (a public stream link, default) or "
+                        "workstation (the owner's Vagon Cloud Computer behind his login); overrides kind in the config file")
+    parser.add_argument("--vagon-url", help="vagon mode: the stream link or the workstation page (prefer the config file: a "
                                             "command line is visible to other users); never logged beyond its host")
-    parser.add_argument("--vagon-config", help=f"vagon mode: JSON file {{schema: {VAGON_SCHEMA}, stream_url, "
-                                               f"api_key_file?}} (default <streamer-dir>/vagon.json)")
+    parser.add_argument("--vagon-config", help=f"vagon mode: JSON file {{schema: {VAGON_SCHEMA}, kind?, stream_url | url, "
+                                               f"api_key_file?, machine_id?}} (default <streamer-dir>/vagon.json)")
     parser.add_argument("--streamer-dir", default=os.environ.get("STREAMER_DIR", DEFAULT_STREAMER_DIR),
                         help="streamer state directory: holds vagon.json (env STREAMER_DIR)")
+    parser.add_argument("--operator-console", action="store_true",
+                        help="vagon mode: serve the owner's console at /operator always, not only while a login is needed")
     args = parser.parse_args(argv)
     if args.host not in LOOPBACK:
         parser.error("the streamer desktop binds only to loopback")
-    flag_url, args.vagon_url, args.vagon_api_key_file = (args.vagon_url or "").strip(), "", ""
+    flag_url, args.vagon_url, args.vagon_api_key_file, args.vagon_machine_id = (args.vagon_url or "").strip(), "", "", ""
     if args.pc_mode == "vagon":
         config_path = Path(args.vagon_config).expanduser() if args.vagon_config else Path(args.streamer_dir).expanduser() / "vagon.json"
-        conf = {"stream_url": "", "api_key_file": ""}
+        conf = {"kind": "", "stream_url": "", "api_key_file": "", "machine_id": ""}
         if args.vagon_config or config_path.is_file():
             try:
                 conf = load_vagon_config(config_path, args.allow_private)
             except ValueError as error:
                 parser.error(f"{config_path}: {error}")
-        url = flag_url or conf["stream_url"]
-        if not url:
-            parser.error(f"vagon mode needs the owner's stream link: --vagon-url or stream_url in {config_path}")
-        why = vagon_url_problem(url, args.allow_private)
+        kind = args.vagon_kind or conf["kind"] or "streams"
+        url = flag_url or (conf["stream_url"] if not args.vagon_kind or args.vagon_kind == conf["kind"] else "")
+        if kind == "workstation":
+            url = url or DEFAULT_WORKSTATION_URL
+            why = workstation_url_problem(url, url, args.allow_private)
+        else:
+            if not url:
+                parser.error(f"vagon mode needs the owner's stream link: --vagon-url or stream_url in {config_path}")
+            why = vagon_url_problem(url, args.allow_private)
         if why:
-            parser.error(f"stream link refused: {why}")   # the link itself is never echoed
-        args.vagon_url, args.vagon_api_key_file = url, conf["api_key_file"]
+            parser.error(f"vagon page refused: {why}")    # the link itself is never echoed
+        args.vagon_kind, args.vagon_url = kind, url
+        args.vagon_api_key_file, args.vagon_machine_id = conf["api_key_file"], conf["machine_id"]
         if args.start_url != "about:blank":
             log("--start-url is ignored in vagon mode")
-    elif flag_url or args.vagon_config:
-        parser.error("--vagon-url and --vagon-config need --pc-mode vagon")
+    elif flag_url or args.vagon_config or args.vagon_kind or args.operator_console:
+        parser.error("--vagon-url, --vagon-config, --vagon-kind and --operator-console need --pc-mode vagon")
     if len(load_token(args.token_file)) < MIN_TOKEN:
         parser.error("set SUB01_ADMIN_TOKEN or --token-file (at least 12 characters)")
     data = Path(args.data_dir).expanduser().resolve()

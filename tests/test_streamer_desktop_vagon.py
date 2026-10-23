@@ -74,10 +74,10 @@ def test_vagon_url_problem():
 def test_load_vagon_config(tmp_path):
     good = tmp_path / "vagon.json"
     good.write_text(json.dumps({"schema": sd.VAGON_SCHEMA, "stream_url": STREAM, "api_key_file": "/secret/vagon-key"}))
-    assert sd.load_vagon_config(good) == {"stream_url": STREAM, "api_key_file": "/secret/vagon-key"}
+    assert sd.load_vagon_config(good) == {"kind": "streams", "stream_url": STREAM, "api_key_file": "/secret/vagon-key", "machine_id": ""}
     minimal = tmp_path / "min.json"
     minimal.write_text(json.dumps({"schema": sd.VAGON_SCHEMA}))
-    assert sd.load_vagon_config(minimal) == {"stream_url": "", "api_key_file": ""}
+    assert sd.load_vagon_config(minimal) == {"kind": "streams", "stream_url": "", "api_key_file": "", "machine_id": ""}
     bad = {"wrong schema": {"schema": "other", "stream_url": STREAM},
            "http link": {"schema": sd.VAGON_SCHEMA, "stream_url": "http://app.vagon.io/stream/x"},
            "credentials": {"schema": sd.VAGON_SCHEMA, "stream_url": "https://u:p@app.vagon.io/stream/x"},

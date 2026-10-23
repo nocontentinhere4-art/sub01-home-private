@@ -1,170 +1,213 @@
-# Vagon Streams as SUB-01's PC (research, 2026-10-23)
+# Vagon as SUB-01's PC (updated 2026-10-23)
+
+Two Vagon products exist and this repository has touched both. **The owner's real PC is a Vagon Cloud Computer** (the
+Teams / workstation product): it already exists and works, it is reached at https://app.vagon.io/workstation, it has
+Steam and *Detroit: Become Human* installed, and that page requires **his Vagon account login** (opened from the pod's
+Chromium it lands on the login page). It is not a Streams link and he does not buy Vagon Streams. Part A below is the road
+that connects this existing computer to SUB-01: an authenticated browser session that he opens once himself, plus
+desktop capture. Part B keeps the earlier Vagon Streams research for reference (nothing of it is bought or needed).
+
+Nothing here was verified against the live Vagon pages: this environment has no Vagon account and makes no Vagon call.
+We never buy, sign up for or start a Vagon service; the owner provides the account and the computer.
+
+## Part A. The owner's Cloud Computer through `--pc-mode vagon`, kind `workstation`
+
+### A1. How it works (scripts/streamer_desktop.py, docs/streamer/DESKTOP.md "Vagon mode")
+
+- The streamer desktop runner's kiosk Chromium (Xvfb :102, 1920x1080, persistent profile under
+  `<data-dir>/profile`, i.e. `/home/unreal/.sub01-private/streamer/desktop/profile`) opens the workstation page. The
+  profile is reused across relaunches and restarts (the runner only removes Chromium's `Singleton*` lock files), so a
+  login survives them until Vagon's own session expires.
+- **The runner never has or types credentials.** When the page is a login page (URL path `/login`, `/signin`, `/auth`,
+  `/verify`...; a visible password field; sign-in text without any computer control) the state becomes
+  `phase: login_required` and the runner serves the **operator console** at `GET /operator`: a self-contained page that
+  shows the live kiosk screen (2 fps) and forwards the owner's mouse and keyboard with the admin token he pastes once.
+  The owner logs in on the Vagon page himself (section A2). The console disappears a few minutes after the login page is
+  gone and never exists while the desktop is connected (`--operator-console` keeps it always).
+- After the login, the runner presses the controls it finds by text, every press logged in `events.jsonl` as
+  `vagon_button`: `Run` / `Start` / `Turn on` (the computer is off: `machine: off`), then `Connect` / `Open` / `Enter`
+  (`machine: on`), waits for the stream (`video`, or a `canvas` covering at least half the viewport), then the existing
+  stream mapping applies: click/scroll/type/key over the stream, navigate/search as Ctrl+L, URL, Enter in the remote
+  browser, back as Alt+Left. "Session ended / disconnected / turned off" states are handled like the stream mode:
+  `Reconnect` or `Run` + `Connect` again, else the page is reopened with 15 s to 5 min backoff (`reconnects`,
+  `last_reconnect_utc`). Never pressed: Stop, Shut down, Delete, Reset, Restart, Sign out, Settings, Billing, Team,
+  Members, Invite, Upgrade, Buy, Sign in and anything money- or account-like.
+- **Privacy lock.** Until the remote desktop is connected, `/desktop/observe` returns a grey "PC not connected" picture
+  with `remote_ready: false` and `/pc/frame.png` (the monitor texture, the recording) shows the same picture: the model
+  and the viewers never see the login page, the dashboard, the team name or anything of the account; the observation's
+  `title` is always `remote desktop` and its `url` is the host only. The kiosk page may navigate only within the site of
+  the configured page (`app.vagon.io` and its sibling hosts such as `login.vagon.io`, `stream.vagon.io`): login and
+  verification paths are allowed, **billing, payments, invoices, subscription, plans, team, members, organization,
+  settings, account, profile, api keys, security, usage, files, storage, sign-up, admin, users, credits** and every other
+  site are refused at the network level and, once committed (SPA route changes included), replaced by the workstation
+  page; each refusal is logged (`blocked`, host only) and counted in `/pc/state.vagon.blocked`.
+- `/pc/state.vagon` in this kind: `kind: "workstation"`, `phase`
+  (`login_required | dashboard | starting | connecting | connected | ended | blocked`, plus `opening` right after the
+  page is (re)opened, `blank` while nothing is recognised, `restarting` while the browser relaunches), `logged_in`,
+  `machine` (`unknown | off | starting | on`) and `machine_source` (`page` or `api`), `blocked`, `login_why`,
+  `operator_console` (served right now), `last_reconnect_utc`, `reconnects`, `sessions`, `reloads`.
+- Optional Teams API (`vagon_pc.py`, unverified against the live API, see docs/design/vagon-pc/README.md):
+  `api_key_file` (mode 0600, one line `KEY:SECRET` or two lines) and `machine_id` in `vagon.json` give the `machine` field
+  from `GET /machines` every 60 s and `POST /pc/vagon/start` (admin token) to start the computer; the connect loop also
+  starts it through the API when the page offers no start button and the API says it is off (at most once per 5 min).
+  Keys stay in memory; errors are scrubbed by `vagon_pc`; nothing is logged but the outcome.
+
+### A2. The owner's one-time login (exact steps)
+
+1. On the pod (uid 1001), write the config, mode 0600:
+   ```
+   /home/unreal/.sub01-private/streamer/vagon.json
+   {"schema": "sub01.streamer-vagon.v1", "kind": "workstation", "url": "https://app.vagon.io/workstation"}
+   ```
+   (`url` may be left out: that is the default. Without any file, the same is `--pc-mode vagon --vagon-kind workstation`.)
+2. Start the desktop runner in vagon mode, e.g. `scripts/streamer_up.py start --child-arg desktop='--pc-mode vagon'`
+   (or the manual command in DESKTOP.md with `--pc-mode vagon`). The log says `vagon mode (workstation)`, then
+   `the Vagon page needs the owner's login (path); the operator console is at /operator`; `/pc/state.vagon.phase` is
+   `login_required`.
+3. Read the token on the pod: `cat /home/unreal/.sub01-private/operator-token`.
+4. In his own browser, logged into the pod's Jupyter server, open
+   `https://<pod>-8888.proxy.runpod.net/proxy/8832/operator`. The page asks for the token: paste it, press **Use token**.
+   It stays in that tab only (sessionStorage) and is sent as `X-Admin-Token`; **Forget token** removes it. The kiosk's
+   screen appears (the Vagon login page) and the header shows `login_required · logged_in=false · machine=unknown`.
+5. Click the e-mail field on the picture, type the e-mail, press Tab, type the password (or paste it with Ctrl+V: the
+   console sends the clipboard text as typed text), press Enter. If Vagon asks for a verification code, type it the same
+   way. Letters, Tab, Enter, Backspace, arrows, Shift and Ctrl combinations go to the kiosk; the runner logs none of it.
+6. When the workstation page appears the runner takes over: `logged_in=true`, then `Run`/`Connect` are pressed by it
+   (`vagon_button` events), `machine` goes `off → starting → on`, `phase` ends at `connected`, and the console closes
+   itself (the page reports it; `/operator` answers 404). Check:
+   `curl -s -H "X-Admin-Token: $(cat /home/unreal/.sub01-private/operator-token)" localhost:8832/pc/state | python3 -m json.tool`.
+7. Nothing else to do until Vagon's session expires: then `phase` returns to `login_required`, the console is served
+   again and `events.jsonl` has a `vagon` / `login_required` line. The agent meanwhile sees `remote_ready: false` and
+   the neutral picture.
+
+Caveats:
+- **Sign in with Google / Apple / Microsoft cannot work through the runner**: those hosts are refused by the runner's
+  rules (owner services), their popups are closed, and the kiosk is not his browser. Use Vagon's e-mail + password login;
+  if the account was created with Google, set a password in Vagon's account settings first (from his own browser, not
+  through the console: the console never reaches account pages).
+- Two-factor codes typed in the page work through the console; a second factor that needs a popup or another device's
+  approval has to be approved on that device. A captcha can be solved on the picture (clicks are forwarded).
+- If the console is not enough (something the kiosk layout hides, a popup the runner closes), start the runner with
+  `--no-kiosk --operator-console` and look at display :102 directly (an `x11vnc -display :102` session on the pod, over
+  an SSH tunnel): the same profile, so the login done there is kept. `--operator-console` alone keeps the console up at all
+  times, including while connected (then the owner's keys reach the remote desktop too).
+- The Windows side is the owner's: Steam must stay logged in on the machine itself ("remember me"), Windows must not
+  lock or ask for a password on the stream; the runner only sees pixels there.
+
+### A3. What remains unknown until the real page is seen
+
+The login page's URL and form (e-mail + password, or only social logins); whether the dashboard and the stream are the
+same page, an iframe, a sibling host (the lock allows `*.vagon.io`) or **a new tab** (the runner closes popups today; if
+Vagon opens the stream in a new tab the fix is to adopt a popup on the site as the main page); the real control texts
+(`Run`? `Start`? `Connect`? `Open`?: tune `VAGON_WS_START_RX` / `VAGON_WS_CONNECT_RX`, every press and every unmatched
+label list is in `events.jsonl`); the stream element (`video` or `canvas`) and whether it fills the viewport; the exact
+"session ended" / "computer turned off" texts (`VAGON_ENDED_RX`); how long Vagon's web session lasts before a new login;
+the computer's auto-stop and the cost per hour of the owner's Teams plan (the runner reconnects whenever the session
+ends: with an auto-stop that is a machine start each time); whether CDP-dispatched input counts as activity for Vagon's
+idle timer; the keyboard layout the remote Windows uses; whether Chromium's software WebRTC decode on Xvfb keeps 1080p
+smooth on the pod's CPU; UDP egress from the pod; and the Teams API facts listed in docs/design/vagon-pc/README.md
+(signed path, field names, status strings).
+
+### A4. Tests
+
+`tests/test_streamer_desktop_workstation.py`: the navigation lock, the classifier and button choice, the config, the
+operator input validation, the neutral frame, the API wrapper against a fake HTTP opener, the HTTP routes against stub
+desks, and, in a real headless Chromium on mock pages (`tests/fixtures/vagon_mock_login.html`,
+`vagon_mock_workstation.html`, `vagon_mock_account.html`): login detection, the console served only then and only with
+the token, the login done through it, Run/Connect/Reconnect/Run again, the neutral picture until connected, the lock
+against billing/settings/external pages, the login surviving a restart in the profile, and the console page working
+behind a `/proxy/8832/` path prefix in a second real browser.
+
+## Part B. Vagon Streams research (kept for reference; not the owner's product)
 
 Sources: https://docs.vagon.io/streams and its sub-pages (introduction, guides, configurations, integrations, custom
 flows), https://vagon.io/streams/pricing, https://vagon.io/streams/terms-and-conditions, the two help-center articles
-on Streams, all read on 2026-10-23. Nothing here was verified against a live stream: this environment has no Vagon
-account and makes no Vagon call. We never buy, sign up for or start a Vagon service; the owner provides the stream.
+on Streams, all read on 2026-10-23. `vagon_pc.py` / `docs/design/vagon-pc/README.md` target the **Teams / Cloud
+Computer** API (`api.vagon.io/organization-management/v1`), the product the owner actually has; this part is about
+**Vagon Streams** (`api.vagon.io/app-stream-management/v2`, `app.vagon.io/stream/...`): an uploaded *application*
+streamed into a browser page, machines provisioned per visitor. The runner's `kind: "streams"` (the default) targets it
+and stays available.
 
-Note the two Vagon products. `vagon_pc.py` / `docs/design/vagon-pc/README.md` target the **Teams / Cloud Computer**
-API (`api.vagon.io/organization-management/v1`: a persistent Windows computer with a Vagon-hosted connection link).
-This document is about **Vagon Streams** (`api.vagon.io/app-stream-management/v2`, `app.vagon.io/stream/...`), the
-product the owner chose: an uploaded *application* streamed into a browser page, machines provisioned per visitor.
-
-## 1. What a Stream is
+### B1. What a Stream is
 
 - An **Application** is a `.zip` of a build with its executable at the root; "You can stream both Windows and Linux
   applications". A **Stream** orchestrates **Stream Machines** (GPU VMs) in chosen **Regions** with a **Capacity**; it is
   reached through one **Stream Link** (`https://app.vagon.io/stream/<STREAM_ID>`) or the dashboard's iframe code.
 - A **Stream Session** is one machine's life from `waiting` to `terminated`; a **Visitor Session** is one visitor's
   connection. Default `Restart Application for Each Visitor` is **enabled**: the application restarts (and loses its
-  state) between visitors; disabling it is documented with a warning about shared session data. Machines are
-  ephemeral; the only documented storage is `T:\PreloadedFiles` (uploaded once, present in every session) and
-  `T:\Temp Files` (visitor downloads). Nothing says a visitor can reach a Windows desktop: the stream starts the one
-  executable chosen in the dashboard. **For SUB-01 that executable has to be a browser** (or a launcher that opens one);
-  its profile, history and logins will not persist between sessions unless the owner disables the per-visitor restart
-  and the machine stays up.
+  state) between visitors. Machines are ephemeral; the only documented storage is `T:\PreloadedFiles` and
+  `T:\Temp Files`. Nothing says a visitor can reach a Windows desktop: the stream starts the one executable chosen in
+  the dashboard, so for SUB-01 that executable would have to be a browser.
 - Streaming protocols: Vagon Application Streaming (default; "30FPS streaming quality in any network condition", up
-  to "4K, 60FPS" from the dashboard), Unreal Pixel Streaming, Unity Render Streaming. Transport: "WebRTC connection
-  over a P2P network".
+  to "4K, 60FPS"), Unreal Pixel Streaming, Unity Render Streaming. Transport: "WebRTC connection over a P2P network".
 
-## 2. Creating a stream (dashboard, owner's account)
+### B2. Creating a stream (dashboard, owner's account)
 
-1. Upload the application `.zip` (main `.exe` in the root), pick the executable, a name and a logo.
-2. Choose a **performance type** (section 6), then the cursor mode: **Mouse Control** (desktop apps) or **360 View
-   Control** (pointer lock, first-person apps). For a browser: Mouse Control.
-3. **Streams > New Stream**: pick the application, the regions (Europe: Dublin, Frankfurt, Stockholm; London, Paris,
-   Milan "upon request"), the capacity method: **Cost Optimized** (`on_demand`: a machine starts when a visitor connects,
-   "around 2 minutes" to connect), **Balanced** (N reserved idle machines kept running), **Availability Optimized**
-   (`always_on`: all capacity running, "less than 10 seconds"). **Automated Setup** (pre-warmed pool, "a few seconds",
-   charged "only for your active stream usage") is Enterprise only (a weekly trial can be requested).
-4. Configure: resolution (`Scale to Screen Resolution`, `720p`, `1080p`, `4K`; the fixed ones keep 16:9), audio and
-   microphone (ON / OFF / users can select), keyboard layout (English US/UK, Dutch, French AZERTY, German, Spanish,
-   Turkish), connection page (dark/light; logo and messages are Enterprise), limits (section 6), availability schedule.
-5. Copy the **Single Link** or the **iframe** code. The same can be done through the API (section 4).
+Upload the application `.zip`, pick the executable, a performance type, the cursor mode (Mouse Control for a browser);
+**Streams > New Stream**: application, regions (Europe: Dublin, Frankfurt, Stockholm), capacity (Cost Optimized
+`on_demand`: "around 2 minutes" to connect; Balanced: reserved idle machines; Availability Optimized `always_on`);
+resolution, audio, keyboard layout, connection page, limits, availability schedule; copy the Single Link or the iframe.
+API alternative: `POST /streams/{id}/assign-machine {region, user_id?}` returns a `connection_link`;
+`start-machine`, `stop-machine`.
 
-The API alternative to the link: `POST /streams/{id}/assign-machine {region, user_id?}` returns a `connection_link`
-for one machine (`connection_status: assigned`), `POST /streams/{id}/start-machine` pre-starts one, `POST
-/streams/stop-machine {machine_id}` stops it.
+### B3. Embedding and the web SDK
 
-## 3. Embedding and the web SDK
+`<script src="https://app.vagon.io/vagonsdk.js">` and an iframe with `allow="autoplay; microphone *; camera *;
+fullscreen; clipboard-read *; clipboard-write *; encrypted-media *;"`. `window.Vagon`: `isConnected()`, `startStream()`
+(what the play button does; needs a user gesture), `focusIframe()` (the documented fix for keyboard input problems),
+`resizeFrame()`, `keepAlive()`, `shutdown()`, `setQuality()`, `setVideoVolume()`, `showKeyboard()/hideKeyboard()`,
+`enableGameMode()`, `sendApplicationMessage()`, `getSessionInformation()`. Events `onConnected`, `onDisconnected`,
+`onApplicationMessage` on every plan; the rest Enterprise only. URL parameters: `?launchFlags=` (stored in local
+storage, re-applied on reconnect; `&newSession=true` resets), `?visitor_email=`. The link may carry secrets: the runner
+never logs its path or query.
 
-```html
-<script src="https://app.vagon.io/vagonsdk.js"></script>
-<iframe id="vagonFrame" src="__Stream_URL__" style="height:100vh;width:100vw"
-        allow="autoplay; microphone *; camera *; fullscreen; clipboard-read *; clipboard-write *; encrypted-media *;"></iframe>
-```
-"If you can not establish a connection, please be sure that you copied the iFrame tag from the Vagon Streams
-dashboard." Methods on `window.Vagon` (all plans): `isConnected()`, `startStream()` (what the play button does;
-"Browsers block unmuted playback and microphone capture without a user gesture"), `focusIframe()` (the documented fix
-for keyboard input problems), `resizeFrame()` (stream resolution follows the iframe size), `keepAlive()` (resets the
-idle timer with a simulated input), `shutdown()` (ends the session and turns the machine off), `setQuality("standard"|
-"moderate"|"high")`, `setVideoVolume(0..1)`, `showKeyboard()/hideKeyboard()`, `enableGameMode()/disableGameMode()`,
-`sendApplicationMessage()`, `getSessionInformation()`. Events: `onConnected`, `onDisconnected`, `onApplicationMessage`
-on every plan; `onInitialization`, `onInstalling`, `onFailed`, `onInactive`, `onPlayButtonClicked`,
-`onSessionInformation` and the rest are **Enterprise only**.
+### B4. API credentials and authentication
 
-URL parameters (Application Streaming only): `?launchFlags=<url-safe flags>` appended to the application's launch
-flags for that session (stored in local storage and re-applied on a reconnect), `&newSession=true` to reset them.
-`?visitor_email=` when visitor data collection is on. The stream link therefore may carry secrets: the runner never
-logs its path or query (section 8).
-
-## 4. API credentials and authentication
-
-Per Stream, from the dashboard: **API Public Key**, **API Secret**, **Application ID** (the Stream must already exist
-in the dashboard). Every call: `Authorization: HMAC {key}:{signature}:{nonce}:{timestamp}`, signature = hex
-HMAC-SHA256(secret, `key + METHOD + path + timestamp_ms + nonce + body`), path without the host but with the
-`/app-stream-management/v2` prefix (e.g. `/app-stream-management/v2/applications`), body `""` for GET. Endpoints:
-`GET /applications`, `GET|POST|PUT|DELETE /streams`, `PUT /streams/{id}/activate|pause`, `GET
-/streams/{id}/machines`, `start-machine`, `assign-machine`, `stop-machine`, `POST /users`, `GET /machines`, `GET
-/sessions` (duration, region, ping, cost per machine). Machine `connection_status`: `waiting`, `available`, `assigned`,
+Per Stream: API Public Key, API Secret, Application ID. `Authorization: HMAC {key}:{signature}:{nonce}:{timestamp}`,
+signature = hex HMAC-SHA256(secret, `key + METHOD + path + timestamp_ms + nonce + body`), path with the
+`/app-stream-management/v2` prefix. Endpoints: `GET /applications`, `GET|POST|PUT|DELETE /streams`, `PUT
+/streams/{id}/activate|pause`, `GET /streams/{id}/machines`, `start-machine`, `assign-machine`, `stop-machine`,
+`POST /users`, `GET /machines`, `GET /sessions`. Machine `connection_status`: `waiting`, `available`, `assigned`,
 `connected`, `terminated`, `proxy-in-migration`. Error codes: 4601 insufficient capacity, 4603 region not active,
-4609 stream not active, 4610 start-machine needs Cost Optimized. `VagonPinger.getRegionPings()` picks the best region
-client-side. The desktop runner does **not** call this API today; `vagon.json` only records where a key file would be.
+4609 stream not active, 4610 start-machine needs Cost Optimized.
 
-## 5. How keyboard and mouse reach the remote machine
+### B5. How keyboard and mouse reach the remote machine
 
-The stream page captures the browser's own DOM input events (mouse buttons, movement, wheel, keys; clipboard through
-the iframe `allow` list; drag-and-drop file transfer when Stream Files is on) and sends them over the WebRTC data
-channel; the remote machine applies them with the configured keyboard layout and cursor mode. The docs document no
-other input path (no input API, no SDK method to inject a key). In our runner the kiosk Chromium *is* the visitor's
-browser: Playwright dispatches real, trusted key and mouse events at page coordinates through CDP, the Vagon client
-forwards them like a human's. `navigate`/`search` therefore mean "Ctrl+L, type the URL, Enter" in the remote browser.
-Documented pitfalls: focus can be lost in an iframe embed (`focusIframe()`; the runner re-focuses the stream element
-before every key); the play page needs a gesture (the runner clicks the button it finds by text).
+The stream page captures the browser's own DOM input events and sends them over the WebRTC data channel; no other input
+path is documented. In our runner the kiosk Chromium *is* the visitor's browser: Playwright dispatches real, trusted key
+and mouse events through CDP and the Vagon client forwards them like a human's. `navigate`/`search` therefore mean
+"Ctrl+L, type the URL, Enter" in the remote browser. The runner re-focuses the stream element before every key and
+clicks the button it finds by text. Network from the visitor's side: TCP/UDP 443, TCP/UDP 3478, UDP 49152-65535 to
+Vagon's per-region addresses; the pod's UDP egress is not verified.
 
-Network from the visitor's side (pod): TCP/UDP 443, TCP/UDP 3478, UDP 49152-65535 to Vagon's per-region addresses.
-The pod's egress for UDP is not verified.
+### B6. Costs and limits as documented (2026-10-23)
 
-## 6. Costs and limits as documented (2026-10-23)
+Pay per minute of machine time; Starter T4 $0.025/min (~$1.50/h), Pro T4 $0.035, Starter G2 A10G $0.036, Pro G2 $0.046,
+Starter G3 L4 $0.036, Pro G3 $0.047; plus storage **$0.67/day per region** and maintenance **$0.67/day**; plan fees
+unpublished; concurrent capacity per link 25 / 50 / custom. A browser streamed 8 h/day on Starter: about $12/day plus
+$1.34, about $400/month. Limits: Session Duration Limit, Idle Duration Limit, Auto Turn-Off, budget limit (Enterprise),
+availability schedule ("Stream is Expired" page), `paused` status; resolution 720p/1080p/4K or scale-to-screen; 30 FPS
+adaptive.
 
-Pay per minute of machine time ("Stream Server usage time will be charged in minutes", terms 2022); prepaid balance
-possible; "effective prices considering performance usage and standard streaming quality", region and quality can
-change them.
+### B7. Usage rights
 
-| Performance type | GPU | vCPU / RAM | $/min | ~$/hour |
-|---|---|---|---|---|
-| Starter | NVIDIA Tesla T4 16 GB | 4 / 16 GB | 0.025 | 1.50 |
-| Pro | Tesla T4 16 GB | 8 / 32 GB | 0.035 | 2.10 |
-| Starter - G2 | NVIDIA A10G 24 GB | 4 / 16 GB | 0.036 | 2.16 |
-| Pro - G2 | A10G 24 GB | 8 / 32 GB | 0.046 | 2.76 |
-| Starter - G3 | NVIDIA L4 24 GB | 4 / 16 GB | 0.036 | 2.16 |
-| Pro - G3 | L4 24 GB | 8 / 32 GB | 0.047 | 2.82 |
+Streams terms (18.02.2022): prohibited illegal use, "disabling or circumventing features that prevent or limit access",
+reverse engineering, malware, interfering with networks; "VAGON CAN PAUSE THE SERVICES ANYTIME IT WANTS". Nothing
+addresses a scripted visitor on one's own stream. The Cloud Computer terms (docs/design/vagon-pc/README.md, 5.1) say the
+machine is "accessed and used through the interface provided by the Company": the runner uses exactly that interface
+(the web client in a real Chromium) with the owner's own login; before SUB-01 goes live the owner should still ask Vagon
+(support@vagon.io) whether an automated operator of his own computer, reconnecting after session ends, is acceptable.
 
-Plus datacenter storage **$0.67/day per region** and application maintenance **$0.67/day** (pricing calculator). Plan
-fees (Basic / Pro / Enterprise) are not published; the plan table: 25 / 50 / custom applications, 25 / 50 / 125 GB per
-application, concurrent capacity per link **25 / 50 / custom per region**, custom stream URL and versioning from Pro,
-white label, custom connection messages, port access, **budget limits** and SDK events on Enterprise. Example: a browser
-streamed 8 h/day on Starter (T4) is 480 min x $0.025 = **$12/day** + $1.34 storage/maintenance, about $400/month; on
-Starter - G2 about $17.3/day. Reserved machines (Balanced) and Availability Optimized capacity run, and bill, while idle;
-whether the `waiting` minutes of a Cost Optimized machine are billed is not stated.
+### B8. What a Streams setup would need from the owner (not pursued)
 
-Limits: **Session Duration Limit** (owner-set; a warning 1 minute before, then the visitor is redirected), **Idle
-Duration Limit** (session ends after the set time without user action), **Auto Turn-Off Duration** for machines (not on
-Availability Optimized or Balanced reserves), **Stream/Application Budget Limit** (pauses the streams when reached;
-Enterprise), availability schedule (outside it: "Stream is Expired" page), stream `paused` status (same page).
-Resolution: scale-to-screen or 720p/1080p/4K; 30 FPS adaptive, 4K60 configurable; higher settings "may cause high
-bandwidth usage". Latency is not quantified; "choose the closest regions" (EU: Dublin, Frankfurt, Stockholm). No
-documented maximum session length or reconnect rate limit.
+A Streams account, an uploaded application that is a browser, an active Stream, the Stream Link in `vagon.json`
+(`kind` left at `streams`, `stream_url`), settings 1080p or scale-to-screen, Mouse Control, English US keyboard, audio
+off, limits and a budget, region Frankfurt or Stockholm; optionally the Streams API key pair.
 
-## 7. Usage rights
+### B9. What we cannot know without an account
 
-Vagon Streams terms (last updated 18.02.2022): the Service is reached "via Channels", defined to include the website,
-APIs and SDKs; prohibited: illegal use, "disabling or circumventing features that prevent or limit access", reverse
-engineering, malware, interfering with networks; "VAGON CAN PAUSE THE SERVICES ANYTIME IT WANTS"; charges per minute;
-account needs an e-mail and password, users over 13. Nothing addresses a scripted visitor on one's own stream, bots or
-automation either way. Before SUB-01 goes live on it the owner should ask Vagon (support@vagon.io) whether an automated
-browser visitor on his own stream, re-entering after session limits, is acceptable, and whether `keepAlive()`-style
-activity is meant to defeat the idle limit he himself sets (the runner does not call `keepAlive()`; it only re-enters).
-
-## 8. What the owner has to provide (we never sign up or pay)
-
-1. A Vagon account with Streams, an uploaded application that is a browser, and an active Stream.
-2. The **Stream Link** (or the dashboard's iframe page), placed on the pod in `<streamer-dir>/vagon.json`, mode 0600,
-   uid 1001: `{"schema":"sub01.streamer-vagon.v1","stream_url":"https://app.vagon.io/stream/...","api_key_file":
-   "/home/unreal/.sub01-private/vagon-api-key"}` (`api_key_file` optional, unused today). The link is a credential:
-   anyone with it connects and spends his minutes (restricting it needs Enterprise visitor authentication).
-3. Stream settings that fit the runner: 1080p or scale-to-screen resolution, Mouse Control, English US keyboard, audio
-   off (the pod has no audio device), a Session Duration / Idle limit and a budget he accepts, the per-visitor restart
-   decision, and the region nearest the pod (EU-RO-1: Frankfurt or Stockholm).
-4. Optionally the API key pair + application id for a later start/stop/cost integration (root-only file).
-
-## 9. What we cannot know without an account
-
-The connection page's DOM (button text, `video` vs `canvas`, element ids) and whether the single link renders the same
-page as the dashboard's iframe; the exact text and controls of the "session ended" / "stream expired" pages; whether
-our CDP-dispatched input counts as user action for the Idle Duration Limit; whether a visitor can see the Windows
-desktop or only the executable's window; whether the per-visitor restart can be disabled on Basic; connect times in
-Frankfurt for a given performance type; plan prices and the Team's current balance; whether Chromium's software WebRTC
-decode (the runner runs with `--disable-gpu` on Xvfb) keeps 1080p30 smooth on the pod's CPU; whether UDP egress from
-the pod reaches Vagon's relays. The runner's behaviours that depend on these (button labels, ended-state texts) are
-text heuristics in `scripts/streamer_desktop.py` (`VAGON_CONNECT_RX`, `VAGON_ENDED_RX`) that may need one round of
-tuning against the real page; `events.jsonl` records every press and phase change for that.
-
-## 10. How the runner uses it
-
-`scripts/streamer_desktop.py --pc-mode vagon` (docs/streamer/DESKTOP.md, "Vagon mode"): the kiosk Chromium opens the
-stream link, presses the connect/play button it finds by text, waits for the stream element, tracks `connected`,
-re-enters after a session end (press "Reconnect", else reopen the page with 15 s to 5 min backoff), maps the agent's
-primitives onto the stream, and exposes `pc_mode` and `vagon{connected, phase, reconnects, last_reconnect_utc, ...}` in
-`/pc/state`. The monitor texture, the director and the agent loop are unchanged; the agent receives `mode: "vagon"` and
-`remote_ready` in `/desktop/observe` and no marks (clicks are by point).
+The connection page's DOM; the exact "session ended" / "stream expired" texts; whether CDP-dispatched input counts as
+user action for the idle limit; whether the per-visitor restart can be disabled on Basic; connect times; plan prices;
+whether Chromium's software WebRTC decode keeps 1080p30 smooth on the pod's CPU; UDP egress. The runner's text heuristics
+(`VAGON_CONNECT_RX`, `VAGON_ENDED_RX`) may need one tuning round against the real page; `events.jsonl` records every
+press and phase change for that.
