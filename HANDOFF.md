@@ -24,8 +24,10 @@ Owner decisions (2026-10-23 21:45 UTC):
 - **Chat source = the chat on his site** (subzerone.live), which sends impulses to SUB-01's brain (site WebSocket
   `/ws` → `live_server.handle_chat` → impulse/brain + streamer chat batches to the agent).
 - **All sites and all games are approved.** Still blocked by design (owner's standing rules and a public stream):
-  purchases/payments/wallets, downloads/installs, adult content. Tell the owner if a request hits these; he can
-  override explicitly.
+  purchases/payments/wallets and adult content. Tell the owner if a request hits these; he can override explicitly.
+- **Downloads and installs enabled** (owner, ~21:55 UTC; `--allow-installs`, default on): SUB-01 may download and
+  install on the owner's PC (Steam game installs included; purchases still blocked). Chat-driven installs only from
+  official stores/vendor sites, never from a file link pasted by a viewer.
 - **Credentials block lifted** (owner, ~21:50 UTC: "Può accedere a tutto quello che vuole"): SUB-01's own decisions may
   log in, use logged-in sessions and account pages on the owner's PC (`--allow-credentials`, default on). Kept: chat
   viewers cannot direct credential or account changes (the owner's original chat rule; he may lift it too); typed
