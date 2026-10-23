@@ -18,9 +18,15 @@ demonstration**. Completion requires: proven keyboard/mouse control of the same 
 agent and the director; safe chat execution and refusal; both cameras composed simultaneously; K07 speech with
 head/mouth motion; a final soak showing logs, recovery and the kill switch; the owner's approval of the look.
 
-Open questions for the owner (do not guess; ask when relevant): what "60+ fps" is measured on (game render, each
-camera, recording, HLS) and for how long; which chat source goes live (site WebSocket today; Twitch/YouTube/Kick?);
-which sites and games are approved on his PC; "looks real" is accepted by the visual-QA matrix plus his approval.
+Owner decisions (2026-10-23 21:45 UTC):
+- **60 fps on everything**: game render, both cameras (cam 2 included), the in-game monitor feed, the recording and
+  HLS. Proven by measured fps in logs (game PERF line, cam2 status, director per-segment fps), not by caps.
+- **Chat source = the chat on his site** (subzerone.live), which sends impulses to SUB-01's brain (site WebSocket
+  `/ws` → `live_server.handle_chat` → impulse/brain + streamer chat batches to the agent).
+- **All sites and all games are approved.** Still blocked by design (owner's standing rules and a public stream):
+  purchases/payments/wallets, logins/credentials/account pages, downloads/installs, adult content. Tell the owner if a
+  request hits these; he can override explicitly.
+- "Looks real" is accepted by the visual-QA matrix plus his approval.
 
 ## Working rules (non-negotiable)
 - **Kimi is the partner in every piece of work, with or without agents** (owner, 2026-10-23). Every agent, the
@@ -42,14 +48,22 @@ which sites and games are approved on his PC; "looks real" is accepted by the vi
 ## Plan (ordered; Kimi-reviewed; each step has a done-criterion)
 1. **Integrate worker outputs without runtime cut-over** — tests pass, Kimi artefacts and report sections exist,
    commits pushed, rollback baseline recorded (last-known-good commit and game k launcher).
-2. **Native game k → l (build v20)** — hands/posture/key light/cam 2 verified on frames, the agreed fps metric logged
-   (`SUB01_STREAMER_VISUAL_PERF`), game k restorable from its launcher.
+2. **Native game k → l (build v20)** — hands/posture/key light/cam 2 verified on frames, 60 fps measured
+   (`SUB01_STREAMER_VISUAL_PERF` p50/p95 frame ms, cam2 achieved fps), game k restorable from its launcher. If 60 does not
+   hold, Kimi's order: async readback ring + minimal SceneCapture show flags, TTS concurrency, then UE scalability
+   (Lumen/shadows/post), then ffmpeg/browser CPU. The 60 fps in-game monitor feed follows in v21.
 3. **Director cut-over (local)** — recording and local HLS show both cameras, the desktop layouts, the NVENC path with
    its fallback, and the agreed fps metric.
 4. **Vagon input proven, then ONE canonical desktop source** for the monitor, director and agent (no 8832/8838 split);
    agent still held — benign before/after frames prove keyboard and mouse.
-5. **Agent provider decision (with Kimi) and safety controls** — allowed/refused actions, logging, fault recovery and
-   STOP halt/resume pass before chat or any unattended run.
+5. **Agent provider and safety controls** (decided with Kimi, `docs/streamer/kimi/cutover.md`): Claude primary, Kimi
+   fallback AND Kimi in shadow on every decision (same frame, its proposal logged and compared: latency, JSON validity,
+   click-in-target, cost per correct action) for a 30-minute trial before any promotion. Code guard rails before any
+   unattended run: deny-by-default action broker, decisions bound to frame id + freshness re-check before dispatch,
+   caps (3 actions/decision, 20/min, stop after 3 consecutive failures), 60-minute lease with manual re-arm, frozen or
+   black stream = stop, independent watchdog that releases keys, append-only audit (frame hashes, raw JSON, actions).
+   Recommend to the owner a dedicated non-admin Windows account on the Vagon PC with no saved passwords/payments.
+   Done: allowed/refused actions, logging, fault recovery and STOP halt/resume pass before chat or unattended runs.
 6. **Visual polish loop** — QA findings closed, frame reviews saved with Kimi, the owner approves the look.
 7. **30-minute acceptance recording** — activity change, executed and refused chat, a recovered error, both cameras,
    voice + head/mouth, Vagon control, measured fps; highlights delivered to the owner.
