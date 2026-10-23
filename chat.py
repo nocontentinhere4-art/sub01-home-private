@@ -7,7 +7,7 @@ The filter runs first: blocked messages are never shown, stored or turned into s
 import re
 import time
 import unicodedata
-from collections import deque
+from collections import OrderedDict, deque
 
 from lexicon import HYPE, money_talk
 from state_io import load_json, save_json
@@ -16,24 +16,30 @@ MAX_LEN = 280
 RATE_S = 10.0
 
 # --- filter --------------------------------------------------------------------------
-URL = re.compile(r"(https?://|www\.|\b[\w-]+\.(com|net|org|io|xyz|fun|app|gg|co|me|ly|sol|to|ru|info|biz|link|"
-                 r"site|online|club|finance|exchange|money|pro|tech|dev|ai)\b|t\.me/|discord\.gg)", re.I)
+# a link: any scheme ("https://", "ftp://"), "www.", or a dotted name ending in one of these top-level domains (a bare
+# "pump.fun" too). has_link() reads the text first (link_text): invisible characters, unicode dots, defanged forms.
+# The lookbehinds and the bounded scheme keep the search linear in the length of the text.
+_TLDS = ("com|net|org|io|xyz|fun|app|gg|co|me|ly|sol|to|ru|info|biz|link|site|online|club|finance|exchange|money|pro|"
+         "tech|dev|ai|be|gl|ee|gd|cc|tv|de|uk|eu|ch|nl|fr|jp|cn|kr|ca|au|br|tk|ml|ga|cf|gq|pw|top|shop|store|vip|"
+         "cloud|website|click|bet|casino")                 # youtu.be, goo.gl, linktr.ee and the ccTLDs spam uses
+URL = re.compile(r"([a-z][a-z0-9+.-]{0,15}://|www\.|(?<![\w-])[\w-]+\.(" + _TLDS + r")\b|t\.me/|discord\.gg)", re.I)
 SOL_ADDR = re.compile(r"\b[1-9A-HJ-NP-Za-km-z]{32,44}\b")
 ETH_ADDR = re.compile(r"\b0x[a-fA-F0-9]{8,}")
 TICKER = re.compile(r"\$[A-Za-z][A-Za-z0-9]{1,11}\b")
 # song and video titles: a coin ticker still counts ("$PEPE to the moon"), a "$" in an artist's styling does not
 # ("$uicideboy$", "A$AP Rocky", "Ke$ha")
 MEDIA_TICKER = re.compile(r"(?<![A-Za-z0-9$])\$[A-Za-z][A-Za-z0-9]{1,11}\b(?!\$)")
-EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b")
+EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[\w-]+\.[\w.]+\b")
 PHONE = re.compile(r"(\+?\d[\d\s().-]{7,}\d)")
 MONEY = re.compile(r"\b(send|give|pay|tip|donate|lend|transfer|spare)\b.{0,20}\b(sol|eth|btc|usdc|usdt|crypto|money|"
-                   r"cash|funds|coins?|tokens?|dollars?|bucks|euros?|\d+)\b|\$\s?\d|\d\s?(sol|usd|eur|€)\b|"
+                   r"cash|funds|coins?|tokens?|dollars?|bucks|euros?|\d+)\b|[$€£]\s?\d|\d\s?(?:(?:sol|usd|eur)\b|€)|"
                    r"\b(donations?|donate|giveaway|airdrop|venmo|paypal|cash ?app|zelle|wallet|seed phrase|private key)\b",
                    re.I)
 # song and video titles (media=True): only requests for money (a verb with a currency, coin or "$" amount, or a
 # donation / payment-app / wallet word); a bare number ("Give It 2 Me") or price ("$5 Pizza Hack", "5 eur") passes
 MEDIA_MONEY = re.compile(r"\b(send|give|pay|tip|donate|lend|transfer|spare)\b.{0,20}(\b(sol|eth|btc|usdc|usdt|crypto|"
-                         r"money|cash|funds|coins?|tokens?|dollars?|bucks|euros?)\b|\$\s?\d|\d\s?(sol|usd|eur|€)\b)|"
+                         r"money|cash|funds|coins?|tokens?|dollars?|bucks|euros?)\b|[$€£]\s?\d|"
+                         r"\d\s?(?:(?:sol|usd|eur)\b|€))|"
                          r"\b(donations?|donate|giveaway|airdrop|venmo|paypal|cash ?app|zelle|wallet|seed phrase|"
                          r"private key)\b", re.I)
 # small built-in list of slurs and insults (matched on a normalised, de-leeted copy of the text). Chat messages,
@@ -41,15 +47,19 @@ MEDIA_MONEY = re.compile(r"\b(send|give|pay|tip|donate|lend|transfer|spare)\b.{0
 # videos and are shown as they are (owner, 2026-10-07: "don't censor anything"): only the self-harm prompts still
 # refuse one (MEDIA_RE); the guard's adult words, self-harm and money rules apply to them elsewhere. Spaced-out
 # letters ("k y s", "n i g g e r") are joined by normalise() before the match.
-SELF_HARM = ("kys", "kill yourself", "hang yourself", "neck yourself", "end yourself", "cut yourself", "off yourself",
-             "go die", "drink bleach")
+SELF_HARM = ("kys", "kill yourself", "kill yourselves", "hang yourself", "hang yourselves", "neck yourself",
+             "end yourself", "cut yourself", "off yourself", "go die", "drink bleach")
 HATE_SLURS = ("nigger", "nigga", "faggot", "fag", "kike", "spic", "chink", "gook", "wetback", "tranny", "retard",
               "dyke", "cunt", "whore", "slut")
 INSULTS = ("bitch", "bastard", "idiot", "moron", "imbecile", "stupid", "dumbass", "loser", "asshole", "dickhead",
            "motherfucker", "fuck you", "fuck yourself", "fuck u", "fuck off", "stfu", "shut up", "piece of shit",
            "worthless", "pathetic", "ugly")
 SLURS = HATE_SLURS + SELF_HARM + INSULTS
-_slur_re = lambda words: re.compile(r"\b(" + "|".join(re.escape(w) for w in words) + r")(s|es|ed|ing|y|ic)?\b")  # noqa: E731
+# plain words that hold a slur and a suffix: "spicy" (spic + y), "spiced" and "spicing" (spic + ed, ing), "chinking"
+# (chink + ing), "retarding" (retard + ing). They pass ("spicy ramen"); the slur itself and its plural still refuse.
+SLUR_FALSE_FRIENDS = ("spicy", "spiced", "spicing", "chinking", "retarding")
+_slur_re = lambda words: re.compile(r"\b(?!(?:" + "|".join(SLUR_FALSE_FRIENDS) + r")\b)(" +
+                                    "|".join(re.escape(w) for w in words) + r")(s|es|ed|ing|y|ic)?\b")  # noqa: E731
 SLUR_RE = _slur_re(SLURS)
 MEDIA_RE = _slur_re(SELF_HARM)
 # ... and explicit calls to violence against a group, or a slur used as one ("kill all the ...", "death to ...",
@@ -127,6 +137,29 @@ def fold(text):
     return "".join(c for c in t if not unicodedata.combining(c))
 
 
+_STOPS = str.maketrans({chr(0x3002): ".", chr(0xFF61): "."})       # ideographic full stops: a browser reads them as "."
+_DEFANG_DOT = re.compile(r"[\[({](?:\.|dot)[\])}]", re.I)                       # "[.]", "(dot)", "{dot}"
+_SPACED_DOT = re.compile(r"(?<=[\w-])[^\S\r\n]+\.[^\S\r\n]+(?=[\w-])")        # "example . com"
+
+
+def clean(text):
+    """The text as the filters read it: invisible characters (zero-width space and joiners, bidi marks, soft hyphen)
+    dropped, ideographic full stops read as dots, accents and full-width forms folded (fold)."""
+    return "".join(c for c in fold((text or "").translate(_STOPS)) if unicodedata.category(c) != "Cf")
+
+
+def link_text(text):
+    """The text as a browser reads a link in it: "hxxp" as "http", the defanged dots "[.]" and "(dot)" as dots, and a
+    dot with spaces round it joined ("example . com" -> "example.com")."""
+    t = _DEFANG_DOT.sub(".", re.sub(r"hxxp", "http", clean(text), flags=re.I))
+    return _SPACED_DOT.sub(".", t)
+
+
+def has_link(text):
+    """A link in the text (URL), read as a browser would read it (link_text)."""
+    return URL.search(link_text(text)) is not None
+
+
 def normalise(text):
     """Lower case, accents folded, leet undone ("sh!t"; a "!" closing a word is just dropped: "kys!"), punctuation and
     digits dropped, a letter repeated 3+ times twice; a run of 3+ single letters is one word ("k y s" -> "kys",
@@ -138,7 +171,10 @@ def normalise(text):
 
 
 def dedupe_key(text):
-    return re.sub(r"[\W_]+", "", unicodedata.normalize("NFKC", text).lower())
+    """Letters and digits, lower case: "HELLO!" and "hello" are one message. A message of emoji or punctuation alone
+    keeps its text, else all of them would have the same empty key and each would count as a duplicate of the last."""
+    t = unicodedata.normalize("NFKC", text).lower()
+    return re.sub(r"[\W_]+", "", t) or t.strip()
 
 
 # the chat is on everyone's screen: trading/"get rich" pushes (lexicon.HYPE, re-exported here), buy advice and coin
@@ -159,7 +195,8 @@ def blocked(text, media=False, skip_links=False):
     (MEDIA_TICKER: not "$uicideboy$"), no phone rule (it reads year ranges, "2000 - 2010"), money only as a request (MEDIA_MONEY),
     and of the money lexicon only trading promotion and buy advice (lexicon.money_talk without BUY_PRESSURE).
     skip_links=True leaves the link rule out: check() decides about links for the chat."""
-    if URL.search(text) and not skip_links:
+    text = clean(text)                                  # the text as the screen shows it (see clean)
+    if not skip_links and has_link(text):
         return "links are not allowed"
     if SOL_ADDR.search(text) or ETH_ADDR.search(text):
         return "addresses are not allowed"
@@ -181,7 +218,9 @@ def blocked(text, media=False, skip_links=False):
 def message_blocked(text, skip_links=False):
     """blocked() for what viewers put on everyone's screen (a message, a nickname, a taught word): a bare coin name
     (lexicon.COIN_NAMES) is refused too."""
-    return blocked(text, skip_links=skip_links) or ("no trading or get-rich talk" if money_talk(text, names=True) else None)
+    text = clean(text)
+    return (blocked(text, skip_links=skip_links)
+            or ("no trading or get-rich talk" if money_talk(text, names=True) else None))
 
 
 # --- message -> stimulus rule table ----------------------------------------------------
@@ -278,14 +317,16 @@ def stimulus(text):
 
 # --- limits --------------------------------------------------------------------------
 class RateLimiter:
-    """1 message per RATE_S per client key. Keys (IPs) are forgotten as soon as the window passes."""
+    """1 message per RATE_S per client key. Keys (IPs) are forgotten as soon as the window passes. They are kept in the
+    order they were allowed, so the expired ones sit at the front and a call drops them (memory stays at one window)."""
 
     def __init__(self, window=RATE_S, clock=time.monotonic):
-        self.window, self.clock, self.last = window, clock, {}
+        self.window, self.clock, self.last = window, clock, OrderedDict()
 
     def allow(self, key):
         now = self.clock()
-        self.last = {k: t for k, t in self.last.items() if now - t < self.window}   # purge old IPs
+        while self.last and now - next(iter(self.last.values())) >= self.window:    # purge old IPs, the oldest first
+            self.last.popitem(last=False)
         if key in self.last:
             return False
         self.last[key] = now
@@ -310,9 +351,9 @@ def check(text, key, limiter, dedupe, links_open=False):
     """Full pipeline for one incoming message -> (ok, reason). Filter first, then limits. A link is refused unless
     links_open (the PC can open links); then the other rules judge the message as they judge any other."""
     text = (text or "").strip()
-    if not text:
+    if not clean(text).strip():                         # empty, or nothing but invisible characters
         return False, "empty"
-    if URL.search(text) and not links_open:
+    if has_link(text) and not links_open:
         return False, "links are not allowed"
     reason = message_blocked(text, skip_links=True)     # with links open, the link itself is no reason to refuse
     if reason:
@@ -379,7 +420,7 @@ class TeachLimits:
 def check_teach(text, nick, key, limits, day, taught_today):
     """Full pipeline for one taught word or phrase -> (ok, reason, text, nick). Filter first, then limits."""
     text = re.sub(r"\s+", " ", (text or "")).strip()
-    if not text:
+    if not clean(text).strip():
         return False, "empty", "", ""
     reason = message_blocked(text)
     if reason:
