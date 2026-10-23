@@ -1,8 +1,10 @@
 # SUB-01 streamer: runbook (pod, v1)
 
 One supervisor (`scripts/streamer_up.py`) runs five children as uid 1001 `unreal`, in this order: Xvfb :102,
-desktop runner, voice server, agent, director. The director records the stream to local MP4 files.
-There is no public broadcast in v1. Design: `docs/streamer/PLAN.md`; persona rules: `DIRECTION.md`.
+desktop runner, voice server, agent, director. The director records the stream to local MP4 files and, on request,
+writes a local HLS playlist from the same encode ("Recording: 60 fps, NVENC, layouts, HLS" below).
+There is no public broadcast: nothing is published or streamed out without the owner's request. Design:
+`docs/streamer/PLAN.md`; persona rules: `DIRECTION.md`.
 
 ## Commands
 
@@ -43,7 +45,10 @@ without a readable token (only the voice call needs it). Undo with `resume`.
 | `STOP`, `state.json`, `events.jsonl` (all components, one JSON per line), `layout.jsonl`, `supervisor.json` | state dir |
 | logs | `logs/<name>.log` (xvfb desktop voice agent director supervisor); `pids/<name>.pid` |
 | recordings | `recordings/sub01-YYYYmmdd-HHMMSS-NNN.mp4` (UTC, 10-minute segments, fragmented MP4) |
+| HLS (only with `--hls-dir`) | `hls/live.m3u8` + `hls/sub01-...-<epoch seq>.ts` (4 s), local test server 127.0.0.1:8839 |
 | voice PCM FIFO, speech WAVs | `voice.pcm`, `speech/` |
+| second camera (written by the game) | `cam2.mjpeg` (FIFO, MJPEG 1280x720 at 60), `cam2.json` (fps, last frame) |
+| in-game monitor feed (read by the game) | `monitor.mjpeg` (FIFO), `scripts/streamer_monitor_feed.py` health 127.0.0.1:8840 (8838 is the Vagon runner) |
 
 Each ffmpeg launch has its own timestamp prefix, so a restart never overwrites a segment. Segments are fragmented:
 a crash costs about 2 s and the file stays playable. Director state: `curl -s -H "X-Admin-Token: $(cat
@@ -80,6 +85,10 @@ First `status`, then `tail -50 logs/<name>.log`, then `grep '"service_' events.j
 - **Chat offline.** Chat arrives only through the site WebSocket and the backend (`SUB01_STREAMER=1`,
   `GET /api/home/streamer`, `.../chat`). The backend is not supervised here: if 8830 is down the agent keeps reading
   without chat. Check `kill` is not set (`STOP` present means `status` prints the kill banner).
+- **Not 60 fps / choppy.** Director state `output` (`fps_measured`, `speed` below 1.0 means ffmpeg falls behind) and
+  `encoder` (`libx264` after an `encoder_fallback` row: read `encoder_note`, e.g. no libcuda, NVENC session limit).
+  Relieve it with `--layout-switch restart` (one composite) or drop cam2; check sources with the mpdecimate command in
+  "Recording: 60 fps" below.
 - **No recording / not growing.** Director state: `recording`, `last_error`, `game_source`. `screen` means no
   window named `Sub01HomeLab*` was found with xdotool on :99 and the whole display is recorded (set `--child-arg
   director='--game-pid N'` or `--window-id`). The watchdog restarts ffmpeg after two checks (30 s apart) without
@@ -119,14 +128,16 @@ curl -s -X POST -H "X-Admin-Token: $(cat $T)" -H 'Content-Type: application/json
      --data '{"operation":"start"}' http://127.0.0.1:8830/api/home/streamer
 runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py start --source $S --streamer-dir $P \
      --token-file $T --child-env "director=XAUTHORITY=/home/unreal/.sub01-private/native-xauthority" \
-     --child-arg "director=--game-pid-file $P/game.pid"
+     --child-arg "director=--game-pid-file $P/game.pid" \
+     --child-arg "director=--fps 60 --desktop-fps 60 --encoder h264_nvenc --hls-dir $P/hls"
 runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py status --source $S --streamer-dir $P --token-file $T
 ```
 
 - [ ] The native game runs with `-Sub01StreamerVisual`; `$P/game.pid` is its pid; `status` shows every service `up`, no
       restart loop; `GET /api/home/streamer` says `active: true`, `activity: use_computer`, routines paused.
 - [ ] Director: `curl -s -H "X-Admin-Token: $(cat $T)" localhost:8837/director/state` shows `recording: true`, `voice:
-      true`, `game_source` a window (not `screen`); the newest segment grows.
+      true`, `game_source` a window (not `screen`), `encoder: h264_nvenc` (else read `encoder_note`), `output.fps_measured`
+      about 60 and `output.speed` about 1.0; the newest segment grows.
 - [ ] Application audio (when enabled, section below): `pactl list short sinks` has `sub01_apps`, a Chromium sink-input
       appears when a page plays sound.
 - [ ] Picture: no body displacement, face and hands in frame, desktop text readable in the PiP; the agent is not in quiet
@@ -200,12 +211,100 @@ Sync: record a page that flashes and beeps on one click, measure the offset in t
 offset with `adelay` on the early path; accept 50 ms locally, 80 ms through Vagon, drift under 20 ms over two hours.
 Until W6 merges the input, the recording stays voice-only and `director/state` does not mention application audio.
 
-## Layouts
+## Recording: 60 fps, NVENC, layouts, HLS (director v2)
 
-`POST /director/layout {"layout": "character"|"desktop"|"split"}` is validated and appended to `layout.jsonl`
-(time, layout, previous, run prefix, seconds into the running recording). The live composite stays `character`
-(game full frame, desktop 480x270 bottom-right). A post pass can use the log to re-cut the recording, but it holds
-only the composite: the full-size desktop is not recoverable from it.
+Director flags (`--child-arg "director=..."`; defaults keep the v1 recording: 24 fps, libx264, no HLS):
+
+| Flag | Meaning |
+|---|---|
+| `--fps 10-120` (24) | game capture, every `fps=` filter, `-r`, and GOP `-g` = 2 x fps (a keyframe every 2 s) |
+| `--desktop-fps 10-60` (15) | desktop capture; never above `--fps` (the graph repeats its frames up to `--fps`) |
+| `--encoder libx264\|h264_nvenc\|hevc_nvenc` | NVENC: `-preset p4 -tune ll -rc vbr -cq <crf> -b:v 0 -bf 2 -g 2*fps -pix_fmt yuv420p`; probed once at start (1 s lavfi encode at the real size/rate, same options); a failed probe records with libx264 and logs `encoder_fallback` |
+| `--layout webcam\|desktop\|split\|room` | fix the layout; default: follow the last line of `layout.jsonl` |
+| `--layout-switch live\|restart` (live) | live: switch inside the running ffmpeg; restart: relaunch ffmpeg at every switch (less CPU) |
+| `--hls-dir DIR` | also `DIR/live.m3u8` + 4 s segments from the same encode (tee muxer; off by default) |
+| `--rtmp-url-file FILE` / `--rtmp-url URL` | optional third tee branch (flv, behind a dropping fifo; off by default). The director never logs, prints or puts the URL in state (ffmpeg's messages are redacted); use the file, because the supervisor logs child command lines. ffmpeg itself can only take it on its command line, so local users can see it with `ps` while it runs |
+| `--cam2-fifo`, `--cam2-json`, `--cam2-stale 3`, `--cam2-interval 1` | second camera paths (default `<streamer-dir>/cam2.mjpeg`, `cam2.json`), freshness limit, check period |
+| `--layout-interval 1`, `--switch-timeout 3` | how often `layout.jsonl` is read; how long a live switch waits for ffmpeg's reply |
+| `--test-sources`, `--test-seconds N` | lavfi testsrc2/sine instead of X, FIFOs and cam2 (local smoke tests) |
+
+Pod profile (owner, 2026-10-23: 60 fps on everything): `--child-arg "director=--fps 60 --desktop-fps 60 --encoder
+h264_nvenc --hls-dir /home/unreal/.sub01-private/streamer/hls"` (start command in B above). Check the exact ffmpeg
+command without starting anything: `runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_director.py
+--streamer-dir $P --fps 60 --desktop-fps 60 --encoder h264_nvenc --hls-dir $P/hls --print-argv` (also runs the probe).
+
+**Layouts.** `webcam` = the game viewport (the frontal webcam shot) full frame + desktop 480x270 bottom-right
+(`character` is accepted as its v1 name); `desktop` = desktop full + webcam PiP; `split` = webcam | desktop side by
+side; `room` = cam2 full + webcam PiP (needs cam2, otherwise `webcam` is shown). `POST /director/layout {"layout": ...}`
+appends a line to `layout.jsonl`; the agent may also append `{"layout": ...}` lines itself. The director reads the last
+line every second (a half-written or unknown line is ignored) and switches.
+
+**How a switch works.** In live mode the graph renders every layout of the run at once (all sources normalised to
+1920x1080 yuv420p at `--fps`) and `streamselect@layout` picks the recorded one. ffmpeg runs with `-stdin` and the
+director writes its interactive filter command `c` + `streamselect@layout -1 map N` to ffmpeg's stdin, then waits for
+`Command reply ... ret:0` (ffmpeg 6.1 says "for stream 0", 7.x "for graph 0"): one command, so no half-switched frame;
+measured 76-86 ms locally. No reply in `--switch-timeout` (3 s) means the fallback: ffmpeg is relaunched with the new
+layout (a 1-2 s gap and a new run prefix). sendcmd cannot do this: it reads its command file once at graph start.
+Cost of rendering all four: about 0.5 core more than one layout at 1080p60 (measured on the 4-core test box with
+lavfi sources); `--layout-switch restart` avoids it. `events.jsonl`: `layout_switched` / `layout_switch_failed`;
+state: `layout` (wanted), `live_layout` (shown), `last_switch`.
+
+**cam2.** Used when `cam2.mjpeg` is a FIFO with a writer and `cam2.json` reports a frame newer than 3 s
+(`last_frame_unix`, `last_frame`, ISO or ms accepted; `last_frame_age_s`; else the file's mtime). ffmpeg reads it with
+`-use_wallclock_as_timestamps 1 -f mjpeg`; the director keeps a read end open and drains it while ffmpeg does not
+read it (a non-blocking writer can attach, a blocking one never stalls). Honest limit: a cam2 that keeps the FIFO open
+but stops writing freezes the whole recording, so while ffmpeg reads it the director checks `cam2.json` every second
+and relaunches ffmpeg without cam2 once the last frame is 3 s old (gap: about 4-6 s). Without cam2 a `room` request
+shows `webcam`; when cam2 comes back the run is relaunched with it only if `room` is wanted (not within 30 s of a
+relaunch that dropped it). A cam2 FIFO the game replaces (new inode) also means a relaunch. In restart mode cam2 is
+attached only to `room` runs. Missing cam2 = v1 inputs.
+
+**HLS.** Same encode as the recording (tee): `hls_time 4`, list size 6, old segments deleted, `omit_endlist` (a
+relaunch does not end the stream for players), `discont_start`, media sequence from the epoch (keeps counting up across
+relaunches), `program_date_time`, temp files renamed when complete. A failing HLS or RTMP branch (`onfail=ignore`) never
+stops the recording. Local check only: `python3 $S/scripts/streamer_hls_serve.py $P/hls` (127.0.0.1:8839, playlist
+no-cache, nothing else served) and `ffprobe http://127.0.0.1:8839/live.m3u8`. Never expose it without the owner's
+request; anything on the pod (the agent's Chromium included) can read it while it runs. Browsers need H.264 for HLS;
+`hevc_nvenc` is for local files.
+
+**Proving 60.** ffmpeg runs with `-progress pipe:1 -stats_period 5`. State `output` = `fps_measured` (output frames per
+wall second over the last 5 s; 60 when ffmpeg keeps up), `fps_ffmpeg` (average since the run started), `speed` (1.0 =
+real time), `dup_frames`/`drop_frames`. Each 10-minute segment (and each run's last, `partial`) gets a `segment_fps`
+row in `events.jsonl` and in state `segments_fps`: frames, wall_s, media_s, fps (frames/wall), fps_media. A row is
+a window of output time numbered like the segment files, not the file itself: the muxer cuts at the first keyframe
+after 600 s and progress comes every 5 s, so a row can include a few seconds of the neighbouring file. That proves
+the output pace, not that every source delivered 60 distinct frames: the graph's `fps` filters repeat frames a source
+did not deliver, and dup/drop do not count those. Check a finished segment offline:
+`ffprobe -v error -select_streams v -count_packets -show_entries stream=nb_read_packets,r_frame_rate -of csv=p=0 SEG`
+(a full 600 s segment: 36000 packets, 60/1) and the distinct frames of one minute of the webcam layout (the character
+always moves; a static desktop legitimately repeats):
+`ffmpeg -hide_banner -nostats -i SEG -t 60 -an -vf mpdecimate=max=0,showinfo -f null - 2>&1 | grep -c 'showinfo.*n:'`
+(about 3600; a 30 fps source upsampled to 60 gives about 1800). Seen locally: 60.8 fps without cam2 at 1080p60 with
+libx264 ultrafast on 4 cores, 36.8 fps (speed 0.4) with cam2 decoding as well; the pod's NVENC and 16 vCPU are
+expected to hold 60, and these numbers are how to check it.
+
+## Monitor feed (in-game monitor texture; `scripts/streamer_monitor_feed.py`)
+
+Captures an X display (default `:103`) at 60 fps, scales to 1280x720 and writes MJPEG (q 5, yuvj420p) into
+`<streamer-dir>/monitor.mjpeg`, a FIFO the game reads. It never blocks: no reader means frames are dropped and ffmpeg is
+stopped after 10 s (restarted when a reader opens the FIFO); a frame that does not fit is dropped whole, a partly
+written one is finished first, so a connected reader gets whole JPEGs; ffmpeg is restarted with backoff when it exits.
+Across a reader reconnect or a feed crash one JPEG can be truncated: the game must resync on SOI (FF D8) and read
+without blocking (the feed pauses without a reader, during backoff and after a crash).
+`:103` is the Vagon runner's display: the feed is raw, so a login or account page there reaches the in-game monitor
+unless the game's privacy lock covers the monitor texture (it does for the neutral picture; check before a stream).
+
+```
+runuser -u unreal -- setsid nohup /home/unreal/venv/bin/python $S/scripts/streamer_monitor_feed.py \
+     --streamer-dir $P --display :103 > $P/logs/monitor.log 2>&1 < /dev/null &
+curl -s localhost:8840/healthz     # ffmpeg, reader, frames_in/written/dropped, fps_in, restarts, last_error
+```
+
+Not yet a `streamer_up.py` child (adding one changes `ORDER`, which the supervisor's tests pin). To add it: `ORDER` +
+`"monitor"` after `"director"`; `SCRIPTS["monitor"] = "scripts/streamer_monitor_feed.py"`, `DEFAULT_PORTS["monitor"] =
+8840`, `PORT_FLAG["monitor"] = "--port"`, `HEALTH_PATH["monitor"] = "/healthz"`, `START_TIMEOUT["monitor"] = 20.0`,
+`DEFAULT_PYTHON["monitor"] = "/home/unreal/venv/bin/python"`; in `build_specs` give it `--streamer-dir` like the
+director (the display through `--child-arg "monitor=--display :103"`); and update the tests that list the services.
 
 ## Known limits
 
@@ -214,7 +313,10 @@ only the composite: the full-size desktop is not recoverable from it.
 - The privacy lock's neutral picture covers the model and the monitor texture, not this recording: the director grabs
   display `:102` itself, so during a Vagon login the kiosk's login page is in the local MP4 (fix: W1/W6, DECISIONS A2).
   Until then, start the director after `phase: connected`, or treat that recording as private.
-- Layout changes are hard cuts and are not applied live in v1; no OBS, no RTMP, no public stream; local files only.
+- Layout changes are hard cuts (live through streamselect, or a relaunch as fallback); no OBS; RTMP and HLS exist but
+  are off by default and nothing public is started without the owner's request.
+- A cam2 FIFO that stays open without frames freezes the recording until the director notices (about 4-6 s) and
+  relaunches without cam2. `fps_measured` proves the output pace, not distinct source frames (offline check above).
 - Audio and video come from separate clocks (two X grabs and a PCM FIFO): small drift is possible.
 - No lip sync or facial animation (the mesh has no face rig). Chat comes only from the site WebSocket.
 - The child command lines follow the flags of `streamer_desktop.py`, `voice_server.py` and `streamer_agent.py`
@@ -228,8 +330,8 @@ only the composite: the full-size desktop is not recoverable from it.
 ## The same scene in OBS on a Mac
 
 Source 1: window capture of the game (1920x1080), full frame. Source 2: the desktop on :102 (screen share,
-VNC or browser source on the desktop frame), cropped and placed 480x270 bottom-right; that is scene `Character`.
-Scenes `Desktop` (desktop full, game small) and `Split` are the other two layouts. Audio: the voice PCM
-(`-f s16le -ar 48000 -ac 2`) piped from the pod into a virtual audio device and captured as an audio input; add
-the Mac's own browser audio if wanted. Scene switching on `layout.jsonl`-style requests through obs-websocket gives
-live cuts, which the pod recorder cannot do.
+VNC or browser source on the desktop frame), cropped and placed 480x270 bottom-right; that is scene `Webcam` (v1
+`Character`). Scenes `Desktop` (desktop full, game small), `Split` and `Room` (cam2 full, game small) are the other
+layouts. Audio: the voice PCM (`-f s16le -ar 48000 -ac 2`) piped from the pod into a virtual audio device and captured
+as an audio input; add the Mac's own browser audio if wanted. Scene switching on `layout.jsonl`-style requests through
+obs-websocket gives the same live cuts the pod recorder now makes with streamselect.

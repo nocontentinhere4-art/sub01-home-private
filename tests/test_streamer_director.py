@@ -114,13 +114,15 @@ def test_config_refuses_out_of_range_values(tmp_path, kw):
 
 # --------------------------------------------------------------- layouts
 
-def test_layout_validation_accepts_only_the_three_names():
-    assert [sd.validate_layout(n) for n in ("character", "desktop", "split")] == ["character", "desktop", "split"]
+def test_layout_validation_accepts_the_four_layouts_and_the_v1_name():
+    # v2: `character` (v1) is the webcam layout; `room` is new (cam2)
+    assert [sd.validate_layout(n) for n in ("character", "webcam", "desktop", "split", "room")] == [
+        "webcam", "webcam", "desktop", "split", "room"]
     for bad in (None, "", "Character", "pip", 1, ["character"], {"layout": "character"}, True):
         with pytest.raises(ValueError) as err:
             sd.validate_layout(bad)
-        assert "character, desktop, split" in str(err.value)
-    assert sd.LIVE_LAYOUT == "character" and [k for k, v in sd.LAYOUTS.items() if v["live"]] == ["character"]
+        assert "webcam, desktop, split, room (character = webcam)" in str(err.value)
+    assert sd.DEFAULT_LAYOUT == "webcam" and sd.LIVE_ORDER == ("webcam", "desktop", "split", "room")
 
 
 def test_filter_graph_for_every_layout(tmp_path):
@@ -383,7 +385,7 @@ def test_director_restarts_ffmpeg_when_it_exits_and_reports_why(tmp_path):
         state = director.state()
         assert state["recording"] is True and state["ffmpeg_pid"] == 502 and state["restarts"] == 1
         assert "code 1" in state["last_error"] and "Cannot open display" in state["last_error"]
-        assert state["voice"] is False and state["game_source"] == "window:0x20000c" and state["layout"] == "character"
+        assert state["voice"] is False and state["game_source"] == "window:0x20000c" and state["layout"] == "webcam"
         assert state["since"].endswith("Z") and state["segments"] == []
         first_argv = launched[0][0]
         assert "anullsrc=channel_layout=stereo:sample_rate=48000" in first_argv
@@ -523,7 +525,7 @@ def test_every_route_but_health_needs_the_operator_credential(tmp_path):
             for method, path in [("get", "/director/state"), ("post", "/director/layout")]:
                 assert (await getattr(http, method)(path)).status == 403
                 assert (await getattr(http, method)(path, headers={"X-Admin-Token": "wrong-credential-x"})).status == 403
-            assert director.layout == "character" and not (tmp_path / "streamer" / "layout.jsonl").exists()
+            assert director.layout == "webcam" and not (tmp_path / "streamer" / "layout.jsonl").exists()
         finally:
             await http.close()
     run(body())
@@ -555,8 +557,8 @@ def test_layout_requests_are_validated_and_logged_to_layout_jsonl(tmp_path):
         try:
             r = await http.post("/director/layout", json={"layout": "desktop"}, headers=AUTH)
             body_ = await r.json()
-            assert r.status == 200 and body_["layout"] == "desktop" and body_["live_layout"] == "character"
-            assert body_["live"] is False and body_["logged"]["previous"] == "character"
+            assert r.status == 200 and body_["layout"] == "desktop" and body_["live_layout"] is None    # not recording
+            assert body_["live"] is True and body_["logged"]["previous"] == "webcam"
             await http.post("/director/layout", json={"layout": "split"}, headers=AUTH)
             await http.post("/director/layout", json={"layout": "split"}, headers=AUTH)       # every call is logged
             for bad in ({"layout": "pip"}, {"layout": 3}, {}, {"Layout": "desktop"}):
@@ -566,10 +568,10 @@ def test_layout_requests_are_validated_and_logged_to_layout_jsonl(tmp_path):
             assert (await http.post("/director/layout", data=b"x" * 2000, headers=AUTH)).status == 413
             lines = [json.loads(line) for line in log.read_text().splitlines()]
             assert [line["layout"] for line in lines] == ["desktop", "split", "split"]
-            assert [line["previous"] for line in lines] == ["character", "desktop", "split"]
+            assert [line["previous"] for line in lines] == ["webcam", "desktop", "split"]
             assert all({"t", "unix", "layout", "previous", "run", "offset_s", "recording"} <= set(line) for line in lines)
             state = await (await http.get("/director/state", headers=AUTH)).json()
-            assert state["layout"] == "split" and state["live_layout"] == "character"
+            assert state["layout"] == "split" and state["live_layout"] is None
         finally:
             await http.close()
     run(body())
@@ -604,3 +606,689 @@ def test_print_argv_shows_the_command_without_running_it(tmp_path, monkeypatch, 
     assert sd.main(["--print-argv", "--streamer-dir", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "voice: False" in out and "-window_id 2097164" in out and "anullsrc" in out and "x11grab" in out
+
+
+# =====================================================================================================================
+# v2 (director worker, 2026-10-23): 60 fps, NVENC with probe fallback, cam2 + layouts webcam/room/desktop/split,
+# live switching through ffmpeg's stdin command channel, HLS/RTMP through the tee muxer, the output fps meter,
+# the loopback HLS server, and two real ffmpeg smoke tests on lavfi test sources (skipped without ffmpeg).
+# =====================================================================================================================
+
+import re
+import shutil
+import subprocess
+import time
+
+hls_spec = importlib.util.spec_from_file_location("streamer_hls_serve", ROOT / "scripts/streamer_hls_serve.py")
+hls_serve = importlib.util.module_from_spec(hls_spec)
+hls_spec.loader.exec_module(hls_serve)
+FFMPEG = shutil.which("ffmpeg")
+needs_ffmpeg = pytest.mark.skipif(FFMPEG is None, reason="ffmpeg not installed")
+RTMP = "rtmp://203.0.113.7/live/sk_live_0123456789abcdef"     # documentation address, fake stream key
+
+
+def inputs_of(argv):
+    """[(options before -i, value of -i)] for every input of an ffmpeg argv."""
+    out, start = [], 0
+    for i, arg in enumerate(argv):
+        if arg == "-i":
+            out.append((argv[start:i], argv[i + 1]))
+            start = i + 2
+    return out
+
+
+def test_v2_argv_60fps_nvenc_cam2_and_hls_tee(tmp_path):
+    hls = tmp_path / "hls"
+    cfg = make_cfg(tmp_path, fps=60, desktop_fps=60, encoder="h264_nvenc", hls_dir=hls)
+    argv = sd.build_ffmpeg_argv(cfg, prefix="sub01-20261023-210000", window_id=0x20000C, voice=True, cam2=True,
+                                layout="room", live=True, encoder="h264_nvenc", cam2_fps=60)
+    assert "-stdin" in argv and "-nostdin" not in argv                      # the live switch channel
+    assert value_after(argv, "-progress") == "pipe:1" and value_after(argv, "-stats_period") == "5"
+    (game, gi), (desk, di), (voice, vi), (cam, ci) = inputs_of(argv)
+    assert gi == ":99.0" and value_after(game, "-framerate") == "60" and value_after(game, "-window_id") == str(0x20000C)
+    assert di == ":102.0" and value_after(desk, "-framerate") == "60"
+    assert vi == str(tmp_path / "streamer" / "voice.pcm")
+    assert ci == str(tmp_path / "streamer" / "cam2.mjpeg") and value_after(cam, "-f") == "mjpeg"
+    assert value_after(cam, "-use_wallclock_as_timestamps") == "1" and value_after(cam, "-framerate") == "60"
+    graph = value_after(argv, "-filter_complex")
+    assert set(re.findall(r"\bfps=(\d+)", graph)) == {"60"}                # nothing resampled below 60
+    assert "[3:v]" in graph and "tpad=stop=-1:stop_mode=clone" in graph     # a cam2 EOF repeats its last frame
+    assert "[lwebcam][ldesktop][lsplit][lroom]streamselect@layout=inputs=4:map=3," in graph and graph.endswith(
+        ";[2:a]apad[aout]")
+    assert graph.count("overlay=") == 3 and "hstack=inputs=2" in graph
+    # NVENC, consistent rate and GOP
+    assert (value_after(argv, "-c:v"), value_after(argv, "-preset"), value_after(argv, "-tune")) == ("h264_nvenc", "p4", "ll")
+    assert (value_after(argv, "-rc"), value_after(argv, "-cq"), value_after(argv, "-b:v"), value_after(argv, "-bf")) == (
+        "vbr", "23", "0", "2")
+    assert (value_after(argv, "-r"), value_after(argv, "-g"), value_after(argv, "-pix_fmt")) == ("60", "120", "yuv420p")
+    assert "-crf" not in argv
+    # one encode, two outputs through tee
+    assert value_after(argv, "-f", argv.index("-c:a")) == "tee" and value_after(argv, "-flags") == "+global_header"
+    rec_branch, hls_branch = argv[-1].split("|")
+    assert rec_branch.startswith("[f=segment:segment_time=600:reset_timestamps=1:segment_format=mp4:")
+    assert "frag_keyframe" in rec_branch and "fflags=+flush_packets" in rec_branch
+    assert rec_branch.endswith("]" + str(tmp_path / "streamer" / "recordings" / "sub01-20261023-210000-%03d.mp4"))
+    assert hls_branch.startswith("[f=hls:onfail=ignore:hls_time=4:hls_list_size=6:hls_flags=delete_segments+")
+    assert "omit_endlist" in hls_branch and "hls_start_number_source=epoch" in hls_branch
+    assert f"hls_segment_filename={hls}/sub01-20261023-210000-%d.ts]{hls}/live.m3u8" in hls_branch
+    # the third branch: RTMP behind a dropping fifo; ':' inside fifo_options escaped for both tee levels
+    rtmp_cfg = make_cfg(tmp_path, fps=60, desktop_fps=60, rtmp_url=RTMP)
+    branches = sd.build_ffmpeg_argv(rtmp_cfg, prefix="p", live=True)[-1].split("|")
+    assert len(branches) == 2 and branches[1].startswith("[f=flv:onfail=ignore:use_fifo=1:fifo_options=drop_pkts_on_overflow=1\\\\:")
+    assert branches[1].endswith("]" + RTMP) and RTMP not in repr(rtmp_cfg)
+
+
+def test_v2_live_graph_without_cam2_and_the_restart_mode_graph(tmp_path):
+    cfg = make_cfg(tmp_path, fps=30, desktop_fps=30)
+    for layout, index in (("webcam", 0), ("character", 0), ("desktop", 1), ("split", 2), ("room", 0)):
+        argv = sd.build_ffmpeg_argv(cfg, prefix="p", window_id=7, cam2=False, layout=layout, live=True)
+        graph = value_after(argv, "-filter_complex")
+        assert f"[lwebcam][ldesktop][lsplit]streamselect@layout=inputs=3:map={index}," in graph   # room -> webcam
+        assert "[3:v]" not in graph and argv.count("-i") == 3 and "mjpeg" not in argv
+    # restart mode: one layout per launch, stdin closed as in v1
+    argv = sd.build_ffmpeg_argv(cfg, prefix="p", window_id=7, cam2=True, layout="room", live=False)
+    graph = value_after(argv, "-filter_complex")
+    assert "-nostdin" in argv and "streamselect" not in graph and argv.count("-i") == 4
+    assert graph.startswith("[3:v]scale=1920:1080:flags=bilinear:in_range=full:out_range=limited,setsar=1,fps=30,tpad=")
+    assert "[0:v]scale=480:270" in graph
+    assert sd.build_filter_complex("webcam", cfg) == sd.build_filter_complex("character", cfg)
+    assert sd.effective_layout("room", False) == "webcam" and sd.effective_layout("room", True) == "room"
+    assert sd.live_order(False) == ("webcam", "desktop", "split") and sd.live_order(True)[-1] == "room"
+
+
+@pytest.mark.parametrize("kw", [{"fps": 121}, {"fps": 9}, {"fps": 60, "desktop_fps": 61}, {"fps": 24, "desktop_fps": 30},
+                                {"encoder": "nvenc"}, {"layout": "bogus"}, {"layout_switch": "hot"},
+                                {"rtmp_url": "http://203.0.113.7/live/key"}, {"rtmp_url": "rtmp://h/app/a key"},
+                                {"rtmp_url": "rtmp://h/a|b"}, {"hls_dir": "/tmp/a|b"}, {"hls_dir": "/tmp/a:b"},
+                                {"hls_dir": "/tmp/a b"}, {"switch_timeout": 0}, {"test_seconds": -1}])
+def test_v2_config_refuses_bad_values(tmp_path, kw):
+    with pytest.raises(ValueError) as err:
+        make_cfg(tmp_path, **kw)
+    assert "key" not in str(err.value) and "203.0.113.7" not in str(err.value)      # never echoes the URL
+
+
+def test_v2_config_and_cli_accept_the_pod_profile(tmp_path):
+    cfg = make_cfg(tmp_path, fps=120, desktop_fps=60, layout="character", encoder="hevc_nvenc")
+    assert (cfg.fps, cfg.desktop_fps, cfg.layout, cfg.encoder) == (120, 60, "webcam", "hevc_nvenc")
+    args, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--fps", "60", "--desktop-fps", "60", "--encoder",
+                               "h264_nvenc", "--hls-dir", str(tmp_path / "hls")])
+    assert (cfg.fps, cfg.desktop_fps, cfg.encoder, cfg.hls_dir, cfg.layout, cfg.layout_switch) == (
+        60, 60, "h264_nvenc", tmp_path / "hls", None, "live")
+    _, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--cam2-interval", "0.5", "--layout-interval", "2"])
+    assert (cfg.cam2_interval, cfg.layout_interval) == (0.5, 2.0)
+    url_file = tmp_path / "rtmp-url"
+    url_file.write_text(RTMP + "\n")
+    _, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--rtmp-url-file", str(url_file)])
+    assert cfg.rtmp_url == RTMP
+    for bad in (["--encoder", "vaapi"], ["--fps", "121"], ["--desktop-fps", "61", "--fps", "60"],
+                ["--rtmp-url", RTMP, "--rtmp-url-file", str(url_file)], ["--layout-switch", "hot"]):
+        with pytest.raises(SystemExit):
+            sd.parse_args(["--streamer-dir", str(tmp_path), *bad])
+
+
+# ------------------------------------------------------------------ encoder
+
+class FakeRun:
+    def __init__(self, code=0, stderr="", raises=None):
+        self.code, self.stderr, self.raises, self.calls = code, stderr, raises, []
+
+    def __call__(self, argv, **kw):
+        self.calls.append(argv)
+        if self.raises:
+            raise self.raises
+        return subprocess.CompletedProcess(argv, self.code, "", self.stderr)
+
+
+def test_v2_encoder_probe_and_fallback_with_a_mocked_subprocess(tmp_path, monkeypatch):
+    cfg = make_cfg(tmp_path, fps=60, desktop_fps=60, encoder="h264_nvenc")
+    fake = FakeRun(code=1, stderr="[h264_nvenc @ 0x1] Cannot load libcuda.so.1\nError while opening encoder\n")
+    monkeypatch.setattr(sd.subprocess, "run", fake)
+    ok, reason = sd.probe_encoder(cfg, "h264_nvenc")
+    assert ok is False and "libcuda" in reason and len(fake.calls) == 1
+    probe = fake.calls[0]
+    assert "testsrc2=size=1920x1080:rate=60:duration=1" in probe and probe[-3:] == ["-f", "null", "-"]
+    assert value_after(probe, "-c:v") == "h264_nvenc" and value_after(probe, "-tune") == "ll"
+    assert sd.probe_encoder(cfg, "libx264") == (True, "libx264 needs no probe") and len(fake.calls) == 1
+    assert sd.probe_encoder(cfg, "hevc_nvenc", run=FakeRun(raises=FileNotFoundError("ffmpeg")))[0] is False
+    assert sd.probe_encoder(cfg, "hevc_nvenc", run=FakeRun(code=0)) == (True, "hevc_nvenc probe passed")
+
+    async def body():                     # the director probes once, falls back, and says so in state and events
+        director, launched = make_director(tmp_path, [lambda: FakeProc(1, exit_after=0.05, code=1), lambda: FakeProc(2)],
+                                           fps=60, desktop_fps=60, encoder="h264_nvenc")
+        task = asyncio.ensure_future(director.run())
+        await until(lambda: len(launched) == 2 and director.alive)
+        state = director.state()
+        assert (state["encoder"], state["encoder_requested"]) == ("libx264", "h264_nvenc") and "libcuda" in state["encoder_note"]
+        assert all(value_after(argv, "-c:v") == "libx264" and value_after(argv, "-g") == "120" for argv, _ in launched)
+        assert len(fake.calls) == 2                                          # once per director, not per launch
+        events = [json.loads(line) for line in (tmp_path / "streamer" / "events.jsonl").read_text().splitlines()]
+        fallback = [e for e in events if e["kind"] == "encoder_fallback"]
+        assert len(fallback) == 1 and fallback[0]["requested"] == "h264_nvenc" and fallback[0]["active"] == "libx264"
+        director.stop()
+        await asyncio.wait_for(task, 5)
+    run(body())
+    passing = sd.Director(make_cfg(tmp_path, encoder="hevc_nvenc"), probe=lambda enc: (True, f"{enc} probe passed"))
+    assert run(passing.resolve_encoder()) == "hevc_nvenc" and passing.state()["encoder"] == "hevc_nvenc"
+
+
+# ------------------------------------------------------------------ layouts
+
+def test_v2_layout_follows_the_last_line_of_layout_jsonl(tmp_path):
+    log = tmp_path / "layout.jsonl"
+    assert sd.read_last_layout(log) is None
+    log.write_text('{"layout": "desktop"}\n{"layout": "character", "source": "agent"}\n\n')
+    assert sd.read_last_layout(log) == "webcam"
+    with open(log, "a") as handle:
+        handle.write('{"layout": "room"}\n{"layout": "spl')                   # half-written last line: keep the current one
+    assert sd.read_last_layout(log) is None
+    log.write_text('{"layout": "room"}\n{"layout": "sideways"}\n')
+    assert sd.read_last_layout(log) is None
+    log.write_text('{"layout": "split"}\n')
+    assert sd.read_last_layout(log) == "split"
+    director, _ = make_director(tmp_path, [lambda: None])
+    streamer_log = tmp_path / "streamer" / "layout.jsonl"
+    streamer_log.parent.mkdir(parents=True)
+    streamer_log.write_text('{"layout": "room"}\n')
+    assert director.poll_layout_log() == "room" and director.layout == "room"
+    assert director.poll_layout_log() is None                               # unchanged file: not re-read
+    fixed, _ = make_director(tmp_path, [lambda: None], layout="desktop")
+    assert fixed.poll_layout_log() is None and fixed.layout == "desktop"
+    record = fixed.set_layout("split")                                      # logged, but the fixed layout stays
+    assert record["fixed"] == "desktop" and fixed.layout == "desktop"
+    assert director.set_layout("character")["requested"] == "character" and director.layout == "webcam"
+
+
+class FakeStdin:
+    """ffmpeg's stdin: records the command lines and answers like ffmpeg 6.1 (or 7.x) on stderr."""
+
+    def __init__(self, director, ret=0, style="stream"):
+        self.director, self.ret, self.style, self.lines = director, ret, style, []
+
+    def write(self, data):
+        self.lines.append(data)
+        if self.ret is not None:
+            reply = (f"Command reply for stream 0: ret:{self.ret} res:" if self.style == "stream"
+                     else f"Command reply for graph 0: ret:<{self.ret}> res:")
+            loop = asyncio.get_running_loop()
+            loop.call_soon(self.director.stderr_line, "")
+            loop.call_soon(self.director.stderr_line, "Enter command: <target>|all <time>|-1 <command>[ <argument>]")
+            loop.call_soon(self.director.stderr_line, reply)
+
+    async def drain(self):
+        return None
+
+    def close(self):
+        pass
+
+
+def live_director(tmp_path, cam2=True, **kw):
+    director, _ = make_director(tmp_path, [lambda: None], switch_timeout=0.3, **kw)
+    proc = FakeProc.__new__(FakeProc)
+    proc.pid, proc.returncode = 5, None
+    director.proc, director.prefix, director.cam2 = proc, "sub01-20261023-210000", cam2
+    director.live_layout, director.live_order = "webcam", sd.live_order(cam2)
+    return director, proc
+
+
+def test_v2_live_switch_writes_one_streamselect_command_and_waits_for_the_reply(tmp_path):
+    async def body():
+        director, proc = live_director(tmp_path)
+        proc.stdin = FakeStdin(director)
+        assert await director.apply_layout() == "same" and proc.stdin.lines == []
+        director.layout = "split"
+        assert await director.apply_layout() == "live"
+        assert proc.stdin.lines == [b"cstreamselect@layout -1 map 2\n"] and director.live_layout == "split"
+        director.layout = "room"
+        proc.stdin.style = "graph"                                           # ffmpeg 7.x wording
+        assert await director.apply_layout() == "live" and proc.stdin.lines[-1] == b"cstreamselect@layout -1 map 3\n"
+        assert director.state()["last_switch"]["how"] == "live" and director._restart_reason is None
+        assert not any("Enter command" in line for line in director._tail)   # prompts stay out of the error tail
+        events = [json.loads(line) for line in (tmp_path / "streamer" / "events.jsonl").read_text().splitlines()]
+        assert [(e["layout"], e["previous"]) for e in events if e["kind"] == "layout_switched"] == [
+            ("split", "webcam"), ("room", "split")]
+        # no reply (or an error reply) -> relaunch with the new layout
+        proc.stdin = FakeStdin(director, ret=None)
+        director.layout = "desktop"
+        assert await director.apply_layout() == "restart"
+        assert director._restart_reason.startswith("layout desktop (live switch failed: no reply")
+        director._restart_reason = None
+        proc.stdin = FakeStdin(director, ret=-22)
+        assert await director.apply_layout() == "restart" and "ret -22" in director._restart_reason
+    run(body())
+
+
+def test_v2_a_switch_that_outlives_its_ffmpeg_changes_nothing(tmp_path):
+    """Kimi review: a relaunch while a switch waits for its reply must not let the old switch touch the new run."""
+    async def body():
+        director, proc = live_director(tmp_path)
+
+        class Relaunching(FakeStdin):
+            def write(self, data):
+                super().write(data)
+                new = FakeProc.__new__(FakeProc)
+                new.pid, new.returncode = 6, None
+                asyncio.get_running_loop().call_soon(setattr, director, "proc", new)   # the run was replaced
+        proc.stdin = Relaunching(director)
+        director.layout = "desktop"
+        assert await director.apply_layout() == "stale"
+        assert director.live_layout == "webcam" and director._restart_reason is None and director.last_switch is None
+    run(body())
+
+
+def test_v2_room_needs_cam2_and_the_restart_mode_relaunches(tmp_path):
+    async def body():
+        director, proc = live_director(tmp_path, cam2=False)
+        proc.stdin = FakeStdin(director)
+        director.layout = "room"
+        assert await director.apply_layout() == "same"                       # no cam2: webcam is what room can show
+        director.cam2_now = True                                             # cam2 came up: relaunch with it...
+        now = [1000.0]
+        director._clock, director.started_mono = (lambda: now[0]), 990.0
+        director.last_restart_reason = sd.CAM2_DROP                          # ...but not 30 s after dropping it
+        assert await director.apply_layout() == "same"
+        now[0] = 1021.0
+        assert await director.apply_layout() == "restart" and director._restart_reason == "layout room: relaunch with cam2"
+        restart, proc2 = live_director(tmp_path, layout_switch="restart")
+        restart.live_order = ("webcam",)
+        restart.layout = "desktop"
+        assert await restart.apply_layout() == "restart" and restart._restart_reason == "layout desktop"
+        assert not hasattr(proc2, "stdin")
+    run(body())
+
+
+# --------------------------------------------------------------------- cam2
+
+def test_v2_cam2_is_usable_only_with_a_writer_and_a_fresh_cam2_json(tmp_path):
+    proc_root = tmp_path / "proc"
+    proc_root.mkdir()
+    cfg = make_cfg(tmp_path)
+    tap = sd.FifoTap(cfg.cam2_fifo, proc_root, create=False, what="cam2")
+    now = time.time()
+    assert sd.cam2_status(cfg, tap, now) == (False, "cam2 FIFO does not exist", None)
+    cfg.streamer_dir.mkdir(parents=True)
+    cfg.cam2_fifo.write_bytes(b"")
+    assert sd.cam2_status(cfg, tap, now)[1] == "cam2 path is not a FIFO"
+    cfg.cam2_fifo.unlink()
+    os.mkfifo(cfg.cam2_fifo)
+    assert sd.cam2_status(cfg, tap, now)[1] == "no cam2.json next to the cam2 FIFO" and tap.fd is not None   # tap open
+    cfg.cam2_json.write_text(json.dumps({"fps": 60, "last_frame_unix": now - 0.4}))
+    assert sd.cam2_status(cfg, tap, now)[1] == "no process writes to the cam2 FIFO"
+    assert sd.cam2_status(cfg, tap, now, writer=False)[0] is True          # freshness only (while the run reads it)
+    fake_proc(proc_root, 30, 9, cfg.cam2_fifo, "0104001")                  # the game: O_WRONLY|O_NONBLOCK
+    ok, reason, fps = sd.cam2_status(cfg, tap, now)
+    assert ok and fps == 60.0 and reason == "cam2 last frame 0.4s ago, writer present"
+    cfg.cam2_json.write_text(json.dumps({"fps": 60, "last_frame": iso_z(now - 9)}))
+    assert sd.cam2_status(cfg, tap, now)[:2] == (False, "cam2 last frame 9.0s ago")
+    cfg.cam2_json.write_text(json.dumps({"last_frame_ms": 1, "last_frame_unix": (now - 2) * 1000}))   # milliseconds
+    assert sd.cam2_status(cfg, tap, now)[0] is True
+    tap.close()
+    assert sd.parse_time(True) is None and sd.parse_time(12345.0) is None and sd.parse_time("nope") is None
+
+
+def iso_z(unix):
+    return datetime.fromtimestamp(unix, timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def test_v2_cam2_decision_drops_at_once_and_adds_only_for_room():
+    f = sd.cam2_decision
+    assert f(True, True, 3, uptime=5, wanted=False) == ("keep", 0)
+    assert f(True, False, 0, uptime=5, wanted=True) == ("drop", 0)          # a stalled cam2 freezes the graph: at once
+    assert f(False, False, 1, uptime=500, wanted=True) == ("keep", 0)
+    assert f(False, True, 0, uptime=500, wanted=True) == ("wait", 1)
+    assert f(False, True, 1, uptime=500, wanted=True) == ("add", 2)
+    assert f(False, True, 1, uptime=10, wanted=True) == ("wait", 2)         # just launched: no relaunch loop
+    assert f(False, True, 1, uptime=500, wanted=False) == ("ready", 2)      # webcam/desktop/split do not need it
+
+
+def test_v2_cam2_tick_relaunches_without_a_stalled_cam2_and_with_it_for_room(tmp_path):
+    async def body():
+        now = [1000.0]
+        available = [(False, "cam2 last frame 7.0s ago", 60.0)]
+        writers = []
+        director, _ = make_director(tmp_path, [lambda: None])
+        director._check_cam2 = lambda writer=True: (writers.append(writer), available[0])[1]
+        director._clock = lambda: now[0]
+        director.proc, director.cam2, director.started_mono = FakeProc(1), True, 1000.0
+        now[0] += 100
+        assert await director.cam2_tick() == "drop" and director._restart_reason == "cam2 stopped delivering"
+        director._restart_reason, director.cam2 = None, False
+        available[0] = (True, "cam2 writer present, last frame 0.1s ago", 60.0)
+        assert await director.cam2_tick() == "wait"
+        assert await director.cam2_tick() == "ready" and director._restart_reason is None and director.cam2_now
+        director.layout = "room"
+        assert await director.cam2_tick() == "add" and director._restart_reason == "cam2 came online"
+        director._restart_reason, director.cam2 = None, True                # reading cam2, the game replaces the FIFO
+        director._cam2_ident, director.cam2_tap.ident = (1, 2), (1, 3)
+        assert await director.cam2_tick() == "drop" and "replaced" in director.cam2_reason
+        kinds = [json.loads(line)["kind"] for line in (tmp_path / "streamer" / "events.jsonl").read_text().splitlines()]
+        assert kinds.count("cam2_changed") == 3
+        assert writers == [False, True, True, True, True]    # reading cam2: freshness only, but every 5th tick is full
+    run(body())
+
+
+def test_v2_restart_mode_attaches_cam2_only_to_room_runs(tmp_path):
+    async def body():
+        launched = []
+        for layout in ("webcam", "room"):
+            director, runs = make_director(tmp_path / layout, [lambda: FakeProc(3)], layout_switch="restart", layout=layout)
+            director._check_cam2 = lambda writer=True: (True, "fresh", 60.0)
+            task = asyncio.ensure_future(director.run())
+            await until(lambda: director.alive)
+            launched.append((runs[0][0], director.cam2, director.cam2_now))
+            director.stop()
+            await asyncio.wait_for(task, 5)
+        (webcam_argv, webcam_cam2, now_ready), (room_argv, room_cam2, _) = launched
+        assert webcam_argv.count("-i") == 3 and webcam_cam2 is False and now_ready is True     # ready for a room switch
+        assert room_argv.count("-i") == 4 and room_cam2 is True and "mjpeg" in room_argv
+    run(body())
+
+
+def test_v2_the_director_drains_cam2_only_while_ffmpeg_is_not_reading_it(tmp_path):
+    async def body():
+        director, _ = make_director(tmp_path, [lambda: None])
+        drained = []
+        director.cam2_tap.drain = lambda limit=None: drained.append(limit)
+        await director.drain_tick()
+        director.proc, director.cam2 = FakeProc(1), True
+        await director.drain_tick()
+        assert drained == [4 << 20]                                # one drain (4 MB cap), none while ffmpeg reads
+    run(body())
+
+
+# ------------------------------------------------------------- output fps
+
+def progress_block(frame, out_s, fps=60.0, dup=0, drop=0, end=False):
+    return [f"frame={frame}", f"fps={fps:.2f}", "stream_0_0_q=23.0", f"out_time_us={int(out_s * 1e6)}",
+            f"out_time=00:00:{out_s:09.6f}", f"dup_frames={dup}", f"drop_frames={drop}", "speed=1.00x",
+            f"progress={'end' if end else 'continue'}"]
+
+
+def test_v2_output_meter_measures_fps_now_and_per_segment():
+    meter = sd.OutputMeter(10, "sub01-r")
+    records = []
+    for now, frame, out_s, dup in ((0.0, 0, 0.0, 0), (5.0, 300, 5.0, 0), (10.5, 630, 10.5, 2), (15.5, 930, 15.5, 2)):
+        for line in progress_block(frame, out_s, dup=dup):
+            records += meter.feed(line, now)
+    assert meter.latest["fps_measured"] == 60.0 and meter.latest["frames"] == 930 and meter.latest["speed"] == 1.0
+    assert records == [{"segment": "sub01-r-000.mp4", "frames": 630, "wall_s": 10.5, "media_s": 10.5, "fps": 60.0,
+                        "fps_media": 60.0, "dup_frames": 2, "drop_frames": 0, "partial": False}]
+    end = [r for line in progress_block(1170, 19.5, dup=2, end=True) for r in meter.feed(line, 19.5)]
+    assert [(r["segment"], r["frames"], r["partial"]) for r in end] == [("sub01-r-001.mp4", 540, True)]
+    assert meter.finish() == [] and len(meter.history) == 2
+    # an end block past a boundary closes the full window; no empty partial after it
+    crossing = sd.OutputMeter(10, "sub01-c")
+    for now, frame, out_s in ((0.0, 0, 0.0), (5.0, 300, 5.0)):
+        for line in progress_block(frame, out_s):
+            crossing.feed(line, now)
+    end = [r for line in progress_block(620, 10.3, end=True) for r in crossing.feed(line, 10.3)]
+    assert [(r["segment"], r["frames"], r["partial"]) for r in end] == [("sub01-c-000.mp4", 620, False)]
+    # a run that ends at its first block reports nothing (no zero-frame record)
+    short = sd.OutputMeter(10, "sub01-s")
+    assert [r for line in progress_block(0, 0.0, end=True) for r in short.feed(line, 0.0)] == [] and short.finish() == []
+    killed = sd.OutputMeter(600, "sub01-k")
+    for now, frame in ((0.0, 0), (2.0, 118)):
+        for line in progress_block(frame, now):
+            killed.feed(line, now)
+    assert killed.finish()[0]["fps"] == 59.0 and killed.feed("garbage", 3.0) == []
+    for line in ("frame=N/A", "progress=continue"):                          # a block without a frame count is ignored
+        assert killed.feed(line, 4.0) == []
+
+
+# -------------------------------------------------------------- secrets, HLS
+
+def test_v2_the_rtmp_url_never_reaches_logs_state_or_print_argv(tmp_path, monkeypatch, capsys):
+    url_file = tmp_path / "rtmp-url"
+    url_file.write_text(RTMP)
+    monkeypatch.setattr(sd, "find_game_window", lambda cfg: (0x20000C, "fixed"))
+    monkeypatch.setattr(sd.VoiceTap, "writer_present", lambda self, settle=None: (False, "no writer"))
+    assert sd.main(["--print-argv", "--streamer-dir", str(tmp_path), "--rtmp-url-file", str(url_file)]) == 0
+    out = capsys.readouterr().out
+    assert "sk_live_0123456789abcdef" not in out and "203.0.113.7" not in out and "]<redacted>" in out
+    director, _ = make_director(tmp_path, [lambda: None], rtmp_url=RTMP)
+    director.stderr_line(f"[fifo @ 0x5] Error opening {RTMP}: Connection refused")
+    director.stderr_line("[rtmp @ 0x6] Server error: stream sk_live_0123456789abcdef refused")
+    state = json.dumps(director.state())
+    assert all("sk_live" not in line and "203.0.113.7" not in line for line in director._tail)
+    assert "sk_live" not in state and director.state()["rtmp"] is True
+
+
+def test_v2_old_hls_segments_are_pruned_and_state_counts_the_current_run(tmp_path):
+    hls = tmp_path / "hls"
+    hls.mkdir()
+    now = time.time()
+    names = {"sub01-20261023-200000-1792790000.ts": now - 300, "sub01-20261023-200000-1792790001.ts.tmp": now - 300,
+             "sub01-20261023-205900-1792790100.ts": now - 10, "sub01-20261023-210000-1792790200.ts": now - 300,
+             "live.m3u8": now - 300, "notes.ts": now - 300}
+    for name, mtime in names.items():
+        (hls / name).write_bytes(b"x")
+        os.utime(hls / name, (mtime, mtime))
+    assert sd.prune_hls(hls, "sub01-20261023-210000", now) == 2
+    assert sorted(os.listdir(hls)) == ["live.m3u8", "notes.ts", "sub01-20261023-205900-1792790100.ts",
+                                       "sub01-20261023-210000-1792790200.ts"]
+    assert sd.hls_state(hls, "sub01-20261023-210000") == {"dir": str(hls), "playlist": True, "segments": 1}
+    assert sd.hls_state(tmp_path / "none", "x")["playlist"] is False
+
+
+def test_v2_hls_server_serves_only_playlist_and_segments_with_no_cache_playlist(tmp_path):
+    async def body():
+        hls = tmp_path / "hls"
+        hls.mkdir()
+        (hls / "live.m3u8").write_text("#EXTM3U\n#EXTINF:4.0,\nsub01-x-1.ts\n")
+        (hls / "sub01-x-1.ts").write_bytes(b"\x47" * 188)
+        (hls / "notes.txt").write_text("private")
+        (tmp_path / "secret.ts").write_bytes(b"no")
+        os.symlink(tmp_path / "secret.ts", hls / "link.ts")
+        http = TestClient(TestServer(hls_serve.create_app(hls)))
+        await http.start_server()
+        try:
+            r = await http.get("/live.m3u8")
+            assert r.status == 200 and r.headers["Content-Type"] == "application/vnd.apple.mpegurl"
+            assert "no-cache" in r.headers["Cache-Control"] and (await r.text()).startswith("#EXTM3U")
+            r = await http.get("/sub01-x-1.ts")
+            assert r.status == 200 and r.headers["Content-Type"] == "video/mp2t" and len(await r.read()) == 188
+            for path in ("/notes.txt", "/missing.ts", "/link.ts", "/..%2Fsecret.ts", "/", "/.hidden.ts"):
+                assert (await http.get(path)).status == 404, path
+        finally:
+            await http.close()
+    run(body())
+    with pytest.raises(SystemExit):
+        hls_serve.main([str(tmp_path), "--host", "0.0.0.0"])
+
+
+# ------------------------------------------------------- real ffmpeg smoke
+
+def small_profile(tmp_path, *extra):
+    return ["--streamer-dir", str(tmp_path / "streamer"), "--test-sources", "--size", "320x180", "--pip-size", "96x54",
+            "--fps", "30", "--desktop-fps", "30", "--preset", "ultrafast", "--hls-dir", str(tmp_path / "hls"), *extra]
+
+
+@needs_ffmpeg
+def test_v2_smoke_five_seconds_of_test_sources_make_an_mp4_and_an_hls_playlist(tmp_path):
+    _, cfg = sd.parse_args(small_profile(tmp_path, "--test-seconds", "5"))
+    cfg.recordings_dir.mkdir(parents=True)
+    cfg.hls_dir.mkdir()
+    argv = sd.build_ffmpeg_argv(cfg, prefix="sub01-20261023-210000", cam2=True, layout="room", live=True)
+    assert argv.count("-i") == 4 and "testsrc2=size=1280x720:rate=30" in argv and "x11grab" not in argv
+    done = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=90)
+    assert done.returncode == 0, done.stderr[-1500:]
+    meter = sd.OutputMeter(cfg.segment_seconds, "sub01-20261023-210000")
+    records = [r for line in done.stdout.splitlines() for r in meter.feed(line, 0.0)]
+    assert records and records[-1]["frames"] >= 140 and records[-1]["partial"] is True     # 5 s at 30 fps
+    mp4 = cfg.recordings_dir / "sub01-20261023-210000-000.mp4"
+    assert mp4.stat().st_size > 10_000
+    playlist = (cfg.hls_dir / "live.m3u8").read_text()
+    assert "#EXTINF:" in playlist and "#EXT-X-DISCONTINUITY" in playlist and "#EXT-X-ENDLIST" not in playlist
+    segments = sorted(cfg.hls_dir.glob("sub01-20261023-210000-*.ts"))
+    assert segments and all(seg.name in playlist for seg in segments)
+    if shutil.which("ffprobe"):
+        probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,width,height,r_frame_rate:"
+                                "format=duration", "-of", "json", str(mp4)], capture_output=True, text=True, timeout=30)
+        info = json.loads(probe.stdout)
+        video = [s for s in info["streams"] if s["codec_name"] == "h264"][0]
+        assert (video["width"], video["height"], video["r_frame_rate"]) == (320, 180, "30/1")
+        assert {s["codec_name"] for s in info["streams"]} == {"h264", "aac"} and 4.5 <= float(info["format"]["duration"]) <= 5.6
+
+
+def top_band_ymax(path, ffmpeg):
+    """Brightest luma of the top 40 rows of every frame (split pads the top with black, testsrc2 is bright there)."""
+    done = subprocess.run([ffmpeg, "-v", "error", "-i", str(path), "-vf",
+                           "crop=iw:40:0:0,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-",
+                           "-f", "null", "-"], capture_output=True, text=True, timeout=60)
+    return [float(v) for v in re.findall(r"YMAX=([\d.]+)", done.stdout)]
+
+
+@needs_ffmpeg
+def test_v2_smoke_the_real_director_switches_layout_live_and_probes_nvenc(tmp_path):
+    """The real Director, real ffmpeg (lavfi sources): NVENC is probed (no GPU here: fallback to libx264), the agent
+    appends a layout line, the running ffmpeg switches to split without a relaunch, the meter reports fps."""
+    _, cfg = sd.parse_args(small_profile(tmp_path, "--encoder", "h264_nvenc"))
+    cfg = sd.DirectorConfig(**{**cfg.__dict__, "stats_period": 0.5})
+
+    async def body():
+        director = sd.Director(cfg)
+        task = asyncio.ensure_future(director.run())
+        try:
+            await until(lambda: director.alive and director.meter and (director.meter.latest or {}).get("frames", 0) >= 45,
+                        timeout=40)
+            assert director.state()["live_layout"] == "webcam" and director.launches == 1
+            sd.append_jsonl(cfg.streamer_dir / "layout.jsonl", {"layout": "split", "source": "agent"})   # as the agent
+            await until(lambda: director.state()["live_layout"] == "split", timeout=10)
+            await asyncio.sleep(1.5)
+            state = director.state()
+            assert state["last_switch"]["how"] == "live" and director.launches == 1     # switched without a relaunch
+            assert state["output"]["fps_measured"] and state["output"]["fps_measured"] > 20
+        finally:
+            director.stop()
+            await asyncio.wait_for(task, 20)
+        return director
+
+    director = run(body())
+    events = [json.loads(line) for line in (cfg.streamer_dir / "events.jsonl").read_text().splitlines()]
+    kinds = [e["kind"] for e in events]
+    assert "layout_switched" in kinds and "ffmpeg_exited" not in kinds and kinds.count("ffmpeg_started") == 1
+    if director.encoder == "libx264":                     # no usable NVENC here: the probe failed and said so
+        assert "encoder_fallback" in kinds
+    seg = [e for e in events if e["kind"] == "segment_fps"]
+    assert seg and seg[-1]["partial"] is True and seg[-1]["frames"] > 45 and director.state()["segments_fps"]
+    assert "#EXTINF:" in (cfg.hls_dir / "live.m3u8").read_text()
+    recording = sorted(cfg.recordings_dir.glob("sub01-*-000.mp4"))
+    assert len(recording) == 1
+    ymax = top_band_ymax(recording[0], FFMPEG)
+    assert len(ymax) > 60 and max(ymax[:15]) > 100 and max(ymax[-10:]) < 40   # webcam first, black split bar at the end
+
+
+# ------------------------------------------------- in-game monitor feed (scripts/streamer_monitor_feed.py)
+
+mon_spec = importlib.util.spec_from_file_location("streamer_monitor_feed", ROOT / "scripts/streamer_monitor_feed.py")
+mon = importlib.util.module_from_spec(mon_spec)
+mon_spec.loader.exec_module(mon)
+
+
+def test_v2_monitor_feed_argv_and_flags(tmp_path):
+    args = mon.parse_args(["--streamer-dir", str(tmp_path)])
+    argv = mon.build_argv(args)
+    assert args.fifo == str(tmp_path / "monitor.mjpeg") and (args.display, args.fps, args.port) == (":103", 60, 8840)
+    assert value_after(argv, "-f") == "x11grab" and value_after(argv, "-framerate") == "60" and value_after(argv, "-i") == ":103"
+    assert value_after(argv, "-vf") == "scale=1280:720" and value_after(argv, "-c:v") == "mjpeg" and value_after(argv, "-q:v") == "5"
+    assert argv[-3:] == ["-f", "mpjpeg", "pipe:1"] and "-nostdin" in argv
+    args = mon.parse_args(["--streamer-dir", str(tmp_path), "--display", ":104", "--test-source", "--fps", "30"])
+    assert "testsrc2=size=1280x720:rate=30" in mon.build_argv(args) and "x11grab" not in mon.build_argv(args)
+    for bad in (["--display", "104"], ["--fps", "0"], ["--size", "big"], ["--host", "0.0.0.0"], ["--pipe-kb", "8"]):
+        with pytest.raises(SystemExit):
+            mon.parse_args(["--streamer-dir", str(tmp_path), *bad])
+
+
+def test_v2_monitor_feed_cuts_mpjpeg_parts_by_length():
+    frames = [b"\xff\xd8" + bytes([i]) * (1000 * (i + 1)) + b"\xff\xd9" for i in range(3)]
+    stream = b"--ffmpeg\r\n" + b"".join(b"Content-type: image/jpeg\r\nContent-length: %d\r\n\r\n%s\r\n--ffmpeg\r\n" % (len(f), f)
+                                         for f in frames)
+    reader, got = mon.PartReader(), []
+    for i in range(0, len(stream), 777):                                  # arbitrary pipe chunks
+        got += reader.feed(stream[i:i + 777])
+    assert got == frames and len(reader.buf) < 40
+
+
+def test_v2_monitor_feed_writes_whole_frames_and_never_blocks(tmp_path):
+    fifo = tmp_path / "monitor.mjpeg"
+    now = [0.0]
+    sink = mon.FifoSink(fifo, pipe_bytes=65536, clock=lambda: now[0])
+    sink.ensure_fifo()
+    assert stat_is_fifo(fifo) and oct(fifo.stat().st_mode & 0o777) == "0o600"
+    assert sink.offer(b"x" * 10) is False and sink.dropped == 1 and sink.fd is None      # no reader: dropped, no block
+    reader = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        assert sink.offer(b"y" * 10) is False                            # open retried only every 0.5 s
+        now[0] += 1
+        a, b, c = b"A" * 100_000, b"B" * 100_000, b"C" * 50_000
+        assert sink.offer(a) is True and sink.pending                    # the kernel took a part: the tail is pending
+        assert sink.offer(b) is False and sink.dropped == 3              # B dropped whole while A is unfinished
+        data = read_all(reader)
+        assert sink.offer(c) is True
+        data += read_all(reader)
+        while sink.pending:                                              # C's tail goes out with the next offer
+            sink.offer(b"")
+            data += read_all(reader)
+        assert data == a + c                                             # whole frames, B never started
+        sink.pending = b"tail"
+    finally:
+        os.close(reader)
+    assert sink.reader_alive() is False and sink.fd is None and sink.pending == b""   # POLLERR: noticed without a write
+    assert sink.offer(b"z" * 10) is False and sink.fd is None
+    with pytest.raises(ValueError):
+        (tmp_path / "plain").write_bytes(b"")
+        mon.FifoSink(tmp_path / "plain").ensure_fifo()
+
+
+def stat_is_fifo(path):
+    import stat as stat_
+    return stat_.S_ISFIFO(os.stat(path).st_mode)
+
+
+def read_all(fd):
+    out = b""
+    while True:
+        try:
+            chunk = os.read(fd, 1 << 20)
+        except BlockingIOError:
+            return out
+        if not chunk:
+            return out
+        out += chunk
+
+
+@needs_ffmpeg
+def test_v2_smoke_monitor_feed_delivers_decodable_jpegs_and_stops_without_a_reader(tmp_path):
+    args = mon.parse_args(["--streamer-dir", str(tmp_path), "--test-source", "--size", "320x180", "--fps", "30",
+                           "--idle-stop", "0.5", "--ffmpeg", FFMPEG])
+
+    async def body():
+        feed = mon.MonitorFeed(args)
+        task = asyncio.ensure_future(feed.run())
+        await until(lambda: Path(args.fifo).exists())
+        reader = os.open(args.fifo, os.O_RDONLY | os.O_NONBLOCK)
+        data = b""
+        try:
+            end = asyncio.get_running_loop().time() + 2.5
+            while asyncio.get_running_loop().time() < end:
+                data += read_all(reader)
+                await asyncio.sleep(0.02)
+            assert feed.health()["ffmpeg"] and feed.health()["reader"]
+        finally:
+            os.close(reader)
+        await until(lambda: not feed.health()["ffmpeg"], timeout=10)    # no reader: capture stops
+        health = feed.health()
+        feed.stop()
+        await asyncio.wait_for(task, 10)
+        return data, health
+
+    data, health = run(body())
+    assert health["frames_written"] >= 20 and health["restarts"] == 1 and health["reader"] is False
+    got = tmp_path / "got.mjpeg"
+    got.write_bytes(data)
+    if shutil.which("ffprobe"):
+        probe = subprocess.run(["ffprobe", "-v", "error", "-f", "mjpeg", "-count_frames", "-show_entries",
+                                "stream=nb_read_frames,width,height", "-of", "json", str(got)],
+                               capture_output=True, text=True, timeout=30)
+        stream = json.loads(probe.stdout)["streams"][0]
+        assert (stream["width"], stream["height"]) == (320, 180)
+        assert int(stream["nb_read_frames"]) >= health["frames_written"] - 1     # every written frame decodes

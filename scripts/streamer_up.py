@@ -1000,8 +1000,9 @@ def collect_status(cfg):
             status, text = http_request("GET", cfg.ports["director"], "/director/state", token, timeout=2.0)
             data = json.loads(text) if status == 200 else {}
             director = {k: data.get(k) for k in ("recording", "voice", "game_source", "restarts", "last_error",
-                                                 "segments_total", "layout")}
+                                                 "segments_total", "layout", "live_layout", "encoder", "cam2")}
             director["latest_segment"] = (data.get("segments") or [{}])[-1].get("name")
+            director["fps_measured"] = (data.get("output") or {}).get("fps_measured")
         except (OSError, ValueError, http.client.HTTPException):
             pass
     return {"supervisor": sup, "stop": cfg.stop_file.exists(), "token": bool(token), "services": services,
