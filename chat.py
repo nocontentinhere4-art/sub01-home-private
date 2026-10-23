@@ -153,12 +153,13 @@ ADULT = re.compile(r"\b(porn\w*|xxx|nsfw|nudes?|naked|sex|sexual|hentai|onlyfans
                    r"cum|horny|boobs?|tits|pussy|cock)\b", re.I)
 
 
-def blocked(text, media=False):
+def blocked(text, media=False, skip_links=False):
     """Reason string if the message must be dropped, else None. media=True: a song or video title, shown as it is:
     no slur check, only self-harm prompts (MEDIA_RE) and calls to violence against a group (incitement); tickers only as coins
     (MEDIA_TICKER: not "$uicideboy$"), no phone rule (it reads year ranges, "2000 - 2010"), money only as a request (MEDIA_MONEY),
-    and of the money lexicon only trading promotion and buy advice (lexicon.money_talk without BUY_PRESSURE)."""
-    if URL.search(text):
+    and of the money lexicon only trading promotion and buy advice (lexicon.money_talk without BUY_PRESSURE).
+    skip_links=True leaves the link rule out: check() decides about links for the chat."""
+    if URL.search(text) and not skip_links:
         return "links are not allowed"
     if SOL_ADDR.search(text) or ETH_ADDR.search(text):
         return "addresses are not allowed"
@@ -177,10 +178,10 @@ def blocked(text, media=False):
     return None
 
 
-def message_blocked(text):
+def message_blocked(text, skip_links=False):
     """blocked() for what viewers put on everyone's screen (a message, a nickname, a taught word): a bare coin name
     (lexicon.COIN_NAMES) is refused too."""
-    return blocked(text) or ("no trading or get-rich talk" if money_talk(text, names=True) else None)
+    return blocked(text, skip_links=skip_links) or ("no trading or get-rich talk" if money_talk(text, names=True) else None)
 
 
 # --- message -> stimulus rule table ----------------------------------------------------
@@ -305,12 +306,15 @@ class Dedupe:
         return False
 
 
-def check(text, key, limiter, dedupe):
-    """Full pipeline for one incoming message -> (ok, reason). Filter first, then limits."""
+def check(text, key, limiter, dedupe, links_open=False):
+    """Full pipeline for one incoming message -> (ok, reason). Filter first, then limits. A link is refused unless
+    links_open (the PC can open links); then the other rules judge the message as they judge any other."""
     text = (text or "").strip()
     if not text:
         return False, "empty"
-    reason = message_blocked(text)
+    if URL.search(text) and not links_open:
+        return False, "links are not allowed"
+    reason = message_blocked(text, skip_links=True)     # with links open, the link itself is no reason to refuse
     if reason:
         return False, reason
     if len(text) > MAX_LEN:
