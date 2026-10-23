@@ -7,6 +7,8 @@ Hard rules (enforced here):
 - only an RTX A5000 GPU pod or a CPU pod; one pod at a time (refuses if one of OUR pods is still alive or its state cannot be read);
 - pods are only ever created, read and deleted by id from data/analysis/my_pods.json - pods we did not create
   (e.g. "BRAIN") are never touched;
+- one run at a time (lock file data/analysis/runpod_job.lock); a create that was not recorded is looked up by its pod name
+  (data/analysis/pending_create.json) before any new create;
 - the pod is deleted when the job finishes, fails, on Ctrl-C / SIGTERM, and at the latest after --max-min (<= 60) minutes;
 - total pod time across all jobs is capped at 2 h, and the gpu-preview runs (tools/gpu_preview.py) at 10 h of their own
   (data/analysis/costs.jsonl is the ledger);
@@ -18,6 +20,7 @@ RunPod auth is injected by the environment for rest.runpod.io (no key in this re
 """
 import argparse
 import base64
+import fcntl
 import json
 import secrets
 import signal
@@ -32,6 +35,8 @@ ROOT = HERE.parent
 API = "https://rest.runpod.io/v1"
 LEDGER = ROOT / "data" / "analysis" / "costs.jsonl"
 MINE = ROOT / "data" / "analysis" / "my_pods.json"
+LOCK = ROOT / "data" / "analysis" / "runpod_job.lock"
+PENDING = ROOT / "data" / "analysis" / "pending_create.json"
 TOTAL_CAP_MIN = 120.0
 PREVIEW_TAG, PREVIEW_CAP_MIN = "gpu-preview", 600.0   # tools/gpu_preview.py runs: their own pod-minute budget (owner OK 2026-10-04)
 UA = "sub01-analysis/1.0 (curl-compatible)"          # Cloudflare rejects the default Python-urllib agent
@@ -93,7 +98,50 @@ def http(method, url, data=None, timeout=120, tries=1, token=None):
             time.sleep(5 * (k + 1))
 
 
+def take_lock():
+    """One run at a time: an exclusive, non-blocking lock that the OS frees when the process exits."""
+    LOCK.parent.mkdir(parents=True, exist_ok=True)
+    fh = LOCK.open("a")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        sys.exit(f"refusing: another runpod_job.py run holds {LOCK}; wait for it to finish, then rerun")
+    return fh
+
+
+def mark_pending(tag, name):
+    """Written before the create POST. If the run dies before the pod id is recorded, the next run looks for the pod by name."""
+    PENDING.parent.mkdir(parents=True, exist_ok=True)
+    rec = {"tag": tag, "name": name, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    PENDING.write_text(json.dumps(rec))
+
+
+def check_pending():
+    """Before any create: find a pod that an earlier run sent but did not record, by its pod name."""
+    if not PENDING.exists():
+        return
+    try:
+        name = json.loads(PENDING.read_text())["name"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        sys.exit(f"refusing: {PENDING} is unreadable ({e}). Check RunPod for pods named sub01-rw-<tag>, then delete that file")
+    try:
+        listed = api("GET", "/pods", tries=1)
+    except Exception as e:
+        sys.exit(f"refusing: could not list RunPod pods ({e}), so whether a pod named {name} exists is unknown; {PENDING} stays")
+    pods = listed.get("pods") if isinstance(listed, dict) else listed     # the reply is a list, or a dict holding "pods"
+    if not isinstance(pods, list):
+        sys.exit(f"refusing: unexpected reply to GET /pods, so whether a pod named {name} exists is unknown; {PENDING} stays")
+    hits = [p["id"] for p in pods if p.get("name") == name]
+    if hits:
+        remember(sorted(set(mine()) | set(hits)))         # on record now, so the usual check covers them
+        PENDING.unlink(missing_ok=True)
+        sys.exit(f"refusing: pod {', '.join(hits)} named {name} exists, probably from an earlier run that did not record it. "
+                 "Delete it on RunPod first, then rerun")
+    PENDING.unlink(missing_ok=True)                       # checked on RunPod: no pod with that name exists
+
+
 def main():
+    _lock = take_lock()                                   # kept open until the process exits: a second run is refused
     p = argparse.ArgumentParser()
     p.add_argument("--kind", choices=["cpu", "a5000", "auto"], required=True,
                    help="auto: first available of CPU 32/16/8 vCPU, then RTX A5000")
@@ -128,6 +176,7 @@ def main():
     if keep:
         sys.exit(f"refusing before any create: {'; '.join(why)}. Still on record in {MINE}: "
                  "check RunPod, delete any pod still running, then rerun")
+    check_pending()                                       # a create that was not recorded (see check_pending)
     preview = a.tag.startswith(PREVIEW_TAG)
     cap = PREVIEW_CAP_MIN if preview else TOTAL_CAP_MIN
     left = cap - spent_minutes(preview)
@@ -152,6 +201,7 @@ def main():
                     minRAMPerGPU=30) for c in ("SECURE", "COMMUNITY")]
         return {"cpu": cpu, "a5000": gpu, "auto": cpu + gpu}[a.kind]
 
+    mark_pending(a.tag, body["name"])                     # before the first create POST
     pod, waited0 = None, time.time()
     while pod is None:
         for v in variants():
@@ -182,6 +232,7 @@ def main():
     signal.signal(signal.SIGINT, stop)
     base = f"https://{pid}-8000.proxy.runpod.net"
     try:
+        PENDING.unlink(missing_ok=True)                   # id is on record now; inside try, so the pod is still deleted if this fails
         while not stopped["flag"]:                                    # wait for the server
             if time.time() - t0 > max_min * 60:
                 raise TimeoutError("pod never came up")
