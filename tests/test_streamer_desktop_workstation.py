@@ -435,6 +435,9 @@ class StubDesk:
     async def api_start(self, why):
         return {"ok": True, "machine": "starting", "started": True, "error": ""}
 
+    def take_start(self, why):                                                          # armed in these route tests
+        return True
+
 
 async def client_for(desk, tmp_path):
     runner = sd.Runner(desk, TOKEN, sd.Events(tmp_path / "e.jsonl"))
@@ -690,7 +693,7 @@ def proxy_app(target_port):
 class Harness:
     """The mock site, a Desktop in the workstation kind on a real headless Chromium, the Runner and its HTTP app."""
 
-    def __init__(self, tmp_path, monkeypatch, logged_in=False, operator_console=False, delay=250):
+    def __init__(self, tmp_path, monkeypatch, logged_in=False, operator_console=False, delay=250, autostart=True):
         monkeypatch.setattr(sd, "VAGON_TICK_S", 0.3)
         monkeypatch.setattr(sd, "VAGON_CLICK_GAP_S", 1.0)
         monkeypatch.setattr(sd, "VAGON_SETTLE_S", 0.3)
@@ -698,6 +701,7 @@ class Harness:
         monkeypatch.setattr(sd, "VAGON_RELOAD_BACKOFF", (0.5,))
         monkeypatch.setattr(sd, "OPERATOR_CONNECTED_GRACE_S", 0.0)                        # the console closes as soon as connected
         self.tmp_path, self.logged_in, self.operator_console, self.delay = tmp_path, logged_in, operator_console, delay
+        self.autostart = autostart                                        # tests of other features start the mock computer
         self.site = self.external = self.desk = self.runner = self.http = self.events = self.cfg = None
 
     async def __aenter__(self):
@@ -708,7 +712,7 @@ class Harness:
         self.url = f"http://127.0.0.1:{self.site.port}/app/workstation?{query}"
         self.cfg = sd.Config(profile=self.tmp_path / "profile", headless=True, kiosk=False, allow_private=True,
                              chromium=CHROMIUM or "", pc_mode="vagon", vagon_kind="workstation", vagon_url=self.url,
-                             operator_console=self.operator_console)
+                             operator_console=self.operator_console, vagon_autostart=self.autostart)
         self.events = sd.Events(self.tmp_path / "events.jsonl")
         self.runner = sd.Runner(StubDesk(), TOKEN, self.events, allow_private=True)
         self.http = TestClient(TestServer(sd.create_app(self.runner)))
@@ -785,7 +789,7 @@ class Harness:
 @needs_browser
 def test_login_required_console_login_then_run_connect_with_the_privacy_lock(tmp_path, monkeypatch, capsys):
     async def body():
-        async with Harness(tmp_path, monkeypatch) as h:
+        async with Harness(tmp_path, monkeypatch, autostart=False) as h:
             desk = h.desk
             # 1. the page needs a login: detected, console available, nothing of it reaches the model or the monitor
             assert await until(lambda: desk.vagon.phase == "login_required", 20), (desk.vagon.phase, desk.error)
@@ -816,8 +820,18 @@ def test_login_required_console_login_then_run_connect_with_the_privacy_lock(tmp
             # 2. the owner logs in through the console
             await h.login_through_the_console()
             assert await until(lambda: desk.vagon.logged_in and desk.vagon.phase != "login_required", 15), desk.vagon.phase
-            # 3. off -> Run -> starting -> Connect -> connecting -> connected
+            # 3. the computer is off: not started until armed (it spends the owner's balance), then one start
+            assert await until(lambda: desk.vagon.start_held, 15), (desk.vagon.phase, desk.vagon.machine)
+            await asyncio.sleep(2.0)
+            assert (await h.mock("window.__pressed")) == [] and desk.vagon.machine == "off"
+            assert (await h.state())["vagon"]["start_held"] is True
+            r = await h.http.post("/pc/vagon/arm", json={"minutes": 5}, headers=AUTH)
+            assert r.status == 200 and (await r.json())["start_armed_s"] > 200
+            assert (await h.http.post("/pc/vagon/arm", json={"minutes": 500}, headers=AUTH)).status == 400
+            assert (await h.http.post("/pc/vagon/arm", json={"minutes": 5})).status in (401, 403)
+            # off -> Run -> starting -> Connect -> connecting -> connected
             assert await until(lambda: desk.vagon.connected, 30), (desk.vagon.phase, desk.vagon.machine)
+            assert desk.vagon.starts == 1 and desk.vagon.start_armed_until == 0.0                # one start per arming
             pressed = await h.mock("window.__pressed")
             assert pressed == ["run", "connect"], pressed                                       # never Stop, Sign out, Billing
             state = await h.state()
@@ -852,9 +866,12 @@ def test_login_required_console_login_then_run_connect_with_the_privacy_lock(tmp
             state = await h.state()
             assert state["vagon"]["reconnects"] == 1 and state["vagon"]["sessions"] == 2 and state["vagon"]["last_reconnect_utc"].endswith("+00:00")
             assert (await h.mock("window.__pressed")) == ["run", "connect", "reconnect"]
-            # 5. the computer turns off behind our back: Run is pressed again
+            # 5. the computer turns off behind our back: held until armed again, then Run is pressed again
             await h.mock("window.__stop()")
             assert await until(lambda: desk.vagon.machine == "off", 10), desk.vagon.machine
+            assert await until(lambda: desk.vagon.start_held, 15), desk.vagon.phase
+            assert (await h.mock("window.__pressed")) == ["run", "connect", "reconnect"]
+            desk.arm_start(5)
             assert await until(lambda: desk.vagon.connected and desk.vagon.sessions == 3, 30), desk.vagon.phase
             assert (await h.mock("window.__pressed")) == ["run", "connect", "reconnect", "run", "connect"]
             events = events_of(h.events.path)
@@ -1599,4 +1616,60 @@ def test_diag_requests_share_one_snapshot_and_never_move_the_connected_schedule(
         now[0] += 2
         await desk._workstation_step(playing, now[0])
         assert len(calls) == n + 2                                                       # then every minute
+    run(body())
+
+
+# ---- starting the owner's computer needs arming (it spends his Vagon balance); Kimi review 2026-10-23 --------------------
+def test_take_start_needs_arming_one_start_per_arming_and_expiry(tmp_path, monkeypatch):
+    desk = ws_desktop(tmp_path)
+    clock = [5000.0]
+    monkeypatch.setattr(sd.time, "monotonic", lambda: clock[0])
+    assert desk.vagon.autostart is False and desk.take_start("t") is False and desk.vagon.start_held is True
+    held = [e for e in events_of(tmp_path / "events.jsonl") if e.get("state") == "start_held"]
+    assert len(held) == 1 and desk.take_start("t") is False                                  # logged once per off period
+    assert len([e for e in events_of(tmp_path / "events.jsonl") if e.get("state") == "start_held"]) == 1
+    assert desk.arm_start(2)["start_armed_s"] == 120.0
+    assert desk.take_start("t") is True and desk.vagon.starts == 1 and desk.take_start("t") is False   # one per arming
+    desk.arm_start(1)
+    clock[0] += 61
+    assert desk.take_start("t") is False                                                       # expired
+    desk.arm_start(5)
+    assert desk.arm_start(0)["start_armed_s"] == 0.0 and desk.take_start("t") is False         # 0 disarms
+    desk._set_machine("on", "page")
+    assert desk.vagon.start_held is False                                                      # the off period ended
+    auto = ws_desktop(tmp_path / "auto", vagon_autostart=True)
+    assert auto.vagon.autostart is True and auto.take_start("t") is True and auto.take_start("t") is True
+
+
+def test_post_pc_vagon_start_and_the_api_fallback_obey_the_arming(tmp_path, monkeypatch):
+    async def body():
+        desk = ws_desktop(tmp_path)
+        desk.api = FakeApi("off")
+        desk.api.refresh()
+        runner = sd.Runner(desk, TOKEN, sd.Events(tmp_path / "r.jsonl"))
+        async with TestClient(TestServer(sd.create_app(runner))) as http:
+            r = await http.post("/pc/vagon/start", headers=AUTH)
+            assert r.status == 409 and "arm it first" in await r.text() and desk.api.starts == 0
+            assert (await http.post("/pc/vagon/arm", json={"minutes": 3}, headers=AUTH)).status == 200
+            r = await http.post("/pc/vagon/start", headers=AUTH)
+            assert r.status == 200 and desk.api.starts == 1 and desk.vagon.starts == 1
+            r = await http.post("/pc/vagon/start", headers=AUTH)
+            assert r.status == 409 and desk.api.starts == 1                                    # the arming was used
+        # the loop's API fallback (no start button on the page) is held the same way
+        desk.vagon.last_api_start = -1e9
+        probe = {"url": "https://app.vagon.io/workstation", "title": "x", "text": "", "buttons": [], "passwords": 0}
+        monkeypatch.setattr(desk, "_log_controls", lambda *a, **k: None)
+        monkeypatch.setattr(desk, "_repainted", lambda: False)
+
+        async def no_diag(*a, **k):
+            return None
+        monkeypatch.setattr(desk, "_vagon_diag", no_diag)
+        monkeypatch.setattr(sd, "classify_workstation",
+                            lambda p: {"phase": "dashboard", "button": None, "kind": None, "machine": "off", "why": ""})
+        await desk._workstation_step(probe, time.monotonic())
+        assert desk.api.starts == 1 and desk.vagon.start_held is True
+        desk.arm_start(3)
+        desk.api.started_at = 0.0                                                              # past the API's own start gap
+        await desk._workstation_step(probe, time.monotonic())
+        assert desk.api.starts == 2 and desk.vagon.starts == 2
     run(body())

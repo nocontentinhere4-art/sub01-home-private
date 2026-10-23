@@ -299,3 +299,11 @@ user action for the idle limit; whether the per-visitor restart can be disabled 
 whether Chromium's software WebRTC decode keeps 1080p30 smooth on the pod's CPU; UDP egress. The runner's text heuristics
 (`VAGON_CONNECT_RX`, `VAGON_ENDED_RX`) may need one tuning round against the real page; `events.jsonl` records every
 press and phase change for that.
+
+### A7. Starting the computer needs arming (2026-10-23)
+Turning the owner's Vagon computer on spends his balance ($0.99/hour on his plan). The runner never starts it on its
+own: when the computer is off it logs `vagon start_held` once and waits. `POST /pc/vagon/arm {"minutes": N}` (admin
+token, 0-120, 0 disarms) allows ONE start within N minutes, through any path (the page's Run/Start button, the Teams API
+fallback, `POST /pc/vagon/start`). `--vagon-autostart` restores starting on its own. `/pc/state.vagon` shows
+`autostart`, `start_armed_s`, `start_held`, `starts`. Connect/Reconnect on a computer that is already on are not gated.
+The computer also stops by itself after the owner's idle setting (seen: 15 minutes).

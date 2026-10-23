@@ -1136,6 +1136,18 @@ class VagonState:
         self.login_seen, self.login_why, self.stuck_since, self.last_api_start = None, "", None, 0.0
         self.connected_at, self.reload_requested, self.last_reload_why = None, False, ""
         self.diag, self.diag_at, self.last_diag, self.last_controls = None, None, 0.0, None
+        # Turning the owner's computer on spends his Vagon balance: one start per arming (POST /pc/vagon/arm) unless
+        # --vagon-autostart. `start_armed_until` is a monotonic deadline; `start_held` is logged once per off period.
+        self.autostart, self.start_armed_until, self.start_held, self.starts = False, 0.0, False, 0
+
+    def start_allowed(self, now):
+        return self.autostart or now < self.start_armed_until
+
+    def consume_start(self, now):
+        self.starts += 1
+        self.start_held = False
+        if not self.autostart:
+            self.start_armed_until = 0.0                  # one start per arming
 
     def set_phase(self, phase):
         changed = phase != self.phase
@@ -1149,6 +1161,9 @@ class VagonState:
                "since_utc": datetime.fromtimestamp(self.since, timezone.utc).isoformat(timespec="seconds"),
                "api_key_file": self.api_key, "kind": self.kind}
         if self.kind == "workstation":
+            now = time.monotonic()
+            out.update(autostart=self.autostart, start_armed_s=round(max(0.0, self.start_armed_until - now), 1),
+                       start_held=self.start_held, starts=self.starts)
             out.update(logged_in=self.logged_in, machine=self.machine, machine_source=self.machine_source,
                        blocked=self.blocked, login_why=self.login_why, reload_requested=self.reload_requested,
                        last_reload_why=self.last_reload_why, diag=self.diag,
@@ -1376,6 +1391,7 @@ class Config:
     gpu: str = "off"                     # "off": --disable-gpu; "swiftshader": software WebGL (ANGLE/SwiftShader); "on": Chromium decides
     autoplay: bool = False               # --autoplay-policy=no-user-gesture-required: a stream video may play without a click
     extra_args: tuple = ()               # --chromium-arg, passed verbatim (documented in the start event)
+    vagon_autostart: bool = False        # workstation: press Run/Start (or the API start) on its own; off = only when armed
 
 
 class DesktopUnavailable(RuntimeError):
@@ -2032,6 +2048,7 @@ class Desktop:
         self.stopping, self._tearing, self._why, self._latest = False, False, None, None
         self._wake = self._frame_event = self._input_lock = self._task = self._publisher_task = None
         self.vagon = VagonState(api_key_file_status(cfg.vagon_api_key_file), cfg.vagon_kind)   # /pc/state "vagon" (vagon mode only)
+        self.vagon.autostart = bool(getattr(cfg, "vagon_autostart", False))
         self._vagon_task, self._vagon_frame, self._vagon_offset = None, None, (0.0, 0.0)
         self._vagon_next_diag = 0.0                       # connected: when the next periodic diag is due (monotonic)
         self._vagon_lock = asyncio.Lock()                 # the connect loop never presses a button during an action
@@ -2478,9 +2495,31 @@ class Desktop:
         v = self.vagon
         if source == "page" and self.api is not None and self.api.fresh():
             return
+        if state in ("on", "starting"):
+            v.start_held = False                          # the off period is over (whoever started it)
         if (state, source) != (v.machine, v.machine_source):
             v.machine, v.machine_source = state, source
             self.on_change()
+
+    def _hold_start(self, why):
+        """The computer is off and starting it is not allowed now (not armed): logged once per off period."""
+        v = self.vagon
+        if not v.start_held:
+            v.start_held = True
+            log(f"vagon: the computer is off; not starting it until armed (POST /pc/vagon/arm) or --vagon-autostart ({why})")
+            self.events.append("vagon", state="start_held", machine="off", why=why)
+            self.on_change()
+
+    def take_start(self, why):
+        """One synchronous check-and-consume before any start (page button, API fallback, POST /pc/vagon/start).
+        True when this start may happen; otherwise the hold is logged."""
+        now = time.monotonic()
+        if not self.vagon.start_allowed(now):
+            self._hold_start(why)
+            return False
+        self.vagon.consume_start(now)
+        self.events.append("vagon", state="start_taken", why=why, autostart=self.vagon.autostart)
+        return True
 
     async def _vagon_return(self, why):
         """Workstation: back to the configured page after a navigation the lock refused. A refused request may leave the
@@ -2535,6 +2574,13 @@ class Desktop:
             if time.monotonic() - v.last_diag < VAGON_DIAG_MIN_GAP_S:   # a request that queued behind another one
                 return v.diag
             return await self._vagon_diag(v.phase if v.connected else f"{v.phase} (request)", force=True)
+
+    def arm_start(self, minutes, why="operator request"):
+        """Allow one start of the owner's computer within `minutes` (POST /pc/vagon/arm). 0 disarms."""
+        minutes = max(0.0, min(float(minutes), 120.0))
+        self.vagon.start_armed_until = time.monotonic() + minutes * 60.0 if minutes else 0.0
+        self.events.append("vagon", state="start_armed" if minutes else "start_disarmed", minutes=minutes, why=why)
+        return self.vagon.public()
 
     def request_reload(self, why="operator request"):
         """The owner asks for the workstation page to be opened again (POST /pc/vagon/reload): the loop does it at
@@ -2608,14 +2654,20 @@ class Desktop:
             v.stuck_since = now
             self.events.append("vagon", state=phase, machine=v.machine, **({"why": c["why"]} if c.get("why") else {}))
             self.on_change()
+        if idx is not None and kind == "start" and not v.start_allowed(time.monotonic()):
+            self._hold_start("page start button")         # turning the computer on spends the owner's balance
+            return
         if idx is not None and v.attempts < 6:
             if now - v.last_click >= VAGON_CLICK_GAP_S:
+                if kind == "start" and not self.take_start("page start button"):
+                    return
                 await self._vagon_press(probe["buttons"][idx], kind)
             return
         if (idx is None and phase in ("dashboard", "blank") and self.api is not None and self.api.fresh()
                 and self.api.machine() == "off" and now - v.last_api_start >= VAGON_API_START_GAP_S):
-            v.last_api_start = now
-            await self.api_start("no start button on the page")
+            if self.take_start("API start (no start button on the page)"):
+                v.last_api_start = now
+                await self.api_start("no start button on the page")
             return
         if phase in ("connecting", "blank", "starting", "ended"):
             await self._vagon_diag(phase)                 # every VAGON_DIAG_EVERY_S: why the stream is not here yet
@@ -3849,9 +3901,22 @@ def create_app(runner):
             raise web.HTTPConflict(text="Bathroom privacy is active")
         return web.json_response(result, headers=no_store)
 
+    async def vagon_arm(request):
+        """Allow one start of the owner's Vagon computer within N minutes ({"minutes": 10}; 0 disarms). Starting it
+        spends his balance, so the runner never does it on its own unless --vagon-autostart."""
+        if not getattr(runner.desk, "workstation", False):
+            raise web.HTTPConflict(text="Only the Vagon workstation kind has a machine to start")
+        data = await read_json(request)
+        minutes = data.get("minutes", 10) if isinstance(data, dict) else 10
+        if not isinstance(minutes, (int, float)) or isinstance(minutes, bool) or not 0 <= minutes <= 120:
+            raise web.HTTPBadRequest(text="minutes must be a number between 0 and 120")
+        return web.json_response(runner.desk.arm_start(minutes), headers=no_store)
+
     async def vagon_start(request):
         if getattr(runner.desk, "api", None) is None:
             raise web.HTTPConflict(text="The Vagon API is not configured (api_key_file and machine_id in vagon.json)")
+        if not runner.desk.take_start("POST /pc/vagon/start"):              # same contract: arm first (spends his balance)
+            raise web.HTTPConflict(text="Starting the computer spends the owner's balance: arm it first (POST /pc/vagon/arm)")
         result = await runner.desk.api_start("operator request")
         return web.json_response(result, status=200 if result["ok"] else 502, headers=no_store)
 
@@ -3875,6 +3940,7 @@ def create_app(runner):
     app.router.add_get("/operator", operator_page)
     app.router.add_get("/operator/frame.jpg", operator_frame)
     app.router.add_post("/operator/input", operator_input)
+    app.router.add_post("/pc/vagon/arm", vagon_arm)
     app.router.add_post("/pc/vagon/start", vagon_start)
     app.router.add_post("/pc/vagon/reload", vagon_reload)
     app.router.add_get("/pc/vagon/diag", vagon_diag)
@@ -3905,7 +3971,8 @@ async def serve(args):
                  vagon_machine_id=getattr(args, "vagon_machine_id", "") or "",
                  operator_console=bool(getattr(args, "operator_console", False)),
                  gpu=getattr(args, "gpu", None) or "off", autoplay=bool(getattr(args, "autoplay", False)),
-                 extra_args=tuple(getattr(args, "chromium_arg", None) or ()))
+                 extra_args=tuple(getattr(args, "chromium_arg", None) or ()),
+                 vagon_autostart=bool(getattr(args, "vagon_autostart", False)))
     desk = Desktop(cfg, events)
     if cfg.pc_mode == "vagon":
         key_status = api_key_file_status(cfg.vagon_api_key_file)
@@ -3988,6 +4055,9 @@ def main(argv=None):
                                                f"api_key_file?, machine_id?}} (default <streamer-dir>/vagon.json)")
     parser.add_argument("--streamer-dir", default=os.environ.get("STREAMER_DIR", DEFAULT_STREAMER_DIR),
                         help="streamer state directory: holds vagon.json (env STREAMER_DIR)")
+    parser.add_argument("--vagon-autostart", action="store_true",
+                        help="workstation: turn the owner's computer on by itself when it is off (spends his Vagon "
+                             "balance); default: only after POST /pc/vagon/arm, one start per arming")
     parser.add_argument("--operator-console", action="store_true",
                         help="vagon mode: serve the owner's console at /operator always, not only while the desktop is not connected")
     parser.add_argument("--gpu", choices=GPU_MODES, default="off",
