@@ -132,7 +132,7 @@ Reply with one JSON object and nothing else:
 {"thought": "<private, one sentence>", "state": "idle|reading|typing|mouse|talking|reacting", "action": null or one of \
 {"action":"scroll","direction":"down","amount":400} | {"action":"click","mark":7} | {"action":"click","point":[x,y]} | \
 {"action":"type","text":"...","submit":true} | {"action":"navigate","url":"https://..."} | \
-{"action":"search","query":"..."} | {"action":"key","key":"PageDown"} | {"action":"back"} | \
+{"action":"search","query":"2 to 6 plain words"} | {"action":"key","key":"PageDown"} | {"action":"back"} | \
 {"action":"wait","seconds":2}, "say": "", "level": 0, "layout": "character|desktop|split", \
 "chat_replies": [{"seq": 12, "say": "..."}]}"""
 
@@ -455,7 +455,7 @@ def url_problem(url, chat_texts=()):
 
 
 def query_clean(q):
-    q = " ".join(str(q or "").split())
+    q = " ".join(str(q or "").split()[:6])        # the eyes rule allows at most 6 words: keep the head of a long query
     if _mind is not None:
         return _mind.E.query_ok(q)
     return q if 2 <= len(q) <= 60 and len(q.split()) <= 6 and not chat_blocked(q) else None

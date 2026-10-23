@@ -141,6 +141,12 @@ The v1 game accepts only `source: "human_vagon_observation"` and no `state`; v2 
 3. Declared limits: no lip sync/facial animation (mesh has no face rig), no app audio capture (no PulseAudio), chat only
    from the site WebSocket, Vagon not connected.
 
+## The PC after v1: Vagon Streams
+The owner's final PC is Vagon Streams (https://docs.vagon.io/streams). The desktop runner keeps the same interfaces:
+it opens the Vagon stream page in kiosk mode instead of browsing itself, `/desktop/observe` returns the streamed
+pixels (no DOM marks on a video canvas), and `/desktop/act` sends clicks by point and keyboard through the stream's
+web client. The monitor texture, the director and the agent loop do not change. Needs the stream link/credentials.
+
 ## Blockers for the owner
 - `ANTHROPIC_API_KEY` (or `OPENROUTER_API_KEY`) on the pod, in a root-only file; without it the agent runs in quiet mode.
 - Voice choice among the candidates (A/B/C Kokoro blends) or a key for ElevenLabs Voice Design if a more realistic voice is wanted.
