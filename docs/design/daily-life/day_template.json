@@ -24,6 +24,7 @@
       {"id": "hyg_teeth_am", "activity": null, "proposal": "P2", "place": null, "earliest_start": "08:00", "latest_start": "09:30", "duration_min": [3, 5], "need": "hygiene", "weight": 1.0},
       {"id": "hyg_teeth_pm", "activity": null, "proposal": "P2", "place": null, "earliest_start": "22:30", "latest_start": "23:15", "duration_min": [3, 5], "need": "hygiene", "weight": 1.0},
       {"id": "errand_bread_stock", "activity": "buy_bread", "place": "counter", "route": "home-bakery", "gate": "G8", "earliest_start": "10:00", "latest_start": "11:00", "duration_min": [2, 4], "need": "hunger", "weight": 0.4},
+      {"id": "errand_bread_dinner", "activity": "buy_bread", "place": "counter", "route": "home-bakery", "gate": "G8", "earliest_start": "17:30", "latest_start": "18:15", "duration_min": [2, 4], "need": "hunger", "weight": 0.4},
       {"id": "chore_after_meal", "activity": null, "proposal": "P4", "place": null, "earliest_start": "20:45", "latest_start": "22:00", "duration_min": [10, 15], "need": "chores", "weight": 0.7}
     ],
     "meals": [
@@ -45,37 +46,37 @@
         ]}
       ]},
       {"group": "lunch", "earliest_start": "11:30", "latest_start": "12:30", "options": [
-        {"id": "ln_stock", "weight": 0.30, "steps": [
+        {"id": "ln_stock", "weight": 0.35, "steps": [
           {"id": "ln_stock_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "ln_ramen", "weight": 0.25, "steps": [
+        {"id": "ln_ramen", "weight": 0.10, "steps": [
           {"id": "ln_ramen_order", "activity": "order_food", "place": "bed", "food": "ramen", "gate": "G2", "earliest_start": "11:30", "latest_start": "11:50", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
           {"id": "ln_ramen_delivery", "activity": "get_delivery", "place": "door_in", "food": "ramen", "earliest_start": "12:00", "latest_start": "12:20", "duration_min": [1, 2], "need": "hunger", "weight": 1.0},
           {"id": "ln_ramen_eat", "activity": "eat", "place": "table", "food": "ramen", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "ln_home", "weight": 0.25, "steps": [
+        {"id": "ln_home", "weight": 0.30, "steps": [
           {"id": "ln_home_make", "activity": null, "proposal": "P5", "place": null, "food": "home-cooked", "earliest_start": "11:30", "latest_start": "11:50", "duration_min": [10, 15], "need": "hunger", "weight": 1.0},
           {"id": "ln_home_eat", "activity": "eat", "place": "table", "food": "home-cooked", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "ln_konbini", "weight": 0.20, "steps": [
+        {"id": "ln_konbini", "weight": 0.25, "steps": [
           {"id": "ln_konbini_buy", "activity": null, "proposal": "P12", "place": "counter", "route": "home-bakery", "gate": "G1", "earliest_start": "11:45", "latest_start": "12:00", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
           {"id": "ln_konbini_eat", "activity": "eat", "place": "table", "food": "onigiri or konbini_bento", "earliest_start": "12:00", "latest_start": "12:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]}
       ]},
       {"group": "dinner", "earliest_start": "18:00", "latest_start": "21:00", "options": [
-        {"id": "dn_stock", "weight": 0.15, "steps": [
+        {"id": "dn_stock", "weight": 0.20, "steps": [
           {"id": "dn_stock_eat", "activity": "eat", "place": "table", "food": "bread", "earliest_start": "18:30", "latest_start": "20:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "dn_ramen", "weight": 0.25, "steps": [
+        {"id": "dn_ramen", "weight": 0.10, "steps": [
           {"id": "dn_ramen_order", "activity": "order_food", "place": "bed", "food": "ramen", "gate": "G2", "earliest_start": "18:15", "latest_start": "19:00", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
           {"id": "dn_ramen_delivery", "activity": "get_delivery", "place": "door_in", "food": "ramen", "earliest_start": "18:30", "latest_start": "19:15", "duration_min": [1, 2], "need": "hunger", "weight": 1.0},
           {"id": "dn_ramen_eat", "activity": "eat", "place": "table", "food": "ramen", "earliest_start": "19:00", "latest_start": "20:15", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "dn_home", "weight": 0.35, "steps": [
+        {"id": "dn_home", "weight": 0.40, "steps": [
           {"id": "dn_home_make", "activity": null, "proposal": "P5", "place": null, "food": "home-cooked", "earliest_start": "18:15", "latest_start": "19:00", "duration_min": [10, 15], "need": "hunger", "weight": 1.0},
           {"id": "dn_home_eat", "activity": "eat", "place": "table", "food": "home-cooked", "earliest_start": "19:00", "latest_start": "20:30", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]},
-        {"id": "dn_konbini", "weight": 0.25, "steps": [
+        {"id": "dn_konbini", "weight": 0.30, "steps": [
           {"id": "dn_konbini_buy", "activity": "buy_konbini", "place": "counter", "route": "home-bakery", "earliest_start": "20:00", "latest_start": "20:30", "duration_min": [2, 4], "need": "hunger", "weight": 1.0},
           {"id": "dn_konbini_eat", "activity": "eat", "place": "table", "food": "onigiri or konbini_bento", "earliest_start": "20:05", "latest_start": "21:00", "duration_min": [8, 15], "need": "hunger", "weight": 1.0}
         ]}
@@ -137,6 +138,7 @@
     "G7 not scheduled: watch_video, play_chess (one game a day in life.py), window and use_bathroom (bladder need). Sleep stages come from the sleep engine; the sleep times here are targets.",
     "G8 bread: buy_bread here is a daily chance. life.py triggers bakery trips from bread stock (4 rolls a trip, 2 a meal), so a consumer should check stock before a bread option.",
     "G9 meal windows: life.py meal slots are 07-10, 12-14 and 18-21. Preparation steps may start before a slot (lunch 11:30) so that eating starts inside it.",
+    "G10 bread and delivery: a delivery takes about 25 simulated minutes from the order to eating (order 2-4, cook 8-15, a ride of about 4 on the 927 m shop-home route), and life.py orders only at hunger 0.55 or more with no bread. While the bakery is open a bakery trip is faster, so each ramen option is 10% (was 25%) and errand_bread_dinner (17:30-18:15) keeps bread for the evening; without it he runs out of bread after the afternoon meal, and the late meal is a delivery (test_life_day, twelve days).",
     "Risk: null activities cannot run in life.py until their proposals are approved and named, and hint() ignores them. The konbini and kitchen decisions (G1, P11, P12) are the owner's to make."
   ]
 }

@@ -25,15 +25,14 @@ Draft of SUB-01's typical week: a 20-year-old student who lives alone in a small
 | 08:00-09:00 | phone | lz_phone (0.15), in bed; the breakfast bakery trip (0.10, from 08:30) is less |
 | 09:00-10:00 | eat | breakfast: the eat steps of the four options add up to 1.00 |
 | 10:00-11:00 | buy_bread | errand_bread_stock (0.40), while the bakery is open |
-| 11:00-11:30 | research | lz_research (0.20), at the computer |
-| 11:30-11:50 | order_food | ln_ramen_order (0.25); life orders only when hungry |
-| 11:50-12:00 | research | lz_research |
+| 11:00-12:00 | research | lz_research (0.20), at the computer; the lunch ramen order (0.10) is less |
 | 12:00-12:30 | eat | lunch: the eat steps add up to 1.00 |
 | 12:30-16:30 | research | lz_research (0.20): the long afternoon at the desk |
 | 16:30-17:30 | park | lz_park (0.18): the outing; life's park opens at 08:00 on weekdays |
-| 17:30-18:15 | phone | lz_phone (0.15) |
-| 18:15-19:00 | order_food | dn_ramen_order (0.25); the courier window and the console also have 0.25, and the earlier order wins |
-| 19:00-21:00 | eat | dinner: the eat steps add up to 0.25 to 1.00 as options finish; the konbini trip (0.25, 20:00-20:30) reads as eat |
+| 17:30-18:15 | buy_bread | errand_bread_dinner (0.40): bread for dinner and the evening |
+| 18:15-18:30 | phone | lz_phone (0.15); the dinner ramen order (0.10) is less |
+| 18:30-19:00 | play_console | lz_console (0.25), before dinner; the dinner stock eat (0.20) is less |
+| 19:00-21:00 | eat | dinner: the eat steps add up to 0.30 to 1.00 as options finish; the konbini trip (0.30, 20:00-20:30) is less than eating |
 | 21:00-22:30 | play_console | lz_console (0.25): the evening TV or console |
 | 22:30-23:30 | phone | lz_phone (0.15), in bed |
 | 23:30-00:00 | listen_music | lz_music (0.12), in bed with headphones |
@@ -42,7 +41,7 @@ What the checks cover:
 
 - Every hour has an activity from `life.ACTIVITIES`, so there are no dead hours. The night is sleep, from bedtime to wake. life.py never scores `sleep` (the sleep engine starts and ends it), so that span gives no bonus; it is the template's statement of the night.
 - Every hinted activity is one life can start at that hour: `buy_bread` only while the bakery is open (06:58 to 19:58 with the walk), `buy_konbini` only while it is closed, `park` from 08:00 on weekdays and home by 20:00, `order_food` from 10:00 to 23:30, and desk activities not between 00:00 and 06:00.
-- `get_delivery` never wins an hour: the courier windows (12:00, 18:30) lose to eat and to the earlier order. `buy_konbini` never wins one either, because eating is the more likely activity at dinner. `chat` and `use_computer` are in the template, but they never beat research or phone.
+- Delivery is never the plan. `order_food` and `get_delivery` never win an hour: the ramen options are 10% each, and the courier takes about 25 simulated minutes from order to eating, while bread at home is eaten at once. `buy_konbini` never wins one either, because eating is the more likely activity at dinner. `chat` and `use_computer` are in the template, but they never beat research or phone.
 - Life still depends on its own state: eat needs food in stock (see P12), chat needs waiting messages, the console needs `home_enabled`, and order_food needs hunger.
 
 **Away days.** On class days (3 a week, 12:50 to about 16:20), library days (about 09:30 to 12:00) and job days (12:50 to about 18:00: 40% of non-class weekdays, Saturday, half of Sundays), he is out. At 13:00 he is out on about three days in four. `hint()` has no away state, so on those days the sequence is not followed: life still scores home activities in those hours. This is the largest gap (proposal A1 below).
@@ -81,11 +80,13 @@ No null entry can take an existing life activity without misrepresenting it, so 
 
 ## Changes in this pass
 
-- Null entries 15 to 17: the two konbini buy steps (P12) are null, because life.py scores `buy_konbini` only while the bakery is closed (G1). Life-mapped entries 30 to 28. The file keeps 45 entries.
+- Null entries 15 to 17: the two konbini buy steps (P12) are null, because life.py scores `buy_konbini` only while the bakery is closed (G1).
+- Bread and delivery (G10): the two ramen options are 10% each (was 25%), with the other options renormalised to 1.00 per meal. The new `errand_bread_dinner` (17:30-18:15) keeps bread for dinner and the evening. Without it, the bread ran out after the afternoon meal, and the late meal became a delivery of about 29 simulated minutes above `EAT_AT` (seed 5 of `test_life_day`, which then read 69 min against a limit of 60; now 40 min).
+- Entries 45 to 46 (life-mapped 28 to 29, nulls 17).
 - Sleep: onset 00:30 (was 23:30), wake target 08:00 (was 07:00), wake window 07:30 to 09:00. Friday and Saturday nights moved to `day_types.weekend`.
 - Morning: breakfast 09:00 to 10:00 after the 08:00 wake (was 07:00 to 10:00), phone from 08:00, hygiene 08:00 to 09:30, bakery errand 10:00 to 11:00 (was 09:30 to 11:00).
 - Afternoon and evening: research 09:30 to 16:30 (was to 23:00); park 16:30 to 17:30 (was 09:00 to 19:30); console 18:30 to 22:30 at 0.25 (was 09:30 to 23:00 at 0.15); music 22:00 to 01:00 (was 18:00 to 24:00).
-- Meals: lunch ramen courier 12:00 to 12:20 (was 11:45 to 12:15); dinner stock from 18:30 (was 18:00), ramen order 18:15 to 19:00, ramen eat 19:00 to 20:15, home eat from 19:00 (was 18:45), konbini buy 20:00 to 20:30 (was 20:45).
+- Meals: lunch courier 12:00 to 12:20 (was 11:45 to 12:15); dinner stock from 18:30 (was 18:00), ramen order 18:15 to 19:00, ramen eat 19:00 to 20:15, home eat from 19:00 (was 18:45), konbini buy 20:00 to 20:30 (was 20:45).
 - `daily_plan.py`: activities add up (was the single highest entry), sleep spans, shared part only, failed reads cached too, and `clear_cache()`.
 
 ## Tests
@@ -93,3 +94,5 @@ No null entry can take an existing life activity without misrepresenting it, so 
     BROWSE=0 /tmp/claude-0/-home-user/2e1bb17a-3c9c-5a3e-a624-f8c5a84eac68/scratchpad/venv/bin/python -m pytest -q -p no:cacheprovider tests/test_daily_plan.py
 
 `tests/test_daily_plan.py` has 38 tests: windows, midnight, sleep spans, weights and ties, null entries, the activities filter, bad files and entries, bad hours and activities, the cache, 10k calls under a second, every half hour in `life.ACTIVITIES`, the sequence minute by minute, life's hour rules, and the entry counts.
+
+The life simulations that read this template pass with it: `tests/test_life_day.py -k twelve_days` (research share, meals and above-threshold time per day) and `tests/test_needs_first.py`.

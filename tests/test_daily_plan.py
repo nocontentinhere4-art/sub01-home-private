@@ -19,10 +19,9 @@ TEMPLATE = Path(__file__).resolve().parents[1] / "docs" / "design" / "daily-life
 
 # The typical weekday at home, as docs/design/daily-life/README.md lists it: (start, activity). Each runs to the next.
 DAY = [("00:00", "listen_music"), ("00:30", "sleep"), ("08:00", "phone"), ("09:00", "eat"),
-       ("10:00", "buy_bread"), ("11:00", "research"), ("11:30", "order_food"), ("11:50", "research"),
-       ("12:00", "eat"), ("12:30", "research"), ("16:30", "park"), ("17:30", "phone"),
-       ("18:15", "order_food"), ("19:00", "eat"), ("21:00", "play_console"), ("22:30", "phone"),
-       ("23:30", "listen_music")]
+       ("10:00", "buy_bread"), ("11:00", "research"), ("12:00", "eat"), ("12:30", "research"),
+       ("16:30", "park"), ("17:30", "buy_bread"), ("18:15", "phone"), ("18:30", "play_console"),
+       ("19:00", "eat"), ("21:00", "play_console"), ("22:30", "phone"), ("23:30", "listen_music")]
 
 
 def window(activity, start, end, weight=1.0):
@@ -271,7 +270,7 @@ def test_repository_template_respects_life_hour_rules():
 
 def test_repository_template_entry_counts_and_names():
     entries = all_entries(json.loads(TEMPLATE.read_text(encoding="utf-8")), [])
-    assert len(entries) == 45
+    assert len(entries) == 46
     nulls = [entry for entry in entries if entry["activity"] is None]
     assert len(nulls) == 17
     assert all(str(entry.get("proposal", "")).startswith("P") for entry in nulls)
@@ -280,5 +279,5 @@ def test_repository_template_entry_counts_and_names():
 
 def test_load_gives_the_shared_part_of_the_repository_template():
     entries = daily_plan.load()
-    assert len(entries) == 36
+    assert len(entries) == 37
     assert sum(entry["activity"] is None for entry in entries) == 9
