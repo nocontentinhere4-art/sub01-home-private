@@ -83,8 +83,9 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
   verify with `pgrep -u unreal -f UnrealEditor-Cmd` and `/home/unreal/.sub01-private/streamer-visual-receipt.json`.
   Main viewer port 8893 (`curl -s 127.0.0.1:8893/frame.jpg`). Live tuning file
   `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` via `runuser -u unreal -- python3 /home/unreal/tune.py key=value`
-  (last: fov 100, up 10, forward 2, side -12, aim_drop 4, seat_back 25, posture_lean -10, posture_head 8; the QA
-  worker may have changed it). State/camera hold: `/home/unreal/camera-check.py <camera> <state> <seconds>`.
+  (QA-kept 22:1x UTC: up 20, forward 2, side -6, aim_drop -2, fov 95, seat_back 36, posture_lean 0, posture_head 14
+  — posture_head 14 is a temporary yaw compensation for the wrong-axis bug; reset to ~0 after the native axis fix).
+  Visual bugs ranked in `docs/streamer/VISUAL-QA-20261023.md`. State/camera hold: `/home/unreal/camera-check.py <camera> <state> <seconds>`.
 - Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
   `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
 - Backend: coordinator `/root/.sub01-windows-recovery/resume20.py` (ports 8830/8831); streamer hold re-armed with
