@@ -6,7 +6,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 def test_screenshot_loading_cannot_advance_camera_reentrantly(monkeypatch,tmp_path):
  module=importlib.import_module('unreal_candidate_visual_review');monkeypatch.setattr(module,'_handle',None)
  (tmp_path/'Content/Sub01Home').mkdir(parents=True);(tmp_path/'Content/Sub01Home/ActualHome.umap').write_bytes(b'actual saved candidate map')
- guard=types.SimpleNamespace(active_candidate_guard=lambda _:True,CANDIDATE=tmp_path,SCOPE=tmp_path/'scope.json',trusted_json=lambda _:{'nullrhi':False})
+ guard=types.SimpleNamespace(active_candidate_guard=lambda _:True,CANDIDATE=tmp_path,SCOPE=tmp_path/'scope.json',trusted_json=lambda _:{'nullrhi':False,'game_pid':159171,'game_start_ticks':976840968})
  monkeypatch.setitem(sys.modules,'private_home_candidate_scope',guard)
  real_path=Path
  monkeypatch.setattr(module,'Path',lambda p:types.SimpleNamespace(read_bytes=lambda:b'UnrealEditor\0-vulkan\0')if str(p)=='/proc/self/cmdline'else real_path(p))
