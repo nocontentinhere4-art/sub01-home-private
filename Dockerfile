@@ -25,9 +25,10 @@ RUN chmod 755 /usr/local/bin/sub01-entrypoint \
  && mkdir -p /data/frames && chown -R 1000:1000 /data
 COPY audience.py brain_sim.py sleep.py chat.py eye.py real_baseline.py life.py live_server.py diary.py research.py browse.py launchpad_eval.py \
      runpod_api.py browse_service.py eyes.py brain_vote.py tastes.py state_io.py mind.py costs.py chess_game.py \
-     search_sources.py sessions.py view_only.py interests.py short_videos.py music.py music_curated.json clips.py readings.py screens.py novelty.py youtube_api.py memory_guard.py lexicon.py ./
+     search_sources.py sessions.py view_only.py interests.py short_videos.py music.py music_curated.json clips.py readings.py screens.py novelty.py youtube_api.py memory_guard.py lexicon.py \
+     impulse.py daily_plan.py vagon_pc.py vagon_bridge.py ./
 COPY console_requests.py home_http.py home_interactions.py home_minecraft.py home_minecraft_input.py home_minecraft_controller.py home_remote_computer.py \
-     home_world.py home_computer.py home_api.py home_native_feedback.py home_phone.py ./
+     home_world.py home_computer.py home_api.py home_native_feedback.py home_phone.py home_geometry_profile.py ./
 COPY scripts ./scripts
 COPY games ./games
 # Build dependencies from the lockfile, never from a developer's node_modules.

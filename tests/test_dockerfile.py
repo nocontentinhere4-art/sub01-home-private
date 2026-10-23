@@ -1,12 +1,15 @@
 """The image must contain every local module the server imports (the #49 incident: mind.py was missing and the image
 crashed at start). Parses the Dockerfile's COPY lines and walks the imports with ast; no docker needed."""
 import ast
+import fnmatch
 import re
 import shlex
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY_POINTS = ("live_server.py", "browse_service.py")          # the CMD, and the browser child / separate service
+# read by path at runtime, so no import walk sees them: daily_plan.hint reads the day template (no plan without it)
+DATA_FILES = ("docs/design/daily-life/day_template.json",)
 
 
 def copied_paths(dockerfile=ROOT / "Dockerfile"):
@@ -72,6 +75,25 @@ def covered(path, copied):
     return any(path == c or path.startswith(c + "/") for c in copied)
 
 
+def dockerignored(path, dockerignore=ROOT / ".dockerignore"):
+    """Whether the build context drops this repo path, by Docker's rule: the last pattern that matches the path or one of
+    its parent directories decides, and a leading ! re-includes. fnmatch globs are enough for this file's patterns."""
+    parts = path.split("/")
+    prefixes = ["/".join(parts[:i]) for i in range(1, len(parts) + 1)]
+    matched = False
+    for raw in dockerignore.read_text().splitlines():
+        pat = raw.strip()
+        if not pat or pat.startswith("#"):
+            continue
+        negated = pat.startswith("!")
+        pat = (pat[1:] if negated else pat).strip("/")
+        if negated != matched:          # only a pattern of the other kind can change the outcome
+            continue
+        if any(fnmatch.fnmatchcase(p, pat) for p in prefixes):
+            matched = not negated
+    return matched
+
+
 def test_dockerfile_copies_every_imported_module():
     copied = copied_paths()
     missing = sorted(f for f in local_imports() if not covered(f, copied))
@@ -82,6 +104,19 @@ def test_dockerfile_copy_sources_exist():
     copied = copied_paths()
     assert "live_server.py" in copied and "entrypoint.sh" in copied
     assert not [c for c in copied if not (ROOT / c).exists()]
+
+
+def test_dockerfile_copies_the_runtime_data_files():
+    copied = copied_paths()
+    for f in DATA_FILES:
+        assert (ROOT / f).exists(), f"{f} is missing: daily_plan would run without a day plan"
+        assert covered(f, copied), f"Dockerfile does not COPY {f} (read at runtime by daily_plan.py)"
+
+
+def test_dockerignore_keeps_every_file_the_image_needs():
+    """A COPY of a file that .dockerignore drops fails the whole build, so the check is on the build context itself."""
+    for f in sorted(local_imports()) + list(DATA_FILES):
+        assert not dockerignored(f), f"{f} is excluded from the build context by .dockerignore; its COPY would fail"
 
 
 def test_catches_a_missing_module(tmp_path):
