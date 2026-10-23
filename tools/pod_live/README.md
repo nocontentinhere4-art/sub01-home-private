@@ -17,3 +17,16 @@ What the live game cannot do yet: sit at the desk or sofa and lie in bed. `Valid
 `Walk` and `Idle`, the `/Game/Sub01Hands/Seating` clips are on another skeleton, and no `SeatedReviewManifest` /
 `BedReviewManifest` is configured. The prepared station-motion integration (`animation-integration-v1`, never built)
 targets exactly the running source; building it is a separate step.
+
+## Ghost camera tour (spectator views)
+
+The native module already has `FSub01GhostViews`: up to 4 scene-capture cameras that fly through the house with
+collision, mirror his body as a poseable copy, and write `frame-<key>.png` (640x360) at the policy's rate. They are
+off until root writes `/run/sub01-home-private/ghost-policy.json` for the exact game pid/start ticks.
+
+| Script | What it does |
+|---|---|
+| `ghost-tour-start.py PID START_TICKS [hours]` | writes the policy (capacity 2, 10 fps, spawn at the aisle node), prepares `ghost-visitors/` and starts the pilot as uid 1001. |
+| `ghost-pilot.py` | keeps one camera request alive, flies along the live node graph (stairs included) and saves 4 views per room into `ghost-tour-20261023/`. 44 frames in about 60 s on 2026-10-23. |
+
+Bathroom privacy closes every ghost view (the game does that); a new camera spawns again at the policy spawn point.
