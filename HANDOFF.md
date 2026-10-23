@@ -1,0 +1,93 @@
+# SUB-01 handoff (read first; re-injected after every compaction and at session start)
+
+Last update: 2026-10-23 21:40 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
+`docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
+
+## Main goal
+SUB-01 is a simulated 20-year-old streamer in a native Unreal Engine 5 home on a RunPod GPU pod. Goal: the first
+complete streaming version, later live on the owner's site subzerone.live (only when he asks). He stays at his desk,
+uses the owner's real PC (Vagon Computer, Windows 11, Steam with Detroit: Become Human), browses and plays, speaks
+English with his own voice (K07), answers and really executes chat requests, looks real (posture, chair, hands on
+keyboard/mouse, head/mouth with the voice), is filmed by two cameras at once (frontal webcam + a camera from behind
+showing the house and him at the PC), at 60+ fps, composed and recorded by the director, with logs, recovery and a
+kill switch.
+
+Until the owner authorises publication, "streaming version" means a **private pod-only recording / local-HLS
+demonstration**. Completion requires: proven keyboard/mouse control of the same Vagon session seen by the monitor, the
+agent and the director; safe chat execution and refusal; both cameras composed simultaneously; K07 speech with
+head/mouth motion; a final soak showing logs, recovery and the kill switch; the owner's approval of the look.
+
+Open questions for the owner (do not guess; ask when relevant): what "60+ fps" is measured on (game render, each
+camera, recording, HLS) and for how long; which chat source goes live (site WebSocket today; Twitch/YouTube/Kick?);
+which sites and games are approved on his PC; "looks real" is accepted by the visual-QA matrix plus his approval.
+
+## Working rules (non-negotiable)
+- **Kimi is the partner in every piece of work, with or without agents** (owner, 2026-10-23). Every agent, the
+  coordinator included, consults Kimi (`kimi-k3.1-pro`, `tools/ask_kimi.py` on the pod, `--file`, `--image`) BEFORE a
+  design decision and has the diff or frames reviewed by Kimi BEFORE EVERY COMMIT; reports carry a "Kimi review"
+  section; consultations are saved in `docs/streamer/kimi/`. See `CLAUDE.md`, `docs/streamer/KIMI.md`.
+- No public stream, deploy to Railway/`main`, purchases or credential changes without the owner's explicit request.
+  "Deploy" here means copying files to the pod only; HLS stays local/private.
+- Secrets never in git, logs or chat. On the pod (mode 600, uid 1001): Anthropic key `/home/unreal/.sub01-private/anthropic-key`
+  (it was pasted in chat once: rotation advised, not yet done), Kimi key `/home/unreal/.sub01-private/kimi-key`,
+  operator token `/home/unreal/.sub01-private/operator-token`. The pod's Jupyter token is supplied by the owner's RunPod
+  pod environment and kept only in the session scratchpad `pods.json`; never print it.
+- The owner writes Italian; answer in Italian (never Spanish). Commits carry only the attribution trailers.
+- Branch `claude/happy-einstein-1x0561` (repo `nocontentinhere4-art/sub01-home-private`, checkout
+  `/home/user/sub01-home-private`). Commit and push each verified, Kimi-reviewed deliverable.
+- Before any restart or build on the pod: disk preflight (`df -h /`, keep > 3 GB; the backend refuses below 3 GB).
+- The agent stays held (STOP file) during cut-overs; it is resumed only after its guard rails pass.
+
+## Plan (ordered; Kimi-reviewed; each step has a done-criterion)
+1. **Integrate worker outputs without runtime cut-over** — tests pass, Kimi artefacts and report sections exist,
+   commits pushed, rollback baseline recorded (last-known-good commit and game k launcher).
+2. **Native game k → l (build v20)** — hands/posture/key light/cam 2 verified on frames, the agreed fps metric logged
+   (`SUB01_STREAMER_VISUAL_PERF`), game k restorable from its launcher.
+3. **Director cut-over (local)** — recording and local HLS show both cameras, the desktop layouts, the NVENC path with
+   its fallback, and the agreed fps metric.
+4. **Vagon input proven, then ONE canonical desktop source** for the monitor, director and agent (no 8832/8838 split);
+   agent still held — benign before/after frames prove keyboard and mouse.
+5. **Agent provider decision (with Kimi) and safety controls** — allowed/refused actions, logging, fault recovery and
+   STOP halt/resume pass before chat or any unattended run.
+6. **Visual polish loop** — QA findings closed, frame reviews saved with Kimi, the owner approves the look.
+7. **30-minute acceptance recording** — activity change, executed and refused chat, a recovered error, both cameras,
+   voice + head/mouth, Vagon control, measured fps; highlights delivered to the owner.
+8. **subzerone.live only on explicit request** — the requested private embed/platform test passes; publication is a
+   separate authorisation.
+
+## Last-observed state (2026-10-23 ~21:35 UTC; verify before relying on it)
+Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~3 GB free).
+- Native game k (build v19, t.MaxFPS 24): launcher `/root/.sub01-windows-recovery/launch-streamer-game-20261023k.py`;
+  verify with `pgrep -u unreal -f UnrealEditor-Cmd` and `/home/unreal/.sub01-private/streamer-visual-receipt.json`.
+  Main viewer port 8893 (`curl -s 127.0.0.1:8893/frame.jpg`). Live tuning file
+  `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` via `runuser -u unreal -- python3 /home/unreal/tune.py key=value`
+  (last: fov 100, up 10, forward 2, side -12, aim_drop 4, seat_back 25, posture_lean -10, posture_head 8; the QA
+  worker may have changed it). State/camera hold: `/home/unreal/camera-check.py <camera> <state> <seconds>`.
+- Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
+  `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
+- Backend: coordinator `/root/.sub01-windows-recovery/resume20.py` (ports 8830/8831); streamer hold re-armed with
+  `POST /api/home/streamer {"operation":"start"}` (X-Admin-Token).
+- Supervisor `scripts/streamer_up.py` (start/status/kill/resume/restart/stop; see `docs/streamer/RUNBOOK.md`):
+  desktop 8832 (bundled Chromium, :102; feeds the in-game monitor + director PiP), voice 8835 (Chatterbox K07,
+  `streamer/mouth.json`), agent 8836 (Claude primary, Kimi fallback), director 8837 (24 fps libx264, recordings in
+  `/home/unreal/.sub01-private/streamer/recordings`, verified rehearsal segments copied to `/workspace/sub01-streamer-recordings`).
+- Vagon runner 8838 (:103, Google Chrome 156 `/opt/google/chrome/chrome`, owner's authenticated profile
+  `streamer/desktop-vagon/profile`, backups `profile.bak-*`): last seen connected=true with real Windows frames;
+  input not yet proven. Owner login console: `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`.
+- Workers in flight (relaunched after a model usage limit): native stream pass + cam 2 + build v20 (no launch);
+  Vagon input proof on 8838; director 60 fps/NVENC/cam2/HLS; visual QA with Kimi targets. Pending Kimi consultation:
+  `/home/unreal/tmp/kimi-q-cutover2.json` (GPU budget, provider choice, guard rails).
+
+## Where things are
+- `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,
+  rehearsal `scripts/streamer_rehearsal.py`, highlights `scripts/streamer_highlights.py`).
+- Code: agent `streamer_agent.py`, motion `scripts/streamer_motion.py`, desktop `scripts/streamer_desktop.py`, voice
+  `scripts/voice_server.py`, director `scripts/streamer_director.py`, supervisor `scripts/streamer_up.py`, backend hooks
+  `streamer.py`/`live_server.py`, native installers `tools/native_streamer_visual_v2/`, Kimi CLI `tools/ask_kimi.py`.
+- Tests: `tests/test_streamer_*.py`, `tests/test_native_streamer_visual_v2.py`, `tests/test_voice_server.py`
+  (run with the scratchpad venv: `python -m pytest -q -p no:cacheprovider <files>`).
+- Kimi consultations and decisions: `docs/streamer/kimi/` (animation, stream, pc, priorities, posture, DECISIONS*.md).
+- Pod bootstrap for a new session: recreate the scratchpad helpers (`podrun.py` runs bash through the Jupyter kernel
+  API, `jupput.py` uploads through the contents API; downloads via `/files/tmp/sub01-share/...`), with the Jupyter
+  token from the owner's RunPod pod.
