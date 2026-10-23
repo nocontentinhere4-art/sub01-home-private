@@ -87,7 +87,7 @@ DEFAULT_KIMI_MODEL = "kimi-k3.1-pro"
 DEFAULT_KIMI_BASE = "https://api.moonshot.ai/v1"              # the .cn endpoint refuses this key
 KIMI_MODELS = ("kimi-k3.1-pro", "kimi-k3.1-pro-highspeed", "kimi-k3", "kimi-k2.6", "kimi-k2.7-code",
                "kimi-k2.7-code-highspeed")                    # seen with the owner's key on 2026-10-23
-KIMI_MAX_TOKENS = 1500                                        # a thinking model spends part of it on reasoning
+KIMI_MAX_TOKENS = int(os.environ.get("STREAMER_KIMI_MAX_TOKENS", "4000"))   # a thinking model spends part of it on reasoning
 FALLBACK_WINDOW_S = 600.0                                     # on the fallback this long, then the primary is tried again
 CAMERA = os.environ.get("STREAMER_CAMERA", "face") if os.environ.get("STREAMER_CAMERA", "face") in ("face", "monitor", "spectator") else "face"
 SCHEMA = "sub01.private-streamer-visual-event.v2"
