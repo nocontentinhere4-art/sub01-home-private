@@ -23,3 +23,15 @@ Question: `q-sawtooth.txt` (model `kimi-k3.1-pro`, 211 s), after these findings 
 - 13:32 UTC: game **m3b** = m3 + `-binnedmalloc2` (log: "Memory allocator used: Binned2"), launcher
   `/root/.sub01-windows-recovery/launch-streamer-game-20261024m3b.py`, everything else unchanged (cam2 60, t.MaxFPS 60).
   CSV profile of 100000 frames from 13:40 UTC for the GC cycles.
+- Result (13:36-13:48 UTC, m3b with Binned2): the ramp is unchanged (render 14.9 -> 18.2 ms in 6 minutes, ~0.55 ms/min);
+  with Binned2 the engine runs a GC every ~61 s and those GCs do NOT reset it; the reset came ~7 minutes after the
+  streamer started (13:43:50), as before. By Kimi's gate this falsifies the Mimalloc-specific mechanism. The reset is
+  tied to something with a ~7-minute period, not to GC as such (the bedroom TV video loops every 10.6 min; the house has
+  no running clock; the PC-frame textures are not it).
+- 13:48-14:00 UTC: game m3t (Mimalloc + `-trace=default,task -tracefile`): 3.5 GB in 12 minutes (~460 MB/min after
+  warm-up), moved to `/workspace/sub01-traces/m3t.utrace`. Headless Unreal Insights (`-NoUI -AutoQuit
+  -ExecOnAnalysisCompleteCmd="TimingInsights.Export..."`) was OOM-killed analysing it (container limit 31 GB). Next: a
+  small trace, the `cpu` channel switched on only for two ~40 s windows (start and end of a ramp) through the trace
+  control port 1985 (`ToggleChannels cpu 1|0`), then `TimingInsights.ExportTimerStatistics -threads=... -startTime=
+  -endTime=` per window.
+- 14:00 UTC: back on plain m3 (Mimalloc, no trace).

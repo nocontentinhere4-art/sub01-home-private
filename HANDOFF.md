@@ -117,7 +117,7 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   h264_nvenc --hls-dir streamer/hls`, PiP from :103, retention, 60 fps at speed 1.02 measured with and without cam2 in
   the graph). The bundled-Chromium runner 8832 is retired (not deleted). Start the supervisor from a shell pinned to
   7-9 or restart the director once after start: a director launched during the voice model load ran at 0.70x
-  (fix in review: speed guard in `scripts/streamer_director.py`).
+  (speed guard in `scripts/streamer_director.py`, deployed 12:22, commit dd15704: it relaunched a 0.76x run at 12:32).
 - Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
   `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
 - Backend: coordinator `/root/.sub01-windows-recovery/resume21.py` (ports 8830/8831); streamer hold re-armed with
@@ -131,17 +131,23 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   version: reads `clientBalance` every 300 s and stops the pod at <= $10, ignoring Retry-After) was blind during the
   block anyway. Resume with `kill -CONT 63` after the block (scheduled reminder 00:20 UTC); the Retry-After-aware
   version on disk replaces it only with the owner's OK. All other pods of the account were EXITED (snapshot 10-23).
-- **Sawtooth found** (`docs/streamer/kimi/sawtooth.md`): the render thread time climbs ~0.5 ms/min and resets at
-  every GC (~7 min); this is the "+-5 fps noise". Experiment running: game **m3b** = m3 + `-binnedmalloc2` (since
-  13:32; `/tmp/sub01-share/game.log` points at its log; `relaunch-m3b.sh`). Kimi's gate: slope < 0.1 ms/min and no
-  GC step > 0.5 ms, then back to Mimalloc (A/B/A).
+- **Sawtooth found** (`docs/streamer/kimi/sawtooth.md`): the render thread time climbs ~0.5 ms/min and resets every
+  ~7 minutes; this is the "+-5 fps noise". Allocator hypothesis FALSIFIED (game m3b with `-binnedmalloc2`: same ramp,
+  GCs every 61 s do not reset it). A full Insights trace (3.5 GB, `/workspace/sub01-traces/m3t.utrace`) was too big
+  to analyse (OOM at the 31 GB container limit). Next: two short `cpu`-channel windows via the trace control port
+  1985. Game back on plain **m3** since 14:00 (`/tmp/sub01-share/game.log` -> its log).
+- Owner progress page with before/now photos: `docs/streamer/STATO-20261024.md` (photos in
+  `docs/streamer/photos/`, Kimi's photo review `docs/streamer/kimi/photos-20261024.md`). The owner wants everything on
+  GitHub but NOTHING live: Railway deploys from `main`, so the work stays on this branch with an open, unmerged PR.
 - Game is back on **m3** (rolled back 12:15 per `docs/streamer/kimi/fps-next.md`; pid in `streamer/game.pid`, cores
   0-5, partition loop default 0-5/6-9). Operational setting: `cam2_fps` 30 (main view 59.7-59.9 fps, cam2 ~27,
   director 60 fps at 1.0x); with cam2 at 60 the game drops to 45-48 fps. Not a pass of the 60/60 gate.
 - The bundled runner 8832 runs standalone again (12:22) only because game m3's in-game monitor polls it
   (`SUB01_PC_ORIGIN`); agent/director/watchdog use 8838. Director layout `webcam_only` while the Vagon page shows
   the login (set 12:22; restore `webcam` once the PC is connected).
-- Next (Kimi `docs/streamer/kimi/fps-v22.md`): native **v22** = cam2 `bMainViewFamily` A/B-able via tuning, capture
+- Next (Kimi `docs/streamer/kimi/fps-v22.md`; NOTE 14:00: the engine source shows our deferred cam2 capture is
+  already built in the main view's SceneRenderBuilder, so `bMainViewFamily` likely changes nothing: re-decide with
+  Kimi; the sawtooth comes first): native **v22** = cam2 `bMainViewFamily` A/B-able via tuning, capture
   sequence IDs + timestamps (CaptureScene, readback enqueue, fence completion, encode, FIFO push, FIFO depth/drops),
   swapchain present mode in diagnostics; launch-time A/Bs of `r.Vulkan.DelayAcquireBackBuffer 0` and
   `r.Vulkan.CpuWaitForFence 0` SEPARATELY; an Unreal Insights trace putting RenderThread/RHIThread/acquire/present on
