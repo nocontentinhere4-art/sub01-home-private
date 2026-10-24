@@ -1,0 +1,14 @@
+voice: listening on http://127.0.0.1:8835 engine=chatterbox voice=sub01-voice-reference-k07.wav fallback=kokoro:am_puck:1.00 streamer-dir=/home/unreal/.sub01-private/streamer
+/home/unreal/voice-rt-venv/lib/python3.12/site-packages/perth/perth_net/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import resource_filename
+voice: spoken id=20261023T230444-0054 tag='comment' 13.23s cut=False text="They can't ask the octopus if it's dreaming. So the plan is to watch …"
+voice: queued id=20261023T230646-0055 priority=normal tag='comment' sentences=3 est=13.2s text="A turkey-sized dino with a parrot's jaw, eating fruit. The skull fits…"
+voice: spoken id=20261023T230646-0055 tag='comment' 12.06s cut=False text="A turkey-sized dino with a parrot's jaw, eating fruit. The skull fits…"
+voice: queued id=20261023T230805-0056 priority=normal tag='comment' sentences=2 est=13.4s text='Search results for new deep sea species. Twenty-four new amphipods an…'
+voice: spoken id=20261023T230805-0056 tag='comment' 15.05s cut=False text='Search results for new deep sea species. Twenty-four new amphipods an…'
+voice: queued id=20261023T231211-0057 priority=normal tag='comment' sentences=3 est=13.0s text='A tiger-sized predator with huge curved claws, forgotten in a museum …'
+voice: listening on http://127.0.0.1:8835 engine=chatterbox voice=sub01-voice-reference-k07.wav fallback=kokoro:am_puck:1.00 streamer-dir=/home/unreal/.sub01-private/streamer
+voice: engine chatterbox ready in 95.5s
+voice: fifo reader is not keeping up: dropped 20 ms of audio
+voice: fifo reader is not keeping up: dropped 19 ms of audio
+voice: fifo reader is not keeping up: dropped 19 ms of audio
