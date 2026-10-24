@@ -138,7 +138,8 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   1985. Game back on plain **m3** since 14:00 (`/tmp/sub01-share/game.log` -> its log).
 - Owner progress page with before/now photos: `docs/streamer/STATO-20261024.md` (photos in
   `docs/streamer/photos/`, Kimi's photo review `docs/streamer/kimi/photos-20261024.md`). The owner wants everything on
-  GitHub but NOTHING live: Railway deploys from `main`, so the work stays on this branch with an open, unmerged PR.
+  GitHub but NOTHING live: Railway deploys from `main`, so the work stays on this branch with the open DRAFT PR
+  https://github.com/nocontentinhere4-art/sub01-home-private/pull/4 (never merge without the owner's explicit go).
 - Game is back on **m3** (rolled back 12:15 per `docs/streamer/kimi/fps-next.md`; pid in `streamer/game.pid`, cores
   0-5, partition loop default 0-5/6-9). Operational setting: `cam2_fps` 30 (main view 59.7-59.9 fps, cam2 ~27,
   director 60 fps at 1.0x); with cam2 at 60 the game drops to 45-48 fps. Not a pass of the 60/60 gate.
