@@ -84,6 +84,17 @@ def attach(live, environ=None):
                         votes=getattr(live, "votes", None), sim_clock=live.clock.now, environ=env)
 
 
+def link_bridge_state():
+    """The backend's Vagon link bridge as the operator's checks read it (GET /api/home/streamer): `enabled` (its four
+    variables are set) and why it refuses viewer links now (streamer mode, STOP). Kimi (plan step 5): the agent's live
+    use needs it disabled, the backend started with VAGON_PC_ENABLED unset or 0 and no Vagon credentials."""
+    try:
+        import vagon_bridge
+    except Exception as e:                                # never a reason for the view to fail
+        return {"enabled": None, "blocked": f"unknown ({type(e).__name__})"}
+    return {"enabled": vagon_bridge.enabled(), "blocked": vagon_bridge.streamer_block() or None}
+
+
 def kind_of(text, imp=None):
     """question | link | request | other, from impulse.parse (its categories). A link anywhere is a link; an activity word
     is a request; a question about him, or any '?', is a question."""
@@ -366,7 +377,7 @@ class StreamerMode:
                 "node": getattr(self.home, "node", None), "stage": "AWAKE" if self.active else getattr(self.life, "stage", None),
                 "paused": list(PAUSED) if self.active else [], "deferred": sorted(self.deferred),
                 "chat": {"pending": pending, "spoken": self.spoken}, "kill": self.stop_path.exists(),
-                "events": list(self.events)[-20:]}
+                "link_bridge": link_bridge_state(), "events": list(self.events)[-20:]}
 
     def public(self):
         return {"active": self.active}

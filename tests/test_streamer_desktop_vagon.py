@@ -737,6 +737,23 @@ def test_remote_typing_is_never_logged_and_state_reports_the_flag(tmp_path):
     run(body())
 
 
+def test_typed_text_is_never_in_the_runners_log_in_either_mode(tmp_path):
+    """Plan step 5 (Kimi, F7): a canary typed in chromium mode too, also when the runner refuses it, never reaches its log."""
+    async def body():
+        canary = "Canary-7f3Q-pass"
+        for mode in ("chromium", "vagon"):
+            desk = ActDesk(mode, True)
+            log = tmp_path / f"{mode}.jsonl"
+            runner = sd.Runner(desk, TOKEN, sd.Events(log))
+            res = await runner.act({"action": "type", "text": canary, "submit": False})
+            assert res["ok"] is True and desk.done[-1]["text"] == canary, mode          # the real text reaches the page
+            refused = await runner.act({"action": "type", "text": canary + " 4111 1111 1111 1111"})
+            assert refused["ok"] is False and len(desk.done) == 1, mode
+            text = log.read_text()
+            assert canary not in text and "4111" not in text and f"[typed {len(canary)} chars]" in text, mode
+    run(body())
+
+
 def test_main_allow_credentials_defaults_on_for_vagon_and_follows_the_env(tmp_path, monkeypatch):
     token = tmp_path / "token"
     token.write_text("operator-credential-test\n")

@@ -6,6 +6,7 @@ No network and no AI calls: the provider is scripted, the services are in-proces
 """
 import asyncio
 import base64
+import collections
 import io
 import json
 import os
@@ -3523,3 +3524,322 @@ def test_review5_a_numeric_pin_in_a_parsed_answer_is_masked_too(tmp_path):
     out = agent.raw_for_log(json.dumps({"pin": 12345678, "say": "", "nested": [87654321, {"code": 1234567890}]}))
     assert "12345678" not in out and out.startswith("[re-serialized] ") and "[typed 8 chars]" in out and "87654321" in out
     assert SA.mask_decoded({"a": True, "b": None, "c": 2.5}, ["12345678"]) == {"a": True, "b": None, "c": 2.5}
+
+
+# --- plan step 5: the controls' checks (docs/streamer/AGENT-CHECKS.md; Kimi: docs/streamer/kimi/agent-checks-design*.md) ---
+BAD_PAYLOADS = [
+    ("none", None), ("string", "scroll"), ("unknown", {"action": "run_shell", "cmd": "x"}),
+    ("routine-kind", {"action": "launch_game", "name": "x"}), ("zoom", {"action": "zoom", "point": [5, 5]}),
+    ("money", {"action": "navigate", "url": "https://www.paypal.com/"}),
+    ("owner-console", {"action": "navigate", "url": "https://console.runpod.io/pods"}),
+    ("account-change", {"action": "navigate", "url": "https://myaccount.google.com/security"}),
+    ("no-url", {"action": "navigate"}), ("lock", {"action": "key", "key": "Meta+l"}),
+    ("ctrl-alt-del", {"action": "key", "key": "Control+Alt+Delete"}), ("alt-f4", {"action": "key", "key": "Alt+F4"}),
+    ("card", {"action": "type", "text": "4111 1111 1111 1111"}), ("iban", {"action": "type", "text": "DE89370400440532013000"}),
+    ("purchase", {"action": "type", "text": "add to cart"}), ("empty", {"action": "type", "text": ""}),
+]
+
+
+@pytest.mark.parametrize("source", ["model", "chat", "routine", "quiet"])
+@pytest.mark.parametrize("name, payload", BAD_PAYLOADS, ids=[n for n, _ in BAD_PAYLOADS])
+def test_checks_the_broker_refuses_a_bad_payload_from_every_source_before_anything_is_sent(tmp_path, source, name, payload):
+    agent, world, prov, clock = pc_make(tmp_path)
+    ack_director(world, agent)
+
+    async def go():
+        obs = await agent.observe()
+        return await agent.act(payload, obs, source=source, bind={"id": "d1", "frame": obs["frame"]})
+    out = asyncio.run(go())
+    assert out["verdict"] == "action_refused" and out["errors"][0].startswith("broker:"), (name, out)
+    assert world.acts == [] and agent.fail_streak == 0 and agent.counters["action_refused"] == 1   # sent nothing, no failure
+    assert len([e for e in events(agent) if e["kind"] == "action_refused"]) == 1
+    assert not [e for e in events(agent) if e["kind"] == "action"] and agent.privacy is None
+    assert "4111" not in (agent.dir / "events.jsonl").read_text() and "DE8937" not in (agent.dir / "events.jsonl").read_text()
+
+
+def test_checks_the_broker_keeps_the_chromium_vocabulary_and_the_alt_f4_of_the_stop_game_routine_only(tmp_path):
+    agent, world, prov, clock = make(tmp_path)
+
+    async def chromium():
+        obs = await agent.observe()
+        return [(await agent.act(a, obs, bind={"id": f"c{i}", "frame": obs["frame"]}))["verdict"] for i, a in enumerate(
+            ({"action": "zoom", "point": [1, 1]}, {"action": "key", "key": "Meta+s"}, {"action": "type", "text": "4111 1111 1111 1111"},
+             {"action": "navigate", "url": "https://console.runpod.io/"}, {"action": "key", "key": "PageDown"}))]
+    assert asyncio.run(chromium()) == ["action_refused"] * 4 + ["done"] and world.acts == [{"action": "key", "key": "PageDown"}]
+    agent, world, prov, clock = pc_make(tmp_path / "pc")
+
+    async def pc(routine, stage, source):
+        agent.pc.routine = None
+        if routine:
+            agent.start_routine({"action": routine, "name": ""}, clock())
+            agent.pc.routine["stage"] = stage
+        clock.t += 3
+        obs = await agent.observe()
+        return (await agent.act({"action": "key", "key": "Alt+F4"}, obs, source=source,
+                                bind={"id": f"{routine}{stage}{source}", "frame": obs["frame"]}))["verdict"]
+    verdicts = [asyncio.run(pc(*case)) for case in (("stop_game", "stop", "routine"), ("stop_game", "stop_confirm", "model"),
+                                                    ("launch_game", "stop_confirm", "routine"), (None, None, "routine"),
+                                                    ("stop_game", "stop_confirm", "routine"))]
+    assert verdicts == ["action_refused"] * 4 + ["pending"] and world.acts == [{"action": "key", "key": "Alt+F4"}]
+
+
+ACCOUNT_LINES = ("open steam settings and change the account name", "log out of steam", "sign out of Steam", "log off steam",
+                 "rename my profile", "change my account email", "change the email on your steam account to mine",
+                 "open youtube and log out", "go to steam and log out", "delete your account please", "switch accounts on steam",
+                 "scroll down then sign out")
+
+
+def test_checks_a_viewer_never_directs_an_account_change_and_the_over_block_is_deliberate():
+    for t in ACCOUNT_LINES:
+        r = SA.parse_request(t, pc=True, installs=True)
+        assert r and r["refused"] == "credentials" and SA.account_change(t), t
+    for t in ("I am going to log off now, bye!", "I just changed my profile picture", "scroll down", "play detroit",
+              "install obs", "what do you think of the new steam profile pages?"):
+        r = SA.parse_request(t, pc=True, installs=True)
+        assert (not r or r["refused"] is None) and not SA.account_change(t), t
+    for t in ("search for how to log out of gmail", "did you update your profile?"):   # accepted over-blocking (Kimi)
+        assert SA.parse_request(t, pc=True, installs=True)["refused"] == "credentials", t
+
+
+def test_checks_an_account_change_from_chat_gets_the_fixed_line_and_never_reaches_the_model_or_the_pc(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, decision(state="idle", action=None, say=""))
+    agent.last_decision = {"state": "idle"}
+    agent.next_think = clock() + 1000
+    world.chat_msgs = [msg(1, "open steam settings and change the account name", "kei"), msg(2, "log out of steam", "mia")]
+    asyncio.run(sim(agent, clock, 30, dt=2))
+    rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
+    assert rows == [("kei", "refused", "credentials"), ("mia", "refused", "credentials")]
+    assert world.acts == [] and agent.pc.routine is None and SA.REFUSAL_LINES["credentials"] in [s["text"] for s in world.spoken]
+    assert not any("account name" in c["text"] or "log out" in c["text"] for c in prov.calls)   # never in a model's state
+
+
+def test_checks_the_account_predicate_runs_again_when_a_request_is_routed_and_when_it_is_started(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path)
+    scroll = {"kind": "scroll", "action": {"action": "scroll", "direction": "down", "amount": 600}, "refused": None}
+    agent.route_request({"seq": 7, "nick": "kei", "text": "log out of steam"}, dict(scroll), clock())   # a parser miss
+    agent.requests.waiting.append(dict(scroll, seq=8, user="mia", nick="mia", text="scroll down and sign out", t=clock()))
+    asyncio.run(agent.step())                                              # queued before: refused when it starts
+    rows = [(e["seq"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
+    assert rows == [(7, "refused", "credentials"), (8, "refused", "credentials")] and world.acts == []
+
+
+def test_checks_the_watchdog_releases_keys_on_every_stop_it_did_not_write_and_keeps_a_heartbeat(tmp_path, release_server):
+    now = [time.time()]
+    WD, wd, d = watchdog(tmp_path, lambda: now[0])
+    beat = lambda: (d / "state.json").write_text(json.dumps({"t": now[0]}))   # noqa: E731 - a healthy agent
+    beat()
+    assert wd.check() is None and release_server["seen"] == []
+    st = json.loads((d / "watchdog.state.json").read_text())
+    assert (st["t"], st["desktop_url"], st["release_pending"], st["stop"]) == (now[0], RELEASE["url"], False, False)
+    assert stat.S_IMODE((d / "watchdog.state.json").stat().st_mode) == 0o600
+    (d / "STOP").write_text(json.dumps({"by": "streamer_up kill", "t": 1}))        # the operator's kill switch
+    now[0] += 5
+    beat()
+    assert wd.check() is None and len(release_server["seen"]) == 1                 # released, no trip of its own
+    now[0] += 5
+    assert wd.check() is None and len(release_server["seen"]) == 1                 # the same STOP: once
+    row = json.loads((d / "watchdog.jsonl").read_text().splitlines()[-1])
+    assert (row["kind"], row["by"], row["release_ok"]) == ("stop_seen", "streamer_up kill", True)
+    (d / "STOP").unlink()
+    (d / "STOP").write_text(json.dumps({"by": "a drill, written again"}))          # a new STOP (removed, written again)
+    assert wd.check() is None and len(release_server["seen"]) == 2
+    WD2, wd2, _ = watchdog(tmp_path, lambda: now[0])                              # started while a STOP is there
+    assert wd2.check() is None and len(release_server["seen"]) == 3
+    release_server["answer"] = {}                                                 # HTTP 200 {}: not a confirmation
+    (d / "STOP").write_text(json.dumps({"by": "rewritten in place", "why": "a longer reason this time"}))
+    assert wd2.check() is None and wd2.release_pending and json.loads((d / "watchdog.state.json").read_text())["release_pending"]
+    n = len(release_server["seen"])
+    assert wd2.check() is None and wd2.release_pending and len(release_server["seen"]) > n   # retried with an ALERT
+    (d / "STOP").unlink()                                                         # STOP gone: a key may still be down
+    n = len(release_server["seen"])
+    assert wd2.check() is None and wd2.release_pending and len(release_server["seen"]) > n   # still retried
+    release_server["answer"] = {"session": False}
+    assert wd2.check() is None and not wd2.release_pending
+    assert [r["release_ok"] for r in map(json.loads, (d / "watchdog.jsonl").read_text().splitlines())] == [True, True, True, False]
+
+
+def test_checks_rotation_never_overwrites_an_older_audit_and_loses_no_row(tmp_path, monkeypatch):
+    monkeypatch.setattr(SA, "EVENTS_ROTATE_BYTES", 2000)
+    agent, world, prov, clock = make(tmp_path)
+    for i in range(150):                                                   # one clock second: the names stay unique
+        agent.log("probe", i=i)
+    files = sorted(agent.dir.glob("events*.jsonl"))
+    rotated = [f for f in files if f.name != "events.jsonl"]
+    assert len(rotated) >= 3 and len({f.name for f in rotated}) == len(rotated)
+    assert any(f.name.endswith(f"-{os.getpid()}-1.jsonl") for f in rotated)
+    rows = [json.loads(x) for f in files for x in f.read_text().splitlines()]
+    assert sorted(r["i"] for r in rows if r["kind"] == "probe") == list(range(150)) and {r["run"] for r in rows} == {agent.run_id}
+    assert all(stat.S_IMODE(f.stat().st_mode) == 0o600 for f in files)
+
+
+def test_checks_an_audit_that_cannot_be_written_stops_the_hands_until_a_synced_recovery(tmp_path):
+    agent, world, prov, clock = make(tmp_path, decision())
+    (agent.dir / "events.jsonl").mkdir()                                  # every append fails from now on
+    asyncio.run(agent.step())
+    assert agent.audit_degraded and agent.hands_off_reason() == "audit" and world.acts == []
+    assert agent.status()["guards"]["audit_degraded"]["error"].startswith("IsADirectoryError")
+
+    async def resume():
+        async with TestClient(TestServer(agent.make_app())) as cl:
+            r1 = await cl.post("/resume", headers={"X-Admin-Token": "tok"})
+            first = (r1.status, await r1.json())
+            (agent.dir / "events.jsonl").rmdir()
+            r2 = await cl.post("/resume", headers={"X-Admin-Token": "tok"})
+            return first, (r2.status, await r2.json())
+    (s1, b1), (s2, b2) = asyncio.run(resume())
+    assert s1 == 503 and b1["audit_degraded"] and s2 == 200 and b2["cleared"] == ["audit_degraded"] and b2["probation"]
+    assert events(agent)[0]["kind"] == "audit_recovered" and events(agent)[0]["error"].startswith("IsADirectoryError")
+    asyncio.run(sim(agent, clock, 45, dt=3))
+    assert world.acts and agent.audit_degraded is None                     # after the probation, acting again
+
+
+def test_checks_a_stop_ends_the_routine_and_the_request_revokes_the_lease_and_only_a_new_lease_acts(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path, steam_brain, lease_required=True)
+    steam_world_script(world)
+    agent.arm_lease(30)
+    world.chat_msgs = [msg(1, "play Detroit", "kenji")]
+    asyncio.run(sim(agent, clock, 6, dt=2))
+    assert agent.pc.routine is not None and agent.requests.current is not None
+    n_acts, n_spoken = len(world.acts), len(world.spoken)
+    (agent.dir / "STOP").write_text("")
+    asyncio.run(agent.check_stop())
+    ends = [(e["kind"], e["why"]) for e in events(agent) if e["kind"] in ("routine_end", "chat_request_end")]
+    assert ends == [("routine_end", "paused"), ("chat_request_end", "paused")] and agent.lease_until is None
+    assert [e["why"] for e in events(agent) if e["kind"] == "lease_revoked"] == ["STOP"]
+    asyncio.run(sim(agent, clock, 10, dt=2))
+    assert (len(world.acts), len(world.spoken)) == (n_acts, n_spoken)       # nothing while paused, not a word
+    (agent.dir / "STOP").unlink()
+    asyncio.run(agent.check_stop())
+    assert agent.probation is not None
+    prov.script, prov.n = [decision(state="idle", action={"action": "key", "key": "ArrowDown"}, say="")], 0
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert len(world.acts) == n_acts and agent.hands_off_reason() == "lease"   # resumed, but no lease: no input
+    agent.arm_lease(10)
+    asyncio.run(sim(agent, clock, 20, dt=2))
+    assert len(world.acts) > n_acts and agent.pc.routine is None and agent.pc.playing is None   # the old routine is gone
+
+
+def test_checks_every_decision_gets_one_shadow_row_or_one_skip_row_across_a_stop_and_a_hard_kill(tmp_path):
+    async def go():
+        gate = asyncio.Event()
+        agent, world, prov, clock = make(tmp_path, decision(say=""))
+        with_shadow(agent, Shadow(decision(say=""), gate=gate))
+        await agent.step()                                                 # d1: in flight
+        await decide_once(agent, clock)                                    # d2: in flight (2 at most)
+        await decide_once(agent, clock)                                    # d3: busy
+        (agent.dir / "STOP").write_text("")
+        await agent.check_stop()                                           # d1, d2: cancelled by the STOP
+        return agent
+    agent = asyncio.run(go())
+    rows = events(agent)
+    terminal = collections.Counter(r["decision_id"] for r in rows if r["kind"] in ("shadow_decision", "shadow_skipped"))
+    assert [r["decision_id"] for r in rows if r["kind"] == "decision"] == ["d1", "d2", "d3"]
+    assert terminal == {"d1": 1, "d2": 1, "d3": 1}
+    assert {r["decision_id"]: r["why"] for r in rows if r["kind"] == "shadow_skipped"} == \
+        {"d1": "cancelled", "d2": "cancelled", "d3": "busy"}
+    with open(agent.dir / "events.jsonl", "a") as f:                       # a hard kill left d9 without either
+        f.write(json.dumps({"t": 1, "kind": "decision", "run": "dead0000", "decision_id": "d9"}) + "\n")
+    agent2, *_ = make(tmp_path)
+    assert agent2.reconcile_shadow() == 1 and agent2.reconcile_shadow() == 0
+    lost = [(r["decision_id"], r["why"]) for r in events(agent2) if r["kind"] == "shadow_skipped" and r.get("decision_run")]
+    assert lost == [("d9", "lost_at_shutdown")]
+
+
+def test_checks_an_input_whose_verified_frame_is_older_than_fresh_s_at_dispatch_is_refused(tmp_path):
+    agent, world, prov, clock = pc_make(tmp_path)
+
+    async def go():
+        obs = await agent.observe()
+
+        async def slow():                                                  # the director takes 3 s to acknowledge
+            clock.t += 3
+            return {"privacy": True, "privacy_id": agent.privacy["id"], "desktop_hidden": True}
+        world.director_state = slow
+        late = await agent.act({"action": "type", "text": "s3cret-Pass", "secret": True, "credential": True}, obs,
+                               bind={"id": "d1", "frame": obs["frame"]})
+        ack_director(world, agent)
+        clock.t += 1
+        obs = await agent.observe()
+        ok = await agent.act({"action": "key", "key": "Tab"}, obs, bind={"id": "d2", "frame": obs["frame"]})
+        return late, ok
+    late, ok = asyncio.run(go())
+    assert late["verdict"] == "stale_refused" and "at dispatch" in late["errors"][0] and ok["verdict"] == "pending"
+    assert world.acts == [{"action": "key", "key": "Tab"}]
+    row = [e for e in events(agent) if e["kind"] == "action"][0]
+    assert row["age_s"] == 0 and row["frame_age_s"] == 0 and row["decision_id"] == "d2" and row["run"] == agent.run_id
+
+
+def test_checks_the_primary_cost_is_joined_to_its_decision_and_to_its_shadow_row(tmp_path):
+    async def go():
+        agent, world, prov, clock = make(tmp_path, decision(say=""))
+        prov.model = SA.DEFAULT_MODEL
+        with_shadow(agent, Shadow(decision(say="")))
+        await agent.step()
+        await asyncio.gather(*agent.shadow_tasks)
+        return agent
+    agent = asyncio.run(go())
+    pin, pout = SA.PRICES[SA.DEFAULT_MODEL]
+    dec = [e for e in events(agent) if e["kind"] == "decision"][0]
+    sh = [e for e in events(agent) if e["kind"] == "shadow_decision"][0]
+    assert (dec["tokens_in"], dec["tokens_out"]) == (1500, 120) and dec["cost_usd"] == pytest.approx((1500 * pin + 120 * pout) / 1e6)
+    assert (sh["primary_cost_usd"], sh["primary_tokens_in"], sh["primary_tokens_out"]) == (dec["cost_usd"], 1500, 120)
+    cost_row = json.loads((agent.dir / "agent_costs.jsonl").read_text().splitlines()[0])
+    assert cost_row["usd"] == pytest.approx(dec["cost_usd"])
+
+
+def test_checks_no_input_is_sent_when_only_its_own_action_row_cannot_be_written(tmp_path):
+    """Kimi (pre-commit review): the dispatch-time append is the last gate; its failure latches the audit and the
+    action is refused before anything reaches the desktop."""
+    agent, world, prov, clock = pc_make(tmp_path)
+    real = agent.log
+
+    def log(event, /, sync=False, **fields):
+        if event == "action":                                            # only this append fails (a full disk)
+            agent.audit_failed(OSError(28, "No space left on device"))
+            return False
+        return real(event, sync=sync, **fields)
+    agent.log = log
+
+    async def go():
+        obs = await agent.observe()
+        return await agent.act({"action": "key", "key": "Tab"}, obs, bind={"id": "d1", "frame": obs["frame"]})
+    out = asyncio.run(go())
+    assert world.acts == [] and out["verdict"] == "action_refused" and "audit" in out["errors"][0]
+    assert agent.hands_off_reason() == "audit" and agent.counters["actions"] == 0 and agent.last_action is None
+
+
+def test_checks_a_short_write_a_wide_mode_and_a_rotation_before_a_restart(tmp_path):
+    """Kimi (pre-commit review): a short write is a failed write; an older audit made with a wider mode is narrowed to
+    0600; the startup reconciliation reads on into the newest rotated file."""
+    agent, world, prov, clock = make(tmp_path)
+    p = agent.dir / "events.jsonl"
+    p.write_text("")
+    os.chmod(p, 0o644)
+    assert agent.log("probe", i=1) and stat.S_IMODE(p.stat().st_mode) == 0o600
+    real = os.write
+    os.write = lambda fd, data: real(fd, data[:-1])                     # the disk took one byte less
+    try:
+        assert agent.log("probe", i=2) is False
+    finally:
+        os.write = real
+    assert agent.audit_degraded["error"].startswith("OSError: short write") and agent.hands_off_reason() == "audit"
+    rotated = agent.dir / "events.20261024T100000.000001Z-1.jsonl"      # a hard kill, then a rotation, then the restart
+    rotated.write_text(json.dumps({"t": 1, "kind": "decision", "run": "dead0001", "decision_id": "d4"}) + "\n")
+    p.write_text("")
+    agent2, *_ = make(tmp_path)
+    assert agent2.reconcile_shadow() == 1
+    assert [(r["decision_id"], r["decision_run"]) for r in events(agent2) if r["kind"] == "shadow_skipped"] == [("d4", "dead0001")]
+
+
+def test_checks_the_watchdog_keeps_retrying_its_own_trips_release_after_stop_is_removed(tmp_path, release_server):
+    """Kimi (pre-commit review): removing STOP after the watchdog's own trip never cancels an unconfirmed release."""
+    now = [time.time()]
+    WD, wd, d = watchdog(tmp_path, lambda: now[0])
+    release_server["answer"] = {}                                         # HTTP 200 {}: not a confirmation
+    now[0] += 61                                                          # no heartbeat after the grace: a trip
+    assert wd.check() and (d / "STOP").exists() and wd.release_pending
+    (d / "STOP").unlink()                                                 # the operator resumes
+    n = len(release_server["seen"])
+    assert wd.check() is None and wd.release_pending and len(release_server["seen"]) > n   # still retried
+    release_server["answer"] = {"session": False}
+    assert wd.check() is None and not wd.release_pending and not (d / "STOP").exists()

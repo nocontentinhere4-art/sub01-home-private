@@ -20,11 +20,15 @@ more than `--max-actions-per-minute` (20, the agent's own cap) actions happened 
      "source": "native"} with the token, confirmed only by HTTP 200 with the runner's view `session: false` (or its
      privacy lock, `privacy: true`), tried twice, and retried with an ALERT at every later check until confirmed;
   3. appends a `trip` row to <streamer-dir>/watchdog.jsonl.
-It does not trip again while STOP exists (a STOP it could not write is retried, with an ALERT, at every check); once
-an operator removes STOP it watches again (a fresh grace for the heartbeat). `wait`/`zoom` rows send no input and are
-not counted, as in the agent's own cap. It never removes STOP, never touches the agent's other files, and exits 0 on SIGTERM/SIGINT. `--once` runs
-one check and exits 0 (all clear) or 3 (tripped) for tests and cron. Limits: on the same pod it cannot survive the pod
-itself; the remote PC's own session (Vagon) is outside its reach.
+A STOP it did not write (the operator's `streamer_up.py kill`, a drill, one already there when it starts) gets the same
+key release, once per STOP (identity: device, inode, mtime, size), confirmed and retried the same way, and a `stop_seen`
+row {why, by, release_status, release_ok}. It does not trip again while STOP exists (a STOP it could not write is
+retried, with an ALERT, at every check); once an operator removes STOP it watches again (a fresh grace for the
+heartbeat). `wait`/`zoom` rows send no input and are not counted, as in the agent's own cap. Every check rewrites
+<streamer-dir>/watchdog.state.json {t, pid, agent_url, desktop_url, tripped_by, trip, stop, release_pending,
+release_status, last} atomically: its own heartbeat. It never removes STOP, never touches the agent's other files, and
+exits 0 on SIGTERM/SIGINT. `--once` runs one check and exits 0 (all clear) or 3 (tripped) for tests and cron. Limits:
+on the same pod it cannot survive the pod itself; the remote PC's own session (Vagon) is outside its reach.
 """
 from __future__ import annotations
 
@@ -155,11 +159,61 @@ class Watchdog:
         self.tripped_by = None                                # set while our STOP is in place
         self.release_pending = False                          # the key release not confirmed yet: retried every check
         self.release_status = None
+        self.stop_handled = None                              # the identity of the STOP whose keys were released
         self.last = {}
 
     @property
     def stop_file(self):
         return self.dir / "STOP"
+
+    def stop_identity(self):
+        """Which STOP this is (Kimi): a STOP removed and written again, or rewritten in place, is a new one."""
+        try:
+            st = self.stop_file.stat()
+        except OSError:
+            return None
+        return st.st_dev, st.st_ino, st.st_mtime_ns, st.st_size
+
+    def write_state(self, why):
+        """<streamer-dir>/watchdog.state.json, atomically at every check: the watchdog's own heartbeat (the live-check
+        runner requires it fresh) and whether the last key release is confirmed."""
+        doc = {"t": self.clock(), "pid": os.getpid(), "agent_url": self.a.agent_url, "desktop_url": self.a.desktop_url,
+               "tripped_by": self.tripped_by, "trip": why, "stop": self.stop_file.exists(),
+               "release_pending": self.release_pending, "release_status": self.release_status, "last": self.last}
+        tmp = self.dir / f".watchdog.state.{os.getpid()}.tmp"
+        try:
+            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(json.dumps(doc))
+            os.replace(tmp, self.dir / "watchdog.state.json")
+        except OSError as e:
+            log(f"cannot write watchdog.state.json: {e}")
+
+    def on_stop(self, sid):
+        """A STOP this watchdog did not write (the operator's kill, the supervisor, a drill): every held key and button
+        is released all the same, once per STOP, confirmed like a trip's release and retried until confirmed."""
+        self.stop_handled = sid
+        if self.tripped_by:                                   # our own STOP: trip() already released
+            return
+        try:
+            body = json.loads(self.stop_file.read_text())
+            why, by = str(body.get("why") or "")[:120], str(body.get("by") or "")[:60]
+        except (OSError, ValueError, AttributeError):
+            why, by = "", ""
+        ok = self.release()
+        self.release_pending = not ok
+        self.append({"t": self.clock(), "kind": "stop_seen", "why": why, "by": by, "release_status": self.release_status,
+                     "release_ok": ok})
+        log(f"STOP seen ({by or 'unknown'}: {why or 'no reason'}): key release HTTP {self.release_status} "
+            f"({'confirmed' if ok else 'NOT confirmed: ALERT, retried at every check'})")
+
+    def append(self, row):
+        try:
+            fd = os.open(self.dir / "watchdog.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+            with os.fdopen(fd, "a", encoding="utf-8") as f:
+                f.write(json.dumps(row) + "\n")
+        except OSError as e:
+            log(f"cannot write watchdog.jsonl: {e}")
 
     def heartbeat(self):
         """-> (newest heartbeat time or None, loop age or None, paused)."""
@@ -198,11 +252,17 @@ class Watchdog:
         now = self.clock()
         if self.tripped_by and not self.stop_file.exists():   # the operator removed STOP: watch again, fresh grace
             log("STOP removed: watching again")
-            self.tripped_by, self.seen_heartbeat, self.started, self.release_pending = None, False, now, False
-        if self.tripped_by and self.release_pending:          # Kimi: an unconfirmed release keeps being retried
-            self.release_pending = not self.release()
+            self.tripped_by, self.seen_heartbeat, self.started = None, False, now   # an unconfirmed release stays
+            # pending and is retried below (Kimi review: removing STOP never cancels a release a held key may need)
+        sid = self.stop_identity()
+        if sid is not None and sid != self.stop_handled:      # a new STOP, whoever wrote it: the keys go up
+            self.on_stop(sid)
+        elif self.release_pending:                            # Kimi: an unconfirmed release keeps being retried, also
+            self.release_pending = not self.release()         # after STOP is gone (a key may still be down)
             if self.release_pending:
                 log("ALERT key release still not confirmed by the runner")
+        if sid is None:
+            self.stop_handled = None
         hb, loop_age, paused = self.heartbeat()
         counts = self.actions_last_minute(now)
         self.last = {"t": now, "heartbeat_age_s": None if hb is None else round(now - hb, 1), "loop_age_s": loop_age,
@@ -219,10 +279,12 @@ class Watchdog:
         top = max(counts.values()) if counts else 0
         if why is None and top > self.a.max_actions_per_minute:
             why = f"{top} actions in 60 s (cap {self.a.max_actions_per_minute})"
+        tripped = None
         if why and not self.tripped_by and not self.stop_file.exists():
             self.trip(why)                                    # latched only once STOP is really there (Kimi)
-            return why
-        return None
+            tripped = why
+        self.write_state(why)
+        return tripped
 
     def trip(self, why):
         try:
@@ -236,14 +298,10 @@ class Watchdog:
             self.tripped_by = why
         release_ok = self.release()
         self.release_pending = not release_ok
-        row = {"t": self.clock(), "kind": "trip", "why": why, "stop_written": stop_ok, "release_status": self.release_status,
-               "release_ok": release_ok, "state": self.last}
-        try:
-            fd = os.open(self.dir / "watchdog.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
-            with os.fdopen(fd, "a", encoding="utf-8") as f:
-                f.write(json.dumps(row) + "\n")
-        except OSError as e:
-            log(f"cannot write watchdog.jsonl: {e}")
+        if stop_ok:                                           # our own STOP: its keys were just released
+            self.stop_handled = self.stop_identity()
+        self.append({"t": self.clock(), "kind": "trip", "why": why, "stop_written": stop_ok,
+                     "release_status": self.release_status, "release_ok": release_ok, "state": self.last})
         log(f"TRIP ({why}): STOP {'written' if stop_ok else 'NOT written'}, key release HTTP {self.release_status} "
             f"({'confirmed' if release_ok else 'NOT confirmed: ALERT, retried at every check'})")
 

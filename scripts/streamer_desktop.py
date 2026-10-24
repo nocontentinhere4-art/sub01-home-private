@@ -3912,9 +3912,9 @@ class Runner:
             refusal = (f"stale frame_id: observe again before using marks (current {self.last_obs['frame_id']})" if stale
                        else action_policy(action, self.last_obs["marks"], self.allow_private, self.remote_logins(), remote))
             # rows: a login URL, and on the remote PC every URL, without its query string (a magic link, a verification or
-            # reset code), and on the remote PC no typed text (pixels cannot tell a password field; the agent keeps its
-            # own masked audit)
-            mask = kind == "type" and remote
+            # reset code), and never a typed text, in either mode (it may be a credential the agent typed with the
+            # owner's --allow-credentials; the agent keeps its own masked audit)
+            mask = kind == "type"
             if refusal:
                 errors.append(refusal)
                 if refusal.startswith("blocked"):

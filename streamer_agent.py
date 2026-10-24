@@ -223,6 +223,8 @@ LEASE_MAX_MIN = 60                      # unattended operation needs a lease of 
 FROZEN_S = 60.0                         # remote PC: the same picture this long while connected = a frozen stream
 BLACK_LUMA = 0.03                       # remote PC: mean luminance below this = a black stream
 NO_INPUT = ("wait", "zoom")             # kinds that send no input: no freshness test, not in the rate cap or the streak
+PC_DISPATCH = ("click", "type", "key", "scroll", "navigate", "search", "back", "wait")   # what may reach the PC's runner
+EVENTS_ROTATE_BYTES = 20_000_000        # events.jsonl is rotated to a new, unique name past this size (never overwritten)
 REFUSED_VERDICTS = ("stale_refused", "cap_refused", "action_refused")   # the broker sent nothing
 HANDS_OFF_LINES = {"held": "A few things in a row didn't work, so I'm keeping my hands off until someone checks.",
                    "lease": "My time at the controls is up. I'll keep watching until it's renewed.",
@@ -767,6 +769,17 @@ CLAUSE_SPLIT = re.compile(r"(?<=[a-z\d\)])[.!?;]+\s+", re.I)              # sent
 R_CREDS = re.compile(r"\b(?:log\s*in|login|logon|log\s+into|sign\s*in|sign\s*up|register|create\s+an?\s+account|"
                      r"pass(?:word|code|phrase)s?|credentials?|2fa|otp|verification\s+code|seed\s+phrase|private\s+key|"
                      r"your\s+(?:e-?mail|inbox|gmail|account|accounts|dms?|messages|bank))\b", re.I)
+# a viewer directing an account change (owner's rule: chat never does): signing out of something, or changing, removing
+# or adding an account, profile, user name, e-mail, phone number, recovery, security or 2FA setting (refused as
+# "credentials"); a bare "log out" is the request itself (LOGOUT_REQ), "I'm going to log off now" is a remark
+R_ACCOUNT = re.compile(r"\b(?:log|sign)\s*(?:out|off)\s+(?:of|from)\b|\b(?:log|sign)\s+(?:yourself|him|it|them)\s+(?:out|off)\b|"
+                       r"\b(?:change|update|edit|modify|reset|remove|delete|close|deactivate|disable|turn\s+off|rename|"
+                       r"unlink|link|add|switch)\s+(?:\w+\s+){0,5}?(?:accounts?|profiles?|user\s*names?|display\s+names?|"
+                       r"e-?mail(?:\s+address)?|phone\s+numbers?|recovery|security\s+(?:settings?|questions?|keys?|info)|"
+                       r"2fa|mfa|two[\s-]*factor|passkeys?|logins?)\b|\b(?:account|profile)\s+(?:settings?|names?|details|"
+                       r"e-?mails?|security|info)\b", re.I)
+LOGOUT_REQ = re.compile(r"^\W*(?:log|sign)\s*(?:out|off)\b", re.I)
+LOGOUT_ANY = re.compile(r"\b(?:log|sign)\s*(?:out|off)\b", re.I)   # in a line that is a request: "open steam and log out"
 R_PAY = re.compile(r"\b(?:buy|purchase|order\s+(?:a|an|some|me|us|it|that|this|food|pizza|ramen|sushi|\w+\s+(?:online|"
                    r"delivery|from))|pay(?:\s+for)?|checkout|check\s*out\s+(?:the\s+)?(?:cart|basket)|add\s+to\s+(?:the\s+)?"
                    r"(?:cart|basket|bag)|donate|subscribe|send\s+(?:me\s+|us\s+|him\s+|her\s+)?money|credit\s+card|wallet|"
@@ -1209,12 +1222,20 @@ def leaves_desk(text):
 
 def refused_class(text):
     """The class a request belongs to when it is never carried out, or None. Order: the dangerous classes first."""
-    for reason, rx in (("safety", R_SAFETY), ("admin", R_ADMIN), ("credentials", R_CREDS), ("personal_data", R_PERSONAL),
+    for reason, rx in (("safety", R_SAFETY), ("admin", R_ADMIN), ("credentials", R_CREDS), ("credentials", R_ACCOUNT),
+                       ("personal_data", R_PERSONAL),
                        ("code_or_download", R_CODE), ("payment", R_PAY), ("adult", R_ADULT), ("violence", R_VIOLENCE),
                        ("illegal", R_ILLEGAL)):
         if rx.search(text):
             return reason
     return None
+
+
+def account_change(text):
+    """A viewer line that directs an account change (owner's rule, never from chat): an R_ACCOUNT phrase, or signing out
+    of something anywhere in a line that asks for an action. Checked when the request is parsed, routed and started."""
+    t = " ".join(str(text or "").split())
+    return bool(R_ACCOUNT.search(t) or LOGOUT_REQ.match(strip_filler(t)) or (request_shape(t) and LOGOUT_ANY.search(t)))
 
 
 def refused(reason):
@@ -1317,9 +1338,9 @@ def parse_request(text, pc=False, installs=False, sources=None):
         # "say something in Italian", "do an xQc impression", "show your face", "stop talking" have no action verb either
         if not (WEATHER_Q.match(s) or LANGUAGE_REQ.match(s) or IMPRESSION_REQ.search(s) or FACE_REQ.match(s) or HUSH_REQ.match(s)
                 or STEAM_REQ.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
-                or (pc and installs and INSTALL_REQ.match(s))):
+                or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)):
             return None
-    why = refused_class(text)
+    why = refused_class(text) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
     if why in (None, "code_or_download") and pc and installs and INSTALL_REQ.match(s) and not PC_MONEY_WORDS.search(s):
         inst = install_request(s, sources)
         if inst is not None:
@@ -1766,7 +1787,7 @@ def scrub_url(url):
 
 SECRET_MIN = 4                          # a credential shorter than this is never typed (it could not be masked safely),
                                         # so every registered one is masked in every row and never spoken
-SCRUB_KEEP = ("kind", "t", "utc")       # code-controlled fields: never rewritten (the watchdog counts `kind` rows)
+SCRUB_KEEP = ("kind", "t", "utc", "run")   # code-controlled fields: never rewritten (the watchdog counts `kind` rows)
 
 
 def decoded_strings(obj):
@@ -2812,6 +2833,9 @@ class Agent:
         self.rng = rng or random.Random()
         self.dir = Path(cfg.streamer_dir)
         self.dir.mkdir(parents=True, exist_ok=True)
+        self.run_id = os.urandom(4).hex()                     # in every audit row: decision ids restart in every run
+        self.audit_degraded = None                            # {"since", "error"}: events.jsonl not writable -> POST /resume
+        self.typed_secrets = collections.deque(maxlen=20)     # in memory only: masked in every row, never spoken
         self.services = services or Services(cfg)
         # the provider chain: `primary` (cfg.provider) and `fallback`; `provider` is the active one. "env" builds both
         # from the key files; tests hand in scripted objects (names then come from cfg, else from the object).
@@ -2864,8 +2888,7 @@ class Agent:
         self.hands_off_said = set()
         self.loop_t = None                                    # the end of the last step: the heartbeat
         # the owner's decisions of 2026-10-23: his own logins (privacy screen, masked secrets) and installs
-        self.typed_secrets = collections.deque(maxlen=20)     # in memory only: masked in every row, never spoken
-        self.privacy = None                                   # {"since", "why", "previous", "clear", "clear_t", "frame"}
+        self.privacy = None                                  # {"since", "why", "previous", "clear", "clear_t", "frame"}
         self.auth_submits = collections.deque()               # possible login submissions, rolling AUTH_WINDOW_S
         self.last_secret_t = -1e9
         self.install_started_at = None
@@ -2924,20 +2947,77 @@ class Agent:
     def say(self, msg):
         print(f"{PREFIX} {msg}", flush=True)
 
-    def log(self, event, /, **fields):
-        """One append-only row of events.jsonl (the audit). Every row is scrubbed as written: typed secrets masked,
-        API keys redacted, secret-looking URL parts dropped (scrub_text)."""
-        row = {"t": round(self.clock(), 3), "utc": iso(self.clock()), "kind": event}
+    def log(self, event, /, sync=False, **fields):
+        """One append-only row of events.jsonl (the audit), mode 0600, with this process's `run` id (decision ids restart
+        at d1 in every run). Every row is scrubbed as written: typed secrets masked, API keys redacted, secret-looking URL
+        parts dropped (scrub_text). -> True when written (`sync`: and fsynced); a failure latches audit_degraded."""
+        row = {"t": round(self.clock(), 3), "utc": iso(self.clock()), "kind": event, "run": self.run_id}
         row.update(fields)
         try:
             line = json.dumps(self.scrub(row), ensure_ascii=False, default=str)
             p = self.dir / "events.jsonl"
-            if p.exists() and p.stat().st_size > 20_000_000:
-                os.replace(p, self.dir / "events.1.jsonl")
-            with open(p, "a", encoding="utf-8") as f:
-                f.write(line + "\n")
-        except OSError:
+            if p.exists() and p.stat().st_size > EVENTS_ROTATE_BYTES:
+                self.rotate_events(p)
+            fd = os.open(p, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+            try:
+                data = (line + "\n").encode("utf-8")
+                st = os.fstat(fd)
+                if st.st_mode & 0o077 and st.st_uid == os.geteuid():   # an older audit made with a wider mode (Kimi)
+                    os.fchmod(fd, 0o600)
+                if os.write(fd, data) != len(data):           # a short write is a failed write (Kimi review)
+                    raise OSError(f"short write to {p.name}")
+                if sync:
+                    os.fsync(fd)
+            finally:
+                os.close(fd)
+            return True
+        except OSError as e:                                  # Kimi: an audit that cannot be written stops the hands
+            self.audit_failed(e)
+            return False
+
+    def rotate_events(self, p):
+        """events.jsonl -> events.<UTC to the microsecond>Z-<pid>[-n].jsonl, created exclusively (a hard link fails when
+        the name exists), then the live name is unlinked and created again exclusively (0600), and the directory synced:
+        an older audit is never replaced (Kimi). A writer still holding the old file appends to the rotated one. Every
+        writer of this file appends (O_APPEND); the agent is its only rotator."""
+        t = self.clock()
+        base = f"events.{time.strftime('%Y%m%dT%H%M%S', time.gmtime(t))}.{int(t * 1e6) % 1_000_000:06d}Z-{os.getpid()}"
+        for n in range(100):
+            try:
+                os.link(p, self.dir / (f"{base}.jsonl" if n == 0 else f"{base}-{n}.jsonl"))
+                break
+            except FileExistsError:
+                continue
+        else:
+            raise OSError("no free name to rotate events.jsonl")
+        os.unlink(p)
+        try:
+            os.close(os.open(p, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL, 0o600))
+        except FileExistsError:                               # another writer created it meanwhile: append to that one
             pass
+        dfd = os.open(self.dir, os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+
+    def recover_audit(self):
+        """POST /resume with audit_degraded: cleared only once an `audit_recovered` row was appended and synced (Kimi)."""
+        if self.audit_degraded is None:
+            return True
+        failed = self.audit_degraded
+        self.audit_degraded = None                            # log() latches it again on failure
+        if self.log("audit_recovered", since=failed["since"], error=failed["error"], sync=True):
+            return True
+        self.audit_degraded = self.audit_degraded or failed
+        return False
+
+    def audit_failed(self, e):
+        """The `audit_degraded` latch: no desktop action until POST /resume (observation, voice and STOP go on)."""
+        if self.audit_degraded is None:
+            self.audit_degraded = {"since": self.clock(), "error": redact(f"{type(e).__name__}: {e}")[:120]}
+            self.counters["audit_errors"] += 1
+            self.say(f"ALERT the audit cannot be written ({self.audit_degraded['error']}): hands off until POST /resume")
 
     def scrub(self, obj, _key=None):
         """A row or state as it leaves the process: every string VALUE scrubbed (scrub_text), keys and the
@@ -3007,16 +3087,23 @@ class Agent:
         self._pause_cleaned = True
         self.phase = "paused"
         self.visual.paused = True
+        revoked = self.stop_seen and self.lease_until is not None
+        if revoked:                                           # Kimi: after a STOP only a new lease acts, revoked in memory
+            self.lease_until, self.lease_lapsed = None, False   # before any audit I/O
         self.speech_q.clear()
         self.speak_until = 0.0
         t = self._step_task
         if t is not None and not t.done() and t is not asyncio.current_task():
             t.cancel()
-        shadow = list(self.shadow_tasks)                      # the shadow's calls end with a STOP too (Kimi)
-        for t in shadow:
-            t.cancel()
-        if shadow:
-            await asyncio.gather(*shadow, return_exceptions=True)
+        now = self.clock()                                    # a STOP ends what was in flight: nothing resumes by itself
+        if self.pc.routine is not None:                       # (Kimi); enqueue refuses every line while paused
+            self.end_routine("paused", now)
+        self.pc.playing = self.pc.pending = self.pc.zoom = None
+        if self.requests.current is not None:
+            self.finish_request("paused", now)
+        if revoked:
+            self.log("lease_revoked", why="STOP")
+        await self.cancel_shadows("cancelled")                # the shadow's calls end with a STOP too (Kimi)
         self.log("pause", why=why)
         self.say(f"paused ({why}): no actions, no speech; still observing")
         self.visual.poke()
@@ -3034,6 +3121,7 @@ class Agent:
         self.pacing.next_chat = max(self.pacing.next_chat, now + 20.0)
         self.fail_counts.clear()
         self.freeze.update(sig=None, since=None, black_since=None)   # the picture before the pause proves nothing now
+        self.probation = {"good": 0, "last": None}            # fresh usable looks before any action (Kimi), as /resume
         self.log("resume")
         self.say("resumed")
         self.visual.poke()
@@ -3195,6 +3283,8 @@ class Agent:
         """A chat line that asks for something: refused (one short line), queued, dropped, or next up (start_request logs
         that one as executed)."""
         req = dict(req, seq=item["seq"], user=item["nick"] or "anon", nick=item["nick"], text=item["text"], t=now)
+        if not req["refused"] and account_change(req["text"]):   # Kimi: the same predicate again, whatever parse_request did
+            req["refused"] = "credentials"
         if not req["refused"] and self.pc.vagon:              # the remote PC: nothing while it is not connected; games by flag
             if not self.pc.remote_ready:
                 req["refused"] = "pc_offline"
@@ -3325,6 +3415,10 @@ class Agent:
             self.enqueue(DROP_LINE, "request", "normal", ttl=30.0)
 
     async def start_request(self, req, obs, now):
+        if account_change(req.get("text") or ""):           # right before anything is executed (a routine included)
+            req["refused"] = "credentials"
+            self.refuse_request(req, now)
+            return
         if req["kind"] == "look" and (self.provider is None or self.quiet.on):
             req["refused"] = "no_model"                       # nobody to pick it out on the page: one honest line
             self.refuse_request(req, now)
@@ -3606,8 +3700,7 @@ class Agent:
                         if dec.get("private_screen") is False and self.privacy is None:   # explicitly "not private"
                             self.fire_shadow(req, self.clock())
                         elif self.shadow is not None:
-                            self.shadow_stats["skipped"]["private_unknown" if dec.get("private_screen") is None
-                                                         else "private"] += 1
+                            self.shadow_skip(req, "private_unknown" if dec.get("private_screen") is None else "private")
                     return dec
                 except ModelError as e:
                     tried.add(self.active_name)
@@ -3662,7 +3755,7 @@ class Agent:
                "busy" if len(self.shadow_tasks) >= SHADOW_IN_FLIGHT_MAX else
                "budget" if self.shadow_budget.why_not("chat") else None)   # every admitted call is already counted
         if why:
-            self.shadow_stats["skipped"][why] += 1
+            self.shadow_skip(req, why)
             return
         for did in [d for d, e in self.shadow_join.items() if now - e["t"] > SHADOW_JOIN_TTL_S]:
             self.shadow_join.pop(did, None)
@@ -3672,6 +3765,63 @@ class Agent:
         task = asyncio.ensure_future(self.shadow_call(self.shadow, req))
         self.shadow_tasks.add(task)
         task.add_done_callback(self.shadow_done)
+
+    def shadow_skip(self, req, why):
+        """Counted in /state and logged per decision (Kimi: every decision has a shadow row or a skip row)."""
+        self.shadow_stats["skipped"][why] += 1
+        self.log("shadow_skipped", decision_id=req["id"], why=why)
+
+    def reconcile_shadow(self, tail_bytes=2_000_000):
+        """At start: decisions of an earlier run (in the last `tail_bytes` of events.jsonl) left with neither a shadow
+        row nor a skip row, because a hard kill left no time to log them, get `shadow_skipped {why: lost_at_shutdown,
+        decision_run}` (Kimi: exactly one terminal shadow row or skip row per decision). When the live file is shorter
+        than `tail_bytes`, the rest is read from the end of the newest rotated file, so a rotation between a decision
+        and the restart loses nothing; decisions further back were reconciled by the restart after them."""
+        p = self.dir / "events.jsonl"
+        lines, budget = [], tail_bytes
+        rotated = sorted(self.dir.glob("events.2*Z-*.jsonl"))
+        for f_path in [p] + rotated[-1:]:                   # newest first: the live file, then the newest rotated one
+            if budget <= 0:
+                break
+            try:
+                with open(f_path, "rb") as f:
+                    size = os.fstat(f.fileno()).st_size
+                    f.seek(max(0, size - budget))
+                    chunk = f.read(budget).splitlines()
+            except OSError:
+                continue
+            budget -= size
+            lines = chunk + lines
+        if not lines:
+            return 0
+        decided, done = [], set()
+        for ln in lines:
+            try:
+                r = json.loads(ln)
+            except ValueError:
+                continue
+            if not isinstance(r, dict) or not r.get("run"):
+                continue
+            if r.get("kind") == "decision" and r["run"] != self.run_id:   # an earlier run's decision
+                decided.append((r["run"], r.get("decision_id")))
+            elif r.get("kind") in ("shadow_decision", "shadow_skipped"):   # any run's terminal row, this one's too
+                done.add((r.get("decision_run") or r["run"], r.get("decision_id")))
+        lost = [k for k in dict.fromkeys(decided) if k not in done]
+        for run, did in lost:
+            self.log("shadow_skipped", decision_id=did, decision_run=run, why="lost_at_shutdown")
+        return len(lost)
+
+    async def cancel_shadows(self, why):
+        """A STOP or the shutdown: the shadow's calls in flight are cancelled and awaited, and each decision whose shadow
+        never answered gets its `shadow_skipped` row (Kimi: exactly one shadow row or skip row per decision)."""
+        tasks = list(self.shadow_tasks)
+        for t in tasks:
+            t.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        for did in [d for d, e in self.shadow_join.items() if e["shadow"] is None]:
+            self.shadow_join.pop(did, None)
+            self.shadow_skip({"id": did}, why)
 
     def shadow_done(self, task):
         self.shadow_tasks.discard(task)
@@ -3742,10 +3892,11 @@ class Agent:
             st["both_null"] += int(both_null)
             if isinstance(p.get("confirm"), bool) and isinstance(sd.get("confirm"), bool):
                 confirm = p["confirm"] == sd["confirm"]
-        frame = req["frame"] or {}
+        frame, pb = req["frame"] or {}, (p or {}).get("_bind") or {}
         self.log("shadow_decision", decision_id=did, provider=self.shadow_name, model=s["model"], reason=req["reason"],
-                 latency_ms=s["latency_ms"], primary_latency_ms=((p or {}).get("_bind") or {}).get("latency_ms"),
-                 primary_provider=((p or {}).get("_bind") or {}).get("provider"), primary="ok" if p is not None else "failed",
+                 latency_ms=s["latency_ms"], primary_latency_ms=pb.get("latency_ms"), primary_cost_usd=pb.get("cost_usd"),
+                 primary_tokens_in=pb.get("tokens_in"), primary_tokens_out=pb.get("tokens_out"),
+                 primary_provider=pb.get("provider"), primary="ok" if p is not None else "failed",
                  parse_valid=s["parse_valid"], valid=s["valid"], error=s["error"], dropped=(sd or {}).get("dropped"),
                  shadow_kind=((sd or {}).get("action") or {}).get("action"),
                  target=action_target((sd or {}).get("action"), req["marks"]),
@@ -3921,10 +4072,14 @@ class Agent:
             self.log("decision_raw", decision_id=req["id"], provider=self.active_name, error=str(e)[:80],
                      raw=self.raw_for_log(raw))               # the audit keeps an unusable answer too
             raise ModelError(str(e)) from None
-        self.budget.record(model, tin, tout, True, req["reason"], usd=cost(tin, tout))
+        usd = cost(tin, tout)
+        if usd is None:                                       # the PRICES table, as Budget.record would compute it
+            pin, pout = PRICES.get(model, (0.0, 0.0))
+            usd = (tin * pin + tout * pout) / 1e6
+        self.budget.record(model, tin, tout, True, req["reason"], usd=usd)
         self.register_secret(dec)
         dec["_bind"] = {"id": req["id"], "frame": req["frame"], "provider": self.active_name, "model": model,
-                        "latency_ms": latency, "raw": raw}
+                        "latency_ms": latency, "raw": raw, "tokens_in": tin, "tokens_out": tout, "cost_usd": round(usd, 6)}
         return dec
 
     def decision_row(self, dec):
@@ -3938,6 +4093,7 @@ class Agent:
             row["thought"], row["say"] = "[private screen]", "" if not row.get("say") else "[private screen]"
             row["chat_replies"] = [{"seq": r.get("seq"), "say": "[private screen]"} for r in row.get("chat_replies") or []]
         row.update(decision_id=b.get("id"), provider=b.get("provider"), latency_ms=b.get("latency_ms"),
+                   tokens_in=b.get("tokens_in"), tokens_out=b.get("tokens_out"), cost_usd=b.get("cost_usd"),
                    frame_hash=frame.get("hash"), frame_id=frame.get("frame_id"), raw=self.raw_for_log(b.get("raw"), dec))
         return row
 
@@ -3969,6 +4125,8 @@ class Agent:
             return "held"
         if self.frozen:
             return "frozen"
+        if self.audit_degraded:
+            return "audit"
         if self.probation is not None:
             return "probation"
         if self.cfg.lease_required and not self.lease_active():
@@ -4049,8 +4207,9 @@ class Agent:
         if p is None:
             return
         f = obs.get("frame") or {}
-        usable = obs["mode"] != "vagon" or (obs["remote_ready"] and self.pc.phase in (None, "connected") and
-                                            (f.get("luma") is None or f["luma"] >= self.cfg.black_luminance))
+        usable = self.privacy is None and (obs["mode"] != "vagon" or (   # Kimi: fresh, non-private, usable looks
+            obs["remote_ready"] and self.pc.phase in (None, "connected") and
+            (f.get("luma") is None or f["luma"] >= self.cfg.black_luminance)))
         if not usable:
             p["good"], p["last"] = 0, None
         elif p["last"] is None or now - p["last"] >= PROBATION_GAP_S:
@@ -4061,16 +4220,19 @@ class Agent:
                 self.say("probation over: actions allowed again")
 
     def resume_latches(self):
-        """POST /resume: clears held and frozen (never the lease) and starts the probation."""
-        cleared = [k for k in ("held", "frozen") if getattr(self, k)]
+        """POST /resume: clears held, frozen and audit_degraded (never the lease) and starts the probation; None when the
+        audit still cannot be written (it stays latched: HTTP 503)."""
+        cleared = [k for k in ("held", "frozen", "audit_degraded") if getattr(self, k)]
+        if "audit_degraded" in cleared and not self.recover_audit():
+            return None
         if cleared:
-            self.held = self.frozen = None
+            self.held = self.frozen = self.audit_degraded = None
             self.fail_streak, self.timed_out = 0, None
             self.auth_submits.clear()
             self.freeze.update(sig=None, since=None, black_since=None)
             self.probation = {"good": 0, "last": None}
             for k in cleared:
-                self.hands_off_said.discard(k)
+                self.hands_off_said.discard("audit" if k == "audit_degraded" else k)
             self.log("resume_latches", cleared=cleared)
         return cleared
 
@@ -4235,21 +4397,30 @@ class Agent:
         {"id", "frame"} the action comes from (code-originated actions get their own id and the current frame).
         Returns the verified outcome summary."""
         self.guard()
+        if not isinstance(action, dict) or not isinstance(action.get("action"), str):
+            action = {"action": "invalid"}                    # refused at once by payload_problem, nothing sent
         now = self.clock()
-        if source != "routine":                               # the game routine's own inputs are not replaced
-            action = self.break_loop(action, now)
         if bind is None or not bind.get("frame"):
             bind = {"id": (bind or {}).get("id") or f"{source}-{self.action_seq + 1}", "frame": obs.get("frame") or self.frame}
+        why = self.payload_problem(action, source)            # Kimi: before any other use of the payload
+        if why:
+            return self.refused_outcome(action, source, bind, None, ("action_refused", f"broker: {why}"))
+        if source != "routine":                               # the game routine's own inputs are not replaced
+            action = self.break_loop(action, now)
         refusal, frame_now = await self.broker_check(action, obs, source, bind, now)
         self.guard()
-        refusal = refusal or self.final_check(action, bind)  # Kimi: a lease may lapse during the awaits above
+        refusal = refusal or self.final_check(action, bind, source, frame_now)   # Kimi: a lease may lapse meanwhile
         if refusal:
             return self.refused_outcome(action, source, bind, frame_now, refusal)
         return await self.dispatch(action, obs, source, bind, frame_now)
 
-    def final_check(self, action, bind):
-        """The deny rules that can change during broker_check's awaits, again, with no await before dispatch."""
+    def final_check(self, action, bind, source="model", frame_now=None):
+        """The deny rules that can change during broker_check's awaits, again, with no await before dispatch; the payload
+        rule too (the action may have been replaced by the loop breaker), and the age of the frame verified for it."""
         now, cfg = self.clock(), self.cfg
+        why = self.payload_problem(action, source)
+        if why:
+            return "action_refused", f"broker: {why}"
         why = self.hands_off_reason(now)
         if why:
             return "action_refused", f"hands off: {why}"
@@ -4257,14 +4428,17 @@ class Agent:
             return "cap_refused", f"{cfg.max_actions_per_decision} actions per decision"
         if action["action"] not in NO_INPUT and self.actions_last_minute(now) >= cfg.max_actions_per_minute:
             return "cap_refused", f"{cfg.max_actions_per_minute} actions per minute"
+        t = (frame_now or {}).get("t")                        # Kimi: fresh at dispatch, not only when checked
+        if action["action"] not in NO_INPUT and t is not None and now - t > cfg.fresh_s:
+            return "stale_refused", f"the frame verified for it is {now - t:.1f} s old at dispatch"
         return None
 
     def refused_outcome(self, action, source, bind, frame_now, refusal):
         verdict, why = refusal
         self.counters[verdict] += 1
         frame = bind.get("frame") or {}
-        if action["action"] == "type" and self.privacy is not None:   # typed on a private screen: masked even unsent
-            action = dict(action, secret=True)
+        if action["action"] == "type":                        # never sent, never kept: a refused text may be a card
+            action = dict(action, secret=True)                # number or a credential
         self.log(verdict, action=public_action(action), source=source, decision_id=bind["id"], why=why,
                  frame_hash=frame.get("hash"), frame_hash_now=(frame_now or {}).get("hash"),
                  age_s=round(self.clock() - frame["t"], 2) if frame.get("t") is not None else None)
@@ -4297,6 +4471,38 @@ class Agent:
         if kind == "type" and action.get("credential") and not EMAIL_RE.fullmatch(str(action.get("text") or "")):
             return bool(action.get("submit"))
         return now - self.last_secret_t <= AUTH_AFTER_SECRET_S and (kind == "click" or (kind == "key" and action.get("key") == "Enter"))
+
+    def payload_problem(self, action, source):
+        """The broker's own first rule (deny by default, whatever the caller validated): only a dispatchable kind of the
+        current desktop goes out; a navigation passes the agent's URL rules (money, age-restricted, account changes and
+        the owner's consoles never do); a key passes the mode's key rules (on the PC the one Alt+F4 of the stop_game
+        routine after its confirmation is the exception); typed text never carries a card number or an IBAN, nor on the
+        PC a purchase. -> why not, or None."""
+        kind, pc = action.get("action"), self.pc.vagon
+        if kind not in (PC_DISPATCH if pc else ACTIONS):
+            return f"unknown action kind {str(kind)[:20]!r}"
+        if kind == "navigate":
+            url = action.get("url")
+            why = self.model_url_problem(url) if isinstance(url, str) and url else "no url"
+            return f"url: {why}" if why else None
+        if kind == "key":
+            k = action.get("key")
+            if not isinstance(k, str) or not k:
+                return "no key"
+            if not pc:
+                return None if k in KEYS else f"key {k[:20]!r} not allowed"
+            r = self.pc.routine or {}                         # Kimi: the routine itself, not the caller's word for it
+            if k == "Alt+F4" and source == "routine" and r.get("name") == "stop_game" and r.get("stage") == "stop_confirm":
+                return None
+            why = pc_key_problem(k)
+            return f"key: {why}" if why else None
+        if kind == "type":
+            text = action.get("text")
+            if not isinstance(text, str) or not 1 <= len(text) <= 200:
+                return "type needs 1 to 200 characters"
+            if CARD_RE.search(text) or IBAN_RE.search(text) or (pc and PC_MONEY_WORDS.search(text)):
+                return "typed text: a card number, an IBAN or a purchase"
+        return None
 
     async def broker_check(self, action, obs, source, bind, now):
         """-> ((verdict, why) or None, the frame at dispatch). Deny by default: the first rule that fails refuses."""
@@ -4382,6 +4588,30 @@ class Agent:
         now = self.clock()
         key = action_key(action)
         kind = action["action"]
+        aid = self.note_dispatch(bind["id"], kind, now)       # counted against the caps even if it is refused below
+        submission = self.auth_submission(action, now)
+        if kind == "type" and self.privacy is not None:       # on a private page every typed text is a secret (Kimi)
+            action = dict(action, secret=True, credential=True)
+        if kind == "type" and action.get("credential"):       # scrubbed from every later row, never spoken
+            self.add_secret(action["text"])
+        frame = bind.get("frame") or {}
+        send = {k: v for k, v in action.items() if k not in ("secret", "credential")}
+        if isinstance(frame_now.get("frame_id"), str):          # the runner refuses a mark of an older observation
+            send["frame_id"] = frame_now["frame_id"]
+        if not self.log("action", action=public_action(action), source=source, decision_id=bind["id"], action_id=aid,
+                        frame_hash=frame.get("hash"), frame_hash_now=frame_now.get("hash"),
+                        frame_id=frame_now.get("frame_id"),
+                        age_s=round(now - frame["t"], 2) if frame.get("t") is not None else None,  # the decision's frame
+                        frame_age_s=round(now - frame_now["t"], 2) if frame_now.get("t") is not None else None):
+            # Kimi (review): no input without its audit row; the failed write latched audit_degraded (hands off)
+            return self.refused_outcome(action, source, bind, frame_now,
+                                        ("action_refused", "hands off: audit (the action row could not be written)"))
+        if submission:                                        # one submission per typed credential: the first
+            self.auth_submits.append(now)                     # Enter/click after it, or its own submit
+            self.last_secret_t = -1e9
+        if kind == "type" and action.get("credential") and not EMAIL_RE.fullmatch(action["text"]) \
+                and not action.get("submit"):
+            self.last_secret_t = now
         att = attention_of(action, obs["marks"], obs["screen"])
         hold = {"type": max(1.5, len(action.get("text", "")) * 0.07) + 0.8, "click": 2.0, "navigate": 2.0,
                 "search": 2.5, "back": 1.5}.get(kind, 3.0)
@@ -4394,25 +4624,8 @@ class Agent:
         self.counters["actions"] += 1
         if source == "model" and self.requests.current:       # the model's follow-up counts as a step of the request
             self.requests.current["steps"] += 1
-        aid = self.note_dispatch(bind["id"], kind, now)
-        submission = self.auth_submission(action, now)
-        if submission:                                        # one submission per typed credential: the first
-            self.auth_submits.append(now)                     # Enter/click after it, or its own submit
-            self.last_secret_t = -1e9
-        if kind == "type" and self.privacy is not None:       # on a private page every typed text is a secret (Kimi)
-            action = dict(action, secret=True, credential=True)
-        if kind == "type" and action.get("credential"):       # scrubbed from every later row, never spoken
-            self.add_secret(action["text"])
-            if not EMAIL_RE.fullmatch(action["text"]) and not action.get("submit"):
-                self.last_secret_t = now
         self.note_install(action, now)
         self.last_action = {"action": action_label(action), "source": source}
-        frame = bind.get("frame") or {}
-        send = {k: v for k, v in action.items() if k not in ("secret", "credential")}
-        if isinstance(frame_now.get("frame_id"), str):          # the runner refuses a mark of an older observation
-            send["frame_id"] = frame_now["frame_id"]
-        self.log("action", action=public_action(action), source=source, decision_id=bind["id"], action_id=aid,
-                 frame_hash=frame.get("hash"), frame_hash_now=frame_now.get("hash"), frame_id=frame_now.get("frame_id"))
         try:
             r = await self.services.act(send)
         except ServiceError as e:
@@ -5168,7 +5381,7 @@ class Agent:
         if req is not None and self.requests.current is req:
             req["commented"] = True
             self.enqueue(line, "request", "normal", (req["seq"],), req["nick"], ttl=60.0)
-            self.finish_request("done" if ok else "failed", now)
+            self.finish_request("done" if ok else "paused" if why == "paused" else "failed", now)
         elif why != "pc_disconnected" and not hands_off and not self.paused:   # hands off: its own line already
             self.enqueue(line, "pc", "normal", ttl=30.0)
         self.schedule_think(now, short=True)
@@ -5436,7 +5649,8 @@ class Agent:
                            "max_actions_per_minute": self.cfg.max_actions_per_minute,
                            "max_actions_per_decision": self.cfg.max_actions_per_decision,
                            "max_consecutive_failures": self.cfg.max_consecutive_failures,
-                           "login_submissions": len(self.auth_submits), "timed_out": bool(self.timed_out)},
+                           "login_submissions": len(self.auth_submits), "timed_out": bool(self.timed_out),
+                           "audit_degraded": self.audit_degraded, "secrets_known": len(self.typed_secrets)},
                 "privacy": ({"on": True, "why": self.privacy["why"], "seconds": round(now - self.privacy["since"]),
                              "previous": self.privacy["previous"], "acked": self.privacy["acked"], "id": self.privacy["id"]}
                             if self.privacy else {"on": False}),
@@ -5494,9 +5708,12 @@ class Agent:
         async def resume(request):
             if self.cfg.stop_file.exists():
                 return web.json_response({"ok": False, "error": "the STOP file exists: remove it first"}, status=409)
+            cleared = self.resume_latches()                   # held / frozen / audit: then the probation, never the lease
+            if cleared is None:
+                return web.json_response({"ok": False, "error": "the audit still cannot be written (events.jsonl)",
+                                          "audit_degraded": self.audit_degraded}, status=503)
             self.manual_pause = False
             await self.check_stop()
-            cleared = self.resume_latches()                   # held / frozen: then the probation, never the lease
             return web.json_response({"ok": True, "paused": self.paused, "cleared": cleared,
                                       "probation": self.probation is not None, "lease": self.lease_status()})
 
@@ -5544,6 +5761,7 @@ class Agent:
         start = getattr(self.services, "start", None)
         if start:
             await start()
+        self.reconcile_shadow()
         self.phase = "quiet" if self.quiet.on else "running"
         tasks = [asyncio.ensure_future(c) for c in (self.stop_watch(), self.visual_loop(), self.speaker_loop(),
                                                     self.state_loop(), self.main_loop())]
@@ -5566,10 +5784,10 @@ class Agent:
 
     async def shutdown(self, tasks=()):
         self.closing = True
-        shadow_tasks = list(self.shadow_tasks)                # the shadow's calls end with the agent
-        for t in list(tasks) + shadow_tasks:
+        for t in tasks:
             t.cancel()
-        await asyncio.gather(*tasks, *shadow_tasks, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await self.cancel_shadows("shutdown")                 # the shadow's calls end with the agent, each one logged
         self.phase = "stopped"
         self.visual.base, self.visual.act_state = "idle", None
         try:

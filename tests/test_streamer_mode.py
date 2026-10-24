@@ -8,6 +8,7 @@ import asyncio
 import json
 import random
 import sys
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -541,6 +542,68 @@ def test_live_server_records_accepted_chat_and_answers_a_moving_request_with_the
     live.streamer.stop(t)
     assert chat("1.1.1.5", "take a stroll in the park")["reaction"] != S.STREAMING_LINE      # the mode is over: as before
     assert chat("1.1.1.8", "hello from Oslo", "ana")["reaction"] == canned                   # ... canned line and all
+
+
+BRIDGE_ENV = {"VAGON_PC_ENABLED": "1", "VAGON_MACHINE_ID": "machine-test", "VAGON_API_KEY": "key-test",
+              "VAGON_API_SECRET": "secret-test"}
+
+
+@pytest.fixture
+def bridge_calls(monkeypatch):
+    """The Vagon link bridge switched on with a recorder in place of the Vagon API: every call it would make is listed."""
+    import vagon_bridge
+    import vagon_pc
+    for name, value in BRIDGE_ENV.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.delenv("SUB01_STREAMER", raising=False)
+    monkeypatch.delenv("STREAMER_DIR", raising=False)
+    monkeypatch.setattr(vagon_bridge, "_queue", deque())
+    monkeypatch.setattr(vagon_bridge, "_worker_running", False)
+    monkeypatch.setattr(vagon_bridge, "_status", {"state": "off", "detail": ""})
+    monkeypatch.setattr(vagon_bridge, "_last_refusal", "")
+    calls = []
+    for name in ("status", "start_machine", "wait_ready", "open_url", "set_auto_stop", "stop_machine", "list_machines"):
+        monkeypatch.setattr(vagon_pc, name, lambda *a, _n=name, **k: calls.append(_n))
+    return calls
+
+
+def test_streamer_mode_never_sends_a_viewer_link_to_the_pc_bridge_and_the_agent_still_gets_it(tmp_path, monkeypatch, bridge_calls):
+    """Plan step 5 (Kimi, G5): only the agent acts on the PC, through its broker; the bridge never sees a viewer's link
+    while the mode is attached, active or not, and never starts the machine for one."""
+    import vagon_bridge
+    live = make_live(tmp_path, monkeypatch)
+    assert live.streamer is not None and not live.streamer.active
+
+    def chat(key, text):
+        ws = WS()
+        asyncio.run(live.handle_chat(ws, key, text, "kei"))
+        return ws.sent[-1]
+    assert chat("1.1.1.1", "open https://example.com/page")["ok"] is True       # attached, not yet active
+    live.streamer.start(live.clock.now())
+    assert chat("1.1.1.2", "go to https://example.org/x")["ok"] is True
+    assert bridge_calls == [] and vagon_bridge.status()["waiting"] == 0
+    texts = [m["text"] for m in live.streamer.messages(0)["messages"]]
+    assert texts == ["open https://example.com/page", "go to https://example.org/x"]   # the agent's guarded path has them
+    assert vagon_bridge.submit_link("https://example.com/", "k") == (False, "streamer")
+    assert live.streamer.view()["link_bridge"] == {"enabled": True, "blocked": "streamer mode: only the streamer agent acts on the PC"}
+    assert live_server.VAGON_REFUSED["streamer"] and len(live_server.VAGON_REFUSED["streamer"]) <= 60
+
+
+def test_a_link_queued_before_the_streamer_mode_or_a_stop_is_dropped_before_any_vagon_call(tmp_path, monkeypatch, bridge_calls):
+    import vagon_bridge
+    monkeypatch.setattr(vagon_bridge, "_worker_running", True)            # no worker yet: the link waits in the queue
+    assert vagon_bridge.submit_link("https://example.com/a", "k") == (True, "")
+    monkeypatch.setenv("SUB01_STREAMER", "1")                              # the mode came on before the worker ran it
+    vagon_bridge._open("https://example.com/a", "example.com")
+    assert bridge_calls == [] and vagon_bridge.status()["state"] == "refused"
+    monkeypatch.delenv("SUB01_STREAMER")
+    monkeypatch.setenv("STREAMER_DIR", str(tmp_path))
+    (tmp_path / "STOP").write_text("")                                      # the kill switch: refused at once and at open
+    assert vagon_bridge.submit_link("https://example.com/b", "k") == (False, "streamer")
+    vagon_bridge._open("https://example.com/b", "example.com")
+    assert bridge_calls == [] and "STOP" in vagon_bridge.status()["detail"]
+    (tmp_path / "STOP").unlink()
+    assert vagon_bridge.streamer_block() == ""                             # outside the mode, without STOP: as before
 
 
 def test_room_reaction_keeps_only_the_honest_moving_refusal_while_streaming(tmp_path):

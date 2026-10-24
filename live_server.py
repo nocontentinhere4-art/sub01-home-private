@@ -74,7 +74,8 @@ VAGON_REFUSED = {"full": "The PC is busy with a link. Send it again shortly.",
                  "hour": "This hour's links for the PC are used up. Try later.",
                  "viewer": "You have used this hour's links for the PC. Try later.",
                  "ontime": "The PC's time for today is used up. Try tomorrow.",
-                 "invalid": "I cannot open that link.", "off": "I cannot open links yet."}
+                 "invalid": "I cannot open that link.", "off": "I cannot open links yet.",
+                 "streamer": "I open links myself while I stream."}
 from eyes import Eyes
 import mind as mind_mod
 from tastes import PageWatch, Tastes
@@ -660,7 +661,9 @@ class Live:
         if imp.kind == "activity":
             reaction = self.life.request_impulse(imp, t) or imp.reaction
         elif imp.kind == "open_url":
-            if links_open:
+            if links_open and self.streamer is not None:   # streamer mode (active or not): only the agent acts on the PC,
+                reaction = VAGON_REFUSED["streamer"]       # through its broker; the link reaches its ring above (Kimi)
+            elif links_open:
                 queued, why = vagon_submit_link(imp.url, key)   # the viewer's key: a per-viewer cap on top of the global ones
                 reaction = imp.reaction if queued else VAGON_REFUSED.get(why, "I cannot open that link.")
             else:

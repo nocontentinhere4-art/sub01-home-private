@@ -71,6 +71,9 @@ Owner decisions (2026-10-23 21:45 UTC):
    black stream = stop, independent watchdog that releases keys, append-only audit (frame hashes, raw JSON, actions).
    Recommend to the owner a dedicated non-admin Windows account on the Vagon PC with no saved passwords/payments.
    Done: allowed/refused actions, logging, fault recovery and STOP halt/resume pass before chat or unattended runs.
+   Status 2026-10-24: every control mapped, fixed where partial and unit-tested (`docs/streamer/AGENT-CHECKS.md`,
+   Kimi-reviewed); the live part is `scripts/streamer_agent_checks.py` (needs the owner's login + armed PC, the
+   operator's resume and lease). Live blocker: the backend must run with the Vagon link bridge variables unset.
 6. **Visual polish loop** — QA findings closed, frame reviews saved with Kimi, the owner approves the look.
 7. **30-minute acceptance recording** — activity change, executed and refused chat, a recovered error, both cameras,
    voice + head/mouth, Vagon control, measured fps; highlights delivered to the owner.

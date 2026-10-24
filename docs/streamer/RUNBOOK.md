@@ -130,6 +130,10 @@ uses the commands of REPORT-20261023.md as they are. Fill the header before star
       Steam logged in, en-US layout, desktop shortcut `SUB-01 Detroit`, save policy approved), `/pc/state.vagon.phase` is
       `connected` and the `remote_ready` neutral picture was seen before it.
 - [ ] A 2-hour local rehearsal passed with this candidate; no open severity-1/2 defect. Otherwise: another rehearsal.
+- [ ] Plan step 5 live checks passed with this candidate (AGENT-CHECKS.md): the backend runs with the Vagon link bridge
+      variables unset (`GET /api/home/streamer` shows `link_bridge.enabled: false`), the new watchdog runs on 8838,
+      then `scripts/streamer_agent_checks.py --owner-logged-in --pc-armed --send-chat --stop-drill` exits 0 (it prints
+      every operator command it needs; it never removes STOP or arms a lease itself).
 
 ### B. Start (as root on the pod)
 

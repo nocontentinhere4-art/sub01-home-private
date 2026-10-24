@@ -88,6 +88,20 @@ def enabled():
             and bool(env.get("VAGON_API_KEY")) and bool(env.get("VAGON_API_SECRET")))
 
 
+def streamer_block():
+    """Why a viewer's link must not reach the PC now, or '' (SUB-01 plan step 5, Kimi): in streamer mode
+    (SUB01_STREAMER=1, the whole process, active or not) the streamer agent is the only actor on the PC, behind its
+    broker, lease, guard rails and kill switch, and it opens a viewer's site itself; a STOP file in STREAMER_DIR holds
+    everything. Checked when a link is submitted and again right before any Vagon API call of a queued one."""
+    env = os.environ
+    if env.get("SUB01_STREAMER") == "1":
+        return "streamer mode: only the streamer agent acts on the PC"
+    d = env.get("STREAMER_DIR", "")
+    if d and os.path.exists(os.path.join(d, "STOP")):
+        return "the streamer's kill switch (STOP) is on"
+    return ""
+
+
 def status():
     """{'enabled', 'state', 'detail', 'waiting', 'last_refusal', 'probe', 'auto_stop', 'budget'}. 'state' is the last
     step this process took ('off' before any); 'waiting' counts the links queued behind it; 'budget' is what the caps
@@ -155,13 +169,19 @@ def configure_auto_stop():
 
 def submit_link(url, viewer=""):
     """Queues one link to open on the PC, or refuses it at once. Returns (True, '') when it is queued, or (False, code):
-    'off' (the bridge is disabled), 'invalid' (not a public http or https link), 'ontime', 'hour' or 'viewer' (a cap;
+    'off' (the bridge is disabled), 'streamer' (streamer mode or its STOP: streamer_block), 'invalid' (not a public http
+    or https link), 'ontime', 'hour' or 'viewer' (a cap;
     the reason is in status()['last_refusal']), 'full' (MAX_QUEUED links already wait) or 'thread' (no worker thread
     could start). viewer is the chat key of the sender, when the caller has one. A refused link never reaches the PC.
     Never raises, and never waits on the network."""
     global _worker_running, _last_refusal
     if not enabled():
         return False, "off"
+    block = streamer_block()
+    if block:
+        log.info("vagon link refused: %s", block)
+        _set_refusal(block)
+        return False, "streamer"
     if not vagon_pc.is_plain_link(url):
         log.info("vagon link refused: not a public http or https link")
         _set_refusal("not a public http or https link")
@@ -222,10 +242,13 @@ def _open(url, host):
     try:
         machine = os.environ["VAGON_MACHINE_ID"]
         with _mu:
-            why = _ontime_reason(time.monotonic())
+            why = _ontime_reason(time.monotonic()) or streamer_block()   # a link queued before the mode or a STOP
         if why:
             raise _Refused(why)
         _ensure_ready(machine, host)
+        why = streamer_block()                                # again after the wait, right before the open
+        if why:
+            raise _Refused(why)
         _set("opening", "opening a link on " + host)
         with _mu:
             _count_on(_budget(), time.monotonic())
