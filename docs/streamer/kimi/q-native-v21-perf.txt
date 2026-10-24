@@ -1,0 +1,81 @@
+You are reviewing a performance decision for SUB-01, a native Unreal Engine 5.8.3 game (Vulkan, Linux, NVIDIA RTX PRO 4000
+Blackwell, driver 595) running in a RunPod container. A seated streamer character is filmed by the main game viewport
+(the "webcam", 1920x1080) and a second camera (cam2: USceneCaptureComponent2D, 1280x720, async readback ring of 3
+FRHIGPUTextureReadback, JPEG encoded on a background task, written to a FIFO for ffmpeg). Owner requirement: 60 fps
+measured on everything (game render, both cameras, recording). Today the game runs at 15 fps (frame 50-65 ms,
+max 200-300 ms) while the GPU frame time is ~11 ms.
+
+FACTS (measured live tonight, game process unchanged)
+- Container cgroup cpu.max = 1020000/100000 (10.2 CPUs) while nproc = 48 (AMD EPYC 7352, 24 cores x 2 SMT, siblings N and
+  N+24). cpu.stat: throttled in 100% of the 100 ms periods, ~11.5 thread-seconds throttled per second. Container
+  usage 10.19 cores. Root in the container has NO CAP_SYS_NICE (cannot change other users' affinity or lower nice);
+  the game's user (uid 1001) can set the affinity of its own processes.
+- Other consumers in the container: the director's ffmpeg (x11grab of the game window at 24 fps + desktop PiP + libx264
+  veryfast) ~2.5 cores; 3 Chromium stacks (a desktop runner on :102, the owner's Vagon cloud-PC client on :103, an old
+  read-only browser) ~3.5 cores; 2 Python desktop runners ~1.1 cores; the 8893 viewer's ffmpeg (x11grab 24 fps ->
+  720p MJPEG) ~0.45 core; Xvfb :99 (the game's X server, 1920x1080x24, no GPU X driver possible: no Xorg/NVIDIA DDX in the
+  container) ~0.15 core.
+- Game launch: -vulkan -windowed 1920x1080 on Xvfb :99, -corelimit=10, t.MaxFPS 60, r.VSync 0.
+- Game fps (from cam2's capture rate and the log frame counter) and game CPU per experiment (25-30 s each):
+  | experiment                                                         | fps  | game cores | game CPU ms/frame |
+  | baseline                                                           | 14.5 | 1.97       | 136 |
+  | director + viewer ffmpeg SIGSTOPped (others grow into the freed CPU)| 21.1 | 2.99       | 142 |
+  | cam2 off (tuning key)                                              | 19.3 | 1.70       | 88  |
+  | ALL processes pinned to cores 0-9 (one SMT thread per core)        | 23.3 | 1.99       | 85  | throttling 0%
+  | game on 0-5, everything else on 6-9                                | 25.4 | 2.44       | 96  |
+  | game + Xvfb :99 on 0-5, everything else on 6-9                     | 40-42| 3.62       | 88  |
+  | same + director/viewer x11grab paused                              | 42.9 | 3.61       | 84  |
+  | game + Xvfb on 0-7, others on 8-9                                  | 38-40| 3.85       | 97  | game NOT CPU-starved here
+  | game + Xvfb on 0-7, others on 8-9, cam2 off                        | 52.9 | 3.17       | 60  |
+  Per-thread CPU per frame with game+Xvfb on 0-7: cam2 on: RHIThread 14.5 ms, RenderThread 14 ms, 2 Foreground
+  workers ~11 ms each, game thread ~4 ms, 7 Background workers ~5 ms each; cam2 off: RHIThread 12.6 ms (!), RenderThread
+  8.1 ms, game thread 4.3 ms. GPU ~11 ms.
+- So: (1) the quota throttling plus SMT sharing roughly halves the game; partitioning cores (game + its X server on
+  dedicated physical cores) takes it from 15 to ~40 fps with cam2 on. (2) Even with spare cores the frame stays at
+  ~25 ms with cam2 / ~19 ms without, i.e. CPU and GPU look serialized; the RHI thread CPU per frame (~12.6 ms with cam2
+  off) is close to the GPU time, which suggests the NVIDIA Vulkan WSI on an X server without the NVIDIA driver does a
+  synchronous GPU->CPU copy + XPutImage at present (fence wait counted as CPU). The engine has GSwapBufferTime
+  (cycles to present), GRenderThreadTime, GRHIThreadTime, GGameThreadTime, GRenderThreadWaitTime; I will log them.
+- Engine source available: FSlateRenderer::OnBackBufferReadyToPresent() (render thread, args SWindow&,
+  ISlateViewportProvider&) is broadcast in PresentWindow_RenderThread; -RenderOffScreen makes SDL use its dummy driver
+  and Vulkan skip the swapchain (the path Pixel Streaming uses in Linux containers).
+
+PROPOSED PLAN (v21 build, ~25 min incremental; one game relaunch ~8 min; the running game must stay up until the new
+one is verified):
+ P1. CPU partition, no rebuild: the launcher starts the game (and I re-pin Xvfb :99) on physical cores 0-5 (no SMT
+     siblings); a small helper `streamer_cpu_partition.py` pins every other process of the game's user to cores 6-9 and
+     re-applies every 10 s for new processes. Total stays <= 10 cores -> no quota throttling. -corelimit=6.
+ P2. Instrumentation in v21: PERF adds game_ms, render_ms, rhi_ms, swap_ms (GSwapBufferTime), render_wait_ms; a live
+     console channel: a "console" list in the private tuning file (uid 1001, 0600, growing sequence) executed once per
+     sequence through GEngine->Exec, only for whitelisted prefixes (r., sg., t.MaxFPS, csvprofile, fx., a., foliage.)
+     so I can test r.* cvars live without relaunching.
+ P3. cam2 costs nothing without a reader: no CaptureSceneDeferred, readback or JPEG encode while the FIFO has no reader
+     (open attempt every 1 s; today it captures and encodes every frame and drops them at the writer).
+ P4. -RenderOffScreen + an engine-side main-view feed: on OnBackBufferReadyToPresent the back buffer is copied into the
+     same kind of async readback ring and written as RAW BGRA 1920x1080 frames (8.3 MB, fixed size, whole frames
+     only, same writer rules as cam2) to a FIFO `cam1.raw` at the game's rate, plus a 1280x720 JPEG snapshot file at
+     ~5 fps for the 8893 viewer. The director would read `-f rawvideo -pix_fmt bgra -video_size 1920x1080 -framerate 60
+     -i cam1.raw` instead of x11grab. RAW because an in-game 1080p JPEG costs ~25 ms per frame on one core (the 720p cam2
+     encode measures 11 ms) = 1.5 cores at 60 fps; raw costs two 8 MB copies per frame on each side.
+     Launch m windowed first (P1+P2+P3 only) or straight with -RenderOffScreen + P4?
+ P5. Report the container budget honestly to the coordinator: at 60 fps the game alone needs ~4-5 cores with cam2;
+     the director must move to NVENC (staged), the duplicate desktop runner (:102 Chromium + Python ~1.5 cores) and the
+     old read-only browser (~0.7 core) should go, or 60 fps everywhere cannot fit in 10.2 CPUs.
+
+EXTRA CONSTRAINTS FOUND SINCE
+- The 8893 viewer (owner view + owner input into the game window, strict privacy checks) refuses on purpose any game
+  launched with -RenderOffScreen and needs an X window id; the director grabs the window with x11grab. So offscreen
+  changes three components (game feed, viewer, director); the windowed path keeps them as they are.
+- Kimi's earlier rule for 60 fps (docs/streamer/kimi): async readback ring + minimal SceneCapture show flags first.
+
+QUESTIONS (answer each in <= 6 lines; do not re-derive the numbers)
+1. Is the diagnosis right (quota throttling + SMT + a synchronous X11 present path)? What else could make the frame
+   ~25 ms when no game thread exceeds ~15 ms of CPU per frame and the GPU is at 11 ms?
+2. P1: is static partitioning (game+Xvfb on 6 physical cores, the rest on 4) the right call under a CFS quota without
+   CAP_SYS_NICE, or would you size it differently (e.g. 0-6 / 7-9, or include SMT siblings for the "others" set)? Any
+   risk with -corelimit lower than the cores the game owns?
+3. P4: raw BGRA FIFO vs in-game MJPEG vs a shared-memory ring for the main view; and is -RenderOffScreen +
+   OnBackBufferReadyToPresent reliable on Vulkan/Linux in 5.8 (any trap: the back buffer format B8G8R8A8 vs A2B10G10R10,
+   HDR, the readback copy needing the texture in CopySrc state, the dummy SDL window size)?
+4. Order: what would you build into v21 now vs measure first, given one build ~25 min and one relaunch ~8 min?
+Answer concisely with a decision per question.

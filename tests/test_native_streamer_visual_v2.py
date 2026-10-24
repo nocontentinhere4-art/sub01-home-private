@@ -329,6 +329,7 @@ public:
  void Reset() { Ptr.reset(); }
 };
 template<class T, class... A> TSharedRef<T> MakeShared(A&&... Args) { TSharedRef<T> Ref; Ref.Ptr = std::make_shared<T>(std::forward<A>(Args)...); return Ref; }
+namespace ESearchCase { enum Type { CaseSensitive, IgnoreCase }; }
 class FString {
  std::u16string Data;
 public:
@@ -343,6 +344,10 @@ public:
  FString& operator+=(const FString& S) { Data += S.Data; return *this; }
  FString& operator+=(const TCHAR* S) { Data += S; return *this; }
  bool StartsWith(const TCHAR* Prefix) const { std::u16string P(Prefix); return Data.compare(0, P.size(), P) == 0; }
+ bool StartsWith(const TCHAR* Prefix, ESearchCase::Type) const { return StartsWith(Prefix); }  // v21: case-sensitive callers only
+ bool Split(const TCHAR* At, FString* Left, FString* Right) const { const std::size_t P = Data.find(At); if (P == std::u16string::npos) return false; if (Left) Left->Data = Data.substr(0, P); if (Right) Right->Data = Data.substr(P + std::u16string(At).size()); return true; }
+ auto begin() const { return Data.begin(); } auto end() const { return Data.end(); }
+ const TCHAR& operator[](int32 I) const { return Data[std::size_t(I)]; }
  friend FString operator+(const FString& A, const FString& B) { FString R = A; R.Data += B.Data; return R; }
  friend FString operator+(const FString& A, const TCHAR* B) { FString R = A; R.Data += B; return R; }
  static FString FromInt(int32) { return FString(); }
@@ -489,8 +494,10 @@ struct FMath {
  template<class T> static constexpr T RadiansToDegrees(T R) { return R * T(180 / 3.14159265358979323846); }
  static FRotator RInterpTo(const FRotator& Current, const FRotator&, float, float) { return Current; }
 };
+class FJsonValue { public: FString StubString; bool StubIsString = false; bool TryGetString(FString& Out) const { if (!StubIsString) return false; Out = StubString; return true; } };
 class FJsonObject {
 public:
+ bool TryGetArrayField(const FString&, const TArray<TSharedPtr<FJsonValue>>*&) const { return false; }
  bool TryGetStringField(const FString&, FString&) const { return false; }
  bool TryGetNumberField(const FString&, double&) const { return false; }
  bool HasField(const FString&) const { return false; }
@@ -510,6 +517,7 @@ struct FCommandLine { static const TCHAR* Get() { return u""; } };
 struct FParse { static bool Param(const TCHAR*, const TCHAR*) { return false; } };
 struct FPlatformTime { static inline double StubNow = 0; static double Seconds() { return StubNow; } static double ToMilliseconds(uint64 Cycles) { return double(Cycles) * 1e-3; } };
 inline uint32 StubGpuCycles = 0;
+inline uint32 GGameThreadTime = 0, GRenderThreadTime = 0, GRHIThreadTime = 0, GSwapBufferTime = 0, GRenderThreadWaitTime = 0, GGameThreadWaitTime = 0;  // v21: RenderTimer.h
 inline uint32 RHIGetGPUFrameCycles(uint32 = 0) { return StubGpuCycles; }
 struct FPlatformProcess { static uint32 GetCurrentProcessId() { return 0; } };
 struct FDateTime { static FDateTime UtcNow() { return {}; } int64 ToUnixTimestamp() const { return 0; } int32 GetMillisecond() const { return 0; } };
@@ -579,16 +587,25 @@ public:
  void SetWorldTransform(const FTransform& T, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubWorld = T; }
  bool StubVisible = true;
  void SetVisibility(bool V) { StubVisible = V; }
- void SetMobility(EComponentMobility::Type) {}
+ EComponentMobility::Type StubMobility = EComponentMobility::Static;  // v21: the props are made Movable before they move
+ void SetMobility(EComponentMobility::Type M) { StubMobility = M; }
+ EComponentMobility::Type GetMobility() const { return StubMobility; }
+ USceneComponent* StubParent = nullptr;  // v21: attachment chain
+ bool IsAttachedTo(const USceneComponent* C) const { for (const USceneComponent* P = StubParent; P; P = P->StubParent) if (P == C) return true; return false; }
 };
 class UPrimitiveComponent : public USceneComponent {
 public:  // the stub trace hits at *StubTraceAnchor + StubTraceOffset when StubTraceHit (the anchor follows its actor)
+ uint8 bOnlyOwnerSee : 1 = 0; bool StubChannels[3] = {true, false, false};  // v21
+ void SetOnlyOwnerSee(bool B) { bOnlyOwnerSee = B ? 1 : 0; }
+ void SetLightingChannels(bool A, bool B, bool C) { StubChannels[0] = A; StubChannels[1] = B; StubChannels[2] = C; }
  bool StubTraceHit = false; const FVector* StubTraceAnchor = nullptr; FVector StubTraceOffset;
  bool LineTraceComponent(FHitResult& Hit, const FVector, const FVector, const FCollisionQueryParams&) { if (!StubTraceHit || !StubTraceAnchor) return false; Hit.ImpactPoint = *StubTraceAnchor + StubTraceOffset; return true; }
 };
-class ULightComponent : public USceneComponent { public: float Intensity = 0, Temperature = 6500; bool bUseTemperature = false; void SetIntensity(float I) { Intensity = I; } void SetTemperature(float T) { Temperature = T; } void SetCastShadows(bool) {} };
-class ULocalLightComponent : public ULightComponent { public: void SetIntensityUnits(ELightUnits) {} void SetAttenuationRadius(float) {} };
-class USpotLightComponent : public ULocalLightComponent { public: void SetInnerConeAngle(float) {} void SetOuterConeAngle(float) {} };
+class ULightComponent : public USceneComponent { public: float Intensity = 0, Temperature = 6500; bool bUseTemperature = false; bool StubChannels[3] = {true, false, false}; void SetIntensity(float I) { Intensity = I; } void SetTemperature(float T) { Temperature = T; } void SetCastShadows(bool) {}
+ void SetLightingChannels(bool A, bool B, bool C) { StubChannels[0] = A; StubChannels[1] = B; StubChannels[2] = C; } };
+class ULocalLightComponent : public ULightComponent { public: float StubRadius = 0; void SetIntensityUnits(ELightUnits) {} void SetAttenuationRadius(float R) { StubRadius = R; } };
+class USpotLightComponent : public ULocalLightComponent { public: float StubInner = 0, StubOuter = 0, StubSource = 0, StubSoft = 0; void SetInnerConeAngle(float A) { StubInner = A; } void SetOuterConeAngle(float A) { StubOuter = A; }
+ void SetSourceRadius(float R) { StubSource = R; } void SetSoftSourceRadius(float R) { StubSoft = R; } };
 class USkeletalMeshComponent : public UPrimitiveComponent {
 public:
  int32 StubHeadIndex = INDEX_NONE; FVector StubHead; UAnimInstance* StubAnim = nullptr; int32 StubForcedLod = 0;
@@ -627,11 +644,15 @@ public:
  void UpdateResourceImmediate(bool = true) { StubResource.Texture = FTextureRHIRef(&StubTexture); }
  FTextureRenderTargetResource* GameThread_GetRenderTargetResource() { return &StubResource; }
 };
-struct FEngineShowFlags { bool MotionBlur = true, DepthOfField = true; void SetMotionBlur(bool V) { MotionBlur = V; } void SetDepthOfField(bool V) { DepthOfField = V; } };
+struct FEngineShowFlags { bool MotionBlur = true, DepthOfField = true; void SetMotionBlur(bool V) { MotionBlur = V; } void SetDepthOfField(bool V) { DepthOfField = V; }
+ bool AmbientOcclusion = true, ScreenSpaceReflections = true, ContactShadows = true, VolumetricFog = true, LensFlares = true, Particles = true;  // v21: the lite capture
+ void SetAmbientOcclusion(bool V) { AmbientOcclusion = V; } void SetScreenSpaceReflections(bool V) { ScreenSpaceReflections = V; } void SetContactShadows(bool V) { ContactShadows = V; }
+ void SetVolumetricFog(bool V) { VolumetricFog = V; } void SetLensFlares(bool V) { LensFlares = V; } void SetParticles(bool V) { Particles = V; } };
 class USceneCaptureComponent2D : public USceneComponent {
 public:
  TObjectPtr<UTextureRenderTarget2D> TextureTarget; ESceneCaptureSource CaptureSource = SCS_SceneColorHDR; bool bCaptureEveryFrame = true, bCaptureOnMovement = true, bAlwaysPersistRenderingState = false;
  FPostProcessSettings PostProcessSettings; float PostProcessBlendWeight = 0; FEngineShowFlags ShowFlags; float FOVAngle = 90; int32 StubCaptures = 0, StubDeferred = 0;
+ float MaxViewDistanceOverride = -1, LODDistanceFactor = 1;  // v21
  void CaptureScene() { ++StubCaptures; if (TextureTarget) { ++TextureTarget->StubTexture.StubShade; ++TextureTarget->StubTexture.StubSerial; } }
  void CaptureSceneDeferred() { ++StubDeferred; CaptureScene(); }  // the stub renders at once; the engine renders it with the frame's main view
 };
@@ -683,7 +704,13 @@ public:
  void GetActorBounds(bool, FVector& Origin, FVector& Extent, bool = false) const { Origin = StubLocation; Extent = StubExtent; }
  UPrimitiveComponent* StubPrimitive = nullptr;
  template<class T> T* FindComponentByClass() const { if constexpr (std::is_same_v<T, UPrimitiveComponent>) return StubPrimitive; else return nullptr; }
+ std::vector<UPrimitiveComponent*> StubComponents;  // v21: GetComponents
+ template<class T> void GetComponents(TArray<T*>& Out, bool = false) const { Out.Reset(); for (UPrimitiveComponent* P : StubComponents) Out.Add(static_cast<T*>(P)); }
 };
+class UEngine { public: std::vector<std::u16string> StubExec; bool Exec(UWorld*, const TCHAR* Command) { StubExec.push_back(Command); return true; } };  // v21: the live console
+inline UEngine* GEngine = nullptr;
+class IConsoleVariable { public: FString StubValue; FString GetString() const { return StubValue; } };
+class IConsoleManager { public: static IConsoleManager& Get() { static IConsoleManager Manager; return Manager; } IConsoleVariable* FindConsoleVariable(const TCHAR*) { return nullptr; } };
 class UStaticMesh : public UObject {};
 class UStaticMeshComponent : public UPrimitiveComponent { public: UStaticMesh* GetStaticMesh() const { return nullptr; } };
 class UInstancedStaticMeshComponent : public UStaticMeshComponent {};
@@ -2806,3 +2833,210 @@ def test_v20_new_locals_do_not_shadow_character_fields(v20_patched, seatfix_patc
         block = header[header.index(marker + ' BEGIN'):header.index(marker + ' END')]
         declared = _header_members(block)
         assert declared and not (declared & before), (marker, sorted(declared & before))
+
+
+# ================================================================================================ v21 fixes (60 fps tools + visual fixes)
+V21_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_v21_fixes.py'
+V21_MARKER = '// SUB01_STREAMER_VISUAL_V2_V21'
+_V21_SPEC = importlib.util.spec_from_file_location('sub01_streamer_visual_v2_v21', V21_INSTALL)
+v21 = importlib.util.module_from_spec(_V21_SPEC)
+_V21_SPEC.loader.exec_module(v21)
+
+
+def install_v21(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(V21_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+def _stack_to_v20(target: Path) -> None:
+    _stack_to_streampass(target)
+    assert install_cam2(target)[0] == 0 and install_mouth(target)[0] == 0 and install_posefix(target)[0] == 0
+
+
+@pytest.fixture(scope='module')
+def v21_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v21') / 'src'
+    _stack_to_v20(target)
+    code, report = install_v21(target)
+    assert code == 0, report
+    return target
+
+
+def test_v21_plans_applies_refuses_twice_and_needs_v20(tmp_path):
+    target = tmp_path / 'src'
+    _stack_to_streampass(target)
+    assert install_cam2(target)[0] == 0 and install_mouth(target)[0] == 0
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, refused = install_v21(target)
+    assert code == 2 and 'lacks the pose fix' in refused['reason'] and {p.name: sha(p) for p in target.iterdir()} == before
+    assert install_posefix(target)[0] == 0
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, planned = install_v21(target, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == len(v21.EDITS) + 1 and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in target.iterdir()} == before
+    code, report = install_v21(target)
+    assert code == 0 and report['status'] == 'applied' and report['key_light']['cd'] == v21.KEY_CD
+    assert {name for name in before if sha(target / name) != before[name]} == {'Sub01HomeLab.cpp', 'Sub01HomeLab.h'}
+    for name in ('Sub01HomeLab.cpp', 'Sub01HomeLab.h'):
+        assert sha(target / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+    after = {p.name: sha(p) for p in target.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_v21(target, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert {p.name: sha(p) for p in target.iterdir()} == after
+
+
+def test_v21_missing_anchor_refuses_without_writing(tmp_path):
+    target = tmp_path / 'src'
+    _stack_to_v20(target)
+    cpp = target / 'Sub01HomeLab.cpp'
+    cpp.write_bytes(cpp.read_bytes().replace(b'const bool On=StreamerVisualCam2On>0&&StreamerVisualCam2Reason.IsEmpty();', b'const bool On=StreamerVisualCam2On>0 && StreamerVisualCam2Reason.IsEmpty();', 1))
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, report = install_v21(target)
+    assert code == 2 and 'anchor missing in Sub01HomeLab.cpp' in report['reason']
+    assert {p.name: sha(p) for p in target.iterdir()} == before
+
+
+def test_v21_text(v21_patched):
+    cpp, header = lf(v21_patched / 'Sub01HomeLab.cpp'), lf(v21_patched / 'Sub01HomeLab.h')
+    for text in (cpp, header):
+        assert text.count(V21_MARKER + ' BEGIN') == text.count(V21_MARKER + ' END') == 1
+        assert text.index(V21_MARKER + ' BEGIN') < text.index(FACE_END)
+    assert closure.brace_walk(closure.strip(cpp)) is not None
+    assert '#include "RenderTimer.h"' in cpp and '#include "Engine/Engine.h"' in cpp and '#include "HAL/IConsoleManager.h"' in cpp
+    perf = cpp[cpp.index('void ASub01HomeCharacter::UpdateStreamerVisualPerf('):cpp.index('void ASub01HomeCharacter::ScanStreamerVisualMouse(')]
+    for name in v21.PERF_GLOBALS:
+        assert name in perf
+    assert ' '.join(f'{k}=%.2f' for k in v21.PERF_THREADS) in perf and perf.count('Now+StreamerVisualPerfWindowSeconds') == 2 and 'Now+30' not in perf
+    camera2 = cpp[cpp.index('void ASub01HomeCharacter::UpdateStreamerVisualCam2('):cpp.index('void ASub01HomeCharacter::WriteStreamerVisualCam2Status(')]
+    assert 'StreamerVisualCam2Reason.IsEmpty()&&ProbeStreamerVisualCam2Reader(Now);' in camera2 and 'ApplyStreamerVisualCam2Lite();' in camera2
+    assert 'const int Handed=HandoffFd.exchange(-1);' in cpp and 'std::atomic<int> HandoffFd{-1};' in cpp and 'MakeStreamerVisualBodySeenByCaptures();ApplyStreamerVisualCam2Lite();' in cpp
+    key = cpp[cpp.index('void ASub01HomeCharacter::UpdateStreamerVisualKeyLight('):cpp.index('void ASub01HomeCharacter::ApplyStreamerVisualBodyLook(')]
+    assert 'Level*2500' not in key and 'StreamerVisualKeyLight->SetIntensity(Cd);' in key and 'SetLightingChannels(!BodyOnly,BodyOnly,false);' in key
+    assert 'Prim->SetLightingChannels(true,BodyOnly,false);' in key and 'SetSoftSourceRadius(StreamerVisualKeyLightSoftCm);' in key
+    fit = cpp[cpp.index('void ASub01HomeCharacter::FitStreamerVisualChair('):cpp.index('void ASub01HomeCharacter::LogStreamerVisualPose(')]
+    assert 'FVector::DotProduct(Rel,Facing)>-3' not in fit and 'HalfDepth>FMath::Max(' in fit and 'LogStreamerVisualChairParts(Pelvis,Facing,Side);' in fit
+    assert f'FMath::Abs(AlongFacing)>{posefix._d(v21.BACKREST_MAX_ALONG_CM)}' in fit and f'Move,-{posefix._d(v21.CHAIR_FIT_MAX_CM)},{posefix._d(v21.CHAIR_FIT_MAX_CM)});' in fit
+    writer = cpp[cpp.index(' void WriteFrame(const uint8* Data,int64 Size){'):cpp.index(' sigset_t Block,Old;')]
+    assert '::open(' not in writer and 'Reader.store(true);HandoffFd.store(-1);Fd=Offered;' in writer  # the probe is the only opener
+    assert 'StreamerVisualDeskPropIsChair.Add(ChairPart);StreamerVisualDeskPropRotations.Add(A->GetActorQuat());' in cpp  # a statement, not a comment
+    assert 'if(PropRoot->GetMobility()!=EComponentMobility::Movable){PropRoot->SetMobility(EComponentMobility::Movable);++StreamerVisualDeskPropsMadeMovable;}' in cpp  # Static props never moved
+    tuning = cpp[cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    for key_name, (lo, hi) in v21.TUNING_LIMITS.items():
+        assert f'Field(TEXT("{key_name}"),{v21.TUNING_FIELDS[key_name]},{lo},{hi});' in tuning, key_name
+    assert 'if(Now>=StreamerVisualConsoleAt){StreamerVisualConsoleAt=Now+.5;ReadStreamerVisualConsole();}' in cpp
+    assert f'"{v21.CONSOLE_PATH}"' in cpp and f'TEXT("{v21.CONSOLE_SCHEMA}")' in cpp
+    for field in ('key_light_cd', 'perf_swap_ms', 'perf_rhi_ms', 'console_applied', 'cam2_idle_no_reader', 'body_seen_cleared'):
+        assert f'TEXT("{field}")' in cpp, field
+    assert f'StreamerVisualKeyLightCd={streampass._f(v21.KEY_CD)}' in header and 'static bool StreamerVisualConsoleAllowed(const FString& Command);' in header
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_v21_cpp_compiles_syntax_only_against_stub(v21_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units(v21_patched, tmp_path, end=FACE_END)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+V21_DRIVER = CAM2_DRIVER[:CAM2_DRIVER.index('int main() {')] + r'''
+static bool Allowed(const TCHAR* Command) { return ASub01HomeCharacter::StreamerVisualConsoleAllowed(FString(Command)); }
+int main() {
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; ASub01HomeCharacter C; C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim;
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65;
+ // his primitives: the owner-only body and a follower attached to it; an unrelated primitive of the actor stays as it is
+ USkeletalMeshComponent Follower; Follower.StubParent = &Body; Follower.bOnlyOwnerSee = 1; Body.bOnlyOwnerSee = 1; UPrimitiveComponent Other;
+ C.StubComponents = {&Body, &Follower, &Other};
+ C.StreamerVisualCam2Dir = u"@@DIR@@"; FPlatformTime::StubNow = 1000; StubRender::Deferred = StubAsync::Deferred = true;
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle"); C.StreamerVisualDeskPropsScanned = true;
+ // 1. a scene capture has no view owner: his owner-only primitives become visible to every view at cam2 start
+ CHECK(!Body.bOnlyOwnerSee && !Follower.bOnlyOwnerSee && C.StreamerVisualBodySeenCount == 2, 1);
+ // 2. cam2 renders only for a reader: nothing is captured, read back or encoded without one
+ USceneCaptureComponent2D* Cap = C.StreamerVisualCam2.Get(); auto& Pipe = *C.StreamerVisualCam2Pipe; Ticks(C, 120, 1 / 60.);
+ CHECK(Cap->StubCaptures == 0 && C.StreamerVisualCam2Idle >= 100 && Pipe.Encoded.load() == 0 && FRHIGPUTextureReadbackStub::Locks == 0, 2);
+ const int R = open("@@DIR@@/cam2.mjpeg", O_RDONLY | O_NONBLOCK); CHECK(R >= 0, 3);
+ Ticks(C, 90, 1 / 60.);  // the probe opens within a second and hands the descriptor to the writer
+ CHECK(Pipe.Reader.load() && Pipe.HandoffFd.load() < 0 && Cap->StubCaptures >= 60 && Pipe.Written.load() >= 30, 4);
+ int Shade = -1; std::vector<uint8> Got = Drain(R); CHECK(WholeFrames(Got, std::size_t(IImageWrapperModule::StubBytes), Shade) == int(Pipe.Written.load()), 5);
+ close(R); Ticks(C, 10, 1 / 60.); CHECK(!Pipe.Reader.load() && Pipe.Fd < 0, 6);  // the writer saw EPIPE
+ int Before = Cap->StubCaptures; Ticks(C, 120, 1 / 60.); CHECK(Cap->StubCaptures - Before <= 3, 7);  // paused again
+ // 3. the lite capture, on change
+ CHECK(Cap->ShowFlags.AmbientOcclusion && Cap->MaxViewDistanceOverride < 0 && Near(Cap->LODDistanceFactor, 1, 1e-9), 8);
+ C.StreamerVisualCam2Lite = 1; Ticks(C, 1, 1 / 60.);
+ CHECK(!Cap->ShowFlags.AmbientOcclusion && !Cap->ShowFlags.ScreenSpaceReflections && !Cap->ShowFlags.ContactShadows && !Cap->ShowFlags.VolumetricFog && !Cap->ShowFlags.LensFlares && !Cap->ShowFlags.Particles
+       && Near(Cap->MaxViewDistanceOverride, @@VIEW@@, 1e-3) && Near(Cap->LODDistanceFactor, @@LOD@@, 1e-6) && Cap->ShowFlags.MotionBlur == false, 9);
+ C.StreamerVisualCam2Lite = 0; Ticks(C, 1, 1 / 60.); CHECK(Cap->ShowFlags.AmbientOcclusion && Cap->ShowFlags.Particles && Cap->MaxViewDistanceOverride < 0 && Near(Cap->LODDistanceFactor, 1, 1e-9), 10);
+ // 4. the key light: candelas, soft, short, on his lighting channel only
+ USpotLightComponent* Key = C.StreamerVisualKeyLight.Get(); Ticks(C, 1, 1 / 60.);
+ CHECK(Near(Key->Intensity, @@CD@@, 1e-6) && Key->StubVisible && !Key->StubChannels[0] && Key->StubChannels[1] && Body.StubChannels[0] && Body.StubChannels[1] && Follower.StubChannels[1] && !Other.StubChannels[1], 11);
+ CHECK(C.StreamerVisualKeyLightBodyPrims == 2 && Near(Key->StubRadius, @@RADIUS@@, 1e-6) && Near(Key->StubSoft, @@SOFT@@, 1e-6) && Near(Key->StubSource, @@SOFT@@ / 2, 1e-6) && Near(Key->StubOuter, @@OUTER@@, 1e-6), 12);
+ C.StreamerVisualKeyLightBodyOnly = 0; Ticks(C, 1, 1 / 60.); CHECK(Key->StubChannels[0] && !Key->StubChannels[1] && Body.StubChannels[0] && !Body.StubChannels[1], 13);
+ C.StreamerVisualKeyLightCd = 0; Ticks(C, 1, 1 / 60.); CHECK(!Key->StubVisible && Key->Intensity == 0, 14);
+ C.StreamerVisualKeyLightCd = .3f; C.StreamerVisualSchemaVersion = 1; Ticks(C, 1, 1 / 60.); CHECK(!Key->StubVisible, 15);  // only for v2 events
+ C.StreamerVisualSchemaVersion = 2; Ticks(C, 1, 1 / 60.); CHECK(Key->StubVisible && Near(Key->Intensity, .3, 1e-6), 16);
+ // 5. the engine's per-frame thread times, averaged over perf_window_s
+ GGameThreadTime = 4000; GRenderThreadTime = 9000; GRHIThreadTime = 12000; GSwapBufferTime = 3000; GRenderThreadWaitTime = 2000; GGameThreadWaitTime = 1000;  // stub: cycles * 1e-3 ms
+ C.StreamerVisualPerfWindowSeconds = 5; Ticks(C, 1200, 1 / 60.);
+ CHECK(Near(C.StreamerVisualPerfThreadMs[0], 4, 1e-9) && Near(C.StreamerVisualPerfThreadMs[1], 9, 1e-9) && Near(C.StreamerVisualPerfThreadMs[2], 12, 1e-9) && Near(C.StreamerVisualPerfThreadMs[3], 3, 1e-9)
+       && Near(C.StreamerVisualPerfThreadMs[4], 2, 1e-9) && Near(C.StreamerVisualPerfThreadMs[5], 1, 1e-9) && Near(C.StreamerVisualPerfFps, 60, 1.5), 17);
+ // 6. the console whitelist
+ CHECK(Allowed(u"r.ScreenPercentage 70") && Allowed(u"t.MaxFPS 60") && Allowed(u"csvprofile start") && Allowed(u"csvprofile stop") && Allowed(u"csvprofile frames=300") && Allowed(u"sg.ShadowQuality 2")
+       && Allowed(u"r.Lumen.Reflections.Allow 0") && Allowed(u"r.Shadow.RadiusThreshold 0.05") && Allowed(u"r.Foo -1") && Allowed(u"r.ShadowQuality") && Allowed(u"t.MaxFPS"), 18);
+ CHECK(!Allowed(u"stat unit") && !Allowed(u"quit") && !Allowed(u"r.Foo 1;quit") && !Allowed(u"r.Foo 1 | exit") && !Allowed(u"t.MaxFPSX 3") && !Allowed(u"r.Foo /tmp/x") && !Allowed(u"") && !Allowed(u"R.foo 1")
+       && !Allowed(u"a.ParallelAnimEvaluation=1") && !Allowed(u"r.Foo abc") && !Allowed(u"r.Foo 1 2") && !Allowed(u"csvprofile frames=x") && !Allowed(u"csvprofile startx") && !Allowed(u"r. 1") && !Allowed(u"r.Foo 1.2.3"), 19);
+ { std::u16string Long(u"r."); Long.append(std::size_t(@@MAXCHARS@@), u'a'); CHECK(!Allowed(Long.c_str()), 20); }
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v21_logic_runs(v21_patched, tmp_path):
+    fifo_dir = tmp_path / 'stream'
+    fifo_dir.mkdir()
+    driver = (V21_DRIVER.replace('@@DIR@@', str(fifo_dir)).replace('@@VIEW@@', repr(v21.CAM2_VIEW_CM)).replace('@@LOD@@', repr(v21.CAM2_LOD_FACTOR))
+              .replace('@@CD@@', repr(v21.KEY_CD)).replace('@@RADIUS@@', repr(v21.KEY_RADIUS_CM)).replace('@@SOFT@@', repr(v21.KEY_SOFT_CM))
+              .replace('@@OUTER@@', repr(v21.KEY_CONES[1])).replace('@@MAXCHARS@@', str(v21.CONSOLE_MAX_CHARS)))
+    units = build_units(v21_patched, tmp_path / 'u', end=FACE_END, driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v21_chair_fit_ignores_a_fat_shell_and_keeps_the_pose_fix_behaviour(v21_patched, tmp_path):
+    """The pose fix's driver on v21 with one more chair part: a fat shell behind him (its bounds front lies IN FRONT of the pelvis, so v20
+    would have pulled the chair 25 cm through him). v21 takes only the thin, tall, central part behind him: the same fitted gap as before."""
+    shell = ('AActor Back, Pan, Arm, Shell; Shell.StubLocation = Pelvis - F0 * 10. + FVector(0, 0, 20); Shell.StubExtent = FVector(34, 31, 47); ',
+             'for (AActor* A : {&Back, &Pan, &Arm, &Shell}) {')
+    driver = POSEFIX_DRIVER.replace('AActor Back, Pan, Arm; ', shell[0], 1).replace('for (AActor* A : {&Back, &Pan, &Arm}) {', shell[1], 1)
+    assert driver != POSEFIX_DRIVER and driver.count('&Shell') == 1
+    (tmp_path / 'cam2').mkdir()
+    driver = (driver.replace('@@DIR@@', str(tmp_path / 'cam2')).replace('@@FADE@@', repr(posefix.LOOP_FADE_SECONDS)).replace('@@SACRUM@@', repr(posefix.SACRUM_BACK_CM))
+              .replace('@@TARGET@@', repr(posefix.BACKREST_GAP_CM)).replace('@@DEADBAND@@', repr(posefix.CHAIR_FIT_DEADBAND_CM)).replace('@@PASSES@@', str(posefix.CHAIR_FIT_PASSES)))
+    units = build_units(v21_patched, tmp_path / 'u', end=FACE_END, driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v2_behaviour_unchanged_under_v21(v21_patched, tmp_path):
+    run = _run_driver(build_units(v21_patched, tmp_path, end=FACE_END), tmp_path)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+def test_v21_new_locals_do_not_shadow_character_fields(v21_patched, tmp_path):
+    v20 = tmp_path / 'v20'
+    _stack_to_v20(v20)
+    members = _header_members(lf(v21_patched / 'Sub01HomeLab.h'))
+    added = _added_locals(lf(v20 / 'Sub01HomeLab.cpp'), lf(v21_patched / 'Sub01HomeLab.cpp'))
+    assert {'Handed', 'Probed', 'Offered', 'AlongFacing'} <= added
+    assert not (added & members), sorted(added & members)
+    header = lf(v21_patched / 'Sub01HomeLab.h')
+    declared = _header_members(header[header.index(V21_MARKER + ' BEGIN'):header.index(V21_MARKER + ' END')])
+    assert declared and not (declared & _header_members(lf(v20 / 'Sub01HomeLab.h'))), sorted(declared & _header_members(lf(v20 / 'Sub01HomeLab.h')))

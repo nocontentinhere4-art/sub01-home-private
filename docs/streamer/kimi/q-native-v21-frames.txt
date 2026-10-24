@@ -1,0 +1,17 @@
+Frame review for SUB-01 native build v21 (game m), one 2x2 sheet attached (each tile 960x540, downscaled):
+- top-left: BEFORE (game l, v20) webcam with the v20 key light off (with it on at any level >= 1.25 cd the face was a white
+  silhouette);
+- top-right: AFTER (game m, v21) webcam, state reading: the new key light (0.15 cd, soft source 20 cm, lighting channel 1 only
+  = direct light on his body only);
+- bottom-left: BEFORE cam2 (v20): desk and chair EMPTY (the scene capture culled his owner-only body) and the chair glowing
+  from the old key light;
+- bottom-right: AFTER cam2 (v21), state typing: he is now rendered at the desk.
+Known and being fixed in a rebuild right now: the chair backrest cuts through his back in cam2 (the chair parts were all in
+front of his pelvis, so the v20/v21 chair fit never found a backrest; v21b picks the thin tall central part even when it is
+in front and moves the chair back up to 40 cm). Also visible: a stretched fan of hoodie polygons at his right elbow in cam2.
+
+Questions (answer briefly, numbered):
+1. Is the webcam face exposure now acceptable for a stream (skin neither clipped nor muddy)? Should key_cd go up or down
+   from 0.15 (we measured: 0.125 cd lifts the face cleanly, 0.5 cd washes it grey)?
+2. In cam2, what are the top 3 visual defects you see, most important first, and a concrete fix for each?
+3. Anything in the webcam frame that would make the owner reject the look (pose, framing, artefacts)?

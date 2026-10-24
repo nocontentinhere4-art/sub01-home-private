@@ -5,8 +5,9 @@ writes, CRLF/LF kept, JSON report with before/after sha256, refusal of a second 
 `install.py` (`// SUB01_STREAMER_VISUAL_V2`) builds v2; `install_face_camera.py` (`// SUB01_STREAMER_VISUAL_V2_FACE`)
 goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that, `install_no_pin.py`
 (`..._NOPIN`) next, `install_seat_fix.py` (`..._SEATFIX`, the one that actually seats him: below), then
-`install_stream_pass.py` (`..._STREAMPASS`), `install_cam2.py` (`..._CAM2`), `install_mouth.py` (anywhere on v2) and
-`install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer).
+`install_stream_pass.py` (`..._STREAMPASS`), `install_cam2.py` (`..._CAM2`), `install_mouth.py` (anywhere on v2),
+`install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer) and `install_v21_fixes.py` (`..._V21`, on the
+full v20 stack: build v21, game m).
 Same R9 gate, spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
@@ -83,6 +84,7 @@ python3 tools/native_streamer_visual_v2/install_stream_pass.py --source "$M" --d
 python3 tools/native_streamer_visual_v2/install_cam2.py --source "$M" --dry-run        # only on the stream-passed stack (v20)
 python3 tools/native_streamer_visual_v2/install_mouth.py --source "$M" --dry-run        # on v2 alone or on any stack above
 python3 tools/native_streamer_visual_v2/install_pose_fix.py --source "$M" --dry-run    # after the stream pass AND the mouth layer (v20)
+python3 tools/native_streamer_visual_v2/install_v21_fixes.py --source "$M" --dry-run  # on the full v20 stack (v21); keep backups OUTSIDE Source/ (a copy with a Build.cs breaks UBT)
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -265,3 +267,37 @@ on speech), composed with the gaze offset; a skeleton with a `Jaw` / `jaw` / `Ja
 `12 deg * open` on that bone instead. This is not lip sync: real mouth movement needs a face rig (jaw bone or visemes)
 on the body mesh. Receipt: `mouth_open`, `mouth_energy`, `mouth_file_fresh`, `mouth_id`, `mouth_rig` (`head_only` |
 `jaw_bone` | `none`); `facial_animation_or_lipsync` stays false. Log: `SUB01_STREAMER_VISUAL_MOUTH_READY rig=...` once.
+
+## v21 fixes (`install_v21_fixes.py`, `// SUB01_STREAMER_VISUAL_V2_V21`, build v21, game m2)
+On the full v20 stack; only `Sub01HomeLab.h/.cpp` change. Decided with Kimi (`docs/streamer/kimi/native-v21-perf.md`), code
+reviewed by Kimi (`docs/streamer/kimi/native-v21-review.md`; game m ran the pre-review build, game m2 the reviewed one).
+- **Why 15 fps** (game l, measured): the container's cgroup allows 10.2 CPUs (`/sys/fs/cgroup/cpu.max` 1020000/100000) of 48
+  visible; the whole container was throttled in 100% of the 100 ms periods and SMT siblings were shared. Pinning alone (no code):
+  everything on cores 0-9 -> 23 fps; game + Xvfb :99 on 0-5, the rest on 6-9 -> 40-42 fps with cam2 on, 53 fps with cam2 off.
+  Launcher `launch-streamer-game-20261023m.py` starts the game on cores 0-5 with `-corelimit=6`;
+  `scripts/streamer_cpu_partition.py` (run as uid 1001: root has no CAP_SYS_NICE here) pins Xvfb :99 with it and the rest on 6-9.
+- **PERF** adds `game_ms render_ms rhi_ms swap_ms render_wait_ms game_wait_ms` (the engine's per-frame cycle counters, swap = present)
+  over `perf_window_s` (default 10); receipt `perf_*`.
+- **Live console**: `/home/unreal/.sub01-private/streamer-visual-console.json` (uid 1001, 0600, <= 2048 bytes)
+  `{"schema":"sub01.private-streamer-visual-console.v1","sequence":N,"commands":["r.Foo 1"]}` runs once per growing sequence;
+  grammar: `<cvar>` (query: the log shows its value) or `<cvar> <number>` under `r. sg. fx. a. foliage. grass.` or the exact
+  `t.MaxFPS`, or exactly `csvprofile start|stop|frames=<n>` (CSV in `Sub01HomeLab/Saved/Profiling/CSV`); <= 8 commands of <= 96
+  chars; log `SUB01_STREAMER_VISUAL_CONSOLE ... handled= value=`; receipt `console_applied/refused/last`. Helper on the pod:
+  `sudo -u unreal python3 /home/unreal/tmp/v21/console.py "r.Shadow.RadiusThreshold 0.05"`.
+- **cam2** renders only for a reader (v20 captured and encoded every frame and dropped it at the writer): a 1 s non-blocking open
+  probe on the game thread is the only opener and hands the fd to the writer; no reader = a pause (the director's tap keeps a
+  reader, so with the director running cam2 always renders). cam2.json `idle_no_reader`, `lite`. `cam2_lite` 1: no
+  AO/SSR/contact shadows/volumetric fog/lens flares/particles, `cam2_view_cm` cull distance, LOD factor 2. cam2 now shows him:
+  a scene capture has no view owner, so his `bOnlyOwnerSee` primitives are made visible to every view at cam2 start
+  (`SUB01_STREAMER_VISUAL_BODY_SEEN onlyOwnerSeeCleared=N`).
+- **Key light**: the house's exposure is set for very dim light (game l: 1.25 cd already clipped his face). New keys, ignored by v20:
+  `key_cd` (candelas, compiled default 0.15, 0 = off), `key_soft_cm` 20, `key_radius_cm` 160, `key_body_only` 1 (the light on
+  lighting channel 1, his primitives on 0+1: its direct light never reaches the chair, desk or walls; Lumen's bounce is not
+  masked); cones 30/55. The v20 `key_light` level is ignored. Measured on game m (face camera, talking, skin median in a 110 px
+  box on the face): 0.04 cd -> 152, 0.06 -> 183, 0.08 -> 199, 0.15 -> 203, none clipped: the tuning file carries `key_cd` 0.04.
+- **Chair fit**: every chair part logged once in his frame (`SUB01_STREAMER_VISUAL_CHAIR_PART`). On game m every chair part lay IN
+  FRONT of his pelvis (the backrest `full-home_node_249`, 40 x 20 x 45 cm half-extents 20/10/22.5, 7 cm in front of it: the chair
+  cut ~29 cm into him, QA bug 4), which is why v20 never found a backrest. The backrest is now the tall, central, near (in front
+  or behind, <= 40 cm), THIN part; its surface is traced at sacrum height, else its bounds' front; the fit clamp is +-40 cm. The pose fix's rotation
+  record in the desk-prop scan (inside a `//` comment since v20) is a statement again (the chair turns with `seat_yaw_deg`).
+- Typing head: `typing_head_deg` 15 with `posture_head_deg` 0 keeps his eyes on the screen (game l frames); unchanged.
