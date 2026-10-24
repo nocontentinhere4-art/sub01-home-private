@@ -1,4 +1,4 @@
-# Kimi review (2026-10-24 ~14:25 UTC): the owner progress page STATO-20261024.md
+# Kimi review (2026-10-24 ~14:25 UTC): the owner progress page (Italian draft, now STATUS-20261024.md in English)
 
 Question: `q-stato-page.txt` (model `kimi-k3.1-pro`, 306 s; attached the page and HANDOFF.md). Answer, verbatim:
 
@@ -23,3 +23,16 @@ No secrets, tokens, emails or obvious personal data appear in the supplied Markd
 4. The privacy cut is described as implemented and covered by automated tests, not yet proven live.
 5. Added to "Cosa manca": supervising the HLS and monitor-feed sidecars, and the private embed test on the site before
    any publication.
+
+## Follow-up (2026-10-24 ~14:50 UTC): the English translation
+The owner wanted the page in English: it is now `docs/streamer/STATUS-20261024.md` (the Italian draft is gone) and the
+native-house photos have English names (`docs/streamer/photos/20261023-native-house/`). Kimi's review of the
+translation (`q-status-en.txt`, 101 s), verbatim:
+
+> No blocking findings.
+>
+> 1. Minor English polish: “By rule” → “As a rule”; “Two more views from now” → “Two more views from today”; “Walls burnt by the light” → “Walls blown out by the lighting.”
+> 2. Use “Kimi reviewed … and considers them acceptable to show…” to fix the tense and awkward “fair to show.” Likewise, “Kimi itself says not to count it as the target reached” reads better as “Kimi also says this does not meet the target.”
+> 3. No Italian remains. Internally, there is no done/60-fps overclaim: the dual-camera target is explicitly unmet, and the privacy cut’s live test is still missing. Exact comparison with the earlier Italian review is not possible from this file alone.
+
+All five wording changes applied.

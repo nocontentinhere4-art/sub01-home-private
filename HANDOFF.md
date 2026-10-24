@@ -136,7 +136,7 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   GCs every 61 s do not reset it). A full Insights trace (3.5 GB, `/workspace/sub01-traces/m3t.utrace`) was too big
   to analyse (OOM at the 31 GB container limit). Next: two short `cpu`-channel windows via the trace control port
   1985. Game back on plain **m3** since 14:00 (`/tmp/sub01-share/game.log` -> its log).
-- Owner progress page with before/now photos: `docs/streamer/STATO-20261024.md` (photos in
+- Owner progress page with before/now photos: `docs/streamer/STATUS-20261024.md` (photos in
   `docs/streamer/photos/`, Kimi's photo review `docs/streamer/kimi/photos-20261024.md`). The owner wants everything on
   GitHub but NOTHING live: Railway deploys from `main`, so the work stays on this branch with the open DRAFT PR
   https://github.com/nocontentinhere4-art/sub01-home-private/pull/4 (never merge without the owner's explicit go).
