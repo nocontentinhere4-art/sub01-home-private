@@ -168,7 +168,7 @@ builds on the pod, deploys and pushes. Split reviewed by Kimi: `docs/streamer/ki
 | Worker | Scope | Pod rights |
 |---|---|---|
 | native v22 | monitor.mjpeg reader + privacy gate, no per-frame UTexture2D, cam2 exposure keys | read-only |
-| sidecars | hls + monitor services in `streamer_up.py`, fail-closed privacy gate, runbook | read-only |
+| sidecars | DONE, merged 8634ff9 (164 tests, Kimi "commit: yes"). Deploy + supervisor restart pending: only outside a measurement lease; command in the commit's RUNBOOK section. Follow-ups: agent waits for the feed's neutral confirmation before typing a credential; game blanks the texture when the feed goes stale | read-only |
 | sawtooth | root cause + fix of the render-time ramp; ends on plain m3, `cam2_fps` 30 unless 60/60 holds | OWNS the game runtime (cvars, trace port, tune.py, relaunch); only one allowed heavy CPU |
 | visual v23 | live-tunable fixes: neck/hood, elbow, posture, hands, face light, chair (`install_v23.py` after v22) | read-only |
 | agent checks | plan step 5: control table `docs/streamer/AGENT-CHECKS.md`, missing tests, live-check runner | read-only; STOP stays |
