@@ -155,3 +155,35 @@ Answer APPROVE (with any caveat to record) or list what must change first, brief
 **Caveat to record:** fingertip offsets are **+0.3/−0.3 cm**, so one side remains **3 mm below key-top level**—this is contact tolerance, not clearance on both sides. Also record the measured **8.3° typing / 8.6° reading** inclines and head position **0.5–0.8 cm ahead**.
 
 The typing→reading→typing pass must still confirm no visible key or chair penetration, stable IK/elbows, smooth posture/head transitions without popping, and a clean return to the p5 typing pose.
+
+## Round 4: question (motion check)
+
+```
+Motion check you asked for (checkpoint p5 values): an 18 s clip of the frontal webcam at 30 fps, events typing (6 s) ->
+reading (6 s) -> typing (7 s). Attached: motion-sheet.jpg (1 frame per second, 6x3, read left to right) and pop.jpg (the
+four consecutive frames around the largest frame-to-frame change, t = 11.07-11.17 s, the reading -> typing switch).
+Frame-difference stats on the body crop (mean abs luma diff between consecutive frames, 0-255 scale): median 0.57,
+p95 1.89, max 4.54 (at the reading -> typing switch); the background does not move (camera fixed; the webcam aim is kept
+across states by design). The state switch is the clip crossfade (0.24 s, compiled) plus the lean change
+(posture_lean_deg -10 for reading vs typing_lean_deg -4 for typing; posture keys ease at 12 deg/s).
+Questions: a) Any popping, IK flip, penetration or rigidity you can see? b) Is a ~0.2 s visible posture change at a
+state switch acceptable for a streamer, or should the lean difference be reduced (e.g. posture_lean_deg -6 so both states
+are close) until the crossfade can be lengthened in a later build? c) Motion sign-off for this checkpoint: yes/no and
+what to record. Briefly.
+```
+
+## Round 4: Kimi (kimi-k3.1-pro)
+
+**a)** No clear popping, IK flip, or penetration is visible in the supplied views. The reading→typing change is a small, fast head/shoulder/torso adjustment, not an obvious discontinuous pose swap. There is **mild residual rigidity**: limited secondary motion and a fairly block-like upper-body movement. The tight crop and four-frame excerpt cannot clear hand/finger IK, keyboard contact, or off-crop penetration; the 1 fps sheet cannot clear the rest of the clip at motion rate.
+
+**b)** The ~0.2 s visible adjustment is **acceptable** for a streamer resuming typing. At 30 fps, that is about six frames; the 0.24 s crossfade is nominally about seven frames, so it is not inherently a one-frame pop. **Keep −10° reading versus −4° typing**; reducing reading to −6° would lessen state distinction without addressing blend quality. If full-speed playback reveals an abrupt onset, smooth/retime the transition instead.
+
+Also, 6° of lean at 12°/s implies **0.50 s of full lean travel at that rate**. Record the visible change and total lean-settle time separately rather than treating both as 0.2 s.
+
+**c) Yes—p5 checkpoint sign-off for the visible fixed-webcam motion, with scope noted.** Record:
+
+- Reading→typing switch at approximately **11.1 s**; compiled crossfade **0.24 s**.
+- Lean **−10° → −4°**, posture ease **12°/s**, plus measured settle time when available.
+- Body-crop difference stats: **median 0.57, p95 1.89, max 4.54**, with the maximum at the switch.
+- Result: no visible pop/flip/penetration in supplied frames; acceptable posture change; mild stiffness remains.
+- Limitation: hand IK/contact, off-crop geometry, and full-rate motion outside the supplied switch excerpt were not certified.

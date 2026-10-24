@@ -6,7 +6,7 @@ with `/home/unreal/tune.py`, frames from `/tmp/sub01-share/frames.sh` (webcam = 
 director's `room` layout from the local HLS), measurements from the v23 receipt. Three frame reviews with Kimi:
 `docs/streamer/kimi/visual-tuning-20261024.md`.
 
-**Result: approved by Kimi as the still-frame checkpoint, not yet as motion sign-off.** Values:
+**Result: approved by Kimi as the still-frame checkpoint, then signed off for the visible fixed-webcam motion (scope below).** Values:
 `docs/streamer/tuning/streamer-visual-tuning-20261024-p5.json` (on the pod: `/tmp/sub01-share/tune/checkpoint-p5.json`).
 
 ![Before and after](photos/20261024-tuning/before-after-grid.jpg)
@@ -55,3 +55,18 @@ Rollback: set each key back to its v23 default (README, v23 table) or restore th
   breathing.
 - Not done yet: chair cosmetics beyond the 2 cm back offset, rim light (Kimi: none for now), `neck_share` only as an
   A/B if the seam shows in motion, the mouse (`mouse_scan`, `hand_on_mouse`).
+
+## Motion check (round 4)
+
+18 s of the frontal webcam at 30 fps, typing (6 s) -> reading (6 s) -> typing (7 s):
+`photos/20261024-tuning/motion-sheet-typing-reading-typing.jpg` (1 frame per second) and
+`photos/20261024-tuning/motion-switch-reading-to-typing.jpg` (the four frames around the largest change).
+
+- Body-crop frame differences (mean abs luma, 0-255): median 0.57, p95 1.89, max 4.54 at the reading -> typing switch
+  (~11.1 s). The background does not move: the webcam keeps its aim across states.
+- The switch is the compiled 0.24 s clip crossfade plus the lean change -10 deg (reading) -> -4 deg (typing); at the
+  12 deg/s posture ease the full lean travel takes ~0.5 s.
+- Kimi: no visible pop, IK flip or penetration; the ~0.2 s adjustment is acceptable; keep -10 / -4; mild residual
+  stiffness (little secondary motion, block-like upper body). **Sign-off for the fixed-webcam motion of checkpoint p5.**
+- Not certified: hand IK and key contact in motion, geometry outside the crop, full-rate motion outside the switch. A
+  longer crossfade, if full-speed playback shows an abrupt onset, needs a build (the crossfade is compiled).
