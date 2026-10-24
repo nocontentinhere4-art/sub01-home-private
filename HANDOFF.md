@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-24 19:25 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -34,6 +34,12 @@ Owner decisions (2026-10-23 21:45 UTC):
   secrets are never spoken, captioned or logged; the director cuts to the webcam layout while a login/account page is
   on screen.
 - "Looks real" is accepted by the visual-QA matrix plus his approval.
+- **Mouth and hoodie set aside** (owner, 2026-10-24 ~21:40 UTC: "Per la bocca lasciamo perdere per ora e la stessa cosa
+  vale anche per la felpa"): no jaw/mouth rig and no hoodie re-weighting for now. The acceptance tool waives
+  `mouth_motion` (`OWNER_WAIVERS`, still evaluated and shown; `--no-waivers` judges it); head motion with the voice
+  stays required.
+- **Codex may take over** (owner, 2026-10-24 ~21:45 UTC): when the Claude session runs out of usage, Codex continues
+  from the exact same point with the same rules and mechanics (`AGENTS.md`, this file, `tools/pod/README.md`).
 
 ## Working rules (non-negotiable)
 - **Kimi is the partner in every piece of work, with or without agents** (owner, 2026-10-23). Every agent, the
@@ -210,6 +216,81 @@ Native v24 worker (offscreen main-view tap) still running; then build, offscreen
 Earlier plan: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
 privacy/stream smoke test; then v23 (offline now, pinned to the v22 commit) builds only after the sawtooth
 measurements end; relaunch, measure, live visual tuning with frames.
+
+## Takeover: exact resume point (2026-10-24 21:50 UTC; for Codex or a new Claude session)
+Read `AGENTS.md` (rules), then this file, then `tools/pod/README.md` (pod access: create `pods.json` outside the repo
+with the Jupyter password the owner gives you). Verify the state below on the pod before acting
+(`podterm.py ... 'tail -20 /tmp/sub01-share/pod-changes.log; cat /tmp/sub01-share/MEASURING'`).
+**Baseline pinned (21:55 UTC):** the takeover baseline is the commit SHA recorded in `docs/streamer/TAKEOVER-BASELINE.txt`
+(written right after this section was pushed); resume against that SHA, not against the moving branch tip. Pod workdirs: Python
+services `/home/unreal/.sub01-private/latest-source-20261023` (deployed files identical to the branch: sha256 prefixes
+agent 82449c080ddd, director d7ff873b40ac, acceptance 89af651914f1, up ebe5cedf96e8, monitor_feed a1035e51c084,
+hls_serve 2b1aedac7f2d, desktop 02dde27fb5fd, watchdog bec28f8958b7); native project
+`/home/unreal/.sub01-private/cinematic-source-v3-final` (running `.so` = `binaries-v23-linux`, sha256 830da2d11dcb);
+streamer data `/home/unreal/.sub01-private/streamer`; shared scratch `/tmp/sub01-share` (wiped if the pod restarts;
+durable copies under `/workspace`). Secrets: `pods.json` is provided by the owner through an approved secret channel
+(never pasted in chat) or pre-provisioned on the machine.
+**Live state:**
+- Game: plain m3 launcher on the **v23** binaries (pid in `streamer/game.pid`, relaunched 19:13 UTC; CPU partition
+  loop 0-5/6-9 running), windowed on Xvfb `:99` (so the sawtooth is still there, ~49-51 fps). Tuning file =
+  checkpoint p5 (`docs/streamer/tuning/streamer-visual-tuning-20261024-p5.json`), `cam2_fps` 30. Binaries/sources
+  saved on the pod: `cinematic-source-v3-final/binaries-v2{1,2,3}-linux`, `source-v2{2,3}`, `source-backup-before-v2{2,3}`.
+- Supervisor (started 18:33 by `tools/pod/onpod/deploy-sidecars.sh`, `--display :103 --desktop-port 8838 --hls-dir`):
+  desktop 8838 (Vagon page at `login_required`), voice 8835, agent 8836 HELD by STOP (since 10:40), director 8837
+  (fifo-capable code, **x11 mode**, layout `webcam_only`), monitor 8840 (grey/neutral: Vagon not connected), hls 8839.
+  Watchdog runs the new code. Runner 8832 standalone (the game's `SUB01_PC_ORIGIN`).
+- **RunPod balance guard PAUSED** (pid 63, `kill -STOP 63`, account API rate limit until ~00:05 UTC 2026-10-25):
+  expected `ps -o pid,stat,lstart,cmd -p 63` = state `Ts`, started `Wed Oct 21 19:05:18 2026`, command
+  `python3 /root/.sub01-windows-recovery/guard-v3.py`. After 00:20 UTC 2026-10-25: verify it is still that process
+  (if the pid is gone or different, the pod restarted: do NOT start another guard without the owner; report it), then
+  `kill -CONT 63`, check its log/next poll for errors, log the change, tell the owner. (A reminder
+  was scheduled into the Claude session; a new agent must do it itself.)
+- No measurement lease. Draft PR #4 open, never merge without the owner's go.
+**In flight at handover:** the native v24 worker (offscreen main-view tap, `install_v24.py`; spec = "Structural fix"
+in `docs/streamer/SAWTOOTH-20261024.md`). If its commits are not on the branch: its code is DONE but only partly Kimi-reviewed (7 of 11 pieces; fixed: SOS
+bounds, FNV basis, a reorder-buffer stall, the write deadline) and is preserved as a patch on the pod,
+`/workspace/sub01-w-v24/v24-wip-2149.patch` (copy of `/tmp/sub01-share/w-v24/v24-wip-2149.patch`; applies with
+`git apply` on commit 11ee6f9; 5 files: `install_v24.py`, `main_fifo_probe.py`, README, tests). Finish the Kimi
+review (status/log, header/cam2 edits, m5 launcher, probe, follow-up), then commit. Launcher already on the pod:
+`/root/.sub01-windows-recovery/launch-streamer-game-20261024m5.py`. Engine APIs verified (OnBackBufferReadyToPresent:
+render thread, (SWindow&, ISlateViewportProvider&); offscreen viewport texture PF_A2B10G10R10). cam2's 52-53 of 60
+fps loss = whole-frame drops on a full pipe (reader back-pressure, ~7/s), not the capture. The director side is DONE
+and deployed in x11 mode (RUNBOOK "Main view from the offscreen game").
+The v24 worker runs inside the Claude session (a local git worktree; it has not modified the pod's native sources
+or binaries: only the m5 launcher file and the patch). If that session is gone, the worker is gone too: inspect
+`/tmp/sub01-share/w-v24/` and the patch before redoing anything; only the coordinator builds, so builds never overlap.
+**Rollback (exact; P=/home/unreal/.sub01-private/cinematic-source-v3-final; durable script copies in
+`/workspace/sub01-tools/`, also in `tools/pod/onpod/`; `/tmp/sub01-share` is wiped by a pod restart):**
+- Game to the known-good v23: `cp -a $P/binaries-v23-linux/. $P/Sub01HomeLab/Binaries/Linux/` (always first: a v24
+  build replaces `Binaries/Linux`, and the m3 launcher loads whatever is there), then
+  `bash /workspace/sub01-tools/relaunch-m3-now.sh` (copy it to `/tmp/sub01-share/` first if that dir is gone). For
+  v22/v21 use `binaries-v22-linux` / `binaries-v21-linux` the same way. v24's tap only runs offscreen (launcher m5).
+- Director to x11: `bash /workspace/sub01-tools/deploy-sidecars.sh` as is (it reinstalls the 18:33 scripts from
+  `/tmp/sub01-share/deploy/sidecars/`; if that dir is gone, copy `/workspace/sub01-tools/sidecars/*` there first, then
+  install the branch's current `scripts/` files instead if newer), then `POST /director/layout {"layout":"webcam_only"}`
+  with the operator token while the Vagon page may show a login.
+- Tuning to checkpoint p5: `runuser -u unreal -- python3 /home/unreal/tune.py $(python3 -c "import json;
+  d=json.load(open('/workspace/sub01-tuning/streamer-visual-tuning-20261024-p5.json')); print(' '.join(f'{k}={v}' for
+  k,v in d.items() if k!='schema'))")` (same values as `docs/streamer/tuning/`; it includes `cam2_fps=30`).
+- Health checks after any of these: supervisor `status` (all children up, agent held), new
+  `SUB01_STREAMER_VISUAL_PERF` lines in the game log, `GET /director/state` (recording, `window_speed` ~1.0), local HLS
+  playlist updating, `pod-changes.log` line written.
+- Measurement lease: the sawtooth tools do NOT create it. Before an ABBA leg or the soak: `echo "<end UTC> <purpose>" >
+  /tmp/sub01-share/MEASURING`; remove it when the leg ends.
+**Next steps, in order:**
+1. 00:20 UTC: resume the RunPod guard (above).
+2. v24: Kimi review -> apply on the pod (pattern `tools/pod/onpod/build-v23.sh`, backups, refuse under MEASURING) ->
+   launcher m5 (= m3o + v24; never edit m3/m3o) -> go/no-go (tap fires once per frame offscreen, non-black, format and
+   pitch handled) -> switch the director to `--game-source fifo` (RUNBOOK) -> `cam2_fps` 60 -> ABBA 4 x 15 min
+   (`tools/sawtooth/`) -> >= 8 h soak -> gates in the spec (>= 59.5 unique main-view fps at the director, <= 0.5%
+   drops, no sawtooth). Rollback: m3 launcher windowed + director x11.
+3. When the owner has logged in at the operator console and OKs a PC start: arm, relaunch the game with
+   `SUB01_PC_ORIGIN=http://127.0.0.1:8838` (feed then live on the in-game monitor), stop 8832 for good, run
+   `scripts/streamer_agent_checks.py` (`--audit-only`, then the live flags with the operator steps it prints), the
+   30-minute Kimi-shadow trial (`scripts/streamer_shadow_report.py`).
+4. 30-minute acceptance recording -> `scripts/streamer_acceptance.py` (mouth waived) -> highlights -> owner approval.
+5. Open with the owner: Kimi's 3 wording suggestions for the public page `docs/streamer/STATUS-20261024.md`;
+   whether to watch PR #4.
 
 ## Where things are
 - `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,
