@@ -1,8 +1,10 @@
 # SUB-01 streamer: runbook (pod, v1)
 
-One supervisor (`scripts/streamer_up.py`) runs five children as uid 1001 `unreal`, in this order: Xvfb :102,
-desktop runner, voice server, agent, director. The director records the stream to local MP4 files and, on request,
-writes a local HLS playlist from the same encode ("Recording: 60 fps, NVENC, layouts, HLS" below).
+One supervisor (`scripts/streamer_up.py`) runs seven children as uid 1001 `unreal`, in this order: Xvfb :102,
+desktop runner, voice server, agent, director, monitor feed, HLS server. The director records the stream to local MP4
+files and, on request, writes a local HLS playlist from the same encode ("Recording: 60 fps, NVENC, layouts, HLS"
+below); the monitor feed puts the desktop's X display on the in-game monitor behind a privacy gate ("Monitor feed"); the
+HLS server serves that playlist on loopback.
 There is no public broadcast: nothing is published or streamed out without the owner's request. Design:
 `docs/streamer/PLAN.md`; persona rules: `DIRECTION.md`.
 
@@ -13,42 +15,50 @@ S=/home/unreal/.sub01-private/latest-source-20261023
 UP="runuser -u unreal -- python3 $S/scripts/streamer_up.py"      # as root; as unreal drop the runuser part
 $UP start --source $S              # detached; returns when services settle or after 60 s, prints status
 $UP start --source $S --dry-run    # exact command line and environment of every child, launches nothing
-$UP status [--json]                # supervisor, STOP file, per-service state, restarts used (n/5), director summary
+$UP status [--json]                # supervisor, STOP file, per-service state, restarts used (n/5), director and
+                                   # monitor summaries (`monitor: {"showing": "screen"|"neutral"|"pending", ...}`)
 $UP kill                           # kill switch (below)
 $UP resume                         # remove STOP; the supervisor starts the agent again
-$UP restart voice                  # one service; resets its restart budget (names: xvfb desktop voice agent director)
-$UP stop                           # SIGTERM in reverse order (director first), SIGKILL a child after 15 s
+$UP restart voice                  # one service; resets its restart budget
+                                   # (names: xvfb desktop voice agent director monitor hls)
+$UP stop                           # SIGTERM in reverse order (hls, monitor, director first), SIGKILL a child after 15 s
 ```
 
 `start` refuses to run as root (`--allow-root` overrides). Every path, port and interpreter is a flag
-(`start --help`); extra child flags: `--child-arg desktop='--flag value'`, `--child-env voice=KEY=VALUE`.
+(`start --help`: `--monitor-port 8840`, `--hls-port 8839`, `--hls-dir` (default `<streamer-dir>/hls`), `--<name>-python`);
+extra child flags: `--child-arg desktop='--flag value'`, `--child-env voice=KEY=VALUE`. Every command after `start`
+(`status`, `restart`, `stop`) takes the same `--display`, `--<name>-port` and `--hls-dir` flags as the `start` it talks
+to (on the pod: `--display :103 --desktop-port 8838`), or it probes the wrong ports.
 The agent gets `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `MOONSHOT_API_KEY`, `STREAMER_MODEL`,
 `STREAMER_CALLS_PER_HOUR`, `STREAMER_PROVIDER`, `STREAMER_FALLBACK_PROVIDER`, `STREAMER_KIMI_MODEL` from the
 supervisor's own environment (set them on the command that starts the supervisor, never on a command line);
-no other child receives them. The operator token goes to the children in `SUB01_ADMIN_TOKEN` only.
+no other child receives them. The operator token goes to the children in `SUB01_ADMIN_TOKEN` only, and only to those
+that call a token-protected API (desktop, voice, agent, director, monitor; not Xvfb and not the HLS server, whose
+health probe is also sent without it).
 Providers (AGENT.md "Providers", KIMI.md): Claude is the primary and Kimi the fallback as soon as
 `/home/unreal/.sub01-private/kimi-key` (0600, uid 1001) exists; explicit `--child-arg "agent=--fallback-provider kimi"`,
 Kimi first `--child-arg "agent=--provider kimi --fallback-provider anthropic"`; `status`/`GET :8836/state` shows
 `provider.active`, `provider_switch` rows are in `events.jsonl`.
 
 `kill`: writes `STOP`, calls voice `/stop`, takes the agent down and keeps it down (`held`). The desktop runner,
-voice server, director and Xvfb keep running, so the stream shows the desktop and the idle character. It works
-without a readable token (only the voice call needs it). Undo with `resume`.
+voice server, director, monitor feed, HLS server and Xvfb keep running, so the stream shows the desktop and the idle
+character. It works without a readable token (only the voice call needs it). Undo with `resume`.
 
 ## Ports, paths
 
 | What | Where |
 |---|---|
 | backend 8830, bridge 8831 | existing, not supervised |
-| desktop runner 8832, voice 8835, agent 8836, director 8837 | 127.0.0.1, header `X-Admin-Token` = `/home/unreal/.sub01-private/operator-token` |
+| desktop runner 8832 (pod: the Vagon runner 8838), voice 8835, agent 8836, director 8837 | 127.0.0.1, header `X-Admin-Token` = `/home/unreal/.sub01-private/operator-token` |
+| monitor feed 8840, HLS server 8839 | 127.0.0.1, `/healthz` without a token; the HLS server serves files without one |
 | state dir | `/home/unreal/.sub01-private/streamer/` |
 | `STOP`, `state.json`, `events.jsonl` (all components, one JSON per line), `layout.jsonl`, `supervisor.json` | state dir |
-| logs | `logs/<name>.log` (xvfb desktop voice agent director supervisor); `pids/<name>.pid` |
+| logs | `logs/<name>.log` (xvfb desktop voice agent director monitor hls supervisor); `pids/<name>.pid` |
 | recordings | `recordings/sub01-YYYYmmdd-HHMMSS-NNN.mp4` (UTC, 10-minute segments, fragmented MP4) |
-| HLS (only with `--hls-dir`) | `hls/live.m3u8` + `hls/sub01-...-<epoch seq>.ts` (4 s), local test server 127.0.0.1:8839 |
+| HLS (only with the director's `--hls-dir`) | `hls/live.m3u8` + `hls/sub01-...-<epoch seq>.ts` (4 s), served by the `hls` service on 127.0.0.1:8839 |
 | voice PCM FIFO, speech WAVs | `voice.pcm`, `speech/` |
 | second camera (written by the game) | `cam2.mjpeg` (FIFO, MJPEG 1280x720 at 60), `cam2.json` (fps, last frame) |
-| in-game monitor feed (read by the game) | `monitor.mjpeg` (FIFO), `scripts/streamer_monitor_feed.py` health 127.0.0.1:8840 (8838 is the Vagon runner) |
+| in-game monitor feed (read by the game) | `monitor.mjpeg` (FIFO), written by the `monitor` service (`scripts/streamer_monitor_feed.py`, health 127.0.0.1:8840) |
 
 Each ffmpeg launch has its own timestamp prefix, so a restart never overwrites a segment. Segments are fragmented:
 a crash costs about 2 s and the file stays playable. Director state: `curl -s -H "X-Admin-Token: $(cat
@@ -59,9 +69,12 @@ a crash costs about 2 s and the file stays playable. Director state: `curl -s -H
 A child that exits is restarted after 1, 2, 4, 8, 16 s; at most 5 restarts per 10 minutes. The sixth failure leaves
 it `failed` (listed by `status`, `service_failed` in `events.jsonl`); the others keep running. A child whose health
 URL fails for 2 minutes after being up is restarted; one not healthy after its start timeout (voice 240 s,
-desktop 90 s, others 20-60 s) counts as a crash. If Xvfb :102 restarts, the desktop runner is restarted too. A
-supervisor that was killed leaves its children running; the next `start` adopts them. An Xvfb :102 that already
-exists is used, never stopped.
+desktop 90 s, agent 60 s, director 45 s, Xvfb, monitor and hls 20 s) counts as a crash. If Xvfb :102 restarts, the desktop runner is
+restarted too (the monitor feed is not: it relaunches its own ffmpeg with backoff). The director and the monitor feed
+need Xvfb up to start; the HLS server needs nothing. On the first start each child waits for the ones before it to
+settle, so the monitor feed and the HLS server come up after the director (up to ~4 minutes while the voice model
+loads). A supervisor that was killed leaves its children running; the next `start` adopts them. An Xvfb :102 that
+already exists is used, never stopped.
 
 ## When something fails
 
@@ -135,6 +148,10 @@ runuser -u unreal -- /home/unreal/venv/bin/python $S/scripts/streamer_up.py stat
 
 - [ ] The native game runs with `-Sub01StreamerVisual`; `$P/game.pid` is its pid; `status` shows every service `up`, no
       restart loop; `GET /api/home/streamer` says `active: true`, `activity: use_computer`, routines paused.
+- [ ] Monitor feed: `status` prints `monitor: {"ok": true, "showing": "neutral", ...}` until the PC is connected
+      (Vagon workstation: login, dashboard; `pending` while the game is not reading) and `"showing": "screen"` once
+      `/pc/state.vagon.phase` is `connected`; no `no_token`, `runner_refused` or `neutral_unavailable` in its `reasons`
+      ("Monitor feed" below).
 - [ ] Director: `curl -s -H "X-Admin-Token: $(cat $T)" localhost:8837/director/state` shows `recording: true`, `voice:
       true`, `game_source` a window (not `screen`), `encoder: h264_nvenc` (else read `encoder_note`), `output.fps_measured`
       about 60 and `output.speed` about 1.0; the newest segment grows.
@@ -309,10 +326,14 @@ attached only to `room` runs. Missing cam2 = v1 inputs.
 **HLS.** Same encode as the recording (tee): `hls_time 4`, list size 6, old segments deleted, `omit_endlist` (a
 relaunch does not end the stream for players), `discont_start`, media sequence from the epoch (keeps counting up across
 relaunches), `program_date_time`, temp files renamed when complete. A failing HLS or RTMP branch (`onfail=ignore`) never
-stops the recording. Local check only: `python3 $S/scripts/streamer_hls_serve.py $P/hls` (127.0.0.1:8839, playlist
-no-cache, nothing else served) and `ffprobe http://127.0.0.1:8839/live.m3u8`. Never expose it without the owner's
-request; anything on the pod (the agent's Chromium included) can read it while it runs. Browsers need H.264 for HLS;
-`hevc_nvenc` is for local files.
+stops the recording. Local check only: the supervisor's `hls` service runs `scripts/streamer_hls_serve.py <hls dir>`
+(127.0.0.1:8839, playlist no-cache, nothing else served; `GET /healthz` -> `{"ok", "playlist", "playlist_age_s"}`); it
+serves the supervisor's `--hls-dir` (default `<streamer-dir>/hls`), which must be the director's `--hls-dir`
+(`start --dry-run` and `start` print a WARNING when they differ or when the director has no `--hls-dir`). Check with
+`ffprobe http://127.0.0.1:8839/live.m3u8`. Never expose it without the owner's request; anything on the pod (the
+agent's Chromium included) can read it while it runs. A privacy cut does not change what was already written: the
+playlist's segments from before the cut (up to 24 s) stay readable through the server until the muxer deletes them,
+and `kill` does not purge them. Browsers need H.264 for HLS; `hevc_nvenc` is for local files.
 
 **Proving 60.** ffmpeg runs with `-progress pipe:1 -stats_period 5`. State `output` = `fps_measured` (output frames per
 wall second over the last 5 s; 60 when ffmpeg keeps up), `fps_ffmpeg` (average since the run started), `speed` (1.0 =
@@ -338,20 +359,76 @@ stopped after 10 s (restarted when a reader opens the FIFO); a frame that does n
 written one is finished first, so a connected reader gets whole JPEGs; ffmpeg is restarted with backoff when it exits.
 Across a reader reconnect or a feed crash one JPEG can be truncated: the game must resync on SOI (FF D8) and read
 without blocking (the feed pauses without a reader, during backoff and after a crash).
-`:103` is the Vagon runner's display: the feed is raw, so a login or account page there reaches the in-game monitor
-unless the game's privacy lock covers the monitor texture (it does for the neutral picture; check before a stream).
+
+**Supervised** as the `monitor` service (after the director; requires Xvfb; 20 s start timeout; the same restart budget).
+The supervisor gives it `--streamer-dir`, `--display` = the desktop child's display (the supervisor's `--display`
+without the screen number: `:103` on the pod, so it always captures what the desktop runner shows) and `--desktop-url`
+= the desktop child (`http://127.0.0.1:<--desktop-port>`: 8838 on the pod), plus the operator token in
+`SUB01_ADMIN_TOKEN`. Extra flags: `--child-arg "monitor=--fps 30 --quality 7"`; `restart monitor`; log
+`logs/monitor.log`.
+
+**Privacy gate** (owner, 2026-10-23: SUB-01 may log in on his PC; the in-game monitor must never show a login or
+account page; designed with Kimi, `kimi/sidecars-design.md`). The screen reaches `monitor.mjpeg` only while the gate
+is open, and it fails closed. It is CLOSED:
+- while the last line of `layout.jsonl` is a privacy line (`"reason": "privacy"`: the agent's line on a login/account
+  page; the director's own rule, layout name ignored), read every 0.25 s, until a later valid line without that
+  reason; a file that disappears, is emptied or truncated during a cut keeps it (`layout_cut_gone`; with no cut seen,
+  no file means no cut); while the file or its last line cannot be read or is not a JSON object (`layout_unreadable`,
+  e.g. a half-written line: a short extra closing, never an opening);
+- while the desktop runner's `GET /pc/state` (every 0.5 s, 1 s timeout, never following a redirect) says `privacy: true`
+  (`runner_privacy`), or, in the Vagon workstation kind, until `vagon.connected` is true AND `vagon.phase` is
+  `connected` (`vagon_not_connected`: the Vagon host page's login, dashboard and account pages; stricter than the
+  runner's own lock on `/pc/frame.png`, which looks at `connected` only); while it cannot be read or is not understood
+  (`no_token`, `runner_refused`, `runner_unreachable`, `runner_bad_answer`: an unknown `pc_mode` or Vagon `kind`, a
+  workstation answer without a boolean `connected` and a `phase`) or an answer is older than 2.5 s (`*_stale`);
+- at start, until both have answered (`starting`), and while the feed has no neutral frame (`neutral_unavailable`:
+  rendered with ffmpeg before any capture may start; until then `/healthz` answers 503, so the supervisor reports and
+  eventually restarts the feed instead of capturing the screen with nothing to cover it).
+On closing, in the same step as the observation (no await in between): the unwritten tail of a screen frame is
+dropped and a neutral grey frame (the runner's "PC not connected" grey, at the feed's size) is offered to the reader
+(best effort: a reader with a full pipe gets it on a retry 0.05 s later); from then on no frame of the running capture
+is written (`discarded_private` counts them) and ffmpeg is told to stop (its exit is awaited afterwards). Then the
+neutral frame every 0.5 s (`--neutral-interval`), and within 0.5 s for a reader that connects during the cut, so the
+game's texture never keeps the last screen picture. Measured locally: 0.20 s from the agent's line to the first
+neutral frame in the FIFO, 0.45 s from the runner's privacy flag. `showing` is `neutral` only once a WHOLE neutral frame
+went into the FIFO for the current cut (`privacy.neutral_ack {gen, privacy_id, t, reasons}`, `privacy.cut_gen`), else
+`pending` (no reader, a full pipe); a new cut while the gate is already closed (another privacy line, or another
+`privacy_id`, e.g. while the Vagon page is not connected) is a new generation too (`cut_renewed` row) and needs its
+own whole neutral frame (completion based: a neutral frame whose tail was still pending at the renewal counts once its
+last byte is in). The gate opens only after every check has been clean and fresh for 1 s (`--resume-after`),
+and then a NEW ffmpeg is launched (a capture belongs to one open period: a close, even one followed at once by a
+reopen, ends it), so nothing captured during the cut can come out of an old pipe. A privacy watcher that ends on its
+own (an error, a return, a cancellation outside shutdown) closes the gate for good (`watcher_failed` in `reasons`, neutral frames go on) and `/healthz` answers 503 until
+the supervisor restarts the feed. Rows in `events.jsonl` and `logs/monitor.log` (`source: "monitor_feed"`):
+`privacy_on` / `cut_renewed` (`reasons`, `privacy_id`), `privacy_off` (`seconds`), `watcher_failed` (`watcher`,
+`error`). ffmpeg gets the feed's environment without the operator token or any key. The gate cannot be switched off
+on a real display (`--no-privacy-gate` is accepted only with `--test-source`).
+
+Not covered (Kimi's review): the frames captured between a private page appearing and the agent's privacy line (the
+agent sees the page first: structural for any raw capture plus classification; a strict guarantee needs logins on a
+display that is never captured); what is already in the FIFO when the gate closes (up to the pipe size, `--pipe-kb`
+256: a few frames); the Vagon dashboard until the runner flips `vagon.connected` to false; a feed that dies or is
+stopped (the game keeps its last texture unless it has its own no-valid-frame deadline: a native follow-up); the game's
+freshness timeout for the monitor texture is not known here, so check that 0.5 s between neutral frames is inside it.
+The agent waits only for the director's `desktop_hidden` before typing a credential; requiring a fresh monitor-feed
+acknowledgement for the same `privacy_id` (`showing: "neutral"` and `privacy.neutral_ack.privacy_id`) is a planned
+agent change.
 
 ```
-runuser -u unreal -- setsid nohup /home/unreal/venv/bin/python $S/scripts/streamer_monitor_feed.py \
-     --streamer-dir $P --display :103 > $P/logs/monitor.log 2>&1 < /dev/null &
-curl -s localhost:8840/healthz     # ffmpeg, reader, frames_in/written/dropped, fps_in, restarts, last_error
+$UP status --display :103 --desktop-port 8838 | grep '^monitor'     # state, restarts, and the monitor: summary
+curl -s localhost:8840/healthz     # ok, showing (screen|neutral|pending), privacy{private, reasons, since,
+                                   # layout_cut_id, closes, last_runner_ok_age_s, cut_gen, neutral_ack}, ffmpeg, reader,
+                                   # frames_in/written/dropped, fps_in, screen_frames, neutral_frames,
+                                   # discarded_private, restarts, last_error
 ```
 
-Not yet a `streamer_up.py` child (adding one changes `ORDER`, which the supervisor's tests pin). To add it: `ORDER` +
-`"monitor"` after `"director"`; `SCRIPTS["monitor"] = "scripts/streamer_monitor_feed.py"`, `DEFAULT_PORTS["monitor"] =
-8840`, `PORT_FLAG["monitor"] = "--port"`, `HEALTH_PATH["monitor"] = "/healthz"`, `START_TIMEOUT["monitor"] = 20.0`,
-`DEFAULT_PYTHON["monitor"] = "/home/unreal/venv/bin/python"`; in `build_specs` give it `--streamer-dir` like the
-director (the display through `--child-arg "monitor=--display :103"`); and update the tests that list the services.
+Moving from the hand-run sidecars: stop them first (`pkill -u unreal -f scripts/streamer_monitor_feed.py`, `pkill -u
+unreal -f scripts/streamer_hls_serve.py`), otherwise ports 8840/8839 are taken and the supervised services end up
+`failed` ("port ... is already in use").
+
+By hand (tests only; the supervisor runs it on the pod): `runuser -u unreal -- /home/unreal/venv/bin/python
+$S/scripts/streamer_monitor_feed.py --streamer-dir $P --display :103 --desktop-url http://127.0.0.1:8838 --token-file
+"$T"` (the token file, mode 0600 uid 1001, never the token itself on a command line).
 
 ## Known limits
 
@@ -362,7 +439,8 @@ director (the display through `--child-arg "monitor=--display :103"`); and updat
   Until then, start the director after `phase: connected`, or treat that recording as private.
 - The privacy cut follows `layout.jsonl` only (the agent's lines); it knows nothing of what is on screen by itself, and
   a cut stays until a line ends it (an agent that dies on a login page leaves the stream on `webcam_only`: end it with
-  `end_privacy`, above).
+  `end_privacy`, above). The monitor feed's gate follows the same lines plus the runner's `/pc/state`; the agent does
+  not wait for the monitor feed's acknowledgement before typing (only for the director's `desktop_hidden`).
 - Layout changes are hard cuts (live through streamselect, or a relaunch as fallback); no OBS; RTMP and HLS exist but
   are off by default and nothing public is started without the owner's request.
 - A cam2 FIFO that stays open without frames freezes the recording until the director notices (about 4-6 s) and

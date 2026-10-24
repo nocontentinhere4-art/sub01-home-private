@@ -1151,6 +1151,31 @@ def test_v2_hls_server_serves_only_playlist_and_segments_with_no_cache_playlist(
         hls_serve.main([str(tmp_path), "--host", "0.0.0.0"])
 
 
+def test_v2_hls_server_health_is_ok_with_or_without_a_playlist(tmp_path):
+    """The supervisor's `hls` service probes /healthz: a working server is healthy before the director writes HLS."""
+    async def body():
+        hls = tmp_path / "hls"
+        out = []
+        for step in ("no dir", "playlist"):
+            if step == "playlist":
+                hls.mkdir()
+                (hls / "live.m3u8").write_text("#EXTM3U\n")
+                os.utime(hls / "live.m3u8", (1000.0, 1000.0))
+            http = TestClient(TestServer(hls_serve.create_app(hls, clock=lambda: 1012.34)))
+            await http.start_server()
+            try:
+                r = await http.get("/healthz")
+                out.append((r.status, r.headers["Cache-Control"], await r.json()))
+            finally:
+                await http.close()
+        return out
+
+    (s1, c1, missing), (s2, c2, present) = run(body())
+    assert s1 == 200 and missing == {"ok": True, "playlist": False, "playlist_age_s": None} and c1 == "no-store"
+    assert s2 == 200 and present == {"ok": True, "playlist": True, "playlist_age_s": 12.3}
+    assert str(tmp_path) not in json.dumps(present)                       # no paths in the answer
+
+
 # ------------------------------------------------------- real ffmpeg smoke
 
 def small_profile(tmp_path, *extra):
@@ -1315,7 +1340,7 @@ def read_all(fd):
 @needs_ffmpeg
 def test_v2_smoke_monitor_feed_delivers_decodable_jpegs_and_stops_without_a_reader(tmp_path):
     args = mon.parse_args(["--streamer-dir", str(tmp_path), "--test-source", "--size", "320x180", "--fps", "30",
-                           "--idle-stop", "0.5", "--ffmpeg", FFMPEG])
+                           "--idle-stop", "0.5", "--ffmpeg", FFMPEG, "--no-privacy-gate"])     # the gate: test_streamer_monitor_feed.py
 
     async def body():
         feed = mon.MonitorFeed(args)

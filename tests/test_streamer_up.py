@@ -115,17 +115,19 @@ def kinds(world, kind=None, service=None):
 def test_defaults_follow_the_plan_and_the_brief():
     args = up.build_parser().parse_args(["start"])
     cfg = up.config_from_args(args)
-    assert cfg.ports == {"desktop": 8832, "voice": 8835, "agent": 8836, "director": 8837}
+    assert cfg.ports == {"desktop": 8832, "voice": 8835, "agent": 8836, "director": 8837, "monitor": 8840, "hls": 8839}
     assert str(cfg.streamer_dir) == "/home/unreal/.sub01-private/streamer"
     assert str(cfg.source) == "/home/unreal/.sub01-private/latest-source-20261023"
     assert cfg.display == ":102" and cfg.stop_grace == 15.0 and (cfg.restart_max, cfg.restart_window) == (5, 600.0)
     assert cfg.pythons == {"desktop": "/home/unreal/.sub01-private/city-readonly-browser/venv/bin/python",
                            "voice": "/home/unreal/voice-rt-venv/bin/python", "agent": "/home/unreal/venv/bin/python",
-                           "director": "/home/unreal/venv/bin/python"}
+                           "director": "/home/unreal/venv/bin/python", "monitor": "/home/unreal/venv/bin/python",
+                           "hls": "/home/unreal/venv/bin/python"}
     assert cfg.library_path == "/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu"
     assert cfg.hf_home == "/home/unreal/hf-cache"
+    assert str(cfg.hls_dir) == "/home/unreal/.sub01-private/streamer/hls"
     assert up.DEFAULT_TOKEN_FILE == "/home/unreal/.sub01-private/operator-token"
-    assert up.ORDER == ("xvfb", "desktop", "voice", "agent", "director")
+    assert up.ORDER == ("xvfb", "desktop", "voice", "agent", "director", "monitor", "hls")
 
 
 def test_each_service_gets_the_command_line_and_environment_of_the_brief(tmp_path):
@@ -159,10 +161,10 @@ def test_the_token_never_appears_in_a_command_line_and_keys_reach_only_the_agent
     specs = up.build_specs(cfg, TOKEN)
     for spec in specs.values():
         assert TOKEN not in " ".join(spec.argv) and "sk-secret" not in " ".join(spec.argv)
-    assert "SUB01_ADMIN_TOKEN" not in specs["xvfb"].env
-    assert all(specs[n].env["SUB01_ADMIN_TOKEN"] == TOKEN for n in ("desktop", "voice", "agent", "director"))
+    assert "SUB01_ADMIN_TOKEN" not in specs["xvfb"].env and "SUB01_ADMIN_TOKEN" not in specs["hls"].env
+    assert all(specs[n].env["SUB01_ADMIN_TOKEN"] == TOKEN for n in ("desktop", "voice", "agent", "director", "monitor"))
     assert specs["agent"].env["ANTHROPIC_API_KEY"] == "sk-secret"
-    for name in ("xvfb", "desktop", "voice", "director"):
+    for name in ("xvfb", "desktop", "voice", "director", "monitor", "hls"):
         assert "ANTHROPIC_API_KEY" not in specs[name].env and "OPENROUTER_API_KEY" not in specs[name].env
     plan = up.describe_plan(cfg, specs)
     assert TOKEN not in plan and "sk-secret" not in plan and "***" in plan
@@ -193,6 +195,66 @@ def test_ports_paths_and_extras_are_configurable_by_flags(tmp_path):
     for bad in (["--child-arg", "nobody=--x"], ["--child-env", "voice=NOVALUE"], ["--health-path", "voice=nope"]):
         with pytest.raises(ValueError):
             up.config_from_args(up.build_parser().parse_args(["start", *bad]))
+
+
+def test_the_monitor_feed_captures_the_desktop_display_and_asks_the_desktop_runner(tmp_path):
+    """The pod runs the supervisor with --display :103 --desktop-port 8838 (the Vagon runner): the monitor feed must
+    capture exactly the desktop child's display and read the privacy state from exactly that runner."""
+    src, sd_dir = str(tmp_path / "src"), str(tmp_path / "sd")
+    args = up.build_parser().parse_args(["start", "--streamer-dir", sd_dir, "--source", src, "--display", ":103",
+                                         "--desktop-port", "8838"])
+    specs = up.build_specs(up.config_from_args(args), TOKEN)
+    desktop, monitor = specs["desktop"], specs["monitor"]
+    assert monitor.argv == ["/home/unreal/venv/bin/python", src + "/scripts/streamer_monitor_feed.py",
+                            "--streamer-dir", sd_dir, "--display", ":103", "--desktop-url", "http://127.0.0.1:8838"]
+    assert desktop.argv[desktop.argv.index("--display") + 1] == ":103" == desktop.env["DISPLAY"]
+    assert monitor.health == ("http", 8840, "/healthz") and monitor.port == 8840 and monitor.requires == ("xvfb",)
+    assert monitor.restart_with == () and monitor.needle == "streamer_monitor_feed.py" and not monitor.hold_on_stop
+    assert monitor.env["SUB01_ADMIN_TOKEN"] == TOKEN and monitor.env["STREAMER_DESKTOP_URL"] == "http://127.0.0.1:8838"
+    assert monitor.start_timeout == 20.0
+    # a display given with its screen number: the runner and the feed both get the bare display
+    specs = up.build_specs(make_cfg(tmp_path, display=":150.0"), TOKEN)
+    assert specs["monitor"].argv[specs["monitor"].argv.index("--display") + 1] == ":150" == specs["desktop"].env["DISPLAY"]
+
+
+def test_the_hls_server_serves_the_hls_dir_without_the_token(tmp_path):
+    src, sd_dir = str(tmp_path / "src"), str(tmp_path / "sd")
+    specs = up.build_specs(make_cfg(tmp_path), TOKEN)
+    hls = specs["hls"]
+    assert hls.argv == ["/home/unreal/venv/bin/python", src + "/scripts/streamer_hls_serve.py", sd_dir + "/hls"]
+    assert hls.health == ("http", 8839, "/healthz") and hls.requires == () and hls.start_timeout == 20.0
+    assert "SUB01_ADMIN_TOKEN" not in hls.env and hls.needle == "streamer_hls_serve.py"
+    args = up.build_parser().parse_args([
+        "start", "--streamer-dir", sd_dir, "--source", src, "--hls-dir", "/data/hls", "--hls-port", "9039",
+        "--monitor-port", "9040", "--monitor-python", "/opt/py", "--child-arg", "monitor=--fps 30 --quality 7",
+        "--child-env", "hls=FOO=bar", "--health-path", "hls=/live.m3u8"])
+    specs = up.build_specs(up.config_from_args(args), TOKEN)
+    assert specs["hls"].argv[2:] == ["/data/hls", "--port", "9039"] and specs["hls"].env["FOO"] == "bar"
+    assert specs["hls"].health == ("http", 9039, "/live.m3u8")
+    assert specs["monitor"].argv[0] == "/opt/py" and specs["monitor"].argv[-6:] == [
+        "--port", "9040", "--fps", "30", "--quality", "7"]
+
+
+def test_dry_run_warns_when_the_director_writes_hls_elsewhere(tmp_path):
+    cfg = make_cfg(tmp_path)
+    assert any("writes no HLS" in note for note in up.environment_warnings(cfg))
+    same = make_cfg(tmp_path, child_args={"director": ["--fps", "60", "--hls-dir", str(tmp_path / "sd" / "hls")]})
+    assert up.director_hls_dir(same) == str(tmp_path / "sd" / "hls")
+    assert not any("HLS" in note for note in up.environment_warnings(same))
+    other = make_cfg(tmp_path, child_args={"director": ["--hls-dir=/elsewhere/hls"]})
+    notes = [n for n in up.environment_warnings(other) if "HLS" in n]
+    assert up.director_hls_dir(other) == "/elsewhere/hls" and len(notes) == 1 and "--hls-dir /elsewhere/hls" in notes[0]
+    moved = make_cfg(tmp_path, hls_dir="/elsewhere/hls/", child_args={"director": ["--hls-dir", "/elsewhere/hls"]})
+    assert not any("HLS" in note for note in up.environment_warnings(moved))
+
+
+def test_health_probes_send_the_token_only_to_children_that_hold_it(tmp_path, monkeypatch):
+    seen = []
+    monkeypatch.setattr(up, "http_request", lambda method, port, path, token, **kw: seen.append((port, token)) or (200, "{}"))
+    specs = up.build_specs(make_cfg(tmp_path), TOKEN)
+    for name in ("director", "monitor", "hls"):
+        assert up.probe_service(specs[name], TOKEN) == (True, "http 200")
+    assert seen == [(8837, TOKEN), (8840, TOKEN), (8839, None)]
 
 
 def test_voice_config_is_passed_only_when_the_file_exists(tmp_path):
@@ -319,6 +381,23 @@ def test_restart_of_a_running_service_terminates_and_starts_it_again_without_usi
     assert sup.svcs["voice"].budget.used(world.t) == 0 and world.spawned.count("voice") == 2
 
 
+def test_the_sidecars_are_restarted_by_name_and_on_crash_like_every_child(tmp_path):
+    sup, world = supervisor(tmp_path)
+    ticks(sup, world, 30)
+    first = world.procs["monitor"].pid
+    (sup.cfg.ctl_dir / "restart-monitor").write_text("x")
+    ticks(sup, world, 8)
+    assert (first, signal.SIGTERM) in world.signals and world.procs["monitor"].pid != first
+    assert sup.statuses()["monitor"] == "up" and sup.svcs["monitor"].budget.used(world.t) == 0
+    world.crash("hls")
+    ticks(sup, world, 8)
+    assert sup.statuses()["hls"] == "up" and sup.svcs["hls"].budget.used(world.t) == 1
+    assert kinds(world, "service_crashed", "hls") and world.spawned.count("director") == 1
+    world.crash("xvfb")                                                    # X restarts: the feed is not restarted with it
+    ticks(sup, world, 20)
+    assert sup.statuses()["monitor"] == "up" and world.spawned.count("monitor") == 2
+
+
 def test_a_service_that_never_gets_healthy_is_restarted_as_a_crash(tmp_path):
     world = World()
     world.unhealthy.add("voice")
@@ -348,7 +427,7 @@ def test_a_service_unhealthy_for_too_long_after_being_up_is_restarted(tmp_path):
 def test_services_start_in_order_each_after_the_one_before_is_up(tmp_path):
     sup, world = supervisor(tmp_path)
     ticks(sup, world, 30)
-    assert world.spawned == ["xvfb", "desktop", "voice", "agent", "director"]
+    assert world.spawned == ["xvfb", "desktop", "voice", "agent", "director", "monitor", "hls"]
     for index, name in enumerate(world.spawned):
         before = world.statuses_at_spawn[index]
         assert all(before[earlier] == "up" for earlier in up.ORDER[:index]), (name, before)
@@ -383,8 +462,9 @@ def test_a_failed_requirement_blocks_dependents_but_not_independent_services(tmp
     status = sup.statuses()
     assert status["xvfb"] == "failed" and status["desktop"] == "blocked" and status["director"] == "blocked"
     assert status["voice"] == "up" and status["agent"] == "blocked"        # voice needs no X server; agent needs the desktop
-    assert "xvfb failed" in sup.svcs["desktop"].detail
-    assert "desktop" not in world.spawned and "director" not in world.spawned
+    assert status["monitor"] == "blocked" and status["hls"] == "up"        # the feed captures X; the HLS server does not
+    assert "xvfb failed" in sup.svcs["desktop"].detail and "xvfb failed" in sup.svcs["monitor"].detail
+    assert "desktop" not in world.spawned and "director" not in world.spawned and "monitor" not in world.spawned
     assert "Xvfb not found" in sup.svcs["xvfb"].last_error
 
 
@@ -497,7 +577,8 @@ def test_a_stop_file_keeps_the_agent_down_and_everything_else_up(tmp_path):
     world.stop = True
     ticks(sup, world, 5)
     assert (agent_pid, signal.SIGTERM) in world.signals
-    assert sup.statuses() == {"xvfb": "up", "desktop": "up", "voice": "up", "agent": "held", "director": "up"}
+    assert sup.statuses() == {"xvfb": "up", "desktop": "up", "voice": "up", "agent": "held", "director": "up",
+                              "monitor": "up", "hls": "up"}                 # the kill switch leaves the sidecars up
     assert sup.svcs["agent"].budget.used(world.t) == 0 and not kinds(world, "service_crashed", "agent")
     assert world.spawned.count("agent") == 1
     assert sup.snapshot()["stop"] is True
@@ -513,7 +594,7 @@ def test_the_agent_is_not_started_at_all_while_the_stop_file_exists(tmp_path):
     world.stop = True
     sup, world = supervisor(tmp_path, world)
     ticks(sup, world, 30)
-    assert world.spawned == ["xvfb", "desktop", "voice", "director"]
+    assert world.spawned == ["xvfb", "desktop", "voice", "director", "monitor", "hls"]
     assert sup.statuses()["agent"] == "held" and sup.statuses()["director"] == "up"
 
 
@@ -653,6 +734,9 @@ def test_cli_kill_resume_and_restart_checks(tmp_path, monkeypatch, capsys):
     assert up.main(["restart", "bogus", *base]) == 2
     assert up.main(["restart", "voice", *base]) == 1              # no supervisor running
     assert "no supervisor running" in capsys.readouterr().err
+    for name in ("monitor", "hls"):                               # known names: refused only for the missing supervisor
+        assert up.main(["restart", name, *base]) == 1 and "no supervisor running" in capsys.readouterr().err
+    assert "monitor feed, HLS server" in (up.main(["kill", *base]) == 0 and capsys.readouterr().out)
     assert up.main(["resume", *base]) == 0 and not (tmp_path / "sd" / "STOP").exists()
     assert "STOP file removed" in capsys.readouterr().out
     assert up.main(["resume", *base]) == 0 and "no STOP file" in capsys.readouterr().out
@@ -674,7 +758,40 @@ def test_status_reports_down_services_without_a_supervisor(tmp_path, monkeypatch
     base = ["--streamer-dir", str(tmp_path / "sd"), "--token-file", str(tmp_path / "token")]
     assert up.main(["status", *base]) == 1
     out = capsys.readouterr().out
-    assert "supervisor: NOT RUNNING" in out and out.count(" down ") == 5
+    assert "supervisor: NOT RUNNING" in out and out.count(" down ") == 7
+    assert "\nmonitor   down" in out and "\nhls       down" in out
     assert up.main(["status", "--json", *base]) == 1
     report = json.loads(capsys.readouterr().out)
     assert report["supervisor"] is None and report["stop"] is False and list(report["services"]) == list(up.ORDER)
+    assert report["monitor"] is None                              # not running: no summary
+
+
+def test_status_shows_what_the_in_game_monitor_shows(tmp_path, monkeypatch, capsys):
+    health = {"ok": True, "showing": "neutral", "reader": True, "ffmpeg": False, "fps_in": 0.0, "display": ":103",
+              "privacy": {"private": True, "reasons": ["layout_cut"], "since": "2026-10-24T15:00:00Z"}}
+    calls = []
+
+    def request(method, port, path, token, timeout=1.5):
+        calls.append((method, port, path, token))
+        return 200, json.dumps(health)
+
+    cfg = make_cfg(tmp_path)
+    summary = up.monitor_summary(cfg, request)
+    assert calls == [("GET", 8840, "/healthz", None)]
+    assert summary == {"ok": True, "showing": "neutral", "private": True, "reasons": ["layout_cut"],
+                       "since": "2026-10-24T15:00:00Z", "display": ":103", "reader": True, "ffmpeg": False, "fps_in": 0.0}
+    assert up.monitor_summary(cfg, lambda *a, **k: (500, "")) == {
+        "ok": None, "showing": None, "private": None, "reasons": None, "since": None, "display": None, "reader": None,
+        "ffmpeg": None, "fps_in": None}
+    broken = dict(health, ok=False, showing="pending", privacy={"private": True, "reasons": ["neutral_unavailable"]})
+    assert up.monitor_summary(cfg, lambda *a, **k: (503, json.dumps(broken)))["reasons"] == ["neutral_unavailable"]
+
+    def refused(*args, **kwargs):
+        raise ConnectionRefusedError()
+    assert up.monitor_summary(cfg, refused) is None and up.monitor_summary(cfg, lambda *a, **k: (200, "[1]")) is None
+    report = {"supervisor": 7, "stop": False, "token": True, "director": None, "monitor": summary,
+              "services": {name: {"status": "up", "healthy": True, "probe": "http 200"} for name in up.ORDER}}
+    monkeypatch.setattr(up, "collect_status", lambda cfg: report)
+    assert up.main(["status", "--streamer-dir", str(tmp_path / "sd")]) == 0
+    out = capsys.readouterr().out
+    assert 'monitor: {"ok": true, "showing": "neutral", "private": true, "reasons": ["layout_cut"]' in out

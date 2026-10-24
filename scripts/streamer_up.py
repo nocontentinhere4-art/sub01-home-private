@@ -5,10 +5,13 @@ Services, started in this order (each waits until the ones before it have settle
 and until the ones it requires are healthy):
 
   xvfb      Xvfb :102 1920x1080 (an X server already there is used and never killed)
-  desktop   scripts/streamer_desktop.py   port 8832   DISPLAY=:102, LD_LIBRARY_PATH=<libs>
-  voice     scripts/voice_server.py       port 8835   HF_HOME=<hf cache>, --voice-config if voice/voice.json exists
-  agent     streamer_agent.py             port 8836   (held down while the STOP file exists)
-  director  scripts/streamer_director.py  port 8837   (records recordings/*.mp4)
+  desktop   scripts/streamer_desktop.py       port 8832   DISPLAY=:102, LD_LIBRARY_PATH=<libs>
+  voice     scripts/voice_server.py           port 8835   HF_HOME=<hf cache>, --voice-config if voice/voice.json exists
+  agent     streamer_agent.py                 port 8836   (held down while the STOP file exists)
+  director  scripts/streamer_director.py      port 8837   (records recordings/*.mp4)
+  monitor   scripts/streamer_monitor_feed.py  port 8840   the desktop's X display -> monitor.mjpeg for the in-game
+                                                          monitor, behind its privacy gate (layout.jsonl + /pc/state)
+  hls       scripts/streamer_hls_serve.py     port 8839   serves --hls-dir (default <streamer-dir>/hls) on loopback
 
 Every child runs as the user that runs this script (no root needed, `start` refuses
 root unless --allow-root), in its own session, with a PID file in <streamer-dir>/pids,
@@ -16,13 +19,15 @@ a log in <streamer-dir>/logs/<name>.log and an HTTP health URL (Xvfb: its socket
 A child that dies is restarted with backoff, at most 5 times per 10 minutes; after
 that it is left down and reported (`status`, events.jsonl). `restart <name>` clears
 that budget. The operator token is read from the token file and handed to the
-children in the SUB01_ADMIN_TOKEN environment variable only, never in argv or logs.
+children that call the token-protected APIs in the SUB01_ADMIN_TOKEN environment
+variable only (never to xvfb and hls), never in argv or logs.
 
   start [--foreground] [--dry-run]   start the supervisor (detached unless --foreground)
   stop                               SIGTERM in reverse order, SIGKILL a child after 15 s
-  status [--json]                    supervisor, children, STOP file, director summary
+  status [--json]                    supervisor, children, STOP file, director and monitor summaries
   kill                               kill switch: STOP file + voice /stop + agent taken down;
-                                     desktop runner, director, voice server, Xvfb stay up
+                                     desktop runner, director, voice server, monitor feed,
+                                     HLS server, Xvfb stay up
   resume                             remove the STOP file; the agent is started again
   restart <name>                     restart one child and reset its restart budget
 
@@ -49,24 +54,31 @@ from pathlib import Path
 DEFAULT_STREAMER_DIR = "/home/unreal/.sub01-private/streamer"
 DEFAULT_TOKEN_FILE = "/home/unreal/.sub01-private/operator-token"
 DEFAULT_SOURCE = "/home/unreal/.sub01-private/latest-source-20261023"
-DEFAULT_PORTS = {"desktop": 8832, "voice": 8835, "agent": 8836, "director": 8837}
+DEFAULT_PORTS = {"desktop": 8832, "voice": 8835, "agent": 8836, "director": 8837, "monitor": 8840, "hls": 8839}
 DEFAULT_PYTHON = {
     "desktop": "/home/unreal/.sub01-private/city-readonly-browser/venv/bin/python",
     "voice": "/home/unreal/voice-rt-venv/bin/python",
     "agent": "/home/unreal/venv/bin/python",
     "director": "/home/unreal/venv/bin/python",
+    "monitor": "/home/unreal/venv/bin/python",
+    "hls": "/home/unreal/venv/bin/python",
 }
 DEFAULT_LIBRARY_PATH = "/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu"
 DEFAULT_HF_HOME = "/home/unreal/hf-cache"
 BACKEND_PORT = 8830
-ORDER = ("xvfb", "desktop", "voice", "agent", "director")
+ORDER = ("xvfb", "desktop", "voice", "agent", "director", "monitor", "hls")
 SCRIPTS = {"desktop": "scripts/streamer_desktop.py", "voice": "scripts/voice_server.py",
-           "agent": "streamer_agent.py", "director": "scripts/streamer_director.py"}
-PORT_FLAG = {"desktop": "--port", "voice": "--port", "agent": "--status-port", "director": "--port"}
-HEALTH_PATH = {"desktop": "/healthz", "voice": "/healthz", "agent": "/healthz", "director": "/healthz"}
-START_TIMEOUT = {"xvfb": 20.0, "desktop": 90.0, "voice": 240.0, "agent": 60.0, "director": 45.0}
-REQUIRES = {"desktop": ("xvfb",), "agent": ("desktop",), "director": ("xvfb",)}
+           "agent": "streamer_agent.py", "director": "scripts/streamer_director.py",
+           "monitor": "scripts/streamer_monitor_feed.py", "hls": "scripts/streamer_hls_serve.py"}
+PORT_FLAG = {"desktop": "--port", "voice": "--port", "agent": "--status-port", "director": "--port",
+             "monitor": "--port", "hls": "--port"}
+HEALTH_PATH = {"desktop": "/healthz", "voice": "/healthz", "agent": "/healthz", "director": "/healthz",
+               "monitor": "/healthz", "hls": "/healthz"}
+START_TIMEOUT = {"xvfb": 20.0, "desktop": 90.0, "voice": 240.0, "agent": 60.0, "director": 45.0, "monitor": 20.0,
+                 "hls": 20.0}
+REQUIRES = {"desktop": ("xvfb",), "agent": ("desktop",), "director": ("xvfb",), "monitor": ("xvfb",)}
 RESTART_WITH = {"desktop": ("xvfb",)}          # Chromium cannot survive its X server restarting
+NO_TOKEN = ("xvfb", "hls")                     # children that call no token-protected API get no operator token
 AGENT_PASSTHROUGH = ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "MOONSHOT_API_KEY", "STREAMER_MODEL",
                      "STREAMER_CALLS_PER_HOUR", "STREAMER_PROVIDER", "STREAMER_FALLBACK_PROVIDER", "STREAMER_KIMI_MODEL",
                      "MIND", "SUB01_STREAMER")
@@ -88,8 +100,9 @@ class Config:
                  game_display=":99.0", ports=None, pythons=None, library_path=DEFAULT_LIBRARY_PATH,
                  hf_home=DEFAULT_HF_HOME, voice_config=None, xvfb="Xvfb", xvfb_screen="1920x1080x24", health=None, child_args=None,
                  child_env=None, stop_grace=15.0, restart_max=5, restart_window=600.0, unhealthy_after=120.0,
-                 backend_port=BACKEND_PORT, environ=None):
+                 backend_port=BACKEND_PORT, hls_dir=None, environ=None):
         self.streamer_dir = Path(streamer_dir)
+        self.hls_dir = Path(hls_dir) if hls_dir else self.streamer_dir / "hls"
         self.token_file = Path(token_file) if token_file else None
         self.source = Path(source)
         self.display = display
@@ -181,16 +194,19 @@ def base_env(cfg):
 
 
 def service_env(cfg, token, extra=None):
+    """The environment of a Python child; `token` None leaves SUB01_ADMIN_TOKEN out (children in NO_TOKEN)."""
     env = base_env(cfg)
     env.update({
         "PYTHONUNBUFFERED": "1", "PYTHONDONTWRITEBYTECODE": "1",
-        "STREAMER_DIR": str(cfg.streamer_dir), "SUB01_ADMIN_TOKEN": token,
+        "STREAMER_DIR": str(cfg.streamer_dir),
         "STREAMER_BACKEND_URL": f"http://127.0.0.1:{cfg.backend_port}",
         "STREAMER_DESKTOP_URL": f"http://127.0.0.1:{cfg.ports['desktop']}",
         "STREAMER_VOICE_URL": f"http://127.0.0.1:{cfg.ports['voice']}",
         "STREAMER_DIRECTOR_URL": f"http://127.0.0.1:{cfg.ports['director']}",
         "STREAMER_AGENT_URL": f"http://127.0.0.1:{cfg.ports['agent']}",
     })
+    if token is not None:
+        env["SUB01_ADMIN_TOKEN"] = token
     env.update(extra or {})
     return env
 
@@ -204,12 +220,13 @@ def build_specs(cfg, token):
         + cfg.child_args.get("xvfb", []), {**base_env(cfg), **cfg.child_env.get("xvfb", {})}, cfg.streamer_dir,
         ("xsocket", cfg.x_socket()), "Xvfb", start_timeout=START_TIMEOUT["xvfb"], adopt_existing=True)
     urls = {n: f"http://127.0.0.1:{cfg.ports[n]}" for n in DEFAULT_PORTS}
-    for name in ("desktop", "voice", "agent", "director"):
+    x_display = cfg.display.split(".")[0]           # the desktop runner's display; the monitor feed captures the same
+    for name in ORDER[1:]:
         port, python = cfg.ports[name], cfg.pythons[name]
         script = str(cfg.source / SCRIPTS[name])
         argv = [python, script]
         if name == "desktop":
-            argv += ["--data-dir", str(cfg.streamer_dir / "desktop"), "--display", cfg.display.split(".")[0],
+            argv += ["--data-dir", str(cfg.streamer_dir / "desktop"), "--display", x_display,
                      "--home-origin", f"http://127.0.0.1:{cfg.backend_port}"]
         elif name == "voice":
             argv += ["--streamer-dir", str(cfg.streamer_dir)]
@@ -219,22 +236,27 @@ def build_specs(cfg, token):
             argv += ["--streamer-dir", str(cfg.streamer_dir), "--desktop-url", urls["desktop"],
                      "--backend-url", f"http://127.0.0.1:{cfg.backend_port}", "--voice-url", urls["voice"],
                      "--director-url", urls["director"]]
-        else:
+        elif name == "director":
             argv += ["--streamer-dir", str(cfg.streamer_dir), "--desktop-display", screen, "--game-display", cfg.game_display]
+        elif name == "monitor":
+            argv += ["--streamer-dir", str(cfg.streamer_dir), "--display", x_display, "--desktop-url", urls["desktop"]]
+        else:                                           # hls: the directory is its one positional argument
+            argv += [str(cfg.hls_dir)]
         if name == "director" or port != DEFAULT_PORTS[name]:      # the others already default to the plan's ports
             argv += [PORT_FLAG[name], str(port)]
         argv += cfg.child_args.get(name, [])
         extra = {}
         if name == "desktop":
             ld = cfg.library_path + (":" + cfg.environ["LD_LIBRARY_PATH"] if cfg.environ.get("LD_LIBRARY_PATH") else "")
-            extra = {"DISPLAY": cfg.display.split(".")[0], "LD_LIBRARY_PATH": ld}
+            extra = {"DISPLAY": x_display, "LD_LIBRARY_PATH": ld}
         elif name == "voice":
             extra = {"HF_HOME": cfg.hf_home}
         elif name == "agent":
             extra = {k: cfg.environ[k] for k in AGENT_PASSTHROUGH if k in cfg.environ}
         extra.update(cfg.child_env.get(name, {}))
         specs[name] = ServiceSpec(
-            name, argv, service_env(cfg, token, extra), cfg.source, ("http", port, cfg.health[name]),
+            name, argv, service_env(cfg, None if name in NO_TOKEN else token, extra), cfg.source,
+            ("http", port, cfg.health[name]),
             os.path.basename(SCRIPTS[name]), requires=REQUIRES.get(name, ()), restart_with=RESTART_WITH.get(name, ()),
             start_timeout=START_TIMEOUT[name], hold_on_stop=(name == "agent"), port=port, python=python, script=script)
     return specs
@@ -255,12 +277,29 @@ def preflight(spec):
     return None
 
 
+def director_hls_dir(cfg):
+    """The --hls-dir the director gets through --child-arg (the last one wins, like argparse), or None (no HLS)."""
+    found, args = None, cfg.child_args.get("director", [])
+    for index, arg in enumerate(args):
+        if arg == "--hls-dir" and index + 1 < len(args):
+            found = args[index + 1]
+        elif arg.startswith("--hls-dir="):
+            found = arg.split("=", 1)[1]
+    return found
+
+
 def environment_warnings(cfg):
     notes = []
     if not shutil.which("ffmpeg"):
-        notes.append("ffmpeg not found in PATH: the director cannot record")
+        notes.append("ffmpeg not found in PATH: the director cannot record, the monitor feed cannot capture")
     if not shutil.which("xdotool"):
         notes.append("xdotool not found in PATH: the director records all of :99 instead of the game window")
+    hls = director_hls_dir(cfg)
+    if hls is None:
+        notes.append(f"the director writes no HLS (no --hls-dir in --child-arg director=...): the hls service serves "
+                     f"{cfg.hls_dir}, which stays empty")
+    elif os.path.normpath(hls) != os.path.normpath(str(cfg.hls_dir)):
+        notes.append(f"the director writes HLS to {hls} but the hls service serves {cfg.hls_dir}: pass --hls-dir {hls}")
     return notes
 
 
@@ -414,7 +453,7 @@ def http_request(method, port, path, token, body=None, timeout=1.5, host="127.0.
     """-> (status, text). Raises OSError/http.client.HTTPException when nothing answers."""
     conn = http.client.HTTPConnection(host, port, timeout=timeout)
     try:
-        headers = {"X-Admin-Token": token}
+        headers = {"X-Admin-Token": token} if token else {}
         data = None
         if body is not None:
             data, headers["Content-Type"] = json.dumps(body).encode(), "application/json"
@@ -449,12 +488,13 @@ def port_in_use(port, host="127.0.0.1"):
 
 
 def probe_service(spec, token):
-    """-> (healthy, detail)."""
+    """-> (healthy, detail). The token header goes only to a child that holds the token already (not hls)."""
     kind = spec.health[0]
     if kind == "xsocket":
         return (True, "X socket ok") if xsocket_ok(spec.health[1]) else (False, "X socket not answering")
     try:
-        status, _ = http_request("GET", spec.health[1], spec.health[2], token)
+        status, _ = http_request("GET", spec.health[1], spec.health[2],
+                                 token if "SUB01_ADMIN_TOKEN" in spec.env else None)
     except (OSError, http.client.HTTPException) as exc:
         return False, f"no answer on port {spec.health[1]}: {type(exc).__name__}"
     return health_ok(status), f"http {status}"
@@ -821,8 +861,9 @@ def load_snapshot(cfg):
 def do_kill(cfg, token, *, post=http_request, signal_fn=signal_group, alive=pid_alive, wall=time.time,
             clock=time.monotonic, sleep=time.sleep):
     """The kill switch. Writes STOP, cuts speech through the voice server, takes the agent down.
-    The desktop runner, the director, the voice server and Xvfb are left running so the scene stays
-    presentable. Returns a result dict (never raises for a failing voice server)."""
+    The desktop runner, the director, the voice server, the monitor feed, the HLS server and Xvfb are left
+    running so the scene stays presentable (a monitor feed killed here could not cover the game's last
+    texture with its neutral frame). Returns a result dict (never raises for a failing voice server)."""
     result = {"stop_file": None, "voice_stop": None, "agent": None}
     atomic_write(cfg.stop_file, json.dumps({"t": now_iso(wall()), "by": "streamer_up kill"}) + "\n")
     result["stop_file"] = str(cfg.stop_file)
@@ -852,7 +893,8 @@ def cmd_kill(cfg, args):
     print(f"STOP file written: {result['stop_file']}")
     print(f"voice /stop: {result['voice_stop']}")
     print(f"agent: {result['agent']} (held down while STOP exists)")
-    print("desktop runner, director, voice server and Xvfb are still running. `streamer_up.py resume` clears STOP.")
+    print("desktop runner, director, voice server, monitor feed, HLS server and Xvfb are still running. "
+          "`streamer_up.py resume` clears STOP.")
     return 0
 
 
@@ -1004,10 +1046,25 @@ def collect_status(cfg):
                                                  "privacy", "desktop_hidden")}
             director["latest_segment"] = (data.get("segments") or [{}])[-1].get("name")
             director["fps_measured"] = (data.get("output") or {}).get("fps_measured")
-        except (OSError, ValueError, http.client.HTTPException):
+        except (OSError, ValueError, http.client.HTTPException, AttributeError):
             pass
     return {"supervisor": sup, "stop": cfg.stop_file.exists(), "token": bool(token), "services": services,
-            "director": director, "snapshot_at": (snap or {}).get("updated")}
+            "director": director, "monitor": monitor_summary(cfg) if services["monitor"]["running"] else None,
+            "snapshot_at": (snap or {}).get("updated")}
+
+
+def monitor_summary(cfg, request=None):
+    """What the in-game monitor shows now, from the feed's /healthz (no token needed): showing screen | neutral |
+    pending, the privacy reasons. Also for a 503 (the feed has no neutral frame: `ok` false)."""
+    try:
+        status, text = (request or http_request)("GET", cfg.ports["monitor"], "/healthz", None, timeout=2.0)
+        data = json.loads(text) if status in (200, 503) else {}
+        privacy = data.get("privacy") or {}
+        return {"ok": data.get("ok"), "showing": data.get("showing"), "private": privacy.get("private"),
+                "reasons": privacy.get("reasons"), "since": privacy.get("since"), "display": data.get("display"),
+                "reader": data.get("reader"), "ffmpeg": data.get("ffmpeg"), "fps_in": data.get("fps_in")}
+    except (OSError, ValueError, http.client.HTTPException, AttributeError):
+        return None
 
 
 def cmd_status(cfg, args):
@@ -1027,6 +1084,8 @@ def cmd_status(cfg, args):
             print(f"{name:9} {s.get('status', '-'):10} {s.get('pid') or '-':>7}  {used:8} {s['probe'][:12]:12} {note[:90]}")
         if report["director"]:
             print("director:", json.dumps(report["director"]))
+        if report["monitor"]:
+            print("monitor:", json.dumps(report["monitor"]))
     ok = bool(report["supervisor"]) and all(s.get("status") == "up" and s["healthy"] for s in report["services"].values())
     return 0 if ok else 1
 
@@ -1093,6 +1152,8 @@ def build_parser():
         common.add_argument(f"--{name}-port", type=int, default=port)
         common.add_argument(f"--{name}-python", default=DEFAULT_PYTHON[name])
     common.add_argument("--backend-port", type=int, default=BACKEND_PORT)
+    common.add_argument("--hls-dir", help="directory the hls service serves (default <streamer-dir>/hls); keep it the "
+                                          "director's --hls-dir (start --dry-run warns when they differ)")
     common.add_argument("--library-path", default=DEFAULT_LIBRARY_PATH, help="LD_LIBRARY_PATH of the desktop runner")
     common.add_argument("--hf-home", default=DEFAULT_HF_HOME, help="HF_HOME of the voice server")
     common.add_argument("--voice-config", help="voice server settings JSON (default <streamer-dir>/voice/voice.json, "
@@ -1140,7 +1201,7 @@ def config_from_args(args):
                   child_args=parse_kv(args.child_arg, "--child-arg", split_args=True),
                   child_env=parse_kv(args.child_env, "--child-env"), stop_grace=args.stop_grace,
                   restart_max=args.restart_max, restart_window=args.restart_window,
-                  unhealthy_after=args.unhealthy_after, backend_port=args.backend_port)
+                  unhealthy_after=args.unhealthy_after, backend_port=args.backend_port, hls_dir=args.hls_dir)
 
 
 def main(argv=None):
