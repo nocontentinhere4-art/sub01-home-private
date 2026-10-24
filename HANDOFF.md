@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-24 15:45 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-24 19:25 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -189,7 +189,7 @@ builds on the pod, deploys and pushes. Split reviewed by Kimi: `docs/streamer/ki
 |---|---|---|
 | native v22 | DONE, merged 27670bd (119 tests, Kimi lifted its hold); engine APIs checked against the 5.8.3 source by the coordinator; include guard narrowed to the read-back (coordinator + Kimi). Pod dry run plans cleanly; build script `/tmp/sub01-share/deploy/v22/build-v22.sh` (refuses under MEASURING, backs up `source-backup-before-v22` and `binaries-v21-linux`). Sequence: sawtooth m3o ablation on v21 → build v22 + sidecars deploy → relaunch m3 (= v22) → smoke test + v22 baseline | read-only |
 | sidecars | DONE, merged 8634ff9 (164 tests, Kimi "commit: yes"). DEPLOYED 18:33 UTC with the agent-checks code (`/tmp/sub01-share/deploy/sidecars/deploy-sidecars.sh`): supervisor pid 2010496 with `--hls-dir`, children desktop/voice/director/monitor/hls up, agent held, watchdog restarted (new code), backups `*.bak-before-window`. Follow-ups: agent waits for the feed's neutral confirmation before typing a credential; game blanks the texture when the feed goes stale | read-only |
-| sawtooth | root cause + fix of the render-time ramp; ends on plain m3, `cam2_fps` 30 unless 60/60 holds | OWNS the game runtime (cvars, trace port, tune.py, relaunch); only one allowed heavy CPU |
+| sawtooth | DONE, merged (findings `docs/streamer/SAWTOOTH-20261024.md`, tools `tools/sawtooth/`, stopgap `scripts/streamer_swapchain_refresh.py` NOT running: Kimi wants an 8-24 h soak, 120 s period). Native hand-off spec for v24 in the same doc. v22 baseline 20.29 ms (49.3 fps), same as v21 | runtime handed back to the coordinator 19:10 |
 | visual v23 | DONE, merged (133 native tests; Kimi: 8 issues + 3 notes fixed, then "ok"). 31 live keys via `tune.py`, defaults bit-identical to v22; tuning order in the installer's `RECOMMENDED` and the README. Builds after the v22 baseline leg | read-only |
 | agent checks | DONE, merged c59403b (819 streamer tests pass; Kimi: 5 blockers fixed, then "may proceed"). Found a second chat→PC path (backend Vagon link bridge) outside broker/lease/STOP: fixed in code, live blocker until the backend runs with the bridge variables unset (review before restarting the backend). Agent/desktop/watchdog files deployed 18:33. The running backend (`runtime-minecraft-resume21/source`, old code) has no VAGON_* variables and no .env, so its bridge is disabled (`vagon_bridge.enabled()` needs them) | read-only; STOP stays |
 | acceptance | DONE, merged (61 tests; Kimi: criteria agreed first, 21 review findings fixed, final check clean). 16 criteria, PASS/FAIL/INCONCLUSIVE with masked evidence + highlight times (RUNBOOK "Acceptance check"). Dry run 18:03-18:33: 3 pass (director, recordings, HLS spot), 12 fail (agent held, `webcam_only`, PC not logged in, game 50.25 fps, cam2 44.35, mouth by design), monitor feed missing evidence until v22 runs (v22's `SUB01_STREAMER_VISUAL_MONITOR_FEED fps=` line is the shape the tool reads) | read-only |
@@ -197,7 +197,12 @@ Nobody but the coordinator restarts the supervisor, director, voice, agent, watc
 **Measurement lease** (Kimi): while `/tmp/sub01-share/MEASURING` exists (end time + purpose inside), nobody builds,
 deploys, restarts, scans logs or runs heavy jobs on the pod; only tiny reads and Kimi calls. Builds, deploys and
 restarts go into `docs/streamer/POD-CHANGES.md` with UTC times.
-Next for the coordinator: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
+State 19:25: all six workers DONE and merged. Game on **v23** binaries (plain m3 launcher, relaunched 19:13 by
+`/tmp/sub01-share/relaunch-m3-now.sh`; binaries saved `binaries-v2{1,2,3}-linux`, sources `source-v2{2,3}`), v23 keys at
+their defaults, `cam2_fps` 30, coordinator owns the runtime. Frames for tuning: `/tmp/sub01-share/frames.sh TAG [STATE]`
+(webcam via x11grab, room/cam2 from the local HLS; restores `webcam_only`). Next: v24 worker (offscreen main view →
+director), live v23 tuning with Kimi frame reviews.
+Earlier plan: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
 privacy/stream smoke test; then v23 (offline now, pinned to the v22 commit) builds only after the sawtooth
 measurements end; relaunch, measure, live visual tuning with frames.
 
