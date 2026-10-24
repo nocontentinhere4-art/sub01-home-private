@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-24 12:15 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-24 15:45 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -155,8 +155,31 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   one timeline. Gate decisions with ABBA/BAAB 60 s legs + an A/A set, judged on per-leg median frame-time deltas
   (<= 2 ms inconclusive). When the owner has logged in and the PC is on: relaunch with
   `SUB01_PC_ORIGIN=http://127.0.0.1:8838`, then stop 8832 for good.
-- No workers in flight. Done 2026-10-24: disk-full recovery, director retention (25d17a8), volume 150 → 200 GB +
-  offload, Kimi C (one desktop source 8838) and B (m4, rejected), shadow/worker A/B and CSV profiles.
+- Done 2026-10-24: disk-full recovery, director retention (25d17a8), volume 150 → 200 GB + offload, Kimi C (one
+  desktop source 8838) and B (m4, rejected), shadow/worker A/B and CSV profiles.
+- **Sawtooth windows A/B compared (15:35)**: per call, everything is flat except EndDrawingViewport 4.4 → 6.8 ms/frame
+  (Vulkan present/acquire wait), RenderGraphExecute exclusive 1.15 → 1.54 ms/call (6 per frame), render-thread
+  WaitForTasks 2.6 → 4.3 ms, DirectLighting/Radiosity/WorldTick slightly. Leading hypothesis: GPU/present side.
+  Exports in `/tmp/sub01-share/insights/`, compare with `cmpab.py`.
+
+## Workers in flight (owner asked for multi-agent work, 2026-10-24 ~15:40 UTC)
+Each works in its own git worktree, consults Kimi and gets a Kimi review before committing; the coordinator merges,
+builds on the pod, deploys and pushes. Split reviewed by Kimi: `docs/streamer/kimi/multiagent.md`.
+| Worker | Scope | Pod rights |
+|---|---|---|
+| native v22 | monitor.mjpeg reader + privacy gate, no per-frame UTexture2D, cam2 exposure keys | read-only |
+| sidecars | hls + monitor services in `streamer_up.py`, fail-closed privacy gate, runbook | read-only |
+| sawtooth | root cause + fix of the render-time ramp; ends on plain m3, `cam2_fps` 30 unless 60/60 holds | OWNS the game runtime (cvars, trace port, tune.py, relaunch); only one allowed heavy CPU |
+| visual v23 | live-tunable fixes: neck/hood, elbow, posture, hands, face light, chair (`install_v23.py` after v22) | read-only |
+| agent checks | plan step 5: control table `docs/streamer/AGENT-CHECKS.md`, missing tests, live-check runner | read-only; STOP stays |
+| acceptance | plan step 7: `scripts/streamer_acceptance.py` report per criterion, dry run on today's logs | read-only |
+Nobody but the coordinator restarts the supervisor, director, voice, agent, watchdog or backend.
+**Measurement lease** (Kimi): while `/tmp/sub01-share/MEASURING` exists (end time + purpose inside), nobody builds,
+deploys, restarts, scans logs or runs heavy jobs on the pod; only tiny reads and Kimi calls. Builds, deploys and
+restarts go into `docs/streamer/POD-CHANGES.md` with UTC times.
+Next for the coordinator: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
+privacy/stream smoke test; then v23 (offline now, pinned to the v22 commit) builds only after the sawtooth
+measurements end; relaunch, measure, live visual tuning with frames.
 
 ## Where things are
 - `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,

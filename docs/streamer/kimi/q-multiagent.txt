@@ -1,0 +1,37 @@
+SUB-01 coordinator question (2026-10-24 ~15:40 UTC). The owner asked to speed the work up with several agents in
+parallel. Please review this split and the pod ownership rules, and say what you would change.
+
+Already running (started ~15:18):
+1. native v22: game-side reader of monitor.mjpeg into a persistent texture with a privacy gate, no per-frame
+   UTexture2D in the PC/device bridges, cam2 exposure tuning keys. Repo work only; the coordinator builds on the pod.
+2. sidecars: hls + monitor-feed services in streamer_up.py, fail-closed privacy gate, runbook, tests. Repo work
+   only; the coordinator deploys and restarts the supervisor.
+
+New (to start now):
+3. sawtooth: root cause of the render-time ramp (+0.5 ms/min, reset every ~7 min). Two 40 s trace windows exist
+   (A = ramp start, B = ramp end). Per-call averages that grow A -> B: EndDrawingViewport 4.4 -> 6.8 ms/frame (RHI
+   thread, Vulkan present/acquire), RenderGraphExecute exclusive 1.15 -> 1.54 ms/call (6 calls/frame), render-thread
+   WaitForTasks 2.6 -> 4.3 ms, DirectLighting 248 -> 306 us, Radiosity 715 -> 779 us, WorldTick 151 -> 189 us;
+   all other pass scopes are flat per call. Next: GPU timing at ramp start/end (CSV profile GPU columns, gpu trace
+   channel, nvidia-smi clocks/power), name the mechanism, test a runtime fix with ABBA legs over >= 2 ramps.
+   This agent is the ONLY one allowed to touch the game runtime (console cvars, trace port, tune.py cam2 keys,
+   relaunch with existing launchers; it must finish on the baseline launcher).
+4. visual v23: live-tunable corrections for the defects in the photo review (neck/hood seam, right-elbow hoodie
+   stretch, hunched posture, hands not touching keyboard/mouse, flat face light, chair/hoodie overlap), written as
+   a v23 installer layered after v22 and touching different files; one build later, then live tuning with frames.
+5. agent safety checks (plan step 5): map every guard rail to code + test, add missing tests, and a live-check
+   runner for when the PC is on. Offline; no STOP removal, no lease, no PC start.
+6. acceptance tooling (plan step 7): a script that turns a 30-minute window of logs + recordings into a pass/fail
+   report per criterion (fps per source, both cameras, chat executed/refused, recovered error, voice + head motion,
+   PC control). Offline plus read-only dry run on today's logs.
+
+Shared rules: every agent consults you before design decisions and has its diff reviewed by you before committing;
+agents commit in their own worktree branches, the coordinator merges and pushes; nobody but the coordinator
+restarts the supervisor, director, voice, agent, watchdog or backend; no heavy CPU jobs on the pod except the
+sawtooth agent (the container's 10.2-CPU quota is shared with the game, so heavy jobs falsify fps measurements);
+no secrets ever leave the pod. Blocked on the owner: Vagon login and arming a PC start.
+
+Questions:
+a) Is the split right? Anything missing or anything that should wait (e.g. visual v23 before v22 is merged)?
+b) Is single ownership of the game runtime by the sawtooth agent enough to keep measurements clean?
+c) For the sawtooth: given the numbers above, which mechanisms would you check first?
