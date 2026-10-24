@@ -15,6 +15,8 @@
 // Also written to out/: boy2.glb, boy2_<clip>.glb, boy2_hands.glb, boy2_motion.glb (the authoring body and its clips).
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { prune, weld, meshopt, dedup, resample } from "@gltf-transform/functions";
@@ -740,6 +742,14 @@ function poseChannels(spec) {
 
 // ------------------------------------------------------------------ write
 const report = [];
+// the walk's measured values (room_build/kimodo_g12/walk_metrics.py) written as a sidecar: refFootSpeed (m/s), cycleTime
+// (s), strideLength (m), the checks. It reads a GLB without meshopt, so it gets the walk before finish() compresses it.
+const WALK_PY = path.join(path.dirname(fileURLToPath(import.meta.url)), "kimodo_g12", "walk_metrics.py");
+function writeWalkSidecar(rawGlb, anim, sidecarFile){
+  try { execFileSync("python3", [WALK_PY, rawGlb, "--rig", "boy", "--anim", anim, "--sidecar", sidecarFile], {stdio: ["ignore", "ignore", "inherit"]});
+    report.push(`${path.basename(sidecarFile)} (the walk's reference foot speed, cycle time and stride)`); }
+  catch (e) { console.warn(`walk sidecar skipped: ${String(e.message).split("\n")[0]}`); }
+}
 async function finish(d, file) {
   await d.transform(dedup(), resample({tolerance: 1e-4}), prune({keepLeaves: true, keepAttributes: true}), meshopt({encoder: MeshoptEncoder, level: "medium"}));
   await io.write(file, d); const kb = fs.statSync(file).size / 1024; report.push(`${path.basename(file)} ${kb.toFixed(0)} KB`); return kb;
@@ -919,6 +929,9 @@ if (UAL) {
   for (const [name, ch] of OLD_CLIPS) if (["walk", "type", "sleep_breathing", "lie_phone", "sit_idle_upright", "stand_idle"].includes(name)) {
     const h = ch.find(c => c.node === "Hips" && c.path === "translation").values;
     console.log(`  boy_moves ${name}: hips at frame 0 [${h.slice(0, 3).map(v => (v / 100).toFixed(3)).join(", ")}] m`); }
+  // the UAL walk's reference foot speed and stride, measured on the walk as written (uncompressed, before finish())
+  const rawWalk = path.join(OUT, "boy_moves_raw.glb"); await io.write(rawWalk, o);
+  writeWalkSidecar(rawWalk, "walk", path.join(WEB, "boy_moves_walk.json"));
   await finish(o, path.join(WEB, "boy_moves.glb"));
 }
 // the check on the first character (boy.glb's skin): the clips he plays today and the new ones (boy_moves.glb)

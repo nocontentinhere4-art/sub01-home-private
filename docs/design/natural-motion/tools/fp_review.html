@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- The first-person body from its own eyes (web/house/first_person_body.mjs), headless: the walk capture on a plain floor
+     with a reference chair and desk, the camera at the server's eye height looking where ?pitch says (radians, down is
+     negative), the walk at ?speed m/s stepped to ?t seconds. Served from the repository root (python -m http.server), the
+     vendored three.js; no network. shots.py takes the pictures. -->
+<html><head><meta charset="utf-8"><title>first-person body review</title>
+<style>html,body{margin:0;background:#202428;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/web/house/vendor/three.module.js"}}</script>
+</head><body>
+<script type="module">
+import * as T from "three";
+import { GLTFLoader } from "/web/house/vendor/GLTFLoader.js";
+import { MeshoptDecoder } from "/web/house/vendor/meshopt_decoder.module.js";
+import { createFirstPersonBody, FIRST_PERSON_CAPTURES } from "/web/house/first_person_body.mjs";
+const q = new URLSearchParams(location.search), num = (k, d) => q.has(k) ? +q.get(k) : d;
+const W = num("w", 480), H = num("h", 360);
+const renderer = new T.WebGLRenderer({antialias: true, preserveDrawingBuffer: true}); renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.outputColorSpace = T.SRGBColorSpace; document.body.appendChild(renderer.domElement);
+const scene = new T.Scene(); scene.background = new T.Color(0x3a4048);
+scene.add(new T.HemisphereLight(0xdfe6ee, 0x3a3328, 1.1));
+const sun = new T.DirectionalLight(0xffffff, 1.6); sun.position.set(2, 4, 1); scene.add(sun);
+// a checkered floor (0.25 m tiles: the stride reads against it), a chair and a desk at the house's scale for reference
+const tiles = 24, cv = document.createElement("canvas"); cv.width = cv.height = 512; const cx = cv.getContext("2d");
+for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { cx.fillStyle = (i + j) % 2 ? "#8c8578" : "#5f5a50"; cx.fillRect(i * 64, j * 64, 64, 64); }
+const tex = new T.CanvasTexture(cv); tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.repeat.set(tiles / 2, tiles / 2); tex.colorSpace = T.SRGBColorSpace;
+const floor = new T.Mesh(new T.PlaneGeometry(tiles * 0.25, tiles * 0.25), new T.MeshStandardMaterial({map: tex, roughness: 0.9})); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const box = (w, h, d, x, y, z, c) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), new T.MeshStandardMaterial({color: c, roughness: 0.8})); m.position.set(x, y, z); scene.add(m); return m; };
+box(1.4, 0.04, 0.7, 0, 0.74, -1.6, 0xb08a5a); box(0.5, 0.45, 0.5, 0.9, 0.225, -0.9, 0x404a60); box(0.5, 0.5, 0.06, 0.9, 0.7, -0.68, 0x404a60);
+const camera = new T.PerspectiveCamera(num("fov", 70), W / H, 0.04, 60);
+camera.position.set(0, 1.65, 0); camera.rotation.set(num("pitch", -1.0), 0, 0, "YXZ");   // facing -z, looking down
+const gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const caps = JSON.parse(JSON.stringify(FIRST_PERSON_CAPTURES));
+for (const k of Object.keys(caps)) { if (typeof caps[k] === "string") caps[k] = "/web" + caps[k]; else caps[k].url = "/web" + caps[k].url; }
+const mode = q.get("mode") || "walking";
+for (const k of ["walking", "idle", "typing", "phone"]) caps[k].visualAccepted = k === mode;   // (the review shows the mode asked for)
+const statuses = []; window.statuses = statuses;
+const body = createFirstPersonBody(T, scene, gltf, s => statuses.push(s), caps);
+const home = {walking: mode === "walking", speed: num("speed", 1.2), place: "aisle", seated: 0, activity: mode === "phone" ? "phone" : "idle"};
+if (mode === "typing") Object.assign(home, {place: "desk", seated: 1, activity: "use_computer"});
+window.ready = false;
+body.ready.then(ok => {
+  if (!ok) { window.ready = "failed"; return; }
+  const dt = 1 / 60, total = num("t", 0.3); let now = 0;
+  const computer = {commands: 1, ready: true, paused: false};
+  body.step(dt, home, computer, now, true, camera, () => 0); computer.commands++; now += dt;
+  for (let t = 0; t < total; t += dt) { body.step(dt, home, computer, now, true, camera, () => 0); now += dt; }
+  renderer.render(scene, camera);
+  window.ready = true;
+});
+</script>
+</body></html>

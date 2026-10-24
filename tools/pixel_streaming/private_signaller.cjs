@@ -9,8 +9,6 @@ const http = require('node:http');
 const { createRequire } = require('node:module');
 const infra = process.argv[2];
 if (!infra || !path.isAbsolute(infra)) throw new Error('Supply absolute official infrastructure directory');
-const deadline = Date.parse('2026-10-14T04:22:00Z');
-if (Date.now() >= deadline) throw new Error('Authorized budget window has ended');
 const fromInfra = createRequire(path.join(infra, 'package.json'));
 const express = fromInfra('express');
 const { SignallingServer, InitLogging } = fromInfra('@epicgames-ps/lib-pixelstreamingsignalling-ue5.8');
@@ -52,11 +50,9 @@ const signalling = new SignallingServer({
 app.get('/private-status', (req, res) => res.json({
   privateLoopback: true,
   officialLibrary: 'UE5.8',
-  expires: new Date(deadline).toISOString(),
+  expires: null,
   mediaRelayConfigured: Boolean(peerOptions.iceServers?.some(s => [].concat(s.urls || []).some(u => /^turns?:/.test(u))))
 }));
 server.listen(8890, '127.0.0.1', () => console.log('Private official signalling listener ready on loopback only'));
-const expiry = setTimeout(() => process.exit(0), deadline - Date.now());
-expiry.unref();
 process.on('SIGTERM', () => process.exit(0));
 process.on('SIGINT', () => process.exit(0));

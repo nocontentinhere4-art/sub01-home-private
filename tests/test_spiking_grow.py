@@ -320,3 +320,31 @@ def test_child_grows_once_a_day_on_the_servers_wake_message(tmp_path, monkeypatc
             await cl.stop()
         assert (tmp_path / "spiking" / "growth.npz").exists()
     asyncio.run(go())
+
+
+# --- a restart re-addresses the network once, not once per grown day -------------------------------------------------------
+def test_replay_with_one_reindex_is_the_network_that_daily_growth_built():
+    """growth.Growth.replay adds the grown days first and re-addresses the network once (LiveNet.reindex). The result is
+    the network that growing day by day built: the same arrays, and the same activity from the same seed."""
+    day_by_day = L.LiveNet(Config(n_neurons=SMALL))
+    g = G.Growth(Config(n_neurons=SMALL), day_by_day.reg, SMALL, per_day=500, cap=10 ** 6, log=lambda *_: None)
+    for i in range(3):
+        day = f"2026-10-{11 + i}"
+        add, why = g.plan(day)
+        assert why is None
+        day_by_day.grow(add, i)                       # re-addresses after every day, as the daily step does
+        g.record(day, add)
+    replayed = L.LiveNet(Config(n_neurons=SMALL))
+    g.replay(replayed)
+    assert (replayed.n, replayed.n_syn, replayed.D) == (day_by_day.n, day_by_day.n_syn, day_by_day.D) and replayed.n == SMALL + 1500
+    for name in ("rowptr", "slot_off", "dst", "w", "delay", "v", "ref", "count", "mu"):
+        assert np.array_equal(getattr(replayed, name), getattr(day_by_day, name)), name
+    assert len(replayed.innate) == len(day_by_day.innate) == 3
+    for x, y in zip(replayed.innate, day_by_day.innate):
+        assert all(np.array_equal(x[k], y[k]) for k in ("rowptr", "slot_off", "src", "dst", "w", "delay"))
+    for net in (replayed, day_by_day):
+        net.rng = np.random.default_rng(7)
+        net.drive()
+        net.run(40)
+    assert np.array_equal(replayed.count, day_by_day.count) and np.array_equal(replayed.v, day_by_day.v)
+    assert int(replayed.count.sum()) > 0                  # it spiked: the comparison is not of silent networks

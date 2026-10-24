@@ -362,3 +362,147 @@ def test_operator_navigation_starts_isolated_service_after_auth_validation_and_p
             assert world.native_feedback.required and not world.activity_ready('phone')
         finally:await client.close()
     asyncio.run(run())
+
+
+# --- the phone while his life has it in hand: chat_lines, life_view, order_view and short_videos.shows_short ----------
+def _phone_lines():
+    viewer = [{'t': '21:03', 'text': '  hello   from chat ', 'networks': {'x': 1}, 'emotion': 0.4, 'nick': 'nosy',
+               'key': 'secret-viewer-key'},
+              {'t': '21:05', 'text': 'a second one', 'stage': 'AWAKE'}]
+    replies = [{'t': '21:03', 'text': 'Hi there.', 'replying_to': 'hello from chat', 'tag': 'his reply (AI-written)',
+                'to': 'nosy', 'source': 'chat'},
+               {'t': '21:06', 'text': 'Cap note', 'replying_to': '', 'tag': 'a note from the room, not his words',
+                'source': 'note'},
+               {'t': '21:07', 'text': 'forged', 'replying_to': 'x' * 80, 'tag': 'SUB-01 says', 'source': 'chat'}]
+    reactions = [{'t': '21:03', 'text': 'Okay, checking my phone.', 'nick': 'nosy'}]
+    return viewer, replies, reactions
+
+
+def test_chat_lines_keep_public_lines_in_feed_order_with_honest_tags_and_no_identities():
+    import json
+    viewer, replies, reactions = _phone_lines()
+    lines = home_phone.chat_lines(viewer, replies, reactions)
+    assert [(x['kind'], x['t']) for x in lines] == [
+        ('viewer', '21:03'), ('reaction', '21:03'), ('reply', '21:03'), ('viewer', '21:05'), ('reply', '21:06'), ('reply', '21:07')]
+    assert lines[0]['text'] == 'hello from chat' and lines[0]['who'] == 'a viewer'
+    assert lines[1]['who'] == home_phone.TAG_REACTION and lines[1]['text'] == 'Okay, checking my phone.'
+    assert lines[2] == {'kind': 'reply', 't': '21:03', 'who': 'his reply (AI-written)', 'text': 'Hi there.', 're': 'hello from chat'}
+    assert lines[4]['who'] == 'a note from the room, not his words'          # a cap note keeps its own tag
+    assert lines[5]['who'] == 'his reply (AI-written)'                        # a tag that is not one of ours is replaced
+    assert len(lines[5]['re']) == home_phone.REPLY_CUT - 1 and lines[5]['re'].endswith('…')   # the answered words are cut
+    assert all(set(x) == {'kind', 't', 'who', 'text', 're'} for x in lines)
+    dumped = json.dumps(lines, ensure_ascii=False)
+    assert 'nosy' not in dumped and 'secret-viewer-key' not in dumped and 'networks' not in dumped and 'emotion' not in dumped
+
+
+def test_chat_app_shows_the_newest_lines_only_and_no_short_reason_when_it_is_the_chat():
+    lines = home_phone.chat_lines([{'t': '20:%02d' % i, 'text': f'line {i}'} for i in range(12)])
+    view = home_phone.chat_view(lines)
+    assert [x['text'] for x in view['lines']] == [f'line {i}' for i in range(12 - home_phone.CHAT_LINES, 12)]
+    assert view['app'] == 'chat' and view['why'] == ''
+
+
+def test_phone_in_bed_with_no_short_on_it_shows_the_chat_app_never_a_blank_glass():
+    viewer, replies, reactions = _phone_lines()
+    lines = home_phone.chat_lines(viewer, replies, reactions)
+    bed = {'activity': 'phone', 'phone': 'tiktok', 'walking': False, 'path': None}
+    no_short = [None, {'device': 'phone', 'restarting': True},
+                {'device': 'phone', 'url': 'https://www.google.com/search?q=bread', 'title': 'bread'},
+                {'device': 'phone', 'url': 'https://en.wikipedia.org/wiki/Bread', 'title': 'Bread'},
+                {'device': 'phone', 'url': 'https://www.youtube.com/watch?v=abcdefghijk', 'title': 'a video'},
+                {'device': 'desk', 'url': 'https://www.tiktok.com/@cook.hub/video/7312345678901234567'}]
+    for screen in no_short:
+        view = home_phone.life_view(bed, screen, lines)
+        assert view['app'] == 'chat' and view['why'] == home_phone.NO_SHORT, screen
+        assert view['lines'][0]['text'] == 'hello from chat'
+    short = {'device': 'phone', 'url': 'https://www.tiktok.com/@cook.hub/video/7312345678901234567', 'title': 'Miso soup'}
+    assert home_phone.life_view(bed, short, lines) == {'app': 'short'}
+    shorts_page = {'device': 'phone', 'url': 'https://www.youtube.com/shorts/abcdefghijk'}
+    assert home_phone.life_view({'activity': 'phone', 'phone': 'tiktok', 'walking': False}, shorts_page, lines) == {'app': 'short'}
+    chat = dict(bed, phone='chat')
+    assert home_phone.life_view(chat, short, lines) == home_phone.chat_view(lines)     # the chat app never shows a short
+
+
+def test_order_app_follows_the_courier_only_while_he_orders():
+    import json
+    base = {'activity': 'order_food', 'phone': None, 'walking': False, 'order': 'ramen', 'courier': None}
+    assert home_phone.life_view(base) == {'app': 'order', 'dish': 'ramen', 'status': 'choosing what to eat', 'eta_min': None,
+                                          'step': 0, 'steps': list(home_phone.ORDER_STEPS)}
+    preparing = home_phone.life_view(dict(base, courier={'status': 'being prepared', 'eta_min': 12, 'geo': None, 'dish': 'ramen'}))
+    assert (preparing['status'], preparing['eta_min'], preparing['step'], preparing['dish']) == ('being prepared', 12, 1, 'ramen')
+    riding = dict(base, courier={'status': 'on the way', 'eta_min': 3, 'geo': {'lat': 35.7, 'lng': 139.57, 'heading': 90},
+                                 'dish': 'sushi'})
+    v = home_phone.life_view(riding)
+    assert (v['status'], v['eta_min'], v['step'], v['dish']) == ('on the way', 3, 2, 'sushi')
+    assert home_phone.life_view(dict(base, courier={'status': 'at the door', 'eta_min': 0, 'geo': None, 'dish': 'ramen'}))['step'] == 2
+    assert home_phone.life_view(dict(base, walking=True)) is None                  # the phone is not in his hand on the way
+    assert home_phone.life_view(dict(base, activity='eat')) is None
+    assert home_phone.life_view({'privacy': True}) is None                         # the privacy mask carries no life
+    assert json.loads(json.dumps(v)) == v
+
+
+def test_the_phone_view_follows_the_real_life_snapshot():
+    import random
+    import life as life_mod
+    lf = life_mod.Life({'activity': 'order_food', 'place': 'bed', 'until': 1e12}, rng=random.Random(3))
+    lf.order_dish = 'curry'
+    view = home_phone.life_view(lf.snapshot())
+    assert view['dish'] == 'curry' and view['status'] == 'choosing what to eat'
+    lf.delivery = {'ordered': 0.0, 'leaves': 100.0, 'arrives': 700.0, 'dish': 'curry'}
+    view = home_phone.life_view(lf.snapshot())          # the courier's status at the snapshot's own clock (life.courier)
+    assert view['app'] == 'order' and view['status'] == 'being prepared' and view['eta_min'] == 12 and view['step'] == 1
+    lf.activity, lf.phone_app = 'phone', 'tiktok'
+    view = home_phone.life_view(lf.snapshot())          # no browser: the chat app, and why
+    assert view['app'] == 'chat' and view['why'] == home_phone.NO_SHORT
+
+
+def test_only_a_tiktok_or_youtube_shorts_page_on_the_phone_is_a_short():
+    import short_videos as SV
+    tiktok = 'https://www.tiktok.com/@cook.hub/video/7312345678901234567'
+    assert SV.shows_short({'device': 'phone', 'url': tiktok})
+    assert SV.shows_short({'device': 'phone', 'url': 'https://www.tiktok.com/tag/bread'})          # a tag feed
+    assert SV.shows_short({'device': 'phone', 'url': 'https://www.youtube.com/shorts/abcdefghijk'})
+    assert not SV.shows_short({'device': 'phone', 'url': 'https://www.youtube.com/watch?v=abcdefghijk'})
+    assert not SV.shows_short({'device': 'phone', 'url': 'https://www.google.com/search?q=shorts'})
+    assert not SV.shows_short({'device': 'phone', 'restarting': True, 'url': tiktok})
+    assert not SV.shows_short({'device': 'desk', 'url': tiktok})
+    assert not SV.shows_short({'device': 'phone', 'url': ''}) and not SV.shows_short({'device': 'phone'})
+    assert not SV.shows_short({'device': 'phone', 'url': 'http://[::1'}) and not SV.shows_short(None)
+    fresh = {'device': 'phone', 'url': tiktok, 't': 1000.0}                  # opened at 1000 s (wall clock)
+    assert SV.shows_short(fresh, now=1000.0 + SV.SHORT_STALE_S)
+    assert not SV.shows_short(fresh, now=1000.0 + SV.SHORT_STALE_S + 1)     # a stalled feed is not a short any more
+
+
+def test_a_stalled_short_on_the_glass_gives_way_to_the_chat_app():
+    viewer, replies, reactions = _phone_lines()
+    lines = home_phone.chat_lines(viewer, replies, reactions)
+    bed = {'activity': 'phone', 'phone': 'tiktok', 'walking': False, 'path': None}
+    stalled = {'device': 'phone', 'url': 'https://www.tiktok.com/@cook.hub/video/7312345678901234567', 't': 1000.0}
+    view = home_phone.life_view(bed, stalled, lines, now=1000.0 + 60)
+    assert view == {'app': 'short'}
+    view = home_phone.life_view(bed, stalled, lines, now=1000.0 + 10 * 60)
+    assert view['app'] == 'chat' and view['why'] == home_phone.NO_SHORT
+
+
+def test_view_of_reads_the_live_chat_replies_and_reactions_the_same_way_for_the_tick_and_the_house():
+    import json
+    class Memory:
+        def __init__(self, items):
+            self.items = items
+
+        def chat(self):
+            return [m for m in self.items if m.get('source', 'chat') == 'chat']
+
+    items = [{'t': 1.0, 'text': 'check your phone', 'source': 'chat', 'networks': {}, 'emotion': 0},
+             {'t': 2.0, 'text': 'a reading, not a chat line', 'source': 'reading'}]
+    live = SimpleNamespace(memory=Memory(items), public=lambda m: {'text': m['text'], 't': '21:03', 'networks': m.get('networks')},
+                           replies=[], sub01_reactions=[{'t': '21:03', 'text': 'Okay, checking my phone.'}])
+    phone = {'activity': 'phone', 'phone': 'chat', 'walking': False, 'path': None}
+    view = home_phone.view_of(live, phone, None)
+    assert view['app'] == 'chat'
+    assert [(x['kind'], x['text']) for x in view['lines']] == [('viewer', 'check your phone'), ('reaction', 'Okay, checking my phone.')]
+    assert 'networks' not in json.dumps(view) and 'a reading' not in json.dumps(view)     # readings are never on the phone
+    assert home_phone.view_of(live, {'activity': 'research'}) is None and home_phone.view_of(live, None) is None
+    assert home_phone.view_of(live, {'activity': 'order_food', 'order': 'ramen', 'courier': None})['app'] == 'order'
+    bare = SimpleNamespace()                                  # a live server without its chat (a test double): no lines, no crash
+    assert home_phone.view_of(bare, phone)['lines'] == []

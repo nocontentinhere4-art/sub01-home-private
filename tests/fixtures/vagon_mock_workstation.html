@@ -1,0 +1,116 @@
+<!doctype html>
+<!-- Mock of the Vagon Cloud Computer (Teams workstation) page for tests/test_streamer_desktop_workstation.py.
+     Served at /app/workstation by the test server. Without the mock session (cookie or localStorage flag, set by
+     vagon_mock_login.html, or by ?mocklogin=1 for tests that skip the login) it goes to the login page. With it: a
+     dashboard with the team name, decoy controls the runner must never press (Billing, Settings, Sign out, Stop) and the
+     computer's state, kept in localStorage: off -> "Run" -> "Starting your computer..." -> on -> "Connect" ->
+     "Connecting..." -> a canvas that fills the viewport and records the input it receives (window.__events, like
+     vagon_mock_stream.html). window.__endSession() shows "Your session has ended." with "Reconnect"; window.__stop()
+     turns the computer off. window.__pressed lists the controls that were pressed. ?delay=MS sets the state delays. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock Vagon - Workstation</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #eef0f3; color: #222; font-family: sans-serif; overflow: hidden; }
+  #bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #1f2430; color: #eee; display: flex; align-items: center; gap: 18px; padding: 0 20px; }
+  #bar a, #bar button { color: #eee; background: transparent; border: 1px solid #556; padding: 6px 12px; border-radius: 4px; font-size: 15px; text-decoration: none; cursor: pointer; }
+  #card { position: absolute; left: 660px; top: 300px; width: 600px; padding: 30px; background: #fff; border-radius: 10px; box-sizing: border-box; text-align: center; }
+  #card h1 { margin: 0 0 10px; font-size: 28px; }
+  #state { font-size: 20px; margin: 10px 0 20px; }
+  .big { font-size: 26px; padding: 14px 48px; border-radius: 8px; border: 0; background: #3b7ddd; color: #fff; cursor: pointer; }
+  #stop { background: #b33; }
+  #stream { position: fixed; inset: 0; width: 100vw; height: 100vh; display: none; outline: none; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <strong>Mock Team</strong>
+  <span>Workstation</span>
+  <a id="billing" href="team/billing">Billing</a>
+  <a id="settings" href="settings">Settings</a>
+  <button id="signout" type="button">Sign out</button>
+</div>
+<div id="card">
+  <h1>SUB-01's computer</h1>
+  <p id="state">Checking...</p>
+  <button id="run" class="big hidden" type="button">Run</button>
+  <button id="connect" class="big hidden" type="button">Connect</button>
+  <button id="reconnect" class="big hidden" type="button">Reconnect</button>
+  <button id="stop" class="big hidden" type="button">Stop</button>
+</div>
+<canvas id="stream" tabindex="0" aria-label="remote desktop"></canvas>
+<script>
+  const params = new URLSearchParams(location.search);
+  if (params.get('mocklogin') === '1') {
+    document.cookie = 'mocksession=1; path=/; max-age=86400';
+    try { localStorage.setItem('mocksession', '1'); } catch (e) {}
+  }
+  let loggedIn = /(^|; )mocksession=1/.test(document.cookie);
+  try { loggedIn = loggedIn || localStorage.getItem('mocksession') === '1'; } catch (e) {}
+  if (!loggedIn) location.replace('login?next=workstation');
+  const delay = Math.max(0, parseInt(params.get('delay') || '250', 10));
+  window.__events = []; window.__moves = 0; window.__pressed = []; window.__state = 'off';
+  const $ = id => document.getElementById(id);
+  const state = $('state'), run = $('run'), connect = $('connect'), reconnect = $('reconnect'), stop = $('stop'), canvas = $('stream');
+  const ctx = canvas.getContext('2d');
+  let n = 0;
+  function machine() { try { return localStorage.getItem('mockmachine') || 'off'; } catch (e) { return 'off'; } }
+  function setMachine(v) { try { localStorage.setItem('mockmachine', v); } catch (e) {} }
+  function show(text, ...buttons) {
+    state.textContent = text;
+    for (const b of [run, connect, reconnect, stop]) b.classList.toggle('hidden', !buttons.includes(b));
+  }
+  function paint(label) {
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    ctx.fillStyle = 'hsl(' + ((n * 47) % 360) + ', 60%, 45%)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff'; ctx.font = '48px sans-serif';
+    ctx.fillText(label || ('event ' + n), 80, 120); ctx.fillText(String(n), 80, 200);
+  }
+  function rec(kind, e) {
+    n++;
+    const r = {kind, n};
+    if (e.clientX !== undefined) { r.x = e.clientX; r.y = e.clientY; r.button = e.button; }
+    if (e.key !== undefined) { r.key = e.key; r.code = e.code; r.ctrl = e.ctrlKey; r.alt = e.altKey; r.shift = e.shiftKey; }
+    if (e.deltaY !== undefined) r.dy = e.deltaY;
+    window.__events.push(r);
+    paint(kind + ' ' + (r.key !== undefined ? r.key : r.dy !== undefined ? r.dy : (r.x + ',' + r.y)));
+  }
+  for (const k of ['mousedown', 'mouseup', 'click', 'wheel']) canvas.addEventListener(k, e => rec(k, e), {passive: true});
+  canvas.addEventListener('mousemove', () => { window.__moves++; });
+  for (const k of ['keydown', 'keyup']) canvas.addEventListener(k, e => { rec(k, e); e.preventDefault(); });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  function dashboard() {
+    canvas.style.display = 'none'; $('card').classList.remove('hidden');
+    if (machine() === 'on') { window.__state = 'on'; show('Your computer is on.', connect, stop); }
+    else { window.__state = 'off'; show('Your computer is off.', run); }
+  }
+  run.addEventListener('click', () => {
+    window.__pressed.push('run'); window.__state = 'starting';
+    show('Starting your computer...');
+    setTimeout(() => { setMachine('on'); dashboard(); }, delay);
+  });
+  function doConnect(which) {
+    window.__pressed.push(which); window.__state = 'connecting';
+    show('Connecting...');
+    setTimeout(() => {
+      $('card').classList.add('hidden'); canvas.style.display = 'block';
+      window.__state = 'connected'; paint('connected'); canvas.focus();
+    }, delay);
+  }
+  connect.addEventListener('click', () => doConnect('connect'));
+  reconnect.addEventListener('click', () => doConnect('reconnect'));
+  stop.addEventListener('click', () => { window.__pressed.push('stop'); setMachine('off'); dashboard(); });
+  $('signout').addEventListener('click', () => { window.__pressed.push('signout'); });
+  window.__endSession = function () {
+    window.__state = 'ended';
+    canvas.style.display = 'none'; canvas.blur(); $('card').classList.remove('hidden');
+    show('Your session has ended.', reconnect);
+  };
+  window.__stop = function () { setMachine('off'); dashboard(); };
+  dashboard();
+</script>
+</body>
+</html>

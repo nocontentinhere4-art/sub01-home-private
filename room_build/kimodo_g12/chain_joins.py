@@ -4,10 +4,12 @@ frame of the one against the first frame of the next, and for each looping clip 
   - the hips' jump: the Hip's position in the clip frame (m) and its height alone (a seated slot clip is re-placed by the
     page on its seat, so its horizontal jump is the page's to absorb; its height is not);
   - with the cross-fade the chain gives the join, the jump per frame across it.
-python chain_joins.py <mixamo_chains.json> <dir of exp.mjs jsons: x_<clip>.json> [out.json]"""
+  - max_deg (optional, default None = report only): exit 1 and a FAILED line for each join (chain step, loop wrap or link)
+    whose worstDeg (the worst bone-angle jump) is above it.
+python chain_joins.py <mixamo_chains.json> <dir of exp.mjs jsons: x_<clip>.json> [out.json [max_deg]]"""
 import json, sys, numpy as np
 from rt import Skel, FPS
-chains = json.load(open(sys.argv[1]))['chains']; xd = sys.argv[2]; out = {}
+chains = json.load(open(sys.argv[1]))['chains']; xd = sys.argv[2]; out = {}; max_deg = float(sys.argv[4]) if len(sys.argv) > 4 else None
 cache = {}
 def ends(name):
     if name not in cache:
@@ -37,3 +39,7 @@ for name, steps in chains.items():
 for a, b, bl in json.load(open(sys.argv[1])).get('links', []):
     x = {'join': f'{a} -> {b}', **jump(a, b, 1, 0, bl)}; out.setdefault('links', []).append(x); print('link', x)
 if len(sys.argv) > 3: json.dump(out, open(sys.argv[3], 'w'), indent=1)
+if max_deg is not None:   # the gate, after the report is written: every reported join (chain step, wrap, link) against max_deg
+    bad = [(k, x) for k, v in out.items() if isinstance(v, list) for x in v if x['worstDeg'] > max_deg]
+    for k, x in bad: print(f"FAILED {k}: {x.get('join', x.get('wrap'))} worstDeg {x['worstDeg']} at {x['joint']} > {max_deg}")
+    if bad: sys.exit(1)

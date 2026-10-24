@@ -1,0 +1,10 @@
+Technical question about a private software project (a simulated live streamer running on one Linux GPU server). Please answer as an engineer, in English, numbered, at most ~600 words.
+
+Setup on one NVIDIA RTX PRO 4000 (24 GB VRAM): an Unreal Engine 5 game (currently capped at 24 fps, about 9 GB VRAM, GPU utilisation ~15%) that we want to run at 60 fps with an extra SceneCapture2D camera (1280x720 at 30 fps read back to the CPU as JPEG); a text-to-speech model (Chatterbox, PyTorch, ~3-4 GB VRAM, renders roughly real time); ffmpeg capturing the game window with x11grab plus a second MJPEG input and a picture-in-picture, encoding H.264 with NVENC at 60 fps into 10-minute segments and an HLS playlist; two headless browsers (Chromium and Google Chrome, software rendering) one of which receives a WebRTC H.264 stream of a remote Windows PC.
+
+Decision model for the character's actions: a vision-language model called once every ~10-30 seconds with a 1280x720 screenshot, returning a JSON decision (click point, keys, scroll, speech line). Candidates: Claude Sonnet (Anthropic) and Kimi k3.1-pro (Moonshot, a reasoning model that spends ~100-400 reasoning tokens even on short JSON answers, ~3-10 s latency on short prompts in our tests).
+
+Questions:
+1. GPU budget: is 60 fps game + SceneCapture readback + NVENC 1080p60 + TTS realistic on this card? Which knobs to turn first if frame time does not hold (in order), and which metrics to log to decide.
+2. Which model should be primary and which fallback for the screenshot-to-JSON decisions, considering latency, vision accuracy on a Windows desktop (small UI text), JSON reliability and cost? Give a recommendation and the measurements to confirm it in a 30-minute trial.
+3. The model will act on the owner's real Windows PC through a browser stream. List the minimum code-level guard rails (not prompt-level) before the first unattended hour, ordered by risk.

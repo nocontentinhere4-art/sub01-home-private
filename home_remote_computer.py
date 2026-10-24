@@ -7,6 +7,10 @@ from aiohttp import ClientSession, ClientTimeout
 from scripts.home_device_proxy import loopback_origin
 
 
+def log(text):
+    print("home computer (remote): " + text, flush=True)
+
+
 class RemoteComputer:
     def __init__(self, data_dir, origin, token_file):
         self.origin = loopback_origin(origin)
@@ -26,22 +30,39 @@ class RemoteComputer:
         self._state = {}
         self._home_private = False
         self._privacy_epoch = 0
+        self._was_available = None            # the last logged availability, so each transition is logged once
+        self.hint = ''
         self._clear()
 
-    def _clear(self):
+    def _clear(self, why=None):
         self.ready, self.paused, self.status = False, True, 'unavailable'
         self.output, self.last_command, self.commands = '', '', 0
         self.display = {'kind': 'unavailable', 'available': False}
         self.framebuffer_png = None
         self.error = 'Actual private guest is unavailable'
+        self.hint = ('Start the private PC runner on ' + self.origin
+                     + ' (scripts/home_pc_runner.py, same operator token) or unset HOME_COMPUTER_ORIGIN')
         self._state = {}
         self._privacy_sent, self._using_sent, self._session_at = None, None, 0
         self.revision += 1
+        if self._was_available is not False and why is not None:
+            log(f'{self.origin} is unavailable ({why}); the house shows the computer as offline until it answers')
+            self._was_available = False
+
+    def summary(self):
+        """One honest line for the monitor and the panel (same contract as home_computer.Computer.summary)."""
+        remote = self._state.get('summary')
+        if isinstance(remote, str) and remote and self.status != 'unavailable':
+            return remote
+        if self.status == 'unavailable':
+            return self.error or 'The private PC runner is not answering'
+        return self.status
 
     def view(self):
         return {**self._state, 'ready': self.ready, 'paused': self.paused,
                 'status': self.status, 'output': self.output, 'display': dict(self.display),
-                'error': self.error, 'revision': self.revision}
+                'error': self.error, 'hint': self.hint if self.status == 'unavailable' else self._state.get('hint', ''),
+                'summary': self.summary(), 'revision': self.revision}
 
     async def request(self, method, path, data=None):
         if self.session is None:
@@ -55,7 +76,7 @@ class RemoteComputer:
                     raise ValueError('Guest response exceeds bound')
                 chunks.append(chunk)
             if response.status != 200:
-                raise RuntimeError('Actual guest refused request')
+                raise RuntimeError(f'Actual guest refused request (HTTP {response.status})')
             return b''.join(chunks)
 
     async def refresh(self):
@@ -91,9 +112,12 @@ class RemoteComputer:
             self.last_command, self.commands = state.get('last_command'), state.get('commands', 0)
             self.error = str(state.get('error', ''))
             self.revision += 1
-        except Exception:
+            if self._was_available is not True:
+                log(f'{self.origin} answers (guest status: {self.status})')
+                self._was_available = True
+        except Exception as error:
             if epoch == self._privacy_epoch:
-                self._clear()
+                self._clear(f'{type(error).__name__}: {str(error)[:80]}')
 
     async def input(self, text):
         # A serial command is meaningful only in an actual serial guest. A GUI
@@ -102,8 +126,8 @@ class RemoteComputer:
             return False
         try:
             return bool(json.loads(await self.request('POST', '/pc/input', {'input': text, 'raw': True})).get('ok'))
-        except Exception:
-            self._clear()
+        except Exception as error:
+            self._clear(f'input failed: {type(error).__name__}')
             return False
 
     async def graphical_input(self, data):
@@ -111,8 +135,8 @@ class RemoteComputer:
             return False
         try:
             return bool(json.loads(await self.request('POST', '/pc/graphical-input', data)).get('ok'))
-        except Exception:
-            self._clear()
+        except Exception as error:
+            self._clear(f'graphical input failed: {type(error).__name__}')
             return False
 
     async def send(self, message):
@@ -121,8 +145,8 @@ class RemoteComputer:
         try:
             await self.request('POST', '/pc/session', {'active': message['type'] == 'resume', 'source': 'home'})
             return True
-        except Exception:
-            self._clear()
+        except Exception as error:
+            self._clear(f'session request failed: {type(error).__name__}')
             return False
 
     async def agent_step(self, home, rel):
@@ -142,12 +166,13 @@ class RemoteComputer:
                 if using or self._using_sent:
                     await self.request('POST', '/pc/session', {'active': using, 'source': 'home'})
                 self._using_sent, self._session_at = using, now
-        except Exception:
-            self._clear()
+        except Exception as error:
+            self._clear(f'privacy/session request failed: {type(error).__name__}')
         # No synthetic command history: agent GUI commands remain gated until
         # an actual focused terminal and rendered text have been verified.
 
     async def run(self):
+        log(f'using the private PC runner at {self.origin} instead of a local guest worker')
         try:
             while True:
                 await self.refresh()

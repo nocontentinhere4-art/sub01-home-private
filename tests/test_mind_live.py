@@ -286,3 +286,23 @@ def test_diary_uses_the_days_notes_and_keeps_its_filters(tmp_path):
     out = d.close(night2, llm, (), notes)
     assert llm.user["read_notes"] == notes["read"] and "I read about sourdough." in llm.user["conversations"][0]
     assert "real person" not in out["text"]                       # the existing filter still rejects it
+
+
+def test_without_an_ai_key_he_still_answers_at_the_desk(tmp_path):
+    """C1 with no AI key: the ack says he will reply (no "resting"); at the desk a template line answers the message,
+    which is not echoed, and no viewer address is in the reply."""
+    live = make_live(tmp_path)
+    live.mind = M.Mind(tmp_path, None, M.mind_budget(tmp_path), clock=live.clock.now)   # no AI key at all
+    live.mind.plan = {"day": "x"}
+    live.mind.due_slot = lambda now=None: None
+    ws = WS()
+    run(live.handle_chat(ws, "203.0.113.9", "what did you read today?", "mika"))
+    ack = ws.sent[-1]
+    assert ack["ok"] and ack["queued"] and ack["will_reply"] and ack["reason"] is None
+    live.life.activity, live.life.path = "chat", []
+    run(live.mind_step())
+    r = replies(live)
+    assert len(r) == 1 and r[0]["source"] == "template" and r[0]["to"] == "mika"
+    text = r[0]["text"]
+    assert M.reply_problem(text) is None and "203.0.113.9" not in text and "what did you read" not in text.lower()
+    assert not live.chat_inbox and live.mind.status()["replies"] == "template"

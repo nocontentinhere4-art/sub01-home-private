@@ -7,13 +7,15 @@ import argparse
 import asyncio
 import ipaddress
 import json
+import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
 PREFIX = '/proxy/8892/'
-ROUTES = {'', 'index.html', 'health', 'settings', 'frame.jpg', 'socket', 'input', 'mode'}
+ROUTES = {'', 'index.html', 'health', 'settings', 'frame.jpg', 'socket', 'control-socket', 'input', 'mode'}
+SOCKETS = {'socket', 'control-socket'}      # the frame feed, and the current viewer's control channel (read-only on the pod)
 RESPONSE_HEADERS = {'content-type', 'cache-control', 'etag', 'x-native-sequence', 'x-native-capture-utc'}
 
 
@@ -26,10 +28,13 @@ def local_request_allowed(host, origin, port, method, websocket, fetch_site=''):
     return bool(origin) if websocket or method == 'POST' else True
 
 
-def create_app(base, token, port):
+def create_app(base, token, port, prefix=PREFIX):
     remote = urlsplit(base)
     if remote.scheme != 'https' or not remote.hostname or not remote.hostname.endswith('.proxy.runpod.net') or remote.query or remote.username or remote.path not in ('', '/'):
         raise ValueError('Exact HTTPS private Runpod origin required')
+    if not re.fullmatch(r'/proxy/[0-9]{4,5}/', prefix):
+        raise ValueError('The viewer prefix must be /proxy/<port>/ on the Jupyter server')
+    PREFIX = prefix    # noqa: N806  (the viewer's port differs between pods: 8892 on the 2026-10-14 host, 8893 on the current one)
     origin = base.rstrip('/')
     session_key = web.AppKey('remote_session', ClientSession)
 
@@ -58,7 +63,7 @@ def create_app(base, token, port):
         target = origin + request.path + ('?' + request.query_string if request.query_string else '')
         client = request.app[session_key]
         if websocket:
-            if suffix != 'socket':
+            if suffix not in SOCKETS:
                 raise web.HTTPNotFound()
             try:
                 remote_ws = await client.ws_connect(target, origin=origin, heartbeat=20, max_msg_size=2*1024*1024)
@@ -120,7 +125,7 @@ def main():
     tokens = list(config['tokens'].values())
     if not tokens or not isinstance(tokens[0], str) or len(tokens[0]) < 12:
         raise ValueError('Existing private viewer credential required')
-    app = create_app(config['base_url'], tokens[0], args.port)
+    app = create_app(config['base_url'], tokens[0], args.port, config.get('prefix', PREFIX))
     web.run_app(app, host='127.0.0.1', port=args.port, access_log=None, print=None)
 
 

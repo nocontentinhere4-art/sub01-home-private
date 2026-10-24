@@ -1,6 +1,12 @@
-"""Real local Minecraft console: official server, Mineflayer, cortical control and live frames."""
+"""Real local Minecraft console: official server, Mineflayer, cortical control and live frames.
+
+Nothing here fakes a game. When the runtime is incomplete (no prepared server, no Java, no
+node_modules, no Playwright, EULA not accepted) the console reports itself offline with the
+reason, logs it once, and the wall TV falls back to Pong, which needs nothing installed.
+"""
 import asyncio
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -12,12 +18,62 @@ from pathlib import Path
 from home_minecraft_controller import BrainController
 
 ROOT = Path(__file__).parent
+GAME_DIR = ROOT / "games/minecraft"
+PACKAGE_JSON = GAME_DIR / "package.json"
+NODE_MODULES = GAME_DIR / "node_modules"
+# Seconds an unexpected crash may keep the console offline before the TV switches to Pong; a
+# preflight or EULA failure is definitive and switches at once. Covers one supervised restart.
+OFFLINE_GRACE = 15.0
+# The game is not available while the console is in one of these states (view()["offline_reason"]).
+OFFLINE_STATES = ("offline", "needs_eula", "error")
 
 def eula_accepted(directory):
     try:
         return any(line.strip() == "eula=true" for line in (Path(directory) / "eula.txt").read_text().splitlines())
     except OSError:
         return False
+
+
+def node_packages():
+    """Direct dependencies pinned in games/minecraft/package.json (the worker's require() roots)."""
+    try:
+        return sorted(json.loads(PACKAGE_JSON.read_text()).get("dependencies", {}))
+    except (OSError, ValueError, AttributeError):
+        return ["mineflayer", "mineflayer-pathfinder", "prismarine-viewer", "prismarine-item"]
+
+
+def missing_requirements(directory, server_port):
+    """Human-readable reasons the real console cannot start yet; [] when everything is installed.
+
+    Cheap file checks only, so a missing runtime is reported before any Java server boots, instead of
+    a start/crash/restart loop that costs a world load each time."""
+    directory = Path(directory)
+    missing = []
+    downloads = directory / "downloads.json"
+    if not downloads.is_file() or not (directory / "server.jar").is_file():
+        missing.append("the official server is not prepared (run `python games/minecraft/bootstrap.py`)")
+    else:
+        try:
+            java = json.loads(downloads.read_text()).get("java")
+        except (OSError, ValueError, AttributeError):
+            java = None
+        if not isinstance(java, str) or not Path(java).is_file() or not os.access(java, os.X_OK):
+            missing.append(f"the Java runtime is missing ({java or 'no java path in downloads.json'})")
+        try:
+            properties = (directory / "server.properties").read_text().splitlines()
+        except OSError:
+            properties = []
+        if "server-ip=127.0.0.1" not in properties or f"server-port={server_port}" not in properties:
+            missing.append(f"server.properties must bind 127.0.0.1:{server_port}")
+    if not shutil.which("node"):
+        missing.append("node is not installed")
+    absent = [name for name in node_packages() if not (NODE_MODULES / name / "package.json").is_file()]
+    if absent:
+        missing.append("Node packages missing in games/minecraft/node_modules: " + ", ".join(absent)
+                       + " (run `npm ci` in games/minecraft)")
+    if importlib.util.find_spec("playwright") is None:
+        missing.append("the playwright Python package is not installed (pip install playwright; playwright install chromium)")
+    return missing
 
 def frame_tag(frame):
     """Identity of a JPEG frame (also its HTTP ETag body), computed once per frame."""
@@ -72,6 +128,8 @@ class MinecraftConsole:
         self.events = []
         self.gains = {}
         self.rng = random.Random(17)
+        self.offline_since = None   # monotonic time the console first reported itself unavailable
+        self.fallback = None        # {"from", "to", "reason", "at"}: the TV switched to Pong because of this
         try:
             self.gains = json.loads((self.directory / "learning.json").read_text())
         except (OSError, ValueError):
@@ -79,10 +137,47 @@ class MinecraftConsole:
 
     def view(self):
         return {"enabled": self.enabled, "status": self.status, "error": self.error,
+                "offline_reason": self.offline_reason(), "fallback": self.fallback,
                 "active": self.active, "last_action": self.last_action,
                 "observation": self.state, "events": self.events[-8:], "has_frame": bool(self.frame),
                 "frame_kind": self.frame_kind, "frame_id": self.frame_tag,
                 "perception": "structured game observations from Mineflayer", "controller": self.controller.view()}
+
+    def requirements(self):
+        """What the real console still needs before it can start; [] when everything is in place."""
+        return missing_requirements(self.directory, self.server_port)
+
+    def offline_reason(self):
+        """Why Minecraft cannot be played right now, or None while it runs or is starting up."""
+        if not self.enabled:
+            return "Minecraft is not configured on this server (SUB01_MINECRAFT=0)"
+        if self.status in OFFLINE_STATES:
+            return self.error or "the Minecraft console stopped"
+        return None
+
+    def offline_fallback(self, home, now=None):
+        """While Minecraft cannot run, the wall TV plays Pong instead of a blank "waiting" screen.
+
+        A missing runtime or EULA is definitive and switches at once; an unexpected crash gets
+        OFFLINE_GRACE seconds for the supervised restart first. Returns True when the game switched."""
+        reason = self.offline_reason()
+        now = time.monotonic() if now is None else now
+        if reason is None:
+            if self.status not in ("preparing", "starting_server"):      # running again, not merely restarting
+                self.offline_since = None
+            if home.console_game == "minecraft":
+                self.fallback = None
+            return False
+        if self.offline_since is None:
+            self.offline_since = now
+        if home.console_game != "minecraft":
+            return False
+        if self.status == "error" and now - self.offline_since < OFFLINE_GRACE:
+            return False
+        home.console_game = "pong"
+        self.fallback = {"from": "minecraft", "to": "pong", "reason": reason, "at": time.time()}
+        print(f"console offline: {reason}; the wall TV plays Pong instead", flush=True)
+        return True
 
     async def send(self, message):
         if not self.worker or self.worker.returncode is not None:
@@ -125,6 +220,7 @@ class MinecraftConsole:
         return self.rng.choices(actions, weights=weights)[0]
 
     async def agent_step(self, home, rel):
+        self.offline_fallback(home)
         if not self.enabled:
             return
         manual = bool(self.native_input and self.native_input.active(home.privacy()) and home.console_game == "minecraft")
@@ -169,6 +265,8 @@ class MinecraftConsole:
                 self.state = message
                 if message.get("connected"):
                     self.status = "playing" if message.get("active") else "paused"
+                    if self.error and not self.error.startswith("Minecraft viewer: "):
+                        self.error = ""          # a connection error from before does not outlive the connection
                 else:
                     self.status = "connecting" if message.get("active") else "paused"
             elif message.get("type") == "feedback":
@@ -285,12 +383,39 @@ class MinecraftConsole:
         except Exception as error:
             self.status = "error"
             self.error = str(error)[:200]
+            print(f"console offline: Minecraft {self.error}", flush=True)
             raise
 
+    async def wait_until_prepared(self, sleep=asyncio.sleep):
+        """Cheap polling until the owner has prepared, installed and accepted everything.
+
+        The status says which gate holds: "offline" (nothing prepared, or a missing runtime piece,
+        the reasons in self.error) or "needs_eula" (prepared, EULA still eula=false). Each new reason
+        is logged once; nothing heavy starts in the meantime."""
+        announced = None
+        while True:
+            if not (self.directory / "eula.txt").is_file():
+                self.status = "offline"
+                reason = "the server is not prepared: run `python games/minecraft/bootstrap.py` (no data/minecraft/eula.txt)"
+            elif not eula_accepted(self.directory):
+                self.status = "needs_eula"
+                reason = "the owner has not accepted the Minecraft EULA (data/minecraft/eula.txt)"
+            else:
+                missing = self.requirements()
+                if not missing:
+                    if self.status in ("offline", "needs_eula"):
+                        self.error = ""
+                    return
+                self.status = "offline"
+                reason = "; ".join(missing)
+            self.error = reason
+            if reason != announced:
+                print(f"console offline: {reason}", flush=True)
+                announced = reason
+            await sleep(2)
+
     async def _run(self):
-        while not eula_accepted(self.directory):
-            self.status = "needs_eula"
-            await asyncio.sleep(2)
+        await self.wait_until_prepared()
         config = json.loads((self.directory / "downloads.json").read_text())
         # Never start a game server configured to bind outside the private loopback.
         properties = (self.directory / "server.properties").read_text().splitlines()

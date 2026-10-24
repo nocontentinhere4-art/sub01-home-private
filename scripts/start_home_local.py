@@ -8,6 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+for _var in ('OPENBLAS_NUM_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS'):
+    os.environ.setdefault(_var, '1')            # one BLAS thread: idle pools spin and burn cores (spiking/threads.py)
 os.environ.update(
     HOME_ENABLED='1', HOME_ENTRYPOINT='1', SUB01_SPIKING_LIVE='0',
     BROWSE='1', BROWSE_SERVICE_URL='', MIND='0', CLIPS='0',

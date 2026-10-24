@@ -60,20 +60,27 @@ def prepare_native_input(source, target):
             'native_mesh_names':[m['name'] for m in actual['meshes']]}
 
 
+def _material_label(m):
+    """Diagnostic only: a material's asset path, else the type of a non-material object."""
+    if m is None:return None
+    get=getattr(m,'get_path_name',None)
+    return get()if callable(get)else repr(type(m))
+
+
 def source_slot_binding(c,source,dest):
     """Bind preserved glTF material slot, never a truncated UE asset basename."""
-    mesh=c.get_editor_property('static_mesh');slots=list(mesh.get_editor_property('static_materials'))
-    mat=c.get_material(0)
+    mesh=c.get_editor_property('static_mesh');slots=list(mesh.get_editor_property('static_materials'))if mesh else []
+    mat=c.get_material(0);get=getattr(mat,'get_path_name',None);path=get()if callable(get)else ''
     # Actual Interchange preserves the full slot identity but replaces spaces
     # with underscores (independently observed on frozen window import111).
     # Permit exactly that complete spelling, never shortened asset basenames,
     # substring matching or a generic alphanumeric/fuzzy canonicalization.
     allowed_slots={source['name'],source['name'].replace(' ','_')}
     if (len(slots)!=1 or str(slots[0].get_editor_property('material_slot_name'))not in allowed_slots
-            or not mat or slots[0].get_editor_property('material_interface')!=mat
-            or not mat.get_path_name().startswith(dest+'/')):
-        raise RuntimeError('Exact original material slot and assigned owned instance required: source='+repr(source['name'])+' actual='+repr([str(s.get_editor_property('material_slot_name'))for s in slots])+' slot_material='+repr([s.get_editor_property('material_interface').get_path_name()if s.get_editor_property('material_interface')else None for s in slots])+' assigned='+repr(mat.get_path_name()if mat else None)+' owned='+repr(dest))
-    return {source['name']:mat.get_path_name()}
+            or not path or slots[0].get_editor_property('material_interface')!=mat
+            or not path.startswith(dest+'/')):
+        raise RuntimeError('Exact original material slot and assigned owned instance required: source='+repr(source['name'])+' actual='+repr([str(s.get_editor_property('material_slot_name'))for s in slots])+' slot_material='+repr([_material_label(s.get_editor_property('material_interface'))for s in slots])+' assigned='+repr(_material_label(mat))+' owned='+repr(dest))
+    return {source['name']:path}
 
 
 def source_rendered_material_binding(c,source,dest):

@@ -98,7 +98,8 @@ def test_chat_names_the_lexicon_rule(text):
 CHAT_ALLOWED = ["what is the price of ramen", "do you like dumplings", "pumpkin soup stock", "Stockholm syndrome",
                 "I bought bread", "buy bread", "did you buy bread?", "goodbye", "How to make 10 minute ramen",
                 "Galaxy S23 100x zoom", "Pokemon trading cards", "Price Tag", "How to make magnetic slime at home",
-                "Kill the Rich", "the fear of heights", "give me a hug", "who removed it", "good morning sub-01"]
+                "Kill the Rich", "the fear of heights", "give me a hug", "who removed it", "good morning sub-01",
+                "spicy ramen, spiced cider", "retarding force"]          # slurs inside plain words (not the word)
 
 
 @pytest.mark.parametrize("text", CHAT_ALLOWED)

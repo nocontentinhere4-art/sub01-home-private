@@ -1,6 +1,6 @@
 # Private headless PC runner
 
-`scripts/home_pc_runner.py` runs SUB-01's real PC without the full brain backend. It is meant for the native first-person bridge, on the private Runpod or localhost.
+`scripts/home_pc_runner.py` runs SUB-01's real PC without the full brain backend. It is meant for the native first-person bridge, on the private Runpod or localhost. For the PC inside the house (local guest, `HOME_ENABLED=1`, with or without `BROWSE`), the guest files `bootstrap.py` downloads and what each status means, see `docs/pc/README.md`.
 
 It reuses `home_computer.Computer` unchanged:
 - the pinned v86/WebAssembly machine: `computer/worker.cjs`, `libv86.cjs`, `v86.wasm`;

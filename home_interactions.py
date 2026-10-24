@@ -127,6 +127,7 @@ def private_view(view):
     """Mask a HomeWorld.view() dict in place for privacy; returns it."""
     view.update({k: list(v) if isinstance(v, list) else v for k, v in PRIVATE_ACTOR.items()})
     view["phone"] = {**view.get("phone", {}), "app": "home"}
+    view["memories"] = []   # the device log is withheld while private, as the compact feed withholds it
     return view
 
 

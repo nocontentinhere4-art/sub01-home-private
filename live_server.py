@@ -26,13 +26,16 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 
+from spiking.threads import cap_threads
+cap_threads()                   # one BLAS thread per process before numpy builds its pool (a venv start sets no env vars)
+
 import aiohttp
 import numpy as np
 from aiohttp import web
 
 from brain_sim import Brain
 from chat import (RULES, TEACH_MAX_WORDS, TEACH_PER_DAY, NICK_MAX, Dedupe, RateLimiter, TeachLimits,
-                  check as chat_check, check_teach, clean_nick, dedupe_key, stimulus as chat_stimulus)
+                  check as chat_check, check_teach, clean_nick, client_key, dedupe_key, stimulus as chat_stimulus)
 from sleep import ROME, TZ, Clock, Memory, SleepEngine, Store, day_of, hhmm, next_bedtime, night_date
 from eye import Eye, ReplicateLLM, load_env, market_mood
 from diary import Diary
@@ -56,15 +59,27 @@ import costs
 from browse_service import BrowserClient, BrowserDown, FrameChanged, LocalBrowser
 from search_sources import live_interest
 import interests
+import home_phone
 import novelty
 import screens
 import search_sources
 from readings import BrowseReadings
 from screens import DA_LABEL, DopamineBursts, ScreensStatus
+from impulse import REACTIONS as IMPULSE_REACTIONS, Impulse, parse as parse_impulse
+from vagon_bridge import (configure_auto_stop as vagon_auto_stop, enabled as vagon_enabled,
+                          probe as vagon_probe, submit_link as vagon_submit_link)
+# what he says when a link cannot go to the PC (vagon_bridge.submit_link's reasons); every line is at most 60 characters
+VAGON_REFUSED = {"full": "The PC is busy with a link. Send it again shortly.",
+                 "thread": "The PC is busy with a link. Send it again shortly.",
+                 "hour": "This hour's links for the PC are used up. Try later.",
+                 "viewer": "You have used this hour's links for the PC. Try later.",
+                 "ontime": "The PC's time for today is used up. Try tomorrow.",
+                 "invalid": "I cannot open that link.", "off": "I cannot open links yet."}
 from eyes import Eyes
 import mind as mind_mod
 from tastes import PageWatch, Tastes
 import state_io
+import streamer as streamer_mod                  # SUB01_STREAMER=1: the owner's streaming mode (off: untouched)
 from state_io import append_jsonl, load_json, read_jsonl, save_json
 
 try:                                             # the GPU spiking brain is optional: the server runs without it
@@ -86,9 +101,8 @@ SAVE_S = 60                     # persist sleep state + memory every minute (rea
 TICK_RING = int(60 / TICK)      # tick durations kept for /api/health: the last minute
 HEALTHY_S = 5.0                 # /healthz: 200 while the brain loop ticked within this many seconds, else 503
 RESTING = "resting its eyes"    # what the pages say while the eye is over its daily cap
-CHAT_INBOX = 10                 # chat messages waiting for his reply at most (C1); older ones are let go with a note
-CHAT_PER_VIEWER = 3             # ... and at most this many from one viewer
-CHAT_WAIT_S = 1200              # simulated seconds a message waits for him, unless he is at the desk answering
+# the chat inbox is mind.Inbox (C1): its bounds, under their old names here (tests and tools read them)
+CHAT_INBOX, CHAT_PER_VIEWER, CHAT_WAIT_S = mind_mod.INBOX_MAX, mind_mod.INBOX_PER_VIEWER, mind_mod.INBOX_WAIT_S
 CHAT_RESERVE = 5                # hourly AI calls kept for chat: no page-read call starts while messages wait (C2)
 CAP_LINE = "He has answered 40 messages today and is resting; back tomorrow."   # the in-world cap notice (C2)
 GATED = web.AppKey("gated", bool)            # the app runs behind the password gate
@@ -352,6 +366,7 @@ def local_accounts():
 
 class Live:
     ca = ""                            # the coin's address (set in __init__; a bare instance in tests has none)
+    streamer = None                    # streamer.StreamerMode with SUB01_STREAMER=1 (end of __init__), else None
     def __init__(self, mint, demo, time_scale=1.0, data_dir=HERE / "data", start=None, trust_proxy=False):
         self.brain = Brain()
         self.mint, self.demo = mint, demo
@@ -409,7 +424,8 @@ class Live:
             self.life.arrival_check = self.activity_arrived
         self.computer = Computer(data_dir) if self.home_enabled else None
         self.minecraft = MinecraftConsole(data_dir) if self.home_enabled else None
-        if self.minecraft and self.minecraft.enabled and "console_game" not in home_state:
+        if (self.minecraft and self.minecraft.enabled and not self.minecraft.requirements()
+                and "console_game" not in home_state):          # an incomplete runtime starts on Pong, not a blank TV
             self.home.console_game = "minecraft"
         elif self.home and not self.minecraft.enabled and self.home.console_game == "minecraft":
             self.home.console_game = "pong"
@@ -455,10 +471,9 @@ class Live:
         self.spiking = None              # SpikingHub, set by spiking.server.attach in main()
         self.decider = None              # brain_vote.Backend (main()): a spiking network votes too, GPU or CPU (#55)
         self.mind = None                 # mind.py (main()): an AI reads and remembers for him; his brain model chooses
-        self.chat_inbox = []             # {t, text, key, nick, tries}: messages he may answer at the computer, FIFO (C1)
-        self.chat_served = {}            # viewer key -> sim t of their last answered message (round-robin, memory only)
+        self.chat_inbox = mind_mod.Inbox()   # messages he may answer at the computer: bounded, FIFO, one viewer at a time (C1)
         self.cap_noted = None            # Tokyo day the "resting, back tomorrow" chat line was posted (C2)
-        self.replies = []                # his recent replies (AI-written), for the hello and /api/mind
+        self.replies = []                # his recent replies, each tagged by what wrote it (mind.reply_tag): hello, /api/mind
         self.read_topics = {}            # page title -> topics an AI noted (the eye's dream scenes)
         self.interest = (0.0, None)      # (wall time, mind.next_interest()) cached for the browser
         self.search_rng = random.Random()  # which of his query sources the browser's next search comes from (#56)
@@ -480,6 +495,7 @@ class Live:
         # viewers (preview/interactive, audience.py): the vote on what he does next, the viewer count, the reactions
         self.votes = audience.Votes(rng=random.Random(int(seed) + 7 if seed else None))
         self.reactions = audience.Reactions()
+        self.streamer = streamer_mod.attach(self)
 
     # --- trades -> stimuli ---------------------------------------------------
     def apply(self, tr):
@@ -613,7 +629,8 @@ class Live:
         return public_why(art)
 
     async def handle_chat(self, ws, key, text, nick=""):
-        ok, reason = chat_check(text, key, self.limiter, self.dedupe)      # filter first; blocked = never stored
+        links_open = vagon_enabled()                       # the PC can open a link: then a link is accepted
+        ok, reason = chat_check(text, key, self.limiter, self.dedupe, links_open)   # filter first; blocked = never stored
         if not ok:
             await ws.send_json({"type": "chat_ack", "ok": False, "reason": reason})
             return
@@ -627,43 +644,59 @@ class Live:
         if self.eye:
             self.eye.hear(text, t)
         self.life.hear(text, t)
-        self.music.hear(text, t)                           # "play …" / "metti …": a wish (filtered above)
-        ack = {"type": "chat_ack", "ok": True, "queued": False}
+        song = self.music.hear(text, t)                    # "play …" / "metti …": a wish (filtered above)
+        ack = {"type": "chat_ack", "ok": True, "queued": False, "t": hhmm(t)}
         if getattr(self, "mind", None):                    # he may answer it later, at the computer (C1)
             why = await self.enqueue_chat(t, text, key, nick)
             ack.update(queued=True, will_reply=why is None, reason=why)
+            if why is None:                                # it is in the inbox: "please reply" can be taken before mind_step's count
+                self.life.chat_waiting = max(self.life.chat_waiting, len(self.chat_inbox))
+        # every accepted message gets one in-character line at once, with or without the mind and the spiking net: the
+        # canned reaction (impulse.py), or life's honest line when the request cannot be taken as asked (closed, asleep...)
+        imp = parse_impulse(text)                          # an action asked for in chat is carried out at once
+        if self.streamer:                                  # the ring the streamer agent reads: input only, never a command
+            self.streamer.record_chat(text, key, nick, t, imp)
+        reaction = imp.reaction
+        if imp.kind == "activity":
+            reaction = self.life.request_impulse(imp, t) or imp.reaction
+        elif imp.kind == "open_url":
+            if links_open:
+                queued, why = vagon_submit_link(imp.url, key)   # the viewer's key: a per-viewer cap on top of the global ones
+                reaction = imp.reaction if queued else VAGON_REFUSED.get(why, "I cannot open that link.")
+            else:
+                reaction = "I cannot open links yet."
+        if song and imp.kind != "activity":                # "play <song>" names no activity word: the wish itself asks for music
+            named = Impulse("activity", "listen_music", None, IMPULSE_REACTIONS["listen_music"], f"asked in chat: play {song}")
+            reaction = self.life.request_impulse(named, t) or named.reaction
+            imp = named
+        if self.streamer and self.streamer.active:         # streaming: the agent answers by voice; no canned line in the room
+            reaction = self.streamer.room_reaction(imp, reaction)
+        shown_nick, _ = clean_nick(nick)                   # the reaction is public: the nickname is cleaned as in enqueue_chat
+        ack.update(reaction=reaction, impulse=imp.kind)
         if self.spiking:                                   # no-op when no GPU pod is connected
             self.spiking.forward_chat(text, emotion)
             if GOOD.search(text):
                 self.spiking.forward_good()
         await ws.send_json(ack)
         await self.broadcast({"type": "chat", "gain": round(gain, 2), **self.public(m)})
+        if reaction:
+            await self.broadcast({"type": "reaction", "text": reaction, "nick": shown_nick, "t": hhmm(t)})
+            self.sub01_reactions = (getattr(self, "sub01_reactions", []) + [{"t": hhmm(t), "text": reaction}])[-8:]
 
     # --- the chat inbox (C1/C2): FIFO, one viewer at a time, a visible outcome for every message -----------------
     async def enqueue_chat(self, t, text, key, nick=""):
-        """Queue a message for his reply at the computer; returns why a reply is not possible right now (or None).
-        A viewer keeps at most CHAT_PER_VIEWER messages waiting: their oldest one is let go with a note."""
+        """Queue a message for his reply at the computer (mind.Inbox: a viewer keeps at most INBOX_PER_VIEWER waiting,
+        INBOX_MAX in all, and what is let go to make room is shown as missed); returns why a reply is not possible
+        right now (or None)."""
         nick, _ = clean_nick(nick)
-        mine = [x for x in self.chat_inbox if x["key"] == key]
-        for x in mine[:max(0, len(mine) + 1 - CHAT_PER_VIEWER)]:
-            await self.chat_missed(x, "a newer message from the same viewer took its place")
-        self.chat_inbox.append({"t": t, "text": text, "key": key, "nick": nick, "tries": 0})
-        for x in self.chat_inbox[:-CHAT_INBOX]:
-            await self.chat_missed(x, "too many messages were waiting")
-        self.chat_inbox = self.chat_inbox[-CHAT_INBOX:]
+        for x, why in self.chat_inbox.add(t, text, key, nick):
+            await self.chat_missed(x, why)
         return (None if self.engine.stage == "AWAKE" else "asleep") or self.mind.reply_open()
 
     async def chat_missed(self, item, why):
-        """The message leaves the inbox unanswered: viewers see why (room.html: a dim line under the message)."""
-        if item in self.chat_inbox:
-            self.chat_inbox.remove(item)
+        """A message the inbox let go unanswered: viewers see why (room.html: a dim line under the message)."""
         await self.broadcast({"type": "chat_missed", "t": hhmm(self.clock.now()), "replying_to": item["text"],
                               "why": why, "tag": "not answered"})
-
-    def next_message(self, t=None):
-        """The message he answers next (C1): the viewer answered longest ago (or never) first, their oldest first."""
-        served = self.chat_served
-        return min(self.chat_inbox, key=lambda x: (served.get(x["key"], -1e18), x["t"]))
 
     def doing_now(self, t):
         """What he is really doing, for a reply's context (C4): the activity, the track playing, the article or the
@@ -879,7 +912,7 @@ class Live:
             xff = [p.strip() for p in request.headers.get("X-Forwarded-For", "").split(",") if p.strip()]
             real = request.headers.get("X-Real-IP", "").strip()
             key = xff[-1] if xff else real or key
-        return key
+        return client_key(key)                      # an IPv6 address keys by its /64 (SUB01-S06)
 
     def sleep_tick(self):
         """Advance the sleep engine, apply its parameters to the model, run REM replays and bursts."""
@@ -976,8 +1009,8 @@ class Live:
             tsim = self.clock.now()
             if self.home:
                 self.life.home_bladder = self.home.bladder
-            self.life.update(tsim, TICK, TICK * self.time_scale, self.engine.stage, rel, hot,
-                             self.engine.pressure(tsim))
+            (self.streamer.update if self.streamer else self.life.update)(   # streamer mode pins him at the desk
+                tsim, TICK, TICK * self.time_scale, self.engine.stage, rel, hot, self.engine.pressure(tsim))
             self.life.music = self.music.tick_view()
             msg["life"] = self.life.snapshot()
             if self.home:
@@ -1006,6 +1039,10 @@ class Live:
             if self.browser and (dev := self.screen_device()):
                 msg["life"]["screen"] = self.screen_status(dev)
                 self.pagewatch.feed(rel, now, TICK)
+            if msg["life"].get("activity") in ("phone", "order_food"):     # his phone in hand: the chat, a short or the order
+                phone_view = home_phone.view_of(self, msg["life"], self.screen_status("phone") if self.browser else None)
+                if phone_view is not None:
+                    msg["life"]["phone_view"] = phone_view
             await self.audience_tick(msg, tsim, rel, hot)
             await self.broadcast(msg)
             if events:
@@ -1101,6 +1138,8 @@ class Live:
     def screen_device(self):
         if not self.activity_arrived() or self.engine.stage != "AWAKE":
             return None
+        if self.life.activity == "phone" and self.life.phone_app != "tiktok":
+            return None                                  # his phone shows the chat app (phone_view): no browser page for it
         return {"research": "desk", "phone": "phone", "watch_video": "desk"}.get(self.life.activity)
 
     def screen_status(self, dev):
@@ -1571,7 +1610,7 @@ class Live:
                 return await self.music_stop(t, "fell asleep")
             if now["mode"] == "activity" and not listening:
                 return await self.music_stop(t, "took the headphones off")
-            if now["mode"] == "background" and not bg and not listening:
+            if now["mode"] == "background" and (listening or not bg):   # headphones on: the bed starts its own track
                 return await self.music_stop(t, "stopped the music")
             if t < ends:
                 return
@@ -1687,11 +1726,14 @@ class Live:
         for k in notes:
             for x in notes[k]:
                 x["t"] = hhmm(x["t"])
-        return {"on": True, "caption": mind_mod.CAPTION, "status": m.status(), "plan": m.plan_public(),
+        status = m.status()                               # status["replies"]: "ai" with a key, else "template"
+        note = ("An AI writes notes on what he reads, proposes day plans and writes his chat replies; his brain model votes "
+                "among the plans. It does not understand what it reads." if status["replies"] == "ai" else
+                "No AI key: his chat replies are prepared wording (fixed templates), not written by an AI, and the day "
+                "plan is a local one; his brain model votes among the plans. Nothing here understands what it reads.")
+        return {"on": True, "caption": mind_mod.CAPTION, "status": status, "plan": m.plan_public(),
                 "interests": self.interest[1] or [], "notes": notes, "replies": self.replies[-10:],
-                "budget": m.budget.summary(), "reply_tag": "his reply (AI-written)",
-                "note": "An AI writes notes on what he reads, proposes day plans and writes his chat replies; his brain "
-                        "model votes among the plans. It does not understand what it reads."}
+                "budget": m.budget.summary(), "reply_tag": mind_mod.reply_tag(status["replies"]), "note": note}
 
     async def run_mind(self):
         """Off the brain loop: the day plan (each Tokyo morning, revised at noon and in the evening, voted by a clone
@@ -1739,36 +1781,32 @@ class Live:
                        "tag": "a note from the room, not his words", "source": "note"}
                 self.replies = (self.replies + [rec])[-30:]
                 await self.broadcast({"type": "chat_reply", **rec})
-            for x in list(self.chat_inbox):
-                await self.chat_missed(x, "he has answered 40 messages today; back tomorrow")
-        for x in list(self.chat_inbox):
-            if t - x["t"] > CHAT_WAIT_S and not (awake and at_desk):
-                await self.chat_missed(x, "he missed that one: it waited too long")
+            for x, why in self.chat_inbox.clear("he has answered 40 messages today; back tomorrow"):
+                await self.chat_missed(x, why)
+        for x, why in self.chat_inbox.expire(t):                     # waited too long: missed, at the desk or not
+            await self.chat_missed(x, why)
         life.chat_waiting = len(self.chat_inbox) if awake and open_why is None else 0
         if self.chat_inbox and awake and at_desk:
-            item = self.next_message(t)                             # peek: popped only on a posted reply
+            item = self.chat_inbox.pick()                           # peek: it leaves the inbox on a posted reply
             ctx = {"awake": True, "at_desk": True, "mood": self.mood(t), "doing": self.doing_now(t),
-                   "brain": self.encoding(), "viewer": item["key"]}
+                   "brain": self.encoding(), "viewer": item["vkey"]}
             try:
                 r = await loop.run_in_executor(None, m.reply, item["text"], item["nick"] or None, ctx)
             except Exception as e:
                 print("mind: reply failed:", repr(e)[:160], flush=True)
                 r = {"reply": None, "why": "no AI reply", "source": None}
             if r["reply"]:
-                if item in self.chat_inbox:
-                    self.chat_inbox.remove(item)
-                self.chat_served[item["key"]] = t
-                while len(self.chat_served) > 200:
-                    self.chat_served.pop(next(iter(self.chat_served)))
+                self.chat_inbox.answered(item)
                 rec = {"t": hhmm(self.clock.now()), "text": r["reply"], "to": item["nick"] or "a viewer",
-                       "replying_to": item["text"], "tag": "his reply (AI-written)", "source": r["source"]}
+                       "replying_to": item["text"], "tag": mind_mod.reply_tag(r["source"]), "source": r["source"]}
                 self.replies = (self.replies + [rec])[-30:]
                 await self.broadcast({"type": "chat_reply", **rec})
             elif r["why"] == "no AI reply":                         # transient: one more try, then a visible miss
-                item["tries"] += 1
-                if item["tries"] >= 2:
-                    await self.chat_missed(item, "his reply did not come (the AI did not answer)")
+                why = self.chat_inbox.failed(item)
+                if why:
+                    await self.chat_missed(item, why)
             elif r["why"].startswith("message blocked"):
+                self.chat_inbox.drop(item)
                 await self.chat_missed(item, "the chat filter kept it")
             # else: it waits (the 2-min gap, the rule gap, the budget): chat_waiting says whether he will come back
 
@@ -1881,7 +1919,7 @@ class Live:
         reactions makes him glance at the camera."""
         v = self.votes
         now = v.clock()
-        awake = self.engine.stage == "AWAKE"
+        awake = self.engine.stage == "AWAKE" and not (self.streamer and self.streamer.active)   # no vote while streaming
         if v.due(now):
             res = v.close(tsim)
             if res:
@@ -2298,6 +2336,9 @@ async def main(args):
 
     add_ops_routes(app, live, data_dir)
     add_home_routes(app, live, admin_ok)
+    if live.streamer:                             # SUB01_STREAMER=1: /api/home/streamer*, and {"streamer": {"active"}} in /api/home
+        streamer_mod.add_routes(app, live.streamer, admin_ok)
+        app.middlewares.append(streamer_mod.home_payload_middleware(live.streamer))
     if os.environ.get("CLIPS", "1") != "0":       # #59: daily clips for the social accounts, made in nice'd children
         live.clips = clips.ClipMaker(data_dir)
         live.clips.ledger = live.ledger
@@ -2481,6 +2522,9 @@ async def main(args):
             tasks.append(supervised("spiking live", cpu_net.run))
         if getattr(live, "clips", None):
             tasks.append(supervised("clips", lambda: live.clips.run(live, args.port), backoff=60))
+        if vagon_enabled():                              # the PC: one listing at startup, then the idle auto-stop; both block, so threads
+            tasks.append(asyncio.to_thread(vagon_probe))
+            tasks.append(asyncio.to_thread(vagon_auto_stop))
         tasks = [asyncio.create_task(task) for task in tasks]
         me, stopping = asyncio.current_task(), []
 
@@ -2503,6 +2547,8 @@ async def main(args):
                     task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             live.store.save(live.engine, live.memory)
+            if live.streamer:
+                live.streamer.save()
             if manager:
                 manager.shutdown()
             if cpu_net:

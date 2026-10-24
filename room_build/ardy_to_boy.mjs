@@ -3,12 +3,14 @@
 // rig (web/room/boy.glb, Meshy auto-rig, 24 bones): world-space rotations of each mapped joint, with the two rest poses
 // aligned per bone (the minimal rotation taking the source's neutral bone direction to the target's rest direction), put
 // on the target's rest pose; Hips translation scaled by the hip-height ratio. Then, per clip: a seamless loop (the best
-// matching pose pair is cropped out and the seam blended), the walk made in-place and timed so its feet move at the page's
-// stride speed, the turn de-yawed (the page turns the root), the feet kept on the floor (the root is lifted by any
+// matching pose pair is cropped out and the seam blended), the walk made in-place and timed to REF_SPEED (its reference
+// foot speed), the turn de-yawed (the page turns the root), the feet kept on the floor (the root is lifted by any
 // penetration), and a manifest with each clip's hips offset. Output: <out_dir>/boy_m_<clip>.glb, rotation tracks + Hips
 // translation only, rotations quantised to int16.
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { prune, resample, quantize } from "@gltf-transform/functions";
@@ -19,7 +21,17 @@ const [,, ARDY, BOY, OUT, ...ONLY] = process.argv;
 await MeshoptEncoder.ready; await MeshoptDecoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({"meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder});
 
-const STRIDE_V = 0.65;                      // m/s: room.html plays the walk clip at timeScale = speed / STRIDE_V
+// m/s: the ARDY walk's reference foot speed, the retime target (boy_m_walk): the walk's time scale is the source's root
+// speed over this. The clip's own feet can differ from it by a few percent (the root and the feet of the source do not
+// move at exactly one speed), so the page plays the walk at speed / refFootSpeed, the value kimodo_g12/walk_metrics.py
+// measures on the clip, which the manifest's walk entry carries.
+const REF_SPEED = 0.65;
+const WALK_PY = path.join(path.dirname(fileURLToPath(import.meta.url)), "kimodo_g12", "walk_metrics.py");
+// the walk's measured values, read from the GLB just written: refFootSpeed (m/s), cycleTime (s), strideLength (m), checks
+function measureWalk(glb, anim){
+  try { return JSON.parse(execFileSync("python3", [WALK_PY, glb, "--rig", "boy", "--anim", anim], {encoding: "utf8"})); }
+  catch (e) { console.warn(`walk metrics for ${anim} skipped: ${String(e.message).split("\n")[0]}`); return null; }
+}
 const BOY_HIP = 0.919;                      // m: boy.glb's hips at rest (Armature scale 0.01, Hips y 91.9 cm)
 // target bone <- source joint, and the child that gives the target bone's direction (null: use the parent's alignment)
 const MAP = {
@@ -36,7 +48,7 @@ const SRC_CHILD = {Hips: "Spine", Spine: "Spine1", Spine1: "Spine2", Spine3: "Ne
   RightShoulder: "RightArm", RightArm: "RightForeArm", RightForeArm: "RightHand", RightHand: "RightHandEnd",
   LeftUpLeg: "LeftLeg", LeftLeg: "LeftFoot", LeftFoot: "LeftToeBase", LeftToeBase: null,
   RightUpLeg: "RightLeg", RightLeg: "RightFoot", RightFoot: "RightToeBase", RightToeBase: null};
-// per clip: loop (cyclic, seam blended), inplace (root xz removed, timed to STRIDE_V), deyaw (root yaw removed), minLoop/maxLoop (s)
+// per clip: loop (cyclic, seam blended), inplace (root xz removed, timed to REF_SPEED), deyaw (root yaw removed), minLoop/maxLoop (s)
 const OPTS = {
   // lean: a constant forward bend of the torso (rad) for the seated clips: ARDY sits reclined as in a lounge chair, and the
   // room's desk chair has its backrest 32 cm behind the hip anchor, so a reclined back sinks into it (the visual QA's chair
@@ -130,7 +142,7 @@ async function convert(name){
   let timeScale = 1;
   if (O.inplace) {
     const d = frames[T - 1].root.clone().sub(frames[0].root).setY(0).length() * hipRatio, v = d / ((T - 1) / fps);
-    if (name === "walk" && v > 0.05) timeScale = v / STRIDE_V;
+    if (name === "walk" && v > 0.05) timeScale = v / REF_SPEED;
     const r0 = frames[0].root.clone();
     for (const f of frames) { f.root.x = r0.x; f.root.z = r0.z; }
     console.log(`${name}: root speed ${v.toFixed(2)} m/s -> time x${timeScale.toFixed(2)}`);
@@ -180,7 +192,7 @@ async function convert(name){
   const lift = pen.map((_, t) => { let s = 0, n = 0; for (let k = -2; k <= 2; k++) if (pen[t + k] != null) { s += pen[t + k]; n++; } return s / n; });
   seq.forEach((f, t) => { f.hips.y += lift[t] * 100; });
   const maxPen = Math.max(...pen);
-  // measure: hips offset from the root (m, the page's HIPS table), lowest foot after the lift, stride speed
+  // measure: hips offset from the root (m, the page's HIPS table), lowest foot after the lift
   const P0 = fkTarget(seq[0].L, seq[0].hips), hipsAvg = seq.reduce((a, f) => a.add(f.hips), new THREE.Vector3()).multiplyScalar(1 / seq.length / 100);
   let lowest = 9; for (const f of seq) { const P = fkTarget(f.L, f.hips); for (const b in restH) lowest = Math.min(lowest, P.get(bone(b)).y - restH[b]); }
   // write: a copy of the rig without its mesh, one animation
@@ -205,7 +217,13 @@ async function convert(name){
   const info = {file: path.basename(outFile), frames: seq.length, duration: +((seq.length - 1) / fps * timeScale).toFixed(3), fps, loop: !!O.loop,
     hips: hipsAvg.toArray().map(v => +v.toFixed(3)), hips0: seq[0].hips.clone().multiplyScalar(0.01).toArray().map(v => +v.toFixed(3)),
     floorFix: +maxPen.toFixed(3), lowestFoot: +lowest.toFixed(3), bytes: size, prompt: C.prompt, seed: C.seed, score: C.score};
-  if (O.inplace && name === "walk") info.stride = STRIDE_V;      // the page's STRIDE_V while this walk plays (its feet move back at this speed)
+  if (O.inplace && name === "walk") {
+    // the walk's reference foot speed as the clip itself measures it (the page plays it at speed / refFootSpeed); `stride`
+    // is the older name of refFootSpeed, kept for the page that reads it. Without the measurement the constant stands.
+    info.stride = REF_SPEED;
+    const w = measureWalk(outFile, `m_${name}`);
+    if (w) Object.assign(info, {stride: w.refFootSpeed, refFootSpeed: w.refFootSpeed, cycleTime: w.cycleTime, strideLength: w.strideLength, walkChecks: w.checks});
+  }
   console.log(`${name}: ${seq.length} frames, ${info.duration} s, hips ${info.hips}, floor fix ${info.floorFix} m, lowest ${info.lowestFoot} m, ${(size / 1024).toFixed(0)} KB`);
   return info;
 }

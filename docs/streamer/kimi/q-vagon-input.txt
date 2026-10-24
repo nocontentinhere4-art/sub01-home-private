@@ -1,0 +1,62 @@
+Question: how to deliver keyboard and mouse input reliably to a Vagon Computer (vagon.io cloud PC, Windows 11) whose web
+stream is shown in a Playwright-driven Google Chrome, and what the host page's own overlays are.
+
+SETUP (facts, measured)
+- Linux pod, Google Chrome (stable, H.264 capable) launched by Playwright launch_persistent_context, headed on an Xvfb
+  display 1920x1080, --kiosk, no emulated viewport. The page is the Vagon web app (app.vagon.io), logged in by the owner.
+  The runner presses the dashboard's Connect button and then watches the page.
+- When connected, the stream is ONE <video> element in the main document (no iframe): CSS box 1918x1079 at (0.39, 0),
+  display:flex, autoplay, not paused, srcObject with tracks "audio:live:muted video:live video:live:muted video:live:muted",
+  videoWidth/Height 1920x1080. A second <video> is display:none (0x0). No <canvas>.
+- WebRTC (wrapped RTCPeerConnection, getStats every 5 s): remote offer with several H.264 (42e01f) video m-lines, two opus
+  audio m-lines and an application (datachannel) m-line; two data channels open (only 48 bytes received on them);
+  inbound video H264 1920x1080 at 30-31 fps, frames_decoded rising (3932 after ~2 min), 0 lost, 0 freezes, jitter 0.023;
+  selected candidate pair local srflx -> remote relay, UDP, RTT 50-100 ms. The page creates a new RTCPeerConnection for
+  each (re)connection (18 created over three sessions).
+- document.hasFocus() true; navigator.userActivation active and hasBeenActive true; Element.prototype.requestPointerLock
+  exists (whether pointer lock is currently held is not measured yet).
+- Host-page controls seen right after connecting (the toolbar was open for a moment, then collapsed): Audio, Audio
+  options, Microphone, Microphone options, Webcam, Webcam options, Fullscreen, Display settings, System, Files, Power.
+  Collapsed, only a small square handle with the Vagon logo remains, top centre-left of the stream (about x 707-757,
+  y 16-66 of the 1920x1080 page); hovering it shows a tooltip "Click to Open".
+- The dashboard (machine off) offers "Run Computer", a quality preset "Smooth" and a setting labelled "15 minutes".
+
+HOW THE RUNNER SENDS INPUT (Playwright, i.e. CDP Input.dispatchMouseEvent / Input.dispatchKeyEvent on the page)
+- Before keys/typing: JS focuses the largest video/canvas (sets tabindex=-1 if missing, el.focus({preventScroll:true})).
+- click: page.mouse.move(x, y, steps=6) then page.mouse.click(x, y) at page coordinates over the video.
+- key: page.keyboard.press("Meta"), press("Control+Escape"), press("Escape"), press("Control+a"), press("Backspace").
+- type: page.keyboard.type(text, delay=~40 ms per character).
+- scroll: page.mouse.move to the video centre, then six page.mouse.wheel(0, +-dy) steps.
+
+OBSERVED RESULTS (frames looked at; the attached image 1 is the current desktop, image 2 is the frame after "Meta")
+1. press("Control+Escape"): returned ok, the Windows Start menu did NOT open.
+2. click on the remote YouTube search box while YouTube showed a modal dialog ("Link your Google services?") in the
+   remote Chrome; then type "sub01 test": no text appeared anywhere (the YouTube modal presumably ate the click).
+3. press("Escape"), press("Control+a"), press("Backspace"): afterwards the WHOLE remote picture was dimmed uniformly
+   (including the Windows taskbar) while the Vagon handle at the top stayed bright. No text or dialog visible on the dim.
+4. press("Meta"): the Windows Start menu opened (visible under the dim, image 2) -> keyboard events DO reach Windows.
+5. press("Escape"): the Start menu closed; the dim stayed.
+6. click at the position of the Windows taskbar Start button (bottom centre, about x 760, y 1056 of 1920x1080): within
+   about 2 s the page showed a session-ended screen with "Retry" and "Return to Dashboard". The runner pressed Retry and
+   reconnected; about 2 minutes later (no input in between) the page went to the dashboard with "Rate Session" and
+   "Run Computer": the machine had stopped. The runner later pressed Run Computer and Connect again (the machine
+   rebooted: clean desktop, image 1).
+
+QUESTIONS (say plainly what you do not know; Vagon's client is closed source)
+A. How does Vagon's (or a Pixel-Streaming/Parsec-like) browser client capture input: keydown/keyup listeners on
+   window/document vs the <video>; mouse listeners on the video vs a transparent layer; absolute coordinates mapped from
+   the video's rect vs relative movement requiring pointer lock; does it need a first real click on the video ("click to
+   start", navigator.keyboard.lock, requestPointerLock) before input is forwarded? Which data channel/transport would
+   carry input (only 48 bytes received on the two channels)?
+B. What is the dim overlay of observation 3? Could Escape (browser convention: release pointer lock / keyboard lock /
+   exit fullscreen) make the client show a "click to resume control" or menu backdrop? Would a click on that dim layer
+   be taken by the host page instead of being forwarded, and could it explain observation 6 (session ended ~2 s after a
+   click at the bottom of the screen)?
+C. Why might Control+Escape not open Start while Meta does (key mapping by event.code/keyCode? Escape reserved by the
+   client)?
+D. Is "15 minutes" plausibly an idle auto-stop, and would synthetic CDP input count as activity for it?
+E. Concrete, safe automation recipe for this runner: what to focus before keys (video vs body vs document), whether to
+   click the video once after connect (where, to avoid the handle and any overlay), how to detect that a host-page
+   overlay (dim layer, toolbar menu, dialog) is on top before clicking (document.elementFromPoint at the target and what
+   to accept as "the stream": the video, an ancestor container covering the viewport, a transparent input layer), and
+   what never to press (Power, Display settings, Files...). Keep it short and precise.

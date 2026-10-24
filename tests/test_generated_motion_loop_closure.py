@@ -34,3 +34,50 @@ def test_excessive_rotation_or_nonhips_translation_refuses(tmp_path):
     _,sha=fixture(s,nonhip_motion=True)
     with pytest.raises(AssertionError,match='Non-Hips'):close(s,o,sha)
     assert not o.exists()
+
+
+# ---------- the loop seam and the QA thresholds (room_build/kimodo_g12/walk_metrics.py and qa.py)
+import importlib.util
+
+import numpy as np
+
+ROOM_QA = Path(__file__).resolve().parent.parent / "room_build" / "kimodo_g12"
+
+
+def _load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+walk_metrics = _load("walk_metrics", ROOM_QA / "walk_metrics.py")
+qa = _load("kimodo_qa", ROOM_QA / "qa.py")
+
+
+def test_the_qa_thresholds_are_the_explicit_one_centimetre_constants():
+    assert qa.CONTACT_TOL_M == 0.01 and qa.SLIDE_MAX_M == 0.01 and qa.SEAM_POP_MAX_M == 0.01
+    assert walk_metrics.CONTACT_ON_M == 0.01 and walk_metrics.REF_TOL == 0.05
+
+
+def test_a_loop_seam_pop_over_one_centimetre_is_flagged():
+    first = np.zeros((4, 3))
+    last = first.copy()
+    last[2] = [0.012, 0.0, 0.0]                              # one joint 1.2 cm away from where the loop started
+    pop = walk_metrics.seam_pop(first, last, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+    assert pop == pytest.approx(0.012, abs=1e-6)
+    assert qa.flag_list({"seam_pop": pop}, {"seam_pop": qa.SEAM_POP_MAX_M}) == [("seam_pop", f"{pop:.4f} > 0.0100")]
+
+
+def test_a_loop_seam_under_one_centimetre_passes():
+    first = np.zeros((4, 3))
+    last = first.copy()
+    last[1] = [0.004, -0.003, 0.0]                           # 5 mm: inside the tolerance
+    pop = walk_metrics.seam_pop(first, last, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+    assert qa.flag_list({"seam_pop": pop}, {"seam_pop": qa.SEAM_POP_MAX_M}) == []
+
+
+def test_the_hips_travel_is_taken_out_of_the_seam_pop():
+    first = np.zeros((4, 3))
+    last = first + np.array([0.3, 0.0, 0.0])                 # the whole body travelled 30 cm: a walk, not a pop
+    assert walk_metrics.seam_pop(first, last, [0.0, 0.0, 0.0], [0.3, 0.0, 0.0]) == pytest.approx(0.0, abs=1e-9)

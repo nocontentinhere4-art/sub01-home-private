@@ -1,0 +1,25 @@
+Final review of SUB-01 native build v21 (game m3, now live). Attached: the C++ delta from the build you reviewed
+(native-v21-review: "do not ship" with 9 items) to the final build, plus the final scripts/streamer_cpu_partition.py, and one
+frame sheet (top row: webcam reading/typing/talking; bottom row: cam2 reading/typing/talking, all game m3, 1920x720).
+
+What changed after your review:
+- cam2 fd: the game-thread probe is the only opener; the writer's open() path is gone; the writer adopts a pending fd by
+  storing Reader=true before clearing the slot (only the probe sets it, only the writer clears it); frames in flight when a
+  reader leaves are dropped. SIGPIPE was already blocked around every write in v20 (not in the earlier diff).
+- Console: `<cvar>` query or `<cvar> <number>` under r./sg./fx./a./foliage./grass. or exactly t.MaxFPS; exactly
+  `csvprofile start|stop|frames=N`; unhandled commands count as refused.
+- Chair: the backrest is the tall/central/near/THIN part even in front of the pelvis; trace only on it; clamp +-40 cm.
+- NEW root cause found on the pod: the keyboard pack and chair parts are Static-mobility actors, so every SetActorLocation of
+  the seat pull-back failed (605 "has to be 'Movable'" warnings): he moved 36 cm back alone (chair 22 cm into his back, keyboard
+  36 cm ahead, arms stretched). v21 final sets each accepted prop's root Movable at the scan. On m3: 0 warnings, the chair fit
+  converged at gap 0.8 cm (target 1) with the backrest node_249, hands on the keyboard in the webcam.
+- Partitioner: fails closed on a missing/stale/foreign game pid; children of the game go to the other set; restore uses
+  cpuset.cpus.effective; ESRCH = gone, EPERM = failed, game-thread failure -> exit 1.
+Measured on m3 (game + Xvfb on cores 0-5, the rest of uid 1001 on 6-9, throttling 0%): 57-58 fps with cam2 idle (no reader),
+45-47 fps with a cam2 reader (cam2 delivered 41-46 fps); render thread 9.5 ms (one view) / 17-18 ms (two views) = the
+critical path; GPU 7-10.5 ms. Before (game l, v20, unpartitioned): 14.5-15 fps.
+
+Answer concisely: (1) any remaining blocking bug in the delta? (2) verdict on the frames: what must the visual-QA loop fix
+next, in order? (3) is 45-47 fps with both cameras an honest ceiling for this architecture, and what is the single most
+promising next step to reach 60 with cam2 at 60 (render thread 17-18 ms: two scene renders of a house with 2175 static mesh
+actors, ~2340 draw calls of which ~1850 shadow depth)?

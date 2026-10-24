@@ -1,0 +1,31 @@
+Code review request for SUB-01 native build v21 (Unreal Engine 5.8.3, Vulkan, Linux). Attached: the C++ diff the installer
+tools/native_streamer_visual_v2/install_v21_fixes.py applies on the pod's v20 sources (it compiled: build v21 succeeded), the
+diff of the game launcher (game l -> game m) and the new scripts/streamer_cpu_partition.py. Context you decided with me
+earlier tonight (docs/streamer/kimi/native-v21-perf.md): the container cgroup allows 10.2 CPUs of 48 visible; the game is
+started on physical cores 0-5 with -corelimit=6, Xvfb :99 joins it, everything else of uid 1001 goes to 6-9; no offscreen yet.
+
+What v21 changes:
+1. PERF line + receipt: mean game/render/RHI/swap(present)/render-wait/game-wait ms from GGameThreadTime, GRenderThreadTime,
+   GRHIThreadTime, GSwapBufferTime, GRenderThreadWaitTime, GGameThreadWaitTime sampled once per tick; window perf_window_s (10 s).
+2. Live console channel: a private JSON file (own uid, 0600, <= 2048 bytes, growing sequence) with up to 8 commands, each
+   whitelisted by prefix (r. sg. "t.MaxFPS " fx. a. foliage. grass. "csvprofile ") and charset [A-Za-z0-9._-= ], run via
+   GEngine->Exec on the game thread, logged with the cvar value after it.
+3. cam2 (USceneCaptureComponent2D + readback ring + background JPEG + FIFO): no capture/readback/encode without a reader. The
+   game thread probes the FIFO every 1 s with open(O_WRONLY|O_NONBLOCK) (ENXIO = none), hands the fd to the writer task through
+   an atomic (the writer adopts it only when it holds no fd), the writer closes on EPIPE and the probing resumes; a no-reader
+   period is treated like the existing pause (epoch bump, stale copies dropped).
+   cam2_lite (default 0): AO, SSR, contact shadows, volumetric fog, lens flares, particles off; MaxViewDistanceOverride; LODDistanceFactor 2.
+4. cam2 showed the chair EMPTY: USceneCaptureComponent::GetViewOwner() is null so the bOnlyOwnerSee first-person body was culled;
+   v21 clears bOnlyOwnerSee on every primitive of the character at cam2 start (streamer mode only films him from outside).
+5. Key light: measured on the live game, the scene exposure is so high that 1.25 cd at ~60 cm clipped his face; v21 uses
+   candelas directly (key_cd default 0.15), soft source radius, attenuation radius 160 cm, cones 30/55, and lighting channel 1 only
+   with his primitives on channels 0+1 (so it never lights the chair/desk/walls).
+6. Chair fit: v20 found no backrest; v21 logs every chair part in his frame once, traces EVERY chair part along his centre line at
+   sacrum height (front-most hit not in front of the pelvis), else picks by shape (tall, central, behind, thin along his facing).
+   Also fixes a pose-fix statement that an earlier installer had placed inside a // comment (chair rotations never recorded).
+
+Review for: correctness bugs (threading/fd ownership races in the cam2 handoff, the epoch/pause logic, signal handling), UE API
+misuse (lighting channels with Lumen/deferred, SetOnlyOwnerSee side effects, GEngine->Exec safety from a game-thread tick, the
+render-timer globals' meaning), anything that could crash or stall the game, the whitelist's safety, and the partition script
+(affinity of other users' processes, races with exiting threads, the restore path). Give a verdict (ship / ship with fixes / do
+not ship) and a numbered list of concrete fixes, most important first. Be concise.

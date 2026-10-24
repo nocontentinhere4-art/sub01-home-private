@@ -399,7 +399,7 @@ def title_ok(text):
     import chat
     from research import BLOCK as TOPIC_BLOCK
     t = text or ""
-    return not (chat.URL.search(t) or chat.SOL_ADDR.search(t) or chat.ETH_ADDR.search(t) or chat.EMAIL.search(t)
+    return not (chat.has_link(t) or chat.SOL_ADDR.search(t) or chat.ETH_ADDR.search(t) or chat.EMAIL.search(t)
                 or MONEY_ASK.search(t) or chat.SLUR_RE.search(chat.normalise(t))
                 or BAD_WORDS.search(t) or TITLE_BAD_HOST.search(t) or TOPIC_BLOCK.search(t) or MONEY_HYPE.search(t)
                 or trading_title(t))
@@ -1493,8 +1493,8 @@ class Browser:
         of pages starts here."""
         from eyes import query_ok
         sc.chain = 0
-        if sc.mode == "shorts" and await self._shorts(sc, interest):
-            return True
+        if sc.mode == "shorts":                                 # the phone's short feed: no short found, no other page on the phone
+            return await self._shorts(sc, interest)
         if not self.watched and sc.mode != "shorts":            # #89 live: the first watch as early as possible
             d = interest if isinstance(interest, dict) else {}
             p = I.pick(self.variety, hour=d.get("hour", I.tokyo_hour()), rng=self.rng, mult=d.get("tastes"),

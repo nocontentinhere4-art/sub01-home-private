@@ -337,9 +337,12 @@ class Growth:
         return {"added": int(add.sum()), "why": None, "n": net.n, "synapses_added": int(n_syn)}
 
     def replay(self, net):
-        """Rebuild the grown layout on a freshly built base network (at start): every block, in order."""
+        """Rebuild the grown layout on a freshly built base network (at start): every block, in order, then the network is
+        re-addressed once (LiveNet.reindex) instead of once per block."""
         for b, add in enumerate(self.blocks):
-            net.grow(add, b)
+            net.grow(add, b, reindex=False)
+        if len(self.blocks):
+            net.reindex()
         self.silent_ms = None
 
     def status(self, day=None):

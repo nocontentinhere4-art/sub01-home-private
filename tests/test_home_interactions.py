@@ -336,8 +336,11 @@ def test_api_and_feed_hide_the_actor_during_privacy_without_authentication():
         http, live = await client()
         try:
             walk(live.home, "use_bathroom")
+            step(live.home, "use_bathroom")      # the arrival is written to the device log on the next tick
+            assert any(m["activity"] == "use_bathroom" for m in live.home.memories)
             d = await (await http.get("/api/home")).json()
             assert d["home"]["privacy"] is True
+            assert d["home"]["memories"] == []
             for key in ("position", "entry_position", "look", "activity", "path", "walking"):
                 assert d["home"][key] == hi.PRIVATE_ACTOR[key]
             assert d["home"]["phone"]["app"] == "home"
@@ -364,3 +367,17 @@ def test_bathroom_door_stays_shut_while_he_climbs_the_stairs():
         if home.node == "bed":
             break
     assert seen_stairs and home.node == "bed"
+
+
+def test_a_private_visit_is_withheld_from_the_device_log_until_it_ends():
+    home = HomeWorld({"node": "loft"})
+    walk(home, "research")
+    walk(home, "use_bathroom")
+    step(home, "use_bathroom")          # the arrival is written to the device log on the next tick
+    view = home.view()
+    assert view["privacy"] and view["memories"] == [] and home.view(compact=True)["memories"] == []
+    assert any(m["activity"] == "use_bathroom" for m in home.memories)   # kept, shown once privacy ends
+    walk(home, "research")
+    step(home, "research")
+    assert not home.view()["privacy"]
+    assert any(m["activity"] == "use_bathroom" for m in home.view()["memories"])

@@ -170,6 +170,19 @@ def test_licences_recorded():
     assert "Character v5 in the room" in credits and "char_v5.glb" in credits and "mh_v5/" in credits and "Tripo" in credits
 
 
+def test_pivot_takes_the_stride_from_the_page():
+    """On his way (a walk step, not a turn on the spot) the walk's share against the stand is the page's gait model's
+    stride share (step.stride, room.html drive()); turning on the spot it stays the speed rule; walking on, the hips are
+    not swung about the feet (that is the turn's), and the turn's origin follows his heading."""
+    js = (WEB / "boy_mh.js").read_text()
+    pivot = _js_function(js, "function pivot(st, dt)")
+    assert 'const straight = walking && S.k === "walk" && S.turn0 == null && S.stride != null' in pivot
+    assert "const want = walking ? (straight ? S.stride : Math.min(1, Math.max(0.15, speed / 0.35))) : 1" in pivot
+    assert "if (straight) return;" in pivot
+    assert "if (M.ry0 == null || M.ww > 0.99 || straight) M.ry0 = b.rotation.y" in pivot
+    assert pivot.index("W.setEffectiveWeight(M.ww); St.setEffectiveWeight(1 - M.ww); env.mixer.update(0);") < pivot.index("if (straight) return;")
+
+
 def test_props_wired():
     js = (WEB / "boy_mh.js").read_text()
     props = json.loads((WEB / "mh" / "props_g2.json").read_text())

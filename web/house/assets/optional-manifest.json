@@ -1,0 +1,39 @@
+{
+  "schema": "sub01-house-optional-assets/1",
+  "noun": "fixture",
+  "purpose": "Original bathroom GLBs with sidecars, loaded by web/house/optional_assets.mjs. Each file is built locally by the tool named in its entry and is not downloaded. One request per file per page load, no retries; a missing file keeps its procedural placeholder and is named in the House panel.",
+  "assets": [
+    {
+      "id": "bath-door",
+      "label": "bathroom door",
+      "builder": "tools/build_home_bath_door.py",
+      "glb": "bath-door-original/bath-door.glb",
+      "sidecar": "bath-door-original/bath-door.json",
+      "placeholder": "the darkwood door slab (home.js bathDoor) stays visible"
+    },
+    {
+      "id": "toilet",
+      "label": "toilet",
+      "builder": "tools/build_home_bath_fixtures.py",
+      "glb": "bath-fixtures-original/toilet.glb",
+      "sidecar": "bath-fixtures-original/toilet.json",
+      "placeholder": "the procedural toilet primitives (BATH_FALLBACK_CALLS.toilet) stay visible"
+    },
+    {
+      "id": "vanity",
+      "label": "vanity",
+      "builder": "tools/build_home_bath_fixtures.py",
+      "glb": "bath-fixtures-original/vanity.glb",
+      "sidecar": "bath-fixtures-original/vanity.json",
+      "placeholder": "the procedural vanity primitives (BATH_FALLBACK_CALLS.vanity) stay visible"
+    },
+    {
+      "id": "bath-light",
+      "label": "bathroom light",
+      "builder": "tools/build_home_bath_light.py",
+      "glb": "bath-light-original/bath-light.glb",
+      "sidecar": "bath-light-original/bath-light.json",
+      "placeholder": "no ceiling fitting and no bathroom point light"
+    }
+  ]
+}
