@@ -6,8 +6,9 @@ writes, CRLF/LF kept, JSON report with before/after sha256, refusal of a second 
 goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX`) on top of that, `install_no_pin.py`
 (`..._NOPIN`) next, `install_seat_fix.py` (`..._SEATFIX`, the one that actually seats him: below), then
 `install_stream_pass.py` (`..._STREAMPASS`), `install_cam2.py` (`..._CAM2`), `install_mouth.py` (anywhere on v2),
-`install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer) and `install_v21_fixes.py` (`..._V21`, on the
-full v20 stack: build v21, game m).
+`install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer), `install_v21_fixes.py` (`..._V21`, on the
+full v20 stack: build v21, game m) and `install_v22.py` (`..._V22`, on v21: the in-game monitor feed, persistent bridge
+textures, cam2 exposure; it also edits the PC and device bridges and creates `Sub01PersistentTexture.h`).
 Same R9 gate, spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
@@ -85,6 +86,7 @@ python3 tools/native_streamer_visual_v2/install_cam2.py --source "$M" --dry-run 
 python3 tools/native_streamer_visual_v2/install_mouth.py --source "$M" --dry-run        # on v2 alone or on any stack above
 python3 tools/native_streamer_visual_v2/install_pose_fix.py --source "$M" --dry-run    # after the stream pass AND the mouth layer (v20)
 python3 tools/native_streamer_visual_v2/install_v21_fixes.py --source "$M" --dry-run  # on the full v20 stack (v21); keep backups OUTSIDE Source/ (a copy with a Build.cs breaks UBT)
+python3 tools/native_streamer_visual_v2/install_v22.py --source "$M" --dry-run        # on v21 (v22): also the bridges + the new Sub01PersistentTexture.h
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -301,3 +303,81 @@ reviewed by Kimi (`docs/streamer/kimi/native-v21-review.md`; game m ran the pre-
   or behind, <= 40 cm), THIN part; its surface is traced at sacrum height, else its bounds' front; the fit clamp is +-40 cm. The pose fix's rotation
   record in the desk-prop scan (inside a `//` comment since v20) is a statement again (the chair turns with `seat_yaw_deg`).
 - Typing head: `typing_head_deg` 15 with `posture_head_deg` 0 keeps his eyes on the screen (game l frames); unchanged.
+
+## v22 (`install_v22.py`, `// SUB01_STREAMER_VISUAL_V2_V22`): monitor feed, persistent textures, cam2 exposure
+On v21; edits `Sub01HomeLab.h/.cpp`, `Sub01PCBridge.h/.cpp`, `Sub01HomeDeviceBridge.h/.cpp` and creates `Sub01PersistentTexture.h`
+(refused if it exists with other content, or if `native_cinematic_pc.inc` binds `PCFrame` itself). Designed with Kimi
+(`docs/streamer/kimi/native-v22-design.md`), code reviewed by Kimi (`docs/streamer/kimi/native-v22-review.md`).
+- **In-game monitor feed**: the supervised `monitor` service (`scripts/streamer_monitor_feed.py`: x11grab of the Vagon desktop, 1280x720
+  JPEGs back to back, its own privacy gate with neutral grey frames during a cut, which are ordinary frames here) writes
+  `<streamer-dir>/monitor.mjpeg`. ONE background task at a time opens it `O_RDONLY|O_NONBLOCK|O_NOFOLLOW` (only this uid's FIFO
+  with no group/other bits; never created or replaced by the game), reads what is there (<= 8 MiB per pump), cuts whole JPEGs by
+  walking their markers (an EOI byte pair inside a segment never ends a frame; garbage, a cut frame, a reserved marker or a frame
+  > 4 MiB = resync on the next SOI) and queues the newest frame of each read (ring: 64 frames / 16 MiB). It then plays out at most
+  ONE frame per pump: the newest one read at least `monitor_delay_s` (0.75) ago AND before the start of the PC bridge's newest
+  completed public confirmation of the connected desktop (a frame read after the runner locked cannot be shown while the lock
+  lasts, even before the game notices); that one is decoded (ImageWrapper JPEG -> BGRA, size checked from the header first,
+  <= 1280x1024). The game thread takes it (a pointer swap), uploads it into ONE persistent texture (B8G8R8A8 sRGB, never
+  streamed, one mip, created once per size and cleared opaque black, cleared again when the source rect changes;
+  `UpdateTextureRegions` of the 1280x720 rect at the PC bridge's own layout offset, the heap copy freed in the cleanup callback;
+  skipped while 3 uploads are still pending on the RHI) and binds it through the PC bridge. Pumps run at `monitor_fps`
+  (default 60, a cap; 30 is the pod fallback if the render thread suffers). Progress = a new upload < `monitor_stale_s` (2.0)
+  ago; none (a dead feed), `monitor_feed` 0 or a closed gate = the bridge's own picture again and the texture blanked
+  (`monitor_feed` 0 also closes the FIFO, so the sidecar stops ffmpeg).
+- **Privacy gate** (fail closed, in the bridge AND the character, every tick): the bridge allows the feed only while it is public (no
+  `Private`, `LocalPrivacy`, `PrivacyDesired`, not the read-only cinematic browser) and its last poll's confirming `/pc/state` read
+  (started < 1.5 s ago) said `pc_mode` "vagon", `vagon.connected` AND `vagon.phase` "connected" (the sidecar's own rule: the host
+  page's login/dashboard can come with `connected` still true) and an available `graphical` display: before the remote desktop is
+  connected the runner itself shows only a neutral picture (the owner's login/account pages), which a raw x11grab would bypass. So
+  with `SUB01_PC_ORIGIN=8832` (the old bundled Chromium runner, `pc_mode` chromium) the feed stays OFF; it needs the 8838 origin.
+  Every "PCFrame" binding of the bridge goes through `ShowFrame` -> `SelectMonitorFrame` (the MID only on a change: its 0.5 s poll
+  never fights the feed); `ClearPrivateState` drops the feed at once, the poll timer re-selects even while a poll hangs, a feed
+  frame the character stops renewing for 1 s is dropped, and the bridge's `EndPlay` first calls `ReleaseMonitorFeed` (the MID goes
+  back to the terminal canvas, or to no texture without one, and no feed texture stays referenced). The character starts a new
+  epoch on every gate or bridge privacy-generation change (`SUB01_STREAMER_VISUAL_MONITOR_FEED_GATE open= epoch= reason=`, at most
+  one line per second; the closed reason is refreshed every 0.5 s while closed): bytes read while closed are discarded, queued and
+  decoded frames of another epoch are never uploaded, and the first 0.25 s of FIFO data after a reopen is discarded.
+- **Acceptance window** (Kimi's review: there is no literal zero-window guarantee). The MID binding is cached: a gate that closes
+  only because time passes (the 1.5 s confirmation growing old, a hung backend) is unbound at the next game-thread routing decision,
+  i.e. the character's next tick (it renews or drops the feed every tick) or else the bridge's 0.5 s poll timer; a game-thread
+  hitch delays both while the render thread keeps showing the bound texture. A real privacy or Vagon change also takes the poll's
+  detection time. The sidecar's own gate (commit 8634ff9: grey frames at once on a privacy cut) covers that detection latency;
+  the confirm-after playout keeps frames read after the runner locked off the screen. Not covered (no per-frame privacy in the
+  stream): frames captured between a private page appearing and the sidecar's or the runner's privacy signal.
+- **Lifetime**: the FIFO descriptor belongs to the pump task; it is closed by `monitor_feed` 0, by a read error, or when the
+  character is destroyed (the task holds the feed by a shared pointer, so destruction may finish on the worker). The character's
+  `EndPlay` is defined in the cinematic sources outside this installer, so v22 does not hook it: after `EndPlay` the descriptor stays
+  open until garbage collection purges the character (a map load forces that purge); supporting an in-process level restart
+  would first need that `EndPlay` cleanup (Kimi's condition). The pending-upload count (3) is feed-only
+  backpressure, not a global memory bound: PC/device uploads do not check it, and a feed `Clear` plus `Update` can briefly reach 4.
+- **Sizes**: the sidecar sends 1280x720 mjpeg at `-q:v 5` (a few hundred KiB a frame), inside the decoder's 1280x1024 and the
+  scanner's 4 MiB limits; a larger `--size` would make every frame fail decode (`decode_failed=` counts it) and the feed fall back.
+- **No per-frame UTexture2D in the bridges**: the PC bridge's `CreateTexture2DFromImage` (one texture per VGA frame) and the device
+  bridge's `ImportBufferAsTexture2D` (one per phone/TV frame) became one persistent texture per screen and size, updated in place
+  (`Sub01PersistentTexture::Ensure/Update/Clear`, every slot a `UPROPERTY` of its owner); `GraphicalFrame` / `Images` keep their
+  meaning (what is shown; emptied on privacy).
+- **cam2 exposure** (cam2 copies the webcam's post process; the house's histogram volume is EV100 -3..+3 with the default bias 1, and
+  cam2's white walls clipped): `cam2_exposure` 0 = as copied (v21), 1 = automatic exposure (`AEM_Histogram` forced, even if the
+  copied method were manual) with `cam2_ev_bias` (default) plus the EV100 range `cam2_ev_min..cam2_ev_max` while min <= max
+  (default min > max: the volume's range stays), 2 = manual (`AEM_Manual`, physical camera exposure off: the bias is then the
+  absolute log2 scale, +4 matches the webcam at its EV100 -3 clamp with bias 1, +2 is two stops darker) at `cam2_ev_bias`; modes
+  1/2 force the capture's post-process weight to 1; mode 0 restores exactly what was copied. Applied on change, logged
+  `SUB01_STREAMER_VISUAL_CAM2_EXPOSURE mode= bias= range= ... copied: ...`. The main camera is not touched. Default: mode 1, bias
+  -1.0 (2 EV below the house's compensation, all else equal; Kimi confirmed the arithmetic and did not ask for manual -3, which
+  would be 7 stops darker than the webcam); calibrate on rendered frames (auto +1/-1, manual +4/+2).
+- Tuning keys (their own V22 line in the tuning reader): `monitor_feed` 0/1 (1), `monitor_fps` 1..60 (60), `monitor_delay_s` 0.5..3
+  (0.75), `monitor_stale_s` 0.5..10 (2.0), `cam2_exposure` 0..2 (1), `cam2_ev_bias` -8..8 (-1), `cam2_ev_min` / `cam2_ev_max` -10..20
+  (0 / -1 = not set). Logs: `SUB01_STREAMER_VISUAL_MONITOR_FEED started ...`, every 5 s `SUB01_STREAMER_VISUAL_MONITOR_FEED fps=
+  decoded= dropped= stale= in_fps= shown= bound= allowed= open= epoch= confirm_age_ms= content_age_ms= queued= queued_kb= pending=
+  dropped_older= dropped_epoch= dropped_overflow= dropped_untaken= rejected= upload_busy= decode_failed= resyncs= discarded_kb=
+  decode_ms= decode_max_ms= upload_mib_s= textures= bridge_textures= target_fps= delay_s= stale_s= reason= window_s=`,
+  `..._MONITOR_FEED_GATE`, and `..._MONITOR_FEED_BOUND` / `..._MONITOR_FEED_FALLBACK` on changes. Receipt: `monitor_feed_on/bound/
+  allowed/open/fps/in_fps/target_fps/delay_s/stale_s/shown/decoded/dropped/upload_busy/stale/resyncs/epoch/queued/gate_reason/age_ms/
+  textures/reason`, `pc_bridge_textures`, `cam2_exposure`, `cam2_ev_bias`, `cam2_ev_min`, `cam2_ev_max`.
+- Offline only (stub, not Unreal): the reader against a real FIFO (gate, quarantine, newest frame, playout and confirm-after, one
+  pump in flight, one texture, resync, bounded ring, pending-upload cap, no-progress fallback, `monitor_fps`, `monitor_feed`,
+  foreign paths), the JPEG scanner, the persistent texture (AddressSanitizer), the patched bridge's own gate methods (phase,
+  `EndPlay` release with and without a terminal canvas) and the exposure modes: `tests/test_native_streamer_visual_v2.py`. Not
+  established offline (Kimi's list): a UE 5.8 compile, an RHI smoke test (first creation, subregion upload, rect change, borders,
+  sRGB look, deferred cleanup, GC while uploads are pending), ImageWrapper on the sidecar's real JPEGs, rendered exposure. The
+  engine APIs to check against UE 5.8 are listed in the review note.

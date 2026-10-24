@@ -1,0 +1,33 @@
+Follow-up to your code review of SUB-01 native v22 (install_v22.py, marker // SUB01_STREAMER_VISUAL_V2_V22). You said "Hold the
+commit" for two blocking findings. Attached: delta.diff = ONLY what changed in the generated sources since the v22.diff you reviewed
+(nothing else changed in the installer output). Please answer briefly: are the two blocking findings resolved, did the fixes
+introduce a new bug, and is anything else blocking the commit? Mark each point BLOCKING or not.
+
+What the delta does:
+1. EndPlay (your blocking #1): the bridge's EndPlay now first calls a new ReleaseMonitorFeed(): FeedFrame=nullptr,
+   PublicConfirmedAt=-1, FeedSourceConnected=false, OwnFrame=TerminalCanvas, SelectMonitorFrame() (binds the canvas, or an explicit
+   null PCFrame when there is no canvas, because BoundFrame differs from the wanted texture), then OwnFrame=nullptr and
+   BoundFrame=nullptr. Offline test on the patched bridge's real methods: feed bound -> ReleaseMonitorFeed -> the stub MID's actual
+   PCFrame is the canvas; without a canvas it is null; nothing held. A mutant without the reselection fails the test.
+2. Vagon predicate (your blocking #2): NoteMonitorFeedSource also requires vagon.phase == "connected" (string field "phase" in the
+   same "vagon" object of GET /pc/state that the sidecar reads: its rule is kind workstation, boolean connected, string phase,
+   connected AND phase == "connected"). Missing phase = closed. Tested with phases connecting/login_required/dashboard/missing, all
+   with connected true. The bridge stays stricter than the sidecar elsewhere (chromium refused; display.available and display.kind
+   "graphical" required). It does not check vagon.kind: a "streams" runner opens only if it also reports connected + phase connected.
+3. Your #3 (no literal zero-window unbind): accepted and documented as "unbind on the next game-thread routing decision: the
+   character's tick (it calls SetMonitorFeedFrame every tick, which rechecks the gate) or the bridge's 0.5 s poll timer; the sidecar's
+   immediate grey frames on a privacy cut cover the detection latency; the confirm-after playout keeps frames read after the runner
+   locked off the screen".
+4. Diagnostics: the FALLBACK log's reason is built after StreamerVisualMonitorFeedBound is updated; while the gate stays closed its
+   reason is refreshed every 0.5 s and logged when it changes (same 1 s rate limit as the gate line).
+5. cam2 mode 1 now forces AutoExposureMethod = AEM_Histogram (bOverride on), so "auto + bias" is automatic even if the copied method
+   were manual; mode 0 still restores the copied method exactly; mode 2 unchanged (AEM_Manual, physical exposure off).
+
+Not applied, with our reason (tell us if you disagree):
+- An explicit feed stop at the CHARACTER's EndPlay: that EndPlay is defined in the cinematic sources outside the files this installer
+  edits (no anchor); the fd is owned by the pump task and closes when the character is destroyed (GC purge, forced by a map load).
+  Documented; matters only if the level is restarted while the game runs.
+- A stub test for an engine-side early-out of UpdateTextureRegions skipping the cleanup: the helper's own early-outs return before
+  counting (tested under AddressSanitizer); the engine's shutdown behaviour needs the real RHI smoke test, listed as not verified.
+Also documented: the pending-upload count is feed-only backpressure (PC/device uploads do not check it; Clear+Update can reach 4),
+and the sidecar's 1280x720 mjpeg at -q:v 5 is inside the decoder's 1280x1024 and the scanner's 4 MiB limits.

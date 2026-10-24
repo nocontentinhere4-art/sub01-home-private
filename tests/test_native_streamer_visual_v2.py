@@ -196,6 +196,7 @@ STUB = r'''#pragma once
 #include <cfloat>
 #include <cstdio>
 #include <deque>
+#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -309,7 +310,11 @@ public:
  void Reset() { Data.clear(); }
  void Append(const T* Items, int64 Count) { Data.insert(Data.end(), Items, Items + Count); }
  void SetNum(int64 N) { Data.resize(std::size_t(N)); }
+ void SetNumZeroed(int64 N) { Data.assign(std::size_t(N), T()); }  // v22
+ T& operator[](int64 I) { return Data[std::size_t(I)]; }
+ const T& operator[](int64 I) const { return Data[std::size_t(I)]; }
 };
+template<class F> using TFunction = std::function<F>;  // v22: UpdateTextureRegions' cleanup
 template<class T> T&& MoveTemp(T& Value) { return static_cast<T&&>(Value); }
 template<class T> using TUniquePtr = std::unique_ptr<T>;
 template<class T, class... A> std::unique_ptr<T> MakeUnique(A&&... Args) { return std::make_unique<T>(std::forward<A>(Args)...); }
@@ -496,9 +501,12 @@ struct FMath {
 };
 class FJsonValue { public: FString StubString; bool StubIsString = false; bool TryGetString(FString& Out) const { if (!StubIsString) return false; Out = StubString; return true; } };
 class FJsonObject {
-public:
+public:  // v22: a driver may fill the Stub maps (the PC bridge's state reads); empty, every lookup misses as before
+ std::map<std::u16string, FString> StubStrings; std::map<std::u16string, bool> StubBools; std::map<std::u16string, TSharedPtr<FJsonObject>> StubObjects;
  bool TryGetArrayField(const FString&, const TArray<TSharedPtr<FJsonValue>>*&) const { return false; }
- bool TryGetStringField(const FString&, FString&) const { return false; }
+ bool TryGetStringField(const FString& Key, FString& Out) const { auto It = StubStrings.find(*Key); if (It == StubStrings.end()) return false; Out = It->second; return true; }
+ bool TryGetBoolField(const FString& Key, bool& Out) const { auto It = StubBools.find(*Key); if (It == StubBools.end()) return false; Out = It->second; return true; }
+ bool TryGetObjectField(const FString& Key, const TSharedPtr<FJsonObject>*& Out) const { auto It = StubObjects.find(*Key); if (It == StubObjects.end()) return false; Out = &It->second; return true; }
  bool TryGetNumberField(const FString&, double&) const { return false; }
  bool HasField(const FString&) const { return false; }
  void SetStringField(const FString&, const FString&) {}
@@ -621,7 +629,11 @@ public:
  void ShowMaterialSection(int32, int32, bool, int32) {}
  void SetAnimInstanceClass(UClass*) {}
 };
-struct FPostProcessSettings { float StubExposure = 0; };
+enum EAutoExposureMethod : int { AEM_Histogram, AEM_Basic, AEM_Manual, AEM_MAX };  // v22: UE Scene.h
+struct FPostProcessSettings { float StubExposure = 0;
+ uint8 bOverride_AutoExposureMethod : 1 = 0, bOverride_AutoExposureBias : 1 = 0, bOverride_AutoExposureMinBrightness : 1 = 0, bOverride_AutoExposureMaxBrightness : 1 = 0,
+  bOverride_AutoExposureApplyPhysicalCameraExposure : 1 = 0;  // v22: cam2 exposure (UE: uint8 bitfields)
+ TEnumAsByte<EAutoExposureMethod> AutoExposureMethod = AEM_Histogram; float AutoExposureBias = 1, AutoExposureMinBrightness = -10, AutoExposureMaxBrightness = 20; uint32 AutoExposureApplyPhysicalCameraExposure : 1 = 1; };
 class UCameraComponent : public USceneComponent { public: float FieldOfView = 90; FPostProcessSettings PostProcessSettings; float PostProcessBlendWeight = 1; void SetFieldOfView(float F) { FieldOfView = F; } };
 // cam2: render target, scene capture, render thread, GPU readback, image wrapper, async task (all synchronous in the stub)
 enum EPixelFormat { PF_Unknown, PF_B8G8R8A8 };
@@ -684,11 +696,58 @@ public:  // every pixel is checked against the staging pattern: a wrong row pitc
   std::vector<uint8> Bytes(std::size_t(StubBytes), 0x55); Bytes[0] = 0xFF; Bytes[1] = 0xD8; const uint32 N = ++StubCounter;
   Bytes[2] = Image.Colors[0].B; std::memcpy(&Bytes[3], &N, 4); std::memcpy(&Bytes[7], &Image.Colors[std::size_t(719) * Image.SizeX], 4); Bytes[Bytes.size() - 2] = 0xFF; Bytes[Bytes.size() - 1] = 0xD9;
   Out.Reset(); Out.Append(Bytes.data(), int64(Bytes.size())); return true; }
+ TSharedPtr<class IImageWrapper> CreateImageWrapper(EImageFormat Format);  // v22: the monitor feed's decoder (defined below)
 };
 struct FModuleManager { template<class T> static T& LoadModuleChecked(FName) { static T Module; return Module; } };
 namespace ENamedThreads { enum Type { AnyBackgroundThreadNormalTask }; }
-namespace StubAsync { inline bool Deferred = false; inline std::vector<std::function<void()>> Queue; inline void Flush() { std::vector<std::function<void()>> Now; Now.swap(Queue); for (auto& Task : Now) Task(); } }
-template<class F> void AsyncTask(ENamedThreads::Type, F&& Function) { if (!StubAsync::Deferred) { Function(); return; } StubAsync::Queue.push_back(std::function<void()>(std::forward<F>(Function))); }
+namespace StubAsync { inline bool Deferred = false; inline int64 Launched = 0; inline std::vector<std::function<void()>> Queue; inline void Flush() { std::vector<std::function<void()>> Now; Now.swap(Queue); for (auto& Task : Now) Task(); } }
+template<class F> void AsyncTask(ENamedThreads::Type, F&& Function) { ++StubAsync::Launched; if (!StubAsync::Deferred) { Function(); return; } StubAsync::Queue.push_back(std::function<void()>(std::forward<F>(Function))); }
+// v22: persistent textures (CreateTransient's mip starts as 0xCD garbage; UpdateTextureRegions copies on the "render thread" = StubRender,
+// then runs the cleanup) and the JPEG decoder (a stub "JPEG": SOI, APP0 "JFIF\0" + the serial (4), SOF0 with the size, SOS, entropy, EOI)
+enum TextureFilter { TF_Nearest, TF_Bilinear, TF_Trilinear, TF_Default };
+enum TextureAddress { TA_Wrap, TA_Clamp, TA_Mirror };
+struct FUpdateTextureRegion2D { uint32 DestX = 0, DestY = 0; int32 SrcX = 0, SrcY = 0; uint32 Width = 0, Height = 0; FUpdateTextureRegion2D() = default;
+ FUpdateTextureRegion2D(uint32 DX, uint32 DY, int32 SX, int32 SY, uint32 W, uint32 H) : DestX(DX), DestY(DY), SrcX(SX), SrcY(SY), Width(W), Height(H) {} };
+class FTextureResource {};
+class UTexture : public UObject { public: bool SRGB = false, NeverStream = false; TextureFilter Filter = TF_Default; TextureAddress AddressX = TA_Wrap, AddressY = TA_Wrap; };
+class UTexture2D : public UTexture {
+public:
+ static inline int64 StubCreated = 0, StubUpdates = 0, StubCleanups = 0;
+ int32 StubX = 0, StubY = 0; EPixelFormat StubFormat = PF_Unknown; bool StubHasResource = false; FTextureResource StubResource; std::vector<uint8> StubPixels;
+ static UTexture2D* CreateTransient(int32 X, int32 Y, EPixelFormat Format = PF_B8G8R8A8, const FName& = FName()) {
+  auto* T = new UTexture2D(); T->StubX = X; T->StubY = Y; T->StubFormat = Format; T->StubPixels.assign(std::size_t(X) * std::size_t(Y) * 4, 0xCD); ++StubCreated; return T; }
+ int32 GetSizeX() const { return StubX; } int32 GetSizeY() const { return StubY; } EPixelFormat GetPixelFormat() const { return StubFormat; }
+ void UpdateResource() { StubHasResource = true; }
+ FTextureResource* GetResource() const { return StubHasResource ? const_cast<FTextureResource*>(&StubResource) : nullptr; }
+ void UpdateTextureRegions(int32 Mip, uint32 NumRegions, const FUpdateTextureRegion2D* Regions, uint32 SrcPitch, uint32 SrcBpp, uint8* SrcData, TFunction<void(uint8*, const FUpdateTextureRegion2D*)> Cleanup) {
+  ++StubUpdates;
+  ::StubRender::FDispatch{}([this, Mip, NumRegions, Regions, SrcPitch, SrcBpp, SrcData, Cleanup](FRHICommandListImmediate&) {
+   for (uint32 R = 0; R < NumRegions && Mip == 0; ++R) { const FUpdateTextureRegion2D& G = Regions[R];
+    for (uint32 Y = 0; Y < G.Height; ++Y) std::memcpy(&StubPixels[(std::size_t(G.DestY + Y) * std::size_t(StubX) + G.DestX) * 4], SrcData + std::size_t(G.SrcY + int32(Y)) * SrcPitch + std::size_t(G.SrcX) * SrcBpp, std::size_t(G.Width) * SrcBpp); }
+   ++StubCleanups; Cleanup(SrcData, Regions); }); }
+ const uint8* StubPixel(int32 X, int32 Y) const { return &StubPixels[(std::size_t(Y) * std::size_t(StubX) + std::size_t(X)) * 4]; }
+};
+enum class ERGBFormat : int8 { Invalid = -1, RGBA = 0, BGRA = 1, Gray = 2 };
+class IImageWrapper {  // decoded pixel (x,y) = (B serial & 255, G x, R y, A 255)
+public:
+ static inline int64 StubDecodes = 0, StubRefused = 0;
+ int64 W = 0, H = 0; uint32 Serial = 0; bool Valid = false;
+ bool SetCompressed(const void* In, int64 Size) {
+  const uint8* B = static_cast<const uint8*>(In); Valid = false;
+  if (Size < 4 || B[0] != 0xFF || B[1] != 0xD8 || B[Size - 2] != 0xFF || B[Size - 1] != 0xD9) { ++StubRefused; return false; }
+  for (int64 P = 2; P + 3 < Size;) { if (B[P] != 0xFF) { ++StubRefused; return false; } while (P + 1 < Size && B[P + 1] == 0xFF) ++P;
+   const uint8 M = B[P + 1]; const int64 L = (int64(B[P + 2]) << 8) | B[P + 3];
+   if (M == 0xC0) { H = (int64(B[P + 5]) << 8) | B[P + 6]; W = (int64(B[P + 7]) << 8) | B[P + 8]; }
+   if (M == 0xE0) std::memcpy(&Serial, B + P + 9, 4);
+   if (M == 0xDA) break; P += 2 + L; }
+  Valid = W > 0 && H > 0; if (!Valid) ++StubRefused; return Valid; }
+ int64 GetWidth() const { return W; } int64 GetHeight() const { return H; }
+ bool GetRaw(ERGBFormat Format, int32 Bits, TArray64<uint8>& Out) {
+  if (!Valid || Format != ERGBFormat::BGRA || Bits != 8) return false; ++StubDecodes; Out.SetNumZeroed(W * H * 4);
+  for (int64 Y = 0; Y < H; ++Y) for (int64 X = 0; X < W; ++X) { uint8* P = &Out[(Y * W + X) * 4]; P[0] = uint8(Serial); P[1] = uint8(X); P[2] = uint8(Y); P[3] = 255; }
+  return true; }
+};
+inline TSharedPtr<IImageWrapper> IImageWrapperModule::CreateImageWrapper(EImageFormat Format) { if (Format != EImageFormat::JPEG) return nullptr; return MakeShared<IImageWrapper>(); }
 class UCharacterMovementComponent : public UActorComponent { public: void StopMovementImmediately() {} void DisableMovement() {} };
 class AController : public UObject { public: void SetControlRotation(const FRotator&) {} };
 class AActor : public UObject {
@@ -796,7 +855,13 @@ CHARACTER = r'''#include "ue_stub.h"
 #include "Sub01HomeHands.h"
 #include <sys/stat.h>
 #include <unistd.h>
-class USub01PCBridge : public UActorComponent { public: void SetOperatorFocus(bool) {} bool HasOperatorFocus() const { return false; } };
+class USub01PCBridge : public UActorComponent { public: void SetOperatorFocus(bool) {} bool HasOperatorFocus() const { return false; }
+ // v22: the monitor feed API; the gate is the driver's (the real one is tested on the patched bridge itself)
+ bool StubFeedAllowed = false; uint64 StubGeneration = 0; double StubAspect = 1280. / 720., StubConfirmedAt = -1; UTexture* StubFeed = nullptr; int64 StubFeedSets = 0;
+ bool IsMonitorFeedAllowed(double) const { return StubFeedAllowed; } uint64 GetMonitorPrivacyGeneration() const { return StubGeneration; }
+ double GetMonitorConfirmedAt() const { return StubConfirmedAt; } FString MonitorFeedGateReason(double) const { return StubFeedAllowed ? FString(u"open") : FString(u"stub closed"); }
+ double GetMonitorScreenAspect() const { return StubAspect; } int32 GetMonitorTexturesCreated() const { return 0; }
+ bool SetMonitorFeedFrame(UTexture* Frame) { if (Frame && !StubFeedAllowed) Frame = nullptr; if (Frame != StubFeed) ++StubFeedSets; StubFeed = Frame; return Frame != nullptr; } };
 class USub01HomeDeviceBridge : public UActorComponent { public: void ReleaseFocus() {} };
 class ASub01HomeCharacter;
 struct FSub01GhostViews { FSub01GhostViews(UWorld*, ASub01HomeCharacter*, USkeletalMeshComponent*, TArray<FName>) {} void Tick(float, bool, bool) {} };
@@ -3040,3 +3105,632 @@ def test_v21_new_locals_do_not_shadow_character_fields(v21_patched, tmp_path):
     header = lf(v21_patched / 'Sub01HomeLab.h')
     declared = _header_members(header[header.index(V21_MARKER + ' BEGIN'):header.index(V21_MARKER + ' END')])
     assert declared and not (declared & _header_members(lf(v20 / 'Sub01HomeLab.h'))), sorted(declared & _header_members(lf(v20 / 'Sub01HomeLab.h')))
+
+
+# ================================================================================================ v22 (monitor feed, persistent textures, cam2 exposure)
+V22_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_v22.py'
+V22_MARKER = '// SUB01_STREAMER_VISUAL_V2_V22'
+_V22_SPEC = importlib.util.spec_from_file_location('sub01_streamer_visual_v2_v22', V22_INSTALL)
+v22 = importlib.util.module_from_spec(_V22_SPEC)
+_V22_SPEC.loader.exec_module(v22)
+V22_FILES = tuple(v22.FILES.values())
+LAYOUT_SOURCE = ROOT / 'tools/native_pc_bridge/Sub01GuestFrameLayout.h'  # byte-identical to the pod copy the PC bridge includes
+
+
+def install_v22(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(V22_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+def _stack_to_v21(target: Path) -> None:
+    _stack_to_v20(target)
+    assert install_v21(target)[0] == 0
+
+
+@pytest.fixture(scope='module')
+def v22_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v22') / 'src'
+    _stack_to_v21(target)
+    code, report = install_v22(target)
+    assert code == 0, report
+    return target
+
+
+@pytest.fixture(scope='module')
+def v21_stack(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v21-stack') / 'src'
+    _stack_to_v21(target)
+    return target
+
+
+def test_v22_plans_applies_refuses_twice_and_needs_v21(v21_stack, tmp_path):
+    target = tmp_path / 'src'
+    shutil.copytree(v21_stack, target)
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, planned = install_v22(target, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == len(v22.EDITS) + 2 and all(e['count'] == 1 for e in planned['edits'] if e['anchor'] != v22.PC_BIND)
+    assert [e['count'] for e in planned['edits'] if e['anchor'] == v22.PC_BIND] == [v22.PC_BIND_SITES]
+    assert {p.name: sha(p) for p in target.iterdir()} == before and not (target / v22.NEW_HEADER).exists()
+    code, report = install_v22(target)
+    assert code == 0 and report['status'] == 'applied' and report['monitor_feed']['fps'] == 60 and report['cinematic_pc_inc'] == 'absent'
+    assert {name for name in before if sha(target / name) != before[name]} == set(V22_FILES)  # the hands files are not touched
+    for name in V22_FILES:
+        assert sha(target / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (target / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    new = target / v22.NEW_HEADER
+    assert sha(new) == report['files'][v22.NEW_HEADER]['after_sha256'] and (new.stat().st_mode & 0o777) == ((target / 'Sub01PCBridge.h').stat().st_mode & 0o777)
+    assert not [p for p in target.iterdir() if p.name.endswith('.v2tmp')]
+    after = {p.name: sha(p) for p in target.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_v22(target, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert install_v21(target)[0] == 2 and {p.name: sha(p) for p in target.iterdir()} == after
+    v20 = tmp_path / 'v20'
+    _stack_to_v20(v20)
+    v20_before = {p.name: sha(p) for p in v20.iterdir()}
+    code, refused = install_v22(v20)
+    assert code == 2 and 'lacks v21' in refused['reason'] and {p.name: sha(p) for p in v20.iterdir()} == v20_before
+
+
+def test_v22_missing_anchor_or_extra_binding_refuses_without_writing(v21_stack, tmp_path):
+    cases = {'bridge_texture': ('Sub01PCBridge.cpp', b'UTexture2D* Texture=FImageUtils::CreateTexture2DFromImage(Padded);', b'UTexture2D* Texture=FImageUtils::CreateTexture2DFromImage( Padded);'),
+             'device_texture': ('Sub01HomeDeviceBridge.cpp', b'FImageUtils::ImportBufferAsTexture2D(Pixels);', b'FImageUtils::ImportBufferAsTexture2D(Pixels );'),
+             'seventh_binding': ('Sub01PCBridge.cpp', b'void USub01PCBridge::SendFlag(', b'static void Sub01Extra(UMaterialInstanceDynamic* MonitorMaterial,UTexture* T){MonitorMaterial->SetTextureParameterValue(TEXT("PCFrame"),T);}\r\nvoid USub01PCBridge::SendFlag(')}  # the pod copies are CRLF
+    for case, (name, old, new) in cases.items():
+        target = tmp_path / case
+        shutil.copytree(v21_stack, target)
+        path = target / name
+        assert path.read_bytes().count(old) == 1, case
+        path.write_bytes(path.read_bytes().replace(old, new, 1))
+        before = {p.name: sha(p) for p in target.iterdir()}
+        code, report = install_v22(target)
+        assert code == 2 and ('anchor missing in ' + name in report['reason'] or '"PCFrame" bindings' in report['reason']), (case, report)
+        assert {p.name: sha(p) for p in target.iterdir()} == before and not (target / v22.NEW_HEADER).exists(), case
+
+
+def test_v22_refuses_a_cinematic_include_that_binds_the_monitor(v21_stack, tmp_path):
+    target = tmp_path / 'src'
+    shutil.copytree(v21_stack, target)
+    (target / v22.CINEMATIC_PC_INC).write_text('void USub01PCBridge::X(){MonitorMaterial->SetTextureParameterValue(TEXT("PCFrame"),nullptr);}\n')
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, report = install_v22(target)
+    assert code == 2 and v22.CINEMATIC_PC_INC in report['reason'] and {p.name: sha(p) for p in target.iterdir()} == before
+    (target / v22.CINEMATIC_PC_INC).write_text('bool USub01PCBridge::BeginCinematicWebsite(FString&,FString&){return false;}\n')
+    code, report = install_v22(target, '--dry-run')
+    assert code == 0 and report['cinematic_pc_inc'] == 'present, no PCFrame binding'
+    (target / v22.NEW_HEADER).write_text('// someone else\'s header\n')
+    code, report = install_v22(target)
+    assert code == 2 and 'already exists' in report['reason'] and (target / v22.NEW_HEADER).read_text() == '// someone else\'s header\n'
+
+
+def test_v22_text(v22_patched):
+    cpp, header = lf(v22_patched / 'Sub01HomeLab.cpp'), lf(v22_patched / 'Sub01HomeLab.h')
+    pc_cpp, pc_h = lf(v22_patched / 'Sub01PCBridge.cpp'), lf(v22_patched / 'Sub01PCBridge.h')
+    dev_cpp, dev_h = lf(v22_patched / 'Sub01HomeDeviceBridge.cpp'), lf(v22_patched / 'Sub01HomeDeviceBridge.h')
+    for text in (cpp, header, pc_cpp):
+        assert text.count(V22_MARKER + ' BEGIN') == text.count(V22_MARKER + ' END') == 1
+    assert pc_h.count(V22_MARKER + ' BEGIN') == pc_h.count(V22_MARKER + ' END') == 2  # the public API and the private members
+    for text in (cpp, header):
+        assert text.index(V21_MARKER + ' END') < text.index(V22_MARKER + ' BEGIN') < text.index(V22_MARKER + ' END') < text.index(FACE_END)  # inside build_units' range
+    for name in (*V22_FILES, *PATCHED):
+        assert closure.brace_walk(closure.strip(lf(v22_patched / name))) is not None, name
+    # 2. no per-frame UTexture2D left; every "PCFrame" binding of the PC bridge goes through ShowFrame -> SelectMonitorFrame (the only direct bind)
+    assert 'CreateTexture2DFromImage' not in pc_cpp and 'ImportBufferAsTexture2D' not in dev_cpp
+    block = pc_cpp[pc_cpp.index(V22_MARKER + ' BEGIN'):pc_cpp.index(V22_MARKER + ' END')]
+    assert pc_cpp.count(v22.PC_BIND) == block.count(v22.PC_BIND) == 1 and pc_cpp.count('ShowFrame(') == v22.PC_BIND_SITES + 1
+    select = block[block.index('void USub01PCBridge::SelectMonitorFrame(){'):block.index('bool USub01PCBridge::IsMonitorFeedAllowed(')]
+    assert select.index('if(BoundFrame&&BoundFrame.Get()==Wanted)return;') < select.index(v22.PC_BIND)  # the MID only on a change
+    assert pc_cpp.index('void USub01PCBridge::Poll(){\n SelectMonitorFrame();') >= 0  # the poll timer re-selects before it may return early
+    endplay = pc_cpp[pc_cpp.index('void USub01PCBridge::EndPlay('):pc_cpp.index('void USub01PCBridge::ReadState(')]
+    assert endplay.index('ReleaseMonitorFeed();') < endplay.index('ClearTimer(PollTimer)')  # Kimi's review: the MID leaves the feed at EndPlay
+    assert 'Sub01PersistentTexture::Ensure(PersistentFrame,Layout.Width,Layout.Height,&FramesCreated);' in pc_cpp and 'Sub01PersistentTexture::Update(Texture,0,0,Layout.Width,Layout.Height,MoveTemp(Padded.RawData))' in pc_cpp
+    assert 'Sub01PersistentTexture::Ensure(PersistentImages.FindOrAdd(Device),BGRA.SizeX,BGRA.SizeY,&PersistentImagesCreated)' in dev_cpp and 'FImageUtils::DecompressImage(Pixels.GetData(),Pixels.Num(),Decoded)' in dev_cpp
+    assert 'UPROPERTY()TMap<FName,TObjectPtr<UTexture2D>> PersistentImages;' in dev_h and 'UPROPERTY() TObjectPtr<UTexture2D> PersistentFrame;' in pc_h
+    for text in (pc_cpp, dev_cpp):  # engine headers ahead of their first use (the build v20 lesson)
+        assert text.index('#include "Sub01PersistentTexture.h"') < text.index('Sub01PersistentTexture::Ensure(')
+    assert dev_cpp.index('#include "ImageCore.h"') < dev_cpp.index('FImage Decoded,BGRA;')
+    # the privacy gate: dropped first thing in ClearPrivateState; the poll's second read (its start time) confirms the connected Vagon desktop
+    clear = pc_cpp[pc_cpp.index('void USub01PCBridge::ClearPrivateState('):pc_cpp.index('void USub01PCBridge::ApplyTerminal(')]
+    assert clear.index('FeedFrame=nullptr;PublicConfirmedAt=-1;FeedSourceConnected=false;') < clear.index('ShowFrame(TerminalCanvas)')
+    poll = pc_cpp[pc_cpp.index('void USub01PCBridge::Poll(){'):pc_cpp.index('void USub01PCBridge::SendGraphicalInput(')]
+    assert poll.index('const double AskedAt=FPlatformTime::Seconds();') < poll.index('ReadState([this,Epoch,AskedAt](TSharedPtr<FJsonObject> After){') < poll.index('if(!IsPublicState(After))') \
+        < poll.index('NoteMonitorFeedSource(After,AskedAt);') < poll.index('ApplyTerminal(After);')
+    for text in ('TEXT("pc_mode"),Mode)&&Mode==TEXT("vagon")', 'TEXT("connected"),Connected)&&Connected', 'TEXT("available"),Available)&&Available',
+                 'TEXT("kind"),Kind)&&Kind==TEXT("graphical")', 'TEXT("phase"),Phase)&&Phase==TEXT("connected")', 'PublicConfirmedAt=FeedSourceConnected?AskedAt:-1.;SelectMonitorFrame();',
+                 f'Now-PublicConfirmedAt<={v22._num(v22.CONFIRM_SECONDS)}', f'Now-FeedFrameAt<={v22._num(v22.RENEW_SECONDS)}', '!Private&&!LocalPrivacy&&!PrivacyDesired&&FeedSourceConnected'):
+        assert text in block, text
+    # the character: tuning keys on their own V22 line, start/tick/receipt hooks, the reader never blocks, never decodes on the game thread
+    tuning = cpp[cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    line = [row for row in tuning.split('\n') if V22_MARKER in row]
+    assert len(line) == 1 and all(f'Field(TEXT("{k}"),{v22.TUNING_FIELDS[k]},{lo},{hi});' in line[0] for k, (lo, hi) in v22.TUNING_LIMITS.items())
+    assert {'monitor_feed', 'monitor_fps', 'monitor_delay_s', 'monitor_stale_s', 'cam2_exposure', 'cam2_ev_bias', 'cam2_ev_min', 'cam2_ev_max'} == set(v22.TUNING_LIMITS)
+    assert v22.STALE_SECONDS >= 1.5 and v22.PLAYOUT_SECONDS == 0.75 and v22.TUNING_LIMITS['monitor_delay_s'][0] >= 0.5  # above the sidecar's 0.5 s neutral repeat; Kimi
+    start = cpp[cpp.index('void ASub01HomeCharacter::StartStreamerVisualV2('):cpp.index('bool ASub01HomeCharacter::ParseStreamerVisualV2(')]
+    apply = cpp[cpp.index('void ASub01HomeCharacter::ApplyStreamerVisualV2('):cpp.index('// SUB01_STREAMER_VISUAL_V2 END')]
+    camera2 = cpp[cpp.index('void ASub01HomeCharacter::UpdateStreamerVisualCam2('):cpp.index('void ASub01HomeCharacter::WriteStreamerVisualCam2Status(')]
+    assert 'StartStreamerVisualMonitorFeed();' in start and 'UpdateStreamerVisualMonitorFeed(Now,Dt);' in apply and 'ApplyStreamerVisualCam2Exposure();' in camera2
+    body = cpp[cpp.index(V22_MARKER + ' BEGIN'):cpp.index(V22_MARKER + ' END')]
+    for text in ('O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW', '!S_ISFIFO(Info.st_mode)||Info.st_uid!=getuid()||(Info.st_mode&0077)', 'AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,',
+                 'if(At<=Now-Delay&&At<ConfirmedAt)Pick=I;', 'Taken->ReadAt>=ConfirmedAt', f'Sub01PersistentTexture::PendingUploads().load()>={v22.MAX_PENDING_UPLOADS}',
+                 'Sub01PersistentTexture::Clear(StreamerVisualMonitorTexture)', 'SUB01_STREAMER_VISUAL_MONITOR_FEED_GATE open=%d',
+                 'Feed.Busy.load()==0', 'Ready.exchange(Frame)', 'Feed.Ready.exchange(nullptr)', 'Images->CreateImageWrapper(EImageFormat::JPEG)', 'GetRaw(ERGBFormat::BGRA,8,Out.Pixels)',
+                 f'W>{v22.MAX_W}||H>{v22.MAX_H}', 'PCBridge->SetMonitorFeedFrame(Fresh?StreamerVisualMonitorTexture.Get():nullptr)', 'PCBridge->IsMonitorFeedAllowed(Now)',
+                 'Sub01GuestFrameLayout(Width,Height,PCBridge->GetMonitorScreenAspect(),Layout)', 'SUB01_STREAMER_VISUAL_MONITOR_FEED fps=%.1f decoded=%d dropped=%d stale=%d',
+                 'SUB01_STREAMER_VISUAL_CAM2_EXPOSURE mode=%d', 'Settings.AutoExposureMethod=AEM_Manual;'):
+        assert text in body, text
+    for text in ('O_RDWR', 'O_WRONLY', 'mkfifo', 'unlink', 'FlushRenderingCommands', 'usleep', 'FPlatformProcess::Sleep', 'CreateTexture2DFromImage', 'ImportBufferAsTexture2D', 'ViewCamera->PostProcessSettings'):
+        assert text not in body, text  # a reader only; never creates or replaces the sidecar's FIFO; never waits; the main camera untouched
+    game_thread = body[body.index('void ASub01HomeCharacter::UpdateStreamerVisualMonitorFeed('):body.index('void ASub01HomeCharacter::LogStreamerVisualMonitorFeed(')]
+    assert '::read(' not in game_thread and 'Decode(' not in game_thread and 'Sub01ScanJpegs(' not in game_thread
+    for field in ('monitor_feed_on', 'monitor_feed_bound', 'monitor_feed_allowed', 'monitor_feed_fps', 'monitor_feed_decoded', 'monitor_feed_dropped', 'monitor_feed_stale',
+                  'monitor_feed_age_ms', 'monitor_feed_textures', 'monitor_feed_reason', 'pc_bridge_textures', 'cam2_exposure', 'cam2_ev_bias',
+                  'monitor_feed_delay_s', 'monitor_feed_stale_s', 'monitor_feed_epoch', 'monitor_feed_gate_reason', 'monitor_feed_upload_busy', 'monitor_feed_in_fps'):
+        assert f'TEXT("{field}")' in cpp, field
+    assert f'StreamerVisualMonitorFps={streampass._f(v22.MONITOR_FPS)}' in header and v22.MONITOR_FPS == 60 and v22.MONITOR_FEED == 1
+    assert 'UPROPERTY() TObjectPtr<class UTexture2D> StreamerVisualMonitorTexture;' in header
+    assert '#include "Sub01PersistentTexture.h"' in cpp and '#include "Sub01GuestFrameLayout.h"' in cpp and '#include "IImageWrapper.h"' in cpp
+    new = lf(v22_patched / v22.NEW_HEADER)
+    assert new == v22.PERSISTENT_HEADER and ('UpdateTextureRegions(0,1,Region,uint32(Width)*4,4,Owned->GetData(),[Owned](uint8*,const FUpdateTextureRegion2D* Done)'
+                                             '{delete Owned;delete Done;--PendingUploads();});') in new
+    assert 'NeverStream=true' in new and 'SRGB=true' in new and 'PF_B8G8R8A8' in new and '!Texture->GetResource()' in new
+
+
+V22_INCLUDES = '#include "ue_stub.h"\n#include "Sub01PersistentTexture.h"\n#include "Sub01GuestFrameLayout.h"\n'
+
+
+def build_units_v22(src: Path, work: Path, driver: str = None) -> dict:
+    """build_units on the v22 stack: the character unit also sees the new persistent-texture header and the bridge's layout header."""
+    units = build_units(src, work, end=FACE_END, driver=driver)
+    include = units['character'][1]
+    shutil.copy(src / v22.NEW_HEADER, include / v22.NEW_HEADER)
+    shutil.copy(LAYOUT_SOURCE, include / 'Sub01GuestFrameLayout.h')
+    (units['stub'] / 'Engine').mkdir(exist_ok=True)
+    (units['stub'] / 'Engine' / 'Texture2D.h').write_text('#pragma once\n#include "ue_stub.h"\n')
+    for key in ('character', 'driver'):
+        path = units[key][0]
+        text = path.read_text()
+        assert text.startswith('#include "ue_stub.h"\n')
+        path.write_text(text.replace('#include "ue_stub.h"\n', V22_INCLUDES, 1))
+    return units
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_v22_cpp_compiles_syntax_only_against_stub(v22_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units_v22(v22_patched, tmp_path)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)], capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+PERSISTENT_DRIVER = r'''#include "ue_stub.h"
+#include "Sub01PersistentTexture.h"
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static TArray64<uint8> Frame(int32 W, int32 H, uint8 Shade) { TArray64<uint8> P; P.SetNumZeroed(int64(W) * H * 4); for (int64 I = 0; I < P.Num(); I += 4) { P[I] = Shade; P[I + 1] = uint8(I / 4); P[I + 2] = 7; P[I + 3] = 255; } return P; }
+static bool Black(const UTexture2D* T, int32 X, int32 Y) { const uint8* P = T->StubPixel(X, Y); return P[0] == 0 && P[1] == 0 && P[2] == 0 && P[3] == 255; }
+int main() {
+ StubRender::Deferred = true; TObjectPtr<UTexture2D> Slot; int32 Created = 0;
+ // created once: B8G8R8A8, sRGB, never streamed, clamped, bilinear, with a resource; its uninitialised mip is overwritten with opaque black first
+ UTexture2D* A = Sub01PersistentTexture::Ensure(Slot, 8, 4, &Created);
+ CHECK(A && Slot.Get() == A && Created == 1 && UTexture2D::StubCreated == 1 && A->GetPixelFormat() == PF_B8G8R8A8 && A->SRGB && A->NeverStream && A->Filter == TF_Bilinear && A->AddressX == TA_Clamp && A->AddressY == TA_Clamp && A->GetResource(), 1);
+ CHECK(UTexture2D::StubUpdates == 1 && UTexture2D::StubCleanups == 0 && Sub01PersistentTexture::PendingUploads().load() == 1, 2);
+ StubRender::Flush(); CHECK(UTexture2D::StubCleanups == 1 && Sub01PersistentTexture::PendingUploads().load() == 0, 3);
+ for (int32 Y = 0; Y < 4; ++Y) for (int32 X = 0; X < 8; ++X) CHECK(Black(A, X, Y), 4);
+ // a region update: the buffer is moved in (the caller's copy is gone) and freed by the cleanup after the RHI copy, outside the region untouched
+ TArray64<uint8> P = Frame(3, 2, 42); CHECK(Sub01PersistentTexture::Update(A, 4, 1, 3, 2, MoveTemp(P)) && P.Num() == 0, 5);
+ CHECK(A->StubPixel(4, 1)[0] == 0, 6);  // not before the render thread ran
+ StubRender::Flush(); CHECK(UTexture2D::StubCleanups == 2 && A->StubPixel(4, 1)[0] == 42 && A->StubPixel(6, 2)[0] == 42 && A->StubPixel(6, 2)[1] == 5 && Black(A, 3, 1) && Black(A, 7, 1) && Black(A, 4, 0) && Black(A, 4, 3), 7);
+ // the same size again and again: the same texture, nothing created, every heap copy freed exactly once
+ for (int K = 0; K < 100; ++K) { UTexture2D* B = Sub01PersistentTexture::Ensure(Slot, 8, 4, &Created); CHECK(B == A, 8); CHECK(Sub01PersistentTexture::Update(B, 0, 0, 8, 4, Frame(8, 4, uint8(K))), 9); }
+ CHECK(Sub01PersistentTexture::PendingUploads().load() == 100, 101);  // what a stalled render thread would accumulate (callers check it)
+ StubRender::Flush(); CHECK(Created == 1 && UTexture2D::StubCreated == 1 && UTexture2D::StubUpdates == 102 && UTexture2D::StubCleanups == 102 && A->StubPixel(7, 3)[0] == 99
+                            && Sub01PersistentTexture::PendingUploads().load() == 0, 10);
+ // Clear: the whole texture opaque black again (a new source rect, a dead feed)
+ CHECK(Sub01PersistentTexture::Clear(A) && !Sub01PersistentTexture::Clear(nullptr), 102); StubRender::Flush();
+ for (int32 Y = 0; Y < 4; ++Y) for (int32 X = 0; X < 8; ++X) CHECK(Black(A, X, Y), 103);
+ CHECK(UTexture2D::StubUpdates == 103 && UTexture2D::StubCleanups == 103, 104);
+ // refused without enqueuing anything: a wrong buffer size, a region outside the texture, no texture, no resource
+ CHECK(!Sub01PersistentTexture::Update(A, 0, 0, 8, 4, Frame(8, 3, 1)) && !Sub01PersistentTexture::Update(A, 6, 0, 3, 1, Frame(3, 1, 1)) && !Sub01PersistentTexture::Update(A, -1, 0, 1, 1, Frame(1, 1, 1))
+       && !Sub01PersistentTexture::Update(nullptr, 0, 0, 1, 1, Frame(1, 1, 1)) && UTexture2D::StubUpdates == 103 && Sub01PersistentTexture::PendingUploads().load() == 0, 11);
+ UTexture2D NoResource; NoResource.StubX = NoResource.StubY = 2; CHECK(!Sub01PersistentTexture::Update(&NoResource, 0, 0, 1, 1, Frame(1, 1, 1)) && UTexture2D::StubUpdates == 103, 12);
+ CHECK(!Sub01PersistentTexture::Ensure(Slot, 0, 4, &Created) && !Sub01PersistentTexture::Ensure(Slot, 5000, 4, &Created) && Slot.Get() == A && Created == 1, 13);
+ // a new size: a new texture (the old one is left to the garbage collector), black again
+ UTexture2D* C = Sub01PersistentTexture::Ensure(Slot, 6, 6, &Created); StubRender::Flush();
+ CHECK(C && C != A && Slot.Get() == C && Created == 2 && UTexture2D::StubCreated == 2 && Black(C, 5, 5) && UTexture2D::StubUpdates == UTexture2D::StubCleanups, 14);
+ delete A; delete C;
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v22_persistent_texture_runs(v22_patched, tmp_path):
+    """One texture per size, updated in place; each heap copy freed once by the cleanup (AddressSanitizer when available)."""
+    stub = tmp_path / 'stub'
+    (stub / 'Engine').mkdir(parents=True)
+    (stub / 'ue_stub.h').write_text(STUB)
+    for name in ('CoreMinimal.h', 'RHI.h', 'Engine/Texture2D.h'):
+        (stub / name).write_text('#pragma once\n#include "ue_stub.h"\n')
+    shutil.copy(v22_patched / v22.NEW_HEADER, tmp_path / v22.NEW_HEADER)
+    (tmp_path / 'driver.cpp').write_text(PERSISTENT_DRIVER)
+    name, path, _ = COMPILERS[0]
+    for sanitize in (['-fsanitize=address,undefined', '-fno-omit-frame-pointer'], []):
+        build = subprocess.run([path, '-std=c++20', '-O1', *sanitize, f'-I{tmp_path}', '-isystem', str(stub), str(tmp_path / 'driver.cpp'), '-o', str(tmp_path / 'driver')],
+                               capture_output=True, text=True)
+        if build.returncode == 0:
+            break
+    assert build.returncode == 0, build.stderr[-6000:]
+    run = subprocess.run([str(tmp_path / 'driver')], capture_output=True, text=True, timeout=120)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+BRIDGE_UNIT = r'''#include "ue_stub.h"
+#include "Sub01PersistentTexture.h"
+class UCanvasRenderTarget2D : public UTexture {};
+class UMaterialInstanceDynamic : public UObject { public: UTexture* StubBound = nullptr; int64 StubSets = 0; void SetTextureParameterValue(const FName&, UTexture* T) { StubBound = T; ++StubSets; } };
+class USub01PCBridge : public UActorComponent {
+public:  // stand-ins for the members of Sub01PCBridge.h the v22 code reads (same names and types), then the patched v22 declarations
+ bool Private = true, LocalPrivacy = false, PrivacyDesired = false, ReadOnlyBrowser = false; uint64 Generation = 0; double ScreenAspect = 1.7;
+ TObjectPtr<UMaterialInstanceDynamic> MonitorMaterial; TObjectPtr<UCanvasRenderTarget2D> TerminalCanvas;
+ bool IsPublicState(const TSharedPtr<FJsonObject>& State) const;
+@@PUBLIC@@
+@@PRIVATE@@
+};
+@@ISPUBLIC@@
+@@METHODS@@
+'''
+BRIDGE_DRIVER = r'''
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static TSharedPtr<FJsonObject> State(bool Privacy, const TCHAR* Mode, bool Connected, bool Available, const TCHAR* Kind = u"graphical", const TCHAR* Phase = u"connected") {  // a runner /pc/state
+ TSharedPtr<FJsonObject> S = MakeShared<FJsonObject>(); S->StubBools[u"privacy"] = Privacy; if (Mode) S->StubStrings[u"pc_mode"] = FString(Mode);
+ TSharedPtr<FJsonObject> V = MakeShared<FJsonObject>(); V->StubBools[u"connected"] = Connected; if (Phase) V->StubStrings[u"phase"] = FString(Phase); S->StubObjects[u"vagon"] = V;
+ TSharedPtr<FJsonObject> D = MakeShared<FJsonObject>(); D->StubBools[u"available"] = Available; if (Kind) D->StubStrings[u"kind"] = FString(Kind); S->StubObjects[u"display"] = D; return S; }
+int main() {
+ UMaterialInstanceDynamic Mid; UCanvasRenderTarget2D Canvas; UTexture2D Graphical, Feed; USub01PCBridge B; B.MonitorMaterial = &Mid; B.TerminalCanvas = &Canvas;
+ double& Now = FPlatformTime::StubNow; Now = 100;
+ // closed until a public poll confirmed the connected Vagon desktop: the bridge's own picture
+ B.ShowFrame(&Canvas); CHECK(Mid.StubBound == &Canvas && Mid.StubSets == 1, 1);
+ B.ShowFrame(&Canvas); CHECK(Mid.StubSets == 1, 101);  // the same picture again: the MID is not touched (textures update in place)
+ CHECK(!B.IsMonitorFeedAllowed(Now) && !B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Canvas && B.GetMonitorConfirmedAt() < 0, 2);
+ CHECK(B.MonitorFeedGateReason(Now) == FString(u"PC private or backend unavailable"), 102);
+ B.Private = false; B.NoteMonitorFeedSource(State(false, u"vagon", true, true), Now);  // the poll's second read (Private false as after ApplyTerminal)
+ CHECK(B.IsMonitorFeedAllowed(Now + .2) && B.GetMonitorConfirmedAt() == 100 && B.MonitorFeedGateReason(Now) == FString(u"open"), 3);
+ CHECK(B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Feed, 4);
+ const int64 Sets = Mid.StubSets; CHECK(B.SetMonitorFeedFrame(&Feed) && Mid.StubSets == Sets, 5);  // renewing every tick touches nothing
+ B.ShowFrame(&Graphical); CHECK(Mid.StubBound == &Feed && Mid.StubSets == Sets, 6);  // the bridge's own poll never takes the monitor back (no flicker)
+ CHECK(!B.SetMonitorFeedFrame(nullptr) && Mid.StubBound == &Graphical, 7);  // no progress: the bridge's latest own picture
+ auto Reopen = [&]() { B.Private = B.LocalPrivacy = B.PrivacyDesired = B.ReadOnlyBrowser = false; B.NoteMonitorFeedSource(State(false, u"vagon", true, true), Now); return B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Feed; };
+ // every privacy flag closes it at once and the bridge's own picture comes back on the next renewal
+ CHECK(Reopen(), 8); B.LocalPrivacy = true; CHECK(!B.IsMonitorFeedAllowed(Now) && !B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Graphical && B.MonitorFeedGateReason(Now) == FString(u"local privacy"), 9);
+ CHECK(Reopen(), 10); B.PrivacyDesired = true; CHECK(!B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Graphical, 11);
+ CHECK(Reopen(), 12); B.Private = true; CHECK(!B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Graphical, 13);
+ CHECK(Reopen(), 14); B.ReadOnlyBrowser = true; CHECK(!B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Graphical && B.MonitorFeedGateReason(Now) == FString(u"read-only cinematic browser"), 15);
+ CHECK(Reopen(), 16); B.ShowFrame(&Graphical); B.LocalPrivacy = true; B.ShowFrame(&Graphical); CHECK(Mid.StubBound == &Graphical, 17);  // the poll itself drops it too
+ // a confirming read that is not the public, connected Vagon desktop with an available GRAPHICAL display closes it AT ONCE (no renewal needed)
+ struct { bool Privacy; const TCHAR* Mode; bool Connected, Available; const TCHAR* Kind; } Closed[] = {{true, u"vagon", true, true, u"graphical"},
+  {false, u"chromium", true, true, u"graphical"}, {false, nullptr, true, true, u"graphical"}, {false, u"vagon", false, true, u"graphical"}, {false, u"vagon", true, false, u"graphical"},
+  {false, u"vagon", true, true, u"terminal"}, {false, u"vagon", true, true, nullptr}};
+ int32 Case = 20; for (auto& C : Closed) { CHECK(Reopen(), Case); B.NoteMonitorFeedSource(State(C.Privacy, C.Mode, C.Connected, C.Available, C.Kind), Now);
+  CHECK(Mid.StubBound == &Graphical && !B.IsMonitorFeedAllowed(Now) && B.GetMonitorConfirmedAt() < 0 && !B.SetMonitorFeedFrame(&Feed), Case + 1); Case += 2; }
+ // the Vagon host page's login/dashboard can come with connected still true: the phase must be "connected" too (the sidecar's rule)
+ for (const TCHAR* Phase : {u"connecting", u"login_required", u"dashboard"}) { CHECK(Reopen(), 37); B.NoteMonitorFeedSource(State(false, u"vagon", true, true, u"graphical", Phase), Now); CHECK(Mid.StubBound == &Graphical && !B.IsMonitorFeedAllowed(Now), 38); }
+ CHECK(Reopen(), 39); B.NoteMonitorFeedSource(State(false, u"vagon", true, true, u"graphical", nullptr), Now); CHECK(Mid.StubBound == &Graphical && !B.IsMonitorFeedAllowed(Now), 35);
+ CHECK(B.MonitorFeedGateReason(Now) == FString(u"source mismatch (not the public, connected Vagon desktop)"), 36);
+ CHECK(Reopen(), 40); B.NoteMonitorFeedSource(nullptr, Now); CHECK(!B.IsMonitorFeedAllowed(Now) && Mid.StubBound == &Graphical, 41);  // backend unavailable
+ CHECK(Reopen(), 42); B.LocalPrivacy = true; B.NoteMonitorFeedSource(State(false, u"vagon", true, true), Now); B.LocalPrivacy = false; CHECK(!B.IsMonitorFeedAllowed(Now), 43);  // not public: not confirmed
+ // the confirming read must have STARTED less than @@CONFIRM@@ s ago; the poll timer's SelectMonitorFrame drops the feed even without a renewal
+ Now = 200; CHECK(Reopen(), 44); const double T0 = Now;
+ CHECK(B.IsMonitorFeedAllowed(T0 + @@CONFIRM@@ - .01) && !B.IsMonitorFeedAllowed(T0 + @@CONFIRM@@ + .01) && !B.IsMonitorFeedAllowed(T0 - .01), 45);
+ Now = T0 + @@CONFIRM@@ + .01; CHECK(B.MonitorFeedGateReason(Now) == FString(u"no recent public confirmation"), 46);
+ B.SelectMonitorFrame(); CHECK(Mid.StubBound == &Graphical, 47);  // a hung backend: the 0.5 s poll timer re-selects before it returns early
+ // a feed the character stops renewing is dropped by the next selection even while the gate stays open
+ Now = 300; CHECK(Reopen(), 48); Now += @@RENEW@@ + .05; B.NoteMonitorFeedSource(State(false, u"vagon", true, true), Now); CHECK(Mid.StubBound == &Graphical, 49);
+ CHECK(B.SetMonitorFeedFrame(&Feed) && Mid.StubBound == &Feed, 50);  // renewed again: back
+ CHECK(B.GetMonitorPrivacyGeneration() == 0 && B.GetMonitorScreenAspect() == 1.7 && B.GetMonitorTexturesCreated() == 0, 51);
+ // EndPlay while the feed is bound: the MID itself leaves the feed's texture (the terminal canvas, or nothing without one) and nothing is held
+ CHECK(Mid.StubBound == &Feed, 52); B.ReleaseMonitorFeed(); CHECK(Mid.StubBound == &Canvas && !B.FeedFrame && !B.BoundFrame && !B.OwnFrame && !B.IsMonitorFeedAllowed(Now), 53);
+ CHECK(Reopen(), 54); B.TerminalCanvas = nullptr; B.ReleaseMonitorFeed(); CHECK(Mid.StubBound == nullptr && !B.FeedFrame && !B.BoundFrame, 55);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v22_pc_bridge_gate_runs(v22_patched, tmp_path):
+    """The patched bridge's own v22 methods and IsPublicState, run against stand-ins for its other members: fail closed on every condition."""
+    pc_h, pc_cpp = lf(v22_patched / 'Sub01PCBridge.h'), lf(v22_patched / 'Sub01PCBridge.cpp')
+    for member in ('Private=true', 'LocalPrivacy=false', 'bool PrivacyDesired=false', 'ReadOnlyBrowser=false', 'uint64 Generation=0;', 'double ScreenAspect=1.7;',
+                   'TObjectPtr<UMaterialInstanceDynamic> MonitorMaterial;', 'TObjectPtr<UCanvasRenderTarget2D> TerminalCanvas;'):
+        assert member in pc_h, member  # the stand-ins mirror the real declarations
+    public, at = _block(pc_h, ' // SUB01_STREAMER_VISUAL_V2_V22 BEGIN (tools', ' // SUB01_STREAMER_VISUAL_V2_V22 END\n')
+    private, p_at = _block(pc_h, ' // SUB01_STREAMER_VISUAL_V2_V22 BEGIN (private)', '// SUB01_STREAMER_VISUAL_V2_V22 END (private)\n')
+    ispublic, i_at = _function(pc_cpp, 'bool USub01PCBridge::IsPublicState(')
+    methods, m_at = _block(pc_cpp, V22_MARKER + ' BEGIN', V22_MARKER + ' END')
+    unit = BRIDGE_UNIT.replace('@@PUBLIC@@', f'#line {at} "{v22_patched / "Sub01PCBridge.h"}"\n{public}').replace(
+        '@@PRIVATE@@', f'#line {p_at} "{v22_patched / "Sub01PCBridge.h"}"\n{private}').replace(
+        '@@ISPUBLIC@@', f'#line {i_at} "{v22_patched / "Sub01PCBridge.cpp"}"\n{ispublic}').replace(
+        '@@METHODS@@', f'#line {m_at} "{v22_patched / "Sub01PCBridge.cpp"}"\n{methods}')
+    stub = tmp_path / 'stub'
+    (stub / 'Engine').mkdir(parents=True)
+    (stub / 'ue_stub.h').write_text(STUB)
+    for name in ('CoreMinimal.h', 'RHI.h', 'Engine/Texture2D.h'):
+        (stub / name).write_text('#pragma once\n#include "ue_stub.h"\n')
+    shutil.copy(v22_patched / v22.NEW_HEADER, tmp_path / v22.NEW_HEADER)
+    name, path, flags = COMPILERS[0]
+    (tmp_path / 'bridge.cpp').write_text(unit)
+    syntax = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{tmp_path}', '-isystem', str(stub), str(tmp_path / 'bridge.cpp')], capture_output=True, text=True)
+    assert syntax.returncode == 0, syntax.stderr[-6000:]
+    driver = BRIDGE_DRIVER.replace('@@CONFIRM@@', repr(v22.CONFIRM_SECONDS)).replace('@@RENEW@@', repr(v22.RENEW_SECONDS))
+    (tmp_path / 'driver.cpp').write_text(unit + driver)
+    build = subprocess.run([path, '-std=c++20', '-O1', f'-I{tmp_path}', '-isystem', str(stub), str(tmp_path / 'driver.cpp'), '-o', str(tmp_path / 'driver')], capture_output=True, text=True)
+    assert build.returncode == 0, build.stderr[-6000:]
+    run = subprocess.run([str(tmp_path / 'driver')], capture_output=True, text=True, timeout=120)
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+V22_PREFIX = CAM2_DRIVER[:CAM2_DRIVER.index('int main() {')] + r'''
+#include <algorithm>
+static std::vector<uint8> MakeJpeg(uint32 Serial, int32 W = 64, int32 H = 36, int32 Entropy = 300) {  // the stub decoder's format, a structurally real JPEG
+ std::vector<uint8> J = {0xFF, 0xD8};
+ auto Segment = [&J](uint8 Marker, std::vector<uint8> Body) { J.push_back(0xFF); J.push_back(Marker); const int32 L = int32(Body.size()) + 2; J.push_back(uint8(L >> 8)); J.push_back(uint8(L)); J.insert(J.end(), Body.begin(), Body.end()); };
+ Segment(0xE0, {'J', 'F', 'I', 'F', 0, uint8(Serial), uint8(Serial >> 8), uint8(Serial >> 16), uint8(Serial >> 24), 0xFF, 0xD9, 0xFF, 0xD8, 0xFF});  // EOI and SOI bytes inside a segment
+ J.push_back(0xFF);  // a fill byte before the next marker
+ Segment(0xC0, {8, uint8(H >> 8), uint8(H), uint8(W >> 8), uint8(W), 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1});
+ Segment(0xDA, {3, 1, 0, 2, 0x11, 3, 0x11, 0, 63, 0});
+ for (int32 K = 0; K < Entropy; ++K) { J.push_back(uint8(K * 7 + int32(Serial))); if (J.back() == 0xFF) J.push_back(0x00); if (K == Entropy / 2) { J.push_back(0xFF); J.push_back(0xD3); } }  // stuffing, a restart marker
+ J.push_back(0xFF); J.push_back(0xFF); J.push_back(0xD9);  // fill before EOI
+ return J;
+}
+'''
+SCAN_DRIVER = V22_PREFIX + r'''
+static std::vector<uint8> Cat(std::initializer_list<std::vector<uint8>> Parts) { std::vector<uint8> Out; for (const auto& P : Parts) Out.insert(Out.end(), P.begin(), P.end()); return Out; }
+static FSub01JpegScan Scan(const std::vector<uint8>& B, int64 Max = 1 << 22) { return Sub01ScanJpegs(B.data(), int64(B.size()), Max); }
+int main() {
+ const std::vector<uint8> A = MakeJpeg(1), B = MakeJpeg(2), C = MakeJpeg(3); const int64 a = int64(A.size()), b = int64(B.size());
+ // one whole frame, its EOI found by walking (the FF D9 inside APP0 does not end it), the stuffing, the RST and the fill bytes skipped
+ FSub01JpegScan S = Scan(A); CHECK(S.Frames == 1 && S.Start == 0 && S.End == a && S.Consumed == a && S.Resyncs == 0, 1);
+ // two whole frames and half of a third: the newest whole one, the half kept
+ const std::vector<uint8> Half(C.begin(), C.begin() + int64(C.size()) / 2);
+ S = Scan(Cat({A, B, Half})); CHECK(S.Frames == 2 && S.Start == a && S.End == a + b && S.Consumed == a + b && S.Resyncs == 0, 2);
+ // the half is finished by the next read: found then
+ S = Scan(Cat({Half, std::vector<uint8>(C.begin() + int64(C.size()) / 2, C.end())})); CHECK(S.Frames == 1 && S.End == int64(C.size()), 3);
+ // garbage first (with an FF D8 not followed by FF, and a stray FF D8 FF + a reserved marker): resynced on the real SOI
+ std::vector<uint8> Junk(300, 0x5A); Junk[10] = 0xFF; Junk[11] = 0xD8; Junk[100] = 0xFF; Junk[101] = 0xD8; Junk[102] = 0xFF; Junk[103] = 0x5A;
+ S = Scan(Cat({Junk, A})); CHECK(S.Frames == 1 && S.Start == 300 && S.End == 300 + a && S.Resyncs >= 1 && S.Skipped == 300, 4);
+ // a frame cut in its entropy data, followed by a whole one: the SOI inside the cut frame resyncs, only the whole one is returned
+ const std::vector<uint8> Cut(B.begin(), B.begin() + b - 60);
+ S = Scan(Cat({Cut, C})); CHECK(S.Frames == 1 && S.Start == b - 60 && S.End == b - 60 + int64(C.size()) && S.Resyncs >= 1, 5);
+ // a possibly split SOI at the end is kept; plain garbage is consumed
+ S = Scan(Cat({A, {0x11, 0xFF}})); CHECK(S.Frames == 1 && S.Consumed == a + 1, 6);
+ S = Scan(Cat({A, {0x11, 0xFF, 0xD8}})); CHECK(S.Frames == 1 && S.Consumed == a + 1, 7);
+ S = Scan(std::vector<uint8>(100, 0x22)); CHECK(S.Frames == 0 && S.Consumed == 100 && S.Resyncs == 1, 8);
+ S = Scan(std::vector<uint8>()); CHECK(S.Frames == 0 && S.Consumed == 0 && S.Start < 0, 9);
+ // a frame over the size limit is garbage (resync), the next one is found; an unfinished frame within the limit waits
+ S = Scan(Cat({MakeJpeg(4, 64, 36, 2000), A}), 1000); CHECK(S.Frames == 1 && S.End == int64(MakeJpeg(4, 64, 36, 2000).size()) + a && S.Resyncs >= 1, 10);
+ S = Scan(Half, 1000); CHECK(S.Frames == 0 && S.Consumed == 0, 11);
+ // an unfinished frame longer than the limit is dropped instead of waiting forever
+ { const std::vector<uint8> Long = MakeJpeg(5, 64, 36, 3000); S = Scan(std::vector<uint8>(Long.begin(), Long.begin() + 2500), 1000); CHECK(S.Frames == 0 && S.Consumed >= 2000, 12); }
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v22_jpeg_scan_resyncs_and_keeps_the_newest_frame(v22_patched, tmp_path):
+    units = build_units_v22(v22_patched, tmp_path / 'u', driver=SCAN_DRIVER)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+FEED_DRIVER = V22_PREFIX + r'''
+static int Writer = -1; static int64 TickNo = 0; static bool Confirming = true;
+static bool Put(const std::vector<uint8>& B, std::size_t From = 0, std::size_t To = std::size_t(-1)) {
+ To = std::min(To, B.size()); for (std::size_t Done = From; Done < To;) { const ssize_t N = write(Writer, B.data() + Done, To - Done); if (N <= 0) return false; Done += std::size_t(N); } return true; }
+static int32 ShownSerial(ASub01HomeCharacter& C) {  // the serial (low byte) in the texture at source pixel (5,7) through the bridge's layout; -2 = blank/other
+ UTexture2D* T = C.StreamerVisualMonitorTexture.Get(); if (!T) return -1;
+ const uint8* P = T->StubPixel((T->GetSizeX() - 64) / 2 + 5, (T->GetSizeY() - 36) / 2 + 7); return P[1] == 5 && P[2] == 7 && P[3] == 255 ? P[0] : -2; }
+// game ticks at 60 Hz; the PC bridge's poll confirms the connected desktop every 0.5 s (its second read's start time); then the render thread and the tasks
+static void Run(ASub01HomeCharacter& C, USub01PCBridge& B, int N, bool Render = true, bool Tasks = true) {
+ for (int K = 0; K < N; ++K) { FPlatformTime::StubNow += 1 / 60.; if (++TickNo % 30 == 0 && Confirming) B.StubConfirmedAt = FPlatformTime::StubNow;
+  C.ApplyStreamerVisualV2(FPlatformTime::StubNow, 1 / 60.f); if (Render) StubRender::Flush(); if (Tasks) StubAsync::Flush(); } }
+static double RunUntil(ASub01HomeCharacter& C, USub01PCBridge& B, uint32 Serial, int Max = 240) {  // -> seconds until shown, or -1
+ const double T0 = FPlatformTime::StubNow; for (int K = 0; K < Max; ++K) { Run(C, B, 1); if (ShownSerial(C) == int32(uint8(Serial))) return FPlatformTime::StubNow - T0; } return -1; }
+int main() {
+ signal(SIGPIPE, SIG_IGN);
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; USub01PCBridge Bridge; ASub01HomeCharacter C;
+ C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim; C.PCBridge = &Bridge; Bridge.StubAspect = 2.0;
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65;
+ C.StreamerVisualCam2Dir = u"@@DIR@@"; FPlatformTime::StubNow = 1000; StubRender::Deferred = StubAsync::Deferred = true;
+ CHECK(mkfifo("@@DIR@@/monitor.mjpeg", 0600) == 0, 1);
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle"); C.StreamerVisualDeskPropsScanned = true; C.StreamerVisualCam2On = 0;
+ FSub01MonitorFeed& Feed = *C.StreamerVisualMonitorFeed; CHECK(Feed.FifoPath == FString(u"@@DIR@@/monitor.mjpeg") && Feed.Images, 2);
+ CHECK(Near(C.StreamerVisualMonitorDelaySeconds, @@DELAY@@, 1e-6) && Near(C.StreamerVisualMonitorStaleSeconds, @@STALE@@, 1e-6), 200);
+ // 1. the reader opens the sidecar's FIFO (no writer yet), so the sidecar can connect; nothing is bound while the gate is closed
+ Run(C, Bridge, 3); CHECK(Feed.Open.load() && Feed.Fd >= 0 && !C.StreamerVisualMonitorFeedBound && Bridge.StubFeed == nullptr, 3);
+ Writer = open("@@DIR@@/monitor.mjpeg", O_WRONLY | O_NONBLOCK); CHECK(Writer >= 0, 4);
+ // 2. gate closed: the bytes are read and discarded, nothing queued or decoded, no texture
+ CHECK(Put(MakeJpeg(1)) && Put(MakeJpeg(2)), 5); Run(C, Bridge, 3);
+ CHECK(Feed.Discarded.load() > 0 && Feed.Queued.load() == 0 && Feed.Decoded.load() == 0 && IImageWrapper::StubDecodes == 0 && Bridge.StubFeed == nullptr && UTexture2D::StubCreated == 0, 6);
+ CHECK(C.StreamerVisualMonitorFeedGateReason == FString(u"not started") || C.StreamerVisualMonitorFeedGateReason == FString(u"stub closed"), 201);
+ // 3. the gate opens: what arrives during the @@GUARD@@ s quarantine is discarded too (frames the pipe and ffmpeg held from before)
+ Bridge.StubFeedAllowed = true; Run(C, Bridge, 1); CHECK(C.StreamerVisualMonitorFeedGateReason == FString(u"open"), 202);
+ CHECK(Put(MakeJpeg(3)), 7); Run(C, Bridge, 6); CHECK(Feed.Queued.load() == 0 && Feed.Decoded.load() == 0 && Bridge.StubFeed == nullptr, 8);
+ Run(C, Bridge, 12);
+ // 4. three frames in one read: only the newest is queued; it plays out no sooner than the delay and once a later confirmation completed, into ONE
+ //    texture laid out like the bridge's (aspect 2: 72x36, 4 px black sides)
+ const int64 Older0 = Feed.DroppedOlder.load(); CHECK(Put(MakeJpeg(10)) && Put(MakeJpeg(11)) && Put(MakeJpeg(12)), 9); Run(C, Bridge, 1);
+ CHECK(Feed.Queued.load() == 1 && Feed.DroppedOlder.load() - Older0 == 2, 10);
+ Run(C, Bridge, 30); CHECK(Feed.Decoded.load() == 0 && ShownSerial(C) == -1, 11);  // 0.5 s: still waiting for its playout
+ const double Shown12 = RunUntil(C, Bridge, 12); UTexture2D* Tex = C.StreamerVisualMonitorTexture.Get();
+ CHECK(Shown12 > 0 && Shown12 + 31 / 60. >= @@DELAY@@ && Shown12 + 31 / 60. < @@DELAY@@ + .6 && Feed.Decoded.load() == 1 && IImageWrapper::StubDecodes == 1 && Bridge.StubFeed == Tex && C.StreamerVisualMonitorFeedBound, 12);
+ CHECK(Tex && UTexture2D::StubCreated == 1 && Tex->GetSizeX() == 72 && Tex->GetSizeY() == 36 && Tex->SRGB && Tex->NeverStream && Tex->StubPixel(0, 0)[3] == 255 && Tex->StubPixel(0, 0)[0] == 0 && Tex->StubPixel(71, 35)[0] == 0, 13);
+ // 5. one frame per tick for a second: played out one per tick after the delay, still ONE texture, every upload's heap copy freed
+ const int64 Shown0 = C.StreamerVisualMonitorFeedShown;
+ for (uint32 K = 0; K < 60; ++K) { CHECK(Put(MakeJpeg(100 + K)), 14); Run(C, Bridge, 1); }
+ CHECK(RunUntil(C, Bridge, 159) > 0 && C.StreamerVisualMonitorFeedShown - Shown0 >= 50, 15);
+ CHECK(UTexture2D::StubCreated == 1 && C.StreamerVisualMonitorTexture.Get() == Tex && C.StreamerVisualMonitorTexturesCreated == 1 && UTexture2D::StubUpdates == UTexture2D::StubCleanups
+       && Sub01PersistentTexture::PendingUploads().load() == 0, 16);
+ // 6. at most one pump (read + one decode) in flight: while it has not run, the game thread launches no second one
+ for (int K = 0; K < 6; ++K) Run(C, Bridge, 1, true, false);
+ CHECK(StubAsync::Queue.size() == 1 && Feed.Busy.load() == 1, 17); StubAsync::Flush(); CHECK(Feed.Busy.load() == 0, 18);
+ // 7. resync: garbage, a frame cut short (its tail never comes), then a whole one: the whole one is shown, nothing failed to decode
+ { std::vector<uint8> Junk(500, 0x5A); Junk[100] = 0xFF; Junk[101] = 0xD8; Junk[200] = 0xFF; Junk[201] = 0xD8; Junk[202] = 0xFF; const std::vector<uint8> Cut = MakeJpeg(200); const int64 R0 = Feed.Resyncs.load();
+   CHECK(Put(Junk) && Put(Cut, 0, Cut.size() - 80) && Put(MakeJpeg(201)), 19); CHECK(RunUntil(C, Bridge, 201) > 0 && Feed.Resyncs.load() > R0 && Feed.DecodeFailed.load() == 0, 20); }
+ // 8. a frame split across reads: shown once whole
+ { const std::vector<uint8> J = MakeJpeg(202); CHECK(Put(J, 0, 50), 21); Run(C, Bridge, 60); CHECK(ShownSerial(C) == 201 && Feed.Queued.load() == 0, 22); CHECK(Put(J, 50), 23); CHECK(RunUntil(C, Bridge, 202) > 0, 24); }
+ // 9. the bridge's privacy generation changes while a decoded frame waits: a new epoch, that frame is never uploaded, the bridge's picture meanwhile
+ { CHECK(Put(MakeJpeg(203)), 25); for (int K = 0; K < 240 && !Feed.Ready.load(); ++K) { Run(C, Bridge, 1, true, false); StubAsync::Flush(); }
+   CHECK(Feed.Ready.load() != nullptr, 26); ++Bridge.StubGeneration; const int64 Rejected0 = C.StreamerVisualMonitorFeedRejected; Run(C, Bridge, 1);
+   CHECK(C.StreamerVisualMonitorFeedRejected == Rejected0 + 1 && Bridge.StubFeed == nullptr && ShownSerial(C) == -2, 27); }  // and the texture blanked
+ // 10. the gate closes: unbound at once, blanked; what was written while closed is never shown, not even after it reopens
+ Run(C, Bridge, 20); CHECK(Put(MakeJpeg(204)), 28); CHECK(RunUntil(C, Bridge, 204) > 0 && Bridge.StubFeed == Tex, 29);
+ Bridge.StubFeedAllowed = false; Run(C, Bridge, 1); CHECK(Bridge.StubFeed == nullptr && !C.StreamerVisualMonitorFeedBound && ShownSerial(C) == -2, 30);
+ CHECK(Put(MakeJpeg(205)), 31); Run(C, Bridge, 3); Bridge.StubFeedAllowed = true; Run(C, Bridge, 90);
+ CHECK(ShownSerial(C) == -2 && Bridge.StubFeed == nullptr && Feed.Decoded.load() > 0, 32);
+ CHECK(Put(MakeJpeg(206)), 33); CHECK(RunUntil(C, Bridge, 206) > 0 && Bridge.StubFeed == Tex, 34);
+ // 11. a dead feed: no new upload for monitor_stale_s -> the bridge's own picture (counted once) and a blank texture; back with the next frame
+ const int64 Stale0 = C.StreamerVisualMonitorFeedStale; Run(C, Bridge, int(@@STALE@@ * 60) - 6); CHECK(Bridge.StubFeed == Tex && ShownSerial(C) == 206, 35);
+ Run(C, Bridge, 12); CHECK(Bridge.StubFeed == nullptr && C.StreamerVisualMonitorFeedStale == Stale0 + 1 && !C.StreamerVisualMonitorFeedBound && ShownSerial(C) == -2, 36);
+ CHECK(Put(MakeJpeg(207)), 37); CHECK(RunUntil(C, Bridge, 207) > 0 && Bridge.StubFeed == Tex, 38);
+ // 12. confirm-after: without a confirmation that started after a frame was read, the frame never plays out (a locked runner the game has not noticed)
+ Confirming = false; CHECK(Put(MakeJpeg(220)), 39); Run(C, Bridge, 150); CHECK(ShownSerial(C) != 220 && Feed.Queued.load() == 1, 40);
+ Confirming = true; CHECK(RunUntil(C, Bridge, 220) > 0, 41);
+ // 13. the playout ring is bounded: without confirmations frames pile up to @@RING@@, the oldest dropped; the newest plays out afterwards
+ Confirming = false; const int64 Overflow0 = Feed.DroppedOverflow.load(); for (uint32 K = 0; K < 70; ++K) { CHECK(Put(MakeJpeg(K)), 42); Run(C, Bridge, 1); }
+ CHECK(Feed.Queued.load() == @@RING@@ && Feed.DroppedOverflow.load() - Overflow0 == 70 - @@RING@@, 43);
+ Confirming = true; CHECK(RunUntil(C, Bridge, 69) > 0 && Feed.Queued.load() == 0, 44);
+ // 14. a stalled render thread: at most @@PENDING@@ uploads wait for the RHI, newer frames are dropped (counted), nothing piles up
+ { const int64 Busy0 = C.StreamerVisualMonitorFeedUploadBusy; for (uint32 K = 0; K < 90; ++K) { CHECK(Put(MakeJpeg(150 + K)), 45); Run(C, Bridge, 1, false, true); }
+   CHECK(Sub01PersistentTexture::PendingUploads().load() <= @@PENDING@@ && C.StreamerVisualMonitorFeedUploadBusy - Busy0 >= 20, 46);
+   StubRender::Flush(); CHECK(Sub01PersistentTexture::PendingUploads().load() == 0 && UTexture2D::StubUpdates == UTexture2D::StubCleanups, 47); CHECK(RunUntil(C, Bridge, 239) > 0, 48); }
+ // 15. monitor_fps 30: a pump every other tick; 60: every tick
+ int64 L0 = StubAsync::Launched; C.StreamerVisualMonitorFps = 30; Run(C, Bridge, 60); CHECK(StubAsync::Launched - L0 >= 29 && StubAsync::Launched - L0 <= 31, 49);
+ L0 = StubAsync::Launched; C.StreamerVisualMonitorFps = 60; Run(C, Bridge, 60); CHECK(StubAsync::Launched - L0 >= 59, 50);
+ // 16. monitor_feed 0: unbound and the FIFO closed (no reader: the sidecar stops ffmpeg), no pumps; 1 reopens it
+ C.StreamerVisualMonitorFeedOn = 0; Run(C, Bridge, 3); CHECK(!Feed.Open.load() && Feed.Fd < 0 && Bridge.StubFeed == nullptr, 51);
+ close(Writer); errno = 0; CHECK(open("@@DIR@@/monitor.mjpeg", O_WRONLY | O_NONBLOCK) < 0 && errno == ENXIO, 52);
+ L0 = StubAsync::Launched; Run(C, Bridge, 30); CHECK(StubAsync::Launched == L0, 53);
+ C.StreamerVisualMonitorFeedOn = 1; FPlatformTime::StubNow += 1.1; Run(C, Bridge, 3); CHECK(Feed.Open.load(), 54);
+ Writer = open("@@DIR@@/monitor.mjpeg", O_WRONLY | O_NONBLOCK); CHECK(Writer >= 0, 55); Run(C, Bridge, 20);
+ CHECK(Put(MakeJpeg(250)), 56); CHECK(RunUntil(C, Bridge, 250) > 0 && Bridge.StubFeed == Tex, 57);
+ // 17. a writer that leaves mid-frame (the sidecar crashed) and a new one: the cut frame never shows, the next whole one does
+ { const std::vector<uint8> J = MakeJpeg(251); CHECK(Put(J, 0, J.size() - 100), 58); close(Writer); Run(C, Bridge, 2); Writer = open("@@DIR@@/monitor.mjpeg", O_WRONLY | O_NONBLOCK);
+   CHECK(Writer >= 0 && Put(MakeJpeg(252)), 59); CHECK(RunUntil(C, Bridge, 252) > 0 && Feed.DecodeFailed.load() == 0 && IImageWrapper::StubRefused == 0, 60); }
+ // 18. the log window ran (many seconds of ticks) and the texture is still the one created at the first frame
+ CHECK(C.StreamerVisualMonitorFeedWindowAt > 1005 && C.StreamerVisualMonitorFeedFpsShown >= 0 && UTexture2D::StubCreated == 1, 61);
+ // 19. a path that is not this user's private FIFO is never opened: a regular file, a group-readable FIFO
+ for (const TCHAR* Dir : {u"@@DIR2@@", u"@@DIR3@@"}) { ASub01HomeCharacter D; D.FirstPersonBody = &Body; D.ViewCamera = &Camera; D.PCBridge = &Bridge; D.StreamerVisualCam2Dir = Dir;
+  D.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); D.StreamerVisualSchemaVersion = 2; D.StreamerVisualDeskPropsScanned = true; D.StreamerVisualCam2On = 0; Run(D, Bridge, 3);
+  CHECK(!D.StreamerVisualMonitorFeed->Open.load() && D.StreamerVisualMonitorFeed->Fd < 0 && D.StreamerVisualMonitorFeed->Refused.load() == 1, 62); }
+ close(Writer);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v22_monitor_feed_logic_runs(v22_patched, tmp_path):
+    """Runs the patched reader against a real FIFO: privacy gate and quarantine, newest frame only, the playout delay and confirm-after rule, one pump
+    in flight, one texture, resync, the bounded ring, the pending-upload cap, the no-progress fallback (blanked), monitor_fps and monitor_feed,
+    a foreign path never opened."""
+    dirs = {name: tmp_path / name for name in ('stream', 'foreign', 'shared')}
+    for path in dirs.values():
+        path.mkdir()
+    (dirs['foreign'] / 'monitor.mjpeg').write_bytes(b'not a fifo')
+    os.mkfifo(dirs['shared'] / 'monitor.mjpeg')
+    os.chmod(dirs['shared'] / 'monitor.mjpeg', 0o640)
+    driver = (FEED_DRIVER.replace('@@DIR@@', str(dirs['stream'])).replace('@@DIR2@@', str(dirs['foreign'])).replace('@@DIR3@@', str(dirs['shared']))
+              .replace('@@STALE@@', repr(v22.STALE_SECONDS)).replace('@@DELAY@@', repr(v22.PLAYOUT_SECONDS)).replace('@@GUARD@@', repr(v22.GUARD_SECONDS))
+              .replace('@@RING@@', str(v22.RING_FRAMES)).replace('@@PENDING@@', str(v22.MAX_PENDING_UPLOADS)))
+    units = build_units_v22(v22_patched, tmp_path / 'u', driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    assert (dirs['foreign'] / 'monitor.mjpeg').read_bytes() == b'not a fifo'
+
+
+EXPOSURE_DRIVER = V22_PREFIX + r'''
+int main() {
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; ASub01HomeCharacter C; C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim;
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65; Camera.PostProcessBlendWeight = .6f;
+ FPostProcessSettings& Web = Camera.PostProcessSettings; Web.bOverride_AutoExposureBias = 1; Web.AutoExposureBias = .5f; Web.bOverride_AutoExposureMinBrightness = 1; Web.AutoExposureMinBrightness = -3;
+ Web.bOverride_AutoExposureMethod = 1; Web.AutoExposureMethod = AEM_Manual;  // a copied manual method: mode 1 must still be automatic
+ C.StreamerVisualCam2Dir = u"@@DIR@@"; FPlatformTime::StubNow = 1000; StubRender::Deferred = StubAsync::Deferred = true;
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle"); C.StreamerVisualDeskPropsScanned = true;
+ USceneCaptureComponent2D* Cap = C.StreamerVisualCam2.Get(); FPostProcessSettings& P = Cap->PostProcessSettings;
+ CHECK(P.bOverride_AutoExposureBias && P.AutoExposureBias == .5f && Near(Cap->PostProcessBlendWeight, .6, 1e-6), 1);  // v21 copied the webcam's settings at start
+ // the default (mode @@MODE@@): histogram auto exposure (forced) with the bias @@BIAS@@ at full weight; the house volume's EV100 range is not overridden (min > max)
+ Ticks(C, 1, 1 / 60.);
+ CHECK(P.bOverride_AutoExposureBias && Near(P.AutoExposureBias, @@BIAS@@, 1e-6) && Near(Cap->PostProcessBlendWeight, 1, 1e-9) && P.bOverride_AutoExposureMethod && P.AutoExposureMethod.GetValue() == AEM_Histogram && !P.bOverride_AutoExposureMaxBrightness
+       && P.bOverride_AutoExposureMinBrightness && P.AutoExposureMinBrightness == -3 && !P.bOverride_AutoExposureApplyPhysicalCameraExposure, 2);
+ CHECK(Web.AutoExposureBias == .5f && Web.bOverride_AutoExposureBias && Near(Camera.PostProcessBlendWeight, .6, 1e-6) && Web.AutoExposureMethod.GetValue() == AEM_Manual, 3);  // the main camera untouched
+ // an EV100 range (mode 1, min <= max)
+ C.StreamerVisualCam2EvMin = -1; C.StreamerVisualCam2EvMax = 2; Ticks(C, 1, 1 / 60.);
+ CHECK(P.bOverride_AutoExposureMinBrightness && P.bOverride_AutoExposureMaxBrightness && Near(P.AutoExposureMinBrightness, -1, 1e-6) && Near(P.AutoExposureMaxBrightness, 2, 1e-6), 4);
+ // manual: AEM_Manual, physical camera exposure off, fixed at the bias; no range
+ C.StreamerVisualCam2Exposure = 2; C.StreamerVisualCam2EvBias = 2.5f; Ticks(C, 1, 1 / 60.);
+ CHECK(P.bOverride_AutoExposureMethod && P.AutoExposureMethod.GetValue() == AEM_Manual && P.bOverride_AutoExposureApplyPhysicalCameraExposure && !P.AutoExposureApplyPhysicalCameraExposure
+       && Near(P.AutoExposureBias, 2.5, 1e-6) && Near(P.AutoExposureMinBrightness, -3, 1e-6) && !P.bOverride_AutoExposureMaxBrightness && Near(Cap->PostProcessBlendWeight, 1, 1e-9), 5);
+ // 0: exactly what cam2 copied from the webcam
+ C.StreamerVisualCam2Exposure = 0; Ticks(C, 1, 1 / 60.);
+ CHECK(P.bOverride_AutoExposureBias && P.AutoExposureBias == .5f && P.bOverride_AutoExposureMethod && P.AutoExposureMethod.GetValue() == AEM_Manual && !P.bOverride_AutoExposureApplyPhysicalCameraExposure
+       && P.AutoExposureApplyPhysicalCameraExposure && P.bOverride_AutoExposureMinBrightness && P.AutoExposureMinBrightness == -3 && !P.bOverride_AutoExposureMaxBrightness && Near(Cap->PostProcessBlendWeight, .6, 1e-6), 6);
+ // applied on change only (a later tuning change re-applies everything)
+ P.AutoExposureBias = 9; Ticks(C, 5, 1 / 60.); CHECK(P.AutoExposureBias == 9, 7);
+ C.StreamerVisualCam2Exposure = 1; Ticks(C, 1, 1 / 60.); CHECK(Near(P.AutoExposureBias, 2.5, 1e-6) && Near(P.AutoExposureMinBrightness, -1, 1e-6), 8);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v22_cam2_exposure_runs(v22_patched, tmp_path):
+    (tmp_path / 'cam2').mkdir()
+    driver = (EXPOSURE_DRIVER.replace('@@DIR@@', str(tmp_path / 'cam2')).replace('@@BIAS@@', repr(v22.CAM2_EV_BIAS)).replace('@@MODE@@', str(v22.CAM2_EXPOSURE)))
+    assert v22.CAM2_EXPOSURE == 1 and v22.CAM2_EV_MIN > v22.CAM2_EV_MAX  # the default: auto + bias, the volume's range kept
+    units = build_units_v22(v22_patched, tmp_path / 'u', driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_earlier_behaviour_unchanged_under_v22(v22_patched, tmp_path):
+    """The v2 driver and the v21 driver (cam2 reader gate, lite capture, key light, perf, console) still pass on the v22 stack."""
+    run = _run_driver(build_units_v22(v22_patched, tmp_path / 'v2'), tmp_path / 'v2')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    (tmp_path / 'stream').mkdir()
+    driver = (V21_DRIVER.replace('@@DIR@@', str(tmp_path / 'stream')).replace('@@VIEW@@', repr(v21.CAM2_VIEW_CM)).replace('@@LOD@@', repr(v21.CAM2_LOD_FACTOR))
+              .replace('@@CD@@', repr(v21.KEY_CD)).replace('@@RADIUS@@', repr(v21.KEY_RADIUS_CM)).replace('@@SOFT@@', repr(v21.KEY_SOFT_CM))
+              .replace('@@OUTER@@', repr(v21.KEY_CONES[1])).replace('@@MAXCHARS@@', str(v21.CONSOLE_MAX_CHARS)))
+    run = _run_driver(build_units_v22(v22_patched, tmp_path / 'v21', driver=driver), tmp_path / 'v21')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+def test_v22_new_locals_do_not_shadow_members(v22_patched, v21_stack):
+    members = _header_members(lf(v22_patched / 'Sub01HomeLab.h'))
+    added = _added_locals(lf(v21_stack / 'Sub01HomeLab.cpp'), lf(v22_patched / 'Sub01HomeLab.cpp'))
+    assert {'Gate', 'Accept', 'Fresh', 'Bound', 'Mode', 'Range'} <= added
+    assert not (added & members), sorted(added & members)
+    header = lf(v22_patched / 'Sub01HomeLab.h')
+    declared = _header_members(header[header.index(V22_MARKER + ' BEGIN'):header.index(V22_MARKER + ' END')])
+    assert declared and not (declared & _header_members(lf(v21_stack / 'Sub01HomeLab.h')))
+    bridge_members = _header_members(lf(v22_patched / 'Sub01PCBridge.h'))
+    bridge_added = _added_locals(lf(v21_stack / 'Sub01PCBridge.cpp'), lf(v22_patched / 'Sub01PCBridge.cpp'))
+    assert {'Connected', 'Available', 'AskedAt'} <= bridge_added and not (bridge_added & bridge_members), sorted(bridge_added & bridge_members)
+    assert not ({'Mode', 'Vagon', 'Screen', 'Own', 'Now'} & bridge_members)  # FString/pointer locals the type heuristic does not see
+    pc_h = lf(v22_patched / 'Sub01PCBridge.h')
+    v22_declared = _header_members(pc_h[pc_h.index(V22_MARKER + ' BEGIN (private)'):pc_h.index(V22_MARKER + ' END (private)')])
+    assert v22_declared and not (v22_declared & _header_members(lf(v21_stack / 'Sub01PCBridge.h')))
+    dev_members = _header_members(lf(v22_patched / 'Sub01HomeDeviceBridge.h'))
+    dev_added = _added_locals(lf(v21_stack / 'Sub01HomeDeviceBridge.cpp'), lf(v22_patched / 'Sub01HomeDeviceBridge.cpp'))
+    assert not (dev_added & dev_members) and not ({'Decoded', 'BGRA', 'Texture'} & dev_members), sorted(dev_added & dev_members)
+    assert 'PersistentImages' not in lf(v21_stack / 'Sub01HomeDeviceBridge.h') and 'PersistentImagesCreated' in dev_members
