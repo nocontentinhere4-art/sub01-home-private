@@ -251,7 +251,7 @@ def jaw_rig(fx):
                                            "rig=jaw_bone"))
 
 
-def run_pass(tmp_path, monkeypatch, mutate=None, hls_ok=True, rig=jaw_rig):
+def run_pass(tmp_path, monkeypatch, mutate=None, hls_ok=True, rig=jaw_rig, extra=()):
     fx = copy_fixture("pass", tmp_path)
     table = media(fx, hls_ok)
     calls = []
@@ -266,7 +266,7 @@ def run_pass(tmp_path, monkeypatch, mutate=None, hls_ok=True, rig=jaw_rig):
             change(fx)
     out = tmp_path / "out"
     code = sa.main(["--streamer-dir", str(fx), "--game-log", str(fx / "game.log"), "--since", PASS_SINCE, "--until",
-                    PASS_UNTIL, "--out-dir", str(out), "--name", "r"])
+                    PASS_UNTIL, "--out-dir", str(out), "--name", "r", *extra])
     report = json.loads((out / "r.json").read_text())
     return code, report, (out / "r.md").read_text(), calls, by_id(report)
 
@@ -274,7 +274,8 @@ def run_pass(tmp_path, monkeypatch, mutate=None, hls_ok=True, rig=jaw_rig):
 def test_pass_scenario_passes_every_criterion_with_highlights(tmp_path, monkeypatch):
     code, report, md, calls, c = run_pass(tmp_path, monkeypatch)
     assert {k: v["status"] for k, v in c.items()} == {k: sa.PASS for k in ALL}, {k: v["why"] for k, v in c.items()}
-    assert code == 0 and report["verdict"] == sa.PASS and report["counts"]["pass"] == len(ALL)
+    assert code == 0 and report["verdict"] == sa.PASS and report["counts"]["pass"] == len(ALL) - 1   # mouth: waived
+    assert report["counts"]["waived"] == 1 and c["mouth_motion"]["waived"]
     assert len(calls) == 6 + 4                                              # 6 HLS segments, 4 recording segments
     assert [s["label"] for s in c["activity_change"]["metrics"]["spans"]] == ["browse", "game", "browse"]
     assert c["chat_executed"]["metrics"]["carried_out"] == 2               # the search and the game launch
@@ -294,10 +295,19 @@ def test_pass_scenario_passes_every_criterion_with_highlights(tmp_path, monkeypa
 
 
 def test_the_real_head_only_rig_does_not_meet_mouth_motion(tmp_path, monkeypatch):
-    code, report, _, _, c = run_pass(tmp_path, monkeypatch, rig=None)
-    assert code == 1 and report["verdict"] == sa.FAIL
+    code, report, _, _, c = run_pass(tmp_path, monkeypatch, rig=None, extra=("--no-waivers",))
+    assert code == 1 and report["verdict"] == sa.FAIL and report["counts"]["waived"] == 0
     assert [k for k, v in c.items() if v["status"] != sa.PASS] == ["mouth_motion"]
-    assert "not met" in c["mouth_motion"]["why"]
+    assert "not met" in c["mouth_motion"]["why"] and not c["mouth_motion"]["waived"]
+
+
+def test_the_owners_mouth_waiver_keeps_the_result_but_not_in_the_verdict(tmp_path, monkeypatch):
+    code, report, md, _, c = run_pass(tmp_path, monkeypatch, rig=None)
+    assert code == 0 and report["verdict"] == sa.PASS                     # owner, 2026-10-24: no mouth for now
+    assert c["mouth_motion"]["status"] == sa.FAIL and "not met" in c["mouth_motion"]["why"]
+    assert "owner" in c["mouth_motion"]["waived"] and report["counts"] == {"pass": 15, "fail": 0, "missing": 0, "waived": 1}
+    assert "FAIL (waived)" in md and "Waiver: waived by the owner" in md and "1 waived by the owner" in md
+    assert set(sa.OWNER_WAIVERS) == {"mouth_motion"}                      # head motion stays required
 
 
 def test_voice_on_the_kokoro_fallback_fails(tmp_path, monkeypatch):

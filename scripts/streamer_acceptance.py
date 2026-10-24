@@ -17,6 +17,8 @@ Statuses (decided with Kimi, docs/streamer/kimi/acceptance-criteria.md):
   missing  "missing evidence": the window cannot be assessed (a log absent or not covering the window, a logging gap,
            no source that measures it, a recovery still pending at the window end).
 Verdict: pass only when every criterion passes; any fail gives fail; otherwise inconclusive. Exit 0 on pass, else 1.
+Owner waivers (OWNER_WAIVERS): a waived criterion is still evaluated and reported with its own status and the waiver,
+but it does not enter the verdict; `--no-waivers` judges every criterion.
 
 Criteria (thresholds in TH):
   activity_change   browse <-> game with >= 60 s of elapsed activity on each side (quiet/held/privacy excluded),
@@ -1569,18 +1571,28 @@ CRITERIA = (eval_activity, eval_chat_executed, eval_chat_refused, eval_errors, e
             eval_voice_recorded, eval_head_motion, eval_mouth_motion, eval_pc_control, eval_fps_game, eval_fps_cam2,
             eval_fps_monitor, eval_fps_director, eval_fps_recordings, eval_fps_hls)
 
+# Criteria the owner set aside for the first version: still evaluated and shown, never counted in the verdict.
+OWNER_WAIVERS = {
+    "mouth_motion": "waived by the owner on 2026-10-24: no mouth movement for now (the head-only rig stays; head motion "
+                    "with the voice is still required)",
+}
+
 
 # ------------------------------------------------------------------ report
 
-def evaluate(src):
+def evaluate(src, waivers=None):
+    waivers = OWNER_WAIVERS if waivers is None else waivers
     results = [fn(src) for fn in CRITERIA]
     for res in results:
+        res["waived"] = waivers.get(res["id"])
         for h in res["highlights"]:
             where = src.locate(h["t"])
             if where:
                 h.update(where)
-    counts = {s: sum(1 for r in results if r["status"] == s) for s in (PASS, FAIL, MISSING)}
-    verdict = PASS if counts[PASS] == len(results) else FAIL if counts[FAIL] else INCONCLUSIVE
+    judged = [r for r in results if not r["waived"]]
+    counts = {s: sum(1 for r in judged if r["status"] == s) for s in (PASS, FAIL, MISSING)}
+    counts["waived"] = len(results) - len(judged)
+    verdict = PASS if counts[PASS] == len(judged) else FAIL if counts[FAIL] else INCONCLUSIVE
     reel = streamer_highlights.windows(src.dir, src.since, src.until)
     stamp = datetime.fromtimestamp(src.until, timezone.utc).strftime("%Y%m%d-%H%M")
     return {
@@ -1601,16 +1613,22 @@ def evaluate(src):
     }
 
 
+def status_text(r):
+    return STATUS_TEXT[r["status"]] + (" (waived)" if r.get("waived") else "")
+
+
 def render_markdown(report):
     w = report["window"]
     out = [f"# SUB-01 acceptance report: {w['since_utc']} to {w['until_utc']} ({w['minutes']} min)", "",
            f"Verdict: **{STATUS_TEXT[report['verdict']]}** ({report['counts'][PASS]} pass, {report['counts'][FAIL]} fail, "
-           f"{report['counts'][MISSING]} missing evidence). Generated {report['generated_utc']} by "
+           f"{report['counts'][MISSING]} missing evidence, {report['counts'].get('waived', 0)} waived by the owner). "
+           f"Generated {report['generated_utc']} by "
            "`scripts/streamer_acceptance.py` (read-only; fps from measured values only). FAIL: the sources cover the "
            "window and the content is absent or below the bar; MISSING EVIDENCE: the window cannot be assessed.", "",
            "| Criterion | Status | Why |", "|---|---|---|"]
     for r in report["criteria"]:
-        out.append(f"| {r['title']} (`{r['id']}`) | {STATUS_TEXT[r['status']]} | {r['why'].replace('|', '/')} |")
+        why = r["why"] + (f" ({r['waived']})" if r.get("waived") else "")
+        out.append(f"| {r['title']} (`{r['id']}`) | {status_text(r)} | {why.replace('|', '/')} |")
     ctx = report["context"]
     out += ["", "## Context", f"- Agent: {ctx['agent'] or 'rows in the window'}", f"- {ctx['vagon']}",
             f"- events.jsonl: {ctx['events_coverage']}; clock: {ctx['clock']}",
@@ -1619,8 +1637,10 @@ def render_markdown(report):
                                                                   else "") + ")" for k, v in report["sources"]["read"].items()),
             "- Sources missing: " + (", ".join(f"{k} ({v})" for k, v in report["sources"]["missing"].items()) or "none")]
     for r in report["criteria"]:
-        out += ["", f"## {r['title']}: {STATUS_TEXT[r['status']]}", "", f"Why: {r['why']}", "",
-                "Thresholds: " + ", ".join(f"{k} {json.dumps(v)}" for k, v in r["thresholds"].items())]
+        out += ["", f"## {r['title']}: {status_text(r)}", "", f"Why: {r['why']}", ""]
+        if r.get("waived"):
+            out += [f"Waiver: {r['waived']}", ""]
+        out.append("Thresholds: " + ", ".join(f"{k} {json.dumps(v)}" for k, v in r["thresholds"].items()))
         if r["metrics"]:
             out.append("Metrics: " + mask(json.dumps(r["metrics"]), 900))
         for note in r["notes"]:
@@ -1672,11 +1692,12 @@ def main(argv=None):
     p.add_argument("--ffprobe", default="ffprobe")
     p.add_argument("--probe-timeout", type=float, default=180.0)
     p.add_argument("--no-probe", action="store_true", help="skip ffprobe (recordings and HLS become missing evidence)")
+    p.add_argument("--no-waivers", action="store_true", help="judge every criterion, the owner's waivers included")
     args = p.parse_args(argv)
     since, until = parse_window(args, args.streamer_dir)
     src = Sources(args.streamer_dir, args.game_log, since, until, args.desktop_data_dir, args.ffprobe,
                   not args.no_probe, args.probe_timeout)
-    report = evaluate(src)
+    report = evaluate(src, {} if args.no_waivers else None)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = args.name or f"acceptance-{datetime.fromtimestamp(until, timezone.utc):%Y%m%d-%H%M%S}"
@@ -1685,7 +1706,7 @@ def main(argv=None):
     print(f"acceptance {report['window']['since_utc']} .. {report['window']['until_utc']}: "
           f"{STATUS_TEXT[report['verdict']]} {json.dumps(report['counts'])}")
     for r in report["criteria"]:
-        print(f"  {STATUS_TEXT[r['status']]:<16} {r['id']:<17} {r['why']}")
+        print(f"  {status_text(r):<25} {r['id']:<17} {r['why']}")
     print(f"  report: {out_dir / (stem + '.md')}  json: {out_dir / (stem + '.json')}")
     return 0 if report["verdict"] == PASS else 1
 
