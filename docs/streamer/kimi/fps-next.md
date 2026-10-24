@@ -15,3 +15,18 @@ Question: `q-fps-next.txt` (model `kimi-k3.1-pro`, 178 s). Answer, verbatim:
 ## Done
 - 12:15 UTC: rolled back to m3 (`/tmp/sub01-share/rollback-m3.sh`: cores 0-5, -corelimit=6, default workers, partition
   0-5/6-9). Rebaseline follows.
+- 12:22 UTC: the bundled runner 8832 restarted standalone (game m3 polls `SUB01_PC_ORIGIN` 8832: 14 connection errors
+  per second, ~26 MB/hour of log, while it was down); agent, director and watchdog stay on 8838.
+- Rebaseline on m3, uncapped (`t.MaxFPS 0`), 3 x 30 s windows (script `/tmp/sub01-share/ab2.sh`, per-thread CPU from
+  /proc):
+
+| case | fps | frame ms | render | RHI | GPU | cam2 fps | max frame ms |
+|---|---|---|---|---|---|---|---|
+| cam2 60 requested | 48.2 | 20.8 | 17.6 | 4.0 | 10.6 | 43.4 | 1381 |
+| cam2 off | 59.2 | 16.9 | 13.1 | 2.6 | 7.0 | 0 | 347 |
+| cam2 30 requested | 61.1 | 16.4 | 13.6 | 3.2 | 8.5 | 28.8 | 35.8 |
+
+  No thread saturated (render thread 50-70% of a core, RHI 60-71%); frame ~= render + RHI in every case.
+- Sync A/B (30 s, cam2 full, uncapped; baselines of the same config varied 44.1-51.3 fps): `r.GTSyncType 1` 50.4
+  (cam2 50.5), `2` 49.4, `r.OneFrameThreadLag 0` 26, `r.FinishCurrentFrame 1` 47.2, `r.Vulkan.CpuWaitForFence 0` 53.8
+  (baseline just before: 44.1); `r.Vulkan.DelayAcquireBackBuffer` is read only at RHI init. Next: `q-fps-v22.txt`.

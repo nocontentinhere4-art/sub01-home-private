@@ -126,10 +126,19 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   (`--desktop-data-dir streamer/desktop-vagon`); the agent needs STOP removed and `POST /lease` (only after plan step 5).
 - Sidecars not yet supervised: `scripts/streamer_hls_serve.py` (127.0.0.1:8839, local HLS),
   `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840, for the in-game monitor feed).
-- Next: Kimi's answer to `q-fps-next.txt` (v22 cam2 `bMainViewFamily` + cam2 path timestamps, the ~4 ms of
-  non-render frame time, cam2 at 30 fps interim, or roll back to m3); the speed-guard review; when the owner has
-  logged in and the PC is on: relaunch the game with `SUB01_PC_ORIGIN=http://127.0.0.1:8838` and verify the in-game
-  monitor, input and PiP.
+- Game is back on **m3** (rolled back 12:15 per `docs/streamer/kimi/fps-next.md`; pid in `streamer/game.pid`, cores
+  0-5, partition loop default 0-5/6-9). Operational setting: `cam2_fps` 30 (main view 59.7-59.9 fps, cam2 ~27,
+  director 60 fps at 1.0x); with cam2 at 60 the game drops to 45-48 fps. Not a pass of the 60/60 gate.
+- The bundled runner 8832 runs standalone again (12:22) only because game m3's in-game monitor polls it
+  (`SUB01_PC_ORIGIN`); agent/director/watchdog use 8838. Director layout `webcam_only` while the Vagon page shows
+  the login (set 12:22; restore `webcam` once the PC is connected).
+- Next (Kimi `docs/streamer/kimi/fps-v22.md`): native **v22** = cam2 `bMainViewFamily` A/B-able via tuning, capture
+  sequence IDs + timestamps (CaptureScene, readback enqueue, fence completion, encode, FIFO push, FIFO depth/drops),
+  swapchain present mode in diagnostics; launch-time A/Bs of `r.Vulkan.DelayAcquireBackBuffer 0` and
+  `r.Vulkan.CpuWaitForFence 0` SEPARATELY; an Unreal Insights trace putting RenderThread/RHIThread/acquire/present on
+  one timeline. Gate decisions with ABBA/BAAB 60 s legs + an A/A set, judged on per-leg median frame-time deltas
+  (<= 2 ms inconclusive). When the owner has logged in and the PC is on: relaunch with
+  `SUB01_PC_ORIGIN=http://127.0.0.1:8838`, then stop 8832 for good.
 - No workers in flight. Done 2026-10-24: disk-full recovery, director retention (25d17a8), volume 150 → 200 GB +
   offload, Kimi C (one desktop source 8838) and B (m4, rejected), shadow/worker A/B and CSV profiles.
 
