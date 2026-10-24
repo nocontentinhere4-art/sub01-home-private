@@ -77,19 +77,22 @@ Owner decisions (2026-10-23 21:45 UTC):
 8. **subzerone.live only on explicit request** — the requested private embed/platform test passes; publication is a
    separate authorisation.
 
-## Last-observed state (2026-10-23 ~23:40 UTC; verify before relying on it)
-Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~2.9 GB free: clean before restarts).
-- Native game **l** (build v20: hands IK, cam 2, pose fix; launcher
-  `/root/.sub01-windows-recovery/launch-streamer-game-20261023l.py`, t.MaxFPS 60): pid 1607013, start_ticks 36459547,
-  log `/home/unreal/.sub01-private/streamer-game-20261023l/game.log`; game k retired (restorable from its launcher).
-  Main viewer 8893 bound to l; `streamer/game.pid` = 1607013. MEASURED: 15-20 fps (frame 50-65 ms, GPU ~11 ms: CPU or
-  present bound; display :99 is an Xvfb) — not 60 yet. Key light blew him out → `key_light=0` live. cam 2 shows the
-  desk with the chair EMPTY (he is not rendered in the SceneCapture). CHAIR_FIT finds no backrest. A native worker is on
-  v21 (60 fps cause and fix, cam 2 visibility, soft key light, chair fit, monitor feed).
-  Live tuning file `/home/unreal/.sub01-private/streamer-visual-face-tuning.json` via
-  `runuser -u unreal -- python3 /home/unreal/tune.py key=value` (now: up 20, forward 2, side -6, aim_drop -2, fov 95,
-  seat_back 36, desk_props 1, posture_lean 0, posture_head 0, key_light 0). Visual bugs: `docs/streamer/VISUAL-QA-20261023.md`.
-  State/camera hold: `runuser -u unreal -- env CC_PID=<pid> CC_TICKS=<ticks> python3 /home/unreal/camera-check.py <camera> <state> <s>`.
+## Last-observed state (2026-10-24 ~11:00 UTC; verify before relying on it)
+Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root disk ~2.6 GB free).
+- INCIDENT 2026-10-24 08:25 UTC: the director recorded all night (60 MB/10 min), the root disk hit 100%, the
+  supervisor and the backend crashed ("No space left on device"), Jupyter kernels could not start (use the terminal
+  channel: scratchpad `podterm.py`). Recovered 10:35-10:55: overnight recordings deleted, backend restarted
+  (`resume21.py`; coordinator reserve lowered 3 → 2.5 GB, backup `*.bak-3gb`), services restarted, director retention
+  (`--keep-segments 18 --min-free-gb 2`) written and in Kimi review; a temporary loop keeps the newest 18 segments.
+- Native game **m3** (build v21): pid 1670615, start_ticks 37117006, launcher
+  `/root/.sub01-windows-recovery/launch-streamer-game-20261023m3.py` (cores 0-5, -corelimit=6), log
+  `/home/unreal/.sub01-private/streamer-game-20261023m3/game.log`. CPU partition loop `scripts/streamer_cpu_partition.py
+  --game-pid-file streamer/game.pid --interval 10` MUST run (else ~25 fps). Measured: 60 fps without a cam2 reader,
+  ~51 fps with the director reading cam2 (cam2 41-46 fps). Main viewer 8893 bound to m3; `streamer/game.pid` = 1670615.
+  Live tuning via `runuser -u unreal -- python3 /home/unreal/tune.py key=value` (key light now `key_cd` 0.04);
+  live console file `streamer-visual-console.json` (delete after use). Visual bugs: `docs/streamer/VISUAL-QA-20261023.md`.
+- Director v2 running (supervisor child): `--fps 60 --desktop-fps 60 --encoder h264_nvenc --hls-dir streamer/hls`,
+  output measured 58.9 fps at speed 1.0 once the voice model had loaded; HLS segments advancing (local only).
 - Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
   `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
 - Backend: coordinator `/root/.sub01-windows-recovery/resume20.py` (ports 8830/8831); streamer hold re-armed with
@@ -105,12 +108,11 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB, root disk ~2.9 GB free: clean before r
   7fc8bcc): it spends the owner's balance ($0.99/h; balance seen 8.88 USD) and the computer stops itself after his
   idle setting (~15 min). The main runner 8832 still runs the bundled Chromium (its source file is updated; it picks
   the new code up when restarted). Owner login console: `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`.
-- Director v2 (commit 9b3da99) is STAGED in the pod source but the running director is still the old 24 fps one:
-  restart it after game l with `--child-arg "director=--game-pid-file $P/game.pid" --child-arg "director=--fps 60
-  --desktop-fps 60 --encoder h264_nvenc --hls-dir /home/unreal/.sub01-private/streamer/hls"` and watch
-  `/director/state` `output.fps_measured`. New sidecars (not yet in the supervisor): `scripts/streamer_hls_serve.py`
-  (127.0.0.1:8839), `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840; for the v21
-  monitor feed). Layouts: webcam, desktop, split, room (cam 2).
+- Sidecars not yet supervised: `scripts/streamer_hls_serve.py` (127.0.0.1:8839, local HLS),
+  `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840, for the in-game monitor feed).
+- Next (Kimi cut-over plan, `docs/streamer/kimi/cutover3.md`): 120 s gate recording on the 60 fps profile; then ONE
+  source: agent → 8838, director PiP → :103, relaunch the game with SUB01_PC_ORIGIN=8838; retire 8832 after the soak;
+  then cached/static shadows for both cameras at 60.
 - Watchdog `scripts/streamer_watchdog.py` running (pid in `pgrep -f streamer_watchdog.py`), pointed at the agent 8836
   and desktop 8832; to act the agent needs STOP removed and `POST /lease {"minutes":60}` (only after plan step 5).
 - Workers in flight: native v21 (60 fps + visual fixes); privacy plumbing (director privacy ack with no desktop picture,
