@@ -738,3 +738,160 @@ def test_hls_check_on_real_ts_segments(tmp_path):
     src = sa.Sources(tmp_path / "s", tmp_path / "none.log", t0 - 60, t0 + 10)
     res = sa.eval_fps_hls(src)
     assert res["status"] == sa.FAIL and [p["fps"] for p in res["metrics"]["segments"]] == [60.0, 60.0, 30.0]
+
+
+# ------------------------------------------------------------------ the director's fifo mode (offscreen game)
+
+def fifo_mode(main_fps=60.0, tap_ok=True):
+    """The pass scenario recorded with `--game-source fifo`: every run reads main.mjpeg and every segment row has the
+    seq tap's count of unique main-view frames."""
+    def mutate(fx):
+        path = fx / "events.jsonl"
+        rows = [json.loads(x) for x in path.read_text().splitlines()]
+        for r in rows:
+            if r.get("source") == "director" and r.get("kind") == "ffmpeg_started":
+                r.update(main="fifo", seq_tap=True, game="fifo:main.mjpeg")
+            elif r.get("source") == "director" and r.get("kind") == "segment_fps":
+                unique = int(round(main_fps * r["wall_s"]))
+                r.update(main_source="fifo", main_frames=unique, main_unique=unique, main_fps=main_fps,
+                         main_repeated=0, main_gaps=0, main_noseq=0, main_bad=0, main_overflows=0, main_tap_ok=tap_ok,
+                         game_written=unique, game_fps=main_fps, game_dropped=0, main_max_gap_ms=21)
+        path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    return mutate
+
+
+def main_view_lost_and_back(main_fps=60.0, back=True):
+    """At 10:23 the main view goes stale: a placeholder run, then (with `back`) a run on the FIFO again."""
+    def mutate(fx):
+        fifo_mode()(fx)
+        rows = [director_row("2026-10-25T10:23:00Z", "main_changed", main="placeholder", previous="fifo",
+                             reason="main view last written 2.3s ago", run="sub01-20261025-095900", failures=1),
+                director_row("2026-10-25T10:23:01Z", "ffmpeg_stopped", run="sub01-20261025-095900",
+                             reason="main view stale: main view last written 2.3s ago", code=-9),
+                director_row("2026-10-25T10:23:02Z", "ffmpeg_started", run="sub01-20261025-102302", layout="room",
+                             cam2=True, voice=True, main="placeholder", seq_tap=False, game="placeholder")]
+        if back:
+            unique = int(main_fps * 258)
+            rows += [director_row("2026-10-25T10:23:40Z", "main_changed", main="fifo", previous="placeholder",
+                                  reason="main view last written 0.1s ago, writer present", run="sub01-20261025-102302"),
+                     director_row("2026-10-25T10:23:41Z", "ffmpeg_stopped", run="sub01-20261025-102302",
+                                  reason="main view back", code=255),
+                     director_row("2026-10-25T10:23:42Z", "ffmpeg_started", run="sub01-20261025-102342", layout="room",
+                                  cam2=True, voice=True, main="fifo", seq_tap=True, game="fifo:main.mjpeg"),
+                     director_row("2026-10-25T10:28:00Z", "segment_fps", run="sub01-20261025-102342",
+                                  segment="sub01-20261025-102342-000.mp4", frames=15480, wall_s=258.0, media_s=258.0,
+                                  fps=60.0, fps_media=60.0, dup_frames=0, drop_frames=0, partial=True,
+                                  main_source="fifo", main_frames=unique, main_unique=unique, main_fps=main_fps,
+                                  main_tap_ok=True, game_written=unique, game_fps=main_fps, game_dropped=0,
+                                  main_max_gap_ms=19)]
+        append(fx / "events.jsonl", *rows)
+    return mutate
+
+
+def test_fifo_mode_pass_scenario_reports_the_unique_main_view_frames(tmp_path, monkeypatch):
+    code, report, md, _, c = run_pass(tmp_path, monkeypatch, fifo_mode())
+    assert {k: v["status"] for k, v in c.items()} == {k: sa.PASS for k in ALL}, {k: v["why"] for k, v in c.items()}
+    assert code == 0 and report["verdict"] == sa.PASS
+    fps = c["fps_director"]
+    assert fps["metrics"]["main_fps_weighted"] == 60.0 and fps["metrics"]["main_rows"] == 3
+    assert "60.0 unique main-view fps (fifo mode)" in fps["why"] and "main_fps" in fps["thresholds"]
+
+
+def test_x11_rows_are_judged_as_before(tmp_path, monkeypatch):
+    c = run_pass(tmp_path, monkeypatch)[4]["fps_director"]
+    assert c["status"] == sa.PASS and "main_fps_weighted" not in c["metrics"] and "main_fps" not in c["thresholds"]
+
+
+def test_fifo_rows_below_59_5_fail_and_an_invalid_count_is_missing_evidence(tmp_path, monkeypatch):
+    c = run_pass(tmp_path, monkeypatch, fifo_mode(main_fps=58.0))[4]["fps_director"]
+    assert c["status"] == sa.FAIL and "unique main-view frames 57.999 fps over 3 FIFO row(s)" in c["why"]
+    c = run_pass(tmp_path / "b", monkeypatch, fifo_mode(tap_ok=False))[4]["fps_director"]
+    assert c["status"] == sa.MISSING and "not valid in 3 row(s)" in c["why"]
+
+
+def test_the_placeholder_card_is_not_the_webcam_and_its_rows_fail(tmp_path, monkeypatch):
+    def card(fx):
+        fifo_mode()(fx)
+        path = fx / "events.jsonl"
+        path.write_text(path.read_text().replace('"main": "fifo"', '"main": "placeholder"')
+                        .replace('"main_source": "fifo"', '"main_source": "placeholder"'))
+    c = run_pass(tmp_path, monkeypatch, card)[4]
+    assert c["two_cameras"]["status"] == sa.FAIL and c["two_cameras"]["metrics"]["room_s"] == 0.0
+    assert any("placeholder main view" in k for k in c["two_cameras"]["metrics"]["seconds_by_layout"])
+    assert c["fps_director"]["status"] == sa.FAIL and "placeholder card" in c["fps_director"]["why"]
+
+
+def fifo_row(when, run, wall, unique, partial=False, source="fifo", **extra):
+    return director_row(when, "segment_fps", run=run, segment=f"{run}-000.mp4", frames=int(wall * 60), wall_s=wall,
+                        media_s=wall, fps=60.0, fps_media=60.0, dup_frames=0, drop_frames=0, partial=partial,
+                        main_source=source, main_unique=unique, main_frames=unique,
+                        main_fps=round(unique / wall, 2), **({"main_tap_ok": True} if source == "fifo" else {}),
+                        **extra)
+
+
+def fifo_src(tmp_path, *rows, since="2026-10-25T09:00:00Z", until="2026-10-25T10:00:00Z"):
+    fx = tmp_path / "s"
+    fx.mkdir(parents=True, exist_ok=True)
+    append(fx / "events.jsonl", *rows)
+    return sa.Sources(fx, fx / "none.log", utc(since), utc(until), probe=False)
+
+
+def test_the_weighted_main_view_gate_is_unrounded_and_weighted_by_wall_time(tmp_path):
+    exact = sa.eval_fps_director(fifo_src(tmp_path / "a", fifo_row("2026-10-25T09:20:00Z", "r1", 600.0, 35700)))
+    assert exact["status"] == sa.PASS and exact["metrics"]["main_fps_weighted"] == 59.5            # 59.5 is enough
+    below = sa.eval_fps_director(fifo_src(tmp_path / "b", fifo_row("2026-10-25T09:20:00Z", "r1", 600.0, 35698)))
+    assert below["status"] == sa.FAIL and "59.497" in below["why"]                 # 59.4967 would round to 59.5
+    mixed = sa.eval_fps_director(fifo_src(tmp_path / "c", fifo_row("2026-10-25T09:20:00Z", "r1", 600.0, 35760),
+                                          fifo_row("2026-10-25T09:30:00Z", "r2", 60.0, 3540, partial=True)))
+    assert mixed["status"] == sa.PASS and mixed["metrics"]["main_fps_weighted"] == 59.545   # a row average: 59.3
+
+
+def test_a_short_placeholder_row_fails_too(tmp_path):
+    res = sa.eval_fps_director(fifo_src(tmp_path, fifo_row("2026-10-25T09:20:00Z", "r1", 600.0, 36000),
+                                        fifo_row("2026-10-25T09:20:40Z", "r2", 39.0, 0, partial=True,
+                                                 source="placeholder")))
+    assert res["status"] == sa.FAIL and "r2-000.mp4: main view on the placeholder card (39.0 s)" in res["why"]
+    alone = sa.eval_fps_director(fifo_src(tmp_path / "b", fifo_row("2026-10-25T09:20:40Z", "r2", 39.0, 0, partial=True,
+                                                                   source="placeholder")))
+    assert alone["status"] == sa.FAIL                                              # not "no row overlaps the window"
+
+
+@pytest.mark.parametrize("tap_ok", [False, None, "missing"])
+def test_the_main_view_recovery_skips_rows_without_a_valid_count(tmp_path, tap_ok):
+    bad = fifo_row("2026-10-25T09:25:00Z", "r9", 300.0, 18000, partial=True)
+    if tap_ok == "missing":
+        del bad["main_tap_ok"]
+    else:
+        bad["main_tap_ok"] = tap_ok
+    src = fifo_src(tmp_path, bad)
+    assert sa.output_healthy(src, "r9", utc("2026-10-25T09:20:00Z"), main=True) is None          # pending, not judged
+    later = fifo_src(tmp_path / "b", bad, fifo_row("2026-10-25T09:35:00Z", "r9", 600.0, 36000))
+    assert sa.output_healthy(later, "r9", utc("2026-10-25T09:20:00Z"), main=True) is True
+    slow = fifo_src(tmp_path / "c", bad, fifo_row("2026-10-25T09:35:00Z", "r9", 600.0, 30000))
+    assert sa.output_healthy(slow, "r9", utc("2026-10-25T09:20:00Z"), main=True) is False
+
+
+def test_a_main_view_recovery_without_a_valid_row_is_pending_until_660_s(tmp_path):
+    rows = [director_row("2026-10-25T09:20:00Z", "main_changed", main="placeholder", previous="fifo", reason="stale"),
+            director_row("2026-10-25T09:20:40Z", "ffmpeg_started", run="r9", layout="webcam", main="fifo"),
+            dict(fifo_row("2026-10-25T09:25:00Z", "r9", 260.0, 15600, partial=True), main_tap_ok=False)]
+    pending = sa.eval_errors(fifo_src(tmp_path / "a", *rows, until="2026-10-25T09:30:00Z"))
+    assert pending["status"] == sa.MISSING and pending["metrics"]["pending"] == 1
+    late = sa.eval_errors(fifo_src(tmp_path / "b", *rows, until="2026-10-25T09:32:00Z"))
+    assert late["status"] == sa.FAIL and late["metrics"]["unrecovered"] == 1             # 09:20:40 + 660 s passed
+
+
+def test_main_view_lost_and_back_is_a_recovered_error(tmp_path, monkeypatch):
+    c = run_pass(tmp_path, monkeypatch, main_view_lost_and_back())[4]
+    err = c["error_recovered"]
+    assert err["status"] == sa.PASS and err["metrics"]["recovered"] == 5, err["why"]
+    assert any(h["label"].startswith("main view lost (main view last written 2.3s ago): recovered, outage 42 s")
+               for h in err["highlights"]), err["highlights"]
+    assert c["two_cameras"]["status"] == sa.PASS                           # the card's 40 s are not room time
+    assert c["two_cameras"]["metrics"]["seconds_by_layout"]["room (cam2 in the graph) (placeholder main view)"] == 39.0
+    c = run_pass(tmp_path / "b", monkeypatch, main_view_lost_and_back(main_fps=50.0))[4]["error_recovered"]
+    assert c["status"] == sa.FAIL and "main view lost" in c["why"]
+    c = run_pass(tmp_path / "c", monkeypatch, main_view_lost_and_back(back=False))[4]
+    assert c["error_recovered"]["status"] == sa.FAIL and c["error_recovered"]["metrics"]["unrecovered"] == 1
+    assert "main view lost" in c["error_recovered"]["why"]                  # 10:23 + 300 s passed inside the window
+    assert c["two_cameras"]["status"] == sa.PASS and c["two_cameras"]["metrics"]["room_longest_s"] == 900.0

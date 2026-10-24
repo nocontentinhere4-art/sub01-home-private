@@ -248,6 +248,8 @@ Director flags (`--child-arg "director=..."`; defaults keep the v1 recording: 24
 | `--cam2-fifo`, `--cam2-json`, `--cam2-stale 3`, `--cam2-interval 1` | second camera paths (default `<streamer-dir>/cam2.mjpeg`, `cam2.json`), freshness limit, check period |
 | `--layout-interval 1`, `--switch-timeout 3` | how often `layout.jsonl` is read; how long a live switch waits for ffmpeg's reply |
 | `--test-sources`, `--test-seconds N` | lavfi sources instead of X, FIFOs and cam2 (local smoke tests): testsrc2 game and cam2, a solid red desktop, a sine |
+| `--game-source x11\|fifo` (x11) | main view: x11grab of the game window on `:99`, or the offscreen game's `main.mjpeg` (see "Main view from the offscreen game" below). Explicit, never inferred |
+| `--main-fifo`, `--main-json`, `--main-stale 2`, `--main-fresh 3`, `--main-interval 1`, `--no-main-tap` | fifo mode: paths (default `<streamer-dir>/main.mjpeg`, `main.json`), staleness limit, freshness needed to go back to the FIFO, check period, no seq tap |
 
 Pod profile (owner, 2026-10-23: 60 fps on everything): `--child-arg "director=--fps 60 --desktop-fps 60 --encoder
 h264_nvenc --hls-dir /home/unreal/.sub01-private/streamer/hls"` (start command in B above). Check the exact ffmpeg
@@ -354,6 +356,111 @@ always moves; a static desktop legitimately repeats):
 (about 3600; a 30 fps source upsampled to 60 gives about 1800). Seen locally: 60.8 fps without cam2 at 1080p60 with
 libx264 ultrafast on 4 cores, 36.8 fps (speed 0.4) with cam2 decoding as well; the pod's NVENC and 16 vCPU are
 expected to hold 60, and these numbers are how to check it.
+
+## Main view from the offscreen game (director fifo mode)
+
+Why: the game's present to Xvfb `:99` costs a growing amount of CPU (the sawtooth, `SAWTOOTH-20261024.md`) and holds the
+game near 49 fps. With `-RenderOffScreen` (native v24 and its launcher variant) the game writes its main view as whole
+1920x1080 JPEGs (each with a `seq=<n>` COM segment) into the FIFO `streamer/main.mjpeg` and its status into
+`streamer/main.json` once a second; the director reads that instead of grabbing the window. Design and review with Kimi:
+`kimi/director-fifo-design.md`, `kimi/director-fifo-review*.md`.
+
+**The mode is explicit.** `--game-source x11` (the default) is today's director, unchanged. `--game-source fifo` never
+looks for a window; it is never chosen because a file exists or not. In fifo mode input 0 is
+`-thread_queue_size 512 -use_wallclock_as_timestamps 1 -probesize 2000000 -analyzeduration 1000000 -f mjpeg -framerate
+<fps> -follow 1 -i main.mjpeg`, scaled full -> limited range with `tpad` clone after an EOF (as cam2). `-follow 1` is the
+one addition to the spec (Kimi): the game closes and reopens the FIFO after a frame misses its 500 ms write deadline, and
+without it that first close is an EOF that ends input 0 for the whole run (tested: a 0.5 s writer gap is seamless with
+it, a frozen frame without it).
+
+**Staleness and the placeholder.** Every `--main-interval` (1 s) the director checks: the FIFO exists, a process holds it
+open for writing (a /proc scan, every 5th check while ffmpeg reads the FIFO, every check otherwise; "no writer" is
+confirmed by a second scan 0.6 s later), `main.json` is at most `--main-stale` (2 s) old and so is its `last_write_utc`.
+A FIFO run that fails it (or whose FIFO was replaced by a new inode, or whose input hit EOF) is stopped (SIGINT, a second
+SIGINT after 1 s, SIGKILL after 2 s: a read blocked on a silent writer only ends that way) and relaunched with input 0 =
+a `smptehdbars` card (lavfi, `-re`: visible, never a black grab; the same graph, so every layout, the privacy cut and
+`room` behave as before; the card carries no desktop). A FIFO run's first 3 s ignore an old `main.json`/last write/
+missing writer (ffmpeg's own start-up holds the game's writes for a moment). The FIFO is tried again once a backoff of
+2, 4, 8, 16, 30 s (then 30) has passed AND `main.json` has been fresh for `--main-fresh` (3 s) without a break; 60 s of
+fresh FIFO operation clear the failures. A FIFO run that ffmpeg leaves by itself within 60 s counts as a failure too
+(the next launch is the card; the generic crash backoff is not added). Events: `main_changed {main, previous, reason,
+failures, retry_in_s | fresh_for_s}` for every transition (also the first source at start), `main_tap_idle` /
+`main_tap_flowing` (no tapped frame for 2 s: reported only, a stalled cam2 or encoder starves the tap too), and
+`ffmpeg_started` carries `main` and `seq_tap`. Outage of a stalled game: ~2-3 s until it is seen (the whole graph freezes
+meanwhile, as with a stalled cam2), 2 s to stop ffmpeg, ~1-2 s to relaunch; a FIFO run after a card run needs 3 s fresh.
+
+**Unique main-view frames (the gate: >= 59.5 per second reaching the director).** A FIFO run has a second ffmpeg output:
+input 0 stream-copied as multipart JPEG behind ffmpeg's dropping `fifo` muxer to a pipe the director reads (`SeqTap`);
+the director looks only at each part's header and COM `seq=`, skipping the JPEG by length. ffmpeg stays the FIFO's only
+reader, and a tap that stalls or closes never stops the recording (tested: the recording keeps 60 fps; at stop the
+director reads on until ffmpeg exits). The -progress `dup_frames`/`drop_frames` cannot see a source's missing frames:
+the graph's `fps` filters repeat them before the encoder. State `main`: `source` (fifo | placeholder), `wanted`, `fresh`,
+`reason`, `fresh_for_s`, `failures`, `retry_in_s`, `json_age_s`, `last_write_age_s`, `game_fps`, `written`, `sequence`,
+`dropped`, `main_fps` (new sequences per second over the last 5 s), `main_tap_ok`, and `tap` (frames, unique, repeated,
+gaps, noseq, bad, cut, trimmed, resets, first/max/last seq, idle_s, eof, error, overflows). Every `segment_fps` row of a fifo-mode run adds
+`main_source`, `main_frames`, `main_unique`, `main_fps` (= main_unique / wall_s), `main_repeated`, `main_gaps`,
+`main_noseq`, `main_bad`, `main_cut`, `main_overflows`, `main_tap_ok` (false: a frame without a marker, a broken header, a tap
+overflow (ffmpeg's "FIFO queue full") or a tap error: the count is not valid), `main_max_gap_ms` (longest time between
+two tapped frames in the window), and from `main.json` `game_written`, `game_fps`, `game_dropped` (deltas over the window;
+null when the game restarted). Cross-check: `main_unique` ~ `game_written` means no frame was lost between the game and
+ffmpeg; `main_gaps` counts sequences the game numbered but this run never got. What the tap does not prove: that each
+of those frames got its own output slot (wallclock jitter can make the `fps` filter drop one and repeat another); check a
+segment offline with mpdecimate as in "Proving 60". `scripts/streamer_acceptance.py` reads the rows: `fps_director`
+fails a row on the card and needs >= 59.5 unique main-view fps over the FIFO rows (weighted), and is missing evidence on
+an invalid count (the seq tap also counts `cut` parts, without EOI: frames the game discarded mid-write, never unique);
+`two_cameras` does not count `room` while the webcam PiP is the card; `error_recovered` counts `main_changed` to the
+card as a fault (deadline 300 s, recovered by a FIFO run whose first valid row has >= 59.5 unique fps). So a planned
+fault on the main view (a game kill) gives `error_recovered` PASS and `fps_director` FAIL in the same window: run the
+all-green 30-minute acceptance on a clean window, and judge fault injections on their own.
+
+**Go / no-go before the switch.** These tests use synthetic 320x180 JPEGs at 30 fps; they prove the mechanics, not v24
+at 1920x1080/60 with NVENC. Before enabling fifo mode for real, a v24 soak with the director in fifo mode must show:
+`seq=` markers in every frame (`tap.noseq` 0), the game's close/reopen after a missed deadline passing without a
+relaunch (`-follow 1`), `main_fps` >= 59.5 with `main_tap_ok` true and `main_unique` ~ `game_written`, the director's
+CPU and the pod's within budget, and then the spec's acceptance (SAWTOOTH-20261024.md step 6: ABBA, soak, fault tests).
+
+**Switch to fifo (the coordinator, in a deploy window, never under `/tmp/sub01-share/MEASURING`).** The director mode and
+the game's offscreen launcher change in one step. Deploy the code first (x11 stays the default, so this changes nothing
+on air until the switch; `restart director` picks the file up with the supervisor's stored arguments: a ~2 s gap and a
+new run; the backup is never overwritten by a second deploy):
+```
+L=/home/unreal/.sub01-private/latest-source-20261023; PD=/home/unreal/.sub01-private/streamer; T=/home/unreal/.sub01-private/operator-token
+U="runuser -u unreal --"; UP="$U /home/unreal/venv/bin/python $L/scripts/streamer_up.py"
+COMMON="--source $L --streamer-dir $PD --token-file $T --display :103 --desktop-port 8838"
+for f in scripts/streamer_director.py scripts/streamer_acceptance.py; do
+  [ -e $L/$f.bak-before-fifo ] || cp -p $L/$f $L/$f.bak-before-fifo; install -o unreal -g unreal -m 644 <checkout>/$f $L/$f; done
+$UP restart director $COMMON
+```
+Then switch: restart the supervisor with the same command as the last deploy (`/tmp/sub01-share/deploy/sidecars/
+deploy-sidecars.sh`, lines "supervisor stop" / "supervisor start") plus ONE more child argument,
+`--child-arg "director=--game-source fifo"` (the `--game-pid-file` argument may stay: fifo mode ignores it). The
+supervisor's stop/start restarts EVERY child (desktop runner and its Chrome, the voice server with its model load of up
+to ~4 minutes, the director, monitor feed, HLS server; the agent stays held by the STOP file): the recording and the
+HLS have a gap and new runs, and nothing hides the desktop during it except the layout in force. Keep the STOP file in
+place, and if a login or account page could be on the PC, set `webcam_only` first (`POST /director/layout`) and restore
+the layout once everything is healthy; the card is not a privacy cut. The director then shows the card (`main_changed`
+to placeholder, "main FIFO does not exist") until the game writes. Then relaunch the game with the offscreen launcher
+(`-RenderOffScreen`, v24 with the main-view tap) and write `game.pid` as usual. Order matters: the card while the game
+restarts, never a black `:99` grab (an x11 director with an offscreen game records a black or absent window). Check
+`$UP status $COMMON` (every service `up` and healthy), the HLS playlist's age (`curl -s localhost:8839/healthz`), and the
+main view (about 10 s after the game's first frame):
+```
+curl -s -H "X-Admin-Token: $(cat $T)" localhost:8837/director/state | python3 -c 'import json,sys; d=json.load(sys.stdin);
+m=d["main"]; print(d["game_source_mode"], d["game_source"], m["source"], m["reason"], m["main_fps"], m["main_tap_ok"],
+m["tap"] and {k: m["tap"][k] for k in ("unique","gaps","repeated","noseq","overflows","idle_s")})'
+grep '"kind":"main_changed"' $PD/events.jsonl | tail -3
+```
+Expected: `fifo fifo:main.mjpeg fifo ... 59.x True`, gaps/noseq/overflows 0. The 10-minute `segment_fps` rows then carry
+`main_fps` and `game_fps`; `ls -la $PD/main.mjpeg $PD/main.json` shows the game's FIFO (uid 1001) and a fresh status.
+
+**Rollback.** Same precautions as the switch (STOP file, `webcam_only` if a private page could show, every child
+restarts, check `$UP status` and the HLS afterwards). Relaunch the game windowed (the plain m3 launcher on the same
+binaries), then restart the supervisor with the previous command (without `--game-source fifo`, or with
+`--child-arg "director=--game-source x11"` as the last director argument): the director grabs `:99` again exactly as
+before. Only if the new code misbehaves in x11 mode as
+well: `install -o unreal -g unreal -m 644 $L/scripts/streamer_director.py.bak-before-fifo $L/scripts/streamer_director.py`
+(and the acceptance file) and `$UP restart director $COMMON`. Nothing else changes: the FIFO, `main.json` and the
+offscreen launcher belong to the game.
 
 ## Monitor feed (in-game monitor texture; `scripts/streamer_monitor_feed.py`)
 
@@ -490,6 +597,10 @@ runuser -u unreal -- nice -n 19 python3 $S/scripts/streamer_acceptance.py --stre
   are off by default and nothing public is started without the owner's request.
 - A cam2 FIFO that stays open without frames freezes the recording until the director notices (about 4-6 s) and
   relaunches without cam2. `fps_measured` proves the output pace, not distinct source frames (offline check above).
+- Fifo mode: a game that keeps `main.mjpeg` open without writing (or exits: `-follow 1` waits for a writer) freezes the
+  whole recording until `main.json` is 2 s old and the next check sees it, then the run is killed (2 s) and relaunched on
+  the card; each source change is a relaunch (a new run prefix, ~1-2 s without output). The seq tap counts frames that
+  reached ffmpeg, not output slots. Verified locally against synthetic JPEGs (tests), not yet against the v24 game.
 - Audio and video come from separate clocks (two X grabs and a PCM FIFO): small drift is possible.
 - No lip sync or facial animation (the mesh has no face rig). Chat comes only from the site WebSocket.
 - The child command lines follow the flags of `streamer_desktop.py`, `voice_server.py` and `streamer_agent.py`

@@ -38,6 +38,16 @@ Criteria (thresholds in TH):
 A 60 fps output pace does not prove 60 distinct source frames (the graph repeats what a source did not deliver):
 that is what the source criteria are for.
 
+Director fifo mode (`--game-source fifo`: the offscreen game hands its main view over main.mjpeg; x11-mode rows carry
+none of this and are judged as before). Its segment_fps rows have `main_source` (fifo | placeholder) and the seq tap's
+count of unique main-view frames (`main_unique`, `main_fps`, `main_tap_ok`). fps_director then also fails a row on the
+placeholder card and needs >= 59.5 unique main-view frames per second over the FIFO rows (weighted), and is missing
+evidence when a count is not valid; two_cameras does not count `room` while the webcam PiP is the card;
+error_recovered treats `main_changed` to the placeholder as a fault, recovered by a run on the FIFO again whose row
+shows >= 59.5 unique main-view fps (deadline 300 s: a game restart). Any placeholder row fails fps_director, however
+short: a planned main-view fault gives error_recovered PASS and fps_director FAIL in one window (Kimi: judge fault
+injections on their own window, run the all-green acceptance on a clean one).
+
 Sources: <streamer-dir>/events.jsonl and events.1.jsonl (agent, director, supervisor rows), speech/timeline.jsonl,
 logs/voice.log, rehearsal.jsonl, watchdog.jsonl, recordings/*.mp4, hls/live.m3u8 + .ts, the desktop runners'
 events.jsonl (desktop-vagon/, desktop/), the game log (SUB01_* lines, UTC). Evidence lines are masked (token-like
@@ -91,8 +101,9 @@ TH = {                                  # one table, so a review changes numbers
     "incident_merge_s": 60.0,           # faults of one kind this close together are one incident
     "log_fresh_s": 900.0,               # events.jsonl must have rows within this of both window ends
     "deadline": {"director": 120.0, "cam2": 300.0, "supervisor": 300.0, "agent": 300.0, "runner": 60.0,
-                 "vagon": 300.0, "watchdog": 900.0},
+                 "vagon": 300.0, "watchdog": 900.0, "main": 300.0},   # main: the fifo mode's main view (a game restart)
 }
+PLACEHOLDER = "placeholder"             # the director's fifo mode: input 0 is a card while main.mjpeg is stale
 OPERATIONAL_REFUSALS = ("pc_offline", "hands_off", "no_model", "games_off")
 NON_DESKTOP_REQUESTS = ("face", "hush")
 VIDEO_HOSTS = ("youtube.com", "youtu.be", "twitch.tv", "vimeo.com", "dailymotion.com")
@@ -870,13 +881,25 @@ def eval_chat_refused(src):
                   thresholds=th)
 
 
-def output_healthy(src, run, after):
+def output_healthy(src, run, after, main=False):
     """A recording run's output after `after`, measured inside the window: True (a segment row or a probed segment of
-    the run at >= 59.9 fps with no dup/drop), False (one below), None (nothing measured in the window)."""
+    the run at >= 59.9 fps with no dup/drop), False (one below), None (nothing measured in the window). A row of a
+    fifo-mode FIFO run must also show >= 59.5 unique main-view frames per second (`main_fps`); a row whose tap count is
+    not valid (`main_tap_ok` false, missing or null: no tap) is skipped. `main`: only such rows count (the main view's
+    own recovery; none valid yet -> None, pending until the caller's deadline)."""
     rows = [r for r in src.director if r.get("kind") == "segment_fps" and r.get("run") == run
             and after < r["_t"] <= src.until and float(r.get("wall_s") or 0) >= 10]
     for r in rows:
-        return float(r.get("fps_media") or 0) >= TH["output_fps"] and not (r.get("dup_frames") or r.get("drop_frames"))
+        if r.get("main_source") == "fifo" and r.get("main_tap_ok") is not True:
+            continue
+        ok = float(r.get("fps_media") or 0) >= TH["output_fps"] and not (r.get("dup_frames") or r.get("drop_frames"))
+        if r.get("main_source") == "fifo":
+            return ok and float(r.get("main_fps") or 0) >= TH["source_min_fps"]
+        if main:
+            continue
+        return ok
+    if main:
+        return None
     for seg in src.recordings:                           # only segments of the window are probed
         res = src.probes.get(seg["path"]) or {}
         if seg["run"] == run and res.get("fps") and seg["end"] > after:
@@ -897,6 +920,11 @@ def recovery_rules(src):
             out.append((r, "director", f"director layout_switch_failed ({want})", src.director,
                         lambda x, w=want: x.get("kind") in ("layout_switched", "ffmpeg_started") and x.get("layout") == w,
                         "director", False))
+        elif k == "main_changed" and r.get("main") == PLACEHOLDER:
+            # fifo mode: the offscreen game's main view went stale (or was not there at the director's start): the card
+            # is on air until a run on the FIFO starts again and delivers >= 59.5 unique frames per second
+            out.append((r, "director", f"main view lost ({mask(r.get('reason') or '', 60)})", src.director,
+                        lambda x: x.get("kind") == "ffmpeg_started" and x.get("main") == "fifo", "main", "main"))
         elif k == "cam2_changed" and r.get("cam2") is False:
             off = [c for c in src.game["cam2"] if abs(c["t"] - r["_t"]) <= 60 and c.get("on") == 0]
             if off:                                       # the game switched cam2 off: intended, not a fault
@@ -949,7 +977,8 @@ def recovery_rules(src):
 def eval_errors(src):
     title = "An error that was recovered"
     th = {"deadline_s": TH["deadline"], "incident_merge_s": TH["incident_merge_s"], "induced": list(INDUCED),
-          "recording_faults": f"a restart plus output >= {TH['output_fps']} fps afterwards"}
+          "recording_faults": f"a restart plus output >= {TH['output_fps']} fps afterwards",
+          "main_view": f"fifo mode: a run on the FIFO again, its row >= {TH['source_min_fps']} unique main-view fps"}
     injects = [r for r in src.rehearsal if r.get("kind") == "inject"] + \
               [r for r in src.agent if r.get("kind") == "inject" and r.get("consumed")]
     faults = []
@@ -962,7 +991,7 @@ def eval_errors(src):
         rec = next((x for x in rows if t < x["_t"] <= cutoff and pred(x)), None)
         state = "recovered" if rec else ("pending" if t + deadline > src.until else "unrecovered")
         if rec and health:                               # a restart is a recovery once its output is measured at 60
-            ok = output_healthy(src, rec.get("run"), rec["_t"])
+            ok = output_healthy(src, rec.get("run"), rec["_t"], main=health == "main")
             due = rec["_t"] + SEGMENT_S + 60             # its first segment row is due by then
             state = "recovered" if ok else "unrecovered" if ok is False or due <= src.until else "pending"
         induced = next((i.get("event") or i.get("inject") for i in injects if 0 <= t - i["_t"] <= 30), None)
@@ -1009,7 +1038,9 @@ def eval_errors(src):
 
 
 def on_air(src):
-    """The director's on-air timeline replayed from all its rows: [{start, end, layout, cam2, voice, run}]."""
+    """The director's on-air timeline replayed from all its rows: [{start, end, layout, cam2, voice, run, main}].
+    `main` is the fifo mode's main view ("fifo" or "placeholder"; None for an x11-mode run): a run changes it only by
+    a relaunch, so it comes from `ffmpeg_started`."""
     out, cur = [], None
 
     def close(t):
@@ -1023,7 +1054,7 @@ def on_air(src):
         if k == "ffmpeg_started":
             close(t)
             cur = {"start": t, "layout": r.get("layout"), "cam2": bool(r.get("cam2")), "voice": r.get("voice"),
-                   "run": r.get("run")}
+                   "run": r.get("run"), "main": r.get("main")}
         elif cur is None or r.get("run") not in (None, cur["run"]):
             continue
         elif k == "layout_switched":
@@ -1048,7 +1079,8 @@ def on_air(src):
 def eval_two_cameras(src):
     title = "Both cameras composed simultaneously"
     th = {"room_s": TH["room_s"], "continuous_s": TH["room_continuous_s"],
-          "layout": "room (cam2 full frame + webcam PiP)", "cam2_lines": "on=1 reader=1 fps>0"}
+          "layout": "room (cam2 full frame + webcam PiP)", "cam2_lines": "on=1 reader=1 fps>0",
+          "main_view": "fifo mode: not while the webcam PiP is the placeholder card"}
     if src.events_gap():                                 # the on-air timeline is replayed from events.jsonl
         return absent(src, "two_cameras", title, "director recording", th)
     spans = [s for s in src.air() if clip(s["start"], s["end"], src.since, src.until) > 0]
@@ -1056,11 +1088,12 @@ def eval_two_cameras(src):
         return absent(src, "two_cameras", title, "director recording", th)
     by_layout = {}
     for s in spans:
-        key = str(s["layout"] or "unknown") + (" (cam2 in the graph)" if s["cam2"] else "")
+        key = (str(s["layout"] or "unknown") + (" (cam2 in the graph)" if s["cam2"] else "")
+               + (" (placeholder main view)" if s.get("main") == PLACEHOLDER else ""))
         by_layout[key] = by_layout.get(key, 0.0) + clip(s["start"], s["end"], src.since, src.until)
     room = []                                            # clipped to the window; touching spans of one run merged
     for s in spans:                                      # (a voice change splits a span, not the composition)
-        if s["layout"] == "room" and s["cam2"]:
+        if s["layout"] == "room" and s["cam2"] and s.get("main") != PLACEHOLDER:
             a, b = max(s["start"], src.since), min(s["end"], src.until)
             if b <= a:                                   # outside the window (spans are filtered already; kept safe)
                 continue
@@ -1361,15 +1394,46 @@ def eval_fps_monitor(src):
     return result("fps_monitor_feed", title, MISSING, why, thresholds={"every_window_min": TH["source_min_fps"]})
 
 
+def main_view_rows(rows, all_rows, bad, highlights, metrics, th):
+    """The director's fifo mode (rows with `main_source`; x11 rows carry none and are judged as before): every row on
+    the placeholder card in the window fails, however short (`all_rows`: before the partial-row filter), and the FIFO
+    rows (`rows`: full, or partial >= partial_min_s) together need >= source_min_fps unique main-view frames per second,
+    weighted over the rows (sum of main_unique / sum of wall_s, compared unrounded; Kimi: not row by row, partial
+    run-boundary rows are short). -> the segments whose count cannot be trusted (main_tap_ok not true)."""
+    fifo = [r for r in rows if r.get("main_source") == "fifo"]
+    cards = [r for r in all_rows if r.get("main_source") == PLACEHOLDER]
+    if not fifo and not cards:
+        return []
+    th["main_fps"] = f">= {TH['source_min_fps']} unique main-view frames/s over the FIFO rows (fifo mode)"
+    th["placeholder"] = "no row on the placeholder card, whatever its length (fifo mode)"
+    for r in cards:
+        bad.append(f"{r.get('segment')}: main view on the placeholder card ({r.get('wall_s')} s)")
+        highlights.append(mark(r["_t"] - float(r.get("wall_s") or 0), f"segment {r.get('segment')}: placeholder card"))
+    valid = [r for r in fifo if r.get("main_tap_ok") is True]
+    invalid = [str(r.get("segment")) for r in fifo if r.get("main_tap_ok") is not True]
+    wall = sum(float(r.get("wall_s") or 0) for r in valid)
+    raw = sum(int(r.get("main_unique") or 0) for r in valid) / wall if wall > 0 else None
+    weighted = None if raw is None else round(raw, 3)
+    metrics.update(main_rows=len(fifo), placeholder_rows=len(cards), main_invalid_rows=len(invalid),
+                   main_fps=[r.get("main_fps") for r in fifo], main_fps_weighted=weighted,
+                   game_fps=[r.get("game_fps") for r in fifo])
+    if raw is not None and raw < TH["source_min_fps"]:
+        bad.append(f"unique main-view frames {weighted} fps over {len(valid)} FIFO row(s)")
+        worst = min(valid, key=lambda r: float(r.get("main_fps") or 0))
+        highlights.append(mark(worst["_t"] - float(worst.get("wall_s") or 0),
+                               f"segment {worst.get('segment')}: {worst.get('main_fps')} unique main-view fps"))
+    return invalid
+
+
 def eval_fps_director(src):
     title = "60 fps: director per segment (segment_fps)"
     th = {"fps": TH["output_fps"], "fps_media": TH["output_fps"], "dup_drop": 0, "speed_restart": "none",
           "partial_rows": f">= {TH['partial_min_s']} s, judged on fps_media (wall time includes the run's start/stop)"}
-    rows = [r for r in src.director if r.get("kind") == "segment_fps"
-            and clip(r["_t"] - float(r.get("wall_s") or 0), r["_t"], src.since, src.until) > 0
-            and (not r.get("partial") or float(r.get("wall_s") or 0) >= TH["partial_min_s"])]
+    in_window = [r for r in src.director if r.get("kind") == "segment_fps"
+                 and clip(r["_t"] - float(r.get("wall_s") or 0), r["_t"], src.since, src.until) > 0]
+    rows = [r for r in in_window if not r.get("partial") or float(r.get("wall_s") or 0) >= TH["partial_min_s"]]
     slow = [r for r in src.in_window(src.director) if r.get("kind") == "speed_restart"]
-    if not rows and not slow:
+    if not rows and not slow and not any(r.get("main_source") == PLACEHOLDER for r in in_window):
         return result("fps_director", title, MISSING, "no segment_fps row overlaps the window (a row is written when "
                       "its segment closes, every 10 minutes)", thresholds=th)
     bad, evidence, highlights = [], [], []
@@ -1391,12 +1455,19 @@ def eval_fps_director(src):
                   union([(r["_t"] - float(r.get("wall_s") or 0), r["_t"]) for r in rows]))
     metrics = {"rows": len(rows), "fps": [r.get("fps") for r in rows], "fps_media": [r.get("fps_media") for r in rows],
                "speed_restarts": len(slow), "coverage": round(covered / (src.until - src.since), 3)}
+    invalid = main_view_rows(rows, in_window, bad, highlights, metrics, th)
     if bad:
         return result("fps_director", title, FAIL, "; ".join(bad[:4]), evidence=evidence, highlights=highlights,
                       metrics=metrics, thresholds=th)
+    if invalid:
+        return result("fps_director", title, MISSING, f"the unique main-view count is not valid in {len(invalid)} "
+                      f"row(s) ({', '.join(invalid[:3])}): tap overflow, frames without a seq marker or no seq tap",
+                      evidence=evidence, highlights=highlights, metrics=metrics, thresholds=th)
+    main = (f"; {metrics['main_fps_weighted']} unique main-view fps (fifo mode)"
+            if metrics.get("main_fps_weighted") is not None else "")
     return result("fps_director", title, PASS, f"{len(rows)} row(s) at {', '.join(str(r.get('fps_media')) for r in rows)} "
                   f"fps (media), dup/drop 0, covering {metrics['coverage']:.0%} of the window (the open segment's row "
-                  "comes when it closes; fps_recordings measures it)", evidence=evidence, highlights=highlights,
+                  f"comes when it closes; fps_recordings measures it){main}", evidence=evidence, highlights=highlights,
                   metrics=metrics, thresholds=th)
 
 
