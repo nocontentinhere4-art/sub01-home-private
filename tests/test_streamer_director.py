@@ -1764,3 +1764,67 @@ def test_privacy_smoke_the_restart_mode_graph_runs_without_any_desktop_pixel(tmp
         assert done.returncode == 0, done.stderr[-1500:]
         chroma = pip_chroma(next(cfg.recordings_dir.glob(f"sub01-20261023-2200{0 if red else 1}0-000.mp4")), FFMPEG, cfg)
         assert len(chroma) >= 50 and all((v > 200) is red for v in chroma), (layout, chroma[:5])
+
+
+# ---- retention: the recordings never fill the disk again (2026-10-24 incident) -----------------------------------------
+def _seg(run, index, size):
+    return {"name": f"{run}-{index:03d}.mp4", "run": run, "index": index, "bytes": size, "mtime": ""}
+
+
+def test_retention_keeps_the_newest_segments_and_never_the_one_being_written():
+    import scripts.streamer_director as sd
+    segs = [_seg("sub01-20261023-100000", i, 60) for i in range(5)] + [_seg("sub01-20261024-010000", i, 60) for i in range(3)]
+    gb = 1024 ** 3
+    # count cap: 8 segments, keep 4 -> the 4 oldest go
+    assert sd.retention_victims(segs, "sub01-20261024-010000", 4, 50 * gb, 2 * gb) == [s["name"] for s in segs[:4]]
+    # no cap and plenty of space -> nothing
+    assert sd.retention_victims(segs, "sub01-20261024-010000", 0, 50 * gb, 2 * gb) == []
+    # low disk: oldest finished segments go until enough would be free; the segment being written survives even if needed
+    victims = sd.retention_victims(segs, "sub01-20261024-010000", 0, 0, 10 ** 12)
+    assert "sub01-20261024-010000-002.mp4" not in victims and len(victims) == 7
+    victims = sd.retention_victims(segs, "sub01-20261024-010000", 0, 2 * gb - 100, 2 * gb)
+    assert victims == [segs[0]["name"], segs[1]["name"]]                     # 60 + 60 bytes cover the 100 missing
+    # a single segment (the one being written) is never deleted
+    assert sd.retention_victims([_seg("r", 0, 10)], "r", 1, 0, 2 * gb) == []
+
+
+def test_apply_retention_deletes_files_and_reports(tmp_path, monkeypatch):
+    import scripts.streamer_director as sd
+    rec = tmp_path / "recordings"
+    rec.mkdir()
+    names = [f"sub01-20261024-010000-{i:03d}.mp4" for i in range(6)]
+    for n in names:
+        (rec / n).write_bytes(b"x" * 10)
+    cfg = sd.DirectorConfig(streamer_dir=tmp_path, recordings_dir=rec, keep_segments=3, min_free_gb=0)
+    seen = []
+    deleted = sd.apply_retention(cfg, "sub01-20261024-010000", lambda kind, **f: seen.append((kind, f)))
+    assert deleted == names[:3] and sorted(p.name for p in rec.iterdir()) == names[3:]
+    assert seen and seen[0][0] == "retention" and seen[0][1]["deleted"] == names[:3]
+    import pytest as _pytest
+    with _pytest.raises(ValueError):
+        sd.DirectorConfig(streamer_dir=tmp_path, keep_segments=-1)
+
+
+def test_apply_retention_skips_an_undeletable_segment_and_rejects_non_finite_limits(tmp_path, monkeypatch):
+    import scripts.streamer_director as sd
+    rec = tmp_path / "recordings"
+    rec.mkdir()
+    names = [f"sub01-20261024-010000-{i:03d}.mp4" for i in range(5)]
+    for n in names:
+        (rec / n).write_bytes(b"x" * 10)
+    cfg = sd.DirectorConfig(streamer_dir=tmp_path, recordings_dir=rec, keep_segments=3, min_free_gb=0)
+    real_unlink = sd.Path.unlink
+
+    def unlink(self, *a, **k):
+        if self.name == names[0]:
+            raise PermissionError("busy")
+        return real_unlink(self, *a, **k)
+    monkeypatch.setattr(sd.Path, "unlink", unlink)
+    seen = []
+    deleted = sd.apply_retention(cfg, "sub01-20261024-010000", lambda kind, **f: seen.append(f))
+    assert names[0] not in deleted and names[1] in deleted and names[2] in deleted          # the stuck one is skipped
+    assert seen and seen[-1]["failed"] == [names[0]]
+    import pytest as _pytest
+    for bad in (float("nan"), float("inf")):
+        with _pytest.raises(ValueError):
+            sd.DirectorConfig(streamer_dir=tmp_path, min_free_gb=bad)

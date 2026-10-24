@@ -97,9 +97,11 @@ import argparse
 import asyncio
 import hmac
 import json
+import math
 import os
 import re
 import shlex
+import shutil
 import signal
 import stat
 import subprocess
@@ -258,6 +260,8 @@ class DirectorConfig:
     test_sources: bool = False
     test_seconds: float = 0
     stats_period: float = STATS_PERIOD
+    keep_segments: int = 18                # retention: at most this many recording segments (3 h at 10 min); 0 = no cap
+    min_free_gb: float = 3.0               # retention: delete the oldest finished segments while the disk has less free
 
     def __post_init__(self):
         base = Path(self.streamer_dir)
@@ -274,6 +278,8 @@ class DirectorConfig:
             raise ValueError(f"desktop fps must not be above fps ({self.fps})")
         if self.segment_seconds < 10:
             raise ValueError("segment length must be at least 10 seconds")
+        if self.keep_segments < 0 or not math.isfinite(self.min_free_gb) or self.min_free_gb < 0:
+            raise ValueError("keep segments and min free GB must be finite and not negative")
         if not 0 <= self.crf <= 51:
             raise ValueError("crf must be between 0 and 51")
         if self.preset not in X264_PRESETS:
@@ -511,6 +517,67 @@ def list_segments(directory):
 
 def run_bytes(segments, prefix):
     return sum(s["bytes"] for s in segments if s["run"] == prefix)
+
+
+def retention_victims(segments, current_prefix, keep, free_bytes, min_free_bytes):
+    """Names of recording segments to delete, oldest first. The newest segment of the running ffmpeg (still being
+    written) is never chosen. Two rules: at most `keep` segments in total (0 = no cap), and while the disk has less than
+    `min_free_bytes` free, the oldest finished segments go one by one until enough would be free (2026-10-24: an
+    overnight recording filled the root disk and took every service down)."""
+    current = [s for s in segments if s["run"] == current_prefix]
+    writing = max(current, key=lambda s: s["index"])["name"] if current else None
+    candidates = [s for s in segments if s["name"] != writing]          # oldest first (list_segments order)
+    victims = []
+    if keep and len(segments) > keep:
+        victims = [s["name"] for s in candidates[:len(segments) - keep]]
+    freed = sum(s["bytes"] for s in candidates if s["name"] in victims)
+    for s in candidates:
+        if free_bytes + freed >= min_free_bytes:
+            break
+        if s["name"] not in victims:
+            victims.append(s["name"])
+            freed += s["bytes"]
+    return victims
+
+
+def apply_retention(cfg, prefix, events=None):
+    """Delete the segments `retention_victims` names; returns the deleted names. Never raises. A segment that cannot be
+    deleted is skipped and the selection runs again without it (Kimi review: one undeletable file must not stall the
+    reclamation forever)."""
+    try:
+        free = shutil.disk_usage(cfg.recordings_dir).free
+        min_free = int(cfg.min_free_gb * 1024 ** 3)
+    except (OSError, ValueError, OverflowError):
+        return []
+    deleted, failed = [], set()
+    try:
+        for _ in range(3):                                 # first pass, then retries without the failed files
+            segments = [s for s in list_segments(cfg.recordings_dir) if s["name"] not in failed]
+            keep = max(1, cfg.keep_segments - len(failed)) if cfg.keep_segments else 0   # a stuck file still counts
+            names = retention_victims(segments, prefix, keep, free, min_free)
+            if not names:
+                break
+            stuck = False
+            for name in names:
+                try:
+                    (Path(cfg.recordings_dir) / name).unlink()
+                    deleted.append(name)
+                except FileNotFoundError:
+                    pass
+                except OSError:
+                    failed.add(name)
+                    stuck = True
+            free = shutil.disk_usage(cfg.recordings_dir).free
+            if not stuck:                                  # everything selected went: the rules are met
+                break
+    except OSError:
+        pass
+    if (deleted or failed) and events is not None:
+        try:
+            events("retention", deleted=deleted, failed=sorted(failed), free_gb=round(free / 1024 ** 3, 2))
+        except Exception:                                  # the event log must not take the watchdog down
+            pass
+    return deleted
 
 
 def prune_hls(directory, keep_prefix, now, max_age=60.0):
@@ -1445,6 +1512,8 @@ class Director:
             self.request_restart("segment growth stalled")
         if self.cfg.hls_dir is not None and self.prefix:
             prune_hls(self.cfg.hls_dir, self.prefix, self._wall())
+        if not self.cfg.test_sources:
+            await asyncio.to_thread(apply_retention, self.cfg, self.prefix, self.event)
         return action
 
     async def voice_tick(self):
@@ -1892,6 +1961,9 @@ def parse_args(argv=None):
     p.add_argument("--fps", type=int, default=24, help=f"game capture and output rate, 10-{MAX_FPS}")
     p.add_argument("--desktop-fps", type=int, default=15, help=f"10-{MAX_DESKTOP_FPS}, at most --fps")
     p.add_argument("--segment-seconds", type=int, default=600)
+    p.add_argument("--keep-segments", type=int, default=18, help="keep at most N recording segments (0 = no cap)")
+    p.add_argument("--min-free-gb", type=float, default=3.0,
+                   help="delete the oldest finished segments while the disk has less free space than this")
     p.add_argument("--crf", type=int, default=23, help="x264 crf, or NVENC -cq")
     p.add_argument("--preset", default="veryfast", help="x264 preset (NVENC always uses p4)")
     p.add_argument("--encoder", default="libx264", choices=ENCODERS,
@@ -1934,7 +2006,8 @@ def parse_args(argv=None):
             desktop_display=args.desktop_display, window_prefix=args.window_prefix, window_id=args.window_id,
             game_pid=args.game_pid, game_pid_file=Path(args.game_pid_file) if args.game_pid_file else None,
             width=width, height=height, pip_width=pip_width, pip_height=pip_height, fps=args.fps,
-            desktop_fps=args.desktop_fps, segment_seconds=args.segment_seconds, crf=args.crf, preset=args.preset,
+            desktop_fps=args.desktop_fps, segment_seconds=args.segment_seconds, keep_segments=args.keep_segments,
+            min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,
             voice_interval=args.voice_interval, encoder=args.encoder, layout=args.layout,
             layout_switch=args.layout_switch, switch_timeout=args.switch_timeout, cam2_fifo=args.cam2_fifo,
