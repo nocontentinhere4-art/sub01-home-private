@@ -16,7 +16,7 @@ the tools only need this shape:
 `SUB01_HOME_CONTROL_API_KEY`; point `SUB01_POD_SECRETS_DIR` at its folder. Growing the volume costs money: only with
 the owner's explicit OK. NEVER use "Edit Pod" on the container disk (it wipes everything outside `/workspace`).
 
-The tools mask the token in their output. Python needs `aiohttp` (podterm, podrun) and `curl` (jupput, vagon_dl).
+The tools mask the token in their output. `podterm.py` and `podrun.py` propagate the remote command exit status; missing completion evidence, kernel errors and failed HTTP requests return nonzero. A signal termination maps to the usual shell status (128 + signal) in `podrun.py`. TLS certificate and hostname verification stay enabled; the existing custom CA bundle is used when present, otherwise the system trust store is used. Python needs `aiohttp` (podterm, podrun) and `curl` (jupput, vagon_dl).
 
 ## Tools (run locally)
 

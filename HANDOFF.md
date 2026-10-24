@@ -304,3 +304,29 @@ or binaries: only the m5 launcher file and the patch). If that session is gone, 
 - Pod bootstrap for a new session: recreate the scratchpad helpers (`podrun.py` runs bash through the Jupyter kernel
   API, `jupput.py` uploads through the contents API; downloads via `/files/tmp/sub01-share/...`), with the Jupyter
   token from the owner's RunPod pod.
+
+## Codex access verification — 2026-10-24 22:12 UTC
+- Separate takeover checkout verified clean at a0332c9549b99bc7d9eccfba7113b0978ca87410. Immutable baseline unchanged.
+- Authenticated existing JupyterLab session reached through the authorized personal browser; no credentials copied or printed. Local pods.json has not yet been provisioned.
+- Tiny read at 22:11:46 UTC: no MEASURING lease; root has 7.4 GB available; PID 63 is Ts, started Wed Oct 21 19:05:18 2026, exact expected guard-v3.py command. It remains paused because 00:20 UTC has not arrived.
+- Existing v24 worker is progressing: shared directory had review7 and m5-fix artefacts timestamped 22:10 UTC; durable v24-wip-2149.patch and v24-wip-on-92bea07-2203.patch exist. Do not duplicate or interrupt its review.
+- Runtime ownership handed to Codex at approximately 22:16 UTC: Claude explicitly confirmed no more builds, deploys, restarts, tuning, console cvars, MEASURING or STOP changes, and no branch commits. Claude cancelled its 00:20 UTC guard reminder. Its v24 worker continues review only and will deliver final patch, verbatim consultations and MANIFEST.txt under /workspace/sub01-w-v24/.
+- Offline reproductions confirm podterm shell status false-positive (false -> END 0) and podrun generated-code false-positive (exit 7 -> local exit 0). No fix or commit yet: consult the on-pod partner first.
+- No runtime changes, builds, restarts, API balance polling, Vagon starts or commits performed by Codex.
+
+### Codex continuation — 2026-10-24 22:19 UTC
+- Private local access provisioned outside git in ~/.sub01/pods.json (directory 700, file 600), downloaded through authenticated Jupyter UI without showing the value; pod transfer file removed. Local terminal helper connection succeeds with certificate verification enabled.
+- Helper design consultation running on the pod: /tmp/sub01-share/codex-helpers/{question.txt,answer.json,consult.err}. Save question/answer verbatim under docs/streamer/kimi/ before committing repairs.
+- Baseline v24 artefact names corrected from Claude's live response: v24-wip-on-92bae07-2203.patch (base 92bae07), sha256 prefix 64352b3cb21440bd; launcher m5 prefix 4d9bd83099609f73. Earlier note spelling 92bea07 was a transcription error. No final MANIFEST.txt yet.
+
+### Helper repair checkpoint — 2026-10-24 22:30 UTC
+- Partner's initial broad consultation exhausted its reasoning budget without an answer (saved verbatim); the focused follow-up explicitly approved the limited status/TLS repair with no blockers.
+- Local fixes preserve the shell status before printf, delimit multiline commands correctly, require kernel completion and an exit marker, map signal exits, and use verified default CA trust when the Linux bundle is absent. No commit until the exact diff review finishes.
+- Live Jupyter probes: both terminal and kernel helpers returned exactly 0 and 7 for the corresponding harmless commands, with expected stdout. No application runtime mutation.
+- Read-only live health: director recording=true, webcam_only, window_speed=1.0; Vagon phase dashboard (does not authorize or prove PC start). Native PID 2015338 remains the 19:13 v23 process; latest 10 s PERF samples at 22:25 UTC = 58.4, 57.1, 56.0 fps, below acceptance.
+
+### Helper deliverable verified — 2026-10-24 22:39 UTC
+- Exact diff review found a fragmented-status blocker (42 could be read as 4). Detection and parsing now share a newline-terminated marker regex; the targeted regression passes. Follow-up review explicitly returned COMMIT YES.
+- Final verification: 26 regression tests pass; live terminal and kernel probes preserve 0, 7 and 42. Source and consultation artefacts are ready to commit/push on the private branch. No game or sidecar runtime changes.
+- Eight deployed service source hashes exactly match the takeover prefixes. v24 worker review still active, no final MANIFEST.txt at last check.
+- For the future v24 build script, do not copy build-v23.sh's final status behaviour: it prints BUILD_EXIT but does not explicitly exit with RC. Require the real build exit and independently verify the produced binary.

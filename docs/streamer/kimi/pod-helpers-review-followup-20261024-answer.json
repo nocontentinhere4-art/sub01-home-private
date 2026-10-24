@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "COMMIT YES",
+ "finish_reason": "stop",
+ "prompt_tokens": 1242,
+ "completion_tokens": 1334,
+ "reasoning_tokens": 1316,
+ "seconds": 26.8
+}

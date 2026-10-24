@@ -1,0 +1,3 @@
+Give a short engineering verdict on this minimal bugfix design, no broad redesign: (1) shell helper currently runs `( CMD ); echo; echo END $?`, so false is reported as success. Change to `(
+CMD
+); rc=$?; printf "\nEND<uuid> %s\n" "$rc"`, match markers as whole lines. (2) Jupyter kernel helper runs subprocess.run then prints output but loses returncode. Add a UUID exit marker carrying r.returncode, map negative signal status to 128+signal, require this marker and successful execute_reply before returning success. (3) ssl.create_default_context uses a custom CA file if it exists, else default trust store; never disable verification. Do you approve this limited repair? Name only concrete blockers. Answer in under 250 words. Do not expand scope.
