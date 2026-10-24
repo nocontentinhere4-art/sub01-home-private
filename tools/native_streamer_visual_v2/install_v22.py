@@ -64,6 +64,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -603,6 +604,23 @@ EDITS = [
 PC_TAIL_EDIT = ('pc_cpp', PC_TAIL, PC_METHODS)
 
 
+# The one "PCFrame" use the pod's native_cinematic_pc.inc may keep: a read-back that checks the bridge's own verified frame is
+# on screen before it records a website observation (still correct under ShowFrame: with the feed on screen it skips).
+INC_READBACK = re.compile(r'GetTextureParameterValue\(\s*FName\(\s*TEXT\(\s*"PCFrame"\s*\)\s*\)\s*,')
+
+
+def inc_binds_pc_frame(inc: str) -> bool:
+    """Fail closed: any "PCFrame" left after removing the allowlisted read-back counts as a binding (a setter may name it
+    through a variable in another statement)."""
+    return 'PCFrame' in INC_READBACK.sub('', inc)
+
+
+def describe_inc(inc: str | None) -> str:
+    if inc is None:
+        return 'absent'
+    return 'present, reads PCFrame only' if INC_READBACK.search(inc) else 'present, no PCFrame binding'
+
+
 def plan(sources: dict, inc: str | None = None) -> dict:
     """Pure transformation of the six LF texts (`inc` = native_cinematic_pc.inc when present); raises Refused, never partial."""
     problems = [f'{FILES[key]} already carries {MARKER} (v22 already installed)' for key in FILES if MARKER in sources[key]]
@@ -610,7 +628,7 @@ def plan(sources: dict, inc: str | None = None) -> dict:
         raise Refused('; '.join(problems))
     problems = [f'{FILES[key]} lacks v21 ({v21.MARKER}); run the stack up to install_v21_fixes.py first'
                 for key in ('header', 'cpp') if v21.MARKER + ' BEGIN' not in sources[key]]
-    if inc is not None and 'PCFrame' in inc:
+    if inc is not None and inc_binds_pc_frame(inc):
         problems.append(f'{CINEMATIC_PC_INC} binds "PCFrame" itself: it would bypass ShowFrame (the feed routing); route it first')
     if problems:
         raise Refused('; '.join(problems))
@@ -699,7 +717,7 @@ def run(source: Path, dry_run: bool) -> dict:
               'cam2_exposure': {'mode': CAM2_EXPOSURE, 'ev_bias': CAM2_EV_BIAS, 'ev_min': CAM2_EV_MIN, 'ev_max': CAM2_EV_MAX},
               'pc_bridge_bind_sites': PC_BIND_SITES, 'new_header': NEW_HEADER,
               'layout_header_present': (source / LAYOUT_HEADER).is_file(),
-              'cinematic_pc_inc': 'absent' if inc is None else 'present, no PCFrame binding',
+              'cinematic_pc_inc': describe_inc(inc),
               'tuning_limits': TUNING_LIMITS, 'edits': result['edits'],
               'files': {FILES[key]: {'before_sha256': v2.sha256(raw[key]), 'after_sha256': v2.sha256(after[key]),
                                      'bytes_before': len(raw[key].encode()), 'bytes_after': len(after[key].encode()),

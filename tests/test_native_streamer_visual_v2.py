@@ -3199,6 +3199,17 @@ def test_v22_refuses_a_cinematic_include_that_binds_the_monitor(v21_stack, tmp_p
     (target / v22.CINEMATIC_PC_INC).write_text('bool USub01PCBridge::BeginCinematicWebsite(FString&,FString&){return false;}\n')
     code, report = install_v22(target, '--dry-run')
     assert code == 0 and report['cinematic_pc_inc'] == 'present, no PCFrame binding'
+    # the pod copy only reads PCFrame back (observation check): allowed
+    (target / v22.CINEMATIC_PC_INC).write_text('void USub01PCBridge::ObserveCinematicWebsite(){\r\n UTexture* Actual=nullptr;'
+                                               'if(!MonitorMaterial->GetTextureParameterValue(FName(TEXT("PCFrame")),Actual)||Actual!=GraphicalFrame.Get())return;\r\n}\r\n')
+    code, report = install_v22(target, '--dry-run')
+    assert code == 0 and report['cinematic_pc_inc'] == 'present, reads PCFrame only'
+    # fail closed: a setter that names PCFrame through a variable in another statement is still refused
+    (target / v22.CINEMATIC_PC_INC).write_text('void USub01PCBridge::X(UTexture* Feed){\n const FName P(TEXT("PCFrame"));\n'
+                                               ' MonitorMaterial->SetTextureParameterValue(P,Feed);\n}\n')
+    code, report = install_v22(target, '--dry-run')
+    assert code == 2 and v22.CINEMATIC_PC_INC in report['reason']
+    (target / v22.CINEMATIC_PC_INC).write_text('bool USub01PCBridge::BeginCinematicWebsite(FString&,FString&){return false;}\n')
     (target / v22.NEW_HEADER).write_text('// someone else\'s header\n')
     code, report = install_v22(target)
     assert code == 2 and 'already exists' in report['reason'] and (target / v22.NEW_HEADER).read_text() == '// someone else\'s header\n'

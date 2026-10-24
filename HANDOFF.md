@@ -157,17 +157,24 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   `SUB01_PC_ORIGIN=http://127.0.0.1:8838`, then stop 8832 for good.
 - Done 2026-10-24: disk-full recovery, director retention (25d17a8), volume 150 → 200 GB + offload, Kimi C (one
   desktop source 8838) and B (m4, rejected), shadow/worker A/B and CSV profiles.
-- **Sawtooth windows A/B compared (15:35)**: per call, everything is flat except EndDrawingViewport 4.4 → 6.8 ms/frame
-  (Vulkan present/acquire wait), RenderGraphExecute exclusive 1.15 → 1.54 ms/call (6 per frame), render-thread
-  WaitForTasks 2.6 → 4.3 ms, DirectLighting/Radiosity/WorldTick slightly. Leading hypothesis: GPU/present side.
-  Exports in `/tmp/sub01-share/insights/`, compare with `cmpab.py`.
+- **Sawtooth ROOT CAUSE (sawtooth worker, 17:30)**: the CPU cost of `vkQueuePresentKHR` on the RHI thread (NVIDIA X11
+  present on Xvfb :99) grows ~3.3 ms/frame over a swapchain's life (RHI user time 8.8 → 12.0 ms/frame; GPU flat and
+  less busy at the ramp end, clocks/power flat, no throttling). It resets after ~21.7k presents (14 cycles, 21,662 ± 230
+  frames) or when the swapchain is recreated. The present gates the render thread through the occlusion fence
+  (WaitOcclusionTests 2.9 → 4.75 ms/frame) and the game thread through the RHI frame fence. (The coordinator's 15:35
+  A/B table was mis-attributed: ExportTimerStatistics always includes the GPU queues.) `r.NumBufferedOcclusionQueries 2`
+  and `r.GTSyncType -1` only move the wait. Stopgap: an `r.VSync` flip every 60-120 s recreates the swapchain (~85 ms
+  hitch): ABBA median 20.45 → 18.47 ms with `cam2_fps` 60, slope 0.36 → 0.01 ms/min; Kimi wants an 8-24 h soak before
+  using it. It does not reach 60: the base present cost (~9 ms user + 2.5 sys per frame) stays. Structural fix (next
+  native build): render the main view offscreen and hand it to the director like cam2 (no X11 present); ablation
+  `-RenderOffScreen` (launcher m3o) measures the ceiling first.
 
 ## Workers in flight (owner asked for multi-agent work, 2026-10-24 ~15:40 UTC)
 Each works in its own git worktree, consults Kimi and gets a Kimi review before committing; the coordinator merges,
 builds on the pod, deploys and pushes. Split reviewed by Kimi: `docs/streamer/kimi/multiagent.md`.
 | Worker | Scope | Pod rights |
 |---|---|---|
-| native v22 | monitor.mjpeg reader + privacy gate, no per-frame UTexture2D, cam2 exposure keys | read-only |
+| native v22 | DONE, merged 27670bd (119 tests, Kimi lifted its hold); engine APIs checked against the 5.8.3 source by the coordinator; include guard narrowed to the read-back (coordinator + Kimi). Pod dry run plans cleanly; build script `/tmp/sub01-share/deploy/v22/build-v22.sh` (refuses under MEASURING, backs up `source-backup-before-v22` and `binaries-v21-linux`). Sequence: sawtooth m3o ablation on v21 → build v22 + sidecars deploy → relaunch m3 (= v22) → smoke test + v22 baseline | read-only |
 | sidecars | DONE, merged 8634ff9 (164 tests, Kimi "commit: yes"). Deploy + supervisor restart pending: only outside a measurement lease; command in the commit's RUNBOOK section. Follow-ups: agent waits for the feed's neutral confirmation before typing a credential; game blanks the texture when the feed goes stale | read-only |
 | sawtooth | root cause + fix of the render-time ramp; ends on plain m3, `cam2_fps` 30 unless 60/60 holds | OWNS the game runtime (cvars, trace port, tune.py, relaunch); only one allowed heavy CPU |
 | visual v23 | live-tunable fixes: neck/hood, elbow, posture, hands, face light, chair (`install_v23.py` after v22) | read-only |
