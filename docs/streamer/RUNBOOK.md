@@ -220,13 +220,13 @@ Director flags (`--child-arg "director=..."`; defaults keep the v1 recording: 24
 | `--fps 10-120` (24) | game capture, every `fps=` filter, `-r`, and GOP `-g` = 2 x fps (a keyframe every 2 s) |
 | `--desktop-fps 10-60` (15) | desktop capture; never above `--fps` (the graph repeats its frames up to `--fps`) |
 | `--encoder libx264\|h264_nvenc\|hevc_nvenc` | NVENC: `-preset p4 -tune ll -rc vbr -cq <crf> -b:v 0 -bf 2 -g 2*fps -pix_fmt yuv420p`; probed once at start (1 s lavfi encode at the real size/rate, same options); a failed probe records with libx264 and logs `encoder_fallback` |
-| `--layout webcam\|desktop\|split\|room` | fix the layout; default: follow the last line of `layout.jsonl` |
+| `--layout webcam\|desktop\|split\|room\|webcam_only` | fix the layout; default: follow the last line of `layout.jsonl` (a privacy line there still wins) |
 | `--layout-switch live\|restart` (live) | live: switch inside the running ffmpeg; restart: relaunch ffmpeg at every switch (less CPU) |
 | `--hls-dir DIR` | also `DIR/live.m3u8` + 4 s segments from the same encode (tee muxer; off by default) |
 | `--rtmp-url-file FILE` / `--rtmp-url URL` | optional third tee branch (flv, behind a dropping fifo; off by default). The director never logs, prints or puts the URL in state (ffmpeg's messages are redacted); use the file, because the supervisor logs child command lines. ffmpeg itself can only take it on its command line, so local users can see it with `ps` while it runs |
 | `--cam2-fifo`, `--cam2-json`, `--cam2-stale 3`, `--cam2-interval 1` | second camera paths (default `<streamer-dir>/cam2.mjpeg`, `cam2.json`), freshness limit, check period |
 | `--layout-interval 1`, `--switch-timeout 3` | how often `layout.jsonl` is read; how long a live switch waits for ffmpeg's reply |
-| `--test-sources`, `--test-seconds N` | lavfi testsrc2/sine instead of X, FIFOs and cam2 (local smoke tests) |
+| `--test-sources`, `--test-seconds N` | lavfi sources instead of X, FIFOs and cam2 (local smoke tests): testsrc2 game and cam2, a solid red desktop, a sine |
 
 Pod profile (owner, 2026-10-23: 60 fps on everything): `--child-arg "director=--fps 60 --desktop-fps 60 --encoder
 h264_nvenc --hls-dir /home/unreal/.sub01-private/streamer/hls"` (start command in B above). Check the exact ffmpeg
@@ -235,9 +235,10 @@ command without starting anything: `runuser -u unreal -- /home/unreal/venv/bin/p
 
 **Layouts.** `webcam` = the game viewport (the frontal webcam shot) full frame + desktop 480x270 bottom-right
 (`character` is accepted as its v1 name); `desktop` = desktop full + webcam PiP; `split` = webcam | desktop side by
-side; `room` = cam2 full + webcam PiP (needs cam2, otherwise `webcam` is shown). `POST /director/layout {"layout": ...}`
-appends a line to `layout.jsonl`; the agent may also append `{"layout": ...}` lines itself. The director reads the last
-line every second (a half-written or unknown line is ignored) and switches.
+side; `room` = cam2 full + webcam PiP (needs cam2, otherwise `webcam` is shown); `webcam_only` = the game viewport
+alone, no PiP (the privacy layout below; it can also be requested like any other). `POST /director/layout {"layout":
+...}` appends a line to `layout.jsonl`; the agent may also append `{"layout": ...}` lines itself. The director reads the
+last line every second (a half-written or unknown line is ignored) and switches.
 
 **How a switch works.** In live mode the graph renders every layout of the run at once (all sources normalised to
 1920x1080 yuv420p at `--fps`) and `streamselect@layout` picks the recorded one. ffmpeg runs with `-stdin` and the
@@ -248,6 +249,52 @@ layout (a 1-2 s gap and a new run prefix). sendcmd cannot do this: it reads its 
 Cost of rendering all four: about 0.5 core more than one layout at 1080p60 (measured on the 4-core test box with
 lavfi sources); `--layout-switch restart` avoids it. `events.jsonl`: `layout_switched` / `layout_switch_failed`;
 state: `layout` (wanted), `live_layout` (shown), `last_switch`.
+
+**Privacy cut (logins on the owner's PC; owner's decision of 2026-10-23).** SUB-01 may log in on the owner's Vagon PC
+(agent and runner `--allow-credentials`, default on). On a login or account page the agent appends `{"layout": "webcam",
+"reason": "privacy", "privacy_id": "p3-ab12cd", "why", "previous", ...}` to `layout.jsonl`. From that line until a later
+line without `reason: "privacy"`, the director shows **`webcam_only`**, whatever is requested and even with a fixed
+`--layout`: no desktop PiP, no `desktop`/`split`, and no `room` (cam 2 films the in-game monitor, which shows the
+desktop). The MP4, HLS and RTMP are the same encode, so all three lose the desktop together. Live mode: one map command
+(`streamselect@layout -1 map N` to the `[lwebcam_only]` input, which is the game picture itself); restart mode, or a
+switch without a reply: ffmpeg is relaunched on the one-layout graph `[0:v]fps,scale,setsar,format` (no `[1:v]` at all).
+`GET /director/state` then answers `privacy: true`, `privacy_id`, `privacy_why`, `privacy_since`, `privacy_restore` (the
+layout that comes back) and **`desktop_hidden`**, which is true only while the running ffmpeg is CONFIRMED on
+`webcam_only`: ffmpeg answered `ret:0` to that map command, or the run was launched on it (a relaunch, restart mode, a
+director restarted during a cut: it reads `layout.jsonl` before its first launch). It is false while a switch is in
+flight, after a switch that got no reply or an error (the on-air layout is unknown: `live_layout: null` until the
+relaunch), while a relaunch is pending, while ffmpeg is not running, and while an ffmpeg of an earlier director that
+survived its reap (SIGKILL) is still alive (`stale_ffmpeg_survived`: it could still write the old layout to HLS; at start
+the director looks in /proc for every ffmpeg recording into its recordings directory (the directory as a path
+component of an argument, never a sibling such as `recordings-old`), not only the pid file's, so a second restart finds a
+survivor again). It
+means "safe to type from now on", not "the outputs are flushed": frames composed before the switch (encoder lookahead,
+the open HLS segment, what RTMP already sent) still show the page that triggered the cut. The agent types a credential only when
+`privacy: true`, its own `privacy_id` and `desktop_hidden: true` come back, asked afresh before every credential; its
+first ask right after writing the line is too early and is refused (`stale_refused`), the next decision gets the ack
+(about one layout tick, 1 s, plus the switch, ~0.1 s). The agent's end line `{"layout": <previous>, "reason":
+"privacy_end", "privacy_id"}` ends the cut and that layout comes back (an invalid one: the layout requested before the
+cut; a director restarted during a cut recovers it from the last request before the privacy line in `layout.jsonl`,
+else from the line's `previous`); state `last_privacy {id, since, ended, seconds, hidden_at, restore, restored_at,
+restored_layout, how}`. A new cut
+whose end line was never seen just takes the new id (acknowledged at once if `webcam_only` is already confirmed on air).
+Events: `privacy_on`, `privacy_hidden` (with `ms` from reading the line), `privacy_off`, `privacy_restored`,
+`privacy_still_on` (every 10 minutes of a cut: the director never ends one on a timer; state `privacy_seconds`); ffmpeg
+launches carry `privacy_id`. **During a cut `POST /director/layout` answers 409** and writes nothing (a plain line
+would end the cut while the agent believes the screen is private); the handler reads `layout.jsonl` first, so the
+agent's end line followed at once by its POST is accepted, and if the agent's privacy line lands between that read and
+the POST's own line, the director appends the privacy line again (`reasserted_by: "director"`, `refused_nonce`, event
+`privacy_reasserted`) so it stays the last line, and answers 409; that refused request is not the layout restored
+afterwards, also for a director restarted later. The operator can end a cut himself (for instance when the
+agent died on a login page; the director never ends one on a timer). If the agent is alive, hold it first (`touch
+$P/STOP`): an end forced between its acknowledgement and its keystrokes would put the typing on air:
+`curl -s -X POST -H "X-Admin-Token: $(cat $T)" -d '{"layout": "webcam", "end_privacy": true}' localhost:8837/director/layout`
+(logged with `reason: "privacy_end_operator"`). Check: `curl -s -H "X-Admin-Token: $(cat $T)" localhost:8837/director/state
+| python3 -c 'import json,sys; d=json.load(sys.stdin); print({k: d[k] for k in ("privacy", "privacy_id", "desktop_hidden",
+"live_layout", "privacy_restore", "last_privacy")})'`; `$UP status` shows `privacy` and `desktop_hidden` too. What the
+cut cannot cover: the frames between the login page appearing and the cut (the agent sees the page first; nothing is
+typed before the ack), HLS segments already written before it (up to 24 s of playlist), and the Vagon host page's own
+login (the owner's, through the operator console: see Known limits).
 
 **cam2.** Used when `cam2.mjpeg` is a FIFO with a writer and `cam2.json` reports a frame newer than 3 s
 (`last_frame_unix`, `last_frame`, ISO or ms accepted; `last_frame_age_s`; else the file's mtime). ffmpeg reads it with
@@ -313,6 +360,9 @@ director (the display through `--child-arg "monitor=--display :103"`); and updat
 - The privacy lock's neutral picture covers the model and the monitor texture, not this recording: the director grabs
   display `:102` itself, so during a Vagon login the kiosk's login page is in the local MP4 (fix: W1/W6, DECISIONS A2).
   Until then, start the director after `phase: connected`, or treat that recording as private.
+- The privacy cut follows `layout.jsonl` only (the agent's lines); it knows nothing of what is on screen by itself, and
+  a cut stays until a line ends it (an agent that dies on a login page leaves the stream on `webcam_only`: end it with
+  `end_privacy`, above).
 - Layout changes are hard cuts (live through streamselect, or a relaunch as fallback); no OBS; RTMP and HLS exist but
   are off by default and nothing public is started without the owner's request.
 - A cam2 FIFO that stays open without frames freezes the recording until the director notices (about 4-6 s) and

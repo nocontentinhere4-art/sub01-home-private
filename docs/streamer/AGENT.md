@@ -412,9 +412,10 @@ or inbox page shows, and say nothing about it.
   may still show the desktop PiP). Each cut has its own `privacy_id` in its layout.jsonl line (`privacy_end` carries
   it too). A credential is typed only when that line was written AND, asked afresh before every credential (never
   cached), `GET /director/state` answers `{"privacy": true, "privacy_id": <this cut's id>, "desktop_hidden": true}`;
-  otherwise `stale_refused` ("the desktop is not hidden yet") and he tries again later. A director that has not
-  implemented this (the v1 one in this repository, and any that only switches to webcam) never acknowledges, so no
-  credential is typed; `--no-require-privacy-ack` accepts the written line alone (the desktop may then stay visible).
+  otherwise `stale_refused` ("the desktop is not hidden yet") and he tries again later. The director implements it
+  (RUNBOOK.md "Privacy cut": `webcam_only`, no desktop picture anywhere, `desktop_hidden` only once confirmed on air); a
+  director without it never acknowledges, so no credential is typed; `--no-require-privacy-ack` accepts the written
+  line alone (the desktop may then stay visible).
   When the privacy screen ends, the previous layout is POSTed back to the director (`layout_now` in step).
 - **Lockouts.** At most 2 possible login submissions in 10 min (a credential typed with submit, or the first Enter or
   click within 30 s after one was typed; a bare e-mail is not counted); the third holds the agent (`held:
@@ -479,8 +480,9 @@ Files: `streamer_agent.py` and `scripts/streamer_watchdog.py` into the superviso
 5. Before any unattended stretch, only after the step-5 checks of HANDOFF.md pass: remove STOP (`$UP resume`), then
    `POST /lease {"minutes": 60}` (command in "Guard rails before unattended runs" (c)); re-arm every hour; after a
    `held` or `stream_frozen`, read the rows, fix the cause, `POST /resume`.
-6. Director: for a credential to be typed, the director must read `layout.jsonl` lines with `reason: "privacy"`, drop
-   every desktop picture meanwhile (its `webcam` layout has a desktop PiP; cam 2 sees the in-game monitor), and report
-   it in `GET /director/state` as `{"privacy": true, "privacy_id": <the line's id>, "desktop_hidden": true}`. The runner's own host policy
-   (`scripts/streamer_desktop.py` HOST_RULES: login, payment hosts) still refuses login hosts on navigate: lifting that
-   for the owner's decision is a runner change.
+6. Director: for a credential to be typed, the director reads `layout.jsonl` lines with `reason: "privacy"`, drops
+   every desktop picture meanwhile (`webcam_only`: its `webcam` layout has a desktop PiP; cam 2 sees the in-game
+   monitor), and reports it in `GET /director/state` as `{"privacy": true, "privacy_id": <the line's id>,
+   "desktop_hidden": true}` (RUNBOOK.md "Privacy cut"; deploy the new `scripts/streamer_director.py`). The Vagon runner's
+   `--allow-credentials` (default on, vagon mode only) lets navigate open login/account pages on the remote PC
+   (DESKTOP.md "Logins on the remote PC"; it takes effect when the runner on 8838 is restarted with the new file).

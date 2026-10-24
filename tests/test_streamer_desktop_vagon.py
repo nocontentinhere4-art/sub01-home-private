@@ -505,6 +505,269 @@ def test_chromium_mode_is_the_default_and_keeps_its_dom_paths(tmp_path):
     assert "--kiosk" in sd.chromium_args(sd.Config(profile=tmp_path / "p", pc_mode="vagon"))   # kiosk: the stream fills the screen
 
 
+# --- --allow-credentials: login/account pages on the REMOTE PC (owner, 2026-10-23) -----------------------------------------
+LOGIN_URLS = ("https://accounts.google.com/signin/v2/identifier", "https://mail.google.com/mail/u/0/",
+              "https://login.microsoftonline.com/common/login", "https://login.live.com/",
+              "https://outlook.live.com/mail/", "https://appleid.apple.com/sign-in", "https://www.icloud.com/",
+              "https://store.steampowered.com/login/", "https://github.com/login", "https://www.reddit.com/account/login",
+              "https://sso.example.com/", "https://auth.example.org/realms/x", "https://example.com/my-account",
+              "https://en.wikipedia.org/wiki/Special:UserLogin", "https://myaccount.google.com/")
+NEVER_URLS = {  # still refused with logins allowed: money, adult, gambling, crypto, the owner's consoles, account changes...
+    "https://www.paypal.com/signin": "banking", "https://online.mybank.com/login": "banking",
+    "https://pay.google.com/": "payment", "https://checkout.stripe.com/x": "banking",
+    "https://store.steampowered.com/checkout/": "checkout-path", "https://www.amazon.com/cart": "checkout-path",
+    "https://www.coinbase.com/signin": "crypto", "https://accounts.binance.com/en/login": "crypto",
+    "https://app.uniswap.org/": "crypto", "https://crypto.com/eea": "crypto", "https://pump.fun/board": "crypto",
+    "https://www.pornhub.com/login": "adult", "https://www.bet365.com/": "gambling",
+    "https://claude.ai/login": "owner-service", "https://console.anthropic.com/settings/keys": "owner-service",
+    "https://www.runpod.io/console/pods": "owner-service", "https://login.runpod.io/": "owner-service",
+    "https://railway.app/login": "owner-service",
+    "https://myaccount.google.com/signinoptions/password": "account-change-path",
+    "https://myaccount.google.com/security": "account-change-path",
+    "https://account.live.com/password/change": "account-change-path",
+    "https://github.com/settings/two-factor-authentication/2fa": "account-change-path",
+    "https://example.com/reset-password?token=abc": "account-change-path",
+    "https://example.com/delete-account": "account-change-path",
+    "https://example.com/setup.exe": "download", "http://192.168.1.1/login": "private-host",
+    "https://user:pw@accounts.google.com/": "credentials-in-url", "https://example.com:8443/login": "port"}
+
+
+def test_allow_login_lifts_only_login_and_account_pages():
+    for url in LOGIN_URLS:
+        assert sd.blocked_url(url) in ("login", "login-path"), url                     # the default: refused
+        assert sd.blocked_url(url, allow_login=True) is None, url                       # the remote PC with the flag
+    for url, why in NEVER_URLS.items():
+        assert sd.blocked_url(url, allow_login=True) == why, url
+        if why != "account-change-path":                    # the default mode never had an account-change rule of its own
+            assert sd.blocked_url(url) is not None, url
+    # ordinary pages are untouched either way; Wikipedia articles about passwords and security stay articles
+    for url in ("https://example.com/", "https://en.wikipedia.org/wiki/Security", "https://gemini.google.com/app",
+                "https://www.youtube.com/results?search_query=x"):
+        assert sd.blocked_url(url, allow_login=True) is None and sd.blocked_url(url) is None, url
+    assert sd.blocked_url("https://mail.google.com/") == "login"                        # an account host now, as in the agent
+    assert sd.blocked_url("https://claude.ai/") == "owner-service" and sd.blocked_url("https://www.binance.com/") == "crypto"
+
+
+def test_allow_login_core_rules_hold_without_the_browse_module(monkeypatch):
+    monkeypatch.setattr(sd, "B", None)
+    for url, why in NEVER_URLS.items():
+        assert sd.blocked_url(url, allow_login=True), url
+    assert sd.blocked_url("https://www.binance.com/en/login", allow_login=True) == "crypto"
+    assert sd.blocked_url("https://accounts.google.com/", allow_login=True) is None
+
+
+def test_action_policy_lifts_logins_for_navigate_only():
+    nav = {"action": "navigate", "url": "https://accounts.google.com/signin"}
+    assert sd.action_policy(nav) == "blocked: login"
+    assert sd.action_policy(nav, allow_login=True) is None
+    assert sd.action_policy({"action": "navigate", "url": "https://www.paypal.com/"}, allow_login=True) == "blocked: banking"
+    card = {"action": "type", "text": "4111 1111 1111 1111"}
+    assert sd.action_policy(card, allow_login=True) == "blocked: card-number"          # typing rules unchanged
+    assert sd.action_policy({"action": "key", "key": "Control+v"}, allow_login=True).startswith("blocked")
+    marks = {1: {"id": 1, "label": "Sign in"}}                                          # chromium marks are not lifted
+    assert sd.action_policy({"action": "click", "mark": 1}, marks, allow_login=True) == "blocked: login or account control"
+
+
+def test_urls_that_may_carry_a_secret_are_logged_as_their_host_only():
+    lu = sd.loggable_url
+    for url in ("https://user:PW@login.example.com/", "https://auth.runpod.io/login?token=SECRET",   # Kimi's review
+                "https://login.example.com/reset-password/SECRET", "https://example.com/login?magic=SECRET",
+                "https://example.com/verify?token=SECRET", "https://example.com/x?session_id=SECRET",
+                "https://en.wikipedia.org/wiki/Special:PasswordReset?wpUsername=SECRET",
+                "https://app.example/#access_token=SECRET&state=x", "https://app.example/#/cb?code=SECRET"):
+        for remote in (False, True):
+            assert "SECRET" not in lu(url, remote) and "PW" not in lu(url, remote) and lu(url, remote).endswith("/…"), url
+        assert sd.sensitive_url(url), url
+    assert lu("https://example.com/news?id=3") == "https://example.com/news?id=3"           # the pod's Chromium: as is
+    assert lu("https://example.com/news?id=3", remote=True) == "https://example.com/news?…"  # the remote PC: no query
+    assert lu("https://example.com/a#b", remote=True) == "https://example.com/a?…" and lu("nope") == ""
+    assert not sd.sensitive_url("https://www.youtube.com/watch?v=abc")
+    action = {"action": "navigate", "url": "https://example.com/login?magic=abc", "obs": "x"}
+    assert sd._loggable(action) == {"action": "navigate", "url": "https://example.com/…"}
+    assert sd._loggable({"action": "type", "text": "hunter22", "submit": True}, mask_text=True) == {
+        "action": "type", "text": "[typed 8 chars]", "submit": True}
+
+
+REMOTE_NEVER = {  # the remote PC's browser, flag or not (remote_url_problem; Kimi's review of 2026-10-23)
+    "https://app.vagon.io/workstation": "owner-service", "https://vagon.io/": "owner-service",
+    "https://auth.runpod.io/": "owner-service", "https://login.railway.app/": "owner-service",
+    "https://passwords.google.com/": "password-manager", "https://my.1password.com/": "password-manager",
+    "https://vault.bitwarden.com/#/vault": "password-manager", "https://takeout.google.com/": "data-export",
+    "https://myaccount.google.com/personal-info": "account-settings", "https://myaccount.google.com/connections": "account-settings",
+    "https://myaccount.google.com/payments-and-subscriptions": "checkout-path",
+    "https://myaccount.google.com/apppasswords": "account-security-path",
+    "https://account.microsoft.com/billing/payments": "checkout-path",
+    "https://github.com/settings/tokens": "account-security-path", "https://github.com/settings/keys": "account-security-path",
+    "https://gitlab.com/-/user_settings/personal_access_tokens": "account-security-path",
+    "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=x": "account-security-path",
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=x": "account-security-path",
+    "https://accounts.google.com/signin/oauth/consent?x=1": "account-security-path",
+    "https://store.steampowered.com/steamaccount/addfunds": "checkout-path",
+    "https://store.steampowered.com/account/redeemwalletcode": "checkout-path",
+    "https://www.example.com/#/checkout": "checkout-path", "https://shop.example.com/item?add-to-cart=42": "checkout-path",
+    "https://example.com/login/checkout": "checkout-path", "https://en.wikipedia.org/wiki/../checkout": "checkout-path",
+    "https://www.reddit.com/r/nsfw/": "unsafe-text", "http://example.com/login": "insecure-login",
+    "https://accounts.google.com/signin?continue=https://pay.google.com/": "redirect-target (payment)",
+    "https://www.youtube.com/redirect?q=https%3A%2F%2Fwww.bet365.com%2F": "redirect-target (gambling)",
+    "https://www.youtube.com/redirect?q=https%3A%2F%2Fwww.pornhub.com%2F": "unsafe-text",
+    "https://accounts.google.com/signin?continue=https%3A%2F%2Fexample.com%2F%3Fnext%3Dhttps%3A%2F%2Fclaude.ai%2F":
+        "redirect-target (redirect-target (owner-service))",
+    # Kimi's final review
+    "https://appleid.apple.com/account/manage": "account-settings", "https://account.apple.com/account/manage": "account-settings",
+    "https://mysignins.microsoft.com/security-info": "account-security-path",
+    "https://en.wikipedia.org/wiki/Special:ChangePassword": "account-change-path",
+    "https://en.wikipedia.org/w/index.php?title=Special:PasswordReset": "account-change-path",
+    "https://example.com/reset-password.html?token=x": "account-change-path",
+    "https://help.steampowered.com/en/wizard/HelpChangePassword": "account-change-path",
+    "https://example.com/oauth/authorize.php?client_id=x": "account-security-path",
+    "https://example.com/#/product?add-to-cart=1": "checkout-path",
+    "https://example.com/#/login?next=https%3A%2F%2Fvagon.io%2F": "redirect-target (owner-service)",
+    "https://myaccount.google.com/#/security": "account-change-path",
+    "https://appleid.apple.com/login/profile": "account-settings", "https://myaccount.google.com/signin/x": "account-settings",
+}
+REMOTE_OK = ("https://accounts.google.com/signin/v2/identifier?continue=https://mail.google.com/mail/",
+             "https://mail.google.com/mail/u/0/#inbox", "https://myaccount.google.com/", "https://appleid.apple.com/sign-in",
+             "https://store.steampowered.com/login/", "https://github.com/login", "https://outlook.live.com/mail/",
+             "https://www.youtube.com/feed/subscriptions", "https://www.youtube.com/watch?v=abc",
+             "https://en.wikipedia.org/wiki/Ford_Escort", "https://store.steampowered.com/app/222140/",
+             "https://en.wikipedia.org/wiki/Security", "https://en.wikipedia.org/wiki/Payment",
+             "https://en.wikipedia.org/wiki/Special:Random", "https://accounts.google.com/ServiceLogin?service=mail")
+
+
+def test_remote_url_problem_on_the_vagon_pc():
+    for url, why in {**REMOTE_NEVER, **NEVER_URLS}.items():
+        assert sd.remote_url_problem(url, allow_login=True) == why, url
+        assert sd.remote_url_problem(url) is not None, url                               # refused with the flag off too
+    for url in REMOTE_OK:
+        assert sd.remote_url_problem(url, allow_login=True) is None, url
+    assert sd.remote_url_problem("https://accounts.google.com/signin") == "login"         # the flag lifts only logins
+    assert sd.remote_url_problem("https://www.youtube.com/watch?v=abc") is None
+    for money in ("checkout", "cart", "basket", "subscribe", "donate"):                  # browse.LOGIN_HREF's money words
+        assert sd.blocked_url(f"https://example.com/{money}", allow_login=True) == "checkout-path"
+    nav = {"action": "navigate", "url": "https://passwords.google.com/"}
+    assert sd.action_policy(nav, allow_login=True) is None                               # the pod's Chromium rules...
+    assert sd.action_policy(nav, allow_login=True, remote=True) == "blocked: password-manager"   # ...and the remote PC's
+    typed = lambda text, remote=True: sd.action_policy({"action": "type", "text": text}, allow_login=True, remote=remote)  # noqa: E731
+    assert typed("passwords.google.com") == "blocked: password-manager"                  # the address bar by hand
+    assert typed("https://takeout.google.com/") == "blocked: data-export" and typed("claude.ai") == "blocked: owner-service"
+    assert typed("accounts.google.com") is None and typed("correct.Horse-battery") is None   # logins, a dotted password
+    assert typed("hello there claude.ai") is None and typed("passwords.google.com", remote=False) is None
+    for text, why in (("http://127.0.0.1/", "private-host"), ("127.0.0.1:8830/api", "private-host"),     # Kimi's delta review
+                      ("localhost:8080", "private-host"), ("myaccount.google.com./security", "account-change-path"),
+                      ("chrome://password-manager/passwords", "scheme"), ("file:///C:/Users", "scheme"),
+                      ("javascript:alert(1)", "scheme"), ("https://claude.ai", "owner-service")):
+        assert typed(text) == f"blocked: {why}", text
+    for text, why in (("http:127.0.0.1/", "private-host"), ("https:/localhost/x", "private-host"),          # 2nd delta review
+                      ("myaccount.google.com/personal-info?x=a@b", "account-settings")):
+        assert typed(text) == f"blocked: {why}", text
+    assert typed("user@gmail.com") is None and typed("P@ss.word9") is None and typed("hunter22") is None   # e-mail, passwords
+    assert typed("Hello123.") is None and typed("abc/def") is None                       # single labels: the documented limit
+    assert sd.typed_url("myaccount.google.com/?x=a@b") == "https://myaccount.google.com/?x=a@b"   # @ after the host: a URL
+    assert sd.typed_url("www.youtube.com/watch?v=1") == "https://www.youtube.com/watch?v=1" and sd.typed_url("a b") is None
+    assert sd.clean_path("/wiki/../checkout") == "/checkout" and sd.clean_path("/a/./b/") == "/a/b/"
+    assert sd.clean_path("/a%2F..%2Fpay") == "/pay" and sd.clean_path("") == "/" and sd.clean_path("/x\\..\\cart") == "/cart"
+
+
+class ActDesk:
+    """A Desktop stand-in for Runner.act: a remote PC (vagon) or the pod's Chromium, recording what reaches it."""
+
+    def __init__(self, mode="vagon", allow=True):
+        self.status, self.restarts, self.error = "ready", 0, ""
+        self.feed, self.vagon = sd.FrameFeed(epoch="abc123"), sd.VagonState("none")
+        self.cfg = SimpleNamespace(pc_mode=mode, allow_credentials=allow)
+        self.done = []
+
+    def display(self):
+        return self.feed.display()
+
+    def operator_allowed(self):
+        return False
+
+    async def release_inputs(self):
+        pass
+
+    async def snapshot(self, obs=None):
+        jpeg = io.BytesIO()
+        Image.new("RGB", (64, 36), (len(self.done) * 40 % 255, 0, 0)).save(jpeg, "JPEG")
+        return {"url": "https://app.vagon.io/…", "title": "remote desktop", "text": "", "scroll": {"y": 0, "max": 0},
+                "loading": False, "width": 1920, "height": 1080, "jpeg": jpeg.getvalue(), "marks": [], "dialogs": [],
+                "mode": "vagon", "remote_ready": True}
+
+    async def do(self, action):
+        self.done.append(action)
+        return {"errors": [], "dialog": None, "load_ms": 5}
+
+
+def test_runner_opens_login_pages_only_on_the_remote_pc_with_the_flag(tmp_path):
+    async def body():
+        login = "https://accounts.google.com/signin?continue=https://mail.google.com/&magic=SECRET-QUERY"
+        for mode, allow, reaches in (("vagon", True, True), ("vagon", False, False), ("chromium", True, False)):
+            desk = ActDesk(mode, allow)
+            log = tmp_path / f"{mode}-{allow}.jsonl"
+            runner = sd.Runner(desk, TOKEN, sd.Events(log))
+            assert runner.remote_logins() is (mode == "vagon" and allow)
+            res = await runner.act({"action": "navigate", "url": login})
+            assert bool(desk.done) is reaches and res["ok"] is reaches, (mode, allow)
+            if not reaches:
+                assert res["outcome"]["errors"] == ["blocked: login"]
+            for url in ("https://www.paypal.com/signin", "https://claude.ai/login", "https://myaccount.google.com/security"):
+                assert (await runner.act({"action": "navigate", "url": url}))["ok"] is False
+            assert len(desk.done) == (1 if reaches else 0)                              # nothing refused reached the PC
+            rows = events_of(log)
+            assert "SECRET-QUERY" not in log.read_text() and "magic=" not in log.read_text()   # logged without the query
+            assert any(r.get("action", {}).get("url") == "https://accounts.google.com/…" for r in rows)
+    run(body())
+
+
+def test_remote_typing_is_never_logged_and_state_reports_the_flag(tmp_path):
+    async def body():
+        desk = ActDesk("vagon", True)
+        runner = sd.Runner(desk, TOKEN, sd.Events(tmp_path / "e.jsonl"))
+        res = await runner.act({"action": "type", "text": "correct-horse-battery", "submit": True})
+        assert res["ok"] is True and desk.done[-1]["text"] == "correct-horse-battery"     # the real text reaches the PC
+        text = (tmp_path / "e.jsonl").read_text()
+        assert "correct-horse" not in text and "[typed 21 chars]" in text
+        await runner.act({"action": "navigate", "url": "https://example.com/verify?token=SECRET-QUERY-x"})
+        assert desk.done[-1]["url"].endswith("token=SECRET-QUERY-x")                      # the PC gets the whole link...
+        assert "SECRET-QUERY" not in (tmp_path / "e.jsonl").read_text()                  # ...the log never its query
+        assert runner.view()["allow_credentials"] is True and runner.view()["pc_mode"] == "vagon"
+        assert sd.Runner(ActDesk("vagon", False), TOKEN, sd.Events(tmp_path / "f.jsonl")).view()["allow_credentials"] is False
+        assert "allow_credentials" not in sd.Runner(ActDesk("chromium", True), TOKEN, sd.Events(tmp_path / "g.jsonl")).view()
+        assert sd.Config(profile=tmp_path / "p").allow_credentials is False             # a bare Config fails closed
+    run(body())
+
+
+def test_main_allow_credentials_defaults_on_for_vagon_and_follows_the_env(tmp_path, monkeypatch):
+    token = tmp_path / "token"
+    token.write_text("operator-credential-test\n")
+    base = ["--token-file", str(token), "--data-dir", str(tmp_path / "d"), "--streamer-dir", str(tmp_path / "none")]
+    seen = []
+
+    async def fake_serve(args):
+        seen.append(args)
+    monkeypatch.setattr(sd, "serve", fake_serve)
+    monkeypatch.delenv("STREAMER_ALLOW_CREDENTIALS", raising=False)
+    sd.main(base + ["--pc-mode", "vagon", "--vagon-url", "https://app.vagon.io/stream/x"])
+    assert seen[-1].allow_credentials is True
+    sd.main(base + ["--pc-mode", "vagon", "--vagon-url", "https://app.vagon.io/stream/x", "--no-allow-credentials"])
+    assert seen[-1].allow_credentials is False
+    monkeypatch.setenv("STREAMER_ALLOW_CREDENTIALS", "0")
+    sd.main(base + ["--pc-mode", "vagon", "--vagon-url", "https://app.vagon.io/stream/x"])
+    assert seen[-1].allow_credentials is False
+    monkeypatch.setenv("STREAMER_ALLOW_CREDENTIALS", "maybe")                            # unreadable: the default
+    sd.main(base + ["--pc-mode", "vagon", "--vagon-url", "https://app.vagon.io/stream/x"])
+    assert seen[-1].allow_credentials is True
+    assert sd.env_bool("X_UNSET_FLAG", False) is False
+
+
+def test_the_vagon_host_page_lock_is_not_lifted_by_the_flag():
+    """The Vagon page's own navigation lock (app.vagon.io account pages, other sites) is a different thing."""
+    ws = "https://app.vagon.io/workstation"
+    assert sd.workstation_url_problem("https://app.vagon.io/team/billing", ws) == "account-page"
+    assert sd.workstation_url_problem("https://accounts.google.com/", ws) == "external"
+    assert sd.workstation_request_blocked("https://accounts.google.com/gsi/client", ws) == "login"
+
+
 # --- integration: a real headless Chromium on the mock stream page ----------------------------------------------------------
 def chromium_executable():
     """A Chromium that Playwright can drive, or None (then the browser tests are skipped). Playwright's own build when

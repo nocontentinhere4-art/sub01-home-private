@@ -300,6 +300,22 @@ whether Chromium's software WebRTC decode keeps 1080p30 smooth on the pod's CPU;
 (`VAGON_CONNECT_RX`, `VAGON_ENDED_RX`) may need one tuning round against the real page; `events.jsonl` records every
 press and phase change for that.
 
+### A8. Logins on the remote PC (owner, 2026-10-23: `--allow-credentials`, default on)
+The owner lifted the credentials block for SUB-01's own decisions ("Può accedere a tutto quello che vuole"). On the
+REMOTE PC the runner now lets the agent's `navigate` open login, SSO and account pages (Google/Microsoft/Apple account
+hosts, `/login`, `/signin`, `/account`, `/oauth`...); money (banks, payment, checkout/cart/billing, crypto), adult,
+gambling, downloads, account changes (password/2FA/recovery/delete) and the owner's consoles (claude.ai,
+console.anthropic.com, runpod.io, railway.app) stay refused; chat viewers still cannot direct any of it (the agent's
+rule). Refused on the remote PC whatever the flag (its Chrome may already be signed in): his Vagon console (vagon.io),
+password vaults (passwords.google.com and the like), Google Takeout, account-portal settings, app passwords, tokens,
+keys, OAuth consent, money pages inside accounts, and URLs that embed a refused redirect target. This is NOT the Vagon page's own lock: the kiosk page itself still never opens app.vagon.io account, billing or
+team pages or other sites, and the owner's Vagon login stays his (A2). Typed text on the remote PC is never written to the
+runner's log (`[typed N chars]`) and remote URLs are logged without their query string. Before a credential is typed the
+agent cuts the stream to the webcam without any desktop picture and waits for the director's acknowledgement (RUNBOOK.md
+"Privacy cut"). Off: `--no-allow-credentials` on the Vagon runner's command line (port 8838, started by hand, not a
+supervisor child) or `STREAMER_ALLOW_CREDENTIALS=0` in its environment; the runner picks the flag up when it is restarted
+(`/pc/state.allow_credentials` shows it). Details: DESKTOP.md "Logins on the remote PC".
+
 ### A7. Starting the computer needs arming (2026-10-23)
 Turning the owner's Vagon computer on spends his balance ($0.99/hour on his plan). The runner never starts it on its
 own: when the computer is off it logs `vagon start_held` once and waits. `POST /pc/vagon/arm {"minutes": N}` (admin

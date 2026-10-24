@@ -74,6 +74,7 @@ import ipaddress
 import json
 import math
 import os
+import posixpath
 import re
 import secrets
 import signal
@@ -84,7 +85,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote_plus, unquote, urljoin, urlsplit
+from urllib.parse import parse_qsl, quote_plus, unquote, urljoin, urlsplit
 
 from aiohttp import web
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
@@ -170,17 +171,97 @@ BANK_HOST = re.compile(r"(^|[.-])(\w*bank\w*|paypal\w*|venmo|revolut|n26|monzo|k
                        r"(^|\.)(wise|chase|stripe|capitalone|americanexpress|amex|citi|ing|schwab|fidelity|vanguard|"
                        r"zellepay)\.(com|co\.uk|it|de|nl|fr|es)$|(^|\.)cash\.app$", re.I)
 PAYMENT_HOST = re.compile(r"^(pay|payments?|checkout|billing|wallet)\.", re.I)
+# crypto exchanges and wallets: refused here too, so they stay refused when browse.py is not deployed next to the runner
+CRYPTO_HOST = re.compile(r"(^|\.)(coinbase|binance|kraken|bybit|okx|kucoin|bitget|mexc|bitstamp|uniswap|pancakeswap|"
+                         r"metamask|walletconnect|dexscreener)\.[a-z.]+$|(^|\.)(crypto\.com|pump\.fun|phantom\.app)$", re.I)
 LOGIN_HOST = re.compile(r"^(login|signin|sign-in|sso|auth|oauth|accounts?|idp)\.", re.I)
-OWNER_HOST = re.compile(r"(^|\.)(claude\.ai|console\.anthropic\.com|mail\.google\.com|myaccount\.google\.com|"
-                        r"accounts\.google\.com|login\.microsoftonline\.com|login\.live\.com|outlook\.live\.com|"
-                        r"outlook\.office\.com|appleid\.apple\.com|icloud\.com|runpod\.io|railway\.app)$", re.I)
+# the big account providers' login, inbox and account hosts: the `login` class (the agent classifies them the same way)
+ACCOUNT_HOST = re.compile(r"(^|\.)(mail\.google\.com|myaccount\.google\.com|accounts\.google\.com|login\.microsoftonline\.com|"
+                          r"login\.live\.com|outlook\.live\.com|outlook\.office\.com|appleid\.apple\.com|icloud\.com)$", re.I)
+# the owner's infrastructure consoles (he could stop his own pod or rotate a key): never lifted, flag or not
+OWNER_HOST = re.compile(r"(^|\.)(claude\.ai|console\.anthropic\.com|runpod\.io|railway\.app)$", re.I)
 HOST_RULES = (("adult", ADULT_HOST), ("gambling", GAMBLING_HOST), ("banking", BANK_HOST), ("payment", PAYMENT_HOST),
-              ("login", LOGIN_HOST), ("owner-service", OWNER_HOST))
+              ("crypto", CRYPTO_HOST), ("owner-service", OWNER_HOST), ("login", LOGIN_HOST), ("login", ACCOUNT_HOST))
 LOGIN_PATH = re.compile(r"/(log-?in|sign-?in|sign-?up|signin|signup|servicelogin|userlogin|createaccount|register|"
                         r"my-?account|accounts?|password|oauth2?|sso)(/|\?|$|\.)", re.I)
 WIKI_LOGIN = re.compile(r"Special:(UserLogin|CreateAccount)", re.I)
 CHECKOUT_PATH = re.compile(r"/(checkout|cart|basket|payments?|pay|billing|purchase|orders?|subscribe|donate|wallet|"
                            r"invoice)(/|\?|$|\.)", re.I)
+# --allow-credentials (owner, 2026-10-23; the remote PC only) lifts the `login` host class and the login paths for the
+# agent's navigate; changing a password, an e-mail, 2FA or recovery, or deleting an account stays refused (the agent's
+# `account_change` class: authentication is not account mutation)
+ACCOUNT_CHANGE_PATH = re.compile(
+    r"/[^/?#]*(?:change|reset|forgot|forgotten|lost|new|update)[-_]?(?:your[-_]?)?password[^/?#]*(?=[/?#]|$)|"
+    r"/password[-_/](?:change|reset|new|update|forgot)(?=[/?#.]|$)|"
+    r"/(?:security(?:[-_]?settings)?|recovery|delete[-_]?account|close[-_]?account|deactivate|two[-_]?step|2fa|mfa|"
+    r"signinoptions)(?=[/?#.]|$)", re.I)
+# MediaWiki's account pages live under /wiki/ (or ?title=) like articles: refused before the article exemption
+MEDIAWIKI_ACCOUNT = re.compile(r"Special:(ChangePassword|PasswordReset|ChangeEmail|ChangeCredentials|RemoveCredentials|"
+                               r"OATHManage|OATH|BotPasswords|ResetTokens|Preferences|Confirmemail|Invalidateemail)",
+                               re.I)
+LOGIN_REASONS = ("login", "login-path")      # what --allow-credentials lifts on the remote PC
+# The REMOTE PC's browser (vagon mode, the agent's navigate), flag or not: its Chrome profile may already be signed in,
+# so these are refused there on top of blocked_url (Kimi review, 2026-10-23: delegation, persistent credentials, data
+# export, password vaults, money inside account portals, the owner's Vagon console, adult words in the URL itself)
+REMOTE_HOST_RULES = (
+    ("owner-service", re.compile(r"(^|\.)vagon\.io$", re.I)),          # his Vagon console (balance, machine)
+    ("password-manager", re.compile(r"(^|\.)(passwords\.google\.com|1password\.com|lastpass\.com|bitwarden\.com|"
+                                    r"dashlane\.com|keepersecurity\.com|nordpass\.com)$", re.I)),
+    ("data-export", re.compile(r"(^|\.)takeout\.google\.com$", re.I)),
+)
+# account settings portals: their root and sign-in pages only (everything below is account management)
+ACCOUNT_PORTAL_HOST = re.compile(r"^(myaccount\.google\.com|account\.google\.com|account\.microsoft\.com|"
+                                 r"myaccount\.microsoft\.com|mysignins\.microsoft\.com|account\.live\.com|"
+                                 r"appleid\.apple\.com|account\.apple\.com)$", re.I)
+PORTAL_SIGNIN = re.compile(r"^/(?:(?:sign-?in|signin|log-?in|login|servicelogin)(?:\.\w{1,5})?/?)?$", re.I)
+ACCOUNT_SECURITY_PATH = re.compile(
+    r"/(app[-_]?passwords?|passkeys?|security[-_]?keys?|backup[-_]?codes|recovery[-_]?codes|proofs|"
+    r"(?:personal[-_])?access[-_]?tokens?|api[-_]?(?:keys?|tokens?)|ssh[-_]?keys?|gpg[-_]?keys?|device[-_]?activity|"
+    r"security[-_]?(?:checkup|info)|third[-_]?party(?:[-_]?(?:access|apps?|connections))?|connected[-_]?(?:apps|accounts)|"
+    r"authorized[-_]?(?:apps|applications)|takeout|data[-_]?export|export[-_]?(?:your[-_]?)?data|"
+    r"download[-_]?(?:your[-_]?)?data|consent|authorize)(?=[/?#.]|$)|"
+    r"/o/oauth2(?=[/?#]|$)|/settings/(?:applications|apps|tokens|keys|connections|installations|sessions|emails?|"
+    r"security(?:-log)?)(?=[/?#.]|$)", re.I)
+SECRET_QUERY = re.compile(r"(^|&)[^=&]*(token|code|key|secret|passw|pwd|otp|auth|session|sig|ticket|magic|nonce)[^=&]*=",
+                          re.I)
+REMOTE_MONEY_PATH = re.compile(r"/(payments?|payment-?methods?|payments-and-subscriptions|billing|purchases?|wallet|"
+                               r"redeem\w*|gift-?cards?|add-?funds|addfunds|top-?up|buy|sell|deposit|withdraw|swap|"
+                               r"bridge|stake|checkout|cart|basket|pay)([/?.#-]|$)", re.I)
+MONEY_QUERY = re.compile(r"(^|&)(add-?to-?cart|add_to_cart|buy-?now|checkout)=", re.I)
+NESTED_URL_DEPTH = 3
+TYPED_SCHEME = re.compile(r"^(?:[a-z][a-z0-9+.-]*://|file:|chrome:|chrome-extension:|edge:|about:|javascript:|data:|"
+                          r"view-source:|blob:)", re.I)
+SLASHLESS_HTTP = re.compile(r"^(https?):/*(?=[^/])", re.I)      # Chromium reads `http:host` and `http:/host` as http://host
+TYPED_HOST = re.compile(r"(?:[a-z0-9-]+\.)+[a-z]{2,}|localhost", re.I)
+
+
+def typed_url(text):
+    """The URL a single typed token would open in an address bar, or None: any token with a scheme (`chrome://...`,
+    `file:...`: blocked_url refuses those; `http:host` as Chromium reads it), or a host (a name with a TLD, an IP
+    literal, localhost, a trailing dot) with an optional port, path, query and fragment. A word, a sentence, an e-mail
+    (an `@` before the path) or a password without a dot is not. Limit: a single-label name (`intranet.`, `router/`) is
+    not treated as a URL, so passwords such as `Hello123.` or `abc/def` stay typeable."""
+    t = str(text or "").strip()
+    if not t or any(c.isspace() for c in t):
+        return None
+    if SLASHLESS_HTTP.match(t) and not re.match(r"^https?://", t, re.I):
+        return SLASHLESS_HTTP.sub(lambda m: m.group(1) + "://", t, count=1)
+    if TYPED_SCHEME.match(t):
+        return t
+    if "@" in re.split(r"[/?#]", t, maxsplit=1)[0]:
+        return None                                              # user@host: an e-mail, not something to navigate to
+    candidate = "https://" + t
+    try:
+        u = urlsplit(candidate)
+        u.port
+    except ValueError:
+        return None
+    host = (u.hostname or "").rstrip(".")
+    try:
+        ipaddress.ip_address(host.strip("[]"))
+        return candidate
+    except ValueError:
+        return candidate if host and TYPED_HOST.fullmatch(host) else None
 DOWNLOAD_EXT = re.compile(r"\.(pdf|zip|rar|7z|exe|dmg|apk|msi|iso|tar|gz|tgz|bz2|xz|deb|rpm|docx?|xlsx?|pptx?|mp3|mp4|"
                           r"mov|avi|mkv|torrent)$", re.I)
 ADULT_WORDS = re.compile(r"\b(porn\w*|xxx|nsfw|hentai|onlyfans|nudes?|naked|escort\w*|camgirl\w*)\b", re.I)
@@ -214,8 +295,9 @@ def private_host(host):
         return "." not in h                      # single-label and numeric-obfuscated names never leave the LAN
 
 
-def blocked_host(host, allow_private=False):
-    """Why a host is refused (adult, gambling, banking, payment, login, owner service, trading, private), or None."""
+def blocked_host(host, allow_private=False, allow_login=False):
+    """Why a host is refused (adult, gambling, banking, payment, crypto, owner service, login, trading, private), or
+    None. `allow_login` (--allow-credentials, the remote PC's address bar only) skips the `login` class and nothing else."""
     h = (host or "").strip("[]").lower().rstrip(".")
     if not h:
         return "no-host"
@@ -223,15 +305,29 @@ def blocked_host(host, allow_private=False):
         return None if allow_private else "private-host"
     plain = (B.HOST_FALSE_HITS.sub("", h) if B else re.sub(r"sussex|essex|middlesex|wessex", "", h))
     for why, rx in HOST_RULES:
-        if rx.search(plain):
+        if rx.search(plain) and not (allow_login and why == "login"):
             return why
     if B and (B.trading_host(h) or B.BAD_HOST.search(plain)):
         return "blocked-site"
     return None
 
 
-def blocked_url(url, allow_private=False):
-    """Why a page URL is refused, or None. Used for navigate/search, links, redirects and the page's final address."""
+def clean_path(raw):
+    """The URL path as a browser resolves it: percent-decoded, backslashes as slashes, dot segments removed
+    (`/wiki/../checkout` is `/checkout`, not a Wikipedia article)."""
+    path = unquote(raw or "") or "/"
+    if "\\" not in path and "/." not in path:
+        return path
+    trailing = path.endswith(("/", "/.", "/.."))
+    norm = posixpath.normpath("/" + path.replace("\\", "/").lstrip("/"))
+    return norm + "/" if trailing and norm != "/" else norm
+
+
+def blocked_url(url, allow_private=False, allow_login=False):
+    """Why a page URL is refused, or None. Used for navigate/search, links, redirects and the page's final address.
+    `allow_login` (only for the agent's navigate on the remote PC with --allow-credentials) lifts the login/SSO/account
+    hosts and the login paths; money, adult, gambling, crypto, the owner's consoles, downloads, private hosts and
+    account changes (ACCOUNT_CHANGE_PATH) are still refused."""
     try:
         u = urlsplit(str(url or ""))
         port = u.port
@@ -241,22 +337,135 @@ def blocked_url(url, allow_private=False):
         return "scheme"
     if u.username or u.password:
         return "credentials-in-url"
-    why = blocked_host(u.hostname, allow_private)
+    why = blocked_host(u.hostname, allow_private, allow_login)
     if why:
         return why
     if port not in (None, 80, 443) and not allow_private:
         return "port"
-    path = unquote(u.path)
-    if WIKI_LOGIN.search(path + "?" + u.query):
+    path = clean_path(u.path)
+    if not allow_login and WIKI_LOGIN.search(path + "?" + u.query):
         return "login-path"
+    if allow_login and MEDIAWIKI_ACCOUNT.search(path + "?" + unquote(u.query)):
+        return "account-change-path"
     article = path.startswith("/wiki/")                  # Wikipedia titles like /wiki/Password are articles, not forms
-    if not article and CHECKOUT_PATH.search(path):
+    if not article and CHECKOUT_PATH.search(path):       # browse.LOGIN_HREF's money words are all in CHECKOUT_PATH
         return "checkout-path"
-    if not article and (LOGIN_PATH.search(path) or (B and B.LOGIN_HREF.search(path))):
+    if allow_login:
+        if not article and ACCOUNT_CHANGE_PATH.search(path):
+            return "account-change-path"
+    elif not article and (LOGIN_PATH.search(path) or (B and B.LOGIN_HREF.search(path))):
         return "login-path"
     if DOWNLOAD_EXT.search(path):
         return "download"
     return None
+
+
+def _routes(u):
+    """[(path, query)] of the URL and, for a single-page app, of its fragment route (`#/checkout?x=1`, `#!/billing`)."""
+    routes = [(clean_path(u.path), unquote(u.query or ""))]
+    frag = unquote(u.fragment or "")
+    if frag.startswith(("/", "!/")):
+        route, _, query = frag.lstrip("!").partition("?")
+        routes.append((clean_path(route), query))
+    return routes
+
+
+def _article(path):
+    """A wiki article (`/wiki/Payment`, `/wiki/Security`): not a form, whatever its title; Special: pages are not."""
+    return path.startswith("/wiki/") and not re.match(r"/wiki/Special:", path, re.I)
+
+
+def remote_url_problem(url, allow_private=False, allow_login=False, depth=0):
+    """Why the agent's navigate may not open `url` in the REMOTE PC's browser (vagon mode), or None: blocked_url (with
+    the `login` class lifted by --allow-credentials), then, flag or not, the remote-only rules: the owner's Vagon
+    console, password vaults, data export, account portals beyond their sign-in pages, account security and delegation
+    (app passwords, tokens, keys, OAuth consent/authorize), MediaWiki account pages, money paths and query actions (also
+    in a SPA fragment route and its query), adult words in the URL, a login page over plain http, and every URL embedded
+    in a query or the fragment (a `continue=` or `redirect_uri=` target), checked the same way. Wiki articles keep their
+    exemption from the path rules. The remote page's final URL after redirects cannot be read back (pixels only): this
+    is a check of what is typed, not of where the browser ends up."""
+    why = blocked_url(url, allow_private, allow_login)
+    if why:
+        return why
+    u = urlsplit(str(url))
+    host = (u.hostname or "").lower().rstrip(".")
+    for why, rx in REMOTE_HOST_RULES:
+        if rx.search(host):
+            return why
+    routes = _routes(u)
+    for path, query in routes:
+        if MEDIAWIKI_ACCOUNT.search(path + "?" + query):
+            return "account-change-path"
+        if not _article(path):
+            if ACCOUNT_CHANGE_PATH.search(path):
+                return "account-change-path"
+            if ACCOUNT_SECURITY_PATH.search(path):
+                return "account-security-path"
+            if REMOTE_MONEY_PATH.search(path) or CHECKOUT_PATH.search(path):
+                return "checkout-path"
+        if MONEY_QUERY.search(query):
+            return "checkout-path"
+    if ACCOUNT_PORTAL_HOST.match(host) and not all(PORTAL_SIGNIN.match(path) for path, _ in routes):
+        return "account-settings"
+    frag = unquote(u.fragment or "")
+    if ADULT_WORDS.search(" ".join([clean_path(u.path), unquote(u.query or ""), frag])) or (
+            B and B.MEDIA_BAD_WORDS.search(unquote(u.query or ""))):
+        return "unsafe-text"
+    if u.scheme != "https" and not allow_private and login_like(url):
+        return "insecure-login"
+    if depth < NESTED_URL_DEPTH:
+        nested = [frag] + [v for _, query in routes for _, v in parse_qsl(query, keep_blank_values=True)]
+        for value in nested:
+            value = value.strip()
+            if re.match(r"^https?://", value, re.I):
+                inner = remote_url_problem(value, allow_private, allow_login, depth + 1)
+                if inner:
+                    return f"redirect-target ({inner})"
+    return None
+
+
+def login_like(url):
+    """A login, account, account-change or account-security page by its host or path, whatever else refuses it."""
+    try:
+        u = urlsplit(str(url or ""))
+        host, path = (u.hostname or "").lower().rstrip("."), clean_path(u.path)
+    except ValueError:
+        return False
+    return bool(LOGIN_HOST.search(host) or ACCOUNT_HOST.search(host) or ACCOUNT_PORTAL_HOST.match(host)
+                or LOGIN_PATH.search(path) or (B and B.LOGIN_HREF.search(path)) or WIKI_LOGIN.search(path + "?" + u.query)
+                or MEDIAWIKI_ACCOUNT.search(path + "?" + unquote(u.query)) or ACCOUNT_CHANGE_PATH.search(path)
+                or ACCOUNT_SECURITY_PATH.search(path))
+
+
+def sensitive_url(url):
+    """The URL may carry a secret: credentials in it, a login/account page (a magic link, a reset code in its path or
+    query), or a query parameter named like a token, code, key, password or session."""
+    try:
+        u = urlsplit(str(url or ""))
+        userinfo = bool(u.username or u.password)
+    except ValueError:
+        return True
+    frag = unquote(u.fragment or "")
+    return userinfo or login_like(url) or bool(SECRET_QUERY.search(u.query or "") or SECRET_QUERY.search(frag.lstrip("#!/"))
+                                               or SECRET_QUERY.search(frag.partition("?")[2]))
+
+
+def loggable_url(url, remote=False):
+    """What a log row shows of a navigate URL: a sensitive one (sensitive_url) as scheme://host/… only; on the remote PC
+    every other one without its query and fragment; on the pod's Chromium the URL as it is. Never the userinfo."""
+    try:
+        u = urlsplit(str(url or ""))
+        port = u.port
+    except ValueError:
+        return ""
+    if not u.scheme or not u.hostname:
+        return ""
+    base = f"{u.scheme}://{u.hostname}" + (f":{port}" if port else "")
+    if sensitive_url(url):
+        return base + "/…"
+    if remote:
+        return base + u.path + ("?…" if u.query or u.fragment else "")
+    return base + u.path + (f"?{u.query}" if u.query else "") + (f"#{u.fragment}" if u.fragment else "")
 
 
 def request_blocked(url, main_frame=False, method="GET", allow_private=False):
@@ -416,11 +625,14 @@ def validate_action(body):
     return out
 
 
-def action_policy(action, marks=None, allow_private=False):
-    """Refusal text for an action the desktop will not do (before anything happens), else None."""
+def action_policy(action, marks=None, allow_private=False, allow_login=False, remote=False):
+    """Refusal text for an action the desktop will not do (before anything happens), else None. `remote`: the URL is
+    typed into the remote PC's browser (vagon mode: remote_url_problem); `allow_login` is that PC's --allow-credentials
+    (Runner.remote_logins): it lifts login/account pages for navigate only."""
     kind = action["action"]
     if kind == "navigate":
-        why = blocked_url(action["url"], allow_private)
+        why = (remote_url_problem(action["url"], allow_private, allow_login) if remote
+               else blocked_url(action["url"], allow_private, allow_login))
         return f"blocked: {why}" if why else None
     if kind == "search":
         why = text_blocked(action["query"])
@@ -437,6 +649,9 @@ def action_policy(action, marks=None, allow_private=False):
             return f"blocked: {why}"
     if kind == "type":
         why = text_blocked(action["text"])
+        url = typed_url(action["text"]) if not why and remote else None
+        if url:                                   # a URL typed into the remote address bar gets the navigate rules too
+            why = remote_url_problem(url, allow_private, allow_login)
         return f"blocked: {why}" if why else None
     return None
 
@@ -1392,6 +1607,8 @@ class Config:
     autoplay: bool = False               # --autoplay-policy=no-user-gesture-required: a stream video may play without a click
     extra_args: tuple = ()               # --chromium-arg, passed verbatim (documented in the start event)
     vagon_autostart: bool = False        # workstation: press Run/Start (or the API start) on its own; off = only when armed
+    allow_credentials: bool = False      # vagon mode: the agent may navigate the REMOTE PC to login/account pages (the
+                                         # CLI's --allow-credentials, default on; off here so a bare Config fails closed)
 
 
 class DesktopUnavailable(RuntimeError):
@@ -3559,6 +3776,12 @@ class Runner:
     def authorized(self, request):
         return hmac.compare_digest(request.headers.get("X-Admin-Token", "").encode(), self._token)
 
+    def remote_logins(self):
+        """--allow-credentials applies: vagon mode only (the URL is typed into the REMOTE PC's browser). The pod's own
+        Chromium and the Vagon host page's navigation lock never lift the login rules."""
+        cfg = getattr(self.desk, "cfg", None)
+        return getattr(cfg, "pc_mode", "chromium") == "vagon" and getattr(cfg, "allow_credentials", False) is True
+
     def notify(self):
         self.changed.set()
         self.changed = asyncio.Event()
@@ -3576,6 +3799,7 @@ class Runner:
         if mode == "vagon":
             view["vagon"] = d.vagon.public()
             view["vagon"]["operator_console"] = bool(getattr(d, "operator_allowed", lambda: False)())
+            view["allow_credentials"] = self.remote_logins()
         return view
 
     async def set_privacy(self, active, source="native"):
@@ -3684,13 +3908,18 @@ class Runner:
             self.last_command = kind
             errors, result = [], {"errors": [], "dialog": None, "load_ms": 0}
             before = await self.desk.snapshot(None)
+            remote = getattr(getattr(self.desk, "cfg", None), "pc_mode", "chromium") == "vagon"
             refusal = (f"stale frame_id: observe again before using marks (current {self.last_obs['frame_id']})" if stale
-                       else action_policy(action, self.last_obs["marks"], self.allow_private))
+                       else action_policy(action, self.last_obs["marks"], self.allow_private, self.remote_logins(), remote))
+            # rows: a login URL, and on the remote PC every URL, without its query string (a magic link, a verification or
+            # reset code), and on the remote PC no typed text (pixels cannot tell a password field; the agent keeps its
+            # own masked audit)
+            mask = kind == "type" and remote
             if refusal:
                 errors.append(refusal)
                 if refusal.startswith("blocked"):
                     log(f"blocked action {kind}: {refusal}")
-                    self.events.append("blocked", what="action", action=_loggable(action), reason=refusal)
+                    self.events.append("blocked", what="action", action=_loggable(action, remote, mask), reason=refusal)
             else:
                 run = dict(action, obs=self.last_obs["frame_id"])
                 if "mark" in action:
@@ -3716,14 +3945,26 @@ class Runner:
                 outcome["errors"].append(f"nothing moved when scrolling {action['direction']} (already at the "
                                          f"{'end' if action['direction'] == 'down' else 'top'} of the page?)")
             ok = not outcome["errors"]
-            self.events.append("act", action=_loggable(action), ok=ok, outcome=outcome, frame_id=frame_id if after else None)
+            self.events.append("act", action=_loggable(action, remote, mask), ok=ok, outcome=outcome,
+                               frame_id=frame_id if after else None)
             if not ok:
                 log(f"action {kind} not ok: {outcome['errors'][0]}")
             return {"ok": ok, "outcome": outcome, "frame_id": frame_id if after is not None else None}
 
 
-def _loggable(action):
-    return {k: (v[:200] if isinstance(v, str) else v) for k, v in action.items() if k not in ("obs", "mark_info")}
+def _loggable(action, remote=False, mask_text=False):
+    """An action for events.jsonl: strings cut at 200 characters, the URL as loggable_url shows it, typed text as
+    `[typed N chars]` (`mask_text`: on the remote PC, where a password may be typed)."""
+    out = {}
+    for k, v in action.items():
+        if k in ("obs", "mark_info"):
+            continue
+        if k == "url" and isinstance(v, str):
+            v = loggable_url(v, remote)
+        elif k == "text" and mask_text and isinstance(v, str):
+            v = f"[typed {len(v)} chars]"
+        out[k] = v[:200] if isinstance(v, str) else v
+    return out
 
 
 async def read_json(request):
@@ -3972,7 +4213,8 @@ async def serve(args):
                  operator_console=bool(getattr(args, "operator_console", False)),
                  gpu=getattr(args, "gpu", None) or "off", autoplay=bool(getattr(args, "autoplay", False)),
                  extra_args=tuple(getattr(args, "chromium_arg", None) or ()),
-                 vagon_autostart=bool(getattr(args, "vagon_autostart", False)))
+                 vagon_autostart=bool(getattr(args, "vagon_autostart", False)),
+                 allow_credentials=args.pc_mode == "vagon" and getattr(args, "allow_credentials", False) is True)
     desk = Desktop(cfg, events)
     if cfg.pc_mode == "vagon":
         key_status = api_key_file_status(cfg.vagon_api_key_file)
@@ -3990,6 +4232,8 @@ async def serve(args):
                 f"operator console {'always' if cfg.operator_console else 'while a login is needed'}")
         else:
             log(f"vagon mode (streams): stream at {redact_url(cfg.vagon_url)}; API key file {key_status} (not used by the runner)")
+        log("remote PC logins: " + ("allowed (--allow-credentials): the agent may open login/account pages on the remote PC"
+                                    if cfg.allow_credentials else "refused (--no-allow-credentials)"))
     runner = Runner(desk, token, events, allow_private=args.allow_private)
     desk.on_change = runner.notify
     if args.home_origin:
@@ -4005,7 +4249,8 @@ async def serve(args):
                   profile=str(cfg.profile), headless=cfg.headless, pid=os.getpid(), pc_mode=cfg.pc_mode,
                   gpu=cfg.gpu, autoplay=cfg.autoplay, chromium_args=list(cfg.extra_args), chromium=cfg.chromium or "playwright",
                   **({"vagon_host": redact_url(cfg.vagon_url), "vagon_kind": cfg.vagon_kind,
-                      "operator_console": cfg.operator_console} if cfg.pc_mode == "vagon" else {}))
+                      "operator_console": cfg.operator_console, "allow_credentials": cfg.allow_credentials}
+                     if cfg.pc_mode == "vagon" else {}))
     stop = asyncio.Event()
     for name in ("SIGINT", "SIGTERM"):
         try:
@@ -4021,6 +4266,16 @@ async def serve(args):
         await desk.close()
         if runner.home_devices:
             await runner.home_devices.close()
+
+
+def env_bool(name, default):
+    """1/true/yes/on and 0/false/no/off (any case); anything else, or unset, is the default."""
+    value = os.environ.get(name, "").strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    if value in ("0", "false", "no", "off"):
+        return False
+    return default
 
 
 def parse_size(value):
@@ -4063,6 +4318,11 @@ def main(argv=None):
     parser.add_argument("--gpu", choices=GPU_MODES, default="off",
                         help="Chromium GPU mode: off (--disable-gpu, default), swiftshader (software WebGL through ANGLE), on")
     parser.add_argument("--autoplay", action="store_true", help="Chromium --autoplay-policy=no-user-gesture-required")
+    parser.add_argument("--allow-credentials", action=argparse.BooleanOptionalAction,
+                        default=env_bool("STREAMER_ALLOW_CREDENTIALS", True),
+                        help="vagon mode (owner, 2026-10-23): the agent may open login, SSO and account pages on the REMOTE "
+                             "PC (money, adult, gambling, crypto, account changes and the owner's consoles stay refused; "
+                             "the Vagon host page's own lock is unchanged); default on (env STREAMER_ALLOW_CREDENTIALS)")
     parser.add_argument("--chromium-arg", action="append", default=[], metavar="--FLAG[=VALUE]",
                         help="extra Chromium flag, verbatim, written as --chromium-arg=--flag=value (repeatable; recorded in the start event)")
     args = parser.parse_args(argv)

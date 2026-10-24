@@ -16,7 +16,8 @@ Flags: `--host` (loopback only), `--port 8832`, `--data-dir` (required, outside 
 holds `profile/` and `events.jsonl`), `--display :102`, `--size 1920x1080`, `--home-origin` (`/devices/*` proxy),
 `--start-url`, `--proxy`, `--chromium PATH`, `--headless` (no X, CI), `--no-kiosk`, `--allow-private` (tests only),
 `--pc-mode chromium|vagon` (default `chromium`), `--vagon-kind streams|workstation`, `--vagon-url`, `--vagon-config`,
-`--streamer-dir`, `--operator-console` (see "Vagon mode").
+`--streamer-dir`, `--operator-console` (see "Vagon mode"), `--allow-credentials` / `--no-allow-credentials` (vagon mode
+only, default on, env `STREAMER_ALLOW_CREDENTIALS`; see "Logins on the remote PC").
 
 ## PC contract (same as `home_pc_runner.py`)
 `GET /pc/state[?since=REV&wait=S]`: `status` (`ready|starting|restarting`), `ready`, `display{kind:"graphical", available,
@@ -43,9 +44,14 @@ with `blocked: ...`; malformed bodies get 400; a browser that is down gets 503. 
 `/desktop/observe` for fresh marks.
 
 ## Limits
-- Refused: adult, gambling, banking/payment, trading, login/account and checkout hosts and paths, owner services, private
-  addresses, ports other than 80/443, downloads and common file types, POST navigations, sub-frames of such hosts. Wikipedia
-  `/wiki/` titles are exempt from the path rules. Redirects are checked from the 3xx answer and again once committed.
+- Refused: adult, gambling, banking/payment, crypto, trading, login/account and checkout hosts and paths, owner services,
+  private addresses, ports other than 80/443, downloads and common file types, POST navigations, sub-frames of such hosts.
+  Wikipedia `/wiki/` titles are exempt from the path rules. Redirects are checked from the 3xx answer and again once
+  committed. Host classes (`blocked_host`): `adult`, `gambling`, `banking`, `payment`, `crypto` (exchanges and wallets,
+  also when `browse.py` is not deployed next to the runner), `owner-service` (claude.ai, console.anthropic.com, runpod.io,
+  railway.app), `login` (`login.`/`signin.`/`sso.`/`auth.`/`accounts.`... hosts and the providers' account hosts:
+  accounts/mail/myaccount.google.com, login.microsoftonline.com, login.live.com, outlook, appleid.apple.com, icloud.com),
+  then browse.py's `blocked-site`. Only the remote PC's `--allow-credentials` lifts `login` (below).
 - Never done: file chooser, clipboard (API, init script, key combos), downloads, popups (closed), password/e-mail/card fields,
   typed card numbers; dialogs are dismissed and listed in `dialogs` / `outcome.dialog`. Cookie banners get the reject button.
 - A crashed browser is relaunched in about 2 s, a hung one (no answer to a heartbeat, a 20 s page read) in about 30 s, backoff up
@@ -95,6 +101,51 @@ refused (no marks). Every action but `wait` is refused with `the remote desktop 
 the stream is not playing. There is no load state: the outcome's `changed` is the pixel difference after 0.8 s (2.5 s
 for navigate/search/back), so the agent must verify through the next observation. `/pc/graphical-input` keys and mouse
 go to the stream (no DOM field policy, clipboard combinations still dropped); `/pc/input` types real key events.
+
+### Logins on the remote PC (`--allow-credentials`, default on; owner's decision of 2026-10-23)
+The owner lifted the credentials block for SUB-01's own decisions on HIS PC. In vagon mode only, `navigate{url}` (the URL
+typed into the remote browser's address bar) is checked with the `login` host class and the login paths lifted
+(`blocked_url(url, allow_login=True)`): accounts.google.com, mail.google.com, login.microsoftonline.com, appleid,
+`/login`, `/signin`, `/account`, `/oauth`, `/sso`, `/register`, Wikipedia's Special:UserLogin... are opened. Still refused
+with the flag: banking, payment and checkout/cart/billing paths, crypto, adult, gambling, trading, downloads, private
+hosts, odd ports, credentials in the URL, the owner's infrastructure consoles (`owner-service`: claude.ai,
+console.anthropic.com, runpod.io, railway.app; `login.runpod.io` too: that class is checked whatever else matches), and
+account CHANGES (`account-change-path`: change/reset/forgot password, security, recovery, 2FA/MFA, sign-in options,
+delete/close/deactivate account: the agent's `account_change` class, authentication is not account mutation). What the
+flag does not touch: the pod's own Chromium (chromium mode: every login rule stays), click marks, typed-text rules (card
+numbers, adult words), and the Vagon host page's own navigation lock (`workstation_request_blocked`: app.vagon.io account,
+billing and team pages and every other site stay blocked for the kiosk page itself).
+On the remote PC every navigate also goes through `remote_url_problem`, flag or not (its Chrome profile may already be
+signed in; Kimi's review of 2026-10-23): refused there as well are the owner's Vagon console (`vagon.io`, as
+`owner-service`), password vaults (passwords.google.com, 1Password, LastPass, Bitwarden, Dashlane, Keeper, NordPass:
+`password-manager`), takeout.google.com (`data-export`), account portals beyond their root and sign-in pages
+(myaccount/account.google.com, account/myaccount/mysignins.microsoft.com, account.live.com, appleid/account.apple.com:
+`account-settings`: only `/`, `/sign-in`, `/signin`, `/login`, `/log-in`, `/servicelogin` pass, fragment routes
+included), MediaWiki's account pages (`Special:ChangePassword`, `PasswordReset`,
+`ChangeEmail`, `OATHManage`, `BotPasswords`, `Preferences`...: `account-change-path`, also as `?title=`), account security
+and delegation (app passwords, passkeys, security keys, backup/recovery codes, access tokens, API keys, SSH/GPG keys,
+device activity, security info, third-party/connected/authorized apps, data export, OAuth `consent`/`authorize`, Google's `/o/oauth2/`,
+`/settings/tokens|keys|applications|sessions|emails|security...`: `account-security-path`), money inside account pages
+(`/payments...`, `/payment-methods`, `/billing`, `/purchases`, `/redeem...`, `/addfunds`, `/gift-cards`, `/buy`, `/sell`,
+`/swap`... also in a single-page app's `#/route`, and `?add-to-cart=` / `?checkout=` query actions, also in the route's
+own query: `checkout-path`; a password change named inside a segment or with a suffix, `/HelpChangePassword`,
+`/reset-password.html`, counts too; wiki articles such as `/wiki/Security` or `/wiki/Payment` keep their exemption),
+adult words in the URL itself (`unsafe-text`), a login page over plain http (`insecure-login`), and any URL embedded in
+the query or fragment (`continue=`, `redirect_uri=`, `q=`) that the same rules refuse (`redirect-target (...)`, three
+levels deep). A `type` whose whole text is one URL (`typed_url`: any scheme, `chrome://...` and `file:` included, which
+are refused; or a host with a TLD, an IP literal, localhost or a trailing dot, with a port and path; not an e-mail or a
+word) gets the same check: the address bar typed by hand (`http:127.0.0.1/` as Chromium reads it too). Limit: a single-label
+name (`intranet.`, `router/`) is not taken for a URL, so passwords such as `Hello123.` or `abc/def` stay typeable. Paths are resolved like a browser does first (`/wiki/../checkout` is `/checkout`, in both modes). Limit:
+the runner sees pixels only, so the remote browser's final URL after redirects cannot be checked; these rules check what
+is typed, and the agent's own policy and privacy detection are the other half. `/pc/state.allow_credentials` and the
+`start` event say whether it is on; `--no-allow-credentials` (or `STREAMER_ALLOW_CREDENTIALS=0`) turns it off; a bare
+`Config` defaults to off. Logging (`loggable_url`): a URL that may carry a secret (credentials in it, a login, account,
+account-change or account-security page by host or path, a query parameter named like a token, code, key, password or
+session, in the query or the fragment such as `#access_token=`) is logged as `scheme://host/…` only, in both modes; every other URL navigated on the remote PC is logged without
+its query and fragment; and every `type` on the remote PC is logged as `[typed N chars]` (pixels
+cannot tell a password field; the agent keeps its own masked audit). The agent decides what is private and asks the
+director to hide the desktop before a credential is typed (AGENT.md "Logins and installs", RUNBOOK.md "Privacy cut").
+Tests: `tests/test_streamer_desktop_vagon.py` (the `--allow-credentials` section).
 
 Limits: the remote application must be a browser with its window focused for navigate/search to mean anything; no DOM,
 so no marks, no page text, no URL of the remote page, no dialogs from the remote machine; Vagon's own limits (session and

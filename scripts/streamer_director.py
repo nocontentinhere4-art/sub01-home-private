@@ -9,7 +9,8 @@ Inputs of the single ffmpeg process
      nobody is writing to the FIFO, `anullsrc` silence (state shows `voice: false`),
   3  only while it is usable: the game's second camera `<streamer-dir>/cam2.mjpeg`, a FIFO of MJPEG 1280x720 at ~30 fps
      (state shows `cam2`). Without it the run has inputs 0-2 only, as before.
-  `--test-sources` replaces all of them with lavfi testsrc2/sine (local smoke tests: no X server, FIFO or game).
+  `--test-sources` replaces all of them with lavfi sources (local smoke tests: no X server, FIFO or game): testsrc2
+  for the game and cam2, a solid red picture for the desktop (any desktop pixel is recognisable in the output), a sine.
 
 Voice FIFO. The voice server opens `<streamer-dir>/voice.pcm` O_WRONLY|O_NONBLOCK and only attaches while a
 reader exists, so the director itself keeps a read end open on the FIFO for as long as it runs (`VoiceTap`):
@@ -43,10 +44,30 @@ directory on 127.0.0.1 for local tests only.
 
 Layouts: `webcam` (game viewport = frontal webcam full frame, desktop picture-in-picture 480x270 bottom-right;
 `character` is the v1 name of the same layout), `desktop` (desktop full frame, webcam PiP), `split` (webcam and
-desktop side by side), `room` (cam2 full frame, webcam PiP; without cam2 `webcam` is shown). The wanted layout is the
-last line of `<streamer-dir>/layout.jsonl` (written by `POST /director/layout` or by the agent directly; read every
---layout-interval s), or fixed with `--layout`. Every line has `t`, `unix`, `layout`, `previous`, `run`, `offset_s`,
-`recording`.
+desktop side by side), `room` (cam2 full frame, webcam PiP; without cam2 `webcam` is shown), `webcam_only` (the game
+viewport alone: no picture of the desktop anywhere). The wanted layout is the last line of `<streamer-dir>/layout.jsonl`
+(written by `POST /director/layout` or by the agent directly; read every --layout-interval s), or fixed with
+`--layout`. Every line the director writes has `t`, `unix`, `layout`, `previous`, `run`, `offset_s`, `recording`.
+
+Privacy cut (owner, 2026-10-23: SUB-01 may log in on his PC). While the last line of layout.jsonl has
+`"reason": "privacy"` (the agent's line on a login/account page, with its `privacy_id`), the output shows `webcam_only`
+whatever else is wanted, a fixed --layout included: every other layout carries the desktop (the PiP, or cam2 in `room`,
+which films the in-game monitor). The recording, HLS and RTMP are one encode, so all three are covered. The cut ends
+with a later valid line without that reason (the agent's `privacy_end`, which names the layout to restore; an invalid
+layout there restores the one requested before the cut). `GET /director/state` has `privacy`, `privacy_id`,
+`desktop_hidden` and the restore (`privacy_restore`, `last_privacy`); `desktop_hidden` is true only while the cut is in
+force and the running ffmpeg is confirmed on `webcam_only`: ffmpeg answered ret:0 to that map command, or the run was
+launched on it (restart mode, a relaunch, a director restart: the log is read before the first launch); false while a
+switch is in flight, after an unanswered or failed one, while a relaunch is pending or when nothing runs. The agent types
+a credential only when that answer carries its own `privacy_id`. During a cut `POST /director/layout` answers 409 (no
+line is written) unless the body has `"end_privacy": true`, which ends the cut (`reason: "privacy_end_operator"`); the
+handler reads layout.jsonl first, so the agent's end line followed at once by its POST is accepted; a privacy line that
+lands between that read and the POST's own line is appended again on top (and the POST gets 409). A director restarted
+during a cut restores the last request before it (or the privacy line's `previous`). A cut never ends on a timer
+(`privacy_still_on` every 10 minutes instead), and nothing is acknowledged while an ffmpeg of an earlier director
+(found in /proc at start) survived its reap. `desktop_hidden` means safe to type from now on, not that frames composed before the switch
+(encoder lookahead, the open HLS segment, RTMP already sent) are gone. Events: `privacy_on`, `privacy_hidden` (ms from
+reading the line), `privacy_off`, `privacy_restored`, `privacy_still_on`.
 
 Live switching (`--layout-switch live`, the default): the graph renders every layout of the run and
 `streamselect@layout` picks the recorded one. The director changes its `map` through ffmpeg's stdin command channel
@@ -61,8 +82,9 @@ credential in `X-Admin-Token` (from --token-file or SUB01_ADMIN_TOKEN; never log
 
   GET  /healthz           -> {"ok": true, "recording": bool}
   GET  /director/state    -> {recording, since, segments:[{name,bytes,mtime}], ffmpeg_pid,
-                              restarts, last_error, layout, live_layout, encoder, cam2, hls, voice, ...}
-  POST /director/layout   {"layout": "webcam"|"desktop"|"split"|"room"|"character"}
+                              restarts, last_error, layout, live_layout, encoder, cam2, hls, voice,
+                              privacy, privacy_id, desktop_hidden, privacy_restore, last_privacy, ...}
+  POST /director/layout   {"layout": "webcam"|"desktop"|"split"|"room"|"webcam_only"|"character", "end_privacy"?: bool}
 
 ffmpeg is restarted on exit with backoff; a watchdog compares the size of the
 current run's segments every 30 s and restarts ffmpeg after two checks without
@@ -105,19 +127,24 @@ GRAB_QUEUE = "128"          # x11grab packets are raw frames (8 MB at 1080p): ~2
 # ---------------------------------------------------------------- layouts
 
 DEFAULT_LAYOUT = "webcam"
+PRIVATE_LAYOUT = "webcam_only"
+PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
+# `desktop`: the layout shows a picture of the desktop somewhere (room too: cam 2 sees the in-game monitor, which shows it)
 LAYOUTS = {
-    "webcam": {"main": "game", "pip": "desktop", "needs_cam2": False,
+    "webcam": {"main": "game", "pip": "desktop", "needs_cam2": False, "desktop": True,
                "summary": "game viewport (frontal webcam) full frame, desktop picture-in-picture bottom-right"},
-    "desktop": {"main": "desktop", "pip": "game", "needs_cam2": False,
+    "desktop": {"main": "desktop", "pip": "game", "needs_cam2": False, "desktop": True,
                 "summary": "desktop full frame, webcam picture-in-picture bottom-right"},
-    "split": {"main": None, "pip": None, "needs_cam2": False,
+    "split": {"main": None, "pip": None, "needs_cam2": False, "desktop": True,
               "summary": "webcam and desktop side by side, each half width"},
-    "room": {"main": "cam2", "pip": "game", "needs_cam2": True,
+    "room": {"main": "cam2", "pip": "game", "needs_cam2": True, "desktop": True,
              "summary": "second camera (room) full frame, webcam picture-in-picture bottom-right"},
+    "webcam_only": {"main": "game", "pip": None, "needs_cam2": False, "desktop": False,
+                    "summary": "game viewport (frontal webcam) full frame, no picture-in-picture: no desktop at all"},
 }
 LAYOUT_ALIASES = {"character": "webcam"}           # the v1 name, still sent by the agent
-LIVE_ORDER = ("webcam", "desktop", "split", "room")  # input index of each layout at streamselect@layout
+LIVE_ORDER = ("webcam", "desktop", "split", "room", "webcam_only")  # input index of each layout at streamselect@layout
 SOURCES = {"game": "0:v", "desktop": "1:v", "cam2": "3:v"}
 SWITCH_MODES = ("live", "restart")
 SWITCH_TARGET = "streamselect@layout"
@@ -141,6 +168,17 @@ def validate_layout(value):
         if value in LAYOUTS:
             return value
     raise ValueError("layout must be one of " + ", ".join(LIVE_ORDER) + " (character = webcam)")
+
+
+def privacy_cut(record):
+    """The privacy cut a layout.jsonl record asks for, or None: {"id", "why"} when its `reason` is "privacy" (the
+    agent's line on a login/account page). The record's `layout` does not matter: a privacy line always means
+    PRIVATE_LAYOUT, even with a missing or unknown layout name (fail closed)."""
+    if not isinstance(record, dict) or record.get("reason") != PRIVACY_REASON:
+        return None
+    pid, why = record.get("privacy_id"), record.get("why")
+    return {"id": pid if isinstance(pid, str) and 0 < len(pid) <= 64 else None,
+            "why": why[:120] if isinstance(why, str) else None}
 
 
 def effective_layout(layout, cam2):
@@ -279,6 +317,8 @@ def build_filter_complex(layout, cfg):
     Inputs: [0:v] game, [1:v] desktop, [3:v] cam2 (room only). Output label [vout]."""
     layout = validate_layout(layout)
     w, h, pw, ph, fps = cfg.width, cfg.height, cfg.pip_width, cfg.pip_height, cfg.fps
+    if layout == PRIVATE_LAYOUT:              # the game alone: [1:v] (desktop) and [3:v] are not in the graph at all
+        return f"[0:v]fps={fps},scale={w}:{h},setsar=1,format=yuv420p[vout]"
     if layout == "split":
         half_w = (w // 2) & ~1
         half_h = (half_w * h // w) & ~1
@@ -308,7 +348,8 @@ def build_live_graph(cfg, cam2, layout):
     norm = f"scale={w}:{h},setsar=1,format=yuv420p"
     pip = f"scale={pw}:{ph}:flags=area,setsar=1"
     order = live_order(cam2)
-    parts = [f"[0:v]fps={fps},{norm},split=3[gm][gp][gh]",
+    # [lwebcam_only] is the game picture itself: the privacy layout, no PiP (every other layout carries the desktop)
+    parts = [f"[0:v]fps={fps},{norm},split=4[gm][gp][gh][l{PRIVATE_LAYOUT}]",
              f"[1:v]{norm},fps={fps},split=3[dm][dp][dh]",
              f"[gp]{pip},split=2[gpa][gpb]" if cam2 else f"[gp]{pip}[gpa]",
              f"[dp]{pip}[dpip]",
@@ -372,9 +413,9 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
             # key=value blocks on stdout (frame, fps, out_time_us, dup/drop, speed): the measured output rate
             "-progress", "pipe:1", "-stats_period", f"{cfg.stats_period:g}"]
     if cfg.test_sources:
-        voice = True
+        voice = True                         # the desktop is solid red: any desktop pixel is recognisable in a test recording
         argv += ["-re", "-f", "lavfi", "-i", f"testsrc2=size={size}:rate={cfg.fps}",
-                 "-re", "-f", "lavfi", "-i", f"testsrc2=size={size}:rate={cfg.desktop_fps}",
+                 "-re", "-f", "lavfi", "-i", f"color=c=red:size={size}:rate={cfg.desktop_fps}",
                  "-re", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000"]
     else:
         argv += ["-thread_queue_size", GRAB_QUEUE, "-f", "x11grab", "-framerate", str(cfg.fps), "-draw_mouse", "0"]
@@ -535,6 +576,7 @@ def voice_decision(running_with_voice, available, mismatches, *, uptime, gap=Fal
     return ("switch" if mismatches >= need and uptime >= min_uptime else "wait"), mismatches
 
 
+PRIVACY_ALERT_S = 600.0     # a privacy cut this long gets a `privacy_still_on` event (again every 10 minutes)
 CAM2_MIN_UPTIME = 30.0      # a run is at least this old before it is relaunched to add cam2 (no relaunch loop)
 CAM2_DROP = "cam2 stopped delivering"
 REPLY_GRACE = 0.5           # after a non-zero command reply, wait this long for another filtergraph's ret:0
@@ -654,26 +696,50 @@ def backoff_delay(failures):
 
 # ---------------------------------------------------------------- layout log
 
-def read_last_layout(path, max_bytes=4096):
-    """The canonical layout of the last line of layout.jsonl, or None (no file, a half-written or bad line, an
-    unknown name: the current layout stays)."""
+LAYOUT_TAIL = 65536          # bytes of layout.jsonl read from the end (a line is ~250 bytes)
+
+
+def read_tail_records(path, max_bytes=LAYOUT_TAIL):
+    """The last lines of layout.jsonl, oldest first: a dict per line, or None for a line that is not a JSON object (a
+    half-written last line). A line cut by the read window is left out, never the last one. [] without a file."""
     try:
         with open(path, "rb") as handle:
             handle.seek(0, os.SEEK_END)
             size = handle.tell()
-            handle.seek(max(0, size - max_bytes))
+            start = max(0, size - max_bytes - 1)        # one byte more: is the window's first line complete?
+            handle.seek(start)
             data = handle.read()
     except OSError:
+        return []
+    if start > 0:
+        cut = data.find(b"\n")
+        data = data[cut + 1:] if cut >= 0 else b""      # up to the first newline: a piece of a longer line
+    out = []
+    for line in data.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except (ValueError, UnicodeDecodeError):
+            record = None
+        out.append(record if isinstance(record, dict) else None)
+    return out
+
+
+def read_last_record(path, max_bytes=LAYOUT_TAIL):
+    """The last line of layout.jsonl as a dict, or None (no file, a half-written or bad line: the current state stays)."""
+    records = read_tail_records(path, max_bytes)
+    return records[-1] if records else None
+
+
+def read_last_layout(path, max_bytes=LAYOUT_TAIL):
+    """The canonical layout the last line of layout.jsonl asks for (PRIVATE_LAYOUT for a privacy line), or None (no
+    file, a half-written or bad line, an unknown name: the current layout stays)."""
+    record = read_last_record(path, max_bytes)
+    if record is None:
         return None
-    lines = [line for line in data.splitlines() if line.strip()]
-    if not lines:
-        return None
-    try:
-        record = json.loads(lines[-1])
-    except (ValueError, UnicodeDecodeError):
-        return None
-    if not isinstance(record, dict):
-        return None
+    if privacy_cut(record) is not None:
+        return PRIVATE_LAYOUT
     try:
         return validate_layout(record.get("layout"))
     except ValueError:
@@ -884,6 +950,39 @@ def parse_geometry(text):
         return 0, 0
 
 
+def recorder_pids(cfg, proc_root="/proc"):
+    """Pids of ffmpeg processes recording into this recordings directory (an x11grab or testsrc2 input and the directory
+    on the command line, the program named like --ffmpeg): what a director left behind, whatever its pid file says."""
+    try:
+        pids = [int(p) for p in os.listdir(proc_root) if p.isdigit()]
+    except OSError:
+        return []
+    found, program = [], os.path.basename(cfg.ffmpeg)
+    # the segment pattern <dir>/<prefix>-%03d.mp4, alone or after a tee option bracket: never a sibling such as dir-old
+    inside = re.compile(r"(?:^|[\]|=])" + re.escape(str(cfg.recordings_dir).rstrip("/")) + "/")
+    for pid in pids:
+        try:
+            argv = Path(proc_root, str(pid), "cmdline").read_bytes().split(b"\0")
+        except OSError:
+            continue
+        argv = [a.decode("utf-8", "replace") for a in argv if a]
+        line = " ".join(argv)
+        if (argv and os.path.basename(argv[0]) in (program, "ffmpeg") and ("x11grab" in line or "testsrc2" in line)
+                and any(inside.search(a) for a in argv)):
+            found.append(pid)
+    return sorted(found)
+
+
+def pid_alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True                          # exists, owned by someone else
+    return True
+
+
 def read_pid(path):
     try:
         return int(Path(path).read_text().strip())
@@ -944,6 +1043,14 @@ async def spawn_ffmpeg(argv):
         start_new_session=True)
 
 
+class PrivacyHeld(RuntimeError):
+    """A layout request while a privacy cut is in force (POST /director/layout answers 409)."""
+
+    def __init__(self, privacy_id):
+        super().__init__("a privacy cut is in force: only webcam_only is shown until it ends")
+        self.privacy_id = privacy_id
+
+
 class Director:
     STABLE_SECONDS = 60.0
 
@@ -971,8 +1078,13 @@ class Director:
         self.game_source = self.game_note = None
         self.encoder, self.encoder_note = ((cfg.encoder, "requested") if cfg.encoder == "libx264"
                                            else (None, "not probed yet"))
-        self.layout = cfg.layout or DEFAULT_LAYOUT
-        self.live_layout, self.live_order = None, ()
+        self.layout = cfg.layout or DEFAULT_LAYOUT     # the requested layout; PRIVATE_LAYOUT wins while privacy is on
+        self.live_layout, self.live_order = None, ()      # live_layout: on air (confirmed by a reply or by the launch)
+        self.privacy = None                               # the privacy cut in force (layout.jsonl reason "privacy")
+        self.last_privacy = None                          # the last cut that ended, and its restore
+        self._switching = None                            # the layout a map command in flight goes to
+        self.stale_pids = set()                           # older ffmpegs that survived the reap (never acknowledge then)
+        self.proc_root = "/proc"
         self.meter, self.fps_history = None, deque(maxlen=24)
         self.last_switch = None
         self.watchdog_action = None
@@ -990,6 +1102,7 @@ class Director:
         self._replies = asyncio.Queue()
         self._switch_lock = asyncio.Lock()
         self._layout_sig = None
+        self._log_polled = False                          # the first poll is a (re)start: recover the restore target
         self._tasks = set()
 
     # -- observable state
@@ -1018,8 +1131,10 @@ class Director:
             "restarts": self.restarts,
             "last_error": self.last_error,
             "last_restart_reason": self.last_restart_reason,
-            "layout": self.layout,
+            "layout": self.wanted(),
+            "layout_requested": self.layout,
             "live_layout": self.live_layout if self.alive else None,
+            **self.privacy_state(),
             "layout_fixed": cfg.layout is not None,
             "layout_switch": cfg.layout_switch,
             "layouts_available": list(live_order(bool(self.cam2) or self.cam2_now)),
@@ -1054,12 +1169,94 @@ class Director:
             pass
 
     # -- layout
-    def set_layout(self, layout):
+    def wanted(self):
+        """The layout the output must show: PRIVATE_LAYOUT while a privacy cut is in force, else the requested one."""
+        return PRIVATE_LAYOUT if self.privacy is not None else self.layout
+
+    def desktop_hidden(self):
+        """True only while a privacy cut is in force AND the running ffmpeg is confirmed on a layout without any desktop
+        picture: a map command for it answered ret:0, or this run was launched on it. False while a switch is in flight,
+        a relaunch is pending (a failed switch may have left the graph anywhere) or nothing runs."""
+        return (self.privacy is not None and self.alive and self._switching is None and not self._restart_reason
+                and self.live_layout in LAYOUTS and not LAYOUTS[self.live_layout]["desktop"]
+                and not any(pid_alive(pid) for pid in self.stale_pids))
+
+    def privacy_state(self):
+        p = self.privacy
+        return {"privacy": p is not None, "privacy_id": p["id"] if p else None, "privacy_why": p["why"] if p else None,
+                "privacy_since": iso(p["since"]) if p else None, "privacy_hidden_at": p["hidden_at"] if p else None,
+                "privacy_seconds": round(self._wall() - p["since"], 1) if p else None,
+                "desktop_hidden": self.desktop_hidden(), "privacy_restore": self.layout if p else None,
+                "last_privacy": dict(self.last_privacy) if self.last_privacy else None}
+
+    def follow_record(self, record):
+        """Apply the last line of layout.jsonl. A privacy line (reason "privacy") starts or renews the cut; any other
+        valid line ends it, and its layout (if valid; else the one requested before the cut) comes back. With --layout
+        only the privacy part is followed: privacy wins over a fixed layout too. -> the layout now wanted when this line
+        changed something, else None."""
+        cut = privacy_cut(record)
+        if cut is not None:
+            return PRIVATE_LAYOUT if self._privacy_on(cut) else None
+        try:
+            layout = validate_layout(record.get("layout"))
+        except ValueError:
+            layout = None
+        changed = False
+        if layout is not None and self.cfg.layout is None and layout != self.layout:
+            self.layout, changed = layout, True
+        if self.privacy is not None:
+            self._privacy_off(str(record.get("reason") or "layout line")[:40])
+            changed = True
+        return self.wanted() if changed or (layout is not None and self.cfg.layout is None) else None
+
+    def _privacy_on(self, cut):
+        """A privacy line: the cut starts (or, with another id while one is in force, is renewed: the agent's end line
+        was never seen). -> True when something changed."""
+        p, now = self.privacy, self._wall()
+        if p is not None and p["id"] == cut["id"]:
+            return False
+        renewed = p is not None
+        if p is None:
+            self.privacy = p = {"since": now, "seen": self._clock(), "hidden_at": None, "hidden_id": None}
+        p.update(id=cut["id"], why=cut["why"], seen=self._clock(), hidden_at=None)   # hidden again only when confirmed
+        self.event("privacy_on", privacy_id=cut["id"], why=cut["why"], renewed=renewed, restore=self.layout,
+                   live_layout=self.live_layout if self.alive else None, run=self.prefix if self.alive else None)
+        self._on_air("already on air")                     # renewed while hidden: the new id is acknowledged at once
+        return True
+
+    def _privacy_off(self, how):
+        p, self.privacy, now = self.privacy, None, self._wall()
+        self.last_privacy = {"id": p["id"], "why": p["why"], "since": iso(p["since"]), "ended": iso(now),
+                             "seconds": round(now - p["since"], 1), "hidden_at": p["hidden_at"], "how": how,
+                             "restore": self.layout, "restored_at": None, "restored_layout": None}
+        self.event("privacy_off", privacy_id=p["id"], seconds=self.last_privacy["seconds"], restore=self.layout, how=how,
+                   was_hidden=p["hidden_at"] is not None, run=self.prefix if self.alive else None)
+
+    def _on_air(self, how):
+        """The on-air layout may have changed (a confirmed switch, a launch, a new cut): log the moment the desktop is
+        hidden for a cut, and the moment the layout after a cut is back on air."""
+        p, lp = self.privacy, self.last_privacy
+        if p is not None and p["hidden_id"] != p["id"] and self.desktop_hidden():
+            p["hidden_id"], p["hidden_at"] = p["id"], p["hidden_at"] or iso(self._wall())
+            self.event("privacy_hidden", privacy_id=p["id"], how=how, live_layout=self.live_layout,
+                       ms=round((self._clock() - p["seen"]) * 1000), run=self.prefix)
+        elif (p is None and lp is not None and lp["restored_at"] is None and self.alive and self._switching is None
+              and self.live_layout == effective_layout(self.layout, bool(self.cam2))):
+            lp["restored_at"], lp["restored_layout"] = iso(self._wall()), self.live_layout
+            self.event("privacy_restored", privacy_id=lp["id"], layout=self.live_layout, how=how, run=self.prefix)
+
+    def set_layout(self, layout, end_privacy=False):
         """Validate, remember and log a layout request (one line of layout.jsonl). With --layout the request is
-        logged but the fixed layout stays."""
+        logged but the fixed layout stays. While a privacy cut is in force (layout.jsonl is read first, so a privacy
+        line written just before counts) the request is refused with PrivacyHeld, unless `end_privacy`: then the line
+        (reason "privacy_end_operator") ends the cut."""
         requested = layout
         layout = validate_layout(layout)
-        previous = self.layout
+        self.poll_layout_log()
+        if self.privacy is not None and not end_privacy:
+            raise PrivacyHeld(self.privacy["id"])
+        previous = self.wanted()
+        cut, before = self.privacy, self.layout
         if self.cfg.layout is None:
             self.layout = layout
         record = {"t": iso(self._wall()), "unix": round(self._wall(), 3), "layout": layout, "previous": previous,
@@ -1069,14 +1266,55 @@ class Director:
             record["requested"] = requested
         if self.cfg.layout is not None:
             record["fixed"] = self.cfg.layout
-        append_jsonl(self.cfg.streamer_dir / "layout.jsonl", record)
+        if cut is not None:
+            record.update(reason="privacy_end_operator", privacy_id=cut["id"])
+        path = self.cfg.streamer_dir / "layout.jsonl"
+        read_up_to = self._layout_sig[0] if self._layout_sig else 0     # the bytes the poll above really read
+        record["nonce"] = os.urandom(6).hex()
+        append_jsonl(path, record)
+        if cut is not None:
+            self._privacy_off("operator")
+        landed = self._cut_landed_before(path, read_up_to, record["nonce"])
+        if landed is not None and (cut is None or landed.get("privacy_id") != cut["id"]):
+            # the agent started a cut between this request's read and its line: put the cut back on top (the last line
+            # decides, also for a director restarted later) and refuse the request
+            again = {k: v for k, v in landed.items() if k not in ("t", "unix")}
+            again.update(t=iso(self._wall()), unix=round(self._wall(), 3), reasserted_by="director",
+                         refused_nonce=record["nonce"])          # a restarted director skips the refused request
+            self.layout = before
+            append_jsonl(path, again)
+            self.poll_layout_log()
+            self.event("privacy_reasserted", privacy_id=landed.get("privacy_id"), request=layout)
+            raise PrivacyHeld(self.privacy["id"] if self.privacy else landed.get("privacy_id"))
         return record
 
-    def poll_layout_log(self):
-        """Follow the last line of layout.jsonl (only re-read when its size or mtime changed). -> layout or None."""
-        if self.cfg.layout is not None:
+    @staticmethod
+    def _cut_landed_before(path, offset, nonce):
+        """The privacy record (if any, and not ended after it) appended between `offset` and the line with `nonce`."""
+        try:
+            with open(path, "rb") as handle:
+                handle.seek(offset)
+                data = handle.read(LAYOUT_TAIL)
+        except OSError:
             return None
+        landed = None
+        for line in data.split(b"\n"):
+            try:
+                rec = json.loads(line) if line.strip() else None
+            except (ValueError, UnicodeDecodeError):
+                continue
+            if not isinstance(rec, dict):
+                continue
+            if rec.get("nonce") == nonce:
+                return landed
+            landed = rec if privacy_cut(rec) is not None else None
+        return None
+
+    def poll_layout_log(self):
+        """Follow the last line of layout.jsonl (only re-read when its size or mtime changed). -> the layout now
+        wanted when the line changed something, else None. A fixed --layout still follows privacy lines."""
         path = self.cfg.streamer_dir / "layout.jsonl"
+        first, self._log_polled = not self._log_polled, True
         try:
             st = os.stat(path)
             sig = (st.st_size, st.st_mtime_ns)
@@ -1085,10 +1323,23 @@ class Director:
         if sig == self._layout_sig:
             return None
         self._layout_sig = sig
-        name = read_last_layout(path) if sig else None
-        if name:
-            self.layout = name
-        return name
+        records = read_tail_records(path) if sig else []
+        record = records[-1] if records else None
+        if record is None:
+            return None
+        if first and privacy_cut(record) is not None and self.cfg.layout is None:
+            # a director (re)started during a cut: the layout to restore is the last request before it (or the agent's
+            # `previous` on its privacy line), not the default
+            refused = {r.get("refused_nonce") for r in records if r is not None and r.get("refused_nonce")}
+            requests = [r.get("layout") for r in records[:-1]
+                        if r is not None and privacy_cut(r) is None and r.get("nonce") not in refused]
+            for name in list(reversed(requests)) + [record.get("previous")]:
+                try:
+                    self.layout = validate_layout(name)
+                    break
+                except ValueError:
+                    continue
+        return self.follow_record(record)
 
     def kick_layout(self):
         """Apply the wanted layout now (after a POST) instead of at the next layout tick."""
@@ -1100,11 +1351,11 @@ class Director:
 
     async def apply_layout(self):
         """Bring the running ffmpeg to the wanted layout: live through streamselect, else by a relaunch.
-        -> idle | same | live | restart"""
+        -> idle | same | live | restart | stale"""
         async with self._switch_lock:
             if not self.alive or self._restart_reason:
                 return "idle"
-            proc, wanted = self.proc, self.layout
+            proc, wanted = self.proc, self.wanted()
             if LAYOUTS[wanted]["needs_cam2"] and not self.cam2 and self.cam2_now:
                 # right after a relaunch that dropped a stalled cam2, wait (no relaunch loop); cam2_tick adds it later
                 if self.last_restart_reason != CAM2_DROP or self.uptime() >= CAM2_MIN_UPTIME:
@@ -1112,13 +1363,18 @@ class Director:
                     return "restart"
             target = effective_layout(wanted, self.cam2)
             if target == self.live_layout:
+                self._on_air("same")
                 return "same"
             if self.cfg.layout_switch != "live" or target not in self.live_order:
                 self._note_switch(target, "restart", True, 0)
                 self.request_restart(f"layout {target}")
                 return "restart"
             started = self._clock()
-            ok, detail = await self.send_command(SWITCH_TARGET, "map", str(self.live_order.index(target)))
+            self._switching = target                     # desktop_hidden is false until the reply settles it
+            try:
+                ok, detail = await self.send_command(SWITCH_TARGET, "map", str(self.live_order.index(target)))
+            finally:
+                self._switching = None
             ms = round((self._clock() - started) * 1000)
             if self.proc is not proc or self._restart_reason:
                 return "stale"                   # relaunched meanwhile: the new run starts with the wanted layout
@@ -1126,7 +1382,12 @@ class Director:
                 previous, self.live_layout = self.live_layout, target
                 self._note_switch(target, "live", True, ms)
                 self.event("layout_switched", layout=target, previous=previous, how="live", ms=ms, run=self.prefix)
+                self._on_air("live switch")
+                if effective_layout(self.wanted(), self.cam2) != target:
+                    self.kick_layout()           # the wanted layout changed meanwhile (a new cut): at once, not next tick
                 return "live"
+            if detail.startswith(("no reply", "cannot write")):
+                self.live_layout = None          # the command may or may not have reached the graph: on air unknown
             self._note_switch(target, "restart", False, ms, detail)
             self.event("layout_switch_failed", layout=target, detail=detail, ms=ms, run=self.prefix)
             self.request_restart(f"layout {target} (live switch failed: {detail})")
@@ -1211,7 +1472,7 @@ class Director:
             available, reason = False, "cam2 FIFO was replaced (ffmpeg still reads the old one)"
         self.cam2_now = available
         action, self.cam2_checks = cam2_decision(bool(self.cam2), available, self.cam2_checks, uptime=self.uptime(),
-                                                 wanted=LAYOUTS[self.layout]["needs_cam2"])
+                                                 wanted=LAYOUTS[self.wanted()]["needs_cam2"])
         if action == "drop":
             self.cam2_reason = reason
             self.event("cam2_changed", cam2=False, reason=reason, run=self.prefix)
@@ -1224,6 +1485,12 @@ class Director:
 
     async def layout_tick(self):
         self.poll_layout_log()
+        self.stale_pids = {pid for pid in self.stale_pids if pid_alive(pid)}   # gone at last (pids may be reused)
+        p = self.privacy
+        if p is not None and self._wall() - p["since"] >= p.get("alerted", 0) + PRIVACY_ALERT_S:
+            p["alerted"] = p.get("alerted", 0) + PRIVACY_ALERT_S       # a cut is never ended on a timer (fail closed):
+            self.event("privacy_still_on", privacy_id=p["id"],         # tell the operator instead, every 10 minutes
+                       seconds=round(self._wall() - p["since"]), desktop_hidden=self.desktop_hidden())
         return await self.apply_layout()
 
     async def drain_tick(self):
@@ -1274,7 +1541,7 @@ class Director:
             Path(self.cfg.hls_dir).mkdir(parents=True, exist_ok=True, mode=0o700)
         await self.reap_stale_ffmpeg()
         await self.resolve_encoder()
-        self.poll_layout_log()                       # resume with the last requested layout
+        self.poll_layout_log()                       # resume with the last requested layout (or the privacy cut)
         watchers = [asyncio.ensure_future(self._loop(self.cfg.watchdog_interval, self.watchdog_tick)),
                     asyncio.ensure_future(self._loop(self.cfg.voice_interval, self.voice_tick)),
                     asyncio.ensure_future(self._loop(self.cfg.cam2_interval, self.cam2_tick)),
@@ -1321,8 +1588,8 @@ class Director:
         window, note, voice, available = await self._sources()
         self.cam2_now = available
         live = cfg.layout_switch == "live"
-        cam2 = available and (live or LAYOUTS[self.layout]["needs_cam2"])
-        target = effective_layout(self.layout, cam2)
+        cam2 = available and (live or LAYOUTS[self.wanted()]["needs_cam2"])
+        target = effective_layout(self.wanted(), cam2)            # a privacy cut: the run starts on webcam_only
         prefix = unique_prefix(cfg.recordings_dir, datetime.fromtimestamp(self._wall(), timezone.utc))
         argv = build_ffmpeg_argv(cfg, prefix=prefix, window_id=window, voice=voice, cam2=cam2, layout=target,
                                  live=live, encoder=self.encoder, cam2_fps=self.cam2_fps)
@@ -1351,7 +1618,11 @@ class Director:
         self._write_pid(proc.pid)
         self.event("ffmpeg_started", pid=proc.pid, run=prefix, voice=voice, game=self.game_source, note=note,
                    cam2=cam2, layout=target, layout_switch=cfg.layout_switch, encoder=self.encoder, fps=cfg.fps,
-                   desktop_fps=cfg.desktop_fps, hls=cfg.hls_dir is not None, rtmp=bool(cfg.rtmp_url))
+                   desktop_fps=cfg.desktop_fps, hls=cfg.hls_dir is not None, rtmp=bool(cfg.rtmp_url),
+                   privacy_id=self.privacy["id"] if self.privacy else None)
+        self._on_air("launch")                   # a run launched on webcam_only during a cut hides the desktop at once
+        if effective_layout(self.wanted(), cam2) != target:
+            self.kick_layout()                   # a privacy line arrived while ffmpeg was being started: switch now
         drain = asyncio.ensure_future(asyncio.gather(self._drain(proc), self._read_progress(proc, self.meter)))
         waiter = asyncio.ensure_future(proc.wait())
         restarter = asyncio.ensure_future(self._restart.wait())
@@ -1459,29 +1730,34 @@ class Director:
             pass
 
     async def reap_stale_ffmpeg(self):
-        pid = read_pid(self.pid_file)
-        if not pid:
-            return
-        try:
-            cmdline = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
-        except OSError:
-            cmdline = ""
-        if ("x11grab" in cmdline or "testsrc2" in cmdline) and str(self.cfg.recordings_dir) in cmdline:
+        """Before the first launch: stop every ffmpeg that still records into this directory (the pid file's, and any
+        other a SIGKILLed director left behind, found in /proc): SIGINT, then SIGKILL, 5 s each. One that survives both
+        is remembered and no privacy cut is acknowledged while it lives (it may still write the old layout to HLS); a
+        restarted director finds it again in /proc."""
+        own = read_pid(self.pid_file)
+        pids = set(recorder_pids(self.cfg, self.proc_root))
+        if own and own in pids:
+            pids.add(own)
+        for pid in sorted(pids):
             self.event("stale_ffmpeg", pid=pid)
-            for sig in (signal.SIGINT, signal.SIGKILL):
+        for sig in (signal.SIGINT, signal.SIGKILL):
+            for pid in list(pids):
                 try:
                     os.kill(pid, sig)
+                except ProcessLookupError:
+                    pids.discard(pid)
                 except OSError:
+                    pass
+            for _ in range(10):
+                pids = {pid for pid in pids if pid_alive(pid)}
+                if not pids:
                     break
-                for _ in range(10):
-                    await self._sleep(0.5)
-                    try:
-                        os.kill(pid, 0)
-                    except OSError:
-                        break
-                else:
-                    continue
+                await self._sleep(0.5)
+            if not pids:
                 break
+        for pid in sorted(pids):                 # it survived SIGKILL: it may still write the old layout to HLS
+            self.event("stale_ffmpeg_survived", pid=pid)
+        self.stale_pids = set(pids)
         self._remove_pid()
 
 
@@ -1505,6 +1781,8 @@ async def read_json(request):
 def layout_plan(director, name):
     """-> (live, note): how a request for `name` will reach the recording."""
     cfg = director.cfg
+    if director.privacy is not None:
+        return False, "a privacy cut is in force: webcam_only stays on air until it ends"
     if cfg.layout is not None:
         return False, f"the layout is fixed by --layout {cfg.layout}; the request is only logged"
     cam2 = bool(director.cam2)
@@ -1543,14 +1821,24 @@ def create_app(director, token):
             name = validate_layout(data.get("layout"))
         except ValueError as exc:
             raise web.HTTPBadRequest(text=str(exc))
+        end_privacy = data.get("end_privacy", False)
+        if not isinstance(end_privacy, bool):
+            raise web.HTTPBadRequest(text="end_privacy must be true or false")
         try:
-            record = director.set_layout(data.get("layout"))
+            record = director.set_layout(data.get("layout"), end_privacy=end_privacy)
+        except PrivacyHeld as exc:
+            # the agent's privacy line rules until its end line: a plain request would show the desktop again
+            director.kick_layout()               # the handler may be the first to have read the privacy line
+            return web.json_response({"ok": False, "error": str(exc), "privacy_id": exc.privacy_id,
+                                      "layout": PRIVATE_LAYOUT, "hint": "add \"end_privacy\": true to end the cut"},
+                                     status=409, headers=no_store)
         except OSError as exc:
             raise web.HTTPInternalServerError(text=f"cannot write layout.jsonl: {exc.strerror}")
         live, note = layout_plan(director, name)
         director.kick_layout()
         return web.json_response({"ok": True, "layout": name, "live_layout": director.live_layout if director.alive else None,
-                                  "live": live, "logged": record, "note": note}, headers=no_store)
+                                  "live": live, "logged": record, "note": note,
+                                  "privacy_ended": record.get("reason") == "privacy_end_operator"}, headers=no_store)
 
     app = web.Application(middlewares=[guard], client_max_size=MAX_BODY)
     app.router.add_get("/healthz", healthz)
@@ -1609,7 +1897,8 @@ def parse_args(argv=None):
     p.add_argument("--encoder", default="libx264", choices=ENCODERS,
                    help="NVENC is probed once at start; libx264 when the probe fails")
     p.add_argument("--audio-bitrate", default="96k")
-    p.add_argument("--layout", help="fix the layout (webcam, desktop, split, room); default: follow layout.jsonl")
+    p.add_argument("--layout", help="fix the layout (webcam, desktop, split, room, webcam_only); default: follow "
+                                    "layout.jsonl (a privacy line there still wins over a fixed layout)")
     p.add_argument("--layout-switch", default="live", choices=SWITCH_MODES,
                    help="live: streamselect through ffmpeg's stdin; restart: relaunch ffmpeg at every switch")
     p.add_argument("--switch-timeout", type=float, default=3.0, help="seconds to wait for ffmpeg's command reply")
@@ -1675,11 +1964,15 @@ def main(argv=None):
         if cfg.encoder != "libx264":
             ok, encoder_note = probe_encoder(cfg, cfg.encoder)
             encoder = cfg.encoder if ok else "libx264"
-        layout = effective_layout(cfg.layout or read_last_layout(cfg.streamer_dir / "layout.jsonl") or DEFAULT_LAYOUT, cam2)
+        logged = read_last_record(cfg.streamer_dir / "layout.jsonl")
+        private = privacy_cut(logged) is not None
+        layout = effective_layout(PRIVATE_LAYOUT if private else
+                                  cfg.layout or read_last_layout(cfg.streamer_dir / "layout.jsonl") or DEFAULT_LAYOUT, cam2)
         command = build_ffmpeg_argv(cfg, prefix="sub01-YYYYmmdd-HHMMSS", window_id=window, voice=voice, cam2=cam2,
                                     layout=layout, live=cfg.layout_switch == "live", encoder=encoder, cam2_fps=cam2_fps)
         print(f"# window: {window} ({note}); voice: {voice} ({reason}); cam2: {cam2} ({cam2_reason}); "
-              f"encoder: {encoder} ({encoder_note}); layout: {layout} ({cfg.layout_switch} switching)")
+              f"encoder: {encoder} ({encoder_note}); layout: {layout} ({cfg.layout_switch} switching)"
+              + ("; privacy cut in force (last layout.jsonl line)" if private else ""))
         print(redact(shlex.join(command), secret_parts(cfg.rtmp_url)))
         return 0
     token = load_token(args.token_file)
