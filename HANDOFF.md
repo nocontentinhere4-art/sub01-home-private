@@ -200,8 +200,10 @@ restarts go into `docs/streamer/POD-CHANGES.md` with UTC times.
 State 19:25: all six workers DONE and merged. Game on **v23** binaries (plain m3 launcher, relaunched 19:13 by
 `/tmp/sub01-share/relaunch-m3-now.sh`; binaries saved `binaries-v2{1,2,3}-linux`, sources `source-v2{2,3}`), v23 keys at
 their defaults, `cam2_fps` 30, coordinator owns the runtime. Frames for tuning: `/tmp/sub01-share/frames.sh TAG [STATE]`
-(webcam via x11grab, room/cam2 from the local HLS; restores `webcam_only`). Next: v24 worker (offscreen main view →
-director), live v23 tuning with Kimi frame reviews.
+(webcam via x11grab, room/cam2 from the local HLS; restores `webcam_only`). v23 live tuning checkpoint p5 approved by Kimi for
+still frames (`docs/streamer/VISUAL-TUNING-20261024.md`; values in `docs/streamer/tuning/`): incline 22 → 8.3 deg, cam2
+hoodie fan gone while reading, fingertips at key height. Next: the motion check (typing → reading → typing), v24 workers
+(native offscreen main-view tap; director `--game-source fifo|x11`) running since 19:30.
 Earlier plan: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
 privacy/stream smoke test; then v23 (offline now, pinned to the v22 commit) builds only after the sawtooth
 measurements end; relaunch, measure, live visual tuning with frames.
