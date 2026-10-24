@@ -36,3 +36,17 @@ translation (`q-status-en.txt`, 101 s), verbatim:
 > 3. No Italian remains. Internally, there is no done/60-fps overclaim: the dual-camera target is explicitly unmet, and the privacy cut’s live test is still missing. Exact comparison with the earlier Italian review is not possible from this file alone.
 
 All five wording changes applied.
+
+## Follow-up (2026-10-24 ~15:05 UTC): the page will be shown on X
+The owner removed the "Where to see everything on GitHub" section (the page will be shown on X); the "Other things that
+need you" block (an API key to rotate, the paused RunPod balance guard) went too. Kimi's check (`q-status-x.txt`,
+133 s), verbatim:
+
+> 1. Deletion is textually clean; no dangling references caused by either removal are visible.
+> 2. Internal repository paths/links: `HANDOFF.md`, `REPORT-20261023.md`, `PLAN.md`, `VISUAL-QA-20261023.md`, `kimi/*`.
+> 3. Infrastructure/security internals: Railway/`main` deployment, private pod HLS, Vagon/Chromium runners, operator console, supervisor/watchdog/STOP and agent thresholds, CPU quota/core pinning, outage timeline, disk/volume/retention figures.
+> 4. Owner/account/financial details: real Vagon PC/Steam usage, exact session-expiry time, login/arming/balance workflow, `$0.99/hour`, `+$3.5/month`.
+>
+> No plaintext secrets appear in the supplied Markdown; embedded images and link targets were not inspectable.
+
+Items 2-4 are left to the owner's decision (a public version of the page is offered).
