@@ -36,6 +36,7 @@ The tools mask the token in their output. `podterm.py` and `podrun.py` propagate
 | `tstep.sh TAG STATE key=value...` | apply live tuning keys (`/home/unreal/tune.py`), wait, capture frames, print the v23 receipt measurements; logs to `pod-changes.log` |
 | `motion.sh` | 18 s typing → reading → typing webcam clip + contact sheet |
 | `relaunch-m3-now.sh` | relaunch the game with the plain m3 launcher (loads whatever is in `Sub01HomeLab/Binaries/Linux`), write `game.pid`, keep the CPU partition loop, wait for new PERF lines |
+| `build-v24.sh` | guarded coordinator build only; requires frozen source manifest, dry-run plan, installer checksums and binary marker in `deploy/v24`; refuses existing v24 backups, drift, missing STOP or a measurement lease; does not restart services |
 | `build-v22.sh`, `build-v23.sh` | apply a native installer (`/tmp/sub01-share/deploy/vNN/`) with backups and build (refuse under `MEASURING`) |
 | `deploy-sidecars.sh` | install scripts with backups and restart the supervisor with the full child-argument set (the reference supervisor command line) |
 
