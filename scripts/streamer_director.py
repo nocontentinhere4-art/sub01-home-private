@@ -627,6 +627,37 @@ def watchdog_decision(prev_bytes, cur_bytes, stalled_checks, *, alive, uptime,
     return ("restart" if stalled_checks >= limit else "stalled"), stalled_checks
 
 
+SLOW_SPEED = 0.95          # output media seconds per wall second below which a check counts as slow
+SLOW_LIMIT = 3             # slow checks in a row (3 x 30 s) before ffmpeg is relaunched
+SLOW_RESTART_GAP = 600.0   # at most one relaunch for slowness per 10 minutes (no loop on a machine that cannot keep up)
+
+
+def window_speed(prev, cur):
+    """Output media time gained per wall second between two meter clocks `(wall_s, out_time_s)`; None if unknown.
+    ffmpeg's own `speed=` is an average since the run started, so a run that fell behind at start (2026-10-24: the
+    director launched while the voice model loaded ran at 0.70x for minutes) keeps a misleading figure."""
+    if not prev or not cur or prev[1] is None or cur[1] is None or cur[0] <= prev[0]:
+        return None
+    return (cur[1] - prev[1]) / (cur[0] - prev[0])
+
+
+def speed_decision(speed, slow_checks, *, uptime, since_restart, grace=WATCHDOG_GRACE, floor=SLOW_SPEED,
+                   limit=SLOW_LIMIT, gap=SLOW_RESTART_GAP):
+    """-> (action, slow_checks). action: grace | unknown | ok | slow | restart | held (slow, but a relaunch for
+    slowness happened less than `gap` s ago). A live graph below real time queues its inputs and its latency grows
+    without bound; a relaunch starts it fresh."""
+    if uptime < grace:
+        return "grace", 0
+    if speed is None:
+        return "unknown", 0          # a gap breaks the streak (Kimi review: only consecutive slow checks count)
+    if speed >= floor:
+        return "ok", 0
+    slow_checks += 1
+    if slow_checks < limit:
+        return "slow", slow_checks
+    return ("held" if since_restart is not None and since_restart < gap else "restart"), slow_checks
+
+
 def voice_decision(running_with_voice, available, mismatches, *, uptime, gap=False, need=2, min_uptime=30.0):
     """-> (action, mismatches). action: keep | wait | switch.
 
@@ -690,6 +721,10 @@ class OutputMeter:
         self.history = history if history is not None else deque(maxlen=24)
         self.latest = None
         self._block, self._prev, self._seg, self._last = {}, None, None, None
+
+    def clock(self):
+        """(wall clock of the last block, output time in s) or None: the input of `window_speed`."""
+        return (self._last[0], self._last[2]) if self._last else None
 
     def feed(self, line, now):
         """One `key=value` line of the progress output. -> the window records it finished (usually none)."""
@@ -1156,6 +1191,8 @@ class Director:
         self.last_switch = None
         self.watchdog_action = None
         self.stalled_checks = 0
+        self.slow_checks, self._speed_ref, self.window_speed = 0, None, None   # output speed between watchdog ticks
+        self._slow_restart_mono = None                    # the last relaunch for slowness (one per SLOW_RESTART_GAP)
         self.voice_mismatches = 0
         self.voice_gap = False
         self.last_restart_reason = None
@@ -1212,6 +1249,8 @@ class Director:
             "fps": cfg.fps,
             "desktop_fps": cfg.desktop_fps,
             "output": self.meter.latest if self.alive and self.meter else None,
+            "window_speed": self.window_speed,
+            "slow_checks": self.slow_checks,
             "segments_fps": list(self.fps_history)[-12:],
             "cam2": self.cam2,
             "cam2_reason": self.cam2_reason,
@@ -1510,6 +1549,18 @@ class Director:
             self.last_error = f"segment file did not grow for {self.stalled_checks} checks"
             self.event("watchdog_restart", run=self.prefix, bytes=cur)
             self.request_restart("segment growth stalled")
+        clock = self.meter.clock() if self.alive and self.meter is not None else None
+        speed, self._speed_ref = window_speed(self._speed_ref, clock), clock
+        self.window_speed = None if speed is None else round(speed, 3)
+        since = None if self._slow_restart_mono is None else self._clock() - self._slow_restart_mono
+        slow, self.slow_checks = speed_decision(speed, self.slow_checks, uptime=self.uptime(), since_restart=since)
+        if slow == "restart" and action != "restart":
+            self.last_error = f"output below real time ({self.window_speed}x) for {self.slow_checks} checks"
+            self.event("speed_restart", run=self.prefix, speed=self.window_speed)
+            self._slow_restart_mono = self._clock()
+            self.request_restart("output below real time")
+        elif slow == "held" and self.slow_checks == SLOW_LIMIT:
+            self.event("speed_restart_held", run=self.prefix, speed=self.window_speed)
         if self.cfg.hls_dir is not None and self.prefix:
             prune_hls(self.cfg.hls_dir, self.prefix, self._wall())
         if not self.cfg.test_sources:
@@ -1677,7 +1728,7 @@ class Director:
         self.started_mono, self.started_wall = self._clock(), self._wall()
         self.first_started_wall = self.first_started_wall or self.started_wall
         self._last_bytes, self.stalled_checks, self.voice_mismatches, self.voice_gap = 0, 0, 0, False
-        self.cam2_checks = 0
+        self.cam2_checks, self.slow_checks, self._speed_ref, self.window_speed = 0, 0, None, None
         while not self._replies.empty():
             self._replies.get_nowait()
         self.meter = OutputMeter(cfg.segment_seconds, prefix, self.fps_history)

@@ -1,0 +1,17 @@
+Follow-up to your decision (C -> B for 60 fps with two cameras; UE 5.8.3, Vulkan SM6 on Xvfb with an NVIDIA RTX PRO 4000, game run as UnrealEditor-Cmd -game). Decide the next step, max ~400 words, numbered.
+
+Results:
+- C done (8832 runner and 8893 viewer grab stopped; supervisor desktop = Vagon runner on :103): game unchanged (51.9 fps, render 16.0).
+- B done: game m4 = 7 cores (0-6), -corelimit=7 -foregroundworkers=4 (log: 4 foreground + 2 background workers), rest on 7-9. Result: 44-50 fps, render 16.3-19.3 ms, CSV EventWait 3.7 ms (was 4.5), RenderOther 4.3. Container uses only 5.8 CPUs of 10.2, zero throttling. By your gate (<58 fps) B is rejected.
+- New runtime A/B on m4 (30 s windows; baseline at that moment 44.1 fps, frame 22.7 ms, render 19.3, RHI 4.2, GPU 10.7, cam2 40.9 fps):
+  cam2 paused (tuning cam2=0): 56.7 fps, frame 17.6, render 13.25, RHI 2.7, GPU 7.1  -> even the main view alone is below 60 now (earlier m3 notes said 60 without a reader).
+  cam2 at 30 fps (cam2_fps=30): 58.3 fps, frame 17.2, render 14.2, GPU 8.5, cam2 achieved 21 fps.
+- Frame time exceeds the render thread by ~4 ms even with one view (17.6 vs 13.25); the game thread spends ~18 ms in EventWait (it waits for the render thread). swap_ms reported ~0.01.
+- Engine facts: USceneCaptureComponent2D in 5.8 has bMainViewFamily ("Render with main view family", batched with the main viewport's family) and bRenderInMainRenderer (custom render pass: disables lighting and shadows, unusable for us). cam2 today: SCS_FinalColorLDR, bCaptureEveryFrame=false (CaptureScene() from our tick at cam2_fps), bAlwaysPersistRenderingState=true, async readback, JPEG on AnyBackgroundThreadNormalTask (3.8-4.2 ms per frame).
+
+Options:
+1. Native v22: cam2 with bMainViewFamily=true (shares scene update/culling setup with the main view), plus timestamps on readback->encode->FIFO as you asked.
+2. Investigate the ~4 ms of non-render-thread frame time with one view (Vulkan present to Xvfb through the NVIDIA driver may be a CPU copy/sync; r.OneFrameThreadLag, r.GTSyncType, r.FinishCurrentFrame).
+3. Interim: cam2 at 30 fps (repeated frames), main view near 58-60.
+4. Roll back m4 -> m3 (6 cores, default workers) since B showed no gain.
+Decide order, what to measure, and whether to roll back now.

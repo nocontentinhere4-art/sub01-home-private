@@ -181,6 +181,60 @@ def test_watchdog_waits_then_restarts_after_two_checks_without_growth():
     assert f(900, 900, 0, alive=True, uptime=100, limit=1) == ("restart", 1)
 
 
+def test_window_speed_and_speed_decision():
+    assert sd.window_speed((100.0, 10.0), (130.0, 31.0)) == 0.7
+    assert sd.window_speed(None, (130.0, 31.0)) is None and sd.window_speed((130.0, 1.0), (130.0, 2.0)) is None
+    assert sd.window_speed((100.0, None), (130.0, 31.0)) is None
+    f = sd.speed_decision
+    assert f(0.5, 2, uptime=20, since_restart=None) == ("grace", 0)
+    assert f(None, 2, uptime=500, since_restart=None) == ("unknown", 0)
+    checks, actions = 0, []
+    for speed in (0.7, None, 0.7, None, 0.7):                           # never 3 slow checks in a row: no relaunch
+        action, checks = f(speed, checks, uptime=500, since_restart=None)
+        actions.append(action)
+    assert actions == ["slow", "unknown", "slow", "unknown", "slow"] and checks == 1
+    assert f(1.01, 2, uptime=500, since_restart=None) == ("ok", 0)
+    assert f(0.7, 0, uptime=500, since_restart=None) == ("slow", 1)
+    assert f(0.7, 2, uptime=500, since_restart=None) == ("restart", 3)
+    assert f(0.7, 2, uptime=500, since_restart=120.0) == ("held", 3)          # one relaunch for slowness per 10 min
+    assert f(0.7, 2, uptime=500, since_restart=700.0) == ("restart", 3)
+
+
+def test_watchdog_tick_relaunches_a_run_below_real_time(tmp_path):
+    async def body():
+        now = [1000.0]
+        director, _ = make_director(tmp_path, [lambda: FakeProc(1)])
+        director._clock = lambda: now[0]
+        director.proc, director.prefix, director.started_mono = FakeProc(1), "sub01-20261023-120000", 1000.0
+        director.meter = sd.OutputMeter(600)
+        rec = director.cfg.recordings_dir
+        rec.mkdir(parents=True)
+        segment = rec / "sub01-20261023-120000-000.mp4"
+        out = [0.0]
+
+        async def tick(media_gain):
+            now[0] += 30
+            out[0] += media_gain
+            segment.write_bytes(b"x" * int(1000 + now[0]))        # growing: the stall rule stays quiet
+            director.meter._last = (now[0], 0, out[0], 0, 0)
+            return await director.watchdog_tick()
+
+        await tick(30)                                             # grace
+        await tick(30)
+        assert director.window_speed == 1.0 and director.slow_checks == 0
+        await tick(21)
+        await tick(21)
+        assert director.slow_checks == 2 and director._restart_reason is None
+        await tick(21)
+        assert director._restart_reason == "output below real time" and "0.7x" in director.last_error
+        assert director.state()["window_speed"] == 0.7
+        director._restart_reason = None
+        for _ in range(3):                                         # still slow right after: held, no relaunch loop
+            await tick(21)
+        assert director._restart_reason is None and director.slow_checks == 6
+    run(body())
+
+
 def test_voice_decision_is_debounced_and_not_flapping():
     f = sd.voice_decision
     assert f(False, False, 3, uptime=500) == ("keep", 0)

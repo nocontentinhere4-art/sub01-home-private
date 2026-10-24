@@ -1,0 +1,14 @@
+Co-lead decision on SUB-01's 60 fps with two cameras (UE 5.8.3, Vulkan SM6, Linux pod, game run as UnrealEditor-Cmd -game). Max ~400 words, numbered, decide.
+
+Measured today on the live game (main view + cam2 SceneCapture 1280x720 with a reader; t.MaxFPS 60):
+- PERF: ~47-52 fps, frame 19.4-21.6 ms; render thread 16-18 ms; RHI 4.0; game 2.8 (game thread EventWait 18 ms); GPU 10.7 ms. Without a cam2 reader the game holds 60.
+- Runtime A/B through the console (30 s windows, noise about +-2 fps): sg.ShadowQuality 2: no change; VSM resolution bias +1.5/+1: no change; r.Shadow.RadiusThreshold 0.03: no change; VSM off + 3 CSM cascades: 39 fps (worse); ALL shadows off (sg.ShadowQuality 0): 52.2 fps, render 15.3 (only ~0.9 ms saved). cam2 "lite" (no AO/SSR/contact shadows/fog/particles, LOD factor): no change. So your earlier shadow-depth hypothesis does not hold at runtime.
+- CSV profile, 600 frames: RenderThreadTime 18.1 ms of which Exclusive EventWait 4.54, RenderOther 4.49, FetchVisibilityForPrimitives 1.96, RDG 1.79, RDG_CollectResources 1.48, RenderShadows 1.49, ShadowInitDynamic 1.30, RenderLighting 0.79, InitViews_Scene 0.68, RDG_Execute 0.56, PostProcessing 0.42, BasePass 0.17. RenderThreadTime_CriticalPath 19.9. DrawSceneCommand_StartDelay 15.6.
+- Threads: the game is pinned to cores 0-5 (container quota 10.2 CPUs; everything else of the service user on 6-9) and launched with -corelimit=6, so NumberOfWorkerThreadsToSpawn=5 -> 2 foreground + 3 background workers (TaskGraph.cpp: GNumForegroundWorkers = max(ceil(N/21),2); `-foregroundworkers=N` on the command line overrides; fg = N - max(1, N - min(fg,N))). Game process ~355% CPU of 600%. All parallel-rendering cvars already on (r.RDG.ParallelExecute 2, ParallelSetup 1, MeshDrawCommands.ParallelPassSetup 1, ParallelGatherShadowPrimitives 1, Visibility.TaskSchedule 1, RHICmdWidth 8). No cgroup throttling in the last minutes.
+- Other CPU on cores 6-9: director ffmpeg (NVENC, filters on CPU) 136%, an x11grab ffmpeg for the owner's 8893 game viewer 45%, the 8832 Chromium runner ~1.1 CPU (to be retired), backend 18%, Xvfb :102 9%.
+
+Proposals (a game relaunch costs ~8 minutes; the stream is private):
+A. Relaunch with -foregroundworkers=4 (4 fg + 1 bg), same cores and corelimit.
+B. A + -corelimit=7 and partition 0-6 for the game, 7-9 for the rest (after retiring 8832 and the 8893 viewer grab).
+C. Keep cores; first retire 8832 and the 8893 grab to reduce contention, then measure.
+Decide the order, what to measure to accept/reject each (EventWait, render ms, fps), the risk of 1 background worker (streaming, shader compiles, the cam2 JPEG encode if it runs on background tasks), and whether to fold it into the same relaunch as the PC origin switch (8832->8838) given the Vagon PC is currently off.

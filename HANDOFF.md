@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-23 21:40 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-24 12:15 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -77,47 +77,61 @@ Owner decisions (2026-10-23 21:45 UTC):
 8. **subzerone.live only on explicit request** — the requested private embed/platform test passes; publication is a
    separate authorisation.
 
-## Last-observed state (2026-10-24 ~11:00 UTC; verify before relying on it)
-Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root disk ~2.6 GB free).
+## Last-observed state (2026-10-24 ~12:15 UTC; verify before relying on it)
+Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root disk ~11 GB free after the offload).
 - INCIDENT 2026-10-24 08:25 UTC: the director recorded all night (60 MB/10 min), the root disk hit 100%, the
   supervisor and the backend crashed ("No space left on device"), Jupyter kernels could not start (use the terminal
   channel: scratchpad `podterm.py`). Recovered 10:35-10:55: overnight recordings deleted, backend restarted
-  (`resume21.py`; coordinator reserve lowered 3 → 2.5 GB, backup `*.bak-3gb`), services restarted, director retention
-  (`--keep-segments 18 --min-free-gb 2`) written and in Kimi review; a temporary loop keeps the newest 18 segments.
-- Native game **m3** (build v21): pid 1670615, start_ticks 37117006, launcher
-  `/root/.sub01-windows-recovery/launch-streamer-game-20261023m3.py` (cores 0-5, -corelimit=6), log
-  `/home/unreal/.sub01-private/streamer-game-20261023m3/game.log`. CPU partition loop `scripts/streamer_cpu_partition.py
-  --game-pid-file streamer/game.pid --interval 10` MUST run (else ~25 fps). Measured: 60 fps without a cam2 reader,
-  ~51 fps with the director reading cam2 (cam2 41-46 fps). Main viewer 8893 bound to m3; `streamer/game.pid` = 1670615.
-  Live tuning via `runuser -u unreal -- python3 /home/unreal/tune.py key=value` (key light now `key_cd` 0.04);
-  live console file `streamer-visual-console.json` (delete after use). Visual bugs: `docs/streamer/VISUAL-QA-20261023.md`.
-- Director v2 running (supervisor child): `--fps 60 --desktop-fps 60 --encoder h264_nvenc --hls-dir streamer/hls`,
-  output measured 58.9 fps at speed 1.0 once the voice model had loaded; HLS segments advancing (local only).
+  (`resume21.py`; coordinator reserve lowered 3 → 2.5 GB, backup `*.bak-3gb`), services restarted. Director retention
+  deployed 11:35 (commit 25d17a8, Kimi-reviewed twice: at most 18 segments, keeps >= 3 GB free, ~160 MB per 10-min
+  segment at 60 fps NVENC); the temporary cleanup loop is stopped.
+- Storage (owner approved 11:20 UTC): network volume `dvrlt6yk2k` (`/workspace`, EU-RO-1) grown 150 → 200 GB
+  (increase-only, +$3.5/month). Idle root-disk folders moved to `/workspace/sub01-root-offload/` with a symlink left in
+  place: `/home/unreal/hf-cache` (voice models), `.sub01-private/{community-demo,desk-final-endpoint-candidate4,
+  desk7-body-v5,postproduction-20261022}`. `/workspace` (MooseFS) shows everything as root 0777; it cannot chown.
+  NEVER grow the container disk: "Edit Pod" resets the pod and wipes everything outside `/workspace`.
+- Zen DDC rotated logs (~600 MB of overnight disk-full warnings) deleted.
+- Vagon computer seen OFF at 11:10 (idle auto-stop). Since 11:48 the Vagon page asks for the owner's login again
+  (`phase login_required`; the session from 2026-10-23 evening expired): the owner must log in at the operator console
+  `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`, then arm a start (`POST /pc/vagon/arm {"minutes":N}`,
+  $0.99/h from his balance) before any PC work.
+- Native game **m4** (build v21, Kimi fps-workers step B, 2026-10-24 11:56): pid in `streamer/game.pid`, launcher
+  `/root/.sub01-windows-recovery/launch-streamer-game-20261024m4.py` = m3 + cores 0-6, `-corelimit=7
+  -foregroundworkers=4` (4 foreground + 2 background task workers), log `streamer-game-20261024m4/game.log`;
+  `SUB01_PC_ORIGIN` still 8832 (stopped: the in-game monitor shows no fresh picture until the origin switch).
+  CPU partition loop: `streamer_cpu_partition.py --game-pid-file streamer/game.pid --game-cpus 0-6 --other-cpus 7-9
+  --interval 10` MUST run. Measured on m4: 44-50 fps with cam2 read (render 16-19 ms), 56.7 without cam2 (render 13.3),
+  58.3 with cam2 at 30 fps: B gave no gain (rejected by Kimi's gate; `docs/streamer/kimi/fps-workers.md`, next step
+  asked in `q-fps-next.txt`). Rollback to m3: kill m4, run the m3 launcher, partition 0-5/6-9, write game.pid.
+  Shadows are NOT the bottleneck (runtime A/B: all shadows off saves <1 ms). Live console helper
+  `/tmp/sub01-share/gc.py 'r.Foo' 'r.Bar 1'` (as unreal; sequence in ms), A/B script `/tmp/sub01-share/ab2.sh`,
+  CSV profiles via `gc.py "csvprofile frames=600"` (Saved/Profiling/CSV), summary `/tmp/sub01-share/csvsum.py`.
+  Live tuning via `runuser -u unreal -- python3 /home/unreal/tune.py key=value` (`cam2` 0/1, `cam2_fps`, `cam2_lite`,
+  `key_cd` 0.04). Visual bugs: `docs/streamer/VISUAL-QA-20261023.md`. The 8893 viewer is stopped (its x11grab cost
+  ~0.45 CPU); its command is in `/tmp/sub01-share/rollback-20261024-1150.txt`.
+- Supervisor (pid file `streamer/pids/supervisor.pid`), restarted 11:48 as the ONE desktop source (Kimi step C):
+  `streamer_up.py start ... --display :103 --desktop-port 8838 --library-path /usr/local/cuda/lib64` + child args
+  (exact command: `/tmp/sub01-share/cutover-c.sh`; every later `status`/`restart` needs `--display :103 --desktop-port
+  8838`). Children: desktop = the Vagon runner 8838 (Google Chrome on :103, profile `streamer/desktop-vagon/profile`),
+  voice 8835, agent 8836 (HELD by STOP; desktop URL 8838), director 8837 (`--fps 60 --desktop-fps 60 --encoder
+  h264_nvenc --hls-dir streamer/hls`, PiP from :103, retention, 60 fps at speed 1.02 measured with and without cam2 in
+  the graph). The bundled-Chromium runner 8832 is retired (not deleted). Start the supervisor from a shell pinned to
+  7-9 or restart the director once after start: a director launched during the voice model load ran at 0.70x
+  (fix in review: speed guard in `scripts/streamer_director.py`).
 - Sources on the pod: Python services `/home/unreal/.sub01-private/latest-source-20261023`; native project
   `/home/unreal/.sub01-private/cinematic-source-v3-final` (`build-worker-vNN.sh`, logs `build-vNN.log`).
-- Backend: coordinator `/root/.sub01-windows-recovery/resume20.py` (ports 8830/8831); streamer hold re-armed with
+- Backend: coordinator `/root/.sub01-windows-recovery/resume21.py` (ports 8830/8831); streamer hold re-armed with
   `POST /api/home/streamer {"operation":"start"}` (X-Admin-Token).
-- Supervisor `scripts/streamer_up.py` (start/status/kill/resume/restart/stop; see `docs/streamer/RUNBOOK.md`):
-  desktop 8832 (bundled Chromium, :102; feeds the in-game monitor + director PiP), voice 8835 (Chatterbox K07,
-  `streamer/mouth.json`), agent 8836 (Claude primary, Kimi fallback + Kimi shadow on every decision, guard rails, lease required: HELD by STOP), director 8837 (24 fps libx264, recordings in
-  `/home/unreal/.sub01-private/streamer/recordings`, verified rehearsal segments copied to `/workspace/sub01-streamer-recordings`).
-- Vagon runner 8838 (:103, Google Chrome 156 `/opt/google/chrome/chrome`, owner's authenticated profile
-  `streamer/desktop-vagon/profile`, backups `profile.bak-*`, last 2 kept): connected, real Windows frames at 30 fps
-  (H.264 1080p, relay over UDP), keyboard and mouse PROVEN (typing/clearing YouTube search, Start menu, scroll; commit
-  45c6830). Starting the computer needs arming (`POST /pc/vagon/arm {"minutes":N}`, one start per arming; commit
-  7fc8bcc): it spends the owner's balance ($0.99/h; balance seen 8.88 USD) and the computer stops itself after his
-  idle setting (~15 min). The main runner 8832 still runs the bundled Chromium (its source file is updated; it picks
-  the new code up when restarted). Owner login console: `https://<pod>-8888.proxy.runpod.net/proxy/8838/operator`.
+- Watchdog `scripts/streamer_watchdog.py` restarted 11:48 on the agent 8836 and desktop 8838
+  (`--desktop-data-dir streamer/desktop-vagon`); the agent needs STOP removed and `POST /lease` (only after plan step 5).
 - Sidecars not yet supervised: `scripts/streamer_hls_serve.py` (127.0.0.1:8839, local HLS),
   `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840, for the in-game monitor feed).
-- Next (Kimi cut-over plan, `docs/streamer/kimi/cutover3.md`): 120 s gate recording on the 60 fps profile; then ONE
-  source: agent → 8838, director PiP → :103, relaunch the game with SUB01_PC_ORIGIN=8838; retire 8832 after the soak;
-  then cached/static shadows for both cameras at 60.
-- Watchdog `scripts/streamer_watchdog.py` running (pid in `pgrep -f streamer_watchdog.py`), pointed at the agent 8836
-  and desktop 8832; to act the agent needs STOP removed and `POST /lease {"minutes":60}` (only after plan step 5).
-- Workers in flight: native v21 (60 fps + visual fixes); privacy plumbing (director privacy ack with no desktop picture,
-  runner `--allow-credentials` for the remote PC). Done today: visual QA, director v2, Vagon input proof, arming gate,
-  agent shadow + guard rails (commit deccdef), build v20 (commit fa4e2c0).
+- Next: Kimi's answer to `q-fps-next.txt` (v22 cam2 `bMainViewFamily` + cam2 path timestamps, the ~4 ms of
+  non-render frame time, cam2 at 30 fps interim, or roll back to m3); the speed-guard review; when the owner has
+  logged in and the PC is on: relaunch the game with `SUB01_PC_ORIGIN=http://127.0.0.1:8838` and verify the in-game
+  monitor, input and PiP.
+- No workers in flight. Done 2026-10-24: disk-full recovery, director retention (25d17a8), volume 150 → 200 GB +
+  offload, Kimi C (one desktop source 8838) and B (m4, rejected), shadow/worker A/B and CSV profiles.
 
 ## Where things are
 - `docs/streamer/PLAN.md`, `REPORT-20261023.md`, `RUNBOOK.md` (commands: start/stop/kill/resume, test chat via `/ws`,
