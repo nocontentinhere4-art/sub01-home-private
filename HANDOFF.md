@@ -202,8 +202,11 @@ State 19:25: all six workers DONE and merged. Game on **v23** binaries (plain m3
 their defaults, `cam2_fps` 30, coordinator owns the runtime. Frames for tuning: `/tmp/sub01-share/frames.sh TAG [STATE]`
 (webcam via x11grab, room/cam2 from the local HLS; restores `webcam_only`). v23 live tuning checkpoint p5 approved by Kimi for
 still frames (`docs/streamer/VISUAL-TUNING-20261024.md`; values in `docs/streamer/tuning/`): incline 22 → 8.3 deg, cam2
-hoodie fan gone while reading, fingertips at key height. Next: the motion check (typing → reading → typing), v24 workers
-(native offscreen main-view tap; director `--game-source fifo|x11`) running since 19:30.
+hoodie fan gone while reading, fingertips at key height. Motion check signed off by Kimi (scope recorded in the tuning doc).
+Director fifo mode DONE (c7e42ed, 944 streamer tests; Kimi "commit: yes"; adds `-follow 1` to the FIFO input, a
+`smptehdbars` placeholder, a `seq=` tap measuring unique main-view fps). Deployed 21:22 UTC in **x11 mode** (default,
+unchanged behaviour; backups `*.bak-before-fifo`); switch/rollback in RUNBOOK "Main view from the offscreen game".
+Native v24 worker (offscreen main-view tap) still running; then build, offscreen launch, go/no-go, ABBA, soak.
 Earlier plan: merge each worker; keep a v22-only build for A/B and rollback; an integrated v22 + sidecars
 privacy/stream smoke test; then v23 (offline now, pinned to the v22 commit) builds only after the sawtooth
 measurements end; relaunch, measure, live visual tuning with frames.
