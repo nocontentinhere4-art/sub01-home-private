@@ -126,6 +126,15 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   (`--desktop-data-dir streamer/desktop-vagon`); the agent needs STOP removed and `POST /lease` (only after plan step 5).
 - Sidecars not yet supervised: `scripts/streamer_hls_serve.py` (127.0.0.1:8839, local HLS),
   `scripts/streamer_monitor_feed.py` (:103 → `streamer/monitor.mjpeg`, health 8840, for the in-game monitor feed).
+- **RunPod balance guard PAUSED** (13:39 UTC, `kill -STOP 63`): the owner's RunPod account hit an API rate limit
+  ("wait 37550 seconds", until ~00:05 UTC 2026-10-25). `/root/.sub01-windows-recovery/guard-v3.py` (pid 63, the OLD
+  version: reads `clientBalance` every 300 s and stops the pod at <= $10, ignoring Retry-After) was blind during the
+  block anyway. Resume with `kill -CONT 63` after the block (scheduled reminder 00:20 UTC); the Retry-After-aware
+  version on disk replaces it only with the owner's OK. All other pods of the account were EXITED (snapshot 10-23).
+- **Sawtooth found** (`docs/streamer/kimi/sawtooth.md`): the render thread time climbs ~0.5 ms/min and resets at
+  every GC (~7 min); this is the "+-5 fps noise". Experiment running: game **m3b** = m3 + `-binnedmalloc2` (since
+  13:32; `/tmp/sub01-share/game.log` points at its log; `relaunch-m3b.sh`). Kimi's gate: slope < 0.1 ms/min and no
+  GC step > 0.5 ms, then back to Mimalloc (A/B/A).
 - Game is back on **m3** (rolled back 12:15 per `docs/streamer/kimi/fps-next.md`; pid in `streamer/game.pid`, cores
   0-5, partition loop default 0-5/6-9). Operational setting: `cam2_fps` 30 (main view 59.7-59.9 fps, cam2 ~27,
   director 60 fps at 1.0x); with cam2 at 60 the game drops to 45-48 fps. Not a pass of the 60/60 gate.
