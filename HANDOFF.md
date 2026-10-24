@@ -170,7 +170,9 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   hitch): ABBA median 20.45 → 18.47 ms with `cam2_fps` 60, slope 0.36 → 0.01 ms/min; Kimi wants an 8-24 h soak before
   using it. It does not reach 60: the base present cost (~9 ms user + 2.5 sys per frame) stays. Structural fix (next
   native build): render the main view offscreen and hand it to the director like cam2 (no X11 present); ablation
-  `-RenderOffScreen` (launcher m3o) measures the ceiling first.
+  `-RenderOffScreen` (launcher m3o) measures the ceiling first. Interim (18:05): m3o on v21 with `cam2_fps` 60 holds the
+  60 cap: 59.8-59.9 fps, render 13.4 ms, RHI 4.3, GPU 10.3-10.5, cam2 capture 59.8 / written 51.5-52.5 fps (was 40).
+  Final ABBA of the VSync flip: -1.79 ms median, +4.3 fps, flip hitches 74-86 ms.
 
 ## Workers in flight (owner asked for multi-agent work, 2026-10-24 ~15:40 UTC)
 Each works in its own git worktree, consults Kimi and gets a Kimi review before committing; the coordinator merges,
@@ -181,7 +183,7 @@ builds on the pod, deploys and pushes. Split reviewed by Kimi: `docs/streamer/ki
 | sidecars | DONE, merged 8634ff9 (164 tests, Kimi "commit: yes"). Deploy + supervisor restart pending: only outside a measurement lease; command in the commit's RUNBOOK section. Follow-ups: agent waits for the feed's neutral confirmation before typing a credential; game blanks the texture when the feed goes stale | read-only |
 | sawtooth | root cause + fix of the render-time ramp; ends on plain m3, `cam2_fps` 30 unless 60/60 holds | OWNS the game runtime (cvars, trace port, tune.py, relaunch); only one allowed heavy CPU |
 | visual v23 | live-tunable fixes: neck/hood, elbow, posture, hands, face light, chair (`install_v23.py` after v22) | read-only |
-| agent checks | plan step 5: control table `docs/streamer/AGENT-CHECKS.md`, missing tests, live-check runner | read-only; STOP stays |
+| agent checks | DONE, merged c59403b (819 streamer tests pass; Kimi: 5 blockers fixed, then "may proceed"). Found a second chat→PC path (backend Vagon link bridge) outside broker/lease/STOP: fixed in code, live blocker until the backend runs with the bridge variables unset (review before restarting the backend). Deploy agent/desktop/watchdog files with the supervisor restart | read-only; STOP stays |
 | acceptance | plan step 7: `scripts/streamer_acceptance.py` report per criterion, dry run on today's logs | read-only |
 Nobody but the coordinator restarts the supervisor, director, voice, agent, watchdog or backend.
 **Measurement lease** (Kimi): while `/tmp/sub01-share/MEASURING` exists (end time + purpose inside), nobody builds,
