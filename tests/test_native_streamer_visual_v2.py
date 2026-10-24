@@ -459,6 +459,7 @@ struct FTransform {
  FQuat GetRotation() const { return Rotation; }
  void SetRotation(const FQuat& Q) { Rotation = Q; }
  void SetTranslation(const FVector& V) { Translation = V; }
+ void SetScale3D(const FVector& S) { Scale3D = S; }  // v23: neck girth
  FVector GetTranslation() const { return Translation; }
  FVector GetScale3D() const { return Scale3D; }
  FRotator Rotator() const { return Rotation.Rotator(); }
@@ -491,6 +492,7 @@ struct FMath {
  static bool IsFinite(double X) { return std::isfinite(X); }
  static double FloorToDouble(double X) { return std::floor(X); }
  static double Sin(double X) { return std::sin(X); }
+ static double Cos(double X) { return std::cos(X); }  // v23
  static double Sqrt(double X) { return std::sqrt(X); }
  static double Acos(double X) { return std::acos(X); }
  static double Atan2(double Y, double X) { return std::atan2(Y, X); }
@@ -556,7 +558,9 @@ public:
  friend bool operator==(const TObjectPtr& A, std::nullptr_t) { return A.Ptr == nullptr; }  // UE compares with nullptr too
 };
 inline UObject* StubCastTarget = nullptr;  // a driver names the one object Cast<> may return (no RTTI/typeinfo needed from the unit)
-template<class T> T* Cast(UObject* Object) { return Object && Object == StubCastTarget ? static_cast<T*>(Object) : nullptr; }
+inline std::vector<UObject*> StubCastAlso;  // v23: more objects Cast<> may return (the mouse scan's static-mesh components)
+template<class T> T* Cast(UObject* Object) { if (!Object) return nullptr; if (Object == StubCastTarget) return static_cast<T*>(Object);
+ for (UObject* Also : StubCastAlso) if (Also == Object) return static_cast<T*>(Object); return nullptr; }
 template<class T> T* NewObject(UObject*, FName = FName()) { return new T(); }
 enum class ELightUnits : uint8 { Unitless, Candelas, Lumens };
 namespace EComponentMobility { enum Type { Static, Stationary, Movable }; }
@@ -577,7 +581,8 @@ struct FCollisionQueryParams { FCollisionQueryParams(FName, bool = false) {} };
 struct FAttachmentTransformRules { static const FAttachmentTransformRules KeepWorldTransform; };
 inline const FAttachmentTransformRules FAttachmentTransformRules::KeepWorldTransform{};
 class UWorld : public UObject { public: float GetDeltaSeconds() const { return 0; } };
-class UActorComponent : public UObject { public: void RegisterComponent() {} };
+inline bool StubWorldEnabled = false; inline UWorld StubTheWorld;  // v23: an opt-in world (AActor::GetWorld, TActorIterator) for the mouse component scan
+class UActorComponent : public UObject { public: bool StubRegistered = true; void RegisterComponent() { StubRegistered = true; } bool IsRegistered() const { return StubRegistered; } };
 struct FBoxSphereBounds { FVector Origin, BoxExtent; double SphereRadius = 0; FString ToString() const { return FString(); } };
 class USceneComponent : public UActorComponent {
 public:
@@ -595,22 +600,26 @@ public:
  void SetWorldTransform(const FTransform& T, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubWorld = T; }
  bool StubVisible = true;
  void SetVisibility(bool V) { StubVisible = V; }
+ bool IsVisible() const { return StubVisible; }  // v23
  EComponentMobility::Type StubMobility = EComponentMobility::Static;  // v21: the props are made Movable before they move
  void SetMobility(EComponentMobility::Type M) { StubMobility = M; }
  EComponentMobility::Type GetMobility() const { return StubMobility; }
  USceneComponent* StubParent = nullptr;  // v21: attachment chain
  bool IsAttachedTo(const USceneComponent* C) const { for (const USceneComponent* P = StubParent; P; P = P->StubParent) if (P == C) return true; return false; }
+ int32 StubChildren = 0; int32 GetNumChildrenComponents() const { return StubChildren; }  // v23: the mouse must be a leaf
 };
 class UPrimitiveComponent : public USceneComponent {
 public:  // the stub trace hits at *StubTraceAnchor + StubTraceOffset when StubTraceHit (the anchor follows its actor)
  uint8 bOnlyOwnerSee : 1 = 0; bool StubChannels[3] = {true, false, false};  // v21
  void SetOnlyOwnerSee(bool B) { bOnlyOwnerSee = B ? 1 : 0; }
  void SetLightingChannels(bool A, bool B, bool C) { StubChannels[0] = A; StubChannels[1] = B; StubChannels[2] = C; }
+ bool StubSimulating = false; bool IsSimulatingPhysics(FName = FName()) const { return StubSimulating; }  // v23
  bool StubTraceHit = false; const FVector* StubTraceAnchor = nullptr; FVector StubTraceOffset;
  bool LineTraceComponent(FHitResult& Hit, const FVector, const FVector, const FCollisionQueryParams&) { if (!StubTraceHit || !StubTraceAnchor) return false; Hit.ImpactPoint = *StubTraceAnchor + StubTraceOffset; return true; }
 };
 class ULightComponent : public USceneComponent { public: float Intensity = 0, Temperature = 6500; bool bUseTemperature = false; bool StubChannels[3] = {true, false, false}; void SetIntensity(float I) { Intensity = I; } void SetTemperature(float T) { Temperature = T; } void SetCastShadows(bool) {}
- void SetLightingChannels(bool A, bool B, bool C) { StubChannels[0] = A; StubChannels[1] = B; StubChannels[2] = C; } };
+ void SetLightingChannels(bool A, bool B, bool C) { StubChannels[0] = A; StubChannels[1] = B; StubChannels[2] = C; }
+ float StubSpecular = 1; void SetSpecularScale(float S) { StubSpecular = S; } };  // v23
 class ULocalLightComponent : public ULightComponent { public: float StubRadius = 0; void SetIntensityUnits(ELightUnits) {} void SetAttenuationRadius(float R) { StubRadius = R; } };
 class USpotLightComponent : public ULocalLightComponent { public: float StubInner = 0, StubOuter = 0, StubSource = 0, StubSoft = 0; void SetInnerConeAngle(float A) { StubInner = A; } void SetOuterConeAngle(float A) { StubOuter = A; }
  void SetSourceRadius(float R) { StubSource = R; } void SetSoftSourceRadius(float R) { StubSoft = R; } };
@@ -753,9 +762,10 @@ class AController : public UObject { public: void SetControlRotation(const FRota
 class AActor : public UObject {
 public:
  FVector StubLocation, StubExtent; FQuat StubQuat;
+ FVector StubScale{1, 1, 1}; FVector GetActorScale3D() const { return StubScale; } void SetActorScale3D(const FVector& S) { StubScale = S; }  // v23: chair_scale
  FQuat GetActorQuat() const { return StubQuat; }
  bool SetActorLocationAndRotation(const FVector& L, const FQuat& Q, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubLocation = L; StubQuat = Q; return true; }
- UWorld* GetWorld() const { return nullptr; }
+ UWorld* GetWorld() const { return StubWorldEnabled ? &StubTheWorld : nullptr; }  // v23: null unless a driver opts in
  USceneComponent* GetRootComponent() const { return nullptr; }
  FVector GetActorLocation() const { return StubLocation; }
  bool SetActorLocation(const FVector& L, bool = false, FHitResult* = nullptr, ETeleportType = ETeleportType::None) { StubLocation = L; return true; }
@@ -771,10 +781,12 @@ inline UEngine* GEngine = nullptr;
 class IConsoleVariable { public: FString StubValue; FString GetString() const { return StubValue; } };
 class IConsoleManager { public: static IConsoleManager& Get() { static IConsoleManager Manager; return Manager; } IConsoleVariable* FindConsoleVariable(const TCHAR*) { return nullptr; } };
 class UStaticMesh : public UObject {};
-class UStaticMeshComponent : public UPrimitiveComponent { public: UStaticMesh* GetStaticMesh() const { return nullptr; } };
+class UStaticMeshComponent : public UPrimitiveComponent { public: UStaticMesh* StubMesh = nullptr; UStaticMesh* GetStaticMesh() const { return StubMesh; } };  // v23: StubMesh
 class UInstancedStaticMeshComponent : public UStaticMeshComponent {};
 class AStaticMeshActor : public AActor { public: UStaticMeshComponent* GetStaticMeshComponent() const { return nullptr; } };
-template<class T> struct TActorIterator { explicit TActorIterator(UWorld*) {} explicit operator bool() const { return false; } void operator++() {} T* operator*() const { return nullptr; } };
+inline std::vector<AActor*> StubWorldActors;  // v23: what TActorIterator walks in the opt-in world (nothing otherwise)
+template<class T> struct TActorIterator { std::size_t I = 0; bool On = false; explicit TActorIterator(UWorld* World) : On(World && StubWorldEnabled) {}
+ explicit operator bool() const { return On && I < StubWorldActors.size(); } void operator++() { ++I; } T* operator*() const { return static_cast<T*>(StubWorldActors[I]); } };
 class APawn : public AActor { public: TObjectPtr<AController> Controller; bool bUseControllerRotationYaw = true; };
 class ACharacter : public APawn { public: UCharacterMovementComponent* GetCharacterMovement() const { return nullptr; } };
 class FAnimInstanceProxy;
@@ -3745,3 +3757,604 @@ def test_v22_new_locals_do_not_shadow_members(v22_patched, v21_stack):
     dev_added = _added_locals(lf(v21_stack / 'Sub01HomeDeviceBridge.cpp'), lf(v22_patched / 'Sub01HomeDeviceBridge.cpp'))
     assert not (dev_added & dev_members) and not ({'Decoded', 'BGRA', 'Texture'} & dev_members), sorted(dev_added & dev_members)
     assert 'PersistentImages' not in lf(v21_stack / 'Sub01HomeDeviceBridge.h') and 'PersistentImagesCreated' in dev_members
+
+
+# ================================================================================================ v23 (live look corrections)
+V23_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_v23.py'
+V23_MARKER = '// SUB01_STREAMER_VISUAL_V2_V23'
+_V23_SPEC = importlib.util.spec_from_file_location('sub01_streamer_visual_v2_v23', V23_INSTALL)
+v23 = importlib.util.module_from_spec(_V23_SPEC)
+_V23_SPEC.loader.exec_module(v23)
+V23_EDITED = ('Sub01HomeLab.cpp', 'Sub01HomeLab.h', 'Sub01HomeHands.cpp', 'Sub01HomeHands.h')
+
+
+def install_v23(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(V23_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+def _stack_to_v22(target: Path) -> None:
+    _stack_to_v21(target)
+    assert install_v22(target)[0] == 0
+
+
+@pytest.fixture(scope='module')
+def v23_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v23') / 'src'
+    _stack_to_v22(target)
+    code, report = install_v23(target)
+    assert code == 0, report
+    return target
+
+
+def test_v23_plans_applies_refuses_twice_and_needs_v22(tmp_path):
+    target = tmp_path / 'src'
+    _stack_to_v21(target)
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, refused = install_v23(target)
+    assert code == 2 and 'lacks v22' in refused['reason'] and {p.name: sha(p) for p in target.iterdir()} == before
+    assert install_v22(target)[0] == 0
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, planned = install_v23(target, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == len(v23.EDITS) and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in target.iterdir()} == before
+    code, report = install_v23(target)
+    assert code == 0 and report['status'] == 'applied'
+    # only the character and the anim proxy files: never v22's bridges (PC bridge, device bridge), Build.cs or the ini
+    assert {name for name in before if sha(target / name) != before[name]} == set(V23_EDITED)
+    assert set(report['untouched']) == {'Sub01PCBridge.h', 'Sub01PCBridge.cpp', 'Sub01HomeDeviceBridge.h', 'Sub01HomeDeviceBridge.cpp', 'Sub01PersistentTexture.h'}
+    for name in V23_EDITED:
+        assert sha(target / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+    after = {p.name: sha(p) for p in target.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_v23(target, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert {p.name: sha(p) for p in target.iterdir()} == after
+
+
+def test_v23_missing_anchor_refuses_without_writing(tmp_path):
+    target = tmp_path / 'src'
+    _stack_to_v22(target)
+    hands = target / 'Sub01HomeHands.cpp'
+    hands.write_bytes(hands.read_bytes().replace(b'static const double Weights[2]={0.4,0.6};', b'static const double Weights[2]={0.45,0.55};', 1))
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, report = install_v23(target)
+    assert code == 2 and 'anchor missing in Sub01HomeHands.cpp' in report['reason']
+    assert {p.name: sha(p) for p in target.iterdir()} == before  # Sub01HomeLab.* had valid anchors and are untouched too
+
+
+def test_v23_keys_defaults_and_ranges():
+    """The key table: unique keys and fields, every default inside its range, the defaults that switch a step off."""
+    keys = [key for key, *_ in v23.TUNING]
+    assert len(keys) == len(set(keys)) == len(v23.TUNING_FIELDS) and len(set(v23.TUNING_FIELDS.values())) == len(keys)
+    off = {'pelvis_pitch_deg': 0, 'shoulder_drop_deg': 0, 'shoulder_back_deg': 0, 'neck_back_deg': 0, 'neck_share': 0.4, 'neck_girth': 1, 'elbow_min_deg': 0,
+           'elbow_pole_back': 0.5, 'elbow_pole_out': 0.3, 'hand_orient': 0, 'finger_bend_deg': 0, 'mouse_scan': 0, 'hand_on_mouse': 0, 'key_side_cm': 0,
+           'key_up_extra_cm': 0, 'key_specular': 1, 'fill_cd': 0, 'rim_cd': 0, 'chair_scale': 1, 'chair_back_extra_cm': 0, 'chair_side_cm': 0}
+    for key, value in off.items():
+        assert v23.DEFAULTS[key] == value, key  # today's look: the step is skipped
+    assert (v23.DEFAULTS['elbow_pole_back'], v23.DEFAULTS['elbow_pole_out']) == streampass.ELBOW_POLE_VECTOR[1:] and v23.DEFAULTS['neck_share'] == posefix.HEAD_WEIGHTS[0]
+    existing = (set(getattr(seatfix, 'TUNING_LIMITS', ())) | set(getattr(cam2, 'TUNING_LIMITS', ())) | set(streampass.TUNING_LIMITS) | set(posefix.TUNING_LIMITS)
+                | set(v21.TUNING_LIMITS) | {'up_cm', 'forward_cm', 'side_cm', 'aim_drop_cm', 'fov_deg', 'seat_back_cm', 'seat_side_cm', 'desk_props', 'posture_lean_deg', 'posture_head_deg'})
+    assert not existing & set(keys), sorted(existing & set(keys))
+    for key, (lo, hi) in v23.TUNING_LIMITS.items():
+        assert lo < hi and lo <= v23.DEFAULTS[key] <= hi, key
+    # the live session: ordered steps; every value inside its key's clamp (v23's own keys or an earlier layer's)
+    limits = {**streampass.TUNING_LIMITS, **posefix.TUNING_LIMITS, **v21.TUNING_LIMITS, **v23.TUNING_LIMITS}
+    assert v23.RECOMMENDED[0] == ('baseline', {}) and len(v23.RECOMMENDED) >= 8
+    for step, values in v23.RECOMMENDED:
+        for key, value in values.items():
+            lo, hi = limits[key]
+            assert lo <= value <= hi, (step, key)
+
+
+def test_v23_text(v23_patched, v22_patched):
+    texts = {name: lf(v23_patched / name) for name in V23_EDITED}
+    for name, text in texts.items():
+        assert text.count(V23_MARKER + ' BEGIN') == text.count(V23_MARKER + ' END') == 1, name
+        assert closure.brace_walk(closure.strip(text)) is not None, name
+    cpp, header, proxy, hands_h = (texts[n] for n in V23_EDITED)
+    v21_cpp, v21_hands = lf(v22_patched / 'Sub01HomeLab.cpp'), lf(v22_patched / 'Sub01HomeHands.cpp')  # the base: v21 + v22
+    for text in (cpp, header):  # inside the region the stub harness compiles
+        assert text.index(V23_MARKER + ' BEGIN') < text.index(FACE_END)
+    # keys parsed: ONE delimited block right after the Field lambda, each key once with its clamp; every older tuning line kept verbatim
+    tuning = cpp[cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    old_tuning = v21_cpp[v21_cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):v21_cpp.index(SEATFIX_MARKER + ' END')]
+    block = tuning[tuning.index(V23_MARKER + ' TUNING ('):tuning.index(V23_MARKER + ' TUNING END')]
+    assert tuning.index(v23.TUNING_LAMBDA.strip()) < tuning.index(V23_MARKER + ' TUNING (')
+    for key, field, lo, hi, default in v23.TUNING:
+        assert f'Field(TEXT("{key}"),{field},{lo},{hi});' in block and tuning.count(f'TEXT("{key}")') == 1, key
+        assert f'{field}={streampass._f(default)}' in header, key  # compiled default = today's look
+        assert f'TEXT("v23_{key}")' in cpp, key  # receipt
+    reader, old_reader = (_function(text, 'bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){')[0] for text in (cpp, v21_cpp))
+    added = [line for line in reader.split('\n') if line not in old_reader.split('\n')]
+    assert all('Field(TEXT("' in line and 'StreamerVisualV23' in line or V23_MARKER in line for line in added), added
+    assert set(old_reader.split('\n')) <= set(reader.split('\n')) and len(reader.split('\n')) == len(old_reader.split('\n')) + len(added)
+    # v22's territory: the cam2 code, v22's own block and the key light function are byte-identical to the v22 base; the bridges are not edited (installer test)
+    assert cpp[cpp.index(V22_MARKER + ' BEGIN'):cpp.index(V22_MARKER + ' END')] == v21_cpp[v21_cpp.index(V22_MARKER + ' BEGIN'):v21_cpp.index(V22_MARKER + ' END')]
+    for head in ('void ASub01HomeCharacter::StartStreamerVisualCam2(', 'void ASub01HomeCharacter::UpdateStreamerVisualCam2(',
+                 'void ASub01HomeCharacter::WriteStreamerVisualCam2Status(', 'void ASub01HomeCharacter::UpdateStreamerVisualKeyLight(',
+                 'void ASub01HomeCharacter::UpdateStreamerVisualPerf('):
+        assert _function(cpp, head)[0] == _function(v21_cpp, head)[0], head
+    assert cpp[cpp.index('// SUB01_STREAMER_VISUAL_V2_CAM2 BEGIN'):cpp.index('// SUB01_STREAMER_VISUAL_V2_CAM2 END')] == \
+        v21_cpp[v21_cpp.index('// SUB01_STREAMER_VISUAL_V2_CAM2 BEGIN'):v21_cpp.index('// SUB01_STREAMER_VISUAL_V2_CAM2 END')]
+    # wiring: the tick, the chair delta and the fit, the hands' mouse goal, the proxy steps in order
+    assert '  UpdateStreamerVisualV23(Now,Dt,Anim);' in cpp and '+StreamerVisualChairFitShown+StreamerVisualV23ChairShown:' in cpp
+    assert '-Front+FVector::DotProduct(StreamerVisualV23ChairShown,Facing),Move=' in cpp and ':StreamerVisualV23MouseGoal(Toward);' in cpp
+    order = [proxy.index(s) for s in ('ApplyStreamerV23Pelvis(Output); //', 'ApplyStreamerV2Body(Output); //', 'ApplyStreamerV23Shoulders(Output); //')]
+    assert order == sorted(order)
+    evaluate = proxy[proxy.index('virtual bool Evaluate(FPoseContext& Output) override {'):]
+    order = [evaluate.index(s) for s in ('EvaluateStreamerV2Hands(Output);', 'ApplyStreamerV2Head(Output);', 'if(StreamerV2)ApplyStreamerV23Head(Output);')]
+    assert order == sorted(order)
+    hands = proxy[proxy.index('void EvaluateStreamerV2Hands(FPoseContext& Output){'):]
+    assert hands.index('const FVector Reached=StreamerV23Target(S,A,B,C);') < hands.index('ApplyStreamerV23Hand(Output.Pose,S,H);') < hands.index('// finger curl (optional') \
+        < hands.index('MeasureStreamerV23Hand(Output.Pose,S,U,F,H);')
+    assert 'StreamerVisualV23ChairWiden(StreamerVisualDeskPropOrigins[I]-StreamerVisualChairPivotWorld)' in cpp and 'StreamerVisualV23ScaleChairPart(A);}' in cpp
+    assert '&&StreamerVisualV23ChairScaleShown==StreamerVisualV23ChairScaleApplied)return;' in cpp
+    assert '(StreamerVisualState==TEXT("reading")||StreamerVisualState==TEXT("idle"))' in cpp  # hand_on_mouse whitelist
+    assert 'static const double Weights[2]={0.4,0.6};' not in proxy and 'Shared?1.-double(StreamerV23NeckShare):0.6' in proxy
+    assert 'UPROPERTY(Transient) float StreamerVisualV23NeckShare=0.4f;' in hands_h and 'StreamerVisualV23OrientErrRightDeg=Proxy.StreamerV23OrientErr[1];' in proxy
+    # nothing outside the v23 blocks changed but the documented one-line wirings
+    import difflib
+    for name, old in (('Sub01HomeLab.cpp', v21_cpp), ('Sub01HomeHands.cpp', v21_hands)):
+        new = texts[name]
+        removed = [line[1:] for line in difflib.unified_diff(old.split('\n'), new.split('\n'), lineterm='', n=0) if line.startswith('-') and not line.startswith('---')]
+        assert len(removed) == {'Sub01HomeLab.cpp': 7, 'Sub01HomeHands.cpp': 2}[name], (name, removed)  # chair delta, fit gap, chair move/gate, 3 hand lines; neck weights, IK solve
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+@pytest.mark.parametrize('unit', ['hands', 'character'])
+def test_v23_cpp_compiles_syntax_only_against_stub(v23_patched, tmp_path, compiler, unit):
+    name, path, flags = compiler
+    units = build_units_v22(v23_patched, tmp_path)
+    source, include = units[unit]
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)],
+                         capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+V23_BODY = r"""
+#include <cstdlib>
+#include <string>
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+static const double Deg = 3.14159265358979323846 / 180;
+static FTransform Inv(const FTransform& T) { const FQuat Q = T.GetRotation().Inverse(); return FTransform(Q, Q.RotateVector(T.GetTranslation()) * -1., FVector(1, 1, 1)); }
+static FQuat AlongY(const FVector& Dir, double Twist) {  // a Mixamo-like bone: local +Y along the bone, twisted about it
+ const FQuat ToDir = FQuat::FindBetweenNormals(FVector(0, 1, 0), Dir.GetSafeNormal()); return ToDir * FQuat(FVector(0, 1, 0), Twist * Deg); }
+struct FBody {  // a seated Mixamo-like skeleton in component space (he faces +Y, his right is -X): spine, neck, head, thighs, clavicles, arms, hands, 4 fingers x 3
+ FReferenceSkeleton Ref; std::vector<FTransform> Cs; std::vector<FVector> P; std::vector<int32> Parents; FPoseContext Context{nullptr};
+ int32 Add(const std::u16string& Name, int32 Parent, const FVector& At) { Ref.StubNames.push_back(FName(Name.c_str())); Ref.StubParents.push_back(Parent); Parents.push_back(Parent); P.push_back(At); return int32(P.size()) - 1; }
+ explicit FBody(const FQuat& HandTurn = FQuat::Identity) {
+  const FVector Lean(0, std::sin(25 * Deg), std::cos(25 * Deg));  // the clips' 25 deg forward hunch
+  const int32 Hips = Add(u"Hips", -1, FVector(0, 20, 65)); const int32 Spine = Add(u"Spine", Hips, P[Hips] + Lean * 10.);
+  const int32 Spine1 = Add(u"Spine1", Spine, P[Spine] + Lean * 12.); const int32 Spine2 = Add(u"Spine2", Spine1, P[Spine1] + Lean * 12.);
+  const int32 Neck = Add(u"Neck", Spine2, P[Spine2] + Lean * 14.); Add(u"Head", Neck, P[Neck] + Lean * 10.);
+  Add(u"LeftUpLeg", Hips, P[Hips] + FVector(10, 0, -5)); Add(u"RightUpLeg", Hips, P[Hips] + FVector(-10, 0, -5));
+  static const char16_t* const Side[2] = {u"Left", u"Right"}; static const char16_t* const Finger[4] = {u"Index", u"Middle", u"Ring", u"Pinky"};
+  const double Lateral[4] = {-3, -1, 1, 3}, Ahead[4] = {9, 9.5, 9, 8};  // index inside, pinky outside
+  for (int S = 0; S < 2; ++S) { const double Out = S ? -1 : 1; const std::u16string N(Side[S]);
+   const int32 Clav = Add(N + u"Shoulder", Spine2, P[Spine2] + FVector(3 * Out, -1, 6)); const int32 Arm = Add(N + u"Arm", Clav, P[Clav] + FVector(14 * Out, -1, 0));
+   const int32 Fore = Add(N + u"ForeArm", Arm, P[Arm] + FVector(4 * Out, 3, -27)); const int32 Hand = Add(N + u"Hand", Fore, P[Fore] + FVector(0, 25, -3));
+   for (int G = 0; G < 4; ++G) { int32 Parent = Hand; FVector At = P[Hand] + HandTurn.RotateVector(FVector(Lateral[G] * Out, Ahead[G], -1));
+    for (int K = 1; K <= 3; ++K) { Parent = Add(N + u"Hand" + Finger[G] + char16_t(u'0' + K), Parent, At); At = At + HandTurn.RotateVector(K == 1 ? FVector(0, 4, -.5) : FVector(0, 2.5, -.5)); } } }
+  const int32 Count = int32(P.size());
+  for (int32 K = 0; K < Count; ++K) { FVector Dir; for (int32 J = 0; J < Count; ++J) if (Parents[std::size_t(J)] == K) { Dir = P[std::size_t(J)] - P[std::size_t(K)]; break; }
+   if (Dir.IsNearlyZero()) Dir = Parents[std::size_t(K)] >= 0 ? P[std::size_t(K)] - P[std::size_t(Parents[std::size_t(K)])] : FVector(0, 0, 1);
+   Cs.push_back(FTransform(AlongY(Dir, double((K * 37) % 90 - 45)), P[std::size_t(K)], FVector(1, 1, 1))); }
+  Context.Pose.StubContainer.StubRef = &Ref;
+  for (int32 K = 0; K < Count; ++K) Context.Pose.StubBones.push_back(Parents[std::size_t(K)] < 0 ? Cs[std::size_t(K)] : Cs[std::size_t(K)] * Inv(Cs[std::size_t(Parents[std::size_t(K)])]));
+ }
+ FBody(const FBody&) = delete;
+ int32 Index(const char16_t* Name) const { return Ref.FindBoneIndex(FName(Name)); }
+ FTransform Component(int32 Bone) const { FTransform Out; FSub01HandsProxy::StreamerV2ComponentTransform(Context.Pose, Bone, Out); return Out; }
+ FVector At(const char16_t* Name) const { return Component(Index(Name)).GetTranslation(); }
+};
+static void Setup(FSub01HandsProxy& Proxy) {  // the desk pose: v2 active, lean, IK on the keys, finger curl, mouth, gaze/head offset
+ Proxy.StreamerVisualActive = true; Proxy.StreamerV2 = true; Proxy.StreamerV2Dt = 1.f / 60; Proxy.StreamerV2LeanCmd = -8; Proxy.StreamerV2HandIK = true; Proxy.StreamerV2HandAlpha = 1;
+ Proxy.StreamerV2ElbowPole = .5f; Proxy.StreamerV2HandTarget[0] = FVector(10, 52, 78); Proxy.StreamerV2HandTarget[1] = FVector(-10, 52, 78);
+ Proxy.StreamerV2HandPole[0] = FVector(.3, -.5, -1); Proxy.StreamerV2HandPole[1] = FVector(-.3, -.5, -1); Proxy.StreamerV2FingerCurlDeg = 6; Proxy.StreamerV2Mouth = .5f;
+}
+"""
+
+V23_DUMP_DRIVER = V23_BODY + r"""
+static void Dump(const FBody& B) { for (const FTransform& T : B.Context.Pose.StubBones) std::printf("%a %a %a %a %a %a %a %a %a %a\n", T.Rotation.X, T.Rotation.Y, T.Rotation.Z, T.Rotation.W,
+  T.Translation.X, T.Translation.Y, T.Translation.Z, T.Scale3D.X, T.Scale3D.Y, T.Scale3D.Z); }
+int main() {  // the WHOLE proxy Evaluate (clip pose, lean + breathing, mouth, hands IK + finger curl, head channel) on 40 frames: printed bit for bit
+ FSub01HandsProxy Proxy(nullptr); Setup(Proxy);
+ for (int Frame = 0; Frame < 40; ++Frame) { Proxy.StreamerVisualHeadOffset = FRotator(-5 + Frame * .1, 7, 0); Proxy.StreamerV2Spine[0] = FRotator(.6 * std::sin(Frame * .1), 0, 0);
+  FBody B(FQuat(FVector(0, 0, 1), .3)); Proxy.Evaluate(B.Context); if (Frame % 13 == 0 || Frame == 39) Dump(B); }
+ std::printf("measured %a %a %a %a %a %a %a\n", Proxy.StreamerV2LeanMeasured, Proxy.StreamerV2LeanGain, Proxy.StreamerV2HandDist[0], Proxy.StreamerV2ElbowDeg[1], Proxy.StreamerV2FingerFlex[0][0],
+  Proxy.StreamerV2FingerFlex[1][1], Proxy.StreamerV2BodyRight.X);
+ return 0;
+}
+"""
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v23_defaults_leave_the_proxy_pose_bit_identical(v23_patched, v22_patched, tmp_path):
+    """The real proxy Evaluate on a 40-bone Mixamo-like body, built once from the v21 sources and once from the v23 sources with every
+    v23 value at its default: every bone's local transform and every published measurement is the same, bit for bit (printf %a).
+    (v22 does not edit the anim proxy: the base is v21's proxy as v22 ships it.)"""
+    outputs = []
+    for label, src in (('v22', v22_patched), ('v23', v23_patched)):
+        units = build_units(src, tmp_path / label, end=FACE_END, hands_driver=V23_DUMP_DRIVER)
+        run = _run_driver(units, tmp_path / label, unit='hands_driver')
+        assert run.returncode == 0, run.stdout[-2000:] + run.stderr[-4000:]
+        outputs.append(run.stdout)
+    assert outputs[0].count('\n') > 160 and 'measured' in outputs[0]
+    assert outputs[0] == outputs[1]
+
+
+V23_CHAIN_DRIVER = V23_BODY + r"""
+static double Incline(const FBody& B) { const FVector D = B.At(u"Head") - B.At(u"Hips"); return std::atan2(D.Y, D.Z) / Deg; }  // Hips->Head, forward +Y
+static FVector Palm(const FBody& B, int S, FVector* Fingers = nullptr, FVector* Across = nullptr) {  // palm side from the bone positions (right hand: -(F x A))
+ const char16_t* const Hand[2] = {u"LeftHand", u"RightHand"}; const char16_t* const I1[2] = {u"LeftHandIndex1", u"RightHandIndex1"};
+ const char16_t* const M1[2] = {u"LeftHandMiddle1", u"RightHandMiddle1"}; const char16_t* const P1[2] = {u"LeftHandPinky1", u"RightHandPinky1"};
+ const FVector F = (B.At(M1[S]) - B.At(Hand[S])).GetSafeNormal(); FVector A = B.At(P1[S]) - B.At(I1[S]); A = (A - F * FVector::DotProduct(A, F)).GetSafeNormal();
+ if (Fingers) *Fingers = F; if (Across) *Across = A; const FVector N = FVector::CrossProduct(F, A); return (S ? N * -1. : N).GetSafeNormal(); }
+int main() {
+ const FVector Up(0, 0, 1), Forward(0, 1, 0), Right(-1, 0, 0);
+ // 1. pelvis_pitch_deg -10 (sit up): the Hips->Head line turns back by 10 deg about the pelvis, the pelvis stays, the thighs keep their orientation
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); FBody Base; FBody B; const double Before = Incline(B); const FTransform Hips0 = B.Component(0);
+   Proxy.StreamerV23Pelvis = -10; Proxy.ApplyStreamerV23Pelvis(B.Context);
+   CHECK(Near(Incline(B) - Before, -10, 1e-6) && B.Component(0).GetTranslation().Equals(Hips0.GetTranslation(), 1e-12), 1);
+   CHECK(B.Component(B.Index(u"LeftUpLeg")).GetRotation().Equals(Base.Component(Base.Index(u"LeftUpLeg")).GetRotation(), 1e-9) && B.Component(B.Index(u"RightUpLeg")).GetRotation().Equals(Base.Component(Base.Index(u"RightUpLeg")).GetRotation(), 1e-9), 2);
+   FBody D; Proxy.StreamerV23Pelvis = 0; Proxy.ApplyStreamerV23Pelvis(D.Context); for (std::size_t K = 0; K < D.Cs.size(); ++K) CHECK(D.Context.Pose.StubBones[K].Equals(Base.Context.Pose.StubBones[K], 0), 3); }
+ // 2. shoulders: drop lowers both arm roots alike, back moves them back; symmetric
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); FBody Base; FBody B; Proxy.StreamerV23ShoulderDrop = 10; Proxy.ApplyStreamerV23Shoulders(B.Context);
+   const FVector L = B.At(u"LeftArm") - Base.At(u"LeftArm"), R = B.At(u"RightArm") - Base.At(u"RightArm");
+   CHECK(L.Z < -1 && Near(L.Z, R.Z, 1e-9) && Near(L.X, -R.X, 1e-9) && Near(L.Y, R.Y, 1e-9), 4);
+   FBody C; Proxy.StreamerV23ShoulderDrop = 0; Proxy.StreamerV23ShoulderBack = 10; Proxy.ApplyStreamerV23Shoulders(C.Context);
+   const FVector LB = C.At(u"LeftArm") - Base.At(u"LeftArm"), RB = C.At(u"RightArm") - Base.At(u"RightArm"); CHECK(LB.Y < -1 && Near(LB.Y, RB.Y, 1e-9) && std::fabs(LB.Z) < 1e-9, 5); }
+ // 3. chin tuck: the head moves back, its orientation is kept; 4. neck girth: the Head is untouched, the Neck swells across its long axis
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); FBody Base; FBody B; Proxy.StreamerV2BodyRight = Right; Proxy.StreamerV23NeckBack = 10; Proxy.ApplyStreamerV23Head(B.Context);
+   const int32 H = B.Index(u"Head"), N = B.Index(u"Neck");
+   CHECK(B.Component(H).GetRotation().Equals(Base.Component(H).GetRotation(), 1e-9) && B.At(u"Head").Y < Base.At(u"Head").Y - 1, 6);
+   FBody G; Proxy.StreamerV23NeckBack = 0; Proxy.StreamerV23NeckGirth = 1.2f; Proxy.ApplyStreamerV23Head(G.Context); const FTransform Head = G.Component(H), Neck = G.Component(N);
+   CHECK(Head.GetRotation().Equals(Base.Component(H).GetRotation(), 1e-9) && Head.GetTranslation().Equals(Base.Component(H).GetTranslation(), 1e-9) && Head.GetScale3D().Equals(FVector(1, 1, 1), 1e-12), 7);
+   CHECK(Neck.GetScale3D().Equals(FVector(1.2, 1, 1.2), 1e-6) && Neck.GetTranslation().Equals(Base.Component(N).GetTranslation(), 1e-12), 8);
+   CHECK(Near(Proxy.StreamerV23Incline, Incline(G), 1e-6) && Proxy.StreamerV23NeckAlign > .999, 9); }  // the measurements the receipt shows
+ // 4b. neck_girth needs the Neck->child offset on one local axis: a diagonal one is skipped (no shear), its alignment published
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); Proxy.StreamerV2BodyRight = Right; FBody G; const std::size_t H = std::size_t(G.Index(u"Head")), N = std::size_t(G.Index(u"Neck"));
+   const double Len = G.Context.Pose.StubBones[H].GetTranslation().Size(); G.Context.Pose.StubBones[H].SetTranslation(FVector(0, 1, 1).GetSafeNormal() * Len);
+   const FTransform Neck0 = G.Context.Pose.StubBones[N], Head0 = G.Context.Pose.StubBones[H]; Proxy.StreamerV23NeckGirth = 1.2f; Proxy.ApplyStreamerV23Head(G.Context);
+   CHECK(Near(Proxy.StreamerV23NeckAlign, std::sqrt(.5), 1e-6) && G.Context.Pose.StubBones[N].Equals(Neck0, 0) && G.Context.Pose.StubBones[H].Equals(Head0, 0), 26); }
+ // 5. neck_share 0: the head channel leaves the Neck alone and turns the Head by the whole pitch
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); FBody Base; const int32 N = Base.Index(u"Neck"), H = Base.Index(u"Head");
+   FBody Shared; Proxy.StreamerVisualHeadOffset = FRotator(-6, 0, 0); Proxy.ApplyStreamerV2Head(Shared.Context); CHECK(!Shared.Context.Pose.StubBones[std::size_t(N)].GetRotation().Equals(Base.Context.Pose.StubBones[std::size_t(N)].GetRotation(), 1e-6), 10);
+   FBody Alone; Proxy.StreamerV23NeckShare = 0; Proxy.ApplyStreamerV2Head(Alone.Context);
+   CHECK(Alone.Context.Pose.StubBones[std::size_t(N)].Equals(Base.Context.Pose.StubBones[std::size_t(N)], 0), 11);
+   const FVector Face0 = Base.Component(H).GetRotation().Inverse().RotateVector(Forward), Face = Alone.Component(H).GetRotation().RotateVector(Face0);
+   CHECK(Near(std::atan2(Face.Z, std::hypot(Face.X, Face.Y)) / Deg, -6, .5), 12); }
+ // 6. elbow_min_deg: a target that closes the elbow to ~74 deg slides forward at the same height until the elbow opens to 95; 0 = untouched
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); Proxy.StreamerV2LeanCmd = 0; Proxy.StreamerV2FingerCurlDeg = 0;
+   FBody A; Proxy.ApplyStreamerV2Body(A.Context); Proxy.EvaluateStreamerV2Hands(A.Context);
+   CHECK(Proxy.StreamerV2ElbowDeg[0] < 80 && Proxy.StreamerV2HandDist[0] < 1e-3 && Proxy.StreamerV23Slide[0] == 0, 13);
+   FBody B; Proxy.StreamerV23ElbowMin = 95; Proxy.ApplyStreamerV2Body(B.Context); Proxy.EvaluateStreamerV2Hands(B.Context); const FVector W = B.At(u"LeftHand"), T = Proxy.StreamerV2HandTarget[0];
+   CHECK(Near(Proxy.StreamerV2ElbowDeg[0], 95, .5) && Near(Proxy.StreamerV2ElbowDeg[1], 95, .5) && Proxy.StreamerV23Slide[0] > 1 && Near(W.Z, T.Z, 1e-6) && Near(W.X, T.X, 1e-6) && W.Y > T.Y + 1, 14);
+   CHECK(Near(Proxy.StreamerV2HandDist[0], Proxy.StreamerV23Slide[0], 1e-4), 15);  // the receipt's reach error = the slide
+   const FVector Sh = B.At(u"LeftArm"), El = B.At(u"LeftForeArm");  // the wrist sits on the SLID target; the elbow's place along his facing is published
+   CHECK(Proxy.StreamerV23Residual[0] < 1e-3 && Near(Proxy.StreamerV23ElbowBack[0], -(El.Y - Sh.Y), 1e-6), 150);
+   FBody C; Proxy.StreamerV23ElbowMin = 60; Proxy.ApplyStreamerV2Body(C.Context); Proxy.EvaluateStreamerV2Hands(C.Context); CHECK(Proxy.StreamerV23Slide[0] == 0 && Proxy.StreamerV2HandDist[0] < 1e-3, 16);
+   // the cap: 150 deg would need ~25 cm, the slide stops at the cap (the elbow stays below the minimum)
+   FBody D; Proxy.StreamerV23ElbowMin = 150; Proxy.ApplyStreamerV2Body(D.Context); Proxy.EvaluateStreamerV2Hands(D.Context);
+   CHECK(Near(Proxy.StreamerV23Slide[0], @@SLIDEMAX@@, 1e-5) && Proxy.StreamerV2ElbowDeg[0] < 149 && Near(Proxy.StreamerV2HandDist[0], @@SLIDEMAX@@, 1e-3), 160);
+   // a target BEHIND the shoulder along his facing: the guard declines (-1) instead of jumping forward; the other hand still slides
+   FBody E; Proxy.StreamerV23ElbowMin = 95; Proxy.StreamerV2HandTarget[0] = FVector(10, 25, 78); Proxy.ApplyStreamerV2Body(E.Context); Proxy.EvaluateStreamerV2Hands(E.Context);
+   CHECK(Proxy.StreamerV23Slide[0] == -1 && Proxy.StreamerV2HandDist[0] < 1e-3 && Proxy.StreamerV23Slide[1] > 1, 161);
+   // 1 cm ahead of the shoulder line the (capped) slide is scaled by 1/ramp: continuous through the line, no 15 cm jump
+   FBody R; Proxy.ApplyStreamerV2Body(R.Context); const FVector Line = R.At(u"LeftArm"); Proxy.StreamerV2HandTarget[0] = FVector(Line.X - 7, Line.Y + 1, 78); Proxy.EvaluateStreamerV2Hands(R.Context);
+   CHECK(Near(Proxy.StreamerV23Slide[0], @@SLIDEMAX@@ / @@SLIDERAMP@@, 1e-4) && Near(Proxy.StreamerV2HandDist[0], Proxy.StreamerV23Slide[0], 1e-3), 162); }
+ // the palm-side convention on hands BUILT palm down (right hand: -(F x A), left: +(F x A))
+ { FBody U; CHECK(Palm(U, 0).Z < -.9 && Palm(U, 1).Z < -.9, 17); }
+ // 7. hand_orient 1 on hands that start yawed and rolled: fingers along the wanted direction, knuckles level, pinky out, palm down
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); Proxy.StreamerV2LeanCmd = 0; Proxy.StreamerV2FingerCurlDeg = 0; Proxy.StreamerV23HandOrient = 1; Proxy.StreamerV23HandYawIn = 12; Proxy.StreamerV23HandPitch = 10;
+   FBody B(FQuat(FVector(.3, .2, .93).GetSafeNormal(), 50 * Deg)); Proxy.ApplyStreamerV2Body(B.Context); Proxy.EvaluateStreamerV2Hands(B.Context);
+   for (int S = 0; S < 2; ++S) { FVector F, A; const FVector P = Palm(B, S, &F, &A); const FVector Out = S ? Right : Right * -1.;
+    const FVector Flat = Forward * std::cos(12 * Deg) - Out * std::sin(12 * Deg), Want = (Flat * std::cos(10 * Deg) - Up * std::sin(10 * Deg)).GetSafeNormal();
+    CHECK(std::acos(std::fmin(1., FVector::DotProduct(F, Want))) / Deg < .5 && std::fabs(A.Z) < .01 && FVector::DotProduct(A, Out) > .9 && P.Z < -.9 && Proxy.StreamerV23OrientErr[S] >= 0 && Proxy.StreamerV23OrientErr[S] < .5, 20 + S); }
+   // 8. finger_bend_deg 20: the proximal phalanx turns by the bend towards the palm, the fingertips follow, the measured flexion grows
+   const double Flex0 = Proxy.StreamerV2FingerFlex[1][0]; const FVector Tip0 = B.At(u"RightHandIndex3") - B.At(u"RightHandIndex1"), Phalanx0 = (B.At(u"RightHandIndex2") - B.At(u"RightHandIndex1")).GetSafeNormal(); const FVector Palm0 = Palm(B, 1);
+   FBody C(FQuat(FVector(.3, .2, .93).GetSafeNormal(), 50 * Deg)); Proxy.StreamerV23FingerBend = 20; Proxy.ApplyStreamerV2Body(C.Context); Proxy.EvaluateStreamerV2Hands(C.Context);
+   const FVector Tip = C.At(u"RightHandIndex3") - C.At(u"RightHandIndex1"), Phalanx = (C.At(u"RightHandIndex2") - C.At(u"RightHandIndex1")).GetSafeNormal();
+   CHECK(FVector::DotProduct(Tip, Palm0) > FVector::DotProduct(Tip0, Palm0) + 1 && Near(std::acos(std::fmin(1., FVector::DotProduct(Phalanx, Phalanx0))) / Deg, 20, 2)
+         && FVector::DotProduct(Phalanx - Phalanx0, Palm0) > 0 && Proxy.StreamerV2FingerFlex[1][0] > Flex0 + 8, 22); }
+ // 8b. the keyboard frame: with a keyboard axis 20 deg off his facing, the fingers follow the keyboard, not him
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); Proxy.StreamerV2LeanCmd = 0; Proxy.StreamerV2FingerCurlDeg = 0; Proxy.StreamerV23HandOrient = 1; Proxy.StreamerV23HandYawIn = 0; Proxy.StreamerV23HandPitch = 0;
+   const FVector Desk(std::sin(20 * Deg), std::cos(20 * Deg), 0); Proxy.StreamerV23DeskForward = Desk;
+   FBody B(FQuat(FVector(.3, .2, .93).GetSafeNormal(), 50 * Deg)); Proxy.ApplyStreamerV2Body(B.Context); Proxy.EvaluateStreamerV2Hands(B.Context);
+   for (int S = 0; S < 2; ++S) { FVector F, A; Palm(B, S, &F, &A); CHECK(std::acos(std::fmin(1., FVector::DotProduct(F, Desk))) / Deg < .5, 23 + S); }
+   // fingertips above the key plane: the *4 end bone, else the last joint + 0.7 x the last phalanx (this body has no *4 bones)
+   Proxy.StreamerV23KeyPlaneValid = true; Proxy.StreamerV23KeyPlaneZ = 70; FBody K; Proxy.ApplyStreamerV2Body(K.Context); Proxy.EvaluateStreamerV2Hands(K.Context);
+   const char16_t* const Fingers[4] = {u"Index", u"Middle", u"Ring", u"Pinky"}; double Sum = 0, Low = 1e9;
+   for (int G = 0; G < 4; ++G) { const std::u16string N = std::u16string(u"RightHand") + Fingers[G]; const FVector T2 = K.At((N + u"2").c_str()), T3 = K.At((N + u"3").c_str());
+    const double Above = (T3 + (T3 - T2) * .7).Z - 70; Sum += Above; Low = std::fmin(Low, Above); }
+   CHECK(Near(Proxy.StreamerV23TipMean[1], Sum / 4, 1e-4) && Near(Proxy.StreamerV23TipMin[1], Low, 1e-4) && Proxy.StreamerV23TipMean[0] > -90, 25); }
+ // 8c. hand_orient from hands turned ~180 deg (fingers pointing back at him): finite, and the same result
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); Proxy.StreamerV2LeanCmd = 0; Proxy.StreamerV2FingerCurlDeg = 0; Proxy.StreamerV23HandOrient = 1; Proxy.StreamerV23HandYawIn = 0; Proxy.StreamerV23HandPitch = 0;
+   FBody B(FQuat(FVector(0, 0, 1), 180 * Deg)); Proxy.ApplyStreamerV2Body(B.Context); Proxy.EvaluateStreamerV2Hands(B.Context);
+   for (const FTransform& T : B.Context.Pose.StubBones) CHECK(!T.ContainsNaN() && std::isfinite(T.Rotation.X + T.Rotation.Y + T.Rotation.Z + T.Rotation.W), 28);
+   for (int S = 0; S < 2; ++S) { FVector F, A; const FVector P = Palm(B, S, &F, &A); const FVector Out = S ? Right : Right * -1.;
+    CHECK(std::acos(std::fmin(1., FVector::DotProduct(F, Forward))) / Deg < .5 && std::fabs(A.Z) < .01 && FVector::DotProduct(A, Out) > .9 && P.Z < -.9 && Proxy.StreamerV23OrientErr[S] < .5, 280 + S); } }
+ // 9. defaults: no slide, no orientation error reported
+ { FSub01HandsProxy Proxy(nullptr); Setup(Proxy); FBody B; Proxy.Evaluate(B.Context);
+   CHECK(Proxy.StreamerV23Slide[0] == 0 && Proxy.StreamerV23OrientErr[0] == -1 && Proxy.StreamerV23OrientErr[1] == -1 && Proxy.StreamerV23NeckAlign == -1, 30); }
+ // 10. the game-thread hand-over: the instance's v23 fields (what the character writes each tick) -> PreUpdate copies them and clears the
+ // last frame's measurements -> Evaluate applies them
+ { USub01HomeHandsInstance Anim; StubCastTarget = &Anim; Anim.StreamerVisualActive = true; Anim.StreamerVisualV2 = true; Anim.StreamerVisualHandIK = true; Anim.StreamerVisualHandAlpha = 1;
+   Anim.StreamerVisualElbowPole = .5f; Anim.StreamerVisualHandTargetLeft = FVector(10, 52, 78); Anim.StreamerVisualHandTargetRight = FVector(-10, 52, 78); Anim.StreamerVisualLeanDeg = 0;
+   Anim.StreamerVisualHandPoleLeft = FVector(.3, -.5, -1); Anim.StreamerVisualHandPoleRight = FVector(-.3, -.5, -1); Anim.StreamerVisualFingerCurlDeg = 0;
+   Anim.StreamerVisualV23ElbowMinDeg = 95; Anim.StreamerVisualV23NeckGirth = 1.1f; Anim.StreamerVisualV23PelvisPitchDeg = -10; Anim.StreamerVisualV23HandOrient = .5f;
+   FSub01HandsProxy Proxy(nullptr); Proxy.StreamerV23Slide[0] = 7; Proxy.StreamerV23NeckAlign = .3f; Proxy.StreamerV23OrientErr[1] = 9; Proxy.PreUpdate(&Anim, 1.f / 60);
+   CHECK(Proxy.StreamerV23ElbowMin == 95 && Proxy.StreamerV23NeckGirth == 1.1f && Proxy.StreamerV23Pelvis == -10 && Proxy.StreamerV23HandOrient == .5f && Proxy.StreamerV2HandIK
+         && Proxy.StreamerV23Slide[0] == 0 && Proxy.StreamerV23NeckAlign == -1 && Proxy.StreamerV23OrientErr[1] == -1, 40);
+   FBody B; Proxy.Evaluate(B.Context);
+   CHECK(Proxy.StreamerV23Slide[0] > 1 && Proxy.StreamerV2ElbowDeg[0] > 94 && Proxy.StreamerV23NeckAlign > .999 && Proxy.StreamerV23OrientErr[0] >= 0, 41);
+   StubCastTarget = nullptr; }
+ std::printf("ok\n");
+ return 0;
+}
+"""
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v23_proxy_corrections_on_a_bone_chain(v23_patched, tmp_path):
+    """Each proxy correction on the Mixamo-like body: hip hinge, clavicles, chin tuck, neck girth, neck share, elbow minimum, hand
+    orientation and finger bend, with numeric acceptance (degrees, cm) and the published measurements."""
+    units = build_units(v23_patched, tmp_path, end=FACE_END, hands_driver=V23_CHAIN_DRIVER.replace('@@SLIDEMAX@@', repr(v23.SLIDE_MAX_CM))
+                        .replace('@@SLIDERAMP@@', repr(v23.SLIDE_RAMP_CM)))
+    run = _run_driver(units, tmp_path, unit='hands_driver')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+V23_CHAR_PRELUDE = r'''
+#include <cstdlib>
+void USub01HomeHandsInstance::NativePostEvaluateAnimation() {}
+FAnimInstanceProxy* USub01HomeHandsInstance::CreateAnimInstanceProxy() { return nullptr; }
+void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy*) {}
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); return n; } } while (0)
+static bool Near(double A, double B, double E) { return std::fabs(A - B) <= E; }
+static void Ticks(ASub01HomeCharacter& C, int N) { for (int K = 0; K < N; ++K) { FPlatformTime::StubNow += .1; C.ApplyStreamerVisualV2(FPlatformTime::StubNow, .1f); } }
+struct FScene {  // the character on the authored transform, seated (seat offset valid), a keyboard, a chair (backrest, pan, armrest)
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; ASub01HomeCharacter C; AActor KB, Back, Pan, Arm; FVector Pelvis, F0, Side0;
+ FScene() {
+  C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim;
+  Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+  Body.StubRelative = FTransform(FQuat::Identity, FVector(0, 0, -91), FVector(1, 1, 1)); Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65; C.StreamerVisualCam2Dir = u"@@DIR@@";
+  C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle"); C.StreamerVisualDeskPropsScanned = true; C.StreamerVisualDeskBase = 0;
+  const FVector Pivot(0.075, 22.727, 64.214); Anim.StreamerVisualSeatOffset = FTransform::Identity; Anim.StreamerVisualSeatOffsetValid = true; Anim.StreamerVisualSeatSettled = true; Anim.StreamerVisualSeatPivot = Pivot; Anim.StreamerVisualPelvisBone = 0;
+  Pelvis = Body.StubWorld.TransformPosition(Pivot); Body.StubHead = Pelvis;  // GetBoneTransform(pelvis) in the stub
+  F0 = (Body.StubWorld.GetRotation().RotateVector(FVector(0, 1, 0)) * FVector(1, 1, 0)).GetSafeNormal(); Side0 = FVector::CrossProduct(FVector::UpVector, F0);
+  Back.StubLocation = Pelvis - F0 * 8. + FVector(0, 0, 30); Back.StubExtent = FVector(20, 4, 25); Pan.StubLocation = Pelvis + FVector(0, 0, -8); Pan.StubExtent = FVector(25, 25, 4);
+  Arm.StubLocation = Pelvis + Side0 * 25. + FVector(0, 0, 10); Arm.StubExtent = FVector(4, 20, 5);
+  for (AActor* A : {&Back, &Pan, &Arm}) { C.StreamerVisualDeskProps.Add(A); C.StreamerVisualDeskPropOrigins.Add(A->StubLocation); C.StreamerVisualDeskPropIsChair.Add(true); C.StreamerVisualDeskPropRotations.Add(FQuat::Identity); }
+  KB.StubLocation = FVector(209, -339.433, 79.9); KB.StubExtent = FVector(16.05, 5.8, 0.9); C.StreamerVisualKeyboardActor = &KB; C.StreamerVisualKeyboardExtent = KB.StubExtent; C.StreamerVisualKeyboardCentreOffset = FVector(1, -2, .5);
+  C.StreamerVisualDeskProps.Add(&KB); C.StreamerVisualDeskPropOrigins.Add(KB.StubLocation); C.StreamerVisualDeskPropIsChair.Add(false); C.StreamerVisualDeskPropRotations.Add(FQuat::Identity);
+ }
+};
+'''
+
+V23_CHAR_DUMP_DRIVER = V23_CHAR_PRELUDE + r'''
+static void P(const FVector& V) { std::printf("%a %a %a\n", V.X, V.Y, V.Z); }
+int main() {  // v21 fields only: the character side at the defaults through states, the pull-back and the chair fit, printed bit for bit
+ FScene S; ASub01HomeCharacter& C = S.C; C.StreamerVisualSeatBackCm = 20; C.StreamerVisualPostureLeanDeg = -6;
+ const TCHAR* States[] = {u"idle", u"typing", u"reading", u"mouse", u"talking", u"typing"};
+ for (const TCHAR* State : States) { C.StreamerVisualState = State; for (int K = 0; K < 12; ++K) { Ticks(C, 1);
+   P(S.Anim.StreamerVisualHandTargetLeft); P(S.Anim.StreamerVisualHandTargetRight); P(S.Anim.StreamerVisualHandPoleLeft); P(S.Anim.StreamerVisualHandPoleRight);
+   std::printf("%a %a %a %a %a\n", S.Anim.StreamerVisualLeanDeg, S.Anim.StreamerVisualHeadOffset.Pitch, S.Anim.StreamerVisualHeadOffset.Yaw, C.StreamerVisualHandAlpha, double(C.StreamerVisualKeyLight->Intensity));
+   P(C.StreamerVisualKeyLight->StubWorld.Translation); std::printf("%a %a\n", C.StreamerVisualKeyLight->StubRotation.Pitch, C.StreamerVisualKeyLight->StubRotation.Yaw);
+   P(S.Body.StubRelative.Translation); P(C.StreamerVisualChairDelta); P(S.Back.StubLocation); P(S.Pan.StubLocation); P(S.KB.StubLocation);
+   std::printf("%a %a %d\n", double(C.StreamerVisualBackrestGapMeasured), double(C.StreamerVisualChairFitCm), C.StreamerVisualChairFitPasses); } }
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v23_defaults_leave_the_character_side_bit_identical(v23_patched, v22_patched, tmp_path):
+    """The character side at the v23 defaults (hand targets, poles, posture, key light, seat, chair fit, props) through every state,
+    compiled from the v22 and the v23 sources: identical, bit for bit."""
+    outputs = []
+    for label, src in (('v22', v22_patched), ('v23', v23_patched)):
+        (tmp_path / label / 'cam2').mkdir(parents=True)
+        driver = V23_CHAR_DUMP_DRIVER.replace('@@DIR@@', str(tmp_path / label / 'cam2'))
+        units = build_units_v22(src, tmp_path / label / 'u', driver=driver)
+        run = _run_driver(units, tmp_path / label / 'u')
+        assert run.returncode == 0, run.stdout[-2000:] + run.stderr[-4000:]
+        outputs.append(run.stdout)
+    assert outputs[0].count('\n') > 900
+    assert outputs[0] == outputs[1]
+
+
+V23_CHAR_DRIVER = V23_CHAR_PRELUDE + r'''
+int main() {
+ FScene Scene; ASub01HomeCharacter& C = Scene.C; USub01HomeHandsInstance& Anim = Scene.Anim; USpotLightComponent* Key = C.StreamerVisualKeyLight.Get();
+ // 1. the defaults: nothing changes (neutral proxy values, no extra light, no chair extra, the key light where v21 puts it, the stream pass's poles)
+ Ticks(C, 10);
+ CHECK(!C.StreamerVisualV23Changed() && Anim.StreamerVisualV23PelvisPitchDeg == 0 && Anim.StreamerVisualV23NeckShare == @@SHARE@@f && Anim.StreamerVisualV23NeckGirth == 1 && Anim.StreamerVisualV23ElbowMinDeg == 0
+       && Anim.StreamerVisualV23HandOrient == 0 && Anim.StreamerVisualV23FingerBendDeg == 0 && Anim.StreamerVisualV23NeckBackDeg == 0, 1);
+ CHECK(!C.StreamerVisualV23Fill && !C.StreamerVisualV23Rim && C.StreamerVisualV23ChairShown.X == 0 && C.StreamerVisualV23ChairShown.Y == 0 && C.StreamerVisualV23ChairShown.Z == 0 && Key->StubSpecular == 1, 2);
+ const FVector Monitor(217, -367.67, 114.75), Aim = C.StreamerVisualKeyLightAim; const FVector Towards = FVector(Aim.X - Monitor.X, Aim.Y - Monitor.Y, 0).GetSafeNormal(), Side = FVector::CrossProduct(FVector::UpVector, Towards * -1.);
+ CHECK(Key->StubWorld.Translation.Equals(Monitor + Towards * 6. + Side * double(C.StreamerVisualFaceSideCm) + FVector(0, 0, C.StreamerVisualKeyLightUpCm), 1e-9), 3);
+ const FVector Facing = C.StreamerVisualBodyAuthoredWorld.GetRotation().RotateVector(C.StreamerVisualFacingLocal); const FVector Flat = FVector(Facing.X, Facing.Y, 0).GetSafeNormal(), BodyRight = FVector::CrossProduct(FVector::UpVector, Flat);
+ const FQuat ToComponent = Scene.Body.StubWorld.GetRotation().Inverse(); const FVector PoleLeft0 = Anim.StreamerVisualHandPoleLeft, PoleRight0 = Anim.StreamerVisualHandPoleRight;
+ CHECK(PoleLeft0.Equals(ToComponent.RotateVector(FVector::UpVector * -1. - Flat * .5 - BodyRight * .3), 1e-12), 4);
+ // 2. posture keys eased at 12 deg/s, exact on arrival; v1 events get the neutral values
+ C.StreamerVisualV23PelvisPitchDeg = -8; C.StreamerVisualV23NeckBackDeg = 6; C.StreamerVisualV23ShoulderDropDeg = 4; Ticks(C, 3);
+ CHECK(Near(Anim.StreamerVisualV23PelvisPitchDeg, -3.6, 1e-4) && Near(Anim.StreamerVisualV23NeckBackDeg, 3.6, 1e-4) && Near(Anim.StreamerVisualV23ShoulderDropDeg, 3.6, 1e-4) && C.StreamerVisualV23Changed(), 5);
+ Ticks(C, 5); CHECK(Anim.StreamerVisualV23PelvisPitchDeg == -8 && Anim.StreamerVisualV23NeckBackDeg == 6 && Anim.StreamerVisualV23ShoulderDropDeg == 4, 6);
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 10); CHECK(Anim.StreamerVisualV23PelvisPitchDeg == 0 && Anim.StreamerVisualV23NeckBackDeg == 0, 7); C.StreamerVisualSchemaVersion = 2;
+ C.StreamerVisualV23PelvisPitchDeg = 0; C.StreamerVisualV23NeckBackDeg = 0; C.StreamerVisualV23ShoulderDropDeg = 0; Ticks(C, 10);
+ // weights eased 1/s: neck share 0.4 -> 0 in 0.4 s
+ C.StreamerVisualV23NeckShare = 0; Ticks(C, 2); CHECK(Near(Anim.StreamerVisualV23NeckShare, .2, 1e-6), 8); Ticks(C, 3); CHECK(Anim.StreamerVisualV23NeckShare == 0, 9);
+ C.StreamerVisualV23NeckShare = @@SHARE@@f; Ticks(C, 5); CHECK(Anim.StreamerVisualV23NeckShare == @@SHARE@@f && !C.StreamerVisualV23Changed(), 10);
+ // hand_orient is a weight too (1/s): 0.5 after 0.5 s, 1 after 1 s
+ C.StreamerVisualV23HandOrient = 1; Ticks(C, 5); CHECK(Near(Anim.StreamerVisualV23HandOrient, .5, 1e-6), 100); Ticks(C, 5); CHECK(Anim.StreamerVisualV23HandOrient == 1, 101);
+ C.StreamerVisualV23HandOrient = 0; Ticks(C, 10); CHECK(Anim.StreamerVisualV23HandOrient == 0, 102);
+ // 3. the elbow pole: back .2 / out .6 recompute the poles; back at the defaults the stream pass's own (bit for bit)
+ C.StreamerVisualV23ElbowPoleBack = .2f; C.StreamerVisualV23ElbowPoleOut = .6f; Ticks(C, 5);
+ CHECK(Anim.StreamerVisualHandPoleLeft.Equals(ToComponent.RotateVector(FVector::UpVector * -1. - Flat * double(.2f) - BodyRight * double(.6f)), 1e-9)
+       && Anim.StreamerVisualHandPoleRight.Equals(ToComponent.RotateVector(FVector::UpVector * -1. - Flat * double(.2f) + BodyRight * double(.6f)), 1e-9), 11);
+ C.StreamerVisualV23ElbowPoleBack = .5f; C.StreamerVisualV23ElbowPoleOut = .3f; Ticks(C, 5);
+ CHECK(Anim.StreamerVisualHandPoleLeft.Equals(PoleLeft0, 0) && Anim.StreamerVisualHandPoleRight.Equals(PoleRight0, 0), 12);
+ // 4. the key off the webcam axis, gliding at @@LIGHTMOVE@@ cm/s; its specular at once
+ C.StreamerVisualV23KeySideCm = 30; C.StreamerVisualV23KeyUpCm = 10; Ticks(C, 1); const float KeyStep = float(@@LIGHTMOVE@@ * double(.1f));
+ CHECK(Key->StubWorld.Translation.Equals(Monitor + Towards * 6. + Side * double(C.StreamerVisualFaceSideCm + KeyStep) + FVector(0, 0, C.StreamerVisualKeyLightUpCm + KeyStep), 1e-6), 13);
+ Ticks(C, 10); CHECK(Key->StubWorld.Translation.Equals(Monitor + Towards * 6. + Side * double(C.StreamerVisualFaceSideCm + 30.f) + FVector(0, 0, C.StreamerVisualKeyLightUpCm + 10.f), 1e-9), 130);
+ C.StreamerVisualV23KeySpecular = .4f; Ticks(C, 1); CHECK(Key->StubSpecular == .4f, 14);
+ // 5. fill between him and the monitor, rim behind him; on his lighting channel; the specular follows; 0 cd hides; a v1 event turns them off
+ C.StreamerVisualV23FillCd = .05f; C.StreamerVisualV23RimCd = .1f; Ticks(C, 1);
+ USpotLightComponent* Fill = C.StreamerVisualV23Fill.Get(); USpotLightComponent* Rim = C.StreamerVisualV23Rim.Get(); const double CdStep = double(@@CDRATE@@f * .1f);
+ CHECK(Fill && Rim && Fill->StubVisible && Near(Fill->Intensity, CdStep, 1e-7) && Near(Rim->Intensity, CdStep, 1e-7), 150);  // the intensities rise from 0
+ Ticks(C, 55);
+ CHECK(Fill && Rim && Fill->StubVisible && Rim->StubVisible && Near(Fill->Intensity, .05, 1e-7) && Near(Rim->Intensity, .1, 1e-7) && !Fill->StubChannels[0] && Fill->StubChannels[1] && !Rim->StubChannels[0]
+       && Fill->StubSpecular == .4f && Rim->StubSpecular == .4f && Fill->bUseTemperature && Near(Fill->StubRadius, C.StreamerVisualKeyLightRadiusCm, 1e-6), 15);
+ const FVector FillRel = Fill->StubWorld.Translation - Aim, RimRel = Rim->StubWorld.Translation - Aim;
+ CHECK(Near(FVector::DotProduct(FillRel, Towards), -@@FFRONT@@, 1e-9) && Near(FVector::DotProduct(FillRel, Side), @@FSIDE@@, 1e-9) && Near(FillRel.Z, @@FUP@@, 1e-9) && Near(Fill->Temperature, @@FTEMP@@, 1e-3), 16);
+ CHECK(Near(FVector::DotProduct(RimRel, Towards), @@RBACK@@, 1e-9) && Near(FVector::DotProduct(RimRel, Side), @@RSIDE@@, 1e-9) && Near(RimRel.Z, @@RUP@@, 1e-9) && Near(Rim->Temperature, @@RTEMP@@, 1e-3), 17);
+ // a placement change glides too (the fill 30 cm further to his right: 3 cm per 0.1 s)
+ const FVector FillAt0 = Fill->StubWorld.Translation; C.StreamerVisualV23FillSideCm = @@FSIDE@@f + 30; Ticks(C, 1);
+ CHECK(Near((Fill->StubWorld.Translation - FillAt0).Size(), @@LIGHTMOVE@@ * double(.1f), 1e-6) && Near(FVector::DotProduct(Fill->StubWorld.Translation - FillAt0, Side), @@LIGHTMOVE@@ * double(.1f), 1e-6), 151);
+ Ticks(C, 10); CHECK(Near(FVector::DotProduct(Fill->StubWorld.Translation - Aim, Side), @@FSIDE@@ + 30, 1e-6), 152); C.StreamerVisualV23FillSideCm = @@FSIDE@@f; Ticks(C, 11);
+ C.StreamerVisualV23FillCd = 0; Ticks(C, 1); CHECK(Fill->StubVisible && Near(Fill->Intensity, .05 - CdStep, 1e-6), 180); Ticks(C, 30); CHECK(!Fill->StubVisible && Fill->Intensity == 0 && Rim->StubVisible, 18);
+ // a v1 event: the rim fades out, the specular is back at once, the key glides back to exactly where v21 puts it
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 1); CHECK(Rim->StubVisible && Key->StubSpecular == 1, 190);
+ CHECK(Key->StubWorld.Translation.Equals(Monitor + Towards * 6. + Side * double(C.StreamerVisualFaceSideCm + (30.f - KeyStep)) + FVector(0, 0, C.StreamerVisualKeyLightUpCm + (10.f - KeyStep)), 1e-6), 191);  // one glide step back
+ Ticks(C, 60);
+ CHECK(!Rim->StubVisible && Key->StubWorld.Translation.Equals(Monitor + Towards * 6. + Side * double(C.StreamerVisualFaceSideCm) + FVector(0, 0, C.StreamerVisualKeyLightUpCm), 1e-9), 19); C.StreamerVisualSchemaVersion = 2;
+ C.StreamerVisualV23RimCd = 0; C.StreamerVisualV23KeySideCm = 0; C.StreamerVisualV23KeyUpCm = 0; C.StreamerVisualV23KeySpecular = 1; Ticks(C, 2);
+ // 6. the chair extra: eased 60 cm/s into the chair delta; the fit measures without it, so a re-fit keeps it
+ C.StreamerVisualChairFit = 1; C.StreamerVisualChairFitPasses = 0; Ticks(C, 60); const FVector Fitted = Scene.Back.StubLocation; const float Gap1 = C.StreamerVisualBackrestGapMeasured;
+ CHECK(C.StreamerVisualChairFitPasses == @@PASSES@@ && Near(Gap1, @@TARGET@@, @@DEADBAND@@ + 1e-6), 20);
+ C.StreamerVisualV23ChairBackCm = 10; Ticks(C, 1); CHECK(Near(FVector::DotProduct(C.StreamerVisualV23ChairShown, Scene.F0), -6, 1e-6), 21);  // 60 cm/s x 0.1 s
+ Ticks(C, 3); C.StreamerVisualChairFitPasses = 0; Ticks(C, 60);
+ CHECK(Scene.Back.StubLocation.Equals(Fitted - Scene.F0 * 10., 1e-6) && Near(C.StreamerVisualBackrestGapMeasured, Gap1, @@DEADBAND@@ + 1e-6), 22);
+ C.StreamerVisualV23ChairSideCm = 5; Ticks(C, 5); CHECK(Scene.Back.StubLocation.Equals(Fitted - Scene.F0 * 10. + Scene.Side0 * 5., 1e-6), 23);
+ C.StreamerVisualSchemaVersion = 1; Ticks(C, 5); CHECK(C.StreamerVisualV23ChairShown.Size() == 0, 24); C.StreamerVisualSchemaVersion = 2;
+ C.StreamerVisualV23ChairBackCm = 0; C.StreamerVisualV23ChairSideCm = 0; Ticks(C, 5);
+ // 7. the mouse as a component: plausible = a registered, visible static-mesh LEAF in the zone, small, not simulating, not of the desk packs
+ UStaticMesh MouseMesh; UStaticMeshComponent Far, Big, Pack, Parent, Mouse, Hidden, Ghost, Falling, Twin, Own, Prop; const FVector MouseAt(238, -332, 80);
+ Far.Bounds.Origin = FVector(300, -332, 81); Far.Bounds.BoxExtent = FVector(3, 6, 2); Big.Bounds.Origin = FVector(238, -332, 81); Big.Bounds.BoxExtent = FVector(20, 6, 2);
+ Mouse.Bounds.Origin = FVector(238, -332, 81); Mouse.Bounds.BoxExtent = FVector(3, 6, 2); Mouse.StubWorld.Translation = MouseAt;
+ for (UStaticMeshComponent* M : {&Pack, &Parent, &Hidden, &Ghost, &Falling, &Twin, &Own, &Prop}) M->Bounds = Mouse.Bounds;
+ for (UStaticMeshComponent* M : {&Far, &Big, &Pack, &Parent, &Mouse, &Hidden, &Ghost, &Falling, &Twin, &Own, &Prop}) { M->StubMesh = &MouseMesh; StubCastAlso.push_back(M); }
+ Parent.StubChildren = 1; Hidden.StubVisible = false; Ghost.StubRegistered = false; Falling.StubSimulating = true;
+ CHECK(!C.StreamerVisualV23MouseCandidate(&Far, u"none", true) && !C.StreamerVisualV23MouseCandidate(&Big, u"none", true) && !C.StreamerVisualV23MouseCandidate(&Pack, u"R15Part0007", true)
+       && !C.StreamerVisualV23MouseCandidate(&Parent, u"none", true) && !C.StreamerVisualV23MouseCandidate(&Hidden, u"none", true) && !C.StreamerVisualV23MouseCandidate(&Ghost, u"none", true)
+       && !C.StreamerVisualV23MouseCandidate(&Falling, u"none", true) && !C.StreamerVisualV23MouseCandidate(&Mouse, u"none", false) && C.StreamerVisualV23MouseCandidate(&Mouse, u"none", true)
+       && !C.StreamerVisualV23MouseComp.IsValid(), 30);
+ // the scan: every component of every actor but his own and the desk props; adopted only when exactly ONE is plausible
+ AActor Room; C.StubComponents = {&Own}; Scene.Back.StubComponents = {&Prop}; StubWorldEnabled = true; StubWorldActors = {&C, &Scene.Back, &Room};
+ Room.StubComponents = {&Far, &Hidden}; C.ScanStreamerVisualV23Mouse();
+ CHECK(C.StreamerVisualV23MouseScanned && !C.StreamerVisualV23MouseComp.IsValid() && C.StreamerVisualV23MouseName == TEXT("none") && C.StreamerVisualV23MouseCandidates == 1, 300);
+ Room.StubComponents = {&Far, &Hidden, &Mouse, &Twin}; C.ScanStreamerVisualV23Mouse();
+ CHECK(!C.StreamerVisualV23MouseComp.IsValid() && !C.StreamerVisualV23MouseAdopted && C.StreamerVisualV23MouseName == TEXT("no unique candidate") && C.StreamerVisualV23MouseCandidates == 3, 301);
+ Mouse.StubMobility = EComponentMobility::Stationary;  // not the field's initial value (Static = 0): the save is really tested
+ Room.StubComponents = {&Far, &Hidden, &Mouse}; C.ScanStreamerVisualV23Mouse(); StubWorldEnabled = false; C.StubComponents.clear();
+ CHECK(C.StreamerVisualV23MouseComp.Get() == &Mouse && C.StreamerVisualV23MouseAdopted && C.StreamerVisualV23MouseCandidates == 2 && C.StreamerVisualV23MouseCentreOffset.Equals(FVector(0, 0, 1), 1e-12)
+       && Mouse.StubMobility == EComponentMobility::Movable && C.StreamerVisualV23MouseMobility == uint8(EComponentMobility::Stationary), 31);
+ // it glides (@@MOUSEMOVE@@ cm/s) by the keyboard pull-back
+ C.StreamerVisualV23MouseScan = 1; C.StreamerVisualV23MouseScanned = true; C.StreamerVisualSeatBackCm = 20; Ticks(C, 1); const double MouseStep = @@MOUSEMOVE@@ * double(.1f);
+ CHECK((Mouse.StubWorld.Translation - MouseAt).Size() <= MouseStep + 1e-9 && (Mouse.StubWorld.Translation - MouseAt).Size() > 0, 32);
+ Ticks(C, 60); const FVector Delta = C.StreamerVisualDeskPropDelta;
+ CHECK(Delta.Size() > 2 * MouseStep && Mouse.StubWorld.Translation.Equals(MouseAt + Delta, 1e-9), 320);
+ // hand_on_mouse: the right hand to the found mouse in idle and reading only; the left hand stays on the keys
+ C.StreamerVisualV23HandOnMouse = 1; C.StreamerVisualState = TEXT("reading"); Ticks(C, 5);
+ CHECK(C.StreamerVisualHandTargetName[1] == TEXT("mouse_component") && C.StreamerVisualHandTargetName[0] == TEXT("keyboard_left") && C.StreamerVisualHandWorld[1].Equals(C.StreamerVisualV23MouseGoal(FVector(0, 1, 0)), 1e-6), 33);
+ C.StreamerVisualState = TEXT("typing"); Ticks(C, 5); CHECK(C.StreamerVisualHandTargetName[1] == TEXT("keyboard_right"), 34);
+ C.StreamerVisualState = TEXT("talking"); Ticks(C, 5); CHECK(C.StreamerVisualHandTargetName[1] == TEXT("keyboard_right"), 340);  // not whitelisted
+ C.StreamerVisualState = TEXT("idle"); Ticks(C, 5); CHECK(C.StreamerVisualHandTargetName[1] == TEXT("mouse_component"), 341);
+ // mouse_scan 0: it glides back, then exactly home with its own mobility, released
+ C.StreamerVisualV23MouseScan = 0; Ticks(C, 1);
+ CHECK(C.StreamerVisualV23MouseComp.Get() == &Mouse && Near((Mouse.StubWorld.Translation - MouseAt).Size(), Delta.Size() - MouseStep, 1e-6) && Mouse.StubMobility == EComponentMobility::Movable, 35);
+ Ticks(C, 20);
+ CHECK(Mouse.StubWorld.Translation.Equals(MouseAt, 0) && !C.StreamerVisualV23MouseComp.IsValid() && !C.StreamerVisualV23MouseAdopted && !C.StreamerVisualV23MouseScanned
+       && Mouse.StubMobility == EComponentMobility::Stationary && C.StreamerVisualV23MouseName == TEXT("-"), 350);
+ C.StreamerVisualState = TEXT("reading"); Ticks(C, 5); CHECK(C.StreamerVisualHandTargetName[1] == TEXT("keyboard_right"), 36);  // no mouse found: hand_on_mouse keeps it on the keys
+ C.StreamerVisualV23HandOnMouse = 0;
+ // an adopted component that vanishes (its weak pointer goes invalid): released on the next tick, and the tick after scans again (this world is empty: none)
+ StubWorldEnabled = true; C.ScanStreamerVisualV23Mouse(); StubWorldEnabled = false; C.StreamerVisualV23MouseScan = 1; CHECK(C.StreamerVisualV23MouseAdopted && C.StreamerVisualV23MouseScanned, 37);
+ C.StreamerVisualV23MouseComp = nullptr; Ticks(C, 1); CHECK(!C.StreamerVisualV23MouseAdopted && !C.StreamerVisualV23MouseScanned && C.StreamerVisualV23MouseName == TEXT("-"), 38);
+ Ticks(C, 1); CHECK(C.StreamerVisualV23MouseScanned && C.StreamerVisualV23MouseName == TEXT("none"), 39);
+ C.StreamerVisualV23MouseScan = 0; Ticks(C, 1); CHECK(!C.StreamerVisualV23MouseScanned, 390); StubCastAlso.clear(); StubWorldActors.clear(); Mouse.StubMobility = EComponentMobility::Static;
+ // 8. chair_scale: the chair widened along his side only, about the seated pelvis; the part's local axis closest to his side scaled; back to the authored scale at 1
+ const FVector ArmOrigin = C.StreamerVisualDeskPropOrigins[2], BackOrigin = C.StreamerVisualDeskPropOrigins[0];
+ C.StreamerVisualV23ChairScale = 1.1f; Ticks(C, 10);
+ CHECK(C.StreamerVisualV23ChairScaleShown == 1.1f && Scene.Arm.StubLocation.Equals(ArmOrigin + Scene.Side0 * (25 * double(1.1f - 1.f)) + C.StreamerVisualChairDelta, 1e-6)
+       && Scene.Back.StubLocation.Equals(BackOrigin + C.StreamerVisualChairDelta, 1e-6) && Scene.Arm.StubScale.Equals(FVector(1.1f, 1, 1), 1e-6) && Scene.Pan.StubScale.Equals(FVector(1.1f, 1, 1), 1e-6), 40);
+ C.StreamerVisualV23ChairScale = 1; Ticks(C, 10);
+ CHECK(Scene.Arm.StubLocation.Equals(ArmOrigin + C.StreamerVisualChairDelta, 1e-6) && Scene.Arm.StubScale.Equals(FVector(1, 1, 1), 0) && Scene.KB.StubScale.Equals(FVector(1, 1, 1), 0), 41);
+ // 9. the keyboard frame and the key plane for the proxy (component space)
+ const FVector TowardHim(0, 1, 0), KeyTop = Scene.KB.StubLocation + C.StreamerVisualKeyboardCentreOffset + FVector(0, 0, C.StreamerVisualKeyboardExtent.Z);
+ CHECK(Anim.StreamerVisualV23KeyPlaneValid && Anim.StreamerVisualV23DeskForward.Equals(Scene.Body.StubWorld.GetRotation().Inverse().RotateVector(TowardHim * -1.), 1e-12)
+       && Near(Anim.StreamerVisualV23KeyPlaneZ, Scene.Body.StubWorld.InverseTransformPosition(KeyTop).Z, 1e-4), 50);
+ // 10. the log: at once on a tuning change (its sequence kept), then every @@LOGS@@ s while a key is off its default; one line when all are back, then quiet
+ C.StreamerVisualFaceTuningSequence = 41; C.StreamerVisualV23NeckBackDeg = 3; Ticks(C, 1); const double LogAt1 = C.StreamerVisualV23LogAt;
+ CHECK(C.StreamerVisualV23LoggedSequence == 41 && Near(LogAt1, FPlatformTime::StubNow + @@LOGS@@, 1e-6), 60);
+ Ticks(C, 50); CHECK(C.StreamerVisualV23LogAt == LogAt1, 61); Ticks(C, 51); CHECK(C.StreamerVisualV23LogAt > LogAt1 && C.StreamerVisualV23LoggedSequence == 41, 62);
+ C.StreamerVisualFaceTuningSequence = 42; C.StreamerVisualV23NeckBackDeg = 0; Ticks(C, 1); const double LogAt2 = C.StreamerVisualV23LogAt;
+ CHECK(C.StreamerVisualV23LoggedSequence == -1 && Near(LogAt2, FPlatformTime::StubNow + @@LOGS@@, 1e-6), 63);
+ Ticks(C, 120); CHECK(C.StreamerVisualV23LogAt == LogAt2 && C.StreamerVisualV23LoggedSequence == -1, 64);
+ C.StreamerVisualFaceTuningSequence = 43; C.StreamerVisualV23FillCd = .01f; Ticks(C, 1); CHECK(C.StreamerVisualV23LightsLoggedSequence == 43, 65);  // the lights line
+ C.StreamerVisualV23FillCd = 0; Ticks(C, 10);
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v23_character_logic_runs(v23_patched, tmp_path):
+    (tmp_path / 'cam2').mkdir()
+    d = v23.DEFAULTS
+    driver = (V23_CHAR_DRIVER.replace('@@DIR@@', str(tmp_path / 'cam2')).replace('@@SHARE@@', repr(v23.NECK_SHARE_V21[0]))
+              .replace('@@FFRONT@@', repr(d['fill_front_cm'])).replace('@@FSIDE@@', repr(d['fill_side_cm'])).replace('@@FUP@@', repr(d['fill_up_cm']))
+              .replace('@@FTEMP@@', repr(d['fill_temp_k'])).replace('@@RBACK@@', repr(d['rim_back_cm'])).replace('@@RSIDE@@', repr(d['rim_side_cm']))
+              .replace('@@RUP@@', repr(d['rim_up_cm'])).replace('@@RTEMP@@', repr(d['rim_temp_k'])).replace('@@PASSES@@', str(posefix.CHAIR_FIT_PASSES))
+              .replace('@@TARGET@@', repr(posefix.BACKREST_GAP_CM)).replace('@@DEADBAND@@', repr(posefix.CHAIR_FIT_DEADBAND_CM))
+              .replace('@@LIGHTMOVE@@', repr(v23.LIGHT_MOVE_CM_S)).replace('@@CDRATE@@', repr(v23.LIGHT_CD_RATE)).replace('@@MOUSEMOVE@@', repr(v23.MOUSE_MOVE_CM_S))
+              .replace('@@LOGS@@', repr(v23.LOG_SECONDS)))
+    assert '@@' not in driver
+    units = build_units_v22(v23_patched, tmp_path / 'u', driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_earlier_drivers_pass_under_v23(v23_patched, tmp_path):
+    """The v2 driver, the pose fix's character driver and bone chain, the v21 driver and v22's monitor feed and cam2 exposure runs all still pass
+    on the v23 sources."""
+    run = _run_driver(build_units_v22(v23_patched, tmp_path / 'v2'), tmp_path / 'v2')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    (tmp_path / 'cam2').mkdir()
+    pose = (POSEFIX_DRIVER.replace('@@DIR@@', str(tmp_path / 'cam2')).replace('@@FADE@@', repr(posefix.LOOP_FADE_SECONDS)).replace('@@SACRUM@@', repr(posefix.SACRUM_BACK_CM))
+            .replace('@@TARGET@@', repr(posefix.BACKREST_GAP_CM)).replace('@@DEADBAND@@', repr(posefix.CHAIR_FIT_DEADBAND_CM)).replace('@@PASSES@@', str(posefix.CHAIR_FIT_PASSES)))
+    run = _run_driver(build_units_v22(v23_patched, tmp_path / 'pose', driver=pose), tmp_path / 'pose')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    chain = build_units(v23_patched, tmp_path / 'chain', end=FACE_END, hands_driver=POSE_CHAIN_DRIVER)
+    run = _run_driver(chain, tmp_path / 'chain', unit='hands_driver')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    (tmp_path / 'stream').mkdir()
+    driver = (V21_DRIVER.replace('@@DIR@@', str(tmp_path / 'stream')).replace('@@VIEW@@', repr(v21.CAM2_VIEW_CM)).replace('@@LOD@@', repr(v21.CAM2_LOD_FACTOR))
+              .replace('@@CD@@', repr(v21.KEY_CD)).replace('@@RADIUS@@', repr(v21.KEY_RADIUS_CM)).replace('@@SOFT@@', repr(v21.KEY_SOFT_CM))
+              .replace('@@OUTER@@', repr(v21.KEY_CONES[1])).replace('@@MAXCHARS@@', str(v21.CONSOLE_MAX_CHARS)))
+    run = _run_driver(build_units_v22(v23_patched, tmp_path / 'v21', driver=driver), tmp_path / 'v21')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    for name, check in (('feed', test_v22_monitor_feed_logic_runs), ('exposure', test_v22_cam2_exposure_runs)):  # v22's own runtime drivers on the v23 output
+        (tmp_path / name).mkdir()
+        check(v23_patched, tmp_path / name)
+
+
+def test_v23_new_locals_do_not_shadow_character_fields(v23_patched, v22_patched):
+    members = _header_members(lf(v23_patched / 'Sub01HomeLab.h'))
+    added = _added_locals(lf(v22_patched / 'Sub01HomeLab.cpp'), lf(v23_patched / 'Sub01HomeLab.cpp'))
+    assert {'ChairFacing', 'ChairGoal', 'LightSide', 'KeyAt'} <= added
+    assert not (added & members), sorted(added & members)
+    header = lf(v23_patched / 'Sub01HomeLab.h')
+    declared = _header_members(header[header.index(V23_MARKER + ' BEGIN'):header.index(V23_MARKER + ' END')])
+    assert declared and not (declared & _header_members(lf(v22_patched / 'Sub01HomeLab.h')))
+    # the proxy's new locals do not shadow its members either (FAnimInstanceProxy fields such as Skeleton or RequiredBones are not reused)
+    proxy_added = _added_locals(lf(v22_patched / 'Sub01HomeHands.cpp'), lf(v23_patched / 'Sub01HomeHands.cpp'))
+    proxy_members = {'Previous', 'Current', 'Blend', 'Progress', 'Skeleton', 'RequiredBones', 'SkeletalMeshComponent', 'RootMotionMode', 'Notifies'}
+    assert not (proxy_added & proxy_members), sorted(proxy_added & proxy_members)

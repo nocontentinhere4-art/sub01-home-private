@@ -1,0 +1,35 @@
+Pre-commit code review: native v23 installer (live-tunable look corrections), after your design review (attached files:
+v23-generated.diff = the C++ the installer adds to the v21 sources, unified diff; install_v23.py = the installer; tests_v23_section.py =
+the v23 tests). Your design review was applied: hand orientation and the elbow slide in the KEYBOARD frame (body frame only as a
+fallback), elbow_min_deg as a guard with the slide capped at 15 cm and the residual / elbow-behind-shoulder published, the mouse adopted
+only when exactly one component is plausible (full path logged), hand_on_mouse whitelisted to idle and reading, a lateral-only
+chair_scale about the seated pelvis, the rim opposite the key, neck_girth limited to 0.9..1.2, fingertip-above-key-plane measurements,
+the log at once on a tuning change and every 10 s with state, clip time and the tuning sequence; the live session order and starting
+values are yours (installer RECOMMENDED).
+
+What it is. tools/native_streamer_visual_v2/install_v23.py patches the UE 5.8 module sources (Sub01HomeLab.h/.cpp = the character,
+Sub01HomeHands.h/.cpp = the anim instance and its proxy) on top of v21, after v22 (another layer that edits only the PC/device
+bridges, the monitor feed and cam2 exposure keys). Anchors are exact strings found exactly once, all or nothing. The C++ it adds is
+the text inside the Python strings (CPP_METHODS, PROXY_MEMBERS, the *_V23 edits). Every key defaults to "today" and its code path is
+skipped at the default. Tests (attached, the v23 section of tests/test_native_streamer_visual_v2.py) compile the patched units
+against a UE syntax stub with g++ and clang++ and RUN them: the proxy Evaluate and the character tick at the defaults are compared
+BIT FOR BIT with the v21 build (printf %a dumps), and each correction is checked numerically on a 40-bone Mixamo-like body.
+Result: 118 passed (104 earlier + 14 new). Engine APIs checked against the UE 5.8.3 headers on the pod (SetSpecularScale,
+SetLightingChannels, SetSourceRadius/SetSoftSourceRadius, SetAttenuationRadius, SetInnerConeAngle/SetOuterConeAngle,
+SetIntensityUnits, SetMobility, SetWorldLocation, GetNumChildrenComponents, Bounds (public), GetStaticMesh (TObjectPtr),
+FTransform::SetScale3D, FMath::Cos, FQuat::FindBetweenNormals / Slerp, FVector::Rotation).
+
+Please review for:
+1. Math and sign conventions (his frame: Right from the thighs, Up = component Z, Forward = Right x Up; a turn about Right by +a tips
+   forward; FQuat(axis, angle) moves v towards axis x v): hip hinge with thighs counter-turned, clavicle drop/retract axes, chin tuck,
+   neck girth (non-uniform scale across the Neck->child axis, children given the exact inverse scale and translation), elbow-minimum
+   target slide (law of cosines, forward at the same height), hand orientation from bone positions (two FindBetweenNormals: aim, then
+   roll about the aimed finger direction), finger bend axis and palm side (right hand palm = -(F x A), left = +(F x A), A = Pinky1 - Index1).
+2. Runtime safety: anything that can produce NaN, a pop on a live key change (eases: posture 12 deg/s, hands 30 deg/s, weights 1/s,
+   girth 0.2/s, chair 60 cm/s), or a thread problem (proxy values copied in PreUpdate on the game thread, read in Evaluate on a worker).
+3. The mouse component scan (a leaf primitive component in the mouse zone, made Movable and moved with the keyboard pull-back): risks?
+4. The extra fill/rim spot lights (created lazily, lighting channel 1 like the key, no shadows): cost and risks with Lumen.
+5. Merge safety with v22: the only shared spots are the tuning reader (one delimited block after the Field lambda line) and the
+   receipt (fields appended after the face_aim_mean_s line). Anything else that could collide?
+6. Anything in the tests that is vacuous or misses a case you consider important.
+Answer with a numbered list of concrete findings (file/function, what is wrong, the fix) and say "no blocking findings" if none.

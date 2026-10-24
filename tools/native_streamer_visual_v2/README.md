@@ -9,6 +9,7 @@ goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX
 `install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer), `install_v21_fixes.py` (`..._V21`, on the
 full v20 stack: build v21, game m) and `install_v22.py` (`..._V22`, on v21: the in-game monitor feed, persistent bridge
 textures, cam2 exposure; it also edits the PC and device bridges and creates `Sub01PersistentTexture.h`).
+`install_v23.py` (`..._V23`, on v22: the live-tunable look corrections, below).
 Same R9 gate, spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
@@ -87,6 +88,7 @@ python3 tools/native_streamer_visual_v2/install_mouth.py --source "$M" --dry-run
 python3 tools/native_streamer_visual_v2/install_pose_fix.py --source "$M" --dry-run    # after the stream pass AND the mouth layer (v20)
 python3 tools/native_streamer_visual_v2/install_v21_fixes.py --source "$M" --dry-run  # on the full v20 stack (v21); keep backups OUTSIDE Source/ (a copy with a Build.cs breaks UBT)
 python3 tools/native_streamer_visual_v2/install_v22.py --source "$M" --dry-run        # on v21 (v22): also the bridges + the new Sub01PersistentTexture.h
+python3 tools/native_streamer_visual_v2/install_v23.py --source "$M" --dry-run        # on v22 (v23): Sub01HomeLab.h/.cpp and Sub01HomeHands.h/.cpp only
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -381,3 +383,65 @@ On v21; edits `Sub01HomeLab.h/.cpp`, `Sub01PCBridge.h/.cpp`, `Sub01HomeDeviceBri
   established offline (Kimi's list): a UE 5.8 compile, an RHI smoke test (first creation, subregion upload, rect change, borders,
   sRGB look, deferred cleanup, GC while uploads are pending), ImageWrapper on the sidecar's real JPEGs, rendered exposure. The
   engine APIs to check against UE 5.8 are listed in the review note.
+
+## v23 live look corrections (`install_v23.py`, `// SUB01_STREAMER_VISUAL_V2_V23`, on v22)
+For "he has to look real" (`docs/streamer/STATUS-20261024.md`, `docs/streamer/kimi/photos-20261024.md`). Design reviewed with Kimi
+(`docs/streamer/kimi/native-v23-design.md`). ONE build, then live iteration on frames: every correction is a key of the same
+tuning file (`sudo -u unreal python3 /home/unreal/tune.py key=value`, polled every 0.5 s). Every compiled default skips its code path
+(no light created, nothing scanned or moved, no extra transform): the tests compare the proxy pose and the character side at the
+defaults with the v21 build bit for bit. Edits `Sub01HomeLab.h/.cpp` and `Sub01HomeHands.h/.cpp` only; never the PC/device bridges,
+the monitor feed or the cam2 code (v22). The shared tuning reader gets one delimited block (`// ..._V23 TUNING` ... `TUNING END`) right
+after the `Field` lambda; the receipt fields go after the `face_aim_mean_s` line.
+
+| key | range | default (= today) | what it does |
+|---|---|---|---|
+| `pelvis_pitch_deg` | -20..20 | 0 | hip hinge: Hips about his lateral axis, forward degrees (negative = sit up); each thigh keeps its orientation |
+| `shoulder_drop_deg` | -10..20 | 0 | clavicles turned down (relaxed, not hunched shoulders) |
+| `shoulder_back_deg` | -10..20 | 0 | clavicles retracted |
+| `neck_back_deg` | -15..20 | 0 | chin tuck: neck back, head forward by the same angle (head over the shoulders, face angle kept) |
+| `neck_share` | 0..1 | 0.4 | the Neck's share of the head channel (rest on Head); 0 keeps the neck skin with the hood ring |
+| `neck_girth` | 0.9..1.2 | 1 | experiment: radial Neck scale across its long axis, children compensated exactly; skipped unless the Neck->child offset lies on one local axis (alignment >= 0.95, published) |
+| `elbow_min_deg` | 0..150 | 0 | guard: the wrist target slides forward along the keyboard axis (same height, 0..15 cm) until the elbow opens to this; a target behind the shoulder is declined (slide -1), within 5 cm ahead of it the slide fades in |
+| `elbow_pole_back` / `elbow_pole_out` | -0.5..1.5 | 0.5 / 0.3 | the elbow pole's back and outward weights (down stays 1) |
+| `hand_orient` | 0..1 | 0 | hands turned so the fingers follow the keyboard axis, knuckles level, palm down (from bone positions) |
+| `hand_yaw_in_deg` / `hand_pitch_deg` | -30..45 / -30..60 | 12 / 10 | inward yaw and downward pitch of the fingers (used when `hand_orient` > 0) |
+| `finger_bend_deg` | 0..60 | 0 | index..pinky bent towards the palm, x1.0/1.2/0.6 on phalanges 1/2/3, additive on the clip |
+| `mouse_scan` | 0/1 | 0 | adopt the RGB mouse if exactly one primitive component is plausible (registered, visible static-mesh leaf, not simulating); it glides with the keyboard pull-back; 0 glides it back and restores its mobility |
+| `hand_on_mouse` | 0/1 | 0 | the right hand on a found mouse in `idle` and `reading` |
+| `key_side_cm` / `key_up_extra_cm` | -80..80 / -40..60 | 0 / 0 | the key light moved off the webcam axis (positive side = his right) |
+| `key_specular` | 0..1 | 1 | specular of the key, fill and rim (only if highlights clip) |
+| `fill_cd`, `fill_front_cm`, `fill_side_cm`, `fill_up_cm`, `fill_temp_k` | 0..2, 0..120, -100..100, -40..80, 2500..8000 | 0, 40, 45, 0, 5000 | a fill spot between him and the monitor (0 cd = none) |
+| `rim_cd`, `rim_back_cm`, `rim_side_cm`, `rim_up_cm`, `rim_temp_k` | 0..2, 20..150, -100..100, -20..120, 2500..10000 | 0, 60, 30, 40, 6500 | a rim spot behind him (0 cd = none; its own placement, positive side = his right); cam2 sees it on his back |
+| `chair_scale` | 1..1.3 | 1 | the chair widened laterally about the seated pelvis |
+| `chair_back_extra_cm` | -10..30 | 0 | the chair moved away from his back after the fit (the fit leaves it out) |
+| `chair_side_cm` | -15..15 | 0 | the chair sideways (only for a measured asymmetric overlap) |
+
+Eases: posture 12 deg/s, hand angles 30 deg/s, weights (neck share, poles, hand orientation) 1/s, girth and chair scale 0.2/s, chair
+60 cm/s, key offsets and fill/rim positions 30 cm/s, fill/rim intensity 0.02 cd/s, the mouse 30 cm/s (only `key_specular` applies at
+once); a v1 event eases everything back to the defaults. Fill and rim use the key's lighting channel (`key_body_only`), softness and radius.
+Logs: `SUB01_STREAMER_VISUAL_V23 state= clipTime= tuningSequence= ... neckAxisAlign= incline= headAheadCm= elbow= slideCm= residualCm= elbowBackCm=
+orientErr= tipsAboveKeysCm= mouse= chairScale= chair=` at once on a tuning change and every 10 s while any key is off its default;
+`SUB01_STREAMER_VISUAL_V23_LIGHTS` (positions, cd) on a tuning change; `..._V23_MOUSE_CANDIDATE path= ... plausible=` and
+`..._V23_MOUSE found=`. Receipt: `v23_<key>`, `v23_changed`, `v23_incline_deg`, `v23_head_ahead_cm`, `v23_slide_*`, `v23_residual_*`,
+`v23_elbow_back_*`, `v23_orient_err_*`, `v23_tips_above_keys_*`, `v23_tips_min_above_keys_*`, `v23_neck_axis_align`, `v23_mouse`, `v23_chair_extra`,
+`v23_chair_scale_applied`.
+
+Live session (Kimi's order; lock the webcam/cam2 exposure first; one step at a time, judged on frames and the receipt):
+0. baseline frames (webcam, cam2, spectator) and the receipt;
+1. pole test: `elbow_pole_back=0 elbow_pole_out=0.45` (does the cam2 elbow fan move?);
+2. reach test, old pole: `elbow_pole_back=0.5 elbow_pole_out=0.3 hand_back_cm=5`;
+3. elbow combined: `hand_back_cm=5 elbow_min_deg=90 elbow_pole_back=0 elbow_pole_out=0.45` (if the fan survives at 90-95 deg, it is the
+   hoodie's weights, not the IK);
+4. posture: `pelvis_pitch_deg=-10 typing_lean_deg=-14 shoulder_drop_deg=3 shoulder_back_deg=2 neck_back_deg=5`; judge `v23_incline_deg`
+   (target <= 5 deg); if still high `pelvis_pitch_deg=-12 typing_lean_deg=-16`;
+5. hands: `hand_orient=1 hand_yaw_in_deg=12 hand_pitch_deg=10 finger_bend_deg=8 finger_curl_deg=0`, then `hand_height_cm` in 0.25 steps
+   on `v23_tips_above_keys_*`; `hand_span_cm=24` if they still overlap;
+6. neck seam: `hide_slot=4`, `hide_slot=5`, then `hide_slot=-1`; `neck_share=0` (0.10-0.15 if yaw looks rigid); `neck_girth` 1.05, at
+   most 1.10;
+7. chair: `chair_scale=1.08 chair_back_extra_cm=2` (then 1.12 / 4);
+8. key and fill: `key_side_cm=-55 key_up_extra_cm=10 fill_cd=0.01 fill_side_cm=45 fill_up_cm=0 fill_temp_k=5000`;
+9. rim, optional: `rim_cd=0.006 rim_back_cm=60 rim_side_cm=30 rim_up_cm=40 rim_temp_k=6500`;
+10. mouse: `mouse_scan=1` alone (the log must show `found=1`, the mouse moves with the keyboard); then `hand_on_mouse=1`.
+An approved set is kept as the tuning file's preset; the compiled defaults stay "off" for rollback.
+Mouth: no jaw bone, no facial bone, 0 morph targets on this body; real mouth movement needs visemes or a jaw rig on a re-imported head
+(options ranked in the Kimi file). Not built.

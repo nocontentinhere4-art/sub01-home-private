@@ -1,0 +1,33 @@
+Follow-up pre-commit review: native v23 installer, the DELTA since your review (attached: v23-delta-cpp.diff = the generated C++
+before/after your findings, on the v22 sources; tests-delta.diff = the test-file changes). v23 is now pinned on v22 (commit 27670bd):
+v21 -> v22 -> v23, every anchor found once on the real v22 output, the installer refuses without the v22 marker.
+
+How each of your findings was handled:
+1. hand_orient now eases at 1/s like the other weights; a test checks 0.5 after 5 ticks and 1 after 10 at Dt 0.1.
+2. StreamerV23Target: a target BEHIND the shoulder along the keyboard axis (Bq < 0) is declined (published slide -1, the IK gets the
+   target as sent) instead of jumping to the far root; the slide is clamped to [0, 15]. Tests: the cap (150 deg asks ~25 cm -> 15) and the
+   behind-shoulder case (-1, the other hand still slides).
+3. No instantaneous cuts any more: key offsets glide 30 cm/s (and glide back, after which the v21 key update has placed it: a test checks
+   the exact v21 location after a v1 event); fill/rim intensity 0.02 cd/s, rising from 0 at the target position (placed there on first
+   appearance), later placement changes glide 30 cm/s; the mouse glides 30 cm/s on adoption and on release. Only key_specular applies at once.
+4. Mouse: candidates must be registered, visible, not simulating physics and a static-mesh component with a mesh (plus small leaf in the
+   zone, not of the desk packs); adoption saves the original mobility; mouse_scan 0 glides it home, sets it exactly to the origin, restores
+   the mobility and releases it; an adopted component whose weak pointer goes invalid is released and a new scan is allowed. Tests: each
+   filter, the scan with 0 / 2 / 1 plausible components over an opt-in stub world (his own actor and a desk-prop actor with plausible
+   components are skipped: the candidate count proves it), mobility restore, glide back, the vanish-and-rescan path.
+5. Neck girth: the alignment |offset on its long local axis| / |offset| is computed and published (v23_neck_axis_align, the log); the
+   girth is skipped below 0.95. Test: a 45 deg diagonal child offset -> 0.707, the Neck and Head untouched.
+6. The rim stays an independent placement (documented: positive rim_side_cm = his right); Lumen cost and leakage are a pod check in the
+   live session (rim optional, step 9, kept off if cam2 suffers).
+7. Done by the rebase: tests compare against the actual v21+v22 output (bit-identical defaults for the proxy pose and the character side).
+8. Added: an end-to-end proxy hand-over test (instance fields -> PreUpdate copies them and clears last frame's measurements -> Evaluate
+   applies them), the log state (at once on a tuning change, every 10 s, one last line when all keys are back, then quiet; the lights line),
+   the elbow cap, the near-180 deg hand aim (finite pose, same result), the non-axis-aligned girth, the key restored after the offsets.
+   Not added: degenerate bones (the existing guards return early on INDEX_NONE / zero vectors; not separately tested).
+
+Result: all 133 tests of the file pass (v23's 14 included); mutation checks: removing the Bq<0 decline fails the behind-shoulder test,
+removing the visibility filter fails the mouse filter test.
+
+Please review ONLY the delta: is any of these fixes wrong (math, sign, NaN, pop on a live change, thread safety, engine API misuse in
+UE 5.8: IsRegistered, IsVisible, IsSimulatingPhysics(FName = NAME_None), GetMobility/SetMobility, SetWorldLocation on a Movable
+component), or a test vacuous? Answer with a short numbered list of concrete findings and say "no blocking findings" if none.

@@ -1,0 +1,94 @@
+Design review before coding: native v23, LIVE-TUNABLE visual corrections for SUB-01 ("he has to look real").
+
+Context. UE 5.8 native game, build v21 running (game m3). A seated streamer at a desk; body = one skeletal mesh on a 65-bone Mixamo
+skeleton (Hips, Spine, Spine1, Spine2, Neck, Head, HeadTop_End, Left/RightShoulder, Arm, ForeArm, Hand, 4 bones per finger,
+legs). No twist bones, no face bones, 0 morph targets. Material slots: 0 KnitLeft, 1 KnitRight (hoodie), 2 skin, 3 nails,
+4 hood_lining, 5 hood_patches, 6 feet, 7 a generated body/hoodie material, 8 owner_head. The pose comes from looped desk
+clips (typing loop as the desk-work base, a reading loop) through our own anim-instance proxy that already applies, in this
+order: clip -> body lean about HIS axes (Spine 0.5 / Spine1 0.3 / Spine2 0.2, measured gain) + breathing -> mouth (head
+emphasis only) -> our own two-bone arm IK (wrist targets on the keyboard; pole = down 1, back 0.5, out 0.3 in his frame,
+weight elbow_pole 0.5; hand local rotation untouched; optional finger curl about a LOCAL axis) -> head channel (pitch/yaw
+over Neck 0.4 / Head 0.6). Everything is tunable at runtime from a private JSON tuning file (one build of ~27 min, then live
+iteration on frames). v23 is applied after v22 (another agent: PC bridge, monitor feed, cam2 exposure keys).
+
+Measured on the running game (receipt and log, state idle on the typing loop):
+- elbow interior angle L 73-80 deg, R 64 deg (your recipe 85-100); wrist targets reached exactly (0.0 cm);
+  hand_back_cm 13 (wrists 13 cm towards him from the keyboard centre line), hand_height_cm 4.5, hand_span_cm 20.
+- finger flexion measured MCP/PIP: L 16/28, R 16-20/13-24 deg; finger_curl_deg 0 (the clip's curl).
+- seat_back_cm 36 (he and the keyboard pack pulled 36 cm away from the monitor); the RGB mouse is NOT a separate actor near
+  the mat (scan found only a desk part), so it did not follow the pull-back and sits ~25-36 cm ahead of his right hand.
+- lean: posture_lean 0 + typing_lean -6 (measured -6.0, gain 1.42); head pitch +14..15 (typing_head 15). Pelvis-to-head line
+  was 20-29 deg forward in the QA (your acceptance: <= 5 deg).
+- chair fit: method trace on the backrest part node_249, gap 0.9 cm behind the "sacrum" (pelvis bone - 11 cm), chair moved
+  12.8 cm. The chair also has a big shell part node_247 (half extents 38 x 41 x 47 cm, the white frame that wraps around the
+  back) and a seat node_248. In cam2 (behind him) the white frame still passes through the oversized hoodie at his flank and
+  lower back.
+- key light: one soft spot 0.04 cd, 25 cm above the monitor centre, on the webcam axis, lighting channel 1 (only him).
+
+The six defects (frames attached: 1 = frontal webcam, 2 = cam2 from behind-right):
+1. seam/gap between the neck skin and the hood ring (frame 1: jagged hood edge, skin wedge left of the neck);
+2. cam2: hoodie polygons stretch into a fan at the right elbow/upper arm (frame 2);
+3. hunched posture (should sit straighter, naturally);
+4. hands look fused/stacked and do not really touch the keyboard or the mouse (frame 1);
+5. flat face lighting on the webcam;
+6. chair and hoodie interpenetrate (frame 2).
+
+PROPOSED v23 (every new key's default leaves today's look bit-identical: the new code path is skipped at the default).
+A. Posture (proxy, before the IK so the IK re-plants the hands):
+   pelvis_pitch_deg (-20..20, default 0): Hips turned about his lateral axis (FORWARD degrees, negative = sit up; same sign as
+     the lean), both UpLegs counter-rotated so the thighs stay on the seat (a hip hinge, not a spine backbend);
+   shoulder_drop_deg (-10..20, default 0): both clavicles (Left/RightShoulder) turned down about his forward axis;
+   shoulder_back_deg (-10..20, default 0): clavicles retracted (turned back about the vertical);
+   neck_back_deg (-15..20, default 0): "chin tuck": Neck turned back (extension) and Head forward by the same angle, so the head
+     moves back over the shoulders with the face orientation kept.
+B. Neck / hood seam (proxy):
+   neck_share (-1 or 0..1, default -1 = today's 0.4): the Neck's share of the head channel (rest on Head); 0 keeps the neck skin
+     with the hood ring when the head pitches/yaws;
+   neck_girth (0.8..1.4, default 1): radial scale of the Neck bone (the two axes across the Neck->Head direction), the Head
+     compensated exactly (inverse scale and translation) so only vertices weighted to Neck swell - to close the skin gap.
+   (Existing live diagnostic: hide_slot 4/5 hides hood_lining / hood_patches.)
+C. Elbow stretch (proxy IK):
+   elbow_min_deg (0..150, default 0 = off): if the wrist target would bend the elbow tighter than this, the target slides FORWARD
+     along his facing at the same height until the elbow interior angle equals the minimum (no hand pushed into the desk);
+   elbow_pole_back / elbow_pole_out (-1 = today's 0.5 / 0.3, else 0..1.5): the pole's back and outward weights (down stays 1),
+     to keep the elbow beside the torso instead of behind it.
+D. Hands (proxy IK, after the arm solve):
+   hand_orient (0..1, default 0): the hand bone turned (in component space, about the wrist) so the fingers (Hand->Middle1) point
+     along his facing, yawed inward by hand_yaw_in_deg (default 12, range -30..45) and pitched down by hand_pitch_deg (default 10,
+     -30..60), with the knuckle line (Index1->Pinky1) horizontal and the pinky outward (palm down follows from handedness);
+     blended by orient * IK alpha. Axis-agnostic: built from bone POSITIONS, not local axes.
+   finger_bend_deg (0..60, default 0): index..pinky phalanges 1/2/3 bent by 1.0/1.2/0.6 x the value about the knuckle axis,
+     towards the palm side computed from the hand geometry (right hand: palm side = -(F x A), left: +(F x A)), axis-agnostic
+     (the existing finger_curl_deg uses a guessed local axis).
+   mouse_scan (0/1, default 0): when no mouse actor exists, scan primitive COMPONENTS (bounds centre in the mouse zone, half
+     extents <= 12/12/8, not desk/keyboard pack meshes), take the one nearest mouse_x/y/z, make it Movable and move it with the
+     keyboard pull-back; it then becomes the right hand's mouse target;
+   hand_on_mouse (0/1, default 0): the right hand on the mouse in every state except typing (left hand stays on the keys).
+E. Face light (character, after the existing key light update; extra lights created lazily, lighting channel 1 like the key):
+   key_side_cm (extra side offset of the key, default 0, -80..80), key_up_extra_cm (default 0), key_specular (default 1, 0..1);
+   fill_cd (0..2, default 0 = no light), fill_side_cm (default 45 to his right), fill_up_cm (default 0), fill_temp_k (default 5000);
+   rim_cd (0..2, default 0), rim_back_cm (default 60), rim_side_cm (default -30), rim_up_cm (default 40), rim_temp_k (default 6500).
+F. Chair (character):
+   chair_back_extra_cm (-10..30, default 0): extra distance of the whole chair along his facing AFTER the fit (the fit measures
+     the backrest without it, so it does not cancel it), eased at 60 cm/s;
+   chair_side_cm (-15..15, default 0): chair sideways only;
+   chair_scale (1..1.3, default 1): chair parts scaled horizontally about the seat pivot (a slightly wider frame around the
+     oversized hoodie).
+Log line SUB01_STREAMER_VISUAL_V23 every 10 s with the applied values and measurements (elbow before/after, slide cm, hand
+orientation error deg, pelvis-to-head incline). Receipt fields for each.
+
+Questions:
+1. Are these the right levers for each defect? What would you drop or add (keep the key count reasonable)? In particular:
+   is neck_girth a sensible way to close a neck-to-hood gap on a skinned mesh, or is neck_share + neck_back enough?
+2. The elbow fan on cam2: is the cause more likely the tight elbow (64 deg) or the upper arm swung back behind the torso
+   (pole "back")? Which default values would you propose to TRY FIRST live (elbow_min_deg, pole back/out, hand_back_cm)?
+3. Hands: is the position-based orientation (fingers along the facing, 12 deg inward yaw, 10 deg down pitch, knuckle line level)
+   right for a relaxed typing pose? Finger bend split 1.0/1.2/0.6? Start value?
+4. Posture: how would you split "sit up 15-20 deg" between pelvis_pitch, the existing spine lean, shoulder drop/back and
+   neck_back for a natural look (not a soldier)? Starting values?
+5. Light: for a frontal webcam, where would you put key, fill and rim (in cm relative to his head / the monitor) and at what
+   ratio to today's 0.04 cd key? Is a rim on his own lighting channel a good idea (cam2 sees his back)?
+6. Chair: back extra vs side vs scale - which first? Any better idea (e.g. hiding a chair part is not acceptable).
+7. Defaults: everything defaults to "today" (code skipped). Do you agree, or should any default change in the build itself?
+8. Mouth: no jaw bone, no morph targets. List what would be possible later (only a note; nothing is built now).
+Please answer per item, concretely, with the starting values for the live tuning session.
