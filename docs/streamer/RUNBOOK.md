@@ -434,6 +434,47 @@ By hand (tests only; the supervisor runs it on the pod): `runuser -u unreal -- /
 $S/scripts/streamer_monitor_feed.py --streamer-dir $P --display :103 --desktop-url http://127.0.0.1:8838 --token-file
 "$T"` (the token file, mode 0600 uid 1001, never the token itself on a command line).
 
+## Acceptance check (plan step 7; `scripts/streamer_acceptance.py`)
+
+Reads the logs and recordings of a window (default: the last 30 minutes) and writes a Markdown report and a JSON file
+(`sub01.streamer-acceptance.v1`) with pass / fail / missing evidence per criterion, the evidence lines with UTC times,
+and highlight times mapped to a recording segment and an offset. Read-only: it never touches a service; the only
+process it runs is `ffprobe -count_packets` (demux, no decode) on the recording and HLS segments of the window.
+Standard library only, so the system `python3` runs it. Criteria, thresholds and the reasons behind them: the module
+docstring and `docs/streamer/kimi/acceptance-criteria.md`.
+
+```
+S=/home/unreal/.sub01-private/latest-source-20261023
+P=/home/unreal/.sub01-private/streamer
+# right after the 30-minute run (HLS keeps only ~24 s, so run it within ~20 s of the end for the HLS check):
+runuser -u unreal -- nice -n 19 python3 $S/scripts/streamer_acceptance.py --streamer-dir $P \
+     --game-log /tmp/sub01-share/game.log --out-dir $P/acceptance
+# a given window, or the window of the last streamer_rehearsal.py run:
+...  --since 2026-10-25T10:00:00Z --until 2026-10-25T10:30:00Z      # or unix seconds; or --last-rehearsal
+...  --no-probe                 # skip ffprobe (recordings and HLS then read as missing evidence)
+```
+
+- Sixteen criteria: activity change, chat request carried out, chat request refused, error recovered, both cameras,
+  K07 voice, voice recorded, head motion, mouth motion, PC control, and fps for game, cam2, in-game monitor feed,
+  director, recordings and an HLS spot check. Fps sources (PERF, CAM2) need every complete window >= 59.5 with no
+  logging gap; outputs (director rows, recording and HLS packets) >= 59.9 with director dup/drop 0. Complete director
+  rows must pass both `fps` and `fps_media`; a partial row (the run ended) spanning >= 60 s is judged on `fps_media`
+  and dup/drop (its wall time includes ffmpeg's start and stop), a shorter one is no fps evidence. An ffprobe that
+  fails or times out makes the recording/HLS check missing evidence, not a fail.
+- Statuses: **fail** = the logs cover the window and the content is absent or below the bar (no chat request while
+  the agent is held by STOP, no input while Vagon is `login_required`, a 48 fps window); **missing evidence** = the
+  window cannot be assessed (a log absent or not covering it, a logging gap, no source that measures it such as the
+  in-game monitor feed today, a recovery still pending, HLS rotated away). Verdict: PASS only if all pass, FAIL if any
+  fails, else INCONCLUSIVE; exit 0 only on PASS. The head_only rig fails `mouth_motion` by design (no jaw, no morph
+  targets) until the rig changes or the owner redefines it.
+- On a shared pod (another job measuring fps): check `/tmp/sub01-share/MEASURING` first and run it with
+  `nice -n 19 taskset -c <idle cores>`; a 30-minute window probes about four 180 MB segments.
+- Highlights: each criterion lists its moments as `segment at mm:ss`; the report ends with the
+  `scripts/streamer_highlights.py` command that cuts the speech and induced-fault reel of the same window.
+- A clean acceptance run: start `scripts/streamer_rehearsal.py --minutes 30` (chat lines, an induced browser crash
+  and a provider error) while the director records, with the agent resumed and the Vagon PC connected, then run the
+  check with `--last-rehearsal`.
+
 ## Known limits
 
 - No application or browser audio yet: no audio device or PulseAudio on the pod. Only the voice PCM is recorded

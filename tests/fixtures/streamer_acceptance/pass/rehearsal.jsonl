@@ -1,0 +1,3 @@
+{"kind": "start", "minutes": 30.0, "t": 1792922400.0}
+{"kind": "inject", "event": "kill_browser", "pids": [2101501, 2101502], "t": 1792922999.8}
+{"kind": "end", "minutes": null, "t": 1792924200.0}
