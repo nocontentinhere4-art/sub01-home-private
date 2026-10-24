@@ -143,9 +143,10 @@ Pod `3u7g6drf5fiiql` (RTX PRO 4000 24 GB; container CPU quota 10.2 CPUs; root di
   `docs/streamer/kimi/sawtooth2-*.md`): the CPU cost of `vkQueuePresentKHR` on the RHI thread (NVIDIA X11 present on
   Xvfb :99) grows ~3.3 ms/frame over a swapchain's life and resets after ~21.7k presents or when the swapchain is
   recreated (an `r.VSync` flip does it, one ~80 ms frame). GPU flat; occlusion/GTSync cvars only move the wait.
-  Offscreen ablation (m3 + `-RenderOffScreen`, cam2 60): 59.9 fps capped, 77.5 uncapped, no sawtooth. Next (native,
-  not built): offscreen + main-view FIFO to the director. Interim, experimental: `scripts/streamer_swapchain_refresh.py`
-  (ABBA: +4.3 fps, one ~80 ms frame per flip; NOT running, soak 8-24 h first).
+  Offscreen ablation (m3 + `-RenderOffScreen`, cam2 60): 59.9 fps capped, 77.5 observed uncapped, no sawtooth. v22
+  baseline (plain m3 launcher, cam2 60): 20.29 ms p50, same sawtooth. Next (native, not built; spec in the doc):
+  offscreen + main-view FIFO to the director. Interim, experimental: `scripts/streamer_swapchain_refresh.py` (ABBA:
+  +4.3 fps, one ~80 ms frame per flip; NOT running, soak 8-24 h first).
 - Owner progress page with before/now photos: `docs/streamer/STATUS-20261024.md` (photos in
   `docs/streamer/photos/`, Kimi's photo review `docs/streamer/kimi/photos-20261024.md`). The owner wants everything on
   GitHub but NOTHING live: Railway deploys from `main`, so the work stays on this branch with the open DRAFT PR

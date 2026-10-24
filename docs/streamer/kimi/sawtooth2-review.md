@@ -1,4 +1,4 @@
-# Kimi pre-commit review (2026-10-24 18:20-18:29 UTC): refresh script, sawtooth doc, structural design
+# Kimi pre-commit reviews (2026-10-24 18:20-19:16 UTC): refresh script, sawtooth doc, structural design
 
 Kimi via `tools/ask_kimi.py` (default model), 32000-token budget, 516 s. Attached: `docs/streamer/SAWTOOTH-20261024.md`,
 `scripts/streamer_swapchain_refresh.py`, `tests/test_streamer_swapchain_refresh.py` (the versions before this review).
@@ -55,3 +55,46 @@ tools/sawtooth/*.py (pod analysis helpers: Insights event exports per thread, sa
    explicitly (`--game-source fifo|x11`), shows a placeholder instead of a black grab, and the FIFO has one reader;
    the "one encode caps below 60" claim is replaced by "measure p99 encode under load and keep enough in flight";
    acceptance = Kimi's four-leg tap-off/on ABBA against m3o with the real director, an >= 8 h soak and the gates above.
+
+## Second review (2026-10-24 19:11-19:16 UTC): the native hand-off write-up, new numbers, v22 paragraph
+
+Kimi via `tools/ask_kimi.py` (default model), 32000-token budget, 300 s; the updated doc attached.
+
+### Question (verbatim)
+
+```text
+Second pre-commit review for SUB-01 (sawtooth doc, attached in full). Since your last review I applied your findings
+and added: (a) offscreen per-thread numbers (RHI thread 4.1-4.3 ms user + 0.4 ms sys per frame offscreen vs 8.6 -> 11.5
+user + 2.6 sys windowed; Xvfb 210 -> 65 ms/s; GPU busier offscreen), (b) the v22 baseline leg (20.29 ms p50, same
+sawtooth as v21), (c) the final runtime state, and (d) a rewritten structural-fix section that is the input for the
+next native worker. The coordinator requires that section to state: the native hand-off path with a go/no-go, the
+FIFO format and its atomicity, the director's explicit windowed/offscreen mode, how the operator still gets a window,
+and the acceptance gates. Please answer, max ~350 words, numbered: (1) anything wrong, unsafe or ambiguous in that
+section that a native worker would trip on (especially the single blocking writer + bounded queue design, F_SETPIPE_SZ,
+EPIPE/probe handling, the OnEndFrameRT fallback, the director's --game-source mode and placeholder); (2) anything in
+the new numbers or the v22 paragraph that is over-claimed; (3) blocking issues before commit, if any.
+```
+
+### Answer (verbatim)
+
+1. **Not implementation-safe yet.** One blocking writer provides ordering/non-interleaving, not frame atomicity: a stall can leave a prefix indefinitely, and crash/EPIPE/shutdown can truncate a frame. Remove “never cut” and “only possible partial frame”. On EPIPE or any write failure, close and **discard the whole current frame**; never resume its tail after reconnect. Specify partial-write/EINTR handling, `ENXIO` probing, clearing `O_NONBLOCK`, shutdown while blocked, and single-writer exclusion across process restarts. Bound encoder submission, in-flight/reordering and output queues too; queue=2 plus three readback slots does not alone prove back-pressure isolation. Treat `F_SETPIPE_SZ` as best-effort: check its return and `F_GETPIPE_SZ` (`EPERM`/user-page limits are possible); never assume 1 MiB or three frames. Verify Slate delegate signature and registration thread/lifetime against installed 5.8.3; retain texture references and handle actual format/row pitch. `OnEndFrameRT` is not a drop-in fallback: final/Slate-composited content and texture validity are not guaranteed, so it needs its own go/no-go. Define status cadence, stale `N`, placeholder/recovery/backoff; close a stalled ffmpeg reader to permit recovery. The explicit source modes and operator-window options are otherwise coherent.
+
+2. **Over-claims:** 77.5 fps is an observed four-minute rate, not a ceiling. Subtracting 12.9 ms offscreen-uncapped from windowed ramp points does not isolate present cost; 5.5–9 ms is only a whole-configuration estimate. Higher GPU utilisation/power at higher fps is not independent proof. One v22 leg supports “no improvement detected; consistent with v21”, not that v22 “changes neither” frame time nor sawtooth, or establishes equivalence.
+
+3. **Blocking as native-worker input:** fix the FIFO lifecycle rules, fallback validation, and two acceptance defects. JFIF-only JPEGs carry no sequence, so distinct sequences cannot be counted at ffmpeg without defined instrumentation. Also define the tap-off ABBA control: fifo-mode director then has no main input unless a placeholder/replay control is specified. After those edits and the wording corrections in (2), the investigation/runtime document can commit; 60/60 remains undemonstrated.
+
+### Applied
+
+1. FIFO lifecycle: "never cut" and "only possible partial frame" removed; one writer thread plus an `flock` across
+   restarts; non-blocking fd written with `poll(POLLOUT)` loops that resume after partial writes and EINTR, a 500 ms
+   per-frame deadline and a stop flag (no hang at shutdown); on EPIPE, any error or the deadline the fd is closed and
+   the whole frame discarded and counted, never resumed; ENXIO probing every 1 s; `F_SETPIPE_SZ` best-effort with the
+   return checked and `F_GETPIPE_SZ` logged; every stage bounded (readback 3, encodes 2, reorder 2, output 2).
+   Hand-off: delegate signature, registration thread and lifetime verified first, texture reference held, actual
+   format and row pitch handled; the `OnEndFrameRT` fallback gets its own go/no-go. Director: status every 1 s, stale
+   after 2 s, kill the run (releasing a stalled reader), placeholder card, backoff 2-30 s, back after 3 s fresh.
+2. Wording: 77.5 fps is "observed over 4 minutes, not a proven ceiling"; 5.5-9 ms is "a whole-configuration estimate
+   only"; the GPU utilisation line says it follows from the higher frame rate; v22 is "no improvement detected,
+   consistent with v21, not equivalence".
+3. Acceptance: each JPEG carries a COM `seq=<n>` marker, counted at the director's input and cross-checked with
+   `main.json` and ffmpeg's dup counts; the tap-off ABBA arm runs the director in fifo mode on its placeholder input.
