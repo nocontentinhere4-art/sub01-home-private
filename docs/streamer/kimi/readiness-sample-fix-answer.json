@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE ONE RUN — supplied manifest and supervisor, with the exact v2 probe only.**\n\nBoth sample-schema blockers are resolved:\n\n- `finish_sample()` now handles both loop-completed and final futures. Each successful status is appended once and receives exactly one `state.observe()` call.\n- A single `now` is used for `fresh_for`, `retry_in`, and `ready`.\n- `ready` replaces `simulated_ready`; no stale renamed field remains.\n- Exceptions from either `check()` or `future.result()` produce the complete exception schema, with readiness and derived timing fields set to `None`. Exceptional samples are not observed and cannot falsely indicate acceptance.\n- `future=None` after finalization prevents duplicate processing.\n\nThe previously reviewed owned-fd lockless drain, remaining-aware 256 MiB cap, 8 MiB/0.1 s bounds, lag guard, 10-second bound, native/STOP/P5/FIFO checks, and fail-closed cleanup remain unchanged.\n\nThis authorizes one bounded diagnostic execution only, subject to the existing wrapper, lease, UID, and exact-hash gates. No edits, automatic retry, voice/model/services startup, or broader approval is included. Runtime conditions and actual artifact hashes remain unverified until those gates execute.",
+ "finish_reason": "stop",
+ "prompt_tokens": 3222,
+ "completion_tokens": 1289,
+ "reasoning_tokens": 1016,
+ "seconds": 35.9
+}

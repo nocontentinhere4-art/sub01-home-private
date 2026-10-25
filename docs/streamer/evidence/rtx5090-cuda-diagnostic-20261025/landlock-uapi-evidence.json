@@ -1,0 +1,22 @@
+{
+  "source": "/usr/include/linux/landlock.h",
+  "sha256": "75368cf0e1eb2cc00413e116b728d89b640a1e5d7653737fe8198e63f752afe8",
+  "defines": [
+    "#define LANDLOCK_ACCESS_FS_EXECUTE\t\t\t(1ULL << 0)",
+    "#define LANDLOCK_ACCESS_FS_WRITE_FILE\t\t\t(1ULL << 1)",
+    "#define LANDLOCK_ACCESS_FS_READ_FILE\t\t\t(1ULL << 2)",
+    "#define LANDLOCK_ACCESS_FS_READ_DIR\t\t\t(1ULL << 3)",
+    "#define LANDLOCK_ACCESS_FS_REMOVE_DIR\t\t\t(1ULL << 4)",
+    "#define LANDLOCK_ACCESS_FS_REMOVE_FILE\t\t\t(1ULL << 5)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_CHAR\t\t\t(1ULL << 6)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_DIR\t\t\t(1ULL << 7)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_REG\t\t\t(1ULL << 8)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_SOCK\t\t\t(1ULL << 9)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_FIFO\t\t\t(1ULL << 10)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_BLOCK\t\t\t(1ULL << 11)",
+    "#define LANDLOCK_ACCESS_FS_MAKE_SYM\t\t\t(1ULL << 12)",
+    "#define LANDLOCK_ACCESS_FS_REFER\t\t\t(1ULL << 13)",
+    "#define LANDLOCK_ACCESS_FS_TRUNCATE\t\t\t(1ULL << 14)"
+  ],
+  "review_contradiction": "TRUNCATE bit14, REFER bit13, MAKE_BLOCK bit11, MAKE_SYM bit12; isolated masks bits6/11 only"
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "sub01.strace-recovery.v1",
+  "url": "https://archive.ubuntu.com/ubuntu/pool/main/s/strace/strace_6.8-0ubuntu2_amd64.deb",
+  "version": "6.8-0ubuntu2",
+  "deb_sha256": "d588810ae26b06fee6678dc81e5b54f6efcde8e718e4589adb4d11d254b9820b",
+  "deb_size": 584172,
+  "binary": "/opt/sub01toolroot/extracted/usr/bin/strace",
+  "binary_sha256": "28f957c227012de0b18d1bd7fff2d396cb693ea60ed8013be68de071e84b5001",
+  "signed_release": "/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_noble_InRelease",
+  "release_sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+  "packages_sha256": "8f6f71ae839c8cba390a7643fcbbdacddb0bc7d12c1583a2dd80a1f8443a30e5",
+  "packages_size": 7165069,
+  "gpgv": "gpgv: Signature made Thu Apr 25 15:11:21 2024 UTC\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n",
+  "installation": false,
+  "extraction_only": true
+}

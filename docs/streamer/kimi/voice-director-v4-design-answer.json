@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE DESIGN — design only, not launch authorization.** One bounded v4 voice/PCM/director diagnostic is appropriate.\n\nThe separate exact-source/delta review must confirm:\n\n- Observer is byte-identical to reviewed v3; controller changes are limited to the new v4 root, exact tested-v2 wrapper path/hash, pinned CUDA-evidence preflight, and revised free-port probe.\n- CUDA preflight parses the pinned combined result and requires `returncode == 0`, `cleanup_verified == true`, `fixture.all_pass == true`, `cuInit == 0`, `cuDeviceGetCount == 0`, `count == 1`, and the acknowledged residual own-task-subtree write scope. File existence alone is insufficient.\n- Immediately before launch, ports 8855/8856 have no TCP/TCP6 listener. The loopback `SO_REUSEADDR` bind probe must preserve occupied-port failure, close its sockets, and retain the existing listener/ownership guards.\n- Native 29950/start-ticks identity, STOP, fresh receipt, absent MEASURING and test processes, and every source/cache/config/reference/tuning hash remain hard preflight/postcondition gates.\n\nExecution remains exactly one launch: 90-second capture, one utterance capped at 10 seconds, one `/speak` attempt with a 5-second deadline, and the 300-second controller bound. No playback, native mouth write, STOP release, broader process/network access, or automatic retry. Any failure proceeds directly through owned cleanup and fresh native/FIFO/port/process postconditions.",
+ "finish_reason": "stop",
+ "prompt_tokens": 7476,
+ "completion_tokens": 1947,
+ "reasoning_tokens": 1615,
+ "seconds": 50.7
+}

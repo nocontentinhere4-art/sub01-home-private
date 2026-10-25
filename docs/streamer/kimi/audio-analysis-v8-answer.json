@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**BLOCK PROCESSING — conditional v8 approval withheld; do not execute.**\n\nTiming is correctly left **OPEN**: `timing_available=False`, `timing_within_bound=None`, and `transport_gates_pass=False`, while waveform-only gates remain independently reported. The v7 decode, cumulative-audio, and input-hashing findings are otherwise substantially addressed.\n\nRemaining concrete defects:\n\n- **The independent supervisor fails its principal hung-worker case.** Its ordinary monitoring loop runs until `START+2996`, but the hard alarm exits the supervisor at 300 seconds using `os._exit(124)`. If the worker stalls without exiting, cleanup is never entered and analysis descendants can survive. The loop must end by the intended cleanup point—apparently `START+296`—followed by bounded pidfd kill/reap. Test with an alarm-resistant worker and a live grandchild.\n\n- **The worker’s alarm can interrupt failure reporting.** `SIGALRM` remains armed throughout `finally`; it can fire during serialization or either result write, bypassing both reports. Likewise, the 294-second `os._exit(124)` path deliberately writes nothing. Disarm the worker alarm on entry to a small, bounded reporting/finalization section and rely on the corrected supervisor for the outer hard deadline.\n\n- **Advertised size bounds are not fully enforced.** `pin()` permits each purportedly “small JSON” input to be 512 MiB. Extraction can write before duration/allocation validation, and final temporary/result/share writes have no encoded-size or artifact-root reservation/check. A root already at the accepted cap can therefore exceed it during final output. Add explicit small-JSON limits, bounded extraction/output, and final-write reservations/checks.\n\nRe-review after these fixes and failure-injection tests. This is a code review only; no v8 capture or processing has occurred.",
+ "finish_reason": "stop",
+ "prompt_tokens": 5184,
+ "completion_tokens": 6881,
+ "reasoning_tokens": 6492,
+ "seconds": 211.8
+}

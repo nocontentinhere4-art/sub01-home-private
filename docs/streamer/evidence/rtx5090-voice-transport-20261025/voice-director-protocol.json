@@ -1,0 +1,10 @@
+{
+ "scope":"offline synthetic K07 -> isolated PCM -> unchanged director -> private MP4, native video only; not performance, PC, agent, mouth/lipsync, audible quality or owner acceptance",
+ "native_pid":29950,"native_ticks":53274039,"STOP_required":true,
+ "overall_seconds":300,"warmup_deadline_seconds":120,"director_ready_deadline_seconds":45,
+ "capture_seconds_after_ready":90,"requests":1,"request_deadline_seconds":5,
+ "utterance_seconds_max":10,"expected_pcm":{"rate":48000,"channels":2,"sample_format":"s16le"},
+ "root_reserve_bytes":10737418240,"artifact_budget_bytes":536870912,
+ "offline_gates":{"all_mp4_full_decode_errors":0,"voice_timeline_utterances":1,"source_wav_duration_min_seconds":0.5,"source_wav_duration_max_seconds":10,"aac_vs_source_wav_normalized_correlation_min":0.85,"audio_timeline_offset_absolute_max_seconds":2,"decoded_audio_clipped_fraction_max":0.001},
+ "interpretation":"Gates require actual decoded AAC comparison to saved speech WAV and source timeline, never infer transport from created files or nonzero samples. Retain failures; no automatic request/relaunch retries. If recording-start mapping is unavailable, timing gate remains OPEN."
+}

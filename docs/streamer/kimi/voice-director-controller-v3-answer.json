@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE ONE RUN v3\n\nNo concrete blocking gap in the supplied delta. The same-UID 1001 observer addresses the demonstrated root `/proc` EACCES limitation without capabilities, ptrace, attachment, or native configuration changes.\n\nThe observer is SHA-pinned and recorded, launched with isolated Python and scrubbed environment, and bounded by the 3-second alarm, 2-second subprocess timeout, and 2 MiB result check. Returned data is limited to numeric identities/inodes, FIFO modes, and argument-match booleans. Observer tick values are checked against independently root-readable `/proc/stat`; missing observations force refresh, cached data expires within 0.5 seconds, and cleanup forces fresh observations. Root and UID 1001 FIFO observations are merged, listener ownership uses same-UID socket observations, and persistent observer access failures are surfaced rather than silently treated as coverage.\n\nApproval is for exactly one execution of the supplied v3 controller with its stated launcher and unchanged gates. It does not approve quality, lip-sync, performance, contact, or any additional runs.",
+ "finish_reason": "stop",
+ "prompt_tokens": 8345,
+ "completion_tokens": 2643,
+ "reasoning_tokens": 2413,
+ "seconds": 88.5
+}

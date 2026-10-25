@@ -1,0 +1,32 @@
+{
+  "schema": "sub01.voice-director-diagnostic.v1",
+  "status": "failed",
+  "owner": "codex-voice-director-4b0d3a727bc74d0bbb906cdce58638b7",
+  "native": [
+    29950,
+    53274039
+  ],
+  "services_acceptance": false,
+  "inputs": {
+    "controller_sha256": "626844e248874597eef9de547c31be9215955c55e65f3a050918cbd7d8c574bd",
+    "observer_sha256": "acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae",
+    "wrapper_sha256": "5dd87124b900a017774a3835d92767ed568d360dd27185da1f25716ce9b492f8",
+    "voice_source_sha256": "95758eb8fd0a4341d6e6fe1a684c1511ca0c98fc8c6f89a753f226a4f5eefce5",
+    "director_source_sha256": "d7ff873b40ac390c2004c248e5aa825255bcefd49e44684a077b78d91c799b8c",
+    "config_sha256": "bfda98ab5376091bc9fa339fa829e2dfcf60d74e2cf8c1fb66c4b258f9da76fa",
+    "reference_sha256": "d8ce97537faff90e4f37044b2260157bede82775c6c97264ae523f9b775180c0",
+    "cache_manifest_sha256": "56b3bdca9852fb5ecc29c3489071c364271e513f68996622ee1b5af5f4de9021",
+    "tuning_before_sha256": "561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a",
+    "main_inode": [
+      67,
+      6480385251
+    ]
+  },
+  "error": "Traceback (most recent call last):\n  File \"/tmp/sub01-share/run-voice-director-check-v3.py\", line 245, in <module>\n    health=wait_for(lambda:(lambda h:h if h.get('ready')is True and h.get('engine')=='chatterbox'else None)(api(8855,'/healthz')),120)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/sub01-share/run-voice-director-check-v3.py\", line 194, in wait_for\n    time.sleep(.2)\n  File \"/tmp/sub01-share/run-voice-director-check-v3.py\", line 211, in interrupted\n    def interrupted(signum,frame):raise KeyboardInterrupt('controller interrupted')\n                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nKeyboardInterrupt: controller interrupted\n",
+  "cleanup_complete": false,
+  "cleanup_errors": [
+    "postcondition: [Errno 98] Address already in use"
+  ],
+  "finished_utc": 1792923033.3772786,
+  "watchdog_fault": []
+}

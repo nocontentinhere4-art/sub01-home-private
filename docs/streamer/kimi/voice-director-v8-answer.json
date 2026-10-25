@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE ONE RUN** of `run-voice-director-check-v8.py`, SHA-256 `ebe038b97aaa469deb6d3de235f749e967724aedc8587ac25e6a578052c9a8ce`.\n\nThe patch corrects the v7 topology error without changing transport, recording, broker, policy, or readiness behavior. The pinned source establishes that, during an active FIFO/voice run:\n\n- FFmpeg opens both FIFO paths directly and is the consuming reader.\n- The director retains its passive `FifoTap`/`VoiceTap` read descriptors.\n- `drain_tick` excludes main while `alive && main_on == \"fifo\"` and voice while `alive && voice`, so those retained descriptors are not alternative on-air consumers.\n\nTherefore the canonical reader set for **each** FIFO is exactly `{director_pid, current_ffmpeg_pid}`, not the v7 director-only set.\n\nThe candidate also binds the state-reported FFmpeg PID to the registered owned process, checks its registered executable inode, ticks/session/UID/ancestry through `owned`, forces a fresh UID-1001 observation before each topology scan, and logs observed/expected identities before asserting. Any restart race or extra reader fails closed rather than weakening the check.\n\nThis approval authorizes execution only, with the existing 300-second bound, native STOP/identity guards, and owned cleanup. It does **not** predetermine speech or capture acceptance. No automatic retry; preserve v7 artifacts and treat any v8 failure as a new diagnostic result.",
+ "finish_reason": "stop",
+ "prompt_tokens": 11083,
+ "completion_tokens": 1493,
+ "reasoning_tokens": 1160,
+ "seconds": 51.1
+}

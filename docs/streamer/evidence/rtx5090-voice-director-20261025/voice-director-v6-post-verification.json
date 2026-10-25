@@ -1,0 +1,14 @@
+{
+  "native_pid": 29950,
+  "native_start_ticks": 53274039,
+  "receipt_age_seconds": 0.24898743629455566,
+  "STOP": true,
+  "MEASURING": false,
+  "owned_pids_gone": true,
+  "owned_pids": [
+    38080,
+    38120,
+    38125
+  ],
+  "p5_sha256": "561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a"
+}

@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE DESIGN — the limited drain is necessary.** The earlier no-drain recommendation is invalid once the probe owns a main-FIFO reader: a finite pipe can fill, altering the native writer behaviour being diagnosed. A readerless metadata-only probe avoids that interference but cannot faithfully test writer attachment, so it is not an equivalent alternative.\n\nMatch the attached director’s placeholder behaviour:\n\n- After preflight lease/UID/STOP/p5/cap/fresh-receipt checks and native identity `29950/53274039`, open only `main_tap` with `FifoTap(..., create=False)`. Start draining immediately after the owned reader opens, before the first potentially slow `/proc` status check.\n- Every **0.1 s**, monotonically scheduled, nonblockingly discard up to **8 MiB**, with no JPEG inspection, decoding, persistence, ffmpeg, model/GPU activity, or native writes. Run 1 Hz `main_status` work off the event-loop thread so its scans/0.6 s confirmation cannot starve draining.\n- Enforce **256 MiB total** using a remaining-aware read size; abort rather than continue undrained if the cap would be reached. A cap hit, drain failure, inode change, or materially late drain scheduling makes the probe **inconclusive**, not a native freshness failure. Log drain bytes, totals, and scheduling lag.\n- Record every 1 Hz sample completely as specified, including report/status/reason/exception/duration and `MainSource` `fresh_for`, `retry_in`, and `ready`.\n- Recheck identical inode/native identity and all required owner checks afterward; close every owned fd in `finally`.\n\nVoice absence remains expected and must not be interpreted as live-voice failure. No voice retry. This approval covers design only; exact code and manifest require separate review before execution.",
+ "finish_reason": "stop",
+ "prompt_tokens": 38704,
+ "completion_tokens": 2904,
+ "reasoning_tokens": 2514,
+ "seconds": 96.4
+}

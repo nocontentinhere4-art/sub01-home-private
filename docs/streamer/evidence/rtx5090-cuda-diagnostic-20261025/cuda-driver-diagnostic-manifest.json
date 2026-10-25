@@ -1,0 +1,22 @@
+{
+  "schema": "sub01.cuda-driver-manifest.v1",
+  "probe_sha256": "a7f003256288f7b21027055d7c1d92f4791c79c6fb565bb76a45e4a1b68c450e",
+  "runner_sha256": "33925a26d7abcd8024986c66e77d08bde328cba01db4f3544609566b41e278d5",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+    "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "environment_sha256": "502c556685e9b8f8c1ccf34ab69cf0ccfd7a94f4a23c340fe92b0c97a013ea6f",
+  "launch": [
+    "env",
+    "-u",
+    "PYTHONOPTIMIZE",
+    "/usr/bin/python3",
+    "-I",
+    "/tmp/sub01-share/supervise-cuda-driver-diagnostic.py"
+  ],
+  "supervisor_sha256": "bc9b6e7f580591abfb4ec646090411393e7adfdbd486523d44ed7323b6b402ff"
+}

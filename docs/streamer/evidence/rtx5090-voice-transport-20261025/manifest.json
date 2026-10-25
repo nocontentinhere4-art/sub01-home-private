@@ -1,0 +1,57 @@
+[
+  {
+    "name": "capture-result.json",
+    "bytes": 1317,
+    "sha256": "ff8065787a69dcd57aec1b6889065d4416d503edc2f34d407081ed24f9359808"
+  },
+  {
+    "name": "director-ready.json",
+    "bytes": 3738,
+    "sha256": "3ee86caeba38fdfd7146cd7b609bc293115ff1bede50431cc6c66b1cb5b8491d"
+  },
+  {
+    "name": "director-journal.jsonl",
+    "bytes": 76850,
+    "sha256": "dcfcc8e23fb5072aec847075228d2212905a47a49d2d68da086d9c8e0fa3efa8"
+  },
+  {
+    "name": "capture-inputs.json",
+    "bytes": 872,
+    "sha256": "3aac25ab3bd1b8e42180b960ef7d5047a9f560f8ca28cf59843f2f3c8c30019d"
+  },
+  {
+    "name": "speak-response.json",
+    "bytes": 187,
+    "sha256": "766353f5252d6d3b6ce91f378240d226c2a2adfa3db5401c0df35e7f4de67641"
+  },
+  {
+    "name": "speech-timeline.jsonl",
+    "bytes": 197,
+    "sha256": "3b20b0366f3d389a9556378fc91f70aaeab86820dab2bdfe64b028326a1b6aae"
+  },
+  {
+    "name": "voice.log",
+    "bytes": 2690,
+    "sha256": "511ad1bdc7ee329d2a5e4168985e879d47d67b4c2e05e7378d8d95a6cf4c0a8a"
+  },
+  {
+    "name": "director.log",
+    "bytes": 4153,
+    "sha256": "06640787687d467d969f713829cc1cb3b83aada106cda78581c823f16299e9b7"
+  },
+  {
+    "name": "20261025T132233-0001.wav",
+    "bytes": 483884,
+    "sha256": "ae748675e787229a5d4c67fa849c936fa7295fb544e0bbcf58347f3a5072a29f"
+  },
+  {
+    "name": "sub01-20261025-132211-000.mp4",
+    "bytes": 29923,
+    "sha256": "9e00439201e95f3886cc1c62fd2c8324700abb1e0ad6ad7052abcf6822f50c28"
+  },
+  {
+    "name": "sub01-20261025-132216-000.mp4",
+    "bytes": 10170117,
+    "sha256": "8c77b4719bdd94b7bb9cfd5720b8dbf78bff8149a3d99c907decccb64f56955e"
+  }
+]

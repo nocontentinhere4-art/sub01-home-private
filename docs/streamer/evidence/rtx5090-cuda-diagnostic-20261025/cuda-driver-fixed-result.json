@@ -1,0 +1,214 @@
+{
+  "schema": "sub01.cuda-driver-diagnostic.v1",
+  "owner": "codex-cuda-driver-065e4c75afca4de0953d9c7f6a466e0b",
+  "started": 1792927115.5855389,
+  "runs": [
+    {
+      "label": "B",
+      "command": [
+        "/opt/sub01toolroot/extracted/usr/bin/strace",
+        "-f",
+        "-qq",
+        "-s",
+        "128",
+        "-e",
+        "trace=%file,%network,ioctl",
+        "/usr/bin/python3",
+        "-I",
+        "/tmp/sub01-share/restrict-diagnostic-child-v2.py",
+        "--directory",
+        "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+        "--bind-port",
+        "8855",
+        "--",
+        "/usr/bin/python3",
+        "-I",
+        "/tmp/sub01-share/cuda-driver-fixed-probe.py",
+        "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+        "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control",
+        "37784"
+      ],
+      "started": 1792927115.5879426,
+      "leader": {
+        "pid": 37785,
+        "ppid": 37783,
+        "sid": 37785,
+        "ticks": 56339110,
+        "state": "R"
+      },
+      "returncode": 0,
+      "elapsed": 0.07661950401961803,
+      "probe": {
+        "fixture": {
+          "schema": "sub01.diagnostic-confinement-test.v1",
+          "all_pass": true,
+          "results": {
+            "isolated-write": {
+              "allowed": true
+            },
+            "readonly-read": {
+              "allowed": true
+            },
+            "readonly-content-write": {
+              "blocked": true,
+              "errno": 13
+            },
+            "readonly-truncate": {
+              "blocked": true,
+              "errno": 13
+            },
+            "outside-create": {
+              "blocked": true,
+              "errno": 13
+            },
+            "2-udp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "2-raw": {
+              "blocked": true,
+              "errno": 1
+            },
+            "2-sctp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "2-mptcp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "10-udp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "10-raw": {
+              "blocked": true,
+              "errno": 1
+            },
+            "10-sctp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "10-mptcp": {
+              "blocked": true,
+              "errno": 1
+            },
+            "unix-socket": {
+              "allowed": true
+            },
+            "loopback-bind-8855": {
+              "allowed": true
+            },
+            "unlisted-bind": {
+              "blocked": true,
+              "errno": 13
+            },
+            "tcp-connect-127.0.0.1": {
+              "blocked": true,
+              "errno": 13
+            },
+            "tcp-connect-198.51.100.1": {
+              "blocked": true,
+              "errno": 13
+            },
+            "io-uring-425": {
+              "blocked": true,
+              "errno": 1
+            },
+            "io-uring-426": {
+              "blocked": true,
+              "errno": 1
+            },
+            "io-uring-427": {
+              "blocked": true,
+              "errno": 1
+            },
+            "own-main-and-future-tid-comm": {
+              "allowed": true,
+              "future_tid": 37789
+            },
+            "other-sacrificial-comm-write": {
+              "blocked": true,
+              "errno": 13
+            },
+            "other-sacrificial-comm-truncate": {
+              "blocked": true,
+              "errno": 13
+            },
+            "own-status-write": {
+              "blocked": true,
+              "errno": 13
+            },
+            "own-status-truncate": {
+              "blocked": true,
+              "errno": 13
+            },
+            "nvidia0-still-absent": {
+              "absent": true
+            },
+            "nvidia1-identity": {
+              "major": 195,
+              "minor": 1
+            },
+            "device-wrong-type-number-symlink": {
+              "rejected": true
+            },
+            "residual-own-task-subtree-write": {
+              "acknowledged": true,
+              "comm_only": false
+            }
+          },
+          "scope": "known non-adversarial offline diagnostics; AF_UNIX IPC available; bind-address enforcement remains a source/observer gate"
+        },
+        "uid": 1001,
+        "cuInit": 0,
+        "cuDeviceGetCount": 0,
+        "count": 1
+      },
+      "helper": {
+        "pid": 37784,
+        "ticks": 56339110
+      },
+      "whole_run_elapsed": 0.08990650298073888
+    }
+  ],
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+    "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "manifest": {
+    "environment": {
+      "PATH": "/usr/bin:/bin",
+      "HOME": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+      "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+      "LANG": "C.UTF-8",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "launch": [
+      "env",
+      "-u",
+      "PYTHONOPTIMIZE",
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/sub01-share/supervise-cuda-driver-fixed-diagnostic.py"
+    ],
+    "probe_sha256": "1c071f42a73df894514ac0029063a70a7b97538522b0c5be32cfa65cbfad0dd0",
+    "fixture_sha256": "9737ab554b11e14ce67a884c9078383dcf3478be8183340b8d4b898e0721c883",
+    "runner_sha256": "a8aae74e0f05c3bdf227236112f752b34773e140c588992b4808dbba8e58c815",
+    "supervisor_sha256": "e738a2a720206141bab3ffd5c6091962e17e8e09b13ed95dd56ac32993014e34"
+  },
+  "session": 37785,
+  "leader_ticks": 56339110,
+  "status": "diagnostic-recorded-not-root-cause-acceptance",
+  "cleanup_verified": true,
+  "finished": 1792927115.6792123,
+  "elapsed": 0.11238382197916508,
+  "owned": {
+    "37784": 56339110,
+    "37785": 56339110,
+    "37788": 56339110
+  }
+}

@@ -1,0 +1,5 @@
+voice: listening on http://127.0.0.1:8855 engine=chatterbox voice=sub01-voice-reference-k07.wav streamer-dir=/home/unreal/.sub01-private/voice-director-diagnostic-20261025/voice
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:182: UserWarning: CUDA initialization: Unexpected error from cudaGetDeviceCount(). Did you run some cuda functions before calling NumCudaDevices() that might have already set an error? Error 304: OS call failed or operation not supported on this OS (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:109.)
+  return torch._C._cuda_getDeviceCount() > 0
+voice: engine chatterbox warmup failed: EngineError: CUDA is not available
+voice: shutting down

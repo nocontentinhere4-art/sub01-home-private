@@ -1,0 +1,11 @@
+{
+  "initial": [
+    "Review exact preservation diff part 1 of 2. Follow attached question. Approve only this part; no runtime action.",
+    "Review exact preservation diff part 2 of 2. Follow attached question. Approve only this part; no runtime action."
+  ],
+  "redaction": "Verify the sole part-2 account redaction correction. All other part-2 bytes unchanged. Return COMMIT YES or concrete remaining blocker.",
+  "part1_fix": "Review only the concrete part-1 fixes and added tests/checkpoint. Preserve all historical reviewed bytes. Return COMMIT YES if resolved.",
+  "archive": "Review the exact new-file archive in the attachment for a private evidence commit only. No runtime execution or production adoption. Check claims and recorded limits. Return APPROVE ARCHIVE or specific corrections.",
+  "initial_diff_sha256": "b087e898a80c42b883153e8aad23d1683ee44ac7aad72a02e7e175bf9a170834",
+  "note": "Initial diff attachments retained privately outside Git because the original quota-error file required account redaction. Both parts approved after the recorded narrow corrections. Archive-only earlier finding superseded by full review. Review records appended as review metadata."
+}

@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**CONCRETE BLOCK — DO NOT LAUNCH THIS MANIFEST.**\n\nThe probe violates the required complete 1 Hz sample schema in two paths:\n\n1. **Final sample is not enriched.** After the 10-second loop, this path appends the raw result:\n   ```python\n   samples.append(future.result())\n   ```\n   It does not call `state.observe(...)` or add `fresh_for`, `retry_in`, and readiness. A final status completing near the deadline therefore produces an incomplete sample and excludes that observation from `MainSource`.\n\n2. **Ready field is renamed.** Ordinary samples use:\n   ```python\n   simulated_ready=state.ready(...)\n   ```\n   rather than the required `ready` field. If renaming is intentional, the manifest/schema and review requirement must explicitly specify it; currently they do not.\n\nConsolidate sample finalization into one function used both inside the loop and for the final future, including exception handling and exactly one `state.observe` per successful status. Then regenerate the probe, runner/supervisor hashes as applicable, and manifest for another exact review; no post-approval edits or automatic retry.\n\nThe lockless drain otherwise uses the owned fd, remaining-aware cap, nonblocking reads, lag accounting, and fail-closed pending-thread handling as described. Runtime receipt freshness, inode validity, old-service absence, wrapper behaviour, and supplied hash correctness cannot be independently verified from these files.",
+ "finish_reason": "stop",
+ "prompt_tokens": 5028,
+ "completion_tokens": 2379,
+ "reasoning_tokens": 2078,
+ "seconds": 78.2
+}

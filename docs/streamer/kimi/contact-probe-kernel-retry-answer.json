@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "Not approved—three kernel blockers:\n\n- **Incoherent geometry snapshots:** `OnFinalized` saves only the serial and body transform. Bones and key transforms/bounds are read later in `OnEndFrame`. A key ticking after mesh finalization, a bounds change, or a direct bone edit can therefore be recorded against the earlier proxy serial; comparing only the body transform cannot detect this. Snapshot geometry at finalization, or verify every geometry input remains unchanged before committing.\n- **Stale bone indices:** indices are resolved only in `Arm`. A skeletal-mesh/skeleton replacement on the same component can make them identify different bones or become out of range. Pin and verify the skeleton revision, or re-resolve stored bone names before sampling.\n- **Broken public `Disarm` lifecycle:** it removes both callbacks but leaves `State == Armed`. `Publish`/`Select` remain accepted, the deadline can no longer fire, and re-arming is impossible. Separate private delegate detachment from public cancellation, which must enter a terminal state.\n\nCollector scope only; contact/JPEG correlation is not approved. Integration and output writing still require separate review.",
+ "finish_reason": "stop",
+ "prompt_tokens": 2228,
+ "completion_tokens": 20367,
+ "reasoning_tokens": 20122,
+ "seconds": 598.8
+}

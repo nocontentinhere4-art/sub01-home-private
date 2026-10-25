@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE DESIGN**, subject to these binding constraints. This is **not** code or launch approval.\n\n- Write the configuration once, before broker launch, with exactly two targets; reject duplicates or additions. Pin the **actual owned voice-server PID/ticks after health**, not an assumed launcher PID.\n- Each writer decision must match FIFO `(dev,ino)`, PID/start-ticks, non-zombie state, and `fdinfo` mode `O_WRONLY` or `O_RDWR`. Any missing/uninspectable FD, malformed/oversized snapshot, unknown target, identity mismatch, or monotonic age outside `0..1.5s` means **false**. Never retain a last-known `true`.\n- Use same-directory temporary-file-plus-atomic-rename snapshots, maximum 64 KiB. Broker state must remain outside the confined write grant. Include `ROOT/broker` in artifact accounting and owned cleanup; broker is finite, registered, and never restarted.\n- The director launcher may override only `fifo_has_writer`; every other identity must delegate to the byte-pinned original. Preserve all existing readiness, freshness, sole-reader, native/STOP, source/cache/reference, recording, and cleanup gates.\n- During the fixed 45-second readiness window, persist non-ready director/voice/main state and both broker decisions, including snapshot age/errors, at most once per second. Timeout remains failure; do not extend it to accommodate voice warmup.\n\nThe supplied main-only result proves the visibility mechanism, including negatives and cleanup; it does **not** prove voice-target detection, the import override, or end-to-end PCM transport.\n\nExact v7 source, configuration, launcher, and command require separate review before **one** run. Any failure stops; no automatic retry.",
+ "finish_reason": "stop",
+ "prompt_tokens": 13931,
+ "completion_tokens": 4026,
+ "reasoning_tokens": 3656,
+ "seconds": 118.1
+}

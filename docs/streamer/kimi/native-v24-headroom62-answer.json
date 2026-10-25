@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE62 — once, for diagnosis only; “clean” is not being redefined. Cap61 remains failed at 0.625% loss. The cap60→61 dose response—write cadence rising from 56.17–57.13 to 59.22fps while loss fell—justifies one more headroom point; 1.55 ffmpeg cores alone neither proves nor disproves consumer capacity. Keep desktop60/output60/main60, the warmup, 120s bound, and stated aborts; restore60 on every exit. Near-60 captured and written with lower loss supports source-pacing starvation; rising captured, flat written, and increasing queueDrops supports consumer backpressure. Otherwise, inconclusive—no cap63. Loss <1% is only an abort bound; even a clean 120s run is neither acceptance nor soak.",
+ "finish_reason": "stop",
+ "prompt_tokens": 488,
+ "completion_tokens": 14291,
+ "reasoning_tokens": 14099,
+ "seconds": 271.5
+}

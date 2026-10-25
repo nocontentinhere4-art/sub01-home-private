@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE ONE RUN** — exactly the manifest supervisor launch, with no retry and no voice release.\n\nThe reviewed implementation satisfies the stated boundary and phase requirements:\n\n- The broker is outside the confined BASE, runs as UID 1001, inspects only the pinned native PID/start-ticks and FIFO identity, and publishes bounded atomic snapshots. The validator enforces regular-file/non-symlink, UID 1001, mode `0600`, ≤64 KiB, freshness, identity, write mode, and empty errors.\n- The Landlock correction is valid: handled rights `WRITE_FILE` bit 1 plus bits 4–14 do not handle `READ_FILE` bit 2. No additional read rule is needed under the stated unchanged wrapper model.\n- The first three seconds retain the original writer path. Installation requires fresh outside proof and records all three same-FD proc operations. Without inside `EPERM`/`EACCES`, or with any failed negative test, installation raises before mutation.\n- `d['main_status'].__globals__` is the correct actual function-global namespace. Only the matching main FIFO uses broker validation; other identities delegate to the original function, and the voice check remains original.\n- Negative tests mutate deep copies only. Drain, byte, lag, CPU, broker, worker, supervisor, pidfd cleanup, lease, and post-reader bounds remain intact.\n\n`status=\"recorded\"` alone is **not** diagnostic success. Acceptance requires broker-phase samples, recorded inside denial, all four negative tests true, unchanged freshness/MainSource evaluation, and verified cleanup. Any exception, stale/mismatched proof, absent denial, or cleanup failure remains a stopped diagnosis and does not authorize a voice retry.",
+ "finish_reason": "stop",
+ "prompt_tokens": 7273,
+ "completion_tokens": 10225,
+ "reasoning_tokens": 9862,
+ "seconds": 311.4
+}
