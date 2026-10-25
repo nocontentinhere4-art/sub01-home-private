@@ -1,0 +1,1074 @@
+{
+  "utc": 1792914260.2718096,
+  "runtime_modified": false,
+  "limitations": [
+    "Archived FK is before runtime pose layers; not final posed fingertips",
+    "Settled receipts and midpoint stills have different clip phase; no exact image-phase contact assertion",
+    "No original lost animation assets; provenance remains unknown"
+  ],
+  "receipts": {
+    "monitor-reading-settled": {
+      "native_pid": 29950,
+      "native_start_ticks": 53274039,
+      "captured_utc": 1792913619.225,
+      "clip": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "body_world": "195.277121,-366.436203,-2.643133|0.000000,166.301741,-0.000000|1.000000,1.000000,1.000000",
+      "clip_time": 3.733375072479248,
+      "seat_offset": "-1.320016,79.367665,-8.834946|0.000000,0.898369,-0.000000|1.000000,1.000000,1.000000",
+      "pelvis_world": "X=216.760 Y=-276.064 Z=70.404",
+      "desk_props_delta": "X=9.072 Y=34.838 Z=0.000",
+      "hand_left": "keyboard_left 11.4cm",
+      "hand_right": "keyboard_right 2.1cm",
+      "hands_alpha": 1,
+      "elbow_left_deg": 100,
+      "elbow_right_deg": 55.790225982666016,
+      "v23_pelvis_pitch_deg": -6,
+      "v23_shoulder_drop_deg": 3,
+      "v23_shoulder_back_deg": 2,
+      "v23_neck_back_deg": 5,
+      "v23_neck_share": 0.4000000059604645,
+      "v23_neck_girth": 1,
+      "v23_elbow_min_deg": 100,
+      "v23_elbow_pole_back": 1,
+      "v23_elbow_pole_out": 0,
+      "v23_hand_orient": 1,
+      "v23_hand_yaw_in_deg": 12,
+      "v23_hand_pitch_deg": 10,
+      "v23_finger_bend_deg": 8,
+      "v23_mouse_scan": 0,
+      "v23_hand_on_mouse": 0,
+      "v23_key_side_cm": -55,
+      "v23_key_up_extra_cm": 10,
+      "v23_key_specular": 1,
+      "v23_fill_cd": 0.009999999776482582,
+      "v23_fill_front_cm": 40,
+      "v23_fill_side_cm": 45,
+      "v23_fill_up_cm": 0,
+      "v23_fill_temp_k": 5000,
+      "v23_rim_cd": 0,
+      "v23_rim_back_cm": 60,
+      "v23_rim_side_cm": 30,
+      "v23_rim_up_cm": 40,
+      "v23_rim_temp_k": 6500,
+      "v23_chair_scale": 1,
+      "v23_chair_back_extra_cm": 2,
+      "v23_chair_side_cm": 0,
+      "v23_changed": true,
+      "v23_mouse": "-",
+      "v23_chair_extra": "X=0.504 Y=1.935 Z=0.000",
+      "v23_chair_scale_applied": 1,
+      "v23_incline_deg": 12.028241157531738,
+      "v23_head_ahead_cm": 1.2566423416137695,
+      "v23_slide_left_cm": 11.377403259277344,
+      "v23_slide_right_cm": 2.070699453353882,
+      "v23_residual_left_cm": 8.405173730352544e-07,
+      "v23_residual_right_cm": 5.685436008207034e-06,
+      "v23_elbow_back_left_cm": -5.049797534942627,
+      "v23_elbow_back_right_cm": 7.876160144805908,
+      "v23_orient_err_left_deg": 2.5613210254959995e-06,
+      "v23_orient_err_right_deg": 4.004553375125397e-06,
+      "v23_tips_above_keys_left_cm": 1.1543920040130615,
+      "v23_tips_above_keys_right_cm": -0.26467838883399963,
+      "v23_tips_min_above_keys_left_cm": -0.20658887922763824,
+      "v23_tips_min_above_keys_right_cm": -0.9957715272903442,
+      "v23_neck_axis_align": -1
+    },
+    "monitor-typing-settled": {
+      "native_pid": 29950,
+      "native_start_ticks": 53274039,
+      "captured_utc": 1792913634.742,
+      "clip": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "body_world": "195.277121,-366.436203,-2.643133|0.000000,166.301741,-0.000000|1.000000,1.000000,1.000000",
+      "clip_time": 0.2958338260650635,
+      "seat_offset": "-1.320016,79.367665,-8.834946|0.000000,0.898369,-0.000000|1.000000,1.000000,1.000000",
+      "pelvis_world": "X=216.992 Y=-276.235 Z=70.399",
+      "desk_props_delta": "X=9.072 Y=34.838 Z=0.000",
+      "hand_left": "keyboard_left 13.0cm",
+      "hand_right": "keyboard_right 7.2cm",
+      "hands_alpha": 1,
+      "elbow_left_deg": 100,
+      "elbow_right_deg": 61.03413009643555,
+      "v23_pelvis_pitch_deg": -6,
+      "v23_shoulder_drop_deg": 3,
+      "v23_shoulder_back_deg": 2,
+      "v23_neck_back_deg": 5,
+      "v23_neck_share": 0.4000000059604645,
+      "v23_neck_girth": 1,
+      "v23_elbow_min_deg": 100,
+      "v23_elbow_pole_back": 1,
+      "v23_elbow_pole_out": 0,
+      "v23_hand_orient": 1,
+      "v23_hand_yaw_in_deg": 12,
+      "v23_hand_pitch_deg": 10,
+      "v23_finger_bend_deg": 8,
+      "v23_mouse_scan": 0,
+      "v23_hand_on_mouse": 0,
+      "v23_key_side_cm": -55,
+      "v23_key_up_extra_cm": 10,
+      "v23_key_specular": 1,
+      "v23_fill_cd": 0.009999999776482582,
+      "v23_fill_front_cm": 40,
+      "v23_fill_side_cm": 45,
+      "v23_fill_up_cm": 0,
+      "v23_fill_temp_k": 5000,
+      "v23_rim_cd": 0,
+      "v23_rim_back_cm": 60,
+      "v23_rim_side_cm": 30,
+      "v23_rim_up_cm": 40,
+      "v23_rim_temp_k": 6500,
+      "v23_chair_scale": 1,
+      "v23_chair_back_extra_cm": 2,
+      "v23_chair_side_cm": 0,
+      "v23_changed": true,
+      "v23_mouse": "-",
+      "v23_chair_extra": "X=0.504 Y=1.935 Z=0.000",
+      "v23_chair_scale_applied": 1,
+      "v23_incline_deg": 9.445088386535645,
+      "v23_head_ahead_cm": 0.5145658254623413,
+      "v23_slide_left_cm": 12.983336448669434,
+      "v23_slide_right_cm": 7.178728103637695,
+      "v23_residual_left_cm": 2.5807396468735533e-06,
+      "v23_residual_right_cm": 3.3692488159431377e-06,
+      "v23_elbow_back_left_cm": -5.206751823425293,
+      "v23_elbow_back_right_cm": 6.272246837615967,
+      "v23_orient_err_left_deg": 3.912482497980818e-06,
+      "v23_orient_err_right_deg": 2.25887265514757e-06,
+      "v23_tips_above_keys_left_cm": 1.0023640394210815,
+      "v23_tips_above_keys_right_cm": 0.05969018116593361,
+      "v23_tips_min_above_keys_left_cm": -0.3302922546863556,
+      "v23_tips_min_above_keys_right_cm": -0.5589328408241272,
+      "v23_neck_axis_align": -1
+    },
+    "spectator-reading-settled": {
+      "native_pid": 29950,
+      "native_start_ticks": 53274039,
+      "captured_utc": 1792913650.792,
+      "clip": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "body_world": "195.277121,-366.436203,-2.643133|0.000000,166.301741,-0.000000|1.000000,1.000000,1.000000",
+      "clip_time": 0.6333379745483398,
+      "seat_offset": "-1.320016,79.367665,-8.834946|0.000000,0.898369,-0.000000|1.000000,1.000000,1.000000",
+      "pelvis_world": "X=217.216 Y=-276.350 Z=70.403",
+      "desk_props_delta": "X=9.072 Y=34.838 Z=0.000",
+      "hand_left": "keyboard_left 13.3cm",
+      "hand_right": "keyboard_right 8.5cm",
+      "hands_alpha": 1,
+      "elbow_left_deg": 100,
+      "elbow_right_deg": 63.356346130371094,
+      "v23_pelvis_pitch_deg": -6,
+      "v23_shoulder_drop_deg": 3,
+      "v23_shoulder_back_deg": 2,
+      "v23_neck_back_deg": 5,
+      "v23_neck_share": 0.4000000059604645,
+      "v23_neck_girth": 1,
+      "v23_elbow_min_deg": 100,
+      "v23_elbow_pole_back": 1,
+      "v23_elbow_pole_out": 0,
+      "v23_hand_orient": 1,
+      "v23_hand_yaw_in_deg": 12,
+      "v23_hand_pitch_deg": 10,
+      "v23_finger_bend_deg": 8,
+      "v23_mouse_scan": 0,
+      "v23_hand_on_mouse": 0,
+      "v23_key_side_cm": -55,
+      "v23_key_up_extra_cm": 10,
+      "v23_key_specular": 1,
+      "v23_fill_cd": 0.009999999776482582,
+      "v23_fill_front_cm": 40,
+      "v23_fill_side_cm": 45,
+      "v23_fill_up_cm": 0,
+      "v23_fill_temp_k": 5000,
+      "v23_rim_cd": 0,
+      "v23_rim_back_cm": 60,
+      "v23_rim_side_cm": 30,
+      "v23_rim_up_cm": 40,
+      "v23_rim_temp_k": 6500,
+      "v23_chair_scale": 1,
+      "v23_chair_back_extra_cm": 2,
+      "v23_chair_side_cm": 0,
+      "v23_changed": true,
+      "v23_mouse": "-",
+      "v23_chair_extra": "X=0.504 Y=1.935 Z=0.000",
+      "v23_chair_scale_applied": 1,
+      "v23_incline_deg": 6.580343246459961,
+      "v23_head_ahead_cm": -1.0492761135101318,
+      "v23_slide_left_cm": 13.287060737609863,
+      "v23_slide_right_cm": 8.545470237731934,
+      "v23_residual_left_cm": 3.3838350645964965e-06,
+      "v23_residual_right_cm": 7.230502433230868e-06,
+      "v23_elbow_back_left_cm": -5.180449485778809,
+      "v23_elbow_back_right_cm": 6.071976184844971,
+      "v23_orient_err_left_deg": 4.0945546970760915e-06,
+      "v23_orient_err_right_deg": 3.8181919990165625e-06,
+      "v23_tips_above_keys_left_cm": 0.2237946093082428,
+      "v23_tips_above_keys_right_cm": -0.358439177274704,
+      "v23_tips_min_above_keys_left_cm": -0.44030383229255676,
+      "v23_tips_min_above_keys_right_cm": -0.7352927923202515,
+      "v23_neck_axis_align": -1
+    },
+    "spectator-typing-settled": {
+      "native_pid": 29950,
+      "native_start_ticks": 53274039,
+      "captured_utc": 1792913665.793,
+      "clip": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "body_world": "195.277121,-366.436203,-2.643133|0.000000,166.301741,-0.000000|1.000000,1.000000,1.000000",
+      "clip_time": 4.437500953674316,
+      "seat_offset": "-1.320016,79.367665,-8.834946|0.000000,0.898369,-0.000000|1.000000,1.000000,1.000000",
+      "pelvis_world": "X=217.089 Y=-276.257 Z=70.404",
+      "desk_props_delta": "X=9.072 Y=34.838 Z=0.000",
+      "hand_left": "keyboard_left 12.4cm",
+      "hand_right": "keyboard_right 8.0cm",
+      "hands_alpha": 1,
+      "elbow_left_deg": 100,
+      "elbow_right_deg": 62.689483642578125,
+      "v23_pelvis_pitch_deg": -6,
+      "v23_shoulder_drop_deg": 3,
+      "v23_shoulder_back_deg": 2,
+      "v23_neck_back_deg": 5,
+      "v23_neck_share": 0.4000000059604645,
+      "v23_neck_girth": 1,
+      "v23_elbow_min_deg": 100,
+      "v23_elbow_pole_back": 1,
+      "v23_elbow_pole_out": 0,
+      "v23_hand_orient": 1,
+      "v23_hand_yaw_in_deg": 12,
+      "v23_hand_pitch_deg": 10,
+      "v23_finger_bend_deg": 8,
+      "v23_mouse_scan": 0,
+      "v23_hand_on_mouse": 0,
+      "v23_key_side_cm": -55,
+      "v23_key_up_extra_cm": 10,
+      "v23_key_specular": 1,
+      "v23_fill_cd": 0.009999999776482582,
+      "v23_fill_front_cm": 40,
+      "v23_fill_side_cm": 45,
+      "v23_fill_up_cm": 0,
+      "v23_fill_temp_k": 5000,
+      "v23_rim_cd": 0,
+      "v23_rim_back_cm": 60,
+      "v23_rim_side_cm": 30,
+      "v23_rim_up_cm": 40,
+      "v23_rim_temp_k": 6500,
+      "v23_chair_scale": 1,
+      "v23_chair_back_extra_cm": 2,
+      "v23_chair_side_cm": 0,
+      "v23_changed": true,
+      "v23_mouse": "-",
+      "v23_chair_extra": "X=0.504 Y=1.935 Z=0.000",
+      "v23_chair_scale_applied": 1,
+      "v23_incline_deg": 7.908430099487305,
+      "v23_head_ahead_cm": -0.1419532150030136,
+      "v23_slide_left_cm": 12.420122146606445,
+      "v23_slide_right_cm": 8.030791282653809,
+      "v23_residual_left_cm": 2.7520486582943704e-06,
+      "v23_residual_right_cm": 3.348892505528056e-06,
+      "v23_elbow_back_left_cm": -5.103668212890625,
+      "v23_elbow_back_right_cm": 5.801793098449707,
+      "v23_orient_err_left_deg": 3.3066510241042124e-06,
+      "v23_orient_err_right_deg": 2.414836444586399e-06,
+      "v23_tips_above_keys_left_cm": 0.8180164694786072,
+      "v23_tips_above_keys_right_cm": -0.29281294345855713,
+      "v23_tips_min_above_keys_left_cm": -0.41687989234924316,
+      "v23_tips_min_above_keys_right_cm": -0.8182439208030701,
+      "v23_neck_axis_align": -1
+    }
+  },
+  "source_samples": {
+    "case-01/DeskTyping-contact-clean-all-key-poses.json": {
+      "sha256": "5a97a3cc113df6790a55c93b134000ee6d8891fb422d9f88b368f77c4e6e3eea",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000094019293833,
+              -40.999950458540624,
+              88.60005500476042
+            ],
+            "RightHand": [
+              -9.999338777134335,
+              -41.00062374317427,
+              88.59994557090299
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000064113757693,
+              -40.99996739114255,
+              88.60007914007669
+            ],
+            "RightHand": [
+              -9.999339428376322,
+              -41.000589181018995,
+              88.59993890373883
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.00012559302111,
+              -40.99995459741291,
+              88.60007903472098
+            ],
+            "RightHand": [
+              -9.999257462454276,
+              -41.000483014345676,
+              88.59997359942584
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000117776905896,
+              -40.99996718293678,
+              88.6000929528165
+            ],
+            "RightHand": [
+              -9.999307599268652,
+              -41.000669140708396,
+              88.5997606213922
+            ]
+          }
+        }
+      ]
+    },
+    "case-01/Website-gaze-all-key-poses.json": {
+      "sha256": "219d1a9e859067b5dcceaea70d140e9b3eabeea05150ed1d582bd1d09ce8ac67",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000094019293833,
+              -40.999950458540624,
+              88.60005500476042
+            ],
+            "RightHand": [
+              -9.999338777134335,
+              -41.00062374317427,
+              88.59994557090299
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000064113757693,
+              -40.99996739114255,
+              88.60007914007669
+            ],
+            "RightHand": [
+              -9.999339428376322,
+              -41.000589181018995,
+              88.59993890373883
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.00012559302111,
+              -40.99995459741291,
+              88.60007903472098
+            ],
+            "RightHand": [
+              -9.999257462454276,
+              -41.000483014345676,
+              88.59997359942584
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000117776905896,
+              -40.99996718293678,
+              88.6000929528165
+            ],
+            "RightHand": [
+              -9.999307599268652,
+              -41.000669140708396,
+              88.5997606213922
+            ]
+          }
+        }
+      ]
+    },
+    "case-02/DeskTyping-contact-clean-all-key-poses.json": {
+      "sha256": "5a97a3cc113df6790a55c93b134000ee6d8891fb422d9f88b368f77c4e6e3eea",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000094019293833,
+              -40.999950458540624,
+              88.60005500476042
+            ],
+            "RightHand": [
+              -9.999338777134335,
+              -41.00062374317427,
+              88.59994557090299
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000064113757693,
+              -40.99996739114255,
+              88.60007914007669
+            ],
+            "RightHand": [
+              -9.999339428376322,
+              -41.000589181018995,
+              88.59993890373883
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.00012559302111,
+              -40.99995459741291,
+              88.60007903472098
+            ],
+            "RightHand": [
+              -9.999257462454276,
+              -41.000483014345676,
+              88.59997359942584
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000117776905896,
+              -40.99996718293678,
+              88.6000929528165
+            ],
+            "RightHand": [
+              -9.999307599268652,
+              -41.000669140708396,
+              88.5997606213922
+            ]
+          }
+        }
+      ]
+    },
+    "case-02/Website-outward-gaze-all-key-poses.json": {
+      "sha256": "dfa184bba28220c94bc132d329a7cd1e75b7915c4479933119c3887b79028454",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000028199681054,
+              -40.99991136879327,
+              88.59998440078411
+            ],
+            "RightHand": [
+              -10.00002085548454,
+              -41.00020846770855,
+              88.59992291843518
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000016903442232,
+              -40.99993515192658,
+              88.59999458527504
+            ],
+            "RightHand": [
+              -10.000025616747692,
+              -41.00019065835606,
+              88.59990465632359
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.000031228123618,
+              -40.999927145861584,
+              88.59999003665553
+            ],
+            "RightHand": [
+              -9.999948747074523,
+              -41.0000288038858,
+              88.5998961624903
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000033188079293,
+              -40.99995305942609,
+              88.60001099955319
+            ],
+            "RightHand": [
+              -10.00017941886253,
+              -41.00027647212314,
+              88.59982134910636
+            ]
+          }
+        }
+      ]
+    },
+    "case-03/DeskTyping-outward-elbows-all-key-poses.json": {
+      "sha256": "4e53fb1fcb02a8e73270aca0cd245884e0654484408791ddbd7bdd2138c58bb4",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000028199681054,
+              -40.99991136879327,
+              88.59998440078411
+            ],
+            "RightHand": [
+              -10.00002085548454,
+              -41.00020846770855,
+              88.59992291843518
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000016903442232,
+              -40.99993515192658,
+              88.59999458527504
+            ],
+            "RightHand": [
+              -10.000025616747692,
+              -41.00019065835606,
+              88.59990465632359
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.000031228123618,
+              -40.999927145861584,
+              88.59999003665553
+            ],
+            "RightHand": [
+              -9.999948747074523,
+              -41.0000288038858,
+              88.5998961624903
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000033188079293,
+              -40.99995305942609,
+              88.60001099955319
+            ],
+            "RightHand": [
+              -10.00017941886253,
+              -41.00027647212314,
+              88.59982134910636
+            ]
+          }
+        }
+      ]
+    },
+    "case-03/Website-gaze-all-key-poses.json": {
+      "sha256": "219d1a9e859067b5dcceaea70d140e9b3eabeea05150ed1d582bd1d09ce8ac67",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000094019293833,
+              -40.999950458540624,
+              88.60005500476042
+            ],
+            "RightHand": [
+              -9.999338777134335,
+              -41.00062374317427,
+              88.59994557090299
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000064113757693,
+              -40.99996739114255,
+              88.60007914007669
+            ],
+            "RightHand": [
+              -9.999339428376322,
+              -41.000589181018995,
+              88.59993890373883
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.00012559302111,
+              -40.99995459741291,
+              88.60007903472098
+            ],
+            "RightHand": [
+              -9.999257462454276,
+              -41.000483014345676,
+              88.59997359942584
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000117776905896,
+              -40.99996718293678,
+              88.6000929528165
+            ],
+            "RightHand": [
+              -9.999307599268652,
+              -41.000669140708396,
+              88.5997606213922
+            ]
+          }
+        }
+      ]
+    },
+    "case-04/DeskTyping-outward-elbows-all-key-poses.json": {
+      "sha256": "4e53fb1fcb02a8e73270aca0cd245884e0654484408791ddbd7bdd2138c58bb4",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000028199681054,
+              -40.99991136879327,
+              88.59998440078411
+            ],
+            "RightHand": [
+              -10.00002085548454,
+              -41.00020846770855,
+              88.59992291843518
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000016903442232,
+              -40.99993515192658,
+              88.59999458527504
+            ],
+            "RightHand": [
+              -10.000025616747692,
+              -41.00019065835606,
+              88.59990465632359
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.000031228123618,
+              -40.999927145861584,
+              88.59999003665553
+            ],
+            "RightHand": [
+              -9.999948747074523,
+              -41.0000288038858,
+              88.5998961624903
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000033188079293,
+              -40.99995305942609,
+              88.60001099955319
+            ],
+            "RightHand": [
+              -10.00017941886253,
+              -41.00027647212314,
+              88.59982134910636
+            ]
+          }
+        }
+      ]
+    },
+    "case-04/Website-outward-gaze-all-key-poses.json": {
+      "sha256": "dfa184bba28220c94bc132d329a7cd1e75b7915c4479933119c3887b79028454",
+      "samples": [
+        {
+          "phase": 0.0,
+          "bones": {
+            "Hips": [
+              -0.05939348042011261,
+              -92.65264129638672,
+              73.04924011230469
+            ],
+            "LeftHand": [
+              10.000028199681054,
+              -40.99991136879327,
+              88.59998440078411
+            ],
+            "RightHand": [
+              -10.00002085548454,
+              -41.00020846770855,
+              88.59992291843518
+            ]
+          }
+        },
+        {
+          "phase": 0.36666666666666664,
+          "bones": {
+            "Hips": [
+              -0.026413457468152046,
+              -92.70279693603516,
+              73.04345703125
+            ],
+            "LeftHand": [
+              10.000016903442232,
+              -40.99993515192658,
+              88.59999458527504
+            ],
+            "RightHand": [
+              -10.000025616747692,
+              -41.00019065835606,
+              88.59990465632359
+            ]
+          }
+        },
+        {
+          "phase": 2.2333333333333334,
+          "bones": {
+            "Hips": [
+              -0.3353336751461029,
+              -92.83950805664062,
+              73.03111267089844
+            ],
+            "LeftHand": [
+              10.000031228123618,
+              -40.999927145861584,
+              88.59999003665553
+            ],
+            "RightHand": [
+              -9.999948747074523,
+              -41.0000288038858,
+              88.5998961624903
+            ]
+          }
+        },
+        {
+          "phase": 4.433333333333334,
+          "bones": {
+            "Hips": [
+              0.3607567846775055,
+              -92.867431640625,
+              73.04915618896484
+            ],
+            "LeftHand": [
+              10.000033188079293,
+              -40.99995305942609,
+              88.60001099955319
+            ],
+            "RightHand": [
+              -10.00017941886253,
+              -41.00027647212314,
+              88.59982134910636
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "contact_window_logs": [
+    "[2026.10.25-07.33.01:675][962]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=idle clipTime=3.28 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=6.1 headAheadCm=-0.0 elbowMin=100 pole=1.00/0.00 elbow=L100/R78 slideCm=L8.5/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-5.4/R-1.4 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L20/40 R27/33 tipsAboveKeysCm=L0.4(min -0.4)/R-0.3(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.09:275][418]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L10.5/R10.5 alpha=1.00 elbow=L100/R68 fingers=L21/32 R29/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.33.11:675][562]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=idle clipTime=3.32 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=6.0 headAheadCm=-0.1 elbowMin=100 pole=1.00/0.00 elbow=L100/R79 slideCm=L8.2/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-5.2/R-1.4 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L18/41 R26/34 tipsAboveKeysCm=L0.6(min -0.5)/R-0.3(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.19:275][ 18]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.2/R9.2 alpha=1.00 elbow=L100/R65 fingers=L21/32 R28/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.33.21:675][162]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=idle clipTime=3.35 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=5.8 headAheadCm=-0.2 elbowMin=100 pole=1.00/0.00 elbow=L100/R80 slideCm=L7.8/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-5.0/R-1.6 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L16/41 R25/34 tipsAboveKeysCm=L0.8(min -0.6)/R-0.1(min -0.9) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.29:275][618]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.3/R9.2 alpha=1.00 elbow=L100/R65 fingers=L22/32 R28/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.33.31:675][762]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=idle clipTime=3.38 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=6.2 headAheadCm=-0.1 elbowMin=100 pole=1.00/0.00 elbow=L100/R78 slideCm=L7.9/R14.4 residualCm=L0.0/R0.0 elbowBackCm=L-4.9/R-0.9 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L14/38 R24/33 tipsAboveKeysCm=L0.9(min -0.6)/R0.0(min -0.8) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.39:276][218]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.5/R2.4 alpha=1.00 elbow=L100/R56 fingers=L12/45 R27/37 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.33.41:676][362]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=reading clipTime=1.20 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=9.0 headAheadCm=-0.6 elbowMin=100 pole=1.00/0.00 elbow=L98/R55 slideCm=L15.0/R3.4 residualCm=L0.0/R0.0 elbowBackCm=L-9.3/R16.7 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L22/32 R29/29 tipsAboveKeysCm=L0.2(min -0.5)/R-0.4(min -0.9) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.49:276][818]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.4/R3.2 alpha=1.00 elbow=L100/R57 fingers=L12/46 R27/38 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.33.51:676][962]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=reading clipTime=1.23 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=9.5 headAheadCm=-0.3 elbowMin=100 pole=1.00/0.00 elbow=L97/R55 slideCm=L15.0/R3.9 residualCm=L0.0/R0.0 elbowBackCm=L-7.8/R16.1 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L22/32 R30/29 tipsAboveKeysCm=L0.2(min -0.5)/R-0.5(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.33.59:292][419]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.2/R9.5 alpha=1.00 elbow=L100/R65 fingers=L16/43 R23/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.01:676][562]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=typing clipTime=2.23 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=7.4 headAheadCm=0.5 elbowMin=100 pole=1.00/0.00 elbow=L93/R79 slideCm=L15.0/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-8.9/R-0.4 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L21/33 R28/35 tipsAboveKeysCm=L0.2(min -0.5)/R-0.4(min -0.8) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.09:292][ 19]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L11.6/R8.3 alpha=1.00 elbow=L100/R62 fingers=L18/42 R21/31 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.11:676][162]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=reading clipTime=1.52 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=9.5 headAheadCm=0.3 elbowMin=100 pole=1.00/0.00 elbow=L92/R63 slideCm=L15.0/R9.6 residualCm=L0.0/R0.0 elbowBackCm=L-4.5/R6.0 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L21/32 R32/30 tipsAboveKeysCm=L0.2(min -0.5)/R-0.6(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.19:293][619]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L13.6/R0.9 alpha=1.00 elbow=L100/R53 fingers=L15/52 R24/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.21:676][762]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=reading clipTime=1.55 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=9.8 headAheadCm=0.4 elbowMin=100 pole=1.00/0.00 elbow=L91/R63 slideCm=L15.0/R9.5 residualCm=L0.0/R0.0 elbowBackCm=L-3.2/R6.1 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L21/32 R32/30 tipsAboveKeysCm=L0.2(min -0.5)/R-0.6(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.29:293][219]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L8.5/R15.0 alpha=1.00 elbow=L100/R84 fingers=L20/37 R20/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.31:676][362]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=typing clipTime=0.35 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=4.6 headAheadCm=-1.0 elbowMin=100 pole=1.00/0.00 elbow=L100/R79 slideCm=L10.8/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-4.7/R-0.3 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L18/37 R30/33 tipsAboveKeysCm=L0.4(min -0.5)/R-0.5(min -1.1) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.39:293][819]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L7.9/R15.0 alpha=1.00 elbow=L100/R84 fingers=L21/37 R18/30 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.41:676][962]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=typing clipTime=0.38 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=4.3 headAheadCm=-1.1 elbowMin=100 pole=1.00/0.00 elbow=L100/R79 slideCm=L10.8/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-4.8/R-0.4 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L19/36 R30/32 tipsAboveKeysCm=L0.3(min -0.5)/R-0.5(min -1.1) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.49:293][419]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L8.0/R15.0 alpha=1.00 elbow=L100/R83 fingers=L21/37 R18/31 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2",
+    "[2026.10.25-07.34.51:676][562]LogTemp: Display: SUB01_STREAMER_VISUAL_V23 state=idle clipTime=0.42 tuningSequence=1792871330188 pelvisPitch=-6.0 shoulderDrop=3.0 shoulderBack=2.0 neckBack=5.0 neckShare=0.40 neckGirth=1.00 neckAxisAlign=-1.00 incline=3.1 headAheadCm=-1.5 elbowMin=100 pole=1.00/0.00 elbow=L100/R81 slideCm=L10.3/R15.0 residualCm=L0.0/R0.0 elbowBackCm=L-4.7/R-1.0 orient=1.00 yawIn=12 pitch=10 orientErr=L0.0/R0.0 fingerBend=8 fingers=L20/35 R29/32 tipsAboveKeysCm=L0.3(min -0.5)/R-0.5(min -1.0) mouse=- handOnMouse=0 chairScale=1.00 chair=X=0.504 Y=1.935 Z=0.000",
+    "[2026.10.25-07.34.59:310][ 20]LogTemp: Display: SUB01_STREAMER_VISUAL_HANDS target=left:keyboard_leftX=208.072 Y=-292.595 Z=88.500 right:keyboard_rightX=228.072 Y=-292.595 Z=88.500 reach=L8.3/R15.0 alpha=1.00 elbow=L100/R81 fingers=L21/37 R19/31 heightCm=9.5 spanCm=20.0 backCm=12.0 pole=0.50 curlDeg=0.0 axis=2"
+  ],
+  "keyboard_scan_logs": [
+    "[2026.10.25-02.55.43:690][  1]LogTemp: Display: SUB01_STREAMER_VISUAL_DESK_PROP_CANDIDATE actor=StaticMeshActor_592 class=StaticMeshActor mesh=R15Part0075 location=X=209.000 Y=-339.433 Z=79.900 extent=X=16.050 Y=5.800 Z=0.900 follows=1",
+    "[2026.10.25-02.55.43:690][  1]LogTemp: Display: SUB01_STREAMER_VISUAL_DESK_PROP_CANDIDATE actor=StaticMeshActor_593 class=StaticMeshActor mesh=R15Part0076 location=X=209.000 Y=-339.433 Z=80.800 extent=X=15.300 Y=5.150 Z=0.100 follows=1",
+    "[2026.10.25-02.55.44:037][  3]LogTemp: Display: SUB01_STREAMER_VISUAL_DESK_PROPS moved=121 delta=X=9.072 Y=34.838 Z=0.000",
+    "[2026.10.25-02.55.45:202][  5]LogTemp: Display: SUB01_STREAMER_VISUAL_DESK_PROPS moved=121 delta=X=9.072 Y=34.838 Z=0.000"
+  ],
+  "target_spec": {
+    "schema": "sub01.authored-desk-targets.v1",
+    "coordinate_frame": "original source GLB converted to physical Z-up metres",
+    "native_frame_calibration_verified": true,
+    "frame_calibration_note": "Actual source DeskTyping2s and native Hips/Head/LeftHand/RightHand matched within max-axis2.7332e-5metres; nativeXYZcm to physical(X,-Y,Z)/100.",
+    "wrists_source_physical_metres": {
+      "Left": [
+        0.1,
+        0.41,
+        0.886
+      ],
+      "Right": [
+        -0.1,
+        0.41,
+        0.886
+      ]
+    },
+    "native_scene_trial": {
+      "actor_translation_cm": [
+        210,
+        -305,
+        2.5
+      ],
+      "actor_yaw_deg": 180,
+      "keyboard_world_cm": [
+        208.99999141693115,
+        -339.4333002090454,
+        80.90000240504742
+      ],
+      "desk_top_cm": 84.5,
+      "seat_top_cm_approximate": 47,
+      "left_keyboard_wrist_world_cm": [
+        200,
+        -264,
+        91.1
+      ],
+      "right_keyboard_wrist_world_cm": [
+        220,
+        -264,
+        91.1
+      ],
+      "chair_roomward_delta_cm": 100,
+      "keyboard_delta_cm": [
+        0,
+        60,
+        5.6
+      ]
+    },
+    "reference_review": {
+      "actual_reference_viewed": true,
+      "source_urls": [
+        "https://unsplash.com/photos/person-using-computer-keyboard-X_JsI_9Hl7o",
+        "https://www.pexels.com/video/side-view-of-a-person-typing-on-computer-5119237/"
+      ],
+      "local_reference_sha256": "79a7bd44e318b8f5d9ddce8cd74da7a0dd4a6190aa5d4d637abf3645252c9d24",
+      "scope": "Actual Pexels5119237 frames: independent captured finger presses with curved finger knuckles above keys; static Unsplash confirms wrist/keyboard posture. No inferred fullbody/floor contact.",
+      "video_reference_requested": "https://www.pexels.com/video/side-view-of-a-person-typing-on-computer-5119237/",
+      "video_reference_viewed": true,
+      "video_retrieval_status": "Remote officialvideo downloaded; actual six frames0/5/10/15/20/25s visually inspected.",
+      "actual_video_frames_sha256": "0983aee8f973322dfb7f5d6e02edaa9186aa58dbcbf40b5d181553e6b849bc1c"
+    },
+    "native_ready": false,
+    "contact_accepted": false,
+    "actual_native_correction_provenance": {
+      "rejected_candidate": "natural-desk-batch5",
+      "snapshot_receipt": "171-desk5-finger-snapshot.result.json",
+      "all10_fingertip_bones_world_Y_cm": [
+        -352.294133688375,
+        -345.405090159399
+      ],
+      "keycap_world_Y_cm": [
+        -344.58330030441283,
+        -334.283300113678
+      ],
+      "fixed_wrist_delta_world_cm": [
+        0,
+        10,
+        2.5
+      ],
+      "no_skin_contact_claim": true
+    }
+  },
+  "raw_evidence_sha256": "e38f3b44e6edfe3e16e7c98ce90627f07b5b055e26703f032b0a637292e66934",
+  "raw_evidence_path": "/tmp/sub01-share/contact-readonly-evidence.json",
+  "interpretation": "Selected pre-runtime bone origins only; full archived FK and immutable source identities retained on pod. No final pose, skin contact or JPEG correlation."
+}

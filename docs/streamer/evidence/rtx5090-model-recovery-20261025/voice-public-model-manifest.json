@@ -1,0 +1,55 @@
+{
+  "model": "ResembleAI/chatterbox",
+  "source": "/home/unreal/.cache/sub01-voice-offline/hub/models--ResembleAI--chatterbox",
+  "files": {
+    "blobs/f0921cab452fa278bc25cd23ffd59d36f816d7dc5181dd1bef9751a7fb61f63c": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/blobs/27/27ab12866f68a8f0f0abe24f08ba47000b8d9586a90a9393bda3e612738cb2aa",
+      "bytes": 5695784,
+      "sha256": "f0921cab452fa278bc25cd23ffd59d36f816d7dc5181dd1bef9751a7fb61f63c",
+      "materialize": true
+    },
+    "blobs/914cb1696f47527fe8852ca8f1fe1fa63cb34f76f9c715e84e067b744dd0da81": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/blobs/59/59c28ab86dda446fafaa58cfc2abfa204976d7446bb1b44a0c2177e63ce605b2",
+      "bytes": 2129653744,
+      "sha256": "914cb1696f47527fe8852ca8f1fe1fa63cb34f76f9c715e84e067b744dd0da81",
+      "materialize": true
+    },
+    "blobs/2b78103c654207393955e4900aac14a12de8ef25f4b09424f1ef91941f161d4e": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/blobs/ff/ff5bfeb1f056b26d2db78035095e5c4c72b78db5bfbaae8f329a3eb6b8b7c914",
+      "bytes": 1056484620,
+      "sha256": "2b78103c654207393955e4900aac14a12de8ef25f4b09424f1ef91941f161d4e",
+      "materialize": true
+    },
+    "blobs/abd07c710243ba89bf1b21780e7c37ddde92334e": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/models--ResembleAI--chatterbox/blobs/abd07c710243ba89bf1b21780e7c37ddde92334e",
+      "bytes": 25470,
+      "sha256": "d71e3a44eabb1784df9a68e9f95b251ecbf1a7af6a9f50835856b2ca9d8c14a5",
+      "materialize": true
+    },
+    "blobs/6552d70568833628ba019c6b03459e77fe71ca197d5c560cef9411bee9d87f4e": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/blobs/f3/f3671d13fefc57b8361ae771bdf603d992c239855916d511f7799245810df3cc",
+      "bytes": 107374,
+      "sha256": "6552d70568833628ba019c6b03459e77fe71ca197d5c560cef9411bee9d87f4e",
+      "materialize": true
+    },
+    "refs/main": {
+      "source": "/home/unreal/.cache/sub01-voice-offline/hub/models--ResembleAI--chatterbox/refs/main",
+      "bytes": 40,
+      "sha256": "fa1be205f53895cd606847a04a388419055a1626fd1ce34a8f04ee5360ca91a4",
+      "materialize": true
+    }
+  },
+  "links": {
+    "snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/ve.safetensors": "../../blobs/f0921cab452fa278bc25cd23ffd59d36f816d7dc5181dd1bef9751a7fb61f63c",
+    "snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/t3_cfg.safetensors": "../../blobs/914cb1696f47527fe8852ca8f1fe1fa63cb34f76f9c715e84e067b744dd0da81",
+    "snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/s3gen.safetensors": "../../blobs/2b78103c654207393955e4900aac14a12de8ef25f4b09424f1ef91941f161d4e",
+    "snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/tokenizer.json": "../../blobs/abd07c710243ba89bf1b21780e7c37ddde92334e",
+    "snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt": "../../blobs/6552d70568833628ba019c6b03459e77fe71ca197d5c560cef9411bee9d87f4e"
+  },
+  "total_bytes": 3191967032,
+  "revisions": [
+    "5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18"
+  ],
+  "utc": 1792904966.9940405,
+  "scope": "public referenced model blobs only; CAS files materialized by hash; no copy done"
+}

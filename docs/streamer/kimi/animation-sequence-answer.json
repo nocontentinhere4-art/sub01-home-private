@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "**Literal sampled findings — diagnostic reconstruction only**\n\n- **Posture/continuity:** At gross level, yes: both sequences maintain a coherent forward-leaning upper-body pose, with modest head yaw/tilt, gaze and torso changes. Subject scale, camera orientation and background appear stable. No obvious gross sample-to-sample snap, teleport, visible-anatomy inversion or mesh deformation is shown. This is **not** a finding of snap-free playback.\n- **Framing/action:** The tight, dark frontal framing crops or obscures much of the desk, arms and hands. Keyboard/mouse contact is not assessable. These stills also do not establish that distinct reading or typing actions are being performed; visible changes are predominantly head/torso posing.\n\n**Acceptance questions still requiring evidence**\n\nReal-time and frame-stepped playback is needed to assess inter-sample snapping, jitter, abrupt head/gaze movement, motion naturalness, clip/state transitions and loop seams. Playback plus a wider/side or hand-level view is needed to judge reading/typing readability, finger/wrist activity, hand–keyboard/mouse contact, hovering/penetration and desk/chair contact.\n\nEach sheet contains only 12 samples, roughly 1.3 seconds apart, with approximate labels; this is not every-frame semantic review. Decode/sequence/hash/luma results and FK/asset-hash matches do not establish correct anatomy, contact, naturalness or provenance. Original animation provenance and owner acceptance remain **OPEN**; Reach is outside these claims.\n\n**No blanket approval of complete animation or migration.**",
+ "finish_reason": "stop",
+ "prompt_tokens": 5396,
+ "completion_tokens": 3073,
+ "reasoning_tokens": 2740,
+ "seconds": 81.4
+}
