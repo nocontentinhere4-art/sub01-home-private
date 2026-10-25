@@ -1,0 +1,113 @@
+UNCHANGED writer; compiledbinary1c78/sourcec698/installad0c alreadyverified
+214: inline void ConsumeSigpipe(){ // a SIGPIPE raised by our write stays pending in the writer thread (blocked there): take it
+215:  sigset_t Block,Waiting;sigemptyset(&Block);sigaddset(&Block,SIGPIPE);
+216:  if(sigpending(&Waiting)==0&&sigismember(&Waiting,SIGPIPE)){const timespec Zero{0,0};sigtimedwait(&Block,nullptr,&Zero);}
+217: }
+363:  // ---- the writer thread
+364:  void WriterLoop(){
+365:   {sigset_t Block;sigemptyset(&Block);sigaddset(&Block,SIGPIPE);pthread_sigmask(SIG_BLOCK,&Block,nullptr);} // this thread only: a broken pipe gives EPIPE
+366:   while(!Stop.load()){
+367:    const double Now=FPlatformTime::Seconds();const bool Want=On.load()!=0&&FifoOk.load();
+368:    if(!Want){CloseFifo();ReleaseLock();DropQueued();NextLockAt=NextProbeAt=0;WaitIdle();continue;} // main_tap 0: the director sees EOF, another game may take the lock (switched on again: both are tried at once)
+369:    if(LockState.load()!=1){if(Now>=NextLockAt){NextLockAt=Now+@@LOCK_RETRY@@;TakeLock();}if(LockState.load()!=1){DropQueued();WaitIdle();continue;}}
+370:    if(Fd<0){if(Now>=NextProbeAt){NextProbeAt=Now+@@PROBE@@;OpenFifo();}if(Fd<0){DropQueued();WaitIdle();continue;}}
+371:    FSub01MainFrame Frame;bool Have=false;
+372:    {std::unique_lock<std::mutex> Lock(Mutex);OutCv.wait_for(Lock,std::chrono::milliseconds(@@IDLE@@),[this](){return Stop.load()||!Out.empty();});
+373:     if(!Out.empty()){Frame=MoveTemp(Out.front());Out.pop_front();Have=true;}}
+374:    if(!Have){if(ReaderGone())CloseFifo();continue;} // idle: notice a reader that left without writing
+375:    if(Frame.Session!=Session.load()){++DroppedNoReader;continue;} // captured for an earlier output session: never crosses a reconnect
+376:    WriteWhole(Frame);
+377:   }
+378:   CloseFifo();
+379:  }
+380:  void WaitIdle(){std::unique_lock<std::mutex> Lock(Mutex);OutCv.wait_for(Lock,std::chrono::milliseconds(@@IDLE@@),[this](){return Stop.load();});}
+381:  void DropQueued(){std::lock_guard<std::mutex> Lock(Mutex);DroppedNoReader+=int64(Out.size());Out.clear();}
+382:  void TakeLock(){
+383:   if(LockFd<0){LockFd=::open(LockUtf8.c_str(),O_RDWR|O_CREAT|O_CLOEXEC|O_NOFOLLOW,0600);if(LockFd<0){SetLockState(3,errno);return;}}
+384:   struct stat Info;if(::fstat(LockFd,&Info)!=0||!S_ISREG(Info.st_mode)||Info.st_uid!=getuid()){::close(LockFd);LockFd=-1;SetLockState(3,0);return;}
+385:   if(::flock(LockFd,LOCK_EX|LOCK_NB)==0)SetLockState(1,0);else SetLockState(errno==EWOULDBLOCK?2:3,errno);
+386:  }
+387:  void ReleaseLock(){if(LockFd>=0){::close(LockFd);LockFd=-1;}if(LockState.load()!=0)SetLockState(0,0);}
+388:  void SetLockState(int32 State,int Error){
+389:   if(LockState.exchange(State)==State)return;
+390:   UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_LOCK state=%s errno=%d lock=%s"),State==1?TEXT("held"):State==2?TEXT("busy (another writer holds it)"):State==3?TEXT("error"):TEXT("released"),Error,*LockPath);
+391:  }
+392:  void OpenFifo(){
+393:   struct stat Info;
+394:   if(::lstat(FifoUtf8.c_str(),&Info)!=0||!S_ISFIFO(Info.st_mode)||Info.st_uid!=getuid()||(Info.st_mode&0077)){OpenErrno.store(errno);return;}
+395:   const int Opened=::open(FifoUtf8.c_str(),O_WRONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW);
+396:   if(Opened<0){OpenErrno.store(errno==ENXIO?0:errno);return;} // ENXIO: nobody reads it yet
+397:   if(::fstat(Opened,&Info)!=0||!S_ISFIFO(Info.st_mode)||Info.st_uid!=getuid()||(Info.st_mode&0077)){::close(Opened);return;}
+398:   const int Set=::fcntl(Opened,F_SETPIPE_SZ,PipeWanted),SetErrno=Set<0?errno:0;const int Size=::fcntl(Opened,F_GETPIPE_SZ); // best effort; never assumed
+399:   Fd=Opened;PipeSet.store(Set);PipeSize.store(Size);OpenErrno.store(0);++Opens;Session.fetch_add(1);Reader.store(true); // a new session, then captures may start
+400:   UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_FIFO reader=1 opens=%d pipe_requested=%d set=%d set_errno=%d pipe_size=%d fifo=%s"),int32(Opens.load()),PipeWanted,Set,SetErrno,Size,*FifoPath);
+401:  }
+402:  void CloseFifo(){if(Fd>=0){::close(Fd);Fd=-1;Session.fetch_add(1);}Reader.store(false);}
+403:  bool ReaderGone(){ // a pipe's write end reports POLLERR once no reader is left
+404:   if(Fd<0)return true;struct pollfd P;P.fd=Fd;P.events=POLLOUT;P.revents=0;return ::poll(&P,1,0)>0&&(P.revents&(POLLERR|POLLHUP|POLLNVAL))!=0;
+405:  }
+406:  bool WriteWhole(const FSub01MainFrame& Frame){
+407:   const uint8* Data=Frame.Jpeg.GetData();const int64 Size=Frame.Jpeg.Num();int64 Sent=0;int32 Why=0; // 1 no reader, 2 error, 3 deadline, 4 stop
+408:   const double Deadline=FPlatformTime::Seconds()+@@DEADLINE@@;
+409:   while(Sent<Size){
+410:    if(Stop.load()){Why=4;break;}
+411:    double Left=Deadline-FPlatformTime::Seconds();if(Left<=0){Why=3;break;} // the deadline bounds the whole frame, a slow trickle of partial writes too
+412:    const ssize_t N=::write(Fd,Data+Sent,size_t(Size-Sent));
+413:    if(N>0){Sent+=int64(N);continue;}
+414:    if(N<0&&errno==EINTR)continue;
+415:    if(N<0&&(errno==EAGAIN||errno==EWOULDBLOCK)){
+416:     Left=Deadline-FPlatformTime::Seconds();if(Left<=0){Why=3;break;}
+417:     struct pollfd P;P.fd=Fd;P.events=POLLOUT;P.revents=0;
+418:     const int Ready=::poll(&P,1,int(FMath::Clamp(Left*1000.,1.,double(@@SLICE@@))));
+419:     if(Ready<0&&errno!=EINTR){Why=2;break;}
+420:     if(Ready>0&&(P.revents&(POLLERR|POLLHUP|POLLNVAL))){Why=1;break;}
+421:     continue;
+422:    }
+423:    Why=N<0&&errno==EPIPE?1:2;break;
+424:   }
+425:   if(Sent>=Size){++Written;Bytes+=Size;LastSeq.store(Frame.Seq);const FDateTime Utc=FDateTime::UtcNow();LastWriteMs.store(Utc.ToUnixTimestamp()*1000+Utc.GetMillisecond());return true;}
+426:   // the WHOLE frame is discarded and the descriptor closed: its tail is never resumed on a new fd; the reader resyncs on the next SOI
+427:   if(Sent>0)++DiscardedMidwrite;else if(Why==3)++DroppedStalled;else ++DroppedNoReader;
+428:   ++Cuts;CloseFifo();Sub01MainTap::ConsumeSigpipe();
+429:   const double Now=FPlatformTime::Seconds();
+430:   if(Now>=CutLogAt){CutLogAt=Now+@@CUT_LOG@@;
+431:    UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_CUT why=%s seq=%llu sent=%lld of=%lld cuts=%lld suppressed=%lld"),Why==1?TEXT("no reader"):Why==3?TEXT("deadline"):Why==4?TEXT("stop"):TEXT("write error"),
+432:     static_cast<unsigned long long>(Frame.Seq),static_cast<long long>(Sent),static_cast<long long>(Size),static_cast<long long>(Cuts.load()),static_cast<long long>(CutsSuppressed));CutsSuppressed=0;}
+433:   else ++CutsSuppressed;
+434:   return false;
+511:   StreamerVisualMainFpsWritten=float(double(Written-StreamerVisualMainStatusBase[0])/Span);StreamerVisualMainFpsCaptured=float(double(Captured-StreamerVisualMainStatusBase[1])/Span);}
+512:  StreamerVisualMainStatusWindowAt=Now;StreamerVisualMainStatusBase[0]=Written;StreamerVisualMainStatusBase[1]=Captured;StreamerVisualMainStatusAt=Now+@@STATUS_S@@;
+513:  auto Status=MakeShared<FJsonObject>();const FDateTime Utc=FDateTime::UtcNow();const int64 Last=Tap.LastWriteMs.load();
+514:  Status->SetNumberField(TEXT("sequence"),double(Tap.LastSeq.load()));Status->SetNumberField(TEXT("fps"),StreamerVisualMainFpsWritten);Status->SetNumberField(TEXT("written"),double(Written));
+515:  Status->SetNumberField(TEXT("dropped_slots"),double(Tap.DroppedSlots.load()));Status->SetNumberField(TEXT("dropped_encode"),double(Tap.DroppedEncode.load()));Status->SetNumberField(TEXT("dropped_queue"),double(Tap.DroppedQueue.load()));
+516:  Status->SetNumberField(TEXT("dropped_noreader"),double(Tap.DroppedNoReader.load()));Status->SetNumberField(TEXT("frames_discarded_midwrite"),double(Tap.DiscardedMidwrite.load()));
+517:  Status->SetNumberField(TEXT("pipe_size"),Tap.PipeSize.load());Status->SetNumberField(TEXT("last_write_utc"),Last>0?double(Last)/1000.:0.);
+518:  Status->SetStringField(TEXT("schema"),TEXT("@@STATUS_SCHEMA@@"));Status->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());
+519:  Status->SetNumberField(TEXT("updated_utc"),double(Utc.ToUnixTimestamp())+Utc.GetMillisecond()/1000.);Status->SetStringField(TEXT("fifo"),Tap.FifoPath);
+520:  Status->SetStringField(TEXT("format"),TEXT("mjpeg: whole baseline JPEGs back to back, one COM \"@@COM@@<n>\" each"));Status->SetBoolField(TEXT("on"),Tap.On.load()!=0);Status->SetStringField(TEXT("reason"),StreamerVisualMainReason);
+521:  Status->SetBoolField(TEXT("reader"),Tap.Reader.load());Status->SetStringField(TEXT("source"),Tap.Source.load()==0?TEXT("backbuffer-delegate"):TEXT("viewport-provider-command"));Status->SetBoolField(TEXT("offscreen"),StreamerVisualMainOffscreen);
+522:  Status->SetNumberField(TEXT("width"),FSub01MainTap::Width);Status->SetNumberField(TEXT("height"),FSub01MainTap::Height);Status->SetStringField(TEXT("pixel_format"),Sub01MainTap::KindName(Tap.LastKind.load()));
+523:  Status->SetNumberField(TEXT("quality"),Tap.Quality.load());Status->SetNumberField(TEXT("target_fps"),StreamerVisualMainFps);Status->SetNumberField(TEXT("capture_fps"),StreamerVisualMainFpsCaptured);
+524:  Status->SetNumberField(TEXT("captured"),double(Captured));Status->SetNumberField(TEXT("encoded"),double(Tap.Encoded.load()));Status->SetNumberField(TEXT("dropped_format"),double(Tap.DroppedFormat.load()));
+525:  Status->SetNumberField(TEXT("dropped_stalled"),double(Tap.DroppedStalled.load()));Status->SetNumberField(TEXT("rate_skipped"),double(Tap.RateSkipped.load()));Status->SetNumberField(TEXT("pipe_set"),Tap.PipeSet.load());
+526:  Status->SetNumberField(TEXT("open_errno"),Tap.OpenErrno.load());Status->SetStringField(TEXT("lock"),Tap.LockState.load()==1?TEXT("held"):Tap.LockState.load()==2?TEXT("busy"):Tap.LockState.load()==3?TEXT("error"):TEXT("released"));
+UNCHANGED passed144tests2x; realFIFO/thread driver disconnect/reconnect
+4841:   CHECK(WaitFor([&] { return IImageWrapperModule::StubMainSlowMs.load() == 0; }, 2), 25); const int64 W0 = Tap->Written.load();
+4842:   CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 15; }, 6), 26);
+4843:   CHECK(Tap->DroppedSlots.load() > Slots0 && InOrder(Since(Parse(Got), Mark), Tap->DroppedQueue.load() == Queue0) && Tap->EncodeInFlight.load() <= 2, 27); }
+4844:  // 6. a reader that stops reading: the pipe fills; at the @@DEADLINE@@ s deadline the frame in the pipe is cut (the fd closed, the WHOLE frame discarded and counted),
+4845:  //    the output queue drops its oldest; the writer reopens (the reader is still there); once it reads again it resyncs on the next SOI
+4846:  IImageWrapperModule::StubMainBytes = 300000; CHECK(WaitFor([&] { return Tap->EncodeInFlight.load() == 0; }, 2), 30);
+4847:  Draining = false; { const int64 Cut0 = Tap->Cuts.load(), Mid0 = Tap->DiscardedMidwrite.load() + Tap->DroppedStalled.load(), Queue0 = Tap->DroppedQueue.load();
+4848:   const double T = Now(); while (Now() - T < 2.2) Frame();
+4849:   CHECK(Tap->Cuts.load() > Cut0 && Tap->DiscardedMidwrite.load() + Tap->DroppedStalled.load() > Mid0 && Tap->DroppedQueue.load() > Queue0, 31); }
+4850:  Draining = true; { const std::size_t Mark = Got.size(); const int64 W0 = Tap->Written.load(); CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 6; }, 6), 32);
+4851:   const FParsed After = Parse(Got); CHECK(Since(After, Mark).size() >= 4 && InOrder(Since(After, Mark), false), 33); }
+4852:  IImageWrapperModule::StubMainBytes = 4000;
+4853:  // 7. the reader leaves: EPIPE or POLLERR, this process survives (SIGPIPE stays blocked in the writer), nothing is written; a new reader starts on a frame boundary
+4854:  close(Reader); Reader = -1; CHECK(WaitFor([&] { return !Tap->Reader.load(); }, 3), 40);
+4855:  { const int64 W0 = Tap->Written.load(); Frames(40); CHECK(Tap->Written.load() == W0 && Tap->DroppedNoReader.load() >= 0, 41); }
+4856:  Got.clear(); Reader = open("@@DIR@@/@@FIFO@@", O_RDONLY | O_NONBLOCK); CHECK(Reader >= 0 && WaitFor([&] { return Tap->Reader.load(); }, 3), 42);
+4857:  { const int64 W0 = Tap->Written.load(); CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 8; }, 4), 43); const FParsed Fresh = Parse(Got);
+4858:   CHECK(Got.size() > 2 && Got[0] == 0xFF && Got[1] == 0xD8 && Fresh.Leading == 0 && Fresh.Cuts.empty() && InOrder(Fresh.Frames, false) && Fresh.Frames.size() >= 6, 44); }
+4859:  // 8. main_tap 0: the FIFO is closed (the reader sees EOF), the lock released, the go/no-go disarmed; another holder of the lock keeps the tap silent

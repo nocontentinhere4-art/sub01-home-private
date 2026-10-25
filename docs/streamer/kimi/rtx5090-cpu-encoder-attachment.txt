@@ -1,0 +1,19 @@
+    labels = "".join(f"[l{name}]" for name in order)
+    parts.append(f"{labels}{SWITCH_TARGET}=inputs={len(order)}:map={order.index(effective_layout(layout, cam2))},"
+                 f"format=yuv420p[vout]")
+    return ";".join(parts)
+
+
+def video_codec_args(cfg, encoder):
+    """Encoder options; -r and -g follow --fps (keyframe every 2 s, so HLS cuts 4 s segments on keyframes)."""
+    rate, gop = str(cfg.fps), str(cfg.fps * 2)
+    if encoder == "libx264":
+        return ["-c:v", "libx264", "-preset", cfg.preset, "-crf", str(cfg.crf), "-pix_fmt", "yuv420p",
+                "-r", rate, "-g", gop]
+    return ["-c:v", encoder, "-preset", "p4", "-tune", "ll", "-rc", "vbr", "-cq", str(cfg.crf), "-b:v", "0",
+            "-bf", "2", "-g", gop, "-pix_fmt", "yuv420p", "-r", rate]
+
+
+def output_args(cfg, prefix):
+    """The direct segment muxer, or (with HLS/RTMP) the tee muxer over the same encode."""
+    fragments = "movflags=+frag_keyframe+empty_moov+default_base_moof"

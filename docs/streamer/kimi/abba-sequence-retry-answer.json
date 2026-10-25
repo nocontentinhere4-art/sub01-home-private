@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE for one bounded attempt-02 retry, diagnostic only.** I find no blocking schema/sequence/restore error in the supplied material.\n\nThe original defect is fixed: issued sequences are safe integers strictly above both the original file and starting native receipt, then increase across arm and restore writes. Copying `original_doc` preserves the required v1 schema and all non-treatment values. Arm acknowledgements require the exact issued receipt sequence plus the existing A/B mode/source gates.\n\nRestore is correctly two-phase: publish the original effective `main_tap` with a higher sequence, require native sequence plus matching `MAIN.on`, then restore original bytes in `finally` and verify bytes/UID/GID/mode. The stale on-disk sequence after rollback is correctly documented; no native restart is needed.\n\nNon-blocking evidence hardening: make final byte/metadata read-back and logging unconditional—currently a restore-ack timeout skips those assertions after `atomic_tuning(original)`—and bind/log initial and restore MAIN/receipt snapshots against game identity. A timeout still becomes `cleanup-failed`, so it cannot falsely report success.\n\nNo scored-leg, raw-frame, cam2, provenance, PC/voice, or soak gate is approved.",
+ "finish_reason": "stop",
+ "prompt_tokens": 6173,
+ "completion_tokens": 18240,
+ "reasoning_tokens": 17978,
+ "seconds": 488.1
+}

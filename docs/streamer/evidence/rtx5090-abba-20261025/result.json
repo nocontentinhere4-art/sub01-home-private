@@ -1,0 +1,77 @@
+{
+  "status": "complete",
+  "diagnostic_only": true,
+  "legs": [
+    {
+      "index": 0,
+      "arm": "A",
+      "elapsed": 900.0206531444564,
+      "nominal_opportunities": 54000,
+      "actual_opportunities": 54001.23918866739,
+      "from_mono": 542979.6090724135,
+      "to_mono": 543879.629725558
+    },
+    {
+      "index": 1,
+      "arm": "B",
+      "elapsed": 900.0198829895817,
+      "nominal_opportunities": 54000,
+      "actual_opportunities": 54001.1929793749,
+      "from_mono": 543951.1290004815,
+      "to_mono": 544851.148883471,
+      "delta": {
+        "unique": 54000,
+        "gaps": 0,
+        "bad": 0,
+        "cut": 0,
+        "overflows": 0,
+        "repeated": 0,
+        "noseq": 0
+      },
+      "unique_fps": 59.99867449664452,
+      "same_run": true,
+      "available_gate_pass": true
+    },
+    {
+      "index": 2,
+      "arm": "B",
+      "elapsed": 900.0194735025289,
+      "nominal_opportunities": 54000,
+      "actual_opportunities": 54001.16841015173,
+      "from_mono": 544912.2552536374,
+      "to_mono": 545812.27472714,
+      "delta": {
+        "unique": 53988,
+        "gaps": 0,
+        "bad": 0,
+        "cut": 0,
+        "overflows": 0,
+        "repeated": 0,
+        "noseq": 0
+      },
+      "unique_fps": 59.985368749744396,
+      "same_run": true,
+      "available_gate_pass": true
+    },
+    {
+      "index": 3,
+      "arm": "A",
+      "elapsed": 900.0196120254695,
+      "nominal_opportunities": 54000,
+      "actual_opportunities": 54001.17672152817,
+      "from_mono": 545876.486915418,
+      "to_mono": 546776.5065274434
+    }
+  ],
+  "open_gates": [
+    "rawframep95",
+    "alignedhitch",
+    "sawtooth",
+    "aggregate-dropdenominator",
+    "cam2",
+    "originalassetprovenance",
+    "PCvoice",
+    "8hsoak"
+  ],
+  "cleanup_complete": true
+}
