@@ -1,0 +1,5 @@
+1. No. With one writer, no stale store can overwrite a newer writer maximum; only the in-flight sample at `exchange(0)` can suffer the accepted reset-boundary loss/misattribution. Exact interval attribution would need writer/reset synchronisation—CAS alone would not fix that.
+2. Yes. On the existing valid-fd/`F_GETPIPE_SZ` path, this atomically publishes the actual capacity in bytes—which may differ from 1,048,576—and the status load needs no extra ordering.
+3. No. The fcntl sequence and `PipeBytes` assignment are unchanged; the once-per-open atomic store only feeds `cam2.json` and does not affect cam2 writes, room tests, or drops.
+
+no blocking issue

@@ -1,0 +1,5 @@
+1. For finite `--seconds`, no normal FIFO hang/busy-spin: nonblocking reads, ≤100 ms polls, 50 ms EOF sleeps, and EAGAIN returning to poll cover all three cases; processing/`--save` I/O is outside that guarantee.
+2. Not as reliable cadence metrics: frames sharing a read get identical timestamps/zero gaps, while first→last timing ignores leading/trailing idleness—two frames 33 ms apart followed by 29 s idle still report ≈30 fps and a 33 ms maximum gap.  
+   For unit-step, nonwrapping sequences, `missing` counts internal holes correctly; `<=` also counts duplicates as non-increasing. `unique_fps` has the same timing flaws.
+3. `lstat`→`open` is TOCTOU; open first and verify with `fstat`. `write_bytes` follows symlinks and truncates predictable existing targets, unsafe as root unless the save tree is trusted; otherwise use dirfd-based no-clobber/no-symlink opens.
+blocking: make go/no-go rates and stall accounting cover the full observation window, including the trailing idle period; per-read gaps cannot establish true per-frame arrival cadence.

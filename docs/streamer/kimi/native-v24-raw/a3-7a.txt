@@ -1,0 +1,5 @@
+1. With an append-only regular log, waiting is normally ≤3+5 minutes plus the active rescan; that scan and wall-clock `time.time()` prevent a hard bound. Rotation/truncation can invalidate the offset, and child exit can skip a final scan. Split partial lines are reread, but a fragment already containing the marker can be saved truncated.
+2. No functional permission failure when run as root: unreal owns `OUT`, and the child writes through the inherited fd. On a shared writable path, symlink-following `chown`/append and `exists()`→`stat()` are unsafe/racy; `exist_ok=True` also leaves an existing directory’s mode unchanged.
+3. No other m5-specific launcher breakage is visible. Repeated whole-suffix rescans are the performance concern; marker spellings/timings and external rotation cannot be verified here.
+
+no blocking issue

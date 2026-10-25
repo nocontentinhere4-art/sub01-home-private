@@ -1,0 +1,5 @@
+1. **Yes—provided `MakeShared` occurs after the full definition.** `TSharedPtr` destroys through a type-erased reference controller, so UHT-generated code and the implicit UCLASS destructor need no complete type; the last owner destroys the tap.
+2. **Yes for the uses stated.** Those are the appropriate public UE 5.8.3 paths; on Linux `<poll.h>` provides `poll`/`pollfd`, and `<sys/file.h>` provides `flock`/`LOCK_*`.
+3. **No.** The tuning values bind to `float&`, bounds convert normally, and `SetNumberField` accepts `double`, making the shown loads/casts valid; the bool and `FString` calls also match.
+
+no blocking issue

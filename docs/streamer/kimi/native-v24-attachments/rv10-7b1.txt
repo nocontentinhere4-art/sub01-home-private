@@ -1,0 +1,46 @@
+def check_contract(frame: bytes) -> tuple:
+    """-> (ok, seq or None, reason) for one JPEG; never raises. Checked: SOI ... EOI, every header segment's length within the frame
+    (before the EOI), the JFIF APP0 first, ONE COM "seq=<1..19 digits>" second, no other APPn/COM, exactly one SOF0 (baseline)
+    1920x1080, an SOS. The entropy data is the frame cutter's part (any marker but RST/EOI there cuts the frame)."""
+    if len(frame) < 6 or frame[:2] != b'\xff\xd8' or frame[-2:] != b'\xff\xd9':
+        return False, None, 'not SOI ... EOI'
+    pos, segments, seq, sof, sos, end = 2, 0, None, None, False, len(frame) - 2
+    while pos + 4 <= end:
+        if frame[pos] != 0xFF:
+            return False, seq, 'not a marker where one must be'
+        marker = frame[pos + 1]
+        length = (frame[pos + 2] << 8) | frame[pos + 3]
+        if length < 2 or pos + 2 + length > end:
+            return False, seq, 'a segment length out of bounds'
+        if marker == 0xDA:
+            sos = True
+            break
+        body = frame[pos + 4:pos + 2 + length]
+        segments += 1
+        if segments == 1 and marker != 0xE0:
+            return False, seq, 'APP0 is not the first segment'
+        if segments == 1 and not body.startswith(b'JFIF\0'):
+            return False, seq, 'APP0 is not JFIF'
+        if segments == 2:
+            digits = body[len(COM_PREFIX):]
+            if marker != 0xFE or not body.startswith(COM_PREFIX) or not 1 <= len(digits) <= 19 or not digits.isdigit():
+                return False, seq, 'the second segment is not COM "seq=<n>"'
+            seq = int(digits)
+        elif segments > 2 and (0xE0 <= marker <= 0xEF or marker == 0xFE):
+            return False, seq, 'another APPn/COM segment'
+        elif marker in (0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+            return False, seq, 'not baseline'
+        elif marker == 0xC0:
+            if sof is not None:
+                return False, seq, 'two SOF0'
+            if len(body) < 5:
+                return False, seq, 'SOF0 too short'
+            sof = ((body[3] << 8) | body[4], (body[1] << 8) | body[2])
+        pos += 2 + length
+    if not sos:
+        return False, seq, 'no SOS'
+    if sof != (WIDTH, HEIGHT):
+        return False, seq, f'SOF0 {sof} is not {WIDTH}x{HEIGHT}'
+    return True, seq, ''
+
+

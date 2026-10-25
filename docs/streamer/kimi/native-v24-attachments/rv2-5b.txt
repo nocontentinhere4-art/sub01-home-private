@@ -1,0 +1,13 @@
+void ASub01HomeCharacter::LogStreamerVisualMainTap(double Now){
+ FSub01MainTap& Tap=*StreamerVisualMainTap;const double Span=FMath::Max(1e-3,Now-StreamerVisualMainLogWindowAt);
+ const int64 Totals[4]={Tap.Written.load(),Tap.Captured.load(),Tap.Calls.load(),Tap.FrameSpan.load()};int64 D[4];for(int32 K=0;K<4;++K)D[K]=Totals[K]-StreamerVisualMainLogBase[K];
+ const int64 Encoded=Tap.Encoded.load(),Copied=Tap.Copied.load(),Calls=Tap.Calls.load();
+ UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP fps=%.1f capture_fps=%.1f written=%lld seq=%llu reader=%d on=%d source=%d lock=%d pipe=%d dropped_slots=%lld dropped_encode=%lld dropped_queue=%lld dropped_noreader=%lld dropped_stalled=%lld discarded_midwrite=%lld dropped_format=%lld rate_skipped=%lld encode_ms=%.2f encode_max_ms=%.2f copy_ms=%.2f readback_ms=%.3f calls_per_frame=%.3f other_windows=%lld format=%s pitch=%d checksum=%llx max_channel=%d go=%s window_s=%.0f"),
+  double(D[0])/Span,double(D[1])/Span,static_cast<long long>(Totals[0]),static_cast<unsigned long long>(Tap.LastSeq.load()),Tap.Reader.load()?1:0,Tap.On.load(),Tap.Source.load(),Tap.LockState.load(),Tap.PipeSize.load(),
+  static_cast<long long>(Tap.DroppedSlots.load()),static_cast<long long>(Tap.DroppedEncode.load()),static_cast<long long>(Tap.DroppedQueue.load()),static_cast<long long>(Tap.DroppedNoReader.load()),static_cast<long long>(Tap.DroppedStalled.load()),
+  static_cast<long long>(Tap.DiscardedMidwrite.load()),static_cast<long long>(Tap.DroppedFormat.load()),static_cast<long long>(Tap.RateSkipped.load()),Encoded?double(Tap.EncodeUs.load())/1000./double(Encoded):0.,double(Tap.EncodeMaxUs.exchange(0))/1000.,
+  Copied?double(Tap.CopyUs.load())/1000./double(Copied):0.,Calls?double(Tap.ReadbackUs.load())/1000./double(Calls):0.,D[3]>0?double(D[2])/double(D[3]):0.,static_cast<long long>(Tap.OtherWindows.load()),Sub01MainTap::KindName(Tap.LastKind.load()),Tap.LastPitch.load(),
+  static_cast<unsigned long long>(Tap.LastChecksum.load()),Tap.MaxChannel.load(),*StreamerVisualMainVerdict,Span);
+ for(int32 K=0;K<4;++K)StreamerVisualMainLogBase[K]=Totals[K];StreamerVisualMainLogWindowAt=Now;StreamerVisualMainLogAt=Now+10.0;
+}
+// SUB01_STREAMER_VISUAL_V2_V24 END

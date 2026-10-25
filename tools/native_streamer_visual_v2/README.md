@@ -9,7 +9,8 @@ goes on top of it (`face` camera, desk guard); `install_pin_fix.py` (`..._PINFIX
 `install_pose_fix.py` (`..._POSEFIX`, needs the stream pass and the mouth layer), `install_v21_fixes.py` (`..._V21`, on the
 full v20 stack: build v21, game m) and `install_v22.py` (`..._V22`, on v21: the in-game monitor feed, persistent bridge
 textures, cam2 exposure; it also edits the PC and device bridges and creates `Sub01PersistentTexture.h`).
-`install_v23.py` (`..._V23`, on v22: the live-tunable look corrections, below).
+`install_v23.py` (`..._V23`, on v22: the live-tunable look corrections, below). `install_v24.py` (`..._V24`, on v23: the
+offscreen main view handed to the director through `main.mjpeg`, below).
 Same R9 gate, spectator camera and ghost views as v1; no new AnimGraph.
 
 ## What v2 does
@@ -89,6 +90,7 @@ python3 tools/native_streamer_visual_v2/install_pose_fix.py --source "$M" --dry-
 python3 tools/native_streamer_visual_v2/install_v21_fixes.py --source "$M" --dry-run  # on the full v20 stack (v21); keep backups OUTSIDE Source/ (a copy with a Build.cs breaks UBT)
 python3 tools/native_streamer_visual_v2/install_v22.py --source "$M" --dry-run        # on v21 (v22): also the bridges + the new Sub01PersistentTexture.h
 python3 tools/native_streamer_visual_v2/install_v23.py --source "$M" --dry-run        # on v22 (v23): Sub01HomeLab.h/.cpp and Sub01HomeHands.h/.cpp only
+python3 tools/native_streamer_visual_v2/install_v24.py --source "$M" --dry-run        # on v23 (v24): Sub01HomeLab.h/.cpp only
 /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh Sub01HomeLabEditor Linux Development \
   -Project=<project>/Sub01HomeLab.uproject      # previous builds: ~27 min with 2 workers
 ```
@@ -445,3 +447,44 @@ Live session (Kimi's order; lock the webcam/cam2 exposure first; one step at a t
 An approved set is kept as the tuning file's preset; the compiled defaults stay "off" for rollback.
 Mouth: no jaw bone, no facial bone, 0 morph targets on this body; real mouth movement needs visemes or a jaw rig on a re-imported head
 (options ranked in the Kimi file). Not built.
+
+## v24 offscreen main view (`install_v24.py`, `// SUB01_STREAMER_VISUAL_V2_V24`, on v23)
+Spec: `docs/streamer/SAWTOOTH-20261024.md` "Structural fix" (steps 1-3, 6); design reviewed with Kimi
+(`docs/streamer/kimi/native-v24-design.md`). Edits `Sub01HomeLab.h/.cpp` only. With `-RenderOffScreen` (launcher
+`/root/.sub01-windows-recovery/launch-streamer-game-20261024m5.py` = m3o + its own output dir + the v24 markers in status.json) the
+game has no X window, no swapchain and no present; the director must read the main view with `--game-source fifo`.
+- **Hand-off**: `FSlateRenderer::OnBackBufferReadyToPresent` (render thread, the game window only, before any present; offscreen the
+  "back buffer" is Slate's `SlateOffScreenViewportTexture`, `r.DefaultBackBufferPixelFormat` = PF_A2B10G10R10 by default) -> Unknown->CopySrc
+  -> `FRHIGPUTextureReadback` ring of 3 (oldest first, every ready copy; no encoder free = it waits in its slot) -> 2 encoder threads
+  (BGRA8, TurboJPEG q`main_quality`, the header rebuilt with one COM `seq=<n>`) -> in-order release -> output queue 2 (drops the oldest)
+  -> ONE writer thread (`flock` on `main.mjpeg.lock`, probe every 1 s, `F_SETPIPE_SZ` to pipe-max-size, poll + 500 ms deadline, whole
+  frames, a cut closes the fd) -> `<streamer-dir>/main.mjpeg` (FIFO created 0600 by the game). `main_source` 1 = the fallback: a render
+  command per game tick reading the same texture through `GetViewportProvider` (the previous frame).
+- **Keys** (their own V24 block): `main_tap` 0/1 (compiled "auto": on when Slate renders offscreen), `main_fps` 1..60 (60),
+  `main_quality` 40..95 (85), `main_source` 0/1 (0).
+- **Status** `main.json` every second (only from the lock holder): `sequence fps written dropped_slots dropped_encode dropped_queue
+  dropped_noreader frames_discarded_midwrite pipe_size last_write_utc` + `go`, `reader`, `lock`, `pixel_format`, `encode_ms`,
+  `copy_ms`, ... Logs: `SUB01_STREAMER_VISUAL_MAIN_TAP started=`, `..._MAIN_TAP_GONOGO verdict=GO|NO-GO reason= fires_per_frame=
+  extent= format= pitch_px= checksum= max_channel= jpeg_ok=`, `..._MAIN_TAP fps= ...` every 10 s, `..._MAIN_TAP_FIFO` (opens, pipe
+  size), `..._MAIN_TAP_LOCK`, `..._MAIN_TAP_CUT`, `..._MAIN_TAP_STOPPED join_ms=`.
+- **Without the director**: `python3 tools/native_streamer_visual_v2/main_fifo_probe.py --seconds 60 --save /tmp/x` reads the FIFO,
+  checks every frame against the contract, counts sequence gaps and arrival gaps, saves a few frames; ONLY while nobody else reads it
+  (it refuses when another process does). Run it as root: another user's descriptors are invisible, so it also refuses when it
+  cannot check every process.
+- **cam2 evidence**: cam2.json gains `pipe_size` and `full_queued_max_kb` (the FIONREAD level at the full-pipe drops); cam2's
+  writer is unchanged (its 52-53 of 60 is reader back-pressure, see the design file).
+- **Go/no-go on the pod** (one build, one offscreen launch; the coordinator owns the runtime):
+  1. a copy of `source-v23` -> `install_v24.py --dry-run` (11 edits, each count 1) -> apply -> build (`-Wshadow -Werror` clean).
+  2. launch with the m5 launcher; status.json gets `main_tap_started` and `main_tap_gonogo`. The tap needs no reader for its verdict
+     (one diagnostic readback a second). Expected: `MAIN_TAP started=1 ... offscreen=1 on=1 source=0 bound=1`, `MAIN_TAP_LOCK
+     state=held`, then about 10 s after the streamer start `MAIN_TAP_GONOGO verdict=GO reason=- source=backbuffer-delegate
+     fires_per_frame=~1.000 dup_calls=0 missed_frames=~0 other_windows=0 wrong_thread=0 extent=1920x1080 format=A2B10G10R10 (or
+     B8G8R8A8) pitch_px>=1920 rows>=1080 max_channel>16 nonblack=1 jpeg_ok=1 jpeg=1920x1080 offscreen=1`. On NO-GO with "the delegate
+     never fired", `tune.py main_source=1` tries the fallback (a new verdict line follows).
+  3. with nobody else reading `main.mjpeg` (the director in x11 mode or stopped, its tap not draining it), as root: `python3
+     main_fifo_probe.py --seconds 60 --save <dir>`: `other_reader_seen false`, `contract_failures {}`, `cuts 0`, `seq.missing` ~0, `seq.unique_fps_window`
+     >= 59.5, `trailing_idle_ms` < 50, `arrival_gap_ms.p95` well under 33 with `max_frames_per_read` 1-2 (larger = the probe itself
+     read late, the gaps are then coarse); the saved frames match the windowed picture (colour, gamma, UI). main.json at the
+     same time: `fps` ~60, `reader true`, `lock held`, `pipe_size` 1048576, drops ~0, `go GO`; PERF: 59.8-60 fps capped, `copy_ms` and
+     `encode_ms` logged by `MAIN_TAP fps=` lines. Stopping the probe: `reader false`, the tap idles (one readback a second).
+  4. the ABBA, the soak and the director-side gates of the spec's step 6 follow with the director's `--game-source fifo`.

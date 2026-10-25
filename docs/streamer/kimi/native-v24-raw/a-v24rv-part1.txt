@@ -1,0 +1,7 @@
+- **`Stamp`, SOS handling:** `Marker==0xDA` breaks before the common segment-length/bounds checks. A truncated or malformed SOS can therefore be accepted and copied verbatim, provided the overall buffer still ends in `FF D9`, contrary to the stated rejection contract. Read and bounds-check `Ls` before breaking; also validate `Ns`, `Ls == 6 + 2*Ns`, and that the complete SOS header precedes the scan/EOI.
+
+- **`Checksum`:** `1469598103934665603ULL` is not the 64-bit FNV-1a offset basis. Use `14695981039346656037ULL`, or stop describing the checksum as FNV-1a. The current value remains deterministic, so this only matters for algorithm conformance or externally expected hashes.
+
+The RGB10A2 bit extraction, COM length/sequence formatting, and zero-timeout pending-SIGPIPE drain are otherwise correct. `ConsumeSigpipe` depends on the stated writer-side requirement that SIGPIPE already be blocked—or ignored—before the first FIFO write.
+
+**no blocking issue**

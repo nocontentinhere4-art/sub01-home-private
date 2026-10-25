@@ -1,0 +1,44 @@
+ // SUB01_STREAMER_VISUAL_V2_V24 BEGIN (tools/native_streamer_visual_v2/install_v24.py): the main view (the Slate back buffer; offscreen: a
+ // texture, no present) to <streamer-dir>/main.mjpeg for the director, main.json every second, the go/no-go line.
+ void StartStreamerVisualMainTap();void UpdateStreamerVisualMainTap(double Now,float Dt);void WriteStreamerVisualMainStatus(double Now);void LogStreamerVisualMainTap(double Now);
+ void JudgeStreamerVisualMainTap(double Now);void ArmStreamerVisualMainTap(double Now);
+ TSharedPtr<class FSub01MainTap> StreamerVisualMainTap; // shared with the render thread (the back-buffer delegate) and the tap's own threads
+ FString StreamerVisualMainReason,StreamerVisualMainVerdict=TEXT("PENDING"),StreamerVisualMainWhy=TEXT("not armed");int64 StreamerVisualMainShape=-1;
+ float StreamerVisualMainTapOn=-1.f,StreamerVisualMainFps=60.f,StreamerVisualMainQuality=85.f,StreamerVisualMainSource=0.f; // main_tap -1 = auto, resolved at start
+ bool StreamerVisualMainOffscreen=false,StreamerVisualMainArmed=false,StreamerVisualMainJudged=false;int32 StreamerVisualMainArmedSource=-1;
+ double StreamerVisualMainStatusAt=0,StreamerVisualMainStatusWindowAt=0,StreamerVisualMainLogAt=0,StreamerVisualMainLogWindowAt=0,StreamerVisualMainArmedAt=0;
+ int64 StreamerVisualMainStatusBase[2]={0,0},StreamerVisualMainLogBase[4]={0,0,0,0},StreamerVisualMainGoBase[5]={0,0,0,0,0};float StreamerVisualMainFpsWritten=0,StreamerVisualMainFpsCaptured=0;
+ // SUB01_STREAMER_VISUAL_V2_V24 END
+
+// includes added
+#include "Framework/Application/SlateApplication.h" // SUB01_STREAMER_VISUAL_V2_V24: the main-view tap (the Slate back buffer)
+#include "Rendering/SlateRenderer.h"
+#include "Slate/SlateViewportProvider.h"
+#include "Widgets/SWindow.h"
+#include "Engine/GameViewportClient.h"
+#include "HAL/Runnable.h"
+#include "HAL/RunnableThread.h"
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <string>
+#include <poll.h>
+#include <sys/file.h>
+
+// start/tick wiring
+ StartStreamerVisualMonitorFeed(); // SUB01_STREAMER_VISUAL_V2_V22: the in-game monitor feed reader, created once
+ StartStreamerVisualMainTap(); // SUB01_STREAMER_VISUAL_V2_V24: the main-view tap (FIFO, back-buffer delegate), created once
+  UpdateStreamerVisualMonitorFeed(Now,Dt); // SUB01_STREAMER_VISUAL_V2_V22: the monitor feed (gate, upload, bind, pump, log)
+  UpdateStreamerVisualMainTap(Now,Dt); // SUB01_STREAMER_VISUAL_V2_V24: the main-view tap (knobs, fallback command, go/no-go, status, log)
+
+// tuning block
+ // SUB01_STREAMER_VISUAL_V2_V23 TUNING END
+ // SUB01_STREAMER_VISUAL_V2_V24 TUNING (tools/native_streamer_visual_v2/install_v24.py): the main-view tap keys, in their own lines for merges
+ Field(TEXT("main_tap"),StreamerVisualMainTapOn,0,1); Field(TEXT("main_fps"),StreamerVisualMainFps,1,60); Field(TEXT("main_quality"),StreamerVisualMainQuality,40,95); Field(TEXT("main_source"),StreamerVisualMainSource,0,1);
+ // SUB01_STREAMER_VISUAL_V2_V24 TUNING END
+
+// receipt
+Receipt->SetNumberField(TEXT("cam2_ev_max"),StreamerVisualCam2EvMax); // SUB01_STREAMER_VISUAL_V2_V22
+   if(StreamerVisualMainTap){const FSub01MainTap& MainTap=*StreamerVisualMainTap; // SUB01_STREAMER_VISUAL_V2_V24
+    Receipt->SetBoolField(TEXT("main_tap_on"),MainTap.On.load()!=0);Receipt->SetBoolField(TEXT("main_tap_reader"),MainTap.Reader.load());Receipt->SetNumberField(TEXT("main_tap_fps"),StreamerVisualMainFpsWritten);Receipt->SetNumberField(TEXT("main_tap_written"),double(MainTap.Written.load()));Receipt->SetNumberField(TEXT("main_tap_seq"),double(MainTap.LastSeq.load()));Receipt->SetNumberField(TEXT("main_tap_source"),MainTap.Source.load());
+    Receipt->SetBoolField(TEXT("main_tap_offscreen"),StreamerVisualMainOffscreen);Receipt->SetStringField(TEXT("main_tap_go"),StreamerVisualMainVerdict);Receipt->SetStringField(TEXT("main_tap_go_reason"),StreamerVisualMainWhy);Receipt->SetStringField(TEXT("main_tap_reason"),StreamerVisualMainReason);}

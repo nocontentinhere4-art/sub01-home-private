@@ -1,0 +1,42 @@
+    walker, frames, seqs, arrivals, failures, saved, save_skipped = Walker(), 0, [], [], {}, [], 0
+    read_bytes, last_read, longest_stall, eof_reads, writer_seen, max_per_read = 0, None, 0.0, 0, False, 0
+    poller = select.poll()
+    poller.register(fd, select.POLLIN)
+    started = time.monotonic()
+    try:
+        while time.monotonic() - started < seconds:
+            poller.poll(100)
+            try:
+                data = os.read(fd, CHUNK)
+            except OSError as exc:
+                if exc.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
+                    continue
+                raise
+            now = time.monotonic()
+            if not data:                          # EOF: no writer (yet, or any more)
+                eof_reads += 1
+                time.sleep(0.05)
+                continue
+            writer_seen = True
+            if last_read is not None:
+                longest_stall = max(longest_stall, now - last_read)
+            last_read = now
+            read_bytes += len(data)
+            whole = walker.feed(data)
+            max_per_read = max(max_per_read, len(whole))
+            for frame in whole:
+                frames += 1
+                arrivals.append(now)
+                ok, seq, why = check_contract(frame) if contract == 'main' else (True, None, '')
+                if not ok:
+                    failures[why] = failures.get(why, 0) + 1
+                if seq is not None:
+                    seqs.append(seq)
+                if save is not None and len(saved) < save_count:
+                    written = save_frame(save, f'frame-{len(saved) + save_skipped:02d}{"-seq%d" % seq if seq is not None else ""}.jpg', frame)
+                    if written:
+                        saved.append(written)
+                    else:
+                        save_skipped += 1
+    finally:
+        os.close(fd)

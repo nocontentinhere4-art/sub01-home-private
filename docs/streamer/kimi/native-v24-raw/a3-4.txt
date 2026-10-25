@@ -1,0 +1,7 @@
+1. yes — For the stated destruction path, the flush drains the already-enqueued command before provider deletion; captured `Self` also keeps the tap alive.
+2. no — The atomic avoids a data race, and comparing the address without dereferencing it creates no use-after-free; a stale value only affects identity filtering until refreshed.
+3. no erroneous early/never case — Ordinary multi-call, render-thread runs wait for 600 frames, subject to the black/readable hold, or 120 s; `Calls<=1`/`Wrong>0` are explicit 30-second failure exits, and the reason order prevents those cases reaching GO.
+4. no — With stable on/source/shape, `StreamerVisualMainShape=Shape` and the latched armed state prevent repeated arming; only genuine per-tick oscillation of those inputs can continually postpone a verdict.
+5. yes — `lstat` rejects symlinks/non-FIFOs, and the uid/`0077` checks fail closed; creation uses `0600`, and no branch unlinks or replaces an existing path.
+
+no blocking issue

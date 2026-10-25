@@ -1,0 +1,62 @@
+SUB-01 native v24 build slice: which Kimi answers cover which exact file version (2026-10-24 23:40 UTC; final copy 2026-10-25)
+
+Model kimi-k3.1-pro via tools/ask_kimi.py on the pod, --max-tokens 24000 --timeout 600, one call at a time. The questions, answers and
+call logs are byte for byte in /tmp/sub01-share/w-v24/ (q*.txt, a*.txt, a*.txt.log; the attachments rv*.txt / rv-*.cpp). Only answers
+given on the exact current text, or after its last change, are cited. "Identical" below was checked mechanically: the attachment as
+sent (downloaded from the pod) was compared with the same cut of the CURRENT installer's output.
+
+1. files/tools/native_streamer_visual_v2/install_v24.py
+   sha256 ad0c3c25efdffbf8e3f24ab26727a39b1d1739b039930e2b9dd19da30b265f5a (new file; patch: v24-native-on-54a8758.patch)
+   Dry-run on the pod's v23 source (= cinematic-source-v3-final/source-v23 = the live Source/Sub01HomeLab, hashes checked 23:38):
+     status planned, 11 edits, each count 1; both files CRLF
+     Sub01HomeLab.h   before 697f82f0a7dd282d7f1e63db8996d897deaa56fbf011dadaf35904c5fce15585 after 14c8981c726de1f38385661744330d2540c142cc35fe16780c6b034ea51e95b6 (1 edit)
+     Sub01HomeLab.cpp before 2bd5614e97923658f49efa4d7f559eb17adf872678474fd423b629baa8587955 after c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628 (10 edits)
+
+   The emitted C++ (CPP_METHODS and the edit texts):
+   - helpers (Classify, KindName, ToBgra8, PipeMaxSize, ConsumeSigpipe): part 1, q-v24rv-part1.txt -> a-v24rv-part1.txt "no blocking
+     issue" (its two findings were in Stamp/Checksum only). NOTE: the pod's rv-A.cpp was regenerated after the part-1 fixes, so it
+     shows the fixed Stamp/Checksum, not the text part 1 saw.
+   - Stamp and Checksum after the part-1 fixes: N1b, q14-n1b.txt -> a14-n1b.txt "APPROVE" (the changed lines quoted verbatim).
+     (N1, the whole two functions, q13-n1.txt: no answer, reasoning budget; rv13-n1.txt is IDENTICAL to the current text.)
+   - the tap class members, runnable, StartThreads/StopThreads: part 2a, q-v24rv-part2a.txt -> a-v24rv-part2a.txt (two claims
+     rejected with engine evidence; the third = one-shot threads, documented). The only later change in that text is the
+     destructor comment, covered by the fix follow-up below.
+   - OnBackBuffer, Pump, ResetRing, TakeBuffer: 2b-api q3-2b-api.txt -> a3-2b-api.txt "no blocking issue"; 2b-acct q3-2b-acct.txt
+     -> a3-2b-acct.txt "no blocking issue" (rv2-2b1.txt IDENTICAL to the current text).
+   - Collect, EncodeLoop (+ static_assert), the writer's main_tap 0 line, WriteWhole, the destructor: fix follow-up q5-fix.txt ->
+     a5-fix.txt "no blocking issue" (rv5-fix.txt IDENTICAL to the current text). Earlier answers on their older text: 3a
+     (a3-3a.txt, blocking -> fixed), 3bc (a3-3bc.txt, blocking -> fixed); the rest of the writer (WriterLoop, locks, OpenFifo,
+     CloseFifo, ReaderGone) is unchanged since 3bc ("no" to every other question).
+   - Start/Update/Arm/Judge: piece 4, q3-4.txt -> a3-4.txt "no blocking issue" (rv2-4a/4b.txt IDENTICAL).
+   - main.json and the log line: piece 5, q3-5.txt -> a3-5.txt "no blocking issue" (rv2-5a/5b.txt IDENTICAL).
+   - header fields, includes, wiring, tuning keys, receipt: piece 6a, q6-6a.txt -> a6-6a.txt "no blocking issue" (rv2-6a.txt IDENTICAL).
+   - the four cam2 evidence lines: piece 6b, q6-6b.txt -> a6-6b.txt "no blocking issue" (rv2-6b.txt IDENTICAL).
+   The installer's Python:
+   - cam2 anchors, EDITS, REQUIRES, plan() (lines 566-623): N2a, q13-n2a.txt -> a13-n2a.txt "APPROVE".
+   - run(), main() (lines 626-676): N2b, q13-n2b.txt -> a13-n2b.txt "APPROVE".
+   - the preamble (lines 1-145: docstring, layer loading, constants, the template fill): reviewed by the takeover side on this exact
+     file (sha256 ad0c3c25...): /workspace/sub01-codex-v24-build/preamble/question.txt (a332684a5fb18a91e3def30502a089c8232a45d44594febfa156b59c13dcba61)
+     -> answer.json (91bb3293380d7ac57655b513962c2a0d17c491f3926448348eeabf1b5e9f8239) "APPROVE"; the attachment preamble.py.txt
+     (bf71b8afc526cea50404c4aad1fe732a255a080f709203cb5d84ac5ea42574a9). The START/TICK/TUNING/RECEIPT text definitions (lines
+     549-564) were reviewed as text in 6a.
+   The design behind it: docs/streamer/kimi/native-v24-design.md (3 parts, in the final patch).
+
+2. files/tools/native_streamer_visual_v2/{install.py, install_cam2.py, install_face_camera.py, install_mouth.py, install_no_pin.py,
+   install_pin_fix.py, install_pose_fix.py, install_seat_fix.py, install_stream_pass.py, install_v21_fixes.py, install_v22.py,
+   install_v23.py}: the import closure of install_v24.py (checked by loading it), copied from 54a8758, byte-identical to 11ee6f9
+   and to the worktree; not changed by v24 (their own reviews belong to the layers that added them).
+
+3. files/launcher/launch-streamer-game-20261024m5.py (a copy of /root/.sub01-windows-recovery/launch-streamer-game-20261024m5.py)
+   sha256 4d9bd83099609f73306256869e7dfaef35f69c09ff6aecbcc350f49da751a910; derived from m3o (sha256
+   71f8cd1cf7569a65fd15fb5793ede893de560f57eb85dc0bb39abe7cf3b96d4b, never edited) by make_m5.py (anchored edits).
+   - piece 7a, q3-7a.txt -> a3-7a.txt "no blocking issue" on the first version (m5-v1.diff); its points were adopted; follow-up
+     q7-m5fix.txt -> a7-m5fix.txt "no blocking issue" on THIS version (m5b.udiff = diff -u m3o m5).
+   It reads the operator token from its file at run time (as m3o does); no secret is in the file.
+
+The probe (not native): 7b1 + its follow-up, 7b2a, 7b2b, 7c (+ 7c-a..7c-d) and the follow-ups F1, F2, F3: all closed, the last
+answers APPROVE on the final text (see MANIFEST.txt). Nothing open.
+
+Not done by me (no runtime actions): no build, no launch. The go/no-go steps are in the final MANIFEST and in
+tools/native_streamer_visual_v2/README.md ("Go/no-go on the pod").
+Artifact marker for build-v24.sh: UE_LOG strings are TEXT() = UTF-16 in the .so, so an ASCII grep will not find them. A narrow
+literal only v24 emits is "seq=%llu" (Stamp's snprintf); check it is absent from the v23 .so first.

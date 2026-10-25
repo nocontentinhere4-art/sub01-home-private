@@ -1,0 +1,5 @@
+1. Yes. SOI/EOI, segment bounds, mandatory SOS, exactly one dimension-matching SOF0, and bounded digit-only `seq` conversion are all enforced; indexing is guarded.
+
+2. No. For `bytes` frames returned by the stated cutter, no contract-breaking acceptance or exception path remains; post-SOS APPn/COM are outside its output domain.
+
+no blocking issue

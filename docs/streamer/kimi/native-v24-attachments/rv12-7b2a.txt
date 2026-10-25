@@ -1,0 +1,35 @@
+class Walker:
+    """Incremental frame cutter: feed bytes, get whole frames; cuts and garbage resync on the next SOI."""
+
+    def __init__(self):
+        self.buffer = bytearray()
+        self.cuts = self.garbage = 0
+
+    def _soi(self, start: int) -> int:
+        return self.buffer.find(b'\xff\xd8\xff', start)
+
+    def feed(self, data: bytes) -> list:
+        self.buffer += data
+        frames = []
+        while True:
+            start = self._soi(0)
+            if start < 0:
+                keep = 2 if self.buffer.endswith(b'\xff\xd8') else 1 if self.buffer.endswith(b'\xff') else 0
+                if len(self.buffer) > keep:
+                    self.garbage += 1
+                del self.buffer[:len(self.buffer) - keep]
+                return frames
+            if start:
+                self.garbage += 1
+                del self.buffer[:start]
+            end, complete = self._walk()
+            if end is None:
+                return frames                    # unfinished: wait for more bytes
+            if not complete:                     # a cut frame: resync on the next SOI after this one
+                self.cuts += 1
+                nxt = self._soi(2)
+                del self.buffer[:nxt if nxt > 0 else end]   # (end >= 2: from the cut on, a next SOI still arriving is kept)
+                continue
+            frames.append(bytes(self.buffer[:end]))
+            del self.buffer[:end]
+

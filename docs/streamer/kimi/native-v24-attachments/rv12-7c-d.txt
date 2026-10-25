@@ -1,0 +1,29 @@
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--fifo', type=Path, default=Path(DEFAULT_FIFO))
+    parser.add_argument('--seconds', type=float, default=30.0)
+    parser.add_argument('--contract', choices=('main', 'any'), default='main')
+    parser.add_argument('--save', type=Path, help='directory for the first whole frames (.jpg)')
+    parser.add_argument('--save-count', type=int, default=3)
+    parser.add_argument('--force', action='store_true', help='skip the other-reader check (only when you know nobody else reads it)')
+    args = parser.parse_args(argv)
+    if args.save is not None:
+        args.save.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if args.save.is_symlink() or not args.save.is_dir():
+            print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': f'--save {args.save} is not a plain directory'}))
+            return 2
+    try:
+        report = probe(args.fifo, args.seconds, args.contract, args.save, args.save_count, args.force)
+    except SystemExit as stop:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': str(stop)}))
+        return 2
+    except FileNotFoundError:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': f'{args.fifo} does not exist'}))
+        return 2
+    report['status'] = 'ok'
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

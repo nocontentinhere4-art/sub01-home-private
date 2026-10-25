@@ -1,0 +1,298 @@
+SUB-01 native v24 (the offscreen main-view hand-off, spec docs/streamer/SAWTOOTH-20261024.md "Structural fix" steps 1-3 and 6)
+Final delivery for the takeover, written 2026-10-25 00:18 UTC. No secrets in any file. Nothing was built, launched, killed or pushed.
+
+BASE COMMITS AND PATCHES
+- v24-final-on-54a8758.patch: the whole v24 work (install_v24.py, main_fifo_probe.py, tests, README, the two Kimi docs) as one patch.
+  `git apply --check` passes on 54a8758, on a0332c9 and on 11ee6f9 (the same text: none of the touched files differs between them),
+  and on 920e4d9 (origin's tip at the last fetch). Applied to an export of 54a8758, the test file runs there: tests/test_native_streamer_visual_v2.py 144 passed (447.6 s).
+- Local commits (worktree branch worktree-agent-ac7570671c083f05a, NOT pushed): 92bae07 (the design consultation), 8131f4a
+  (the code, the tests, the README, the review doc). The patch is `git diff 11ee6f9 8131f4a`.
+- build-slice/ (next to this folder, delivered earlier, unchanged): install_v24.py at the same sha256 as in this patch, its import
+  closure, the m5 launcher copy, REVIEW-MAP.txt.
+
+TESTS
+- tests/test_native_streamer_visual_v2.py: 144 passed in the worktree at 8131f4a (439.5 s) and 144 passed on the 54a8758 export with the patch applied (447.6 s) (g++ and clang++ present: the v24 C++ is compiled against the stub with
+  -Wall -Werror -Wshadow and run with real threads and a real FIFO; the probe runs against a real FIFO).
+- The v24 tests: plan/apply/refuse twice/needs v23, a missing anchor refuses without writing, keys and the FIFO/status contract, the
+  text checks, the C++ compiles (g++, clang++), no new local shadows a member, the stamp/convert/checksum driver, the tap runtime
+  driver (start, no-reader probes, GO, gap-free in-order frames, main.json, formats, a stalled encode (0.4 s: the old release logic
+  never resumed, `failed 26`), a stalled reader (deadline, cut, resync), a reader leaving, main_tap 0, a foreign lock, seven NO-GO
+  causes, the fallback source, teardown), the FIFO probe, and every earlier driver on the v24 sources.
+- m5's incremental log reader: checked locally (complete lines only, offsets, a missing file).
+
+KIMI REVIEW (kimi-k3.1-pro, --max-tokens 24000 --timeout 600, one call at a time)
+Every question, answer and call log is in kimi-raw/ (byte for byte), every attachment as sent in kimi-attachments/, and one
+kimi-NN-<piece>.md per piece (question and answer verbatim). docs/streamer/kimi/native-v24-review.md (in the patch) has the decision
+table; docs/streamer/kimi/native-v24-design.md the design consultation.
+Piece (file in this folder)                          | verdict (verbatim answer: kimi-raw/<a...>.txt)        | outcome
+kimi-00-design.md  design, 3 parts                   | design answers                                        | decisions table in the design doc
+kimi-01 part 1  helpers                              | no blocking issue (a-v24rv-part1.txt)                 | 2 findings fixed -> kimi-27 N1b APPROVE
+kimi-02 part 2  whole class                          | no answer (reasoning budget)                          | split into 2a/2b
+kimi-03 part 2a members/threads/teardown             | "blocking" (a-v24rv-part2a.txt)                       | both claims rejected with 5.8.3 evidence; teardown accepted in kimi-20
+kimi-04 part 2b render thread                        | no answer                                             | re-asked as 2b-api / 2b-acct
+kimi-05 piece 2b1                                    | no answer                                             | re-asked as 2b-api / 2b-acct
+kimi-06 2b-api  RHI calls                            | no blocking issue (a3-2b-api.txt)                     | -
+kimi-07 2b-acct accounting                           | no blocking issue (a3-2b-acct.txt)                    | -
+kimi-08 3a encoders                                  | blocking: reorder stall (a3-3a.txt)                   | fixed + runtime test -> kimi-20 no blocking issue
+kimi-09 3bc writer                                   | blocking: deadline (a3-3bc.txt)                       | fixed -> kimi-20 no blocking issue
+kimi-10 4  game thread                               | no blocking issue (a3-4.txt)                          | -
+kimi-11 5  main.json/log                             | no blocking issue (a3-5.txt)                          | -
+kimi-12 6  other edits                               | no answer                                             | split into 6a/6b
+kimi-13 6a character edits                           | no blocking issue (a6-6a.txt)                         | -
+kimi-14 6b cam2 evidence                             | no blocking issue (a6-6b.txt)                         | -
+kimi-15 7a m5 launcher                               | no blocking issue (a3-7a.txt)                         | points adopted -> kimi-21 no blocking issue
+kimi-16 7b probe (both halves)                       | no answer                                             | split into 7b1/7b2
+kimi-17 7b1 reader scan + contract                   | blocking: contract check (a8-7b1.txt)                 | fixed -> kimi-23 no blocking issue
+kimi-18 7b2 frame cutter                             | no answer                                             | split into 7b2a/7b2b (~35 lines each)
+kimi-19 7c probe read loop                           | blocking (a3-7c.txt)                                  | fixed -> kimi-22 no answer -> kimi-30..36
+kimi-20 fix follow-up (3a/3bc fixes, teardown)       | no blocking issue (a5-fix.txt)                        | -
+kimi-21 m5 follow-up                                 | no blocking issue (a7-m5fix.txt)                      | -
+kimi-22 7c follow-up (whole)                         | no answer                                             | re-asked as 7c-a..7c-d
+kimi-23 7b1 follow-up                                | no blocking issue (a10-7b1.txt)                       | -
+kimi-24 7b2a cutter feed                             | APPROVE (a12-7b2a.txt)                                | -
+kimi-25 7b2b cutter _walk                            | APPROVE (a12-7b2b.txt)                                | -
+kimi-26 N1 Stamp/Checksum (whole)                    | no answer                                             | re-asked as N1b (kimi-27)
+kimi-27 N1b changed Stamp/Checksum lines             | APPROVE (a14-n1b.txt)                                 | -
+kimi-28 N2a anchors/EDITS/plan                       | APPROVE (a13-n2a.txt)                                 | -
+kimi-29 N2b run/main                                 | APPROVE (a13-n2b.txt)                                 | -
+kimi-30 7c-a probe opening                           | blocking: scan TOCTOU (a12-7c-a.txt)                  | rescans -> kimi-34 -> kimi-36 APPROVE
+kimi-31 7c-b read loop                               | blocking: partial frame at EOF (a12-7c-b.txt)         | drop_partial -> kimi-34 -> kimi-36 APPROVE
+kimi-32 7c-c summary                                 | APPROVE (a12-7c-c.txt)                                | -
+kimi-33 7c-d main()                                  | blocking+minor: --save TOCTOU (a12-7c-d.txt)          | held dir fd -> kimi-35 APPROVE
+kimi-34 F1 follow-up                                 | blocking x2 (a15-f1.txt)                              | other_reader_seen + fresh-SOI guard -> kimi-36 APPROVE
+kimi-35 F2 follow-up                                 | APPROVE (a15-f2.txt)                                  | -
+kimi-36 F3 follow-up                                 | APPROVE (a16-f3.txt)                                  | -
+Preamble of install_v24.py (lines 1-145): reviewed by the takeover side on this exact file, APPROVE:
+  /workspace/sub01-codex-v24-build/preamble/question.txt a332684a5fb18a91e3def30502a089c8232a45d44594febfa156b59c13dcba61,
+  answer.json 91bb3293380d7ac57655b513962c2a0d17c491f3926448348eeabf1b5e9f8239, preamble.py.txt bf71b8afc526cea50404c4aad1fe732a255a080f709203cb5d84ac5ea42574a9.
+OPEN: nothing in the review. REVIEW-MAP.txt (here) maps each delivered file version to the answers that cover it.
+
+WHAT CODEX STILL HAS TO DO (the go/no-go: build, offscreen launch, FIFO check; then the spec's gates)
+1. Build (build-only, e.g. tools/pod/onpod/build-v24.sh): stage build-slice/files/tools/native_streamer_visual_v2/*.py (install_v24.py
+   + its 12 imports). On the pod's v23 source (cinematic-source-v3-final/Sub01HomeLab/Source/Sub01HomeLab = source-v23, checked
+   23:38) the dry-run must say: status planned, 11 edits each count 1, both files CRLF;
+     Sub01HomeLab.h   697f82f0a7dd282d7f1e63db8996d897deaa56fbf011dadaf35904c5fce15585 -> 14c8981c726de1f38385661744330d2540c142cc35fe16780c6b034ea51e95b6
+     Sub01HomeLab.cpp 2bd5614e97923658f49efa4d7f559eb17adf872678474fd423b629baa8587955 -> c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628
+   The engine build uses -Wshadow -Werror. Artifact marker: UE_LOG strings are TEXT() = UTF-16 in the .so; the narrow literal
+   "seq=%llu" (Stamp's snprintf) is v24's own: check it is absent from the v23 .so first.
+2. Launch offscreen with /root/.sub01-windows-recovery/launch-streamer-game-20261024m5.py (sha256
+   4d9bd83099609f73306256869e7dfaef35f69c09ff6aecbcc350f49da751a910; m3o unchanged, 71f8cd1cf7569a65fd15fb5793ede893de560f57eb85dc0bb39abe7cf3b96d4b).
+   Its output: /home/unreal/.sub01-private/streamer-game-20261024m5/ (game.log, status.json with main_tap_started and main_tap_gonogo).
+   Expected log lines:
+   - SUB01_STREAMER_VISUAL_MAIN_TAP started=1 fifo=<streamer-dir>/main.mjpeg offscreen=1 on=1 source=0 bound=1 size=1920x1080 targetFps=60
+     quality=85 pipeWanted=1048576 ... reason=-
+   - SUB01_STREAMER_VISUAL_MAIN_TAP_LOCK state=held
+   - about 10 s after the streamer start (600 render frames): SUB01_STREAMER_VISUAL_MAIN_TAP_GONOGO verdict=GO reason=-
+     source=backbuffer-delegate fires_per_frame=~1.000 dup_calls=0 missed_frames=~0 other_windows=0 wrong_thread=0 extent=1920x1080
+     format=A2B10G10R10 (or B8G8R8A8) pitch_px>=1920 rows>=1080 max_channel>16 nonblack=1 jpeg_ok=1 jpeg=1920x1080 offscreen=1
+     (no reader is needed for the verdict: one diagnostic readback a second).
+   - On NO-GO "the delegate never fired for the game window": main_source=1 in the tuning file (tune.py) tries the fallback; a new
+     verdict line follows. Any other NO-GO reason: stop and report it.
+3. FIFO check, with nobody else reading main.mjpeg (the director in x11 mode or stopped, its tap not draining it), as root:
+     python3 tools/native_streamer_visual_v2/main_fifo_probe.py --seconds 60 --save <a private dir>
+   must show: status ok, other_reader_seen false (a true voids the run), contract_failures {}, cuts 0, garbage_runs 0, tail_bytes
+   small, seq.missing ~0, seq.out_of_order 0, seq.unique_fps_window >= 59.5, trailing_idle_ms < 50, arrival_gap_ms.p95 well under 33
+   with max_frames_per_read 1-2; the saved frames match the windowed picture (colour, gamma, UI). main.json at the same time: fps ~60,
+   reader true, lock held, pipe_size 1048576, the dropped_* counters ~0, go GO; the MAIN_TAP fps= lines every 10 s give copy_ms and
+   encode_ms (the render-thread copy must pass the frame-time gates). Stopping the probe: reader false, the tap idles.
+4. Then the spec's step 6 with the director's --game-source fifo (c7e42ed; its main.json fields and seq= parsing match this
+   contract): the ABBA against x11, the soak, the director-side gates (docs/streamer/SAWTOOTH-20261024.md).
+5. cam2 (52-53 of 60 written offscreen): the writer's whole-frame drops on a full pipe = reader back-pressure; cam2.json now has
+   pipe_size and full_queued_max_kb. Suggested measurements: the director's reader timing, an always-draining reader with the
+   director stopped, ffmpeg decode-only vs the full graph, the main FIFO watched at the same time (design doc, part 3).
+
+NOTE FOR THE WARM DELIVERY BELOW 59.5 FPS (from the tap's design and the cam2 analysis; nothing measured by me)
+- A sequence is given only when a capture is ACCEPTED (after the reader gate, the main_fps rate gate and a free ring slot), and each
+  accepted sequence ends written or in exactly one drop counter. So in the director's seq tap / the probe: unique fps < 59.5 with
+  seq.missing ~0 means fewer captures (render calls below 60/s, rate_skipped, or dropped_slots: those never get a sequence); missing > 0
+  means post-acceptance drops, and the main.json counter that grows says where (deltas over 60 s, main.json is cumulative):
+  - dropped_slots: the 3-slot ring was full: encoders behind (2 encoders: encode_ms must stay well under 33 ms) or late GPU copies.
+  - dropped_queue: the 2-frame output queue overflowed: the writer is blocked on a full pipe = the READER is behind. Same mechanism as
+    cam2's dropped_full (52-53 of 60 offscreen, ~7 drops/s at 1 MiB): reader back-pressure, not the game.
+  - dropped_stalled / frames_discarded_midwrite (+ MAIN_TAP_CUT lines): the reader stalled for the whole 0.5 s deadline.
+  - dropped_noreader: the reader closed or was away; dropped_encode: failed encodes; dropped_format: a back buffer that is not 1920x1080.
+- Pipe slack: 1 MiB (pipe_size in main.json) holds only ~4-6 main frames at 170-250 KB each, ~70-100 ms. A reader that pauses longer
+  (ffmpeg 6.1's main thread demuxing/decoding 1080p MJPEG next to cam2, the filters and NVENC; its "Thread message queue blocking"
+  warnings at run start) back-pressures the writer exactly as cam2 showed. Cheap checks: main.json deltas with the director reading
+  vs the probe reading (the probe drains as fast as it can); the director's seq-tap gaps vs main.json `written`; main_quality 75
+  (fewer bytes per frame, same 60 fps) as an A/B; a larger pipe needs root's /proc/sys/fs/pipe-max-size (the tap asks for the max).
+
+FILES (sha256, path relative to this folder)
+ce3140b3e764ea375d3f019cb7cbb1dac9f3bb911dfc02703d8ed69722faf662  REVIEW-MAP.txt
+659cb1bf9303f94419d6e12d45d118a6ba7e58c0fbdddaf8eb2a9f10dfb845dd  kimi-00-design.md
+b2413c04661ce3f8bfe68242daafdef02c6e9d551b0cb7c45ab36a95075e1e78  kimi-01-rv-part1.md
+8173325935b4578b514bae98af17adef3284246317be224dbf9ff21ea22138bc  kimi-02-rv-part2.md
+c886ac52b59d9cd6cfe79580df6e6f2b6bc49973c64c92d1b0e5222254fb3115  kimi-03-rv-part2a.md
+00d4b4f1865c6989874711fab40ba4ee35e77a895954a11c8ee36dfd430d36b2  kimi-04-rv-part2b.md
+7e61e30418ddb31c133c94405db246bb63c9d071b70dceed6bdb62364513d41e  kimi-05-rv-2b1.md
+95fbaa1da3dca0983acf4fef6740bf03115b0a30495a42ca22612a97da1f6389  kimi-06-rv-2b-api.md
+4a420e7968d366114d2c41646df277ecd2eda86b7a018daa36ad2596da2d0093  kimi-07-rv-2b-acct.md
+a5711bed13c242b80f93028813253f097dc3aef5d588eae3f690b7cfa21d5624  kimi-08-rv-3a.md
+5cfbf7aa1a978f61532638a768dfb678c15e65b9d461ab63c40ba0713c86670a  kimi-09-rv-3bc.md
+28c9c1a997e5539f59e3ca8ae125fceb8fcc0425457f7798785b52d3df70bf75  kimi-10-rv-4.md
+3f74b167cc41b9bd19990cca3a28a7484434710cc2860dc418fcc01af4b1ca1c  kimi-11-rv-5.md
+54a919046dea0056e36864e15ad5b1a89ace30936b4da1524754807082b529e4  kimi-12-rv-6.md
+4daf59b8b604f54c5ee8667fecaa08eefeb2b247da665ca726eac95087bfd1e4  kimi-13-rv-6a.md
+1b6fdc7aa1f3037d1453dab6a2b27e427e2a9226e99ebe6a91eed78bc2a8f3bf  kimi-14-rv-6b.md
+66536586aee81ca32a7d9535cb06788098fa9c32e35f7f4e8bbf1d4dc82c6c71  kimi-15-rv-7a.md
+a04c60224bf7699b10c0f5f84115f5aa8c91344e08f739b7a280ce95aae3e2b6  kimi-16-rv-7b.md
+89339f5a749ed5ac774c768f918fba5030882ec1365aab1a571faa0d0b6876c5  kimi-17-rv-7b1.md
+8895f11aa61100642003a81c45b5059a3d90959fb3e0cd747654daaa6b7cc2be  kimi-18-rv-7b2.md
+5b2e088449823a09ea71453322485e758a3454153305d13b486b80848d2f5cd2  kimi-19-rv-7c.md
+6fdaccaaff0476fa98e01f59e32db05390e034e65b6c0539d9b1912cc13fc2ee  kimi-20-rv-fix.md
+67ebd6fa81e71644837c642c9339c9c0d53512bb7acdbe996bdf1a29cfc24937  kimi-21-rv-m5fix.md
+b124bd9db5b5034fb005b248c13da8f8b0178d0888010fc64a4593674d79fa03  kimi-22-rv-7c-fix.md
+8ee09a9f57956b6809936722ebc5cf55aad8c3070a71ede242e24bc3ffc15378  kimi-23-rv-7b1-fix.md
+f777b587ecf4f0ba5d0425e63f4e3e5715cfecd2c38afec7b2f1639e7c21f57b  kimi-24-rv-7b2a.md
+b25b29d12c28497d996b4ce80a151030b79affbb7fe251d47a0493c6555b5edf  kimi-25-rv-7b2b.md
+0a5569ea5a402839dd08b1ebfa4f01ac642d0b50d7277653ee7dfdb4e58598cb  kimi-26-rv-n1.md
+66575c2570bd244ef9065734a50574bdfdae0a6c4df092b6ab3d6f6c64ea5261  kimi-27-rv-n1b.md
+f7d650aa18201a7816e15f3094fa5a009d3f2730ee31b0b90e8c2a82f6e2bf96  kimi-28-rv-n2a.md
+178cfa3db6d58c3bbaffc9610732bd938acf7c83de866d794c0cca25cd5e9acb  kimi-29-rv-n2b.md
+799251c38365a57f56db6799db11c46888ce0004f8ce9a90385e3a1283fba5c1  kimi-30-rv-7c-a.md
+8c37518bf34e95f4be9875efb9d299bfa27d03ffa6d63f26648a7dc585082053  kimi-31-rv-7c-b.md
+b44ccacf039a04a1f0b208e821a8bf9ef7773f65da4877f23e7214429d72803f  kimi-32-rv-7c-c.md
+2f25e3924ad41c196cd6da7fe5e709143145852bb6066edac36dc5dbfa0bbce3  kimi-33-rv-7c-d.md
+3325ae1d5809457b78b3a576687f750bef8b68971abfb21aeea85437ad861077  kimi-34-rv-f1.md
+041a37f9bef08f2f9ac5d43e38a3bc298cf5e559ef173e545c5dba3cb7f8e3c2  kimi-35-rv-f2.md
+e167c2bf8f202f19364a5c89d7ee55364aee325a0468968366945681ff65dcb1  kimi-36-rv-f3.md
+c4230d7a9afe072fd2f371db38f62c4036970dfb5f8d758c1c66297f049a7e3c  kimi-attachments/m5-v1.diff
+df0e2326cd778b7403303e606e5562e58321ec5d46174df767bc7e3803e9439d  kimi-attachments/m5b.udiff
+ee4900fb3226c24ffd1c6fdb7ce0f3e8a9a73c6b98efe3971c9093d4bf8a4d43  kimi-attachments/rv-A.cpp
+ca91dd10ad6d6de5602d983393418b529f29ae947a971a641be6d6e5ae469a5e  kimi-attachments/rv-B.cpp
+69f5d794f9f46e036bc9307ce24a9ba4319baf1d017645ebf153720fef0de270  kimi-attachments/rv-B1.cpp
+63dcba24c87a2e9de807161511e50a381c1b0ac16b0bd0b84e8c8c44ef109aeb  kimi-attachments/rv-B2.cpp
+8f13ea2ee92788530560be4bcbcc2af68af856005583fd6f5f44a2b0e5e8db55  kimi-attachments/rv10-7b1.txt
+693f2f6143ac9c9ee32da3ea0962b41aa65ac262cee01326cf39c0b875c426da  kimi-attachments/rv12-7b2a.txt
+26977fed1828bb32d6928d80f43ea42c8f287e3bb9d8677a7b1a151e01c09e20  kimi-attachments/rv12-7b2b.txt
+34810f332dc2dbcc98e0846e55d7838f67a4951051bc51563d87ec7dc2efc8e8  kimi-attachments/rv12-7c-a.txt
+a4dc35061d5fc948fb8e0a679ba0cd76592b52637ce935834fe2a9bc38f90dd0  kimi-attachments/rv12-7c-b.txt
+3e1a672e7af4fb6240de92a61d6fa04c04c6f82c0ae99fadce55e6f5636f7381  kimi-attachments/rv12-7c-c.txt
+5f24e9690a5f0c8fec7797c6913734c92b32770c3ce899bc5e49452746b4dae8  kimi-attachments/rv12-7c-d.txt
+860b68ddd6acd9919d4ab61795a39e75c336ee810bbb5854d3ff4824d49f66a6  kimi-attachments/rv13-n1.txt
+70c8f24f3c1ca2cfb8030cf7ab5f1538b273bf9c04e995483e2a57f2d902e4ad  kimi-attachments/rv13-n2a.txt
+fe1bb57d54c6983b586c6c6603c4244c308e8353fb69ac51d1f7ac73fc4bbf9f  kimi-attachments/rv13-n2b.txt
+84cd51398a64c1127391560fd5ecc3a1c8588c98a1961ed3e128dc3f71d4e3de  kimi-attachments/rv15-f1.txt
+de556b431461c139f3e8f1e85ab4a63dadb264b94bbbe238b46fb0039d01da6f  kimi-attachments/rv15-f2.txt
+9830b98677c66e4a86cf8467ffc366181f5f9d8a525b356c134571d36ddf754b  kimi-attachments/rv2-2b1.txt
+2e1d826e5467147442a1e4c15c1b53855a43898af08f4161294a5fb49a6cf371  kimi-attachments/rv2-2b2.txt
+de837fc357c7bd2b2202af9eafc0427524cdccb0cb3307fb419c642ad2442635  kimi-attachments/rv2-3a.txt
+136c9660d6b34897c6d04ccb28249cd6ab28177bd604325e14c7e2f405617efc  kimi-attachments/rv2-3b.txt
+af13610a21669b4ccea99bf78c4dea4b3509ae34a48ad2f909652f3b1ddb2de0  kimi-attachments/rv2-3c.txt
+9975d2d6a22d37f63f4b7d00d4a5c5068904b59f06f32cbf9af5bfe095e38115  kimi-attachments/rv2-4a.txt
+54f77f3c83ebe293137b414a00ad5e35070dded8c57dd6eac96a012653b1f940  kimi-attachments/rv2-4b.txt
+507bd787f2cdcf64cf91915c7cd287918a8589af3f3ca29bad168524cd71e8c9  kimi-attachments/rv2-5a.txt
+d3f25341248990b01edff906d14dc742aa5786ac0116d3c21744347c2db4af3a  kimi-attachments/rv2-5b.txt
+c3ad6114c0bbc28f705a85466725b6b181a8024cdb8568d23d2038781a525e35  kimi-attachments/rv2-6a.txt
+e885cc05515ae2ba43ef2019c91f7ce4f2db37aa31a29cbf09a980926a0d08b5  kimi-attachments/rv2-6b.txt
+1391ee42f7e0936fbcdd40b395281dc916fd727130b24112955ca450adb3a11a  kimi-attachments/rv2-7b.txt
+14e9242a93df0f7b141549aca38a5ca1adfecb70c410d9fe5ec2ef58be1c71dc  kimi-attachments/rv2-7b2.txt
+72c73755da76ac2a5d3d8afa2a47cef1e91f728055926c3b504bae74b6444c3f  kimi-attachments/rv2-7c.txt
+5b8e93b79c0bd9bf3fa321d4a9e27338f73dcd64ef6570913aec8dfd46eec548  kimi-attachments/rv5-fix.txt
+78000961084e8b6f69682528a2183c25422a8dda76c71cc827493a179cb6b23e  kimi-attachments/rv8-7b1.txt
+14e9242a93df0f7b141549aca38a5ca1adfecb70c410d9fe5ec2ef58be1c71dc  kimi-attachments/rv8-7b2.txt
+3d320abed95f97a90503f609060e2890156b5756f934ca4db1e8f687ad2a1a3e  kimi-attachments/rv9-7c.txt
+33d70d584be3df3b336193ee0fef0a8e6b8007b46d21118753922b038fec5551  kimi-raw/a-v24rv-part1.txt
+9f0334900bbe70312784595c1f364d870b08ffb3791fb54b8d2afcafee67c4cc  kimi-raw/a-v24rv-part1.txt.log
+cc1dc8172ac288c94d52c19806898c5ef0c496707f5a9781faec278d4c4d9d96  kimi-raw/a-v24rv-part2.txt.log
+182591235ace2d621d33d9d0c7832242ab37d78ff07f0ad0579fd7f6b8b0609b  kimi-raw/a-v24rv-part2a.txt
+5983ce9332fe067e3ec7f305bfb551ad272d1ba33715153d2370321e72ae7f50  kimi-raw/a-v24rv-part2a.txt.log
+47cc48da8b065922fc4c2b0957f94790fa4e715257fe296abcf8b2a5432ad698  kimi-raw/a-v24rv-part2b.txt.log
+d170d2784c2e0f580eab0340bc27c05c57d3ad3040fdfc2c48d04c893d32efc2  kimi-raw/a10-7b1.txt
+7a486d2d5d151bc95e9ec6c76cd7c450ca3ea4b0f2f9c631903d1023807e8e9f  kimi-raw/a10-7b1.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a12-7b2a.txt
+ef9d49bc08db8809ce15d769f02fe048a15c4d8b234cc3e797094a83a3abbf48  kimi-raw/a12-7b2a.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a12-7b2b.txt
+46a21498623782ed4afb69319854e7c045a91a192494fd034e45308e182d1cce  kimi-raw/a12-7b2b.txt.log
+5b76685dae71141874342e7bfb3ca44bf8f48d73728edf8f756a7f24d56618cc  kimi-raw/a12-7c-a.txt
+94320f4febd9a9553d733bd1996b1bb297079c2b07e0887790c0a20d7ce913ad  kimi-raw/a12-7c-a.txt.log
+e26c602d642a601780851dec2822d65406ba0778f349b7e4b886b5639f1dd547  kimi-raw/a12-7c-b.txt
+2ea94364c176d645e1f2e6e2dff5e32d6ce5024be9e72ed63f402efc837cfecf  kimi-raw/a12-7c-b.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a12-7c-c.txt
+4c429a9301c278a4dc04a559b7ca4719ec1bb39764ae6474c39d4ee5c52a6e3d  kimi-raw/a12-7c-c.txt.log
+32b73317aaf8230bad3be90925f1dec2bbfea13a00b1fdca86a775cba0fe588b  kimi-raw/a12-7c-d.txt
+a53c577833cb9fee6c3a64293fde665b5fdcb374c85c91581eb770cd2cf8f18c  kimi-raw/a12-7c-d.txt.log
+f5be93987f0abbd765e4fef5708e78d88eb5c9f89cf4baba9a85ec1b8f18904d  kimi-raw/a13-n1.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a13-n2a.txt
+3428027e2e5a093c0f3de051a7076e203af394b0e599bbe7d6d03d48b6931f20  kimi-raw/a13-n2a.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a13-n2b.txt
+bb057711ad62b991ac8a54678a5aedaaa50ca59702812d6dbf5de73bbeed7b0e  kimi-raw/a13-n2b.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a14-n1b.txt
+44563e9475b24cb80be5e5a6201dcf4bcd60c1d16c8cdbde4c8274402a360186  kimi-raw/a14-n1b.txt.log
+a8256487b4edaccb2ee5427a374bab94cd4b17091ada57314a79335644855c5d  kimi-raw/a15-f1.txt
+682e927c12df4bf4b117b6a07e534d8d096cdcdbd6b0f11cded3a72fe627caff  kimi-raw/a15-f1.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a15-f2.txt
+8669eec926ef6d0982cf1ff573a9ed696fade744bb1366f31d8831edf437a0f3  kimi-raw/a15-f2.txt.log
+4363961457737ff39cb1f784a55ddb4062537473ed0b2bbc20664f44ecd2bc45  kimi-raw/a16-f3.txt
+7386649935bc744d85cdf5d3235637df2362f2a899f3ee43cc78a16cadf02211  kimi-raw/a16-f3.txt.log
+e9158c062457de4c2da1b035da8ceb3cc151f434e8a089ea8c208371187e0265  kimi-raw/a2-2b1.txt.log
+261deec8140789ab9e37056132ef2cef1d4ff9e2f2fb04e09c0ccda2e88b26bb  kimi-raw/a3-2b-acct.txt
+2982d265c386637460427ca8526411329f65d0d6312cb608ec6e5c0738b6dc6c  kimi-raw/a3-2b-acct.txt.log
+58cb402014d633685663820335171842edb43631d3b40cf6654d2bcdf2ec4234  kimi-raw/a3-2b-api.txt
+a902dfecbda09635fea33989608b4a627fd42c54acbefd3aabf134e93ce767e8  kimi-raw/a3-2b-api.txt.log
+b9714cd84bb6fece95e3f985097612a84d04dd53e59d32b3393812d9a68d63de  kimi-raw/a3-3a.txt
+1bf819be82427dba773836be07163699ff5e7297c942b856ce2eaee807240324  kimi-raw/a3-3a.txt.log
+20bed2799509e09a8ed810729c4dd6af43556d3904c6fb378be21762aa868ca6  kimi-raw/a3-3bc.txt
+2cf36f9a479fda34efba05c5049ff917e9ae4ba3678a7bc670dde21a4e1ca646  kimi-raw/a3-3bc.txt.log
+9535b37b386cd13b169144c57da27983010f584ad56f64b3f49f6c4924d4e4c2  kimi-raw/a3-4.txt
+96c9679e081d418ff1d6f9012a64a3a86b7606b08c6075cca4c33cdd94ab7fd3  kimi-raw/a3-4.txt.log
+a9e12c0612be22ada45883aaac66d07a6030cf510440b382b2e1c1c89502e394  kimi-raw/a3-5.txt
+ead49210042808e8d4cbb83aedf0c406c8effff4473af3592172090c9e824cff  kimi-raw/a3-5.txt.log
+e59cfdbfde2e10c066c1109c16355045637d287b7228f748204c2593a40e0f0f  kimi-raw/a3-6.txt.log
+2ea9078b6d2a4be2effb767dabe0f8171babb06b80f63d4e2660074172a1bf2a  kimi-raw/a3-7a.txt
+a83a99fcff84dac0a985a447fbdb218e5e0dc394478892563698faa9bbf9de15  kimi-raw/a3-7a.txt.log
+28ca13b74b6571272d1552c9e94c20424a73ad865a5ed9dd271dba6c239af907  kimi-raw/a3-7b.txt.log
+51073ec97471d78bccf8826ec954a6670f1342241f646c07c207472ee9e4e140  kimi-raw/a3-7c.txt
+b9666647b2f55fb31f40c88492a0281b48abb99dd5b3bac53a1202374765443e  kimi-raw/a3-7c.txt.log
+e3c514937743916a227d858bc3e90c7643ccbe84fdb7ad043278d8bb2e5e2676  kimi-raw/a5-fix.txt
+f2ad30e677633713c9fa82072cbc551540ebccd7ee1b31749e606dc13a1db828  kimi-raw/a5-fix.txt.log
+dd0bbaf9d879e57d94804cf6d23612f7443616f8e458c1893280a75d37b54a9f  kimi-raw/a6-6a.txt
+a05fe3886903f41ac1e6ee0c0739e20c18c1b5ae200c5631d46dad48481b9462  kimi-raw/a6-6a.txt.log
+5cc6925d05aae36e6a7765e653c15fb6e23be85cc22b56b7de095d448ff5ee3f  kimi-raw/a6-6b.txt
+3419040e294c5eed808cf1677a0c9f2deadb9cea256fe5242a863ef20c533c5b  kimi-raw/a6-6b.txt.log
+52befc0ad0b1f5f9f94a4c8fadadc7677501c56c9ec2b87fe173d1c38840dd26  kimi-raw/a7-m5fix.txt
+19388ba057677005dbfe38f8ac6bd45832b569aa7f0e53d7f858059375d21876  kimi-raw/a7-m5fix.txt.log
+8b5e40ee746f4958ecc96f82784ea0750464a0a40a25129e529540f529cbe24e  kimi-raw/a8-7b1.txt
+16016a670b4f11394af53b9fc20cd5fe04422edbea36a99e9acfe6888b28680b  kimi-raw/a8-7b1.txt.log
+021e1daa04793db3b4997926ca7be58799f30610c51d0b729c9dff279c3a5495  kimi-raw/a8-7b2.txt.log
+68f3bd8497bfc02f1098ec8a330b3724a9616e3b4d375aa8223e79837f0e9b5e  kimi-raw/a9-7c.txt.log
+b23654840c8b3e821cdda7996a5903452abffd24ad57405f93008a43a63133f1  kimi-raw/q-v24rv-part1.txt
+54f3ab0649f0acc1db2f5a6adbb364430e65d8290c34a6f440e2664175418e71  kimi-raw/q-v24rv-part2.txt
+ea388663c2c535a6c302fd2cad87f4c5a9321928414f894a08f7a773aef65269  kimi-raw/q-v24rv-part2a.txt
+8277d1852f6a81c0b7a4f24c3da9c74db13c5c8e494217b49b41ce91858fd7d9  kimi-raw/q-v24rv-part2b.txt
+82638f750626cf71b2024b01297b5021a14f5d0f3a240505864e77762dcc54b4  kimi-raw/q10-7b1.txt
+de7dc8f58cd44c8d5830efc33434aa468a3fa375e6f91fd3f597c9ae73ab0d32  kimi-raw/q12-7b2a.txt
+abb516fcc81685148eca5d5ff377f3e976cab9906c48ed3e61c66d3506ec8498  kimi-raw/q12-7b2b.txt
+83d7c0b64e235d1d7f9b5996c5e038e0258d85a8742c8094a0e66ef26cbc0122  kimi-raw/q12-7c-a.txt
+28ee2b5e5b54aeaf2998c77f41f89a5a78dc2a7421f6ebd4474db060c10b53ad  kimi-raw/q12-7c-b.txt
+da42b8807f77701cbe368e54c70bc498e51462310db67557d5c43e4d1334a63f  kimi-raw/q12-7c-c.txt
+a81a906dde2d931f9a72c3887a8d9cd5c959b533178d02f470891df04bdfa1a3  kimi-raw/q12-7c-d.txt
+8dce9b63490aed1e911aab1746f291bbb71383a3101437aadc02b83e713179e2  kimi-raw/q13-n1.txt
+38695ed2e60840fa9f9ad37f984519f516a2cc2cc2a35f6933883056fa433ffe  kimi-raw/q13-n2a.txt
+767ebb85b88fc6bdc760492022f4f1c72fa7fdea6b0d011e38bb4350af974fd7  kimi-raw/q13-n2b.txt
+6467243107b8134a2853dc951cb361419516b317c43c329a819aeef40ec9e7f8  kimi-raw/q14-n1b.txt
+1a2d16f7c9096adf2b65e7e20942e09d87caa24647bf3eb10a9c2ec2ba177362  kimi-raw/q15-f1.txt
+2b3067d4b0b218c6f803426553a8ef7b86bef73937c3b9e23bef71e95da88d5e  kimi-raw/q15-f2.txt
+a2d12482b77505ba6d7ef344b7328f074e48c5128fe4f216e17d64893ba36a0a  kimi-raw/q16-f3.txt
+0a446b59e66bf77e7eecde8b9506acb353d40ab8dd5c37dc680d27b61e17e5dc  kimi-raw/q2-2b1.txt
+2b5c0ccb339c987e0ae474b5916b28ae43befbd8b4c16ac163ed7aac6147f5b5  kimi-raw/q3-2b-acct.txt
+631db6c938cdc6f2a9b69d4c11815bafd9deee5349a06f0dd280e040f756dd9f  kimi-raw/q3-2b-api.txt
+31dc8eea5351b0cb45ed25a46551c75784dabb65e945beda4f7352d225344e05  kimi-raw/q3-3a.txt
+addad0c4d34bf41d9c9c0af9c157ef7b81e8313f49db359bcfc5d79561cd2048  kimi-raw/q3-3bc.txt
+41fb4fb9532b507e45b1e2af8212904e73cf005faed2b91f4311d7863f24fcf5  kimi-raw/q3-4.txt
+a84848cf72564f7d4de8f5027c0428eae2d99c99d4ea625c2a8defb648ed5829  kimi-raw/q3-5.txt
+c411b7b52f200755ac0f6334dc077f79f820ab504aca87a8b61ae5ae7b135824  kimi-raw/q3-6.txt
+be7aca6b0a0cff905dee0fd4e24847dc9fe27a9b11ebcf90af390d0a37aeb030  kimi-raw/q3-7a.txt
+c85b355549aa00ac80695b4fdadfe87e9b929dc2163021988b6c30eb89d1d5b6  kimi-raw/q3-7b.txt
+de37201e2b400adfdb11f4c58085f18fdd3bdcbc00919ae5300bb1331d9847af  kimi-raw/q3-7c.txt
+d54a5c2258b813f2fda5332577d4951afb700272b10dc2a6660ab76359beea2d  kimi-raw/q5-fix.txt
+46c13baef2b79cf1c7a5d340581ef158746d9022c9e5e5e2b159ebf29dc36ae1  kimi-raw/q6-6a.txt
+77ecfc9cd4fd21e992b4083a180e7a878f265f2c0f3933e9521a7eb3667b775b  kimi-raw/q6-6b.txt
+f1588c40eb1929d2a3fdee4aee4891414e28d9bfb1d6bda4d70db34f3ced377b  kimi-raw/q7-m5fix.txt
+dcd8c5cebb4a14a240265b158e397e042cc7266fa15d78693b4ad0741cf1966a  kimi-raw/q8-7b1.txt
+242ee563aaad1cda8a8d90cc4f34634953c21c1b5cb1cbcfb0acc9d84bcf50ee  kimi-raw/q8-7b2.txt
+d9c75d1d6164a9f7d78ff6a2123bb9095a3890f66a9913dcacb74124c0de94e6  kimi-raw/q9-7c.txt
+f78febd01e8abe5f89546620ac3695185f679f7f76a14046324aecd664700fd3  make_m5.py
+c79dc95b312f983c532034f1c1cfff67a85280d006dd06c808c877970dd575b8  native-v24-review.md
+ac6068824ff6c0c9c7797308489446e0fc8d78c74184a821c9a8772404db6a34  v24-final-on-54a8758.patch
+26cb79d95911bf56313f6e0d10da34b30575c7d1ee37d70b41f841d7f5ce296a  ../build-slice/SHA256SUMS (the build slice, unchanged)

@@ -1,0 +1,6 @@
+1. no — each sequenced slot remains pending or takes exactly one terminal path: queued, `DroppedNoReader`, or `DroppedFormat`; clearing `Pending` prevents recounting.
+2. yes — oldest-first collection stops at an unready or encoder-blocked slot, so newer sequences cannot overtake it in `Outstanding`.
+3. yes — probes never increment `EncodeInFlight` or push `Outstanding`; both operations are guarded by `!Job.Probe`.
+4. yes — the `Free<0` return, including `++DroppedSlots` for non-probes, occurs before the acceptance statement containing `++NextSeq`.
+5. no — shown shared containers are mutex-protected and cross-thread state is atomic; slot/ring/readback state remains render-thread-only.
+no blocking issue

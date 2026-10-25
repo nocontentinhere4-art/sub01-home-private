@@ -1,0 +1,1 @@
+1. **blocking — `if not data:` branch:** EOF leaves any partial JPEG buffered in `walker`. After a mid-frame close, the next writer’s fresh SOI can be parsed as its continuation, yielding a bogus frame/seq and invalid go/no-go results. Reset the parser before `continue`—`walker = Walker()` or `walker.reset()`—discarding the incomplete frame.

@@ -1,0 +1,13 @@
+- **Destructor — real-UE build break:** `FSlateApplication::Get().GetRenderer()` returns `TSharedRef<FSlateRenderer>`, not a nullable raw pointer. `if (FSlateRenderer* Renderer = ...)` therefore does not compile. After the lifecycle checks, use:
+  ```cpp
+  FSlateApplication::Get().GetRenderer()
+      ->OnBackBufferReadyToPresent().Remove(Handle);
+  Bound = false;
+  ```
+
+- **Destructor/`StopThreads` — render-thread lifetime race:** joining the encoder/writer threads does not quiesce `OnBackBufferReadyToPresent`. Unregistration currently happens last, and removing a delegate does not by itself establish that an invocation already running on the render thread has returned. An in-flight callback can consequently race queue/readback destruction. Moreover, destruction off the game thread—or merely while `IsEngineExitRequested()` is true—skips unregistration entirely; Slate may still be alive and retain a callback referencing the freed tap.  
+  **Fix:** provide an explicit game-thread shutdown while Slate/RHI are still valid: disable new intake, unregister the delegate, and flush/fence the render thread so active callbacks and queued readback work have drained; only then join workers and release file descriptors/readback members. Do not treat engine-exit as proof that unregistration is unnecessary. If teardown cannot be dispatched safely, require shutdown earlier and assert in the destructor that `Bound == false`.
+
+- **`StartThreads`/`StopThreads` — permanently one-shot state:** after any stop, `Started` remains true and `Stop` remains set. A later start either returns immediately or, if only `Started` were reset, would create threads that immediately exit. If restart or pre-start `StopThreads()` is supported, reset `Stop` before creation, clear `Started` after joining, and roll back partial thread-creation failures. Otherwise enforce/document destructor-only, one-shot use.
+
+**blocking: unsafe render-thread/Slate teardown, plus the `GetRenderer()` compile error on the real engine.**

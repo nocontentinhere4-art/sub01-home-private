@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Read the game's main-view FIFO for a while and check the v24 contract (a go/no-go helper; standard library only).
+
+    python3 tools/native_streamer_visual_v2/main_fifo_probe.py [--fifo PATH] [--seconds 30] [--contract main|any]
+                                                               [--save DIR --save-count 3] [--force]
+
+Use it ONLY while nobody else reads the FIFO: a FIFO's readers split its bytes, so a second reader breaks frames for both. It refuses
+when another process holds the path open for reading (/proc scan; --force skips the check) and never creates or replaces the FIFO.
+Run it as root on the pod: another user's descriptors are invisible, so it also refuses when processes cannot be checked. The
+director must not be reading main.mjpeg (x11 mode, or stopped), and its own FIFO tap must not be draining it.
+
+It opens the FIFO O_RDONLY|O_NONBLOCK (no writer yet = EOF, tolerated), polls, and walks whole JPEGs by their markers (header segments
+by length, entropy data to the EOI; a frame whose tail never came, or garbage, resyncs on the next SOI). `--contract main` checks every
+whole frame against install_v24.py's contract: SOI, the JFIF APP0 first, ONE COM "seq=<n>" second, no other APPn/COM, SOF0 (baseline)
+1920x1080, EOI. `--contract any` only counts frames (cam2). The summary (JSON): frames, contract failures, cuts, a truncated tail,
+sequences (first, last, distinct, missing, out of order), frame rate from arrival times, inter-frame arrival gaps (p50/p95/p99/max ms)
+and the longest reader-side stall between reads; `--save` keeps the first whole frames as .jpg files for a visual check against the
+windowed game.
+"""
+from __future__ import annotations
+
+import argparse
+import errno
+import json
+import os
+import select
+import stat
+import sys
+import time
+from pathlib import Path
+
+DEFAULT_FIFO = '/home/unreal/.sub01-private/streamer/main.mjpeg'
+WIDTH, HEIGHT, COM_PREFIX = 1920, 1080, b'seq='
+CHUNK = 1 << 20
+
+
+def other_readers(path: Path, proc: Path = Path('/proc')) -> tuple:
+    """-> (PIDs other than this one holding `path` open for reading (O_RDONLY or O_RDWR), from /proc/<pid>/fd and fdinfo;
+    the number of processes whose descriptors this user may not list: another user's reader would be invisible)."""
+    target = os.stat(path)
+    found, unchecked = [], 0
+    for entry in proc.iterdir():
+        if not entry.name.isdigit() or int(entry.name) == os.getpid():
+            continue
+        try:
+            try:
+                fds = list((entry / 'fd').iterdir())
+            except PermissionError:
+                unchecked += 1
+                continue
+            for fd in fds:
+                try:
+                    st = os.stat(fd)
+                except OSError:
+                    continue
+                if (st.st_dev, st.st_ino) != (target.st_dev, target.st_ino):
+                    continue
+                flags = 0
+                for line in (entry / 'fdinfo' / fd.name).read_text().splitlines():
+                    if line.startswith('flags:'):
+                        flags = int(line.split()[1], 8)
+                if flags & os.O_ACCMODE in (os.O_RDONLY, os.O_RDWR):
+                    found.append(int(entry.name))
+                    break
+        except OSError:
+            continue
+    return found, unchecked
+
+
+def check_contract(frame: bytes) -> tuple:
+    """-> (ok, seq or None, reason) for one whole JPEG."""
+    pos, segments, seq, sof = 2, 0, None, None
+    while pos + 4 <= len(frame):
+        if frame[pos] != 0xFF:
+            return False, seq, 'not a marker where one must be'
+        marker = frame[pos + 1]
+        if marker == 0xDA:
+            break
+        length = (frame[pos + 2] << 8) | frame[pos + 3]
+        body = frame[pos + 4:pos + 2 + length]
+        segments += 1
+        if segments == 1 and marker != 0xE0:
+            return False, seq, 'APP0 is not the first segment'
+        if segments == 1 and not body.startswith(b'JFIF\0'):
+            return False, seq, 'APP0 is not JFIF'
+        if segments == 2:
+            if marker != 0xFE or not body.startswith(COM_PREFIX) or not body[len(COM_PREFIX):].isdigit():
+                return False, seq, 'the second segment is not COM "seq=<n>"'
+            seq = int(body[len(COM_PREFIX):])
+        elif segments > 2 and (0xE0 <= marker <= 0xEF or marker == 0xFE):
+            return False, seq, 'another APPn/COM segment'
+        elif marker in (0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+            return False, seq, 'not baseline'
+        elif marker == 0xC0:
+            if len(body) < 5:
+                return False, seq, 'SOF0 too short'
+            sof = ((body[3] << 8) | body[4], (body[1] << 8) | body[2])
+        pos += 2 + length
+    if sof != (WIDTH, HEIGHT):
+        return False, seq, f'SOF0 {sof} is not {WIDTH}x{HEIGHT}'
+    return True, seq, ''
+
+

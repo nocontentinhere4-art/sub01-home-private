@@ -1,0 +1,74 @@
+--- /root/.sub01-windows-recovery/launch-streamer-game-20261024m3o.py	2026-10-24 17:53:58.767941976 +0000
++++ /root/.sub01-windows-recovery/launch-streamer-game-20261024m5.py	2026-10-24 20:32:03.107008969 +0000
+@@ -2,7 +2,9 @@
+ """Launch the final private Game in STREAMER VISUAL mode (seated at the desk, v2 animations) beside the live game.
+
+ Runs detached as root. The game runs as uid 1001 (unreal) on Xvfb :99, side by side with the old manual-mode
+-game, which is left untouched here. Game m3o = m3 + -RenderOffScreen (sawtooth ablation, 2026-10-24). Game m3 (build v21 final: reviewed + Movable props; games m, m2 ran earlier v21 builds): the game and all its threads start on physical cores 0-5
++game, which is left untouched here. Game m3o = m3 + -RenderOffScreen (sawtooth ablation, 2026-10-24). Game m5 = m3o on build v24 (install_v24.py): offscreen,
++the main view goes to the director through <streamer-dir>/main.mjpeg (main_tap auto-on offscreen; the director must run
++with --game-source fifo); this launcher also waits for the v24 start and go/no-go lines and records them in status.json. Game m3 (build v21 final: reviewed + Movable props; games m, m2 ran earlier v21 builds): the game and all its threads start on physical cores 0-5
+ (GAME_CPUS, no SMT sibling; the container's cgroup allows 10.2 CPUs: Kimi's partition, docs/streamer/kimi/native-v21-perf.md)
+ with -corelimit=6; everything else of uid 1001 belongs on 6-9 (scripts/streamer_cpu_partition.py). Progress goes to live-game-20261023/status.json and launch.log.
+ """
+@@ -16,7 +18,9 @@
+ ENGINE = '/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+ PROJECT = '/home/unreal/.sub01-private/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject'
+ PRIVATE = Path('/home/unreal/.sub01-private')
+-OUT = PRIVATE / 'streamer-game-20261024m3o'
++OUT = PRIVATE / 'streamer-game-20261024m5'
++OUT.mkdir(mode=0o755, exist_ok=True)   # m5: a new directory for this launcher's log and status (like m3o's: unreal, 0755)
++os.chown(OUT, 1001, 1001)
+ GAME_CPUS = set(range(0, 6))   # physical cores 0-5 (siblings 24-29 stay idle)
+ CONTROL = PRIVATE / 'native-control.json'
+ UID = GID = 1001
+@@ -63,6 +67,20 @@
+     return None
+
+
++def log_after(path, offset, marker):
++    """m5: the first line holding `marker` after byte `offset` (this launch's part of an appended log), or None."""
++    try:
++        with open(path, 'rb') as handle:
++            handle.seek(offset)
++            for raw in handle:
++                line = raw.decode('utf-8', 'replace')
++                if marker in line:
++                    return line.strip()[:600]
++    except OSError:
++        return None
++    return None
++
++
+ def api_home():
+     try:
+         with urllib.request.urlopen('http://127.0.0.1:8830/api/home', timeout=3) as response:
+@@ -95,6 +113,7 @@
+             '-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0',
+             '-stdout', '-FullStdOutLogOutput']
+     game_log = OUT / 'game.log'
++    log_offset = game_log.stat().st_size if game_log.exists() else 0   # m5: v24 markers are searched after this offset
+     with game_log.open('ab') as out:
+         child = subprocess.Popen(args, env=env, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
+                                  start_new_session=True, preexec_fn=drop_privileges, cwd='/home/unreal')
+@@ -141,6 +160,20 @@
+     state['phase'] = 'streamer_visual' if state.get('switch_marker') == 'SUB01_STREAMER_VISUAL_STARTED' else 'no_marker'
+     save()
+     log('streamer marker:', state.get('switch_marker'))
++
++    # 2b (m5). the v24 main-view tap: its start line, then its go/no-go verdict (judged after ~600 render frames)
++    for key, marker, minutes in (('main_tap_started', 'SUB01_STREAMER_VISUAL_MAIN_TAP started=', 3),
++                                 ('main_tap_gonogo', 'SUB01_STREAMER_VISUAL_MAIN_TAP_GONOGO', 5)):
++        deadline = time.time() + minutes * 60
++        while time.time() < deadline and child.poll() is None:
++            line = log_after(game_log, log_offset, marker)
++            if line:
++                state[key] = line
++                break
++            time.sleep(2)
++        state.setdefault(key, None)
++        save()
++        log(key + ':', state[key])
+     return
+
+     # 3. confirm the backend sees the bound consumer

@@ -1,0 +1,12 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: the render-thread side (Pump = per callback; ResetRing; Collect = drains finished slots oldest first). Check ONLY these
+invariants (the rest was reviewed):
+1. Every capture accepted WITH a sequence (Pending[S]=true, SlotProbe[S]=false, SlotSeq=++NextSeq) ends in exactly ONE of: a job
+   queued (EncodeInFlight+1, Outstanding.push_back(seq), Jobs.push_back), ++DroppedNoReader, ++DroppedFormat (bad map or ResetRing).
+   Any path that loses it or counts it twice?
+2. Sequences pushed to Outstanding are strictly increasing (collection is oldest first by SlotOrder; a slot left pending when no
+   encoder is free blocks the newer ones).
+3. Probe slots (SlotSeq 0) never touch EncodeInFlight or Outstanding.
+4. When the ring is full (no free slot) the NEW capture is refused before a sequence is assigned (++DroppedSlots), so no gap appears.
+5. Any data race: render-thread-only members touched by another thread, or shared state touched outside Mutex/atomics?

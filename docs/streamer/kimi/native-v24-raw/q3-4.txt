@@ -1,0 +1,14 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: the game-thread side: Start (once), Update (every tick), Arm, Judge (go/no-go). The tap is MakeShared<FSub01MainTap>()
+(thread-safe); its OnBackBuffer/Pump run on the render thread. Verified in 5.8.3: FSlateApplicationBase::GetRenderer() returns
+FSlateRenderer*; FSlateApplication::IsRenderingOffScreen() exists; FSlateRHIRenderer::OnWindowDestroyed runs FlushRenderingCommands()
+before deleting the viewport info that GetViewportProvider returns; SP delegate bindings pin the object for each call. Check ONLY:
+1. The main_source 1 fallback: ENQUEUE_RENDER_COMMAND capturing a raw ISlateViewportProvider* (taken on the game thread this tick)
+   and a TSharedPtr to the tap: safe given the flush above?
+2. GEngine->GameViewport->GetWindow().Get() stored as an atomic const void* and compared on the render thread against the SWindow&
+   of the callback: any problem (only compared, never dereferenced)?
+3. The judge's wait condition and the order of reasons: can it judge too early (before 600 render frames when calls arrive) or never
+   (with no calls: 30 s; with calls: 120 s at most)?
+4. Re-arming on a change of the (format, extent) shape, source or switch-on: any way to re-arm every tick (no verdict ever)?
+5. mkfifo/lstat checks at start (refuse a non-FIFO, a foreign owner or group/other bits; never replace the path): correct?

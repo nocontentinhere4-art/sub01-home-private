@@ -1,0 +1,5 @@
+1. ok — all 29 specifiers match their arguments: integer casts fit `%lld/%llu/%llx`, `%d` receives `int` or promoted values, floating arguments are `double`, and `%s` receives TCHAR strings.
+2. ok — numeric arguments convert legally to `double`, boolean conversions are valid, and `TCHAR*`/`FString` arguments bind to `SetStringField`; no ambiguity or build-breaking narrowing.
+3. ok — deltas use current totals minus previous bases; status requires `Now > WindowAt`, logging clamps `Span` to `>= 1e-3`, and `D[3]` is guarded before division.
+4. yes — on Linux/POSIX, a successful same-directory `std::rename` atomically replaces `main.json`; opens observe the old or new file, not a partially renamed destination.
+no blocking issue

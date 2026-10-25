@@ -1,0 +1,24 @@
+    ended = time.monotonic()
+    elapsed = (arrivals[-1] - arrivals[0]) if len(arrivals) > 1 else 0.0
+    window = (ended - arrivals[0]) if arrivals else 0.0   # first frame to the END of the run: a writer that stopped early counts
+    if last_read is not None:
+        longest_stall = max(longest_stall, ended - last_read)   # the trailing silence too
+    gaps = [(b - a) * 1000 for a, b in zip(arrivals, arrivals[1:])]
+    distinct = sorted(set(seqs))
+    out_of_order = sum(1 for a, b in zip(seqs, seqs[1:]) if b <= a)
+    missing = (distinct[-1] - distinct[0] + 1 - len(distinct)) if distinct else 0
+    return {'schema': 'sub01.main-fifo-probe.v1', 'fifo': str(path), 'contract': contract, 'seconds': seconds, 'writer_seen': writer_seen,
+            'bytes': read_bytes, 'frames': frames, 'contract_failures': failures, 'cuts': walker.cuts, 'garbage_runs': walker.garbage,
+            'tail_bytes': len(walker.buffer), 'fps': round((frames - 1) / elapsed, 2) if elapsed > 0 else 0.0,
+            'fps_window': round((frames - 1) / window, 2) if window > 0 and frames > 1 else 0.0,
+            'trailing_idle_ms': round((ended - arrivals[-1]) * 1000, 2) if arrivals else None,
+            'seq': {'first': seqs[0] if seqs else None, 'last': seqs[-1] if seqs else None, 'distinct': len(distinct), 'missing': missing,
+                    'out_of_order': out_of_order, 'unique_fps': round((len(distinct) - 1) / elapsed, 2) if elapsed > 0 and distinct else 0.0,
+                    'unique_fps_window': round((len(distinct) - 1) / window, 2) if window > 0 and distinct else 0.0},
+            # arrival = the time of the read that completed the frame: frames completed by one read share it (max_frames_per_read)
+            'arrival_gap_ms': {'p50': round(percentile(gaps, .5), 2), 'p95': round(percentile(gaps, .95), 2), 'p99': round(percentile(gaps, .99), 2),
+                               'max': round(max(gaps), 2) if gaps else 0.0},
+            'max_frames_per_read': max_per_read, 'longest_read_stall_ms': round(longest_stall * 1000, 2), 'eof_reads': eof_reads, 'saved': saved,
+            'save_skipped_existing': save_skipped}
+
+

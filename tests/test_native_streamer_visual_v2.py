@@ -214,6 +214,13 @@ STUB = r'''#pragma once
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#include <poll.h>
+#include <sys/file.h>
 #ifndef WITH_EDITOR
 #define WITH_EDITOR 0
 #endif
@@ -311,12 +318,24 @@ public:
  void Append(const T* Items, int64 Count) { Data.insert(Data.end(), Items, Items + Count); }
  void SetNum(int64 N) { Data.resize(std::size_t(N)); }
  void SetNumZeroed(int64 N) { Data.assign(std::size_t(N), T()); }  // v22
+ void SetNumUninitialized(int64 N) { Data.resize(std::size_t(N)); }  // v24
  T& operator[](int64 I) { return Data[std::size_t(I)]; }
  const T& operator[](int64 I) const { return Data[std::size_t(I)]; }
 };
 template<class F> using TFunction = std::function<F>;  // v22: UpdateTextureRegions' cleanup
 template<class T> T&& MoveTemp(T& Value) { return static_cast<T&&>(Value); }
-template<class T> using TUniquePtr = std::unique_ptr<T>;
+template<class T> class TUniquePtr {  // v24: UE's Reset() (a std::unique_ptr underneath)
+ std::unique_ptr<T> P;
+public:
+ TUniquePtr() = default;
+ TUniquePtr(std::unique_ptr<T>&& U) : P(std::move(U)) {}
+ TUniquePtr& operator=(std::unique_ptr<T>&& U) { P = std::move(U); return *this; }
+ T* operator->() const { return P.get(); }
+ T& operator*() const { return *P; }
+ explicit operator bool() const { return bool(P); }
+ T* Get() const { return P.get(); }
+ void Reset() { P.reset(); }
+};
 template<class T, class... A> std::unique_ptr<T> MakeUnique(A&&... Args) { return std::make_unique<T>(std::forward<A>(Args)...); }
 struct FMemory { static void* Memcpy(void* D, const void* S, std::size_t N) { return std::memcpy(D, S, N); } };
 template<class T> class TSharedRef { public: std::shared_ptr<T> Ptr; T* operator->() const { return Ptr.get(); } T& operator*() const { return *Ptr; } };
@@ -332,6 +351,7 @@ public:
  T& operator*() const { return *Ptr; }
  T* Get() const { return Ptr.get(); }
  void Reset() { Ptr.reset(); }
+ TSharedRef<T> ToSharedRef() const { TSharedRef<T> Ref; Ref.Ptr = Ptr; return Ref; }  // v24
 };
 template<class T, class... A> TSharedRef<T> MakeShared(A&&... Args) { TSharedRef<T> Ref; Ref.Ptr = std::make_shared<T>(std::forward<A>(Args)...); return Ref; }
 namespace ESearchCase { enum Type { CaseSensitive, IgnoreCase }; }
@@ -511,29 +531,43 @@ public:  // v22: a driver may fill the Stub maps (the PC bridge's state reads); 
  bool TryGetObjectField(const FString& Key, const TSharedPtr<FJsonObject>*& Out) const { auto It = StubObjects.find(*Key); if (It == StubObjects.end()) return false; Out = &It->second; return true; }
  bool TryGetNumberField(const FString&, double&) const { return false; }
  bool HasField(const FString&) const { return false; }
- void SetStringField(const FString&, const FString&) {}
- void SetNumberField(const FString&, double) {}
- void SetBoolField(const FString&, bool) {}
+ std::vector<std::pair<std::u16string, std::u16string>> StubOut;  // v24: what Set*Field wrote (JSON values), serialized by FJsonSerializer
+ static std::u16string StubAscii(const std::string& S) { return std::u16string(S.begin(), S.end()); }
+ void SetStringField(const FString& Key, const FString& Value) { std::u16string Q = u"\""; for (TCHAR C : Value) { if (C == u'"' || C == u'\\') Q += u'\\'; Q += C; } StubOut.push_back({*Key, Q + u"\""}); }
+ void SetNumberField(const FString& Key, double Value) { char Text[64]; std::snprintf(Text, sizeof Text, "%.17g", Value); StubOut.push_back({*Key, StubAscii(Text)}); }
+ void SetBoolField(const FString& Key, bool Value) { StubOut.push_back({*Key, Value ? u"true" : u"false"}); }
 };
 template<class C = TCHAR> class TJsonReader {};
-template<class C = TCHAR> class TJsonWriter {};
+template<class C = TCHAR> class TJsonWriter { public: FString* StubOut = nullptr; };
 template<class C = TCHAR> struct TJsonReaderFactory { static TSharedRef<TJsonReader<C>> Create(const FString&) { return {}; } };
-template<class C = TCHAR> struct TJsonWriterFactory { static TSharedRef<TJsonWriter<C>> Create(FString*) { return {}; } };
+template<class C = TCHAR> struct TJsonWriterFactory { static TSharedRef<TJsonWriter<C>> Create(FString* Out) { TSharedRef<TJsonWriter<C>> W; W.Ptr = std::make_shared<TJsonWriter<C>>(); W.Ptr->StubOut = Out; return W; } };
 struct FJsonSerializer {
  template<class C> static bool Deserialize(const TSharedRef<TJsonReader<C>>&, TSharedPtr<FJsonObject>&) { return false; }
- template<class C> static bool Serialize(const TSharedRef<FJsonObject>&, const TSharedRef<TJsonWriter<C>>&) { return true; }
+ template<class C> static bool Serialize(const TSharedRef<FJsonObject>& Object, const TSharedRef<TJsonWriter<C>>& Writer) {  // v24: flat objects only
+  if (!Writer.Ptr || !Writer.Ptr->StubOut || !Object.Ptr) return true;
+  std::u16string Text = u"{"; bool First = true;
+  for (const auto& Field : Object.Ptr->StubOut) { if (!First) Text += u","; First = false; Text += u"\"" + Field.first + u"\":" + Field.second; }
+  Text += u"}"; *Writer.Ptr->StubOut = FString(Text.c_str()); return true; }
 };
 struct FCommandLine { static const TCHAR* Get() { return u""; } };
 struct FParse { static bool Param(const TCHAR*, const TCHAR*) { return false; } };
-struct FPlatformTime { static inline double StubNow = 0; static double Seconds() { return StubNow; } static double ToMilliseconds(uint64 Cycles) { return double(Cycles) * 1e-3; } };
+struct FPlatformTime { static inline double StubNow = 0; static inline bool StubReal = false;  // v24: StubReal = the monotonic clock (the main tap's own threads)
+ static double Seconds() { return StubReal ? std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count() : StubNow; }
+ static double ToMilliseconds(uint64 Cycles) { return double(Cycles) * 1e-3; } };
 inline uint32 StubGpuCycles = 0;
 inline uint32 GGameThreadTime = 0, GRenderThreadTime = 0, GRHIThreadTime = 0, GSwapBufferTime = 0, GRenderThreadWaitTime = 0, GGameThreadWaitTime = 0;  // v21: RenderTimer.h
 inline uint32 RHIGetGPUFrameCycles(uint32 = 0) { return StubGpuCycles; }
 struct FPlatformProcess { static uint32 GetCurrentProcessId() { return 0; } };
-struct FDateTime { static FDateTime UtcNow() { return {}; } int64 ToUnixTimestamp() const { return 0; } int32 GetMillisecond() const { return 0; } };
-struct FFileHelper { static bool LoadFileToString(FString&, const TCHAR*) { return false; } static bool SaveStringToFile(const FString&, const TCHAR*) { return false; } };
+struct FDateTime { static inline bool StubReal = false; int64 StubUnix = 0; int32 StubMs = 0;  // v24: StubReal = the wall clock
+ static FDateTime UtcNow() { FDateTime D; if (StubReal) { const long long Ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); D.StubUnix = Ms / 1000; D.StubMs = int32(Ms % 1000); } return D; }
+ int64 ToUnixTimestamp() const { return StubUnix; } int32 GetMillisecond() const { return StubMs; } };
 #define UTF8_TO_TCHAR(x) ((void)(x), u"")
 inline std::string StubUtf8(const TCHAR* S) { std::string R; for (; S && *S; ++S) R += char(*S); return R; }  // ASCII paths only
+struct FFileHelper { static bool LoadFileToString(FString&, const TCHAR*) { return false; }
+ static inline std::string StubSaveRoot;  // v24: saves under this directory only (empty = nothing is ever written, as before)
+ static bool SaveStringToFile(const FString& Text, const TCHAR* Path) {
+  const std::string P = StubUtf8(Path); if (StubSaveRoot.empty() || P.rfind(StubSaveRoot + "/", 0) != 0) return false;
+  FILE* F = std::fopen(P.c_str(), "wb"); if (!F) return false; const std::string Body = StubUtf8(*Text); const bool Ok = std::fwrite(Body.data(), 1, Body.size(), F) == Body.size(); std::fclose(F); return Ok; } };
 #define TCHAR_TO_UTF8(x) (::StubUtf8(x).c_str())
 class UObject { public: virtual ~UObject() = default; FString GetPathName() const { return FString(); } FString GetName() const { return FString(); } UClass* GetClass() const { static UClass None; return &None; } };
 template<class T> class TWeakObjectPtr {
@@ -645,17 +679,30 @@ struct FPostProcessSettings { float StubExposure = 0;
  TEnumAsByte<EAutoExposureMethod> AutoExposureMethod = AEM_Histogram; float AutoExposureBias = 1, AutoExposureMinBrightness = -10, AutoExposureMaxBrightness = 20; uint32 AutoExposureApplyPhysicalCameraExposure : 1 = 1; };
 class UCameraComponent : public USceneComponent { public: float FieldOfView = 90; FPostProcessSettings PostProcessSettings; float PostProcessBlendWeight = 1; void SetFieldOfView(float F) { FieldOfView = F; } };
 // cam2: render target, scene capture, render thread, GPU readback, image wrapper, async task (all synchronous in the stub)
-enum EPixelFormat { PF_Unknown, PF_B8G8R8A8 };
+enum EPixelFormat { PF_Unknown, PF_B8G8R8A8, PF_R8G8B8A8, PF_A2B10G10R10, PF_FloatRGBA };  // v24: the back buffer formats
 enum ESceneCaptureSource { SCS_SceneColorHDR, SCS_FinalColorLDR };
-class FRHITexture { public: int32 StubPitch = 1280; uint8 StubShade = 7; uint32 StubSerial = 0; };
+struct FIntPoint { int32 X = 0, Y = 0; };  // v24
+struct FRHITextureDesc { FIntPoint Extent{1280, 720}; EPixelFormat Format = PF_B8G8R8A8; };  // v24
+class FRHITexture { public: int32 StubPitch = 1280; uint8 StubShade = 7; uint32 StubSerial = 0;
+ FRHITextureDesc StubDesc; bool StubBlack = false; const FRHITextureDesc& GetDesc() const { return StubDesc; } };  // v24: desc; a black picture
 template<class T> class TRefCountPtr { T* Ptr = nullptr; public: TRefCountPtr() = default; TRefCountPtr(T* P) : Ptr(P) {} T* GetReference() const { return Ptr; } };
 using FTextureRHIRef = TRefCountPtr<FRHITexture>;
-class FRHICommandList {};
-class FRHICommandListImmediate : public FRHICommandList {};
+enum class ERHIAccess : uint32 { Unknown = 0, CPURead = 1, CopySrc = 1u << 7, CopyDest = 1u << 8 };  // v24
+struct FRHITransitionInfo { FRHITexture* Texture = nullptr; ERHIAccess AccessBefore = ERHIAccess::Unknown, AccessAfter = ERHIAccess::Unknown;
+ FRHITransitionInfo(FRHITexture* T, ERHIAccess Before, ERHIAccess After) : Texture(T), AccessBefore(Before), AccessAfter(After) {} };
+class FRHICommandList { public: static inline FRHITexture* StubLastTransitioned = nullptr; static inline ERHIAccess StubLastAfter = ERHIAccess::Unknown; static inline int64 StubTransitions = 0;
+ void Transition(const FRHITransitionInfo& Info) { ++StubTransitions; StubLastTransitioned = Info.Texture; StubLastAfter = Info.AccessAfter; } };  // v24
+class FRHICommandListImmediate : public FRHICommandList { public: static FRHICommandListImmediate& Get(); };
 namespace StubRender {  // Deferred: commands wait for Flush() (the render thread), else they run at once
  inline FRHICommandListImmediate Immediate; inline int32 Commands = 0; inline bool Deferred = false; inline std::vector<std::function<void()>> Queue;
  struct FDispatch { template<class L> void operator()(L&& Lambda) const { ++Commands; if (!Deferred) { Lambda(Immediate); return; } Queue.push_back([Command = std::forward<L>(Lambda)]() mutable { Command(Immediate); }); } };
  inline void Flush() { std::vector<std::function<void()>> Now; Now.swap(Queue); for (auto& Command : Now) Command(); } }
+inline FRHICommandListImmediate& FRHICommandListImmediate::Get() { return StubRender::Immediate; }
+inline uint32 GFrameNumberRenderThread = 0;  // v24: the render thread's frame number (a driver advances it)
+inline bool StubInRenderingThread = true, StubInGameThread = true, StubEngineExit = false;
+inline bool IsInRenderingThread() { return StubInRenderingThread; }
+inline bool IsInGameThread() { return StubInGameThread; }
+inline bool IsEngineExitRequested() { return StubEngineExit; }
 #define ENQUEUE_RENDER_COMMAND(Type) ::StubRender::FDispatch{}
 class FTextureRenderTargetResource { public: FTextureRHIRef Texture; const FTextureRHIRef& GetRenderTargetTexture() const { return Texture; } };
 class UTextureRenderTarget2D : public UObject {
@@ -677,18 +724,32 @@ public:
  void CaptureScene() { ++StubCaptures; if (TextureTarget) { ++TextureTarget->StubTexture.StubShade; ++TextureTarget->StubTexture.StubSerial; } }
  void CaptureSceneDeferred() { ++StubDeferred; CaptureScene(); }  // the stub renders at once; the engine renders it with the frame's main view
 };
-struct FRHIGPUTextureReadbackStub { static inline int32 ReadyAfterPolls = 1; static inline int32 Locks = 0; static inline int32 BadLocks = 0; };
+struct FRHIGPUTextureReadbackStub { static inline int32 ReadyAfterPolls = 1; static inline int32 Locks = 0; static inline int32 BadLocks = 0;
+ static inline int32 Untransitioned = 0, FormatMismatch = 0; };  // v24: a main-view copy without its CopySrc transition; a staging texture reused for another format
 class FRHIGPUTextureReadback {  // staging pixel (x,y) = (B shade, G x, R y, A 0xA5); padding 0xEE; pixel (0,719) = the capture serial
- int32 Polls = 0; bool Copied = false, Ready = false, Locked = false; std::vector<uint8> Staging; int32 Pitch = 0;
+ int32 Polls = 0; bool Copied = false, Ready = false, Locked = false; std::vector<uint8> Staging; int32 Pitch = 0, Rows = 720;
+ bool StubFormatSet = false; EPixelFormat StubFormat = PF_Unknown;  // v24: UE creates the staging texture once, from the first source's desc
 public:
  explicit FRHIGPUTextureReadback(FName) {}
  bool IsReady() { Ready = Copied && ++Polls > FRHIGPUTextureReadbackStub::ReadyAfterPolls; return Ready; }
  void EnqueueCopy(FRHICommandList&, FRHITexture* Source) {
   if (Locked) ++FRHIGPUTextureReadbackStub::BadLocks;
-  Pitch = Source->StubPitch; Staging.assign(std::size_t(Pitch) * 720 * 4, 0xEE);
-  for (int32 Y = 0; Y < 720; ++Y) for (int32 X = 0; X < 1280; ++X) { uint8* P = &Staging[(std::size_t(Y) * Pitch + X) * 4]; P[0] = Source->StubShade; P[1] = uint8(X); P[2] = uint8(Y); P[3] = 0xA5; }
-  std::memcpy(&Staging[std::size_t(719) * Pitch * 4], &Source->StubSerial, 4); Copied = true; Ready = false; Polls = 0; }
- void* Lock(int32& OutRowPitchInPixels, int32* OutBufferHeight = nullptr) { ++FRHIGPUTextureReadbackStub::Locks; if (!Ready || Locked) ++FRHIGPUTextureReadbackStub::BadLocks; Locked = true; OutRowPitchInPixels = Pitch; if (OutBufferHeight) *OutBufferHeight = 720; return Staging.data(); }
+  const int32 W = Source->StubDesc.Extent.X, H = Source->StubDesc.Extent.Y;
+  if (W == 1280 && H == 720) {  // cam2, as before
+   Pitch = Source->StubPitch; Rows = 720; Staging.assign(std::size_t(Pitch) * 720 * 4, 0xEE);
+   for (int32 Y = 0; Y < 720; ++Y) for (int32 X = 0; X < 1280; ++X) { uint8* P = &Staging[(std::size_t(Y) * Pitch + X) * 4]; P[0] = Source->StubShade; P[1] = uint8(X); P[2] = uint8(Y); P[3] = 0xA5; }
+   std::memcpy(&Staging[std::size_t(719) * Pitch * 4], &Source->StubSerial, 4); Copied = true; Ready = false; Polls = 0; return; }
+  // v24, the main view: the same 8-bit pattern (B shade, G x, R y) in the source's format; black when StubBlack
+  const EPixelFormat F = Source->StubDesc.Format; if (StubFormatSet && F != StubFormat) ++FRHIGPUTextureReadbackStub::FormatMismatch; StubFormatSet = true; StubFormat = F;
+  if (FRHICommandList::StubLastTransitioned != Source || FRHICommandList::StubLastAfter != ERHIAccess::CopySrc) ++FRHIGPUTextureReadbackStub::Untransitioned;
+  Pitch = Source->StubPitch > W ? Source->StubPitch : W; Rows = H; Staging.assign(std::size_t(Pitch) * std::size_t(H) * 4, 0xEE);
+  for (int32 Y = 0; Y < H; ++Y) for (int32 X = 0; X < W; ++X) { uint8* P = &Staging[(std::size_t(Y) * Pitch + X) * 4];
+   const uint8 B = Source->StubBlack ? 0 : Source->StubShade, G = Source->StubBlack ? 0 : uint8(X), R = Source->StubBlack ? 0 : uint8(Y);
+   if (F == PF_R8G8B8A8) { P[0] = R; P[1] = G; P[2] = B; P[3] = 0xA5; }
+   else if (F == PF_A2B10G10R10) { const uint32 V = (uint32(R) << 2 | 1u) | ((uint32(G) << 2 | 2u) << 10) | ((uint32(B) << 2 | 3u) << 20) | (2u << 30); std::memcpy(P, &V, 4); }
+   else { P[0] = B; P[1] = G; P[2] = R; P[3] = 0xA5; } }
+  Copied = true; Ready = false; Polls = 0; }
+ void* Lock(int32& OutRowPitchInPixels, int32* OutBufferHeight = nullptr) { ++FRHIGPUTextureReadbackStub::Locks; if (!Ready || Locked) ++FRHIGPUTextureReadbackStub::BadLocks; Locked = true; OutRowPitchInPixels = Pitch; if (OutBufferHeight) *OutBufferHeight = Rows; return Staging.data(); }
  void Unlock() { if (!Locked) ++FRHIGPUTextureReadbackStub::BadLocks; Locked = false; Copied = Ready = false; }
 };
 enum class EImageFormat : int8 { Invalid = -1, PNG = 0, JPEG };
@@ -697,8 +758,31 @@ struct FImageView { const FColor* Colors = nullptr; int32 SizeX = 0, SizeY = 0; 
 class IImageWrapperModule {  // the stub "JPEG": FF D8, the shade, an encode counter (4), the capture serial (4), filler, FF D9 (StubBytes long)
 public:  // every pixel is checked against the staging pattern: a wrong row pitch, size or order shows up in StubPixelErrors
  static inline int64 StubBytes = 2000; static inline uint32 StubCounter = 0; static inline int64 StubPixelErrors = 0;
+ // v24, a 1920x1080 image (the main view; encoder threads, so atomics): a structurally real baseline JFIF (APP0, an APP1 with FF D9 inside,
+ // a COM, DQT, SOF0 with the size, DHT, SOS, stuffed entropy data, EOI) of about StubMainBytes; StubMainFail / StubMainProgressive refuse
+ static inline std::atomic<int64> StubMainBytes{4000}, StubMainEncodes{0}, StubMainPixelErrors{0}, StubMainBlack{0}; static inline std::atomic<bool> StubMainFail{false}, StubMainProgressive{false};
+ static inline std::atomic<int32> StubMainQuality{0}, StubMainSlowMs{0};  // StubMainSlowMs: the NEXT encode alone takes that long (a stalled encoder)
+ static bool MainJpeg(TArray64<uint8>& Out, const FImageView& Image, int32 Quality) {
+  if (const int32 Ms = StubMainSlowMs.exchange(0)) std::this_thread::sleep_for(std::chrono::milliseconds(Ms));
+  if (StubMainFail.load()) return false; ++StubMainEncodes; StubMainQuality.store(Quality); const uint8 Shade = Image.Colors[0].B; bool Black = true;
+  for (int64 I = 0; I < int64(Image.SizeX) * Image.SizeY; I += 997) { const int32 X = int32(I % Image.SizeX), Y = int32(I / Image.SizeX); const FColor& C = Image.Colors[I];
+   if (C.B || C.G || C.R) Black = false; if (!(C.B == 0 && C.G == 0 && C.R == 0) && (C.B != Shade || C.G != uint8(X) || C.R != uint8(Y))) ++StubMainPixelErrors; }
+  if (Black) ++StubMainBlack;
+  std::vector<uint8> J = {0xFF, 0xD8};
+  auto Segment = [&J](uint8 Marker, std::vector<uint8> Body) { J.push_back(0xFF); J.push_back(Marker); const int32 L = int32(Body.size()) + 2; J.push_back(uint8(L >> 8)); J.push_back(uint8(L)); J.insert(J.end(), Body.begin(), Body.end()); };
+  Segment(0xE0, {'J', 'F', 'I', 'F', 0, 1, 1, 0, 0, 1, 0, 1, 0, 0});
+  Segment(0xE1, {'E', 'x', 'i', 'f', 0, 0, 0xFF, 0xD9, 0xFF, 0xD8, 1, 2});
+  Segment(0xFE, {'s', 't', 'u', 'b'});
+  Segment(0xDB, std::vector<uint8>(65, 3));
+  const int32 H = Image.SizeY, W = Image.SizeX;
+  Segment(StubMainProgressive.load() ? 0xC2 : 0xC0, {8, uint8(H >> 8), uint8(H), uint8(W >> 8), uint8(W), 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1});
+  Segment(0xC4, std::vector<uint8>(29, 4));
+  Segment(0xDA, {3, 1, 0, 2, 0x11, 3, 0x11, 0, 63, 0});
+  const int64 Entropy = StubMainBytes.load(); for (int64 K = 0; K < Entropy; ++K) { J.push_back(uint8(K * 13 + Shade)); if (J.back() == 0xFF) J.push_back(0x00); }
+  J.push_back(0xFF); J.push_back(0xD9); Out.Reset(); Out.Append(J.data(), int64(J.size())); return true; }
  bool CompressImage(TArray64<uint8>& Out, EImageFormat Format, const FImageView& Image, int32 Quality) {
   if (Format != EImageFormat::JPEG || !Image.Colors || Quality <= 0) return false;
+  if (Image.SizeX == 1920 && Image.SizeY == 1080) return MainJpeg(Out, Image, Quality);  // v24
   if (Image.SizeX != 1280 || Image.SizeY != 720) ++StubPixelErrors;
   for (int32 Y = 0; Y < Image.SizeY; ++Y) for (int32 X = 0; X < Image.SizeX; ++X) { if (X == 0 && Y == 719) continue; const FColor& C = Image.Colors[std::size_t(Y) * Image.SizeX + X];
    if (C.B != Image.Colors[0].B || C.G != uint8(X) || C.R != uint8(Y) || C.A != 0xA5) ++StubPixelErrors; }
@@ -776,7 +860,38 @@ public:
  std::vector<UPrimitiveComponent*> StubComponents;  // v21: GetComponents
  template<class T> void GetComponents(TArray<T*>& Out, bool = false) const { Out.Reset(); for (UPrimitiveComponent* P : StubComponents) Out.Add(static_cast<T*>(P)); }
 };
-class UEngine { public: std::vector<std::u16string> StubExec; bool Exec(UWorld*, const TCHAR* Command) { StubExec.push_back(Command); return true; } };  // v21: the live console
+// v24: Slate's renderer and its back-buffer delegate (thread-safe multicast: AddSP holds the object weakly and pins it during a call), the game
+// viewport's window, FRunnableThread (a std::thread)
+struct FDelegateHandle { uint64 StubId = 0; bool IsValid() const { return StubId != 0; } };
+class SWindow { public: int32 StubId = 0; };
+class ISlateViewportProvider { public: virtual ~ISlateViewportProvider() = default; virtual FRHITexture* GetBackBufferResource() const = 0; };
+class FOnBackBufferReadyToPresent {
+ struct FBinding { uint64 Id = 0; std::function<void(SWindow&, ISlateViewportProvider&)> Call; };
+ std::mutex StubMutex; std::vector<FBinding> Bindings; uint64 NextId = 1;
+public:
+ template<class U> FDelegateHandle AddSP(const TSharedRef<U>& Ref, void (U::*Method)(SWindow&, ISlateViewportProvider&)) {
+  std::lock_guard<std::mutex> Lock(StubMutex); FBinding B; B.Id = NextId++; std::weak_ptr<U> Weak = Ref.Ptr;
+  B.Call = [Weak, Method](SWindow& W, ISlateViewportProvider& P) { if (std::shared_ptr<U> Pinned = Weak.lock()) ((*Pinned).*Method)(W, P); }; Bindings.push_back(B); FDelegateHandle H; H.StubId = B.Id; return H; }
+ bool Remove(FDelegateHandle H) { std::lock_guard<std::mutex> Lock(StubMutex); for (std::size_t I = 0; I < Bindings.size(); ++I) if (Bindings[I].Id == H.StubId) { Bindings.erase(Bindings.begin() + std::ptrdiff_t(I)); return true; } return false; }
+ void Broadcast(SWindow& W, ISlateViewportProvider& P) { std::vector<FBinding> Copy; { std::lock_guard<std::mutex> Lock(StubMutex); Copy = Bindings; } for (auto& B : Copy) B.Call(W, P); }
+ int32 StubNum() { std::lock_guard<std::mutex> Lock(StubMutex); return int32(Bindings.size()); }
+};
+class FSlateRenderer { public: virtual ~FSlateRenderer() = default; FOnBackBufferReadyToPresent StubDelegate; ISlateViewportProvider* StubProvider = nullptr; const SWindow* StubProviderWindow = nullptr;
+ FOnBackBufferReadyToPresent& OnBackBufferReadyToPresent() { return StubDelegate; }
+ virtual ISlateViewportProvider* GetViewportProvider(const SWindow& Window) { return &Window == StubProviderWindow ? StubProvider : nullptr; } };
+class FSlateApplication { public: static inline bool StubInitialized = false, StubOffscreen = false; static inline FSlateRenderer StubRenderer;
+ static bool IsInitialized() { return StubInitialized; } static FSlateApplication& Get() { static FSlateApplication App; return App; }
+ FSlateRenderer* GetRenderer() const { return &StubRenderer; } bool IsRenderingOffScreen() const { return StubOffscreen; } };
+class UGameViewportClient : public UObject { public: TSharedPtr<SWindow> StubWindow; TSharedPtr<SWindow> GetWindow() const { return StubWindow; } };
+enum EThreadPriority { TPri_Normal, TPri_AboveNormal, TPri_BelowNormal };
+class FRunnable { public: virtual ~FRunnable() = default; virtual bool Init() { return true; } virtual uint32 Run() = 0; virtual void Stop() {} virtual void Exit() {} };
+class FRunnableThread { std::thread Thread;
+public: static inline std::atomic<int32> StubCreated{0}, StubJoined{0};
+ static FRunnableThread* Create(FRunnable* R, const TCHAR*, uint32 = 0, EThreadPriority = TPri_Normal) { auto* T = new FRunnableThread(); ++StubCreated; T->Thread = std::thread([R]() { if (R->Init()) R->Run(); R->Exit(); }); return T; }
+ void WaitForCompletion() { if (Thread.joinable()) { Thread.join(); ++StubJoined; } }
+ ~FRunnableThread() { WaitForCompletion(); } };
+class UEngine { public: std::vector<std::u16string> StubExec; bool Exec(UWorld*, const TCHAR* Command) { StubExec.push_back(Command); return true; }  // v21: the live console
+ UGameViewportClient* GameViewport = nullptr; };  // v24
 inline UEngine* GEngine = nullptr;
 class IConsoleVariable { public: FString StubValue; FString GetString() const { return StubValue; } };
 class IConsoleManager { public: static IConsoleManager& Get() { static IConsoleManager Manager; return Manager; } IConsoleVariable* FindConsoleVariable(const TCHAR*) { return nullptr; } };
@@ -4358,3 +4473,623 @@ def test_v23_new_locals_do_not_shadow_character_fields(v23_patched, v22_patched)
     proxy_added = _added_locals(lf(v22_patched / 'Sub01HomeHands.cpp'), lf(v23_patched / 'Sub01HomeHands.cpp'))
     proxy_members = {'Previous', 'Current', 'Blend', 'Progress', 'Skeleton', 'RequiredBones', 'SkeletalMeshComponent', 'RootMotionMode', 'Notifies'}
     assert not (proxy_added & proxy_members), sorted(proxy_added & proxy_members)
+
+
+# ================================================================================================ v24: the main view to the director (offscreen, no X11 present)
+V24_INSTALL = ROOT / 'tools/native_streamer_visual_v2/install_v24.py'
+V24_MARKER = '// SUB01_STREAMER_VISUAL_V2_V24'
+_V24_SPEC = importlib.util.spec_from_file_location('sub01_streamer_visual_v2_v24', V24_INSTALL)
+v24 = importlib.util.module_from_spec(_V24_SPEC)
+_V24_SPEC.loader.exec_module(v24)
+V24_EDITED = ('Sub01HomeLab.cpp', 'Sub01HomeLab.h')
+
+
+def install_v24(source: Path, *extra) -> tuple:
+    run = subprocess.run([sys.executable, '-I', str(V24_INSTALL), '--source', str(source), *extra], capture_output=True, text=True)
+    return run.returncode, json.loads(run.stdout)
+
+
+def _stack_to_v23(target: Path) -> None:
+    _stack_to_v22(target)
+    assert install_v23(target)[0] == 0
+
+
+@pytest.fixture(scope='module')
+def v24_patched(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v24') / 'src'
+    _stack_to_v23(target)
+    code, report = install_v24(target)
+    assert code == 0, report
+    return target
+
+
+@pytest.fixture(scope='module')
+def v23_stack(tmp_path_factory) -> Path:
+    target = tmp_path_factory.mktemp('v23-stack') / 'src'
+    _stack_to_v23(target)
+    return target
+
+
+def test_v24_plans_applies_refuses_twice_and_needs_v23(v23_stack, tmp_path):
+    target = tmp_path / 'src'
+    _stack_to_v22(target)
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, refused = install_v24(target)
+    assert code == 2 and 'lacks v23' in refused['reason'] and {p.name: sha(p) for p in target.iterdir()} == before
+    shutil.rmtree(target)
+    shutil.copytree(v23_stack, target)
+    before = {p.name: sha(p) for p in target.iterdir()}
+    code, planned = install_v24(target, '--dry-run')
+    assert code == 0 and planned['status'] == 'planned' and len(planned['edits']) == len(v24.EDITS) and all(e['count'] == 1 for e in planned['edits'])
+    assert {p.name: sha(p) for p in target.iterdir()} == before
+    code, report = install_v24(target)
+    assert code == 0 and report['status'] == 'applied' and report['main_tap']['status_fields'] == list(v24.STATUS_FIELDS)
+    assert {name for name in before if sha(target / name) != before[name]} == set(V24_EDITED)  # the character only: no bridge, hands file, Build.cs
+    for name in V24_EDITED:
+        assert sha(target / name) == report['files'][name]['after_sha256'] == planned['files'][name]['after_sha256']
+        raw = (target / name).read_bytes()
+        assert raw.count(b'\r\n') == (raw.count(b'\n') if report['files'][name]['line_ending'] == 'CRLF' else 0)
+    assert not [p for p in target.iterdir() if p.name.endswith('.v2tmp')]
+    after = {p.name: sha(p) for p in target.iterdir()}
+    for extra in ((), ('--dry-run',)):
+        code, again = install_v24(target, *extra)
+        assert code == 2 and 'already' in again['reason']
+    assert install_v23(target)[0] == 2 and {p.name: sha(p) for p in target.iterdir()} == after
+
+
+def test_v24_missing_anchor_refuses_without_writing(v23_stack, tmp_path):
+    cases = {'cam2_room': (b'   if(!Room)++DroppedFull; // the reader is behind', b'   if(!Room) ++DroppedFull; // the reader is behind'),
+             'tuning_end': (b' // SUB01_STREAMER_VISUAL_V2_V23 TUNING END', b' // SUB01_STREAMER_VISUAL_V2_V23 TUNING  END'),
+             'tick': (b'  UpdateStreamerVisualMonitorFeed(Now,Dt); // SUB01_STREAMER_VISUAL_V2_V22', b'  UpdateStreamerVisualMonitorFeed(Now, Dt); // SUB01_STREAMER_VISUAL_V2_V22')}
+    for case, (old, new) in cases.items():
+        target = tmp_path / case
+        shutil.copytree(v23_stack, target)
+        path = target / 'Sub01HomeLab.cpp'
+        assert path.read_bytes().count(old) == 1, case
+        path.write_bytes(path.read_bytes().replace(old, new, 1))
+        before = {p.name: sha(p) for p in target.iterdir()}
+        code, report = install_v24(target)
+        assert code == 2 and 'anchor missing in Sub01HomeLab.cpp' in report['reason'], (case, report)
+        assert {p.name: sha(p) for p in target.iterdir()} == before, case  # the header had valid anchors and is untouched too
+
+
+def test_v24_keys_defaults_and_contract():
+    """The keys (their own block), the defaults (main_tap auto, 60 fps, q85, the delegate), the spec's numbers and names."""
+    assert set(v24.TUNING_LIMITS) == {'main_tap', 'main_fps', 'main_quality', 'main_source'} == set(v24.TUNING_FIELDS)
+    existing = (set(cam2.TUNING_LIMITS) | set(streampass.TUNING_LIMITS) | set(posefix.TUNING_LIMITS) | set(v21.TUNING_LIMITS) | set(v22.TUNING_LIMITS)
+                | set(v23.TUNING_LIMITS))
+    assert not existing & set(v24.TUNING_LIMITS)
+    assert v24.MAIN_TAP_AUTO == -1 and v24.MAIN_FPS == 60 and v24.MAIN_QUALITY == 85 and v24.MAIN_SOURCE == 0
+    for key, default in (('main_fps', v24.MAIN_FPS), ('main_quality', v24.MAIN_QUALITY), ('main_source', v24.MAIN_SOURCE)):
+        lo, hi = v24.TUNING_LIMITS[key]
+        assert lo <= default <= hi, key
+    assert (v24.SLOTS, v24.ENCODERS, v24.REORDER_MAX, v24.QUEUE_MAX) == (3, 2, 2, 2) and v24.DEADLINE_S == 0.5 and v24.PROBE_S == 1.0
+    assert (v24.WIDTH, v24.HEIGHT) == (1920, 1080) and v24.STATUS_S == 1.0 and v24.FIFO_NAME == 'main.mjpeg' and v24.LOCK_NAME == 'main.mjpeg.lock'
+    assert v24.STATUS_NAME == 'main.json' and v24.COM_PREFIX == 'seq='
+    assert v24.STATUS_FIELDS == ('sequence', 'fps', 'written', 'dropped_slots', 'dropped_encode', 'dropped_queue', 'dropped_noreader',
+                                 'frames_discarded_midwrite', 'pipe_size', 'last_write_utc')
+
+
+def test_v24_text(v24_patched, v23_patched):
+    cpp, header = lf(v24_patched / 'Sub01HomeLab.cpp'), lf(v24_patched / 'Sub01HomeLab.h')
+    old_cpp, old_header = lf(v23_patched / 'Sub01HomeLab.cpp'), lf(v23_patched / 'Sub01HomeLab.h')
+    for text in (cpp, header):
+        assert text.count(V24_MARKER + ' BEGIN') == text.count(V24_MARKER + ' END') == 1
+        assert text.index(V22_MARKER + ' END') < text.index(V24_MARKER + ' BEGIN') < text.index(V24_MARKER + ' END') < text.index(FACE_END)  # inside build_units' range
+        assert closure.brace_walk(closure.strip(text)) is not None
+    body = cpp[cpp.index(V24_MARKER + ' BEGIN'):cpp.index(V24_MARKER + ' END')]
+    # the hand-off: the delegate on the game thread, the game window only, render thread, the reference held, CopySrc before the copy
+    for text in ('Renderer->OnBackBufferReadyToPresent().AddSP(StreamerVisualMainTap.ToSharedRef(),&FSub01MainTap::OnBackBuffer);',
+                 'void OnBackBuffer(SWindow& Window,ISlateViewportProvider& Provider){', 'static_cast<const void*>(&Window)!=Want){++OtherWindows;return;}',
+                 'if(!IsInRenderingThread()){++WrongThread;return;}', 'FTextureRHIRef Held=Provider.GetBackBufferResource();',
+                 'Renderer->OnBackBufferReadyToPresent().Remove(Handle);', 'IsInGameThread()&&!IsEngineExitRequested()', 'GetViewportProvider(*Window)',
+                 'FSlateApplication::Get().IsRenderingOffScreen()', 'const uint32 Frame=GFrameNumberRenderThread;'):
+        assert text in body, text
+    pump = body[body.index(' void Pump(FRHICommandListImmediate& RHICmdList,FRHITexture* Texture){'):body.index(' void ResetRing(){')]
+    assert pump.index('RHICmdList.Transition(FRHITransitionInfo(Texture,ERHIAccess::Unknown,ERHIAccess::CopySrc));') < pump.index('Readback[Free]->EnqueueCopy(RHICmdList,Texture);')
+    assert pump.index('Collect();') < pump.index('EnqueueCopy(')
+    collect = body[body.index(' void Collect(){'):body.index(' TArray64<uint8> TakeBuffer(){')]
+    assert 'SlotOrder[K]<SlotOrder[S]' in collect and 'if(S<0||!Readback[S]->IsReady())return;' in collect
+    assert collect.index('if(!SlotProbe[S]&&Live&&EncodeInFlight.load()>=Encoders)return;') < collect.index('Pending[S]=false;')  # no place free: it stays pending
+    assert collect.index('const bool Live=Reader.load();') < collect.index('if(!SlotProbe[S]&&Live') and 'else if(!Live){++DroppedNoReader;continue;}' in collect
+    assert 'DroppedEncode' not in collect and 'Frame.Session!=Session.load()' in body and 'Session.fetch_add(1);Reader.store(true);' in body
+    assert collect.index('Readback[S]->Lock(Pitch,&Rows)') < collect.index('Readback[S]->Unlock();++Copied;')
+    # encoders: BGRA8, JPEG, the stamp; in-order release; the bounded output queue drops the oldest
+    for text in ('Images->CompressImage(Jpeg,EImageFormat::JPEG,FImageView(', 'Sub01MainTap::Stamp(Jpeg.GetData(),Jpeg.Num(),Job.Seq,Stamped,JpegWidth,JpegHeight)',
+                 'if(int32(Out.size())>=QueueMax){Out.pop_front();++DroppedQueue;}', 'Done[size_t(K)].Seq==Outstanding.front()',
+                 'Q[0]=uint8((V>>22)&0xFF);Q[1]=uint8((V>>12)&0xFF);Q[2]=uint8((V>>2)&0xFF);'):
+        assert text in body, text
+    # a sequence's place frees at its RELEASE (never when its encode ends), so the reorder buffer never needs to drop a frame
+    encode = body[body.index(' void EncodeLoop(){'):body.index(' // ---- the writer thread')]
+    assert encode.count('EncodeInFlight.fetch_sub(1);') == 1 and 'Outstanding.pop_front();EncodeInFlight.fetch_sub(1);' in encode and 'Done.pop_front()' not in encode
+    # the writer: the lock, the probe, the pipe size, SIGPIPE blocked in its own thread, poll with a deadline, a cut closes the fd
+    writer = body[body.index(' void WriterLoop(){'):body.index('void ASub01HomeCharacter::StartStreamerVisualMainTap(){')]
+    for text in ('pthread_sigmask(SIG_BLOCK,&Block,nullptr);', '::flock(LockFd,LOCK_EX|LOCK_NB)', 'O_RDWR|O_CREAT|O_CLOEXEC|O_NOFOLLOW,0600', 'O_WRONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW',
+                 'errno==ENXIO?0:errno', '::fcntl(Opened,F_SETPIPE_SZ,PipeWanted)', '::fcntl(Opened,F_GETPIPE_SZ)', 'P.events=POLLOUT;', f'+{v24._num(v24.DEADLINE_S)};',
+                 f'double({v24.SLICE_MS})', 'if(N<0&&errno==EINTR)continue;', 'if(Sent>0)++DiscardedMidwrite;else if(Why==3)++DroppedStalled;else ++DroppedNoReader;',
+                 '++Cuts;CloseFifo();Sub01MainTap::ConsumeSigpipe();', '(Info.st_mode&0077)'):
+        assert text in writer, text
+    for text in ('signal(SIGPIPE', 'SIG_IGN', 'unlink', 'FlushRenderingCommands', 'usleep', 'FPlatformProcess::Sleep', 'O_RDONLY|O_NONBLOCK', 'AsyncTask('):
+        assert text not in body, text  # never the process-wide disposition; never removes the FIFO; never waits for the GPU or sleeps; not the task pool
+    assert body.count('::mkfifo(') == 1 and 'mkfifo(Tap.FifoUtf8.c_str(),0600)' in body
+    # the status: the spec's fields verbatim, tmp + rename; the go/no-go line
+    status = _function(cpp, 'void ASub01HomeCharacter::WriteStreamerVisualMainStatus(double Now){')[0]
+    for field in v24.STATUS_FIELDS:
+        assert f'TEXT("{field}")' in status, field
+    assert 'Tmp=Final+TEXT(".tmp");' in status and 'std::rename(' in status
+    assert 'SUB01_STREAMER_VISUAL_MAIN_TAP_GONOGO verdict=%s reason=%s' in body and 'SUB01_STREAMER_VISUAL_MAIN_TAP fps=%.1f' in body
+    # wiring: start next to cam2 and the monitor feed, the tick, the keys in their own block, the receipt
+    assert v24.START_V24 in cpp and v24.TICK_V24 in cpp and v24.TUNING_BLOCK in cpp and 'TEXT("main_tap_go")' in cpp
+    tuning = cpp[cpp.index('bool ASub01HomeCharacter::ReadStreamerVisualFaceTuning(){'):cpp.index(SEATFIX_MARKER + ' END')]
+    for key, (lo, hi) in v24.TUNING_LIMITS.items():
+        assert tuning.count(f'Field(TEXT("{key}"),{v24.TUNING_FIELDS[key]},{lo},{hi});') == 1, key
+    assert f'StreamerVisualMainTapOn={streampass._f(v24.MAIN_TAP_AUTO)}' in header and 'TSharedPtr<class FSub01MainTap> StreamerVisualMainTap;' in header
+    # cam2: only the evidence (pipe size, the FIONREAD level at the drops); its writer logic is otherwise byte-identical
+    for text in ('if(!Room){++DroppedFull;if(Known&&int64(Queued)>FullQueuedMax.load())FullQueuedMax.store(int64(Queued));}', 'PipeSizeSeen.store(PipeBytes);',
+                 'TEXT("full_queued_max_kb")', 'TEXT("pipe_size"),Pipe.PipeSizeSeen.load()'):
+        assert text in cpp, text
+    # nothing outside the v24 blocks changed but the documented one-line edits (cam2's open and Room lines)
+    import difflib
+    for new, old, count in ((cpp, old_cpp, 2), (header, old_header, 0)):
+        removed = [line[1:] for line in difflib.unified_diff(old.split('\n'), new.split('\n'), lineterm='', n=0) if line.startswith('-') and not line.startswith('---')]
+        assert len(removed) == count, removed
+    # engine headers ahead of their first use
+    for include in ('#include "Framework/Application/SlateApplication.h" // SUB01_STREAMER_VISUAL_V2_V24', '#include <poll.h>', '#include <sys/file.h>', '#include "HAL/RunnableThread.h"'):
+        assert cpp.index(include) < cpp.index(V24_MARKER + ' BEGIN'), include
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++ for the syntax-only compile')
+@pytest.mark.parametrize('compiler', COMPILERS, ids=[c[0] for c in COMPILERS])
+def test_v24_cpp_compiles_syntax_only_against_stub(v24_patched, tmp_path, compiler):
+    name, path, flags = compiler
+    units = build_units_v22(v24_patched, tmp_path)
+    source, include = units['character']
+    run = subprocess.run([path, '-std=c++20', '-fsyntax-only', *flags, f'-I{include}', '-isystem', str(units['stub']), str(source)], capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr[-6000:]
+
+
+def test_v24_new_locals_do_not_shadow_members(v24_patched, v23_patched):
+    """-Wshadow -Werror on the pod: the new locals shadow neither the character's members nor the tap's own."""
+    import re
+    members = _header_members(lf(v24_patched / 'Sub01HomeLab.h'))
+    added = _added_locals(lf(v23_patched / 'Sub01HomeLab.cpp'), lf(v24_patched / 'Sub01HomeLab.cpp'))
+    assert {'Mapped', 'Sent', 'Fires'} <= added
+    assert not (added & members), sorted(added & members)
+    cpp = lf(v24_patched / 'Sub01HomeLab.cpp')
+    tap = closure.strip(cpp[cpp.index('class FSub01MainTap{'):cpp.index('void ASub01HomeCharacter::StartStreamerVisualMainTap(){')])
+    fields, code = set(), []
+    for line in tap.splitlines():
+        if re.match(r' (std::atomic<|FString |std::string |TUniquePtr<|double |int |bool |uint64 |std::mutex |std::condition_variable |std::deque<|std::vector<|FRunnableThread\*|FSub01MainTapRunnable\*|static constexpr|IImageWrapperModule\*|FDelegateHandle )', line):
+            fields.update(re.findall(r'\b([A-Z][A-Za-z0-9]*)\s*(?=\{|=|\[|;|,)', re.sub(r'\{[^{}]*\}', '{}', line)))
+        else:
+            code.append(line)  # method bodies (and signatures)
+    tap_locals = set(re.findall(r'\b(?:double|int32|int64|uint32|uint64|bool|int|ssize_t|auto|uint8\*|FSub01MainJob|FSub01MainFrame|FTextureRHIRef|TArray64<uint8>|sigset_t|struct stat|struct pollfd)\s*[&*]?\s+([A-Z][A-Za-z0-9]*)\s*(?=[=;({,\[])',
+                                ' '.join(code)))
+    assert {'Pending', 'Readback', 'Source', 'Out', 'Done', 'Jobs', 'Fd', 'Width'} <= fields, sorted(fields)
+    assert {'Mapped', 'Sent', 'Frame', 'Job', 'Held'} <= tap_locals, sorted(tap_locals)
+    assert not (tap_locals & fields), sorted(tap_locals & fields)
+
+
+V24_PRELUDE = r'''
+#include <cstdlib>
+#include <string>
+#include <fstream>
+#include <sstream>
+void USub01HomeHandsInstance::NativePostEvaluateAnimation() {}
+FAnimInstanceProxy* USub01HomeHandsInstance::CreateAnimInstanceProxy() { return nullptr; }
+void USub01HomeHandsInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy*) {}
+#define CHECK(c, n) do { if (!(c)) { std::printf("failed %d\n", n); std::fflush(stdout); std::_Exit(n); } } while (0)
+struct FFrameSeen { std::size_t At = 0; uint64 Seq = 0; bool Bad = false; };
+struct FParsed { std::vector<FFrameSeen> Frames; std::vector<std::size_t> Cuts; int Tail = 0, Leading = 0; };
+static FParsed Parse(const std::vector<uint8>& B) {
+ // what a reader sees: whole JPEGs walked by their markers (header segments by length, the entropy data to the EOI); a frame whose tail never came
+ // (a cut) or garbage resyncs on the next SOI. Each whole frame is checked against the contract: SOI, the JFIF APP0 first, ONE COM "seq=<n>"
+ // second, no other APPn/COM, SOF0 1920x1080, EOI.
+ FParsed Out; const std::size_t N = B.size(); std::size_t P = 0;
+ auto FindSoi = [&](std::size_t From) { for (std::size_t I = From; I + 2 < N; ++I) if (B[I] == 0xFF && B[I + 1] == 0xD8 && B[I + 2] == 0xFF) return I; return std::size_t(-1); };
+ while (P < N) {
+  const std::size_t S = FindSoi(P); if (S == std::size_t(-1)) { ++Out.Tail; break; }
+  if (S > P && P == 0) ++Out.Leading;
+  std::size_t Q = S + 2; bool Ok = true, App0 = false, Com = false, Sof = false, Extra = false, Complete = false; int Seg = 0; uint64 Seq = 0; int W = 0, H = 0;
+  while (Q + 4 <= N) {
+   if (B[Q] != 0xFF) { Ok = false; break; } const uint8 M = B[Q + 1]; if (M == 0xDA) break;
+   const std::size_t L = (std::size_t(B[Q + 2]) << 8) | B[Q + 3]; if (L < 2 || Q + 2 + L > N) { Ok = false; break; }
+   ++Seg;
+   if (Seg == 1 && M == 0xE0) App0 = true;
+   else if (Seg == 2 && M == 0xFE) { const std::string T(B.begin() + std::ptrdiff_t(Q + 4), B.begin() + std::ptrdiff_t(Q + 2 + L)); Com = T.rfind("@@COM@@", 0) == 0; if (Com) Seq = std::strtoull(T.c_str() + 4, nullptr, 10); }
+   else if ((M >= 0xE0 && M <= 0xEF) || M == 0xFE) Extra = true;
+   else if (M == 0xC0) { Sof = true; H = (B[Q + 5] << 8) | B[Q + 6]; W = (B[Q + 7] << 8) | B[Q + 8]; }
+   Q += 2 + L; }
+  if (Ok && Q + 3 < N && B[Q] == 0xFF && B[Q + 1] == 0xDA) {
+   Q += 2 + ((std::size_t(B[Q + 2]) << 8) | B[Q + 3]);
+   while (Q + 1 < N) { if (B[Q] == 0xFF) { const uint8 X = B[Q + 1]; if (X == 0x00 || (X >= 0xD0 && X <= 0xD7)) { Q += 2; continue; } if (X == 0xD9) { Q += 2; Complete = true; } break; } ++Q; } }
+  if (!Complete) { const std::size_t Next = FindSoi(S + 2); if (Next == std::size_t(-1)) { ++Out.Tail; break; } Out.Cuts.push_back(S); P = Next; continue; }
+  FFrameSeen F; F.At = S; F.Seq = Seq; F.Bad = !(App0 && Com && Sof && !Extra && W == 1920 && H == 1080); Out.Frames.push_back(F); P = Q;
+ }
+ return Out;
+}
+'''
+
+V24_STAMP_DRIVER = V24_PRELUDE + r'''
+static std::vector<uint8> J(std::initializer_list<std::vector<uint8>> Segments, bool Eoi = true) {  // SOI, the segments (marker, body), SOS, entropy, EOI
+ std::vector<uint8> Out = {0xFF, 0xD8};
+ for (const auto& S : Segments) { Out.push_back(0xFF); Out.push_back(S[0]); const int L = int(S.size()) + 1; Out.push_back(uint8(L >> 8)); Out.push_back(uint8(L)); Out.insert(Out.end(), S.begin() + 1, S.end()); }
+ const std::vector<uint8> Sos = {0xFF, 0xDA, 0, 12, 3, 1, 0, 2, 0x11, 3, 0x11, 0, 63, 0}; Out.insert(Out.end(), Sos.begin(), Sos.end());
+ for (int K = 0; K < 500; ++K) { Out.push_back(uint8(K * 31)); if (Out.back() == 0xFF) Out.push_back(0); }
+ if (Eoi) { Out.push_back(0xFF); Out.push_back(0xD9); } return Out; }
+static const std::vector<uint8> App0 = {0xE0, 'J', 'F', 'I', 'F', 0, 1, 1, 0, 0, 1, 0, 1, 0, 0}, Exif = {0xE1, 'E', 'x', 'i', 'f', 0, 0, 0xFF, 0xD9, 1}, Comment = {0xFE, 'o', 'l', 'd'},
+ Dqt = {0xDB, 0, 1, 2, 3}, Dht = {0xC4, 0, 4, 5}, Sof0 = {0xC0, 8, 0x04, 0x38, 0x07, 0x80, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1};
+static int Count(const TArray64<uint8>& B, uint8 A, uint8 C) { int N = 0; for (int64 I = 0; I + 1 < B.Num(); ++I) if (B[I] == A && B[I + 1] == C) ++N; return N; }
+int main() {
+ // 1. the header rebuilt: SOI, APP0, ONE COM "seq=<n>", DQT, SOF0, DHT (order kept), no APP1 (with its FF D9) and no old COM; the scan verbatim
+ const std::vector<uint8> In = J({App0, Exif, Comment, Dqt, Sof0, Dht}); TArray64<uint8> Out; int32 W = 0, H = 0;
+ CHECK(Sub01MainTap::Stamp(In.data(), int64(In.size()), 42, Out, W, H) && W == 1920 && H == 1080, 1);
+ std::vector<uint8> V(Out.GetData(), Out.GetData() + Out.Num()); FParsed P = Parse(V);
+ CHECK(P.Frames.size() == 1 && !P.Frames[0].Bad && P.Frames[0].Seq == 42 && P.Cuts.empty() && P.Tail == 0, 2);
+ CHECK(Count(Out, 0xFF, 0xD9) == 1 && Count(Out, 0xFF, 0xE1) == 0 && Count(Out, 0xFF, 0xFE) == 1 && Out[2] == 0xFF && Out[3] == 0xE0, 3);
+ const uint8 SosMarker[2] = {0xFF, 0xDA}, ComMarker[2] = {0xFF, 0xFE};
+ const std::size_t Scan = std::size_t(std::search(In.begin(), In.end(), SosMarker, SosMarker + 2) - In.begin());
+ CHECK(Scan < In.size() && std::equal(In.begin() + std::ptrdiff_t(Scan), In.end(), V.end() - std::ptrdiff_t(In.size() - Scan)), 4);
+ // the COM text and length; a 13-digit sequence
+ const char* Text = "@@COM@@1099511627776"; CHECK(Sub01MainTap::Stamp(In.data(), int64(In.size()), 1099511627776ull, Out, W, H), 5);
+ V.assign(Out.GetData(), Out.GetData() + Out.Num()); const std::size_t Com = std::size_t(std::search(V.begin(), V.end(), ComMarker, ComMarker + 2) - V.begin());
+ CHECK(Com + 4 < V.size() && ((V[Com + 2] << 8) | V[Com + 3]) == int(std::strlen(Text)) + 2 && std::memcmp(&V[Com + 4], Text, std::strlen(Text)) == 0, 6);
+ // without APP0 the COM comes right after SOI; a later APP0 is dropped like any APPn
+ { const std::vector<uint8> Late = J({Dqt, App0, Sof0, Dht}); CHECK(Sub01MainTap::Stamp(Late.data(), int64(Late.size()), 7, Out, W, H) && Out[2] == 0xFF && Out[3] == 0xFE && Count(Out, 0xFF, 0xE0) == 0, 7); }
+ // refused: progressive (SOF2), arithmetic (SOF9), no SOF, two SOF0, a truncated segment, no EOI, garbage before SOI, a fill byte, too short
+ std::vector<uint8> Sof2 = Sof0; Sof2[0] = 0xC2; std::vector<uint8> Sof9 = Sof0; Sof9[0] = 0xC9;
+ for (const std::vector<uint8>& Bad : {J({App0, Dqt, Sof2, Dht}), J({App0, Dqt, Sof9, Dht}), J({App0, Dqt, Dht}), J({App0, Sof0, Sof0, Dht}), J({App0, Dqt, Sof0, Dht}, false)})
+  CHECK(!Sub01MainTap::Stamp(Bad.data(), int64(Bad.size()), 1, Out, W, H), 8);
+ { std::vector<uint8> T = J({App0, Dqt, Sof0, Dht}); T[4] = 0xFF; CHECK(!Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 9); }  // APP0 length FFxx: past the end
+ { std::vector<uint8> T = J({App0, Dqt, Sof0, Dht}); T.insert(T.begin(), 0x00); CHECK(!Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 10); }
+ { std::vector<uint8> T = J({App0, Dqt, Sof0, Dht}); T.insert(T.begin() + 2, 0xFF); CHECK(!Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 11); }
+ { const uint8 Tiny[] = {0xFF, 0xD8, 0xFF, 0xD9}; CHECK(!Sub01MainTap::Stamp(Tiny, 4, 1, Out, W, H), 12); }
+ { std::vector<uint8> T = J({App0, Dqt, Sof0, Dht}); const std::size_t Sos = std::size_t(std::search(T.begin(), T.end(), SosMarker, SosMarker + 2) - T.begin());
+  T[Sos + 3] = 14; CHECK(!Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 120);  // SOS length inconsistent with its 3 components
+  T[Sos + 3] = 12; T[Sos + 4] = 0; CHECK(!Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 121);  // no component
+  T[Sos + 4] = 3; CHECK(Sub01MainTap::Stamp(T.data(), int64(T.size()), 1, Out, W, H), 122);
+  const std::vector<uint8> Short(T.begin(), T.begin() + std::ptrdiff_t(Sos + 8)); std::vector<uint8> Cut = Short; Cut.push_back(0xFF); Cut.push_back(0xD9);
+  CHECK(!Sub01MainTap::Stamp(Cut.data(), int64(Cut.size()), 1, Out, W, H), 123); }  // a truncated SOS header that still ends in FF D9
+ // 2. BGRA8 in place: R8G8B8A8 swizzled; A2B10G10R10 to 8 bits per channel (R 9:0, G 19:10, B 29:20); B8G8R8A8 untouched
+ uint8 Px[8] = {10, 20, 30, 40, 1, 2, 3, 4}; Sub01MainTap::ToBgra8(Px, 2, Sub01MainTap::KindRgba8); CHECK(Px[0] == 30 && Px[1] == 20 && Px[2] == 10 && Px[3] == 40 && Px[4] == 3 && Px[6] == 1, 13);
+ const uint32 V10 = (1023u) | (512u << 10) | (4u << 20) | (3u << 30); uint8 Q[4]; std::memcpy(Q, &V10, 4); Sub01MainTap::ToBgra8(Q, 1, Sub01MainTap::KindRgb10A2);
+ CHECK(Q[0] == 1 && Q[1] == 128 && Q[2] == 255 && Q[3] == 255, 14);
+ uint8 Same[4] = {9, 8, 7, 6}; Sub01MainTap::ToBgra8(Same, 1, Sub01MainTap::KindBgra8); CHECK(Same[0] == 9 && Same[3] == 6, 15);
+ CHECK(Sub01MainTap::Classify(PF_B8G8R8A8) == Sub01MainTap::KindBgra8 && Sub01MainTap::Classify(PF_A2B10G10R10) == Sub01MainTap::KindRgb10A2 && Sub01MainTap::Classify(PF_FloatRGBA) == Sub01MainTap::KindUnknown, 16);
+ // 3. the checksum: 64 samples, black = max 0, one bright sample changes it
+ std::vector<uint8> Img(std::size_t(1920) * 1080 * 4, 0); int32 Max = -1; const uint64 Black = Sub01MainTap::Checksum(Img.data(), 1920, 1080, Max); CHECK(Max == 0, 17);
+ Img[(std::size_t(67) * 1920 + 120) * 4 + 2] = 200; const uint64 Lit = Sub01MainTap::Checksum(Img.data(), 1920, 1080, Max); CHECK(Max == 200 && Lit != Black, 18);  // (120,67) is the first sample
+ std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v24_stamp_convert_and_checksum_run(v24_patched, tmp_path):
+    driver = ('#include <algorithm>\n' + V24_STAMP_DRIVER).replace('@@COM@@', v24.COM_PREFIX)
+    units = build_units_v22(v24_patched, tmp_path / 'u', driver=driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+
+
+V24_TAP_DRIVER = V24_PRELUDE + r'''
+#include <functional>
+struct FProvider : ISlateViewportProvider { FRHITexture* Tex = nullptr; FRHITexture* GetBackBufferResource() const override { return Tex; } };
+static ASub01HomeCharacter* GC = nullptr; static SWindow* GameWin = nullptr; static SWindow* OtherWin = nullptr; static FProvider* Prov = nullptr; static FProvider* OtherProv = nullptr;
+static std::vector<uint8> Got; static int Reader = -1; static bool Draining = true; static int FiresPerFrame = 1, DupEvery = 0;
+static double Now() { return FPlatformTime::Seconds(); }
+static void Drain() { if (Reader < 0 || !Draining) return; uint8 Buf[1 << 16]; for (;;) { const ssize_t N = read(Reader, Buf, sizeof Buf); if (N <= 0) break; Got.insert(Got.end(), Buf, Buf + N); } }
+static void Frame(double Dt = .004) {  // one engine frame: the game tick (knobs, the fallback command), the render commands, Slate's present (the delegate), a short real pause
+ GC->ApplyStreamerVisualV2(Now(), float(Dt)); StubRender::Flush(); StubAsync::Flush(); ++GFrameNumberRenderThread;
+ const int Fires = FiresPerFrame + (DupEvery && GFrameNumberRenderThread % uint32(DupEvery) == 0 ? 1 : 0);
+ for (int K = 0; K < Fires; ++K) FSlateApplication::StubRenderer.OnBackBufferReadyToPresent().Broadcast(*GameWin, *Prov);
+ FSlateApplication::StubRenderer.OnBackBufferReadyToPresent().Broadcast(*OtherWin, *OtherProv);
+ Drain(); std::this_thread::sleep_for(std::chrono::duration<double>(Dt)); }
+static void Frames(int N) { for (int K = 0; K < N; ++K) Frame(); }
+static bool WaitFor(const std::function<bool()>& Cond, double Seconds) { const double End = Now() + Seconds; while (Now() < End) { if (Cond()) return true; Frame(); } return Cond(); }
+static std::string ReadText(const char* Path) { std::ifstream F(Path); std::stringstream S; S << F.rdbuf(); return S.str(); }
+static double JsonNumber(const std::string& J, const char* Key) { const std::string K = std::string("\"") + Key + "\":"; const std::size_t P = J.find(K); return P == std::string::npos ? -1e300 : std::strtod(J.c_str() + P + K.size(), nullptr); }
+static std::vector<FFrameSeen> Since(const FParsed& P, std::size_t Mark) { std::vector<FFrameSeen> Out; for (const auto& F : P.Frames) if (F.At >= Mark) Out.push_back(F); return Out; }
+static bool InOrder(const std::vector<FFrameSeen>& F, bool GapFree) { for (std::size_t K = 0; K < F.size(); ++K) { if (F[K].Bad) return false; if (K && (GapFree ? F[K].Seq != F[K - 1].Seq + 1 : F[K].Seq <= F[K - 1].Seq)) return false; } return true; }
+int main() {
+ FPlatformTime::StubReal = FDateTime::StubReal = true; FFileHelper::StubSaveRoot = "@@DIR@@"; FSlateApplication::StubInitialized = FSlateApplication::StubOffscreen = true;
+ USkeletalMeshComponent Body; UCameraComponent Camera; USub01HomeHandsInstance Anim; ASub01HomeCharacter C; C.FirstPersonBody = &Body; C.ViewCamera = &Camera; Body.StubAnim = &Anim; StubCastTarget = &Anim;
+ Body.StubWorld = FTransform(FQuat(0, 0, .991898180738225, .1270354243831201), FVector(214.00134645387243, -289.2975482520179, 6.191812330665947), FVector(1, 1, 1));
+ Camera.StubWorld.Translation = FVector(334, -209, 151); Camera.FieldOfView = 65;
+ UEngine Engine; UGameViewportClient Viewport; GEngine = &Engine; Engine.GameViewport = &Viewport; TSharedPtr<SWindow> Game(MakeShared<SWindow>()); Viewport.StubWindow = Game; SWindow Other;
+ FRHITexture Back; Back.StubDesc.Extent = {1920, 1080}; Back.StubDesc.Format = PF_A2B10G10R10; Back.StubShade = 200; Back.StubPitch = 1984; FRHITexture Small;
+ FProvider P; P.Tex = &Back; FProvider PO; PO.Tex = &Small; FSlateApplication::StubRenderer.StubProvider = &P; FSlateApplication::StubRenderer.StubProviderWindow = Game.Get();
+ GC = &C; GameWin = Game.Get(); OtherWin = &Other; Prov = &P; OtherProv = &PO;
+ C.StreamerVisualCam2Dir = u"@@DIR@@"; StubRender::Deferred = StubAsync::Deferred = true;
+ C.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); C.StreamerVisualSchemaVersion = 2; C.StreamerVisualState = TEXT("idle"); C.StreamerVisualDeskPropsScanned = true;
+ // 1. created once at v2 start: the FIFO (0600), the tap bound to the back-buffer delegate, main_tap auto = on (offscreen); its threads wait for the first tick
+ struct stat S; CHECK(lstat("@@DIR@@/@@FIFO@@", &S) == 0 && S_ISFIFO(S.st_mode) && (S.st_mode & 0777) == 0600, 1);
+ FSub01MainTap* Tap = C.StreamerVisualMainTap.Get();
+ CHECK(Tap && Tap->Bound && FSlateApplication::StubRenderer.StubDelegate.StubNum() == 1 && C.StreamerVisualMainTapOn == 1.f && C.StreamerVisualMainOffscreen && !Tap->Started, 2);
+ C.StartStreamerVisualMainTap(); CHECK(C.StreamerVisualMainTap.Get() == Tap && FSlateApplication::StubRenderer.StubDelegate.StubNum() == 1, 3);
+ // 2. no reader: one diagnostic readback a second (converted, checksummed, a JPEG, discarded); nothing captured or written; other windows counted only
+ Frames(30); CHECK(Tap->Started && FRunnableThread::StubCreated.load() >= 3 && !Tap->Reader.load(), 4);
+ CHECK(WaitFor([&] { return Tap->JpegOk.load() && Tap->NonBlack.load(); }, 4), 5);
+ CHECK(Tap->Captured.load() == 0 && Tap->Written.load() == 0 && Tap->Probes.load() >= 1 && Tap->OtherWindows.load() >= 30 && Tap->DroppedFormat.load() == 0, 6);
+ CHECK(Tap->LastPitch.load() == 1984 && Tap->LastRows.load() == 1080 && Tap->LastKind.load() == Sub01MainTap::KindRgb10A2 && Tap->LastJpegWidth.load() == 1920, 7);
+ CHECK(IImageWrapperModule::StubMainPixelErrors.load() == 0 && FRHIGPUTextureReadbackStub::Untransitioned == 0 && IImageWrapperModule::StubMainQuality.load() == @@QUALITY@@, 8);
+ // 3. the go/no-go: after @@GONOGO@@ render frames, once per frame, the game window, the format, the pitch, not black, a stamped JPEG: GO
+ CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 30), 9);
+ CHECK(C.StreamerVisualMainVerdict == TEXT("GO") && C.StreamerVisualMainWhy == TEXT("-"), 10);
+ // 4. a reader: the writer opens it within a second; whole frames, in order and gap-free, one COM seq= each (the contract); main.json has the spec's fields
+ Reader = open("@@DIR@@/@@FIFO@@", O_RDONLY | O_NONBLOCK); CHECK(Reader >= 0, 11);
+ CHECK(WaitFor([&] { return Tap->Reader.load(); }, 3), 12); CHECK(Tap->PipeSize.load() >= 65536 && Tap->LockState.load() == 1, 13);
+ CHECK(WaitFor([&] { return Tap->Written.load() >= 25; }, 6), 14);
+ FParsed Seen = Parse(Got); std::vector<FFrameSeen> F = Since(Seen, 0);
+ CHECK(F.size() >= 20 && InOrder(F, true) && Seen.Cuts.empty() && Seen.Leading == 0 && F[0].Seq >= 1, 15);
+ CHECK(Tap->DroppedQueue.load() == 0 && Tap->DroppedEncode.load() == 0 && Tap->DroppedSlots.load() == 0 && Tap->RateSkipped.load() > 0, 16);  // frames every ~4 ms, captures <= 60 fps
+ std::string Json; CHECK(WaitFor([&] { Json = ReadText("@@DIR@@/@@STATUS@@"); return JsonNumber(Json, "written") >= 25 && JsonNumber(Json, "fps") > 0; }, 4), 17);  // rewritten every @@STATUSS@@ s
+ for (const char* Key : {@@FIELDS@@}) CHECK(JsonNumber(Json, Key) > -1e300, 17);
+ CHECK(Json.find("\"reader\":true") != std::string::npos && Json.find("\"on\":true") != std::string::npos && Json.find("\"go\":\"GO\"") != std::string::npos, 18);
+ CHECK(JsonNumber(Json, "last_write_utc") > 1.7e9 && JsonNumber(Json, "written") >= 25 && JsonNumber(Json, "sequence") >= 25 && JsonNumber(Json, "pipe_size") >= 65536 && JsonNumber(Json, "fps") > 0, 19);
+ CHECK(Json.find("\"schema\":\"@@SCHEMA@@\"") != std::string::npos && Json.find("\"pixel_format\":\"A2B10G10R10\"") != std::string::npos, 20);
+ // 5. formats: R8G8B8A8 and B8G8R8A8 rebuild the ring and arrive as the same picture; FloatRGBA is refused (dropped_format, nothing captured)
+ for (EPixelFormat Format : {PF_R8G8B8A8, PF_B8G8R8A8, PF_A2B10G10R10}) { Back.StubDesc.Format = Format; const std::size_t Mark = Got.size(); const int64 W0 = Tap->Written.load();
+  CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 8; }, 4), 21); CHECK(InOrder(Since(Parse(Got), Mark), false), 22); }
+ Back.StubDesc.Format = PF_FloatRGBA; { const int64 Fmt0 = Tap->DroppedFormat.load(), Cap0 = Tap->Captured.load(); Frames(30); CHECK(Tap->DroppedFormat.load() > Fmt0 && Tap->Captured.load() == Cap0, 23); }
+ Back.StubDesc.Format = PF_A2B10G10R10;
+ CHECK(IImageWrapperModule::StubMainPixelErrors.load() == 0 && FRHIGPUTextureReadbackStub::FormatMismatch == 0 && FRHIGPUTextureReadbackStub::Untransitioned == 0, 24);
+ // 5b. one encode stalls (0.4 s) while the other encoder is free: nothing overtakes it, nothing is lost from the reorder buffer; the ring fills (dropped_slots,
+ //     refused before a sequence is given), then the stream resumes in order and gap-free (a place frees at its sequence's release, not at its encode's end)
+ { const std::size_t Mark = Got.size(); const int64 Slots0 = Tap->DroppedSlots.load(), Queue0 = Tap->DroppedQueue.load(); IImageWrapperModule::StubMainSlowMs = 400;
+  CHECK(WaitFor([&] { return IImageWrapperModule::StubMainSlowMs.load() == 0; }, 2), 25); const int64 W0 = Tap->Written.load();
+  CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 15; }, 6), 26);
+  CHECK(Tap->DroppedSlots.load() > Slots0 && InOrder(Since(Parse(Got), Mark), Tap->DroppedQueue.load() == Queue0) && Tap->EncodeInFlight.load() <= 2, 27); }
+ // 6. a reader that stops reading: the pipe fills; at the @@DEADLINE@@ s deadline the frame in the pipe is cut (the fd closed, the WHOLE frame discarded and counted),
+ //    the output queue drops its oldest; the writer reopens (the reader is still there); once it reads again it resyncs on the next SOI
+ IImageWrapperModule::StubMainBytes = 300000; CHECK(WaitFor([&] { return Tap->EncodeInFlight.load() == 0; }, 2), 30);
+ Draining = false; { const int64 Cut0 = Tap->Cuts.load(), Mid0 = Tap->DiscardedMidwrite.load() + Tap->DroppedStalled.load(), Queue0 = Tap->DroppedQueue.load();
+  const double T = Now(); while (Now() - T < 2.2) Frame();
+  CHECK(Tap->Cuts.load() > Cut0 && Tap->DiscardedMidwrite.load() + Tap->DroppedStalled.load() > Mid0 && Tap->DroppedQueue.load() > Queue0, 31); }
+ Draining = true; { const std::size_t Mark = Got.size(); const int64 W0 = Tap->Written.load(); CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 6; }, 6), 32);
+  const FParsed After = Parse(Got); CHECK(Since(After, Mark).size() >= 4 && InOrder(Since(After, Mark), false), 33); }
+ IImageWrapperModule::StubMainBytes = 4000;
+ // 7. the reader leaves: EPIPE or POLLERR, this process survives (SIGPIPE stays blocked in the writer), nothing is written; a new reader starts on a frame boundary
+ close(Reader); Reader = -1; CHECK(WaitFor([&] { return !Tap->Reader.load(); }, 3), 40);
+ { const int64 W0 = Tap->Written.load(); Frames(40); CHECK(Tap->Written.load() == W0 && Tap->DroppedNoReader.load() >= 0, 41); }
+ Got.clear(); Reader = open("@@DIR@@/@@FIFO@@", O_RDONLY | O_NONBLOCK); CHECK(Reader >= 0 && WaitFor([&] { return Tap->Reader.load(); }, 3), 42);
+ { const int64 W0 = Tap->Written.load(); CHECK(WaitFor([&] { return Tap->Written.load() >= W0 + 8; }, 4), 43); const FParsed Fresh = Parse(Got);
+  CHECK(Got.size() > 2 && Got[0] == 0xFF && Got[1] == 0xD8 && Fresh.Leading == 0 && Fresh.Cuts.empty() && InOrder(Fresh.Frames, false) && Fresh.Frames.size() >= 6, 44); }
+ // 8. main_tap 0: the FIFO is closed (the reader sees EOF), the lock released, the go/no-go disarmed; another holder of the lock keeps the tap silent
+ C.StreamerVisualMainTapOn = 0; CHECK(WaitFor([&] { return !Tap->Reader.load() && Tap->LockState.load() == 0; }, 3), 50);
+ Drain(); { uint8 B = 0; CHECK(read(Reader, &B, 1) == 0 && !C.StreamerVisualMainArmed, 51); }
+ const int Lock = open("@@DIR@@/@@LOCK@@", O_RDWR); CHECK(Lock >= 0 && flock(Lock, LOCK_EX | LOCK_NB) == 0, 52);
+ C.StreamerVisualMainTapOn = 1; CHECK(WaitFor([&] { return Tap->LockState.load() == 2; }, 3), 53);
+ { const int64 W0 = Tap->Written.load(); Frames(60); CHECK(Tap->Written.load() == W0 && !Tap->Reader.load(), 54); }
+ flock(Lock, LOCK_UN); close(Lock); CHECK(WaitFor([&] { return Tap->LockState.load() == 1 && Tap->Reader.load(); }, 8), 55);  // retried every @@LOCKRETRY@@ s
+ { const int Second = open("@@DIR@@/@@LOCK@@", O_RDWR); CHECK(Second >= 0 && flock(Second, LOCK_EX | LOCK_NB) != 0 && errno == EWOULDBLOCK, 56); close(Second); }
+ // 9. NO-GO cases, each in a new window (main_tap 0 then 1): a black picture (judged at the timeout), two calls per frame, wrong thread, only other windows, a
+ //    wrong extent, failed encodes
+ auto Rearm = [&]() { C.StreamerVisualMainTapOn = 0; Frames(3); C.StreamerVisualMainTapOn = 1; Frames(2); return C.StreamerVisualMainArmed && !C.StreamerVisualMainJudged; };
+ auto Verdict = [&](const TCHAR* Why) { return C.StreamerVisualMainJudged && C.StreamerVisualMainVerdict == TEXT("NO-GO") && C.StreamerVisualMainWhy == Why; };
+ Back.StubBlack = true; Frames(12); CHECK(Rearm(), 60); Frames(@@GONOGO@@ + 20); CHECK(!C.StreamerVisualMainJudged, 61);  // black: waits for a picture (frames in flight flushed first)
+ C.StreamerVisualMainArmedAt -= @@TIMEOUT@@ + 1; Frames(2); CHECK(Verdict(u"black picture (checksum)"), 62); Back.StubBlack = false;
+ FiresPerFrame = 2; CHECK(Rearm(), 63); CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 20) && Verdict(u"not once per render frame"), 64); FiresPerFrame = 1;
+ DupEvery = 25; CHECK(Rearm(), 75); CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 20) && Verdict(u"duplicate calls in one render frame"), 76); DupEvery = 0;  // 4 %: the net ratio passes
+ StubInRenderingThread = false; CHECK(Rearm(), 65); Frames(5); C.StreamerVisualMainArmedAt -= @@NOCALLS@@ + 1; Frames(2); CHECK(Verdict(u"called off the render thread"), 66); StubInRenderingThread = true;
+ { TSharedPtr<SWindow> Elsewhere(MakeShared<SWindow>()); Viewport.StubWindow = Elsewhere; CHECK(Rearm(), 67); Frames(5); C.StreamerVisualMainArmedAt -= @@NOCALLS@@ + 1; Frames(2);
+  CHECK(Verdict(u"the delegate never fired for the game window"), 68); Viewport.StubWindow = Game; }
+ Back.StubDesc.Extent = {1280, 720}; CHECK(Rearm(), 69); CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 20) && Verdict(u"back buffer extent"), 70); Back.StubDesc.Extent = {1920, 1080};
+ IImageWrapperModule::StubMainFail = true; Frames(12); CHECK(Rearm(), 71); { const int64 Enc0 = Tap->DroppedEncode.load(); CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 20) && Verdict(u"no valid stamped JPEG"), 72);
+  CHECK(WaitFor([&] { return Tap->DroppedEncode.load() > Enc0; }, 4), 73); } IImageWrapperModule::StubMainFail = false;  // (captured frames once the reader is back)
+ IImageWrapperModule::StubMainProgressive = true; { const int64 Enc0 = Tap->DroppedEncode.load(), W0 = Tap->Written.load(); Frames(40); CHECK(Tap->DroppedEncode.load() > Enc0 && Tap->Written.load() == W0, 74); }
+ IImageWrapperModule::StubMainProgressive = false;
+ // 10. main_source 1, the fallback: a render command per game tick reads the viewport provider's back buffer; the delegate's calls are ignored; GO again
+ C.StreamerVisualMainSource = 1; Frames(3); CHECK(C.StreamerVisualMainArmedSource == 1 && !C.StreamerVisualMainJudged, 80);
+ { const std::size_t Mark = Got.size(); CHECK(WaitFor([&] { return C.StreamerVisualMainJudged; }, 30) && C.StreamerVisualMainVerdict == TEXT("GO"), 81);
+  const std::vector<FFrameSeen> Fallback = Since(Parse(Got), Mark); CHECK(Fallback.size() >= 10 && InOrder(Fallback, false), 82); }
+ C.StreamerVisualMainSource = 0; Frames(3);
+ // 11. teardown: the character drops the tap: its 3 threads joined, the binding removed, the FIFO closed (EOF), the lock released
+ const int32 Joined0 = FRunnableThread::StubJoined.load(); C.StreamerVisualMainTap.Reset();
+ CHECK(FRunnableThread::StubJoined.load() - Joined0 == 3 && FSlateApplication::StubRenderer.StubDelegate.StubNum() == 0, 90);
+ Drain(); { uint8 B = 0; CHECK(read(Reader, &B, 1) == 0, 91); }
+ { const int Free = open("@@DIR@@/@@LOCK@@", O_RDWR); CHECK(Free >= 0 && flock(Free, LOCK_EX | LOCK_NB) == 0, 92); close(Free); }
+ // 12. a path that is not this user's private FIFO is never replaced: the tap stays off with a reason (and starts no thread)
+ ASub01HomeCharacter D; D.FirstPersonBody = &Body; D.ViewCamera = &Camera; D.StreamerVisualCam2Dir = u"@@DIR2@@"; const int32 Created0 = FRunnableThread::StubCreated.load();
+ D.StartStreamerVisualV2(FRotator(-13.64, -146.31, 0)); D.StreamerVisualSchemaVersion = 2; for (int K = 0; K < 5; ++K) D.ApplyStreamerVisualV2(Now(), .016f);
+ CHECK(!D.StreamerVisualMainReason.IsEmpty() && D.StreamerVisualMainTap && !D.StreamerVisualMainTap->FifoOk.load() && FRunnableThread::StubCreated.load() == Created0, 93);
+ CHECK(lstat("@@DIR2@@/@@FIFO@@", &S) == 0 && S_ISREG(S.st_mode), 94);
+ CHECK(FRHIGPUTextureReadbackStub::BadLocks == 0, 95);
+ close(Reader); std::printf("ok\n");
+ return 0;
+}
+'''
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_v24_main_tap_logic_runs(v24_patched, tmp_path):
+    """Runs the patched tap with real threads against a real FIFO: the delegate and the game window, the no-reader diagnostics, the go/no-go (GO and
+    six NO-GO causes), whole in-order frames with one COM seq= each, main.json, the formats, a stalled reader (the deadline, a cut, the resync), a
+    reader that leaves (EPIPE, this process survives), main_tap 0 (EOF, the lock released), another lock holder, the fallback source, teardown."""
+    dirs = {name: tmp_path / name for name in ('stream', 'foreign')}
+    for path in dirs.values():
+        path.mkdir()
+    (dirs['foreign'] / v24.FIFO_NAME).write_bytes(b'not a fifo')
+    fields = ', '.join(f'"{f}"' for f in v24.STATUS_FIELDS)
+    driver = (V24_TAP_DRIVER.replace('@@DIR@@', str(dirs['stream'])).replace('@@DIR2@@', str(dirs['foreign'])).replace('@@FIFO@@', v24.FIFO_NAME)
+              .replace('@@LOCK@@', v24.LOCK_NAME).replace('@@STATUS@@', v24.STATUS_NAME).replace('@@SCHEMA@@', v24.STATUS_SCHEMA).replace('@@FIELDS@@', fields)
+              .replace('@@COM@@', v24.COM_PREFIX).replace('@@GONOGO@@', str(v24.GONOGO_FRAMES)).replace('@@TIMEOUT@@', repr(v24.GONOGO_TIMEOUT_S))
+              .replace('@@NOCALLS@@', repr(v24.NO_CALLS_S)).replace('@@DEADLINE@@', repr(v24.DEADLINE_S)).replace('@@LOCKRETRY@@', repr(v24.LOCK_RETRY_S))
+              .replace('@@QUALITY@@', str(int(v24.MAIN_QUALITY))).replace('@@STATUSS@@', repr(v24.STATUS_S)))
+    assert '@@' not in driver
+    units = build_units_v22(v24_patched, tmp_path / 'u', driver='#include <algorithm>\n' + driver)
+    run = _run_driver(units, tmp_path / 'u')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    import stat
+    assert (dirs['foreign'] / v24.FIFO_NAME).read_bytes() == b'not a fifo'
+    assert stat.S_ISFIFO(os.lstat(dirs['stream'] / v24.FIFO_NAME).st_mode) and json.loads((dirs['stream'] / v24.STATUS_NAME).read_text())['schema'] == v24.STATUS_SCHEMA
+
+
+PROBE = ROOT / 'tools/native_streamer_visual_v2/main_fifo_probe.py'
+
+
+def _main_jpeg(seq, width=1920, height=1080, com=True, extra_app=False, progressive=False, entropy=3000) -> bytes:
+    """A structurally real JPEG in v24's contract (SOI, APP0 JFIF, COM seq=, DQT, SOF0, DHT, SOS, stuffed entropy, EOI)."""
+    def seg(marker, body):
+        return bytes([0xFF, marker]) + (len(body) + 2).to_bytes(2, 'big') + body
+    out = b'\xff\xd8' + seg(0xE0, b'JFIF\0\x01\x01\0\0\x01\0\x01\0\0')
+    if com:
+        out += seg(0xFE, b'seq=%d' % seq)
+    if extra_app:
+        out += seg(0xE1, b'Exif\0\0\xff\xd9')
+    out += seg(0xDB, bytes(65)) + seg(0xC2 if progressive else 0xC0, bytes([8]) + height.to_bytes(2, 'big') + width.to_bytes(2, 'big') + bytes([3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1]))
+    out += seg(0xC4, bytes(29)) + seg(0xDA, bytes([3, 1, 0, 2, 0x11, 3, 0x11, 0, 63, 0]))
+    body = bytearray()
+    for k in range(entropy):
+        body.append((k * 13 + seq) & 0xFF)
+        if body[-1] == 0xFF:
+            body.append(0)
+    return out + bytes(body) + b'\xff\xd9'
+
+
+def test_v24_main_fifo_probe_counts_the_contract(tmp_path):
+    """The go/no-go reader: whole frames, the contract checked per frame, a cut frame and garbage resynced, sequence gaps counted, frames saved;
+    it refuses a path that is not a FIFO and a FIFO another process already reads."""
+    import threading
+    import time
+    fifo = tmp_path / 'main.mjpeg'
+    os.mkfifo(fifo, 0o600)
+    good = [_main_jpeg(n) for n in (1, 2, 3, 5, 6)]  # seq 4 missing
+    cut = _main_jpeg(7)[:1500]                        # a frame whose tail never came
+    stream = good[0] + b'garbage\xff' + good[1] + good[2] + cut + good[3] + good[4] + _main_jpeg(8, width=1280, height=720) + _main_jpeg(9, extra_app=True) + good[0]
+
+    def writer():
+        time.sleep(0.4)
+        fd = os.open(fifo, os.O_WRONLY)
+        for k in range(0, len(stream), 7000):
+            os.write(fd, stream[k:k + 7000])
+            time.sleep(0.01)
+        os.close(fd)
+    thread = threading.Thread(target=writer)
+    thread.start()
+    blind = [] if os.geteuid() == 0 else ['--force']  # not root: other users' processes cannot be checked (refused without --force)
+    run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(fifo), '--seconds', '2.5', '--save', str(tmp_path / 'saved'), '--save-count', '2', *blind],
+                         capture_output=True, text=True, timeout=30)
+    thread.join()
+    report = json.loads(run.stdout)
+    assert run.returncode == 0 and report['status'] == 'ok' and report['writer_seen'], run.stdout + run.stderr
+    assert report['frames'] == 8 and report['cuts'] == 1 and report['garbage_runs'] >= 1 and report['tail_bytes'] == 0
+    assert report['contract_failures'] == {'SOF0 (1280, 720) is not 1920x1080': 1, 'another APPn/COM segment': 1}
+    # 1,2,3,5,6,8,9 then 1 again: 4 and 7 missing, one step backwards
+    assert report['seq'] == {**report['seq'], 'first': 1, 'last': 1, 'distinct': 7, 'missing': 2, 'out_of_order': 1}
+    assert len(report['saved']) == 2 and (tmp_path / 'saved' / 'frame-00-seq1.jpg').read_bytes() == good[0]
+    # the window rates count the silence after the writer stopped (it wrote for well under a second of the 2.5 s)
+    assert report['trailing_idle_ms'] > 1000 and 0 < report['fps_window'] < report['fps'] and report['max_frames_per_read'] >= 1
+    assert 0 < report['seq']['unique_fps_window'] < report['seq']['unique_fps'] and report['longest_read_stall_ms'] >= report['trailing_idle_ms'] - 150
+    # refusals: a regular file; a FIFO another reader holds (a second reader would split the frames)
+    (tmp_path / 'plain').write_bytes(b'x')
+    run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(tmp_path / 'plain'), '--seconds', '0.2'], capture_output=True, text=True)
+    assert run.returncode == 2 and 'not a FIFO' in json.loads(run.stdout)['reason'] and (tmp_path / 'plain').read_bytes() == b'x'
+    (tmp_path / 'link').symlink_to(fifo)  # a link is never followed (opened with O_NOFOLLOW, then checked with fstat)
+    run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(tmp_path / 'link'), '--seconds', '0.2', '--force'], capture_output=True, text=True)
+    assert run.returncode == 2 and 'cannot be opened' in json.loads(run.stdout)['reason']
+    held = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(fifo), '--seconds', '0.2'], capture_output=True, text=True)
+        assert run.returncode == 2 and 'other readers' in json.loads(run.stdout)['reason'] and str(os.getpid()) in json.loads(run.stdout)['reason']
+    finally:
+        os.close(held)
+    assert report['other_reader_seen'] is (None if blind else False) and report['other_readers_during_run'] == []
+    # a writer that closes mid-frame (EOF): the unfinished frame is dropped as a cut, so the next writer's frame can never be glued to it
+    def two_sessions():
+        time.sleep(0.3)
+        for chunk in (_main_jpeg(20) + _main_jpeg(21)[:1500], _main_jpeg(22)):
+            fd = os.open(fifo, os.O_WRONLY)
+            os.write(fd, chunk)
+            os.close(fd)
+            time.sleep(0.4)
+    thread = threading.Thread(target=two_sessions)
+    thread.start()
+    run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(fifo), '--seconds', '1.8', *blind], capture_output=True, text=True, timeout=30)
+    thread.join()
+    sessions = json.loads(run.stdout)
+    assert sessions['frames'] == 2 and sessions['cuts'] == 1 and sessions['seq']['first'] == 20 and sessions['seq']['last'] == 22, sessions
+    assert sessions['contract_failures'] == {} and sessions['tail_bytes'] == 0 and sessions['seq']['missing'] == 1
+    if not blind:  # the scan is advisory: a reader that opens during the run is caught by the rescans / the last look, and the run does not count
+        late = subprocess.Popen([sys.executable, '-I', str(PROBE), '--fifo', str(fifo), '--seconds', '1.2'], stdout=subprocess.PIPE, text=True)
+        time.sleep(0.4)
+        intruder = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK)
+        try:
+            out, _ = late.communicate(timeout=30)
+        finally:
+            os.close(intruder)
+        late_report = json.loads(out)
+        assert late_report['status'] == 'ok' and late_report['other_reader_seen'] is True and os.getpid() in late_report['other_readers_during_run']
+    # in process: a process whose descriptors cannot be listed is counted (the CLI refuses then); a cut frame followed by the first bytes of
+    # the next SOI keeps them, so the next frame is not lost; a too-short SOF0 is a contract failure, not a crash
+    spec = importlib.util.spec_from_file_location('main_fifo_probe', PROBE)
+    probe = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(probe)
+
+    class Hidden:
+        name = '999999'
+
+        def __truediv__(self, other):
+            return self
+
+        def iterdir(self):
+            raise PermissionError('not yours')
+
+    class Proc:
+        def iterdir(self):
+            return [Hidden()]
+    assert probe.other_readers(fifo, Proc()) == ([], 1)
+    walker, nxt = probe.Walker(), _main_jpeg(11)
+    assert walker.feed(_main_jpeg(10)[:1500] + nxt[:2]) == [] and walker.feed(nxt[2:]) == [nxt] and walker.cuts == 1
+    # a writer that closed inside a header segment and reopened with no EOF in between: the old segment's length would swallow the new
+    # frame's SOI, APP0 and COM and the walk would glue the two frames (with the OLD seq); the new SOI ends the old frame instead
+    old, new = _main_jpeg(30), _main_jpeg(31)
+    swallowed = new.index(b'\xff\xdb')                       # the new frame's SOI + APP0 + COM bytes
+    dqt = old.index(b'\xff\xdb')
+    glued = old[:dqt + (2 + 67) - swallowed] + new           # the old DQT segment (69 bytes) cut so that its rest is exactly those bytes
+    walker = probe.Walker()
+    assert walker.feed(glued) == [new] and walker.cuts == 1 and probe.check_contract(new) == (True, 31, '')
+    short = b'\xff\xd8' + _main_jpeg(1)[2:29] + b'\xff\xc0\x00\x05\x08\x04\x38' + b'\xff\xd9'  # SOI, APP0 (18 bytes), COM seq=1 (9), a 3-byte SOF0
+    assert probe.check_contract(short) == (False, 1, 'SOF0 too short')
+    # the contract check stands alone (never raises): SOI...EOI, segment lengths in bounds, one SOF0, an SOS, a sane seq
+    whole = _main_jpeg(5)
+    at = whole.index(b'\xff\xc0')
+    overrun = bytearray(whole)
+    overrun[4:6] = b'\xff\xff'
+    assert probe.check_contract(whole) == (True, 5, '') and probe.check_contract(whole[:-2] + b'\0\0') == (False, None, 'not SOI ... EOI')
+    assert probe.check_contract(whole[:at] + whole[at:at + 19] + whole[at:]) == (False, 5, 'two SOF0')
+    assert probe.check_contract(b'\xff\xd8' + whole[2:29] + b'\xff\xd9') == (False, 5, 'no SOS')
+    assert probe.check_contract(bytes(overrun)) == (False, None, 'a segment length out of bounds')
+    assert probe.check_contract(_main_jpeg(10 ** 24)) == (False, None, 'the second segment is not COM "seq=<n>"')
+    # --save never replaces a file and never writes through a link
+    keep = tmp_path / 'keep'
+    held_dir = probe.open_save_dir(keep)  # created 0700, held open: the frames go through this descriptor
+    try:
+        assert probe.save_frame(held_dir, 'a.jpg', b'1') == 'a.jpg' and probe.save_frame(held_dir, 'a.jpg', b'2') is None and (keep / 'a.jpg').read_bytes() == b'1'
+        (keep / 'b.jpg').symlink_to(tmp_path / 'elsewhere.jpg')
+        assert probe.save_frame(held_dir, 'b.jpg', b'3') is None and not (tmp_path / 'elsewhere.jpg').exists()
+        assert (keep.stat().st_mode & 0o777) == 0o700
+    finally:
+        os.close(held_dir)
+    (tmp_path / 'dirlink').symlink_to(keep)
+    for bad in (tmp_path / 'plain', tmp_path / 'dirlink'):  # a file, a link to a directory: refused as JSON (exit 2), nothing read
+        run = subprocess.run([sys.executable, '-I', str(PROBE), '--fifo', str(fifo), '--seconds', '0.2', '--save', str(bad), '--force'], capture_output=True, text=True)
+        assert run.returncode == 2 and 'not a usable plain directory' in json.loads(run.stdout)['reason'], run.stdout + run.stderr
+
+
+@pytest.mark.skipif(not COMPILERS, reason='no g++/clang++')
+def test_earlier_drivers_pass_under_v24(v24_patched, tmp_path):
+    """The v2 driver, the v21 driver (cam2's reader gate and writer, with v24's cam2 evidence), v22's monitor feed and cam2 exposure, v23's character
+    driver all still pass on the v24 sources."""
+    run = _run_driver(build_units_v22(v24_patched, tmp_path / 'v2'), tmp_path / 'v2')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    (tmp_path / 'stream').mkdir()
+    driver = (V21_DRIVER.replace('@@DIR@@', str(tmp_path / 'stream')).replace('@@VIEW@@', repr(v21.CAM2_VIEW_CM)).replace('@@LOD@@', repr(v21.CAM2_LOD_FACTOR))
+              .replace('@@CD@@', repr(v21.KEY_CD)).replace('@@RADIUS@@', repr(v21.KEY_RADIUS_CM)).replace('@@SOFT@@', repr(v21.KEY_SOFT_CM))
+              .replace('@@OUTER@@', repr(v21.KEY_CONES[1])).replace('@@MAXCHARS@@', str(v21.CONSOLE_MAX_CHARS)))
+    run = _run_driver(build_units_v22(v24_patched, tmp_path / 'v21', driver=driver), tmp_path / 'v21')
+    assert run.returncode == 0 and run.stdout.strip() == 'ok', run.stdout + run.stderr
+    for name, check in (('feed', test_v22_monitor_feed_logic_runs), ('exposure', test_v22_cam2_exposure_runs), ('v23', test_v23_character_logic_runs)):
+        (tmp_path / name).mkdir()
+        check(v24_patched, tmp_path / name)

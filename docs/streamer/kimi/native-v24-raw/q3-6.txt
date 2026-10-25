@@ -1,0 +1,12 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: the other edits. (a) Character header fields (UCLASS, plain non-UPROPERTY members) incl. TSharedPtr<class FSub01MainTap>
+(the class is defined later in the .cpp; the tap is created with MakeShared there); includes added to the .cpp; the start/tick wiring;
+the tuning keys (Field(name, float&, min, max)); the receipt (after the class definition). (b) Four one-line evidence edits in the
+EXISTING cam2 writer (the parts marked V24 are new): two atomics in its pipe object; the F_GETPIPE_SZ result stored at open; the max
+FIONREAD level seen at a full-pipe drop (writer thread); two new cam2.json fields read by the game thread (the max reset by exchange).
+Check ONLY:
+1. Anything that breaks the build on the real engine or UHT (a forward-declared class in TSharedPtr as a UCLASS member destroyed in
+   the class's destructor; includes; the anchors' surroundings)?
+2. The cam2 edits: a race or wrong value (load-then-store max from one writer thread, exchange(0) from the game thread)?
+3. The receipt and tuning lines: any type or semantic problem?

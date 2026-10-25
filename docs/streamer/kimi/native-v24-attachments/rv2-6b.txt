@@ -1,0 +1,7 @@
+ std::atomic<int32> EncodeBusy{0},OpenErrno{0};std::atomic<bool> Reader{false};std::atomic<int64> DroppedStale{0}; std::atomic<int> HandoffFd{-1}; // SUB01_STREAMER_VISUAL_V2_V21: a descriptor the game thread's reader probe opened
+ std::atomic<int64> FullQueuedMax{0};std::atomic<int32> PipeSizeSeen{0}; // SUB01_STREAMER_VISUAL_V2_V24: FIONREAD at the full-pipe drops (max since the last status), F_GETPIPE_SZ for the status
+   ::fcntl(Fd,F_SETPIPE_SZ,1048576);PipeBytes=::fcntl(Fd,F_GETPIPE_SZ);PipeSizeSeen.store(PipeBytes);Rest.Reset();RestAt=0;OpenErrno.store(0);} // + SUB01_STREAMER_VISUAL_V2_V24: the pipe size for cam2.json
+   if(!Room){++DroppedFull;if(Known&&int64(Queued)>FullQueuedMax.load())FullQueuedMax.store(int64(Queued));} // the reader is behind: this whole frame is dropped; SUB01_STREAMER_VISUAL_V2_V24: the pipe level seen
+ const int64 Last=Pipe.LastWrittenMs.load();Status->SetNumberField(TEXT("last_frame_utc"),Last>0?double(Last)/1000.:0.);
+ Status->SetNumberField(TEXT("idle_no_reader"),double(StreamerVisualCam2Idle));Status->SetBoolField(TEXT("lite"),StreamerVisualCam2Lite>0); // SUB01_STREAMER_VISUAL_V2_V21
+ Status->SetNumberField(TEXT("pipe_size"),Pipe.PipeSizeSeen.load());Status->SetNumberField(TEXT("full_queued_max_kb"),double(Pipe.FullQueuedMax.exchange(0))/1024.); // SUB01_STREAMER_VISUAL_V2_V24: the cam2 loss evidence (reader back-pressure)
