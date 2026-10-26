@@ -1,0 +1,142 @@
+Review exact private-branch commit for owner-requested temporary live preview at subzerone.live/live.html. APPROVE COMMIT or concise blocking issues. Baseline is exact active deployed commit7069cd1a4f083e92c1402ef3befc253bb137bccc; only four new files below. Existing room, server, Dockerfile, env, /data unchanged. Railway one instance/aiohttp process, existing SIGTERM save path preserves state; prior deployment0a2a1e26-97c9-4c3e-92dd-4382ae214829 for rollback. Branch claude/live-control-20261027 in private repo, never main. Five focused relay tests PASS (default deny, origins/text type, traversal/symlink, status/body limit, current media). Official cloudflared2026.10.4 SHAae5e8add7884b0531d66bbca4570d1de491ff6da51e4ebe7eb160cdf241d9e42 runs outbound to loopback8841. Kimi approved Quick Tunnel preview architecture. Public URL is not a secret; users may view/chat, not operate agent. No credentials/admin routes, no RunPod API. STOP held, no lease. Public chat ordinary viewer role only, backend existing filters and lease/STOP enforcement. max_tokens9000 low, avoid lengthy reasoning.
+
+--- /dev/null
++++ tools/live_preview/relay.py
++"""Temporary public viewer relay. No operator routes, credentials, or generic proxy."""
++import argparse, asyncio, collections, re, time
++from pathlib import Path
++import aiohttp
++from aiohttp import web
++ORIGIN = 'https://subzerone.live'
++SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
++HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
++
++def create_app(root, stop_file):
++    root = Path(root).resolve()
++    messages = collections.deque(maxlen=30)
++    rates = collections.OrderedDict()
++    global_chat = collections.deque()
++    slots = asyncio.Semaphore(8)
++    def limited(ip, kind, period, maximum):
++        now = time.monotonic(); key = (ip, kind)
++        q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
++        while q and q[0] < now-period: q.popleft()
++        while len(rates) > 2048: rates.popitem(last=False)
++        if len(q) >= maximum: return True
++        q.append(now); return False
++    @web.middleware
++    async def boundary(request, handler):
++        if request.headers.get('Origin') not in (None, ORIGIN):
++            return web.Response(status=403, text='Origin refused')
++        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
++        if limited(ip, 'all', 10, 120) or limited('global', 'all', 1, 100):
++            return web.Response(status=429, text='Please wait', headers=HEADERS)
++        try: response = await handler(request)
++        except web.HTTPException as exc: response = web.Response(status=exc.status, text='Unavailable')
++        response.headers.update(HEADERS)
++        return response
++    def playlist():
++        p = root/'live.m3u8'
++        if not p.is_file() or time.time()-p.stat().st_mtime > 20: return None, set()
++        raw = p.read_text()
++        if len(raw) > 65536: return None, set()
++        names = {line.strip() for line in raw.splitlines() if line.strip() and not line.startswith('#')}
++        if not names or not all(SEGMENT.fullmatch(n) for n in names): return None, set()
++        return raw, names
++    async def media(request):
++        if '%' in request.raw_path or request.query_string: raise web.HTTPNotFound()
++        name = request.match_info['name']; raw, names = playlist()
++        if raw is None: return web.Response(status=503, text='Stream offline')
++        if name == 'live.m3u8': return web.Response(text=raw, content_type='application/vnd.apple.mpegurl')
++        # Only currently referenced media; neither arbitrary files nor paths are accepted.
++        if name not in names or not SEGMENT.fullmatch(name): raise web.HTTPNotFound()
++        p = root/name
++        if p.is_symlink() or p.resolve().parent != root or not p.is_file(): raise web.HTTPNotFound()
++        if p.stat().st_size > 32*1024*1024: raise web.HTTPServiceUnavailable()
++        async with slots:
++            data = await asyncio.to_thread(p.read_bytes)
++        return web.Response(body=data, content_type='video/mp2t')
++    async def status(request):
++        raw, _ = playlist()
++        return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
++    async def chat(request):
++        if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()
++        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
++        now = time.monotonic()
++        while global_chat and global_chat[0] < now-10: global_chat.popleft()
++        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'why':'Attendi qualche secondo.'}, status=429)
++        text = (await request.text()).strip()
++        if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
++        global_chat.append(now)
++        try:
++            async with asyncio.timeout(12):
++                async with aiohttp.ClientSession() as client:
++                    async with client.ws_connect('http://127.0.0.1:8830/ws', max_msg_size=2*1024*1024) as ws:
++                        await ws.send_json({'type':'chat','nick':'viewer','text':text})
++                        async for msg in ws:
++                            if msg.type == aiohttp.WSMsgType.TEXT:
++                                data = msg.json()
++                                if data.get('type') == 'chat_ack':
++                                    ok = data.get('ok') is True
++                                    if ok: messages.append({'text':text,'at':int(time.time())})
++                                    return web.json_response({'ok':ok,'why':'Messaggio ricevuto.' if ok else 'Messaggio rifiutato dal filtro della chat.'})
++        except (TimeoutError, aiohttp.ClientError, ValueError): pass
++        return web.json_response({'ok':False,'why':'Chat non disponibile. Riprova più tardi.'}, status=503)
++    app = web.Application(client_max_size=2048, middlewares=[boundary])
++    app.router.add_get('/hls/{name}', media, allow_head=False)
++    app.router.add_get('/status', status, allow_head=False)
++    app.router.add_post('/chat', chat)
++    return app
++
++if __name__ == '__main__':
++    p=argparse.ArgumentParser();p.add_argument('--hls', required=True);p.add_argument('--stop',required=True);p.add_argument('--port',type=int,default=8841);a=p.parse_args()
++    web.run_app(create_app(a.hls,a.stop),host='127.0.0.1',port=a.port,access_log=None)
+
+--- /dev/null
++++ tools/live_preview/test_relay.py
++import tempfile,unittest
++from pathlib import Path
++from aiohttp.test_utils import TestClient,TestServer
++from relay import create_app,ORIGIN
++class RelayTests(unittest.IsolatedAsyncioTestCase):
++ async def asyncSetUp(self):
++  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.seg='sub01-20261026-233000-123.ts'
++  (self.root/self.seg).write_bytes(b'media')
++  (self.root/'live.m3u8').write_text('#EXTM3U\n#EXTINF:2,\n'+self.seg+'\n')
++  self.client=TestClient(TestServer(create_app(self.root,self.root/'STOP')));await self.client.start_server()
++ async def asyncTearDown(self):await self.client.close();self.tmp.cleanup()
++ async def test_current_playlist_and_segment(self):
++  for name in ['live.m3u8',self.seg]:
++   r=await self.client.get('/hls/'+name,headers={'Origin':ORIGIN});self.assertEqual(r.status,200);self.assertEqual(r.headers['Access-Control-Allow-Origin'],ORIGIN)
++ async def test_default_deny(self):
++  for path in ['/operator','/pc/state','/lease','/hls/secret.json','/hls/%2e%2e%2fsecret.ts']:
++   self.assertEqual((await self.client.get(path)).status,404)
++  self.assertEqual((await self.client.head('/status')).status,405)
++ async def test_origins_and_plain_text_only(self):
++  self.assertEqual((await self.client.get('/status',headers={'Origin':'https://evil.example'})).status,403)
++  self.assertEqual((await self.client.post('/chat',json={'role':'operator'},headers={'Origin':ORIGIN})).status,403)
++  self.assertEqual((await self.client.post('/chat',data='hello')).status,403)
++ async def test_traversal_in_playlist_and_symlinks(self):
++  (self.root/'live.m3u8').write_text('#EXTM3U\n../secret.ts\n');self.assertEqual((await self.client.get('/hls/live.m3u8')).status,503)
++  (self.root/'live.m3u8').write_text('#EXTM3U\n'+self.seg+'\n');(self.root/self.seg).unlink();(self.root/self.seg).symlink_to('/etc/passwd')
++  self.assertEqual((await self.client.get('/hls/'+self.seg)).status,404)
++ async def test_status_pause_and_body_limit(self):
++  (self.root/'STOP').touch();r=await self.client.get('/status');self.assertEqual((await r.json())['agent'],'paused')
++  r=await self.client.post('/chat',data='x'*3000,headers={'Origin':ORIGIN,'Content-Type':'text/plain'});self.assertEqual(r.status,413)
++if __name__=='__main__':unittest.main()
+
+--- /dev/null
++++ web/live.html
++<!doctype html>
++<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUB-01 · live</title><link rel="icon" href="/favicon.svg"><style>
++:root{color-scheme:dark;--bg:#08080b;--fg:#ececf2;--muted:#8f8fa3;--line:#292932;--accent:#ff6a00}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px ui-monospace,"SF Mono",Menlo,Consolas,monospace}header{display:flex;align-items:center;gap:18px;padding:24px 28px;border-bottom:1px solid var(--line)}h1{font-size:20px;letter-spacing:.16em;margin:0;background:var(--accent);color:#08080b;padding:3px 10px;border-radius:2px}a{color:var(--muted);text-decoration:none}a:hover{color:var(--fg)}#status{margin-left:auto;color:var(--muted);font-size:12px}main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;max-width:1680px;margin:auto;padding:24px 28px}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line)}h2{font-size:14px;font-weight:500;margin:0 0 16px}p{color:var(--muted);line-height:1.6;font-size:12px}aside{border-left:1px solid var(--line);padding-left:24px;display:flex;flex-direction:column;min-height:360px}#messages{height:250px;overflow:auto;flex:1;margin-bottom:16px}#messages p{color:var(--fg);border-bottom:1px solid var(--line);padding:10px 0;margin:0;overflow-wrap:anywhere}label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}textarea{width:100%;resize:vertical;min-height:88px;background:#101015;border:1px solid var(--line);border-radius:4px;color:var(--fg);padding:12px;font:inherit}button{background:var(--accent);color:#08080b;border:0;padding:11px 18px;font:inherit;border-radius:3px;cursor:pointer;margin-top:10px}button:disabled{opacity:.5;cursor:wait}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}#feedback{min-height:36px}#mode{color:#ff9a3c}footer{padding:0 28px 24px;color:var(--muted);font-size:11px}@media(max-width:850px){header{padding:18px 16px;gap:12px}h1{font-size:17px}main{grid-template-columns:1fr;padding:16px;gap:20px}aside{border-left:0;border-top:1px solid var(--line);padding:20px 0 0;min-height:300px}#messages{max-height:180px}footer{padding:0 16px 20px}#status{max-width:130px;text-align:right}}
++</style></head><body><header><h1>SUB-01</h1><a href="/">stanza</a><span id="status" role="status">Collegamento…</span></header><main><section aria-label="Video in diretta"><video id="video" controls playsinline muted autoplay></video><p>Anteprima live · audio attivabile nel lettore · qualche secondo di ritardo</p><p id="mode">Verifica dello stato…</p></section><aside><h2>Chat live</h2><div id="messages" aria-label="Messaggi recenti"></div><form id="chat"><label for="text">Scrivi a SUB-01</label><textarea id="text" maxlength="280" required placeholder="Lascia un messaggio…"></textarea><button id="send" type="submit">Invia</button><p id="feedback" role="status"></p></form><p>I messaggi passano dai filtri della chat. Non concedono permessi operativi.</p></aside></main><footer>SUB-01 è un personaggio digitale. Anteprima in verifica.</footer><script src="/live-config.js"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js" crossorigin="anonymous"></script><script>
++const base=window.SUB01_PREVIEW_ORIGIN,video=document.querySelector('#video'),statusEl=document.querySelector('#status'),mode=document.querySelector('#mode'),messages=document.querySelector('#messages');let hls,attached=false;
++function start(){if(attached||!base)return;attached=true;const src=base+'/hls/live.m3u8';if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=src;else if(window.Hls&&Hls.isSupported()){hls=new Hls({maxBufferLength:10,liveSyncDurationCount:3});hls.loadSource(src);hls.attachMedia(video);hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal){statusEl.textContent='Video in riconnessione';hls.destroy();attached=false;}});}else statusEl.textContent='Browser non compatibile';}
++async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();statusEl.textContent=s.online?'● LIVE':'Video temporaneamente offline';mode.textContent=s.agent==='paused'?'Controllo manuale · agente in STOP':'Verifica operativa in corso';messages.replaceChildren(...s.messages.map(m=>{const p=document.createElement('p');p.textContent=m.text;return p}));if(s.online)start();}catch{statusEl.textContent='Collegamento non disponibile';}setTimeout(refresh,5000)}
++document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const t=document.querySelector('#text'),b=document.querySelector('#send'),f=document.querySelector('#feedback');b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:t.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.why||'Invio non confermato.';if(d.ok)t.value='';}catch{f.textContent='Invio non confermato. Controlla il collegamento.';}setTimeout(()=>b.disabled=false,12000)});refresh();
++</script></body></html>
+
+--- /dev/null
++++ web/live-config.js
++window.SUB01_PREVIEW_ORIGIN = "https://chemistry-referrals-membrane-prices.trycloudflare.com";
