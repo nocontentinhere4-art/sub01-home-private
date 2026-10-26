@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# APPROVE ONE ATTEMPT06 RUN\n\nNo concrete runtime blocker is identified in the corrected bundle. The two previously stale internal pins now match the supplied sources. The `LogCmds` correction uses one argv element without literal quotes, and `(0,0)` waits remain bounded `PENDING_WAIT` records rather than reap or success evidence.\n\nApproval is bound exclusively to these seven runtime files:\n\n```json\n{\n  \"foreground-launch.py\": \"17661c22ed6da1959e58842e9750dc8df3a38fb1aacbfa1b4d8f4b1b9f0828f7\",\n  \"visual-supervisor.candidate.py\": \"e3ec4709bed25134a04bbf45ce1f4782f91e2322347ac507fe06e87ec27ab90e\",\n  \"admission.json\": \"6b2b74ed69fa4b761fceb677a2d966f973b6906ebddd2e33264d7d0996e358e1\",\n  \"fifo_observer_collector.py\": \"0ba8ee861eb7bc653f07df04245d2ad14b75c3282c477604ddda533133067329\",\n  \"contract_reference.py\": \"20aaf881203db5a2ed8d7009ca215c32d9dc81164aa2fe49c846fb36bd1d1a54\",\n  \"access_barrier.py\": \"82d82b23a5746a4e1386526010ee6355401a637f83f3bdfbf50c05696ae9d0f6\",\n  \"ddc_launch_checks.py\": \"416e05f6f746835309dda72a1ca77fc277307d1bb6552ad8ae5727ac923cc371\"\n}\n```\n\nThe supplied read-only post-run verifier is also authorized:\n\n```text\nverify_visual_once.py\nSHA256 eeb72e67956f6911b3f233589507923d85f68c7dae138afb54b1d851bf113787\n```\n\nIt must be invoked with the exact seven-pin map above and this review\u2019s answer hash. The supplied staging and one-shot foreground transport may be used only to activate and execute this bound review.\n\nThis authorizes **exactly one autonomous foreground attempt06 run**, following exact HTTP 200/stop activation and verified staging. **No retry, runtime repair, replacement bundle, additional launch, or scope expansion is approved.** Static admission remains `NOT_READY` until that activation.\n\nA technical pass remains conditional on the actual strict startup/final logs, native FD census, complete capture and JPEG readback/decode, ordered exact-wait teardown with real drain EOF, independent verifier acceptance, preservation, and source/FIFO/barrier restoration. Subsequent actual JPEG viewing/review remains mandatory and separate.\n\nAttempt05 remains **FAILED**. SDK status remains **`ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED`**. This review asserts no runtime outcome, images, visual quality, performance, or owner acceptance.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 91893,
+    "completion_tokens": 8176,
+    "total_tokens": 100069,
+    "completion_tokens_details": {
+      "reasoning_tokens": 7508
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 91648
+    }
+  },
+  "seconds": 240.42
+}
