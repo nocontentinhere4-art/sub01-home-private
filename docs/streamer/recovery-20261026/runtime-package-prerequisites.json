@@ -1,0 +1,181 @@
+{
+  "python": "/usr/bin/python3",
+  "packages": {
+    "torch": "2.8.0+cu128",
+    "torchaudio": "2.8.0+cu128",
+    "torchvision": "0.23.0+cu128",
+    "chatterbox-tts": null,
+    "transformers": null,
+    "diffusers": null,
+    "safetensors": null,
+    "huggingface-hub": null,
+    "numpy": "2.1.2",
+    "scipy": null,
+    "aiohttp": null,
+    "pillow": "11.0.0",
+    "soundfile": null,
+    "librosa": null,
+    "omegaconf": null,
+    "resampy": null,
+    "playwright": null
+  },
+  "tools": {
+    "python3": "/usr/bin/python3",
+    "ffmpeg": "/usr/bin/ffmpeg",
+    "ffprobe": "/usr/bin/ffprobe",
+    "Xvfb": null,
+    "xauth": null,
+    "readelf": "/usr/bin/readelf",
+    "ldconfig": "/usr/sbin/ldconfig",
+    "useradd": "/usr/sbin/useradd",
+    "runuser": "/usr/sbin/runuser"
+  },
+  "paths": {
+    "/opt/venv/bin/python": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/home/unreal/voice-rt-venv/bin/python": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/home/unreal/venv/bin/python": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor": {
+      "exists": true,
+      "symlink": false,
+      "readable": true,
+      "executable": true
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd": {
+      "exists": true,
+      "symlink": false,
+      "readable": true,
+      "executable": true
+    },
+    "/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu": {
+      "exists": true,
+      "symlink": false,
+      "readable": true,
+      "executable": true
+    },
+    "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/home/unreal/runtime-tools/BigBuckBunny-720p.webm": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/home/unreal/.sub01-private/streamer/voice/voice.json": {
+      "exists": false,
+      "symlink": false,
+      "readable": false,
+      "executable": false
+    },
+    "/home/unreal/.sub01-private/operator-token": {
+      "exists": true,
+      "symlink": false,
+      "readable": true,
+      "executable": false
+    }
+  },
+  "unreal": null,
+  "encoders": {
+    "returncode": 0,
+    "lines": [
+      " V....D libx264              libx264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)",
+      " V....D libx264rgb           libx264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 RGB (codec h264)",
+      " VFS... mjpeg                MJPEG (Motion JPEG)",
+      " V..... mjpeg_qsv            MJPEG (Intel Quick Sync Video acceleration) (codec mjpeg)",
+      " V....D mjpeg_vaapi          MJPEG (VAAPI) (codec mjpeg)",
+      " A....D aac                  AAC (Advanced Audio Coding)"
+    ]
+  },
+  "libraries": {
+    "returncode": 0,
+    "lines": [
+      "\tlibvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1",
+      "\tlibpulse.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpulse.so.0",
+      "\tlibpulse-simple.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpulse-simple.so.0",
+      "\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-vksc-core.so.1",
+      "\tlibnvidia-tls.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-tls.so.595.91.07",
+      "\tlibnvidia-tileiras.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-tileiras.so.595.91.07",
+      "\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-sandboxutils.so.1",
+      "\tlibnvidia-rtcore.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-rtcore.so.595.91.07",
+      "\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.1",
+      "\tlibnvidia-present.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-present.so.595.91.07",
+      "\tlibnvidia-pkcs11-openssl3.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.595.91.07",
+      "\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-opticalflow.so.1",
+      "\tlibnvidia-opticalflow.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-opticalflow.so",
+      "\tlibnvidia-opencl.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-opencl.so.1",
+      "\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-nvvm70.so.4",
+      "\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-nvvm.so.4",
+      "\tlibnvidia-ngx.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-ngx.so.1",
+      "\tlibnvidia-ml.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+      "\tlibnvidia-gpucomp.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-gpucomp.so.595.91.07",
+      "\tlibnvidia-glvkspirv.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.595.91.07",
+      "\tlibnvidia-glsi.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-glsi.so.595.91.07",
+      "\tlibnvidia-glcore.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-glcore.so.595.91.07",
+      "\tlibnvidia-encode.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-encode.so.1",
+      "\tlibnvidia-encode.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-encode.so",
+      "\tlibnvidia-eglcore.so.595.91.07 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-eglcore.so.595.91.07",
+      "\tlibnvidia-egl-xlib.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-egl-xlib.so.1",
+      "\tlibnvidia-egl-xcb.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-egl-xcb.so.1",
+      "\tlibnvidia-egl-wayland2.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-egl-wayland2.so.1",
+      "\tlibnvidia-egl-gbm.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-egl-gbm.so.1",
+      "\tlibnvidia-cfg.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-cfg.so.1",
+      "\tlibnvidia-allocator.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnvidia-allocator.so.1",
+      "\tlibasound.so.2 (libc6,x86-64) => /lib/x86_64-linux-gnu/libasound.so.2",
+      "\tlibX11.so.6 (libc6,x86-64) => /lib/x86_64-linux-gnu/libX11.so.6",
+      "\tlibX11.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libX11.so",
+      "\tlibXrandr.so.2 (libc6,x86-64) => /lib/x86_64-linux-gnu/libXrandr.so.2",
+      "\tlibXi.so.6 (libc6,x86-64) => /lib/x86_64-linux-gnu/libXi.so.6",
+      "\tlibSDL2-2.0.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libSDL2-2.0.so.0",
+      "\tlibGL.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libGL.so.1"
+    ]
+  },
+  "engine_needed": {
+    "returncode": 0,
+    "lines": [
+      " 0x000000000000000f (RPATH)              Library rpath: [${ORIGIN}:${ORIGIN}/..:${ORIGIN}/NotForLicensees:${ORIGIN}/../../../Engine/Binaries/ThirdParty/Qualcomm/Linux:${ORIGIN}/../../../Engine/Binaries/ThirdParty/PhysX3/Unix/x86_64-unknown-linux-gnu]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libpthread.so.0]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-Core.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-CoreUObject.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-Engine.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-InputCore.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-MoviePlayer.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-MoviePlayerProxy.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-Projects.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-RenderCore.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-RHI.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-ApplicationCore.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-Slate.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-SlateCore.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-TraceLog.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-PreLoadScreen.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-InstallBundleManager.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-MediaUtils.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-DerivedDataCache.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-UnrealEd.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-DesktopPlatform.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libUnrealEditor-UnixCommonStartup.so]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [librt.so.1]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]",
+      " 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]"
+    ]
+  }
+}

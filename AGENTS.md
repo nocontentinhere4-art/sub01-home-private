@@ -1,5 +1,18 @@
 # SUB-01 (private): rules for every agent (Codex, Claude, any other)
 
+## Highest priority: RunPod request discipline (owner, 2026-10-26)
+
+Avoiding another RunPod API rate-limit block takes precedence over speed and parallel work.
+Use one designated provider caller and an explicit bounded request plan. No automatic provider
+polling, retries, fallback endpoints, or duplicate calls by other agents. On a rate-limit response,
+record Retry-After and stop provider requests; do not test the block repeatedly. A timeout or
+ambiguous mutation is not permission to retry. Prefer the already working direct pod shell for
+application work, using bounded sessions and no blind retries. Keep a request ledger.
+Do not install or restart any automatic pod-stop guard. Historical guard/deadline instructions
+below are obsolete and must not be used. No top-ups or credential changes. Preserve original
+resume20/21 state; missing state does not authorize a historical or empty replacement.
+
+
 Same rules as `CLAUDE.md`; this file exists so that Codex (and other agents that read `AGENTS.md`) get them too.
 
 **Read `HANDOFF.md` first.** It holds the main goal, the ordered plan, the last-observed pod state and the exact resume

@@ -1,0 +1,20 @@
+{
+  "roots": [
+    "/home/unreal/.sub01-private/k07-proof-inputs-20261026",
+    "/workspace/sub01-k07-proof-inputs-20261026"
+  ],
+  "hashes": {
+    "sub01-voice-reference-k07.wav": "d8ce97537faff90e4f37044b2260157bede82775c6c97264ae523f9b775180c0",
+    "k07_bounded_synthesis.py": "2cab76ee2991565ef6ca76c5cd470f96c4cfc30d1860dc04db75fee1fabf2c66",
+    "k07-synthesis-input-manifest.json": "067dd6bcedc0a8a2ec0cb2a14c3053f08c0c578e58ef00db991845a9ebc2f72c",
+    "k07-synthesis-review-question.txt": "cd32b5a2437ced11456eb4e885ffaf5f9dcaab0f43bd33e2f8779a43f903b32a"
+  },
+  "reference": {
+    "frames": 192000,
+    "rate": 24000,
+    "channels": 1,
+    "seconds": 8.0
+  },
+  "executed": false,
+  "status": "inputs-staged-and-readback-verified"
+}

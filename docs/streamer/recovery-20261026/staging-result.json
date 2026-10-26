@@ -1,0 +1,14 @@
+{
+  "status": "STAGED_ONLY_NOT_LAUNCHED",
+  "receipt_sha256": "c7d2ae1811fea6dc9e49728cef4e0835e65a17ed9de5beb9abe173489b63cbec",
+  "persistent_copy_verified": true,
+  "destination": "/home/sub01-recovery-stage-20261026",
+  "files": {
+    "native": 5640,
+    "runtime-source": 1297,
+    "voice-public": 6
+  },
+  "script_sha256": "58bbcfe5808b261f48309e50308dab9f1038a877ac053f4d0c20b8dec18a8fde",
+  "original_state_restored": false,
+  "applications_started": false
+}

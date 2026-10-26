@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**A: APPROVE** \u2014 for the stated temporary native diagnostic only.\n\n**B: APPROVE** \u2014 subject to the stated global pre-GPU balance check and serialization after A has fully stopped.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 705,
+    "completion_tokens": 1444,
+    "total_tokens": 2149,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1387
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 512
+    }
+  },
+  "seconds": 53.08
+}

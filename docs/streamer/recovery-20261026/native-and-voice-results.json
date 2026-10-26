@@ -1,0 +1,40 @@
+{
+  "native_frames": 4947,
+  "whole_delivery_fps": 54.952957959779134,
+  "final_window_seconds": 28.18499994277954,
+  "final_window_samples": 15,
+  "final_fps_min": 58.938262939453125,
+  "final_fps_median": 59.99907684326172,
+  "first_frame_visual": "Decoded1920x1080; displays shader/texture preparation and incomplete appearance. Not final visual acceptance.",
+  "voice": {
+    "status": "one-synthesis-pass-not-live-acceptance",
+    "service_started": false,
+    "fallback_permitted": false,
+    "device_playback": false,
+    "voice_quality_acceptance": false,
+    "load_seconds": 11.428530447068624,
+    "synthesis_seconds": 0.6199589050374925,
+    "text": "Ready for the private audio check.",
+    "seconds": 1.68,
+    "rms": 2548.411686284745,
+    "peak": 17002,
+    "clipped_fraction": 0.0,
+    "wav_sha256": "020ab7f52942702013f67eac7ae0ae6c0f770f2471134bd3197a6ba19233b3e2",
+    "reference_sha256": "d8ce97537faff90e4f37044b2260157bede82775c6c97264ae523f9b775180c0",
+    "model_revision": "5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18",
+    "exaggeration": 0.45,
+    "cfg_weight": 0.5
+  },
+  "native_owned_processes_stopped": true,
+  "persistent": "/workspace/sub01-diagnostic-results-20261026",
+  "manifest": {
+    "native-receipt.json": "215b73a50b95439fefb9e8188d2df9c4480ee77a239aded6722d6134b9f0793f",
+    "native-first-frame.jpg": "bfadb340296f9fca059033225ba852a7457aeadae4c5efbf51cb499d1712bb93",
+    "native-native.log": "1d0cd7a90a70abd650c50bd5a9c03039abf72a762d46853a78fd540d667979cb",
+    "native-xvfb.log": "6d73d78138c41bea466314919237a4fe998e5b670a356ab2012f328fff769a7b",
+    "voice-result.json": "9eb272a17b263adcce0bfa7df9d78a4ba11ab35bed712e5d4f8909f18fa0655d",
+    "voice-supervisor.json": "8f9b76282bea0638e1874ce73ed126d2bcbc296e268f0dd8f4b6b8ec3414eb3e",
+    "voice-k07-proof.wav": "020ab7f52942702013f67eac7ae0ae6c0f770f2471134bd3197a6ba19233b3e2",
+    "voice-worker.log": "2553c4fd65d978ebe83a8ca10ae74eb871722def2ef97a3599ad4565592c06a1"
+  }
+}

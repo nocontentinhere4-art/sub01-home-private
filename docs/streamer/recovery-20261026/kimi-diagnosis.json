@@ -1,0 +1,22 @@
+{
+  "utc": "2026-10-26T02:46:57.814590+00:00",
+  "attempts": 1,
+  "max_tokens": 16,
+  "model": "kimi-k3.1-pro",
+  "provider": "Moonshot; not RunPod",
+  "http_status": 200,
+  "finish_reason": "length",
+  "usage": {
+    "prompt_tokens": 89,
+    "completion_tokens": 16,
+    "total_tokens": 105,
+    "completion_tokens_details": {
+      "reasoning_tokens": 13
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 0
+    }
+  },
+  "classification": "request-accepted",
+  "seconds": 6.53
+}

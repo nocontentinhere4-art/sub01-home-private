@@ -1,0 +1,12 @@
+{
+  "root": "/workspace/sub01-recovery-20261026/preservation-0319",
+  "verified": true,
+  "files": {
+    "recovery-current-20261026-031904.tar.gz": "1654355d7db6020ab8bcf5e268258eaa8dbd6737e77dd5e403cdc7de295a790e",
+    "recovery-current-20261026-031904.manifest.json": "45ab25127922adebfd9f1ce8bfea32ad0771b16bde80fcc8a7617dbef730768b",
+    "HANDOFF.md": "f1c49eeef921e913122961d74a7573103e5fdc49764d2d850aef332764cea461",
+    "integrated_readiness.py": "b11ea43093e0b462e6da307c572dde707370ef58ccdd8434cdce5f7d91cd66cb",
+    "integrated-static-validation.json": "8863c9fe29e5c86bcfe2c65a6fe18b0f0a58f3df60142d7758420a4878cfa2c8",
+    "integrated-plan-review.json": "b7f3be4468c814b350e2b79770888947b411a2918b935eb347dcc413e84cae1d"
+  }
+}

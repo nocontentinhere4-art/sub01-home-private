@@ -1,0 +1,118 @@
+Review bounded native-only RTX5090 proof; no backend/agent restoration, Vagon, public service, build, guard or pip. Existing STOP stays. Proposed native_render_validation.py derives m5 launch using exact staged v24 module pin1c78...69b0 and persistent engine. Current Xvfb/xauth and unreal1001 setup verified. Missing old brain state remains explicit; manual streamer visual only.
+
+Launch private Xvfb:99 with ephemeral private xauthority, -nolisten tcp. Run native as unreal1001, environment token read existing file and never printed/argv. Persistent sanitized logs redact token. CPU cap min6/current quota minus1, using actual allowed affinity, not hardcoded old cores. Fixed fresh output directory, UID/starttick receipts; no matching runtime/MEASURING allowed. Pre-existing main FIFO/status rejected. FIFO fixed by native install_cam2.py:59 and install_v24.py:444/531: /home/unreal/.sub01-private/streamer/main.mjpeg and main.json. Consume FIFO locally, save first JPEG, count complete JPEG deliveries, sample native_pid-bound status fps/capture_fps/go. Warmup bound900s followed90s observation; teardown only spawned process groups with matching PID/startticks. First-frame JPEG still requires decode/visual inspection; raw delivery numbers are not automatically60fps acceptance.
+
+Legacy BigBuckBunny launcher assert omitted in this derived manual-only proof; no fake movie or download. Exact local Sub01HomeLab.cpp SHA c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628 and Sub01HomeHands.cpp SHA2462b6746880b3d5145bb0251d3c5800c17dfb64704a87eaaafc4242c648d0c8 match actual staging receipt; neither references BigBuckBunny, runtime-tools or webm. This scoped source evidence does not claim movie/browser functions work.
+
+Approve or identify critical changes. Candidate syntax-checked only, never executed. No new external requests from preparation agent.
+
+Candidate implementation:
+#!/usr/bin/env python3
+"""Candidate for one review; NOT executed. Native-only bounded diagnostic."""
+import hashlib,json,math,os,pwd,secrets,select,signal,stat,subprocess,threading,time
+from pathlib import Path
+P=Path('/home/unreal/.sub01-private');STREAM=P/'streamer'
+PROJECT=Path('/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject')
+ENGINE='/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+OUT=Path('/workspace/sub01-native-render-validation-20261026')
+PIN='1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b'
+def need(ok,msg):
+ if not ok:raise RuntimeError(msg)
+def digest(p):
+ h=hashlib.sha256()
+ with p.open('rb')as f:
+  for b in iter(lambda:f.read(1024**2),b''):h.update(b)
+ return h.hexdigest()
+def ticks(pid):return Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19]
+def main():
+ need(os.geteuid()==0,'Root orchestrator required')
+ need((STREAM/'STOP').is_file(),'STOP required')
+ need(not Path('/tmp/sub01-share/MEASURING').exists(),'MEASURING active')
+ need(not OUT.exists()and not OUT.is_symlink(),'Output exists; no rerun')
+ need(not Path('/tmp/.X11-unix/X99').exists()and not Path('/tmp/.X99-lock').exists(),'Display99 occupied')
+ need(not (STREAM/'main.mjpeg').exists()and not (STREAM/'main.json').exists(),'Existing main tap; inspect first')
+ need(digest(PROJECT.parent/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==PIN,'Native module mismatch')
+ # Legacy movie assertion omitted for this manual visual-only probe: exact staged
+ # Sub01HomeLab.cpp and Sub01HomeHands.cpp have no movie path/reference. No fake asset.
+ u=pwd.getpwnam('unreal');need(u.pw_uid==1001 and u.pw_gid==1001,'Unexpected runtime identity')
+ for entry in Path('/proc').iterdir():
+  if not entry.name.isdigit():continue
+  try:comm=(entry/'comm').read_text().strip()
+  except OSError:continue
+  need(not comm.startswith(('UnrealEditor','Xvfb','ffmpeg')),'Matching runtime already active')
+ allowed=sorted(os.sched_getaffinity(0));budget=float(len(allowed))
+ quota=Path('/sys/fs/cgroup/cpu.max')
+ if quota.exists():
+  q,period=quota.read_text().split()
+  if q!='max':budget=min(budget,int(q)/int(period))
+ need(budget>=2,'Insufficient CPU quota for bounded proof')
+ cores=max(1,min(6,math.floor(budget)-1));cpus=set(allowed[:cores])
+ token=(P/'operator-token').read_text().strip();need(len(token)>=16 and '\n'not in token,'Invalid existing operator token')
+ os.umask(0o077);OUT.mkdir(mode=0o700);os.chown(OUT,1001,1001)
+ receipt={'scope':'native-only, no historical backend state restored','phase':'preparing','cpu_budget':budget,'game_cpus':sorted(cpus),'processes':[],'samples':[],'services_backend_agent':False}
+ def save():
+  tmp=OUT/'receipt.tmp';tmp.write_text(json.dumps(receipt,indent=2));os.replace(tmp,OUT/'receipt.json')
+ def drop():os.setgroups([]);os.setgid(1001);os.setuid(1001);os.sched_setaffinity(0,cpus)
+ children=[];threads=[]
+ def spawn(name,args,env):
+  child=subprocess.Popen(args,env=env,cwd='/home/unreal',stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=drop)
+  ident=ticks(child.pid);children.append((child,ident));receipt['processes'].append({'name':name,'pid':child.pid,'start_ticks':ident});save()
+  def drain():
+   written=0
+   with (OUT/(name+'.log')).open('xb')as log:
+    for line in iter(child.stdout.readline,b''):
+     safe=line.replace(token.encode(),b'[REDACTED]')
+     if written+len(safe)<=128*1024**2:log.write(safe);written+=len(safe)
+  thread=threading.Thread(target=drain,daemon=True);thread.start();threads.append(thread);return child
+ base={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/home/unreal','USER':'unreal','LANG':'C.UTF-8'}
+ auth=OUT/'xauthority';auth.touch(mode=0o600);os.chown(auth,1001,1001)
+ # Ephemeral local display cookie; never printed or persisted outside private authfile.
+ request='add :99 MIT-MAGIC-COOKIE-1 '+secrets.token_hex(16)+'\n'
+ subprocess.run(['/usr/bin/xauth','-f',str(auth)],input=request,text=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=10,env=base,preexec_fn=drop)
+ control=OUT/'native-control.json';control.write_text('{"revision":0}\n');os.chown(control,1001,1001)
+ fd=None
+ try:
+  x=spawn('xvfb',['/usr/bin/Xvfb',':99','-screen','0','1920x1080x24','-nolisten','tcp','-auth',str(auth)],base)
+  until=time.monotonic()+15
+  while not Path('/tmp/.X11-unix/X99').exists():
+   need(x.poll()is None and time.monotonic()<until,'Xvfb failed');time.sleep(.2)
+  env=dict(base,DISPLAY=':99',SDL_VIDEODRIVER='x11',XAUTHORITY=str(auth),XDG_RUNTIME_DIR=str(P/'xdg-runtime'),SUB01_ADMIN_TOKEN=token,SUB01_HOME_ORIGIN='http://127.0.0.1:8831',SUB01_PC_ORIGIN='http://127.0.0.1:8832',LD_LIBRARY_PATH='/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
+  args=[ENGINE,str(PROJECT),'/Game/Sub01Home/ActualHome','-game','-Sub01CompletionSandbox','-Sub01ManualView','-Sub01StreamerVisual','-Sub01NativeControl='+str(control),'-vulkan','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-corelimit='+str(cores),'-RenderOffScreen','-windowed','-NoBorder','-WinX=0','-WinY=0','-ResX=1920','-ResY=1080','-ForceRes','-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0','-stdout','-FullStdOutLogOutput']
+  game=spawn('native',args,env);receipt['phase']='warmup';save()
+  deadline=time.monotonic()+900;first=None;frames=0;buf=b'';last_sample=0
+  while time.monotonic()<deadline:
+   need(game.poll()is None,'Native exited');need((STREAM/'STOP').exists(),'STOP removed')
+   need(not Path('/tmp/sub01-share/MEASURING').exists(),'External MEASURING appeared')
+   fifo=STREAM/'main.mjpeg'
+   if fd is None and fifo.exists():
+    s=fifo.lstat();need(stat.S_ISFIFO(s.st_mode)and s.st_uid==1001,'Unexpected FIFO');fd=os.open(fifo,os.O_RDONLY|os.O_NONBLOCK|os.O_NOFOLLOW)
+   if fd is not None and select.select([fd],[],[],.05)[0]:
+    chunk=os.read(fd,1024**2)
+    if not chunk:time.sleep(.02)
+    buf+=chunk;need(len(buf)<16*1024**2,'Frame buffer exceeded')
+    while b'\xff\xd9'in buf:
+     end=buf.index(b'\xff\xd9')+2;frame,buf=buf[:end],buf[end:];start=frame.find(b'\xff\xd8')
+     if start<0:continue
+     frame=frame[start:];frames+=1
+     if first is None:
+      first=time.monotonic();deadline=first+90;(OUT/'first-frame.jpg').write_bytes(frame);receipt['phase']='sampling';receipt['first_frame_sha256']=digest(OUT/'first-frame.jpg')
+   else:time.sleep(.02)
+   now=time.monotonic()
+   if now-last_sample>=2 and (STREAM/'main.json').exists():
+    try:s=json.loads((STREAM/'main.json').read_text())
+    except (ValueError,OSError):continue
+    need(s.get('native_pid')==game.pid,'Status belongs to other native process')
+    receipt['samples'].append({k:s.get(k)for k in ['native_pid','updated_utc','fps','capture_fps','written','captured','reader','go','go_reason']});last_sample=now;save()
+   if first is not None and now-first>=90:break
+  need(first is not None,'No native frame before warmup deadline')
+  receipt.update(phase='bounded_capture_finished',frames_received=frames,observed_delivery_fps=(frames-1)/(time.monotonic()-first),acceptance='Requires JPEG decode/visual inspection and steady-window fps review; not automatic acceptance');save()
+ finally:
+  if fd is not None:os.close(fd)
+  for child,ident in reversed(children):
+   if child.poll()is None:
+    try:need(ticks(child.pid)==ident,'PID identity changed');os.killpg(child.pid,signal.SIGTERM);child.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+     if ticks(child.pid)==ident:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=10)
+  for thread in threads:thread.join(timeout=3)
+  receipt['owned_processes_stopped']=all(c.poll()is not None for c,_ in children);save()
+if __name__=='__main__':main()

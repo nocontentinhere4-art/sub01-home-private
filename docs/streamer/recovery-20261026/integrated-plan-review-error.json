@@ -1,0 +1,9 @@
+{
+  "http_status": 429,
+  "error_type": "engine_overloaded_error",
+  "insufficient_balance": false,
+  "rate_limit": false,
+  "retry_after": null,
+  "seconds": 6.93,
+  "observed_utc": "2026-10-26T03:17:28.951901+00:00"
+}
