@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "APPROVE ONE RUN",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 6759,
+    "completion_tokens": 2599,
+    "total_tokens": 9358,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2579
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 6656
+    }
+  },
+  "seconds": 100.32
+}

@@ -1,0 +1,7 @@
+{
+  "utc": "2026-10-26T13:58:28.133194+00:00",
+  "pid": 2640,
+  "start_ticks": "59480059",
+  "script_sha256": "35b426374d3fc63217fd5989138845c8c3a6f09cb8de33e2d3b92080f88362f7",
+  "scope": "single cap61 cadence diagnostic, five minutes after real FIFO; not acceptance"
+}

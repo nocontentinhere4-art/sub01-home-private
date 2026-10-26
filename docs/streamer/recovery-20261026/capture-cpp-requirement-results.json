@@ -1,0 +1,182 @@
+{
+  "equal_timestamps": {
+    "old": {
+      "accepted": 1,
+      "calls": 100,
+      "first_six_decisions": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 2,
+      "calls": 100,
+      "first_six_decisions": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  },
+  "near_equal_timestamps": {
+    "old": {
+      "accepted": 1,
+      "calls": 100,
+      "first_six_decisions": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 2,
+      "calls": 100,
+      "first_six_decisions": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  },
+  "pause_then_fast": {
+    "old": {
+      "accepted": 602,
+      "calls": 1202,
+      "first_six_decisions": [
+        true,
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 603,
+      "calls": 1202,
+      "first_six_decisions": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  },
+  "pause_then_1ms": {
+    "old": {
+      "accepted": 62,
+      "calls": 1002,
+      "first_six_decisions": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 63,
+      "calls": 1002,
+      "first_six_decisions": [
+        true,
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  },
+  "reverse_period_change": {
+    "old": {
+      "accepted": 2700,
+      "calls": 7200,
+      "first_six_decisions": [
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 2701,
+      "calls": 7200,
+      "first_six_decisions": [
+        true,
+        true,
+        false,
+        false,
+        true,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  },
+  "reader_reconnect": {
+    "old": {
+      "accepted": 2,
+      "calls": 6,
+      "first_six_decisions": [
+        true,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    },
+    "candidate": {
+      "accepted": 3,
+      "calls": 6,
+      "first_six_decisions": [
+        true,
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "direct_deadline_invariants": "PASS",
+      "independent_hand_derived_requirements": "PASS"
+    }
+  }
+}

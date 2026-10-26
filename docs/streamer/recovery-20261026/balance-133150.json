@@ -1,0 +1,12 @@
+{
+  "source": "Claude message83 visibly read in authorized Chrome",
+  "utc": "2026-10-26T13:31:50Z",
+  "http_status": 200,
+  "seconds": 0.51,
+  "balance_usd": 33.984343,
+  "retry_after": null,
+  "provider_requests_total": 6,
+  "provider_reads_completed": 5,
+  "provider_mutations_completed": 1,
+  "next_due_utc": "2026-10-26T15:31:50Z"
+}

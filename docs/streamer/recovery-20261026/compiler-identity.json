@@ -1,0 +1,36 @@
+{
+  "toolchain_version": "v26_clang-20.1.8-rockylinux8\n",
+  "entries": [
+    "bin",
+    "etc",
+    "include",
+    "lib",
+    "lib64",
+    "libexec",
+    "share",
+    "usr"
+  ],
+  "compiler_files": [
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+      "bytes": 148543152,
+      "sha256": "e6166786aee0388cc170ab761d8d51d6e0d708cc5ca533b0330f356ca99468cf",
+      "version_exit": 0,
+      "version": "clang version 20.1.8 (github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin\n",
+      "error": ""
+    },
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/clang",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/clang",
+      "bytes": 148543152,
+      "sha256": "e6166786aee0388cc170ab761d8d51d6e0d708cc5ca533b0330f356ca99468cf"
+    },
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/ld.lld",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/ld.lld",
+      "bytes": 85748680,
+      "sha256": "65f1d662ca49467c86f7c9f59d134d898135ee09899d72be235a0eee53d6280b"
+    }
+  ]
+}

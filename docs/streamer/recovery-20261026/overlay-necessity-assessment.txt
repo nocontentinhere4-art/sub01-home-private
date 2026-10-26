@@ -1,0 +1,22 @@
+Offline assessment: is historical exact-header-overlay necessary?
+
+Conclusion: required to reproduce the recorded build invocation; NOT proven intrinsically required by current C++ source. Available evidence cannot distinguish (A) supplying ordinary missing authentic headers from (B) redirecting existing headers to another exact vendor revision or other contents. Do not claim either without mapping/target bytes. The local native source has normal includes, not a reference to overlay JSON. The overlay is injected by the external compiler flag in all v22–v24 wrappers.
+
+Evidence distinctions
+1. tools/private_home_engine_extract.py:4–36 selects every engine-full.zip member, copying regular files and symlinks. It is not an overlay generator and contains no header substitutions. Its completion marker verifies executable presence and records total bytes, not a cryptographically authenticated engine/source revision or exhaustive SHA manifest.
+2. tools/recover_private_engine_runtime_overlay.py:74–87 deliberately excludes Engine/Source entirely; also excludes plugin Source/Intermediate, platform Source/Intermediate and compiler SDK trees. It verifies selected members using archive CRC/size and records compiler_complete:false (line156). This supports a historically incomplete build environment, not the conclusion that ALL later overlay entries were missing rather than replacements. Current SDK presence proves later additions beyond this particular restore scope.
+3. tools/pod/onpod/build-v22.sh/v23.sh and build-v24.sh pass -AdditionalCompilerArguments=-ivfsoverlay <project-parent>/exact-header-overlay.json. They neither produce the mapping nor describe its entries. Therefore replaying these commands requires that file and its resolved external targets. Removing the flag changes the build input and needs separate evidence/review.
+4. Current engine5.8.3 actualCL58210709/compatible55116800 and compiler20.1.8 were independently read by root. Those identifiers establish declared versions, not hashes of every consumed header or equivalence to overlay inputs. Existing v24 .so/source hashes establish preserved outputs/source, not a reversible derivation of header contents.
+
+Exact minimal evidence prerequisite (not an invented filename list)
+- Original overlay JSON bytes and hash, plus its generation-time working directory if any mapping paths are relative; parse every roots/contents/name/external-contents entry and any overlay options affecting path resolution/case/use-external-names. A filename alone is insufficient.
+- All resolved external target files or directory mappings, hashes and proven source archive/revision; include any symlink resolution. Compare their virtual-path bytes with current native Engine files. Until mapping is found, the minimal header set CANNOT honestly be named.
+- Original build response/dependency files or logged complete compiler argv for Sub01HomeLab translation units, where preserved, to show overlay use, include paths, defines, generated headers and relevant PCH. No such paths have been newly established in this task; do not guess a directory and assert coverage.
+- Proven immutable project source/build rules and exact engine/SDK inputs already partly recorded; generated header/UHT dependencies are separate from ordinary vendor headers. Successful UBT startup or matching BuildId cannot prove their completeness.
+
+Possible future evidence-based outcomes
+A. Mapping only redirects missing paths to authenticated byte-identical headers from the same engine distribution: a reviewed isolated complete-header restoration can be a legitimate new build setup without the historical overlay. This would be input equivalence established by hashes, not literal replay of the old command; binary bit-reproducibility is a separate gate.
+B. Mapping shadows differing headers or exact revision unknown: preserve/recover those exact inputs or stop. Never infer declarations from binary symbols, fabricate engine API stubs, or substitute Mac/newer-version headers.
+C. Mapping unrecovered: build prerequisite remains unresolved; neither dropping the overlay nor inventing an empty overlay is justified by current evidence.
+
+For design consultation: ask approval of evidence classification/read-only comparison and an isolated build plan only AFTER authentic mapping/headers are supplied. Current scheduling correction remains design-only; this assessment authorizes no build, runtime, source edit or installation.

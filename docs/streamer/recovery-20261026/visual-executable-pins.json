@@ -1,0 +1,82 @@
+{
+  "utc": "2026-10-26T16:30:13.591793+00:00",
+  "executables": {
+    "/usr/sbin/docker-init": {
+      "sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",
+      "bytes": 765072,
+      "resolved": "/usr/sbin/docker-init",
+      "uid": 65534,
+      "mode": "0o755"
+    },
+    "/usr/bin/bash": {
+      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "bytes": 1446024,
+      "resolved": "/usr/bin/bash",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/usr/sbin/nginx": {
+      "sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",
+      "bytes": 1313752,
+      "resolved": "/usr/sbin/nginx",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/usr/sbin/sshd": {
+      "sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",
+      "bytes": 921416,
+      "resolved": "/usr/sbin/sshd",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/usr/bin/python3.12": {
+      "sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",
+      "bytes": 8021824,
+      "resolved": "/usr/bin/python3.12",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/usr/bin/sleep": {
+      "sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",
+      "bytes": 35336,
+      "resolved": "/usr/bin/sleep",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/usr/bin/Xvfb": {
+      "sha256": "0081b27338b510ec5e2068a93c6db31480872de9bb082f347f3747ef1648e794",
+      "bytes": 2064864,
+      "resolved": "/usr/bin/Xvfb",
+      "uid": 0,
+      "mode": "0o755"
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd": {
+      "sha256": "7e54a59c2740d66003656e7a8f33d11e7348bb97d33483e98f05fedd0784284a",
+      "bytes": 450848,
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd",
+      "uid": 0,
+      "mode": "0o777"
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer": {
+      "sha256": "aadf17081e53c29a02a413449ca3b3dab9032ba3466ddf37ec9f909f59313461",
+      "bytes": 1523816,
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer",
+      "uid": 0,
+      "mode": "0o777"
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver": {
+      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",
+      "bytes": 21032680,
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver",
+      "uid": 0,
+      "mode": "0o777"
+    },
+    "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver": {
+      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",
+      "bytes": 21032680,
+      "resolved": "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver",
+      "uid": 1001,
+      "mode": "0o777"
+    }
+  }
+}

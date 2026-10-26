@@ -1,0 +1,247 @@
+{
+  "utc": "2026-10-26T16:17:33.643686+00:00",
+  "inventory_pid": 4541,
+  "inventory_parent": 4536,
+  "processes": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "docker-init",
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "argv0_basename": "docker-init",
+      "script_basenames": [],
+      "exe": "/usr/sbin/docker-init"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "start.sh",
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "argv0_basename": "bash",
+      "script_basenames": [],
+      "exe": "/usr/bin/bash"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "nginx",
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "argv0_basename": "nginx",
+      "script_basenames": [],
+      "exe": "/usr/sbin/nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "comm": "nginx",
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "argv0_basename": "nginx: worker process",
+      "script_basenames": [],
+      "exe": "permission-denied"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "sshd",
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "argv0_basename": "sshd [listener] 0 of 10-100 startups",
+      "script_basenames": [],
+      "exe": "/usr/sbin/sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "start.sh",
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "argv0_basename": "bash",
+      "script_basenames": [],
+      "exe": "/usr/bin/bash"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "jupyter-lab",
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "argv0_basename": "python",
+      "script_basenames": [],
+      "exe": "/usr/bin/python3.12"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "sleep",
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "argv0_basename": "sleep",
+      "script_basenames": [],
+      "exe": "/usr/bin/sleep"
+    },
+    {
+      "pid": 4536,
+      "ticks": 60314501,
+      "ppid": 122,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "bash",
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "argv0_basename": "bash",
+      "script_basenames": [],
+      "exe": "/usr/bin/bash"
+    },
+    {
+      "pid": 4541,
+      "ticks": 60314608,
+      "ppid": 4536,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "comm": "python3",
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "argv0_basename": "python3",
+      "script_basenames": [],
+      "exe": "/usr/bin/python3.12"
+    }
+  ]
+}

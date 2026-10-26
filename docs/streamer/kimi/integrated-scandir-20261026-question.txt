@@ -1,0 +1,16 @@
+Exact tiny correction to the attempt02 you just approved (approved full candidate SHA b398df22ea3ad74f22f3ab29adbdd492d4ac9ff1e41bd147ac2aded5d6cb65b9). NO runtime launch occurred. A read-only execution of the exact FD census exposed its own transient directory FD: Path.iterdir materializes os.listdir then closes the enumeration FD before fd.stat, yielding ENOENT /proc/<self>/fd/3 and strict abort. Corrected ONLY root enumeration to keep os.scandir context open throughout FD inspection. Full corrected census then actually PASSED on the pod, including credentialed nginx check; no exclusion, exception bypass, runtime/IPC writes. All other bytes unchanged. Approve this exact delta for ONE attempt02 runtime run with all prior limits; concise verdict, critical blockers only.
+Corrected full candidate SHA256: 7ba3bbea5cf5a9415787f826076d363c72bf1b512238f76ae289e34edb60dd75
+--- 
++++ 
+@@ -89,8 +89,9 @@
+   except FileNotFoundError:
+    need(not proc.exists(),'Process identity unreadable');continue
+   try:
+-   for fd in (proc/'fd').iterdir():
+-    v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')
++   with os.scandir(proc/'fd') as entries:
++    for fd in entries:
++     v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')
+    need(ticks(int(proc.name))==before,'Process identity changed during census')
+   except PermissionError:
+    rows={line.split(':',1)[0]:line.split(':',1)[1].split() for line in (proc/'status').read_text().splitlines() if ':'in line}

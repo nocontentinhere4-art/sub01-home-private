@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**APPROVED \u2014 precise timing clarification only.** The normative interpretation is:\n\n- **Sampling/freshness:** Poll and validate with a maximum **250 ms start-to-start interval**. At **every sample**, compute `age = validation_time \u2212 receipt_timestamp` using the same clock/timebase. Accept only:\n  - `age \u2264 500 ms`, and\n  - `age \u2265 \u221250 ms` (maximum future tolerance).\n  \n  Thus, a receipt may be at most 50 ms future-dated and at most 500 ms old. **Any per-sample age violation aborts immediately**; averaging cannot mask a violation. A missed 250 ms sampling deadline is likewise a failure.\n\n- **Per-sample validation:** Require exact `nativePID`/start-ticks identity and all approved schema-2/state/clip/camera checks, **1.5 s event expiry**, and sequence advancement with **no regression**. A newly observed receipt must advance the sequence; repeated validation must never accept a regression.\n\n- **Capture window:** Start immediately before the first expected wrap, within **`5.2 s \u2264 clip_time < 5.5 s`** of the 5.5 s clip. Record the **fixed, full 15.0 s**. The capture must contain **three observed expected wraps**, thereby containing **two complete wrap-to-wrap loops**, each approximately 5.5 s subject only to sampling tolerance. Merely counting two wraps is insufficient. No early termination, shortened capture, or timing extension is permitted; failure to obtain the required wraps within the fixed capture is a failure.\n\n- **GO scope:** The actual pinned native `main.json` GO source validates **transport only**; it is **not an FPS gate**. **Performance remains `NOT_ASSESSED`.**\n\nAll other approved design, provenance/source, STOP, cleanup, and complete-frame-bounds requirements remain unchanged. The independently passed three-asset import and verified teardown are noted. This grants no visual-execution approval and does not change readiness: **code remains `NOT_READY` pending the exact combined review.**",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 354,
+    "completion_tokens": 2552,
+    "total_tokens": 2906,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2117
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 256
+    }
+  },
+  "seconds": 89.05
+}

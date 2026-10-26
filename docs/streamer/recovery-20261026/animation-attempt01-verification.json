@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-26T15:50:47.052238+00:00",
+  "scope": "independent readback of failed first preflight",
+  "preservation_files_verified": 8,
+  "source_baseline_files_verified": 5640,
+  "original_bytes_unchanged": true,
+  "three_assets_absent": true,
+  "import_invocation_exists": false,
+  "refpose_result_exists": false,
+  "jobs": [],
+  "stop": true,
+  "measuring": false
+}

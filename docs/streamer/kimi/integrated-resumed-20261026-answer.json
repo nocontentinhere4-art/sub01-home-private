@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**Verdict: APPROVED. No critical corrections required.**\n\nApproval is limited to the single bounded private run on `recovered5090`, with all stated preflight, pinning, ownership, transition, failure, evidence-retention, and cleanup constraints treated as mandatory.\n\nThe result may establish only **integrated native visual + offline K07 readiness + local recording/HLS pipeline readiness**. It must not be reported as final 30-minute acceptance or as proof of backend identity, live speech/head sync, camera2, Vagon/desktop delivery, or final appearance.\n\nAny exception, placeholder-only native evidence, unexpected restart/source/FFmpeg-identity change, invalid recording/HLS output, or low-disk condition makes the run failed/aborted\u2014not a partial success\u2014and does not permit a launcher retry.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 876,
+    "completion_tokens": 2223,
+    "total_tokens": 3099,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2050
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 768
+    }
+  },
+  "seconds": 77.86
+}

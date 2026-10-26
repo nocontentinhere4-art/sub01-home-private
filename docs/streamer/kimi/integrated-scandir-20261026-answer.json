@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**APPROVED \u2014 no critical blockers in the supplied delta.**\n\nExactly **ONE attempt02 runtime run** is authorized for full candidate SHA256:\n\n`7ba3bbea5cf5a9415787f826076d363c72bf1b512238f76ae289e34edb60dd75`\n\nAll prior limits remain unchanged. No other byte changes or additional runs are covered.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 499,
+    "completion_tokens": 826,
+    "total_tokens": 1325,
+    "completion_tokens_details": {
+      "reasoning_tokens": 729
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 256
+    }
+  },
+  "seconds": 28.67
+}

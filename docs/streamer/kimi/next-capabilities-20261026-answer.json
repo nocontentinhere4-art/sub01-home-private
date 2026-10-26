@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**APPROVE DESIGN WITH REQUIRED CHANGES \u2014 isolated manual proof only.**\n\n1. **STOP meaning / authorization:** The proposal is inconsistent if canonical STOP globally prohibits speech/head driving. Historical v8 approval covers isolated audio transport only, **not** canonical `mouth.json` injection. Keep STOP unchanged and blocking agent/production voice, and record explicit test-only authorization for this single manual utterance and native mouth write. If STOP is global, remove the head-motion portion rather than reinterpreting STOP.\n\n2. **Sole writer / IPC:** The bridge must be fail-closed and become the sole canonical mouth writer only for the utterance window. Preflight **and continuously monitor** for competing writers or unexpected file changes. Validate regular-file/UID, size, schema, freshness, finite `open`, and utterance identity; use same-directory temporary files plus atomic rename. Abort on stale/invalid input, source exit, ownership loss, or STOP deviation under the documented semantics. Preserve and restore prior mouth/tuning state\u2014including prior absence\u2014and verify hashes/metadata. Because tuning requires a strictly larger sequence, restore original tuning bytes **after native exits**, not while it may reject the older sequence.\n\n3. **Timing evidence:** Put request, FIFO/audio write, source-mouth emission, bridge rename, native observation, and captured A/V on one monotonic timeline, with any capture-clock offset measured. Without native consumption timestamps and calibrated A/V alignment, claim only **audio transport plus correlated head-only response**. Since mouth/jaw animation is excluded, do not claim lip-sync or full timing acceptance.\n\n4. **Minimal bound:** One run, one tuning transition, no process restarts, one fixed utterance \u226410 s, one bounded warmup, and one predefined five-minute stable window. Gate the utterance on readiness and capture it while both cameras remain stable. Predeclare pass/fail thresholds using actual per-camera capture/write and director unique-frame cadence\u2014not caps or FIFO settings. Any failure ends the test with evidence preserved; no retry or promotion.\n\nProceed only after the required full exact-code, FD, sole-writer, and restoration review. This would not constitute production or full-system acceptance.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 924,
+    "completion_tokens": 5250,
+    "total_tokens": 6174,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4796
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 768
+    }
+  },
+  "seconds": 202.05
+}

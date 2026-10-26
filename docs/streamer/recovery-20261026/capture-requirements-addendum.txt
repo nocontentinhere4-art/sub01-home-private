@@ -1,0 +1,11 @@
+Additional offline verification after APPROVE DESIGN; source correction unchanged.
+Original review-packet.txt and its tests/results remain frozen. test_cpp_requirements.py is a separate independent requirements suite, not another parity comparison. It compiles only tiny extracted scheduling harnesses with existing local clang, no Unreal/remote execution.
+Six additional cases passed. Each directly inspects native C++ NextAt: accepted calls advance the deadline by at least the active period and leave it at/after current time; rejected and reader-absent calls leave it unchanged. Variable periods are checked using that call's actual period.
+Hand-derived traces:
+- 100 equal timestamps or 100 timestamps100ns apart: original accepts first only; candidate accepts first two then rejects all remaining. This explicitly characterizes a bounded extra startup credit; it does NOT reject duplicate frame callbacks.
+- After3s pause then120Hz: original first6 decisions A,A,R,A,R,A; candidate A,A,A,A,R,A. Every post-pause prefix satisfies accepted<=ceil(elapsed/16666us)+2. Entire10s fast tail including resumed sample601old/602candidate; no accumulated3s debt is repaid.
+- After3s pause then1ms ticks: original rejects first16 then accepts17th; candidate also accepts first1ms tick, then rejects2–16 and accepts17th. Every prefix obeys same bounded-rate condition.
+- Reverse33333→16666us period:2700old/2701candidate among7200calls, tolerance3boundary frames.
+- Reader absent then reconnect at repeated identical times: original A,R,R,A,R,R; candidate A,R,R,A,A,R.
+The earlier pause<=callcount assertion is non-discriminating; the new exact traces, state invariants and every-prefix rate bound supersede it as pause evidence. Parity and behavioral requirements are explicitly distinct. No claim of native rendering, unique frame safety, transport or60fps runtime acceptance follows.
+One initial local Python syntax error (else16666 lacking whitespace) was corrected before harness execution. Full suite then passed. Build prerequisites remain blocked on unproven original overlay/header inputs; no source or runtime change was made.

@@ -1,0 +1,311 @@
+Exact launch review for ONE corrected attempt02. Prior attempt01 failed BEFORE services/IPC mutation on root permission denied proc89 nginx fd. Your design required inspect-or-abort via correctly credentialed bounded helper. Executed a READ-ONLY sameUID65534 helper: all14 nginx FDs readable, stable PID89 ticks54754037 before/after, none match stale IPC. No exclusion or permission weakening is needed. Implemented same logic only for PermissionError, UID/GID consistency and starttick pins, 10s timeout, abort any unobservable live process/FD, including ENOENT from live processes. Helper uses /usr/bin/python3 since runtime venv private ancestor excludes nginx. Original failed output retained; fresh attempt02 output and persistence paths. No source/runtime/model/tuning changes; no launch yet. All previously approved30min limited readiness/STOP/no backend/agent/Vagon/warmup/realFIFO source/run pins/owned cleanup conditions remain. Assess full candidate below for critical launch blockers, return APPROVE ONE RUN or concrete blocker, concise. No repeated full service trial unless this exact candidate approved.
+
+Exact delta:
+--- approved-attempt01.py
++++ attempt02.py
+@@ -1,13 +1,13 @@
+ #!/usr/bin/env python3
+-"""Candidate for one review; NOT executed. Integrated readiness only, no live-agent acceptance."""
++"""Attempt02 candidate for exact review; NOT executed. Integrated readiness only, no live-agent acceptance."""
+ import psutil
+ import hashlib,json,math,os,pwd,secrets,select,signal,stat,subprocess,threading,time,shutil,socket,urllib.request
+ from pathlib import Path
+ P=Path('/home/unreal/.sub01-private');STREAM=P/'streamer'
+ PROJECT=Path('/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject')
+ ENGINE='/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+-OUT=Path('/home/unreal/.sub01-private/integrated-readiness-20261026')
+-PERSIST=Path('/workspace/sub01-integrated-readiness-20261026')
++OUT=Path('/home/unreal/.sub01-private/integrated-readiness-20261026-attempt02')
++PERSIST=Path('/workspace/sub01-integrated-readiness-20261026-attempt02')
+ SOURCE=Path('/home/sub01-recovery-stage-20261026/runtime-source')
+ PYTHON='/home/unreal/voice-rt-venv/bin/python'
+ CONFIG=OUT/'voice.json'
+@@ -67,13 +67,40 @@
+  stale=OUT/'stale-ipc';stale.mkdir(mode=0o700)
+  stale_paths=[STREAM/n for n in ['main.mjpeg','main.json','main.mjpeg.lock','cam2.mjpeg','cam2.json','voice.pcm'] if (STREAM/n).exists()]
+  identities={(p.lstat().st_dev,p.lstat().st_ino)for p in stale_paths}
+- for proc in Path('/proc').iterdir():
++ # Inspect every process, using its verified credentials only when root cannot read its FD table.
++ probe_code = """import os,json,pathlib,sys
++pid=int(sys.argv[1]); expected=sys.argv[2]; targets={tuple(x) for x in json.loads(sys.argv[3])}
++p=pathlib.Path('/proc')/str(pid)
++def identity():
++ st=(p/'stat').read_text().rsplit(')',1)[1].split()[19]
++ rows={x.split(':',1)[0]:x.split(':',1)[1].split() for x in (p/'status').read_text().splitlines() if ':' in x}
++ return st,rows['Uid'],rows['Gid']
++before=identity()
++if before[0]!=expected or set(before[1])!={str(os.geteuid())} or set(before[2])!={str(os.getegid())}:raise RuntimeError('Credential/PID mismatch')
++for entry in (p/'fd').iterdir():
++ v=entry.stat()
++ if (v.st_dev,v.st_ino) in targets:raise RuntimeError('IPC open')
++if identity()!=before:raise RuntimeError('Target identity changed')
++print('FD_TABLE_CLEAR')
++"""
++ for proc in list(Path('/proc').iterdir()):
+   if not proc.name.isdigit():continue
++  try:before=ticks(int(proc.name))
++  except FileNotFoundError:
++   need(not proc.exists(),'Process identity unreadable');continue
+   try:
+    for fd in (proc/'fd').iterdir():
+-    try:v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')
+-    except FileNotFoundError:pass
+-  except FileNotFoundError:pass
++    v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')
++   need(ticks(int(proc.name))==before,'Process identity changed during census')
++  except PermissionError:
++   rows={line.split(':',1)[0]:line.split(':',1)[1].split() for line in (proc/'status').read_text().splitlines() if ':'in line}
++   uids=rows['Uid'];gids=rows['Gid']
++   need(len(set(uids))==1 and len(set(gids))==1,'Mixed target credentials; cannot inspect safely')
++   check=subprocess.run(['setpriv','--reuid='+uids[0],'--regid='+gids[0],'--clear-groups','/usr/bin/python3','-I','-c',probe_code,proc.name,before,json.dumps(sorted(identities))],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,timeout=10)
++   need(check.returncode==0 and check.stdout.strip()=='FD_TABLE_CLEAR','Credentialed FD census failed')
++   need(ticks(int(proc.name))==before,'Process identity changed after credentialed census')
++  except FileNotFoundError:
++   need(not proc.exists(),'FD disappeared from a live process; census incomplete')
+  for p in stale_paths:
+   need(not p.is_symlink(),'Stale symlink refused');os.rename(p,stale/p.name)
+  if not target.exists():
+
+Full candidate:
+#!/usr/bin/env python3
+"""Attempt02 candidate for exact review; NOT executed. Integrated readiness only, no live-agent acceptance."""
+import psutil
+import hashlib,json,math,os,pwd,secrets,select,signal,stat,subprocess,threading,time,shutil,socket,urllib.request
+from pathlib import Path
+P=Path('/home/unreal/.sub01-private');STREAM=P/'streamer'
+PROJECT=Path('/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject')
+ENGINE='/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+OUT=Path('/home/unreal/.sub01-private/integrated-readiness-20261026-attempt02')
+PERSIST=Path('/workspace/sub01-integrated-readiness-20261026-attempt02')
+SOURCE=Path('/home/sub01-recovery-stage-20261026/runtime-source')
+PYTHON='/home/unreal/voice-rt-venv/bin/python'
+CONFIG=OUT/'voice.json'
+REFERENCE=P/'k07-proof-inputs-20261026/sub01-voice-reference-k07.wav'
+PINS={'voice_server.py':'95758eb8fd0a4341d6e6fe1a684c1511ca0c98fc8c6f89a753f226a4f5eefce5','streamer_director.py':'d7ff873b40ac390c2004c248e5aa825255bcefd49e44684a077b78d91c799b8c','streamer_hls_serve.py':'2b1aedac7f2d56c5e4ca1b2bb10fe0c13614c7b6210124289021ecd873ab6047'}
+PIN='1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b'
+def need(ok,msg):
+ if not ok:raise RuntimeError(msg)
+def digest(p):
+ h=hashlib.sha256()
+ with p.open('rb')as f:
+  for b in iter(lambda:f.read(1024**2),b''):h.update(b)
+ return h.hexdigest()
+def ticks(pid):return Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19]
+def main():
+ need(os.geteuid()==0,'Root orchestrator required')
+ tune=Path('/workspace/sub01-recovery-20261026/streamer-visual-face-tuning.json');target=P/'streamer-visual-face-tuning.json'
+ tunehash='561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a'
+ need(not tune.is_symlink()and digest(tune)==tunehash,'Tuning source mismatch')
+ if target.exists()or target.is_symlink():need(not target.is_symlink()and digest(target)==tunehash,'Existing tuning differs')
+ need(shutil.which('setpriv')and shutil.which('taskset')and shutil.which('ffprobe'),'Required tool missing')
+ need((STREAM/'STOP').is_file(),'STOP required')
+ need(not Path('/tmp/sub01-share/MEASURING').exists(),'MEASURING active')
+ need(not OUT.exists()and not OUT.is_symlink(),'Output exists; no rerun')
+ need(not Path('/tmp/.X11-unix/X99').exists()and not Path('/tmp/.X99-lock').exists(),'Display99 occupied')
+ need(not PERSIST.exists()and not PERSIST.is_symlink()and shutil.disk_usage('/home').free>10*1024**3,'Output exists or low disk')
+ for port in (8835,8837,8839):
+  with socket.socket()as sock:
+   sock.settimeout(.2);need(sock.connect_ex(('127.0.0.1',port))!=0,'Service port already occupied')
+ for name,pin in PINS.items():need(digest(SOURCE/'scripts'/name)==pin,'Source pin mismatch')
+ need(digest(REFERENCE)=='d8ce97537faff90e4f37044b2260157bede82775c6c97264ae523f9b775180c0','K07 reference mismatch')
+ for oldpid,oldticks in [(928,'55468376'),(932,'55468396')]:
+  need(not Path('/proc',str(oldpid)).exists()or ticks(oldpid)!=oldticks,'Old diagnostic still alive')
+ for display in (99,103):
+  need(not Path('/tmp/.X11-unix/X'+str(display)).exists()and not Path('/tmp/.X'+str(display)+'-lock').exists(),'Display occupied')
+ need(digest(PROJECT.parent/'Binaries/Linux/libUnrealEditor-Sub01HomeLab.so')==PIN,'Native module mismatch')
+ # Legacy movie assertion omitted for this manual visual-only probe: exact staged
+ # Sub01HomeLab.cpp and Sub01HomeHands.cpp have no movie path/reference. No fake asset.
+ u=pwd.getpwnam('unreal');need(u.pw_uid==1001 and u.pw_gid==1001,'Unexpected runtime identity')
+ for entry in Path('/proc').iterdir():
+  if not entry.name.isdigit():continue
+  try:comm=(entry/'comm').read_text().strip()
+  except OSError:continue
+  need(not comm.startswith(('UnrealEditor','Xvfb','ffmpeg')),'Matching runtime already active')
+ allowed=sorted(os.sched_getaffinity(0));budget=float(len(allowed))
+ quota=Path('/sys/fs/cgroup/cpu.max')
+ if quota.exists():
+  q,period=quota.read_text().split()
+  if q!='max':budget=min(budget,int(q)/int(period))
+ need(budget>=2,'Insufficient CPU quota for bounded proof')
+ cores=max(1,min(6,math.floor(budget)-1));cpus=set(allowed[:cores])
+ token=(P/'operator-token').read_text().strip();need(len(token)>=16 and '\n'not in token,'Invalid existing operator token')
+ os.umask(0o077);OUT.mkdir(mode=0o700);os.chown(OUT,1001,1001)
+ cfg={'schema':'sub01.streamer-voice.v1','chosen':'K07','engine':'chatterbox','voice_prompt':str(REFERENCE),'exaggeration':.45,'cfg_weight':.5,'fallback':None}
+ with CONFIG.open('x')as f:json.dump(cfg,f)
+ os.chown(CONFIG,1001,1001);os.chmod(CONFIG,0o600)
+ stale=OUT/'stale-ipc';stale.mkdir(mode=0o700)
+ stale_paths=[STREAM/n for n in ['main.mjpeg','main.json','main.mjpeg.lock','cam2.mjpeg','cam2.json','voice.pcm'] if (STREAM/n).exists()]
+ identities={(p.lstat().st_dev,p.lstat().st_ino)for p in stale_paths}
+ # Inspect every process, using its verified credentials only when root cannot read its FD table.
+ probe_code = """import os,json,pathlib,sys
+pid=int(sys.argv[1]); expected=sys.argv[2]; targets={tuple(x) for x in json.loads(sys.argv[3])}
+p=pathlib.Path('/proc')/str(pid)
+def identity():
+ st=(p/'stat').read_text().rsplit(')',1)[1].split()[19]
+ rows={x.split(':',1)[0]:x.split(':',1)[1].split() for x in (p/'status').read_text().splitlines() if ':' in x}
+ return st,rows['Uid'],rows['Gid']
+before=identity()
+if before[0]!=expected or set(before[1])!={str(os.geteuid())} or set(before[2])!={str(os.getegid())}:raise RuntimeError('Credential/PID mismatch')
+for entry in (p/'fd').iterdir():
+ v=entry.stat()
+ if (v.st_dev,v.st_ino) in targets:raise RuntimeError('IPC open')
+if identity()!=before:raise RuntimeError('Target identity changed')
+print('FD_TABLE_CLEAR')
+"""
+ for proc in list(Path('/proc').iterdir()):
+  if not proc.name.isdigit():continue
+  try:before=ticks(int(proc.name))
+  except FileNotFoundError:
+   need(not proc.exists(),'Process identity unreadable');continue
+  try:
+   for fd in (proc/'fd').iterdir():
+    v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')
+   need(ticks(int(proc.name))==before,'Process identity changed during census')
+  except PermissionError:
+   rows={line.split(':',1)[0]:line.split(':',1)[1].split() for line in (proc/'status').read_text().splitlines() if ':'in line}
+   uids=rows['Uid'];gids=rows['Gid']
+   need(len(set(uids))==1 and len(set(gids))==1,'Mixed target credentials; cannot inspect safely')
+   check=subprocess.run(['setpriv','--reuid='+uids[0],'--regid='+gids[0],'--clear-groups','/usr/bin/python3','-I','-c',probe_code,proc.name,before,json.dumps(sorted(identities))],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,timeout=10)
+   need(check.returncode==0 and check.stdout.strip()=='FD_TABLE_CLEAR','Credentialed FD census failed')
+   need(ticks(int(proc.name))==before,'Process identity changed after credentialed census')
+  except FileNotFoundError:
+   need(not proc.exists(),'FD disappeared from a live process; census incomplete')
+ for p in stale_paths:
+  need(not p.is_symlink(),'Stale symlink refused');os.rename(p,stale/p.name)
+ if not target.exists():
+  with target.open('xb')as f:f.write(tune.read_bytes());f.flush();os.fsync(f.fileno())
+  os.chown(target,1001,1001);os.chmod(target,0o600)
+ need(digest(target)==tunehash,'Tuning copy mismatch')
+ for name in ['recordings','hls']:
+  d=OUT/name;d.mkdir(mode=0o700);os.chown(d,1001,1001)
+ receipt={'scope':'native + K07 readiness + FIFO/libx264/local HLS; STOP means silent audio, empty desktop scaffold, no backend/Vagon/appearance acceptance','phase':'preparing','cpu_budget':budget,'game_cpus':sorted(cpus),'processes':[],'samples':[],'services_backend_agent':False}
+ def save():
+  tmp=OUT/'receipt.tmp';tmp.write_text(json.dumps(receipt,indent=2));os.replace(tmp,OUT/'receipt.json')
+ def unprivileged(args,game=False):
+  selected=cpus if game else set(allowed)-cpus
+  need(selected and shutil.which('setpriv')and shutil.which('taskset'),'Missing privilege/affinity tools')
+  return ['setpriv','--reuid=1001','--regid=1001','--clear-groups','taskset','-c',','.join(map(str,sorted(selected))),*args]
+ children=[];threads=[]
+ def spawn(name,args,env):
+  child=subprocess.Popen(unprivileged(args,name=='native'),env=env,cwd='/home/unreal',stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True)
+  ident=ticks(child.pid);children.append((child,ident));receipt['processes'].append({'name':name,'pid':child.pid,'start_ticks':ident});save()
+  def drain():
+   written=0
+   with (OUT/(name+'.log')).open('xb')as log:
+    for line in iter(child.stdout.readline,b''):
+     safe=line.replace(token.encode(),b'[REDACTED]')
+     if written+len(safe)<=128*1024**2:log.write(safe);written+=len(safe)
+  thread=threading.Thread(target=drain,daemon=True);thread.start();threads.append(thread);return child
+ base={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/home/unreal','USER':'unreal','LANG':'C.UTF-8'}
+ auth=OUT/'xauthority';auth.touch(mode=0o600);os.chown(auth,1001,1001)
+ # Ephemeral local display cookie; never printed or persisted outside private authfile.
+ request='add :99 MIT-MAGIC-COOKIE-1 '+secrets.token_hex(16)+'\nadd :103 MIT-MAGIC-COOKIE-1 '+secrets.token_hex(16)+'\n'
+ subprocess.run(unprivileged(['/usr/bin/xauth','-f',str(auth)]),input=request,text=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=10,env=base)
+ control=OUT/'native-control.json';control.write_text('{"revision":0}\n');os.chown(control,1001,1001)
+ fd=None;ffmpeg_owned=[];cpu_handles={}
+ def api(port,path):
+  req=urllib.request.Request('http://127.0.0.1:'+str(port)+path,headers={'X-Admin-Token':token})
+  with urllib.request.urlopen(req,timeout=3)as response:return json.load(response)
+ def await_ready(port,path,predicate,seconds):
+  until=time.monotonic()+seconds
+  while time.monotonic()<until:
+   need(all(c.poll()is None for c,_ in children),'Owned process exited')
+   try:value=api(port,path)
+   except (OSError,ValueError):time.sleep(1);continue
+   if predicate(value):return value
+   time.sleep(1)
+  raise RuntimeError('Bounded readiness deadline exceeded')
+ try:
+  x=spawn('xvfb',['/usr/bin/Xvfb',':99','-screen','0','1920x1080x24','-nolisten','tcp','-auth',str(auth)],base)
+  until=time.monotonic()+15
+  while not Path('/tmp/.X11-unix/X99').exists():
+   need(x.poll()is None and time.monotonic()<until,'Xvfb failed');time.sleep(.2)
+  spawn('xvfb-desktop',['/usr/bin/Xvfb',':103','-screen','0','1920x1080x24','-nolisten','tcp','-auth',str(auth)],base)
+  env=dict(base,DISPLAY=':99',SDL_VIDEODRIVER='x11',XAUTHORITY=str(auth),XDG_RUNTIME_DIR=str(P/'xdg-runtime'),SUB01_ADMIN_TOKEN=token,SUB01_HOME_ORIGIN='http://127.0.0.1:8831',SUB01_PC_ORIGIN='http://127.0.0.1:8832',LD_LIBRARY_PATH='/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
+  args=[ENGINE,str(PROJECT),'/Game/Sub01Home/ActualHome','-game','-Sub01CompletionSandbox','-Sub01ManualView','-Sub01StreamerVisual','-Sub01NativeControl='+str(control),'-vulkan','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-corelimit='+str(cores),'-RenderOffScreen','-windowed','-NoBorder','-WinX=0','-WinY=0','-ResX=1920','-ResY=1080','-ForceRes','-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0','-stdout','-FullStdOutLogOutput']
+  game=spawn('native',args,env);receipt['phase']='warmup';save()
+  # Voice warms under STOP; no speech request or fake backend state.
+  sideenv=dict(base,XAUTHORITY=str(auth),HF_HOME='/home/sub01-recovery-stage-20261026/voice-public',HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
+  spawn('voice',[PYTHON,str(SOURCE/'scripts/voice_server.py'),'--host','127.0.0.1','--port','8835','--token-file',str(P/'operator-token'),'--streamer-dir',str(STREAM),'--voice-config',str(CONFIG),'--offline','--fallback','none','--threads','4','--keep-hours','0'],sideenv)
+  await_ready(8835,'/healthz',lambda h:h.get('ready')is True and h.get('engine')=='chatterbox',180)
+  gamepid=OUT/'game.pid';gamepid.write_text(str(game.pid));os.chown(gamepid,1001,1001)
+  recording_deadline=time.monotonic()+1800
+  director=spawn('director',[PYTHON,str(SOURCE/'scripts/streamer_director.py'),'--host','127.0.0.1','--port','8837','--token-file',str(P/'operator-token'),'--streamer-dir',str(STREAM),'--game-source','fifo','--main-fifo',str(STREAM/'main.mjpeg'),'--main-json',str(STREAM/'main.json'),'--game-pid-file',str(gamepid),'--desktop-display',':103.0','--game-display',':99.0','--fps','60','--desktop-fps','60','--encoder','libx264','--layout','webcam_only','--recordings-dir',str(OUT/'recordings'),'--hls-dir',str(OUT/'hls'),'--keep-segments','60','--min-free-gb','5'],sideenv)
+  spawn('hls',[PYTHON,str(SOURCE/'scripts/streamer_hls_serve.py'),str(OUT/'hls'),'--host','127.0.0.1','--port','8839'],sideenv)
+  # Total director lifetime bounded30min, including any placeholder/warmup footage.
+  await_ready(8837,'/director/state',lambda h:isinstance(h,dict),30)
+  deadline=recording_deadline;pinned_run=None;bootstrap_started=time.monotonic();first_fifo_at=None
+  while time.monotonic()<deadline:
+   need(all(c.poll()is None for c,_ in children),'Owned process exited')
+   need((STREAM/'STOP').exists()and not Path('/tmp/sub01-share/MEASURING').exists(),'Control gate changed')
+   need(shutil.disk_usage('/home').free>5*1024**3,'Root disk reserve low')
+   state=api(8837,'/director/state')
+   run=state.get('run');real_fifo=(state.get('game_source')=='fifo:main.mjpeg'and (state.get('main')or {}).get('source')=='fifo')
+   if pinned_run is None:
+    need(state.get('restarts',0)<=1,'Unexpected multiple bootstrap restarts')
+    need(time.monotonic()-bootstrap_started<900,'No real FIFO before warmup bound')
+    if real_fifo and state.get('recording'):
+     pinned_run=run;first_fifo_at=time.time();receipt['real_fifo_started_utc']=first_fifo_at;receipt['bootstrap_restarts']=state.get('restarts',0)
+   else:
+    need(run==pinned_run and real_fifo and state.get('restarts',0)==receipt['bootstrap_restarts'],'Post-readiness restart/source change')
+   fpid=state.get('ffmpeg_pid')
+   if fpid and not any(pid==fpid for pid,_ in ffmpeg_owned):
+    proc=Path('/proc',str(fpid));parts=(proc/'stat').read_text().rsplit(')',1)[1].split()
+    need(int(parts[1])==director.pid and (proc/'comm').read_text().strip()=='ffmpeg','Unowned ffmpeg identity')
+    ffmpeg_owned.append((fpid,parts[19]));receipt['processes'].append({'name':'director-ffmpeg','pid':fpid,'start_ticks':parts[19]})
+   usage=[]
+   for item in receipt['processes']:
+    pid=item['pid']
+    try:
+     if ticks(pid)!=item['start_ticks']:continue
+     if pid not in cpu_handles:cpu_handles[pid]=psutil.Process(pid);cpu_handles[pid].cpu_percent(None)
+     proc=cpu_handles[pid];usage.append({'name':item['name'],'pid':pid,'cpu_percent':proc.cpu_percent(None),'rss_bytes':proc.memory_info().rss})
+    except (FileNotFoundError,ProcessLookupError,psutil.NoSuchProcess):continue
+   cg={};cpu_stat=Path('/sys/fs/cgroup/cpu.stat')
+   if cpu_stat.exists():cg={k:int(v)for k,v in (line.split()for line in cpu_stat.read_text().splitlines())}
+   receipt.setdefault('resource_samples',[]).append({'utc':time.time(),'owned_processes':usage,'cgroup_cpu_stat':cg})
+   receipt['samples'].append({k:state.get(k)for k in ['recording','run','ffmpeg_pid','restarts','encoder','game_source','game_source_mode','main','voice','hls','output','window_speed']})
+   receipt['phase']='recording_readiness_only';save();time.sleep(2)
+  need(pinned_run is not None,'No real native FIFO recording')
+  receipt['phase']='bounded_recording_complete_requires_decode_and_visual_review';save()
+
+ except BaseException as exc:
+  receipt['phase']='failed';receipt['failure_type']=type(exc).__name__;save();raise
+ finally:
+  if fd is not None:os.close(fd)
+  cleanup_errors=[]
+  for child,ident in reversed(children):
+   try:
+    if child.poll()is None and ticks(child.pid)==ident:
+     os.killpg(child.pid,signal.SIGTERM)
+     try:child.wait(timeout=15)
+     except subprocess.TimeoutExpired:
+      if ticks(child.pid)==ident:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=10)
+   except (FileNotFoundError,ProcessLookupError):pass
+   except Exception as exc:cleanup_errors.append({'pid':child.pid,'type':type(exc).__name__})
+  for fpid,ident in ffmpeg_owned:
+   try:
+    if Path('/proc',str(fpid)).exists()and ticks(fpid)==ident:
+     os.killpg(fpid,signal.SIGTERM);time.sleep(2)
+     if Path('/proc',str(fpid)).exists()and ticks(fpid)==ident:os.killpg(fpid,signal.SIGKILL)
+   except (FileNotFoundError,ProcessLookupError):pass
+   except Exception as exc:cleanup_errors.append({'pid':fpid,'type':type(exc).__name__})
+  receipt['cleanup_errors']=cleanup_errors
+  for thread in threads:thread.join(timeout=3)
+  receipt['owned_processes_stopped']=all(c.poll()is not None for c,_ in children)and not cleanup_errors
+  if not receipt['owned_processes_stopped']:receipt['phase']='failed_cleanup'
+  save()
+  # Decode last finalized recording frame; never open the live main FIFO twice.
+  mp4s=sorted((OUT/'recordings').glob('*.mp4'),key=lambda p:p.stat().st_mtime)
+  if mp4s:
+   last=mp4s[-1];frame=OUT/'recording-final-frame.jpg'
+   try:result=subprocess.run(unprivileged(['/usr/bin/ffmpeg','-hide_banner','-loglevel','error','-sseof','-1','-i',str(last),'-frames:v','1','-q:v','2',str(frame)]),env=base,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=30)
+   except subprocess.TimeoutExpired:result=None
+   receipt['final_frame']={'source':last.name,'decode_exit':result.returncode if result is not None else 'timeout','sha256':digest(frame)if frame.exists()else None,'scope':'Recording-derived frame, requires visual review'};save()
+  # Root copies only bounded receipts/logs; recordings remain rootfs pending review.
+  PERSIST.mkdir(mode=0o700)
+  for name in ['receipt.json','native.log','voice.log','director.log','hls.log','recording-final-frame.jpg']:
+   source=OUT/name
+   if source.exists():
+    need(source.stat().st_size<=128*1024**2,'Log bound exceeded');shutil.copyfile(source,PERSIST/name);need(digest(source)==digest(PERSIST/name),'Persistent receipt copy mismatch')
+if __name__=='__main__':main()

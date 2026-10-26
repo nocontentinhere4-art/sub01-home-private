@@ -1,0 +1,12 @@
+{
+  "source": "Claude session_01E63naeGXvtFvPtw1RQAVDL message81, visibly read in authorized Chrome",
+  "request": "one GraphQL myself clientBalance",
+  "utc": "2026-10-26T11:31:49Z",
+  "http_status": 200,
+  "seconds": 0.51,
+  "balance_usd": 36.501928,
+  "retry_after": null,
+  "provider_requests_total": 5,
+  "coordinator_provider_requests": 0,
+  "next_due_utc": "2026-10-26T13:31:49Z"
+}

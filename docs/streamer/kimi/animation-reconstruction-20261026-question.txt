@@ -1,0 +1,260 @@
+PROPOSED ONE-CASE RECONSTRUCTION REVIEW — NOT SUBMITTED OR EXECUTED
+
+Scope: recreate only the previously tested case01 animation hypothesis (Website-gaze, DeskTyping-contact-clean, Reach), from pinned preserved sources in a NEW isolated project. No original animation provenance claim, no promotion, no baseline edits, no rendering in this step, no backend state/streamer_state replacement, no Vagon, no STOP removal, no rejected hoodie or local Blender garment asset. Root owns all remote work. Never overlap this work with the current bounded rendering/cap61 diagnostic or MEASURING. No provider call, retry, build or download.
+
+Evidence: current work/animation-source-verification.raw.txt confirms all three FBXs and the reference helper match historical pins. It confirms existence/hashes of old case01-manifest/result/import-run/baseline metadata, not generated native bytes. The previous generated uasset SHA values must be read from /workspace/sub01-migration-20261025/animation-candidates/case-01-result.json and retained for comparison; differing new package hashes do not establish failure of source motion, but MUST be reported as not byte-identical recovery. Do not overwrite those records. Current frame issue has two independent prerequisites: missing accepted visual fixture and missing3animations; do not attribute pose to one cause from a still.
+
+ONE CASE, STAGING CONTRACT (not yet implemented/executed):
+1. Wait for owned diagnostic teardown, no MEASURING, no native/voice/director/Editor jobs. Root verifies fresh balance through sole designated caller only if actually due. Pin current source project module1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b, meshc350dbfb65e82d6bd46770b68debe6c7ceca9ed55501248c58d2b7ccbc6a8781, skeleton122a8a8d90c1ff73971e9aa5d490a479bbba661dd953f3753b226e0c46c39389, map and full immutable file manifest. Source is /home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab. Keep it unchanged and inaccessible for writes by UID1002. Do not alter its parent/move source/change active runtime pointer.
+2. Refuse existing /home/sub01-animation-reconstruction-20261026/case-01 or /opt/sub01/animation-reconstruction-20261026. Measure full copy size/inodes before copying; require size+10GiB root reserve (and at least15GiB initially). Copy only project content/config/source/binaries, excluding Saved/Intermediate/DerivedDataCache, NO hardlinks or symlinks. Original tree read-only for probe; new immutable candidate files root-owned0444, dirs0755. Only three exact new asset parent directories plus candidate Saved/Intermediate/DerivedDataCache/results writable by UID1002. UID1002 must either be an existing verified dedicated probe account or be set up explicitly under this review; do not hijack an occupied UID. Native UID1001 is not importer. Root controls all staging, helper, manifest, control and baseline-manifest files. Validate engine/library traversal as UID1002 without changing shared volume ownership.
+3. Verify ALL ten entries in input-pins.json, including the three GLBs and conversion-proof JSONs not covered by the latest four-input receipt. Stage byte-exact read-only copies under /opt/sub01/animation-reconstruction-20261026/inputs/<hash>.<suffix>; pin readback. No fallback sources. Preserve mesh/skeleton/map hashes. Create tools/baseline-manifest.json from complete candidate immutable tree and verify exact equality with copied current baseline; historical baseline file may have different source inventory and is evidence, not blindly reusable input. Stage manifest.json at case-01/manifest.json. Verify exactly the three allowed targets are absent.
+4. Stage reference-pose-preflight.py in tools; run once under UID1002 using the same engine build55116800, NullRHI, six selected available CPU cores, no game. Require ready=true, get_reference_pose, reference_pose_sha256=ae5c67df12bf35ed272d8c3f79d506889617d5e63ce2fd9e4a5fc02cb37f56bf; root copies this result to tools/reference-pose-control.json read-only. On failure, preserve report and stop; no alternate API guesses/import.
+5. Stage candidate import-animation-candidate.py under tools. Run ONCE under UID1002, same engine/project, -run=pythonscript -script=<tools/import-animation-candidate.py> -NullRHI -unattended -NoSound -NoSplash -NoLiveCoding -NoHotReloadFromIDE -NoCompile -corelimit=6 '-ExecCmds=Interchange.FeatureFlags.Import.FBX 0' -stdout -FullStdOutLogOutput. Clean HOME for dedicated probe, LD_LIBRARY_PATH=/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu, OMP_NUM_THREADS=4, OPENBLAS_NUM_THREADS=1. Root supervisor deadline600s with owned PID/startticks/session cleanup only, plus bounded preflight. No retry. This packet supplies exact importer/preflight/manifest, but NOT a ready root launch supervisor: staging/supervisor must be frozen and reviewed before execution.
+
+IMPORTER DELTA: old importer preserved source semantics; only fresh paths, canonical STOP/noMEASURING checks, pinned reference-pose digest, reject unexpected immutable-tree symlinks. All original animation-only FBX settings, zero root-motion flags, all-key FK validation, original mesh/skeleton/map invariance and exact-three-additions gates remain. UID1002 and read-only parent permissions prevent modifications to baseline/hoodie. Candidate AST parses locally; that is not Unreal validation.
+
+SUCCESS/PRESERVATION: require exit0 AND status three_hypothesis_assets_imported_source_coherent, exactly3newassetfiles, no previous package changed, unchanged skeleton reference pose after each import, 166/166/91 keys with5.5/5.5/3sec, source joint-position error<0.05cm at every sample, output flags0/0/0, no substitutions. Independently verify candidate and original full manifests after process exit. Preserve ACTUAL THREE UASSET BYTES this time with their exact relative paths plus new/old result manifests, source pins, full audits and logs in a fresh /workspace/sub01-animation-reconstruction-20261026 directory. Root-only volume copy without chown; readback SHA256 every artifact. Keep baseline and candidate separate. Record old/new package hash comparison explicitly. A new import hash is not evidence of original lost assets.
+
+SEPARATE LATER VISUAL GATE (NOT execution authorization here): render only isolated candidate, same native module/original owner+garment+tuning, synthetic expiring v2reading/face fixture bound to actual PID/startticks. Require receipt schema2, reading, expectedclip, clip_fallback_frozen=false, camera face and settled blend. Inspect>=2loops, torso/head stability and original underarm/chair defects; use typing and mouse only under a later bounded plan. No cherry-picked still as visual acceptance; no synthetic fixture as agent/PC activity. Fixture expiring does not restore a lower sequence counter: restart game before future real agent takeover. STOP stays, original state remains missing; voice/head synchronization requires its own reviewed route. No rebuilt hoodie deployment. No claim that this reconstruction alone fixes the observed recline.
+
+Review requested: APPROVE PLAN AND EXACT IMPORTER DELTA or concrete blockers for ONE isolated source-coherence import only; acknowledge execution wrapper still needs exact freeze/review. No automatic promotion or complete-system acceptance.
+
+
+EXACT importer.delta.patch
+--- historical/import-animation-candidate.py
++++ candidate/import-animation-candidate.py
+@@ -7,10 +7,12 @@
+ import traceback
+ import unreal as u
+ 
+-TOOLS = Path('/opt/sub01/animation-candidate-tools')
++TOOLS = Path('/opt/sub01/animation-reconstruction-20261026')
+ PROJECT = Path(u.Paths.project_dir()).resolve()
+ CASE = PROJECT.parent
+-assert CASE.parent == Path('/home/sub01-animation-candidates')
++assert CASE == Path('/home/sub01-animation-reconstruction-20261026/case-01')
++assert Path('/home/unreal/.sub01-private/streamer/STOP').is_file()
++assert not Path('/tmp/sub01-share/MEASURING').exists()
+ assert os.getuid() == 1002
+ REQUEST = json.loads((CASE / 'manifest.json').read_text())
+ assert REQUEST['project'] == str(PROJECT)
+@@ -31,6 +33,7 @@
+     (OUT / name).write_text(json.dumps(data, sort_keys=True, indent=2) + '\n')
+ 
+ def project_files():
++    assert not any(p.is_symlink() for p in PROJECT.rglob('*') if p.relative_to(PROJECT).parts[0] not in ('Saved', 'Intermediate', 'DerivedDataCache')), 'unexpected candidate symlink'
+     return {str(p.relative_to(PROJECT)): sha(p) for p in PROJECT.rglob('*')
+             if p.is_file() and not p.is_symlink()
+             and p.relative_to(PROJECT).parts[0] not in ('Saved', 'Intermediate', 'DerivedDataCache')}
+@@ -75,7 +78,7 @@
+ map_path = PROJECT / 'Content/Sub01Home/ActualHome.umap'
+ immutable[str(map_path)] = sha(map_path)
+ ref_hash, ref_rows = reference_pose(skeleton)
+-assert ref_hash == CONTROL['reference_pose_sha256']
++assert ref_hash == CONTROL['reference_pose_sha256'] == 'ae5c67df12bf35ed272d8c3f79d506889617d5e63ce2fd9e4a5fc02cb37f56bf'
+ save('admission.json', {'request_sha256': sha(CASE / 'manifest.json'), 'uid': os.getuid(),
+      'before_manifest_sha256': sha(TOOLS / 'baseline-manifest.json'), 'reference_pose_sha256': ref_hash,
+      'reference_pose': ref_rows, 'immutable_packages': immutable, 'before_first_import': True,
+@@ -114,6 +117,8 @@
+     world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
+     u.SystemLibrary.execute_console_command(world, 'Interchange.FeatureFlags.Import.FBX 0')
+     for item in REQUEST['clips']:
++        assert Path('/home/unreal/.sub01-private/streamer/STOP').is_file()
++        assert not Path('/tmp/sub01-share/MEASURING').exists()
+         inputs = item['input']
+         for entry in (inputs['fbx'], inputs['glb'], inputs['proof']):
+             assert sha(entry['path']) == entry['sha256']
+
+
+EXACT reference-pose-preflight.py
+from pathlib import Path
+import hashlib,json,os,traceback
+import unreal as u
+P=Path(u.Paths.project_dir()).resolve()
+assert str(P)=='/home/sub01-animation-reconstruction-20261026/case-01/Sub01HomeLab'
+assert os.getuid()==1002
+out=P.parent/'results/refpose-preflight.json'
+owner='/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner.AnatomicalOwner'
+j={'project':str(P),'uid':os.getuid(),'classes':{k:hasattr(u,k)for k in ('AnimPoseExtensions','AnimPose','AnimPoseSpaces','AnimationLibrary')},'import_executed':False}
+try:
+    mesh=u.load_asset(owner);assert isinstance(mesh,u.SkeletalMesh)
+    sk=mesh.get_editor_property('skeleton');assert isinstance(sk,u.Skeleton)
+    ext=u.AnimPoseExtensions
+    j['api_names']=[x for x in dir(ext)if not x.startswith('_')]
+    j['reference_api_docs']={x:getattr(ext,x).__doc__ for x in j['api_names']if 'ref'in x.lower()}
+    out.write_text(json.dumps(j,indent=2)+'\n')
+    options=[name for name in ('get_ref_pose','get_reference_pose')if hasattr(ext,name)]
+    assert len(options)==1, 'reference API discovery saved; no import'
+    name=options[0];fn=getattr(ext,name);doc=fn.__doc__ or ''
+    j['reference_pose_api']=name
+    j['get_ref_pose_doc']=doc
+    j['get_bone_pose_doc']=ext.get_bone_pose.__doc__
+    j['get_bone_names_doc']=ext.get_bone_names.__doc__
+    j['spaces']=[x for x in dir(u.AnimPoseSpaces)if not x.startswith('_')]
+    signature=doc.splitlines()[0].lower()
+    if 'skeletal_mesh'in signature:pose=fn(mesh);j['reference_pose_argument']='mesh'
+    elif 'skeleton'in signature:pose=fn(sk);j['reference_pose_argument']='skeleton'
+    else:raise RuntimeError('unrecognized reference-pose signature; no import: '+signature)
+    names=list(ext.get_bone_names(pose));assert len(names)>=65
+    rows=[]
+    for n in names:
+        t=ext.get_bone_pose(pose,n,u.AnimPoseSpaces.LOCAL)
+        rows.append({'bone':str(n),'translation':[t.translation.x,t.translation.y,t.translation.z],
+                     'rotation':[t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w],'scale':[t.scale3d.x,t.scale3d.y,t.scale3d.z]})
+    j.update(reference_pose=rows,reference_pose_sha256=hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(',',':')).encode()).hexdigest(),ready=True)
+except Exception:
+    j['error']=traceback.format_exc();j['ready']=False
+out.write_text(json.dumps(j,indent=2)+'\n')
+print('SUB01_REFPOSE_PREFLIGHT '+json.dumps({k:v for k,v in j.items()if k not in ('reference_pose',)}))
+assert j['ready'],j.get('error')
+
+
+EXACT manifest.json
+{
+  "schema": "sub01.isolated-animation-hypothesis.v1",
+  "candidate_id": "case-01-reconstruction-20261026",
+  "project": "/home/sub01-animation-reconstruction-20261026/case-01/Sub01HomeLab",
+  "output": "/home/sub01-animation-reconstruction-20261026/case-01/results",
+  "clips": [
+    {
+      "variant": "Website-gaze",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d.fbx",
+          "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363.glb",
+          "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35.json",
+          "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json"
+        },
+        "samples": 166,
+        "seconds": 5.5
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    },
+    {
+      "variant": "DeskTyping-contact-clean",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8.fbx",
+          "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce.glb",
+          "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492.json",
+          "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json"
+        },
+        "samples": 166,
+        "seconds": 5.5
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    },
+    {
+      "variant": "Reach",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.AuthoredReach",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e.fbx",
+          "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438.glb",
+          "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/inputs/b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b.json",
+          "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json"
+        },
+        "samples": 91,
+        "seconds": 3.0
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    }
+  ],
+  "mesh": "/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner.AnatomicalOwner",
+  "skeleton": "/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner_Skeleton.AnatomicalOwner_Skeleton",
+  "mesh_sha256": "c350dbfb65e82d6bd46770b68debe6c7ceca9ed55501248c58d2b7ccbc6a8781",
+  "skeleton_sha256": "122a8a8d90c1ff73971e9aa5d490a479bbba661dd953f3753b226e0c46c39389",
+  "original_importers": {
+    "unreal_supported_bed_candidate8_cinematic_import.py": {
+      "path": "/opt/sub01/animation-reconstruction-20261026/inputs/7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad.py",
+      "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "original_path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py"
+    }
+  },
+  "game_or_migration_accepted": false,
+  "exact_provenance_proven": false
+}
+
+
+EXACT input-pins.json
+[
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d.fbx",
+    "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363.glb",
+    "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35.json",
+    "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8.fbx",
+    "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce.glb",
+    "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492.json",
+    "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e.fbx",
+    "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438.glb",
+    "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b.json",
+    "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/inputs/7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad.py",
+    "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+    "original_path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py"
+  }
+]

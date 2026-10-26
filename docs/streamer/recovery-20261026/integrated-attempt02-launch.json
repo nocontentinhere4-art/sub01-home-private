@@ -1,0 +1,7 @@
+{
+  "utc": "2026-10-26T13:22:45.640688+00:00",
+  "pid": 1356,
+  "start_ticks": "59265809",
+  "script_sha256": "7ba3bbea5cf5a9415787f826076d363c72bf1b512238f76ae289e34edb60dd75",
+  "scope": "single bounded limited readiness attempt02; not acceptance"
+}

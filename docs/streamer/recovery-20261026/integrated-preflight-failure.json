@@ -1,0 +1,28 @@
+{
+  "preservation": {
+    "utc": "2026-10-26T11:41:34.078348+00:00",
+    "failure": "PermissionError /proc/89/fd/0 (nginx UID65534), before application spawn or IPC mutation",
+    "runtime_started": false,
+    "records": {
+      "launch-receipt.json": {
+        "sha256": "c26408b3ec2a5c4dc43217912abe723a7c58b03d98e0ff44b06a881eb858d442",
+        "bytes": 210
+      },
+      "launcher.log": {
+        "sha256": "ef6817cc52e1e4a9690380467b99dfe3dc95610f177ce91224b23d4c99e62029",
+        "bytes": 644
+      },
+      "integrated_readiness.py": {
+        "sha256": "b11ea43093e0b462e6da307c572dde707370ef58ccdd8434cdce5f7d91cd66cb",
+        "bytes": 16415
+      }
+    }
+  },
+  "launcher_log": "Traceback (most recent call last):\n  File \"/home/sub01-integrated-launch-20261026/integrated_readiness.py\", line 215, in <module>\n    if __name__=='__main__':main()\n                            ^^^^^^\n  File \"/home/sub01-integrated-launch-20261026/integrated_readiness.py\", line 74, in main\n    try:v=fd.stat();need((v.st_dev,v.st_ino)not in identities,'Existing IPC open by a process')\n          ^^^^^^^^^\n  File \"/usr/lib/python3.12/pathlib.py\", line 842, in stat\n    return os.stat(self, follow_symlinks=follow_symlinks)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nPermissionError: [Errno 13] Permission denied: '/proc/89/fd/0'\n",
+  "launch_receipt": {
+    "pid": 1279,
+    "start_ticks": "58630460",
+    "script_sha256": "b11ea43093e0b462e6da307c572dde707370ef58ccdd8434cdce5f7d91cd66cb",
+    "scope": "bounded limited integrated readiness, not full live acceptance"
+  }
+}

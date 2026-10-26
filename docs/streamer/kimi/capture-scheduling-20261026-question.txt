@@ -1,0 +1,592 @@
+REQUEST: Source-correction design review ONLY. No Unreal build, runtime launch, cap sweep, canonical source edit, STOP release, provider request or commit authorized by this packet. Return APPROVE DESIGN / required changes / BLOCK with precise mathematical or test findings.
+
+Observed root-verified final integrated cap61 diagnostic: last179.348seconds10507uniqueFrames=58.58438fps, no new reported tap errors or throttling, meanCPU5.295/13.6; cleanup/full decoding passed. Prior cap60 last179seconds58.26048uniqueFPS. Neither passes59.5fps acceptance. Logs do not provide per-Pump timestamps; do not infer this defect is the sole runtime cause.
+
+Exact source baseline c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628 matches both local frozen v24 and current staged pod. Only proposed change is line3770's main FIFO capture scheduler late reset:
+old: NextAt+=Period;if(NextAt<T0)NextAt=T0+Period;
+new: NextAt+=Period;if(NextAt<T0)NextAt=T0;
+Existing accept condition T0 + .5*(Interval>0?Interval:Period) >= NextAt unchanged. Interval is per-Pump time capped100ms; PeriodUs=int64(1e6/main_fps),16666 at target60. No cam2/monitor/encoder/slot/writer/sequence/pixel/tuning changes. Full counterfactual file bytes are calculated in memory and hashed, preserving CRLF; no production source edited.
+
+Mathematical motivation: current reset discards one full period of available timing credit after a late capture. Alternating25ms and8.333ms intervals at average60 render calls/sec become30captures/sec in current code,60 in proposed code. Proposed deadline still advances at leastPeriod per accepted call, with late reset only forward; bounded half-interval tolerance therefore provides a finite boundary allowance rather than unbounded backlog catchup. This preserves rate limiting for sustained faster inputs and one decision per invocation. DupCalls is already measured but not explicitly rejected: no claim that this patch fixes duplicate render callbacks or downstream backpressure.
+
+Evidence: test_cpp_parity.py extracts exact current native reader gate and substitutes only scalar PeriodUs for its atomic load and bool return for void return, embeds current LastCallAt/reader-probe semantics, then compiles both variants with existing Apple clang21 C++17 -O2 -Wall -Wextra -Werror. Every decision matches separate Python model across8deterministic cases: steady30/60/61/120,25/8.333jitter,longpause,16666→33333periodchange,no-reader/reconnect. Jitter regression1800/3600 original versus3600/3600 candidate.60Hz all3600;120Hz3601/7200;periodchange2701/7200; no-reader window0captures and3000/3600total. These are isolated scheduler tests on Mac, NOT Unreal build or Linux compatibility verification; GPU/slots/FIFO transport excluded.
+
+Proposed next step after design approval: read-only establish exact current Linux build prerequisites using the provenance-only location list below. If available, prepare separately reviewed isolated source/build wrapper with baseline manifest, exactone replacement, rollback/module metadata and output hashes. Do not build until wrapper exactreview; never overwrite canonical module. Subsequent candidate runtime evaluation must retain STOP, original cap60 and capture/output60, originalcam2settings, bounded unique-frame/error metrics, full decode and owned cleanup, plus compare per-Pump interval/deadline/counter evidence if instrumentation separately reviewed. No success based on synthetic scheduler tests or encoded-frame count alone.
+
+Concrete historical build prerequisite paths (not guesses):
+1. /home/unreal/.sub01-private/cinematic-source-v3-final/build-v24.log
+2. /home/unreal/.sub01-private/cinematic-source-v3-final/exact-header-overlay.json
+3. /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh
+4. /workspace/sub01-private-recovered-engine/Engine/Build/Build.version
+5. /home/unreal/.sub01-private/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject
+6. Under project Sub01HomeLab/: Source/Sub01HomeLab/Sub01HomeLab.Build.cs, Source/Sub01HomeLabEditor.Target.cs, Binaries/Linux/Sub01HomeLabEditor.target and Binaries/Linux/UnrealEditor.modules.
+Historical wrapper v24-build/review-question.txt explicitly assigns P and LOG and uses -NoHotReload -NoUBTMakefiles -MaxParallelActions=6 -NoUBA with -ivfsoverlay $P/exact-header-overlay.json. Some old-root paths may no longer exist; missing must be recorded, not interpreted as current build-ready. Read actual scripts/logs/overlay to resolve UBT/.NET/compiler/SDK/headerpaths; no invented compiler-version path or broad filesystem scan. Existing fresh engine inventory confirms4and engine executable, not compiler readiness. If old log absent use only a preserved archive manifest proving its location before reading; current evidence does not prove a persistent relocated build-log filename.
+
+
+--- counterfactual-manifest.json SHA256 56b1e3765b13a5f85e6d916fdc7159bc8b80b6fe31a3dd26e60a18c840825698 ---
+{
+  "baseline_sha256": "c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628",
+  "counterfactual_sha256": "5959ffb9b6e39497d62325e54853d174f60b3cbca0f234c162aa6562d2eeaa2c",
+  "replacements": 1,
+  "old": "NextAt+=Period;if(NextAt<T0)NextAt=T0+Period;",
+  "new": "NextAt+=Period;if(NextAt<T0)NextAt=T0;",
+  "note": "No production source edited; CRLF preserved in counterfactual bytes hashed in memory"
+}
+
+--- candidate.diff SHA256 36cb1aa9f6db44718bb3ecec8a3deabd7f61ac521c714709db161a8c5d5b0759 ---
+--- Sub01HomeLab.cpp (verified baseline; illustrative diff only)
++++ Sub01HomeLab.cpp (proposed isolated candidate)
+@@ -3770,1 +3770,1 @@
+-   NextAt+=Period;if(NextAt<T0)NextAt=T0+Period;}
++   NextAt+=Period;if(NextAt<T0)NextAt=T0;}
+
+
+--- old-gate.cpp SHA256 da95907234550134910bfe796e333bf0f59c547863fb01a0a65f83f02f1237e6 ---
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+struct Gate {double NextAt=0,LastCallAt=0,ProbeAt=0; long RateSkipped=0; bool step(double T0,bool reader,long PeriodUs){const double Interval=LastCallAt>0?std::min(T0-LastCallAt,.1):0.;LastCallAt=T0; if(!reader){if(T0<ProbeAt)return false;ProbeAt=T0+1.;return false;} const double Period=double(PeriodUs)*1e-6;
+   if(T0+.5*(Interval>0?Interval:Period)<NextAt){++RateSkipped;return false;} // main_fps (half a frame of tolerance)
+   NextAt+=Period;if(NextAt<T0)NextAt=T0+Period; return true;}};
+int main(){Gate g;double t;bool r;long p;while(std::cin>>t>>r>>p)std::cout<<g.step(t,r,p)<<'\n';}
+
+
+--- candidate-gate.cpp SHA256 8de1ab2a3303ff4c706e8f571a423b5c80d04d7e99ba9820403071830b31a313 ---
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+struct Gate {double NextAt=0,LastCallAt=0,ProbeAt=0; long RateSkipped=0; bool step(double T0,bool reader,long PeriodUs){const double Interval=LastCallAt>0?std::min(T0-LastCallAt,.1):0.;LastCallAt=T0; if(!reader){if(T0<ProbeAt)return false;ProbeAt=T0+1.;return false;} const double Period=double(PeriodUs)*1e-6;
+   if(T0+.5*(Interval>0?Interval:Period)<NextAt){++RateSkipped;return false;} // main_fps (half a frame of tolerance)
+   NextAt+=Period;if(NextAt<T0)NextAt=T0; return true;}};
+int main(){Gate g;double t;bool r;long p;while(std::cin>>t>>r>>p)std::cout<<g.step(t,r,p)<<'\n';}
+
+
+--- test_cpp_parity.py SHA256 698f9c7fbe47d07dbc9c35d82f1f032d5114adf53adbbf92f1c3badb2c454d57 ---
+from pathlib import Path
+import hashlib,json,subprocess
+D=Path(__file__).resolve().parent
+S=Path('/Users/cn/Documents/Codex/2026-10-25/sub01-codex-takeover/work/migration/contact-source-v24/Sub01HomeLab.cpp').read_bytes()
+assert hashlib.sha256(S).hexdigest()=='c6981c959fd0d8db8d2b7b80cc07032bd4481569f2b721c21d4546af22a6b628'
+old='NextAt+=Period;if(NextAt<T0)NextAt=T0+Period;'
+new='NextAt+=Period;if(NextAt<T0)NextAt=T0;'
+assert S.count(old.encode())==1
+C=S.replace(old.encode(),new.encode())
+(D/'counterfactual-manifest.json').write_text(json.dumps({'baseline_sha256':hashlib.sha256(S).hexdigest(),'counterfactual_sha256':hashlib.sha256(C).hexdigest(),'replacements':1,'old':old,'new':new,'note':'No production source edited; CRLF preserved in counterfactual bytes hashed in memory'},indent=2))
+# Extract exact native reader branch; replace member atomic load only with scalar input.
+text=S.decode(); start=text.index('const double Period=double(PeriodUs.load())*1e-6;',text.index('void Pump(')); end=text.index('\n  int32 Free=',start)
+branch=text[start:end].rstrip('\r\n'); assert branch.endswith('}')
+branch=branch[:-1].replace('PeriodUs.load()','PeriodUs').replace('return;','return false;')
+cpp='''#include <algorithm>\n#include <iostream>\n#include <iomanip>\nstruct Gate {double NextAt=0,LastCallAt=0,ProbeAt=0; long RateSkipped=0; bool step(double T0,bool reader,long PeriodUs){const double Interval=LastCallAt>0?std::min(T0-LastCallAt,.1):0.;LastCallAt=T0; if(!reader){if(T0<ProbeAt)return false;ProbeAt=T0+1.;return false;} BODY return true;}};\nint main(){Gate g;double t;bool r;long p;while(std::cin>>t>>r>>p)std::cout<<g.step(t,r,p)<<'\\n';}\n'''
+for label,b in [('old',branch),('candidate',branch.replace(old,new))]:
+    (D/(label+'-gate.cpp')).write_text(cpp.replace('BODY',b))
+    subprocess.run(['/usr/bin/clang++','-std=c++17','-O2','-Wall','-Wextra','-Werror',str(D/(label+'-gate.cpp')),'-o',str(D/(label+'-gate'))],check=True)
+def rows(intervals,periods=None,readers=None):
+    t=1000.; out=[]
+    for i,dt in enumerate(intervals):
+        t+=dt;out.append((t,True if readers is None else readers[i],16666 if periods is None else periods[i]))
+    return out
+cases={f'steady{rate}':rows([1/rate]*(rate*60))for rate in [30,60,61,120]}
+cases.update(jitter=rows([.025,1/30-.025]*1800),pause=rows([1/60]*600+[3.]+[1/60]*600),period_change=rows([1/120]*7200,[16666]*3600+[33333]*3600),reconnect=rows([1/60]*3600,readers=[True]*600+[False]*600+[True]*2400))
+def model(rs,fixed):
+    nxt=last=probe=0.;out=[]
+    for t,reader,us in rs:
+        dt=min(t-last,.1)if last>0 else 0;last=t;p=us*1e-6
+        if not reader:
+            if t>=probe:probe=t+1
+            out.append(False);continue
+        if t+.5*(dt if dt>0 else p)<nxt:out.append(False);continue
+        nxt+=p
+        if nxt<t:nxt=t if fixed else t+p
+        out.append(True)
+    return out
+result={}
+for name,rs in cases.items():
+    result[name]={}
+    inp=''.join(f'{t:.17g} {int(r)} {p}\n'for t,r,p in rs)
+    for label in ['old','candidate']:
+        got=subprocess.run([str(D/(label+'-gate'))],input=inp,text=True,capture_output=True,check=True)
+        decisions=[bool(int(x))for x in got.stdout.splitlines()]
+        assert decisions==model(rs,label=='candidate'),(name,label,'parity failed')
+        result[name][label]={'accepted':sum(decisions),'calls':len(rs),'exact_decision_parity':True}
+        if name=='reconnect':assert not any(decisions[600:1200])
+assert result['jitter']['old']['accepted']==1800
+assert result['jitter']['candidate']['accepted']==3600
+assert result['steady60']['candidate']['accepted']==3600
+assert result['steady30']['candidate']['accepted']==1800
+assert abs(result['steady120']['candidate']['accepted']-3600)<=3
+assert result['pause']['candidate']['accepted']<=1201
+assert abs(result['period_change']['candidate']['accepted']-2700)<=3
+result['compiler']=subprocess.run(['/usr/bin/clang++','--version'],capture_output=True,text=True,check=True).stdout
+(D/'cpp-test-results.json').write_text(json.dumps(result,indent=2))
+print(json.dumps(result,indent=2))
+
+
+--- cpp-test-results.json SHA256 92de8ad5d06859646cf94954c2f494d08d88f77e8b1fc73804e67448f25525ec ---
+{
+  "steady30": {
+    "old": {
+      "accepted": 1800,
+      "calls": 1800,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 1800,
+      "calls": 1800,
+      "exact_decision_parity": true
+    }
+  },
+  "steady60": {
+    "old": {
+      "accepted": 3600,
+      "calls": 3600,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 3600,
+      "calls": 3600,
+      "exact_decision_parity": true
+    }
+  },
+  "steady61": {
+    "old": {
+      "accepted": 3600,
+      "calls": 3660,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 3601,
+      "calls": 3660,
+      "exact_decision_parity": true
+    }
+  },
+  "steady120": {
+    "old": {
+      "accepted": 3600,
+      "calls": 7200,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 3601,
+      "calls": 7200,
+      "exact_decision_parity": true
+    }
+  },
+  "jitter": {
+    "old": {
+      "accepted": 1800,
+      "calls": 3600,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 3600,
+      "calls": 3600,
+      "exact_decision_parity": true
+    }
+  },
+  "pause": {
+    "old": {
+      "accepted": 1201,
+      "calls": 1201,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 1201,
+      "calls": 1201,
+      "exact_decision_parity": true
+    }
+  },
+  "period_change": {
+    "old": {
+      "accepted": 2700,
+      "calls": 7200,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 2701,
+      "calls": 7200,
+      "exact_decision_parity": true
+    }
+  },
+  "reconnect": {
+    "old": {
+      "accepted": 3000,
+      "calls": 3600,
+      "exact_decision_parity": true
+    },
+    "candidate": {
+      "accepted": 3000,
+      "calls": 3600,
+      "exact_decision_parity": true
+    }
+  },
+  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n"
+}
+CURRENT PREREQUISITES AND SCOPE
+Current Linux clang++20.1.8 is present and --version passed, hash e6166786aee0388cc170ab761d8d51d6e0d708cc5ca533b0330f356ca99468cf. Native module rebuild NOT requested or executable under this review: historical exact-header-overlay.json and its replacement header bytes remain unproven/missing from stagedtree and scoped local/40member namedarchive evidence. Do not invent ABI/header substitutes. Review only this scheduling design, exact one-line counterfactual diff, deterministic tests, and requirements for one future isolated native test after authentic buildinputs recovered. No canonical code modification, build, deployment or runtime activation. All current diagnostics stopped; STOP held. Capture cap61 exact final verification:
+{
+  "utc": "2026-10-26T14:08:16.675669+00:00",
+  "phase": "bounded_recording_complete_requires_decode_and_visual_review",
+  "cleanup_verified": true,
+  "recordings": [
+    {
+      "name": "sub01-20261026-135837-000.mp4",
+      "bytes": 1132163,
+      "sha256": "654c6358f777c432e08721aaaaf77aab6b0ce0823febf0cabc233bb1e8b2644e",
+      "persistent": "/workspace/sub01-integrated-cadence61-20261026-media/sub01-20261026-135837-000.mp4",
+      "ffprobe_exit": 0,
+      "metadata": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "High",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "width": 1920,
+            "height": 1080,
+            "coded_width": 1920,
+            "coded_height": 1088,
+            "closed_captions": 0,
+            "film_grain": 0,
+            "has_b_frames": 2,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 42,
+            "color_range": "tv",
+            "color_space": "bt709",
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 4,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "60/1",
+            "avg_frame_rate": "60/1",
+            "time_base": "1/15360",
+            "start_pts": 512,
+            "start_time": "0.033333",
+            "duration_ts": 2866688,
+            "duration": "186.633333",
+            "bit_rate": "40862",
+            "bits_per_raw_sample": "8",
+            "nb_read_frames": "11198",
+            "extradata_size": 49,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "vendor_id": "[0][0][0][0]",
+              "encoder": "Lavc60.31.102 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 8960576,
+            "duration": "186.678667",
+            "bit_rate": "2275",
+            "nb_read_frames": "8750",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler",
+              "vendor_id": "[0][0][0][0]"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/home/unreal/.sub01-private/integrated-cadence61-20261026/recordings/sub01-20261026-135837-000.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "186.678667",
+          "size": "1132163",
+          "bit_rate": "48518",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "iso5",
+            "minor_version": "512",
+            "compatible_brands": "iso5iso6mp41",
+            "encoder": "Lavf60.16.100"
+          }
+        }
+      },
+      "decode_exit": 0,
+      "decode_error": ""
+    },
+    {
+      "name": "sub01-20261026-140146-000.mp4",
+      "bytes": 24398556,
+      "sha256": "c2f6d603b1b38ee1bf152f8de9f6aaad4a21425627a03e99c9696b612f7119cd",
+      "persistent": "/workspace/sub01-integrated-cadence61-20261026-media/sub01-20261026-140146-000.mp4",
+      "ffprobe_exit": 0,
+      "metadata": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "High",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "width": 1920,
+            "height": 1080,
+            "coded_width": 1920,
+            "coded_height": 1088,
+            "closed_captions": 0,
+            "film_grain": 0,
+            "has_b_frames": 2,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 42,
+            "color_range": "tv",
+            "color_space": "bt470bg",
+            "chroma_location": "center",
+            "field_order": "progressive",
+            "refs": 4,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "60/1",
+            "avg_frame_rate": "60/1",
+            "time_base": "1/15360",
+            "start_pts": 512,
+            "start_time": "0.033333",
+            "duration_ts": 4513024,
+            "duration": "293.816667",
+            "bit_rate": "656699",
+            "bits_per_raw_sample": "8",
+            "nb_read_frames": "17629",
+            "extradata_size": 49,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "vendor_id": "[0][0][0][0]",
+              "encoder": "Lavc60.31.102 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 14105152,
+            "duration": "293.857333",
+            "bit_rate": "2275",
+            "nb_read_frames": "13774",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler",
+              "vendor_id": "[0][0][0][0]"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/home/unreal/.sub01-private/integrated-cadence61-20261026/recordings/sub01-20261026-140146-000.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "293.857333",
+          "size": "24398556",
+          "bit_rate": "664228",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "iso5",
+            "minor_version": "512",
+            "compatible_brands": "iso5iso6mp41",
+            "encoder": "Lavf60.16.100"
+          }
+        }
+      },
+      "decode_exit": 0,
+      "decode_error": ""
+    }
+  ],
+  "hls": [
+    {
+      "name": "live.m3u8",
+      "bytes": 758,
+      "sha256": "12a8992360f61a1b089afb78aab06d64b0989045fbb51e84c458e56a7a760aac"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023374.ts",
+      "bytes": 396116,
+      "sha256": "35a68bdf5a858fd0c42c533da24b255547d55ec31688cc161389a12774144ff0"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023375.ts",
+      "bytes": 409652,
+      "sha256": "b8bceba14f830e8bced34a9bcd4bc090f6db16d59f414d9cea8472d011b61796"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023376.ts",
+      "bytes": 415104,
+      "sha256": "199d7de856384fe2957b6e5f9d1327e56bfe406baab2fb0f7d73b368dd758540"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023377.ts",
+      "bytes": 403824,
+      "sha256": "cdfc9b9cb0e12facd641b6484dfd49256c02f87bba539499544b47ab1d8180e2"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023378.ts",
+      "bytes": 413412,
+      "sha256": "f77304a6396cd0a90118f201c75ba5a680bbf923ccffae78b2afdee720db38ce"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023379.ts",
+      "bytes": 389536,
+      "sha256": "c887a7b572de0b58ac075954985a18fc85467377c4a0cfcc0fa475af506f3fc0"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023380.ts",
+      "bytes": 183676,
+      "sha256": "f55abeedb8d3a3a07800c63b45e1147b08806c4b0ba51ffdf3cf8605f2df731d"
+    }
+  ],
+  "scope": "Limited native/K07-ready/recording/HLS proof; no full acceptance",
+  "last180s": {
+    "seconds": 179.348153591156,
+    "unique_frames": 10507,
+    "unique_fps": 58.584377868488524,
+    "counter_deltas": {
+      "gaps": 0,
+      "bad": 0,
+      "cut": 0,
+      "repeated": 0,
+      "noseq": 0,
+      "overflows": 0
+    },
+    "core_mean": 5.294544444444444,
+    "cpu_budget": 13.6,
+    "throttled_usec_delta": 0
+  },
+  "real_fifo_span_s": 299.97947216033936,
+  "bootstrap_restarts": 1,
+  "post_ready_run_ids": [
+    "sub01-20261026-140146"
+  ],
+  "recording_decode_pass": true,
+  "main_60fps_gate": false
+}

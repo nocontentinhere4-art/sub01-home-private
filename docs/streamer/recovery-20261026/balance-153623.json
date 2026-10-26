@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-26T15:36:23Z",
+  "balance_usd": 31.364513,
+  "http_status": 200,
+  "seconds": 0.53,
+  "retry_after": null,
+  "sole_caller": "authorized Claude session",
+  "provider_total": 7,
+  "reads": 6,
+  "mutations": 1,
+  "coordinator_provider_calls": 0,
+  "next_due": "2026-10-26T17:36:23Z",
+  "evidence": "Observed exact Claude session response after one requested read; provider response not fetched independently."
+}
