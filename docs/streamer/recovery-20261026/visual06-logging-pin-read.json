@@ -1,0 +1,36 @@
+[
+  {
+    "path": "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Unix/UnixCommonStartup/Private/UnixCommonStartup.cpp",
+    "bytes": 10821,
+    "sha256": "53e89a54d15eda5cbb8dfacc11f77bad4ed5f9d228790fb5309be940df3e1084",
+    "dev": 46,
+    "ino": 684762685,
+    "uid": 0,
+    "gid": 0,
+    "mode": 292,
+    "nlink": 1
+  },
+  {
+    "path": "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/Parse.cpp",
+    "bytes": 47381,
+    "sha256": "bfc0a1f19e2318a83b1444728da61ed4c09037ffd3c1531f1ae99f97c01b6bd4",
+    "dev": 46,
+    "ino": 684639875,
+    "uid": 0,
+    "gid": 0,
+    "mode": 292,
+    "nlink": 1,
+    "excerpt": "270: \t}\n271: \n272: \tconst TCHAR* ValueStartInStream = FoundInStream + MatchLen;\n273: \tconst TCHAR* ValueEndInStream;\n274: \n275: \t// Check for quoted arguments' string with spaces\n276: \t// -Option=\"Value1 Value2\"\n277: \t//         ^~~~Start\n278: \tconst bool bArgumentsQuoted = *ValueStartInStream == '\"';\n279: \n280: \tif (bArgumentsQuoted)\n281: \t{\n282: \t\t// Skip quote character if only params were quoted.\n283: \t\tValueStartInStream += 1;\n284: \t\tValueEndInStream = FCString::Strstr(ValueStartInStream, TEXT(\"\\x22\"));\n285: \n286: \t\tif (ValueEndInStream == nullptr)\n287: \t\t{\n288: \t\t\t// this should probably log a warning if bArgumentsQuoted is true, as we started with a '\"' and didn't find the terminating one.\n289: \t\t\tValueEndInStream = FoundInStream + FCString::Strlen(FoundInStream);\n290: \t\t}\n291: \t}\n292: \telse\n293: \t{\n294: \t\t// Skip initial whitespace\n295: \t\tconst TCHAR* WhiteSpaceChars = TEXT(\" \\r\\n\\t\");\n296: \t\tValueStartInStream += FCString::Strspn(ValueStartInStream, WhiteSpaceChars);\n297: \n298: \t\t// Non-quoted string without spaces.\n299: \t\tconst TCHAR* TerminatingChars = bShouldStopOnSeparator ? TEXT(\",) \\r\\n\\t\") : WhiteSpaceChars;\n300: \t\tValueEndInStream = ValueStartInStream + FCString::Strcspn(ValueStartInStream, TerminatingChars);\n301: \t}\n302: \n303: \tint32 ValueLength = FMath::Min<int32>(MaxLen - 1, UE_PTRDIFF_TO_INT32(ValueEndInStream - ValueStartInStream));\n304: \t// It is possible for ValueLength to be 0.\n305: \t// FCString::Strncpy asserts that its copying at least 1 char, memcpy has no such constraint.\n306: \tFMemory::Memcpy(Value, ValueStartInStream, sizeof(Value[0]) * ValueLength);\n307: \tValue[ValueLength] = TCHAR('\\0');\n308: \n309: \tif (OptStreamGotTo)\n310: \t{\n311: \t\tif (bArgumentsQuoted && *ValueEndInStream == '\"')\n312: \t\t{\n313: \t\t\t++ValueEndInStream;\n314: \t\t}\n315: \n316: \t\t*OptStreamGotTo = ValueEndInStream;\n317: \t}\n318: \n319: \treturn true;\n320: }"
+  },
+  {
+    "path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-UnixCommonStartup.so",
+    "bytes": 49208,
+    "sha256": "4c6b8e3c191faf9c29bd23361b78d488c304edb28f4578c0288d0e6881aa92a3",
+    "dev": 46,
+    "ino": 683520929,
+    "uid": 0,
+    "gid": 0,
+    "mode": 511,
+    "nlink": 1
+  }
+]

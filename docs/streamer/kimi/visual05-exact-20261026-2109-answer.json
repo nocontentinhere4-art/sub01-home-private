@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# APPROVE ONE ATTEMPT05 RUN\n\nNo concrete runtime blocker is identified in the supplied seven-file bundle. Approval is bound exclusively to these exact files:\n\n```json\n{\n  \"foreground-launch.py\": \"09662b8e0e529aac4cde77cd3bb31a233468a11a017b400c03d48b1995970532\",\n  \"visual-supervisor.candidate.py\": \"dff19007c6cd9b08fcb2103e63533cb9feb8d3609de4fa3165f379abf490fac6\",\n  \"admission.json\": \"fda638d575b823afb7e80440d513c9a2b42db024f36ebec63c6dc1feb179c10f\",\n  \"fifo_observer_collector.py\": \"e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049\",\n  \"contract_reference.py\": \"20aaf881203db5a2ed8d7009ca215c32d9dc81164aa2fe49c846fb36bd1d1a54\",\n  \"access_barrier.py\": \"028a1af6ec3ec99d1c69d99a86467cdd03fd13fc2fdf97fdfc6cead2270e080d\",\n  \"ddc_launch_checks.py\": \"29351a0bb6145beac5fbee9907897108df3ea70267066cc11a2c221bc4be9fa8\"\n}\n```\n\n**The effective-CVar condition is satisfied for launch authorization** by the finite source-backed `CONTROLLED_STARTUP_SETTER_DERIVATION_NOT_OBSERVED_FUTURE_STATE`, together with the mandatory runtime evidence. The prelaunch derivation is correctly not represented as observation of a future process. Acceptance depends on actual startup setter/deferred evidence, both custom startup sections preceding the single exact graph parse, and final whole-log revalidation. It does not claim that every conceivable code, hotfix, or other setter was exhaustively excluded. Any priority rejection, unsafe assignment, graph mismatch/reparse/fallback, forbidden store, missing positive store evidence, or incomplete final proof fails the run.\n\nThe required pak FD census, actual UID1001 access probe, immutable config/pin readbacks, optional-pak absence, ordinary Local cache writes, lifecycle cleanup, immutable generations, source/FIFO/barrier restoration, and independent post-run verification remain mandatory.\n\nThis authorizes **one autonomous foreground attempt05 run and its supplied read-only post-run verification**, after exact HTTP 200/stop activation and staging. No retry, runtime repair, wider graph/process admission, or additional experiment is approved. SDK status remains **`ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED`**.\n\nA technical pass still requires independent evidence readback and actual JPEG viewing/review afterward. This approval asserts no images, visual quality, performance, SDK verification, or owner acceptance.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 100469,
+    "completion_tokens": 6904,
+    "total_tokens": 107373,
+    "completion_tokens_details": {
+      "reasoning_tokens": 6252
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 100352
+    }
+  },
+  "seconds": 201.62
+}
