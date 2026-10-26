@@ -1,0 +1,30 @@
+Narrow canonical device-origin correction only: owner requires loopback8838. Change HOME_COMPUTER_ORIGIN from historical8832 to8838 and assert it in existing environment test. Other8832 references untouched. No new resume mode or behavior. Please review this delta for the private commit alongside prior approved changes.
+
+tools/private_backend_coordinator.py
+BEFORE 16a9bb7ef6194f1fdeb5a70e5e49430a1a89739087b61ce8d3d2b3267ec2322c
+AFTER c57d824eeae62e6b3a075793195be3feca77150a1696fd1f79bf5966be11e202
+--- before/tools/private_backend_coordinator.py
++++ tools/private_backend_coordinator.py
+@@ -296,7 +296,7 @@
+     return dict(PATH=str(interpreter.parent)+':/usr/local/bin:/usr/bin:/bin',HOME='/home/unreal',TMPDIR=str(data/'tmp'),XDG_CACHE_HOME=str(data/'cache'),XDG_CONFIG_HOME=str(data/'config'),XDG_DATA_HOME=str(data/'local-share'),USER='unreal',LOGNAME='unreal',
+         LANG='C.UTF-8',PYTHONNOUSERSITE='1',PYTHONDONTWRITEBYTECODE='1',
+         HOME_ENABLED='1',HOME_ENTRYPOINT='1',HOME_NATIVE_REQUIRED='1',HOME_NATIVE_BATHROOM_CORRIDOR_PROFILE='5ffac2406e66',
+-        SUB01_ADMIN_TOKEN=token,HOME_COMPUTER_TOKEN_FILE=str(token_file),HOME_COMPUTER_ORIGIN='http://127.0.0.1:8832',
++        SUB01_ADMIN_TOKEN=token,HOME_COMPUTER_TOKEN_FILE=str(token_file),HOME_COMPUTER_ORIGIN='http://127.0.0.1:8838',
+         HOME_NATIVE_MANUAL_TV_INPUT='0',SUB01_BRAIN_CONTROLLER='0',SUB01_MINECRAFT='0',
+         SUB01_MC_SERVER_PORT='25579',SUB01_MC_VIEW_PORT='8813',
+         SUB01_SESSIONS='off',SUB01_SPIKING_LIVE='0',SUB01_DAY_LIVE='0',MIND='0',CLIPS='0',BROWSE='0',SUB01_STREAMER='1',STREAMER_DIR='/home/unreal/.sub01-private/streamer')
+
+tests/test_private_backend_coordinator.py
+BEFORE 0dadd49b5ea5bfd12434ce557177614b4a55fab8476a9d5e887aa750dc013007
+AFTER 4b7476c0f6d09011385a755b281473a79e2e84eba74915d8df5e7d2fec04b93d
+--- before/tests/test_private_backend_coordinator.py
++++ tests/test_private_backend_coordinator.py
+@@ -36,6 +36,7 @@
+   env=c.environment(Path('/token'),'test-only',Path('/private/new'),Path('/actual/venv/bin/python'))
+   for name in ('TMPDIR','XDG_CACHE_HOME','XDG_CONFIG_HOME','XDG_DATA_HOME'):self.assertTrue(env[name].startswith('/private/new/'))
+   self.assertEqual(env['HOME'],'/home/unreal');self.assertEqual(env['STREAMER_DIR'],'/home/unreal/.sub01-private/streamer')
++  self.assertEqual(env['HOME_COMPUTER_ORIGIN'],'http://127.0.0.1:8838')
+   self.assertTrue(env['PATH'].startswith('/actual/venv/bin:'))
+  def test_no_provider_guard_or_broad_kill_entrypoint(self):
+   text=P.read_text()
