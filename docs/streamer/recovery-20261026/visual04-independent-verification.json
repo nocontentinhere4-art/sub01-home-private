@@ -1,0 +1,381 @@
+{
+  "utc": "2026-10-26T20:35:33.322981+00:00",
+  "status": "POSTRUN_INDEPENDENTLY_VERIFIED",
+  "reported_status": "FAILED",
+  "independent_technical_pass": false,
+  "generation_count": 2,
+  "latest_generation": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "586cb297ac08e544a620dedbdb2f5cb53fcce91b8c783563a27a10585e6fa944"
+  },
+  "preserved_file_count": 122,
+  "project_files": {
+    "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab": 5640,
+    "/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab": 5643,
+    "/home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab": 5643
+  },
+  "barrier": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 456,
+    "type": 16384
+  },
+  "canonical_fifo": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "restored_access_probe": {
+    "uid": 1001,
+    "euid": 1001,
+    "gid": 1001,
+    "egid": 1001,
+    "groups": [],
+    "status": {
+      "Uid": [
+        "1001",
+        "1001",
+        "1001",
+        "1001"
+      ],
+      "Gid": [
+        "1001",
+        "1001",
+        "1001",
+        "1001"
+      ],
+      "CapEff": [
+        "0000000000000000"
+      ],
+      "CapPrm": [
+        "0000000000000000"
+      ],
+      "CapAmb": [
+        "0000000000000000"
+      ],
+      "NoNewPrivs": [
+        "1"
+      ]
+    },
+    "ancestor_access": {
+      "r": false,
+      "w": false,
+      "x": true
+    },
+    "descendant": {
+      "read": true,
+      "errno": null
+    },
+    "positive_control": {
+      "read": true,
+      "errno": null
+    }
+  },
+  "process_identities": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "comm": "docker-init"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "comm": "nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "groups": [
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "cap_prm": "0000000000000000",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "comm": "nginx"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "sid": 110,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "comm": "sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "comm": "jupyter-lab"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "comm": "sleep"
+    },
+    {
+      "pid": 5370,
+      "ticks": 61862008,
+      "ppid": 122,
+      "sid": 5370,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "comm": "bash"
+    },
+    {
+      "pid": 5375,
+      "ticks": 61862101,
+      "ppid": 5370,
+      "sid": 5370,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "comm": "python3"
+    }
+  ],
+  "frame_readback": null,
+  "stop": true,
+  "measuring": false,
+  "visual_acceptance": "NOT_ASSESSED",
+  "performance_acceptance": "NOT_ASSESSED"
+}

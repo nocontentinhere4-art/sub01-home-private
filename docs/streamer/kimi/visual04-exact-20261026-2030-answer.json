@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# APPROVE ONE ATTEMPT04 RUN\n\nApproval is for **one conditional native visual run** using only this exact six-file manifest:\n\n```json\n{\n  \"foreground-launch.py\": \"626d98c269827a68fa97781082ef09fce36a28ee5c5fd71b6877563be105a278\",\n  \"visual-supervisor.candidate.py\": \"cab71830f5a46cc7131fe236eb31c53be009e6ccec2b9f9a3473a624d37507c0\",\n  \"admission.json\": \"d4587bc54965de5aa42cc362340ec17dbf5be8cadbfd51e186ed59c75ad9f262\",\n  \"fifo_observer_collector.py\": \"e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049\",\n  \"contract_reference.py\": \"20aaf881203db5a2ed8d7009ca215c32d9dc81164aa2fe49c846fb36bd1d1a54\",\n  \"access_barrier.py\": \"0cbbd8aecbe60f010e7af77adccf89cd6f502a8f1ddf5600cf870d3611c5cbdb\"\n}\n```\n\nNo remaining runtime blocker is identified in the supplied attempt04 correction set:\n\n- The failed attempt03 authorization is not reused. Attempt04 has distinct output, staging, runtime, activation, barrier, and launch paths, while preserving the failed03 generations and gating on the exact verified recovery receipt and restored original FIFO identity.\n- `UE_SKIP_UBT_SDK_SETUP=1` is confined to the native child environment. `UE_SDKS_ROOT` remains absent, and neither the coordinator environment nor helper environments are changed.\n- The SDK prelaunch check occurs only for `native`, after the preceding gates and launch-plan publication and before `Popen`. It freshly verifies all five source/module/receipt pins and rejects any existing `ManualSDKEnvVars.txt`, including a symlink. Its record is preserved in the result and immutable generations.\n- The suppression claim remains properly limited to the corroborated guarded `ValidatePlatforms` startup route and the existing `-unattended` Turnkey early-return route. Platform status remains **`ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED`**; this is not SDK installation, readiness, validation, or all-routes suppression proof.\n- Any unapproved Build.sh, UBT, .NET, Turnkey, or other descendant remains fatal. There is no new graph admission, unknown-adoption relaxation, retry, build, or broader runtime authorization.\n- The previously reviewed lifecycle, census, teardown, FIFO restoration, immutable-generation, frame-contract, full-window capture, and preservation protections remain intact.\n\n**Mandatory activation conditions:** both review helpers must be observed complete before staging or runtime. Staging still requires the explicit HTTP 200/stop review artifact, these six exact hashes, and the corresponding answer hash. Static admission remains `NOT_READY` until that administrative activation.\n\nThis approval covers one foreground execution followed by the supplied independent read-only verification and actual JPEG inspection. It implies no native success, technical pass, visual acceptance, performance/fps acceptance, SDK verification, second attempt, manual repair, or runtime extension.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 63239,
+    "completion_tokens": 2557,
+    "total_tokens": 65796,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1835
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 63232
+    }
+  },
+  "seconds": 78.07
+}

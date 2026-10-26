@@ -1,0 +1,1313 @@
+{
+  "main": {
+    "status": "FAILED",
+    "performance": "NOT_ASSESSED",
+    "visual": "PENDING",
+    "scope": "controlled reconstruction hypothesis; frontal visible-scope only; no full-contact, backend-state/brain, 60fps, or owner acceptance",
+    "failures": [
+      {
+        "kind": "UNEXPLAINED_FAILURE",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 125, in inspect_one\n    try:row=executable_one(pid,proc) if executable_only else scan_one(pid,proc)\n            ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 40, in executable_one\n    exe=os.readlink(p/'exe');exe_hash=sha_bytes((p/'exe').read_bytes())\n        ^^^^^^^^^^^^^^^^^^^^\nPermissionError: [Errno 13] Permission denied: '/proc/5256/exe'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/visual-supervisor.candidate.py\", line 558, in run\n    try:self.result['status']='PREPARING';self.prepare();self.execute()\n                                                         ^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/visual-supervisor.candidate.py\", line 396, in execute\n    self.gates();require(same(self.game[1]),'launch','native exited')\n    ^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/visual-supervisor.candidate.py\", line 131, in gates\n    if self.observer and not noproc:self.observer.register_descendants()\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 368, in register_descendants\n    try:return self._register_descendants()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 378, in _register_descendants\n    self.reconcile_descendants(rows)\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 407, in reconcile_descendants\n    row=inspect_one(pid,executable_only=True);need(stable(i,row['identity']),'Descendant identity raced');self.verify_exe(row,dynamic=True)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 139, in inspect_one\n    need(result['complete'] and result['returncode']==0,'Credentialed FD census failed/incomplete: '+str(pid))\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: Credentialed FD census failed/incomplete: 5256\n"
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Descendant live verification failed",
+          "pid": 5256,
+          "error": "Block('Credentialed FD census failed/incomplete: 5256')"
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Discovery failed",
+          "error": "Block('Credentialed FD census failed/incomplete: 5256')"
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Gone before live verification",
+          "pid": 5256
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Cleanup identity/wait failure",
+          "pid": 5220,
+          "error": "Block('Exact child not reaped')"
+        }
+      }
+    ],
+    "subreaper": {
+      "enabled": true,
+      "pid": 5199,
+      "ticks": 61846717,
+      "before_any_Popen": true
+    },
+    "sdk_prelaunch": {
+      "environment_delta": {
+        "UE_SKIP_UBT_SDK_SETUP": "1"
+      },
+      "source_module_receipts": {
+        "Source/Developer/TargetPlatform/Private/TargetPlatformManagerModule.cpp": {
+          "sha256": "1ab0fb6d8141ee06d80e0190883a30962552ccb0d96e39ca71d8f95f3979efa2",
+          "bytes": 59373
+        },
+        "Binaries/Linux/libUnrealEditor-TargetPlatform.so": {
+          "sha256": "daf409938b14e955c258defc5cf9ec22bcd42a023c803239b098d8ff3b70ee2a",
+          "bytes": 370072
+        },
+        "Build/Build.version": {
+          "sha256": "eab58750e84719489f3ee0d42d05a533ceb357eb3ee511777e9408d27a85f43c",
+          "bytes": 215
+        },
+        "Binaries/Linux/UnrealEditor.modules": {
+          "sha256": "9c60786f45b2ee850c5355706961b5933ee36effd2169d25459562e7bf6f62ba",
+          "bytes": 31321
+        },
+        "Source/Editor/TurnkeySupport/Private/TurnkeySupportModule.cpp": {
+          "sha256": "9637ec95f0ff582f5976530e45e84d40510e35196a8ffee8bec498759b019a99",
+          "bytes": 156547
+        }
+      },
+      "manual_sdk_env_absent": true,
+      "checked_monotonic_ns": 618472643157050,
+      "sdk_status": "ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED",
+      "scope": "observed guarded ValidatePlatforms route only; unapproved descendants remain fatal"
+    },
+    "accepted_actual_event_count": 0,
+    "control_workers_before_teardown": [],
+    "fifo_preservation_location": "/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt04/fifo-evidence/preserved-original-fifo",
+    "lifecycle_cleanup": {
+      "pending": [],
+      "errors": [],
+      "outcomes": [
+        {
+          "pid": 5210,
+          "identity": {
+            "pid": 5210,
+            "ticks": 61847230,
+            "ppid": 5199,
+            "sid": 5210,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "python3"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5210,
+            "ticks": 61847230,
+            "ppid": 5199,
+            "sid": 5210,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "9efb9035beea0ea394ecf52902b26b4acc2359ad0696f365cf1bf3c8881f3da8",
+            "comm": "python3"
+          },
+          "parent_identity": {
+            "pid": 5199,
+            "ticks": 61846717,
+            "ppid": 5194,
+            "sid": 5194,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "f1240acc33416b190f88f8d10b7453877d7fefe4f2c794368d978ee6a7d7624d",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 5215,
+          "identity": {
+            "pid": 5215,
+            "ticks": 61847252,
+            "ppid": 5199,
+            "sid": 5215,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Xvfb"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5215,
+            "ticks": 61847252,
+            "ppid": 5199,
+            "sid": 5215,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "218febe32c97ff2108b253e2d78dc32c9c4767b0165700d022b1648a4f205b4c",
+            "comm": "Xvfb"
+          },
+          "parent_identity": {
+            "pid": 5199,
+            "ticks": 61846717,
+            "ppid": 5194,
+            "sid": 5194,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "f1240acc33416b190f88f8d10b7453877d7fefe4f2c794368d978ee6a7d7624d",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 5220,
+          "identity": {
+            "pid": 5220,
+            "ticks": 61847264,
+            "ppid": 5199,
+            "sid": 5220,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "UnrealEditor-Cm"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5220,
+            "ticks": 61847264,
+            "ppid": 5199,
+            "sid": 5220,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "42e94eaeac51ad56a9b2f5e49f0fee18942cf5f66af05c5ff5dc5b2fe52564aa",
+            "comm": "UnrealEditor-Cm"
+          },
+          "parent_identity": {
+            "pid": 5199,
+            "ticks": 61846717,
+            "ppid": 5194,
+            "sid": 5194,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "f1240acc33416b190f88f8d10b7453877d7fefe4f2c794368d978ee6a7d7624d",
+            "comm": "python3"
+          },
+          "wait_status": 36608,
+          "returncode": 143
+        },
+        {
+          "pid": 5256,
+          "identity": {
+            "pid": 5256,
+            "ticks": 61853357,
+            "ppid": 5220,
+            "sid": 5220,
+            "state": "D",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "7034b18d1b02ac77fab2d157de547a204ef22aad6499d7e7f9dca0a2918ec4a1",
+            "comm": "zen"
+          },
+          "state": "GONE",
+          "live_verified": false
+        },
+        {
+          "pid": 5262,
+          "identity": {
+            "pid": 5262,
+            "ticks": 61853385,
+            "ppid": 5199,
+            "sid": 5220,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "zenserver"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5262,
+            "ticks": 61853385,
+            "ppid": 5220,
+            "sid": 5220,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "ae0893ee7b9e6b1c336370ad213bbb0d3b70393d471452d55d388a98459e4afc",
+            "comm": "zenserver"
+          },
+          "parent_identity": {
+            "pid": 5220,
+            "ticks": 61847264,
+            "ppid": 5199,
+            "sid": 5220,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "42e94eaeac51ad56a9b2f5e49f0fee18942cf5f66af05c5ff5dc5b2fe52564aa",
+            "comm": "UnrealEditor-Cm"
+          },
+          "wait_status": 36608,
+          "returncode": 143
+        }
+      ]
+    },
+    "workers": [
+      {
+        "name": "drain-xvfb",
+        "alive": false
+      },
+      {
+        "name": "drain-native",
+        "alive": false
+      }
+    ],
+    "drain_pipes": [
+      {
+        "name": "drain-xvfb",
+        "launch_identity": {
+          "pid": 5215,
+          "ticks": 61847252,
+          "sid": 5215,
+          "uid": 1001,
+          "state": "R"
+        },
+        "pipe_inode": 37020058
+      },
+      {
+        "name": "drain-native",
+        "launch_identity": {
+          "pid": 5220,
+          "ticks": 61847264,
+          "sid": 5220,
+          "uid": 1001,
+          "state": "S"
+        },
+        "pipe_inode": 37017560
+      }
+    ],
+    "access_barrier": "RESTORED_0710"
+  },
+  "latest": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "586cb297ac08e544a620dedbdb2f5cb53fcce91b8c783563a27a10585e6fa944"
+  },
+  "barrier": [
+    [
+      "001-launch-locked.json",
+      {
+        "event": "launch-locked",
+        "state": "LOCKED",
+        "utc": 1793046774.753535,
+        "monotonic_ns": 618467212961793,
+        "pid": 5199
+      }
+    ],
+    [
+      "002-pre-chmod.json",
+      {
+        "event": "pre-chmod",
+        "state": "LOCKED",
+        "utc": 1793046779.4927738,
+        "monotonic_ns": 618471952201487,
+        "ancestor": "/home/sub01-recovery-stage-20261026",
+        "expected": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "original": {
+          "dev": 66,
+          "ino": 4631271,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "recovery": "Only exact quiescence+FD-bound identity allows restoring0710"
+      }
+    ],
+    [
+      "003-post-chmod.json",
+      {
+        "event": "post-chmod",
+        "state": "ACTIVE",
+        "utc": 1793046779.4937763,
+        "monotonic_ns": 618471953203248,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "004-probe-active.json",
+      {
+        "event": "probe-active",
+        "state": "ACTIVE",
+        "utc": 1793046779.5123358,
+        "monotonic_ns": 618471971762702,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": false
+          },
+          "descendant": {
+            "read": false,
+            "errno": 13
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ],
+    [
+      "005-pre-restore.json",
+      {
+        "event": "pre-restore",
+        "state": "ACTIVE",
+        "utc": 1793046848.6316178,
+        "monotonic_ns": 618541091044446,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "006-post-restore.json",
+      {
+        "event": "post-restore",
+        "state": "RESTORED",
+        "utc": 1793046848.6323082,
+        "monotonic_ns": 618541091734821,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "007-probe-restored.json",
+      {
+        "event": "probe-restored",
+        "state": "RESTORED",
+        "utc": 1793046848.6477048,
+        "monotonic_ns": 618541107131589,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": true
+          },
+          "descendant": {
+            "read": true,
+            "errno": null
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ]
+  ],
+  "ancestor": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 456,
+    "type": 16384
+  },
+  "fifo": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "fifo_old": null,
+  "native_tail": [
+    "[2026.10.26-20.34.00:818][  0]LogTargetPlatformManager: Unable to find shader format SF_VULKAN_SM6 from hinted modules, loading all potential format modules to find it",
+    "[2026.10.26-20.34.00:824][  0]LogModuleManager: InternalLoadLibrary: 'ShaderFormatOpenGL' ('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-ShaderFormatOpenGL.so')",
+    "[2026.10.26-20.34.00:832][  0]LogTargetPlatformManager: Loaded format module ShaderFormatOpenGL",
+    "[2026.10.26-20.34.00:832][  0]LogTargetPlatformManager:   GLSL_150_ES31",
+    "[2026.10.26-20.34.00:832][  0]LogTargetPlatformManager:   GLSL_ES3_1_ANDROID",
+    "[2026.10.26-20.34.00:832][  0]LogTargetPlatformManager: Loaded format module ShaderFormatVectorVM",
+    "[2026.10.26-20.34.00:832][  0]LogTargetPlatformManager:   VVM_1_0",
+    "[2026.10.26-20.34.00:836][  0]LogModuleManager: InternalLoadLibrary: 'VulkanShaderFormat' ('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-VulkanShaderFormat.so')",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager: Loaded format module VulkanShaderFormat",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager:   SF_VULKAN_SM5",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager:   SF_VULKAN_ES31_ANDROID",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager:   SF_VULKAN_ES31",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager:   SF_VULKAN_SM5_ANDROID",
+    "[2026.10.26-20.34.00:842][  0]LogTargetPlatformManager:   SF_VULKAN_SM6",
+    "[2026.10.26-20.34.00:842][  0]LogRendererCore: Ray tracing is disabled. Reason: disabled through project setting (r.RayTracing=0).",
+    "[2026.10.26-20.34.00:844][  0]LogModuleManager: InternalLoadLibrary: 'DerivedDataCache' ('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-DerivedDataCache.so')",
+    "[2026.10.26-20.34.00:847][  0]LogModuleManager: InternalLoadLibrary: 'DesktopPlatform' ('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-DesktopPlatform.so')",
+    "[2026.10.26-20.34.00:850][  0]LogDerivedDataCache: ProjectPak: Pak cache file ../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp not found, will not use a pak cache.",
+    "[2026.10.26-20.34.00:850][  0]LogDerivedDataCache: InstalledProjectPak: Pak cache file ../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp not found, will not use a pak cache.",
+    "[2026.10.26-20.34.01:081][  0]LogDerivedDataCache: Display: ../../../Engine/DerivedDataCache/Compressed.ddp: Opened pak cache for reading. (1081 MiB)",
+    "[2026.10.26-20.34.01:085][  0]LogDerivedDataCache: EnterprisePak: Pak cache file ../../../Enterprise/DerivedDataCache/Compressed.ddp not found, will not use a pak cache.",
+    "[2026.10.26-20.34.01:091][  0]LogZenServiceInstance: Found Zen config default=/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Data",
+    "[2026.10.26-20.34.01:117][  0]LogZenServiceInstance: Display: Can't find file for plugin 'Engine/Source/Developer/Android/AndroidZenServerPlugin/Binaries/Win64/AndroidPortForwarder2.dll', tried '/workspace/sub01-private-recovered-engine/Engine/Source/Developer/Android/AndroidZenServerPlugin/Binaries/Win64/AndroidPortForwarder2.dll'",
+    "[2026.10.26-20.34.01:117][  0]LogZenServiceInstance: Display: Launching zen utility '/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zen service status'.",
+    "[2026.10.26-20.34.01:372][  0]LogZenServiceInstance: Display: Writing plugin version info to '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'",
+    "[2026.10.26-20.34.01:379][  0]LogZenServiceInstance: Display: Read zen version cache file from '/home/unreal/.config/Epic/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-linux-x86_64-release-094f62c2'",
+    "[2026.10.26-20.34.01:379][  0]LogZenServiceInstance: InTree version at '/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver' is '5.8.13-202605190912-linux-x86_64-release-094f62c2'",
+    "[2026.10.26-20.34.01:379][  0]LogZenServiceInstance: Display: Read zen version cache file from '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-linux-x86_64-release-094f62c2'",
+    "[2026.10.26-20.34.01:379][  0]LogZenServiceInstance: Installed version at '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver' is '5.8.13-202605190912-linux-x86_64-release-094f62c2'",
+    "[2026.10.26-20.34.01:379][  0]LogZenServiceInstance: Display: Installed service at '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver' is up to date",
+    "[2026.10.26-20.34.01:398][  0]LogUnixPlatformFile: FUnixFileMapper::MapCaseInsensitiveFile: Lookup:/workspace/sub01-private-recovered-engine/Engine/Binaries/DotNet/OidcToken/linux-x64/OidcToken Found:/workspace/sub01-private-recovered-engine/Engine/Binaries/DotNET/OidcToken/linux-x64/OidcToken",
+    "",
+    "[2026.10.26-20.34.01:399][  0]LogZenServiceInstance: No current process using the data dir found, launching a new instance",
+    "[2026.10.26-20.34.01:399][  0]LogZenServiceInstance: Display: Launching executable '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver', working dir '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install', data dir '/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir /home/unreal/.config/Epic/UnrealEngine/Common/Zen/Data --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --cache-bucket-limit-overwrites --quiet --restrict-content-types --allow-external-oidctoken-exe=false --no-sentry --security-config-path \"/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/security-config.json\" --owner-pid 5220  --child-id Zen_5220_Startup --detach'",
+    "[2026.10.26-20.34.01:447][  0]LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.",
+    "[2026.10.26-20.34.01:447][  0]LogZenServiceInstance: Local ZenServer AutoLaunch initialization completed in 0.075 seconds",
+    "[2026.10.26-20.34.01:448][  0]LogDerivedDataCache: Display: ZenLocal: Using ZenServer HTTP service at [::1] with namespace ue.ddc. Status: OK!.",
+    "FUnixPlatformMisc::RequestExitWithStatus",
+    "\u0000FUnixPlatformMisc::RequestExit",
+    "\u0000[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Speed tests took 0.00 seconds.",
+    "[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: Display: /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.01ms. RandomReadSpeed=6133.96MBs, RandomWriteSpeed=1394.71MBs. Assigned SpeedClass 'Local'",
+    "[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: Local: Using data cache path /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Writable",
+    "[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: ZenShared: Disabled because Host is set to 'None'",
+    "[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: Shared: Disabled because no path is configured.",
+    "[2026.10.26-20.34.01:451][  0]LogDerivedDataCache: Cloud: Disabled because Host is set to 'None'",
+    "[2026.10.26-20.34.01:456][  0]LogModuleManager: InternalLoadLibrary: 'ShaderPreprocessor' ('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-ShaderPreprocessor.so')",
+    "[2026.10.26-20.34.01:456][  0]LogShaderCompilers: Guid format shader working directory is 15 characters bigger than the processId version (../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/Intermediate/Shaders/WorkingDirectory/5220/).",
+    "[2026.10.26-20.34.01:456][  0]LogShaderCompilers: Cleaned the shader compiler working directory '../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/Intermediate/Shaders/tmp/01A179EB88707E2ABB9788B0A5E4339E/'.",
+    "[2026.10.26-20.34.01:457][  0]LogShaderCompilers: Display: No distributed shader compiler controller found",
+    "[2026.10.26-20.34.01:457][  0]LogShaderCompilers: Display: Using 3 local workers for shader compilation",
+    "[2026.10.26-20.34.01:457][  0]LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush",
+    "[2026.10.26-20.34.01:457][  0]LogShaderCompilers: Display: Failed to delete old shader autogen file: ../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush",
+    "[2026.10.26-20.34.01:457][  0]LogShaderCompilers: Display: Shader autogen file written: ../../../../../home/sub01-animation-visual-20261026-attempt04/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush",
+    "FUnixPlatformMisc::RequestExit",
+    "\u0000"
+  ],
+  "current_identities": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "comm": "docker-init"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "sid": 110,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "comm": "sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "comm": "jupyter-lab"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "comm": "sleep"
+    },
+    {
+      "pid": 5364,
+      "ticks": 61856769,
+      "ppid": 122,
+      "sid": 5364,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "comm": "bash"
+    },
+    {
+      "pid": 5369,
+      "ticks": 61856851,
+      "ppid": 5364,
+      "sid": 5364,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "comm": "python3"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "comm": "nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "groups": [
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "cap_prm": "0000000000000000",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "comm": "nginx"
+    }
+  ],
+  "diagnostic_failures": [
+    {
+      "file": "0038-inspection-diagnostic.json",
+      "metadata": {
+        "argv": [
+          "/usr/bin/setpriv",
+          "--no-new-privs",
+          "--reuid=1001",
+          "--regid=1001",
+          "--clear-groups",
+          "/usr/bin/python3",
+          "-I",
+          "/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py",
+          "--executable-one",
+          "5256"
+        ],
+        "complete": true,
+        "finished_ns": 618533856468664,
+        "helper_identity": {
+          "cap_amb": "0000000000000000",
+          "cap_eff": "00000000a80425fb",
+          "cap_prm": "00000000a80425fb",
+          "cmdline_sha256": "195ecdf755c4b4005c5da1a9beb1770dcb755c89186800d20961993b6bfbf282",
+          "comm": "setpriv",
+          "gids": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "groups": [
+            "0",
+            "44",
+            "993"
+          ],
+          "no_new_privs": 0,
+          "pid": 5257,
+          "ppid": 5199,
+          "sid": 5194,
+          "state": "R",
+          "ticks": 61853364,
+          "uids": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "helper_pid": 5257,
+        "read_error": null,
+        "returncode": 1,
+        "started_ns": 618533649731450,
+        "timeout": false,
+        "truncated": false
+      },
+      "streams": {
+        "stderr": {
+          "bytes": 1278,
+          "retained_bytes": 1278,
+          "retained_sha256": "3da4df8adc59a4eb620e146668ae0e6fcb9c00cb401bef78427274ce1d032c6f",
+          "sha256": "3da4df8adc59a4eb620e146668ae0e6fcb9c00cb401bef78427274ce1d032c6f",
+          "raw_prefix_utf8": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 644, in <module>\n    elif a.executable_one is not None:print(json.dumps(executable_one(a.executable_one)))\n                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 41, in executable_one\n    after=identity(pid,proc);need(stable(before,after),'Identity changed while reading executable')\n          ^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt04/tools/fifo_observer_collector.py\", line 20, in identity\n    p=proc/str(pid); fields=(p/'stat').read_text().rsplit(')',1)[1].split()\n                            ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/pathlib.py\", line 1029, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/pathlib.py\", line 1015, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/proc/5256/stat'\n"
+        },
+        "stdout": {
+          "bytes": 0,
+          "retained_bytes": 0,
+          "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_prefix_utf8": ""
+        }
+      }
+    }
+  ],
+  "lifecycle": [
+    [
+      "0040-lifecycle-failure.json",
+      {
+        "error": "Block('Credentialed FD census failed/incomplete: 5256')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618533857964832,
+        "pid": 5256,
+        "reason": "Descendant live verification failed"
+      }
+    ],
+    [
+      "0041-lifecycle-failure.json",
+      {
+        "error": "Block('Credentialed FD census failed/incomplete: 5256')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618533858526086,
+        "reason": "Discovery failed"
+      }
+    ],
+    [
+      "0045-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618533909556194,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0054-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618533966395796,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0058-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534020312983,
+        "pid": 5220,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0059-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534020895516,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0063-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534074828303,
+        "pid": 5220,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0064-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534075363758,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0068-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534128991361,
+        "pid": 5220,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0069-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534129517038,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0077-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534228731713,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0078-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534280927600,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0079-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534332962714,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0080-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534385065245,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ],
+    [
+      "0082-lifecycle-failure.json",
+      {
+        "label": "lifecycle-failure",
+        "monotonic_ns": 618534437812947,
+        "pid": 5256,
+        "reason": "Gone before live verification"
+      }
+    ]
+  ]
+}

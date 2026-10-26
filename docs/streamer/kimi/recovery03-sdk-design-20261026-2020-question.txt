@@ -1,0 +1,3242 @@
+EXACT REVIEW REQUEST: ONE ATTEMPT03 RECOVERY01 ONLY
+
+Please inspect this complete recovery candidate and return an explicit verdict: APPROVE ONE ATTEMPT03 RECOVERY01 or BLOCK with concrete corrections. This request DOES NOT authorize visual04, native startup, SDK bypass, voice/head, provider changes, or runtime implementation beyond recovery. The coordinator may append a separately headed SDK DESIGN-only consultation; give separate verdicts, never treat that design as execution approval.
+
+Actual visual03 FAILED before fixture admission/capture. Native startup automatically invoked Build.sh -Mode=ValidatePlatforms; the exact descendant executable was not admitted, then unproven first-seen adoptees blocked final provenance checks. Known children were reaped. We do not relabel unknown descendants as owned or infer cause from a still. Independent read-only facts below report full credentialed census twice, no FIFO openers, exact original5640/import5643/visual5643 files, complete chain0002(201 files)/0001(199 files), STOP held and no MEASURING. Those historical facts do NOT replace fresh runtime census.
+
+Recovery repeats the prior narrowly reviewed pattern with current03 pins: one foreground root stdin Python and its exact waiting Bash direct child of Jupyter122; eight fixed background identities only. Full strict census twice before/after each critical phase, actual executable/credential/FD/CWD/root/mount audit, no skip on error or unknown PID. No applications launched, no kills/reaping/admission exception. Existing bounded credential helpers only inspect or test restored access and must finish before census. Existing launch lock exactdev66/ino7741078 held. Canonical STOP bytes checked throughout. Network listeners/UDP fixed; established connections may only monotonically disappear as previously reviewed.
+
+Mutations to existing runtime state are precisely: rename canonical fresh FIFO dev66/ino2177729005 to a new retired evidence path using RENAME_NOREPLACE; rename preserved original FIFO dev66/ino4303368925 back to canonical using RENAME_NOREPLACE; after exact baselines, preservation, full quiescence and FD-bound identity proof, fchmod exact ancestor dev66/ino2149578155 from0700 to0710, then actual UID1001 probe and census. No FIFO byte reads/unlinks, recursive chmod, canonical backend/memory substitution, or original project changes. On an error after mode restoration, exact FD/path identity allows safe reclose0700; otherwise no forced operation. Both FIFO identities remain preserved if the second rename fails.
+
+New records/files are written only to separate root/volume recovery01 paths and the retired FIFO name in current OUT. Current OUT/main remains FAILED. Original ROOT_RECORDS and all historical PERSIST generations are immutable: validate full linked chain against pinned latest a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c, copy complete historical persistent tree into separate recovery archive, independently validate copied chain, re-read original chain. Current OUT evidence and late root barrier records copied separately. No earlier sealed file is modified and no new visual generation is published. Independent verifier checks recovery receipt/files/events, historical chain and projects, restored FIFO/barrier and real access probe, exact background census. Recovery success is RECOVERED_NOT_VISUALLY_ACCEPTED; visual03 remains FAILED, performance NOT_ASSESSED.
+
+All code below is byte-faithful UTF-8 from local files with byte counts/SHA256. Only the launcher's duplicate base64 assets literal is omitted using the exhaustive reconstruction proof; full decoded source and pins appear once as their own sections (source embeds pins additionally as runtime integrity binding). All other launcher statements remain. Imported installed observer/barrier full bytes are included, pinned to the previously deployed approved03 bytes. The installed observer's lifecycle functions are NOT used to bypass quiescence: recovery uses module census directly and never Observer.register_descendants/corroborate. 24 local tests pass; no execution/staging/review API performed by this preparation.
+
+
+===== BEGIN SOURCE recover_once.py bytes=32731 sha256=3b0c41e2be9b18302898f50379a01b56780d8ee3bbd4153ed2b7f72c12e45db2 =====
+"""OFFLINE PREPARED: requires exact review before one foreground root execution.
+No application launch, provider call, FIFO read, broad kill, or historical receipt rewrite.
+"""
+from pathlib import Path
+import ctypes,fcntl,hashlib,importlib.util,json,os,signal,stat,subprocess,sys,time,traceback,re
+TOOLS=Path('/opt/sub01/animation-visual-20261026-attempt03/tools')
+OBSERVER_SHA='e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049'
+BARRIER_SHA='05abf6bdd9db7455696dba460b432d8cd97e41eb82b7f4b11c5a20c2342a2698'
+PINS_BYTES=b'{\n  "actual_assets": {\n    "Content/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.uasset": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",\n    "Content/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.uasset": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",\n    "Content/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.uasset": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1"\n  },\n  "approved_background": [\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",\n        "comm": "docker-init",\n        "exe": "/usr/sbin/docker-init",\n        "exe_sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 1,\n        "ppid": 0,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754026,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing container init; trusted fixed process reaper, no FIFO consumer or experiment launcher."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",\n        "comm": "start.sh",\n        "exe": "/usr/bin/bash",\n        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 57,\n        "ppid": 1,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754036,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing startup shell; trusted idle service supervisor; no new jobs during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",\n        "comm": "nginx",\n        "exe": "/usr/sbin/nginx",\n        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 88,\n        "ppid": 1,\n        "sid": 88,\n        "state": "S",\n        "ticks": 54754037,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing nginx master; fixed existing HTTP service only; no native private FIFO configuration or new workers allowed."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "0000000000000000",\n        "cap_prm": "0000000000000000",\n        "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",\n        "comm": "nginx",\n        "exe": "/usr/sbin/nginx",\n        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n        "gids": [\n          "65534",\n          "65534",\n          "65534",\n          "65534"\n        ],\n        "groups": [\n          "65534"\n        ],\n        "no_new_privs": 0,\n        "pid": 89,\n        "ppid": 88,\n        "sid": 88,\n        "state": "S",\n        "ticks": 54754037,\n        "uids": [\n          "65534",\n          "65534",\n          "65534",\n          "65534"\n        ]\n      },\n      "reason": "Existing nginx worker UID65534; fixed HTTP service; no native private FIFO access; credentialed full FD census mandatory."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",\n        "comm": "sshd",\n        "exe": "/usr/sbin/sshd",\n        "exe_sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [],\n        "no_new_privs": 0,\n        "pid": 110,\n        "ppid": 1,\n        "sid": 110,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing SSH listener; no new SSH sessions permitted during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",\n        "comm": "start.sh",\n        "exe": "/usr/bin/bash",\n        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 115,\n        "ppid": 57,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing startup shell supervising Jupyter; trusted fixed behavior, no FIFO consumer."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",\n        "comm": "jupyter-lab",\n        "exe": "/usr/bin/python3.12",\n        "exe_sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 122,\n        "ppid": 115,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing Jupyter server hosting sole foreground experiment session; no other cells/terminals/tasks permitted during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",\n        "comm": "sleep",\n        "exe": "/usr/bin/sleep",\n        "exe_sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 123,\n        "ppid": 57,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing long-lived sleep under startup shell; no IPC opener behavior."\n    }\n  ],\n  "baseline_sha256": "0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5",\n  "executable_pins": {\n    "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver": {\n      "bytes": 21032680,\n      "mode": "0o777",\n      "resolved": "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver",\n      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",\n      "uid": 1001\n    },\n    "/usr/bin/Xvfb": {\n      "bytes": 2064864,\n      "mode": "0o755",\n      "resolved": "/usr/bin/Xvfb",\n      "sha256": "0081b27338b510ec5e2068a93c6db31480872de9bb082f347f3747ef1648e794",\n      "uid": 0\n    },\n    "/usr/bin/bash": {\n      "bytes": 1446024,\n      "mode": "0o755",\n      "resolved": "/usr/bin/bash",\n      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n      "uid": 0\n    },\n    "/usr/bin/python3.12": {\n      "bytes": 8021824,\n      "mode": "0o755",\n      "resolved": "/usr/bin/python3.12",\n      "sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",\n      "uid": 0\n    },\n    "/usr/bin/setpriv": {\n      "bytes": 39304,\n      "mode": "0o755",\n      "resolved": "/usr/bin/setpriv",\n      "sha256": "52a93eadf78c657f0330ed0618a78b6bbca5212df527d816b7fc5af5b10cb1da",\n      "uid": 0\n    },\n    "/usr/bin/sleep": {\n      "bytes": 35336,\n      "mode": "0o755",\n      "resolved": "/usr/bin/sleep",\n      "sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",\n      "uid": 0\n    },\n    "/usr/sbin/docker-init": {\n      "bytes": 765072,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/docker-init",\n      "sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",\n      "uid": 65534\n    },\n    "/usr/sbin/nginx": {\n      "bytes": 1313752,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/nginx",\n      "sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n      "uid": 0\n    },\n    "/usr/sbin/sshd": {\n      "bytes": 921416,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/sshd",\n      "sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd": {\n      "bytes": 450848,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd",\n      "sha256": "7e54a59c2740d66003656e7a8f33d11e7348bb97d33483e98f05fedd0784284a",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer": {\n      "bytes": 1523816,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer",\n      "sha256": "aadf17081e53c29a02a413449ca3b3dab9032ba3466ddf37ec9f909f59313461",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver": {\n      "bytes": 21032680,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver",\n      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",\n      "uid": 0\n    }\n  },\n  "expected_latest": {\n    "generation": "generation-0002",\n    "manifest_sha256": "a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c",\n    "schema": "sub01.visual-preservation-latest.v1"\n  },\n  "expected_lock": {\n    "dev": 66,\n    "gid": 0,\n    "ino": 7741078,\n    "mode": 384,\n    "type": 32768,\n    "uid": 0\n  },\n  "expected_pre_chmod": {\n    "ancestor": "/home/sub01-recovery-stage-20261026",\n    "event": "pre-chmod",\n    "expected": {\n      "dev": 66,\n      "gid": 1001,\n      "ino": 2149578155,\n      "mode": 456,\n      "type": 16384,\n      "uid": 0\n    },\n    "monotonic_ns": 616379550946036,\n    "original": {\n      "dev": 66,\n      "gid": 1001,\n      "ino": 4631271,\n      "mode": 448,\n      "type": 16384,\n      "uid": 1001\n    },\n    "recovery": "Only exact quiescence+FD-bound identity allows restoring0710",\n    "state": "LOCKED",\n    "utc": 1793044687.0915196\n  }\n}\n'
+PINS_SHA='58916fd1cbc34366dd67dcbbf887c57774ef4ead8a0deac54940fc7b36385f9b'
+ANCESTOR=Path('/home/sub01-recovery-stage-20261026')
+ORIGINAL=ANCESTOR/'native/cinematic-source-v3-final/Sub01HomeLab'
+IMPORT=Path('/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab')
+VISUAL=Path('/home/sub01-animation-visual-20261026-attempt03/reading-face/Sub01HomeLab')
+BASELINE=Path('/workspace/sub01-animation-reconstruction-20261026-attempt02/metadata/baseline-manifest.json')
+OUT=Path('/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt03')
+PERSIST=Path('/workspace/sub01-animation-visual-reading-20261026-attempt03')
+ROOT_RECORDS=Path('/root/sub01-animation-visual-20261026-attempt03-barrier')
+RECOVERY=Path('/root/sub01-animation-visual-attempt03-recovery01')
+VOLUME=Path('/workspace/sub01-animation-visual-attempt03-recovery01')
+FIFO=Path('/home/unreal/.sub01-private/streamer/main.mjpeg')
+OLD=OUT/'fifo-evidence/preserved-original-fifo'
+RETIRED=OUT/'fifo-evidence/retired-fresh-fifo-recovery01'
+STOP=Path('/home/unreal/.sub01-private/streamer/STOP')
+EXPECTED_BARRIER=dict(dev=66,ino=2149578155,uid=0,gid=1001,mode=0o700,type=stat.S_IFDIR)
+EXPECTED_FRESH=dict(dev=66,ino=2177729005,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+EXPECTED_OLD=dict(dev=66,ino=4303368925,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+class Block(RuntimeError):pass
+def need(ok,msg):
+ if not ok:raise Block(msg)
+def digest(p):
+ h=hashlib.sha256()
+ fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+ with os.fdopen(fd,'rb')as f:
+  need(stat.S_ISREG(os.fstat(f.fileno()).st_mode),'not regular: '+str(p))
+  for b in iter(lambda:f.read(1024*1024),b''):h.update(b)
+ return h.hexdigest()
+def meta(s):return dict(dev=s.st_dev,ino=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),type=stat.S_IFMT(s.st_mode))
+def exact(p,want):need(meta(p.lstat())==want,'identity/metadata mismatch: '+str(p))
+def no_replace(src,dst):
+ # Atomic Linux renameat2 RENAME_NOREPLACE: never overwrite an unexpected inode.
+ libc=ctypes.CDLL(None,use_errno=True);fn=libc.renameat2;fn.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+ need(fn(-100,os.fsencode(src),-100,os.fsencode(dst),1)==0,'renameat2 no-replace failed errno='+str(ctypes.get_errno()))
+def restore_fifo():
+ exact(FIFO,EXPECTED_FRESH);exact(OLD,EXPECTED_OLD)
+ need(not RETIRED.exists() and not RETIRED.is_symlink(),'retired path collision')
+ no_replace(FIFO,RETIRED);exact(RETIRED,EXPECTED_FRESH)
+ no_replace(OLD,FIFO);exact(FIFO,EXPECTED_OLD)
+ # Failed second rename leaves both originals preserved, barrier stays0700; no forced retry.
+def load(name,sha):
+ p=TOOLS/(name+'.py');need(digest(p)==sha,'deployed module pin: '+name)
+ spec=importlib.util.spec_from_file_location('recovery_'+name,p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+def audit_rows(rows,allowed,observer,barrier,me):
+ need({r['identity']['pid']for r in rows}==set(allowed),'unexpected/missing process')
+ for row in rows:
+  i=row['identity'];a=allowed[i['pid']];need(i['state']!='Z','terminal process present during recovery quiescence')
+  need(observer.stable(a['identity'],i),'identity/credential drift')
+  need(i['cmdline_sha256']==a['identity']['cmdline_sha256'] and i['comm']==a['identity']['comm'],'argv/comm drift')
+  need(row['exe']==a['exe'] and row['exe_sha256']==a['exe_sha256'],'executable drift')
+  need(not(set(i['uids'])&{'1001','1002'}),'native/import UID remains')
+  for f in row['fds']:need((f['dev'],f['ino'])not in {(66,2177729005),(66,4303368925)},'old/fresh FIFO opener')
+ barrier.audit(rows,True) # full FD/CWD/root + aliases; only own exact control FD is exempt
+def get(p):
+ need(stat.S_ISREG(p.lstat().st_mode),'nonregular JSON');return json.loads(p.read_text())
+def file_rows(root):
+ need(stat.S_ISDIR(root.lstat().st_mode),'non-directory root');rows={}
+ for p in sorted(root.rglob('*')):
+  s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'symlink '+str(p))
+  if stat.S_ISDIR(s.st_mode):continue
+  need(stat.S_ISREG(s.st_mode) and s.st_nlink==1,'non-independent regular file '+str(p))
+  rows[str(p.relative_to(root))]={'bytes':s.st_size,'sha256':digest(p)}
+ return rows
+def verify_generations(volume):
+ pointer=get(volume/'LATEST-GENERATION.json');latest=dict(pointer);seen=set();chain=[];last_number=None
+ while pointer is not None:
+  need(set(pointer)=={'schema','generation','manifest_sha256'} and pointer['schema']=='sub01.visual-preservation-latest.v1','pointer schema')
+  name=pointer['generation'];need(isinstance(name,str) and re.fullmatch(r'generation-[0-9]{4}',name),'generation name')
+  need(name not in seen,'generation cycle');seen.add(name);number=int(name[-4:])
+  if last_number is not None:need(number==last_number-1,'generation gap/reorder')
+  last_number=number;root=volume/'generations'/name
+  need(stat.S_ISDIR(root.lstat().st_mode),'generation directory')
+  need(digest(root/'manifest.json')==pointer['manifest_sha256'],'manifest hash')
+  m=get(root/'manifest.json');need(m['schema']=='sub01.visual-preservation-generation.v1' and m['generation']==name,'manifest identity')
+  rows=file_rows(root);rows.pop('manifest.json');need(rows==m['files'],'complete generation membership/hash')
+  r=get(root/'result.json');need(r==get(root/'files/main.json') and r['status']==m['run_status'],'generation result disagreement')
+  chain.append({'pointer':pointer,'manifest':m,'result':r});pointer=m['previous']
+ need(last_number==1,'chain did not reach first generation')
+ actual={p.name for p in (volume/'generations').iterdir()}
+ need(actual==seen,'unsealed/incomplete or unchained generation')
+ need(get(volume/'LATEST-GENERATION.json')==latest,'latest pointer changed during readback')
+ return chain
+
+class Recovery:
+ def __init__(self):self.counter=0;self.lockfd=None;self.barrier=None;self.allowed={};self.network=None;self.restored=False;self.status='BLOCKED';self.first_error=None;self.failure_events=[]
+ def record(self,event,**data):
+  self.counter+=1;p=RECOVERY/f'{self.counter:03d}-{event}.json';b=(json.dumps(dict(event=event,utc=time.time(),monotonic_ns=time.monotonic_ns(),**data),sort_keys=True,indent=2)+'\n').encode()
+  with p.open('xb')as f:f.write(b);f.flush();os.fsync(f.fileno())
+ def network_snapshot(self):
+  rows=[]
+  for n in ('tcp','tcp6','udp','udp6'):
+   for line in (Path('/proc/net')/n).read_text().splitlines()[1:]:
+    f=line.split()
+    if n.startswith('udp')or f[3]in ('01','0A'):rows.append((n,f[1],f[2],f[3],f[9]))
+  return sorted(rows)
+ def record_network(self,label,rows,network):
+  # Fixed listeners/UDP; established socket tuples (including inode) only shrink.
+  current={tuple(r) for r in network}
+  previous=None if self.network is None else {tuple(r) for r in self.network}
+  fixed=lambda rs:{r for r in rs if r[0].startswith('udp') or r[3]=='0A'}
+  established=lambda rs:{r for r in rs if r[0].startswith('tcp') and r[3]=='01'}
+  valid=previous is None or (fixed(current)==fixed(previous) and established(current)<=established(previous))
+  delta={'initial':previous is None,'added':sorted(current-(previous or set())),
+         'removed':sorted((previous or set())-current),'allowed':valid,
+         'policy':'fixed listeners and UDP; established monotonic subset of previous snapshot'}
+  # Persist the actual rejected snapshot and delta BEFORE raising.
+  self.record(label,processes=rows,network=network,network_delta=delta)
+  need(valid,'control clients/listeners changed outside monotonic closure policy')
+  self.network=network
+ def quiescent(self,label):
+  for n in range(2):
+   need(not Path('/tmp/sub01-share/MEASURING').exists(),'measurement active')
+   need(STOP.is_file() and digest(STOP)==self.stop_hash,'STOP changed')
+   need({int(p.name)for p in Path('/proc').iterdir()if p.name.isdigit()}==set(self.allowed),'unexpected process before census')
+   rows=self.observer.census() # deliberately NOT Observer.corroborate/register_descendants
+   need({int(p.name)for p in Path('/proc').iterdir()if p.name.isdigit()}==set(self.allowed),'unexpected process after census')
+   audit_rows(rows,self.allowed,self.observer,self.barrier,os.getpid())
+   network=self.network_snapshot()
+   self.record_network(label+'-'+str(n),rows,network)
+   if n==0:time.sleep(.1)
+ def hash_projects(self,label):
+  expected=dict(self.baseline);extended=dict(expected,**self.pins['actual_assets']);results={}
+  for root,wanted in ((ORIGINAL,expected),(IMPORT,extended),(VISUAL,extended)):
+   got={}
+   for p in sorted(root.rglob('*')):
+    rel=p.relative_to(root)
+    if rel.parts[0]in {'Saved','Intermediate','DerivedDataCache'}:continue
+    s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'project symlink')
+    if stat.S_ISREG(s.st_mode):need(s.st_nlink==1,'project hardlink');got[str(rel)]=digest(p)
+    else:need(stat.S_ISDIR(s.st_mode),'unexpected project special file')
+   need(got==wanted,'project baseline/asset mismatch: '+str(root));results[str(root)]={'files':len(got),'baseline_files':len(expected),'match':True}
+  self.record(label,projects=results)
+ def copy_evidence(self):
+  inventory={};excluded=[]
+  for source,label in ((OUT,'current-root-output'),(ROOT_RECORDS,'original-barrier-records')):
+   for p in sorted(source.rglob('*')):
+    rel=p.relative_to(source);s=p.lstat()
+    if 'xauthority' in p.name.lower():excluded.append(str(p));continue
+    need(not stat.S_ISLNK(s.st_mode),'evidence symlink')
+    if stat.S_ISDIR(s.st_mode):continue
+    if stat.S_ISFIFO(s.st_mode):
+     need(p==RETIRED and meta(s)==EXPECTED_FRESH,'unexpected evidence FIFO');excluded.append(str(p));continue
+    need(stat.S_ISREG(s.st_mode),'evidence special file');self.copy_regular(p,VOLUME/label/rel,inventory)
+  chain=verify_generations(PERSIST)
+  need(chain[0]['pointer']==self.pins['expected_latest'],'historical latest differs')
+  need(chain[0]['result']['status']=='FAILED','historical attempt not FAILED')
+  for p in sorted(PERSIST.rglob('*')):
+   st=p.lstat();need(not stat.S_ISLNK(st.st_mode),'historical persistence symlink')
+   if stat.S_ISDIR(st.st_mode):continue
+   need(stat.S_ISREG(st.st_mode),'historical persistence special file')
+   self.copy_regular(p,VOLUME/'historical-volume'/p.relative_to(PERSIST),inventory)
+  need(verify_generations(VOLUME/'historical-volume')==chain,'archived generation readback differs')
+  need(verify_generations(PERSIST)==chain,'historical generation changed')
+  self.record('historical-generations-preserved',latest=chain[0]['pointer'],generation_count=len(chain),current_main_sha256=digest(OUT/'main.json'),latest_result_sha256=digest(PERSIST/'generations'/chain[0]['pointer']['generation']/'result.json'),historical_untouched=True)
+  self.inventory=inventory;self.excluded=excluded
+ def copy_regular(self,src,dst,inventory):
+  s=src.lstat();need(stat.S_ISREG(s.st_mode) and s.st_size<64*1024*1024,'regular evidence bound');before=digest(src)
+  dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+  with src.open('rb')as a,dst.open('xb')as b:
+   while True:
+    data=a.read(1024*1024)
+    if not data:break
+    b.write(data)
+   b.flush();os.fsync(b.fileno())
+  need(meta(src.lstat())==meta(s) and digest(src)==before==digest(dst),'copy/readback mismatch')
+  inventory[str(dst.relative_to(VOLUME))]={'bytes':dst.stat().st_size,'sha256':before}
+ def fail_closed(self,error_text):
+  """Never mask the initiating error; never trust restored flag for actual mode.
+  The control FD and visible path must BOTH match the fixed admitted instance.
+  Failure diagnostics are best effort: safety reclosure precedes file writes.
+  """
+  if self.first_error is None:self.first_error=sys.exc_info()
+  self.status='BLOCKED';outcome={'original_error':error_text,'reclose':'not_attempted'}
+  try:
+   if self.barrier is not None and self.barrier.fd is not None:
+    actual=meta(os.fstat(self.barrier.fd));visible=meta(ANCESTOR.lstat())
+    need(actual==visible and actual in (EXPECTED_BARRIER,dict(EXPECTED_BARRIER,mode=0o710)),'reclose identity/owner/mode changed')
+    if actual['mode']==0o710:os.fchmod(self.barrier.fd,0o700)
+    need(meta(os.fstat(self.barrier.fd))==meta(ANCESTOR.lstat())==EXPECTED_BARRIER,'reclose verification failed')
+    self.restored=False;outcome['reclose']='verified0700'
+   else:outcome['reclose']='no_control_fd'
+  except BaseException:
+   outcome['reclose']='BLOCKED_no_force';outcome['reclose_error']=traceback.format_exc()
+  self.failure_events.append(outcome)
+  try:self.record('failure-reclose',**outcome)
+  except BaseException:
+   outcome['record_error']=traceback.format_exc()
+   # Distinct exclusive root evidence when normal numbered event recording fails.
+   try:
+    p=RECOVERY/('FAILURE-FALLBACK-'+str(len(self.failure_events))+'.json')
+    with p.open('xb')as f:
+     f.write((json.dumps(outcome,sort_keys=True)+'\n').encode());f.flush();os.fsync(f.fileno())
+   except BaseException:pass # original exception still propagates; never claim success
+ def run(self):
+  try:return self._run()
+  except BaseException:
+   # Catches failures outside inner handlers too, including completion reporting.
+   if self.first_error is None or (self.barrier is not None and self.barrier.fd is not None):
+    self.fail_closed(traceback.format_exc())
+   first=self.first_error
+   if first and first[1] is not None:raise first[1].with_traceback(first[2])
+   raise
+ def _run(self):
+  need(sys.platform=='linux' and os.geteuid()==0,'root Linux only');os.chdir('/')
+  os.sched_setaffinity(0,set(sorted(os.sched_getaffinity(0))[:2]))
+  self.observer=load('fifo_observer_collector',OBSERVER_SHA);B=load('access_barrier',BARRIER_SHA)
+  need(hashlib.sha256(PINS_BYTES).hexdigest()==PINS_SHA,'recovery pins');self.pins=json.loads(PINS_BYTES)
+  need(not RECOVERY.exists() and not VOLUME.exists(),'one-shot output collision')
+  self.lockfd=os.open(B.LOCK,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC)
+  s=os.fstat(self.lockfd);need(self.pins['expected_lock'] is not None and meta(s)==self.pins['expected_lock'],'existing lock identity / NOT_READY missing actual pin')
+  fcntl.flock(self.lockfd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  RECOVERY.mkdir(mode=0o700);VOLUME.mkdir(mode=0o700)
+  try:
+   self.record('begin',scope='recovery only; attempt03 remains FAILED; visual PENDING/performance NOT_ASSESSED',pins_sha256=PINS_SHA)
+   for a in self.pins['approved_background']:
+    i=a['identity'];self.allowed[i['pid']]={'identity':i,'exe':i['exe'],'exe_sha256':i['exe_sha256']}
+   need(len(self.allowed)==8,'background count')
+   me=self.observer.executable_one(os.getpid());parent=self.observer.executable_one(me['identity']['ppid'])
+   need(parent['identity']['ppid']==122 and parent['exe']=='/usr/bin/bash' and parent['identity']['state']=='S','waiting bash must be direct Jupyter122 child')
+   need(me['exe']=='/usr/bin/python3.12','recovery Python')
+   own_argv=(Path('/proc')/str(os.getpid())/'cmdline').read_bytes().split(b'\0');need(own_argv==[b'python3',b'-',b''],'stdin Python argv')
+   source_path=Path(__file__);need(source_path==Path('/root/sub01-attempt03-recovery01-tools/recover_once.py'),'exact staged source path')
+   for p in (source_path,source_path.with_name('recovery-pins.json')):
+    st=p.lstat();need(stat.S_ISREG(st.st_mode) and st.st_uid==0 and not(st.st_mode&0o022),'root staged source metadata')
+   need(digest(source_path.with_name('recovery-pins.json'))==PINS_SHA,'staged pins mismatch')
+   self.record('source-bound',source_sha256=digest(source_path),parent_cmdline_sha256=parent['identity']['cmdline_sha256'])
+   (RECOVERY/'recover_once.py').write_bytes(source_path.read_bytes());(RECOVERY/'recovery-pins.json').write_bytes(PINS_BYTES)
+   for row in (me,parent):
+    i=row['identity'];need(set(i['uids'])=={'0'} and set(i['gids'])=={'0'},'root recovery controller credentials')
+    need(row['exe_sha256']==self.pins['executable_pins'][row['exe']]['sha256'],'controller exe pin');self.allowed[i['pid']]=row
+   need(len(self.allowed)==10,'controller collision');self.record('bound-launch-graph',own=me,parent=parent)
+   pre=ROOT_RECORDS/'002-pre-chmod.json';s=pre.lstat();need(s.st_uid==0 and stat.S_ISREG(s.st_mode) and not(s.st_mode&0o022),'recovery record owner/type')
+   need(json.loads(pre.read_text())==self.pins['expected_pre_chmod'],'pre-chmod record differs')
+   exact(ANCESTOR,EXPECTED_BARRIER)
+   self.barrier=B.AccessBarrier(ORIGINAL,VISUAL/'Sub01HomeLab.uproject')
+   self.barrier.fd=os.open(ANCESTOR,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+   self.barrier.expected=dict(EXPECTED_BARRIER,mode=0o710);self.barrier.original_identity=self.pins['expected_pre_chmod']['original'];self.barrier.record=lambda e,**d:self.record(e,**d)
+   self.barrier.protected_inodes=set()
+   for p in [ANCESTOR,ORIGINAL,*ORIGINAL.rglob('*')]:
+    s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'protected symlink')
+    if stat.S_ISREG(s.st_mode):need(s.st_nlink==1,'protected hardlink')
+    self.barrier.protected_inodes.add((s.st_dev,s.st_ino))
+   self.barrier.device='0:66';self.barrier.verify(0o700)
+   self.stop_hash=digest(STOP);need(not Path('/tmp/sub01-share/MEASURING').exists(),'measurement active')
+   need(digest(BASELINE)==self.pins['baseline_sha256'],'baseline hash');self.baseline=json.loads(BASELINE.read_text());need(len(self.baseline)==5640,'baseline count')
+   self.quiescent('pre-recovery');self.barrier.probe(True);self.quiescent('post-active-probe');self.hash_projects('baseline-before')
+   self.quiescent('pre-fifo');self.record('pre-fifo-restore',fresh=meta(FIFO.lstat()),old=meta(OLD.lstat()),retired=str(RETIRED));restore_fifo();self.record('fifo-restored',canonical=meta(FIFO.lstat()),retired=meta(RETIRED.lstat()))
+   self.quiescent('post-fifo');self.hash_projects('baseline-final');self.copy_evidence()
+   self.quiescent('immediate-pre-mode-restore');self.barrier.verify(0o700);self.record('pre-mode-restore',actual=meta(os.fstat(self.barrier.fd)))
+   os.fchmod(self.barrier.fd,0o710);self.restored=True
+   self.barrier.verify(0o710);self.barrier.probe(False);self.quiescent('post-mode-probe');self.barrier.verify(0o710)
+   self.status='RECOVERED_NOT_VISUALLY_ACCEPTED';self.record('complete',status=self.status,barrier=meta(os.fstat(self.barrier.fd)),canonical_fifo=meta(FIFO.lstat()),retired_fifo=meta(RETIRED.lstat()))
+  except BaseException:
+   self.fail_closed(traceback.format_exc())
+   raise
+  finally:
+   # Preserve NEW records without overwriting historical receipt/current failed status.
+   inventory=getattr(self,'inventory',{})
+   try:
+    for p in sorted(RECOVERY.glob('*.json')):self.copy_regular(p,VOLUME/'recovery-records'/p.name,inventory)
+    for p in (RECOVERY/'recover_once.py',):
+     if p.exists():self.copy_regular(p,VOLUME/'recovery-source'/p.name,inventory)
+    receipt=dict(status=self.status,attempt03_status='FAILED',visual='PENDING',performance='NOT_ASSESSED',barrier_restored=self.restored,files=inventory,excluded=getattr(self,'excluded',[]),historical_receipt_rewritten=False)
+    data=(json.dumps(receipt,sort_keys=True,indent=2)+'\n').encode()
+    for root in (RECOVERY,VOLUME):
+     p=root/'RECOVERY-PRESERVATION-RECEIPT.json'
+     with p.open('xb')as f:f.write(data);f.flush();os.fsync(f.fileno())
+     need(p.read_bytes()==data,'new receipt readback')
+   except BaseException:
+    self.fail_closed(traceback.format_exc())
+    raise
+   finally:
+    # All potentially failing evidence/probe work has finished or been handled.
+    # Cancel the work alarm before releasing the last verified control descriptor.
+    signal.alarm(0)
+    if self.lockfd is not None:fcntl.flock(self.lockfd,fcntl.LOCK_UN);os.close(self.lockfd);self.lockfd=None
+    if self.barrier and self.barrier.fd is not None:os.close(self.barrier.fd);self.barrier.fd=None
+if __name__=='__main__':
+ def timeout(*a):raise Block('180second recovery deadline')
+ signal.signal(signal.SIGALRM,timeout);signal.alarm(180)
+ r=Recovery();r.run();signal.alarm(0);print(json.dumps({'status':r.status,'recovery_records':str(RECOVERY),'volume':str(VOLUME)}))
+
+===== END SOURCE recover_once.py =====
+
+===== BEGIN SOURCE recovery-pins.json bytes=11892 sha256=58916fd1cbc34366dd67dcbbf887c57774ef4ead8a0deac54940fc7b36385f9b =====
+{
+  "actual_assets": {
+    "Content/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.uasset": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",
+    "Content/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.uasset": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",
+    "Content/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.uasset": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1"
+  },
+  "approved_background": [
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+        "comm": "docker-init",
+        "exe": "/usr/sbin/docker-init",
+        "exe_sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 1,
+        "ppid": 0,
+        "sid": 1,
+        "state": "S",
+        "ticks": 54754026,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing container init; trusted fixed process reaper, no FIFO consumer or experiment launcher."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+        "comm": "start.sh",
+        "exe": "/usr/bin/bash",
+        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 57,
+        "ppid": 1,
+        "sid": 1,
+        "state": "S",
+        "ticks": 54754036,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing startup shell; trusted idle service supervisor; no new jobs during closed experiment."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+        "comm": "nginx",
+        "exe": "/usr/sbin/nginx",
+        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 88,
+        "ppid": 1,
+        "sid": 88,
+        "state": "S",
+        "ticks": 54754037,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing nginx master; fixed existing HTTP service only; no native private FIFO configuration or new workers allowed."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "0000000000000000",
+        "cap_prm": "0000000000000000",
+        "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+        "comm": "nginx",
+        "exe": "/usr/sbin/nginx",
+        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",
+        "gids": [
+          "65534",
+          "65534",
+          "65534",
+          "65534"
+        ],
+        "groups": [
+          "65534"
+        ],
+        "no_new_privs": 0,
+        "pid": 89,
+        "ppid": 88,
+        "sid": 88,
+        "state": "S",
+        "ticks": 54754037,
+        "uids": [
+          "65534",
+          "65534",
+          "65534",
+          "65534"
+        ]
+      },
+      "reason": "Existing nginx worker UID65534; fixed HTTP service; no native private FIFO access; credentialed full FD census mandatory."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+        "comm": "sshd",
+        "exe": "/usr/sbin/sshd",
+        "exe_sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [],
+        "no_new_privs": 0,
+        "pid": 110,
+        "ppid": 1,
+        "sid": 110,
+        "state": "S",
+        "ticks": 54754071,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing SSH listener; no new SSH sessions permitted during closed experiment."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+        "comm": "start.sh",
+        "exe": "/usr/bin/bash",
+        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 115,
+        "ppid": 57,
+        "sid": 1,
+        "state": "S",
+        "ticks": 54754071,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing startup shell supervising Jupyter; trusted fixed behavior, no FIFO consumer."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+        "comm": "jupyter-lab",
+        "exe": "/usr/bin/python3.12",
+        "exe_sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 122,
+        "ppid": 115,
+        "sid": 1,
+        "state": "S",
+        "ticks": 54754071,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing Jupyter server hosting sole foreground experiment session; no other cells/terminals/tasks permitted during closed experiment."
+    },
+    {
+      "identity": {
+        "cap_amb": "0000000000000000",
+        "cap_eff": "00000000a80425fb",
+        "cap_prm": "00000000a80425fb",
+        "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+        "comm": "sleep",
+        "exe": "/usr/bin/sleep",
+        "exe_sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",
+        "gids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "groups": [
+          "0",
+          "44",
+          "993"
+        ],
+        "no_new_privs": 0,
+        "pid": 123,
+        "ppid": 57,
+        "sid": 1,
+        "state": "S",
+        "ticks": 54754071,
+        "uids": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "reason": "Existing long-lived sleep under startup shell; no IPC opener behavior."
+    }
+  ],
+  "baseline_sha256": "0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5",
+  "executable_pins": {
+    "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver": {
+      "bytes": 21032680,
+      "mode": "0o777",
+      "resolved": "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver",
+      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",
+      "uid": 1001
+    },
+    "/usr/bin/Xvfb": {
+      "bytes": 2064864,
+      "mode": "0o755",
+      "resolved": "/usr/bin/Xvfb",
+      "sha256": "0081b27338b510ec5e2068a93c6db31480872de9bb082f347f3747ef1648e794",
+      "uid": 0
+    },
+    "/usr/bin/bash": {
+      "bytes": 1446024,
+      "mode": "0o755",
+      "resolved": "/usr/bin/bash",
+      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "uid": 0
+    },
+    "/usr/bin/python3.12": {
+      "bytes": 8021824,
+      "mode": "0o755",
+      "resolved": "/usr/bin/python3.12",
+      "sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",
+      "uid": 0
+    },
+    "/usr/bin/setpriv": {
+      "bytes": 39304,
+      "mode": "0o755",
+      "resolved": "/usr/bin/setpriv",
+      "sha256": "52a93eadf78c657f0330ed0618a78b6bbca5212df527d816b7fc5af5b10cb1da",
+      "uid": 0
+    },
+    "/usr/bin/sleep": {
+      "bytes": 35336,
+      "mode": "0o755",
+      "resolved": "/usr/bin/sleep",
+      "sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",
+      "uid": 0
+    },
+    "/usr/sbin/docker-init": {
+      "bytes": 765072,
+      "mode": "0o755",
+      "resolved": "/usr/sbin/docker-init",
+      "sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",
+      "uid": 65534
+    },
+    "/usr/sbin/nginx": {
+      "bytes": 1313752,
+      "mode": "0o755",
+      "resolved": "/usr/sbin/nginx",
+      "sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",
+      "uid": 0
+    },
+    "/usr/sbin/sshd": {
+      "bytes": 921416,
+      "mode": "0o755",
+      "resolved": "/usr/sbin/sshd",
+      "sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",
+      "uid": 0
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd": {
+      "bytes": 450848,
+      "mode": "0o777",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd",
+      "sha256": "7e54a59c2740d66003656e7a8f33d11e7348bb97d33483e98f05fedd0784284a",
+      "uid": 0
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer": {
+      "bytes": 1523816,
+      "mode": "0o777",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer",
+      "sha256": "aadf17081e53c29a02a413449ca3b3dab9032ba3466ddf37ec9f909f59313461",
+      "uid": 0
+    },
+    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver": {
+      "bytes": 21032680,
+      "mode": "0o777",
+      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver",
+      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",
+      "uid": 0
+    }
+  },
+  "expected_latest": {
+    "generation": "generation-0002",
+    "manifest_sha256": "a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c",
+    "schema": "sub01.visual-preservation-latest.v1"
+  },
+  "expected_lock": {
+    "dev": 66,
+    "gid": 0,
+    "ino": 7741078,
+    "mode": 384,
+    "type": 32768,
+    "uid": 0
+  },
+  "expected_pre_chmod": {
+    "ancestor": "/home/sub01-recovery-stage-20261026",
+    "event": "pre-chmod",
+    "expected": {
+      "dev": 66,
+      "gid": 1001,
+      "ino": 2149578155,
+      "mode": 456,
+      "type": 16384,
+      "uid": 0
+    },
+    "monotonic_ns": 616379550946036,
+    "original": {
+      "dev": 66,
+      "gid": 1001,
+      "ino": 4631271,
+      "mode": 448,
+      "type": 16384,
+      "uid": 1001
+    },
+    "recovery": "Only exact quiescence+FD-bound identity allows restoring0710",
+    "state": "LOCKED",
+    "utc": 1793044687.0915196
+  }
+}
+
+===== END SOURCE recovery-pins.json =====
+
+===== BEGIN SOURCE verify_recovery_once.py bytes=9390 sha256=943dea7e2bc69cb52f39b1960537d256cddde6499f9423ef681301ba8022d23a =====
+"""One read-only independent verification; no application, FIFO read or evidence write."""
+from pathlib import Path
+import hashlib,importlib.util,json,os,stat,time
+os.chdir('/')
+V=Path('/workspace/sub01-animation-visual-attempt03-recovery01');R=Path('/root/sub01-animation-visual-attempt03-recovery01');T=Path('/root/sub01-attempt03-recovery01-tools')
+PINS_SHA='58916fd1cbc34366dd67dcbbf887c57774ef4ead8a0deac54940fc7b36385f9b'
+SOURCE_SHA='3b0c41e2be9b18302898f50379a01b56780d8ee3bbd4153ed2b7f72c12e45db2'
+BASELINE_SHA='0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5'
+ancestor=Path('/home/sub01-recovery-stage-20261026');original=ancestor/'native/cinematic-source-v3-final/Sub01HomeLab'
+imported=Path('/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab');visual=Path('/home/sub01-animation-visual-20261026-attempt03/reading-face/Sub01HomeLab')
+private=Path('/home/unreal/.sub01-private');out=private/'animation-visual-reading-20261026-attempt03';historical=Path('/workspace/sub01-animation-visual-reading-20261026-attempt03')
+fifo=private/'streamer/main.mjpeg';retired=out/'fifo-evidence/retired-fresh-fifo-recovery01'
+def sha(p):
+ h=hashlib.sha256();fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+ with os.fdopen(fd,'rb')as f:
+  assert stat.S_ISREG(os.fstat(f.fileno()).st_mode)
+  for b in iter(lambda:f.read(1048576),b''):h.update(b)
+ return h.hexdigest()
+def met(s):return dict(dev=s.st_dev,ino=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),type=stat.S_IFMT(s.st_mode))
+def meta(p):return met(p.lstat())
+def absent(p):
+ try:p.lstat()
+ except FileNotFoundError:return True
+ return False
+
+def manifest(root):
+ result={}
+ for p in sorted(root.rglob('*')):
+  rel=p.relative_to(root)
+  if rel.parts[0] in {'Saved','Intermediate','DerivedDataCache'}:continue
+  s=p.lstat();assert not stat.S_ISLNK(s.st_mode)
+  if stat.S_ISREG(s.st_mode):assert s.st_nlink==1;result[str(rel)]=sha(p)
+  else:assert stat.S_ISDIR(s.st_mode)
+ return result
+
+def load(name,digest):
+ p=Path('/opt/sub01/animation-visual-20261026-attempt03/tools')/(name+'.py');assert sha(p)==digest
+ spec=importlib.util.spec_from_file_location('verified_'+name,p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+assert os.geteuid()==0 and sha(T/'recovery-pins.json')==PINS_SHA and sha(T/'recover_once.py')==SOURCE_SHA
+pins=json.loads((T/'recovery-pins.json').read_text())
+receipt=json.loads((V/'RECOVERY-PRESERVATION-RECEIPT.json').read_text());assert (R/'RECOVERY-PRESERVATION-RECEIPT.json').read_bytes()==(V/'RECOVERY-PRESERVATION-RECEIPT.json').read_bytes()
+assert receipt['status']=='RECOVERED_NOT_VISUALLY_ACCEPTED' and receipt['barrier_restored'] and not receipt['historical_receipt_rewritten']
+assert receipt['attempt03_status']=='FAILED' and receipt['visual']=='PENDING' and receipt['performance']=='NOT_ASSESSED'
+for rel,row in receipt['files'].items():
+ assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
+ p=V/rel;assert p.is_file() and not p.is_symlink() and p.stat().st_size==row['bytes'] and sha(p)==row['sha256'],rel
+for p in sorted(R.glob('*.json')):
+ if p.name=='RECOVERY-PRESERVATION-RECEIPT.json':continue
+ target=V/'recovery-records'/p.name;assert target.is_file() and p.read_bytes()==target.read_bytes()
+assert sha(V/'recovery-source/recover_once.py')==SOURCE_SHA and sha(R/'recover_once.py')==SOURCE_SHA
+assert sha(V/'recovery-records/recovery-pins.json')==PINS_SHA and sha(R/'recovery-pins.json')==PINS_SHA
+record_paths=sorted(R.glob('[0-9][0-9][0-9]-*.json'));records=[json.loads(p.read_text())for p in record_paths]
+expected=['begin','source-bound','bound-launch-graph','pre-recovery-0','pre-recovery-1','probe-active','post-active-probe-0','post-active-probe-1','baseline-before','pre-fifo-0','pre-fifo-1','pre-fifo-restore','fifo-restored','post-fifo-0','post-fifo-1','baseline-final','historical-generations-preserved','immediate-pre-mode-restore-0','immediate-pre-mode-restore-1','pre-mode-restore','probe-restored','post-mode-probe-0','post-mode-probe-1','complete']
+assert [r['event']for r in records]==expected
+assert [int(p.name[:3])for p in record_paths]==list(range(1,len(records)+1))
+assert records[-1]['status']=='RECOVERED_NOT_VISUALLY_ACCEPTED'
+network_records=[{tuple(x)for x in r['network']}for r in records if 'network'in r]
+assert network_records
+for before,after in zip(network_records,network_records[1:]):
+ fixed_before={x for x in before if x[0].startswith('udp')or x[3]=='0A'}
+ fixed_after={x for x in after if x[0].startswith('udp')or x[3]=='0A'}
+ established_before={x for x in before if x[0].startswith('tcp')and x[3]=='01'}
+ established_after={x for x in after if x[0].startswith('tcp')and x[3]=='01'}
+ assert fixed_before==fixed_after and established_after<=established_before
+
+source_record=next(r for r in records if r['event']=='source-bound');assert source_record['source_sha256']==SOURCE_SHA
+comparison=next(r for r in records if r['event']=='historical-generations-preserved')
+# Load only pinned recovery definitions; __main__ guard never executes recovery.
+spec=importlib.util.spec_from_file_location('generation_checker',T/'recover_once.py');checker=importlib.util.module_from_spec(spec);spec.loader.exec_module(checker)
+chain=checker.verify_generations(historical);archived=checker.verify_generations(V/'historical-volume')
+assert chain==archived and chain[0]['pointer']==pins['expected_latest']==comparison['latest']
+assert len(chain)==comparison['generation_count'] and chain[0]['result']['status']=='FAILED'
+for p in sorted(historical.rglob('*')):
+ st=p.lstat();assert not stat.S_ISLNK(st.st_mode)
+ if stat.S_ISDIR(st.st_mode):continue
+ assert stat.S_ISREG(st.st_mode)
+ assert sha(p)==sha(V/'historical-volume'/p.relative_to(historical))
+assert sha(out/'main.json')==comparison['current_main_sha256']==sha(V/'current-root-output/main.json')
+assert sha(historical/'generations'/chain[0]['pointer']['generation']/'result.json')==comparison['latest_result_sha256']
+assert json.loads((out/'main.json').read_text())['status']=='FAILED'
+assert meta(ancestor)==dict(dev=66,ino=2149578155,uid=0,gid=1001,mode=0o710,type=stat.S_IFDIR)
+assert meta(fifo)==dict(dev=66,ino=4303368925,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+assert meta(retired)==dict(dev=66,ino=2177729005,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+assert absent(out/'fifo-evidence/preserved-original-fifo')
+bp=Path('/workspace/sub01-animation-reconstruction-20261026-attempt02/metadata/baseline-manifest.json');assert sha(bp)==BASELINE_SHA==pins['baseline_sha256']
+baseline=json.loads(bp.read_text());assert len(baseline)==5640;extended=dict(baseline,**pins['actual_assets']);assert len(extended)==5643
+checks={}
+for root,wanted in ((original,baseline),(imported,extended),(visual,extended)):
+ assert manifest(root)==wanted,str(root);checks[str(root)]=len(wanted)
+obs=load('fifo_observer_collector','e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049')
+B=load('access_barrier','05abf6bdd9db7455696dba460b432d8cd97e41eb82b7f4b11c5a20c2342a2698')
+allowed={r['identity']['pid']:r['identity']for r in pins['approved_background']};assert len(allowed)==8
+me=obs.executable_one(os.getpid());parent=obs.executable_one(os.getppid());assert me['exe']=='/usr/bin/python3.12' and parent['exe']=='/usr/bin/bash' and parent['identity']['ppid']==122
+for r in (me,parent):
+ i=r['identity'];assert set(i['uids'])=={'0'} and set(i['gids'])=={'0'} and r['exe_sha256']==pins['executable_pins'][r['exe']]['sha256'];allowed[i['pid']]=dict(i,exe=r['exe'],exe_sha256=r['exe_sha256'])
+assert len(allowed)==10
+barrier=B.AccessBarrier(original,visual/'Sub01HomeLab.uproject');barrier.fd=os.open(ancestor,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+try:
+ barrier.expected=pins['expected_pre_chmod']['expected'];barrier.original_identity=pins['expected_pre_chmod']['original'];barrier.device='0:66';barrier.protected_inodes=set()
+ for p in [ancestor,original,*original.rglob('*')]:
+  s=p.lstat();assert not stat.S_ISLNK(s.st_mode)
+  if stat.S_ISREG(s.st_mode):assert s.st_nlink==1
+  barrier.protected_inodes.add((s.st_dev,s.st_ino))
+ barrier.record=lambda *args,**kwargs:None # Read-only verification: probe data returned in memory only.
+ def census():
+  barrier.verify(0o710);rows=obs.census();assert {r['identity']['pid']for r in rows}==set(allowed)
+  for r in rows:
+   i=r['identity'];a=allowed[i['pid']];assert i['state']!='Z';assert obs.stable(i,a) and i['cmdline_sha256']==a['cmdline_sha256'] and r['exe']==a['exe'] and r['exe_sha256']==a['exe_sha256'];assert not(set(i['uids'])&{'1001','1002'})
+   for f in r['fds']:assert(f['dev'],f['ino'])not in {(66,2177729005),(66,4303368925)}
+  barrier.audit(rows,True);assert (private/'streamer/STOP').is_file() and absent(Path('/tmp/sub01-share/MEASURING'));return rows
+ census();probe=barrier.probe(False);rows=census();time.sleep(.1);rows=census()
+finally:os.close(barrier.fd)
+print(json.dumps(dict(utc=time.time(),status='RECOVERY_INDEPENDENTLY_VERIFIED',preserved_file_count=len(receipt['files']),successful_recovery_events=expected,barrier=meta(ancestor),canonical_fifo=meta(fifo),retired_fifo=meta(retired),baseline_count=len(baseline),project_files=checks,process_identities=[r['identity']for r in rows],restored_access_probe=probe,stop=True,measuring=False,attempt03='FAILED',visual='NOT_ACCEPTED',performance='NOT_ASSESSED'),indent=2))
+
+===== END SOURCE verify_recovery_once.py =====
+
+===== BEGIN SOURCE test_recovery.py bytes=9702 sha256=3668ae399e086f83a19291fa0aa3dbcba23c58a46bc6dbb26267720a0ad9b965 =====
+"""Offline safety decisions; never invokes recovery.run(), real census or chmod."""
+import importlib.util,json,stat,tempfile,unittest
+from pathlib import Path
+from unittest.mock import patch
+spec=importlib.util.spec_from_file_location('recovery',Path(__file__).with_name('recover_once.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+class Tests(unittest.TestCase):
+ def test_pins_actual_relative_manifest_contract(self):
+  import hashlib
+  p=json.loads(m.PINS_BYTES);self.assertEqual(hashlib.sha256(m.PINS_BYTES).hexdigest(),m.PINS_SHA)
+  self.assertEqual(len(p['approved_background']),8);self.assertEqual(p['baseline_sha256'],'0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5')
+  # Actual preserved admission paths are root-relative project paths, no leading project prefix.
+  for key in p['actual_assets']:self.assertTrue(key.startswith('Content/'));self.assertFalse(Path(key).is_absolute())
+  self.assertEqual(p['expected_pre_chmod']['expected']['mode'],0o710)
+ def test_fifo_restore_order_and_no_unlink(self):
+  calls=[]
+  with patch.object(m,'exact',side_effect=lambda p,e:calls.append(('check',p))),patch.object(m.Path,'exists',return_value=False),patch.object(m.Path,'is_symlink',return_value=False),patch.object(m,'no_replace',side_effect=lambda a,b:calls.append(('rename',a,b))),patch.object(m.os,'unlink')as unlink:
+   m.restore_fifo();unlink.assert_not_called()
+  self.assertEqual([r for r in calls if r[0]=='rename'],[('rename',m.FIFO,m.RETIRED),('rename',m.OLD,m.FIFO)])
+ def test_foreign_fifo_stops_before_mutation(self):
+  with patch.object(m,'exact',side_effect=m.Block('foreign')),patch.object(m,'no_replace')as rename:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   rename.assert_not_called()
+ def test_retired_collision_no_rename(self):
+  with patch.object(m,'exact'),patch.object(m.Path,'exists',return_value=True),patch.object(m,'no_replace')as rename:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   rename.assert_not_called()
+ def test_second_rename_failure_retains_both_instances(self):
+  calls=[]
+  def rename(a,b):
+   calls.append((a,b))
+   if len(calls)==2:raise m.Block('collision')
+  with patch.object(m,'exact'),patch.object(m.Path,'exists',return_value=False),patch.object(m.Path,'is_symlink',return_value=False),patch.object(m,'no_replace',side_effect=rename),patch.object(m.os,'unlink')as unlink:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   unlink.assert_not_called();self.assertEqual(len(calls),2)
+ def rows(self):
+  i={'pid':1,'state':'S','cmdline_sha256':'cmd','comm':'x','uids':['0']*4};r={'identity':i,'exe':'/x','exe_sha256':'sha','fds':[]};return [r],{1:r}
+ def test_census_rejects_extra_uid_and_fifo_openers(self):
+  from types import SimpleNamespace
+  observer=SimpleNamespace(stable=lambda a,b:a==b);barrier=SimpleNamespace(audit=lambda *a:None)
+  for mode in ('extra','uid','fifo','exe'):
+   rows,allowed=self.rows();rows=json.loads(json.dumps(rows))
+   if mode=='extra':rows.append(dict(rows[0],identity=dict(rows[0]['identity'],pid=2)))
+   elif mode=='uid':rows[0]['identity']['uids']=['1001']*4
+   elif mode=='fifo':rows[0]['fds']=[{'dev':66,'ino':2177729005}]
+   else:rows[0]['exe_sha256']='changed'
+   with self.subTest(mode=mode),self.assertRaises(m.Block):m.audit_rows(rows,allowed,observer,barrier,999)
+ def test_terminal_background_rejected_even_with_matching_identity(self):
+  from types import SimpleNamespace
+  rows,allowed=self.rows();rows[0]['identity']['state']='Z'
+  with self.assertRaisesRegex(m.Block,'terminal process'):
+   m.audit_rows(rows,allowed,SimpleNamespace(stable=lambda a,b:True),SimpleNamespace(audit=lambda *a:None),999)
+ def test_protected_route_failure_propagates(self):
+  from types import SimpleNamespace
+  rows,allowed=self.rows();observer=SimpleNamespace(stable=lambda a,b:a==b)
+  def reject(*a):raise m.Block('cwd/protected route')
+  with self.assertRaises(m.Block):m.audit_rows(rows,allowed,observer,SimpleNamespace(audit=reject),999)
+ def test_evidence_copy_never_overwrites(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);src=p/'source';src.write_bytes(b'current');dst=p/'volume'/'copy';dst.parent.mkdir();dst.write_bytes(b'historical')
+   with patch.object(m,'VOLUME',dst.parent):
+    with self.assertRaises(FileExistsError):m.Recovery().copy_regular(src,dst,{})
+   self.assertEqual(dst.read_bytes(),b'historical')
+class FailureReclose(unittest.TestCase):
+ def setUp(self):
+  from types import SimpleNamespace
+  self.r=m.Recovery();self.r.barrier=SimpleNamespace(fd=17);self.mode=0o700;self.foreign=False;self.chmods=[];self.records=[]
+ def metadata(self,_):return dict(m.EXPECTED_BARRIER,mode=self.mode,ino=999 if self.foreign else m.EXPECTED_BARRIER['ino'])
+ def change(self,fd,mode):self.chmods.append(mode);self.mode=mode
+ def guards(self):
+  from contextlib import ExitStack
+  st=ExitStack();st.enter_context(patch.object(m,'meta',side_effect=self.metadata));st.enter_context(patch.object(m.os,'fstat',return_value=object()));st.enter_context(patch.object(m.Path,'lstat',return_value=object()));st.enter_context(patch.object(m.os,'fchmod',side_effect=self.change));return st
+ def test_complete_record_failure_recloses(self):
+  def record(label,**data):
+   if label=='complete':raise OSError('complete record injected')
+   self.records.append((label,data))
+  self.r.record=record
+  def body():
+   m.os.fchmod(17,0o710);self.r.restored=True;self.r.status='RECOVERED_NOT_VISUALLY_ACCEPTED';self.r.record('complete')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(OSError,'complete record injected'):self.r.run()
+  self.assertEqual(self.chmods,[0o710,0o700]);self.assertFalse(self.r.restored);self.assertEqual(self.r.status,'BLOCKED');self.assertEqual(self.records[0][1]['reclose'],'verified0700')
+ def test_alarm_after_fchmod_before_flag_recloses(self):
+  self.r.record=lambda label,**data:self.records.append((label,data))
+  def body():
+   m.os.fchmod(17,0o710)
+   raise m.Block('180second recovery deadline injected before flag')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(m.Block,'before flag'):self.r.run()
+  self.assertEqual(self.chmods,[0o710,0o700]);self.assertEqual(self.mode,0o700);self.assertFalse(self.r.restored)
+ def test_changed_identity_never_forced_and_original_error_preserved(self):
+  self.r.record=lambda *a,**k:None
+  def body():self.mode=0o710;self.foreign=True;raise ValueError('original failure')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(ValueError,'original failure'):self.r.run()
+  self.assertEqual(self.chmods,[]);self.assertEqual(self.r.failure_events[0]['reclose'],'BLOCKED_no_force')
+ def test_final_preservation_error_does_not_replace_primary(self):
+  self.r.record=lambda *a,**k:None
+  def body():
+   self.mode=0o710
+   try:raise ValueError('primary complete failure')
+   except BaseException:self.r.fail_closed('primary complete failure')
+   raise OSError('secondary preservation failure')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(ValueError,'primary complete failure'):self.r.run()
+  self.assertEqual(self.mode,0o700);self.assertEqual(self.chmods,[0o700])
+ def test_failure_record_failure_cannot_prevent_reclose(self):
+  def record(*a,**k):raise OSError('record disk failure')
+  self.r.record=record
+  def body():self.mode=0o710;raise ValueError('original failure')
+  self.r._run=body
+  with tempfile.TemporaryDirectory()as d,patch.object(m,'RECOVERY',Path(d)),self.guards(),self.assertRaisesRegex(ValueError,'original failure'):
+   self.r.run()
+  self.assertEqual(self.mode,0o700);self.assertIn('record_error',self.r.failure_events[0])
+class NetworkAndPreservation(unittest.TestCase):
+ def setUp(self):
+  self.r=m.Recovery();self.records=[];self.r.record=lambda label,**data:self.records.append((label,data))
+  self.listener=('tcp','local','zero','0A','10');self.flow=('tcp','local','peer','01','11');self.udp=('udp','dns','zero','07','12')
+  self.initial=[self.listener,self.flow,self.udp]
+ def test_closed_flow_allowed_and_recorded(self):
+  self.r.record_network('initial',[],self.initial);self.r.record_network('closed',[],[self.listener,self.udp])
+  self.assertEqual(self.records[-1][1]['network_delta']['removed'],[self.flow]);self.assertTrue(self.records[-1][1]['network_delta']['allowed'])
+ def test_new_flow_rejected_after_record(self):
+  self.r.record_network('initial',[],self.initial);new=('tcp','local','other','01','99')
+  with self.assertRaises(m.Block):self.r.record_network('new',[],self.initial+[new])
+  self.assertEqual(self.records[-1][1]['network_delta']['added'],[new]);self.assertFalse(self.records[-1][1]['network_delta']['allowed'])
+ def test_disappeared_flow_cannot_reappear(self):
+  self.r.record_network('initial',[],self.initial);self.r.record_network('closed',[],[self.listener,self.udp])
+  with self.assertRaises(m.Block):self.r.record_network('reappeared',[],self.initial)
+  self.assertEqual(self.records[-1][1]['network_delta']['added'],[self.flow])
+ def test_listener_and_udp_changes_rejected(self):
+  for missing in (self.listener,self.udp):
+   self.r.network=self.initial
+   with self.subTest(missing=missing),self.assertRaises(m.Block):self.r.record_network('changed',[],[x for x in self.initial if x!=missing])
+ def test_outer_closed_fd_does_not_append_after_final_receipt(self):
+  from types import SimpleNamespace
+  self.r.barrier=SimpleNamespace(fd=None)
+  def body():
+   try:raise ValueError('handled original')
+   except ValueError:
+    import sys
+    self.r.first_error=sys.exc_info()
+    raise
+  self.r._run=body
+  with self.assertRaisesRegex(ValueError,'handled original'):self.r.run()
+  self.assertEqual(self.records,[])
+if __name__=='__main__':unittest.main(verbosity=2)
+
+
+===== END SOURCE test_recovery.py =====
+
+===== BEGIN SOURCE test_generations.py bytes=3114 sha256=666d3e0451ba885ef79ecfff7b4dc97f5232e2539260b0288873875b35478df5 =====
+"""Local-only generation chain and recovery binding regressions."""
+import hashlib,importlib.util,json,tempfile,unittest
+from pathlib import Path
+spec=importlib.util.spec_from_file_location('recovery03',Path(__file__).with_name('recover_once.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+def dump(p,x):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(x,sort_keys=True)+'\n')
+class Tests(unittest.TestCase):
+ def chain(self,p):
+  previous=None
+  for n in (1,2):
+   name=f'generation-{n:04d}';root=p/'generations'/name;result={'status':'FAILED','failures':['real failure']}
+   dump(root/'result.json',result);dump(root/'files/main.json',result)
+   manifest={'schema':'sub01.visual-preservation-generation.v1','generation':name,'previous':previous,'files':m.file_rows(root),'run_status':'FAILED'}
+   dump(root/'manifest.json',manifest)
+   previous={'schema':'sub01.visual-preservation-latest.v1','generation':name,'manifest_sha256':m.digest(root/'manifest.json')}
+  dump(p/'LATEST-GENERATION.json',previous)
+ def test_valid_chain_readonly(self):
+  with tempfile.TemporaryDirectory()as t:
+   p=Path(t);self.chain(p);before={str(x):x.read_bytes() for x in p.rglob('*')if x.is_file()}
+   self.assertEqual(len(m.verify_generations(p)),2)
+   self.assertEqual(before,{str(x):x.read_bytes()for x in p.rglob('*')if x.is_file()})
+ def test_changed_or_extra_sealed_member_rejected(self):
+  for change in ('changed','extra','missing'):
+   with self.subTest(change=change),tempfile.TemporaryDirectory()as t:
+    p=Path(t);self.chain(p);r=p/'generations/generation-0001'
+    if change=='changed':(r/'files/main.json').write_text('{}')
+    elif change=='extra':(r/'unsealed.txt').write_text('late')
+    else:(r/'result.json').unlink()
+    with self.assertRaises((m.Block,FileNotFoundError)):m.verify_generations(p)
+ def test_unpublished_generation_rejected(self):
+  with tempfile.TemporaryDirectory()as t:
+   p=Path(t);self.chain(p);(p/'generations/.incomplete-3').mkdir()
+   with self.assertRaises(m.Block):m.verify_generations(p)
+ def test_current_pins_and_historical_import_not_replaced(self):
+  p=json.loads(m.PINS_BYTES)
+  self.assertEqual(p['expected_latest']['manifest_sha256'],'a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c')
+  self.assertEqual(p['expected_lock']['ino'],7741078)
+  self.assertIn('reconstruction-20261026-attempt02',str(m.IMPORT))
+  self.assertIn('visual-20261026-attempt03',str(m.VISUAL))
+  self.assertEqual(m.EXPECTED_FRESH['ino'],2177729005)
+  self.assertEqual(m.EXPECTED_OLD['ino'],4303368925)
+ def test_packaged_wrapper_payload_exact(self):
+  import ast,base64
+  folder=Path(__file__).parent;tree=ast.parse((folder/'stage_and_recover_stdin.py').read_text())
+  values=next(ast.literal_eval(n.value)for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name)and t.id=='files'for t in n.targets))
+  for name,row in values.items():
+   raw=base64.b64decode(row['base64']);self.assertEqual(raw,(folder/name).read_bytes());self.assertEqual(hashlib.sha256(raw).hexdigest(),row['sha256'])
+if __name__=='__main__':unittest.main()
+
+===== END SOURCE test_generations.py =====
+
+===== BEGIN SOURCE test-results.txt bytes=196 sha256=a846a9ffee2dfbf85ebb860c2a6500f2136a4cea86e786550deea4e43390d33e =====
+Offline unittest discovery: 24 tests PASS. All candidate Python files syntax-compiled. Wrapper payload decoded independently and byte-compared with source/pins by regression. No target execution.
+
+===== END SOURCE test-results.txt =====
+
+===== BEGIN SOURCE NOTES.txt bytes=1441 sha256=c9157ddebfa17d6f8e42723b693dfe39104a8150283810d2bc22df4199537d8f =====
+OFFLINE exact-review candidate; no execution authorized or performed. Recovery03 uses same approved recovery02 strict two-pass census and no-kill restoration pattern. Only operational visual/recovery paths and live pins changed; original/import02/baseline paths unchanged. Historical failed recovery01/02 archives are outside this recovery03 scope and untouched. Current visual03 complete generation chain (0002 -> 0001) is hash-validated, copied with full persistent tree into a separate historical-volume archive, validated again, and never rewritten. OUT/current main is copied separately and remains FAILED. No new native process or ownership exception. No attempt to admit/reap previously unexplained adoptees: actual full census requires only exact eight background processes plus current root Python and its waiting Bash. Barrier probes spawn only the existing bounded credential verification helper, which exits before census. Review must authorize this one-shot recovery, including exact fresh FIFO2177729005 and old FIFO4303368925, lock7741078, source ancestor2149578155. Root facts confirmed in visual03-readonly-quiescence.json. All final preservation failures reclose the FD-bound barrier if safe; root records remain independent. Reviewable stdin wrapper duplicates exact source/pins; verifier is read-only target code and was only syntax-compiled locally. 24 local tests pass. Head work checkpoint stays NOT_READY/incomplete.
+
+===== END SOURCE NOTES.txt =====
+
+===== BEGIN SOURCE stage_and_recover_stdin.py COMPACT REPRESENTATION; raw hash in coverage proof bytes=886 sha256=2631f05c49845470062c860c0f3c4a3207eb2f7240b732f779d7394d7f89891d =====
+# Reviewed same-process stdin staging; no subprocess or extra shell.
+from pathlib import Path
+import base64,hashlib,os,stat
+assert os.geteuid()==0
+os.chdir('/')
+d=Path('/root/sub01-attempt03-recovery01-tools')
+for parent in d.parents:
+ s=parent.lstat();assert stat.S_ISDIR(s.st_mode) and s.st_uid==0 and not(s.st_mode&0o022)
+d.mkdir(mode=0o700)
+files=__EXACT_ASSETS_LITERAL_FROM_FULL_DECODED_SECTIONS__
+for name,row in files.items():
+ raw=base64.b64decode(row['base64'],validate=True);assert hashlib.sha256(raw).hexdigest()==row['sha256']
+ fd=os.open(d/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o400)
+ with os.fdopen(fd,'wb')as f:f.write(raw);f.flush();os.fsync(f.fileno())
+ assert hashlib.sha256((d/name).read_bytes()).hexdigest()==row['sha256']
+source=d/'recover_once.py'
+exec(compile(source.read_bytes(),str(source),'exec'),{'__name__':'__main__','__file__':str(source)})
+
+===== END SOURCE stage_and_recover_stdin.py COMPACT REPRESENTATION; raw hash in coverage proof =====
+
+===== BEGIN SOURCE wrapper-coverage-proof.json bytes=936 sha256=a1bf6b6cf89c3d473690ce799541b8dcae07c917e0156210b1349ac2e9614805 =====
+{
+  "wrapper_raw_bytes": 60564,
+  "wrapper_raw_sha256": "11e9beba771554ae124c781c1d53f942162ebfdec6fb9e04033e844e45f7c6a9",
+  "omitted_literal_utf8_sha256": "d5ffca30d12d74effbc398dfb53c794ce54583934e8cbdaac185e4575736982b",
+  "omitted_literal_bytes": 59729,
+  "linked_full_sources": {
+    "recover_once.py": {
+      "decoded_bytes": 32731,
+      "sha256": "3b0c41e2be9b18302898f50379a01b56780d8ee3bbd4153ed2b7f72c12e45db2"
+    },
+    "recovery-pins.json": {
+      "decoded_bytes": 11892,
+      "sha256": "58916fd1cbc34366dd67dcbbf887c57774ef4ead8a0deac54940fc7b36385f9b"
+    }
+  },
+  "reconstruction": "Use Python dict insertion order recover_once.py then recovery-pins.json. Each value has base64 then sha256. base64 is standard b64encode exact full source bytes; digest lowercase hex. Replace the single placeholder by repr(dict). Exact raw SHA verified locally.",
+  "decoded_equals_files": true,
+  "reconstructed_raw_equal": true
+}
+
+===== END SOURCE wrapper-coverage-proof.json =====
+
+===== BEGIN SOURCE INSTALLED_APPROVED03/fifo_observer_collector.py bytes=47817 sha256=e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049 =====
+"""Offline candidate. Requires exact combined approval before Linux execution.
+Closed-experiment assumption is explicit: trusted sole coordinator and fixed,
+reviewed background processes. Census snapshots corroborate, not enforce it.
+"""
+from pathlib import Path
+import argparse, errno, hashlib, importlib.util, json, math, os, select
+import signal, stat, subprocess, sys, time, threading, ctypes
+FD_LOCK=threading.RLock()
+REFERENCE_SHA='20aaf881203db5a2ed8d7009ca215c32d9dc81164aa2fe49c846fb36bd1d1a54'
+HERE=Path(__file__).resolve().parent
+class Block(RuntimeError): pass
+def need(ok,why):
+    if not ok: raise Block(why)
+def sha_bytes(b): return hashlib.sha256(b).hexdigest()
+def write_new(p,value):
+    b=(json.dumps(value,sort_keys=True)+'\n').encode()
+    fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
+    with os.fdopen(fd,'wb') as f:f.write(b);f.flush();os.fsync(f.fileno())
+def identity(pid,proc=Path('/proc')):
+    p=proc/str(pid); fields=(p/'stat').read_text().rsplit(')',1)[1].split()
+    rows={x.split(':',1)[0]:x.split(':',1)[1].split() for x in (p/'status').read_text().splitlines() if ':'in x}
+    return {'pid':int(pid),'ticks':int(fields[19]),'ppid':int(fields[1]),'sid':int(fields[3]),'state':fields[0],
+            'uids':rows['Uid'],'gids':rows['Gid'],'groups':rows['Groups'],'cap_eff':rows['CapEff'][0],
+            'cap_prm':rows['CapPrm'][0],'cap_amb':rows['CapAmb'][0],'no_new_privs':int(rows['NoNewPrivs'][0]),
+            'cmdline_sha256':sha_bytes((p/'cmdline').read_bytes()),'comm':(p/'comm').read_text().strip()}
+def stable(a,b): return all(a[k]==b[k] for k in ('pid','ticks','uids','gids','groups','cap_eff','cap_prm','cap_amb','no_new_privs','ppid','sid'))
+def require_unprivileged(i):
+    need(i['no_new_privs']==1,'Native/helper no_new_privs absent')
+    need(set(i['uids'])=={'1001'} and set(i['gids'])=={'1001'},'Native/helper UID/GID elevated')
+    need(set(i['groups'])<={'1001'},'Native/helper supplementary groups not admitted')
+    need(all(int(i[k],16)==0 for k in ('cap_eff','cap_prm','cap_amb')),'Native/helper capabilities elevated')
+def path_reference(path):
+    target=os.readlink(path);s=path.stat()
+    need(os.readlink(path)==target,'Process path changed during census')
+    again=path.stat();need((s.st_dev,s.st_ino,s.st_mode)==(again.st_dev,again.st_ino,again.st_mode),'Process path identity changed')
+    return {'target':target,'dev':s.st_dev,'ino':s.st_ino,'mode':s.st_mode}
+def executable_one(pid,proc=Path('/proc')):
+    """Registration identity/executable proof ONLY; no FD/opener absence claim."""
+    before=identity(pid,proc);p=proc/str(pid)
+    exe=os.readlink(p/'exe');exe_hash=sha_bytes((p/'exe').read_bytes())
+    after=identity(pid,proc);need(stable(before,after),'Identity changed while reading executable')
+    return {'identity':after,'exe':exe,'exe_sha256':exe_hash}
+def scan_one(pid,proc=Path('/proc')):
+    before=identity(pid,proc);p=proc/str(pid);fds=[]
+    cwd=path_reference(p/'cwd');root=path_reference(p/'root')
+    mount_namespace=os.readlink(p/'ns'/'mnt');mountinfo=(p/'mountinfo').read_text()
+    # Keep scandir FD open until all entries are consumed, including self FD.
+    with os.scandir(p/'fd') as entries:
+        for entry in entries:
+            ref=path_reference(Path(entry.path));s=entry.stat();need((s.st_dev,s.st_ino)==(ref['dev'],ref['ino']),'FD target raced'); lines=(p/'fdinfo'/entry.name).read_text().splitlines()
+            flags=[int(x.split()[1],8) for x in lines if x.startswith('flags:')]
+            need(len(flags)==1,'FD flags absent/ambiguous')
+            fds.append({'fd':int(entry.name),'dev':s.st_dev,'ino':s.st_ino,'flags':flags[0],'socket':stat.S_ISSOCK(s.st_mode),'target':ref['target'],'mode':ref['mode']})
+    after=identity(pid,proc);need(stable(before,after),'PID/credential changed during census')
+    exe=os.readlink(p/'exe');exe_hash=sha_bytes((p/'exe').read_bytes())
+    need(stable(after,identity(pid,proc)),'Identity changed while reading executable')
+    need(cwd==path_reference(p/'cwd') and root==path_reference(p/'root'),'CWD/root changed during census')
+    need(mount_namespace==os.readlink(p/'ns'/'mnt') and mountinfo==(p/'mountinfo').read_text(),'Mount namespace/table changed during census')
+    return {'identity':after,'fds':fds,'exe':exe,'exe_sha256':exe_hash,'cwd':cwd,'root':root,'mount_namespace':mount_namespace,'mountinfo':mountinfo}
+DIAGNOSTICS=[]
+DIAGNOSTIC_BYTES=0
+DIAGNOSTIC_SINK=None
+
+def diagnostic(event):
+    # Diagnostic-write failure cannot replace an inspection error or block cleanup.
+    if len(DIAGNOSTICS)<128:DIAGNOSTICS.append(event)
+    if DIAGNOSTIC_SINK:
+        try:DIAGNOSTIC_SINK(event)
+        except BaseException:pass
+
+def bounded_helper(cmd,timeout=10,validate_json=False):
+    global DIAGNOSTIC_BYTES
+    import selectors
+    p=subprocess.Popen(cmd,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,close_fds=True,cwd='/')
+    info={'helper_pid':p.pid,'argv':cmd,'started_ns':time.monotonic_ns(),'timeout':False,'truncated':False,'read_error':None}
+    buffers={'stdout':bytearray(),'stderr':bytearray()};sel=selectors.DefaultSelector();deadline=time.monotonic()+timeout
+    try:
+        try:info['helper_identity']=identity(p.pid)
+        except BaseException as e:info['helper_identity_error']=repr(e)
+        for name in buffers:
+            stream=getattr(p,name);os.set_blocking(stream.fileno(),False);sel.register(stream,selectors.EVENT_READ,name)
+        while sel.get_map():
+            remaining=deadline-time.monotonic()
+            if remaining<=0:info['timeout']=True;break
+            for key,_ in sel.select(min(.05,remaining)):
+                chunk=os.read(key.fd,8192)
+                if not chunk:sel.unregister(key.fileobj);continue
+                name=key.data;room=65536-len(buffers[name])
+                keep=chunk[:max(0,room)];buffers[name].extend(keep)
+                if len(keep)<len(chunk):info['truncated']=True;break
+            if info['truncated']:break
+    except BaseException as e:info['read_error']=repr(e)
+    finally:
+        sel.close()
+        # Exact Popen child only; never leave helper running when diagnostics fill.
+        try:
+            if info['timeout'] or info['truncated'] or info['read_error']:
+                if p.poll() is None:p.kill()
+            try:info['returncode']=p.wait(timeout=max(.01,deadline-time.monotonic()))
+            except subprocess.TimeoutExpired:
+                info['timeout']=True;p.kill();info['returncode']=p.wait(timeout=2)
+        finally:
+            p.stdout.close();p.stderr.close()
+    info['finished_ns']=time.monotonic_ns()
+    if validate_json and not(info['timeout'] or info['truncated'] or info['read_error']) and info['returncode']==0:
+        try:json.loads(buffers['stdout'])
+        except (ValueError,UnicodeError) as e:info['read_error']='Invalid complete helper JSON: '+repr(e)
+    failed=bool(info['timeout'] or info['truncated'] or info['read_error'] or info['returncode']!=0)
+    info['streams']={}
+    for name,data in buffers.items():
+        entry={'bytes':len(data),'sha256':sha_bytes(data)}
+        if failed:
+            retained=data[:max(0,1048576-DIAGNOSTIC_BYTES)];DIAGNOSTIC_BYTES+=len(retained)
+            entry.update(retained_bytes=len(retained),retained_sha256=sha_bytes(retained),hex=retained.hex())
+            if len(retained)!=len(data):info['truncated']=True
+        info['streams'][name]=entry
+    info['complete']=not(info['timeout'] or info['truncated'] or info['read_error'])
+    diagnostic(info)
+    return bytes(buffers['stdout']),info
+
+def inspect_one(pid,proc=Path('/proc'),*,executable_only=False):
+    """Complete FD+executable inspection, with bounded credential fallback everywhere."""
+    with FD_LOCK:
+        before=identity(pid,proc)
+        try:row=executable_one(pid,proc) if executable_only else scan_one(pid,proc)
+        except PermissionError:
+            need(proc==Path('/proc'),'Credential fallback unavailable for synthetic proc')
+            need(len(set(before['uids']))==1 and len(set(before['gids']))==1,'Mixed target credentials')
+            cmd=['/usr/bin/setpriv','--no-new-privs','--reuid='+before['uids'][0],'--regid='+before['gids'][0],
+                 ('--groups='+','.join(before['groups']) if before['groups'] else '--clear-groups'),sys.executable,'-I',str(Path(__file__).resolve()),('--executable-one' if executable_only else '--census-one'),str(pid)]
+            # run() waits/reaps on return and kills/waits on timeout; no helper survives.
+            try:raw,result=bounded_helper(cmd,validate_json=True)
+            except BaseException as e:
+                diagnostic({'target_before':before,'mode':'executable' if executable_only else 'full-census','helper_error':repr(e)})
+                raise
+            try:after=identity(pid,proc)
+            except BaseException as e:after={'inspection_error':repr(e)}
+            diagnostic({'target_before':before,'target_after':after,'mode':'executable' if executable_only else 'full-census','helper_result':{k:v for k,v in result.items() if k!='streams'}})
+            need(result['complete'] and result['returncode']==0,'Credentialed FD census failed/incomplete: '+str(pid))
+            row=json.loads(raw)
+        need(stable(before,row['identity']) and stable(before,identity(pid,proc)),'Inspection helper identity mismatch')
+        return row
+
+def census(proc=Path('/proc')):
+    with FD_LOCK:return _census(proc)
+
+def _census(proc):
+    result=[];initial={int(p.name)for p in proc.iterdir()if p.name.isdigit()}
+    for pid in sorted(initial):
+        try:result.append(inspect_one(pid,proc))
+        except FileNotFoundError:
+            need(not (proc/str(pid)).exists(),'Live process lost FD/identity: incomplete census')
+    final={int(p.name)for p in proc.iterdir()if p.name.isdigit()}
+    need(not(final-initial),'New process appeared during census; unaccounted launch')
+    return result
+
+def main_status(path,writer_pid,fifo_path):
+    m=json.loads(Path(path).read_text());u=m.get('updated_utc')
+    need(m.get('schema')=='sub01.streamer-main-status.v1' and m.get('native_pid')==writer_pid and m.get('fifo')==str(fifo_path),'Mainstatus schema/identity/path mismatch')
+    need(isinstance(u,(int,float)) and math.isfinite(u) and -.1<=time.time()-u<=2.5,'Mainstatus stale/future')
+    return m
+
+def load_contract():
+    p=HERE/'contract_reference.py';need(sha_bytes(p.read_bytes())==REFERENCE_SHA,'JPEG reference hash mismatch')
+    spec=importlib.util.spec_from_file_location('visual_contract_reference',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+
+def inspect_frames(directory,reference,window):
+    """Independent on-disk journal/frame readback; safe only after collector closes."""
+    directory=Path(directory); journal=directory/'frames.jsonl'
+    rows=[json.loads(x) for x in journal.read_text().splitlines()]
+    need(rows,'No captured frames'); seen=set();inodes=set();previous=None;last_time=None
+    for ordinal,r in enumerate(rows,1):
+        need(r['ordinal']==ordinal,'Journal ordinal gap')
+        name=r['saved_frame'];need(name==f'frame-{ordinal:06d}-seq{r["seq"]}.jpg','Unexpected frame name')
+        need(name not in seen,'Repeated saved identity');seen.add(name);p=directory/name;s=p.lstat()
+        need(stat.S_ISREG(s.st_mode) and s.st_nlink==1,'Non-independent frame file')
+        need((s.st_dev,s.st_ino)not in inodes,'Shared frame inode');inodes.add((s.st_dev,s.st_ino))
+        b=p.read_bytes();need(len(b)==r['jpeg_bytes'] and sha_bytes(b)==r['sha256'],'Frame readback mismatch')
+        ok,seq,why=reference.check_contract(b);need(ok and seq==r['seq'],'Readback JPEG/seq invalid: '+why)
+        if previous is not None:need(seq==previous+1,'Unexplained sequence gap/regression')
+        previous=seq;t=r['arrival_monotonic_ns']
+        need(window['start_ns']<=t<window['deadline_ns'],'Frame outside capture window')
+        need(last_time is None or t>=last_time,'Arrival time regression');last_time=t
+    need({x.name for x in directory.glob('*.jpg')}==seen,'Extra/unlisted JPEG')
+    need(len(rows)==window['frames'] and window['save_skipped']==0,'Incomplete saved frames')
+    need(window['end_ns']>=window['deadline_ns'],'Early capture termination')
+    need(window['deadline_ns']-window['start_ns']==15_000_000_000,'Not full15s capture')
+    # byte bound includes ALL FIFO read bytes (including pre-window) + journal bytes.
+    need(journal.stat().st_size==window['journal_bytes'],'Journal byte accounting mismatch')
+    need(sum(r['jpeg_bytes']for r in rows)<=window['input_bytes'],'Saved JPEG bytes exceed FIFO input')
+    need(window['input_bytes']+journal.stat().st_size<512*1024*1024,'Byte bound reached')
+    need(len(rows)<1000,'Frame bound reached')
+    arrivals=[r['arrival_monotonic_ns'] for r in rows]
+    gaps=[arrivals[0]-window['start_ns'],window['deadline_ns']-arrivals[-1]]+[b-a for a,b in zip(arrivals,arrivals[1:])]
+    need(max(gaps)<=window['max_gap_ns'],'Unexplained leading/interframe/trailing timing gap')
+    return {'frames':len(rows),'input_plus_journal_bytes':window['input_bytes']+journal.stat().st_size,'max_gap_ns':max(gaps),'journal_sha256':sha_bytes(journal.read_bytes()),'status':'READBACK_PASS'}
+
+class FrameStore:
+    """Synchronous complete frame saving; bounds fail, never truncate as success."""
+    def __init__(self,directory,reference,max_frames=1000,max_bytes=512*1024*1024):
+        self.directory=Path(directory);self.directory.mkdir(mode=0o700);self.ref=reference
+        self.dirfd=os.open(self.directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+        self.journal=open(self.directory/'frames.jsonl','xb',buffering=0)
+        self.frames=0;self.input_bytes=0;self.journal_bytes=0;self.last_seq=None;self.max_frames=max_frames;self.max_bytes=max_bytes
+    def account(self,n):
+        need(n>=0,'Negative input accounting');self.input_bytes+=n
+        need(self.input_bytes+self.journal_bytes<self.max_bytes,'BYTE_BOUND_REACHED')
+    def append(self,frame,arrival_ns,read_ordinal):
+        ok,seq,why=self.ref.check_contract(frame);need(ok and seq is not None and seq>0,'JPEG_CONTRACT: '+why)
+        need(self.last_seq is None or seq==self.last_seq+1,'SEQUENCE_GAP_OR_REGRESSION')
+        ordinal=self.frames+1;need(ordinal<self.max_frames,'FRAME_BOUND_REACHED')
+        name=f'frame-{ordinal:06d}-seq{seq}.jpg'
+        row={'ordinal':ordinal,'seq':seq,'arrival_monotonic_ns':arrival_ns,'read_ordinal':read_ordinal,'jpeg_bytes':len(frame),'sha256':sha_bytes(frame),'saved_frame':name}
+        b=(json.dumps(row,sort_keys=True)+'\n').encode();need(self.input_bytes+self.journal_bytes+len(b)<self.max_bytes,'BYTE_BOUND_REACHED')
+        fd=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600,dir_fd=self.dirfd)
+        with os.fdopen(fd,'wb')as f:f.write(frame);f.flush();os.fsync(f.fileno())
+        self.journal.write(b);self.journal_bytes+=len(b);self.frames=ordinal;self.last_seq=seq
+    def close(self):
+        if not self.journal.closed:os.fsync(self.journal.fileno());self.journal.close()
+        if self.dirfd is not None:os.close(self.dirfd);self.dirfd=None
+
+class Observer:
+    def __init__(self,fifo_path,evidence_dir,approved_background,*,executable_pins,launch_floor_ticks):
+        """approved_background: explicit reviewed [{'identity':..., 'reason':...}].
+        Must include every initial process other than this supervisor; never auto-approved.
+        """
+        flag=ctypes.c_int();need(ctypes.CDLL(None,use_errno=True).prctl(37,ctypes.byref(flag),0,0,0)==0 and flag.value==1,'Supervisor subreaper not enabled')
+        self.executable_pins=executable_pins;self.launch_floor_ticks=launch_floor_ticks
+        self.dynamic_executables={p for p in executable_pins if Path(p).name in {'UnrealEditor-Cmd','UnrealTraceServer','zenserver'}}
+        self.network_baseline=None
+        self.ancestry={};self.terminal_records={};self.lifecycle_failures=[]
+        global DIAGNOSTIC_SINK
+        DIAGNOSTIC_SINK=lambda event:self.event("inspection-diagnostic",diagnostic=event)
+        self.path=Path(fifo_path);self.out=Path(evidence_dir);self.out.mkdir(mode=0o700)
+        self.background={int(x['identity']['pid']):x for x in approved_background}
+        need(len(self.background)==len(approved_background),'Duplicate background approval')
+        for x in approved_background:need(bool(x.get('reason')),'Background behavior rationale required')
+        self.owned={os.getpid():{'identity':identity(os.getpid()),'role':'observer-supervisor'}}
+        self.setup_phase='UNTOUCHED';self.target=None;self.old=None;self.warm=None;self.event_count=0;self.handoff_pass=False
+    def event(self,label,**data):
+        self.event_count+=1;write_new(self.out/f'{self.event_count:04d}-{label}.json',{'label':label,'monotonic_ns':time.monotonic_ns(),**data})
+    def verify_exe(self,row,dynamic=False):
+        exe=row['exe'];pin=self.executable_pins.get(exe)
+        need(pin is not None and row['exe_sha256']==pin['sha256'],'Executable identity/hash mismatch: '+exe)
+        if dynamic:need(exe in self.dynamic_executables,'Unexpected dynamic descendant executable')
+    def lifecycle_failure(self,why,**data):
+        self.lifecycle_failures.append({'reason':why,**data})
+        try:self.event('lifecycle-failure',reason=why,**data)
+        except BaseException:pass
+    def record_launch(self,pid,ticks,role,transitional_executable=None):
+        i=identity(pid);need(i['ticks']==ticks and i['ppid']==os.getpid(),'Direct launch identity/parent mismatch')
+        if pid in self.ancestry:need(self.ancestry[pid]['identity']['ticks']==ticks,'Direct launch receipt PID reused')
+        need(pid not in self.background,'Background cannot become launch')
+        proof={'identity':i,'role':role,'direct_launch':True,'parent_identity':self.owned[os.getpid()]['identity']}
+        if transitional_executable is not None and set(i['uids'])=={'0'}:
+            need(role=='warm-reader' and transitional_executable=='/usr/bin/setpriv' and i['sid']==pid,'Unapproved root transition launch')
+            parent=proof['parent_identity']
+            need(all(i[k]==parent[k] for k in ('uids','gids','groups','cap_eff','cap_prm','cap_amb')) and i['no_new_privs'] in (0,1),'Unexpected root transition credentials')
+            row=executable_one(pid);need(stable(i,row['identity']) and row['exe']==transitional_executable,'Root transition executable mismatch');self.verify_exe(row)
+            binary=Path(transitional_executable);st=binary.stat()
+            need(stat.S_ISREG(st.st_mode) and st.st_uid==0 and not(st.st_mode&0o022),'Transition executable not root-controlled')
+            need(sha_bytes(binary.read_bytes())==row['exe_sha256'],'Transition executable bytes differ')
+            proof['root_transition']={'exe':row['exe'],'exe_sha256':row['exe_sha256'],'identity':i}
+        self.ancestry[pid]=proof
+    def cleanup_binding(self,pid,current):
+        proof=self.ancestry.get(pid) or self.owned.get(pid);need(proof is not None,'Cleanup has no launch proof')
+        expected=proof['identity'];need(current['ticks']==expected['ticks'],'Cleanup PID reused')
+        transition=proof.get('root_transition')
+        if transition:
+            self.lifecycle_failure('Unverified root-transition launch cleanup only',pid=pid)
+            need(proof.get('direct_launch') and current['ppid']==os.getpid() and current['sid']==pid,'Root transition parent/session drift')
+            if set(current['uids'])=={'0'}:
+                bound=dict(expected,no_new_privs=current['no_new_privs'])
+                need(current['no_new_privs'] in (expected['no_new_privs'],1) and stable(bound,current),'Root transition credential drift')
+                if current['state']!='Z':
+                    row=executable_one(pid);need(stable(current,row['identity']) and row['exe']==transition['exe'] and row['exe_sha256']==transition['exe_sha256'],'Root transition executable drift');self.verify_exe(row)
+                return bound
+            require_unprivileged(current)
+            need(all(current[k]==expected[k] for k in ('pid','ticks','ppid','sid')),'Transition UID1001 identity drift')
+            if current['state']!='Z':
+                row=inspect_one(pid,executable_only=True);need(stable(current,row['identity']),'Transition cleanup inspection drift')
+                if row['exe']==transition['exe']:need(row['exe_sha256']==transition['exe_sha256'],'Transition binary changed')
+                else:
+                    self.verify_exe(row);need(row['exe']=='/usr/bin/python3.12','Unapproved warm transition executable')
+            # Cleanup-only credentials may finish dropping after the last observation.
+            # This never sets owned/executable admission and remains a failed run.
+            return current
+        bound=expected
+        if current['ppid']!=expected['ppid']:
+            need(current['ppid']==os.getpid() and proof.get('parent_identity') is not None,'Cleanup adoption lacks earlier chain')
+            bound=dict(expected,ppid=os.getpid())
+        require_unprivileged(current);need(stable(bound,current),'Cleanup identity drift')
+        return bound
+    def terminal(self,pid):
+        proof=self.ancestry.get(pid) or self.owned.get(pid)
+        need(proof is not None,'Terminal ancestry unproven')
+        expected=proof['identity'];verified=pid in self.owned and self.owned[pid].get('exe') is not None
+        try:
+            a=identity(pid);need(a['ticks']==expected['ticks'],'Terminal PID reused');b=identity(pid)
+        except FileNotFoundError:
+            need(not Path('/proc',str(pid)).exists(),'Partial terminal identity read')
+            result={'pid':pid,'identity':expected,'state':'GONE','live_verified':verified}
+            if not verified:self.lifecycle_failure('Gone before live verification',pid=pid)
+            self.terminal_records[pid]=result;return result
+        need(a['ticks']==expected['ticks'],'Terminal PID reused')
+        bound=self.cleanup_binding(pid,a)
+        need(stable(bound,a) and stable(a,b) and a['state']==b['state']=='Z','Terminal identity not stable Z')
+        result={'pid':pid,'identity':b,'state':'VERIFIED_TERMINAL' if verified else 'UNVERIFIED_TERMINAL_CHILD','live_verified':verified,'prior_identity':expected,'parent_identity':proof.get('parent_identity')}
+        self.terminal_records[pid]=result
+        if not verified:self.lifecycle_failure('Terminal before live executable verification',pid=pid)
+        try:self.event('terminal',terminal=result)
+        except BaseException:pass
+        return result
+    def reap_terminal(self,record):
+        pid=record['pid'];need(record['state'] in ('VERIFIED_TERMINAL','UNVERIFIED_TERMINAL_CHILD'),'Not a terminal wait candidate')
+        current=self.terminal(pid);need(current['state'] in ('VERIFIED_TERMINAL','UNVERIFIED_TERMINAL_CHILD'),'Gone is not reaped')
+        need(current['identity']['ppid']==os.getpid(),'Terminal not actual waitable child')
+        try:waited,status=os.waitpid(pid,os.WNOHANG)
+        except ChildProcessError:
+            self.lifecycle_failure('ECHILD is not REAPED',pid=pid);raise Block('Exact child wait returned ECHILD')
+        need(waited==pid,'Exact child not reaped')
+        need(not Path('/proc',str(pid)).exists(),'PID remains/reappeared after wait; no old-identity reuse')
+        result=dict(current,state='REAPED',wait_status=status,returncode=os.waitstatus_to_exitcode(status))
+        self.terminal_records[pid]=result
+        try:self.event('terminal-reaped',terminal=result)
+        except BaseException:pass
+        return result
+    def lifecycle_cleanup_pass(self,sig):
+        outcomes=[];errors=[];pending=[]
+        records=dict(self.ancestry);records.update({p:r for p,r in self.owned.items() if p!=os.getpid()})
+        for pid,proof in records.items():
+            try:
+                try:i=identity(pid)
+                except FileNotFoundError:
+                    need(not Path('/proc',str(pid)).exists(),'Partial identity in cleanup')
+                    prior=self.terminal_records.get(pid)
+                    if prior and prior['state']=='REAPED':outcomes.append(prior)
+                    else:outcomes.append(self.terminal(pid))
+                    continue
+                expected=proof['identity'];need(i['ticks']==expected['ticks'],'Cleanup PID reused')
+                if i['state']=='Z':
+                    t=self.terminal(pid)
+                    if t['identity']['ppid']==os.getpid():outcomes.append(self.reap_terminal(t))
+                    else:pending.append(pid)
+                    continue
+                bound=self.cleanup_binding(pid,i)
+                # A recorded direct Popen identity permits failure-path termination,
+                # not live executable admission. Unknown adoption is never recorded.
+                need(pid in self.owned or proof.get('direct_launch'),'Unverified live descendant cannot bypass inspection')
+                need(stable(i,identity(pid)),'Cleanup signal identity changed');os.kill(pid,sig);pending.append(pid)
+            except BaseException as e:
+                errors.append({'pid':pid,'error':repr(e)});self.lifecycle_failure('Cleanup identity/wait failure',pid=pid,error=repr(e))
+        return {'pending':pending,'errors':errors,'outcomes':outcomes}
+    def register_owned(self,pid,start_ticks,role):
+        if pid not in self.ancestry:self.record_launch(pid,start_ticks,role)
+        try:row=inspect_one(pid,executable_only=True)
+        except BaseException as e:
+            self.lifecycle_failure('Direct launch executable unverified',pid=pid,error=repr(e))
+            raise
+        i=row['identity'];need(i['ticks']==start_ticks,'Owned PID reused')
+        need(pid not in self.background,'Background cannot silently become owned')
+        need(i['ppid']==os.getpid(),'Direct launch relationship absent')
+        need(set(i['uids'])=={'1001'} and set(i['gids'])=={'1001'} and i['ticks']>=self.launch_floor_ticks,'Owned direct launch eligibility mismatch')
+        require_unprivileged(i);self.verify_exe(row)
+        need(Path(row['exe']).name in {'UnrealEditor-Cmd','Xvfb','python3.12'},'Unexpected direct executable')
+        self.owned[pid]={'identity':i,'role':role,'exe':row['exe'],'exe_sha256':row['exe_sha256'],'launch_parent':os.getpid()};self.event('owned',identity=i,role=role,exe=row['exe'],exe_sha256=row['exe_sha256'])
+    def register_descendants(self):
+        try:return self._register_descendants()
+        except BaseException as e:
+            self.lifecycle_failure('Discovery failed',error=repr(e));raise
+    def _register_descendants(self):
+        # Actual ancestry / verified subreaper adoption is the ownership proof.
+        rows=[]
+        for p in Path('/proc').iterdir():
+            if p.name.isdigit():
+                try:rows.append(identity(int(p.name)))
+                except FileNotFoundError:need(not p.exists(),'Transient live identity')
+        self.reconcile_descendants(rows)
+    def reconcile_descendants(self,rows):
+        known={pid for pid,x in self.owned.items() if any(i['pid']==pid and i['ticks']==x['identity']['ticks']for i in rows)}
+        changed=True
+        while changed:
+            changed=False
+            for i in rows:
+                pid=i['pid']
+                if pid==os.getpid() or pid in self.background:continue
+                if pid in self.owned:
+                    require_unprivileged(i);prev=self.owned[pid]['identity'];need(prev['ticks']==i['ticks'],'Owned PID reused')
+                    if i['state']=='Z':self.terminal(pid);continue
+                    if prev['ppid']!=i['ppid']:
+                        need(i['ppid']==os.getpid(),'Owned process reparented outside supervisor')
+                        need((self.ancestry.get(pid) or {}).get('parent_identity') is not None,'Owned adoption lacks recorded parent identity')
+                        altered=dict(prev,ppid=i['ppid']);need(stable(altered,i),'Adopted identity/credentials/session drift')
+                        row=inspect_one(pid,executable_only=True);self.verify_exe(row,dynamic=True)
+                        self.owned[pid]['identity']=i;self.event('owned-reparent',old_parent=prev['ppid'],identity=i)
+                    continue
+                if i['ppid']in known:
+                    need(i['ppid']!=os.getpid() or pid in self.ancestry,'First-seen adoption has no prior chain/direct launch')
+                    parent=self.owned[i['ppid']]['identity']
+                    need(any(stable(parent,x) for x in rows if x['pid']==i['ppid']),'Verified parent identity changed')
+                    self.ancestry.setdefault(pid,{'identity':i,'role':'descendant-observation','parent_identity':parent,'direct_launch':False})
+                    require_unprivileged(i)
+                    if i['state']=='Z':
+                        self.terminal(pid);raise Block('Unverified terminal descendant; cleanup only')
+                    need(set(i['uids'])=={'1001'} and set(i['gids'])=={'1001'} and i['ticks']>=self.launch_floor_ticks,'Unknown descendant eligibility failed')
+                    try:
+                        row=inspect_one(pid,executable_only=True);need(stable(i,row['identity']),'Descendant identity raced');self.verify_exe(row,dynamic=True)
+                    except BaseException as e:
+                        self.lifecycle_failure('Descendant live verification failed',pid=pid,error=repr(e));raise
+                    self.owned[pid]={'identity':i,'role':'owned-descendant','exe':row['exe'],'exe_sha256':row['exe_sha256'],'launch_parent':i['ppid']}
+                    self.event('descendant-or-subreaper-adoption',identity=i,actual_parent=i['ppid'],exe=row['exe'],exe_sha256=row['exe_sha256']);known.add(pid);changed=True
+    def network_snapshot(self,rows):
+        # Only known transport sockets may remain attached to background services.
+        background_sockets={str(f['ino']) for r in rows if r['identity']['pid']in self.background for f in r['fds']if f.get('socket')}
+        owned_sockets={str(f['ino']) for r in rows if r['identity']['pid']in self.owned for f in r['fds']if f.get('socket')}
+        records=set()
+        for table in ('tcp','tcp6','udp','udp6'):
+            for line in (Path('/proc/net')/table).read_text().splitlines()[1:]:
+                fields=line.split();need(len(fields)>=10,'Malformed network inventory')
+                # TCP established/listening; all UDP endpoints can carry new control traffic.
+                if table.startswith('tcp') and fields[3]not in ('01','0A'):continue
+                inode=fields[9];record=(table,fields[1],fields[2],fields[3],inode)
+                if inode in owned_sockets and inode not in background_sockets:continue
+                records.add(record)
+        snapshot={'background_socket_inodes':sorted(background_sockets),'control_network_rows':sorted(records)}
+        if self.network_baseline is None:self.network_baseline=snapshot;self.event('network-admission',snapshot=snapshot)
+        else:need(snapshot==self.network_baseline,'Background/control connection or listener changed')
+    def corroborate(self,label,expected_reader_pids=(),writer_identity=None):
+        with FD_LOCK:
+            self.register_descendants();rows=census()
+        seen=set();readers=[];writers=[]
+        for row in rows:
+            i=row['identity'];pid=i['pid'];seen.add(pid)
+            approved=self.owned.get(pid)or self.background.get(pid)
+            need(approved is not None,'Unapproved process: '+str(pid))
+            need(stable(approved['identity'],i),'Process identity/credential/parent/session drift: '+str(pid))
+            self.verify_exe(row)
+            if pid in self.owned and pid!=os.getpid():
+                require_unprivileged(i)
+                need(row['exe']==approved['exe'] and row['exe_sha256']==approved['exe_sha256'],'Owned executable drift')
+            if pid in self.background:
+                need(approved['identity'].get('cmdline_sha256')==i['cmdline_sha256'] and approved['identity'].get('comm')==i['comm'],'Background executable/argv identity changed')
+            for fd in row['fds']:
+                if self.target and (fd['dev'],fd['ino'])==self.target:
+                    mode=fd['flags']&os.O_ACCMODE
+                    if mode in (os.O_RDONLY,os.O_RDWR):readers.append(pid)
+                    if mode in (os.O_WRONLY,os.O_RDWR):
+                        need(pid in self.owned,'Unowned/background FIFO writer');writers.append(pid)
+        need(set(self.background)<=seen,'Fixed background process disappeared')
+        self.network_snapshot(rows)
+        need(set(readers)==set(expected_reader_pids),'Unexpected/missing FIFO reader')
+        if writer_identity is not None:
+            now=identity(writer_identity['pid']);need(now['ticks']==writer_identity['ticks'],'Writer PID reused')
+            need(set(writers)<={writer_identity['pid']},'Foreign FIFO writer')
+        if self.target:self.check_inode()
+        self.event(label,processes=rows,readers=readers,writers=writers)
+        return rows
+    def check_inode(self):
+        s=self.path.lstat();need(stat.S_ISFIFO(s.st_mode) and (s.st_dev,s.st_ino)==self.target and s.st_uid==1001 and stat.S_IMODE(s.st_mode)==0o600,'FIFO identity/mode changed')
+    def prepare_fresh(self):
+        need(os.geteuid()==0,'Observer must be root')
+        need(self.path.is_absolute(),'FIFO path must be absolute')
+        for ancestor in self.path.parents:
+            a=ancestor.lstat();need(stat.S_ISDIR(a.st_mode) and not stat.S_ISLNK(a.st_mode) and not(a.st_mode&0o022),'Unsafe FIFO ancestor')
+        s=self.path.parent.lstat();need(stat.S_ISDIR(s.st_mode) and s.st_uid==1001 and stat.S_IMODE(s.st_mode)==0o700,'FIFO parent must be UID1001mode0700')
+        if self.path.exists()or self.path.is_symlink():
+            s=self.path.lstat();need(stat.S_ISFIFO(s.st_mode),'Existing IPC not plain FIFO');self.target=(s.st_dev,s.st_ino)
+            rows=self.corroborate('initial-old-inode',())
+            need(not any((f['dev'],f['ino'])==self.target for r in rows for f in r['fds']),'Old FIFO still open')
+            old=self.out/'preserved-original-fifo';need(not old.exists() and not old.is_symlink(),'Old FIFO preservation collision')
+            os.rename(self.path,old)
+            self.old=old;self.setup_phase='ORIGINAL_MOVED'
+        else:self.corroborate('initial-no-fifo',())
+        # Install only after configuration: failures leave the canonical path absent.
+        # Keep original identity separate; target refers only to an installed FIFO.
+        self.preserved_target=self.target;self.target=None;self.partial_setup=True
+        self.pending=self.out/'pending-fresh-fifo';self.pending_target=None
+        need(not self.pending.exists() and not self.pending.is_symlink(),'Fresh FIFO staging collision')
+        os.mkfifo(self.pending,0o600)
+        s=self.pending.lstat();need(stat.S_ISFIFO(s.st_mode),'Staged FIFO type changed');self.pending_target=(s.st_dev,s.st_ino)
+        os.chown(self.pending,1001,1001);os.chmod(self.pending,0o600)
+        s=self.pending.lstat();need(stat.S_ISFIFO(s.st_mode) and (s.st_dev,s.st_ino)==self.pending_target and s.st_uid==1001 and stat.S_IMODE(s.st_mode)==0o600,'Staged FIFO identity/mode changed')
+        need(not self.path.exists() and not self.path.is_symlink(),'Foreign canonical FIFO appeared')
+        os.rename(self.pending,self.path);self.target=self.pending_target;self.partial_setup=False;self.setup_phase='FRESH_INSTALLED'
+        self.check_inode();self.event('fresh-inode',dev=s.st_dev,ino=s.st_ino)
+        rows=self.corroborate('fresh-no-opener',())
+        need(not any((f['dev'],f['ino'])==self.target for r in rows for f in r['fds']),'Fresh FIFO already opened')
+        return self.target
+    def start_warm_reader(self):
+        need(self.warm is None and self.target is not None,'Warm reader already exists or FIFO absent');self.check_inode()
+        args=['/usr/bin/setpriv','--no-new-privs','--reuid=1001','--regid=1001','--clear-groups',sys.executable,'-I',str(Path(__file__).resolve()),'--warm-reader',str(self.path),'--dev',str(self.target[0]),'--ino',str(self.target[1])]
+        p=subprocess.Popen(args,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True,close_fds=True,cwd='/')
+        self.warm=p # tracked before identity lookup, caller finally must cleanup even if lookup fails
+        deadline=time.monotonic()+3
+        while True:
+            i=identity(p.pid)
+            if p.pid not in self.ancestry:self.record_launch(p.pid,i['ticks'],'warm-reader',transitional_executable='/usr/bin/setpriv')
+            need(i['state']!='Z','Warm reader terminal before identity registration')
+            if set(i['uids'])=={'1001'} and set(i['gids'])=={'1001'}:break
+            need(time.monotonic()<deadline,'Warm reader credential transition timeout');time.sleep(.005)
+        self.record_launch(p.pid,i['ticks'],'warm-reader',transitional_executable='/usr/bin/setpriv')
+        self.register_owned(p.pid,i['ticks'],'warm-reader');self.event('warm-start',pid=p.pid)
+        while time.monotonic()<deadline:
+            need(identity(p.pid)['state']!='Z','Warm reader terminal before handoff')
+            row=inspect_one(p.pid)
+            if any((f['dev'],f['ino'])==self.target and f['flags']&os.O_ACCMODE==os.O_RDONLY for f in row['fds']):
+                self.corroborate('warm-open',(p.pid,));return p
+            time.sleep(.02)
+        raise Block('Warm reader open timeout')
+    def stop_warm_reader(self,writer_identity,main_path):
+        need(self.warm is not None,'No owned warm reader');p=self.warm
+        need(identity(p.pid)['ticks']==self.owned[p.pid]['identity']['ticks'],'Warm reader PID reused')
+        before=main_status(main_path,writer_identity['pid'],self.path);need(before.get('reader')is True,'Warm mainstatus must show live reader')
+        stop_utc=time.time();self.event('warm-stop-request',main=before)
+        deadline=time.monotonic()+3
+        need(stable(self.owned[p.pid]['identity'],identity(p.pid)),'Warm signal identity drift');os.kill(p.pid,signal.SIGTERM)
+        while identity(p.pid)['state']!='Z':
+            need(time.monotonic()<deadline,'Warm terminal timeout');time.sleep(.01)
+        outcome=self.reap_terminal(self.terminal(p.pid));p.returncode=outcome['returncode']
+        need(not Path('/proc',str(p.pid)).exists(),'Warm reader not fully reaped')
+        # Own descendants holding inherited reader FDs are rejected, not excused.
+        self.corroborate('warm-reaped-no-reader',(),writer_identity)
+        while time.monotonic()<deadline:
+            need(identity(writer_identity['pid'])['ticks']==writer_identity['ticks'],'Writer lost')
+            m=main_status(main_path,writer_identity['pid'],self.path)
+            if m.get('reader')is False and m['updated_utc']>=stop_utc and m['updated_utc']>before['updated_utc']:
+                self.event('handoff-reader-false',main=m,writer=writer_identity);self.handoff_pass=True;return m
+            time.sleep(.02)
+        raise Block('Readerfalse/reap/census exceeded3s')
+    def capture(self,writer_identity,sample_callback,start_gate,gate_timeout=6,seconds=15,max_gap_ms=250):
+        need(seconds==15 and self.handoff_pass,'Capture requires successful handoff/full15s')
+        need(0<max_gap_ms<=250,'Gap threshold must be predeclared<=250ms')
+        self.corroborate('pre-collector',(),writer_identity);self.check_inode()
+        ref=load_contract();store=FrameStore(self.out/'frames',ref);fd=None;started=None;ended=None;reads=0;precapture_frames=0;last_sample=0;last_census=0;window={};failure=None
+        try:
+            fd=os.open(self.path,os.O_RDONLY|os.O_NONBLOCK|os.O_CLOEXEC|os.O_NOFOLLOW)
+            s=os.fstat(fd);need((s.st_dev,s.st_ino)==self.target,'Collector opened otherinode')
+            self.corroborate('collector-open',(os.getpid(),),writer_identity)
+            poller=select.poll();poller.register(fd,select.POLLIN);walker=ref.Walker();gate_deadline=time.monotonic_ns()+int(gate_timeout*1e9)
+            while True:
+                now=time.monotonic_ns()
+                if started is not None and now>=started+15_000_000_000:ended=now;break
+                if started is None:need(now<gate_deadline,'Pre-boundary gate timeout')
+                if now-last_sample>=80_000_000:
+                    if last_sample:need(now-last_sample<=250_000_000,'Receipt sample scheduling gap')
+                    sample=sample_callback();sample_end=time.monotonic_ns();need(sample_end-now<=250_000_000,'Receipt callback too slow');last_sample=now
+                    need(identity(writer_identity['pid'])['ticks']==writer_identity['ticks'],'Writer lost duringcapture')
+                    if started is None and precapture_frames>0 and start_gate(sample):
+                        # Retain parser continuity; journal timestamps identify frame completion, not SOI/exposure.
+                        start_cuts,start_garbage=walker.cuts,walker.garbage
+                        started=sample_end;self.event('capture-window-start',start_ns=started,deadline_ns=started+15_000_000_000,sample=sample)
+                if now-last_census>=1_000_000_000:
+                    self.corroborate('collector-snapshot',(os.getpid(),),writer_identity);last_census=time.monotonic_ns()
+                deadline=(started+15_000_000_000)if started is not None else gate_deadline
+                remaining=deadline-time.monotonic_ns()
+                if remaining<=0:continue
+                poller.poll(max(0,min(20,int(remaining/1_000_000))))
+                if time.monotonic_ns()>=deadline:continue
+                try:data=os.read(fd,1<<20)
+                except BlockingIOError:continue
+                arrival=time.monotonic_ns();reads+=1
+                if not data:
+                    if started is not None:raise Block('Writer EOF during capture')
+                    time.sleep(.005);continue
+                store.account(len(data))
+                need(arrival<deadline,'Read completion crossed deadline; boundary ambiguous')
+                whole=walker.feed(data)
+                if started is None:precapture_frames+=len(whole);continue
+                need(walker.cuts==start_cuts and walker.garbage==start_garbage,'JPEG cut/garbage during window')
+                for frame in whole:store.append(frame,arrival,reads)
+            need(started is not None,'No window')
+            # trailing partial JPEG is normal for a wall-clock cut and explicitly reported.
+            window={'start_ns':started,'deadline_ns':started+15_000_000_000,'end_ns':ended,'frames':store.frames,'save_skipped':0,'input_bytes':store.input_bytes,'journal_bytes':store.journal_bytes,'max_gap_ns':int(max_gap_ms*1e6),'prewindow_frames':precapture_frames,'tail_bytes':len(walker.buffer),'timing_scope':'read completion; frames from same read share timestamp','bound_scope':'allFIFOinput includingprewindow + frames.jsonl; JPEG subset not doublecounted'}
+        except BaseException as e:
+            failure=type(e).__name__+': '+str(e);raise
+        finally:
+            if fd is not None:os.close(fd)
+            store.close();self.event('capture-closed',failure=failure,window=window,frames=store.frames,input_bytes=store.input_bytes)
+        self.corroborate('post-collector',(),writer_identity)
+        write_new(self.out/'frames'/'window.json',window)
+        return window
+    def validate_saved(self):
+        ref=load_contract();w=json.loads((self.out/'frames'/'window.json').read_text())
+        r=inspect_frames(self.out/'frames',ref,w);write_new(self.out/'readback.json',r);return r
+    def restore_fifo(self):
+        # Before any installation, the canonical inode is never ours to unlink.
+        # Still require complete census and no opener proof for a known original.
+        if getattr(self,'setup_phase','UNTOUCHED')=='UNTOUCHED' and not getattr(self,'partial_setup',False):
+            rows=self.corroborate('cleanup-untouched',())
+            if self.target is not None:
+                need(not any((f['dev'],f['ino'])==self.target for r in rows for f in r['fds']),'Untouched original FIFO still open')
+                self.check_inode()
+            self.event('fifo-untouched',original_identity=self.target)
+            return
+        if getattr(self,'partial_setup',False):
+            # Full census still applies, but no installed canonical inode exists yet.
+            need(self.target is None,'Partial setup has installed target')
+            rows=self.corroborate('cleanup-partial-setup',())
+            need(not self.path.exists() and not self.path.is_symlink(),'Foreign canonical inode blocks restoration')
+            targets=set()
+            if self.old is not None:
+                s=self.old.lstat();need(stat.S_ISFIFO(s.st_mode) and (s.st_dev,s.st_ino)==self.preserved_target,'Preserved original inode changed')
+                targets.add(self.preserved_target)
+            pending_stat=None
+            try:pending_stat=self.pending.lstat()
+            except FileNotFoundError:pass
+            if pending_stat is not None:
+                need(stat.S_ISFIFO(pending_stat.st_mode),'Staged FIFO replaced')
+                observed=(pending_stat.st_dev,pending_stat.st_ino);targets.add(observed)
+                if self.pending_target is not None:need(observed==self.pending_target,'Staged FIFO inode changed')
+            need(not any((f['dev'],f['ino']) in targets for r in rows for f in r['fds']),'Partial setup FIFO still open')
+            # If initial lstat failed, ownership of the staged inode was not recorded.
+            # Preserve it for diagnosis; never delete an unproven inode.
+            if pending_stat is not None and self.pending_target is not None:os.unlink(self.pending)
+            if self.old is not None:os.rename(self.old,self.path)
+            self.partial_setup=False;self.setup_phase='RESTORED'
+            self.event('fifo-restored-partial',original_present=self.old is not None,unproven_staging_preserved=pending_stat is not None and self.pending_target is None)
+            return
+        need(getattr(self,'setup_phase','UNTOUCHED')=='FRESH_INSTALLED','No installed fresh FIFO to remove')
+        rows=self.corroborate('cleanup-no-reader',())
+        need(not any((f['dev'],f['ino'])==self.target for r in rows for f in r['fds']),'FIFO still open duringrestore')
+        self.check_inode();os.unlink(self.path)
+        if self.old is not None:os.rename(self.old,self.path)
+        self.event('fifo-restored',original_present=self.old is not None);self.target=None;self.setup_phase='RESTORED'
+
+def warm_reader(path,dev,ino):
+    stopped=False
+    def stop(*_):
+        nonlocal stopped;stopped=True
+    signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+    fd=os.open(path,os.O_RDONLY|os.O_NONBLOCK|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        s=os.fstat(fd);need(stat.S_ISFIFO(s.st_mode)and(s.st_dev,s.st_ino)==(dev,ino),'Warmreaderinode mismatch')
+        poller=select.poll();poller.register(fd,select.POLLIN)
+        while not stopped:
+            poller.poll(50)
+            try:
+                if not os.read(fd,1<<20):time.sleep(.01)
+            except BlockingIOError:pass
+    finally:os.close(fd)
+if __name__=='__main__':
+    ap=argparse.ArgumentParser();ap.add_argument('--census-one',type=int);ap.add_argument('--executable-one',type=int);ap.add_argument('--warm-reader',type=Path);ap.add_argument('--dev',type=int);ap.add_argument('--ino',type=int);a=ap.parse_args()
+    if a.census_one is not None:print(json.dumps(scan_one(a.census_one)))
+    elif a.executable_one is not None:print(json.dumps(executable_one(a.executable_one)))
+    elif a.warm_reader is not None:warm_reader(a.warm_reader,a.dev,a.ino)
+    else:ap.error('No direct runtime mode; supervisor owns observer')
+
+===== END SOURCE INSTALLED_APPROVED03/fifo_observer_collector.py =====
+
+===== BEGIN SOURCE INSTALLED_APPROVED03/access_barrier.py bytes=9289 sha256=05abf6bdd9db7455696dba460b432d8cd97e41eb82b7f4b11c5a20c2342a2698 =====
+"""Single root-owned traversal barrier; does not claim intrinsic read-only contents.
+Runtime requires exact review and verified existing ordinary UID1001 isolation.
+"""
+from pathlib import Path
+import ctypes,errno,fcntl,json,os,stat,subprocess,time
+ANCESTOR=Path('/home/sub01-recovery-stage-20261026')
+LOCK=Path('/root/sub01-visual-launch.lock')
+RECOVERY=Path('/root/sub01-animation-visual-20261026-attempt03-barrier')
+def need(ok,why):
+ if not ok:raise RuntimeError('access barrier: '+why)
+def metadata(s):return dict(dev=s.st_dev,ino=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),type=stat.S_IFMT(s.st_mode))
+def within(path,root):return path==root or path.startswith(root.rstrip('/')+'/')
+def unescape(s):
+ for a,b in [('\\040',' '),('\\011','\t'),('\\012','\n'),('\\134','\\')]:s=s.replace(a,b)
+ return s
+def mounts(text):
+ rows=[]
+ for line in text.splitlines():
+  left,right=line.split(' - ',1);fields=left.split();need(len(fields)>=6,'invalid mount row')
+  rows.append(dict(device=fields[2],root=unescape(fields[3]),point=unescape(fields[4])))
+ return rows
+def reject_aliases(text,original,ancestor,device):
+ rows=mounts(text);containing=[r for r in rows if within(original,r['point'])]
+ need(containing,'original effective mount absent');base=max(containing,key=lambda r:len(r['point']))
+ need(base['device']==device,'original mount device differs')
+ underlying=(base['root'].rstrip('/')+'/'+original[len(base['point']):].lstrip('/')).rstrip('/') or '/'
+ for row in rows:
+  if row['device']!=device:continue
+  root=row['root'];point=row['point']
+  if within(underlying,root):alias=(point.rstrip('/')+'/'+underlying[len(root):].lstrip('/')).rstrip('/') or '/'
+  elif within(root,underlying):alias=point
+  else:continue
+  need(within(alias,ancestor),'mount alias bypasses ancestor: '+alias)
+ return dict(effective=base,underlying=underlying,mount_rows=len(rows))
+def no_new_privileges():
+ need(ctypes.CDLL(None,use_errno=True).prctl(38,1,0,0,0)==0,'no_new_privs failed')
+PROBE=r'''
+import errno,json,os,sys
+from pathlib import Path
+a,o,c=sys.argv[1:];status={x.split(':',1)[0]:x.split(':',1)[1].split() for x in Path('/proc/self/status').read_text().splitlines() if ':' in x}
+r={'uid':os.getuid(),'euid':os.geteuid(),'gid':os.getgid(),'egid':os.getegid(),'groups':os.getgroups(),'status':{k:status[k] for k in ('Uid','Gid','CapEff','CapPrm','CapAmb','NoNewPrivs')},'ancestor_access':{k:os.access(a,v) for k,v in [('r',os.R_OK),('w',os.W_OK),('x',os.X_OK)]}}
+for key,path in [('descendant',o),('positive_control',c)]:
+ try:
+  fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW);r[key]={'read':bool(os.read(fd,1)),'errno':None};os.close(fd)
+ except OSError as e:r[key]={'read':False,'errno':e.errno}
+print(json.dumps(r))
+'''
+class AccessBarrier:
+ def __init__(self,original,control):
+  self.original=Path(original);self.control=Path(control);self.fd=None;self.lockfd=None;self.active=False;self.state='NEW';self.census=None;self.expected=None;self.event_number=0;self.record_owned=False
+ def record(self,event,**data):
+  self.event_number+=1;p=RECOVERY/f'{self.event_number:03d}-{event}.json'
+  fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o400)
+  with os.fdopen(fd,'w') as f:json.dump(dict(event=event,state=self.state,utc=time.time(),monotonic_ns=time.monotonic_ns(),**data),f,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+  directory=os.open(RECOVERY,os.O_RDONLY|os.O_DIRECTORY)
+  try:os.fsync(directory)
+  finally:os.close(directory)
+ def acquire(self):
+  need(os.geteuid()==0,'root required');self.lockfd=os.open(LOCK,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
+  s=os.fstat(self.lockfd);need(stat.S_ISREG(s.st_mode) and s.st_uid==0 and stat.S_IMODE(s.st_mode)==0o600,'launch lock metadata')
+  fcntl.flock(self.lockfd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  RECOVERY.mkdir(mode=0o700);self.record_owned=True;self.state='LOCKED';self.record('launch-locked',pid=os.getpid())
+ def open_control(self):
+  # Every ancestor directory is checked without following a symlink before opening.
+  for p in [ANCESTOR,*ANCESTOR.parents]:
+   s=p.lstat();need(stat.S_ISDIR(s.st_mode) and not p.is_symlink(),'unsafe ancestor path')
+  self.fd=os.open(ANCESTOR,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+  self.expected=metadata(os.fstat(self.fd));need(self.expected==metadata(ANCESTOR.lstat()),'ancestor changed during open')
+  need(self.expected['uid']==0 and self.expected['gid']==1001 and self.expected['mode']==0o710,'expected root0 group1001 mode0710 absent')
+  self.original_identity=metadata(self.original.lstat());need(stat.S_ISDIR(self.original.lstat().st_mode),'original missing')
+  self.protected_inodes=set()
+  for p in [ANCESTOR,self.original,*self.original.rglob('*')]:
+   s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'original symlink route')
+   if stat.S_ISREG(s.st_mode):need(s.st_nlink==1,'hard-link alias cannot be ruled out: '+str(p))
+   self.protected_inodes.add((s.st_dev,s.st_ino))
+  self.device=f'{os.major(self.original.stat().st_dev)}:{os.minor(self.original.stat().st_dev)}'
+ def verify(self,mode):
+  need(self.fd is not None,'control FD missing');now=metadata(os.fstat(self.fd));path=metadata(ANCESTOR.lstat());expected=dict(self.expected,mode=mode)
+  need(now==path==expected,'barrier identity/owner/group/mode changed')
+  need(metadata(self.original.lstat())==self.original_identity,'original directory identity/metadata changed')
+  with (self.original/'Sub01HomeLab.uproject').open('rb') as f:need(bool(f.read(1)),'root original read failed')
+ def audit(self,rows,quiescent):
+  aliases=[]
+  for row in rows:
+   i=row['identity']
+   if quiescent:need(not ({'1001','1002'} & set(i['uids'])),'native/import UID remains')
+   aliases.append(reject_aliases(row['mountinfo'],str(self.original),str(ANCESTOR),self.device))
+   for kind,value in [('cwd',row['cwd']),('root',row['root'])]+[('fd',v) for v in row['fds']]:
+    refers=(value['dev'],value['ino']) in self.protected_inodes or within(value['target'].removesuffix(' (deleted)'),str(ANCESTOR))
+    if refers:
+     allowed=kind=='fd' and i['pid']==os.getpid() and value['fd']==self.fd and (value['dev'],value['ino'])==(self.expected['dev'],self.expected['ino'])
+     need(allowed,'preexisting FD/CWD/root route: '+str(i['pid'])+' '+kind)
+  return aliases
+ def quiescence(self,label):
+  for n in range(2):
+   rows=self.census(label+'-'+str(n));self.audit(rows,True)
+   if n==0:time.sleep(.1)
+ def probe(self,active):
+  self.verify(0o700 if active else 0o710)
+  r=subprocess.run(['/usr/bin/python3','-I','-c',PROBE,str(ANCESTOR),str(self.original/'Sub01HomeLab.uproject'),str(self.control)],user=1001,group=1001,extra_groups=[],preexec_fn=no_new_privileges,cwd='/home/unreal',close_fds=True,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=5)
+  need(r.returncode==0,'credential probe failed');p=json.loads(r.stdout)
+  need(all(p[k]==1001 for k in ('uid','euid','gid','egid')) and p['groups']==[],'probe credentials')
+  need(all(p['status'][k]==['1001']*4 for k in ('Uid','Gid')) and all(int(p['status'][k][0],16)==0 for k in ('CapEff','CapPrm','CapAmb')) and p['status']['NoNewPrivs']==['1'],'probe capabilities/no_new_privs')
+  need(p['positive_control']['read'] and p['positive_control']['errno'] is None,'positive read control failed')
+  need(p['ancestor_access']==dict(r=False,w=False,x=not active),'ancestor probe access unexpected')
+  need(p['descendant']==dict(read=False,errno=errno.EACCES) if active else p['descendant']['read'] and p['descendant']['errno'] is None,'descendant traversal errno/restore probe')
+  self.record('probe-active' if active else 'probe-restored',probe=p);return p
+ def install(self,census):
+  self.census=census;self.open_control();self.quiescence('barrier-preinstall');self.verify(0o710)
+  self.record('pre-chmod',ancestor=str(ANCESTOR),expected=self.expected,original=self.original_identity,recovery='Only exact quiescence+FD-bound identity allows restoring0710')
+  os.fchmod(self.fd,0o700);self.active=True;self.state='ACTIVE';self.verify(0o700)
+  self.record('post-chmod',actual=metadata(os.fstat(self.fd)),path=metadata(ANCESTOR.lstat()))
+  self.probe(True);self.quiescence('barrier-active')
+ def restore(self):
+  need(self.active,'barrier not active');self.quiescence('barrier-final');self.verify(0o700)
+  self.record('pre-restore',actual=metadata(os.fstat(self.fd)))
+  os.fchmod(self.fd,0o710);self.active=False;self.state='RESTORED'
+  try:
+   self.verify(0o710)
+   self.record('post-restore',actual=metadata(os.fstat(self.fd)),path=metadata(ANCESTOR.lstat()))
+   self.probe(False)
+  except BaseException:
+   # Probe helpers have returned/reaped; fail closed only on our exact directory.
+   self.verify(0o710);os.fchmod(self.fd,0o700);self.active=True;self.state='ACTIVE';self.verify(0o700)
+   self.record('restoration-proof-failed-barrier-retained',actual=metadata(os.fstat(self.fd)))
+   raise
+  self.close()
+ def blocked(self,error):
+  if not self.record_owned:self.close();return
+  self.state='RESTORATION_BLOCKED';self.record('blocked',error=str(error),active=self.active,ancestor=str(ANCESTOR));self.close()
+ def close(self):
+  if self.fd is not None:os.close(self.fd);self.fd=None
+  if self.lockfd is not None:fcntl.flock(self.lockfd,fcntl.LOCK_UN);os.close(self.lockfd);self.lockfd=None
+
+===== END SOURCE INSTALLED_APPROVED03/access_barrier.py =====
+
+===== BEGIN SOURCE ACTUAL_READONLY_FACTS/visual03-readonly-quiescence.json bytes=7019 sha256=193f58e1fba58e7e35eba4f5c53ec2abe3f6b7c5a6294b4edcdca1d2e8860576 =====
+{
+  "status": "READONLY_QUIESCENT_BASELINES_AND_GENERATIONS_VERIFIED_NOT_RESTORED",
+  "utc": "2026-10-26T20:07:35.200928+00:00",
+  "lock": {
+    "dev": 66,
+    "ino": 7741078,
+    "uid": 0,
+    "gid": 0,
+    "mode": 384,
+    "type": 32768
+  },
+  "source": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 448,
+    "type": 16384
+  },
+  "fifo": {
+    "dev": 66,
+    "ino": 2177729005,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "original_fifo": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "latest": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c"
+  },
+  "generation_counts": [
+    201,
+    199
+  ],
+  "project_counts": {
+    "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab": 5640,
+    "/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab": 5643,
+    "/home/sub01-animation-visual-20261026-attempt03/reading-face/Sub01HomeLab": 5643
+  },
+  "process_identities": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "comm": "docker-init"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "comm": "nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "groups": [
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "cap_prm": "0000000000000000",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "comm": "nginx"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "sid": 110,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "comm": "sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "comm": "jupyter-lab"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "comm": "sleep"
+    },
+    {
+      "pid": 5075,
+      "ticks": 61694033,
+      "ppid": 122,
+      "sid": 5075,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "comm": "bash"
+    },
+    {
+      "pid": 5080,
+      "ticks": 61694131,
+      "ppid": 5075,
+      "sid": 5075,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "comm": "python3"
+    }
+  ],
+  "stop": true,
+  "measuring": false
+}
+
+===== END SOURCE ACTUAL_READONLY_FACTS/visual03-readonly-quiescence.json =====
+
+===== BEGIN SOURCE ACTUAL_FAILURE_SUMMARY bytes=23311 sha256=68e61f1a7d05b214095b8fa36032570c2dc3b71b13828f95c0484767d8323495 =====
+{
+  "main": {
+    "status": "FAILED",
+    "performance": "NOT_ASSESSED",
+    "visual": "PENDING",
+    "scope": "controlled reconstruction hypothesis; frontal visible-scope only; no full-contact, backend-state/brain, 60fps, or owner acceptance",
+    "failures": [
+      {
+        "kind": "UNEXPLAINED_FAILURE",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 533, in run\n    try:self.result['status']='PREPARING';self.prepare();self.execute()\n                                                         ^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 371, in execute\n    self.gates();require(same(self.game[1]),'launch','native exited')\n    ^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 112, in gates\n    if self.observer and not noproc:self.observer.register_descendants()\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 368, in register_descendants\n    try:return self._register_descendants()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 378, in _register_descendants\n    self.reconcile_descendants(rows)\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 407, in reconcile_descendants\n    row=inspect_one(pid,executable_only=True);need(stable(i,row['identity']),'Descendant identity raced');self.verify_exe(row,dynamic=True)\n                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 245, in verify_exe\n    if dynamic:need(exe in self.dynamic_executables,'Unexpected dynamic descendant executable')\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: Unexpected dynamic descendant executable\n"
+      },
+      {
+        "kind": "lifecycle/discovery",
+        "error": "Block('Unexpected dynamic descendant executable')"
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Descendant live verification failed",
+          "pid": 4986,
+          "error": "Block('Unexpected dynamic descendant executable')"
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Discovery failed",
+          "error": "Block('Unexpected dynamic descendant executable')"
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Cleanup identity/wait failure",
+          "pid": 4986,
+          "error": "Block('Unverified live descendant cannot bypass inspection')"
+        }
+      },
+      {
+        "kind": "lifecycle/discovery",
+        "error": "Block('Unverified terminal descendant; cleanup only')"
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Terminal before live executable verification",
+          "pid": 4986
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Discovery failed",
+          "error": "Block('Unverified terminal descendant; cleanup only')"
+        }
+      },
+      {
+        "kind": "collector/cleanup",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 502, in finish\n    self.observer.corroborate('settled-before-fifo-restoration',())\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 190, in corroborate_with_barrier\n    rows=original_corroborate(*args,**kwargs)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 430, in corroborate\n    self.register_descendants();rows=census()\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 368, in register_descendants\n    try:return self._register_descendants()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 378, in _register_descendants\n    self.reconcile_descendants(rows)\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 398, in reconcile_descendants\n    need(i['ppid']!=os.getpid() or pid in self.ancestry,'First-seen adoption has no prior chain/direct launch')\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: First-seen adoption has no prior chain/direct launch\n"
+      },
+      {
+        "kind": "cleanup/evidence",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 536, in run\n    try:self.finish()\n        ^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 525, in finish\n    if self.observer:self.observer.corroborate('settled-before-barrier-restoration',())\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 190, in corroborate_with_barrier\n    rows=original_corroborate(*args,**kwargs)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 430, in corroborate\n    self.register_descendants();rows=census()\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 368, in register_descendants\n    try:return self._register_descendants()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 378, in _register_descendants\n    self.reconcile_descendants(rows)\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 398, in reconcile_descendants\n    need(i['ppid']!=os.getpid() or pid in self.ancestry,'First-seen adoption has no prior chain/direct launch')\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: First-seen adoption has no prior chain/direct launch\n"
+      }
+    ],
+    "subreaper": {
+      "enabled": true,
+      "pid": 4933,
+      "ticks": 61637440,
+      "before_any_Popen": true
+    },
+    "accepted_actual_event_count": 0,
+    "control_workers_before_teardown": [],
+    "fifo_preservation_location": "/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt03/fifo-evidence/preserved-original-fifo",
+    "lifecycle_cleanup": {
+      "pending": [],
+      "errors": [],
+      "outcomes": [
+        {
+          "pid": 4944,
+          "identity": {
+            "pid": 4944,
+            "ticks": 61637990,
+            "ppid": 4933,
+            "sid": 4944,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "python3"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 4944,
+            "ticks": 61637990,
+            "ppid": 4933,
+            "sid": 4944,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "50594c2eb95fc12c80151e722cf88823b2e4c9ad24136749d0501d3498e8f3ce",
+            "comm": "python3"
+          },
+          "parent_identity": {
+            "pid": 4933,
+            "ticks": 61637440,
+            "ppid": 4928,
+            "sid": 4928,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "97b7d2acf8ae6ec87a6f1118080bbce6ecb501e2ea1f56b58640f46c7d8a7d4a",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 4949,
+          "identity": {
+            "pid": 4949,
+            "ticks": 61638012,
+            "ppid": 4933,
+            "sid": 4949,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Xvfb"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 4949,
+            "ticks": 61638012,
+            "ppid": 4933,
+            "sid": 4949,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "cf6385f90a1060329056c3fb42d12dfa2ef1b0b0128ba742a36aaa03890c8db2",
+            "comm": "Xvfb"
+          },
+          "parent_identity": {
+            "pid": 4933,
+            "ticks": 61637440,
+            "ppid": 4928,
+            "sid": 4928,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "97b7d2acf8ae6ec87a6f1118080bbce6ecb501e2ea1f56b58640f46c7d8a7d4a",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 4954,
+          "identity": {
+            "pid": 4954,
+            "ticks": 61638022,
+            "ppid": 4933,
+            "sid": 4954,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "UnrealEditor-Cm"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 4954,
+            "ticks": 61638022,
+            "ppid": 4933,
+            "sid": 4954,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "f2099e6eb37b4e15f02ed6616c0e2432f512c190d728bc498ac7cf56c4c95ab7",
+            "comm": "UnrealEditor-Cm"
+          },
+          "parent_identity": {
+            "pid": 4933,
+            "ticks": 61637440,
+            "ppid": 4928,
+            "sid": 4928,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "97b7d2acf8ae6ec87a6f1118080bbce6ecb501e2ea1f56b58640f46c7d8a7d4a",
+            "comm": "python3"
+          },
+          "wait_status": 36608,
+          "returncode": 143
+        },
+        {
+          "pid": 4986,
+          "identity": {
+            "pid": 4986,
+            "ticks": 61644549,
+            "ppid": 4933,
+            "sid": 4954,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Build.sh"
+          },
+          "state": "REAPED",
+          "live_verified": false,
+          "prior_identity": {
+            "pid": 4986,
+            "ticks": 61644549,
+            "ppid": 4954,
+            "sid": 4954,
+            "state": "D",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "2688bdddc56391770464f699e2f16986f12f1bcc1627a923eab0025650c560e2",
+            "comm": "Build.sh"
+          },
+          "parent_identity": {
+            "pid": 4954,
+            "ticks": 61638022,
+            "ppid": 4933,
+            "sid": 4954,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "f2099e6eb37b4e15f02ed6616c0e2432f512c190d728bc498ac7cf56c4c95ab7",
+            "comm": "UnrealEditor-Cm"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        }
+      ]
+    },
+    "workers": [
+      {
+        "name": "drain-xvfb",
+        "alive": false
+      },
+      {
+        "name": "drain-native",
+        "alive": false
+      }
+    ],
+    "drain_pipes": [
+      {
+        "name": "drain-xvfb",
+        "launch_identity": {
+          "pid": 4949,
+          "ticks": 61638012,
+          "sid": 4949,
+          "uid": 1001,
+          "state": "R"
+        },
+        "pipe_inode": 36934307
+      },
+      {
+        "name": "drain-native",
+        "launch_identity": {
+          "pid": 4954,
+          "ticks": 61638022,
+          "sid": 4954,
+          "uid": 1001,
+          "state": "S"
+        },
+        "pipe_inode": 36934324
+      }
+    ]
+  },
+  "latest": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "a0bfcd6249edb5dc1c0bb4161bfe7710126f44374e8928230166b8a63832e72c"
+  },
+  "barrier": [
+    [
+      "001-launch-locked.json",
+      {
+        "event": "launch-locked",
+        "state": "LOCKED",
+        "utc": 1793044681.990504,
+        "monotonic_ns": 616374449931207,
+        "pid": 4933
+      }
+    ],
+    [
+      "002-pre-chmod.json",
+      {
+        "event": "pre-chmod",
+        "state": "LOCKED",
+        "utc": 1793044687.0915196,
+        "monotonic_ns": 616379550946036,
+        "ancestor": "/home/sub01-recovery-stage-20261026",
+        "expected": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "original": {
+          "dev": 66,
+          "ino": 4631271,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "recovery": "Only exact quiescence+FD-bound identity allows restoring0710"
+      }
+    ],
+    [
+      "003-post-chmod.json",
+      {
+        "event": "post-chmod",
+        "state": "ACTIVE",
+        "utc": 1793044687.0922236,
+        "monotonic_ns": 616379551650398,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "004-probe-active.json",
+      {
+        "event": "probe-active",
+        "state": "ACTIVE",
+        "utc": 1793044687.1063907,
+        "monotonic_ns": 616379565817288,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": false
+          },
+          "descendant": {
+            "read": false,
+            "errno": 13
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ],
+    [
+      "005-blocked.json",
+      {
+        "event": "blocked",
+        "state": "RESTORATION_BLOCKED",
+        "utc": 1793044764.6398911,
+        "monotonic_ns": 616457099317915,
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 536, in run\n    try:self.finish()\n        ^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 525, in finish\n    if self.observer:self.observer.corroborate('settled-before-barrier-restoration',())\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/visual-supervisor.candidate.py\", line 190, in corroborate_with_barrier\n    rows=original_corroborate(*args,**kwargs)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 430, in corroborate\n    self.register_descendants();rows=census()\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 368, in register_descendants\n    try:return self._register_descendants()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 378, in _register_descendants\n    self.reconcile_descendants(rows)\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 398, in reconcile_descendants\n    need(i['ppid']!=os.getpid() or pid in self.ancestry,'First-seen adoption has no prior chain/direct launch')\n  File \"/opt/sub01/animation-visual-20261026-attempt03/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: First-seen adoption has no prior chain/direct launch\n",
+        "active": true,
+        "ancestor": "/home/sub01-recovery-stage-20261026"
+      }
+    ]
+  ],
+  "ancestor": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 448,
+    "type": 16384
+  },
+  "fifo": {
+    "dev": 66,
+    "ino": 2177729005,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "fifo_old": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  }
+}
+===== END SOURCE ACTUAL_FAILURE_SUMMARY =====
+
+
+INDEPENDENT SECOND VERDICT: SDK DESIGN ONLY, NOT RUNTIME
+DESIGN CONSULTATION ONLY — narrowly suppress native startup SDK validation
+No run, environment mutation, build, project compilation, helper admission or source/binary change is authorized. Visual03 failed in warmup with no accepted visual fixture. Recovery and a fresh04 exact runtime bundle are separate gates; retain all03 process/FD/ancestry/cleanup/barrier protections.
+
+Observed cause
+work/visual03-failure-inspect.json native_tail at2026-10-26 19:59:13.036 records Engine/Build/BatchFiles/Linux/Build.sh -Mode=ValidatePlatforms -OutputSDKs -AllPlatforms, project and AutoSDKInfo.txt arguments; dotnet then runs the same UBT mode. This is platform SDK validation, not evidence of project/module compilation. PID4986 was not on the admitted dynamic executable graph; later first-seen adoption remained blocked. We do not propose admitting arbitrary bash, Build.sh, UBT or .NET.
+
+Actual source evidence
+Installed Engine/Source/Developer/TargetPlatform/Private/TargetPlatformManagerModule.cpp:59373bytes1815lines SHA1ab0fb6d8141ee06d80e0190883a30962552ccb0d96e39ca71d8f95f3979efa2. Exact numbered source excerpts accompany this question.
+-54 defines SkipUBTSDKSetupEnvVar as UE_SKIP_UBT_SDK_SETUP.
+-221-227 NeedsToRunSetupPlatformsUBT reads that environment variable with FCString::Atoi and returnsfalse if value==1, before other checks.
+-366-400 LaunchUBTValidatePlatformsProc constructs the exact observed Mode=ValidatePlatforms/OutputSDKs/AllPlatforms command.390 guards InvokeUnrealBuildToolAsync with !Multiprocess AND NeedsToRunSetupPlatformsUBT().
+-404-410 GSDKInit calls this function at FileSystemReady. This matches the observed startup command. The other call in this translation unit, UpdateAfterSDKInstall1499, uses the same guarded function, so the same environment condition also applies there.
+-492-550 SDKSetup waits/parses/clears only a valid SDKSetupUBTProc. With this route skipped, there is no such process to wait for or validate via its output.
+-559-571 AutoSDK enabled still calls SetupAutoSDK; the environment switch does NOT globally disable SDK environment processing.
+-573-581: with AutoSDK disabled and NeedsToRunSetupPlatformsUBT false, SDKSetup explicitly ASSUMES all platforms valid. This is a behavior change in platform status, NOT proof of installed/verified SDKs. Do not present skipped validation as SDK readiness.
+-583-587 existing ManualSDKEnvVars can still be applied;1347-1353 SetupEnvironmentFromManualSDK also deletes that existing file after reading. The switch does not prevent this unrelated side effect. A future preflight should establish whether Engine/Intermediate/ManualSDKEnvVars.txt exists before claiming that no such existing engine file can be changed. Initialize621 calls TurnkeySupport.UpdateSdkInfo under build guards before SDKSetup; that separate implementation was not supplied here. Thus do not claim every possible UBT/Turnkey launch is suppressed or engine code is immutable/trusted merely because source exists.
+
+Proposed narrow design delta for a future separately reviewed04
+Set UE_SKIP_UBT_SDK_SETUP='1' ONLY in the owned native child environment before its exec, recorded in exact launch plan/readback. Do not mutate global environment, Engine files, project bytes, original tuning or SDK caches; do not fabricate SDK receipts. Preserve the exact03 fixed process graph and executable pins, -notraceserver choice, STOP, foreground sole-operator model, ancestry/census rules, bounded workers, known-child cleanup and conditional restoration. Unknown helper/descendant remains a failure; no relaxed admission if another route appears. Before any fresh04 launch require completed recovery/quiescence, fresh manifested isolated copy, refreshed exact pins and full exact runtime re-review. Native visual permission is not inherited from this design answer.
+
+Compiled-module corroboration still needed
+Source full SHA and matching logged command support the source route, but do not alone prove the installed binary's exact control flow. Prepared read_targetplatform_binary.py reads/hashes only the observed TargetPlatform shared object, searches bounded ASCII/UTF16/UTF32 string representations of the env name and command, and reads Build.version/UnrealEditor.modules identity receipts. Positive strings+BuildId are corroboration, not proof of every conditional or all helper paths. No remote call was made by this agent; coordinator may obtain this read-only evidence. If stronger provenance is required, specify the minimum, without requesting a rebuild or arbitrary process admission.
+
+Question: APPROVE DESIGN or BLOCK for this native-child-only environment switch as a narrowly scoped prevention of the observed automatic SDK-validation route, explicitly retaining unverified/assumed SDK status and all existing cleanup/ownership gates? Are any additional exact source/correspondence checks essential before the fresh04 exact-code review? Please do not broaden the graph or authorize runtime/build work.
+
+ACTUAL COORDINATOR READBACK obtained after the draft above: binary contains expected UTF16 strings; Build.version/module receipts as below; ManualSDKEnvVars.txt is absent. This supersedes draft statement that corroboration still needs collecting; limitations remain.
+{
+  "module": {
+    "path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-TargetPlatform.so",
+    "bytes": 370072,
+    "sha256": "daf409938b14e955c258defc5cf9ec22bcd42a023c803239b098d8ff3b70ee2a",
+    "uid": 0,
+    "gid": 0,
+    "mode": "0o777",
+    "header_hex": "7f454c4602010100000000000000000003003e000100000000000000000000004000000000000000d89d05000000000000000000400038000a0040001f001d00",
+    "string_offsets": {
+      "UE_SKIP_UBT_SDK_SETUP:utf-8": [],
+      "UE_SKIP_UBT_SDK_SETUP:utf-16-le": [
+        106676
+      ],
+      "UE_SKIP_UBT_SDK_SETUP:utf-32-le": [],
+      "-Mode=ValidatePlatforms -OutputSDKs:utf-8": [],
+      "-Mode=ValidatePlatforms -OutputSDKs:utf-16-le": [
+        108996
+      ],
+      "-Mode=ValidatePlatforms -OutputSDKs:utf-32-le": [],
+      "CachedAutoSdkInfo.ini:utf-8": [],
+      "CachedAutoSdkInfo.ini:utf-16-le": [
+        109070
+      ],
+      "CachedAutoSdkInfo.ini:utf-32-le": [],
+      "Multiprocess:utf-8": [],
+      "Multiprocess:utf-16-le": [
+        117764
+      ],
+      "Multiprocess:utf-32-le": []
+    }
+  },
+  "receipts": [
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Build/Build.version",
+      "bytes": 215,
+      "sha256": "eab58750e84719489f3ee0d42d05a533ceb357eb3ee511777e9408d27a85f43c",
+      "data": {
+        "MajorVersion": 5,
+        "MinorVersion": 8,
+        "PatchVersion": 3,
+        "Changelist": 58210709,
+        "CompatibleChangelist": 55116800,
+        "IsLicenseeVersion": 0,
+        "IsPromotedBuild": 1,
+        "BranchName": "++UE5+Release-5.8"
+      }
+    },
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor.modules",
+      "bytes": 31321,
+      "sha256": "9c60786f45b2ee850c5355706961b5933ee36effd2169d25459562e7bf6f62ba",
+      "data": {
+        "BuildId": "55116800",
+        "TargetPlatform": "libUnrealEditor-TargetPlatform.so"
+      }
+    }
+  ],
+  "claim_limit": "strings/build receipts corroborate included code/provenance; do not prove control-flow equivalence or suppression of every UBT/Turnkey route",
+  "manual_sdk_env_file": {
+    "path": "/workspace/sub01-private-recovered-engine/Engine/Intermediate/ManualSDKEnvVars.txt",
+    "exists": false
+  }
+}
+
+EXACT SOURCE EXCERPTS
+Source SHA256 1ab0fb6d8141ee06d80e0190883a30962552ccb0d96e39ca71d8f95f3979efa2
+45: namespace UE::AutoSDK
+46: {
+47: 	static const TCHAR* SDKRootEnvVar = TEXT("UE_SDKS_ROOT");
+48: 	static const TCHAR* SDKInstallManifestFileName = TEXT("CurrentlyInstalled.txt");
+49: 	static const TCHAR* SDKLastScriptRunVersionFileName = TEXT("CurrentlyInstalled.Version.txt");
+50: 	static const TCHAR* SDKRequiredScriptVersionFileName = TEXT("Version.txt");
+51: 	static const TCHAR* SDKEnvironmentVarsFile = TEXT("OutputEnvVars.txt");
+52: }
+53: 
+54: static const TCHAR* SkipUBTSDKSetupEnvVar = TEXT("UE_SKIP_UBT_SDK_SETUP");
+55: static FProcHandle SDKSetupUBTProc;
+56: 
+57: static FConfigFile& GetCachedInfoToSaveAfterUBT()
+58: {
+59: 	static FConfigFile CachedInfoToSaveAfterUBT;
+60: 	return CachedInfoToSaveAfterUBT;
+61: }
+62: 
+63: static bool IsAutoSDKsEnabled()
+64: {
+65: #if AUTOSDKS_ENABLED
+66: 	FString SDKPath = FPlatformMisc::GetEnvironmentVariable(UE::AutoSDK::SDKRootEnvVar);
+67: 
+68: 	// AutoSDKs only enabled if UE_SDKS_ROOT is set.
+69: 	if (SDKPath.Len() != 0)
+70: 	{
+71: 		return true;
+72: 	}
+73: #endif
+74: 	return false;
+
+221: static bool NeedsToRunSetupPlatformsUBT()
+222: {
+223: 	int32 SkipUBTSDKSetupEnvVarValue = FCString::Atoi(*FPlatformMisc::GetEnvironmentVariable(SkipUBTSDKSetupEnvVar));
+224: 	if (SkipUBTSDKSetupEnvVarValue == 1)
+225: 	{
+226: 		return false;
+227: 	}
+228: 
+229: 	if (!IsAutoSDKsEnabled())
+230: 	{
+231: 		// UBT is usually always invoked when AutoSDK is disabled to check platform status, as there is no other way to check sdk validity. 
+232: 		// This causes a startup overhead and unexpected console log output because we have to launch an UBT process and read the output in order to check platform validity.
+233: 		// Returning false here for program target type solves the problem by skipping calling UBT, we assume all platforms are valid.
+234: #if IS_PROGRAM
+235: 		return false;
+236: #else
+237: 		return true;
+238: #endif
+239: 	}
+240: 
+241: 	// early out and always return true on builders
+242: 	if (GIsBuildMachine)
+243: 	{
+244: 		return true;
+245: 	}
+
+366: void LaunchUBTValidatePlatformsProc(FName PlatformName = NAME_None)
+367: {
+368: 	FString UBTParams(TEXT("-Mode=ValidatePlatforms -OutputSDKs "));
+369: 	if (PlatformName == NAME_None)
+370: 	{
+371: 		UBTParams += TEXT(" -AllPlatforms ");
+372: 	}
+373: 	else
+374: 	{
+375: 		UBTParams += FString::Printf(TEXT("  -Platforms=%s "), *(PlatformName.ToString()));
+376: 	}
+377: 
+378: 	if (FString Project = GetProjectPathForUBT(); Project.Len() > 0)
+379: 	{
+380: 		UBTParams += FString::Printf(TEXT(" -project=\"%s\""), *Project);
+381: 	}
+382: 	// Write the output to a separate file since it performs much better than read pipes in this scenario
+383: 	// where the invocation script is quite involved and is in turn calling other scripts and programs...
+384: 	{
+385: 		FString LogFile = FPaths::Combine(FPaths::ProjectLogDir(), "AutoSDKInfo.txt");
+386: 		FString AbsLogFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*LogFile);
+387: 		UBTParams += FString::Printf(TEXT(" -log=\"%s\" -verbose -timestamps"), *AbsLogFile);
+388: 	}
+389: 
+390: 	if (FParse::Param(FCommandLine::Get(), TEXT("Multiprocess")) == false && NeedsToRunSetupPlatformsUBT())
+391: 	{
+392: 		int32 UBTReturnCode = -1;
+393: 
+394: 		void* ReadPipe = nullptr;
+395: 		void* WritePipe = nullptr;
+396: 		SDKSetupUBTProc = FDesktopPlatformModule::Get()->InvokeUnrealBuildToolAsync(UBTParams, *GLog, ReadPipe, WritePipe, true);
+397: 		if (!SDKSetupUBTProc.IsValid())
+398: 		{
+399: 			UE_LOGF(LogTargetPlatformManager, Warning, "AutoSDK is enabled (UE_SDKS_ROOT is set), but failed to run UBT to check SDK status! Check your installation.");
+400: 		}
+401: 	}
+402: }
+403: 
+404: // kick off a call to UBT nice and early so that it's results are hopefully ready when needed
+405: FDelayedAutoRegisterHelper GSDKInit(EDelayedRegisterRunPhase::FileSystemReady, []
+406: 	{
+407: 		SCOPED_BOOT_TIMING("AutoSDKInit - DelayedAutoRegisterHelper");
+408: 		LaunchUBTValidatePlatformsProc();
+409: 	}
+410: );
+
+492: 	void SDKSetup(FName InPlatformName = NAME_None)
+493: 	{
+494: 		if (SDKSetupUBTProc.IsValid())
+495: 		{
+496: 			SCOPED_BOOT_TIMING("AutoSDKInit - WaitForUBTProc");
+497: 			// wait for UBT to finish
+498: 			FPlatformProcess::WaitForProc(SDKSetupUBTProc);
+499: 
+500: 			FString LogFile = FPaths::Combine(FPaths::ProjectLogDir(), "AutoSDKInfo.txt");
+501: 			FString AbsLogFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*LogFile);
+502: 
+503: 			TArray<FString> Lines;
+504: 
+505: 			bool bIsAutoSDKEnabled = IsAutoSDKsEnabled();
+506: 			if (FFileHelper::LoadFileToStringArray(Lines, *AbsLogFile) && !bIsAutoSDKEnabled)
+507: 			{
+508: 				TMap<FName, FName> UBTNameToIniPlatformName;
+509: 				for (auto Pair : FDataDrivenPlatformInfoRegistry::GetAllPlatformInfos())
+510: 				{
+511: 					FName PlatformName = Pair.Key;
+512: 					if (InPlatformName == PlatformName || InPlatformName == NAME_None)
+513: 					{
+514: 						const FDataDrivenPlatformInfo& Info = Pair.Value;
+515: 						UBTNameToIniPlatformName.Add(Info.UBTPlatformName, PlatformName);
+516: 					}
+517: 				}
+518: 
+519: 				for (int Index = 0; Index < Lines.Num(); ++Index)
+520: 				{
+521: 					FString Item = Lines[Index];
+522: 					FString ValidateTag = TEXT("##PlatformValidate: ");
+523: 					int32 StartIndex = Item.Find(ValidateTag, ESearchCase::IgnoreCase);
+524: 					if (StartIndex != INDEX_NONE)
+525: 					{
+526: 						StartIndex += ValidateTag.Len();
+527: 						int32 EndIndex = Item.Find(TEXT(" "), ESearchCase::IgnoreCase, ESearchDir::FromStart, StartIndex);
+528: 						bool bIsSDKValid = !Item.Contains(TEXT("INVALID"));
+529: 						if (EndIndex != INDEX_NONE)
+530: 						{
+531: 							FName UBTName = FName(Item.Mid(StartIndex, EndIndex - StartIndex));
+532: 							FName* IniPlatformName = UBTNameToIniPlatformName.Find(UBTName);
+533: 							if (IniPlatformName != nullptr)
+534: 							{
+535: 								PlatformsSetup.Add(*IniPlatformName, bIsSDKValid);
+536: 							}
+537: 						}
+538: 					}
+539: 				}
+540: 			}
+541: 			// if it failed, we don't want to cache the saved info, so we make sure we run it again next time
+542: 			int32 ReturnCode = 0;
+543: 
+544: 			FPlatformProcess::GetProcReturnCode(SDKSetupUBTProc, &ReturnCode);
+545: 			FPlatformProcess::CloseProc(SDKSetupUBTProc);
+546: 			SDKSetupUBTProc.Reset();
+547: 			if (IsAutoSDKsEnabled() && ReturnCode == 0)
+548: 			{
+549: 				// now save out the cached info so next run we can skip UBT
+550: 				GetCachedInfoToSaveAfterUBT().Write(*(FPaths::ProjectIntermediateDir() / TEXT("CachedAutoSdkInfo.ini")));
+551: 			}
+552: 
+553: 			UE_LOGFMT(LogTargetPlatformManager, Log, "UBT AutoSDK ReturnCode: {ReturnCode}", ReturnCode);
+554: 		}
+555: 
+556: 		// we have to setup our local environment according to AutoSDKs or the ITargetPlatform's IsSDkInstalled calls may fail
+557: 		// before we get a change to setup for a given platform.  Use the platforminfo list to avoid any kind of interdependency.
+558: 		SCOPED_BOOT_TIMING("AutoSDKInit - SetupAutoSDK");
+559: 		if (IsAutoSDKsEnabled())
+560: 		{
+561: 			for (auto Pair : FDataDrivenPlatformInfoRegistry::GetAllPlatformInfos())
+562: 			{
+563: 				FName PlatformName = Pair.Key;
+564: 				if (InPlatformName == PlatformName || InPlatformName == NAME_None)
+565: 				{
+566: 					if (Pair.Value.AutoSDKPath.Len() > 0)
+567: 					{
+568: 						SetupAutoSDK(Pair.Value.AutoSDKPath);
+569: 					}
+570: 				}
+571: 			}
+572: 		}
+573: 		else if (!NeedsToRunSetupPlatformsUBT())
+574: 		{
+575: 			// If AutoSDK is disabled and we didn't run UBT, assume all platforms are valid as there is no way to check.
+576: 			for (auto Pair : FDataDrivenPlatformInfoRegistry::GetAllPlatformInfos())
+577: 			{
+578: 				FName PlatformName = Pair.Key;
+579: 				PlatformsSetup.Add(PlatformName, true);
+580: 			}
+581: 		}
+582: 
+583: 		FString ManualSDKEnvironmentVarsPath = FPaths::EngineIntermediateDir() / FString(TEXT("ManualSDKEnvVars.txt"));
+584: 		if (IFileManager::Get().FileExists(*ManualSDKEnvironmentVarsPath))
+585: 		{
+586: 			SetupEnvironmentFromManualSDK(ManualSDKEnvironmentVarsPath);
+587: 		}
+588: 	}
+589: 
+590: public:
+
+611: 	virtual void Initialize()
+612: 	{
+613: 		if (bIsInitialized)
+614: 		{
+615: 			return;
+616: 		}
+617: 
+618: 		bIsInitialized = true;
+619: 
+620: #if WITH_EDITOR && UE_WITH_TURNKEY_SUPPORT
+621: 		ITurnkeySupportModule::Get().UpdateSdkInfo();
+622: #endif
+623: 
+624: 		SDKSetup();
+625: 
+626: 		TextureFormatManager = FModuleManager::LoadModulePtr<ITextureFormatManagerModule>("TextureFormat");
+627: 
+628: 		Invalidate();
+
+1480: 
+1481: 		const FDataDrivenPlatformInfo& Info = FDataDrivenPlatformInfoRegistry::GetPlatformInfo(PlatformName);
+1482: 
+1483: 
+1484: 		FName AutoSDKName = NAME_None;
+1485: 		FString AutoSDKPath;
+1486: 		if(IsAutoSDKsEnabled())
+1487: 		{
+1488: 			AutoSDKPath = Info.AutoSDKPath;
+1489: 			AutoSDKName = *AutoSDKPath;
+1490: 			if (AutoSDKName != NAME_None)
+1491: 			{
+1492: 				// make sure we can re-do the AutoSDK setup
+1493: 				PlatformsSetup.Remove(AutoSDKName);
+1494: 			}
+1495: 		}
+1496: 		else
+1497: 		{
+1498: 			// Must call UBT again to update platform status if AutoSDK is off.
+1499: 			LaunchUBTValidatePlatformsProc(PlatformName);
+1500: 		}
+1501: 		
+1502: 		SDKSetup(PlatformName);
+1503: 
+
+1318: 	void SetupAutoSDK(const FString& AutoSDKPath)
+1319: 	{
+1320: 		TRACE_CPUPROFILER_EVENT_SCOPE(FTargetPlatformManagerModule::SetupAndValidateAutoSDK);
+1321: 		bool bValidSDK = false;
+1322: 		if (AutoSDKPath.Len() > 0)
+1323: 		{		
+1324: 			FName AutoSDKName(*AutoSDKPath);
+1325: 
+1326: 			// cache result of the last setup attempt to avoid calling UBT all the time.
+1327: 			bool* bPreviousSetupSuccessful = PlatformsSetup.Find(AutoSDKName);
+1328: 			if (!bPreviousSetupSuccessful)
+1329: 			{
+1330: 				bValidSDK = SetupEnvironmentFromAutoSDK(AutoSDKPath);
+1331: 				PlatformsSetup.Add(AutoSDKName, bValidSDK);
+1332: 			}
+1333: 		}
+1334: 	}
+1335: 
+1336: 	bool ValidateSDK(FName PlatformName)
+1337: 	{
+1338: 		bool bValidSDK = false;
+1339: 		bool* SetupSuccessful = PlatformsSetup.Find(PlatformName);
+1340: 		if (SetupSuccessful)
+1341: 		{
+1342: 			bValidSDK = *SetupSuccessful;
+1343: 		}
+1344: 		return bValidSDK;
+1345: 	}
+1346: 
+1347: 	bool SetupEnvironmentFromManualSDK(const FString& EnvVarFileName)
+1348: 	{
+1349: 		TRACE_CPUPROFILER_EVENT_SCOPE(FTargetPlatformManagerModule::SetupEnvironmentFromManualSDK);
+1350: 
+1351: 		UE_LOGF(LogTargetPlatformManager, Verbose, "Reading the manifest for auto-selected manual sdks" );
+1352: 		bool bResult = SetupEnvironmentFromEnvVarFile(EnvVarFileName);
+1353: 		IFileManager::Get().Delete(*EnvVarFileName);
+1354: 		return bResult;
