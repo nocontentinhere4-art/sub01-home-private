@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# APPROVE ONE RECOVERY02\n\nApprove **exactly one foreground root execution** of the newly reviewed staging wrapper:\n\n- **Wrapper SHA256:** `d281c71b6964f86e4ec2700c6737e49debf799f7fabbdbc4a37e4e56b3eb8927`\n- **Recovery source SHA256:** `421b5b2be0446a6f6800cb86e0d3bf0805ccf1745a9620506211739e4947b899`\n- **Pins SHA256:** `c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887`\n- **Independent verifier SHA256:** `6782cc92219c67a7f4c77708ac446c0f35919fb9d272761f75676ef4e00085ad`\n\nThe recovery02 changes resolve the reviewed failure-handling and evidence issues:\n\n1. UDP and listener entries must remain exactly unchanged. ESTABLISHED TCP tuples, including inode, may only monotonically disappear; additions and reappearances are rejected. The actual rejected snapshot and delta are recorded **before** rejection.\n2. Recovery02 uses fresh output and FIFO-retirement paths. Recovery01 is copied read-only, including late `011-failure-reclose.json`; its historical receipt is not rewritten.\n3. The outer handler avoids another failure record when the original fault was already handled and the control FD is closed, while retaining fail-closed reclosure when the FD remains available.\n4. The existing credentialed 8+2 census, FD/barrier checks, exact project hashes, no-replace FIFO renames, restored-access probe, and independent postcheck remain in force.\n\nThis is a **new one-shot approval**, not reuse of the prior approval. It does not assert recovery success or confirm that ordinary connection closure caused recovery01 to stop.\n\nAny failed admission, execution failure, or failed independent postcheck exhausts this approval: **no retry and no attempt03**. No application/native launch, FIFO read, provider call, or historical rewrite is authorized. Attempt02 remains **FAILED**; visual remains **PENDING/not accepted**; performance remains **NOT_ASSESSED**.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 24883,
+    "completion_tokens": 4130,
+    "total_tokens": 29013,
+    "completion_tokens_details": {
+      "reasoning_tokens": 3633
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 24832
+    }
+  },
+  "seconds": 116.6
+}
