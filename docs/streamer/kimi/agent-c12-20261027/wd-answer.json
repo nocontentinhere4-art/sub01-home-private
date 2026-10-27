@@ -1,0 +1,6 @@
+{
+ "http": 200,
+ "finish": "stop",
+ "seconds": 18.1,
+ "answer": "APPROVE. The removal branch now handles both watchdog-tripped and operator/drill STOP states, grants fresh grace exactly once, and cannot renew `started` on subsequent STOP-less checks. The later `stop_handled = None` makes the explicit assignment redundant but harmless and clarifies the one-shot intent. Pending release retries remain intact. The regression test covers the original failure, consecutive checks, heartbeat recovery, and subsequent fail-closed tripping; the prior blocker is resolved."
+}

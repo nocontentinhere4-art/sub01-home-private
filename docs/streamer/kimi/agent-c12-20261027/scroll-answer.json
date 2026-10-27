@@ -1,0 +1,6 @@
+{
+ "http": 200,
+ "finish": "stop",
+ "seconds": 22.9,
+ "answer": "APPROVE \u2014 The fix directly covers the normalized `scroll up bit` path while preserving SCROLL\u2019s full-string anchoring and closed modifier set, so it does not broaden matching to arbitrary free text. The added tests cover both directions, modifier placement, default-down behavior, and the `stand up` refusal regression guard. The reported 19 targeted passes and unchanged agent suite, with only pre-existing environment failures, are sufficient for this narrowly scoped change."
+}

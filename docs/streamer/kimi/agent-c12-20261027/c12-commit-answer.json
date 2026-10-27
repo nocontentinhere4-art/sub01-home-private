@@ -1,0 +1,6 @@
+{
+ "http": 200,
+ "finish": "stop",
+ "seconds": 44.7,
+ "answer": "APPROVE\n\nThe fix is narrowly scoped and matches the confirmed root cause: it enables request shaping, while the existing `TOP_BOTTOM` handler performs the `End`/`Home` mapping. It does not alter key execution, queueing, or safety-filter ordering, so I see no safety-filter bypass. The regression test covers bottom, top, and optional `back`.\n\nResidual false-positive risk: `ACTION_VERB` is broader than `TOP_BOTTOM`, so ordinary chat such as \u201cdon\u2019t jump to conclusions\u201d now reaches request shaping. The added negative test (\u201cjumped in the pool\u201d) does not exercise that new boundary. A follow-up test asserting such text produces no executable request would be useful, but the diff alone does not demonstrate a misroute. Existing downstream validation and safety checks still apply, and the reported unrelated failures/flakiness do not block this fix."
+}

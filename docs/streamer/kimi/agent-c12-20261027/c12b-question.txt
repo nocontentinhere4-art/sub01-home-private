@@ -1,0 +1,511 @@
+You are the engineer fixing SUB-01's desktop agent. A live focused check failed (C12). Two allowed viewer chat requests were sent ~seconds apart while a lease was armed: 'scroll a bit some more down' executed (scroll, 2 actions/2 receipts); 'jump to the bottom of the page' got chat ack=True but 0 actions/0 receipts in its window (expected a key press, e.g. End). Earlier run home-r3 failed similarly: 'second command queued past the window while the first waited for the model'. A recent change made quick scroll/key/back requests finish after the actual action confirmation without waiting for the model. Second issue: after the STOP kill-switch drill, the operator ran `streamer_up.py resume` then POST /lease; the first re-arm found STOP present again, the second (right after resume) found port 8836 not yet listening. Using the full streamer_agent.py source and the log/audit evidence below: (1) state the most likely root cause of each issue with line references; (2) give a MINIMAL unified diff for streamer_agent.py that makes a second quick request queued while another decision is in flight execute promptly (or be reported as refused with a reason), without weakening caps, lease, STOP, freshness or audit; (3) for the resume issue say what the operator procedure/checker should do (e.g. wait for health, remove STOP ordering) and whether code must change. Be concise; give the diff against the shown line numbers of streamer_agent.py (unified, 3 lines context).
+
+=== EVIDENCE ===
+FILES: agent_costs.jsonl, agent_memory.json, agent_shadow_costs.jsonl, cam2.json, desktop-vagon/events.jsonl, desktop-vagon/profile/Default/Extension Rules/000003.log, desktop-vagon/profile/Default/Extension Scripts/000003.log, desktop-vagon/profile/Default/Extension State/000003.log, desktop-vagon/profile/Default/Local Storage/leveldb/000010.log, desktop-vagon/profile/Default/Session Storage/000003.log, desktop-vagon/profile/Default/Site Characteristics Database/000003.log, desktop-vagon/profile/Default/Sync Data/LevelDB/000003.log, desktop-vagon/profile/Default/shared_proto_db/000003.log, desktop-vagon/profile/Default/shared_proto_db/metadata/000003.log, desktop-vagon/profile/component_crx_cache/metadata.json, desktop-vagon/profile/extensions_crx_cache/metadata.json, events.jsonl, layout.jsonl, logs/agent.log, logs/desktop.log, logs/director.log, logs/hls.log, logs/monitor.log, logs/voice.log, logs/xvfb.log, main.json, mouth.json, speaking.json, speech/timeline.jsonl, state.json, supervisor.json, vagon.json, watchdog.jsonl, watchdog.state.json
+
+=== events.jsonl (17 matching lines, last 40)
+{"t": 1793060897.077, "utc": "2026-10-27T00:28:17.076Z", "kind": "lease_armed", "run": "de7c2f61", "minutes": 15.0, "expires_utc": "2026-10-27T00:43:17.076Z"}
+{"t": 1793061082.475, "utc": "2026-10-27T00:31:22.475Z", "kind": "lease_armed", "run": "10368471", "minutes": 15.0, "expires_utc": "2026-10-27T00:46:22.475Z"}
+{"t": 1793061811.822, "utc": "2026-10-27T00:43:31.822Z", "kind": "hands_off", "run": "851402e9", "why": "lease", "detail": "", "lease": {"required": true, "active": false, "remaining_s": 0, "expires_utc": null, "armed_utc": null, "max_minutes": 60}}
+{"t": 1793061811.823, "utc": "2026-10-27T00:43:31.823Z", "kind": "release_inputs", "run": "851402e9", "why": "hands off: lease", "ok": true}
+{"t": 1793062007.291, "utc": "2026-10-27T00:46:47.291Z", "kind": "lease_armed", "run": "851402e9", "minutes": 15.0, "expires_utc": "2026-10-27T01:01:47.291Z"}
+{"t": 1793062015.035, "utc": "2026-10-27T00:46:55.035Z", "kind": "chat_request", "run": "851402e9", "seq": 1057, "user": "ck_scroll", "text": "scroll a bit some more down", "decision": "executed", "reason": "scroll", "action": "scroll down"}
+{"t": 1793062019.324, "utc": "2026-10-27T00:46:59.323Z", "kind": "chat_request_end", "run": "851402e9", "seq": 1057, "user": "ck_scroll", "text": "scroll a bit some more down", "request": "scroll", "steps": 1, "why": "done", "commented": false, "seconds": 4.3}
+{"t": 1793062027.905, "utc": "2026-10-27T00:47:07.904Z", "kind": "chat", "run": "851402e9", "seq": 1058, "cls": "ok", "direct": false, "text": "jump to the bottom of the page"}
+{"t": 1793062042.518, "utc": "2026-10-27T00:47:22.517Z", "kind": "lease_revoked", "run": "851402e9", "why": "STOP"}
+{"t": 1793062042.518, "utc": "2026-10-27T00:47:22.518Z", "kind": "pause", "run": "851402e9", "why": "STOP file"}
+{"t":"2026-10-27T00:47:24Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+{"t": 1793062323.932, "utc": "2026-10-27T00:52:03.931Z", "kind": "pause", "run": "d51f0c36", "why": "STOP file"}
+{"t":"2026-10-27T00:52:05Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+{"t": 1793062418.208, "utc": "2026-10-27T00:53:38.208Z", "kind": "hands_off", "run": "f1342a97", "why": "lease", "detail": "", "lease": {"required": true, "active": false, "remaining_s": 0, "expires_utc": null, "armed_utc": null, "max_minutes": 60}}
+{"t": 1793062418.209, "utc": "2026-10-27T00:53:38.209Z", "kind": "release_inputs", "run": "f1342a97", "why": "hands off: lease", "ok": true}
+{"t": 1793062465.838, "utc": "2026-10-27T00:54:25.837Z", "kind": "lease_revoked", "run": "f1342a97"}
+{"t":"2026-10-27T00:54:27Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+
+
+=== state.json (1 matching lines, last 40)
+{"schema": "sub01.streamer-agent-state.v1", "t": 1793062466.014, "utc": "2026-10-27T00:54:26.014Z", "phase": "stopped", "rhythm": "open", "paused": false, "stop_file": true, "uptime_s": 48, "model": "claude-sonnet-5-5", "api_key": true, "key_source": "file", "provider": {"primary": "anthropic", "fallback": "kimi", "active": "anthropic", "model": "claude-sonnet-5-5", "switched_utc": null, "reason": null, "window_s": 600.0, "returns_in_s": null, "switches": 0}, "quiet": {"on": false, "kind": null, "reason": "", "since_s": null, "failures": 0, "next_probe_in_s": null}, "page": {"url": "https://ap
+
+=== streamer_agent.py RELEVANT EXCERPTS (runtime copy, with line numbers) ===
+CALL SITES:
+3244:             self.finish_quick_request(ps.get("request_seq"), self.last_outcome, now)
+3389:     async def run_requests(self, obs, now):
+3414:             await self.start_request(req, obs, now)
+3419:     async def start_request(self, req, obs, now):
+3459:                 self.finish_quick_request(req["seq"], out, self.clock())
+3490:     def finish_quick_request(self, seq, outcome, now):
+4750:         await self.run_requests(obs, now)
+5124:             self.finish_quick_request(pv.get("request_seq"), out, now)
+
+# --- request_shape (lines 1309-1321)
+1309: def request_shape(text):
+1310:     """The clause of a chat line that asks for an action, with its filler removed, or None when nothing is asked."""
+1311:     for clause in CLAUSE_SPLIT.split(str(text or "")):
+1312:         s = strip_filler(clause)
+1313:         if not s:
+1314:             continue
+1315:         if VERB_AT_START.match(s):
+1316:             return s
+1317:         if REQUEST_MARK.search(clause):
+1318:             m = VERB_ANYWHERE.search(s)
+1319:             if m:
+1320:                 return s[m.start():]
+1321:     return None
+
+# --- parse_request (lines 1324-1400)
+1324: def parse_request(text, pc=False, installs=False, sources=None):
+1325:     """What a chat line asks him to do on the computer: None when nothing (a question, a remark: the model answers by
+1326:     voice), else {"kind", "action", "refused", ...}. kind: navigate | search | scroll | key | back (the code does it) |
+1327:     look (the model finds it on the page; `intent` read|play|click, `thing`) | face ("show your face": the webcam
+1328:     layout) | hush ("stop talking": a quiet minute) | refused (one short line, REFUSAL_LINES[refused]). With `pc` (the
+1329:     desktop is the remote PC) also launch_game ("play Detroit", "open Steam") and stop_game ("stop the game"), done by
+1330:     the routine; without it a Steam request is refused (no_steam). A search carries `query`, `weather` (the place, on
+1331:     the weather path) and `sensitive` (an awkward but safe query). With `pc` and `installs` (--allow-installs) an
+1332:     install request is carried out from an official source only (install_request: kind install, `name`, `source`,
+1333:     `hosts`); a pasted URL or file name is refused (official_source)."""
+1334:     text = " ".join(str(text or "").split())
+1335:     s = request_shape(text)
+1336:     if s is None:
+1337:         s = strip_filler(text)
+1338:         # on the remote PC a money word is a request shape of its own ("add funds to your wallet": refused as payment);
+1339:         # "say something in Italian", "do an xQc impression", "show your face", "stop talking" have no action verb either
+1340:         if not (WEATHER_Q.match(s) or LANGUAGE_REQ.match(s) or IMPRESSION_REQ.search(s) or FACE_REQ.match(s) or HUSH_REQ.match(s)
+1341:                 or STEAM_REQ.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
+1342:                 or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)):
+1343:             return None
+1344:     why = refused_class(text) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
+1345:     if why in (None, "code_or_download") and pc and installs and INSTALL_REQ.match(s) and not PC_MONEY_WORDS.search(s):
+1346:         inst = install_request(s, sources)
+1347:         if inst is not None:
+1348:             return inst
+1349:     if why:
+1350:         return refused(why)
+1351:     if R_TYPE.match(s):
+1352:         return refused("typing")
+1353:     if LANGUAGE_REQ.match(s):                                 # English-only performance: no other language, no accent
+1354:         return refused("language")
+1355:     if IMPRESSION_REQ.search(s):                              # original character: no impression of a real streamer
+1356:         return refused("impression")
+1357:     if HUSH_REQ.match(s):                                     # "stop talking": a quiet minute, by code, no desktop action
+1358:         return doable("hush", None)
+1359:     if FACE_REQ.match(s):                                     # "show your face": the webcam layout for a while
+1360:         return doable("face", None)
+1361:     if pc:
+1362:         if PC_MONEY_WORDS.search(s):                          # the owner's Steam: cart, wallet, gift cards, pre-orders too
+1363:             return refused("payment")
+1364:         if (m := GAME_PLAY.match(s)):
+1365:             game = DEFAULT_GAME if m.group(1).lower().startswith("detroit") else ""
+1366:             return doable("launch_game", {"action": "launch_game", "name": game}, game=game)
+1367:         if GAME_STOP.match(s):
+1368:             return doable("stop_game", {"action": "stop_game"})
+1369:     elif STEAM_REQ.match(s):                                  # the pod desktop has no Steam: one line, the lookup is offered
+1370:         return refused("no_steam")
+1371:     links = request_links(s) or [m.group(0).rstrip(".,;:!?)]") for m in URL_ANY.finditer(s)]
+1372:     if links:
+1373:         url = links[0]
+1374:         why = request_url_problem(url)
+1375:         return refused(why) if why else doable("navigate", {"action": "navigate", "url": url}, url=url)
+1376:     if SCROLL.match(s):
+1377:         return doable("scroll", {"action": "scroll", "direction": "up" if SCROLL_UP.search(s) else "down", "amount": 600})
+1378:     if (m := TOP_BOTTOM.match(s)):
+1379:         return doable("key", {"action": "key", "key": "Home" if m.group(1).lower() == "top" else "End"})
+1380:     if (m := PAGE_KEY.match(s)):
+1381:         return doable("key", {"action": "key", "key": "PageUp" if "up" in m.group(1).lower() else "PageDown"})
+1382:     if BACK.match(s):
+1383:         return doable("back", {"action": "back"})
+1384:     if (m := WEATHER.match(s)):
+1385:         place = request_query(m.group(1)) if m.group(1).strip() else ""
+1386:         q = query_clean(f"weather {place}" if place else "weather today")
+1387:         return search_doable(q, weather=place or "")
+1388:     if (m := SEARCH_STRICT.match(s)):
+1389:         return search_doable(request_query(m.group(1)))
+1390:     if (m := LOOK.match(s)):
+1391:         return look_doable(m)
+1392:     if leaves_desk(text):
+1393:         return refused("leave_desk")
+1394:     if (m := NAV_LOOSE.match(s)):
+1395:         rest = m.group(1).strip(" .,!?")
+1396:         site = KNOWN_SITES.get(re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "", rest.lower()).strip())
+1397:         if site:
+1398:             return doable("navigate", {"action": "navigate", "url": site}, url=site)
+1399:         return search_doable(request_query(rest))
+1400:     return refused("not_doable")
+
+# --- Requests (lines 1403-1444)
+1403: class Requests:
+1404:     """Viewer requests the code carries out: one in flight, at most REQUEST_QUEUE_MAX waiting, one per viewer at a time
+1405:     (so the order across viewers is round robin), oldest first; a request that waited too long is dropped as stale."""
+1406: 
+1407:     def __init__(self, clock=time.time):
+1408:         self.clock = clock
+1409:         self.waiting = collections.deque()
+1410:         self.current = None
+1411:         self.last_drop_line, self.drop_line_due = -1e9, False
+1412:         self.done = 0
+1413: 
+1414:     def busy_users(self):
+1415:         users = {r["user"] for r in self.waiting}
+1416:         if self.current:
+1417:             users.add(self.current["user"])
+1418:         return users
+1419: 
+1420:     def offer(self, req, now):
+1421:         """-> ("queued", why) with why "" when it is next, or ("dropped", reason)."""
+1422:         if req["user"] in self.busy_users():
+1423:             return "dropped", "one request per viewer at a time"
+1424:         if len(self.waiting) >= REQUEST_QUEUE_MAX + (0 if self.current else 1):   # the head starts at once: not pending
+1425:             return "dropped", f"queue full ({REQUEST_QUEUE_MAX} waiting)"
+1426:         self.waiting.append(req)
+1427:         ahead = len(self.waiting) - 1 + (1 if self.current else 0)
+1428:         return "queued", f"waiting behind {ahead}" if ahead else ""
+1429: 
+1430:     def expire(self, now):
+1431:         stale = [r for r in self.waiting if now - r["t"] > REQUEST_WAIT_MAX_S]
+1432:         for r in stale:
+1433:             self.waiting.remove(r)
+1434:         return stale
+1435: 
+1436:     def take(self, now):
+1437:         if self.current is not None or not self.waiting:
+1438:             return None
+1439:         return self.waiting.popleft()
+1440: 
+1441:     def summary(self):
+1442:         cur = self.current
+1443:         return {"current": {"user": cur["user"], "kind": cur["kind"], "steps": cur["steps"], "phase": cur["phase"]} if cur else None,
+1444:                 "waiting": len(self.waiting), "done": self.done}
+
+# --- on_chat_window (lines 2601-2603)
+2601:     def on_chat_window(self, now):
+2602:         self.last_chat = now
+2603:         self.next_chat = now + self.rng.uniform(*CHAT_EVERY_S)
+
+# --- refresh_stop (lines 3073-3077)
+3073:     def refresh_stop(self):
+3074:         present = self.cfg.stop_file.exists()
+3075:         changed = present != self.stop_seen
+3076:         self.stop_seen = present
+3077:         return changed
+
+# --- check_stop (lines 3079-3085)
+3079:     async def check_stop(self):
+3080:         """Idempotent; called by the 0.25 s watcher and at the start of every step."""
+3081:         self.refresh_stop()
+3082:         if self.paused and not self._pause_cleaned:
+3083:             await self.enter_pause("STOP file" if self.stop_seen else "pause requested")
+3084:         elif not self.paused and self._pause_cleaned:
+3085:             await self.leave_pause()
+
+# --- ingest_chat (lines 3192-3232)
+3192:     def ingest_chat(self, messages):
+3193:         now = self.clock()
+3194:         page = self.obs
+3195:         page_words = set(words_of((page or {}).get("title", "") + " " + (page or {}).get("text", "")[:1500]))
+3196:         for m in messages:
+3197:             item = self.gate.classify(m, page_words)
+3198:             if item is None:
+3199:                 continue
+3200:             self.chat_since = max(self.chat_since, item["seq"])
+3201:             self.counters["chat_seen"] += 1
+3202:             if "ignored" in item:
+3203:                 self.counters["chat_ignored"] += 1
+3204:                 self.log("chat", seq=item["seq"], ignored=item["ignored"])
+3205:                 continue
+3206:             self.recent_chat.append((now, item["text"]))
+3207:             req = item["request"]
+3208:             if item["cls"] == "ok" and req:                   # a request: carried out, queued, dropped or refused by code
+3209:                 self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
+3210:                 self.route_request(item, req, now)
+3211:                 continue
+3212:             if item["cls"] != "ok":
+3213:                 self.counters["chat_refused"] += 1
+3214:                 if item["cls"] == "inject" or req or item["asks_action"]:   # a request the gate refuses anyway: visible as such
+3215:                     reason = (req or {}).get("refused") or ("credentials" if CREDS.search(item["text"]) else
+3216:                                                              {"inject": "admin", "finance": "payment"}.get(item["cls"], item["cls"]))
+3217:                     self.log_request("refused", reason, dict(item, user=item["nick"] or "anon"), answered_by=item["cls"])
+3218:             self.pending[item["seq"]] = item
+3219:             self.log("chat", seq=item["seq"], cls=item["cls"], direct=item["direct"], text=item["text"][:80])
+3220:         per = collections.Counter(i["nick"] for i in self.pending.values())       # at most 3 waiting per viewer
+3221:         for seq in sorted(self.pending):
+3222:             nick = self.pending[seq]["nick"]
+3223:             if per[nick] > 3:
+3224:                 per[nick] -= 1
+3225:                 self.pending.pop(seq)
+3226:         for seq in sorted(self.pending)[:-CHAT_PENDING_MAX]:
+3227:             self.pending.pop(seq)
+3228:         for seq in [s for s, i in self.pending.items() if now - i["seen"] > CHAT_TTL_S]:
+3229:             self.pending.pop(seq)
+3230:         if messages:
+3231:             self.memory.chat_since = self.chat_since
+3232:             self.memory.save()
+
+# --- log_request (lines 3279-3282)
+3279:     def log_request(self, decision, reason, req, **extra):
+3280:         self.counters[f"requests_{decision}"] += 1
+3281:         self.log("chat_request", seq=req["seq"], user=req["user"], text=req["text"][:120], decision=decision,
+3282:                  reason=reason, **extra)
+
+# --- route_request (lines 3284-3316)
+3284:     def route_request(self, item, req, now):
+3285:         """A chat line that asks for something: refused (one short line), queued, dropped, or next up (start_request logs
+3286:         that one as executed)."""
+3287:         req = dict(req, seq=item["seq"], user=item["nick"] or "anon", nick=item["nick"], text=item["text"], t=now)
+3288:         if not req["refused"] and account_change(req["text"]):   # Kimi: the same predicate again, whatever parse_request did
+3289:             req["refused"] = "credentials"
+3290:         if not req["refused"] and self.pc.vagon:              # the remote PC: nothing while it is not connected; games by flag
+3291:             if not self.pc.remote_ready:
+3292:                 req["refused"] = "pc_offline"
+3293:             elif req["kind"] in ("launch_game", "stop_game") and not self.cfg.pc_allow_games:
+3294:                 req["refused"] = "games_off"
+3295:         if not req["refused"] and req["kind"] not in ("hush", "face") and self.hands_off_reason(now):
+3296:             req["refused"] = "hands_off"                      # held, frozen, probation or no lease: nothing on the desktop
+3297:         if req["refused"]:
+3298:             self.refuse_request(req, now)
+3299:             return
+3300:         if req["kind"] == "hush":                             # at once, no desktop, no queue slot: finish the chunk, then silence
+3301:             self.hush_request(req, now)
+3302:             return
+3303:         if req["kind"] == "face":                             # applied by run_requests (the director call is async)
+3304:             if self.face_pending is None:
+3305:                 self.face_pending = req
+3306:                 self.log_request("executed", "face", req, action="layout webcam")
+3307:             else:
+3308:                 self.log_request("dropped", "a face request is already pending", req)
+3309:             return
+3310:         verdict, why = self.requests.offer(req, now)
+3311:         if verdict == "dropped":
+3312:             self.log_request("dropped", why, req)
+3313:             if now - self.requests.last_drop_line >= REQUEST_DROP_LINE_EVERY_S:
+3314:                 self.requests.last_drop_line, self.requests.drop_line_due = now, True   # said after the ack (run_requests)
+3315:         elif why:
+3316:             self.log_request("queued", why, req, waiting=len(self.requests.waiting))
+
+# --- refuse_request (lines 3318-3324)
+3318:     def refuse_request(self, req, now):
+3319:         reason = req["refused"]
+3320:         self.log_request("refused", reason, req)
+3321:         if now - self.last_refusal_line >= REQUEST_REFUSAL_GAP_S and not self.paused:
+3322:             self.last_refusal_line = now
+3323:             self.enqueue(REFUSAL_LINES.get(reason, REFUSAL_LINES["not_doable"]), "request", "normal", (req["seq"],),
+3324:                          req["nick"], ttl=60.0, hush_ok=True)
+
+# --- run_requests (lines 3389-3417)
+3389:     async def run_requests(self, obs, now):
+3390:         """The request in flight is finished first (REQUEST_STEPS_MAX steps or REQUEST_RUN_MAX_S); then the next one
+3391:         waiting is taken up: acknowledged by voice, its first step done by code (or handed to the model: "look")."""
+3392:         rq = self.requests
+3393:         if self.face_pending is not None and not self.paused:   # no desktop action: never waits for the request in flight
+3394:             req, self.face_pending = self.face_pending, None
+3395:             await self.face_request(req, now)
+3396:         cur = rq.current
+3397:         if cur:
+3398:             if cur.get("routine") and self.pc.routine is not None:   # a game routine ends its own request (end_routine)
+3399:                 return
+3400:             steps_max, run_max = (INSTALL_STEPS_MAX, INSTALL_RUN_MAX_S) if cur["kind"] == "install" else \
+3401:                 (REQUEST_STEPS_MAX, REQUEST_RUN_MAX_S)        # an install takes more clicks than a lookup
+3402:             why = ("steps" if cur["steps"] >= steps_max else "time" if now - cur["started"] > run_max
+3403:                    else "done" if cur["done"] else "quiet" if cur["steps"] and (self.provider is None or self.quiet.on)
+3404:                    else None)                                 # quiet mode: the step was done, nobody to comment on it
+3405:             if why:
+3406:                 self.finish_request(why, now)
+3407:             return
+3408:         for stale in rq.expire(now):
+3409:             self.log_request("dropped", "waited too long", stale)
+3410:         if self.paused or obs["loading"] or self.pending_scroll or self.pc.routine is not None:
+3411:             return
+3412:         req = rq.take(now)
+3413:         if req:
+3414:             await self.start_request(req, obs, now)
+3415:         if rq.drop_line_due:                                  # after the acknowledgement of the one he did take up
+3416:             rq.drop_line_due = False
+3417:             self.enqueue(DROP_LINE, "request", "normal", ttl=30.0)
+
+# --- start_request (lines 3419-3488)
+3419:     async def start_request(self, req, obs, now):
+3420:         if account_change(req.get("text") or ""):           # right before anything is executed (a routine included)
+3421:             req["refused"] = "credentials"
+3422:             self.refuse_request(req, now)
+3423:             return
+3424:         if req["kind"] == "look" and (self.provider is None or self.quiet.on):
+3425:             req["refused"] = "no_model"                       # nobody to pick it out on the page: one honest line
+3426:             self.refuse_request(req, now)
+3427:             return
+3428:         if req["kind"] in ("launch_game", "stop_game"):      # the remote PC: the deterministic routine does it
+3429:             req.update(started=now, steps=1, commented=False, done=False, phase="report", routine=True)
+3430:             self.requests.current = req
+3431:             self.log_request("executed", req["kind"], req, action=action_label(req["action"]))
+3432:             self.enqueue(self.ack_line(req["nick"]), "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
+3433:             if not self.start_routine(req["action"], now, source="chat", request=req):
+3434:                 self.finish_request("failed", now)
+3435:             return
+3436:         silent = req["kind"] in REQUEST_ACK_SILENT            # a scroll, a key or "back" done at once: no spoken acknowledgement
+3437:         req.update(started=now, steps=0, commented=False, done=False, phase="act" if req["action"] is None else "report",
+3438:                    quick=silent)
+3439:         self.requests.current = req
+3440:         self.log_request("executed", req["kind"], req,
+3441:                          action=action_label(req["action"]) if req["action"] else "the model picks it on the page")
+3442:         if not silent:
+3443:             self.enqueue(self.ack_for(req), "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
+3444:         if req["action"] is None:
+3445:             self.next_think = now                             # the model's turn: find it on the page
+3446:             return
+3447:         if req["kind"] == "install":                          # an official source only; the row has host and name
+3448:             self.note_install(req["action"], now, phase="chat", host=host_of(req["url"]), name=req["name"],
+3449:                               source=req["source"], seq=req["seq"])
+3450:         bind = {"id": f"req-{req['seq']}"}
+3451:         out = await self.act(req["action"], obs, source="chat", bind=bind)
+3452:         req["steps"] = 1
+3453:         if silent and self.requests.current is req:
+3454:             if self.pc.pending is not None:
+3455:                 self.pc.pending["request_seq"] = req["seq"]
+3456:             elif self.pending_scroll is not None:
+3457:                 self.pending_scroll["request_seq"] = req["seq"]
+3458:             elif out.get("ok") and out.get("verdict") in ("done", "changed", "moved"):
+3459:                 self.finish_quick_request(req["seq"], out, self.clock())
+3460:                 return
+3461:         if out["verdict"] in REFUSED_VERDICTS:                # the broker sent nothing: said so, not as a load failure
+3462:             line = REFUSAL_LINES["hands_off"] if "hands off" in (out["errors"] or [""])[0] else FAIL_LINE
+3463:             self.enqueue(line, "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
+3464:             self.finish_request("refused", self.clock())
+3465:             return
+3466:         failed = out["verdict"] == "error" or (out["verdict"] == "unchanged" and
+3467:                                                req["action"]["action"] in ("navigate", "search", "back"))
+3468:         if failed:
+3469:             self.enqueue(FAIL_LINE, "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
+3470:             self.finish_request("failed", self.clock())
+3471:             return
+3472:         if req["kind"] == "install" and out.get("url") and not source_ok(out["url"], list(req["hosts"]) + list(STORE_HOSTS)):
+3473:             self.log("request_redirect", seq=req["seq"], url=out["url"][:160], why="official_source")
+3474:             await self.act({"action": "back"}, obs, source="chat", bind=bind)
+3475:             req["commented"] = True
+3476:             self.enqueue(REFUSAL_LINES["official_source"], "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
+3477:             self.finish_request("redirected", self.clock())
+3478:             return
+3479:         if req["kind"] == "navigate" and out.get("url") and (why := request_url_problem(out["url"])):
+3480:             # the viewer's site redirected to a login, checkout or blocked host: revalidated after the fact, undone, said
+3481:             self.counters["requests_redirected"] += 1
+3482:             self.log("request_redirect", seq=req["seq"], url=out["url"][:160], why=why)
+3483:             await self.act({"action": "back"}, obs, source="chat", bind=bind)
+3484:             req["commented"] = True
+3485:             self.enqueue(REFUSAL_LINES[why], "request", "normal", (req["seq"],), req["nick"], ttl=30.0, hush_ok=True)
+3486:             self.finish_request("redirected", self.clock())
+3487:             return
+3488:         self.schedule_think(self.clock(), short=True)         # the model looks at the outcome and tells the viewer
+
+# --- finish_quick_request (lines 3490-3500)
+3490:     def finish_quick_request(self, seq, outcome, now):
+3491:         cur = self.requests.current
+3492:         if not cur or cur["seq"] != seq or not cur.get("quick") or cur["kind"] not in ("scroll", "key", "back"):
+3493:             return
+3494:         if self.hands_off_reason(now):
+3495:             self.finish_request("interrupted", now)
+3496:             return
+3497:         success = outcome.get("ok") and outcome.get("verdict") in ("done", "changed", "moved")
+3498:         if not success:
+3499:             self.enqueue(FAIL_LINE, "request", "normal", (seq,), cur["nick"], ttl=30.0)
+3500:         self.finish_request("done" if success else "failed", now)
+
+# --- finish_request (lines 3502-3510)
+3502:     def finish_request(self, why, now):
+3503:         cur = self.requests.current
+3504:         if not cur:
+3505:             return
+3506:         self.requests.current = None
+3507:         self.requests.done += 1
+3508:         self.counters["requests_done"] += 1
+3509:         self.log("chat_request_end", seq=cur["seq"], user=cur["user"], text=cur["text"][:120], request=cur["kind"],
+3510:                  steps=cur["steps"], why=why, commented=cur["commented"], seconds=round(now - cur["started"], 1))
+
+# --- lease_active (lines 4166-4167)
+4166:     def lease_active(self):
+4167:         return self.lease_until is not None and self.mono() < self.lease_until
+
+# --- arm_lease (lines 4175-4185)
+4175:     def arm_lease(self, minutes):
+4176:         """POST /lease: minutes 1..60 arm (or re-arm) it from now; 0 revokes it. It never clears held or frozen."""
+4177:         if minutes <= 0:
+4178:             self.lease_until, self.lease_lapsed = None, False
+4179:             self.log("lease_revoked")
+4180:             self.say("lease revoked: no desktop actions")
+4181:             return
+4182:         self.lease_until, self.lease_armed_at, self.lease_lapsed = self.mono() + minutes * 60.0, self.clock(), False
+4183:         self.hands_off_said.discard("lease")
+4184:         self.log("lease_armed", minutes=minutes, expires_utc=iso(self.clock() + minutes * 60.0))
+4185:         self.say(f"lease armed for {minutes:g} min")
+
+# --- check_lease (lines 4187-4192)
+4187:     def check_lease(self, now):
+4188:         if self.lease_until is not None and not self.lease_active():
+4189:             self.lease_until, self.lease_lapsed = None, True
+4190:             self.counters["lease_expired"] += 1
+4191:             self.log("lease_expired")
+4192:             self.say("lease expired: no desktop actions until POST /lease")
+
+# --- resume_latches (lines 4244-4259)
+4244:     def resume_latches(self):
+4245:         """POST /resume: clears held, frozen and audit_degraded (never the lease) and starts the probation; None when the
+4246:         audit still cannot be written (it stays latched: HTTP 503)."""
+4247:         cleared = [k for k in ("held", "frozen", "audit_degraded") if getattr(self, k)]
+4248:         if "audit_degraded" in cleared and not self.recover_audit():
+4249:             return None
+4250:         if cleared:
+4251:             self.held = self.frozen = self.audit_degraded = None
+4252:             self.fail_streak, self.timed_out = 0, None
+4253:             self.auth_submits.clear()
+4254:             self.freeze.update(sig=None, since=None, black_since=None)
+4255:             self.probation = {"good": 0, "last": None}
+4256:             for k in cleared:
+4257:                 self.hands_off_said.discard("audit" if k == "audit_degraded" else k)
+4258:             self.log("resume_latches", cleared=cleared)
+4259:         return cleared
+
+# --- note_chat_pickup (lines 4977-4982)
+4977:     def note_chat_pickup(self, now):
+4978:         """A chat batch is picked up (the model is asked, or the answers are queued): the visual chat flag goes up now,
+4979:         before any voice, so the motion director plays its read beat at the chat anchor first (note from the motion
+4980:         worker, 2026-10-23); speak_next extends it over the answer."""
+4981:         self.visual.chat_until = max(self.visual.chat_until, now + CHAT_READ_BEAT_S)
+4982:         self.visual.poke()
+
+# --- stop_watch (lines 5628-5634)
+5628:     async def stop_watch(self):
+5629:         while not self.closing:
+5630:             try:
+5631:                 await self.check_stop()
+5632:             except Exception as e:
+5633:                 self.error("stop watch", e)
+5634:             await asyncio.sleep(self.cfg.stop_interval)
+
+# --- authorized (lines 5709-5710)
+5709:     def authorized(self, request):
+5710:         return not self.cfg.token or hmac.compare_digest(request.headers.get("X-Admin-Token", ""), self.cfg.token)
+
+=== STOP file writes/reads in other runtime scripts ===
+streamer_agent_checks.py:23: * `--stop-drill` (live run only) writes the STOP file (the kill switch, a safety action), measures the halt of the
+streamer_agent_checks.py:32: end once the lease was asked for (an abort, Ctrl+C, an error) writes STOP (the agent revokes its lease) and must
+streamer_agent_checks.py:363: missing.append((f"the STOP file exists ({why or 'no reason recorded'}): the agent is held down",
+streamer_agent_checks.py:425: "a STOP appeared" if not drill and (Path(self.a.streamer_dir) / "STOP").exists() else
+streamer_agent_checks.py:560: self.lease_asked = True                               # from here on any abnormal end writes STOP (fail closed)
+streamer_agent_checks.py:711: self.check(cid, control, SKIP, "STOP already exists")
+streamer_agent_checks.py:820: p.add_argument("--stop-drill", action="store_true", help="also the kill-switch drill (writes STOP, never removes it)")
+streamer_agent_checks.py:855: "(it sends viewer chat lines; --stop-drill also writes STOP). Nothing was done.")
+streamer_up.py:10: agent     streamer_agent.py                 port 8836   (held down while the STOP file exists)
+streamer_up.py:895: print(f"agent: {result['agent']} (held down while STOP exists)")
+streamer_watchdog.py:17: 1. writes <streamer-dir>/STOP with the reason (the agent pauses within 1 s and never deletes STOP; the supervisor holds
+streamer_watchdog.py:23: A STOP it did not write (the operator's `streamer_up.py kill`, a drill, one already there when it starts) gets the same
+streamer_watchdog.py:25: row {why, by, release_status, release_ok}. It does not trip again while STOP exists (a STOP it could not write is
+streamer_watchdog.py:29: release_status, last} atomically: its own heartbeat. It never removes STOP, never touches the agent's other files, and
+streamer_watchdog.py:193: """A STOP this watchdog did not write (the operator's kill, the supervisor, a drill): every held key and button
+streamer_watchdog.py:253: if self.tripped_by and not self.stop_file.exists():   # the operator removed STOP: watch again, fresh grace
+streamer_watchdog.py:296: log(f"ALERT cannot write STOP ({e}): retrying at every check")
+voice_server.py:28: speech_seconds = the speech alone. 429 when the queue is full, 503 while STOP exists.
+streamer_agent_checks.before-home-rerun.py:23: * `--stop-drill` (live run only) writes the STOP file (the kill switch, a safety action), measures the halt of the
+streamer_agent_checks.before-home-rerun.py:32: end once the lease was asked for (an abort, Ctrl+C, an error) writes STOP (the agent revokes its lease) and must
+streamer_agent_checks.before-home-rerun.py:363: missing.append((f"the STOP file exists ({why or 'no reason recorded'}): the agent is held down",
+streamer_agent_checks.before-home-rerun.py:425: "a STOP appeared" if not drill and (Path(self.a.streamer_dir) / "STOP").exists() else
+streamer_agent_checks.before-home-rerun.py:560: self.lease_asked = True                               # from here on any abnormal end writes STOP (fail closed)
+streamer_agent_checks.before-home-rerun.py:711: self.check(cid, control, SKIP, "STOP already exists")
+streamer_agent_checks.before-home-rerun.py:820: p.add_argument("--stop-drill", action="store_true", help="also the kill-switch drill (writes STOP, never removes it)")
+streamer_agent_checks.before-home-rerun.py:855: "(it sends viewer chat lines; --stop-drill also writes STOP). Nothing was done.")
+streamer.py:23: POST /api/home/streamer              {"operation": "start" | "stop" | "kill"}; kill also writes STREAMER_DIR/STOP
+vagon_bridge.py:100: if d and os.path.exists(os.path.join(d, "STOP")):
