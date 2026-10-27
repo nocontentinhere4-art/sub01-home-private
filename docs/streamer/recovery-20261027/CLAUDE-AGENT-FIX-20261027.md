@@ -42,10 +42,20 @@ retry 10 minutes later.
   3. settle about 8 s;
   4. `POST /lease`.
 
+## Real chat from the public site: PASS (02:42-02:44 UTC)
+
+Both messages went through the public relay (`POST /chat`, Origin subzerone.live), with a 15-minute lease armed and
+revoked afterwards. Both returned `received`.
+
+- **"hey, what are you reading right now?"** He answered on topic, in the `say [direct]` log line: "A Scientific
+  American piece on how octopus arms may talk to each other..."
+- **"can you open youtube please?"** He said "I'll open it", and YouTube opened on the Vagon PC: "YouTube's open. The
+  home feed is mostly big-budget challenge videos...". Screenshot: `chat-test-youtube-20261027T0243.jpg`.
+
+The log shows that he spoke. Audio playback on the stream was not measured here; the 30-minute recording covers it.
+
 ## Still open (from the handoff plan)
 
-1. Real chat from the public site: a relevant spoken reply, and opening YouTube/Twitter on the Vagon PC. Needs an active
-   lease.
-2. Simple visual check (webcam and camera 2 frames, Kimi then the owner), voice and head sync, main fps at least 55 stable.
-3. The 30-minute acceptance recording and the 1-hour stability run.
-4. Promote Codex's runtime-only fixes with a diff review (see the handoff, point 6).
+1. Simple visual check (webcam and camera 2 frames, Kimi then the owner), voice and head sync, main fps at least 55 stable.
+2. The 30-minute acceptance recording and the 1-hour stability run.
+3. Promote Codex's runtime-only fixes with a diff review (see the handoff, point 6).
