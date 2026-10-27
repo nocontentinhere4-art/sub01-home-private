@@ -488,3 +488,27 @@ game has no X window, no swapchain and no present; the director must read the ma
      same time: `fps` ~60, `reader true`, `lock held`, `pipe_size` 1048576, drops ~0, `go GO`; PERF: 59.8-60 fps capped, `copy_ms` and
      `encode_ms` logged by `MAIN_TAP fps=` lines. Stopping the probe: `reader false`, the tap idles (one readback a second).
   4. the ABBA, the soak and the director-side gates of the spec's step 6 follow with the director's `--game-source fifo`.
+
+## v25 (`install_v25.py` + `v25_edits.json`, `// SUB01_STREAMER_VISUAL_V2_V25`, on v24)
+Owner 2026-10-27: "migliora la cazzo di animazione". The agent's event already carried a `motion` object (lean, head tilt,
+gestures, breathing rate) that v24 ignored, and v2 ignored `nod_strength` except on entry into `reacting`.
+Designed and written by Kimi (`docs/streamer/kimi/agent-c12-20261027/native-v25-*`); one brace fix and larger gestures by
+Claude; Kimi APPROVE.
+
+**What v25 adds**
+- **Nods:** an edge-triggered nod on `nod_strength` > 0.05 while re-armed, using the existing 0.75 s shape. It re-arms
+  at <= 0.02.
+- **Motion parsing:** `motion` is parsed leniently. A malformed object never rejects the event, and a stale or missing
+  one eases back to neutral.
+- **Lean:** 9° × `lean` forward or 8° × `lean_back` back, eased at 10°/s and added to the tuning lean.
+- **Head roll:** `head_tilt_deg` (±12), eased with τ 0.25 s, about his forward axis on the neck/head weights.
+- **Breathing:** a phase accumulator at the eased `breathing_rate_hz` (0.1-0.5, default 0.22). The amplitude is
+  0.6° × (1 + 0.6 × intensity).
+- **Gestures:** a hand whose state is `gesture` lifts by `gesture_strength` × (10 cm towards him, 26 cm up, 5 cm out).
+  It rises in 0.25 s and falls in 0.4 s, and is added after the wrist glide. The right hand never gestures in `mouse`.
+
+**Receipt and log:** receipt fields `v25_motion`, `v25_lean_deg`, `v25_head_roll_deg`, `v25_breath_hz`,
+`v25_gesture_left/right` and `v25_nods`; a log line `SUB01_STREAMER_VISUAL_V25` every 10 s.
+
+**Build:** done in a staging copy (`<private>/v25-build`, Content symlinked) with taskset on CCD1 and nice 10, then the
+module binaries are swapped while the game is stopped. The v24 binaries and source are backed up first.

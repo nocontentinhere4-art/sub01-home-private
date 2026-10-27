@@ -1,0 +1,158 @@
+You are the animation/C++ partner for SUB-01's native UE 5.8 character (live stream). Owner: "improve the f***ing animation" (more natural, cooler). Today the Python motion director already computes a rich motion object every tick, but the native build (v24) IGNORES it, and it even ignores nod_strength in v2 except on entry into "reacting". We will build v25 = v24 + these, ALL bounded, eased, and defaulting to today's behaviour when the event has no motion object (or is stale > 2 s):
+
+1. Nods (v2): honour the event's nod_strength as an edge-triggered nod: when nod_strength rises above 0.05 while re-armed, start the existing 0.75 s nod shape (StreamerVisualNodAt=Now, StreamerVisualNodGain=nod_strength); re-arm when nod_strength <= 0.02. Keep the reacting-entry nod as is.
+2. Optional "motion" object in the v2 event (from the Python, schema "sub01.streamer-motion.v1"): lean 0..1 (1 = 9 deg forward torso), lean_back 0..1 (1 = 8 deg back; mutually exclusive with lean), head_tilt_deg -12..12 (right ear down +), breathing_rate_hz 0.1..0.5, gesture_strength 0..1, hand_left / hand_right in {rest, mouse, keyboard, gesture}. Parse it leniently: a malformed or missing motion object must NOT invalidate the event (only ignore the motion part). Clamp every value.
+3. Lean: motion lean deg = 9*lean - 8*lean_back, eased at 10 deg/s, ADDED to the existing lean channel (Anim->StreamerVisualLeanDeg = StreamerVisualPostureLeanApplied + motion lean applied).
+4. Head tilt (roll): eased (time constant ~0.25 s), applied in ApplyStreamerV2Head as a roll about his forward axis (Forward = Cross(Right, Up) like ApplyStreamerV2Body), on the same Neck/Head weights. Carry it in StreamerVisualHeadOffset.Roll (today always 0).
+5. Breathing: replace the fixed 0.22 Hz with a phase accumulator at the eased breathing_rate_hz (default 0.22 without motion), amplitude 0.6 deg * (1 + 0.6*intensity) (intensity is today's v2 intensity), Spine2 lagging 1.1 rad as now. No phase jump when the rate changes.
+6. Gesture: when hand_left (or hand_right, only when not in the mouse state) == "gesture", lift that wrist goal in UpdateStreamerVisualHands: Goal[S] += Toward*(8*g) + Up*(16*g) + (S==0 ? -Right : Right)*(4*g), with g = eased gesture_strength for that hand (rise 0.25 s, fall 0.4 s). The existing glide (goal jump > 2 cm -> hand_move_s arc) must not fight it: apply the eased offset AFTER the glide to Sent[S] instead of to Goal[S] (so it is continuous, no new glides). Planted otherwise.
+7. Receipt fields: v25_motion (bool, a fresh motion object), v25_lean_deg, v25_head_roll_deg, v25_breath_hz, v25_gesture_left, v25_gesture_right, v25_nods (count). One log line SUB01_STREAMER_VISUAL_V25 every 10 s with the same values.
+
+Write the change as an installer edit list for these files (exact anchors from the excerpts below; each anchor must occur EXACTLY ONCE in its file; prefer anchoring on full existing statements and inserting after/before them). Format: a JSON array of {"file": "...", "anchor": "<exact substring>", "replacement": "<the anchor text plus/with your change>"}. Members you add go into the class declarations (anchor on an existing member line given below). Mark every inserted line with a trailing comment // SUB01_STREAMER_VISUAL_V2_V25. Keep the compact one-line style of the code. C++17, UE 5.8 API (FMath, FRotator, FQuat, FJsonObject: TryGetObjectField takes `const TSharedPtr<FJsonObject>*&` in 5.x: use `const TSharedPtr<FJsonObject>* M=nullptr; if(J->TryGetObjectField(TEXT("motion"),M)&&M&&M->IsValid())`). Mind: ParseStreamerVisualV2 is const (store parsed motion through output params or a mutable member), AcceptStreamerVisualV2 is called only for a NEW accepted event; the proxy (FSub01...Proxy in Sub01HomeHands.cpp) copies from the UAnimInstance in PreUpdate (line shown) — add the Roll by using the existing FRotator StreamerVisualHeadOffset (no new proxy field needed for the roll). Output: a 6-line design note, then the JSON array only.
+
+--- Sub01HomeLab.h (members near the v2 state; anchor here for new members)
+98: bool ParseStreamerVisualV2(const TSharedPtr<FJsonObject>& J,FString& Frame,FString& State,double& Intensity,FString& Camera) const;
+99: void AcceptStreamerVisualV2(int32 Version,const FString& State,double Intensity,const FString& Camera,double Nod);
+107: float StreamerVisualIntensity=.5f,StreamerVisualNodStrength=0,StreamerVisualNodGain=0,StreamerVisualCameraAlpha=0;
+132: float StreamerVisualPostureLeanDeg=0.f,StreamerVisualPostureHeadDeg=0.f,StreamerVisualPostureLeanApplied=0,StreamerVisualPostureHeadApplied=0,StreamerVisualPostureLeanLogged=-999,StreamerVisualPostureHeadLogged=-999;
+--- Sub01HomeLab.cpp: parse/accept/tick
+bool ASub01HomeCharacter::ParseStreamerVisualV2(const TSharedPtr<FJsonObject>& J,FString& Frame,FString& State,double& Intensity,FString& Camera) const{
+ // v2 = the v1 envelope (uid, mode, pid, start ticks, expiry, sequence, gaze, nod: checked by the caller) + state, intensity, camera.
+ if(!J->TryGetStringField(TEXT("state"),State)||(State!=TEXT("idle")&&State!=TEXT("reading")&&State!=TEXT("typing")&&State!=TEXT("mouse")&&State!=TEXT("talking")&&State!=TEXT("reacting")))return false;
+ Intensity=.5;if(J->HasField(TEXT("intensity"))&&!(J->TryGetNumberField(TEXT("intensity"),Intensity)&&FMath::IsFinite(Intensity)&&Intensity>=0&&Intensity<=1))return false;
+ Camera=TEXT("spectator");if(J->HasField(TEXT("camera"))&&!(J->TryGetStringField(TEXT("camera"),Camera)&&(Camera==TEXT("spectator")||Camera==TEXT("monitor")||Camera==TEXT("face")/* SUB01_STREAMER_VISUAL_V2_FACE */)))return false;
+ if(!J->HasField(TEXT("source_frame_id"))){Frame=TEXT("streamer_agent");return true;}
+ return J->TryGetStringField(TEXT("source_frame_id"),Frame)&&!Frame.IsEmpty()&&Frame.Len()<=128;
+}
+void ASub01HomeCharacter::AcceptStreamerVisualV2(int32 Version,const FString& State,double Intensity,const FString& Camera,double Nod){
+ if(Version!=StreamerVisualSchemaVersion)UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_SCHEMA v%d (was v%d)"),Version,StreamerVisualSchemaVersion);
+ StreamerVisualSchemaVersion=Version;if(Version!=2)return; // v1: the unchanged frozen-R9 path (gaze, nod on every new event)
+ StreamerVisualNod=0; // v2 nods only on entry into "reacting" (TickStreamerVisualV2), never on every event
+ StreamerVisualRequestedState=State;StreamerVisualIntensity=float(Intensity);StreamerVisualRequestedCamera=Camera;StreamerVisualNodStrength=float(FMath::Clamp(Nod,0.,1.));
+}
+FRotator ASub01HomeCharacter::TickStreamerVisualV2(double Now){
+ const bool Fresh=Now-StreamerVisualEventAt<=2; // same 2 s freshness as the gaze; stale -> idle + spectator camera
+ const FString Wanted=Fresh?StreamerVisualRequestedState:FString(TEXT("idle"));
+ // Debounce: at most one state change per 0.6 s (the latest request wins when the window ends); "reacting" applies at once.
+ if(Wanted!=StreamerVisualState&&(Wanted==TEXT("reacting")||Now-StreamerVisualStateAt>=.6)){
+  UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_STATE %s -> %s"),*StreamerVisualState,*Wanted);
+  StreamerVisualState=Wanted;StreamerVisualStateAt=Now;
+  if(Wanted==TEXT("reacting")){StreamerVisualNodAt=Now;StreamerVisualNodGain=StreamerVisualNodStrength>0?StreamerVisualNodStrength:.5f;}
+ }
+ StreamerVisualCameraTarget=Fresh?StreamerVisualRequestedCamera:FString(TEXT("spectator"));
+ const double Scale=.5+.5*(Fresh?StreamerVisualIntensity:.5f),T=Now-StreamerVisualStartedAt; // intensity scales sway and nod
+ FRotator Motion(1.5*Scale*Sub01StreamerVisualV2Noise(T*.16,0x51u),1.5*Scale*Sub01StreamerVisualV2Noise(T*.12,0xA7u),0); // sway <=1.5 deg
+--- Sub01HomeLab.cpp: event read (the caller)
+  const bool V2Accept=Valid&&uint64(Sequence)>StreamerVisualSequence; // SUB01_STREAMER_VISUAL_V2
+  if(Valid&&uint64(Sequence)>StreamerVisualSequence){StreamerVisualSequence=uint64(Sequence);StreamerVisualDesired=FRotator(Pitch,Yaw,0);StreamerVisualNod=Nod;StreamerVisualEventAt=Now;StreamerVisualSourceFrame=Frame;}
+  if(V2Accept)AcceptStreamerVisualV2(Schema==TEXT("sub01.private-streamer-visual-event.v2")?2:1,V2State,V2Intensity,V2Camera,Nod); // SUB01_STREAMER_VISUAL_V2
+ }
+ if(Now-StreamerVisualEventAt>2){StreamerVisualDesired=FRotator::ZeroRotator;StreamerVisualNod=0;}
+ FRotator Target=StreamerVisualDesired;const double Since=Now-StreamerVisualEventAt;if(Since>=0&&Since<=.75)Target.Pitch+=float(FMath::Sin(Since/.75*2*PI)*6*StreamerVisualNod);
+ if(StreamerVisualSchemaVersion==2)Target+=TickStreamerVisualV2(Now); // SUB01_STREAMER_VISUAL_V2: state debounce, sway, talking, reacting nod (bounded)
+--- Sub01HomeLab.cpp: ApplyStreamerVisualV2 breathing/lean
+  const double W=2*PI*.22*(Now-StreamerVisualStartedAt);
+  // SUB01_STREAMER_VISUAL_V2_SEATFIX: "sit up" posture layer from the tuning file, eased at 12 deg/s: the lean split over Spine1/Spine2
+  // (the breathing axis), the head pitch on the gaze axis (composed with the gaze/nod offset set by the tick above).
+  StreamerVisualPostureLeanApplied+=FMath::Clamp((StreamerVisualPostureLeanDeg+(StreamerVisualTypingBase?StreamerVisualTypingLeanDeg:0.f))-StreamerVisualPostureLeanApplied,-12.f*Dt,12.f*Dt);StreamerVisualPostureHeadApplied+=FMath::Clamp((StreamerVisualPostureHeadDeg+(StreamerVisualTypingBase?StreamerVisualTypingHeadDeg:0.f))-StreamerVisualPostureHeadApplied,-12.f*Dt,12.f*Dt); // SUB01_STREAMER_VISUAL_V2_STREAMPASS: the typing loop adds its own sit-up
+  if(StreamerVisualPostureLeanDeg!=StreamerVisualPostureLeanLogged||StreamerVisualPostureHeadDeg!=StreamerVisualPostureHeadLogged){StreamerVisualPostureLeanLogged=StreamerVisualPostureLeanDeg;StreamerVisualPostureHeadLogged=StreamerVisualPostureHeadDeg;UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_POSTURE leanDeg=%.1f (Spine1+Spine2 pitch, half each) headDeg=%.1f (Head pitch)"),StreamerVisualPostureLeanDeg,StreamerVisualPostureHeadDeg);}
+  // SUB01_STREAMER_VISUAL_V2_POSEFIX: breathing stays on the Spine1/Spine2 channel, the lean goes to its own channel (forward degrees, spread over the
+  // spine with a measured gain in the proxy); head pitch (nose up) and yaw (to his right, head_yaw_deg eased like the posture) about HIS axes
+  Anim->StreamerVisualSpine1Offset=FRotator(.6*FMath::Sin(W),0,0);Anim->StreamerVisualSpine2Offset=FRotator(.6*FMath::Sin(W-1.1),0,0);Anim->StreamerVisualLeanDeg=StreamerVisualPostureLeanApplied;Anim->StreamerVisualHeadOffset.Pitch+=StreamerVisualPostureHeadApplied;
+  StreamerVisualHeadYawApplied+=FMath::Clamp(StreamerVisualHeadYawDeg-StreamerVisualHeadYawApplied,-12.f*Dt,12.f*Dt);Anim->StreamerVisualHeadOffset.Yaw+=StreamerVisualHeadYawApplied;Anim->StreamerVisualLoopFadeSeconds=StreamerVisualLoopFadeSeconds;
+ }
+--- Sub01HomeLab.cpp: UpdateStreamerVisualHands (goal + glide)
+void ASub01HomeCharacter::UpdateStreamerVisualHands(USub01HomeHandsInstance* Anim,float Dt){
+ // World WRIST targets on the keyboard body (the widest follower of the keyboard pack, its bounds centre): hand_span_cm apart,
+ // hand_back_cm towards him, hand_height_cm above the desk (its bottom); the right wrist behind the mouse in `mouse`. A goal jump
+ // glides in hand_move_s on a hand_arc_cm arc (eased); converted to component space for the proxy, alpha eased over 0.3 s.
+ if(!Anim||!FirstPersonBody)return;if(!StreamerVisualDeskPropsScanned)ScanStreamerVisualDeskProps();
+ AActor* KB=StreamerVisualKeyboardActor.Get();const bool Have=StreamerVisualSchemaVersion==2&&StreamerVisualHandsIK>0&&KB!=nullptr;
+ // his facing (authored body) and, snapped to the level's axes (the keyboard is axis-aligned), "towards him" and "his right" on the keys
+ const FVector Facing=StreamerVisualBodyAuthoredWorld.GetRotation().RotateVector(StreamerVisualFacingLocal);
+ const FVector Toward=FMath::Abs(Facing.Y)>=FMath::Abs(Facing.X)?FVector(0,Facing.Y>0?-1:1,0):FVector(Facing.X>0?-1:1,0,0),Right=FVector::CrossProduct(FVector::UpVector,-Toward);
+ FVector Goal[2]={FVector::ZeroVector,FVector::ZeroVector};FString Name[2];
+ if(Have){const FVector K=KB->GetActorLocation()+StreamerVisualKeyboardCentreOffset,E=StreamerVisualKeyboardExtent;
+  const FVector Base=K+Toward*double(StreamerVisualHandBackCm)+FVector(0,0,-E.Z+StreamerVisualHandHeightCm),Half=Right*(double(StreamerVisualHandSpanCm)*.5);
+  Goal[0]=Base-Half;Name[0]=TEXT("keyboard_left");Goal[1]=Base+Half;Name[1]=TEXT("keyboard_right");
+  if(StreamerVisualState==TEXT("mouse")||(StreamerVisualV23HandOnMouse>0&&(StreamerVisualState==TEXT("reading")||StreamerVisualState==TEXT("idle"))&&(StreamerVisualMouseActor.IsValid()||StreamerVisualV23MouseComp.IsValid()))){AActor* M=StreamerVisualMouseActor.Get(); // the left hand stays planted on the keys; SUB01_STREAMER_VISUAL_V2_V23: hand_on_mouse 1 in idle/reading, with a mouse found
+   Goal[1]=M?M->GetActorLocation()+StreamerVisualMouseCentreOffset+Toward*double(StreamerVisualMouseBackCm)+FVector(0,0,-StreamerVisualMouseExtent.Z+StreamerVisualHandHeightCm):StreamerVisualV23MouseGoal(Toward); // SUB01_STREAMER_VISUAL_V2_V23: the adopted mouse component, else mouse_x/y/z
+   Name[1]=M?TEXT("mouse_prop"):StreamerVisualV23MouseComp.IsValid()?TEXT("mouse_component"):TEXT("mouse_point");} // SUB01_STREAMER_VISUAL_V2_V23
+ }
+ const double MoveS=FMath::Max(.05,double(StreamerVisualHandMoveS));FVector Sent[2]={FVector::ZeroVector,FVector::ZeroVector};
+ if(Have){for(int32 S=0;S<2;++S){
+   if(!StreamerVisualHandWorldValid){StreamerVisualHandWorld[S]=StreamerVisualHandSent[S]=StreamerVisualHandMoveFrom[S]=StreamerVisualHandMoveTo[S]=Goal[S];StreamerVisualHandMoveP[S]=1;}
+   else{if(FVector::Dist(Goal[S],StreamerVisualHandMoveTo[S])>2){StreamerVisualHandMoveFrom[S]=StreamerVisualHandSent[S];StreamerVisualHandMoveP[S]=0;} // a new glide from where the wrist was shown (arc included: no pop)
+    StreamerVisualHandMoveTo[S]=Goal[S];StreamerVisualHandMoveP[S]=FMath::Min(1.,StreamerVisualHandMoveP[S]+Dt/MoveS);
+    StreamerVisualHandWorld[S]=FMath::Lerp(StreamerVisualHandMoveFrom[S],Goal[S],FMath::SmoothStep(0.,1.,StreamerVisualHandMoveP[S]));}
+   Sent[S]=StreamerVisualHandWorld[S];
+   if(StreamerVisualHandMoveP[S]<1)Sent[S].Z+=double(StreamerVisualHandArcCm)*FMath::Sin(PI*FMath::SmoothStep(0.,1.,StreamerVisualHandMoveP[S])); // the glide arcs up, never through the desk
+   StreamerVisualHandSent[S]=Sent[S];
+  }StreamerVisualHandWorldValid=true;}
+ StreamerVisualHandAlpha+=FMath::Clamp((Have?1.f:0.f)-StreamerVisualHandAlpha,-Dt/0.3f,Dt/0.3f);
+ const FTransform W=FirstPersonBody->GetComponentTransform();const FQuat ToComponent=W.GetRotation().Inverse();
+ Anim->StreamerVisualHandIK=StreamerVisualHandAlpha>0&&StreamerVisualHandWorldValid;Anim->StreamerVisualHandAlpha=StreamerVisualHandAlpha;
+ Anim->StreamerVisualHandTargetLeft=W.InverseTransformPosition(Have?Sent[0]:StreamerVisualHandSent[0]);Anim->StreamerVisualHandTargetRight=W.InverseTransformPosition(Have?Sent[1]:StreamerVisualHandSent[1]); // fading out: the last shown target
+--- Sub01HomeLab.cpp: receipt line
+   Receipt->SetNumberField(TEXT("clip_time"),V2Anim?V2Anim->StreamerVisualEvaluatedTime:-1.f);Receipt->SetNumberField(TEXT("matched_start_seconds"),V2Anim?V2Anim->StreamerVisualMatchedSeconds:-1.f);Receipt->SetNumberField(TEXT("intensity"),StreamerVisualIntensity);Receipt->SetBoolField(TEXT("breathing"),StreamerVisualSchemaVersion==2);
+--- Sub01HomeHands.cpp: proxy copy (PreUpdate) and head/body channels
+  StreamerVisualActive=Hands->StreamerVisualActive;StreamerVisualHeadOffset=Hands->StreamerVisualHeadOffset;
+  StreamerV2=Hands->StreamerVisualV2;StreamerV2Spine[0]=Hands->StreamerVisualSpine1Offset;StreamerV2Spine[1]=Hands->StreamerVisualSpine2Offset; // SUB01_STREAMER_VISUAL_V2
+ void ApplyStreamerV2Body(FPoseContext& Output){ // spine channel: the lean spread over Spine/Spine1/Spine2 with a measured gain, then breathing on Spine1/Spine2
+  auto& Pose=Output.Pose;ResolveStreamerV2Pose(Pose.GetBoneContainer().GetReferenceSkeleton());
+  const FVector Right=StreamerV2Right(Pose),Forward=FVector::CrossProduct(Right,FVector::UpVector);StreamerV2BodyRight=Right; // a turn about Right by +a tips the trunk forward
+  FTransform Pelvis,Head0,Head1;const bool Measure=FMath::Abs(StreamerV2LeanCmd)>=2.f&&StreamerV2ComponentTransform(Pose,StreamerV2PoseBones[0],Pelvis)&&StreamerV2ComponentTransform(Pose,StreamerV2PoseBones[5],Head0);
+  static const double Weights[3]={0.5,0.3,0.2};
+  for(int32 K=0;K<3;++K){const double Deg=double(StreamerV2LeanCmd)*StreamerV2LeanGain*Weights[K];if(FMath::Abs(Deg)>1e-4)StreamerV2Turn(Pose,StreamerV2PoseBones[1+K],FQuat(Right,FMath::DegreesToRadians(Deg)));}
+  if(Measure&&StreamerV2ComponentTransform(Pose,StreamerV2PoseBones[5],Head1)){ // the pelvis is below every turned bone: the line's change is the lean achieved
+   const double Achieved=StreamerV2Incline(Head1.GetTranslation()-Pelvis.GetTranslation(),Forward)-StreamerV2Incline(Head0.GetTranslation()-Pelvis.GetTranslation(),Forward);StreamerV2LeanMeasured=float(Achieved);
+   if(Achieved*StreamerV2LeanCmd>0&&FMath::Abs(Achieved)>=0.25){const double Target=FMath::Clamp(double(StreamerV2LeanGain)*StreamerV2LeanCmd/Achieved,0.5,3.);StreamerV2LeanGain+=float((Target-StreamerV2LeanGain)*(1.-FMath::Exp(-double(StreamerV2Dt)/0.08)));}
+  }else StreamerV2LeanMeasured=0;
+  for(int32 K=0;K<2;++K)if(FMath::Abs(StreamerV2Spine[K].Pitch)>1e-4)StreamerV2Turn(Pose,StreamerV2PoseBones[2+K],FQuat(Right,FMath::DegreesToRadians(double(StreamerV2Spine[K].Pitch)))); // breathing
+ }
+ void ApplyStreamerV2Head(FPoseContext& Output){ // head channel: pitch (nose UP positive) about his lateral axis, yaw (to his RIGHT positive) about the vertical
+  auto& Pose=Output.Pose;ResolveStreamerV2Pose(Pose.GetBoneContainer().GetReferenceSkeleton());const FVector Right=StreamerV2Right(Pose);StreamerV2BodyRight=Right;
+  const double Pitch=double(StreamerVisualHeadOffset.Pitch)+StreamerV2MouthPitch,Yaw=double(StreamerVisualHeadOffset.Yaw);StreamerV2MouthPitch=0;
+  const bool Neck=StreamerV2PoseBones[4]!=INDEX_NONE;const bool Shared=StreamerV23NeckShare!=0.4f; // SUB01_STREAMER_VISUAL_V2_V23: neck_share
+  const double Weights[2]={Shared?double(StreamerV23NeckShare):0.4,Shared?1.-double(StreamerV23NeckShare):0.6};
+  for(int32 K=0;K<2;++K){const double W=Neck?Weights[K]:(K?1.:0.);if(W<=0)continue;
+   StreamerV2Turn(Pose,StreamerV2PoseBones[4+K],FQuat(FVector::UpVector,FMath::DegreesToRadians(Yaw*W))*FQuat(Right,FMath::DegreesToRadians(-Pitch*W)));}
+ }
+ void StreamerV2LoopSeam(float DeltaSeconds){ // within the fade of a desk loop's end: Previous keeps the end, Current restarts at 0, crossfaded (no pop)
+--- Sub01HomeHands.h: anim instance members
+ UPROPERTY(Transient) TObjectPtr<UAnimSequence> PreviousSequence;
+ UPROPERTY(Transient) float TargetRate=0;
+ UPROPERTY(Transient) bool StreamerVisualActive=false;
+ UPROPERTY(Transient) FRotator StreamerVisualHeadOffset=FRotator::ZeroRotator;
+ // SUB01_STREAMER_VISUAL_V2 BEGIN (tools/native_streamer_visual_v2/install.py): written by the character every tick.
+ UPROPERTY(Transient) bool StreamerVisualV2=false;
+ UPROPERTY(Transient) TObjectPtr<UAnimSequence> StreamerVisualFreezeSequence;
+ UPROPERTY(Transient) float StreamerVisualFreezeSeconds=.7f;
+ UPROPERTY(Transient) float StreamerVisualStartSeconds=0;
+ UPROPERTY(Transient) bool StreamerVisualLoop=true;
+ UPROPERTY(Transient) bool StreamerVisualMatchHands=false;
+ UPROPERTY(Transient) FRotator StreamerVisualSpine1Offset=FRotator::ZeroRotator;
+ UPROPERTY(Transient) FRotator StreamerVisualSpine2Offset=FRotator::ZeroRotator;
+ // Published after evaluation: the Current player time and the hand-matched start phase (-1 when none).
+ UPROPERTY(Transient) float StreamerVisualEvaluatedTime=-1;
+ UPROPERTY(Transient) float StreamerVisualMatchedSeconds=-1;
+ // SUB01_STREAMER_VISUAL_V2 END
+ // SUB01_STREAMER_VISUAL_V2_MOUTH BEGIN (tools/native_streamer_visual_v2/install_mouth.py): live mouth, written by the character every tick.
+ UPROPERTY(Transient) float StreamerVisualMouthOpen=0; // 0..1 from <streamer-dir>/mouth.json, smoothed
+ UPROPERTY(Transient) int32 StreamerVisualMouthRig=0; // published by the proxy: 0 unresolved, 1 Head emphasis (no face rig), 2 jaw bone
+ // SUB01_STREAMER_VISUAL_V2_MOUTH END
+ // SUB01_STREAMER_VISUAL_V2_SEATFIX BEGIN (tools/native_streamer_visual_v2/install_seat_fix.py): published after evaluation.
+ UPROPERTY(Transient) FTransform StreamerVisualSeatOffset; // component space: the playing clip's reference pelvis onto R9's (crossfade-blended)
+ UPROPERTY(Transient) bool StreamerVisualSeatOffsetValid=false;
+ UPROPERTY(Transient) bool StreamerVisualSeatSettled=false; // no crossfade in progress
+ UPROPERTY(Transient) int32 StreamerVisualPelvisBone=-1;
+ // SUB01_STREAMER_VISUAL_V2_SEATFIX END
+ // SUB01_STREAMER_VISUAL_V2_STREAMPASS BEGIN (tools/native_streamer_visual_v2/install_stream_pass.py): hands IK, set by the character every tick.
+ UPROPERTY(Transient) bool StreamerVisualHandIK=false;
+ UPROPERTY(Transient) float StreamerVisualHandAlpha=0;
+ UPROPERTY(Transient) FVector StreamerVisualHandTargetLeft=FVector::ZeroVector; // component space: wrist targets
+ UPROPERTY(Transient) FVector StreamerVisualHandTargetRight=FVector::ZeroVector;
+ UPROPERTY(Transient) FVector StreamerVisualHandPoleLeft=FVector::ZeroVector; // component space: elbow pole directions
+ UPROPERTY(Transient) FVector StreamerVisualHandPoleRight=FVector::ZeroVector;
+ UPROPERTY(Transient) float StreamerVisualElbowPole=0; // 0 = the clip's bend plane, 1 = the pole
+ UPROPERTY(Transient) float StreamerVisualFingerCurlDeg=0; // added to the proximal (x1) and middle (x1.2) phalanges, scaled by the alpha
