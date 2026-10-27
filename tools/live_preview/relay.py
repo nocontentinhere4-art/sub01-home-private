@@ -7,6 +7,16 @@ ORIGIN = 'https://subzerone.live'
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
 
+def chat_ack_response(data):
+    ok = data.get('ok') is True
+    reason = str(data.get('reason') or '')
+    if ok: code, why, status = 'received', 'Message received.', 200
+    elif reason == 'duplicate': code, why, status = 'duplicate', 'This message was already received. Try a different message.', 409
+    elif reason.startswith('one message every ') or 'busy' in reason.lower():
+        code, why, status = 'rate_limited', 'Chat is busy. Please wait 10 seconds and try again.', 429
+    else: code, why, status = 'filtered', 'Message rejected by the chat filter.', 400
+    return web.json_response({'ok':ok, 'code':code, 'why':why}, status=status)
+
 def create_app(root, stop_file, token_file=None):
     root = Path(root).resolve()
     messages = collections.deque(maxlen=30)
@@ -83,13 +93,13 @@ def create_app(root, stop_file, token_file=None):
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
         now = time.monotonic()
         while global_chat and global_chat[0] < now-10: global_chat.popleft()
-        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'why':'Attendi qualche secondo.'}, status=429)
+        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'code':'rate_limited','why':'Please wait a few seconds.'}, status=429)
         text = (await request.text()).strip()
         if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
         global_chat.append(now)
         try:
             async with asyncio.timeout(12):
-                async with aiohttp.ClientSession() as client:
+                async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(local_addr=('127.0.0.2',0))) as client:
                     async with client.ws_connect('http://127.0.0.1:8830/ws', max_msg_size=2*1024*1024) as ws:
                         await ws.send_json({'type':'chat','nick':'viewer','text':text})
                         async for msg in ws:
@@ -98,9 +108,9 @@ def create_app(root, stop_file, token_file=None):
                                 if data.get('type') == 'chat_ack':
                                     ok = data.get('ok') is True
                                     if ok: messages.append({'text':text,'at':int(time.time())})
-                                    return web.json_response({'ok':ok,'why':'Messaggio ricevuto.' if ok else 'Messaggio rifiutato dal filtro della chat.'})
+                                    return chat_ack_response(data)
         except (TimeoutError, aiohttp.ClientError, ValueError): pass
-        return web.json_response({'ok':False,'why':'Chat non disponibile. Riprova più tardi.'}, status=503)
+        return web.json_response({'ok':False,'code':'offline','why':'Chat unavailable. Please try again later.'}, status=503)
     app = web.Application(client_max_size=2048, middlewares=[boundary])
     app.router.add_get('/hls/{name}', media, allow_head=False)
     app.router.add_get('/screen.png', screen, allow_head=False)

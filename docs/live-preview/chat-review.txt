@@ -1,0 +1,86 @@
+Exact commit review, design approved. Fixed loopback .2 validated actual WS accepted normal message. Backend tests share .1 previously. All10 relay tests PASS, mapping duplicate/rate/filtered statuses no raw reason. UI English. No backend or filters change. Approve commit or blocker concise.
+diff --git a/tools/live_preview/relay.py b/tools/live_preview/relay.py
+index e641ec4e..cf3d9721 100644
+--- a/tools/live_preview/relay.py
++++ b/tools/live_preview/relay.py
+@@ -7,6 +7,16 @@ ORIGIN = 'https://subzerone.live'
+ SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
+ HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
+ 
++def chat_ack_response(data):
++    ok = data.get('ok') is True
++    reason = str(data.get('reason') or '')
++    if ok: code, why, status = 'received', 'Message received.', 200
++    elif reason == 'duplicate': code, why, status = 'duplicate', 'This message was already received. Try a different message.', 409
++    elif reason.startswith('one message every ') or 'busy' in reason.lower():
++        code, why, status = 'rate_limited', 'Chat is busy. Please wait 10 seconds and try again.', 429
++    else: code, why, status = 'filtered', 'Message rejected by the chat filter.', 400
++    return web.json_response({'ok':ok, 'code':code, 'why':why}, status=status)
++
+ def create_app(root, stop_file, token_file=None):
+     root = Path(root).resolve()
+     messages = collections.deque(maxlen=30)
+@@ -83,13 +93,13 @@ def create_app(root, stop_file, token_file=None):
+         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+         now = time.monotonic()
+         while global_chat and global_chat[0] < now-10: global_chat.popleft()
+-        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'why':'Attendi qualche secondo.'}, status=429)
++        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'code':'rate_limited','why':'Please wait a few seconds.'}, status=429)
+         text = (await request.text()).strip()
+         if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
+         global_chat.append(now)
+         try:
+             async with asyncio.timeout(12):
+-                async with aiohttp.ClientSession() as client:
++                async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(local_addr=('127.0.0.2',0))) as client:
+                     async with client.ws_connect('http://127.0.0.1:8830/ws', max_msg_size=2*1024*1024) as ws:
+                         await ws.send_json({'type':'chat','nick':'viewer','text':text})
+                         async for msg in ws:
+@@ -98,9 +108,9 @@ def create_app(root, stop_file, token_file=None):
+                                 if data.get('type') == 'chat_ack':
+                                     ok = data.get('ok') is True
+                                     if ok: messages.append({'text':text,'at':int(time.time())})
+-                                    return web.json_response({'ok':ok,'why':'Messaggio ricevuto.' if ok else 'Messaggio rifiutato dal filtro della chat.'})
++                                    return chat_ack_response(data)
+         except (TimeoutError, aiohttp.ClientError, ValueError): pass
+-        return web.json_response({'ok':False,'why':'Chat non disponibile. Riprova più tardi.'}, status=503)
++        return web.json_response({'ok':False,'code':'offline','why':'Chat unavailable. Please try again later.'}, status=503)
+     app = web.Application(client_max_size=2048, middlewares=[boundary])
+     app.router.add_get('/hls/{name}', media, allow_head=False)
+     app.router.add_get('/screen.png', screen, allow_head=False)
+diff --git a/tools/live_preview/test_relay.py b/tools/live_preview/test_relay.py
+index da5a12c9..cc253b71 100644
+--- a/tools/live_preview/test_relay.py
++++ b/tools/live_preview/test_relay.py
+@@ -1,7 +1,7 @@
+-import tempfile,unittest
++import tempfile,unittest,json
+ from pathlib import Path
+ from aiohttp.test_utils import TestClient,TestServer
+-from relay import create_app,ORIGIN
++from relay import create_app,ORIGIN,chat_ack_response
+ class RelayTests(unittest.IsolatedAsyncioTestCase):
+  async def asyncSetUp(self):
+   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.seg='sub01-20261026-233000-123.ts'
+@@ -27,4 +27,8 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
+  async def test_status_pause_and_body_limit(self):
+   (self.root/'STOP').touch();r=await self.client.get('/status');self.assertEqual((await r.json())['agent'],'paused')
+   r=await self.client.post('/chat',data='x'*3000,headers={'Origin':ORIGIN,'Content-Type':'text/plain'});self.assertEqual(r.status,413)
++class AckTests(unittest.TestCase):
++ def test_allowlisted_reasons_and_status(self):
++  for data,status,code in [({'ok':True},200,'received'),({'ok':False,'reason':'duplicate'},409,'duplicate'),({'ok':False,'reason':'one message every 10 s'},429,'rate_limited'),({'ok':False,'reason':'chat busy'},429,'rate_limited'),({'ok':False,'reason':'private internal detail'},400,'filtered')]:
++   r=chat_ack_response(data);self.assertEqual(r.status,status);self.assertEqual(json.loads(r.body)['code'],code);self.assertNotIn('private internal detail',r.text)
+ if __name__=='__main__':unittest.main()
+diff --git a/web/live.html b/web/live.html
+index 931736a6..39063f2d 100644
+--- a/web/live.html
++++ b/web/live.html
+@@ -6,7 +6,7 @@
+ const base=window.SUB01_PREVIEW_ORIGIN,video=document.querySelector('#video'),statusEl=document.querySelector('#status'),mode=document.querySelector('#mode'),messages=document.querySelector('#messages');let hls,attached=false;
+ function start(){if(attached||!base)return;attached=true;const src=base+'/hls/live.m3u8';if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=src;else if(window.Hls&&Hls.isSupported()){hls=new Hls({maxBufferLength:10,liveSyncDurationCount:3});hls.loadSource(src);hls.attachMedia(video);hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal){statusEl.textContent='Reconnecting video';hls.destroy();attached=false;}});}else statusEl.textContent='Browser not supported';}
+ async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();statusEl.textContent=s.online?'● LIVE':'Video temporarily offline';mode.textContent=s.agent==='paused'?'Manual control · agent in STOP':'Operational checks in progress';messages.replaceChildren(...s.messages.map(m=>{const p=document.createElement('p');p.textContent=m.text;return p}));if(s.online)start();}catch{statusEl.textContent='Connection unavailable';}setTimeout(refresh,5000)}
+-document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const t=document.querySelector('#text'),b=document.querySelector('#send'),f=document.querySelector('#feedback');b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:t.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Message received.':r.status===429?'Please wait a few seconds.':r.status===503?'Chat unavailable. Please try again later.':'Message rejected by the chat filter.';if(d.ok)t.value='';}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});refresh();
++document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const t=document.querySelector('#text'),b=document.querySelector('#send'),f=document.querySelector('#feedback');b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:t.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Message received.':d.code==='duplicate'?'This message was already received. Try a different message.':r.status===429?'Please wait a few seconds.':r.status===503?'Chat unavailable. Please try again later.':'Message rejected by the chat filter.';if(d.ok)t.value='';}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});refresh();
+ </script><script>
+ const pcFrame=document.querySelector('#pc-frame'),pcState=document.querySelector('#pc-state');let pcURL=null,pcAbort=null,pcGeneration=0;
+ function clearPC(label){pcGeneration++;if(pcAbort)pcAbort.abort();pcFrame.hidden=true;pcFrame.removeAttribute('src');if(pcURL)URL.revokeObjectURL(pcURL);pcURL=null;pcState.textContent=label;}

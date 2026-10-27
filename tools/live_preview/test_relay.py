@@ -1,7 +1,7 @@
-import tempfile,unittest
+import tempfile,unittest,json
 from pathlib import Path
 from aiohttp.test_utils import TestClient,TestServer
-from relay import create_app,ORIGIN
+from relay import create_app,ORIGIN,chat_ack_response
 class RelayTests(unittest.IsolatedAsyncioTestCase):
  async def asyncSetUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.seg='sub01-20261026-233000-123.ts'
@@ -27,4 +27,8 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
  async def test_status_pause_and_body_limit(self):
   (self.root/'STOP').touch();r=await self.client.get('/status');self.assertEqual((await r.json())['agent'],'paused')
   r=await self.client.post('/chat',data='x'*3000,headers={'Origin':ORIGIN,'Content-Type':'text/plain'});self.assertEqual(r.status,413)
+class AckTests(unittest.TestCase):
+ def test_allowlisted_reasons_and_status(self):
+  for data,status,code in [({'ok':True},200,'received'),({'ok':False,'reason':'duplicate'},409,'duplicate'),({'ok':False,'reason':'one message every 10 s'},429,'rate_limited'),({'ok':False,'reason':'chat busy'},429,'rate_limited'),({'ok':False,'reason':'private internal detail'},400,'filtered')]:
+   r=chat_ack_response(data);self.assertEqual(r.status,status);self.assertEqual(json.loads(r.body)['code'],code);self.assertNotIn('private internal detail',r.text)
 if __name__=='__main__':unittest.main()
