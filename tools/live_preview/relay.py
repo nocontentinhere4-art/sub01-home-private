@@ -7,12 +7,13 @@ ORIGIN = 'https://subzerone.live'
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
 
-def create_app(root, stop_file):
+def create_app(root, stop_file, token_file=None):
     root = Path(root).resolve()
     messages = collections.deque(maxlen=30)
     rates = collections.OrderedDict()
     global_chat = collections.deque()
     slots = asyncio.Semaphore(8)
+    screen_lock = asyncio.Lock()
     def limited(ip, kind, period, maximum):
         now = time.monotonic(); key = (ip, kind)
         q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
@@ -52,6 +53,28 @@ def create_app(root, stop_file):
         async with slots:
             data = await asyncio.to_thread(p.read_bytes)
         return web.Response(body=data, content_type='video/mp2t')
+    async def screen(request):
+        if request.query_string or token_file is None: raise web.HTTPNotFound()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if screen_lock.locked() or limited(ip, 'screen', 1, 1):
+            raise web.HTTPTooManyRequests()
+        async with screen_lock:
+            try:
+                token = Path(token_file).read_text().strip()
+                async with asyncio.timeout(3):
+                    async with aiohttp.ClientSession() as client:
+                        async with client.get('http://127.0.0.1:8838/pc/frame.png',
+                                headers={'X-Admin-Token':token}, allow_redirects=False) as r:
+                            if r.status != 200 or r.content_type != 'image/png':
+                                raise web.HTTPServiceUnavailable()
+                            data = bytearray()
+                            async for chunk in r.content.iter_chunked(65536):
+                                data.extend(chunk)
+                                if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
+                            if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
+                            return web.Response(body=bytes(data),content_type='image/png')
+            except (TimeoutError, aiohttp.ClientError, OSError, ValueError):
+                raise web.HTTPServiceUnavailable()
     async def status(request):
         raw, _ = playlist()
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
@@ -80,10 +103,11 @@ def create_app(root, stop_file):
         return web.json_response({'ok':False,'why':'Chat non disponibile. Riprova più tardi.'}, status=503)
     app = web.Application(client_max_size=2048, middlewares=[boundary])
     app.router.add_get('/hls/{name}', media, allow_head=False)
+    app.router.add_get('/screen.png', screen, allow_head=False)
     app.router.add_get('/status', status, allow_head=False)
     app.router.add_post('/chat', chat)
     return app
 
 if __name__ == '__main__':
-    p=argparse.ArgumentParser();p.add_argument('--hls', required=True);p.add_argument('--stop',required=True);p.add_argument('--port',type=int,default=8841);a=p.parse_args()
-    web.run_app(create_app(a.hls,a.stop),host='127.0.0.1',port=a.port,access_log=None)
+    p=argparse.ArgumentParser();p.add_argument('--hls', required=True);p.add_argument('--stop',required=True);p.add_argument('--token-file');p.add_argument('--port',type=int,default=8841);a=p.parse_args()
+    web.run_app(create_app(a.hls,a.stop,a.token_file),host='127.0.0.1',port=a.port,access_log=None)
