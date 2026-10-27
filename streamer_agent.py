@@ -927,6 +927,7 @@ PATH_CLASSES = (
 )
 BLOCKED_HOST = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in HOST_CLASSES), re.I)
 BLOCKED_PATH = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in PATH_CLASSES), re.I)
+VIEWER_LINK_BLOCKED = ("adult",)                  # the only link class a viewer cannot open (owner 2026-10-27)
 LIFTABLE = {"credentials": ("login",), "installs": ("file",)}   # what each owner flag lifts for his own decisions
 QUERY_LEAD = re.compile(r"^(?:(?:for|up|about|on|out|whether|if|the|a|an|some|me|us|info\s+on|information\s+(?:on|about)|"
                         r"more\s+(?:about|on)|what\s+is|what's|who\s+is|who's)\s+)+", re.I)
@@ -1145,11 +1146,11 @@ def request_url_problem(url):
     why = url_problem(url)                                    # scheme, host, the house guard (browse.url_ok)
     if why:
         return "blocked_domain" if why in ("blocked by the browse guard", "local host") else "bad_url"
-    u = urlsplit(url)
-    if BLOCKED_HOST.search((u.hostname or "").lower()):
+    # owner 2026-10-27 ("qualsiasi link sia apribile ... fare tutto come una persona reale"): a viewer's link opens
+    # whatever its class (money, gambling, torrents, logins, files, account pages), except adult content: the PC screen
+    # is public on subzerone.live
+    if any(c in VIEWER_LINK_BLOCKED for c in blocked_classes(url)):
         return "blocked_domain"
-    if BLOCKED_PATH.search(u.path) or BLOCKED_PATH.search(u.path + "?" + u.query):
-        return "blocked_url"
     return None
 
 
