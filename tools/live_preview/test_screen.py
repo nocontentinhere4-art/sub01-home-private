@@ -34,7 +34,7 @@ class ScreenTests(unittest.IsolatedAsyncioTestCase):
   gate=asyncio.Event()
   with self.upstream(Response(gate=gate)):
    first=asyncio.create_task(self.client.get('/screen.png',headers={'CF-Connecting-IP':'a'}));await asyncio.sleep(.05)
-   second=await self.client.get('/screen.png',headers={'CF-Connecting-IP':'b'});self.assertEqual(second.status,429);gate.set();self.assertEqual((await first).status,200)
+   second=asyncio.create_task(self.client.get('/screen.png',headers={'CF-Connecting-IP':'b'}));await asyncio.sleep(.05);gate.set();self.assertEqual((await first).status,200);self.assertEqual((await second).status,200)
  async def test_no_generic_proxy(self):
   self.assertEqual((await self.client.get('/screen.png?url=http://evil.example')).status,404)
   self.assertEqual((await self.client.post('/screen.png')).status,405)

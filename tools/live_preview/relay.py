@@ -23,7 +23,7 @@ def create_app(root, stop_file, token_file=None):
     rates = collections.OrderedDict()
     global_chat = collections.deque()
     slots = asyncio.Semaphore(8)
-    screen_lock = asyncio.Lock()
+    screen_task = None
     def limited(ip, kind, period, maximum):
         now = time.monotonic(); key = (ip, kind)
         q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
@@ -63,28 +63,37 @@ def create_app(root, stop_file, token_file=None):
         async with slots:
             data = await asyncio.to_thread(p.read_bytes)
         return web.Response(body=data, content_type='video/mp2t')
+    async def capture_screen():
+        try:
+            token = Path(token_file).read_text().strip()
+            async with asyncio.timeout(3):
+                async with aiohttp.ClientSession() as client:
+                    async with client.get('http://127.0.0.1:8838/pc/frame.png',
+                            headers={'X-Admin-Token':token}, allow_redirects=False) as r:
+                        if r.status != 200 or r.content_type != 'image/png': raise web.HTTPServiceUnavailable()
+                        data = bytearray()
+                        async for chunk in r.content.iter_chunked(65536):
+                            data.extend(chunk)
+                            if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
+                        if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
+                        return bytes(data)
+        except (TimeoutError, aiohttp.ClientError, OSError, ValueError):
+            raise web.HTTPServiceUnavailable()
+    def discard_capture(task):
+        nonlocal screen_task
+        if screen_task is task: screen_task = None
+        if not task.cancelled(): task.exception()
     async def screen(request):
+        nonlocal screen_task
         if request.query_string or token_file is None: raise web.HTTPNotFound()
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
-        if screen_lock.locked() or limited(ip, 'screen', 1, 1):
-            raise web.HTTPTooManyRequests()
-        async with screen_lock:
-            try:
-                token = Path(token_file).read_text().strip()
-                async with asyncio.timeout(3):
-                    async with aiohttp.ClientSession() as client:
-                        async with client.get('http://127.0.0.1:8838/pc/frame.png',
-                                headers={'X-Admin-Token':token}, allow_redirects=False) as r:
-                            if r.status != 200 or r.content_type != 'image/png':
-                                raise web.HTTPServiceUnavailable()
-                            data = bytearray()
-                            async for chunk in r.content.iter_chunked(65536):
-                                data.extend(chunk)
-                                if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
-                            if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
-                            return web.Response(body=bytes(data),content_type='image/png')
-            except (TimeoutError, aiohttp.ClientError, OSError, ValueError):
-                raise web.HTTPServiceUnavailable()
+        if limited(ip, 'screen', .8, 1): raise web.HTTPTooManyRequests()
+        if screen_task is None or screen_task.done():
+            screen_task = asyncio.create_task(capture_screen())
+            screen_task.add_done_callback(discard_capture)
+        task = screen_task
+        data = await asyncio.shield(task)
+        return web.Response(body=data,content_type='image/png')
     async def status(request):
         raw, _ = playlist()
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
