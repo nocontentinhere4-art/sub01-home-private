@@ -2345,7 +2345,7 @@ def test_read_play_and_click_requests_get_their_lines_and_the_model_may_ask_whic
     assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["done"]
 
 
-def test_scroll_and_back_requests_are_silent_and_end_after_one_look(tmp_path):
+def test_scroll_and_back_requests_finish_after_verified_input_without_model_wait(tmp_path):
     agent, world, prov, clock = request_world(tmp_path, decision(state="reading", action=None, say=""))
     world.history = ["https://example.org/home"]                                        # there is a page to go back to
     world.chat_msgs = [msg(1, "scroll down a bit", "a"), msg(2, "go back", "b"), msg(3, "back to the top", "c")]
@@ -2355,13 +2355,20 @@ def test_scroll_and_back_requests_are_silent_and_end_after_one_look(tmp_path):
     ends = [e for e in events(agent) if e["kind"] == "chat_request_end"]
     assert [(e["user"], e["why"], e["steps"]) for e in ends] == [("a", "done", 1), ("b", "done", 1), ("c", "done", 1)]
     assert all(e["seconds"] <= 12 for e in ends)                                         # one look each, no lingering request
-    assert len([c for c in prov.calls if "chat_request" in c["state"]]) == 3
-    # a line is still possible when it is useful: the model's one look may say it
-    agent, world, prov, clock = request_world(tmp_path / "line", decision(state="reading", action=None, say="Back one page."))
-    world.history = ["https://example.org/home"]
-    world.chat_msgs = [msg(1, "go back", "b")]
-    asyncio.run(sim(agent, clock, 20, dt=2))
-    assert [(s["text"], s["tag"]) for s in world.spoken] == [("Back one page.", "request")]
+    assert not [c for c in prov.calls if "chat_request" in c["state"]]
+
+
+def test_late_quick_result_cannot_finish_new_request_and_lease_loss_interrupts(tmp_path):
+    agent, world, prov, clock = request_world(tmp_path, decision(state="reading", action=None, say=""))
+    cur = dict(seq=42, quick=True, kind="scroll", nick="viewer", user="viewer", text="scroll down", steps=1, commented=False, started=clock())
+    agent.requests.current = cur
+    agent.finish_quick_request(41, {"ok":True,"verdict":"changed"}, clock())
+    assert agent.requests.current is cur
+    agent.hands_off_reason = lambda now: "lease"
+    agent.finish_quick_request(42, {"ok":True,"verdict":"changed"}, clock())
+    assert agent.requests.current is None
+    assert [e["why"] for e in events(agent) if e["kind"] == "chat_request_end"] == ["interrupted"]
+    assert not world.acts
 
 
 def test_show_your_face_cuts_the_character_layout_says_so_and_holds_it(tmp_path):

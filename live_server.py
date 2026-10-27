@@ -34,6 +34,7 @@ import numpy as np
 from aiohttp import web
 
 from brain_sim import Brain
+from viewer_chat import dedupe_for_peer
 from chat import (RULES, TEACH_MAX_WORDS, TEACH_PER_DAY, NICK_MAX, Dedupe, RateLimiter, TeachLimits,
                   check as chat_check, check_teach, clean_nick, client_key, dedupe_key, stimulus as chat_stimulus)
 from sleep import ROME, TZ, Clock, Memory, SleepEngine, Store, day_of, hhmm, next_bedtime, night_date
@@ -631,7 +632,7 @@ class Live:
 
     async def handle_chat(self, ws, key, text, nick=""):
         links_open = vagon_enabled()                       # the PC can open a link: then a link is accepted
-        ok, reason = chat_check(text, key, self.limiter, self.dedupe, links_open)   # filter first; blocked = never stored
+        ok, reason = chat_check(text, key, self.limiter, dedupe_for_peer(ws, self.dedupe), links_open)   # filter first; blocked = never stored
         if not ok:
             await ws.send_json({"type": "chat_ack", "ok": False, "reason": reason})
             return
