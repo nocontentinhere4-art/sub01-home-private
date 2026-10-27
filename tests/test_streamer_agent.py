@@ -3887,3 +3887,13 @@ def test_jump_to_top_or_bottom_is_a_key_request():
     for chat in ("i jumped in the pool lol", "don't jump to conclusions", "jump to conclusions much?"):
         req = A.parse_request(chat, pc=True)
         assert req is None, (chat, req)              # plain chat: no action and no refusal line
+
+
+def test_scroll_a_little_bit_scrolls_instead_of_refusing_to_leave_the_desk():
+    """Live check 2026-10-27: 'scroll up a little bit' fell through SCROLL and was refused as leaving the desk."""
+    import streamer_agent as A
+    for text, direction in (("scroll up a little bit", "up"), ("scroll down a little bit", "down"),
+                            ("scroll a tiny bit up", "up"), ("scroll a little bit more", "down")):
+        req = A.parse_request(text, pc=True)
+        assert req and req["kind"] == "scroll" and req["action"]["direction"] == direction, (text, req)
+    assert A.parse_request("stand up", pc=True)["refused"] == "leave_desk"   # real desk-leaving still refused

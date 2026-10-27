@@ -817,7 +817,8 @@ R_TYPE = re.compile(r"^\W*(?:type|write|post|comment|tweet|send|reply\s+to|paste
 LEAVE_WORDS = re.compile(r"\b(?:leave|stand\s+up|get\s+up|get\s+out|take\s+a\s+(?:break|walk|nap)|go\s+(?:out|outside|"
                          r"away|home)|step\s+(?:out|away)|lie\s+down|dance|sing|stretch|turn\s+around|wave)\b", re.I)
 # doable kinds, in the order they are tried (scroll and back before the activity words: impulse reads "scroll" as the phone)
-SCROLL = re.compile(r"^\W*(?:keep\s+scrolling|scroll(?:\s+(?:on|further|more|down|up|a\s+bit|a\s+little|some\s+more|"
+# ("bit": strip_filler turns "scroll up a little bit" into "scroll up bit"; live check 2026-10-27)
+SCROLL = re.compile(r"^\W*(?:keep\s+scrolling|scroll(?:\s+(?:on|further|more|down|up|a\s+bit|a\s+(?:little|tiny)(?:\s+bit)?|bit|some\s+more|"
                     r"the\s+page|it))*)\W*$", re.I)
 SCROLL_UP = re.compile(r"\bup\b", re.I)
 TOP_BOTTOM = re.compile(r"^\W*(?:(?:go|scroll|jump|take\s+(?:me|us))\s+)?(?:back\s+)?(?:to\s+)?(?:the\s+)?(top|bottom)"
