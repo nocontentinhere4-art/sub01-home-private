@@ -207,3 +207,29 @@ provider keys.
   4.4 s, relay 200.
 
 **RunPod:** one balance read at 17:14:34 UTC: $48.94. It was $51.36 at 15:18, so the spend is about $1.24/h.
+
+## 17:27 UTC: game fps back to about 59 (CPU partition)
+
+**Problem**
+- After the restarts of the day, the game ran at 48-57 fps, below the owner's 55.
+- It was render-thread bound: `perf_render_ms` 15-20 against a GPU time of 7.4 ms (34% GPU).
+- On pod 505 (Ryzen 9 9950X, 32 logical CPUs, cgroup 13.6 CPUs, no throttling) nothing was pinned.
+
+**What was tried** (Kimi's order: `cam2_lite` first, then the partition)
+1. `cam2_lite=1` alone gave 49-59 fps: not enough.
+2. `streamer_cpu_partition.py --once` as unreal, with game and Xvfb :99 on `0-7` (CCD0, siblings idle) and all other
+   uid-1001 threads on `8-15,24-31`, gave 58-60 fps and a render time of 10-13 ms.
+3. `cam2_lite` back to 0 (cam2 at full quality) with the partition alone gave 57.4-59.9 fps, `nr_throttled` flat.
+   This is the setup kept.
+
+The tuning backup is `/home/sub01-review-20261027/face-tuning.bak-20261027T1726.json`; its content is identical to the
+current file except the sequence.
+
+**The partition is one pass, not persistent.** Children inherit their parent's set, so supervisor restarts stay on
+`8-15,24-31`. A NEW game process would start on the others' set, so re-run the same command after any game restart:
+
+```
+runuser -u unreal -- python3 $SRC/scripts/streamer_cpu_partition.py --game-pid-file $SD/game.pid --game-cpus 0-7 --other-cpus 8-15,24-31 --xvfb-display :99 --once
+```
+
+Undo with `--restore`.
