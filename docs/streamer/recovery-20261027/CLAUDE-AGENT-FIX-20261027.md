@@ -134,3 +134,39 @@ automatic.
 - **To replace the music:** drop another file at that path and restart the director.
 - **Still to do:** desktop (Vagon PC) audio. It needs the PulseAudio monitor of the desktop runner's Chrome as an extra
   input.
+
+## 16:29 UTC: the desktop's (Vagon PC) audio in the live mix
+
+**Setup**
+- PulseAudio was installed on the pod with apt (pulseaudio and pulseaudio-utils).
+- `scripts/streamer_audio.sh up` runs as unreal with `STREAMER_DIR` set. It provides:
+  - the socket `<streamer-dir>/run/pulse/native`, with `auth-anonymous` (the 0700 directory is the access control);
+  - the null sink `sub01_apps`.
+- The tone test passed (-21 dB).
+
+**Desktop runner**
+- At every browser launch it probes that socket. When the socket answers, Chrome runs without `--mute-audio`, with
+  autoplay allowed, and with `PULSE_SERVER` and `PULSE_SINK` set. Otherwise nothing changes.
+- Restarted with `streamer_up.py restart desktop`: Vagon reconnected in 19 s on its own, and Chrome shows up as a sink
+  input.
+
+**Director**
+- When the socket answers, the director adds `-f pulse -server unix:<socket> -i sub01_apps.monitor` as the last input.
+- Mix chain:
+  1. `volume@apps` at 0.6;
+  2. summed with the music;
+  3. ducked under the voice;
+  4. `alimiter`.
+- On the privacy layout (`webcam_only`) the desktop audio is muted before the picture switches, and unmuted after every
+  successful live switch to another layout.
+- If the mute gets no reply, the director relaunches ffmpeg, which starts at `volume@apps=0`.
+- Restarted with `restart director` at 16:28. The ffmpeg argv has both the apps input and the music. The HLS audio was
+  -32.7 dB mean.
+
+**Review and tests**
+- Code written by Kimi; I spliced it in (one probe per launch, plus an idempotent unmute). Kimi APPROVEd the final diff.
+- Tests: 399 pass. The one failure is `test_logged_in_feeds.py::test_api_browsing_lists_accounts`, which already failed
+  before this change: the `chess` module is missing locally.
+
+**After a pod restart:** run `streamer_audio.sh up` again. Without the server, both the desktop and the director fall
+back to the old behaviour (muted Chrome, no apps input).

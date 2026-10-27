@@ -1619,8 +1619,25 @@ class ActFailed(RuntimeError):
     """An action could not be carried out (stale mark, covered element, blocked target); the text goes to the agent."""
 
 
-def chromium_args(cfg):
-    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags."""
+PULSE_SINK = "sub01_apps"              # the application-audio null sink of scripts/streamer_audio.sh
+
+
+def pulse_socket(streamer_dir):
+    """The application-audio server's socket (<streamer-dir>/run/pulse/native, scripts/streamer_audio.sh) when it accepts
+    a connection within 0.5 s, else None: the browser is then launched muted, exactly as before."""
+    path = Path(streamer_dir) / "run" / "pulse" / "native"
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.5)
+            sock.connect(str(path))
+    except OSError:
+        return None
+    return path
+
+
+def chromium_args(cfg, pulse=None):
+    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags.
+    With `pulse` (an answering application-audio socket) the browser is not muted and media may play without a click."""
     args = ["--no-first-run", "--no-default-browser-check", "--disable-sync", "--disable-extensions",
             "--disable-background-networking", "--mute-audio", "--password-store=basic",
             "--disable-dev-shm-usage", "--deny-permission-prompts", "--disable-session-crashed-bubble",
@@ -1628,17 +1645,22 @@ def chromium_args(cfg):
             "--disable-features=Translate,AutofillServerCommunication", "--window-position=0,0",
             f"--window-size={cfg.width},{cfg.height}"]
     args += GPU_ARGS.get(getattr(cfg, "gpu", "off") or "off", GPU_ARGS["off"])
-    if getattr(cfg, "autoplay", False):
+    if pulse:
+        args.remove("--mute-audio")
+    if pulse or getattr(cfg, "autoplay", False):
         args.append("--autoplay-policy=no-user-gesture-required")
     args += [str(a) for a in (getattr(cfg, "extra_args", ()) or ()) if str(a).startswith("--")]
     return args + (["--kiosk"] if cfg.kiosk and not cfg.headless else [])
 
 
-def chromium_env(display, environ=None):
-    """A clean environment for the browser: no operator token, no API keys, only what Chromium needs."""
+def chromium_env(display, environ=None, pulse=None):
+    """A clean environment for the browser: no operator token, no API keys, only what Chromium needs (with `pulse`, the
+    application-audio server and its sink)."""
     environ = os.environ if environ is None else environ
     env = {k: v for k, v in environ.items() if k in SAFE_ENV}
     env["DISPLAY"] = display
+    if pulse:
+        env["PULSE_SERVER"], env["PULSE_SINK"] = f"unix:{pulse}", PULSE_SINK
     return env
 
 
@@ -2414,7 +2436,10 @@ class Desktop:
         self.feed.clear()
         self.pw = await async_playwright().start()
         # Headed: the real window is the viewport (an emulated viewport would undo --kiosk). Headless: emulate the size.
-        options = {"headless": cfg.headless, "args": chromium_args(cfg), "env": chromium_env(cfg.display),
+        pulse = pulse_socket(os.environ.get("STREAMER_DIR") or cfg.profile.parent.parent)   # probed at every launch
+        if pulse:
+            log(f"browser audio: on, into {PULSE_SINK} ({pulse})")
+        options = {"headless": cfg.headless, "args": chromium_args(cfg, pulse), "env": chromium_env(cfg.display, pulse=pulse),
                    "accept_downloads": False, "service_workers": "block", "locale": "en-US", "permissions": [],
                    "ignore_default_args": ["--enable-automation"]}
         options.update({"viewport": {"width": cfg.width, "height": cfg.height}} if cfg.headless else {"no_viewport": True})

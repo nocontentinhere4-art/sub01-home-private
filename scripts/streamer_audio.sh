@@ -111,7 +111,9 @@ write_pa() {
   cat >"$PA_FILE" <<EOF
 .fail
 # SUB-01 application audio. Unix socket only: no TCP/network protocol module, no hardware detection.
-load-module module-native-protocol-unix
+# auth-anonymous: the socket's directory is 0700 (uid unreal), which is the access control; Chromium's audio service
+# and ffmpeg then need no cookie file.
+load-module module-native-protocol-unix auth-anonymous=1
 load-module module-null-sink sink_name=$SINK rate=48000 channels=2 format=s16le channel_map=front-left,front-right sink_properties=device.description=SUB01_Apps
 set-default-sink $SINK
 EOF

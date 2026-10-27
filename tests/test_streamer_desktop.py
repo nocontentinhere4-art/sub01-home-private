@@ -1173,3 +1173,26 @@ def test_healthz_reports_status_without_credentials(tmp_path):
         finally:
             await http.close()
     run(body())
+
+
+def test_browser_audio_only_with_an_answering_pulse_socket(tmp_path):
+    import socket as socket_mod
+    cfg = sd.Config(profile=tmp_path / "desktop" / "profile", kiosk=False, autoplay=True)
+    assert sd.pulse_socket(tmp_path) is None
+    assert sd.chromium_args(cfg, None) == sd.chromium_args(cfg) and "--mute-audio" in sd.chromium_args(cfg)
+    assert sd.chromium_env(":103", {"PATH": "/bin"}) == {"PATH": "/bin", "DISPLAY": ":103"}
+    path = tmp_path / "run" / "pulse" / "native"
+    path.parent.mkdir(parents=True)
+    server = socket_mod.socket(socket_mod.AF_UNIX, socket_mod.SOCK_STREAM)
+    server.bind(str(path))
+    try:
+        assert sd.pulse_socket(tmp_path) is None                     # bound but not listening: refused
+        server.listen()
+        pulse = sd.pulse_socket(tmp_path)
+        assert pulse == path
+        args = sd.chromium_args(cfg, pulse)
+        assert "--mute-audio" not in args and args.count("--autoplay-policy=no-user-gesture-required") == 1
+        env = sd.chromium_env(":103", {"PATH": "/bin", "SUB01_ADMIN_TOKEN": "x" * 20}, pulse=pulse)
+        assert env == {"PATH": "/bin", "DISPLAY": ":103", "PULSE_SERVER": f"unix:{path}", "PULSE_SINK": "sub01_apps"}
+    finally:
+        server.close()

@@ -121,6 +121,7 @@ import re
 import shlex
 import shutil
 import signal
+import socket
 import stat
 import subprocess
 import sys
@@ -496,6 +497,23 @@ def tap_output_args(cfg, tap_fd):
             "-drop_pkts_on_overflow", "1", "-attempt_recovery", "0", "-queue_size", TAP_QUEUE, f"pipe:{int(tap_fd)}"]
 
 
+APPS_GAIN = 0.6         # the desktop browser's audio (scripts/streamer_audio.sh sink sub01_apps) before ducking
+APPS_SOURCE = "sub01_apps.monitor"
+
+
+def pulse_socket(streamer_dir):
+    """The application-audio server's socket (<streamer-dir>/run/pulse/native, scripts/streamer_audio.sh) when it accepts
+    a connection within 0.5 s, else None (no desktop audio input: the argv is exactly as before)."""
+    path = Path(streamer_dir) / "run" / "pulse" / "native"
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.5)
+            sock.connect(str(path))
+    except OSError:
+        return None
+    return path
+
+
 def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, layout=None, live=False,
                       encoder=None, cam2_fps=None, main=None, tap_fd=None):
     """The one ffmpeg command line. `window_id` None captures the whole of :99.0 instead.
@@ -541,17 +559,34 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
     music_index = argv.count("-i")       # the next input's index (cam2 and live inputs counted, not assumed)
     if music:                           # last input: the established 0..N indices never move
         argv += ["-stream_loop", "-1", "-i", str(music)]
+    apps = None if cfg.test_sources else pulse_socket(cfg.streamer_dir)
+    apps_index = argv.count("-i")
+    if apps:                            # the desktop browser's audio, after the music
+        argv += ["-thread_queue_size", "1024", "-f", "pulse", "-server", f"unix:{apps}", "-i", APPS_SOURCE]
     graph = build_live_graph(cfg, cam2, layout, main) if live else build_filter_complex(layout, cfg, main)
-    if music:
+    if music or apps:
         # apad also covers a vanished voice writer; normalize=0 leaves the voice's level untouched
-        graph += (f";[2:a]apad,asplit=2[voice][key];[{music_index}:a]aresample=48000,"
-                  "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm];"
-                  "[bgm][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
-                  "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+        graph += ";[2:a]apad,asplit=2[voice][key]"
+        if music:
+            graph += (f";[{music_index}:a]aresample=48000,"
+                      "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm]")
+        if apps:
+            # volume@apps: 0 on the privacy layout; the director changes it live around a privacy cut (apply_layout)
+            gain = 0 if layout == PRIVATE_LAYOUT else APPS_GAIN
+            graph += (f";[{apps_index}:a]aresample=48000:async=1:first_pts=0,"
+                      f"aformat=sample_fmts=fltp:channel_layouts=stereo,volume@apps={gain}[apps]")
+        if music and apps:
+            graph += ";[bgm][apps]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[bed]"
+        bed = "bed" if music and apps else "bgm" if music else "apps"
+        mixed = "mix" if apps else "aout"
+        graph += (f";[{bed}][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
+                  f"[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[{mixed}]")
+        if apps:
+            graph += ";[mix]alimiter=limit=0.891[aout]"
     elif voice:
         # apad: if the voice server goes away the FIFO hits EOF; silence keeps the audio track running meanwhile
         graph += ";[2:a]apad[aout]"
-    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music else "2:a",
+    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music or apps else "2:a",
              *video_codec_args(cfg, encoder or cfg.encoder), "-max_muxing_queue_size", "1024",
              "-c:a", "aac", "-b:a", cfg.audio_bitrate, "-ar", "48000", "-ac", "2"]
     if cfg.test_seconds:
@@ -1702,6 +1737,7 @@ class Director:
         self.layout = cfg.layout or DEFAULT_LAYOUT     # the requested layout; PRIVATE_LAYOUT wins while privacy is on
         self.live_layout, self.live_order = None, ()      # live_layout: on air (confirmed by a reply or by the launch)
         self.privacy = None                               # the privacy cut in force (layout.jsonl reason "privacy")
+        self.apps_audio = False                           # this run's graph has volume@apps (the desktop's audio)
         self.last_privacy = None                          # the last cut that ended, and its restore
         self._switching = None                            # the layout a map command in flight goes to
         self.stale_pids = set()                           # older ffmpegs that survived the reap (never acknowledge then)
@@ -2038,6 +2074,12 @@ class Director:
                 self._note_switch(target, "restart", True, 0)
                 self.request_restart(f"layout {target}")
                 return "restart"
+            if self.apps_audio and target == PRIVATE_LAYOUT:   # the desktop's sound goes before its picture
+                muted, why = await self.send_command("volume@apps", "volume", "0")
+                if not muted:
+                    self.event("apps_mute_failed", detail=why, run=self.prefix)
+                    self.request_restart("privacy: apps mute failed")     # the relaunch starts with volume@apps=0
+                    return "restart"
             started = self._clock()
             self._switching = target                     # desktop_hidden is false until the reply settles it
             try:
@@ -2052,6 +2094,10 @@ class Director:
                 self._note_switch(target, "live", True, ms)
                 self.event("layout_switched", layout=target, previous=previous, how="live", ms=ms, run=self.prefix)
                 self._on_air("live switch")
+                if self.apps_audio and target != PRIVATE_LAYOUT:   # idempotent: also right after an unknown state
+                    unmuted, why = await self.send_command("volume@apps", "volume", str(APPS_GAIN))
+                    if not unmuted:
+                        self.event("apps_unmute_failed", detail=why, run=self.prefix)
                 if effective_layout(self.wanted(), self.cam2) != target:
                     self.kick_layout()           # the wanted layout changed meanwhile (a new cut): at once, not next tick
                 return "live"
@@ -2365,6 +2411,7 @@ class Director:
             argv = build_ffmpeg_argv(cfg, prefix=prefix, window_id=window, voice=voice, cam2=cam2, layout=target,
                                      live=live, encoder=self.encoder, cam2_fps=self.cam2_fps, main=main, tap_fd=tap_fd)
             proc = await (self._spawn(argv, pass_fds=(tap_fd,)) if tap else self._spawn(argv))
+            self.apps_audio = APPS_SOURCE in argv           # volume@apps exists in this run's graph
         except (OSError, ValueError) as exc:
             if tap:
                 tap.close()

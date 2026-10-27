@@ -1944,3 +1944,74 @@ def test_optional_bgm_is_last_input_and_mixes_both_voice_paths(tmp_path, monkeyp
         assert graph.endswith("[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
         assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"
         assert argv[argv.index("-ar") + 1:argv.index("-ar") + 4] == ["48000", "-ac", "2"]
+
+
+def _apps_cfg(tmp_path, monkeypatch):
+    import socket as socket_mod
+    from types import SimpleNamespace
+    cfg = SimpleNamespace(streamer_dir=tmp_path, ffmpeg="ffmpeg", width=1280, height=720,
+                          pip_width=320, pip_height=180, fps=30, desktop_fps=5, stats_period=1,
+                          test_sources=False, test_seconds=None, encoder="libx264",
+                          audio_bitrate="128k", game_display=":99.0", desktop_display=":99.0",
+                          voice_fifo=tmp_path / "voice.raw")
+    monkeypatch.setattr(sd, "effective_layout", lambda layout, cam2: layout)
+    monkeypatch.setattr(sd, "build_filter_complex", lambda *args: "VIDEO")
+    monkeypatch.setattr(sd, "video_codec_args", lambda *args: [])
+    monkeypatch.setattr(sd, "output_args", lambda *args: ["out.mkv"])
+    path = tmp_path / "run" / "pulse" / "native"
+    path.parent.mkdir(parents=True)
+    server = socket_mod.socket(socket_mod.AF_UNIX, socket_mod.SOCK_STREAM)
+    server.bind(str(path))
+    server.listen()
+    return cfg, server, path
+
+
+def test_desktop_audio_is_the_last_input_ducked_with_the_music_and_zero_on_the_privacy_layout(tmp_path, monkeypatch):
+    cfg, server, path = _apps_cfg(tmp_path, monkeypatch)
+    try:
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out")
+        fc = argv.index("-filter_complex")
+        assert argv[fc - 8:fc] == ["-thread_queue_size", "1024", "-f", "pulse", "-server", f"unix:{path}",
+                                   "-i", "sub01_apps.monitor"]
+        graph = argv[fc + 1]
+        assert graph == ("VIDEO;[2:a]apad,asplit=2[voice][key];[3:a]aresample=48000:async=1:first_pts=0,"
+                         "aformat=sample_fmts=fltp:channel_layouts=stereo,volume@apps=0.6[apps];"
+                         "[apps][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
+                         "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[mix];"
+                         "[mix]alimiter=limit=0.891[aout]")
+        assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"
+        assert "volume@apps=0[apps]" in sd.build_ffmpeg_argv(cfg, prefix="out", layout=sd.PRIVATE_LAYOUT)[fc + 1]
+        bgm = tmp_path / "music" / "bgm.mp3"
+        bgm.parent.mkdir()
+        bgm.write_bytes(b"test")
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out")
+        assert argv.index(str(bgm)) < argv.index("sub01_apps.monitor")
+        graph = argv[argv.index("-filter_complex") + 1]
+        assert "[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm]" in graph
+        assert "[4:a]aresample=48000:async=1:first_pts=0," in graph
+        assert ";[bgm][apps]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[bed];[bed][key]" in graph
+        cfg.test_sources = True                          # test recordings never take the desktop's audio
+        assert "sub01_apps.monitor" not in sd.build_ffmpeg_argv(cfg, prefix="out")
+    finally:
+        server.close()
+    cfg.test_sources = False
+    assert "sub01_apps.monitor" not in sd.build_ffmpeg_argv(cfg, prefix="out")   # socket gone: no input, music only
+
+
+def test_privacy_cut_mutes_the_desktop_audio_before_the_picture_and_unmutes_after(tmp_path):
+    async def body():
+        director, proc = live_director(tmp_path)
+        director.apps_audio = True
+        proc.stdin = FakeStdin(director)
+        private = str(director.live_order.index(sd.PRIVATE_LAYOUT))
+        director.layout = sd.PRIVATE_LAYOUT
+        assert await director.apply_layout() == "live"
+        assert proc.stdin.lines == [b"cvolume@apps -1 volume 0\n", f"cstreamselect@layout -1 map {private}\n".encode()]
+        director.layout = "split"
+        assert await director.apply_layout() == "live"
+        assert proc.stdin.lines[-2:] == [b"cstreamselect@layout -1 map 2\n", b"cvolume@apps -1 volume 0.6\n"]
+        proc.stdin = FakeStdin(director, ret=None)       # the mute gets no reply: relaunch, the picture never switched
+        director.layout = sd.PRIVATE_LAYOUT
+        assert await director.apply_layout() == "restart"
+        assert director._restart_reason == "privacy: apps mute failed" and proc.stdin.lines == [b"cvolume@apps -1 volume 0\n"]
+    run(body())
