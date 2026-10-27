@@ -19,7 +19,7 @@ MONEY_BLOCKED = [
     "Learn how to trade like a pro", "Presale is live now", "buy this coin now", "should I buy sol",
     "Top 5 stocks to buy now",
     # live 2026-10-09 (chat and the monitor)
-    "take a look on pump fun, and learn how to trade like a pro", "when you wake up, look on fomo",
+    "take a look on pump fun, and learn how to trade like a pro",
     "How to make millions on FOMO app... newbie tutorial!",
     "#1 Prop Firm Scalper: The ICT Trader Who Made $2.5+ Million With A 40% Win Rate",
     "Day Trading for beginners", "make money online fast", "crypto gems 100x", "$PEPE 100x gem",
@@ -90,7 +90,7 @@ def test_chat_drops_money_talk(text):
 
 
 @pytest.mark.parametrize("text", ["Learn how to trade like a pro", "should I buy sol", "buy this coin now",
-                                  "when you wake up, look on fomo", "Top 5 stocks to buy now"])
+                                  "Top 5 stocks to buy now"])
 def test_chat_names_the_lexicon_rule(text):
     assert chat.blocked(text) == chat.message_blocked(text) == "no trading or get-rich talk", text
 

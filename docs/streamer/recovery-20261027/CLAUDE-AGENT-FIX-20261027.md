@@ -103,3 +103,20 @@ automatic.
        audio input of the director's FFmpeg;
      - mix in a quiet royalty-free lo-fi loop, ducked under the voice;
      - check the levels in a short recording before going live.
+
+## 15:27-15:34 UTC: "fomo" removed from the chat filter, backend restarted as r7b
+
+- **Kimi:** APPROVE (it had been overloaded overnight, `engine_overloaded_error`).
+- **Runtime-source patched** (backup in `/home/sub01-review-20261027/fomo-backup.tgz`).
+- **Backend downtime 15:27:15-15:34:05.**
+  - The first relaunch (r7) was refused with "Production agent STOP must remain held".
+  - Rule for later restarts: **hold STOP (`streamer_up.py kill`) BEFORE launching the coordinator**, then `resume` once
+    `/healthz` 8830/8831 answers.
+- **Now running:**
+  - coordinator `/root/sub01-owner-backend-resume-r7.py`, with its memory count read from the stopped state, not the
+    hard-coded 356;
+  - argv in `/home/sub01-review-20261027/coord-r7b.argv`;
+  - state `owner-state-oct15-20261027-r7b`, **382 memories preserved**;
+  - snapshot source `…-r6`, untouched.
+- **Agent resumed**, lease of 60 min armed at 15:34:18.
+- **Chat test** "fomo family, have you heard of it?" returned `received`.
