@@ -170,3 +170,40 @@ automatic.
 
 **After a pod restart:** run `streamer_audio.sh up` again. Without the server, both the desktop and the director fall
 back to the old behaviour (muted Chrome, no apps input).
+
+## 17:18 UTC: livelier animation, and the 1-hour stability watch
+
+**Why only six fields**
+- The owner asked for more natural, cooler animation ("più naturali e fighe").
+- The current native build reads only six fields from the motion director: `state`, the head aim (yaw and pitch),
+  `nod_strength`, `intensity` and `camera`.
+- Everything under `motion` (lean, tilt, gestures, fidgets, breathing rate) is ignored until a native rebuild, so all of
+  the new liveliness goes through those six fields.
+
+**Design** (Kimi, with my changes; Kimi APPROVEd the final diff)
+- **Talk beats:** while he speaks, a small head-aim accent every 1.1-2.1 s, up to ±3.2° yaw and ±1.5° pitch. The accents
+  are smaller (×0.55) while he looks into the lens.
+- **Nods during speech:** about a third of the beats carry a nod of 0.14-0.28, only once the native envelope can re-arm.
+  The first beat of an utterance never nods.
+- **Reading and idle:** a wider aim filter (gain 0.18 / 0.28, at most 3°/2°) and a slower visible drift (0.9° at 0.055 Hz).
+- **Viewer awareness:** chat glances every 35-80 s. A rare silent lens check (every 150-300 s, lasting 0.6-1.1 s) uses
+  the same gates as a chat glance.
+- **Intensity raised:** idle 0.18, reading 0.4, talking 0.68.
+
+**Tests:** the quiet-version tests were updated to the new rules. All 37 motion tests pass. The 6 failures in
+`test_streamer_agent.py` predate this change: they fail the same way with it stashed, because this container has no
+provider keys.
+
+**Deploy**
+- Patched in runtime-source.
+- `streamer_up.py restart agent` at 17:18, then the lease was re-armed for 60 min (until 18:18).
+- STOP stayed absent throughout.
+
+**Stability watch**
+- `tools/pod/onpod/stability_watch.py` is passive: it samples every 30 s for 3600 s and never acts. It started at
+  17:19 on the pod.
+- Output: `/home/sub01-review-20261027/stability-20261027T1730.jsonl`; the last line is the summary.
+- First sample: all services up, game RSS 8044 MB, receipt 51.8 fps (under load right after the agent restart), HLS age
+  4.4 s, relay 200.
+
+**RunPod:** one balance read at 17:14:34 UTC: $48.94. It was $51.36 at 15:18, so the spend is about $1.24/h.

@@ -64,23 +64,23 @@ DEFAULTS = {
     "click_target_hold_s": (0.7, 1.2),   # a click/search/navigate target holds the head aim this long (K, A4)
     "scroll_target_hold_s": (0.35, 0.7), # a scroll briefly redirects attention, then the reading filter resumes (K, A2)
     "action_gaze_gain": 0.45,            # discrete targets give a visible but partial head turn (K)
-    "reading_gaze_gain": 0.12,           # the head barely follows the lines: fixations and saccades are eye work (K, A1, R7, R10)
-    "idle_gaze_gain": 0.18,              # idle attention wanders slightly more than reading (K, A6)
-    "reading_gaze_max_yaw_deg": 2.0,     # hard bound on screen-following yaw while reading (K)
-    "reading_gaze_max_pitch_deg": 1.5,   # no vertical line tracking turning into a reading nod (K)
-    "reading_gaze_smooth_s": 0.8,        # 4 Hz target changes filtered into slow, low-amplitude head motion (K)
-    "reading_head_wander_deg": 0.6,      # independent slow head drift: not frozen, still still (K, A1)
-    "reading_head_wander_hz": 0.04,      # about a 25 s drift scale, two incommensurate sines, not a visible loop (K)
+    "reading_gaze_gain": 0.18,           # the head follows the lines a little: visible at webcam scale, still no saccades (K 10-27)
+    "idle_gaze_gain": 0.28,              # idle attention wanders farther than reading (K 10-27)
+    "reading_gaze_max_yaw_deg": 3.0,     # hard bound on screen-following yaw while reading, far below a chat glance (K 10-27)
+    "reading_gaze_max_pitch_deg": 2.0,   # no vertical line tracking turning into a reading nod (K 10-27)
+    "reading_gaze_smooth_s": 0.65,       # 4 Hz target changes filtered into calm head motion (K 10-27)
+    "reading_head_wander_deg": 0.9,      # independent slow head drift: alive, not busy (K 10-27)
+    "reading_head_wander_hz": 0.055,     # about an 18 s drift scale, two incommensurate sines, not a visible loop (K 10-27)
     "gaze_tau_s": 0.22,                  # voluntary head aims (lens, chat, click target, think) settle in ~0.22 s (K)
     "camera_pitch_deg": 4.2,             # head-to-lens pitch of the framing recipe: atan(0.07 / 0.95); native computes the real one (K)
     # chat and camera (event-driven: no camera timer, no camera quota; DIRECTION rule 10)
-    "chat_glance_every_s": (45.0, 105.0),    # silent reading/idle: a clock-like glance at the chat (K, A10)
+    "chat_glance_every_s": (35.0, 80.0),     # silent reading/idle: a glance at the chat, a little more viewer awareness (K 10-27)
     "chat_glance_min_state_s": 8.0,          # no glance within 8 s of speech, a reaction, typing or a page change (K)
     "chat_glance_s": (0.8, 1.5),             # dwell, excluding the native turn-in/out (K)
     "chat_yaw_deg": 20.0,                    # the chat anchor: 20 deg to his side (K, R15, R16)
     "chat_pitch_deg": -4.0,                  # ... and 4 deg below monitor centre (K)
     "chat_read_first_s": (1.2, 2.2),         # answering chat: one visible read beat at the chat anchor first (K, A11)
-    "chat_ack_nod": 0.24,                    # the first look up to the lens carries one small nod (K, A11)
+    "chat_ack_nod": 0.28,                    # the first look up to the lens carries one small, clear nod (K 10-27)
     "chat_camera_s": (1.4, 2.4),             # ... one initial lens address (K)
     "chat_mid_glance_at_s": (5.5, 8.0),      # a longer answer earns one recheck of the message at this point (K)
     "chat_mid_glance_s": (0.8, 1.2),
@@ -88,6 +88,15 @@ DEFAULTS = {
     "camera_hold_after_speech_s": 0.35,      # no eye-line exit on the last audio sample (K)
     "wait_glance_at_s": 3.0,                 # waiting for a page longer than this earns one short chat glance (K rule 5)
     "wait_glance_s": (0.8, 1.2),
+    "lens_check_every_s": (150.0, 300.0),    # silent idle/reading: a rare brief look at the viewers, eligibility-gated (K 10-27)
+    "lens_check_s": (0.6, 1.1),
+    # talk beats: phrase-scale head accents while speaking; the native build reads only head aim and nods (K 10-27)
+    "talk_beat_every_s": (1.1, 2.1),         # irregular holds, not per-tick noise
+    "talk_beat_yaw_deg": 3.2,                # off-lens accents (Kimi 2.6; owner: livelier)
+    "talk_beat_pitch_deg": 1.5,              # (Kimi 1.2)
+    "talk_beat_look_cam_scale": 0.55,        # smaller at the lens: he keeps addressing the viewers
+    "talk_beat_nod_p": 0.35,                 # most beats carry no nod (Kimi 0.30)
+    "talk_beat_nod_strength": (0.14, 0.28),  # about 0.8-1.7 deg before intensity scaling (Kimi 0.12-0.24)
     # nods (native: 0.75 s envelope, strength 1.0 = 6 deg down; rearm at <= 0.02)
     "nod_decay_s": 1.0,
     "speech_start_nod": 0.28,                # a small nod opens a non-chat utterance (K, A13)
@@ -159,7 +168,7 @@ DEFAULTS = {
     "breath_laugh_hz": 0.34,                 # mostly in the recovery; the laugh beat itself is a native torso pulse (K)
     "breath_tau_s": 2.0,
     # intensity (native: scales sway and nod)
-    "intensity_by_state": {"idle": 0.1, "reading": 0.3, "typing": 0.55, "mouse": 0.45, "talking": 0.6, "reacting": 0.5},
+    "intensity_by_state": {"idle": 0.18, "reading": 0.4, "typing": 0.6, "mouse": 0.5, "talking": 0.68, "reacting": 0.55},   # K 10-27
     "intensity_by_reaction": {"surprise": 0.65, "laugh": 0.8, "think": 0.4},
     "intensity_chat_bonus": 0.1,
 }
@@ -208,6 +217,9 @@ class MotionDirector:
         self.chat_phase, self.chat_phase_until, self.chat_t0, self.chat_end_t = "none", -1e9, -1e9, -1e9
         self.chat_speech_t0, self.chat_cam_done, self.chat_mid_done, self.chat_mid_at = None, False, False, 0.0
         self.cam_until = -1e9
+        self.next_lens_check = None
+        self.beat_next, self.beat_yaw, self.beat_pitch = None, 0.0, 0.0     # talk beats (K 10-27)
+        self.beat_yaw_out = self.beat_pitch_out = 0.0
         self.chat_glance_until, self.next_chat_glance, self.wait_glanced = -1e9, None, False
         # nods
         self.nod_t0, self.nod_peak, self.pending_nod = -1e9, 0.0, None
@@ -229,6 +241,24 @@ class MotionDirector:
     def u(self, key):
         v = self.d[key]
         return self.rng.uniform(*v) if isinstance(v, tuple) else float(v)
+
+    def talk_beat(self, now, speaking, reacting, paused, look_cam):
+        """Phrase-scale head accents while speaking (K 10-27) -> (yaw, pitch) offset held until the next beat; some
+        beats carry a small nod, only once the native envelope can re-arm (the decayed nod value <= 0.02)."""
+        d = self.d
+        if not speaking or reacting or paused:
+            self.beat_next, self.beat_yaw, self.beat_pitch = None, 0.0, 0.0
+            return 0.0, 0.0
+        if self.beat_next is None or now >= self.beat_next:
+            first = self.beat_next is None                 # the utterance's first beat: the onset nod is its accent
+            scale = d["talk_beat_look_cam_scale"] if look_cam else 1.0
+            self.beat_yaw = self.rng.uniform(-d["talk_beat_yaw_deg"], d["talk_beat_yaw_deg"]) * scale
+            self.beat_pitch = self.rng.uniform(-d["talk_beat_pitch_deg"], d["talk_beat_pitch_deg"]) * scale
+            self.beat_next = now + self.u("talk_beat_every_s")
+            current = self.nod_peak * max(0.0, 1.0 - (now - self.nod_t0) / d["nod_decay_s"])
+            if not first and self.rng.random() < d["talk_beat_nod_p"] and current <= 0.02:
+                self.nod(self.u("talk_beat_nod_strength"), now)
+        return self.beat_yaw, self.beat_pitch
 
     def nod(self, strength, now):
         if strength > 0 and strength >= self.nod_peak * max(0.0, 1 - (now - self.nod_t0) / self.d["nod_decay_s"]):
@@ -326,6 +356,7 @@ class MotionDirector:
             self.last_pointer = now                                  # he sits down with the mouse hand on the mouse (A2)
             self.next_fidget = now + self.u("fidget_every_s")
             self.next_chat_glance = now + self.u("chat_glance_every_s")
+            self.next_lens_check = now + self.u("lens_check_every_s")
             self.next_posture_shift = now + self.u("posture_shift_every_s")
             self.next_weight_shift = now + self.u("weight_shift_every_s")
             self.busy_t = self.settle_t = now
@@ -418,6 +449,12 @@ class MotionDirector:
                 look_cam = 1.0 if ph == "camera" else 0.0
                 look_chat = 1.0 if ph in ("read", "chat") else 0.0
             else:
+                # a rare silent look at the viewers while idle or reading (K 10-27): same gates as a chat glance
+                if (state in ("idle", "reading") and not speaking and not hands_on_keys and not reacting
+                        and now >= self.next_lens_check and now >= self.chat_glance_until and now >= self.cam_until
+                        and now - self.busy_t >= d["chat_glance_min_state_s"] and now >= self.mouse_until):
+                    self.cam_until = now + self.u("lens_check_s")
+                    self.next_lens_check = self.cam_until + self.u("lens_check_every_s")
                 if now < self.cam_until:                             # the eye-line hold at the end of a chat answer
                     look_cam = 1.0
                 # a silent glance at the chat without stopping; not within 8 s of speech/typing/reaction/page change,
@@ -616,6 +653,11 @@ class MotionDirector:
             wander_p = w * 0.6 * (0.7 * math.sin(2 * math.pi * f * 1.3 * now + self.phase_a)
                                   + 0.3 * math.sin(2 * math.pi * f * 0.6 * now + self.phase_b))
 
+        # talk beats, eased like any voluntary aim (K 10-27)
+        by, bp = self.talk_beat(now, speaking, reacting, paused, look_cam)
+        self.beat_yaw_out = self.ease(self.beat_yaw_out, by, dt, d["gaze_tau_s"])
+        self.beat_pitch_out = self.ease(self.beat_pitch_out, bp, dt, d["gaze_tau_s"])
+
         # -- nod, intensity, breathing
         nod = 0.0 if paused else self.nod_peak * max(0.0, 1 - (now - self.nod_t0) / d["nod_decay_s"])
         if paused:
@@ -641,8 +683,8 @@ class MotionDirector:
         s_out = 0.0 if paused else self.s + self.wshift
         return {
             "state": state,
-            "gaze_yaw_deg": round(clamp(self.yaw + wander_y, -20.0, 20.0), 2),
-            "gaze_pitch_deg": round(clamp(self.pitch + wander_p, -10.0, 10.0), 2),
+            "gaze_yaw_deg": round(clamp(self.yaw + wander_y + self.beat_yaw_out, -20.0, 20.0), 2),
+            "gaze_pitch_deg": round(clamp(self.pitch + wander_p + self.beat_pitch_out, -10.0, 10.0), 2),
             "nod_strength": round(clamp(nod, 0.0, 1.0), 3),
             "intensity": round(clamp(inten, 0.0, 1.0), 2),
             "camera": "spectator" if paused else self.camera,

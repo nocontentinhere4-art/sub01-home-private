@@ -168,18 +168,21 @@ def test_paused_is_neutral():
 
 
 # ---- head: camera and chat -------------------------------------------------------------------------------------------
-def test_camera_looks_are_event_driven_never_on_a_timer():
+def test_camera_looks_are_event_driven_or_a_rare_brief_silent_lens_check():
     talking = simulate(20 * 60, TALKING, seed=21)                     # twenty minutes of page comments
     assert fraction(talking, CAM) == 0                                # a dry page comment stays on the content
-    assert fraction(simulate(10 * 60, READING, seed=4), CAM) == 0
-    assert fraction(simulate(10 * 60, IDLE, seed=4), CAM) == 0
     assert fraction(simulate(10 * 60, lambda t: {"action": "type"}, seed=4), CAM) == 0
+    for rows in (simulate(10 * 60, READING, seed=4), simulate(10 * 60, IDLE, seed=4)):   # owner 10-27: livelier
+        n, runs = onsets(rows, CAM)
+        assert 1 <= n <= 10 * 60 / D["lens_check_every_s"][0] + 1     # rare: one every 2.5-5 minutes
+        assert max(runs) <= D["lens_check_s"][1] + 2 * DT and fraction(rows, CAM) < 0.01
 
 
 def test_chat_answer_reads_the_message_then_addresses_the_lens_once_then_rechecks():
     rows = simulate(10 * 40, answers(40.0, 10.0), seed=4)             # ten answers of 10 s
-    cams = [(t, o) for t, o in rows if CAM(o)]
-    n, runs = onsets(rows, CAM)
+    in_answer = [(t, o) for t, o in rows if (t - 1000.0) % 40.0 < 12.0]   # the silent gaps may hold a rare lens check
+    cams = [(t, o) for t, o in in_answer if CAM(o)]
+    n, runs = onsets(in_answer, CAM)
     assert n == 10, n                                                 # exactly one lens address per answer
     assert min(runs) >= D["chat_camera_s"][0] - DT and max(runs) <= D["chat_camera_s"][1] + 2 * DT
     for k in range(10):
@@ -279,8 +282,8 @@ def test_reading_head_is_nearly_still():
     rows = simulate(10 * 60, lambda t: {"action": "read"}, seed=27)
     last_glance = -1e9
     quiet = []
-    for t, o in rows:                                     # outside the chat glances and their 0.75 s fast return
-        if CHAT_LOOK(o):
+    for t, o in rows:                                     # outside the chat glances, lens checks and their 0.75 s fast return
+        if CHAT_LOOK(o) or CAM(o):
             last_glance = t
         elif t - last_glance > 0.75:
             quiet.append((t, o))
@@ -546,7 +549,7 @@ def test_boredom_after_75_s_idle_releases_the_posture_once_and_any_action_cancel
     assert back[-1]["motion"]["lean_back"] == 0 and back[-1]["motion"]["lean"] >= 0.25
 
 
-def test_speech_onset_nod_only_no_periodic_talking_nods():
+def test_speech_onset_nod_then_occasional_talk_beat_nods():
     md = SM.MotionDirector(random.Random(22))
     for k in range(8):
         md.tick(k * 0.25, action="read")
@@ -554,7 +557,11 @@ def test_speech_onset_nod_only_no_periodic_talking_nods():
     assert rows[0][1]["nod_strength"] == 0                            # not on the exact toggle: 0.12 s later
     assert rows[1][1]["nod_strength"] == pytest.approx(D["speech_start_nod"], abs=1e-6)
     n, _ = onsets(rows, lambda o: o["nod_strength"] >= 0.05)
-    assert n == 1                                                     # five minutes of speech: one onset nod, nothing periodic
+    assert 20 <= n <= 120                       # five minutes of speech: talk-beat accents on about a third of the beats
+    vals = [o["nod_strength"] for _, o in rows]
+    starts = [i for i in range(1, len(vals)) if vals[i] > vals[i - 1] + 1e-9]
+    assert all(vals[i - 1] <= 0.02 for i in starts[1:])                # every later nod waits for the native re-arm
+    assert max(vals[starts[1]:]) <= D["talk_beat_nod_strength"][1] + 1e-6
     silent = simulate(5 * 60, READING, seed=22)
     n_silent, _ = onsets(silent, lambda o: o["nod_strength"] >= 0.05)
     assert n_silent == 0
@@ -562,7 +569,7 @@ def test_speech_onset_nod_only_no_periodic_talking_nods():
     md = SM.MotionDirector(random.Random(22))
     a = [md.tick(k * 0.25, action="read", speaking=0.5 <= k * 0.25 < 2.0 or 4.0 <= k * 0.25 < 6.0) for k in range(32)]
     n, _ = onsets([(0, o) for o in a], lambda o: o["nod_strength"] >= 0.05)
-    assert n == 2
+    assert n >= 2
 
 
 def test_breathing_slower_while_talking_than_at_rest():
@@ -575,10 +582,10 @@ def test_breathing_slower_while_talking_than_at_rest():
 
 def test_intensity_by_state_and_chat_bonus():
     md = SM.MotionDirector(random.Random(24))
-    assert md.tick(0.0, action="none")["intensity"] == pytest.approx(0.1)
-    assert md.tick(1.0, action="read")["intensity"] == pytest.approx(0.3)
-    assert md.tick(2.0, action="read", speaking=True)["intensity"] == pytest.approx(0.6)
-    assert md.tick(3.0, action="read", speaking=True, chat_addressed=True)["intensity"] == pytest.approx(0.7)
+    assert md.tick(0.0, action="none")["intensity"] == pytest.approx(0.18)
+    assert md.tick(1.0, action="read")["intensity"] == pytest.approx(0.4)
+    assert md.tick(2.0, action="read", speaking=True)["intensity"] == pytest.approx(0.68)
+    assert md.tick(3.0, action="read", speaking=True, chat_addressed=True)["intensity"] == pytest.approx(0.78)
     assert md.tick(4.0, action="read", reaction="laugh")["intensity"] == pytest.approx(0.8)
 
 
@@ -591,3 +598,27 @@ def test_talking_releases_the_posture_back_and_returns_to_reading():
     assert all(not CAM(o) for o in talk)
     after = [md.tick(16 + k * 0.25, action="read") for k in range(12)]
     assert after[-1]["motion"]["lean_back"] == 0 and after[-1]["motion"]["lean"] >= 0.25
+
+
+def test_talk_beats_only_while_speaking_bounded_and_smaller_at_the_lens():
+    md = SM.MotionDirector(random.Random(7))
+    for speaking, reacting, paused in ((False, False, False), (True, True, False), (True, False, True)):
+        assert md.talk_beat(0.0, speaking, reacting, paused, 0.0) == (0.0, 0.0) and md.beat_next is None
+    for look_cam in (0.0, 1.0):
+        md = SM.MotionDirector(random.Random(7))
+        scale = D["talk_beat_look_cam_scale"] if look_cam else 1.0
+        offsets = [md.talk_beat(k * 0.25, True, False, False, look_cam) for k in range(200)]
+        assert all(abs(y) <= D["talk_beat_yaw_deg"] * scale + 1e-9 and abs(p) <= D["talk_beat_pitch_deg"] * scale + 1e-9
+                   for y, p in offsets)
+        assert len(set(offsets)) >= 20                                # irregular beats, each held until the next
+    a, b = SM.MotionDirector(random.Random(7)), SM.MotionDirector(random.Random(7))
+    assert [a.talk_beat(k * 0.25, True, False, False, 0.0) for k in range(80)] == \
+           [b.talk_beat(k * 0.25, True, False, False, 0.0) for k in range(80)]
+
+
+def test_talk_beats_move_the_head_while_speaking():
+    md = SM.MotionDirector(random.Random(9))
+    rows = [md.tick(k * 0.25, action="read", speaking=k >= 8) for k in range(8 + 4 * 60 * 2)]
+    yaws = [o["gaze_yaw_deg"] for o in rows[16:]]
+    assert max(yaws) - min(yaws) >= 3.0                               # visible phrase-level head movement
+    assert all(abs(b - a) / 0.25 <= 30.0 for a, b in zip(yaws, yaws[1:]))   # eased, never a snap
