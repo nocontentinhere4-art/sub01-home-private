@@ -283,3 +283,33 @@ pre-existing ones (no API keys locally).
 - In the first 2.5 minutes he greeted and said he would leave the abbey stream, opened a different video, and commented
   on it twice, about one remark a minute.
 - The layout stayed on desktop.
+
+## 21:46-21:51 UTC: native v25 live (the body follows the agent)
+
+**Build**
+- Staging copy `<private>/v25-build` (Content symlinked), `install_v25.py` (9 anchors), UBT on CCD1 at nice 10.
+- `BUILD EXIT 0` in about 3 min, with no warnings or errors from the v25 lines.
+
+**Swap and restart** (21:46:52-21:49:15)
+1. The v24 binaries and source were backed up to `/home/sub01-review-20261027/{binaries,source}-v24-backup-20261027T214652`.
+2. The game (pid 7405) was stopped with TERM.
+3. The v25 `Binaries/Linux` and `Source/Sub01HomeLab` were copied into the live project.
+4. The game was relaunched with the same argv and environment as before (read from the old process as its own user; the
+   token is the old process's own, equal to operator-token), with `taskset -c 0-7`.
+5. New pid 18983, written to both game.pid files.
+
+**State after the restart**
+- `SUB01_STREAMER_VISUAL_V2_READY clips=3/3` and `MAIN_TAP_GONOGO verdict=GO`.
+- The HLS was fresh again, and STOP stayed absent.
+- The stream showed the placeholder for about 2.5 min while the game loaded.
+
+**Live checks**
+- `SUB01_STREAMER_VISUAL_V25 motion=1`.
+- Lean follows the state: reading +2.3 to +3.2°, talking -1.4°.
+- The breathing rate follows speech: 0.18 Hz talking, 0.20 Hz otherwise.
+- Agent nods are honoured: 5 in the first minute.
+- Game fps after warm-up: 57.5-59.8, render 9.5-12.8 ms.
+- Head roll and gestures read 0 in that minute. They appear with think/laugh reactions and with talking gestures.
+
+**Roll back to v24:** stop the game, copy `binaries-v24-backup-20261027T214652/Linux/.` back into
+`project/Sub01HomeLab/Binaries/Linux/`, and relaunch the same way.
