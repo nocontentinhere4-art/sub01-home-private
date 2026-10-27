@@ -87,7 +87,7 @@ def create_app(root, stop_file, token_file=None):
         nonlocal screen_task
         if request.query_string or token_file is None: raise web.HTTPNotFound()
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
-        if limited(ip, 'screen', .8, 1): raise web.HTTPTooManyRequests()
+        if limited(ip, 'screen', 10, 30) or limited('global', 'screen', 1, 15): raise web.HTTPTooManyRequests()
         if screen_task is None or screen_task.done():
             screen_task = asyncio.create_task(capture_screen())
             screen_task.add_done_callback(discard_capture)

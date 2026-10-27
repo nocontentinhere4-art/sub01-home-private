@@ -1,0 +1,1 @@
+Applied the exact one-line start() retryTimer guard required by Kimi. Relay tests: 10 passed. No additional changes beyond reviewed diff and required guard.
