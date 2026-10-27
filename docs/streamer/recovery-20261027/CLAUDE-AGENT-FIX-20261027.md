@@ -59,3 +59,47 @@ The log shows that he spoke. Audio playback on the stream was not measured here;
 1. Simple visual check (webcam and camera 2 frames, Kimi then the owner), voice and head sync, main fps at least 55 stable.
 2. The 30-minute acceptance recording and the 1-hour stability run.
 3. Promote Codex's runtime-only fixes with a diff review (see the handoff, point 6).
+
+## Later on 2026-10-27
+
+**Faster replies (deployed).** Commit f8c1eae: a direct question went from about 14 s to about 9.4 s, measured from
+the site to the start of the voice. Kimi approved.
+
+**Lease.** A 60-minute lease was armed at 02:49:24 UTC and expires around 03:49 UTC. After that SUB-01 again answers
+"my hands are off the desk" to requests. That is by design (manual re-arm); the owner decides whether it becomes
+automatic.
+
+## NEXT: owner requests not yet implemented (02:50-03:00 UTC)
+
+1. **"Fai sì che qualsiasi link sia apribile ... può fare tutto come una persona reale."**
+   - Agent side, `streamer_agent.py` `request_url_problem()`: refuse a viewer link only for the classes in a new
+     `VIEWER_LINK_BLOCKED` tuple instead of every `BLOCKED_HOST` / `BLOCKED_PATH` class.
+   - The owner lifts `money`, `gambling`, `torrent`, `login`, `file` and `account_change` for viewers.
+   - Recommendation to put to the owner: keep `adult` blocked, because the PC screen is public on subzerone.live.
+   - Update the policy tests that encode the old rule:
+     - `test_parse_request_refused_classes_with_their_reason` (paypal, cart);
+     - `test_a_viewer_site_redirecting_to_a_login_page_is_undone_and_said`;
+     - `test_logins_are_his_own_to_use_by_flag_while_chat_keeps_every_block`.
+   - Kimi reviews the diff. Patch the runtime source `/home/sub01-recovery-stage-20261026/runtime-source`, then
+     restart the agent with `streamer_up.py kill` and `resume`; port 8836 is up in about 3-50 s. Re-arm the lease.
+2. **Chat filter: "fomo family open it" was rejected** ("no trading or get-rich talk").
+   - Cause: `lexicon.py` `HYPE` contains `fomo(?: app)?`, from the owner's rule of 2026-10-09; `browse.py` `MONEY_HYPE`
+     contains `fomo app`. The owner now says "rimuovi sto filtro".
+   - Remove `fomo`, and with `links_open` do not judge the URL text itself with `HYPE` (`chat.check`). Keep insults,
+     personal data and so on.
+   - The chat filter runs in the BACKEND (run copy
+     `/home/unreal/.sub01-private/owner-backend-runtime-20261027-r6/source`). The coordinator ends all its services
+     if one child stops, so a restart means Codex's full r7 procedure (`restart_backend_r6.py` on his Mac):
+     - new `--state-snapshot` from the stopped r6 state;
+     - new run and state directories;
+     - the expected memory count read from the stopped state.
+
+     Do it while watching, not overnight.
+   - Workaround that already works: "open fomofamily.com" passes the filter and opens the site.
+3. **Desktop audio and soft chill background music on the stream** ("c'è troppo silenzio").
+   - Today the director's audio is the K07 voice only.
+   - Needed:
+     - capture the Vagon Chrome tab audio on `:103` (PulseAudio monitor of the desktop runner's Chrome) as a second
+       audio input of the director's FFmpeg;
+     - mix in a quiet royalty-free lo-fi loop, ducked under the voice;
+     - check the levels in a short recording before going live.
