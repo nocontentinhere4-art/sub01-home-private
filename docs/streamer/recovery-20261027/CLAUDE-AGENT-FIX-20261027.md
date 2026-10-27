@@ -233,3 +233,21 @@ runuser -u unreal -- python3 $SRC/scripts/streamer_cpu_partition.py --game-pid-f
 ```
 
 Undo with `--restore`.
+
+## 18:19 UTC: 1-hour stability watch passed
+
+**Window:** 17:19-18:19 UTC, 121 samples.
+
+**Whole window**
+- No service restarted: xvfb, desktop, voice, agent, director, monitor and hls all 0.
+- The game pid did not change.
+- STOP was never seen, and the relay always answered 200.
+- The maximum HLS age was 4.8 s.
+
+**After the CPU partition (17:28 onwards, 103 samples)**
+- Game fps: median 59.2, minimum 56.2, p10 57.5; no sample below 55.
+- Worst frame: 68 ms.
+- Game RSS: 8068 to 8190 MB, about +122 MB/h, to keep watching on a long run.
+
+**Lease:** it expired at 18:18:39 as designed. The agent announced "My time at the controls is up" and released its
+inputs. Re-arming is manual and waits for the owner.
