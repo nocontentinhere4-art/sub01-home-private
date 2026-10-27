@@ -2346,7 +2346,7 @@ async def main(args):
         return web.json_response({"url": CITY_URL, "up": city_state["up"], "checked": int(city_state["checked"])},
                                  headers={"Cache-Control": "no-store"})
     app.router.add_get("/api/city", city)
-    app.router.add_get("/", lambda r: web.FileResponse(HERE / "web" / "room.html", headers=NOCACHE))   # his room is the front page       # the life is the front page
+    app.router.add_get("/", lambda r: web.FileResponse(HERE / "web" / "live.html", headers=NOCACHE))
     app.router.add_get("/brain", lambda r: web.FileResponse(HERE / "web" / "index.html", headers=NOCACHE))
     app.router.add_get("/diary", lambda r: web.FileResponse(HERE / "web" / "diary.html", headers=NOCACHE))
     for old, new in OLD_PATHS.items():             # links from before the launch (the login page, short names)

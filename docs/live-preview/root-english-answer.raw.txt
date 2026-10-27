@@ -1,0 +1,2 @@
+{"http_status": 200, "answer": "APPROVE COMMIT", "finish_reason": "stop", "usage": {"prompt_tokens": 2716, "completion_tokens": 218, "total_tokens": 2934, "completion_tokens_details": {"reasoning_tokens": 198}, "prompt_tokens_details": {"cache_write_tokens": 2560}}, "seconds": 8.46}
+root@45b2350a6a96:/# 
