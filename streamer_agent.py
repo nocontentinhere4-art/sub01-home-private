@@ -158,11 +158,12 @@ COMMENT_READING_S = (150.0, 270.0)      # unsolicited remark while reading: abou
 COMMENT_OTHER_S = (30.0, 70.0)          # ... while browsing, typing, idle
 REACT_COOLDOWN_S = 30.0
 BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
-CHAT_EVERY_S = (90.0, 180.0)            # a chat batch (the brief; DIRECTION.md suggests 6-10 min for a busy chat)
-CHAT_EARLY_N = 3                        # ... or as soon as this many new messages wait
-CHAT_MIN_GAP_S = 30.0
-DIRECT_WAIT_S = 10.0                    # a direct question is answered after it has waited this long (he "notices")
-DIRECT_MIN_GAP_S = 8.0
+CHAT_EVERY_S = (25.0, 45.0)             # a chat batch (owner 2026-10-27: "deve essere piu reattivo"; was 90-180 s)
+CHAT_EARLY_N = 2                        # ... or as soon as this many new messages wait (was 3)
+CHAT_MIN_GAP_S = 12.0                   # was 30 s (owner: more reactive)
+DIRECT_WAIT_S = 1.5                     # a direct question is answered after it has waited this long (was 10 s:
+                                        # the 2026-10-27 live test took ~14 s from send to voice; owner: more reactive)
+DIRECT_MIN_GAP_S = 3.0                  # was 8 s
 OPEN_WINDOW_S = 180.0                   # the greeting may come in the first three minutes
 FOCUS_CAP_S = 1200.0                    # reading focus lasts 20 min at most, then he is nudged to move on
 STALE_PAGE_S = 600.0
