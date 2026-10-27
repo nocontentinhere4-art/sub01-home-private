@@ -750,7 +750,7 @@ FILLER = re.compile(r"\b(?:sub[\s-]?01|hey|hi|yo|ok(?:ay)?|please|pls|plz|kindly
                     r"when\s+you\s+can|right\s+now|would\s+you\s+mind(?:\s+to)?|do\s+me\s+a\s+favou?r\s+and)\b|"
                     r"\b(?:can|could|would|will|may|do)\s+(?:you|u|ya)\b|\b(?:i\s+want\s+you\s+to|i'?d\s+like\s+you\s+to|"
                     r"you\s+should|why\s+don'?t\s+you|let'?s|wanna|go\s+ahead\s+and|try\s+to|try\s+and)\b", re.I)
-ACTION_VERB = (r"open(?:\s+up)?|go\s+(?:to|on|back)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|load|"
+ACTION_VERB = (r"open(?:\s+up)?|go\s+(?:to|on|back)|jump\s+(?:back\s+)?to\s+(?:the\s+)?(?:top|bottom)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|load|"
                r"search(?:\s+for|\s+up)?|google|look\s+(?:up|at|for|into)|find(?:\s+out)?|show\s+(?:me|us)|pull\s+up|"
                r"bring\s+up|take\s+(?:me|us)\s+to|check(?:\s+out)?|research|keep\s+scrolling|scroll|page\s+(?:up|down)|"
                r"next\s+page|previous\s+page|back|click|tap|press|select|choose|pick|read|play|watch|zoom|expand|refresh|"

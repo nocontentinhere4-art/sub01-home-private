@@ -3850,3 +3850,15 @@ def test_checks_the_watchdog_keeps_retrying_its_own_trips_release_after_stop_is_
     assert wd.check() is None and wd.release_pending and len(release_server["seen"]) > n   # still retried
     release_server["answer"] = {"session": False}
     assert wd.check() is None and not wd.release_pending and not (d / "STOP").exists()
+
+
+def test_jump_to_top_or_bottom_is_a_key_request():
+    """Live check C12 (2026-10-27): "jump to the bottom of the page" was read as plain chat, so nothing ran."""
+    import streamer_agent as A
+    for text, key in (("jump to the bottom of the page", "End"), ("jump to the top", "Home"),
+                      ("jump back to the top of the page", "Home")):
+        req = A.parse_request(text, pc=True)
+        assert req and req["kind"] == "key" and req["action"] == {"action": "key", "key": key}, (text, req)
+    for chat in ("i jumped in the pool lol", "don't jump to conclusions", "jump to conclusions much?"):
+        req = A.parse_request(chat, pc=True)
+        assert req is None, (chat, req)              # plain chat: no action and no refusal line
