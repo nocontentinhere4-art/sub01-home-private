@@ -251,3 +251,35 @@ Undo with `--restore`.
 
 **Lease:** it expired at 18:18:39 as designed. The agent announced "My time at the controls is up" and released its
 inputs. Re-arming is manual and waits for the owner.
+
+## 21:30 UTC: a more interactive SUB-01 (owner, twice: "più interattivo")
+
+**Evidence before the change**
+- With the PC working, he watched one YouTube live stream for an hour. Every decision said "Nothing new on screen; stay
+  quiet". He spoke 2 lines in 3 hours.
+- The persona had been written reserved: "happy to say nothing for minutes", "an empty say is often the best answer",
+  "no question designed to make chat respond", "do not answer every remark".
+- The code pacing matched that: a reading remark every 2.5-4.5 min, and a 20 s gap between lines.
+
+**Change** (Kimi wrote the persona replacements and the numbers; Kimi APPROVEd the final diff)
+- **Persona:** he thinks aloud and talks regularly, and answers every viewer message quickly (by nick when it is clean).
+  He may ask chat what to look up next, and he moves to new content after a few minutes.
+- **Unchanged:** honesty, safety, untrusted content, the chat_request rules, no assistant-speak and no engagement bait.
+- **Pacing:**
+  - speech gap 8 s;
+  - a reading remark every 35-70 s, other remarks every 12-25 s;
+  - chat batches every 8-15 s, or at once for 1 waiting message (minimum gap 4 s);
+  - direct questions after 0.75 s;
+  - up to 4 chat replies, say up to 30 words;
+  - focus cap 4 min, stale page 3 min;
+  - decisions every 8-11 s (reading) or 7-10 s, with a call cap of 450/h (about $0.005 a call, so about $2.3/h at most).
+- **Layout:** a model-chosen layout stays at least 45 s. Webcam may come after 8 s for a chat answer or a reaction.
+  Before, it flipped between room and desktop every ~30 s.
+
+**Tests:** 10 tests that encoded the old cadence now use the new constants. The 6 failures that remain are the
+pre-existing ones (no API keys locally).
+
+**Live** (agent restart at 21:30, lease re-armed until 22:30)
+- In the first 2.5 minutes he greeted and said he would leave the abbey stream, opened a different video, and commented
+  on it twice, about one remark a minute.
+- The layout stayed on desktop.

@@ -203,23 +203,25 @@ def test_no_speech_while_reading_and_cadence(tmp_path):
     agent, world, prov, clock = make(tmp_path, lambda st: decision(say=next(lines, "")))
     asyncio.run(sim(agent, clock, 900))
     times = [s["t"] for s in world.spoken]
-    assert len(prov.calls) >= 25                                        # the model wanted to talk all the time ...
-    assert 3 <= len(times) <= 6                                         # ... the pacing let a few lines through
+    assert len(prov.calls) >= 50                                        # the model wanted to talk all the time ...
+    assert 8 <= len(times) <= 900 / SA.COMMENT_READING_S[0] + 2         # ... the pacing lets about one a minute through
     assert times[0] - 1_800_000_000 < 15                                # the greeting comes first
-    assert all(b - a >= 150 for a, b in zip(times, times[1:]))          # reading: one remark per ~3 min at most
+    focus = [t for t in times if t - times[0] < SA.FOCUS_CAP_S]       # past the focus cap he is nudged on: other pacing
+    assert all(b - a >= SA.COMMENT_READING_S[0] for a, b in zip(focus, focus[1:]))   # reading: a remark a minute at most
+    assert all(b - a >= max(SA.SPEECH_GAP_S, SA.COMMENT_OTHER_S[0]) for a, b in zip(times, times[1:]))
     assert agent.counters["say_dropped"] >= 15
     assert world.overlaps == 0
-    mid = [c["state"]["pacing"]["say_allowed"] for c in prov.calls[3:8]]   # 10-40 s after the greeting
-    assert mid and not any(mid)                                         # the model was told not to speak
+    told = [c["state"]["pacing"] for c in prov.calls if c["state"]["pacing"]["reading_focus"]]
+    assert told and sum(not p["say_allowed"] for p in told) >= len(told) / 2   # mostly told to keep reading quietly
 
 
-def test_twenty_seconds_between_unsolicited_lines_when_not_reading(tmp_path):
+def test_a_gap_between_unsolicited_lines_when_not_reading(tmp_path):
     lines = iter(LINES * 3)
     agent, world, prov, clock = make(tmp_path, lambda st: decision(state="idle", action=None, say=next(lines, "")))
     asyncio.run(sim(agent, clock, 600))
     times = [s["t"] for s in world.spoken]
     assert len(times) >= 5
-    assert all(b - a >= SA.SPEECH_GAP_S + 20 for a, b in zip(times, times[1:]))   # gap + the line itself
+    assert all(b - a >= max(SA.SPEECH_GAP_S, SA.COMMENT_OTHER_S[0]) for a, b in zip(times, times[1:]))
     assert all(s["max_seconds"] <= 15 and s["priority"] == "normal" for s in world.spoken)
     assert len(set(s["text"] for s in world.spoken)) == len(world.spoken)
 
@@ -232,7 +234,7 @@ def test_reaction_cooldown_and_level_rules(tmp_path):
     assert agent.counters["reactions"] == 1
     snap = agent.visual.snapshot()
     assert snap["state"] == "reacting" and snap["nod_strength"] > 0.9
-    for _ in range(3):                                                  # cooldown 30 s: no second reaction
+    for _ in range(2):                                                  # cooldown 15 s: no second reaction
         clock.t += 5
         agent.next_think = 0
         asyncio.run(agent.step())
@@ -258,33 +260,33 @@ def chat_agent(tmp_path, reply_seqs, clock=None):
     return agent, world, prov, clock
 
 
-def test_chat_batch_answers_at_most_two_and_reports_said(tmp_path):
+def test_chat_batch_answers_every_offered_message_and_reports_said(tmp_path):
     agent, world, prov, clock = chat_agent(tmp_path, [5, 2, 4])         # the model offers three answers
     agent.pacing.next_chat = clock()
     asyncio.run(sim(agent, clock, 60, dt=2))
-    assert [s["tag"] for s in world.spoken] == ["direct", "chat"]       # two lines, the direct question first
-    assert [s["priority"] for s in world.spoken] == ["high", "normal"]  # high only for the direct question
-    assert world.spoken[0]["text"].startswith("Reply 1 to seq 2") and world.spoken[1]["text"].startswith("Reply 0 to seq 5")
+    assert [s["tag"] for s in world.spoken] == ["direct", "direct", "chat"]   # all three (owner: answer everyone), questions first
+    assert [s["priority"] for s in world.spoken] == ["high", "high", "normal"]   # high only for the direct questions
+    assert world.spoken[0]["text"].startswith("Reply 1 to seq 2") and world.spoken[2]["text"].startswith("Reply 0 to seq 5")
     assert all(s["max_seconds"] <= 30 for s in world.spoken)
     assert world.overlaps == 0
-    assert [p["seqs"] for p in world.said_log] == [[2], [5]]                # reported with the seq they answer
+    assert sorted(p["seqs"] for p in world.said_log) == [[2], [4], [5]]     # reported with the seq they answer
     assert all(p["text"] and p["source"] == "streamer_agent" and p["voice"] for p in world.said_log)
     assert not agent.pending                                            # the batch is consumed
     chat = prov.calls[0]["state"]["chat"]
     assert {c["seq"] for c in chat} == {1, 2, 3, 4, 5}
     assert next(c for c in chat if c["seq"] == 2)["direct"] and not next(c for c in chat if c["seq"] == 5)["direct"]
-    assert any(e["kind"] == "chat_window" and e["answered"] == [2, 5] for e in events(agent))
+    assert any(e["kind"] == "chat_window" and sorted(e["answered"]) == [2, 4, 5] for e in events(agent))
 
 
-def test_chat_waits_for_the_batch_timer_or_three_messages(tmp_path):
+def test_chat_opens_a_batch_for_one_waiting_message_after_the_minimum_gap(tmp_path):
     agent, world, prov, clock = chat_agent(tmp_path, [1])
     agent.pending.clear()
-    world.chat_msgs = [msg(1, "what is this site?")]
+    world.chat_msgs = [msg(1, "nice font", "a")]
     agent.pacing.next_chat = clock() + 120
+    agent.pacing.last_chat = clock() - 1                                # a batch just ran: the minimum gap holds this one
     asyncio.run(agent.step())
     assert 1 in agent.pending and not [c for c in prov.calls if "chat" in c["state"]]
-    world.chat_msgs += [msg(2, "nice font", "a"), msg(3, "cool", "b")]  # three waiting: the batch opens early
-    clock.t += 40
+    clock.t += SA.CHAT_MIN_GAP_S + 1                                    # one waiting message is enough (owner: interactive)
     agent.next_think = clock() + 100
     asyncio.run(agent.step())
     assert prov.calls and "chat" in prov.calls[-1]["state"]
@@ -318,7 +320,7 @@ def test_refusals_come_from_code_and_the_model_never_opens_a_host_from_chat(tmp_
     assert prov.calls[0]["state"]["chat_declined_by_code"] == 3
     assert not [a for a in world.acts if a["action"] == "navigate"]     # the model's own navigation to a chat host: dropped
     assert any("action: " in d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"])
-    assert len(world.spoken) == 2                                       # honest answer + the model's pick
+    assert 2 <= len(world.spoken) <= 3                                  # honest answer + the model's pick (+ one refusal line)
     assert world.spoken[0]["text"] in SA.persona("HONEST_LINES", SA.FALLBACK_HONEST)
     assert world.spoken[0]["priority"] == "high" and world.spoken[1]["text"].startswith("Thanks")
     rows = [e for e in events(agent) if e["kind"] == "chat_request"]   # the refused attempts are visible, with a reason
@@ -449,7 +451,7 @@ def test_provider_error_enters_quiet_mode_with_backoff_and_recovers(tmp_path):
     scrolls = [a for a in world.acts if a["action"] in ("scroll", "key")]
     assert len(scrolls) >= 12                                           # scripted slow reading goes on
     lines = [s for s in world.spoken if s["tag"] == "quiet"]
-    assert 1 <= len(lines) <= 2 and all(s["priority"] == "low" for s in lines)
+    assert 1 <= len(lines) <= 700 // SA.QUIET_LINE_EVERY_S + 1 and all(s["priority"] == "low" for s in lines)
     assert lines[0]["t"] - t0 >= SA.QUIET_MIN_S
     assert all(b["t"] - a["t"] >= SA.QUIET_LINE_EVERY_S for a, b in zip(lines, lines[1:]))
     assert all(SA.reply_problem(s["text"]) is None for s in lines)
@@ -763,8 +765,8 @@ def test_validate_decision_drops_what_is_not_allowed():
     d = SA.validate_decision("```json\n" + raw + "\n```", MARKS, {1, 2, 3})
     assert d["action"] is None and d["state"] is None and d["layout"] is None and d["level"] == 3
     assert len(d["thought"]) == 300 and len(d["say"]) <= 220
-    assert [r["seq"] for r in d["chat_replies"]] == [1, 2]
-    assert any("unknown action" in x for x in d["dropped"]) and any("over 2" in x for x in d["dropped"])
+    assert [r["seq"] for r in d["chat_replies"]] == [1, 2, 3]
+    assert any("unknown action" in x for x in d["dropped"]) and any("99" in x for x in d["dropped"])
     with pytest.raises(SA.DecisionError):
         SA.validate_decision("scroll down please", MARKS)
 
@@ -813,7 +815,7 @@ def test_fixed_lines_pass_the_filters():
 
 
 def test_system_prompt_states_the_rules():
-    for needle in ("simulated character", "never the real person", "untrusted", "English only", "at most 25 words",
+    for needle in ("simulated character", "never the real person", "untrusted", "English only", "at most 30 words",
                    "chat_replies", "say_allowed", "last_outcome", "chat_request", "request_done",
                    "never type a viewer's words"):
         assert needle in SA.SYSTEM.replace("\\\n", "")
@@ -2206,11 +2208,12 @@ PROMPT_PC = SA.SYSTEM_PC.replace("\\\n", "")
 def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones():
     for needle in ("20-year-old streamer", "selective about what deserves a comment", "not an assistant giving a demonstration",
                    "never a real streamer's name", "no accents, no claims of fluency", "Never claim to have heard tab audio",
-                   "Doing, not narrating", "never speak because a timer permits it", "Do not narrate mouse moves",
+                   "Doing, not narrating", "a quiet screen is a reason to look for", "Do not narrate mouse moves",
                    "Never infer an article from its headline", "at most two short utterances and 35 words", "no invented tea",
                    "Read silently first", "never enumerate", "Keep headline and evidence apart", '"I don\'t know yet" is fine',
                    "a dead end is called a dead end", "no announced segment transitions", "never invent viewers",
-                   "clean and pronounceable", "Three of you caught the same typo", "never asks chat to choose his whole session",
+                   "clean and pronounceable", "Three of you caught the same typo", "Answer every viewer message quickly",
+                   "Keep exploring", "Keep a layout for at least 45 seconds",
                    "Level is intensity, not permission to speak", "never screaming, fake outrage or panic",
                    "one plain correction, not an apology speech", "at most one joke per utterance", "1-8 words", "8-20 words",
                    "12-28 by habit", "Never on air", '"as an AI"', '"let\'s dive in"', '"smash that like"', '"in summary"',
@@ -2221,13 +2224,13 @@ def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones()
                      "really happening on this desktop", "Claude", "Kimi", "Never mock a viewer", "legal, or financial",
                      "You are SUB-01", "Code owns request classification", "Do not mention"):
         assert rejected not in PROMPT, rejected
-    for needle in ("simulated character", "never the real person", "untrusted", "English only", "at most 25 words",      # the old rules stay
+    for needle in ("simulated character", "never the real person", "untrusted", "English only", "at most 30 words",      # the old rules stay
                    "chat_replies", "say_allowed", "last_outcome", "chat_request", "request_done", "never type a viewer's words",
                    'Reply with one JSON object and nothing else', '"request_done": false}'):
         assert needle in PROMPT, needle
-    for once in ("English only", "medical", "is anyone there", "fakes volume", "faked laughter", "tickers", "at most 25 words"):
+    for once in ("English only", "medical", "is anyone there", "fakes volume", "faked laughter", "tickers", "at most 30 words"):
         assert PROMPT.count(once) == 1, once                                                       # no duplicated rule
-    assert len(PROMPT.split()) <= 1700
+    assert len(PROMPT.split()) <= 1800                     # owner 10-27: the interactive persona added ~60 words
     assert "without narrating each click or key" in PROMPT_PC and "never as if you heard its sound" in PROMPT_PC
     assert "Say what you see" in PROMPT_PC and "the on-air habits and the pacing rules stay" in PROMPT_PC
 
