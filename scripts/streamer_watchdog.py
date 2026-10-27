@@ -250,11 +250,13 @@ class Watchdog:
     def check(self):
         """One look; -> the trip reason or None."""
         now = self.clock()
-        if self.tripped_by and not self.stop_file.exists():   # the operator removed STOP: watch again, fresh grace
-            log("STOP removed: watching again")
-            self.tripped_by, self.seen_heartbeat, self.started = None, False, now   # an unconfirmed release stays
-            # pending and is retried below (Kimi review: removing STOP never cancels a release a held key may need)
         sid = self.stop_identity()
+        if sid is None and (self.tripped_by or self.stop_handled is not None):   # STOP removed (an operator resume),
+            log("STOP removed: watching again")              # whoever wrote it: watch again, fresh grace (live check
+            self.tripped_by, self.seen_heartbeat, self.started = None, False, now   # 2026-10-27: after a drill the
+            self.stop_handled = None                          # one-shot: the next STOP-less check does not renew it
+            # agent's old heartbeat tripped a new STOP within 2 s of resume). An unconfirmed release stays pending and is
+            # retried below (Kimi review: removing STOP never cancels a release a held key may need)
         if sid is not None and sid != self.stop_handled:      # a new STOP, whoever wrote it: the keys go up
             self.on_stop(sid)
         elif self.release_pending:                            # Kimi: an unconfirmed release keeps being retried, also

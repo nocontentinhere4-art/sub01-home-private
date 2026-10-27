@@ -2973,6 +2973,31 @@ def test_watchdog_trips_on_a_missing_heartbeat_releases_keys_and_never_trips_twi
                     "http://127.0.0.1:9", "--token-file", str(tmp_path / "token")]) == 0   # STOP exists: no trip
 
 
+def test_watchdog_gives_a_fresh_grace_when_an_operator_stop_is_removed(tmp_path, release_server):
+    """Live check 2026-10-27: after a kill-switch drill (STOP not written by the watchdog) the agent's heartbeat was
+    37 min old; `resume` removed STOP and the watchdog tripped a new STOP 2 s later, before the agent could start."""
+    now = [time.time()]
+    WD, wd, d = watchdog(tmp_path, lambda: now[0])
+    (d / "state.json").write_text(json.dumps({"t": now[0], "paused": False, "heartbeat": {"loop_t": now[0]}}))
+    assert wd.check() is None and wd.seen_heartbeat
+    (d / "STOP").write_text(json.dumps({"by": "drill"}))                 # the operator's kill switch / a drill
+    now[0] += 1
+    assert wd.check() is None
+    now[0] += 2234                                                        # held down: no heartbeat for 37 min
+    assert wd.check() is None and (d / "STOP").exists()
+    (d / "STOP").unlink()                                                 # `streamer_up.py resume`
+    now[0] += 2
+    assert wd.check() is None and not (d / "STOP").exists()              # fresh grace: the agent is still starting
+    (d / "state.json").write_text(json.dumps({"t": now[0], "paused": False, "heartbeat": {"loop_t": now[0]}}))
+    started = wd.started
+    now[0] += 5
+    assert wd.check() is None and wd.started == started                  # consecutive STOP-less checks: no renewal
+    now[0] += 5
+    assert wd.check() is None and wd.seen_heartbeat and wd.started == started   # first heartbeat after resume
+    now[0] += 31
+    assert "heartbeat missing" in wd.check() and (d / "STOP").exists()  # and it still fails closed afterwards
+
+
 def test_watchdog_trips_when_actions_exceed_the_cap_counting_agent_rows_and_runner_receipts(tmp_path, release_server):
     now = [time.time()]
     WD, wd, d = watchdog(tmp_path, lambda: now[0])
