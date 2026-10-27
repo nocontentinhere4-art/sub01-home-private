@@ -536,11 +536,22 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
             # arrival wallclock as timestamps (x11grab uses the wallclock too); probe small so a launch is quick
             argv += ["-thread_queue_size", "512", "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
                      "-analyzeduration", "1000000", "-f", "mjpeg", "-framerate", str(rate), "-i", str(cfg.cam2_fifo)]
+    music = cfg.streamer_dir / "music" / "bgm.mp3"
+    music = music if music.exists() else None
+    music_index = argv.count("-i")       # the next input's index (cam2 and live inputs counted, not assumed)
+    if music:                           # last input: the established 0..N indices never move
+        argv += ["-stream_loop", "-1", "-i", str(music)]
     graph = build_live_graph(cfg, cam2, layout, main) if live else build_filter_complex(layout, cfg, main)
-    if voice:
+    if music:
+        # apad also covers a vanished voice writer; normalize=0 leaves the voice's level untouched
+        graph += (f";[2:a]apad,asplit=2[voice][key];[{music_index}:a]aresample=48000,"
+                  "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm];"
+                  "[bgm][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
+                  "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+    elif voice:
         # apad: if the voice server goes away the FIFO hits EOF; silence keeps the audio track running meanwhile
         graph += ";[2:a]apad[aout]"
-    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice else "2:a",
+    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music else "2:a",
              *video_codec_args(cfg, encoder or cfg.encoder), "-max_muxing_queue_size", "1024",
              "-c:a", "aac", "-b:a", cfg.audio_bitrate, "-ar", "48000", "-ac", "2"]
     if cfg.test_seconds:

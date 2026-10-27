@@ -120,3 +120,17 @@ automatic.
   - snapshot source `…-r6`, untouched.
 - **Agent resumed**, lease of 60 min armed at 15:34:18.
 - **Chat test** "fomo family, have you heard of it?" returned `received`.
+
+## 16:08 UTC: soft background music in the live mix
+
+- **Director change** (written by Kimi; two defects fixed, then Kimi APPROVE): when
+  `<streamer-dir>/music/bgm.mp3` exists, it is the last FFmpeg input, looped. The mix is `volume=0.08`,
+  `sidechaincompress` keyed by the voice, then `amix` with the unchanged voice. Without the file the argv is identical.
+- **Track:** `tools/pod/onpod/make-bgm.sh` generates an original 180 s lo-fi pad at -10 LUFS. It is installed at
+  `/home/unreal/.sub01-private/streamer/music/bgm.mp3`, owned by root, mode 600; **chown it to unreal** if the director
+  ever runs as unreal.
+- **Restart:** only the director was restarted (16:08:14); the supervisor respawned it.
+- **Check:** the first live HLS segment afterwards had a mean of -33.7 dB (it was silent before).
+- **To replace the music:** drop another file at that path and restart the director.
+- **Still to do:** desktop (Vagon PC) audio. It needs the PulseAudio monitor of the desktop runner's Chrome as an extra
+  input.

@@ -1907,3 +1907,40 @@ def test_apply_retention_skips_an_undeletable_segment_and_rejects_non_finite_lim
     for bad in (float("nan"), float("inf")):
         with _pytest.raises(ValueError):
             sd.DirectorConfig(streamer_dir=tmp_path, min_free_gb=bad)
+
+
+def test_optional_bgm_is_last_input_and_mixes_both_voice_paths(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import scripts.streamer_director as sd
+    cfg = SimpleNamespace(streamer_dir=tmp_path, ffmpeg="ffmpeg", width=1280, height=720,
+                          pip_width=320, pip_height=180, fps=30, desktop_fps=5, stats_period=1,
+                          test_sources=False, test_seconds=None, encoder="libx264",
+                          audio_bitrate="128k", game_display=":99.0", desktop_display=":99.0",
+                          voice_fifo=tmp_path / "voice.raw")
+    monkeypatch.setattr(sd, "effective_layout", lambda layout, cam2: layout)
+    monkeypatch.setattr(sd, "build_filter_complex", lambda *args: "VIDEO")
+    monkeypatch.setattr(sd, "video_codec_args", lambda *args: [])
+    monkeypatch.setattr(sd, "output_args", lambda *args: ["out.mkv"])
+    baseline = {}
+    for voice in (True, False):
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out", voice=voice)
+        baseline[voice] = argv
+        assert "-stream_loop" not in argv
+        graph = argv[argv.index("-filter_complex") + 1]
+        assert graph == ("VIDEO;[2:a]apad[aout]" if voice else "VIDEO")
+        assert argv[argv.index("-map", argv.index("-filter_complex") + 3) + 1] == ("[aout]" if voice else "2:a")
+    bgm = tmp_path / "music" / "bgm.mp3"
+    bgm.parent.mkdir()
+    bgm.write_bytes(b"test")
+    for voice in (True, False):
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out", voice=voice)
+        fc = argv.index("-filter_complex")
+        old_fc = baseline[voice].index("-filter_complex")
+        assert argv[fc - 4:fc] == ["-stream_loop", "-1", "-i", str(bgm)]
+        assert argv[:fc - 4] == baseline[voice][:old_fc]
+        graph = argv[fc + 1]
+        assert ";[2:a]apad,asplit=2[voice][key];[3:a]aresample=48000" in graph
+        assert "volume=0.08[bgm];[bgm][key]sidechaincompress=" in graph
+        assert graph.endswith("[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+        assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"
+        assert argv[argv.index("-ar") + 1:argv.index("-ar") + 4] == ["48000", "-ac", "2"]
